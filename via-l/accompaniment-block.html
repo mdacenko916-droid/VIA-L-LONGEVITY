@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIA-L · Програма супроводу</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --cream:#F5F3EF;--cream-dk:#EDE9E2;--cream-md:#E8E3DA;
+      --gold:#8B6F47;--gold-lt:#B8955A;--gold-pale:#D4B896;--gold-xp:#F4EDE3;
+      --text:#140E05;--text-mid:#2C1F10;--text-lt:#4A3520;
+      --line:rgba(139,111,71,.15);
+    }
+    body{background:var(--cream);color:var(--text);font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased;font-size:17px;line-height:1.75;}
+
+    /* ══ LANG SWITCHER ══ */
+    .acc-lang-bar{display:flex;justify-content:flex-end;max-width:1200px;margin:0 auto 32px;padding:0 clamp(24px,6vw,96px);}
+    .acc-lang-switcher{display:flex;gap:4px;background:var(--cream-dk);border:1px solid var(--line);border-radius:50px;padding:4px;}
+    .acc-lang-btn{font-size:11px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-lt);background:transparent;border:none;padding:6px 14px;border-radius:50px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .25s;}
+    .acc-lang-btn:hover{color:var(--text);}
+    .acc-lang-btn.active{background:var(--cream);color:var(--gold);box-shadow:0 2px 8px rgba(139,111,71,.12);}
+
+    /* ══ SECTION ══ */
+    #accompaniment{background:var(--cream-dk);padding:96px clamp(24px,6vw,96px);}
+    .acc-inner{max-width:1200px;margin:0 auto;}
+
+    /* ══ HEADER ══ */
+    .acc-eyebrow{font-size:11px;font-weight:500;letter-spacing:.22em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:12px;}
+    .acc-eyebrow::before,.acc-eyebrow::after{content:'';display:block;height:1px;background:var(--gold-pale);width:32px;}
+    .acc-header{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-bottom:64px;align-items:end;}
+    .acc-title{font-family:'Playfair Display',serif;font-size:clamp(30px,3vw,44px);font-weight:400;line-height:1.12;color:var(--text);}
+    .acc-title em{font-style:italic;color:var(--gold);}
+    .acc-subtitle{font-size:15px;font-weight:300;line-height:1.85;color:var(--text-mid);max-width:420px;}
+    .acc-subtitle strong{font-weight:500;color:var(--text);}
+
+    /* ══ STATS ══ */
+    .acc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-bottom:64px;}
+    .acc-stat{background:var(--cream);padding:32px 24px;text-align:center;border-right:1px solid var(--line);}
+    .acc-stat:last-child{border-right:none;}
+    .stat-num{font-family:'Playfair Display',serif;font-size:clamp(40px,4vw,56px);font-weight:400;color:var(--gold);line-height:1;margin-bottom:8px;display:block;}
+    .stat-label{font-size:13px;font-weight:300;color:var(--text-lt);line-height:1.5;}
+
+    /* ══ TIMELINE ══ */
+    .acc-timeline-wrap{margin-bottom:64px;}
+    .acc-timeline-title{font-family:'Playfair Display',serif;font-size:clamp(22px,2vw,28px);font-weight:400;color:var(--text);margin-bottom:32px;line-height:1.2;}
+    .acc-timeline-title em{font-style:italic;color:var(--gold);}
+    .acc-timeline{display:flex;flex-direction:column;gap:0;}
+    .acc-phase{display:grid;grid-template-columns:160px 1px 1fr;gap:0 36px;}
+    .phase-left{padding:28px 0;display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+    .phase-week{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);text-align:right;}
+    .phase-sublabel{font-size:11px;color:var(--text-lt);opacity:.6;text-align:right;}
+    .phase-spine{display:flex;flex-direction:column;align-items:center;}
+    .phase-dot{width:10px;height:10px;border-radius:50%;background:var(--gold-pale);border:2px solid var(--cream-dk);flex-shrink:0;margin-top:34px;position:relative;z-index:1;transition:background .3s;}
+    .acc-phase:hover .phase-dot{background:var(--gold);}
+    .phase-segment{width:1px;flex:1;background:var(--line);}
+    .acc-phase:last-child .phase-segment{opacity:0;}
+    .phase-right{padding:24px 0 28px;border-bottom:1px solid var(--line);}
+    .acc-phase:last-child .phase-right{border-bottom:none;}
+    .phase-tag{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold-lt);margin-bottom:6px;display:block;}
+    .phase-title{font-family:'Playfair Display',serif;font-size:clamp(17px,1.7vw,21px);font-weight:400;color:var(--text);margin-bottom:8px;line-height:1.25;}
+    .phase-desc{font-size:14px;font-weight:300;line-height:1.8;color:var(--text-mid);margin-bottom:14px;max-width:580px;}
+    .phase-chips{display:flex;flex-wrap:wrap;gap:7px;}
+    .phase-chip{font-size:11px;letter-spacing:.5px;color:var(--text-lt);border:0.5px solid rgba(139,111,71,.28);padding:4px 13px;border-radius:50px;transition:border-color .3s,background .3s;}
+    .acc-phase:hover .phase-chip{border-color:rgba(139,111,71,.45);background:rgba(244,237,227,.5);}
+
+    /* ══ INCLUDED GRID ══ */
+    .acc-included-title{font-family:'Playfair Display',serif;font-size:clamp(22px,2vw,28px);font-weight:400;color:var(--text);margin-bottom:32px;}
+    .acc-included-title em{font-style:italic;color:var(--gold);}
+    .acc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-bottom:64px;}
+    .acc-card{background:var(--cream);padding:32px 28px;border-right:1px solid var(--line);transition:background .3s;}
+    .acc-card:last-child{border-right:none;}
+    .acc-card:nth-child(n+4){border-top:1px solid var(--line);}
+    .acc-card:hover{background:var(--gold-xp);}
+    .acc-card-icon{font-size:22px;margin-bottom:14px;display:block;}
+    .acc-card-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px;}
+    .acc-card-desc{font-size:13px;font-weight:300;color:var(--text-lt);line-height:1.65;}
+
+    /* ══ CARE BLOCK ══ */
+    .acc-care{background:var(--cream);border:0.5px solid var(--line);padding:48px;display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-bottom:64px;position:relative;}
+    .acc-care::before{content:'✦ VIA-L Care';position:absolute;top:-11px;left:40px;background:var(--cream-dk);padding:0 12px;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);}
+    .care-tag{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold-lt);margin-bottom:12px;display:block;}
+    .care-title{font-family:'Playfair Display',serif;font-size:clamp(20px,2vw,26px);font-weight:400;color:var(--text);margin-bottom:14px;line-height:1.2;}
+    .care-title em{font-style:italic;color:var(--gold);}
+    .care-desc{font-size:14px;font-weight:300;line-height:1.8;color:var(--text-mid);}
+    .care-items{display:flex;flex-direction:column;gap:0;justify-content:center;}
+    .care-item{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--line);align-items:flex-start;}
+    .care-item:last-child{border-bottom:none;}
+    .care-dot{width:6px;height:6px;border-radius:50%;background:var(--gold-pale);flex-shrink:0;margin-top:8px;}
+    .care-text strong{font-size:14px;font-weight:500;color:var(--text);display:block;margin-bottom:2px;}
+    .care-text span{font-size:13px;font-weight:300;color:var(--text-lt);line-height:1.55;}
+
+    /* ══ BOTTOM CTA ══ */
+    .acc-bottom{text-align:center;padding-top:8px;}
+    .acc-quote{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(20px,2.2vw,30px);font-weight:400;color:var(--text-mid);max-width:700px;margin:0 auto 32px;line-height:1.55;}
+    .acc-quote em{color:var(--gold);font-style:normal;}
+    .acc-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;}
+    .btn-primary{display:inline-block;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--text);border:1px solid rgba(139,111,71,.4);background:rgba(245,243,239,.6);backdrop-filter:blur(12px);padding:14px 36px;border-radius:50px;text-decoration:none;font-weight:500;transition:all .3s;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 4px 24px rgba(139,111,71,.1),inset 0 1px 0 rgba(255,255,255,.8);white-space:nowrap;}
+    .btn-primary:hover{background:rgba(255,255,255,.85);border-color:var(--gold-pale);box-shadow:0 8px 28px rgba(139,111,71,.16);}
+    .btn-secondary{display:inline-block;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);border:1px solid rgba(139,111,71,.45);background:transparent;padding:13px 28px;border-radius:50px;text-decoration:none;font-weight:500;transition:all .3s;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+    .btn-secondary:hover{background:rgba(139,111,71,.06);border-color:var(--gold);}
+    .acc-note{font-size:12px;color:var(--gold);opacity:.7;font-style:italic;}
+
+    /* ══ RESPONSIVE ══ */
+    @media(max-width:900px){
+      .acc-header{grid-template-columns:1fr;gap:16px;margin-bottom:40px;}
+      .acc-stats{grid-template-columns:1fr 1fr;}
+      .acc-stat:nth-child(2){border-right:none;}
+      .acc-stat:nth-child(3),.acc-stat:nth-child(4){border-top:1px solid var(--line);}
+      .acc-phase{grid-template-columns:80px 1px 1fr;gap:0 18px;}
+      .phase-sublabel{display:none;}
+      .acc-grid{grid-template-columns:1fr;}
+      .acc-card{border-right:none;border-bottom:1px solid var(--line);}
+      .acc-card:nth-child(n+4){border-top:none;}
+      .acc-care{grid-template-columns:1fr;gap:28px;padding:32px 24px;}
+      .acc-btns{flex-direction:column;align-items:center;}
+      .acc-lang-bar{padding:0 24px;}
+    }
+    @media(max-width:580px){
+      #accompaniment{padding:64px 20px;}
+      .acc-phase{grid-template-columns:60px 1px 1fr;gap:0 12px;}
+      .phase-week{font-size:10px;}
+      .acc-stats{grid-template-columns:1fr 1fr;gap:2px;}
+    }
+  </style>
+</head>
+<body>
+
+<!--
+  ═══════════════════════════════════════════════
+  БЛОК: Програма супроводу — VIA-L
+  Універсальний для всіх 4 сторінок програм.
+  Вставити перед секцією #cta на кожній сторінці.
+  ═══════════════════════════════════════════════
+-->
+
+<!-- LANG SWITCHER — вставляється перед секцією -->
+<div class="acc-lang-bar">
+  <div class="acc-lang-switcher">
+    <button class="acc-lang-btn active" onclick="accSetLang('uk')">UA</button>
+    <button class="acc-lang-btn" onclick="accSetLang('ru')">RU</button>
+    <button class="acc-lang-btn" onclick="accSetLang('es')">ES</button>
+    <button class="acc-lang-btn" onclick="accSetLang('en')">EN</button>
+  </div>
+</div>
+
+<section id="accompaniment">
+  <div class="acc-inner">
+
+    <!-- HEADER -->
+    <div class="acc-header">
+      <div>
+        <div class="acc-eyebrow" data-acc-i18n="eyebrow">Програма супроводу</div>
+        <h2 class="acc-title" data-acc-i18n="title">12 тижнів —<br><em>поруч на кожному кроці</em></h2>
+      </div>
+      <p class="acc-subtitle" data-acc-i18n="subtitle">
+        Це не разова консультація. Це <strong>системна робота</strong> — тиждень за тижнем, аналіз за аналізом, крок за кроком. Від першого знайомства до письмового плану на наступні пів року.
+      </p>
+    </div>
+
+    <!-- STATS -->
+    <div class="acc-stats">
+      <div class="acc-stat">
+        <span class="stat-num">12</span>
+        <span class="stat-label" data-acc-i18n="stat1">тижнів<br>повного супроводу</span>
+      </div>
+      <div class="acc-stat">
+        <span class="stat-num">12</span>
+        <span class="stat-label" data-acc-i18n="stat2">онлайн-сесій<br>по 60 хвилин</span>
+      </div>
+      <div class="acc-stat">
+        <span class="stat-num">2×</span>
+        <span class="stat-label" data-acc-i18n="stat3">аналізи —<br>до та після</span>
+      </div>
+      <div class="acc-stat">
+        <span class="stat-num">6</span>
+        <span class="stat-label" data-acc-i18n="stat4">місяців план<br>на завершення</span>
+      </div>
+    </div>
+
+    <!-- TIMELINE -->
+    <div class="acc-timeline-wrap">
+      <h3 class="acc-timeline-title" data-acc-i18n="tl_title">Як виглядає <em>шлях клієнта</em> — тиждень за тижнем</h3>
+      <div class="acc-timeline">
+
+        <div class="acc-phase">
+          <div class="phase-left">
+            <span class="phase-week" data-acc-i18n="w1_week">Тиждень 1</span>
+            <span class="phase-sublabel" data-acc-i18n="w1_sub">Старт</span>
+          </div>
+          <div class="phase-spine"><div class="phase-dot"></div><div class="phase-segment"></div></div>
+          <div class="phase-right">
+            <span class="phase-tag" data-acc-i18n="w1_tag">Крок перший</span>
+            <h4 class="phase-title" data-acc-i18n="w1_title">Глибоке знайомство та діагностика</h4>
+            <p class="phase-desc" data-acc-i18n="w1_desc">Перша сесія — 60 хвилин. Розбираємо вашу ситуацію від початку: симптоми, харчова поведінка, сон, стрес, спосіб життя, поточні аналізи. Визначаємо точку відліку і напрямок роботи.</p>
+            <div class="phase-chips">
+              <span class="phase-chip" data-acc-i18n="w1_c1">Аналіз симптомів</span>
+              <span class="phase-chip" data-acc-i18n="w1_c2">Харчова поведінка</span>
+              <span class="phase-chip" data-acc-i18n="w1_c3">Розбір аналізів</span>
+              <span class="phase-chip" data-acc-i18n="w1_c4">Визначення цілей</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="acc-phase">
+          <div class="phase-left">
+            <span class="phase-week" data-acc-i18n="w2_week">Тиждень 2</span>
+            <span class="phase-sublabel" data-acc-i18n="w2_sub">Протокол</span>
+          </div>
+          <div class="phase-spine"><div class="phase-dot"></div><div class="phase-segment"></div></div>
+          <div class="phase-right">
+            <span class="phase-tag" data-acc-i18n="w2_tag">Крок другий</span>
+            <h4 class="phase-title" data-acc-i18n="w2_title">Персональний протокол у ваших руках</h4>
+            <p class="phase-desc" data-acc-i18n="w2_desc">Після першої сесії ви отримуєте два письмових документи: протокол харчування та список нутрицевтиків з точними дозуваннями — складені під ваш біохімічний профіль. Не загальні рекомендації, а конкретний план дій.</p>
+            <div class="phase-chips">
+              <span class="phase-chip" data-acc-i18n="w2_c1">Протокол харчування</span>
+              <span class="phase-chip" data-acc-i18n="w2_c2">Список нутрицевтиків</span>
+              <span class="phase-chip" data-acc-i18n="w2_c3">Дозування під ваш профіль</span>
+              <span class="phase-chip" data-acc-i18n="w2_c4">Письмово</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="acc-phase">
+          <div class="phase-left">
+            <span class="phase-week" data-acc-i18n="w3_week">Тижні 3–10</span>
+            <span class="phase-sublabel" data-acc-i18n="w3_sub">Робота</span>
+          </div>
+          <div class="phase-spine"><div class="phase-dot"></div><div class="phase-segment"></div></div>
+          <div class="phase-right">
+            <span class="phase-tag" data-acc-i18n="w3_tag">Серце програми</span>
+            <h4 class="phase-title" data-acc-i18n="w3_title">Щотижневі сесії та підтримка між ними</h4>
+            <p class="phase-desc" data-acc-i18n="w3_desc">Кожного тижня — 60-хвилинна онлайн-зустріч: аналізуємо динаміку, коригуємо протокол. Між сесіями — підтримка у Telegram або WhatsApp: чат, голосові повідомлення, відповіді на запитання. Ви не залишаєтесь наодинці з процесом.</p>
+            <div class="phase-chips">
+              <span class="phase-chip" data-acc-i18n="w3_c1">60 хв / щотижня</span>
+              <span class="phase-chip" data-acc-i18n="w3_c2">Чат між сесіями</span>
+              <span class="phase-chip" data-acc-i18n="w3_c3">Голосові повідомлення</span>
+              <span class="phase-chip" data-acc-i18n="w3_c4">Telegram або WhatsApp</span>
+              <span class="phase-chip" data-acc-i18n="w3_c5">Корекція протоколу</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="acc-phase">
+          <div class="phase-left">
+            <span class="phase-week" data-acc-i18n="w4_week">Тиждень 11</span>
+            <span class="phase-sublabel" data-acc-i18n="w4_sub">Аналізи</span>
+          </div>
+          <div class="phase-spine"><div class="phase-dot"></div><div class="phase-segment"></div></div>
+          <div class="phase-right">
+            <span class="phase-tag" data-acc-i18n="w4_tag">Контрольна точка</span>
+            <h4 class="phase-title" data-acc-i18n="w4_title">Повторні аналізи — бачимо зміни у цифрах</h4>
+            <p class="phase-desc" data-acc-i18n="w4_desc">Здаємо повторну панель аналізів. Порівнюємо з початковими показниками — об'єктивно, у цифрах. Зміни у вч-СРБ, інсуліні, вітаміні D та інших маркерах показують, що відбулося всередині — не лише як ви себе почуваєте.</p>
+            <div class="phase-chips">
+              <span class="phase-chip" data-acc-i18n="w4_c1">Повторна панель</span>
+              <span class="phase-chip" data-acc-i18n="w4_c2">Порівняння з початком</span>
+              <span class="phase-chip" data-acc-i18n="w4_c3">Оцінка динаміки</span>
+              <span class="phase-chip" data-acc-i18n="w4_c4">Фінальне коригування</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="acc-phase">
+          <div class="phase-left">
+            <span class="phase-week" data-acc-i18n="w5_week">Тиждень 12</span>
+            <span class="phase-sublabel" data-acc-i18n="w5_sub">Фінал</span>
+          </div>
+          <div class="phase-spine"><div class="phase-dot"></div><div class="phase-segment"></div></div>
+          <div class="phase-right">
+            <span class="phase-tag" data-acc-i18n="w5_tag">Завершення програми</span>
+            <h4 class="phase-title" data-acc-i18n="w5_title">Підсумкова сесія та план на пів року вперед</h4>
+            <p class="phase-desc" data-acc-i18n="w5_desc">Фінальна зустріч — підводимо підсумки, фіксуємо результати. Ви отримуєте письмовий документ: рекомендації на наступні 6 місяців з харчування, нутрицевтиків і способу життя. Міцна основа, з якої рухаєтесь далі.</p>
+            <div class="phase-chips">
+              <span class="phase-chip" data-acc-i18n="w5_c1">Підсумкова сесія 60 хв</span>
+              <span class="phase-chip" data-acc-i18n="w5_c2">Порівняння аналізів</span>
+              <span class="phase-chip" data-acc-i18n="w5_c3">План харчування на 6 міс.</span>
+              <span class="phase-chip" data-acc-i18n="w5_c4">Нутрицевтики на підтримку</span>
+              <span class="phase-chip" data-acc-i18n="w5_c5">Письмовий документ</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- INCLUDED GRID -->
+    <h3 class="acc-included-title" data-acc-i18n="inc_title">Що входить у <em>програму супроводу</em></h3>
+    <div class="acc-grid">
+      <div class="acc-card">
+        <span class="acc-card-icon">🗓</span>
+        <div class="acc-card-title" data-acc-i18n="acci1_t">12 онлайн-сесій по 60 хв</div>
+        <p class="acc-card-desc" data-acc-i18n="acci1_d">Щотижнева зустріч у Zoom або Meet. Аналіз динаміки, відповіді на запитання, коригування протоколу в реальному часі.</p>
+      </div>
+      <div class="acc-card">
+        <span class="acc-card-icon">📐</span>
+        <div class="acc-card-title" data-acc-i18n="acci2_t">Персональний протокол харчування</div>
+        <p class="acc-card-desc" data-acc-i18n="acci2_d">Письмовий документ після першої сесії. Складений під ваш біохімічний профіль, симптоми і спосіб життя — не шаблон.</p>
+      </div>
+      <div class="acc-card">
+        <span class="acc-card-icon">💊</span>
+        <div class="acc-card-title" data-acc-i18n="acci3_t">Список нутрицевтиків з дозуваннями</div>
+        <p class="acc-card-desc" data-acc-i18n="acci3_d">Письмовий перелік добавок з точними дозами під ваш профіль дефіцитів. Лише доказова база, нічого зайвого.</p>
+      </div>
+      <div class="acc-card">
+        <span class="acc-card-icon">💬</span>
+        <div class="acc-card-title" data-acc-i18n="acci4_t">Підтримка між сесіями</div>
+        <p class="acc-card-desc" data-acc-i18n="acci4_d">Чат і голосові у Telegram або WhatsApp — за вашим вибором. Відповідаю на запитання між зустрічами.</p>
+      </div>
+      <div class="acc-card">
+        <span class="acc-card-icon">🔬</span>
+        <div class="acc-card-title" data-acc-i18n="acci5_t">Повторні аналізи та порівняння</div>
+        <p class="acc-card-desc" data-acc-i18n="acci5_d">Здаємо панель на 11-му тижні. Порівнюємо з початком — бачимо зміни у цифрах, а не тільки у відчуттях.</p>
+      </div>
+      <div class="acc-card">
+        <span class="acc-card-icon">📋</span>
+        <div class="acc-card-title" data-acc-i18n="acci6_t">Фінальний план на 6 місяців</div>
+        <p class="acc-card-desc" data-acc-i18n="acci6_d">Письмові рекомендації з харчування, нутрицевтиків і способу життя — щоб впевнено продовжити шлях самостійно.</p>
+      </div>
+    </div>
+
+    <!-- CARE BLOCK -->
+    <div class="acc-care">
+      <div>
+        <span class="care-tag" data-acc-i18n="care_tag">Після програми · За бажанням</span>
+        <h3 class="care-title" data-acc-i18n="care_title">VIA-L <em>Care</em> —<br>програма підтримки результату</h3>
+        <p class="care-desc" data-acc-i18n="care_desc">Для тих, хто хоче зберегти і примножити результат після завершення основної програми. Щотижневий зворотний зв'язок, підтримка і своєчасне коригування — щоб зміни залишалися назавжди.</p>
+      </div>
+      <div class="care-items">
+        <div class="care-item">
+          <div class="care-dot"></div>
+          <div class="care-text">
+            <strong data-acc-i18n="care_i1_t">Зворотний зв'язок раз на тиждень</strong>
+            <span data-acc-i18n="care_i1_d">Чат або коротка зустріч — підтримка без пропусків</span>
+          </div>
+        </div>
+        <div class="care-item">
+          <div class="care-dot"></div>
+          <div class="care-text">
+            <strong data-acc-i18n="care_i2_t">Корекція при змінах</strong>
+            <span data-acc-i18n="care_i2_d">Сезон, стрес, подорожі — адаптуємо протокол разом</span>
+          </div>
+        </div>
+        <div class="care-item">
+          <div class="care-dot"></div>
+          <div class="care-text">
+            <strong data-acc-i18n="care_i3_t">Контроль аналізів</strong>
+            <span data-acc-i18n="care_i3_d">Стежимо за маркерами і коригуємо нутрицевтики</span>
+          </div>
+        </div>
+        <div class="care-item">
+          <div class="care-dot"></div>
+          <div class="care-text">
+            <strong data-acc-i18n="care_i4_t">Відчуття «не один»</strong>
+            <span data-acc-i18n="care_i4_d">Результат тримається, коли є хтось поруч</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM CTA -->
+    <div class="acc-bottom">
+      <p class="acc-quote" data-acc-i18n="quote">
+        «Зміни, які стають частиною вашого життя —<br>
+        це не результат сили волі.<br>
+        Це результат <em>правильної підтримки</em>.»
+      </p>
+      <div class="acc-btns">
+        <button class="btn-primary" onclick="openModal('calModal')" id="acc_btn1" data-acc-i18n="btn_slots">Вільні слоти на знайомство</button>
+        <button class="btn-secondary" onclick="openAccPayModal()" id="acc_btn2" data-acc-i18n="btn_pay">Оплатити супровід</button>
+      </div>
+      <p class="acc-note" data-acc-i18n="acc_note">✦ Онлайн · Весь світ · UA / RU / ES / EN</p>
+    </div>
+
+  </div>
+</section>
+
+<script>
+// ═══ VIA-L Accompaniment Block — i18n ═══
+// Система перекладів для фінального блоку програми супроводу.
+// Заповніть RU / ES / EN рядки своїми перекладами.
+
+var ACC_LANGS = {
+  uk: {
+    eyebrow:  "Програма супроводу",
+    title:    "12 тижнів —<br><em>поруч на кожному кроці</em>",
+    subtitle: "Це не разова консультація. Це <strong>системна робота</strong> — тиждень за тижнем, аналіз за аналізом, крок за кроком. Від першого знайомства до письмового плану на наступні пів року.",
+    stat1: "тижнів<br>повного супроводу",
+    stat2: "онлайн-сесій<br>по 60 хвилин",
+    stat3: "аналізи —<br>до та після",
+    stat4: "місяців план<br>на завершення",
+    tl_title: "Як виглядає <em>шлях клієнта</em> — тиждень за тижнем",
+    w1_week:"Тиждень 1", w1_sub:"Старт", w1_tag:"Крок перший",
+    w1_title:"Глибоке знайомство та діагностика",
+    w1_desc:"Перша сесія — 60 хвилин. Розбираємо вашу ситуацію від початку: симптоми, харчова поведінка, сон, стрес, спосіб життя, поточні аналізи. Визначаємо точку відліку і напрямок роботи.",
+    w1_c1:"Аналіз симптомів", w1_c2:"Харчова поведінка", w1_c3:"Розбір аналізів", w1_c4:"Визначення цілей",
+    w2_week:"Тиждень 2", w2_sub:"Протокол", w2_tag:"Крок другий",
+    w2_title:"Персональний протокол у ваших руках",
+    w2_desc:"Після першої сесії ви отримуєте два письмових документи: протокол харчування та список нутрицевтиків з точними дозуваннями — складені під ваш біохімічний профіль. Не загальні рекомендації, а конкретний план дій.",
+    w2_c1:"Протокол харчування", w2_c2:"Список нутрицевтиків", w2_c3:"Дозування під ваш профіль", w2_c4:"Письмово",
+    w3_week:"Тижні 3–10", w3_sub:"Робота", w3_tag:"Серце програми",
+    w3_title:"Щотижневі сесії та підтримка між ними",
+    w3_desc:"Кожного тижня — 60-хвилинна онлайн-зустріч: аналізуємо динаміку, коригуємо протокол. Між сесіями — підтримка у Telegram або WhatsApp: чат, голосові повідомлення, відповіді на запитання. Ви не залишаєтесь наодинці з процесом.",
+    w3_c1:"60 хв / щотижня", w3_c2:"Чат між сесіями", w3_c3:"Голосові повідомлення", w3_c4:"Telegram або WhatsApp", w3_c5:"Корекція протоколу",
+    w4_week:"Тиждень 11", w4_sub:"Аналізи", w4_tag:"Контрольна точка",
+    w4_title:"Повторні аналізи — бачимо зміни у цифрах",
+    w4_desc:"Здаємо повторну панель аналізів. Порівнюємо з початковими показниками — об'єктивно, у цифрах. Зміни у вч-СРБ, інсуліні, вітаміні D та інших маркерах показують, що відбулося всередині — не лише як ви себе почуваєте.",
+    w4_c1:"Повторна панель", w4_c2:"Порівняння з початком", w4_c3:"Оцінка динаміки", w4_c4:"Фінальне коригування",
+    w5_week:"Тиждень 12", w5_sub:"Фінал", w5_tag:"Завершення програми",
+    w5_title:"Підсумкова сесія та план на пів року вперед",
+    w5_desc:"Фінальна зустріч — підводимо підсумки, фіксуємо результати. Ви отримуєте письмовий документ: рекомендації на наступні 6 місяців з харчування, нутрицевтиків і способу життя. Міцна основа, з якої рухаєтесь далі.",
+    w5_c1:"Підсумкова сесія 60 хв", w5_c2:"Порівняння аналізів", w5_c3:"План харчування на 6 міс.", w5_c4:"Нутрицевтики на підтримку", w5_c5:"Письмовий документ",
+    inc_title: "Що входить у <em>програму супроводу</em>",
+    acci1_t:"12 онлайн-сесій по 60 хв", acci1_d:"Щотижнева зустріч у Zoom або Meet. Аналіз динаміки, відповіді на запитання, коригування протоколу в реальному часі.",
+    acci2_t:"Персональний протокол харчування", acci2_d:"Письмовий документ після першої сесії. Складений під ваш біохімічний профіль, симптоми і спосіб життя — не шаблон.",
+    acci3_t:"Список нутрицевтиків з дозуваннями", acci3_d:"Письмовий перелік добавок з точними дозами під ваш профіль дефіцитів. Лише доказова база, нічого зайвого.",
+    acci4_t:"Підтримка між сесіями", acci4_d:"Чат і голосові у Telegram або WhatsApp — за вашим вибором. Відповідаю на запитання між зустрічами.",
+    acci5_t:"Повторні аналізи та порівняння", acci5_d:"Здаємо панель на 11-му тижні. Порівнюємо з початком — бачимо зміни у цифрах, а не тільки у відчуттях.",
+    acci6_t:"Фінальний план на 6 місяців", acci6_d:"Письмові рекомендації з харчування, нутрицевтиків і способу життя — щоб впевнено продовжити шлях самостійно.",
+    care_tag:"Після програми · За бажанням",
+    care_title:"VIA-L <em>Care</em> —<br>програма підтримки результату",
+    care_desc:"Для тих, хто хоче зберегти і примножити результат після завершення основної програми. Щотижневий зворотний зв'язок, підтримка і своєчасне коригування — щоб зміни залишалися назавжди.",
+    care_i1_t:"Зворотний зв'язок раз на тиждень", care_i1_d:"Чат або коротка зустріч — підтримка без пропусків",
+    care_i2_t:"Корекція при змінах", care_i2_d:"Сезон, стрес, подорожі — адаптуємо протокол разом",
+    care_i3_t:"Контроль аналізів", care_i3_d:"Стежимо за маркерами і коригуємо нутрицевтики",
+    care_i4_t:"Відчуття «не один»", care_i4_d:"Результат тримається, коли є хтось поруч",
+    quote: "«Зміни, які стають частиною вашого життя —<br>це не результат сили волі.<br>Це результат <em>правильної підтримки</em>.»",
+    btn_slots:"Вільні слоти на знайомство",
+    btn_pay:"Оплатити супровід",
+    acc_note:"✦ Онлайн · Весь світ · UA / RU / ES / EN"
+  },
+
+  ru: {
+    // ═══ ЗАПОЛНИТЕ ПЕРЕВОД ═══
+    eyebrow:  "Программа сопровождения",
+    title:    "12 недель —<br><em>рядом на каждом шагу</em>",
+    subtitle: "Это не разовая консультация. Это <strong>системная работа</strong> — неделя за неделей, анализ за анализом, шаг за шагом. От первого знакомства до письменного плана на следующие полгода.",
+    stat1: "недель<br>полного сопровождения",
+    stat2: "онлайн-сессий<br>по 60 минут",
+    stat3: "анализы —<br>до и после",
+    stat4: "месяцев план<br>на завершение",
+    tl_title: "Как выглядит <em>путь клиента</em> — неделя за неделей",
+    w1_week:"Неделя 1", w1_sub:"Старт", w1_tag:"Шаг первый",
+    w1_title:"Глубокое знакомство и диагностика",
+    w1_desc:"Первая сессия — 60 минут. Разбираем вашу ситуацию с самого начала: симптомы, пищевое поведение, сон, стресс, образ жизни, текущие анализы. Определяем точку отсчёта и направление работы.",
+    w1_c1:"Анализ симптомов", w1_c2:"Пищевое поведение", w1_c3:"Разбор анализов", w1_c4:"Определение целей",
+    w2_week:"Неделя 2", w2_sub:"Протокол", w2_tag:"Шаг второй",
+    w2_title:"Персональный протокол в ваших руках",
+    w2_desc:"После первой сессии вы получаете два письменных документа: протокол питания и список нутрицевтиков с точными дозировками — составленные под ваш биохимический профиль. Не общие рекомендации, а конкретный план действий.",
+    w2_c1:"Протокол питания", w2_c2:"Список нутрицевтиков", w2_c3:"Дозировки под ваш профиль", w2_c4:"Письменно",
+    w3_week:"Недели 3–10", w3_sub:"Работа", w3_tag:"Сердце программы",
+    w3_title:"Еженедельные сессии и поддержка между ними",
+    w3_desc:"Каждую неделю — 60-минутная онлайн-встреча: анализируем динамику, корректируем протокол. Между сессиями — поддержка в Telegram или WhatsApp: чат, голосовые сообщения, ответы на вопросы. Вы не остаётесь наедине с процессом.",
+    w3_c1:"60 мин / каждую неделю", w3_c2:"Чат между сессиями", w3_c3:"Голосовые сообщения", w3_c4:"Telegram или WhatsApp", w3_c5:"Коррекция протокола",
+    w4_week:"Неделя 11", w4_sub:"Анализы", w4_tag:"Контрольная точка",
+    w4_title:"Повторные анализы — видим изменения в цифрах",
+    w4_desc:"Сдаём повторную панель анализов. Сравниваем с начальными показателями — объективно, в цифрах. Изменения в вч-СРБ, инсулине, витамине D и других маркерах показывают, что произошло внутри — не только как вы себя чувствуете.",
+    w4_c1:"Повторная панель", w4_c2:"Сравнение с началом", w4_c3:"Оценка динамики", w4_c4:"Финальная коррекция",
+    w5_week:"Неделя 12", w5_sub:"Финал", w5_tag:"Завершение программы",
+    w5_title:"Итоговая сессия и план на полгода вперёд",
+    w5_desc:"Финальная встреча — подводим итоги, фиксируем результаты. Вы получаете письменный документ: рекомендации на следующие 6 месяцев по питанию, нутрицевтикам и образу жизни. Прочная основа, с которой движетесь дальше.",
+    w5_c1:"Итоговая сессия 60 мин", w5_c2:"Сравнение анализов", w5_c3:"План питания на 6 мес.", w5_c4:"Нутрицевтики на поддержку", w5_c5:"Письменный документ",
+    inc_title: "Что входит в <em>программу сопровождения</em>",
+    acci1_t:"12 онлайн-сессий по 60 мин", acci1_d:"Еженедельная встреча в Zoom или Meet. Анализ динамики, ответы на вопросы, коррекция протокола в реальном времени.",
+    acci2_t:"Персональный протокол питания", acci2_d:"Письменный документ после первой сессии. Составлен под ваш биохимический профиль, симптомы и образ жизни — не шаблон.",
+    acci3_t:"Список нутрицевтиков с дозировками", acci3_d:"Письменный перечень добавок с точными дозами под ваш профиль дефицитов. Только доказательная база, ничего лишнего.",
+    acci4_t:"Поддержка между сессиями", acci4_d:"Чат и голосовые в Telegram или WhatsApp — на ваш выбор. Отвечаю на вопросы между встречами.",
+    acci5_t:"Повторные анализы и сравнение", acci5_d:"Сдаём панель на 11-й неделе. Сравниваем с началом — видим изменения в цифрах, а не только в ощущениях.",
+    acci6_t:"Финальный план на 6 месяцев", acci6_d:"Письменные рекомендации по питанию, нутрицевтикам и образу жизни — чтобы уверенно продолжить путь самостоятельно.",
+    care_tag:"После программы · По желанию",
+    care_title:"VIA-L <em>Care</em> —<br>программа поддержки результата",
+    care_desc:"Для тех, кто хочет сохранить и приумножить результат после завершения основной программы. Еженедельная обратная связь, поддержка и своевременная корректировка — чтобы изменения остались навсегда.",
+    care_i1_t:"Обратная связь раз в неделю", care_i1_d:"Чат или короткая встреча — поддержка без пропусков",
+    care_i2_t:"Коррекция при изменениях", care_i2_d:"Сезон, стресс, путешествия — адаптируем протокол вместе",
+    care_i3_t:"Контроль анализов", care_i3_d:"Следим за маркерами и корректируем нутрицевтики",
+    care_i4_t:"Ощущение «не один»", care_i4_d:"Результат держится, когда рядом есть кто-то",
+    quote: "«Изменения, которые становятся частью вашей жизни —<br>это не результат силы воли.<br>Это результат <em>правильной поддержки</em>.»",
+    btn_slots:"Свободные слоты для знакомства",
+    btn_pay:"Оплатить сопровождение",
+    acc_note:"✦ Онлайн · Весь мир · UA / RU / ES / EN"
+  },
+
+  es: {
+    eyebrow:  "Programa de acompañamiento",
+    title:    "12 semanas —<br><em>a tu lado en cada paso</em>",
+    subtitle: "No es una consulta puntual. Es un <strong>trabajo sistemático</strong> — semana a semana, análisis tras análisis, paso a paso. Desde la primera toma de contacto hasta un plan escrito para los próximos seis meses.",
+    stat1: "semanas<br>de acompañamiento completo",
+    stat2: "sesiones online<br>de 60 minutos",
+    stat3: "análisis —<br>antes y después",
+    stat4: "meses de plan<br>al finalizar",
+    tl_title: "Cómo es <em>el recorrido del cliente</em> — semana a semana",
+    w1_week:"Semana 1", w1_sub:"Inicio", w1_tag:"Primer paso",
+    w1_title:"Conocimiento profundo y diagnóstico",
+    w1_desc:"Primera sesión — 60 minutos. Analizamos tu situación desde el principio: síntomas, hábitos alimentarios, sueño, estrés, estilo de vida y analíticas actuales. Definimos el punto de partida y la dirección del trabajo.",
+    w1_c1:"Análisis de síntomas", w1_c2:"Hábitos alimentarios", w1_c3:"Revisión de analíticas", w1_c4:"Definición de objetivos",
+    w2_week:"Semana 2", w2_sub:"Protocolo", w2_tag:"Segundo paso",
+    w2_title:"Tu protocolo personalizado en tus manos",
+    w2_desc:"Tras la primera sesión recibes dos documentos escritos: un protocolo nutricional y una lista de nutracéuticos con dosis exactas, elaborados según tu perfil bioquímico. No son recomendaciones generales, sino un plan de acción concreto.",
+    w2_c1:"Protocolo nutricional", w2_c2:"Lista de nutracéuticos", w2_c3:"Dosis según tu perfil", w2_c4:"Por escrito",
+    w3_week:"Semanas 3-10", w3_sub:"Trabajo", w3_tag:"El corazón del programa",
+    w3_title:"Sesiones semanales y apoyo entre ellas",
+    w3_desc:"Cada semana tenemos una sesión online de 60 minutos: analizamos la evolución y ajustamos el protocolo. Entre sesiones hay apoyo por Telegram o WhatsApp: chat, mensajes de voz y respuestas a tus preguntas. No te quedas sola o solo en el proceso.",
+    w3_c1:"60 min / cada semana", w3_c2:"Chat entre sesiones", w3_c3:"Mensajes de voz", w3_c4:"Telegram o WhatsApp", w3_c5:"Ajuste del protocolo",
+    w4_week:"Semana 11", w4_sub:"Analíticas", w4_tag:"Punto de control",
+    w4_title:"Analíticas de seguimiento: vemos cambios en números",
+    w4_desc:"Realizamos una nueva batería de analíticas y la comparamos con los valores iniciales de forma objetiva, en cifras. Los cambios en PCR ultrasensible, insulina, vitamina D y otros marcadores muestran lo que ocurrió por dentro, no solo cómo te sientes.",
+    w4_c1:"Panel de seguimiento", w4_c2:"Comparación con el inicio", w4_c3:"Evaluación de la evolución", w4_c4:"Ajuste final",
+    w5_week:"Semana 12", w5_sub:"Cierre", w5_tag:"Final del programa",
+    w5_title:"Sesión final y plan para seis meses",
+    w5_desc:"En la reunión final resumimos y dejamos fijados los resultados. Recibes un documento escrito con recomendaciones para los próximos 6 meses sobre nutrición, nutracéuticos y estilo de vida. Una base sólida para seguir avanzando.",
+    w5_c1:"Sesión final 60 min", w5_c2:"Comparación de analíticas", w5_c3:"Plan nutricional 6 meses", w5_c4:"Nutracéuticos de mantenimiento", w5_c5:"Documento escrito",
+    inc_title: "Qué incluye <em>el programa de acompañamiento</em>",
+    acci1_t:"12 sesiones online de 60 min", acci1_d:"Reunión semanal en Zoom o Meet. Análisis de la evolución, respuestas a preguntas y ajuste del protocolo en tiempo real.",
+    acci2_t:"Protocolo nutricional personalizado", acci2_d:"Documento escrito tras la primera sesión. Elaborado según tu perfil bioquímico, síntomas y estilo de vida, no una plantilla.",
+    acci3_t:"Lista de nutracéuticos con dosis", acci3_d:"Listado escrito de suplementos con dosis precisas según tu perfil de déficits. Solo enfoque basado en evidencia, nada superfluo.",
+    acci4_t:"Apoyo entre sesiones", acci4_d:"Chat y mensajes de voz por Telegram o WhatsApp, según prefieras. Respondo a tus preguntas entre reuniones.",
+    acci5_t:"Analíticas de seguimiento y comparación", acci5_d:"Realizamos panel en la semana 11 y comparamos con el inicio para ver cambios en cifras, no solo en sensaciones.",
+    acci6_t:"Plan final para 6 meses", acci6_d:"Recomendaciones escritas sobre nutrición, nutracéuticos y estilo de vida para continuar el proceso con seguridad.",
+    care_tag:"Después del programa · Opcional",
+    care_title:"VIA-L <em>Care</em> —<br>programa de mantenimiento de resultados",
+    care_desc:"Para quienes quieren conservar y multiplicar su resultado tras terminar el programa principal. Feedback semanal, apoyo y ajustes a tiempo para que los cambios se mantengan.",
+    care_i1_t:"Feedback semanal", care_i1_d:"Chat o reunión breve: apoyo constante y sin pausas",
+    care_i2_t:"Ajustes cuando cambian las circunstancias", care_i2_d:"Estaciones, estrés, viajes: adaptamos el protocolo juntas y juntos",
+    care_i3_t:"Control de analíticas", care_i3_d:"Seguimos marcadores y ajustamos nutracéuticos según necesidad",
+    care_i4_t:"Sensación de no estar sola o solo", care_i4_d:"Los resultados se sostienen cuando hay alguien a tu lado",
+    quote: "«Los cambios que pasan a formar parte de tu vida<br>no son fruto de la fuerza de voluntad.<br>Son el resultado de <em>un acompañamiento correcto</em>.»",
+    btn_slots:"Plazas disponibles para la sesión inicial",
+    btn_pay:"Pagar el acompañamiento",
+    acc_note:"✦ Online · Todo el mundo · UA / RU / ES / EN"
+  },
+
+  en: {
+    eyebrow:  "Accompaniment Programme",
+    title:    "12 weeks —<br><em>by your side at every step</em>",
+    subtitle: "This is not a one-off consultation. It is <strong>systematic work</strong> — week by week, test by test, step by step. From the first introduction to a written plan for the next six months.",
+    stat1: "weeks<br>of full accompaniment",
+    stat2: "online sessions<br>of 60 minutes",
+    stat3: "tests —<br>before and after",
+    stat4: "months of plan<br>after completion",
+    tl_title: "What <em>the client journey</em> looks like — week by week",
+    w1_week:"Week 1", w1_sub:"Start", w1_tag:"Step one",
+    w1_title:"Deep introduction and diagnostics",
+    w1_desc:"First session lasts 60 minutes. We review your situation from the ground up: symptoms, eating behaviour, sleep, stress, lifestyle and current lab results. We define your baseline and the direction of work.",
+    w1_c1:"Symptom analysis", w1_c2:"Eating behaviour", w1_c3:"Lab review", w1_c4:"Goal setting",
+    w2_week:"Week 2", w2_sub:"Protocol", w2_tag:"Step two",
+    w2_title:"Your personal protocol in your hands",
+    w2_desc:"After the first session you receive two written documents: a nutrition protocol and a list of nutraceuticals with exact dosages, tailored to your biochemical profile. Not generic advice, but a concrete action plan.",
+    w2_c1:"Nutrition protocol", w2_c2:"Nutraceutical list", w2_c3:"Dosages for your profile", w2_c4:"In writing",
+    w3_week:"Weeks 3-10", w3_sub:"Work", w3_tag:"The heart of the programme",
+    w3_title:"Weekly sessions and support in between",
+    w3_desc:"Every week we hold a 60-minute online session to review progress and adjust your protocol. Between sessions you get support via Telegram or WhatsApp: chat, voice messages and answers to your questions. You are not left alone with the process.",
+    w3_c1:"60 min / every week", w3_c2:"Chat between sessions", w3_c3:"Voice messages", w3_c4:"Telegram or WhatsApp", w3_c5:"Protocol adjustment",
+    w4_week:"Week 11", w4_sub:"Labs", w4_tag:"Checkpoint",
+    w4_title:"Follow-up tests: changes visible in numbers",
+    w4_desc:"We run a follow-up lab panel and compare it with your starting values objectively, in numbers. Changes in hs-CRP, insulin, vitamin D and other markers show what has changed internally, not only how you feel.",
+    w4_c1:"Follow-up panel", w4_c2:"Baseline comparison", w4_c3:"Progress assessment", w4_c4:"Final adjustment",
+    w5_week:"Week 12", w5_sub:"Final", w5_tag:"Programme completion",
+    w5_title:"Final session and a six-month forward plan",
+    w5_desc:"At the final meeting we summarise and document your results. You receive a written plan for the next 6 months covering nutrition, nutraceuticals and lifestyle. A strong foundation to keep moving forward.",
+    w5_c1:"Final 60-min session", w5_c2:"Lab comparison", w5_c3:"6-month nutrition plan", w5_c4:"Maintenance nutraceuticals", w5_c5:"Written document",
+    inc_title: "What is included in <em>the accompaniment programme</em>",
+    acci1_t:"12 online sessions, 60 min each", acci1_d:"Weekly Zoom or Meet session. Progress review, Q and A, and real-time protocol adjustments.",
+    acci2_t:"Personal nutrition protocol", acci2_d:"Written document after the first session. Tailored to your biochemical profile, symptoms and lifestyle, not a template.",
+    acci3_t:"Nutraceutical list with dosages", acci3_d:"Written supplement list with precise doses for your deficiency profile. Evidence-based, with nothing unnecessary.",
+    acci4_t:"Between-session support", acci4_d:"Chat and voice support in Telegram or WhatsApp, whichever you prefer. I answer your questions between calls.",
+    acci5_t:"Follow-up testing and comparison", acci5_d:"Panel at week 11 with side-by-side comparison to baseline so changes are clear in numbers.",
+    acci6_t:"Final six-month plan", acci6_d:"Written guidance on nutrition, nutraceuticals and lifestyle to continue your journey with confidence.",
+    care_tag:"After the programme · Optional",
+    care_title:"VIA-L <em>Care</em> —<br>result maintenance programme",
+    care_desc:"For people who want to preserve and build on results after the core programme. Weekly feedback, ongoing support and timely adjustments help changes last.",
+    care_i1_t:"Weekly feedback", care_i1_d:"Chat or a short call for steady support without gaps",
+    care_i2_t:"Adjustments when life changes", care_i2_d:"Seasons, stress, travel: we adapt the protocol together",
+    care_i3_t:"Lab monitoring", care_i3_d:"We track markers and adjust nutraceuticals as needed",
+    care_i4_t:"You are not on your own", care_i4_d:"Results hold better when someone is alongside you",
+    quote: "\"Changes that become part of your life<br>are not the result of willpower.<br>They are the result of <em>the right support</em>.\"",
+    btn_slots:"Available slots for an intro call",
+    btn_pay:"Pay for accompaniment",
+    acc_note:"✦ Online · Worldwide · UA / RU / ES / EN"
+  }
+};
+
+// ─── Применить язык ───
+function accApplyLang(lang) {
+  var t = ACC_LANGS[lang] || ACC_LANGS.uk;
+  document.querySelectorAll('[data-acc-i18n]').forEach(function(el) {
+    var key = el.getAttribute('data-acc-i18n');
+    if (t[key] !== undefined) el.innerHTML = t[key];
+  });
+  // Синхронизировать кнопки switcher
+  document.querySelectorAll('.acc-lang-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.textContent.toLowerCase() === lang);
+  });
+  // Сохранить выбор
+  try { localStorage.setItem('selectedLang', lang); } catch(e) {}
+}
+
+function accSetLang(lang) {
+  accApplyLang(lang);
+}
+
+// ─── Инициализация ───
+(function() {
+  // Синхронизируется с языком страницы если он уже выбран
+  var saved = '';
+  try { saved = localStorage.getItem('selectedLang') || ''; } catch(e) {}
+  // Нормализация: 'ua' → 'uk'
+  if (saved === 'ua') saved = 'uk';
+  var lang = ACC_LANGS[saved] ? saved : 'uk';
+  accApplyLang(lang);
+})();
+</script>
+
+</body>
+</html>

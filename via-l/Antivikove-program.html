@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Антивікове Харчування · Програма · VIA-L</title>
+  <meta name="description" content="Персоналізована програма антивікового харчування. Уповільнення біологічного старіння через нутриціологію. Мітохондрії, аутофагія, NAD+. VIA-L Longevity.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream:     #F5F3EF;
+      --cream-dk:  #EDE9E2;
+      --cream-md:  #E8E3DA;
+      --gold:      #8B6F47;
+      --gold-lt:   #B8955A;
+      --gold-pale: #D4B896;
+      --gold-xp:   #F4EDE3;
+      --text:      #140E05;
+      --text-mid:  #2C1F10;
+      --text-lt:   #4A3520;
+      --line:      rgba(139,111,71,.15);
+      /* Program accent — deep forest green for longevity/nature theme */
+      --accent:    #2D4A3E;
+      --accent-lt: #3D6455;
+      --accent-pale: rgba(45,74,62,.12);
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--cream);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      font-size: 17px;
+      line-height: 1.75;
+    }
+
+    /* ═══ NAV ═══ */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 300;
+      display: grid; grid-template-columns: 1fr auto 1fr;
+      align-items: center; padding: 10px 48px;
+      background: transparent; border-bottom: 1px solid transparent;
+      transition: border-color .3s, background .4s, box-shadow .3s;
+    }
+    nav.scrolled { background: var(--cream); border-color: var(--line); box-shadow: 0 2px 20px rgba(44,36,23,.06); }
+    .nav-left { display: flex; align-items: center; }
+    .nav-back { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-lt); text-decoration: none; display: flex; align-items: center; gap: 7px; transition: color .3s; white-space: nowrap; }
+    .nav-back:hover { color: var(--gold); }
+    .nav-back::before { content: '←'; font-size: 12px; }
+    .nav-logo-wrap { display: flex; flex-direction: column; align-items: center; text-decoration: none; justify-self: center; }
+    .nav-logo { font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 700; letter-spacing: 5px; color: var(--text); line-height: 1; }
+    .logo-line { height: 1px; background: var(--gold); margin: 3px 0; align-self: stretch; opacity: 0.75; }
+    .logo-sub { font-size: 8px; letter-spacing: 4px; text-transform: uppercase; color: var(--gold); font-weight: 500; }
+    .nav-right { display: flex; justify-content: flex-end; align-items: center; }
+    .lang-switcher { position: relative; }
+    .lang-btn { display: flex; align-items: center; gap: 5px; background: rgba(245,243,239,.72); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(139,111,71,.22); padding: 6px 12px; border-radius: 50px; cursor: pointer; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--text); white-space: nowrap; font-family: 'DM Sans', sans-serif; transition: border-color .3s; }
+    .lang-btn:hover { border-color: var(--gold-pale); }
+    nav.scrolled .lang-btn { background: none; backdrop-filter: none; border-color: var(--line); }
+    .lang-flag { font-size: 13px; }
+    .lang-arrow { font-size: 6px; color: var(--text-lt); transition: transform .2s; display: inline-block; }
+    .lang-switcher.open .lang-arrow { transform: rotate(180deg); }
+    .lang-dropdown { display: none; position: absolute; top: calc(100% + 6px); right: 0; background: var(--cream); border: 1px solid var(--gold-pale); border-radius: 12px; overflow: hidden; min-width: 170px; box-shadow: 0 8px 24px rgba(90,70,40,.18); z-index: 9999; }
+    .lang-switcher.open .lang-dropdown { display: block; }
+    .lang-option { display: flex; align-items: center; gap: 10px; padding: 11px 16px; cursor: pointer; font-size: 14px; color: var(--text-mid); transition: background .2s; position: relative; }
+    .lang-option:hover { background: var(--cream-dk); }
+    .lang-option .flag { font-size: 16px; }
+    .lang-option .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); position: absolute; right: 14px; opacity: 0; }
+    .lang-option.active .dot { opacity: 1; }
+    .lang-option.active { color: var(--text); font-weight: 500; }
+    .btn-secondary { display: inline-block; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); border: 1px solid rgba(139,111,71,.45); background: transparent; padding: 13px 28px; border-radius: 50px; text-decoration: none; font-weight: 500; transition: all .3s; cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
+    .btn-secondary:hover { background: rgba(139,111,71,.06); border-color: var(--gold); }
+    .hero-btns { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    @media (max-width: 680px) {
+      nav { padding: 10px 18px; }
+      .nav-back { font-size: 9px; letter-spacing: 1.5px; }
+      .nav-logo { font-size: 15px; letter-spacing: 4px; }
+      .logo-sub { font-size: 7px; letter-spacing: 3px; }
+      .lang-btn { font-size: 10px; padding: 5px 9px; }
+      .hero-btns { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* ═══ HERO ═══ */
+    #hero {
+      min-height: 100svh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: stretch;
+      padding-top: 72px;
+      position: relative;
+    }
+    .hero-left {
+      display: flex; flex-direction: column; justify-content: center;
+      padding: clamp(48px,8vh,96px) clamp(24px,4vw,64px) clamp(48px,8vh,80px) clamp(44px,6vw,112px);
+      position: relative; z-index: 1;
+    }
+    .hero-right { position: relative; overflow: hidden; }
+    .hero-img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
+    .hero-right::before {
+      content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 14%; z-index: 1;
+      background: linear-gradient(to right,
+        rgba(245,243,239,.98) 0%,
+        rgba(245,243,239,.86) 18%,
+        rgba(245,243,239,.48) 46%,
+        rgba(245,243,239,0) 100%);
+    }
+    .hero-right::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 180px; z-index: 1;
+      background: linear-gradient(to top, var(--cream) 0%, transparent 100%);
+    }
+
+    .prog-tag { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .prog-tag::before { content: ''; width: 22px; height: 1px; background: var(--gold-pale); }
+    .prog-tag span { font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); font-weight: 500; }
+
+    .hero-title { font-family: 'Playfair Display', serif; font-size: clamp(36px, 3.6vw, 54px); font-weight: 500; line-height: 1.1; color: var(--text); margin-bottom: 6px; }
+    .hero-title em { font-style: italic; color: var(--gold); }
+    .hero-subtitle { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: clamp(20px, 2vw, 26px); color: var(--text-mid); margin-bottom: 24px; line-height: 1.35; }
+    .hero-divider { width: 28px; height: 1px; background: var(--gold-pale); margin-bottom: 20px; }
+    .hero-desc { font-size: clamp(14px,1vw,16px); font-weight: 300; line-height: 1.85; color: var(--text-mid); max-width: 420px; margin-bottom: 32px; }
+    .hero-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+    .pill { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); border: 0.5px solid rgba(139,111,71,.35); padding: 6px 14px; border-radius: 50px; }
+    .btn-primary { display: inline-block; font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--text); border: 1px solid rgba(139,111,71,.4); background: rgba(245,243,239,.6); backdrop-filter: blur(12px); padding: 14px 36px; border-radius: 50px; text-decoration: none; font-weight: 500; transition: all .3s; box-shadow: 0 4px 24px rgba(139,111,71,.1), inset 0 1px 0 rgba(255,255,255,.8); cursor: pointer; font-family: 'DM Sans', sans-serif; }
+    .btn-primary:hover { background: rgba(255,255,255,.85); border-color: var(--gold-pale); box-shadow: 0 8px 28px rgba(139,111,71,.16); }
+    .hero-note { margin-top: 14px; font-size: 12px; color: var(--gold); opacity: .75; font-style: italic; }
+
+    /* ═══ QUOTE BRIDGE ═══ */
+    .quote-bridge { background: var(--cream); border-top: 1px solid rgba(139,111,71,.08); padding: 56px clamp(24px,6vw,96px); text-align: center; }
+    .bridge-quote { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: clamp(22px, 2.2vw, 32px); font-weight: 500; line-height: 1.5; color: var(--text); max-width: 860px; margin: 0 auto 16px; }
+    .bridge-author-row { display: flex; align-items: center; justify-content: center; gap: 12px; }
+    .bridge-line { width: 100px; height: 1px; background: linear-gradient(to right, rgba(139,111,71,.12), rgba(139,111,71,.5), rgba(139,111,71,.12)); }
+    .bridge-author { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--text-mid); opacity: .7; }
+
+    /* ═══ SECTIONS SHARED ═══ */
+    section { padding: 80px clamp(24px,6vw,96px); }
+    .section-eyebrow { font-size: 11px; font-weight: 500; letter-spacing: .22em; color: var(--gold); text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
+    .section-eyebrow::before, .section-eyebrow::after { content: ''; display: block; height: 1px; background: var(--gold-pale); width: 32px; }
+    .section-title { font-family: 'Playfair Display', serif; font-size: clamp(28px, 2.8vw, 40px); font-weight: 400; line-height: 1.15; color: var(--text); margin-bottom: 16px; }
+    .section-title em { font-style: italic; color: var(--gold); }
+    .section-desc { font-size: 15px; font-weight: 300; line-height: 1.85; color: var(--text-mid); max-width: 600px; }
+
+    /* ═══ FOR WHOM ═══ */
+    #for-whom { background: var(--cream-dk); }
+    .for-whom-inner { max-width: 1200px; margin: 0 auto; }
+    .for-whom-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; margin-top: 48px; border: 1px solid var(--line); border-radius: 2px; }
+    .fw-card { padding: 32px 28px; background: var(--cream); border-right: 1px solid var(--line); transition: background .3s; }
+    .fw-card:last-child { border-right: none; }
+    .fw-card:hover { background: var(--gold-xp); }
+    .fw-card-icon { font-size: 22px; margin-bottom: 14px; }
+    .fw-card-text { font-size: 15px; font-style: italic; font-family: 'Cormorant Garamond', serif; color: var(--text-mid); line-height: 1.55; margin-bottom: 10px; }
+    .fw-card-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); }
+    .for-whom-not { margin-top: 32px; padding: 24px 28px; border: 0.5px solid var(--line); border-radius: 2px; background: rgba(245,243,239,.5); }
+    .for-whom-not p { font-size: 14px; color: var(--text-lt); line-height: 1.7; }
+    .for-whom-not strong { font-weight: 500; color: var(--text); }
+
+    /* ═══ BIOCHEMISTRY / MECHANISMS ═══ */
+    #biochem { background: var(--cream); }
+    .biochem-inner { max-width: 1200px; margin: 0 auto; }
+    .biochem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 48px; align-items: start; }
+    .chain-list { display: flex; flex-direction: column; gap: 0; }
+    .chain-item { display: grid; grid-template-columns: 40px 1fr; gap: 16px; padding: 20px 0; border-bottom: 1px solid var(--line); align-items: start; }
+    .chain-item:last-child { border-bottom: none; }
+    .chain-arrow { font-size: 10px; letter-spacing: 1px; color: var(--gold-pale); padding-top: 4px; font-weight: 500; }
+    .chain-text strong { font-size: 14px; font-weight: 500; color: var(--text); display: block; margin-bottom: 3px; }
+    .chain-text span { font-size: 13px; color: var(--text-lt); line-height: 1.55; }
+    .chain-symptom { display: inline-block; margin-top: 6px; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); border: 0.5px solid rgba(139,111,71,.3); padding: 3px 10px; border-radius: 50px; }
+    .biochem-insight { background: var(--cream-dk); padding: 36px; border-radius: 2px; border-left: 2px solid var(--gold-pale); position: sticky; top: 100px; }
+    .insight-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 400; color: var(--text); margin-bottom: 16px; line-height: 1.3; }
+    .insight-body { font-size: 14px; font-weight: 300; line-height: 1.85; color: var(--text-mid); margin-bottom: 20px; }
+    .insight-list { list-style: none; }
+    .insight-list li { font-size: 14px; color: var(--text-lt); padding: 8px 0 8px 20px; border-bottom: 1px solid var(--line); position: relative; }
+    .insight-list li:last-child { border-bottom: none; }
+    .insight-list li::before { content: '✦'; position: absolute; left: 0; font-size: 7px; top: 11px; color: var(--gold-pale); }
+
+    /* ═══ PILLARS (NMN, NAD+, etc.) ═══ */
+    #pillars { background: var(--cream-dk); }
+    .pillars-inner { max-width: 1200px; margin: 0 auto; }
+    .pillars-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; margin-top: 48px; }
+    .pillar-card { background: var(--cream); padding: 36px 32px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); transition: background .3s, box-shadow .3s; position: relative; }
+    .pillar-card:hover { background: var(--gold-xp); box-shadow: 0 8px 32px rgba(139,111,71,.08); }
+    .pillar-num { font-family: 'Cormorant Garamond', serif; font-size: 44px; color: var(--gold-pale); line-height: 1; margin-bottom: 12px; display: block; }
+    .pillar-name { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 400; color: var(--text); margin-bottom: 8px; line-height: 1.3; }
+    .pillar-sub { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 14px; }
+    .pillar-text { font-size: 14px; font-weight: 300; line-height: 1.8; color: var(--text-lt); }
+    .pillar-tag { display: inline-block; margin-top: 14px; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-lt); border: 0.5px solid var(--line); padding: 4px 10px; border-radius: 50px; }
+
+    /* ═══ PROGRAM STAGES ═══ */
+    #stages { background: var(--cream); }
+    .stages-inner { max-width: 1200px; margin: 0 auto; }
+    .stages-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 48px; }
+    .stage-card { padding: 32px; border: 1px solid var(--line); border-radius: 2px; background: var(--cream); position: relative; transition: border-color .3s, background .3s; }
+    .stage-card:hover { border-color: var(--gold-pale); background: var(--gold-xp); }
+    .stage-card.full-width { grid-column: span 2; }
+    .stage-num { font-family: 'Cormorant Garamond', serif; font-size: 56px; color: var(--gold-pale); line-height: 1; margin-bottom: 8px; opacity: .5; }
+    .stage-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 400; color: var(--text); margin-bottom: 10px; line-height: 1.3; }
+    .stage-body { font-size: 14px; font-weight: 300; line-height: 1.85; color: var(--text-lt); }
+    .stage-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+    .stage-tag { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); border: 0.5px solid rgba(139,111,71,.3); padding: 4px 10px; border-radius: 50px; }
+
+    /* ═══ RESULTS ═══ */
+    #results { background: var(--accent); padding: 96px clamp(24px,6vw,96px); }
+    .results-inner { max-width: 1200px; margin: 0 auto; }
+    .results-eyebrow { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(245,243,239,.5); margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
+    .results-eyebrow::before, .results-eyebrow::after { content: ''; display: block; height: 1px; background: rgba(245,243,239,.15); width: 24px; }
+    .results-title { font-family: 'Playfair Display', serif; font-size: clamp(28px, 2.8vw, 40px); font-weight: 400; line-height: 1.15; color: var(--cream); margin-bottom: 48px; }
+    .results-title em { font-style: italic; color: var(--gold-pale); }
+    .results-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid rgba(245,243,239,.08); }
+    .result-card { padding: 36px 28px; border-right: 1px solid rgba(245,243,239,.06); }
+    .result-card:last-child { border-right: none; }
+    .result-timeline { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-pale); margin-bottom: 12px; display: block; }
+    .result-heading { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 400; color: var(--cream); margin-bottom: 10px; line-height: 1.3; }
+    .result-text { font-size: 14px; font-weight: 300; line-height: 1.8; color: rgba(245,243,239,.7); }
+    .results-disclaimer { margin-top: 40px; padding-top: 28px; border-top: 1px solid rgba(245,243,239,.08); font-size: 12px; color: rgba(245,243,239,.4); font-style: italic; text-align: center; }
+
+    /* ═══ ANALYSES ═══ */
+    #analyses { background: var(--cream-dk); }
+    .analyses-inner { max-width: 1200px; margin: 0 auto; }
+    .analyses-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; margin-top: 48px; }
+    .analysis-card { padding: 28px 24px; background: var(--cream); border-right: 1px solid var(--line); }
+    .analysis-card:last-child { border-right: none; }
+    .analysis-marker { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+    .analysis-optimal { font-size: 11px; letter-spacing: 1px; color: var(--gold); margin-bottom: 8px; }
+    .analysis-why { font-size: 13px; font-weight: 300; line-height: 1.65; color: var(--text-lt); }
+    .analyses-note { margin-top: 24px; padding: 20px 28px; background: rgba(245,243,239,.7); border-left: 2px solid rgba(184,149,90,.4); font-size: 13px; color: var(--text-lt); line-height: 1.7; font-style: italic; }
+
+    /* ═══ CTA ═══ */
+    #cta { background: var(--cream); text-align: center; padding: 96px clamp(24px,6vw,96px); }
+    .cta-inner { max-width: 680px; margin: 0 auto; }
+    .cta-eyebrow { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 24px; display: block; }
+    .cta-title { font-family: 'Playfair Display', serif; font-size: clamp(32px,3.2vw,48px); font-weight: 400; line-height: 1.15; color: var(--text); margin-bottom: 20px; }
+    .cta-title em { font-style: italic; color: var(--gold); }
+    .cta-desc { font-size: 15px; font-weight: 300; line-height: 1.9; color: var(--text-mid); margin-bottom: 40px; max-width: 520px; margin-left: auto; margin-right: auto; }
+    .cta-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+    .btn-ghost { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-lt); border: 0.5px solid rgba(139,111,71,.25); padding: 13px 28px; border-radius: 50px; text-decoration: none; transition: all .3s; }
+    .btn-ghost:hover { border-color: var(--gold-pale); color: var(--text); }
+    .cta-note { font-size: 13px; color: var(--gold); opacity: .7; font-style: italic; }
+
+    /* ═══ FOOTER ═══ */
+    footer { background: var(--text); padding: 40px clamp(24px,6vw,96px); display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(245,243,239,.06); }
+    .footer-logo { font-family: 'Playfair Display', serif; font-size: 18px; letter-spacing: 6px; color: var(--cream); font-weight: 700; }
+    .footer-copy { font-size: 11px; letter-spacing: 1.5px; color: rgba(245,243,239,.35); text-transform: uppercase; }
+    .footer-tagline { font-size: 12px; color: rgba(245,243,239,.4); font-style: italic; font-family: 'Cormorant Garamond', serif; }
+
+    /* ═══ MODAL ═══ */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(20,14,5,.55); backdrop-filter: blur(6px); z-index: 1000; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--cream); border-radius: 20px; padding: 40px 44px; max-width: 480px; width: 90%; position: relative; box-shadow: 0 32px 80px rgba(20,14,5,.22); }
+    .modal-close { position: absolute; top: 16px; right: 20px; background: none; border: none; font-size: 18px; color: var(--text-mid); cursor: pointer; opacity: .55; transition: opacity .2s; }
+    .modal-close:hover { opacity: 1; }
+    .modal-icon { font-size: 28px; margin-bottom: 12px; }
+    .modal-eyebrow { font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+    .modal-title { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 400; line-height: 1.2; color: var(--text); margin-bottom: 12px; }
+    .modal-title em { font-style: italic; color: var(--gold); }
+    .modal-body { font-size: 14px; font-weight: 300; line-height: 1.8; color: var(--text-mid); margin-bottom: 24px; }
+    .modal-divider { height: 1px; background: var(--line); margin-bottom: 20px; }
+    .modal-channels { display: flex; flex-direction: column; gap: 10px; }
+    .modal-ch { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border: 0.5px solid var(--line); border-radius: 10px; text-decoration: none; transition: background .2s, border-color .2s; }
+    .modal-ch:hover { background: var(--gold-xp); border-color: var(--gold-pale); }
+    .modal-ch-icon { font-size: 18px; flex-shrink: 0; }
+    .modal-ch-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); margin-bottom: 2px; }
+    .modal-ch-desc { font-size: 12px; font-weight: 300; color: var(--text-lt); }
+
+    /* ═══ RESPONSIVE ═══ */
+    @media (max-width: 900px) {
+      nav { padding: 14px 24px; }
+      #hero { grid-template-columns: 1fr; min-height: auto; padding-top: 72px; }
+      .hero-right { height: 55vw; min-height: 280px; }
+      .hero-right::before { background: linear-gradient(to top, var(--cream) 0%, transparent 60%); }
+      .hero-left { padding: 32px 24px 40px; }
+      .biochem-grid, .stages-grid { grid-template-columns: 1fr; }
+      .stage-card.full-width { grid-column: span 1; }
+      .for-whom-grid { grid-template-columns: 1fr; }
+      .fw-card { border-right: none; border-bottom: 1px solid var(--line); }
+      .results-grid, .analyses-grid { grid-template-columns: 1fr; }
+      .result-card, .analysis-card { border-right: none; border-bottom: 1px solid rgba(245,243,239,.06); }
+      .analysis-card { border-bottom-color: var(--line); }
+      .biochem-insight { position: static; }
+      .pillars-grid { grid-template-columns: 1fr; }
+      footer { flex-direction: column; gap: 12px; text-align: center; }
+    }
+  </style>
+
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+
+<nav id="nav">
+  <div class="nav-left">
+    <a href="index.html" class="nav-back" id="nav_back" data-i18n="nav_back">Програми</a>
+  </div>
+  <a href="index.html" class="nav-logo-wrap">
+    <span class="nav-logo">VIA–L</span>
+    <div class="logo-line"></div>
+    <span class="logo-sub">Longevity</span>
+  </a>
+  <div class="nav-right">
+    <div class="lang-switcher" id="langSwitcher">
+      <button class="lang-btn" onclick="toggleLangMenu()" aria-label="Language">
+        <span class="lang-flag" id="currentFlag">🇺🇦</span>
+        <span id="currentLangLabel">UA</span>
+        <span class="lang-arrow">▼</span>
+      </button>
+      <div class="lang-dropdown" id="langDropdown">
+        <div class="lang-option active" data-lang="uk" onclick="setLang('uk')"><span class="flag">🇺🇦</span>Українська<span class="dot"></span></div>
+        <div class="lang-option" data-lang="ru" onclick="setLang('ru')"><span class="flag">🇷🇺</span>Русский<span class="dot"></span></div>
+        <div class="lang-option" data-lang="es" onclick="setLang('es')"><span class="flag">🇪🇸</span>Español<span class="dot"></span></div>
+        <div class="lang-option" data-lang="en" onclick="setLang('en')"><span class="flag">🇬🇧</span>English<span class="dot"></span></div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+
+<section id="hero">
+  <div class="hero-left">
+    <div class="prog-tag"><span id="hero_tag" data-i18n="hero_tag">⬡ Антивікове · Програма супроводу</span></div>
+    <h1 class="hero-title" data-i18n="hero_title">
+      Антивікове<br>
+      <em>Харчування</em>
+    </h1>
+    <p class="hero-subtitle" data-i18n="hero_subtitle">Уповільнити старіння —<br>це питання біохімії, не калорій.</p>
+    <div class="hero-divider"></div>
+    <p class="hero-desc" data-i18n="hero_desc">Після 40 тіло старіє не тому що «час прийшов». Мітохондрії виробляють менше енергії. NAD+ падає. Аутофагія сповільнюється. Кожен із цих процесів — мішень для харчування. Це не біохакінг. Це доказова нутриціологія довголіття.</p>
+    <div class="hero-pills">
+      <span class="pill" id="pill1" data-i18n="pill1">Біологічний вік</span>
+      <span class="pill" id="pill2" data-i18n="pill2">NMN · NAD+ · Ресвератрол</span>
+      <span class="pill" id="pill3" data-i18n="pill3">Аутофагія</span>
+      <span class="pill" id="pill4" data-i18n="pill4">Онлайн · UA / RU / ES / EN</span>
+    </div>
+    <div class="hero-btns">
+      <button class="btn-primary" id="btn_consult" data-i18n="btn_consult" onclick="openModal('contactModal')">Записатися на консультацію</button>
+      <button class="btn-secondary" id="btn_how" data-i18n="btn_how" onclick="document.getElementById('stages').scrollIntoView({behavior:'smooth'})">Як влаштована програма</button>
+    </div>
+    <p class="hero-note" data-i18n="hero_note">✦ Знайомство — 15 хвилин, безкоштовно, без зобов'язань</p>
+  </div>
+  <div class="hero-right">
+    <img class="hero-img"
+      src="images/%20Антивозрастное%20Питание.PNG"
+      alt="Антивікове харчування — VIA-L програма"
+      onerror="this.style.background='#EDE9E2';this.removeAttribute('src')">
+  </div>
+</section>
+
+<!-- ═══ QUOTE BRIDGE ═══ -->
+
+<div class="quote-bridge">
+  <p class="bridge-quote" data-i18n="bridge_quote">«Біологічний вік — це не вирок. Це змінна, з якою можна працювати.»</p>
+  <div class="bridge-author-row">
+    <div class="bridge-line"></div>
+    <span class="bridge-author">Maryna Datsenko · VIA-L</span>
+    <div class="bridge-line"></div>
+  </div>
+</div>
+
+<!-- ═══ FOR WHOM ═══ -->
+
+<section id="for-whom">
+  <div class="for-whom-inner">
+    <div class="section-eyebrow" data-i18n="fw_ey">Для кого</div>
+    <h2 class="section-title" data-i18n="fw_title">Ви впізнаєте себе тут?</h2>
+    <p class="section-desc" data-i18n="fw_desc">Ці ситуації я чую найчастіше. Якщо хоча б одна відгукується — ми можемо допомогти.</p>
+    <div class="for-whom-grid">
+      <div class="fw-card">
+        <div class="fw-card-icon">⚡</div>
+        <p class="fw-card-text" id="fw1_q">«Я роблю все правильно — сплю, рухаюся, харчуюся. Але відновлення стало значно довшим. Тіло не встигає за темпом.»</p>
+        <div class="fw-card-label" id="fw1_l">Сповільнене відновлення</div>
+      </div>
+      <div class="fw-card">
+        <div class="fw-card-icon">🧠</div>
+        <p class="fw-card-text" id="fw2_q">«Когнітивна чіткість не та, що 5 років тому. Туман у голові, важче концентруватися, пам'ять не так гостра.»</p>
+        <div class="fw-card-label" id="fw2_l">Когнітивний спад</div>
+      </div>
+      <div class="fw-card">
+        <div class="fw-card-icon">📈</div>
+        <p class="fw-card-text" id="fw3_q">«Хочу діяти проактивно — не чекати симптомів, а налаштувати метаболізм на довголіття зараз.»</p>
+        <div class="fw-card-label" id="fw3_l">Інвестиція в довголіття</div>
+      </div>
+      <div class="fw-card">
+        <div class="fw-card-icon">🪞</div>
+        <p class="fw-card-text" id="fw4_q">«Шкіра, волосся, загальний вигляд змінилися після 40. Хочу підтримку зсередини — через харчування, не косметику.»</p>
+        <div class="fw-card-label" id="fw4_l">Зовнішні зміни після 40</div>
+      </div>
+      <div class="fw-card">
+        <div class="fw-card-icon">🧬</div>
+        <p class="fw-card-text" id="fw5_q">«Цікавлюся темою біохакінгу та NAD+, але не хочу діяти наосліп — потрібний фахівець, який розуміє доказову базу.»</p>
+        <div class="fw-card-label" id="fw5_l">Доказовий підхід до anti-aging</div>
+      </div>
+      <div class="fw-card">
+        <div class="fw-card-icon">🔋</div>
+        <p class="fw-card-text" id="fw6_q">«Енергія впала — але не критично. Лікарі кажуть "все в нормі". Я відчуваю, що тіло може більше.»</p>
+        <div class="fw-card-label" id="fw6_l">Субоптимальна енергія</div>
+      </div>
+    </div>
+    <div class="for-whom-not">
+      <p id="fw_not_body"><strong id="fw_not_title">Ця програма не підходить, якщо:</strong> ви шукаєте "швидке схуднення за 2 тижні", не готові здавати аналізи та відстежувати динаміку, або потребуєте медичного лікування гострих захворювань. Нутриціолог працює з харчуванням та способом життя, а не з діагнозами.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ BIOCHEMISTRY ═══ -->
+
+<section id="biochem">
+  <div class="biochem-inner">
+    <div class="section-eyebrow" data-i18n="bc_ey">Біохімія</div>
+    <h2 class="section-title" id="bc_title">Чому тіло <em>старіє</em> — і де харчування<br>втручається в цей процес</h2>
+    <p class="section-desc" id="bc_desc">Старіння — це не одна причина. Це каскад взаємопов'язаних процесів. Харчування може впливати на кожне ланцюжко одночасно.</p>
+    <div class="biochem-grid">
+      <div class="chain-list">
+        <div class="chain-item">
+          <div class="chain-arrow">↓</div>
+          <div class="chain-text">
+            <strong id="ch1_t">Падіння NAD+</strong>
+            <span id="ch1_b">Після 40 рівень NAD+ знижується на 40–50%. NAD+ — ключовий кофактор енергетичного метаболізму та активації сиртуїнів (білків довголіття). Без нього мітохондрії виробляють менше АТФ.</span>
+            <span class="chain-symptom" id="ch1_s">Втома · Сповільнений метаболізм</span>
+          </div>
+        </div>
+        <div class="chain-item">
+          <div class="chain-arrow">↓</div>
+          <div class="chain-text">
+            <strong id="ch2_t">Мітохондріальна дисфункція</strong>
+            <span id="ch2_b">Мітохондрії — «енергетичні станції» клітин. З віком вони накопичують пошкодження, виробляють більше вільних радикалів і менше АТФ. Наслідок: хронічна втома, запалення, уповільнене відновлення.</span>
+            <span class="chain-symptom" id="ch2_s">Втома · Запалення · М'язова слабкість</span>
+          </div>
+        </div>
+        <div class="chain-item">
+          <div class="chain-arrow">↓</div>
+          <div class="chain-text">
+            <strong id="ch3_t">Сповільнення аутофагії</strong>
+            <span id="ch3_b">Аутофагія — це самоочищення клітин: видалення пошкоджених компонентів. Після 40 цей процес сповільнюється. Клітинне сміття накопичується, прискорюючи старіння та підвищуючи ризик нейродегенерації.</span>
+            <span class="chain-symptom" id="ch3_s">Когнітивний спад · Запалення</span>
+          </div>
+        </div>
+        <div class="chain-item">
+          <div class="chain-arrow">↑</div>
+          <div class="chain-text">
+            <strong id="ch4_t">Хронічне запалення (inflammaging)</strong>
+            <span id="ch4_b">Старіння супроводжується фоновим запаленням низького рівня. Воно прискорює скорочення теломер, пошкоджує мітохондрії та підвищує ризик хронічних захворювань на 25–30%.</span>
+            <span class="chain-symptom" id="ch4_s">Прискорене старіння · Серцево-судинний ризик</span>
+          </div>
+        </div>
+        <div class="chain-item">
+          <div class="chain-arrow">↓</div>
+          <div class="chain-text">
+            <strong id="ch5_t">Скорочення теломер</strong>
+            <span id="ch5_b">Теломери — «захисні ковпачки» хромосом. Кожен поділ клітини скорочує їх. Запалення, стрес та дефіцити прискорюють цей процес. Довжина теломер — один із біомаркерів біологічного віку.</span>
+            <span class="chain-symptom" id="ch5_s">Біологічне старіння · Клітинне старіння</span>
+          </div>
+        </div>
+      </div>
+      <div class="biochem-insight">
+        <h3 class="insight-title" id="ins_title">Де харчування може вплинути</h3>
+        <p class="insight-body" id="ins_body">Кожне ланцюжко процесу старіння відповідає на конкретні нутрієнти та стратегії харчування. Це не «корисне харчування» в загальному сенсі — це цілеспрямована робота з молекулярними механізмами.</p>
+        <ul class="insight-list">
+          <li id="ins_li1">NMN і ніацин — попередники NAD+, підтримують енергетику клітин</li>
+          <li id="ins_li2">Ресвератрол і кверцетин — активатори сиртуїнів та AMPK</li>
+          <li id="ins_li3">Інтервальне харчування — потужний тригер аутофагії</li>
+          <li id="ins_li4">Омега-3 і куркумін — знижують маркери inflammaging</li>
+          <li id="ins_li5">Метилдонори (B9, B12, холін) — підтримують метилювання ДНК</li>
+          <li id="ins_li6">Антиоксиданти з їжі — захист мітохондрій від окисного стресу</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PILLARS ═══ -->
+
+<section id="pillars">
+  <div class="pillars-inner">
+    <div class="section-eyebrow" data-i18n="pl_ey">Інструменти програми</div>
+    <h2 class="section-title" id="pl_title">Чотири напрямки<br><em>антивікової стратегії</em></h2>
+    <p class="section-desc" id="pl_desc">Не добавки самі по собі — а стратегія, де кожен інструмент посилює дію інших. Починаємо з харчування, нутрицевтики — як підсилення.</p>
+    <div class="pillars-grid">
+      <div class="pillar-card">
+        <span class="pillar-num">01</span>
+        <div class="pillar-name" id="pl1_name">Мітохондріальна підтримка</div>
+        <div class="pillar-sub" id="pl1_sub">Енергія на клітинному рівні</div>
+        <p class="pillar-text" id="pl1_text">Відновлення функції мітохондрій через харчування та цільові нутрицевтики. NMN як попередник NAD+. CoQ10 для ланцюга перенесення електронів. Магній — для понад 300 ферментативних реакцій. Протокол харчування, що мінімізує окисний стрес.</p>
+        <span class="pillar-tag" id="pl1_tag">NMN · CoQ10 · Магній · Антиоксиданти</span>
+      </div>
+      <div class="pillar-card">
+        <span class="pillar-num">02</span>
+        <div class="pillar-name" id="pl2_name">NAD+ та сиртуїнова вісь</div>
+        <div class="pillar-sub" id="pl2_sub">Молекули довголіття</div>
+        <p class="pillar-text" id="pl2_text">Сиртуїни — білки, що регулюють старіння, метаболізм і відновлення ДНК. Їх активність залежить від NAD+. Ресвератрол, кверцетин та фізерин — дієтарні активатори сиртуїнів. Стратегія харчування, що природно підвищує NAD+ через прекурсори.</p>
+        <span class="pillar-tag" id="pl2_tag">Ресвератрол · Ніацин · Сиртуїни</span>
+      </div>
+      <div class="pillar-card">
+        <span class="pillar-num">03</span>
+        <div class="pillar-name" id="pl3_name">Аутофагія та клітинне очищення</div>
+        <div class="pillar-sub" id="pl3_sub">Самовідновлення клітин</div>
+        <p class="pillar-text" id="pl3_text">Аутофагія — процес утилізації пошкоджених клітинних компонентів. Нобелівська премія 2016. Харчування є потужним регулятором: інтервальне харчування, обмеження mTOR через білковий баланс, спермідин із натуральних продуктів (паростки пшениці, нато, зрілий сир).</p>
+        <span class="pillar-tag" id="pl3_tag">Інтервальне харчування · Спермідин · mTOR</span>
+      </div>
+      <div class="pillar-card">
+        <span class="pillar-num">04</span>
+        <div class="pillar-name" id="pl4_name">Протизапальний протокол</div>
+        <div class="pillar-sub" id="pl4_sub">Знизити inflammaging</div>
+        <p class="pillar-text" id="pl4_text">Хронічне фонове запалення — один із головних двигунів старіння. Омега-3 (EPA+DHA) пригнічують прозапальні цитокіни. Куркумін блокує NF-κB — ключовий запальний медіатор. Поліфеноли з ягід, оливкова олія та хрестоцвіті — основа протоколу.</p>
+        <span class="pillar-tag" id="pl4_tag">Омега-3 · Куркумін · Поліфеноли</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ STAGES ═══ -->
+
+<section id="stages">
+  <div class="stages-inner">
+    <div class="section-eyebrow" data-i18n="st_ey">Програма</div>
+    <h2 class="section-title" id="st_title">Як влаштована<br><em>ваша програма</em></h2>
+    <p class="section-desc" id="st_desc">Чотири послідовні кроки — від базової діагностики до персонального протоколу та підтримки протягом усього шляху.</p>
+    <div class="stages-grid">
+      <div class="stage-card">
+        <div class="stage-num">01</div>
+        <div class="stage-title" id="s1_t">Первинна консультація</div>
+        <p class="stage-body" id="s1_b">Розбираємо образ життя, харчову поведінку, симптоми та цілі. Оцінюємо поточний стан метаболізму. Визначаємо, які ланцюжки старіння найбільш актуальні для вас. Формуємо точку відліку.</p>
+        <div class="stage-tags">
+          <span class="stage-tag" id="s1_tag1">Анамнез та цілі</span>
+          <span class="stage-tag" id="s1_tag2">Харчування та спосіб життя</span>
+          <span class="stage-tag" id="s1_tag3">Напрямок роботи</span>
+        </div>
+      </div>
+      <div class="stage-card">
+        <div class="stage-num">02</div>
+        <div class="stage-title" id="s2_t">Лабораторна діагностика</div>
+        <p class="stage-body" id="s2_b">Аналізуємо маркери біологічного віку, мітохондріальної функції, запалення та нутрітивні дефіцити. «Всё в нормі» за лабораторними референсами ≠ відсутність дефіцитів. Шукаємо функціональний оптимум.</p>
+        <div class="stage-tags">
+          <span class="stage-tag" id="s2_tag1">Маркери запалення</span>
+          <span class="stage-tag" id="s2_tag2">Метаболічний статус</span>
+          <span class="stage-tag" id="s2_tag3">Нутритивні дефіцити</span>
+          <span class="stage-tag" id="s2_tag4">Гормональний фон</span>
+        </div>
+      </div>
+      <div class="stage-card">
+        <div class="stage-num">03</div>
+        <div class="stage-title" id="s3_t">Персональний антивіковий протокол</div>
+        <p class="stage-body" id="s3_b">Протокол харчування під ваш біохімічний профіль. Вибір нутрицевтиків: NMN, CoQ10, омега-3, ресвератрол — тільки те, що обґрунтовано вашими даними, не загальні схеми. Стратегія інтервального харчування під ваш ритм.</p>
+        <div class="stage-tags">
+          <span class="stage-tag" id="s3_tag1">Протокол харчування</span>
+          <span class="stage-tag" id="s3_tag2">Цільові нутрицевтики</span>
+          <span class="stage-tag" id="s3_tag3">Інтервальне харчування</span>
+          <span class="stage-tag" id="s3_tag4">Дорожня карта 3 місяці</span>
+        </div>
+      </div>
+      <div class="stage-card">
+        <div class="stage-num">✦</div>
+        <div class="stage-title" id="s4_t">Супровід та коригування</div>
+        <p class="stage-body" id="s4_b">Регулярні check-in сесії, відстеження динаміки маркерів, гнучке коригування протоколу. Підтримка між зустрічами. Через 8–12 тижнів — контрольні аналізи: бачимо реальні зміни в біохімії.</p>
+        <div class="stage-tags">
+          <span class="stage-tag" id="s4_tag1">Регулярні check-in</span>
+          <span class="stage-tag" id="s4_tag2">Коригування за аналізами</span>
+          <span class="stage-tag" id="s4_tag3">Підтримка між зустрічами</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ RESULTS ═══ -->
+
+<section id="results">
+  <div class="results-inner">
+    <div class="results-eyebrow" data-i18n="res_ey">Результати</div>
+    <h2 class="results-title" data-i18n="res_title">Що змінюється<br><em>через 8–16 тижнів</em></h2>
+    <div class="results-grid">
+      <div class="result-card">
+        <span class="result-timeline" id="r1_t">4–6 тижнів</span>
+        <div class="result-heading" id="r1_h">Енергія та відновлення</div>
+        <p class="result-text" id="r1_b">Рівніша, стабільніша енергія протягом дня. Менше втоми після фізичного та ментального навантаження. Глибший сон. Перший помітний ефект оптимізації мітохондрій.</p>
+      </div>
+      <div class="result-card">
+        <span class="result-timeline" id="r2_t">6–10 тижнів</span>
+        <div class="result-heading" id="r2_h">Когнітивна ясність</div>
+        <p class="result-text" id="r2_b">Зменшення туману в голові, краща концентрація та пам'ять. Протизапальний протокол знижує нейрозапалення. Стабільний рівень глюкози захищає мозок від когнітивних коливань.</p>
+      </div>
+      <div class="result-card">
+        <span class="result-timeline" id="r3_t">8–16 тижнів</span>
+        <div class="result-heading" id="r3_h">Зміни в маркерах</div>
+        <p class="result-text" id="r3_b">Зниження вч-СРБ та гомоцистеїну. Нормалізація інсуліну натощак. Відновлення ферритину та вітаміну D до функціонального оптимуму. Динаміка в аналізах — об'єктивне підтвердження стратегії.</p>
+      </div>
+    </div>
+    <p class="results-disclaimer" id="res_disc">Результати індивідуальні та залежать від вихідного стану, дотримання протоколу та супутніх чинників. Нутриціолог не замінює лікаря — для медичних діагнозів та лікування звертайтеся до профільних спеціалістів.</p>
+  </div>
+</section>
+
+<!-- ═══ ANALYSES ═══ -->
+
+<section id="analyses">
+  <div class="analyses-inner">
+    <div class="section-eyebrow" data-i18n="an_ey">Діагностика</div>
+    <h2 class="section-title" data-i18n="an_title">Ключові маркери<br>антивікового моніторингу</h2>
+    <p class="section-desc" id="an_desc">Ці показники дають реальну картину метаболічного та запального статусу. Стандартної панелі — недостатньо.</p>
+    <div class="analyses-grid">
+      <div class="analysis-card">
+        <div class="analysis-marker" id="a1_m">вч-СРБ (високочутливий)</div>
+        <div class="analysis-optimal" id="a1_o">Оптимум: &lt; 1 мг/л</div>
+        <p class="analysis-why" id="a1_w">Маркер хронічного запалення низького рівня. Стандартний СРБ його не виявляє. вч-СРБ &gt; 2 мг/л = активний inflammaging, вищий ризик серцево-судинних захворювань.</p>
+      </div>
+      <div class="analysis-card">
+        <div class="analysis-marker" id="a2_m">Гомоцистеїн</div>
+        <div class="analysis-optimal" id="a2_o">Оптимум: &lt; 7 мкмоль/л</div>
+        <p class="analysis-why" id="a2_w">При дефіциті B12, B6 та фолату гомоцистеїн накопичується, пошкоджує судини та знижує когнітивні функції. Норма лабораторії до 15 мкмоль/л — недостатньо.</p>
+      </div>
+      <div class="analysis-card">
+        <div class="analysis-marker" id="a3_m">Вітамін D 25(OH)D</div>
+        <div class="analysis-optimal" id="a3_o">Оптимум: 60–80 нг/мл</div>
+        <p class="analysis-why" id="a3_w">Вітамін D — це гормон. Регулює імунітет, захищає від нейродегенерації, підтримує м'язову функцію. Більшість людей після 40 мають субоптимальний рівень навіть влітку.</p>
+      </div>
+      <div class="analysis-card">
+        <div class="analysis-marker" id="a4_m">Інсулін натщесерце</div>
+        <div class="analysis-optimal" id="a4_o">Оптимум: 3–8 мкОД/мл</div>
+        <p class="analysis-why" id="a4_w">Хронічно підвищений інсулін прискорює mTOR, пригнічує аутофагію та посилює запалення. Норма лабораторії до 24,9 — катастрофічно висока з позиції антивікової медицини.</p>
+      </div>
+      <div class="analysis-card">
+        <div class="analysis-marker" id="a5_m">Ферритин</div>
+        <div class="analysis-optimal" id="a5_o">Оптимум: 70–100 мкг/л</div>
+        <p class="analysis-why" id="a5_w">Залізо — кофактор мітохондріального дихання. Дефіцит = пряма причина хронічної втоми та сповільненого відновлення. Гемоглобін може бути нормальним при вже виснажених запасах.</p>
+      </div>
+      <div class="analysis-card">
+        <div class="analysis-marker" id="a6_m">Магній в еритроцитах</div>
+        <div class="analysis-optimal" id="a6_o">Здати окремо (не сироватку)</div>
+        <p class="analysis-why" id="a6_w">Магній — кофактор понад 300 ферментів, включаючи АТФ-синтазу. Сироватковий магній залишається «нормальним» до кінця — тоді як клітинний запас давно виснажений.</p>
+      </div>
+    </div>
+    <div class="analyses-note" id="an_note">
+      ✦ Ця таблиця — орієнтир для розуміння, не діагноз. Інтерпретація завжди індивідуальна і залежить від ваших симптомів, анамнезу та способу життя. Детально про кожен маркер — у гайді VIA-L «Що приховують ваші аналізи».
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ПРОГРАМА СУПРОВОДУ ═══ -->
+
+<section id="accompaniment">
+  <div class="acc-inner">
+    <div class="acc-header">
+      <div>
+        <div class="acc-eyebrow" id="acc_ey">Програма супроводу</div>
+        <h2 class="acc-title" id="acc_title">12 тижнів —<br><em>поруч на кожному кроці</em></h2>
+      </div>
+      <p class="acc-subtitle" id="acc_sub">Це не разова консультація. Це <strong>системна робота</strong> — тиждень за тижнем, аналіз за аналізом. Від першого знайомства до письмового плану на наступні пів року.</p>
+    </div>
+    <div class="acc-stats">
+      <div class="acc-stat"><span class="stat-num">12</span><span class="stat-label" id="acc_s1">тижнів<br>повного супроводу</span></div>
+      <div class="acc-stat"><span class="stat-num">12</span><span class="stat-label" id="acc_s2">онлайн-сесій<br>по 60 хвилин</span></div>
+      <div class="acc-stat"><span class="stat-num">2×</span><span class="stat-label" id="acc_s3">аналізи —<br>до та після</span></div>
+      <div class="acc-stat"><span class="stat-num">6</span><span class="stat-label" id="acc_s4">місяців план<br>на завершення</span></div>
+    </div>
+    <div class="acc-timeline-wrap">
+      <h3 class="acc-timeline-title" id="acc_tl_title">Як виглядає <em>шлях клієнта</em></h3>
+      <div class="acc-timeline">
+        <div class="acc-phase"><div class="phase-left"><span class="phase-week" id="acc_w1">Тиждень 1</span><span class="phase-sublabel" id="acc_wl1">Старт</span></div><div class="phase-spine"><div class="phase-dot"></div><div class="phase-segment"></div></div><div class="phase-right"><span class="phase-tag" id="acc_t1">Крок перший</span><h4 class="phase-title" id="acc_ph1">Глибоке знайомство та діагностика</h4><p class="phase-desc" id="acc_pd1">Перша сесія — 60 хвилин. Симптоми, харчова поведінка, сон, аналізи. Визначаємо точку відліку.</p><div class="phase-chips"><span class="phase-chip" id="acc_c1_1">Аналіз симптомів</span><span class="phase-chip" id="acc_c1_2">Харчова поведінка</span><span class="phase-chip" id="acc_c1_3">Розбір аналізів</span><span class="phase-chip" id="acc_c1_4">Визначення цілей</span></div></div></div>
+        <div class="acc-phase"><div class="phase-left"><span class="phase-week" id="acc_w2">Тиждень 2</span><span class="phase-sublabel" id="acc_wl2">Протокол</span></div><div class="phase-spine"><div class="phase-dot"></div><div class="phase-segment"></div></div><div class="phase-right"><span class="phase-tag" id="acc_t2">Крок другий</span><h4 class="phase-title" id="acc_ph2">Персональний протокол у ваших руках</h4><p class="phase-desc" id="acc_pd2">Два письмових документи: протокол харчування та список нутрицевтиків з дозуваннями під ваш профіль.</p><div class="phase-chips"><span class="phase-chip" id="acc_c2_1">Протокол харчування</span><span class="phase-chip" id="acc_c2_2">Список нутрицевтиків</span><span class="phase-chip" id="acc_c2_3">Дозування під профіль</span><span class="phase-chip" id="acc_c2_4">Письмово</span></div></div></div>
+        <div class="acc-phase"><div class="phase-left"><span class="phase-week" id="acc_w3">Тижні 3–10</span><span class="phase-sublabel" id="acc_wl3">Робота</span></div><div class="phase-spine"><div class="phase-dot"></div><div class="phase-segment"></div></div><div class="phase-right"><span class="phase-tag" id="acc_t3">Серце програми</span><h4 class="phase-title" id="acc_ph3">Щотижневі сесії та підтримка між ними</h4><p class="phase-desc" id="acc_pd3">60-хвилинна зустріч щотижня. Між сесіями — чат і голосові у Telegram або WhatsApp. Ви не залишаєтесь наодинці.</p><div class="phase-chips"><span class="phase-chip">60 хв / щотижня</span><span class="phase-chip" id="acc_c3_2">Чат між сесіями</span><span class="phase-chip" id="acc_c3_3">Голосові повідомлення</span><span class="phase-chip">Telegram / WhatsApp</span></div></div></div>
+        <div class="acc-phase"><div class="phase-left"><span class="phase-week" id="acc_w4">Тиждень 11</span><span class="phase-sublabel" id="acc_wl4">Аналізи</span></div><div class="phase-spine"><div class="phase-dot"></div><div class="phase-segment"></div></div><div class="phase-right"><span class="phase-tag" id="acc_t4">Контрольна точка</span><h4 class="phase-title" id="acc_ph4">Повторні аналізи — бачимо зміни у цифрах</h4><p class="phase-desc" id="acc_pd4">Повторна панель. Порівнюємо з початком — об'єктивно, у цифрах.</p><div class="phase-chips"><span class="phase-chip" id="acc_c4_1">Повторна панель</span><span class="phase-chip" id="acc_c4_2">Порівняння з початком</span><span class="phase-chip" id="acc_c4_3">Оцінка динаміки</span></div></div></div>
+        <div class="acc-phase"><div class="phase-left"><span class="phase-week" id="acc_w5">Тиждень 12</span><span class="phase-sublabel" id="acc_wl5">Фінал</span></div><div class="phase-spine"><div class="phase-dot"></div><div class="phase-segment"></div></div><div class="phase-right"><span class="phase-tag" id="acc_t5">Завершення</span><h4 class="phase-title" id="acc_ph5">Підсумкова сесія та план на пів року</h4><p class="phase-desc" id="acc_pd5">Письмовий документ: рекомендації на 6 місяців по харчуванню, нутрицевтикам і способу життя.</p><div class="phase-chips"><span class="phase-chip" id="acc_c5_1">Підсумкова сесія</span><span class="phase-chip" id="acc_c5_2">Порівняння аналізів</span><span class="phase-chip" id="acc_c5_3">План на 6 місяців</span><span class="phase-chip" id="acc_c5_4">Письмово</span></div></div></div>
+      </div>
+    </div>
+    <h3 class="acc-included-title" id="acc_inc_title">Що входить у <em>програму супроводу</em></h3>
+    <div class="acc-grid">
+      <div class="acc-card"><span class="acc-card-icon">🗓</span><div class="acc-card-title" id="acci1_t">12 онлайн-сесій по 60 хв</div><p class="acc-card-desc" id="acci1_d">Щотижнева зустріч у Zoom або Meet. Аналіз динаміки, коригування протоколу.</p></div>
+      <div class="acc-card"><span class="acc-card-icon">📐</span><div class="acc-card-title" id="acci2_t">Персональний протокол харчування</div><p class="acc-card-desc" id="acci2_d">Письмовий документ після першої сесії. Складений під ваш профіль — не шаблон.</p></div>
+      <div class="acc-card"><span class="acc-card-icon">💊</span><div class="acc-card-title" id="acci3_t">Список нутрицевтиків з дозуваннями</div><p class="acc-card-desc" id="acci3_d">Письмовий перелік добавок з точними дозами. Лише доказова база.</p></div>
+      <div class="acc-card"><span class="acc-card-icon">💬</span><div class="acc-card-title" id="acci4_t">Підтримка між сесіями</div><p class="acc-card-desc" id="acci4_d">Чат і голосові у Telegram або WhatsApp — за вашим вибором.</p></div>
+      <div class="acc-card"><span class="acc-card-icon">🔬</span><div class="acc-card-title" id="acci5_t">Повторні аналізи та порівняння</div><p class="acc-card-desc" id="acci5_d">Здаємо панель на 11-му тижні. Зміни у цифрах, не тільки у відчуттях.</p></div>
+      <div class="acc-card"><span class="acc-card-icon">📋</span><div class="acc-card-title" id="acci6_t">Фінальний план на 6 місяців</div><p class="acc-card-desc" id="acci6_d">Письмові рекомендації з харчування, нутрицевтиків і способу життя.</p></div>
+    </div>
+    <div class="acc-care">
+      <div><span class="care-tag" id="care_tag">Після програми · За бажанням</span><h3 class="care-title" id="care_title">VIA-L <em>Care</em> —<br>програма підтримки результату</h3><p class="care-desc" id="care_desc">Щотижневий зворотний зв'язок, підтримка і своєчасне коригування — щоб зміни залишалися назавжди.</p></div>
+      <div class="care-items">
+        <div class="care-item"><div class="care-dot"></div><div class="care-text"><strong id="care1_t">Зворотний зв'язок раз на тиждень</strong><span id="care1_d">Чат або коротка зустріч — підтримка без пропусків</span></div></div>
+        <div class="care-item"><div class="care-dot"></div><div class="care-text"><strong id="care2_t">Корекція при змінах</strong><span id="care2_d">Сезон, стрес, подорожі — адаптуємо протокол разом</span></div></div>
+        <div class="care-item"><div class="care-dot"></div><div class="care-text"><strong id="care3_t">Контроль аналізів</strong><span id="care3_d">Стежимо за маркерами і коригуємо нутрицевтики</span></div></div>
+        <div class="care-item"><div class="care-dot"></div><div class="care-text"><strong id="care4_t">Відчуття «не один»</strong><span id="care4_d">Результат тримається, коли є хтось поруч</span></div></div>
+      </div>
+    </div>
+    <div class="acc-bottom">
+      <p class="acc-quote" id="acc_quote">«Зміни, які стають частиною вашого життя —<br>це результат <em>правильної підтримки</em>.»</p>
+      <div class="acc-btns">
+        <button class="btn-primary" onclick="openModal('calModal')" id="acc_btn1">Вільні слоти на знайомство</button>
+        <button class="btn-secondary" onclick="openAccPayModal()" id="acc_btn2">Оплатити супровід</button>
+      </div>
+      <p class="acc-note">✦ Онлайн · Весь світ · UA / RU / ES / EN</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CTA ═══ -->
+
+<section id="cta">
+  <div class="cta-inner">
+    <span class="cta-eyebrow" data-i18n="cta_ey">Почати</span>
+    <h2 class="cta-title" data-i18n="cta_title">Готові дізнатись свій<br><em>біологічний вік?</em></h2>
+    <p class="cta-desc" data-i18n="cta_desc">На першій консультації розберемо ваші аналізи (або підготуємо список для здачі), поговоримо про симптоми та цілі. Без зобов'язань і без тиску — просто розмова про вас.</p>
+    <div class="cta-buttons">
+      <button class="btn-primary" id="ctaBtnConsult" data-i18n="btn_consult" onclick="openModal('contactModal')">Записатися на консультацію</button>
+      <a href="index.html" class="btn-ghost" id="btn_back" data-i18n="btn_back">Повернутися до програм</a>
+    </div>
+    <p class="cta-note" data-i18n="cta_note">✦ Перша зустріч — знайомство, без зобов'язань ✦</p>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+
+<footer>
+  <div class="footer-logo">VIA–L</div>
+  <div class="footer-copy" data-i18n="f_copy">© 2025 VIA-L Longevity</div>
+  <div class="footer-tagline" data-i18n="f_tag">Longevity — це не про роки. Про якість кожного з них.</div>
+</footer>
+
+<!-- ═══ MODAL ═══ -->
+
+<div class="modal-overlay" id="contactModal" onclick="if(event.target===this)closeModal('contactModal')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('contactModal')">✕</button>
+    <div class="modal-icon">⬡</div>
+    <div class="modal-eyebrow" data-i18n="m_prog">Антивікове Харчування · VIA-L</div>
+    <h3 class="modal-title" data-i18n="m_title">Записатись<br><em>на консультацію</em></h3>
+    <p class="modal-body" data-i18n="m_body">Перша зустріч — знайомство. Без зобов'язань і без тиску. Розберемо вашу ситуацію та визначимо, як можемо допомогти.</p>
+    <div class="modal-divider"></div>
+    <div class="modal-channels">
+      <a href="#" data-href="https://t.me/via_l_longevity" target="_blank" rel="noopener" class="modal-ch">
+        <span class="modal-ch-icon">✈️</span>
+        <div>
+          <div class="modal-ch-label">Telegram</div>
+          <div class="modal-ch-desc" id="m_tg" data-i18n="m_tg">Найшвидший спосіб зв'язатися</div>
+        </div>
+      </a>
+      <a href="mailto:hello@via-l.com" class="modal-ch">
+        <span class="modal-ch-icon">✉️</span>
+        <div>
+          <div class="modal-ch-label">Email</div>
+          <div class="modal-ch-desc" id="m_em" data-i18n="m_em">Відповідаємо протягом 24 годин</div>
+        </div>
+      </a>
+      <a href="#" data-href="https://via-l.com" target="_blank" rel="noopener" class="modal-ch">
+        <span class="modal-ch-icon">🌐</span>
+        <div>
+          <div class="modal-ch-label">via-l.com</div>
+          <div class="modal-ch-desc" id="m_web" data-i18n="m_web">Онлайн · Весь світ · UA / RU / ES / EN</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+// Nav scroll
+window.addEventListener('scroll', () => {
+  document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 10);
+});
+
+// Lang menu
+function toggleLangMenu() {
+  document.getElementById('langSwitcher').classList.toggle('open');
+}
+function setLang(lang) {
+  const flags = { uk: '🇺🇦', ru: '🇷🇺', es: '🇪🇸', en: '🇬🇧' };
+  const labels = { uk: 'UA', ru: 'RU', es: 'ES', en: 'EN' };
+  document.getElementById('currentFlag').textContent = flags[lang];
+  document.getElementById('currentLangLabel').textContent = labels[lang];
+  document.querySelectorAll('.lang-option').forEach(o => {
+    o.classList.toggle('active', o.dataset.lang === lang);
+  });
+  document.getElementById('langSwitcher').classList.remove('open');
+  applyAccT(l);
+}
+document.addEventListener('click', e => {
+  const sw = document.getElementById('langSwitcher');
+  if (sw && !sw.contains(e.target)) sw.classList.remove('open');
+});
+
+// Modal
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => {
+      m.classList.remove('open');
+      document.body.style.overflow = '';
+    });
+  }
+});
+</script>
+
+<script>
+// ═══ VIA-L i18n SYSTEM ═══
+const LANGS = {
+uk:{
+  nav_back:"Програми",
+  hero_tag:"⬡ Антивікове · Програма супроводу",
+  hero_title:"Антивікове<br><em>Харчування</em>",
+  hero_subtitle:"Уповільнити старіння —<br>це питання біохімії, не калорій.",
+  hero_desc:"Після 40 тіло старіє не тому що «час прийшов». Мітохондрії виробляють менше енергії. NAD+ падає. Аутофагія сповільнюється. Кожен із цих процесів — мішень для харчування. Це не біохакінг. Це доказова нутриціологія довголіття.",
+  pill1:"Біологічний вік", pill2:"NMN · NAD+ · Ресвератрол", pill3:"Аутофагія", pill4:"Онлайн · UA / RU / ES / EN",
+  btn_consult:"Записатися на консультацію", btn_how:"Як влаштована програма",
+  hero_note:"✦ Знайомство — 15 хвилин, безкоштовно, без зобов'язань",
+  bridge_quote:"«Біологічний вік — це не вирок. Це змінна, з якою можна працювати.»",
+  fw_ey:"Для кого", fw_title:"Ви впізнаєте себе тут?",
+  fw_desc:"Ці ситуації я чую найчастіше. Якщо хоча б одна відгукується — ми можемо допомогти.",
+  fw1_q:"«Я роблю все правильно — сплю, рухаюся, харчуюся. Але відновлення стало значно довшим. Тіло не встигає за темпом.»", fw1_l:"Сповільнене відновлення",
+  fw2_q:"«Когнітивна чіткість не та, що 5 років тому. Туман у голові, важче концентруватися, пам'ять не так гостра.»", fw2_l:"Когнітивний спад",
+  fw3_q:"«Хочу діяти проактивно — не чекати симптомів, а налаштувати метаболізм на довголіття зараз.»", fw3_l:"Інвестиція в довголіття",
+  fw4_q:"«Шкіра, волосся, загальний вигляд змінилися після 40. Хочу підтримку зсередини — через харчування, не косметику.»", fw4_l:"Зовнішні зміни після 40",
+  fw5_q:"«Цікавлюся темою NAD+, але не хочу діяти наосліп — потрібний фахівець з доказовою базою.»", fw5_l:"Доказовий підхід до anti-aging",
+  fw6_q:"«Енергія впала — але не критично. Лікарі кажуть \"все в нормі\". Я відчуваю, що тіло може більше.»", fw6_l:"Субоптимальна енергія",
+  bc_ey:"Біохімія", bc_title:"Чому тіло <em>старіє</em> — і де харчування<br>втручається в цей процес",
+  bc_desc:"Старіння — це каскад взаємопов'язаних процесів. Харчування може впливати на кожне ланцюжко одночасно.",
+  ch1_t:"Падіння NAD+", ch1_b:"Після 40 рівень NAD+ знижується на 40–50%. NAD+ — ключовий кофактор енергетичного метаболізму та активації сиртуїнів (білків довголіття). Без нього мітохондрії виробляють менше АТФ.", ch1_s:"Втома · Сповільнений метаболізм",
+  ch2_t:"Мітохондріальна дисфункція", ch2_b:"Мітохондрії — «енергетичні станції» клітин. З віком вони накопичують пошкодження, виробляють більше вільних радикалів і менше АТФ. Наслідок: хронічна втома, запалення, уповільнене відновлення.", ch2_s:"Втома · Запалення · М'язова слабкість",
+  ch3_t:"Сповільнення аутофагії", ch3_b:"Аутофагія — це самоочищення клітин: видалення пошкоджених компонентів. Після 40 цей процес сповільнюється. Клітинне сміття накопичується, прискорюючи старіння та підвищуючи ризик нейродегенерації.", ch3_s:"Когнітивний спад · Запалення",
+  ch4_t:"Хронічне запалення (inflammaging)", ch4_b:"Старіння супроводжується фоновим запаленням низького рівня. Воно прискорює скорочення теломер, пошкоджує мітохондрії та підвищує ризик хронічних захворювань на 25–30%.", ch4_s:"Прискорене старіння · Серцево-судинний ризик",
+  ch5_t:"Скорочення теломер", ch5_b:"Теломери — «захисні ковпачки» хромосом. Кожен поділ клітини скорочує їх. Запалення, стрес та дефіцити прискорюють цей процес. Довжина теломер — один із біомаркерів біологічного віку.", ch5_s:"Біологічне старіння · Клітинне старіння",
+  ins_title:"Де харчування може вплинути",
+  ins_body:"Кожне ланцюжко процесу старіння відповідає на конкретні нутрієнти та стратегії харчування. Це не «корисне харчування» в загальному сенсі — це цілеспрямована робота з молекулярними механізмами.",
+  ins_li1:"NMN і ніацин — попередники NAD+, підтримують енергетику клітин",
+  ins_li2:"Ресвератрол і кверцетин — активатори сиртуїнів та AMPK",
+  ins_li3:"Інтервальне харчування — потужний тригер аутофагії",
+  ins_li4:"Омега-3 і куркумін — знижують маркери inflammaging",
+  ins_li5:"Метилдонори (B9, B12, холін) — підтримують метилювання ДНК",
+  ins_li6:"Антиоксиданти з їжі — захист мітохондрій від окисного стресу",
+  pl_ey:"Інструменти програми", pl_title:"Чотири напрямки<br><em>антивікової стратегії</em>",
+  pl_desc:"Не добавки самі по собі — а стратегія, де кожен інструмент посилює дію інших.",
+  pl1_name:"Мітохондріальна підтримка", pl1_sub:"Енергія на клітинному рівні",
+  pl2_name:"NAD+ та сиртуїнова вісь", pl2_sub:"Молекули довголіття",
+  pl3_name:"Аутофагія та клітинне очищення", pl3_sub:"Самовідновлення клітин",
+  pl4_name:"Протизапальний протокол", pl4_sub:"Знизити inflammaging",
+  pl1_text:"Відновлення функції мітохондрій через харчування та цільові нутрицевтики. NMN як попередник NAD+. CoQ10 для ланцюга перенесення електронів. Магній — для понад 300 ферментативних реакцій. Протокол харчування, що мінімізує окисний стрес.", pl1_tag:"NMN · CoQ10 · Магній · Антиоксиданти",
+  pl2_text:"Сиртуїни — білки, що регулюють старіння, метаболізм і відновлення ДНК. Їх активність залежить від NAD+. Ресвератрол, кверцетин та фізерин — дієтарні активатори сиртуїнів. Стратегія харчування, що природно підвищує NAD+ через прекурсори.", pl2_tag:"Ресвератрол · Ніацин · Сиртуїни",
+  pl3_text:"Аутофагія — процес утилізації пошкоджених клітинних компонентів. Нобелівська премія 2016. Харчування є потужним регулятором: інтервальне харчування, обмеження mTOR через білковий баланс, спермідин із натуральних продуктів (паростки пшениці, нато, зрілий сир).", pl3_tag:"Інтервальне харчування · Спермідин · mTOR",
+  pl4_text:"Хронічне фонове запалення — один із головних двигунів старіння. Омега-3 (EPA+DHA) пригнічують прозапальні цитокіни. Куркумін блокує NF-κB — ключовий запальний медіатор. Поліфеноли з ягід, оливкова олія та хрестоцвіті — основа протоколу.", pl4_tag:"Омега-3 · Куркумін · Поліфеноли",
+  st_ey:"Програма", st_title:"Як влаштована<br><em>ваша програма</em>",
+  st_desc:"Чотири послідовні кроки — від базової діагностики до персонального протоколу та підтримки протягом усього шляху.",
+  s1_t:"Первинна консультація", s1_b:"Розбираємо образ життя, харчову поведінку, симптоми та цілі. Оцінюємо поточний стан метаболізму. Визначаємо, які ланцюжки старіння найбільш актуальні для вас.",
+  s2_t:"Лабораторна діагностика", s2_b:"Аналізуємо маркери біологічного віку, запалення та нутрітивні дефіцити. «Все в нормі» ≠ відсутність дефіцитів. Шукаємо функціональний оптимум.",
+  s3_t:"Персональний антивіковий протокол", s3_b:"Протокол харчування під ваш біохімічний профіль. Вибір нутрицевтиків обґрунтований вашими даними. Стратегія інтервального харчування під ваш ритм.",
+  s4_t:"Супровід та коригування", s4_b:"Регулярні check-in сесії, відстеження динаміки маркерів. Через 8–12 тижнів — контрольні аналізи: бачимо реальні зміни в біохімії.",
+  s1_tag1:"Анамнез та цілі", s1_tag2:"Харчування та спосіб життя", s1_tag3:"Напрямок роботи",
+  s2_tag1:"Маркери запалення", s2_tag2:"Метаболічний статус", s2_tag3:"Нутритивні дефіцити", s2_tag4:"Гормональний фон",
+  s3_tag1:"Протокол харчування", s3_tag2:"Цільові нутрицевтики", s3_tag3:"Інтервальне харчування", s3_tag4:"Дорожня карта 3 місяці",
+  s4_tag1:"Регулярні check-in", s4_tag2:"Коригування за аналізами", s4_tag3:"Підтримка між зустрічами",
+  res_ey:"Результати", res_title:"Що змінюється<br><em>через 8–16 тижнів</em>",
+  r1_t:"4–6 тижнів", r1_h:"Енергія та відновлення", r1_b:"Рівніша, стабільніша енергія протягом дня. Менше втоми після навантаження. Глибший сон.",
+  r2_t:"6–10 тижнів", r2_h:"Когнітивна ясність", r2_b:"Зменшення туману в голові, краща концентрація та пам'ять. Протизапальний протокол знижує нейрозапалення.",
+  r3_t:"8–16 тижнів", r3_h:"Зміни в маркерах", r3_b:"Зниження вч-СРБ та гомоцистеїну. Нормалізація інсуліну. Відновлення ферритину та вітаміну D до функціонального оптимуму.",
+  res_disc:"Результати індивідуальні та залежать від вихідного стану та дотримання протоколу. Нутриціолог не замінює лікаря.",
+  an_ey:"Діагностика", an_title:"Ключові маркери<br>антивікового моніторингу",
+  an_desc:"Ці показники дають реальну картину метаболічного та запального статусу. Стандартної панелі — недостатньо.",
+  a1_m:"вч-СРБ (високочутливий)", a1_o:"Оптимум: < 1 мг/л", a1_w:"Маркер хронічного запалення низького рівня. вч-СРБ > 2 мг/л = активний inflammaging.",
+  a2_m:"Гомоцистеїн", a2_o:"Оптимум: < 7 мкмоль/л", a2_w:"При дефіциті B12, B6 та фолату накопичується, пошкоджує судини та знижує когнітивні функції.",
+  a3_m:"Вітамін D 25(OH)D", a3_o:"Оптимум: 60–80 нг/мл", a3_w:"Вітамін D — це гормон. Регулює імунітет, захищає від нейродегенерації, підтримує м'язову функцію.",
+  a4_m:"Інсулін натщесерце", a4_o:"Оптимум: 3–8 мкОД/мл", a4_w:"Хронічно підвищений інсулін прискорює mTOR, пригнічує аутофагію та посилює запалення.",
+  a5_m:"Ферритин", a5_o:"Оптимум: 70–100 мкг/л", a5_w:"Залізо — кофактор мітохондріального дихання. Дефіцит = пряма причина хронічної втоми та сповільненого відновлення.",
+  a6_m:"Магній в еритроцитах", a6_o:"Здати окремо (не сироватку)", a6_w:"Магній — кофактор понад 300 ферментів. Сироватковий залишається «нормальним» до кінця — тоді як клітинний запас давно виснажений.",
+  an_note:"✦ Ця таблиця — орієнтир для розуміння, не діагноз. Детально — у гайді VIA-L «Що приховують ваші аналізи».",
+  cta_ey:"Почати", cta_title:"Готові дізнатись свій<br><em>біологічний вік?</em>",
+  cta_desc:"На першій консультації розберемо ваші аналізи (або підготуємо список для здачі), поговоримо про симптоми та цілі. Без зобов'язань і без тиску.",
+  btn_back:"Повернутися до програм", cta_note:"✦ Перша зустріч — знайомство, без зобов'язань ✦",
+  f_copy:"© 2025 VIA-L Longevity", f_tag:"Longevity — це не про роки. Про якість кожного з них.",
+  m_prog:"Антивікове Харчування · VIA-L", m_title:"Записатись<br><em>на консультацію</em>",
+  m_body:"Перша зустріч — знайомство. Без зобов'язань і без тиску.",
+  m_tg:"Найшвидший спосіб зв'язатися", m_em:"Відповідаємо протягом 24 годин", m_web:"Онлайн · Весь світ · UA / RU / ES / EN"
+},
+ru:{
+  nav_back:"Программы",
+  hero_tag:"⬡ Антивозрастное · Программа сопровождения",
+  hero_title:"Антивозрастное<br><em>Питание</em>",
+  hero_subtitle:"Замедлить старение —<br>это вопрос биохимии, а не калорий.",
+  hero_desc:"После 40 тело стареет не потому что «пришло время». Митохондрии производят меньше энергии. NAD+ падает. Аутофагия замедляется. Каждый из этих процессов — мишень для питания. Это доказательная нутрициология долголетия.",
+  pill1:"Биологический возраст", pill2:"NMN · NAD+ · Ресвератрол", pill3:"Аутофагия", pill4:"Онлайн · UA / RU / ES / EN",
+  btn_consult:"Записаться на консультацию", btn_how:"Как устроена программа",
+  hero_note:"✦ Знакомство — 15 минут, бесплатно, без обязательств",
+  bridge_quote:"«Биологический возраст — это не приговор. Это переменная, с которой можно работать.»",
+  fw_ey:"Для кого", fw_title:"Вы узнаёте себя здесь?",
+  fw_desc:"Эти ситуации слышу чаще всего. Если хотя бы одна откликается — мы можем помочь.",
+  fw1_q:"«Я делаю всё правильно — сплю, двигаюсь, питаюсь. Но восстановление стало значительно дольше. Тело не успевает за темпом.»", fw1_l:"Замедленное восстановление",
+  fw2_q:"«Когнитивная чёткость не та, что 5 лет назад. Туман в голове, сложнее концентрироваться, память не такая острая.»", fw2_l:"Когнитивный спад",
+  fw3_q:"«Хочу действовать проактивно — не ждать симптомов, а настроить метаболизм на долголетие прямо сейчас.»", fw3_l:"Инвестиция в долголетие",
+  fw4_q:"«Кожа, волосы, общий вид изменились после 40. Хочу поддержку изнутри — через питание, а не косметику.»", fw4_l:"Внешние изменения после 40",
+  fw5_q:"«Интересуюсь NAD+, но не хочу действовать вслепую — нужен специалист, понимающий доказательную базу.»", fw5_l:"Доказательный подход к anti-aging",
+  fw6_q:"«Энергия упала — но не критично. Врачи говорят \"всё в норме\". Чувствую, что тело может больше.»", fw6_l:"Субоптимальная энергия",
+  fw_not_title:"Программа не подходит, если:", fw_not_body:"вы ищете «быстрое похудение за 2 недели», не готовы сдавать анализы и отслеживать динамику, или нуждаетесь в медицинском лечении острых заболеваний.",
+  bc_ey:"Биохимия", bc_title:"Почему тело <em>стареет</em> — и где питание<br>вмешивается в этот процесс",
+  bc_desc:"Старение — это каскад взаимосвязанных процессов. Питание может влиять на каждое звено одновременно.",
+  ch1_t:"Падение NAD+", ch1_b:"После 40 уровень NAD+ снижается на 40–50%. NAD+ — ключевой кофактор энергетического метаболизма и активации сиртуинов (белков долголетия). Без него митохондрии вырабатывают меньше АТФ.", ch1_s:"Усталость · Замедленный метаболизм",
+  ch2_t:"Митохондриальная дисфункция", ch2_b:"Митохондрии — «энергетические станции» клеток. С возрастом они накапливают повреждения, вырабатывают больше свободных радикалов и меньше АТФ. Следствие: хроническая усталость, воспаление, замедленное восстановление.", ch2_s:"Усталость · Воспаление · Мышечная слабость",
+  ch3_t:"Замедление аутофагии", ch3_b:"Аутофагия — это самоочищение клеток: удаление поврежденных компонентов. После 40 этот процесс замедляется. Клеточный «мусор» накапливается, ускоряя старение и повышая риск нейродегенерации.", ch3_s:"Когнитивный спад · Воспаление",
+  ch4_t:"Хроническое воспаление (inflammaging)", ch4_b:"Старение сопровождается фоновым воспалением низкого уровня. Оно ускоряет укорочение теломер, повреждает митохондрии и повышает риск хронических заболеваний на 25–30%.", ch4_s:"Ускоренное старение · Сердечно-сосудистый риск",
+  ch5_t:"Укорачивание теломер", ch5_b:"Теломеры — «защитные колпачки» хромосом. Каждое деление клетки укорачивает их. Воспаление, стресс и дефициты ускоряют этот процесс. Длина теломер — один из биомаркеров биологического возраста.", ch5_s:"Биологическое старение · Клеточное старение",
+  ins_title:"Где питание может повлиять",
+  ins_body:"Каждое звено процесса старения реагирует на конкретные нутриенты. Это не «полезное питание» в общем смысле — целенаправленная работа с молекулярными механизмами.",
+  ins_li1:"NMN и ниацин — предшественники NAD+, поддерживают клеточную энергетику",
+  ins_li2:"Ресвератрол и кверцетин — активаторы сиртуинов и AMPK",
+  ins_li3:"Интервальное питание — мощный триггер аутофагии",
+  ins_li4:"Омега-3 и куркумин — снижают маркеры inflammaging",
+  ins_li5:"Метилдоноры (B9, B12, холин) — поддерживают метилирование ДНК",
+  ins_li6:"Антиоксиданты из пищи — защита митохондрий от окислительного стресса",
+  pl_ey:"Инструменты программы", pl_title:"Четыре направления<br><em>антивозрастной стратегии</em>",
+  pl_desc:"Не добавки сами по себе — а стратегия, где каждый инструмент усиливает действие других.",
+  pl1_name:"Митохондриальная поддержка", pl1_sub:"Энергия на клеточном уровне",
+  pl2_name:"NAD+ и сиртуиновая ось", pl2_sub:"Молекулы долголетия",
+  pl3_name:"Аутофагия и клеточное очищение", pl3_sub:"Самовосстановление клеток",
+  pl4_name:"Противовоспалительный протокол", pl4_sub:"Снизить inflammaging",
+  pl1_text:"Восстановление функции митохондрий через питание и целевые нутрицевтики. NMN как предшественник NAD+. CoQ10 для цепи переноса электронов. Магний — для более чем 300 ферментативных реакций. Протокол питания, минимизирующий окислительный стресс.", pl1_tag:"NMN · CoQ10 · Магний · Антиоксиданты",
+  pl2_text:"Сиртуины — белки, регулирующие старение, метаболизм и восстановление ДНК. Их активность зависит от NAD+. Ресвератрол, кверцетин и фисетин — диетарные активаторы сиртуинов. Стратегия питания, которая естественно повышает NAD+ через прекурсоры.", pl2_tag:"Ресвератрол · Ниацин · Сиртуины",
+  pl3_text:"Аутофагия — процесс утилизации поврежденных клеточных компонентов. Нобелевская премия 2016. Питание является мощным регулятором: интервальное питание, ограничение mTOR через белковый баланс, спермидин из натуральных продуктов (проростки пшеницы, натто, выдержанный сыр).", pl3_tag:"Интервальное питание · Спермидин · mTOR",
+  pl4_text:"Хроническое фоновое воспаление — один из главных драйверов старения. Омега-3 (EPA+DHA) подавляют провоспалительные цитокины. Куркумин блокирует NF-κB — ключевой воспалительный медиатор. Полифенолы из ягод, оливковое масло и крестоцветные — основа протокола.", pl4_tag:"Омега-3 · Куркумин · Полифенолы",
+  st_ey:"Программа", st_title:"Как устроена<br><em>ваша программа</em>",
+  st_desc:"Четыре последовательных шага — от базовой диагностики до персонального протокола и поддержки на всём пути.",
+  s1_t:"Первичная консультация", s1_b:"Разбираем образ жизни, пищевое поведение, симптомы и цели. Оцениваем текущее состояние метаболизма. Определяем, какие звенья старения наиболее актуальны для вас.",
+  s2_t:"Лабораторная диагностика", s2_b:"Анализируем маркеры биологического возраста, воспаления и нутритивные дефициты. «Всё в норме» ≠ отсутствие дефицитов.",
+  s3_t:"Персональный антивозрастной протокол", s3_b:"Протокол питания под ваш биохимический профиль. Выбор нутрицевтиков — только то, что обосновано вашими данными.",
+  s4_t:"Сопровождение и коррекция", s4_b:"Регулярные check-in сессии, отслеживание динамики маркеров. Через 8–12 недель — контрольные анализы: видим реальные изменения в биохимии.",
+  s1_tag1:"Анамнез и цели", s1_tag2:"Питание и образ жизни", s1_tag3:"Направление работы",
+  s2_tag1:"Маркеры воспаления", s2_tag2:"Метаболический статус", s2_tag3:"Нутритивные дефициты", s2_tag4:"Гормональный фон",
+  s3_tag1:"Протокол питания", s3_tag2:"Целевые нутрицевтики", s3_tag3:"Интервальное питание", s3_tag4:"Дорожная карта на 3 месяца",
+  s4_tag1:"Регулярные check-in", s4_tag2:"Коррекция по анализам", s4_tag3:"Поддержка между встречами",
+  res_ey:"Результаты", res_title:"Что меняется<br><em>через 8–16 недель</em>",
+  r1_t:"4–6 недель", r1_h:"Энергия и восстановление", r1_b:"Ровная, стабильная энергия в течение дня. Меньше усталости после нагрузки. Более глубокий сон.",
+  r2_t:"6–10 недель", r2_h:"Когнитивная ясность", r2_b:"Уменьшение тумана в голове, лучшая концентрация и память. Противовоспалительный протокол снижает нейровоспаление.",
+  r3_t:"8–16 недель", r3_h:"Изменения в маркерах", r3_b:"Снижение вч-СРБ и гомоцистеина. Нормализация инсулина. Восстановление ферритина и витамина D до функционального оптимума.",
+  res_disc:"Результаты индивидуальны и зависят от исходного состояния и соблюдения протокола. Нутрициолог не заменяет врача.",
+  an_ey:"Диагностика", an_title:"Ключевые маркеры<br>антивозрастного мониторинга",
+  an_desc:"Эти показатели дают реальную картину метаболического и воспалительного статуса. Стандартной панели — недостаточно.",
+  a1_m:"вч-СРБ (высокочувствительный)", a1_o:"Оптимум: < 1 мг/л", a1_w:"Маркер хронического воспаления низкого уровня. вч-СРБ > 2 мг/л = активный inflammaging.",
+  a2_m:"Гомоцистеин", a2_o:"Оптимум: < 7 мкмоль/л", a2_w:"При дефиците B12, B6 и фолата накапливается, повреждает сосуды и снижает когнитивные функции.",
+  a3_m:"Витамин D 25(OH)D", a3_o:"Оптимум: 60–80 нг/мл", a3_w:"Витамин D — это гормон. Регулирует иммунитет, защищает от нейродегенерации, поддерживает мышечную функцию.",
+  a4_m:"Инсулин натощак", a4_o:"Оптимум: 3–8 мкЕД/мл", a4_w:"Хронически повышенный инсулин ускоряет mTOR, подавляет аутофагию и усиливает воспаление.",
+  a5_m:"Ферритин", a5_o:"Оптимум: 70–100 мкг/л", a5_w:"Железо — кофактор митохондриального дыхания. Дефицит = прямая причина хронической усталости.",
+  a6_m:"Магний в эритроцитах", a6_o:"Сдать отдельно (не сыворотку)", a6_w:"Магний — кофактор более 300 ферментов. Сывороточный остаётся «нормальным» до конца — тогда как клеточный запас уже истощён.",
+  an_note:"✦ Эта таблица — ориентир для понимания, не диагноз. Подробнее — в гайде VIA-L «Что скрывают ваши анализы».",
+  cta_ey:"Начать", cta_title:"Готовы узнать свой<br><em>биологический возраст?</em>",
+  cta_desc:"На первой консультации разберём ваши анализы (или подготовим список для сдачи), поговорим о симптомах и целях. Без обязательств и без давления.",
+  btn_back:"Вернуться к программам", cta_note:"✦ Первая встреча — знакомство, без обязательств ✦",
+  f_copy:"© 2025 VIA-L Longevity", f_tag:"Longevity — это не про годы. Про качество каждого из них.",
+  m_prog:"Антивозрастное Питание · VIA-L", m_title:"Записаться<br><em>на консультацию</em>",
+  m_body:"Первая встреча — знакомство. Без обязательств и без давления.",
+  m_tg:"Самый быстрый способ связаться", m_em:"Отвечаем в течение 24 часов", m_web:"Онлайн · Весь мир · UA / RU / ES / EN"
+},
+es:{
+  nav_back:"Programas",
+  hero_tag:"⬡ Antiedad · Programa de acompañamiento",
+  hero_title:"Nutrición<br><em>Antiedad</em>",
+  hero_subtitle:"Frenar el envejecimiento —<br>es una cuestión de bioquímica, no de calorías.",
+  hero_desc:"Después de los 40, el cuerpo envejece no porque «llegó el momento». Las mitocondrias producen menos energía. El NAD+ cae. La autofagia se ralentiza. Nutrición científica para la longevidad.",
+  pill1:"Edad biológica", pill2:"NMN · NAD+ · Resveratrol", pill3:"Autofagia", pill4:"Online · UA / RU / ES / EN",
+  btn_consult:"Reservar consulta", btn_how:"Cómo funciona el programa",
+  hero_note:"✦ Primera reunión — 15 minutos, gratuita, sin compromiso",
+  bridge_quote:"«La edad biológica no es un veredicto. Es una variable con la que se puede trabajar.»",
+  fw_ey:"Para quién", fw_title:"¿Te reconoces aquí?",
+  fw_desc:"Estas son las situaciones que escucho con más frecuencia. Si al menos una resuena contigo, podemos ayudarte.",
+  fw1_q:"«Hago todo bien — duermo, me muevo, me alimento. Pero la recuperación se ha vuelto mucho más lenta.»", fw1_l:"Recuperación lenta",
+  fw2_q:"«La claridad cognitiva no es la misma de hace 5 años. Niebla mental, más difícil concentrarse.»", fw2_l:"Declive cognitivo",
+  fw3_q:"«Quiero actuar de forma proactiva — ajustar el metabolismo para la longevidad ahora.»", fw3_l:"Inversión en longevidad",
+  fw4_q:"«La piel, el cabello han cambiado después de los 40. Quiero apoyo desde dentro — a través de la nutrición.»", fw4_l:"Cambios externos después de los 40",
+  fw5_q:"«Me interesa el NAD+, pero necesito un especialista que entienda la base científica.»", fw5_l:"Enfoque basado en evidencia",
+  fw6_q:"«La energía ha bajado — pero no de forma crítica. Los médicos dicen 'todo normal'. Siento que el cuerpo puede más.»", fw6_l:"Energía subóptima",
+  fw_not_title:"El programa no es adecuado si:", fw_not_body:"buscas «adelgazamiento rápido en 2 semanas», no estás dispuesto/a a hacerte análisis y seguir la dinámica, o necesitas tratamiento médico para enfermedades agudas.",
+  bc_ey:"Bioquímica", bc_title:"Por qué el cuerpo <em>envejece</em> — y dónde interviene<br>la nutrición en ese proceso",
+  bc_desc:"El envejecimiento es una cascada de procesos interconectados. La nutrición puede influir en cada eslabón al mismo tiempo.",
+  ch1_t:"Caída del NAD+", ch1_b:"Después de los 40, el nivel de NAD+ disminuye entre un 40 y un 50%. El NAD+ es un cofactor clave del metabolismo energético y de la activación de las sirtuinas (proteínas de longevidad). Sin él, las mitocondrias producen menos ATP.", ch1_s:"Fatiga · Metabolismo ralentizado",
+  ch2_t:"Disfunción mitocondrial", ch2_b:"Las mitocondrias son las «centrales energéticas» de las células. Con la edad, acumulan daño, producen más radicales libres y menos ATP. Consecuencia: fatiga crónica, inflamación y recuperación más lenta.", ch2_s:"Fatiga · Inflamación · Debilidad muscular",
+  ch3_t:"Ralentización de la autofagia", ch3_b:"La autofagia es la auto-limpieza celular: la eliminación de componentes dañados. Después de los 40, este proceso se ralentiza. Los desechos celulares se acumulan, acelerando el envejecimiento y aumentando el riesgo de neurodegeneración.", ch3_s:"Declive cognitivo · Inflamación",
+  ch4_t:"Inflamación crónica (inflammaging)", ch4_b:"El envejecimiento se acompaña de una inflamación basal de bajo grado. Esto acelera el acortamiento de los telómeros, daña las mitocondrias y aumenta el riesgo de enfermedades crónicas en un 25–30%.", ch4_s:"Envejecimiento acelerado · Riesgo cardiovascular",
+  ch5_t:"Acortamiento de los telómeros", ch5_b:"Los telómeros son los «capuchones protectores» de los cromosomas. Cada división celular los acorta. La inflamación, el estrés y las carencias aceleran este proceso. La longitud de los telómeros es uno de los biomarcadores de la edad biológica.", ch5_s:"Envejecimiento biológico · Senescencia celular",
+  ins_title:"Dónde puede influir la nutrición",
+  ins_body:"Cada eslabón del proceso de envejecimiento responde a nutrientes específicos. No es una «alimentación saludable» en sentido general — es trabajo dirigido sobre los mecanismos moleculares.",
+  ins_li1:"NMN y niacina — precursores de NAD+, sostienen la energía celular",
+  ins_li2:"Resveratrol y quercetina — activadores de sirtuinas y AMPK",
+  ins_li3:"Alimentación por intervalos — un potente disparador de la autofagia",
+  ins_li4:"Omega-3 y curcumina — reducen los marcadores de inflammaging",
+  ins_li5:"Metildonantes (B9, B12, colina) — apoyan la metilación del ADN",
+  ins_li6:"Antioxidantes de los alimentos — protección mitocondrial frente al estrés oxidativo",
+  pl_ey:"Herramientas del programa", pl_title:"Cuatro pilares de la<br><em>estrategia antiedad</em>",
+  pl_desc:"No suplementos aislados — una estrategia donde cada herramienta potencia a las otras.",
+  pl1_name:"Apoyo mitocondrial", pl1_sub:"Energía a nivel celular",
+  pl2_name:"NAD+ y el eje de las sirtuinas", pl2_sub:"Moléculas de longevidad",
+  pl3_name:"Autofagia y limpieza celular", pl3_sub:"Autorregeneración celular",
+  pl4_name:"Protocolo antiinflamatorio", pl4_sub:"Reducir el inflammaging",
+  pl1_text:"Recuperación de la función mitocondrial mediante nutrición y nutracéuticos dirigidos. NMN como precursor de NAD+. CoQ10 para la cadena de transporte de electrones. Magnesio para más de 300 reacciones enzimáticas. Un protocolo nutricional que minimiza el estrés oxidativo.", pl1_tag:"NMN · CoQ10 · Magnesio · Antioxidantes",
+  pl2_text:"Las sirtuinas son proteínas que regulan el envejecimiento, el metabolismo y la reparación del ADN. Su actividad depende del NAD+. El resveratrol, la quercetina y la fisetina son activadores dietéticos de las sirtuinas. Una estrategia nutricional que eleva de forma natural el NAD+ mediante precursores.", pl2_tag:"Resveratrol · Niacina · Sirtuinas",
+  pl3_text:"La autofagia es el proceso de eliminación de componentes celulares dañados. Premio Nobel 2016. La nutrición es un regulador potente: alimentación por intervalos, restricción de mTOR a través del equilibrio proteico y espermidina de alimentos naturales (brotes de trigo, natto, queso curado).", pl3_tag:"Alimentación por intervalos · Espermidina · mTOR",
+  pl4_text:"La inflamación crónica de bajo grado es uno de los principales motores del envejecimiento. Los omega-3 (EPA+DHA) suprimen citocinas proinflamatorias. La curcumina bloquea NF-κB, un mediador inflamatorio clave. Los polifenoles de frutos rojos, el aceite de oliva y las crucíferas son la base del protocolo.", pl4_tag:"Omega-3 · Curcumina · Polifenoles",
+  st_ey:"Programa", st_title:"Cómo está estructurado<br><em>tu programa</em>",
+  st_desc:"Cuatro pasos consecutivos — desde el diagnóstico básico hasta el protocolo personal y el acompañamiento.",
+  s1_t:"Consulta inicial", s1_b:"Analizamos el estilo de vida, los hábitos alimentarios, los síntomas y los objetivos. Determinamos qué eslabones del envejecimiento son más relevantes para ti.",
+  s2_t:"Diagnóstico de laboratorio", s2_b:"Analizamos marcadores de edad biológica, inflamación y déficits nutricionales. «Todo normal» ≠ ausencia de déficits.",
+  s3_t:"Protocolo antiedad personalizado", s3_b:"Protocolo nutricional adaptado a tu perfil bioquímico. Selección de nutracéuticos respaldada por tus datos.",
+  s4_t:"Seguimiento y ajuste", s4_b:"Sesiones regulares de check-in, seguimiento de la dinámica de marcadores. A las 8–12 semanas — análisis de control.",
+  s1_tag1:"Anamnesis y objetivos", s1_tag2:"Nutrición y estilo de vida", s1_tag3:"Dirección de trabajo",
+  s2_tag1:"Marcadores de inflamación", s2_tag2:"Estado metabólico", s2_tag3:"Déficits nutricionales", s2_tag4:"Perfil hormonal",
+  s3_tag1:"Protocolo nutricional", s3_tag2:"Nutracéuticos dirigidos", s3_tag3:"Alimentación por intervalos", s3_tag4:"Hoja de ruta de 3 meses",
+  s4_tag1:"Check-ins regulares", s4_tag2:"Ajustes según análisis", s4_tag3:"Apoyo entre sesiones",
+  res_ey:"Resultados", res_title:"Qué cambia<br><em>en 8–16 semanas</em>",
+  r1_t:"4–6 semanas", r1_h:"Energía y recuperación", r1_b:"Energía más estable durante el día. Menos fatiga. Sueño más profundo.",
+  r2_t:"6–10 semanas", r2_h:"Claridad cognitiva", r2_b:"Reducción de la niebla mental, mejor concentración y memoria.",
+  r3_t:"8–16 semanas", r3_h:"Cambios en los marcadores", r3_b:"Descenso de PCR-us y homocisteína. Normalización de la insulina. Restauración de ferritina y vitamina D.",
+  res_disc:"Los resultados son individuales y dependen del estado inicial y del cumplimiento del protocolo. El nutricionista no reemplaza al médico.",
+  an_ey:"Diagnóstico", an_title:"Marcadores clave<br>del monitoreo antiedad",
+  an_desc:"Estos indicadores ofrecen una imagen real del estado metabólico e inflamatorio. Un panel estándar no es suficiente.",
+  a1_m:"PCR-us (alta sensibilidad)", a1_o:"Óptimo: < 1 mg/l", a1_w:"Marcador de inflamación crónica de bajo nivel. PCR-us > 2 mg/l = inflammaging activo.",
+  a2_m:"Homocisteína", a2_o:"Óptimo: < 7 µmol/l", a2_w:"Con déficit de B12, B6 y folato se acumula, daña los vasos y reduce las funciones cognitivas.",
+  a3_m:"Vitamina D 25(OH)D", a3_o:"Óptimo: 60–80 ng/ml", a3_w:"La vitamina D es una hormona. Regula la inmunidad y apoya la función muscular.",
+  a4_m:"Insulina en ayunas", a4_o:"Óptimo: 3–8 µUI/ml", a4_w:"La insulina crónicamente elevada acelera mTOR, inhibe la autofagia y aumenta la inflamación.",
+  a5_m:"Ferritina", a5_o:"Óptimo: 70–100 µg/l", a5_w:"El hierro es cofactor de la respiración mitocondrial. Déficit = causa directa de fatiga crónica.",
+  a6_m:"Magnesio en eritrocitos", a6_o:"Pedir por separado (no suero)", a6_w:"El magnesio es cofactor de más de 300 enzimas. El magnesio sérico permanece «normal» hasta el final.",
+  an_note:"✦ Esta tabla es una guía de referencia, no un diagnóstico. Más detalles en la guía VIA-L «Lo que ocultan tus análisis».",
+  cta_ey:"Comenzar", cta_title:"¿Lista para conocer tu<br><em>edad biológica?</em>",
+  cta_desc:"En la primera consulta analizaremos tus análisis, hablaremos de síntomas y objetivos. Sin compromiso y sin presión.",
+  btn_back:"Volver a los programas", cta_note:"✦ Primera reunión — para conocernos, sin compromiso ✦",
+  f_copy:"© 2025 VIA-L Longevity", f_tag:"Longevity no es sobre los años. Es sobre la calidad de cada uno.",
+  m_prog:"Nutrición Antiedad · VIA-L", m_title:"Reservar<br><em>una consulta</em>",
+  m_body:"Primera reunión — para conocernos. Sin compromiso y sin presión.",
+  m_tg:"La forma más rápida de contactar", m_em:"Respondemos en 24 horas", m_web:"Online · Todo el mundo · UA / RU / ES / EN"
+},
+en:{
+  nav_back:"Programs",
+  hero_tag:"⬡ Anti-Aging · Coaching Program",
+  hero_title:"Anti-Aging<br><em>Nutrition</em>",
+  hero_subtitle:"Slowing aging —<br>is a matter of biochemistry, not calories.",
+  hero_desc:"After 40, the body ages not because 'time has come'. Mitochondria produce less energy. NAD+ declines. Autophagy slows down. Each of these processes is a target for nutrition. This is evidence-based longevity nutrition.",
+  pill1:"Biological age", pill2:"NMN · NAD+ · Resveratrol", pill3:"Autophagy", pill4:"Online · UA / RU / ES / EN",
+  btn_consult:"Book a consultation", btn_how:"How the program works",
+  hero_note:"✦ Intro call — 15 minutes, free, no commitment",
+  bridge_quote:"\"Biological age is not a verdict. It\'s a variable you can work with.\"",
+  fw_ey:"Who it's for", fw_title:"Do you recognise yourself here?",
+  fw_desc:"These are the situations I hear most often. If even one resonates, we can help.",
+  fw1_q:"\"I\'m doing everything right — sleeping, moving, eating well. But recovery has become much longer.\"", fw1_l:"Slow recovery",
+  fw2_q:"\"Cognitive sharpness is not what it was 5 years ago. Brain fog, harder to concentrate.\"", fw2_l:"Cognitive decline",
+  fw3_q:"\"I want to act proactively — tune my metabolism for longevity right now.\"", fw3_l:"Investing in longevity",
+  fw4_q:"\"Skin, hair have changed after 40. I want support from within — through nutrition, not cosmetics.\"", fw4_l:"Visible changes after 40",
+  fw5_q:"\"I\'m interested in NAD+, but need a specialist who understands the evidence base.\"", fw5_l:"Evidence-based anti-aging",
+  fw6_q:"\"Energy has dropped. Doctors say everything is normal. I feel the body can do more.\"", fw6_l:"Suboptimal energy",
+  fw_not_title:"This program is not suitable if:", fw_not_body:"you're looking for 'rapid weight loss in 2 weeks', are not ready to do lab tests, or need medical treatment for acute conditions.",
+  bc_ey:"Biochemistry", bc_title:"Why the body <em>ages</em> — and where nutrition<br>intervenes in the process",
+  bc_desc:"Aging is a cascade of interconnected processes. Nutrition can influence each link simultaneously.",
+  ch1_t:"NAD+ decline", ch1_b:"After 40, NAD+ levels drop by 40-50%. NAD+ is a key cofactor in energy metabolism and sirtuin activation (longevity proteins). Without it, mitochondria produce less ATP.", ch1_s:"Fatigue · Slowed metabolism",
+  ch2_t:"Mitochondrial dysfunction", ch2_b:"Mitochondria are the cell's power stations. With age, they accumulate damage, produce more free radicals, and generate less ATP. The result is chronic fatigue, inflammation, and slower recovery.", ch2_s:"Fatigue · Inflammation · Muscle weakness",
+  ch3_t:"Autophagy slowdown", ch3_b:"Autophagy is cellular self-cleaning: removing damaged components. After 40, this process slows down. Cellular waste accumulates, accelerating aging and increasing the risk of neurodegeneration.", ch3_s:"Cognitive decline · Inflammation",
+  ch4_t:"Chronic inflammation (inflammaging)", ch4_b:"Aging is accompanied by low-grade background inflammation. It accelerates telomere shortening, damages mitochondria, and increases the risk of chronic diseases by 25-30%.", ch4_s:"Accelerated aging · Cardiovascular risk",
+  ch5_t:"Telomere shortening", ch5_b:"Telomeres are the protective caps of chromosomes. Every cell division shortens them. Inflammation, stress, and deficiencies accelerate this process. Telomere length is one of the biomarkers of biological age.", ch5_s:"Biological aging · Cellular senescence",
+  ins_title:"Where nutrition can make a difference",
+  ins_body:"Each link in the aging process responds to specific nutrients and strategies. This is targeted work with molecular mechanisms.",
+  ins_li1:"NMN and niacin are NAD+ precursors that support cellular energy",
+  ins_li2:"Resveratrol and quercetin activate sirtuins and AMPK",
+  ins_li3:"Time-restricted eating is a powerful trigger of autophagy",
+  ins_li4:"Omega-3 and curcumin reduce inflammaging markers",
+  ins_li5:"Methyl donors (B9, B12, choline) support DNA methylation",
+  ins_li6:"Food-derived antioxidants protect mitochondria from oxidative stress",
+  pl_ey:"Program tools", pl_title:"Four pillars of the<br><em>anti-aging strategy</em>",
+  pl_desc:"Not supplements alone — a strategy where each tool enhances the others.",
+  pl1_name:"Mitochondrial support", pl1_sub:"Energy at the cellular level",
+  pl2_name:"NAD+ and the sirtuins axis", pl2_sub:"Longevity molecules",
+  pl3_name:"Autophagy and cellular cleansing", pl3_sub:"Cellular self-renewal",
+  pl4_name:"Anti-inflammatory protocol", pl4_sub:"Reducing inflammaging",
+  pl1_text:"Restoring mitochondrial function through nutrition and targeted nutraceuticals. NMN as an NAD+ precursor. CoQ10 for the electron transport chain. Magnesium for over 300 enzymatic reactions. A nutrition protocol that minimizes oxidative stress.", pl1_tag:"NMN · CoQ10 · Magnesium · Antioxidants",
+  pl2_text:"Sirtuins are proteins that regulate aging, metabolism, and DNA repair. Their activity depends on NAD+. Resveratrol, quercetin, and fisetin are dietary sirtuin activators. A nutrition strategy that naturally raises NAD+ through precursors.", pl2_tag:"Resveratrol · Niacin · Sirtuins",
+  pl3_text:"Autophagy is the process of recycling damaged cellular components. Nobel Prize 2016. Nutrition is a powerful regulator: time-restricted eating, mTOR moderation through protein balance, and spermidine from natural foods (wheat sprouts, natto, aged cheese).", pl3_tag:"Time-restricted eating · Spermidine · mTOR",
+  pl4_text:"Chronic low-grade inflammation is one of the main drivers of aging. Omega-3 (EPA+DHA) suppress pro-inflammatory cytokines. Curcumin blocks NF-kB, a key inflammatory mediator. Polyphenols from berries, olive oil, and cruciferous vegetables are the foundation of the protocol.", pl4_tag:"Omega-3 · Curcumin · Polyphenols",
+  st_ey:"Program", st_title:"How your<br><em>program is structured</em>",
+  st_desc:"Four sequential steps — from baseline diagnostics to a personalised protocol and ongoing support.",
+  s1_t:"Initial consultation", s1_b:"We review lifestyle, eating habits, symptoms and goals. We assess current metabolic state and identify which aging pathways are most relevant for you.",
+  s2_t:"Laboratory diagnostics", s2_b:"We analyse biomarkers of biological age, inflammation and nutritional deficiencies. \'All normal\' does not mean no deficiencies.",
+  s3_t:"Personal anti-aging protocol", s3_b:"A nutrition protocol tailored to your biochemical profile. Nutraceutical selection justified by your data.",
+  s4_t:"Support & adjustment", s4_b:"Regular check-in sessions, tracking biomarker dynamics. At 8–12 weeks — follow-up tests: real changes in biochemistry.",
+  s1_tag1:"History and goals", s1_tag2:"Nutrition and lifestyle", s1_tag3:"Work direction",
+  s2_tag1:"Inflammation markers", s2_tag2:"Metabolic status", s2_tag3:"Nutritional deficiencies", s2_tag4:"Hormonal profile",
+  s3_tag1:"Nutrition protocol", s3_tag2:"Targeted nutraceuticals", s3_tag3:"Time-restricted eating", s3_tag4:"3-month roadmap",
+  s4_tag1:"Regular check-ins", s4_tag2:"Adjustments by lab data", s4_tag3:"Support between sessions",
+  res_ey:"Results", res_title:"What changes<br><em>in 8–16 weeks</em>",
+  r1_t:"4–6 weeks", r1_h:"Energy & recovery", r1_b:"More stable energy throughout the day. Less fatigue after effort. Deeper sleep.",
+  r2_t:"6–10 weeks", r2_h:"Cognitive clarity", r2_b:"Reduced brain fog, better focus and memory. Anti-inflammatory protocol reduces neuroinflammation.",
+  r3_t:"8–16 weeks", r3_h:"Biomarker changes", r3_b:"Reduction in hs-CRP and homocysteine. Normalisation of fasting insulin. Restoration of ferritin and vitamin D to optimal levels.",
+  res_disc:"Results are individual and depend on baseline state and protocol adherence. A nutritionist does not replace a doctor.",
+  an_ey:"Diagnostics", an_title:"Key biomarkers for<br>anti-aging monitoring",
+  an_desc:"These indicators provide a real picture of metabolic and inflammatory status. A standard panel is not enough.",
+  a1_m:"hs-CRP (high sensitivity)", a1_o:"Optimum: < 1 mg/l", a1_w:"Marker of low-level chronic inflammation. hs-CRP > 2 mg/l = active inflammaging.",
+  a2_m:"Homocysteine", a2_o:"Optimum: < 7 µmol/l", a2_w:"With B12, B6 and folate deficiency it accumulates, damages blood vessels and reduces cognitive function.",
+  a3_m:"Vitamin D 25(OH)D", a3_o:"Optimum: 60–80 ng/ml", a3_w:"Vitamin D is a hormone. Regulates immunity and supports muscle function.",
+  a4_m:"Fasting insulin", a4_o:"Optimum: 3–8 µIU/ml", a4_w:"Chronically elevated insulin accelerates mTOR, suppresses autophagy and amplifies inflammation.",
+  a5_m:"Ferritin", a5_o:"Optimum: 70–100 µg/l", a5_w:"Iron is a cofactor of mitochondrial respiration. Deficiency = direct cause of chronic fatigue.",
+  a6_m:"Red blood cell magnesium", a6_o:"Order separately (not serum)", a6_w:"Magnesium is a cofactor for over 300 enzymes. Serum magnesium remains normal to the very end.",
+  an_note:"✦ This table is a reference guide, not a diagnosis. For details, see the VIA-L guide 'What Your Tests Don\'t Tell You'.",
+  cta_ey:"Get started", cta_title:"Ready to find out your<br><em>biological age?</em>",
+  cta_desc:"In the first consultation we'll review your tests, talk about symptoms and goals. No obligations, no pressure.",
+  btn_back:"Back to programs", cta_note:"✦ First meeting — intro, no commitment ✦",
+  f_copy:"© 2025 VIA-L Longevity", f_tag:"Longevity is not about years. It's about the quality of each one.",
+  m_prog:"Anti-Aging Nutrition · VIA-L", m_title:"Book<br><em>a consultation</em>",
+  m_body:"First meeting — getting to know each other. No obligations, no pressure.",
+  m_tg:"Fastest way to get in touch", m_em:"We respond within 24 hours", m_web:"Online · Worldwide · UA / RU / ES / EN"
+}
+};
+
+function _applyLang(lang){
+  const t=LANGS[lang]||LANGS.uk;
+  const setOne = (selector, value) => {
+    if (typeof value !== 'string') return;
+    const el = document.querySelector(selector);
+    if (el) el.innerHTML = value;
+  };
+
+  Object.keys(t).forEach((k)=>{
+    const value=t[k];
+    if(typeof value!=='string') return;
+    const byId=document.getElementById(k);
+    if(byId) byId.innerHTML=value;
+    document.querySelectorAll('[data-i18n="'+k+'"]').forEach((el)=>{
+      if(el) el.innerHTML=value;
+    });
+  });
+
+  // Apply keys that are stored in _T but rendered in repeating cards without IDs.
+  for (let i = 1; i <= 6; i++) {
+    setOne(`.for-whom-grid .fw-card:nth-child(${i}) .fw-card-text`, t[`fw${i}_q`]);
+    setOne(`.for-whom-grid .fw-card:nth-child(${i}) .fw-card-label`, t[`fw${i}_l`]);
+  }
+  setOne('.for-whom-not strong', t.fw_not_title);
+  setOne('.for-whom-not p', t.fw_not_body);
+
+  setOne('#biochem .section-title', t.bc_title);
+  setOne('#biochem .section-desc', t.bc_desc);
+  for (let i = 1; i <= 5; i++) {
+    setOne(`.chain-list .chain-item:nth-child(${i}) strong`, t[`ch${i}_t`]);
+    setOne(`.chain-list .chain-item:nth-child(${i}) .chain-symptom`, t[`ch${i}_s`]);
+  }
+  setOne('.biochem-insight .insight-title', t.ins_title);
+  setOne('.biochem-insight .insight-body', t.ins_body);
+
+  setOne('#pillars .section-title', t.pl_title);
+  setOne('#pillars .section-desc', t.pl_desc);
+  for (let i = 1; i <= 4; i++) {
+    setOne(`.pillars-grid .pillar-card:nth-child(${i}) .pillar-name`, t[`pl${i}_name`]);
+    setOne(`.pillars-grid .pillar-card:nth-child(${i}) .pillar-sub`, t[`pl${i}_sub`]);
+  }
+
+  setOne('#stages .section-title', t.st_title);
+  setOne('#stages .section-desc', t.st_desc);
+  for (let i = 1; i <= 4; i++) {
+    setOne(`.stages-grid .stage-card:nth-child(${i}) .stage-title`, t[`s${i}_t`]);
+    setOne(`.stages-grid .stage-card:nth-child(${i}) .stage-body`, t[`s${i}_b`]);
+  }
+
+  for (let i = 1; i <= 3; i++) {
+    setOne(`.results-grid .result-card:nth-child(${i}) .result-timeline`, t[`r${i}_t`]);
+    setOne(`.results-grid .result-card:nth-child(${i}) .result-heading`, t[`r${i}_h`]);
+    setOne(`.results-grid .result-card:nth-child(${i}) .result-text`, t[`r${i}_b`]);
+  }
+  setOne('.results-disclaimer', t.res_disc);
+
+  setOne('#analyses .section-desc', t.an_desc);
+  for (let i = 1; i <= 6; i++) {
+    setOne(`.analyses-grid .analysis-card:nth-child(${i}) .analysis-marker`, t[`a${i}_m`]);
+    setOne(`.analyses-grid .analysis-card:nth-child(${i}) .analysis-optimal`, t[`a${i}_o`]);
+    setOne(`.analyses-grid .analysis-card:nth-child(${i}) .analysis-why`, t[`a${i}_w`]);
+  }
+  setOne('.analyses-note', t.an_note);
+
+  document.documentElement.lang=lang;
+}
+
+const LANG_STORAGE_KEY='selectedLang';
+
+function setLang(lang){
+  if(!LANGS[lang]) return;
+  const flags={uk:'🇺🇦',ru:'🇷🇺',es:'🇪🇸',en:'🇬🇧'};
+  const labels={uk:'UA',ru:'RU',es:'ES',en:'EN'};
+  const f=document.getElementById('currentFlag');
+  const l=document.getElementById('currentLangLabel');
+  if(f) f.textContent=flags[lang];
+  if(l) l.textContent=labels[lang];
+  document.querySelectorAll('.lang-option').forEach(o=>{
+    o.classList.toggle('active',o.dataset.lang===lang);
+  });
+  const sw=document.getElementById('langSwitcher');
+  if(sw) sw.classList.remove('open');
+  localStorage.setItem(LANG_STORAGE_KEY,lang);
+  _applyLang(lang);
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const storedLang=localStorage.getItem(LANG_STORAGE_KEY);
+  const initialLang=storedLang&&LANGS[storedLang]?storedLang:'uk';
+  setLang(initialLang);
+});
+
+/* ═══ ACCOMPANIMENT TRANSLATIONS ═══ */
+const ACC_T={uk:{acc_ey:'Програма супроводу',acc_title:'12 тижнів —<br><em>поруч на кожному кроці</em>',acc_sub:'Це не разова консультація. Це системна робота — тиждень за тижнем, аналіз за аналізом.',acc_s1:'тижнів<br>повного супроводу',acc_s2:'онлайн-сесій<br>по 60 хвилин',acc_s3:'аналізи —<br>до та після',acc_s4:'місяців план<br>на завершення',acc_tl_title:'Як виглядає <em>шлях клієнта</em>',acc_w1:'Тиждень 1',acc_wl1:'Старт',acc_t1:'Крок перший',acc_ph1:'Глибоке знайомство та діагностика',acc_pd1:'Перша сесія — 60 хвилин. Симптоми, харчова поведінка, сон, аналізи. Визначаємо точку відліку.',acc_w2:'Тиждень 2',acc_wl2:'Протокол',acc_t2:'Крок другий',acc_ph2:'Персональний протокол у ваших руках',acc_pd2:'Два письмових документи: протокол харчування та список нутрицевтиків з дозуваннями.',acc_w3:'Тижні 3–10',acc_wl3:'Робота',acc_t3:'Серце програми',acc_ph3:'Щотижневі сесії та підтримка між ними',acc_pd3:'60-хвилинна зустріч щотижня. Між сесіями — чат і голосові у Telegram або WhatsApp.',acc_w4:'Тиждень 11',acc_wl4:'Аналізи',acc_t4:'Контрольна точка',acc_ph4:'Повторні аналізи — бачимо зміни у цифрах',acc_pd4:"Повторна панель. Порівнюємо з початком — об'єктивно, у цифрах.",acc_w5:'Тиждень 12',acc_wl5:'Фінал',acc_t5:'Завершення',acc_ph5:'Підсумкова сесія та план на пів року',acc_pd5:'Письмовий документ: рекомендації на 6 місяців по харчуванню, нутрицевтикам і способу життя.',acc_inc_title:'Що входить у <em>програму супроводу</em>',acci1_t:'12 онлайн-сесій по 60 хв',acci1_d:'Щотижнева зустріч у Zoom або Meet. Аналіз динаміки, коригування протоколу.',acci2_t:'Персональний протокол харчування',acci2_d:'Письмовий документ після першої сесії. Складений під ваш профіль — не шаблон.',acci3_t:'Список нутрицевтиків з дозуваннями',acci3_d:'Письмовий перелік добавок з точними дозами. Лише доказова база.',acci4_t:'Підтримка між сесіями',acci4_d:'Чат і голосові у Telegram або WhatsApp — за вашим вибором.',acci5_t:'Повторні аналізи та порівняння',acci5_d:'Здаємо панель на 11-му тижні. Зміни у цифрах, не тільки у відчуттях.',acci6_t:'Фінальний план на 6 місяців',acci6_d:'Письмові рекомендації з харчування, нутрицевтиків і способу життя.',care_tag:'Після програми · За бажанням',care_title:'VIA-L <em>Care</em> —<br>програма підтримки результату',care_desc:"Щотижневий зворотний зв'язок, підтримка і своєчасне коригування — щоб зміни залишалися назавжди.",care1_t:"Зворотний зв'язок раз на тиждень",care1_d:'Чат або коротка зустріч — підтримка без пропусків',care2_t:'Корекція при змінах',care2_d:'Сезон, стрес, подорожі — адаптуємо протокол разом',care3_t:'Контроль аналізів',care3_d:'Стежимо за маркерами і коригуємо нутрицевтики',care4_t:'Відчуття «не один»',care4_d:'Результат тримається, коли є хтось поруч',acc_quote:"«Зміни, які стають частиною вашого життя —<br>це результат <em>правильної підтримки</em>.»",acc_btn1:'Вільні слоти на знайомство',acc_btn2:'Оплатити супровід'},ru:{acc_ey:'Программа сопровождения',acc_title:'12 недель —<br><em>рядом на каждом шагу</em>',acc_sub:'Это не разовая консультация. Это системная работа — неделя за неделей, анализ за анализом.',acc_s1:'недель<br>полного сопровождения',acc_s2:'онлайн-сессий<br>по 60 минут',acc_s3:'анализы —<br>до и после',acc_s4:'месяцев план<br>на завершение',acc_tl_title:'Как выглядит <em>путь клиента</em>',acc_w1:'Неделя 1',acc_wl1:'Старт',acc_t1:'Шаг первый',acc_ph1:'Глубокое знакомство и диагностика',acc_pd1:'Первая сессия — 60 минут. Симптомы, пищевое поведение, сон, анализы. Определяем точку отсчёта.',acc_w2:'Неделя 2',acc_wl2:'Протокол',acc_t2:'Шаг второй',acc_ph2:'Персональный протокол в ваших руках',acc_pd2:'Два письменных документа: протокол питания и список нутрицевтиков с дозировками.',acc_w3:'Недели 3–10',acc_wl3:'Работа',acc_t3:'Сердце программы',acc_ph3:'Еженедельные сессии и поддержка между ними',acc_pd3:'60-минутная встреча каждую неделю. Между сессиями — чат и голосовые в Telegram или WhatsApp.',acc_w4:'Неделя 11',acc_wl4:'Анализы',acc_t4:'Контрольная точка',acc_ph4:'Повторные анализы — видим изменения в цифрах',acc_pd4:'Повторная панель. Сравниваем с началом — объективно, в цифрах.',acc_w5:'Неделя 12',acc_wl5:'Финал',acc_t5:'Завершение',acc_ph5:'Итоговая сессия и план на полгода',acc_pd5:'Письменный документ: рекомендации на 6 месяцев по питанию, нутрицевтикам и образу жизни.',acc_inc_title:'Что входит в <em>программу сопровождения</em>',acci1_t:'12 онлайн-сессий по 60 мин',acci1_d:'Еженедельная встреча в Zoom или Meet. Анализ динамики, корректировка протокола.',acci2_t:'Персональный протокол питания',acci2_d:'Письменный документ после первой сессии. Составлен под ваш профиль — не шаблон.',acci3_t:'Список нутрицевтиков с дозировками',acci3_d:'Письменный перечень добавок с точными дозами. Только доказательная база.',acci4_t:'Поддержка между сессиями',acci4_d:'Чат и голосовые в Telegram или WhatsApp — по вашему выбору.',acci5_t:'Повторные анализы и сравнение',acci5_d:'Сдаём панель на 11-й неделе. Изменения в цифрах, не только в ощущениях.',acci6_t:'Финальный план на 6 месяцев',acci6_d:'Письменные рекомендации по питанию, нутрицевтикам и образу жизни.',care_tag:'После программы · По желанию',care_title:'VIA-L <em>Care</em> —<br>программа поддержки результата',care_desc:'Еженедельная обратная связь, поддержка и своевременная корректировка — чтобы изменения остались навсегда.',care1_t:'Обратная связь раз в неделю',care1_d:'Чат или короткая встреча — поддержка без пропусков',care2_t:'Коррекция при изменениях',care2_d:'Сезон, стресс, путешествия — адаптируем протокол вместе',care3_t:'Контроль анализов',care3_d:'Следим за маркерами и корректируем нутрицевтики',care4_t:'Ощущение «не один»',care4_d:'Результат держится, когда есть кто-то рядом',acc_quote:'«Изменения, которые становятся частью вашей жизни —<br>это результат <em>правильной поддержки</em>.»',acc_btn1:'Свободные слоты на знакомство',acc_btn2:'Оплатить сопровождение'},es:{acc_ey:'Programa de acompañamiento',acc_title:'12 semanas —<br><em>junto a ti en cada paso</em>',acc_sub:'No es una consulta puntual. Es trabajo sistemático — semana a semana, análisis tras análisis.',acc_s1:'semanas de<br>acompañamiento completo',acc_s2:'sesiones online<br>de 60 minutos',acc_s3:'análisis —<br>antes y después',acc_s4:'meses de plan<br>al finalizar',acc_tl_title:'El camino del cliente <em>semana a semana</em>',acc_w1:'Semana 1',acc_wl1:'Inicio',acc_t1:'Paso primero',acc_ph1:'Conocimiento profundo y diagnóstico',acc_pd1:'Primera sesión — 60 minutos. Síntomas, comportamiento alimentario, sueño, análisis. Establecemos el punto de partida.',acc_w2:'Semana 2',acc_wl2:'Protocolo',acc_t2:'Paso segundo',acc_ph2:'Tu protocolo personal en tus manos',acc_pd2:'Dos documentos escritos: protocolo de alimentación y lista de nutracéuticos con dosis para tu perfil.',acc_w3:'Semanas 3–10',acc_wl3:'Trabajo',acc_t3:'El corazón del programa',acc_ph3:'Sesiones semanales y soporte entre ellas',acc_pd3:'Sesión de 60 min cada semana. Entre sesiones — chat y mensajes de voz en Telegram o WhatsApp.',acc_w4:'Semana 11',acc_wl4:'Análisis',acc_t4:'Punto de control',acc_ph4:'Análisis de seguimiento — vemos cambios en cifras',acc_pd4:'Panel de seguimiento. Comparamos con el inicio — objetivamente, en cifras.',acc_w5:'Semana 12',acc_wl5:'Final',acc_t5:'Cierre',acc_ph5:'Sesión de cierre y plan para medio año',acc_pd5:'Documento escrito: recomendaciones para 6 meses sobre alimentación, nutracéuticos y estilo de vida.',acc_inc_title:'Qué incluye el <em>programa de acompañamiento</em>',acci1_t:'12 sesiones online de 60 min',acci1_d:'Reunión semanal en Zoom o Meet. Análisis de dinámica, ajuste de protocolo.',acci2_t:'Protocolo de alimentación personalizado',acci2_d:'Documento escrito tras la primera sesión. Elaborado para tu perfil — no es una plantilla.',acci3_t:'Lista de nutracéuticos con dosis',acci3_d:'Lista escrita de suplementos con dosis precisas. Solo base científica.',acci4_t:'Soporte entre sesiones',acci4_d:'Chat y mensajes de voz en Telegram o WhatsApp — a tu elección.',acci5_t:'Análisis de seguimiento y comparación',acci5_d:'Panel en la semana 11. Cambios en cifras, no solo en sensaciones.',acci6_t:'Plan final para 6 meses',acci6_d:'Recomendaciones escritas sobre alimentación, nutracéuticos y estilo de vida.',care_tag:'Después del programa · Opcional',care_title:'VIA-L <em>Care</em> —<br>programa de mantenimiento',care_desc:'Feedback semanal, apoyo y ajustes a tiempo — para que los cambios sean permanentes.',care1_t:'Feedback una vez a la semana',care1_d:'Chat o breve reunión — apoyo continuo',care2_t:'Ajuste ante cambios',care2_d:'Temporada, estrés, viajes — adaptamos el protocolo juntos',care3_t:'Control de análisis',care3_d:'Monitoreamos marcadores y ajustamos nutracéuticos',care4_t:'Sensación de no estar solo',care4_d:'El resultado se mantiene cuando hay alguien cerca',acc_quote:'«Los cambios que se convierten en parte de tu vida —<br>son el resultado del <em>apoyo correcto</em>.»',acc_btn1:'Horarios disponibles para conocernos',acc_btn2:'Pagar acompañamiento'},en:{acc_ey:'Accompaniment programme',acc_title:'12 weeks —<br><em>with you every step</em>',acc_sub:'This is not a one-off consultation. It is systematic work — week by week, test by test.',acc_s1:'weeks of<br>full accompaniment',acc_s2:'online sessions<br>60 minutes each',acc_s3:'lab tests —<br>before and after',acc_s4:'months plan<br>at the end',acc_tl_title:'The client journey <em>week by week</em>',acc_w1:'Week 1',acc_wl1:'Start',acc_t1:'Step one',acc_ph1:'In-depth introduction and diagnostics',acc_pd1:'First session — 60 minutes. Symptoms, eating behaviour, sleep, tests. We set the baseline.',acc_w2:'Week 2',acc_wl2:'Protocol',acc_t2:'Step two',acc_ph2:'Your personal protocol in your hands',acc_pd2:'Two written documents: nutrition protocol and nutrient list with personalised dosages.',acc_w3:'Weeks 3–10',acc_wl3:'Work',acc_t3:'The heart of the programme',acc_ph3:'Weekly sessions and support between them',acc_pd3:'60-min session every week. Between sessions — chat and voice messages in Telegram or WhatsApp.',acc_w4:'Week 11',acc_wl4:'Tests',acc_t4:'Control point',acc_ph4:'Follow-up tests — seeing changes in numbers',acc_pd4:'Follow-up panel. We compare with the baseline — objectively, in numbers.',acc_w5:'Week 12',acc_wl5:'Finale',acc_t5:'Completion',acc_ph5:'Final session and plan for six months ahead',acc_pd5:'Written document: 6-month recommendations on nutrition, supplements and lifestyle.',acc_inc_title:"What's included in the <em>accompaniment programme</em>",acci1_t:'12 online sessions — 60 min each',acci1_d:'Weekly meeting in Zoom or Meet. Progress review, protocol adjustment.',acci2_t:'Personal nutrition protocol',acci2_d:'Written document after the first session. Tailored to your profile — not a template.',acci3_t:'Supplement list with dosages',acci3_d:'Written list of supplements with precise doses. Evidence-based only.',acci4_t:'Support between sessions',acci4_d:'Chat and voice messages in Telegram or WhatsApp — your choice.',acci5_t:'Follow-up tests and comparison',acci5_d:'Panel at week 11. Changes in numbers, not just feelings.',acci6_t:'Final 6-month plan',acci6_d:'Written recommendations on nutrition, supplements and lifestyle.',care_tag:'After the programme · Optional',care_title:'VIA-L <em>Care</em> —<br>result maintenance programme',care_desc:"Weekly feedback, support and timely adjustments — so that changes last for ever.",care1_t:'Weekly feedback',care1_d:'Chat or short meeting — continuous support',care2_t:'Adjustment when things change',care2_d:'Season, stress, travel — we adapt the protocol together',care3_t:'Lab monitoring',care3_d:'We track markers and adjust supplements',care4_t:'The feeling of not being alone',care4_d:"Results hold when there's someone by your side",acc_quote:'"Changes that become part of your life —<br>are the result of the <em>right support</em>."',acc_btn1:'Available intro slots',acc_btn2:'Pay for programme'}};
+
+function applyAccT(l){
+  const t=ACC_T[l];if(!t)return;
+  const ids=['acc_ey','acc_title','acc_sub','acc_tl_title','acc_inc_title','acc_quote',
+    'acc_w1','acc_wl1','acc_t1','acc_ph1','acc_pd1',
+    'acc_w2','acc_wl2','acc_t2','acc_ph2','acc_pd2',
+    'acc_w3','acc_wl3','acc_t3','acc_ph3','acc_pd3',
+    'acc_w4','acc_wl4','acc_t4','acc_ph4','acc_pd4',
+    'acc_w5','acc_wl5','acc_t5','acc_ph5','acc_pd5',
+    'acci1_t','acci1_d','acci2_t','acci2_d','acci3_t','acci3_d',
+    'acci4_t','acci4_d','acci5_t','acci5_d','acci6_t','acci6_d',
+    'care_tag','care_title','care_desc',
+    'care1_t','care1_d','care2_t','care2_d','care3_t','care3_d','care4_t','care4_d',
+    'acc_s1','acc_s2','acc_s3','acc_s4'];
+  ids.forEach(k=>{const el=document.getElementById(k);if(el&&t[k]!==undefined)el.innerHTML=t[k];});
+  const b1=document.getElementById('acc_btn1');const b2=document.getElementById('acc_btn2');
+  if(b1)b1.textContent=t.acc_btn1;if(b2)b2.textContent=t.acc_btn2;
+}
+
+function openAccPayModal(){
+  // ── STRIPE PAYMENT LINKS ──
+  // Замените заглушки на реальные ссылки после настройки Stripe:
+  // Базова 8 тижнів €390  → STRIPE_BASE  = 'https://buy.stripe.com/REPLACE_ME'
+  // Повна 12 тижнів €590  → STRIPE_FULL  = 'https://buy.stripe.com/REPLACE_ME'
+  // Разова €120           → STRIPE_ONCE  = 'https://buy.stripe.com/REPLACE_ME'
+  openModal('payModal');
+}
+
+</script>
+
+</body>
+</html>

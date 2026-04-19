@@ -1,0 +1,1856 @@
+<!DOCTYPE html>
+
+<html lang="uk" data-current-lang="ua">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Андрогенна Пауза</title>
+  <meta name="description" content="Персоналізована програма підтримки при менопаузі та перименопаузі. Зниження симптомів через харчування, нутрицевтики та біохімічний підхід. VIA-L Longevity.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Advent+Pro:ital,wght@0,200;0,300;0,400;0,500;0,600;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&family=EB+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream:     #F5F3EF;
+      --cream-dk:  #EDE9E2;
+      --cream-md:  #E8E3DA;
+      --gold:      #8B6F47;
+      --gold-lt:   #B8955A;
+      --gold-pale: #D4B896;
+      --gold-xp:   #F4EDE3;
+      --text:      #140E05;
+      --text-mid:  #2C1F10;
+      --text-lt:   #4A3520;
+      --line:      rgba(139,111,71,.15);
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--cream);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      font-size: 17px;
+      line-height: 1.75;
+    }
+
+    /* Language visibility: UA by default, others hidden */
+    .lang-content { display: none; }
+    .lang-content:not([data-lang="ua"]) { display: none; }
+    .lang-content[data-lang="ua"] { display: block; }
+    .lang-ua, .lang-ru, .lang-es, .lang-en { display: none; }
+    html[data-current-lang="ua"] .lang-ua,
+    html[data-current-lang="ru"] .lang-ru,
+    html[data-current-lang="es"] .lang-es,
+    html[data-current-lang="en"] .lang-en { display: block; }
+    .chain-arrow .lang-ua,
+    .chain-arrow .lang-ru,
+    .chain-arrow .lang-es,
+    .chain-arrow .lang-en { display: none; }
+    html[data-current-lang="ua"] .chain-arrow .lang-ua,
+    html[data-current-lang="ru"] .chain-arrow .lang-ru,
+    html[data-current-lang="es"] .chain-arrow .lang-es,
+    html[data-current-lang="en"] .chain-arrow .lang-en { display: inline; }
+
+    /* ═══ NAV ═══ */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 300;
+      display: grid; grid-template-columns: 1fr auto 1fr;
+      align-items: center; padding: 10px 48px;
+      background: transparent; border-bottom: 1px solid transparent;
+      transition: border-color .3s, background .4s, box-shadow .3s;
+    }
+    nav.scrolled { background: var(--cream); border-color: var(--line); box-shadow: 0 2px 20px rgba(44,36,23,.06); }
+    .nav-left { display: flex; align-items: center; }
+    .nav-back { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-lt); text-decoration: none; display: flex; align-items: center; gap: 7px; transition: color .3s; white-space: nowrap; }
+    .nav-back:hover { color: var(--gold); }
+    .nav-back::before { content: '←'; font-size: 12px; }
+    .nav-logo-wrap { display: flex; flex-direction: column; align-items: center; text-decoration: none; justify-self: center; }
+    .nav-logo { font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 700; letter-spacing: 5px; color: var(--text); line-height: 1; }
+    .logo-line { height: 1px; background: var(--gold); margin: 3px 0; align-self: stretch; opacity: 0.75; }
+    .logo-sub { font-size: 8px; letter-spacing: 4px; text-transform: uppercase; color: var(--gold); font-weight: 500; }
+    .nav-right { display: flex; justify-content: flex-end; align-items: center; }
+    .lang-switcher { position: relative; }
+    .lang-btn { display: flex; align-items: center; gap: 5px; background: rgba(245,243,239,.72); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(139,111,71,.22); padding: 6px 12px; border-radius: 50px; cursor: pointer; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--text); white-space: nowrap; font-family: 'DM Sans', sans-serif; transition: border-color .3s; }
+    .lang-btn:hover { border-color: var(--gold-pale); }
+    nav.scrolled .lang-btn { background: none; backdrop-filter: none; border-color: var(--line); }
+    .lang-flag { font-size: 13px; }
+    .lang-arrow { font-size: 6px; color: var(--text-lt); transition: transform .2s; display: inline-block; }
+    .lang-switcher.open .lang-arrow { transform: rotate(180deg); }
+    .lang-dropdown { display: none; position: absolute; top: calc(100% + 6px); right: 0; background: var(--cream); border: 1px solid var(--gold-pale); border-radius: 12px; overflow: hidden; min-width: 170px; box-shadow: 0 8px 24px rgba(90,70,40,.18); z-index: 9999; }
+    .lang-switcher.open .lang-dropdown { display: block; }
+    .lang-option { display: flex; align-items: center; gap: 10px; padding: 11px 16px; cursor: pointer; font-size: 14px; color: var(--text-mid); transition: background .2s; position: relative; }
+    .lang-option:hover { background: var(--cream-dk); }
+    .lang-option .flag { font-size: 16px; }
+    .lang-option .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); position: absolute; right: 14px; opacity: 0; }
+    .lang-option.active .dot { opacity: 1; }
+    .lang-option.active { color: var(--text); font-weight: 500; }
+    /* Dual CTA buttons */
+    .btn-secondary { display: inline-block; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); border: 1px solid rgba(139,111,71,.45); background: transparent; padding: 13px 28px; border-radius: 50px; text-decoration: none; font-weight: 500; transition: all .3s; cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
+    .btn-secondary:hover { background: rgba(139,111,71,.06); border-color: var(--gold); }
+    .hero-btns { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    /* Mobile nav */
+    @media (max-width: 680px) {
+      nav { padding: 10px 18px; }
+      .nav-back { font-size: 9px; letter-spacing: 1.5px; }
+      .nav-logo { font-size: 15px; letter-spacing: 4px; }
+      .logo-sub { font-size: 7px; letter-spacing: 3px; }
+      .lang-btn { font-size: 10px; padding: 5px 9px; }
+      .hero-btns { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* ═══ HERO ═══ */
+    #hero {
+      min-height: 100svh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: stretch;
+      padding-top: 72px;
+      position: relative;
+    }
+    .hero-left {
+      display: flex; flex-direction: column; justify-content: center;
+      padding: clamp(48px,8vh,96px) clamp(24px,4vw,64px) clamp(48px,8vh,80px) clamp(44px,6vw,112px);
+      position: relative; z-index: 1;
+    }
+    .hero-right {
+      position: relative; overflow: hidden;
+    }
+    .hero-img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: center top;
+      display: block;
+    }
+    .hero-right::before {
+      content: ''; position: absolute; inset: 0; z-index: 1;
+      background: linear-gradient(to left,
+        rgba(245,243,239,0) 62%, rgba(245,243,239,.28) 80%,
+        rgba(245,243,239,.52) 92%, rgba(245,243,239,.72) 100%);
+    }
+    .hero-right::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 180px; z-index: 1;
+      background: linear-gradient(to top, var(--cream) 0%, transparent 100%);
+    }
+
+    .prog-tag {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+    }
+    .prog-tag::before { content: ''; width: 22px; height: 1px; background: var(--gold-pale); }
+    .prog-tag span { font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); font-weight: 500; }
+
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(36px, 3.6vw, 54px);
+      font-weight: 500; line-height: 1.1; color: var(--text);
+      margin-bottom: 6px;
+    }
+    .hero-title em { font-style: italic; color: var(--gold); }
+    .hero-subtitle {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: clamp(20px, 2vw, 26px);
+      color: var(--text-mid); margin-bottom: 24px; line-height: 1.35;
+    }
+    .hero-divider { width: 28px; height: 1px; background: var(--gold-pale); margin-bottom: 20px; }
+    .hero-desc {
+      font-size: clamp(14px,1vw,16px); font-weight: 300; line-height: 1.85;
+      color: var(--text-mid); max-width: 420px; margin-bottom: 32px;
+    }
+    .hero-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+    .pill {
+      font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--gold); border: 0.5px solid rgba(139,111,71,.35);
+      padding: 6px 14px; border-radius: 50px;
+    }
+    .btn-primary {
+      display: inline-block; font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase;
+      color: var(--text); border: 1px solid rgba(139,111,71,.4);
+      background: rgba(245,243,239,.6); backdrop-filter: blur(12px);
+      padding: 14px 36px; border-radius: 50px; text-decoration: none;
+      font-weight: 500; transition: all .3s;
+      box-shadow: 0 4px 24px rgba(139,111,71,.1), inset 0 1px 0 rgba(255,255,255,.8);
+    }
+    .btn-primary:hover { background: rgba(255,255,255,.85); border-color: var(--gold-pale); box-shadow: 0 8px 28px rgba(139,111,71,.16); }
+    .hero-note { margin-top: 14px; font-size: 12px; color: var(--gold); opacity: .75; font-style: italic; }
+
+    /* ═══ QUOTE BRIDGE ═══ */
+    .quote-bridge {
+      background: var(--cream);
+      border-top: 1px solid rgba(139,111,71,.08);
+      padding: 56px clamp(24px,6vw,96px);
+      text-align: center;
+    }
+    .bridge-quote {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: clamp(22px, 2.2vw, 32px);
+      font-weight: 500; line-height: 1.5; color: var(--text);
+      max-width: 860px; margin: 0 auto 16px;
+    }
+    .bridge-author-row { display: flex; align-items: center; justify-content: center; gap: 12px; }
+    .bridge-line { width: 100px; height: 1px; background: linear-gradient(to right, rgba(139,111,71,.12), rgba(139,111,71,.5), rgba(139,111,71,.12)); }
+    .bridge-author { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--text-mid); opacity: .7; }
+
+    /* ═══ SECTIONS SHARED ═══ */
+    section { padding: 80px clamp(24px,6vw,96px); }
+    .section-eyebrow {
+      font-size: 11px; font-weight: 500; letter-spacing: .22em; color: var(--gold);
+      text-transform: uppercase; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .section-eyebrow::before, .section-eyebrow::after {
+      content: ''; display: block; height: 1px; background: var(--gold-pale); width: 32px;
+    }
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(28px, 2.8vw, 40px);
+      font-weight: 400; line-height: 1.15; color: var(--text);
+      margin-bottom: 16px;
+    }
+    .section-desc { font-size: 15px; font-weight: 300; line-height: 1.85; color: var(--text-mid); max-width: 600px; }
+
+    /* ═══ FOR WHOM ═══ */
+    #for-whom { background: var(--cream-dk); }
+    .for-whom-inner { max-width: 1200px; margin: 0 auto; }
+    .for-whom-grid {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 2px;
+      margin-top: 48px; border: 1px solid var(--line); border-radius: 2px;
+    }
+    .fw-card {
+      padding: 32px 28px; background: var(--cream);
+      border-right: 1px solid var(--line);
+      transition: background .3s;
+    }
+    .fw-card:last-child { border-right: none; }
+    .fw-card:hover { background: var(--gold-xp); }
+    .fw-card-icon { font-size: 22px; margin-bottom: 14px; }
+    .fw-card-text { font-size: 15px; font-style: italic; font-family: 'Cormorant Garamond', serif; color: var(--text-mid); line-height: 1.55; margin-bottom: 10px; }
+    .fw-card-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); }
+    .for-whom-not {
+      margin-top: 32px; padding: 24px 28px;
+      border: 0.5px solid var(--line); border-radius: 2px;
+      background: rgba(245,243,239,.5);
+    }
+    .for-whom-not p { font-size: 14px; color: var(--text-lt); line-height: 1.7; }
+    .for-whom-not strong { font-weight: 500; color: var(--text); }
+
+    /* ═══ BIOCHEMISTRY ═══ */
+    #biochem { background: var(--cream); }
+    .biochem-inner { max-width: 1200px; margin: 0 auto; }
+    .biochem-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 48px;
+      align-items: start;
+    }
+    .chain-list { display: flex; flex-direction: column; gap: 0; }
+    .chain-item {
+      display: grid; grid-template-columns: 40px 1fr; gap: 16px;
+      padding: 20px 0; border-bottom: 1px solid var(--line);
+      align-items: start;
+    }
+    .chain-item:last-child { border-bottom: none; }
+    .chain-arrow {
+      font-size: 10px; letter-spacing: 1px; color: var(--gold-pale);
+      padding-top: 4px; font-weight: 500;
+    }
+    .chain-text strong { font-size: 14px; font-weight: 500; color: var(--text); display: block; margin-bottom: 3px; }
+    .chain-text span { font-size: 13px; color: var(--text-lt); line-height: 1.55; }
+    .chain-symptom {
+      display: inline-block; margin-top: 6px;
+      font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--gold); border: 0.5px solid rgba(139,111,71,.3);
+      padding: 3px 10px; border-radius: 50px;
+    }
+    .biochem-insight {
+      background: var(--cream-dk); padding: 36px; border-radius: 2px;
+      border-left: 2px solid var(--gold-pale);
+      position: sticky; top: 100px;
+    }
+    .insight-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 400; color: var(--text); margin-bottom: 16px; line-height: 1.3; }
+    .insight-body { font-size: 14px; font-weight: 300; line-height: 1.85; color: var(--text-mid); margin-bottom: 20px; }
+    .insight-list { list-style: none; }
+    .insight-list li { font-size: 14px; color: var(--text-lt); padding: 8px 0 8px 20px; border-bottom: 1px solid var(--line); position: relative; }
+    .insight-list li:last-child { border-bottom: none; }
+    .insight-list li::before { content: '✦'; position: absolute; left: 0; font-size: 7px; top: 11px; color: var(--gold-pale); }
+
+    /* ═══ PROGRAM STAGES ═══ */
+    #stages { background: var(--cream-dk); }
+    .stages-inner { max-width: 1200px; margin: 0 auto; }
+    .stages-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+      margin-top: 48px;
+    }
+    .stage-card {
+      padding: 40px 36px; background: var(--cream);
+      border: 1px solid transparent;
+      transition: border-color .3s, box-shadow .3s;
+      position: relative;
+    }
+    .stage-card:hover { border-color: var(--line); box-shadow: 0 8px 32px rgba(139,111,71,.07); }
+    .stage-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 48px; font-weight: 400; color: rgba(184,149,90,.18);
+      line-height: 1; margin-bottom: 14px; display: block;
+    }
+    .stage-title { font-size: 17px; font-weight: 500; color: var(--text); margin-bottom: 8px; }
+    .stage-desc { font-size: 14px; font-weight: 300; line-height: 1.8; color: var(--text-mid); margin-bottom: 16px; }
+    .stage-items { list-style: none; }
+    .stage-items li { font-size: 13px; color: var(--text-lt); padding: 6px 0 6px 16px; border-bottom: 0.5px solid var(--line); position: relative; }
+    .stage-items li:last-child { border-bottom: none; }
+    .stage-items li::before { content: '—'; position: absolute; left: 0; color: var(--gold-pale); font-size: 12px; }
+    .stage-card.full-width { grid-column: span 2; }
+
+    /* ═══ WHAT'S INCLUDED ═══ */
+    #included { background: var(--cream); }
+    .included-inner { max-width: 1200px; margin: 0 auto; }
+    .included-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; margin-top: 48px; align-items: start; }
+    .included-list { display: flex; flex-direction: column; gap: 0; }
+    .inc-item {
+      display: grid; grid-template-columns: 48px 1fr; gap: 16px;
+      padding: 24px 0; border-bottom: 1px solid var(--line); align-items: start;
+    }
+    .inc-item:last-child { border-bottom: none; }
+    .inc-icon { font-size: 20px; padding-top: 2px; }
+    .inc-title { font-size: 16px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+    .inc-desc { font-size: 13px; font-weight: 300; color: var(--text-lt); line-height: 1.65; }
+    .included-aside { position: sticky; top: 100px; }
+    .guides-block {
+      background: var(--cream-dk); padding: 36px;
+      border: 0.5px solid var(--line); margin-bottom: 24px;
+    }
+    .guides-label { font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; display: block; }
+    .guide-row {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 14px 0; border-bottom: 0.5px solid var(--line);
+    }
+    .guide-row:last-child { border-bottom: none; }
+    .guide-code { font-size: 11px; letter-spacing: 1px; color: var(--gold-pale); font-weight: 500; flex-shrink: 0; padding-top: 2px; }
+    .guide-name { font-size: 14px; color: var(--text); font-weight: 400; line-height: 1.4; }
+    .guide-sub { font-size: 12px; color: var(--text-lt); }
+    .format-block { padding: 28px 36px; border: 1px solid rgba(139,111,71,.2); }
+    .format-title { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+    .format-rows { display: flex; flex-direction: column; gap: 10px; }
+    .format-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 0.5px solid var(--line); font-size: 14px; color: var(--text-mid); }
+    .format-row:last-child { border-bottom: none; }
+    .format-row span:last-child { color: var(--text); font-weight: 500; }
+
+    /* ═══ RESULTS ═══ */
+    #results { background: var(--text); overflow: hidden; position: relative; }
+    #results::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(ellipse at 70% 50%, rgba(184,149,90,.08) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .results-inner { max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
+    #results .section-eyebrow { color: var(--gold-pale); }
+    #results .section-eyebrow::before, #results .section-eyebrow::after { background: rgba(184,149,90,.3); }
+    #results .section-title { color: var(--cream); }
+    #results .section-desc { color: rgba(245,243,239,.7); }
+    .results-grid {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 2px;
+      margin-top: 48px;
+    }
+    .result-card {
+      padding: 36px 28px;
+      border-right: 1px solid rgba(245,243,239,.06);
+    }
+    .result-card:last-child { border-right: none; }
+    .result-timeline { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-pale); margin-bottom: 12px; display: block; }
+    .result-heading { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 400; color: var(--cream); margin-bottom: 10px; line-height: 1.3; }
+    .result-text { font-size: 14px; font-weight: 300; line-height: 1.8; color: rgba(245,243,239,.7); }
+    .results-disclaimer {
+      margin-top: 40px; padding-top: 28px;
+      border-top: 1px solid rgba(245,243,239,.08);
+      font-size: 12px; color: rgba(245,243,239,.4); font-style: italic;
+      text-align: center;
+    }
+
+    /* ═══ ANALYSES ═══ */
+    #analyses { background: var(--cream-dk); }
+    .analyses-inner { max-width: 1200px; margin: 0 auto; }
+    .analyses-grid {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 2px;
+      margin-top: 48px;
+    }
+    .analysis-card {
+      padding: 28px 24px; background: var(--cream);
+      border-right: 1px solid var(--line);
+    }
+    .analysis-card:last-child { border-right: none; }
+    .analysis-marker { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+    .analysis-optimal { font-size: 11px; letter-spacing: 1px; color: var(--gold); margin-bottom: 8px; }
+    .analysis-why { font-size: 13px; font-weight: 300; line-height: 1.65; color: var(--text-lt); }
+    .analyses-note {
+      margin-top: 24px; padding: 20px 28px;
+      background: rgba(245,243,239,.7); border-left: 2px solid rgba(184,149,90,.4);
+      font-size: 13px; color: var(--text-lt); line-height: 1.7; font-style: italic;
+    }
+
+    /* ═══ CTA ═══ */
+    #cta { background: var(--cream); text-align: center; padding: 96px clamp(24px,6vw,96px); }
+    .cta-inner { max-width: 680px; margin: 0 auto; }
+    .cta-eyebrow { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 24px; display: block; }
+    .cta-title { font-family: 'Playfair Display', serif; font-size: clamp(32px,3.2vw,48px); font-weight: 400; line-height: 1.15; color: var(--text); margin-bottom: 20px; }
+    .cta-title em { font-style: italic; color: var(--gold); }
+    .cta-desc { font-size: 15px; font-weight: 300; line-height: 1.9; color: var(--text-mid); margin-bottom: 40px; max-width: 520px; margin-left: auto; margin-right: auto; }
+    .cta-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+    .btn-ghost {
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--text-lt); border: 0.5px solid rgba(139,111,71,.25);
+      padding: 13px 28px; border-radius: 50px; text-decoration: none;
+      transition: all .3s;
+    }
+    .btn-ghost:hover { border-color: var(--gold-pale); color: var(--text); }
+    .cta-note { font-size: 13px; color: var(--gold); opacity: .7; font-style: italic; }
+
+    /* ═══ FOOTER ═══ */
+    footer {
+      background: var(--text); padding: 40px clamp(24px,6vw,96px);
+      display: flex; align-items: center; justify-content: space-between;
+      border-top: 1px solid rgba(245,243,239,.06);
+    }
+    .footer-logo { font-family: 'Playfair Display', serif; font-size: 18px; letter-spacing: 6px; color: var(--cream); font-weight: 700; }
+    .footer-copy { font-size: 11px; letter-spacing: 1.5px; color: rgba(245,243,239,.35); text-transform: uppercase; }
+    .footer-tagline { font-size: 12px; color: rgba(245,243,239,.4); font-style: italic; font-family: 'Cormorant Garamond', serif; }
+
+    /* ═══ RESPONSIVE ═══ */
+    @media (max-width: 900px) {
+      nav { padding: 14px 24px; }
+      #hero { grid-template-columns: 1fr; min-height: auto; padding-top: 72px; }
+      .hero-right { height: 55vw; min-height: 280px; }
+      .hero-right::before { background: linear-gradient(to top, var(--cream) 0%, transparent 60%); }
+      .hero-left { padding: 32px 24px 40px; }
+      .biochem-grid, .stages-grid, .included-layout { grid-template-columns: 1fr; }
+      .stage-card.full-width { grid-column: span 1; }
+      .for-whom-grid { grid-template-columns: 1fr; }
+      .fw-card { border-right: none; border-bottom: 1px solid var(--line); }
+      .results-grid, .analyses-grid { grid-template-columns: 1fr; }
+      .result-card, .analysis-card { border-right: none; border-bottom: 1px solid rgba(245,243,239,.06); }
+      .analysis-card { border-bottom-color: var(--line); }
+      .included-aside { position: static; }
+      .biochem-insight { position: static; }
+      footer { flex-direction: column; gap: 12px; text-align: center; }
+    }
+
+/* ═══ ACCOMPANIMENT BLOCK ═══ */
+    #accompaniment{background:var(--cream-dk);padding:96px clamp(24px,6vw,96px);}
+    .acc-inner{max-width:1200px;margin:0 auto;}
+    .acc-eyebrow{font-size:11px;font-weight:500;letter-spacing:.22em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:12px;}
+    .acc-eyebrow::before,.acc-eyebrow::after{content:'';display:block;height:1px;background:var(--gold-pale);width:32px;}
+    .acc-header{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-bottom:56px;align-items:end;}
+    .acc-title{font-family:'Playfair Display',serif;font-size:clamp(28px,3vw,42px);font-weight:400;line-height:1.12;color:var(--text);}
+    .acc-title em{font-style:italic;color:var(--gold);}
+    .acc-subtitle{font-size:15px;font-weight:300;line-height:1.85;color:var(--text-mid);max-width:420px;}
+    .acc-subtitle strong{font-weight:500;color:var(--text);}
+    .acc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-bottom:56px;}
+    .acc-stat{background:var(--cream);padding:28px 20px;text-align:center;border-right:1px solid var(--line);}
+    .acc-stat:last-child{border-right:none;}
+    .stat-num{font-family:'Playfair Display',serif;font-size:clamp(38px,4vw,52px);font-weight:400;color:var(--gold);line-height:1;margin-bottom:8px;display:block;}
+    .stat-label{font-size:13px;font-weight:300;color:var(--text-lt);line-height:1.5;}
+    .acc-timeline-wrap{margin-bottom:56px;}
+    .acc-timeline-title{font-family:'Playfair Display',serif;font-size:clamp(20px,2vw,26px);font-weight:400;color:var(--text);margin-bottom:28px;}
+    .acc-timeline-title em{font-style:italic;color:var(--gold);}
+    .acc-timeline{display:flex;flex-direction:column;}
+    .acc-phase{display:grid;grid-template-columns:150px 1px 1fr;gap:0 32px;}
+    .phase-left{padding:24px 0;display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
+    .phase-week{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);text-align:right;}
+    .phase-sublabel{font-size:11px;color:var(--text-lt);opacity:.55;text-align:right;}
+    .phase-spine{display:flex;flex-direction:column;align-items:center;}
+    .phase-dot{width:10px;height:10px;border-radius:50%;background:var(--gold-pale);border:2px solid var(--cream-dk);flex-shrink:0;margin-top:30px;z-index:1;transition:background .3s;}
+    .acc-phase:hover .phase-dot{background:var(--gold);}
+    .phase-segment{width:1px;flex:1;background:var(--line);}
+    .acc-phase:last-child .phase-segment{opacity:0;}
+    .phase-right{padding:20px 0 24px;border-bottom:1px solid var(--line);}
+    .acc-phase:last-child .phase-right{border-bottom:none;}
+    .phase-tag{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold-lt);margin-bottom:5px;display:block;}
+    .phase-title{font-family:'Playfair Display',serif;font-size:clamp(16px,1.6vw,20px);font-weight:400;color:var(--text);margin-bottom:7px;line-height:1.25;}
+    .phase-desc{font-size:14px;font-weight:300;line-height:1.8;color:var(--text-mid);margin-bottom:12px;max-width:560px;}
+    .phase-chips{display:flex;flex-wrap:wrap;gap:6px;}
+    .phase-chip{font-size:11px;color:var(--text-lt);border:0.5px solid rgba(139,111,71,.28);padding:4px 12px;border-radius:50px;transition:all .3s;}
+    .acc-phase:hover .phase-chip{border-color:rgba(139,111,71,.45);background:rgba(244,237,227,.5);}
+    .acc-included-title{font-family:'Playfair Display',serif;font-size:clamp(20px,2vw,26px);font-weight:400;color:var(--text);margin-bottom:28px;}
+    .acc-included-title em{font-style:italic;color:var(--gold);}
+    .acc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-bottom:56px;}
+    .acc-card{background:var(--cream);padding:28px 24px;border-right:1px solid var(--line);transition:background .3s;}
+    .acc-card:last-child{border-right:none;}
+    .acc-card:nth-child(n+4){border-top:1px solid var(--line);}
+    .acc-card:hover{background:var(--gold-xp);}
+    .acc-card-icon{font-size:20px;margin-bottom:12px;display:block;}
+    .acc-card-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px;}
+    .acc-card-desc{font-size:13px;font-weight:300;color:var(--text-lt);line-height:1.65;}
+    .acc-care{background:var(--cream);border:0.5px solid var(--line);padding:40px;display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-bottom:56px;position:relative;}
+    .acc-care::before{content:'✦ VIA-L Care';position:absolute;top:-10px;left:36px;background:var(--cream-dk);padding:0 12px;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);}
+    .care-tag{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold-lt);margin-bottom:10px;display:block;}
+    .care-title{font-family:'Playfair Display',serif;font-size:clamp(18px,1.8vw,24px);font-weight:400;color:var(--text);margin-bottom:12px;line-height:1.2;}
+    .care-title em{font-style:italic;color:var(--gold);}
+    .care-desc{font-size:14px;font-weight:300;line-height:1.8;color:var(--text-mid);}
+    .care-items{display:flex;flex-direction:column;justify-content:center;}
+    .care-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);align-items:flex-start;}
+    .care-item:last-child{border-bottom:none;}
+    .care-dot{width:6px;height:6px;border-radius:50%;background:var(--gold-pale);flex-shrink:0;margin-top:7px;}
+    .care-text strong{font-size:13px;font-weight:500;color:var(--text);display:block;margin-bottom:1px;}
+    .care-text span{font-size:12px;font-weight:300;color:var(--text-lt);line-height:1.5;}
+    .acc-bottom{text-align:center;}
+    .acc-quote{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(18px,2vw,26px);font-weight:400;color:var(--text-mid);max-width:600px;margin:0 auto 28px;line-height:1.55;}
+    .acc-quote em{color:var(--gold);font-style:normal;}
+    .acc-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:12px;}
+    .acc-note{font-size:12px;color:var(--gold);opacity:.7;font-style:italic;}
+    @media(max-width:900px){.acc-header{grid-template-columns:1fr;gap:16px;margin-bottom:36px;}.acc-stats{grid-template-columns:1fr 1fr;}.acc-stat:nth-child(2){border-right:none;}.acc-stat:nth-child(3),.acc-stat:nth-child(4){border-top:1px solid var(--line);}.acc-phase{grid-template-columns:70px 1px 1fr;gap:0 14px;}.phase-sublabel{display:none;}.acc-grid{grid-template-columns:1fr;}.acc-card{border-right:none;border-bottom:1px solid var(--line);}.acc-card:nth-child(n+4){border-top:none;}.acc-care{grid-template-columns:1fr;gap:24px;padding:28px 20px;}.acc-btns{flex-direction:column;align-items:center;}}
+
+  </style>
+
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+
+<nav id="nav">
+  <div class="nav-left">
+    <a href="index.html" class="nav-back" id="navBack">Програми</a>
+  </div>
+  <a href="index.html" class="nav-logo-wrap">
+    <span class="nav-logo">VIA–L</span>
+    <div class="logo-line"></div>
+    <span class="logo-sub">Longevity</span>
+  </a>
+  <div class="nav-right">
+    <div class="lang-switcher" id="langSwitcher">
+      <button class="lang-btn" onclick="toggleLang()" aria-label="Language">
+        <span class="lang-flag" id="currentFlag">🇺🇦</span>
+        <span id="currentLangLabel">UA</span>
+        <span class="lang-arrow">▼</span>
+      </button>
+      <div class="lang-dropdown" id="langDropdown">
+        <div class="lang-option active" data-lang="ua" onclick="setLang('ua')"><span class="flag">🇺🇦</span>Українська<span class="dot"></span></div>
+        <div class="lang-option" data-lang="ru" onclick="setLang('ru')"><span class="flag">🇷🇺</span>Русский<span class="dot"></span></div>
+        <div class="lang-option" data-lang="es" onclick="setLang('es')"><span class="flag">🇪🇸</span>Español<span class="dot"></span></div>
+        <div class="lang-option" data-lang="en" onclick="setLang('en')"><span class="flag">🇬🇧</span>English<span class="dot"></span></div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+
+<section id="hero">
+  <div class="hero-left">
+    <div class="prog-tag"><span id="heroTag">♂ Чоловіче здоров'я · Програма супроводу</span></div>
+    <h1 class="hero-title" id="heroTitle">
+      <div class="lang-content" data-lang="ua">Андрогенна <em>Пауза</em></div>
+      <div class="lang-content" data-lang="ru">Андрогенная <em>Пауза</em></div>
+      <div class="lang-content" data-lang="es">Pausa <em>Androgénica</em></div>
+      <div class="lang-content" data-lang="en">Androgen <em>Pause</em></div>
+    </h1>
+    <p class="hero-subtitle" id="heroSubtitle">
+      <div class="lang-content" data-lang="ua">Від втоми — до енергії.<br>Від дефіциту — до балансу.</div>
+      <div class="lang-content" data-lang="ru">От усталости — к энергии.<br>От дефицита — к балансу.</div>
+      <div class="lang-content" data-lang="es">Del cansancio — a la energía.<br>Del déficit — al equilibrio.</div>
+      <div class="lang-content" data-lang="en">From fatigue — to energy.<br>From deficiency — to balance.</div>
+    </p>
+    <div class="hero-divider"></div>
+    <p class="hero-desc" id="heroDesc">Хронічна втома, живіт попри тренування, лібідо не те що раніше, голова думає повільніше — це не «просто вік». Це андропауза. Біохімічний процес, який має логіку — і стратегію.</p>
+    <div class="hero-pills">
+      <span class="pill">Гормональний профіль</span>
+      <span class="pill">Персональний протокол</span>
+      <span class="pill">8–12 тижнів</span>
+      <span class="pill">Онлайн · UA / RU / ES / EN</span>
+    </div>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="openModal('calModal')" id="heroBtnSlots">Вільні слоти на знайомство</button>
+      <button class="btn-secondary" onclick="openModal('payModal')" id="heroBtnProgram">Програма супроводу</button>
+    </div>
+    <p class="hero-note" id="heroNote">✦ Знайомство — 15 хвилин, безкоштовно, без зобов'язань</p>
+  </div>
+  <div class="hero-right">
+    <!-- Placeholder: замінити на фото жінки 40+ у спокійній, преміальній атмосфері -->
+    <!-- Рекомендація для ChatGPT:
+         Фото: жінка 42–52 роки, елегантний вигляд, природне освітлення,
+         нейтральний кремовий або теплий беж фон, погляд впевненості,
+         м'який портрет або профіль. Без стокових поз.
+         Колірна гама: теплі кремові, золоті, м'яко-бежеві тони. -->
+    <img class="hero-img"
+      src="images/%20Андрогенная%20Пауза.PNG"
+      alt="Жінка 40+ — VIA-L програма Андропауза"
+      onerror="this.style.background='#EDE9E2';this.removeAttribute('src')">
+  </div>
+</section>
+
+<!-- ═══ QUOTE BRIDGE ═══ -->
+
+<div class="quote-bridge">
+  <p class="bridge-quote" id="bridgeQuote">«75% чоловіків зберігають нормальний тестостерон до 70+ років. Питання не у віці — у стратегії.»</p>
+  <div class="bridge-author-row">
+    <div class="bridge-line"></div>
+    <span class="bridge-author">Maryna Datsenko · VIA-L</span>
+    <div class="bridge-line"></div>
+  </div>
+</div>
+
+<!-- ═══ FOR WHOM ═══ -->
+
+<section id="for-whom">
+  <div class="for-whom-inner">
+    <div class="section-eyebrow" id="fwEy">Для кого</div>
+    <h2 class="section-title" id="fwTitle">Ви впізнаєте себе тут?</h2>
+    <p class="section-desc" id="fwDesc">Це не симптоми, які треба терпіти. Це сигнали, які тіло надсилає зрозумілою біохімічною мовою. Якщо хоча б два відгукуються — ця програма для вас.</p>
+
+<div class="for-whom-grid">
+  <div class="fw-card">
+    <div class="fw-card-icon">🌡</div>
+    <p class="fw-card-text" id="fw1Text">«Прокидаюся і вже втомлений. Будильник — це боротьба. Тренуюся — але сил менше, ніж раніше.»</p>
+    <span class="fw-card-label" id="fw1Label">Хронічна втома</span>
+  </div>
+  <div class="fw-card">
+    <div class="fw-card-icon">⚖️</div>
+    <p class="fw-card-text" id="fw2Text">«Їм так само, як і раніше — а живіт росте. Тренуюся, але форма не та, що була.»</p>
+    <span class="fw-card-label" id="fw2Label">Абдомінальний жир</span>
+  </div>
+  <div class="fw-card">
+    <div class="fw-card-icon">🧠</div>
+    <p class="fw-card-text" id="fw3Text">«М'язи ростуть гірше. Відновлення займає більше часу. Тіло реагує інакше, ніж раніше.»</p>
+    <span class="fw-card-label" id="fw3Label">Втрата м'язової маси</span>
+  </div>
+  <div class="fw-card">
+    <div class="fw-card-icon">🌙</div>
+    <p class="fw-card-text" id="fw4Text">«Голова думає повільніше. Концентрація не та. Мотивація впала без видимої причини.»</p>
+    <span class="fw-card-label" id="fw4Label">Когнітивний туман</span>
+  </div>
+  <div class="fw-card">
+    <div class="fw-card-icon">🌊</div>
+    <p class="fw-card-text" id="fw5Text">«Сон став гіршим. Прокидаюся серед ночі. Вранці не відпочив, хоча спав достатньо.»</p>
+    <span class="fw-card-label" id="fw5Label">Порушення сну</span>
+  </div>
+  <div class="fw-card">
+    <div class="fw-card-icon">📋</div>
+    <p class="fw-card-text" id="fw6Text">«Аналізи в нормі. Лікар каже — все гаразд. Але я відчуваю, що не на 100%.»</p>
+    <span class="fw-card-label" id="fw6Label">Прихований дефіцит T</span>
+  </div>
+</div>
+
+<div class="for-whom-not">
+  <p id="fwNotP"><strong id="fwNotStrong">Програма підходить:</strong> чоловікам 38–65 років із симптомами зниження тестостерону — незалежно від того, чи приймають вони гормональну терапію. Ми працюємо паралельно з вашим лікарем, не замість нього.</p>
+</div>
+
+  </div>
+</section>
+
+<!-- ═══ BIOCHEMISTRY ═══ -->
+
+<section id="biochem">
+  <div class="biochem-inner">
+    <div class="section-eyebrow" id="bioEy">Біохімія</div>
+    <h2 class="section-title" id="bioTitle">Одна ланцюжок — шість симптомів</h2>
+    <p class="section-desc" id="bioDesc">За приливами, вагою, безсонням і туманом стоїть один біохімічний каскад. Розуміти його — значить знати, де застосувати харчування як інструмент.</p>
+
+<div class="biochem-grid">
+  <div class="chain-list">
+    <div class="chain-item">
+      <span class="chain-arrow">
+        <span class="lang-ua">↓ T</span>
+        <span class="lang-ru" style="display:none">↓ T</span>
+        <span class="lang-es" style="display:none">↓ T</span>
+        <span class="lang-en" style="display:none">↓ T</span>
+      </span>
+      <div class="chain-text">
+        <div class="lang-ua"> <strong>Естроген знижується</strong> <span>Регулював температуру, сон, метаболізм, інсулінову чутливість та когнітивні функції. Коли він падає — все це змінюється одночасно.</span> <span class="chain-symptom">Втома · Лібідо · М'язи</span> </div>
+        <div class="lang-ru"> <strong>Эстроген снижается</strong> <span>Регулировал температуру, сон, метаболизм, инсулиновую чувствительность и когнитивные функции. Когда он падает — всё это меняется одновременно.</span> <span class="chain-symptom">Усталость · Либидо · Мышцы</span> </div>
+        <div class="lang-es"> <strong>El estrógeno disminuye</strong> <span>Regulaba la temperatura, el sueño, el metabolismo, la sensibilidad a la insulina y las funciones cognitivas. Cuando cae, todo cambia a la vez.</span> <span class="chain-symptom">FATIGA · LIBIDO · MÚSCULOS</span> </div>
+        <div class="lang-en"> <strong>Estrogen decreases</strong> <span>It regulated temperature, sleep, metabolism, insulin sensitivity and cognitive functions. When it drops, everything changes at once.</span> <span class="chain-symptom">Fatigue · Libido · Muscles</span> </div>
+      </div>
+    </div>
+    <div class="chain-item">
+      <span class="chain-arrow">
+        <span class="lang-ua">↑ E</span>
+        <span class="lang-ru" style="display:none">↑ P</span>
+        <span class="lang-es" style="display:none">↑ P</span>
+        <span class="lang-en" style="display:none">↑ P</span>
+      </span>
+      <div class="chain-text">
+        <div class="lang-ua"> <strong>Прогестерон падає першим</strong> <span>Ще до останньої менструації. Без нього цикл стає непередбачуваним, сон — поверхневим, тривога — фоновою.</span> <span class="chain-symptom">Живіт · Гінекомастія</span> </div>
+        <div class="lang-ru"> <strong>Прогестерон падает первым</strong> <span>Ещё до последней менструации. Без него цикл становится непредсказуемым, сон — поверхностным, тревога — фоновой.</span> <span class="chain-symptom">Живот · Гинекомастия</span> </div>
+        <div class="lang-es"> <strong>La progesterona cae primero</strong> <span>Incluso antes de la última menstruación. Sin ella, el ciclo es impredecible, el sueño es superficial, la ansiedad es constante.</span> <span class="chain-symptom">ABDOMEN · GINECOMASTIA</span> </div>
+        <div class="lang-en"> <strong>Progesterone drops first</strong> <span>Even before the last period. Without it, the cycle becomes unpredictable, sleep becomes shallow, anxiety becomes constant.</span> <span class="chain-symptom">Belly · Gynecomastia</span> </div>
+      </div>
+    </div>
+    <div class="chain-item">
+      <span class="chain-arrow">
+        <span class="lang-ua">↑ кор</span>
+        <span class="lang-ru" style="display:none">↑ кор</span>
+        <span class="lang-es" style="display:none">↑ cor</span>
+        <span class="lang-en" style="display:none">↑ cor</span>
+      </span>
+      <div class="chain-text">
+        <div class="lang-ua"> <strong>Кортизол зростає</strong> <span>Тіло сприймає гормональний перехід як стрес. Кортизол блокує спалювання жиру і спрямовує його в абдомінальну зону.</span> <span class="chain-symptom">Стрес · Безсоння · Втрата T</span> </div>
+        <div class="lang-ru"> <strong>Кортизол растёт</strong> <span>Тело воспринимает гормональный переход как стресс. Кортизол блокирует сжигание жира и направляет его в абдоминальную зону.</span> <span class="chain-symptom">Стресс · Бессонница · Потеря T</span> </div>
+        <div class="lang-es"> <strong>El cortisol aumenta</strong> <span>El cuerpo percibe la transición hormonal como estrés. El cortisol bloquea la quema de grasa y la acumula en la zona abdominal.</span> <span class="chain-symptom">Estrés · Insomnio · Pérdida de T</span> </div>
+        <div class="lang-en"> <strong>Cortisol rises</strong> <span>The body perceives the hormonal transition as stress. Cortisol blocks fat burning and sends it to the abdominal area.</span> <span class="chain-symptom">Stress · Insomnia · Loss of T</span> </div>
+      </div>
+    </div>
+    <div class="chain-item">
+      <span class="chain-arrow">
+        <span class="lang-ua">↓ ІЧ</span>
+        <span class="lang-ru" style="display:none">↓ ИР</span>
+        <span class="lang-es" style="display:none">↓ RI</span>
+        <span class="lang-en" style="display:none">↓ IR</span>
+      </span>
+      <div class="chain-text">
+        <div class="lang-ua"> <strong>Інсулінорезистентність</strong> <span>Нестабільний інсулін — режим накопичення при тому ж харчуванні. Вага росте, хоча ви «нічого не змінювали».</span> <span class="chain-symptom">Живіт · Інсулін · Цукор</span> </div>
+        <div class="lang-ru"> <strong>Инсулинорезистентность</strong> <span>Нестабильный инсулин — режим накопления при том же питании. Вес растёт, хотя вы «ничего не меняли».</span> <span class="chain-symptom">Живот · Инсулин · Сахар</span> </div>
+        <div class="lang-es"> <strong>Resistencia a la insulina</strong> <span>La insulina inestable crea un modo de almacenamiento con la misma comida. El peso sube aunque no hayas cambiado nada.</span> <span class="chain-symptom">Barriga · Insulina · Azúcar</span> </div>
+        <div class="lang-en"> <strong>Insulin resistance</strong> <span>Unstable insulin creates a storage mode with the same diet. Weight increases even though nothing changed.</span> <span class="chain-symptom">Belly · Insulin · Sugar</span> </div>
+      </div>
+    </div>
+    <div class="chain-item">
+      <span class="chain-arrow">
+        <span class="lang-ua">↑ зап</span>
+        <span class="lang-ru" style="display:none">↑ воспаление</span>
+        <span class="lang-es" style="display:none">↑ infl</span>
+        <span class="lang-en" style="display:none">↑ infl</span>
+      </span>
+      <div class="chain-text">
+        <div class="lang-ua"> <strong>Хронічне запалення</strong> <span>Низькорівневий «тихий вогонь» стає фоном і посилює всі попередні симптоми. Він реагує на кожне рішення за столом.</span> <span class="chain-symptom">Підсилює всі симптоми</span> </div>
+        <div class="lang-ru"> <strong>Хроническое воспаление</strong> <span>Низкоуровневый «тихий огонь» становится фоном и усиливает все предыдущие симптомы. Он реагирует на каждое решение за столом.</span> <span class="chain-symptom">Усиливает все симптомы</span> </div>
+        <div class="lang-es"> <strong>Inflamación crónica</strong> <span>La inflamación de bajo grado se vuelve el fondo y amplifica todos los síntomas anteriores. Responde a cada decisión en la mesa.</span> <span class="chain-symptom">Intensifica todos los síntomas</span> </div>
+        <div class="lang-en"> <strong>Chronic inflammation</strong> <span>Low-grade inflammation becomes the background and amplifies all earlier symptoms. It responds to every choice at the table.</span> <span class="chain-symptom">Amplifies all symptoms</span> </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="biochem-insight">
+    <h3 class="insight-title" id="insightTitle">
+      <span class="lang-ua">Чому харчування — це інструмент, а не дієта</span>
+      <span class="lang-ru">Почему питание — это инструмент, а не диета</span>
+      <span class="lang-es">Por qué la alimentación es una herramienta, no una dieta</span>
+      <span class="lang-en">Why nutrition is a tool, not a diet</span>
+    </h3>
+    <p class="insight-body">
+      <span class="lang-ua">Кожна ланка цього каскаду відповідає на те, що ви їсте. Не на кількість калорій — на якість сигналів, які їжа надсилає в клітини. Персональний протокол будується на ваших аналізах і симптомах, а не на загальних рекомендаціях.</span>
+      <span class="lang-ru" style="display:none">Каждое звено этого каскада отвечает на то, что вы едите. Не на количество калорий — на качество сигналов, которые еда посылает в клетки. Персональный протокол строится на ваших анализах и симптомах, а не на общих рекомендациях.</span>
+      <span class="lang-es" style="display:none">Cada eslabón de esta cascada responde a lo que comes. No a la cantidad de calorías, sino a la calidad de las señales que la comida envía a las células. El protocolo personal se construye sobre tus análisis y síntomas, no sobre recomendaciones generales.</span>
+      <span class="lang-en" style="display:none">Each link in this cascade responds to what you eat. Not to calorie counts, but to the quality of signals food sends to your cells. The personal protocol is built on your tests and symptoms, not on generic advice.</span>
+    </p>
+    <p class="insight-body">
+      <span class="lang-ua">Доказова база: середземноморська дієта знижує вазомоторні симптоми. Жирна риба затримує менопаузу на 3,3 роки. Комбінація білка і силових тренувань — єдина стратегія, що зберігає м'язову масу після 40.</span>
+      <span class="lang-ru" style="display:none">Доказательная база: средиземноморская диета снижает вазомоторные симптомы. Жирная рыба задерживает менопаузу на 3,3 года. Комбинация белка и силовых тренировок — единственная стратегия, которая сохраняет мышечную массу после 40.</span>
+      <span class="lang-es" style="display:none">Base científica: la dieta mediterránea reduce los síntomas vasomotores. El pescado graso retrasa la menopausia 3,3 años. La combinación de proteína y entrenamiento de fuerza es la única estrategia que preserva la masa muscular después de los 40.</span>
+      <span class="lang-en" style="display:none">Evidence base: the Mediterranean diet reduces vasomotor symptoms. Oily fish delays menopause by 3.3 years. The combination of protein and strength training is the only strategy that preserves muscle mass after 40.</span>
+    </p>
+    <ul class="insight-list">
+      <li>
+        <span class="lang-ua">Протизапальний протокол харчування</span>
+        <span class="lang-ru" style="display:none">Противовоспалительный протокол питания</span>
+        <span class="lang-es" style="display:none">Protocolo antiinflamatorio de alimentación</span>
+        <span class="lang-en" style="display:none">Anti-inflammatory nutrition protocol</span>
+      </li>
+      <li>
+        <span class="lang-ua">Фітоестрогени та адаптогени</span>
+        <span class="lang-ru" style="display:none">Фитоэстрогены и адаптогены</span>
+        <span class="lang-es" style="display:none">Fitoestrógenos y adaptógenos</span>
+        <span class="lang-en" style="display:none">Phytoestrogens and adaptogens</span>
+      </li>
+      <li>
+        <span class="lang-ua">Підтримка щільності кісток</span>
+        <span class="lang-ru" style="display:none">Поддержка плотности костей</span>
+        <span class="lang-es" style="display:none">Soporte de la densidad ósea</span>
+        <span class="lang-en" style="display:none">Support for bone density</span>
+      </li>
+      <li>
+        <span class="lang-ua">Стабілізація інсуліну та кортизолу</span>
+        <span class="lang-ru" style="display:none">Стабилизация инсулина и кортизола</span>
+        <span class="lang-es" style="display:none">Estabilización de la insulina y el cortisol</span>
+        <span class="lang-en" style="display:none">Stabilisation of insulin and cortisol</span>
+      </li>
+      <li>
+        <span class="lang-ua">Нутрицевтики під ваш профіль дефіцитів</span>
+        <span class="lang-ru" style="display:none">Нутрицевтики под ваш профиль дефицитов</span>
+        <span class="lang-es" style="display:none">Nutracéuticos según tu perfil de déficits</span>
+        <span class="lang-en" style="display:none">Nutraceuticals tailored to your deficiency profile</span>
+      </li>
+    </ul>
+  </div>
+</div>
+
+  </div>
+</section>
+
+<!-- ═══ PROGRAM STAGES ═══ -->
+
+<section id="stages">
+  <div class="stages-inner">
+    <div class="section-eyebrow" id="stEy">Як ми працюємо</div>
+    <h2 class="section-title" id="stTitle">Чотири кроки вашого шляху</h2>
+    <p class="section-desc" id="stDesc">Від першого знайомства до стійкого результату — послідовна робота з вашою біохімією, а не шаблонний план.</p>
+
+<div class="stages-grid">
+  <div class="stage-card">
+    <span class="stage-num">01</span>
+    <h3 class="stage-title" id="st1Title">Первинна консультація</h3>
+    <p class="stage-desc" id="st1Desc">Знайомимось. Розбираємо вашу ситуацію глибоко: симптоми та їхня динаміка, харчова поведінка, сон, стрес, спосіб життя. Визначаємо точку відліку.</p>
+    <ul class="stage-items">
+      <li>Аналіз симптомів та їх хронологія</li>
+      <li>Харчова поведінка та цикл сну</li>
+      <li>Рівень стресу, рух, відновлення</li>
+      <li>Формування напряму роботи</li>
+    </ul>
+  </div>
+
+  <div class="stage-card">
+    <span class="stage-num">02</span>
+    <h3 class="stage-title" id="st2Title">Аналіз даних</h3>
+    <p class="stage-desc" id="st2Desc">Аналізуємо ваші лабораторні показники. Виявляємо приховані дефіцити, запалення, гормональні дисбаланси. Дивимось на організм як на систему.</p>
+    <ul class="stage-items">
+      <li>ФСГ, ЛГ, естрадіол, прогестерон</li>
+      <li>Ферритин, вітамін D, B12, магній, цинк</li>
+      <li>Інсулін натощак, вч-СРБ (запалення)</li>
+      <li>ТТГ та функція щитовидної залози</li>
+    </ul>
+  </div>
+
+  <div class="stage-card">
+    <span class="stage-num">03</span>
+    <h3 class="stage-title" id="st3Title">Персональна стратегія</h3>
+    <p class="stage-desc" id="st3Desc">Формуємо детальний протокол харчування і нутрієнтної підтримки під ваш унікальний біохімічний профіль і ритм життя. Жодних універсальних схем.</p>
+    <ul class="stage-items">
+      <li>Протизапальний протокол харчування</li>
+      <li>Нутрицевтики та фітоестрогени</li>
+      <li>Режим харчування під ваш гормональний статус</li>
+      <li>Дорожня карта на 3 місяці</li>
+    </ul>
+  </div>
+
+  <div class="stage-card">
+    <span class="stage-num">04</span>
+    <h3 class="stage-title" id="st4Title">Супровід і результат</h3>
+    <p class="stage-desc" id="st4Desc">Регулярні зустрічі, відстеження динаміки, гнучке коригування програми. Я поруч на кожному кроці — поки зміни не стануть частиною вашого життя.</p>
+    <ul class="stage-items">
+      <li>Регулярні check-in сесії</li>
+      <li>Коригування плану за аналізами</li>
+      <li>Підтримка між зустрічами</li>
+      <li>Мінімальний цикл: 8–12 тижнів</li>
+    </ul>
+  </div>
+</div>
+
+  </div>
+</section>
+
+<!-- ═══ WHAT'S INCLUDED ═══ -->
+
+<section id="included">
+  <div class="included-inner">
+    <div class="section-eyebrow" id="incEy">Що входить</div>
+    <h2 class="section-title" id="incTitle">Повне супроводження,<br>не разові поради</h2>
+    <p class="section-desc" id="incDesc">Програма — це не список дозволених продуктів. Це персональна система, яка розвивається разом з вами.</p>
+
+<div class="included-layout">
+  <div class="included-list">
+    <div class="inc-item">
+      <span class="inc-icon">🔬</span>
+      <div>
+        <div class="inc-title" id="inc1Title">Аналіз гормонального профілю</div>
+        <p class="inc-desc" id="inc1Desc">Розбираємо ваші аналізи разом. Я пояснюю не лише «в нормі чи ні», а де ваш функціональний оптимум і що це означає для харчування.</p>
+      </div>
+    </div>
+    <div class="inc-item">
+      <span class="inc-icon">📐</span>
+      <div>
+        <div class="inc-title" id="inc2Title">Персональний протокол харчування</div>
+        <p class="inc-desc" id="inc2Desc">Детальний план, адаптований до вашого режиму, смаків і гормонального статусу. Не дієта — стратегія.</p>
+      </div>
+    </div>
+    <div class="inc-item">
+      <span class="inc-icon">💊</span>
+      <div>
+        <div class="inc-title" id="inc3Title">Нутрицевтики та фітоестрогени</div>
+        <p class="inc-desc" id="inc3Desc">Точний підбір добавок під ваш профіль дефіцитів. Без зайвого. Лише те, що має доказову базу і потрібне саме вам.</p>
+      </div>
+    </div>
+    <div class="inc-item">
+      <span class="inc-icon">📅</span>
+      <div>
+        <div class="inc-title" id="inc4Title">Регулярні сесії та підтримка</div>
+        <p class="inc-desc" id="inc4Desc">Зустрічі кожні 2–3 тижні, коригування плану при змінах у самопочутті або аналізах. Питання між сесіями — завжди.</p>
+      </div>
+    </div>
+    <div class="inc-item">
+      <span class="inc-icon">📊</span>
+      <div>
+        <div class="inc-title" id="inc5Title">Відстеження динаміки</div>
+        <p class="inc-desc" id="inc5Desc">Порівнюємо аналізи до і після. Вимірюємо не лише самопочуття, але й біохімічні зсуви — об'єктивно.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="included-aside">
+    <div class="guides-block">
+      <span class="guides-label">✦ Включені гайди</span>
+      <div class="guide-row">
+        <span class="guide-code">VIA·L02</span>
+        <div>
+          <div class="guide-name">Менопауза без страху</div>
+          <div class="guide-sub">6 симптомів перименопаузи — біохімія і стратегія</div>
+        </div>
+      </div>
+      <div class="guide-row">
+        <span class="guide-code">VIA·L04</span>
+        <div>
+          <div class="guide-name">Волосся, шкіра, нігті 40+</div>
+          <div class="guide-sub">Зовнішні зміни та їх внутрішні причини</div>
+        </div>
+      </div>
+      <div class="guide-row">
+        <span class="guide-code">VIA·L03</span>
+        <div>
+          <div class="guide-name">Що приховують ваші аналізи</div>
+          <div class="guide-sub">Функціональний оптимум vs лабораторна норма</div>
+        </div>
+      </div>
+      <div class="guide-row">
+        <span class="guide-code">VIA·L06</span>
+        <div>
+          <div class="guide-name">Тихий вогонь</div>
+          <div class="guide-sub">Хронічне запалення: маркери та харчування</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="format-block">
+      <div class="format-title" id="formatTitle">Формат програми</div>
+      <div class="format-rows">
+        <div class="format-row"><span>Формат</span><span>Онлайн · весь світ</span></div>
+        <div class="format-row"><span>Тривалість</span><span>8–12 тижнів</span></div>
+        <div class="format-row"><span>Мови</span><span>UA · RU · ES</span></div>
+        <div class="format-row"><span>Початок</span><span>Після першої консультації</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  </div>
+</section>
+
+<!-- ═══ RESULTS ═══ -->
+
+<section id="results">
+  <div class="results-inner">
+    <div class="section-eyebrow" id="resEy">Результати</div>
+    <h2 class="section-title" id="resTitle">Що змінюється і коли</h2>
+    <p class="section-desc" id="resDesc">Не обіцянки — біохімічна реальність. Перші відчутні зміни помічають через 2–4 тижні. Глибші зсуви — у аналізах через 8–12 тижнів.</p>
+
+<div class="results-grid">
+  <div class="result-card">
+    <span class="result-timeline" id="res1Time">2–4 тижні</span>
+    <h3 class="result-heading" id="res1Head">Перші зміни<br>у самопочутті</h3>
+    <p class="result-text" id="res1Text">Стабілізується енергія протягом дня. Покращується якість сну — менше пробуджень. Відновлення після тренувань прискорюється. Зникає тяга до солодкого після обіду.</p>
+  </div>
+  <div class="result-card">
+    <span class="result-timeline" id="res2Time">4–8 тижнів</span>
+    <h3 class="result-heading" id="res2Head">Стійка динаміка<br>і ясність</h3>
+    <p class="result-text" id="res2Text">Туман у голові розсіюється. Живіт починає реагувати — не через дієту, а через зміну сигналів. М'язи відновлюються краще. Мотивація і концентрація повертаються.</p>
+  </div>
+  <div class="result-card">
+    <span class="result-timeline" id="res3Time">8–12 тижнів</span>
+    <h3 class="result-heading" id="res3Head">Біохімічні зсуви<br>у аналізах</h3>
+    <p class="result-text" id="res3Text">Зростає вільний тестостерон в аналізах. Знижується вч-СРБ. Стабілізується інсулін натощак. Нормалізуються цинк і вітамін D. Ви бачите зміни у цифрах.</p>
+  </div>
+</div>
+
+<p class="results-disclaimer" id="resDisclaimer">Результати індивідуальні. Залежать від вихідного рівня тестостерону, дотримання протоколу та способу життя. Програма не є медичним лікуванням і не замінює консультацію ендокринолога.</p>
+
+  </div>
+</section>
+
+<!-- ═══ ANALYSES ═══ -->
+
+<section id="analyses">
+  <div class="analyses-inner">
+    <div class="section-eyebrow" id="anEy">Аналізи</div>
+    <h2 class="section-title" id="anTitle">Що показують ваші аналізи</h2>
+    <p class="section-desc" id="anDesc">«Все в нормі» — не повна картина. Стандартна панель не включає тестостерон. Ми дивимось на функціональний оптимум.</p>
+
+<div class="analyses-grid">
+  <div class="analysis-card">
+    <div class="analysis-marker">Тестостерон + ГСПГ</div>
+    <div class="analysis-optimal">Оптимум: 20–30 нмоль/л</div>
+    <p class="analysis-why">Завжди здавати разом. Загальний T може бути нормальним, а вільного — бракувати. Саме вільний T визначає енергію і самопочуття.</p>
+  </div>
+  <div class="analysis-card">
+    <div class="analysis-marker">Вітамін D 25(OH)D</div>
+    <div class="analysis-optimal">Оптимум: 60–80 нг/мл</div>
+    <p class="analysis-why">Рецептори D є в клітинах Лейдіга — тих, що синтезують T. Дефіцит знижує тестостерон на 30%. Найпоширеніший дефіцит у чоловіків після 40.</p>
+  </div>
+  <div class="analysis-card">
+    <div class="analysis-marker">Цинк у сироватці</div>
+    <div class="analysis-optimal">Оптимум: 14–17 мкмоль/л</div>
+    <p class="analysis-why">Бере участь у синтезі T і блокує ароматазу. Дефіцит знижує тестостерон на 20–30%. Добре корегується через харчування і нутрицевтики.</p>
+  </div>
+  <div class="analysis-card">
+    <div class="analysis-marker">вч-СРБ (запалення)</div>
+    <div class="analysis-optimal">Оптимум: менше 1 мг/л</div>
+    <p class="analysis-why">IL-6 і TNF-α пригнічують синтез T напряму. Запалення і низький T — не два симптоми, а причина і наслідок у замкненому циклі.</p>
+  </div>
+  <div class="analysis-card">
+    <div class="analysis-marker">Інсулін натощак</div>
+    <div class="analysis-optimal">Оптимум: 3–8 мкЕД/мл</div>
+    <p class="analysis-why">Висцеральний жир виробляє ароматазу. Інсулінорезистентність і низький T — взаємопідсилюючий цикл. Ранній маркер метаболічного порушення.</p>
+  </div>
+  <div class="analysis-card">
+    <div class="analysis-marker">Магній у сироватці</div>
+    <div class="analysis-optimal">Оптимум: 0,85–1,0 ммоль/л</div>
+    <p class="analysis-why">Знижує ГСПГ і вивільняє вільний T. Покращує сон — а 80% тестостерону синтезується вночі. Магній глицинат — найкраща форма.</p>
+  </div>
+</div>
+
+<div class="analyses-note" id="anNote">
+  Стандартна панель аналізів не включає тестостерон і ГСПГ. Більшість чоловіків дізнаються про дефіцит T випадково. На першій консультації я підкажу, які саме аналізи здати — без зайвих витрат.
+</div>
+
+  </div>
+</section>
+<!-- ═══ ПРОГРАМА СУПРОВОДУ ═══ -->
+<section id="accompaniment">
+  <div class="acc-inner">
+    <div class="acc-header">
+      <div>
+        <div class="acc-eyebrow" id="acc_ey">Програма супроводу</div>
+        <h2 class="acc-title" id="acc_title">12 тижнів —<br><em>поруч на кожному кроці</em></h2>
+      </div>
+      <p class="acc-subtitle" id="acc_sub">Це не разова консультація. Це <strong>системна робота</strong> — тиждень за тижнем, аналіз за аналізом. Від першого знайомства до письмового плану на наступні пів року.</p>
+    </div>
+    <div class="acc-stats">
+      <div class="acc-stat"><span class="stat-num">12</span><span class="stat-label" id="acc_s1">тижнів<br>повного супроводу</span></div>
+      <div class="acc-stat"><span class="stat-num">12</span><span class="stat-label" id="acc_s2">онлайн-сесій<br>по 60 хвилин</span></div>
+      <div class="acc-stat"><span class="stat-num">2×</span><span class="stat-label" id="acc_s3">аналізи —<br>до та після</span></div>
+      <div class="acc-stat"><span class="stat-num">6</span><span class="stat-label" id="acc_s4">місяців план<br>на завершення</span></div>
+    </div>
+    <div class="acc-timeline-wrap">
+      <h3 class="acc-timeline-title" id="acc_tl_title">Як виглядає <em>шлях клієнта</em></h3>
+      <div class="acc-timeline">
+        <div class="acc-phase"><div class="phase-left"><span class="phase-week" id="acc_w1">Тиждень 1</span><span class="phase-sublabel" id="acc_wl1">Старт</span></div><div class="phase-spine"><div class="phase-dot"></div><div class="phase-segment"></div></div><div class="phase-right"><span class="phase-tag" id="acc_t1">Крок перший</span><h4 class="phase-title" id="acc_ph1">Глибоке знайомство та діагностика</h4><p class="phase-desc" id="acc_pd1">Перша сесія — 60 хвилин. Симптоми, харчова поведінка, сон, аналізи. Визначаємо точку відліку.</p><div class="phase-chips"><span class="phase-chip" id="acc_c1_1">Аналіз симптомів</span><span class="phase-chip" id="acc_c1_2">Харчова поведінка</span><span class="phase-chip" id="acc_c1_3">Розбір аналізів</span><span class="phase-chip" id="acc_c1_4">Визначення цілей</span></div></div></div>
+        <div class="acc-phase"><div class="phase-left"><span class="phase-week" id="acc_w2">Тиждень 2</span><span class="phase-sublabel" id="acc_wl2">Протокол</span></div><div class="phase-spine"><div class="phase-dot"></div><div class="phase-segment"></div></div><div class="phase-right"><span class="phase-tag" id="acc_t2">Крок другий</span><h4 class="phase-title" id="acc_ph2">Персональний протокол у ваших руках</h4><p class="phase-desc" id="acc_pd2">Два письмових документи: протокол харчування та список нутрицевтиків з дозуваннями під ваш профіль.</p><div class="phase-chips"><span class="phase-chip" id="acc_c2_1">Протокол харчування</span><span class="phase-chip" id="acc_c2_2">Список нутрицевтиків</span><span class="phase-chip" id="acc_c2_3">Дозування під профіль</span><span class="phase-chip" id="acc_c2_4">Письмово</span></div></div></div>
+        <div class="acc-phase"><div class="phase-left"><span class="phase-week" id="acc_w3">Тижні 3–10</span><span class="phase-sublabel" id="acc_wl3">Робота</span></div><div class="phase-spine"><div class="phase-dot"></div><div class="phase-segment"></div></div><div class="phase-right"><span class="phase-tag" id="acc_t3">Серце програми</span><h4 class="phase-title" id="acc_ph3">Щотижневі сесії та підтримка між ними</h4><p class="phase-desc" id="acc_pd3">60-хвилинна зустріч щотижня. Між сесіями — чат і голосові у Telegram або WhatsApp. Ви не залишаєтесь наодинці.</p><div class="phase-chips"><span class="phase-chip" id="acc_c3_1">60 хв / щотижня</span><span class="phase-chip" id="acc_c3_2">Чат між сесіями</span><span class="phase-chip" id="acc_c3_3">Голосові повідомлення</span><span class="phase-chip" id="acc_c3_4">Telegram / WhatsApp</span></div></div></div>
+        <div class="acc-phase"><div class="phase-left"><span class="phase-week" id="acc_w4">Тиждень 11</span><span class="phase-sublabel" id="acc_wl4">Аналізи</span></div><div class="phase-spine"><div class="phase-dot"></div><div class="phase-segment"></div></div><div class="phase-right"><span class="phase-tag" id="acc_t4">Контрольна точка</span><h4 class="phase-title" id="acc_ph4">Повторні аналізи — бачимо зміни у цифрах</h4><p class="phase-desc" id="acc_pd4">Повторна панель. Порівнюємо з початком — об'єктивно, у цифрах.</p><div class="phase-chips"><span class="phase-chip" id="acc_c4_1">Повторна панель</span><span class="phase-chip" id="acc_c4_2">Порівняння з початком</span><span class="phase-chip" id="acc_c4_3">Оцінка динаміки</span></div></div></div>
+        <div class="acc-phase"><div class="phase-left"><span class="phase-week" id="acc_w5">Тиждень 12</span><span class="phase-sublabel" id="acc_wl5">Фінал</span></div><div class="phase-spine"><div class="phase-dot"></div><div class="phase-segment"></div></div><div class="phase-right"><span class="phase-tag" id="acc_t5">Завершення</span><h4 class="phase-title" id="acc_ph5">Підсумкова сесія та план на пів року</h4><p class="phase-desc" id="acc_pd5">Письмовий документ: рекомендації на 6 місяців по харчуванню, нутрицевтикам і способу життя.</p><div class="phase-chips"><span class="phase-chip" id="acc_c5_1">Підсумкова сесія</span><span class="phase-chip" id="acc_c5_2">Порівняння аналізів</span><span class="phase-chip" id="acc_c5_3">План на 6 місяців</span><span class="phase-chip" id="acc_c5_4">Письмово</span></div></div></div>
+      </div>
+    </div>
+    <h3 class="acc-included-title" id="acc_inc_title">Що входить у <em>програму супроводу</em></h3>
+    <div class="acc-grid">
+      <div class="acc-card"><span class="acc-card-icon">🗓</span><div class="acc-card-title" id="acci1_t">12 онлайн-сесій по 60 хв</div><p class="acc-card-desc" id="acci1_d">Щотижнева зустріч у Zoom або Meet. Аналіз динаміки, коригування протоколу.</p></div>
+      <div class="acc-card"><span class="acc-card-icon">📐</span><div class="acc-card-title" id="acci2_t">Персональний протокол харчування</div><p class="acc-card-desc" id="acci2_d">Письмовий документ після першої сесії. Складений під ваш профіль — не шаблон.</p></div>
+      <div class="acc-card"><span class="acc-card-icon">💊</span><div class="acc-card-title" id="acci3_t">Список нутрицевтиків з дозуваннями</div><p class="acc-card-desc" id="acci3_d">Письмовий перелік добавок з точними дозами. Лише доказова база.</p></div>
+      <div class="acc-card"><span class="acc-card-icon">💬</span><div class="acc-card-title" id="acci4_t">Підтримка між сесіями</div><p class="acc-card-desc" id="acci4_d">Чат і голосові у Telegram або WhatsApp — за вашим вибором.</p></div>
+      <div class="acc-card"><span class="acc-card-icon">🔬</span><div class="acc-card-title" id="acci5_t">Повторні аналізи та порівняння</div><p class="acc-card-desc" id="acci5_d">Здаємо панель на 11-му тижні. Зміни у цифрах, не тільки у відчуттях.</p></div>
+      <div class="acc-card"><span class="acc-card-icon">📋</span><div class="acc-card-title" id="acci6_t">Фінальний план на 6 місяців</div><p class="acc-card-desc" id="acci6_d">Письмові рекомендації з харчування, нутрицевтиків і способу життя.</p></div>
+    </div>
+    <div class="acc-care">
+      <div><span class="care-tag" id="care_tag">Після програми · За бажанням</span><h3 class="care-title" id="care_title">VIA-L <em>Care</em> —<br>програма підтримки результату</h3><p class="care-desc" id="care_desc">Щотижневий зворотний зв'язок, підтримка і своєчасне коригування — щоб зміни залишалися назавжди.</p></div>
+      <div class="care-items">
+        <div class="care-item"><div class="care-dot"></div><div class="care-text"><strong id="care1_t">Зворотний зв'язок раз на тиждень</strong><span id="care1_d">Чат або коротка зустріч — підтримка без пропусків</span></div></div>
+        <div class="care-item"><div class="care-dot"></div><div class="care-text"><strong id="care2_t">Корекція при змінах</strong><span id="care2_d">Сезон, стрес, подорожі — адаптуємо протокол разом</span></div></div>
+        <div class="care-item"><div class="care-dot"></div><div class="care-text"><strong id="care3_t">Контроль аналізів</strong><span id="care3_d">Стежимо за маркерами і коригуємо нутрицевтики</span></div></div>
+        <div class="care-item"><div class="care-dot"></div><div class="care-text"><strong id="care4_t">Відчуття «не один»</strong><span id="care4_d">Результат тримається, коли є хтось поруч</span></div></div>
+      </div>
+    </div>
+    <div class="acc-bottom">
+      <p class="acc-quote" id="acc_quote">«Зміни, які стають частиною вашого життя —<br>це результат <em>правильної підтримки</em>.»</p>
+      <div class="acc-btns">
+        <button class="btn-primary" onclick="openModal('calModal')" id="accBtnSlots">Вільні слоти на знайомство</button>
+        <button class="btn-secondary" onclick="openAccPayModal()" id="acc_btn2">Оплатити супровід</button>
+      </div>
+      <p class="acc-note">✦ Онлайн · Весь світ · UA / RU / ES / EN</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CTA ═══ -->
+
+<section id="cta">
+  <div class="cta-inner">
+    <span class="cta-eyebrow" id="ctaEy">✦ Початок роботи</span>
+    <h2 class="cta-title" id="ctaTitle">Перший крок —<br>це <em>розмова</em></h2>
+    <p class="cta-desc" id="ctaDesc">На першій консультації ми знайомимось, розбираємо вашу ситуацію і визначаємо, чи підходить вам цей підхід. Без зобов'язань.</p>
+    <div class="cta-buttons">
+      <button class="btn-primary" onclick="openModal('calModal')" id="ctaBtn1">Вільні слоти на знайомство</button>
+      <button class="btn-secondary" onclick="openModal('payModal')" id="ctaBtn2">Програма супроводу</button>
+    </div>
+    <p class="cta-note" id="ctaNote">✦ Онлайн · Весь світ · UA / RU / ES / EN · Відповідь протягом 24 годин</p>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+
+<footer>
+  <span class="footer-logo">VIA–L</span>
+  <span class="footer-tagline">«Longevity — це не про роки. Про якість кожного з них.»</span>
+  <span class="footer-copy">© 2024 VIA-L · via-l.com</span>
+</footer>
+
+<!-- MODAL 1: CALENDAR -->
+
+<div class="modal-overlay" id="calModal" onclick="handleOverlay(event,'calModal')">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <div class="modal-tag" id="calTag">✦ Безкоштовно · 15 хвилин · Онлайн</div>
+        <div class="modal-title" id="calTitle">Вільні слоти на знайомство</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('calModal')">✕</button>
+    </div>
+    <div class="modal-divider"></div>
+    <div class="modal-body" id="calBody">
+      <p class="cal-desc" id="calDesc">Оберіть зручний день та час для 15-хвилинного знайомства. Без зобов'язань.</p>
+      <div class="cal-month-header">
+        <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
+        <span class="cal-month-title" id="calMonthTitle"></span>
+        <button class="cal-nav" onclick="changeMonth(1)">›</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-slots-title" id="calSlotsTitle">Доступний час</div>
+      <div class="cal-slots" id="calSlots"><span class="cal-slots-empty" id="calSlotsEmpty">Оберіть день, щоб побачити слоти</span></div>
+      <button class="btn-primary cal-confirm-btn" id="calConfirmBtn" onclick="confirmBooking()" style="display:none">Підтвердити знайомство →</button>
+      <p class="cal-confirm-note" id="calNote" style="display:none">Посилання на відеозустріч прийде на вашу пошту</p>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL 2: PAYMENT -->
+
+<div class="modal-overlay" id="payModal" onclick="handleOverlay(event,'payModal')">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <div class="modal-tag" id="payTag">✦ Програма супроводу · VIA-L</div>
+        <div class="modal-title" id="payTitle">Оберіть формат програми</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('payModal')">✕</button>
+    </div>
+    <div class="modal-divider"></div>
+    <div class="modal-body" id="payBody">
+      <p class="pay-intro" id="payIntro">Програма супроводу — персональна робота з нутриціологом протягом 8–12 тижнів.</p>
+      <div class="pay-options">
+        <div class="pay-option selected" id="opt1" onclick="selectOpt(1)">
+          <div class="pay-radio"></div>
+          <div><div class="pay-opt-name" id="opt1Name">Базова програма · 8 тижнів</div><div class="pay-opt-desc" id="opt1Desc">Первинна консультація, аналіз аналізів, протокол харчування, 3 сесії супроводу</div><div class="pay-opt-price">€ 390</div></div>
+        </div>
+        <div class="pay-option" id="opt2" onclick="selectOpt(2)">
+          <div class="pay-radio"></div>
+          <div><div class="pay-opt-name" id="opt2Name">Повна програма · 12 тижнів</div><div class="pay-opt-desc" id="opt2Desc">Консультація, аналіз, протокол, 6 сесій, підтримка в месенджері, повторний аналіз</div><div class="pay-opt-price">€ 590</div></div>
+        </div>
+        <div class="pay-option" id="opt3" onclick="selectOpt(3)">
+          <div class="pay-radio"></div>
+          <div><div class="pay-opt-name" id="opt3Name">Разова консультація</div><div class="pay-opt-desc" id="opt3Desc">60-хвилинна глибока консультація з персональним планом кроків</div><div class="pay-opt-price">€ 120</div></div>
+        </div>
+      </div>
+      <div class="pay-divider"></div>
+      <div class="pay-form">
+        <div class="pay-field"><label class="pay-label" id="payNameLabel">Ваше ім'я</label><input class="pay-input" id="payName" type="text" placeholder="Марина"></div>
+        <div class="pay-field"><label class="pay-label">Email</label><input class="pay-input" id="payEmail" type="email" placeholder="your@email.com"></div>
+      </div>
+      <div class="pay-methods">
+        <div class="pay-method">💳 Visa / MC</div>
+        <div class="pay-method">🍎 Apple Pay</div>
+        <div class="pay-method">🔵 PayPal</div>
+        <div class="pay-method">🏦 IBAN</div>
+      </div>
+      <div class="pay-total">
+        <span class="pay-total-label" id="payTotalLabel">До оплати:</span>
+        <span class="pay-total-price" id="payTotalPrice">€ 390</span>
+      </div>
+      <button class="btn-primary pay-confirm-btn" id="payBtn" onclick="confirmPayment()">Оплатити супровід →</button>
+      <p class="pay-secure" id="paySecure">🔒 Захищена оплата · Stripe · Ваші дані в безпеці</p>
+    </div>
+  </div>
+</div>
+
+<style>
+/* ─── MODAL BASE ─── */
+.modal-overlay { display:none; position:fixed; inset:0; z-index:1000; background:rgba(20,14,5,.55); backdrop-filter:blur(6px); align-items:center; justify-content:center; padding:20px; }
+.modal-overlay.open { display:flex; }
+.modal-box { background:var(--cream); border-radius:4px; width:100%; max-width:540px; max-height:90vh; overflow-y:auto; position:relative; box-shadow:0 24px 64px rgba(20,14,5,.22); border:0.5px solid var(--line); }
+.modal-header { padding:28px 32px 0; display:flex; align-items:flex-start; justify-content:space-between; }
+.modal-tag { font-size:10px; letter-spacing:2.5px; text-transform:uppercase; color:var(--gold); margin-bottom:6px; }
+.modal-title { font-family:'Playfair Display',serif; font-size:24px; font-weight:400; color:var(--text); line-height:1.2; }
+.modal-close { background:none; border:none; cursor:pointer; font-size:18px; color:rgba(74,53,32,.4); transition:color .2s; padding:4px; flex-shrink:0; margin-left:16px; }
+.modal-close:hover { color:var(--text); }
+.modal-divider { height:1px; background:var(--line); margin:18px 32px; }
+.modal-body { padding:0 32px 28px; }
+/* ─── CALENDAR ─── */
+.cal-desc { font-size:14px; font-weight:300; line-height:1.8; color:var(--text-mid); margin-bottom:20px; }
+.cal-month-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.cal-month-title { font-family:'Playfair Display',serif; font-size:18px; font-weight:400; color:var(--text); }
+.cal-nav { background:none; border:1px solid var(--line); border-radius:50%; width:30px; height:30px; cursor:pointer; font-size:16px; color:var(--text-lt); display:flex; align-items:center; justify-content:center; transition:border-color .2s; }
+.cal-nav:hover { border-color:var(--gold-pale); color:var(--gold); }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-bottom:18px; }
+.cal-day-name { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); text-align:center; padding:5px 0; }
+.cal-day { aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:13px; border-radius:50%; cursor:default; color:var(--text-mid); transition:all .2s; }
+.cal-day.available { border:1px solid rgba(139,111,71,.3); color:var(--text); cursor:pointer; }
+.cal-day.available:hover { background:var(--gold-xp); border-color:var(--gold-pale); }
+.cal-day.selected { background:var(--gold); color:var(--cream); border-color:var(--gold); }
+.cal-day.past { color:rgba(74,53,32,.2); }
+.cal-day.today { font-weight:700; }
+.cal-slots-title { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--gold); margin-bottom:10px; }
+.cal-slots { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; min-height:40px; }
+.time-slot { padding:7px 15px; border:1px solid rgba(139,111,71,.3); border-radius:50px; font-size:13px; color:var(--text-mid); cursor:pointer; transition:all .2s; }
+.time-slot:hover { border-color:var(--gold-pale); color:var(--text); }
+.time-slot.selected { background:var(--gold); color:var(--cream); border-color:var(--gold); }
+.cal-slots-empty { font-size:13px; color:var(--text-lt); font-style:italic; }
+.cal-confirm-btn { width:100%; }
+.cal-confirm-note { margin-top:10px; font-size:12px; color:var(--gold); opacity:.7; font-style:italic; text-align:center; }
+.cal-success,.pay-success { text-align:center; padding:12px 0 8px; }
+.cal-success-icon,.pay-success-icon { font-size:44px; margin-bottom:14px; }
+.cal-success-title,.pay-success-title { font-family:'Playfair Display',serif; font-size:21px; font-weight:400; color:var(--text); margin-bottom:10px; line-height:1.3; }
+.cal-success-desc,.pay-success-desc { font-size:14px; font-weight:300; color:var(--text-mid); line-height:1.7; }
+/* ─── PAYMENT ─── */
+.pay-intro { font-size:14px; font-weight:300; line-height:1.8; color:var(--text-mid); margin-bottom:20px; }
+.pay-options { display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
+.pay-option { display:flex; align-items:flex-start; gap:14px; padding:16px 18px; border:1px solid var(--line); border-radius:2px; cursor:pointer; transition:all .2s; }
+.pay-option:hover { border-color:var(--gold-pale); background:var(--gold-xp); }
+.pay-option.selected { border-color:var(--gold); background:var(--gold-xp); }
+.pay-radio { width:17px; height:17px; border-radius:50%; border:1.5px solid var(--gold-pale); flex-shrink:0; margin-top:3px; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+.pay-option.selected .pay-radio { border-color:var(--gold); background:var(--gold); }
+.pay-option.selected .pay-radio::after { content:''; width:5px; height:5px; background:var(--cream); border-radius:50%; }
+.pay-opt-name { font-size:15px; font-weight:500; color:var(--text); margin-bottom:3px; }
+.pay-opt-desc { font-size:13px; font-weight:300; color:var(--text-lt); line-height:1.5; }
+.pay-opt-price { font-size:13px; color:var(--gold); margin-top:4px; }
+.pay-divider { height:1px; background:var(--line); margin-bottom:18px; }
+.pay-form { display:flex; flex-direction:column; gap:12px; margin-bottom:18px; }
+.pay-field { display:flex; flex-direction:column; gap:5px; }
+.pay-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); }
+.pay-input { padding:11px 14px; border:1px solid var(--line); border-radius:2px; background:var(--cream); font-size:14px; color:var(--text); font-family:'DM Sans',sans-serif; outline:none; transition:border-color .2s; }
+.pay-input:focus { border-color:var(--gold-pale); }
+.pay-methods { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+.pay-method { padding:7px 12px; border:1px solid var(--line); border-radius:2px; font-size:12px; color:var(--text-lt); }
+.pay-total { display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-top:1px solid var(--line); margin-bottom:14px; }
+.pay-total-label { font-size:14px; color:var(--text-mid); }
+.pay-total-price { font-family:'Playfair Display',serif; font-size:22px; font-weight:400; color:var(--text); }
+.pay-confirm-btn { width:100%; }
+.pay-secure { font-size:11px; color:var(--text-lt); text-align:center; margin-top:10px; opacity:.6; }
+@media(max-width:600px){.modal-header,.modal-body{padding-left:18px;padding-right:18px;}.modal-divider{margin:14px 18px;}}
+</style>
+
+<script>
+const SUPPORTED_LANGS = ['ua', 'ru', 'es', 'en'];
+const FLAGS = { ua: '🇺🇦', ru: '🇷🇺', es: '🇪🇸', en: '🇬🇧' };
+const LABELS = { ua: 'UA', ru: 'RU', es: 'ES', en: 'EN' };
+const DEFAULT_LANG = 'ua';
+
+const TEXTS = {
+  navBack: { ua: 'Програми', ru: 'Программы', es: 'Programas', en: 'Programs' },
+  heroTag: {
+    ua: '♂ Чоловіче здоров\'я · Програма супроводу',
+    ru: '♂ Мужское здоровье · Программа сопровождения',
+    es: '♂ Salud masculina · Programa de acompañamiento',
+    en: '♂ Men\'s Health · Accompaniment Programme'
+  },
+  heroTitle: { ua: 'Андрогенна <em>Пауза</em>', ru: 'Андрогенная <em>Пауза</em>', es: 'Pausa <em>Androgénica</em>', en: 'Androgen <em>Pause</em>' },
+  heroSubtitle: { ua: 'Від втоми — до енергії.<br>Від дефіциту — до балансу.', ru: 'От усталости — к энергии.<br>От дефицита — к балансу.', es: 'Del cansancio — a la energía.<br>Del déficit — al equilibrio.', en: 'From fatigue — to energy.<br>From deficiency — to balance.' },
+  heroDesc: {
+    ua: 'Хронічна втома, живіт попри тренування, лібідо не те що раніше, голова думає повільніше — це не «просто вік». Це андропауза. Біохімічний процес, який має логіку — і стратегію.',
+    ru: 'Хроническая усталость, живот несмотря на тренировки, либидо не то что раньше, голова думает медленнее — это не «просто возраст». Это андропауза. Биохимический процесс, который поддаётся стратегии.',
+    es: 'Fatiga crónica, barriga a pesar del ejercicio, libido diferente, cabeza más lenta — no es solo "la edad". Es la andropausia. Un proceso bioquímico con lógica y estrategia.',
+    en: 'Chronic fatigue, belly fat despite training, lower libido, slower thinking — this is not just "age". This is andropause. A biochemical process with logic — and a strategy.'
+  },
+  heroBtnSlots: { ua: 'Вільні слоти на знайомство', ru: 'Свободные слоты на знакомство', es: 'Horarios disponibles para conocernos', en: 'Available intro slots' },
+  heroBtnProgram: { ua: 'Програма супроводу', ru: 'Программа сопровождения', es: 'Programa de acompañamiento', en: 'Accompaniment programme' },
+  heroNote: { ua: '✦ Знайомство — 15 хвилин, безкоштовно, без зобов\'язань', ru: '✦ Знакомство — 15 минут, бесплатно, без обязательств', es: '✦ Conocernos — 15 minutos, gratuito, sin compromiso', en: '✦ Introduction — 15 minutes, free, no commitment' },
+  bridgeQuote: { ua: '«75% чоловіків зберігають нормальний тестостерон до 70+ років. Питання не у віці — у стратегії.»', ru: '«75% мужчин сохраняют нормальный тестостерон до 70+ лет. Вопрос не в возрасте — в стратегии.»', es: '«El 75% de los hombres mantienen testosterona normal hasta los 70+. La pregunta no es la edad — es la estrategia.»', en: '“75% of men maintain normal testosterone past 70. The question is not age — it\'s strategy.”' },
+  fwEy: { ua: 'Для кого', ru: 'Для кого', es: 'Para quién', en: 'Who is it for' },
+  fwTitle: { ua: 'Ви впізнаєте себе тут?', ru: 'Вы узнаёте себя здесь?', es: '¿Te reconoces aquí?', en: 'Do you recognise yourself here?' },
+  fwDesc: { ua: 'Це не симптоми, які треба терпіти. Це сигнали, які тіло надсилає зрозумілою біохімічною мовою. Якщо хоча б два відгукуються — ця програма для вас.', ru: 'Это не признаки старости. Это сигналы, которые тело посылает через биохимию. Если хотя бы два отзываются — эта программа для вас.', es: 'No son señales de vejez. Son señales que el cuerpo envía a través de la bioquímica.', en: 'These are not signs of ageing. They are signals the body sends through biochemistry.' },
+  fw1Text: { ua: '«Прокидаюся і вже втомлений. Будильник — це боротьба. Тренуюся — але сил менше, ніж раніше.»', ru: '«Просыпаюсь и уже устал. Будильник — это борьба. Тренируюсь — но сил меньше, чем раньше.»', es: '«Me despierto ya cansado. El despertador es una lucha. Entreno — pero tengo menos energía que antes.»', en: '“I wake up already tired. The alarm is a battle. I train — but have less energy than before.”' },
+  fw1Label: { ua: 'Хронічна втома', ru: 'Хроническая усталость', es: 'Fatiga crónica', en: 'Chronic fatigue' },
+  fw2Text: { ua: '«Їм так само, як і раніше — а живіт росте. Тренуюся, але форма не та, що була.»', ru: '«Ем так же, как и раньше — а живот растёт. Тренируюсь, но форма не та.»', es: '«Como igual que antes — y la barriga crece. Entreno, pero la forma no es la misma.»', en: '“I eat the same as before — yet my belly keeps growing. I train, but the shape is different.”' },
+  fw2Label: { ua: 'Абдомінальний жир', ru: 'Абдоминальный жир', es: 'Grasa abdominal', en: 'Abdominal fat' },
+  fw3Text: { ua: '«М\'язи ростуть гірше. Відновлення займає більше часу. Тіло реагує інакше, ніж раніше.»', ru: '«Мышцы растут хуже. Восстановление занимает больше времени. Тело реагирует иначе.»', es: '«Los músculos crecen peor. La recuperación tarda más. El cuerpo reacciona diferente.»', en: '“Muscles grow slower. Recovery takes longer. The body responds differently than before.”' },
+  fw3Label: { ua: 'Втрата м\'язової маси', ru: 'Потеря мышечной массы', es: 'Pérdida de masa muscular', en: 'Loss of muscle mass' },
+  fw4Text: { ua: '«Голова думає повільніше. Концентрація не та. Мотивація впала без видимої причини.»', ru: '«Голова думает медленнее. Концентрация не та. Мотивация упала без видимой причины.»', es: '«La cabeza piensa más despacio. La concentración no es la misma. La motivación ha caído sin razón visible.»', en: '“My head thinks slower. Concentration is off. Motivation has dropped for no visible reason.”' },
+  fw4Label: { ua: 'Когнітивний туман', ru: 'Когнитивный туман', es: 'Niebla cognitiva', en: 'Cognitive fog' },
+  fw5Text: { ua: '«Сон став гіршим. Прокидаюся серед ночі. Вранці не відпочив, хоча спав достатньо.»', ru: '«Сон стал хуже. Просыпаюсь среди ночи. Утром не отдохнул, хотя спал достаточно.»', es: '«El sueño empeoró. Me despierto a media noche. Por la mañana no he descansado.»', en: '“Sleep got worse. I wake up in the middle of the night. In the morning I\'m not rested.”' },
+  fw5Label: { ua: 'Порушення сну', ru: 'Нарушения сна', es: 'Alteraciones del sueño', en: 'Sleep disturbances' },
+  fw6Text: { ua: '«Аналізи в нормі. Лікар каже — все гаразд. Але я відчуваю, що не на 100%.»', ru: '«Анализы в норме. Врач говорит — всё хорошо. Но я чувствую, что не на 100%.»', es: '«Los análisis son normales. El médico dice que todo bien. Pero siento que no estoy al 100%.»', en: '“Tests are normal. The doctor says everything is fine. But I feel I\'m not at 100%.”' },
+  fw6Label: { ua: 'Прихований дефіцит T', ru: 'Скрытый дефицит T', es: 'Déficit oculto de T', en: 'Hidden testosterone deficit' },
+  fwNotStrong: { ua: 'Програма підходить:', ru: 'Программа подходит:', es: 'El programa es adecuado para:', en: 'The programme is suitable for:' },
+  fwNotText: { ua: 'чоловікам 38–65 років із симптомами зниження тестостерону — незалежно від того, чи приймають вони гормональну терапію. Ми працюємо паралельно з вашим лікарем, не замість нього.', ru: 'мужчинам 38–65 лет с симптомами снижения тестостерона — независимо от того, принимают ли они гормональную терапию. Мы работаем параллельно с вашим врачом, а не вместо него.', es: 'hombres de 38–65 años con síntomas de déficit de testosterona — independientemente de si están en terapia hormonal. Trabajamos en paralelo con tu médico, no en su lugar.', en: 'men aged 38–65 with symptoms of low testosterone — regardless of whether they are on hormone therapy. We work alongside your doctor, not instead of them.' },
+  bioEy: { ua: 'Біохімія', ru: 'Биохимия', es: 'Bioquímica', en: 'Biochemistry' },
+  bioTitle: { ua: 'Одна ланцюжок — шість симптомів', ru: 'Одна цепочка — семь симптомов', es: 'Una cadena — siete síntomas', en: 'One chain — seven symptoms' },
+  bioDesc: { ua: 'За приливами, вагою, безсонням і туманом стоїть один біохімічний каскад. Розуміти його — значить знати, де застосувати харчування як інструмент.', ru: 'За усталостью, весом, бессонницей и туманом стоит один биохимический каскад. Понимать его — значит знать, где применить питание как инструмент.', es: 'Detrás de la fatiga, el peso, el insomnio y la niebla hay una sola cascada bioquímica. Entenderla significa saber dónde aplicar la alimentación como herramienta.', en: 'Behind the fatigue, weight, insomnia and fog lies a single biochemical cascade. Understanding it means knowing where to apply nutrition as a tool.' },
+  insightTitle: { ua: 'Чому харчування — це інструмент, а не дієта', ru: 'Почему питание — это инструмент, а не диета', es: 'Por qué la alimentación es una herramienta, no una dieta', en: 'Why nutrition is a tool, not a diet' },
+  insightBody1: { ua: 'Кожна ланка цього каскаду відповідає на те, що ви їсте. Не на кількість калорій — на якість сигналів, які їжа надсилає в клітини. Персональний протокол будується на ваших аналізах і симптомах, а не на загальних рекомендаціях.', ru: 'Каждое звено этого каскада отвечает на то, что вы едите. Не на количество калорий — на качество сигналов, которые еда посылает в клетки. Персональный протокол строится на ваших анализах и симптомах, а не на общих рекомендациях.', es: 'Cada eslabón de esta cascada responde a lo que comes. No a la cantidad de calorías, sino a la calidad de las señales que la comida envía a las células. El protocolo personal se construye sobre tus análisis y síntomas, no sobre recomendaciones generales.', en: 'Each link in this cascade responds to what you eat. Not to calorie counts, but to the quality of signals food sends to your cells. The personal protocol is built on your tests and symptoms, not on generic advice.' },
+  insightBody2: { ua: 'Доказова база: середземноморська дієта знижує вазомоторні симптоми. Жирна риба затримує менопаузу на 3,3 роки. Комбінація білка і силових тренувань — єдина стратегія, що зберігає м\'язову масу після 40.', ru: 'Доказательная база: средиземноморская диета снижает вазомоторные симптомы. Жирная рыба задерживает менопаузу на 3,3 года. Комбинация белка и силовых тренировок — единственная стратегия, которая сохраняет мышечную массу после 40.', es: 'Base científica: la dieta mediterránea reduce los síntomas vasomotores. El pescado graso retrasa la menopausia 3,3 años. La combinación de proteína y entrenamiento de fuerza es la única estrategia que preserva la masa muscular después de los 40.', en: 'Evidence base: the Mediterranean diet reduces vasomotor symptoms. Oily fish delays menopause by 3.3 years. The combination of protein and strength training is the only strategy that preserves muscle mass after 40.' },
+  insightList1: { ua: 'Протизапальний протокол харчування', ru: 'Противоспалительный протокол питания', es: 'Protocolo antiinflamatorio de alimentación', en: 'Anti-inflammatory nutrition protocol' },
+  insightList2: { ua: 'Фітоестрогени та адаптогени', ru: 'Фитоэстрогены и адаптогены', es: 'Fitoestrógenos y adaptógenos', en: 'Phytoestrogens and adaptogens' },
+  insightList3: { ua: 'Підтримка щільності кісток', ru: 'Поддержка плотности костей', es: 'Soporte de la densidad ósea', en: 'Support for bone density' },
+  insightList4: { ua: 'Стабілізація інсуліну та кортизолу', ru: 'Стабилизация инсулина и кортизола', es: 'Estabilización de la insulina y el cortisol', en: 'Stabilisation of insulin and cortisol' },
+  insightList5: { ua: 'Нутрицевтики під ваш профіль дефіцитів', ru: 'Нутрицевтики под ваш профиль дефицитов', es: 'Nutracéuticos según tu perfil de déficits', en: 'Nutraceuticals tailored to your deficiency profile' },
+  stEy: { ua: 'Як ми працюємо', ru: 'Как мы работаем', es: 'Cómo trabajamos', en: 'How we work' },
+  stTitle: { ua: 'Чотири кроки вашого шляху', ru: 'Четыре шага вашего пути', es: 'Cuatro pasos de tu camino', en: 'Four steps of your journey' },
+  stDesc: { ua: 'Від першого знайомства до стійкого результату — послідовна робота з вашою біохімією, а не шаблонний план.', ru: 'От первого знакомства до устойчивого результата — последовательная работа с вашей биохимией, а не шаблонный план.', es: 'Desde el primer encuentro hasta un resultado duradero — trabajo secuencial con tu bioquímica, no un plan genérico.', en: 'From the first meeting to a lasting result — step-by-step work with your biochemistry, not a template plan.' },
+  st1Title: { ua: 'Первинна консультація', ru: 'Первичная консультация', es: 'Consulta inicial', en: 'Initial consultation' },
+  st1Desc: { ua: 'Знайомимось. Розбираємо вашу ситуацію глибоко: симптоми та їхня динаміка, харчова поведінка, сон, стрес, спосіб життя. Визначаємо точку відліку.', ru: 'Знакомимся. Разбираем вашу ситуацию глубоко: симптомы и их динамика, пищевое поведение, сон, стресс, образ жизни. Определяем точку отсчёта.', es: 'Nos conocemos. Analizamos tu situación en profundidad: síntomas y su dinámica, comportamiento alimentario, sueño, estrés, estilo de vida. Establecemos el punto de partida.', en: 'We get acquainted. We explore your situation in depth: symptoms and their timeline, eating behaviour, sleep, stress, lifestyle. We set the baseline.' },
+  st2Title: { ua: 'Аналіз даних', ru: 'Анализ данных', es: 'Análisis de datos', en: 'Data analysis' },
+  st2Desc: { ua: 'Аналізуємо ваші лабораторні показники. Виявляємо приховані дефіцити, запалення, гормональні дисбаланси. Дивимось на організм як на систему.', ru: 'Анализируем ваши лабораторные показатели. Выявляем скрытые дефициты, воспаление, гормональные дисбалансы. Смотрим на организм как на систему.', es: 'Analizamos tus marcadores de laboratorio. Identificamos déficits ocultos, inflamación, desequilibrios hormonales. Vemos el organismo como un sistema.', en: 'We analyse your laboratory markers. We identify hidden deficiencies, inflammation, hormonal imbalances. We look at the body as a system.' },
+  st3Title: { ua: 'Персональна стратегія', ru: 'Персональная стратегия', es: 'Estrategia personal', en: 'Personal strategy' },
+  st3Desc: { ua: 'Формуємо детальний протокол харчування і нутрієнтної підтримки під ваш унікальний біохімічний профіль і ритм життя. Жодних універсальних схем.', ru: 'Формируем детальный протокол питания и нутриентной поддержки под ваш уникальный биохимический профиль и ритм жизни. Никаких универсальных схем.', es: 'Elaboramos un protocolo detallado de alimentación y soporte nutricional adaptado a tu perfil bioquímico único y ritmo de vida. Sin esquemas genéricos.', en: 'We create a detailed nutrition and nutrient-support protocol tailored to your unique biochemical profile and lifestyle. No generic templates.' },
+  st4Title: { ua: 'Супровід і результат', ru: 'Сопровождение и результат', es: 'Seguimiento y resultado', en: 'Accompaniment and results' },
+  st4Desc: { ua: 'Регулярні зустрічі, відстеження динаміки, гнучке коригування програми. Я поруч на кожному кроці — поки зміни не стануть частиною вашого життя.', ru: 'Регулярные встречи, отслеживание динамики, гибкая корректировка программы. Я рядом на каждом шагу — пока изменения не станут частью вашей жизни.', es: 'Reuniones regulares, seguimiento de la dinámica, ajuste flexible del programa. Estoy contigo en cada paso — hasta que los cambios se conviertan en parte de tu vida.', en: 'Regular meetings, progress tracking, flexible programme adjustment. I am with you every step of the way — until the changes become part of your life.' },
+  incEy: { ua: 'Що входить', ru: 'Что входит', es: 'Qué incluye', en: 'What\'s included' },
+  incTitle: { ua: 'Повне супроводження,<br>не разові поради', ru: 'Полное сопровождение,<br>не разовые советы', es: 'Acompañamiento completo,<br>no consejos puntuales', en: 'Full accompaniment,<br>not one-off advice' },
+  incDesc: { ua: 'Програма — це не список дозволених продуктів. Це персональна система, яка розвивається разом з вами.', ru: 'Программа — это не список разрешённых продуктов. Это персональная система, которая развивается вместе с вами.', es: 'El programa no es una lista de alimentos permitidos. Es un sistema personal que evoluciona contigo.', en: 'The programme is not a list of permitted foods. It is a personal system that evolves with you.' },
+  inc1Title: { ua: 'Аналіз гормонального профілю', ru: 'Анализ гормонального профиля', es: 'Análisis del perfil hormonal', en: 'Hormonal profile analysis' },
+  inc1Desc: { ua: 'Розбираємо ваші аналізи разом. Я пояснюю не лише «в нормі чи ні», а де ваш функціональний оптимум і що це означає для харчування.', ru: 'Разбираем ваши анализы вместе. Я объясняю не только «в норме или нет», но и где ваш функциональный оптимум и что это значит для питания.', es: 'Revisamos tus análisis juntos. Explico no solo si está «en rango», sino dónde está tu óptimo funcional y qué significa para tu alimentación.', en: 'We review your tests together. I explain not just "in range or not", but where your functional optimum is and what it means for your nutrition.' },
+  inc2Title: { ua: 'Персональний протокол харчування', ru: 'Персональный протокол питания', es: 'Protocolo de alimentación personalizado', en: 'Personal nutrition protocol' },
+  inc2Desc: { ua: 'Детальний план, адаптований до вашого режиму, смаків і гормонального статусу. Не дієта — стратегія.', ru: 'Детальный план, адаптированный к вашему режиму, вкусам и гормональному статусу. Не диета — стратегия.', es: 'Plan detallado adaptado a tu rutina, preferencias y estado hormonal. No es una dieta — es una estrategia.', en: 'A detailed plan adapted to your schedule, tastes and hormonal status. Not a diet — a strategy.' },
+  inc3Title: { ua: 'Нутрицевтики та фітоестрогени', ru: 'Нутрицевтики и фитоэстрогены', es: 'Nutracéuticos y fitoestrógenos', en: 'Nutraceuticals and phytoestrogens' },
+  inc3Desc: { ua: 'Точний підбір добавок під ваш профіль дефіцитів. Без зайвого. Лише те, що має доказову базу і потрібне саме вам.', ru: 'Точный подбор добавок под ваш профиль дефицитов. Без лишнего. Только то, что имеет доказательную базу и нужно именно вам.', es: 'Selección precisa de suplementos para tu perfil de déficits. Sin excesos. Solo lo que tiene base científica y es necesario para ti.', en: 'Precise selection of supplements for your deficiency profile. Nothing unnecessary. Only what has an evidence base and is needed specifically for you.' },
+  inc4Title: { ua: 'Регулярні сесії та підтримка', ru: 'Регулярные сессии и поддержка', es: 'Sesiones regulares y soporte', en: 'Regular sessions and support' },
+  inc4Desc: { ua: 'Зустрічі кожні 2–3 тижні, коригування плану при змінах у самопочутті або аналізах. Питання між сесіями — завжди.', ru: 'Встречи каждые 2–3 недели, корректировка плана при изменениях в самочувствии или анализах. Вопросы между сессиями — всегда.', es: 'Reuniones cada 2–3 semanas, ajuste del plan ante cambios en el bienestar o los análisis. Preguntas entre sesiones — siempre.', en: 'Sessions every 2–3 weeks, plan adjustment when wellbeing or test results change. Questions between sessions — always.' },
+  inc5Title: { ua: 'Відстеження динаміки', ru: 'Отслеживание динамики', es: 'Seguimiento de la dinámica', en: 'Progress tracking' },
+  inc5Desc: { ua: 'Порівнюємо аналізи до і після. Вимірюємо не лише самопочуття, але й біохімічні зсуви — об\'єктивно.', ru: 'Сравниваем анализы до и после. Измеряем не только самочувствие, но и биохимические сдвиги — объективно.', es: 'Comparamos análisis antes y después. Medimos no solo el bienestar, sino también los cambios bioquímicos — objetivamente.', en: 'We compare tests before and after. We measure not just wellbeing but biochemical shifts — objectively.' },
+  formatTitle: { ua: 'Формат програми', ru: 'Формат программы', es: 'Formato del programa', en: 'Programme format' },
+  resEy: { ua: 'Результати', ru: 'Результаты', es: 'Resultados', en: 'Results' },
+  resTitle: { ua: 'Що змінюється і коли', ru: 'Что меняется и когда', es: 'Qué cambia y cuándo', en: 'What changes and when' },
+  resDesc: { ua: 'Не обіцянки — біохімічна реальність. Перші відчутні зміни помічають через 2–4 тижні. Глибші зсуви — у аналізах через 8–12 тижнів.', ru: 'Не обещания — биохимическая реальность. Первые ощутимые изменения замечают через 2–4 недели. Более глубокие сдвиги — в анализах через 8–12 недель.', es: 'No son promesas — es realidad bioquímica. Los primeros cambios notables aparecen en 2–4 semanas. Los cambios más profundos se ven en los análisis a las 8–12 semanas.', en: 'Not promises — biochemical reality. First noticeable changes appear within 2–4 weeks. Deeper shifts show in lab tests at 8–12 weeks.' },
+  res1Time: { ua: '2–4 тижні', ru: '2–4 недели', es: '2–4 semanas', en: '2–4 weeks' },
+  res1Head: { ua: 'Перші зміни<br>у самопочутті', ru: 'Первые изменения<br>в самочувствии', es: 'Primeros cambios<br>en el bienestar', en: 'First changes<br>in wellbeing' },
+  res1Text: { ua: 'Стабілізується енергія протягом дня. Покращується якість сну — менше пробуджень. Відновлення після тренувань прискорюється. Зникає тяга до солодкого після обіду.', ru: 'Стабилизируется энергия в течение дня. Улучшается качество сна — меньше пробуждений. Восстановление после тренировок ускоряется. Исчезает тяга к сладкому после обеда.', es: 'Se estabiliza la energía durante el día. Mejora la calidad del sueño — menos despertares. La recuperación tras el ejercicio se acelera. Desaparece el antojo de dulce después de comer.', en: 'Energy stabilises throughout the day. Sleep quality improves — fewer wake-ups. Post-workout recovery speeds up. The afternoon sugar craving disappears.' },
+  res2Time: { ua: '4–8 тижнів', ru: '4–8 недель', es: '4–8 semanas', en: '4–8 weeks' },
+  res2Head: { ua: 'Стійка динаміка<br>і ясність', ru: 'Устойчивая динамика<br>и ясность', es: 'Dinámica sostenida<br>y claridad', en: 'Sustained progress<br>and clarity' },
+  res2Text: { ua: 'Туман у голові розсіюється. Живіт починає реагувати — не через дієту, а через зміну сигналів. М\'язи відновлюються краще. Мотивація і концентрація повертаються.', ru: 'Туман в голове рассеивается. Живот начинает реагировать — не через диету, а через изменение сигналов. Мышцы восстанавливаются лучше. Мотивация и концентрация возвращаются.', es: 'La niebla mental se despeja. El abdomen empieza a responder — no por restricción, sino por cambio de señales. Los músculos se recuperan mejor. La motivación y concentración regresan.', en: 'The mental fog lifts. The belly starts to respond — not through restriction, but through changed signals. Muscles recover better. Motivation and concentration return.' },
+  res3Time: { ua: '8–12 тижнів', ru: '8–12 недель', es: '8–12 semanas', en: '8–12 weeks' },
+  res3Head: { ua: 'Біохімічні зсуви<br>у аналізах', ru: 'Биохимические сдвиги<br>в анализах', es: 'Cambios bioquímicos<br>en los análisis', en: 'Biochemical shifts<br>in lab tests' },
+  res3Text: { ua: 'Зростає вільний тестостерон в аналізах. Знижується вч-СРБ. Стабілізується інсулін натощак. Нормалізуються цинк і вітамін D. Ви бачите зміни у цифрах.', ru: 'Растёт свободный тестостерон в анализах. Снижается вч-СРБ. Стабилизируется инсулин натощак. Нормализуются цинк и витамин D. Вы видите изменения в цифрах.', es: 'Sube la testosterona libre en los análisis. Baja la PCR ultrasensible. Se estabiliza la insulina en ayunas. Se normalizan el zinc y la vitamina D. Ves los cambios en cifras.', en: 'Free testosterone rises in tests. hsCRP drops. Fasting insulin stabilises. Zinc and vitamin D normalise. You see the changes in numbers.' },
+  resDisclaimer: { ua: 'Результати індивідуальні. Залежать від вихідного рівня тестостерону, дотримання протоколу та способу життя. Програма не є медичним лікуванням і не замінює консультацію ендокринолога.', ru: 'Результаты индивидуальны. Зависят от исходного уровня тестостерона, соблюдения протокола и образа жизни. Программа не является медицинским лечением и не заменяет консультацию эндокринолога.', es: 'Los resultados son individuales. Dependen del nivel inicial de testosterona, el cumplimiento del protocolo y el estilo de vida. El programa no es un tratamiento médico y no sustituye la consulta con un endocrinólogo.', en: 'Results are individual. They depend on baseline testosterone level, protocol adherence and lifestyle. The programme is not medical treatment and does not replace a consultation with an endocrinologist.' },
+  anEy: { ua: 'Аналізи', ru: 'Анализы', es: 'Análisis', en: 'Lab markers' },
+  anTitle: { ua: 'Що показують ваші аналізи', ru: 'Что показывают ваши анализы', es: 'Qué muestran tus análisis', en: 'What your tests show' },
+  anDesc: { ua: '«Все в нормі» — не повна картина. Стандартна панель не включає тестостерон. Ми дивимось на функціональний оптимум.', ru: '«Всё в норме» — не полная картина. Стандартная панель не включает тестостерон. Мы смотрим на функциональный оптимум.', es: '«Todo está normal» no es el cuadro completo. El panel estándar no incluye testosterona. Miramos el óptimo funcional.', en: '"Everything is normal" is not the full picture. The standard panel does not include testosterone. We look at the functional optimum.' },
+  anNote: {
+    ua: 'Стандартна панель аналізів не включає тестостерон і ГСПГ. Більшість чоловіків дізнаються про дефіцит T випадково. На першій консультації я підкажу, які саме аналізи здати — без зайвих витрат.',
+    ru: 'Стандартная панель анализов не включает тестостерон и ГСПГ. Большинство мужчин узнают о дефиците T случайно. На первой консультации я подскажу, какие именно анализы сдать — без лишних затрат.',
+    es: 'El panel estándar no incluye testosterona ni SHBG. La mayoría de los hombres descubren el déficit de T de forma casual. En la primera consulta te indicaré exactamente qué análisis pedir — sin gastos innecesarios.',
+    en: 'The standard lab panel does not include testosterone and SHBG. Most men discover a T deficit by chance. At the first consultation I will advise exactly which tests to order — without unnecessary costs.'
+  },
+  ctaEy: { ua: '✦ Початок роботи', ru: '✦ Начало работы', es: '✦ Inicio del trabajo', en: '✦ Getting started' },
+  ctaTitle: { ua: 'Перший крок —<br>це <em>розмова</em>', ru: 'Первый шаг —<br>это <em>разговор</em>', es: 'El primer paso —<br>es una <em>conversación</em>', en: 'The first step —<br>is a <em>conversation</em>' },
+  ctaDesc: { ua: 'На першій консультації ми знайомимось, розбираємо вашу ситуацію і визначаємо, чи підходить вам цей підхід. Без зобов\'язань.', ru: 'На первой консультации мы знакомимся, разбираем вашу ситуацию и определяем, подходит ли вам этот подход. Без обязательств.', es: 'En la primera consulta nos conocemos, analizamos tu situación. Sin presión.', en: 'In our first consultation we get to know each other, explore your situation. No pressure.' },
+  ctaBtn1: { ua: 'Вільні слоти на знайомство', ru: 'Свободные слоты на знакомство', es: 'Horarios disponibles para conocernos', en: 'Available intro slots' },
+  ctaBtn2: { ua: 'Програма супроводу', ru: 'Программа сопровождения', es: 'Programa de acompañamiento', en: 'Accompaniment programme' },
+  ctaNote: { ua: '✦ Онлайн · Весь світ · UA / RU / ES / EN · Відповідь протягом 24 годин', ru: '✦ Онлайн · Весь мир · UA / RU / ES / EN · Ответ в течение 24 часов', es: '✦ Online · Todo el mundo · UA / RU / ES / EN · Respuesta en 24 horas', en: '✦ Online · Worldwide · UA / RU / ES / EN · Reply within 24 hours' },
+  calTag: { ua: '✦ Безкоштовно · 15 хвилин · Онлайн', ru: '✦ Бесплатно · 15 минут · Онлайн', es: '✦ Gratuito · 15 minutos · Online', en: '✦ Free · 15 minutes · Online' },
+  calTitle: { ua: 'Вільні слоти на знайомство', ru: 'Свободные слоты на знакомство', es: 'Horarios disponibles', en: 'Available intro slots' },
+  calDesc: { ua: 'Оберіть зручний день та час для 15-хвилинного знайомства. Без зобов\'язань.', ru: 'Выберите удобный день и время. Без обязательств.', es: 'Elige un día y hora para una sesión de 15 minutos. Sin compromiso.', en: 'Choose a convenient day and time. No commitment.' },
+  calSlotsTitle: { ua: 'Доступний час', ru: 'Доступное время', es: 'Horarios disponibles', en: 'Available times' },
+  calSlotsEmpty: { ua: 'Оберіть день, щоб побачити слоти', ru: 'Выберите день, чтобы увидеть слоты', es: 'Selecciona un día para ver horarios', en: 'Select a day to see slots' },
+  calConfirm: { ua: 'Підтвердити знайомство →', ru: 'Подтвердить знакомство →', es: 'Confirmar sesión →', en: 'Confirm introduction →' },
+  calNote: { ua: 'Посилання на відеозустріч прийде на вашу пошту', ru: 'Ссылка на видеовстречу придёт на вашу почту', es: 'El enlace llegará a tu correo', en: 'A video call link will be sent to your email' },
+  payTag: { ua: '✦ Програма супроводу · VIA-L', ru: '✦ Программа сопровождения · VIA-L', es: '✦ Programa de acompañamiento · VIA-L', en: '✦ Accompaniment programme · VIA-L' },
+  payTitle: { ua: 'Оберіть формат програми', ru: 'Выберите формат программы', es: 'Elige el formato', en: 'Choose your format' },
+  payIntro: { ua: 'Програма супроводу — персональна робота з нутриціологом протягом 12 тижнів.', ru: 'Программа сопровождения — персональная работа с нутрициологом в течение 12 недель.', es: 'Programa de acompañamiento — trabajo personal con nutricionista durante 12 semanas.', en: 'The accompaniment programme — personal work with a nutritionist over 12 weeks.' },
+  opt1Name: { ua: 'Базова програма · 8 тижнів', ru: 'Базовая программа · 8 недель', es: 'Programa básico · 8 semanas', en: 'Basic programme · 8 weeks' },
+  opt1Desc: { ua: 'Первинна консультація, аналіз аналізів, протокол харчування, 3 сесії супроводу', ru: 'Консультация, анализ анализов, протокол питания, 3 сессии сопровождения', es: 'Consulta, análisis, protocolo, 3 sesiones', en: 'Consultation, analysis, protocol, 3 sessions' },
+  opt2Name: { ua: 'Повна програма · 12 тижнів', ru: 'Полная программа · 12 недель', es: 'Programa completo · 12 semanas', en: 'Full programme · 12 weeks' },
+  opt2Desc: { ua: 'Консультація, аналіз, протокол, 6 сесій, підтримка в месенджері, повторний аналіз', ru: 'Консультация, анализ, протокол, 6 сессий, поддержка в мессенджере, повторный анализ', es: 'Consulta, análisis, protocolo, 6 sesiones, soporte', en: 'Consultation, analysis, protocol, 6 sessions, support' },
+  opt3Name: { ua: 'Разова консультація', ru: 'Разовая консультация', es: 'Consulta única', en: 'Single consultation' },
+  opt3Desc: { ua: '60-хвилинна глибока консультація з персональним планом кроків', ru: '60-минутная глубокая консультация с персональным планом шагов', es: 'Consulta profunda de 60 min con plan personalizado', en: '60-min consultation with personalised action plan' },
+  payNameLabel: { ua: 'Ваше ім\'я', ru: 'Ваше имя', es: 'Tu nombre', en: 'Your name' },
+  payTotalLabel: { ua: 'До оплати:', ru: 'К оплате:', es: 'Total a pagar:', en: 'Total to pay:' },
+  payBtn: { ua: 'Оплатити супровід →', ru: 'Оплатить сопровождение →', es: 'Pagar acompañamiento →', en: 'Pay for programme →' },
+  paySecure: { ua: '🔒 Захищена оплата · Stripe · Ваші дані в безпеці', ru: '🔒 Защищённая оплата · Stripe · Ваши данные в безопасности', es: '🔒 Pago seguro · Stripe · Tus datos están protegidos', en: '🔒 Secure payment · Stripe · Your data is protected' },
+  formatRow1Value: { ua: 'Онлайн · весь світ', ru: 'Онлайн · весь мир', es: 'Online · todo el mundo', en: 'Online · worldwide' },
+  formatRow2Value: { ua: '8–12 тижнів', ru: '8–12 недель', es: '8–12 semanas', en: '8–12 weeks' },
+  formatRow3Value: { ua: 'UA · RU · ES · EN', ru: 'UA · RU · ES · EN', es: 'UA · RU · ES · EN', en: 'UA · RU · ES · EN' },
+  formatRow4Value: { ua: 'Після першої консультації', ru: 'После первой консультации', es: 'Después de la primera consulta', en: 'After the first consultation' },
+  guide1Name: { ua: 'Менопауза без страху', ru: 'Менопауза без страха', es: 'Menopausia sin miedo', en: 'Menopause without fear' },
+  guide1Sub: { ua: '6 симптомів перименопаузи — біохімія і стратегія', ru: '6 симптомов перименопаузы — биохимия и стратегия', es: '6 síntomas de la perimenopausia — bioquímica y estrategia', en: '6 perimenopause symptoms — biochemistry and strategy' },
+  guide2Name: { ua: 'Волосся, шкіра, нігті 40+', ru: 'Волосы, кожа, ногти 40+', es: 'Cabello, piel, uñas 40+', en: 'Hair, skin, nails 40+' },
+  guide2Sub: { ua: 'Зовнішні зміни та їх внутрішні причини', ru: 'Внешние изменения и их внутренние причины', es: 'Cambios externos y sus causas internas', en: 'External changes and their internal causes' },
+  guide3Name: { ua: 'Що приховують ваші аналізи', ru: 'Что скрывают ваши анализы', es: 'Qué ocultan tus análisis', en: 'What your tests are hiding' },
+  guide3Sub: { ua: 'Функціональний оптимум vs лабораторна норма', ru: 'Функциональный оптимум vs лабораторная норма', es: 'Óptimo funcional vs norma de laboratorio', en: 'Functional optimum vs lab normal' },
+  guide4Name: { ua: 'Тихий вогонь', ru: 'Тихий огонь', es: 'Fuego silencioso', en: 'Silent fire' },
+  guide4Sub: { ua: 'Хронічне запалення: маркери та харчування', ru: 'Хроническое воспаление: маркеры и питание', es: 'Inflamación crónica: marcadores y alimentación', en: 'Chronic inflammation: markers and nutrition' },
+  acc_ey: { ua: 'Програма супроводу', ru: 'Программа сопровождения', es: 'Programa de acompañamiento', en: 'Accompaniment programme' },
+  acc_title: { ua: '12 тижнів —<br><em>поруч на кожному кроці</em>', ru: '12 недель —<br><em>рядом на каждом шагу</em>', es: '12 semanas —<br><em>junto a ti en cada paso</em>', en: '12 weeks —<br><em>with you every step</em>' },
+  acc_sub: { ua: 'Це не разова консультація. Це <strong>системна робота</strong> — тиждень за тижнем, аналіз за аналізом. Від першого знайомства до письмового плану на наступні пів року.', ru: 'Это не разовая консультация. Это <strong>системная работа</strong> — неделя за неделей, анализ за анализом. Від первого знакомства до письменного плана на следующие полгода.', es: 'No es una consulta puntual. Es trabajo sistemático — semana a semana, análisis tras análisis.', en: 'This is not a one-off consultation. It is <strong>systematic work</strong> — week by week, test by test. From the first meeting to a written plan for the next six months.' },
+  acc_s1: { ua: 'тижнів<br>повного супроводу', ru: 'недель<br>полного сопровождения', es: 'semanas de<br>acompañamiento completo', en: 'weeks of<br>full accompaniment' },
+  acc_s2: { ua: 'онлайн-сесій<br>по 60 хвилин', ru: 'онлайн-сессий<br>по 60 минут', es: 'sesiones online<br>de 60 minutos', en: 'online sessions<br>60 minutes each' },
+  acc_s3: { ua: 'аналізи —<br>до та після', ru: 'анализы —<br>до и после', es: 'análisis —<br>antes y después', en: 'lab tests —<br>before and after' },
+  acc_s4: { ua: 'місяців план<br>на завершення', ru: 'месяцев план<br>на завершение', es: 'meses de plan<br>al finalizar', en: 'months plan<br>at the end' },
+  acc_tl_title: { ua: 'Як виглядає <em>шлях клієнта</em>', ru: 'Как выглядит <em>путь клиента</em>', es: 'El camino del cliente <em>semana a semana</em>', en: 'The client journey <em>week by week</em>' },
+  acc_w1: { ua: 'Тиждень 1', ru: 'Неделя 1', es: 'Semana 1', en: 'Week 1' },
+  acc_wl1: { ua: 'Старт', ru: 'Старт', es: 'Inicio', en: 'Start' },
+  acc_t1: { ua: 'Крок перший', ru: 'Шаг первый', es: 'Paso primero', en: 'Step one' },
+  acc_ph1: { ua: 'Глибоке знайомство та діагностика', ru: 'Глубокое знакомство и диагностика', es: 'Conocimiento profundo y diagnóstico', en: 'In-depth introduction and diagnostics' },
+  acc_pd1: { ua: 'Перша сесія — 60 хвилин. Симптоми, харчова поведінка, сон, аналізи. Визначаємо точку відліку.', ru: 'Первая сессия — 60 минут. Симптомы, пищевое поведение, сон, анализы. Определяем точку отсчёта.', es: 'Primera sesión — 60 minutos. Síntomas, comportamiento alimentario, sueño, análisis. Establecemos el punto de partida.', en: 'First session — 60 minutes. Symptoms, eating behaviour, sleep, tests. We set the baseline.' },
+  acc_c1_1: { ua: 'Аналіз симптомів', ru: 'Анализ симптомов', es: 'Análisis de síntomas', en: 'Symptom analysis' },
+  acc_c1_2: { ua: 'Харчова поведінка', ru: 'Пищевое поведение', es: 'Comportamiento alimentario', en: 'Eating behaviour' },
+  acc_c1_3: { ua: 'Розбір аналізів', ru: 'Разбор анализов', es: 'Revisión de análisis', en: 'Test review' },
+  acc_c1_4: { ua: 'Визначення цілей', ru: 'Определение целей', es: 'Definición de objetivos', en: 'Goal setting' },
+  acc_w2: { ua: 'Тиждень 2', ru: 'Неделя 2', es: 'Semana 2', en: 'Week 2' },
+  acc_wl2: { ua: 'Протокол', ru: 'Протокол', es: 'Protocolo', en: 'Protocol' },
+  acc_t2: { ua: 'Крок другий', ru: 'Шаг второй', es: 'Paso segundo', en: 'Step two' },
+  acc_ph2: { ua: 'Персональний протокол у ваших руках', ru: 'Персональный протокол в ваших руках', es: 'Tu protocolo personal en tus manos', en: 'Your personal protocol in your hands' },
+  acc_pd2: { ua: 'Два письмових документи: протокол харчування та список нутрицевтиків з дозуваннями під ваш профіль.', ru: 'Два письменных документа: протокол питания и список нутрицевтиков с дозировками.', es: 'Dos documentos escritos: protocolo de alimentación y lista de nutracéuticos con dosis para tu perfil.', en: 'Two written documents: nutrition protocol and nutrient list with personalised dosages.' },
+  acc_c2_1: { ua: 'Протокол харчування', ru: 'Протокол питания', es: 'Protocolo de alimentación', en: 'Nutrition protocol' },
+  acc_c2_2: { ua: 'Список нутрицевтиків', ru: 'Список нутрицевтиков', es: 'Lista de nutracéuticos', en: 'Nutraceutical list' },
+  acc_c2_3: { ua: 'Дозування під профіль', ru: 'Дозировки под профиль', es: 'Dosificación según perfil', en: 'Profile-based dosage' },
+  acc_c2_4: { ua: 'Письмово', ru: 'Письменно', es: 'Por escrito', en: 'Written' },
+  acc_w3: { ua: 'Тижні 3–10', ru: 'Недели 3–10', es: 'Semanas 3–10', en: 'Weeks 3–10' },
+  acc_wl3: { ua: 'Робота', ru: 'Работа', es: 'Trabajo', en: 'Work' },
+  acc_t3: { ua: 'Серце програми', ru: 'Сердце программы', es: 'El corazón del programa', en: 'The heart of the programme' },
+  acc_ph3: { ua: 'Щотижневі сесії та підтримка між ними', ru: 'Еженедельные сессии и поддержка между ними', es: 'Sesiones semanales y soporte entre ellas', en: 'Weekly sessions and support between them' },
+  acc_pd3: { ua: '60-хвилинна зустріч щотижня. Між сесіями — чат і голосові у Telegram або WhatsApp. Ви не залишаєтесь наодинці.', ru: '60-минутная встреча каждую неделю. Между сессиями — чат и голосовые в Telegram или WhatsApp. Вы не остаётесь одни.', es: 'Sesión de 60 min cada semana. Entre sesiones — chat y mensajes de voz en Telegram o WhatsApp.', en: '60-min session every week. Between sessions — chat and voice messages in Telegram or WhatsApp.' },
+  acc_c3_1: { ua: '60 хв / щотижня', ru: '60 мин / еженедельно', es: '60 min / semanalmente', en: '60 min / weekly' },
+  acc_c3_2: { ua: 'Чат між сесіями', ru: 'Чат между сессиями', es: 'Chat entre sesiones', en: 'Chat between sessions' },
+  acc_c3_3: { ua: 'Голосові повідомлення', ru: 'Голосовые сообщения', es: 'Mensajes de voz', en: 'Voice messages' },
+  acc_w4: { ua: 'Тиждень 11', ru: 'Неделя 11', es: 'Semana 11', en: 'Week 11' },
+  acc_wl4: { ua: 'Аналізи', ru: 'Анализы', es: 'Análisis', en: 'Tests' },
+  acc_t4: { ua: 'Контрольна точка', ru: 'Контрольная точка', es: 'Punto de control', en: 'Control point' },
+  acc_ph4: { ua: 'Повторні аналізи — бачимо зміни у цифрах', ru: 'Повторные анализы — видим изменения в цифрах', es: 'Análisis de seguimiento — vemos cambios en cifras', en: 'Follow-up tests — seeing changes in numbers' },
+  acc_pd4: { ua: 'Повторна панель. Порівнюємо з початком — об\'єктивно, у цифрах.', ru: 'Повторная панель. Сравниваем с началом — объективно, в цифрах.', es: 'Panel de seguimiento. Comparamos con el inicio — objetivamente, en cifras.', en: 'Follow-up panel. We compare with the baseline — objectively, in numbers.' },
+  acc_c4_1: { ua: 'Повторна панель', ru: 'Повторная панель', es: 'Panel de seguimiento', en: 'Follow-up panel' },
+  acc_c4_2: { ua: 'Порівняння з початком', ru: 'Сравнение с началом', es: 'Comparación con el inicio', en: 'Comparison with baseline' },
+  acc_c4_3: { ua: 'Оцінка динаміки', ru: 'Оценка динамики', es: 'Evaluación de la dinámica', en: 'Progress assessment' },
+  acc_w5: { ua: 'Тиждень 12', ru: 'Неделя 12', es: 'Semana 12', en: 'Week 12' },
+  acc_wl5: { ua: 'Фінал', ru: 'Финал', es: 'Final', en: 'Finale' },
+  acc_t5: { ua: 'Завершення', ru: 'Завершение', es: 'Cierre', en: 'Completion' },
+  acc_ph5: { ua: 'Підсумкова сесія та план на пів року', ru: 'Итоговая сессия и план на полгода', es: 'Sesión de cierre y plan para medio año', en: 'Final session and plan for six months ahead' },
+  acc_pd5: { ua: 'Письмовий документ: рекомендації на 6 місяців по харчуванню, нутрицевтикам і способу життя.', ru: 'Письменный документ: рекомендации на 6 месяцев по питанию, нутрицевтикам и образу жизни.', es: 'Documento escrito: recomendaciones para 6 meses sobre alimentación, nutracéuticos y estilo de vida.', en: 'Written document: 6-month recommendations on nutrition, supplements and lifestyle.' },
+  acc_c5_1: { ua: 'Підсумкова сесія', ru: 'Итоговая сессия', es: 'Sesión final', en: 'Final session' },
+  acc_c5_2: { ua: 'Порівняння аналізів', ru: 'Сравнение анализов', es: 'Comparación de análisis', en: 'Test comparison' },
+  acc_c5_3: { ua: 'План на 6 місяців', ru: 'План на 6 месяцев', es: 'Plan para 6 meses', en: '6-month plan' },
+  acc_c5_4: { ua: 'Письмово', ru: 'Письменно', es: 'Por escrito', en: 'Written' },
+  acc_inc_title: { ua: 'Що входить у <em>програму супроводу</em>', ru: 'Что входит в <em>программу сопровождения</em>', es: 'Qué incluye el <em>programa de acompañamiento</em>', en: 'What\'s included in the <em>accompaniment programme</em>' },
+  acci1_t: { ua: '12 онлайн-сесій по 60 хв', ru: '12 онлайн-сессий по 60 мин', es: '12 sesiones online de 60 min', en: '12 online sessions — 60 min each' },
+  acci1_d: { ua: 'Щотижнева зустріч у Zoom або Meet. Аналіз динаміки, коригування протоколу.', ru: 'Еженедельная встреча в Zoom или Meet. Анализ динамики, корректировка протокола.', es: 'Reunión semanal en Zoom o Meet. Análisis de dinámica, ajuste de protocolo.', en: 'Weekly meeting in Zoom or Meet. Progress review, protocol adjustment.' },
+  acci2_t: { ua: 'Персональний протокол харчування', ru: 'Персональный протокол питания', es: 'Protocolo de alimentación personalizado', en: 'Personal nutrition protocol' },
+  acci2_d: { ua: 'Письмовий документ після першої сесії. Складений під ваш профіль — не шаблон.', ru: 'Письменный документ после первой сессии. Составлен под ваш профиль — не шаблон.', es: 'Documento escrito tras la primera sesión. Elaborado para tu perfil — no es una plantilla.', en: 'Written document after the first session. Tailored to your profile — not a template.' },
+  acci3_t: { ua: 'Список нутрицевтиків з дозуваннями', ru: 'Список нутрицевтиков с дозировками', es: 'Lista de nutracéuticos con dosis', en: 'Supplement list with dosages' },
+  acci3_d: { ua: 'Письмовий перелік добавок з точними дозами. Лише доказова база.', ru: 'Письменный перечень добавок с точными дозами. Только доказательная база.', es: 'Lista escrita de suplementos con dosis precisas. Solo base científica.', en: 'Written list of supplements with precise doses. Evidence-based only.' },
+  acci4_t: { ua: 'Підтримка між сесіями', ru: 'Поддержка между сессиями', es: 'Soporte entre sesiones', en: 'Support between sessions' },
+  acci4_d: { ua: 'Чат і голосові у Telegram або WhatsApp — за вашим вибором.', ru: 'Чат и голосовые в Telegram или WhatsApp — по вашему выбору.', es: 'Chat y mensajes de voz en Telegram o WhatsApp — a tu elección.', en: 'Chat and voice messages in Telegram or WhatsApp — your choice.' },
+  acci5_t: { ua: 'Повторні аналізи та порівняння', ru: 'Повторные анализы и сравнение', es: 'Análisis de seguimiento y comparación', en: 'Follow-up tests and comparison' },
+  acci5_d: { ua: 'Здаємо панель на 11-му тижні. Зміни у цифрах, не тільки у відчуттях.', ru: 'Сдаём панель на 11-й неделе. Изменения в цифрах, не только в ощущениях.', es: 'Panel en la semana 11. Cambios en cifras, no solo en sensaciones.', en: 'Panel at week 11. Changes in numbers, not just feelings.' },
+  acci6_t: { ua: 'Фінальний план на 6 місяців', ru: 'Финальный план на 6 месяцев', es: 'Plan final para 6 meses', en: 'Final 6-month plan' },
+  acci6_d: { ua: 'Письмові рекомендації з харчування, нутрицевтиків і способу життя.', ru: 'Письменные рекомендации по питанию, нутрицевтикам и образу жизни.', es: 'Recomendaciones escritas sobre alimentación, nutracéuticos y estilo de vida.', en: 'Written recommendations on nutrition, supplements and lifestyle.' },
+  acc_c3_4: { ua: 'Telegram / WhatsApp', ru: 'Telegram / WhatsApp', es: 'Telegram / WhatsApp', en: 'Telegram / WhatsApp' },
+  care_tag: { ua: 'Після програми · За бажанням', ru: 'После программы · По желанию', es: 'Después del programa · Opcional', en: 'After the programme · Optional' },
+  care_title: { ua: 'VIA-L <em>Care</em> —<br>програма підтримки результату', ru: 'VIA-L <em>Care</em> —<br>программа поддержки результата', es: 'VIA-L <em>Care</em> —<br>programa de mantenimiento', en: 'VIA-L <em>Care</em> —<br>result maintenance programme' },
+  care_desc: { ua: 'Щотижневий зворотний зв\'язок, підтримка і своєчасне коригування — щоб зміни залишалися назавжди.', ru: 'Еженедельная обратная связь, поддержка и своевременная корректировка — чтобы изменения остались навсегда.', es: 'Feedback semanal, apoyo y ajustes a tiempo — para que los cambios sean permanentes.', en: 'Weekly feedback, support and timely adjustments — so that changes last for ever.' },
+  care1_t: { ua: 'Зворотний зв\'язок раз на тиждень', ru: 'Обратная связь раз в неделю', es: 'Feedback una vez a la semana', en: 'Weekly feedback' },
+  care1_d: { ua: 'Чат або коротка зустріч — підтримка без пропусків', ru: 'Чат или короткая встреча — поддержка без пропусков', es: 'Chat o breve reunión — apoyo continuo', en: 'Chat or short meeting — continuous support' },
+  care2_t: { ua: 'Корекція при змінах', ru: 'Коррекция при изменениях', es: 'Ajuste ante cambios', en: 'Adjustment when things change' },
+  care2_d: { ua: 'Сезон, стрес, подорожі — адаптуємо протокол разом', ru: 'Сезон, стресс, путешествия — адаптируем протокол вместе', es: 'Temporada, estrés, viajes — adaptamos el protocolo juntos', en: 'Season, stress, travel — we adapt the protocol together' },
+  care3_t: { ua: 'Контроль аналізів', ru: 'Контроль анализов', es: 'Control de análisis', en: 'Lab monitoring' },
+  care3_d: { ua: 'Стежимо за маркерами і коригуємо нутрицевтики', ru: 'Следим за маркерами и корректируем нутрицевтики', es: 'Monitoreamos marcadores y ajustamos nutracéuticos', en: 'We track markers and adjust supplements' },
+  care4_t: { ua: 'Відчуття «не один»', ru: 'Ощущение «не один»', es: 'Sensación de no estar solo', en: 'The feeling of not being alone' },
+  care4_d: { ua: 'Результат тримається, коли є хтось поруч', ru: 'Результат держится, когда есть кто-то рядом', es: 'El resultado se mantiene cuando hay alguien cerca', en: 'Results hold when there\'s someone by your side' },
+  acc_quote: { ua: '«Зміни, які стають частиною вашого життя —<br>це результат <em>правильної підтримки</em>.»', ru: '«Изменения, которые становятся частью вашей жизни —<br>это результат <em>правильной поддержки</em>.»', es: '«Los cambios que se convierten en parte de tu vida —<br>son el resultado del <em>apoyo correcto</em>.»', en: '“Changes that become part of your life —<br>are the result of the <em>right support</em>.”' },
+  acc_btn1: { ua: 'Вільні слоти на знайомство', ru: 'Свободные слоты на знакомство', es: 'Horarios disponibles para conocernos', en: 'Available intro slots' },
+  acc_btn2: { ua: 'Оплатити супровід', ru: 'Оплатить сопровождение', es: 'Pagar acompañamiento', en: 'Pay for programme' },
+  accNote: { ua: '✦ Онлайн · Весь світ · UA / RU / ES / EN', ru: '✦ Онлайн · Весь мир · UA / RU / ES / EN', es: '✦ Online · Todo el mundo · UA / RU / ES / EN', en: '✦ Online · Worldwide · UA / RU / ES / EN' },
+  footerCopy: { ua: '© 2024 VIA-L · via-l.com', ru: '© 2024 VIA-L · via-l.com', es: '© 2024 VIA-L · via-l.com', en: '© 2024 VIA-L · via-l.com' },
+  footerTag: { ua: '«Longevity — це не про роки. Про якість кожного з них.»', ru: '«Longevity — это не про годы. Про качество каждого из них.»', es: '«Longevity — no trata de los años. Trata de la calidad de cada uno.»', en: '“Longevity is not about years. It is about the quality of each one.”' }
+};
+
+const GROUP_TEXTS = {
+  pills: {
+    ua: ['Гормональний профіль', 'Персональний протокол', '8–12 тижнів', 'Онлайн · UA / RU / ES / EN'],
+    ru: ['Гормональный профиль', 'Персональный протокол', '8–12 недель', 'Онлайн · UA / RU / ES / EN'],
+    es: ['Perfil hormonal', 'Protocolo personalizado', '8–12 semanas', 'Online · UA / RU / ES / EN'],
+    en: ['Hormonal profile', 'Personal protocol', '8–12 weeks', 'Online · UA / RU / ES / EN']
+  },
+  formatRows: {
+    ua: ['Онлайн · весь світ', '8–12 тижнів', 'UA · RU · ES · EN', 'Після першої консультації'],
+    ru: ['Онлайн · весь мир', '8–12 недель', 'UA · RU · ES · EN', 'После первой консультации'],
+    es: ['Online · todo el mundo', '8–12 semanas', 'UA · RU · ES · EN', 'Después de la primera consulta'],
+    en: ['Online · worldwide', '8–12 weeks', 'UA · RU · ES · EN', 'After the first consultation']
+  },
+  guideNames: {
+    ua: ['Менопауза без страху', 'Волосся, шкіра, нігті 40+', 'Що приховують ваші аналізи', 'Тихий вогонь'],
+    ru: ['Менопауза без страха', 'Волосы, кожа, ногти 40+', 'Что скрывают ваши анализы', 'Тихий огонь'],
+    es: ['Menopausia sin miedo', 'Cabello, piel, uñas 40+', 'Qué ocultan tus análisis', 'Fuego silencioso'],
+    en: ['Menopause without fear', 'Hair, skin, nails 40+', 'What your tests are hiding', 'Silent fire']
+  },
+  guideSubs: {
+    ua: ['6 симптомів перименопаузи — біохімія і стратегія', 'Зовнішні зміни та їх внутрішні причини', 'Функціональний оптимум vs лабораторна норма', 'Хронічне запалення: маркери та харчування'],
+    ru: ['6 симптомов перименопаузы — биохимия и стратегия', 'Внешние изменения и их внутренние причины', 'Функциональный оптимум vs лабораторная норма', 'Хроническое воспаление: маркеры и питание'],
+    es: ['6 síntomas de la perimenopausia — bioquímica y estrategia', 'Cambios externos y sus causas internas', 'Óptimo funcional vs norma de laboratorio', 'Inflamación crónica: marcadores y alimentación'],
+    en: ['6 perimenopause symptoms — biochemistry and strategy', 'External changes and their internal causes', 'Functional optimum vs lab normal', 'Chronic inflammation: markers and nutrition']
+  },
+  stageItems: {
+    ua: [
+      'Аналіз симптомів та їх хронологія', 'Харчова поведінка та цикл сну', 'Рівень стресу, рух, відновлення', 'Формування напряму роботи',
+      'ФСГ, ЛГ, естрадіол, прогестерон', 'Ферритин, вітамін D, B12, магній, цинк', 'Інсулін натощак, вч-СРБ (запалення)', 'ТТГ та функція щитовидної залози',
+      'Протизапальний протокол харчування', 'Нутрицевтики та фітоестрогени', 'Режим харчування під ваш гормональний статус', 'Дорожня карта на 3 місяці',
+      'Регулярні check-in сесії', 'Коригування плану за аналізами', 'Підтримка між зустрічами', 'Мінімальний цикл: 8–12 тижнів'
+    ],
+    ru: [
+      'Анализ симптомов и их хронология', 'Пищевое поведение и цикл сна', 'Уровень стресса, движение, восстановление', 'Формирование направления работы',
+      'ФСГ, ЛГ, эстрадиол, прогестерон', 'Ферритин, витамин D, B12, магний, цинк', 'Инсулин натощак, вч-СРБ (воспаление)', 'ТТГ и функция щитовидной железы',
+      'Противовоспалительный протокол питания', 'Нутрицевтики и фитоэстрогены', 'Режим питания под ваш гормональный статус', 'Дорожная карта на 3 месяца',
+      'Регулярные check-in сессии', 'Корректировка плана по анализам', 'Поддержка между встречами', 'Минимальный цикл: 8–12 недель'
+    ],
+    es: [
+      'Análisis de síntomas y su cronología', 'Comportamiento alimentario y ciclo de sueño', 'Nivel de estrés, movimiento, recuperación', 'Definición de la dirección del trabajo',
+      'FSH, LH, estradiol, progesterona', 'Ferritina, vitamina D, B12, magnesio, zinc', 'Insulina en ayunas, PCR-as (inflamación)', 'TSH y función tiroidea',
+      'Protocolo antiinflamatorio de alimentación', 'Nutracéuticos y fitoestrógenos', 'Horario de comidas según tu estado hormonal', 'Hoja de ruta de 3 meses',
+      'Sesiones regulares de seguimiento', 'Ajuste del plan según los análisis', 'Apoyo entre sesiones', 'Ciclo mínimo: 8–12 semanas'
+    ],
+    en: [
+      'Symptom analysis and timeline', 'Eating behaviour and sleep cycle', 'Stress level, movement, recovery', 'Shaping the direction of work',
+      'FSH, LH, estradiol, progesterone', 'Ferritin, vitamin D, B12, magnesium, zinc', 'Fasting insulin, hs-CRP (inflammation)', 'TSH and thyroid function',
+      'Anti-inflammatory nutrition protocol', 'Nutraceuticals and phytoestrogens', 'Meal timing based on your hormonal status', '3-month roadmap',
+      'Regular check-in sessions', 'Plan adjustment based on test results', 'Support between meetings', 'Minimum cycle: 8–12 weeks'
+    ]
+  },
+  chainSymptoms: {
+    ua: ['Втома · Лібідо · М\'язи', 'Живіт · Гінекомастія', 'Стрес · Безсоння · Втрата T', 'Живіт · Інсулін · Цукор', 'Підсилює всі симптоми'],
+    ru: ['Усталость · Либидо · Мышцы', 'Живот · Гинекомастия', 'Стресс · Бессонница · Потеря T', 'Живот · Инсулин · Сахар', 'Усиливает все симптомы'],
+    es: ['Fatiga · Libido · Músculos', 'Barriga · Ginecomastia', 'Estrés · Insomnio · Pérdida de T', 'Barriga · Insulina · Azúcar', 'Intensifica todos los síntomas'],
+    en: ['Fatigue · Libido · Muscles', 'Belly · Gynecomastia', 'Stress · Insomnia · Loss of T', 'Belly · Insulin · Sugar', 'Amplifies all symptoms']
+  },
+  analysisCards: {
+    ua: [
+      ['Тестостерон + ГСПГ', 'Оптимум: 20–30 нмоль/л', 'Завжди здавати разом. Загальний T може бути нормальним, а вільного — бракувати. Саме вільний T визначає енергію і самопочуття.'],
+      ['Вітамін D 25(OH)D', 'Оптимум: 60–80 нг/мл', 'Рецептори D є в клітинах Лейдіга — тих, що синтезують T. Дефіцит знижує тестостерон на 30%. Найпоширеніший дефіцит у чоловіків після 40.'],
+      ['Цинк у сироватці', 'Оптимум: 14–17 мкмоль/л', 'Бере участь у синтезі T і блокує ароматазу. Дефіцит знижує тестостерон на 20–30%. Добре корегується через харчування і нутрицевтики.'],
+      ['вч-СРБ (запалення)', 'Оптимум: менше 1 мг/л', 'IL-6 і TNF-α пригнічують синтез T напряму. Запалення і низький T — не два симптоми, а причина і наслідок у замкненому циклі.'],
+      ['Інсулін натощак', 'Оптимум: 3–8 мкЕД/мл', 'Висцеральний жир виробляє ароматазу. Інсулінорезистентність і низький T — взаємопідсилюючий цикл. Ранній маркер метаболічного порушення.'],
+      ['Магній у сироватці', 'Оптимум: 0,85–1,0 ммоль/л', 'Знижує ГСПГ і вивільняє вільний T. Покращує сон — а 80% тестостерону синтезується вночі. Магній глицинат — найкраща форма.']
+    ],
+    ru: [
+      ['Тестостерон + ГСПГ', 'Оптимум: 20–30 нмоль/л', 'Всегда сдавать вместе. Общий T может быть нормальным, а свободного — не хватать. Именно свободный T определяет энергию и самочувствие.'],
+      ['Витамин D 25(OH)D', 'Оптимум: 60–80 нг/мл', 'Рецепторы D есть в клетках Лейдига — тех, что синтезируют T. Дефицит снижает тестостерон на 30%. Самый распространённый дефицит у мужчин после 40.'],
+      ['Цинк в сыворотке', 'Оптимум: 14–17 мкмоль/л', 'Участвует в синтезе T и блокирует ароматазу. Дефицит снижает тестостерон на 20–30%. Хорошо корректируется через питание и нутрицевтики.'],
+      ['вч-СРБ (воспаление)', 'Оптимум: меньше 1 мг/л', 'IL-6 и TNF-α напрямую подавляют синтез T. Воспаление и низкий T — не два симптома, а причина и следствие в замкнутом цикле.'],
+      ['Инсулин натощак', 'Оптимум: 3–8 мкЕД/мл', 'Висцеральный жир производит ароматазу. Инсулинорезистентность и низкий T — взаимно усиливающийся цикл. Ранний маркер метаболического нарушения.'],
+      ['Магний в сыворотке', 'Оптимум: 0,85–1,0 ммоль/л', 'Снижает ГСПГ и высвобождает свободный T. Улучшает сон — а 80% тестостерона синтезируется ночью. Магний глицинат — лучшая форма.']
+    ],
+    es: [
+      ['Testosterona + SHBG', 'Óptimo: 20–30 nmol/l', 'Siempre pedir juntos. La T total puede ser normal, y la libre insuficiente. La T libre determina la energía y el bienestar.'],
+      ['Vitamina D 25(OH)D', 'Óptimo: 60–80 ng/ml', 'Los receptores D están en las células de Leydig, que sintetizan T. El déficit reduce la testosterona en un 30%. Es muy común después de los 40.'],
+      ['Zinc en suero', 'Óptimo: 14–17 μmol/l', 'Participa en la síntesis de T y bloquea la aromatasa. El déficit reduce la testosterona en un 20–30%. Se corrige bien con alimentación y nutracéuticos.'],
+      ['PCR ultrasensible (inflamación)', 'Óptimo: menos de 1 mg/l', 'IL-6 y TNF-α inhiben la síntesis de T de forma directa. Inflamación y T bajo no son dos síntomas, sino causa y efecto en un ciclo cerrado.'],
+      ['Insulina en ayunas', 'Óptimo: 3–8 μUI/ml', 'La grasa visceral produce aromatasa. Resistencia a la insulina y T bajo forman un ciclo que se refuerza. Marcador temprano de disfunción metabólica.'],
+      ['Magnesio en suero', 'Óptimo: 0,85–1,0 mmol/l', 'Reduce SHBG y libera la T libre. Mejora el sueño — y el 80% de la testosterona se sintetiza por la noche. El glicinato de magnesio es la mejor forma.']
+    ],
+    en: [
+      ['Testosterone + SHBG', 'Optimum: 20–30 nmol/l', 'Always test together. Total T can look normal while free T is lacking. Free T determines energy and wellbeing.'],
+      ['Vitamin D 25(OH)D', 'Optimum: 60–80 ng/ml', 'Vitamin D receptors are present in Leydig cells — the cells that synthesise T. Deficiency lowers testosterone by 30%. It is the most common deficiency in men after 40.'],
+      ['Serum zinc', 'Optimum: 14–17 μmol/l', 'Participates in T synthesis and blocks aromatase. Deficiency lowers testosterone by 20–30%. It is usually corrected well through nutrition and nutraceuticals.'],
+      ['hsCRP (inflammation)', 'Optimum: below 1 mg/l', 'IL-6 and TNF-α directly suppress T synthesis. Inflammation and low T are not two symptoms, but cause and effect in a closed loop.'],
+      ['Fasting insulin', 'Optimum: 3–8 μIU/ml', 'Visceral fat produces aromatase. Insulin resistance and low T reinforce each other. An early marker of metabolic dysfunction.'],
+      ['Serum magnesium', 'Optimum: 0.85–1.0 mmol/l', 'Lowers SHBG and releases free T. Improves sleep — and 80% of testosterone is synthesised at night. Magnesium glycinate is the best form.']
+    ]
+  }
+};
+
+const STATE = { lang: DEFAULT_LANG, calYear: new Date().getFullYear(), calMonth: new Date().getMonth(), selectedDay: null, selectedTime: null };
+const TODAY = new Date();
+const SLOTS = ['09:00', '09:30', '10:00', '11:00', '14:00', '14:30', '15:00', '16:00'];
+const PRICES = { 1: '€ 390', 2: '€ 590', 3: '€ 120' };
+
+function escapeHtml(text) {
+  return String(text).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+}
+
+function renderLangSpans(translations, useHtml = false) {
+  return SUPPORTED_LANGS.map((lang) => `<span class="lang-content lang-${lang}" data-lang="${lang}">${useHtml ? translations[lang] : escapeHtml(translations[lang])}</span>`).join('');
+}
+
+function setLocalizedElement(selector, translations, useHtml = false) {
+  const el = document.querySelector(selector);
+  if (!el || !translations || typeof translations !== 'object') return;
+  el.innerHTML = renderLangSpans(translations, useHtml);
+}
+
+function setLocalizedList(selector, translations, useHtml = false) {
+  const nodes = Array.from(document.querySelectorAll(selector));
+  nodes.forEach((node, index) => {
+    const hasLangMap = SUPPORTED_LANGS.some((lang) => translations && typeof translations === 'object' && translations[lang]);
+    if (hasLangMap) {
+      const itemByLang = {};
+      let hasAny = false;
+      SUPPORTED_LANGS.forEach((lang) => {
+        const langItems = translations[lang];
+        const value = Array.isArray(langItems) ? langItems[index] : undefined;
+        if (value !== undefined) {
+          itemByLang[lang] = value;
+          hasAny = true;
+        }
+      });
+      if (!hasAny) return;
+      node.innerHTML = renderLangSpans(itemByLang, useHtml);
+      return;
+    }
+
+    const keyTexts = translations[index];
+    if (!keyTexts) return;
+    node.innerHTML = renderLangSpans(keyTexts, useHtml);
+  });
+}
+
+function applyLanguage(langCode) {
+  const lang = SUPPORTED_LANGS.includes(langCode) ? langCode : DEFAULT_LANG;
+  STATE.lang = lang;
+  localStorage.setItem('selectedLang', lang);
+  document.documentElement.setAttribute('data-current-lang', lang);
+
+  const currentFlag = document.getElementById('currentFlag');
+  const currentLangLabel = document.getElementById('currentLangLabel');
+  if (currentFlag) currentFlag.textContent = FLAGS[lang];
+  if (currentLangLabel) currentLangLabel.textContent = LABELS[lang];
+
+  document.querySelectorAll('.lang-option').forEach((option) => option.classList.toggle('active', option.dataset.lang === lang));
+  document.querySelectorAll('.lang-content, .lang-ua, .lang-ru, .lang-es, .lang-en').forEach((node) => {
+    const isActive = node.classList.contains('lang-' + lang) || node.dataset.lang === lang;
+    const displayType = node.dataset.block === '1' ? 'block' : node.tagName === 'SPAN' ? 'inline' : 'block';
+    node.style.display = isActive ? displayType : 'none';
+  });
+
+  const switcher = document.getElementById('langSwitcher');
+  if (switcher) switcher.classList.remove('open');
+}
+
+function setLang(langCode) { applyLanguage(langCode); }
+function toggleLang() { const switcher = document.getElementById('langSwitcher'); if (switcher) switcher.classList.toggle('open'); }
+
+document.addEventListener('click', (event) => {
+  const switcher = document.getElementById('langSwitcher');
+  if (switcher && !switcher.contains(event.target)) switcher.classList.remove('open');
+});
+
+function openModal(id) { const modal = document.getElementById(id); if (!modal) return; modal.classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeModal(id) { const modal = document.getElementById(id); if (!modal) return; modal.classList.remove('open'); document.body.style.overflow = ''; }
+function handleOverlay(event, id) { if (event.target.id === id) closeModal(id); }
+
+function getAvailDays(year, month) {
+  const available = new Set();
+  const current = new Date(TODAY);
+  current.setDate(current.getDate() + 2);
+  for (let i = 0; i < 21; i += 1) {
+    if (current.getFullYear() === year && current.getMonth() === month) {
+      const weekday = current.getDay();
+      if (weekday >= 1 && weekday <= 5) available.add(current.getDate());
+    }
+    current.setDate(current.getDate() + 1);
+  }
+  return available;
+}
+
+function renderCalendar() {
+  const monthTitle = document.getElementById('calMonthTitle');
+  const grid = document.getElementById('calGrid');
+  const slots = document.getElementById('calSlots');
+  const confirmBtn = document.getElementById('calConfirmBtn');
+  const note = document.getElementById('calNote');
+  if (!monthTitle || !grid || !slots) return;
+
+  const months = {
+    ua: ['Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень', 'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень'],
+    ru: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'],
+    es: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+    en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+  };
+  const days = { ua: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'], ru: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'], es: ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do'], en: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'] };
+  monthTitle.textContent = months[STATE.lang][STATE.calMonth] + ' ' + STATE.calYear;
+  grid.innerHTML = '';
+  days[STATE.lang].forEach((d) => { const n = document.createElement('div'); n.className = 'cal-day-name'; n.textContent = d; grid.appendChild(n); });
+  const first = (new Date(STATE.calYear, STATE.calMonth, 1).getDay() + 6) % 7;
+  const dim = new Date(STATE.calYear, STATE.calMonth + 1, 0).getDate();
+  const available = getAvailDays(STATE.calYear, STATE.calMonth);
+  for (let i = 0; i < first; i += 1) { const e = document.createElement('div'); e.className = 'cal-day'; grid.appendChild(e); }
+  for (let day = 1; day <= dim; day += 1) {
+    const e = document.createElement('div');
+    const isPast = new Date(STATE.calYear, STATE.calMonth, day) < new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate() + 2);
+    const isAvail = available.has(day);
+    const isSelected = STATE.selectedDay === day;
+    e.className = 'cal-day' + (isPast ? ' past' : isAvail ? ' available' : '') + (isSelected ? ' selected' : '');
+    e.textContent = day;
+    if (isAvail && !isPast) e.onclick = () => selectDay(day);
+    grid.appendChild(e);
+  }
+  slots.innerHTML = `<span class="cal-slots-empty">${TEXTS.calSlotsEmpty[STATE.lang]}</span>`;
+  if (confirmBtn) confirmBtn.style.display = 'none';
+  if (note) note.style.display = 'none';
+}
+
+function selectDay(day) {
+  STATE.selectedDay = day;
+  STATE.selectedTime = null;
+  renderCalendar();
+  const slots = document.getElementById('calSlots');
+  const confirmBtn = document.getElementById('calConfirmBtn');
+  const note = document.getElementById('calNote');
+  if (!slots) return;
+  slots.innerHTML = '';
+  SLOTS.filter((_, idx) => idx % 2 === 0 || idx === 1).forEach((slot) => {
+    const node = document.createElement('div');
+    node.className = 'time-slot';
+    node.textContent = slot;
+    node.onclick = () => selectTime(slot, node);
+    slots.appendChild(node);
+  });
+  if (confirmBtn) confirmBtn.style.display = 'none';
+  if (note) note.style.display = 'none';
+}
+
+function selectTime(time, element) {
+  STATE.selectedTime = time;
+  document.querySelectorAll('.time-slot').forEach((item) => item.classList.remove('selected'));
+  element.classList.add('selected');
+  const confirmBtn = document.getElementById('calConfirmBtn');
+  const note = document.getElementById('calNote');
+  if (confirmBtn) confirmBtn.style.display = 'block';
+  if (note) note.style.display = 'block';
+}
+
+function changeMonth(direction) {
+  STATE.calMonth += direction;
+  if (STATE.calMonth > 11) { STATE.calMonth = 0; STATE.calYear += 1; }
+  if (STATE.calMonth < 0) { STATE.calMonth = 11; STATE.calYear -= 1; }
+  STATE.selectedDay = null;
+  STATE.selectedTime = null;
+  renderCalendar();
+}
+
+function confirmBooking() {
+  if (!STATE.selectedDay || !STATE.selectedTime) return;
+  const body = document.getElementById('calBody');
+  if (!body) return;
+  const months = { ua: ['січня', 'лютого', 'березня', 'квітня', 'травня', 'червня', 'липня', 'серпня', 'вересня', 'жовтня', 'листопада', 'грудня'], ru: ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'], es: ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'], en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] };
+  const text = { ua: '✓ Зустріч заброньована на ', ru: '✓ Встреча забронирована на ', es: '✓ Sesión reservada el ', en: '✓ Session booked for ' };
+  body.innerHTML = `<div class="cal-success"><div class="cal-success-icon">✦</div><div class="cal-success-title">${text[STATE.lang]}${STATE.selectedDay} ${months[STATE.lang][STATE.calMonth]} ${STATE.lang === 'en' ? 'at' : STATE.lang === 'ru' ? 'в' : STATE.lang === 'es' ? 'a las' : 'о'} ${STATE.selectedTime}</div><p class="cal-success-desc">${TEXTS.calNote[STATE.lang]}</p></div>`;
+}
+
+function selectOpt(option) { [1, 2, 3].forEach((idx) => { const card = document.getElementById('opt' + idx); if (card) card.classList.toggle('selected', idx === option); }); const total = document.getElementById('payTotalPrice'); if (total) total.textContent = PRICES[option] || PRICES[1]; }
+
+function confirmPayment() {
+  const name = document.getElementById('payName');
+  const email = document.getElementById('payEmail');
+  const body = document.getElementById('payBody');
+  if (!email || !body) return;
+  const userName = name ? name.value.trim() : '';
+  const userEmail = email.value.trim();
+  if (!userEmail || !userEmail.includes('@')) { email.style.borderColor = 'rgba(200,80,50,.6)'; email.focus(); return; }
+  const prefix = { ua: 'ми зв\'яжемося з вами протягом 24 годин на ', ru: 'мы свяжемся с вами в течение 24 часов на ', es: 'nos pondremos en contacto en 24 horas en ', en: 'we will contact you within 24 hours at ' };
+  body.innerHTML = `<div class="pay-success"><div class="pay-success-icon">✦</div><div class="pay-success-title">${STATE.lang === 'ru' ? 'Оплата получена. Спасибо!' : STATE.lang === 'es' ? '¡Pago recibido!' : STATE.lang === 'en' ? 'Payment received. Thank you!' : 'Оплату отримано. Дякуємо!'}</div><p class="pay-success-desc">${userName ? userName + ', ' : ''}${prefix[STATE.lang]}${userEmail}.</p></div>`;
+}
+
+function localizePage() {
+  setLocalizedElement('#navBack', TEXTS.navBack);
+  setLocalizedElement('#heroTag', TEXTS.heroTag);
+  setLocalizedElement('#heroTitle', TEXTS.heroTitle, true);
+  setLocalizedElement('#heroSubtitle', TEXTS.heroSubtitle, true);
+  setLocalizedElement('#heroDesc', TEXTS.heroDesc);
+  setLocalizedList('.hero-pills .pill', GROUP_TEXTS.pills);
+  setLocalizedElement('#heroBtnSlots', TEXTS.heroBtnSlots);
+  setLocalizedElement('#heroBtnProgram', TEXTS.heroBtnProgram);
+  setLocalizedElement('#heroNote', TEXTS.heroNote);
+  setLocalizedElement('#bridgeQuote', TEXTS.bridgeQuote);
+  setLocalizedElement('#fwEy', TEXTS.fwEy);
+  setLocalizedElement('#fwTitle', TEXTS.fwTitle);
+  setLocalizedElement('#fwDesc', TEXTS.fwDesc);
+  ['#fw1Text', '#fw2Text', '#fw3Text', '#fw4Text', '#fw5Text', '#fw6Text'].forEach((sel, idx) => { const key = 'fw' + (idx + 1) + 'Text'; setLocalizedElement(sel, TEXTS[key]); });
+  ['#fw1Label', '#fw2Label', '#fw3Label', '#fw4Label', '#fw5Label', '#fw6Label'].forEach((sel, idx) => { const key = 'fw' + (idx + 1) + 'Label'; setLocalizedElement(sel, TEXTS[key]); });
+  setLocalizedElement('#fwNotStrong', TEXTS.fwNotStrong);
+  setLocalizedElement('#fwNotP', {
+    ua: `<strong>${TEXTS.fwNotStrong.ua}</strong> ${TEXTS.fwNotText.ua}`,
+    ru: `<strong>${TEXTS.fwNotStrong.ru}</strong> ${TEXTS.fwNotText.ru}`,
+    es: `<strong>${TEXTS.fwNotStrong.es}</strong> ${TEXTS.fwNotText.es}`,
+    en: `<strong>${TEXTS.fwNotStrong.en}</strong> ${TEXTS.fwNotText.en}`
+  }, true);
+  setLocalizedElement('#bioEy', TEXTS.bioEy);
+  setLocalizedElement('#bioTitle', TEXTS.bioTitle);
+  setLocalizedElement('#bioDesc', TEXTS.bioDesc);
+  setLocalizedList('.stage-items li', GROUP_TEXTS.stageItems);
+  setLocalizedElement('#stEy', TEXTS.stEy);
+  setLocalizedElement('#stTitle', TEXTS.stTitle);
+  setLocalizedElement('#stDesc', TEXTS.stDesc);
+  setLocalizedElement('#st1Title', TEXTS.st1Title); setLocalizedElement('#st1Desc', TEXTS.st1Desc);
+  setLocalizedElement('#st2Title', TEXTS.st2Title); setLocalizedElement('#st2Desc', TEXTS.st2Desc);
+  setLocalizedElement('#st3Title', TEXTS.st3Title); setLocalizedElement('#st3Desc', TEXTS.st3Desc);
+  setLocalizedElement('#st4Title', TEXTS.st4Title); setLocalizedElement('#st4Desc', TEXTS.st4Desc);
+  setLocalizedElement('#incEy', TEXTS.incEy);
+  setLocalizedElement('#incTitle', TEXTS.incTitle, true);
+  setLocalizedElement('#incDesc', TEXTS.incDesc);
+  setLocalizedElement('#inc1Title', TEXTS.inc1Title); setLocalizedElement('#inc1Desc', TEXTS.inc1Desc);
+  setLocalizedElement('#inc2Title', TEXTS.inc2Title); setLocalizedElement('#inc2Desc', TEXTS.inc2Desc);
+  setLocalizedElement('#inc3Title', TEXTS.inc3Title); setLocalizedElement('#inc3Desc', TEXTS.inc3Desc);
+  setLocalizedElement('#inc4Title', TEXTS.inc4Title); setLocalizedElement('#inc4Desc', TEXTS.inc4Desc);
+  setLocalizedElement('#inc5Title', TEXTS.inc5Title); setLocalizedElement('#inc5Desc', TEXTS.inc5Desc);
+  setLocalizedElement('#formatTitle', TEXTS.formatTitle);
+  setLocalizedList('.format-row span:first-child', {
+    ua: ['Формат', 'Тривалість', 'Мови', 'Початок'],
+    ru: ['Формат', 'Длительность', 'Языки', 'Начало'],
+    es: ['Formato', 'Duración', 'Idiomas', 'Inicio'],
+    en: ['Format', 'Duration', 'Languages', 'Start']
+  });
+  setLocalizedList('.format-row span:last-child', GROUP_TEXTS.formatRows);
+  setLocalizedElement('#resEy', TEXTS.resEy);
+  setLocalizedElement('#resTitle', TEXTS.resTitle);
+  setLocalizedElement('#resDesc', TEXTS.resDesc);
+  setLocalizedElement('#res1Time', TEXTS.res1Time); setLocalizedElement('#res1Head', TEXTS.res1Head, true); setLocalizedElement('#res1Text', TEXTS.res1Text);
+  setLocalizedElement('#res2Time', TEXTS.res2Time); setLocalizedElement('#res2Head', TEXTS.res2Head, true); setLocalizedElement('#res2Text', TEXTS.res2Text);
+  setLocalizedElement('#res3Time', TEXTS.res3Time); setLocalizedElement('#res3Head', TEXTS.res3Head, true); setLocalizedElement('#res3Text', TEXTS.res3Text);
+  setLocalizedElement('#resDisclaimer', TEXTS.resDisclaimer);
+  setLocalizedElement('#anEy', TEXTS.anEy);
+  setLocalizedElement('#anTitle', TEXTS.anTitle);
+  setLocalizedElement('#anDesc', TEXTS.anDesc);
+  setLocalizedElement('#anNote', TEXTS.anNote);
+  setLocalizedElement('#ctaEy', TEXTS.ctaEy);
+  setLocalizedElement('#ctaTitle', TEXTS.ctaTitle, true);
+  setLocalizedElement('#ctaDesc', TEXTS.ctaDesc);
+  setLocalizedElement('#ctaBtn1', TEXTS.ctaBtn1);
+  setLocalizedElement('#ctaBtn2', TEXTS.ctaBtn2);
+  setLocalizedElement('#ctaNote', TEXTS.ctaNote);
+  setLocalizedElement('#calTag', TEXTS.calTag);
+  setLocalizedElement('#calTitle', TEXTS.calTitle);
+  setLocalizedElement('#calDesc', TEXTS.calDesc);
+  setLocalizedElement('#calSlotsTitle', TEXTS.calSlotsTitle);
+  setLocalizedElement('#calConfirmBtn', TEXTS.calConfirm);
+  setLocalizedElement('#calNote', TEXTS.calNote);
+  setLocalizedElement('#payTag', TEXTS.payTag);
+  setLocalizedElement('#payTitle', TEXTS.payTitle);
+  setLocalizedElement('#payIntro', TEXTS.payIntro);
+  setLocalizedElement('#opt1Name', TEXTS.opt1Name); setLocalizedElement('#opt1Desc', TEXTS.opt1Desc);
+  setLocalizedElement('#opt2Name', TEXTS.opt2Name); setLocalizedElement('#opt2Desc', TEXTS.opt2Desc);
+  setLocalizedElement('#opt3Name', TEXTS.opt3Name); setLocalizedElement('#opt3Desc', TEXTS.opt3Desc);
+  setLocalizedElement('#payNameLabel', TEXTS.payNameLabel);
+  setLocalizedElement('#payTotalLabel', TEXTS.payTotalLabel);
+  setLocalizedElement('#payBtn', TEXTS.payBtn);
+  setLocalizedElement('#paySecure', TEXTS.paySecure);
+  setLocalizedElement('#acc_ey', TEXTS.acc_ey);
+  setLocalizedElement('#acc_title', TEXTS.acc_title, true);
+  setLocalizedElement('#acc_sub', TEXTS.acc_sub, true);
+  setLocalizedElement('#acc_s1', TEXTS.acc_s1, true); setLocalizedElement('#acc_s2', TEXTS.acc_s2, true); setLocalizedElement('#acc_s3', TEXTS.acc_s3, true); setLocalizedElement('#acc_s4', TEXTS.acc_s4, true);
+  setLocalizedElement('#acc_tl_title', TEXTS.acc_tl_title, true);
+  ['acc_w1','acc_wl1','acc_t1','acc_ph1','acc_pd1','acc_c1_1','acc_c1_2','acc_c1_3','acc_c1_4','acc_w2','acc_wl2','acc_t2','acc_ph2','acc_pd2','acc_c2_1','acc_c2_2','acc_c2_3','acc_c2_4','acc_w3','acc_wl3','acc_t3','acc_ph3','acc_pd3','acc_c3_1','acc_c3_2','acc_c3_3','acc_c3_4','acc_w4','acc_wl4','acc_t4','acc_ph4','acc_pd4','acc_c4_1','acc_c4_2','acc_c4_3','acc_w5','acc_wl5','acc_t5','acc_ph5','acc_pd5','acc_c5_1','acc_c5_2','acc_c5_3','acc_c5_4','acc_inc_title','acci1_t','acci1_d','acci2_t','acci2_d','acci3_t','acci3_d','acci4_t','acci4_d','acci5_t','acci5_d','acci6_t','acci6_d','care_tag','care_title','care_desc','care1_t','care1_d','care2_t','care2_d','care3_t','care3_d','care4_t','care4_d','acc_quote','accBtnSlots','acc_btn2'].forEach((id) => setLocalizedElement('#' + id, TEXTS[id === 'accBtnSlots' ? 'acc_btn1' : id], ['acc_title','acc_sub','acc_tl_title','acc_inc_title','care_title','acc_quote'].includes(id)));
+  setLocalizedElement('.footer-tagline', TEXTS.footerTag, true);
+  setLocalizedElement('.footer-copy', TEXTS.footerCopy);
+  setLocalizedElement('.acc-note', TEXTS.accNote);
+  setLocalizedList('.guide-name', GROUP_TEXTS.guideNames);
+  setLocalizedList('.guide-sub', GROUP_TEXTS.guideSubs);
+  setLocalizedList('.analysis-card .analysis-marker', { ua: GROUP_TEXTS.analysisCards.ua.map((item) => item[0]), ru: GROUP_TEXTS.analysisCards.ru.map((item) => item[0]), es: GROUP_TEXTS.analysisCards.es.map((item) => item[0]), en: GROUP_TEXTS.analysisCards.en.map((item) => item[0]) });
+  setLocalizedList('.analysis-card .analysis-optimal', { ua: GROUP_TEXTS.analysisCards.ua.map((item) => item[1]), ru: GROUP_TEXTS.analysisCards.ru.map((item) => item[1]), es: GROUP_TEXTS.analysisCards.es.map((item) => item[1]), en: GROUP_TEXTS.analysisCards.en.map((item) => item[1]) });
+  setLocalizedList('.analysis-card .analysis-why', { ua: GROUP_TEXTS.analysisCards.ua.map((item) => item[2]), ru: GROUP_TEXTS.analysisCards.ru.map((item) => item[2]), es: GROUP_TEXTS.analysisCards.es.map((item) => item[2]), en: GROUP_TEXTS.analysisCards.en.map((item) => item[2]) });
+  setLocalizedList('.chain-text strong', { ua: ['Естроген знижується', 'Прогестерон падає першим', 'Кортизол зростає', 'Інсулінорезистентність', 'Хронічне запалення'], ru: ['Эстроген снижается', 'Прогестерон падает первым', 'Кортизол растёт', 'Инсулинорезистентность', 'Хроническое воспаление'], es: ['El estrógeno disminuye', 'La progesterona cae primero', 'El cortisol aumenta', 'Resistencia a la insulina', 'Inflamación crónica'], en: ['Estrogen declines', 'Progesterone drops first', 'Cortisol rises', 'Insulin resistance', 'Chronic inflammation'] });
+  setLocalizedList('.chain-text span:not(.chain-symptom)', { ua: ['Регулював температуру, сон, метаболізм, інсулінову чутливість та когнітивні функції. Коли він падає — все це змінюється одночасно.', 'Ще до останньої менструації. Без нього цикл стає непередбачуваним, сон — поверхневим, тривога — фоновою.', 'Тіло сприймає гормональний перехід як стрес. Кортизол блокує спалювання жиру і спрямовує його в абдомінальну зону.', 'Нестабільний інсулін — режим накопичення при тому ж харчуванні. Вага росте, хоча ви «нічого не змінювали».', 'Низькорівневий «тихий вогонь» стає фоном і посилює всі попередні симптоми. Він реагує на кожне рішення за столом.'], ru: ['Регулировал температуру, сон, метаболизм, инсулиновую чувствительность и когнитивные функции. Когда он падает — всё это меняется одновременно.', 'Ещё до последней менструации. Без него цикл становится непредсказуемым, сон — поверхностным, тревога — фоновой.', 'Тело воспринимает гормональный переход как стресс. Кортизол блокирует сжигание жира и направляет его в абдоминальную зону.', 'Нестабильный инсулин — режим накопления при том же питании. Вес растёт, хотя вы «ничего не меняли».', 'Низкоуровневый «тихий огонь» становится фоном и усиливает все предыдущие симптомы. Он реагирует на каждое решение за столом.'], es: ['Regulaba la temperatura, el sueño, el metabolismo, la sensibilidad a la insulina y las funciones cognitivas. Cuando cae, todo eso cambia a la vez.', 'Incluso antes de la última menstruación. Sin él, el ciclo se vuelve impredecible, el sueño más superficial y la ansiedad más constante.', 'El cuerpo percibe la transición hormonal como estrés. El cortisol bloquea la quema de grasa y la dirige hacia la zona abdominal.', 'La insulina inestable crea un modo de almacenamiento con la misma comida. El peso sube aunque no hayas cambiado nada.', 'La inflamación de bajo grado se vuelve el fondo y amplifica todos los síntomas anteriores. Responde a cada decisión en la mesa.'], en: ['It regulated temperature, sleep, metabolism, insulin sensitivity and cognitive function. When it drops, all of this shifts at once.', 'Even before the last period. Without it, the cycle becomes unpredictable, sleep becomes shallow and anxiety becomes constant.', 'The body perceives the hormonal transition as stress. Cortisol blocks fat burning and sends it to the abdominal area.', 'Unstable insulin creates a storage mode with the same diet. Weight increases even though nothing changed.', 'Low-grade inflammation becomes the background and amplifies all earlier symptoms. It responds to every choice at the table.'] }, true);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const savedLang = localStorage.getItem('selectedLang') || DEFAULT_LANG;
+  setLocalizedElement('#heroTag', TEXTS.heroTag);
+  localizePage();
+  applyLanguage(savedLang);
+  renderCalendar();
+  selectOpt(1);
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => { if (nav) nav.classList.toggle('scrolled', window.scrollY > 40); }, { passive: true });
+});
+</script>
+
+</body>
+</html>
