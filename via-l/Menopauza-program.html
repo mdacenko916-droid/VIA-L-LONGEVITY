@@ -1063,21 +1063,6 @@
   </div>
 </section>
 
-<!-- ═══ CTA ═══ -->
-
-<section id="cta">
-  <div class="cta-inner">
-    <span class="cta-eyebrow" id="ctaEy">✦ Початок роботи</span>
-    <h2 class="cta-title" id="ctaTitle">Перший крок —<br>це <em>розмова</em></h2>
-    <p class="cta-desc" id="ctaDesc">На першій консультації ми знайомимось, розбираємо вашу ситуацію і визначаємо, чи підходить вам цей підхід. Без зобов'язань і без тиску.</p>
-    <div class="cta-buttons">
-      <button class="btn-primary" onclick="openModal('calModal')" id="ctaBtn1">Вільні слоти на знайомство</button>
-      <button class="btn-secondary" onclick="openModal('payModal')" id="ctaBtn2">Програма супроводу</button>
-    </div>
-    <p class="cta-note" id="ctaNote">✦ Онлайн · Весь світ · UA / RU / ES / EN · Відповідь протягом 24 годин</p>
-  </div>
-</section>
-
 <!-- ═══ FOOTER ═══ -->
 
 <footer>
@@ -1876,6 +1861,7 @@ function applyLanguage(langCode) {
 
   const switcher = document.getElementById('langSwitcher');
   if (switcher) switcher.classList.remove('open');
+  if (typeof accApplyLang === 'function') accApplyLang(lang);
   renderCalendar();
 }
 
@@ -1984,6 +1970,7 @@ document.addEventListener('DOMContentLoaded', () => {
   localizePage();
   const savedLang = localStorage.getItem('selectedLang');
   applyLanguage(savedLang || DEFAULT_LANG);
+  if (typeof accApplyLang === 'function') accApplyLang(lang);
   renderCalendar();
 });
 
