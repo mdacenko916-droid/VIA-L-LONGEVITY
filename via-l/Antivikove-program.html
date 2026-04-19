@@ -856,6 +856,7 @@ function setLang(lang) {
   });
   document.getElementById('langSwitcher').classList.remove('open');
   applyAccT(lang);
+  if (typeof accApplyLang === 'function') accApplyLang(lang);
 }
 document.addEventListener('click', e => {
   const sw = document.getElementById('langSwitcher');
@@ -1273,6 +1274,7 @@ function setLang(lang){
   if(sw) sw.classList.remove('open');
   localStorage.setItem(LANG_STORAGE_KEY,lang);
   _applyLang(lang);
+  if (typeof accApplyLang === 'function') accApplyLang(lang);
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
@@ -1300,6 +1302,10 @@ function applyAccT(l){
   ids.forEach(k=>{const el=document.getElementById(k);if(el&&t[k]!==undefined)el.innerHTML=t[k];});
   const b1=document.getElementById('acc_btn1');const b2=document.getElementById('acc_btn2');
   if(b1)b1.textContent=t.acc_btn1;if(b2)b2.textContent=t.acc_btn2;
+}
+
+function accApplyLang(lang){
+  applyAccT(lang);
 }
 
 function openAccPayModal(){
