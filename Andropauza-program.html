@@ -591,7 +591,7 @@
     </div>
     <div class="hero-btns">
       <button class="btn-primary" onclick="openModal('calModal')" id="heroBtnSlots">Вільні слоти на знайомство</button>
-      <button class="btn-secondary" onclick="openModal('payModal')" id="heroBtnProgram">Програма супроводу</button>
+      <button class="btn-secondary" onclick="document.getElementById('accompaniment').scrollIntoView({behavior:'smooth'})" id="heroBtnProgram">Програма супроводу</button>
       <button class="btn-secondary" onclick="openAccPayModal()" id="heroBtnPay">Оплатити супровід</button>
     </div>
     <p class="hero-note" id="heroNote">✦ Знайомство — 15 хвилин, безкоштовно, без зобов'язань</p>
@@ -1870,11 +1870,20 @@ document.addEventListener('DOMContentLoaded', () => {
   renderCalendar();
   selectOpt(1);
   const nav = document.getElementById('nav');
-  window.addEventListener('scroll', () => { if (nav) nav.classList.toggle('scrolled', window.scrollY > 40); }, { passive: true });
+  window.addEventListener('scroll', () => {
+    if (nav) nav.classList.toggle('scrolled', window.scrollY > 40);
+    const st=document.getElementById('scrollTop');if(st)st.classList.toggle('visible',window.scrollY>400);
+  }, { passive: true });
   if (location.hash === '#pay') { openAccPayModal(); }
 });
 </script>
 
+<style>
+#scrollTop{position:fixed;bottom:32px;right:28px;width:44px;height:44px;border-radius:50%;background:rgba(139,111,71,.12);border:1px solid rgba(139,111,71,.35);color:var(--gold);font-size:20px;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;z-index:500;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;}
+#scrollTop.visible{opacity:1;pointer-events:auto;}
+#scrollTop:hover{background:rgba(139,111,71,.22);transform:translateY(-3px);}
+</style>
+<button id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Наверх">↑</button>
 
 </body>
 </html>
