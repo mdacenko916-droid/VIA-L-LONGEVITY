@@ -1745,7 +1745,18 @@ function confirmBooking() {
 }
 
 function selectOpt(option) { [1, 2, 3].forEach((idx) => { const card = document.getElementById('opt' + idx); if (card) card.classList.toggle('selected', idx === option); }); const total = document.getElementById('payTotalPrice'); if (total) total.textContent = PRICES[option] || PRICES[1]; }
-function openAccPayModal(){ selectOpt(1); openModal('payModal'); }
+function openAccPayModal(){
+  const body = document.getElementById('payBody');
+  if (body && _payBodyHTML && body.querySelector('.pay-success')) {
+    body.innerHTML = _payBodyHTML;
+    localizePage();
+  }
+  selectOpt(1);
+  const n = document.getElementById('payName'), e = document.getElementById('payEmail');
+  if (n) n.value = '';
+  if (e) { e.value = ''; e.style.borderColor = ''; }
+  openModal('payModal');
+}
 
 function confirmPayment() {
   const name = document.getElementById('payName');
@@ -1861,6 +1872,7 @@ function localizePage() {
   setLocalizedList('.chain-text span:not(.chain-symptom)', { ua: ['Регулював температуру, сон, метаболізм, інсулінову чутливість та когнітивні функції. Коли він падає — все це змінюється одночасно.', 'Ще до останньої менструації. Без нього цикл стає непередбачуваним, сон — поверхневим, тривога — фоновою.', 'Тіло сприймає гормональний перехід як стрес. Кортизол блокує спалювання жиру і спрямовує його в абдомінальну зону.', 'Нестабільний інсулін — режим накопичення при тому ж харчуванні. Вага росте, хоча ви «нічого не змінювали».', 'Низькорівневий «тихий вогонь» стає фоном і посилює всі попередні симптоми. Він реагує на кожне рішення за столом.'], ru: ['Регулировал температуру, сон, метаболизм, инсулиновую чувствительность и когнитивные функции. Когда он падает — всё это меняется одновременно.', 'Ещё до последней менструации. Без него цикл становится непредсказуемым, сон — поверхностным, тревога — фоновой.', 'Тело воспринимает гормональный переход как стресс. Кортизол блокирует сжигание жира и направляет его в абдоминальную зону.', 'Нестабильный инсулин — режим накопления при том же питании. Вес растёт, хотя вы «ничего не меняли».', 'Низкоуровневый «тихий огонь» становится фоном и усиливает все предыдущие симптомы. Он реагирует на каждое решение за столом.'], es: ['Regulaba la temperatura, el sueño, el metabolismo, la sensibilidad a la insulina y las funciones cognitivas. Cuando cae, todo eso cambia a la vez.', 'Incluso antes de la última menstruación. Sin él, el ciclo se vuelve impredecible, el sueño más superficial y la ansiedad más constante.', 'El cuerpo percibe la transición hormonal como estrés. El cortisol bloquea la quema de grasa y la dirige hacia la zona abdominal.', 'La insulina inestable crea un modo de almacenamiento con la misma comida. El peso sube aunque no hayas cambiado nada.', 'La inflamación de bajo grado se vuelve el fondo y amplifica todos los síntomas anteriores. Responde a cada decisión en la mesa.'], en: ['It regulated temperature, sleep, metabolism, insulin sensitivity and cognitive function. When it drops, all of this shifts at once.', 'Even before the last period. Without it, the cycle becomes unpredictable, sleep becomes shallow and anxiety becomes constant.', 'The body perceives the hormonal transition as stress. Cortisol blocks fat burning and sends it to the abdominal area.', 'Unstable insulin creates a storage mode with the same diet. Weight increases even though nothing changed.', 'Low-grade inflammation becomes the background and amplifies all earlier symptoms. It responds to every choice at the table.'] }, true);
 }
 
+let _payBodyHTML = '';
 document.addEventListener('DOMContentLoaded', () => {
   const savedLang = localStorage.getItem('selectedLang') || DEFAULT_LANG;
   setLocalizedElement('#heroTag', TEXTS.heroTag);
@@ -1869,6 +1881,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof accApplyLang === 'function') accApplyLang(savedLang);
   renderCalendar();
   selectOpt(1);
+  _payBodyHTML = document.getElementById('payBody').innerHTML;
   const nav = document.getElementById('nav');
   window.addEventListener('scroll', () => {
     if (nav) nav.classList.toggle('scrolled', window.scrollY > 40);

@@ -1462,11 +1462,16 @@ function accApplyLang(lang){
 }
 
 function openAccPayModal(){
-  // ── STRIPE PAYMENT LINKS ──
-  // Замените заглушки на реальные ссылки после настройки Stripe:
-  // Базова 8 тижнів €390  → STRIPE_BASE  = 'https://buy.stripe.com/REPLACE_ME'
-  // Повна 12 тижнів €590  → STRIPE_FULL  = 'https://buy.stripe.com/REPLACE_ME'
-  // Разова €120           → STRIPE_ONCE  = 'https://buy.stripe.com/REPLACE_ME'
+  const body = document.getElementById('payBody');
+  if (body && _payBodyHTML && body.querySelector('.pay-success')) {
+    body.innerHTML = _payBodyHTML;
+    const lang = document.documentElement.lang || 'uk';
+    _applyLang(lang);
+  }
+  selectOpt(1);
+  const n = document.getElementById('payName'), e = document.getElementById('payEmail');
+  if (n) n.value = '';
+  if (e) { e.value = ''; e.style.borderColor = ''; }
   openModal('payModal');
 }
 
@@ -1552,7 +1557,12 @@ function confirmPayment(){
   body.innerHTML=`<div class="pay-success"><div class="pay-success-icon">✦</div><div class="pay-success-title">${title[lang]||title.uk}</div><p class="pay-success-desc">${userName?userName+', ':''}${prefix[lang]||prefix.uk}${userEmail}.</p></div>`;
 }
 
-document.addEventListener('DOMContentLoaded', ()=>{ renderCalendar(); if (location.hash === '#pay') { openAccPayModal(); } });
+let _payBodyHTML = '';
+document.addEventListener('DOMContentLoaded', ()=>{
+  renderCalendar();
+  _payBodyHTML = document.getElementById('payBody').innerHTML;
+  if (location.hash === '#pay') { openAccPayModal(); }
+});
 
 </script>
 
