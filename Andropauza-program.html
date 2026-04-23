@@ -592,6 +592,7 @@
     <div class="hero-btns">
       <button class="btn-primary" onclick="openModal('calModal')" id="heroBtnSlots">Вільні слоти на знайомство</button>
       <button class="btn-secondary" onclick="openModal('payModal')" id="heroBtnProgram">Програма супроводу</button>
+      <button class="btn-secondary" onclick="openAccPayModal()" id="heroBtnPay">Оплатити супровід</button>
     </div>
     <p class="hero-note" id="heroNote">✦ Знайомство — 15 хвилин, безкоштовно, без зобов'язань</p>
   </div>
@@ -1271,6 +1272,7 @@ const TEXTS = {
   },
   heroBtnSlots: { ua: 'Вільні слоти на знайомство', ru: 'Свободные слоты на знакомство', es: 'Horarios disponibles para conocernos', en: 'Available intro slots' },
   heroBtnProgram: { ua: 'Програма супроводу', ru: 'Программа сопровождения', es: 'Programa de acompañamiento', en: 'Accompaniment programme' },
+  heroBtnPay: { ua: 'Оплатити супровід', ru: 'Оплатить сопровождение', es: 'Pagar el acompañamiento', en: 'Pay for support' },
   heroNote: { ua: '✦ Знайомство — 15 хвилин, безкоштовно, без зобов\'язань', ru: '✦ Знакомство — 15 минут, бесплатно, без обязательств', es: '✦ Conocernos — 15 minutos, gratuito, sin compromiso', en: '✦ Introduction — 15 minutes, free, no commitment' },
   bridgeQuote: { ua: '«75% чоловіків зберігають нормальний тестостерон до 70+ років. Питання не у віці — у стратегії.»', ru: '«75% мужчин сохраняют нормальный тестостерон до 70+ лет. Вопрос не в возрасте — в стратегии.»', es: '«El 75% de los hombres mantienen testosterona normal hasta los 70+. La pregunta no es la edad — es la estrategia.»', en: '“75% of men maintain normal testosterone past 70. The question is not age — it\'s strategy.”' },
   fwEy: { ua: 'Для кого', ru: 'Для кого', es: 'Para quién', en: 'Who is it for' },
@@ -1743,6 +1745,7 @@ function confirmBooking() {
 }
 
 function selectOpt(option) { [1, 2, 3].forEach((idx) => { const card = document.getElementById('opt' + idx); if (card) card.classList.toggle('selected', idx === option); }); const total = document.getElementById('payTotalPrice'); if (total) total.textContent = PRICES[option] || PRICES[1]; }
+function openAccPayModal(){ selectOpt(1); openModal('payModal'); }
 
 function confirmPayment() {
   const name = document.getElementById('payName');
@@ -1765,6 +1768,7 @@ function localizePage() {
   setLocalizedList('.hero-pills .pill', GROUP_TEXTS.pills);
   setLocalizedElement('#heroBtnSlots', TEXTS.heroBtnSlots);
   setLocalizedElement('#heroBtnProgram', TEXTS.heroBtnProgram);
+  setLocalizedElement('#heroBtnPay', TEXTS.heroBtnPay);
   setLocalizedElement('#heroNote', TEXTS.heroNote);
   setLocalizedElement('#bridgeQuote', TEXTS.bridgeQuote);
   setLocalizedElement('#fwEy', TEXTS.fwEy);
