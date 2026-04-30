@@ -566,50 +566,14 @@
       display: flex; flex-direction: column; overflow: hidden;
       box-shadow: inset 6px 0 16px rgba(0,0,0,0.10);
     }
-    /* Left page (intro) */
-    .book-page-left {
-      position: absolute; inset: 0;
-      border-radius: 0 0 12px 0;
-      background: linear-gradient(140deg, #f9f4ec 0%, #fdfaf5 50%, #f5f0e6 100%);
-      padding: 13px 11px 13px;
-      display: flex; flex-direction: column; overflow: hidden;
-      box-shadow: inset 6px 0 16px rgba(0,0,0,0.10);
-    }
-    .book-page-left::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 36%;
-      background: linear-gradient(to bottom, rgba(255,255,255,0.28) 0%, transparent 100%);
-      pointer-events: none; z-index: 5;
-    }
-    /* Right page (what's inside) */
-    .book-page-right {
-      position: absolute; top: 0; bottom: 0; left: 100%; width: 100%;
-      border-radius: 0 12px 12px 0;
-      background: linear-gradient(140deg, #eee8de 0%, #f5f0e7 50%, #faf7f1 100%);
-      padding: 13px 11px 11px;
-      display: flex; flex-direction: column; overflow: hidden;
-      opacity: 0; transform: translateX(-14px);
-      transition: opacity 0.3s 0.45s ease, transform 0.3s 0.45s ease;
-      box-shadow: 6px 0 18px rgba(0,0,0,0.16);
-    }
-    .book-page-right::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 36%;
-      background: linear-gradient(to bottom, rgba(255,255,255,0.22) 0%, transparent 100%);
-      pointer-events: none; z-index: 5;
-    }
-    .book-page-right::after {
-      content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 10px;
-      background: linear-gradient(to right, rgba(0,0,0,0.06) 0%, transparent 100%);
-      pointer-events: none;
-    }
-    .guide-card.open .book-page-right { opacity: 1; transform: translateX(0); }
     /* Shared page elements */
     .book-page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
     .book-page-tag { font-family: 'Oswald', sans-serif; font-size: 8.5px; font-weight: 400; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); }
     .book-page-num { font-family: 'Cormorant Garamond', serif; font-size: 10px; font-weight: 300; color: rgba(0,0,0,0.18); }
     .book-page-title { font-family: 'Oswald', sans-serif; font-size: 13px; font-weight: 600; text-transform: uppercase; color: #1a1208; line-height: 1.18; margin-bottom: 8px; }
-    .book-page-desc { font-family: 'DM Sans', sans-serif; font-size: 10.5px; line-height: 1.55; color: #4a4035; flex: 1; overflow: hidden; }
-    .book-inside-title { font-family: 'Oswald', sans-serif; font-size: 8.5px; font-weight: 400; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); margin-bottom: 9px; }
-    .book-inside-list { list-style: none; padding: 0; margin: 0; flex: 1; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+    .book-page-desc { font-family: 'DM Sans', sans-serif; font-size: 10px; line-height: 1.45; color: #4a4035; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; margin-bottom: 5px; }
+    .book-inside-title { font-family: 'Oswald', sans-serif; font-size: 8.5px; font-weight: 400; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); margin-bottom: 5px; }
+    .book-inside-list { list-style: none; padding: 0; margin: 0; flex: 1; display: flex; flex-direction: column; gap: 5px; overflow: hidden; }
     .book-inside-list li { font-family: 'DM Sans', sans-serif; font-size: 10px; line-height: 1.4; color: #3a3028; padding-left: 11px; position: relative; }
     .book-inside-list li::before { content: '—'; position: absolute; left: 0; color: var(--gold); font-size: 9px; top: 1px; }
     .book-page-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 8px; border-top: 0.5px solid rgba(0,0,0,0.10); }
@@ -715,9 +679,10 @@
     .guides-footer::before, .guides-footer::after { content:''; flex: 1; max-width: 80px; height: 1px; background: var(--gold-pale); opacity: .7; }
 
 
-    /* Mobile inside section (shown when card open) */
-    .guides-slider .book-page-desc { -webkit-line-clamp: 3; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; flex: 0; min-height: 0; }
-    .book-inside-section { display: none; flex-direction: column; gap: 5px; margin-top: 7px; padding-top: 7px; border-top: 0.5px solid rgba(139,111,71,0.2); flex: 1; }
+    /* Inside section */
+    .book-inside-section { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; padding-top: 6px; border-top: 0.5px solid rgba(139,111,71,0.18); flex: 1; }
+    /* Mobile: hide inside section until card is open */
+    .guides-slider .book-inside-section { display: none; }
     .guides-slider .guide-card.open .book-inside-section { display: flex; }
 
     /* Mobile slider */
@@ -1885,14 +1850,11 @@
           <div class="guide-name" data-i18n="g1_name">Харчування при менопаузі</div>
         </div>
       </div>
-      <div class="book-page-left">
+      <div class="book-page">
         <div class="book-page-header"><span class="book-page-tag" data-i18n="g1_tag">Гормони</span><span class="book-page-num">01</span></div>
         <div class="book-page-title" data-i18n="g1_name">Харчування при менопаузі</div>
         <p class="book-page-desc"></p>
-      </div>
-      <div class="book-page-right">
-        <div class="book-inside-title"></div>
-        <ul class="book-inside-list"></ul>
+        <div class="book-inside-section"><div class="book-inside-title"></div><ul class="book-inside-list"></ul></div>
         <div class="book-page-footer">
           <div class="book-page-price">35<sub>€</sub></div>
           <button class="guide-btn-page" data-i18n="g_btn" onclick="buyGuide(0);event.stopPropagation()">Придбати</button>
@@ -1917,14 +1879,11 @@
           <div class="guide-name" data-i18n="g2_name">Тестостерон і харчування</div>
         </div>
       </div>
-      <div class="book-page-left">
+      <div class="book-page">
         <div class="book-page-header"><span class="book-page-tag" data-i18n="g2_tag">Чоловіче здоров'я</span><span class="book-page-num">02</span></div>
         <div class="book-page-title" data-i18n="g2_name">Тестостерон і харчування</div>
         <p class="book-page-desc"></p>
-      </div>
-      <div class="book-page-right">
-        <div class="book-inside-title"></div>
-        <ul class="book-inside-list"></ul>
+        <div class="book-inside-section"><div class="book-inside-title"></div><ul class="book-inside-list"></ul></div>
         <div class="book-page-footer">
           <div class="book-page-price">35<sub>€</sub></div>
           <button class="guide-btn-page" data-i18n="g_btn" onclick="buyGuide(1);event.stopPropagation()">Придбати</button>
@@ -1949,14 +1908,11 @@
           <div class="guide-name" data-i18n="g3_name">Як читати свої аналізи</div>
         </div>
       </div>
-      <div class="book-page-left">
+      <div class="book-page">
         <div class="book-page-header"><span class="book-page-tag" data-i18n="g3_tag">Аналізи</span><span class="book-page-num">03</span></div>
         <div class="book-page-title" data-i18n="g3_name">Як читати свої аналізи</div>
         <p class="book-page-desc"></p>
-      </div>
-      <div class="book-page-right">
-        <div class="book-inside-title"></div>
-        <ul class="book-inside-list"></ul>
+        <div class="book-inside-section"><div class="book-inside-title"></div><ul class="book-inside-list"></ul></div>
         <div class="book-page-footer">
           <div class="book-page-price">35<sub>€</sub></div>
           <button class="guide-btn-page" data-i18n="g_btn" onclick="buyGuide(2);event.stopPropagation()">Придбати</button>
@@ -1981,14 +1937,11 @@
           <div class="guide-name" data-i18n="g4_name">Харчування для довголіття</div>
         </div>
       </div>
-      <div class="book-page-left">
+      <div class="book-page">
         <div class="book-page-header"><span class="book-page-tag" data-i18n="g4_tag">Антивіковий</span><span class="book-page-num">04</span></div>
         <div class="book-page-title" data-i18n="g4_name">Харчування для довголіття</div>
         <p class="book-page-desc"></p>
-      </div>
-      <div class="book-page-right">
-        <div class="book-inside-title"></div>
-        <ul class="book-inside-list"></ul>
+        <div class="book-inside-section"><div class="book-inside-title"></div><ul class="book-inside-list"></ul></div>
         <div class="book-page-footer">
           <div class="book-page-price">35<sub>€</sub></div>
           <button class="guide-btn-page" data-i18n="g_btn" onclick="buyGuide(3);event.stopPropagation()">Придбати</button>
@@ -2013,14 +1966,11 @@
           <div class="guide-name" data-i18n="g5_name">Протокол проти втоми</div>
         </div>
       </div>
-      <div class="book-page-left">
+      <div class="book-page">
         <div class="book-page-header"><span class="book-page-tag" data-i18n="g5_tag">Енергія</span><span class="book-page-num">05</span></div>
         <div class="book-page-title" data-i18n="g5_name">Протокол проти втоми</div>
         <p class="book-page-desc"></p>
-      </div>
-      <div class="book-page-right">
-        <div class="book-inside-title"></div>
-        <ul class="book-inside-list"></ul>
+        <div class="book-inside-section"><div class="book-inside-title"></div><ul class="book-inside-list"></ul></div>
         <div class="book-page-footer">
           <div class="book-page-price">35<sub>€</sub></div>
           <button class="guide-btn-page" data-i18n="g_btn" onclick="buyGuide(4);event.stopPropagation()">Придбати</button>
@@ -2045,14 +1995,11 @@
           <div class="guide-name" data-i18n="g6_name">Тихий вогонь</div>
         </div>
       </div>
-      <div class="book-page-left">
+      <div class="book-page">
         <div class="book-page-header"><span class="book-page-tag" data-i18n="g6_tag">Запалення</span><span class="book-page-num">06</span></div>
         <div class="book-page-title" data-i18n="g6_name">Тихий вогонь</div>
         <p class="book-page-desc"></p>
-      </div>
-      <div class="book-page-right">
-        <div class="book-inside-title"></div>
-        <ul class="book-inside-list"></ul>
+        <div class="book-inside-section"><div class="book-inside-title"></div><ul class="book-inside-list"></ul></div>
         <div class="book-page-footer">
           <div class="book-page-price">35<sub>€</sub></div>
           <button class="guide-btn-page" data-i18n="g_btn" onclick="buyGuide(5);event.stopPropagation()">Придбати</button>
@@ -2077,14 +2024,11 @@
           <div class="guide-name" data-i18n="g7_name">Волосся, шкіра, нігті 40+</div>
         </div>
       </div>
-      <div class="book-page-left">
+      <div class="book-page">
         <div class="book-page-header"><span class="book-page-tag" data-i18n="g7_tag">Краса зсередини</span><span class="book-page-num">07</span></div>
         <div class="book-page-title" data-i18n="g7_name">Волосся, шкіра, нігті 40+</div>
         <p class="book-page-desc"></p>
-      </div>
-      <div class="book-page-right">
-        <div class="book-inside-title"></div>
-        <ul class="book-inside-list"></ul>
+        <div class="book-inside-section"><div class="book-inside-title"></div><ul class="book-inside-list"></ul></div>
         <div class="book-page-footer">
           <div class="book-page-price">35<sub>€</sub></div>
           <button class="guide-btn-page" data-i18n="g_btn" onclick="buyGuide(6);event.stopPropagation()">Придбати</button>
