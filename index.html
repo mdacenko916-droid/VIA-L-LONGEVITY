@@ -507,31 +507,73 @@
     /* Grid desktop */
     .guides-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; align-items: start; }
 
-    /* Card base — full book cover */
+    /* Book card wrapper */
     .guide-card {
+      display: flex;
       position: relative;
-      border-radius: 12px;
-      overflow: hidden;
-      aspect-ratio: 2/3;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      transition: transform .35s ease, box-shadow .35s ease;
       opacity: 0;
       transform: translateY(28px);
-      box-shadow: 4px 6px 20px rgba(20,14,5,0.22), 1px 1px 0 rgba(139,111,71,0.10), inset -2px 0 6px rgba(0,0,0,0.08);
+      -webkit-tap-highlight-color: transparent;
+      transition: opacity .55s ease, transform .55s ease;
+      cursor: default;
+      z-index: 1;
     }
-    .guide-card.visible { opacity: 1; transform: translateY(0); transition: opacity .55s ease, transform .55s ease, box-shadow .35s; }
-    .guide-card:hover { transform: translateY(-7px) rotate(0.5deg); box-shadow: 8px 20px 48px rgba(20,14,5,0.32), 2px 2px 0 rgba(139,111,71,0.15), inset -2px 0 6px rgba(0,0,0,0.10); }
+    .guide-card.visible { opacity: 1; transform: translateY(0); }
+    .guide-card:not(.open):hover { transform: translateY(-4px); }
+    .guide-card.open { transform: translateY(-7px); z-index: 20; }
 
-    /* Spine shadow (book effect) */
-    .guide-card::before {
-      content: '';
-      position: absolute; top: 0; left: 0; bottom: 0;
-      width: 8px;
-      background: linear-gradient(to right, rgba(0,0,0,0.30) 0%, rgba(0,0,0,0.06) 70%, transparent 100%);
-      z-index: 4;
-      pointer-events: none;
+    /* Real spine */
+    .book-spine {
+      width: 20px; flex-shrink: 0;
+      background: linear-gradient(to right, #1c1208 0%, #3a2510 70%, #4d3318 100%);
+      border-radius: 4px 0 0 4px;
+      display: flex; flex-direction: column-reverse;
+      align-items: center; justify-content: space-between;
+      padding: 10px 0;
+      cursor: pointer;
+      box-shadow: inset -4px 0 10px rgba(0,0,0,0.55);
+      z-index: 5; user-select: none;
     }
+    .book-spine:hover { background: linear-gradient(to right, #2a1c0e 0%, #4a3018 70%, #5c3d20 100%); }
+    .book-spine-logo { font-family: 'Playfair Display', serif; font-size: 5.5px; letter-spacing: 2px; color: rgba(255,255,255,0.35); text-transform: uppercase; }
+    .book-spine-title { writing-mode: vertical-rl; transform: rotate(180deg); font-family: 'Oswald', sans-serif; font-size: 7px; font-weight: 400; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold-lt); white-space: nowrap; overflow: hidden; max-height: 110px; }
+    .book-spine-num { font-family: 'Cormorant Garamond', serif; font-size: 8px; font-weight: 300; color: rgba(255,255,255,0.28); }
+
+    /* Book body */
+    .book-body { flex: 1; position: relative; perspective: 1200px; border-radius: 0 12px 12px 0; aspect-ratio: 2/3; }
+
+    /* Cover face */
+    .book-cover {
+      position: absolute; inset: 0;
+      border-radius: 0 12px 12px 0; overflow: hidden;
+      transform-origin: left center;
+      transform: rotateY(0deg);
+      transition: transform 0.65s cubic-bezier(0.645, 0.045, 0.355, 1.000);
+      backface-visibility: hidden; -webkit-backface-visibility: hidden;
+      z-index: 3; cursor: pointer;
+      box-shadow: 3px 0 10px rgba(0,0,0,0.25);
+    }
+    .guide-card.open .book-cover { transform: rotateY(-162deg); }
+
+    /* Inner page */
+    .book-page {
+      position: absolute; inset: 0;
+      border-radius: 0 12px 12px 0;
+      background: linear-gradient(108deg, #ede8df 0%, #f7f3ec 28%, #fdfaf6 100%);
+      padding: 13px 11px 11px;
+      display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: inset 6px 0 16px rgba(0,0,0,0.10);
+    }
+    .book-page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+    .book-page-tag { font-family: 'Oswald', sans-serif; font-size: 8.5px; font-weight: 400; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); }
+    .book-page-num { font-family: 'Cormorant Garamond', serif; font-size: 10px; font-weight: 300; color: rgba(0,0,0,0.18); }
+    .book-page-title { font-family: 'Oswald', sans-serif; font-size: 14px; font-weight: 600; text-transform: uppercase; color: #1a1208; line-height: 1.18; margin-bottom: 9px; }
+    .book-page-desc { font-family: 'DM Sans', sans-serif; font-size: 11px; line-height: 1.5; color: #4a4035; flex: 1; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+    .book-page-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 8px; border-top: 0.5px solid rgba(0,0,0,0.10); }
+    .book-page-price { font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 500; color: #1a1208; }
+    .book-page-price sub { font-family: 'DM Sans', sans-serif; font-size: 10px; color: #5a4a35; font-weight: 300; margin-left: 1px; vertical-align: baseline; }
+    .guide-btn-page { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .07em; padding: 6px 12px; border-radius: 50px; background: transparent; border: 1.5px solid #3a2510; color: #3a2510; cursor: pointer; transition: background .2s; white-space: nowrap; }
+    .guide-btn-page:hover { background: rgba(58,37,16,0.08); }
 
     /* Full-bleed photo */
     .guide-cover-photo {
@@ -541,7 +583,7 @@
       display: block;
       transition: transform .5s ease;
     }
-    .guide-card:hover .guide-cover-photo { transform: scale(1.05); }
+    .book-cover:hover .guide-cover-photo { transform: scale(1.04); }
 
     .guide-cover-overlay { display: none; /* no overlay, clean photo */ }
 
@@ -1778,107 +1820,198 @@
 <!-- Desktop grid -->
 <div class="guides-grid">
 
-  <div class="guide-card" onclick="openGuidesModal(0)">
-    <img class="guide-cover-photo" src="images/Menopayza.png" alt="Менопауза без страха" loading="lazy">
-    <div class="guide-cover-overlay"></div>
-    <div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">01</span></div>
-    <div class="guide-cover-inner">
-      <div class="guide-tag" data-i18n="g1_tag">Гормони</div>
-      <div class="guide-name" data-i18n="g1_name">Харчування при менопаузі</div>
-      <div class="guide-desc" data-i18n="g1_desc">Які продукти знижують припливи, підтримують кістки та стабілізують настрій.</div>
-      <div class="guide-footer">
-        <div class="guide-price">35<sub>€</sub></div>
-        <button class="guide-btn" data-i18n="g_btn">Придбати</button>
+  <div class="guide-card">
+    <div class="book-spine" onclick="toggleBook(this.parentElement);event.stopPropagation()">
+      <span class="book-spine-logo">VIA·L</span>
+      <span class="book-spine-title" data-i18n="g1_tag">Гормони</span>
+      <span class="book-spine-num">01</span>
+    </div>
+    <div class="book-body">
+      <div class="book-cover" onclick="toggleBook(this.closest('.guide-card'))">
+        <img class="guide-cover-photo" src="images/Menopayza.png" alt="Менопауза без страха" loading="lazy">
+        <div class="guide-cover-overlay"></div>
+        <div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">01</span></div>
+        <div class="guide-cover-inner">
+          <div class="guide-tag" data-i18n="g1_tag">Гормони</div>
+          <div class="guide-name" data-i18n="g1_name">Харчування при менопаузі</div>
+        </div>
+      </div>
+      <div class="book-page">
+        <div class="book-page-header"><span class="book-page-tag" data-i18n="g1_tag">Гормони</span><span class="book-page-num">01</span></div>
+        <div class="book-page-title" data-i18n="g1_name">Харчування при менопаузі</div>
+        <p class="book-page-desc" data-i18n="g1_desc">Які продукти знижують припливи, підтримують кістки та стабілізують настрій.</p>
+        <div class="book-page-footer">
+          <div class="book-page-price">35<sub>€</sub></div>
+          <button class="guide-btn-page" data-i18n="g_btn" onclick="openGuidesModal(0);event.stopPropagation()">Придбати</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="guide-card" onclick="openGuidesModal(1)">
-    <img class="guide-cover-photo" src="images/Testosteron.png" alt="Тестостерон і харчування" loading="lazy">
-    <div class="guide-cover-overlay"></div>
-    <div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">02</span></div>
-    <div class="guide-cover-inner">
-      <div class="guide-tag" data-i18n="g2_tag">Чоловіче здоров'я</div>
-      <div class="guide-name" data-i18n="g2_name">Тестостерон і харчування</div>
-      <div class="guide-desc" data-i18n="g2_desc">Тестостерон і харчування. Як підтримати андрогенний статус після 40 через дієту і нутрієнти.</div>
-      <div class="guide-footer">
-        <div class="guide-price">35<sub>€</sub></div>
-        <button class="guide-btn" data-i18n="g_btn">Придбати</button>
+  <div class="guide-card">
+    <div class="book-spine" onclick="toggleBook(this.parentElement);event.stopPropagation()">
+      <span class="book-spine-logo">VIA·L</span>
+      <span class="book-spine-title" data-i18n="g2_tag">Чоловіче здоров'я</span>
+      <span class="book-spine-num">02</span>
+    </div>
+    <div class="book-body">
+      <div class="book-cover" onclick="toggleBook(this.closest('.guide-card'))">
+        <img class="guide-cover-photo" src="images/Testosteron.png" alt="Тестостерон і харчування" loading="lazy">
+        <div class="guide-cover-overlay"></div>
+        <div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">02</span></div>
+        <div class="guide-cover-inner">
+          <div class="guide-tag" data-i18n="g2_tag">Чоловіче здоров'я</div>
+          <div class="guide-name" data-i18n="g2_name">Тестостерон і харчування</div>
+        </div>
+      </div>
+      <div class="book-page">
+        <div class="book-page-header"><span class="book-page-tag" data-i18n="g2_tag">Чоловіче здоров'я</span><span class="book-page-num">02</span></div>
+        <div class="book-page-title" data-i18n="g2_name">Тестостерон і харчування</div>
+        <p class="book-page-desc" data-i18n="g2_desc">Тестостерон і харчування. Як підтримати андрогенний статус після 40 через дієту і нутрієнти.</p>
+        <div class="book-page-footer">
+          <div class="book-page-price">35<sub>€</sub></div>
+          <button class="guide-btn-page" data-i18n="g_btn" onclick="openGuidesModal(1);event.stopPropagation()">Придбати</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="guide-card" onclick="openGuidesModal(2)">
-    <img class="guide-cover-photo" src="images/Analizo.png" alt="Что скрывают ваши анализы" loading="lazy">
-    <div class="guide-cover-overlay"></div>
-    <div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">03</span></div>
-    <div class="guide-cover-inner">
-      <div class="guide-tag" data-i18n="g3_tag">Аналізи</div>
-      <div class="guide-name" data-i18n="g3_name">Як читати свої аналізи</div>
-      <div class="guide-desc" data-i18n="g3_desc">Розшифровка ключових маркерів: що норма лабораторії не говорить вам.</div>
-      <div class="guide-footer">
-        <div class="guide-price">35<sub>€</sub></div>
-        <button class="guide-btn" data-i18n="g_btn">Придбати</button>
+  <div class="guide-card">
+    <div class="book-spine" onclick="toggleBook(this.parentElement);event.stopPropagation()">
+      <span class="book-spine-logo">VIA·L</span>
+      <span class="book-spine-title" data-i18n="g3_tag">Аналізи</span>
+      <span class="book-spine-num">03</span>
+    </div>
+    <div class="book-body">
+      <div class="book-cover" onclick="toggleBook(this.closest('.guide-card'))">
+        <img class="guide-cover-photo" src="images/Analizo.png" alt="Що скрывають ваші аналізи" loading="lazy">
+        <div class="guide-cover-overlay"></div>
+        <div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">03</span></div>
+        <div class="guide-cover-inner">
+          <div class="guide-tag" data-i18n="g3_tag">Аналізи</div>
+          <div class="guide-name" data-i18n="g3_name">Як читати свої аналізи</div>
+        </div>
+      </div>
+      <div class="book-page">
+        <div class="book-page-header"><span class="book-page-tag" data-i18n="g3_tag">Аналізи</span><span class="book-page-num">03</span></div>
+        <div class="book-page-title" data-i18n="g3_name">Як читати свої аналізи</div>
+        <p class="book-page-desc" data-i18n="g3_desc">Розшифровка ключових маркерів: що норма лабораторії не говорить вам.</p>
+        <div class="book-page-footer">
+          <div class="book-page-price">35<sub>€</sub></div>
+          <button class="guide-btn-page" data-i18n="g_btn" onclick="openGuidesModal(2);event.stopPropagation()">Придбати</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="guide-card" onclick="openGuidesModal(3)">
-    <img class="guide-cover-photo" src="images/40plys.png" alt="40+ без отката" loading="lazy">
-    <div class="guide-cover-overlay"></div>
-    <div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">04</span></div>
-    <div class="guide-cover-inner">
-      <div class="guide-tag" data-i18n="g4_tag">Антивіковий</div>
-      <div class="guide-name" data-i18n="g4_name">Харчування для довголіття</div>
-      <div class="guide-desc" data-i18n="g4_desc">Топ-продукти та нутрицевтики, що уповільнюють біологічне старіння.</div>
-      <div class="guide-footer">
-        <div class="guide-price">1<sub>€</sub></div>
-        <button class="guide-btn" data-i18n="g_btn">Придбати</button>
+  <div class="guide-card">
+    <div class="book-spine" onclick="toggleBook(this.parentElement);event.stopPropagation()">
+      <span class="book-spine-logo">VIA·L</span>
+      <span class="book-spine-title" data-i18n="g4_tag">Антивіковий</span>
+      <span class="book-spine-num">04</span>
+    </div>
+    <div class="book-body">
+      <div class="book-cover" onclick="toggleBook(this.closest('.guide-card'))">
+        <img class="guide-cover-photo" src="images/40plys.png" alt="40+ без отката" loading="lazy">
+        <div class="guide-cover-overlay"></div>
+        <div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">04</span></div>
+        <div class="guide-cover-inner">
+          <div class="guide-tag" data-i18n="g4_tag">Антивіковий</div>
+          <div class="guide-name" data-i18n="g4_name">Харчування для довголіття</div>
+        </div>
+      </div>
+      <div class="book-page">
+        <div class="book-page-header"><span class="book-page-tag" data-i18n="g4_tag">Антивіковий</span><span class="book-page-num">04</span></div>
+        <div class="book-page-title" data-i18n="g4_name">Харчування для довголіття</div>
+        <p class="book-page-desc" data-i18n="g4_desc">Топ-продукти та нутрицевтики, що уповільнюють біологічне старіння.</p>
+        <div class="book-page-footer">
+          <div class="book-page-price">35<sub>€</sub></div>
+          <button class="guide-btn-page" data-i18n="g_btn" onclick="openGuidesModal(3);event.stopPropagation()">Придбати</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="guide-card" onclick="openGuidesModal(4)">
-    <img class="guide-cover-photo" src="images/Sahar.png" alt="Енергія - Протокол проти втоми" loading="lazy">
-    <div class="guide-cover-overlay"></div>
-    <div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">05</span></div>
-    <div class="guide-cover-inner">
-      <div class="guide-tag" data-i18n="g5_tag">Енергія</div>
-      <div class="guide-name" data-i18n="g5_name">Протокол проти втоми</div>
-      <div class="guide-desc" data-i18n="g5_desc">Енергія. Протокол проти втоми. Чому аналізи в нормі, але сил немає — і як це виправити через харчування.</div>
-      <div class="guide-footer">
-        <div class="guide-price">35<sub>€</sub></div>
-        <button class="guide-btn" data-i18n="g_btn">Придбати</button>
+  <div class="guide-card">
+    <div class="book-spine" onclick="toggleBook(this.parentElement);event.stopPropagation()">
+      <span class="book-spine-logo">VIA·L</span>
+      <span class="book-spine-title" data-i18n="g5_tag">Енергія</span>
+      <span class="book-spine-num">05</span>
+    </div>
+    <div class="book-body">
+      <div class="book-cover" onclick="toggleBook(this.closest('.guide-card'))">
+        <img class="guide-cover-photo" src="images/Sahar.png" alt="Енергія - Протокол проти втоми" loading="lazy">
+        <div class="guide-cover-overlay"></div>
+        <div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">05</span></div>
+        <div class="guide-cover-inner">
+          <div class="guide-tag" data-i18n="g5_tag">Енергія</div>
+          <div class="guide-name" data-i18n="g5_name">Протокол проти втоми</div>
+        </div>
+      </div>
+      <div class="book-page">
+        <div class="book-page-header"><span class="book-page-tag" data-i18n="g5_tag">Енергія</span><span class="book-page-num">05</span></div>
+        <div class="book-page-title" data-i18n="g5_name">Протокол проти втоми</div>
+        <p class="book-page-desc" data-i18n="g5_desc">Енергія. Протокол проти втоми. Чому аналізи в нормі, але сил немає — і як це виправити через харчування.</p>
+        <div class="book-page-footer">
+          <div class="book-page-price">35<sub>€</sub></div>
+          <button class="guide-btn-page" data-i18n="g_btn" onclick="openGuidesModal(4);event.stopPropagation()">Придбати</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="guide-card" onclick="openGuidesModal(5)">
-    <img class="guide-cover-photo" src="images/Tihii-ogon.png" alt="Тихий огонь" loading="lazy">
-    <div class="guide-cover-overlay"></div>
-    <div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">06</span></div>
-    <div class="guide-cover-inner">
-      <div class="guide-tag" data-i18n="g6_tag">Запалення</div>
-      <div class="guide-name" data-i18n="g6_name">Тихий вогонь</div>
-      <div class="guide-desc" data-i18n="g6_desc">Хронічне запалення після 40 — звідки воно береться, як його розпізнати і що з ним робить харчування.</div>
-      <div class="guide-footer">
-        <div class="guide-price">35<sub>€</sub></div>
-        <button class="guide-btn" data-i18n="g_btn">Придбати</button>
+  <div class="guide-card">
+    <div class="book-spine" onclick="toggleBook(this.parentElement);event.stopPropagation()">
+      <span class="book-spine-logo">VIA·L</span>
+      <span class="book-spine-title" data-i18n="g6_tag">Запалення</span>
+      <span class="book-spine-num">06</span>
+    </div>
+    <div class="book-body">
+      <div class="book-cover" onclick="toggleBook(this.closest('.guide-card'))">
+        <img class="guide-cover-photo" src="images/Tihii-ogon.png" alt="Тихий огонь" loading="lazy">
+        <div class="guide-cover-overlay"></div>
+        <div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">06</span></div>
+        <div class="guide-cover-inner">
+          <div class="guide-tag" data-i18n="g6_tag">Запалення</div>
+          <div class="guide-name" data-i18n="g6_name">Тихий вогонь</div>
+        </div>
+      </div>
+      <div class="book-page">
+        <div class="book-page-header"><span class="book-page-tag" data-i18n="g6_tag">Запалення</span><span class="book-page-num">06</span></div>
+        <div class="book-page-title" data-i18n="g6_name">Тихий вогонь</div>
+        <p class="book-page-desc" data-i18n="g6_desc">Хронічне запалення після 40 — звідки воно береться, як його розпізнати і що з ним робить харчування.</p>
+        <div class="book-page-footer">
+          <div class="book-page-price">35<sub>€</sub></div>
+          <button class="guide-btn-page" data-i18n="g_btn" onclick="openGuidesModal(5);event.stopPropagation()">Придбати</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="guide-card" onclick="openGuidesModal(6)">
-    <img class="guide-cover-photo" src="images/Volosi.png" alt="Волосы, кожа, ногти 40+" loading="lazy">
-    <div class="guide-cover-overlay"></div>
-    <div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">07</span></div>
-    <div class="guide-cover-inner">
-      <div class="guide-tag" data-i18n="g7_tag">Краса зсередини</div>
-      <div class="guide-name" data-i18n="g7_name">Волосся, шкіра, нігті 40+</div>
-      <div class="guide-desc" data-i18n="g7_desc">Чому зовнішні зміни після 40 пов'язані не тільки з доглядом.</div>
-      <div class="guide-footer">
-        <div class="guide-price">35<sub>€</sub></div>
-        <button class="guide-btn" data-i18n="g_btn">Придбати</button>
+  <div class="guide-card">
+    <div class="book-spine" onclick="toggleBook(this.parentElement);event.stopPropagation()">
+      <span class="book-spine-logo">VIA·L</span>
+      <span class="book-spine-title" data-i18n="g7_tag">Краса зсередини</span>
+      <span class="book-spine-num">07</span>
+    </div>
+    <div class="book-body">
+      <div class="book-cover" onclick="toggleBook(this.closest('.guide-card'))">
+        <img class="guide-cover-photo" src="images/Volosi.png" alt="Волосся, шкіра, нігті 40+" loading="lazy">
+        <div class="guide-cover-overlay"></div>
+        <div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">07</span></div>
+        <div class="guide-cover-inner">
+          <div class="guide-tag" data-i18n="g7_tag">Краса зсередини</div>
+          <div class="guide-name" data-i18n="g7_name">Волосся, шкіра, нігті 40+</div>
+        </div>
+      </div>
+      <div class="book-page">
+        <div class="book-page-header"><span class="book-page-tag" data-i18n="g7_tag">Краса зсередини</span><span class="book-page-num">07</span></div>
+        <div class="book-page-title" data-i18n="g7_name">Волосся, шкіра, нігті 40+</div>
+        <p class="book-page-desc" data-i18n="g7_desc">Чому зовнішні зміни після 40 пов'язані не тільки з доглядом.</p>
+        <div class="book-page-footer">
+          <div class="book-page-price">35<sub>€</sub></div>
+          <button class="guide-btn-page" data-i18n="g_btn" onclick="openGuidesModal(6);event.stopPropagation()">Придбати</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1888,27 +2021,13 @@
 <!-- Mobile slider -->
 <div class="guides-slider-wrap">
   <div class="guides-slider" id="guidesSlider">
-    <div class="guide-card" onclick="openGuidesModal(0)">
-      <img class="guide-cover-photo" src="images/Menopayza.png" alt="Менопауза без страха" loading="lazy"><div class="guide-cover-overlay"></div><div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">01</span></div><div class="guide-cover-inner"><div class="guide-tag" data-i18n="g1_tag">Гормони</div><div class="guide-name" data-i18n="g1_name">Харчування при менопаузі</div><div class="guide-desc" data-i18n="g1_desc">Які продукти знижують припливи, підтримують кістки та стабілізують настрій.</div><div class="guide-footer"><div class="guide-price">35<sub>€</sub></div><button class="guide-btn" data-i18n="g_btn">Придбати</button></div></div>
-    </div>
-    <div class="guide-card" onclick="openGuidesModal(1)">
-      <img class="guide-cover-photo" src="images/Testosteron.png" alt="Тестостерон и питание" loading="lazy"><div class="guide-cover-overlay"></div><div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">02</span></div><div class="guide-cover-inner"><div class="guide-tag" data-i18n="g2_tag">Чоловіче здоров'я</div><div class="guide-name" data-i18n="g2_name">Тестостерон і харчування</div><div class="guide-desc" data-i18n="g2_desc">Тестостерон і харчування. Як підтримати андрогенний статус після 40 через дієту і нутрієнти.</div><div class="guide-footer"><div class="guide-price">35<sub>€</sub></div><button class="guide-btn" data-i18n="g_btn">Придбати</button></div></div>
-    </div>
-    <div class="guide-card" onclick="openGuidesModal(2)">
-      <img class="guide-cover-photo" src="images/Analizo.png" alt="Что скрывают ваши анализы" loading="lazy"><div class="guide-cover-overlay"></div><div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">03</span></div><div class="guide-cover-inner"><div class="guide-tag" data-i18n="g3_tag">Аналізи</div><div class="guide-name" data-i18n="g3_name">Як читати свої аналізи</div><div class="guide-desc" data-i18n="g3_desc">Розшифровка ключових маркерів: що норма лабораторії не говорить вам.</div><div class="guide-footer"><div class="guide-price">35<sub>€</sub></div><button class="guide-btn" data-i18n="g_btn">Придбати</button></div></div>
-    </div>
-    <div class="guide-card" onclick="openGuidesModal(3)">
-      <img class="guide-cover-photo" src="images/40plys.png" alt="40+ без отката" loading="lazy"><div class="guide-cover-overlay"></div><div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">04</span></div><div class="guide-cover-inner"><div class="guide-tag" data-i18n="g4_tag">Антивіковий</div><div class="guide-name" data-i18n="g4_name">Харчування для довголіття</div><div class="guide-desc" data-i18n="g4_desc">Топ-продукти та нутрицевтики, що уповільнюють біологічне старіння.</div><div class="guide-footer"><div class="guide-price">35<sub>€</sub></div><button class="guide-btn" data-i18n="g_btn">Придбати</button></div></div>
-    </div>
-    <div class="guide-card" onclick="openGuidesModal(4)">
-      <img class="guide-cover-photo" src="images/Sahar.png" alt="Енергія. Протокол проти втоми" loading="lazy"><div class="guide-cover-overlay"></div><div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">05</span></div><div class="guide-cover-inner"><div class="guide-tag" data-i18n="g5_tag">Енергія</div><div class="guide-name" data-i18n="g5_name">Протокол проти втоми</div><div class="guide-desc" data-i18n="g5_desc">Енергія. Протокол проти втоми. Чому аналізи в нормі, але сил немає — і як це виправити через харчування.</div><div class="guide-footer"><div class="guide-price">35<sub>€</sub></div><button class="guide-btn" data-i18n="g_btn">Придбати</button></div></div>
-    </div>
-    <div class="guide-card" onclick="openGuidesModal(5)">
-      <img class="guide-cover-photo" src="images/Tihii-ogon.png" alt="Тихий огонь" loading="lazy"><div class="guide-cover-overlay"></div><div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">06</span></div><div class="guide-cover-inner"><div class="guide-tag" data-i18n="g6_tag">Запалення</div><div class="guide-name" data-i18n="g6_name">Тихий вогонь</div><div class="guide-desc" data-i18n="g6_desc">Хронічне запалення після 40 — звідки воно береться, як його розпізнати і що з ним робить харчування.</div><div class="guide-footer"><div class="guide-price">35<sub>€</sub></div><button class="guide-btn" data-i18n="g_btn">Придбати</button></div></div>
-    </div>
-    <div class="guide-card" onclick="openGuidesModal(6)">
-      <img class="guide-cover-photo" src="images/Volosi.png" alt="Волосы, кожа, ногти 40+" loading="lazy"><div class="guide-cover-overlay"></div><div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">07</span></div><div class="guide-cover-inner"><div class="guide-tag" data-i18n="g7_tag">Краса зсередини</div><div class="guide-name" data-i18n="g7_name">Волосся, шкіра, нігті 40+</div><div class="guide-desc" data-i18n="g7_desc">Чому зовнішні зміни після 40 пов'язані не тільки з доглядом.</div><div class="guide-footer"><div class="guide-price">35<sub>€</sub></div><button class="guide-btn" data-i18n="g_btn">Придбати</button></div></div>
-    </div>
+    <div class="guide-card"><div class="book-spine" onclick="toggleBook(this.parentElement);event.stopPropagation()"><span class="book-spine-logo">VIA·L</span><span class="book-spine-title" data-i18n="g1_tag">Гормони</span><span class="book-spine-num">01</span></div><div class="book-body"><div class="book-cover" onclick="toggleBook(this.closest('.guide-card'))"><img class="guide-cover-photo" src="images/Menopayza.png" alt="Менопауза без страха" loading="lazy"><div class="guide-cover-overlay"></div><div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">01</span></div><div class="guide-cover-inner"><div class="guide-tag" data-i18n="g1_tag">Гормони</div><div class="guide-name" data-i18n="g1_name">Харчування при менопаузі</div></div></div><div class="book-page"><div class="book-page-header"><span class="book-page-tag" data-i18n="g1_tag">Гормони</span><span class="book-page-num">01</span></div><div class="book-page-title" data-i18n="g1_name">Харчування при менопаузі</div><p class="book-page-desc" data-i18n="g1_desc">Які продукти знижують припливи, підтримують кістки та стабілізують настрій.</p><div class="book-page-footer"><div class="book-page-price">35<sub>€</sub></div><button class="guide-btn-page" data-i18n="g_btn" onclick="openGuidesModal(0);event.stopPropagation()">Придбати</button></div></div></div></div>
+    <div class="guide-card"><div class="book-spine" onclick="toggleBook(this.parentElement);event.stopPropagation()"><span class="book-spine-logo">VIA·L</span><span class="book-spine-title" data-i18n="g2_tag">Чоловіче здоров'я</span><span class="book-spine-num">02</span></div><div class="book-body"><div class="book-cover" onclick="toggleBook(this.closest('.guide-card'))"><img class="guide-cover-photo" src="images/Testosteron.png" alt="Тестостерон і харчування" loading="lazy"><div class="guide-cover-overlay"></div><div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">02</span></div><div class="guide-cover-inner"><div class="guide-tag" data-i18n="g2_tag">Чоловіче здоров'я</div><div class="guide-name" data-i18n="g2_name">Тестостерон і харчування</div></div></div><div class="book-page"><div class="book-page-header"><span class="book-page-tag" data-i18n="g2_tag">Чоловіче здоров'я</span><span class="book-page-num">02</span></div><div class="book-page-title" data-i18n="g2_name">Тестостерон і харчування</div><p class="book-page-desc" data-i18n="g2_desc">Як підтримати андрогенний статус після 40 через дієту і нутрієнти.</p><div class="book-page-footer"><div class="book-page-price">35<sub>€</sub></div><button class="guide-btn-page" data-i18n="g_btn" onclick="openGuidesModal(1);event.stopPropagation()">Придбати</button></div></div></div></div>
+    <div class="guide-card"><div class="book-spine" onclick="toggleBook(this.parentElement);event.stopPropagation()"><span class="book-spine-logo">VIA·L</span><span class="book-spine-title" data-i18n="g3_tag">Аналізи</span><span class="book-spine-num">03</span></div><div class="book-body"><div class="book-cover" onclick="toggleBook(this.closest('.guide-card'))"><img class="guide-cover-photo" src="images/Analizo.png" alt="Що скрывають ваші аналізи" loading="lazy"><div class="guide-cover-overlay"></div><div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">03</span></div><div class="guide-cover-inner"><div class="guide-tag" data-i18n="g3_tag">Аналізи</div><div class="guide-name" data-i18n="g3_name">Як читати свої аналізи</div></div></div><div class="book-page"><div class="book-page-header"><span class="book-page-tag" data-i18n="g3_tag">Аналізи</span><span class="book-page-num">03</span></div><div class="book-page-title" data-i18n="g3_name">Як читати свої аналізи</div><p class="book-page-desc" data-i18n="g3_desc">Розшифровка ключових маркерів: що норма лабораторії не говорить вам.</p><div class="book-page-footer"><div class="book-page-price">35<sub>€</sub></div><button class="guide-btn-page" data-i18n="g_btn" onclick="openGuidesModal(2);event.stopPropagation()">Придбати</button></div></div></div></div>
+    <div class="guide-card"><div class="book-spine" onclick="toggleBook(this.parentElement);event.stopPropagation()"><span class="book-spine-logo">VIA·L</span><span class="book-spine-title" data-i18n="g4_tag">Антивіковий</span><span class="book-spine-num">04</span></div><div class="book-body"><div class="book-cover" onclick="toggleBook(this.closest('.guide-card'))"><img class="guide-cover-photo" src="images/40plys.png" alt="40+ без отката" loading="lazy"><div class="guide-cover-overlay"></div><div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">04</span></div><div class="guide-cover-inner"><div class="guide-tag" data-i18n="g4_tag">Антивіковий</div><div class="guide-name" data-i18n="g4_name">Харчування для довголіття</div></div></div><div class="book-page"><div class="book-page-header"><span class="book-page-tag" data-i18n="g4_tag">Антивіковий</span><span class="book-page-num">04</span></div><div class="book-page-title" data-i18n="g4_name">Харчування для довголіття</div><p class="book-page-desc" data-i18n="g4_desc">Топ-продукти та нутрицевтики, що уповільнюють біологічне старіння.</p><div class="book-page-footer"><div class="book-page-price">35<sub>€</sub></div><button class="guide-btn-page" data-i18n="g_btn" onclick="openGuidesModal(3);event.stopPropagation()">Придбати</button></div></div></div></div>
+    <div class="guide-card"><div class="book-spine" onclick="toggleBook(this.parentElement);event.stopPropagation()"><span class="book-spine-logo">VIA·L</span><span class="book-spine-title" data-i18n="g5_tag">Енергія</span><span class="book-spine-num">05</span></div><div class="book-body"><div class="book-cover" onclick="toggleBook(this.closest('.guide-card'))"><img class="guide-cover-photo" src="images/Sahar.png" alt="Енергія. Протокол проти втоми" loading="lazy"><div class="guide-cover-overlay"></div><div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">05</span></div><div class="guide-cover-inner"><div class="guide-tag" data-i18n="g5_tag">Енергія</div><div class="guide-name" data-i18n="g5_name">Протокол проти втоми</div></div></div><div class="book-page"><div class="book-page-header"><span class="book-page-tag" data-i18n="g5_tag">Енергія</span><span class="book-page-num">05</span></div><div class="book-page-title" data-i18n="g5_name">Протокол проти втоми</div><p class="book-page-desc" data-i18n="g5_desc">Чому аналізи в нормі, але сил немає — і як це виправити через харчування.</p><div class="book-page-footer"><div class="book-page-price">35<sub>€</sub></div><button class="guide-btn-page" data-i18n="g_btn" onclick="openGuidesModal(4);event.stopPropagation()">Придбати</button></div></div></div></div>
+    <div class="guide-card"><div class="book-spine" onclick="toggleBook(this.parentElement);event.stopPropagation()"><span class="book-spine-logo">VIA·L</span><span class="book-spine-title" data-i18n="g6_tag">Запалення</span><span class="book-spine-num">06</span></div><div class="book-body"><div class="book-cover" onclick="toggleBook(this.closest('.guide-card'))"><img class="guide-cover-photo" src="images/Tihii-ogon.png" alt="Тихий огонь" loading="lazy"><div class="guide-cover-overlay"></div><div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">06</span></div><div class="guide-cover-inner"><div class="guide-tag" data-i18n="g6_tag">Запалення</div><div class="guide-name" data-i18n="g6_name">Тихий вогонь</div></div></div><div class="book-page"><div class="book-page-header"><span class="book-page-tag" data-i18n="g6_tag">Запалення</span><span class="book-page-num">06</span></div><div class="book-page-title" data-i18n="g6_name">Тихий вогонь</div><p class="book-page-desc" data-i18n="g6_desc">Хронічне запалення після 40 — звідки воно береться і що з ним робить харчування.</p><div class="book-page-footer"><div class="book-page-price">35<sub>€</sub></div><button class="guide-btn-page" data-i18n="g_btn" onclick="openGuidesModal(5);event.stopPropagation()">Придбати</button></div></div></div></div>
+    <div class="guide-card"><div class="book-spine" onclick="toggleBook(this.parentElement);event.stopPropagation()"><span class="book-spine-logo">VIA·L</span><span class="book-spine-title" data-i18n="g7_tag">Краса зсередини</span><span class="book-spine-num">07</span></div><div class="book-body"><div class="book-cover" onclick="toggleBook(this.closest('.guide-card'))"><img class="guide-cover-photo" src="images/Volosi.png" alt="Волосся, шкіра, нігті 40+" loading="lazy"><div class="guide-cover-overlay"></div><div class="guide-cover-top"><span class="guide-cover-logo">VIA·L</span><span class="guide-cover-num">07</span></div><div class="guide-cover-inner"><div class="guide-tag" data-i18n="g7_tag">Краса зсередини</div><div class="guide-name" data-i18n="g7_name">Волосся, шкіра, нігті 40+</div></div></div><div class="book-page"><div class="book-page-header"><span class="book-page-tag" data-i18n="g7_tag">Краса зсередини</span><span class="book-page-num">07</span></div><div class="book-page-title" data-i18n="g7_name">Волосся, шкіра, нігті 40+</div><p class="book-page-desc" data-i18n="g7_desc">Чому зовнішні зміни після 40 пов'язані не тільки з доглядом.</p><div class="book-page-footer"><div class="book-page-price">35<sub>€</sub></div><button class="guide-btn-page" data-i18n="g_btn" onclick="openGuidesModal(6);event.stopPropagation()">Придбати</button></div></div></div></div>
   </div>
   <div class="guides-dots" id="guidesDots">
     <button class="guides-dot active" onclick="scrollToGuide(0)"></button>
@@ -3024,6 +3143,12 @@ var guideData = {
     { name: "Cabello, piel, uñas 40+", price: "35€" }
   ]
 };
+
+function toggleBook(card) {
+  var wasOpen = card.classList.contains('open');
+  document.querySelectorAll('.guide-card.open').forEach(function(c) { c.classList.remove('open'); });
+  if (!wasOpen) card.classList.add('open');
+}
 
 function openGuidesModal(index) {
   var lang = document.documentElement.lang || 'uk';
