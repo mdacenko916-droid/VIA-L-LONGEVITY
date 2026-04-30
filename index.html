@@ -707,100 +707,87 @@
     }
 
 
-    /* ════ GUIDE BOOK MODAL (page-flip) ════ */
-    .gbook-modal {
-      display: none; position: fixed; inset: 0; z-index: 10000;
-      background: rgba(15,10,3,0.88); backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      align-items: center; justify-content: center;
-      padding: 20px;
+    /* ════ GUIDE BOOK MODAL ════ */
+    .bmodal {
+      display: flex; position: fixed; inset: 0; z-index: 10000;
+      background: rgba(12,8,2,0.92); backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      align-items: center; justify-content: center; padding: 20px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.35s ease;
     }
-    .gbook-modal.open { display: flex; }
-    .gbook-wrap {
-      position: relative;
-      display: flex; flex-direction: column; align-items: center; gap: 28px;
+    .bmodal.open { opacity: 1; pointer-events: all; }
+    .bmodal-inner { position: relative; display: flex; flex-direction: column; align-items: center; gap: 26px; }
+    .bscene { perspective: 2000px; }
+    .bspread {
+      display: flex; position: relative;
+      transform: rotateX(22deg) rotateZ(-3deg) translateY(24px);
+      transition: transform 0.8s cubic-bezier(0.4,0,0.2,1);
+      filter: drop-shadow(28px 50px 70px rgba(0,0,0,0.65));
     }
-    .gbook-scene {
-      transform: rotateX(22deg) rotateY(-4deg) rotateZ(-2deg);
-      transform-style: preserve-3d;
-      transition: transform 0.75s cubic-bezier(0.4,0,0.2,1);
-      filter: drop-shadow(40px 60px 90px rgba(0,0,0,0.5));
+    .bmodal.spread-open .bspread {
+      transform: rotateX(12deg) rotateZ(0deg) translateY(-16px);
+      filter: drop-shadow(18px 36px 55px rgba(0,0,0,0.45));
     }
-    .gbook-scene.is-open {
-      transform: rotateX(12deg) rotateY(0deg) rotateZ(0deg) translateY(-18px);
-      filter: drop-shadow(60px 90px 110px rgba(0,0,0,0.35));
+    /* Left page — text */
+    .bpage-left {
+      width: 0; height: 470px; overflow: hidden;
+      background: #faf8f3; border-radius: 3px 0 0 3px;
+      flex-shrink: 0; position: relative;
+      transition: width 0.65s cubic-bezier(0.4,0,0.2,1) 0.1s;
     }
-    #gbookEl { background: transparent; }
-    .gbook-page { background: #faf8f4; }
-    /* Cover */
-    .gbp-cover-wrap {
-      position: relative; width: 100%; height: 100%;
-      overflow: hidden; background: #1a1208;
+    .bmodal.spread-open .bpage-left { width: 300px; }
+    .bpage-left-inner { width: 300px; height: 100%; padding: 34px 28px 26px; box-sizing: border-box; display: flex; flex-direction: column; }
+    /* Fold shadow */
+    .bfold { position: absolute; top: 0; right: 0; bottom: 0; width: 50px; background: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.07) 50%, rgba(0,0,0,0.16) 100%); pointer-events: none; z-index: 2; }
+    /* Right page — photo */
+    .bpage-right { width: 300px; height: 470px; position: relative; overflow: hidden; border-radius: 0 4px 4px 0; flex-shrink: 0; background: #1a1208; }
+    .bpage-right-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+    /* Cover flap — overlays right page, rotates open like a real cover */
+    .bcover-flap {
+      position: absolute; inset: 0; overflow: hidden;
+      transform-origin: left center; border-radius: 0 4px 4px 0;
+      transform: perspective(1500px) rotateY(0deg);
+      transition: transform 0.72s cubic-bezier(0.4,0,0.2,1) 0.05s;
+      backface-visibility: hidden; -webkit-backface-visibility: hidden;
     }
-    .gbp-cover-img {
-      position: absolute; inset: 0; width: 100%; height: 100%;
-      object-fit: cover; opacity: 0.82;
+    .bmodal.spread-open .bcover-flap { transform: perspective(1500px) rotateY(-165deg); }
+    .bcover-flap > img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .bcover-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 28%, rgba(12,6,0,0.75) 100%); }
+    .bcover-info { position: absolute; bottom: 0; left: 0; right: 0; padding: 22px 18px 20px; }
+    .bcover-logo { font-family: 'Playfair Display',serif; font-size: 7px; letter-spacing: 5px; color: rgba(255,255,255,0.28); text-transform: uppercase; margin-bottom: 6px; }
+    .bcover-tag { font-family: 'Oswald',sans-serif; font-size: 9px; font-weight: 400; letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold-lt,#c9a96e); margin-bottom: 4px; }
+    .bcover-title { font-family: 'Oswald',sans-serif; font-size: 19px; font-weight: 600; text-transform: uppercase; line-height: 1.2; color: #fff; }
+    .bcover-price { font-family: 'Oswald',sans-serif; font-size: 14px; color: var(--gold-pale,#e8d5b0); margin-top: 6px; }
+    /* Left page content */
+    .bleft-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 0.5px solid rgba(139,111,71,0.22); }
+    .bleft-tag { font-family: 'Oswald',sans-serif; font-size: 9px; font-weight: 400; letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold,#b07d3a); }
+    .bleft-num { font-family: 'Cormorant Garamond',serif; font-size: 13px; font-weight: 300; color: rgba(0,0,0,0.15); }
+    .bleft-title { font-family: 'Oswald',sans-serif; font-size: 17px; font-weight: 600; text-transform: uppercase; color: #1a1208; line-height: 1.22; margin-bottom: 12px; }
+    .bleft-desc { font-family: 'DM Sans',sans-serif; font-size: 12px; line-height: 1.65; color: #4a4035; margin-bottom: 12px; }
+    .bleft-inside-title { font-family: 'Oswald',sans-serif; font-size: 8.5px; font-weight: 400; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 0.5px solid rgba(139,111,71,0.18); }
+    .bleft-list { list-style: none; padding: 0; margin: 0; flex: 1; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+    .bleft-list li { font-family: 'DM Sans',sans-serif; font-size: 11.5px; line-height: 1.5; color: #3a3028; padding-left: 14px; position: relative; }
+    .bleft-list li::before { content: '—'; position: absolute; left: 0; color: var(--gold); }
+    .bleft-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 14px; border-top: 0.5px solid rgba(0,0,0,0.10); margin-top: 14px; flex-shrink: 0; }
+    .bleft-price { font-family: 'Oswald',sans-serif; font-size: 26px; font-weight: 500; color: #1a1208; }
+    .bleft-price sub { font-family: 'DM Sans',sans-serif; font-size: 11px; color: #5a4a35; font-weight: 300; }
+    .bleft-buy { font-family: 'DM Sans',sans-serif; font-size: 11px; font-weight: 500; letter-spacing: .08em; padding: 10px 22px; border-radius: 50px; background: #3a2510; border: none; color: #fff; cursor: pointer; transition: background .2s; }
+    .bleft-buy:hover { background: #1c1208; }
+    .bclose-btn { position: absolute; top: -14px; right: -14px; width: 36px; height: 36px; border-radius: 50%; background: rgba(245,243,239,0.92); border: none; color: #3a2510; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 12px rgba(0,0,0,0.3); z-index: 10; }
+    .bback-btn { font-family: 'DM Sans',sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; padding: 9px 22px; border-radius: 50px; background: rgba(245,243,239,0.08); border: 1px solid rgba(245,243,239,0.2); color: rgba(245,243,239,0.7); cursor: pointer; transition: background .2s; }
+    .bback-btn:hover { background: rgba(245,243,239,0.15); }
+    @media (max-width: 660px) {
+      .bmodal.spread-open .bpage-left { width: 220px; }
+      .bpage-left-inner { width: 220px; padding: 24px 18px 20px; }
+      .bpage-right { width: 220px; height: 380px; }
+      .bpage-left { height: 380px; }
     }
-    .gbp-cover-overlay {
-      position: absolute; inset: 0;
-      background: linear-gradient(to bottom, transparent 25%, rgba(15,8,2,0.78) 100%);
-    }
-    .gbp-cover-inner {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      padding: 28px 22px 24px;
-      display: flex; flex-direction: column; gap: 5px;
-    }
-    .gbp-cover-logo { font-family: 'Playfair Display', serif; font-size: 8px; letter-spacing: 5px; color: rgba(255,255,255,0.35); text-transform: uppercase; }
-    .gbp-cover-tag { font-family: 'Oswald', sans-serif; font-size: 10px; font-weight: 400; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold-lt); }
-    .gbp-cover-title { font-family: 'Oswald', sans-serif; font-size: 22px; font-weight: 600; text-transform: uppercase; line-height: 1.18; color: #fff; }
-    .gbp-cover-price { font-family: 'Oswald', sans-serif; font-size: 17px; font-weight: 400; color: var(--gold-pale); margin-top: 2px; }
-    .gbp-cover-price sub { font-family: 'DM Sans', sans-serif; font-size: 9px; font-weight: 300; }
-    /* Inner pages */
-    .gbp-content {
-      height: 100%; padding: 28px 24px 22px;
-      display: flex; flex-direction: column;
-      position: relative; overflow: hidden;
-    }
-    .gbp-content::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 40%;
-      background: linear-gradient(to bottom, rgba(255,255,255,0.32) 0%, transparent 100%);
-      pointer-events: none;
-    }
-    .gbp-left-shadow::after {
-      content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 50px;
-      background: linear-gradient(to right, transparent, rgba(0,0,0,0.09));
-      pointer-events: none;
-    }
-    .gbp-right-shadow::after {
-      content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 50px;
-      background: linear-gradient(to left, transparent, rgba(0,0,0,0.09));
-      pointer-events: none;
-    }
-    .gbp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 0.5px solid rgba(139,111,71,0.2); }
-    .gbp-tag { font-family: 'Oswald', sans-serif; font-size: 9px; font-weight: 400; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); }
-    .gbp-num { font-family: 'Cormorant Garamond', serif; font-size: 12px; font-weight: 300; color: rgba(0,0,0,0.18); }
-    .gbp-title { font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 600; text-transform: uppercase; color: #1a1208; line-height: 1.2; margin-bottom: 14px; }
-    .gbp-desc { font-family: 'DM Sans', sans-serif; font-size: 13px; line-height: 1.65; color: #4a4035; flex: 1; }
-    .gbp-inside-title { font-family: 'Oswald', sans-serif; font-size: 9px; font-weight: 400; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 0.5px solid rgba(139,111,71,0.2); }
-    .gbp-inside-list { list-style: none; padding: 0; margin: 0; flex: 1; display: flex; flex-direction: column; gap: 12px; }
-    .gbp-inside-list li { font-family: 'DM Sans', sans-serif; font-size: 12.5px; line-height: 1.55; color: #3a3028; padding-left: 16px; position: relative; }
-    .gbp-inside-list li::before { content: '—'; position: absolute; left: 0; color: var(--gold); }
-    .gbp-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; padding-top: 14px; border-top: 0.5px solid rgba(0,0,0,0.10); }
-    .gbp-price { font-family: 'Oswald', sans-serif; font-size: 26px; font-weight: 500; color: #1a1208; }
-    .gbp-price sub { font-family: 'DM Sans', sans-serif; font-size: 11px; color: #5a4a35; font-weight: 300; }
-    .gbp-buy-btn { font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: .08em; padding: 10px 24px; border-radius: 50px; background: #3a2510; border: none; color: #fff; cursor: pointer; transition: background .2s; }
-    .gbp-buy-btn:hover { background: #1c1208; }
-    /* Back cover */
-    .gbp-back-wrap { width: 100%; height: 100%; background: linear-gradient(135deg, #1c1208, #3a2510); display: flex; align-items: center; justify-content: center; }
-    .gbp-back-logo { font-family: 'Playfair Display', serif; font-size: 20px; letter-spacing: 10px; color: rgba(255,255,255,0.12); text-transform: uppercase; }
-    /* Close + Nav */
-    .gbook-close { position: absolute; top: -18px; right: -18px; width: 38px; height: 38px; border-radius: 50%; background: rgba(245,243,239,0.92); border: none; color: #3a2510; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 12px rgba(0,0,0,0.25); z-index: 2; }
-    .gbook-nav { display: flex; gap: 12px; }
-    .gbook-nav-btn { font-family: 'DM Sans', sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; padding: 9px 22px; border-radius: 50px; background: rgba(245,243,239,0.12); border: 1px solid rgba(245,243,239,0.25); color: rgba(245,243,239,0.85); cursor: pointer; transition: background .2s; }
-    .gbook-nav-btn:hover { background: rgba(245,243,239,0.22); }
-    @media (max-width: 600px) {
-      .gbook-scene { transform: rotateX(10deg) rotateY(0deg) rotateZ(0deg); }
-      .gbook-scene.is-open { transform: rotateX(5deg) rotateY(0deg) rotateZ(0deg) translateY(-10px); }
+    @media (max-width: 480px) {
+      .bmodal.spread-open .bpage-left { width: min(270px,calc(100vw - 48px)); }
+      .bpage-left-inner { width: min(270px,calc(100vw - 48px)); padding: 22px 16px 18px; }
+      .bpage-right { display: none; }
+      .bpage-left { height: auto; min-height: 380px; }
     }
 
     /* ════ BLOCK 5 — FOR WHOM ════ */
@@ -1725,7 +1712,6 @@
 
   </style>
 
-  <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
 </head>
 <body>
 
@@ -3736,13 +3722,11 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeModal();
 });
 
-/* ── Guide Book Modal (page-flip) ── */
-var gbookFlip = null;
+/* ── Guide Book Modal ── */
 var currentGuideIdx = -1;
 var guideImages = ['Menopayza','Testosteron','Analizo','40plys','Sahar','Tihii-ogon','Volosi'];
 
 function openGuideBook(cardOrEl) {
-  // Accept element or index
   var index;
   if (typeof cardOrEl === 'number') {
     index = cardOrEl;
@@ -3766,117 +3750,91 @@ function openGuideBook(cardOrEl) {
   var gKey = 'g' + (index + 1);
   var tag = t[gKey + '_tag'] || '';
   var name = t[gKey + '_name'] || '';
+  var imgSrc = 'images/' + guideImages[index] + '.png';
 
-  document.getElementById('gb-cover-img').src = 'images/' + guideImages[index] + '.png';
-  document.getElementById('gb-cover-img').alt = name;
-  document.getElementById('gb-cover-tag').textContent = tag;
-  document.getElementById('gb-cover-title').textContent = name;
-  document.getElementById('gb-left-tag').textContent = tag;
-  document.getElementById('gb-num').textContent = String(index + 1).padStart(2, '0');
-  document.getElementById('gb-left-title').textContent = name;
-  document.getElementById('gb-desc').textContent = g.desc;
-  document.getElementById('gb-inside-title').textContent = g.insideTitle;
-  var list = document.getElementById('gb-inside-list');
+  document.getElementById('b-cover-img').src = imgSrc;
+  document.getElementById('b-cover-img').alt = name;
+  document.getElementById('b-photo').src = imgSrc;
+  document.getElementById('b-photo').alt = name;
+  document.getElementById('b-cover-tag').textContent = tag;
+  document.getElementById('b-cover-title').textContent = name;
+  document.getElementById('b-tag').textContent = tag;
+  document.getElementById('b-num').textContent = String(index + 1).padStart(2, '0');
+  document.getElementById('b-title').textContent = name;
+  document.getElementById('b-desc').textContent = g.desc;
+  document.getElementById('b-inside-title').textContent = g.insideTitle;
+  var list = document.getElementById('b-list');
   list.innerHTML = '';
   g.bullets.forEach(function(b) {
     var li = document.createElement('li'); li.textContent = b; list.appendChild(li);
   });
+  var btn = document.querySelector('.bleft-buy');
+  if (btn && t['g_btn']) btn.textContent = t['g_btn'];
 
-  // Update buy button text
-  var btn = document.querySelector('#gb-right .gbp-buy-btn');
-  if (btn && t['g_btn']) btn.innerHTML = t['g_btn'];
-
-  document.getElementById('guideBookModal').classList.add('open');
+  var modal = document.getElementById('guideBookModal');
+  modal.classList.remove('spread-open');
+  void modal.offsetWidth;
+  modal.classList.add('open');
   document.body.style.overflow = 'hidden';
-
-  // Destroy old, init new
-  if (gbookFlip) { try { gbookFlip.destroy(); } catch(e){} gbookFlip = null; }
-  setTimeout(function() {
-    var el = document.getElementById('gbookEl');
-    var mobile = window.innerWidth < 600;
-    gbookFlip = new St.PageFlip(el, {
-      width: mobile ? 240 : 320,
-      height: mobile ? 360 : 470,
-      size: 'fixed',
-      drawShadow: true,
-      usePortrait: mobile,
-      startPage: 0,
-      showCover: false
-    });
-    gbookFlip.loadFromHTML(el.querySelectorAll('.gbook-page'));
-    var scene = document.getElementById('gbookScene');
-    gbookFlip.on('flip', function(e) {
-      scene.classList.toggle('is-open', e.data > 0);
-    });
-  }, 60);
+  setTimeout(function() { modal.classList.add('spread-open'); }, 80);
 }
 
 function closeGuideBook() {
-  document.getElementById('guideBookModal').classList.remove('open');
-  document.getElementById('gbookScene').classList.remove('is-open');
-  document.body.style.overflow = '';
+  var modal = document.getElementById('guideBookModal');
+  modal.classList.remove('spread-open');
+  setTimeout(function() {
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+  }, 500);
 }
 
 function buyCurrentGuide() { buyGuide(currentGuideIdx); }
 
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeGuideBook();
-  if (!gbookFlip) return;
-  if (e.key === 'ArrowRight') gbookFlip.flipNext();
-  if (e.key === 'ArrowLeft') gbookFlip.flipPrev();
 });
 
 </script>
 
-<!-- Guide Book Modal (page-flip) -->
-<div id="guideBookModal" class="gbook-modal" onclick="if(event.target===this)closeGuideBook()">
-  <div class="gbook-wrap">
-    <button class="gbook-close" onclick="closeGuideBook()">✕</button>
-    <div class="gbook-scene" id="gbookScene">
-      <div id="gbookEl">
-        <div class="gbook-page" data-density="hard" style="background:transparent;visibility:hidden;"></div>
-        <div class="gbook-page gbp-cover" data-density="hard" id="gb-cover">
-          <div class="gbp-cover-wrap">
-            <img class="gbp-cover-img" id="gb-cover-img" src="" alt="">
-            <div class="gbp-cover-overlay"></div>
-            <div class="gbp-cover-inner">
-              <div class="gbp-cover-logo">VIA·L</div>
-              <div class="gbp-cover-tag" id="gb-cover-tag"></div>
-              <div class="gbp-cover-title" id="gb-cover-title"></div>
-              <div class="gbp-cover-price">35<sub>€</sub></div>
+<!-- Guide Book Modal -->
+<div id="guideBookModal" class="bmodal" onclick="if(event.target===this)closeGuideBook()">
+  <div class="bmodal-inner">
+    <button class="bclose-btn" onclick="closeGuideBook()">✕</button>
+    <div class="bscene">
+      <div class="bspread">
+        <div class="bpage-left">
+          <div class="bpage-left-inner">
+            <div class="bleft-header">
+              <span class="bleft-tag" id="b-tag"></span>
+              <span class="bleft-num" id="b-num"></span>
+            </div>
+            <div class="bleft-title" id="b-title"></div>
+            <p class="bleft-desc" id="b-desc"></p>
+            <div class="bleft-inside-title" id="b-inside-title"></div>
+            <ul class="bleft-list" id="b-list"></ul>
+            <div class="bleft-footer">
+              <span class="bleft-price">35<sub>€</sub></span>
+              <button class="bleft-buy" onclick="buyCurrentGuide()" data-i18n="g_btn">Придбати</button>
+            </div>
+          </div>
+          <div class="bfold"></div>
+        </div>
+        <div class="bpage-right">
+          <img class="bpage-right-photo" id="b-photo" src="" alt="">
+          <div class="bcover-flap" id="bCoverFlap">
+            <img id="b-cover-img" src="" alt="">
+            <div class="bcover-overlay"></div>
+            <div class="bcover-info">
+              <div class="bcover-logo">VIA·L</div>
+              <div class="bcover-tag" id="b-cover-tag"></div>
+              <div class="bcover-title" id="b-cover-title"></div>
+              <div class="bcover-price">35<sub>€</sub></div>
             </div>
           </div>
         </div>
-        <div class="gbook-page" id="gb-left">
-          <div class="gbp-content gbp-left-shadow">
-            <div class="gbp-header">
-              <span class="gbp-tag" id="gb-left-tag"></span>
-              <span class="gbp-num" id="gb-num"></span>
-            </div>
-            <div class="gbp-title" id="gb-left-title"></div>
-            <p class="gbp-desc" id="gb-desc"></p>
-          </div>
-        </div>
-        <div class="gbook-page" id="gb-right">
-          <div class="gbp-content gbp-right-shadow">
-            <div class="gbp-inside-title" id="gb-inside-title"></div>
-            <ul class="gbp-inside-list" id="gb-inside-list"></ul>
-            <div class="gbp-footer">
-              <span class="gbp-price">35<sub>€</sub></span>
-              <button class="gbp-buy-btn" onclick="buyCurrentGuide()" data-i18n="g_btn">Придбати</button>
-            </div>
-          </div>
-        </div>
-        <div class="gbook-page" data-density="hard" id="gb-back">
-          <div class="gbp-back-wrap"><div class="gbp-back-logo">VIA·L</div></div>
-        </div>
-        <div class="gbook-page" data-density="hard" style="background:transparent;visibility:hidden;"></div>
       </div>
     </div>
-    <div class="gbook-nav">
-      <button class="gbook-nav-btn" onclick="gbookFlip&&gbookFlip.flipPrev()">← назад</button>
-      <button class="gbook-nav-btn" onclick="gbookFlip&&gbookFlip.flipNext()">вперёд →</button>
-    </div>
+    <button class="bback-btn" onclick="closeGuideBook()">← Назад</button>
   </div>
 </div>
 
