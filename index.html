@@ -1710,10 +1710,546 @@
     .modal-title { font-size: 20px; }
   }
 
+    /* ════ BOOK MODAL (BM) ════ */
+    #book-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 900;
+      pointer-events: none;
+    }
+    body.bm-open #book-modal { pointer-events: auto; }
+    body.bm-open { overflow: hidden; }
+    #bm-bd {
+      position: fixed;
+      inset: 0;
+      z-index: 900;
+      background: rgba(0,0,0,.65);
+      opacity: 0;
+      transition: opacity .4s ease;
+      pointer-events: none;
+    }
+    #bm-x {
+      position: fixed;
+      top: 20px;
+      right: 24px;
+      z-index: 920;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,.40);
+      background: rgba(12,6,2,.82);
+      color: #fff;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s;
+    }
+    #bm-wrap {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      z-index: 910;
+      display: flex;
+      align-items: stretch;
+      transform: translate(-228px, -290px);
+      transition: transform .72s cubic-bezier(.42,0,.18,1), opacity .25s ease;
+      pointer-events: none;
+      opacity: 0;
+    }
+    .bm-spine {
+      width: 24px;
+      flex-shrink: 0;
+      background: linear-gradient(to right, #1a1008, #5a3c22, #38231a);
+      border-radius: 6px 0 0 6px;
+      box-shadow: inset -5px 0 10px rgba(0,0,0,.50);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      transition: opacity .22s ease;
+    }
+    .bm-spine span {
+      font-family: 'Oswald', sans-serif;
+      font-size: 7.5px;
+      letter-spacing: .28em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.36);
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+    }
+    #bm-clipper {
+      --seam-left: calc(100% - 3px);
+      position: relative;
+      width: 420px;
+      height: 580px;
+      overflow: hidden;
+      transition: width .72s cubic-bezier(.42,0,.18,1);
+      box-shadow: 0 40px 70px rgba(0,0,0,.52), 0 14px 28px rgba(0,0,0,.24);
+      pointer-events: auto;
+    }
+    /* seam position controlled by --seam-left; animates from right edge to center */
+    #bm-clipper #bm-seam {
+      position: absolute;
+      left: var(--seam-left);
+      top: 0;
+      transform: translateX(-50%);
+      width: 6px;
+      height: 100%;
+      pointer-events: none;
+      z-index: 6;
+      background: linear-gradient(to right, rgba(0,0,0,0.12), rgba(0,0,0,0.18) 40%, rgba(255,255,255,0.02) 60%, rgba(0,0,0,0.04));
+      border-radius: 2px;
+      box-shadow: 0 0 18px rgba(0,0,0,0.18);
+      opacity: 0.95;
+      transition: left .72s cubic-bezier(.42,0,.18,1), opacity .4s ease;
+    }
+    #bm-book {
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 840px;
+      height: 580px;
+      background: #f4ede4;
+    }
+    #bm-left {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 420px;
+      height: 580px;
+      background: #f8f5f0;
+      padding: 36px 28px 24px;
+      display: flex;
+      flex-direction: column;
+    }
+    #bm-right {
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 420px;
+      height: 580px;
+      background: #1a1208;
+      overflow: hidden;
+    }
+    /* inner page shadows at the fold for depth */
+    #bm-left::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 18px;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+      background: linear-gradient(to right, rgba(0,0,0,0.04), rgba(0,0,0,0.18));
+      transition: opacity .5s ease;
+      opacity: 0;
+    }
+    #bm-right::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 18px;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+      background: linear-gradient(to left, rgba(255,255,255,0.02), rgba(0,0,0,0.12));
+      transition: opacity .5s ease;
+      opacity: 0;
+    }
+    #bm-right img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    #bm-cover {
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 420px;
+      height: 580px;
+      transform-origin: left center;
+      transform: perspective(1400px) rotateY(0deg);
+      backface-visibility: hidden;
+      transition: transform .76s cubic-bezier(.42,0,.18,1);
+      overflow: hidden;
+      z-index: 4;
+    }
+    #bm-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .bm-edge {
+      width: 12px;
+      flex-shrink: 0;
+      background: repeating-linear-gradient(to bottom, #ddd6c8 0 1px, #ede7db 1px 3px);
+      border-radius: 0 3px 3px 0;
+      z-index: 2;
+    }
+    .bm-cover-grad {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,.10) 0%, transparent 28%, transparent 46%, rgba(0,0,0,.88) 100%);
+    }
+    .bm-cover-info {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 24px 20px;
+    }
+    .bm-cover-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 7px;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.28);
+      margin-bottom: 8px;
+    }
+    #bm-cover-cat {
+      font-family: 'Oswald', sans-serif;
+      font-size: 9.5px;
+      letter-spacing: .34em;
+      text-transform: uppercase;
+      color: #c9a96e;
+      margin-bottom: 5px;
+    }
+    #bm-cover-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: 26px;
+      font-weight: 600;
+      text-transform: uppercase;
+      line-height: 1.10;
+      color: #fff;
+      margin-bottom: 9px;
+    }
+    #bm-cover-price {
+      font-family: 'Oswald', sans-serif;
+      font-size: 13px;
+      color: #e8d5a8;
+    }
+    .bm-left-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 13px;
+      margin-bottom: 18px;
+      border-bottom: .5px solid rgba(139,111,71,.30);
+      flex-shrink: 0;
+    }
+    #bm-tag {
+      font-family: 'Oswald', sans-serif;
+      font-size: 8px;
+      letter-spacing: .30em;
+      text-transform: uppercase;
+      color: #b07d3a;
+    }
+    #bm-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 14px;
+      font-weight: 300;
+      color: rgba(0,0,0,.14);
+    }
+    #bm-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: 17px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #1a1208;
+      line-height: 1.20;
+      margin-bottom: 14px;
+      flex-shrink: 0;
+    }
+    #bm-desc {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      line-height: 1.74;
+      color: #4a4035;
+      margin-bottom: 16px;
+      flex-shrink: 0;
+    }
+    #bm-sect-label {
+      font-family: 'Oswald', sans-serif;
+      font-size: 7.5px;
+      letter-spacing: .30em;
+      text-transform: uppercase;
+      color: #b07d3a;
+      margin-bottom: 11px;
+      padding-bottom: 9px;
+      border-bottom: .5px solid rgba(139,111,71,.18);
+      flex-shrink: 0;
+    }
+    #bm-bullets {
+      list-style: none;
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      margin: 0;
+      padding: 0;
+    }
+    #bm-bullets li {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 10.5px;
+      line-height: 1.56;
+      color: #3a3028;
+      padding-left: 14px;
+      position: relative;
+    }
+    #bm-bullets li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: #b07d3a;
+    }
+    .bm-left-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 14px;
+      margin-top: auto;
+      border-top: .5px solid rgba(0,0,0,.10);
+      flex-shrink: 0;
+    }
+    #bm-price {
+      font-family: 'Oswald', sans-serif;
+      font-size: 26px;
+      font-weight: 500;
+      color: #1a1208;
+    }
+    #bm-price sub {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 300;
+      color: #5a4a35;
+    }
+    .bm-buy {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .06em;
+      padding: 10px 22px;
+      border-radius: 50px;
+      background: #3a2510;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .bm-buy:hover { background: #1c1208; }
+
+    body.bm-open #bm-bd {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    body.bm-open #bm-x {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    body.bm-open #bm-wrap { transform: translate(-450px, -290px); }
+    body.bm-open #bm-wrap { opacity: 1; }
+    body.bm-open #bm-clipper { width: 840px; }
+    /* open state: expand clipper to spread, rotate cover fully and center seam */
+    body.bm-open #bm-cover { transform: perspective(1400px) rotateY(-180deg); transition-delay: .18s; }
+    body.bm-open .bm-spine { opacity: 0; }
+    body.bm-open #bm-clipper { --seam-left: 50%; }
+    body.bm-open #bm-left::after,
+    body.bm-open #bm-right::before { opacity: 1; }
+
+    /* intermediate opening pose: slight cover tilt and partial spread */
+    body.bm-opening #bm-cover { transform: perspective(1400px) rotateY(-24deg) translateZ(6px); transition: transform .34s cubic-bezier(.2,.9,.3,1); }
+    body.bm-opening #bm-clipper { width: 560px; transition-duration: .42s; --seam-left: 74%; }
+    body.bm-opening #bm-wrap { transform: translate(-380px, -290px); }
+
+    /* turn.js mode for Menopauza: hide the handcrafted fallback and show the real book */
+    body.bm-turn-active #bm-clipper { width: 840px; }
+    body.bm-turn-active #bm-spine,
+    body.bm-turn-active #bm-seam,
+    body.bm-turn-active #bm-left,
+    body.bm-turn-active #bm-right,
+    body.bm-turn-active #bm-cover {
+      display: none !important;
+    }
+    body.bm-turn-active #bm-turnbook {
+      display: block !important;
+      position: absolute;
+      inset: 0;
+      margin: 0 auto;
+    }
+    body.bm-turn-active #bm-book {
+      display: block;
+      width: 840px;
+      height: 580px;
+    }
+    body.bm-turn-active #bm-wrap {
+      transform: translate(-420px, -290px);
+    }
+
+    #bm-turnbook {
+      width: 840px;
+      height: 580px;
+      display: none;
+      position: relative;
+      margin: 0 auto;
+      box-shadow: 0 30px 70px rgba(0,0,0,.45);
+    }
+    #bm-turnbook .page,
+    #bm-turnbook .hard {
+      width: 420px;
+      height: 580px;
+      overflow: hidden;
+      background: #f8f5ef;
+      position: relative;
+      box-sizing: border-box;
+    }
+    #bm-turnbook .hard {
+      background: #1e140b;
+      color: #fff;
+    }
+    #bm-turnbook .hard .cover-art,
+    #bm-turnbook .hard .cover-art img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    #bm-turnbook .bm-page {
+      padding: 34px 30px;
+      background: linear-gradient(180deg, #fbf8f2 0%, #f4eee5 100%);
+    }
+    #bm-turnbook .bm-page h3 {
+      font-family: 'Oswald', sans-serif;
+      font-size: 18px;
+      line-height: 1.15;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      margin: 0 0 12px;
+      color: #1a1208;
+    }
+    #bm-turnbook .bm-page p,
+    #bm-turnbook .bm-page li {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      line-height: 1.7;
+      color: #4b4035;
+    }
+    #bm-turnbook .bm-page ul {
+      margin: 18px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    #bm-turnbook .bm-page li {
+      position: relative;
+      padding-left: 14px;
+      margin-bottom: 10px;
+    }
+    #bm-turnbook .bm-page li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: #b07d3a;
+    }
+    #bm-turnbook .bm-photo {
+      padding: 0;
+      background: #22170e;
+    }
+    #bm-turnbook .bm-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    #bm-turnbook .bm-cover-front {
+      background: #130d08;
+    }
+    #bm-turnbook .bm-cover-front .cover-art {
+      position: absolute;
+      inset: 0;
+    }
+    #bm-turnbook .bm-cover-front .cover-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,.12), rgba(0,0,0,.2) 45%, rgba(0,0,0,.84));
+    }
+    #bm-turnbook .bm-cover-front .cover-text {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 28px 26px 26px;
+      color: #fff;
+    }
+    #bm-turnbook .bm-cover-front .cover-tag {
+      font-family: 'Oswald', sans-serif;
+      font-size: 10px;
+      letter-spacing: .36em;
+      text-transform: uppercase;
+      color: #d3b06d;
+      margin-bottom: 8px;
+    }
+    #bm-turnbook .bm-cover-front .cover-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: 30px;
+      line-height: 1.05;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      max-width: 90%;
+    }
+    #bm-turnbook .bm-cover-front .cover-price {
+      font-family: 'Oswald', sans-serif;
+      font-size: 13px;
+      color: #ead8b0;
+    }
+    #bm-turnbook .bm-cover-inside,
+    #bm-turnbook .bm-back-inside {
+      background: #f5efe5;
+    }
+
+    /* turn.js page styles (approximate sample look) */
+    #bm-turnbook { width: 840px; height: 580px; }
+    #bm-turnbook .page { width: 420px; height: 580px; background: #fff; box-shadow: 0 12px 30px rgba(0,0,0,.28); }
+    #bm-turnbook .page.cover { background: #f4efe6; }
+    #bm-turnbook .page .page-inner { padding: 36px; box-sizing: border-box; height: 100%; }
+    #bm-turnbook .page.cover .cover-inner img { width:100%; height:100%; object-fit:cover; display:block; }
+    /* small page spine effect */
+    #bm-turnbook .page { border-right: 1px solid rgba(0,0,0,0.04); }
+
+    @media (max-width: 940px) {
+      #bm-wrap {
+        transform: translate(-50%, -50%) scale(0.88);
+        transform-origin: center center;
+      }
+      body.bm-open #bm-wrap {
+        transform: translate(-50%, -50%) scale(0.88);
+      }
+    }
+
+    @media (max-width: 760px) {
+      #bm-wrap {
+        transform: translate(-50%, -50%) scale(0.64);
+      }
+      body.bm-open #bm-wrap {
+        transform: translate(-50%, -50%) scale(0.64);
+      }
+    }
   </style>
 
 </head>
 <body>
+
+<!-- jQuery + turn.js for Menopauza flipbook -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="turn.min.js"></script>
 
 <!-- NAV -->
 
@@ -3722,9 +4258,153 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeModal();
 });
 
-/* ── Guide Book Modal ── */
-var currentGuideIdx = -1;
-var guideImages = ['Menopayza','Testosteron','Analizo','40plys','Sahar','Tihii-ogon','Volosi'];
+/* ── Book Modal (BM) ── */
+var bmCurrentGuideIndex = 0;
+var GUIDES = [
+  {
+    num: "01",
+    tag: "Гормони",
+    title: "Харчування при менопаузі",
+    img: "images/Menopayza.png",
+    price: "35€",
+    desc: "Гормональна перебудова — це не вирок, а новий етап. Цей гайд допоможе збалансувати гормони через харчування та спосіб життя.",
+    bullets: ["Біохімічний каскад менопаузи", "Чек-лист продуктів, що підтримують естроген", "5 кроків адаптогенного харчування", "Практичне меню на 7 днів"]
+  },
+  {
+    num: "02",
+    tag: "Чоловіче здоров'я",
+    title: "Тестостерон і харчування",
+    img: "images/Testosteron.png",
+    price: "35€",
+    desc: "Харчування безпосередньо впливає на рівень тестостерону.",
+    bullets: ["Як харчування впливає на тестостерон", "Продукти-блокатори та підсилювачі", "Нутрицевтичний протокол", "Чоловіче меню на тиждень"]
+  },
+  {
+    num: "03",
+    tag: "Аналізи",
+    title: "Як читати свої аналізи",
+    img: "images/Analizo.png",
+    price: "35€",
+    desc: "Розшифруй свої показники без лікаря.",
+    bullets: ["Ключові маркери гормонального здоров'я", "Що приховує загальний аналіз крові", "Референсні значення vs оптимум", "Коли варто перездати"]
+  },
+  {
+    num: "04",
+    tag: "Антивіковий",
+    title: "Харчування для довголіття",
+    img: "images/40plys.png",
+    price: "35€",
+    desc: "Уповільни біологічне старіння через харчування.",
+    bullets: ["Теломери і харчові тригери", "NMN, ресвератрол, NAD+", "Інтервальне харчування та аутофагія", "План харчування 40+"]
+  },
+  {
+    num: "05",
+    tag: "Енергія",
+    title: "Протокол проти втоми",
+    img: "images/Sahar.png",
+    price: "35€",
+    desc: "Повернути енергію без кофеїну та силоволі.",
+    bullets: ["Причини хронічної втоми", "Мітохондріальне харчування", "Рівень цукру і провали енергії", "Протокол відновлення"]
+  },
+  {
+    num: "06",
+    tag: "Запалення",
+    title: "Тихий вогонь",
+    img: "images/Tihii-ogon.png",
+    price: "35€",
+    desc: "Хронічне запалення — причина більшості хвороб 40+.",
+    bullets: ["Маркери запалення в аналізах", "Протизапальний раціон", "Продукти-провокатори", "30-денний протокол"]
+  },
+  {
+    num: "07",
+    tag: "Краса зсередини",
+    title: "Волосся, шкіра, нігті 40+",
+    img: "images/Volosi.png",
+    price: "35€",
+    desc: "Краса будується зсередини, а не з кремів.",
+    bullets: ["Нутрієнти для шкіри та волосся", "Коляген і кофактори", "Харчові дефіцити краси", "Протокол підтримки"]
+  }
+];
+
+function closeBookModal() {
+  // if Menopauza (staged), run closing sequence; otherwise close immediately
+  if (document.body.classList.contains('bm-guide-0')) {
+    document.body.classList.remove('bm-opened');
+    setTimeout(function() {
+      document.body.classList.remove('bm-open');
+      setTimeout(function() { document.body.classList.remove('bm-opening'); }, 480);
+    }, 80);
+  } else {
+    document.body.classList.remove('bm-open','bm-opening','bm-opened','bm-guide-0');
+  }
+}
+
+function openBookModal(guideIndex) {
+  var index = Math.max(0, Math.min(guideIndex, GUIDES.length - 1));
+  bmCurrentGuideIndex = index;
+  var guide = GUIDES[index];
+
+  var spineText = document.getElementById('bm-spine-text');
+  var tag = document.getElementById('bm-tag');
+  var num = document.getElementById('bm-num');
+  var title = document.getElementById('bm-title');
+  var desc = document.getElementById('bm-desc');
+  var sectLabel = document.getElementById('bm-sect-label');
+  var bullets = document.getElementById('bm-bullets');
+  var price = document.getElementById('bm-price');
+
+  var photo = document.getElementById('bm-photo');
+  var coverImg = document.getElementById('bm-cover-img');
+  var coverCat = document.getElementById('bm-cover-cat');
+  var coverTitle = document.getElementById('bm-cover-title');
+  var coverPrice = document.getElementById('bm-cover-price');
+
+  if (spineText) spineText.textContent = guide.tag;
+  if (tag) tag.textContent = guide.tag;
+  if (num) num.textContent = guide.num;
+  if (title) title.innerHTML = guide.title.replace(' і ', ' і<br>');
+  if (desc) desc.textContent = guide.desc;
+  if (sectLabel) sectLabel.textContent = 'Що всередині';
+  if (price) price.innerHTML = guide.price.replace('€', '<sub>€</sub>');
+
+  if (bullets) {
+    bullets.innerHTML = '';
+    guide.bullets.forEach(function(item) {
+      var li = document.createElement('li');
+      li.textContent = item;
+      bullets.appendChild(li);
+    });
+  }
+
+  if (photo) {
+    photo.src = guide.img;
+    photo.alt = guide.title;
+  }
+  if (coverImg) {
+    coverImg.src = guide.img;
+    coverImg.alt = guide.title;
+  }
+  if (coverCat) coverCat.textContent = guide.tag;
+  if (coverTitle) coverTitle.innerHTML = guide.title.replace(' і ', ' і<br>');
+  if (coverPrice) coverPrice.textContent = guide.price;
+
+  // mark whether this is the Menopauza guide (index 0)
+  document.body.classList.toggle('bm-guide-0', index === 0);
+
+  if (index === 0) {
+    // orchestrate staged open for realistic flip (only for Menopauza)
+    document.body.classList.remove('bm-opening','bm-open','bm-opened');
+    document.body.classList.add('bm-opening');
+    setTimeout(function() {
+      document.body.classList.add('bm-open');
+      setTimeout(function() { document.body.classList.add('bm-opened'); }, 780);
+    }, 30);
+  } else {
+    // simple open for other guides
+    document.body.classList.remove('bm-opening','bm-opened');
+    document.body.classList.add('bm-open');
+  }
+}
 
 function openGuideBook(cardOrEl) {
   var index;
@@ -3732,7 +4412,8 @@ function openGuideBook(cardOrEl) {
     index = cardOrEl;
   } else {
     var card = (cardOrEl.classList && cardOrEl.classList.contains('guide-card'))
-      ? cardOrEl : cardOrEl.closest('.guide-card');
+      ? cardOrEl
+      : cardOrEl.closest('.guide-card');
     var allCards = Array.from(document.querySelectorAll('.guides-grid .guide-card'));
     index = allCards.indexOf(card);
     if (index === -1) {
@@ -3741,102 +4422,269 @@ function openGuideBook(cardOrEl) {
     }
     if (index === -1) index = 0;
   }
-  currentGuideIdx = index;
-
-  var lang = document.documentElement.lang || 'uk';
-  var data = bookContent[lang] || bookContent['uk'];
-  var g = data[index];
-  var t = translations[lang] || translations['ru'];
-  var gKey = 'g' + (index + 1);
-  var tag = t[gKey + '_tag'] || '';
-  var name = t[gKey + '_name'] || '';
-  var imgSrc = 'images/' + guideImages[index] + '.png';
-
-  document.getElementById('b-cover-img').src = imgSrc;
-  document.getElementById('b-cover-img').alt = name;
-  document.getElementById('b-photo').src = imgSrc;
-  document.getElementById('b-photo').alt = name;
-  document.getElementById('b-cover-tag').textContent = tag;
-  document.getElementById('b-cover-title').textContent = name;
-  document.getElementById('b-tag').textContent = tag;
-  document.getElementById('b-num').textContent = String(index + 1).padStart(2, '0');
-  document.getElementById('b-title').textContent = name;
-  document.getElementById('b-desc').textContent = g.desc;
-  document.getElementById('b-inside-title').textContent = g.insideTitle;
-  var list = document.getElementById('b-list');
-  list.innerHTML = '';
-  g.bullets.forEach(function(b) {
-    var li = document.createElement('li'); li.textContent = b; list.appendChild(li);
-  });
-  var btn = document.querySelector('.bleft-buy');
-  if (btn && t['g_btn']) btn.textContent = t['g_btn'];
-
-  var modal = document.getElementById('guideBookModal');
-  modal.classList.remove('spread-open');
-  void modal.offsetWidth;
-  modal.classList.add('open');
-  document.body.style.overflow = 'hidden';
-  setTimeout(function() { modal.classList.add('spread-open'); }, 80);
+  openBookModal(index);
 }
 
 function closeGuideBook() {
-  var modal = document.getElementById('guideBookModal');
-  modal.classList.remove('spread-open');
-  setTimeout(function() {
-    modal.classList.remove('open');
-    document.body.style.overflow = '';
-  }, 500);
+  closeBookModal();
 }
 
-function buyCurrentGuide() { buyGuide(currentGuideIdx); }
-
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeGuideBook();
+  if (e.key === 'Escape') closeBookModal();
 });
 
 </script>
 
-<!-- Guide Book Modal -->
-<div id="guideBookModal" class="bmodal" onclick="if(event.target===this)closeGuideBook()">
-  <div class="bmodal-inner">
-    <button class="bclose-btn" onclick="closeGuideBook()">✕</button>
-    <div class="bscene">
-      <div class="bspread">
-        <div class="bpage-left">
-          <div class="bpage-left-inner">
-            <div class="bleft-header">
-              <span class="bleft-tag" id="b-tag"></span>
-              <span class="bleft-num" id="b-num"></span>
-            </div>
-            <div class="bleft-title" id="b-title"></div>
-            <p class="bleft-desc" id="b-desc"></p>
-            <div class="bleft-inside-title" id="b-inside-title"></div>
-            <ul class="bleft-list" id="b-list"></ul>
-            <div class="bleft-footer">
-              <span class="bleft-price">35<sub>€</sub></span>
-              <button class="bleft-buy" onclick="buyCurrentGuide()" data-i18n="g_btn">Придбати</button>
-            </div>
+<!-- Shared Book Modal -->
+<div id="book-modal">
+  <div id="bm-bd" onclick="closeBookModal()"></div>
+  <button id="bm-x" onclick="closeBookModal()">✕</button>
+  <div id="bm-wrap">
+    <div class="bm-spine"><span id="bm-spine-text"></span></div>
+    <div id="bm-clipper">
+      <div id="bm-seam" aria-hidden="true"></div>
+      <div id="bm-book">
+        <div id="bm-turnbook"></div>
+        <div id="bm-left">
+          <div class="bm-left-head">
+            <span id="bm-tag"></span>
+            <span id="bm-num"></span>
           </div>
-          <div class="bfold"></div>
+          <div id="bm-title"></div>
+          <p id="bm-desc"></p>
+          <div id="bm-sect-label">Що всередині</div>
+          <ul id="bm-bullets"></ul>
+          <div class="bm-left-foot">
+            <span id="bm-price">35<sub>€</sub></span>
+            <button class="bm-buy" type="button" onclick="buyGuide(bmCurrentGuideIndex)">Придбати</button>
+          </div>
         </div>
-        <div class="bpage-right">
-          <img class="bpage-right-photo" id="b-photo" src="" alt="">
-          <div class="bcover-flap" id="bCoverFlap">
-            <img id="b-cover-img" src="" alt="">
-            <div class="bcover-overlay"></div>
-            <div class="bcover-info">
-              <div class="bcover-logo">VIA·L</div>
-              <div class="bcover-tag" id="b-cover-tag"></div>
-              <div class="bcover-title" id="b-cover-title"></div>
-              <div class="bcover-price">35<sub>€</sub></div>
-            </div>
+
+        <div id="bm-right">
+          <img id="bm-photo" src="" alt="">
+        </div>
+
+        <div id="bm-cover">
+          <img id="bm-cover-img" src="" alt="">
+          <div class="bm-cover-grad"></div>
+          <div class="bm-cover-info">
+            <div class="bm-cover-brand">VIA·L</div>
+            <div id="bm-cover-cat"></div>
+            <div id="bm-cover-title"></div>
+            <div id="bm-cover-price"></div>
           </div>
         </div>
       </div>
     </div>
-    <button class="bback-btn" onclick="closeGuideBook()">← Назад</button>
+    <div class="bm-edge"></div>
   </div>
 </div>
+
+<script>
+var bmTurn = null;
+var bmClosing = false;
+
+function escHtml(text) {
+  return String(text).replace(/[&<>"]|'/g, function(ch) {
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]);
+  });
+}
+
+function destroyTurn() {
+  var container = document.getElementById('bm-turnbook');
+  if (bmTurn && bmTurn.turn) {
+    try { bmTurn.turn('destroy'); } catch (e) {}
+  }
+  if (container) container.innerHTML = '';
+  bmTurn = null;
+}
+
+function finalizeTurnClose() {
+  bmClosing = false;
+  destroyTurn();
+  document.body.classList.remove('bm-open', 'bm-guide-0', 'bm-turn-active', 'bm-closing', 'bm-opening', 'bm-opened');
+}
+
+function buildMenopauzaTurnbook(guide) {
+  var container = document.getElementById('bm-turnbook');
+  if (!container || !window.jQuery || !$.fn || !$.fn.turn) return false;
+
+  destroyTurn();
+
+  var bullets = guide.bullets || [];
+  var firstBullets = bullets.slice(0, 2).map(function(item) { return '<li>' + escHtml(item) + '</li>'; }).join('');
+  var secondBullets = bullets.slice(2).map(function(item) { return '<li>' + escHtml(item) + '</li>'; }).join('');
+
+  container.innerHTML = [
+    '<div class="hard bm-cover-front">',
+      '<div class="cover-art"><img src="' + escHtml(guide.img) + '" alt="' + escHtml(guide.title) + '"></div>',
+      '<div class="cover-overlay"></div>',
+      '<div class="cover-text">',
+        '<div class="cover-tag">' + escHtml(guide.tag) + '</div>',
+        '<div class="cover-title">' + escHtml(guide.title) + '</div>',
+        '<div class="cover-price">' + escHtml(guide.price) + '</div>',
+      '</div>',
+    '</div>',
+    '<div class="hard bm-cover-inside"></div>',
+    '<div class="page bm-page bm-intro">',
+      '<h3>' + escHtml(guide.title) + '</h3>',
+      '<p>' + escHtml(guide.desc) + '</p>',
+      '<ul>' + firstBullets + '</ul>',
+    '</div>',
+    '<div class="page bm-photo"><img src="' + escHtml(guide.img) + '" alt="' + escHtml(guide.title) + '"></div>',
+    '<div class="page bm-page bm-content">',
+      '<h3>Що всередині</h3>',
+      '<ul>' + secondBullets + '</ul>',
+      '<p style="margin-top:18px;">' + escHtml(guide.price) + ' · PDF-формат для читання з будь-якого пристрою.</p>',
+    '</div>',
+    '<div class="page bm-photo"><img src="' + escHtml(guide.img) + '" alt="' + escHtml(guide.title) + '"></div>',
+    '<div class="hard bm-back-inside"></div>',
+    '<div class="hard bm-back-cover">',
+      '<div class="cover-overlay"></div>',
+      '<div class="cover-text">',
+        '<div class="cover-tag">VIA·L</div>',
+        '<div class="cover-title">' + escHtml(guide.title) + '</div>',
+      '</div>',
+    '</div>'
+  ].join('');
+
+  bmTurn = $(container);
+  bmTurn.turn({
+    width: 840,
+    height: 580,
+    display: 'double',
+    autoCenter: true,
+    gradients: true,
+    acceleration: true,
+    elevation: 50,
+    duration: 1200,
+    when: {
+      turned: function(e, page) {
+        if (bmClosing && page === 1) {
+          finalizeTurnClose();
+        }
+      }
+    }
+  });
+
+  return true;
+}
+
+function openBookModal(guideIndex) {
+  var index = Math.max(0, Math.min(guideIndex, GUIDES.length - 1));
+  bmCurrentGuideIndex = index;
+  var guide = GUIDES[index];
+
+  var spineText = document.getElementById('bm-spine-text');
+  var tag = document.getElementById('bm-tag');
+  var num = document.getElementById('bm-num');
+  var title = document.getElementById('bm-title');
+  var desc = document.getElementById('bm-desc');
+  var sectLabel = document.getElementById('bm-sect-label');
+  var bullets = document.getElementById('bm-bullets');
+  var price = document.getElementById('bm-price');
+  var photo = document.getElementById('bm-photo');
+  var coverImg = document.getElementById('bm-cover-img');
+  var coverCat = document.getElementById('bm-cover-cat');
+  var coverTitle = document.getElementById('bm-cover-title');
+  var coverPrice = document.getElementById('bm-cover-price');
+
+  if (spineText) spineText.textContent = guide.tag;
+  if (tag) tag.textContent = guide.tag;
+  if (num) num.textContent = guide.num;
+  if (title) title.innerHTML = guide.title.replace(' і ', ' і<br>');
+  if (desc) desc.textContent = guide.desc;
+  if (sectLabel) sectLabel.textContent = 'Що всередині';
+  if (price) price.innerHTML = guide.price.replace('€', '<sub>€</sub>');
+
+  if (bullets) {
+    bullets.innerHTML = '';
+    guide.bullets.forEach(function(item) {
+      var li = document.createElement('li');
+      li.textContent = item;
+      bullets.appendChild(li);
+    });
+  }
+
+  if (photo) {
+    photo.src = guide.img;
+    photo.alt = guide.title;
+  }
+  if (coverImg) {
+    coverImg.src = guide.img;
+    coverImg.alt = guide.title;
+  }
+  if (coverCat) coverCat.textContent = guide.tag;
+  if (coverTitle) coverTitle.innerHTML = guide.title.replace(' і ', ' і<br>');
+  if (coverPrice) coverPrice.textContent = guide.price;
+
+  document.body.classList.remove('bm-closing', 'bm-opening', 'bm-opened');
+  document.body.classList.toggle('bm-guide-0', index === 0);
+
+  if (index === 0 && buildMenopauzaTurnbook(guide)) {
+    document.body.classList.add('bm-open', 'bm-turn-active');
+    bmClosing = false;
+    setTimeout(function() {
+      if (bmTurn && bmTurn.turn) bmTurn.turn('next');
+    }, 280);
+  } else {
+    document.body.classList.remove('bm-turn-active');
+    destroyTurn();
+    document.body.classList.add('bm-open');
+  }
+}
+
+function closeBookModal() {
+  if (document.body.classList.contains('bm-turn-active') && bmTurn && bmTurn.turn) {
+    bmClosing = true;
+    document.body.classList.add('bm-closing');
+    try {
+      bmTurn.turn('page', 1);
+    } catch (e) {
+      finalizeTurnClose();
+      return;
+    }
+    setTimeout(function() {
+      if (bmClosing) finalizeTurnClose();
+    }, 1200);
+    return;
+  }
+
+  document.body.classList.remove('bm-open', 'bm-opening', 'bm-opened', 'bm-guide-0', 'bm-turn-active', 'bm-closing');
+  destroyTurn();
+}
+
+function openGuideBook(cardOrEl) {
+  var index;
+  if (typeof cardOrEl === 'number') {
+    index = cardOrEl;
+  } else {
+    var card = (cardOrEl.classList && cardOrEl.classList.contains('guide-card'))
+      ? cardOrEl
+      : cardOrEl.closest('.guide-card');
+    var allCards = Array.from(document.querySelectorAll('.guides-grid .guide-card'));
+    index = allCards.indexOf(card);
+    if (index === -1) {
+      allCards = Array.from(document.querySelectorAll('.guides-slider .guide-card'));
+      index = allCards.indexOf(card);
+    }
+    if (index === -1) index = 0;
+  }
+  openBookModal(index);
+}
+
+function closeGuideBook() {
+  closeBookModal();
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeBookModal();
+  if (document.body.classList.contains('bm-turn-active') && bmTurn && bmTurn.turn) {
+    if (e.key === 'ArrowLeft') bmTurn.turn('previous');
+    if (e.key === 'ArrowRight') bmTurn.turn('next');
+  }
+});
+</script>
 
 </body>
 </html>

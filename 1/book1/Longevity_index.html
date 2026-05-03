@@ -1,0 +1,819 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VIA·L — Book</title>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<script src="turn.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Oswald:wght@300;400;500&family=DM+Sans:wght@300;400&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #ffffff;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* ── CANVAS ── */
+#canvas {
+  width: 960px;
+  height: 600px;
+  position: relative;
+}
+
+/* ── BOOK ── */
+.book {
+  width: 960px;
+  height: 600px;
+  visibility: hidden;
+}
+
+/* ── HARD PAGES ── */
+.book .hard {
+  width: 480px;
+  height: 600px;
+  background: #1a0f06;
+  box-shadow: none;
+}
+
+/* ── page-wrapper perspective (from steve-jobs.css) ── */
+.book .page-wrapper {
+  -webkit-perspective: 2000px;
+  perspective: 2000px;
+  overflow: visible !important;
+}
+
+/* ── INNER PAGES ── */
+.book .own-size {
+  width: 460px;
+  height: 582px;
+  background: #faf7f2;
+  overflow: hidden;
+}
+.book .own-size.even {
+  background: linear-gradient(to right, #faf7f2 95%, #ddd 100%);
+}
+.book .own-size.odd {
+  background: linear-gradient(to left, #faf7f2 95%, #ccc 100%);
+}
+
+/* ── SPINE SIDE (3D cover edge) ── */
+.book .p1 .side {
+  width: 5px;
+  height: 600px;
+  position: absolute;
+  top: 0;
+  left: 475px;
+  background: linear-gradient(to right, #8a7560, #c8b99a, #8a7560);
+  -webkit-transform: rotateY(-90deg);
+  transform: rotateY(-90deg);
+  -webkit-transform-origin: top right;
+  transform-origin: top right;
+  z-index: 100000;
+}
+
+/* ── DEPTH (stacked pages edge) ── */
+.book .depth {
+  background-image: url('pages-depth.png');
+  position: absolute;
+  top: 7px;
+  width: 0;
+  height: 582px;
+  overflow: hidden;
+}
+.book .front-side .depth {
+  left: 4px;
+  background-position: 0 0;
+}
+.book .back-side .depth {
+  right: 4px;
+  background-position: right 0;
+}
+
+/* ── NAVIGATION ── */
+#controls {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  z-index: 100;
+}
+.btn-nav {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,.15);
+  background: rgba(0,0,0,.08);
+  color: #3a2510;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s;
+}
+.btn-nav:hover { background: rgba(0,0,0,.18); }
+#page-info {
+  font-family: 'Oswald', sans-serif;
+  font-size: 11px;
+  letter-spacing: .22em;
+  color: rgba(0,0,0,.35);
+  text-transform: uppercase;
+  min-width: 60px;
+  text-align: center;
+}
+
+/* ════════════════════════════════════
+   PAGE CONTENT STYLES
+   ════════════════════════════════════ */
+
+/* COVER — p1  (1:1 как guide-card в index.html) */
+.cover-front {
+  width: 100%; height: 100%;
+  background: #1c0e06;
+  position: relative;
+  overflow: hidden;
+  border-radius: 5px 0 0 5px;
+}
+/* блики поверх фото — левый край */
+.cover-front::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 30px; height: 100%;
+  background: linear-gradient(to right,
+    rgba(255,255,255,0.82) 0%,
+    rgba(255,255,255,0.28) 30%,
+    transparent 100%
+  );
+  z-index: 4;
+  pointer-events: none;
+  border-radius: 5px 0 0 5px;
+}
+/* блики поверх фото — правый край */
+.cover-front::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 30px; height: 100%;
+  background: linear-gradient(to left,
+    rgba(255,255,255,0.78) 0%,
+    rgba(255,255,255,0.25) 30%,
+    transparent 100%
+  );
+  z-index: 4;
+  pointer-events: none;
+}
+.cover-front-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+/* top row: logo + number */
+.cover-top {
+  position: absolute; top: 0; left: 0; right: 0;
+  z-index: 2;
+  padding: 16px 18px 0;
+  display: flex; justify-content: space-between; align-items: flex-start;
+}
+.cover-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 11px; font-weight: 700; letter-spacing: 4px;
+  color: #fff0cf;
+  text-shadow:
+    0 1px 2px rgba(0,0,0,.5),
+    0 0 8px rgba(248,214,140,.45),
+    0 0 20px rgba(220,165,70,.28);
+}
+.cover-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 11px; color: rgba(255,255,255,.55);
+}
+/* bottom row: tag + name */
+.cover-bottom {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  z-index: 2;
+  padding: 18px 18px 20px 78px;
+  display: flex; flex-direction: column; gap: 14px;
+  align-items: flex-start;
+  text-align: left;
+  transform: translateY(-26px);
+}
+.cover-tag {
+  font-family: 'Oswald', sans-serif;
+  font-size: 13px; font-weight: 400; letter-spacing: .28em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,.8), 0 2px 10px rgba(0,0,0,.6);
+}
+.cover-name {
+  font-family: 'Oswald', sans-serif;
+  font-size: 26px; font-weight: 500; line-height: 1.65;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: #fff1d6;
+  text-shadow:
+    0 1px 2px rgba(0,0,0,.55),
+    0 3px 10px rgba(0,0,0,.45),
+    0 0 8px rgba(255,235,185,.55),
+    0 0 18px rgba(245,210,120,.45),
+    0 0 34px rgba(228,180,80,.35),
+    0 0 52px rgba(205,150,55,.26);
+}
+
+/* BACK OF FRONT COVER — p2 */
+.cover-back-inner {
+  width: 100%; height: 100%;
+  background: #f8f4ee;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 40px;
+  position: relative;
+}
+.cover-back-inner::after {
+  content: '❦';
+  position: absolute;
+  top: 28px;
+  font-size: 24px;
+  color: rgba(160,120,60,.3);
+}
+.cover-back-inner blockquote {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 17px;
+  font-style: italic;
+  line-height: 1.75;
+  color: #4a3a28;
+  text-align: center;
+  max-width: 320px;
+  margin-bottom: 24px;
+}
+.cover-back-inner cite {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgba(160,120,60,.7);
+}
+
+/* INNER PAGES */
+.page-inner {
+  width: 100%; height: 100%;
+  padding: 48px 40px 36px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.page-inner.dark {
+  background: linear-gradient(135deg, #1a0f06, #2a1a0a);
+  color: #f0e8d8;
+}
+.page-chapter {
+  font-family: 'Oswald', sans-serif;
+  font-size: 7.5px;
+  letter-spacing: .38em;
+  text-transform: uppercase;
+  color: #b8904a;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: .5px solid rgba(160,120,60,.25);
+}
+.page-heading {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  font-weight: 300;
+  line-height: 1.25;
+  color: #1a0f06;
+  margin-bottom: 18px;
+}
+.page-text {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  line-height: 1.82;
+  color: #4a3a28;
+  flex: 1;
+}
+.page-text p { margin-bottom: 14px; }
+.page-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 11px;
+  color: rgba(0,0,0,.18);
+  text-align: center;
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.page-inner.photo {
+  padding: 0;
+  background: #1a0f06;
+  overflow: hidden;
+}
+.page-photo-bg {
+  width: 100%; height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 36px 32px;
+  background:
+    linear-gradient(to top, rgba(0,0,0,.75) 0%, transparent 55%),
+    linear-gradient(135deg, #2d1a08 0%, #5c3518 40%, #3a1f0a 70%, #1a0a04 100%);
+}
+.photo-caption {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  font-style: italic;
+  color: #f0e8d8;
+  margin-bottom: 8px;
+}
+.photo-label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 8px;
+  letter-spacing: .35em;
+  text-transform: uppercase;
+  color: rgba(200,165,90,.7);
+}
+
+/* BACK INNER COVER — p9 */
+.back-inner {
+  width: 100%; height: 100%;
+  background: #faf7f2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 48px;
+}
+.back-inner-logo {
+  font-family: 'Oswald', sans-serif;
+  font-size: 10px;
+  letter-spacing: .5em;
+  text-transform: uppercase;
+  color: #b8904a;
+}
+.back-inner-divider {
+  width: 40px; height: 1px;
+  background: rgba(160,120,60,.35);
+}
+.back-inner-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.9;
+  color: #5a4a35;
+  text-align: center;
+  max-width: 300px;
+}
+.back-inner-url {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px;
+  letter-spacing: .22em;
+  color: rgba(160,120,60,.55);
+}
+
+/* BACK COVER — p10 */
+.cover-back-final {
+  width: 100%; height: 100%;
+  background:
+    radial-gradient(ellipse 65% 45% at 12% 22%, rgba(140,100,50,0.30) 0%, transparent 100%),
+    radial-gradient(ellipse 45% 65% at 88% 78%, rgba(90,60,25,0.25) 0%, transparent 100%),
+    radial-gradient(ellipse 55% 38% at 72% 18%, rgba(190,155,90,0.20) 0%, transparent 100%),
+    radial-gradient(ellipse 38% 58% at 22% 82%, rgba(110,75,30,0.18) 0%, transparent 100%),
+    radial-gradient(ellipse 80% 55% at 50% 50%, rgba(165,130,70,0.12) 0%, transparent 100%),
+    radial-gradient(ellipse 30% 40% at 60% 40%, rgba(80,50,20,0.14) 0%, transparent 100%),
+    #c4af8e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+.cover-back-final .brand {
+  font-family: 'Oswald', sans-serif;
+  font-size: 9px;
+  letter-spacing: .55em;
+  text-transform: uppercase;
+  color: rgba(100,70,30,.65);
+}
+.cover-back-final .monogram {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 64px;
+  font-weight: 300;
+  color: rgba(100,70,30,.14);
+  line-height: 1;
+}
+.cover-back-final .url {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px;
+  letter-spacing: .3em;
+  color: rgba(100,70,30,.4);
+  text-transform: lowercase;
+}
+</style>
+</head>
+<body>
+
+<div id="canvas">
+  <div class="book" id="book">
+
+    <!-- p1: Front cover (hard) -->
+    <div class="hard p1" depth="5">
+      <div class="side"></div>
+      <div class="cover-front">
+        <img class="cover-front-photo" src="foto/Longevity.PNG" alt="Тестостерон і харчування">
+        <div class="cover-top" style="flex-direction:column;align-items:center;gap:0;padding-top:20px;">
+          <span class="cover-logo" style="font-size:13px;letter-spacing:5px;">VIA·L</span>
+          <div style="width:90px;height:1px;background:rgba(255,222,162,.9);box-shadow:0 0 8px rgba(220,165,70,.35);margin:5px 0;"></div>
+          <span style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:.38em;color:#ffe8be;text-transform:uppercase;text-shadow:0 1px 2px rgba(0,0,0,.5),0 0 9px rgba(236,188,90,.35);">LONGEVITY</span>
+        </div>
+        <div class="cover-bottom">
+          <div class="cover-tag">Антивозрастной</div>
+          <div class="cover-name">Питание для<br>долголетия</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- p2: Back of front cover (hard, front-side) -->
+    <div class="hard front-side p2" depth="5">
+      <div class="depth"></div>
+      <!-- тень корешка — правый край p2 -->
+      <div style="position:absolute;top:0;right:0;width:20px;height:100%;background:linear-gradient(to left,rgba(0,0,0,0.16) 0%,rgba(0,0,0,0.05) 60%,transparent 100%);z-index:10;pointer-events:none;"></div>
+      <!-- фото: отступы сверху, снизу, слева — вплотную к p3 справа -->
+      <div style="position:absolute;inset:0;background:#f0ece6;padding:9px 0 9px 10px;">
+        <img src="foto/Longevity1.PNG"
+             style="display:block;width:100%;height:100%;object-fit:cover;object-position:top;">
+      </div>
+    </div>
+
+    <!-- p3: Inner page left -->
+    <div class="own-size odd" style="position:relative;">
+      <!-- gutter shadow — лівий край p3, як між p3 і p4 -->
+      <div style="position:absolute;top:0;left:0;width:20px;height:100%;background:linear-gradient(to right,rgba(0,0,0,0.16) 0%,rgba(0,0,0,0.05) 60%,transparent 100%);z-index:10;pointer-events:none;"></div>
+      <div style="width:100%;height:100%;background:#faf7f2;padding:24px 38px 20px 42px;display:flex;flex-direction:column;box-sizing:border-box;">
+
+        <!-- заголовок + категория -->
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px;">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;line-height:1.18;color:#1a1208;">40+<br>Без отката</div>
+          <div style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:.42em;text-transform:uppercase;color:#b8924a;white-space:nowrap;flex-shrink:0;margin-top:6px;">Антивозрастной</div>
+        </div>
+
+        <!-- подзаголовок -->
+        <div style="font-family:'Oswald',sans-serif;font-size:11px;font-weight:300;letter-spacing:.18em;text-transform:uppercase;color:#b8924a;margin-bottom:12px;">Перименопауза · Андропауза · Стратегия</div>
+
+        <!-- разделитель -->
+        <div style="width:100%;height:.5px;background:linear-gradient(to right,rgba(160,120,60,.35),transparent);margin-bottom:12px;"></div>
+
+        <!-- вводный абзац -->
+        <p style="font-family:'Cormorant Garamond',serif;font-size:14px;font-style:italic;font-weight:300;line-height:1.6;color:#3a2a18;margin-bottom:12px;">
+          После 40 правила игры меняются. Этот гайд — пошаговая стратегия управления гормональным переходом (перименопауза у женщин и андропауза у мужчин). Узнайте, как сохранить энергию, сон и форму, используя биохимию, а не диеты.
+        </p>
+
+        <!-- раздел -->
+        <div style="font-family:'Oswald',sans-serif;font-size:6.5px;letter-spacing:.40em;text-transform:uppercase;color:rgba(160,120,60,.6);margin-bottom:8px;">Что внутри</div>
+
+        <!-- список -->
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:7px;">
+          <li style="display:flex;gap:11px;align-items:baseline;">
+            <span style="font-family:'Cormorant Garamond',serif;font-size:13px;color:#b8924a;flex-shrink:0;line-height:1;">✦</span>
+            <span style="font-family:'DM Sans',sans-serif;font-size:12.5px;line-height:1.6;color:#1a1208;"><strong style="font-weight:500;color:#1a1208;">Одна биохимия — два пола</strong> — почему у мужчин и женщин запускаются похожие процессы (кортизол, инсулин, воспаление).</span>
+          </li>
+          <li style="display:flex;gap:11px;align-items:baseline;">
+            <span style="font-family:'Cormorant Garamond',serif;font-size:13px;color:#b8924a;flex-shrink:0;line-height:1;">✦</span>
+            <span style="font-family:'DM Sans',sans-serif;font-size:12.5px;line-height:1.6;color:#1a1208;"><strong style="font-weight:500;color:#1a1208;">Разбор 10 симптомов</strong> — от приливов и тумана в голове до роста живота и потери мышц.</span>
+          </li>
+          <li style="display:flex;gap:11px;align-items:baseline;">
+            <span style="font-family:'Cormorant Garamond',serif;font-size:13px;color:#b8924a;flex-shrink:0;line-height:1;">✦</span>
+            <span style="font-family:'DM Sans',sans-serif;font-size:12.5px;line-height:1.6;color:#1a1208;"><strong style="font-weight:500;color:#1a1208;">Список анализов 40+</strong> — оптимальные значения ферритина, витамина D, ТТГ и половых гормонов.</span>
+          </li>
+          <li style="display:flex;gap:11px;align-items:baseline;">
+            <span style="font-family:'Cormorant Garamond',serif;font-size:13px;color:#b8924a;flex-shrink:0;line-height:1;">✦</span>
+            <span style="font-family:'DM Sans',sans-serif;font-size:12.5px;line-height:1.6;color:#1a1208;"><strong style="font-weight:500;color:#1a1208;">3 критические ошибки</strong> — почему «есть меньше» и «убрать жиры» после 40 — это опасно.</span>
+          </li>
+          <li style="display:flex;gap:11px;align-items:baseline;">
+            <span style="font-family:'Cormorant Garamond',serif;font-size:13px;color:#b8924a;flex-shrink:0;line-height:1;">✦</span>
+            <span style="font-family:'DM Sans',sans-serif;font-size:12.5px;line-height:1.6;color:#1a1208;"><strong style="font-weight:500;color:#1a1208;">План на 14 дней</strong> — 5 конкретных шагов для настройки биохимии.</span>
+          </li>
+        </ul>
+
+        <!-- кнопка покупки -->
+        <div style="margin-top:auto;padding-top:14px;border-top:.5px solid rgba(160,120,60,.2);display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;color:#1a1208;line-height:1;position:relative;top:-10px;">35 €</div>
+            <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#5a4030;margin-top:2px;">PDF · 18 стр. · Мгновенно</div>
+          </div>
+          <a href="#" onclick="return false;" style="font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:#fff;text-decoration:none;background:linear-gradient(105deg,#b8924a 0%,#e8c97a 40%,#c8a055 60%,#b8924a 100%);padding:12px 26px;border-radius:50px;white-space:nowrap;box-shadow:0 2px 14px rgba(184,146,74,.45);text-shadow:0 1px 2px rgba(0,0,0,.18);">Получить гайд →</a>
+        </div>
+
+        <!-- нижний колонтитул -->
+        <div style="padding-top:10px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-family:'Playfair Display',serif;font-size:9.5px;letter-spacing:3px;color:rgba(160,120,60,.4);text-transform:uppercase;">VIA·L</span>
+          <span style="font-family:'Cormorant Garamond',serif;font-size:12px;font-style:italic;color:rgba(0,0,0,.16);">via-l.com</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- p4: Inner page right — Статья 1 -->
+    <div class="own-size even" style="position:relative;">
+      <!-- тень корешка — правый край p4 -->
+      <div style="position:absolute;top:0;right:0;width:20px;height:100%;background:linear-gradient(to left,rgba(0,0,0,0.16) 0%,rgba(0,0,0,0.05) 60%,transparent 100%);z-index:10;pointer-events:none;"></div>
+      <div style="width:100%;height:100%;background:#faf7f2;padding:32px 36px 26px 36px;display:flex;flex-direction:column;box-sizing:border-box;">
+
+        <!-- плашка раздела -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+          <div style="width:3px;height:32px;background:#b8924a;flex-shrink:0;border-radius:2px;"></div>
+          <div>
+            <div style="font-family:'Oswald',sans-serif;font-size:6.5px;letter-spacing:.42em;text-transform:uppercase;color:#b8924a;margin-bottom:3px;">Исследование · Nature Medicine, 2024</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:300;line-height:1.2;color:#1a1208;">Питание и здоровое<br>старение после 40</div>
+          </div>
+        </div>
+
+        <div style="width:100%;height:.5px;background:linear-gradient(to right,rgba(160,120,60,.3),transparent);margin-bottom:12px;"></div>
+
+        <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:rgba(160,120,60,.8);letter-spacing:.03em;margin-bottom:10px;line-height:1.5;">
+          Tessier A-J., Hu F. et al. — Harvard T.H. Chan School of Public Health<br>
+          Nurses' Health Study + Health Professionals Follow-Up Study · n = 105 000 · 30 лет наблюдений
+        </div>
+
+        <p style="font-family:'DM Sans',sans-serif;font-size:11px;line-height:1.65;color:#1a1208;margin-bottom:10px;">
+          Учёные наблюдали за <strong>105 000 взрослых на протяжении 30 лет</strong>. Цель — понять, как питание влияет не просто на продолжительность жизни, а на её качество: сохранение физической активности, когнитивной ясности и психического здоровья после 70 лет.
+        </p>
+
+        <p style="font-family:'DM Sans',sans-serif;font-size:11px;line-height:1.65;color:#1a1208;margin-bottom:10px;">
+          Люди, придерживавшиеся качественного питания, имели <strong>на 86% больше шансов</strong> сохранить здоровье к 70 годам. К 75 годам — шансы были выше в <strong>2,2 раза</strong>. Особую роль сыграли ненасыщенные жиры: они связаны не только с долголетием, но и с сохранением подвижности и ясности ума.
+        </p>
+
+        <div style="padding:10px 14px;background:rgba(184,146,74,.08);border-left:2px solid #b8924a;border-radius:0 3px 3px 0;">
+          <p style="font-family:'Cormorant Garamond',serif;font-size:13px;font-style:italic;line-height:1.6;color:#2a1a08;margin:0;">«Нет универсальной диеты. Но есть принципы — и они работают у всех» — Anne-Julie Tessier, Университет Монреаля.</p>
+        </div>
+
+        <!-- колонтитул -->
+        <div style="padding-top:12px;margin-top:14px;border-top:.5px solid rgba(0,0,0,.07);display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-family:'Playfair Display',serif;font-size:7px;letter-spacing:3px;color:rgba(160,120,60,.38);text-transform:uppercase;">VIA·L</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- p5: Inner page left — Статья 2 -->
+    <div class="own-size odd" style="position:relative;">
+      <!-- тень корешка -->
+      <div style="position:absolute;top:0;left:0;width:20px;height:100%;background:linear-gradient(to right,rgba(0,0,0,0.16) 0%,rgba(0,0,0,0.05) 60%,transparent 100%);z-index:10;pointer-events:none;"></div>
+      <div style="width:100%;height:100%;background:#f5f1eb;padding:32px 36px 26px 36px;display:flex;flex-direction:column;box-sizing:border-box;">
+
+        <!-- плашка раздела -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+          <div style="width:3px;height:32px;background:#b8924a;flex-shrink:0;border-radius:2px;"></div>
+          <div>
+            <div style="font-family:'Oswald',sans-serif;font-size:6.5px;letter-spacing:.42em;text-transform:uppercase;color:#b8924a;margin-bottom:3px;">Продолжение · Что это значит для вас</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:300;line-height:1.2;color:#1a1208;">После 40 правила<br>меняются</div>
+          </div>
+        </div>
+
+        <div style="width:100%;height:.5px;background:linear-gradient(to right,rgba(160,120,60,.3),transparent);margin-bottom:12px;"></div>
+
+        <p style="font-family:'DM Sans',sans-serif;font-size:11px;line-height:1.65;color:#1a1208;margin-bottom:10px;">
+          Исследование показало: <strong>ультрапереработанные продукты</strong> — особенно колбасы, сладкие напитки и полуфабрикаты — напрямую связаны с ухудшением физической и когнитивной функции с возрастом.
+        </p>
+
+        <p style="font-family:'DM Sans',sans-serif;font-size:11px;line-height:1.65;color:#1a1208;margin-bottom:10px;">
+          Зато те, кто ел больше овощей, цельных злаков, бобовых, орехов и ненасыщенных жиров, <strong>сохраняли независимость, ясность ума и физическую форму</strong> значительно дольше. И этот эффект был стабильным у обоих полов — и у женщин, и у мужчин.
+        </p>
+
+        <p style="font-family:'DM Sans',sans-serif;font-size:11px;line-height:1.65;color:#1a1208;margin-bottom:12px;">
+          Marta Guasch-Ferré, соавтор исследования: <em>«Оставаться активным и независимым — приоритет для каждого. Именно поэтому исследования здорового старения так важны.»</em>
+        </p>
+
+        <div style="padding:10px 14px;background:rgba(184,146,74,.08);border-left:2px solid #b8924a;border-radius:0 3px 3px 0;">
+          <p style="font-family:'Cormorant Garamond',serif;font-size:13px;font-style:italic;line-height:1.6;color:#2a1a08;margin:0;">Вывод: старение — не приговор. Это результат ежедневных выборов. И питание — главный из них.</p>
+        </div>
+
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+          <div style="width:24px;height:1px;background:#b8924a;flex-shrink:0;"></div>
+          <span style="font-family:'DM Sans',sans-serif;font-size:9px;color:#8a7060;line-height:1.5;">Nature Medicine · doi: 10.1038/s41591-024-02942-1</span>
+        </div>
+
+        <!-- колонтитул -->
+        <div style="padding-top:12px;margin-top:14px;border-top:.5px solid rgba(0,0,0,.08);display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-family:'Playfair Display',serif;font-size:7px;letter-spacing:3px;color:rgba(160,120,60,.38);text-transform:uppercase;">VIA·L</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- p6: фото Марины (левая страница) -->
+    <div class="own-size even" style="position:relative;overflow:hidden;background:#ede8e1;">
+      <!-- тень корешка — правый край -->
+      <div style="position:absolute;top:0;right:0;width:20px;height:100%;background:linear-gradient(to left,rgba(0,0,0,0.16) 0%,rgba(0,0,0,0.05) 60%,transparent 100%);z-index:10;pointer-events:none;"></div>
+      <div style="position:absolute;inset:0;padding:9px 0 9px 10px;">
+        <img src="foto/Maryna.PNG/Maryna.PNG"
+             style="display:block;width:100%;height:100%;object-fit:cover;object-position:center top;">
+      </div>
+    </div>
+
+    <!-- p7: цитата автора (правая страница) -->
+    <div class="own-size odd" style="position:relative;">
+      <!-- тень корешка — левый край -->
+      <div style="position:absolute;top:0;left:0;width:20px;height:100%;background:linear-gradient(to right,rgba(0,0,0,0.16) 0%,rgba(0,0,0,0.05) 60%,transparent 100%);z-index:10;pointer-events:none;"></div>
+      <div style="width:100%;height:100%;background:#faf7f2;padding:52px 40px 36px 44px;display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box;">
+
+        <!-- верхний декор -->
+        <div>
+          <div style="width:28px;height:1px;background:#b8924a;margin-bottom:32px;"></div>
+
+          <!-- большая кавычка -->
+          <div style="font-family:'Cormorant Garamond',serif;font-size:64px;line-height:1;color:rgba(184,146,74,.18);margin-bottom:-16px;margin-left:-4px;">"</div>
+
+          <!-- цитата -->
+          <p style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;font-style:italic;line-height:1.70;color:#1a1208;margin-bottom:28px;">
+            После 40 тело не ломается — оно меняет правила. Задача нутрициолога — помочь вам их понять и использовать в свою пользу.
+          </p>
+
+          <!-- подпись -->
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="font-family:'Oswald',sans-serif;font-size:13px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:#1a1208;">Maryna Datsenko</div>
+            <div style="font-family:'DM Sans',sans-serif;font-size:11.5px;font-weight:300;color:#5a4030;letter-spacing:.04em;">Нутрициолог · VIA·L Longevity</div>
+          </div>
+        </div>
+
+        <!-- нижний блок -->
+        <div>
+          <div style="width:100%;height:.5px;background:linear-gradient(to right,rgba(160,120,60,.25),transparent);margin-bottom:16px;"></div>
+          <p style="font-family:'DM Sans',sans-serif;font-size:12px;line-height:1.72;color:#3a2a18;">
+            Специализация — гормональное здоровье: перименопауза у женщин и андропауза у мужчин после 40.
+          </p>
+          <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-family:'Playfair Display',serif;font-size:9.5px;letter-spacing:3px;color:rgba(160,120,60,.4);text-transform:uppercase;">VIA·L</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- p8: CTA / покупка (левая страница перед задней обложкой) -->
+    <div class="own-size even" style="position:relative;">
+      <!-- тень корешка — правый край -->
+      <div style="position:absolute;top:0;right:0;width:20px;height:100%;background:linear-gradient(to left,rgba(0,0,0,0.16) 0%,rgba(0,0,0,0.05) 60%,transparent 100%);z-index:10;pointer-events:none;"></div>
+      <div style="width:100%;height:100%;background:#faf7f2;padding:44px 44px 36px 40px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box;text-align:center;">
+
+        <!-- логотип -->
+        <div style="font-family:'Playfair Display',serif;font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#b8924a;margin-bottom:6px;">VIA·L</div>
+        <div style="width:96px;height:1px;background:#b8924a;opacity:.55;margin-bottom:6px;"></div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;letter-spacing:.22em;color:rgba(0,0,0,.55);margin-bottom:22px;">LONGEVITY</div>
+
+        <!-- разделитель -->
+        <div style="width:32px;height:.5px;background:rgba(184,146,74,.35);margin-bottom:22px;"></div>
+
+        <!-- название гайда -->
+        <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;line-height:1.2;color:#1a1208;margin-bottom:8px;">40+<br>Без отката</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:300;color:#5a4030;line-height:1.5;margin-bottom:22px;">Перименопауза и андропауза:<br>биохимия, симптомы и стратегия питания · 18 стр.</div>
+
+        <!-- цена -->
+        <div style="font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:300;line-height:1;color:#1a1208;margin-bottom:20px;">35 <span style="font-size:30px;">€</span></div>
+
+        <!-- кнопка -->
+        <a href="#" onclick="return false;"
+           style="font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:#fff;text-decoration:none;background:linear-gradient(105deg,#b8924a 0%,#e8c97a 40%,#c8a055 60%,#b8924a 100%);padding:13px 36px;border-radius:50px;margin-bottom:14px;display:inline-block;box-shadow:0 2px 14px rgba(184,146,74,.45);text-shadow:0 1px 2px rgba(0,0,0,.18);">
+          Получить гайд →
+        </a>
+
+        <!-- подпись -->
+        <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(0,0,0,.6);line-height:1.6;margin-bottom:22px;">Hotmart · Безопасная оплата<br>Доступ сразу после оплаты</div>
+
+        <!-- разделитель -->
+        <div style="width:32px;height:.5px;background:rgba(184,146,74,.25);margin-bottom:16px;"></div>
+
+        <!-- автор -->
+        <div style="font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#1a1208;margin-bottom:3px;">Maryna Datsenko</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:400;color:#3a2a18;">Нутрициолог · VIA·L Longevity</div>
+
+      </div>
+    </div>
+
+    <!-- p9: Inner back cover (hard, back-side) -->
+    <div class="hard back-side fixed">
+      <div class="depth"></div>
+      <!-- тень корешка — левый край, как на p7 -->
+      <div style="position:absolute;top:0;left:0;width:20px;height:100%;background:linear-gradient(to right,rgba(0,0,0,0.22) 0%,rgba(0,0,0,0.10) 55%,transparent 100%);z-index:12;pointer-events:none;"></div>
+      <div style="width:100%;height:100%;background:#faf7f2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:48px;">
+        <div style="font-family:'Playfair Display',serif;font-size:13px;letter-spacing:4px;text-transform:uppercase;color:#b8924a;">VIA·L</div>
+        <div style="width:96px;height:1px;background:#b8924a;opacity:.55;margin-top:6px;"></div>
+        <div style="width:1px;height:40px;background:linear-gradient(to bottom,transparent,rgba(160,120,60,.4),transparent);"></div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;line-height:1.85;color:#2e1e0e;text-align:center;max-width:280px;">
+          Твоё тело — не враг.<br>Оно говорит языком симптомов —<br>научись его слушать.
+        </div>
+        <div style="width:1px;height:40px;background:linear-gradient(to bottom,transparent,rgba(160,120,60,.4),transparent);"></div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:10.5px;letter-spacing:.26em;text-transform:lowercase;color:rgba(160,120,60,.55);">via-l.com</div>
+      </div>
+    </div>
+
+    <!-- p10: Back cover (hard) -->
+    <div class="hard">
+      <div class="cover-back-final">
+        <div class="monogram">V</div>
+        <div class="brand">VIA·L Longevity</div>
+        <div style="width:28px;height:.5px;background:rgba(200,165,90,.3);"></div>
+        <div class="url">via-l.com</div>
+      </div>
+    </div>
+
+  </div><!-- /#book -->
+</div><!-- /#canvas -->
+
+<!-- Navigation -->
+<div id="controls">
+  <button class="btn-nav" id="btn-prev">&#8249;</button>
+  <span id="page-info">1 / 6</span>
+  <button class="btn-nav" id="btn-next">&#8250;</button>
+</div>
+
+<script>
+$(function () {
+
+  var book  = $('#book');
+  var total = 6;
+
+  function updateDepth(book, newPage) {
+    var page  = book.turn('page');
+    var pages = book.turn('pages');
+    var inner = pages - 4;
+    var dw;
+    newPage = newPage || page;
+
+    dw = 16 * Math.min(1, Math.max(0, page - 2) / inner);
+    if (newPage > 2)
+      $('#book .front-side .depth').css({ width: dw, left: 20 - dw });
+    else
+      $('#book .front-side .depth').css({ width: 0 });
+
+    dw = 16 * Math.min(1, Math.max(0, pages - 1 - page) / inner);
+    if (newPage < pages - 1)
+      $('#book .back-side .depth').css({ width: dw, right: 20 - dw });
+    else
+      $('#book .back-side .depth').css({ width: 0 });
+  }
+
+  function pageLabel(page) {
+    if (page <= 1) return '1 / ' + total;
+    if (page >= book.turn('pages')) return total + ' / ' + total;
+    return Math.ceil(page / 2) + ' / ' + total;
+  }
+
+  book.turn({
+    width:        960,
+    height:       600,
+    autoCenter:   true,
+    gradients:    true,
+    acceleration: true,
+    elevation:    50,
+    duration:     1000,
+    display:      'double',
+    when: {
+      turning: function (e, page) {
+        updateDepth(book, page);
+        if (page >= 2)
+          $('#book .p2').addClass('fixed');
+        else
+          $('#book .p2').removeClass('fixed');
+        if (page < book.turn('pages'))
+          $('#book .p9').addClass('fixed');
+        else
+          $('#book .p9').removeClass('fixed');
+      },
+      turned: function (e, page) {
+        updateDepth(book);
+        $('#page-info').text(pageLabel(page));
+        if (page === 2 || page === 3) book.turn('peel', 'br');
+      },
+      end: function () {
+        updateDepth(book);
+      }
+    }
+  });
+
+  updateDepth(book);
+  book.css('visibility', 'visible');
+
+  $('#btn-prev').on('click', function () { book.turn('previous'); });
+  $('#btn-next').on('click', function () { book.turn('next'); });
+
+  $(document).keydown(function (e) {
+    if (e.keyCode === 37) book.turn('previous');
+    if (e.keyCode === 39) book.turn('next');
+  });
+
+  $('#page-info').text(pageLabel(1));
+
+});
+</script>
+</body>
+</html>
