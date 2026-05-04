@@ -1740,7 +1740,7 @@
        gives turn.js room for the 3D flip corners outside the 960×600 canvas */
     #book-iframe-box iframe {
       width: 1200px;
-      height: 700px;
+      height: 860px;
       border: none;
       transform-origin: top left;
       display: block;
@@ -3631,10 +3631,10 @@ window.addEventListener('message', function(e) {
 });
 
 function calcBookScale() {
-  // Fit the 1200×700 iframe (which contains 960×600 book canvas) in viewport
+  // Fit 1200×860 iframe in viewport (canvas 960×600 sits centered with 120px/130px margins)
   var scaleW = (window.innerWidth  - 80) / 1200;
-  var scaleH = (window.innerHeight - 100) / 700;
-  return Math.min(scaleW, scaleH, 0.71);
+  var scaleH = (window.innerHeight - 60) / 860;
+  return Math.min(scaleW, scaleH, 0.75);
 }
 
 function applyBookScale() {
@@ -3643,15 +3643,12 @@ function applyBookScale() {
   var btn   = document.getElementById('book-iframe-close');
   if (!box || !frame) return;
   var s = calcBookScale();
-  // Box = full iframe visual size (1200×700 scaled)
   box.style.width  = Math.round(1200 * s) + 'px';
-  box.style.height = Math.round(700 * s) + 'px';
+  box.style.height = Math.round(860 * s) + 'px';
   frame.style.transform = 'scale(' + s + ')';
-  // Close button at top-right corner of the 960×600 canvas
-  // Canvas sits at (120px, 50px) within 1200×700 iframe
-  // Canvas right edge from box right = (1200-120-960)*s = 120*s
+  // Canvas sits at (120px, 130px) within 1200×860 iframe
   if (btn) {
-    btn.style.top   = Math.round(50 * s + 6) + 'px';
+    btn.style.top   = Math.round(130 * s + 6) + 'px';
     btn.style.right = Math.round(120 * s + 6) + 'px';
   }
 }
