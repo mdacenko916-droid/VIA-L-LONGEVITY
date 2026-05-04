@@ -311,6 +311,7 @@ function go(idx) {
 // Создаём карточки
 let swipeBlocked = false; // prevents click firing right after a swipe
 
+console.log('[carousel] Creating ' + N + ' books...');
 BOOKS.forEach((b, i) => {
   const el = document.createElement('div');
   el.className = 'bk';
@@ -330,9 +331,9 @@ BOOKS.forEach((b, i) => {
 
   // Обработчик для клика
   const handleBookClick = (evt) => {
+    console.log('[book click] FIRED! i=' + i + ', cur=' + cur + ', cur index matches:', i === cur);
     evt.stopPropagation();
     evt.preventDefault();
-    console.log('[book click] i=' + i + ', cur=' + cur + ', cur index matches:', i === cur);
     if (i === cur) {
       console.log('[book] OPENING BOOK:', b.file);
       openBook(b.file);
@@ -347,6 +348,7 @@ BOOKS.forEach((b, i) => {
   };
 
   el.addEventListener('click', handleBookClick, true);  // capture phase
+  console.log('[carousel] Book ' + i + ' (' + b.name + ') click handler attached');
 
   scene.appendChild(el);
 
@@ -355,6 +357,8 @@ BOOKS.forEach((b, i) => {
   dot.addEventListener('click', () => go(i));
   dotsEl.appendChild(dot);
 });
+
+console.log('[carousel] All ' + N + ' books created and event listeners attached');
 
 // Стрелки
 document.getElementById('prev').addEventListener('click', () => go(cur - 1));
@@ -420,6 +424,11 @@ window.addEventListener('wheel', e => {
 
 // Ресайз
 window.addEventListener('resize', render);
+
+// GLOBAL CLICK LOGGING - DEBUG
+document.addEventListener('click', (e) => {
+  console.log('[GLOBAL CLICK] target:', e.target, 'closest .bk:', e.target.closest('.bk'));
+}, true);
 
 // Модалка
 function openBook(file) {
