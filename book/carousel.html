@@ -430,6 +430,15 @@ document.addEventListener('click', (e) => {
   console.log('[GLOBAL CLICK] target:', e.target, 'closest .bk:', e.target.closest('.bk'));
 }, true);
 
+// Также логируем mousedown и pointerdown
+document.addEventListener('mousedown', (e) => {
+  console.log('[MOUSEDOWN] at:', e.clientX, e.clientY, 'target:', e.target.className);
+}, true);
+
+document.addEventListener('pointerdown', (e) => {
+  console.log('[POINTERDOWN] at:', e.clientX, e.clientY, 'target:', e.target.className);
+}, true);
+
 // Модалка
 function openBook(file) {
   console.log('[openBook] Called with file:', file);
@@ -453,7 +462,15 @@ document.getElementById('modal').addEventListener('click', e => {
 
 console.log('[carousel.html] ✅ SCRIPT FULLY LOADED AND INITIALIZED');
 console.log('[carousel.html] Central book element:', document.querySelector('.bk[data-i="0"]'));
-console.log('[carousel.html] Is central book clickable?', document.querySelector('.bk[data-i="0"]')?.style.pointerEvents);
+const centralBook = document.querySelector('.bk[data-i="0"]');
+if (centralBook) {
+  console.log('[carousel.html] Central book computed style pointerEvents:', window.getComputedStyle(centralBook).pointerEvents);
+  console.log('[carousel.html] Central book visibility:', window.getComputedStyle(centralBook).visibility);
+  console.log('[carousel.html] Central book display:', window.getComputedStyle(centralBook).display);
+  console.log('[carousel.html] Central book bounds:', centralBook.getBoundingClientRect());
+} else {
+  console.error('[carousel.html] ❌ CENTRAL BOOK NOT FOUND!');
+}
 
 render();
 </script>
