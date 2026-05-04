@@ -281,7 +281,7 @@ function posForAngle(a) {
 }
 
 function render() {
-  console.log('[render] cur=' + cur + ', front book:', BOOKS[cur].name);
+  console.log('[render] ▶ RENDER CALLED: cur=' + cur + ', front book: ' + BOOKS[cur].name + ' (index ' + cur + ')');
   scene.querySelectorAll('.bk').forEach((card) => {
     const i = parseInt(card.dataset.i);
     const offset = i - cur;
@@ -295,7 +295,11 @@ function render() {
     card.style.transform = `translate(${x - 70}px, ${y - 105}px) scale(${scale})`;
     card.style.opacity = opacity;
     card.style.zIndex = Math.round(100 * t);
-    card.classList.toggle('front', i === cur);
+    const isFront = i === cur;
+    card.classList.toggle('front', isFront);
+    if (isFront) {
+      console.log('  ▶ Book ' + i + ' (' + BOOKS[i].name + ') is FRONT now');
+    }
   });
 
   dotsEl.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('on', i === cur));
@@ -331,8 +335,9 @@ BOOKS.forEach((b, i) => {
 
   // Обработчик для клика
   const handleBookClick = (evt) => {
-    console.log('[handleBookClick] CALLED! i=' + i + ', cur=' + cur + ', evt.target.className=' + evt.target.className + ', evt.currentTarget.className=' + evt.currentTarget.className);
-    console.log('[handleBookClick] target.closest(.bk):', evt.target.closest('.bk') !== null);
+    console.log('[handleBookClick] CALLED! i=' + i + ', b.name=' + b.name + ', CURRENT cur=' + cur);
+    console.log('[handleBookClick] COMPARISON: i (' + i + ') === cur (' + cur + ') ? ' + (i === cur));
+    console.log('[handleBookClick] evt.target.className=' + evt.target.className + ', evt.currentTarget.className=' + evt.currentTarget.className);
     
     // Проверяем, что клик пришёл на саму книгу
     if (!evt.currentTarget.classList.contains('bk')) {
@@ -340,15 +345,16 @@ BOOKS.forEach((b, i) => {
       return;
     }
     
-    console.log('[handleBookClick] FIRING! i=' + i + ', cur=' + cur + ', match=' + (i === cur));
     evt.stopPropagation();
     evt.preventDefault();
     
+    console.log('[handleBookClick] After stopPropagation. Checking if i === cur: ' + (i === cur));
     if (i === cur) {
-      console.log('[handleBookClick] OPENING BOOK:', b.file);
+      console.log('[handleBookClick] ✅ YES MATCH! OPENING BOOK:', b.file);
       openBook(b.file);
       return;
     } else {
+      console.log('[handleBookClick] ❌ NO MATCH - navigating carousel. i=' + i + ', cur=' + cur);
       let rel = i - cur;
       if (rel > N/2) rel -= N;
       if (rel < -N/2) rel += N;
@@ -466,14 +472,16 @@ document.addEventListener('pointerdown', (e) => {
 
 // Модалка
 function openBook(file) {
-  console.log('[openBook] Called with file:', file);
+  console.log('[openBook] ▶▶ CALLED with file:', file);
   const msg = { action: 'openBook', file: '/book/' + file };
-  console.log('[carousel] Sending postMessage:', msg);
+  console.log('[openBook] Message object:', msg);
+  console.log('[openBook] window.parent:', window.parent);
   try {
+    console.log('[openBook] ⏳ Attempting postMessage...');
     window.parent.postMessage(msg, '*');
-    console.log('[carousel] postMessage sent successfully');
+    console.log('[openBook] ✅ postMessage sent successfully!');
   } catch (e) {
-    console.error('[carousel] postMessage failed:', e);
+    console.error('[openBook] ❌ postMessage failed:', e);
   }
 }
 function closeModal() {
