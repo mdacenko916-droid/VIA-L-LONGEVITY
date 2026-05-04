@@ -3630,8 +3630,13 @@ var CAROUSEL_FILE_MAP = {
   'Beauty_index.html':      6
 };
 window.addEventListener('message', function(e) {
-  if (!e.data || e.data.action !== 'openBook') return;
-  openBookIframe(e.data.file);
+  if (!e.data) return;
+  if (e.data.action === 'openBook') {
+    openBookIframe(e.data.file);
+  } else if (e.data.action === 'bookReady') {
+    var overlay = document.getElementById('book-iframe-overlay');
+    if (overlay) overlay.classList.add('open');
+  }
 });
 
 function openBookIframe(file) {
@@ -3640,10 +3645,7 @@ function openBookIframe(file) {
   if (!overlay || !frame) return;
   document.body.style.overflow = 'hidden';
   overlay.classList.remove('open');
-  frame.onload = function() {
-    frame.onload = null;
-    overlay.classList.add('open');
-  };
+  frame.onload = null;
   frame.src = file;
 }
 
