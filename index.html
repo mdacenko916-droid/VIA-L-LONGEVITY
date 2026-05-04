@@ -1728,10 +1728,7 @@
     }
     #book-iframe-box {
       position: relative;
-      width: 614px;
-      height: 384px;
-      max-width: 92vw;
-      max-height: 86vh;
+      overflow: hidden;
       background: transparent;
       flex-shrink: 0;
       opacity: 0;
@@ -1746,7 +1743,6 @@
       width: 960px;
       height: 600px;
       border: none;
-      transform: scale(0.64);
       transform-origin: top left;
       display: block;
       background: transparent;
@@ -3637,10 +3633,27 @@ window.addEventListener('message', function(e) {
   }
 });
 
+function calcBookScale() {
+  var scaleW = (window.innerWidth  - 32) / 960;
+  var scaleH = (window.innerHeight - 80) / 600;
+  return Math.min(scaleW, scaleH, 0.88);
+}
+
+function applyBookScale() {
+  var box   = document.getElementById('book-iframe-box');
+  var frame = document.getElementById('book-iframe-frame');
+  if (!box || !frame) return;
+  var s = calcBookScale();
+  box.style.width  = Math.round(960 * s) + 'px';
+  box.style.height = Math.round(600 * s) + 'px';
+  frame.style.transform = 'scale(' + s + ')';
+}
+
 function openBookIframe(file) {
   var overlay = document.getElementById('book-iframe-overlay');
   var frame = document.getElementById('book-iframe-frame');
   if (!overlay || !frame) return;
+  applyBookScale();
   overlay.classList.remove('open');
   frame.onload = null;
   frame.src = file;
@@ -3652,6 +3665,8 @@ function closeBookIframe() {
   if (overlay) overlay.classList.remove('open');
   if (frame) setTimeout(function(){ frame.src = ''; }, 300);
 }
+
+window.addEventListener('resize', applyBookScale);
 
 </script>
 
