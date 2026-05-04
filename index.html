@@ -1749,20 +1749,25 @@
     #book-iframe-close {
       position: absolute;
       z-index: 10;
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      border: none;
-      background: rgba(26,15,6,.85);
+      padding: 7px 18px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(26,15,6,.72);
       color: #f5f3ef;
-      font-size: 14px;
+      font-family: 'Oswald', sans-serif;
+      font-size: 11px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
       cursor: pointer;
       display: flex;
       align-items: center;
-      justify-content: center;
-      line-height: 1;
+      gap: 6px;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      transition: background .2s;
+      white-space: nowrap;
     }
-    #book-iframe-close:hover { background: rgba(26,15,6,1); }
+    #book-iframe-close:hover { background: rgba(26,15,6,.95); }
   </style>
 
 </head>
@@ -3646,10 +3651,12 @@ function applyBookScale() {
   box.style.width  = Math.round(1200 * s) + 'px';
   box.style.height = Math.round(860 * s) + 'px';
   frame.style.transform = 'scale(' + s + ')';
-  // Canvas sits at (120px, 130px) within 1200×860 iframe
+  // Button centered below canvas — canvas bottom = (130+600)*s = 730*s from box top
   if (btn) {
-    btn.style.top   = Math.round(130 * s + 6) + 'px';
-    btn.style.right = Math.round(120 * s + 6) + 'px';
+    btn.style.top  = Math.round((130 + 600) * s + 14) + 'px';
+    btn.style.left = '50%';
+    btn.style.transform = 'translateX(-50%)';
+    btn.style.right = 'auto';
   }
 }
 
@@ -3760,7 +3767,7 @@ console.log('[index.html] Parent click handler attached');
 <!-- Book iframe overlay — відкриває реальні книги з /book/ -->
 <div id="book-iframe-overlay" onclick="if(event.target===this)closeBookIframe()">
   <div id="book-iframe-box">
-    <button id="book-iframe-close" onclick="closeBookIframe()">✕</button>
+    <button id="book-iframe-close" onclick="closeBookIframe()">✕ &nbsp;Закрыть</button>
     <iframe id="book-iframe-frame" src="" allowtransparency="true"></iframe>
   </div>
 </div>
