@@ -2254,7 +2254,10 @@
       position: fixed;
       inset: 0;
       z-index: 1000;
-      background: #fff;
+      background: rgba(0,0,0,.50);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       opacity: 0;
       pointer-events: none;
       transition: opacity .3s ease;
@@ -2263,31 +2266,45 @@
       opacity: 1;
       pointer-events: auto;
     }
-    #book-iframe-overlay iframe {
-      width: 100%;
-      height: 100%;
+    #book-iframe-box {
+      position: relative;
+      width: 768px;
+      height: 480px;
+      max-width: 92vw;
+      max-height: 86vh;
+      overflow: hidden;
+      border-radius: 10px;
+      box-shadow: 0 20px 70px rgba(0,0,0,.55);
+      flex-shrink: 0;
+    }
+    #book-iframe-box iframe {
+      width: 960px;
+      height: 600px;
       border: none;
+      transform: scale(0.8);
+      transform-origin: top left;
+      display: block;
     }
     #book-iframe-close {
-      position: fixed;
-      top: 16px;
-      right: 20px;
-      z-index: 1010;
-      width: 40px;
-      height: 40px;
+      position: absolute;
+      top: -14px;
+      right: -14px;
+      z-index: 10;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
-      border: 1.5px solid rgba(0,0,0,.18);
-      background: #fff;
-      color: #2c1f10;
-      font-size: 18px;
+      border: none;
+      background: #1a0f06;
+      color: #f5f3ef;
+      font-size: 16px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       line-height: 1;
-      box-shadow: 0 2px 8px rgba(0,0,0,.15);
+      box-shadow: 0 3px 12px rgba(0,0,0,.40);
     }
-    #book-iframe-close:hover { background: #f5f3ef; }
+    #book-iframe-close:hover { background: #3a2010; }
   </style>
 
 </head>
@@ -4453,8 +4470,10 @@ console.log('[index.html] Parent click handler attached');
 
 <!-- Book iframe overlay — відкриває реальні книги з /book/ -->
 <div id="book-iframe-overlay" onclick="if(event.target===this)closeBookIframe()">
-  <button id="book-iframe-close" onclick="closeBookIframe()">✕</button>
-  <iframe id="book-iframe-frame" src="" allowfullscreen></iframe>
+  <div id="book-iframe-box">
+    <button id="book-iframe-close" onclick="closeBookIframe()">✕</button>
+    <iframe id="book-iframe-frame" src="" allowfullscreen></iframe>
+  </div>
 </div>
 
 </body>
