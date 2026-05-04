@@ -331,24 +331,34 @@ BOOKS.forEach((b, i) => {
 
   // Обработчик для клика
   const handleBookClick = (evt) => {
-    console.log('[book click] FIRED! i=' + i + ', cur=' + cur + ', cur index matches:', i === cur);
+    console.log('[handleBookClick] CALLED! i=' + i + ', cur=' + cur + ', evt.target.className=' + evt.target.className + ', evt.currentTarget.className=' + evt.currentTarget.className);
+    console.log('[handleBookClick] target.closest(.bk):', evt.target.closest('.bk') !== null);
+    
+    // Проверяем, что клик пришёл на саму книгу
+    if (!evt.currentTarget.classList.contains('bk')) {
+      console.log('[handleBookClick] SKIP: not on .bk element');
+      return;
+    }
+    
+    console.log('[handleBookClick] FIRING! i=' + i + ', cur=' + cur + ', match=' + (i === cur));
     evt.stopPropagation();
     evt.preventDefault();
+    
     if (i === cur) {
-      console.log('[book] OPENING BOOK:', b.file);
+      console.log('[handleBookClick] OPENING BOOK:', b.file);
       openBook(b.file);
       return;
     } else {
       let rel = i - cur;
       if (rel > N/2) rel -= N;
       if (rel < -N/2) rel += N;
-      console.log('[book] navigating to:', cur + Math.sign(rel));
+      console.log('[handleBookClick] navigating to:', cur + Math.sign(rel));
       go(cur + Math.sign(rel));
     }
   };
 
   el.addEventListener('click', handleBookClick, true);  // capture phase
-  console.log('[carousel] Book ' + i + ' (' + b.name + ') click handler attached');
+  console.log('[carousel] Book ' + i + ' (' + b.name + ') click handler attached on element:', el);
 
   scene.appendChild(el);
 
@@ -375,6 +385,7 @@ window.addEventListener('keydown', e => {
 let px0 = null, py0 = null, isSwipe = false;
 
 scene.addEventListener('pointerdown', e => {
+  console.log('[scene.pointerdown] clientX=' + e.clientX + ', clientY=' + e.clientY + ', target=' + e.target.className);
   px0 = e.clientX; py0 = e.clientY;
   isSwipe = false;
 });
@@ -386,10 +397,13 @@ scene.addEventListener('pointermove', e => {
   // Если движение больше 20px - это свайп
   if (Math.abs(dx) > 20 || Math.abs(dy) > 20) {
     isSwipe = true;
+    console.log('[scene.pointermove] SWIPE DETECTED, dx=' + dx + ', dy=' + dy);
   }
 });
 
 scene.addEventListener('pointerup', e => {
+  console.log('[scene.pointerup] clientX=' + e.clientX + ', clientY=' + e.clientY + ', isSwipe=' + isSwipe + ', target=' + e.target.className + ', e.target.closest(.bk)=' + (e.target.closest('.bk') ? 'YES' : 'NO'));
+  
   if (px0 === null) return;
   
   const dx = e.clientX - px0;
@@ -398,6 +412,7 @@ scene.addEventListener('pointerup', e => {
 
   // Если это был свайп - обработаем его
   if (isSwipe) {
+    console.log('[scene.pointerup] SWIPE: dx=' + dx);
     if (Math.abs(dx) > 35 && Math.abs(dx) > Math.abs(dy)) {
       dx < 0 ? go(cur + 1) : go(cur - 1);
     }
@@ -406,7 +421,10 @@ scene.addEventListener('pointerup', e => {
 
   // Если клик произошел на самой книге - не обрабатываем навигацию
   // Позволим обработчику click на книге срабатывать
-  if (e.target.closest('.bk')) return;
+  if (e.target.closest('.bk')) {
+    console.log('[scene.pointerup] CLICK ON BOOK - will let click handler fire');
+    return;
+  }
 
   // Иначе это был клик на пустую область сцены - обработаем навигацию
   const cx = scene.offsetWidth / 2;
@@ -425,18 +443,25 @@ window.addEventListener('wheel', e => {
 // Ресайз
 window.addEventListener('resize', render);
 
+// ✅ FINAL INIT LOG
+console.log('[carousel.html] ✅ CAROUSEL FULLY INITIALIZED');
+console.log('[carousel.html] - Scene:', scene);
+console.log('[carousel.html] - Scene size:', { width: scene.offsetWidth, height: scene.offsetHeight });
+console.log('[carousel.html] - Books count:', N);
+console.log('[carousel.html] - All listeners attached, ready for clicks');
+
 // GLOBAL CLICK LOGGING - DEBUG
 document.addEventListener('click', (e) => {
-  console.log('[GLOBAL CLICK] target:', e.target, 'closest .bk:', e.target.closest('.bk'));
+  console.log('[GLOBAL CLICK] target:', e.target.className, 'tag:', e.target.tagName, 'closest .bk:', e.target.closest('.bk') ? 'YES' : 'NO');
 }, true);
 
 // Также логируем mousedown и pointerdown
 document.addEventListener('mousedown', (e) => {
-  console.log('[MOUSEDOWN] at:', e.clientX, e.clientY, 'target:', e.target.className);
+  console.log('[GLOBAL MOUSEDOWN] at:', e.clientX, e.clientY, 'target:', e.target.className, 'tagName:', e.target.tagName);
 }, true);
 
 document.addEventListener('pointerdown', (e) => {
-  console.log('[POINTERDOWN] at:', e.clientX, e.clientY, 'target:', e.target.className);
+  console.log('[GLOBAL POINTERDOWN] at:', e.clientX, e.clientY, 'target:', e.target.className, 'tagName:', e.target.tagName);
 }, true);
 
 // Модалка
