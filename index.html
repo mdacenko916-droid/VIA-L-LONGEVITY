@@ -4101,10 +4101,22 @@ var CAROUSEL_FILE_MAP = {
   'Beauty_index.html':      6
 };
 window.addEventListener('message', function(e) {
-  if (!e.data || e.data.action !== 'openBook') return;
+  console.log('[index.html] Received message:', e);
+  console.log('[index.html] Message data:', e.data);
+  if (!e.data || e.data.action !== 'openBook') {
+    console.log('[index.html] Message ignored - not openBook action');
+    return;
+  }
   var filename = String(e.data.file).split('/').pop();
+  console.log('[index.html] Extracted filename:', filename);
   var idx = CAROUSEL_FILE_MAP[filename];
-  if (idx !== undefined) openBookModal(idx);
+  console.log('[index.html] Mapped index:', idx);
+  if (idx !== undefined) {
+    console.log('[index.html] Opening book modal with index:', idx);
+    openBookModal(idx);
+  } else {
+    console.warn('[index.html] File not found in CAROUSEL_FILE_MAP:', filename);
+  }
 });
 
 </script>
