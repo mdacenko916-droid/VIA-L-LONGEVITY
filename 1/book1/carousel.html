@@ -388,7 +388,11 @@ scene.addEventListener('pointerup', e => {
     return;
   }
 
-  // Иначе это был клик - обработаем навигацию если не было нажато на книгу
+  // Если клик произошел на самой книге - не обрабатываем навигацию
+  // Позволим обработчику click на книге срабатывать
+  if (e.target.closest('.bk')) return;
+
+  // Иначе это был клик на пустую область сцены - обработаем навигацию
   const cx = scene.offsetWidth / 2;
   e.clientX < cx ? go(cur - 1) : go(cur + 1);
 }, { passive: false });
