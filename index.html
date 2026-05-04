@@ -4374,6 +4374,29 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'ArrowRight') bmTurn.turn('next');
   }
 });
+
+// DEBUG: Parent document click logging
+console.log('[index.html] Adding parent document click handler');
+document.addEventListener('click', function(e) {
+  var guidesSection = document.getElementById('guides');
+  if (!guidesSection) return;
+  
+  var rect = guidesSection.getBoundingClientRect();
+  var isInGuidesArea = (
+    e.clientX >= rect.left && 
+    e.clientX <= rect.right && 
+    e.clientY >= rect.top && 
+    e.clientY <= rect.bottom
+  );
+  
+  if (isInGuidesArea) {
+    console.log('[index.html PARENT CLICK] YES! Click in #guides area at:', e.clientX, e.clientY);
+    console.log('[index.html PARENT CLICK] target:', e.target.className);
+    console.log('[index.html PARENT CLICK] event:', e);
+  }
+}, true);
+
+console.log('[index.html] Parent click handler attached');
 </script>
 
 </body>
