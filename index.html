@@ -2249,6 +2249,53 @@
     }
   </style>
 
+  <style>
+    #book-iframe-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0,0,0,.78);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s ease;
+    }
+    #book-iframe-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #book-iframe-overlay iframe {
+      width: 960px;
+      height: 600px;
+      max-width: 96vw;
+      max-height: 90vh;
+      border: none;
+      border-radius: 4px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    }
+    #book-iframe-close {
+      position: fixed;
+      top: 20px;
+      right: 24px;
+      z-index: 1010;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,.40);
+      background: rgba(12,6,2,.82);
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    #book-iframe-close:hover { background: rgba(40,20,5,.95); }
+  </style>
+
 </head>
 <body>
 
@@ -4106,23 +4153,26 @@ var CAROUSEL_FILE_MAP = {
   'Beauty_index.html':      6
 };
 window.addEventListener('message', function(e) {
-  console.log('[index.html] Received message:', e);
-  console.log('[index.html] Message data:', e.data);
-  if (!e.data || e.data.action !== 'openBook') {
-    console.log('[index.html] Message ignored - not openBook action');
-    return;
-  }
-  var filename = String(e.data.file).split('/').pop();
-  console.log('[index.html] Extracted filename:', filename);
-  var idx = CAROUSEL_FILE_MAP[filename];
-  console.log('[index.html] Mapped index:', idx);
-  if (idx !== undefined) {
-    console.log('[index.html] Opening book modal with index:', idx);
-    openBookModal(idx);
-  } else {
-    console.warn('[index.html] File not found in CAROUSEL_FILE_MAP:', filename);
-  }
+  if (!e.data || e.data.action !== 'openBook') return;
+  openBookIframe(e.data.file);
 });
+
+function openBookIframe(file) {
+  var overlay = document.getElementById('book-iframe-overlay');
+  var frame = document.getElementById('book-iframe-frame');
+  if (!overlay || !frame) return;
+  frame.src = file;
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeBookIframe() {
+  var overlay = document.getElementById('book-iframe-overlay');
+  var frame = document.getElementById('book-iframe-frame');
+  if (overlay) overlay.classList.remove('open');
+  if (frame) setTimeout(function(){ frame.src = ''; }, 300);
+  document.body.style.overflow = '';
+}
 
 </script>
 
@@ -4373,7 +4423,10 @@ function closeGuideBook() {
 }
 
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeBookModal();
+  if (e.key === 'Escape') {
+    closeBookIframe();
+    closeBookModal();
+  }
   if (document.body.classList.contains('bm-turn-active') && bmTurn && bmTurn.turn) {
     if (e.key === 'ArrowLeft') bmTurn.turn('previous');
     if (e.key === 'ArrowRight') bmTurn.turn('next');
@@ -4403,6 +4456,12 @@ document.addEventListener('click', function(e) {
 
 console.log('[index.html] Parent click handler attached');
 </script>
+
+<!-- Book iframe overlay — відкриває реальні книги з /book/ -->
+<div id="book-iframe-overlay" onclick="if(event.target===this)closeBookIframe()">
+  <button id="book-iframe-close" onclick="closeBookIframe()">✕</button>
+  <iframe id="book-iframe-frame" src="" allowfullscreen></iframe>
+</div>
 
 </body>
 </html>
