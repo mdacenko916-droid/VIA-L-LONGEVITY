@@ -4088,8 +4088,7 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeModal();
 });
 
-/* ── Book Modal (BM) ── */
-var bmCurrentGuideIndex = 0;
+/* ── Book Modal ── */
 var GUIDES = [
   {
     num: "01",
@@ -4190,228 +4189,40 @@ function closeBookIframe() {
 
 </script>
 
-<!-- Shared Book Modal -->
-<div id="book-modal">
-  <div id="bm-bd" onclick="closeBookModal()"></div>
-  <button id="bm-x" onclick="closeBookModal()">✕</button>
-  <div id="bm-wrap">
-    <div class="bm-spine"><span id="bm-spine-text"></span></div>
-    <div id="bm-clipper">
-      <div id="bm-seam" aria-hidden="true"></div>
-      <div id="bm-book">
-        <div id="bm-turnbook"></div>
-        <div id="bm-left">
-          <div class="bm-left-head">
-            <span id="bm-tag"></span>
-            <span id="bm-num"></span>
-          </div>
-          <div id="bm-title"></div>
-          <p id="bm-desc"></p>
-          <div id="bm-sect-label">Що всередині</div>
-          <ul id="bm-bullets"></ul>
-          <div class="bm-left-foot">
-            <span id="bm-price">35<sub>€</sub></span>
-            <button class="bm-buy" type="button" onclick="buyGuide(bmCurrentGuideIndex)">Придбати</button>
-          </div>
-        </div>
-
-        <div id="bm-right">
-          <img id="bm-photo" src="" alt="">
-        </div>
-
-        <div id="bm-cover">
-          <img id="bm-cover-img" src="" alt="">
-          <div class="bm-cover-grad"></div>
-          <div class="bm-cover-info">
-            <div class="bm-cover-brand">VIA·L</div>
-            <div id="bm-cover-cat"></div>
-            <div id="bm-cover-title"></div>
-            <div id="bm-cover-price"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="bm-edge"></div>
-  </div>
+<!-- Book Modal -->
+<div id="book-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);align-items:center;justify-content:center;">
+  <button onclick="closeBookModal()" style="position:fixed;top:20px;right:24px;background:#fff;border:1.5px solid rgba(184,146,74,.4);color:#1a1208;font-family:sans-serif;font-size:12px;letter-spacing:.15em;padding:8px 20px;border-radius:24px;cursor:pointer;z-index:10000;">✕ Закрыть</button>
+  <iframe id="book-frame" src="about:blank" style="width:min(960px,95vw);height:min(600px,85vh);border:none;border-radius:4px;display:block;box-shadow:0 30px 80px rgba(0,0,0,.5);"></iframe>
 </div>
 
 <script>
-var bmTurn = null;
-var bmClosing = false;
 
-function escHtml(text) {
-  return String(text).replace(/[&<>"]|'/g, function(ch) {
-    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]);
-  });
-}
+var BOOK_FILES = [
+  'book/Hormones_index.html',
+  'book/Testosteron_index.html',
+  'book/Blood_Tests_index.html',
+  'book/Longevity_index.html',
+  'book/Sugar_40_index.html',
+  'book/Inflammation_index.html',
+  'book/Beauty_index.html'
+];
 
-function destroyTurn() {
-  var container = document.getElementById('bm-turnbook');
-  if (bmTurn && bmTurn.turn) {
-    try { bmTurn.turn('destroy'); } catch (e) {}
-  }
-  if (container) container.innerHTML = '';
-  bmTurn = null;
-}
-
-function finalizeTurnClose() {
-  bmClosing = false;
-  destroyTurn();
-  document.body.classList.remove('bm-open', 'bm-guide-0', 'bm-turn-active', 'bm-closing', 'bm-opening', 'bm-opened');
-}
-
-function buildMenopauzaTurnbook(guide) {
-  var container = document.getElementById('bm-turnbook');
-  if (!container || !window.jQuery || !$.fn || !$.fn.turn) return false;
-
-  destroyTurn();
-
-  var bullets = guide.bullets || [];
-  var firstBullets = bullets.slice(0, 2).map(function(item) { return '<li>' + escHtml(item) + '</li>'; }).join('');
-  var secondBullets = bullets.slice(2).map(function(item) { return '<li>' + escHtml(item) + '</li>'; }).join('');
-
-  container.innerHTML = [
-    '<div class="hard bm-cover-front">',
-      '<div class="cover-art"><img src="' + escHtml(guide.img) + '" alt="' + escHtml(guide.title) + '"></div>',
-      '<div class="cover-overlay"></div>',
-      '<div class="cover-text">',
-        '<div class="cover-tag">' + escHtml(guide.tag) + '</div>',
-        '<div class="cover-title">' + escHtml(guide.title) + '</div>',
-        '<div class="cover-price">' + escHtml(guide.price) + '</div>',
-      '</div>',
-    '</div>',
-    '<div class="hard bm-cover-inside"></div>',
-    '<div class="page bm-page bm-intro">',
-      '<h3>' + escHtml(guide.title) + '</h3>',
-      '<p>' + escHtml(guide.desc) + '</p>',
-      '<ul>' + firstBullets + '</ul>',
-    '</div>',
-    '<div class="page bm-photo"><img src="' + escHtml(guide.img) + '" alt="' + escHtml(guide.title) + '"></div>',
-    '<div class="page bm-page bm-content">',
-      '<h3>Що всередині</h3>',
-      '<ul>' + secondBullets + '</ul>',
-      '<p style="margin-top:18px;">' + escHtml(guide.price) + ' · PDF-формат для читання з будь-якого пристрою.</p>',
-    '</div>',
-    '<div class="page bm-photo"><img src="' + escHtml(guide.img) + '" alt="' + escHtml(guide.title) + '"></div>',
-    '<div class="hard bm-back-inside"></div>',
-    '<div class="hard bm-back-cover">',
-      '<div class="cover-overlay"></div>',
-      '<div class="cover-text">',
-        '<div class="cover-tag">VIA·L</div>',
-        '<div class="cover-title">' + escHtml(guide.title) + '</div>',
-      '</div>',
-    '</div>'
-  ].join('');
-
-  bmTurn = $(container);
-  bmTurn.turn({
-    width: 840,
-    height: 580,
-    display: 'double',
-    autoCenter: true,
-    gradients: true,
-    acceleration: true,
-    elevation: 50,
-    duration: 1200,
-    when: {
-      turned: function(e, page) {
-        if (bmClosing && page === 1) {
-          finalizeTurnClose();
-        }
-      }
-    }
-  });
-
-  return true;
-}
-
-function openBookModal(guideIndex) {
-  console.log('[openBookModal] Called with guideIndex:', guideIndex);
-  console.log('[openBookModal] GUIDES length:', GUIDES.length);
-  var index = Math.max(0, Math.min(guideIndex, GUIDES.length - 1));
-  console.log('[openBookModal] Adjusted index:', index);
-  bmCurrentGuideIndex = index;
-  var guide = GUIDES[index];
-  console.log('[openBookModal] guide:', guide);
-
-  var spineText = document.getElementById('bm-spine-text');
-  var tag = document.getElementById('bm-tag');
-  var num = document.getElementById('bm-num');
-  var title = document.getElementById('bm-title');
-  var desc = document.getElementById('bm-desc');
-  var sectLabel = document.getElementById('bm-sect-label');
-  var bullets = document.getElementById('bm-bullets');
-  var price = document.getElementById('bm-price');
-  var photo = document.getElementById('bm-photo');
-  var coverImg = document.getElementById('bm-cover-img');
-  var coverCat = document.getElementById('bm-cover-cat');
-  var coverTitle = document.getElementById('bm-cover-title');
-  var coverPrice = document.getElementById('bm-cover-price');
-
-  if (spineText) spineText.textContent = guide.tag;
-  if (tag) tag.textContent = guide.tag;
-  if (num) num.textContent = guide.num;
-  if (title) title.innerHTML = guide.title.replace(' і ', ' і<br>');
-  if (desc) desc.textContent = guide.desc;
-  if (sectLabel) sectLabel.textContent = 'Що всередині';
-  if (price) price.innerHTML = guide.price.replace('€', '<sub>€</sub>');
-
-  if (bullets) {
-    bullets.innerHTML = '';
-    guide.bullets.forEach(function(item) {
-      var li = document.createElement('li');
-      li.textContent = item;
-      bullets.appendChild(li);
-    });
-  }
-
-  if (photo) {
-    photo.src = guide.img;
-    photo.alt = guide.title;
-  }
-  if (coverImg) {
-    coverImg.src = guide.img;
-    coverImg.alt = guide.title;
-  }
-  if (coverCat) coverCat.textContent = guide.tag;
-  if (coverTitle) coverTitle.innerHTML = guide.title.replace(' і ', ' і<br>');
-  if (coverPrice) coverPrice.textContent = guide.price;
-
-  document.body.classList.remove('bm-closing', 'bm-opening', 'bm-opened');
-  document.body.classList.toggle('bm-guide-0', index === 0);
-
-  if (index === 0 && buildMenopauzaTurnbook(guide)) {
-    document.body.classList.add('bm-open', 'bm-turn-active');
-    bmClosing = false;
-    setTimeout(function() {
-      if (bmTurn && bmTurn.turn) bmTurn.turn('next');
-    }, 280);
-  } else {
-    document.body.classList.remove('bm-turn-active');
-    destroyTurn();
-    document.body.classList.add('bm-open');
-  }
+function openBookModal(idx) {
+  document.getElementById('book-frame').src = BOOK_FILES[idx] || BOOK_FILES[0];
+  var m = document.getElementById('book-modal');
+  m.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
 }
 
 function closeBookModal() {
-  if (document.body.classList.contains('bm-turn-active') && bmTurn && bmTurn.turn) {
-    bmClosing = true;
-    document.body.classList.add('bm-closing');
-    try {
-      bmTurn.turn('page', 1);
-    } catch (e) {
-      finalizeTurnClose();
-      return;
-    }
-    setTimeout(function() {
-      if (bmClosing) finalizeTurnClose();
-    }, 1200);
-    return;
-  }
-
-  document.body.classList.remove('bm-open', 'bm-opening', 'bm-opened', 'bm-guide-0', 'bm-turn-active', 'bm-closing');
-  destroyTurn();
+  document.getElementById('book-modal').style.display = 'none';
+  document.body.style.overflow = '';
+  setTimeout(function(){ document.getElementById('book-frame').src = 'about:blank'; }, 300);
 }
+
+document.getElementById('book-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeBookModal();
+});
 
 function openGuideBook(cardOrEl) {
   var index;
@@ -4419,8 +4230,7 @@ function openGuideBook(cardOrEl) {
     index = cardOrEl;
   } else {
     var card = (cardOrEl.classList && cardOrEl.classList.contains('guide-card'))
-      ? cardOrEl
-      : cardOrEl.closest('.guide-card');
+      ? cardOrEl : cardOrEl.closest('.guide-card');
     var allCards = Array.from(document.querySelectorAll('.guides-grid .guide-card'));
     index = allCards.indexOf(card);
     if (index === -1) {
@@ -4432,19 +4242,10 @@ function openGuideBook(cardOrEl) {
   openBookModal(index);
 }
 
-function closeGuideBook() {
-  closeBookModal();
-}
+function closeGuideBook() { closeBookModal(); }
 
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    closeBookIframe();
-    closeBookModal();
-  }
-  if (document.body.classList.contains('bm-turn-active') && bmTurn && bmTurn.turn) {
-    if (e.key === 'ArrowLeft') bmTurn.turn('previous');
-    if (e.key === 'ArrowRight') bmTurn.turn('next');
-  }
+  if (e.key === 'Escape') { closeBookIframe(); closeBookModal(); }
 });
 
 // DEBUG: Parent document click logging
