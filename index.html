@@ -1718,31 +1718,30 @@
       inset: 0;
       z-index: 1000;
       background: transparent;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       pointer-events: none;
       overflow: hidden;
     }
     #book-iframe-overlay.open {
       pointer-events: auto;
     }
+    /* absolute centering avoids flex-overflow right-side clip */
     #book-iframe-box {
-      position: relative;
-      overflow: hidden;
-      background: transparent;
-      flex-shrink: 0;
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, calc(-50% + 60px));
       opacity: 0;
-      transform: translateY(60px);
+      background: transparent;
       transition: transform .45s cubic-bezier(0.22,1,0.36,1), opacity .35s ease;
     }
     #book-iframe-overlay.open #book-iframe-box {
       opacity: 1;
-      transform: translateY(0);
+      transform: translate(-50%, -50%);
     }
+    /* iframe is 1200×700 — 120px extra on each side + 50px top/bottom
+       gives turn.js room for the 3D flip corners outside the 960×600 canvas */
     #book-iframe-box iframe {
-      width: 960px;
-      height: 600px;
+      width: 1200px;
+      height: 700px;
       border: none;
       transform-origin: top left;
       display: block;
@@ -1750,8 +1749,6 @@
     }
     #book-iframe-close {
       position: absolute;
-      top: 8px;
-      right: 8px;
       z-index: 10;
       width: 30px;
       height: 30px;
@@ -3635,19 +3632,29 @@ window.addEventListener('message', function(e) {
 });
 
 function calcBookScale() {
-  var scaleW = (window.innerWidth  - 80) / 960;
-  var scaleH = (window.innerHeight - 120) / 600;
-  return Math.min(scaleW, scaleH, 0.86);
+  // Fit the 1200×700 iframe (which contains 960×600 book canvas) in viewport
+  var scaleW = (window.innerWidth  - 40) / 1200;
+  var scaleH = (window.innerHeight - 60) / 700;
+  return Math.min(scaleW, scaleH, 0.82);
 }
 
 function applyBookScale() {
   var box   = document.getElementById('book-iframe-box');
   var frame = document.getElementById('book-iframe-frame');
+  var btn   = document.getElementById('book-iframe-close');
   if (!box || !frame) return;
   var s = calcBookScale();
-  box.style.width  = Math.round(960 * s) + 'px';
-  box.style.height = Math.round(600 * s) + 'px';
+  // Box = full iframe visual size (1200×700 scaled)
+  box.style.width  = Math.round(1200 * s) + 'px';
+  box.style.height = Math.round(700 * s) + 'px';
   frame.style.transform = 'scale(' + s + ')';
+  // Close button at top-right corner of the 960×600 canvas
+  // Canvas sits at (120px, 50px) within 1200×700 iframe
+  // Canvas right edge from box right = (1200-120-960)*s = 120*s
+  if (btn) {
+    btn.style.top   = Math.round(50 * s + 6) + 'px';
+    btn.style.right = Math.round(120 * s + 6) + 'px';
+  }
 }
 
 function openBookIframe(file) {
