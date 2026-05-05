@@ -56,7 +56,7 @@ body {
   border-radius: 2px 7px 7px 2px;
   will-change: transform;
   transform-origin: center center;
-  transition: transform .7s cubic-bezier(.25,.46,.45,.94), opacity .7s ease;
+  transition: transform .38s cubic-bezier(.4,0,.2,1), opacity .38s ease;
 }
 
 .bk-inner {
@@ -245,8 +245,6 @@ body {
 </div>
 
 <script>
-console.log('[carousel.html] Script loaded, window.parent:', window.parent);
-console.log('[carousel.html] window.location:', window.location.href);
 
 const BOOKS = [
   { tag:'Гормоны',          name:'Менопауза без страха',      title:'Менопауза\nбез страха',      img:'foto/Hormones.PNG',    file:'Hormones_index.html',    bg:'#7a5c3a' },
@@ -295,7 +293,6 @@ function posForAngle(a) {
 }
 
 function render() {
-  console.log('[render] ▶ RENDER CALLED: cur=' + cur + ', front book: ' + BOOKS[cur].name + ' (index ' + cur + ')');
   scene.querySelectorAll('.bk').forEach((card) => {
     const i = parseInt(card.dataset.i);
     const offset = i - cur;
@@ -305,14 +302,13 @@ function render() {
     const angDist = Math.min(absA, 2 * Math.PI - absA);
     const t = 1 - angDist / Math.PI;
     const scale = 0.55 + 0.65 * (t * t);
-    const opacity = 0.25 + 0.75 * t;
+    const opacity = 0.55 + 0.45 * t;
     card.style.transform = `translate(${x - 70}px, ${y - 105}px) scale(${scale})`;
     card.style.opacity = opacity;
     card.style.zIndex = Math.round(100 * t);
     const isFront = i === cur;
     card.classList.toggle('front', isFront);
     if (isFront) {
-      console.log('  ▶ Book ' + i + ' (' + BOOKS[i].name + ') is FRONT now');
     }
   });
 
@@ -329,7 +325,6 @@ function go(idx) {
 // Создаём карточки
 let swipeBlocked = false; // prevents click firing right after a swipe
 
-console.log('[carousel] Creating ' + N + ' books...');
 BOOKS.forEach((b, i) => {
   const el = document.createElement('div');
   el.className = 'bk';
@@ -351,36 +346,27 @@ BOOKS.forEach((b, i) => {
 
   // Обработчик для клика
   const handleBookClick = (evt) => {
-    console.log('[handleBookClick] CALLED! i=' + i + ', b.name=' + b.name + ', CURRENT cur=' + cur);
-    console.log('[handleBookClick] COMPARISON: i (' + i + ') === cur (' + cur + ') ? ' + (i === cur));
-    console.log('[handleBookClick] evt.target.className=' + evt.target.className + ', evt.currentTarget.className=' + evt.currentTarget.className);
     
     // Проверяем, что клик пришёл на саму книгу
     if (!evt.currentTarget.classList.contains('bk')) {
-      console.log('[handleBookClick] SKIP: not on .bk element');
       return;
     }
     
     evt.stopPropagation();
     evt.preventDefault();
     
-    console.log('[handleBookClick] After stopPropagation. Checking if i === cur: ' + (i === cur));
     if (i === cur) {
-      console.log('[handleBookClick] ✅ YES MATCH! OPENING BOOK:', b.file);
       openBook(b.file);
       return;
     } else {
-      console.log('[handleBookClick] ❌ NO MATCH - navigating carousel. i=' + i + ', cur=' + cur);
       let rel = i - cur;
       if (rel > N/2) rel -= N;
       if (rel < -N/2) rel += N;
-      console.log('[handleBookClick] navigating to:', cur + Math.sign(rel));
       go(cur + Math.sign(rel));
     }
   };
 
   el.addEventListener('click', handleBookClick, true);  // capture phase
-  console.log('[carousel] Book ' + i + ' (' + b.name + ') click handler attached on element:', el);
 
   scene.appendChild(el);
 
@@ -390,7 +376,6 @@ BOOKS.forEach((b, i) => {
   dotsEl.appendChild(dot);
 });
 
-console.log('[carousel] All ' + N + ' books created and event listeners attached');
 
 // Стрелки
 document.getElementById('prev').addEventListener('click', () => go(cur - 1));
@@ -407,7 +392,6 @@ window.addEventListener('keydown', e => {
 let px0 = null, py0 = null, isSwipe = false;
 
 scene.addEventListener('pointerdown', e => {
-  console.log('[scene.pointerdown] clientX=' + e.clientX + ', clientY=' + e.clientY + ', target=' + e.target.className);
   px0 = e.clientX; py0 = e.clientY;
   isSwipe = false;
 });
@@ -419,12 +403,10 @@ scene.addEventListener('pointermove', e => {
   // Если движение больше 20px - это свайп
   if (Math.abs(dx) > 20 || Math.abs(dy) > 20) {
     isSwipe = true;
-    console.log('[scene.pointermove] SWIPE DETECTED, dx=' + dx + ', dy=' + dy);
   }
 });
 
 scene.addEventListener('pointerup', e => {
-  console.log('[scene.pointerup] clientX=' + e.clientX + ', clientY=' + e.clientY + ', isSwipe=' + isSwipe + ', target=' + e.target.className + ', e.target.closest(.bk)=' + (e.target.closest('.bk') ? 'YES' : 'NO'));
   
   if (px0 === null) return;
   
@@ -434,7 +416,6 @@ scene.addEventListener('pointerup', e => {
 
   // Если это был свайп - обработаем его
   if (isSwipe) {
-    console.log('[scene.pointerup] SWIPE: dx=' + dx);
     if (Math.abs(dx) > 35 && Math.abs(dx) > Math.abs(dy)) {
       dx < 0 ? go(cur + 1) : go(cur - 1);
     }
@@ -444,7 +425,6 @@ scene.addEventListener('pointerup', e => {
   // Если клик произошел на самой книге - не обрабатываем навигацию
   // Позволим обработчику click на книге срабатывать
   if (e.target.closest('.bk')) {
-    console.log('[scene.pointerup] CLICK ON BOOK - will let click handler fire');
     return;
   }
 
@@ -466,38 +446,24 @@ window.addEventListener('wheel', e => {
 window.addEventListener('resize', render);
 
 // ✅ FINAL INIT LOG
-console.log('[carousel.html] ✅ CAROUSEL FULLY INITIALIZED');
-console.log('[carousel.html] - Scene:', scene);
-console.log('[carousel.html] - Scene size:', { width: scene.offsetWidth, height: scene.offsetHeight });
-console.log('[carousel.html] - Books count:', N);
-console.log('[carousel.html] - All listeners attached, ready for clicks');
 
 // GLOBAL CLICK LOGGING - DEBUG
 document.addEventListener('click', (e) => {
-  console.log('[GLOBAL CLICK] target:', e.target.className, 'tag:', e.target.tagName, 'closest .bk:', e.target.closest('.bk') ? 'YES' : 'NO');
 }, true);
 
 // Также логируем mousedown и pointerdown
 document.addEventListener('mousedown', (e) => {
-  console.log('[GLOBAL MOUSEDOWN] at:', e.clientX, e.clientY, 'target:', e.target.className, 'tagName:', e.target.tagName);
 }, true);
 
 document.addEventListener('pointerdown', (e) => {
-  console.log('[GLOBAL POINTERDOWN] at:', e.clientX, e.clientY, 'target:', e.target.className, 'tagName:', e.target.tagName);
 }, true);
 
 // Модалка
 function openBook(file) {
-  console.log('[openBook] ▶▶ CALLED with file:', file);
   const msg = { action: 'openBook', file: '/book/' + file };
-  console.log('[openBook] Message object:', msg);
-  console.log('[openBook] window.parent:', window.parent);
   try {
-    console.log('[openBook] ⏳ Attempting postMessage...');
     window.parent.postMessage(msg, '*');
-    console.log('[openBook] ✅ postMessage sent successfully!');
   } catch (e) {
-    console.error('[openBook] ❌ postMessage failed:', e);
   }
 }
 function closeModal() {
@@ -509,16 +475,9 @@ document.getElementById('modal').addEventListener('click', e => {
   if (e.target === document.getElementById('modal')) closeModal();
 });
 
-console.log('[carousel.html] ✅ SCRIPT FULLY LOADED AND INITIALIZED');
-console.log('[carousel.html] Central book element:', document.querySelector('.bk[data-i="0"]'));
 const centralBook = document.querySelector('.bk[data-i="0"]');
 if (centralBook) {
-  console.log('[carousel.html] Central book computed style pointerEvents:', window.getComputedStyle(centralBook).pointerEvents);
-  console.log('[carousel.html] Central book visibility:', window.getComputedStyle(centralBook).visibility);
-  console.log('[carousel.html] Central book display:', window.getComputedStyle(centralBook).display);
-  console.log('[carousel.html] Central book bounds:', centralBook.getBoundingClientRect());
 } else {
-  console.error('[carousel.html] ❌ CENTRAL BOOK NOT FOUND!');
 }
 
 render();
