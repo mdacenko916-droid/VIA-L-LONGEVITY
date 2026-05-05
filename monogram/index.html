@@ -11,75 +11,22 @@ body {
   background: #1c0e06;
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 60px;
-  padding: 60px 40px;
+  justify-content: center;
 }
-h2 {
-  font-family: 'Oswald', sans-serif;
-  font-size: 10px;
-  letter-spacing: .42em;
-  text-transform: uppercase;
-  color: rgba(255,228,155,0.3);
-  text-align: center;
-  margin-bottom: 20px;
-}
-.col { display:flex; flex-direction:column; align-items:center; }
-.row { display:flex; gap:50px; align-items:flex-start; }
-.light { background:#f5f1eb; border-radius:10px; padding:30px 40px; }
-.light h2 { color:rgba(120,80,30,0.35); }
 </style>
 </head>
 <body>
 
-<!--
-  ГЕОМЕТРИЯ (viewBox 0 0 400 300):
-
-  V: x=20, y=220, size=160
-     cap-top y=220-114=106
-     right-leg top ≈ (20+104,106)=(124,106)
-     right-leg bottom (center) ≈ (20+52,220)=(72,220)
-     slope dx/dy = (72-124)/(220-106) = -52/114 = -0.456
-
-  L: x=85, y=240, size=120
-     cap-top y=240-85=155
-     stem: x=85–100 (15px)
-     55% height: y=155+47=202
-     65% height: y=155+55=210
-
-  V@y=202: x = 124 - 52*(202-106)/114 = 124 - 43.8 = 80.2  → внутри [85-100]? NO — 80<85
-  V@y=210: x = 124 - 52*(210-106)/114 = 124 - 47.4 = 76.6  → нет
-
-  Сдвигаем L влево: x=72
-  stem: x=72–87
-  V@y=202: x=80.2 → внутри [72-87] ✓ (8.2px от левой кромки = 55% ширины стойки)
-  V@y=210: x=76.6 → внутри [72-87] ✓ (4.6px от левой кромки)
-
-  Gap: x=70–89, y=199–212  (покрывает стойку + 2px margin)
--->
-
-<!-- ══ КРУПНО ══ -->
-<div class="col">
-  <h2>Монограмма — крупно</h2>
-  <svg width="380" height="280" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg width="700" height="300" viewBox="0 0 700 300" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <!-- Градиент для объёма — как на референсе -->
       <linearGradient id="gv" x1="0%" y1="0%" x2="80%" y2="100%">
-        <stop offset="0%"   stop-color="#C8A05A"/>
-        <stop offset="35%"  stop-color="#E8C870"/>
-        <stop offset="65%"  stop-color="#B88840"/>
-        <stop offset="100%" stop-color="#907030"/>
+        <stop offset="0%"   stop-color="rgba(255,235,165,0.95)"/>
+        <stop offset="35%"  stop-color="rgba(255,215,120,0.92)"/>
+        <stop offset="100%" stop-color="rgba(200,160,70,0.88)"/>
       </linearGradient>
-      <linearGradient id="gl" x1="0%" y1="0%" x2="80%" y2="100%">
-        <stop offset="0%"   stop-color="#C0984E"/>
-        <stop offset="40%"  stop-color="#DEC068"/>
-        <stop offset="100%" stop-color="#906828"/>
-      </linearGradient>
-
-      <!-- Маска на V: вырезает стойку L -->
       <mask id="gap">
-        <rect width="400" height="300" fill="white"/>
+        <rect width="700" height="300" fill="white"/>
         <rect x="86" y="157" width="16" height="29" fill="black"/>
       </mask>
     </defs>
@@ -92,87 +39,18 @@ h2 {
     <!-- L: цельная, спереди -->
     <text x="88" y="232"
           font-family="Cormorant Garamond, serif" font-size="115"
-          fill="url(#gl)">L</text>
+          fill="rgba(255,225,145,0.9)">L</text>
+
+    <!-- VIA-L -->
+    <text x="270" y="165"
+          font-family="Oswald, sans-serif" font-size="52"
+          letter-spacing="5" fill="rgba(255,228,155,0.88)">VIA-L</text>
+    <line x1="270" y1="182" x2="580" y2="182"
+          stroke="rgba(255,228,155,0.4)" stroke-width="1.5"/>
+    <text x="270" y="218"
+          font-family="Oswald, sans-serif" font-size="28"
+          letter-spacing="8" fill="rgba(255,228,155,0.6)">LONGEVITY</text>
   </svg>
-</div>
-
-<!-- ══ ДВА ФОНА РЯДОМ ══ -->
-<div class="row">
-
-  <div class="col">
-    <h2>Тёмный — с VIA-L</h2>
-    <svg width="400" height="150" viewBox="0 0 700 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="gvd" x1="0%" y1="0%" x2="80%" y2="100%">
-          <stop offset="0%"   stop-color="rgba(255,235,165,0.95)"/>
-          <stop offset="35%"  stop-color="rgba(255,215,120,0.92)"/>
-          <stop offset="100%" stop-color="rgba(200,160,70,0.88)"/>
-        </linearGradient>
-        <mask id="gapd">
-          <rect width="700" height="300" fill="white"/>
-          <rect x="86" y="157" width="16" height="29" fill="black"/>
-        </mask>
-      </defs>
-      <text x="20" y="220" font-family="Cormorant Garamond, serif" font-size="160"
-            fill="url(#gvd)" mask="url(#gapd)">V</text>
-      <text x="72" y="240" font-family="Cormorant Garamond, serif" font-size="115"
-            fill="rgba(255,225,145,0.9)">L</text>
-      <!-- VIA-L LONGEVITY -->
-      <text x="260" y="165" font-family="Oswald, sans-serif" font-size="52"
-            letter-spacing="5" fill="rgba(255,228,155,0.88)">VIA-L</text>
-      <line x1="260" y1="182" x2="580" y2="182"
-            stroke="rgba(255,228,155,0.4)" stroke-width="1.5"/>
-      <text x="260" y="218" font-family="Oswald, sans-serif" font-size="28"
-            letter-spacing="8" fill="rgba(255,228,155,0.6)">LONGEVITY</text>
-    </svg>
-  </div>
-
-  <div class="col light">
-    <h2>Светлый фон</h2>
-    <svg width="320" height="240" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <mask id="gapl">
-          <rect width="400" height="300" fill="white"/>
-          <rect x="86" y="157" width="16" height="29" fill="black"/>
-        </mask>
-      </defs>
-      <text x="20" y="220" font-family="Cormorant Garamond, serif" font-size="160"
-            fill="#A68A6D" mask="url(#gapl)">V</text>
-      <text x="72" y="240" font-family="Cormorant Garamond, serif" font-size="115"
-            fill="#A68A6D">L</text>
-    </svg>
-  </div>
-
-</div>
-
-<!-- ══ СХЕМА ══ -->
-<div class="col">
-  <h2>Схема пересечения</h2>
-  <svg width="300" height="220" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <!-- ножка V (жёлтый) -->
-    <line x1="124" y1="106" x2="72" y2="220"
-          stroke="rgba(255,220,60,0.3)" stroke-width="14" stroke-linecap="round"/>
-    <!-- стойка L (синий) -->
-    <rect x="72" y="155" width="15" height="85" fill="rgba(80,160,255,0.2)"/>
-    <!-- 55% и 65% метки -->
-    <line x1="60" y1="202" x2="102" y2="202"
-          stroke="rgba(255,255,255,0.18)" stroke-width="1" stroke-dasharray="4 3"/>
-    <line x1="60" y1="210" x2="102" y2="210"
-          stroke="rgba(255,255,255,0.18)" stroke-width="1" stroke-dasharray="4 3"/>
-    <text x="105" y="204" font-family="Oswald,sans-serif" font-size="10"
-          fill="rgba(255,255,255,0.25)">55%</text>
-    <text x="105" y="212" font-family="Oswald,sans-serif" font-size="10"
-          fill="rgba(255,255,255,0.25)">65%</text>
-    <!-- Gap (красный) -->
-    <rect x="86" y="157" width="16" height="29" fill="rgba(255,60,60,0.5)"/>
-    <!-- точка V на 55% -->
-    <circle cx="80" cy="202" r="3.5" fill="rgba(80,255,120,0.7)"/>
-  </svg>
-  <div style="font-family:'Oswald',sans-serif;font-size:8px;letter-spacing:.28em;
-       color:rgba(255,228,155,0.18);text-align:center;text-transform:uppercase;line-height:2.2;margin-top:8px;">
-    Жёлтое = ножка V · Синее = стойка L · Красное = gap · Зелёное = точка 55%
-  </div>
-</div>
 
 </body>
 </html>
