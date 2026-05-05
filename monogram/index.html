@@ -14,44 +14,66 @@ body {
   align-items: center;
   justify-content: center;
 }
+canvas { display: block; }
 </style>
 </head>
 <body>
 
-  <svg width="700" height="300" viewBox="0 0 700 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="gv" x1="0%" y1="0%" x2="80%" y2="100%">
-        <stop offset="0%"   stop-color="rgba(255,235,165,0.95)"/>
-        <stop offset="35%"  stop-color="rgba(255,215,120,0.92)"/>
-        <stop offset="100%" stop-color="rgba(200,160,70,0.88)"/>
-      </linearGradient>
-    </defs>
+<canvas id="mono" width="700" height="300"></canvas>
 
-    <!-- V: полностью -->
-    <text x="20" y="220"
-          font-family="Cormorant Garamond, serif" font-size="160"
-          fill="url(#gv)">V</text>
+<script>
+document.fonts.ready.then(draw);
 
-    <!-- L цветом фона — стирает V под собой точно по форме буквы -->
-    <text x="74" y="232"
-          font-family="Cormorant Garamond, serif" font-size="115"
-          fill="#1c0e06">L</text>
+function draw() {
+  const c = document.getElementById('mono');
+  const ctx = c.getContext('2d');
 
-    <!-- L золотом поверх — цельная, спереди -->
-    <text x="74" y="232"
-          font-family="Cormorant Garamond, serif" font-size="115"
-          fill="rgba(255,225,145,0.9)">L</text>
+  /* background — canvas pixels start transparent;
+     destination-out will erase back to transparent
+     and the body #1c0e06 shows through the gap */
 
-    <!-- VIA-L -->
-    <text x="270" y="165"
-          font-family="Oswald, sans-serif" font-size="52"
-          letter-spacing="5" fill="rgba(255,228,155,0.88)">VIA-L</text>
-    <line x1="270" y1="182" x2="580" y2="182"
-          stroke="rgba(255,228,155,0.4)" stroke-width="1.5"/>
-    <text x="270" y="218"
-          font-family="Oswald, sans-serif" font-size="28"
-          letter-spacing="8" fill="rgba(255,228,155,0.6)">LONGEVITY</text>
-  </svg>
+  /* — V with gold gradient — */
+  const grad = ctx.createLinearGradient(0, 0, 560, 300);
+  grad.addColorStop(0,    'rgba(255,235,165,0.95)');
+  grad.addColorStop(0.35, 'rgba(255,215,120,0.92)');
+  grad.addColorStop(1,    'rgba(200,160,70,0.88)');
+
+  ctx.font = '160px "Cormorant Garamond"';
+  ctx.fillStyle = grad;
+  ctx.fillText('V', 20, 220);
+
+  /* — erase V where L sits — */
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.font = '115px "Cormorant Garamond"';
+  ctx.fillStyle = 'rgba(0,0,0,1)';
+  ctx.fillText('L', 74, 232);
+
+  /* — gold L on top — */
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = 'rgba(255,225,145,0.9)';
+  ctx.fillText('L', 74, 232);
+
+  /* — VIA-L — */
+  ctx.font = '300 52px "Oswald"';
+  ctx.letterSpacing = '5px';
+  ctx.fillStyle = 'rgba(255,228,155,0.88)';
+  ctx.fillText('VIA-L', 270, 165);
+
+  /* — separator line — */
+  ctx.strokeStyle = 'rgba(255,228,155,0.4)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(270, 182);
+  ctx.lineTo(580, 182);
+  ctx.stroke();
+
+  /* — LONGEVITY — */
+  ctx.letterSpacing = '8px';
+  ctx.font = '300 28px "Oswald"';
+  ctx.fillStyle = 'rgba(255,228,155,0.6)';
+  ctx.fillText('LONGEVITY', 270, 218);
+}
+</script>
 
 </body>
 </html>
