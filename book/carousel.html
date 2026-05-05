@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Oswald:wght@300;400&family=Playfair+Display:wght@400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root { --gold: #b8924a; --dark: #1a1208; }
+:root { --gold: #b8924a; --dark: #1a1208; --bw: 140px; --bh: 210px; }
 
 html, body {
   width: 100%; height: 100%;
@@ -47,8 +47,8 @@ body {
 /* книга */
 .bk {
   position: absolute;
-  width: 140px;
-  height: 210px;
+  width: var(--bw);
+  height: var(--bh);
   cursor: pointer;
   border-radius: 2px 7px 7px 2px;
   will-change: transform;
@@ -209,6 +209,22 @@ body {
   border: none; border-radius: 4px; display: block;
   box-shadow: 0 24px 70px rgba(0,0,0,.4);
 }
+
+/* — мобильная адаптация — */
+@media (max-width: 767px) {
+  .hd svg { width: 100px; height: 38px; }
+  .hd-title { font-size: 22px; }
+}
+@media (max-width: 479px) {
+  .hd { top: 14px; }
+  .hd svg { width: 80px; height: 31px; }
+  .hd-title { font-size: 18px; margin-top: 5px; }
+  .hd-hint { display: none; }
+  .nav { bottom: 16px; gap: 10px; }
+  .arr { width: 36px; height: 36px; font-size: 14px; }
+  .center-label { bottom: 64px; font-size: 13px; }
+  .tap-hint { transform: translate(-50%, calc(-50% + 88px)); }
+}
 </style>
 </head>
 <body>
@@ -268,45 +284,39 @@ function getCenter() {
   return { cx: scene.offsetWidth / 2, cy: scene.offsetHeight / 2 };
 }
 
-const RX = 260;   // горизонтальный радиус кольца
-const RY = 90;    // вертикальный радиус (уплощение = наклон ~±45°)
-const TILT = 60;  // сдвиг кольца вниз — передняя книга в центре экрана
-
-// Угол 0 = передняя нижняя точка кольца, π = задняя верхняя
-function getAngle(i) {
-  return (2 * Math.PI * i) / N;
+function getParams() {
+  const w = window.innerWidth;
+  if (w < 480) return { rx: 136, ry: 48, tilt: 34, bw: 104, bh: 156 };
+  if (w < 768) return { rx: 192, ry: 66, tilt: 48, bw: 120, bh: 180 };
+  return { rx: 260, ry: 90, tilt: 60, bw: 140, bh: 210 };
 }
 
-function posForAngle(a) {
-  // Позиция на наклонённом эллипсе
-  // x = cx + RX * sin(a)
-  // y = cy + TILT + RY * (-cos(a))  — cos=1 при a=0 → нижняя точка
+function posForAngle(a, rx, ry, tilt) {
   const { cx, cy } = getCenter();
-  const x = cx + RX * Math.sin(a);
-  const y = cy + TILT + RY * (-Math.cos(a));
-  // depth: cos(a) → -1 (перед) до 1 (зад)
-  const depth = Math.cos(a); // -1 = front, 1 = back
+  const x = cx + rx * Math.sin(a);
+  const y = cy + tilt + ry * (-Math.cos(a));
+  const depth = Math.cos(a);
   return { x, y, depth };
 }
 
 function render() {
+  const { rx, ry, tilt, bw, bh } = getParams();
+  document.documentElement.style.setProperty('--bw', bw + 'px');
+  document.documentElement.style.setProperty('--bh', bh + 'px');
   scene.querySelectorAll('.bk').forEach((card) => {
     const i = parseInt(card.dataset.i);
     const offset = i - cur;
     const a = (2 * Math.PI * offset) / N;
-    const { x, y } = posForAngle(a);
+    const { x, y } = posForAngle(a, rx, ry, tilt);
     const absA = Math.abs(a) % (2 * Math.PI);
     const angDist = Math.min(absA, 2 * Math.PI - absA);
     const t = 1 - angDist / Math.PI;
     const scale = 0.55 + 0.65 * (t * t);
     const opacity = 0.80 + 0.20 * t;
-    card.style.transform = `translate(${x - 70}px, ${y - 105}px) scale(${scale})`;
+    card.style.transform = `translate(${x - bw/2}px, ${y - bh/2}px) scale(${scale})`;
     card.style.opacity = opacity;
     card.style.zIndex = Math.round(100 * t);
-    const isFront = i === cur;
-    card.classList.toggle('front', isFront);
-    if (isFront) {
-    }
+    card.classList.toggle('front', i === cur);
   });
 
   dotsEl.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('on', i === cur));
