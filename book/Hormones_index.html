@@ -444,28 +444,27 @@ body {
           <svg width="190" height="64" viewBox="0 0 600 200" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <!--
-                V: x=60, y=122, size=88
-                  cap-top y≈59, right-leg: (117,59)→(89,122)
-                  stroke-width ≈13px, parallelogram perpendicular to leg
-                L: x=92, y=140, size=78  stem x=92..105
-                  V enters stem at ≈(105,87), exits at ≈(92,114)
+                V right-leg: (117,59)→(89,122)
+                L stem: x=92..106, enters V-leg at y≈84, exits at y≈115
+                Gap on V = vertical rect matching L stem width + 2px margin
               -->
-              <mask id="vl-mask">
+              <mask id="v-gap">
                 <rect width="600" height="200" fill="white"/>
-                <polygon points="111,56 123,62 95,125 83,119" fill="black"/>
+                <!-- вырезаем зону где стойка L проходит перед V -->
+                <rect x="89" y="81" width="19" height="37" fill="black"/>
               </mask>
             </defs>
 
             <!-- Открытая дуга, разрыв вправо -->
             <path d="M160 65 A70 70 0 1 0 160 135" stroke="rgba(255,228,155,0.78)" stroke-width="2.5"/>
 
-            <!-- L: рисуется первой, маска вырезает место прохода V -->
-            <text x="92" y="140" font-family="Cormorant Garamond, serif" font-size="78"
-                  fill="rgba(255,228,155,0.88)" mask="url(#vl-mask)">L</text>
-
-            <!-- V: рисуется поверх — ножка проходит сквозь L -->
+            <!-- V: с разрывом — L проходит сквозь неё спереди -->
             <text x="60" y="122" font-family="Cormorant Garamond, serif" font-size="88"
-                  fill="rgba(255,228,155,0.88)">V</text>
+                  fill="rgba(255,228,155,0.88)" mask="url(#v-gap)">V</text>
+
+            <!-- L: цельная, рисуется поверх — она спереди -->
+            <text x="92" y="140" font-family="Cormorant Garamond, serif" font-size="78"
+                  fill="rgba(255,228,155,0.88)">L</text>
 
             <!-- VIA-L -->
             <text x="222" y="88" font-family="Oswald, Helvetica, sans-serif" font-size="36"
