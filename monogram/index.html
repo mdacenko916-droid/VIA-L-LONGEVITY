@@ -6,132 +6,164 @@
 <title>VL Monogram</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Oswald:wght@300;400&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing:border-box; margin:0; padding:0; }
 body {
   background: #1c0e06;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 60px;
+  gap: 50px;
   padding: 60px 40px;
 }
-.label {
+h2 {
   font-family: 'Oswald', sans-serif;
   font-size: 10px;
-  letter-spacing: .4em;
+  letter-spacing: .42em;
   text-transform: uppercase;
-  color: rgba(255,228,155,0.35);
+  color: rgba(255,228,155,0.3);
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
-.variant { display: flex; flex-direction: column; align-items: center; }
-.on-light { background: #faf7f2; border-radius: 12px; padding: 40px 60px; }
-.on-light .label { color: rgba(120,80,30,0.4); }
+.row { display:flex; gap:60px; align-items:flex-start; }
+.col { display:flex; flex-direction:column; align-items:center; }
+.light-bg { background:#faf7f2; border-radius:10px; padding:30px 40px; }
+.light-bg h2 { color:rgba(120,80,30,0.35); }
 </style>
 </head>
 <body>
 
 <!--
+═══════════════════════════════════════════
   ГЕОМЕТРИЯ (viewBox 0 0 600 200):
-  V: x=60, y=122, size=88 → правая ножка (118,60)→(89,122)
-  L: x=85, y=140, size=78 → стойка x=85–93, top y=85
-  Пересечение: 55% высоты L = y=115, 65% = y=121
-    V@y=115: x=92.3  → внутри стойки [85..93] ✓
-    V@y=121: x=89.5  → внутри стойки [85..93] ✓
-  Gap mask: закрывает стойку L x=83–95, y=113–124
+
+  V: x=65, y=122, size=88
+     right-leg: top=(65+57,122-62)=(122,60) → bottom=(65+29,122)=(94,122)
+     slope: dx/dy = (94-122)/(122-60) = -28/62 = -0.452
+
+  L: x=90, y=144, size=78
+     cap-height ≈ 55px → top y=89
+     stem: x=90–99 (9px wide)
+     foot: y≈136–144 → ниже baseline V (y=122) — нет пересечения с телом V ✓
+     55% высоты L = y=89+30=119
+     65% высоты L = y=89+36=125
+
+  V@y=119: x = 122 - 28*(119-60)/62 = 122-26.6 = 95.4  → внутри [90-99] ✓
+  V@y=125: x = 122 - 28*(125-60)/62 = 122-29.4 = 92.6  → внутри [90-99] ✓
+
+  Глубина: V при y=119 на x=95.4 → 5.4px от левой кромки стойки (90+5.4) = 11% ширины L ✓
+  Ширина gap = 10px ≈ толщина штриха L
+
+  Gap mask: x=89–99, y=118–128  (55–68% высоты L)
+═══════════════════════════════════════════
 -->
 
-<!-- ── Тёмный фон ── -->
-<div class="variant">
-  <div class="label">На тёмном фоне</div>
-  <svg width="380" height="140" viewBox="0 0 600 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- ══ КРУПНО — только монограмма ══ -->
+<div class="col">
+  <h2>Монограмма крупно</h2>
+  <svg width="340" height="340" viewBox="40 40 150 150" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <mask id="v-gap-dark">
-        <rect width="600" height="200" fill="white"/>
-        <!-- gap = L стойка: x 83–95, y 113–124 (55–65% высоты L) -->
-        <rect x="83" y="113" width="12" height="11" fill="black"/>
-      </mask>
-    </defs>
-    <path d="M160 65 A70 70 0 1 0 160 135" stroke="rgba(255,228,155,0.78)" stroke-width="2.5"/>
-    <!-- V: разрыв в зоне пересечения -->
-    <text x="60" y="122" font-family="Cormorant Garamond, serif" font-size="88"
-          fill="rgba(255,228,155,0.92)" mask="url(#v-gap-dark)">V</text>
-    <!-- L: цельная, спереди -->
-    <text x="85" y="140" font-family="Cormorant Garamond, serif" font-size="78"
-          fill="rgba(255,228,155,0.92)">L</text>
-    <text x="222" y="88" font-family="Oswald, sans-serif" font-size="36"
-          letter-spacing="4" fill="rgba(255,228,155,0.88)">VIA-L</text>
-    <line x1="222" y1="100" x2="450" y2="100" stroke="rgba(255,228,155,0.45)" stroke-width="1.5"/>
-    <text x="222" y="136" font-family="Oswald, sans-serif" font-size="20"
-          letter-spacing="6" fill="rgba(255,228,155,0.62)">LONGEVITY</text>
-  </svg>
-</div>
-
-<!-- ── Светлый фон ── -->
-<div class="variant on-light">
-  <div class="label">На светлом фоне</div>
-  <svg width="380" height="140" viewBox="0 0 600 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <mask id="v-gap-light">
-        <rect width="600" height="200" fill="white"/>
-        <rect x="83" y="113" width="12" height="11" fill="black"/>
-      </mask>
-    </defs>
-    <path d="M160 65 A70 70 0 1 0 160 135" stroke="#A68A6D" stroke-width="2.5"/>
-    <text x="60" y="122" font-family="Cormorant Garamond, serif" font-size="88"
-          fill="#A68A6D" mask="url(#v-gap-light)">V</text>
-    <text x="85" y="140" font-family="Cormorant Garamond, serif" font-size="78"
-          fill="#A68A6D">L</text>
-    <text x="222" y="88" font-family="Oswald, sans-serif" font-size="36"
-          letter-spacing="4" fill="#A68A6D">VIA-L</text>
-    <line x1="222" y1="100" x2="450" y2="100" stroke="#A68A6D" stroke-width="1.5"/>
-    <text x="222" y="136" font-family="Oswald, sans-serif" font-size="20"
-          letter-spacing="6" fill="#C4A882">LONGEVITY</text>
-  </svg>
-</div>
-
-<!-- ── Монограмма крупно — для точной настройки ── -->
-<div class="variant">
-  <div class="label">Крупно — только монограмма</div>
-  <svg width="300" height="300" viewBox="45 45 135 135" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <mask id="v-gap-big">
+      <mask id="gap-big">
         <rect width="600" height="600" fill="white"/>
-        <rect x="83" y="113" width="12" height="11" fill="black"/>
+        <!-- gap: 55–68% высоты L, ширина = толщина стойки -->
+        <rect x="89" y="118" width="11" height="11" fill="black"/>
       </mask>
     </defs>
-    <path d="M160 65 A70 70 0 1 0 160 135" stroke="rgba(255,228,155,0.7)" stroke-width="1.5"/>
-    <text x="60" y="122" font-family="Cormorant Garamond, serif" font-size="88"
-          fill="rgba(255,228,155,0.92)" mask="url(#v-gap-big)">V</text>
-    <text x="85" y="140" font-family="Cormorant Garamond, serif" font-size="78"
+    <!-- дуга, разрыв вправо -->
+    <path d="M160 65 A70 70 0 1 0 160 135"
+          stroke="rgba(255,228,155,0.72)" stroke-width="1.5"/>
+    <!-- V: разрыв в зоне пересечения -->
+    <text x="65" y="122"
+          font-family="Cormorant Garamond, serif" font-size="88"
+          fill="rgba(255,228,155,0.92)" mask="url(#gap-big)">V</text>
+    <!-- L: цельная, спереди, foot ниже V -->
+    <text x="90" y="144"
+          font-family="Cormorant Garamond, serif" font-size="78"
           fill="rgba(255,228,155,0.92)">L</text>
   </svg>
 </div>
 
-<!-- ── Схема пересечения (диагностика) ── -->
-<div class="variant">
-  <div class="label">Схема: зона пересечения</div>
-  <svg width="300" height="300" viewBox="45 45 135 135" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <!-- V правая ножка -->
-    <line x1="118" y1="60" x2="89" y2="122" stroke="rgba(255,200,80,0.4)" stroke-width="10"
-          stroke-linecap="round"/>
-    <!-- L стойка -->
-    <rect x="85" y="85" width="8" height="55" fill="rgba(100,200,255,0.3)"/>
-    <!-- Gap зона (красный) -->
-    <rect x="83" y="113" width="12" height="11" fill="rgba(255,80,80,0.6)"/>
-    <!-- разметка 55% и 65% -->
-    <line x1="80" y1="115" x2="100" y2="115" stroke="rgba(255,255,255,0.25)" stroke-width="0.5" stroke-dasharray="3 2"/>
-    <line x1="80" y1="121" x2="100" y2="121" stroke="rgba(255,255,255,0.25)" stroke-width="0.5" stroke-dasharray="3 2"/>
-    <text x="103" y="117" font-family="Oswald,sans-serif" font-size="7" fill="rgba(255,255,255,0.3)">55%</text>
-    <text x="103" y="123" font-family="Oswald,sans-serif" font-size="7" fill="rgba(255,255,255,0.3)">65%</text>
-  </svg>
+<!-- ══ ТЕМНЫЙ + СВЕТЛЫЙ рядом ══ -->
+<div class="row">
+
+  <div class="col">
+    <h2>Тёмный фон</h2>
+    <svg width="380" height="140" viewBox="0 0 600 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <mask id="gap-dark">
+          <rect width="600" height="200" fill="white"/>
+          <rect x="89" y="118" width="11" height="11" fill="black"/>
+        </mask>
+      </defs>
+      <path d="M160 65 A70 70 0 1 0 160 135"
+            stroke="rgba(255,228,155,0.78)" stroke-width="2.5"/>
+      <text x="65" y="122" font-family="Cormorant Garamond, serif" font-size="88"
+            fill="rgba(255,228,155,0.92)" mask="url(#gap-dark)">V</text>
+      <text x="90" y="144" font-family="Cormorant Garamond, serif" font-size="78"
+            fill="rgba(255,228,155,0.92)">L</text>
+      <text x="222" y="88" font-family="Oswald, sans-serif" font-size="36"
+            letter-spacing="4" fill="rgba(255,228,155,0.88)">VIA-L</text>
+      <line x1="222" y1="100" x2="450" y2="100"
+            stroke="rgba(255,228,155,0.45)" stroke-width="1.5"/>
+      <text x="222" y="136" font-family="Oswald, sans-serif" font-size="20"
+            letter-spacing="6" fill="rgba(255,228,155,0.62)">LONGEVITY</text>
+    </svg>
+  </div>
+
+  <div class="col light-bg">
+    <h2>Светлый фон</h2>
+    <svg width="380" height="140" viewBox="0 0 600 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <mask id="gap-light">
+          <rect width="600" height="200" fill="white"/>
+          <rect x="89" y="118" width="11" height="11" fill="black"/>
+        </mask>
+      </defs>
+      <path d="M160 65 A70 70 0 1 0 160 135" stroke="#A68A6D" stroke-width="2.5"/>
+      <text x="65" y="122" font-family="Cormorant Garamond, serif" font-size="88"
+            fill="#A68A6D" mask="url(#gap-light)">V</text>
+      <text x="90" y="144" font-family="Cormorant Garamond, serif" font-size="78"
+            fill="#A68A6D">L</text>
+      <text x="222" y="88" font-family="Oswald, sans-serif" font-size="36"
+            letter-spacing="4" fill="#A68A6D">VIA-L</text>
+      <line x1="222" y1="100" x2="450" y2="100" stroke="#A68A6D" stroke-width="1.5"/>
+      <text x="222" y="136" font-family="Oswald, sans-serif" font-size="20"
+            letter-spacing="6" fill="#C4A882">LONGEVITY</text>
+    </svg>
+  </div>
+
 </div>
 
-<div style="font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:.3em;
-     color:rgba(255,228,155,0.2);text-align:center;text-transform:uppercase;line-height:2.2;">
-  Жёлтое = ножка V · Синее = стойка L · Красное = разрыв gap
+<!-- ══ СХЕМА ГЕОМЕТРИИ ══ -->
+<div class="col">
+  <h2>Схема: позиция gap</h2>
+  <svg width="300" height="300" viewBox="40 40 150 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- V правая ножка (жёлтый) -->
+    <line x1="122" y1="60" x2="94" y2="122"
+          stroke="rgba(255,220,60,0.35)" stroke-width="10" stroke-linecap="round"/>
+    <!-- L стойка (синий) -->
+    <rect x="90" y="89" width="9" height="55" fill="rgba(80,160,255,0.25)"/>
+    <!-- 55% и 65% метки -->
+    <line x1="82" y1="119" x2="104" y2="119"
+          stroke="rgba(255,255,255,0.2)" stroke-width="0.8" stroke-dasharray="3 2"/>
+    <line x1="82" y1="125" x2="104" y2="125"
+          stroke="rgba(255,255,255,0.2)" stroke-width="0.8" stroke-dasharray="3 2"/>
+    <text x="106" y="121" font-family="Oswald,sans-serif" font-size="7"
+          fill="rgba(255,255,255,0.3)">55%</text>
+    <text x="106" y="127" font-family="Oswald,sans-serif" font-size="7"
+          fill="rgba(255,255,255,0.3)">65%</text>
+    <!-- Gap зона (красный) -->
+    <rect x="89" y="118" width="11" height="11" fill="rgba(255,60,60,0.55)"/>
+    <!-- V точка на y=119 (зелёный) -->
+    <circle cx="95" cy="119" r="2.5" fill="rgba(80,255,120,0.7)"/>
+    <text x="100" y="118" font-family="Oswald,sans-serif" font-size="6"
+          fill="rgba(80,255,120,0.5)">V@55%</text>
+  </svg>
+  <div style="font-family:'Oswald',sans-serif;font-size:8px;letter-spacing:.3em;
+       color:rgba(255,228,155,0.2);text-align:center;text-transform:uppercase;
+       line-height:2.2;margin-top:10px;">
+    Жёлтое = ножка V · Синее = стойка L · Красное = gap · Зелёное = точка пересечения
+  </div>
 </div>
 
 </body>
