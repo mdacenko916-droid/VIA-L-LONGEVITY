@@ -742,6 +742,7 @@ body {
 </div><!-- /#canvas -->
 
 <!-- Navigation -->
+<button id="btn-back" style="display:none;position:fixed;top:14px;left:14px;z-index:200;background:rgba(255,255,255,0.92);border:1.5px solid rgba(184,146,74,.35);border-radius:22px;padding:7px 16px;font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#3a2510;cursor:pointer;" onclick="history.back()">&#8592; Каталог</button>
 <div id="controls">
   <button class="btn-nav" id="btn-prev">&#8249;</button>
   <span id="page-info">1 / 6</span>
@@ -751,6 +752,7 @@ body {
 <script>
 $(function () {
 
+  var isMobile = window.innerWidth < 768;
   var book  = $('#book');
   var total = 6;
 
@@ -775,20 +777,26 @@ $(function () {
   }
 
   function pageLabel(page) {
+    if (isMobile) return page + ' / ' + book.turn('pages');
     if (page <= 1) return '1 / ' + total;
     if (page >= book.turn('pages')) return total + ' / ' + total;
     return Math.ceil(page / 2) + ' / ' + total;
   }
 
+  if (isMobile) {
+    var mScale = Math.min(window.innerWidth / 480, (window.innerHeight - 70) / 600);
+    $('#canvas').css({ width: '480px', height: '600px', transform: 'translate(-50%, -50%) scale(' + mScale + ')' });
+  }
+
   book.turn({
-    width:        960,
+    width:        isMobile ? 480 : 960,
     height:       600,
     autoCenter:   true,
     gradients:    true,
     acceleration: true,
     elevation:    50,
-    duration:     1000,
-    display:      'double',
+    duration:     isMobile ? 500 : 1000,
+    display:      isMobile ? 'single' : 'double',
     when: {
       turning: function (e, page) {
         updateDepth(book, page);
@@ -814,6 +822,17 @@ $(function () {
 
   updateDepth(book);
   book.css('visibility', 'visible');
+  if (isMobile) {
+    var swipeX = null;
+    document.addEventListener('touchstart', function(e) { swipeX = e.touches[0].clientX; }, { passive: true });
+    document.addEventListener('touchend', function(e) {
+      if (swipeX === null) return;
+      var dx = e.changedTouches[0].clientX - swipeX;
+      swipeX = null;
+      if (Math.abs(dx) > 40) dx < 0 ? book.turn('next') : book.turn('previous');
+    }, { passive: true });
+    document.getElementById('btn-back').style.display = 'block';
+  }
   requestAnimationFrame(function() {
     requestAnimationFrame(function() {
       window.parent.postMessage({ action: 'bookReady' }, '*');
