@@ -747,6 +747,13 @@ $(function () {
 
   var isMobile = window.innerWidth < 768;
   var book  = $('#book');
+  function mobilePage(dir) {
+    var p = book.turn('page');
+    var next = p + dir;
+    if (next === 2)  next = dir > 0 ? 3 : 1;
+    if (next === 11) next = dir > 0 ? 12 : 10;
+    book.turn('page', Math.max(1, Math.min(next, book.turn('pages'))));
+  }
   var total = 6;
 
   function updateDepth(book, newPage) {
@@ -779,6 +786,7 @@ $(function () {
   if (isMobile) {
     var mScale = Math.min(window.innerWidth / 480, (window.innerHeight - 70) / 600);
     $('#canvas').css({ width: '480px', height: '600px', transform: 'translate(-50%, -50%) scale(' + mScale + ')' });
+    $('#book .hard').removeClass('hard');
   }
 
   book.turn({
@@ -792,6 +800,7 @@ $(function () {
     display:      isMobile ? 'single' : 'double',
     when: {
       turning: function (e, page) {
+        if (isMobile) return;
         updateDepth(book, page);
         if (page >= 2)
           $('#book .p2').addClass('fixed');
@@ -803,17 +812,17 @@ $(function () {
           $('#book .p9').removeClass('fixed');
       },
       turned: function (e, page) {
-        updateDepth(book);
+        if (!isMobile) updateDepth(book);
         $('#page-info').text(pageLabel(page));
-        if (page === 2 || page === 3) book.turn('peel', 'br');
+        if (!isMobile && (page === 2 || page === 3)) book.turn('peel', 'br');
       },
       end: function () {
-        updateDepth(book);
+        if (!isMobile) updateDepth(book);
       }
     }
   });
 
-  updateDepth(book);
+  if (!isMobile) updateDepth(book);
   book.css('visibility', 'visible');
   if (isMobile) {
     var swipeX = null;
@@ -822,7 +831,7 @@ $(function () {
       if (swipeX === null) return;
       var dx = e.changedTouches[0].clientX - swipeX;
       swipeX = null;
-      if (Math.abs(dx) > 40) dx < 0 ? book.turn('next') : book.turn('previous');
+      if (Math.abs(dx) > 40) mobilePage(dx < 0 ? 1 : -1);
     }, { passive: true });
     document.getElementById('btn-back').style.display = 'block';
   }
@@ -832,8 +841,8 @@ $(function () {
     });
   });
 
-  $('#btn-prev').on('click', function () { book.turn('previous'); });
-  $('#btn-next').on('click', function () { book.turn('next'); });
+  $('#btn-prev').on('click', function () { isMobile ? mobilePage(-1) : book.turn('previous'); });
+  $('#btn-next').on('click', function () { isMobile ? mobilePage(1) : book.turn('next'); });
 
   $(document).keydown(function (e) {
     if (e.keyCode === 37) book.turn('previous');
