@@ -433,30 +433,12 @@ window.addEventListener('wheel', e => {
 window.addEventListener('resize', render);
 
 // Модалка
-window.addEventListener('message', function(e) {
-  if (e.data && e.data.action === 'bookReady') {
-    if (_bookReadyTimer) { clearTimeout(_bookReadyTimer); _bookReadyTimer = null; }
-    requestAnimationFrame(() => document.getElementById('modal').classList.add('on'));
-  }
-});
-var _bookReadyTimer = null;
-
 function openBook(file) {
   if (window.innerWidth < 768) {
     try { window.top.location.href = '/book/' + file; } catch(e) { window.location.href = file; }
     return;
   }
-  const modal = document.getElementById('modal');
-  const frame = document.getElementById('frame');
-  modal.classList.remove('on');
-  modal.style.display = 'flex';
-  frame.src = '/book/' + file;
-  // show after book signals ready; 4s fallback if postMessage never fires
-  if (_bookReadyTimer) clearTimeout(_bookReadyTimer);
-  _bookReadyTimer = setTimeout(() => {
-    modal.classList.add('on');
-    _bookReadyTimer = null;
-  }, 4000);
+  try { window.parent.postMessage({ action: 'openBook', file: '/book/' + file }, '*'); } catch(e) {}
 }
 function closeModal() {
   const modal = document.getElementById('modal');
