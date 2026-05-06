@@ -796,14 +796,22 @@ $(function () {
     var $reader = $('<div id="m-reader"></div>').appendTo('body');
     var $track  = $('<div id="m-track"></div>').appendTo($reader);
 
+    var scaledW = Math.floor(pageW * scale);
+    var scaledH = Math.floor(pageH * scale);
     $.each(pages, function(i, page) {
       var $slide = $('<div class="m-slide"></div>');
+      var $wrap  = $('<div class="m-scale-wrap"></div>').css({
+        width: scaledW + 'px', height: scaledH + 'px',
+        position: 'relative', overflow: 'hidden', flexShrink: 0
+      });
       var $inner = $('<div class="m-page-inner"></div>').css({
         width: pageW + 'px', height: pageH + 'px',
-        transform: 'scale(' + scale + ')', transformOrigin: 'top left'
+        transform: 'scale(' + scale + ')', transformOrigin: 'top left',
+        position: 'absolute', top: 0, left: 0
       });
       $inner.append($(page));
-      $slide.append($inner);
+      $wrap.append($inner);
+      $slide.append($wrap);
       $track.append($slide);
     });
 
