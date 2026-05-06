@@ -330,8 +330,6 @@ function go(idx) {
 }
 
 // Создаём карточки
-let swipeBlocked = false; // prevents click firing right after a swipe
-
 BOOKS.forEach((b, i) => {
   const el = document.createElement('div');
   el.className = 'bk';
@@ -350,30 +348,6 @@ BOOKS.forEach((b, i) => {
       </div>
     </div>
   `;
-
-  // Обработчик для клика
-  const handleBookClick = (evt) => {
-    
-    // Проверяем, что клик пришёл на саму книгу
-    if (!evt.currentTarget.classList.contains('bk')) {
-      return;
-    }
-    
-    evt.stopPropagation();
-    evt.preventDefault();
-    
-    if (i === cur) {
-      openBook(b.file);
-      return;
-    } else {
-      let rel = i - cur;
-      if (rel > N/2) rel -= N;
-      if (rel < -N/2) rel += N;
-      go(cur + Math.sign(rel));
-    }
-  };
-
-  el.addEventListener('click', handleBookClick, true);  // capture phase
 
   scene.appendChild(el);
 
@@ -429,13 +403,20 @@ scene.addEventListener('pointerup', e => {
     return;
   }
 
-  // Если клик произошел на самой книге - не обрабатываем навигацию
-  // Позволим обработчику click на книге срабатывать
-  if (e.target.closest('.bk')) {
+  const bkEl = e.target.closest('.bk');
+  if (bkEl) {
+    const idx = parseInt(bkEl.dataset.i);
+    if (idx === cur) {
+      openBook(BOOKS[idx].file);
+    } else {
+      let rel = idx - cur;
+      if (rel > N/2) rel -= N;
+      if (rel < -N/2) rel += N;
+      go(cur + Math.sign(rel));
+    }
     return;
   }
 
-  // Иначе это был клик на пустую область сцены - обработаем навигацию
   const cx = scene.offsetWidth / 2;
   e.clientX < cx ? go(cur - 1) : go(cur + 1);
 }, { passive: false });
