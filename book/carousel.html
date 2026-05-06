@@ -208,6 +208,7 @@ body {
   width: min(960px, 95vw); height: min(600px, 80vh);
   border: none; border-radius: 4px; display: block;
   box-shadow: 0 24px 70px rgba(0,0,0,.4);
+  background: #f8f3eb;
 }
 
 /* — мобильная адаптация — */
@@ -432,6 +433,14 @@ window.addEventListener('wheel', e => {
 window.addEventListener('resize', render);
 
 // Модалка
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.action === 'bookReady') {
+    if (_bookReadyTimer) { clearTimeout(_bookReadyTimer); _bookReadyTimer = null; }
+    requestAnimationFrame(() => document.getElementById('modal').classList.add('on'));
+  }
+});
+var _bookReadyTimer = null;
+
 function openBook(file) {
   if (window.innerWidth < 768) {
     try { window.top.location.href = '/book/' + file; } catch(e) { window.location.href = file; }
@@ -439,9 +448,15 @@ function openBook(file) {
   }
   const modal = document.getElementById('modal');
   const frame = document.getElementById('frame');
-  frame.src = '/book/' + file;
+  modal.classList.remove('on');
   modal.style.display = 'flex';
-  requestAnimationFrame(() => modal.classList.add('on'));
+  frame.src = '/book/' + file;
+  // show after book signals ready; 4s fallback if postMessage never fires
+  if (_bookReadyTimer) clearTimeout(_bookReadyTimer);
+  _bookReadyTimer = setTimeout(() => {
+    modal.classList.add('on');
+    _bookReadyTimer = null;
+  }, 4000);
 }
 function closeModal() {
   const modal = document.getElementById('modal');
