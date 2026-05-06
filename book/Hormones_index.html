@@ -847,7 +847,9 @@ $(function () {
     var pages = $('#book').children().not('.p2').not('.back-side').toArray();
     var cur = 0;
     var pageW = 480, pageH = 600;
-    var scale  = Math.min(window.innerWidth / pageW, (window.innerHeight - 64) / pageH);
+    var vw     = document.documentElement.clientWidth  || window.innerWidth;
+    var vh     = document.documentElement.clientHeight || window.innerHeight;
+    var scale  = Math.min(vw / pageW, (vh - 64) / pageH);
 
     var $reader = $('<div id="m-reader"></div>').appendTo('body');
     var $track  = $('<div id="m-track"></div>').appendTo($reader);
@@ -865,6 +867,7 @@ $(function () {
         transform: 'scale(' + scale + ')', transformOrigin: 'top left',
         position: 'absolute', top: 0, left: 0
       });
+      $(page).css({ width: '480px', height: '600px', overflow: 'hidden' });
       $inner.append($(page));
       $wrap.append($inner);
       $slide.append($wrap);
