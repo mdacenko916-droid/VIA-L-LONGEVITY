@@ -1,0 +1,944 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VIA·L — Book</title>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<script src="turn.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Oswald:wght@300;400;500&family=DM+Sans:wght@300;400&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { width: 100%; height: 100%; overflow: hidden; background: transparent; }
+body {
+  background: transparent;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── CANVAS ── */
+#canvas {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 960px;
+  height: 600px;
+}
+
+/* ── BOOK ── */
+.book {
+  width: 960px;
+  height: 600px;
+  visibility: hidden;
+}
+
+/* ── HARD PAGES ── */
+.book .hard {
+  width: 480px;
+  height: 600px;
+  background: #1a0f06;
+  box-shadow: none;
+}
+
+/* ── page-wrapper perspective ── */
+.book .page-wrapper {
+  -webkit-perspective: 2000px;
+  perspective: 2000px;
+  overflow: visible !important;
+}
+
+/* ── INNER PAGES ── */
+.book .own-size {
+  width: 460px;
+  height: 582px;
+  background: #faf7f2;
+  overflow: hidden;
+}
+.book .own-size.even {
+  background: linear-gradient(to right, #faf7f2 95%, #ddd 100%);
+}
+.book .own-size.odd {
+  background: linear-gradient(to left, #faf7f2 95%, #ccc 100%);
+}
+
+/* ── SPINE SIDE ── */
+.book .p1 .side {
+  width: 5px;
+  height: 600px;
+  position: absolute;
+  top: 0;
+  left: 475px;
+  background: linear-gradient(to right, #8a7560, #c8b99a, #8a7560);
+  -webkit-transform: rotateY(-90deg);
+  transform: rotateY(-90deg);
+  -webkit-transform-origin: top right;
+  transform-origin: top right;
+  z-index: 100000;
+}
+
+/* ── DEPTH ── */
+.book .depth {
+  background-image: url('pages-depth.png');
+  position: absolute;
+  top: 7px;
+  width: 0;
+  height: 582px;
+  overflow: hidden;
+}
+.book .front-side .depth {
+  left: 4px;
+  background-position: 0 0;
+}
+.book .back-side .depth {
+  right: 4px;
+  background-position: right 0;
+}
+
+/* ── NAVIGATION ── */
+#controls {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  z-index: 100;
+}
+.btn-nav {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,.15);
+  background: rgba(0,0,0,.08);
+  color: #3a2510;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s;
+}
+.btn-nav:hover { background: rgba(0,0,0,.18); }
+#page-info {
+  font-family: 'Oswald', sans-serif;
+  font-size: 11px;
+  letter-spacing: .22em;
+  color: rgba(0,0,0,.35);
+  text-transform: uppercase;
+  min-width: 60px;
+  text-align: center;
+}
+
+/* ════════════════════════════════════
+   PAGE CONTENT STYLES — Beauty Standard
+   ════════════════════════════════════ */
+
+/* COVER — p1 */
+.cover-front {
+  width: 100%; height: 100%;
+  background: #1c0e06;
+  position: relative;
+  overflow: hidden;
+  border-radius: 5px 0 0 5px;
+}
+.cover-front::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 30px; height: 100%;
+  background: linear-gradient(to right,
+    rgba(255,255,255,0.82) 0%,
+    rgba(255,255,255,0.28) 30%,
+    transparent 100%
+  );
+  z-index: 4;
+  pointer-events: none;
+  border-radius: 5px 0 0 5px;
+}
+.cover-front::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 30px; height: 100%;
+  background: linear-gradient(to left,
+    rgba(255,255,255,0.78) 0%,
+    rgba(255,255,255,0.25) 30%,
+    transparent 100%
+  );
+  z-index: 4;
+  pointer-events: none;
+}
+.cover-front-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+.cover-top {
+  position: absolute; top: 0; left: 0; right: 0;
+  z-index: 2;
+  padding: 16px 18px 0;
+  display: flex; justify-content: space-between; align-items: flex-start;
+}
+.cover-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 11px; font-weight: 700; letter-spacing: 4px;
+  color: #fff0cf;
+  text-shadow:
+    0 1px 2px rgba(0,0,0,.5),
+    0 0 8px rgba(248,214,140,.45),
+    0 0 20px rgba(220,165,70,.28);
+}
+.cover-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 11px; color: rgba(255,255,255,.55);
+}
+.cover-bottom {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  z-index: 2;
+  padding: 18px 18px 20px 78px;
+  display: flex; flex-direction: column; gap: 14px;
+  align-items: flex-start;
+  text-align: left;
+  transform: translateY(-26px);
+}
+.cover-tag {
+  font-family: 'Oswald', sans-serif;
+  font-size: 13px; font-weight: 400; letter-spacing: .28em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,.8), 0 2px 10px rgba(0,0,0,.6);
+}
+.cover-name {
+  font-family: 'Oswald', sans-serif;
+  font-size: 26px; font-weight: 500; line-height: 1.65;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: #fff1d6;
+  text-shadow:
+    0 1px 2px rgba(0,0,0,.55),
+    0 3px 10px rgba(0,0,0,.45),
+    0 0 8px rgba(255,235,185,.55),
+    0 0 18px rgba(245,210,120,.45),
+    0 0 34px rgba(228,180,80,.35),
+    0 0 52px rgba(205,150,55,.26);
+}
+
+/* BACK OF FRONT COVER — p2 */
+.cover-back-inner {
+  width: 100%; height: 100%;
+  background: #f8f4ee;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 40px;
+  position: relative;
+}
+.cover-back-inner::after {
+  content: '❦';
+  position: absolute;
+  top: 28px;
+  font-size: 24px;
+  color: rgba(160,120,60,.3);
+}
+.cover-back-inner blockquote {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 17px;
+  font-style: italic;
+  line-height: 1.75;
+  color: #4a3a28;
+  text-align: center;
+  max-width: 320px;
+  margin-bottom: 24px;
+}
+.cover-back-inner cite {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgba(160,120,60,.7);
+}
+
+/* ── BACK COVER FINAL ── */
+.cover-back-final {
+  width: 100%; height: 100%;
+  background:
+    radial-gradient(ellipse 65% 45% at 12% 22%, rgba(140,100,50,0.30) 0%, transparent 100%),
+    radial-gradient(ellipse 45% 65% at 88% 78%, rgba(90,60,25,0.25) 0%, transparent 100%),
+    radial-gradient(ellipse 55% 38% at 72% 18%, rgba(190,155,90,0.20) 0%, transparent 100%),
+    radial-gradient(ellipse 38% 58% at 22% 82%, rgba(110,75,30,0.18) 0%, transparent 100%),
+    radial-gradient(ellipse 80% 55% at 50% 50%, rgba(165,130,70,0.12) 0%, transparent 100%),
+    radial-gradient(ellipse 30% 40% at 60% 40%, rgba(80,50,20,0.14) 0%, transparent 100%),
+    #c4af8e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+.cover-back-final .brand {
+  font-family: 'Oswald', sans-serif;
+  font-size: 9px;
+  letter-spacing: .55em;
+  text-transform: uppercase;
+  color: rgba(100,70,30,.65);
+}
+.cover-back-final .monogram {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 64px;
+  font-weight: 300;
+  color: rgba(100,70,30,.14);
+  line-height: 1;
+}
+.cover-back-final .url {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px;
+  letter-spacing: .3em;
+  color: rgba(100,70,30,.4);
+  text-transform: lowercase;
+}
+
+/* ── FOOTER STANDARD (Beauty) ── */
+/* Используется как position:absolute; bottom:16px; height:~14px на всех страницах */
+.pg-footer {
+  position: absolute;
+  bottom: 16px;
+  left: 36px;
+  right: 36px;
+  height: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+  z-index: 6;
+}
+.pg-footer .f-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: rgba(160,120,60,.38);
+  text-transform: uppercase;
+  line-height: 14px;
+}
+.pg-footer .f-url {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 11px;
+  font-style: italic;
+  color: rgba(0,0,0,.18);
+  line-height: 14px;
+}
+
+/* — мобильный ридер — */
+#m-reader {
+  position: fixed; inset: 0; background: transparent;
+  z-index: 9999; overflow: hidden;
+}
+#m-track {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: calc(100% - 64px);
+  display: flex;
+  transition: transform .35s cubic-bezier(.4,0,.2,1);
+}
+.m-slide {
+  flex: 0 0 100%; width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.m-page-inner { flex-shrink: 0; }
+#m-nav {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 64px;
+  display: flex; align-items: center; justify-content: center; gap: 20px;
+  background: rgba(248,243,235,.97); border-top: 1px solid rgba(184,146,74,.18); backdrop-filter: blur(8px);
+}
+.m-arr {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1.5px solid rgba(184,146,74,.38);
+  background: rgba(26,18,8,.05); color: #b8924a;
+  font-size: 22px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s;
+}
+.m-arr:not(:disabled):active { background: rgba(184,146,74,.18); }
+.m-arr:disabled { opacity: .28; cursor: default; }
+#m-info {
+  font-family: 'Oswald', sans-serif; font-size: 11px;
+  letter-spacing: .22em; color: rgba(26,18,8,.38);
+  text-transform: uppercase; min-width: 56px; text-align: center;
+}
+#m-back {
+  position: absolute; top: 14px; left: 14px; z-index: 10;
+  background: rgba(255,255,255,.92); border: 1.5px solid rgba(184,146,74,.38);
+  border-radius: 22px; padding: 7px 16px;
+  font-family: 'Oswald', sans-serif; font-size: 11px;
+  letter-spacing: .15em; text-transform: uppercase;
+  color: #3a2510; cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<div id="canvas">
+  <div class="book" id="book">
+
+    <!-- p1: Front cover (hard) -->
+    <div class="hard p1" depth="5">
+      <div class="side"></div>
+      <div class="cover-front">
+        <img class="cover-front-photo" src="foto/Blood_Tests.PNG" alt="Анализы крови">
+        <!-- логотип VIA-L LONGEVITY — правый верхний угол -->
+        <div style="position:absolute;top:10px;right:8px;z-index:3;">
+          <svg width="133" height="51" viewBox="0 0 869 335" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M153.972 0.575971C86.3115 6.79897 27.6765 52.656 7.54753 115.09C1.53453 133.74 -0.0334622 144.128 0.000537849 165.09C0.0495378 196.331 6.06354 219.476 21.2985 247.061C45.4175 290.731 92.1245 323.787 142.361 332.741C157.959 335.521 185.285 335.737 200.825 333.204C253.728 324.579 298.024 294.082 324.777 247.865L328.38 241.639L326.204 240.115C325.006 239.276 323.491 238.59 322.836 238.59C322.18 238.59 319.947 241.628 317.873 245.34C305.858 266.845 287.231 286.775 266.863 299.918C208.912 337.312 137.117 337.459 80.6935 300.3C45.2895 276.983 20.0005 240.742 11.1165 200.59C6.94454 181.735 5.97355 169.491 7.37755 153.463C11.3936 107.628 33.1695 68.391 69.9715 40.683C99.6925 18.305 132.639 7.35499 170.472 7.28099C201.525 7.21999 228.833 14.315 254.811 29.191C281.652 44.562 305.102 68.973 318.359 95.34C320.087 98.778 321.652 101.59 321.837 101.59C322.504 101.59 328.472 99.388 328.472 99.142C328.472 99.004 326.174 94.66 323.365 89.49C301.093 48.499 260.551 16.742 216.472 5.75898C197.257 0.970984 172.235 -1.10403 153.972 0.575971ZM55.4715 71.09C55.4715 73.361 55.8605 73.592 59.7215 73.612C65.7755 73.643 71.8716 76.723 74.8616 81.261C76.2486 83.367 81.2805 94.09 86.0445 105.09C90.8085 116.09 99.7686 136.79 105.956 151.09C112.143 165.39 120.586 184.74 124.719 194.09C128.851 203.44 136.835 221.665 142.461 234.59C148.087 247.515 154.514 262.271 156.742 267.38C158.97 272.49 161.171 276.904 161.632 277.189C162.691 277.843 178.275 246.262 179.132 241.726C179.713 238.649 179.589 238.418 177.676 239.025C174.77 239.947 174.066 238.681 162.061 210.958C156.376 197.83 149.24 181.465 146.203 174.59C108.799 89.915 106.551 84.048 109.439 78.651C110.954 75.82 116.242 73.59 121.44 73.59C125.074 73.59 125.472 73.343 125.472 71.09V68.59H90.4715H55.4715V71.09ZM221.472 70.95C221.472 73.061 222.025 73.368 226.722 73.855C236.566 74.875 240.486 78.424 240.459 86.29C240.439 92.294 235.464 106.495 222.566 137.365C219.764 144.071 217.472 149.75 217.472 149.986C217.472 150.221 219.321 150.727 221.58 151.108C226.745 151.981 226.985 151.718 232.554 139.09C234.98 133.59 241.991 118.965 248.134 106.59C261.857 78.945 265.062 75.255 276.526 73.897C280.892 73.38 281.472 73.035 281.472 70.951V68.59H251.472H221.472V70.95ZM393.435 78.84C395.561 83.927 401.903 98.665 407.527 111.59C413.152 124.515 420.136 140.715 423.048 147.59L428.343 160.09L434.407 160.388C439.934 160.659 440.554 160.482 441.4 158.388C442.565 155.506 461.082 111.992 467.698 96.59C476.68 75.679 478.472 71.324 478.472 70.407C478.472 69.907 475.449 69.632 471.754 69.794L465.036 70.09L450.296 105.464C442.189 124.92 435.391 141.005 435.188 141.207C434.873 141.522 419.776 106.709 407.927 78.34L404.272 69.59H396.92H389.569L393.435 78.84ZM501.472 115.09V160.59H508.472H515.472V115.09V69.59H508.472H501.472V115.09ZM578.616 71.34C578.106 72.302 574.762 79.615 571.183 87.59C567.605 95.565 562.999 105.69 560.949 110.09C548.019 137.84 538.472 159.114 538.472 160.179C538.472 160.405 541.561 160.59 545.336 160.59H552.2L554.003 155.87C554.994 153.274 557.319 147.874 559.169 143.87L562.533 136.59H584.801H607.07L608.335 140.089C609.031 142.013 611.393 147.413 613.584 152.089L617.568 160.59H624.52C628.344 160.59 631.472 160.415 631.472 160.201C631.472 159.987 629.169 154.699 626.354 148.451C623.539 142.202 620.203 134.615 618.942 131.59C617.68 128.565 612.748 117.54 607.982 107.09C603.216 96.64 597.474 83.927 595.222 78.84L591.127 69.59H585.335C580.838 69.59 579.335 69.981 578.616 71.34ZM716.472 115.09V160.59H746.972H777.472V155.09V149.59H753.972H730.472V109.59V69.59H723.472H716.472V115.09ZM596.039 111.78C599.027 118.759 601.472 124.722 601.472 125.03C601.472 125.338 593.774 125.59 584.365 125.59C571.069 125.59 567.374 125.312 567.778 124.34C568.065 123.653 571.215 116.565 574.779 108.59C578.343 100.615 582.017 92.29 582.943 90.09L584.626 86.09L587.616 92.59C589.26 96.165 593.05 104.8 596.039 111.78ZM645.472 122.09V127.59H667.972H690.472V122.09V116.59H667.972H645.472V122.09ZM168.472 163.976C168.472 166.04 169.084 166.455 172.991 167.041C175.483 167.414 178.734 168.771 180.239 170.066L182.969 172.414L182.971 224.087L182.972 275.76L180.679 277.62C179.418 278.643 176.38 279.781 173.929 280.149C170.584 280.65 169.472 281.259 169.472 282.587C169.472 283.581 170.458 284.615 171.722 284.945C172.959 285.269 195.572 285.434 221.972 285.312L269.972 285.09L270.623 273.09C270.981 266.49 271.566 258.503 271.923 255.34C272.525 249.999 272.425 249.59 270.522 249.59C269.394 249.59 268.18 249.478 267.824 249.34C267.468 249.202 266.426 251.79 265.509 255.09C263.427 262.582 261.442 266.355 257.811 269.726C251.19 275.873 243.693 277.59 223.479 277.59C209.222 277.59 208.519 277.495 207.029 275.367C205.67 273.428 205.472 266.762 205.472 222.949C205.472 195.342 205.752 172.025 206.093 171.135C206.984 168.812 211.79 166.59 215.922 166.59C219.042 166.59 219.472 166.287 219.472 164.09V161.59H193.972H168.472V163.976ZM337.472 189.09C337.472 190.414 349.796 190.59 442.389 190.59C525.386 190.59 547.411 190.329 547.81 189.34C548.213 188.34 548.33 188.34 548.393 189.34C548.456 190.334 581.181 190.59 708.472 190.59C850.028 190.59 868.472 190.417 868.472 189.09C868.472 187.761 843.87 187.59 653.055 187.59C481.658 187.59 437.536 187.845 437.134 188.84C436.731 189.84 436.614 189.84 436.551 188.84C436.489 187.858 425.863 187.59 386.972 187.59C343.639 187.59 337.472 187.777 337.472 189.09ZM414.472 243.59V264.59H427.972H441.472V262.09V259.59H430.472H419.472V241.09V222.59H416.972H414.472V243.59ZM464.625 225.201C460.572 227.221 458.703 228.976 456.372 232.951C453.661 237.573 453.4 238.755 453.772 244.701C454.297 253.104 458.18 259.302 464.981 262.594C472.562 266.264 484.082 264.968 489.789 259.803C493.83 256.146 496.615 249.853 496.614 244.38C496.614 237.81 495.515 234.848 491.298 230.044C484.538 222.345 474.143 220.458 464.625 225.201ZM515.139 223.257C514.772 223.623 514.472 233.073 514.472 244.257V264.59H516.972H519.472L519.674 251.34C519.785 244.052 519.893 236.853 519.914 235.34C519.935 233.827 520.182 232.617 520.462 232.651C520.743 232.685 523.294 235.722 526.132 239.401C528.97 243.08 534.497 250.253 538.414 255.34C549.305 269.487 549.472 269.312 549.472 243.757V222.924L547.222 223.088C545.016 223.249 544.962 223.555 544.472 238.753L543.972 254.253L532.972 239.884C526.922 231.981 521.377 224.857 520.651 224.053C519.277 222.532 516.294 222.101 515.139 223.257ZM579.379 224.917C572.594 228.499 569.116 234.191 568.648 242.481C568.24 249.707 569.543 253.712 573.839 258.435C580.484 265.741 594.064 267.112 602.924 261.373L606.447 259.09L606.46 250.84L606.472 242.59H597.972C590.139 242.59 589.472 242.747 589.472 244.59C589.472 246.368 590.139 246.59 595.472 246.59H601.472V251.646C601.472 256.699 601.469 256.704 596.837 258.753C585.759 263.653 573.569 255.716 573.494 243.552C573.462 238.411 577.305 231.587 581.456 229.414C586.591 226.726 594.309 226.99 598.753 230.006C602.132 232.299 602.395 232.333 603.901 230.668C605.355 229.062 605.337 228.778 603.693 227.29C598.06 222.192 586.65 221.078 579.379 224.917ZM628.222 223.263L625.472 223.723V244.156V264.59H639.972H654.472V262.09V259.59H642.972H631.472V252.59V245.59H641.472C650.805 245.59 651.472 245.457 651.472 243.59C651.472 241.723 650.805 241.59 641.472 241.59H631.472V234.59V227.59H642.472C652.805 227.59 653.472 227.469 653.472 225.59C653.472 223.95 652.797 223.585 649.722 223.564C647.66 223.549 642.597 223.372 638.472 223.171C634.347 222.969 629.735 223.011 628.222 223.263ZM667.472 223.024C667.472 223.284 670.553 230.605 674.318 239.293C678.083 247.982 681.978 257.251 682.973 259.891C684.537 264.04 685.121 264.652 687.273 264.391C689.488 264.123 690.689 261.934 698.118 244.624C702.713 233.917 706.472 224.655 706.472 224.041C706.472 222.722 702.806 222.809 701.615 224.156C700.496 225.421 688.472 254.076 688.472 255.477C688.472 258.309 686.722 256.034 684.521 250.34C682.354 244.736 673.497 224.253 673.122 223.981C672.462 223.5 667.472 222.656 667.472 223.024ZM723.702 243.34L723.972 264.09L726.722 264.406L729.472 264.723V243.656V222.59H726.452H723.431L723.702 243.34ZM746.473 225.34C746.472 227.459 746.879 227.59 753.472 227.59H760.472L760.606 241.84C760.68 249.677 760.64 258.003 760.516 260.34C760.307 264.304 760.466 264.59 762.882 264.59H765.472V246.09V227.59H772.472C779.065 227.59 779.472 227.459 779.472 225.34C779.472 223.097 779.417 223.09 762.973 223.09C746.529 223.09 746.473 223.098 746.473 225.34ZM793.044 223.474C792.753 223.945 796.105 229.553 800.493 235.937L808.472 247.544V256.067C808.472 264.492 808.501 264.59 810.972 264.59C813.353 264.59 813.48 264.292 813.65 258.34C813.748 254.903 813.816 251.219 813.801 250.156C813.786 249.092 817.475 242.679 821.998 235.906L830.223 223.59L827.097 223.622C824.24 223.652 823.47 224.466 818.116 233.122C814.895 238.33 811.97 242.575 811.616 242.556C811.262 242.538 808.047 238.18 804.472 232.874C800.004 226.242 797.284 223.13 795.772 222.922C794.563 222.755 793.335 223.003 793.044 223.474ZM483.231 229.585C492.139 235.016 493.744 248.164 486.395 255.513C480.133 261.775 471.129 261.986 464.532 256.025C456.493 248.762 457.65 235.111 466.776 229.546C471.072 226.927 478.902 226.945 483.231 229.585Z" fill="rgba(255,228,155,0.88)"/>
+          </svg>
+        </div>
+        <div class="cover-bottom">
+          <div class="cover-tag">Анализы</div>
+          <div class="cover-name">Как читать свои<br>анализы</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- p2: Back of front cover (hard, front-side) -->
+    <div class="hard front-side p2" depth="5">
+      <div class="depth"></div>
+      <!-- тень корешка — правый край p2 -->
+      <div style="position:absolute;top:0;right:0;width:20px;height:100%;background:linear-gradient(to left,rgba(0,0,0,0.16) 0%,rgba(0,0,0,0.05) 60%,transparent 100%);z-index:10;pointer-events:none;"></div>
+      <!-- фото: отступы сверху, снизу, слева — вплотную к p3 справа -->
+      <div style="position:absolute;inset:0;background:#f0ece6;padding:9px 0 9px 10px;">
+        <div style="position:relative;width:100%;height:100%;overflow:hidden;">
+          <img src="foto/Blood_Tests1.PNG"
+               style="display:block;position:relative;z-index:2;width:100%;height:100%;object-fit:contain;object-position:center;">
+        </div>
+      </div>
+    </div>
+
+    <!-- p3: Титульная + CTA -->
+    <div class="own-size odd" style="position:relative;">
+      <!-- gutter shadow — левый край p3 -->
+      <div style="position:absolute;top:0;left:0;width:20px;height:100%;background:linear-gradient(to right,rgba(0,0,0,0.16) 0%,rgba(0,0,0,0.05) 60%,transparent 100%);z-index:10;pointer-events:none;"></div>
+      <!-- Контент: padding-bottom=46px, чтобы контент не залезал под футер (футер 14px + bottom 16px = 30px, + запас 16px) -->
+      <div style="width:100%;height:100%;background:#faf7f2;padding:38px 40px 46px 40px;display:flex;flex-direction:column;box-sizing:border-box;">
+
+        <!-- верхний блок: категория + заголовок + подзаголовок -->
+        <div>
+          <div style="font-family:'Oswald',sans-serif;font-size:8px;letter-spacing:.52em;text-transform:uppercase;color:#b8924a;margin-bottom:14px;">Анализы</div>
+          <div style="width:28px;height:1px;background:linear-gradient(to right,#b8924a,transparent);margin-bottom:14px;"></div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:300;line-height:1.14;color:#1a1208;margin-bottom:10px;">Как читать<br>свои анализы</div>
+          <div style="font-family:'Oswald',sans-serif;font-size:9px;font-weight:300;letter-spacing:.28em;text-transform:uppercase;color:#b8924a;">Норма · Оптимум · Коррекция</div>
+        </div>
+
+        <!-- Пространство 1 -->
+        <div style="flex:1;min-height:8px;"></div>
+
+        <!-- центральный блок: вводный абзац-манифест -->
+        <div>
+          <p style="font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;font-weight:300;line-height:1.75;color:#2e1e0e;margin:0;letter-spacing:.02em;">
+            Биохимический ответ на вопрос, почему «всё в норме» не значит здоровье — 8 ключевых маркеров и чёткий алгоритм коррекции.
+          </p>
+        </div>
+
+        <!-- Пространство 2 -->
+        <div style="flex:1;min-height:8px;"></div>
+
+        <!-- нижний блок: цена + кнопка -->
+        <div>
+          <div style="width:100%;height:.5px;background:linear-gradient(to right,rgba(160,120,60,.22),transparent);margin-bottom:12px;"></div>
+
+          <!-- цена -->
+          <div style="font-family:'Cormorant Garamond',serif;font-size:44px;font-weight:300;line-height:1;color:#b8924a;letter-spacing:-.01em;margin-bottom:7px;">35 <span style="font-size:24px;vertical-align:middle;">€</span></div>
+
+          <!-- описание -->
+          <div style="font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:.05em;color:rgba(80,55,35,.6);margin-bottom:9px;">PDF · 12 стр. · Мгновенно</div>
+
+          <!-- кнопка — во всю ширину -->
+          <a href="https://pay.hotmart.com/D105606414M" target="_blank" style="display:block;text-align:center;font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:#fff;text-decoration:none;background:linear-gradient(105deg,#b8924a 0%,#e8c97a 40%,#c8a055 60%,#b8924a 100%);padding:13px 0;border-radius:50px;box-shadow:0 3px 18px rgba(184,146,74,.4);text-shadow:0 1px 2px rgba(0,0,0,.18);margin-bottom:7px;">Получить гайд →</a>
+
+          <!-- подсказка: содержание гайда на следующей странице -->
+          <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:7px 12px;background:rgba(184,146,74,.08);border-radius:6px;border:0.5px solid rgba(184,146,74,.25);">
+            <span style="font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:.32em;text-transform:uppercase;color:#b8924a;">Содержание гайда</span>
+            <span style="width:16px;height:.5px;background:#b8924a;display:inline-block;opacity:.5;"></span>
+            <span style="font-family:'Cormorant Garamond',serif;font-size:18px;color:#b8924a;line-height:1;">›</span>
+          </div>
+        </div>
+
+      </div>
+      <!-- Футер: position:absolute; bottom:16px; height:~14px -->
+      <div class="pg-footer">
+        <span class="f-logo">VIA·L</span>
+        <span class="f-url">via-l.com</span>
+      </div>
+    </div>
+
+    <!-- p4: Что внутри -->
+    <div class="own-size even" style="position:relative;">
+      <!-- тень корешка — правый край p4 -->
+      <div style="position:absolute;top:0;right:0;width:20px;height:100%;background:linear-gradient(to left,rgba(0,0,0,0.16) 0%,rgba(0,0,0,0.05) 60%,transparent 100%);z-index:10;pointer-events:none;"></div>
+      <!-- декоративная рамка страницы -->
+      <div style="position:absolute;inset:10px;border:1px solid rgba(184,146,74,.22);pointer-events:none;z-index:5;"></div>
+      <div style="position:absolute;inset:14px;border:.5px solid rgba(184,146,74,.1);pointer-events:none;z-index:5;"></div>
+      <!-- Контент: padding-bottom=46px чтобы не заходить под футер -->
+      <div style="width:100%;height:100%;background:#f5f1eb;padding:26px 36px 46px 36px;display:flex;flex-direction:column;box-sizing:border-box;">
+
+        <div style="margin-bottom:10px;">
+          <div style="font-family:'Oswald',sans-serif;font-size:8px;letter-spacing:.48em;text-transform:uppercase;color:#b8924a;margin-bottom:7px;">Структура гайда · PDF · 12 стр.</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;line-height:1.2;color:#1a1208;">Что внутри</div>
+        </div>
+
+        <div style="width:100%;height:.5px;background:linear-gradient(to right,rgba(184,146,74,.32),transparent);margin-bottom:8px;"></div>
+
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:3px;">
+          <li style="display:flex;gap:12px;align-items:flex-start;padding:10px 12px;background:rgba(184,146,74,.06);border-radius:6px;">
+            <span style="font-family:'Cormorant Garamond',serif;font-size:18px;color:#b8924a;flex-shrink:0;line-height:1.4;font-weight:400;">1</span>
+            <span style="font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.5;color:#1a1208;"><span style="font-weight:600;">Норма vs Оптимум</span> — почему стандартные референсы лабораторий подходят не всем.</span>
+          </li>
+          <li style="display:flex;gap:12px;align-items:flex-start;padding:10px 12px;background:rgba(184,146,74,.06);border-radius:6px;">
+            <span style="font-family:'Cormorant Garamond',serif;font-size:18px;color:#b8924a;flex-shrink:0;line-height:1.4;font-weight:400;">2</span>
+            <span style="font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.5;color:#1a1208;"><span style="font-weight:600;">8 главных маркеров</span> — разбор Ферритина, Витамина D, B12, ТТГ, Инсулина, вч-СРБ, Гомоцистеина и Магния.</span>
+          </li>
+          <li style="display:flex;gap:12px;align-items:flex-start;padding:10px 12px;background:rgba(184,146,74,.06);border-radius:6px;">
+            <span style="font-family:'Cormorant Garamond',serif;font-size:18px;color:#b8924a;flex-shrink:0;line-height:1.4;font-weight:400;">3</span>
+            <span style="font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.5;color:#1a1208;"><span style="font-weight:600;">4 фактора искажения</span> — как время суток, стресс и еда влияют на точность результата.</span>
+          </li>
+          <li style="display:flex;gap:12px;align-items:flex-start;padding:10px 12px;background:rgba(184,146,74,.06);border-radius:6px;">
+            <span style="font-family:'Cormorant Garamond',serif;font-size:18px;color:#b8924a;flex-shrink:0;line-height:1.4;font-weight:400;">4</span>
+            <span style="font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.5;color:#1a1208;"><span style="font-weight:600;">Три ошибки интерпретации</span> — почему нельзя смотреть только на «флажки» ↑ и ↓.</span>
+          </li>
+          <li style="display:flex;gap:12px;align-items:flex-start;padding:10px 12px;background:rgba(184,146,74,.06);border-radius:6px;">
+            <span style="font-family:'Cormorant Garamond',serif;font-size:18px;color:#b8924a;flex-shrink:0;line-height:1.4;font-weight:400;">5</span>
+            <span style="font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.5;color:#1a1208;"><span style="font-weight:600;">Алгоритм действий</span> — сводная таблица оптимальных значений и шаги по коррекции питания.</span>
+          </li>
+        </ul>
+
+        <div style="margin-top:0;">
+          <div style="width:100%;height:.5px;background:linear-gradient(to right,rgba(184,146,74,.22),transparent);margin-bottom:6px;"></div>
+          <div style="background:rgba(184,146,74,.07);border-left:2px solid #b8924a;border-radius:0 6px 6px 0;padding:12px 14px;">
+            <div style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:.38em;text-transform:uppercase;color:#b8924a;margin-bottom:4px;">Ваш результат</div>
+            <div style="font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.5;color:#1a1208;">Вы научитесь читать свои анализы самостоятельно и понимать, что именно корректировать в рационе.</div>
+          </div>
+        </div>
+
+      </div>
+      <!-- Футер: position:absolute; bottom:16px; height:~14px -->
+      <div class="pg-footer">
+        <span class="f-logo">VIA·L</span>
+        <span class="f-url">via-l.com</span>
+      </div>
+    </div>
+
+    <!-- p5: Статья 1 — Почему «всё в норме» -->
+    <div class="own-size even" style="position:relative;">
+      <!-- тень корешка — левый край p5 -->
+      <div style="position:absolute;top:0;left:0;width:20px;height:100%;background:linear-gradient(to right,rgba(0,0,0,0.16) 0%,rgba(0,0,0,0.05) 60%,transparent 100%);z-index:10;pointer-events:none;"></div>
+      <!-- Контент: padding-bottom=46px чтобы не заходить под футер -->
+      <div style="width:100%;height:100%;background:#faf7f2;padding:30px 36px 46px 36px;display:flex;flex-direction:column;box-sizing:border-box;">
+
+        <!-- плашка раздела -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+          <div style="width:3px;height:34px;background:#b8924a;flex-shrink:0;border-radius:2px;"></div>
+          <div>
+            <div style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:.42em;text-transform:uppercase;color:#b8924a;margin-bottom:4px;">Клинический обзор · 2025</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;line-height:1.2;color:#1a1208;">Почему «всё в норме»<br>— не всегда норма</div>
+          </div>
+        </div>
+
+        <div style="width:100%;height:.5px;background:linear-gradient(to right,rgba(160,120,60,.3),transparent);margin-bottom:10px;"></div>
+
+        <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:rgba(160,120,60,.8);letter-spacing:.03em;margin-bottom:14px;line-height:1.6;">
+          Doles N., Mon M.Y., Shaikh A. et al. — <em>Journal of the American Board of Family Medicine</em><br>
+          Medical College of Georgia at Augusta University · 2025
+        </div>
+
+        <p style="font-family:'DM Sans',sans-serif;font-size:16px;line-height:1.65;color:#1a1208;margin-bottom:14px;">
+          Результаты анализов влияют на <strong>70% всех медицинских решений</strong>. Но мало кто знает, как на самом деле устанавливается «норма».
+        </p>
+
+        <p style="font-family:'DM Sans',sans-serif;font-size:16px;line-height:1.65;color:#1a1208;">
+          Лаборатория берёт минимум 120 здоровых людей, убирает крайние 2,5% снизу и сверху — и объявляет оставшиеся 95% нормой. Это означает, что <strong>каждый 20-й здоровый человек автоматически попадает в «ненорму»</strong> — просто по математике.
+        </p>
+
+        <div style="padding:12px 14px;background:rgba(184,146,74,.08);border-left:2px solid #b8924a;border-radius:0 4px 4px 0;margin-top:auto;">
+          <p style="font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;line-height:1.65;color:#2a1a08;margin:0;">Вывод: анализ без контекста — просто цифра. Важно знать не только норму, но и что она означает лично для вас.</p>
+        </div>
+
+      </div>
+      <!-- Футер: position:absolute; bottom:16px; height:~14px -->
+      <div class="pg-footer">
+        <span class="f-logo">VIA·L</span>
+        <span class="f-url">via-l.com</span>
+      </div>
+    </div>
+
+    <!-- p6: Статья 2, ч.1 — Одна и та же цифра -->
+    <div class="own-size odd" style="position:relative;">
+      <!-- тень корешка — левый край p6 -->
+      <div style="position:absolute;top:0;left:0;width:20px;height:100%;background:linear-gradient(to right,rgba(0,0,0,0.16) 0%,rgba(0,0,0,0.05) 60%,transparent 100%);z-index:10;pointer-events:none;"></div>
+      <!-- Контент: padding-bottom=46px чтобы не заходить под футер -->
+      <div style="width:100%;height:100%;background:#f5f1eb;padding:30px 36px 46px 36px;display:flex;flex-direction:column;box-sizing:border-box;">
+
+        <!-- плашка раздела -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px;">
+          <div style="width:3px;height:30px;background:#b8924a;flex-shrink:0;border-radius:2px;"></div>
+          <div>
+            <div style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:.42em;text-transform:uppercase;color:#b8924a;margin-bottom:4px;">Продолжение · Что влияет на результат</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;line-height:1.18;color:#1a1208;">Одна и та же цифра —<br>разный смысл</div>
+          </div>
+        </div>
+
+        <div style="width:100%;height:.5px;background:linear-gradient(to right,rgba(160,120,60,.3),transparent);margin-bottom:8px;"></div>
+
+        <p style="font-family:'DM Sans',sans-serif;font-size:16px;line-height:1.65;color:#1a1208;margin-bottom:14px;">
+          Авторы исследования показали: один и тот же показатель анализа может означать разное в зависимости от <strong>возраста, пола, этничности и даже лаборатории</strong>, где сдавались анализы.
+        </p>
+
+        <p style="font-family:'DM Sans',sans-serif;font-size:16px;line-height:1.65;color:#1a1208;margin-bottom:14px;">
+          Например, уровень витамина D у людей африканского происхождения генетически ниже. Или норма ферритина: она различается принципиально для мужчин и женщин. Стандартизированы международно <strong>только 3 показателя</strong> из всех.
+        </p>
+
+        <div style="padding:12px 14px;background:rgba(184,146,74,.08);border-left:2px solid #b8924a;border-radius:0 4px 4px 0;margin-top:auto;">
+          <p style="font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;line-height:1.65;color:#2a1a08;margin:0 0 7px 0;">Вывод: контекст важнее числа. Один и тот же показатель говорит о разном у разных людей.</p>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <div style="width:24px;height:1px;background:#b8924a;flex-shrink:0;"></div>
+            <span style="font-family:'DM Sans',sans-serif;font-size:9px;color:#8a7060;line-height:1.5;">Journal of the American Board of Family Medicine · 2025</span>
+          </div>
+        </div>
+
+      </div>
+      <!-- Футер: position:absolute; bottom:16px; height:~14px -->
+      <div class="pg-footer">
+        <span class="f-logo">VIA·L</span>
+        <span class="f-url">via-l.com</span>
+      </div>
+    </div>
+
+    <!-- p7: Статья 2, ч.2 — продолжение -->
+    <div class="own-size even" style="position:relative;">
+      <!-- тень корешка — правый край p7 -->
+      <div style="position:absolute;top:0;right:0;width:20px;height:100%;background:linear-gradient(to left,rgba(0,0,0,0.16) 0%,rgba(0,0,0,0.05) 60%,transparent 100%);z-index:10;pointer-events:none;"></div>
+      <!-- Контент: padding-bottom=46px чтобы не заходить под футер -->
+      <div style="width:100%;height:100%;background:#faf7f2;padding:30px 36px 46px 36px;display:flex;flex-direction:column;box-sizing:border-box;">
+
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+          <div style="width:3px;height:36px;background:#b8924a;flex-shrink:0;border-radius:2px;opacity:.45;"></div>
+          <div>
+            <div style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:.42em;text-transform:uppercase;color:#b8924a;margin-bottom:4px;">Продолжение · Что влияет на результат</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;line-height:1.2;color:#1a1208;opacity:.6;">Одна и та же цифра —<br>разный смысл</div>
+          </div>
+        </div>
+
+        <div style="width:100%;height:.5px;background:linear-gradient(to right,rgba(160,120,60,.3),transparent);margin-bottom:20px;"></div>
+
+        <p style="font-family:'DM Sans',sans-serif;font-size:16px;line-height:1.7;color:#1a1208;margin-bottom:26px;">
+          Всё остальное — зависит от метода, оборудования и конкретной лаборатории. Разные клиники могут дать <strong>разный результат по одному и тому же образцу крови</strong>. Если сдать панель из 20 анализов — у <strong>64% здоровых людей</strong> хотя бы один показатель окажется «вне нормы». Не потому что они больны, а потому что так устроена система подсчёта.
+        </p>
+
+        <div style="padding:12px 14px;background:rgba(184,146,74,.08);border-left:2px solid #b8924a;border-radius:0 4px 4px 0;margin-top:auto;">
+          <p style="font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;line-height:1.65;color:#2a1a08;margin:0 0 7px 0;">Вывод: читать анализы нужно уметь. Этот гайд даёт инструмент — не диагноз, а понимание.</p>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <div style="width:24px;height:1px;background:#b8924a;flex-shrink:0;"></div>
+            <span style="font-family:'DM Sans',sans-serif;font-size:9px;color:#8a7060;line-height:1.5;">Journal of the American Board of Family Medicine · 2025</span>
+          </div>
+        </div>
+
+      </div>
+      <!-- Футер: position:absolute; bottom:16px; height:~14px -->
+      <div class="pg-footer">
+        <span class="f-logo">VIA·L</span>
+        <span class="f-url">via-l.com</span>
+      </div>
+    </div>
+
+    <!-- p8: фото Марины -->
+    <div class="own-size even" style="position:relative;overflow:hidden;background:#ede8e1;">
+      <!-- тень корешка — правый край -->
+      <div style="position:absolute;top:0;right:0;width:20px;height:100%;background:linear-gradient(to left,rgba(0,0,0,0.16) 0%,rgba(0,0,0,0.05) 60%,transparent 100%);z-index:10;pointer-events:none;"></div>
+      <div style="position:absolute;inset:0;padding:9px 0 9px 10px;">
+        <img src="foto/Maryna.PNG"
+             style="display:block;width:100%;height:100%;object-fit:cover;object-position:center top;">
+      </div>
+      <div style="position:absolute;left:12px;bottom:10px;z-index:20;font-family:'Playfair Display',serif;font-size:7px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.82);text-shadow:0 1px 2px rgba(0,0,0,.28);">VIA·L</div>
+    </div>
+
+    <!-- p9: цитата автора -->
+    <div class="own-size odd" style="position:relative;">
+      <!-- тень корешка — левый край -->
+      <div style="position:absolute;top:0;left:0;width:20px;height:100%;background:linear-gradient(to right,rgba(0,0,0,0.16) 0%,rgba(0,0,0,0.05) 60%,transparent 100%);z-index:10;pointer-events:none;"></div>
+      <!-- Контент: padding-bottom=46px чтобы не заходить под футер -->
+      <div style="width:100%;height:100%;background:#faf7f2;padding:44px 40px 46px 44px;display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box;">
+
+        <!-- верхний блок -->
+        <div>
+          <div style="width:28px;height:1px;background:#b8924a;margin-bottom:26px;"></div>
+
+          <!-- большая кавычка -->
+          <div style="font-family:'Cormorant Garamond',serif;font-size:60px;line-height:1;color:rgba(184,146,74,.18);margin-bottom:-14px;margin-left:-4px;">"</div>
+
+          <!-- цитата -->
+          <p style="font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:300;font-style:italic;line-height:1.56;color:#1a1208;margin-bottom:18px;">
+            «Всё в норме» — самая опасная фраза в медицине. Потому что норма — это среднее по больнице, а не ваш личный оптимум.
+          </p>
+
+          <!-- подпись -->
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <div style="font-family:'Oswald',sans-serif;font-size:13px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:#1a1208;">Maryna Datsenko</div>
+            <div style="font-family:'DM Sans',sans-serif;font-size:12px;font-weight:300;color:#5a4030;letter-spacing:.04em;">Нутрициолог · VIA·L Longevity</div>
+          </div>
+        </div>
+
+        <!-- нижний блок -->
+        <div>
+          <div style="width:100%;height:.5px;background:linear-gradient(to right,rgba(160,120,60,.25),transparent);margin-bottom:14px;"></div>
+          <p style="font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.55;color:#3a2a18;">
+            Специализация — гормональное здоровье после 40: интерпретация анализов, питание и восстановление метаболизма для женщин и мужчин.
+          </p>
+        </div>
+
+      </div>
+      <!-- Футер: position:absolute; bottom:16px; height:~14px -->
+      <div class="pg-footer">
+        <span class="f-logo">VIA·L</span>
+        <span class="f-url">via-l.com</span>
+      </div>
+    </div>
+
+    <!-- p10: CTA / покупка -->
+    <div class="own-size even" style="position:relative;">
+      <!-- тень корешка — правый край -->
+      <div style="position:absolute;top:0;right:0;width:20px;height:100%;background:linear-gradient(to left,rgba(0,0,0,0.16) 0%,rgba(0,0,0,0.05) 60%,transparent 100%);z-index:10;pointer-events:none;"></div>
+      <!-- Контент: padding-bottom=46px чтобы не заходить под футер -->
+      <div style="width:100%;height:100%;background:#f5f1eb;padding:28px 36px 46px 36px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box;text-align:center;">
+
+        <!-- логотип -->
+        <div style="margin-bottom:18px;">
+          <svg width="108" height="42" viewBox="0 0 869 335" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M153.972 0.575971C86.3115 6.79897 27.6765 52.656 7.54753 115.09C1.53453 133.74 -0.0334622 144.128 0.000537849 165.09C0.0495378 196.331 6.06354 219.476 21.2985 247.061C45.4175 290.731 92.1245 323.787 142.361 332.741C157.959 335.521 185.285 335.737 200.825 333.204C253.728 324.579 298.024 294.082 324.777 247.865L328.38 241.639L326.204 240.115C325.006 239.276 323.491 238.59 322.836 238.59C322.18 238.59 319.947 241.628 317.873 245.34C305.858 266.845 287.231 286.775 266.863 299.918C208.912 337.312 137.117 337.459 80.6935 300.3C45.2895 276.983 20.0005 240.742 11.1165 200.59C6.94454 181.735 5.97355 169.491 7.37755 153.463C11.3936 107.628 33.1695 68.391 69.9715 40.683C99.6925 18.305 132.639 7.35499 170.472 7.28099C201.525 7.21999 228.833 14.315 254.811 29.191C281.652 44.562 305.102 68.973 318.359 95.34C320.087 98.778 321.652 101.59 321.837 101.59C322.504 101.59 328.472 99.388 328.472 99.142C328.472 99.004 326.174 94.66 323.365 89.49C301.093 48.499 260.551 16.742 216.472 5.75898C197.257 0.970984 172.235 -1.10403 153.972 0.575971ZM55.4715 71.09C55.4715 73.361 55.8605 73.592 59.7215 73.612C65.7755 73.643 71.8716 76.723 74.8616 81.261C76.2486 83.367 81.2805 94.09 86.0445 105.09C90.8085 116.09 99.7686 136.79 105.956 151.09C112.143 165.39 120.586 184.74 124.719 194.09C128.851 203.44 136.835 221.665 142.461 234.59C148.087 247.515 154.514 262.271 156.742 267.38C158.97 272.49 161.171 276.904 161.632 277.189C162.691 277.843 178.275 246.262 179.132 241.726C179.713 238.649 179.589 238.418 177.676 239.025C174.77 239.947 174.066 238.681 162.061 210.958C156.376 197.83 149.24 181.465 146.203 174.59C108.799 89.915 106.551 84.048 109.439 78.651C110.954 75.82 116.242 73.59 121.44 73.59C125.074 73.59 125.472 73.343 125.472 71.09V68.59H90.4715H55.4715V71.09ZM221.472 70.95C221.472 73.061 222.025 73.368 226.722 73.855C236.566 74.875 240.486 78.424 240.459 86.29C240.439 92.294 235.464 106.495 222.566 137.365C219.764 144.071 217.472 149.75 217.472 149.986C217.472 150.221 219.321 150.727 221.58 151.108C226.745 151.981 226.985 151.718 232.554 139.09C234.98 133.59 241.991 118.965 248.134 106.59C261.857 78.945 265.062 75.255 276.526 73.897C280.892 73.38 281.472 73.035 281.472 70.951V68.59H251.472H221.472V70.95ZM393.435 78.84C395.561 83.927 401.903 98.665 407.527 111.59C413.152 124.515 420.136 140.715 423.048 147.59L428.343 160.09L434.407 160.388C439.934 160.659 440.554 160.482 441.4 158.388C442.565 155.506 461.082 111.992 467.698 96.59C476.68 75.679 478.472 71.324 478.472 70.407C478.472 69.907 475.449 69.632 471.754 69.794L465.036 70.09L450.296 105.464C442.189 124.92 435.391 141.005 435.188 141.207C434.873 141.522 419.776 106.709 407.927 78.34L404.272 69.59H396.92H389.569L393.435 78.84ZM501.472 115.09V160.59H508.472H515.472V115.09V69.59H508.472H501.472V115.09ZM578.616 71.34C578.106 72.302 574.762 79.615 571.183 87.59C567.605 95.565 562.999 105.69 560.949 110.09C548.019 137.84 538.472 159.114 538.472 160.179C538.472 160.405 541.561 160.59 545.336 160.59H552.2L554.003 155.87C554.994 153.274 557.319 147.874 559.169 143.87L562.533 136.59H584.801H607.07L608.335 140.089C609.031 142.013 611.393 147.413 613.584 152.089L617.568 160.59H624.52C628.344 160.59 631.472 160.415 631.472 160.201C631.472 159.987 629.169 154.699 626.354 148.451C623.539 142.202 620.203 134.615 618.942 131.59C617.68 128.565 612.748 117.54 607.982 107.09C603.216 96.64 597.474 83.927 595.222 78.84L591.127 69.59H585.335C580.838 69.59 579.335 69.981 578.616 71.34ZM716.472 115.09V160.59H746.972H777.472V155.09V149.59H753.972H730.472V109.59V69.59H723.472H716.472V115.09ZM596.039 111.78C599.027 118.759 601.472 124.722 601.472 125.03C601.472 125.338 593.774 125.59 584.365 125.59C571.069 125.59 567.374 125.312 567.778 124.34C568.065 123.653 571.215 116.565 574.779 108.59C578.343 100.615 582.017 92.29 582.943 90.09L584.626 86.09L587.616 92.59C589.26 96.165 593.05 104.8 596.039 111.78ZM645.472 122.09V127.59H667.972H690.472V122.09V116.59H667.972H645.472V122.09ZM168.472 163.976C168.472 166.04 169.084 166.455 172.991 167.041C175.483 167.414 178.734 168.771 180.239 170.066L182.969 172.414L182.971 224.087L182.972 275.76L180.679 277.62C179.418 278.643 176.38 279.781 173.929 280.149C170.584 280.65 169.472 281.259 169.472 282.587C169.472 283.581 170.458 284.615 171.722 284.945C172.959 285.269 195.572 285.434 221.972 285.312L269.972 285.09L270.623 273.09C270.981 266.49 271.566 258.503 271.923 255.34C272.525 249.999 272.425 249.59 270.522 249.59C269.394 249.59 268.18 249.478 267.824 249.34C267.468 249.202 266.426 251.79 265.509 255.09C263.427 262.582 261.442 266.355 257.811 269.726C251.19 275.873 243.693 277.59 223.479 277.59C209.222 277.59 208.519 277.495 207.029 275.367C205.67 273.428 205.472 266.762 205.472 222.949C205.472 195.342 205.752 172.025 206.093 171.135C206.984 168.812 211.79 166.59 215.922 166.59C219.042 166.59 219.472 166.287 219.472 164.09V161.59H193.972H168.472V163.976ZM337.472 189.09C337.472 190.414 349.796 190.59 442.389 190.59C525.386 190.59 547.411 190.329 547.81 189.34C548.213 188.34 548.33 188.34 548.393 189.34C548.456 190.334 581.181 190.59 708.472 190.59C850.028 190.59 868.472 190.417 868.472 189.09C868.472 187.761 843.87 187.59 653.055 187.59C481.658 187.59 437.536 187.845 437.134 188.84C436.731 189.84 436.614 189.84 436.551 188.84C436.489 187.858 425.863 187.59 386.972 187.59C343.639 187.59 337.472 187.777 337.472 189.09ZM414.472 243.59V264.59H427.972H441.472V262.09V259.59H430.472H419.472V241.09V222.59H416.972H414.472V243.59ZM464.625 225.201C460.572 227.221 458.703 228.976 456.372 232.951C453.661 237.573 453.4 238.755 453.772 244.701C454.297 253.104 458.18 259.302 464.981 262.594C472.562 266.264 484.082 264.968 489.789 259.803C493.83 256.146 496.615 249.853 496.614 244.38C496.614 237.81 495.515 234.848 491.298 230.044C484.538 222.345 474.143 220.458 464.625 225.201ZM515.139 223.257C514.772 223.623 514.472 233.073 514.472 244.257V264.59H516.972H519.472L519.674 251.34C519.785 244.052 519.893 236.853 519.914 235.34C519.935 233.827 520.182 232.617 520.462 232.651C520.743 232.685 523.294 235.722 526.132 239.401C528.97 243.08 534.497 250.253 538.414 255.34C549.305 269.487 549.472 269.312 549.472 243.757V222.924L547.222 223.088C545.016 223.249 544.962 223.555 544.472 238.753L543.972 254.253L532.972 239.884C526.922 231.981 521.377 224.857 520.651 224.053C519.277 222.532 516.294 222.101 515.139 223.257ZM579.379 224.917C572.594 228.499 569.116 234.191 568.648 242.481C568.24 249.707 569.543 253.712 573.839 258.435C580.484 265.741 594.064 267.112 602.924 261.373L606.447 259.09L606.46 250.84L606.472 242.59H597.972C590.139 242.59 589.472 242.747 589.472 244.59C589.472 246.368 590.139 246.59 595.472 246.59H601.472V251.646C601.472 256.699 601.469 256.704 596.837 258.753C585.759 263.653 573.569 255.716 573.494 243.552C573.462 238.411 577.305 231.587 581.456 229.414C586.591 226.726 594.309 226.99 598.753 230.006C602.132 232.299 602.395 232.333 603.901 230.668C605.355 229.062 605.337 228.778 603.693 227.29C598.06 222.192 586.65 221.078 579.379 224.917ZM628.222 223.263L625.472 223.723V244.156V264.59H639.972H654.472V262.09V259.59H642.972H631.472V252.59V245.59H641.472C650.805 245.59 651.472 245.457 651.472 243.59C651.472 241.723 650.805 241.59 641.472 241.59H631.472V234.59V227.59H642.472C652.805 227.59 653.472 227.469 653.472 225.59C653.472 223.95 652.797 223.585 649.722 223.564C647.66 223.549 642.597 223.372 638.472 223.171C634.347 222.969 629.735 223.011 628.222 223.263ZM667.472 223.024C667.472 223.284 670.553 230.605 674.318 239.293C678.083 247.982 681.978 257.251 682.973 259.891C684.537 264.04 685.121 264.652 687.273 264.391C689.488 264.123 690.689 261.934 698.118 244.624C702.713 233.917 706.472 224.655 706.472 224.041C706.472 222.722 702.805 222.809 701.615 224.156C700.495 225.421 688.472 254.076 688.472 255.477C688.472 258.309 686.721 256.034 684.521 250.34C682.354 244.736 673.497 224.253 673.122 223.981C672.462 223.5 667.472 222.656 667.472 223.024ZM723.702 243.34L723.972 264.09L726.722 264.406L729.472 264.723V243.656V222.59H726.452H723.431L723.702 243.34ZM746.473 225.34C746.472 227.459 746.879 227.59 753.472 227.59H760.472L760.606 241.84C760.68 249.677 760.64 258.003 760.516 260.34C760.307 264.304 760.466 264.59 762.882 264.59H765.472V246.09V227.59H772.472C779.065 227.59 779.472 227.459 779.472 225.34C779.472 223.097 779.417 223.09 762.973 223.09C746.529 223.09 746.473 223.098 746.473 225.34ZM793.044 223.474C792.753 223.945 796.105 229.553 800.493 235.937L808.472 247.544V256.067C808.472 264.492 808.501 264.59 810.972 264.59C813.353 264.59 813.48 264.292 813.65 258.34C813.748 254.903 813.816 251.219 813.801 250.156C813.786 249.092 817.475 242.679 821.998 235.906L830.223 223.59L827.097 223.622C824.24 223.652 823.47 224.466 818.116 233.122C814.895 238.33 811.97 242.575 811.616 242.556C811.262 242.538 808.047 238.18 804.472 232.874C800.004 226.242 797.284 223.13 795.772 222.922C794.563 222.755 793.335 223.003 793.044 223.474ZM483.231 229.585C492.139 235.016 493.744 248.164 486.395 255.513C480.133 261.775 471.129 261.986 464.532 256.025C456.493 248.762 457.65 235.111 466.776 229.546C471.072 226.927 478.902 226.945 483.231 229.585Z" fill="rgba(184,146,74,0.9)"/>
+          </svg>
+        </div>
+
+        <!-- разделитель -->
+        <div style="width:32px;height:.5px;background:rgba(184,146,74,.35);margin-bottom:18px;"></div>
+
+        <!-- название гайда -->
+        <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;line-height:1.2;color:#1a1208;margin-bottom:7px;">Как читать<br>свои анализы</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:300;color:#5a4030;line-height:1.5;margin-bottom:18px;">Норма, оптимум и питание —<br>полная расшифровка 8 ключевых маркеров · 12 стр.</div>
+
+        <!-- цена -->
+        <div style="font-family:'Cormorant Garamond',serif;font-size:50px;font-weight:300;line-height:1;color:#1a1208;margin-bottom:18px;">35 <span style="font-size:28px;">€</span></div>
+
+        <!-- кнопка -->
+        <a href="https://pay.hotmart.com/D105606414M" target="_blank"
+            style="font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:#fff;text-decoration:none;background:linear-gradient(105deg,#b8924a 0%,#e8c97a 40%,#c8a055 60%,#b8924a 100%);padding:13px 36px;border-radius:50px;margin-bottom:13px;display:inline-block;box-shadow:0 2px 14px rgba(184,146,74,.45);text-shadow:0 1px 2px rgba(0,0,0,.18);">
+          Получить гайд →
+        </a>
+
+        <!-- подпись -->
+        <div style="font-family:'DM Sans',sans-serif;font-size:12px;color:rgba(0,0,0,.6);line-height:1.6;margin-bottom:18px;">Hotmart · Безопасная оплата<br>Доступ сразу после оплаты</div>
+
+        <!-- разделитель -->
+        <div style="width:32px;height:.5px;background:rgba(184,146,74,.25);margin-bottom:14px;"></div>
+
+        <!-- автор -->
+        <div style="font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:#1a1208;margin-bottom:3px;">Maryna Datsenko</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:400;color:#3a2a18;">Нутрициолог · VIA·L Longevity</div>
+
+      </div>
+      <!-- Футер: position:absolute; bottom:16px; height:~14px -->
+      <div class="pg-footer">
+        <span class="f-logo">VIA·L</span>
+        <span class="f-url">via-l.com</span>
+      </div>
+    </div>
+
+    <!-- p11: Inner back cover (hard, back-side) -->
+    <div class="hard back-side fixed">
+      <div class="depth"></div>
+      <!-- тень корешка — левый край -->
+      <div style="position:absolute;top:0;left:0;width:20px;height:100%;background:linear-gradient(to right,rgba(0,0,0,0.22) 0%,rgba(0,0,0,0.10) 55%,transparent 100%);z-index:12;pointer-events:none;"></div>
+      <!-- Контент: padding-bottom=46px чтобы не заходить под футер -->
+      <div style="width:100%;height:100%;background:#faf7f2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:44px 48px 46px 48px;box-sizing:border-box;position:relative;">
+        <svg width="120" height="46" viewBox="0 0 869 335" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M153.972 0.575971C86.3115 6.79897 27.6765 52.656 7.54753 115.09C1.53453 133.74 -0.0334622 144.128 0.000537849 165.09C0.0495378 196.331 6.06354 219.476 21.2985 247.061C45.4175 290.731 92.1245 323.787 142.361 332.741C157.959 335.521 185.285 335.737 200.825 333.204C253.728 324.579 298.024 294.082 324.777 247.865L328.38 241.639L326.204 240.115C325.006 239.276 323.491 238.59 322.836 238.59C322.18 238.59 319.947 241.628 317.873 245.34C305.858 266.845 287.231 286.775 266.863 299.918C208.912 337.312 137.117 337.459 80.6935 300.3C45.2895 276.983 20.0005 240.742 11.1165 200.59C6.94454 181.735 5.97355 169.491 7.37755 153.463C11.3936 107.628 33.1695 68.391 69.9715 40.683C99.6925 18.305 132.639 7.35499 170.472 7.28099C201.525 7.21999 228.833 14.315 254.811 29.191C281.652 44.562 305.102 68.973 318.359 95.34C320.087 98.778 321.652 101.59 321.837 101.59C322.504 101.59 328.472 99.388 328.472 99.142C328.472 99.004 326.174 94.66 323.365 89.49C301.093 48.499 260.551 16.742 216.472 5.75898C197.257 0.970984 172.235 -1.10403 153.972 0.575971ZM55.4715 71.09C55.4715 73.361 55.8605 73.592 59.7215 73.612C65.7755 73.643 71.8716 76.723 74.8616 81.261C76.2486 83.367 81.2805 94.09 86.0445 105.09C90.8085 116.09 99.7686 136.79 105.956 151.09C112.143 165.39 120.586 184.74 124.719 194.09C128.851 203.44 136.835 221.665 142.461 234.59C148.087 247.515 154.514 262.271 156.742 267.38C158.97 272.49 161.171 276.904 161.632 277.189C162.691 277.843 178.275 246.262 179.132 241.726C179.713 238.649 179.589 238.418 177.676 239.025C174.77 239.947 174.066 238.681 162.061 210.958C156.376 197.83 149.24 181.465 146.203 174.59C108.799 89.915 106.551 84.048 109.439 78.651C110.954 75.82 116.242 73.59 121.44 73.59C125.074 73.59 125.472 73.343 125.472 71.09V68.59H90.4715H55.4715V71.09ZM221.472 70.95C221.472 73.061 222.025 73.368 226.722 73.855C236.566 74.875 240.486 78.424 240.459 86.29C240.439 92.294 235.464 106.495 222.566 137.365C219.764 144.071 217.472 149.75 217.472 149.986C217.472 150.221 219.321 150.727 221.58 151.108C226.745 151.981 226.985 151.718 232.554 139.09C234.98 133.59 241.991 118.965 248.134 106.59C261.857 78.945 265.062 75.255 276.526 73.897C280.892 73.38 281.472 73.035 281.472 70.951V68.59H251.472H221.472V70.95ZM393.435 78.84C395.561 83.927 401.903 98.665 407.527 111.59C413.152 124.515 420.136 140.715 423.048 147.59L428.343 160.09L434.407 160.388C439.934 160.659 440.554 160.482 441.4 158.388C442.565 155.506 461.082 111.992 467.698 96.59C476.68 75.679 478.472 71.324 478.472 70.407C478.472 69.907 475.449 69.632 471.754 69.794L465.036 70.09L450.296 105.464C442.189 124.92 435.391 141.005 435.188 141.207C434.873 141.522 419.776 106.709 407.927 78.34L404.272 69.59H396.92H389.569L393.435 78.84ZM501.472 115.09V160.59H508.472H515.472V115.09V69.59H508.472H501.472V115.09ZM578.616 71.34C578.106 72.302 574.762 79.615 571.183 87.59C567.605 95.565 562.999 105.69 560.949 110.09C548.019 137.84 538.472 159.114 538.472 160.179C538.472 160.405 541.561 160.59 545.336 160.59H552.2L554.003 155.87C554.994 153.274 557.319 147.874 559.169 143.87L562.533 136.59H584.801H607.07L608.335 140.089C609.031 142.013 611.393 147.413 613.584 152.089L617.568 160.59H624.52C628.344 160.59 631.472 160.415 631.472 160.201C631.472 159.987 629.169 154.699 626.354 148.451C623.539 142.202 620.203 134.615 618.942 131.59C617.68 128.565 612.748 117.54 607.982 107.09C603.216 96.64 597.474 83.927 595.222 78.84L591.127 69.59H585.335C580.838 69.59 579.335 69.981 578.616 71.34ZM716.472 115.09V160.59H746.972H777.472V155.09V149.59H753.972H730.472V109.59V69.59H723.472H716.472V115.09ZM596.039 111.78C599.027 118.759 601.472 124.722 601.472 125.03C601.472 125.338 593.774 125.59 584.365 125.59C571.069 125.59 567.374 125.312 567.778 124.34C568.065 123.653 571.215 116.565 574.779 108.59C578.343 100.615 582.017 92.29 582.943 90.09L584.626 86.09L587.616 92.59C589.26 96.165 593.05 104.8 596.039 111.78ZM645.472 122.09V127.59H667.972H690.472V122.09V116.59H667.972H645.472V122.09ZM168.472 163.976C168.472 166.04 169.084 166.455 172.991 167.041C175.483 167.414 178.734 168.771 180.239 170.066L182.969 172.414L182.971 224.087L182.972 275.76L180.679 277.62C179.418 278.643 176.38 279.781 173.929 280.149C170.584 280.65 169.472 281.259 169.472 282.587C169.472 283.581 170.458 284.615 171.722 284.945C172.959 285.269 195.572 285.434 221.972 285.312L269.972 285.09L270.623 273.09C270.981 266.49 271.566 258.503 271.923 255.34C272.525 249.999 272.425 249.59 270.522 249.59C269.394 249.59 268.18 249.478 267.824 249.34C267.468 249.202 266.426 251.79 265.509 255.09C263.427 262.582 261.442 266.355 257.811 269.726C251.19 275.873 243.693 277.59 223.479 277.59C209.222 277.59 208.519 277.495 207.029 275.367C205.67 273.428 205.472 266.762 205.472 222.949C205.472 195.342 205.752 172.025 206.093 171.135C206.984 168.812 211.79 166.59 215.922 166.59C219.042 166.59 219.472 166.287 219.472 164.09V161.59H193.972H168.472V163.976ZM337.472 189.09C337.472 190.414 349.796 190.59 442.389 190.59C525.386 190.59 547.411 190.329 547.81 189.34C548.213 188.34 548.33 188.34 548.393 189.34C548.456 190.334 581.181 190.59 708.472 190.59C850.028 190.59 868.472 190.417 868.472 189.09C868.472 187.761 843.87 187.59 653.055 187.59C481.658 187.59 437.536 187.845 437.134 188.84C436.731 189.84 436.614 189.84 436.551 188.84C436.489 187.858 425.863 187.59 386.972 187.59C343.639 187.59 337.472 187.777 337.472 189.09ZM414.472 243.59V264.59H427.972H441.472V262.09V259.59H430.472H419.472V241.09V222.59H416.972H414.472V243.59ZM464.625 225.201C460.572 227.221 458.703 228.976 456.372 232.951C453.661 237.573 453.4 238.755 453.772 244.701C454.297 253.104 458.18 259.302 464.981 262.594C472.562 266.264 484.082 264.968 489.789 259.803C493.83 256.146 496.615 249.853 496.614 244.38C496.614 237.81 495.515 234.848 491.298 230.044C484.538 222.345 474.143 220.458 464.625 225.201ZM515.139 223.257C514.772 223.623 514.472 233.073 514.472 244.257V264.59H516.972H519.472L519.674 251.34C519.785 244.052 519.893 236.853 519.914 235.34C519.935 233.827 520.182 232.617 520.462 232.651C520.743 232.685 523.294 235.722 526.132 239.401C528.97 243.08 534.497 250.253 538.414 255.34C549.305 269.487 549.472 269.312 549.472 243.757V222.924L547.222 223.088C545.016 223.249 544.962 223.555 544.472 238.753L543.972 254.253L532.972 239.884C526.922 231.981 521.377 224.857 520.651 224.053C519.277 222.532 516.294 222.101 515.139 223.257ZM579.379 224.917C572.594 228.499 569.116 234.191 568.648 242.481C568.24 249.707 569.543 253.712 573.839 258.435C580.484 265.741 594.064 267.112 602.924 261.373L606.447 259.09L606.46 250.84L606.472 242.59H597.972C590.139 242.59 589.472 242.747 589.472 244.59C589.472 246.368 590.139 246.59 595.472 246.59H601.472V251.646C601.472 256.699 601.469 256.704 596.837 258.753C585.759 263.653 573.569 255.716 573.494 243.552C573.462 238.411 577.305 231.587 581.456 229.414C586.591 226.726 594.309 226.99 598.753 230.006C602.132 232.299 602.395 232.333 603.901 230.668C605.355 229.062 605.337 228.778 603.693 227.29C598.06 222.192 586.65 221.078 579.379 224.917ZM628.222 223.263L625.472 223.723V244.156V264.59H639.972H654.472V262.09V259.59H642.972H631.472V252.59V245.59H641.472C650.805 245.59 651.472 245.457 651.472 243.59C651.472 241.723 650.805 241.59 641.472 241.59H631.472V234.59V227.59H642.472C652.805 227.59 653.472 227.469 653.472 225.59C653.472 223.95 652.797 223.585 649.722 223.564C647.66 223.549 642.597 223.372 638.472 223.171C634.347 222.969 629.735 223.011 628.222 223.263ZM667.472 223.024C667.472 223.284 670.553 230.605 674.318 239.293C678.083 247.982 681.978 257.251 682.973 259.891C684.537 264.04 685.121 264.652 687.273 264.391C689.488 264.123 690.689 261.934 698.118 244.624C702.713 233.917 706.472 224.655 706.472 224.041C706.472 222.722 702.805 222.809 701.615 224.156C700.495 225.421 688.472 254.076 688.472 255.477C688.472 258.309 686.721 256.034 684.521 250.34C682.354 244.736 673.497 224.253 673.122 223.981C672.462 223.5 667.472 222.656 667.472 223.024ZM723.702 243.34L723.972 264.09L726.722 264.406L729.472 264.723V243.656V222.59H726.452H723.431L723.702 243.34ZM746.473 225.34C746.472 227.459 746.879 227.59 753.472 227.59H760.472L760.606 241.84C760.68 249.677 760.64 258.003 760.516 260.34C760.307 264.304 760.466 264.59 762.882 264.59H765.472V246.09V227.59H772.472C779.065 227.59 779.472 227.459 779.472 225.34C779.472 223.097 779.417 223.09 762.973 223.09C746.529 223.09 746.473 223.098 746.473 225.34ZM793.044 223.474C792.753 223.945 796.105 229.553 800.493 235.937L808.472 247.544V256.067C808.472 264.492 808.501 264.59 810.972 264.59C813.353 264.59 813.48 264.292 813.65 258.34C813.748 254.903 813.816 251.219 813.801 250.156C813.786 249.092 817.475 242.679 821.998 235.906L830.223 223.59L827.097 223.622C824.24 223.652 823.47 224.466 818.116 233.122C814.895 238.33 811.97 242.575 811.616 242.556C811.262 242.538 808.047 238.18 804.472 232.874C800.004 226.242 797.284 223.13 795.772 222.922C794.563 222.755 793.335 223.003 793.044 223.474ZM483.231 229.585C492.139 235.016 493.744 248.164 486.395 255.513C480.133 261.775 471.129 261.986 464.532 256.025C456.493 248.762 457.65 235.111 466.776 229.546C471.072 226.927 478.902 226.945 483.231 229.585Z" fill="rgba(184,146,74,0.9)"/>
+        </svg>
+        <div style="width:96px;height:1px;background:#b8924a;opacity:.55;margin-top:4px;"></div>
+        <div style="width:1px;height:36px;background:linear-gradient(to bottom,transparent,rgba(160,120,60,.4),transparent);"></div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;line-height:1.82;color:#2e1e0e;text-align:center;max-width:280px;">
+          Твоё тело — не враг.<br>Оно говорит языком симптомов —<br>научись его слушать.
+        </div>
+        <div style="width:1px;height:36px;background:linear-gradient(to bottom,transparent,rgba(160,120,60,.4),transparent);"></div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:.26em;text-transform:lowercase;color:rgba(160,120,60,.55);">via-l.com</div>
+      </div>
+      <!-- Футер: position:absolute; bottom:16px; height:~14px -->
+      <div class="pg-footer">
+        <span class="f-logo">VIA·L</span>
+        <span class="f-url">via-l.com</span>
+      </div>
+    </div>
+
+    <!-- p12: Back cover (hard) -->
+    <div class="hard">
+      <div class="cover-back-final">
+        <svg width="200" height="77" viewBox="0 0 869 335" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M153.972 0.575971C86.3115 6.79897 27.6765 52.656 7.54753 115.09C1.53453 133.74 -0.0334622 144.128 0.000537849 165.09C0.0495378 196.331 6.06354 219.476 21.2985 247.061C45.4175 290.731 92.1245 323.787 142.361 332.741C157.959 335.521 185.285 335.737 200.825 333.204C253.728 324.579 298.024 294.082 324.777 247.865L328.38 241.639L326.204 240.115C325.006 239.276 323.491 238.59 322.836 238.59C322.18 238.59 319.947 241.628 317.873 245.34C305.858 266.845 287.231 286.775 266.863 299.918C208.912 337.312 137.117 337.459 80.6935 300.3C45.2895 276.983 20.0005 240.742 11.1165 200.59C6.94454 181.735 5.97355 169.491 7.37755 153.463C11.3936 107.628 33.1695 68.391 69.9715 40.683C99.6925 18.305 132.639 7.35499 170.472 7.28099C201.525 7.21999 228.833 14.315 254.811 29.191C281.652 44.562 305.102 68.973 318.359 95.34C320.087 98.778 321.652 101.59 321.837 101.59C322.504 101.59 328.472 99.388 328.472 99.142C328.472 99.004 326.174 94.66 323.365 89.49C301.093 48.499 260.551 16.742 216.472 5.75898C197.257 0.970984 172.235 -1.10403 153.972 0.575971ZM55.4715 71.09C55.4715 73.361 55.8605 73.592 59.7215 73.612C65.7755 73.643 71.8716 76.723 74.8616 81.261C76.2486 83.367 81.2805 94.09 86.0445 105.09C90.8085 116.09 99.7686 136.79 105.956 151.09C112.143 165.39 120.586 184.74 124.719 194.09C128.851 203.44 136.835 221.665 142.461 234.59C148.087 247.515 154.514 262.271 156.742 267.38C158.97 272.49 161.171 276.904 161.632 277.189C162.691 277.843 178.275 246.262 179.132 241.726C179.713 238.649 179.589 238.418 177.676 239.025C174.77 239.947 174.066 238.681 162.061 210.958C156.376 197.83 149.24 181.465 146.203 174.59C108.799 89.915 106.551 84.048 109.439 78.651C110.954 75.82 116.242 73.59 121.44 73.59C125.074 73.59 125.472 73.343 125.472 71.09V68.59H90.4715H55.4715V71.09ZM221.472 70.95C221.472 73.061 222.025 73.368 226.722 73.855C236.566 74.875 240.486 78.424 240.459 86.29C240.439 92.294 235.464 106.495 222.566 137.365C219.764 144.071 217.472 149.75 217.472 149.986C217.472 150.221 219.321 150.727 221.58 151.108C226.745 151.981 226.985 151.718 232.554 139.09C234.98 133.59 241.991 118.965 248.134 106.59C261.857 78.945 265.062 75.255 276.526 73.897C280.892 73.38 281.472 73.035 281.472 70.951V68.59H251.472H221.472V70.95ZM393.435 78.84C395.561 83.927 401.903 98.665 407.527 111.59C413.152 124.515 420.136 140.715 423.048 147.59L428.343 160.09L434.407 160.388C439.934 160.659 440.554 160.482 441.4 158.388C442.565 155.506 461.082 111.992 467.698 96.59C476.68 75.679 478.472 71.324 478.472 70.407C478.472 69.907 475.449 69.632 471.754 69.794L465.036 70.09L450.296 105.464C442.189 124.92 435.391 141.005 435.188 141.207C434.873 141.522 419.776 106.709 407.927 78.34L404.272 69.59H396.92H389.569L393.435 78.84ZM501.472 115.09V160.59H508.472H515.472V115.09V69.59H508.472H501.472V115.09ZM578.616 71.34C578.106 72.302 574.762 79.615 571.183 87.59C567.605 95.565 562.999 105.69 560.949 110.09C548.019 137.84 538.472 159.114 538.472 160.179C538.472 160.405 541.561 160.59 545.336 160.59H552.2L554.003 155.87C554.994 153.274 557.319 147.874 559.169 143.87L562.533 136.59H584.801H607.07L608.335 140.089C609.031 142.013 611.393 147.413 613.584 152.089L617.568 160.59H624.52C628.344 160.59 631.472 160.415 631.472 160.201C631.472 159.987 629.169 154.699 626.354 148.451C623.539 142.202 620.203 134.615 618.942 131.59C617.68 128.565 612.748 117.54 607.982 107.09C603.216 96.64 597.474 83.927 595.222 78.84L591.127 69.59H585.335C580.838 69.59 579.335 69.981 578.616 71.34ZM716.472 115.09V160.59H746.972H777.472V155.09V149.59H753.972H730.472V109.59V69.59H723.472H716.472V115.09ZM596.039 111.78C599.027 118.759 601.472 124.722 601.472 125.03C601.472 125.338 593.774 125.59 584.365 125.59C571.069 125.59 567.374 125.312 567.778 124.34C568.065 123.653 571.215 116.565 574.779 108.59C578.343 100.615 582.017 92.29 582.943 90.09L584.626 86.09L587.616 92.59C589.26 96.165 593.05 104.8 596.039 111.78ZM645.472 122.09V127.59H667.972H690.472V122.09V116.59H667.972H645.472V122.09ZM168.472 163.976C168.472 166.04 169.084 166.455 172.991 167.041C175.483 167.414 178.734 168.771 180.239 170.066L182.969 172.414L182.971 224.087L182.972 275.76L180.679 277.62C179.418 278.643 176.38 279.781 173.929 280.149C170.584 280.65 169.472 281.259 169.472 282.587C169.472 283.581 170.458 284.615 171.722 284.945C172.959 285.269 195.572 285.434 221.972 285.312L269.972 285.09L270.623 273.09C270.981 266.49 271.566 258.503 271.923 255.34C272.525 249.999 272.425 249.59 270.522 249.59C269.394 249.59 268.18 249.478 267.824 249.34C267.468 249.202 266.426 251.79 265.509 255.09C263.427 262.582 261.442 266.355 257.811 269.726C251.19 275.873 243.693 277.59 223.479 277.59C209.222 277.59 208.519 277.495 207.029 275.367C205.67 273.428 205.472 266.762 205.472 222.949C205.472 195.342 205.752 172.025 206.093 171.135C206.984 168.812 211.79 166.59 215.922 166.59C219.042 166.59 219.472 166.287 219.472 164.09V161.59H193.972H168.472V163.976ZM337.472 189.09C337.472 190.414 349.796 190.59 442.389 190.59C525.386 190.59 547.411 190.329 547.81 189.34C548.213 188.34 548.33 188.34 548.393 189.34C548.456 190.334 581.181 190.59 708.472 190.59C850.028 190.59 868.472 190.417 868.472 189.09C868.472 187.761 843.87 187.59 653.055 187.59C481.658 187.59 437.536 187.845 437.134 188.84C436.731 189.84 436.614 189.84 436.551 188.84C436.489 187.858 425.863 187.59 386.972 187.59C343.639 187.59 337.472 187.777 337.472 189.09ZM414.472 243.59V264.59H427.972H441.472V262.09V259.59H430.472H419.472V241.09V222.59H416.972H414.472V243.59ZM464.625 225.201C460.572 227.221 458.703 228.976 456.372 232.951C453.661 237.573 453.4 238.755 453.772 244.701C454.297 253.104 458.18 259.302 464.981 262.594C472.562 266.264 484.082 264.968 489.789 259.803C493.83 256.146 496.615 249.853 496.614 244.38C496.614 237.81 495.515 234.848 491.298 230.044C484.538 222.345 474.143 220.458 464.625 225.201ZM515.139 223.257C514.772 223.623 514.472 233.073 514.472 244.257V264.59H516.972H519.472L519.674 251.34C519.785 244.052 519.893 236.853 519.914 235.34C519.935 233.827 520.182 232.617 520.462 232.651C520.743 232.685 523.294 235.722 526.132 239.401C528.97 243.08 534.497 250.253 538.414 255.34C549.305 269.487 549.472 269.312 549.472 243.757V222.924L547.222 223.088C545.016 223.249 544.962 223.555 544.472 238.753L543.972 254.253L532.972 239.884C526.922 231.981 521.377 224.857 520.651 224.053C519.277 222.532 516.294 222.101 515.139 223.257ZM579.379 224.917C572.594 228.499 569.116 234.191 568.648 242.481C568.24 249.707 569.543 253.712 573.839 258.435C580.484 265.741 594.064 267.112 602.924 261.373L606.447 259.09L606.46 250.84L606.472 242.59H597.972C590.139 242.59 589.472 242.747 589.472 244.59C589.472 246.368 590.139 246.59 595.472 246.59H601.472V251.646C601.472 256.699 601.469 256.704 596.837 258.753C585.759 263.653 573.569 255.716 573.494 243.552C573.462 238.411 577.305 231.587 581.456 229.414C586.591 226.726 594.309 226.99 598.753 230.006C602.132 232.299 602.395 232.333 603.901 230.668C605.355 229.062 605.337 228.778 603.693 227.29C598.06 222.192 586.65 221.078 579.379 224.917ZM628.222 223.263L625.472 223.723V244.156V264.59H639.972H654.472V262.09V259.59H642.972H631.472V252.59V245.59H641.472C650.805 245.59 651.472 245.457 651.472 243.59C651.472 241.723 650.805 241.59 641.472 241.59H631.472V234.59V227.59H642.472C652.805 227.59 653.472 227.469 653.472 225.59C653.472 223.95 652.797 223.585 649.722 223.564C647.66 223.549 642.597 223.372 638.472 223.171C634.347 222.969 629.735 223.011 628.222 223.263ZM667.472 223.024C667.472 223.284 670.553 230.605 674.318 239.293C678.083 247.982 681.978 257.251 682.973 259.891C684.537 264.04 685.121 264.652 687.273 264.391C689.488 264.123 690.689 261.934 698.118 244.624C702.713 233.917 706.472 224.655 706.472 224.041C706.472 222.722 702.806 222.809 701.615 224.156C700.496 225.421 688.472 254.076 688.472 255.477C688.472 258.309 686.722 256.034 684.521 250.34C682.354 244.736 673.497 224.253 673.122 223.981C672.462 223.5 667.472 222.656 667.472 223.024ZM723.702 243.34L723.972 264.09L726.722 264.406L729.472 264.723V243.656V222.59H726.452H723.431L723.702 243.34ZM746.473 225.34C746.472 227.459 746.879 227.59 753.472 227.59H760.472L760.606 241.84C760.68 249.677 760.64 258.003 760.516 260.34C760.307 264.304 760.466 264.59 762.882 264.59H765.472V246.09V227.59H772.472C779.065 227.59 779.472 227.459 779.472 225.34C779.472 223.097 779.417 223.09 762.973 223.09C746.529 223.09 746.473 223.098 746.473 225.34ZM793.044 223.474C792.753 223.945 796.105 229.553 800.493 235.937L808.472 247.544V256.067C808.472 264.492 808.501 264.59 810.972 264.59C813.353 264.59 813.48 264.292 813.65 258.34C813.748 254.903 813.816 251.219 813.801 250.156C813.786 249.092 817.475 242.679 821.998 235.906L830.223 223.59L827.097 223.622C824.24 223.652 823.47 224.466 818.116 233.122C814.895 238.33 811.97 242.575 811.616 242.556C811.262 242.538 808.047 238.18 804.472 232.874C800.004 226.242 797.284 223.13 795.772 222.922C794.563 222.755 793.335 223.003 793.044 223.474ZM483.231 229.585C492.139 235.016 493.744 248.164 486.395 255.513C480.133 261.775 471.129 261.986 464.532 256.025C456.493 248.762 457.65 235.111 466.776 229.546C471.072 226.927 478.902 226.945 483.231 229.585Z" fill="rgba(90,60,20,0.78)"/>
+        </svg>
+        <div class="url">via-l.com</div>
+        <div style="font-family:'Playfair Display',serif;font-size:7.5px;letter-spacing:3px;text-transform:uppercase;color:rgba(90,60,20,.45);margin-top:6px;">VIA·L</div>
+      </div>
+    </div>
+
+  </div><!-- /#book -->
+</div><!-- /#canvas -->
+
+<!-- Navigation -->
+<button id="btn-back" style="display:none;position:fixed;top:14px;left:14px;z-index:200;background:rgba(255,255,255,0.92);border:1.5px solid rgba(184,146,74,.35);border-radius:22px;padding:7px 16px;font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#3a2510;cursor:pointer;" onclick="history.back()">&#8592; Каталог</button>
+<div id="controls">
+  <button class="btn-nav" id="btn-prev">&#8249;</button>
+  <span id="page-info">1 / 6</span>
+  <button class="btn-nav" id="btn-next">&#8250;</button>
+</div>
+
+<script>
+$(function () {
+
+  var isMobile = window.innerWidth < 768;
+  var book  = $('#book');
+  function updateDepth() {}
+  function pageLabel(p) {
+    var total = book.turn('pages');
+    return Math.ceil(p / 2) + ' / ' + Math.ceil(total / 2);
+  }
+  function initMobileReader() {
+    var pages = $('#book').children().toArray();
+    if (pages.length > 2) {
+      var p2 = pages.splice(1, 1)[0];
+      pages.splice(pages.length - 1, 0, p2);
+    }
+    var cur = 0;
+    var pageW = 480, pageH = 600;
+    var vw     = document.documentElement.clientWidth  || window.innerWidth;
+    var vh     = document.documentElement.clientHeight || window.innerHeight;
+    var scale  = Math.min(vw / pageW, (vh - 64) / pageH);
+
+    var $reader = $('<div id="m-reader"></div>').appendTo('body');
+    var $track  = $('<div id="m-track"></div>').appendTo($reader);
+
+    var scaledW = Math.floor(pageW * scale);
+    var scaledH = Math.floor(pageH * scale);
+    $.each(pages, function(i, page) {
+      var $slide = $('<div class="m-slide"></div>');
+      var $wrap  = $('<div class="m-scale-wrap"></div>').css({
+        width: scaledW + 'px', height: scaledH + 'px',
+        position: 'relative', overflow: 'hidden', flexShrink: 0
+      });
+      var $inner = $('<div class="m-page-inner"></div>').css({
+        width: pageW + 'px', height: pageH + 'px',
+        transform: 'scale(' + scale + ')', transformOrigin: 'top left',
+        position: 'absolute', top: 0, left: 0
+      });
+      $(page).css({ width: '480px', height: '600px', overflow: 'hidden' });
+      $inner.append($(page));
+      $wrap.append($inner);
+      $slide.append($wrap);
+      $track.append($slide);
+    });
+
+    var $nav  = $('<div id="m-nav"></div>').appendTo($reader);
+    var $prev = $('<button class="m-arr" id="m-prev">&#8249;</button>').appendTo($nav);
+    var $info = $('<span id="m-info"></span>').appendTo($nav);
+    var $next = $('<button class="m-arr" id="m-next">&#8250;</button>').appendTo($nav);
+    $('<button id="m-back">&#8592;&nbsp;Каталог</button>')
+      .appendTo($reader).on('click', function() { history.back(); });
+
+    function show(idx) {
+      cur = Math.max(0, Math.min(idx, pages.length - 1));
+      $track.css('transform', 'translateX(' + (-cur * 100) + '%)');
+      $info.text((cur + 1) + ' / ' + pages.length);
+      $prev.prop('disabled', cur === 0);
+      $next.prop('disabled', cur === pages.length - 1);
+    }
+
+    $prev.on('click', function() { show(cur - 1); });
+    $next.on('click', function() { show(cur + 1); });
+
+    var swipeX = null;
+    document.addEventListener('touchstart', function(e) { swipeX = e.touches[0].clientX; }, { passive: true });
+    document.addEventListener('touchend', function(e) {
+      if (swipeX === null) return;
+      var dx = e.changedTouches[0].clientX - swipeX;
+      swipeX = null;
+      if (Math.abs(dx) > 40) show(dx < 0 ? cur + 1 : cur - 1);
+    }, { passive: true });
+
+    show(0);
+    $('#canvas').hide();
+    $('#controls').hide();
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        window.parent.postMessage({ action: 'bookReady' }, '*');
+      });
+    });
+  }
+
+  if (isMobile) {
+    initMobileReader();
+    return;
+  }
+
+  book.turn({
+    width:        960,
+    height:       600,
+    autoCenter:   true,
+    gradients:    true,
+    acceleration: true,
+    elevation:    50,
+    duration:     1000,
+    display:      'double',
+    when: {
+      turning: function (e, page) {
+        updateDepth(book, page);
+        if (page >= 2)
+          $('#book .p2').addClass('fixed');
+        else
+          $('#book .p2').removeClass('fixed');
+        if (page < book.turn('pages'))
+          $('#book .back-side').addClass('fixed');
+        else
+          $('#book .back-side').removeClass('fixed');
+      },
+      turned: function (e, page) {
+        updateDepth(book);
+        $('#page-info').text(pageLabel(page));
+        if (page === 2 || page === 3) book.turn('peel', 'br');
+      },
+      end: function () {
+        updateDepth(book);
+      }
+    }
+  });
+
+  updateDepth(book);
+  book.css('visibility', 'visible');
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      window.parent.postMessage({ action: 'bookReady' }, '*');
+    });
+  });
+
+  $('#btn-prev').on('click', function () { book.turn('previous'); });
+  $('#btn-next').on('click', function () { book.turn('next'); });
+
+  $(document).keydown(function (e) {
+    if (e.keyCode === 37) book.turn('previous');
+    if (e.keyCode === 39) book.turn('next');
+  });
+
+  $('#page-info').text(pageLabel(1));
+
+});
+</script>
+</body>
+</html>
