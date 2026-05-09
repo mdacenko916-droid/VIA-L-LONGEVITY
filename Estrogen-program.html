@@ -1541,20 +1541,19 @@ function confirmBooking(){
   body.innerHTML=`<div class="cal-success"><div class="cal-success-icon">✦</div><div class="cal-success-title">${text[lang]||text.uk}${_calSelDay} ${(months[lang]||months.uk)[_calMonth]} ${lang==='en'?'at':lang==='ru'?'в':lang==='es'?'a las':'о'} ${_calSelTime}</div><p class="cal-success-desc">${t.calNote||''}</p></div>`;
 }
 
-function selectOpt(option){
-  [1,2,3].forEach(i=>{const c=document.getElementById('opt'+i);if(c)c.classList.toggle('selected',i===option);});
+let selOpt=1;function selectOpt(option){
+  selOpt=option;[1,2,3].forEach(i=>{const c=document.getElementById('opt'+i);if(c)c.classList.toggle('selected',i===option);});
   const tot=document.getElementById('payTotalPrice'); if(tot) tot.textContent=_PRICES[option]||_PRICES[1];
 }
 
 function confirmPayment(){
-  const name=document.getElementById('payName'), email=document.getElementById('payEmail'), body=document.getElementById('payBody');
-  if(!email||!body) return;
+  const name=document.getElementById('payName'), email=document.getElementById('payEmail');
+  if(!email) return;
   const userName=name?name.value.trim():'', userEmail=email.value.trim();
   if(!userEmail||!userEmail.includes('@')){email.style.borderColor='rgba(200,80,50,.6)';email.focus();return;}
-  const lang=document.documentElement.lang||'uk';
-  const prefix={uk:"ми зв'яжемося з вами протягом 24 годин на ",ru:'мы свяжемся с вами в течение 24 часов на ',es:'nos pondremos en contacto en 24 horas en ',en:'we will contact you within 24 hours at '};
-  const title={uk:'Оплату отримано. Дякуємо!',ru:'Оплата получена. Спасибо!',es:'¡Pago recibido!',en:'Payment received. Thank you!'};
-  body.innerHTML=`<div class="pay-success"><div class="pay-success-icon">✦</div><div class="pay-success-title">${title[lang]||title.uk}</div><p class="pay-success-desc">${userName?userName+', ':''}${prefix[lang]||prefix.uk}${userEmail}. viaelcom@gmail.com</p></div>`;
+  const hotmartLinks={1:'https://pay.hotmart.com/O105760722E',2:'https://pay.hotmart.com/L105760780P',3:'https://pay.hotmart.com/F105760896F'};
+  const url=hotmartLinks[selOpt]||hotmartLinks[1];
+  window.open(url+'?name='+encodeURIComponent(userName)+'&email='+encodeURIComponent(userEmail),'_blank');
 }
 
 let _payBodyHTML = '';

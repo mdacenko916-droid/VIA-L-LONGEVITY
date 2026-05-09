@@ -1744,7 +1744,7 @@ function confirmBooking() {
   body.innerHTML = `<div class="cal-success"><div class="cal-success-icon">✦</div><div class="cal-success-title">${text[STATE.lang]}${STATE.selectedDay} ${months[STATE.lang][STATE.calMonth]} ${STATE.lang === 'en' ? 'at' : STATE.lang === 'ru' ? 'в' : STATE.lang === 'es' ? 'a las' : 'о'} ${STATE.selectedTime}</div><p class="cal-success-desc">${TEXTS.calNote[STATE.lang]}</p></div>`;
 }
 
-function selectOpt(option) { [1, 2, 3].forEach((idx) => { const card = document.getElementById('opt' + idx); if (card) card.classList.toggle('selected', idx === option); }); const total = document.getElementById('payTotalPrice'); if (total) total.textContent = PRICES[option] || PRICES[1]; }
+let selOpt=1;function selectOpt(option) { selOpt=option;[1, 2, 3].forEach((idx) => { const card = document.getElementById('opt' + idx); if (card) card.classList.toggle('selected', idx === option); }); const total = document.getElementById('payTotalPrice'); if (total) total.textContent = PRICES[option] || PRICES[1]; }
 function openAccPayModal(){
   const body = document.getElementById('payBody');
   if (body && _payBodyHTML && body.querySelector('.pay-success')) {
@@ -1761,14 +1761,13 @@ function openAccPayModal(){
 function confirmPayment() {
   const name = document.getElementById('payName');
   const email = document.getElementById('payEmail');
-  const body = document.getElementById('payBody');
-  if (!email || !body) return;
+  if (!email) return;
   const userName = name ? name.value.trim() : '';
   const userEmail = email.value.trim();
   if (!userEmail || !userEmail.includes('@')) { email.style.borderColor = 'rgba(200,80,50,.6)'; email.focus(); return; }
-  const suffix = '. viaelcom@gmail.com';
-  const prefix = { ua: 'ми зв\'яжемося з вами протягом 24 годин на ', ru: 'мы свяжемся с вами в течение 24 часов на ', es: 'nos pondremos en contacto en 24 horas en ', en: 'we will contact you within 24 hours at ' };
-  body.innerHTML = `<div class="pay-success"><div class="pay-success-icon">✦</div><div class="pay-success-title">${STATE.lang === 'ru' ? 'Оплата получена. Спасибо!' : STATE.lang === 'es' ? '¡Pago recibido!' : STATE.lang === 'en' ? 'Payment received. Thank you!' : 'Оплату отримано. Дякуємо!'}</div><p class="pay-success-desc">${userName ? userName + ', ' : ''}${prefix[STATE.lang]}${userEmail}${suffix}</p></div>`;
+  const hotmartLinks={1:'https://pay.hotmart.com/W105760322L',2:'https://pay.hotmart.com/Q105760427V',3:'https://pay.hotmart.com/T105760508Y'};
+  const url=hotmartLinks[selOpt]||hotmartLinks[1];
+  window.open(url+'?name='+encodeURIComponent(userName)+'&email='+encodeURIComponent(userEmail),'_blank');
 }
 
 function localizePage() {
