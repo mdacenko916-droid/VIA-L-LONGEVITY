@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VIA‑L · Интерпретатор</title>
+<title>VIA‑L · PRO Интерпретатор</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -761,6 +761,8 @@ footer{
 .source-icon.garmin{background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.2);}
 .source-icon.polar {background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.2);}
 .source-icon.manual{background:rgba(196,154,60,.12);border:1px solid var(--b2);}
+.source-icon.fitbit{background:rgba(0,176,202,.12);border:1px solid rgba(0,176,202,.2);}
+.source-icon.samsung{background:rgba(20,114,246,.12);border:1px solid rgba(20,114,246,.2);}
 
 .source-info{flex:1;}
 .source-name{font-size:14px;font-weight:500;color:var(--t1);margin-bottom:2px;}
@@ -1267,6 +1269,90 @@ footer{
     </div>
   </div>
 
+  <!-- FITBIT AIR / GOOGLE HEALTH -->
+  <div class="source-card" id="card-fitbit">
+    <div class="source-header" onclick="toggleCard('fitbit')">
+      <div class="source-icon fitbit">📡</div>
+      <div class="source-info">
+        <div class="source-name">Fitbit Air · Google Health</div>
+        <div class="source-desc">HRV · Пульс · Сон · Шаги · Энергия</div>
+      </div>
+      <span class="source-badge badge-good">Новый</span>
+      <span class="source-chevron">›</span>
+    </div>
+    <div class="source-body">
+      <div class="method-tabs">
+        <button class="method-tab active" onclick="setMethod('fitbit','token')">🔑 Токен API</button>
+        <button class="method-tab" onclick="setMethod('fitbit','file')">📁 Файл</button>
+      </div>
+      <!-- Token method -->
+      <div id="fitbit-token">
+        <div style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;">
+          Откройте <b style="color:var(--t1);">dev.fitbit.com</b> → Manage → Register an App → Personal App → скопируйте Access Token:
+        </div>
+        <div class="token-wrap">
+          <label class="token-label">Personal Access Token</label>
+          <div class="token-row">
+            <input class="token-input" id="fitbit-token-input" type="password" placeholder="your_fitbit_token_here...">
+            <button class="token-btn" onclick="fetchFitbit()">Загрузить</button>
+          </div>
+        </div>
+        <div class="import-status" id="fitbit-status"></div>
+        <div class="imported-preview" id="fitbit-preview">
+          <div style="font-size:11px;color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">✓ Данные загружены</div>
+          <div class="preview-grid" id="fitbit-preview-grid"></div>
+        </div>
+      </div>
+      <!-- File method -->
+      <div id="fitbit-file" style="display:none;">
+        <div style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;">
+          <b style="color:var(--t1);">Google Takeout</b> → выберите Fitbit → скачайте архив → откройте папку <b>Global Export Data</b> → загрузите JSON или CSV:
+        </div>
+        <div class="drop-zone" id="fitbit-drop" ondragover="dragOver(event,'fitbit-drop')" ondragleave="dragLeave('fitbit-drop')" ondrop="dropFile(event,'fitbit')">
+          <input type="file" accept=".json,.csv" onchange="handleFile(this,'fitbit')">
+          <div class="drop-icon">📂</div>
+          <div class="drop-title">Перетащите файл или нажмите</div>
+          <div class="drop-hint">Поддерживается: JSON, CSV из Google Takeout / Fitbit</div>
+        </div>
+        <div class="import-status" id="fitbit-file-status"></div>
+        <div class="imported-preview" id="fitbit-file-preview">
+          <div style="font-size:11px;color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">✓ Файл обработан</div>
+          <div class="preview-grid" id="fitbit-file-grid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAMSUNG GALAXY WATCH / SAMSUNG HEALTH -->
+  <div class="source-card" id="card-samsung">
+    <div class="source-header" onclick="toggleCard('samsung')">
+      <div class="source-icon samsung">🔵</div>
+      <div class="source-info">
+        <div class="source-name">Samsung Galaxy Watch · Health</div>
+        <div class="source-desc">HRV · ЧСС · ЭКГ · Сон · Стресс · Шаги</div>
+      </div>
+      <span class="source-badge badge-good">Новый</span>
+      <span class="source-chevron">›</span>
+    </div>
+    <div class="source-body">
+      <div style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;">
+        Samsung Health → <b style="color:var(--t1);">Настройки → Скачать личные данные</b> → выбрать период → разархивировать ZIP → загрузить один из CSV файлов:
+        <br><span style="opacity:.7;">com.samsung.shealth.tracker.heart_rate.csv · com.samsung.shealth.sleep.csv · com.samsung.shealth.stress.csv</span>
+      </div>
+      <div class="drop-zone" id="samsung-drop" ondragover="dragOver(event,'samsung-drop')" ondragleave="dragLeave('samsung-drop')" ondrop="dropFile(event,'samsung')">
+        <input type="file" accept=".csv,.zip" onchange="handleFile(this,'samsung')">
+        <div class="drop-icon">📂</div>
+        <div class="drop-title">Перетащите CSV из Samsung Health</div>
+        <div class="drop-hint">heart_rate.csv · sleep.csv · stress.csv · pedometer.csv</div>
+      </div>
+      <div class="import-status" id="samsung-status"></div>
+      <div class="imported-preview" id="samsung-preview">
+        <div style="font-size:11px;color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">✓ Файл обработан</div>
+        <div class="preview-grid" id="samsung-preview-grid"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- MANUAL -->
   <div class="source-card" id="card-manual">
     <div class="source-header" onclick="toggleCard('manual')">
@@ -1312,7 +1398,7 @@ footer{
   <div class="hero-eyebrow" data-t="hero_badge">Персональный анализ · VIA‑L</div>
   <h1 class="hero-title" data-t="hero_title">Интерпретатор данных<br><em>носимого устройства</em></h1>
   <p class="hero-desc" data-t="hero_desc">Введите показатели из Oura, Garmin, Polar или Apple Watch — получите нутрициологические рекомендации.</p>
-  <div class="hero-badge"><span data-t="hero_tier_label">📖 Базовая версия</span></div>
+  <div class="hero-badge"><span data-t="hero_tier_label">⭐ PRO версия</span></div>
   <div style="margin-top:16px;">
     <button onclick="openImport()" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:50px;background:rgba(78,204,163,.1);border:1px solid rgba(78,204,163,.25);color:var(--ok);font-size:12px;font-weight:500;letter-spacing:.5px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;">
       📡 Импорт из устройства
@@ -1326,11 +1412,20 @@ footer{
   <div class="progress-wrap">
     <div class="progress-bar">
       <div class="progress-dot active" id="pd0"></div>
-      <div class="progress-dot" id="pd1"></div>
-      <div class="progress-dot" id="pd2"></div>
-      <div class="progress-dot" id="pd3"></div>
-      <div class="progress-dot" id="pd4"></div>
-      <div class="progress-dot" id="pd5"></div>
+      <div class="progress-dot " id="pd1"></div>
+      <div class="progress-dot " id="pd2"></div>
+      <div class="progress-dot " id="pd3"></div>
+      <div class="progress-dot " id="pd4"></div>
+      <div class="progress-dot " id="pd5"></div>
+      <div class="progress-dot " id="pd6"></div>
+      <div class="progress-dot " id="pd7"></div>
+      <div class="progress-dot " id="pd8"></div>
+      <div class="progress-dot " id="pd9"></div>
+      <div class="progress-dot " id="pd10"></div>
+      <div class="progress-dot " id="pd11"></div>
+      <div class="progress-dot " id="pd12"></div>
+      <div class="progress-dot " id="pd13"></div>
+      <div class="progress-dot " id="pd14"></div>
     </div>
     <div class="progress-lbl" id="progressLbl">Шаг 1 из 5</div>
   </div>
@@ -1339,7 +1434,7 @@ footer{
   <div class="step active" id="step0">
     <div class="card">
       <div class="card-accent"></div>
-      <div class="step-badge" data-t="s_prof_badge">00 / 05 · Профиль</div>
+      <div class="step-badge" data-t="s_prof_badge">00 / 15 · Профиль</div>
       <h2 class="step-title" data-t="s_prof_title">Ваш профиль</h2>
       <p class="step-desc" data-t="s_prof_desc">Это определяет точность рекомендаций. Гормональная фаза влияет на интерпретацию всех показателей.</p>
       <div class="input-group">
@@ -1368,14 +1463,14 @@ footer{
         </div>
       </div>
       <div class="btn-row">
-        <button class="btn btn-primary" onclick="goTo(2)"><span class="btn-label" data-t="next">Далее →</span></button>
+        <button class="btn btn-primary" onclick="goTo(1)"><span class="btn-label" data-t="next">Далее →</span></button>
       </div>
     </div>
   </div>
   <div class="step" id="step1">
     <div class="card">
       <div class="card-accent"></div>
-      <div class="step-badge" data-t="s0_badge">01 / 05 · HRV</div>
+      <div class="step-badge" data-t="s0_badge">01 / 15 · HRV</div>
       <h2 class="step-title" data-t="s0_title">Вариабельность сердечного ритма</h2>
       <p class="step-desc" data-t="s0_desc">HRV показывает, насколько хорошо организм справляется со стрессом и восстанавливается.</p>
       <div class="input-group">
@@ -1402,7 +1497,7 @@ footer{
             </div>
           </div>
         </div>
-        <div class="input-hint" data-t="s0_hint">Oura / Garmin / Polar / Apple Watch → HRV</div>
+        <div class="input-hint" data-t="s0_hint">Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV</div>
       </div>
       <div class="divider"></div>
       <div class="input-group">
@@ -1433,7 +1528,7 @@ footer{
   <div class="step" id="step2">
     <div class="card">
       <div class="card-accent"></div>
-      <div class="step-badge" data-t="s1_badge">02 / 05 · Температура</div>
+      <div class="step-badge" data-t="s1_badge">02 / 15 · Температура</div>
       <h2 class="step-title" data-t="s1_title">Ночное отклонение температуры</h2>
       <p class="step-desc" data-t="s1_desc">Устройство показывает отклонение от базовой линии. Нас интересует прошлая ночь.</p>
       <div class="input-group">
@@ -1474,7 +1569,7 @@ footer{
   <div class="step" id="step3">
     <div class="card">
       <div class="card-accent"></div>
-      <div class="step-badge" data-t="s2_badge">03 / 05 · Сон</div>
+      <div class="step-badge" data-t="s2_badge">03 / 15 · Сон</div>
       <h2 class="step-title" data-t="s2_title">Качество сна</h2>
       <p class="step-desc" data-t="s2_desc">Сон — самый чувствительный индикатор гормонального состояния.</p>
       <div class="input-group">
@@ -1533,7 +1628,7 @@ footer{
   <div class="step" id="step4">
     <div class="card">
       <div class="card-accent"></div>
-      <div class="step-badge" data-t="s3_badge">04 / 05 · Пульс и симптомы</div>
+      <div class="step-badge" data-t="s3_badge">04 / 15 · Пульс и симптомы</div>
       <h2 class="step-title" data-t="s3_title">Пульс покоя и самочувствие</h2>
       <p class="step-desc" data-t="s3_desc">Пульс покоя и симптомы, которые вы замечаете сегодня.</p>
       <div class="input-group">
@@ -1594,7 +1689,7 @@ footer{
   <div class="step" id="step5">
     <div class="card">
       <div class="card-accent"></div>
-      <div class="step-badge" data-t="s4_badge">05 / 05 · Образ жизни</div>
+      <div class="step-badge" data-t="s4_badge">05 / 15 · Образ жизни</div>
       <h2 class="step-title" data-t="s4_title">Энергия и образ жизни</h2>
       <p class="step-desc" data-t="s4_desc">Последние вопросы для точных рекомендаций.</p>
       <div class="input-group">
@@ -1641,7 +1736,382 @@ footer{
       </div>
       <div class="btn-row">
         <button class="btn btn-back" onclick="goTo(4)">←</button>
-        <button class="btn btn-primary" onclick="showResults()"><span class="btn-label" data-t="show_result">Показать результат →</span></button>
+        <button class="btn btn-primary" onclick="goTo(6)"><span class="btn-label" data-t="next">Далее →</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 6–14: PRO STEPS -->
+  <!-- STEP 6: КОГНИТИВНЫЕ СИМПТОМЫ -->
+  <div class="step" id="step6">
+    <div class="card">
+      <div class="card-accent" style="background:linear-gradient(90deg,transparent,rgba(139,92,246,.5),transparent);"></div>
+      <div class="step-badge" style="background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3);color:#A78BFA;">06 / 15 · Когниция</div>
+      <h2 class="step-title">Когнитивные симптомы</h2>
+      <p class="step-desc" style="border-color:rgba(139,92,246,.3);">Мозг чувствителен к гормональным изменениям. Ответьте честно — это поможет точнее выявить паттерн.</p>
+      <div class="input-group">
+        <label>Память и концентрация</label>
+        <div class="chips">
+          <div class="chip"><input type="radio" name="memory" id="mem1" value="good" checked><label for="mem1">Без изменений</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem2" value="slight"><label for="mem2">Чуть хуже обычного</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem3" value="poor"><label for="mem3">Заметно хуже</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem4" value="severe"><label for="mem4">Сильно нарушена</label></div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="input-group">
+        <label>Туман в голове (brain fog)</label>
+        <div class="chips">
+          <div class="chip"><input type="radio" name="fog" id="fog1" value="none" checked><label for="fog1">Нет</label></div>
+          <div class="chip"><input type="radio" name="fog" id="fog2" value="morning"><label for="fog2">Только утром</label></div>
+          <div class="chip"><input type="radio" name="fog" id="fog3" value="daily"><label for="fog3">Большую часть дня</label></div>
+          <div class="chip"><input type="radio" name="fog" id="fog4" value="constant"><label for="fog4">Постоянно</label></div>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Как давно заметили изменения?</label>
+        <div class="chips">
+          <div class="chip"><input type="radio" name="cogndur" id="cd1" value="none" checked><label for="cd1">Не замечаю</label></div>
+          <div class="chip"><input type="radio" name="cogndur" id="cd2" value="weeks"><label for="cd2">Несколько недель</label></div>
+          <div class="chip"><input type="radio" name="cogndur" id="cd3" value="months"><label for="cd3">Несколько месяцев</label></div>
+          <div class="chip"><input type="radio" name="cogndur" id="cd4" value="year"><label for="cd4">Больше года</label></div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-back" onclick="goTo(5)">←</button>
+        <button class="btn btn-primary" onclick="goTo(7)"><span class="btn-label">Далее →</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 7: ГОРМОНАЛЬНЫЕ СИМПТОМЫ -->
+  <div class="step" id="step7">
+    <div class="card">
+      <div class="card-accent" style="background:linear-gradient(90deg,transparent,rgba(236,72,153,.5),transparent);"></div>
+      <div class="step-badge" style="background:rgba(236,72,153,.1);border-color:rgba(236,72,153,.3);color:#F472B6;">07 / 15 · Гормоны</div>
+      <h2 class="step-title">Гормональные симптомы</h2>
+      <p class="step-desc" style="border-color:rgba(236,72,153,.3);">Специфические симптомы помогают определить какие именно гормоны требуют поддержки.</p>
+      <div class="input-group" id="horm-female-symp">
+        <label>Симптомы (женщины)</label>
+        <div class="chips">
+          <div class="chip"><input type="checkbox" id="hs1" value="irregular_cycle"><label for="hs1">Нерегулярный цикл</label></div>
+          <div class="chip"><input type="checkbox" id="hs2" value="heavy_period"><label for="hs2">Обильные менструации</label></div>
+          <div class="chip"><input type="checkbox" id="hs4" value="dry_skin"><label for="hs4">Сухость кожи/слизистых</label></div>
+          <div class="chip"><input type="checkbox" id="hs5" value="hair_loss"><label for="hs5">Выпадение волос</label></div>
+          <div class="chip"><input type="checkbox" id="hs6" value="weight_gain"><label for="hs6">Набор веса (живот)</label></div>
+          <div class="chip"><input type="checkbox" id="hs7" value="libido_low"><label for="hs7">Снижение либидо</label></div>
+          <div class="chip"><input type="checkbox" id="hs8" value="none_h"><label for="hs8">Ничего из перечисленного</label></div>
+        </div>
+      </div>
+      <div class="input-group" id="horm-male-symp" style="display:none;">
+        <label>Симптомы (мужчины)</label>
+        <div class="chips">
+          <div class="chip"><input type="checkbox" id="hm1" value="fatigue_chronic"><label for="hm1">Хроническая усталость</label></div>
+          <div class="chip"><input type="checkbox" id="hm2" value="muscle_loss"><label for="hm2">Потеря мышечной массы</label></div>
+          <div class="chip"><input type="checkbox" id="hm3" value="belly_fat"><label for="hm3">Жир в области живота</label></div>
+          <div class="chip"><input type="checkbox" id="hm4" value="libido_male"><label for="hm4">Снижение либидо</label></div>
+          <div class="chip"><input type="checkbox" id="hm6" value="mood_male"><label for="hm6">Раздражительность / апатия</label></div>
+          <div class="chip"><input type="checkbox" id="hm8" value="none_hm"><label for="hm8">Ничего из перечисленного</label></div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="input-group">
+        <label>Интенсивность симптомов</label>
+        <div class="chips">
+          <div class="chip"><input type="radio" name="horm_intensity" id="hi1" value="mild" checked><label for="hi1">Лёгкая</label></div>
+          <div class="chip"><input type="radio" name="horm_intensity" id="hi2" value="moderate"><label for="hi2">Умеренная</label></div>
+          <div class="chip"><input type="radio" name="horm_intensity" id="hi3" value="severe"><label for="hi3">Выраженная</label></div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-back" onclick="goTo(6)">←</button>
+        <button class="btn btn-primary" onclick="goTo(8)"><span class="btn-label">Далее →</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 8: ПИТАНИЕ -->
+  <div class="step" id="step8">
+    <div class="card">
+      <div class="card-accent" style="background:linear-gradient(90deg,transparent,rgba(34,197,94,.5),transparent);"></div>
+      <div class="step-badge" style="background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:#4ADE80;">08 / 15 · Питание</div>
+      <h2 class="step-title">Питание и аппетит</h2>
+      <p class="step-desc" style="border-color:rgba(34,197,94,.3);">Паттерны питания напрямую влияют на гормональный баланс.</p>
+      <div class="input-group">
+        <label>Аппетит за последние 2 недели</label>
+        <div class="chips">
+          <div class="chip"><input type="radio" name="appetite" id="ap1" value="normal" checked><label for="ap1">Нормальный</label></div>
+          <div class="chip"><input type="radio" name="appetite" id="ap2" value="increased"><label for="ap2">Повышен</label></div>
+          <div class="chip"><input type="radio" name="appetite" id="ap3" value="decreased"><label for="ap3">Снижен</label></div>
+          <div class="chip"><input type="radio" name="appetite" id="ap4" value="cravings"><label for="ap4">Тяга к сладкому/соленому</label></div>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Режим питания</label>
+        <div class="chips">
+          <div class="chip"><input type="radio" name="eating_pattern" id="ep1" value="regular" checked><label for="ep1">3 приёма, регулярно</label></div>
+          <div class="chip"><input type="radio" name="eating_pattern" id="ep2" value="irregular"><label for="ep2">Нерегулярно</label></div>
+          <div class="chip"><input type="radio" name="eating_pattern" id="ep3" value="if"><label for="ep3">Интервальное голодание</label></div>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Белок в рационе</label>
+        <div class="chips">
+          <div class="chip"><input type="radio" name="protein_intake" id="pi1" value="high" checked><label for="pi1">Высокий — в каждый приём</label></div>
+          <div class="chip"><input type="radio" name="protein_intake" id="pi2" value="moderate"><label for="pi2">Умеренный — 1–2 раза/день</label></div>
+          <div class="chip"><input type="radio" name="protein_intake" id="pi3" value="low"><label for="pi3">Низкий — редко</label></div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-back" onclick="goTo(7)">←</button>
+        <button class="btn btn-primary" onclick="goTo(9)"><span class="btn-label">Далее →</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 9: ФИЗИЧЕСКАЯ АКТИВНОСТЬ -->
+  <div class="step" id="step9">
+    <div class="card">
+      <div class="card-accent" style="background:linear-gradient(90deg,transparent,rgba(251,146,60,.5),transparent);"></div>
+      <div class="step-badge" style="background:rgba(251,146,60,.1);border-color:rgba(251,146,60,.3);color:#FB923C;">09 / 15 · Активность</div>
+      <h2 class="step-title">Физическая активность</h2>
+      <p class="step-desc" style="border-color:rgba(251,146,60,.3);">Тип и интенсивность нагрузок влияют на гормоны и восстановление.</p>
+      <div class="input-group">
+        <label>Тип активности (можно несколько)</label>
+        <div class="chips">
+          <div class="chip"><input type="checkbox" id="act1" value="strength"><label for="act1">Силовые</label></div>
+          <div class="chip"><input type="checkbox" id="act2" value="cardio"><label for="act2">Кардио</label></div>
+          <div class="chip"><input type="checkbox" id="act3" value="yoga"><label for="act3">Йога / пилатес</label></div>
+          <div class="chip"><input type="checkbox" id="act4" value="walking"><label for="act4">Ходьба</label></div>
+          <div class="chip"><input type="checkbox" id="act5" value="hiit"><label for="act5">ВИИТ</label></div>
+          <div class="chip"><input type="checkbox" id="act6" value="none_act"><label for="act6">Не тренируюсь</label></div>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Частота в неделю</label>
+        <div class="chips">
+          <div class="chip"><input type="radio" name="act_freq" id="af1" value="none" checked><label for="af1">0</label></div>
+          <div class="chip"><input type="radio" name="act_freq" id="af2" value="low"><label for="af2">1–2 раза</label></div>
+          <div class="chip"><input type="radio" name="act_freq" id="af3" value="moderate"><label for="af3">3–4 раза</label></div>
+          <div class="chip"><input type="radio" name="act_freq" id="af4" value="high"><label for="af4">5+ раз</label></div>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Самочувствие после тренировок</label>
+        <div class="chips">
+          <div class="chip"><input type="radio" name="act_recovery" id="ar1" value="great" checked><label for="ar1">Прилив сил</label></div>
+          <div class="chip"><input type="radio" name="act_recovery" id="ar2" value="ok"><label for="ar2">Нормально</label></div>
+          <div class="chip"><input type="radio" name="act_recovery" id="ar3" value="tired"><label for="ar3">Сильно устаю</label></div>
+          <div class="chip"><input type="radio" name="act_recovery" id="ar4" value="exhausted"><label for="ar4">Истощён(а)</label></div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-back" onclick="goTo(8)">←</button>
+        <button class="btn btn-primary" onclick="goTo(10)"><span class="btn-label">Далее →</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 10: ДОБАВКИ -->
+  <div class="step" id="step10">
+    <div class="card">
+      <div class="card-accent" style="background:linear-gradient(90deg,transparent,rgba(99,102,241,.5),transparent);"></div>
+      <div class="step-badge" style="background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.3);color:#818CF8;">10 / 15 · Добавки</div>
+      <h2 class="step-title">Добавки и медикаменты</h2>
+      <p class="step-desc" style="border-color:rgba(99,102,241,.3);">Поможет избежать дублирования и учесть взаимодействия.</p>
+      <div class="input-group">
+        <label>Что принимаете сейчас?</label>
+        <div class="chips">
+          <div class="chip"><input type="checkbox" id="sup1" value="magnesium"><label for="sup1">Магний</label></div>
+          <div class="chip"><input type="checkbox" id="sup2" value="vitd"><label for="sup2">Витамин D3</label></div>
+          <div class="chip"><input type="checkbox" id="sup3" value="omega3"><label for="sup3">Омега-3</label></div>
+          <div class="chip"><input type="checkbox" id="sup4" value="b_complex"><label for="sup4">В-комплекс</label></div>
+          <div class="chip"><input type="checkbox" id="sup5" value="zinc"><label for="sup5">Цинк</label></div>
+          <div class="chip"><input type="checkbox" id="sup6" value="iron"><label for="sup6">Железо</label></div>
+          <div class="chip"><input type="checkbox" id="sup7" value="collagen"><label for="sup7">Коллаген</label></div>
+          <div class="chip"><input type="checkbox" id="sup8" value="probiotics"><label for="sup8">Пробиотики</label></div>
+          <div class="chip"><input type="checkbox" id="sup9" value="adaptogens"><label for="sup9">Адаптогены</label></div>
+          <div class="chip"><input type="checkbox" id="sup10" value="hrt"><label for="sup10">ЗГТ / гормоны</label></div>
+          <div class="chip"><input type="checkbox" id="sup11" value="none_sup"><label for="sup11">Ничего не принимаю</label></div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="input-group">
+        <label>Регулярные лекарства</label>
+        <div class="chips">
+          <div class="chip"><input type="radio" name="meds" id="med1" value="no" checked><label for="med1">Нет</label></div>
+          <div class="chip"><input type="radio" name="meds" id="med2" value="thyroid"><label for="med2">Щитовидная железа</label></div>
+          <div class="chip"><input type="radio" name="meds" id="med3" value="antidep"><label for="med3">Антидепрессанты</label></div>
+          <div class="chip"><input type="radio" name="meds" id="med4" value="contraceptive"><label for="med4">КОК / контрацептивы</label></div>
+          <div class="chip"><input type="radio" name="meds" id="med5" value="other_meds"><label for="med5">Другие</label></div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-back" onclick="goTo(9)">←</button>
+        <button class="btn btn-primary" onclick="goTo(11)"><span class="btn-label">Далее →</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 11: СТРЕСС -->
+  <div class="step" id="step11">
+    <div class="card">
+      <div class="card-accent" style="background:linear-gradient(90deg,transparent,rgba(239,68,68,.5),transparent);"></div>
+      <div class="step-badge" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:#F87171;">11 / 15 · Стресс</div>
+      <h2 class="step-title">Стресс и кортизол</h2>
+      <p class="step-desc" style="border-color:rgba(239,68,68,.3);">Хронический стресс — один из главных факторов гормонального дисбаланса.</p>
+      <div class="input-group">
+        <label>Уровень хронического стресса (последние 3 месяца)</label>
+        <div class="chips">
+          <div class="chip"><input type="radio" name="chronic_stress" id="cst1" value="low" checked><label for="cst1">Низкий</label></div>
+          <div class="chip"><input type="radio" name="chronic_stress" id="cst2" value="moderate"><label for="cst2">Умеренный</label></div>
+          <div class="chip"><input type="radio" name="chronic_stress" id="cst3" value="high"><label for="cst3">Высокий</label></div>
+          <div class="chip"><input type="radio" name="chronic_stress" id="cst4" value="burnout"><label for="cst4">Выгорание</label></div>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Симптомы высокого кортизола</label>
+        <div class="chips">
+          <div class="chip"><input type="checkbox" id="cort2" value="insomnia"><label for="cort2">Трудно заснуть — ум не выключается</label></div>
+          <div class="chip"><input type="checkbox" id="cort3" value="afternoon_crash"><label for="cort3">Спад после 14:00</label></div>
+          <div class="chip"><input type="checkbox" id="cort4" value="sugar_craving"><label for="cort4">Тяга к сахару вечером</label></div>
+          <div class="chip"><input type="checkbox" id="cort5" value="irritable"><label for="cort5">Раздражительность</label></div>
+          <div class="chip"><input type="checkbox" id="cort6" value="second_wind"><label for="cort6">Второе дыхание после 22:00</label></div>
+          <div class="chip"><input type="checkbox" id="cort7" value="none_cort"><label for="cort7">Ничего</label></div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-back" onclick="goTo(10)">←</button>
+        <button class="btn btn-primary" onclick="goTo(12)"><span class="btn-label">Далее →</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 12: ЦИКЛ / ВИТАЛЬНОСТЬ -->
+  <div class="step" id="step12">
+    <div class="card">
+      <div class="card-accent" style="background:linear-gradient(90deg,transparent,rgba(244,114,182,.5),transparent);"></div>
+      <div class="step-badge" style="background:rgba(244,114,182,.1);border-color:rgba(244,114,182,.3);color:#F472B6;">12 / 15 · Цикл</div>
+      <h2 class="step-title" id="step12-title">Цикл и репродуктивное здоровье</h2>
+      <p class="step-desc" style="border-color:rgba(244,114,182,.3);">Помогает точнее определить фазу и подобрать рекомендации.</p>
+      <div id="cycle-female">
+        <div class="input-group">
+          <label>Статус цикла</label>
+          <div class="chips">
+            <div class="chip"><input type="radio" name="cycle_status" id="cyc1" value="regular" checked><label for="cyc1">Регулярный (21–35 дней)</label></div>
+            <div class="chip"><input type="radio" name="cycle_status" id="cyc2" value="irregular"><label for="cyc2">Нерегулярный</label></div>
+            <div class="chip"><input type="radio" name="cycle_status" id="cyc3" value="absent"><label for="cyc3">Отсутствует</label></div>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Последняя менструация</label>
+          <div class="chips">
+            <div class="chip"><input type="radio" name="last_period" id="lp1" value="recent" checked><label for="lp1">Менее 3 месяцев назад</label></div>
+            <div class="chip"><input type="radio" name="last_period" id="lp2" value="months"><label for="lp2">3–12 месяцев назад</label></div>
+            <div class="chip"><input type="radio" name="last_period" id="lp3" value="year"><label for="lp3">Более 12 месяцев назад</label></div>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>ПМС симптомы</label>
+          <div class="chips">
+            <div class="chip"><input type="radio" name="pms" id="pms1" value="none" checked><label for="pms1">Нет</label></div>
+            <div class="chip"><input type="radio" name="pms" id="pms2" value="mild"><label for="pms2">Лёгкий</label></div>
+            <div class="chip"><input type="radio" name="pms" id="pms3" value="moderate"><label for="pms3">Умеренный</label></div>
+            <div class="chip"><input type="radio" name="pms" id="pms4" value="severe"><label for="pms4">Выраженный</label></div>
+          </div>
+        </div>
+      </div>
+      <div id="cycle-male" style="display:none;">
+        <div class="input-group">
+          <label>Витальность и жизненная сила</label>
+          <div class="chips">
+            <div class="chip"><input type="radio" name="vitality" id="vit1" value="high" checked><label for="vit1">Высокая</label></div>
+            <div class="chip"><input type="radio" name="vitality" id="vit2" value="moderate"><label for="vit2">Умеренная — бывают спады</label></div>
+            <div class="chip"><input type="radio" name="vitality" id="vit3" value="low"><label for="vit3">Низкая — нет драйва</label></div>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Настроение и мотивация</label>
+          <div class="chips">
+            <div class="chip"><input type="radio" name="male_mood" id="mm1" value="good" checked><label for="mm1">Хорошее, стабильное</label></div>
+            <div class="chip"><input type="radio" name="male_mood" id="mm2" value="flat"><label for="mm2">Приглушённое</label></div>
+            <div class="chip"><input type="radio" name="male_mood" id="mm3" value="irritable"><label for="mm3">Раздражительность</label></div>
+            <div class="chip"><input type="radio" name="male_mood" id="mm4" value="depressed"><label for="mm4">Подавленность</label></div>
+          </div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-back" onclick="goTo(11)">←</button>
+        <button class="btn btn-primary" onclick="goTo(13)"><span class="btn-label">Далее →</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 13: ЛАБОРАТОРНЫЕ ПОКАЗАТЕЛИ -->
+  <div class="step" id="step13">
+    <div class="card">
+      <div class="card-accent" style="background:linear-gradient(90deg,transparent,rgba(20,184,166,.5),transparent);"></div>
+      <div class="step-badge" style="background:rgba(20,184,166,.1);border-color:rgba(20,184,166,.3);color:#2DD4BF;">13 / 15 · Анализы</div>
+      <h2 class="step-title">Лабораторные показатели</h2>
+      <p class="step-desc" style="border-color:rgba(20,184,166,.3);">Если есть свежие анализы — введите значения. Незаполненные поля пропускаются.</p>
+      <div class="manual-grid" style="margin-top:0;">
+        <div class="manual-field"><label class="manual-label">Витамин D (нмоль/л)</label><input class="manual-input" id="lab-vitd" type="number" min="0" max="300" placeholder="—"></div>
+        <div class="manual-field"><label class="manual-label">Ферритин (мкг/л)</label><input class="manual-input" id="lab-ferr" type="number" min="0" max="500" placeholder="—"></div>
+        <div class="manual-field"><label class="manual-label">ТТГ (мМЕ/л)</label><input class="manual-input" id="lab-tsh" type="number" min="0" max="10" step="0.01" placeholder="—"></div>
+        <div class="manual-field"><label class="manual-label">Эстрадиол (пг/мл)</label><input class="manual-input" id="lab-e2" type="number" min="0" max="1000" placeholder="—"></div>
+        <div class="manual-field"><label class="manual-label">Прогестерон (нмоль/л)</label><input class="manual-input" id="lab-prog" type="number" min="0" max="100" step="0.1" placeholder="—"></div>
+        <div class="manual-field"><label class="manual-label">Тестостерон (нмоль/л)</label><input class="manual-input" id="lab-test" type="number" min="0" max="40" step="0.1" placeholder="—"></div>
+        <div class="manual-field"><label class="manual-label">Кортизол утром</label><input class="manual-input" id="lab-cort" type="number" min="0" max="800" placeholder="—"></div>
+        <div class="manual-field"><label class="manual-label">В12 (пмоль/л)</label><input class="manual-input" id="lab-b12" type="number" min="0" max="1000" placeholder="—"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-back" onclick="goTo(12)">←</button>
+        <button class="btn btn-primary" onclick="goTo(14)"><span class="btn-label">Далее →</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 14: САМОЧУВСТВИЕ ЗА НЕДЕЛЮ -->
+  <div class="step" id="step14">
+    <div class="card">
+      <div class="card-accent"></div>
+      <div class="step-badge">14 / 15 · Динамика</div>
+      <h2 class="step-title">Самочувствие за последнюю неделю</h2>
+      <p class="step-desc">Сравните с прошлой неделей — это выявит тренд.</p>
+      <div class="input-group">
+        <label>Общая динамика</label>
+        <div class="chips">
+          <div class="chip"><input type="radio" name="weekly_trend" id="wt1" value="better" checked><label for="wt1">Лучше 📈</label></div>
+          <div class="chip"><input type="radio" name="weekly_trend" id="wt2" value="same"><label for="wt2">Без изменений →</label></div>
+          <div class="chip"><input type="radio" name="weekly_trend" id="wt3" value="worse"><label for="wt3">Хуже 📉</label></div>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Что изменилось?</label>
+        <div class="chips">
+          <div class="chip"><input type="checkbox" id="wk1p" value="sleep_better"><label for="wk1p">Сон лучше</label></div>
+          <div class="chip"><input type="checkbox" id="wk2p" value="energy_better"><label for="wk2p">Больше энергии</label></div>
+          <div class="chip"><input type="checkbox" id="wk3p" value="mood_better"><label for="wk3p">Настроение лучше</label></div>
+          <div class="chip"><input type="checkbox" id="wk4p" value="sleep_worse"><label for="wk4p">Сон ухудшился</label></div>
+          <div class="chip"><input type="checkbox" id="wk5p" value="energy_worse"><label for="wk5p">Меньше энергии</label></div>
+          <div class="chip"><input type="checkbox" id="wk6p" value="hotflash_worse"><label for="wk6p">Больше приливов</label></div>
+          <div class="chip"><input type="checkbox" id="wk7p" value="stable"><label for="wk7p">Всё стабильно</label></div>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Значимые события на неделе</label>
+        <div class="chips">
+          <div class="chip"><input type="checkbox" id="ev1" value="travel"><label for="ev1">Перелёт / смена часового пояса</label></div>
+          <div class="chip"><input type="checkbox" id="ev2" value="illness"><label for="ev2">Болезнь</label></div>
+          <div class="chip"><input type="checkbox" id="ev3" value="new_supps"><label for="ev3">Начал(а) новые добавки</label></div>
+          <div class="chip"><input type="checkbox" id="ev4" value="overtraining"><label for="ev4">Перетренировка</label></div>
+          <div class="chip"><input type="checkbox" id="ev5" value="emotional"><label for="ev5">Сильное эмоциональное событие</label></div>
+          <div class="chip"><input type="checkbox" id="ev6" value="nothing_ev"><label for="ev6">Ничего особенного</label></div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-back" onclick="goTo(13)">←</button>
+        <button class="btn btn-primary" onclick="showResults()"><span class="btn-label">Показать результат →</span></button>
       </div>
     </div>
   </div>
@@ -1834,7 +2304,7 @@ footer{
 
 <script>
 // ══ ACCESS ════════════════════════════════════════════════
-const VALID_CODES=['VIAL-GUIDE-2024','GUIDE2024','VIALBASIC'];
+const VALID_CODES=['VIAL-PRO-2024','VIALPROMONTH','VIALPRO'];
 function checkCode(){
   const v=document.getElementById('gateInput').value.trim().toUpperCase();
   if(VALID_CODES.map(c=>c.toUpperCase()).includes(v)){
@@ -1864,16 +2334,16 @@ document.addEventListener('click',e=>{
 // ══ TRANSLATIONS ══════════════════════════════════════════
 const T={
   ru:{
-    gate_sub:'Базовый доступ',gate_title:'Введите код доступа',gate_desc:'Код прилагается к вашему гайду VIA‑L.',gate_error:'Неверный код.',gate_btn:'Войти →',preview_label:'Введите код для доступа',
-    hero_badge:'Персональный анализ · VIA‑L',hero_title:'Интерпретатор данных<br><em>носимого устройства</em>',hero_desc:'Oura, Garmin, Polar, Apple Watch → нутрициологические рекомендации.',hero_tier_label:'📖 Базовая версия',
+    gate_sub:'PRO доступ · Программа ведения',gate_title:'Введите код доступа',gate_desc:'Код прилагается к вашему гайду VIA‑L.',gate_error:'Неверный код.',gate_btn:'Войти →',preview_label:'Введите код для доступа',
+    hero_badge:'Персональный анализ · VIA‑L',hero_title:'Интерпретатор данных<br><em>носимого устройства</em>',hero_desc:'Oura, Garmin, Polar, Apple Watch → нутрициологические рекомендации.',hero_tier_label:'⭐ PRO версия',
     nav_today:'Сегодня',nav_history:'История',nav_consult:'Консультация',history_title:'История сессий',history_empty:'Пока нет сохранённых сессий. Пройдите анализ.',
-    s_prof_badge:'00 / 06 · Профиль',s_prof_title:'Ваш профиль',s_prof_desc:'Гормональная фаза влияет на интерпретацию всех показателей.',s_prof_l1:'Пол',s_prof_l2:'Фаза (женщины)',s_prof_l3:'Фаза (мужчины)',
+    s_prof_badge:'00 / 15 · Профиль',s_prof_title:'Ваш профиль',s_prof_desc:'Гормональная фаза влияет на интерпретацию всех показателей.',s_prof_l1:'Пол',s_prof_l2:'Фаза (женщины)',s_prof_l3:'Фаза (мужчины)',
     gender_f:'👩 Женщина',gender_m:'👨 Мужчина',phase_peri:'Перименопауза',phase_meno:'Менопауза',phase_post:'Постменопауза',phase_andro:'Андропауза',phase_preandro:'Предандропауза',phase_other:'Другое',
-    s0_badge:'01 / 06 · HRV',s0_title:'Вариабельность сердечного ритма',s0_desc:'HRV показывает, насколько хорошо организм справляется со стрессом.',s0_l1:'Ваш HRV сегодня',s0_low:'10 мс',s0_high:'120 мс',s0_hint:'Oura / Garmin / Polar / Apple Watch → HRV',s0_l2:'По сравнению с нормой',s0_l3:'Это продолжается',
-    s1_badge:'02 / 06 · Температура',s1_title:'Ночное отклонение температуры',s1_desc:'Отклонение от базовой линии прошлой ночью.',s1_l1:'Отклонение',s1_l2:'Просыпались от жара?',s1_l3:'Как часто на неделе?',
-    s2_badge:'03 / 06 · Сон',s2_title:'Качество сна',s2_desc:'Сон — самый чувствительный индикатор гормонального состояния.',s2_l1:'Ощущение сна (1–10)',s2_l2:'Глубокий сон',s2_l3:'Пробуждения',
-    s3_badge:'04 / 06 · Пульс',s3_title:'Пульс покоя и симптомы',s3_desc:'Пульс покоя и симптомы сегодня.',s3_l1:'Пульс покоя (RHR)',s3_l2:'По сравнению с обычным',s3_l3:'Что замечаете',
-    s4_badge:'05 / 06 · Образ жизни',s4_title:'Энергия и образ жизни',s4_desc:'Последние вопросы.',s4_l1:'Уровень энергии (1–10)',s4_l2:'Алкоголь вчера?',s4_l3:'Стресс вчера?',
+    s0_badge:'01 / 15 · HRV',s0_title:'Вариабельность сердечного ритма',s0_desc:'HRV показывает, насколько хорошо организм справляется со стрессом.',s0_l1:'Ваш HRV сегодня',s0_low:'10 мс',s0_high:'120 мс',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'По сравнению с нормой',s0_l3:'Это продолжается',
+    s1_badge:'02 / 15 · Температура',s1_title:'Ночное отклонение температуры',s1_desc:'Отклонение от базовой линии прошлой ночью.',s1_l1:'Отклонение',s1_l2:'Просыпались от жара?',s1_l3:'Как часто на неделе?',
+    s2_badge:'03 / 15 · Сон',s2_title:'Качество сна',s2_desc:'Сон — самый чувствительный индикатор гормонального состояния.',s2_l1:'Ощущение сна (1–10)',s2_l2:'Глубокий сон',s2_l3:'Пробуждения',
+    s3_badge:'04 / 15 · Пульс',s3_title:'Пульс покоя и симптомы',s3_desc:'Пульс покоя и симптомы сегодня.',s3_l1:'Пульс покоя (RHR)',s3_l2:'По сравнению с обычным',s3_l3:'Что замечаете',
+    s4_badge:'05 / 15 · Образ жизни',s4_title:'Энергия и образ жизни',s4_desc:'Последние вопросы.',s4_l1:'Уровень энергии (1–10)',s4_l2:'Алкоголь вчера?',s4_l3:'Стресс вчера?',
     above_norm:'Выше нормы',in_norm:'В норме',below_norm:'Ниже нормы',dont_know:'Не знаю',
     dur_today:'Только сегодня',dur_week:'3–7 дней',dur_weeks:'2–3 недели',dur_month:'>месяца',
     temp_norm:'В норме',temp_slight:'+0.2–0.4°C',temp_spike:'+0.5°C+',temp_down:'Ниже нормы',temp_chaotic:'Хаотично',
@@ -1892,7 +2362,7 @@ const T={
     cta_title:'Хотите персональную стратегию?',cta_desc:'На консультации разберём ваши данные.',restart:'Пройти заново',book:'Записаться →',
     pdf_btn:'📄 Скачать PDF-отчёт',
     disclaimer:'Инструмент носит информационный характер.',tagline:'Живи. Не просто существуй.',back_home:'← На главную',
-    step_of:'Шаг {n} из 6',your_result:'Ваш результат',
+    step_of:'Шаг {n} из 15',your_result:'Ваш результат',
     res_good_title:'Хорошее восстановление',res_good_sub:'Показатели в целом позитивны.',
     res_warn_title:'Требует внимания',res_warn_sub:'Организм нуждается в поддержке.',
     res_alert_title:'Нужна поддержка',res_alert_sub:'Организм под нагрузкой. Рекомендуем консультацию.',
@@ -1900,16 +2370,16 @@ const T={
     compare_better:'лучше чем в прошлый раз',compare_worse:'хуже чем в прошлый раз',compare_same:'без изменений',
   },
   uk:{
-    gate_sub:'Базовий доступ',gate_title:'Введіть код доступу',gate_desc:'Код додається до вашого гайду VIA‑L.',gate_error:'Невірний код.',gate_btn:'Увійти →',preview_label:'Введіть код для доступу',
-    hero_badge:'Персональний аналіз · VIA‑L',hero_title:'Інтерпретатор даних<br><em>носимого пристрою</em>',hero_desc:'Oura, Garmin, Polar, Apple Watch → нутриціологічні рекомендації.',hero_tier_label:'📖 Базова версія',
+    gate_sub:'PRO доступ · Програма ведення',gate_title:'Введіть код доступу',gate_desc:'Код додається до вашого гайду VIA‑L.',gate_error:'Невірний код.',gate_btn:'Увійти →',preview_label:'Введіть код для доступу',
+    hero_badge:'Персональний аналіз · VIA‑L',hero_title:'Інтерпретатор даних<br><em>носимого пристрою</em>',hero_desc:'Oura, Garmin, Polar, Apple Watch → нутриціологічні рекомендації.',hero_tier_label:'⭐ PRO версія',
     nav_today:'Сьогодні',nav_history:'Історія',nav_consult:'Консультація',history_title:'Історія сесій',history_empty:'Ще немає збережених сесій.',
-    s_prof_badge:'00 / 06 · Профіль',s_prof_title:'Ваш профіль',s_prof_desc:'Гормональна фаза впливає на інтерпретацію всіх показників.',s_prof_l1:'Стать',s_prof_l2:'Фаза (жінки)',s_prof_l3:'Фаза (чоловіки)',
+    s_prof_badge:'00 / 15 · Профіль',s_prof_title:'Ваш профіль',s_prof_desc:'Гормональна фаза впливає на інтерпретацію всіх показників.',s_prof_l1:'Стать',s_prof_l2:'Фаза (жінки)',s_prof_l3:'Фаза (чоловіки)',
     gender_f:'👩 Жінка',gender_m:'👨 Чоловік',phase_peri:'Перименопауза',phase_meno:'Менопауза',phase_post:'Постменопауза',phase_andro:'Андропауза',phase_preandro:'Передандропауза',phase_other:'Інше',
-    s0_badge:'01 / 06 · HRV',s0_title:'Варіабельність серцевого ритму',s0_desc:'HRV показує, наскільки добре організм справляється зі стресом.',s0_l1:'Ваш HRV сьогодні',s0_low:'10 мс',s0_high:'120 мс',s0_hint:'Oura / Garmin / Polar / Apple Watch → HRV',s0_l2:'Порівняно з нормою',s0_l3:'Це триває',
-    s1_badge:'02 / 06 · Температура',s1_title:'Нічне відхилення температури',s1_desc:'Відхилення від базової лінії минулої ночі.',s1_l1:'Відхилення',s1_l2:'Прокидалися від жару?',s1_l3:'Як часто на тижні?',
-    s2_badge:'03 / 06 · Сон',s2_title:'Якість сну',s2_desc:'Сон — найчутливіший індикатор гормонального стану.',s2_l1:'Відчуття сну (1–10)',s2_l2:'Глибокий сон',s2_l3:'Прокидання',
-    s3_badge:'04 / 06 · Пульс',s3_title:'Пульс спокою і симптоми',s3_desc:'Пульс спокою і симптоми сьогодні.',s3_l1:'Пульс спокою (RHR)',s3_l2:'Порівняно зі звичайним',s3_l3:'Що помічаєте',
-    s4_badge:'05 / 06 · Спосіб життя',s4_title:'Енергія і спосіб життя',s4_desc:'Останні запитання.',s4_l1:'Рівень енергії (1–10)',s4_l2:'Алкоголь вчора?',s4_l3:'Стрес вчора?',
+    s0_badge:'01 / 15 · HRV',s0_title:'Варіабельність серцевого ритму',s0_desc:'HRV показує, наскільки добре організм справляється зі стресом.',s0_l1:'Ваш HRV сьогодні',s0_low:'10 мс',s0_high:'120 мс',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'Порівняно з нормою',s0_l3:'Це триває',
+    s1_badge:'02 / 15 · Температура',s1_title:'Нічне відхилення температури',s1_desc:'Відхилення від базової лінії минулої ночі.',s1_l1:'Відхилення',s1_l2:'Прокидалися від жару?',s1_l3:'Як часто на тижні?',
+    s2_badge:'03 / 15 · Сон',s2_title:'Якість сну',s2_desc:'Сон — найчутливіший індикатор гормонального стану.',s2_l1:'Відчуття сну (1–10)',s2_l2:'Глибокий сон',s2_l3:'Прокидання',
+    s3_badge:'04 / 15 · Пульс',s3_title:'Пульс спокою і симптоми',s3_desc:'Пульс спокою і симптоми сьогодні.',s3_l1:'Пульс спокою (RHR)',s3_l2:'Порівняно зі звичайним',s3_l3:'Що помічаєте',
+    s4_badge:'05 / 15 · Спосіб життя',s4_title:'Енергія і спосіб життя',s4_desc:'Останні запитання.',s4_l1:'Рівень енергії (1–10)',s4_l2:'Алкоголь вчора?',s4_l3:'Стрес вчора?',
     above_norm:'Вище норми',in_norm:'В нормі',below_norm:'Нижче норми',dont_know:'Не знаю',dur_today:'Тільки сьогодні',dur_week:'3–7 днів',dur_weeks:'2–3 тижні',dur_month:'>місяця',
     temp_norm:'В нормі',temp_slight:'+0.2–0.4°C',temp_spike:'+0.5°C+',temp_down:'Нижче норми',temp_chaotic:'Хаотично',
     no:'Ні',once:'Один раз',multiple:'Кілька разів',yes:'Так',freq_rare:'Рідко',freq_often:'Часто',freq_daily:'Кожну ніч',
@@ -1919,22 +2389,22 @@ const T={
     energy_low:'1 — немає сил',energy_high:'10 — енергія',stress_mild:'Помірний',stress_high:'Сильний',
     next:'Далі →',show_result:'Показати результат →',result_eyebrow:'Аналіз VIA‑L',readiness:'Готовність',doctor_title:'⚠ Консультація з лікарем',lab_title:'🧪 Рекомендовані аналізи',
     cta_title:'Хочете персональну стратегію?',cta_desc:'На консультації розберемо ваші дані.',restart:'Пройти знову',book:'Записатися →',pdf_btn:'📄 Завантажити PDF-звіт',
-    disclaimer:'Інструмент носить інформаційний характер.',tagline:'Живи. Не просто існуй.',back_home:'← На головну',step_of:'Крок {n} з 6',your_result:'Ваш результат',
+    disclaimer:'Інструмент носить інформаційний характер.',tagline:'Живи. Не просто існуй.',back_home:'← На головну',step_of:'Крок {n} з 15',your_result:'Ваш результат',
     res_good_title:'Гарне відновлення',res_good_sub:'Показники в цілому позитивні.',res_warn_title:'Потребує уваги',res_warn_sub:'Організм потребує підтримки.',res_alert_title:'Потрібна підтримка',res_alert_sub:'Організм під навантаженням.',
     doc_reason_hrv:'хронічно знижений HRV',doc_reason_temp:'щоденні нічні припливи',doc_reason_rhr:'високий пульс + серцебиття',doc_reason_thyroid:'низька температура + втома',doc_prefix:'Рекомендуємо звернутися до фахівця: ',
     compare_better:'краще ніж минулого разу',compare_worse:'гірше ніж минулого разу',compare_same:'без змін',
   },
   en:{
-    gate_sub:'Basic Access',gate_title:'Enter Your Access Code',gate_desc:'Your code is included with your VIA‑L guide.',gate_error:'Invalid code.',gate_btn:'Enter →',preview_label:'Enter code to access',
-    hero_badge:'Personal Analysis · VIA‑L',hero_title:'Wearable Device<br><em>Data Interpreter</em>',hero_desc:'Oura, Garmin, Polar, Apple Watch → nutritional recommendations.',hero_tier_label:'📖 Basic Version',
+    gate_sub:'PRO Access · Coaching Program',gate_title:'Enter Your Access Code',gate_desc:'Your code is included with your VIA‑L guide.',gate_error:'Invalid code.',gate_btn:'Enter →',preview_label:'Enter code to access',
+    hero_badge:'Personal Analysis · VIA‑L',hero_title:'Wearable Device<br><em>Data Interpreter</em>',hero_desc:'Oura, Garmin, Polar, Apple Watch → nutritional recommendations.',hero_tier_label:'⭐ PRO Version',
     nav_today:'Today',nav_history:'History',nav_consult:'Consult',history_title:'Session History',history_empty:'No saved sessions yet.',
-    s_prof_badge:'00 / 06 · Profile',s_prof_title:'Your Profile',s_prof_desc:'Your hormonal phase affects interpretation of all metrics.',s_prof_l1:'Gender',s_prof_l2:'Phase (women)',s_prof_l3:'Phase (men)',
+    s_prof_badge:'00 / 15 · Profile',s_prof_title:'Your Profile',s_prof_desc:'Your hormonal phase affects interpretation of all metrics.',s_prof_l1:'Gender',s_prof_l2:'Phase (women)',s_prof_l3:'Phase (men)',
     gender_f:'👩 Female',gender_m:'👨 Male',phase_peri:'Perimenopause',phase_meno:'Menopause',phase_post:'Postmenopause',phase_andro:'Andropause',phase_preandro:'Pre-andropause',phase_other:'Other',
-    s0_badge:'01 / 06 · HRV',s0_title:'Heart Rate Variability',s0_desc:'HRV shows how well your body handles stress and recovery.',s0_l1:'Your HRV today',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura / Garmin / Polar / Apple Watch → HRV',s0_l2:'Compared to baseline',s0_l3:'Duration',
-    s1_badge:'02 / 06 · Temperature',s1_title:'Overnight Temperature',s1_desc:'Deviation from your baseline last night.',s1_l1:'Deviation',s1_l2:'Woke up from heat?',s1_l3:'How often per week?',
-    s2_badge:'03 / 06 · Sleep',s2_title:'Sleep Quality',s2_desc:'Sleep is the most sensitive indicator of hormonal health.',s2_l1:'Sleep feeling (1–10)',s2_l2:'Deep Sleep',s2_l3:'Awakenings',
-    s3_badge:'04 / 06 · Heart Rate',s3_title:'Resting HR & Symptoms',s3_desc:'Resting heart rate and symptoms today.',s3_l1:'Resting Heart Rate (RHR)',s3_l2:'Compared to usual',s3_l3:'What you notice',
-    s4_badge:'05 / 06 · Lifestyle',s4_title:'Energy & Lifestyle',s4_desc:'Final questions.',s4_l1:'Energy level (1–10)',s4_l2:'Alcohol last night?',s4_l3:'Stress yesterday?',
+    s0_badge:'01 / 15 · HRV',s0_title:'Heart Rate Variability',s0_desc:'HRV shows how well your body handles stress and recovery.',s0_l1:'Your HRV today',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'Compared to baseline',s0_l3:'Duration',
+    s1_badge:'02 / 15 · Temperature',s1_title:'Overnight Temperature',s1_desc:'Deviation from your baseline last night.',s1_l1:'Deviation',s1_l2:'Woke up from heat?',s1_l3:'How often per week?',
+    s2_badge:'03 / 15 · Sleep',s2_title:'Sleep Quality',s2_desc:'Sleep is the most sensitive indicator of hormonal health.',s2_l1:'Sleep feeling (1–10)',s2_l2:'Deep Sleep',s2_l3:'Awakenings',
+    s3_badge:'04 / 15 · Heart Rate',s3_title:'Resting HR & Symptoms',s3_desc:'Resting heart rate and symptoms today.',s3_l1:'Resting Heart Rate (RHR)',s3_l2:'Compared to usual',s3_l3:'What you notice',
+    s4_badge:'05 / 15 · Lifestyle',s4_title:'Energy & Lifestyle',s4_desc:'Final questions.',s4_l1:'Energy level (1–10)',s4_l2:'Alcohol last night?',s4_l3:'Stress yesterday?',
     above_norm:'Above baseline',in_norm:'Normal',below_norm:'Below baseline',dont_know:'Not sure',dur_today:'Today only',dur_week:'3–7 days',dur_weeks:'2–3 weeks',dur_month:'>1 month',
     temp_norm:'Normal',temp_slight:'+0.2–0.4°C',temp_spike:'+0.5°C+',temp_down:'Below normal',temp_chaotic:'Erratic',
     no:'No',once:'Once',multiple:'Several times',yes:'Yes',freq_rare:'Rarely',freq_often:'Often',freq_daily:'Every night',
@@ -1944,22 +2414,22 @@ const T={
     energy_low:'1 — no energy',energy_high:'10 — energised',stress_mild:'Moderate',stress_high:'High',
     next:'Next →',show_result:'Show Results →',result_eyebrow:'VIA‑L Analysis',readiness:'Readiness',doctor_title:'⚠ Medical Consultation',lab_title:'🧪 Recommended Tests',
     cta_title:'Want a personalised strategy?',cta_desc:"We'll review your data and create a protocol.",restart:'Start Over',book:'Book →',pdf_btn:'📄 Download PDF Report',
-    disclaimer:'This tool is informational only.',tagline:'Live. Not just exist.',back_home:'← Back',step_of:'Step {n} of 6',your_result:'Your Result',
+    disclaimer:'This tool is informational only.',tagline:'Live. Not just exist.',back_home:'← Back',step_of:'Step {n} of 15',your_result:'Your Result',
     res_good_title:'Good Recovery State',res_good_sub:'Your indicators are generally positive.',res_warn_title:'Needs Attention',res_warn_sub:'Your body needs support.',res_alert_title:'Support Needed',res_alert_sub:'Your body is under load.',
     doc_reason_hrv:'chronically low HRV',doc_reason_temp:'daily night sweats',doc_reason_rhr:'elevated HR + palpitations',doc_reason_thyroid:'low temp + fatigue',doc_prefix:'We recommend consulting a specialist: ',
     compare_better:'better than last time',compare_worse:'worse than last time',compare_same:'no change',
   },
   es:{
-    gate_sub:'Acceso Básico',gate_title:'Código de Acceso',gate_desc:'El código está en tu guía VIA‑L.',gate_error:'Código incorrecto.',gate_btn:'Entrar →',preview_label:'Ingresa el código',
-    hero_badge:'Análisis Personal · VIA‑L',hero_title:'Intérprete de datos<br><em>de dispositivo ponible</em>',hero_desc:'Oura, Garmin, Polar, Apple Watch → recomendaciones nutricionales.',hero_tier_label:'📖 Versión Básica',
+    gate_sub:'Acceso PRO · Programa',gate_title:'Código de Acceso',gate_desc:'El código está en tu guía VIA‑L.',gate_error:'Código incorrecto.',gate_btn:'Entrar →',preview_label:'Ingresa el código',
+    hero_badge:'Análisis Personal · VIA‑L',hero_title:'Intérprete de datos<br><em>de dispositivo ponible</em>',hero_desc:'Oura, Garmin, Polar, Apple Watch → recomendaciones nutricionales.',hero_tier_label:'⭐ Versión PRO',
     nav_today:'Hoy',nav_history:'Historial',nav_consult:'Consulta',history_title:'Historial de sesiones',history_empty:'Sin sesiones guardadas aún.',
-    s_prof_badge:'00 / 06 · Perfil',s_prof_title:'Tu Perfil',s_prof_desc:'La fase hormonal afecta la interpretación de todas las métricas.',s_prof_l1:'Género',s_prof_l2:'Fase (mujeres)',s_prof_l3:'Fase (hombres)',
+    s_prof_badge:'00 / 15 · Perfil',s_prof_title:'Tu Perfil',s_prof_desc:'La fase hormonal afecta la interpretación de todas las métricas.',s_prof_l1:'Género',s_prof_l2:'Fase (mujeres)',s_prof_l3:'Fase (hombres)',
     gender_f:'👩 Mujer',gender_m:'👨 Hombre',phase_peri:'Perimenopausia',phase_meno:'Menopausia',phase_post:'Posmenopausia',phase_andro:'Andropausia',phase_preandro:'Pre-andropausia',phase_other:'Otro',
-    s0_badge:'01 / 06 · VFC',s0_title:'Variabilidad Cardíaca',s0_desc:'La VFC muestra cómo maneja el estrés tu cuerpo.',s0_l1:'Tu VFC hoy',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura / Garmin / Polar / Apple Watch → HRV',s0_l2:'Comparado con tu base',s0_l3:'Duración',
-    s1_badge:'02 / 06 · Temperatura',s1_title:'Temperatura nocturna',s1_desc:'Desviación de tu línea base anoche.',s1_l1:'Desviación',s1_l2:'¿Despertaste por calor?',s1_l3:'¿Con qué frecuencia?',
-    s2_badge:'03 / 06 · Sueño',s2_title:'Calidad del Sueño',s2_desc:'El sueño es el indicador más sensible del estado hormonal.',s2_l1:'Sensación (1–10)',s2_l2:'Sueño profundo',s2_l3:'Despertares',
-    s3_badge:'04 / 06 · FC',s3_title:'FC en reposo y síntomas',s3_desc:'Frecuencia cardíaca y síntomas hoy.',s3_l1:'FC en reposo (RHR)',s3_l2:'Comparado con lo usual',s3_l3:'Qué notas',
-    s4_badge:'05 / 06 · Estilo de vida',s4_title:'Energía y Estilo de vida',s4_desc:'Últimas preguntas.',s4_l1:'Nivel de energía (1–10)',s4_l2:'¿Alcohol anoche?',s4_l3:'¿Estrés ayer?',
+    s0_badge:'01 / 15 · VFC',s0_title:'Variabilidad Cardíaca',s0_desc:'La VFC muestra cómo maneja el estrés tu cuerpo.',s0_l1:'Tu VFC hoy',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'Comparado con tu base',s0_l3:'Duración',
+    s1_badge:'02 / 15 · Temperatura',s1_title:'Temperatura nocturna',s1_desc:'Desviación de tu línea base anoche.',s1_l1:'Desviación',s1_l2:'¿Despertaste por calor?',s1_l3:'¿Con qué frecuencia?',
+    s2_badge:'03 / 15 · Sueño',s2_title:'Calidad del Sueño',s2_desc:'El sueño es el indicador más sensible del estado hormonal.',s2_l1:'Sensación (1–10)',s2_l2:'Sueño profundo',s2_l3:'Despertares',
+    s3_badge:'04 / 15 · FC',s3_title:'FC en reposo y síntomas',s3_desc:'Frecuencia cardíaca y síntomas hoy.',s3_l1:'FC en reposo (RHR)',s3_l2:'Comparado con lo usual',s3_l3:'Qué notas',
+    s4_badge:'05 / 15 · Estilo de vida',s4_title:'Energía y Estilo de vida',s4_desc:'Últimas preguntas.',s4_l1:'Nivel de energía (1–10)',s4_l2:'¿Alcohol anoche?',s4_l3:'¿Estrés ayer?',
     above_norm:'Por encima',in_norm:'Normal',below_norm:'Por debajo',dont_know:'No sé',dur_today:'Solo hoy',dur_week:'3–7 días',dur_weeks:'2–3 semanas',dur_month:'>1 mes',
     temp_norm:'Normal',temp_slight:'+0.2–0.4°C',temp_spike:'+0.5°C+',temp_down:'Por debajo',temp_chaotic:'Errático',
     no:'No',once:'Una vez',multiple:'Varias veces',yes:'Sí',freq_rare:'Raramente',freq_often:'Frecuente',freq_daily:'Cada noche',
@@ -1969,7 +2439,7 @@ const T={
     energy_low:'1 — sin energía',energy_high:'10 — energía',stress_mild:'Moderado',stress_high:'Alto',
     next:'Siguiente →',show_result:'Ver Resultados →',result_eyebrow:'Análisis VIA‑L',readiness:'Preparación',doctor_title:'⚠ Consulta médica',lab_title:'🧪 Análisis recomendados',
     cta_title:'¿Quieres una estrategia?',cta_desc:'Analizaremos tus datos y crearemos un protocolo.',restart:'Empezar de nuevo',book:'Reservar →',pdf_btn:'📄 Descargar PDF',
-    disclaimer:'Esta herramienta es informativa.',tagline:'Vive. No solo existas.',back_home:'← Volver',step_of:'Paso {n} de 6',your_result:'Tu Resultado',
+    disclaimer:'Esta herramienta es informativa.',tagline:'Vive. No solo existas.',back_home:'← Volver',step_of:'Paso {n} de 15',your_result:'Tu Resultado',
     res_good_title:'Buen estado',res_good_sub:'Tus indicadores son positivos.',res_warn_title:'Requiere atención',res_warn_sub:'Tu cuerpo necesita apoyo.',res_alert_title:'Necesita apoyo',res_alert_sub:'Tu cuerpo está bajo carga.',
     doc_reason_hrv:'VFC crónicamente baja',doc_reason_temp:'sudores nocturnos',doc_reason_rhr:'FC alta + palpitaciones',doc_reason_thyroid:'temperatura baja + fatiga',doc_prefix:'Consulta a un especialista: ',
     compare_better:'mejor que la vez anterior',compare_worse:'peor que la vez anterior',compare_same:'sin cambios',
@@ -2003,6 +2473,19 @@ document.querySelectorAll('input[name=gender]').forEach(el=>{
     const male=el.value==='male';
     document.getElementById('phase-female').style.display=male?'none':'block';
     document.getElementById('phase-male').style.display=male?'block':'none';
+    // PRO: update step 7 hormone symptoms
+    const hf=document.getElementById('horm-female-symp');
+    const hm=document.getElementById('horm-male-symp');
+    if(hf)hf.style.display=male?'none':'block';
+    if(hm)hm.style.display=male?'block':'none';
+    // PRO: update step 12 cycle/vitality
+    const cf=document.getElementById('cycle-female');
+    const cm=document.getElementById('cycle-male');
+    if(cf)cf.style.display=male?'none':'block';
+    if(cm)cm.style.display=male?'block':'none';
+    // Update step 12 title
+    const t12=document.getElementById('step12-title');
+    if(t12)t12.textContent=male?'Витальность и мужское здоровье':'Цикл и репродуктивное здоровье';
   });
 });
 
@@ -2114,7 +2597,7 @@ function goTo(n){
 function updateProgress(n){
   const lbl=document.getElementById('progressLbl');
   if(lbl)lbl.textContent=n==='result'?t('your_result'):t('step_of').replace('{n}',n+1);
-  for(let i=0;i<6;i++){
+  for(let i=0;i<15;i++){
     const d=document.getElementById('pd'+i);if(!d)continue;
     d.className='progress-dot';
     if(n==='result'||i<n)d.classList.add('done');
@@ -2154,6 +2637,14 @@ function setScore(score,type){
 // ══ PDF REPORT ════════════════════════════════════════════
 let _lastResult=null;
 function downloadPDF(){
+  try { _downloadPDFInner(); } catch(e) {
+    const d=document.createElement('div');
+    d.style.cssText='position:fixed;top:60px;left:10px;right:10px;background:#c00;color:#fff;padding:12px;border-radius:10px;z-index:9999;font-size:11px;font-family:monospace;word-break:break-all;';
+    d.textContent='PDF ERROR: '+e.message+' | '+(e.stack||'').slice(0,200);
+    document.body.appendChild(d);setTimeout(()=>d.remove(),12000);
+  }
+}
+function _downloadPDFInner(){
   if(!_lastResult)return;
   const{score,type,insights,recs,docR,labs,data}=_lastResult;
   const date=new Date().toLocaleDateString(lang==='en'?'en-GB':'ru-RU',{day:'numeric',month:'long',year:'numeric'});
@@ -2205,6 +2696,7 @@ function downloadPDF(){
   ${labs.length?`<h3>${t('lab_title')}</h3>${labs.map(l=>`<div class="lab-item">· ${l}</div>`).join('')}`:''}
   <div class="footer">VIA-L Longevity · via-l.com · ${date}<br>${t('disclaimer')}</div>
   <\/body><\/html>`;
+  // iOS-compatible: download as HTML file
   // Show HTML in overlay for printing/saving
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#fff;overflow:auto;';
@@ -2223,7 +2715,9 @@ function downloadPDF(){
   overlay.appendChild(printBtn);
   overlay.appendChild(iframe);
   document.body.appendChild(overlay);
+
 }
+
 
 // ══ LAB TESTS ═════════════════════════════════════════════
 function getLabTests(data,docR){
@@ -2631,6 +3125,39 @@ function _showResultsInner(){
     symptoms:getChecked(['sym1','sym2','sym3','sym4','sym5','sym6','sym7']),
     energy:+document.getElementById('energy').value,
     alc:getRadio('alc'),stress:getRadio('stress'),
+    // PRO fields
+    memory:getRadio('memory'),
+    fog:getRadio('fog'),
+    cogndur:getRadio('cogndur'),
+    horm_symptoms:getChecked(['hs1','hs2','hs4','hs5','hs6','hs7','hs8','hm1','hm2','hm3','hm4','hm6','hm8']),
+    horm_intensity:getRadio('horm_intensity'),
+    appetite:getRadio('appetite'),
+    eating_pattern:getRadio('eating_pattern'),
+    protein_intake:getRadio('protein_intake'),
+    act_types:getChecked(['act1','act2','act3','act4','act5','act6']),
+    act_freq:getRadio('act_freq'),
+    act_recovery:getRadio('act_recovery'),
+    supplements:getChecked(['sup1','sup2','sup3','sup4','sup5','sup6','sup7','sup8','sup9','sup10','sup11']),
+    meds:getRadio('meds'),
+    chronic_stress:getRadio('chronic_stress'),
+    cortisol_symp:getChecked(['cort2','cort3','cort4','cort5','cort6','cort7']),
+    cycle_status:getRadio('cycle_status'),
+    last_period:getRadio('last_period'),
+    pms:getRadio('pms'),
+    vitality:getRadio('vitality'),
+    weekly_trend:getRadio('weekly_trend'),
+    weekly_changes:getChecked(['wk1p','wk2p','wk3p','wk4p','wk5p','wk6p','wk7p']),
+    events:getChecked(['ev1','ev2','ev3','ev4','ev5','ev6']),
+    labs:{
+      vitd:parseFloat(document.getElementById('lab-vitd')?.value)||null,
+      ferr:parseFloat(document.getElementById('lab-ferr')?.value)||null,
+      tsh:parseFloat(document.getElementById('lab-tsh')?.value)||null,
+      e2:parseFloat(document.getElementById('lab-e2')?.value)||null,
+      prog:parseFloat(document.getElementById('lab-prog')?.value)||null,
+      test:parseFloat(document.getElementById('lab-test')?.value)||null,
+      cort:parseFloat(document.getElementById('lab-cort')?.value)||null,
+      b12:parseFloat(document.getElementById('lab-b12')?.value)||null,
+    },
   };
   const ins=[],recs={};
   let score=70,doc=false,docR=[];
@@ -2684,12 +3211,76 @@ function _showResultsInner(){
   // Symptoms
   const sc=data.symptoms.filter(s=>s!=='nothing').length;
   if(sc>=3){ins.push({t:'warn',i:'🔍',h:lang==='ru'?'Несколько симптомов одновременно':lang==='uk'?'Кілька симптомів':lang==='en'?'Multiple Symptoms':'Múltiples síntomas',b:lang==='ru'?'Усталость, тревога, туман в голове — характерный симптомокомплекс гормонального дисбаланса.':lang==='uk'?'Комплекс симптомів гормонального дисбалансу.':lang==='en'?'Fatigue, anxiety, brain fog — characteristic hormonal imbalance pattern.':'Fatiga, ansiedad, niebla mental — patrón de desequilibrio hormonal.'});score-=10;
-  recs['stress']={h:lang==='ru'?'⚡ Поддержка нервной системы':lang==='uk'?'⚡ Підтримка нервової системи':lang==='en'?'⚡ Nervous System Support':'⚡ Apoyo nervioso',l:lang==='ru'?['Омега-3 EPA+DHA: 2–3 г/сут','Витамин D3 + К2','Адаптогены (ашваганда/родиола)','Белок 1.6–2 г/кг/день','Магний глицинат']:lang==='uk'?['Омега-3 EPA+DHA 2–3 г/добу','Вітамін D3 + К2','Адаптогени','Білок 1.6–2 г/кг/день']:lang==='en'?['Omega-3 EPA+DHA 2–3 g/day','Vitamin D3 + K2','Adaptogens (ashwagandha/rhodiola)','Protein 1.6–2 g/kg/day','Magnesium glycinate']:['Omega-3 EPA+DHA 2–3 g/día','Vitamina D3 + K2','Adaptógenos','Proteína 1.6–2 g/kg/día']};}
+  recs['stress']={h:lang==='ru'?'⚡ Поддержка нервной системы':lang==='uk'?'⚡ Підтримка нервової системи':lang==='en'?'⚡ Nervous System Support':'⚡ Apoyo nervioso',l:lang==='ru'?['Омега-3 EPA+DHA: 2–3 г/сут','Витамин D3 + К2','Адаптогены (ашваганда/родиола)','Белок 1.6–2 г/кг/день','Магний глицинат']:lang==='uk'?['Омега-3 EPA+DHA 2–3 г/добу','Вітамін D3 + К2','Адаптогени','Білок 1.6–2 г/кг/день']:lang==='en'?['Omega-3 EPA+DHA 2–3 g/day','Vitamin D3 + K2','Adaptogens (ashwagandha/rhodiola)','Protein 1.6–2 g/kg/day','Magnesium glycinate']:['Omega-3 EPA+DHA 2–3 g/día','Vitamina D3 + K2','Adaptógenos','Proteína 1.6–2 g/kg/día']};
 
   if(data.alc==='yes'){ins.push({t:'warn',i:'🍷',h:lang==='ru'?'Алкоголь снижает HRV и сон':lang==='uk'?'Алкоголь знижує HRV та сон':lang==='en'?'Alcohol Reduces HRV & Sleep':'El alcohol reduce VFC',b:lang==='ru'?'Даже небольшое количество накануне снижает HRV и глубокий сон.':lang==='uk'?'Навіть невелика кількість знижує HRV.':lang==='en'?'Even small amounts the night before reduce HRV and deep sleep.':'Incluso pequeñas cantidades reducen la VFC.'});score-=8;}
   if(data.stress==='high'){ins.push({t:'warn',i:'🧠',h:lang==='ru'?'Высокий стресс влияет на всё':lang==='uk'?'Високий стрес впливає на все':lang==='en'?'High Stress Affects Everything':'El estrés alto lo afecta todo',b:lang==='ru'?'Сильный стресс повышает кортизол, снижает HRV и нарушает сон.':lang==='uk'?'Стрес підвищує кортизол і порушує сон.':lang==='en'?'High stress raises cortisol, lowers HRV, disrupts sleep.':'El estrés elevado aumenta el cortisol y perturba el sueño.'});score-=5;}
 
-  recs['base']={h:lang==='ru'?`🥩 Базовая поддержка (${isMale?'андропауза':'гормональный переход'})`:lang==='uk'?`🥩 Базова підтримка`:lang==='en'?`🥩 Core Support (${isMale?'Andropause':'Hormonal Transition'})`:`🥩 Soporte base`,
+  // PRO: Cognitive analysis
+  if(data.fog==='constant'||data.memory==='severe'){
+    ins.push({t:'alert',i:'🧠',h:lang==='ru'?'Выраженный когнитивный туман':'Severe Brain Fog',b:lang==='ru'?'Постоянный туман в голове и нарушение памяти — признак значительного гормонального влияния на ЦНС. Приоритет: эстроген/тестостерон, В12, железо, Омега-3.':'Persistent brain fog and memory issues indicate significant hormonal impact on the CNS.'});
+    score-=15;doc=true;docR.push(lang==='ru'?'выраженные когнитивные нарушения':'severe cognitive impairment');
+    recs['cognition']={h:lang==='ru'?'🧠 Нутрициология для когнитивной функции':'🧠 Cognitive Function Nutrition',l:lang==='ru'?['Омега-3 EPA+DHA 2–3 г/сут — строительный материал для нейронов','Витамин D3 2000–4000 МЕ — напрямую влияет на когницию','В12 метилкобаламин 1000 мкг — дефицит вызывает туман','Куркумин 500 мг с пиперином — нейропротекция','Фосфатидилсерин 300 мг — поддержка памяти']:['Omega-3 EPA+DHA 2–3 g/day','Vitamin D3 2000–4000 IU','B12 methylcobalamin 1000 mcg','Curcumin 500 mg with piperine','Phosphatidylserine 300 mg']};
+  } else if(data.fog==='daily'||data.memory==='poor'){
+    ins.push({t:'warn',i:'🧠',h:lang==='ru'?'Умеренный когнитивный туман':'Moderate Brain Fog',b:lang==='ru'?'Туман в течение дня и снижение памяти указывают на дефицит — скорее всего нутриентный или гормональный.':'Daytime fog and reduced memory suggest a nutrient or hormonal deficiency.'});
+    score-=10;
+  }
+
+  // PRO: Cortisol pattern
+  const cortSymp = data.cortisol_symp||[];
+  if(data.chronic_stress==='burnout'||data.chronic_stress==='high'){
+    ins.push({t:'alert',i:'🔥',h:lang==='ru'?'Высокий хронический стресс — кортизольный паттерн':'High Chronic Stress — Cortisol Pattern',b:lang==='ru'?'Хронически высокий кортизол подавляет выработку половых гормонов, разрушает мышцы, нарушает сон и иммунитет. Это приоритет #1 для восстановления.':'Chronically high cortisol suppresses sex hormones, breaks down muscle, disrupts sleep and immunity.'});
+    score-=15;
+    recs['cortisol']={h:lang==='ru'?'🔥 Снижение кортизола — нутриционный протокол':'🔥 Cortisol Reduction Protocol',l:lang==='ru'?['Ашваганда (KSM-66) 300 мг утром — клинически снижает кортизол на 27%','Родиола розовая 200 мг — адаптоген, повышает стрессоустойчивость','Магний 400 мг вечером — естественный антагонист кортизола','Витамин С 1000 мг — поддержка надпочечников','Фосфатидилсерин 400 мг — блокирует выброс кортизола после нагрузки']:['Ashwagandha (KSM-66) 300 mg morning','Rhodiola rosea 200 mg','Magnesium 400 mg evening','Vitamin C 1000 mg','Phosphatidylserine 400 mg']};
+  }
+  if(cortSymp.includes('second_wind')&&cortSymp.includes('insomnia')){
+    ins.push({t:'warn',i:'⏰',h:lang==='ru'?'Инвертированный кортизольный ритм':'Inverted Cortisol Rhythm',b:lang==='ru'?'Второе дыхание после 22:00 + трудно заснуть = кортизол не снижается вечером. Классический признак нарушения циркадного ритма кортизола.':'Second wind after 10pm + difficulty sleeping = cortisol not dropping in the evening.'});
+    score-=8;
+  }
+
+  // PRO: Labs analysis
+  const labs = data.labs||{};
+  if(labs.vitd!=null){
+    if(labs.vitd<50){ins.push({t:'alert',i:'☀️',h:lang==='ru'?'Дефицит витамина D ('+labs.vitd+' нмоль/л)':'Vitamin D Deficiency ('+labs.vitd+' nmol/L)',b:lang==='ru'?'Уровень критически низкий. Дефицит D напрямую связан с депрессией, иммунной дисфункцией, болями в мышцах и усилением симптомов менопаузы/андропаузы.':'Level is critically low. D deficiency is directly linked to depression, immune dysfunction and worsening menopause/andropause symptoms.'});score-=12;doc=true;docR.push(lang==='ru'?'критический дефицит витамина D':'critical vitamin D deficiency');}
+    else if(labs.vitd<75){ins.push({t:'warn',i:'☀️',h:lang==='ru'?'Недостаточность витамина D ('+labs.vitd+' нмоль/л)':'Vitamin D Insufficiency',b:lang==='ru'?'Субоптимальный уровень. Целевой диапазон 75–150 нмоль/л. Рекомендуется дополнительный приём.':'Suboptimal level. Target range 75–150 nmol/L. Supplementation recommended.'});score-=6;}
+    else{ins.push({t:'ok',i:'☀️',h:lang==='ru'?'Витамин D в норме ('+labs.vitd+' нмоль/л)':'Vitamin D Normal',b:lang==='ru'?'Отличный уровень. Поддерживайте текущую дозировку.':'Excellent level. Maintain current dosage.'});score+=3;}
+  }
+  if(labs.ferr!=null){
+    if(labs.ferr<20){ins.push({t:'alert',i:'🩸',h:lang==='ru'?'Низкий ферритин ('+labs.ferr+' мкг/л)':'Low Ferritin',b:lang==='ru'?'Железодефицит — частая причина усталости, тумана в голове и выпадения волос. Особенно важно при гормональном переходе.':'Iron deficiency — frequent cause of fatigue, brain fog and hair loss.'});score-=12;doc=true;docR.push(lang==='ru'?'низкий ферритин':'low ferritin');}
+    else if(labs.ferr<50){ins.push({t:'warn',i:'🩸',h:lang==='ru'?'Субоптимальный ферритин ('+labs.ferr+' мкг/л)':'Suboptimal Ferritin',b:lang==='ru'?'Для оптимального функционирования рекомендуется 50–100 мкг/л. Обратите внимание на источники железа в питании.':'Optimal range is 50–100 mcg/L. Focus on dietary iron sources.'});score-=5;}
+  }
+  if(labs.tsh!=null){
+    if(labs.tsh>4.0){ins.push({t:'alert',i:'🦋',h:lang==='ru'?'Высокий ТТГ ('+labs.tsh+' мМЕ/л) — гипотиреоз?':'High TSH — Hypothyroid?',b:lang==='ru'?'ТТГ выше нормы указывает на сниженную функцию щитовидной железы. Это объясняет усталость, набор веса, сухость кожи и когнитивные нарушения.':'TSH above normal indicates thyroid underfunction — explains fatigue, weight gain and cognitive issues.'});score-=15;doc=true;docR.push(lang==='ru'?'высокий ТТГ':'elevated TSH');}
+    else if(labs.tsh<0.4){ins.push({t:'warn',i:'🦋',h:lang==='ru'?'Низкий ТТГ ('+labs.tsh+' мМЕ/л)':'Low TSH',b:lang==='ru'?'ТТГ ниже нормы. Возможен гипертиреоз или избыточная терапия. Требует контроля.':'TSH below normal. Possible hyperthyroid or over-treatment. Requires monitoring.'});doc=true;docR.push(lang==='ru'?'низкий ТТГ':'low TSH');}
+    else{ins.push({t:'ok',i:'🦋',h:lang==='ru'?'ТТГ в норме ('+labs.tsh+' мМЕ/л)':'TSH Normal',b:lang==='ru'?'Функция щитовидной железы в норме.':'Thyroid function is within normal range.'});score+=3;}
+  }
+
+  // PRO: Activity recovery issue
+  if(data.act_recovery==='exhausted'&&data.act_freq==='high'){
+    ins.push({t:'warn',i:'🏋️',h:lang==='ru'?'Перетренированность — кортизоловая нагрузка':'Overtraining — Cortisol Load',b:lang==='ru'?'Частые тренировки + истощение после них = хронический стресс от нагрузок. При гормональном переходе это усугубляет симптомы. Рекомендуется снизить интенсивность и добавить восстановительные дни.':'High training frequency + post-workout exhaustion = chronic exercise stress.'});
+    score-=10;
+  }
+
+  // PRO: Supplement gaps
+  const sups = data.supplements||[];
+  if(!sups.includes('magnesium')&&!sups.includes('none_sup')){
+    recs['mag_gap']={h:lang==='ru'?'💊 Ключевая добавка отсутствует':'💊 Key Supplement Missing',l:lang==='ru'?['Магний глицинат — отсутствует в вашем протоколе. Критически важен для сна, HRV и снижения кортизола. Начните с 300 мг перед сном.']:['Magnesium glycinate — missing from your protocol. Critical for sleep, HRV and cortisol reduction. Start with 300 mg before bed.']};
+  }
+
+  // PRO: Weekly trend
+  if(data.weekly_trend==='worse'){
+    ins.push({t:'warn',i:'📉',h:lang==='ru'?'Ухудшение за последнюю неделю':'Declining Trend This Week',b:lang==='ru'?'Отрицательная динамика важна для анализа. Проверьте: не было ли пропуска добавок, нарушения сна или повышенного стресса на этой неделе.':'A declining trend is important data. Check: missed supplements, sleep disruption or increased stress this week.'});
+    score-=5;
+  } else if(data.weekly_trend==='better'){
+    ins.push({t:'ok',i:'📈',h:lang==='ru'?'Положительная динамика':'Positive Trend',b:lang==='ru'?'Организм улучшается. Продолжайте текущий протокол — изменения работают.':'Your body is improving. Continue your current protocol — changes are working.'});
+    score+=5;
+  }
+
+  // Travel/illness events
+  if((data.events||[]).includes('travel')){
+    ins.push({t:'warn',i:'✈️',h:lang==='ru'?'Перелёт нарушает циркадный ритм':'Travel Disrupts Circadian Rhythm',b:lang==='ru'?'Смена часовых поясов — сильный стрессор для гормональной системы. HRV и сон снижаются на 3–7 дней после перелёта.':'Timezone changes are powerful hormonal stressors. HRV and sleep decrease for 3–7 days after travel.'});
+    score-=8;
+  }
   l:lang==='ru'?(isMale?['Белок 1.6–2 г/кг: тестостерон защищает мышцы','Цинк 25–30 мг/день — поддержка тестостерона','Витамин D3 — проверьте уровень','Омега-3 — снижают воспаление']:['Белок 1.6–2 г/кг: эстроген защищает мышцы','Цинк + селен — поддержка щитовидной','Витамин D3 — проверьте уровень','Куркума, ягоды, зелёный чай']):
   lang==='uk'?(isMale?['Білок 1.6–2 г/кг','Цинк 25–30 мг/день','Вітамін D3','Омега-3']:['Білок 1.6–2 г/кг','Цинк + селен','Вітамін D3','Куркума, ягоди']):
   lang==='en'?(isMale?['Protein 1.6–2 g/kg: testosterone protects muscle','Zinc 25–30 mg/day — testosterone support','Vitamin D3 — check levels','Omega-3 — reduces inflammation']:['Protein 1.6–2 g/kg','Zinc + selenium — thyroid support','Vitamin D3 — check levels','Turmeric, berries, green tea']):
@@ -2783,7 +3374,7 @@ function applyImportedToSliders(){
 function showImportBanner(){
   if(!importedData.source)return;
   const existing=document.getElementById('import-banner');if(existing)existing.remove();
-  const icons={oura:'💍',apple:'🍎','apple-manual':'🍎',garmin:'⌚',polar:'🔴',manual:'✏️'};
+  const icons={oura:'💍',apple:'🍎','apple-manual':'🍎',garmin:'⌚',polar:'🔴',fitbit:'📡',samsung:'🔵',manual:'✏️'};
   const b=document.createElement('div');b.id='import-banner';
   b.style.cssText='background:rgba(78,204,163,.08);border:1px solid rgba(78,204,163,.2);border-radius:14px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--ok);';
   const src=importedData.source;
@@ -2796,25 +3387,27 @@ function setMethod(source,method){
   const tabs=card.querySelectorAll('.method-tab');
   if(source==='oura'){document.getElementById('oura-token').style.display=method==='token'?'block':'none';document.getElementById('oura-file').style.display=method==='file'?'block':'none';tabs[0].classList.toggle('active',method==='token');tabs[1].classList.toggle('active',method==='file');}
   else if(source==='apple'){document.getElementById('apple-file').style.display=method==='file'?'block':'none';document.getElementById('apple-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
+  else if(source==='fitbit'){document.getElementById('fitbit-token').style.display=method==='token'?'block':'none';document.getElementById('fitbit-file').style.display=method==='file'?'block':'none';tabs[0].classList.toggle('active',method==='token');tabs[1].classList.toggle('active',method==='file');}
 }
 function dragOver(e,id){e.preventDefault();document.getElementById(id).classList.add('dragover');}
 function dragLeave(id){document.getElementById(id).classList.remove('dragover');}
 function dropFile(e,source){e.preventDefault();dragLeave(source+'-drop');const file=e.dataTransfer?.files?.[0];if(file)processFile(file,source);}
 function handleFile(input,source){const file=input.files?.[0];if(file)processFile(file,source);}
 function processFile(file,source){
+  const isFitbitFile=source==='fitbit'&&document.getElementById('fitbit-file').style.display!=='none';
   const isOuraFile=source==='oura'&&document.getElementById('oura-file').style.display!=='none';
-  const sid=isOuraFile?'oura-file-status':source+'-status';
-  const pid=isOuraFile?'oura-file-preview':source+'-preview';
-  const gid=isOuraFile?'oura-file-grid':source+'-preview-grid';
+  const sid=isFitbitFile?'fitbit-file-status':isOuraFile?'oura-file-status':source+'-status';
+  const pid=isFitbitFile?'fitbit-file-preview':isOuraFile?'oura-file-preview':source+'-preview';
+  const gid=isFitbitFile?'fitbit-file-grid':isOuraFile?'oura-file-grid':source+'-preview-grid';
   setStatus(sid,'loading','⏳ Обрабатываем файл...');
   const reader=new FileReader();
   reader.onload=e=>{
     try{
       const content=e.target.result;
       let ex={};
-      if(file.name.endsWith('.json'))ex=parseOuraJSON(content);
+      if(file.name.endsWith('.json'))ex=source==='fitbit'?parseFitbitJSON(content):parseOuraJSON(content);
       else if(file.name.endsWith('.xml'))ex=parseAppleXML(content);
-      else if(file.name.endsWith('.csv'))ex=parseCSV(content,source);
+      else if(file.name.endsWith('.csv'))ex=source==='samsung'?parseSamsungCSV(content):parseCSV(content,source);
       applyExtracted(ex,source);
       renderPreview(gid,ex);
       document.getElementById(pid).classList.add('show');
@@ -2879,6 +3472,73 @@ function renderPreview(gridId,data){
 }
 function setStatus(id,type,msg){const el=document.getElementById(id);if(!el)return;el.className='import-status '+type;el.textContent=msg;}
 function updateImportSummary(){const s=document.getElementById('import-summary'),g=document.getElementById('import-summary-grid');if(!s||!g)return;const count=Object.keys(importedData).filter(k=>importedData[k]!=null&&k!=='source').length;if(count>0){s.style.display='block';renderPreview('import-summary-grid',importedData);}}
+function parseSamsungCSV(text){
+  const out={};
+  try{
+    const lines=text.trim().split('\n');
+    if(lines.length<3)return out;
+    const headers=lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,'').toLowerCase());
+    const dataLines=lines.slice(2).filter(l=>l.trim());
+    if(!dataLines.length)return out;
+    const col=(key)=>headers.findIndex(h=>h.includes(key));
+    const hrMin=col('heart_rate.min');const hrMax=col('heart_rate.max');const hrHrv=col('heart_rate_variability');
+    if(hrMin>=0||hrMax>=0){
+      const vals=dataLines.map(l=>{const f=l.split(',');return{min:parseFloat(f[hrMin]),max:parseFloat(f[hrMax]),hrv:hrHrv>=0?parseFloat(f[hrHrv]):NaN};}).filter(v=>!isNaN(v.min)&&v.min>0);
+      if(vals.length){out.rhr=Math.round(vals.reduce((s,v)=>s+v.min,0)/vals.length);if(hrHrv>=0){const hvVals=vals.map(v=>v.hrv).filter(v=>!isNaN(v)&&v>0);if(hvVals.length)out.hrv=Math.round(hvVals.reduce((s,v)=>s+v,0)/hvVals.length);}}
+    }
+    const slTotal=col('sleep_duration');const slDeep=col('deep_sleep');
+    if(slTotal>=0){const last=dataLines[dataLines.length-1].split(',');const dur=parseFloat(last[slTotal]);if(!isNaN(dur)&&dur>0)out.sleepHours=parseFloat((dur/60).toFixed(1));if(slDeep>=0){const d=parseFloat(last[slDeep]);if(!isNaN(d)&&d>0)out.deepMin=Math.round(d);}}
+    const stScore=col('stress_score')||col('stress');
+    if(stScore>=0){const recent=dataLines.slice(-10).map(l=>parseFloat(l.split(',')[stScore])).filter(v=>!isNaN(v)&&v>0);if(recent.length){const avg=recent.reduce((s,v)=>s+v,0)/recent.length;out.readiness=Math.round(100-avg);}}
+    const stSteps=col('count')||col('step_count')||col('steps');
+    if(stSteps>=0){const last=dataLines[dataLines.length-1].split(',');const s=parseInt(last[stSteps]);if(!isNaN(s)&&s>0)out.energy=Math.min(10,Math.round(s/1000));}
+  }catch(e){console.error('parseSamsungCSV error',e);}
+  return out;
+}
+function parseFitbitJSON(text){
+  const out={};
+  try{
+    const d=JSON.parse(text);
+    const hrArr=d['activities-heart']||d['heart-rate']||[];
+    if(hrArr.length){const last=hrArr[hrArr.length-1];out.rhr=last?.value?.restingHeartRate||last?.restingHeartRate||null;}
+    const hrvArr=d['hrv']||d['heart-rate-variability']||[];
+    if(hrvArr.length){const last=hrvArr[hrvArr.length-1];out.hrv=last?.value?.dailyRmssd||last?.value?.deepRmssd||last?.rmssd||null;}
+    const slArr=d['sleep']||[];
+    if(slArr.length){const last=slArr[slArr.length-1];out.sleepHours=(last?.minutesAsleep||0)/60||null;out.deepMin=last?.levels?.summary?.deep?.minutes||null;if(out.sleepHours===0)out.sleepHours=null;}
+    const stArr=d['activities-steps']||d['steps']||[];
+    if(stArr.length){const last=stArr[stArr.length-1];const s=parseInt(last?.value||last?.steps||0);if(s>0)out.energy=Math.min(10,Math.round(s/1000));}
+  }catch(e){console.error('parseFitbitJSON error',e);}
+  return out;
+}
+async function fetchFitbit(){
+  const token=document.getElementById('fitbit-token-input').value.trim();
+  if(!token){setStatus('fitbit-status','error','Введите Personal Access Token');return;}
+  setStatus('fitbit-status','loading','⏳ Подключаемся к Fitbit API...');
+  try{
+    const today=new Date().toISOString().slice(0,10);
+    const h={'Authorization':'Bearer '+token};
+    const [hrRes,sleepRes,hrvRes]=await Promise.all([
+      fetch(`https://api.fitbit.com/1/user/-/activities/heart/date/${today}/1d.json`,{headers:h}),
+      fetch(`https://api.fitbit.com/1.2/user/-/sleep/date/${today}.json`,{headers:h}),
+      fetch(`https://api.fitbit.com/1/user/-/hrv/date/${today}.json`,{headers:h})
+    ]);
+    if(!hrRes.ok)throw new Error('Неверный токен или нет доступа. Проверьте права приложения на dev.fitbit.com');
+    const [hrData,sleepData,hrvData]=await Promise.all([hrRes.json(),sleepRes.json(),hrvRes.json()]);
+    const ex={};
+    const hrSummary=hrData?.['activities-heart']?.[0]?.value;
+    if(hrSummary?.restingHeartRate)ex.rhr=hrSummary.restingHeartRate;
+    const hrvVal=hrvData?.hrv?.[0]?.value;
+    if(hrvVal?.dailyRmssd)ex.hrv=Math.round(hrvVal.dailyRmssd);
+    else if(hrvVal?.deepRmssd)ex.hrv=Math.round(hrvVal.deepRmssd);
+    const mainSleep=sleepData?.sleep?.find(s=>s.isMainSleep)||sleepData?.sleep?.[0];
+    if(mainSleep){ex.sleepHours=(mainSleep.minutesAsleep||0)/60;ex.deepMin=mainSleep.levels?.summary?.deep?.minutes||null;}
+    applyExtracted(ex,'fitbit');
+    renderPreview('fitbit-preview-grid',ex);
+    document.getElementById('fitbit-preview').classList.add('show');
+    setStatus('fitbit-status','success','✓ Данные Fitbit загружены успешно');
+    updateImportSummary();
+  }catch(err){setStatus('fitbit-status','error','⚠ '+err.message);}
+}
 async function fetchOura(){
   const token=document.getElementById('oura-token-input').value.trim();
   if(!token){setStatus('oura-status','error','Введите Personal Access Token');return;}
