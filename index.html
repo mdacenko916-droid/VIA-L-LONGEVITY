@@ -2895,6 +2895,10 @@ function applyLang(lang) {
   });
   document.documentElement.lang = lang;
   if (typeof populateAllBookDescs === 'function') populateAllBookDescs();
+  var carouselFrame = document.querySelector('#guides iframe');
+  if (carouselFrame) {
+    try { carouselFrame.contentWindow.postMessage({ action: 'setLang', lang: lang }, '*'); } catch(e) {}
+  }
 }
 
 function switchLang(lang,flag,code,el){
