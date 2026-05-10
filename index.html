@@ -2895,6 +2895,7 @@ function applyLang(lang) {
   });
   document.documentElement.lang = lang;
   if (typeof populateAllBookDescs === 'function') populateAllBookDescs();
+  try { localStorage.setItem('via_lang_lon', lang); } catch(e) {}
   var carouselFrame = document.querySelector('#guides iframe');
   if (carouselFrame) {
     try { carouselFrame.contentWindow.postMessage({ action: 'setLang', lang: lang }, '*'); } catch(e) {}
@@ -3771,7 +3772,7 @@ console.log('[index.html] Parent click handler attached');
 <!-- Book iframe overlay — відкриває реальні книги з /book/ -->
 <div id="book-iframe-overlay" onclick="if(event.target===this)closeBookIframe()">
   <div id="book-iframe-box">
-    <button id="book-iframe-close" onclick="closeBookIframe()">✕ &nbsp;Закрыть</button>
+    <button id="book-iframe-close" onclick="closeBookIframe()">✕</button>
     <iframe id="book-iframe-frame" src="" allowtransparency="true"></iframe>
   </div>
 </div>

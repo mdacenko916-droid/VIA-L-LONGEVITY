@@ -253,7 +253,7 @@ body {
 
 <div class="modal" id="modal">
   <div class="modal-box">
-    <button class="modal-close" id="mclose">✕ &nbsp;Закрыть</button>
+    <button class="modal-close" id="mclose">✕</button>
     <iframe class="bk-frame" id="frame" src="about:blank"></iframe>
   </div>
 </div>
@@ -327,6 +327,7 @@ const dotsEl = document.getElementById('dots');
 const cLabel = document.getElementById('cLabel');
 const tapHint = document.getElementById('tapHint');
 let cur = 0;
+let curLang = 'ru';
 
 // Параметры кольца — наклонённый эллипс
 // Кольцо: горизонтальная ось = rx, вертикальная (перспективная) = ry
@@ -485,11 +486,12 @@ window.addEventListener('resize', render);
 
 // Модалка
 function openBook(file) {
+  const langParam = curLang ? '?lang=' + curLang : '';
   if (window.innerWidth < 768) {
-    try { window.top.location.href = file; } catch(e) { window.location.href = file; }
+    try { window.top.location.href = file + langParam; } catch(e) { window.location.href = file + langParam; }
     return;
   }
-  try { window.parent.postMessage({ action: 'openBook', file: 'book/' + file }, '*'); } catch(e) {}
+  try { window.parent.postMessage({ action: 'openBook', file: 'book/' + file + langParam }, '*'); } catch(e) {}
 }
 function closeModal() {
   const modal = document.getElementById('modal');
@@ -508,11 +510,12 @@ render();
 
 function setLang(lang) {
   if (!UI_T[lang]) lang = 'ru';
+  curLang = lang;
   const u = UI_T[lang];
   document.querySelector('.hd-title').textContent = u.title;
   document.querySelector('.hd-hint').textContent  = u.hint;
   tapHint.textContent = u.tapHint;
-  document.getElementById('mclose').textContent   = u.close;
+  try { localStorage.setItem('via_lang_lon', lang); } catch(e) {}
 
   BOOKS_I18N.forEach((bi, i) => {
     const loc = bi[lang] || bi.ru;
