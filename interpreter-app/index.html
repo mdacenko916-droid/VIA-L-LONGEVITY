@@ -6,6 +6,7 @@
 <title>VIA·L — Інтерпретатор біопоказників</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500&family=Oswald:wght@200;300;400&display=swap" rel="stylesheet">
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
 <style>
 :root {
   --gold:      #c4963c;
@@ -155,6 +156,19 @@ header {
 @keyframes spinY {
   from { transform: rotateY(0deg); }
   to   { transform: rotateY(360deg); }
+}
+
+/* ── GLB MODEL VIEWER ── */
+.dev-stage-glb { perspective: none; }
+model-viewer.dev-glb {
+  width: 110px; height: 140px;
+  background: transparent;
+  --poster-color: transparent;
+  --progress-bar-color: transparent;
+  --progress-mask: transparent;
+}
+.dev-slot:hover model-viewer.dev-glb {
+  filter: drop-shadow(0 0 18px var(--glow));
 }
 
 /* ── WATCH TYPE ── */
@@ -632,10 +646,10 @@ const DEVICES = [
     metrics: ['ВСР / HRV', 'Температура ночі', 'SpO₂', 'Готовність', 'Активність']
   },
   {
-    id: 'apple', name: 'Apple Health', sub: 'Watch / iPhone', type: 'watch', spd: '7s', del: '-1.5s',
+    id: 'apple', name: 'Apple Watch', sub: 'Series 9', type: 'glb',
+    glbPath: '../Интерпретатор%20/Часы/apple_watch_series_9.glb',
     badge: 'best',
-    rim: '#2a2a2e', screen: '#1c1c1e', face: '#111114', back: '#222226', band: '#1a1a1e',
-    glow: 'rgba(180,190,210,0.3)',
+    glow: 'rgba(180,190,210,0.35)',
     metrics: ['ВСР / HRV', 'Сон', 'ЧСС спокою', 'VO₂max', 'ECG']
   },
   {
@@ -699,8 +713,32 @@ const DEVICES = [
 let selectedDevice = null;
 
 function buildDeviceHTML(d) {
-  let bodyHTML = '';
+  const metricsHTML = d.metrics.map(m => `<li>${m}</li>`).join('');
+  const badgeClass = d.badge === 'best' ? 'badge-best' : 'badge-good';
+  const badgeText = d.badge === 'best' ? '★ Найкращий' : 'Хороший';
 
+  if (d.type === 'glb') {
+    return `
+    <div class="dev-slot" data-id="${d.id}" onclick="selectDevice('${d.id}')">
+      <div class="dev-stage dev-stage-glb" style="--glow:${d.glow}">
+        <ul class="dev-metrics">
+          <div class="dev-metrics-list">${metricsHTML}</div>
+        </ul>
+        <model-viewer class="dev-glb"
+          src="${d.glbPath}"
+          auto-rotate rotation-per-second="22deg"
+          camera-orbit="0deg 80deg auto"
+          shadow-intensity="0.6" exposure="1.0"
+          style="--progress-bar-color:transparent;--poster-color:transparent;">
+        </model-viewer>
+      </div>
+      <div class="dev-label">${d.name}</div>
+      <div class="dev-sub">${d.sub}</div>
+      <span class="dev-badge ${badgeClass}">${badgeText}</span>
+    </div>`;
+  }
+
+  let bodyHTML = '';
   if (d.type === 'ring') {
     bodyHTML = `<div class="dev-ring" style="--ring-color:${d.ringColor};"></div>`;
   } else if (d.type === 'watch') {
@@ -728,10 +766,6 @@ function buildDeviceHTML(d) {
         <div class="d-band-b"></div>
       </div>`;
   }
-
-  const metricsHTML = d.metrics.map(m => `<li>${m}</li>`).join('');
-  const badgeClass = d.badge === 'best' ? 'badge-best' : 'badge-good';
-  const badgeText = d.badge === 'best' ? '★ Найкращий' : 'Хороший';
 
   return `
     <div class="dev-slot" data-id="${d.id}" onclick="selectDevice('${d.id}')">
