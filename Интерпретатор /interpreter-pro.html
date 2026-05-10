@@ -603,23 +603,38 @@ input.oura-input::-webkit-slider-thumb{
 .btn-back:hover{border-color:var(--b2);color:var(--t2);}
 
 /* ══ RESULTS ═════════════════════════════════════════════ */
-.result-header{text-align:center;padding:36px 24px 28px;}
-.result-eyebrow{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;opacity:.8;}
-.result-title{font-family:'Playfair Display',serif;font-size:clamp(20px,4vw,30px);font-weight:400;color:var(--t1);line-height:1.2;margin-bottom:8px;}
-.result-sub{font-size:13px;color:var(--t2);line-height:1.6;}
+.result-header{text-align:center;padding:32px 24px 28px;position:relative;overflow:hidden;}
+.result-header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(196,154,60,.07),transparent 70%);pointer-events:none;}
+.result-eyebrow{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:16px;opacity:.7;}
+.result-title{font-family:'Playfair Display',serif;font-size:clamp(20px,4vw,28px);font-weight:400;color:var(--t1);line-height:1.2;margin-bottom:8px;}
+.result-sub{font-size:13px;color:var(--t2);line-height:1.65;max-width:280px;margin:0 auto;}
 
-/* SCORE RING — Oura style */
-.score-wrap{display:flex;justify-content:center;margin:28px 0 0;}
-.score-ring-outer{position:relative;width:120px;height:120px;}
-.score-svg{width:120px;height:120px;transform:rotate(-90deg);}
-.score-track{fill:none;stroke:var(--surface-3);stroke-width:6;}
-.score-arc{fill:none;stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.16,1,.3,1),stroke .4s;}
+/* SCORE RING */
+.score-wrap{display:flex;flex-direction:column;align-items:center;margin:28px 0 0;gap:14px;}
+.score-ring-outer{position:relative;width:160px;height:160px;}
+.score-svg{width:160px;height:160px;transform:rotate(-90deg);}
+.score-track{fill:none;stroke:rgba(255,255,255,.06);stroke-width:8;}
+.score-arc{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 1s cubic-bezier(.16,1,.3,1),stroke .4s;}
 .score-center{
   position:absolute;inset:0;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
 }
-.score-num{font-family:'DM Mono',monospace;font-size:36px;font-weight:300;line-height:1;}
-.score-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-top:3px;}
+.score-num{font-family:'DM Mono',monospace;font-size:46px;font-weight:300;line-height:1;letter-spacing:-1px;}
+.score-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-top:4px;}
+.score-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 14px;border-radius:20px;
+  font-size:11px;font-weight:500;letter-spacing:.5px;
+  transition:all .4s;
+}
+.score-badge.ok{background:rgba(78,204,163,.12);color:#4ECCA3;border:1px solid rgba(78,204,163,.2);}
+.score-badge.warn{background:rgba(245,166,35,.12);color:#F5A623;border:1px solid rgba(245,166,35,.2);}
+.score-badge.alert{background:rgba(255,107,138,.12);color:#FF6B8A;border:1px solid rgba(255,107,138,.2);}
+.score-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+.result-steps-row{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:20px;padding-top:20px;border-top:1px solid var(--b1);}
+.result-step-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);opacity:.25;}
+.result-step-dot.done{opacity:1;}
+.result-steps-label{font-size:10px;color:var(--t3);letter-spacing:2px;text-transform:uppercase;margin-left:4px;}
 
 /* DOCTOR ALERT */
 .doctor-alert{
@@ -1065,9 +1080,9 @@ footer{
       <svg viewBox="0 0 24 24"><path d="M12 1C5.9 1 1 5.9 1 12s4.9 11 11 11 11-4.9 11-11S18.1 1 12 1zm0 4c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm3 12H9v-1l1-1v-4l-1-1v-1h4v6l1 1v1z"/></svg>
     </div>
     <div class="gate-logo">VIA—L</div>
-    <div class="gate-sub" data-t="gate_sub">Basic Access</div>
-    <div class="gate-title" data-t="gate_title">Введите код доступа</div>
-    <div class="gate-desc" data-t="gate_desc">Код прилагается к вашему гайду VIA‑L. Проверьте письмо после покупки.</div>
+    <div class="gate-sub" data-t="gate_sub">Pro Access · $29 / міс</div>
+    <div class="gate-title" data-t="gate_title">Введіть код доступу</div>
+    <div class="gate-desc" data-t="gate_desc">Код надсилається на email після оплати. Ще не маєте Pro? <a href="../interpreter-app/index.html#plans" style="color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(196,154,60,.4);">Перейти до планів →</a></div>
     <input class="gate-input" id="gateInput" type="password" maxlength="20" placeholder="· · · · · · · ·" autocomplete="off">
     <div class="gate-error" id="gateError" data-t="gate_error">Неверный код. Проверьте письмо.</div>
     <button class="gate-btn" onclick="checkCode()"><span data-t="gate_btn">Войти →</span></button>
@@ -1680,7 +1695,7 @@ footer{
       <div class="progress-dot " id="pd13"></div>
       <div class="progress-dot " id="pd14"></div>
     </div>
-    <div class="progress-lbl" id="progressLbl">Шаг 1 из 5</div>
+    <div class="progress-lbl" id="progressLbl">Pro · Крок 1 з 15</div>
   </div>
 
   <!-- STEP 0: PROFILE (NEW) -->
@@ -2378,15 +2393,27 @@ footer{
       <p class="result-sub" id="res-subtitle"></p>
       <div class="score-wrap">
         <div class="score-ring-outer">
-          <svg class="score-svg" viewBox="0 0 120 120">
-            <circle class="score-track" cx="60" cy="60" r="50"/>
-            <circle class="score-arc" id="scoreArc" cx="60" cy="60" r="50"
-              stroke-dasharray="314" stroke-dashoffset="314"/>
+          <svg class="score-svg" viewBox="0 0 160 160">
+            <circle class="score-track" cx="80" cy="80" r="67"/>
+            <circle class="score-arc" id="scoreArc" cx="80" cy="80" r="67"
+              stroke-dasharray="421" stroke-dashoffset="421"/>
           </svg>
           <div class="score-center">
             <div class="score-num" id="scoreNum">—</div>
-            <div class="score-lbl" data-t="readiness">Готовность</div>
+            <div class="score-lbl" data-t="readiness">Готовність</div>
           </div>
+        </div>
+        <div class="score-badge ok" id="scoreBadge">Добре</div>
+        <div class="result-steps-row">
+          <div class="result-step-dot done"></div><div class="result-step-dot done"></div>
+          <div class="result-step-dot done"></div><div class="result-step-dot done"></div>
+          <div class="result-step-dot done"></div><div class="result-step-dot done"></div>
+          <div class="result-step-dot done"></div><div class="result-step-dot done"></div>
+          <div class="result-step-dot done"></div><div class="result-step-dot done"></div>
+          <div class="result-step-dot done"></div><div class="result-step-dot done"></div>
+          <div class="result-step-dot done"></div><div class="result-step-dot done"></div>
+          <div class="result-step-dot done"></div>
+          <span class="result-steps-label">Pro · 15 кроків</span>
         </div>
       </div>
     </div>
@@ -2849,7 +2876,7 @@ function goTo(n){
 }
 function updateProgress(n){
   const lbl=document.getElementById('progressLbl');
-  if(lbl)lbl.textContent=n==='result'?t('your_result'):t('step_of').replace('{n}',n+1);
+  if(lbl)lbl.textContent=n==='result'?'Pro · '+t('your_result'):'Pro · '+(lang==='ru'?'Шаг '+(n+1)+' из 15':lang==='en'?'Step '+(n+1)+' of 15':lang==='es'?'Paso '+(n+1)+' de 15':'Крок '+(n+1)+' з 15');
   for(let i=0;i<15;i++){
     const d=document.getElementById('pd'+i);if(!d)continue;
     d.className='progress-dot';
@@ -2878,13 +2905,23 @@ function getChecked(ids){return ids.filter(id=>document.getElementById(id)?.chec
 // ══ SCORE ARC ═════════════════════════════════════════════
 function setScore(score,type){
   const arc=document.getElementById('scoreArc');
-  const circ=314;
+  const circ=421;
   arc.style.strokeDashoffset=circ-(circ*score/100);
   const colors={ok:'#4ECCA3',warn:'#F5A623',alert:'#FF6B8A'};
   arc.style.stroke=colors[type]||colors.ok;
-  arc.style.filter=`drop-shadow(0 0 8px ${colors[type]||colors.ok}66)`;
+  arc.style.filter=`drop-shadow(0 0 10px ${colors[type]||colors.ok}55)`;
   document.getElementById('scoreNum').style.color=colors[type]||colors.ok;
-  document.getElementById('scoreNum').style.textShadow=`0 0 20px ${colors[type]||colors.ok}66`;
+  document.getElementById('scoreNum').style.textShadow=`0 0 24px ${colors[type]||colors.ok}55`;
+  const badge=document.getElementById('scoreBadge');
+  if(badge){
+    const labels={
+      ok:{uk:'Добре',ru:'Хорошо',en:'Good',es:'Bien'},
+      warn:{uk:'Увага',ru:'Внимание',en:'Attention',es:'Atención'},
+      alert:{uk:'Сигнал',ru:'Сигнал',en:'Alert',es:'Alerta'}
+    };
+    badge.className='score-badge '+type;
+    badge.textContent=(labels[type]||labels.ok)[lang]||labels[type||'ok'].uk;
+  }
 }
 
 // ══ PDF REPORT ════════════════════════════════════════════
@@ -3534,10 +3571,62 @@ function _showResultsInner(){
     ins.push({t:'warn',i:'✈️',h:lang==='ru'?'Перелёт нарушает циркадный ритм':'Travel Disrupts Circadian Rhythm',b:lang==='ru'?'Смена часовых поясов — сильный стрессор для гормональной системы. HRV и сон снижаются на 3–7 дней после перелёта.':'Timezone changes are powerful hormonal stressors. HRV and sleep decrease for 3–7 days after travel.'});
     score-=8;
   }
-  l:lang==='ru'?(isMale?['Белок 1.6–2 г/кг: тестостерон защищает мышцы','Цинк 25–30 мг/день — поддержка тестостерона','Витамин D3 — проверьте уровень','Омега-3 — снижают воспаление']:['Белок 1.6–2 г/кг: эстроген защищает мышцы','Цинк + селен — поддержка щитовидной','Витамин D3 — проверьте уровень','Куркума, ягоды, зелёный чай']):
-  lang==='uk'?(isMale?['Білок 1.6–2 г/кг','Цинк 25–30 мг/день','Вітамін D3','Омега-3']:['Білок 1.6–2 г/кг','Цинк + селен','Вітамін D3','Куркума, ягоди']):
-  lang==='en'?(isMale?['Protein 1.6–2 g/kg: testosterone protects muscle','Zinc 25–30 mg/day — testosterone support','Vitamin D3 — check levels','Omega-3 — reduces inflammation']:['Protein 1.6–2 g/kg','Zinc + selenium — thyroid support','Vitamin D3 — check levels','Turmeric, berries, green tea']):
-  (isMale?['Proteína 1.6–2 g/kg','Zinc 25–30 mg/día','Vitamina D3','Omega-3']:['Proteína 1.6–2 g/kg','Zinc + selenio','Vitamina D3','Cúrcuma, bayas'])};
+  // PRO: Hormone symptoms (step 7)
+  const hs = data.horm_symptoms||[];
+  const harmCount = hs.filter(s=>s!=='none_h'&&s!=='none_hm').length;
+  if(harmCount>=3||data.horm_intensity==='severe'){
+    ins.push({t:'alert',i:'🧬',
+      h:lang==='ru'?(isMale?'Выраженные симптомы андропаузы':'Выраженные симптомы дефицита гормонов'):
+        lang==='uk'?(isMale?'Виражені симптоми андропаузи':'Виражені симптоми дефіциту гормонів'):
+        lang==='en'?(isMale?'Severe Andropause Symptoms':'Severe Hormone Deficiency Symptoms'):(isMale?'Síntomas severos de andropausia':'Síntomas severos de déficit hormonal'),
+      b:lang==='ru'?(isMale?'Множественные симптомы — хроническая усталость, снижение либидо, изменение настроения — указывают на дефицит тестостерона. Рекомендуется сдать гормональную панель.':'Несколько симптомов одновременно — признак значительного гормонального дисбаланса. Необходима консультация с гинекологом-эндокринологом.'):
+        lang==='en'?(isMale?'Multiple symptoms — chronic fatigue, reduced libido, mood changes — indicate testosterone deficiency. Hormonal panel recommended.':'Multiple concurrent symptoms indicate significant hormonal imbalance. Gynaecologist-endocrinologist consultation required.'):
+        lang==='uk'?(isMale?'Численні симптоми вказують на дефіцит тестостерону. Рекомендується гормональна панель.':'Декілька симптомів одночасно — ознака гормонального дисбалансу.'):
+        (isMale?'Múltiples síntomas indican deficiencia de testosterona.':'Múltiples síntomas indican desequilibrio hormonal significativo.')});
+    score-=12;doc=true;docR.push(lang==='ru'?'выраженные гормональные симптомы':lang==='en'?'severe hormonal symptoms':'виражені гормональні симптоми');
+  } else if(harmCount>=1||data.horm_intensity==='moderate'){
+    ins.push({t:'warn',i:'🧬',
+      h:lang==='ru'?'Гормональные симптомы требуют внимания':lang==='uk'?'Гормональні симптоми потребують уваги':lang==='en'?'Hormonal Symptoms Need Attention':'Síntomas hormonales requieren atención',
+      b:lang==='ru'?'Наблюдаемые симптомы могут быть связаны с началом гормонального перехода. Рекомендуется периодический мониторинг.':lang==='en'?'Observed symptoms may indicate the beginning of a hormonal transition. Periodic monitoring recommended.':'Симптоми можуть свідчити про початок гормонального переходу.'});
+    score-=7;
+  }
+  recs['hormone_support']={
+    h:lang==='ru'?(isMale?'🧬 Питание для поддержки тестостерона':'🧬 Питание для гормонального баланса'):
+      lang==='uk'?(isMale?'🧬 Харчування для тестостерону':'🧬 Харчування для гормонального балансу'):
+      lang==='en'?(isMale?'🧬 Testosterone Support Nutrition':'🧬 Hormonal Balance Nutrition'):(isMale?'🧬 Nutrición para testosterona':'🧬 Nutrición hormonal'),
+    l:lang==='ru'?(isMale?['Белок 1.6–2 г/кг: тестостерон защищает мышечную массу','Цинк 25–30 мг/день — поддержка тестостерона','Витамин D3 + К2 — проверьте уровень','Омега-3 EPA+DHA 2 г/сут — снижают воспаление']:['Белок 1.6–2 г/кг: эстроген защищает мышцы и кости','Цинк + селен — поддержка щитовидной и репродуктивной','Витамин D3 2000+ МЕ — проверьте уровень','Куркума, ягоды, зелёный чай — фитоэстрогены и антиоксиданты']):
+    lang==='uk'?(isMale?['Білок 1.6–2 г/кг','Цинк 25–30 мг/день','Вітамін D3 + К2','Омега-3 2 г/добу']:['Білок 1.6–2 г/кг','Цинк + селен','Вітамін D3 2000+ МЕ','Куркума, ягоди, зелений чай']):
+    lang==='en'?(isMale?['Protein 1.6–2 g/kg: testosterone protects muscle','Zinc 25–30 mg/day — testosterone support','Vitamin D3 + K2 — check levels','Omega-3 EPA+DHA 2 g/day — reduces inflammation']:['Protein 1.6–2 g/kg: estrogen protects muscle & bone','Zinc + selenium — thyroid & reproductive support','Vitamin D3 2000+ IU — check levels','Turmeric, berries, green tea — phytoestrogens & antioxidants']):
+    (isMale?['Proteína 1.6–2 g/kg','Zinc 25–30 mg/día','Vitamina D3 + K2','Omega-3 2 g/día']:['Proteína 1.6–2 g/kg','Zinc + selenio','Vitamina D3 2000+ UI','Cúrcuma, bayas, té verde'])
+  };
+
+  // PRO: Cycle/PMS (step 12)
+  if(!isMale){
+    if(data.pms==='severe'||data.last_period==='year'){
+      ins.push({t:'alert',i:'🌙',
+        h:lang==='ru'?'Выраженный ПМС или менопауза':lang==='uk'?'Виражений ПМС або менопауза':lang==='en'?'Severe PMS or Menopause':'SPM severo o menopausia',
+        b:lang==='ru'?'Выраженный ПМС указывает на дефицит прогестерона. Отсутствие менструаций >12 мес — постменопауза. Рекомендуется гинеколог-эндокринолог.':lang==='en'?'Severe PMS indicates progesterone deficiency. Absence >12 months = postmenopause. Gynaecologist recommended.':'Виражений ПМС вказує на дефіцит прогестерону або постменопаузу.'});
+      score-=10;doc=true;docR.push(lang==='ru'?'ПМС/гормональный переход':lang==='en'?'PMS/hormonal transition':'ПМС/гормональний перехід');
+    } else if(data.pms==='moderate'||data.cycle_status==='irregular'){
+      ins.push({t:'warn',i:'🌙',
+        h:lang==='ru'?'Нерегулярный цикл или ПМС':lang==='uk'?'Нерегулярний цикл або ПМС':lang==='en'?'Irregular Cycle or PMS':'Ciclo irregular o SPM',
+        b:lang==='ru'?'Нерегулярный цикл или умеренный ПМС — признаки колебаний прогестерона и эстрогена.':lang==='en'?'Irregular cycle or moderate PMS — signs of progesterone and estrogen fluctuations.':'Нерегулярний цикл — ознака коливань прогестерону та естрогену.'});
+      score-=6;
+    }
+  }
+
+  // PRO: Meds interactions (step 10)
+  if(data.meds==='antidep'){
+    ins.push({t:'warn',i:'💊',
+      h:lang==='ru'?'Антидепрессанты влияют на HRV и либидо':lang==='uk'?'Антидепресанти впливають на HRV та лібідо':lang==='en'?'Antidepressants Affect HRV & Libido':'Antidepresivos afectan VFC y libido',
+      b:lang==='ru'?'Многие антидепрессанты снижают HRV и либидо. Добавьте Омега-3 и Магний — частично компенсируют этот эффект. Информируйте назначающего врача о симптомах.':lang==='en'?'Many antidepressants reduce HRV and libido. Add Omega-3 and Magnesium — partially counteract this effect.':'Багато антидепресантів знижують HRV та лібідо. Омега-3 та магній частково компенсують цей ефект.'});
+  }
+  if(data.meds==='contraceptive'){
+    ins.push({t:'warn',i:'💊',
+      h:lang==='ru'?'КОК снижают B6, магний, цинк':lang==='uk'?'КОК знижують B6, магній, цинк':lang==='en'?'OCP Depletes B6, Magnesium, Zinc':'Anticonceptivos reducen B6, magnesio, zinc',
+      b:lang==='ru'?'Оральные контрацептивы истощают B6, B12, фолиевую кислоту, магний и цинк. Добавьте мультивитамин с активными формами B-витаминов.':lang==='en'?'Oral contraceptives deplete B6, B12, folate, magnesium and zinc. Add a multivitamin with active B-vitamin forms.':'КОК виснажують B6, B12, фолат, магній та цинк. Додайте мультивітамін з активними формами вітамінів B.'});
+    score-=4;
+  }
 
   score=Math.max(10,Math.min(100,score));
   let type='ok',title,sub;
