@@ -766,6 +766,8 @@ footer{
 .source-icon.whoop{background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.12);}
 .source-icon.xiaomi{background:rgba(255,106,0,.12);border:1px solid rgba(255,106,0,.2);}
 .source-icon.samsung{background:rgba(20,114,246,.12);border:1px solid rgba(20,114,246,.2);}
+.source-icon.withings{background:rgba(0,168,232,.12);border:1px solid rgba(0,168,232,.2);}
+.source-icon.amazfit{background:rgba(0,190,170,.12);border:1px solid rgba(0,190,170,.2);}
 
 .source-info{flex:1;}
 .source-name{font-size:14px;font-weight:500;color:var(--t1);margin-bottom:2px;}
@@ -1499,6 +1501,107 @@ footer{
         </div>
         <button class="apply-btn" onclick="applyXiaomiManual()">Применить данные</button>
         <div class="import-status" id="xiaomi-manual-status"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WITHINGS -->
+  <div class="source-card" id="card-withings">
+    <div class="source-header" onclick="toggleCard('withings')">
+      <div class="source-icon withings">🔵</div>
+      <div class="source-info">
+        <div class="source-name">Withings · Health Mate</div>
+        <div class="source-desc">ЧСС · Сон · SpO₂ · ВСР · Шаги · Вес</div>
+      </div>
+      <span class="source-badge badge-good">Хороший</span>
+      <span class="source-chevron">›</span>
+    </div>
+    <div class="source-body">
+      <div class="method-tabs">
+        <button class="method-tab active" onclick="setMethod('withings','file')">📁 Файл (CSV)</button>
+        <button class="method-tab" onclick="setMethod('withings','manual')">✏️ Вручную</button>
+      </div>
+      <div id="withings-file">
+        <div style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;">
+          <b style="color:var(--t1);">Health Mate App</b> → Профиль → Настройки → Экспортировать данные → CSV<br>
+          <b style="color:var(--t1);">Или через сайт:</b> account.withings.com → Настройки → Скачать данные<br>
+          <span style="color:var(--t3);margin-top:4px;display:block;">• <b>heart_rate.csv</b> — ЧСС покоя и ВСР<br>• <b>sleep.csv</b> — сон и стадии<br>• <b>activities.csv</b> — шаги, калории</span>
+        </div>
+        <div class="drop-zone" id="withings-drop" ondragover="dragOver(event,'withings-drop')" ondragleave="dragLeave('withings-drop')" ondrop="dropFile(event,'withings')">
+          <input type="file" accept=".csv,.json" onchange="handleFile(this,'withings')">
+          <div class="drop-icon">📂</div>
+          <div class="drop-title">Перетащите файл или нажмите</div>
+          <div class="drop-hint">heart_rate · sleep · activities (CSV)</div>
+        </div>
+        <div class="import-status" id="withings-status"></div>
+        <div class="imported-preview" id="withings-preview">
+          <div style="font-size:11px;color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">✓ Файл обработан</div>
+          <div class="preview-grid" id="withings-preview-grid"></div>
+        </div>
+      </div>
+      <div id="withings-manual" style="display:none;">
+        <div style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:10px;">Введите показатели из Health Mate вручную:</div>
+        <div class="manual-grid">
+          <div class="manual-field"><label>ЧСС в покое (уд/мин)</label><input type="number" id="wi-rhr" placeholder="62" min="30" max="120"></div>
+          <div class="manual-field"><label>ВСР / HRV (мс)</label><input type="number" id="wi-hrv" placeholder="55" min="0" max="300"></div>
+          <div class="manual-field"><label>Сон (часы)</label><input type="number" id="wi-sleep" placeholder="7.5" min="0" max="24" step="0.1"></div>
+          <div class="manual-field"><label>Глубокий сон (мин)</label><input type="number" id="wi-deep" placeholder="85" min="0" max="300"></div>
+          <div class="manual-field"><label>SpO₂ (%)</label><input type="number" id="wi-spo2" placeholder="97" min="80" max="100"></div>
+          <div class="manual-field"><label>Шаги (в день)</label><input type="number" id="wi-steps" placeholder="9000" min="0" max="100000"></div>
+        </div>
+        <button class="apply-btn" onclick="applyWithingsManual()">Применить данные</button>
+        <div class="import-status" id="withings-manual-status"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AMAZFIT -->
+  <div class="source-card" id="card-amazfit">
+    <div class="source-header" onclick="toggleCard('amazfit')">
+      <div class="source-icon amazfit">⚡</div>
+      <div class="source-info">
+        <div class="source-name">Amazfit · Zepp App</div>
+        <div class="source-desc">ЧСС · Сон · SpO₂ · Стресс · PAI · ВСР</div>
+      </div>
+      <span class="source-badge badge-good">Хороший</span>
+      <span class="source-chevron">›</span>
+    </div>
+    <div class="source-body">
+      <div class="method-tabs">
+        <button class="method-tab active" onclick="setMethod('amazfit','file')">📁 Файл (CSV/JSON)</button>
+        <button class="method-tab" onclick="setMethod('amazfit','manual')">✏️ Вручную</button>
+      </div>
+      <div id="amazfit-file">
+        <div style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;">
+          <b style="color:var(--t1);">Zepp App</b> → Профиль → Настройки → Экспорт данных о здоровье → ZIP → CSV<br>
+          <span style="color:var(--t3);margin-top:4px;display:block;">• <b>heart_rate.csv</b> — ЧСС и ВСР<br>• <b>sleep.csv</b> — сон и стадии<br>• <b>sport.csv</b> — активность, PAI</span>
+        </div>
+        <div class="drop-zone" id="amazfit-drop" ondragover="dragOver(event,'amazfit-drop')" ondragleave="dragLeave('amazfit-drop')" ondrop="dropFile(event,'amazfit')">
+          <input type="file" accept=".csv,.json" onchange="handleFile(this,'amazfit')">
+          <div class="drop-icon">📂</div>
+          <div class="drop-title">Перетащите файл или нажмите</div>
+          <div class="drop-hint">heart_rate · sleep · sport (CSV / JSON)</div>
+        </div>
+        <div class="import-status" id="amazfit-status"></div>
+        <div class="imported-preview" id="amazfit-preview">
+          <div style="font-size:11px;color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">✓ Файл обработан</div>
+          <div class="preview-grid" id="amazfit-preview-grid"></div>
+        </div>
+      </div>
+      <div id="amazfit-manual" style="display:none;">
+        <div style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:10px;">Введите показатели из Zepp вручную:</div>
+        <div class="manual-grid">
+          <div class="manual-field"><label>ЧСС в покое (уд/мин)</label><input type="number" id="am-rhr" placeholder="64" min="30" max="120"></div>
+          <div class="manual-field"><label>ВСР / HRV (мс)</label><input type="number" id="am-hrv" placeholder="48" min="0" max="300"></div>
+          <div class="manual-field"><label>Сон (часы)</label><input type="number" id="am-sleep" placeholder="7.0" min="0" max="24" step="0.1"></div>
+          <div class="manual-field"><label>Глубокий сон (мин)</label><input type="number" id="am-deep" placeholder="80" min="0" max="300"></div>
+          <div class="manual-field"><label>SpO₂ (%)</label><input type="number" id="am-spo2" placeholder="97" min="80" max="100"></div>
+          <div class="manual-field"><label>Стресс (0–100)</label><input type="number" id="am-stress" placeholder="30" min="0" max="100"></div>
+          <div class="manual-field"><label>PAI (очки)</label><input type="number" id="am-pai" placeholder="50" min="0" max="200"></div>
+          <div class="manual-field"><label>Шаги (в день)</label><input type="number" id="am-steps" placeholder="8000" min="0" max="100000"></div>
+        </div>
+        <button class="apply-btn" onclick="applyAmazfitManual()">Применить данные</button>
+        <div class="import-status" id="amazfit-manual-status"></div>
       </div>
     </div>
   </div>
@@ -3541,6 +3644,8 @@ function setMethod(source,method){
   else if(source==='samsung'){document.getElementById('samsung-file').style.display=method==='file'?'block':'none';document.getElementById('samsung-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
   else if(source==='whoop'){document.getElementById('whoop-file').style.display=method==='file'?'block':'none';document.getElementById('whoop-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
   else if(source==='xiaomi'){document.getElementById('xiaomi-file').style.display=method==='file'?'block':'none';document.getElementById('xiaomi-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
+  else if(source==='withings'){document.getElementById('withings-file').style.display=method==='file'?'block':'none';document.getElementById('withings-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
+  else if(source==='amazfit'){document.getElementById('amazfit-file').style.display=method==='file'?'block':'none';document.getElementById('amazfit-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
 }
 function dragOver(e,id){e.preventDefault();document.getElementById(id).classList.add('dragover');}
 function dragLeave(id){document.getElementById(id).classList.remove('dragover');}
@@ -3563,7 +3668,7 @@ function processFile(file,source){
       let ex={};
       if(file.name.endsWith('.json'))ex=source==='fitbit'?parseFitbitJSON(content):source==='xiaomi'?parseXiaomiJSON(content):parseOuraJSON(content);
       else if(file.name.endsWith('.xml'))ex=parseAppleXML(content);
-      else if(file.name.endsWith('.csv'))ex=source==='samsung'?parseSamsungCSV(content,file.name):source==='whoop'?parseWhoopCSV(content,file.name):source==='xiaomi'?parseXiaomiCSV(content,file.name):parseCSV(content,source);
+      else if(file.name.endsWith('.csv'))ex=source==='samsung'?parseSamsungCSV(content,file.name):source==='whoop'?parseWhoopCSV(content,file.name):source==='xiaomi'?parseXiaomiCSV(content,file.name):source==='withings'?parseWithingsCSV(content,file.name):source==='amazfit'?parseAmazfitCSV(content,file.name):parseCSV(content,source);
       applyExtracted(ex,source);
       renderPreview(gid,ex);
       document.getElementById(pid).classList.add('show');
@@ -3890,5 +3995,96 @@ function applyXiaomiManual(){
 }
 function applyManual(){const fields={hrv:'m-hrv',rhr:'m-rhr',sleepHours:'m-sleep',deepMin:'m-deep',tempDev:'m-temp',vo2:'m-vo2'};let n=0;Object.keys(fields).forEach(k=>{const v=parseFloat(document.getElementById(fields[k])?.value);if(!isNaN(v)){importedData[k]=v;n++;}});importedData.source='apple-manual';if(n>0){setStatus('manual-status','success',`✓ Применено ${n} показателей`);updateImportSummary();}else setStatus('manual-status','error','Введите хотя бы один показатель');}
 function applyManualFull(){const fields={hrv:'mm-hrv',rhr:'mm-rhr',sleepHours:'mm-sleep',deepMin:'mm-deep',tempDev:'mm-temp',energy:'mm-energy'};let n=0;Object.keys(fields).forEach(k=>{const v=parseFloat(document.getElementById(fields[k])?.value);if(!isNaN(v)){importedData[k]=v;n++;}});importedData.source='manual';if(n>0){setStatus('manual-full-status','success',`✓ Применено ${n} показателей`);updateImportSummary();}else setStatus('manual-full-status','error','Введите хотя бы один показатель');}
+
+function parseWithingsCSV(text,filename){
+  const out={};
+  try{
+    const fn=(filename||'').toLowerCase();
+    const lines=text.split('\n').filter(l=>l.trim()&&!l.startsWith('#'));
+    if(!lines.length)return out;
+    const header=lines[0].split(',').map(h=>h.trim().replace(/^"+|"+$/g,'').toLowerCase());
+    const rows=lines.slice(1).map(l=>l.split(',').map(v=>v.trim().replace(/^"+|"+$/g,'')));
+    const col=k=>header.findIndex(h=>h.includes(k));
+    if(fn.includes('heart_rate')||col('heart_rate')>=0||col('bpm')>=0){
+      const hc=col('bpm')>=0?col('bpm'):col('heart_rate');
+      const vals=rows.map(r=>parseFloat(r[hc])).filter(v=>!isNaN(v)&&v>30&&v<200);
+      if(vals.length)out.rhr=Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+      const hrvc=col('sdnn')>=0?col('sdnn'):col('rmssd')>=0?col('rmssd'):col('hrv');
+      if(hrvc>=0){const hv=rows.map(r=>parseFloat(r[hrvc])).filter(v=>!isNaN(v)&&v>0);if(hv.length)out.hrv=Math.round(hv.reduce((a,b)=>a+b,0)/hv.length);}
+    }
+    if(fn.includes('sleep')||col('duration_total')>=0||col('sleep_score')>=0){
+      const dur=col('duration_total')>=0?col('duration_total'):col('sleep_duration');
+      if(dur>=0){const v=parseFloat(rows[rows.length-1]?.[dur]);if(!isNaN(v))out.sleepHours=parseFloat((v/3600).toFixed(1));}
+      const deep=col('deepsleepduration')>=0?col('deepsleepduration'):col('deep_sleep');
+      if(deep>=0){const v=parseFloat(rows[rows.length-1]?.[deep]);if(!isNaN(v))out.deepMin=Math.round(v/60);}
+      const spo2c=col('spo2')>=0?col('spo2'):col('sp02');
+      if(spo2c>=0){const v=parseFloat(rows[rows.length-1]?.[spo2c]);if(!isNaN(v)&&v>70)out.spo2=Math.round(v);}
+    }
+    if(fn.includes('activities')||fn.includes('activity')||col('steps')>=0){
+      const sc=col('steps');
+      if(sc>=0){const v=parseInt(rows[rows.length-1]?.[sc]);if(!isNaN(v)&&v>0)out.energy=Math.min(10,Math.round(v/1200));}
+    }
+  }catch(e){console.error('parseWithingsCSV error',e);}
+  return out;
+}
+
+function parseAmazfitCSV(text,filename){
+  const out={};
+  try{
+    const fn=(filename||'').toLowerCase();
+    const lines=text.split('\n').filter(l=>l.trim()&&!l.startsWith('#'));
+    if(!lines.length)return out;
+    const header=lines[0].split(',').map(h=>h.trim().replace(/^"+|"+$/g,'').toLowerCase());
+    const rows=lines.slice(1).map(l=>l.split(',').map(v=>v.trim().replace(/^"+|"+$/g,'')));
+    const col=k=>header.findIndex(h=>h.includes(k));
+    if(fn.includes('heart_rate')||fn.includes('heartrate')||col('heartrate')>=0||col('bpm')>=0){
+      const hc=col('bpm')>=0?col('bpm'):col('heartrate')>=0?col('heartrate'):col('heart_rate');
+      if(hc>=0){const vals=rows.map(r=>parseFloat(r[hc])).filter(v=>!isNaN(v)&&v>30&&v<200);if(vals.length)out.rhr=Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);}
+      const hrvc=col('hrv')>=0?col('hrv'):col('sdnn');
+      if(hrvc>=0){const hv=rows.map(r=>parseFloat(r[hrvc])).filter(v=>!isNaN(v)&&v>0);if(hv.length)out.hrv=Math.round(hv.reduce((a,b)=>a+b,0)/hv.length);}
+    }
+    if(fn.includes('sleep')||col('total_sleep')>=0||col('sleep_score')>=0){
+      const dur=col('total_sleep')>=0?col('total_sleep'):col('sleep_duration');
+      if(dur>=0){const v=parseFloat(rows[rows.length-1]?.[dur]);if(!isNaN(v))out.sleepHours=v>100?parseFloat((v/60).toFixed(1)):parseFloat(v.toFixed(1));}
+      const deep=col('deep_sleep')>=0?col('deep_sleep'):col('deepsleep');
+      if(deep>=0){const v=parseFloat(rows[rows.length-1]?.[deep]);if(!isNaN(v))out.deepMin=v>300?Math.round(v/60):Math.round(v);}
+      const spo2c=col('spo2')>=0?col('spo2'):col('blood_oxygen');
+      if(spo2c>=0){const v=parseFloat(rows[rows.length-1]?.[spo2c]);if(!isNaN(v)&&v>70)out.spo2=Math.round(v);}
+      const strc=col('stress');
+      if(strc>=0){const v=parseFloat(rows[rows.length-1]?.[strc]);if(!isNaN(v))out.stress=Math.round(v);}
+    }
+    if(fn.includes('sport')||fn.includes('activit')||col('steps')>=0||col('pai')>=0){
+      const sc=col('steps');if(sc>=0){const v=parseInt(rows[rows.length-1]?.[sc]);if(!isNaN(v)&&v>0)out.energy=Math.min(10,Math.round(v/1200));}
+      const pc=col('pai');if(pc>=0){const v=parseFloat(rows[rows.length-1]?.[pc]);if(!isNaN(v)&&v>0)out.readiness=Math.min(100,Math.round(v*1.4));}
+    }
+  }catch(e){console.error('parseAmazfitCSV error',e);}
+  return out;
+}
+
+function applyWithingsManual(){
+  const ex={};
+  const map={hrv:'wi-hrv',rhr:'wi-rhr',sleepHours:'wi-sleep',deepMin:'wi-deep',spo2:'wi-spo2'};
+  Object.keys(map).forEach(k=>{const v=parseFloat(document.getElementById(map[k])?.value);if(!isNaN(v)&&document.getElementById(map[k])?.value!=='')ex[k]=k==='sleepHours'?v:Math.round(v);});
+  const steps=parseInt(document.getElementById('wi-steps')?.value);
+  if(!isNaN(steps)&&steps>0)ex.energy=Math.min(10,Math.round(steps/1200));
+  if(!Object.keys(ex).length){setStatus('withings-manual-status','error','Введите хотя бы одно значение');return;}
+  applyExtracted(ex,'withings');
+  setStatus('withings-manual-status','success','✓ Данные Withings применены');
+  updateImportSummary();
+}
+
+function applyAmazfitManual(){
+  const ex={};
+  const map={hrv:'am-hrv',rhr:'am-rhr',sleepHours:'am-sleep',deepMin:'am-deep',spo2:'am-spo2',stress:'am-stress'};
+  Object.keys(map).forEach(k=>{const v=parseFloat(document.getElementById(map[k])?.value);if(!isNaN(v)&&document.getElementById(map[k])?.value!=='')ex[k]=k==='sleepHours'?v:Math.round(v);});
+  const pai=parseFloat(document.getElementById('am-pai')?.value);
+  if(!isNaN(pai)&&pai>0)ex.readiness=Math.min(100,Math.round(pai*1.4));
+  const steps=parseInt(document.getElementById('am-steps')?.value);
+  if(!isNaN(steps)&&steps>0)ex.energy=Math.min(10,Math.round(steps/1200));
+  if(!Object.keys(ex).length){setStatus('amazfit-manual-status','error','Введите хотя бы одно значение');return;}
+  applyExtracted(ex,'amazfit');
+  setStatus('amazfit-manual-status','success','✓ Данные Amazfit применены');
+  updateImportSummary();
+}
 
 </script>
