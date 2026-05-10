@@ -14,10 +14,20 @@ html, body {
   overflow: hidden;
   touch-action: none;
 }
+/* фоновый слой с фото */
+.bg-layer {
+  position: fixed;
+  inset: -8%;
+  background: url('../images/%D0%A4%D0%BE%D0%BD_%D0%B3%D0%B0%D0%B9%D0%B4.PNG') center/cover no-repeat;
+  filter: brightness(0.88) saturate(1.05);
+  z-index: 0;
+  will-change: transform;
+}
+
 body {
   background:
-    radial-gradient(ellipse 80% 55% at 50% 48%, rgba(255,252,245,0) 0%, rgba(228,207,176,0.28) 55%, rgba(205,178,140,0.50) 100%),
-    linear-gradient(155deg, #faf6ee 0%, #f5e9d6 40%, #ede0c5 75%, #e5d3b2 100%);
+    radial-gradient(ellipse 100% 65% at 50% 45%, rgba(255,250,240,0.38) 0%, rgba(230,210,178,0.58) 55%, rgba(200,168,118,0.72) 100%),
+    linear-gradient(170deg, rgba(250,244,232,0.55) 0%, rgba(240,225,200,0.65) 50%, rgba(220,195,155,0.75) 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -44,6 +54,7 @@ body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  z-index: 1;
 }
 
 /* книга */
@@ -231,6 +242,8 @@ body {
 </style>
 </head>
 <body>
+
+<div class="bg-layer" id="bgLayer"></div>
 
 <div class="hd">
   <svg width="120" height="46" viewBox="0 0 869 335" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -541,6 +554,23 @@ window.addEventListener('message', e => {
   var lang = 'ru';
   try { lang = localStorage.getItem('selectedLang') || 'ru'; } catch(e) {}
   setLang(lang);
+})();
+
+// 3D parallax на фоне
+(function() {
+  var bg = document.getElementById('bgLayer');
+  var tx = 0, ty = 0, gx = 0, gy = 0;
+  document.addEventListener('mousemove', function(e) {
+    gx = (e.clientX / window.innerWidth  - 0.5) * 26;
+    gy = (e.clientY / window.innerHeight - 0.5) * 18;
+  });
+  function loop() {
+    tx += (gx - tx) * 0.05;
+    ty += (gy - ty) * 0.05;
+    if (bg) bg.style.transform = 'translate(' + tx + 'px,' + ty + 'px)';
+    requestAnimationFrame(loop);
+  }
+  loop();
 })();
 </script>
 </body>
