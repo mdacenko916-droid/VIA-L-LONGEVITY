@@ -354,9 +354,9 @@ header {
 
 .plans-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 20px;
-  max-width: 720px;
+  max-width: 1000px;
   margin: 0 auto 40px;
 }
 .plan-card {
@@ -384,6 +384,22 @@ header {
   position: absolute; top: 0; left: 0; right: 0; height: 2px;
   background: linear-gradient(90deg, transparent, var(--gold), transparent);
 }
+.plan-expert {
+  background: linear-gradient(145deg, #10141e, #0a0e18);
+  border: 1px solid rgba(120,160,255,.25);
+  box-shadow: 0 8px 48px rgba(80,120,255,.08);
+}
+.plan-expert::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, #7898ff, transparent);
+}
+.btn-expert {
+  background: linear-gradient(135deg, #3b5bdb, #2848c8);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(59,91,219,.35);
+}
+.btn-expert:hover { background: linear-gradient(135deg, #4c6eee, #3b5bdb); box-shadow: 0 6px 28px rgba(59,91,219,.5); }
 
 .plan-eyebrow {
   font-family: 'Oswald', sans-serif; font-size: 9px; font-weight: 300;
@@ -413,8 +429,9 @@ header {
   border-bottom: 1px solid rgba(255,255,255,.04);
 }
 .plan-features li:last-child { border: none; }
-.plan-features li .fi { color: var(--gold); flex-shrink: 0; }
-.plan-features li .fi-lock { color: var(--t3); }
+.plan-features li .fi       { color: var(--gold); flex-shrink: 0; }
+.plan-features li .fi-lock  { color: var(--t3); }
+.plan-features li .fi-blue  { color: #7898ff; flex-shrink: 0; }
 
 .plan-btn {
   display: block; width: 100%; margin-top: 28px;
@@ -473,9 +490,11 @@ footer a:hover { color: var(--gold); }
   header { padding: 14px 20px; }
   .header-nav { display: none; }
 }
+@media (max-width: 860px) {
+  .plans-grid { grid-template-columns: 1fr; max-width: 420px; }
+}
 @media (max-width: 640px) {
   .devices-grid { grid-template-columns: repeat(3, 1fr); gap: 16px 8px; }
-  .plans-grid { grid-template-columns: 1fr; }
   .hero { padding: 110px 0 40px; }
   .dev-metrics { display: none; }
 }
@@ -527,10 +546,11 @@ footer a:hover { color: var(--gold); }
 <!-- PLANS -->
 <section class="plans-section" id="plans">
   <div class="wrap">
-    <h2 class="plans-title">Два рівні аналізу</h2>
-    <p class="plans-sub">Базовий — безкоштовно. Повний — за підпискою.</p>
+    <h2 class="plans-title">Три рівні аналізу</h2>
+    <p class="plans-sub">Починай безкоштовно — поглиблюй коли готовий.</p>
     <div class="plans-grid">
 
+      <!-- V10 FREE -->
       <div class="plan-card plan-free">
         <div class="plan-eyebrow">Безкоштовно</div>
         <div class="plan-name">V10</div>
@@ -544,15 +564,16 @@ footer a:hover { color: var(--gold); }
           <li><span class="fi">✓</span> Енергія та спосіб життя</li>
           <li><span class="fi">✓</span> Базовий скор (0–100)</li>
           <li><span class="fi fi-lock">○</span> <span style="color:var(--t3)">Детальні рекомендації — Pro</span></li>
-          <li><span class="fi fi-lock">○</span> <span style="color:var(--t3)">Гормональний профіль — Pro</span></li>
+          <li><span class="fi fi-lock">○</span> <span style="color:var(--t3)">Чат з нутриціологом — Expert</span></li>
         </ul>
         <button class="plan-btn btn-free" onclick="startV10()">Почати безкоштовно →</button>
       </div>
 
+      <!-- PRO -->
       <div class="plan-card plan-pro">
         <div class="plan-eyebrow">Підписка</div>
         <div class="plan-name">Pro</div>
-        <div class="plan-price"><strong>$12</strong> / місяць</div>
+        <div class="plan-price"><strong>$29</strong> / місяць</div>
         <div class="plan-steps">15 кроків аналізу</div>
         <ul class="plan-features">
           <li><span class="fi">✓</span> Всі 5 кроків V10</li>
@@ -563,9 +584,29 @@ footer a:hover { color: var(--gold); }
           <li><span class="fi">✓</span> Стрес і кортизол</li>
           <li><span class="fi">✓</span> Цикл і репродуктивне здоров'я</li>
           <li><span class="fi">✓</span> Лабораторні показники</li>
-          <li><span class="fi">✓</span> PDF-звіт + чат з нутриціологом</li>
+          <li><span class="fi">✓</span> PDF-звіт · Необмежена кількість</li>
+          <li><span class="fi">✓</span> Динаміка та історія</li>
+          <li><span class="fi fi-lock">○</span> <span style="color:var(--t3)">Особистий нутриціолог — Expert</span></li>
         </ul>
         <button class="plan-btn btn-pro" onclick="startPro()">Отримати Pro →</button>
+      </div>
+
+      <!-- PRO + EXPERT -->
+      <div class="plan-card plan-expert">
+        <div class="plan-eyebrow">Максимум</div>
+        <div class="plan-name">Pro&nbsp;+ Expert</div>
+        <div class="plan-price"><strong style="color:#7898ff;">$79</strong> / місяць</div>
+        <div class="plan-steps">15 кроків + особистий нутриціолог</div>
+        <ul class="plan-features">
+          <li><span class="fi-blue">✓</span> Все з тарифу Pro</li>
+          <li><span class="fi-blue">✓</span> Персональна відповідь нутриціолога</li>
+          <li><span class="fi-blue">✓</span> Протокол харчування під ваш профіль</li>
+          <li><span class="fi-blue">✓</span> Інтерпретація лабораторних аналізів</li>
+          <li><span class="fi-blue">✓</span> Пріоритетна підтримка в чаті</li>
+          <li><span class="fi-blue">✓</span> Щомісячний огляд динаміки</li>
+          <li><span class="fi-blue">✓</span> Доступ до кабінету нутриціолога</li>
+        </ul>
+        <button class="plan-btn btn-expert" onclick="contactExpert()">Підключити Expert →</button>
       </div>
 
     </div>
@@ -746,8 +787,9 @@ function goToInterpreter(file) {
   setTimeout(() => { window.location.href = url; }, 600);
 }
 
-function startV10() { goToInterpreter('interpreter-v10.html'); }
-function startPro()  { goToInterpreter('interpreter-pro.html'); }
+function startV10()      { goToInterpreter('interpreter-v10.html'); }
+function startPro()      { goToInterpreter('interpreter-pro.html'); }
+function contactExpert() { window.location.href = '../index.html#booking'; }
 </script>
 </body>
 </html>
