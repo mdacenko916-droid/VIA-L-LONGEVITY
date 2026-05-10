@@ -2034,8 +2034,57 @@ footer{
         <a href="https://via-l.com/#contact" class="btn-cta" style="flex:2;border-radius:14px;"><span data-t="book">Записаться →</span></a>
       </div>
       <button onclick="downloadPDF()" style="width:100%;padding:13px;border-radius:14px;border:1px solid var(--b2);background:var(--gold-dim);color:var(--gold);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s;" data-t="pdf_btn">📄 Скачать PDF-отчёт</button>
-      <div class="disclaimer" data-t="disclaimer">Инструмент носит информационный характер и не является медицинским заключением.</div>
+      <div class="disclaimer" data-t="disclaimer">Інструмент носить інформаційний характер і не є медичним висновком.</div>
     </div>
+
+    <!-- ── PAYWALL PRO ── -->
+    <div id="paywall-pro" style="
+      margin-top:20px;
+      border-radius:20px;
+      overflow:hidden;
+      position:relative;
+      background:linear-gradient(145deg,#1a1408,#100e04);
+      border:1px solid rgba(196,150,60,.35);
+      box-shadow:0 8px 48px rgba(196,150,60,.12);
+    ">
+      <div style="height:2px;background:linear-gradient(90deg,transparent,#c4963c,transparent);"></div>
+      <div style="padding:24px 20px 20px;">
+        <div style="font-family:'Oswald',sans-serif;font-size:9px;font-weight:300;letter-spacing:.45em;text-transform:uppercase;color:rgba(196,150,60,.6);margin-bottom:10px;">Повний аналіз</div>
+        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:#f0ede8;margin-bottom:6px;">Pro — 15 кроків</div>
+        <div style="font-size:12px;color:#7a766e;margin-bottom:18px;">Базовий аналіз завершено. Ось що залишилось за замком:</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;margin-bottom:20px;">
+          <div style="font-size:11px;color:#a8a49e;display:flex;align-items:center;gap:6px;"><span style="color:#c4963c;">🔒</span>Когнітивні симптоми</div>
+          <div style="font-size:11px;color:#a8a49e;display:flex;align-items:center;gap:6px;"><span style="color:#c4963c;">🔒</span>Гормональний профіль</div>
+          <div style="font-size:11px;color:#a8a49e;display:flex;align-items:center;gap:6px;"><span style="color:#c4963c;">🔒</span>Харчування і апетит</div>
+          <div style="font-size:11px;color:#a8a49e;display:flex;align-items:center;gap:6px;"><span style="color:#c4963c;">🔒</span>Стрес і кортизол</div>
+          <div style="font-size:11px;color:#a8a49e;display:flex;align-items:center;gap:6px;"><span style="color:#c4963c;">🔒</span>Фізична активність</div>
+          <div style="font-size:11px;color:#a8a49e;display:flex;align-items:center;gap:6px;"><span style="color:#c4963c;">🔒</span>Лабораторні показники</div>
+          <div style="font-size:11px;color:#a8a49e;display:flex;align-items:center;gap:6px;"><span style="color:#c4963c;">🔒</span>Цикл і репродуктивне</div>
+          <div style="font-size:11px;color:#a8a49e;display:flex;align-items:center;gap:6px;"><span style="color:#c4963c;">🔒</span>PDF-звіт + чат з лікарем</div>
+        </div>
+
+        <div style="background:rgba(196,150,60,.08);border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+          <div style="font-size:26px;font-weight:300;color:#c4963c;font-family:'Playfair Display',serif;">$12</div>
+          <div>
+            <div style="font-size:11px;color:#f0ede8;font-weight:500;">на місяць</div>
+            <div style="font-size:10px;color:#7a766e;">Скасувати будь-коли</div>
+          </div>
+        </div>
+
+        <a href="../interpreter-app/index.html#plans" style="
+          display:block;width:100%;padding:14px;border-radius:12px;
+          background:#c4963c;color:#0a0800;
+          font-family:'Oswald',sans-serif;font-size:12px;font-weight:400;
+          letter-spacing:.3em;text-transform:uppercase;text-align:center;text-decoration:none;
+          box-shadow:0 4px 20px rgba(196,150,60,.35);
+          transition:all .25s;
+        " onmouseover="this.style.background='#e2b96a'" onmouseout="this.style.background='#c4963c'">
+          Розблокувати Pro →
+        </a>
+      </div>
+    </div>
+
   </div>
 
 </main>
@@ -3004,6 +3053,20 @@ function checkCode(){
 }
 document.getElementById('gateInput').addEventListener('keydown',e=>{if(e.key==='Enter')checkCode();});
 if(sessionStorage.getItem('vial_basic'))document.getElementById('gate').style.display='none';
+
+// Auto-open device card from URL ?device=oura etc.
+(function(){
+  const p = new URLSearchParams(window.location.search);
+  const dev = p.get('device');
+  if(!dev) return;
+  setTimeout(function(){
+    const card = document.getElementById('card-' + dev);
+    if(card){
+      toggleCard(dev);
+      card.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }
+  }, 400);
+})();
 
 // ══ IMPORT DATA STORE ════════════════════════════════════
 const importedData={hrv:null,rhr:null,sleepHours:null,deepMin:null,tempDev:null,energy:null,vo2:null,source:null};
