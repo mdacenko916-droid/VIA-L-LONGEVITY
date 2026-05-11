@@ -170,6 +170,20 @@ model-viewer.dev-glb {
 .dev-slot:hover model-viewer.dev-glb {
   filter: drop-shadow(0 0 18px var(--glow));
 }
+/* ── GLB2 (dual model: watch + ring) ── */
+.dev-glb2-wrap {
+  display: flex; gap: 6px; align-items: flex-end; justify-content: center;
+}
+model-viewer.dev-glb-sm {
+  width: 68px; height: 100px;
+  background: transparent;
+  --poster-color: transparent;
+  --progress-bar-color: transparent;
+  --progress-mask: transparent;
+}
+.dev-slot:hover .dev-glb2-wrap model-viewer {
+  filter: drop-shadow(0 0 14px var(--glow));
+}
 
 /* ── WATCH TYPE ── */
 .dev-watch {
@@ -641,72 +655,74 @@ footer a:hover { color: var(--gold); }
 <script>
 const DEVICES = [
   {
-    id: 'oura', name: 'Oura Ring', sub: 'Gen 3 / Gen 4', type: 'ring', spd: '6s', del: '0s',
+    id: 'oura', name: 'Oura Ring', sub: 'Gen 3 / Gen 4', type: 'glb',
+    glbPath: '../Интерпретатор%20/Часы/Oura%20Ring.glb',
     badge: 'best',
-    ringColor: '#c4963c',
     glow: 'rgba(196,150,60,0.45)',
     metrics: ['ВСР / HRV', 'Температура ночі', 'SpO₂', 'Готовність', 'Активність']
   },
   {
     id: 'apple', name: 'Apple Watch', sub: 'Series 9', type: 'glb',
-    glbPath: '../Интерпретатор%20/Часы/apple_watch_series_9.glb',
+    glbPath: '../Интерпретатор%20/Часы/apple_watch.glb',
     badge: 'best',
     glow: 'rgba(180,190,210,0.35)',
     metrics: ['ВСР / HRV', 'Сон', 'ЧСС спокою', 'VO₂max', 'ECG']
   },
   {
-    id: 'garmin', name: 'Garmin', sub: 'Connect', type: 'watch', spd: '8s', del: '-2s',
+    id: 'garmin', name: 'Garmin', sub: 'Fenix', type: 'glb',
+    glbPath: '../Интерпретатор%20/Часы/garmin%20fenix..glb',
     badge: 'good',
-    rim: '#1a2840', screen: '#0d1828', face: '#091220', back: '#141e30', band: '#0e1a28',
     glow: 'rgba(59,127,212,0.35)',
     metrics: ['ВСР / HRV', 'Сон', 'Стрес', 'VO₂max', 'Body Battery']
   },
   {
-    id: 'polar', name: 'Polar Flow', sub: 'H10 / Vantage', type: 'watch', spd: '7.5s', del: '-3s',
+    id: 'polar', name: 'Polar Flow', sub: 'Vantage', type: 'glb',
+    glbPath: '../Интерпретатор%20/Часы/polar%20vantage.glb',
     badge: 'good',
-    rim: '#2a0808', screen: '#1e0606', face: '#140404', back: '#240808', band: '#1a0404',
     glow: 'rgba(220,48,64,0.35)',
     metrics: ['ВСР / HRV', 'Сон', 'ЧСС', 'Тренувальне навантаження', 'Шаги']
   },
   {
-    id: 'samsung', name: 'Samsung', sub: 'Galaxy Watch', type: 'watch', spd: '9s', del: '-0.8s',
+    id: 'samsung', name: 'Samsung', sub: 'Galaxy Watch 5', type: 'glb',
+    glbPath: '../Интерпретатор%20/Часы/samsung__galaxy__watch_5.glb',
     badge: 'good',
-    rim: '#0e1428', screen: '#0a1020', face: '#060c18', back: '#0e1428', band: '#0c1220',
     glow: 'rgba(20,114,246,0.35)',
     metrics: ['ВСР / HRV', 'Сон', 'ЧСС', 'SpO₂', 'Шаги']
   },
   {
-    id: 'fitbit', name: 'Fitbit', sub: 'Google Health', type: 'band', spd: '6.5s', del: '-4s',
+    id: 'fitbit', name: 'Fitbit', sub: 'Google Health', type: 'glb',
+    glbPath: '../Интерпретатор%20/Часы/fitbit%20charge.glb',
     badge: 'good',
-    rim: '#041c20', screen: '#031418', face: '#020e10', back: '#041820', band: '#031214',
     glow: 'rgba(0,184,202,0.35)',
     metrics: ['Сон', 'ЧСС', 'SpO₂', 'Шаги', 'Стрес']
   },
   {
-    id: 'whoop', name: 'WHOOP 5.0', sub: 'Strap', type: 'strap', spd: '7s', del: '-2.5s',
+    id: 'whoop', name: 'WHOOP 5.0', sub: 'Strap', type: 'glb',
+    glbPath: '../Интерпретатор%20/Часы/whoop%20strap_fit.glb',
+    glbFilter: 'grayscale(1) brightness(0.35) contrast(1.2)',
     badge: 'best',
-    rim: '#141414', screen: '#0c0c0c', face: '#080808', back: '#101010', band: '#0e0e0e',
     glow: 'rgba(240,240,240,0.2)',
     metrics: ['ВСР / HRV', 'Сон', 'Відновлення', 'Навантаження', 'Strain']
   },
   {
-    id: 'xiaomi', name: 'Xiaomi', sub: 'Mi Fitness', type: 'band', spd: '6s', del: '-1s',
+    id: 'xiaomi', name: 'Xiaomi', sub: 'Mi Fitness', type: 'glb',
+    glbPath: '../Интерпретатор%20/Часы/xiaomi_band_no_rock.glb',
     badge: 'good',
-    rim: '#1a0c00', screen: '#140800', face: '#0e0600', back: '#180a00', band: '#120800',
     glow: 'rgba(255,106,0,0.35)',
     metrics: ['ЧСС', 'Сон', 'SpO₂', 'Шаги', 'Стрес']
   },
   {
-    id: 'withings', name: 'Withings', sub: 'Health Mate', type: 'watch', spd: '8.5s', del: '-3.5s',
+    id: 'withings', name: 'Withings', sub: 'ScanWatch', type: 'glb',
+    glbPath: '../Интерпретатор%20/Часы/withings%20scanwatch.glb',
     badge: 'good',
-    rim: '#021828', screen: '#011220', face: '#010c18', back: '#021620', band: '#011018',
     glow: 'rgba(0,168,232,0.35)',
     metrics: ['ВСР / HRV', 'Сон', 'ЧСС', 'SpO₂', 'Шаги']
   },
   {
-    id: 'amazfit', name: 'Amazfit', sub: 'Zepp App', type: 'watch', spd: '7s', del: '-0.5s',
+    id: 'amazfit', name: 'Amazfit', sub: 'Watch + Ring', type: 'glb2',
+    glbPath: '../Интерпретатор%20/Часы/Amazfit_watch.glb',
+    glbPath2: '../Интерпретатор%20/Часы/Amazfit_ring.glb',
     badge: 'good',
-    rim: '#041814', screen: '#030e0c', face: '#020a08', back: '#041410', band: '#030c0a',
     glow: 'rgba(0,190,170,0.35)',
     metrics: ['ВСР / HRV', 'Сон', 'ЧСС', 'PAI', 'Стрес']
   }
@@ -720,6 +736,7 @@ function buildDeviceHTML(d) {
   const badgeText = d.badge === 'best' ? '★ Найкращий' : 'Хороший';
 
   if (d.type === 'glb') {
+    const filterStyle = d.glbFilter ? `filter:${d.glbFilter};` : '';
     return `
     <div class="dev-slot" data-id="${d.id}" onclick="selectDevice('${d.id}')">
       <div class="dev-stage dev-stage-glb" style="--glow:${d.glow}">
@@ -731,8 +748,38 @@ function buildDeviceHTML(d) {
           auto-rotate rotation-per-second="22deg"
           camera-orbit="0deg 80deg auto"
           shadow-intensity="0.6" exposure="1.0"
-          style="--progress-bar-color:transparent;--poster-color:transparent;">
+          style="--progress-bar-color:transparent;--poster-color:transparent;${filterStyle}">
         </model-viewer>
+      </div>
+      <div class="dev-label">${d.name}</div>
+      <div class="dev-sub">${d.sub}</div>
+      <span class="dev-badge ${badgeClass}">${badgeText}</span>
+    </div>`;
+  }
+
+  if (d.type === 'glb2') {
+    return `
+    <div class="dev-slot" data-id="${d.id}" onclick="selectDevice('${d.id}')">
+      <div class="dev-stage dev-stage-glb" style="--glow:${d.glow}">
+        <ul class="dev-metrics">
+          <div class="dev-metrics-list">${metricsHTML}</div>
+        </ul>
+        <div class="dev-glb2-wrap">
+          <model-viewer class="dev-glb-sm"
+            src="${d.glbPath}"
+            auto-rotate rotation-per-second="20deg"
+            camera-orbit="0deg 80deg auto"
+            shadow-intensity="0.6" exposure="1.0"
+            style="--progress-bar-color:transparent;--poster-color:transparent;">
+          </model-viewer>
+          <model-viewer class="dev-glb-sm"
+            src="${d.glbPath2}"
+            auto-rotate rotation-per-second="22deg"
+            camera-orbit="0deg 75deg auto"
+            shadow-intensity="0.6" exposure="1.0"
+            style="--progress-bar-color:transparent;--poster-color:transparent;">
+          </model-viewer>
+        </div>
       </div>
       <div class="dev-label">${d.name}</div>
       <div class="dev-sub">${d.sub}</div>
