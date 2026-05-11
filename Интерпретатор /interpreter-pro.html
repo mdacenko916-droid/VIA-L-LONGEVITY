@@ -3699,23 +3699,6 @@ function _showResultsInner(){
 
 }
 
-function checkCode(){
-  const v=document.getElementById('gateInput').value.trim().toUpperCase();
-  if(VALID_CODES.map(c=>c.toUpperCase()).includes(v)){
-    const g=document.getElementById('gate');
-    g.style.transition='opacity .5s';g.style.opacity='0';
-    setTimeout(()=>g.style.display='none',500);
-    sessionStorage.setItem('vial_basic','1');
-  } else {
-    const i=document.getElementById('gateInput');
-    i.classList.add('error');
-    document.getElementById('gateError').classList.add('show');
-    setTimeout(()=>i.classList.remove('error'),400);
-  }
-}
-document.getElementById('gateInput').addEventListener('keydown',e=>{if(e.key==='Enter')checkCode();});
-if(sessionStorage.getItem('vial_basic'))document.getElementById('gate').style.display='none';
-
 // ══ IMPORT DATA STORE ════════════════════════════════════
 const importedData={hrv:null,rhr:null,sleepHours:null,deepMin:null,tempDev:null,energy:null,vo2:null,source:null};
 function openImport(){document.getElementById('importPanel').classList.add('open');const sa=document.getElementById('scroll-area');if(sa)sa.scrollTo({top:0,behavior:'instant'});}
