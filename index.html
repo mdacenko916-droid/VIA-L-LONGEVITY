@@ -95,6 +95,18 @@
     .lang-option.active .dot { opacity: 1; }
     .lang-option.active { color: var(--text); }
 
+    /* ════ NAV MENU DROPDOWN ════ */
+    .nav-menu-wrap { position: relative; }
+    .nav-menu-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 7px; font-family: 'DM Sans', sans-serif; font-size: 15px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold-pale); padding: 0; transition: color .3s; -webkit-tap-highlight-color: transparent; }
+    .nav-menu-btn:hover { color: var(--gold); }
+    .nav-menu-btn .menu-arrow { font-size: 6px; color: var(--text-lt); transition: transform .2s; display: inline-block; }
+    .nav-menu-wrap.open .menu-arrow { transform: rotate(180deg); }
+    .nav-menu-dropdown { display: none; position: absolute; top: calc(100% + 10px); left: 0; background: var(--cream); border: 1px solid var(--gold-pale); border-radius: 14px; overflow: hidden; min-width: 210px; box-shadow: 0 8px 32px rgba(90,70,40,0.14); z-index: 9999; padding: 8px 0; }
+    .nav-menu-wrap.open .nav-menu-dropdown { display: block; }
+    .nav-menu-dropdown a { display: block; padding: 11px 22px; font-family: 'DM Sans', sans-serif; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-mid); text-decoration: none; transition: background .2s, color .2s; white-space: nowrap; }
+    .nav-menu-dropdown a:hover { background: var(--cream-dk); color: var(--gold); }
+    .nav-menu-divider { height: 1px; background: var(--gold-pale); opacity: 0.3; margin: 6px 16px; }
+
     /* ════ HERO ════ */
     #hero {
       position: relative;
@@ -1143,12 +1155,10 @@
     }
     @media (max-width: 960px) {
       nav { padding: 8px 20px; }
-      .nav-left { display: none; }
-      .nav-links { display: none; }
-      .nav-logo-wrap { justify-self: center; grid-column: 2; }
+      .nav-menu-wrap { display: none; }
       .nav-logo { font-size: 20px; letter-spacing: 5px; }
       .logo-sub { font-size: 9px; letter-spacing: 3.5px; }
-      .nav-right { justify-content: flex-end; padding-left: 0; }
+      .nav-right { justify-content: flex-end; }
       .lang-switcher { margin-left: auto; }
       #about { grid-template-columns: 1fr; min-height: auto; margin-top: 0; }
       .approach-photo { height: 70vw; min-height: 320px; }
@@ -1949,11 +1959,22 @@
   <button class="burger-btn" id="burgerBtn" aria-label="Меню" onclick="toggleDrawer()">
     <span></span><span></span><span></span>
   </button>
-  <ul class="nav-left">
-    <li><a href="#about" data-i18n="nav_approach">Підхід</a></li>
-    <li><a href="#programs" data-i18n="nav_programs">Програми</a></li>
-    <li><a href="#guides" data-i18n="nav_guides">Гайди</a></li>
-  </ul>
+  <div class="nav-menu-wrap" id="navMenuWrap">
+    <button class="nav-menu-btn" id="navMenuBtn" onclick="toggleNavMenu(event)" aria-haspopup="true" aria-expanded="false">
+      <span data-i18n="nav_menu">Меню</span>
+      <span class="menu-arrow">▼</span>
+    </button>
+    <div class="nav-menu-dropdown" id="navMenuDrop" role="menu">
+      <a href="#about" onclick="closeNavMenu()" data-i18n="nav_approach">Підхід</a>
+      <a href="#programs" onclick="closeNavMenu()" data-i18n="nav_programs">Програми</a>
+      <a href="#guides" onclick="closeNavMenu()" data-i18n="nav_guides">Гайди</a>
+      <div class="nav-menu-divider"></div>
+      <a href="interpreter-app/index.html" data-i18n="nav_interp">Інтерпретатор</a>
+      <a href="cabinet/index.html" data-i18n="nav_cabinet">Кабінет</a>
+      <a href="#me" onclick="closeNavMenu()" data-i18n="nav_about">Про мене</a>
+      <a href="#booking" onclick="closeNavMenu()" data-i18n="nav_book">Контакт</a>
+    </div>
+  </div>
   <div class="nav-logo-wrap">
     <a href="#hero" class="nav-logo" aria-label="VIA-L Longevity" style="display:block;line-height:0;">
       <svg width="130" height="50" viewBox="0 0 869 335" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1962,12 +1983,6 @@
     </a>
   </div>
   <div class="nav-right">
-    <ul class="nav-links">
-      <li><a href="interpreter-app/index.html" data-i18n="nav_interp">Інтерпретатор</a></li>
-      <li><a href="cabinet/index.html" data-i18n="nav_cabinet">Кабінет</a></li>
-      <li><a href="#me" data-i18n="nav_about">Про мене</a></li>
-      <li><a href="#booking" data-i18n="nav_book">Записатися</a></li>
-    </ul>
     <div class="lang-switcher" id="langSwitcher">
       <button class="lang-btn" id="langBtn" aria-haspopup="true" aria-expanded="false" onclick="toggleLangDropdown(event)">
         <span class="flag" id="currentFlag">🇺🇦</span>
@@ -2480,7 +2495,7 @@
 // ════ TRANSLATIONS ════
 var translations = {
 uk: {
-nav_approach: "Підхід", nav_programs: "Програми", nav_guides: "Гайди", nav_interp: "Інтерпретатор", nav_cabinet: "Кабінет", nav_about: "Про мене", nav_book: "Контакт",
+nav_menu: "Меню", nav_approach: "Підхід", nav_programs: "Програми", nav_guides: "Гайди", nav_interp: "Інтерпретатор", nav_cabinet: "Кабінет", nav_about: "Про мене", nav_book: "Контакт",
 bridge_label: "Перехід до стратегії",
 bridge_text: "Від того, що ви відчуваєте зараз, до того, що насправді запускає ці стани.",
 bridge_link: "Як ми працюємо",
@@ -2639,7 +2654,7 @@ faq_q8: "Якими мовами ви працюєте?",
 faq_a8: "Консультую <em>російською, українською та іспанською</em> мовами. Приймаю клієнтів з будь-якої точки світу онлайн.",
 },
 ru: {
-nav_approach: "Подход", nav_programs: "Программы", nav_guides: "Гайды", nav_interp: "Интерпретатор", nav_cabinet: "Кабинет", nav_about: "Обо мне", nav_book: "Контакт",
+nav_menu: "Меню", nav_approach: "Подход", nav_programs: "Программы", nav_guides: "Гайды", nav_interp: "Интерпретатор", nav_cabinet: "Кабинет", nav_about: "Обо мне", nav_book: "Контакт",
 bridge_label: "Переход к стратегии",
 bridge_text: "От того, что вы чувствуете сейчас, к тому, что действительно запускает эти состояния.",
 bridge_link: "Как мы работаем",
@@ -2798,7 +2813,7 @@ faq_q8: "На каких языках вы работаете?",
 faq_a8: "Консультирую на <em>русском, украинском и испанском</em> языках. Принимаю клиентов из любой точки мира онлайн.",
 },
 es: {
-nav_approach: "Enfoque", nav_programs: "Programas", nav_guides: "Guías", nav_interp: "Intérprete", nav_cabinet: "Gabinete", nav_about: "Sobre mí", nav_book: "Contacto",
+nav_menu: "Menú", nav_approach: "Enfoque", nav_programs: "Programas", nav_guides: "Guías", nav_interp: "Intérprete", nav_cabinet: "Gabinete", nav_about: "Sobre mí", nav_book: "Contacto",
 bridge_label: "Transición a la estrategia",
 bridge_text: "De lo que sientes hoy a lo que realmente activa estos estados.",
 bridge_link: "Cómo trabajamos",
@@ -2957,7 +2972,7 @@ faq_q8: "¿En qué idiomas trabajas?",
 faq_a8: "Consulto en <em>ruso, ucraniano y español</em>. Trabajo con clientes de cualquier parte del mundo de forma online.",
 },
 en: {
-nav_approach: "Approach", nav_programs: "Programmes", nav_guides: "Guides", nav_interp: "Interpreter", nav_cabinet: "Cabinet", nav_about: "About", nav_book: "Contact",
+nav_menu: "Menu", nav_approach: "Approach", nav_programs: "Programmes", nav_guides: "Guides", nav_interp: "Interpreter", nav_cabinet: "Cabinet", nav_about: "About", nav_book: "Contact",
 bridge_label: "From symptoms to strategy",
 bridge_text: "From how you feel right now to what is actually triggering these states.",
 bridge_link: "How we work",
@@ -3181,6 +3196,24 @@ var isOpen = sw.classList.toggle('open');
 btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 }
 
+function toggleNavMenu(event) {
+if (event) event.stopPropagation();
+var wrap = document.getElementById('navMenuWrap');
+var btn = document.getElementById('navMenuBtn');
+if (!wrap) return;
+var isOpen = wrap.classList.toggle('open');
+if (btn) btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+closeLangDropdown();
+}
+
+function closeNavMenu() {
+var wrap = document.getElementById('navMenuWrap');
+var btn = document.getElementById('navMenuBtn');
+if (!wrap) return;
+wrap.classList.remove('open');
+if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+
 // ────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
   var saved = localStorage.getItem('selectedLang');
@@ -3250,6 +3283,8 @@ if(nav){nav.classList.toggle('scrolled', window.scrollY>10);}
 document.addEventListener('click', function(e){
 var sw=document.getElementById('langSwitcher');
 if(sw && !sw.contains(e.target)){closeLangDropdown();}
+var nm=document.getElementById('navMenuWrap');
+if(nm && !nm.contains(e.target)){closeNavMenu();}
 });
 
 // ── Burger / Drawer ──
