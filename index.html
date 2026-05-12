@@ -808,26 +808,70 @@
 
     /* ════ BLOCK 4.7 — INTERPRETER ════ */
     #interpreter {
-      padding: 100px 40px;
-      background: linear-gradient(180deg, var(--cream) 0%, #f5f0e8 100%);
-      text-align: center;
+      padding: 0;
+      background: var(--cream);
+      text-align: left;
       overflow: hidden;
       position: relative;
+      min-height: 600px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .interp-photo-bg {
+      position: absolute; inset: 0; z-index: 0;
+    }
+    .interp-photo-bg img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: right center;
+      display: block;
+    }
+    .interp-photo-bg::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        to right,
+        rgba(245,243,239,1.0)  0%,
+        rgba(245,243,239,0.97) 35%,
+        rgba(245,243,239,0.80) 55%,
+        rgba(245,243,239,0.10) 80%,
+        rgba(245,243,239,0.0)  100%
+      );
     }
     #interpreter::before {
       content: '';
-      position: absolute; inset: 0;
-      background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(196,150,60,.06) 0%, transparent 70%);
+      position: absolute; inset: 0; z-index: 1;
       pointer-events: none;
     }
+
+    /* контент-колонка слева */
+    .interp-content {
+      position: relative; z-index: 2;
+      max-width: 560px;
+      padding: 100px 40px 100px clamp(40px, 7vw, 120px);
+    }
+
+    #interpreter .interp-eyebrow,
+    #interpreter .interp-title,
+    #interpreter .interp-sub,
+    #interpreter .interp-stats,
+    #interpreter .interp-cta-wrap {
+      position: relative; z-index: 2;
+    }
+    .interp-ticker-wrap {
+      position: relative; z-index: 2;
+    }
+
     .interp-eyebrow {
       font-family: 'DM Sans', sans-serif;
-      font-size: 18px; font-weight: 500; letter-spacing: .18em;
+      font-size: 13px; font-weight: 500; letter-spacing: .22em;
       text-transform: uppercase; color: var(--gold);
-      display: flex; align-items: center; justify-content: center; gap: 12px;
+      display: flex; align-items: center; gap: 12px;
+      justify-content: flex-start;
       margin-bottom: 22px;
     }
-    .interp-eyebrow::before, .interp-eyebrow::after { content: ''; width: 28px; height: 1px; background: var(--gold-pale); }
+    .interp-eyebrow::before { content: ''; width: 28px; height: 1px; background: var(--gold-pale); }
+    .interp-eyebrow::after  { display: none; }
     .interp-title {
       font-family: 'Playfair Display', serif;
       font-size: clamp(30px, 4vw, 50px); font-weight: 400; line-height: 1.15;
@@ -836,25 +880,15 @@
     .interp-title em { font-style: italic; color: var(--gold); }
     .interp-sub {
       font-size: 17px; font-weight: 300; color: var(--text-mid);
-      max-width: 540px; margin: 0 auto 52px; line-height: 1.75;
+      max-width: 460px; margin: 0 0 40px; line-height: 1.75;
     }
-    .interp-devices {
-      display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
-      gap: 10px 8px; max-width: 760px; margin: 0 auto 52px;
-    }
-    .interp-device-pill {
-      display: inline-flex; align-items: center; gap: 7px;
-      padding: 7px 14px; border-radius: 50px;
-      background: rgba(255,255,255,.7); backdrop-filter: blur(4px);
-      border: 1px solid rgba(196,150,60,.18);
-      font-size: 12px; font-weight: 400; color: var(--text-mid);
-      white-space: nowrap; transition: all .2s;
-    }
-    .interp-device-pill:hover { background: #fff; border-color: var(--gold); color: var(--text); }
-    .interp-device-pill .dp-icon { font-size: 15px; }
     .interp-stats {
-      display: flex; justify-content: center; gap: 48px;
-      margin-bottom: 48px; flex-wrap: wrap;
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-start;
+      gap: 40px;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
     }
     .interp-stat-num {
       font-family: 'Playfair Display', serif;
@@ -865,7 +899,7 @@
       font-size: 11px; font-weight: 400; letter-spacing: .12em;
       text-transform: uppercase; color: var(--text-mid); margin-top: 6px;
     }
-    .interp-cta-wrap { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
+    .interp-cta-wrap { display: flex; align-items: center; justify-content: flex-start; gap: 16px; flex-wrap: wrap; }
     .interp-btn-primary {
       display: inline-flex; align-items: center; gap: 10px;
       padding: 16px 36px; border-radius: 50px;
@@ -882,9 +916,82 @@
       transition: border-color .2s;
     }
     .interp-btn-secondary:hover { border-color: var(--gold); }
-    @media (max-width: 600px) {
-      #interpreter { padding: 72px 20px; }
-      .interp-stats { gap: 28px; }
+
+    /* ── GOLDEN TICKER ── */
+    .interp-ticker-wrap {
+      width: 100%;
+      overflow: hidden;
+      padding: 18px 0;
+      border-top: 1px solid rgba(196,150,60,.18);
+      border-bottom: 1px solid rgba(196,150,60,.18);
+      position: relative; z-index: 2;
+      flex-shrink: 0;
+      mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+    }
+    .interp-ticker {
+      display: flex;
+      width: max-content;
+      animation: ticker-scroll 32s linear infinite;
+    }
+    .interp-ticker:hover { animation-play-state: paused; }
+    .interp-ticker-inner {
+      display: flex; align-items: center;
+      white-space: nowrap;
+    }
+    .interp-ticker-item {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px; font-weight: 500;
+      letter-spacing: .22em; text-transform: uppercase;
+      padding: 0 32px;
+      /* золотой перелив */
+      background: linear-gradient(
+        90deg,
+        #8B6030 0%,
+        #C4964C 20%,
+        #E8C97A 38%,
+        #F5E4B0 50%,
+        #E8C97A 62%,
+        #C4964C 80%,
+        #8B6030 100%
+      );
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gold-shimmer 4s linear infinite;
+    }
+    .interp-ticker-dot {
+      font-size: 8px;
+      flex-shrink: 0;
+      background: linear-gradient(90deg, #C4964C, #F5E4B0, #C4964C);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gold-shimmer 4s linear infinite;
+    }
+    @keyframes ticker-scroll {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    @keyframes gold-shimmer {
+      0%   { background-position: 0% center; }
+      100% { background-position: 200% center; }
+    }
+
+    @media (max-width: 768px) {
+      #interpreter { min-height: auto; }
+      .interp-content { padding: 72px 24px; max-width: 100%; }
+      .interp-photo-bg::after {
+        background: linear-gradient(
+          to bottom,
+          rgba(245,243,239,1.0) 40%,
+          rgba(245,243,239,0.5) 70%,
+          rgba(245,243,239,0.1) 100%
+        );
+      }
+      .interp-stats { gap: 24px; }
       .interp-stat-num { font-size: 28px; }
     }
 
@@ -2192,45 +2299,69 @@
 <!-- BLOCK 4.7: INTERPRETER -->
 
 <section id="interpreter">
-  <div class="interp-eyebrow">Інтерпретатор біопоказників · VIA·L</div>
-  <h2 class="interp-title">Ваш трекер знає більше,<br>ніж показує <em>екран</em></h2>
-  <p class="interp-sub">Трекер збирає цифри. Інтерпретатор VIA·L читає їх мовою нутриціології: гормональний статус, дефіцити мікронутрієнтів, персональний протокол — на основі ваших реальних даних.</p>
-
-  <div class="interp-devices">
-    <span class="interp-device-pill"><span class="dp-icon">💍</span> Oura Ring</span>
-    <span class="interp-device-pill"><span class="dp-icon">🍎</span> Apple Health</span>
-    <span class="interp-device-pill"><span class="dp-icon">⌚</span> Garmin</span>
-    <span class="interp-device-pill"><span class="dp-icon">🔴</span> Polar</span>
-    <span class="interp-device-pill"><span class="dp-icon">📱</span> Samsung</span>
-    <span class="interp-device-pill"><span class="dp-icon">🔵</span> Withings</span>
-    <span class="interp-device-pill"><span class="dp-icon">⚡</span> Amazfit</span>
-    <span class="interp-device-pill"><span class="dp-icon">🟠</span> Xiaomi</span>
-    <span class="interp-device-pill"><span class="dp-icon">⬛</span> WHOOP</span>
-    <span class="interp-device-pill"><span class="dp-icon">📊</span> Fitbit</span>
+  <div class="interp-photo-bg">
+    <img src="images/interpreter-bg.jpg" alt="" aria-hidden="true">
   </div>
 
-  <div class="interp-stats">
-    <div>
-      <div class="interp-stat-num">10</div>
-      <div class="interp-stat-label">Пристроїв</div>
+  <div class="interp-content">
+    <div class="interp-eyebrow">Інтерпретатор біопоказників · VIA·L</div>
+    <h2 class="interp-title">Ваш трекер знає більше,<br>ніж показує <em>екран</em></h2>
+    <p class="interp-sub">Трекер збирає цифри. Інтерпретатор VIA·L читає їх мовою нутриціології: гормональний статус, дефіцити мікронутрієнтів, персональний протокол — на основі ваших реальних даних.</p>
+
+    <div class="interp-stats">
+      <div>
+        <div class="interp-stat-num">10</div>
+        <div class="interp-stat-label" data-i18n="b_interp_devices">Пристроїв</div>
+      </div>
+      <div>
+        <div class="interp-stat-num">15</div>
+        <div class="interp-stat-label" data-i18n="b_interp_params">Параметрів аналізу</div>
+      </div>
+      <div>
+        <div class="interp-stat-num">4</div>
+        <div class="interp-stat-label" data-i18n="b_interp_langs">Мови</div>
+      </div>
     </div>
-    <div>
-      <div class="interp-stat-num">15</div>
-      <div class="interp-stat-label">Параметрів аналізу</div>
-    </div>
-    <div>
-      <div class="interp-stat-num">4</div>
-      <div class="interp-stat-label">Мови</div>
+
+    <div class="interp-cta-wrap">
+      <a href="interpreter-app/index.html" class="interp-btn-primary">
+        Розпочати аналіз
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <a href="interpreter-app/index.html#plans" class="interp-btn-secondary">Переглянути тарифи</a>
     </div>
   </div>
 
-  <div class="interp-cta-wrap">
-    <a href="interpreter-app/index.html" class="interp-btn-primary">
-      Розпочати аналіз
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </a>
-    <a href="interpreter-app/index.html#plans" class="interp-btn-secondary">Переглянути тарифи</a>
+  <!-- Бегущая строка — на всю ширину, внизу блока -->
+  <div class="interp-ticker-wrap">
+    <div class="interp-ticker">
+      <div class="interp-ticker-inner">
+        <span class="interp-ticker-item">Oura Ring</span><span class="interp-ticker-dot">✦</span>
+        <span class="interp-ticker-item">Apple Health</span><span class="interp-ticker-dot">✦</span>
+        <span class="interp-ticker-item">Garmin</span><span class="interp-ticker-dot">✦</span>
+        <span class="interp-ticker-item">Polar</span><span class="interp-ticker-dot">✦</span>
+        <span class="interp-ticker-item">Samsung Health</span><span class="interp-ticker-dot">✦</span>
+        <span class="interp-ticker-item">Withings</span><span class="interp-ticker-dot">✦</span>
+        <span class="interp-ticker-item">Amazfit</span><span class="interp-ticker-dot">✦</span>
+        <span class="interp-ticker-item">Xiaomi</span><span class="interp-ticker-dot">✦</span>
+        <span class="interp-ticker-item">WHOOP</span><span class="interp-ticker-dot">✦</span>
+        <span class="interp-ticker-item">Fitbit</span><span class="interp-ticker-dot">✦</span>
+      </div>
+      <div class="interp-ticker-inner" aria-hidden="true">
+        <span class="interp-ticker-item">Oura Ring</span><span class="interp-ticker-dot">✦</span>
+        <span class="interp-ticker-item">Apple Health</span><span class="interp-ticker-dot">✦</span>
+        <span class="interp-ticker-item">Garmin</span><span class="interp-ticker-dot">✦</span>
+        <span class="interp-ticker-item">Polar</span><span class="interp-ticker-dot">✦</span>
+        <span class="interp-ticker-item">Samsung Health</span><span class="interp-ticker-dot">✦</span>
+        <span class="interp-ticker-item">Withings</span><span class="interp-ticker-dot">✦</span>
+        <span class="interp-ticker-item">Amazfit</span><span class="interp-ticker-dot">✦</span>
+        <span class="interp-ticker-item">Xiaomi</span><span class="interp-ticker-dot">✦</span>
+        <span class="interp-ticker-item">WHOOP</span><span class="interp-ticker-dot">✦</span>
+        <span class="interp-ticker-item">Fitbit</span><span class="interp-ticker-dot">✦</span>
+      </div>
+    </div>
   </div>
+
 </section>
 
 <!-- BLOCK 5: FOR WHOM -->
