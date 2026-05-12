@@ -3349,17 +3349,10 @@ var CAL_SLOTS=['09:00','09:30','10:00','11:00','14:00','14:30','15:00','16:00'];
 function _calLang(){var l=localStorage.getItem('selectedLang')||'uk';return CAL_I18N[l]?l:'uk';}
 function openCalModal(){
   var l=_calLang(),t=CAL_I18N[l];
-  document.getElementById('calModalTag').textContent=t.tag;
-  document.getElementById('calModalTitle').textContent=t.title;
-  document.getElementById('calModalDesc').textContent=t.desc;
-  document.getElementById('calModalSlotsTitle').textContent=t.slotsTitle;
-  document.getElementById('calModalSlotsEmpty').textContent=t.slotsEmpty;
-  document.getElementById('calModalConfirmBtn').textContent=t.confirmBtn;
-  calYear_v=calToday.getFullYear();calMonth_v=calToday.getMonth();calSelDay=null;calSelTime=null;
-  document.getElementById('calModalConfirmBtn').style.display='none';
-  document.getElementById('calModalNote').style.display='none';
-  document.getElementById('calModalSlots').innerHTML='<span class="cal-slots-empty">'+t.slotsEmpty+'</span>';
-  _renderCalModal();
+  var tagEl=document.getElementById('calModalTag');
+  var titleEl=document.getElementById('calModalTitle');
+  if(tagEl) tagEl.textContent=t.tag;
+  if(titleEl) titleEl.textContent=t.title;
   document.getElementById('calModal').classList.add('open');
   document.body.style.overflow='hidden';
 }
@@ -4289,8 +4282,8 @@ console.log('[index.html] Parent click handler attached');
   <div class="modal-box modal-box--cal">
     <div class="modal-header">
       <div>
-        <div class="modal-tag">✦ Безкоштовно · 15 хвилин · Онлайн</div>
-        <div class="modal-title">Записатися на консультацію</div>
+        <div class="modal-tag" id="calModalTag">✦ Безкоштовно · 15 хвилин · Онлайн</div>
+        <div class="modal-title" id="calModalTitle">Записатися на консультацію</div>
       </div>
       <button class="modal-close" onclick="closeCalModal()">✕</button>
     </div>
