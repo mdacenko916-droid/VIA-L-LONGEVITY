@@ -806,6 +806,8 @@
       .bpage-left { height: auto; min-height: 380px; }
     }
 
+    .interp-mob-bg { display: none; }
+
     /* ════ BLOCK 4.7 — INTERPRETER ════ */
     #interpreter {
       padding: 0;
@@ -1068,18 +1070,25 @@
         padding: 52px 28px 28px;
         width: 100%;
         background: none !important;
+        overflow: hidden;
       }
-      /* Розмитий фон під текстом — те саме фото, розмите */
-      .interp-content::before {
-        content: '';
+      /* Розмитий фон — показуємо тільки на мобільному */
+      .interp-mob-bg { display: block !important; }
+
+      .interp-mob-bg {
         position: absolute;
         inset: 0;
-        z-index: -1;
+        z-index: 0;
         background: url('images/interpreter-bg.PNG') no-repeat;
-        background-size: 170%;
-        background-position: 72% 5%;
-        filter: blur(22px) brightness(1.12) saturate(0.65);
-        transform: scale(1.08);
+        background-size: 200%;
+        background-position: 60% 10%;
+        filter: blur(20px) brightness(1.1) saturate(0.65);
+        transform: scale(1.1);
+      }
+      /* Текст поверх фону */
+      .interp-content > *:not(.interp-mob-bg) {
+        position: relative;
+        z-index: 1;
       }
       .interp-photo-col {
         position: relative;
