@@ -1941,13 +1941,9 @@
     padding: 20px;
   }
 
-  #directionModal.active {
-    display: block;
-  }
+  #directionModal.active { display: block; }
 
   #directionModal .modal-content {
-    --theme-tint: rgba(255, 235, 205, 0.18);
-    --theme-gloss: rgba(255, 255, 255, 0.32);
     position: fixed;
     width: 100%;
     max-width: 250px;
@@ -1959,10 +1955,10 @@
       0 0 0 10px rgba(184, 146, 74, 0.95),
       0 0 0 11px rgba(210, 175, 110, 0.35),
       0 28px 64px rgba(0, 0, 0, 0.45);
-    background: #111;
     isolation: isolate;
   }
 
+  /* Нотч (Dynamic Island) */
   #directionModal .modal-content::before {
     content: "";
     position: absolute;
@@ -1972,74 +1968,73 @@
     width: 34%;
     height: 18px;
     border-radius: 0 0 12px 12px;
-    background: #0a0a0b;
+    background: rgba(61, 42, 18, 0.18);
     z-index: 6;
   }
 
+  /* Стеклянный блик на корпусе */
   #directionModal .modal-content::after {
     content: "";
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(140% 55% at 15% 4%, var(--theme-gloss) 0%, rgba(255, 255, 255, 0) 55%),
-      linear-gradient(120deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 36%),
-      linear-gradient(190deg, rgba(255, 255, 255, 0) 32%, rgba(255, 255, 255, 0.14) 58%, rgba(255, 255, 255, 0) 82%);
-    mix-blend-mode: screen;
-    opacity: 0.8;
+      radial-gradient(120% 40% at 20% 3%, rgba(255,255,255,0.22) 0%, transparent 55%),
+      linear-gradient(120deg, rgba(255,255,255,0.14) 0%, transparent 35%);
     pointer-events: none;
-    z-index: 3;
+    z-index: 5;
   }
 
+  /* Верхняя часть — иконка на градиентном фоне */
   #directionModal .modal-image {
     position: absolute;
-    inset: 0;
-    background-size: cover;
-    background-position: center;
+    top: 0; left: 0; right: 0;
+    height: 42%;
     display: flex;
     align-items: center;
     justify-content: center;
-    filter: saturate(0.68) brightness(0.95);
+    background: var(--screen-top, #E8DCC8);
+    z-index: 1;
   }
 
   #directionModal .modal-image::before {
     content: attr(data-icon);
-    font-size: 72px;
-    opacity: 0.12;
-    position: relative;
-    z-index: 1;
+    font-size: 64px;
+    opacity: 0.55;
+    filter: saturate(0.8);
   }
 
+  /* Разделительная линия — тонкая золотая */
   #directionModal .modal-image::after {
     content: "";
     position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.2) 44%, rgba(0,0,0,0.38) 100%);
-    z-index: 2;
+    bottom: 0; left: 16px; right: 16px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(184,146,74,0.4), transparent);
   }
 
+  /* Нижняя часть — текст на кремовом фоне */
   #directionModal .modal-body {
     position: absolute;
-    inset: 0;
-    padding: 58px 16px 16px;
-    overflow: hidden;
+    top: 42%; left: 0; right: 0; bottom: 0;
+    padding: 20px 18px 22px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     z-index: 4;
-    color: #fff;
-    background: linear-gradient(to top, rgba(20,18,16,0.3) 0%, rgba(20,18,16,0.14) 44%, rgba(22,18,14,0.04) 100%);
+    background: var(--screen-bottom, #F5F0E8);
   }
 
   #directionModal .modal-close {
     position: absolute;
-    top: 16px;
+    top: 14px;
     right: 14px;
-    width: 28px;
-    height: 28px;
-    background: transparent;
-    border: none;
-    font-size: 28px;
-    color: rgba(255, 255, 255, 0.95);
+    width: 26px;
+    height: 26px;
+    background: rgba(184,146,74,0.12);
+    border: 1px solid rgba(184,146,74,0.25);
+    border-radius: 50%;
+    font-size: 14px;
+    color: rgba(61, 42, 18, 0.6);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -2049,22 +2044,22 @@
     line-height: 1;
   }
 
-  #directionModal .modal-close:hover { color: #fff; transform: scale(1.1); opacity: 0.85; }
+  #directionModal .modal-close:hover { background: rgba(184,146,74,0.22); color: #3D2A12; }
   #directionModal .modal-num { display: none; }
 
   #directionModal .modal-title {
     font-family: "Cormorant Garamond", serif;
     font-size: 24px;
     font-weight: 600;
-    color: #fff;
+    color: #3D2A12;
     line-height: 1.25;
     margin-bottom: 10px;
   }
 
   #directionModal .modal-text {
     font-size: 15px;
-    line-height: 1.45;
-    color: rgba(255, 255, 255, 0.92);
+    line-height: 1.55;
+    color: rgba(61, 42, 18, 0.72);
     flex: 1;
   }
 
@@ -2073,17 +2068,14 @@
     font-size: 11px;
     letter-spacing: 0.15em;
     text-transform: uppercase;
-    color: #fff;
-    background: rgba(255, 255, 255, 0.12);
-    background: color-mix(in srgb, var(--theme-tint) 46%, rgba(255, 255, 255, 0.08));
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    border-color: color-mix(in srgb, var(--theme-tint) 70%, rgba(255, 255, 255, 0.35));
+    color: #8B6030;
+    background: rgba(184,146,74,0.1);
+    border: 1px solid rgba(184,146,74,0.3);
     border-radius: 12px;
-    padding: 6px 14px;
-    margin-top: 12px;
+    padding: 5px 12px;
+    margin-top: 10px;
     font-weight: 500;
     width: fit-content;
-    -webkit-backdrop-filter: blur(4px);backdrop-filter: blur(4px);
     align-self: flex-start;
   }
 
@@ -4166,10 +4158,10 @@ const directionsData = {
 };
 
 const directionsMeta = {
-  1: { tint: 'rgba(114, 188, 118, 0.14)', gloss: 'rgba(221, 255, 223, 0.34)', image: "linear-gradient(130deg, rgba(25, 45, 23, 0.22) 0%, rgba(25, 45, 23, 0.42) 100%), url('https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=900&q=80')", icon: '🥗' },
-  2: { tint: 'rgba(158, 214, 235, 0.13)', gloss: 'rgba(239, 251, 255, 0.34)', image: "linear-gradient(130deg, rgba(44, 68, 82, 0.2) 0%, rgba(44, 68, 82, 0.38) 100%), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=80')", icon: '⏳' },
-  3: { tint: 'rgba(102, 139, 222, 0.13)', gloss: 'rgba(228, 237, 255, 0.33)', image: "linear-gradient(130deg, rgba(20, 33, 73, 0.24) 0%, rgba(20, 33, 73, 0.44) 100%), url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=900&q=80')", icon: '🧬' },
-  4: { tint: 'rgba(232, 146, 176, 0.14)', gloss: 'rgba(255, 232, 242, 0.34)', image: "linear-gradient(130deg, rgba(97, 52, 70, 0.2) 0%, rgba(97, 52, 70, 0.36) 100%), url('https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=900&q=80')", icon: '⚖️' }
+  1: { screenTop: '#EAD8BE', screenBottom: '#F5EFE4', icon: '🥗' },
+  2: { screenTop: '#D8E0D0', screenBottom: '#EDF0E8', icon: '⏳' },
+  3: { screenTop: '#D0D8E8', screenBottom: '#E8ECF4', icon: '🧬' },
+  4: { screenTop: '#E0D0D8', screenBottom: '#F2EAF0', icon: '⚖️' }
 };
 
 function getDirections() {
@@ -4191,10 +4183,9 @@ function openDirectionModal(num, cardEl) {
   if (!data) return;
   const modalImage = document.getElementById('modalImage');
   const modalContent = document.querySelector('.modal-content');
-  modalImage.style.background = data.image;
   modalImage.setAttribute('data-icon', data.icon);
-  modalContent.style.setProperty('--theme-tint', data.tint);
-  modalContent.style.setProperty('--theme-gloss', data.gloss);
+  modalContent.style.setProperty('--screen-top', data.screenTop);
+  modalContent.style.setProperty('--screen-bottom', data.screenBottom);
   document.getElementById('modalNum').textContent = data.num;
   document.getElementById('modalTitle').textContent = data.title;
   document.getElementById('modalDesc').textContent = data.desc;
