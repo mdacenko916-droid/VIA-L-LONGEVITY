@@ -816,16 +816,44 @@
       grid-template-columns: minmax(380px,46%) 1fr;
       grid-template-areas: "content photo";
       align-items: stretch;
-      background: var(--cream);
     }
 
-    /* LEFT — текст, без змін */
+    /* Фото рук — абсолютний фон на весь блок (обидві колонки) */
+    .interp-photo-col {
+      grid-area: photo;
+      position: relative;
+      overflow: hidden;
+      min-height: 460px;
+    }
+    .interp-photo-col .ipc-img {
+      position: fixed; /* temporary trick — use absolute on section */
+      display: none; /* hidden — photo is on #interpreter::before */
+    }
+    #interpreter .ipc-bg {
+      position: absolute; inset: 0;
+      z-index: 0;
+    }
+    #interpreter .ipc-bg img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      object-position: 62% center;
+      display: block;
+      filter: saturate(0.85) brightness(1.02);
+    }
+
+    /* LEFT — текст, прозорий фон щоб фото проглядало */
     .interp-content {
       grid-area: content;
       position: relative; z-index: 2;
       padding: 64px clamp(20px,3vw,48px) 64px clamp(40px,7vw,112px);
       display: flex; flex-direction: column; justify-content: center;
-      background: var(--cream);
+      /* Світлий напівпрозорий градієнт зліва — текст читабельний */
+      background: linear-gradient(to right,
+        rgba(245,243,239,.96) 0%,
+        rgba(245,243,239,.92) 60%,
+        rgba(245,243,239,.55) 85%,
+        rgba(245,243,239,0)   100%
+      );
     }
     #interpreter .interp-eyebrow,
     #interpreter .interp-title,
@@ -833,71 +861,59 @@
     #interpreter .interp-stats,
     #interpreter .interp-cta-wrap { position:relative; z-index:2; }
 
-    /* RIGHT — фото рук як повний фон */
-    .interp-photo-col {
-      grid-area: photo;
-      position: relative;
-      overflow: hidden;
-      min-height: 460px;
-    }
-
-    /* Фото рук — повністю заповнює праву колонку */
-    .interp-photo-col .ipc-img {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%;
-      object-fit: cover;
-      object-position: 42% center;
-      display: block;
-      filter: saturate(0.88) brightness(1.0);
-    }
-
-    /* Галактика — компактний медальйон, що парить над руками */
+    /* Галактика — парить над руками, без чіткого контуру */
     .ig-medallion {
       position: absolute;
-      /* центруємо у верхніх 55% колонки */
-      top: 8%;
+      top: 5%;
       left: 50%;
       transform: translateX(-50%);
-      width: min(78%, 380px);
+      /* Більше ніж колонка — щоб дімка виходила за межі */
+      width: min(90%, 420px);
       aspect-ratio: 1;
       z-index: 5;
+      /* Обрізаємо тільки канвас, не дімку */
+      overflow: visible;
     }
 
-    /* Кругла дімка тільки навколо галактики */
+    /* М'яка дімка — без жодного чіткого краю
+       Розширена за межі медальйону через від'ємний inset */
     .ig-aura {
-      position: absolute; inset: -18%;
-      border-radius: 50%;
-      background: radial-gradient(ellipse at center,
-        rgba(4,6,20,.92)  0%,
-        rgba(5,8,24,.82)  28%,
-        rgba(6,10,26,.55) 50%,
-        rgba(4,7,18,.18)  68%,
-        transparent       82%
+      position: absolute;
+      inset: -30%;          /* виходить за межі */
+      border-radius: 0;     /* без кола! */
+      background: radial-gradient(ellipse 62% 58% at 50% 46%,
+        rgba(4,6,20,.90)  0%,
+        rgba(5,8,24,.78)  22%,
+        rgba(6,10,26,.50) 42%,
+        rgba(4,7,18,.20)  60%,
+        rgba(3,5,14,.05)  74%,
+        transparent       86%
       );
       pointer-events: none;
       z-index: 1;
+      filter: blur(8px);    /* ще м'якше розмиття по краях */
     }
 
     /* Синя туманність */
     .ig-aura::before {
-      content:'';position:absolute;inset:10%;border-radius:50%;
+      content:''; position:absolute; inset:8%;
       background: radial-gradient(ellipse at 40% 35%,
-        rgba(14,30,85,.35) 0%, transparent 65%);
-      filter: blur(20px);
+        rgba(14,30,85,.32) 0%, transparent 62%);
+      filter: blur(24px);
     }
     /* Золота туманність */
     .ig-aura::after {
-      content:'';position:absolute;inset:15%;border-radius:50%;
-      background: radial-gradient(ellipse at 60% 55%,
-        rgba(70,40,8,.25) 0%, transparent 60%);
-      filter: blur(18px);
+      content:''; position:absolute; inset:12%;
+      background: radial-gradient(ellipse at 60% 58%,
+        rgba(70,40,8,.22) 0%, transparent 58%);
+      filter: blur(20px);
     }
 
-    /* Зорі та пил — canvas всередині медальйону */
+    /* Canvas — без border-radius (коло прибираємо) */
     #igStars, #igGalaxyCv {
       position:absolute; inset:0;
       width:100% !important; height:100% !important;
-      border-radius:50%;
+      border-radius: 0;     /* без обрізки кола */
       pointer-events:none;
     }
     #igStars   { z-index:2; }
@@ -1030,9 +1046,16 @@
 
     @media (max-width:768px){
       #interpreter{display:flex;flex-direction:column;}
-      .interp-content{padding:48px 24px 40px;}
-      .interp-photo-col{min-height:340px;}
-      .ig-medallion{top:6%;width:min(72%,280px);}
+      .interp-content{
+        padding:48px 24px 40px;
+        background: linear-gradient(to bottom,
+          rgba(245,243,239,.98) 0%,
+          rgba(245,243,239,.95) 70%,
+          rgba(245,243,239,.7)  100%
+        );
+      }
+      .interp-photo-col{min-height:320px;}
+      .ig-medallion{top:4%;width:min(80%,300px);}
     }
 
         /* ════ BLOCK 5 — FOR WHOM ════ */
@@ -2368,21 +2391,14 @@
     </div>
   </div>
 
-  <!-- RIGHT: фото рук + галактика-медальйон над ними -->
+  <!-- RIGHT: галактика-медальйон, фото рук — єдиний фон усього блоку -->
   <div class="interp-photo-col" id="igPhotoCol">
 
-    <!-- Фото рук — повний фон колонки -->
-    <img class="ipc-img" src="images/interpreter-bg.PNG" alt="" aria-hidden="true">
-
-    <!-- Галактика — компактний об'єкт що парить над руками -->
+    <!-- Галактика — парить у центрі правої колонки -->
     <div class="ig-medallion" id="igMedallion">
-      <!-- Кругла аура/дімка навколо галактики -->
       <div class="ig-aura"></div>
-      <!-- Зорі -->
       <canvas id="igStars"></canvas>
-      <!-- Пиловий диск галактики -->
       <canvas id="igGalaxyCv"></canvas>
-      <!-- Кільця + сонце + планети -->
       <div id="igRoot">
         <div class="ig-ring" id="igR1"></div>
         <div class="ig-ring" id="igR2"></div>
@@ -2391,6 +2407,11 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- Фото рук — єдиний фон на весь #interpreter -->
+  <div class="ipc-bg">
+    <img src="images/interpreter-bg.PNG" alt="" aria-hidden="true">
   </div>
 
 </section>
