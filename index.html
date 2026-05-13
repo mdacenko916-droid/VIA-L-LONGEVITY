@@ -809,110 +809,111 @@
     /* ════ BLOCK 4.7 — INTERPRETER ════ */
     #interpreter {
       padding: 0;
-      background: var(--cream);
       overflow: hidden;
       position: relative;
       min-height: 540px;
-    }
-
-    /* Desktop: 2-column grid */
-    @media (min-width: 769px) {
-      #interpreter {
-        display: grid;
-        grid-template-columns: minmax(380px, 46%) 1fr;
-        grid-template-areas: "content galaxy";
-        align-items: stretch;
-        min-height: 540px;
-      }
-    }
-
-    /* LEFT column — текст */
-    .interp-content {
-      grid-area: content;
-      position: relative; z-index: 2;
-      padding: 64px clamp(24px, 4vw, 56px) 64px clamp(40px, 7vw, 120px);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
+      display: grid;
+      grid-template-columns: minmax(380px,46%) 1fr;
+      grid-template-areas: "content photo";
+      align-items: stretch;
       background: var(--cream);
     }
 
-    /* RIGHT column — галактика */
-    .interp-galaxy-zone {
-      grid-area: galaxy;
+    /* LEFT — текст, без змін */
+    .interp-content {
+      grid-area: content;
+      position: relative; z-index: 2;
+      padding: 64px clamp(20px,3vw,48px) 64px clamp(40px,7vw,112px);
+      display: flex; flex-direction: column; justify-content: center;
+      background: var(--cream);
+    }
+    #interpreter .interp-eyebrow,
+    #interpreter .interp-title,
+    #interpreter .interp-sub,
+    #interpreter .interp-stats,
+    #interpreter .interp-cta-wrap { position:relative; z-index:2; }
+
+    /* RIGHT — фото рук як повний фон */
+    .interp-photo-col {
+      grid-area: photo;
       position: relative;
       overflow: hidden;
-      min-height: 420px;
-      background: #06080e;
+      min-height: 460px;
     }
 
-    /* Фото рук — подложка правой зоны */
-    .interp-hands-bg {
-      position: absolute; inset: 0; z-index: 0;
-    }
-    .interp-hands-bg img {
+    /* Фото рук — повністю заповнює праву колонку */
+    .interp-photo-col .ipc-img {
+      position: absolute; inset: 0;
       width: 100%; height: 100%;
       object-fit: cover;
       object-position: 42% center;
       display: block;
-      opacity: .65;
-      filter: saturate(0.7) brightness(0.55);
+      filter: saturate(0.88) brightness(1.0);
     }
 
-    /* Тёмная дымка поверх фото */
-    .interp-space-fog {
-      position: absolute; inset: 0; z-index: 1;
-      background:
-        radial-gradient(ellipse 120% 100% at 52% 38%,
-          rgba(4,6,18,.94) 0%,
-          rgba(5,8,22,.88) 20%,
-          rgba(6,9,22,.72) 42%,
-          rgba(4,6,16,.30) 65%,
-          rgba(3,5,12,.0)  82%
-        );
+    /* Галактика — компактний медальйон, що парить над руками */
+    .ig-medallion {
+      position: absolute;
+      /* центруємо у верхніх 55% колонки */
+      top: 8%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(78%, 380px);
+      aspect-ratio: 1;
+      z-index: 5;
     }
 
-    /* Туманности (nebula) */
-    .interp-neb { position:absolute; border-radius:50%; pointer-events:none; }
-    .ig-nb1 {
-      z-index:2; width:130%;height:65%; top:-5%;left:-15%;
-      background:radial-gradient(ellipse,rgba(55,30,6,.22) 0%,transparent 65%);
-      filter:blur(72px);
-    }
-    .ig-nb2 {
-      z-index:2; width:90%;height:90%; top:0%;left:-5%;
-      background:radial-gradient(ellipse,rgba(10,20,65,.28) 0%,transparent 65%);
-      filter:blur(85px);
-    }
-    .ig-nb3 {
-      z-index:2; width:75%;height:75%; top:5%;right:-10%;
-      background:radial-gradient(ellipse,rgba(14,32,75,.22) 0%,transparent 65%);
-      filter:blur(75px);
+    /* Кругла дімка тільки навколо галактики */
+    .ig-aura {
+      position: absolute; inset: -18%;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center,
+        rgba(4,6,20,.92)  0%,
+        rgba(5,8,24,.82)  28%,
+        rgba(6,10,26,.55) 50%,
+        rgba(4,7,18,.18)  68%,
+        transparent       82%
+      );
+      pointer-events: none;
+      z-index: 1;
     }
 
-    /* Stars & Galaxy canvases */
-    #igStars    { position:absolute;inset:0;z-index:3;pointer-events:none; }
-    #igGalaxyCv { position:absolute;inset:0;z-index:4;pointer-events:none; }
-
-    /* Planets root */
-    #igRoot     { position:absolute;inset:0;z-index:5; }
-
-    /* Свечение на руки */
-    .ig-handglow {
-      position:absolute; z-index:6;
-      bottom:12%; left:50%; transform:translateX(-50%);
-      width:55%; height:90px;
-      background:radial-gradient(ellipse,rgba(175,135,55,.25) 0%,transparent 70%);
-      filter:blur(22px); pointer-events:none;
+    /* Синя туманність */
+    .ig-aura::before {
+      content:'';position:absolute;inset:10%;border-radius:50%;
+      background: radial-gradient(ellipse at 40% 35%,
+        rgba(14,30,85,.35) 0%, transparent 65%);
+      filter: blur(20px);
+    }
+    /* Золота туманність */
+    .ig-aura::after {
+      content:'';position:absolute;inset:15%;border-radius:50%;
+      background: radial-gradient(ellipse at 60% 55%,
+        rgba(70,40,8,.25) 0%, transparent 60%);
+      filter: blur(18px);
     }
 
-    /* Orbit rings */
+    /* Зорі та пил — canvas всередині медальйону */
+    #igStars, #igGalaxyCv {
+      position:absolute; inset:0;
+      width:100% !important; height:100% !important;
+      border-radius:50%;
+      pointer-events:none;
+    }
+    #igStars   { z-index:2; }
+    #igGalaxyCv{ z-index:3; }
+
+    /* Планети та кільця */
+    #igRoot { position:absolute; inset:0; z-index:4; }
+
+    /* Кільця орбіт */
     .ig-ring {
-      position:absolute; border-radius:50%; pointer-events:none;
+      position:absolute; border-radius:50%;
       border-style:solid; border-color:rgba(201,169,110,.12);
+      pointer-events:none;
     }
 
-    /* Core sun */
+    /* Сонце VIA·L */
     .ig-core {
       position:absolute; border-radius:50%;
       background:radial-gradient(circle at 36% 32%,#f5df80,#c08a28 50%,#6a3a08);
@@ -921,16 +922,17 @@
       animation:ig-cp 4s ease-in-out infinite;
     }
     @keyframes ig-cp {
-      0%,100%{box-shadow:0 0 16px 5px rgba(220,170,70,.7),0 0 55px 20px rgba(200,145,50,.2),0 0 110px 55px rgba(180,120,40,.07);}
-      50%    {box-shadow:0 0 26px 9px rgba(240,185,80,.9),0 0 75px 28px rgba(210,155,55,.3),0 0 140px 75px rgba(180,120,40,.1);}
+      0%,100%{box-shadow:0 0 14px 5px rgba(220,170,70,.75),0 0 45px 16px rgba(200,145,50,.22),0 0 90px 45px rgba(180,120,40,.08);}
+      50%    {box-shadow:0 0 22px 8px rgba(240,185,80,.95),0 0 60px 22px rgba(210,155,55,.32),0 0 120px 60px rgba(180,120,40,.12);}
     }
     .ig-core-text {
       font-family:'DM Sans',sans-serif; font-weight:500;
       letter-spacing:1px; color:#1a0d03;
-      text-align:center; line-height:1.3; user-select:none; text-transform:uppercase;
+      text-align:center; line-height:1.3;
+      user-select:none; text-transform:uppercase;
     }
 
-    /* Planet orbits */
+    /* Планетні орбіти */
     .ig-porbit {
       position:absolute; width:0; height:0;
       transform-origin:0 0;
@@ -942,7 +944,7 @@
     }
     .ig-planet {
       position:absolute;
-      display:flex; flex-direction:column; align-items:center; gap:4px;
+      display:flex; flex-direction:column; align-items:center; gap:3px;
       cursor:pointer; animation:ig-unspin linear infinite;
     }
     @keyframes ig-unspin {
@@ -956,43 +958,36 @@
     .ig-pball::after {
       content:''; position:absolute; top:16%;left:18%;
       width:30%;height:18%;
-      background:rgba(255,255,255,.22); border-radius:50%;filter:blur(2px);
+      background:rgba(255,255,255,.24); border-radius:50%; filter:blur(2px);
     }
-    .ig-porbit:hover .ig-pball{transform:scale(1.4);}
+    .ig-porbit:hover .ig-pball { transform:scale(1.4); }
     .ig-plabel {
       font-family:'DM Sans',sans-serif; font-weight:400;
       letter-spacing:2px; text-transform:uppercase;
-      color:rgba(210,175,110,.72); white-space:nowrap; pointer-events:none;
-      text-shadow:0 0 10px #000,0 0 6px rgba(0,0,0,.9);
+      color:rgba(215,180,115,.8); white-space:nowrap; pointer-events:none;
+      text-shadow:0 0 10px rgba(0,0,0,.95),0 0 6px rgba(0,0,0,.9);
       transition:color .3s;
     }
-    .ig-porbit:hover .ig-plabel{color:#f0d870;}
+    .ig-porbit:hover .ig-plabel { color:#f5e070; }
 
     @keyframes ig-rr {
       from{transform:rotateX(68deg) rotateZ(0deg);}
       to  {transform:rotateX(68deg) rotateZ(360deg);}
     }
 
-    /* interp text styles */
-    #interpreter .interp-eyebrow,
-    #interpreter .interp-title,
-    #interpreter .interp-sub,
-    #interpreter .interp-stats,
-    #interpreter .interp-cta-wrap {
-      position:relative; z-index:2;
-    }
-    .interp-ticker-wrap { display:none; }
+    /* Приховуємо стару бігучу строку */
+    .interp-ticker-wrap { display:none !important; }
 
+    /* TEXT STYLES (unchanged) */
     .interp-eyebrow {
       font-family:'DM Sans',sans-serif;
       font-size:13px; font-weight:500; letter-spacing:.22em;
       text-transform:uppercase; color:var(--gold);
       display:flex; align-items:center; gap:12px;
-      justify-content:flex-start;
       margin-bottom:22px;
     }
     .interp-eyebrow::before{content:'';width:28px;height:1px;background:var(--gold-pale);}
-    .interp-eyebrow::after {display:none;}
+    .interp-eyebrow::after{display:none;}
     .interp-title {
       font-family:'Playfair Display',serif;
       font-size:clamp(28px,3.5vw,48px); font-weight:400; line-height:1.15;
@@ -1004,7 +999,7 @@
       max-width:460px; margin:0 0 14px; line-height:1.75;
     }
     .interp-stats {
-      display:flex; flex-direction:row; justify-content:flex-start;
+      display:flex; flex-direction:row;
       gap:40px; margin-bottom:14px; flex-wrap:wrap;
     }
     .interp-stat-num {
@@ -1015,7 +1010,7 @@
       font-size:11px; font-weight:400; letter-spacing:.12em;
       text-transform:uppercase; color:var(--text-mid); margin-top:6px;
     }
-    .interp-cta-wrap{display:flex;align-items:center;justify-content:flex-start;gap:16px;flex-wrap:wrap;}
+    .interp-cta-wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
     .interp-btn-primary {
       display:inline-flex; align-items:center; gap:10px;
       padding:16px 36px; border-radius:50px;
@@ -1035,26 +1030,12 @@
 
     @media (max-width:768px){
       #interpreter{display:flex;flex-direction:column;}
-      .interp-content{padding:48px 24px 40px;order:1;}
-      .interp-galaxy-zone{min-height:300px;order:2;}
+      .interp-content{padding:48px 24px 40px;}
+      .interp-photo-col{min-height:340px;}
+      .ig-medallion{top:6%;width:min(72%,280px);}
     }
 
-    @media (max-width: 768px) {
-      #interpreter { height: auto; min-height: 460px; }
-      .interp-content { padding: 56px 24px 40px; max-width: 100%; }
-      .interp-photo-bg::after {
-        background: linear-gradient(
-          to bottom,
-          rgba(245,243,239,1.0) 40%,
-          rgba(245,243,239,0.5) 70%,
-          rgba(245,243,239,0.1) 100%
-        );
-      }
-      .interp-stats { gap: 24px; }
-      .interp-stat-num { font-size: 28px; }
-    }
-
-    /* ════ BLOCK 5 — FOR WHOM ════ */
+        /* ════ BLOCK 5 — FOR WHOM ════ */
     #for-whom { max-width: 1320px; margin: 0 auto; }
     .header-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; margin-bottom: 24px; flex-wrap: wrap; }
     .header-note { max-width: 320px; font-size: 17px; font-weight: 400; color: var(--text-mid); line-height: 1.75; text-align: right; }
@@ -2359,7 +2340,7 @@
 
 <section id="interpreter">
 
-  <!-- LEFT: текст + кнопки — без змін -->
+  <!-- LEFT: текст + кнопки — незмінно -->
   <div class="interp-content">
     <div class="interp-eyebrow" data-i18n="b_interp_eyebrow">Інтерпретатор біопоказників · VIA·L</div>
     <h2 class="interp-title" data-i18n="b_interp_title">Ваш трекер знає більше,<br>ніж показує <em>екран</em></h2>
@@ -2387,24 +2368,29 @@
     </div>
   </div>
 
-  <!-- RIGHT: галактика над руками -->
-  <div class="interp-galaxy-zone" id="igZone">
-    <div class="interp-hands-bg">
-      <img src="images/interpreter-bg.PNG" alt="" aria-hidden="true">
+  <!-- RIGHT: фото рук + галактика-медальйон над ними -->
+  <div class="interp-photo-col" id="igPhotoCol">
+
+    <!-- Фото рук — повний фон колонки -->
+    <img class="ipc-img" src="images/interpreter-bg.PNG" alt="" aria-hidden="true">
+
+    <!-- Галактика — компактний об'єкт що парить над руками -->
+    <div class="ig-medallion" id="igMedallion">
+      <!-- Кругла аура/дімка навколо галактики -->
+      <div class="ig-aura"></div>
+      <!-- Зорі -->
+      <canvas id="igStars"></canvas>
+      <!-- Пиловий диск галактики -->
+      <canvas id="igGalaxyCv"></canvas>
+      <!-- Кільця + сонце + планети -->
+      <div id="igRoot">
+        <div class="ig-ring" id="igR1"></div>
+        <div class="ig-ring" id="igR2"></div>
+        <div class="ig-ring" id="igR3"></div>
+        <div class="ig-core" id="igCore"><div class="ig-core-text">VIA·L</div></div>
+      </div>
     </div>
-    <div class="interp-space-fog"></div>
-    <div class="interp-neb ig-nb1"></div>
-    <div class="interp-neb ig-nb2"></div>
-    <div class="interp-neb ig-nb3"></div>
-    <canvas id="igStars"></canvas>
-    <canvas id="igGalaxyCv"></canvas>
-    <div id="igRoot">
-      <div class="ig-ring" id="igR1"></div>
-      <div class="ig-ring" id="igR2"></div>
-      <div class="ig-ring" id="igR3"></div>
-      <div class="ig-core" id="igCore"><div class="ig-core-text">VIA·L</div></div>
-    </div>
-    <div class="ig-handglow"></div>
+
   </div>
 
 </section>
@@ -4505,9 +4491,8 @@ console.log('[index.html] Parent click handler attached');
   </div>
 </div>
 
-
 <script>
-/* INTERPRETER GALAXY — VIA·L */
+/* INTERPRETER GALAXY v3 — medallion floating over hands */
 (function(){
   function lc(hex,a){
     return '#'+hex.slice(1).replace(/../g,function(c){
@@ -4517,55 +4502,62 @@ console.log('[index.html] Parent click handler attached');
   }
 
   var brands=[
-    {n:'Oura Ring',      f:.35,sz:14,c:'#d08050',spd:11,s:10  },
-    {n:'Apple Health',   f:.35,sz:11,c:'#70aed0',spd:11,s:190 },
-    {n:'Garmin',         f:.59,sz:17,c:'#68a058',spd:19,s:60  },
-    {n:'Fitbit',         f:.59,sz:13,c:'#d89838',spd:19,s:195 },
-    {n:'WHOOP',          f:.59,sz:11,c:'#b06878',spd:19,s:318 },
-    {n:'Samsung Health', f:.84,sz:16,c:'#5878c8',spd:30,s:28  },
-    {n:'Polar',          f:.84,sz:12,c:'#c87040',spd:30,s:148 },
-    {n:'Withings',       f:.84,sz:11,c:'#80c0b0',spd:30,s:245 },
-    {n:'Amazfit',        f:.59,sz:10,c:'#a070c8',spd:23,s:100 },
+    {n:'Oura Ring',      f:.34,sz:13,c:'#d08050',spd:11,s:10  },
+    {n:'Apple Health',   f:.34,sz:10,c:'#70aed0',spd:11,s:190 },
+    {n:'Garmin',         f:.58,sz:16,c:'#68a058',spd:19,s:60  },
+    {n:'Fitbit',         f:.58,sz:12,c:'#d89838',spd:19,s:195 },
+    {n:'WHOOP',          f:.58,sz:10,c:'#b06878',spd:19,s:318 },
+    {n:'Samsung Health', f:.84,sz:15,c:'#5878c8',spd:30,s:28  },
+    {n:'Polar',          f:.84,sz:11,c:'#c87040',spd:30,s:148 },
+    {n:'Withings',       f:.84,sz:10,c:'#80c0b0',spd:30,s:245 },
+    {n:'Amazfit',        f:.58,sz:10,c:'#a070c8',spd:23,s:108 },
     {n:'Xiaomi',         f:.84,sz:10,c:'#e07070',spd:36,s:340 },
   ];
 
   var tip=document.createElement('div');
-  tip.style.cssText='position:fixed;bottom:22px;left:50%;transform:translateX(-50%);'+
+  tip.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);'+
     'background:rgba(4,6,18,.96);border:1px solid rgba(180,140,60,.3);'+
     'color:#c9a96e;font-family:"DM Sans",sans-serif;font-size:9px;letter-spacing:2px;'+
-    'padding:7px 18px;white-space:nowrap;opacity:0;pointer-events:none;'+
+    'padding:6px 16px;white-space:nowrap;opacity:0;pointer-events:none;'+
     'transition:opacity .3s;z-index:9990;text-transform:uppercase;';
   document.body.appendChild(tip);
   var tipT;
 
-  var zone,sc,gc,stD=[],animId;
+  var med, sc, gc, stD=[], animId;
 
-  function getL(){
-    var w=zone.offsetWidth, h=zone.offsetHeight;
-    var cx=w*.50, cy=h*.42;
-    var maxR=Math.min(w*.44, h*.40);
-    return {cx:cx,cy:cy,maxR:maxR,w:w,h:h};
+  /* галактика завжди квадратна — беремо розмір медальйону */
+  function getSize(){
+    return med ? med.offsetWidth : 300;
   }
+  /* центр — завжди середина медальйону */
+  function getCX(S){ return S/2; }
+  function getCY(S){ return S/2; }
+  /* радіус орбіт відносно розміру */
+  function getMaxR(S){ return S * 0.44; }
 
   /* STARS */
-  function initStars(){
+  function initStars(S){
     stD=[];
-    for(var i=0;i<180;i++){
+    for(var i=0;i<160;i++){
       var d=Math.random();
-      stD.push({x:Math.random(),y:Math.random(),
-        r:d*.9+.1,a:Math.random()*(d*.4+.05)+.04,
-        sp:Math.random()*.005+.002,dir:Math.random()>.5?1:-1,
-        warm:Math.random()>.87});
+      stD.push({
+        x:Math.random(), y:Math.random(),
+        r:d*.85+.1,
+        a:Math.random()*(d*.4+.05)+.04,
+        sp:Math.random()*.005+.002,
+        dir:Math.random()>.5?1:-1,
+        warm:Math.random()>.87
+      });
     }
   }
 
   function drawStars(){
-    var w=sc.width,h=sc.height;
+    var S=getSize();
     var sx=sc.getContext('2d');
-    sx.clearRect(0,0,w,h);
+    sx.clearRect(0,0,S,S);
     stD.forEach(function(s){
       s.a+=s.sp*s.dir; if(s.a>=.8||s.a<=.03)s.dir*=-1;
-      sx.beginPath(); sx.arc(s.x*w,s.y*h,s.r,0,Math.PI*2);
+      sx.beginPath(); sx.arc(s.x*S,s.y*S,s.r,0,Math.PI*2);
       sx.fillStyle=(s.warm?'rgba(255,235,190,':'rgba(200,215,255,')+s.a+')';
       sx.fill();
     });
@@ -4574,77 +4566,78 @@ console.log('[index.html] Parent click handler attached');
 
   /* GALAXY DUST */
   function drawGalaxy(){
-    var L=getL();
-    gc.width=zone.offsetWidth; gc.height=zone.offsetHeight;
+    var S=getSize();
+    sc.width=S; sc.height=S;
+    gc.width=S; gc.height=S;
     var gx=gc.getContext('2d');
-    var cx=L.cx,cy=L.cy,R=L.maxR;
-    for(var i=0;i<1100;i++){
+    var cx=S/2, cy=S/2, R=S*0.44;
+    for(var i=0;i<900;i++){
       var arm=Math.floor(Math.random()*3)*(Math.PI*2/3);
       var dist=Math.pow(Math.random(),.72)*R*.97;
       var spi=(dist/R)*Math.PI*1.8;
-      var spd=(dist/R)*1.2;
-      var a=arm+spi+(Math.random()-.5)*spd*1.6;
+      var spd2=(dist/R)*1.2;
+      var a=arm+spi+(Math.random()-.5)*spd2*1.6;
       var px=cx+Math.cos(a)*dist;
-      var py=cy+Math.sin(a)*dist*.28;
-      var sz=Math.random()*1.45+.18;
-      var al=(Math.random()*.52+.12)*(1-dist/R)*.9;
+      var py=cy+Math.sin(a)*dist*.30; /* perspective */
+      var sz=Math.random()*1.4+.18;
+      var al=(Math.random()*.55+.12)*(1-dist/R)*.9;
       var t=dist/R;
       gx.beginPath(); gx.arc(px,py,sz,0,Math.PI*2);
       gx.fillStyle='rgba('+(Math.round(225-t*65))+','+(Math.round(158-t*8))+','+(Math.round(52+t*95))+','+al+')';
       gx.fill();
     }
     var cg=gx.createRadialGradient(cx,cy,0,cx,cy,R*.15);
-    cg.addColorStop(0,'rgba(255,235,125,.4)');
+    cg.addColorStop(0,'rgba(255,235,125,.42)');
     cg.addColorStop(.5,'rgba(200,138,48,.18)');
     cg.addColorStop(1,'rgba(0,0,0,0)');
-    gx.fillStyle=cg; gx.fillRect(0,0,gc.width,gc.height);
+    gx.fillStyle=cg; gx.fillRect(0,0,S,S);
   }
 
   /* RINGS + CORE */
-  var RF=[{f:.35,op:.22,spd:38},{f:.59,op:.14,spd:55},{f:.84,op:.09,spd:76}];
-
+  var RF=[{f:.34,op:.24,spd:36},{f:.58,op:.15,spd:54},{f:.84,op:.09,spd:74}];
   function posRings(){
-    var L=getL();
+    var S=getSize();
+    var cx=S/2, cy=S/2, R=S*0.44;
     ['igR1','igR2','igR3'].forEach(function(id,i){
       var r=document.getElementById(id); if(!r)return;
-      var d=RF[i], dm=L.maxR*2*d.f;
+      var d=RF[i], dm=R*2*d.f;
       r.style.cssText='position:absolute;border-radius:50%;pointer-events:none;border-width:1px;border-style:solid;'+
         'border-color:rgba(201,169,110,'+d.op+');'+
         'width:'+dm+'px;height:'+dm+'px;'+
-        'top:'+(L.cy-dm/2)+'px;left:'+(L.cx-dm/2)+'px;'+
+        'top:'+(cy-dm/2)+'px;left:'+(cx-dm/2)+'px;'+
         'animation:ig-rr '+d.spd+'s linear infinite'+(i===1?' reverse':'')+';';
     });
     var core=document.getElementById('igCore'); if(!core)return;
-    var cs=Math.min(L.maxR*.17,66);
+    var cs=Math.min(R*0.18,62);
     core.style.cssText='position:absolute;border-radius:50%;z-index:10;cursor:default;'+
       'width:'+cs+'px;height:'+cs+'px;'+
-      'top:'+(L.cy-cs/2)+'px;left:'+(L.cx-cs/2)+'px;'+
+      'top:'+(cy-cs/2)+'px;left:'+(cx-cs/2)+'px;'+
       'background:radial-gradient(circle at 36% 32%,#f5df80,#c08a28 50%,#6a3a08);'+
       'display:flex;align-items:center;justify-content:center;'+
       'animation:ig-cp 4s ease-in-out infinite;';
     core.querySelector('.ig-core-text').style.fontSize=Math.max(7,cs*.15)+'px';
-    var gl=zone.querySelector('.ig-handglow'); if(gl)gl.style.bottom=(L.h*.12)+'px';
   }
 
   /* PLANETS */
   function buildPlanets(){
     document.querySelectorAll('.ig-porbit').forEach(function(e){e.remove();});
-    var L=getL();
+    var S=getSize();
+    var cx=S/2, cy=S/2, R=S*0.44;
     var root=document.getElementById('igRoot'); if(!root)return;
     brands.forEach(function(b){
-      var rad=L.maxR*b.f;
+      var rad=R*b.f;
       var po=document.createElement('div'); po.className='ig-porbit';
       po.style.cssText='--s:'+b.s+'deg;animation-duration:'+b.spd+'s;'+
-        'top:'+L.cy+'px;left:'+L.cx+'px;';
+        'top:'+cy+'px;left:'+cx+'px;';
       var pl=document.createElement('div'); pl.className='ig-planet';
       pl.style.cssText='left:'+rad+'px;--s:'+b.s+'deg;animation-duration:'+b.spd+'s;';
       var ball=document.createElement('div'); ball.className='ig-pball';
-      var sz=Math.max(7, b.sz*(Math.min(L.maxR/160,1.3)));
+      var sz=Math.max(6, b.sz*(S/340));
       ball.style.cssText='width:'+sz+'px;height:'+sz+'px;'+
         'background:radial-gradient(circle at 32% 28%,'+lc(b.c,70)+','+b.c+' 55%,'+lc(b.c,-55)+');'+
-        'box-shadow:0 0 '+(sz*.65)+'px '+(sz*.22)+'px '+b.c+'55;';
+        'box-shadow:0 0 '+(sz*.7)+'px '+(sz*.25)+'px '+b.c+'60;';
       var lbl=document.createElement('div'); lbl.className='ig-plabel';
-      lbl.style.fontSize=Math.max(5.5,sz*.44)+'px';
+      lbl.style.fontSize=Math.max(5,sz*.42)+'px';
       lbl.textContent=b.n;
       pl.appendChild(ball); pl.appendChild(lbl);
       po.appendChild(pl); root.appendChild(po);
@@ -4664,27 +4657,23 @@ console.log('[index.html] Parent click handler attached');
   }
 
   var rsT;
+  function rebuild(){
+    drawGalaxy(); posRings(); buildPlanets();
+  }
   function onResize(){
     clearTimeout(rsT);
-    rsT=setTimeout(function(){
-      var w=zone.offsetWidth,h=zone.offsetHeight;
-      sc.width=w; sc.height=h;
-      drawGalaxy(); posRings(); buildPlanets();
-    },150);
+    rsT=setTimeout(rebuild,150);
   }
 
   function init(){
-    zone=document.getElementById('igZone'); if(!zone)return;
-    sc=document.getElementById('igStars');
-    gc=document.getElementById('igGalaxyCv');
-    /* wait for layout to settle */
+    med=document.getElementById('igMedallion'); if(!med)return;
+    sc =document.getElementById('igStars');
+    gc =document.getElementById('igGalaxyCv');
     setTimeout(function(){
-      var w=zone.offsetWidth, h=zone.offsetHeight;
-      if(!w||!h){ setTimeout(init,200); return; }
-      sc.width=w; sc.height=h;
-      initStars(); drawStars(); drawGalaxy(); posRings(); buildPlanets();
+      if(!med.offsetWidth){ setTimeout(init,200); return; }
+      initStars(); drawStars(); rebuild();
       window.addEventListener('resize',onResize);
-    },100);
+    },80);
   }
 
   if(document.readyState==='loading'){
@@ -4692,6 +4681,5 @@ console.log('[index.html] Parent click handler attached');
   } else { init(); }
 })();
 </script>
-
 </body>
 </html>
