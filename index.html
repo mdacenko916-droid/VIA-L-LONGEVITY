@@ -855,48 +855,56 @@
     /* Галактика — парить над руками, без чіткого контуру */
     .ig-medallion {
       position: absolute;
-      top: 10%;
-      left: 35%;
+      top: 40%;
+      left: 46%;
       transform: translate(-50%, -50%);
       width: min(88%, 400px);
       aspect-ratio: 1;
       z-index: 5;
-      /* Обрізаємо тільки канвас, не дімку */
       overflow: visible;
     }
 
     /* М'яка дімка — без жодного чіткого краю
        Розширена за межі медальйону через від'ємний inset */
+    /* Дімка — прив'язана до центру медальйону через псевдоелемент */
     .ig-aura {
+      display: none; /* прибираємо старий підхід */
+    }
+
+    .ig-medallion::before {
+      content: '';
       position: absolute;
-      inset: -30%;          /* виходить за межі */
-      border-radius: 0;     /* без кола! */
-      background: radial-gradient(ellipse 62% 58% at 50% 46%,
-        rgba(4,6,20,.90)  0%,
-        rgba(5,8,24,.78)  22%,
-        rgba(6,10,26,.50) 42%,
-        rgba(4,7,18,.20)  60%,
-        rgba(3,5,14,.05)  74%,
-        transparent       86%
+      /* Розширюємо на 40% в кожну сторону від центру */
+      top: 50%; left: 50%;
+      width: 180%; height: 180%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: radial-gradient(ellipse 55% 55% at 50% 50%,
+        rgba(4,6,20,.92)  0%,
+        rgba(5,8,24,.80)  20%,
+        rgba(6,10,26,.52) 40%,
+        rgba(4,7,18,.22)  58%,
+        rgba(3,5,14,.06)  72%,
+        transparent       85%
       );
       pointer-events: none;
       z-index: 1;
-      filter: blur(8px);    /* ще м'якше розмиття по краях */
+      filter: blur(6px);
     }
 
     /* Синя туманність */
-    .ig-aura::before {
-      content:''; position:absolute; inset:8%;
-      background: radial-gradient(ellipse at 40% 35%,
-        rgba(14,30,85,.32) 0%, transparent 62%);
-      filter: blur(24px);
-    }
-    /* Золота туманність */
-    .ig-aura::after {
-      content:''; position:absolute; inset:12%;
-      background: radial-gradient(ellipse at 60% 58%,
-        rgba(70,40,8,.22) 0%, transparent 58%);
-      filter: blur(20px);
+    .ig-medallion::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 160%; height: 160%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: radial-gradient(ellipse 50% 50% at 50% 50%,
+        rgba(14,30,85,.28) 0%, transparent 65%);
+      filter: blur(22px);
+      pointer-events: none;
+      z-index: 1;
     }
 
     /* Canvas — без border-radius (коло прибираємо) */
@@ -1035,22 +1043,23 @@
     .interp-btn-secondary:hover{border-color:var(--gold);}
 
     @media (max-width:768px){
-      /* На мобільному — єдиний блок, фото як фон, текст зверху */
+      /* На мобільному — єдиний блок */
       #interpreter {
         display: block;
         position: relative;
         min-height: 100vh;
       }
-      /* Фото — абсолютний фон на весь мобільний блок */
+      /* Фото — менший масштаб, руки віддалені */
       #interpreter .ipc-bg {
         position: absolute;
         inset: 0;
         z-index: 0;
       }
       #interpreter .ipc-bg img {
-        object-position: 68% center;
+        object-position: 50% 80%;
+        object-fit: cover;
       }
-      /* Текст зверху, прозорий фон */
+      /* Текст зверху */
       .interp-content {
         position: relative;
         z-index: 2;
@@ -1058,19 +1067,19 @@
         background: none !important;
         width: 100%;
       }
-      /* Права колонка — займає нижню частину для галактики */
+      /* Права колонка */
       .interp-photo-col {
         position: relative;
         z-index: 2;
-        min-height: 420px;
+        min-height: 460px;
         width: 100%;
       }
-      /* Галактика — строго по центру колонки, над руками */
+      /* Галактика — менша, строго по центру, над руками */
       .ig-medallion {
-        top: 30%;
+        top: 24% !important;
         left: 50% !important;
         transform: translate(-50%, -50%) !important;
-        width: min(90vw, 340px);
+        width: min(70vw, 270px) !important;
       }
     }
 
@@ -2171,13 +2180,11 @@
     /* Galaxy medallion fade-in from above */
     .ig-medallion {
       opacity: 0;
-      transform: translateX(-50%) translateY(-20px);
-      transition: opacity .9s cubic-bezier(.4,0,.2,1), transform .9s cubic-bezier(.4,0,.2,1);
+      transition: opacity .9s cubic-bezier(.4,0,.2,1);
       transition-delay: .2s;
     }
     .ig-medallion.visible {
       opacity: 1;
-      transform: translateX(-50%) translateY(0);
     }
 
   
@@ -4617,15 +4624,12 @@ console.log('[index.html] Parent click handler attached');
   /* On mobile: reposition medallion center relative to photo col */
   function fixMobilePosition(){
     if(window.innerWidth > 768) return;
-    var col = document.getElementById('igPhotoCol');
-    if(!col || !med) return;
-    var colH = col.offsetHeight;
-    var colW = col.offsetWidth;
-    var medW = med.offsetWidth;
-    /* Place center at 35% from top of photo col, exactly centered horizontally */
-    med.style.top    = Math.round(colH * 0.32) + 'px';
-    med.style.left   = Math.round(colW * 0.50) + 'px';
-    med.style.transform = 'translate(-50%, -50%)';
+    if(!med) return;
+    // Use CSS — JS override not needed on mobile
+    // just ensure centering is correct
+    med.style.top = '';
+    med.style.left = '';
+    med.style.transform = '';
   }
 
   /* STARS */
