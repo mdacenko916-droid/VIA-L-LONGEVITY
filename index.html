@@ -832,14 +832,16 @@
     #interpreter .ipc-bg {
       position: absolute; inset: 0;
       z-index: 0;
+      /* Covers the FULL section — both text and photo columns */
     }
     #interpreter .ipc-bg img {
       width: 100%; height: 100%;
       object-fit: cover;
       object-position: 60% 70%;
       display: block;
-      filter: saturate(0.85) brightness(1.02);
+      filter: saturate(0.82) brightness(1.06) contrast(0.96);
     }
+
 
     /* LEFT — текст, прозорий фон щоб фото проглядало */
     .interp-content {
@@ -847,7 +849,7 @@
       position: relative; z-index: 2;
       padding: 64px clamp(20px,3vw,48px) 64px clamp(40px,7vw,112px);
       display: flex; flex-direction: column; justify-content: center;
-      background: var(--cream);
+      background: transparent;
     }
     #interpreter .interp-eyebrow,
     #interpreter .interp-title,
@@ -858,11 +860,10 @@
     /* Галактика — парить над руками, без чіткого контуру */
     .ig-medallion {
       position: absolute;
-      top: auto;
-      bottom: 16%;
+      top: 43%;
       left: 50%;
-      transform: translateX(-50%);
-      width: min(90%, 420px);
+      transform: translate(-50%, -50%);
+      width: min(88%, 400px);
       aspect-ratio: 1;
       z-index: 5;
       /* Обрізаємо тільки канвас, не дімку */
@@ -2409,10 +2410,13 @@
     </div>
   </div>
 
-  <!-- RIGHT: галактика-медальйон, фото рук — єдиний фон усього блоку -->
-  <div class="interp-photo-col" id="igPhotoCol">
+  <!-- Фото рук — абсолютний фон на ВЕСЬ #interpreter (обидві колонки) -->
+  <div class="ipc-bg">
+    <img src="images/interpreter-bg.PNG" alt="" aria-hidden="true">
+  </div>
 
-    <!-- Галактика — парить у центрі правої колонки -->
+  <!-- RIGHT: галактика-медальйон над руками -->
+  <div class="interp-photo-col" id="igPhotoCol">
     <div class="ig-medallion" id="igMedallion">
       <div class="ig-aura"></div>
       <canvas id="igStars"></canvas>
@@ -2424,12 +2428,6 @@
         <div class="ig-core" id="igCore"><div class="ig-core-text">VIA·L</div></div>
       </div>
     </div>
-
-  </div>
-
-  <!-- Фото рук — єдиний фон на весь #interpreter -->
-  <div class="ipc-bg">
-    <img src="images/interpreter-bg.PNG" alt="" aria-hidden="true">
   </div>
 
 </section>
