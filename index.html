@@ -1065,12 +1065,12 @@
         min-height: 420px;
         width: 100%;
       }
-      /* Галактика — по центру, над руками */
+      /* Галактика — строго по центру колонки, над руками */
       .ig-medallion {
-        top: 18%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: min(85vw, 320px);
+        top: 30%;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        width: min(90vw, 340px);
       }
     }
 
@@ -4609,15 +4609,24 @@ console.log('[index.html] Parent click handler attached');
 
   var med, sc, gc, stD=[], animId;
 
-  /* галактика завжди квадратна — беремо розмір медальйону */
   function getSize(){
     return med ? med.offsetWidth : 300;
   }
-  /* центр — завжди середина медальйону */
-  function getCX(S){ return S/2; }
-  function getCY(S){ return S/2; }
-  /* радіус орбіт відносно розміру */
   function getMaxR(S){ return S * 0.44; }
+
+  /* On mobile: reposition medallion center relative to photo col */
+  function fixMobilePosition(){
+    if(window.innerWidth > 768) return;
+    var col = document.getElementById('igPhotoCol');
+    if(!col || !med) return;
+    var colH = col.offsetHeight;
+    var colW = col.offsetWidth;
+    var medW = med.offsetWidth;
+    /* Place center at 35% from top of photo col, exactly centered horizontally */
+    med.style.top    = Math.round(colH * 0.32) + 'px';
+    med.style.left   = Math.round(colW * 0.50) + 'px';
+    med.style.transform = 'translate(-50%, -50%)';
+  }
 
   /* STARS */
   function initStars(S){
@@ -4742,7 +4751,7 @@ console.log('[index.html] Parent click handler attached');
 
   var rsT;
   function rebuild(){
-    drawGalaxy(); posRings(); buildPlanets();
+    drawGalaxy(); posRings(); buildPlanets(); fixMobilePosition();
   }
   function onResize(){
     clearTimeout(rsT);
@@ -4755,7 +4764,7 @@ console.log('[index.html] Parent click handler attached');
     gc =document.getElementById('igGalaxyCv');
     setTimeout(function(){
       if(!med.offsetWidth){ setTimeout(init,200); return; }
-      initStars(); drawStars(); rebuild();
+      initStars(); drawStars(); rebuild(); fixMobilePosition();
       window.addEventListener('resize',onResize);
     },80);
   }
