@@ -971,21 +971,28 @@
       0%   { transform: translateX(0); }
       100% { transform: translateX(-50%); }
     }
+    
+    @keyframes ig-rr {
+      from { transform: rotateX(70deg) rotateZ(0deg); }
+      to   { transform: rotateX(70deg) rotateZ(360deg); }
+    }
+
     @keyframes gold-shimmer {
       0%   { background-position: 0% center; }
       100% { background-position: 200% center; }
     }
 
     @media (max-width: 768px) {
-      #interpreter { height: auto; min-height: 460px; }
-      .interp-content { padding: 56px 24px 40px; max-width: 100%; }
-      .interp-photo-bg::after {
-        background: linear-gradient(
-          to bottom,
-          rgba(245,243,239,1.0) 40%,
-          rgba(245,243,239,0.5) 70%,
-          rgba(245,243,239,0.1) 100%
-        );
+      #interpreter {
+        height: auto; min-height: auto;
+        display: flex; flex-direction: column;
+      }
+      .interp-content {
+        padding: 56px 24px 40px; max-width: 100%;
+        background: var(--cream);
+      }
+      .interp-galaxy-zone {
+        min-height: 320px;
       }
       .interp-stats { gap: 24px; }
       .interp-stat-num { font-size: 28px; }
@@ -2295,10 +2302,8 @@
 <!-- BLOCK 4.7: INTERPRETER -->
 
 <section id="interpreter">
-  <div class="interp-photo-bg">
-    <img src="images/interpreter-bg.PNG" alt="" aria-hidden="true">
-  </div>
 
+  <!-- LEFT: текст + кнопки (без изменений) -->
   <div class="interp-content">
     <div class="interp-eyebrow" data-i18n="b_interp_eyebrow">Інтерпретатор біопоказників · VIA·L</div>
     <h2 class="interp-title" data-i18n="b_interp_title">Ваш трекер знає більше,<br>ніж показує <em>екран</em></h2>
@@ -2328,34 +2333,40 @@
     </div>
   </div>
 
-  <!-- Бегущая строка — на всю ширину, внизу блока -->
-  <div class="interp-ticker-wrap">
-    <div class="interp-ticker">
-      <div class="interp-ticker-inner">
-        <span class="interp-ticker-item">Oura Ring</span><span class="interp-ticker-dot">✦</span>
-        <span class="interp-ticker-item">Apple Health</span><span class="interp-ticker-dot">✦</span>
-        <span class="interp-ticker-item">Garmin</span><span class="interp-ticker-dot">✦</span>
-        <span class="interp-ticker-item">Polar</span><span class="interp-ticker-dot">✦</span>
-        <span class="interp-ticker-item">Samsung Health</span><span class="interp-ticker-dot">✦</span>
-        <span class="interp-ticker-item">Withings</span><span class="interp-ticker-dot">✦</span>
-        <span class="interp-ticker-item">Amazfit</span><span class="interp-ticker-dot">✦</span>
-        <span class="interp-ticker-item">Xiaomi</span><span class="interp-ticker-dot">✦</span>
-        <span class="interp-ticker-item">WHOOP</span><span class="interp-ticker-dot">✦</span>
-        <span class="interp-ticker-item">Fitbit</span><span class="interp-ticker-dot">✦</span>
-      </div>
-      <div class="interp-ticker-inner" aria-hidden="true">
-        <span class="interp-ticker-item">Oura Ring</span><span class="interp-ticker-dot">✦</span>
-        <span class="interp-ticker-item">Apple Health</span><span class="interp-ticker-dot">✦</span>
-        <span class="interp-ticker-item">Garmin</span><span class="interp-ticker-dot">✦</span>
-        <span class="interp-ticker-item">Polar</span><span class="interp-ticker-dot">✦</span>
-        <span class="interp-ticker-item">Samsung Health</span><span class="interp-ticker-dot">✦</span>
-        <span class="interp-ticker-item">Withings</span><span class="interp-ticker-dot">✦</span>
-        <span class="interp-ticker-item">Amazfit</span><span class="interp-ticker-dot">✦</span>
-        <span class="interp-ticker-item">Xiaomi</span><span class="interp-ticker-dot">✦</span>
-        <span class="interp-ticker-item">WHOOP</span><span class="interp-ticker-dot">✦</span>
-        <span class="interp-ticker-item">Fitbit</span><span class="interp-ticker-dot">✦</span>
+  <!-- RIGHT: галактика над руками -->
+  <div class="interp-galaxy-zone" id="interpGalaxyZone">
+
+    <!-- Фото рук фоном -->
+    <div class="interp-hands-photo">
+      <img src="images/interpreter-bg.PNG" alt="" aria-hidden="true">
+    </div>
+
+    <!-- Космическая дымка -->
+    <div class="interp-space-overlay"></div>
+    <div class="interp-neb interp-nb1"></div>
+    <div class="interp-neb interp-nb2"></div>
+    <div class="interp-neb interp-nb3"></div>
+    <div class="interp-neb interp-nb4"></div>
+
+    <!-- Звёзды -->
+    <canvas class="interp-stars" id="interpStars"></canvas>
+
+    <!-- Галактическая пыль -->
+    <canvas class="interp-galaxy-canvas" id="interpGalaxyCanvas"></canvas>
+
+    <!-- Планеты + орбиты + солнце -->
+    <div class="interp-galaxy-root" id="interpGalaxyRoot">
+      <div class="ig-ring" id="igRing1"></div>
+      <div class="ig-ring" id="igRing2"></div>
+      <div class="ig-ring" id="igRing3"></div>
+      <div class="ig-core" id="igCore">
+        <div class="ig-core-text">VIA·L</div>
       </div>
     </div>
+
+    <!-- Свечение на руки -->
+    <div class="interp-hand-light"></div>
+
   </div>
 
 </section>
@@ -4455,6 +4466,253 @@ console.log('[index.html] Parent click handler attached');
     <iframe id="book-iframe-frame" src="" allowtransparency="true"></iframe>
   </div>
 </div>
+
+
+<script>
+/* ═══════════════════════════════════════════════
+   INTERPRETER GALAXY — planets orbiting VIA·L sun
+   over hands photo, right column only
+═══════════════════════════════════════════════ */
+(function() {
+  function lc(hex, amt) {
+    return '#' + hex.slice(1).replace(/../g, function(c) {
+      var n = Math.min(255, Math.max(0, parseInt(c, 16) + amt)).toString(16);
+      return n.length === 1 ? '0' + n : n;
+    });
+  }
+
+  var zone, starsC, galaxyC, root;
+  var starsData = [];
+  var animId;
+  var planets = [];
+
+  var brands = [
+    {name:'Oura Ring',      frac:.36, size:14, color:'#d08050', spd:11, s:10,  desc:'Кільце · сон та HRV'},
+    {name:'Apple Health',   frac:.36, size:11, color:'#70aed0', spd:11, s:190, desc:'Apple HealthKit'},
+    {name:'Garmin',         frac:.60, size:17, color:'#68a058', spd:19, s:60,  desc:'GPS · мультиспорт'},
+    {name:'Fitbit',         frac:.60, size:13, color:'#d89838', spd:19, s:200, desc:'Фітнес-браслети Google'},
+    {name:'WHOOP',          frac:.60, size:11, color:'#b06878', spd:19, s:320, desc:'Відновлення та навантаження'},
+    {name:'Samsung Health', frac:.86, size:16, color:'#5878c8', spd:30, s:30,  desc:'Galaxy Watch'},
+    {name:'Polar',          frac:.86, size:12, color:'#c87040', spd:30, s:150, desc:'Профспорт · кардіо'},
+    {name:'Withings',       frac:.86, size:11, color:'#80c0b0', spd:30, s:270, desc:'Медичні трекери'},
+  ];
+
+  // tooltip
+  var tip = document.createElement('div');
+  tip.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);'+
+    'background:rgba(5,8,20,.96);border:1px solid rgba(180,140,60,.25);'+
+    'color:#c9a96e;font-family:"DM Sans",sans-serif;font-size:10px;letter-spacing:2px;'+
+    'padding:8px 20px;white-space:nowrap;opacity:0;pointer-events:none;'+
+    'transition:opacity .3s;z-index:9990;text-transform:uppercase;';
+  document.body.appendChild(tip);
+  var tipTimer;
+
+  function getLayout() {
+    var r = zone.getBoundingClientRect();
+    var w = zone.offsetWidth, h = zone.offsetHeight;
+    // center galaxy in upper 60% of zone (above hands)
+    var cx = w * 0.50;
+    var cy = h * 0.42;
+    var maxR = Math.min(w, h) * 0.38;
+    return {cx:cx, cy:cy, maxR:maxR, w:w, h:h};
+  }
+
+  // ── STARS ──
+  function initStars() {
+    starsData = [];
+    for (var i = 0; i < 200; i++) {
+      var depth = Math.random();
+      starsData.push({
+        x: Math.random(), y: Math.random(),
+        r: depth * 1.0 + 0.12,
+        a: Math.random() * (depth * .5 + .04) + .03,
+        sp: Math.random() * .005 + .002,
+        d: Math.random() > .5 ? 1 : -1,
+        warm: Math.random() > .88
+      });
+    }
+  }
+
+  function drawStars() {
+    var w = starsC.width, h = starsC.height;
+    var sx = starsC.getContext('2d');
+    sx.clearRect(0, 0, w, h);
+    starsData.forEach(function(s) {
+      s.a += s.sp * s.d;
+      if (s.a >= .82 || s.a <= .03) s.d *= -1;
+      sx.beginPath();
+      sx.arc(s.x * w, s.y * h, s.r, 0, Math.PI * 2);
+      var col = s.warm ? 'rgba(255,235,190,' : 'rgba(200,215,255,';
+      sx.fillStyle = col + s.a + ')';
+      sx.fill();
+    });
+    animId = requestAnimationFrame(drawStars);
+  }
+
+  // ── GALAXY DUST ──
+  function drawGalaxy() {
+    var L = getLayout();
+    var w = zone.offsetWidth, h = zone.offsetHeight;
+    galaxyC.width = w; galaxyC.height = h;
+    var gx = galaxyC.getContext('2d');
+    var cx = L.cx, cy = L.cy, maxR = L.maxR;
+
+    for (var i = 0; i < 1200; i++) {
+      var arm = Math.floor(Math.random() * 3) * (Math.PI * 2 / 3);
+      var dist = Math.pow(Math.random(), 0.7) * maxR * .96;
+      var spiral = (dist / maxR) * Math.PI * 1.8;
+      var spread = (dist / maxR) * 1.2;
+      var a = arm + spiral + (Math.random() - .5) * spread * 1.6;
+      var px = cx + Math.cos(a) * dist;
+      var py = cy + Math.sin(a) * dist * .28; // perspective flatten
+      var sz = Math.random() * 1.5 + 0.18;
+      var al = (Math.random() * .55 + .12) * (1 - dist / maxR) * .88;
+      var t = dist / maxR;
+      var rr = Math.round(225 - t * 65);
+      var gg = Math.round(158 - t * 8);
+      var bb = Math.round(52 + t * 95);
+      gx.beginPath(); gx.arc(px, py, sz, 0, Math.PI * 2);
+      gx.fillStyle = 'rgba(' + rr + ',' + gg + ',' + bb + ',' + al + ')';
+      gx.fill();
+    }
+    // bright core
+    var cg = gx.createRadialGradient(cx, cy, 0, cx, cy, maxR * .14);
+    cg.addColorStop(0, 'rgba(255,235,125,.38)');
+    cg.addColorStop(.5, 'rgba(200,138,48,.16)');
+    cg.addColorStop(1, 'rgba(0,0,0,0)');
+    gx.fillStyle = cg; gx.fillRect(0, 0, w, h);
+  }
+
+  // ── RINGS & CORE ──
+  var ringData = [
+    {frac:.36, op:.22}, {frac:.60, op:.14}, {frac:.86, op:.09}
+  ];
+
+  function positionStatic() {
+    var L = getLayout();
+    var rings = [
+      document.getElementById('igRing1'),
+      document.getElementById('igRing2'),
+      document.getElementById('igRing3')
+    ];
+    rings.forEach(function(r, i) {
+      if (!r) return;
+      var d = ringData[i];
+      var diam = L.maxR * 2 * d.frac;
+      r.style.cssText = 'position:absolute;border-radius:50%;pointer-events:none;' +
+        'width:' + diam + 'px;height:' + diam + 'px;' +
+        'top:' + (L.cy - diam/2) + 'px;left:' + (L.cx - diam/2) + 'px;' +
+        'border:1px solid rgba(201,169,110,' + d.op + ');' +
+        'animation:ig-rr ' + (38+i*20) + 's linear infinite' + (i===1?' reverse':'') + ';';
+    });
+    var core = document.getElementById('igCore');
+    if (core) {
+      var cs = Math.min(L.maxR * .16, 64);
+      core.style.cssText = 'position:absolute;border-radius:50%;' +
+        'width:' + cs + 'px;height:' + cs + 'px;' +
+        'top:' + (L.cy - cs/2) + 'px;left:' + (L.cx - cs/2) + 'px;' +
+        'background:radial-gradient(circle at 36% 32%,#f5df80,#c08a28 50%,#6a3a08);' +
+        'display:flex;align-items:center;justify-content:center;z-index:10;cursor:default;' +
+        'animation:ig-cp 4s ease-in-out infinite;';
+      core.querySelector('.ig-core-text').style.fontSize = Math.max(7, cs * .16) + 'px';
+    }
+    // hand light
+    var hl = zone.querySelector('.interp-hand-light');
+    if (hl) {
+      hl.style.bottom = (L.h * 0.14) + 'px';
+    }
+  }
+
+  // ── PLANETS ──
+  function buildPlanets() {
+    document.querySelectorAll('.ig-porbit').forEach(function(e) { e.remove(); });
+    planets = [];
+    var L = getLayout();
+    var root = document.getElementById('interpGalaxyRoot');
+    if (!root) return;
+
+    brands.forEach(function(b) {
+      var radius = L.maxR * b.frac;
+      var po = document.createElement('div');
+      po.className = 'ig-porbit';
+      po.style.cssText = '--s:' + b.s + 'deg;animation-duration:' + b.spd + 's;' +
+        'top:' + L.cy + 'px;left:' + L.cx + 'px;';
+
+      var pl = document.createElement('div');
+      pl.className = 'ig-planet';
+      pl.style.cssText = 'left:' + radius + 'px;--s:' + b.s + 'deg;animation-duration:' + b.spd + 's;';
+
+      var ball = document.createElement('div');
+      ball.className = 'ig-pball';
+      var sz = b.size * Math.min(L.maxR / 170, 1.2);
+      ball.style.cssText = 'width:' + sz + 'px;height:' + sz + 'px;' +
+        'background:radial-gradient(circle at 32% 28%,' + lc(b.color,70) + ',' + b.color + ' 55%,' + lc(b.color,-55) + ');' +
+        'box-shadow:0 0 ' + (sz*.65) + 'px ' + (sz*.22) + 'px ' + b.color + '55;';
+
+      var lbl = document.createElement('div');
+      lbl.className = 'ig-plabel';
+      lbl.style.fontSize = Math.max(5.5, sz * .44) + 'px';
+      lbl.textContent = b.name;
+
+      pl.appendChild(ball); pl.appendChild(lbl);
+      po.appendChild(pl); root.appendChild(po);
+      planets.push({po:po, pl:pl});
+
+      po.addEventListener('mouseenter', function() {
+        clearTimeout(tipTimer);
+        tip.textContent = b.name + ' · ' + b.desc;
+        tip.style.opacity = '1';
+        po.style.animationPlayState = 'paused';
+        pl.style.animationPlayState = 'paused';
+      });
+      po.addEventListener('mouseleave', function() {
+        tipTimer = setTimeout(function() { tip.style.opacity = '0'; }, 600);
+        po.style.animationPlayState = 'running';
+        pl.style.animationPlayState = 'running';
+      });
+    });
+  }
+
+  // ── RESIZE ──
+  var resizeT;
+  function onResize() {
+    clearTimeout(resizeT);
+    resizeT = setTimeout(function() {
+      var w = zone.offsetWidth, h = zone.offsetHeight;
+      starsC.width = w; starsC.height = h;
+      drawGalaxy();
+      positionStatic();
+      buildPlanets();
+    }, 120);
+  }
+
+  // ── INIT ──
+  function init() {
+    zone = document.getElementById('interpGalaxyZone');
+    if (!zone) return;
+    starsC = document.getElementById('interpStars');
+    galaxyC = document.getElementById('interpGalaxyCanvas');
+    root = document.getElementById('interpGalaxyRoot');
+
+    var w = zone.offsetWidth, h = zone.offsetHeight;
+    starsC.width = w; starsC.height = h;
+
+    initStars();
+    drawStars();
+    drawGalaxy();
+    positionStatic();
+    buildPlanets();
+
+    window.addEventListener('resize', onResize);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
 
 </body>
 </html>
