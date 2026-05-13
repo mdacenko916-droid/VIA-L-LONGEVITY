@@ -810,189 +810,245 @@
     #interpreter {
       padding: 0;
       background: var(--cream);
-      text-align: left;
       overflow: hidden;
       position: relative;
-      min-height: 480px;
+      min-height: 540px;
+    }
+
+    /* Desktop: 2-column grid */
+    @media (min-width: 769px) {
+      #interpreter {
+        display: grid;
+        grid-template-columns: minmax(380px, 46%) 1fr;
+        grid-template-areas: "content galaxy";
+        align-items: stretch;
+        min-height: 540px;
+      }
+    }
+
+    /* LEFT column — текст */
+    .interp-content {
+      grid-area: content;
+      position: relative; z-index: 2;
+      padding: 64px clamp(24px, 4vw, 56px) 64px clamp(40px, 7vw, 120px);
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;
+      justify-content: center;
+      background: var(--cream);
     }
-    .interp-photo-bg {
+
+    /* RIGHT column — галактика */
+    .interp-galaxy-zone {
+      grid-area: galaxy;
+      position: relative;
+      overflow: hidden;
+      min-height: 420px;
+      background: #06080e;
+    }
+
+    /* Фото рук — подложка правой зоны */
+    .interp-hands-bg {
       position: absolute; inset: 0; z-index: 0;
     }
-    .interp-photo-bg img {
+    .interp-hands-bg img {
       width: 100%; height: 100%;
-      object-fit: cover; object-position: center center;
+      object-fit: cover;
+      object-position: 42% center;
       display: block;
+      opacity: .65;
+      filter: saturate(0.7) brightness(0.55);
     }
-    .interp-photo-bg::after {
-      display: none;
-    }
-    #interpreter::before {
-      content: '';
+
+    /* Тёмная дымка поверх фото */
+    .interp-space-fog {
       position: absolute; inset: 0; z-index: 1;
-      pointer-events: none;
+      background:
+        radial-gradient(ellipse 120% 100% at 52% 38%,
+          rgba(4,6,18,.94) 0%,
+          rgba(5,8,22,.88) 20%,
+          rgba(6,9,22,.72) 42%,
+          rgba(4,6,16,.30) 65%,
+          rgba(3,5,12,.0)  82%
+        );
     }
 
-    /* контент-колонка слева */
-    .interp-content {
-      position: relative; z-index: 2;
-      max-width: 560px;
-      padding: 64px 40px 40px clamp(40px, 7vw, 120px);
-      flex: none;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
+    /* Туманности (nebula) */
+    .interp-neb { position:absolute; border-radius:50%; pointer-events:none; }
+    .ig-nb1 {
+      z-index:2; width:130%;height:65%; top:-5%;left:-15%;
+      background:radial-gradient(ellipse,rgba(55,30,6,.22) 0%,transparent 65%);
+      filter:blur(72px);
+    }
+    .ig-nb2 {
+      z-index:2; width:90%;height:90%; top:0%;left:-5%;
+      background:radial-gradient(ellipse,rgba(10,20,65,.28) 0%,transparent 65%);
+      filter:blur(85px);
+    }
+    .ig-nb3 {
+      z-index:2; width:75%;height:75%; top:5%;right:-10%;
+      background:radial-gradient(ellipse,rgba(14,32,75,.22) 0%,transparent 65%);
+      filter:blur(75px);
     }
 
+    /* Stars & Galaxy canvases */
+    #igStars    { position:absolute;inset:0;z-index:3;pointer-events:none; }
+    #igGalaxyCv { position:absolute;inset:0;z-index:4;pointer-events:none; }
+
+    /* Planets root */
+    #igRoot     { position:absolute;inset:0;z-index:5; }
+
+    /* Свечение на руки */
+    .ig-handglow {
+      position:absolute; z-index:6;
+      bottom:12%; left:50%; transform:translateX(-50%);
+      width:55%; height:90px;
+      background:radial-gradient(ellipse,rgba(175,135,55,.25) 0%,transparent 70%);
+      filter:blur(22px); pointer-events:none;
+    }
+
+    /* Orbit rings */
+    .ig-ring {
+      position:absolute; border-radius:50%; pointer-events:none;
+      border-style:solid; border-color:rgba(201,169,110,.12);
+    }
+
+    /* Core sun */
+    .ig-core {
+      position:absolute; border-radius:50%;
+      background:radial-gradient(circle at 36% 32%,#f5df80,#c08a28 50%,#6a3a08);
+      display:flex; align-items:center; justify-content:center;
+      cursor:default; z-index:10;
+      animation:ig-cp 4s ease-in-out infinite;
+    }
+    @keyframes ig-cp {
+      0%,100%{box-shadow:0 0 16px 5px rgba(220,170,70,.7),0 0 55px 20px rgba(200,145,50,.2),0 0 110px 55px rgba(180,120,40,.07);}
+      50%    {box-shadow:0 0 26px 9px rgba(240,185,80,.9),0 0 75px 28px rgba(210,155,55,.3),0 0 140px 75px rgba(180,120,40,.1);}
+    }
+    .ig-core-text {
+      font-family:'DM Sans',sans-serif; font-weight:500;
+      letter-spacing:1px; color:#1a0d03;
+      text-align:center; line-height:1.3; user-select:none; text-transform:uppercase;
+    }
+
+    /* Planet orbits */
+    .ig-porbit {
+      position:absolute; width:0; height:0;
+      transform-origin:0 0;
+      animation:ig-spin linear infinite;
+    }
+    @keyframes ig-spin {
+      from{transform:rotate(var(--s));}
+      to  {transform:rotate(calc(var(--s) + 360deg));}
+    }
+    .ig-planet {
+      position:absolute;
+      display:flex; flex-direction:column; align-items:center; gap:4px;
+      cursor:pointer; animation:ig-unspin linear infinite;
+    }
+    @keyframes ig-unspin {
+      from{transform:translate(-50%,-50%) rotate(calc(-1 * var(--s)));}
+      to  {transform:translate(-50%,-50%) rotate(calc(-1 * (var(--s) + 360deg)));}
+    }
+    .ig-pball {
+      border-radius:50%; position:relative; overflow:hidden;
+      flex-shrink:0; transition:transform .3s,box-shadow .3s;
+    }
+    .ig-pball::after {
+      content:''; position:absolute; top:16%;left:18%;
+      width:30%;height:18%;
+      background:rgba(255,255,255,.22); border-radius:50%;filter:blur(2px);
+    }
+    .ig-porbit:hover .ig-pball{transform:scale(1.4);}
+    .ig-plabel {
+      font-family:'DM Sans',sans-serif; font-weight:400;
+      letter-spacing:2px; text-transform:uppercase;
+      color:rgba(210,175,110,.72); white-space:nowrap; pointer-events:none;
+      text-shadow:0 0 10px #000,0 0 6px rgba(0,0,0,.9);
+      transition:color .3s;
+    }
+    .ig-porbit:hover .ig-plabel{color:#f0d870;}
+
+    @keyframes ig-rr {
+      from{transform:rotateX(68deg) rotateZ(0deg);}
+      to  {transform:rotateX(68deg) rotateZ(360deg);}
+    }
+
+    /* interp text styles */
     #interpreter .interp-eyebrow,
     #interpreter .interp-title,
     #interpreter .interp-sub,
     #interpreter .interp-stats,
     #interpreter .interp-cta-wrap {
-      position: relative; z-index: 2;
+      position:relative; z-index:2;
     }
-    .interp-ticker-wrap {
-      position: relative; z-index: 2;
-      margin-top: -36px;
-    }
+    .interp-ticker-wrap { display:none; }
 
     .interp-eyebrow {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px; font-weight: 500; letter-spacing: .22em;
-      text-transform: uppercase; color: var(--gold);
-      display: flex; align-items: center; gap: 12px;
-      justify-content: flex-start;
-      margin-bottom: 22px;
+      font-family:'DM Sans',sans-serif;
+      font-size:13px; font-weight:500; letter-spacing:.22em;
+      text-transform:uppercase; color:var(--gold);
+      display:flex; align-items:center; gap:12px;
+      justify-content:flex-start;
+      margin-bottom:22px;
     }
-    .interp-eyebrow::before { content: ''; width: 28px; height: 1px; background: var(--gold-pale); }
-    .interp-eyebrow::after  { display: none; }
+    .interp-eyebrow::before{content:'';width:28px;height:1px;background:var(--gold-pale);}
+    .interp-eyebrow::after {display:none;}
     .interp-title {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(30px, 4vw, 50px); font-weight: 400; line-height: 1.15;
-      color: var(--text); margin-bottom: 16px;
+      font-family:'Playfair Display',serif;
+      font-size:clamp(28px,3.5vw,48px); font-weight:400; line-height:1.15;
+      color:var(--text); margin-bottom:16px;
     }
-    .interp-title em { font-style: italic; color: var(--gold); }
+    .interp-title em{font-style:italic;color:var(--gold);}
     .interp-sub {
-      font-size: 17px; font-weight: 300; color: var(--text-mid);
-      max-width: 460px; margin: 0 0 14px; line-height: 1.75;
+      font-size:17px; font-weight:300; color:var(--text-mid);
+      max-width:460px; margin:0 0 14px; line-height:1.75;
     }
     .interp-stats {
-      display: flex;
-      flex-direction: row;
-      justify-content: flex-start;
-      gap: 40px;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
+      display:flex; flex-direction:row; justify-content:flex-start;
+      gap:40px; margin-bottom:14px; flex-wrap:wrap;
     }
     .interp-stat-num {
-      font-family: 'Playfair Display', serif;
-      font-size: 30px; font-weight: 400; color: var(--text);
-      line-height: 1;
+      font-family:'Playfair Display',serif;
+      font-size:30px; font-weight:400; color:var(--text); line-height:1;
     }
     .interp-stat-label {
-      font-size: 11px; font-weight: 400; letter-spacing: .12em;
-      text-transform: uppercase; color: var(--text-mid); margin-top: 6px;
+      font-size:11px; font-weight:400; letter-spacing:.12em;
+      text-transform:uppercase; color:var(--text-mid); margin-top:6px;
     }
-    .interp-cta-wrap { display: flex; align-items: center; justify-content: flex-start; gap: 16px; flex-wrap: wrap; }
+    .interp-cta-wrap{display:flex;align-items:center;justify-content:flex-start;gap:16px;flex-wrap:wrap;}
     .interp-btn-primary {
-      display: inline-flex; align-items: center; gap: 10px;
-      padding: 16px 36px; border-radius: 50px;
-      background: var(--text); color: var(--cream);
-      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
-      letter-spacing: .08em; text-decoration: none; text-transform: uppercase;
-      transition: all .25s; border: none; cursor: pointer;
+      display:inline-flex; align-items:center; gap:10px;
+      padding:16px 36px; border-radius:50px;
+      background:var(--text); color:var(--cream);
+      font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500;
+      letter-spacing:.08em; text-decoration:none; text-transform:uppercase;
+      transition:all .25s; border:none; cursor:pointer;
     }
-    .interp-btn-primary:hover { background: var(--gold); color: #fff; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(196,150,60,.3); }
+    .interp-btn-primary:hover{background:var(--gold);color:#fff;transform:translateY(-2px);box-shadow:0 8px 28px rgba(196,150,60,.3);}
     .interp-btn-secondary {
-      font-size: 13px; color: var(--gold); font-weight: 400;
-      text-decoration: none; letter-spacing: .06em;
-      border-bottom: 1px solid rgba(196,150,60,.4); padding-bottom: 2px;
-      transition: border-color .2s;
+      font-size:13px; color:var(--gold); font-weight:400;
+      text-decoration:none; letter-spacing:.06em;
+      border-bottom:1px solid rgba(196,150,60,.4); padding-bottom:2px;
+      transition:border-color .2s;
     }
-    .interp-btn-secondary:hover { border-color: var(--gold); }
+    .interp-btn-secondary:hover{border-color:var(--gold);}
 
-    /* ── GOLDEN TICKER ── */
-    .interp-ticker-wrap {
-      width: 100%;
-      overflow: hidden;
-      padding: 18px 0;
-      border-top: 1px solid rgba(196,150,60,.18);
-      border-bottom: 1px solid rgba(196,150,60,.18);
-      position: relative; z-index: 2;
-      flex-shrink: 0;
-      mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
-      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
-    }
-    .interp-ticker {
-      display: flex;
-      width: max-content;
-      animation: ticker-scroll 32s linear infinite;
-    }
-    .interp-ticker:hover { animation-play-state: paused; }
-    .interp-ticker-inner {
-      display: flex; align-items: center;
-      white-space: nowrap;
-    }
-    .interp-ticker-item {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 15px; font-weight: 500;
-      letter-spacing: .22em; text-transform: uppercase;
-      padding: 0 32px;
-      /* золотой перелив */
-      background: linear-gradient(
-        90deg,
-        #8B6030 0%,
-        #C4964C 20%,
-        #E8C97A 38%,
-        #F5E4B0 50%,
-        #E8C97A 62%,
-        #C4964C 80%,
-        #8B6030 100%
-      );
-      background-size: 200% auto;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      animation: gold-shimmer 4s linear infinite;
-    }
-    .interp-ticker-dot {
-      font-size: 8px;
-      flex-shrink: 0;
-      background: linear-gradient(90deg, #C4964C, #F5E4B0, #C4964C);
-      background-size: 200% auto;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      animation: gold-shimmer 4s linear infinite;
-    }
-    @keyframes ticker-scroll {
-      0%   { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
-    
-    @keyframes ig-rr {
-      from { transform: rotateX(70deg) rotateZ(0deg); }
-      to   { transform: rotateX(70deg) rotateZ(360deg); }
-    }
-
-    @keyframes gold-shimmer {
-      0%   { background-position: 0% center; }
-      100% { background-position: 200% center; }
+    @media (max-width:768px){
+      #interpreter{display:flex;flex-direction:column;}
+      .interp-content{padding:48px 24px 40px;order:1;}
+      .interp-galaxy-zone{min-height:300px;order:2;}
     }
 
     @media (max-width: 768px) {
-      #interpreter {
-        height: auto; min-height: auto;
-        display: flex; flex-direction: column;
-      }
-      .interp-content {
-        padding: 56px 24px 40px; max-width: 100%;
-        background: var(--cream);
-      }
-      .interp-galaxy-zone {
-        min-height: 320px;
+      #interpreter { height: auto; min-height: 460px; }
+      .interp-content { padding: 56px 24px 40px; max-width: 100%; }
+      .interp-photo-bg::after {
+        background: linear-gradient(
+          to bottom,
+          rgba(245,243,239,1.0) 40%,
+          rgba(245,243,239,0.5) 70%,
+          rgba(245,243,239,0.1) 100%
+        );
       }
       .interp-stats { gap: 24px; }
       .interp-stat-num { font-size: 28px; }
@@ -2303,12 +2359,11 @@
 
 <section id="interpreter">
 
-  <!-- LEFT: текст + кнопки (без изменений) -->
+  <!-- LEFT: текст + кнопки — без змін -->
   <div class="interp-content">
     <div class="interp-eyebrow" data-i18n="b_interp_eyebrow">Інтерпретатор біопоказників · VIA·L</div>
     <h2 class="interp-title" data-i18n="b_interp_title">Ваш трекер знає більше,<br>ніж показує <em>екран</em></h2>
     <p class="interp-sub" data-i18n="b_interp_sub">Трекер збирає цифри. Інтерпретатор VIA·L читає їх мовою нутриціології: гормональний статус, дефіцити мікронутрієнтів, персональний протокол — на основі ваших реальних даних.</p>
-
     <div class="interp-stats">
       <div>
         <div class="interp-stat-num">10</div>
@@ -2323,7 +2378,6 @@
         <div class="interp-stat-label" data-i18n="b_interp_langs">Мови</div>
       </div>
     </div>
-
     <div class="interp-cta-wrap">
       <a href="interpreter-app/index.html" class="interp-btn-primary">
         <span data-i18n="b_interp_btn">Розпочати аналіз</span>
@@ -2334,39 +2388,23 @@
   </div>
 
   <!-- RIGHT: галактика над руками -->
-  <div class="interp-galaxy-zone" id="interpGalaxyZone">
-
-    <!-- Фото рук фоном -->
-    <div class="interp-hands-photo">
+  <div class="interp-galaxy-zone" id="igZone">
+    <div class="interp-hands-bg">
       <img src="images/interpreter-bg.PNG" alt="" aria-hidden="true">
     </div>
-
-    <!-- Космическая дымка -->
-    <div class="interp-space-overlay"></div>
-    <div class="interp-neb interp-nb1"></div>
-    <div class="interp-neb interp-nb2"></div>
-    <div class="interp-neb interp-nb3"></div>
-    <div class="interp-neb interp-nb4"></div>
-
-    <!-- Звёзды -->
-    <canvas class="interp-stars" id="interpStars"></canvas>
-
-    <!-- Галактическая пыль -->
-    <canvas class="interp-galaxy-canvas" id="interpGalaxyCanvas"></canvas>
-
-    <!-- Планеты + орбиты + солнце -->
-    <div class="interp-galaxy-root" id="interpGalaxyRoot">
-      <div class="ig-ring" id="igRing1"></div>
-      <div class="ig-ring" id="igRing2"></div>
-      <div class="ig-ring" id="igRing3"></div>
-      <div class="ig-core" id="igCore">
-        <div class="ig-core-text">VIA·L</div>
-      </div>
+    <div class="interp-space-fog"></div>
+    <div class="interp-neb ig-nb1"></div>
+    <div class="interp-neb ig-nb2"></div>
+    <div class="interp-neb ig-nb3"></div>
+    <canvas id="igStars"></canvas>
+    <canvas id="igGalaxyCv"></canvas>
+    <div id="igRoot">
+      <div class="ig-ring" id="igR1"></div>
+      <div class="ig-ring" id="igR2"></div>
+      <div class="ig-ring" id="igR3"></div>
+      <div class="ig-core" id="igCore"><div class="ig-core-text">VIA·L</div></div>
     </div>
-
-    <!-- Свечение на руки -->
-    <div class="interp-hand-light"></div>
-
+    <div class="ig-handglow"></div>
   </div>
 
 </section>
@@ -4469,248 +4507,189 @@ console.log('[index.html] Parent click handler attached');
 
 
 <script>
-/* ═══════════════════════════════════════════════
-   INTERPRETER GALAXY — planets orbiting VIA·L sun
-   over hands photo, right column only
-═══════════════════════════════════════════════ */
-(function() {
-  function lc(hex, amt) {
-    return '#' + hex.slice(1).replace(/../g, function(c) {
-      var n = Math.min(255, Math.max(0, parseInt(c, 16) + amt)).toString(16);
-      return n.length === 1 ? '0' + n : n;
+/* INTERPRETER GALAXY — VIA·L */
+(function(){
+  function lc(hex,a){
+    return '#'+hex.slice(1).replace(/../g,function(c){
+      var n=Math.min(255,Math.max(0,parseInt(c,16)+a)).toString(16);
+      return n.length===1?'0'+n:n;
     });
   }
 
-  var zone, starsC, galaxyC, root;
-  var starsData = [];
-  var animId;
-  var planets = [];
-
-  var brands = [
-    {name:'Oura Ring',      frac:.36, size:14, color:'#d08050', spd:11, s:10,  desc:'Кільце · сон та HRV'},
-    {name:'Apple Health',   frac:.36, size:11, color:'#70aed0', spd:11, s:190, desc:'Apple HealthKit'},
-    {name:'Garmin',         frac:.60, size:17, color:'#68a058', spd:19, s:60,  desc:'GPS · мультиспорт'},
-    {name:'Fitbit',         frac:.60, size:13, color:'#d89838', spd:19, s:200, desc:'Фітнес-браслети Google'},
-    {name:'WHOOP',          frac:.60, size:11, color:'#b06878', spd:19, s:320, desc:'Відновлення та навантаження'},
-    {name:'Samsung Health', frac:.86, size:16, color:'#5878c8', spd:30, s:30,  desc:'Galaxy Watch'},
-    {name:'Polar',          frac:.86, size:12, color:'#c87040', spd:30, s:150, desc:'Профспорт · кардіо'},
-    {name:'Withings',       frac:.86, size:11, color:'#80c0b0', spd:30, s:270, desc:'Медичні трекери'},
+  var brands=[
+    {n:'Oura Ring',      f:.35,sz:14,c:'#d08050',spd:11,s:10  },
+    {n:'Apple Health',   f:.35,sz:11,c:'#70aed0',spd:11,s:190 },
+    {n:'Garmin',         f:.59,sz:17,c:'#68a058',spd:19,s:60  },
+    {n:'Fitbit',         f:.59,sz:13,c:'#d89838',spd:19,s:195 },
+    {n:'WHOOP',          f:.59,sz:11,c:'#b06878',spd:19,s:318 },
+    {n:'Samsung Health', f:.84,sz:16,c:'#5878c8',spd:30,s:28  },
+    {n:'Polar',          f:.84,sz:12,c:'#c87040',spd:30,s:148 },
+    {n:'Withings',       f:.84,sz:11,c:'#80c0b0',spd:30,s:245 },
+    {n:'Amazfit',        f:.59,sz:10,c:'#a070c8',spd:23,s:100 },
+    {n:'Xiaomi',         f:.84,sz:10,c:'#e07070',spd:36,s:340 },
   ];
 
-  // tooltip
-  var tip = document.createElement('div');
-  tip.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);'+
-    'background:rgba(5,8,20,.96);border:1px solid rgba(180,140,60,.25);'+
-    'color:#c9a96e;font-family:"DM Sans",sans-serif;font-size:10px;letter-spacing:2px;'+
-    'padding:8px 20px;white-space:nowrap;opacity:0;pointer-events:none;'+
+  var tip=document.createElement('div');
+  tip.style.cssText='position:fixed;bottom:22px;left:50%;transform:translateX(-50%);'+
+    'background:rgba(4,6,18,.96);border:1px solid rgba(180,140,60,.3);'+
+    'color:#c9a96e;font-family:"DM Sans",sans-serif;font-size:9px;letter-spacing:2px;'+
+    'padding:7px 18px;white-space:nowrap;opacity:0;pointer-events:none;'+
     'transition:opacity .3s;z-index:9990;text-transform:uppercase;';
   document.body.appendChild(tip);
-  var tipTimer;
+  var tipT;
 
-  function getLayout() {
-    var r = zone.getBoundingClientRect();
-    var w = zone.offsetWidth, h = zone.offsetHeight;
-    // center galaxy in upper 60% of zone (above hands)
-    var cx = w * 0.50;
-    var cy = h * 0.42;
-    var maxR = Math.min(w, h) * 0.38;
-    return {cx:cx, cy:cy, maxR:maxR, w:w, h:h};
+  var zone,sc,gc,stD=[],animId;
+
+  function getL(){
+    var w=zone.offsetWidth, h=zone.offsetHeight;
+    var cx=w*.50, cy=h*.42;
+    var maxR=Math.min(w*.44, h*.40);
+    return {cx:cx,cy:cy,maxR:maxR,w:w,h:h};
   }
 
-  // ── STARS ──
-  function initStars() {
-    starsData = [];
-    for (var i = 0; i < 200; i++) {
-      var depth = Math.random();
-      starsData.push({
-        x: Math.random(), y: Math.random(),
-        r: depth * 1.0 + 0.12,
-        a: Math.random() * (depth * .5 + .04) + .03,
-        sp: Math.random() * .005 + .002,
-        d: Math.random() > .5 ? 1 : -1,
-        warm: Math.random() > .88
-      });
+  /* STARS */
+  function initStars(){
+    stD=[];
+    for(var i=0;i<180;i++){
+      var d=Math.random();
+      stD.push({x:Math.random(),y:Math.random(),
+        r:d*.9+.1,a:Math.random()*(d*.4+.05)+.04,
+        sp:Math.random()*.005+.002,dir:Math.random()>.5?1:-1,
+        warm:Math.random()>.87});
     }
   }
 
-  function drawStars() {
-    var w = starsC.width, h = starsC.height;
-    var sx = starsC.getContext('2d');
-    sx.clearRect(0, 0, w, h);
-    starsData.forEach(function(s) {
-      s.a += s.sp * s.d;
-      if (s.a >= .82 || s.a <= .03) s.d *= -1;
-      sx.beginPath();
-      sx.arc(s.x * w, s.y * h, s.r, 0, Math.PI * 2);
-      var col = s.warm ? 'rgba(255,235,190,' : 'rgba(200,215,255,';
-      sx.fillStyle = col + s.a + ')';
+  function drawStars(){
+    var w=sc.width,h=sc.height;
+    var sx=sc.getContext('2d');
+    sx.clearRect(0,0,w,h);
+    stD.forEach(function(s){
+      s.a+=s.sp*s.dir; if(s.a>=.8||s.a<=.03)s.dir*=-1;
+      sx.beginPath(); sx.arc(s.x*w,s.y*h,s.r,0,Math.PI*2);
+      sx.fillStyle=(s.warm?'rgba(255,235,190,':'rgba(200,215,255,')+s.a+')';
       sx.fill();
     });
-    animId = requestAnimationFrame(drawStars);
+    animId=requestAnimationFrame(drawStars);
   }
 
-  // ── GALAXY DUST ──
-  function drawGalaxy() {
-    var L = getLayout();
-    var w = zone.offsetWidth, h = zone.offsetHeight;
-    galaxyC.width = w; galaxyC.height = h;
-    var gx = galaxyC.getContext('2d');
-    var cx = L.cx, cy = L.cy, maxR = L.maxR;
-
-    for (var i = 0; i < 1200; i++) {
-      var arm = Math.floor(Math.random() * 3) * (Math.PI * 2 / 3);
-      var dist = Math.pow(Math.random(), 0.7) * maxR * .96;
-      var spiral = (dist / maxR) * Math.PI * 1.8;
-      var spread = (dist / maxR) * 1.2;
-      var a = arm + spiral + (Math.random() - .5) * spread * 1.6;
-      var px = cx + Math.cos(a) * dist;
-      var py = cy + Math.sin(a) * dist * .28; // perspective flatten
-      var sz = Math.random() * 1.5 + 0.18;
-      var al = (Math.random() * .55 + .12) * (1 - dist / maxR) * .88;
-      var t = dist / maxR;
-      var rr = Math.round(225 - t * 65);
-      var gg = Math.round(158 - t * 8);
-      var bb = Math.round(52 + t * 95);
-      gx.beginPath(); gx.arc(px, py, sz, 0, Math.PI * 2);
-      gx.fillStyle = 'rgba(' + rr + ',' + gg + ',' + bb + ',' + al + ')';
+  /* GALAXY DUST */
+  function drawGalaxy(){
+    var L=getL();
+    gc.width=zone.offsetWidth; gc.height=zone.offsetHeight;
+    var gx=gc.getContext('2d');
+    var cx=L.cx,cy=L.cy,R=L.maxR;
+    for(var i=0;i<1100;i++){
+      var arm=Math.floor(Math.random()*3)*(Math.PI*2/3);
+      var dist=Math.pow(Math.random(),.72)*R*.97;
+      var spi=(dist/R)*Math.PI*1.8;
+      var spd=(dist/R)*1.2;
+      var a=arm+spi+(Math.random()-.5)*spd*1.6;
+      var px=cx+Math.cos(a)*dist;
+      var py=cy+Math.sin(a)*dist*.28;
+      var sz=Math.random()*1.45+.18;
+      var al=(Math.random()*.52+.12)*(1-dist/R)*.9;
+      var t=dist/R;
+      gx.beginPath(); gx.arc(px,py,sz,0,Math.PI*2);
+      gx.fillStyle='rgba('+(Math.round(225-t*65))+','+(Math.round(158-t*8))+','+(Math.round(52+t*95))+','+al+')';
       gx.fill();
     }
-    // bright core
-    var cg = gx.createRadialGradient(cx, cy, 0, cx, cy, maxR * .14);
-    cg.addColorStop(0, 'rgba(255,235,125,.38)');
-    cg.addColorStop(.5, 'rgba(200,138,48,.16)');
-    cg.addColorStop(1, 'rgba(0,0,0,0)');
-    gx.fillStyle = cg; gx.fillRect(0, 0, w, h);
+    var cg=gx.createRadialGradient(cx,cy,0,cx,cy,R*.15);
+    cg.addColorStop(0,'rgba(255,235,125,.4)');
+    cg.addColorStop(.5,'rgba(200,138,48,.18)');
+    cg.addColorStop(1,'rgba(0,0,0,0)');
+    gx.fillStyle=cg; gx.fillRect(0,0,gc.width,gc.height);
   }
 
-  // ── RINGS & CORE ──
-  var ringData = [
-    {frac:.36, op:.22}, {frac:.60, op:.14}, {frac:.86, op:.09}
-  ];
+  /* RINGS + CORE */
+  var RF=[{f:.35,op:.22,spd:38},{f:.59,op:.14,spd:55},{f:.84,op:.09,spd:76}];
 
-  function positionStatic() {
-    var L = getLayout();
-    var rings = [
-      document.getElementById('igRing1'),
-      document.getElementById('igRing2'),
-      document.getElementById('igRing3')
-    ];
-    rings.forEach(function(r, i) {
-      if (!r) return;
-      var d = ringData[i];
-      var diam = L.maxR * 2 * d.frac;
-      r.style.cssText = 'position:absolute;border-radius:50%;pointer-events:none;' +
-        'width:' + diam + 'px;height:' + diam + 'px;' +
-        'top:' + (L.cy - diam/2) + 'px;left:' + (L.cx - diam/2) + 'px;' +
-        'border:1px solid rgba(201,169,110,' + d.op + ');' +
-        'animation:ig-rr ' + (38+i*20) + 's linear infinite' + (i===1?' reverse':'') + ';';
+  function posRings(){
+    var L=getL();
+    ['igR1','igR2','igR3'].forEach(function(id,i){
+      var r=document.getElementById(id); if(!r)return;
+      var d=RF[i], dm=L.maxR*2*d.f;
+      r.style.cssText='position:absolute;border-radius:50%;pointer-events:none;border-width:1px;border-style:solid;'+
+        'border-color:rgba(201,169,110,'+d.op+');'+
+        'width:'+dm+'px;height:'+dm+'px;'+
+        'top:'+(L.cy-dm/2)+'px;left:'+(L.cx-dm/2)+'px;'+
+        'animation:ig-rr '+d.spd+'s linear infinite'+(i===1?' reverse':'')+';';
     });
-    var core = document.getElementById('igCore');
-    if (core) {
-      var cs = Math.min(L.maxR * .16, 64);
-      core.style.cssText = 'position:absolute;border-radius:50%;' +
-        'width:' + cs + 'px;height:' + cs + 'px;' +
-        'top:' + (L.cy - cs/2) + 'px;left:' + (L.cx - cs/2) + 'px;' +
-        'background:radial-gradient(circle at 36% 32%,#f5df80,#c08a28 50%,#6a3a08);' +
-        'display:flex;align-items:center;justify-content:center;z-index:10;cursor:default;' +
-        'animation:ig-cp 4s ease-in-out infinite;';
-      core.querySelector('.ig-core-text').style.fontSize = Math.max(7, cs * .16) + 'px';
-    }
-    // hand light
-    var hl = zone.querySelector('.interp-hand-light');
-    if (hl) {
-      hl.style.bottom = (L.h * 0.14) + 'px';
-    }
+    var core=document.getElementById('igCore'); if(!core)return;
+    var cs=Math.min(L.maxR*.17,66);
+    core.style.cssText='position:absolute;border-radius:50%;z-index:10;cursor:default;'+
+      'width:'+cs+'px;height:'+cs+'px;'+
+      'top:'+(L.cy-cs/2)+'px;left:'+(L.cx-cs/2)+'px;'+
+      'background:radial-gradient(circle at 36% 32%,#f5df80,#c08a28 50%,#6a3a08);'+
+      'display:flex;align-items:center;justify-content:center;'+
+      'animation:ig-cp 4s ease-in-out infinite;';
+    core.querySelector('.ig-core-text').style.fontSize=Math.max(7,cs*.15)+'px';
+    var gl=zone.querySelector('.ig-handglow'); if(gl)gl.style.bottom=(L.h*.12)+'px';
   }
 
-  // ── PLANETS ──
-  function buildPlanets() {
-    document.querySelectorAll('.ig-porbit').forEach(function(e) { e.remove(); });
-    planets = [];
-    var L = getLayout();
-    var root = document.getElementById('interpGalaxyRoot');
-    if (!root) return;
-
-    brands.forEach(function(b) {
-      var radius = L.maxR * b.frac;
-      var po = document.createElement('div');
-      po.className = 'ig-porbit';
-      po.style.cssText = '--s:' + b.s + 'deg;animation-duration:' + b.spd + 's;' +
-        'top:' + L.cy + 'px;left:' + L.cx + 'px;';
-
-      var pl = document.createElement('div');
-      pl.className = 'ig-planet';
-      pl.style.cssText = 'left:' + radius + 'px;--s:' + b.s + 'deg;animation-duration:' + b.spd + 's;';
-
-      var ball = document.createElement('div');
-      ball.className = 'ig-pball';
-      var sz = b.size * Math.min(L.maxR / 170, 1.2);
-      ball.style.cssText = 'width:' + sz + 'px;height:' + sz + 'px;' +
-        'background:radial-gradient(circle at 32% 28%,' + lc(b.color,70) + ',' + b.color + ' 55%,' + lc(b.color,-55) + ');' +
-        'box-shadow:0 0 ' + (sz*.65) + 'px ' + (sz*.22) + 'px ' + b.color + '55;';
-
-      var lbl = document.createElement('div');
-      lbl.className = 'ig-plabel';
-      lbl.style.fontSize = Math.max(5.5, sz * .44) + 'px';
-      lbl.textContent = b.name;
-
+  /* PLANETS */
+  function buildPlanets(){
+    document.querySelectorAll('.ig-porbit').forEach(function(e){e.remove();});
+    var L=getL();
+    var root=document.getElementById('igRoot'); if(!root)return;
+    brands.forEach(function(b){
+      var rad=L.maxR*b.f;
+      var po=document.createElement('div'); po.className='ig-porbit';
+      po.style.cssText='--s:'+b.s+'deg;animation-duration:'+b.spd+'s;'+
+        'top:'+L.cy+'px;left:'+L.cx+'px;';
+      var pl=document.createElement('div'); pl.className='ig-planet';
+      pl.style.cssText='left:'+rad+'px;--s:'+b.s+'deg;animation-duration:'+b.spd+'s;';
+      var ball=document.createElement('div'); ball.className='ig-pball';
+      var sz=Math.max(7, b.sz*(Math.min(L.maxR/160,1.3)));
+      ball.style.cssText='width:'+sz+'px;height:'+sz+'px;'+
+        'background:radial-gradient(circle at 32% 28%,'+lc(b.c,70)+','+b.c+' 55%,'+lc(b.c,-55)+');'+
+        'box-shadow:0 0 '+(sz*.65)+'px '+(sz*.22)+'px '+b.c+'55;';
+      var lbl=document.createElement('div'); lbl.className='ig-plabel';
+      lbl.style.fontSize=Math.max(5.5,sz*.44)+'px';
+      lbl.textContent=b.n;
       pl.appendChild(ball); pl.appendChild(lbl);
       po.appendChild(pl); root.appendChild(po);
-      planets.push({po:po, pl:pl});
-
-      po.addEventListener('mouseenter', function() {
-        clearTimeout(tipTimer);
-        tip.textContent = b.name + ' · ' + b.desc;
-        tip.style.opacity = '1';
-        po.style.animationPlayState = 'paused';
-        pl.style.animationPlayState = 'paused';
+      po.addEventListener('mouseenter',function(){
+        clearTimeout(tipT);
+        tip.textContent=b.n;
+        tip.style.opacity='1';
+        po.style.animationPlayState='paused';
+        pl.style.animationPlayState='paused';
       });
-      po.addEventListener('mouseleave', function() {
-        tipTimer = setTimeout(function() { tip.style.opacity = '0'; }, 600);
-        po.style.animationPlayState = 'running';
-        pl.style.animationPlayState = 'running';
+      po.addEventListener('mouseleave',function(){
+        tipT=setTimeout(function(){tip.style.opacity='0';},500);
+        po.style.animationPlayState='running';
+        pl.style.animationPlayState='running';
       });
     });
   }
 
-  // ── RESIZE ──
-  var resizeT;
-  function onResize() {
-    clearTimeout(resizeT);
-    resizeT = setTimeout(function() {
-      var w = zone.offsetWidth, h = zone.offsetHeight;
-      starsC.width = w; starsC.height = h;
-      drawGalaxy();
-      positionStatic();
-      buildPlanets();
-    }, 120);
+  var rsT;
+  function onResize(){
+    clearTimeout(rsT);
+    rsT=setTimeout(function(){
+      var w=zone.offsetWidth,h=zone.offsetHeight;
+      sc.width=w; sc.height=h;
+      drawGalaxy(); posRings(); buildPlanets();
+    },150);
   }
 
-  // ── INIT ──
-  function init() {
-    zone = document.getElementById('interpGalaxyZone');
-    if (!zone) return;
-    starsC = document.getElementById('interpStars');
-    galaxyC = document.getElementById('interpGalaxyCanvas');
-    root = document.getElementById('interpGalaxyRoot');
-
-    var w = zone.offsetWidth, h = zone.offsetHeight;
-    starsC.width = w; starsC.height = h;
-
-    initStars();
-    drawStars();
-    drawGalaxy();
-    positionStatic();
-    buildPlanets();
-
-    window.addEventListener('resize', onResize);
+  function init(){
+    zone=document.getElementById('igZone'); if(!zone)return;
+    sc=document.getElementById('igStars');
+    gc=document.getElementById('igGalaxyCv');
+    /* wait for layout to settle */
+    setTimeout(function(){
+      var w=zone.offsetWidth, h=zone.offsetHeight;
+      if(!w||!h){ setTimeout(init,200); return; }
+      sc.width=w; sc.height=h;
+      initStars(); drawStars(); drawGalaxy(); posRings(); buildPlanets();
+      window.addEventListener('resize',onResize);
+    },100);
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',init);
+  } else { init(); }
 })();
 </script>
 
