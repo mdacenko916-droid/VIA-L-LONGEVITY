@@ -53,6 +53,8 @@ html,body{
   max-width:100%;
   overflow-x:hidden;
 }
+html[data-lang="ja"] body{font-family:'Noto Sans JP',sans-serif;}
+html[data-lang="ko"] body{font-family:'Noto Sans KR',sans-serif;}
 body{
   font-family:'DM Sans',sans-serif;
   font-weight:300;
@@ -268,6 +270,7 @@ body{
 .gate-back svg{width:13px;height:13px;flex-shrink:0;}
 
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 /* ══ HERO ═════════════════════════════════════════════════ */
 .hero{
@@ -1077,6 +1080,14 @@ footer{
       <div class="lang-option" onclick="setLang('uk')"><span class="lang-flag">🇺🇦</span>Українська</div>
       <div class="lang-option" onclick="setLang('en')"><span class="lang-flag">🇬🇧</span>English</div>
       <div class="lang-option" onclick="setLang('es')"><span class="lang-flag">🇪🇸</span>Español</div>
+      <div class="lang-option" onclick="setLang('de')"><span class="lang-flag">🇩🇪</span>Deutsch</div>
+      <div class="lang-option" onclick="setLang('pt')"><span class="lang-flag">🇧🇷</span>Português</div>
+      <div class="lang-option" onclick="setLang('fr')"><span class="lang-flag">🇫🇷</span>Français</div>
+      <div class="lang-option" onclick="setLang('pl')"><span class="lang-flag">🇵🇱</span>Polski</div>
+      <div class="lang-option" onclick="setLang('it')"><span class="lang-flag">🇮🇹</span>Italiano</div>
+      <div class="lang-option" onclick="setLang('he')"><span class="lang-flag">🇮🇱</span>עברית</div>
+      <div class="lang-option" onclick="setLang('ja')"><span class="lang-flag">🇯🇵</span>日本語</div>
+      <div class="lang-option" onclick="setLang('ko')"><span class="lang-flag">🇰🇷</span>한국어</div>
     </div>
   </div>
 </div>
@@ -1110,7 +1121,10 @@ footer{
     <div class="gate-sub" data-t="gate_sub">Pro Access · $29 / міс</div>
     <div class="gate-title" data-t="gate_title">Введіть код доступу</div>
     <div class="gate-desc" data-t="gate_desc">Код надсилається на email після оплати. Ще не маєте Pro? <a href="../interpreter-app/index.html#plans" style="color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(196,154,60,.4);">Перейти до планів →</a></div>
-    <input class="gate-input" id="gateInput" type="password" maxlength="20" placeholder="· · · · · · · ·" autocomplete="off">
+    <div style="position:relative;">
+      <input class="gate-input" id="gateInput" type="password" maxlength="40" placeholder="· · · · · · · ·" autocomplete="off" style="padding-right:44px;">
+      <button type="button" onclick="toggleGateVis()" id="gateEye" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--t3);font-size:18px;line-height:1;padding:4px;">👁</button>
+    </div>
     <div class="gate-error" id="gateError" data-t="gate_error">Неверный код. Проверьте письмо.</div>
     <button type="button" id="gateBtn" class="gate-btn" onclick="checkCode()"><span data-t="gate_btn">Увійти →</span></button>
     <!-- Blurred preview -->
@@ -1692,7 +1706,7 @@ footer{
 <div class="hero">
   <div class="hero-eyebrow" data-t="hero_badge">Персональный анализ · VIA‑L</div>
   <h1 class="hero-title" data-t="hero_title">Интерпретатор данных<br><em>носимого устройства</em></h1>
-  <p class="hero-desc" data-t="hero_desc">Введите показатели из Oura, Garmin, Polar или Apple Watch — получите нутрициологические рекомендации.</p>
+  <p class="hero-desc" data-t="hero_desc">Oura Menopause Insights (Gen3 & Ring 4) · Garmin · Polar · Apple Watch → нутрициологические рекомендации.</p>
   <div class="hero-badge"><span data-t="hero_tier_label">⭐ PRO версия</span></div>
   <div style="margin-top:16px;">
     <button onclick="openImport()" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:50px;background:rgba(78,204,163,.1);border:1px solid rgba(78,204,163,.25);color:var(--ok);font-size:12px;font-weight:500;letter-spacing:.5px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;">
@@ -1721,8 +1735,9 @@ footer{
       <div class="progress-dot " id="pd12"></div>
       <div class="progress-dot " id="pd13"></div>
       <div class="progress-dot " id="pd14"></div>
+      <div class="progress-dot " id="pd15"></div>
     </div>
-    <div class="progress-lbl" id="progressLbl">Pro · Крок 1 з 15</div>
+    <div class="progress-lbl" id="progressLbl">Pro · Крок 1 з 16</div>
   </div>
 
   <!-- STEP 0: PROFILE (NEW) -->
@@ -1756,6 +1771,19 @@ footer{
           <div class="chip"><input type="radio" name="phase" id="ph6" value="pre_andro"><label for="ph6" data-t="phase_preandro">Предандропауза</label></div>
           <div class="chip"><input type="radio" name="phase" id="ph7" value="other"><label for="ph7" data-t="phase_other">Другое</label></div>
         </div>
+      </div>
+      <div class="divider"></div>
+      <div class="input-group">
+        <label data-t="s_prof_l4">Ваше устройство</label>
+        <div class="chips">
+          <div class="chip"><input type="radio" name="device" id="dev1" value="oura4" checked><label for="dev1">Oura Ring 4 ✦</label></div>
+          <div class="chip"><input type="radio" name="device" id="dev2" value="oura3"><label for="dev2">Oura Gen 3 ✦</label></div>
+          <div class="chip"><input type="radio" name="device" id="dev3" value="garmin"><label for="dev3">Garmin</label></div>
+          <div class="chip"><input type="radio" name="device" id="dev4" value="apple"><label for="dev4">Apple Watch</label></div>
+          <div class="chip"><input type="radio" name="device" id="dev5" value="polar"><label for="dev5">Polar</label></div>
+          <div class="chip"><input type="radio" name="device" id="dev6" value="other"><label for="dev6" data-t="phase_other">Другое</label></div>
+        </div>
+        <p id="oura-device-note" style="font-size:11px;color:var(--gold);margin-top:8px;" data-t="oura_note">✦ Поддерживает Oura Menopause Insights</p>
       </div>
       <div class="btn-row">
         <button class="btn btn-primary" onclick="goTo(1)"><span class="btn-label" data-t="next">Далее →</span></button>
@@ -1838,11 +1866,28 @@ footer{
       </div>
       <div class="divider"></div>
       <div class="input-group">
-        <label data-t="s1_l2">Просыпались от жара / потоотделения?</label>
+        <label data-t="s1_hf_count">Приливов прошлой ночью</label>
         <div class="chips">
-          <div class="chip"><input type="radio" name="hotflash" id="hf1" value="no" checked><label for="hf1" data-t="no">Нет</label></div>
-          <div class="chip"><input type="radio" name="hotflash" id="hf2" value="once"><label for="hf2" data-t="once">Один раз</label></div>
-          <div class="chip"><input type="radio" name="hotflash" id="hf3" value="multiple"><label for="hf3" data-t="multiple">Несколько раз</label></div>
+          <div class="chip"><input type="radio" name="hf_count" id="hfc1" value="none" checked><label for="hfc1" data-t="hf_0">Не было</label></div>
+          <div class="chip"><input type="radio" name="hf_count" id="hfc2" value="low"><label for="hfc2" data-t="hf_1">1–2</label></div>
+          <div class="chip"><input type="radio" name="hf_count" id="hfc3" value="mid"><label for="hfc3" data-t="hf_35">3–5</label></div>
+          <div class="chip"><input type="radio" name="hf_count" id="hfc4" value="high"><label for="hfc4" data-t="hf_6p">6+</label></div>
+        </div>
+      </div>
+      <div class="input-group" id="hf-detail" style="display:none;">
+        <label data-t="s1_hf_int">Интенсивность приливов</label>
+        <div class="chips">
+          <div class="chip"><input type="radio" name="hf_intensity" id="hfi1" value="mild" checked><label for="hfi1" data-t="hf_mild">Слабые</label></div>
+          <div class="chip"><input type="radio" name="hf_intensity" id="hfi2" value="moderate"><label for="hfi2" data-t="hf_mod">Умеренные</label></div>
+          <div class="chip"><input type="radio" name="hf_intensity" id="hfi3" value="intense"><label for="hfi3" data-t="hf_strong">Сильные</label></div>
+        </div>
+        <div class="input-group" style="margin-top:12px;padding:0;">
+          <label data-t="s1_hf_time">Когда бывают</label>
+          <div class="chips">
+            <div class="chip"><input type="radio" name="hf_time" id="hft1" value="night" checked><label for="hft1" data-t="hf_night">Только ночью</label></div>
+            <div class="chip"><input type="radio" name="hf_time" id="hft2" value="mixed"><label for="hft2" data-t="hf_mixed">День и ночь</label></div>
+            <div class="chip"><input type="radio" name="hf_time" id="hft3" value="day"><label for="hft3" data-t="hf_day">Преимущественно днём</label></div>
+          </div>
         </div>
       </div>
       <div class="input-group">
@@ -1912,6 +1957,33 @@ footer{
           <div class="chip"><input type="radio" name="wake" id="wk4" value="multiple"><label for="wk4" data-t="multiple">Несколько раз</label></div>
         </div>
       </div>
+      <div class="divider"></div>
+      <div class="input-group">
+        <label data-t="s2_l4">Частота дыхания за ночь</label>
+        <div class="oura-slider-wrap">
+          <div class="oura-display">
+            <div class="oura-number" id="resp-num">15</div>
+            <div class="oura-unit" data-t="resp_unit">вдохов/мин</div>
+            <div class="oura-status" id="resp-status">Normal</div>
+          </div>
+          <div class="oura-track-wrap">
+            <div class="oura-track" id="resp-track">
+              <div class="oura-fill" id="resp-fill"></div>
+              <div class="oura-range" id="resp-range"></div>
+              <div class="oura-marker" id="resp-marker"></div>
+              <input class="oura-input" type="range" id="resp_rate" min="8" max="28" value="15"
+                oninput="ouraSlider('resp',+this.value)">
+            </div>
+            <div class="oura-range-labels">
+              <span class="oura-label-min">8</span>
+              <span class="oura-label-norm-start" id="resp-nl">12</span>
+              <span class="oura-label-norm-end" id="resp-nr">20</span>
+              <span class="oura-label-max">28</span>
+            </div>
+          </div>
+        </div>
+        <p style="font-size:11px;color:var(--t3);margin-top:6px;" data-t="resp_hint">Oura: Sleep → Respiratory Rate</p>
+      </div>
       <div class="btn-row">
         <button class="btn btn-back" onclick="goTo(2)">←</button>
         <button class="btn btn-primary" onclick="goTo(4)"><span class="btn-label" data-t="next">Далее →</span></button>
@@ -1971,6 +2043,48 @@ footer{
           <div class="chip"><input type="checkbox" id="sym5" value="palpitations"><label for="sym5" data-t="sym_palp">Сердцебиения</label></div>
           <div class="chip"><input type="checkbox" id="sym6" value="joint"><label for="sym6" data-t="sym_joint">Боли в суставах</label></div>
           <div class="chip"><input type="checkbox" id="sym7" value="nothing"><label for="sym7" data-t="sym_nothing">Ничего особенного</label></div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="input-group">
+        <label data-t="s3_mood">Настроение сегодня</label>
+        <div class="chips">
+          <div class="chip"><input type="radio" name="mood" id="md1" value="stable" checked><label for="md1" data-t="mood_stable">Стабильное</label></div>
+          <div class="chip"><input type="radio" name="mood" id="md2" value="swings"><label for="md2" data-t="mood_swings">Перепады</label></div>
+          <div class="chip"><input type="radio" name="mood" id="md3" value="low"><label for="md3" data-t="mood_low">Подавленное</label></div>
+        </div>
+      </div>
+      <div class="input-group">
+        <label data-t="s3_anx">Тревожность (1–10)</label>
+        <div class="oura-slider-wrap">
+          <div class="oura-display">
+            <div class="oura-number" id="anx-num">3</div>
+            <div class="oura-unit">/ 10</div>
+            <div class="oura-status" id="anx-status">Low</div>
+          </div>
+          <div class="oura-track-wrap">
+            <div class="oura-track" id="anx-track">
+              <div class="oura-fill" id="anx-fill"></div>
+              <div class="oura-range" id="anx-range"></div>
+              <div class="oura-marker" id="anx-marker"></div>
+              <input class="oura-input" type="range" id="anxiety" min="1" max="10" value="3"
+                oninput="ouraSlider('anx',+this.value)">
+            </div>
+            <div class="oura-range-labels">
+              <span class="oura-label-min">1</span>
+              <span class="oura-label-norm-start" id="anx-nl">1</span>
+              <span class="oura-label-norm-end" id="anx-nr">4</span>
+              <span class="oura-label-max">10</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="input-group">
+        <label data-t="s3_irr">Раздражительность</label>
+        <div class="chips">
+          <div class="chip"><input type="radio" name="irritability" id="irr1" value="none" checked><label for="irr1" data-t="irr_none">Нет</label></div>
+          <div class="chip"><input type="radio" name="irritability" id="irr2" value="mild"><label for="irr2" data-t="irr_mild">Умеренная</label></div>
+          <div class="chip"><input type="radio" name="irritability" id="irr3" value="high"><label for="irr3" data-t="irr_high">Высокая</label></div>
         </div>
       </div>
       <div class="btn-row">
@@ -2346,7 +2460,7 @@ footer{
   <div class="step" id="step13">
     <div class="card">
       <div class="card-accent" style="background:linear-gradient(90deg,transparent,rgba(20,184,166,.5),transparent);"></div>
-      <div class="step-badge" style="background:rgba(20,184,166,.1);border-color:rgba(20,184,166,.3);color:#2DD4BF;">13 / 15 · Анализы</div>
+      <div class="step-badge" style="background:rgba(20,184,166,.1);border-color:rgba(20,184,166,.3);color:#2DD4BF;">13 / 16 · Анализы</div>
       <h2 class="step-title">Лабораторные показатели</h2>
       <p class="step-desc" style="border-color:rgba(20,184,166,.3);">Если есть свежие анализы — введите значения. Незаполненные поля пропускаются.</p>
       <div class="manual-grid" style="margin-top:0;">
@@ -2366,11 +2480,35 @@ footer{
     </div>
   </div>
 
-  <!-- STEP 14: САМОЧУВСТВИЕ ЗА НЕДЕЛЮ -->
+  <!-- STEP 14: БИОИМПЕДАНС -->
   <div class="step" id="step14">
     <div class="card">
+      <div class="card-accent" style="background:linear-gradient(90deg,transparent,rgba(99,102,241,.5),transparent);"></div>
+      <div class="step-badge" style="background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.3);color:#818CF8;">14 / 16 · Биоимпеданс</div>
+      <h2 class="step-title" data-t="s14_title">Состав тела</h2>
+      <p class="step-desc" style="border-color:rgba(99,102,241,.3);" data-t="s14_desc">Показания биоимпеданса позволят сделать рекомендации более персонализированными и точными. Если нет умных весов — пропустите шаг.</p>
+      <div class="manual-grid" style="margin-top:0;">
+        <div class="manual-field"><label class="manual-label" data-t="bio_fat">% жира</label><input class="manual-input" id="bio-fat" type="number" min="3" max="60" step="0.1" placeholder="—"></div>
+        <div class="manual-field"><label class="manual-label" data-t="bio_muscle">% мышц</label><input class="manual-input" id="bio-muscle" type="number" min="10" max="60" step="0.1" placeholder="—"></div>
+        <div class="manual-field"><label class="manual-label" data-t="bio_visceral">Висцеральный жир (1–30)</label><input class="manual-input" id="bio-visceral" type="number" min="1" max="30" step="1" placeholder="—"></div>
+        <div class="manual-field"><label class="manual-label" data-t="bio_water">% воды</label><input class="manual-input" id="bio-water" type="number" min="20" max="80" step="0.1" placeholder="—"></div>
+        <div class="manual-field"><label class="manual-label" data-t="bio_bone">Костная масса (кг)</label><input class="manual-input" id="bio-bone" type="number" min="0.5" max="5" step="0.1" placeholder="—"></div>
+        <div class="manual-field"><label class="manual-label">BMI</label><input class="manual-input" id="bio-bmi" type="number" min="10" max="50" step="0.1" placeholder="—"></div>
+        <div class="manual-field"><label class="manual-label" data-t="bio_bmr">Базальный метаболизм (ккал)</label><input class="manual-input" id="bio-bmr" type="number" min="800" max="4000" step="1" placeholder="—"></div>
+        <div class="manual-field"><label class="manual-label" data-t="bio_bioage">Биологический возраст</label><input class="manual-input" id="bio-bioage" type="number" min="10" max="100" step="1" placeholder="—"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-back" onclick="goTo(13)">←</button>
+        <button class="btn btn-primary" onclick="goTo(15)"><span class="btn-label" data-t="next">Далее →</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 15: САМОЧУВСТВИЕ ЗА НЕДЕЛЮ -->
+  <div class="step" id="step15">
+    <div class="card">
       <div class="card-accent"></div>
-      <div class="step-badge">14 / 15 · Динамика</div>
+      <div class="step-badge">15 / 16 · Динамика</div>
       <h2 class="step-title">Самочувствие за последнюю неделю</h2>
       <p class="step-desc">Сравните с прошлой неделей — это выявит тренд.</p>
       <div class="input-group">
@@ -2405,7 +2543,7 @@ footer{
         </div>
       </div>
       <div class="btn-row">
-        <button class="btn btn-back" onclick="goTo(13)">←</button>
+        <button class="btn btn-back" onclick="goTo(14)">←</button>
         <button class="btn btn-primary" onclick="showResults()"><span class="btn-label">Показать результат →</span></button>
       </div>
     </div>
@@ -2559,6 +2697,28 @@ footer{
 
     <div class="ornament">· · ·</div>
 
+    <!-- QoL / MIS SCORE CARD -->
+    <div id="qolCard" style="display:none;" class="card" style="margin-bottom:12px;">
+      <div class="card-accent"></div>
+      <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--t1);margin-bottom:14px;">🌿 <span data-t="qol_title">Индекс качества жизни (QoL)</span></div>
+      <div id="qolBar" style="height:8px;border-radius:4px;background:var(--bg-3);margin-bottom:14px;overflow:hidden;">
+        <div id="qolFill" style="height:100%;border-radius:4px;width:0%;transition:width .8s ease;"></div>
+      </div>
+      <div id="qolDesc" style="font-size:13px;color:var(--t2);line-height:1.7;"></div>
+    </div>
+
+    <!-- AI ANALYSIS CARD -->
+    <div id="aiCard" style="display:none;" class="card" style="margin-bottom:12px;">
+      <div class="card-accent" style="background:linear-gradient(90deg,transparent,rgba(120,152,255,.5),transparent);"></div>
+      <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--t1);margin-bottom:14px;">✦ <span data-t="ai_title">Персональный анализ ИИ</span></div>
+      <div id="aiLoading" style="display:flex;align-items:center;gap:10px;color:var(--t2);font-size:13px;">
+        <div style="width:18px;height:18px;border:2px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;"></div>
+        <span data-t="ai_loading">Анализирую ваши данные...</span>
+      </div>
+      <div id="aiResult" style="display:none;font-size:13px;color:var(--t2);line-height:1.85;white-space:pre-wrap;"></div>
+      <div id="aiError" style="display:none;font-size:12px;color:var(--alert);margin-top:8px;"></div>
+    </div>
+
     <!-- LAB TESTS CARD -->
     <div id="labCard" style="display:none;" class="card" style="margin-bottom:12px;">
       <div class="card-accent"></div>
@@ -2650,7 +2810,7 @@ function gateError(reason){
 }
 
 async function checkCode(){
-  const v=document.getElementById('gateInput').value.trim().toUpperCase();
+  const v=document.getElementById('gateInput').value.trim().toUpperCase().replace(/\s+/g,'');
   if(!v)return;
 
   const btn=document.getElementById('gateBtn');
@@ -2658,8 +2818,11 @@ async function checkCode(){
   btn.querySelector('span').textContent='Перевірка…';
   document.getElementById('gateError').classList.remove('show');
 
+  // Тестовые коды разработчика
+  const DEV_CODES={'VIAL-PRO-2024':'PRO','VIAL-MAX-2024':'MAX','VL-DEV-PRO':'PRO','VL-DEV-MAX':'MAX'};
+  if(DEV_CODES[v]){gateUnlock(DEV_CODES[v]);return;}
+
   if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL==='YOUR_APPS_SCRIPT_URL_HERE'){
-    // Режим разработки: принимаем любой код начинающийся с VL-
     if(v.startsWith('VL-')){ gateUnlock('PRO'); } else { gateError('invalid'); }
     return;
   }
@@ -2676,6 +2839,12 @@ async function checkCode(){
 }
 
 document.getElementById('gateInput').addEventListener('keydown',e=>{if(e.key==='Enter')checkCode();});
+function toggleGateVis(){
+  const inp=document.getElementById('gateInput');
+  const eye=document.getElementById('gateEye');
+  inp.type=inp.type==='password'?'text':'password';
+  eye.textContent=inp.type==='password'?'👁':'🙈';
+}
 if(sessionStorage.getItem('vial_access'))document.getElementById('gate').style.display='none';
 
 // ══ LANG DROPDOWN ═════════════════════════════════════════
@@ -2691,9 +2860,9 @@ document.addEventListener('click',e=>{
 const T={
   ru:{
     gate_sub:'PRO доступ · Программа ведения',gate_title:'Введите код доступа',gate_desc:'Код прилагается к вашему гайду VIA‑L.',gate_error:'Неверный код.',gate_btn:'Войти →',preview_label:'Введите код для доступа',
-    hero_badge:'Персональный анализ · VIA‑L',hero_title:'Интерпретатор данных<br><em>носимого устройства</em>',hero_desc:'Oura, Garmin, Polar, Apple Watch → нутрициологические рекомендации.',hero_tier_label:'⭐ PRO версия',
+    hero_badge:'Персональный анализ · VIA‑L',hero_title:'Интерпретатор данных<br><em>носимого устройства</em>',hero_desc:'Oura Menopause Insights (Gen3 & Ring 4) · Garmin · Polar · Apple Watch → нутрициологические рекомендации.',hero_tier_label:'⭐ PRO версия',
     nav_today:'Сегодня',nav_history:'История',nav_consult:'Консультация',history_title:'История сессий',history_empty:'Пока нет сохранённых сессий. Пройдите анализ.',
-    s_prof_badge:'00 / 15 · Профиль',s_prof_title:'Ваш профиль',s_prof_desc:'Гормональная фаза влияет на интерпретацию всех показателей.',s_prof_l1:'Пол',s_prof_l2:'Фаза (женщины)',s_prof_l3:'Фаза (мужчины)',
+    s_prof_badge:'00 / 15 · Профиль',s_prof_title:'Ваш профиль',s_prof_desc:'Гормональная фаза влияет на интерпретацию всех показателей.',s_prof_l1:'Пол',s_prof_l2:'Фаза (женщины)',s_prof_l3:'Фаза (мужчины)',s_prof_l4:'Ваше устройство',oura_note:'✦ Поддерживает Oura Menopause Insights',
     gender_f:'👩 Женщина',gender_m:'👨 Мужчина',phase_peri:'Перименопауза',phase_meno:'Менопауза',phase_post:'Постменопауза',phase_andro:'Андропауза',phase_preandro:'Предандропауза',phase_other:'Другое',
     s0_badge:'01 / 15 · HRV',s0_title:'Вариабельность сердечного ритма',s0_desc:'HRV показывает, насколько хорошо организм справляется со стрессом.',s0_l1:'Ваш HRV сегодня',s0_low:'10 мс',s0_high:'120 мс',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'По сравнению с нормой',s0_l3:'Это продолжается',
     s1_badge:'02 / 15 · Температура',s1_title:'Ночное отклонение температуры',s1_desc:'Отклонение от базовой линии прошлой ночью.',s1_l1:'Отклонение',s1_l2:'Просыпались от жара?',s1_l3:'Как часто на неделе?',
@@ -2725,12 +2894,18 @@ const T={
     res_alert_title:'Нужна поддержка',res_alert_sub:'Организм под нагрузкой. Рекомендуем консультацию.',
     doc_reason_hrv:'хронически сниженный HRV',doc_reason_temp:'ежедневные ночные приливы',doc_reason_rhr:'высокий пульс + сердцебиения',doc_reason_thyroid:'низкая температура + усталость',doc_prefix:'Рекомендуем обратиться к специалисту: ',
     compare_better:'лучше чем в прошлый раз',compare_worse:'хуже чем в прошлый раз',compare_same:'без изменений',
+    s1_hf_count:'Приливов прошлой ночью',hf_0:'Не было',hf_1:'1–2',hf_35:'3–5',hf_6p:'6+',s1_hf_int:'Интенсивность приливов',hf_mild:'Слабые',hf_mod:'Умеренные',hf_strong:'Сильные',s1_hf_time:'Когда бывают',hf_night:'Только ночью',hf_mixed:'День и ночь',hf_day:'Преимущественно днём',
+    s2_l4:'Частота дыхания за ночь',resp_unit:'вдохов/мин',resp_hint:'Oura: Sleep → Respiratory Rate',
+    s3_mood:'Настроение сегодня',mood_stable:'Стабильное',mood_swings:'Перепады',mood_low:'Подавленное',s3_anx:'Тревожность (1–10)',s3_irr:'Раздражительность',irr_none:'Нет',irr_mild:'Умеренная',irr_high:'Высокая',
+    qol_title:'Индекс качества жизни (QoL)',qol_good:'Качество жизни удовлетворительное',qol_mod:'Умеренное снижение качества жизни',qol_high:'Значительное снижение качества жизни',
+    s14_title:'Состав тела',s14_desc:'Показания биоимпеданса позволят сделать рекомендации более персонализированными и точными. Если нет умных весов — пропустите шаг.',bio_fat:'% жира',bio_muscle:'% мышц',bio_visceral:'Висцеральный жир (1–30)',bio_water:'% воды',bio_bone:'Костная масса (кг)',bio_bmr:'Базальный метаболизм (ккал)',bio_bioage:'Биологический возраст',
+    ai_title:'Персональный анализ ИИ',ai_loading:'Анализирую ваши данные...',
   },
   uk:{
     gate_sub:'PRO доступ · Програма ведення',gate_title:'Введіть код доступу',gate_desc:'Код додається до вашого гайду VIA‑L.',gate_error:'Невірний код.',gate_btn:'Увійти →',preview_label:'Введіть код для доступу',
-    hero_badge:'Персональний аналіз · VIA‑L',hero_title:'Інтерпретатор даних<br><em>носимого пристрою</em>',hero_desc:'Oura, Garmin, Polar, Apple Watch → нутриціологічні рекомендації.',hero_tier_label:'⭐ PRO версія',
+    hero_badge:'Персональний аналіз · VIA‑L',hero_title:'Інтерпретатор даних<br><em>носимого пристрою</em>',hero_desc:'Oura Menopause Insights (Gen3 & Ring 4) · Garmin · Polar · Apple Watch → нутриціологічні рекомендації.',hero_tier_label:'⭐ PRO версія',
     nav_today:'Сьогодні',nav_history:'Історія',nav_consult:'Консультація',history_title:'Історія сесій',history_empty:'Ще немає збережених сесій.',
-    s_prof_badge:'00 / 15 · Профіль',s_prof_title:'Ваш профіль',s_prof_desc:'Гормональна фаза впливає на інтерпретацію всіх показників.',s_prof_l1:'Стать',s_prof_l2:'Фаза (жінки)',s_prof_l3:'Фаза (чоловіки)',
+    s_prof_badge:'00 / 15 · Профіль',s_prof_title:'Ваш профіль',s_prof_desc:'Гормональна фаза впливає на інтерпретацію всіх показників.',s_prof_l1:'Стать',s_prof_l2:'Фаза (жінки)',s_prof_l3:'Фаза (чоловіки)',s_prof_l4:'Ваш пристрій',oura_note:'✦ Підтримує Oura Menopause Insights',
     gender_f:'👩 Жінка',gender_m:'👨 Чоловік',phase_peri:'Перименопауза',phase_meno:'Менопауза',phase_post:'Постменопауза',phase_andro:'Андропауза',phase_preandro:'Передандропауза',phase_other:'Інше',
     s0_badge:'01 / 15 · HRV',s0_title:'Варіабельність серцевого ритму',s0_desc:'HRV показує, наскільки добре організм справляється зі стресом.',s0_l1:'Ваш HRV сьогодні',s0_low:'10 мс',s0_high:'120 мс',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'Порівняно з нормою',s0_l3:'Це триває',
     s1_badge:'02 / 15 · Температура',s1_title:'Нічне відхилення температури',s1_desc:'Відхилення від базової лінії минулої ночі.',s1_l1:'Відхилення',s1_l2:'Прокидалися від жару?',s1_l3:'Як часто на тижні?',
@@ -2751,12 +2926,18 @@ const T={
     res_good_title:'Гарне відновлення',res_good_sub:'Показники в цілому позитивні.',res_warn_title:'Потребує уваги',res_warn_sub:'Організм потребує підтримки.',res_alert_title:'Потрібна підтримка',res_alert_sub:'Організм під навантаженням.',
     doc_reason_hrv:'хронічно знижений HRV',doc_reason_temp:'щоденні нічні припливи',doc_reason_rhr:'високий пульс + серцебиття',doc_reason_thyroid:'низька температура + втома',doc_prefix:'Рекомендуємо звернутися до фахівця: ',
     compare_better:'краще ніж минулого разу',compare_worse:'гірше ніж минулого разу',compare_same:'без змін',
+    s1_hf_count:'Припливів минулої ночі',hf_0:'Не було',hf_1:'1–2',hf_35:'3–5',hf_6p:'6+',s1_hf_int:'Інтенсивність припливів',hf_mild:'Слабкі',hf_mod:'Помірні',hf_strong:'Сильні',s1_hf_time:'Коли бувають',hf_night:'Тільки вночі',hf_mixed:'День і ніч',hf_day:'Переважно вдень',
+    s2_l4:'Частота дихання за ніч',resp_unit:'вдихів/хв',resp_hint:'Oura: Sleep → Respiratory Rate',
+    s3_mood:'Настрій сьогодні',mood_stable:'Стабільний',mood_swings:'Перепади',mood_low:'Пригнічений',s3_anx:'Тривожність (1–10)',s3_irr:'Дратівливість',irr_none:'Немає',irr_mild:'Помірна',irr_high:'Висока',
+    qol_title:'Індекс якості життя (QoL)',qol_good:'Якість життя задовільна',qol_mod:'Помірне зниження якості життя',qol_high:'Значне зниження якості життя',
+    s14_title:'Склад тіла',s14_desc:'Показання біоімпедансу дозволять зробити рекомендації більш персоналізованими та точними. Якщо немає розумних терезів — пропустіть крок.',bio_fat:'% жиру',bio_muscle:'% м\'язів',bio_visceral:'Вісцеральний жир (1–30)',bio_water:'% води',bio_bone:'Кісткова маса (кг)',bio_bmr:'Базальний метаболізм (ккал)',bio_bioage:'Біологічний вік',
+    ai_title:'Персональний аналіз ІІ',ai_loading:'Аналізую ваші дані...',
   },
   en:{
     gate_sub:'PRO Access · Coaching Program',gate_title:'Enter Your Access Code',gate_desc:'Your code is included with your VIA‑L guide.',gate_error:'Invalid code.',gate_btn:'Enter →',preview_label:'Enter code to access',
-    hero_badge:'Personal Analysis · VIA‑L',hero_title:'Wearable Device<br><em>Data Interpreter</em>',hero_desc:'Oura, Garmin, Polar, Apple Watch → nutritional recommendations.',hero_tier_label:'⭐ PRO Version',
+    hero_badge:'Personal Analysis · VIA‑L',hero_title:'Wearable Device<br><em>Data Interpreter</em>',hero_desc:'Compatible with Oura Menopause Insights (Gen3 & Ring 4) · Garmin · Polar · Apple Watch → nutritional recommendations.',hero_tier_label:'⭐ PRO Version',
     nav_today:'Today',nav_history:'History',nav_consult:'Consult',history_title:'Session History',history_empty:'No saved sessions yet.',
-    s_prof_badge:'00 / 15 · Profile',s_prof_title:'Your Profile',s_prof_desc:'Your hormonal phase affects interpretation of all metrics.',s_prof_l1:'Gender',s_prof_l2:'Phase (women)',s_prof_l3:'Phase (men)',
+    s_prof_badge:'00 / 15 · Profile',s_prof_title:'Your Profile',s_prof_desc:'Your hormonal phase affects interpretation of all metrics.',s_prof_l1:'Gender',s_prof_l2:'Phase (women)',s_prof_l3:'Phase (men)',s_prof_l4:'Your device',oura_note:'✦ Supports Oura Menopause Insights',
     gender_f:'👩 Female',gender_m:'👨 Male',phase_peri:'Perimenopause',phase_meno:'Menopause',phase_post:'Postmenopause',phase_andro:'Andropause',phase_preandro:'Pre-andropause',phase_other:'Other',
     s0_badge:'01 / 15 · HRV',s0_title:'Heart Rate Variability',s0_desc:'HRV shows how well your body handles stress and recovery.',s0_l1:'Your HRV today',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'Compared to baseline',s0_l3:'Duration',
     s1_badge:'02 / 15 · Temperature',s1_title:'Overnight Temperature',s1_desc:'Deviation from your baseline last night.',s1_l1:'Deviation',s1_l2:'Woke up from heat?',s1_l3:'How often per week?',
@@ -2777,12 +2958,17 @@ const T={
     res_good_title:'Good Recovery State',res_good_sub:'Your indicators are generally positive.',res_warn_title:'Needs Attention',res_warn_sub:'Your body needs support.',res_alert_title:'Support Needed',res_alert_sub:'Your body is under load.',
     doc_reason_hrv:'chronically low HRV',doc_reason_temp:'daily night sweats',doc_reason_rhr:'elevated HR + palpitations',doc_reason_thyroid:'low temp + fatigue',doc_prefix:'We recommend consulting a specialist: ',
     compare_better:'better than last time',compare_worse:'worse than last time',compare_same:'no change',
+    s1_hf_count:'Hot flashes last night',hf_0:'None',hf_1:'1–2',hf_35:'3–5',hf_6p:'6+',s1_hf_int:'Intensity',hf_mild:'Mild',hf_mod:'Moderate',hf_strong:'Intense',s1_hf_time:'When do they occur',hf_night:'Night only',hf_mixed:'Day & night',hf_day:'Mainly daytime',
+    s2_l4:'Respiratory rate last night',resp_unit:'breaths/min',resp_hint:'Oura: Sleep → Respiratory Rate',
+    s3_mood:'Mood today',mood_stable:'Stable',mood_swings:'Swings',mood_low:'Low',s3_anx:'Anxiety (1–10)',s3_irr:'Irritability',irr_none:'None',irr_mild:'Mild',irr_high:'High',
+    qol_title:'Quality of Life Index (QoL)',qol_good:'Quality of life satisfactory',qol_mod:'Moderate QoL reduction',qol_high:'Significant QoL reduction',
+    s14_title:'Body Composition',s14_desc:'Bioimpedance readings will make recommendations more personalised and precise. Skip if you don\'t have smart scales.',bio_fat:'Body fat %',bio_muscle:'Muscle %',bio_visceral:'Visceral fat (1–30)',bio_water:'Water %',bio_bone:'Bone mass (kg)',bio_bmr:'Basal metabolism (kcal)',bio_bioage:'Biological age',
   },
   es:{
     gate_sub:'Acceso PRO · Programa',gate_title:'Código de Acceso',gate_desc:'El código está en tu guía VIA‑L.',gate_error:'Código incorrecto.',gate_btn:'Entrar →',preview_label:'Ingresa el código',
-    hero_badge:'Análisis Personal · VIA‑L',hero_title:'Intérprete de datos<br><em>de dispositivo ponible</em>',hero_desc:'Oura, Garmin, Polar, Apple Watch → recomendaciones nutricionales.',hero_tier_label:'⭐ Versión PRO',
+    hero_badge:'Análisis Personal · VIA‑L',hero_title:'Intérprete de datos<br><em>de dispositivo ponible</em>',hero_desc:'Compatible con Oura Menopause Insights (Gen3 & Ring 4) · Garmin · Polar · Apple Watch → recomendaciones nutricionales.',hero_tier_label:'⭐ Versión PRO',
     nav_today:'Hoy',nav_history:'Historial',nav_consult:'Consulta',history_title:'Historial de sesiones',history_empty:'Sin sesiones guardadas aún.',
-    s_prof_badge:'00 / 15 · Perfil',s_prof_title:'Tu Perfil',s_prof_desc:'La fase hormonal afecta la interpretación de todas las métricas.',s_prof_l1:'Género',s_prof_l2:'Fase (mujeres)',s_prof_l3:'Fase (hombres)',
+    s_prof_badge:'00 / 15 · Perfil',s_prof_title:'Tu Perfil',s_prof_desc:'La fase hormonal afecta la interpretación de todas las métricas.',s_prof_l1:'Género',s_prof_l2:'Fase (mujeres)',s_prof_l3:'Fase (hombres)',s_prof_l4:'Tu dispositivo',oura_note:'✦ Compatible con Oura Menopause Insights',
     gender_f:'👩 Mujer',gender_m:'👨 Hombre',phase_peri:'Perimenopausia',phase_meno:'Menopausia',phase_post:'Posmenopausia',phase_andro:'Andropausia',phase_preandro:'Pre-andropausia',phase_other:'Otro',
     s0_badge:'01 / 15 · VFC',s0_title:'Variabilidad Cardíaca',s0_desc:'La VFC muestra cómo maneja el estrés tu cuerpo.',s0_l1:'Tu VFC hoy',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'Comparado con tu base',s0_l3:'Duración',
     s1_badge:'02 / 15 · Temperatura',s1_title:'Temperatura nocturna',s1_desc:'Desviación de tu línea base anoche.',s1_l1:'Desviación',s1_l2:'¿Despertaste por calor?',s1_l3:'¿Con qué frecuencia?',
@@ -2803,10 +2989,263 @@ const T={
     res_good_title:'Buen estado',res_good_sub:'Tus indicadores son positivos.',res_warn_title:'Requiere atención',res_warn_sub:'Tu cuerpo necesita apoyo.',res_alert_title:'Necesita apoyo',res_alert_sub:'Tu cuerpo está bajo carga.',
     doc_reason_hrv:'VFC crónicamente baja',doc_reason_temp:'sudores nocturnos',doc_reason_rhr:'FC alta + palpitaciones',doc_reason_thyroid:'temperatura baja + fatiga',doc_prefix:'Consulta a un especialista: ',
     compare_better:'mejor que la vez anterior',compare_worse:'peor que la vez anterior',compare_same:'sin cambios',
+    s1_hf_count:'Sofocos anoche',hf_0:'Ninguno',hf_1:'1–2',hf_35:'3–5',hf_6p:'6+',s1_hf_int:'Intensidad',hf_mild:'Leve',hf_mod:'Moderado',hf_strong:'Intenso',s1_hf_time:'¿Cuándo ocurren?',hf_night:'Solo de noche',hf_mixed:'Día y noche',hf_day:'Principalmente de día',
+    s2_l4:'Frecuencia respiratoria nocturna',resp_unit:'resp/min',resp_hint:'Oura: Sleep → Respiratory Rate',
+    s3_mood:'Humor hoy',mood_stable:'Estable',mood_swings:'Variable',mood_low:'Bajo',s3_anx:'Ansiedad (1–10)',s3_irr:'Irritabilidad',irr_none:'Ninguna',irr_mild:'Moderada',irr_high:'Alta',
+    qol_title:'Índice de Calidad de Vida (QoL)',qol_good:'Calidad de vida satisfactoria',qol_mod:'Reducción moderada de calidad de vida',qol_high:'Reducción significativa de calidad de vida',
+    s14_title:'Composición corporal',s14_desc:'Los datos de bioimpedancia harán las recomendaciones más personalizadas y precisas. Omite este paso si no tienes báscula inteligente.',bio_fat:'% grasa',bio_muscle:'% músculo',bio_visceral:'Grasa visceral (1–30)',bio_water:'% agua',bio_bone:'Masa ósea (kg)',bio_bmr:'Metabolismo basal (kcal)',bio_bioage:'Edad biológica',
+  },
+  de:{
+    gate_sub:'PRO Zugang · Betreuungsprogramm',gate_title:'Zugangscode eingeben',gate_desc:'Ihr Code liegt Ihrem VIA‑L Guide bei.',gate_error:'Ungültiger Code.',gate_btn:'Eintreten →',preview_label:'Code eingeben',
+    hero_badge:'Persönliche Analyse · VIA‑L',hero_title:'Daten-Interpreter<br><em>für Wearable-Geräte</em>',hero_desc:'Kompatibel mit Oura Menopause Insights (Gen3 & Ring 4) · Garmin · Polar · Apple Watch → Ernährungsempfehlungen.',hero_tier_label:'⭐ PRO Version',
+    nav_today:'Heute',nav_history:'Verlauf',nav_consult:'Beratung',history_title:'Sitzungsverlauf',history_empty:'Noch keine gespeicherten Sitzungen.',
+    s_prof_badge:'00 / 15 · Profil',s_prof_title:'Ihr Profil',s_prof_desc:'Die Hormonphase beeinflusst die Interpretation aller Messwerte.',s_prof_l1:'Geschlecht',s_prof_l2:'Phase (Frauen)',s_prof_l3:'Phase (Männer)',s_prof_l4:'Dein Gerät',oura_note:'✦ Unterstützt Oura Menopause Insights',
+    gender_f:'👩 Frau',gender_m:'👨 Mann',phase_peri:'Perimenopause',phase_meno:'Menopause',phase_post:'Postmenopause',phase_andro:'Andropause',phase_preandro:'Prä-Andropause',phase_other:'Sonstiges',
+    s0_badge:'01 / 15 · HRV',s0_title:'Herzratenvariabilität',s0_desc:'HRV zeigt, wie gut Ihr Körper mit Stress und Erholung umgeht.',s0_l1:'Ihr HRV heute',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'Im Vergleich zur Baseline',s0_l3:'Dauer',
+    s1_badge:'02 / 15 · Temperatur',s1_title:'Nächtliche Temperatur',s1_desc:'Abweichung von Ihrer Basislinie letzte Nacht.',s1_l1:'Abweichung',s1_l2:'Vom Hitzegefühl aufgewacht?',s1_l3:'Wie oft pro Woche?',
+    s2_badge:'03 / 15 · Schlaf',s2_title:'Schlafqualität',s2_desc:'Schlaf ist der empfindlichste Indikator für die Hormongesundheit.',s2_l1:'Schlafgefühl (1–10)',s2_l2:'Tiefschlaf',s2_l3:'Aufwachen',
+    s3_badge:'04 / 15 · Herzrate',s3_title:'Ruheherzrate & Symptome',s3_desc:'Ruheherzrate und Symptome heute.',s3_l1:'Ruheherzrate (RHR)',s3_l2:'Im Vergleich zum Üblichen',s3_l3:'Was Sie bemerken',
+    s4_badge:'05 / 15 · Lebensstil',s4_title:'Energie & Lebensstil',s4_desc:'Letzte Fragen.',s4_l1:'Energieniveau (1–10)',s4_l2:'Alkohol gestern?',s4_l3:'Stress gestern?',
+    above_norm:'Über der Norm',in_norm:'Normal',below_norm:'Unter der Norm',dont_know:'Weiß nicht',dur_today:'Nur heute',dur_week:'3–7 Tage',dur_weeks:'2–3 Wochen',dur_month:'>1 Monat',
+    temp_norm:'Normal',temp_slight:'+0.2–0.4°C',temp_spike:'+0.5°C+',temp_down:'Unter normal',temp_chaotic:'Unregelmäßig',
+    no:'Nein',once:'Einmal',multiple:'Mehrmals',yes:'Ja',freq_rare:'Selten',freq_often:'Oft',freq_daily:'Jede Nacht',
+    sleep_bad:'1 — keine Erholung',sleep_good:'10 — erfrischt',deep_good:'>1.5 Std',deep_low:'30–90 Min',deep_none:'<30 Min',wake_none:'Kein Aufwachen',wake_early:'2–4 Uhr',
+    bpm:'Schl/min',rhr_norm:'Wie üblich',rhr_slight:'+3–5',rhr_high:'+8+',rhr_low:'Niedriger',
+    sym_fatigue:'Müdigkeit',sym_anxiety:'Angst',sym_foggy:'Gehirnnebel',sym_mood:'Stimmungsschwankungen',sym_palp:'Herzrasen',sym_joint:'Gelenkschmerzen',sym_nothing:'Nichts Ungewöhnliches',
+    energy_low:'1 — keine Energie',energy_high:'10 — voller Energie',stress_mild:'Moderat',stress_high:'Stark',
+    next:'Weiter →',show_result:'Ergebnis anzeigen →',result_eyebrow:'VIA‑L Analyse',readiness:'Bereitschaft',doctor_title:'⚠ Ärztliche Konsultation',lab_title:'🧪 Empfohlene Tests',
+    max_title:'Ihre Expert-Auswertung',max_desc:'Senden Sie eine Anfrage — Ihre Ernährungsberaterin erstellt eine persönliche schriftliche Auswertung innerhalb von 48 Stunden.',max_btn:'Anfrage an Ernährungsberaterin →',max_placeholder:'Ihre Frage oder was Sie klären möchten...',max_sent:'✓ Anfrage gesendet! Antwort innerhalb von 48 Stunden.',
+    cta_title:'Möchten Sie eine persönliche Strategie?',cta_desc:'Wir analysieren Ihre Daten und erstellen ein Protokoll.',restart:'Neu starten',book:'Buchen →',pdf_btn:'📄 PDF-Bericht herunterladen',
+    disclaimer:'Dieses Tool hat informativen Charakter.',tagline:'Lebe. Existiere nicht nur.',back_home:'← Zurück',step_of:'Schritt {n} von 15',your_result:'Ihr Ergebnis',
+    res_good_title:'Gute Erholungsrate',res_good_sub:'Ihre Werte sind insgesamt positiv.',res_warn_title:'Aufmerksamkeit erforderlich',res_warn_sub:'Ihr Körper braucht Unterstützung.',res_alert_title:'Unterstützung benötigt',res_alert_sub:'Ihr Körper steht unter Belastung.',
+    doc_reason_hrv:'chronisch niedriger HRV',doc_reason_temp:'tägliche Nachtschweiße',doc_reason_rhr:'erhöhte HR + Herzrasen',doc_reason_thyroid:'niedrige Temp + Müdigkeit',doc_prefix:'Wir empfehlen einen Facharztbesuch: ',
+    compare_better:'besser als beim letzten Mal',compare_worse:'schlechter als beim letzten Mal',compare_same:'keine Veränderung',
+    s1_hf_count:'Hitzewallungen letzte Nacht',hf_0:'Keine',hf_1:'1–2',hf_35:'3–5',hf_6p:'6+',s1_hf_int:'Intensität',hf_mild:'Leicht',hf_mod:'Mäßig',hf_strong:'Stark',s1_hf_time:'Wann treten sie auf?',hf_night:'Nur nachts',hf_mixed:'Tag & Nacht',hf_day:'Hauptsächlich tagsüber',
+    s2_l4:'Atemfrequenz letzte Nacht',resp_unit:'Atemz./min',resp_hint:'Oura: Sleep → Respiratory Rate',
+    s3_mood:'Stimmung heute',mood_stable:'Stabil',mood_swings:'Schwankend',mood_low:'Gedrückt',s3_anx:'Angst (1–10)',s3_irr:'Reizbarkeit',irr_none:'Keine',irr_mild:'Mäßig',irr_high:'Hoch',
+    qol_title:'Lebensqualitätsindex (QoL)',qol_good:'Lebensqualität zufriedenstellend',qol_mod:'Mäßige Einschränkung der Lebensqualität',qol_high:'Erhebliche Einschränkung der Lebensqualität',
+    s14_title:'Körperzusammensetzung',s14_desc:'Bioimpedanzwerte machen die Empfehlungen persönlicher und präziser. Überspringen Sie diesen Schritt ohne Körperwaage.',bio_fat:'Körperfett %',bio_muscle:'Muskeln %',bio_visceral:'Viszeralfett (1–30)',bio_water:'Wasser %',bio_bone:'Knochenmasse (kg)',bio_bmr:'Grundumsatz (kcal)',bio_bioage:'Biologisches Alter',
+  },
+  pt:{
+    gate_sub:'Acesso PRO · Programa de acompanhamento',gate_title:'Digite seu código de acesso',gate_desc:'Seu código está incluído no guia VIA‑L.',gate_error:'Código inválido.',gate_btn:'Entrar →',preview_label:'Digite o código para acessar',
+    hero_badge:'Análise Pessoal · VIA‑L',hero_title:'Interpretador de dados<br><em>de dispositivo wearable</em>',hero_desc:'Compatível com Oura Menopause Insights (Gen3 & Ring 4) · Garmin · Polar · Apple Watch → recomendações nutricionais.',hero_tier_label:'⭐ Versão PRO',
+    nav_today:'Hoje',nav_history:'Histórico',nav_consult:'Consulta',history_title:'Histórico de sessões',history_empty:'Nenhuma sessão salva ainda.',
+    s_prof_badge:'00 / 15 · Perfil',s_prof_title:'Seu Perfil',s_prof_desc:'A fase hormonal influencia a interpretação de todos os indicadores.',s_prof_l1:'Sexo',s_prof_l2:'Fase (mulheres)',s_prof_l3:'Fase (homens)',s_prof_l4:'Seu dispositivo',oura_note:'✦ Suporta Oura Menopause Insights',
+    gender_f:'👩 Feminino',gender_m:'👨 Masculino',phase_peri:'Perimenopausa',phase_meno:'Menopausa',phase_post:'Pós-menopausa',phase_andro:'Andropausa',phase_preandro:'Pré-andropausa',phase_other:'Outro',
+    s0_badge:'01 / 15 · VFC',s0_title:'Variabilidade da Frequência Cardíaca',s0_desc:'A VFC mostra o quanto seu corpo lida bem com o estresse.',s0_l1:'Seu VFC hoje',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'Comparado com a linha base',s0_l3:'Duração',
+    s1_badge:'02 / 15 · Temperatura',s1_title:'Temperatura noturna',s1_desc:'Desvio da sua linha base na noite passada.',s1_l1:'Desvio',s1_l2:'Acordou com calor?',s1_l3:'Com que frequência na semana?',
+    s2_badge:'03 / 15 · Sono',s2_title:'Qualidade do Sono',s2_desc:'O sono é o indicador mais sensível da saúde hormonal.',s2_l1:'Sensação ao acordar (1–10)',s2_l2:'Sono profundo',s2_l3:'Despertares',
+    s3_badge:'04 / 15 · FC',s3_title:'FC em repouso & sintomas',s3_desc:'Frequência cardíaca em repouso e sintomas hoje.',s3_l1:'FC em repouso (RHR)',s3_l2:'Comparado com o habitual',s3_l3:'O que você nota',
+    s4_badge:'05 / 15 · Estilo de vida',s4_title:'Energia & Estilo de vida',s4_desc:'Últimas perguntas.',s4_l1:'Nível de energia (1–10)',s4_l2:'Álcool ontem?',s4_l3:'Estresse ontem?',
+    above_norm:'Acima do normal',in_norm:'Normal',below_norm:'Abaixo do normal',dont_know:'Não sei',dur_today:'Só hoje',dur_week:'3–7 dias',dur_weeks:'2–3 semanas',dur_month:'>1 mês',
+    temp_norm:'Normal',temp_slight:'+0.2–0.4°C',temp_spike:'+0.5°C+',temp_down:'Abaixo do normal',temp_chaotic:'Irregular',
+    no:'Não',once:'Uma vez',multiple:'Várias vezes',yes:'Sim',freq_rare:'Raramente',freq_often:'Frequentemente',freq_daily:'Toda noite',
+    sleep_bad:'1 — sem descanso',sleep_good:'10 — descansada',deep_good:'>1.5 h',deep_low:'30–90 min',deep_none:'<30 min',wake_none:'Sem despertares',wake_early:'2–4 AM',
+    bpm:'bpm',rhr_norm:'Como sempre',rhr_slight:'+3–5',rhr_high:'+8+',rhr_low:'Mais baixo',
+    sym_fatigue:'Fadiga',sym_anxiety:'Ansiedade',sym_foggy:'Névoa mental',sym_mood:'Mudanças de humor',sym_palp:'Palpitações',sym_joint:'Dor nas articulações',sym_nothing:'Nada incomum',
+    energy_low:'1 — sem energia',energy_high:'10 — cheia de energia',stress_mild:'Moderado',stress_high:'Intenso',
+    next:'Próximo →',show_result:'Ver Resultado →',result_eyebrow:'Análise VIA‑L',readiness:'Prontidão',doctor_title:'⚠ Consulta médica',lab_title:'🧪 Exames recomendados',
+    max_title:'Sua avaliação Expert',max_desc:'Envie uma solicitação — sua nutricionista preparará uma avaliação pessoal escrita do seu perfil em até 48 horas.',max_btn:'Enviar solicitação à nutricionista →',max_placeholder:'Sua pergunta ou o que deseja esclarecer...',max_sent:'✓ Solicitação enviada! Resposta em até 48 horas.',
+    cta_title:'Quer uma estratégia personalizada?',cta_desc:'Analisaremos seus dados e criaremos um protocolo.',restart:'Recomeçar',book:'Agendar →',pdf_btn:'📄 Baixar relatório PDF',
+    disclaimer:'Esta ferramenta tem caráter informativo.',tagline:'Viva. Não apenas exista.',back_home:'← Voltar',step_of:'Passo {n} de 15',your_result:'Seu Resultado',
+    res_good_title:'Boa recuperação',res_good_sub:'Seus indicadores são positivos.',res_warn_title:'Requer atenção',res_warn_sub:'Seu corpo precisa de suporte.',res_alert_title:'Suporte necessário',res_alert_sub:'Seu corpo está sob carga.',
+    doc_reason_hrv:'VFC cronicamente baixa',doc_reason_temp:'suores noturnos diários',doc_reason_rhr:'FC elevada + palpitações',doc_reason_thyroid:'temperatura baixa + fadiga',doc_prefix:'Recomendamos consultar um especialista: ',
+    compare_better:'melhor que da última vez',compare_worse:'pior que da última vez',compare_same:'sem mudanças',
+    s1_hf_count:'Ondas de calor na última noite',hf_0:'Nenhuma',hf_1:'1–2',hf_35:'3–5',hf_6p:'6+',s1_hf_int:'Intensidade',hf_mild:'Leve',hf_mod:'Moderada',hf_strong:'Intensa',s1_hf_time:'Quando ocorrem?',hf_night:'Só à noite',hf_mixed:'Dia e noite',hf_day:'Principalmente de dia',
+    s2_l4:'Frequência respiratória noturna',resp_unit:'resp/min',resp_hint:'Oura: Sleep → Respiratory Rate',
+    s3_mood:'Humor hoje',mood_stable:'Estável',mood_swings:'Oscilações',mood_low:'Baixo',s3_anx:'Ansiedade (1–10)',s3_irr:'Irritabilidade',irr_none:'Nenhuma',irr_mild:'Moderada',irr_high:'Alta',
+    qol_title:'Índice de Qualidade de Vida (QoL)',qol_good:'Qualidade de vida satisfatória',qol_mod:'Redução moderada da qualidade de vida',qol_high:'Redução significativa da qualidade de vida',
+    s14_title:'Composição corporal',s14_desc:'Os dados de bioimpedância tornarão as recomendações mais personalizadas e precisas. Pule esta etapa se não tiver balança inteligente.',bio_fat:'% gordura',bio_muscle:'% músculo',bio_visceral:'Gordura visceral (1–30)',bio_water:'% água',bio_bone:'Massa óssea (kg)',bio_bmr:'Metabolismo basal (kcal)',bio_bioage:'Idade biológica',
+  },
+  fr:{
+    gate_sub:'Accès PRO · Programme de suivi',gate_title:'Entrez votre code d\'accès',gate_desc:'Votre code est inclus dans votre guide VIA‑L.',gate_error:'Code invalide.',gate_btn:'Entrer →',preview_label:'Entrez le code d\'accès',
+    hero_badge:'Analyse Personnelle · VIA‑L',hero_title:'Interpréteur de données<br><em>pour appareils connectés</em>',hero_desc:'Compatible avec Oura Menopause Insights (Gen3 & Ring 4) · Garmin · Polar · Apple Watch → recommandations nutritionnelles.',hero_tier_label:'⭐ Version PRO',
+    nav_today:'Aujourd\'hui',nav_history:'Historique',nav_consult:'Consultation',history_title:'Historique des séances',history_empty:'Aucune séance enregistrée.',
+    s_prof_badge:'00 / 15 · Profil',s_prof_title:'Votre Profil',s_prof_desc:'La phase hormonale influence l\'interprétation de tous les indicateurs.',s_prof_l1:'Sexe',s_prof_l2:'Phase (femmes)',s_prof_l3:'Phase (hommes)',s_prof_l4:'Votre appareil',oura_note:'✦ Compatible Oura Menopause Insights',
+    gender_f:'👩 Femme',gender_m:'👨 Homme',phase_peri:'Périménopause',phase_meno:'Ménopause',phase_post:'Post-ménopause',phase_andro:'Andropause',phase_preandro:'Pré-andropause',phase_other:'Autre',
+    s0_badge:'01 / 15 · VRC',s0_title:'Variabilité de la Fréquence Cardiaque',s0_desc:'La VRC montre comment votre corps gère le stress et la récupération.',s0_l1:'Votre VRC aujourd\'hui',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'Par rapport à la baseline',s0_l3:'Durée',
+    s1_badge:'02 / 15 · Température',s1_title:'Température nocturne',s1_desc:'Écart par rapport à votre ligne de base la nuit dernière.',s1_l1:'Écart',s1_l2:'Réveillée par la chaleur ?',s1_l3:'Combien de fois par semaine ?',
+    s2_badge:'03 / 15 · Sommeil',s2_title:'Qualité du Sommeil',s2_desc:'Le sommeil est l\'indicateur le plus sensible de la santé hormonale.',s2_l1:'Sensation au réveil (1–10)',s2_l2:'Sommeil profond',s2_l3:'Réveils',
+    s3_badge:'04 / 15 · FC',s3_title:'FC au repos & symptômes',s3_desc:'Fréquence cardiaque au repos et symptômes aujourd\'hui.',s3_l1:'FC au repos (RHR)',s3_l2:'Par rapport à l\'habituel',s3_l3:'Ce que vous remarquez',
+    s4_badge:'05 / 15 · Mode de vie',s4_title:'Énergie & Mode de vie',s4_desc:'Dernières questions.',s4_l1:'Niveau d\'énergie (1–10)',s4_l2:'Alcool hier ?',s4_l3:'Stress hier ?',
+    above_norm:'Au-dessus de la normale',in_norm:'Normal',below_norm:'En dessous de la normale',dont_know:'Je ne sais pas',dur_today:'Aujourd\'hui seulement',dur_week:'3–7 jours',dur_weeks:'2–3 semaines',dur_month:'>1 mois',
+    temp_norm:'Normal',temp_slight:'+0.2–0.4°C',temp_spike:'+0.5°C+',temp_down:'En dessous de la normale',temp_chaotic:'Irrégulier',
+    no:'Non',once:'Une fois',multiple:'Plusieurs fois',yes:'Oui',freq_rare:'Rarement',freq_often:'Souvent',freq_daily:'Chaque nuit',
+    sleep_bad:'1 — pas reposée',sleep_good:'10 — reposée',deep_good:'>1.5 h',deep_low:'30–90 min',deep_none:'<30 min',wake_none:'Aucun réveil',wake_early:'2h–4h du matin',
+    bpm:'bpm',rhr_norm:'Comme d\'habitude',rhr_slight:'+3–5',rhr_high:'+8+',rhr_low:'Plus bas',
+    sym_fatigue:'Fatigue',sym_anxiety:'Anxiété',sym_foggy:'Brouillard mental',sym_mood:'Sautes d\'humeur',sym_palp:'Palpitations',sym_joint:'Douleurs articulaires',sym_nothing:'Rien d\'inhabituel',
+    energy_low:'1 — sans énergie',energy_high:'10 — pleine d\'énergie',stress_mild:'Modéré',stress_high:'Intense',
+    next:'Suivant →',show_result:'Voir le résultat →',result_eyebrow:'Analyse VIA‑L',readiness:'Préparation',doctor_title:'⚠ Consultation médicale',lab_title:'🧪 Analyses recommandées',
+    max_title:'Votre bilan Expert',max_desc:'Envoyez une demande — votre nutritionniste préparera un bilan personnel écrit de votre profil dans les 48 heures.',max_btn:'Envoyer la demande à la nutritionniste →',max_placeholder:'Votre question ou ce que vous souhaitez clarifier...',max_sent:'✓ Demande envoyée ! Réponse sous 48 heures.',
+    cta_title:'Vous voulez une stratégie personnalisée ?',cta_desc:'Nous analyserons vos données et créerons un protocole.',restart:'Recommencer',book:'Réserver →',pdf_btn:'📄 Télécharger le rapport PDF',
+    disclaimer:'Cet outil est à titre informatif.',tagline:'Vivez. N\'existez pas seulement.',back_home:'← Retour',step_of:'Étape {n} sur 15',your_result:'Votre Résultat',
+    res_good_title:'Bonne récupération',res_good_sub:'Vos indicateurs sont globalement positifs.',res_warn_title:'Attention requise',res_warn_sub:'Votre corps a besoin de soutien.',res_alert_title:'Soutien nécessaire',res_alert_sub:'Votre corps est sous charge.',
+    doc_reason_hrv:'VRC chroniquement basse',doc_reason_temp:'sueurs nocturnes quotidiennes',doc_reason_rhr:'FC élevée + palpitations',doc_reason_thyroid:'température basse + fatigue',doc_prefix:'Nous recommandons de consulter un spécialiste : ',
+    compare_better:'mieux que la dernière fois',compare_worse:'moins bien que la dernière fois',compare_same:'sans changement',
+    s1_hf_count:'Bouffées de chaleur la nuit dernière',hf_0:'Aucune',hf_1:'1–2',hf_35:'3–5',hf_6p:'6+',s1_hf_int:'Intensité',hf_mild:'Légère',hf_mod:'Modérée',hf_strong:'Intense',s1_hf_time:'Quand surviennent-elles ?',hf_night:'La nuit uniquement',hf_mixed:'Jour et nuit',hf_day:'Principalement le jour',
+    s2_l4:'Fréquence respiratoire nocturne',resp_unit:'resp/min',resp_hint:'Oura: Sleep → Respiratory Rate',
+    s3_mood:'Humeur aujourd\'hui',mood_stable:'Stable',mood_swings:'Variable',mood_low:'Basse',s3_anx:'Anxiété (1–10)',s3_irr:'Irritabilité',irr_none:'Aucune',irr_mild:'Modérée',irr_high:'Élevée',
+    qol_title:'Indice de Qualité de Vie (QoL)',qol_good:'Qualité de vie satisfaisante',qol_mod:'Réduction modérée de la qualité de vie',qol_high:'Réduction significative de la qualité de vie',
+    s14_title:'Composition corporelle',s14_desc:'Les données de bioimpédance rendront les recommandations plus personnalisées et précises. Ignorez cette étape sans balance intelligente.',bio_fat:'% graisse',bio_muscle:'% muscle',bio_visceral:'Graisse viscérale (1–30)',bio_water:'% eau',bio_bone:'Masse osseuse (kg)',bio_bmr:'Métabolisme de base (kcal)',bio_bioage:'Âge biologique',
+  },
+  pl:{
+    gate_sub:'Dostęp PRO · Program opieki',gate_title:'Wprowadź kod dostępu',gate_desc:'Kod jest dołączony do Twojego przewodnika VIA‑L.',gate_error:'Nieprawidłowy kod.',gate_btn:'Wejdź →',preview_label:'Wprowadź kod dostępu',
+    hero_badge:'Analiza Osobista · VIA‑L',hero_title:'Interpreter danych<br><em>urządzenia wearable</em>',hero_desc:'Kompatybilny z Oura Menopause Insights (Gen3 & Ring 4) · Garmin · Polar · Apple Watch → zalecenia żywieniowe.',hero_tier_label:'⭐ Wersja PRO',
+    nav_today:'Dziś',nav_history:'Historia',nav_consult:'Konsultacja',history_title:'Historia sesji',history_empty:'Brak zapisanych sesji.',
+    s_prof_badge:'00 / 15 · Profil',s_prof_title:'Twój Profil',s_prof_desc:'Faza hormonalna wpływa na interpretację wszystkich wskaźników.',s_prof_l1:'Płeć',s_prof_l2:'Faza (kobiety)',s_prof_l3:'Faza (mężczyźni)',s_prof_l4:'Twoje urządzenie',oura_note:'✦ Obsługuje Oura Menopause Insights',
+    gender_f:'👩 Kobieta',gender_m:'👨 Mężczyzna',phase_peri:'Perimenopauza',phase_meno:'Menopauza',phase_post:'Postmenopauza',phase_andro:'Andropauza',phase_preandro:'Przed-andropauza',phase_other:'Inne',
+    s0_badge:'01 / 15 · HRV',s0_title:'Zmienność Rytmu Serca',s0_desc:'HRV pokazuje, jak dobrze Twój organizm radzi sobie ze stresem.',s0_l1:'Twoje HRV dziś',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'W porównaniu z normą',s0_l3:'Czas trwania',
+    s1_badge:'02 / 15 · Temperatura',s1_title:'Nocna temperatura',s1_desc:'Odchylenie od linii bazowej ostatniej nocy.',s1_l1:'Odchylenie',s1_l2:'Obudziłaś się z powodu gorąca?',s1_l3:'Jak często w tygodniu?',
+    s2_badge:'03 / 15 · Sen',s2_title:'Jakość Snu',s2_desc:'Sen jest najbardziej czułym wskaźnikiem zdrowia hormonalnego.',s2_l1:'Odczucie snu (1–10)',s2_l2:'Sen głęboki',s2_l3:'Przebudzenia',
+    s3_badge:'04 / 15 · Tętno',s3_title:'Tętno spoczynkowe & objawy',s3_desc:'Tętno spoczynkowe i objawy dziś.',s3_l1:'Tętno spoczynkowe (RHR)',s3_l2:'W porównaniu ze zwykłym',s3_l3:'Co zauważasz',
+    s4_badge:'05 / 15 · Styl życia',s4_title:'Energia & Styl życia',s4_desc:'Ostatnie pytania.',s4_l1:'Poziom energii (1–10)',s4_l2:'Alkohol wczoraj?',s4_l3:'Stres wczoraj?',
+    above_norm:'Powyżej normy',in_norm:'W normie',below_norm:'Poniżej normy',dont_know:'Nie wiem',dur_today:'Tylko dziś',dur_week:'3–7 dni',dur_weeks:'2–3 tygodnie',dur_month:'>1 miesiąc',
+    temp_norm:'W normie',temp_slight:'+0.2–0.4°C',temp_spike:'+0.5°C+',temp_down:'Poniżej normy',temp_chaotic:'Nieregularnie',
+    no:'Nie',once:'Raz',multiple:'Kilka razy',yes:'Tak',freq_rare:'Rzadko',freq_often:'Często',freq_daily:'Każdej nocy',
+    sleep_bad:'1 — bez odpoczynku',sleep_good:'10 — wypoczęta',deep_good:'>1.5 h',deep_low:'30–90 min',deep_none:'<30 min',wake_none:'Bez przebudzeń',wake_early:'2–4 w nocy',
+    bpm:'ud/min',rhr_norm:'Jak zwykle',rhr_slight:'+3–5',rhr_high:'+8+',rhr_low:'Niższe',
+    sym_fatigue:'Zmęczenie',sym_anxiety:'Lęk',sym_foggy:'Mgła mózgowa',sym_mood:'Wahania nastroju',sym_palp:'Kołatanie serca',sym_joint:'Bóle stawów',sym_nothing:'Nic niezwykłego',
+    energy_low:'1 — brak energii',energy_high:'10 — pełna energii',stress_mild:'Umiarkowany',stress_high:'Silny',
+    next:'Dalej →',show_result:'Pokaż wynik →',result_eyebrow:'Analiza VIA‑L',readiness:'Gotowość',doctor_title:'⚠ Konsultacja medyczna',lab_title:'🧪 Zalecane badania',
+    max_title:'Twoja ocena Expert',max_desc:'Wyślij prośbę — Twoja dietetyk przygotuje osobistą pisemną ocenę Twojego profilu w ciągu 48 godzin.',max_btn:'Wyślij prośbę do dietetyka →',max_placeholder:'Twoje pytanie lub co chcesz wyjaśnić...',max_sent:'✓ Prośba wysłana! Odpowiedź w ciągu 48 godzin.',
+    cta_title:'Chcesz spersonalizowaną strategię?',cta_desc:'Przeanalizujemy Twoje dane i stworzymy protokół.',restart:'Zacznij od nowa',book:'Umów wizytę →',pdf_btn:'📄 Pobierz raport PDF',
+    disclaimer:'To narzędzie ma charakter informacyjny.',tagline:'Żyj. Nie tylko istniej.',back_home:'← Powrót',step_of:'Krok {n} z 15',your_result:'Twój Wynik',
+    res_good_title:'Dobra regeneracja',res_good_sub:'Twoje wskaźniki są ogólnie pozytywne.',res_warn_title:'Wymaga uwagi',res_warn_sub:'Twój organizm potrzebuje wsparcia.',res_alert_title:'Potrzebne wsparcie',res_alert_sub:'Twój organizm jest pod obciążeniem.',
+    doc_reason_hrv:'chronicznie niskie HRV',doc_reason_temp:'codzienne nocne poty',doc_reason_rhr:'podwyższone HR + kołatanie',doc_reason_thyroid:'niska temp + zmęczenie',doc_prefix:'Zalecamy konsultację ze specjalistą: ',
+    compare_better:'lepiej niż ostatnim razem',compare_worse:'gorzej niż ostatnim razem',compare_same:'bez zmian',
+    s1_hf_count:'Uderzenia gorąca ostatniej nocy',hf_0:'Brak',hf_1:'1–2',hf_35:'3–5',hf_6p:'6+',s1_hf_int:'Intensywność',hf_mild:'Łagodne',hf_mod:'Umiarkowane',hf_strong:'Silne',s1_hf_time:'Kiedy występują?',hf_night:'Tylko w nocy',hf_mixed:'Dzień i noc',hf_day:'Głównie w ciągu dnia',
+    s2_l4:'Częstość oddechów w nocy',resp_unit:'oddech/min',resp_hint:'Oura: Sleep → Respiratory Rate',
+    s3_mood:'Nastrój dziś',mood_stable:'Stabilny',mood_swings:'Wahania',mood_low:'Obniżony',s3_anx:'Lęk (1–10)',s3_irr:'Drażliwość',irr_none:'Brak',irr_mild:'Umiarkowana',irr_high:'Wysoka',
+    qol_title:'Indeks jakości życia (QoL)',qol_good:'Jakość życia zadowalająca',qol_mod:'Umiarkowane obniżenie jakości życia',qol_high:'Znaczne obniżenie jakości życia',
+    s14_title:'Skład ciała',s14_desc:'Dane z bioimpedancji sprawią, że zalecenia będą bardziej spersonalizowane i dokładne. Pomiń ten krok bez inteligentnej wagi.',bio_fat:'% tłuszczu',bio_muscle:'% mięśni',bio_visceral:'Tłuszcz trzewny (1–30)',bio_water:'% wody',bio_bone:'Masa kostna (kg)',bio_bmr:'Metabolizm podstawowy (kcal)',bio_bioage:'Wiek biologiczny',
+  },
+  it:{
+    gate_sub:'Accesso PRO · Programma di accompagnamento',gate_title:'Inserisci il codice di accesso',gate_desc:'Il codice è incluso nella tua guida VIA‑L.',gate_error:'Codice non valido.',gate_btn:'Entra →',preview_label:'Inserisci il codice di accesso',
+    hero_badge:'Analisi Personale · VIA‑L',hero_title:'Interpretatore di dati<br><em>per dispositivi indossabili</em>',hero_desc:'Compatibile con Oura Menopause Insights (Gen3 & Ring 4) · Garmin · Polar · Apple Watch → raccomandazioni nutrizionali.',hero_tier_label:'⭐ Versione PRO',
+    nav_today:'Oggi',nav_history:'Cronologia',nav_consult:'Consulenza',history_title:'Cronologia delle sessioni',history_empty:'Nessuna sessione salvata.',
+    s_prof_badge:'00 / 15 · Profilo',s_prof_title:'Il Tuo Profilo',s_prof_desc:'La fase ormonale influenza l\'interpretazione di tutti gli indicatori.',s_prof_l1:'Sesso',s_prof_l2:'Fase (donne)',s_prof_l3:'Fase (uomini)',s_prof_l4:'Il tuo dispositivo',oura_note:'✦ Supporta Oura Menopause Insights',
+    gender_f:'👩 Donna',gender_m:'👨 Uomo',phase_peri:'Perimenopausa',phase_meno:'Menopausa',phase_post:'Post-menopausa',phase_andro:'Andropausa',phase_preandro:'Pre-andropausa',phase_other:'Altro',
+    s0_badge:'01 / 15 · VFC',s0_title:'Variabilità della Frequenza Cardiaca',s0_desc:'La VFC mostra quanto bene il tuo corpo gestisce lo stress.',s0_l1:'La tua VFC oggi',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'Rispetto alla baseline',s0_l3:'Durata',
+    s1_badge:'02 / 15 · Temperatura',s1_title:'Temperatura notturna',s1_desc:'Deviazione dalla tua linea base la notte scorsa.',s1_l1:'Deviazione',s1_l2:'Ti sei svegliata per il caldo?',s1_l3:'Quante volte a settimana?',
+    s2_badge:'03 / 15 · Sonno',s2_title:'Qualità del Sonno',s2_desc:'Il sonno è l\'indicatore più sensibile della salute ormonale.',s2_l1:'Sensazione al risveglio (1–10)',s2_l2:'Sonno profondo',s2_l3:'Risvegli',
+    s3_badge:'04 / 15 · FC',s3_title:'FC a riposo & sintomi',s3_desc:'Frequenza cardiaca a riposo e sintomi oggi.',s3_l1:'FC a riposo (RHR)',s3_l2:'Rispetto al solito',s3_l3:'Cosa noti',
+    s4_badge:'05 / 15 · Stile di vita',s4_title:'Energia & Stile di vita',s4_desc:'Ultime domande.',s4_l1:'Livello di energia (1–10)',s4_l2:'Alcol ieri?',s4_l3:'Stress ieri?',
+    above_norm:'Sopra la norma',in_norm:'Normale',below_norm:'Sotto la norma',dont_know:'Non so',dur_today:'Solo oggi',dur_week:'3–7 giorni',dur_weeks:'2–3 settimane',dur_month:'>1 mese',
+    temp_norm:'Normale',temp_slight:'+0.2–0.4°C',temp_spike:'+0.5°C+',temp_down:'Sotto la norma',temp_chaotic:'Irregolare',
+    no:'No',once:'Una volta',multiple:'Più volte',yes:'Sì',freq_rare:'Raramente',freq_often:'Spesso',freq_daily:'Ogni notte',
+    sleep_bad:'1 — senza riposo',sleep_good:'10 — riposata',deep_good:'>1.5 h',deep_low:'30–90 min',deep_none:'<30 min',wake_none:'Nessun risveglio',wake_early:'2–4 di notte',
+    bpm:'bpm',rhr_norm:'Come al solito',rhr_slight:'+3–5',rhr_high:'+8+',rhr_low:'Più bassa',
+    sym_fatigue:'Stanchezza',sym_anxiety:'Ansia',sym_foggy:'Nebbia mentale',sym_mood:'Sbalzi d\'umore',sym_palp:'Palpitazioni',sym_joint:'Dolori articolari',sym_nothing:'Niente di insolito',
+    energy_low:'1 — senza energia',energy_high:'10 — piena di energia',stress_mild:'Moderato',stress_high:'Intenso',
+    next:'Avanti →',show_result:'Mostra risultato →',result_eyebrow:'Analisi VIA‑L',readiness:'Prontezza',doctor_title:'⚠ Consulto medico',lab_title:'🧪 Esami consigliati',
+    max_title:'La tua valutazione Expert',max_desc:'Invia una richiesta — la tua nutrizionista preparerà una valutazione personale scritta del tuo profilo entro 48 ore.',max_btn:'Invia richiesta alla nutrizionista →',max_placeholder:'La tua domanda o cosa vuoi chiarire...',max_sent:'✓ Richiesta inviata! Risposta entro 48 ore.',
+    cta_title:'Vuoi una strategia personalizzata?',cta_desc:'Analizzeremo i tuoi dati e creeremo un protocollo.',restart:'Ricomincia',book:'Prenota →',pdf_btn:'📄 Scarica report PDF',
+    disclaimer:'Questo strumento ha carattere informativo.',tagline:'Vivi. Non esistere soltanto.',back_home:'← Indietro',step_of:'Passo {n} di 15',your_result:'Il Tuo Risultato',
+    res_good_title:'Buon recupero',res_good_sub:'I tuoi indicatori sono positivi.',res_warn_title:'Richiede attenzione',res_warn_sub:'Il tuo corpo ha bisogno di supporto.',res_alert_title:'Supporto necessario',res_alert_sub:'Il tuo corpo è sotto carico.',
+    doc_reason_hrv:'VFC cronicamente bassa',doc_reason_temp:'sudorazioni notturne quotidiane',doc_reason_rhr:'FC elevata + palpitazioni',doc_reason_thyroid:'temperatura bassa + stanchezza',doc_prefix:'Consigliamo di consultare uno specialista: ',
+    compare_better:'meglio dell\'ultima volta',compare_worse:'peggio dell\'ultima volta',compare_same:'nessun cambiamento',
+    s1_hf_count:'Vampate di calore la notte scorsa',hf_0:'Nessuna',hf_1:'1–2',hf_35:'3–5',hf_6p:'6+',s1_hf_int:'Intensità',hf_mild:'Leggera',hf_mod:'Moderata',hf_strong:'Intensa',s1_hf_time:'Quando si verificano?',hf_night:'Solo di notte',hf_mixed:'Giorno e notte',hf_day:'Prevalentemente di giorno',
+    s2_l4:'Frequenza respiratoria notturna',resp_unit:'resp/min',resp_hint:'Oura: Sleep → Respiratory Rate',
+    s3_mood:'Umore oggi',mood_stable:'Stabile',mood_swings:'Altalenante',mood_low:'Basso',s3_anx:'Ansia (1–10)',s3_irr:'Irritabilità',irr_none:'Nessuna',irr_mild:'Moderata',irr_high:'Alta',
+    qol_title:'Indice di Qualità della Vita (QoL)',qol_good:'Qualità della vita soddisfacente',qol_mod:'Riduzione moderata della qualità della vita',qol_high:'Riduzione significativa della qualità della vita',
+    s14_title:'Composizione corporea',s14_desc:'I dati di bioimpedenza renderanno le raccomandazioni più personalizzate e precise. Salta questo passaggio senza bilancia smart.',bio_fat:'% grasso',bio_muscle:'% muscolo',bio_visceral:'Grasso viscerale (1–30)',bio_water:'% acqua',bio_bone:'Massa ossea (kg)',bio_bmr:'Metabolismo basale (kcal)',bio_bioage:'Età biologica',
+  },
+  he:{
+    gate_sub:'גישה PRO · תוכנית ליווי',gate_title:'הזן את קוד הגישה שלך',gate_desc:'הקוד כלול במדריך VIA‑L שלך.',gate_error:'קוד לא תקין.',gate_btn:'← כניסה',preview_label:'הזן את קוד הגישה שלך',
+    hero_badge:'ניתוח אישי · VIA‑L',hero_title:'מפענח נתונים<br><em>למכשירים לבישים</em>',hero_desc:'תואם עם Oura Menopause Insights (Gen3 & Ring 4) · Garmin · Polar · Apple Watch → המלצות תזונתיות.',hero_tier_label:'⭐ גרסת PRO',
+    nav_today:'היום',nav_history:'היסטוריה',nav_consult:'ייעוץ',history_title:'היסטוריית סשנים',history_empty:'אין סשנים שמורים.',
+    s_prof_badge:'00 / 15 · פרופיל',s_prof_title:'הפרופיל שלך',s_prof_desc:'השלב ההורמונלי משפיע על פרשנות כל המדדים.',s_prof_l1:'מין',s_prof_l2:'שלב (נשים)',s_prof_l3:'שלב (גברים)',s_prof_l4:'המכשיר שלך',oura_note:'✦ תומך ב-Oura Menopause Insights',
+    gender_f:'👩 אישה',gender_m:'👨 גבר',phase_peri:'פרה-מנופאוזה',phase_meno:'מנופאוזה',phase_post:'פוסט-מנופאוזה',phase_andro:'אנדרופאוזה',phase_preandro:'פרה-אנדרופאוזה',phase_other:'אחר',
+    s0_badge:'01 / 15 · HRV',s0_title:'שונות קצב הלב',s0_desc:'HRV מראה עד כמה גופך מתמודד עם לחץ.',s0_l1:'HRV שלך היום',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'ביחס לקו הבסיס',s0_l3:'משך הזמן',
+    s1_badge:'02 / 15 · טמפרטורה',s1_title:'טמפרטורת לילה',s1_desc:'סטייה מקו הבסיס שלך הלילה האחרון.',s1_l1:'סטייה',s1_l2:'התעוררת בשל חום?',s1_l3:'כמה פעמים בשבוע?',
+    s2_badge:'03 / 15 · שינה',s2_title:'איכות השינה',s2_desc:'שינה היא המדד הרגיש ביותר לבריאות הורמונלית.',s2_l1:'תחושה בהתעוררות (1–10)',s2_l2:'שינה עמוקה',s2_l3:'יקיצות',
+    s3_badge:'04 / 15 · דופק',s3_title:'דופק במנוחה וסימפטומים',s3_desc:'דופק במנוחה וסימפטומים היום.',s3_l1:'דופק במנוחה (RHR)',s3_l2:'בהשוואה לרגיל',s3_l3:'מה שם לב',
+    s4_badge:'05 / 15 · אורח חיים',s4_title:'אנרגיה ואורח חיים',s4_desc:'שאלות אחרונות.',s4_l1:'רמת אנרגיה (1–10)',s4_l2:'אלכוהול אתמול?',s4_l3:'מתח אתמול?',
+    above_norm:'מעל הנורמה',in_norm:'תקין',below_norm:'מתחת לנורמה',dont_know:'לא יודע/ת',dur_today:'רק היום',dur_week:'3–7 ימים',dur_weeks:'2–3 שבועות',dur_month:'>1 חודש',
+    temp_norm:'תקין',temp_slight:'+0.2–0.4°C',temp_spike:'+0.5°C+',temp_down:'מתחת לנורמה',temp_chaotic:'לא סדיר',
+    no:'לא',once:'פעם אחת',multiple:'מספר פעמים',yes:'כן',freq_rare:'לעתים נדירות',freq_often:'לעתים קרובות',freq_daily:'כל לילה',
+    sleep_bad:'1 — ללא מנוחה',sleep_good:'10 — נוחה',deep_good:'>1.5 ש\'',deep_low:'30–90 דק\'',deep_none:'<30 דק\'',wake_none:'ללא יקיצות',wake_early:'2–4 לפנות בוקר',
+    bpm:'פעימות/דקה',rhr_norm:'כרגיל',rhr_slight:'+3–5',rhr_high:'+8+',rhr_low:'נמוך יותר',
+    sym_fatigue:'עייפות',sym_anxiety:'חרדה',sym_foggy:'ערפל מנטלי',sym_mood:'תנודות במצב רוח',sym_palp:'דפיקות לב',sym_joint:'כאבי מפרקים',sym_nothing:'שום דבר חריג',
+    energy_low:'1 — ללא אנרגיה',energy_high:'10 — מלא/ת אנרגיה',stress_mild:'מתון',stress_high:'עצים',
+    next:'← הבא',show_result:'← הצג תוצאה',result_eyebrow:'ניתוח VIA‑L',readiness:'מוכנות',doctor_title:'⚠ ייעוץ רפואי',lab_title:'🧪 בדיקות מומלצות',
+    max_title:'הערכת המומחה שלך',max_desc:'שלח/י בקשה — הדיאטנית תכין הערכה אישית כתובה של הפרופיל שלך תוך 48 שעות.',max_btn:'← שלח/י בקשה לדיאטנית',max_placeholder:'השאלה שלך או מה שברצונך להבהיר...',max_sent:'✓ הבקשה נשלחה! תשובה תוך 48 שעות.',
+    cta_title:'רוצה אסטרטגיה אישית?',cta_desc:'ננתח את הנתונים שלך ונכין פרוטוקול.',restart:'התחל מחדש',book:'← קבע פגישה',pdf_btn:'📄 הורד דו"ח PDF',
+    disclaimer:'כלי זה הוא למידע בלבד.',tagline:'חיה. לא רק קיים/ת.',back_home:'→ חזרה',step_of:'שלב {n} מתוך 15',your_result:'התוצאה שלך',
+    res_good_title:'התאוששות טובה',res_good_sub:'המדדים שלך חיוביים.',res_warn_title:'דורש תשומת לב',res_warn_sub:'גופך זקוק לתמיכה.',res_alert_title:'תמיכה נחוצה',res_alert_sub:'גופך תחת עומס.',
+    doc_reason_hrv:'HRV נמוך באופן כרוני',doc_reason_temp:'הזעות לילה יומיומיות',doc_reason_rhr:'דופק גבוה + דפיקות לב',doc_reason_thyroid:'טמפרטורה נמוכה + עייפות',doc_prefix:'אנו ממליצים להתייעץ עם מומחה: ',
+    compare_better:'טוב יותר מהפעם הקודמת',compare_worse:'גרוע יותר מהפעם הקודמת',compare_same:'ללא שינוי',
+    s1_hf_count:'גלי חום אמש',hf_0:'לא היו',hf_1:'1–2',hf_35:'3–5',hf_6p:'6+',s1_hf_int:'עוצמה',hf_mild:'קלה',hf_mod:'בינונית',hf_strong:'חזקה',s1_hf_time:'מתי מופיעים?',hf_night:'רק בלילה',hf_mixed:'יום ולילה',hf_day:'בעיקר ביום',
+    s2_l4:'קצב נשימה בלילה',resp_unit:'נשימות/דקה',resp_hint:'Oura: Sleep → Respiratory Rate',
+    s3_mood:'מצב רוח היום',mood_stable:'יציב',mood_swings:'תנודות',mood_low:'ירוד',s3_anx:'חרדה (1–10)',s3_irr:'עצבנות',irr_none:'אין',irr_mild:'בינונית',irr_high:'גבוהה',
+    qol_title:'מדד איכות החיים (QoL)',qol_good:'איכות חיים מספקת',qol_mod:'ירידה מתונה באיכות החיים',qol_high:'ירידה משמעותית באיכות החיים',
+    s14_title:'הרכב הגוף',s14_desc:'נתוני ביו-אימפדנס יאפשרו להתאים המלצות אישיות ומדויקות יותר. דלג על שלב זה אם אין לך משקל חכם.',bio_fat:'% שומן',bio_muscle:'% שריר',bio_visceral:'שומן קרביים (1–30)',bio_water:'% מים',bio_bone:'מסת עצם (ק"ג)',bio_bmr:'חילוף חומרים בסיסי (קק"ל)',bio_bioage:'גיל ביולוגי',
+  },
+  ja:{
+    gate_sub:'PRO アクセス · サポートプログラム',gate_title:'アクセスコードを入力してください',gate_desc:'コードはVIA‑Lガイドに含まれています。',gate_error:'無効なコードです。',gate_btn:'入る →',preview_label:'アクセスコードを入力してください',
+    hero_badge:'個人分析 · VIA‑L',hero_title:'ウェアラブルデバイス向け<br><em>データ解析ツール</em>',hero_desc:'Oura Menopause Insights（Gen3 & Ring 4）対応 · Garmin · Polar · Apple Watch → 栄養アドバイス。',hero_tier_label:'⭐ PROバージョン',
+    nav_today:'今日',nav_history:'履歴',nav_consult:'相談',history_title:'セッション履歴',history_empty:'保存されたセッションはありません。',
+    s_prof_badge:'00 / 15 · プロフィール',s_prof_title:'あなたのプロフィール',s_prof_desc:'ホルモンの段階がすべての指標の解釈に影響します。',s_prof_l1:'性別',s_prof_l2:'段階（女性）',s_prof_l3:'段階（男性）',s_prof_l4:'あなたのデバイス',oura_note:'✦ Oura Menopause Insights 対応',
+    gender_f:'👩 女性',gender_m:'👨 男性',phase_peri:'更年期前期',phase_meno:'更年期',phase_post:'更年期後期',phase_andro:'アンドロポーズ',phase_preandro:'プレアンドロポーズ',phase_other:'その他',
+    s0_badge:'01 / 15 · HRV',s0_title:'心拍変動',s0_desc:'HRVはあなたのストレス対処能力を示します。',s0_l1:'今日のHRV',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'ベースラインとの比較',s0_l3:'継続期間',
+    s1_badge:'02 / 15 · 体温',s1_title:'夜間体温',s1_desc:'昨夜のベースラインからの偏差。',s1_l1:'偏差',s1_l2:'暑さで目が覚めましたか？',s1_l3:'週に何回？',
+    s2_badge:'03 / 15 · 睡眠',s2_title:'睡眠の質',s2_desc:'睡眠はホルモン健康の最も敏感な指標です。',s2_l1:'目覚めの感覚（1〜10）',s2_l2:'深い眠り',s2_l3:'目覚め回数',
+    s3_badge:'04 / 15 · 心拍数',s3_title:'安静時心拍数と症状',s3_desc:'安静時心拍数と今日の症状。',s3_l1:'安静時心拍数（RHR）',s3_l2:'いつもと比べて',s3_l3:'気になること',
+    s4_badge:'05 / 15 · ライフスタイル',s4_title:'エネルギーとライフスタイル',s4_desc:'最後の質問。',s4_l1:'エネルギーレベル（1〜10）',s4_l2:'昨日のアルコール？',s4_l3:'昨日のストレス？',
+    above_norm:'基準値以上',in_norm:'正常',below_norm:'基準値以下',dont_know:'わからない',dur_today:'今日だけ',dur_week:'3〜7日',dur_weeks:'2〜3週間',dur_month:'1ヶ月以上',
+    temp_norm:'正常',temp_slight:'+0.2〜0.4°C',temp_spike:'+0.5°C以上',temp_down:'基準値以下',temp_chaotic:'不規則',
+    no:'いいえ',once:'1回',multiple:'数回',yes:'はい',freq_rare:'まれに',freq_often:'よく',freq_daily:'毎晩',
+    sleep_bad:'1 — 全く休まらない',sleep_good:'10 — 完全に休まった',deep_good:'1.5時間以上',deep_low:'30〜90分',deep_none:'30分未満',wake_none:'目覚めなし',wake_early:'深夜2〜4時',
+    bpm:'bpm',rhr_norm:'いつも通り',rhr_slight:'+3〜5',rhr_high:'+8以上',rhr_low:'より低い',
+    sym_fatigue:'疲労',sym_anxiety:'不安',sym_foggy:'頭の霧',sym_mood:'気分の波',sym_palp:'動悸',sym_joint:'関節痛',sym_nothing:'異常なし',
+    energy_low:'1 — エネルギーなし',energy_high:'10 — 元気いっぱい',stress_mild:'軽度',stress_high:'強度',
+    next:'次へ →',show_result:'結果を表示 →',result_eyebrow:'VIA‑L分析',readiness:'準備度',doctor_title:'⚠ 医療相談',lab_title:'🧪 推奨検査',
+    max_title:'あなたの専門家評価',max_desc:'リクエストを送信してください — 栄養士があなたのプロフィールの個人的な評価を48時間以内に準備します。',max_btn:'栄養士にリクエストを送る →',max_placeholder:'ご質問または確認したいこと...',max_sent:'✓ リクエストが送信されました！48時間以内に回答します。',
+    cta_title:'個人的な戦略が必要ですか？',cta_desc:'データを分析してプロトコルを作成します。',restart:'もう一度',book:'予約する →',pdf_btn:'📄 PDFレポートをダウンロード',
+    disclaimer:'このツールは情報提供のみを目的としています。',tagline:'生きる。ただ存在するだけでなく。',back_home:'← 戻る',step_of:'ステップ {n} / 15',your_result:'あなたの結果',
+    res_good_title:'良好な回復',res_good_sub:'あなたの指標は良好です。',res_warn_title:'注意が必要',res_warn_sub:'あなたの体はサポートを必要としています。',res_alert_title:'サポートが必要',res_alert_sub:'あなたの体は負荷を受けています。',
+    doc_reason_hrv:'慢性的な低HRV',doc_reason_temp:'毎日の寝汗',doc_reason_rhr:'高い心拍数＋動悸',doc_reason_thyroid:'低体温＋疲労',doc_prefix:'専門家への相談をお勧めします：',
+    compare_better:'前回より良い',compare_worse:'前回より悪い',compare_same:'変化なし',
+    s1_hf_count:'昨夜のホットフラッシュ',hf_0:'なし',hf_1:'1–2回',hf_35:'3–5回',hf_6p:'6回以上',s1_hf_int:'強度',hf_mild:'軽度',hf_mod:'中程度',hf_strong:'強い',s1_hf_time:'いつ起きる?',hf_night:'夜のみ',hf_mixed:'昼夜',hf_day:'主に昼間',
+    s2_l4:'夜間呼吸数',resp_unit:'回/分',resp_hint:'Oura: Sleep → Respiratory Rate',
+    s3_mood:'今日の気分',mood_stable:'安定',mood_swings:'変動',mood_low:'落ち込み',s3_anx:'不安感 (1–10)',s3_irr:'イライラ',irr_none:'なし',irr_mild:'中程度',irr_high:'強い',
+    qol_title:'生活の質指数 (QoL)',qol_good:'生活の質は満足のいく状態',qol_mod:'生活の質が中程度低下',qol_high:'生活の質が大幅に低下',
+    s14_title:'体組成',s14_desc:'生体インピーダンスのデータで推奨事項をより個別化・精密化できます。スマート体重計がない場合はスキップしてください。',bio_fat:'体脂肪%',bio_muscle:'筋肉%',bio_visceral:'内臓脂肪レベル (1–30)',bio_water:'水分%',bio_bone:'骨量 (kg)',bio_bmr:'基礎代謝 (kcal)',bio_bioage:'生物学的年齢',
+  },
+  ko:{
+    gate_sub:'PRO 접근 · 지원 프로그램',gate_title:'접근 코드를 입력하세요',gate_desc:'코드는 VIA‑L 가이드에 포함되어 있습니다.',gate_error:'유효하지 않은 코드입니다.',gate_btn:'입장 →',preview_label:'접근 코드를 입력하세요',
+    hero_badge:'개인 분석 · VIA‑L',hero_title:'웨어러블 기기를 위한<br><em>데이터 분석 도구</em>',hero_desc:'Oura Menopause Insights (Gen3 & Ring 4) 호환 · Garmin · Polar · Apple Watch → 영양 권장 사항.',hero_tier_label:'⭐ PRO 버전',
+    nav_today:'오늘',nav_history:'기록',nav_consult:'상담',history_title:'세션 기록',history_empty:'저장된 세션이 없습니다.',
+    s_prof_badge:'00 / 15 · 프로필',s_prof_title:'나의 프로필',s_prof_desc:'호르몬 단계는 모든 지표 해석에 영향을 미칩니다.',s_prof_l1:'성별',s_prof_l2:'단계 (여성)',s_prof_l3:'단계 (남성)',s_prof_l4:'나의 기기',oura_note:'✦ Oura Menopause Insights 지원',
+    gender_f:'👩 여성',gender_m:'👨 남성',phase_peri:'갱년기 전기',phase_meno:'갱년기',phase_post:'갱년기 후기',phase_andro:'남성 갱년기',phase_preandro:'남성 갱년기 전기',phase_other:'기타',
+    s0_badge:'01 / 15 · HRV',s0_title:'심박 변동성',s0_desc:'HRV는 신체의 스트레스 대응 능력을 보여줍니다.',s0_l1:'오늘의 HRV',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'기준선 대비',s0_l3:'지속 기간',
+    s1_badge:'02 / 15 · 체온',s1_title:'야간 체온',s1_desc:'지난밤 기준선으로부터의 편차.',s1_l1:'편차',s1_l2:'더위로 잠이 깼나요?',s1_l3:'주당 몇 번?',
+    s2_badge:'03 / 15 · 수면',s2_title:'수면의 질',s2_desc:'수면은 호르몬 건강의 가장 민감한 지표입니다.',s2_l1:'기상 시 느낌 (1–10)',s2_l2:'깊은 수면',s2_l3:'각성 횟수',
+    s3_badge:'04 / 15 · 심박수',s3_title:'안정 시 심박수 및 증상',s3_desc:'오늘의 안정 시 심박수 및 증상.',s3_l1:'안정 시 심박수 (RHR)',s3_l2:'평소와 비교',s3_l3:'느끼는 것',
+    s4_badge:'05 / 15 · 생활 방식',s4_title:'에너지 및 생활 방식',s4_desc:'마지막 질문들.',s4_l1:'에너지 수준 (1–10)',s4_l2:'어제 알코올?',s4_l3:'어제 스트레스?',
+    above_norm:'정상 이상',in_norm:'정상',below_norm:'정상 이하',dont_know:'모르겠음',dur_today:'오늘만',dur_week:'3–7일',dur_weeks:'2–3주',dur_month:'1개월 이상',
+    temp_norm:'정상',temp_slight:'+0.2–0.4°C',temp_spike:'+0.5°C 이상',temp_down:'정상 이하',temp_chaotic:'불규칙',
+    no:'아니오',once:'한 번',multiple:'여러 번',yes:'예',freq_rare:'드물게',freq_often:'자주',freq_daily:'매일 밤',
+    sleep_bad:'1 — 전혀 쉬지 못함',sleep_good:'10 — 완전히 쉬었음',deep_good:'1.5시간 이상',deep_low:'30–90분',deep_none:'30분 미만',wake_none:'각성 없음',wake_early:'새벽 2–4시',
+    bpm:'bpm',rhr_norm:'평소와 같음',rhr_slight:'+3–5',rhr_high:'+8 이상',rhr_low:'더 낮음',
+    sym_fatigue:'피로',sym_anxiety:'불안',sym_foggy:'정신적 안개',sym_mood:'기분 변동',sym_palp:'두근거림',sym_joint:'관절통',sym_nothing:'이상 없음',
+    energy_low:'1 — 에너지 없음',energy_high:'10 — 활기참',stress_mild:'보통',stress_high:'심함',
+    next:'다음 →',show_result:'결과 보기 →',result_eyebrow:'VIA‑L 분석',readiness:'준비도',doctor_title:'⚠ 의료 상담',lab_title:'🧪 권장 검사',
+    max_title:'전문가 평가',max_desc:'요청을 보내세요 — 영양사가 48시간 이내에 귀하의 프로필에 대한 개인 서면 평가를 준비합니다.',max_btn:'영양사에게 요청 보내기 →',max_placeholder:'질문 또는 확인하고 싶은 것...',max_sent:'✓ 요청이 전송되었습니다! 48시간 이내에 답변 드립니다.',
+    cta_title:'개인 맞춤 전략이 필요하신가요?',cta_desc:'데이터를 분석하고 프로토콜을 작성합니다.',restart:'다시 시작',book:'예약하기 →',pdf_btn:'📄 PDF 보고서 다운로드',
+    disclaimer:'이 도구는 정보 제공 목적으로만 사용됩니다.',tagline:'살아가세요. 단순히 존재하는 것이 아니라.',back_home:'← 뒤로',step_of:'{n}단계 / 15',your_result:'나의 결과',
+    res_good_title:'좋은 회복',res_good_sub:'지표가 긍정적입니다.',res_warn_title:'주의 필요',res_warn_sub:'신체가 지원을 필요로 합니다.',res_alert_title:'지원 필요',res_alert_sub:'신체가 부하를 받고 있습니다.',
+    doc_reason_hrv:'만성적으로 낮은 HRV',doc_reason_temp:'매일 밤 식은땀',doc_reason_rhr:'높은 심박수 + 두근거림',doc_reason_thyroid:'낮은 체온 + 피로',doc_prefix:'전문가 상담을 권장합니다: ',
+    compare_better:'지난번보다 좋음',compare_worse:'지난번보다 나쁨',compare_same:'변화 없음',
+    s1_hf_count:'어젯밤 핫플래시',hf_0:'없음',hf_1:'1–2회',hf_35:'3–5회',hf_6p:'6회 이상',s1_hf_int:'강도',hf_mild:'약함',hf_mod:'보통',hf_strong:'강함',s1_hf_time:'언제 발생?',hf_night:'밤에만',hf_mixed:'낮과 밤',hf_day:'주로 낮에',
+    s2_l4:'야간 호흡 수',resp_unit:'회/분',resp_hint:'Oura: Sleep → Respiratory Rate',
+    s3_mood:'오늘 기분',mood_stable:'안정적',mood_swings:'기복',mood_low:'우울함',s3_anx:'불안감 (1–10)',s3_irr:'과민성',irr_none:'없음',irr_mild:'보통',irr_high:'높음',
+    qol_title:'삶의 질 지수 (QoL)',qol_good:'삶의 질 만족스러움',qol_mod:'삶의 질 중간 수준 저하',qol_high:'삶의 질 상당히 저하',
+    s14_title:'체성분',s14_desc:'생체임피던스 데이터로 추천사항을 더욱 개인화하고 정밀하게 만들 수 있습니다. 스마트 체중계가 없으면 건너뛰세요.',bio_fat:'체지방%',bio_muscle:'근육%',bio_visceral:'내장지방 (1–30)',bio_water:'수분%',bio_bone:'골량 (kg)',bio_bmr:'기초대사량 (kcal)',bio_bioage:'생물학적 나이',
   }
 };
 
-const LANG_FLAGS={'ru':'🇷🇺 RU','uk':'🇺🇦 UK','en':'🇬🇧 EN','es':'🇪🇸 ES'};
+const LANG_FLAGS={'ru':'🇷🇺 RU','uk':'🇺🇦 UK','en':'🇬🇧 EN','es':'🇪🇸 ES','de':'🇩🇪 DE','pt':'🇧🇷 PT','fr':'🇫🇷 FR','pl':'🇵🇱 PL','it':'🇮🇹 IT','he':'🇮🇱 HE','ja':'🇯🇵 JA','ko':'🇰🇷 KO'};
 let lang='ru';
 function setLang(l){
   lang=l;
@@ -2816,8 +3255,24 @@ function setLang(l){
       (l==='ru'&&o.textContent.includes('Русский'))||
       (l==='uk'&&o.textContent.includes('Укр'))||
       (l==='en'&&o.textContent.includes('Eng'))||
-      (l==='es'&&o.textContent.includes('Esp')));
+      (l==='es'&&o.textContent.includes('Esp'))||
+      (l==='de'&&o.textContent.includes('Deutsch'))||
+      (l==='pt'&&o.textContent.includes('Portugu'))||
+      (l==='fr'&&o.textContent.includes('Français'))||
+      (l==='pl'&&o.textContent.includes('Polski'))||
+      (l==='it'&&o.textContent.includes('Italiano'))||
+      (l==='he'&&o.textContent.includes('עברית'))||
+      (l==='ja'&&o.textContent.includes('日本語'))||
+      (l==='ko'&&o.textContent.includes('한국어')));
   });
+  document.documentElement.dir=(l==='he')?'rtl':'ltr';
+  document.documentElement.setAttribute('data-lang',l);
+  if((l==='ja'||l==='ko')&&!document.getElementById('cjk-font-'+l)){
+    const lnk=document.createElement('link');
+    lnk.id='cjk-font-'+l;lnk.rel='stylesheet';
+    lnk.href='https://fonts.googleapis.com/css2?family=Noto+Sans+'+(l==='ja'?'JP':'KR')+':wght@300;400;500&display=swap';
+    document.head.appendChild(lnk);
+  }
   document.querySelectorAll('[data-t]').forEach(el=>{
     const k=el.getAttribute('data-t');
     if(T[l][k]!==undefined)el.innerHTML=T[l][k];
@@ -2831,6 +3286,13 @@ function setLang(l){
 }
 function t(k){return T[lang][k]||T.ru[k]||k;}
 
+// ══ DEVICE TOGGLE ════════════════════════════════════════
+document.querySelectorAll('input[name=device]').forEach(el=>{
+  el.addEventListener('change',()=>{
+    const note=document.getElementById('oura-device-note');
+    if(note)note.style.display=(el.value==='oura4'||el.value==='oura3')?'block':'none';
+  });
+});
 // ══ GENDER TOGGLE ════════════════════════════════════════
 document.querySelectorAll('input[name=gender]').forEach(el=>{
   el.addEventListener('change',()=>{
@@ -2940,6 +3402,8 @@ const SLIDER_CFG={
   sq:{min:1,max:10,normLow:6,normHigh:8,unit:'/10',labels:{low:'Плохо',ok:'Good',high:'Excellent'},color:{low:'#FF6B8A',ok:'#4ECCA3',high:'#4ECCA3'}},
   rhr:{min:40,max:110,normLow:50,normHigh:75,unit:'уд/мин',labels:{low:'Низкий',ok:'Normal',high:'Высокий'},color:{low:'#F5A623',ok:'#4ECCA3',high:'#FF6B8A'}},
   en:{min:1,max:10,normLow:6,normHigh:9,unit:'/10',labels:{low:'Низкий',ok:'Good',high:'Excellent'},color:{low:'#FF6B8A',ok:'#4ECCA3',high:'#4ECCA3'}},
+  resp:{min:8,max:28,normLow:12,normHigh:20,unit:'br/min',labels:{low:'Низкое',ok:'Normal',high:'Высокое'},color:{low:'#F5A623',ok:'#4ECCA3',high:'#FF6B8A'}},
+  anx:{min:1,max:10,normLow:1,normHigh:4,unit:'/10',labels:{low:'Low',ok:'Low',high:'Высокая'},color:{low:'#4ECCA3',ok:'#4ECCA3',high:'#FF6B8A'}},
 };
 function ouraSlider(id,val){
   const cfg=SLIDER_CFG[id];if(!cfg)return;
@@ -2964,8 +3428,16 @@ function ouraSlider(id,val){
   const nl=document.getElementById(id+'-nl');const nr=document.getElementById(id+'-nr');
   if(nl)nl.style.left=(nlp*100)+'%';if(nr)nr.style.left=(nrp*100)+'%';
 }
-function initSliders(){ouraSlider('hrv',55);ouraSlider('sq',6);ouraSlider('rhr',68);ouraSlider('en',6);}
+function initSliders(){ouraSlider('hrv',55);ouraSlider('sq',6);ouraSlider('rhr',68);ouraSlider('en',6);ouraSlider('resp',15);ouraSlider('anx',3);}
 initSliders();
+
+// Hot flash detail toggle
+document.querySelectorAll('input[name="hf_count"]').forEach(r=>{
+  r.addEventListener('change',()=>{
+    const d=document.getElementById('hf-detail');
+    if(d)d.style.display=r.value==='none'?'none':'block';
+  });
+});
 
 // ══ NAVIGATION ════════════════════════════════════════════
 function goTo(n){
@@ -2982,8 +3454,8 @@ function goTo(n){
 }
 function updateProgress(n){
   const lbl=document.getElementById('progressLbl');
-  if(lbl)lbl.textContent=n==='result'?'Pro · '+t('your_result'):'Pro · '+(lang==='ru'?'Шаг '+(n+1)+' из 15':lang==='en'?'Step '+(n+1)+' of 15':lang==='es'?'Paso '+(n+1)+' de 15':'Крок '+(n+1)+' з 15');
-  for(let i=0;i<15;i++){
+  if(lbl)lbl.textContent=n==='result'?'Pro · '+t('your_result'):'Pro · '+(lang==='ru'?'Шаг '+(n+1)+' из 16':lang==='en'?'Step '+(n+1)+' of 16':lang==='es'?'Paso '+(n+1)+' de 16':'Крок '+(n+1)+' з 16');
+  for(let i=0;i<16;i++){
     const d=document.getElementById('pd'+i);if(!d)continue;
     d.className='progress-dot';
     if(n==='result'||i<n)d.classList.add('done');
@@ -2996,7 +3468,10 @@ function restart(){
   document.getElementById('sleep_qual').value=6;ouraSlider('sq',6);
   document.getElementById('rhr').value=68;ouraSlider('rhr',68);
   document.getElementById('energy').value=6;ouraSlider('en',6);
-  ['gf','hd1','tp1','hf1','hfq1','dp1','wk1','rc1','al1','st1','ph1'].forEach(id=>{
+  document.getElementById('resp_rate').value=15;ouraSlider('resp',15);
+  document.getElementById('anxiety').value=3;ouraSlider('anx',3);
+  const hfd=document.getElementById('hf-detail');if(hfd)hfd.style.display='none';
+  ['gf','hd1','tp1','hf1','hfq1','dp1','wk1','rc1','al1','st1','ph1','hfc1','md1','irr1'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.checked=true;
   });
   document.querySelectorAll('input[type=checkbox]').forEach(el=>el.checked=false);
@@ -3085,6 +3560,14 @@ function _downloadPDFInner(){
     <div class="metric"><div class="metric-label">${lang==='ru'?'Сон':lang==='uk'?'Сон':'Sleep'}</div><div class="metric-val">${data.sleep_qual}</div><div class="metric-unit">/10</div></div>
     <div class="metric"><div class="metric-label">RHR</div><div class="metric-val">${data.rhr}</div><div class="metric-unit">${t('bpm')}</div></div>
     <div class="metric"><div class="metric-label">${lang==='ru'?'Энергия':lang==='uk'?'Енергія':'Energy'}</div><div class="metric-val">${data.energy}</div><div class="metric-unit">/10</div></div>
+    <div class="metric"><div class="metric-label">${lang==='ru'?'Дыхание':lang==='uk'?'Дихання':'Resp. Rate'}</div><div class="metric-val">${data.resp_rate||'–'}</div><div class="metric-unit">${lang==='ru'?'вд/мин':lang==='en'?'br/min':'вд/хв'}</div></div>
+    <div class="metric"><div class="metric-label">${lang==='ru'?'Приливы':lang==='uk'?'Припливи':'Hot Flashes'}</div><div class="metric-val">${data.hf_count==='none'?'0':data.hf_count==='low'?'1–2':data.hf_count==='mid'?'3–5':data.hf_count==='high'?'6+':'–'}</div><div class="metric-unit"></div></div>
+    <div class="metric"><div class="metric-label">${lang==='ru'?'Тревога':lang==='uk'?'Тривога':'Anxiety'}</div><div class="metric-val">${data.anxiety||'–'}</div><div class="metric-unit">/10</div></div>
+    <div class="metric"><div class="metric-label">${lang==='ru'?'Настроение':lang==='uk'?'Настрій':'Mood'}</div><div class="metric-val">${data.mood==='stable'?'✓':data.mood==='swings'?'~':data.mood==='low'?'↓':'–'}</div><div class="metric-unit"></div></div>
+    ${data.bio&&data.bio.muscle?`<div class="metric"><div class="metric-label">${lang==='ru'?'Мышцы':lang==='uk'?'М\'язи':'Muscle'}</div><div class="metric-val">${data.bio.muscle}</div><div class="metric-unit">%</div></div>`:''}
+    ${data.bio&&data.bio.fat?`<div class="metric"><div class="metric-label">${lang==='ru'?'Жир':lang==='uk'?'Жир':'Fat'}</div><div class="metric-val">${data.bio.fat}</div><div class="metric-unit">%</div></div>`:''}
+    ${data.bio&&data.bio.visceral?`<div class="metric"><div class="metric-label">${lang==='ru'?'Висцер.жир':lang==='uk'?'Вісц.жир':'Visceral'}</div><div class="metric-val">${data.bio.visceral}</div><div class="metric-unit">/30</div></div>`:''}
+    ${data.bio&&data.bio.bioage?`<div class="metric"><div class="metric-label">${lang==='ru'?'Биовозраст':lang==='uk'?'Біовік':'Bio Age'}</div><div class="metric-val">${data.bio.bioage}</div><div class="metric-unit">${lang==='ru'?'лет':lang==='uk'?'років':'yrs'}</div></div>`:''}
   </div>
   <h3>${lang==='ru'?'Анализ показателей':lang==='uk'?'Аналіз показників':lang==='en'?'Metrics Analysis':'Análisis'}</h3>
   ${insights.map(o=>`<div class="insight"><div class="insight-title">${o.i} ${o.h}</div><div class="insight-text">${o.b}</div></div>`).join('')}
@@ -3537,6 +4020,23 @@ function _showResultsInner(){
     meds:getRadio('meds'),
     chronic_stress:getRadio('chronic_stress'),
     cortisol_symp:getChecked(['cort2','cort3','cort4','cort5','cort6','cort7']),
+    bio:{
+      fat:parseFloat(document.getElementById('bio-fat')?.value)||null,
+      muscle:parseFloat(document.getElementById('bio-muscle')?.value)||null,
+      visceral:parseFloat(document.getElementById('bio-visceral')?.value)||null,
+      water:parseFloat(document.getElementById('bio-water')?.value)||null,
+      bone:parseFloat(document.getElementById('bio-bone')?.value)||null,
+      bmi:parseFloat(document.getElementById('bio-bmi')?.value)||null,
+      bmr:parseFloat(document.getElementById('bio-bmr')?.value)||null,
+      bioage:parseFloat(document.getElementById('bio-bioage')?.value)||null,
+    },
+    hf_count:getRadio('hf_count'),
+    hf_intensity:getRadio('hf_intensity'),
+    hf_time:getRadio('hf_time'),
+    resp_rate:+document.getElementById('resp_rate').value,
+    mood:getRadio('mood'),
+    anxiety:+document.getElementById('anxiety').value,
+    irritability:getRadio('irritability'),
     cycle_status:getRadio('cycle_status'),
     last_period:getRadio('last_period'),
     pms:getRadio('pms'),
@@ -3735,6 +4235,126 @@ function _showResultsInner(){
     score-=4;
   }
 
+  // Bioimpedance analysis
+  const bio=data.bio;
+  if(bio&&(bio.muscle||bio.fat||bio.visceral)){
+    const isFem=!isMale;
+    // Muscle mass
+    if(bio.muscle!==null){
+      const muscLow=isFem?bio.muscle<30:bio.muscle<35;
+      const muscOk=isFem?(bio.muscle>=33&&bio.muscle<=40):(bio.muscle>=38&&bio.muscle<=46);
+      if(muscLow){
+        ins.push({t:'alert',i:'💪',
+          h:lang==='ru'?(isFem?'Низкая мышечная масса — риск для эстрогена':'Низкая мышечная масса — риск для тестостерона'):lang==='uk'?(isFem?'Низька м\'язова маса — ризик для естрогену':'Низька м\'язова маса — ризик для тестостерону'):lang==='en'?(isFem?'Low Muscle Mass — Estrogen Risk':'Low Muscle Mass — Testosterone Risk'):(isFem?'Masa muscular baja — riesgo para estrógeno':'Masa muscular baja — riesgo para testosterona'),
+          b:lang==='ru'?(isFem?`${bio.muscle}% мышц. Мышечная ткань — источник ароматазы, необходимой для синтеза эстрогена. При дефиците мышц снижается выработка и баланс гормонов. Приоритет: силовые тренировки и достаточный белок.`:`${bio.muscle}% мышц. Мышечная ткань участвует в синтезе тестостерона. Дефицит мышц → меньше гормонов → хуже восстановление. Приоритет: силовые тренировки 3×/нед.`):
+          lang==='uk'?(isFem?`${bio.muscle}% м\'язів. М\'язова тканина — джерело ароматази для синтезу естрогену.`:`${bio.muscle}% м\'язів. Дефіцит м\'язів → менше гормонів → гірше відновлення.`):
+          lang==='en'?(isFem?`${bio.muscle}% muscle. Muscle tissue is the source of aromatase needed for estrogen synthesis. Low muscle = lower hormone output.`:`${bio.muscle}% muscle. Muscle participates in testosterone synthesis. Less muscle → less hormone → slower recovery.`):
+          (isFem?`${bio.muscle}% músculo. El tejido muscular es fuente de aromatasa para la síntesis de estrógeno.`:`${bio.muscle}% músculo. El déficit muscular reduce la producción de testosterona.`)
+        });
+        score-=12;
+        recs['muscle']={
+          h:lang==='ru'?'💪 Наращивание мышечной массы':lang==='uk'?'💪 Нарощення м\'язової маси':lang==='en'?'💪 Building Muscle Mass':'💪 Construir masa muscular',
+          l:lang==='ru'?['Силовые тренировки 3× в неделю (присед, жим, тяга)','Белок 1.6–2.0 г/кг массы тела в день','Коллаген + витамин C для суставов','Магний 300–400 мг перед сном']:
+             lang==='en'?['Strength training 3×/week (squat, press, deadlift)','Protein 1.6–2.0 g/kg body weight/day','Collagen + vitamin C for joints','Magnesium 300–400 mg before sleep']:
+             ['Entrenamiento de fuerza 3×/semana','Proteína 1.6–2.0 g/kg peso corporal/día','Magnesio 300–400 mg antes de dormir']
+        };
+      } else if(muscOk){
+        ins.push({t:'ok',i:'💪',
+          h:lang==='ru'?'Мышечная масса в норме':lang==='uk'?'М\'язова маса в нормі':lang==='en'?'Muscle Mass Normal':'Masa muscular normal',
+          b:lang==='ru'?`${bio.muscle}% — хороший показатель. Мышцы поддерживают гормональный синтез и метаболизм.`:lang==='uk'?`${bio.muscle}% — добрий показник.`:lang==='en'?`${bio.muscle}% — good indicator. Muscles support hormonal synthesis and metabolism.`:`${bio.muscle}% — buen indicador.`
+        });
+        score+=5;
+      }
+    }
+    // Visceral fat
+    if(bio.visceral!==null){
+      if(bio.visceral>12){
+        ins.push({t:'alert',i:'🔴',
+          h:lang==='ru'?`Висцеральный жир повышен (уровень ${bio.visceral})`:lang==='uk'?`Вісцеральний жир підвищений (рівень ${bio.visceral})`:lang==='en'?`Elevated Visceral Fat (level ${bio.visceral})`:`Grasa visceral elevada (nivel ${bio.visceral})`,
+          b:lang==='ru'?'Уровень >12 — метаболический риск. Висцеральный жир активно нарушает гормональный баланс: повышает эстроген у мужчин, снижает чувствительность к инсулину, усиливает воспаление.':
+          lang==='uk'?'Рівень >12 — метаболічний ризик. Вісцеральний жир порушує гормональний баланс.':
+          lang==='en'?'Level >12 is a metabolic risk. Visceral fat disrupts hormonal balance: raises estrogen in men, reduces insulin sensitivity, increases inflammation.':
+          'Nivel >12 es riesgo metabólico. La grasa visceral altera el equilibrio hormonal.'
+        });
+        score-=15;doc=true;docR.push(lang==='ru'?'повышенный висцеральный жир':lang==='en'?'elevated visceral fat':'підвищений вісцеральний жир');
+      } else if(bio.visceral<=5){
+        ins.push({t:'ok',i:'🟢',
+          h:lang==='ru'?`Висцеральный жир в норме (уровень ${bio.visceral})`:lang==='uk'?`Вісцеральний жир в нормі (рівень ${bio.visceral})`:lang==='en'?`Visceral Fat Normal (level ${bio.visceral})`:`Grasa visceral normal (nivel ${bio.visceral})`,
+          b:lang==='ru'?'Отличный показатель. Низкий висцеральный жир снижает системное воспаление и поддерживает гормональный баланс.':lang==='uk'?'Відмінний показник.':lang==='en'?'Excellent. Low visceral fat reduces systemic inflammation and supports hormonal balance.':'Excelente. La grasa visceral baja reduce la inflamación sistémica.'
+        });
+        score+=5;
+      }
+    }
+    // Biological age vs chronological
+    if(bio.bioage!==null){
+      const chronoAge=new Date().getFullYear()-1980; // placeholder — we don't collect birth year yet
+      if(bio.bioage<35){
+        ins.push({t:'ok',i:'🧬',
+          h:lang==='ru'?`Биологический возраст: ${bio.bioage} лет`:lang==='uk'?`Біологічний вік: ${bio.bioage} років`:lang==='en'?`Biological Age: ${bio.bioage} years`:`Edad biológica: ${bio.bioage} años`,
+          b:lang==='ru'?'Биологический возраст ниже среднего — признак хорошего метаболизма и восстановления.':lang==='uk'?'Біологічний вік нижче середнього.':lang==='en'?'Biological age is below average — sign of good metabolism and recovery.':'La edad biológica está por debajo del promedio.'
+        });
+        score+=5;
+      } else if(bio.bioage>50){
+        ins.push({t:'warn',i:'🧬',
+          h:lang==='ru'?`Биологический возраст: ${bio.bioage} лет — выше нормы`:lang==='uk'?`Біологічний вік: ${bio.bioage} — вище норми`:lang==='en'?`Biological Age: ${bio.bioage} — Above Average`:`Edad biológica: ${bio.bioage} — Por encima del promedio`,
+          b:lang==='ru'?'Биологический возраст указывает на повышенную метаболическую нагрузку. Фокус на питании, сне и физической активности.':lang==='uk'?'Підвищена метаболічна навантаженість. Фокус на харчуванні та сні.':lang==='en'?'Indicates elevated metabolic load. Focus on nutrition, sleep and physical activity.':'Indica carga metabólica elevada. Enfócate en nutrición, sueño y actividad física.'
+        });
+        score-=8;
+      }
+    }
+  }
+
+  // Hot Flash analysis
+  if(data.hf_count==='high'){
+    ins.push({t:'alert',i:'🔥',h:lang==='ru'?'Выраженные ночные приливы (6+)':lang==='uk'?'Виражені нічні припливи (6+)':lang==='en'?'Severe Night Hot Flashes (6+)':'Sofocos nocturnos severos (6+)',
+    b:lang==='ru'?'Частые приливы нарушают сон и сигнализируют о значительном снижении эстрогена. Скоре снижены: сон, HRV, восстановление.':lang==='uk'?'Часті припливи порушують сон і сигналізують про значне зниження естрогену.':lang==='en'?'Frequent hot flashes disrupt sleep and signal significant estrogen decline.':'Los sofocos frecuentes interrumpen el sueño y señalan una disminución significativa del estrógeno.'});
+    score-=15;doc=true;docR.push(lang==='ru'?'частые ночные приливы':lang==='en'?'frequent night hot flashes':'часті нічні припливи');
+  } else if(data.hf_count==='mid'&&data.hf_intensity==='intense'){
+    ins.push({t:'warn',i:'🔥',h:lang==='ru'?'Умеренные приливы — высокая интенсивность':lang==='uk'?'Помірні припливи — висока інтенсивність':lang==='en'?'Moderate Hot Flashes — High Intensity':'Sofocos moderados de alta intensidad',
+    b:lang==='ru'?'3–5 сильных прилива за ночь указывают на нестабильность вазомоторной регуляции.':lang==='uk'?'3–5 сильних припливів за ніч вказують на нестабільність вазомоторної регуляції.':lang==='en'?'3–5 intense night flashes indicate vasomotor instability.':'3–5 sofocos intensos indican inestabilidad vasomotora.'});
+    score-=10;
+  } else if(data.hf_count==='low'||data.hf_count==='mid'){
+    ins.push({t:'warn',i:'🔥',h:lang==='ru'?'Ночные приливы зафиксированы':lang==='uk'?'Нічні припливи зафіксовані':lang==='en'?'Night Hot Flashes Present':'Sofocos nocturnos presentes',
+    b:lang==='ru'?'Отслеживайте динамику ежедневно. Снижение числа приливов — первый признак улучшения гормонального баланса.':lang==='uk'?'Відстежуйте динаміку щодня.':lang==='en'?'Track daily. Fewer hot flashes = first sign of improving hormone balance.':'Haz seguimiento diario.'});
+    score-=5;
+  } else {
+    ins.push({t:'ok',i:'🔥',h:lang==='ru'?'Приливов прошлой ночью нет':lang==='uk'?'Припливів минулої ночі немає':lang==='en'?'No Hot Flashes Last Night':'Sin sofocos anoche',
+    b:lang==='ru'?'Хороший знак стабильности вазомоторной регуляции.':lang==='uk'?'Добрий знак стабільності.':lang==='en'?'Good sign of vasomotor stability.':'Buena señal de estabilidad vasomotora.'});
+    score+=3;
+  }
+
+  // Respiratory rate analysis
+  if(data.resp_rate>20){
+    ins.push({t:'warn',i:'🫁',h:lang==='ru'?'Частота дыхания повышена ('+data.resp_rate+' вд/мин)':lang==='uk'?'Частота дихання підвищена':lang==='en'?'Elevated Respiratory Rate ('+data.resp_rate+' br/min)':'Frecuencia respiratoria elevada',
+    b:lang==='ru'?'Выше 20 вд/мин в покое — признак напряжения нервной системы или нарушения дыхания во сне. Возможна связь с апноэ сна.':lang==='uk'?'Вище 20 вд/хв у спокої — ознака напруги нервової системи або порушення дихання уві сні.':lang==='en'?'Above 20 br/min at rest indicates nervous system stress or possible sleep-disordered breathing.':'Encima de 20 resp/min puede indicar estrés del sistema nervioso o apnea del sueño.'});
+    score-=10;if(data.resp_rate>22){doc=true;docR.push(lang==='ru'?'повышенная частота дыхания':lang==='en'?'elevated respiratory rate':'підвищена частота дихання');}
+  } else if(data.resp_rate<12){
+    ins.push({t:'warn',i:'🫁',h:lang==='ru'?'Частота дыхания низкая ('+data.resp_rate+' вд/мин)':lang==='en'?'Low Respiratory Rate ('+data.resp_rate+' br/min)':'Frecuencia respiratoria baja',
+    b:lang==='ru'?'Ниже 12 вд/мин. Может быть нормой для тренированных, но стоит наблюдать.':lang==='en'?'Below 12 br/min. May be normal for athletes, worth monitoring.':'Puede ser normal para atletas, pero merece seguimiento.'});
+  } else {
+    ins.push({t:'ok',i:'🫁',h:lang==='ru'?'Частота дыхания в норме ('+data.resp_rate+' вд/мин)':lang==='uk'?'Частота дихання в нормі':lang==='en'?'Respiratory Rate Normal ('+data.resp_rate+' br/min)':'Frecuencia respiratoria normal',
+    b:lang==='ru'?'12–20 вд/мин — оптимальный диапазон. Признак хорошего восстановления во сне.':lang==='uk'?'12–20 вд/хв — оптимальний діапазон.':lang==='en'?'12–20 br/min is optimal. Sign of good sleep recovery.':'12–20 resp/min es óptimo.'});
+    score+=3;
+  }
+
+  // Mood / Anxiety / Irritability
+  const anxHigh=data.anxiety>6;
+  const moodBad=data.mood==='low'||data.mood==='swings';
+  const irrHigh=data.irritability==='high';
+  if(anxHigh&&moodBad){
+    ins.push({t:'alert',i:'🧠',h:lang==='ru'?'Тревожность + нарушение настроения':lang==='uk'?'Тривожність + порушення настрою':lang==='en'?'Anxiety + Mood Disturbance':'Ansiedad + alteración del estado de ánimo',
+    b:lang==='ru'?'Совместное присутствие высокой тревожности и изменений настроения — нейрогормональный флаг. Часто связано со снижением прогестерона и эстрогена.':lang==='uk'?'Висока тривожність і зміни настрою — нейрогормональний прапор.':lang==='en'?'Anxiety combined with mood disturbance is a neurohormonal flag — often linked to progesterone/estrogen decline.':'La ansiedad con alteración del estado de ánimo es una señal neurohormonal.'});
+    score-=12;doc=true;docR.push(lang==='ru'?'тревожность и нарушение настроения':lang==='en'?'anxiety and mood disturbance':'тривожність та порушення настрою');
+  } else if(anxHigh||irrHigh){
+    ins.push({t:'warn',i:'🧠',h:lang==='ru'?(anxHigh?'Повышенная тревожность':'Повышенная раздражительность'):lang==='uk'?(anxHigh?'Підвищена тривожність':'Підвищена дратівливість'):lang==='en'?(anxHigh?'Elevated Anxiety':'Elevated Irritability'):(anxHigh?'Ansiedad elevada':'Irritabilidad elevada'),
+    b:lang==='ru'?'Возможная причина: скачок кортизола, снижение прогестерона или дефицит магния.':lang==='uk'?'Можлива причина: стрибок кортизолу, зниження прогестерону або дефіцит магнію.':lang==='en'?'Possible causes: cortisol spike, progesterone drop or magnesium deficiency.':'Posibles causas: pico de cortisol, caída de progesterona o déficit de magnesio.'});
+    score-=7;
+  } else if(data.mood==='stable'&&data.anxiety<=4&&data.irritability==='none'){
+    ins.push({t:'ok',i:'🧠',h:lang==='ru'?'Настроение и тревожность стабильны':lang==='uk'?'Настрій і тривожність стабільні':lang==='en'?'Mood & Anxiety Stable':'Estado de ánimo y ansiedad estables',
+    b:lang==='ru'?'Эмоциональный баланс — признак хорошей гормональной регуляции.':lang==='uk'?'Емоційний баланс — ознака хорошої гормональної регуляції.':lang==='en'?'Emotional balance is a sign of good hormonal regulation.':'El equilibrio emocional es señal de buena regulación hormonal.'});
+    score+=5;
+  }
+
   score=Math.max(10,Math.min(100,score));
   let type='ok',title,sub;
   if(score>=65){title=t('res_good_title');sub=t('res_good_sub');}
@@ -3778,11 +4398,57 @@ function _showResultsInner(){
     rs.appendChild(d);
   });
 
+  // QoL / MIS Score
+  (function(){
+    let qol=100;
+    // Hot flashes
+    if(data.hf_count==='high')qol-=25;
+    else if(data.hf_count==='mid')qol-=15;
+    else if(data.hf_count==='low')qol-=8;
+    if(data.hf_intensity==='intense')qol-=10;
+    else if(data.hf_intensity==='moderate')qol-=5;
+    // Sleep
+    if(data.sleep_qual<=3)qol-=20;
+    else if(data.sleep_qual<=5)qol-=12;
+    else if(data.sleep_qual>=8)qol+=5;
+    // Mood
+    if(data.mood==='low')qol-=15;
+    else if(data.mood==='swings')qol-=10;
+    else if(data.mood==='stable')qol+=5;
+    // Anxiety
+    if(data.anxiety>=8)qol-=15;
+    else if(data.anxiety>=6)qol-=8;
+    else if(data.anxiety<=3)qol+=3;
+    // Irritability
+    if(data.irritability==='high')qol-=10;
+    else if(data.irritability==='mild')qol-=5;
+    // Energy
+    if(data.energy>=8)qol+=5;
+    else if(data.energy<=3)qol-=10;
+    // Resp rate
+    if(data.resp_rate>22||data.resp_rate<10)qol-=8;
+    qol=Math.max(10,Math.min(100,Math.round(qol)));
+    const clrQ=qol>=70?'#4ECCA3':qol>=45?'#F5A623':'#FF6B8A';
+    const qolCard=document.getElementById('qolCard');
+    qolCard.style.display='block';
+    setTimeout(()=>{
+      document.getElementById('qolFill').style.width=qol+'%';
+      document.getElementById('qolFill').style.background=clrQ;
+    },200);
+    const qolLabel=qol>=70?(lang==='ru'?t('qol_good'):lang==='uk'?'Якість життя задовільна':lang==='en'?'Quality of life satisfactory':'Calidad de vida satisfactoria'):
+                   qol>=45?(lang==='ru'?t('qol_mod'):lang==='uk'?'Помірне зниження якості життя':lang==='en'?'Moderate QoL reduction':'Reducción moderada de la calidad de vida'):
+                   (lang==='ru'?t('qol_high'):lang==='uk'?'Значне зниження якості життя':lang==='en'?'Significant QoL reduction':'Reducción significativa de la calidad de vida');
+    document.getElementById('qolDesc').innerHTML=`<span style="font-size:22px;font-family:DM Mono,monospace;color:${clrQ};">${qol}</span><span style="color:var(--t3)">/100</span><br><span style="margin-top:6px;display:inline-block;">${qolLabel}</span>`;
+  })();
+
   // Save to history
   saveSession(score,type,data);
 
   // Store for PDF
   _lastResult={score,type,insights:ins,recs,docR,labs,data};
+
+  // AI personalized analysis
+  fetchAIAnalysis(data,lang);
 
   // Render PRO modules
   renderProModules(data, score, type);
@@ -4264,6 +4930,45 @@ function applyAmazfitManual(){
   applyExtracted(ex,'amazfit');
   setStatus('amazfit-manual-status','success','✓ Данные Amazfit применены');
   updateImportSummary();
+}
+
+// ══ AI ANALYSIS ═══════════════════════════════════════════
+const AI_WORKER = 'https://vial-claude-proxy.viaelcom.workers.dev';
+
+async function fetchAIAnalysis(data, lang) {
+  const card = document.getElementById('aiCard');
+  const loading = document.getElementById('aiLoading');
+  const result = document.getElementById('aiResult');
+  const err = document.getElementById('aiError');
+  if (!card) return;
+
+  card.style.display = 'block';
+  loading.style.display = 'flex';
+  result.style.display = 'none';
+  err.style.display = 'none';
+
+  try {
+    const res = await fetch(AI_WORKER, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data, lang }),
+    });
+    const json = await res.json();
+    if (json.analysis) {
+      result.textContent = json.analysis;
+      loading.style.display = 'none';
+      result.style.display = 'block';
+    } else {
+      throw new Error(json.error || 'No response');
+    }
+  } catch (e) {
+    loading.style.display = 'none';
+    err.textContent = '⚠ ' + (lang === 'ru' ? 'Не удалось получить анализ. Попробуйте позже.' :
+      lang === 'uk' ? 'Не вдалося отримати аналіз.' :
+      lang === 'en' ? 'Could not load analysis. Try again later.' :
+      'Error loading analysis.');
+    err.style.display = 'block';
+  }
 }
 
 </script>
