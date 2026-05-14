@@ -88,8 +88,8 @@ body{
   flex:1 1 auto;
   overflow-y:auto;
   overflow-x:hidden;
-  -webkit-overflow-scrolling:touch;
   overscroll-behavior:none;
+  background:#10131A;
 }
 
 /* ── Bottom nav — fixed height ── */
@@ -1785,6 +1785,21 @@ footer{
         </div>
         <p id="oura-device-note" style="font-size:11px;color:var(--gold);margin-top:8px;" data-t="oura_note">✦ Поддерживает Oura Menopause Insights</p>
       </div>
+      <div class="divider"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        <div class="manual-field">
+          <label class="manual-label" data-t="s_prof_age">Возраст</label>
+          <input class="manual-input" id="prof-age" type="number" min="18" max="99" placeholder="—">
+        </div>
+        <div class="manual-field">
+          <label class="manual-label" data-t="s_prof_weight">Вес (кг)</label>
+          <input class="manual-input" id="prof-weight" type="number" min="30" max="250" placeholder="—">
+        </div>
+        <div class="manual-field">
+          <label class="manual-label" data-t="s_prof_height">Рост (см)</label>
+          <input class="manual-input" id="prof-height" type="number" min="100" max="230" placeholder="—">
+        </div>
+      </div>
       <div class="btn-row">
         <button class="btn btn-primary" onclick="goTo(1)"><span class="btn-label" data-t="next">Далее →</span></button>
       </div>
@@ -1864,6 +1879,7 @@ footer{
           <div class="chip"><input type="radio" name="temp" id="tp5" value="chaotic"><label for="tp5" data-t="temp_chaotic">Хаотичные колебания</label></div>
         </div>
       </div>
+      <div id="hf-section">
       <div class="divider"></div>
       <div class="input-group">
         <label data-t="s1_hf_count">Приливов прошлой ночью</label>
@@ -1897,6 +1913,7 @@ footer{
           <div class="chip"><input type="radio" name="hotfreq" id="hfq2" value="often"><label for="hfq2" data-t="freq_often">Часто (3–5 дней)</label></div>
           <div class="chip"><input type="radio" name="hotfreq" id="hfq3" value="daily"><label for="hfq3" data-t="freq_daily">Почти каждую ночь</label></div>
         </div>
+      </div>
       </div>
       <div class="btn-row">
         <button class="btn btn-back" onclick="goTo(0)">←</button>
@@ -2736,15 +2753,40 @@ footer{
       <div class="max-sent" id="maxSent" data-t="max_sent">✓ Запит надіслано! Відповідь протягом 48 годин.</div>
     </div>
 
-    <div class="cta-card">
+    <!-- CTA: RU/UK — живая консультация с Мариной -->
+    <div class="cta-card" id="cta-marina">
+      <div style="font-size:32px;margin-bottom:12px;">🌿</div>
       <div class="cta-title" data-t="cta_title">Хотите персональную стратегию?</div>
-      <div class="cta-desc" data-t="cta_desc">На консультации разберём ваши данные и составим точный протокол.</div>
+      <div class="cta-desc" data-t="cta_desc">Марина разберёт ваши показатели лично и составит точный протокол питания под вашу гормональную фазу.</div>
+      <div style="text-align:left;background:rgba(196,154,60,.06);border-radius:12px;padding:12px 16px;margin-bottom:20px;font-size:12px;color:var(--t2);line-height:2.3;">
+        <div>✦ <span data-t="cta_f1">Персональный разбор показателей</span></div>
+        <div>✦ <span data-t="cta_f2">Протокол питания под вашу фазу</span></div>
+        <div>✦ <span data-t="cta_f3">Добавки с точными дозировками</span></div>
+      </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
         <button class="btn btn-back" style="flex:1;border-radius:14px;" onclick="restart()" data-t="restart">Пройти заново</button>
         <a href="https://via-l.com/#contact" class="btn-cta" style="flex:2;border-radius:14px;"><span data-t="book">Записаться →</span></a>
       </div>
       <button onclick="downloadPDF()" style="width:100%;padding:13px;border-radius:14px;border:1px solid var(--b2);background:var(--gold-dim);color:var(--gold);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s;" data-t="pdf_btn">📄 Скачать PDF-отчёт</button>
       <div class="disclaimer" data-t="disclaimer">Инструмент носит информационный характер и не является медицинским заключением.</div>
+    </div>
+
+    <!-- CTA: International — апсейл Максимум -->
+    <div class="cta-card" id="cta-max" style="display:none;background:linear-gradient(135deg,rgba(120,152,255,.07),rgba(80,110,220,.03));border-color:rgba(120,152,255,.3);">
+      <div style="display:inline-flex;align-items:center;gap:6px;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#7898ff;border:1px solid rgba(120,152,255,.35);border-radius:50px;padding:4px 12px;margin-bottom:16px;">★ Максимум</div>
+      <div class="cta-title" data-t="cta_max_title">Want a personalised protocol?</div>
+      <div class="cta-desc" data-t="cta_max_desc">Upgrade to Maximum — get a written expert analysis in your language within 48 hours.</div>
+      <div style="text-align:left;background:rgba(120,152,255,.06);border-radius:12px;padding:12px 16px;margin-bottom:20px;font-size:12px;color:var(--t2);line-height:2.3;">
+        <div>✦ <span data-t="cta_max_f1">Written nutritionist analysis</span></div>
+        <div>✦ <span data-t="cta_max_f2">Protocol for your hormonal phase</span></div>
+        <div>✦ <span data-t="cta_max_f3">Personalised supplements &amp; dosages</span></div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+        <button class="btn btn-back" style="flex:1;border-radius:14px;" onclick="restart()" data-t="restart">Start Over</button>
+        <a href="../interpreter-app/index.html#plans" style="flex:2;display:flex;align-items:center;justify-content:center;padding:16px 24px;border-radius:14px;background:linear-gradient(135deg,#5c7aff,#7898ff);color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;box-shadow:0 4px 24px rgba(120,152,255,.35);transition:transform .2s;"><span data-t="cta_max_book">Upgrade to Maximum →</span></a>
+      </div>
+      <button onclick="downloadPDF()" style="width:100%;padding:13px;border-radius:14px;border:1px solid rgba(120,152,255,.3);background:rgba(120,152,255,.06);color:#7898ff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s;" data-t="pdf_btn">📄 Download PDF Report</button>
+      <div class="disclaimer" data-t="disclaimer">This tool is informational only and does not constitute medical advice.</div>
     </div>
   </div>
 
@@ -2862,7 +2904,7 @@ const T={
     gate_sub:'PRO доступ · Программа ведения',gate_title:'Введите код доступа',gate_desc:'Код прилагается к вашему гайду VIA‑L.',gate_error:'Неверный код.',gate_btn:'Войти →',preview_label:'Введите код для доступа',
     hero_badge:'Персональный анализ · VIA‑L',hero_title:'Интерпретатор данных<br><em>носимого устройства</em>',hero_desc:'Oura Menopause Insights (Gen3 & Ring 4) · Garmin · Polar · Apple Watch → нутрициологические рекомендации.',hero_tier_label:'⭐ PRO версия',
     nav_today:'Сегодня',nav_history:'История',nav_consult:'Консультация',history_title:'История сессий',history_empty:'Пока нет сохранённых сессий. Пройдите анализ.',
-    s_prof_badge:'00 / 15 · Профиль',s_prof_title:'Ваш профиль',s_prof_desc:'Гормональная фаза влияет на интерпретацию всех показателей.',s_prof_l1:'Пол',s_prof_l2:'Фаза (женщины)',s_prof_l3:'Фаза (мужчины)',s_prof_l4:'Ваше устройство',oura_note:'✦ Поддерживает Oura Menopause Insights',
+    s_prof_badge:'00 / 15 · Профиль',s_prof_title:'Ваш профиль',s_prof_desc:'Гормональная фаза влияет на интерпретацию всех показателей.',s_prof_l1:'Пол',s_prof_l2:'Фаза (женщины)',s_prof_l3:'Фаза (мужчины)',s_prof_l4:'Ваше устройство',oura_note:'✦ Поддерживает Oura Menopause Insights',s_prof_age:'Возраст (лет)',s_prof_weight:'Вес (кг)',s_prof_height:'Рост (см)',
     gender_f:'👩 Женщина',gender_m:'👨 Мужчина',phase_peri:'Перименопауза',phase_meno:'Менопауза',phase_post:'Постменопауза',phase_andro:'Андропауза',phase_preandro:'Предандропауза',phase_other:'Другое',
     s0_badge:'01 / 15 · HRV',s0_title:'Вариабельность сердечного ритма',s0_desc:'HRV показывает, насколько хорошо организм справляется со стрессом.',s0_l1:'Ваш HRV сегодня',s0_low:'10 мс',s0_high:'120 мс',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'По сравнению с нормой',s0_l3:'Это продолжается',
     s1_badge:'02 / 15 · Температура',s1_title:'Ночное отклонение температуры',s1_desc:'Отклонение от базовой линии прошлой ночью.',s1_l1:'Отклонение',s1_l2:'Просыпались от жара?',s1_l3:'Как часто на неделе?',
@@ -2885,7 +2927,7 @@ const T={
     doctor_title:'⚠ Консультация с врачом',
     lab_title:'🧪 Рекомендуемые анализы',
     max_title:'Ваш Expert-разбор',max_desc:'Отправьте запрос — нутрициолог подготовит персональный письменный разбор вашего профиля в течение 48 часов.',max_btn:'Отправить запрос нутрициологу →',max_placeholder:'Ваш вопрос или что хотите уточнить...',max_sent:'✓ Запрос отправлен! Ответ в течение 48 часов.',
-    cta_title:'Хотите персональную стратегию?',cta_desc:'На консультации разберём ваши данные.',restart:'Пройти заново',book:'Записаться →',
+    cta_title:'Хотите персональную стратегию?',cta_desc:'Марина разберёт ваши показатели лично и составит точный протокол питания под вашу гормональную фазу.',cta_f1:'Персональный разбор показателей',cta_f2:'Протокол питания под вашу фазу',cta_f3:'Добавки с точными дозировками',restart:'Пройти заново',book:'Записаться →',cta_max_title:'Хотите персональную стратегию?',cta_max_desc:'Перейдите на Максимум — получите письменный экспертный разбор от нутрициолога в течение 48 часов.',cta_max_f1:'Письменный разбор от нутрициолога',cta_max_f2:'Протокол под вашу гормональную фазу',cta_max_f3:'Персональные добавки и дозировки',cta_max_book:'Перейти на Максимум →',
     pdf_btn:'📄 Скачать PDF-отчёт',
     disclaimer:'Инструмент носит информационный характер.',tagline:'Живи. Не просто существуй.',back_home:'← На главную',
     step_of:'Шаг {n} из 15',your_result:'Ваш результат',
@@ -2905,7 +2947,7 @@ const T={
     gate_sub:'PRO доступ · Програма ведення',gate_title:'Введіть код доступу',gate_desc:'Код додається до вашого гайду VIA‑L.',gate_error:'Невірний код.',gate_btn:'Увійти →',preview_label:'Введіть код для доступу',
     hero_badge:'Персональний аналіз · VIA‑L',hero_title:'Інтерпретатор даних<br><em>носимого пристрою</em>',hero_desc:'Oura Menopause Insights (Gen3 & Ring 4) · Garmin · Polar · Apple Watch → нутриціологічні рекомендації.',hero_tier_label:'⭐ PRO версія',
     nav_today:'Сьогодні',nav_history:'Історія',nav_consult:'Консультація',history_title:'Історія сесій',history_empty:'Ще немає збережених сесій.',
-    s_prof_badge:'00 / 15 · Профіль',s_prof_title:'Ваш профіль',s_prof_desc:'Гормональна фаза впливає на інтерпретацію всіх показників.',s_prof_l1:'Стать',s_prof_l2:'Фаза (жінки)',s_prof_l3:'Фаза (чоловіки)',s_prof_l4:'Ваш пристрій',oura_note:'✦ Підтримує Oura Menopause Insights',
+    s_prof_badge:'00 / 15 · Профіль',s_prof_title:'Ваш профіль',s_prof_desc:'Гормональна фаза впливає на інтерпретацію всіх показників.',s_prof_l1:'Стать',s_prof_l2:'Фаза (жінки)',s_prof_l3:'Фаза (чоловіки)',s_prof_l4:'Ваш пристрій',oura_note:'✦ Підтримує Oura Menopause Insights',s_prof_age:'Вік (років)',s_prof_weight:'Вага (кг)',s_prof_height:'Зріст (см)',
     gender_f:'👩 Жінка',gender_m:'👨 Чоловік',phase_peri:'Перименопауза',phase_meno:'Менопауза',phase_post:'Постменопауза',phase_andro:'Андропауза',phase_preandro:'Передандропауза',phase_other:'Інше',
     s0_badge:'01 / 15 · HRV',s0_title:'Варіабельність серцевого ритму',s0_desc:'HRV показує, наскільки добре організм справляється зі стресом.',s0_l1:'Ваш HRV сьогодні',s0_low:'10 мс',s0_high:'120 мс',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'Порівняно з нормою',s0_l3:'Це триває',
     s1_badge:'02 / 15 · Температура',s1_title:'Нічне відхилення температури',s1_desc:'Відхилення від базової лінії минулої ночі.',s1_l1:'Відхилення',s1_l2:'Прокидалися від жару?',s1_l3:'Як часто на тижні?',
@@ -2921,7 +2963,7 @@ const T={
     energy_low:'1 — немає сил',energy_high:'10 — енергія',stress_mild:'Помірний',stress_high:'Сильний',
     next:'Далі →',show_result:'Показати результат →',result_eyebrow:'Аналіз VIA‑L',readiness:'Готовність',doctor_title:'⚠ Консультація з лікарем',lab_title:'🧪 Рекомендовані аналізи',
     max_title:'Ваш Expert-розбір',max_desc:'Надішліть запит — нутриціолог підготує персональний письмовий розбір вашого профілю протягом 48 годин.',max_btn:'Надіслати запит нутриціологу →',max_placeholder:'Ваше запитання або що хочете уточнити...',max_sent:'✓ Запит надіслано! Відповідь протягом 48 годин.',
-    cta_title:'Хочете персональну стратегію?',cta_desc:'На консультації розберемо ваші дані.',restart:'Пройти знову',book:'Записатися →',pdf_btn:'📄 Завантажити PDF-звіт',
+    cta_title:'Хочете персональну стратегію?',cta_desc:'Марина особисто розбере ваші показники і складе точний протокол харчування під вашу фазу.',cta_f1:'Персональний розбір показників',cta_f2:'Протокол харчування під вашу фазу',cta_f3:'Добавки з точними дозуваннями',restart:'Пройти знову',book:'Записатися →',pdf_btn:'📄 Завантажити PDF-звіт',cta_max_title:'Хочете персональну стратегію?',cta_max_desc:'Перейдіть на Максимум — отримайте письмовий експертний розбір від нутриціолога протягом 48 годин.',cta_max_f1:'Письмовий розбір від нутриціолога',cta_max_f2:'Протокол під вашу гормональну фазу',cta_max_f3:'Персональні добавки та дозування',cta_max_book:'Перейти на Максимум →',
     disclaimer:'Інструмент носить інформаційний характер.',tagline:'Живи. Не просто існуй.',back_home:'← На головну',step_of:'Крок {n} з 15',your_result:'Ваш результат',
     res_good_title:'Гарне відновлення',res_good_sub:'Показники в цілому позитивні.',res_warn_title:'Потребує уваги',res_warn_sub:'Організм потребує підтримки.',res_alert_title:'Потрібна підтримка',res_alert_sub:'Організм під навантаженням.',
     doc_reason_hrv:'хронічно знижений HRV',doc_reason_temp:'щоденні нічні припливи',doc_reason_rhr:'високий пульс + серцебиття',doc_reason_thyroid:'низька температура + втома',doc_prefix:'Рекомендуємо звернутися до фахівця: ',
@@ -2937,7 +2979,7 @@ const T={
     gate_sub:'PRO Access · Coaching Program',gate_title:'Enter Your Access Code',gate_desc:'Your code is included with your VIA‑L guide.',gate_error:'Invalid code.',gate_btn:'Enter →',preview_label:'Enter code to access',
     hero_badge:'Personal Analysis · VIA‑L',hero_title:'Wearable Device<br><em>Data Interpreter</em>',hero_desc:'Compatible with Oura Menopause Insights (Gen3 & Ring 4) · Garmin · Polar · Apple Watch → nutritional recommendations.',hero_tier_label:'⭐ PRO Version',
     nav_today:'Today',nav_history:'History',nav_consult:'Consult',history_title:'Session History',history_empty:'No saved sessions yet.',
-    s_prof_badge:'00 / 15 · Profile',s_prof_title:'Your Profile',s_prof_desc:'Your hormonal phase affects interpretation of all metrics.',s_prof_l1:'Gender',s_prof_l2:'Phase (women)',s_prof_l3:'Phase (men)',s_prof_l4:'Your device',oura_note:'✦ Supports Oura Menopause Insights',
+    s_prof_badge:'00 / 15 · Profile',s_prof_title:'Your Profile',s_prof_desc:'Your hormonal phase affects interpretation of all metrics.',s_prof_l1:'Gender',s_prof_l2:'Phase (women)',s_prof_l3:'Phase (men)',s_prof_l4:'Your device',oura_note:'✦ Supports Oura Menopause Insights',s_prof_age:'Age',s_prof_weight:'Weight (kg)',s_prof_height:'Height (cm)',
     gender_f:'👩 Female',gender_m:'👨 Male',phase_peri:'Perimenopause',phase_meno:'Menopause',phase_post:'Postmenopause',phase_andro:'Andropause',phase_preandro:'Pre-andropause',phase_other:'Other',
     s0_badge:'01 / 15 · HRV',s0_title:'Heart Rate Variability',s0_desc:'HRV shows how well your body handles stress and recovery.',s0_l1:'Your HRV today',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'Compared to baseline',s0_l3:'Duration',
     s1_badge:'02 / 15 · Temperature',s1_title:'Overnight Temperature',s1_desc:'Deviation from your baseline last night.',s1_l1:'Deviation',s1_l2:'Woke up from heat?',s1_l3:'How often per week?',
@@ -2953,7 +2995,7 @@ const T={
     energy_low:'1 — no energy',energy_high:'10 — energised',stress_mild:'Moderate',stress_high:'High',
     next:'Next →',show_result:'Show Results →',result_eyebrow:'VIA‑L Analysis',readiness:'Readiness',doctor_title:'⚠ Medical Consultation',lab_title:'🧪 Recommended Tests',
     max_title:'Your Expert Review',max_desc:'Send a request — your nutritionist will prepare a personal written review of your profile within 48 hours.',max_btn:'Send request to nutritionist →',max_placeholder:'Your question or what you would like to clarify...',max_sent:'✓ Request sent! Reply within 48 hours.',
-    cta_title:'Want a personalised strategy?',cta_desc:"We'll review your data and create a protocol.",restart:'Start Over',book:'Book →',pdf_btn:'📄 Download PDF Report',
+    cta_title:'Want a personalised strategy?',cta_desc:"Book a consultation — Marina will review your data and create a precise nutrition protocol for your phase.",cta_f1:'Personal review of your metrics',cta_f2:'Nutrition protocol for your hormonal phase',cta_f3:'Supplements with precise dosages',restart:'Start Over',book:'Book →',pdf_btn:'📄 Download PDF Report',cta_max_title:'Want a personalised protocol?',cta_max_desc:'Upgrade to Maximum — get a written expert analysis in your language within 48 hours.',cta_max_f1:'Written nutritionist analysis',cta_max_f2:'Protocol for your hormonal phase',cta_max_f3:'Personalised supplements &amp; dosages',cta_max_book:'Upgrade to Maximum →',
     disclaimer:'This tool is informational only.',tagline:'Live. Not just exist.',back_home:'← Back',step_of:'Step {n} of 15',your_result:'Your Result',
     res_good_title:'Good Recovery State',res_good_sub:'Your indicators are generally positive.',res_warn_title:'Needs Attention',res_warn_sub:'Your body needs support.',res_alert_title:'Support Needed',res_alert_sub:'Your body is under load.',
     doc_reason_hrv:'chronically low HRV',doc_reason_temp:'daily night sweats',doc_reason_rhr:'elevated HR + palpitations',doc_reason_thyroid:'low temp + fatigue',doc_prefix:'We recommend consulting a specialist: ',
@@ -2968,7 +3010,7 @@ const T={
     gate_sub:'Acceso PRO · Programa',gate_title:'Código de Acceso',gate_desc:'El código está en tu guía VIA‑L.',gate_error:'Código incorrecto.',gate_btn:'Entrar →',preview_label:'Ingresa el código',
     hero_badge:'Análisis Personal · VIA‑L',hero_title:'Intérprete de datos<br><em>de dispositivo ponible</em>',hero_desc:'Compatible con Oura Menopause Insights (Gen3 & Ring 4) · Garmin · Polar · Apple Watch → recomendaciones nutricionales.',hero_tier_label:'⭐ Versión PRO',
     nav_today:'Hoy',nav_history:'Historial',nav_consult:'Consulta',history_title:'Historial de sesiones',history_empty:'Sin sesiones guardadas aún.',
-    s_prof_badge:'00 / 15 · Perfil',s_prof_title:'Tu Perfil',s_prof_desc:'La fase hormonal afecta la interpretación de todas las métricas.',s_prof_l1:'Género',s_prof_l2:'Fase (mujeres)',s_prof_l3:'Fase (hombres)',s_prof_l4:'Tu dispositivo',oura_note:'✦ Compatible con Oura Menopause Insights',
+    s_prof_badge:'00 / 15 · Perfil',s_prof_title:'Tu Perfil',s_prof_desc:'La fase hormonal afecta la interpretación de todas las métricas.',s_prof_l1:'Género',s_prof_l2:'Fase (mujeres)',s_prof_l3:'Fase (hombres)',s_prof_l4:'Tu dispositivo',oura_note:'✦ Compatible con Oura Menopause Insights',s_prof_age:'Edad',s_prof_weight:'Peso (kg)',s_prof_height:'Estatura (cm)',
     gender_f:'👩 Mujer',gender_m:'👨 Hombre',phase_peri:'Perimenopausia',phase_meno:'Menopausia',phase_post:'Posmenopausia',phase_andro:'Andropausia',phase_preandro:'Pre-andropausia',phase_other:'Otro',
     s0_badge:'01 / 15 · VFC',s0_title:'Variabilidad Cardíaca',s0_desc:'La VFC muestra cómo maneja el estrés tu cuerpo.',s0_l1:'Tu VFC hoy',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'Comparado con tu base',s0_l3:'Duración',
     s1_badge:'02 / 15 · Temperatura',s1_title:'Temperatura nocturna',s1_desc:'Desviación de tu línea base anoche.',s1_l1:'Desviación',s1_l2:'¿Despertaste por calor?',s1_l3:'¿Con qué frecuencia?',
@@ -2984,7 +3026,7 @@ const T={
     energy_low:'1 — sin energía',energy_high:'10 — energía',stress_mild:'Moderado',stress_high:'Alto',
     next:'Siguiente →',show_result:'Ver Resultados →',result_eyebrow:'Análisis VIA‑L',readiness:'Preparación',doctor_title:'⚠ Consulta médica',lab_title:'🧪 Análisis recomendados',
     max_title:'Tu revisión Expert',max_desc:'Envía una solicitud — tu nutricionista preparará una revisión personal escrita de tu perfil en 48 horas.',max_btn:'Enviar solicitud al nutricionista →',max_placeholder:'Tu pregunta o lo que quieres aclarar...',max_sent:'✓ ¡Solicitud enviada! Respuesta en 48 horas.',
-    cta_title:'¿Quieres una estrategia?',cta_desc:'Analizaremos tus datos y crearemos un protocolo.',restart:'Empezar de nuevo',book:'Reservar →',pdf_btn:'📄 Descargar PDF',
+    cta_title:'¿Quieres una estrategia personalizada?',cta_desc:'Reserva una consulta — analizaremos tus datos y crearemos un protocolo preciso.',cta_f1:'Revisión personal de tus métricas',cta_f2:'Protocolo nutricional para tu fase hormonal',cta_f3:'Suplementos con dosificaciones precisas',restart:'Empezar de nuevo',book:'Reservar →',pdf_btn:'📄 Descargar PDF',cta_max_title:'¿Quieres un protocolo personalizado?',cta_max_desc:'Pasa a Máximo — recibe un análisis experto por escrito en tu idioma en 48 horas.',cta_max_f1:'Análisis escrito por nutricionista',cta_max_f2:'Protocolo para tu fase hormonal',cta_max_f3:'Suplementos y dosificaciones personalizadas',cta_max_book:'Mejorar a Máximo →',
     disclaimer:'Esta herramienta es informativa.',tagline:'Vive. No solo existas.',back_home:'← Volver',step_of:'Paso {n} de 15',your_result:'Tu Resultado',
     res_good_title:'Buen estado',res_good_sub:'Tus indicadores son positivos.',res_warn_title:'Requiere atención',res_warn_sub:'Tu cuerpo necesita apoyo.',res_alert_title:'Necesita apoyo',res_alert_sub:'Tu cuerpo está bajo carga.',
     doc_reason_hrv:'VFC crónicamente baja',doc_reason_temp:'sudores nocturnos',doc_reason_rhr:'FC alta + palpitaciones',doc_reason_thyroid:'temperatura baja + fatiga',doc_prefix:'Consulta a un especialista: ',
@@ -2999,7 +3041,7 @@ const T={
     gate_sub:'PRO Zugang · Betreuungsprogramm',gate_title:'Zugangscode eingeben',gate_desc:'Ihr Code liegt Ihrem VIA‑L Guide bei.',gate_error:'Ungültiger Code.',gate_btn:'Eintreten →',preview_label:'Code eingeben',
     hero_badge:'Persönliche Analyse · VIA‑L',hero_title:'Daten-Interpreter<br><em>für Wearable-Geräte</em>',hero_desc:'Kompatibel mit Oura Menopause Insights (Gen3 & Ring 4) · Garmin · Polar · Apple Watch → Ernährungsempfehlungen.',hero_tier_label:'⭐ PRO Version',
     nav_today:'Heute',nav_history:'Verlauf',nav_consult:'Beratung',history_title:'Sitzungsverlauf',history_empty:'Noch keine gespeicherten Sitzungen.',
-    s_prof_badge:'00 / 15 · Profil',s_prof_title:'Ihr Profil',s_prof_desc:'Die Hormonphase beeinflusst die Interpretation aller Messwerte.',s_prof_l1:'Geschlecht',s_prof_l2:'Phase (Frauen)',s_prof_l3:'Phase (Männer)',s_prof_l4:'Dein Gerät',oura_note:'✦ Unterstützt Oura Menopause Insights',
+    s_prof_badge:'00 / 15 · Profil',s_prof_title:'Ihr Profil',s_prof_desc:'Die Hormonphase beeinflusst die Interpretation aller Messwerte.',s_prof_l1:'Geschlecht',s_prof_l2:'Phase (Frauen)',s_prof_l3:'Phase (Männer)',s_prof_l4:'Dein Gerät',oura_note:'✦ Unterstützt Oura Menopause Insights',s_prof_age:'Alter',s_prof_weight:'Gewicht (kg)',s_prof_height:'Größe (cm)',
     gender_f:'👩 Frau',gender_m:'👨 Mann',phase_peri:'Perimenopause',phase_meno:'Menopause',phase_post:'Postmenopause',phase_andro:'Andropause',phase_preandro:'Prä-Andropause',phase_other:'Sonstiges',
     s0_badge:'01 / 15 · HRV',s0_title:'Herzratenvariabilität',s0_desc:'HRV zeigt, wie gut Ihr Körper mit Stress und Erholung umgeht.',s0_l1:'Ihr HRV heute',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'Im Vergleich zur Baseline',s0_l3:'Dauer',
     s1_badge:'02 / 15 · Temperatur',s1_title:'Nächtliche Temperatur',s1_desc:'Abweichung von Ihrer Basislinie letzte Nacht.',s1_l1:'Abweichung',s1_l2:'Vom Hitzegefühl aufgewacht?',s1_l3:'Wie oft pro Woche?',
@@ -3015,7 +3057,7 @@ const T={
     energy_low:'1 — keine Energie',energy_high:'10 — voller Energie',stress_mild:'Moderat',stress_high:'Stark',
     next:'Weiter →',show_result:'Ergebnis anzeigen →',result_eyebrow:'VIA‑L Analyse',readiness:'Bereitschaft',doctor_title:'⚠ Ärztliche Konsultation',lab_title:'🧪 Empfohlene Tests',
     max_title:'Ihre Expert-Auswertung',max_desc:'Senden Sie eine Anfrage — Ihre Ernährungsberaterin erstellt eine persönliche schriftliche Auswertung innerhalb von 48 Stunden.',max_btn:'Anfrage an Ernährungsberaterin →',max_placeholder:'Ihre Frage oder was Sie klären möchten...',max_sent:'✓ Anfrage gesendet! Antwort innerhalb von 48 Stunden.',
-    cta_title:'Möchten Sie eine persönliche Strategie?',cta_desc:'Wir analysieren Ihre Daten und erstellen ein Protokoll.',restart:'Neu starten',book:'Buchen →',pdf_btn:'📄 PDF-Bericht herunterladen',
+    cta_title:'Möchten Sie eine persönliche Strategie?',cta_desc:'Wir analysieren Ihre Daten und erstellen ein Protokoll.',cta_f1:'Persönliche Auswertung Ihrer Werte',cta_f2:'Ernährungsprotokoll für Ihre Hormonphase',cta_f3:'Supplements mit genauen Dosierungen',restart:'Neu starten',book:'Buchen →',pdf_btn:'📄 PDF-Bericht herunterladen',cta_max_title:'Möchten Sie ein persönliches Protokoll?',cta_max_desc:'Upgrade auf Maximum — erhalten Sie eine schriftliche Expertenanalyse auf Deutsch innerhalb von 48 Stunden.',cta_max_f1:'Schriftliche Ernährungsberatung',cta_max_f2:'Protokoll für Ihre Hormonphase',cta_max_f3:'Persönliche Supplements &amp; Dosierungen',cta_max_book:'Upgrade auf Maximum →',
     disclaimer:'Dieses Tool hat informativen Charakter.',tagline:'Lebe. Existiere nicht nur.',back_home:'← Zurück',step_of:'Schritt {n} von 15',your_result:'Ihr Ergebnis',
     res_good_title:'Gute Erholungsrate',res_good_sub:'Ihre Werte sind insgesamt positiv.',res_warn_title:'Aufmerksamkeit erforderlich',res_warn_sub:'Ihr Körper braucht Unterstützung.',res_alert_title:'Unterstützung benötigt',res_alert_sub:'Ihr Körper steht unter Belastung.',
     doc_reason_hrv:'chronisch niedriger HRV',doc_reason_temp:'tägliche Nachtschweiße',doc_reason_rhr:'erhöhte HR + Herzrasen',doc_reason_thyroid:'niedrige Temp + Müdigkeit',doc_prefix:'Wir empfehlen einen Facharztbesuch: ',
@@ -3030,7 +3072,7 @@ const T={
     gate_sub:'Acesso PRO · Programa de acompanhamento',gate_title:'Digite seu código de acesso',gate_desc:'Seu código está incluído no guia VIA‑L.',gate_error:'Código inválido.',gate_btn:'Entrar →',preview_label:'Digite o código para acessar',
     hero_badge:'Análise Pessoal · VIA‑L',hero_title:'Interpretador de dados<br><em>de dispositivo wearable</em>',hero_desc:'Compatível com Oura Menopause Insights (Gen3 & Ring 4) · Garmin · Polar · Apple Watch → recomendações nutricionais.',hero_tier_label:'⭐ Versão PRO',
     nav_today:'Hoje',nav_history:'Histórico',nav_consult:'Consulta',history_title:'Histórico de sessões',history_empty:'Nenhuma sessão salva ainda.',
-    s_prof_badge:'00 / 15 · Perfil',s_prof_title:'Seu Perfil',s_prof_desc:'A fase hormonal influencia a interpretação de todos os indicadores.',s_prof_l1:'Sexo',s_prof_l2:'Fase (mulheres)',s_prof_l3:'Fase (homens)',s_prof_l4:'Seu dispositivo',oura_note:'✦ Suporta Oura Menopause Insights',
+    s_prof_badge:'00 / 15 · Perfil',s_prof_title:'Seu Perfil',s_prof_desc:'A fase hormonal influencia a interpretação de todos os indicadores.',s_prof_l1:'Sexo',s_prof_l2:'Fase (mulheres)',s_prof_l3:'Fase (homens)',s_prof_l4:'Seu dispositivo',oura_note:'✦ Suporta Oura Menopause Insights',s_prof_age:'Idade',s_prof_weight:'Peso (kg)',s_prof_height:'Altura (cm)',
     gender_f:'👩 Feminino',gender_m:'👨 Masculino',phase_peri:'Perimenopausa',phase_meno:'Menopausa',phase_post:'Pós-menopausa',phase_andro:'Andropausa',phase_preandro:'Pré-andropausa',phase_other:'Outro',
     s0_badge:'01 / 15 · VFC',s0_title:'Variabilidade da Frequência Cardíaca',s0_desc:'A VFC mostra o quanto seu corpo lida bem com o estresse.',s0_l1:'Seu VFC hoje',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'Comparado com a linha base',s0_l3:'Duração',
     s1_badge:'02 / 15 · Temperatura',s1_title:'Temperatura noturna',s1_desc:'Desvio da sua linha base na noite passada.',s1_l1:'Desvio',s1_l2:'Acordou com calor?',s1_l3:'Com que frequência na semana?',
@@ -3046,7 +3088,7 @@ const T={
     energy_low:'1 — sem energia',energy_high:'10 — cheia de energia',stress_mild:'Moderado',stress_high:'Intenso',
     next:'Próximo →',show_result:'Ver Resultado →',result_eyebrow:'Análise VIA‑L',readiness:'Prontidão',doctor_title:'⚠ Consulta médica',lab_title:'🧪 Exames recomendados',
     max_title:'Sua avaliação Expert',max_desc:'Envie uma solicitação — sua nutricionista preparará uma avaliação pessoal escrita do seu perfil em até 48 horas.',max_btn:'Enviar solicitação à nutricionista →',max_placeholder:'Sua pergunta ou o que deseja esclarecer...',max_sent:'✓ Solicitação enviada! Resposta em até 48 horas.',
-    cta_title:'Quer uma estratégia personalizada?',cta_desc:'Analisaremos seus dados e criaremos um protocolo.',restart:'Recomeçar',book:'Agendar →',pdf_btn:'📄 Baixar relatório PDF',
+    cta_title:'Quer uma estratégia personalizada?',cta_desc:'Analisaremos seus dados e criaremos um protocolo.',cta_f1:'Revisão pessoal das suas métricas',cta_f2:'Protocolo nutricional para a sua fase hormonal',cta_f3:'Suplementos com dosagens precisas',restart:'Recomeçar',book:'Agendar →',pdf_btn:'📄 Baixar relatório PDF',cta_max_title:'Quer um protocolo personalizado?',cta_max_desc:'Actualize para Máximo — receba uma análise especializada por escrito no seu idioma em 48 horas.',cta_max_f1:'Análise escrita por nutricionista',cta_max_f2:'Protocolo para a sua fase hormonal',cta_max_f3:'Suplementos e dosagens personalizados',cta_max_book:'Upgrade para Máximo →',
     disclaimer:'Esta ferramenta tem caráter informativo.',tagline:'Viva. Não apenas exista.',back_home:'← Voltar',step_of:'Passo {n} de 15',your_result:'Seu Resultado',
     res_good_title:'Boa recuperação',res_good_sub:'Seus indicadores são positivos.',res_warn_title:'Requer atenção',res_warn_sub:'Seu corpo precisa de suporte.',res_alert_title:'Suporte necessário',res_alert_sub:'Seu corpo está sob carga.',
     doc_reason_hrv:'VFC cronicamente baixa',doc_reason_temp:'suores noturnos diários',doc_reason_rhr:'FC elevada + palpitações',doc_reason_thyroid:'temperatura baixa + fadiga',doc_prefix:'Recomendamos consultar um especialista: ',
@@ -3061,7 +3103,7 @@ const T={
     gate_sub:'Accès PRO · Programme de suivi',gate_title:'Entrez votre code d\'accès',gate_desc:'Votre code est inclus dans votre guide VIA‑L.',gate_error:'Code invalide.',gate_btn:'Entrer →',preview_label:'Entrez le code d\'accès',
     hero_badge:'Analyse Personnelle · VIA‑L',hero_title:'Interpréteur de données<br><em>pour appareils connectés</em>',hero_desc:'Compatible avec Oura Menopause Insights (Gen3 & Ring 4) · Garmin · Polar · Apple Watch → recommandations nutritionnelles.',hero_tier_label:'⭐ Version PRO',
     nav_today:'Aujourd\'hui',nav_history:'Historique',nav_consult:'Consultation',history_title:'Historique des séances',history_empty:'Aucune séance enregistrée.',
-    s_prof_badge:'00 / 15 · Profil',s_prof_title:'Votre Profil',s_prof_desc:'La phase hormonale influence l\'interprétation de tous les indicateurs.',s_prof_l1:'Sexe',s_prof_l2:'Phase (femmes)',s_prof_l3:'Phase (hommes)',s_prof_l4:'Votre appareil',oura_note:'✦ Compatible Oura Menopause Insights',
+    s_prof_badge:'00 / 15 · Profil',s_prof_title:'Votre Profil',s_prof_desc:'La phase hormonale influence l\'interprétation de tous les indicateurs.',s_prof_l1:'Sexe',s_prof_l2:'Phase (femmes)',s_prof_l3:'Phase (hommes)',s_prof_l4:'Votre appareil',oura_note:'✦ Compatible Oura Menopause Insights',s_prof_age:'Âge',s_prof_weight:'Poids (kg)',s_prof_height:'Taille (cm)',
     gender_f:'👩 Femme',gender_m:'👨 Homme',phase_peri:'Périménopause',phase_meno:'Ménopause',phase_post:'Post-ménopause',phase_andro:'Andropause',phase_preandro:'Pré-andropause',phase_other:'Autre',
     s0_badge:'01 / 15 · VRC',s0_title:'Variabilité de la Fréquence Cardiaque',s0_desc:'La VRC montre comment votre corps gère le stress et la récupération.',s0_l1:'Votre VRC aujourd\'hui',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'Par rapport à la baseline',s0_l3:'Durée',
     s1_badge:'02 / 15 · Température',s1_title:'Température nocturne',s1_desc:'Écart par rapport à votre ligne de base la nuit dernière.',s1_l1:'Écart',s1_l2:'Réveillée par la chaleur ?',s1_l3:'Combien de fois par semaine ?',
@@ -3077,7 +3119,7 @@ const T={
     energy_low:'1 — sans énergie',energy_high:'10 — pleine d\'énergie',stress_mild:'Modéré',stress_high:'Intense',
     next:'Suivant →',show_result:'Voir le résultat →',result_eyebrow:'Analyse VIA‑L',readiness:'Préparation',doctor_title:'⚠ Consultation médicale',lab_title:'🧪 Analyses recommandées',
     max_title:'Votre bilan Expert',max_desc:'Envoyez une demande — votre nutritionniste préparera un bilan personnel écrit de votre profil dans les 48 heures.',max_btn:'Envoyer la demande à la nutritionniste →',max_placeholder:'Votre question ou ce que vous souhaitez clarifier...',max_sent:'✓ Demande envoyée ! Réponse sous 48 heures.',
-    cta_title:'Vous voulez une stratégie personnalisée ?',cta_desc:'Nous analyserons vos données et créerons un protocole.',restart:'Recommencer',book:'Réserver →',pdf_btn:'📄 Télécharger le rapport PDF',
+    cta_title:'Vous voulez une stratégie personnalisée ?',cta_desc:'Nous analyserons vos données et créerons un protocole.',cta_f1:'Analyse personnelle de vos indicateurs',cta_f2:'Protocole nutritionnel pour votre phase hormonale',cta_f3:'Compléments avec dosages précis',restart:'Recommencer',book:'Réserver →',pdf_btn:'📄 Télécharger le rapport PDF',cta_max_title:'Vous voulez un protocole personnalisé ?',cta_max_desc:'Passez à Maximum — obtenez une analyse experte par écrit dans votre langue sous 48 heures.',cta_max_f1:'Analyse nutritionniste écrite',cta_max_f2:'Protocole pour votre phase hormonale',cta_max_f3:'Compléments &amp; dosages personnalisés',cta_max_book:'Passer à Maximum →',
     disclaimer:'Cet outil est à titre informatif.',tagline:'Vivez. N\'existez pas seulement.',back_home:'← Retour',step_of:'Étape {n} sur 15',your_result:'Votre Résultat',
     res_good_title:'Bonne récupération',res_good_sub:'Vos indicateurs sont globalement positifs.',res_warn_title:'Attention requise',res_warn_sub:'Votre corps a besoin de soutien.',res_alert_title:'Soutien nécessaire',res_alert_sub:'Votre corps est sous charge.',
     doc_reason_hrv:'VRC chroniquement basse',doc_reason_temp:'sueurs nocturnes quotidiennes',doc_reason_rhr:'FC élevée + palpitations',doc_reason_thyroid:'température basse + fatigue',doc_prefix:'Nous recommandons de consulter un spécialiste : ',
@@ -3092,7 +3134,7 @@ const T={
     gate_sub:'Dostęp PRO · Program opieki',gate_title:'Wprowadź kod dostępu',gate_desc:'Kod jest dołączony do Twojego przewodnika VIA‑L.',gate_error:'Nieprawidłowy kod.',gate_btn:'Wejdź →',preview_label:'Wprowadź kod dostępu',
     hero_badge:'Analiza Osobista · VIA‑L',hero_title:'Interpreter danych<br><em>urządzenia wearable</em>',hero_desc:'Kompatybilny z Oura Menopause Insights (Gen3 & Ring 4) · Garmin · Polar · Apple Watch → zalecenia żywieniowe.',hero_tier_label:'⭐ Wersja PRO',
     nav_today:'Dziś',nav_history:'Historia',nav_consult:'Konsultacja',history_title:'Historia sesji',history_empty:'Brak zapisanych sesji.',
-    s_prof_badge:'00 / 15 · Profil',s_prof_title:'Twój Profil',s_prof_desc:'Faza hormonalna wpływa na interpretację wszystkich wskaźników.',s_prof_l1:'Płeć',s_prof_l2:'Faza (kobiety)',s_prof_l3:'Faza (mężczyźni)',s_prof_l4:'Twoje urządzenie',oura_note:'✦ Obsługuje Oura Menopause Insights',
+    s_prof_badge:'00 / 15 · Profil',s_prof_title:'Twój Profil',s_prof_desc:'Faza hormonalna wpływa na interpretację wszystkich wskaźników.',s_prof_l1:'Płeć',s_prof_l2:'Faza (kobiety)',s_prof_l3:'Faza (mężczyźni)',s_prof_l4:'Twoje urządzenie',oura_note:'✦ Obsługuje Oura Menopause Insights',s_prof_age:'Wiek',s_prof_weight:'Masa (kg)',s_prof_height:'Wzrost (cm)',
     gender_f:'👩 Kobieta',gender_m:'👨 Mężczyzna',phase_peri:'Perimenopauza',phase_meno:'Menopauza',phase_post:'Postmenopauza',phase_andro:'Andropauza',phase_preandro:'Przed-andropauza',phase_other:'Inne',
     s0_badge:'01 / 15 · HRV',s0_title:'Zmienność Rytmu Serca',s0_desc:'HRV pokazuje, jak dobrze Twój organizm radzi sobie ze stresem.',s0_l1:'Twoje HRV dziś',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'W porównaniu z normą',s0_l3:'Czas trwania',
     s1_badge:'02 / 15 · Temperatura',s1_title:'Nocna temperatura',s1_desc:'Odchylenie od linii bazowej ostatniej nocy.',s1_l1:'Odchylenie',s1_l2:'Obudziłaś się z powodu gorąca?',s1_l3:'Jak często w tygodniu?',
@@ -3108,7 +3150,7 @@ const T={
     energy_low:'1 — brak energii',energy_high:'10 — pełna energii',stress_mild:'Umiarkowany',stress_high:'Silny',
     next:'Dalej →',show_result:'Pokaż wynik →',result_eyebrow:'Analiza VIA‑L',readiness:'Gotowość',doctor_title:'⚠ Konsultacja medyczna',lab_title:'🧪 Zalecane badania',
     max_title:'Twoja ocena Expert',max_desc:'Wyślij prośbę — Twoja dietetyk przygotuje osobistą pisemną ocenę Twojego profilu w ciągu 48 godzin.',max_btn:'Wyślij prośbę do dietetyka →',max_placeholder:'Twoje pytanie lub co chcesz wyjaśnić...',max_sent:'✓ Prośba wysłana! Odpowiedź w ciągu 48 godzin.',
-    cta_title:'Chcesz spersonalizowaną strategię?',cta_desc:'Przeanalizujemy Twoje dane i stworzymy protokół.',restart:'Zacznij od nowa',book:'Umów wizytę →',pdf_btn:'📄 Pobierz raport PDF',
+    cta_title:'Chcesz spersonalizowaną strategię?',cta_desc:'Przeanalizujemy Twoje dane i stworzymy protokół.',cta_f1:'Osobista analiza Twoich wskaźników',cta_f2:'Protokół żywieniowy dla Twojej fazy hormonalnej',cta_f3:'Suplementy z dokładnymi dawkami',restart:'Zacznij od nowa',book:'Umów wizytę →',pdf_btn:'📄 Pobierz raport PDF',cta_max_title:'Chcesz spersonalizowany protokół?',cta_max_desc:'Przejdź na Maximum — otrzymaj pisemną analizę eksperta w swoim języku w ciągu 48 godzin.',cta_max_f1:'Pisemna analiza dietetyka',cta_max_f2:'Protokół dla Twojej fazy hormonalnej',cta_max_f3:'Spersonalizowane suplementy i dawki',cta_max_book:'Przejdź na Maximum →',
     disclaimer:'To narzędzie ma charakter informacyjny.',tagline:'Żyj. Nie tylko istniej.',back_home:'← Powrót',step_of:'Krok {n} z 15',your_result:'Twój Wynik',
     res_good_title:'Dobra regeneracja',res_good_sub:'Twoje wskaźniki są ogólnie pozytywne.',res_warn_title:'Wymaga uwagi',res_warn_sub:'Twój organizm potrzebuje wsparcia.',res_alert_title:'Potrzebne wsparcie',res_alert_sub:'Twój organizm jest pod obciążeniem.',
     doc_reason_hrv:'chronicznie niskie HRV',doc_reason_temp:'codzienne nocne poty',doc_reason_rhr:'podwyższone HR + kołatanie',doc_reason_thyroid:'niska temp + zmęczenie',doc_prefix:'Zalecamy konsultację ze specjalistą: ',
@@ -3123,7 +3165,7 @@ const T={
     gate_sub:'Accesso PRO · Programma di accompagnamento',gate_title:'Inserisci il codice di accesso',gate_desc:'Il codice è incluso nella tua guida VIA‑L.',gate_error:'Codice non valido.',gate_btn:'Entra →',preview_label:'Inserisci il codice di accesso',
     hero_badge:'Analisi Personale · VIA‑L',hero_title:'Interpretatore di dati<br><em>per dispositivi indossabili</em>',hero_desc:'Compatibile con Oura Menopause Insights (Gen3 & Ring 4) · Garmin · Polar · Apple Watch → raccomandazioni nutrizionali.',hero_tier_label:'⭐ Versione PRO',
     nav_today:'Oggi',nav_history:'Cronologia',nav_consult:'Consulenza',history_title:'Cronologia delle sessioni',history_empty:'Nessuna sessione salvata.',
-    s_prof_badge:'00 / 15 · Profilo',s_prof_title:'Il Tuo Profilo',s_prof_desc:'La fase ormonale influenza l\'interpretazione di tutti gli indicatori.',s_prof_l1:'Sesso',s_prof_l2:'Fase (donne)',s_prof_l3:'Fase (uomini)',s_prof_l4:'Il tuo dispositivo',oura_note:'✦ Supporta Oura Menopause Insights',
+    s_prof_badge:'00 / 15 · Profilo',s_prof_title:'Il Tuo Profilo',s_prof_desc:'La fase ormonale influenza l\'interpretazione di tutti gli indicatori.',s_prof_l1:'Sesso',s_prof_l2:'Fase (donne)',s_prof_l3:'Fase (uomini)',s_prof_l4:'Il tuo dispositivo',oura_note:'✦ Supporta Oura Menopause Insights',s_prof_age:'Età',s_prof_weight:'Peso (kg)',s_prof_height:'Altezza (cm)',
     gender_f:'👩 Donna',gender_m:'👨 Uomo',phase_peri:'Perimenopausa',phase_meno:'Menopausa',phase_post:'Post-menopausa',phase_andro:'Andropausa',phase_preandro:'Pre-andropausa',phase_other:'Altro',
     s0_badge:'01 / 15 · VFC',s0_title:'Variabilità della Frequenza Cardiaca',s0_desc:'La VFC mostra quanto bene il tuo corpo gestisce lo stress.',s0_l1:'La tua VFC oggi',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'Rispetto alla baseline',s0_l3:'Durata',
     s1_badge:'02 / 15 · Temperatura',s1_title:'Temperatura notturna',s1_desc:'Deviazione dalla tua linea base la notte scorsa.',s1_l1:'Deviazione',s1_l2:'Ti sei svegliata per il caldo?',s1_l3:'Quante volte a settimana?',
@@ -3139,7 +3181,7 @@ const T={
     energy_low:'1 — senza energia',energy_high:'10 — piena di energia',stress_mild:'Moderato',stress_high:'Intenso',
     next:'Avanti →',show_result:'Mostra risultato →',result_eyebrow:'Analisi VIA‑L',readiness:'Prontezza',doctor_title:'⚠ Consulto medico',lab_title:'🧪 Esami consigliati',
     max_title:'La tua valutazione Expert',max_desc:'Invia una richiesta — la tua nutrizionista preparerà una valutazione personale scritta del tuo profilo entro 48 ore.',max_btn:'Invia richiesta alla nutrizionista →',max_placeholder:'La tua domanda o cosa vuoi chiarire...',max_sent:'✓ Richiesta inviata! Risposta entro 48 ore.',
-    cta_title:'Vuoi una strategia personalizzata?',cta_desc:'Analizzeremo i tuoi dati e creeremo un protocollo.',restart:'Ricomincia',book:'Prenota →',pdf_btn:'📄 Scarica report PDF',
+    cta_title:'Vuoi una strategia personalizzata?',cta_desc:'Analizzeremo i tuoi dati e creeremo un protocollo.',cta_f1:'Analisi personale dei tuoi indicatori',cta_f2:'Protocollo nutrizionale per la tua fase ormonale',cta_f3:'Integratori con dosaggi precisi',restart:'Ricomincia',book:'Prenota →',pdf_btn:'📄 Scarica report PDF',cta_max_title:'Vuoi un protocollo personalizzato?',cta_max_desc:'Passa a Maximum — ricevi un\'analisi esperta scritta nella tua lingua entro 48 ore.',cta_max_f1:'Analisi scritta da nutrizionista',cta_max_f2:'Protocollo per la tua fase ormonale',cta_max_f3:'Integratori e dosaggi personalizzati',cta_max_book:'Passa a Maximum →',
     disclaimer:'Questo strumento ha carattere informativo.',tagline:'Vivi. Non esistere soltanto.',back_home:'← Indietro',step_of:'Passo {n} di 15',your_result:'Il Tuo Risultato',
     res_good_title:'Buon recupero',res_good_sub:'I tuoi indicatori sono positivi.',res_warn_title:'Richiede attenzione',res_warn_sub:'Il tuo corpo ha bisogno di supporto.',res_alert_title:'Supporto necessario',res_alert_sub:'Il tuo corpo è sotto carico.',
     doc_reason_hrv:'VFC cronicamente bassa',doc_reason_temp:'sudorazioni notturne quotidiane',doc_reason_rhr:'FC elevata + palpitazioni',doc_reason_thyroid:'temperatura bassa + stanchezza',doc_prefix:'Consigliamo di consultare uno specialista: ',
@@ -3154,7 +3196,7 @@ const T={
     gate_sub:'גישה PRO · תוכנית ליווי',gate_title:'הזן את קוד הגישה שלך',gate_desc:'הקוד כלול במדריך VIA‑L שלך.',gate_error:'קוד לא תקין.',gate_btn:'← כניסה',preview_label:'הזן את קוד הגישה שלך',
     hero_badge:'ניתוח אישי · VIA‑L',hero_title:'מפענח נתונים<br><em>למכשירים לבישים</em>',hero_desc:'תואם עם Oura Menopause Insights (Gen3 & Ring 4) · Garmin · Polar · Apple Watch → המלצות תזונתיות.',hero_tier_label:'⭐ גרסת PRO',
     nav_today:'היום',nav_history:'היסטוריה',nav_consult:'ייעוץ',history_title:'היסטוריית סשנים',history_empty:'אין סשנים שמורים.',
-    s_prof_badge:'00 / 15 · פרופיל',s_prof_title:'הפרופיל שלך',s_prof_desc:'השלב ההורמונלי משפיע על פרשנות כל המדדים.',s_prof_l1:'מין',s_prof_l2:'שלב (נשים)',s_prof_l3:'שלב (גברים)',s_prof_l4:'המכשיר שלך',oura_note:'✦ תומך ב-Oura Menopause Insights',
+    s_prof_badge:'00 / 15 · פרופיל',s_prof_title:'הפרופיל שלך',s_prof_desc:'השלב ההורמונלי משפיע על פרשנות כל המדדים.',s_prof_l1:'מין',s_prof_l2:'שלב (נשים)',s_prof_l3:'שלב (גברים)',s_prof_l4:'המכשיר שלך',oura_note:'✦ תומך ב-Oura Menopause Insights',s_prof_age:'גיל',s_prof_weight:'משקל (ק״ג)',s_prof_height:'גובה (ס״מ)',
     gender_f:'👩 אישה',gender_m:'👨 גבר',phase_peri:'פרה-מנופאוזה',phase_meno:'מנופאוזה',phase_post:'פוסט-מנופאוזה',phase_andro:'אנדרופאוזה',phase_preandro:'פרה-אנדרופאוזה',phase_other:'אחר',
     s0_badge:'01 / 15 · HRV',s0_title:'שונות קצב הלב',s0_desc:'HRV מראה עד כמה גופך מתמודד עם לחץ.',s0_l1:'HRV שלך היום',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'ביחס לקו הבסיס',s0_l3:'משך הזמן',
     s1_badge:'02 / 15 · טמפרטורה',s1_title:'טמפרטורת לילה',s1_desc:'סטייה מקו הבסיס שלך הלילה האחרון.',s1_l1:'סטייה',s1_l2:'התעוררת בשל חום?',s1_l3:'כמה פעמים בשבוע?',
@@ -3170,7 +3212,7 @@ const T={
     energy_low:'1 — ללא אנרגיה',energy_high:'10 — מלא/ת אנרגיה',stress_mild:'מתון',stress_high:'עצים',
     next:'← הבא',show_result:'← הצג תוצאה',result_eyebrow:'ניתוח VIA‑L',readiness:'מוכנות',doctor_title:'⚠ ייעוץ רפואי',lab_title:'🧪 בדיקות מומלצות',
     max_title:'הערכת המומחה שלך',max_desc:'שלח/י בקשה — הדיאטנית תכין הערכה אישית כתובה של הפרופיל שלך תוך 48 שעות.',max_btn:'← שלח/י בקשה לדיאטנית',max_placeholder:'השאלה שלך או מה שברצונך להבהיר...',max_sent:'✓ הבקשה נשלחה! תשובה תוך 48 שעות.',
-    cta_title:'רוצה אסטרטגיה אישית?',cta_desc:'ננתח את הנתונים שלך ונכין פרוטוקול.',restart:'התחל מחדש',book:'← קבע פגישה',pdf_btn:'📄 הורד דו"ח PDF',
+    cta_title:'רוצה אסטרטגיה אישית?',cta_desc:'ננתח את הנתונים שלך ונכין פרוטוקול.',cta_f1:'ניתוח אישי של המדדים שלך',cta_f2:'פרוטוקול תזונה לשלב ההורמונלי שלך',cta_f3:'תוספים עם מינונים מדויקים',restart:'התחל מחדש',book:'← קבע פגישה',pdf_btn:'📄 הורד דו"ח PDF',cta_max_title:'רוצה פרוטוקול אישי?',cta_max_desc:'שדרג ל-Maximum — קבל ניתוח מקצועי בכתב בשפתך תוך 48 שעות.',cta_max_f1:'ניתוח תזונאי בכתב',cta_max_f2:'פרוטוקול לשלב ההורמונלי שלך',cta_max_f3:'תוספים ומינונים אישיים',cta_max_book:'← שדרג ל-Maximum',
     disclaimer:'כלי זה הוא למידע בלבד.',tagline:'חיה. לא רק קיים/ת.',back_home:'→ חזרה',step_of:'שלב {n} מתוך 15',your_result:'התוצאה שלך',
     res_good_title:'התאוששות טובה',res_good_sub:'המדדים שלך חיוביים.',res_warn_title:'דורש תשומת לב',res_warn_sub:'גופך זקוק לתמיכה.',res_alert_title:'תמיכה נחוצה',res_alert_sub:'גופך תחת עומס.',
     doc_reason_hrv:'HRV נמוך באופן כרוני',doc_reason_temp:'הזעות לילה יומיומיות',doc_reason_rhr:'דופק גבוה + דפיקות לב',doc_reason_thyroid:'טמפרטורה נמוכה + עייפות',doc_prefix:'אנו ממליצים להתייעץ עם מומחה: ',
@@ -3185,7 +3227,7 @@ const T={
     gate_sub:'PRO アクセス · サポートプログラム',gate_title:'アクセスコードを入力してください',gate_desc:'コードはVIA‑Lガイドに含まれています。',gate_error:'無効なコードです。',gate_btn:'入る →',preview_label:'アクセスコードを入力してください',
     hero_badge:'個人分析 · VIA‑L',hero_title:'ウェアラブルデバイス向け<br><em>データ解析ツール</em>',hero_desc:'Oura Menopause Insights（Gen3 & Ring 4）対応 · Garmin · Polar · Apple Watch → 栄養アドバイス。',hero_tier_label:'⭐ PROバージョン',
     nav_today:'今日',nav_history:'履歴',nav_consult:'相談',history_title:'セッション履歴',history_empty:'保存されたセッションはありません。',
-    s_prof_badge:'00 / 15 · プロフィール',s_prof_title:'あなたのプロフィール',s_prof_desc:'ホルモンの段階がすべての指標の解釈に影響します。',s_prof_l1:'性別',s_prof_l2:'段階（女性）',s_prof_l3:'段階（男性）',s_prof_l4:'あなたのデバイス',oura_note:'✦ Oura Menopause Insights 対応',
+    s_prof_badge:'00 / 15 · プロフィール',s_prof_title:'あなたのプロフィール',s_prof_desc:'ホルモンの段階がすべての指標の解釈に影響します。',s_prof_l1:'性別',s_prof_l2:'段階（女性）',s_prof_l3:'段階（男性）',s_prof_l4:'あなたのデバイス',oura_note:'✦ Oura Menopause Insights 対応',s_prof_age:'年齢',s_prof_weight:'体重 (kg)',s_prof_height:'身長 (cm)',
     gender_f:'👩 女性',gender_m:'👨 男性',phase_peri:'更年期前期',phase_meno:'更年期',phase_post:'更年期後期',phase_andro:'アンドロポーズ',phase_preandro:'プレアンドロポーズ',phase_other:'その他',
     s0_badge:'01 / 15 · HRV',s0_title:'心拍変動',s0_desc:'HRVはあなたのストレス対処能力を示します。',s0_l1:'今日のHRV',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'ベースラインとの比較',s0_l3:'継続期間',
     s1_badge:'02 / 15 · 体温',s1_title:'夜間体温',s1_desc:'昨夜のベースラインからの偏差。',s1_l1:'偏差',s1_l2:'暑さで目が覚めましたか？',s1_l3:'週に何回？',
@@ -3201,7 +3243,7 @@ const T={
     energy_low:'1 — エネルギーなし',energy_high:'10 — 元気いっぱい',stress_mild:'軽度',stress_high:'強度',
     next:'次へ →',show_result:'結果を表示 →',result_eyebrow:'VIA‑L分析',readiness:'準備度',doctor_title:'⚠ 医療相談',lab_title:'🧪 推奨検査',
     max_title:'あなたの専門家評価',max_desc:'リクエストを送信してください — 栄養士があなたのプロフィールの個人的な評価を48時間以内に準備します。',max_btn:'栄養士にリクエストを送る →',max_placeholder:'ご質問または確認したいこと...',max_sent:'✓ リクエストが送信されました！48時間以内に回答します。',
-    cta_title:'個人的な戦略が必要ですか？',cta_desc:'データを分析してプロトコルを作成します。',restart:'もう一度',book:'予約する →',pdf_btn:'📄 PDFレポートをダウンロード',
+    cta_title:'個人的な戦略が必要ですか？',cta_desc:'データを分析してプロトコルを作成します。',cta_f1:'あなたの指標の個別分析',cta_f2:'ホルモン段階に合わせた栄養プロトコル',cta_f3:'正確な用量のサプリメント',restart:'もう一度',book:'予約する →',pdf_btn:'📄 PDFレポートをダウンロード',cta_max_title:'パーソナライズされたプロトコルをご希望ですか？',cta_max_desc:'Maximumにアップグレード — 48時間以内にあなたの言語で専門家の書面分析を取得。',cta_max_f1:'栄養士による書面分析',cta_max_f2:'ホルモン段階に合わせたプロトコル',cta_max_f3:'個別サプリメントと用量',cta_max_book:'Maximumにアップグレード →',
     disclaimer:'このツールは情報提供のみを目的としています。',tagline:'生きる。ただ存在するだけでなく。',back_home:'← 戻る',step_of:'ステップ {n} / 15',your_result:'あなたの結果',
     res_good_title:'良好な回復',res_good_sub:'あなたの指標は良好です。',res_warn_title:'注意が必要',res_warn_sub:'あなたの体はサポートを必要としています。',res_alert_title:'サポートが必要',res_alert_sub:'あなたの体は負荷を受けています。',
     doc_reason_hrv:'慢性的な低HRV',doc_reason_temp:'毎日の寝汗',doc_reason_rhr:'高い心拍数＋動悸',doc_reason_thyroid:'低体温＋疲労',doc_prefix:'専門家への相談をお勧めします：',
@@ -3216,7 +3258,7 @@ const T={
     gate_sub:'PRO 접근 · 지원 프로그램',gate_title:'접근 코드를 입력하세요',gate_desc:'코드는 VIA‑L 가이드에 포함되어 있습니다.',gate_error:'유효하지 않은 코드입니다.',gate_btn:'입장 →',preview_label:'접근 코드를 입력하세요',
     hero_badge:'개인 분석 · VIA‑L',hero_title:'웨어러블 기기를 위한<br><em>데이터 분석 도구</em>',hero_desc:'Oura Menopause Insights (Gen3 & Ring 4) 호환 · Garmin · Polar · Apple Watch → 영양 권장 사항.',hero_tier_label:'⭐ PRO 버전',
     nav_today:'오늘',nav_history:'기록',nav_consult:'상담',history_title:'세션 기록',history_empty:'저장된 세션이 없습니다.',
-    s_prof_badge:'00 / 15 · 프로필',s_prof_title:'나의 프로필',s_prof_desc:'호르몬 단계는 모든 지표 해석에 영향을 미칩니다.',s_prof_l1:'성별',s_prof_l2:'단계 (여성)',s_prof_l3:'단계 (남성)',s_prof_l4:'나의 기기',oura_note:'✦ Oura Menopause Insights 지원',
+    s_prof_badge:'00 / 15 · 프로필',s_prof_title:'나의 프로필',s_prof_desc:'호르몬 단계는 모든 지표 해석에 영향을 미칩니다.',s_prof_l1:'성별',s_prof_l2:'단계 (여성)',s_prof_l3:'단계 (남성)',s_prof_l4:'나의 기기',oura_note:'✦ Oura Menopause Insights 지원',s_prof_age:'나이',s_prof_weight:'몸무게 (kg)',s_prof_height:'키 (cm)',
     gender_f:'👩 여성',gender_m:'👨 남성',phase_peri:'갱년기 전기',phase_meno:'갱년기',phase_post:'갱년기 후기',phase_andro:'남성 갱년기',phase_preandro:'남성 갱년기 전기',phase_other:'기타',
     s0_badge:'01 / 15 · HRV',s0_title:'심박 변동성',s0_desc:'HRV는 신체의 스트레스 대응 능력을 보여줍니다.',s0_l1:'오늘의 HRV',s0_low:'10 ms',s0_high:'120 ms',s0_hint:'Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch → HRV',s0_l2:'기준선 대비',s0_l3:'지속 기간',
     s1_badge:'02 / 15 · 체온',s1_title:'야간 체온',s1_desc:'지난밤 기준선으로부터의 편차.',s1_l1:'편차',s1_l2:'더위로 잠이 깼나요?',s1_l3:'주당 몇 번?',
@@ -3232,7 +3274,7 @@ const T={
     energy_low:'1 — 에너지 없음',energy_high:'10 — 활기참',stress_mild:'보통',stress_high:'심함',
     next:'다음 →',show_result:'결과 보기 →',result_eyebrow:'VIA‑L 분석',readiness:'준비도',doctor_title:'⚠ 의료 상담',lab_title:'🧪 권장 검사',
     max_title:'전문가 평가',max_desc:'요청을 보내세요 — 영양사가 48시간 이내에 귀하의 프로필에 대한 개인 서면 평가를 준비합니다.',max_btn:'영양사에게 요청 보내기 →',max_placeholder:'질문 또는 확인하고 싶은 것...',max_sent:'✓ 요청이 전송되었습니다! 48시간 이내에 답변 드립니다.',
-    cta_title:'개인 맞춤 전략이 필요하신가요?',cta_desc:'데이터를 분석하고 프로토콜을 작성합니다.',restart:'다시 시작',book:'예약하기 →',pdf_btn:'📄 PDF 보고서 다운로드',
+    cta_title:'개인 맞춤 전략이 필요하신가요?',cta_desc:'데이터를 분석하고 프로토콜을 작성합니다.',cta_f1:'지표에 대한 개인 분석',cta_f2:'호르몬 단계를 위한 영양 프로토콜',cta_f3:'정확한 복용량의 보충제',restart:'다시 시작',book:'예약하기 →',pdf_btn:'📄 PDF 보고서 다운로드',cta_max_title:'개인화된 프로토콜을 원하시나요?',cta_max_desc:'Maximum으로 업그레이드 — 48시간 이내에 귀하의 언어로 전문가 서면 분석을 받으세요.',cta_max_f1:'영양사 서면 분석',cta_max_f2:'귀하의 호르몬 단계를 위한 프로토콜',cta_max_f3:'개인화된 보충제 및 복용량',cta_max_book:'Maximum으로 업그레이드 →',
     disclaimer:'이 도구는 정보 제공 목적으로만 사용됩니다.',tagline:'살아가세요. 단순히 존재하는 것이 아니라.',back_home:'← 뒤로',step_of:'{n}단계 / 15',your_result:'나의 결과',
     res_good_title:'좋은 회복',res_good_sub:'지표가 긍정적입니다.',res_warn_title:'주의 필요',res_warn_sub:'신체가 지원을 필요로 합니다.',res_alert_title:'지원 필요',res_alert_sub:'신체가 부하를 받고 있습니다.',
     doc_reason_hrv:'만성적으로 낮은 HRV',doc_reason_temp:'매일 밤 식은땀',doc_reason_rhr:'높은 심박수 + 두근거림',doc_reason_thyroid:'낮은 체온 + 피로',doc_prefix:'전문가 상담을 권장합니다: ',
@@ -3281,6 +3323,12 @@ function setLang(l){
     const k=el.getAttribute('data-t-placeholder');
     if(T[l][k]!==undefined)el.placeholder=T[l][k];
   });
+  // CTA block: RU/UK → Marina, other languages → Максимум upsell
+  const isLocal=(l==='ru'||l==='uk');
+  const ctaMarina=document.getElementById('cta-marina');
+  const ctaMax=document.getElementById('cta-max');
+  if(ctaMarina)ctaMarina.style.display=isLocal?'block':'none';
+  if(ctaMax)ctaMax.style.display=isLocal?'none':'block';
   document.getElementById('langDropdown').classList.remove('open');
   initSliders();
 }
@@ -3299,6 +3347,9 @@ document.querySelectorAll('input[name=gender]').forEach(el=>{
     const male=el.value==='male';
     document.getElementById('phase-female').style.display=male?'none':'block';
     document.getElementById('phase-male').style.display=male?'block':'none';
+    // Hot flash section — females only
+    const hfSec=document.getElementById('hf-section');
+    if(hfSec)hfSec.style.display=male?'none':'block';
     // PRO: update step 7 hormone symptoms
     const hf=document.getElementById('horm-female-symp');
     const hm=document.getElementById('horm-male-symp');
@@ -3441,16 +3492,12 @@ document.querySelectorAll('input[name="hf_count"]').forEach(r=>{
 
 // ══ NAVIGATION ════════════════════════════════════════════
 function goTo(n){
+  const sa=document.getElementById('scroll-area');
+  if(sa) sa.scrollTop = 0;
   document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
   const target = document.getElementById(n==='result'?'stepResult':'step'+n);
   if(target) target.classList.add('active');
   updateProgress(n);
-  // Small delay ensures DOM is updated before scroll
-  setTimeout(()=>{
-    const sa=document.getElementById('scroll-area');
-    if(sa) sa.scrollTop = 0;
-    else window.scrollTo(0,0);
-  }, 50);
 }
 function updateProgress(n){
   const lbl=document.getElementById('progressLbl');
@@ -3479,6 +3526,8 @@ function restart(){
   document.getElementById('labCard').style.display='none';
   document.getElementById('phase-female').style.display='block';
   document.getElementById('phase-male').style.display='none';
+  const hfSec=document.getElementById('hf-section');if(hfSec)hfSec.style.display='block';
+  ['prof-age','prof-weight','prof-height'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
 }
 function getRadio(n){const el=document.querySelector(`input[name="${n}"]:checked`);return el?el.value:null;}
 function getChecked(ids){return ids.filter(id=>document.getElementById(id)?.checked).map(id=>document.getElementById(id).value);}
@@ -3995,6 +4044,9 @@ function _showResultsInner(){
   const data={
     gender:getRadio('gender')||'female',
     phase:getRadio('phase')||'peri',
+    age:parseInt(document.getElementById('prof-age')?.value)||null,
+    weight:parseFloat(document.getElementById('prof-weight')?.value)||null,
+    height:parseFloat(document.getElementById('prof-height')?.value)||null,
     hrv:+document.getElementById('hrv').value,
     hrv_trend:getRadio('hrv_trend'),hrv_dur:getRadio('hrv_dur'),
     temp:getRadio('temp'),hotflash:getRadio('hotflash'),hotfreq:getRadio('hotfreq'),

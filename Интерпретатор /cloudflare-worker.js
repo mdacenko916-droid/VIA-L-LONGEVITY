@@ -71,6 +71,8 @@ function buildPrompt(data, lang) {
 
 ДАННЫЕ КЛИЕНТА:
 - Пол: ${isFem ? 'Женщина' : 'Мужчина'}, Фаза: ${phaseMap[data.phase] || data.phase}
+${data.age ? `- Возраст: ${data.age} лет` : ''}
+${data.weight && data.height ? `- Вес: ${data.weight} кг | Рост: ${data.height} см` : data.weight ? `- Вес: ${data.weight} кг` : data.height ? `- Рост: ${data.height} см` : ''}
 - HRV: ${data.hrv} мс (тренд: ${data.hrv_trend === 'below' ? 'ниже нормы' : data.hrv_trend === 'above' ? 'выше нормы' : 'в норме'})
 - Сон: ${data.sleep_qual}/10 | Глубокий: ${data.deep} | Пробуждения: ${data.wake}
 - Приливы за ночь: ${data.hf_count === 'none' ? 'нет' : data.hf_count === 'low' ? '1–2' : data.hf_count === 'mid' ? '3–5' : '6+'} ${data.hf_intensity ? '| Интенсивность: ' + data.hf_intensity : ''}
