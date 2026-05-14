@@ -5005,13 +5005,15 @@ async function fetchAIAnalysis(data, lang) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ data, lang }),
     });
-    const json = await res.json();
+    const rawText = await res.text();
+    let json;
+    try { json = JSON.parse(rawText); } catch(pe) { json = { raw: rawText }; }
     if (json.analysis) {
       result.textContent = json.analysis;
       loading.style.display = 'none';
       result.style.display = 'block';
     } else {
-      throw new Error(json.error || 'No response');
+      throw new Error('HTTP ' + res.status + ' | ' + rawText.slice(0, 300));
     }
   } catch (e) {
     loading.style.display = 'none';
