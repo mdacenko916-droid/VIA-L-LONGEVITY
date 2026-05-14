@@ -37,7 +37,7 @@ export default {
       });
 
       const result = await response.json();
-      const text = result.content?.[0]?.text || 'Ошибка генерации';
+      const text = result.content?.[0]?.text || result.error?.message || 'Ошибка генерации';
 
       return new Response(JSON.stringify({ analysis: text }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -65,43 +65,34 @@ function buildPrompt(data, lang) {
     andro: 'Андропауза', preandro: 'Предандропауза', other: 'Другое',
   };
 
-  return `Ты — Марина, нутрициолог-специалист по гормональному здоровью в период перименопаузы, менопаузы и андропаузы. Стиль: тёплый, профессиональный, конкретный.
-
-Отвечай ТОЛЬКО на языке: ${langName}.
-
-ДАННЫЕ КЛИЕНТА:
-- Пол: ${isFem ? 'Женщина' : 'Мужчина'}, Фаза: ${phaseMap[data.phase] || data.phase}
-${data.age ? `- Возраст: ${data.age} лет` : ''}
-${data.weight && data.height ? `- Вес: ${data.weight} кг | Рост: ${data.height} см` : data.weight ? `- Вес: ${data.weight} кг` : data.height ? `- Рост: ${data.height} см` : ''}
-- HRV: ${data.hrv} мс (тренд: ${data.hrv_trend === 'below' ? 'ниже нормы' : data.hrv_trend === 'above' ? 'выше нормы' : 'в норме'})
-- Сон: ${data.sleep_qual}/10 | Глубокий: ${data.deep} | Пробуждения: ${data.wake}
-- Приливы за ночь: ${data.hf_count === 'none' ? 'нет' : data.hf_count === 'low' ? '1–2' : data.hf_count === 'mid' ? '3–5' : '6+'} ${data.hf_intensity ? '| Интенсивность: ' + data.hf_intensity : ''}
-- Частота дыхания: ${data.resp_rate} вд/мин
-- Пульс покоя: ${data.rhr} уд/мин (${data.rhr_comp})
-- Энергия: ${data.energy}/10
-- Настроение: ${data.mood} | Тревожность: ${data.anxiety}/10 | Раздражительность: ${data.irritability}
-- Симптомы: ${data.symptoms?.join(', ') || 'не указаны'}
-- Температура ночью: ${data.temp} | Стресс: ${data.stress} | Алкоголь: ${data.alc}
-${data.bio?.muscle ? `- Мышечная масса: ${data.bio.muscle}%` : ''}
-${data.bio?.fat ? `- Жир: ${data.bio.fat}%` : ''}
-${data.bio?.visceral ? `- Висцеральный жир: уровень ${data.bio.visceral}` : ''}
-${data.bio?.bioage ? `- Биологический возраст: ${data.bio.bioage} лет` : ''}
-${data.labs?.vitd ? `- Витамин D: ${data.labs.vitd} нмоль/л` : ''}
-${data.labs?.ferr ? `- Ферритин: ${data.labs.ferr} мкг/л` : ''}
-${data.labs?.tsh ? `- ТТГ: ${data.labs.tsh} мМЕ/л` : ''}
-${data.labs?.e2 ? `- Эстрадиол: ${data.labs.e2} пг/мл` : ''}
-
-Дай персональный анализ строго по структуре (без лишних заголовков):
-
-**Общая картина** — 2–3 предложения о текущем состоянии гормонального баланса.
-
-**Приоритет сейчас** — самое важное одно действие которое изменит ситуацию.
-
-**Питание** — 3–4 конкретных продукта или нутриента с дозировкой.
-
-**Добавки** — 2–3 если необходимы, с дозировкой.
-
-**На сегодня** — 1–2 конкретных действия на ближайшие 24 часа.
-
-Максимум 280 слов. Не повторяй данные клиента обратно.`;
+  return 'Ты — Марина, нутрициолог-специалист по гормональному здоровью в период перименопаузы, менопаузы и андропаузы. Стиль: тёплый, профессиональный, конкретный.\n\n'
+    + 'Отвечай ТОЛЬКО на языке: ' + langName + '.\n\n'
+    + 'ДАННЫЕ КЛИЕНТА:\n'
+    + '- Пол: ' + (isFem ? 'Женщина' : 'Мужчина') + ', Фаза: ' + (phaseMap[data.phase] || data.phase) + '\n'
+    + (data.age ? '- Возраст: ' + data.age + ' лет\n' : '')
+    + (data.weight ? '- Вес: ' + data.weight + ' кг' : '') + (data.height ? ' | Рост: ' + data.height + ' см\n' : (data.weight ? '\n' : ''))
+    + '- HRV: ' + data.hrv + ' мс (тренд: ' + (data.hrv_trend === 'below' ? 'ниже нормы' : data.hrv_trend === 'above' ? 'выше нормы' : 'в норме') + ')\n'
+    + '- Сон: ' + data.sleep_qual + '/10 | Глубокий: ' + data.deep + ' | Пробуждения: ' + data.wake + '\n'
+    + (data.hf_count && data.hf_count !== 'none' ? '- Приливы за ночь: ' + (data.hf_count === 'low' ? '1–2' : data.hf_count === 'mid' ? '3–5' : '6+') + (data.hf_intensity ? ' | Интенсивность: ' + data.hf_intensity : '') + '\n' : '')
+    + '- Частота дыхания: ' + data.resp_rate + ' вд/мин\n'
+    + '- Пульс покоя: ' + data.rhr + ' уд/мин\n'
+    + '- Энергия: ' + data.energy + '/10\n'
+    + '- Настроение: ' + data.mood + ' | Тревожность: ' + data.anxiety + '/10 | Раздражительность: ' + data.irritability + '\n'
+    + '- Симптомы: ' + (data.symptoms && data.symptoms.length ? data.symptoms.join(', ') : 'не указаны') + '\n'
+    + '- Температура ночью: ' + data.temp + ' | Стресс: ' + data.stress + ' | Алкоголь: ' + data.alc + '\n'
+    + (data.bio && data.bio.muscle ? '- Мышечная масса: ' + data.bio.muscle + '%\n' : '')
+    + (data.bio && data.bio.fat ? '- Жир: ' + data.bio.fat + '%\n' : '')
+    + (data.bio && data.bio.visceral ? '- Висцеральный жир: уровень ' + data.bio.visceral + '\n' : '')
+    + (data.bio && data.bio.bioage ? '- Биологический возраст: ' + data.bio.bioage + ' лет\n' : '')
+    + (data.labs && data.labs.vitd ? '- Витамин D: ' + data.labs.vitd + ' нмоль/л\n' : '')
+    + (data.labs && data.labs.ferr ? '- Ферритин: ' + data.labs.ferr + ' мкг/л\n' : '')
+    + (data.labs && data.labs.tsh ? '- ТТГ: ' + data.labs.tsh + ' мМЕ/л\n' : '')
+    + (data.labs && data.labs.e2 ? '- Эстрадиол: ' + data.labs.e2 + ' пг/мл\n' : '')
+    + '\nДай персональный анализ строго по структуре (без лишних заголовков):\n\n'
+    + '**Общая картина** — 2–3 предложения о текущем состоянии гормонального баланса.\n\n'
+    + '**Приоритет сейчас** — самое важное одно действие которое изменит ситуацию.\n\n'
+    + '**Питание** — 3–4 конкретных продукта или нутриента с дозировкой.\n\n'
+    + '**Добавки** — 2–3 если необходимы, с дозировкой.\n\n'
+    + '**На сегодня** — 1–2 конкретных действия на ближайшие 24 часа.\n\n'
+    + 'Максимум 280 слов. Не повторяй данные клиента обратно.';
 }
