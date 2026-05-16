@@ -543,6 +543,31 @@ footer a:hover { color: var(--gold); }
 @media (max-width: 400px) {
   .devices-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ── LANG SWITCHER ── */
+.lang-wrap { position: relative; }
+.lang-btn {
+  background: none; border: 1px solid rgba(196,150,60,.2);
+  border-radius: 6px; padding: 5px 10px;
+  font-size: 14px; cursor: pointer; color: var(--t2);
+  transition: border-color .2s, color .2s;
+}
+.lang-btn:hover { border-color: rgba(196,150,60,.5); color: var(--gold); }
+.lang-drop {
+  position: absolute; right: 0; top: calc(100% + 8px);
+  background: var(--dark3); border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px; padding: 6px;
+  display: none; z-index: 200; min-width: 150px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.5);
+}
+.lang-wrap.open .lang-drop { display: block; }
+.lang-opt {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px; border-radius: 6px;
+  font-size: 12px; color: var(--t2); cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.lang-opt:hover, .lang-opt.active { background: rgba(196,150,60,.12); color: var(--t1); }
 </style>
 </head>
 <body>
@@ -560,22 +585,39 @@ footer a:hover { color: var(--gold); }
       <span class="logo-lon">Longevity</span>
     </div>
     <div class="logo-divider"></div>
-    <span class="logo-title">Інтерпретатор</span>
+    <span class="logo-title" data-t="logo_title">Інтерпретатор</span>
   </a>
   <nav class="header-nav">
-    <a href="../index.html">← Сайт</a>
-    <a href="#plans">Тарифи</a>
-    <a href="../cabinet/index.html">Кабінет</a>
+    <a href="../index.html" data-t="nav_site">← Сайт</a>
+    <a href="#plans" data-t="nav_plans">Тарифи</a>
+    <a href="../cabinet/index.html" data-t="nav_cabinet">Кабінет</a>
   </nav>
+  <div class="lang-wrap" id="langWrap">
+    <button class="lang-btn" id="langBtn" onclick="toggleLangDrop()">🇺🇦</button>
+    <div class="lang-drop" id="langDrop">
+      <div class="lang-opt" onclick="setLang('ru')">🇷🇺 Русский</div>
+      <div class="lang-opt active" onclick="setLang('uk')">🇺🇦 Українська</div>
+      <div class="lang-opt" onclick="setLang('en')">🇬🇧 English</div>
+      <div class="lang-opt" onclick="setLang('es')">🇪🇸 Español</div>
+      <div class="lang-opt" onclick="setLang('de')">🇩🇪 Deutsch</div>
+      <div class="lang-opt" onclick="setLang('pt')">🇧🇷 Português</div>
+      <div class="lang-opt" onclick="setLang('fr')">🇫🇷 Français</div>
+      <div class="lang-opt" onclick="setLang('pl')">🇵🇱 Polski</div>
+      <div class="lang-opt" onclick="setLang('it')">🇮🇹 Italiano</div>
+      <div class="lang-opt" onclick="setLang('he')">🇮🇱 עברית</div>
+      <div class="lang-opt" onclick="setLang('ja')">🇯🇵 日本語</div>
+      <div class="lang-opt" onclick="setLang('ko')">🇰🇷 한국어</div>
+    </div>
+  </div>
 </header>
 
 <!-- HERO -->
 <section class="hero">
   <div class="wrap">
-    <div class="hero-badge">Персональний аналіз біопоказників · VIA·L</div>
-    <h1 class="hero-h1">Ваш трекер<br><em>говорить</em> більше,<br>ніж ви думаєте</h1>
-    <p class="hero-sub">Завантажте дані свого пристрою і отримайте нутриціологічну інтерпретацію показників здоров'я</p>
-    <div style="margin-top:16px;display:inline-flex;align-items:center;gap:8px;background:rgba(184,146,74,0.12);border:1px solid rgba(184,146,74,0.3);border-radius:50px;padding:8px 18px;font-size:12px;color:#b8924a;letter-spacing:0.5px;">
+    <div class="hero-badge" data-t="hero_badge">Персональний аналіз біопоказників · VIA·L</div>
+    <h1 class="hero-h1" data-t="hero_h1">Ваш трекер<br><em>говорить</em> більше,<br>ніж ви думаєте</h1>
+    <p class="hero-sub" data-t="hero_sub">Завантажте дані свого пристрою і отримайте нутриціологічну інтерпретацію показників здоров'я</p>
+    <div style="margin-top:16px;display:inline-flex;align-items:center;gap:8px;background:rgba(184,146,74,0.12);border:1px solid rgba(184,146,74,0.3);border-radius:50px;padding:8px 18px;font-size:12px;color:#b8924a;letter-spacing:0.5px;" data-t="hero_oura">
       ✦ Сумісний з Oura Menopause Insights · Gen3 & Ring 4
     </div>
   </div>
@@ -584,7 +626,7 @@ footer a:hover { color: var(--gold); }
 <!-- DEVICES -->
 <section class="devices-section">
   <div class="wrap">
-    <div class="section-label">Оберіть ваш пристрій</div>
+    <div class="section-label" data-t="section_devices">Оберіть ваш пристрій</div>
     <div class="devices-grid" id="devicesGrid"></div>
   </div>
 </section>
@@ -592,17 +634,17 @@ footer a:hover { color: var(--gold); }
 <!-- PLANS -->
 <section class="plans-section" id="plans">
   <div class="wrap">
-    <h2 class="plans-title">Три рівні аналізу</h2>
-    <p class="plans-sub">Починай безкоштовно — поглиблюй коли готовий.</p>
+    <h2 class="plans-title" data-t="plans_title">Три рівні аналізу</h2>
+    <p class="plans-sub" data-t="plans_sub">Починай безкоштовно — поглиблюй коли готовий.</p>
     <div class="plans-grid">
 
       <!-- V10 FREE -->
       <div class="plan-card plan-free">
-        <div class="plan-eyebrow">Безкоштовно</div>
+        <div class="plan-eyebrow" data-t="plan_free_eye">Безкоштовно</div>
         <div class="plan-name">V10</div>
-        <div class="plan-price">Завжди безкоштовно</div>
-        <div class="plan-steps">7 кроків аналізу</div>
-        <ul class="plan-features">
+        <div class="plan-price" data-t="plan_free_price">Завжди безкоштовно</div>
+        <div class="plan-steps" data-t="plan_free_steps">7 кроків аналізу</div>
+        <ul class="plan-features" data-t="plan_free_feat">
           <li><span class="fi">✓</span> ВСР · Варіабельність ритму серця</li>
           <li><span class="fi">✓</span> Нічне відхилення температури</li>
           <li><span class="fi">✓</span> Якість сну</li>
@@ -612,16 +654,16 @@ footer a:hover { color: var(--gold); }
           <li><span class="fi fi-lock">○</span> <span style="color:var(--t3)">Детальні рекомендації — Pro</span></li>
           <li><span class="fi fi-lock">○</span> <span style="color:var(--t3)">Чат з нутриціологом — Expert</span></li>
         </ul>
-        <button class="plan-btn btn-free" onclick="startV10()">Почати безкоштовно →</button>
+        <button type="button" class="plan-btn btn-free" data-t="plan_free_btn" onclick="startV10()">Почати безкоштовно →</button>
       </div>
 
       <!-- PRO -->
       <div class="plan-card plan-pro">
-        <div class="plan-eyebrow">Підписка</div>
+        <div class="plan-eyebrow" data-t="plan_pro_eye">Підписка</div>
         <div class="plan-name">Pro</div>
-        <div class="plan-price"><strong>$29</strong> / місяць</div>
-        <div class="plan-steps">16 кроків аналізу</div>
-        <ul class="plan-features">
+        <div class="plan-price" data-t="plan_pro_price"><strong>$29</strong> / місяць</div>
+        <div class="plan-steps" data-t="plan_pro_steps">16 кроків аналізу</div>
+        <ul class="plan-features" data-t="plan_pro_feat">
           <li><span class="fi">✓</span> Всі 7 кроків V10</li>
           <li><span class="fi">✓</span> Когнітивні симптоми</li>
           <li><span class="fi">✓</span> Гормональні симптоми</li>
@@ -634,16 +676,16 @@ footer a:hover { color: var(--gold); }
           <li><span class="fi">✓</span> Динаміка та історія</li>
           <li><span class="fi fi-lock">○</span> <span style="color:var(--t3)">Особистий нутриціолог — Expert</span></li>
         </ul>
-        <button class="plan-btn btn-pro" onclick="startPro()">Спробувати Pro →</button>
+        <button type="button" class="plan-btn btn-pro" data-t="plan_pro_btn" onclick="startPro()">Спробувати Pro →</button>
       </div>
 
       <!-- PRO + EXPERT -->
       <div class="plan-card plan-expert">
-        <div class="plan-eyebrow">Максимум</div>
+        <div class="plan-eyebrow" data-t="plan_exp_eye">Максимум</div>
         <div class="plan-name">Pro&nbsp;+ Expert</div>
-        <div class="plan-price"><strong style="color:#7898ff;">$79</strong> / місяць</div>
-        <div class="plan-steps">16 кроків аналізу + живий контакт з нутриціологом</div>
-        <ul class="plan-features">
+        <div class="plan-price" data-t="plan_exp_price"><strong style="color:#7898ff;">$79</strong> / місяць</div>
+        <div class="plan-steps" data-t="plan_exp_steps">16 кроків аналізу + живий контакт з нутриціологом</div>
+        <ul class="plan-features" data-t="plan_exp_feat">
           <li><span class="fi-blue">✓</span> Все з тарифу Pro</li>
           <li><span class="fi-blue">✓</span> Письмовий розбір нутриціолога (1×) — персональний відгук на ваш Oura-профіль</li>
           <li><span class="fi-blue">✓</span> Інтерпретація лабораторних аналізів нутриціологом</li>
@@ -651,7 +693,7 @@ footer a:hover { color: var(--gold); }
           <li><span class="fi-blue">✓</span> Пріоритетний запис на програму ведення</li>
           <li><span class="fi-blue">✓</span> <a href="../cabinet/index.html" class="cab-link">Кабінет нутриціолога</a></li>
         </ul>
-        <button type="button" class="plan-btn btn-expert" onclick="contactExpert()">Отримати Expert-розбір →</button>
+        <button type="button" class="plan-btn btn-expert" data-t="plan_exp_btn" onclick="contactExpert()">Отримати Expert-розбір →</button>
       </div>
 
     </div>
@@ -660,7 +702,7 @@ footer a:hover { color: var(--gold); }
 
 <footer>
   <div class="wrap">
-    <span>© 2025 VIA·L Longevity · <a href="../index.html">Головна</a> · <a href="mailto:via-l@via-l.com">Підтримка</a></span>
+    <span>© 2025 VIA·L Longevity · <a href="../index.html" data-t="footer_home">Головна</a> · <a href="mailto:via-l@via-l.com" data-t="footer_support">Підтримка</a></span>
   </div>
 </footer>
 
@@ -671,49 +713,49 @@ const DEVICES = [
     glbPath: '../Интерпретатор%20/Часы/Oura%20Ring.glb',
     badge: 'best',
     glow: 'rgba(196,150,60,0.45)',
-    metrics: ['ВСР / HRV', 'Температура ночі', 'SpO₂', 'Готовність', 'Menopause Insights ✦']
+    metrics: ['m_hrv', 'm_temp', 'm_spo2', 'm_readiness', 'm_menopause']
   },
   {
     id: 'apple', name: 'Apple Watch', sub: 'Series 9', type: 'glb',
     glbPath: '../Интерпретатор%20/Часы/apple_watch.glb',
     badge: 'best',
     glow: 'rgba(180,190,210,0.35)',
-    metrics: ['ВСР / HRV', 'Сон', 'ЧСС спокою', 'VO₂max', 'ECG']
+    metrics: ['m_hrv', 'm_sleep', 'm_rhr', 'm_vo2', 'm_ecg']
   },
   {
     id: 'garmin', name: 'Garmin', sub: 'Fenix', type: 'glb',
     glbPath: '../Интерпретатор%20/Часы/garmin%20fenix..glb',
     badge: 'good',
     glow: 'rgba(59,127,212,0.35)',
-    metrics: ['ВСР / HRV', 'Сон', 'Стрес', 'VO₂max', 'Body Battery']
+    metrics: ['m_hrv', 'm_sleep', 'm_stress', 'm_vo2', 'm_body_bat']
   },
   {
     id: 'polar', name: 'Polar Flow', sub: 'Vantage', type: 'glb',
     glbPath: '../Интерпретатор%20/Часы/polar%20vantage.glb',
     badge: 'good',
     glow: 'rgba(220,48,64,0.35)',
-    metrics: ['ВСР / HRV', 'Сон', 'ЧСС', 'Тренувальне навантаження', 'Шаги']
+    metrics: ['m_hrv', 'm_sleep', 'm_hr', 'm_training', 'm_steps']
   },
   {
     id: 'samsung', name: 'Samsung', sub: 'Galaxy Watch 5', type: 'glb',
     glbPath: '../Интерпретатор%20/Часы/samsung__galaxy__watch_5.glb',
     badge: 'good',
     glow: 'rgba(20,114,246,0.35)',
-    metrics: ['ВСР / HRV', 'Сон', 'ЧСС', 'SpO₂', 'Шаги']
+    metrics: ['m_hrv', 'm_sleep', 'm_hr', 'm_spo2', 'm_steps']
   },
   {
     id: 'fitbit', name: 'Fitbit', sub: 'Google Health', type: 'glb',
     glbPath: '../Интерпретатор%20/Часы/fitbit%20charge.glb',
     badge: 'good',
     glow: 'rgba(0,184,202,0.35)',
-    metrics: ['Сон', 'ЧСС', 'SpO₂', 'Шаги', 'Стрес']
+    metrics: ['m_sleep', 'm_hr', 'm_spo2', 'm_steps', 'm_stress']
   },
   {
     id: 'whoop', name: 'WHOOP 5.0', sub: 'Strap', type: 'glb',
     glbPath: '../Интерпретатор%20/Часы/whoop%20strap_fit.glb',
     badge: 'best',
     glow: 'rgba(200,215,255,0.6)',
-    metrics: ['ВСР / HRV', 'Сон', 'Відновлення', 'Навантаження', 'Strain']
+    metrics: ['m_hrv', 'm_sleep', 'm_recovery', 'm_load', 'm_strain']
   },
   {
     id: 'xiaomi', name: 'Xiaomi', sub: 'Mi Fitness', type: 'glb',
@@ -727,7 +769,7 @@ const DEVICES = [
     glbPath: '../Интерпретатор%20/Часы/withings%20scanwatch.glb',
     badge: 'good',
     glow: 'rgba(0,168,232,0.35)',
-    metrics: ['ВСР / HRV', 'Сон', 'ЧСС', 'SpO₂', 'Шаги']
+    metrics: ['m_hrv', 'm_sleep', 'm_hr', 'm_spo2', 'm_steps']
   },
   {
     id: 'amazfit', name: 'Amazfit', sub: 'Watch + Ring', type: 'glb2',
@@ -735,16 +777,16 @@ const DEVICES = [
     glbPath2: '../Интерпретатор%20/Часы/Amazfit_ring.glb',
     badge: 'good',
     glow: 'rgba(0,190,170,0.35)',
-    metrics: ['ВСР / HRV', 'Сон', 'ЧСС', 'PAI', 'Стрес']
+    metrics: ['m_hrv', 'm_sleep', 'm_hr', 'm_pai', 'm_stress']
   }
 ];
 
 let selectedDevice = null;
 
 function buildDeviceHTML(d) {
-  const metricsHTML = d.metrics.map(m => `<li>${m}</li>`).join('');
+  const metricsHTML = d.metrics.map(m => `<li>${T[lang][m]||m}</li>`).join('');
   const badgeClass = d.badge === 'best' ? 'badge-best' : 'badge-good';
-  const badgeText = d.badge === 'best' ? '★ Найкращий' : 'Хороший';
+  const badgeText = d.badge === 'best' ? T[lang].badge_best_dev : T[lang].badge_good_dev;
 
   if (d.type === 'glb') {
     const filterStyle = d.glbFilter ? `filter:${d.glbFilter};` : '';
@@ -887,6 +929,144 @@ function goToInterpreter(file) {
 function startV10()      { goToInterpreter('interpreter-v10.html'); }
 function startPro()      { goToInterpreter('interpreter-pro.html'); }
 function contactExpert() { window.location.href = '../index.html#booking'; }
+
+// ── I18N ─────────────────────────────────────────────────
+let lang = 'uk';
+const LANG_FLAGS = {ru:'🇷🇺',uk:'🇺🇦',en:'🇬🇧',es:'🇪🇸',de:'🇩🇪',pt:'🇧🇷',fr:'🇫🇷',pl:'🇵🇱',it:'🇮🇹',he:'🇮🇱',ja:'🇯🇵',ko:'🇰🇷'};
+
+const T = {
+  uk:{
+    logo_title:'Інтерпретатор', nav_site:'← Сайт', nav_plans:'Тарифи', nav_cabinet:'Кабінет',
+    hero_badge:'Персональний аналіз біопоказників · VIA·L',
+    hero_h1:'Ваш трекер<br><em>говорить</em> більше,<br>ніж ви думаєте',
+    hero_sub:'Завантажте дані свого пристрою і отримайте нутриціологічну інтерпретацію показників здоров\'я',
+    hero_oura:'✦ Сумісний з Oura Menopause Insights · Gen3 & Ring 4',
+    section_devices:'Оберіть ваш пристрій',
+    badge_best_dev:'★ Найкращий', badge_good_dev:'Хороший',
+    m_hrv:'ВСР / HRV', m_temp:'Температура ночі', m_spo2:'SpO₂', m_readiness:'Готовність', m_menopause:'Menopause Insights ✦',
+    m_sleep:'Сон', m_hr:'ЧСС', m_rhr:'ЧСС спокою', m_vo2:'VO₂max', m_ecg:'ECG',
+    m_stress:'Стрес', m_steps:'Кроки', m_recovery:'Відновлення', m_load:'Навантаження',
+    m_strain:'Strain', m_training:'Тренувальне навантаження', m_body_bat:'Body Battery', m_pai:'PAI',
+    plans_title:'Три рівні аналізу', plans_sub:'Починай безкоштовно — поглиблюй коли готовий.',
+    plan_free_eye:'Безкоштовно', plan_free_price:'Завжди безкоштовно', plan_free_steps:'7 кроків аналізу',
+    plan_free_feat:'<li><span class="fi">✓</span> ВСР · Варіабельність ритму серця</li><li><span class="fi">✓</span> Нічне відхилення температури</li><li><span class="fi">✓</span> Якість сну</li><li><span class="fi">✓</span> Пульс спокою та самопочуття</li><li><span class="fi">✓</span> Енергія та спосіб життя</li><li><span class="fi">✓</span> Базовий скор (0–100)</li><li><span class="fi fi-lock">○</span> <span style="color:var(--t3)">Детальні рекомендації — Pro</span></li><li><span class="fi fi-lock">○</span> <span style="color:var(--t3)">Чат з нутриціологом — Expert</span></li>',
+    plan_free_btn:'Почати безкоштовно →',
+    plan_pro_eye:'Підписка', plan_pro_price:'<strong>$29</strong> / місяць', plan_pro_steps:'16 кроків аналізу',
+    plan_pro_feat:'<li><span class="fi">✓</span> Всі 7 кроків V10</li><li><span class="fi">✓</span> Когнітивні симптоми</li><li><span class="fi">✓</span> Гормональні симптоми</li><li><span class="fi">✓</span> Харчування і апетит</li><li><span class="fi">✓</span> Фізична активність</li><li><span class="fi">✓</span> Стрес і кортизол</li><li><span class="fi">✓</span> Цикл і репродуктивне здоров\'я</li><li><span class="fi">✓</span> Лабораторні показники</li><li><span class="fi">✓</span> PDF-звіт · Необмежена кількість</li><li><span class="fi">✓</span> Динаміка та історія</li><li><span class="fi fi-lock">○</span> <span style="color:var(--t3)">Особистий нутриціолог — Expert</span></li>',
+    plan_pro_btn:'Спробувати Pro →',
+    plan_exp_eye:'Максимум', plan_exp_price:'<strong style="color:#7898ff;">$79</strong> / місяць', plan_exp_steps:'16 кроків + живий нутриціолог',
+    plan_exp_feat:'<li><span class="fi-blue">✓</span> Все з тарифу Pro</li><li><span class="fi-blue">✓</span> Письмовий розбір нутриціолога (1×)</li><li><span class="fi-blue">✓</span> Інтерпретація лабораторних аналізів</li><li><span class="fi-blue">✓</span> Підбір програми ведення</li><li><span class="fi-blue">✓</span> Пріоритетний запис</li><li><span class="fi-blue">✓</span> <a href="../cabinet/index.html" class="cab-link">Кабінет нутриціолога</a></li>',
+    plan_exp_btn:'Отримати Expert-розбір →',
+    footer_home:'Головна', footer_support:'Підтримка',
+  },
+  ru:{
+    logo_title:'Интерпретатор', nav_site:'← Сайт', nav_plans:'Тарифы', nav_cabinet:'Кабинет',
+    hero_badge:'Персональный анализ биопоказателей · VIA·L',
+    hero_h1:'Ваш трекер<br><em>говорит</em> больше,<br>чем вы думаете',
+    hero_sub:'Загрузите данные вашего устройства и получите нутрициологическую интерпретацию показателей здоровья',
+    hero_oura:'✦ Совместим с Oura Menopause Insights · Gen3 & Ring 4',
+    section_devices:'Выберите ваше устройство',
+    badge_best_dev:'★ Лучший', badge_good_dev:'Хороший',
+    m_hrv:'ВСР / HRV', m_temp:'Температура ночи', m_spo2:'SpO₂', m_readiness:'Готовность', m_menopause:'Menopause Insights ✦',
+    m_sleep:'Сон', m_hr:'ЧСС', m_rhr:'ЧСС покоя', m_vo2:'VO₂max', m_ecg:'ECG',
+    m_stress:'Стресс', m_steps:'Шаги', m_recovery:'Восстановление', m_load:'Нагрузка',
+    m_strain:'Strain', m_training:'Тренировочная нагрузка', m_body_bat:'Body Battery', m_pai:'PAI',
+    plans_title:'Три уровня анализа', plans_sub:'Начинай бесплатно — углубляй когда готов.',
+    plan_free_eye:'Бесплатно', plan_free_price:'Всегда бесплатно', plan_free_steps:'7 шагов анализа',
+    plan_free_feat:'<li><span class="fi">✓</span> ВСР · Вариабельность ритма сердца</li><li><span class="fi">✓</span> Ночное отклонение температуры</li><li><span class="fi">✓</span> Качество сна</li><li><span class="fi">✓</span> Пульс покоя и самочувствие</li><li><span class="fi">✓</span> Энергия и образ жизни</li><li><span class="fi">✓</span> Базовый скор (0–100)</li><li><span class="fi fi-lock">○</span> <span style="color:var(--t3)">Детальные рекомендации — Pro</span></li><li><span class="fi fi-lock">○</span> <span style="color:var(--t3)">Чат с нутрициологом — Expert</span></li>',
+    plan_free_btn:'Начать бесплатно →',
+    plan_pro_eye:'Подписка', plan_pro_price:'<strong>$29</strong> / месяц', plan_pro_steps:'16 шагов анализа',
+    plan_pro_feat:'<li><span class="fi">✓</span> Все 7 шагов V10</li><li><span class="fi">✓</span> Когнитивные симптомы</li><li><span class="fi">✓</span> Гормональные симптомы</li><li><span class="fi">✓</span> Питание и аппетит</li><li><span class="fi">✓</span> Физическая активность</li><li><span class="fi">✓</span> Стресс и кортизол</li><li><span class="fi">✓</span> Цикл и репродуктивное здоровье</li><li><span class="fi">✓</span> Лабораторные показатели</li><li><span class="fi">✓</span> PDF-отчёт · Без ограничений</li><li><span class="fi">✓</span> Динамика и история</li><li><span class="fi fi-lock">○</span> <span style="color:var(--t3)">Личный нутрициолог — Expert</span></li>',
+    plan_pro_btn:'Попробовать Pro →',
+    plan_exp_eye:'Максимум', plan_exp_price:'<strong style="color:#7898ff;">$79</strong> / месяц', plan_exp_steps:'16 шагов + живой нутрициолог',
+    plan_exp_feat:'<li><span class="fi-blue">✓</span> Всё из тарифа Pro</li><li><span class="fi-blue">✓</span> Письменный разбор нутрициолога (1×)</li><li><span class="fi-blue">✓</span> Интерпретация лабораторных анализов</li><li><span class="fi-blue">✓</span> Подбор программы ведения</li><li><span class="fi-blue">✓</span> Приоритетная запись</li><li><span class="fi-blue">✓</span> <a href="../cabinet/index.html" class="cab-link">Кабинет нутрициолога</a></li>',
+    plan_exp_btn:'Получить Expert-разбор →',
+    footer_home:'Главная', footer_support:'Поддержка',
+  },
+  en:{
+    logo_title:'Interpreter', nav_site:'← Site', nav_plans:'Plans', nav_cabinet:'Cabinet',
+    hero_badge:'Personal biomarker analysis · VIA·L',
+    hero_h1:'Your tracker<br><em>tells</em> more<br>than you think',
+    hero_sub:'Upload your device data and get a nutritional interpretation of your health metrics',
+    hero_oura:'✦ Compatible with Oura Menopause Insights · Gen3 & Ring 4',
+    section_devices:'Choose your device',
+    badge_best_dev:'★ Best', badge_good_dev:'Good',
+    m_hrv:'HRV', m_temp:'Night Temperature', m_spo2:'SpO₂', m_readiness:'Readiness', m_menopause:'Menopause Insights ✦',
+    m_sleep:'Sleep', m_hr:'HR', m_rhr:'Resting HR', m_vo2:'VO₂max', m_ecg:'ECG',
+    m_stress:'Stress', m_steps:'Steps', m_recovery:'Recovery', m_load:'Load',
+    m_strain:'Strain', m_training:'Training Load', m_body_bat:'Body Battery', m_pai:'PAI',
+    plans_title:'Three levels of analysis', plans_sub:'Start free — go deeper when ready.',
+    plan_free_eye:'Free', plan_free_price:'Always free', plan_free_steps:'7 analysis steps',
+    plan_free_feat:'<li><span class="fi">✓</span> HRV · Heart Rate Variability</li><li><span class="fi">✓</span> Night temperature deviation</li><li><span class="fi">✓</span> Sleep quality</li><li><span class="fi">✓</span> Resting HR & well-being</li><li><span class="fi">✓</span> Energy & lifestyle</li><li><span class="fi">✓</span> Base score (0–100)</li><li><span class="fi fi-lock">○</span> <span style="color:var(--t3)">Detailed recommendations — Pro</span></li><li><span class="fi fi-lock">○</span> <span style="color:var(--t3)">Chat with nutritionist — Expert</span></li>',
+    plan_free_btn:'Start free →',
+    plan_pro_eye:'Subscription', plan_pro_price:'<strong>$29</strong> / month', plan_pro_steps:'16 analysis steps',
+    plan_pro_feat:'<li><span class="fi">✓</span> All 7 V10 steps</li><li><span class="fi">✓</span> Cognitive symptoms</li><li><span class="fi">✓</span> Hormonal symptoms</li><li><span class="fi">✓</span> Nutrition & appetite</li><li><span class="fi">✓</span> Physical activity</li><li><span class="fi">✓</span> Stress & cortisol</li><li><span class="fi">✓</span> Cycle & reproductive health</li><li><span class="fi">✓</span> Lab markers</li><li><span class="fi">✓</span> PDF report · Unlimited</li><li><span class="fi">✓</span> Trends & history</li><li><span class="fi fi-lock">○</span> <span style="color:var(--t3)">Personal nutritionist — Expert</span></li>',
+    plan_pro_btn:'Try Pro →',
+    plan_exp_eye:'Maximum', plan_exp_price:'<strong style="color:#7898ff;">$79</strong> / month', plan_exp_steps:'16 steps + live nutritionist',
+    plan_exp_feat:'<li><span class="fi-blue">✓</span> Everything in Pro</li><li><span class="fi-blue">✓</span> Written nutritionist review (1×)</li><li><span class="fi-blue">✓</span> Lab results interpretation</li><li><span class="fi-blue">✓</span> Personalised programme selection</li><li><span class="fi-blue">✓</span> Priority booking</li><li><span class="fi-blue">✓</span> <a href="../cabinet/index.html" class="cab-link">Nutritionist cabinet</a></li>',
+    plan_exp_btn:'Get Expert review →',
+    footer_home:'Home', footer_support:'Support',
+  },
+};
+
+// Fill remaining languages from English base with overrides
+['es','de','pt','fr','pl','it','he','ja','ko'].forEach(l => {
+  const nav = {
+    es:{logo_title:'Intérprete',nav_site:'← Sitio',nav_plans:'Planes',nav_cabinet:'Gabinete',hero_badge:'Análisis personal de biomarcadores · VIA·L',hero_h1:'Tu tracker<br><em>dice</em> más<br>de lo que crees',hero_sub:'Carga los datos de tu dispositivo y obtén una interpretación nutricional de tus métricas de salud',hero_oura:'✦ Compatible con Oura Menopause Insights · Gen3 & Ring 4',section_devices:'Elige tu dispositivo',badge_best_dev:'★ Mejor',badge_good_dev:'Bueno',plans_title:'Tres niveles de análisis',plans_sub:'Empieza gratis — profundiza cuando estés listo.',plan_free_eye:'Gratis',plan_free_price:'Siempre gratis',plan_free_steps:'7 pasos de análisis',plan_free_btn:'Empezar gratis →',plan_pro_eye:'Suscripción',plan_pro_price:'<strong>$29</strong> / mes',plan_pro_steps:'16 pasos de análisis',plan_pro_btn:'Probar Pro →',plan_exp_eye:'Máximo',plan_exp_price:'<strong style="color:#7898ff;">$79</strong> / mes',plan_exp_steps:'16 pasos + nutricionista',plan_exp_btn:'Obtener revisión Expert →',footer_home:'Inicio',footer_support:'Soporte',m_hrv:'VFC/HRV',m_temp:'Temp. nocturna',m_sleep:'Sueño',m_hr:'FC',m_rhr:'FC reposo',m_readiness:'Preparación',m_stress:'Estrés',m_steps:'Pasos',m_recovery:'Recuperación',m_load:'Carga',m_training:'Carga entrena.',},
+    de:{logo_title:'Interpreter',nav_site:'← Website',nav_plans:'Tarife',nav_cabinet:'Kabinett',hero_badge:'Persönliche Biomarker-Analyse · VIA·L',hero_h1:'Dein Tracker<br><em>erzählt</em> mehr,<br>als du denkst',hero_sub:'Lade deine Gerätedaten hoch und erhalte eine ernährungsmedizinische Interpretation deiner Gesundheitswerte',hero_oura:'✦ Kompatibel mit Oura Menopause Insights · Gen3 & Ring 4',section_devices:'Wähle dein Gerät',badge_best_dev:'★ Bestes',badge_good_dev:'Gut',plans_title:'Drei Analyseebenen',plans_sub:'Starte kostenlos — vertiefe wenn bereit.',plan_free_eye:'Kostenlos',plan_free_price:'Immer kostenlos',plan_free_steps:'7 Analyseschritte',plan_free_btn:'Kostenlos starten →',plan_pro_eye:'Abo',plan_pro_price:'<strong>$29</strong> / Monat',plan_pro_steps:'16 Analyseschritte',plan_pro_btn:'Pro testen →',plan_exp_eye:'Maximum',plan_exp_price:'<strong style="color:#7898ff;">$79</strong> / Monat',plan_exp_steps:'16 Schritte + Ernährungsberater',plan_exp_btn:'Expert-Analyse →',footer_home:'Startseite',footer_support:'Support',m_hrv:'HRV',m_temp:'Nachttemperatur',m_sleep:'Schlaf',m_hr:'HF',m_rhr:'Ruhe-HF',m_readiness:'Bereitschaft',m_stress:'Stress',m_steps:'Schritte',m_recovery:'Erholung',m_load:'Belastung',m_training:'Trainingsbelastung',},
+    pt:{logo_title:'Intérprete',nav_site:'← Site',nav_plans:'Planos',nav_cabinet:'Gabinete',hero_badge:'Análise pessoal de biomarcadores · VIA·L',hero_h1:'Seu tracker<br><em>diz</em> muito<br>mais do que imagina',hero_sub:'Carregue os dados do seu dispositivo e receba uma interpretação nutricional dos seus indicadores de saúde',hero_oura:'✦ Compatível com Oura Menopause Insights · Gen3 & Ring 4',section_devices:'Escolha seu dispositivo',badge_best_dev:'★ Melhor',badge_good_dev:'Bom',plans_title:'Três níveis de análise',plans_sub:'Comece de graça — aprofunde quando estiver pronto.',plan_free_eye:'Grátis',plan_free_price:'Sempre grátis',plan_free_steps:'7 etapas de análise',plan_free_btn:'Começar grátis →',plan_pro_eye:'Assinatura',plan_pro_price:'<strong>$29</strong> / mês',plan_pro_steps:'16 etapas de análise',plan_pro_btn:'Experimentar Pro →',plan_exp_eye:'Máximo',plan_exp_price:'<strong style="color:#7898ff;">$79</strong> / mês',plan_exp_steps:'16 etapas + nutricionista',plan_exp_btn:'Obter revisão Expert →',footer_home:'Início',footer_support:'Suporte',m_hrv:'VFC/HRV',m_temp:'Temp. noturna',m_sleep:'Sono',m_hr:'FC',m_rhr:'FC repouso',m_readiness:'Prontidão',m_stress:'Estresse',m_steps:'Passos',m_recovery:'Recuperação',m_load:'Carga',m_training:'Carga treino',},
+    fr:{logo_title:'Interpréteur',nav_site:'← Site',nav_plans:'Tarifs',nav_cabinet:'Cabinet',hero_badge:'Analyse personnelle de biomarqueurs · VIA·L',hero_h1:'Votre tracker<br><em>révèle</em> plus<br>que vous ne pensez',hero_sub:'Chargez les données de votre appareil et obtenez une interprétation nutritionnelle de vos indicateurs de santé',hero_oura:'✦ Compatible avec Oura Menopause Insights · Gen3 & Ring 4',section_devices:'Choisissez votre appareil',badge_best_dev:'★ Meilleur',badge_good_dev:'Bon',plans_title:'Trois niveaux d\'analyse',plans_sub:'Commencez gratuitement — approfondissez quand vous êtes prêt.',plan_free_eye:'Gratuit',plan_free_price:'Toujours gratuit',plan_free_steps:'7 étapes d\'analyse',plan_free_btn:'Commencer gratuitement →',plan_pro_eye:'Abonnement',plan_pro_price:'<strong>$29</strong> / mois',plan_pro_steps:'16 étapes d\'analyse',plan_pro_btn:'Essayer Pro →',plan_exp_eye:'Maximum',plan_exp_price:'<strong style="color:#7898ff;">$79</strong> / mois',plan_exp_steps:'16 étapes + nutritionniste',plan_exp_btn:'Obtenir l\'analyse Expert →',footer_home:'Accueil',footer_support:'Support',m_hrv:'VRC/HRV',m_temp:'Temp. nocturne',m_sleep:'Sommeil',m_hr:'FC',m_rhr:'FC repos',m_readiness:'Préparation',m_stress:'Stress',m_steps:'Pas',m_recovery:'Récupération',m_load:'Charge',m_training:'Charge entraîn.',},
+    pl:{logo_title:'Interpreter',nav_site:'← Strona',nav_plans:'Plany',nav_cabinet:'Gabinet',hero_badge:'Personalna analiza biomarkerów · VIA·L',hero_h1:'Twój tracker<br><em>mówi</em> więcej,<br>niż myślisz',hero_sub:'Prześlij dane swojego urządzenia i uzyskaj interpretację żywieniową swoich wskaźników zdrowia',hero_oura:'✦ Kompatybilny z Oura Menopause Insights · Gen3 & Ring 4',section_devices:'Wybierz swoje urządzenie',badge_best_dev:'★ Najlepszy',badge_good_dev:'Dobry',plans_title:'Trzy poziomy analizy',plans_sub:'Zacznij bezpłatnie — pogłębiaj kiedy jesteś gotowy.',plan_free_eye:'Bezpłatny',plan_free_price:'Zawsze bezpłatny',plan_free_steps:'7 kroków analizy',plan_free_btn:'Zacznij bezpłatnie →',plan_pro_eye:'Subskrypcja',plan_pro_price:'<strong>$29</strong> / miesiąc',plan_pro_steps:'16 kroków analizy',plan_pro_btn:'Wypróbuj Pro →',plan_exp_eye:'Maksimum',plan_exp_price:'<strong style="color:#7898ff;">$79</strong> / miesiąc',plan_exp_steps:'16 kroków + dietetyk',plan_exp_btn:'Uzyskaj analizę Expert →',footer_home:'Strona główna',footer_support:'Wsparcie',m_hrv:'HRV',m_temp:'Temp. nocna',m_sleep:'Sen',m_hr:'Tętno',m_rhr:'Tętno spocz.',m_readiness:'Gotowość',m_stress:'Stres',m_steps:'Kroki',m_recovery:'Regeneracja',m_load:'Obciążenie',m_training:'Obciążenie trening.',},
+    it:{logo_title:'Interprete',nav_site:'← Sito',nav_plans:'Piani',nav_cabinet:'Gabinetto',hero_badge:'Analisi personale dei biomarcatori · VIA·L',hero_h1:'Il tuo tracker<br><em>dice</em> più<br>di quanto pensi',hero_sub:'Carica i dati del tuo dispositivo e ottieni un\'interpretazione nutrizionale dei tuoi indicatori di salute',hero_oura:'✦ Compatibile con Oura Menopause Insights · Gen3 & Ring 4',section_devices:'Scegli il tuo dispositivo',badge_best_dev:'★ Migliore',badge_good_dev:'Buono',plans_title:'Tre livelli di analisi',plans_sub:'Inizia gratis — approfondisci quando sei pronto.',plan_free_eye:'Gratuito',plan_free_price:'Sempre gratuito',plan_free_steps:'7 passaggi di analisi',plan_free_btn:'Inizia gratis →',plan_pro_eye:'Abbonamento',plan_pro_price:'<strong>$29</strong> / mese',plan_pro_steps:'16 passaggi di analisi',plan_pro_btn:'Prova Pro →',plan_exp_eye:'Massimo',plan_exp_price:'<strong style="color:#7898ff;">$79</strong> / mese',plan_exp_steps:'16 passaggi + nutrizionista',plan_exp_btn:'Ottieni analisi Expert →',footer_home:'Home',footer_support:'Supporto',m_hrv:'HRV',m_temp:'Temp. notturna',m_sleep:'Sonno',m_hr:'FC',m_rhr:'FC riposo',m_readiness:'Prontezza',m_stress:'Stress',m_steps:'Passi',m_recovery:'Recupero',m_load:'Carico',m_training:'Carico allenamento',},
+    he:{logo_title:'מפענח',nav_site:'← אתר',nav_plans:'תוכניות',nav_cabinet:'קבינט',hero_badge:'ניתוח אישי של ביומרקרים · VIA·L',hero_h1:'הטרקר שלך<br><em>מספר</em> יותר<br>ממה שאתה חושב',hero_sub:'העלה את נתוני המכשיר שלך וקבל פרשנות תזונתית של מדדי הבריאות שלך',hero_oura:'✦ תואם ל-Oura Menopause Insights · Gen3 & Ring 4',section_devices:'בחר את המכשיר שלך',badge_best_dev:'★ מומלץ',badge_good_dev:'טוב',plans_title:'שלושה רמות של ניתוח',plans_sub:'התחל בחינם — העמק כשאתה מוכן.',plan_free_eye:'חינמי',plan_free_price:'תמיד חינמי',plan_free_steps:'7 שלבי ניתוח',plan_free_btn:'התחל בחינם →',plan_pro_eye:'מנוי',plan_pro_price:'<strong>$29</strong> / חודש',plan_pro_steps:'16 שלבי ניתוח',plan_pro_btn:'נסה Pro →',plan_exp_eye:'מקסימום',plan_exp_price:'<strong style="color:#7898ff;">$79</strong> / חודש',plan_exp_steps:'16 שלבים + תזונאי',plan_exp_btn:'קבל ניתוח Expert →',footer_home:'דף הבית',footer_support:'תמיכה',m_hrv:'HRV',m_temp:'טמפ\' לילה',m_sleep:'שינה',m_hr:'דופק',m_rhr:'דופק מנוחה',m_readiness:'מוכנות',m_stress:'לחץ',m_steps:'צעדים',m_recovery:'התאוששות',m_load:'עומס',m_training:'עומס אימון',},
+    ja:{logo_title:'インタープリター',nav_site:'← サイト',nav_plans:'プラン',nav_cabinet:'キャビネット',hero_badge:'個人バイオマーカー分析 · VIA·L',hero_h1:'あなたのトラッカーは<br>あなたが思う以上に<br><em>語っています</em>',hero_sub:'デバイスデータをアップロードして、健康指標の栄養的解釈を受け取ってください',hero_oura:'✦ Oura Menopause Insights · Gen3 & Ring 4 対応',section_devices:'デバイスを選択',badge_best_dev:'★ 最良',badge_good_dev:'良好',plans_title:'3段階の分析',plans_sub:'無料で始めて、準備ができたら深める。',plan_free_eye:'無料',plan_free_price:'常に無料',plan_free_steps:'7ステップ分析',plan_free_btn:'無料で始める →',plan_pro_eye:'サブスクリプション',plan_pro_price:'<strong>$29</strong> / 月',plan_pro_steps:'16ステップ分析',plan_pro_btn:'Pro を試す →',plan_exp_eye:'最大',plan_exp_price:'<strong style="color:#7898ff;">$79</strong> / 月',plan_exp_steps:'16ステップ + 栄養士',plan_exp_btn:'Expert 分析を取得 →',footer_home:'ホーム',footer_support:'サポート',m_hrv:'HRV',m_temp:'夜間体温',m_sleep:'睡眠',m_hr:'心拍',m_rhr:'安静心拍',m_readiness:'準備度',m_stress:'ストレス',m_steps:'歩数',m_recovery:'回復',m_load:'負荷',m_training:'トレーニング負荷',},
+    ko:{logo_title:'인터프리터',nav_site:'← 사이트',nav_plans:'플랜',nav_cabinet:'캐비닛',hero_badge:'개인 바이오마커 분석 · VIA·L',hero_h1:'당신의 트래커가<br><em>말하는</em> 것은<br>생각보다 많습니다',hero_sub:'기기 데이터를 업로드하고 건강 지표에 대한 영양 해석을 받아보세요',hero_oura:'✦ Oura Menopause Insights · Gen3 & Ring 4 호환',section_devices:'기기를 선택하세요',badge_best_dev:'★ 최고',badge_good_dev:'좋음',plans_title:'3단계 분석',plans_sub:'무료로 시작하고 준비되면 깊어지세요.',plan_free_eye:'무료',plan_free_price:'항상 무료',plan_free_steps:'7단계 분석',plan_free_btn:'무료로 시작 →',plan_pro_eye:'구독',plan_pro_price:'<strong>$29</strong> / 월',plan_pro_steps:'16단계 분석',plan_pro_btn:'Pro 시도 →',plan_exp_eye:'최대',plan_exp_price:'<strong style="color:#7898ff;">$79</strong> / 월',plan_exp_steps:'16단계 + 영양사',plan_exp_btn:'Expert 분석 받기 →',footer_home:'홈',footer_support:'지원',m_hrv:'HRV',m_temp:'야간 체온',m_sleep:'수면',m_hr:'심박',m_rhr:'안정 심박',m_readiness:'준비도',m_stress:'스트레스',m_steps:'걸음수',m_recovery:'회복',m_load:'부하',m_training:'훈련 부하',},
+  }[l];
+  // merge with English base, add universal keys
+  T[l] = Object.assign({}, T.en, {
+    m_spo2:'SpO₂', m_vo2:'VO₂max', m_ecg:'ECG', m_menopause:'Menopause Insights ✦',
+    m_strain:'Strain', m_body_bat:'Body Battery', m_pai:'PAI',
+    plan_free_feat: T.en.plan_free_feat,
+    plan_pro_feat: T.en.plan_pro_feat,
+    plan_exp_feat: T.en.plan_exp_feat,
+  }, nav);
+});
+
+function setLang(l) {
+  lang = l;
+  localStorage.setItem('vial_lang', l);
+  document.documentElement.dir = (l === 'he') ? 'rtl' : 'ltr';
+  document.getElementById('langBtn').textContent = LANG_FLAGS[l] || l;
+  document.querySelectorAll('.lang-opt').forEach((o, i) => {
+    const codes = ['ru','uk','en','es','de','pt','fr','pl','it','he','ja','ko'];
+    o.classList.toggle('active', codes[i] === l);
+  });
+  // Apply static translations
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const k = el.getAttribute('data-t');
+    if (T[l] && T[l][k] !== undefined) el.innerHTML = T[l][k];
+  });
+  // Re-render device grid (badges + metrics are in JS)
+  const grid = document.getElementById('devicesGrid');
+  if (grid) grid.innerHTML = DEVICES.map(buildDeviceHTML).join('');
+  // Close dropdown
+  document.getElementById('langWrap').classList.remove('open');
+}
+
+function toggleLangDrop() {
+  document.getElementById('langWrap').classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#langWrap')) {
+    document.getElementById('langWrap').classList.remove('open');
+  }
+});
+
+// Init language from localStorage or default uk
+(function() {
+  const saved = localStorage.getItem('vial_lang') || 'uk';
+  setLang(saved);
+})();
 </script>
 </body>
 </html>
