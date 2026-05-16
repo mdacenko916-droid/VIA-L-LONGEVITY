@@ -277,12 +277,35 @@ body{
   width:100%;
   overflow:hidden;
 }
+/* ── Hide scrollbar ── */
+::-webkit-scrollbar{display:none;}
+*{scrollbar-width:none;-ms-overflow-style:none;}
+
 .hero-eyebrow{
   display:inline-flex;align-items:center;gap:8px;
   font-size:10px;letter-spacing:3px;text-transform:uppercase;
   color:var(--gold);margin-bottom:20px;
 }
-.hero-eyebrow::before,.hero-eyebrow::after{content:'';width:24px;height:1px;background:var(--gold-dim);}
+.hero-eyebrow::before,.hero-eyebrow::after{
+  content:'';width:18px;height:8px;
+  border:1px solid rgba(196,154,60,0.45);
+  border-top:none;border-radius:0 0 18px 18px;
+  background:transparent;margin-top:5px;
+}
+
+/* ── Hero block header (logo + Vio) ── */
+.hero-block-header{
+  display:inline-flex;align-items:center;gap:16px;
+  justify-content:center;margin-bottom:10px;
+}
+.hero-monogram{width:88px;height:90px;margin:28px 0 0;}
+.hero-block-name{
+  font-family:'Playfair Display',serif;
+  font-size:44px;letter-spacing:3px;color:var(--gold);
+  line-height:1;margin-top:28px;
+  animation:logo-breathe 4.5s ease-in-out infinite;
+  text-shadow:0 0 22px rgba(196,154,60,0.55);
+}
 .hero-title{
   font-family:'Playfair Display',serif;
   font-size:clamp(22px,6vw,42px);font-weight:400;
@@ -1089,7 +1112,7 @@ footer{
 }
 
 /* ── Hero VL monogram ── */
-.hero-monogram{width:88px;height:90px;margin:28px auto 10px;}
+/* .hero-monogram moved to hero-block-header section above */
 .hero-monogram svg{
   width:100%;height:100%;
   filter:
@@ -1933,7 +1956,8 @@ footer{
 
 <!-- HERO -->
 <div class="hero">
-  <!-- VL monogram logo below cosmic stripe -->
+  <!-- VL monogram + block name -->
+  <div class="hero-block-header">
   <div class="flare-ring-wrap">
   <div class="hero-monogram">
     <svg viewBox="0 0 335 340" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1953,13 +1977,15 @@ footer{
   <span class="logo-spark" style="--a:180deg;--d:2.4s;--r:-49px"></span>
   <span class="logo-spark" style="--a:240deg;--d:3.2s;--r:-49px"></span>
   <span class="logo-spark" style="--a:300deg;--d:.4s;--r:-49px"></span>
-  </div>
+  </div><!-- /flare-ring-wrap -->
+  <div class="hero-block-name">Vio</div>
+  </div><!-- /hero-block-header -->
+  <div class="hero-badge" style="margin-bottom:18px;"><span data-t="hero_tier_label">📖 Базовая версия</span></div>
   <div class="hero-brand">VIA—L</div>
   <div class="hero-brand-tag">LONGEVITY</div>
   <div class="hero-eyebrow" data-t="hero_badge">Персональный анализ · VIA‑L</div>
   <h1 class="hero-title" data-t="hero_title">Интерпретатор данных<br><em>носимого устройства</em></h1>
   <p class="hero-desc" data-t="hero_desc">Oura Menopause Insights (Gen3 & Ring 4) · Garmin · Polar · Apple Watch → нутрициологические рекомендации.</p>
-  <div class="hero-badge"><span data-t="hero_tier_label">📖 Базовая версия</span></div>
   <div style="margin-top:16px;">
     <button onclick="openImport()" data-t="import_open_btn" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:50px;background:rgba(78,204,163,.1);border:1px solid rgba(78,204,163,.25);color:var(--ok);font-size:12px;font-weight:500;letter-spacing:.5px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;">
       📡 Імпорт із пристрою
