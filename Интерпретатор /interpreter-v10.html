@@ -336,13 +336,15 @@ main{
 .card{
   position:relative;
   border-radius:20px;
-  border:1px solid rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.09);
   padding:24px 18px;
   margin-bottom:12px;
   overflow:hidden;
   width:100%;
+  -webkit-backdrop-filter:blur(16px);
+  backdrop-filter:blur(16px);
   box-shadow:
-    0 1px 0 rgba(255,255,255,.07) inset,
+    0 1px 0 rgba(255,255,255,.08) inset,
     0 -1px 0 rgba(0,0,0,.4) inset,
     0 12px 40px rgba(0,0,0,.5),
     0 2px 8px rgba(0,0,0,.4);
@@ -378,32 +380,32 @@ main{
 .card > *{position:relative;z-index:1;}
 
 /* ── Step 0: HRV — Графитово-фиолетовый ── */
-#step0 .card{background:linear-gradient(145deg,#1A1628 0%,#141020 60%,#120E1E 100%);}
+#step0 .card{background:linear-gradient(145deg,rgba(26,22,40,.92) 0%,rgba(20,16,32,.90) 60%,rgba(18,14,30,.88) 100%);}
 #step0 .card::before{background:radial-gradient(circle,#7B4FBB,transparent 70%);}
 #step0 .card-accent{background:linear-gradient(90deg,transparent,rgba(123,79,187,.5),transparent);}
 
 /* ── Step 1: Temperature — Графитово-синий ── */
-#step1 .card{background:linear-gradient(145deg,#111828 0%,#0D1420 60%,#0A1018 100%);}
+#step1 .card{background:linear-gradient(145deg,rgba(17,24,40,.92) 0%,rgba(13,20,32,.90) 60%,rgba(10,16,24,.88) 100%);}
 #step1 .card::before{background:radial-gradient(circle,#2E6FBF,transparent 70%);}
 #step1 .card-accent{background:linear-gradient(90deg,transparent,rgba(46,111,191,.5),transparent);}
 
 /* ── Step 2: Sleep — Глубокий индиго ── */
-#step2 .card{background:linear-gradient(145deg,#121830 0%,#0E1426 60%,#0A1020 100%);}
+#step2 .card{background:linear-gradient(145deg,rgba(18,24,48,.92) 0%,rgba(14,20,38,.90) 60%,rgba(10,16,32,.88) 100%);}
 #step2 .card::before{background:radial-gradient(circle,#3B5BDB,transparent 70%);}
 #step2 .card-accent{background:linear-gradient(90deg,transparent,rgba(59,91,219,.5),transparent);}
 
 /* ── Step 3: Heart Rate — Графитово-малиновый ── */
-#step3 .card{background:linear-gradient(145deg,#1E1218 0%,#180E14 60%,#140A10 100%);}
+#step3 .card{background:linear-gradient(145deg,rgba(30,18,24,.92) 0%,rgba(24,14,20,.90) 60%,rgba(20,10,16,.88) 100%);}
 #step3 .card::before{background:radial-gradient(circle,#C0395A,transparent 70%);}
 #step3 .card-accent{background:linear-gradient(90deg,transparent,rgba(192,57,90,.5),transparent);}
 
 /* ── Step 4: Lifestyle — Графитово-бирюзовый ── */
-#step4 .card{background:linear-gradient(145deg,#0F1E20 0%,#0A1A1C 60%,#071416 100%);}
+#step4 .card{background:linear-gradient(145deg,rgba(15,30,32,.92) 0%,rgba(10,26,28,.90) 60%,rgba(7,20,22,.88) 100%);}
 #step4 .card::before{background:radial-gradient(circle,#1A8A7A,transparent 70%);}
 #step4 .card-accent{background:linear-gradient(90deg,transparent,rgba(26,138,122,.5),transparent);}
 
 /* ── Result card — Золотисто-графитовый ── */
-#stepResult .card{background:linear-gradient(145deg,#1C1A12 0%,#161408 60%,#121004 100%);}
+#stepResult .card{background:linear-gradient(145deg,rgba(28,26,18,.90) 0%,rgba(22,20,8,.88) 60%,rgba(18,16,4,.86) 100%);}
 #stepResult .card::before{background:radial-gradient(circle,#8B6B22,transparent 70%);}
 #stepResult .card-accent{background:linear-gradient(90deg,transparent,rgba(196,154,60,.5),transparent);}
 #stepResult .cta-card{background:linear-gradient(145deg,#1C1A12,#161408);}
@@ -1004,6 +1006,12 @@ footer{
   50%{opacity:var(--op2,0.6);transform:scale(1.5);}
 }
 
+/* Particle field canvas */
+#bg-particles{
+  position:absolute;inset:0;width:100%;height:100%;
+  pointer-events:none;z-index:3;opacity:0.85;
+}
+
 /* Gate makeover */
 #gate{background:transparent;}
 .gate-box{
@@ -1372,6 +1380,7 @@ footer{
   <div class="bg-blob bg-blob-3"></div>
   <div class="star-field" id="starField"></div>
   <div class="bg-tint" id="bgTint"></div>
+  <canvas id="bg-particles"></canvas>
 </div>
 
 <!-- TOPBAR -->
@@ -4501,6 +4510,67 @@ function applyManualFull(){const fields={hrv:'mm-hrv',rhr:'mm-rhr',sleepHours:'m
     el.style.cssText=`width:${sz}px;height:${sz}px;left:${(Math.random()*100).toFixed(1)}%;top:${(Math.random()*100).toFixed(1)}%;--op1:${op1};--op2:${op2};--td:${td}s;--tdelay:${delay}s;`;
     field.appendChild(el);
   }
+})();
+
+// ══ PARTICLE FIELD ═══════════════════════════════════════
+(function initParticleField(){
+  const canvas=document.getElementById('bg-particles');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const N=28, DIST=135;
+  const G=[196,154,60]; // gold #C49A3C
+  let W,H,pts,pr=window.devicePixelRatio||1,raf;
+
+  function resize(){
+    pr=window.devicePixelRatio||1;
+    W=canvas.offsetWidth; H=canvas.offsetHeight;
+    canvas.width=W*pr; canvas.height=H*pr;
+    ctx.scale(pr,pr);
+    if(!pts) spawn();
+  }
+
+  function spawn(){
+    pts=Array.from({length:N},()=>({
+      x:Math.random()*W, y:Math.random()*H,
+      vx:(Math.random()-.5)*.42, vy:(Math.random()-.5)*.42,
+      r:.8+Math.random()*1.3,
+      op:.2+Math.random()*.35
+    }));
+  }
+
+  function frame(){
+    ctx.clearRect(0,0,W,H);
+    for(const p of pts){
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0||p.x>W) p.vx*=-1;
+      if(p.y<0||p.y>H) p.vy*=-1;
+    }
+    for(let i=0;i<N;i++){
+      for(let j=i+1;j<N;j++){
+        const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
+        const d=Math.sqrt(dx*dx+dy*dy);
+        if(d<DIST){
+          ctx.beginPath();
+          ctx.strokeStyle=`rgba(${G[0]},${G[1]},${G[2]},${((1-d/DIST)*0.22).toFixed(3)})`;
+          ctx.lineWidth=0.7;
+          ctx.moveTo(pts[i].x,pts[i].y);
+          ctx.lineTo(pts[j].x,pts[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+    for(const p of pts){
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${G[0]},${G[1]},${G[2]},${p.op})`;
+      ctx.fill();
+    }
+    raf=requestAnimationFrame(frame);
+  }
+
+  resize();
+  frame();
+  window.addEventListener('resize',()=>{cancelAnimationFrame(raf);resize();frame();});
 })();
 
 </script>
