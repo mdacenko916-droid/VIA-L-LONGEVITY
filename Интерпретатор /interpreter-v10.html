@@ -1113,6 +1113,32 @@ footer{
   width:130%;height:90px;pointer-events:none;z-index:0;overflow:visible;
 }
 
+/* ══ HRV BIOMETRIC UI — ECG + PULSE RINGS ════════════════ */
+.hrv-vital{position:relative;margin-bottom:18px;}
+.hrv-vital .oura-display{margin-bottom:0;position:relative;z-index:1;}
+.hrv-rings-wrap{
+  position:absolute;left:30px;top:50%;
+  transform:translate(-50%,-52%);
+  width:68px;height:68px;
+  pointer-events:none;z-index:0;
+}
+.hrv-ring{
+  position:absolute;inset:0;border-radius:50%;
+  border:1.5px solid rgba(123,79,187,0.7);
+  animation:hrv-ripple 2.8s ease-out infinite;
+}
+.hrv-ring:nth-child(2){animation-delay:.93s;}
+.hrv-ring:nth-child(3){animation-delay:1.87s;}
+@keyframes hrv-ripple{
+  0%{transform:scale(0.32);opacity:0.9;}
+  65%{opacity:0.18;}
+  100%{transform:scale(2.85);opacity:0;}
+}
+.hrv-ecg-canvas{
+  display:block;width:100%;height:54px;
+  margin-bottom:16px;border-radius:8px;
+}
+
 /* ══ PRO MODULES ═════════════════════════════════════════ */
 .pro-module{margin-bottom:12px;animation:fadeUp .5s ease both;}
 .mod-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:20px;}
@@ -1887,11 +1913,21 @@ footer{
       <div class="input-group">
         <label data-t="s0_l1">Ваш HRV сегодня</label>
         <div class="oura-slider-wrap">
-          <div class="oura-display">
-            <div class="oura-number" id="hrv-num">55</div>
-            <div class="oura-unit">мс</div>
-            <div class="oura-status" id="hrv-status">Норма</div>
+          <!-- Pulse rings + number -->
+          <div class="hrv-vital">
+            <div class="hrv-rings-wrap">
+              <div class="hrv-ring"></div>
+              <div class="hrv-ring"></div>
+              <div class="hrv-ring"></div>
+            </div>
+            <div class="oura-display">
+              <div class="oura-number" id="hrv-num">55</div>
+              <div class="oura-unit">мс</div>
+              <div class="oura-status" id="hrv-status">Норма</div>
+            </div>
           </div>
+          <!-- ECG waveform canvas -->
+          <canvas id="hrv-ecg" class="hrv-ecg-canvas"></canvas>
           <div class="oura-track-wrap">
             <div class="oura-track" id="hrv-track">
               <div class="oura-fill" id="hrv-fill"></div>
@@ -4013,6 +4049,88 @@ function applyXiaomiManual(){
 }
 function applyManual(){const fields={hrv:'m-hrv',rhr:'m-rhr',sleepHours:'m-sleep',deepMin:'m-deep',tempDev:'m-temp',vo2:'m-vo2'};let n=0;Object.keys(fields).forEach(k=>{const v=parseFloat(document.getElementById(fields[k])?.value);if(!isNaN(v)){importedData[k]=v;n++;}});importedData.source='apple-manual';if(n>0){setStatus('manual-status','success',`✓ Применено ${n} показателей`);updateImportSummary();}else setStatus('manual-status','error','Введите хотя бы один показатель');}
 function applyManualFull(){const fields={hrv:'mm-hrv',rhr:'mm-rhr',sleepHours:'mm-sleep',deepMin:'mm-deep',tempDev:'mm-temp',energy:'mm-energy'};let n=0;Object.keys(fields).forEach(k=>{const v=parseFloat(document.getElementById(fields[k])?.value);if(!isNaN(v)){importedData[k]=v;n++;}});importedData.source='manual';if(n>0){setStatus('manual-full-status','success',`✓ Применено ${n} показателей`);updateImportSummary();}else setStatus('manual-full-status','error','Введите хотя бы один показатель');}
+
+/* ── HRV ECG Waveform Animation ── */
+(function initHrvEcg(){
+  const canvas = document.getElementById('hrv-ecg');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let w=0, h=0, t=0, raf=null;
+
+  function resize(){
+    const r = window.devicePixelRatio||1;
+    w = canvas.offsetWidth; h = canvas.offsetHeight;
+    canvas.width = w*r; canvas.height = h*r;
+    ctx.scale(r,r);
+  }
+
+  /* P-QRS-T complex — gaussian bumps & dips summed */
+  function ecgShape(x, offset){
+    const period = w * 0.68;
+    const n = (((x - offset) % period) + period) % period;
+    const p = n / period; // 0..1
+    let y = 0;
+    y += 0.10 * Math.exp(-Math.pow(p-0.10,2)/0.0006); // P wave
+    y -= 0.09 * Math.exp(-Math.pow(p-0.19,2)/0.00009); // Q dip
+    y += 1.00 * Math.exp(-Math.pow(p-0.23,2)/0.00016); // R spike
+    y -= 0.20 * Math.exp(-Math.pow(p-0.28,2)/0.00016); // S dip
+    y += 0.22 * Math.exp(-Math.pow(p-0.43,2)/0.0022);  // T wave
+    return y;
+  }
+
+  function draw(){
+    if(!w) resize();
+    ctx.clearRect(0,0,w,h);
+    t += 0.62;
+    const midY = h*0.52, amp = h*0.37;
+
+    /* Gradient trail: old = transparent, front = vivid violet */
+    const grad = ctx.createLinearGradient(0,0,w,0);
+    grad.addColorStop(0,   'rgba(123,79,187,0)');
+    grad.addColorStop(0.22,'rgba(123,79,187,0.15)');
+    grad.addColorStop(0.55,'rgba(135,90,205,0.52)');
+    grad.addColorStop(0.80,'rgba(155,108,228,0.88)');
+    grad.addColorStop(0.92,'rgba(172,132,248,1)');
+    grad.addColorStop(1,   'rgba(172,132,248,0.04)');
+
+    ctx.beginPath();
+    for(let x=0; x<=w; x++){
+      const y = midY - ecgShape(x,t)*amp;
+      x===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 1.7;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    /* Active front: outer glow + core dot */
+    const fx = Math.round(w*0.90);
+    const fy = midY - ecgShape(fx,t)*amp;
+    const gr = ctx.createRadialGradient(fx,fy,0,fx,fy,15);
+    gr.addColorStop(0,'rgba(160,110,255,0.38)');
+    gr.addColorStop(1,'rgba(160,110,255,0)');
+    ctx.beginPath(); ctx.arc(fx,fy,15,0,Math.PI*2);
+    ctx.fillStyle = gr; ctx.fill();
+    ctx.beginPath(); ctx.arc(fx,fy,2.4,0,Math.PI*2);
+    ctx.fillStyle = 'rgba(210,180,255,0.96)'; ctx.fill();
+
+    raf = requestAnimationFrame(draw);
+  }
+
+  /* Start / stop tied to step visibility */
+  const step = document.getElementById('step1');
+  if(step){
+    new MutationObserver(()=>{
+      if(step.classList.contains('active')){
+        if(!raf){ resize(); draw(); }
+      } else {
+        if(raf){ cancelAnimationFrame(raf); raf=null; }
+      }
+    }).observe(step,{attributes:true,attributeFilter:['class']});
+    if(step.classList.contains('active')){ resize(); draw(); }
+  }
+  new ResizeObserver(()=>{ resize(); }).observe(canvas);
+})();
 
 /* ── Star field init ── */
 (function initStarField(){
