@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500&family=Oswald:wght@200;300;400&display=swap" rel="stylesheet">
 <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.min.js"></script>
 <style>
 :root {
   --gold:      #c4963c;
@@ -32,29 +33,21 @@ body {
   overflow-x: hidden;
 }
 
-/* ── STARFIELD BACKGROUND ── */
-.stars {
+/* ── GALAXY CANVAS BACKGROUND ── */
+#galaxy-bg {
   position: fixed; inset: 0; z-index: 0;
-  background:
-    radial-gradient(ellipse 80% 50% at 20% 20%, rgba(196,150,60,.04) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(59,91,180,.05) 0%, transparent 60%),
-    var(--dark);
   pointer-events: none;
+  width: 100% !important; height: 100% !important;
 }
-.stars::before {
-  content: '';
-  position: absolute; inset: 0;
-  background-image:
-    radial-gradient(1px 1px at 15% 25%, rgba(255,255,255,.4) 0%, transparent 100%),
-    radial-gradient(1px 1px at 42% 12%, rgba(255,255,255,.3) 0%, transparent 100%),
-    radial-gradient(1px 1px at 70% 35%, rgba(255,255,255,.35) 0%, transparent 100%),
-    radial-gradient(1px 1px at 88% 60%, rgba(255,255,255,.25) 0%, transparent 100%),
-    radial-gradient(1px 1px at 30% 70%, rgba(255,255,255,.3) 0%, transparent 100%),
-    radial-gradient(1px 1px at 55% 85%, rgba(255,255,255,.2) 0%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 8% 50%, rgba(255,255,255,.2) 0%, transparent 100%),
-    radial-gradient(1px 1px at 95% 20%, rgba(255,255,255,.35) 0%, transparent 100%),
-    radial-gradient(1px 1px at 62% 55%, rgba(255,255,255,.15) 0%, transparent 100%),
-    radial-gradient(1px 1px at 25% 90%, rgba(255,255,255,.2) 0%, transparent 100%);
+
+/* ── VL HERO MONOGRAM ── */
+.hero-vl-wrap {
+  display: flex; justify-content: center; align-items: center;
+  margin-bottom: 40px;
+}
+.hero-vl-logo {
+  width: 160px; height: 160px;
+  filter: drop-shadow(0 0 18px rgba(196,150,60,.25));
 }
 
 /* ── LAYOUT ── */
@@ -616,7 +609,7 @@ footer a:hover { color: var(--gold); }
 </head>
 <body>
 
-<div class="stars"></div>
+<canvas id="galaxy-bg"></canvas>
 
 <!-- TRANSITION OVERLAY -->
 <div id="transition-overlay"><div class="overlay-spinner"></div></div>
@@ -666,6 +659,84 @@ footer a:hover { color: var(--gold); }
 <!-- HERO -->
 <section class="hero">
   <div class="wrap">
+
+    <!-- VL ENERGY MONOGRAM -->
+    <div class="hero-vl-wrap">
+      <svg class="hero-vl-logo" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="glow-soft" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="glow-strong" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- OUTER RING — base -->
+        <circle cx="100" cy="100" r="85" stroke="rgba(196,150,60,0.12)" stroke-width="1"/>
+        <!-- OUTER RING — energy pulse 1 -->
+        <circle cx="100" cy="100" r="85" stroke="#e2b96a" stroke-width="1.8" stroke-linecap="round"
+          stroke-dasharray="28 506" filter="url(#glow-soft)">
+          <animate attributeName="stroke-dashoffset" from="0" to="-534" dur="8s" repeatCount="indefinite"/>
+        </circle>
+        <!-- OUTER RING — energy pulse 2 (offset 267) -->
+        <circle cx="100" cy="100" r="85" stroke="#c4963c" stroke-width="1.2" stroke-linecap="round"
+          stroke-dasharray="18 516" filter="url(#glow-soft)">
+          <animate attributeName="stroke-dashoffset" from="-267" to="-801" dur="8s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- TILTED ORBITAL ELLIPSE — base -->
+        <ellipse cx="100" cy="100" rx="85" ry="22" transform="rotate(-25 100 100)"
+          stroke="rgba(196,150,60,0.08)" stroke-width="1"/>
+        <!-- TILTED ORBITAL ELLIPSE — energy pulse -->
+        <ellipse cx="100" cy="100" rx="85" ry="22" transform="rotate(-25 100 100)"
+          stroke="#c4963c" stroke-width="1.5" stroke-linecap="round"
+          stroke-dasharray="22 344" filter="url(#glow-soft)">
+          <animate attributeName="stroke-dashoffset" from="0" to="-366" dur="10s" repeatCount="indefinite"/>
+        </ellipse>
+        <!-- TILTED ORBITAL ELLIPSE — pulse 2 (opposite phase) -->
+        <ellipse cx="100" cy="100" rx="85" ry="22" transform="rotate(-25 100 100)"
+          stroke="#e2b96a" stroke-width="1" stroke-linecap="round"
+          stroke-dasharray="12 354" filter="url(#glow-soft)">
+          <animate attributeName="stroke-dashoffset" from="-183" to="-549" dur="10s" repeatCount="indefinite"/>
+        </ellipse>
+
+        <!-- V LETTER — base dim -->
+        <path d="M 46,62 L 80,145 L 114,62" stroke="rgba(196,150,60,0.22)" stroke-width="2.2"
+          stroke-linejoin="round" stroke-linecap="round"/>
+        <!-- V LETTER — energy pulse 1 -->
+        <path d="M 46,62 L 80,145 L 114,62" stroke="#e2b96a" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round"
+          stroke-dasharray="22 160" filter="url(#glow-strong)">
+          <animate attributeName="stroke-dashoffset" from="0" to="-182" dur="2.8s" repeatCount="indefinite"/>
+        </path>
+        <!-- V LETTER — energy pulse 2 (offset halfway) -->
+        <path d="M 46,62 L 80,145 L 114,62" stroke="#ffffff" stroke-width="1"
+          stroke-linecap="round" stroke-linejoin="round"
+          stroke-dasharray="8 174" filter="url(#glow-soft)">
+          <animate attributeName="stroke-dashoffset" from="-91" to="-273" dur="2.8s" repeatCount="indefinite"/>
+        </path>
+
+        <!-- L LETTER — base dim -->
+        <path d="M 114,62 L 114,145 L 152,145" stroke="rgba(196,150,60,0.22)" stroke-width="2.2"
+          stroke-linejoin="round" stroke-linecap="round"/>
+        <!-- L LETTER — energy pulse 1 -->
+        <path d="M 114,62 L 114,145 L 152,145" stroke="#e2b96a" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round"
+          stroke-dasharray="18 103" filter="url(#glow-strong)">
+          <animate attributeName="stroke-dashoffset" from="0" to="-121" dur="2.2s" repeatCount="indefinite"/>
+        </path>
+        <!-- L LETTER — energy pulse 2 (offset) -->
+        <path d="M 114,62 L 114,145 L 152,145" stroke="#ffffff" stroke-width="1"
+          stroke-linecap="round" stroke-linejoin="round"
+          stroke-dasharray="8 113" filter="url(#glow-soft)">
+          <animate attributeName="stroke-dashoffset" from="-60" to="-181" dur="2.2s" repeatCount="indefinite"/>
+        </path>
+      </svg>
+    </div>
+
     <div class="hero-badge" data-t="hero_badge">Персональний аналіз біопоказників · VIA·L</div>
     <h1 class="hero-h1" data-t="hero_h1">Ваш трекер<br><em>говорить</em> більше,<br>ніж ви думаєте</h1>
     <p class="hero-sub" data-t="hero_sub">Завантажте дані свого пристрою і отримайте нутриціологічну інтерпретацію показників здоров'я</p>
@@ -1121,6 +1192,88 @@ document.addEventListener('click', e => {
 (function() {
   const saved = localStorage.getItem('vial_lang') || 'uk';
   setLang(saved);
+})();
+</script>
+
+<script>
+// ── THREE.JS GALAXY BACKGROUND ──
+(function() {
+  if (typeof THREE === 'undefined') return;
+
+  const canvas = document.getElementById('galaxy-bg');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 2000);
+  camera.position.z = 120;
+
+  // ── Stars ──
+  const starCount = 12000;
+  const starPos = new Float32Array(starCount * 3);
+  for (let i = 0; i < starCount; i++) {
+    starPos[i * 3]     = (Math.random() - 0.5) * 800;
+    starPos[i * 3 + 1] = (Math.random() - 0.5) * 800;
+    starPos[i * 3 + 2] = (Math.random() - 0.5) * 800;
+  }
+  const starGeo = new THREE.BufferGeometry();
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+  const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.65, sizeAttenuation: true, transparent: true, opacity: 0.85 });
+  const stars = new THREE.Points(starGeo, starMat);
+  scene.add(stars);
+
+  // ── Gold nebula dust ──
+  function makeNebula(count, color, opacity, spread, flatness) {
+    const pos = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = Math.pow(Math.random(), 0.6) * spread;
+      pos[i * 3]     = Math.cos(angle) * radius;
+      pos[i * 3 + 1] = (Math.random() - 0.5) * flatness;
+      pos[i * 3 + 2] = Math.sin(angle) * radius;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    return new THREE.Points(geo, new THREE.PointsMaterial({ color, size: 2.5, sizeAttenuation: true, transparent: true, opacity }));
+  }
+
+  const nebGold = makeNebula(400, 0xc4963c, 0.045, 120, 30);
+  const nebBlue = makeNebula(250, 0x3b5bb4, 0.038, 90, 20);
+  const nebGold2 = makeNebula(200, 0xe2b96a, 0.03, 60, 15);
+  scene.add(nebGold);
+  scene.add(nebBlue);
+  scene.add(nebGold2);
+
+  // ── Mouse parallax ──
+  let mx = 0, my = 0, tx = 0, ty = 0;
+  document.addEventListener('mousemove', e => {
+    mx = (e.clientX / window.innerWidth  - 0.5) * 12;
+    my = (e.clientY / window.innerHeight - 0.5) * 8;
+  });
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  function animate() {
+    requestAnimationFrame(animate);
+    stars.rotation.y   += 0.00008;
+    stars.rotation.x   += 0.000035;
+    nebGold.rotation.y += 0.00012;
+    nebBlue.rotation.y -= 0.00009;
+    nebGold2.rotation.z+= 0.00006;
+    // smooth camera parallax
+    tx += (mx - tx) * 0.04;
+    ty += (-my - ty) * 0.04;
+    camera.position.x = tx;
+    camera.position.y = ty;
+    camera.lookAt(scene.position);
+    renderer.render(scene, camera);
+  }
+  animate();
 })();
 </script>
 </body>
