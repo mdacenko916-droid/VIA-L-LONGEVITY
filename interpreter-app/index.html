@@ -150,7 +150,7 @@ header {
   transition: filter .4s;
 }
 .dev-slot:hover .dev-body {
-  filter: drop-shadow(0 0 18px var(--glow));
+  filter: drop-shadow(0 0 26px var(--glow)) drop-shadow(0 0 10px var(--glow)) !important;
 }
 
 @keyframes spinY {
@@ -168,7 +168,7 @@ model-viewer.dev-glb {
   --progress-mask: transparent;
 }
 .dev-slot:hover model-viewer.dev-glb {
-  filter: drop-shadow(0 0 18px var(--glow));
+  filter: drop-shadow(0 0 26px var(--glow)) drop-shadow(0 0 10px var(--glow)) !important;
 }
 /* ── GLB2 (dual model: watch + ring) ── */
 .dev-glb2-wrap {
@@ -182,7 +182,15 @@ model-viewer.dev-glb-sm {
   --progress-mask: transparent;
 }
 .dev-slot:hover .dev-glb2-wrap model-viewer {
-  filter: drop-shadow(0 0 14px var(--glow));
+  filter: drop-shadow(0 0 22px var(--glow)) drop-shadow(0 0 8px var(--glow)) !important;
+}
+
+/* WHOOP: move grayscale to CSS so hover glow can override inline style */
+.dev-slot[data-id="whoop"] model-viewer.dev-glb {
+  filter: grayscale(0.8) brightness(0.5) contrast(1.1);
+}
+.dev-slot[data-id="whoop"]:hover model-viewer.dev-glb {
+  filter: drop-shadow(0 0 26px rgba(200,215,255,0.7)) drop-shadow(0 0 10px rgba(200,215,255,0.4)) brightness(0.8) !important;
 }
 
 /* ── WATCH TYPE ── */
@@ -701,9 +709,8 @@ const DEVICES = [
   {
     id: 'whoop', name: 'WHOOP 5.0', sub: 'Strap', type: 'glb',
     glbPath: '../Интерпретатор%20/Часы/whoop%20strap_fit.glb',
-    glbFilter: 'grayscale(1) brightness(0.35) contrast(1.2)',
     badge: 'best',
-    glow: 'rgba(240,240,240,0.2)',
+    glow: 'rgba(200,215,255,0.6)',
     metrics: ['ВСР / HRV', 'Сон', 'Відновлення', 'Навантаження', 'Strain']
   },
   {
