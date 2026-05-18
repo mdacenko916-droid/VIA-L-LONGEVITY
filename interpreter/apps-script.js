@@ -136,10 +136,12 @@ function validateCode(code) {
 // ── Отправка письма Марине + подтверждение клиенту ────────────
 function sendExpertEmail(name, email, question, d, lang, code) {
   var date = new Date().toLocaleString('uk-UA');
-  var subject = '★ Expert-розбір · ' + (name || 'Клієнт') + ' · ' + new Date().toLocaleDateString('uk-UA');
+  var isElite = code.indexOf('ELITE') !== -1;
+  var tier = isElite ? 'ELITE' : 'Pro + Expert';
+  var subject = (isElite ? '💎 ELITE-розбір · ' : '★ Expert-розбір · ') + (name || 'Клієнт') + ' · ' + new Date().toLocaleDateString('uk-UA');
 
   var b = '═══════════════════════════════════════\n';
-  b += '  VIA-L · EXPERT-РОЗБІР · Pro + Expert\n';
+  b += '  VIA-L · ' + (isElite ? 'ELITE-РОЗБІР · ELITE' : 'EXPERT-РОЗБІР · Pro + Expert') + '\n';
   b += '═══════════════════════════════════════\n\n';
   b += 'Клієнт:       ' + (name  || '—') + '\n';
   b += 'Email:        ' + (email || '—') + '\n';

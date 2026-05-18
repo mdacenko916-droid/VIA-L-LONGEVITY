@@ -3367,7 +3367,8 @@ const T={
 
 const LANG_FLAGS={'ru':'🇷🇺 RU','uk':'🇺🇦 UK','en':'🇬🇧 EN','es':'🇪🇸 ES','de':'🇩🇪 DE','pt':'🇧🇷 PT','fr':'🇫🇷 FR','pl':'🇵🇱 PL','it':'🇮🇹 IT','he':'🇮🇱 HE','ja':'🇯🇵 JA','ko':'🇰🇷 KO'};
 let lang='ru';
-let _analysisData=null; // сохраняем данные 16 шагов для Expert-запроса
+let _analysisData=null;
+const _urlDevice=new URLSearchParams(location.search).get('device')||null;
 function setLang(l){
   lang=l;
   document.getElementById('langLabel').textContent=LANG_FLAGS[l]||l.toUpperCase();
@@ -4271,7 +4272,7 @@ function _showResultsInner(){
       cort:parseFloat(document.getElementById('lab-cort')?.value)||null,
       b12:parseFloat(document.getElementById('lab-b12')?.value)||null,
     },
-    device: importedData.source || null,
+    device: importedData.source || _urlDevice || null,
   };
   _analysisData=data; // сохраняем для Expert-запроса
   const ins=[],recs={};
