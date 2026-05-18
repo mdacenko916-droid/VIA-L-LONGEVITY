@@ -268,3 +268,7 @@ function respond(data) {
     .createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
 }
+
+function doOptions(e) {
+  return ContentService.createTextOutput('');
+}

@@ -3448,9 +3448,11 @@ async function sendMaxRequest(){
   }
   document.getElementById('maxEmail').style.borderColor='var(--b1)';
 
-  // Клиентская проверка лимита 1×/месяц (localStorage)
+  // Клиентская проверка лимита 1×/месяц (localStorage) — dev-коды не ограничиваются
+  const DEV_CODES_LIST = ['VIAL-EXPERT-2024'];
+  const isDevCode = DEV_CODES_LIST.includes(code);
   const limitKey = 'vial_expert_sent_' + (code || 'default');
-  const lastSent = localStorage.getItem(limitKey);
+  const lastSent = isDevCode ? null : localStorage.getItem(limitKey);
   if (lastSent) {
     const daysSince = (Date.now() - parseInt(lastSent)) / (1000 * 60 * 60 * 24);
     if (daysSince < 30) {
@@ -3483,7 +3485,6 @@ async function sendMaxRequest(){
 
     const res  = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
     const json = await res.json();
