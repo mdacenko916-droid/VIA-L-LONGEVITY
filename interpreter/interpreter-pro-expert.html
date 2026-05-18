@@ -2795,9 +2795,18 @@ footer{
       <div class="max-badge">★ Pro + Expert · 1 раз на місяць</div>
       <div class="max-title" data-t="max_title">Ваш Expert-розбір</div>
       <div class="max-desc" data-t="max_desc">Ваш щомісячний Expert-розбір. Надішліть запит 1 раз на місяць — нутриціолог підготує персональний письмовий аналіз вашого профілю протягом 48 годин.</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;">
+        <input id="maxName" type="text" placeholder="Ваше ім'я" autocomplete="name"
+          style="width:100%;padding:12px 16px;border:1px solid var(--b1);border-radius:12px;background:#1A1F2B;color:var(--t1);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s;"
+          onfocus="this.style.borderColor='var(--b2)'" onblur="this.style.borderColor='var(--b1)'">
+        <input id="maxEmail" type="email" placeholder="Ваш email (для отримання відповіді)" autocomplete="email"
+          style="width:100%;padding:12px 16px;border:1px solid var(--b1);border-radius:12px;background:#1A1F2B;color:var(--t1);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s;"
+          onfocus="this.style.borderColor='var(--b2)'" onblur="this.style.borderColor='var(--b1)'">
+      </div>
       <textarea id="maxQuestion" class="max-textarea" rows="3" data-t-placeholder="max_placeholder" placeholder="Ваше запитання або що хочете уточнити..."></textarea>
+      <div id="maxLimitMsg" style="display:none;font-size:12px;color:var(--warn);background:var(--warn-dim);border:1px solid rgba(245,166,35,.2);border-radius:10px;padding:10px 14px;margin-bottom:10px;"></div>
       <button type="button" class="max-btn" id="maxSendBtn" onclick="sendMaxRequest()" data-t="max_btn">Надіслати запит нутриціологу →</button>
-      <div class="max-sent" id="maxSent" data-t="max_sent">✓ Запит надіслано! Відповідь протягом 48 годин.</div>
+      <div class="max-sent" id="maxSent" style="display:none;" data-t="max_sent">✓ Запит надіслано! Відповідь протягом 48 годин.</div>
     </div>
 
     <!-- CTA: RU/UK — живая консультация с Мариной -->
@@ -2871,7 +2880,7 @@ footer{
 <script>
 // ══ ACCESS ════════════════════════════════════════════════
 // Вставь сюда URL после деплоя Google Apps Script:
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxaATfqaJoGYbLJcKnMX_450Sojm_tlfTIzY5mtUsshbPNnIZui00J-QRz0AZl50dkj/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyWirCAJO6dKNkmfXE8gQ3AF3R7uzU1JhRjGKVEVBDwL9tIZZPZLbQhx6U9WfnzKLWgtQ/exec';
 
 function gateUnlock(plan, code){
   const g=document.getElementById('gate');
@@ -3423,18 +3432,114 @@ document.querySelectorAll('input[name=gender]').forEach(el=>{
   }
 })();
 
-function sendMaxRequest(){
-  const q=(document.getElementById('maxQuestion').value||'').trim();
-  const email='viaelcom@gmail.com';
-  const subject=encodeURIComponent('Expert-розбір VIA-L MAX');
-  const body=encodeURIComponent(
-    'Запит на Expert-розбір від клієнта тарифу Максимум.\n\n'+
-    (q?'Запитання / уточнення:\n'+q+'\n\n':'')+
-    'Дата: '+new Date().toLocaleString()
+async function sendMaxRequest(){
+  const name  = (document.getElementById('maxName')?.value  || '').trim();
+  const email = (document.getElementById('maxEmail')?.value || '').trim();
+  const q     = (document.getElementById('maxQuestion')?.value || '').trim();
+  const code  = sessionStorage.getItem('vial_code') || '';
+  const limitMsg = document.getElementById('maxLimitMsg');
+  const btn   = document.getElementById('maxSendBtn');
+
+  // Email обязателен
+  if (!email || !/\S+@\S+\.\S+/.test(email)) {
+    document.getElementById('maxEmail').style.borderColor='var(--alert)';
+    document.getElementById('maxEmail').focus();
+    return;
+  }
+  document.getElementById('maxEmail').style.borderColor='var(--b1)';
+
+  // Клиентская проверка лимита 1×/месяц (localStorage)
+  const limitKey = 'vial_expert_sent_' + (code || 'default');
+  const lastSent = localStorage.getItem(limitKey);
+  if (lastSent) {
+    const daysSince = (Date.now() - parseInt(lastSent)) / (1000 * 60 * 60 * 24);
+    if (daysSince < 30) {
+      const nextDate = new Date(parseInt(lastSent) + 30 * 24 * 60 * 60 * 1000);
+      const nextStr  = nextDate.toLocaleDateString(lang==='en'?'en-GB':'uk-UA', {day:'numeric',month:'long'});
+      limitMsg.textContent = (lang==='ru'
+        ? '⏳ Expert-разбор уже использован в этом месяце. Следующий доступен с '
+        : lang==='uk'
+        ? '⏳ Expert-розбір вже використано цього місяця. Наступний доступний з '
+        : '⏳ Expert review already used this month. Next available from ')
+        + nextStr + '.';
+      limitMsg.style.display='block';
+      return;
+    }
+  }
+  limitMsg.style.display='none';
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Відправляємо...';
+
+  try {
+    const payload = {
+      code,
+      name,
+      email,
+      question: q,
+      lang,
+      analysisData: _analysisData || {}
+    };
+
+    const res  = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+
+    if (json.ok) {
+      // Сохраняем дату в localStorage
+      localStorage.setItem(limitKey, Date.now().toString());
+      btn.style.display = 'none';
+      document.getElementById('maxSent').style.display = 'block';
+
+    } else if (json.reason === 'monthly_limit') {
+      const nextDate = json.next_date ? new Date(json.next_date) : null;
+      const nextStr  = nextDate
+        ? nextDate.toLocaleDateString(lang==='en'?'en-GB':'uk-UA', {day:'numeric',month:'long'})
+        : '';
+      limitMsg.textContent = (lang==='ru'
+        ? '⏳ Expert-разбор уже использован в этом месяце. Следующий доступен с '
+        : lang==='uk'
+        ? '⏳ Expert-розбір вже використано цього місяця. Наступний доступний з '
+        : '⏳ Expert review already used this month. Next available from ')
+        + nextStr + '.';
+      limitMsg.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Надіслати запит нутриціологу →';
+
+    } else {
+      // Fallback — открываем mailto если Apps Script недоступен
+      _sendMaxFallback(name, email, q);
+      localStorage.setItem(limitKey, Date.now().toString());
+      btn.style.display = 'none';
+      document.getElementById('maxSent').style.display = 'block';
+    }
+
+  } catch(e) {
+    // Сеть недоступна — fallback на mailto
+    _sendMaxFallback(name, email, q);
+    localStorage.setItem(limitKey, Date.now().toString());
+    btn.style.display = 'none';
+    document.getElementById('maxSent').style.display = 'block';
+  }
+}
+
+function _sendMaxFallback(name, email, q) {
+  const subject = encodeURIComponent('Expert-розбір VIA-L · ' + (name||'Клієнт'));
+  const d = _analysisData || {};
+  const body = encodeURIComponent(
+    'Клієнт: ' + (name||'—') + '\nEmail: ' + (email||'—') + '\n\n' +
+    (q ? 'Питання:\n' + q + '\n\n' : '') +
+    'Профіль: ' + (d.gender==='male'?'♂':'♀') + ' ' + (d.phase||'') +
+    (d.age ? ', ' + d.age + ' р.' : '') + '\n' +
+    'HRV: ' + (d.hrv||'—') + ' мс  |  ЧСС: ' + (d.rhr||'—') + '  |  Сон: ' + (d.sleep_qual||'—') + '/10\n' +
+    'Дата: ' + new Date().toLocaleString('uk-UA')
   );
-  document.getElementById('maxSendBtn').style.display='none';
-  document.getElementById('maxSent').style.display='block';
-  setTimeout(()=>{ window.location.href='mailto:'+email+'?subject='+subject+'&body='+body; },300);
+  setTimeout(() => {
+    window.location.href = 'mailto:viaelcom@gmail.com?subject=' + subject + '&body=' + body;
+  }, 300);
 }
 
 // ══ BOTTOM NAV ════════════════════════════════════════════
