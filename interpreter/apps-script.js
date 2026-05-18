@@ -1,7 +1,8 @@
 // ══════════════════════════════════════════════════════════════
-// VIA-L · Google Apps Script v2.0
-// — валидация кодов доступа (doGet)
-// — приём Expert-запросов с данными анализа (doPost)
+// VIA-L · Google Apps Script v3.0
+// — валидация кодов доступа (doGet без action)
+// — приём Expert-запросов (doGet?action=expert) — image beacon
+// — приём Expert-запросов (doPost) — fallback
 // ══════════════════════════════════════════════════════════════
 //
 // СТРУКТУРА ТАБЛИЦЫ (лист 1, строка 1 = заголовки):
@@ -14,67 +15,88 @@
 var SUBSCRIPTION_DAYS = 30;
 var MARINA_EMAIL = 'viaelcom@gmail.com';
 
-// ── GET: валидация кода при входе ─────────────────────────────
+// Dev-коды — обходят проверку по таблице, не ограничены лимитом
+var DEV_CODES = ['VIAL-EXPERT-2024', 'VIAL-PRO-2024', 'VL-DEV-MAX', 'VIAL-ELITE-2024'];
+
+// ── GET: валидация кода ИЛИ приём Expert-запроса ─────────────
 function doGet(e) {
+  var action = (e.parameter && e.parameter.action) || '';
+
+  if (action === 'expert') {
+    return handleExpertRequest(e.parameter);
+  }
+
   var code = ((e.parameter && e.parameter.code) || '').toString().toUpperCase().trim();
   if (!code) return respond({ ok: false, reason: 'no_code' });
   return validateCode(code);
 }
 
-// ── POST: приём Expert-запроса ─────────────────────────────────
+// ── POST: fallback приём Expert-запроса ───────────────────────
 function doPost(e) {
   try {
     var payload = JSON.parse(e.postData.contents);
-    var code    = (payload.code     || '').toString().toUpperCase().trim();
-    var name    = payload.name      || '';
-    var email   = payload.email     || '';
-    var question = payload.question || '';
-    var data    = payload.analysisData || {};
-    var lang    = payload.lang      || 'ru';
-
-    if (!code) return respond({ ok: false, reason: 'no_code' });
-
-    var sheet  = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
-    var rows   = sheet.getDataRange().getValues();
-    var now    = new Date();
-
-    for (var i = 1; i < rows.length; i++) {
-      var rowCode   = (rows[i][0] || '').toString().toUpperCase().trim();
-      var rowStatus = (rows[i][2] || '').toString().toUpperCase().trim();
-      var rowExpiry = rows[i][4];
-      var lastExpert = rows[i][5]; // колонка F
-
-      if (rowCode !== code) continue;
-
-      if (rowStatus === 'EXPIRED') return respond({ ok: false, reason: 'expired' });
-
-      // Проверка: не более 1 Expert-запроса в 30 дней
-      if (lastExpert) {
-        var lastDate   = new Date(lastExpert);
-        var daysSince  = (now - lastDate) / (1000 * 60 * 60 * 24);
-        if (daysSince < 30) {
-          var nextAvail = new Date(lastDate.getTime() + 30 * 24 * 60 * 60 * 1000);
-          return respond({ ok: false, reason: 'monthly_limit', next_date: nextAvail.toISOString() });
-        }
-      }
-
-      // Сохраняем дату запроса
-      sheet.getRange(i + 1, 6).setValue(now.toISOString());
-
-      // Отправляем письма
-      sendExpertEmail(name, email, question, data, lang, code);
-
-      return respond({ ok: true });
-    }
-
-    return respond({ ok: false, reason: 'invalid' });
-
+    return handleExpertRequest(payload);
   } catch (err) {
     return respond({ ok: false, reason: 'error', message: err.toString() });
   }
 }
 
-// ── Валидация кода (общая) ─────────────────────────────────────
+// ── Обработчик Expert-запроса (общий для GET и POST) ─────────
+function handleExpertRequest(p) {
+  var code     = (p.code     || '').toString().toUpperCase().trim();
+  var name     = p.name      || '';
+  var email    = p.email     || '';
+  var question = p.question  || '';
+  var lang     = p.lang      || 'ru';
+  var data     = {};
+
+  try {
+    // GET передаёт data как строку, POST — как объект
+    data = typeof p.data === 'string'         ? JSON.parse(p.data) :
+           typeof p.analysisData === 'string' ? JSON.parse(p.analysisData) :
+           (p.data || p.analysisData || {});
+  } catch(e) { data = {}; }
+
+  if (!code) return respond({ ok: false, reason: 'no_code' });
+
+  // Dev-коды: отправляем письмо без проверки таблицы
+  if (DEV_CODES.indexOf(code) !== -1) {
+    sendExpertEmail(name, email, question, data, lang, code + ' [DEV]');
+    return respond({ ok: true, dev: true });
+  }
+
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+  var rows  = sheet.getDataRange().getValues();
+  var now   = new Date();
+
+  for (var i = 1; i < rows.length; i++) {
+    var rowCode    = (rows[i][0] || '').toString().toUpperCase().trim();
+    var rowStatus  = (rows[i][2] || '').toString().toUpperCase().trim();
+    var lastExpert = rows[i][5];
+
+    if (rowCode !== code) continue;
+
+    if (rowStatus === 'EXPIRED') return respond({ ok: false, reason: 'expired' });
+
+    // Лимит 1 Expert-запрос в 30 дней
+    if (lastExpert) {
+      var lastDate  = new Date(lastExpert);
+      var daysSince = (now - lastDate) / (1000 * 60 * 60 * 24);
+      if (daysSince < 30) {
+        var nextAvail = new Date(lastDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+        return respond({ ok: false, reason: 'monthly_limit', next_date: nextAvail.toISOString() });
+      }
+    }
+
+    sheet.getRange(i + 1, 6).setValue(now.toISOString());
+    sendExpertEmail(name, email, question, data, lang, code);
+    return respond({ ok: true });
+  }
+
+  return respond({ ok: false, reason: 'invalid' });
+}
+
+// ── Валидация кода при входе ──────────────────────────────────
 function validateCode(code) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
   var data  = sheet.getDataRange().getValues();
@@ -123,7 +145,9 @@ function sendExpertEmail(name, email, question, d, lang, code) {
   b += 'Email:        ' + (email || '—') + '\n';
   b += 'Мова:         ' + lang.toUpperCase() + '\n';
   b += 'Код доступу:  ' + code + '\n';
-  b += 'Дата запиту:  ' + date + '\n\n';
+  b += 'Дата запиту:  ' + date + '\n';
+  if (d.device) b += 'Гаджет:       ' + d.device + '\n';
+  b += '\n';
 
   if (question) {
     b += '─── ПИТАННЯ КЛІЄНТА ─────────────────\n';
@@ -153,12 +177,12 @@ function sendExpertEmail(name, email, question, d, lang, code) {
 
   if (d.temp || d.hotflash) {
     b += '\n─── ТЕМПЕРАТУРА / ПРИПЛИВИ ──────────\n';
-    if (d.temp)       b += 'Нічна т-ра:   ' + d.temp       + '\n';
-    if (d.hotflash)   b += 'Припливи:     ' + d.hotflash   + '\n';
-    if (d.hotfreq)    b += 'Частота:      ' + d.hotfreq    + '\n';
-    if (d.hf_count)   b += 'Кількість:    ' + d.hf_count   + '\n';
+    if (d.temp)         b += 'Нічна т-ра:   ' + d.temp       + '\n';
+    if (d.hotflash)     b += 'Припливи:     ' + d.hotflash   + '\n';
+    if (d.hotfreq)      b += 'Частота:      ' + d.hotfreq    + '\n';
+    if (d.hf_count)     b += 'Кількість:    ' + d.hf_count   + '\n';
     if (d.hf_intensity) b += 'Інтенсивність:' + d.hf_intensity + '\n';
-    if (d.hf_time)    b += 'Час:          ' + d.hf_time    + '\n';
+    if (d.hf_time)      b += 'Час:          ' + d.hf_time    + '\n';
   }
 
   if (d.symptoms && d.symptoms.length) {
@@ -193,7 +217,7 @@ function sendExpertEmail(name, email, question, d, lang, code) {
   if (d.meds) b += 'Медикаменти:  ' + d.meds + '\n';
 
   b += '\n─── СТРЕС / НАСТРІЙ ─────────────────\n';
-  if (d.stress)        b += 'Стрес:        ' + d.stress        + '\n';
+  if (d.stress)         b += 'Стрес:        ' + d.stress         + '\n';
   if (d.chronic_stress) b += 'Хрон. стрес:  ' + d.chronic_stress + '\n';
   if (d.cortisol_symp && d.cortisol_symp.length) b += 'Кортизол:     ' + d.cortisol_symp.join(', ') + '\n';
   if (d.mood)        b += 'Настрій:      ' + d.mood        + '\n';

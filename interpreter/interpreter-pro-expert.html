@@ -1818,19 +1818,6 @@ footer{
         </div>
       </div>
       <div class="divider"></div>
-      <div class="input-group">
-        <label data-t="s_prof_l4">Ваше устройство</label>
-        <div class="chips">
-          <div class="chip"><input type="radio" name="device" id="dev1" value="oura4" checked><label for="dev1">Oura Ring 4 ✦</label></div>
-          <div class="chip"><input type="radio" name="device" id="dev2" value="oura3"><label for="dev2">Oura Gen 3 ✦</label></div>
-          <div class="chip"><input type="radio" name="device" id="dev3" value="garmin"><label for="dev3">Garmin</label></div>
-          <div class="chip"><input type="radio" name="device" id="dev4" value="apple"><label for="dev4">Apple Watch</label></div>
-          <div class="chip"><input type="radio" name="device" id="dev5" value="polar"><label for="dev5">Polar</label></div>
-          <div class="chip"><input type="radio" name="device" id="dev6" value="other"><label for="dev6" data-t="phase_other">Другое</label></div>
-        </div>
-        <p id="oura-device-note" style="font-size:11px;color:var(--gold);margin-top:8px;" data-t="oura_note">✦ Поддерживает Oura Menopause Insights</p>
-      </div>
-      <div class="divider"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
         <div class="manual-field">
           <label class="manual-label" data-t="s_prof_age">Возраст</label>
@@ -3483,65 +3470,38 @@ async function sendMaxRequest(){
       analysisData: _analysisData || {}
     };
 
-    const res  = await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify(payload)
+    // Image beacon GET — обходит redirect-проблему Apps Script (POST→GET redirect убивает body)
+    // GET с action=expert передаёт все данные как query params, doGet() их обрабатывает
+    const params = new URLSearchParams({
+      action:   'expert',
+      code:     code,
+      name:     name,
+      email:    email,
+      question: q.slice(0, 400),
+      lang:     lang,
+      data:     JSON.stringify(_analysisData || {})
     });
-    const json = await res.json();
+    const beacon = new Image();
+    beacon.src = APPS_SCRIPT_URL + '?' + params.toString();
 
-    if (json.ok) {
-      // Сохраняем дату в localStorage
-      localStorage.setItem(limitKey, Date.now().toString());
-      btn.style.display = 'none';
-      document.getElementById('maxSent').style.display = 'block';
-
-    } else if (json.reason === 'monthly_limit') {
-      const nextDate = json.next_date ? new Date(json.next_date) : null;
-      const nextStr  = nextDate
-        ? nextDate.toLocaleDateString(lang==='en'?'en-GB':'uk-UA', {day:'numeric',month:'long'})
-        : '';
-      limitMsg.textContent = (lang==='ru'
-        ? '⏳ Expert-разбор уже использован в этом месяце. Следующий доступен с '
-        : lang==='uk'
-        ? '⏳ Expert-розбір вже використано цього місяця. Наступний доступний з '
-        : '⏳ Expert review already used this month. Next available from ')
-        + nextStr + '.';
-      limitMsg.style.display = 'block';
-      btn.disabled = false;
-      btn.textContent = 'Надіслати запит нутриціологу →';
-
-    } else {
-      // Fallback — открываем mailto если Apps Script недоступен
-      _sendMaxFallback(name, email, q);
-      localStorage.setItem(limitKey, Date.now().toString());
-      btn.style.display = 'none';
-      document.getElementById('maxSent').style.display = 'block';
-    }
-
-  } catch(e) {
-    // Сеть недоступна — fallback на mailto
-    _sendMaxFallback(name, email, q);
-    localStorage.setItem(limitKey, Date.now().toString());
+    if(!isDevCode) localStorage.setItem(limitKey, Date.now().toString());
     btn.style.display = 'none';
     document.getElementById('maxSent').style.display = 'block';
+
+  } catch(e) {
+    console.error('Expert send error:', e);
+    limitMsg.textContent = lang==='ru'
+      ? '⚠ Ошибка соединения. Проверьте интернет и попробуйте снова.'
+      : lang==='en'
+      ? '⚠ Connection error. Check your internet and try again.'
+      : '⚠ Помилка з\'єднання. Перевірте інтернет і спробуйте ще раз.';
+    limitMsg.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = T[lang]?.max_btn || 'Надіслати запит нутриціологу →';
   }
 }
 
-function _sendMaxFallback(name, email, q) {
-  const subject = encodeURIComponent('Expert-розбір VIA-L · ' + (name||'Клієнт'));
-  const d = _analysisData || {};
-  const body = encodeURIComponent(
-    'Клієнт: ' + (name||'—') + '\nEmail: ' + (email||'—') + '\n\n' +
-    (q ? 'Питання:\n' + q + '\n\n' : '') +
-    'Профіль: ' + (d.gender==='male'?'♂':'♀') + ' ' + (d.phase||'') +
-    (d.age ? ', ' + d.age + ' р.' : '') + '\n' +
-    'HRV: ' + (d.hrv||'—') + ' мс  |  ЧСС: ' + (d.rhr||'—') + '  |  Сон: ' + (d.sleep_qual||'—') + '/10\n' +
-    'Дата: ' + new Date().toLocaleString('uk-UA')
-  );
-  setTimeout(() => {
-    window.location.href = 'mailto:viaelcom@gmail.com?subject=' + subject + '&body=' + body;
-  }, 300);
-}
+function _sendMaxFallback() { /* disabled */ }
 
 // ══ BOTTOM NAV ════════════════════════════════════════════
 function navTo(tab){
@@ -4276,6 +4236,7 @@ function _showResultsInner(){
       cort:parseFloat(document.getElementById('lab-cort')?.value)||null,
       b12:parseFloat(document.getElementById('lab-b12')?.value)||null,
     },
+    device: importedData.source || null,
   };
   _analysisData=data; // сохраняем для Expert-запроса
   const ins=[],recs={};
