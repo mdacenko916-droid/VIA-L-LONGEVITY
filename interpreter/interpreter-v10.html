@@ -1441,7 +1441,7 @@ footer{
 </div>
 
 <!-- GATE -->
-<div id="gate">
+<div id="gate" style="display:none">
   <a href="./index.html" class="gate-back">
     <svg viewBox="0 0 16 16" fill="none"><path d="M10 13L5 8l5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <span data-t="gate_back">Назад</span>
@@ -3314,6 +3314,7 @@ function ouraSlider(id,val){
 }
 function initSliders(){ouraSlider('hrv',55);ouraSlider('sq',6);ouraSlider('rhr',68);ouraSlider('en',6);}
 initSliders();
+setLang(localStorage.getItem('vial_lang')||localStorage.getItem('selectedLang')||'ru');
 
 // ══ NAVIGATION ════════════════════════════════════════════
 function goFromProfile(){
@@ -3962,7 +3963,7 @@ function _showResultsInner(){
   // Symptoms
   const sc=data.symptoms.filter(s=>s!=='nothing').length;
   if(sc>=3){ins.push({t:'warn',i:'🔍',h:L({ru:'Несколько симптомов одновременно',uk:'Кілька симптомів',en:'Multiple Symptoms',es:'Múltiples síntomas',de:'Mehrere Symptome gleichzeitig',pt:'Múltiplos sintomas',fr:'Symptômes multiples',pl:'Wiele objawów jednocześnie',it:'Sintomi multipli',he:'תסמינים מרובים',ja:'複数の症状が同時に',ko:'다중 증상'}),b:L({ru:'Усталость, тревога, туман в голове — характерный симптомокомплекс гормонального дисбаланса.',uk:'Комплекс симптомів гормонального дисбалансу.',en:'Fatigue, anxiety, brain fog — characteristic hormonal imbalance pattern.',es:'Fatiga, ansiedad, niebla mental — patrón de desequilibrio hormonal.',de:'Müdigkeit, Angst, Gehirnnebel — charakteristisches Hormonungleichgewichtsmuster.',pt:'Fadiga, ansiedade, névoa cerebral — padrão característico de desequilíbrio hormonal.',fr:'Fatigue, anxiété, brouillard cérébral — schéma caractéristique de déséquilibre hormonal.',pl:'Zmęczenie, lęk, mgła mózgowa — charakterystyczny wzorzec dysbalansu hormonalnego.',it:'Stanchezza, ansia, nebbia cerebrale — schema caratteristico di squilibrio ormonale.',he:'עייפות, חרדה, ערפל מוחי — תסמין מאפיין של חוסר איזון הורמונלי.',ja:'疲労、不安、ブレインフォグ — ホルモン不均衡の特徴的なパターン。',ko:'피로, 불안, 브레인 포그 — 호르몬 불균형의 특징적인 패턴.'})});score-=10;
-  recs['stress']={h:L({ru:'⚡ Поддержка нервной системы',uk:'⚡ Підтримка нервової системи',en:'⚡ Nervous System Support',es:'⚡ Apoyo al sistema nervioso',de:'⚡ Unterstützung des Nervensystems',pt:'⚡ Suporte ao sistema nervoso',fr:'⚡ Soutien du système nerveux',pl:'⚡ Wsparcie układu nerwowego',it:'⚡ Supporto al sistema nervoso',he:'⚡ תמיכה במערכת העצבים',ja:'⚡ 神経系のサポート',ko:'⚡ 신경계 지원'}),l:L({ru:['Омега-3 EPA+DHA: 2–3 г/сут','Витамин D3 + К2','Адаптогены (ашваганда/родиола)','Белок 1.6–2 г/кг/день','Магний глицинат'],uk:['Омега-3 EPA+DHA 2–3 г/добу','Вітамін D3 + К2','Адаптогени','Білок 1.6–2 г/кг/день'],en:['Omega-3 EPA+DHA 2–3 g/day','Vitamin D3 + K2','Adaptogens (ashwagandha/rhodiola)','Protein 1.6–2 g/kg/day','Magnesium glycinate'],es:['Omega-3 EPA+DHA 2–3 g/día','Vitamina D3 + K2','Adaptógenos (ashwagandha/rhodiola)','Proteína 1.6–2 g/kg/día','Glicinato de magnesio'],de:['Omega-3 EPA+DHA 2–3 g/Tag','Vitamin D3 + K2','Adaptogene (Ashwagandha/Rhodiola)','Protein 1.6–2 g/kg/Tag','Magnesiumglycinat'],pt:['Omega-3 EPA+DHA 2–3 g/dia','Vitamina D3 + K2','Adaptógenos (ashwagandha/rhodiola)','Proteína 1.6–2 g/kg/dia','Glicinato de magnésio'],fr:['Oméga-3 EPA+DHA 2–3 g/jour','Vitamine D3 + K2','Adaptogènes (ashwagandha/rhodiola)','Protéines 1.6–2 g/kg/jour','Glycinate de magnésium'],pl:['Omega-3 EPA+DHA 2–3 g/dzień','Witamina D3 + K2','Adaptogeny (ashwagandha/rhodiola)','Białko 1.6–2 g/kg/dzień','Glicynian magnezu'],it:['Omega-3 EPA+DHA 2–3 g/giorno','Vitamina D3 + K2','Adattogeni (ashwagandha/rhodiola)','Proteine 1.6–2 g/kg/giorno','Glicinato di magnesio'],he:['אומגה-3 EPA+DHA 2–3 גרם ליום','ויטמין D3 + K2','אדפטוגנים (אשוואגנדה/רודיולה)','חלבון 1.6–2 גרם/ק"ג ליום','גליצינט מגנזיום'],ja:['オメガ3 EPA+DHA 2〜3g/日','ビタミンD3+K2','アダプトゲン（アシュワガンダ/ロジオラ）','タンパク質1.6〜2g/kg/日','マグネシウムグリシネート'],ko:['오메가3 EPA+DHA 2–3g/일','비타민 D3+K2','적응소(아슈와간다/로지올라)','단백질 1.6–2g/kg/일','마그네슘 글리시네이트']});}
+  recs['stress']={h:L({ru:'⚡ Поддержка нервной системы',uk:'⚡ Підтримка нервової системи',en:'⚡ Nervous System Support',es:'⚡ Apoyo al sistema nervioso',de:'⚡ Unterstützung des Nervensystems',pt:'⚡ Suporte ao sistema nervoso',fr:'⚡ Soutien du système nerveux',pl:'⚡ Wsparcie układu nerwowego',it:'⚡ Supporto al sistema nervoso',he:'⚡ תמיכה במערכת העצבים',ja:'⚡ 神経系のサポート',ko:'⚡ 신경계 지원'}),l:L({ru:['Омега-3 EPA+DHA: 2–3 г/сут','Витамин D3 + К2','Адаптогены (ашваганда/родиола)','Белок 1.6–2 г/кг/день','Магний глицинат'],uk:['Омега-3 EPA+DHA 2–3 г/добу','Вітамін D3 + К2','Адаптогени','Білок 1.6–2 г/кг/день'],en:['Omega-3 EPA+DHA 2–3 g/day','Vitamin D3 + K2','Adaptogens (ashwagandha/rhodiola)','Protein 1.6–2 g/kg/day','Magnesium glycinate'],es:['Omega-3 EPA+DHA 2–3 g/día','Vitamina D3 + K2','Adaptógenos (ashwagandha/rhodiola)','Proteína 1.6–2 g/kg/día','Glicinato de magnesio'],de:['Omega-3 EPA+DHA 2–3 g/Tag','Vitamin D3 + K2','Adaptogene (Ashwagandha/Rhodiola)','Protein 1.6–2 g/kg/Tag','Magnesiumglycinat'],pt:['Omega-3 EPA+DHA 2–3 g/dia','Vitamina D3 + K2','Adaptógenos (ashwagandha/rhodiola)','Proteína 1.6–2 g/kg/dia','Glicinato de magnésio'],fr:['Oméga-3 EPA+DHA 2–3 g/jour','Vitamine D3 + K2','Adaptogènes (ashwagandha/rhodiola)','Protéines 1.6–2 g/kg/jour','Glycinate de magnésium'],pl:['Omega-3 EPA+DHA 2–3 g/dzień','Witamina D3 + K2','Adaptogeny (ashwagandha/rhodiola)','Białko 1.6–2 g/kg/dzień','Glicynian magnezu'],it:['Omega-3 EPA+DHA 2–3 g/giorno','Vitamina D3 + K2','Adattogeni (ashwagandha/rhodiola)','Proteine 1.6–2 g/kg/giorno','Glicinato di magnesio'],he:['אומגה-3 EPA+DHA 2–3 גרם ליום','ויטמין D3 + K2','אדפטוגנים (אשוואגנדה/רודיולה)','חלבון 1.6–2 גרם/ק"ג ליום','גליצינט מגנזיום'],ja:['オメガ3 EPA+DHA 2〜3g/日','ビタミンD3+K2','アダプトゲン（アシュワガンダ/ロジオラ）','タンパク質1.6〜2g/kg/日','マグネシウムグリシネート'],ko:['오메가3 EPA+DHA 2–3g/일','비타민 D3+K2','적응소(아슈와간다/로지올라)','단백질 1.6–2g/kg/일','마그네슘 글리시네이트']})};}
 
   if(data.alc==='yes'){ins.push({t:'warn',i:'🍷',h:L({ru:'Алкоголь снижает HRV и сон',uk:'Алкоголь знижує HRV та сон',en:'Alcohol Reduces HRV & Sleep',es:'El alcohol reduce VFC y sueño',de:'Alkohol reduziert HRV und Schlaf',pt:'Álcool reduz VFC e sono',fr:'L\'alcool réduit la VRC et le sommeil',pl:'Alkohol obniża HRV i sen',it:'L\'alcool riduce HRV e sonno',he:'אלכוהול מפחית HRV ושינה',ja:'アルコールがHRVと睡眠を低下させる',ko:'알코올이 HRV와 수면을 감소시킵니다'}),b:L({ru:'Даже небольшое количество накануне снижает HRV и глубокий сон.',uk:'Навіть невелика кількість знижує HRV.',en:'Even small amounts the night before reduce HRV and deep sleep.',es:'Incluso pequeñas cantidades la noche anterior reducen la VFC y el sueño profundo.',de:'Auch kleine Mengen am Abend zuvor reduzieren HRV und Tiefschlaf.',pt:'Mesmo pequenas quantidades na noite anterior reduzem VFC e sono profundo.',fr:'Même de petites quantités la veille réduisent la VRC et le sommeil profond.',pl:'Nawet małe ilości poprzedniego wieczoru obniżają HRV i głęboki sen.',it:'Anche piccole quantità la sera prima riducono HRV e sonno profondo.',he:'אפילו כמויות קטנות בלילה הקודם מפחיתות HRV ושינה עמוקה.',ja:'前夜の少量のアルコールでもHRVと深い睡眠が低下します。',ko:'전날 밤 소량의 알코올도 HRV와 깊은 수면을 감소시킵니다.'})});score-=8;}
   if(data.stress==='high'){ins.push({t:'warn',i:'🧠',h:L({ru:'Высокий стресс влияет на всё',uk:'Високий стрес впливає на все',en:'High Stress Affects Everything',es:'El estrés alto lo afecta todo',de:'Hoher Stress beeinflusst alles',pt:'Alto estresse afeta tudo',fr:'Le stress élevé affecte tout',pl:'Wysoki stres wpływa na wszystko',it:'L\'alto stress influenza tutto',he:'לחץ גבוה משפיע על הכל',ja:'高いストレスが全てに影響します',ko:'높은 스트레스가 모든 것에 영향을 미칩니다'}),b:L({ru:'Сильный стресс повышает кортизол, снижает HRV и нарушает сон.',uk:'Стрес підвищує кортизол і порушує сон.',en:'High stress raises cortisol, lowers HRV, disrupts sleep.',es:'El estrés elevado aumenta el cortisol y perturba el sueño.',de:'Hoher Stress erhöht Kortisol, senkt HRV, stört den Schlaf.',pt:'Alto estresse aumenta cortisol, reduz VFC, perturba o sono.',fr:'Le stress élevé augmente le cortisol, baisse la VRC, perturbe le sommeil.',pl:'Wysoki stres podwyższa kortyzol, obniża HRV, zaburza sen.',it:'Lo stress elevato aumenta il cortisolo, abbassa l\'HRV, disturba il sonno.',he:'לחץ גבוה מעלה קורטיזול, מוריד HRV, מפריע לשינה.',ja:'高いストレスがコルチゾールを高め、HRVを下げ、睡眠を乱します。',ko:'높은 스트레스가 코르티솔을 높이고, HRV를 낮추고, 수면을 방해합니다.'})});score-=5;}
@@ -4060,21 +4061,6 @@ function _showResultsInner(){
 
 }
 
-function checkCode(){
-  const v=document.getElementById('gateInput').value.trim().toUpperCase();
-  if(VALID_CODES.map(c=>c.toUpperCase()).includes(v)){
-    const g=document.getElementById('gate');
-    g.style.transition='opacity .5s';g.style.opacity='0';
-    setTimeout(()=>g.style.display='none',500);
-    sessionStorage.setItem('vial_basic','1');
-  } else {
-    const i=document.getElementById('gateInput');
-    i.classList.add('error');
-    document.getElementById('gateError').classList.add('show');
-    setTimeout(()=>i.classList.remove('error'),400);
-  }
-}
-document.getElementById('gateInput').addEventListener('keydown',e=>{if(e.key==='Enter')checkCode();});
 // V10 is free — gate bypassed automatically
 document.getElementById('gate').style.display='none';
 sessionStorage.setItem('vial_basic','1');
