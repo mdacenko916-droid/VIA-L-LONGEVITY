@@ -1013,7 +1013,7 @@ footer{
   .chips{gap:5px;}
   .chip label{padding:7px 12px;font-size:11px;}
   .step-title{font-size:19px;}
-  .lang-bar{padding:8px 14px;}
+  .lang-bar{padding:8px 18px;}
   .bottom-nav{padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));}
   .bottom-nav-item{padding:4px 6px;font-size:8px;}
   .bottom-nav-icon{font-size:18px;}
@@ -2862,9 +2862,10 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxaATfqaJoGYbLJ
 
 function gateUnlock(plan){
   const g=document.getElementById('gate');
+  const sa=document.getElementById('scroll-area');
   g.style.transition='opacity .5s';g.style.opacity='0';
-  setTimeout(()=>g.style.display='none',500);
-  sessionStorage.setItem('vial_access', plan); // 'PRO' или 'MAX'
+  setTimeout(()=>{g.style.display='none';if(sa)sa.style.visibility='visible';},500);
+  sessionStorage.setItem('vial_access', plan);
 }
 
 function gateError(reason){
@@ -2921,7 +2922,12 @@ function toggleGateVis(){
   inp.type=inp.type==='password'?'text':'password';
   eye.textContent=inp.type==='password'?'👁':'🙈';
 }
-if(sessionStorage.getItem('vial_access'))document.getElementById('gate').style.display='none';
+if(sessionStorage.getItem('vial_access')){
+  document.getElementById('gate').style.display='none';
+}else{
+  const sa=document.getElementById('scroll-area');
+  if(sa)sa.style.visibility='hidden';
+}
 
 // ══ LANG DROPDOWN ═════════════════════════════════════════
 function toggleLangMenu(){
