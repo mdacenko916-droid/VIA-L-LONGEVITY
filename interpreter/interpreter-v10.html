@@ -1041,6 +1041,11 @@ footer{
   position:absolute;inset:0;width:100%;height:100%;
   pointer-events:none;z-index:3;opacity:0.85;
 }
+/* Cosmic: constellations + shooting stars */
+#cosmic-canvas{
+  position:absolute;inset:0;width:100%;height:100%;
+  pointer-events:none;z-index:2;
+}
 
 /* Gate makeover */
 #gate{background:transparent;}
@@ -1391,6 +1396,7 @@ footer{
   <div class="bg-blob bg-blob-2"></div>
   <div class="bg-blob bg-blob-3"></div>
   <div class="star-field" id="starField"></div>
+  <canvas id="cosmic-canvas"></canvas>
   <div class="bg-tint" id="bgTint"></div>
   <canvas id="bg-particles"></canvas>
 </div>
@@ -4552,16 +4558,18 @@ function applyManualFull(){const fields={hrv:'mm-hrv',rhr:'mm-rhr',sleepHours:'m
 (function initStarField(){
   const field=document.getElementById('starField');
   if(!field)return;
-  const count=48;
+  const count=90;
   for(let i=0;i<count;i++){
     const el=document.createElement('div');
     el.className='star-dot';
-    const sz=Math.random()*1.8+0.4;
-    const op1=(Math.random()*0.18+0.06).toFixed(2);
-    const op2=(Math.random()*0.45+0.25).toFixed(2);
-    const td=(Math.random()*4+2).toFixed(1);
-    const delay=-(Math.random()*6).toFixed(1);
-    el.style.cssText=`width:${sz}px;height:${sz}px;left:${(Math.random()*100).toFixed(1)}%;top:${(Math.random()*100).toFixed(1)}%;--op1:${op1};--op2:${op2};--td:${td}s;--tdelay:${delay}s;`;
+    const sz=Math.random()*2.2+0.4;
+    const op1=(Math.random()*0.18+0.05).toFixed(2);
+    const op2=(Math.random()*0.55+0.25).toFixed(2);
+    const td=(Math.random()*5+2).toFixed(1);
+    const delay=-(Math.random()*8).toFixed(1);
+    const isGold=Math.random()<0.15;
+    const color=isGold?'rgba(226,185,90,1)':'rgba(255,255,255,1)';
+    el.style.cssText=`width:${sz}px;height:${sz}px;left:${(Math.random()*100).toFixed(1)}%;top:${(Math.random()*100).toFixed(1)}%;background:${color};--op1:${op1};--op2:${op2};--td:${td}s;--tdelay:${delay}s;`;
     field.appendChild(el);
   }
 })();
@@ -4625,6 +4633,149 @@ function applyManualFull(){const fields={hrv:'mm-hrv',rhr:'mm-rhr',sleepHours:'m
   resize();
   frame();
   window.addEventListener('resize',()=>{cancelAnimationFrame(raf);resize();frame();});
+})();
+
+// ══ COSMIC CANVAS — constellations + shooting stars ═══════
+(function initCosmicCanvas(){
+  const canvas=document.getElementById('cosmic-canvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  let W=0,H=0,pr=window.devicePixelRatio||1,raf;
+
+  /* Constellation shapes — relative coords (unit ≈ SCALE px) */
+  const TMPLS=[
+    {pts:[[0,0],[1.2,-.6],[2.4,0],[.6,1.5],[1.8,1.5],[.9,3],[2,3]],
+     lines:[[0,1],[1,2],[0,3],[2,4],[3,4],[3,5],[4,6]]},          // Orion
+    {pts:[[0,0],[1,.3],[2,.1],[3,.6],[3.5,1.7],[3,2.5],[2.2,2.8]],
+     lines:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6]]},                 // Big Dipper
+    {pts:[[0,0],[1.8,0],[.9,-1.5]],
+     lines:[[0,1],[1,2],[2,0]]},                                   // Triangle
+    {pts:[[0,0],[.7,-.8],[1.4,0],[2.1,-.8],[2.8,0]],
+     lines:[[0,1],[1,2],[2,3],[3,4]]},                             // Cassiopeia
+    {pts:[[.8,0],[1.6,.8],[.8,1.6],[0,.8]],
+     lines:[[0,1],[1,2],[2,3],[3,0]]},                             // Diamond
+    {pts:[[0,0],[.5,1],[1,0],[.75,1.8],[.25,1.8]],
+     lines:[[0,1],[1,2],[0,2],[1,3],[2,4],[3,4]]},                 // Lyra
+    {pts:[[0,0],[3.2,0],[0,-1.1],[0,1.1]],
+     lines:[[0,1],[2,3]]},                                         // Cross
+    {pts:[[0,0],[1,-.4],[2,0],[3,-.4],[4,0]],
+     lines:[[0,1],[1,2],[2,3],[3,4]]},                             // Zigzag
+  ];
+  const SCALE=30;
+
+  let consts=[], meteors=[], nextMeteor=0;
+
+  function mkConst(offscreen){
+    const t=TMPLS[Math.floor(Math.random()*TMPLS.length)];
+    const sc=SCALE*(.65+Math.random()*.85);
+    const goRight=Math.random()<.5;
+    const ang=goRight?(Math.random()*.35-.17):(Math.PI+Math.random()*.35-.17);
+    const spd=.07+Math.random()*.13;
+    let x,y;
+    if(offscreen){
+      x=goRight?-260:W+260;
+      y=40+Math.random()*(H-80);
+    }else{
+      x=Math.random()*W; y=Math.random()*H;
+    }
+    return{
+      t,x,y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,sc,
+      op:.07+Math.random()*.13,
+      gold:Math.random()<.35,
+      sizes:t.pts.map(()=>1.0+Math.random()*.9),
+      phase:Math.random()*Math.PI*2,
+      freq:.25+Math.random()*.65
+    };
+  }
+
+  function resize(){
+    pr=window.devicePixelRatio||1;
+    W=canvas.offsetWidth; H=canvas.offsetHeight;
+    canvas.width=W*pr; canvas.height=H*pr;
+    ctx.scale(pr,pr);
+    if(!consts.length) consts=Array.from({length:7},()=>mkConst(false));
+  }
+
+  function spawnMeteor(){
+    const ang=Math.PI/4+(Math.random()-.5)*.4;
+    meteors.push({
+      x:Math.random()*W,y:Math.random()*H*.35,
+      dx:Math.cos(ang),dy:Math.sin(ang),
+      spd:7+Math.random()*5,len:65+Math.random()*115,
+      life:0,max:22+Math.random()*10
+    });
+  }
+
+  function frame(ts){
+    ctx.clearRect(0,0,W,H);
+    const now=ts*.001;
+
+    /* Shooting stars */
+    if(ts>nextMeteor){spawnMeteor();nextMeteor=ts+4500+Math.random()*5500;}
+    meteors=meteors.filter(m=>m.life<m.max+18);
+    for(const m of meteors){
+      m.life++;
+      const p=m.life/m.max;
+      const a=p<.25?p/.25:p<.65?1:Math.max(0,1-(p-.65)/.35);
+      if(a<=0)continue;
+      const hx=m.x+m.dx*m.spd*m.life, hy=m.y+m.dy*m.spd*m.life;
+      const tx=hx-m.dx*m.len,  ty=hy-m.dy*m.len;
+      const g=ctx.createLinearGradient(tx,ty,hx,hy);
+      g.addColorStop(0,'rgba(255,255,255,0)');
+      g.addColorStop(.45,`rgba(230,210,170,${(a*.22).toFixed(3)})`);
+      g.addColorStop(.82,`rgba(255,248,230,${(a*.65).toFixed(3)})`);
+      g.addColorStop(1,  `rgba(255,255,255,${(a*.88).toFixed(3)})`);
+      ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(hx,hy);
+      ctx.strokeStyle=g;ctx.lineWidth=1.3;ctx.stroke();
+      /* Head glow */
+      const gr=ctx.createRadialGradient(hx,hy,0,hx,hy,6);
+      gr.addColorStop(0,`rgba(255,245,210,${(a*.45).toFixed(3)})`);
+      gr.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.beginPath();ctx.arc(hx,hy,6,0,Math.PI*2);
+      ctx.fillStyle=gr;ctx.fill();
+    }
+
+    /* Flying constellations */
+    for(let i=consts.length-1;i>=0;i--){
+      const c=consts[i];
+      c.x+=c.vx; c.y+=c.vy;
+      if(c.x<-320||c.x>W+320||c.y<-320||c.y>H+320){
+        consts.splice(i,1); consts.push(mkConst(true)); continue;
+      }
+      const tw=.80+.20*Math.sin(now*c.freq*Math.PI*2+c.phase);
+      const op=c.op*tw;
+      const col=c.gold?'196,154,60':'205,218,240';
+      /* Lines */
+      ctx.lineWidth=.4;
+      for(const[a,b]of c.t.lines){
+        ctx.beginPath();
+        ctx.moveTo(c.x+c.t.pts[a][0]*c.sc, c.y+c.t.pts[a][1]*c.sc);
+        ctx.lineTo(c.x+c.t.pts[b][0]*c.sc, c.y+c.t.pts[b][1]*c.sc);
+        ctx.strokeStyle=`rgba(${col},${(op*.42).toFixed(3)})`;
+        ctx.stroke();
+      }
+      /* Stars */
+      for(let j=0;j<c.t.pts.length;j++){
+        const px=c.x+c.t.pts[j][0]*c.sc, py=c.y+c.t.pts[j][1]*c.sc;
+        const sr=c.sizes[j];
+        /* Halo */
+        const gr=ctx.createRadialGradient(px,py,0,px,py,sr*4.5);
+        gr.addColorStop(0,`rgba(${col},${(op*.48).toFixed(3)})`);
+        gr.addColorStop(1,`rgba(${col},0)`);
+        ctx.beginPath();ctx.arc(px,py,sr*4.5,0,Math.PI*2);
+        ctx.fillStyle=gr;ctx.fill();
+        /* Core */
+        ctx.beginPath();ctx.arc(px,py,sr*.85,0,Math.PI*2);
+        ctx.fillStyle=`rgba(${col},${(op*.95).toFixed(3)})`;
+        ctx.fill();
+      }
+    }
+    raf=requestAnimationFrame(frame);
+  }
+
+  resize();
+  raf=requestAnimationFrame(frame);
+  window.addEventListener('resize',()=>{cancelAnimationFrame(raf);resize();raf=requestAnimationFrame(frame);});
 })();
 
 </script>
