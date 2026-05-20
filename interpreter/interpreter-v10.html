@@ -12,6 +12,7 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
 :root{
+  --topbar-h: 74px;
   /* Deep graphite-navy — Oura style */
   --bg:        #10131A;
   --bg-2:      #141820;
@@ -210,7 +211,7 @@ body{
 
 /* ══ GATE ═════════════════════════════════════════════════ */
 #gate{
-  position:absolute;inset:0;z-index:500;
+  position:absolute;top:var(--topbar-h);left:0;right:0;bottom:0;z-index:500;
   background:#10131A;
   display:flex;align-items:center;justify-content:center;
   padding:24px;
@@ -792,7 +793,7 @@ footer{
 
 /* ══ IMPORT PANEL ════════════════════════════════════════ */
 #importPanel{
-  position:absolute;inset:0;z-index:300;
+  position:absolute;top:var(--topbar-h);left:0;right:0;bottom:0;z-index:300;
   background:#10131A;
   overflow-y:auto;
   -webkit-overflow-scrolling:touch;
@@ -999,7 +1000,7 @@ footer{
   .btn-row{flex-direction:column;}
   .btn-back{flex:1;}
   .gate-box{padding:24px 16px;}
-  .hero{padding:28px 14px 24px;margin-top:50px;}
+  .hero{padding:calc(var(--topbar-h) + 16px) 14px 24px;margin-top:0;}
   .oura-number{font-size:40px;}
   .chips{gap:5px;}
   .chip label{padding:7px 12px;font-size:11px;}
@@ -1451,7 +1452,7 @@ footer{
 <div id="scroll-area">
 
 <!-- HISTORY PANEL (inside scroll-area) -->
-<div id="historyPanel" style="display:none;position:absolute;inset:0;z-index:400;background:#10131A;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 20px 40px;">
+<div id="historyPanel" style="display:none;position:absolute;top:var(--topbar-h,74px);left:0;right:0;bottom:0;z-index:400;background:#10131A;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 20px 40px;">
   <div style="max-width:600px;margin:0 auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
       <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--t1);" data-t="history_title">История сессий</div>
@@ -4981,5 +4982,16 @@ function applyManualFull(){const fields={hrv:'mm-hrv',rhr:'mm-rhr',sleepHours:'m
   raf=requestAnimationFrame(frame);
   window.addEventListener('resize',()=>{cancelAnimationFrame(raf);resize();raf=requestAnimationFrame(frame);});
 })();
+
+// ── Topbar offset — push all absolute panels below topbar ──
+(function applyTopbarOffset(){
+  const h = (document.getElementById('topbar')||{}).offsetHeight;
+  if(!h) return;
+  document.documentElement.style.setProperty('--topbar-h', h+'px');
+})();
+window.addEventListener('resize', function(){
+  const h = (document.getElementById('topbar')||{}).offsetHeight;
+  if(h) document.documentElement.style.setProperty('--topbar-h', h+'px');
+});
 
 </script>
