@@ -69,7 +69,7 @@ body{
   position:relative;
 }
 
-/* ── App shell — the ONE scrollable container ── */
+/* ── App shell ── */
 #app{
   position:fixed;
   top:0;left:0;right:0;bottom:0;
@@ -79,26 +79,20 @@ body{
   background:transparent;
 }
 
-/* ── Top bar — fixed height ── */
+/* ── Top bar — fully transparent, floats over content ── */
 #topbar{
-  flex:0 0 auto;
-  position:relative;
+  position:absolute;
+  top:0;left:0;right:0;
   z-index:600;
   background:transparent;
   -webkit-backdrop-filter:none;
   backdrop-filter:none;
+  border-bottom:none;
+  box-shadow:none;
 }
-#topbar::after{
-  content:'';
-  position:absolute;
-  top:100%;left:0;right:0;
-  height:44px;
-  background:linear-gradient(to bottom,rgba(16,19,26,0.72) 0%,transparent 100%);
-  pointer-events:none;
-  z-index:1;
-}
+#topbar::after{display:none;}
 
-/* ── Scroll area — fills remaining space ── */
+/* ── Scroll area — fills full space, topbar floats above ── */
 #scroll-area{
   flex:1 1 auto;
   overflow-y:auto;
@@ -297,7 +291,7 @@ body{
 .hero{
   position:relative;z-index:1;
   margin-top:0;
-  padding:90px 18px 28px;
+  padding:calc(var(--topbar-h, 74px) + 24px) 18px 28px;
   text-align:center;
   border-bottom:1px solid var(--b1);
   width:100%;
