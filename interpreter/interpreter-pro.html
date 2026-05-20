@@ -59,7 +59,7 @@ body{
   font-family:'DM Sans',sans-serif;
   font-weight:300;
   color:var(--t1);
-  background:#060410;
+  background:#10131A;
   height:100%;
   height: -webkit-fill-available;
   -webkit-font-smoothing:antialiased;
@@ -110,42 +110,13 @@ body{
 .bg-canvas{
   position:fixed;inset:0;z-index:0;
   pointer-events:none;overflow:visible;
-  background:#060410;
 }
 .bg-gradient{
   position:absolute;inset:0;
   background:
-    radial-gradient(ellipse 80% 55% at 50% 0%, rgba(90,25,170,.75) 0%, transparent 65%),
-    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(70,15,130,.45) 0%, transparent 55%),
-    radial-gradient(ellipse 50% 35% at 0% 65%, rgba(55,10,110,.40) 0%, transparent 55%);
+    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(30,55,120,.35) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 30% at 100% 100%, rgba(20,40,90,.20) 0%, transparent 55%);
 }
-/* ══ COSMIC AMBIENT ══════════════════════════════════════ */
-.bg-blob{position:absolute;border-radius:50%;pointer-events:none;}
-.bg-blob-1{
-  width:600px;height:420px;top:-160px;left:50%;transform:translateX(-50%);
-  background:radial-gradient(ellipse at center,rgba(110,40,210,0.85),transparent 65%);
-  filter:blur(70px);
-  animation:blob1 28s ease-in-out infinite;
-}
-.bg-blob-2{
-  width:400px;height:300px;bottom:5%;right:-80px;
-  background:radial-gradient(ellipse at center,rgba(130,55,220,0.45),transparent 65%);
-  filter:blur(60px);
-  animation:blob2 36s ease-in-out infinite;
-}
-.bg-blob-3{
-  width:340px;height:280px;top:35%;left:-100px;
-  background:radial-gradient(ellipse at center,rgba(80,20,160,0.65),transparent 65%);
-  filter:blur(65px);
-  animation:blob3 22s ease-in-out infinite;
-}
-@keyframes blob1{
-  0%,100%{transform:translateX(-50%) translateY(0);}
-  33%{transform:translateX(-56%) translateY(-28px);}
-  66%{transform:translateX(-44%) translateY(20px);}
-}
-@keyframes blob2{0%,100%{transform:translate(0,0);}50%{transform:translate(-38px,-28px);}}
-@keyframes blob3{0%,100%{transform:translate(0,0);}50%{transform:translate(28px,-38px);}}
 
 .star-field{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1;}
 .star-dot{
@@ -5269,28 +5240,29 @@ async function fetchAIAnalysis(data, lang) {
 (function initStarField(){
   const field=document.getElementById('starField');
   if(!field)return;
-  const count=160;
+  const count=90;
   for(let i=0;i<count;i++){
     const el=document.createElement('div');
     el.className='star-dot';
-    const sz=Math.random()*2.8+0.6;
-    const op1=(Math.random()*0.30+0.12).toFixed(2);
-    const op2=(Math.random()*0.55+0.45).toFixed(2);
+    const sz=Math.random()*2.2+0.4;
+    const op1=(Math.random()*0.18+0.05).toFixed(2);
+    const op2=(Math.random()*0.55+0.25).toFixed(2);
     const td=(Math.random()*5+2).toFixed(1);
     const delay=-(Math.random()*8).toFixed(1);
-    const isAmethyst=Math.random()<0.25;
-    const color=isAmethyst?'rgba(200,160,255,1)':'rgba(255,255,255,1)';
+    const isGold=Math.random()<0.15;
+    const color=isGold?'rgba(226,185,90,1)':'rgba(255,255,255,1)';
     el.style.cssText=`width:${sz}px;height:${sz}px;left:${(Math.random()*100).toFixed(1)}%;top:${(Math.random()*100).toFixed(1)}%;background:${color};--op1:${op1};--op2:${op2};--td:${td}s;--tdelay:${delay}s;`;
     field.appendChild(el);
   }
 })();
 
+// ══ PARTICLE FIELD ═══════════════════════════════════════
 (function initParticleField(){
   const canvas=document.getElementById('bg-particles');
   if(!canvas)return;
   const ctx=canvas.getContext('2d');
   const N=28, DIST=135;
-  const G=[147,100,220];
+  const G=[196,154,60];
   let W,H,pts,pr=window.devicePixelRatio||1,raf;
   function resize(){
     pr=window.devicePixelRatio||1;
@@ -5340,6 +5312,10 @@ async function fetchAIAnalysis(data, lang) {
      lines:[[0,1],[1,2],[2,3],[3,0]]},
     {pts:[[0,0],[.5,1],[1,0],[.75,1.8],[.25,1.8]],
      lines:[[0,1],[1,2],[0,2],[1,3],[2,4],[3,4]]},
+    {pts:[[0,0],[3.2,0],[0,-1.1],[0,1.1]],
+     lines:[[0,1],[2,3]]},
+    {pts:[[0,0],[1,-.4],[2,0],[3,-.4],[4,0]],
+     lines:[[0,1],[1,2],[2,3],[3,4]]},
   ];
   const SCALE=30;
   let consts=[], meteors=[], nextMeteor=0;
@@ -5353,38 +5329,14 @@ async function fetchAIAnalysis(data, lang) {
     let x,y;
     if(offscreen){x=goRight?-260:W+260;y=40+Math.random()*(H-80);}
     else{x=Math.random()*W;y=Math.random()*H;}
-    return{t,sc,x,y,ang,spd,
-      op:0,targetOp:.18+Math.random()*.22,
-      fadeIn:true,fadeOut:false,age:0,
-      life:1800+Math.random()*1200};
-  }
-
-  function mkMeteor(){
-    const x=Math.random()*W*1.2-W*.1;
-    return{x,y:-10,vx:1.8+Math.random()*2.2,vy:1.4+Math.random()*1.8,
-      len:55+Math.random()*70,op:1,alive:true};
-  }
-
-  function drawConst(c){
-    const pts=c.t.pts.map(([px,py])=>{
-      const rx=Math.cos(c.ang)*px-Math.sin(c.ang)*py;
-      const ry=Math.sin(c.ang)*px+Math.cos(c.ang)*py;
-      return[c.x+rx*c.sc, c.y+ry*c.sc];
-    });
-    ctx.strokeStyle=`rgba(180,138,240,${(c.op*.55).toFixed(3)})`;
-    ctx.lineWidth=.6;
-    ctx.beginPath();
-    for(const[a,b] of c.t.lines){
-      ctx.moveTo(pts[a][0],pts[a][1]);
-      ctx.lineTo(pts[b][0],pts[b][1]);
-    }
-    ctx.stroke();
-    for(const[px,py] of pts){
-      ctx.beginPath();
-      ctx.arc(px,py,1.1,0,Math.PI*2);
-      ctx.fillStyle=`rgba(220,190,255,${(c.op*.9).toFixed(3)})`;
-      ctx.fill();
-    }
+    return{
+      t,x,y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,sc,
+      op:.07+Math.random()*.13,
+      gold:Math.random()<.35,
+      sizes:t.pts.map(()=>1.0+Math.random()*.9),
+      phase:Math.random()*Math.PI*2,
+      freq:.25+Math.random()*.65
+    };
   }
 
   function resize(){
@@ -5392,42 +5344,76 @@ async function fetchAIAnalysis(data, lang) {
     W=canvas.offsetWidth; H=canvas.offsetHeight;
     canvas.width=W*pr; canvas.height=H*pr;
     ctx.scale(pr,pr);
-    if(!consts.length){
-      for(let i=0;i<4;i++) consts.push(mkConst(false));
-    }
+    if(!consts.length) consts=Array.from({length:7},()=>mkConst(false));
+  }
+
+  function spawnMeteor(){
+    const ang=Math.PI/4+(Math.random()-.5)*.4;
+    meteors.push({
+      x:Math.random()*W,y:Math.random()*H*.35,
+      dx:Math.cos(ang),dy:Math.sin(ang),
+      spd:7+Math.random()*5,len:65+Math.random()*115,
+      life:0,max:22+Math.random()*10
+    });
   }
 
   function frame(ts){
     ctx.clearRect(0,0,W,H);
-    const spd=.016;
-    for(const c of consts){
-      c.x+=Math.cos(c.ang)*c.spd;
-      c.y+=Math.sin(c.ang)*c.spd;
-      c.age++;
-      if(c.fadeIn){c.op=Math.min(c.op+.0008,c.targetOp);if(c.op>=c.targetOp)c.fadeIn=false;}
-      if(!c.fadeIn&&c.age>c.life){c.fadeOut=true;}
-      if(c.fadeOut){c.op=Math.max(c.op-.0012,0);}
-      drawConst(c);
-    }
-    consts=consts.filter(c=>c.op>0||c.fadeIn);
-    while(consts.length<4) consts.push(mkConst(true));
+    const now=ts*.001;
 
-    if(ts>nextMeteor){
-      meteors.push(mkMeteor());
-      nextMeteor=ts+3000+Math.random()*5000;
-    }
+    if(ts>nextMeteor){spawnMeteor();nextMeteor=ts+4500+Math.random()*5500;}
+    meteors=meteors.filter(m=>m.life<m.max+18);
     for(const m of meteors){
-      const ex=m.x-m.vx*(m.len/Math.hypot(m.vx,m.vy));
-      const ey=m.y-m.vy*(m.len/Math.hypot(m.vx,m.vy));
-      const g=ctx.createLinearGradient(m.x,m.y,ex,ey);
-      g.addColorStop(0,`rgba(220,190,255,${m.op.toFixed(2)})`);
-      g.addColorStop(1,'rgba(180,138,240,0)');
-      ctx.beginPath();ctx.moveTo(m.x,m.y);ctx.lineTo(ex,ey);
-      ctx.strokeStyle=g;ctx.lineWidth=1.2;ctx.stroke();
-      m.x+=m.vx;m.y+=m.vy;m.op-=.022;
-      if(m.op<=0||m.y>H+20)m.alive=false;
+      m.life++;
+      const p=m.life/m.max;
+      const a=p<.25?p/.25:p<.65?1:Math.max(0,1-(p-.65)/.35);
+      if(a<=0)continue;
+      const hx=m.x+m.dx*m.spd*m.life, hy=m.y+m.dy*m.spd*m.life;
+      const tx=hx-m.dx*m.len, ty=hy-m.dy*m.len;
+      const g=ctx.createLinearGradient(tx,ty,hx,hy);
+      g.addColorStop(0,'rgba(255,255,255,0)');
+      g.addColorStop(.45,`rgba(230,210,170,${(a*.22).toFixed(3)})`);
+      g.addColorStop(.82,`rgba(255,248,230,${(a*.65).toFixed(3)})`);
+      g.addColorStop(1,`rgba(255,255,255,${(a*.88).toFixed(3)})`);
+      ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(hx,hy);
+      ctx.strokeStyle=g;ctx.lineWidth=1.3;ctx.stroke();
+      const gr=ctx.createRadialGradient(hx,hy,0,hx,hy,6);
+      gr.addColorStop(0,`rgba(255,245,210,${(a*.45).toFixed(3)})`);
+      gr.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.beginPath();ctx.arc(hx,hy,6,0,Math.PI*2);
+      ctx.fillStyle=gr;ctx.fill();
     }
-    meteors=meteors.filter(m=>m.alive);
+
+    for(let i=consts.length-1;i>=0;i--){
+      const c=consts[i];
+      c.x+=c.vx; c.y+=c.vy;
+      if(c.x<-320||c.x>W+320||c.y<-320||c.y>H+320){
+        consts.splice(i,1); consts.push(mkConst(true)); continue;
+      }
+      const tw=.80+.20*Math.sin(now*c.freq*Math.PI*2+c.phase);
+      const op=c.op*tw;
+      const col=c.gold?'196,154,60':'205,218,240';
+      ctx.lineWidth=.4;
+      for(const[a,b]of c.t.lines){
+        ctx.beginPath();
+        ctx.moveTo(c.x+c.t.pts[a][0]*c.sc, c.y+c.t.pts[a][1]*c.sc);
+        ctx.lineTo(c.x+c.t.pts[b][0]*c.sc, c.y+c.t.pts[b][1]*c.sc);
+        ctx.strokeStyle=`rgba(${col},${(op*.42).toFixed(3)})`;
+        ctx.stroke();
+      }
+      for(let j=0;j<c.t.pts.length;j++){
+        const px=c.x+c.t.pts[j][0]*c.sc, py=c.y+c.t.pts[j][1]*c.sc;
+        const sr=c.sizes[j];
+        const gr=ctx.createRadialGradient(px,py,0,px,py,sr*4.5);
+        gr.addColorStop(0,`rgba(${col},${(op*.48).toFixed(3)})`);
+        gr.addColorStop(1,`rgba(${col},0)`);
+        ctx.beginPath();ctx.arc(px,py,sr*4.5,0,Math.PI*2);
+        ctx.fillStyle=gr;ctx.fill();
+        ctx.beginPath();ctx.arc(px,py,sr*.85,0,Math.PI*2);
+        ctx.fillStyle=`rgba(${col},${(op*.95).toFixed(3)})`;
+        ctx.fill();
+      }
+    }
     raf=requestAnimationFrame(frame);
   }
 
