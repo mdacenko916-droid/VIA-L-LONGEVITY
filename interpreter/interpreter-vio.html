@@ -303,9 +303,9 @@ body{
 
 .hero-eyebrow{display:none;}
 
-/* ── Hero block header (logo → Vio vertical) ── */
-.hero-block-header{display:block;text-align:center;margin-bottom:14px;}
-.hero-monogram{width:88px;height:90px;margin:0 auto 10px;}
+/* ── Hero block header (logo only) ── */
+.hero-block-header{display:block;text-align:center;margin-bottom:0;}
+.hero-monogram{width:88px;height:90px;margin:0 auto 8px;}
 @keyframes vio-shimmer{
   0%{background-position:-200% center;}
   100%{background-position:200% center;}
@@ -314,11 +314,14 @@ body{
   font-family:'Playfair Display',serif;
   font-size:clamp(42px,11vw,62px);letter-spacing:14px;text-transform:uppercase;
   line-height:1;display:inline-block;
+  margin-top:4px;margin-bottom:0;
   background:linear-gradient(90deg,#8B6B22 0%,#C49A3C 18%,#E8C46A 32%,#FFF5A0 50%,#E8C46A 68%,#C49A3C 82%,#8B6B22 100%);
   background-size:200% auto;
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
   animation:vio-shimmer 3s linear infinite;
   filter:drop-shadow(0 0 16px rgba(196,154,60,0.75)) drop-shadow(0 0 40px rgba(196,154,60,0.35));
+  /* isolated stacking context — keeps monogram sharp */
+  isolation:isolate;
 }
 .hero-sep{
   width:120px;height:1px;margin:18px auto 16px;
@@ -327,7 +330,7 @@ body{
 .hero-title{
   font-family:'Playfair Display',serif;
   font-size:clamp(22px,6vw,42px);font-weight:400;
-  color:var(--t1);line-height:1.15;margin-bottom:14px;
+  color:var(--t1);line-height:1.15;margin-bottom:16px;
   text-shadow:0 0 60px rgba(196,154,60,.2);
   word-break:break-word;
 }
@@ -338,7 +341,7 @@ body{
   font-size:10px;letter-spacing:2px;text-transform:uppercase;
   color:var(--t3);background:#1C2030;
   border:1px solid var(--b1);padding:6px 14px;border-radius:50px;
-  margin-top:14px;margin-bottom:0;
+  margin-top:0;margin-bottom:18px;
 }
 .hero-badge span{color:var(--gold);}
 
@@ -1114,7 +1117,7 @@ footer{
 .hero-planet-arc{
   display:block;width:130%;margin-left:-15%;
   height:52px;overflow:visible;
-  margin-bottom:10px;
+  margin-top:10px;margin-bottom:18px;
 }
 
 /* ── Hero VL monogram ── */
@@ -1989,11 +1992,9 @@ footer{
       <span class="logo-spark" style="--a:240deg;--d:3.2s;--r:-49px"></span>
       <span class="logo-spark" style="--a:300deg;--d:.4s;--r:-49px"></span>
     </div>
-    <!-- ③ Название блока под логотипом -->
-    <div class="hero-block-name">Vio</div>
   </div>
-  <!-- ① Бейдж под Vio -->
-  <div class="hero-badge"><span data-t="hero_tier_label">📖 Базовая версия</span></div>
+  <!-- ③ Название блока под логотипом (вне header — изолировано от монограммы) -->
+  <div class="hero-block-name">Vio</div>
 
   <!-- ⑤ Planet arc separator -->
   <svg class="hero-planet-arc" viewBox="0 0 1000 52" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
@@ -2035,6 +2036,9 @@ footer{
       <line x1="487" y1="8"  x2="513" y2="8"  stroke="rgba(255,255,255,0.85)" stroke-width="0.85"/>
     </g>
   </svg>
+
+  <!-- ① Бейдж под дугой горизонта -->
+  <div class="hero-badge"><span data-t="hero_tier_label">📖 Базовая версия</span></div>
 
   <!-- ⑥ Заголовок + описание -->
   <h1 class="hero-title" data-t="hero_title">Интерпретатор данных<br><em>носимого устройства</em></h1>
