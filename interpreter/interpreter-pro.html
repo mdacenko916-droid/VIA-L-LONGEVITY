@@ -96,7 +96,9 @@ body{
   overflow-x:hidden;
   overscroll-behavior:none;
   background:transparent;
+  scrollbar-width:none;
 }
+#scroll-area::-webkit-scrollbar{display:none;}
 
 /* ── Bottom nav — fixed height ── */
 #bottombar{
@@ -1173,29 +1175,6 @@ footer{
       <button onclick="navTo('home')" style="background:none;border:1px solid var(--b1);color:var(--t3);padding:6px 14px;border-radius:50px;font-size:11px;letter-spacing:1px;cursor:pointer;font-family:'DM Sans',sans-serif;">✕</button>
     </div>
     <div id="historyList"></div>
-  </div>
-</div>
-
-<!-- GATE -->
-<div id="gate">
-  <a href="./index.html" class="gate-back">
-    <svg viewBox="0 0 16 16" fill="none"><path d="M10 13L5 8l5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    Назад
-  </a>
-  <div class="gate-box">
-    <div class="gate-ring">
-      <svg viewBox="0 0 24 24"><path d="M12 1C5.9 1 1 5.9 1 12s4.9 11 11 11 11-4.9 11-11S18.1 1 12 1zm0 4c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm3 12H9v-1l1-1v-4l-1-1v-1h4v6l1 1v1z"/></svg>
-    </div>
-    <div class="gate-logo">VIA—L</div>
-    <div class="gate-sub" data-t="gate_sub">Pro Access · $29 / міс</div>
-    <div class="gate-title" data-t="gate_title">Введіть код доступу</div>
-    <div class="gate-desc" data-t="gate_desc">Код надсилається на email після оплати. Ще не маєте Pro? <a href="./index.html#plans" style="color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(196,154,60,.4);">Перейти до планів →</a></div>
-    <div style="position:relative;">
-      <input class="gate-input" id="gateInput" type="password" maxlength="40" placeholder="· · · · · · · ·" autocomplete="off" style="padding-right:44px;">
-      <button type="button" onclick="toggleGateVis()" id="gateEye" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--t3);font-size:18px;line-height:1;padding:4px;">👁</button>
-    </div>
-    <div class="gate-error" id="gateError" data-t="gate_error">Неверный код. Проверьте письмо.</div>
-    <button type="button" id="gateBtn" class="gate-btn" onclick="checkCode()"><span data-t="gate_btn">Увійти →</span></button>
   </div>
 </div>
 
@@ -2834,6 +2813,29 @@ footer{
 </footer>
 
 </div><!-- /scroll-area -->
+
+<!-- GATE — direct child of #app, outside scroll-area -->
+<div id="gate">
+  <a href="./index.html" class="gate-back">
+    <svg viewBox="0 0 16 16" fill="none"><path d="M10 13L5 8l5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Назад
+  </a>
+  <div class="gate-box">
+    <div class="gate-ring">
+      <svg viewBox="0 0 24 24"><path d="M12 1C5.9 1 1 5.9 1 12s4.9 11 11 11 11-4.9 11-11S18.1 1 12 1zm0 4c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm3 12H9v-1l1-1v-4l-1-1v-1h4v6l1 1v1z"/></svg>
+    </div>
+    <div class="gate-logo">VIA—L</div>
+    <div class="gate-sub" data-t="gate_sub">Pro Access · $29 / міс</div>
+    <div class="gate-title" data-t="gate_title">Введіть код доступу</div>
+    <div class="gate-desc" data-t="gate_desc">Код надсилається на email після оплати. Ще не маєте Pro? <a href="./index.html#plans" style="color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(196,154,60,.4);">Перейти до планів →</a></div>
+    <div style="position:relative;">
+      <input class="gate-input" id="gateInput" type="password" maxlength="40" placeholder="· · · · · · · ·" autocomplete="off" style="padding-right:44px;">
+      <button type="button" onclick="toggleGateVis()" id="gateEye" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--t3);font-size:18px;line-height:1;padding:4px;">👁</button>
+    </div>
+    <div class="gate-error" id="gateError" data-t="gate_error">Неверный код. Проверьте письмо.</div>
+    <button type="button" id="gateBtn" class="gate-btn" onclick="checkCode()"><span data-t="gate_btn">Увійти →</span></button>
+  </div>
+</div>
 
 <!-- BOTTOMBAR -->
 <div id="bottombar">
