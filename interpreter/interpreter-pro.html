@@ -59,12 +59,25 @@ body{
   font-family:'DM Sans',sans-serif;
   font-weight:300;
   color:var(--t1);
-  background:#10131A;
+  background-color:#10131A;
+  background-image:url('./images-bg/galaxy-pro.jpg');
+  background-size:cover;
+  background-position:center;
+  background-attachment:fixed;
   height:100%;
   height: -webkit-fill-available;
   -webkit-font-smoothing:antialiased;
   overflow:hidden;
   position:relative;
+}
+@media (max-width:768px){
+  body{background-image:none;}
+  body::before{
+    content:'';position:fixed;inset:0;z-index:-1;
+    background-image:url('./images-bg/galaxy-pro-mobile.jpg');
+    background-size:cover;background-position:center top;
+    transform:translateZ(0);-webkit-transform:translateZ(0);will-change:transform;
+  }
 }
 
 /* ── App shell — the ONE scrollable container ── */
@@ -108,144 +121,9 @@ body{
   z-index:200;
 }
 
-/* ══ BACKGROUND — REALISTIC DEEP SPACE, ZERO CPU ═══════════
-   Black void · dense white star field · faint Milky Way band
-   Zero JS · Zero animation · Zero CPU · Pure CSS paint        */
-.bg-canvas{
-  position:fixed;inset:0;z-index:0;
-  pointer-events:none;overflow:hidden;
-  background:#0C0818;
-}
-
-/* Milky Way band + violet nebula + depth */
-.bg-gradient{
-  position:absolute;inset:0;
-  background:
-    /* Violet nebula — PRO signature, soft and deep */
-    radial-gradient(ellipse 85% 65% at 50% 40%, rgba(72,32,140,.28) 0%, transparent 65%),
-    radial-gradient(ellipse 55% 45% at 12% 8%,  rgba(88,40,165,.20) 0%, transparent 58%),
-    radial-gradient(ellipse 48% 38% at 92% 8%,  rgba(55,25,125,.16) 0%, transparent 52%),
-    radial-gradient(ellipse 42% 34% at 90% 92%, rgba(80,20,135,.14) 0%, transparent 50%),
-    radial-gradient(ellipse 36% 28% at 5%  92%, rgba(48,16,108,.12) 0%, transparent 48%),
-    /* Milky Way band — blue-white, slightly boosted */
-    radial-gradient(ellipse 280% 28% at 50% 44%, rgba(165,188,248,.08) 0%, rgba(140,165,235,.04) 48%, transparent 100%),
-    radial-gradient(ellipse 240% 16% at 53% 41%, rgba(185,205,255,.055) 0%, transparent 100%);
-}
-
-/* Star field — three density layers, 100% static ─────────── */
-.star-field{position:absolute;inset:0;pointer-events:none;z-index:1;}
-
-/* Layer 1 — dense micro stars (48 per 195×200 tile) */
-.star-field::before{
-  content:'';position:absolute;inset:0;
-  background-image:
-    radial-gradient(circle,rgba(255,255,255,.90) .5px,transparent .5px),
-    radial-gradient(circle,rgba(205,222,255,.85) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.78) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,245,215,.88) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.95) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.72) .5px,transparent .5px),
-    radial-gradient(circle,rgba(210,228,255,.82) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.88) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,250,232,.80) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.66) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.92) .5px,transparent .5px),
-    radial-gradient(circle,rgba(188,212,255,.80) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.74) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.86) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,242,212,.82) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.70) .5px,transparent .5px),
-    radial-gradient(circle,rgba(222,236,255,.88) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.76) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.62) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,248,226,.84) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.93) .5px,transparent .5px),
-    radial-gradient(circle,rgba(196,216,255,.78) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.85) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.71) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.89) .5px,transparent .5px),
-    radial-gradient(circle,rgba(238,248,255,.80) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.67) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,244,218,.82) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.91) .5px,transparent .5px),
-    radial-gradient(circle,rgba(202,222,255,.76) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.83) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.73) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.87) .5px,transparent .5px),
-    radial-gradient(circle,rgba(228,240,255,.82) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.96) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,252,238,.77) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.69) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.88) .5px,transparent .5px),
-    radial-gradient(circle,rgba(192,214,255,.84) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.77) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.91) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,246,222,.86) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.74) .5px,transparent .5px),
-    radial-gradient(circle,rgba(216,232,255,.81) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.66) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.93) .5px,transparent .5px),
-    radial-gradient(circle,rgba(255,255,255,.79) .5px,transparent .5px),
-    radial-gradient(circle,rgba(234,244,255,.85) .5px,transparent .5px);
-  background-position:
-     14px  21px,  52px   7px,  98px  45px, 137px  15px, 168px  62px,
-     23px  88px,  77px  34px, 115px  78px, 155px  42px, 182px 105px,
-      8px 118px,  45px  62px,  90px 132px, 128px  95px, 162px 148px,
-     35px 163px,  70px 110px, 108px 155px, 148px 172px, 178px  28px,
-     18px  55px,  60px 140px,  95px  18px, 140px 115px, 172px  85px,
-      3px 175px,  42px  98px,  85px 175px, 125px  55px, 158px 132px,
-     28px 195px,  66px  72px, 103px  95px, 144px 180px, 170px 155px,
-     12px 145px,  50px 160px,  88px 122px, 130px  35px, 160px 108px,
-     32px  38px,  72px 185px, 110px  68px, 148px 145px, 180px  48px,
-      5px  82px,  55px 125px, 100px 162px;
-  background-size:195px 200px;
-  background-repeat:repeat;
-}
-
-/* Layer 2 — bright stars with glow halo + medium stars */
-.star-field::after{
-  content:'';position:absolute;inset:0;
-  background-image:
-    /* 8 bright stars — white/blue-white/warm, with soft halo */
-    radial-gradient(circle,#fff 1.2px,rgba(255,255,255,.22) 3px,transparent 5px),
-    radial-gradient(circle,rgba(195,218,255,.96) 1.1px,rgba(195,218,255,.18) 3px,transparent 5px),
-    radial-gradient(circle,#fff 1.3px,rgba(255,255,255,.25) 3px,transparent 5px),
-    radial-gradient(circle,rgba(255,245,210,.94) 1px,rgba(255,245,210,.16) 3px,transparent 5px),
-    radial-gradient(circle,#fff 1.2px,rgba(255,255,255,.22) 3px,transparent 5px),
-    radial-gradient(circle,rgba(178,210,255,.92) 1.1px,rgba(178,210,255,.14) 3px,transparent 5px),
-    radial-gradient(circle,#fff 1.3px,rgba(255,255,255,.24) 3px,transparent 5px),
-    radial-gradient(circle,rgba(255,248,225,.90) 1px,rgba(255,248,225,.12) 3px,transparent 5px),
-    /* 16 medium stars — 0.9px, no halo */
-    radial-gradient(circle,rgba(255,255,255,.92) .9px,transparent .9px),
-    radial-gradient(circle,rgba(212,230,255,.88) .9px,transparent .9px),
-    radial-gradient(circle,rgba(255,250,228,.90) .9px,transparent .9px),
-    radial-gradient(circle,rgba(255,255,255,.84) .9px,transparent .9px),
-    radial-gradient(circle,rgba(255,255,255,.94) .9px,transparent .9px),
-    radial-gradient(circle,rgba(185,212,255,.86) .9px,transparent .9px),
-    radial-gradient(circle,rgba(255,255,255,.80) .9px,transparent .9px),
-    radial-gradient(circle,rgba(255,242,208,.88) .9px,transparent .9px),
-    radial-gradient(circle,rgba(255,255,255,.92) .9px,transparent .9px),
-    radial-gradient(circle,rgba(224,238,255,.84) .9px,transparent .9px),
-    radial-gradient(circle,rgba(255,255,255,.88) .9px,transparent .9px),
-    radial-gradient(circle,rgba(255,255,255,.76) .9px,transparent .9px),
-    radial-gradient(circle,rgba(255,248,222,.86) .9px,transparent .9px),
-    radial-gradient(circle,rgba(255,255,255,.94) .9px,transparent .9px),
-    radial-gradient(circle,rgba(198,220,255,.82) .9px,transparent .9px),
-    radial-gradient(circle,rgba(255,255,255,.88) .9px,transparent .9px);
-  background-position:
-     68px  92px, 198px  25px, 335px 148px, 458px  72px, 252px 198px,  92px 172px, 408px  48px,  38px 238px,
-    138px  38px, 295px 122px, 428px 178px,  42px 148px, 185px 225px, 348px  92px, 488px 158px,  78px 208px,
-    242px  58px, 385px 215px,  18px  78px, 315px 168px, 462px 112px, 158px 182px, 268px 142px, 422px  25px;
-  background-size:528px 248px;
-  background-repeat:repeat;
-}
-
-/* Orion constellation — fixed full-screen SVG overlay */
-.constellation{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;}
+.bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
 
 .bg-tint{position:absolute;inset:0;z-index:4;pointer-events:none;transition:background .8s;}
-
-.bg-grid{display:none;}
 
 /* ══ LANG BAR ═════════════════════════════════════════════ */
 .lang-bar{
@@ -469,14 +347,6 @@ body{
   isolation:isolate;
 }
 .flare-ring-wrap{position:relative;display:inline-block;}
-/* ── Hero globe ── */
-.hero-globe{
-  position:absolute;
-  top:50%;left:50%;
-  transform:translate(-50%,-50%);
-  width:min(560px,96vw);height:min(560px,96vw);
-  opacity:0.92;pointer-events:none;z-index:-1;
-}
 
 /* ══ MAIN ═════════════════════════════════════════════════ */
 main{
@@ -1271,36 +1141,6 @@ footer{
 </head>
 <body>
 <div class="bg-canvas">
-  <div class="bg-gradient"></div>
-  <div class="star-field"></div>
-  <!-- Constellation Orion — static SVG, zero CPU -->
-  <svg class="constellation" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <g opacity="1">
-      <!-- Constellation lines — very faint blue-white -->
-      <line x1="63.5" y1="14.2" x2="72.8" y2="17.5" stroke="rgba(180,205,255,.18)" stroke-width=".22"/>
-      <line x1="63.5" y1="14.2" x2="65.2" y2="33.8" stroke="rgba(180,205,255,.18)" stroke-width=".22"/>
-      <line x1="72.8" y1="17.5" x2="73.5" y2="30.2" stroke="rgba(180,205,255,.18)" stroke-width=".22"/>
-      <line x1="65.2" y1="33.8" x2="69.4" y2="31.8" stroke="rgba(180,205,255,.22)" stroke-width=".24"/>
-      <line x1="69.4" y1="31.8" x2="73.5" y2="30.2" stroke="rgba(180,205,255,.22)" stroke-width=".24"/>
-      <line x1="65.2" y1="33.8" x2="67.5" y2="47.2" stroke="rgba(180,205,255,.18)" stroke-width=".22"/>
-      <line x1="73.5" y1="30.2" x2="77.2" y2="46.5" stroke="rgba(180,205,255,.18)" stroke-width=".22"/>
-      <!-- Stars: Betelgeuse (orange), Bellatrix (blue), belt×3 (white), Rigel (bright blue-white), Saiph -->
-      <circle cx="63.5" cy="14.2" r="0.52" fill="rgba(255,162,72,.96)"/>   <!-- Betelgeuse -->
-      <circle cx="63.5" cy="14.2" r="1.2"  fill="rgba(255,162,72,.12)"/>
-      <circle cx="72.8" cy="17.5" r="0.40" fill="rgba(190,218,255,.90)"/>   <!-- Bellatrix -->
-      <circle cx="72.8" cy="17.5" r="0.95" fill="rgba(190,218,255,.10)"/>
-      <circle cx="65.2" cy="33.8" r="0.35" fill="rgba(255,255,255,.88)"/>   <!-- Alnitak -->
-      <circle cx="69.4" cy="31.8" r="0.42" fill="rgba(255,255,255,.95)"/>   <!-- Alnilam (center, brightest) -->
-      <circle cx="69.4" cy="31.8" r="1.0"  fill="rgba(255,255,255,.08)"/>
-      <circle cx="73.5" cy="30.2" r="0.35" fill="rgba(255,255,255,.88)"/>   <!-- Mintaka -->
-      <circle cx="77.2" cy="46.5" r="0.58" fill="rgba(195,222,255,.94)"/>   <!-- Rigel -->
-      <circle cx="77.2" cy="46.5" r="1.4"  fill="rgba(195,222,255,.10)"/>
-      <circle cx="67.5" cy="47.2" r="0.38" fill="rgba(255,255,255,.82)"/>   <!-- Saiph -->
-      <!-- Nebula hint (M42, Orion Nebula) — faint glow below belt -->
-      <circle cx="69" cy="39.5" r="2.8" fill="rgba(160,210,255,.04)"/>
-      <circle cx="69" cy="39.5" r="1.4" fill="rgba(200,230,255,.05)"/>
-    </g>
-  </svg>
   <div class="bg-tint" id="bgTint"></div>
 </div>
 
@@ -1904,77 +1744,6 @@ footer{
 
 <!-- HERO -->
 <div class="hero">
-  <!-- Globe background -->
-  <svg class="hero-globe" viewBox="-30 -30 380 380" overflow="visible" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <clipPath id="globe-clip"><circle cx="160" cy="160" r="154"/></clipPath>
-      <!-- Ocean gradient -->
-      <radialGradient id="ocean-g" cx="37%" cy="32%" r="65%">
-        <stop offset="0%" stop-color="#1A7FA8"/>
-        <stop offset="38%" stop-color="#0B3E62"/>
-        <stop offset="100%" stop-color="#040B1A"/>
-      </radialGradient>
-      <!-- Specular highlight -->
-      <radialGradient id="spec-g" cx="34%" cy="27%" r="42%">
-        <stop offset="0%" stop-color="rgba(170,235,255,0.24)"/>
-        <stop offset="100%" stop-color="transparent"/>
-      </radialGradient>
-      <!-- Atmosphere blur -->
-      <filter id="atmo-f" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur stdDeviation="7"/>
-      </filter>
-      <!-- Sun glow behind globe (bottom-right) -->
-      <radialGradient id="sun-g" cx="248" cy="318" r="185" gradientUnits="userSpaceOnUse">
-        <stop offset="0%"   stop-color="#FFF090" stop-opacity="1"/>
-        <stop offset="18%"  stop-color="#FFB030" stop-opacity="0.85"/>
-        <stop offset="40%"  stop-color="#FF6010" stop-opacity="0.45"/>
-        <stop offset="70%"  stop-color="#C03800" stop-opacity="0.12"/>
-        <stop offset="100%" stop-color="#800000" stop-opacity="0"/>
-      </radialGradient>
-      <!-- Limb glow — wide soft atmospheric blur, not a drawn line -->
-      <linearGradient id="limb-g" x1="1" y1="1" x2="0" y2="0">
-        <stop offset="0%"   stop-color="#FFD060" stop-opacity="0.88"/>
-        <stop offset="28%"  stop-color="#FF8820" stop-opacity="0.52"/>
-        <stop offset="58%"  stop-color="rgba(255,120,40,0.14)"/>
-        <stop offset="100%" stop-color="transparent" stop-opacity="0"/>
-      </linearGradient>
-      <!-- Soft blur for the limb glow — makes it look atmospheric -->
-      <filter id="limb-blur" x="-12%" y="-12%" width="124%" height="124%">
-        <feGaussianBlur stdDeviation="6"/>
-      </filter>
-      <!-- Mask: white everywhere EXCEPT inside globe — rays only outside sphere -->
-      <mask id="ray-mask">
-        <rect x="-30" y="-30" width="380" height="380" fill="white"/>
-        <circle cx="160" cy="160" r="156" fill="black"/>
-      </mask>
-    </defs>
-
-    <!-- ① Sun glow (behind everything) -->
-    <circle cx="248" cy="318" r="185" fill="url(#sun-g)"/>
-
-    <!-- ③ Atmosphere glow -->
-    <circle cx="160" cy="160" r="168" fill="none" stroke="rgba(60,160,255,0.50)" stroke-width="14" filter="url(#atmo-f)"/>
-
-    <!-- ④ Ocean sphere -->
-    <circle cx="160" cy="160" r="154" fill="url(#ocean-g)"/>
-
-    <!-- ⑤ Grid lines -->
-    <g clip-path="url(#globe-clip)" fill="none" stroke="rgba(90,200,255,0.25)" stroke-width="0.9">
-      <ellipse cx="160" cy="160" rx="154" ry="13"/>
-      <ellipse cx="160" cy="107" rx="133" ry="11"/>
-      <ellipse cx="160" cy="53"  rx="77"  ry="7"/>
-      <ellipse cx="160" cy="213" rx="133" ry="11"/>
-      <ellipse cx="160" cy="267" rx="77"  ry="7"/>
-      <ellipse cx="160" cy="160" rx="77"  ry="154"/>
-      <ellipse cx="160" cy="160" rx="133" ry="154"/>
-    </g>
-
-    <!-- ⑥ Specular highlight (top-left) -->
-    <circle cx="160" cy="160" r="154" fill="url(#spec-g)"/>
-
-    <!-- ⑦ Horizon limb — wide soft atmospheric glow, masked to outside sphere only -->
-    <circle cx="160" cy="160" r="162" fill="none" stroke="url(#limb-g)" stroke-width="22" opacity="0.82" filter="url(#limb-blur)" mask="url(#ray-mask)"/>
-  </svg>
   <!-- Логотип по центру с искрами -->
   <div class="hero-block-header">
     <div class="flare-ring-wrap">
