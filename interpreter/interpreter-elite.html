@@ -3864,12 +3864,11 @@ function goFromProfile(){
   goTo(1);
 }
 function goTo(n){
-  const sa=document.getElementById('scroll-area');
-  if(sa) sa.scrollTop = 0;
   document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
   const target = document.getElementById(n==='result'?'stepResult':'step'+n);
   if(target) target.classList.add('active');
   updateProgress(n);
+  setTimeout(()=>{ if(target) target.scrollIntoView({behavior:'smooth', block:'start'}); }, 80);
 }
 function updateProgress(n){
   const lbl=document.getElementById('progressLbl');
