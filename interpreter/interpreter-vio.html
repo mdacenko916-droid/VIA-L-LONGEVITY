@@ -49,7 +49,6 @@ html{
   height:100%;
   height: -webkit-fill-available;
   overflow:hidden;
-  background:#10131A;
 }
 html,body{
   max-width:100%;
@@ -61,12 +60,19 @@ body{
   font-family:'DM Sans',sans-serif;
   font-weight:300;
   color:var(--t1);
-  background:#10131A;
+  background-color:#10131A;
+  background-image:url('./images-bg/galaxy-vio.jpg');
+  background-size:cover;
+  background-position:center;
+  background-attachment:fixed;
   height:100%;
   height: -webkit-fill-available;
   -webkit-font-smoothing:antialiased;
   overflow:hidden;
   position:relative;
+}
+@supports (-webkit-touch-callout: none) {
+  body { background-attachment: scroll; }
 }
 
 /* ── App shell ── */
@@ -116,13 +122,7 @@ body{
 /* ══ BACKGROUND ══════════════════════════════════════════ */
 .bg-canvas{
   position:fixed;inset:0;z-index:0;
-  pointer-events:none;overflow:visible;
-}
-.bg-gradient{
-  position:absolute;inset:0;
-  background:
-    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(30,55,120,.35) 0%, transparent 65%),
-    radial-gradient(ellipse 50% 30% at 100% 100%, rgba(20,40,90,.20) 0%, transparent 55%);
+  pointer-events:none;overflow:hidden;
 }
 .bg-grid{display:none;}
 
@@ -304,23 +304,17 @@ body{
 .hero-eyebrow{display:none;}
 
 /* ── Hero block header (logo only) ── */
-.hero-block-header{display:block;text-align:center;margin-bottom:0;}
+.hero-block-header{display:block;text-align:center;margin-bottom:0;margin-top:20px;}
 .hero-monogram{width:88px;height:90px;margin:0 auto 8px;}
-@keyframes vio-shimmer{
-  0%{background-position:-200% center;}
-  100%{background-position:200% center;}
-}
 .hero-block-name{
   font-family:'Playfair Display',serif;
   font-size:clamp(42px,11vw,62px);letter-spacing:14px;text-transform:uppercase;
   line-height:1;display:inline-block;
   margin-top:4px;margin-bottom:0;
-  background:linear-gradient(90deg,#8B6B22 0%,#C49A3C 18%,#E8C46A 32%,#FFF5A0 50%,#E8C46A 68%,#C49A3C 82%,#8B6B22 100%);
-  background-size:200% auto;
+  padding-left:14px; /* compensate trailing letter-spacing — visually centres "VIO" under logo */
+  background:linear-gradient(105deg,#6B4E18 0%,#C49A3C 22%,#F0D078 40%,#FFF8B0 52%,#F0D078 64%,#C49A3C 78%,#7A581E 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  animation:vio-shimmer 3s linear infinite;
-  filter:drop-shadow(0 0 16px rgba(196,154,60,0.75)) drop-shadow(0 0 40px rgba(196,154,60,0.35));
-  /* isolated stacking context — keeps monogram sharp */
+  filter:drop-shadow(0 0 18px rgba(196,154,60,0.78)) drop-shadow(0 0 44px rgba(196,154,60,0.36));
   isolation:isolate;
 }
 .hero-sep{
@@ -337,13 +331,14 @@ body{
 .hero-title em{font-style:italic;color:var(--gold);}
 .hero-desc{font-size:14px;color:var(--t2);line-height:1.75;max-width:440px;margin:0 auto 20px;}
 .hero-badge{
-  display:inline-flex;align-items:center;gap:6px;
-  font-size:10px;letter-spacing:2px;text-transform:uppercase;
-  color:var(--t3);background:#1C2030;
-  border:1px solid var(--b1);padding:6px 14px;border-radius:50px;
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:13px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--t2);background:rgba(28,32,48,0.85);
+  border:1px solid rgba(196,154,60,0.35);padding:10px 22px;border-radius:50px;
   margin-top:0;margin-bottom:18px;
+  box-shadow:0 0 18px rgba(196,154,60,0.10);
 }
-.hero-badge span{color:var(--gold);}
+.hero-badge span{color:var(--gold);font-size:14px;}
 
 /* ══ MAIN ═════════════════════════════════════════════════ */
 main{
@@ -1006,55 +1001,8 @@ footer{
   .bottom-nav-icon{font-size:18px;}
   main{padding:24px 12px 70px;}
 }
-/* ══ VISUAL UPGRADE — COSMIC AMBIENT ══════════════════════ */
-.bg-blob{position:absolute;border-radius:50%;pointer-events:none;}
-.bg-blob-1{
-  width:520px;height:360px;top:-40px;left:50%;transform:translateX(-50%);
-  background:radial-gradient(ellipse at center,rgba(38,22,80,0.75),transparent 65%);
-  filter:blur(75px);
-  animation:blob1 28s ease-in-out infinite;
-}
-.bg-blob-2{
-  width:340px;height:240px;bottom:8%;right:-70px;
-  background:radial-gradient(ellipse at center,rgba(196,154,60,0.08),transparent 65%);
-  filter:blur(65px);
-  animation:blob2 36s ease-in-out infinite;
-}
-.bg-blob-3{
-  width:290px;height:230px;top:38%;left:-90px;
-  background:radial-gradient(ellipse at center,rgba(12,22,65,0.65),transparent 65%);
-  filter:blur(70px);
-  animation:blob3 22s ease-in-out infinite;
-}
-@keyframes blob1{
-  0%,100%{transform:translateX(-50%) translateY(0);}
-  33%{transform:translateX(-56%) translateY(-28px);}
-  66%{transform:translateX(-44%) translateY(20px);}
-}
-@keyframes blob2{0%,100%{transform:translate(0,0);}50%{transform:translate(-38px,-28px);}}
-@keyframes blob3{0%,100%{transform:translate(0,0);}50%{transform:translate(28px,-38px);}}
-
-.star-field{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1;}
-.star-dot{
-  position:absolute;border-radius:50%;background:#fff;
-  animation:twinkle var(--td,3s) ease-in-out infinite;
-  animation-delay:var(--tdelay,0s);
-}
-@keyframes twinkle{
-  0%,100%{opacity:var(--op1,0.15);transform:scale(1);}
-  50%{opacity:var(--op2,0.6);transform:scale(1.5);}
-}
-
-/* Particle field canvas */
-#bg-particles{
-  position:absolute;inset:0;width:100%;height:100%;
-  pointer-events:none;z-index:3;opacity:0.85;
-}
-/* Cosmic: constellations + shooting stars */
-#cosmic-canvas{
-  position:absolute;inset:0;width:100%;height:100%;
-  pointer-events:none;z-index:2;
-}
+/* ══ STAR FIELD — static CSS, zero CPU ═══════════════════ */
+/* tint */
 
 /* Gate makeover */
 #gate{background:transparent;}
@@ -1088,12 +1036,8 @@ footer{
   color:var(--gold);margin-bottom:22px;opacity:0.85;
 }
 
-/* Animated gold gradient primary button */
-@keyframes btn-gold-flow{0%{background-position:0% 50%;}100%{background-position:200% 50%;}}
 .btn-primary{
-  background:linear-gradient(90deg,#9B7A2E 0%,#E2B95A 40%,#C49A3C 60%,#E2B95A 100%) !important;
-  background-size:200% 100% !important;
-  animation:btn-gold-flow 4s linear infinite !important;
+  background:linear-gradient(90deg,#9B7A2E 0%,#E2B95A 38%,#C49A3C 62%,#9B7A2E 100%) !important;
   color:#060a14 !important;font-weight:600 !important;
   box-shadow:0 4px 22px rgba(196,154,60,0.32),inset 0 1px 0 rgba(255,255,255,0.18) !important;
 }
@@ -1124,16 +1068,11 @@ footer{
 /* .hero-monogram moved to hero-block-header section above */
 .hero-monogram svg{
   width:100%;height:100%;
-  filter:
-    drop-shadow(0 0 12px rgba(196,154,60,0.72))
-    drop-shadow(0 0 32px rgba(196,154,60,0.38))
-    drop-shadow(0 0 65px rgba(196,154,60,0.16));
-  animation:logo-breathe 4.5s ease-in-out infinite;
+  filter:drop-shadow(0 0 14px rgba(196,154,60,.84)) drop-shadow(0 0 38px rgba(196,154,60,.45)) drop-shadow(0 0 78px rgba(196,154,60,.20));
+  animation:logo-float 6s ease-in-out infinite;
+  will-change:transform;
 }
-@keyframes logo-breathe{
-  0%,100%{filter:drop-shadow(0 0 12px rgba(196,154,60,0.72)) drop-shadow(0 0 32px rgba(196,154,60,0.38)) drop-shadow(0 0 65px rgba(196,154,60,0.16));}
-  50%{filter:drop-shadow(0 0 18px rgba(196,154,60,0.95)) drop-shadow(0 0 48px rgba(196,154,60,0.55)) drop-shadow(0 0 95px rgba(196,154,60,0.22));}
-}
+@keyframes logo-float{0%,100%{transform:translateY(0);}50%{transform:translateY(-9px);}}
 .hero-brand{
   font-family:'Playfair Display',serif;font-size:17px;letter-spacing:9px;
   color:var(--t1);margin-bottom:3px;
@@ -1144,31 +1083,7 @@ footer{
   color:var(--gold);opacity:0.75;margin-bottom:22px;
 }
 
-/* ── Cinematic star flares on VL logo ── */
 .flare-ring-wrap{position:relative;display:inline-block;}
-.logo-spark{
-  position:absolute;top:50%;left:50%;
-  width:16px;height:16px;margin:-8px 0 0 -8px;
-  transform:rotate(var(--a,0deg)) translateY(var(--r,-48px));
-  animation:spark-twinkle 4.5s ease-in-out var(--d,0s) infinite;
-  opacity:0;pointer-events:none;
-}
-.logo-spark::before,.logo-spark::after{
-  content:'';position:absolute;left:50%;top:50%;border-radius:2px;
-}
-.logo-spark::before{
-  width:1.5px;height:16px;transform:translate(-50%,-50%);
-  background:linear-gradient(to bottom,transparent 0%,rgba(255,223,120,0.95) 50%,transparent 100%);
-}
-.logo-spark::after{
-  width:16px;height:1.5px;transform:translate(-50%,-50%);
-  background:linear-gradient(to right,transparent 0%,rgba(255,223,120,0.95) 50%,transparent 100%);
-}
-@keyframes spark-twinkle{
-  0%,12%,70%,100%{opacity:0;scale:0.2;}
-  38%{opacity:1;scale:1;}
-  52%{opacity:0.25;scale:0.6;}
-}
 
 /* ── Lens flare — cinematic sweep on result reveal ── */
 #lens-flare{
@@ -1211,23 +1126,10 @@ footer{
 
 /* ══ VISUAL UPGRADE — 6 cinematic effects ════════════════ */
 
-/* 1. Aurora sweep — result card top */
+/* 1. Result card accent line — static gold */
 #stepResult .card-accent{
-  background:linear-gradient(90deg,
-    transparent 0%,
-    rgba(196,154,60,.1) 10%,
-    rgba(196,154,60,.65) 35%,
-    rgba(255,232,148,.92) 50%,
-    rgba(196,154,60,.65) 65%,
-    rgba(196,154,60,.1) 90%,
-    transparent 100%) !important;
-  background-size:300% 100%;
-  animation:aurora-card-sweep 3.5s linear infinite;
+  background:linear-gradient(90deg,transparent 0%,rgba(196,154,60,.65) 35%,rgba(255,232,148,.92) 50%,rgba(196,154,60,.65) 65%,transparent 100%) !important;
   height:2px;
-}
-@keyframes aurora-card-sweep{
-  0%{background-position:200% 0;}
-  100%{background-position:-100% 0;}
 }
 
 /* 2. Holographic shimmer — card hover */
@@ -1397,15 +1299,7 @@ footer{
 <body>
 <!-- BACKGROUND — fixed full-viewport layer, outside #app -->
 <div class="bg-canvas">
-  <div class="bg-gradient"></div>
-  <div class="bg-grid"></div>
-  <div class="bg-blob bg-blob-1"></div>
-  <div class="bg-blob bg-blob-2"></div>
-  <div class="bg-blob bg-blob-3"></div>
-  <div class="star-field" id="starField"></div>
-  <canvas id="cosmic-canvas"></canvas>
   <div class="bg-tint" id="bgTint"></div>
-  <canvas id="bg-particles"></canvas>
 </div>
 <div id="app">
 
@@ -1477,12 +1371,7 @@ footer{
         <path fill-rule="evenodd" clip-rule="evenodd" d="M153.972 0.575971C86.3115 6.79897 27.6765 52.656 7.54753 115.09C1.53453 133.74 -0.0334622 144.128 0.000537849 165.09C0.0495378 196.331 6.06354 219.476 21.2985 247.061C45.4175 290.731 92.1245 323.787 142.361 332.741C157.959 335.521 185.285 335.737 200.825 333.204C253.728 324.579 298.024 294.082 324.777 247.865L328.38 241.639L326.204 240.115C325.006 239.276 323.491 238.59 322.836 238.59C322.18 238.59 319.947 241.628 317.873 245.34C305.858 266.845 287.231 286.775 266.863 299.918C208.912 337.312 137.117 337.459 80.6935 300.3C45.2895 276.983 20.0005 240.742 11.1165 200.59C6.94454 181.735 5.97355 169.491 7.37755 153.463C11.3936 107.628 33.1695 68.391 69.9715 40.683C99.6925 18.305 132.639 7.35499 170.472 7.28099C201.525 7.21999 228.833 14.315 254.811 29.191C281.652 44.562 305.102 68.973 318.359 95.34C320.087 98.778 321.652 101.59 321.837 101.59C322.504 101.59 328.472 99.388 328.472 99.142C328.472 99.004 326.174 94.66 323.365 89.49C301.093 48.499 260.551 16.742 216.472 5.75898C197.257 0.970984 172.235 -1.10403 153.972 0.575971ZM55.4715 71.09C55.4715 73.361 55.8605 73.592 59.7215 73.612C65.7755 73.643 71.8716 76.723 74.8616 81.261C76.2486 83.367 81.2805 94.09 86.0445 105.09C90.8085 116.09 99.7686 136.79 105.956 151.09C112.143 165.39 120.586 184.74 124.719 194.09C128.851 203.44 136.835 221.665 142.461 234.59C148.087 247.515 154.514 262.271 156.742 267.38C158.97 272.49 161.171 276.904 161.632 277.189C162.691 277.843 178.275 246.262 179.132 241.726C179.713 238.649 179.589 238.418 177.676 239.025C174.77 239.947 174.066 238.681 162.061 210.958C156.376 197.83 149.24 181.465 146.203 174.59C108.799 89.915 106.551 84.048 109.439 78.651C110.954 75.82 116.242 73.59 121.44 73.59C125.074 73.59 125.472 73.343 125.472 71.09V68.59H90.4715H55.4715V71.09ZM221.472 70.95C221.472 73.061 222.025 73.368 226.722 73.855C236.566 74.875 240.486 78.424 240.459 86.29C240.439 92.294 235.464 106.495 222.566 137.365C219.764 144.071 217.472 149.75 217.472 149.986C217.472 150.221 219.321 150.727 221.58 151.108C226.745 151.981 226.985 151.718 232.554 139.09C234.98 133.59 241.991 118.965 248.134 106.59C261.857 78.945 265.062 75.255 276.526 73.897C280.892 73.38 281.472 73.035 281.472 70.951V68.59H251.472H221.472V70.95ZM168.472 163.976C168.472 166.04 169.084 166.455 172.991 167.041C175.483 167.414 178.734 168.771 180.239 170.066L182.969 172.414L182.971 224.087L182.972 275.76L180.679 277.62C179.418 278.643 176.38 279.781 173.929 280.149C170.584 280.65 169.472 281.259 169.472 282.587C169.472 283.581 170.458 284.615 171.722 284.945C172.959 285.269 195.572 285.434 221.972 285.312L269.972 285.09L270.623 273.09C270.981 266.49 271.566 258.503 271.923 255.34C272.525 249.999 272.425 249.59 270.522 249.59C269.394 249.59 268.18 249.478 267.824 249.34C267.468 249.202 266.426 251.79 265.509 255.09C263.427 262.582 261.442 266.355 257.811 269.726C251.19 275.873 243.693 277.59 223.479 277.59C209.222 277.59 208.519 277.495 207.029 275.367C205.67 273.428 205.472 266.762 205.472 222.949C205.472 195.342 205.752 172.025 206.093 171.135C206.984 168.812 211.79 166.59 215.922 166.59C219.042 166.59 219.472 166.287 219.472 164.09V161.59H193.972H168.472V163.976Z" fill="url(#g-gold)"/>
       </svg>
     </div>
-    <span class="logo-spark" style="--a:0deg;--d:.2s;--r:-44px"></span>
-    <span class="logo-spark" style="--a:60deg;--d:1s;--r:-44px"></span>
-    <span class="logo-spark" style="--a:120deg;--d:1.8s;--r:-44px"></span>
-    <span class="logo-spark" style="--a:180deg;--d:2.6s;--r:-44px"></span>
-    <span class="logo-spark" style="--a:240deg;--d:3.4s;--r:-44px"></span>
-    <span class="logo-spark" style="--a:300deg;--d:.6s;--r:-44px"></span>
+
     </div>
     <div class="gate-logo-name">VIA—L</div>
     <div class="gate-logo-tagline" data-t="gate_sub">Basic Access</div>
@@ -1985,12 +1874,7 @@ footer{
           <path fill-rule="evenodd" clip-rule="evenodd" d="M153.972 0.575971C86.3115 6.79897 27.6765 52.656 7.54753 115.09C1.53453 133.74 -0.0334622 144.128 0.000537849 165.09C0.0495378 196.331 6.06354 219.476 21.2985 247.061C45.4175 290.731 92.1245 323.787 142.361 332.741C157.959 335.521 185.285 335.737 200.825 333.204C253.728 324.579 298.024 294.082 324.777 247.865L328.38 241.639L326.204 240.115C325.006 239.276 323.491 238.59 322.836 238.59C322.18 238.59 319.947 241.628 317.873 245.34C305.858 266.845 287.231 286.775 266.863 299.918C208.912 337.312 137.117 337.459 80.6935 300.3C45.2895 276.983 20.0005 240.742 11.1165 200.59C6.94454 181.735 5.97355 169.491 7.37755 153.463C11.3936 107.628 33.1695 68.391 69.9715 40.683C99.6925 18.305 132.639 7.35499 170.472 7.28099C201.525 7.21999 228.833 14.315 254.811 29.191C281.652 44.562 305.102 68.973 318.359 95.34C320.087 98.778 321.652 101.59 321.837 101.59C322.504 101.59 328.472 99.388 328.472 99.142C328.472 99.004 326.174 94.66 323.365 89.49C301.093 48.499 260.551 16.742 216.472 5.75898C197.257 0.970984 172.235 -1.10403 153.972 0.575971ZM55.4715 71.09C55.4715 73.361 55.8605 73.592 59.7215 73.612C65.7755 73.643 71.8716 76.723 74.8616 81.261C76.2486 83.367 81.2805 94.09 86.0445 105.09C90.8085 116.09 99.7686 136.79 105.956 151.09C112.143 165.39 120.586 184.74 124.719 194.09C128.851 203.44 136.835 221.665 142.461 234.59C148.087 247.515 154.514 262.271 156.742 267.38C158.97 272.49 161.171 276.904 161.632 277.189C162.691 277.843 178.275 246.262 179.132 241.726C179.713 238.649 179.589 238.418 177.676 239.025C174.77 239.947 174.066 238.681 162.061 210.958C156.376 197.83 149.24 181.465 146.203 174.59C108.799 89.915 106.551 84.048 109.439 78.651C110.954 75.82 116.242 73.59 121.44 73.59C125.074 73.59 125.472 73.343 125.472 71.09V68.59H90.4715H55.4715V71.09ZM221.472 70.95C221.472 73.061 222.025 73.368 226.722 73.855C236.566 74.875 240.486 78.424 240.459 86.29C240.439 92.294 235.464 106.495 222.566 137.365C219.764 144.071 217.472 149.75 217.472 149.986C217.472 150.221 219.321 150.727 221.58 151.108C226.745 151.981 226.985 151.718 232.554 139.09C234.98 133.59 241.991 118.965 248.134 106.59C261.857 78.945 265.062 75.255 276.526 73.897C280.892 73.38 281.472 73.035 281.472 70.951V68.59H251.472H221.472V70.95ZM168.472 163.976C168.472 166.04 169.084 166.455 172.991 167.041C175.483 167.414 178.734 168.771 180.239 170.066L182.969 172.414L182.971 224.087L182.972 275.76L180.679 277.62C179.418 278.643 176.38 279.781 173.929 280.149C170.584 280.65 169.472 281.259 169.472 282.587C169.472 283.581 170.458 284.615 171.722 284.945C172.959 285.269 195.572 285.434 221.972 285.312L269.972 285.09L270.623 273.09C270.981 266.49 271.566 258.503 271.923 255.34C272.525 249.999 272.425 249.59 270.522 249.59C269.394 249.59 268.18 249.478 267.824 249.34C267.468 249.202 266.426 251.79 265.509 255.09C263.427 262.582 261.442 266.355 257.811 269.726C251.19 275.873 243.693 277.59 223.479 277.59C209.222 277.59 208.519 277.495 207.029 275.367C205.67 273.428 205.472 266.762 205.472 222.949C205.472 195.342 205.752 172.025 206.093 171.135C206.984 168.812 211.79 166.59 215.922 166.59C219.042 166.59 219.472 166.287 219.472 164.09V161.59H193.972H168.472V163.976Z" fill="url(#h-gold)"/>
         </svg>
       </div>
-      <span class="logo-spark" style="--a:0deg;--d:0s;--r:-49px"></span>
-      <span class="logo-spark" style="--a:60deg;--d:.8s;--r:-49px"></span>
-      <span class="logo-spark" style="--a:120deg;--d:1.6s;--r:-49px"></span>
-      <span class="logo-spark" style="--a:180deg;--d:2.4s;--r:-49px"></span>
-      <span class="logo-spark" style="--a:240deg;--d:3.2s;--r:-49px"></span>
-      <span class="logo-spark" style="--a:300deg;--d:.4s;--r:-49px"></span>
+
     </div>
   </div>
   <!-- ③ Название блока под логотипом (вне header — изолировано от монограммы) -->
@@ -4751,229 +4635,7 @@ function applyManualFull(){const fields={hrv:'mm-hrv',rhr:'mm-rhr',sleepHours:'m
   new ResizeObserver(()=>{ resize(); }).observe(canvas);
 })();
 
-/* ── Star field init ── */
-(function initStarField(){
-  const field=document.getElementById('starField');
-  if(!field)return;
-  const count=90;
-  for(let i=0;i<count;i++){
-    const el=document.createElement('div');
-    el.className='star-dot';
-    const sz=Math.random()*2.2+0.4;
-    const op1=(Math.random()*0.18+0.05).toFixed(2);
-    const op2=(Math.random()*0.55+0.25).toFixed(2);
-    const td=(Math.random()*5+2).toFixed(1);
-    const delay=-(Math.random()*8).toFixed(1);
-    const isGold=Math.random()<0.15;
-    const color=isGold?'rgba(226,185,90,1)':'rgba(255,255,255,1)';
-    el.style.cssText=`width:${sz}px;height:${sz}px;left:${(Math.random()*100).toFixed(1)}%;top:${(Math.random()*100).toFixed(1)}%;background:${color};--op1:${op1};--op2:${op2};--td:${td}s;--tdelay:${delay}s;`;
-    field.appendChild(el);
-  }
-})();
 
-// ══ PARTICLE FIELD ═══════════════════════════════════════
-(function initParticleField(){
-  const canvas=document.getElementById('bg-particles');
-  if(!canvas)return;
-  const ctx=canvas.getContext('2d');
-  const N=28, DIST=135;
-  const G=[196,154,60]; // gold #C49A3C
-  let W,H,pts,pr=window.devicePixelRatio||1,raf;
-
-  function resize(){
-    pr=window.devicePixelRatio||1;
-    W=canvas.offsetWidth; H=canvas.offsetHeight;
-    canvas.width=W*pr; canvas.height=H*pr;
-    ctx.scale(pr,pr);
-    if(!pts) spawn();
-  }
-
-  function spawn(){
-    pts=Array.from({length:N},()=>({
-      x:Math.random()*W, y:Math.random()*H,
-      vx:(Math.random()-.5)*.42, vy:(Math.random()-.5)*.42,
-      r:.8+Math.random()*1.3,
-      op:.2+Math.random()*.35
-    }));
-  }
-
-  function frame(){
-    ctx.clearRect(0,0,W,H);
-    for(const p of pts){
-      p.x+=p.vx; p.y+=p.vy;
-      if(p.x<0||p.x>W) p.vx*=-1;
-      if(p.y<0||p.y>H) p.vy*=-1;
-    }
-    for(let i=0;i<N;i++){
-      for(let j=i+1;j<N;j++){
-        const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
-        const d=Math.sqrt(dx*dx+dy*dy);
-        if(d<DIST){
-          ctx.beginPath();
-          ctx.strokeStyle=`rgba(${G[0]},${G[1]},${G[2]},${((1-d/DIST)*0.22).toFixed(3)})`;
-          ctx.lineWidth=0.7;
-          ctx.moveTo(pts[i].x,pts[i].y);
-          ctx.lineTo(pts[j].x,pts[j].y);
-          ctx.stroke();
-        }
-      }
-    }
-    for(const p of pts){
-      ctx.beginPath();
-      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-      ctx.fillStyle=`rgba(${G[0]},${G[1]},${G[2]},${p.op})`;
-      ctx.fill();
-    }
-    raf=requestAnimationFrame(frame);
-  }
-
-  resize();
-  frame();
-  window.addEventListener('resize',()=>{cancelAnimationFrame(raf);resize();frame();});
-})();
-
-// ══ COSMIC CANVAS — constellations + shooting stars ═══════
-(function initCosmicCanvas(){
-  const canvas=document.getElementById('cosmic-canvas');
-  if(!canvas)return;
-  const ctx=canvas.getContext('2d');
-  let W=0,H=0,pr=window.devicePixelRatio||1,raf;
-
-  /* Constellation shapes — relative coords (unit ≈ SCALE px) */
-  const TMPLS=[
-    {pts:[[0,0],[1.2,-.6],[2.4,0],[.6,1.5],[1.8,1.5],[.9,3],[2,3]],
-     lines:[[0,1],[1,2],[0,3],[2,4],[3,4],[3,5],[4,6]]},          // Orion
-    {pts:[[0,0],[1,.3],[2,.1],[3,.6],[3.5,1.7],[3,2.5],[2.2,2.8]],
-     lines:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6]]},                 // Big Dipper
-    {pts:[[0,0],[1.8,0],[.9,-1.5]],
-     lines:[[0,1],[1,2],[2,0]]},                                   // Triangle
-    {pts:[[0,0],[.7,-.8],[1.4,0],[2.1,-.8],[2.8,0]],
-     lines:[[0,1],[1,2],[2,3],[3,4]]},                             // Cassiopeia
-    {pts:[[.8,0],[1.6,.8],[.8,1.6],[0,.8]],
-     lines:[[0,1],[1,2],[2,3],[3,0]]},                             // Diamond
-    {pts:[[0,0],[.5,1],[1,0],[.75,1.8],[.25,1.8]],
-     lines:[[0,1],[1,2],[0,2],[1,3],[2,4],[3,4]]},                 // Lyra
-    {pts:[[0,0],[3.2,0],[0,-1.1],[0,1.1]],
-     lines:[[0,1],[2,3]]},                                         // Cross
-    {pts:[[0,0],[1,-.4],[2,0],[3,-.4],[4,0]],
-     lines:[[0,1],[1,2],[2,3],[3,4]]},                             // Zigzag
-  ];
-  const SCALE=30;
-
-  let consts=[], meteors=[], nextMeteor=0;
-
-  function mkConst(offscreen){
-    const t=TMPLS[Math.floor(Math.random()*TMPLS.length)];
-    const sc=SCALE*(.65+Math.random()*.85);
-    const goRight=Math.random()<.5;
-    const ang=goRight?(Math.random()*.35-.17):(Math.PI+Math.random()*.35-.17);
-    const spd=.07+Math.random()*.13;
-    let x,y;
-    if(offscreen){
-      x=goRight?-260:W+260;
-      y=40+Math.random()*(H-80);
-    }else{
-      x=Math.random()*W; y=Math.random()*H;
-    }
-    return{
-      t,x,y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,sc,
-      op:.07+Math.random()*.13,
-      gold:Math.random()<.35,
-      sizes:t.pts.map(()=>1.0+Math.random()*.9),
-      phase:Math.random()*Math.PI*2,
-      freq:.25+Math.random()*.65
-    };
-  }
-
-  function resize(){
-    pr=window.devicePixelRatio||1;
-    W=canvas.offsetWidth; H=canvas.offsetHeight;
-    canvas.width=W*pr; canvas.height=H*pr;
-    ctx.scale(pr,pr);
-    if(!consts.length) consts=Array.from({length:7},()=>mkConst(false));
-  }
-
-  function spawnMeteor(){
-    const ang=Math.PI/4+(Math.random()-.5)*.4;
-    meteors.push({
-      x:Math.random()*W,y:Math.random()*H*.35,
-      dx:Math.cos(ang),dy:Math.sin(ang),
-      spd:7+Math.random()*5,len:65+Math.random()*115,
-      life:0,max:22+Math.random()*10
-    });
-  }
-
-  function frame(ts){
-    ctx.clearRect(0,0,W,H);
-    const now=ts*.001;
-
-    /* Shooting stars */
-    if(ts>nextMeteor){spawnMeteor();nextMeteor=ts+4500+Math.random()*5500;}
-    meteors=meteors.filter(m=>m.life<m.max+18);
-    for(const m of meteors){
-      m.life++;
-      const p=m.life/m.max;
-      const a=p<.25?p/.25:p<.65?1:Math.max(0,1-(p-.65)/.35);
-      if(a<=0)continue;
-      const hx=m.x+m.dx*m.spd*m.life, hy=m.y+m.dy*m.spd*m.life;
-      const tx=hx-m.dx*m.len,  ty=hy-m.dy*m.len;
-      const g=ctx.createLinearGradient(tx,ty,hx,hy);
-      g.addColorStop(0,'rgba(255,255,255,0)');
-      g.addColorStop(.45,`rgba(230,210,170,${(a*.22).toFixed(3)})`);
-      g.addColorStop(.82,`rgba(255,248,230,${(a*.65).toFixed(3)})`);
-      g.addColorStop(1,  `rgba(255,255,255,${(a*.88).toFixed(3)})`);
-      ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(hx,hy);
-      ctx.strokeStyle=g;ctx.lineWidth=1.3;ctx.stroke();
-      /* Head glow */
-      const gr=ctx.createRadialGradient(hx,hy,0,hx,hy,6);
-      gr.addColorStop(0,`rgba(255,245,210,${(a*.45).toFixed(3)})`);
-      gr.addColorStop(1,'rgba(255,255,255,0)');
-      ctx.beginPath();ctx.arc(hx,hy,6,0,Math.PI*2);
-      ctx.fillStyle=gr;ctx.fill();
-    }
-
-    /* Flying constellations */
-    for(let i=consts.length-1;i>=0;i--){
-      const c=consts[i];
-      c.x+=c.vx; c.y+=c.vy;
-      if(c.x<-320||c.x>W+320||c.y<-320||c.y>H+320){
-        consts.splice(i,1); consts.push(mkConst(true)); continue;
-      }
-      const tw=.80+.20*Math.sin(now*c.freq*Math.PI*2+c.phase);
-      const op=c.op*tw;
-      const col=c.gold?'196,154,60':'205,218,240';
-      /* Lines */
-      ctx.lineWidth=.4;
-      for(const[a,b]of c.t.lines){
-        ctx.beginPath();
-        ctx.moveTo(c.x+c.t.pts[a][0]*c.sc, c.y+c.t.pts[a][1]*c.sc);
-        ctx.lineTo(c.x+c.t.pts[b][0]*c.sc, c.y+c.t.pts[b][1]*c.sc);
-        ctx.strokeStyle=`rgba(${col},${(op*.42).toFixed(3)})`;
-        ctx.stroke();
-      }
-      /* Stars */
-      for(let j=0;j<c.t.pts.length;j++){
-        const px=c.x+c.t.pts[j][0]*c.sc, py=c.y+c.t.pts[j][1]*c.sc;
-        const sr=c.sizes[j];
-        /* Halo */
-        const gr=ctx.createRadialGradient(px,py,0,px,py,sr*4.5);
-        gr.addColorStop(0,`rgba(${col},${(op*.48).toFixed(3)})`);
-        gr.addColorStop(1,`rgba(${col},0)`);
-        ctx.beginPath();ctx.arc(px,py,sr*4.5,0,Math.PI*2);
-        ctx.fillStyle=gr;ctx.fill();
-        /* Core */
-        ctx.beginPath();ctx.arc(px,py,sr*.85,0,Math.PI*2);
-        ctx.fillStyle=`rgba(${col},${(op*.95).toFixed(3)})`;
-        ctx.fill();
-      }
-    }
-    raf=requestAnimationFrame(frame);
-  }
-
-  resize();
-  raf=requestAnimationFrame(frame);
-  window.addEventListener('resize',()=>{cancelAnimationFrame(raf);resize();raf=requestAnimationFrame(frame);});
-})();
 
 // ── Topbar offset — push all absolute panels below topbar ──
 (function applyTopbarOffset(){
