@@ -298,9 +298,14 @@ body{
 ::-webkit-scrollbar{display:none;}
 *{scrollbar-width:none;-ms-overflow-style:none;}
 @media (max-width: 768px) {
-  body {
+  body { background-image: none; }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
     background-image: url('./images-bg/galaxy-vio-mobile.jpg');
-    background-attachment: scroll;
+    background-size: cover;
     background-position: center top;
   }
 }
@@ -3482,10 +3487,9 @@ function goTo(n){
   document.getElementById('app').setAttribute('data-step', n);
   updateProgress(n);
   setTimeout(()=>{
-    const sa=document.getElementById('scroll-area');
-    if(sa) sa.scrollTop = 0;
-    else window.scrollTo(0,0);
-  }, 50);
+    const target2 = document.getElementById(n==='result'?'stepResult':'step'+n);
+    if(target2) target2.scrollIntoView({behavior:'smooth', block:'start'});
+  }, 80);
 }
 function updateProgress(n){
   const lbl=document.getElementById('progressLbl');
