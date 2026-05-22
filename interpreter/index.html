@@ -28,10 +28,6 @@ html::-webkit-scrollbar { display: none !important; width: 0 !important; }
 
 body {
   background-color: var(--dark);
-  background-image: url('./images-bg/galaxy-index.jpg');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
   color: var(--t1);
   font-family: 'DM Sans', sans-serif;
   min-height: 100vh;
@@ -40,21 +36,22 @@ body {
   -ms-overflow-style: none;
 }
 body::-webkit-scrollbar { display: none; width: 0; }
+/* Фиксированный фон — работает везде включая iOS */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: url('./images-bg/galaxy-index.jpg');
+  background-size: cover;
+  background-position: center;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
 @media (max-width: 768px) {
-  body {
-    background-image: none;
-  }
   body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: -1;
     background-image: url('./images-bg/galaxy-mobile.jpg');
-    background-size: cover;
     background-position: center top;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    will-change: transform;
   }
 }
 
