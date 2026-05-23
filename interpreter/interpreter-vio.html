@@ -106,7 +106,6 @@ body{
   scrollbar-width:none;
   -ms-overflow-style:none;
   background:transparent;
-  -webkit-transform:translateZ(0);
 }
 #scroll-area::-webkit-scrollbar{display:none;width:0;}
 
@@ -4247,8 +4246,8 @@ sessionStorage.setItem('vial_basic','1');
 
 // ══ IMPORT DATA STORE ════════════════════════════════════
 const importedData={hrv:null,rhr:null,sleepHours:null,deepMin:null,tempDev:null,energy:null,vo2:null,source:null};
-function openImport(){document.getElementById('importPanel').classList.add('open');const sa=document.getElementById('scroll-area');if(sa)sa.scrollTo({top:0,behavior:'instant'});}
-function closeImport(skip){document.getElementById('importPanel').classList.remove('open');if(!skip&&importedData.source)applyImportedToSliders();}
+function openImport(){const sa=document.getElementById('scroll-area');if(sa){sa.scrollTo({top:0,behavior:'instant'});sa.style.overflowY='hidden';}document.getElementById('importPanel').classList.add('open');}
+function closeImport(skip){document.getElementById('importPanel').classList.remove('open');const sa=document.getElementById('scroll-area');if(sa)sa.style.overflowY='auto';if(!skip&&importedData.source)applyImportedToSliders();}
 function applyImportedToSliders(){
   if(importedData.hrv!=null){const el=document.getElementById('hrv');el.value=Math.min(120,Math.max(10,Math.round(importedData.hrv)));ouraSlider('hrv',+el.value);}
   if(importedData.rhr!=null){const el=document.getElementById('rhr');el.value=Math.min(110,Math.max(40,Math.round(importedData.rhr)));ouraSlider('rhr',+el.value);}
