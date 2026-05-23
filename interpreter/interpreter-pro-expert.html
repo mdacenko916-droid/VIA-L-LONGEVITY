@@ -4333,6 +4333,7 @@ const T={
 const LANG_FLAGS={'ru':'🇷🇺 RU','uk':'🇺🇦 UK','en':'🇬🇧 EN','es':'🇪🇸 ES','de':'🇩🇪 DE','pt':'🇧🇷 PT','fr':'🇫🇷 FR','pl':'🇵🇱 PL','it':'🇮🇹 IT','he':'🇮🇱 HE','ja':'🇯🇵 JA','ko':'🇰🇷 KO'};
 let lang='uk';
 let _analysisData=null;
+let _rerendering=false;
 const _urlDevice=new URLSearchParams(location.search).get('device')||null;
 function setLang(l){
   lang=l;
@@ -4380,6 +4381,7 @@ function setLang(l){
   const _t12=document.getElementById('step12-title');
   if(_t12&&_gm)_t12.innerHTML=_gm.value==='male'?t('s12_title_m'):t('s12_title_f');
   initSliders();
+  if(_lastResult){_rerendering=true;try{_showResultsInner();}finally{_rerendering=false;}if(document.getElementById('aiCard'))fetchAIAnalysis(_lastResult.data,l);}
 }
 function t(k){return T[lang][k]||T.ru[k]||k;}
 function L(t){return t[lang]||t.en||t.ru||Object.values(t)[0];}
@@ -5625,14 +5627,14 @@ function _showResultsInner(){
     document.getElementById('qolDesc').innerHTML=`<span style="font-size:22px;font-family:DM Mono,monospace;color:${clrQ};">${qol}</span><span style="color:var(--t3)">/100</span><br><span style="margin-top:6px;display:inline-block;">${qolLabel}</span>`;
   })();
 
-  // Save to history
-  saveSession(score,type,data);
+  // Save to history (skip on language re-render)
+  if(!_rerendering)saveSession(score,type,data);
 
   // Store for PDF
   _lastResult={score,type,insights:ins,recs,docR,labs,data};
 
-  // AI personalized analysis
-  fetchAIAnalysis(data,lang);
+  // AI personalized analysis (skip on language re-render — setLang calls it directly)
+  if(!_rerendering)fetchAIAnalysis(data,lang);
 
   // Render PRO modules
   renderProModules(data, score, type);
