@@ -245,6 +245,12 @@ export default {
 
     try {
       const { data, lang } = await request.json();
+      const langMap = {
+        ru: 'русском', uk: 'украинском', en: 'English', es: 'español',
+        de: 'Deutsch', pt: 'português', fr: 'français', pl: 'polski',
+        it: 'italiano', he: 'עברית', ja: '日本語', ko: '한국어',
+      };
+      const langName = langMap[lang] || 'русском';
 
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -260,7 +266,7 @@ export default {
           system: [
             {
               type: 'text',
-              text: SYSTEM_PROMPT,
+              text: 'Отвечай ТОЛЬКО на языке: ' + langName + '.\n\n' + SYSTEM_PROMPT,
               cache_control: { type: 'ephemeral' },
             },
           ],
@@ -360,12 +366,6 @@ function selectKBPatterns(data) {
 }
 
 function buildUserMessage(data, lang) {
-  const langMap = {
-    ru: 'русском', uk: 'украинском', en: 'English', es: 'español',
-    de: 'Deutsch', pt: 'português', fr: 'français', pl: 'polski',
-    it: 'italiano', he: 'עברית', ja: '日本語', ko: '한국어',
-  };
-  const langName = langMap[lang] || 'русском';
   const isFem = data.gender !== 'male';
   const phaseMap = {
     peri: 'Перименопауза', meno: 'Менопауза', post: 'Постменопауза',
@@ -652,8 +652,7 @@ function buildUserMessage(data, lang) {
   const circadianBlock = circadian.length ? '══ ПАТТЕРНЫ СНА ══\n' + circadian.join('\n') + '\n\n' : '';
   const symptomBlock   = symRules.length  ? '══ СИМПТОМ → НУТРИТИВНАЯ ПОДДЕРЖКА ══\n' + symRules.join('\n') + '\n\n' : '';
 
-  return 'Отвечай ТОЛЬКО на языке: ' + langName + '.\n\n'
-    + '══ РЕФЕРЕНСНЫЕ НОРМЫ ══\n'
+  return '══ РЕФЕРЕНСНЫЕ НОРМЫ ══\n'
     + 'HRV (' + age + ' лет): норма ' + hrvNormLow + '–' + hrvNormHigh + ' мс | клиент: ' + data.hrv + ' мс → ' + hrvStatus + '\n'
     + 'ЧСС покоя: норма ' + (isFem ? '60–75' : '55–70') + ' уд/мин | клиент: ' + rhrVal + ' уд/мин → ' + rhrStatus + '\n'
     + 'Глубокий сон: норма 90–110 мин | клиент: ' + deepContext + '\n'
