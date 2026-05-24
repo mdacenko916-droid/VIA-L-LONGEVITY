@@ -1161,6 +1161,29 @@ footer{
 .max-btn{margin-top:12px;width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#5c7aff,#7898ff);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;letter-spacing:.5px;cursor:pointer;transition:opacity .2s;}
 .max-btn:hover{opacity:.88;}
 .max-sent{display:none;text-align:center;padding:16px;font-size:13px;color:#7898ff;}
+/* ══ PULSE RINGS + ECG CANVAS ON SLIDERS ════════════════ */
+.hrv-vital{position:relative;margin-bottom:14px;}
+.hrv-vital .oura-display{margin-bottom:0;position:relative;z-index:1;}
+.rings-wrap{
+  position:absolute;left:30px;top:50%;
+  transform:translate(-50%,-52%);
+  width:68px;height:68px;
+  pointer-events:none;z-index:0;
+}
+.pulse-ring{
+  position:absolute;inset:0;border-radius:50%;
+  border:1.5px solid var(--ring-clr,rgba(196,154,60,.7));
+  animation:ring-ripple 2.8s ease-out infinite;
+}
+.pulse-ring:nth-child(2){animation-delay:.93s;}
+.pulse-ring:nth-child(3){animation-delay:1.87s;}
+@keyframes ring-ripple{
+  0%{transform:scale(0.32);opacity:0.9;}
+  65%{opacity:0.18;}
+  100%{transform:scale(2.85);opacity:0;}
+}
+.ecg-canvas{display:block;width:100%;height:50px;margin-bottom:14px;border-radius:8px;}
+
 </style>
 </head>
 <body>
@@ -1900,11 +1923,17 @@ footer{
       <div class="input-group">
         <label data-t="s0_l1">Ваш HRV сегодня</label>
         <div class="oura-slider-wrap">
-          <div class="oura-display">
-            <div class="oura-number" id="hrv-num">55</div>
-            <div class="oura-unit">мс</div>
-            <div class="oura-status" id="hrv-status">Норма</div>
+          <div class="hrv-vital">
+            <div class="rings-wrap" style="--ring-clr:rgba(46,111,191,.65)">
+              <div class="pulse-ring"></div><div class="pulse-ring"></div><div class="pulse-ring"></div>
+            </div>
+            <div class="oura-display">
+              <div class="oura-number" id="hrv-num">55</div>
+              <div class="oura-unit">мс</div>
+              <div class="oura-status" id="hrv-status">Норма</div>
+            </div>
           </div>
+          <canvas id="ecg-hrv" class="ecg-canvas"></canvas>
           <div class="oura-track-wrap">
             <div class="oura-track" id="hrv-track">
               <div class="oura-fill" id="hrv-fill"></div>
@@ -2019,11 +2048,17 @@ footer{
       <div class="input-group">
         <label data-t="s2_l1">Ощущение сна (1–10)</label>
         <div class="oura-slider-wrap">
-          <div class="oura-display">
-            <div class="oura-number" id="sq-num">6</div>
-            <div class="oura-unit">/ 10</div>
-            <div class="oura-status" id="sq-status">Good</div>
+          <div class="hrv-vital">
+            <div class="rings-wrap" style="--ring-clr:rgba(59,91,219,.65)">
+              <div class="pulse-ring"></div><div class="pulse-ring"></div><div class="pulse-ring"></div>
+            </div>
+            <div class="oura-display">
+              <div class="oura-number" id="sq-num">6</div>
+              <div class="oura-unit">/ 10</div>
+              <div class="oura-status" id="sq-status">Good</div>
+            </div>
           </div>
+          <canvas id="ecg-sq" class="ecg-canvas"></canvas>
           <div class="oura-track-wrap">
             <div class="oura-track" id="sq-track">
               <div class="oura-fill" id="sq-fill"></div>
@@ -2065,11 +2100,17 @@ footer{
       <div class="input-group">
         <label data-t="s2_l4">Частота дыхания за ночь</label>
         <div class="oura-slider-wrap">
-          <div class="oura-display">
-            <div class="oura-number" id="resp-num">15</div>
-            <div class="oura-unit" data-t="resp_unit">вдохов/мин</div>
-            <div class="oura-status" id="resp-status">Normal</div>
+          <div class="hrv-vital">
+            <div class="rings-wrap" style="--ring-clr:rgba(59,91,219,.65)">
+              <div class="pulse-ring"></div><div class="pulse-ring"></div><div class="pulse-ring"></div>
+            </div>
+            <div class="oura-display">
+              <div class="oura-number" id="resp-num">15</div>
+              <div class="oura-unit" data-t="resp_unit">вдохов/мин</div>
+              <div class="oura-status" id="resp-status">Normal</div>
+            </div>
           </div>
+          <canvas id="ecg-resp" class="ecg-canvas"></canvas>
           <div class="oura-track-wrap">
             <div class="oura-track" id="resp-track">
               <div class="oura-fill" id="resp-fill"></div>
@@ -2105,11 +2146,17 @@ footer{
       <div class="input-group">
         <label data-t="s3_l1">Пульс покоя (RHR)</label>
         <div class="oura-slider-wrap">
-          <div class="oura-display">
-            <div class="oura-number" id="rhr-num">68</div>
-            <div class="oura-unit" data-t="bpm">уд/мин</div>
-            <div class="oura-status" id="rhr-status">Normal</div>
+          <div class="hrv-vital">
+            <div class="rings-wrap" style="--ring-clr:rgba(192,57,90,.65)">
+              <div class="pulse-ring"></div><div class="pulse-ring"></div><div class="pulse-ring"></div>
+            </div>
+            <div class="oura-display">
+              <div class="oura-number" id="rhr-num">68</div>
+              <div class="oura-unit" data-t="bpm">уд/мин</div>
+              <div class="oura-status" id="rhr-status">Normal</div>
+            </div>
           </div>
+          <canvas id="ecg-rhr" class="ecg-canvas"></canvas>
           <div class="oura-track-wrap">
             <div class="oura-track" id="rhr-track">
               <div class="oura-fill" id="rhr-fill"></div>
@@ -2161,11 +2208,17 @@ footer{
       <div class="input-group">
         <label data-t="s3_anx">Тревожность (1–10)</label>
         <div class="oura-slider-wrap">
-          <div class="oura-display">
-            <div class="oura-number" id="anx-num">3</div>
-            <div class="oura-unit">/ 10</div>
-            <div class="oura-status" id="anx-status">Low</div>
+          <div class="hrv-vital">
+            <div class="rings-wrap" style="--ring-clr:rgba(192,57,90,.65)">
+              <div class="pulse-ring"></div><div class="pulse-ring"></div><div class="pulse-ring"></div>
+            </div>
+            <div class="oura-display">
+              <div class="oura-number" id="anx-num">3</div>
+              <div class="oura-unit">/ 10</div>
+              <div class="oura-status" id="anx-status">Low</div>
+            </div>
           </div>
+          <canvas id="ecg-anx" class="ecg-canvas"></canvas>
           <div class="oura-track-wrap">
             <div class="oura-track" id="anx-track">
               <div class="oura-fill" id="anx-fill"></div>
@@ -2208,11 +2261,17 @@ footer{
       <div class="input-group">
         <label data-t="s4_l1">Уровень энергии (1–10)</label>
         <div class="oura-slider-wrap">
-          <div class="oura-display">
-            <div class="oura-number" id="en-num">6</div>
-            <div class="oura-unit">/ 10</div>
-            <div class="oura-status" id="en-status">Good</div>
+          <div class="hrv-vital">
+            <div class="rings-wrap" style="--ring-clr:rgba(26,138,122,.65)">
+              <div class="pulse-ring"></div><div class="pulse-ring"></div><div class="pulse-ring"></div>
+            </div>
+            <div class="oura-display">
+              <div class="oura-number" id="en-num">6</div>
+              <div class="oura-unit">/ 10</div>
+              <div class="oura-status" id="en-status">Good</div>
+            </div>
           </div>
+          <canvas id="ecg-en" class="ecg-canvas"></canvas>
           <div class="oura-track-wrap">
             <div class="oura-track" id="en-track">
               <div class="oura-fill" id="en-fill"></div>
@@ -6297,6 +6356,85 @@ async function fetchAIAnalysis(data, lang) {
     err.style.display = 'block';
   }
 }
+
+
+(function(){
+  function parseHex(hex){
+    return[parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)];
+  }
+  function initECG(canvasId, stepId, hexColor){
+    const canvas=document.getElementById(canvasId);
+    if(!canvas)return;
+    const ctx=canvas.getContext('2d');
+    const[cr,cg,cb]=parseHex(hexColor);
+    const dotColor=`rgba(${Math.min(cr+60,255)},${Math.min(cg+60,255)},${Math.min(cb+60,255)},0.95)`;
+    let w=0,h=0,t=0,raf=null,linGrad=null;
+    function resize(){
+      const r=window.devicePixelRatio||1;
+      w=canvas.offsetWidth; h=canvas.offsetHeight;
+      canvas.width=w*r; canvas.height=h*r;
+      ctx.scale(r,r);
+      linGrad=ctx.createLinearGradient(0,0,w,0);
+      linGrad.addColorStop(0,   `rgba(${cr},${cg},${cb},0)`);
+      linGrad.addColorStop(0.22,`rgba(${cr},${cg},${cb},0.15)`);
+      linGrad.addColorStop(0.55,`rgba(${cr},${cg},${cb},0.52)`);
+      linGrad.addColorStop(0.80,`rgba(${cr},${cg},${cb},0.88)`);
+      linGrad.addColorStop(0.92,`rgba(${cr},${cg},${cb},1)`);
+      linGrad.addColorStop(1,   `rgba(${cr},${cg},${cb},0.04)`);
+    }
+    function ecgShape(x,offset){
+      const period=w*0.68;
+      const n=(((x-offset)%period)+period)%period;
+      const p=n/period;
+      let y=0;
+      y+=0.10*Math.exp(-Math.pow(p-0.10,2)/0.0006);
+      y-=0.09*Math.exp(-Math.pow(p-0.19,2)/0.00009);
+      y+=1.00*Math.exp(-Math.pow(p-0.23,2)/0.00016);
+      y-=0.20*Math.exp(-Math.pow(p-0.28,2)/0.00016);
+      y+=0.22*Math.exp(-Math.pow(p-0.43,2)/0.0022);
+      return y;
+    }
+    function draw(){
+      if(!w)resize();
+      ctx.clearRect(0,0,w,h);
+      t+=0.62;
+      const midY=h*0.52, amp=h*0.37;
+      ctx.beginPath();
+      for(let x=0;x<=w;x+=2){
+        const y=midY-ecgShape(x,t)*amp;
+        x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+      }
+      ctx.strokeStyle=linGrad; ctx.lineWidth=1.8; ctx.lineJoin='round'; ctx.stroke();
+      const fx=Math.round(w*0.90), fy=midY-ecgShape(fx,t)*amp;
+      ctx.shadowColor=`rgba(${cr},${cg},${cb},0.55)`;
+      ctx.shadowBlur=14;
+      ctx.beginPath(); ctx.arc(fx,fy,2.5,0,Math.PI*2);
+      ctx.fillStyle=dotColor; ctx.fill();
+      ctx.shadowBlur=0;
+      raf=requestAnimationFrame(draw);
+    }
+    function start(){if(!raf){resize();draw();}}
+    function stop(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+    const step=document.getElementById(stepId);
+    if(step){
+      new MutationObserver(()=>{
+        step.classList.contains('active')?start():stop();
+      }).observe(step,{attributes:true,attributeFilter:['class']});
+      if(step.classList.contains('active'))start();
+    }
+    document.addEventListener('visibilitychange',()=>{
+      if(document.hidden)stop();
+      else if(step&&step.classList.contains('active'))start();
+    });
+    new ResizeObserver(()=>{if(w){resize();}}).observe(canvas);
+  }
+  initECG('ecg-hrv',  'step1', '#2E6FBF');
+  initECG('ecg-sq',   'step3', '#3B5BDB');
+  initECG('ecg-resp', 'step3', '#3B5BDB');
+  initECG('ecg-rhr',  'step4', '#C0395A');
+  initECG('ecg-anx',  'step4', '#C0395A');
+  initECG('ecg-en',   'step5', '#1A8A7A');
+})();
 
 
 </script>
