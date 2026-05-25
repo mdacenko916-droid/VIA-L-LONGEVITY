@@ -243,43 +243,16 @@ export default {
       return new Response('Method not allowed', { status: 405 });
     }
 
+    const url  = new URL(request.url);
+    const path = url.pathname;
+
     try {
-      const { data, lang } = await request.json();
-      const langMap = {
-        ru: 'русском', uk: 'украинском', en: 'English', es: 'español',
-        de: 'Deutsch', pt: 'português', fr: 'français', pl: 'polski',
-        it: 'italiano', he: 'עברית', ja: '日本語', ko: '한국어',
-      };
-      const langName = langMap[lang] || 'русском';
+      // Backstage Telegram bot — этап 1 (skeleton).
+      if (path === '/tg-test') return handleTgTest(request, env, corsHeaders);
+      if (path === '/draft')   return handleDraft(request, env, corsHeaders);
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': env.CLAUDE_API_KEY,
-          'anthropic-version': '2023-06-01',
-          'anthropic-beta': 'prompt-caching-2024-07-31',
-        },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 1600,
-          system: [
-            {
-              type: 'text',
-              text: 'Отвечай ТОЛЬКО на языке: ' + langName + '.\n\n' + SYSTEM_PROMPT,
-              cache_control: { type: 'ephemeral' },
-            },
-          ],
-          messages: [{ role: 'user', content: buildUserMessage(data, lang) }],
-        }),
-      });
-
-      const result = await response.json();
-      const text = result.content?.[0]?.text || result.error?.message || 'Ошибка генерации';
-
-      return new Response(JSON.stringify({ analysis: text }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      // Default: AI-анализ для интерпретатора (старая логика по корню «/»).
+      return handleAnalyze(request, env, corsHeaders);
 
     } catch (e) {
       return new Response(JSON.stringify({ error: e.message }), {
@@ -289,6 +262,136 @@ export default {
     }
   },
 };
+
+// ─────────────────────────────────────────────────────────────
+// AI analyse endpoint (existing)
+// ─────────────────────────────────────────────────────────────
+async function handleAnalyze(request, env, corsHeaders) {
+  const { data, lang } = await request.json();
+  const langMap = {
+    ru: 'русском', uk: 'украинском', en: 'English', es: 'español',
+    de: 'Deutsch', pt: 'português', fr: 'français', pl: 'polski',
+    it: 'italiano', he: 'עברית', ja: '日本語', ko: '한국어',
+  };
+  const langName = langMap[lang] || 'русском';
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': env.CLAUDE_API_KEY,
+      'anthropic-version': '2023-06-01',
+      'anthropic-beta': 'prompt-caching-2024-07-31',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1600,
+      system: [
+        {
+          type: 'text',
+          text: 'Отвечай ТОЛЬКО на языке: ' + langName + '.\n\n' + SYSTEM_PROMPT,
+          cache_control: { type: 'ephemeral' },
+        },
+      ],
+      messages: [{ role: 'user', content: buildUserMessage(data, lang) }],
+    }),
+  });
+
+  const result = await response.json();
+  const text = result.content?.[0]?.text || result.error?.message || 'Ошибка генерации';
+
+  return new Response(JSON.stringify({ analysis: text }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// Telegram backstage helpers
+// ─────────────────────────────────────────────────────────────
+async function sendTelegram(env, text, extra = {}) {
+  const tgUrl = `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+  const body = {
+    chat_id: env.NUTRITIONIST_CHAT_ID,
+    text,
+    parse_mode: 'HTML',
+    disable_web_page_preview: true,
+    ...extra,
+  };
+  const res = await fetch(tgUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  return res.json();
+}
+
+function jsonResponse(obj, corsHeaders, status = 200) {
+  return new Response(JSON.stringify(obj), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+// POST /tg-test  → отправляет нутрициологу контрольное сообщение.
+async function handleTgTest(request, env, corsHeaders) {
+  if (!env.TELEGRAM_BOT_TOKEN || !env.NUTRITIONIST_CHAT_ID) {
+    return jsonResponse({ ok: false, error: 'tg_secrets_missing' }, corsHeaders, 500);
+  }
+  const tg = await sendTelegram(
+    env,
+    '✅ <b>VIA-L Backstage</b>\n\nБот подключён к Worker и готов получать AI-черновики Expert/ELITE-разборов.'
+  );
+  return jsonResponse({ ok: true, tg }, corsHeaders);
+}
+
+// POST /draft  → принимает данные Expert-запроса от Apps Script, отправляет
+// нутрициологу карточку клиента в Telegram. AI-анализ добавим на этапе 3.
+async function handleDraft(request, env, corsHeaders) {
+  if (!env.TELEGRAM_BOT_TOKEN || !env.NUTRITIONIST_CHAT_ID) {
+    return jsonResponse({ ok: false, error: 'tg_secrets_missing' }, corsHeaders, 500);
+  }
+  let payload = {};
+  try { payload = await request.json(); }
+  catch (e) { return jsonResponse({ ok: false, error: 'invalid_json' }, corsHeaders, 400); }
+
+  const d = payload.data || {};
+  const lines = [];
+  lines.push('📋 <b>Новый Expert-разбор</b>');
+  lines.push(`<b>Тариф:</b> ${esc(payload.plan)}${payload.week_no ? ` · неделя ${esc(payload.week_no)}` : ''}`);
+  lines.push(`<b>Клиент:</b> ${esc(payload.client_name) || '—'} · ${esc(payload.client_email) || '—'}`);
+  lines.push(`<b>Код:</b> <code>${esc(payload.code)}</code> · <b>язык:</b> ${esc(payload.lang || 'ru')}`);
+  lines.push('');
+  lines.push(`<b>Профиль:</b> ${d.gender === 'male' ? 'М' : 'Ж'} · фаза ${esc(d.phase) || '—'}${d.age ? ' · ' + d.age + ' лет' : ''}`);
+  const bio = [];
+  if (d.hrv)         bio.push(`HRV ${d.hrv}мс`);
+  if (d.rhr)         bio.push(`ЧСС ${d.rhr}`);
+  if (d.sleep_qual)  bio.push(`сон ${d.sleep_qual}/10`);
+  if (d.energy)      bio.push(`энергия ${d.energy}/10`);
+  if (d.anxiety)     bio.push(`тревога ${d.anxiety}/10`);
+  if (bio.length)    lines.push(`<b>Биометрия:</b> ${bio.join(' · ')}`);
+  if (Array.isArray(d.symptoms) && d.symptoms.length) {
+    lines.push(`<b>Симптомы:</b> ${esc(d.symptoms.join(', '))}`);
+  }
+  if (payload.question) {
+    lines.push('');
+    lines.push('<b>Вопрос клиента:</b>');
+    lines.push(esc(payload.question));
+  }
+  lines.push('');
+  lines.push('<i>AI-bullet-points будут добавлены на этапе 3.</i>');
+
+  const tg = await sendTelegram(env, lines.join('\n'));
+  return jsonResponse({ ok: true, tg }, corsHeaders);
+}
+
+// HTML-escape для Telegram parse_mode=HTML.
+function esc(s) {
+  if (s === null || s === undefined) return '';
+  return s.toString()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
 
 // Selects 1–2 most relevant KB patterns based on user profile
 function selectKBPatterns(data) {

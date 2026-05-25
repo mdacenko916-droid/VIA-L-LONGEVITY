@@ -33,6 +33,10 @@ var ELITE_12W_MAX  = 12;   // 12 отчётов за программу
 
 var MARINA_EMAIL = 'viaelcom@gmail.com';
 
+// Backstage Telegram-бот: после каждого Expert-запроса Apps Script зовёт
+// этот endpoint Cloudflare Worker, который шлёт карточку клиента нутрициологу.
+var BACKSTAGE_DRAFT_URL = 'https://vial-claude-proxy.viaelcom.workers.dev/draft';
+
 // Dev-коды — обходят проверку по таблице, не ограничены лимитом
 var DEV_CODES = ['VIAL-EXPERT-2024', 'VIAL-PRO-2024', 'VL-DEV-MAX',
                  'VIAL-ELITE-2024', 'VIAL-ELITE-8W', 'VIAL-ELITE-12W'];
@@ -81,6 +85,11 @@ function handleExpertRequest(p) {
   // Dev-коды: отправляем письмо без проверки таблицы
   if (DEV_CODES.indexOf(code) !== -1) {
     sendExpertEmail(name, email, question, data, lang, code + ' [DEV]');
+    notifyBackstageBot({
+      client_name: name, client_email: email, code: code + ' [DEV]',
+      lang: lang, plan: 'DEV', week_no: null,
+      question: question, data: data
+    });
     return respond({ ok: true, dev: true });
   }
 
@@ -143,6 +152,11 @@ function handleExpertRequest(p) {
       historyAll.map(function (d) { return d.toISOString(); })
     ));
     sendExpertEmail(name, email, question, data, lang, code);
+    notifyBackstageBot({
+      client_name: name, client_email: email, code: code,
+      lang: lang, plan: limits.plan, week_no: recent.length,
+      question: question, data: data
+    });
     return respond({
       ok: true,
       used: recent.length,
@@ -430,6 +444,23 @@ function respond(data) {
   return ContentService
     .createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// Backstage Telegram-бот: уведомление нутрициолога после Expert-запроса.
+// Безопасно к ошибкам — если Worker недоступен или вернёт ошибку, основной
+// поток (email на viaelcom@gmail.com) уже завершён успешно.
+function notifyBackstageBot(payload) {
+  try {
+    UrlFetchApp.fetch(BACKSTAGE_DRAFT_URL, {
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    });
+  } catch (e) {
+    // Логируем для диагностики, но не пробрасываем — клиент уже получил подтверждение.
+    Logger.log('notifyBackstageBot failed: ' + e.toString());
+  }
 }
 
 function doOptions(e) {
