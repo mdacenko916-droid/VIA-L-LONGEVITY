@@ -1,5 +1,5 @@
 // ══════════════════════════════════════════════════════════════
-// VIA-L · Google Apps Script v3.1
+// VIA-L · Google Apps Script v3.2
 // — валидация кодов доступа (doGet без action)
 // — приём Expert-запросов (doGet?action=expert) — image beacon
 // — приём Expert-запросов (doPost) — fallback
@@ -12,18 +12,30 @@
 //
 // Статусы: FREE → ACTIVE → EXPIRED
 //
-// Лимиты Expert (PRO-EXPERT / ELITE): 2 разбора в скользящем окне 30 дней,
-//                                     минимум 7 дней между запросами.
+// ТАРИФЫ (значения колонки B; регистр не важен, проверяется по подстроке):
+//   PRO            — Pro, без Expert-запросов; срок 30 дней.
+//   EXPERT/MAX     — Pro + Expert: 30 дней, 2 разбора в окне 30 дней, cooldown 7 дней.
+//   ELITE-8W       — Elite 8 недель (€390): 56 дней, до 8 отчётов всего, cooldown 7 дней.
+//   ELITE-12W      — Elite 12 недель (€590): 84 дня, до 12 отчётов всего, cooldown 7 дней.
+//   ELITE (legacy) — попадает в ELITE-8W (бэкап-совместимость).
 // ══════════════════════════════════════════════════════════════
 
-var SUBSCRIPTION_DAYS = 30;
-var EXPERT_MAX        = 2;                          // максимум разборов в окне
-var EXPERT_WIN_MS     = 30 * 24 * 60 * 60 * 1000;   // размер окна (30 дней)
+var SUBSCRIPTION_DAYS = 30;                         // дефолт (PRO / EXPERT)
+var EXPERT_MAX        = 2;                          // максимум разборов EXPERT в окне
+var EXPERT_WIN_MS     = 30 * 24 * 60 * 60 * 1000;   // размер окна EXPERT (30 дней)
 var EXPERT_COOL_MS    = 7  * 24 * 60 * 60 * 1000;   // cooldown между запросами (7 дней)
+
+// ELITE — две вариации программы
+var ELITE_8W_DAYS  = 56;   // 8 недель
+var ELITE_12W_DAYS = 84;   // 12 недель
+var ELITE_8W_MAX   = 8;    // 8 отчётов за программу
+var ELITE_12W_MAX  = 12;   // 12 отчётов за программу
+
 var MARINA_EMAIL = 'viaelcom@gmail.com';
 
 // Dev-коды — обходят проверку по таблице, не ограничены лимитом
-var DEV_CODES = ['VIAL-EXPERT-2024', 'VIAL-PRO-2024', 'VL-DEV-MAX', 'VIAL-ELITE-2024'];
+var DEV_CODES = ['VIAL-EXPERT-2024', 'VIAL-PRO-2024', 'VL-DEV-MAX',
+                 'VIAL-ELITE-2024', 'VIAL-ELITE-8W', 'VIAL-ELITE-12W'];
 
 // ── GET: валидация кода ИЛИ приём Expert-запроса ─────────────
 function doGet(e) {
@@ -86,36 +98,40 @@ function handleExpertRequest(p) {
 
     if (rowStatus === 'EXPIRED') return respond({ ok: false, reason: 'expired' });
 
-    // Лимиты по тарифу:
-    //   EXPERT (MAX) — 2 разбора в окне 30 дней + cooldown 7 дней.
-    //   ELITE        — без лимита окна, только cooldown 7 дней.
-    //                  (Детальная логика «8/12 разборов на программу» добавим отдельно.)
-    var elite      = isElitePlan(rowPlan);
+    // Лимиты по тарифу (см. getPlanLimits):
+    //   EXPERT     — 2 разбора в окне 30 дней + cooldown 7 дней.
+    //   ELITE-8W   — 8 отчётов на программу (56 дней)  + cooldown 7 дней.
+    //   ELITE-12W  — 12 отчётов на программу (84 дня) + cooldown 7 дней.
+    var limits     = getPlanLimits(rowPlan);
     var historyAll = parseExpertHistory(lastExpert);
-    var recent     = elite
+    var recent     = limits.windowMs === Infinity
       ? historyAll.slice()
-      : historyAll.filter(function (d) { return (now - d) < EXPERT_WIN_MS; });
+      : historyAll.filter(function (d) { return (now - d) < limits.windowMs; });
 
-    // ① лимит окна — только для EXPERT
-    if (!elite && recent.length >= EXPERT_MAX) {
-      var earliest = recent.reduce(function (a, b) { return a < b ? a : b; });
-      var nextAvail = new Date(earliest.getTime() + EXPERT_WIN_MS);
+    // ① лимит исчерпан
+    if (recent.length >= limits.max) {
+      var nextAvailIso = null;
+      var reason = limits.windowMs === Infinity ? 'program_limit' : 'monthly_limit';
+      if (limits.windowMs !== Infinity) {
+        var earliest = recent.reduce(function (a, b) { return a < b ? a : b; });
+        nextAvailIso = new Date(earliest.getTime() + limits.windowMs).toISOString();
+      }
       return respond({
-        ok: false, reason: 'monthly_limit',
-        next_date: nextAvail.toISOString(),
-        used: recent.length, max: EXPERT_MAX
+        ok: false, reason: reason,
+        next_date: nextAvailIso,
+        used: recent.length, max: limits.max
       });
     }
 
     // ② cooldown между запросами — для всех тарифов
     if (recent.length >= 1) {
       var last = recent.reduce(function (a, b) { return a > b ? a : b; });
-      if ((now - last) < EXPERT_COOL_MS) {
-        var nextCool = new Date(last.getTime() + EXPERT_COOL_MS);
+      if ((now - last) < limits.cooldownMs) {
+        var nextCool = new Date(last.getTime() + limits.cooldownMs);
         return respond({
           ok: false, reason: 'cooldown_7d',
           next_date: nextCool.toISOString(),
-          used: recent.length, max: elite ? null : EXPERT_MAX
+          used: recent.length, max: limits.max
         });
       }
     }
@@ -130,8 +146,8 @@ function handleExpertRequest(p) {
     return respond({
       ok: true,
       used: recent.length,
-      max: elite ? null : EXPERT_MAX,
-      next_available_at: new Date(now.getTime() + EXPERT_COOL_MS).toISOString()
+      max: limits.max,
+      next_available_at: new Date(now.getTime() + limits.cooldownMs).toISOString()
     });
   }
 
@@ -153,13 +169,14 @@ function validateCode(code) {
     if (rowCode !== code) continue;
 
     if (rowStatus === 'FREE') {
-      var expiry = new Date(now.getTime() + SUBSCRIPTION_DAYS * 24 * 60 * 60 * 1000);
+      var limitsFree = getPlanLimits(rowPlan);
+      var expiry = new Date(now.getTime() + limitsFree.subscriptionDays * 24 * 60 * 60 * 1000);
       sheet.getRange(i + 1, 3).setValue('ACTIVE');
       sheet.getRange(i + 1, 4).setValue(now.toISOString());
       sheet.getRange(i + 1, 5).setValue(expiry.toISOString());
       return respond({
         ok: true, plan: rowPlan, expiry: expiry.toISOString(),
-        expert_used: 0, expert_max: EXPERT_MAX, expert_next_at: null
+        expert_used: 0, expert_max: limitsFree.max, expert_next_at: null
       });
     }
 
@@ -340,12 +357,31 @@ function sendExpertEmail(name, email, question, d, lang, code) {
   }
 }
 
-// ── Helpers для Expert-счётчика ───────────────────────────────
-// ELITE определяется по содержимому колонки B (тариф). Допустимые значения
-// для ELITE: 'ELITE', 'ELITE-8W', 'ELITE-12W' и т.п. — любая строка с подстрокой ELITE.
-function isElitePlan(plan) {
-  return (plan || '').toString().toUpperCase().indexOf('ELITE') !== -1;
+// ── Helpers для тарифов и Expert-счётчика ─────────────────────
+// Возвращает параметры тарифа по содержимому колонки B.
+//   { plan, subscriptionDays, max, windowMs, cooldownMs, isElite }
+// Все ELITE-программы используют windowMs=Infinity (лимит на всю программу).
+// EXPERT использует windowMs=30 дней.
+function getPlanLimits(plan) {
+  var p = (plan || '').toString().toUpperCase().trim();
+  if (p.indexOf('ELITE-12') !== -1 || p === 'ELITE12W' || p === 'ELITE-12W') {
+    return { plan: 'ELITE-12W', subscriptionDays: ELITE_12W_DAYS,
+             max: ELITE_12W_MAX, windowMs: Infinity, cooldownMs: EXPERT_COOL_MS,
+             isElite: true };
+  }
+  if (p.indexOf('ELITE') !== -1) {  // ELITE / ELITE-8W / ELITE8W → 8W
+    return { plan: 'ELITE-8W', subscriptionDays: ELITE_8W_DAYS,
+             max: ELITE_8W_MAX, windowMs: Infinity, cooldownMs: EXPERT_COOL_MS,
+             isElite: true };
+  }
+  // PRO+EXPERT / MAX (legacy) → одна логика
+  return { plan: 'EXPERT', subscriptionDays: SUBSCRIPTION_DAYS,
+           max: EXPERT_MAX, windowMs: EXPERT_WIN_MS, cooldownMs: EXPERT_COOL_MS,
+           isElite: false };
 }
+
+// Старый алиас оставлен для совместимости с прежним кодом.
+function isElitePlan(plan) { return getPlanLimits(plan).isElite; }
 
 // Парсит колонку F. Поддерживает два формата:
 //   • новый: JSON-массив ISO-дат  →  ["2026-05-01T…","2026-05-12T…"]
@@ -368,27 +404,26 @@ function parseExpertHistory(value) {
   return isNaN(single.getTime()) ? [] : [single];
 }
 
-// Возвращает { used: N, max: M|null, next_at: ISO|null } с учётом тарифа.
-// EXPERT: окно 30 дней, max=2.
-// ELITE:  без окна (вся история), max=null (детальная логика 8/12 — отдельно).
+// Возвращает { used: N, max: M, next_at: ISO|null } с учётом тарифа.
 function expertStateFromHistory(history, now, plan) {
-  var elite  = isElitePlan(plan);
-  var recent = elite
+  var limits = getPlanLimits(plan);
+  var recent = limits.windowMs === Infinity
     ? history.slice()
-    : history.filter(function (d) { return (now - d) < EXPERT_WIN_MS; });
+    : history.filter(function (d) { return (now - d) < limits.windowMs; });
   var next_at = null;
-  if (!elite && recent.length >= EXPERT_MAX) {
-    var earliest = recent.reduce(function (a, b) { return a < b ? a : b; });
-    next_at = new Date(earliest.getTime() + EXPERT_WIN_MS).toISOString();
+  if (recent.length >= limits.max) {
+    if (limits.windowMs === Infinity) {
+      // Лимит программы исчерпан — следующая дата неприменима до окончания программы.
+      next_at = null;
+    } else {
+      var earliest = recent.reduce(function (a, b) { return a < b ? a : b; });
+      next_at = new Date(earliest.getTime() + limits.windowMs).toISOString();
+    }
   } else if (recent.length >= 1) {
     var last = recent.reduce(function (a, b) { return a > b ? a : b; });
-    next_at = new Date(last.getTime() + EXPERT_COOL_MS).toISOString();
+    next_at = new Date(last.getTime() + limits.cooldownMs).toISOString();
   }
-  return {
-    used: recent.length,
-    max:  elite ? null : EXPERT_MAX,
-    next_at: next_at
-  };
+  return { used: recent.length, max: limits.max, next_at: next_at };
 }
 
 function respond(data) {
