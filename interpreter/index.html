@@ -1024,26 +1024,27 @@ function goToInterpreter(file) {
   setTimeout(() => { window.location.href = url; }, 600);
 }
 
-// Hotmart-чекауты ELITE (заменить реальными URL после создания продуктов).
+// Hotmart-чекауты для всех платных тарифов (заменить реальными URL после создания продуктов).
 const HOTMART_LINKS = {
-  elite_8w:  '#TODO-HOTMART-ELITE-8W',
-  elite_12w: '#TODO-HOTMART-ELITE-12W'
+  pro:        '#TODO-HOTMART-PRO',
+  pro_expert: '#TODO-HOTMART-PRO-EXPERT',
+  elite_8w:   '#TODO-HOTMART-ELITE-8W',
+  elite_12w:  '#TODO-HOTMART-ELITE-12W'
 };
 
-function startV10()      { goToInterpreter('interpreter-vio.html'); }
-function startPro()      { goToInterpreter('interpreter-pro.html'); }
-function contactExpert() { goToInterpreter('interpreter-pro-expert.html'); }
+function _openHotmart(url, label){
+  if (!url || url.indexOf('#TODO') === 0) { alert('Hotmart-чекаут ' + label + ' ещё не настроен.'); return; }
+  window.open(url, '_blank');
+}
 
-function buyElite8w(){
-  const url = HOTMART_LINKS.elite_8w;
-  if (!url || url.indexOf('#TODO') === 0) { alert('Hotmart-чекаут ELITE-8W ещё не настроен.'); return; }
-  window.open(url, '_blank');
-}
-function buyElite12w(){
-  const url = HOTMART_LINKS.elite_12w;
-  if (!url || url.indexOf('#TODO') === 0) { alert('Hotmart-чекаут ELITE-12W ещё не настроен.'); return; }
-  window.open(url, '_blank');
-}
+// VIO — бесплатный, переход прямо в interpreter (gate не требуется).
+function startV10()      { goToInterpreter('interpreter-vio.html'); }
+
+// Платные тарифы — клиент идёт на Hotmart за кодом доступа.
+function startPro()      { _openHotmart(HOTMART_LINKS.pro,        'PRO'); }
+function contactExpert() { _openHotmart(HOTMART_LINKS.pro_expert, 'PRO+EXPERT'); }
+function buyElite8w()    { _openHotmart(HOTMART_LINKS.elite_8w,   'ELITE-8W'); }
+function buyElite12w()   { _openHotmart(HOTMART_LINKS.elite_12w,  'ELITE-12W'); }
 
 // ── I18N ─────────────────────────────────────────────────
 let lang = 'uk';
