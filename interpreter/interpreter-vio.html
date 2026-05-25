@@ -49,6 +49,7 @@ html{
   height:100%;
   height: -webkit-fill-available;
   overflow:hidden;
+  background-color:#10131A;
 }
 html,body{
   max-width:100%;
@@ -61,15 +62,17 @@ body{
   font-weight:300;
   color:var(--t1);
   background-color:#10131A;
-  background-image:url('./images-bg/galaxy-vio.jpg');
-  background-size:cover;
-  background-position:center;
-  background-attachment:fixed;
   height:100%;
   height: -webkit-fill-available;
   -webkit-font-smoothing:antialiased;
   overflow:hidden;
   position:relative;
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:-1;
+  background-image:url('./images-bg/galaxy-vio.jpg');
+  background-size:cover;background-position:center;
+  transform:translateZ(0);-webkit-transform:translateZ(0);will-change:transform;
 }
 
 /* ── App shell ── */
@@ -297,18 +300,9 @@ body{
 ::-webkit-scrollbar{display:none;}
 *{scrollbar-width:none;-ms-overflow-style:none;}
 @media (max-width: 768px) {
-  body { background-image: none; }
   body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: -1;
     background-image: url('./images-bg/galaxy-vio-mobile.jpg');
-    background-size: cover;
     background-position: center top;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    will-change: transform;
   }
   /* Убираем backdrop-filter на мобиле: карточки непрозрачные (.95+),
      blur не нужен и вызывает задержку при display:none→block */
