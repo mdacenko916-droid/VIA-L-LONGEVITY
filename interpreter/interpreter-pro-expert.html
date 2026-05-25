@@ -2890,6 +2890,7 @@ footer{
       <div class="max-badge">★ Pro + Expert · 2 рази на місяць</div>
       <div class="max-title" data-t="max_title">Ваш Expert-розбір</div>
       <div class="max-desc" data-t="max_desc">Ваш щомісячний Expert-розбір. Надсилайте запит до 2 разів на місяць — нутриціолог підготує персональний письмовий аналіз вашого профілю протягом 48 годин.</div>
+      <div id="expertCounter" style="display:none;font-size:12px;line-height:1.5;padding:10px 14px;border-radius:10px;margin-bottom:12px;border:1px solid transparent;"></div>
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;">
         <input id="maxName" type="text" placeholder="Ваше ім'я" autocomplete="name"
           style="width:100%;padding:12px 16px;border:1px solid var(--b1);border-radius:12px;background:#1A1F2B;color:var(--t1);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s;"
@@ -2981,6 +2982,63 @@ function gateUnlock(plan, code){
   if(code) sessionStorage.setItem('vial_code', code);
 }
 
+// ══ EXPERT COUNTER STATE ══════════════════════════════════
+// Заполняется из ответа Apps Script: { used, max, next_at }.
+// max=null означает ELITE-режим без лимита окна.
+let expertState = (function(){
+  try { return JSON.parse(sessionStorage.getItem('vial_expert_state') || 'null') || { used:0, max:2, next_at:null }; }
+  catch(e){ return { used:0, max:2, next_at:null }; }
+})();
+
+function saveExpertState(state){
+  expertState = state;
+  sessionStorage.setItem('vial_expert_state', JSON.stringify(state));
+}
+
+function renderExpertCounter(){
+  const el = document.getElementById('expertCounter');
+  const btn = document.getElementById('maxSendBtn');
+  if (!el) return;
+
+  const { used, max, next_at } = expertState;
+  const now = Date.now();
+  const nextDate = next_at ? new Date(next_at) : null;
+  const isCooldown = nextDate && nextDate.getTime() > now;
+  const isLimit = (max !== null && max !== undefined) && used >= max;
+
+  const locales = {ru:'ru-RU',uk:'uk-UA',en:'en-GB',es:'es-ES',de:'de-DE',pt:'pt-PT',fr:'fr-FR',pl:'pl-PL',it:'it-IT',he:'he-IL',ja:'ja-JP',ko:'ko-KR'};
+  const nextStr = nextDate ? nextDate.toLocaleDateString(locales[lang]||'en-GB', {day:'numeric',month:'long'}) : '';
+
+  let key, bg, color, borderColor;
+  if (isLimit && isCooldown) {
+    key = 'counter_limit';
+    bg = 'rgba(255,107,138,.08)'; color = '#FF6B8A'; borderColor = 'rgba(255,107,138,.25)';
+    if (btn) btn.disabled = true;
+  } else if (isCooldown) {
+    key = 'counter_cooldown';
+    bg = 'rgba(245,166,35,.08)'; color = '#F5A623'; borderColor = 'rgba(245,166,35,.25)';
+    if (btn) btn.disabled = true;
+  } else if (max === null || max === undefined) {
+    key = 'counter_unlimited';
+    bg = 'rgba(78,204,163,.08)'; color = '#4ECCA3'; borderColor = 'rgba(78,204,163,.25)';
+    if (btn) btn.disabled = false;
+  } else {
+    key = 'counter_used';
+    bg = 'rgba(78,204,163,.08)'; color = '#4ECCA3'; borderColor = 'rgba(78,204,163,.25)';
+    if (btn) btn.disabled = false;
+  }
+
+  const tpl = (T[lang] && T[lang][key]) || (T.ru && T.ru[key]) || '';
+  el.textContent = tpl
+    .replace('{used}', used)
+    .replace('{max}',  max ?? '')
+    .replace('{date}', nextStr);
+  el.style.background = bg;
+  el.style.color = color;
+  el.style.borderColor = borderColor;
+  el.style.display = 'block';
+}
+
 function gateError(reason){
   const input=document.getElementById('gateInput');
   const err=document.getElementById('gateError');
@@ -3021,7 +3079,15 @@ async function checkCode(){
     const url=APPS_SCRIPT_URL+'?code='+encodeURIComponent(v);
     const res=await fetch(url,{redirect:'follow'});
     const data=await res.json();
-    if(data.ok){ gateUnlock('MAX', v); }
+    if(data.ok){
+      saveExpertState({
+        used:    typeof data.expert_used === 'number' ? data.expert_used : 0,
+        max:     (data.expert_max === null || data.expert_max === undefined) ? 2 : data.expert_max,
+        next_at: data.expert_next_at || null
+      });
+      gateUnlock('MAX', v);
+      renderExpertCounter();
+    }
     else { gateError(data.reason||'invalid'); }
   } catch(e){
     gateError('network');
@@ -3074,7 +3140,7 @@ const T={
     result_eyebrow:'Анализ VIA‑L',readiness:'Готовность',
     doctor_title:'⚠ Консультация с врачом',
     lab_title:'🧪 Рекомендуемые анализы',
-    max_title:'Ваш Expert-разбор',max_desc:'Ваш ежемесячный Expert-разбор. Отправляйте запрос до 2 раз в месяц — нутрициолог подготовит персональный письменный анализ вашего профиля в течение 48 часов.',max_btn:'Отправить запрос нутрициологу →',max_placeholder:'Ваш вопрос или что хотите уточнить...',max_sent:'✓ Запрос отправлен! Ответ в течение 48 часов.',
+    max_title:'Ваш Expert-разбор',max_desc:'Ваш ежемесячный Expert-разбор. Отправляйте запрос до 2 раз в месяц — нутрициолог подготовит персональный письменный анализ вашего профиля в течение 48 часов.',max_btn:'Отправить запрос нутрициологу →',max_placeholder:'Ваш вопрос или что хотите уточнить...',max_sent:'✓ Запрос отправлен! Ответ в течение 48 часов.',counter_used:'Использовано {used} из {max} разборов',counter_cooldown:'⏳ Следующий разбор доступен {date} · накопите свежие данные',counter_limit:'✕ Лимит {max} разборов в месяц исчерпан · следующий {date}',counter_unlimited:'Использовано {used} разборов',counter_sending:'Отправляем…',counter_error:'⚠ Не удалось отправить. Попробуйте позже.',counter_network:'⚠ Ошибка соединения. Проверьте интернет.',
     cta_title:'Готовы к персональному результату?',cta_desc:'Нутрициолог лично разберёт ваши показатели и составит точный протокол питания и нутрицевтической поддержки под вашу гормональную фазу. Для женщин 35+ и мужчин 40+.',cta_f1:'Персональный разбор показателей',cta_f2:'Протокол питания под вашу фазу',cta_f3:'Добавки с точными дозировками',restart:'Пройти заново',view_plans:'Просмотреть тарифы →',cta_max_title:'Хотите персональную стратегию?',cta_max_desc:'Перейдите на Максимум — получите письменный экспертный разбор от нутрициолога в течение 48 часов.',cta_max_f1:'Письменный разбор от нутрициолога',cta_max_f2:'Протокол под вашу гормональную фазу',cta_max_f3:'Персональные добавки и дозировки',cta_max_book:'Перейти на Максимум →',
     pdf_btn:'📄 Скачать PDF-отчёт',
     disclaimer:'Инструмент носит информационный характер.',tagline:'Живи. Не просто существуй.',back_home:'← На главную',
@@ -3187,7 +3253,7 @@ const T={
     sym_fatigue:'Втома',sym_anxiety:'Тривожність',sym_foggy:'Туман',sym_mood:'Перепади',sym_palp:'Серцебиття',sym_joint:'Суглоби',sym_nothing:'Нічого особливого',
     energy_low:'1 — немає сил',energy_high:'10 — енергія',stress_mild:'Помірний',stress_high:'Сильний',
     next:'Далі →',show_result:'Показати результат →',result_eyebrow:'Аналіз VIA‑L',readiness:'Готовність',doctor_title:'⚠ Консультація з лікарем',lab_title:'🧪 Рекомендовані аналізи',
-    max_title:'Ваш Expert-розбір',max_desc:'Ваш щомісячний Expert-розбір. Надсилайте запит до 2 разів на місяць — нутриціолог підготує персональний письмовий аналіз вашого профілю протягом 48 годин.',max_btn:'Надіслати запит нутриціологу →',max_placeholder:'Ваше запитання або що хочете уточнити...',max_sent:'✓ Запит надіслано! Відповідь протягом 48 годин.',
+    max_title:'Ваш Expert-розбір',max_desc:'Ваш щомісячний Expert-розбір. Надсилайте запит до 2 разів на місяць — нутриціолог підготує персональний письмовий аналіз вашого профілю протягом 48 годин.',max_btn:'Надіслати запит нутриціологу →',max_placeholder:'Ваше запитання або що хочете уточнити...',max_sent:'✓ Запит надіслано! Відповідь протягом 48 годин.',counter_used:'Використано {used} з {max} розборів',counter_cooldown:'⏳ Наступний розбір доступний {date} · накопичіть свіжі дані',counter_limit:'✕ Ліміт {max} розборів на місяць вичерпано · наступний {date}',counter_unlimited:'Використано {used} розборів',counter_sending:'Надсилаємо…',counter_error:'⚠ Не вдалося надіслати. Спробуйте пізніше.',counter_network:'⚠ Помилка з\'єднання. Перевірте інтернет.',
     cta_title:'Готові до персонального результату?',cta_desc:'Нутрициолог особисто розбере ваші показники та складе точний протокол харчування і нутрицевтичної підтримки під вашу гормональну фазу. Для жінок 35+ та чоловіків 40+.',cta_f1:'Персональний розбір показників',cta_f2:'Протокол харчування під вашу фазу',cta_f3:'Добавки з точними дозуваннями',restart:'Пройти знову',view_plans:'Переглянути тарифи →',pdf_btn:'📄 Завантажити PDF-звіт',cta_max_title:'Хочете персональну стратегію?',cta_max_desc:'Перейдіть на Максимум — отримайте письмовий експертний розбір від нутриціолога протягом 48 годин.',cta_max_f1:'Письмовий розбір від нутриціолога',cta_max_f2:'Протокол під вашу гормональну фазу',cta_max_f3:'Персональні добавки та дозування',cta_max_book:'Перейти на Максимум →',
     disclaimer:'Інструмент носить інформаційний характер.',tagline:'Живи. Не просто існуй.',back_home:'← На головну',step_of:'Крок {n} з 15',your_result:'Ваш результат',
     res_good_title:'Гарне відновлення',res_good_sub:'Показники в цілому позитивні.',res_warn_title:'Потребує уваги',res_warn_sub:'Організм потребує підтримки.',res_alert_title:'Потрібна підтримка',res_alert_sub:'Організм під навантаженням.',
@@ -3296,7 +3362,7 @@ const T={
     sym_fatigue:'Fatigue',sym_anxiety:'Anxiety',sym_foggy:'Brain fog',sym_mood:'Mood swings',sym_palp:'Palpitations',sym_joint:'Joint pain',sym_nothing:'Nothing unusual',
     energy_low:'1 — no energy',energy_high:'10 — energised',stress_mild:'Moderate',stress_high:'High',
     next:'Next →',show_result:'Show Results →',result_eyebrow:'VIA‑L Analysis',readiness:'Readiness',doctor_title:'⚠ Medical Consultation',lab_title:'🧪 Recommended Tests',
-    max_title:'Your Expert Review',max_desc:'Your monthly Expert review. Send up to 2 requests per month — your nutritionist will prepare a personal written analysis of your profile within 48 hours.',max_btn:'Send request to nutritionist →',max_placeholder:'Your question or what you would like to clarify...',max_sent:'✓ Request sent! Reply within 48 hours.',
+    max_title:'Your Expert Review',max_desc:'Your monthly Expert review. Send up to 2 requests per month — your nutritionist will prepare a personal written analysis of your profile within 48 hours.',max_btn:'Send request to nutritionist →',max_placeholder:'Your question or what you would like to clarify...',max_sent:'✓ Request sent! Reply within 48 hours.',counter_used:'{used} of {max} reviews used',counter_cooldown:'⏳ Next review available {date} · accumulate fresh data',counter_limit:'✕ Limit of {max} reviews reached · next available {date}',counter_unlimited:'{used} reviews used',counter_sending:'Sending…',counter_error:'⚠ Request failed. Try again later.',counter_network:'⚠ Connection error. Check your internet and try again.',
     cta_title:'Ready for a personal result?',cta_desc:'Your nutritionist will personally review your metrics and build a precise nutrition and nutraceutical support protocol for your hormonal phase. For women 35+ and men 40+.',cta_f1:'Personal review of your metrics',cta_f2:'Nutrition protocol for your hormonal phase',cta_f3:'Supplements with precise dosages',restart:'Start Over',view_plans:'View plans →',pdf_btn:'📄 Download PDF Report',cta_max_title:'Want a personalised protocol?',cta_max_desc:'Upgrade to Maximum — get a written expert analysis in your language within 48 hours.',cta_max_f1:'Written nutritionist analysis',cta_max_f2:'Protocol for your hormonal phase',cta_max_f3:'Personalised supplements &amp; dosages',cta_max_book:'Upgrade to Maximum →',
     disclaimer:'This tool is informational only.',tagline:'Live. Not just exist.',back_home:'← Back',step_of:'Step {n} of 15',your_result:'Your Result',
     res_good_title:'Good Recovery State',res_good_sub:'Your indicators are generally positive.',res_warn_title:'Needs Attention',res_warn_sub:'Your body needs support.',res_alert_title:'Support Needed',res_alert_sub:'Your body is under load.',
@@ -3405,7 +3471,7 @@ const T={
     sym_fatigue:'Fatiga',sym_anxiety:'Ansiedad',sym_foggy:'Niebla mental',sym_mood:'Cambios de humor',sym_palp:'Palpitaciones',sym_joint:'Dolor articular',sym_nothing:'Nada inusual',
     energy_low:'1 — sin energía',energy_high:'10 — energía',stress_mild:'Moderado',stress_high:'Alto',
     next:'Siguiente →',show_result:'Ver Resultados →',result_eyebrow:'Análisis VIA‑L',readiness:'Preparación',doctor_title:'⚠ Consulta médica',lab_title:'🧪 Análisis recomendados',
-    max_title:'Tu revisión Expert',max_desc:'Tu revisión Expert mensual. Envía hasta 2 solicitudes al mes — tu nutricionista preparará un análisis personal escrito de tu perfil en 48 horas.',max_btn:'Enviar solicitud al nutricionista →',max_placeholder:'Tu pregunta o lo que quieres aclarar...',max_sent:'✓ ¡Solicitud enviada! Respuesta en 48 horas.',
+    max_title:'Tu revisión Expert',max_desc:'Tu revisión Expert mensual. Envía hasta 2 solicitudes al mes — tu nutricionista preparará un análisis personal escrito de tu perfil en 48 horas.',max_btn:'Enviar solicitud al nutricionista →',max_placeholder:'Tu pregunta o lo que quieres aclarar...',max_sent:'✓ ¡Solicitud enviada! Respuesta en 48 horas.',counter_used:'{used} de {max} análisis utilizados',counter_cooldown:'⏳ Próximo análisis disponible {date} · acumula datos frescos',counter_limit:'✕ Límite de {max} análisis alcanzado · próximo {date}',counter_unlimited:'{used} análisis utilizados',counter_sending:'Enviando…',counter_error:'⚠ Error al enviar. Inténtalo más tarde.',counter_network:'⚠ Error de conexión. Comprueba tu internet.',
     cta_title:'¿Lista para un resultado personal?',cta_desc:'La nutricionista revisará personalmente tus métricas y elaborará un protocolo preciso de nutrición y suplementación para tu fase hormonal. Para mujeres 35+ y hombres 40+.',cta_f1:'Revisión personal de tus métricas',cta_f2:'Protocolo nutricional para tu fase hormonal',cta_f3:'Suplementos con dosificaciones precisas',restart:'Empezar de nuevo',view_plans:'Ver planes →',pdf_btn:'📄 Descargar PDF',cta_max_title:'¿Quieres un protocolo personalizado?',cta_max_desc:'Pasa a Máximo — recibe un análisis experto por escrito en tu idioma en 48 horas.',cta_max_f1:'Análisis escrito por nutricionista',cta_max_f2:'Protocolo para tu fase hormonal',cta_max_f3:'Suplementos y dosificaciones personalizadas',cta_max_book:'Mejorar a Máximo →',
     disclaimer:'Esta herramienta es informativa.',tagline:'Vive. No solo existas.',back_home:'← Volver',step_of:'Paso {n} de 15',your_result:'Tu Resultado',
     res_good_title:'Buen estado',res_good_sub:'Tus indicadores son positivos.',res_warn_title:'Requiere atención',res_warn_sub:'Tu cuerpo necesita apoyo.',res_alert_title:'Necesita apoyo',res_alert_sub:'Tu cuerpo está bajo carga.',
@@ -3514,7 +3580,7 @@ const T={
     sym_fatigue:'Müdigkeit',sym_anxiety:'Angst',sym_foggy:'Gehirnnebel',sym_mood:'Stimmungsschwankungen',sym_palp:'Herzrasen',sym_joint:'Gelenkschmerzen',sym_nothing:'Nichts Ungewöhnliches',
     energy_low:'1 — keine Energie',energy_high:'10 — voller Energie',stress_mild:'Moderat',stress_high:'Stark',
     next:'Weiter →',show_result:'Ergebnis anzeigen →',result_eyebrow:'VIA‑L Analyse',readiness:'Bereitschaft',doctor_title:'⚠ Ärztliche Konsultation',lab_title:'🧪 Empfohlene Tests',
-    max_title:'Ihre Expert-Auswertung',max_desc:'Ihre monatliche Expert-Auswertung. Senden Sie bis zu 2 Anfragen pro Monat — Ihre Ernährungsberaterin erstellt eine persönliche schriftliche Analyse Ihres Profils innerhalb von 48 Stunden.',max_btn:'Anfrage an Ernährungsberaterin →',max_placeholder:'Ihre Frage oder was Sie klären möchten...',max_sent:'✓ Anfrage gesendet! Antwort innerhalb von 48 Stunden.',
+    max_title:'Ihre Expert-Auswertung',max_desc:'Ihre monatliche Expert-Auswertung. Senden Sie bis zu 2 Anfragen pro Monat — Ihre Ernährungsberaterin erstellt eine persönliche schriftliche Analyse Ihres Profils innerhalb von 48 Stunden.',max_btn:'Anfrage an Ernährungsberaterin →',max_placeholder:'Ihre Frage oder was Sie klären möchten...',max_sent:'✓ Anfrage gesendet! Antwort innerhalb von 48 Stunden.',counter_used:'{used} von {max} Auswertungen verwendet',counter_cooldown:'⏳ Nächste Auswertung verfügbar {date} · frische Daten sammeln',counter_limit:'✕ Limit von {max} Auswertungen erreicht · nächste {date}',counter_unlimited:'{used} Auswertungen verwendet',counter_sending:'Senden…',counter_error:'⚠ Senden fehlgeschlagen. Bitte später erneut versuchen.',counter_network:'⚠ Verbindungsfehler. Bitte Internet prüfen.',
     cta_title:'Bereit für ein persönliches Ergebnis?',cta_desc:'Die Ernährungsberaterin analysiert Ihre Werte persönlich und erstellt ein präzises Ernährungs- und Supplementierungsprotokoll für Ihre Hormonphase. Für Frauen ab 35 und Männer ab 40.',cta_f1:'Persönliche Auswertung Ihrer Werte',cta_f2:'Ernährungsprotokoll für Ihre Hormonphase',cta_f3:'Supplements mit genauen Dosierungen',restart:'Neu starten',view_plans:'Tarife ansehen →',pdf_btn:'📄 PDF-Bericht herunterladen',cta_max_title:'Möchten Sie ein persönliches Protokoll?',cta_max_desc:'Upgrade auf Maximum — erhalten Sie eine schriftliche Expertenanalyse auf Deutsch innerhalb von 48 Stunden.',cta_max_f1:'Schriftliche Ernährungsberatung',cta_max_f2:'Protokoll für Ihre Hormonphase',cta_max_f3:'Persönliche Supplements &amp; Dosierungen',cta_max_book:'Upgrade auf Maximum →',
     disclaimer:'Dieses Tool hat informativen Charakter.',tagline:'Lebe. Existiere nicht nur.',back_home:'← Zurück',step_of:'Schritt {n} von 15',your_result:'Ihr Ergebnis',
     res_good_title:'Gute Erholungsrate',res_good_sub:'Ihre Werte sind insgesamt positiv.',res_warn_title:'Aufmerksamkeit erforderlich',res_warn_sub:'Ihr Körper braucht Unterstützung.',res_alert_title:'Unterstützung benötigt',res_alert_sub:'Ihr Körper steht unter Belastung.',
@@ -3623,7 +3689,7 @@ const T={
     sym_fatigue:'Fadiga',sym_anxiety:'Ansiedade',sym_foggy:'Névoa mental',sym_mood:'Mudanças de humor',sym_palp:'Palpitações',sym_joint:'Dor nas articulações',sym_nothing:'Nada incomum',
     energy_low:'1 — sem energia',energy_high:'10 — cheia de energia',stress_mild:'Moderado',stress_high:'Intenso',
     next:'Próximo →',show_result:'Ver Resultado →',result_eyebrow:'Análise VIA‑L',readiness:'Prontidão',doctor_title:'⚠ Consulta médica',lab_title:'🧪 Exames recomendados',
-    max_title:'Sua avaliação Expert',max_desc:'Sua avaliação Expert mensal. Envie até 2 solicitações por mês — sua nutricionista preparará uma análise pessoal escrita do seu perfil em até 48 horas.',max_btn:'Enviar solicitação à nutricionista →',max_placeholder:'Sua pergunta ou o que deseja esclarecer...',max_sent:'✓ Solicitação enviada! Resposta em até 48 horas.',
+    max_title:'Sua avaliação Expert',max_desc:'Sua avaliação Expert mensal. Envie até 2 solicitações por mês — sua nutricionista preparará uma análise pessoal escrita do seu perfil em até 48 horas.',max_btn:'Enviar solicitação à nutricionista →',max_placeholder:'Sua pergunta ou o que deseja esclarecer...',max_sent:'✓ Solicitação enviada! Resposta em até 48 horas.',counter_used:'{used} de {max} análises usadas',counter_cooldown:'⏳ Próxima análise disponível {date} · acumule dados recentes',counter_limit:'✕ Limite de {max} análises atingido · próxima {date}',counter_unlimited:'{used} análises usadas',counter_sending:'Enviando…',counter_error:'⚠ Falha ao enviar. Tente novamente mais tarde.',counter_network:'⚠ Erro de conexão. Verifique a sua internet.',
     cta_title:'Pronta para um resultado pessoal?',cta_desc:'A nutricionista analisará pessoalmente suas métricas e elaborará um protocolo preciso de nutrição e suporte nutracêutico para a sua fase hormonal. Para mulheres 35+ e homens 40+.',cta_f1:'Revisão pessoal das suas métricas',cta_f2:'Protocolo nutricional para a sua fase hormonal',cta_f3:'Suplementos com dosagens precisas',restart:'Recomeçar',view_plans:'Ver planos →',pdf_btn:'📄 Baixar relatório PDF',cta_max_title:'Quer um protocolo personalizado?',cta_max_desc:'Actualize para Máximo — receba uma análise especializada por escrito no seu idioma em 48 horas.',cta_max_f1:'Análise escrita por nutricionista',cta_max_f2:'Protocolo para a sua fase hormonal',cta_max_f3:'Suplementos e dosagens personalizados',cta_max_book:'Upgrade para Máximo →',
     disclaimer:'Esta ferramenta tem caráter informativo.',tagline:'Viva. Não apenas exista.',back_home:'← Voltar',step_of:'Passo {n} de 15',your_result:'Seu Resultado',
     res_good_title:'Boa recuperação',res_good_sub:'Seus indicadores são positivos.',res_warn_title:'Requer atenção',res_warn_sub:'Seu corpo precisa de suporte.',res_alert_title:'Suporte necessário',res_alert_sub:'Seu corpo está sob carga.',
@@ -3732,7 +3798,7 @@ const T={
     sym_fatigue:'Fatigue',sym_anxiety:'Anxiété',sym_foggy:'Brouillard mental',sym_mood:'Sautes d\'humeur',sym_palp:'Palpitations',sym_joint:'Douleurs articulaires',sym_nothing:'Rien d\'inhabituel',
     energy_low:'1 — sans énergie',energy_high:'10 — pleine d\'énergie',stress_mild:'Modéré',stress_high:'Intense',
     next:'Suivant →',show_result:'Voir le résultat →',result_eyebrow:'Analyse VIA‑L',readiness:'Préparation',doctor_title:'⚠ Consultation médicale',lab_title:'🧪 Analyses recommandées',
-    max_title:'Votre bilan Expert',max_desc:'Votre bilan Expert mensuel. Envoyez jusqu\'à 2 demandes par mois — votre nutritionniste préparera une analyse personnelle écrite de votre profil dans les 48 heures.',max_btn:'Envoyer la demande à la nutritionniste →',max_placeholder:'Votre question ou ce que vous souhaitez clarifier...',max_sent:'✓ Demande envoyée ! Réponse sous 48 heures.',
+    max_title:'Votre bilan Expert',max_desc:'Votre bilan Expert mensuel. Envoyez jusqu\'à 2 demandes par mois — votre nutritionniste préparera une analyse personnelle écrite de votre profil dans les 48 heures.',max_btn:'Envoyer la demande à la nutritionniste →',max_placeholder:'Votre question ou ce que vous souhaitez clarifier...',max_sent:'✓ Demande envoyée ! Réponse sous 48 heures.',counter_used:'{used} sur {max} bilans utilisés',counter_cooldown:'⏳ Prochain bilan disponible {date} · accumulez des données récentes',counter_limit:'✕ Limite de {max} bilans atteinte · prochain {date}',counter_unlimited:'{used} bilans utilisés',counter_sending:'Envoi…',counter_error:'⚠ Échec de l\'envoi. Réessayez plus tard.',counter_network:'⚠ Erreur de connexion. Vérifiez votre internet.',
     cta_title:'Prêt(e) pour un résultat personnel ?',cta_desc:'La nutritionniste analysera personnellement vos indicateurs et élaborera un protocole précis de nutrition et de soutien nutraceutique pour votre phase hormonale. Pour les femmes 35+ et les hommes 40+.',cta_f1:'Analyse personnelle de vos indicateurs',cta_f2:'Protocole nutritionnel pour votre phase hormonale',cta_f3:'Compléments avec dosages précis',restart:'Recommencer',view_plans:'Voir les plans →',pdf_btn:'📄 Télécharger le rapport PDF',cta_max_title:'Vous voulez un protocole personnalisé ?',cta_max_desc:'Passez à Maximum — obtenez une analyse experte par écrit dans votre langue sous 48 heures.',cta_max_f1:'Analyse nutritionniste écrite',cta_max_f2:'Protocole pour votre phase hormonale',cta_max_f3:'Compléments &amp; dosages personnalisés',cta_max_book:'Passer à Maximum →',
     disclaimer:'Cet outil est à titre informatif.',tagline:'Vivez. N\'existez pas seulement.',back_home:'← Retour',step_of:'Étape {n} sur 15',your_result:'Votre Résultat',
     res_good_title:'Bonne récupération',res_good_sub:'Vos indicateurs sont globalement positifs.',res_warn_title:'Attention requise',res_warn_sub:'Votre corps a besoin de soutien.',res_alert_title:'Soutien nécessaire',res_alert_sub:'Votre corps est sous charge.',
@@ -3841,7 +3907,7 @@ const T={
     sym_fatigue:'Zmęczenie',sym_anxiety:'Lęk',sym_foggy:'Mgła mózgowa',sym_mood:'Wahania nastroju',sym_palp:'Kołatanie serca',sym_joint:'Bóle stawów',sym_nothing:'Nic niezwykłego',
     energy_low:'1 — brak energii',energy_high:'10 — pełna energii',stress_mild:'Umiarkowany',stress_high:'Silny',
     next:'Dalej →',show_result:'Pokaż wynik →',result_eyebrow:'Analiza VIA‑L',readiness:'Gotowość',doctor_title:'⚠ Konsultacja medyczna',lab_title:'🧪 Zalecane badania',
-    max_title:'Twoja ocena Expert',max_desc:'Twoja miesięczna ocena Expert. Wyślij do 2 próśb miesięcznie — Twoja dietetyk przygotuje osobistą pisemną analizę Twojego profilu w ciągu 48 godzin.',max_btn:'Wyślij prośbę do dietetyka →',max_placeholder:'Twoje pytanie lub co chcesz wyjaśnić...',max_sent:'✓ Prośba wysłana! Odpowiedź w ciągu 48 godzin.',
+    max_title:'Twoja ocena Expert',max_desc:'Twoja miesięczna ocena Expert. Wyślij do 2 próśb miesięcznie — Twoja dietetyk przygotuje osobistą pisemną analizę Twojego profilu w ciągu 48 godzin.',max_btn:'Wyślij prośbę do dietetyka →',max_placeholder:'Twoje pytanie lub co chcesz wyjaśnić...',max_sent:'✓ Prośba wysłana! Odpowiedź w ciągu 48 godzin.',counter_used:'Wykorzystano {used} z {max} analiz',counter_cooldown:'⏳ Następna analiza dostępna {date} · zbierz świeże dane',counter_limit:'✕ Limit {max} analiz wyczerpany · następna {date}',counter_unlimited:'Wykorzystano {used} analiz',counter_sending:'Wysyłanie…',counter_error:'⚠ Wysłanie nieudane. Spróbuj później.',counter_network:'⚠ Błąd połączenia. Sprawdź internet.',
     cta_title:'Gotowy/a na osobisty wynik?',cta_desc:'Dietetyk osobiście przeanalizuje Twoje wskaźniki i opracuje precyzyjny protokół żywieniowy i nutraceutyczny dla Twojej fazy hormonalnej. Dla kobiet 35+ i mężczyzn 40+.',cta_f1:'Osobista analiza Twoich wskaźników',cta_f2:'Protokół żywieniowy dla Twojej fazy hormonalnej',cta_f3:'Suplementy z dokładnymi dawkami',restart:'Zacznij od nowa',view_plans:'Zobacz plany →',pdf_btn:'📄 Pobierz raport PDF',cta_max_title:'Chcesz spersonalizowany protokół?',cta_max_desc:'Przejdź na Maximum — otrzymaj pisemną analizę eksperta w swoim języku w ciągu 48 godzin.',cta_max_f1:'Pisemna analiza dietetyka',cta_max_f2:'Protokół dla Twojej fazy hormonalnej',cta_max_f3:'Spersonalizowane suplementy i dawki',cta_max_book:'Przejdź na Maximum →',
     disclaimer:'To narzędzie ma charakter informacyjny.',tagline:'Żyj. Nie tylko istniej.',back_home:'← Powrót',step_of:'Krok {n} z 15',your_result:'Twój Wynik',
     res_good_title:'Dobra regeneracja',res_good_sub:'Twoje wskaźniki są ogólnie pozytywne.',res_warn_title:'Wymaga uwagi',res_warn_sub:'Twój organizm potrzebuje wsparcia.',res_alert_title:'Potrzebne wsparcie',res_alert_sub:'Twój organizm jest pod obciążeniem.',
@@ -3950,7 +4016,7 @@ const T={
     sym_fatigue:'Stanchezza',sym_anxiety:'Ansia',sym_foggy:'Nebbia mentale',sym_mood:'Sbalzi d\'umore',sym_palp:'Palpitazioni',sym_joint:'Dolori articolari',sym_nothing:'Niente di insolito',
     energy_low:'1 — senza energia',energy_high:'10 — piena di energia',stress_mild:'Moderato',stress_high:'Intenso',
     next:'Avanti →',show_result:'Mostra risultato →',result_eyebrow:'Analisi VIA‑L',readiness:'Prontezza',doctor_title:'⚠ Consulto medico',lab_title:'🧪 Esami consigliati',
-    max_title:'La tua valutazione Expert',max_desc:'La tua valutazione Expert mensile. Invia fino a 2 richieste al mese — la tua nutrizionista preparerà un\'analisi personale scritta del tuo profilo entro 48 ore.',max_btn:'Invia richiesta alla nutrizionista →',max_placeholder:'La tua domanda o cosa vuoi chiarire...',max_sent:'✓ Richiesta inviata! Risposta entro 48 ore.',
+    max_title:'La tua valutazione Expert',max_desc:'La tua valutazione Expert mensile. Invia fino a 2 richieste al mese — la tua nutrizionista preparerà un\'analisi personale scritta del tuo profilo entro 48 ore.',max_btn:'Invia richiesta alla nutrizionista →',max_placeholder:'La tua domanda o cosa vuoi chiarire...',max_sent:'✓ Richiesta inviata! Risposta entro 48 ore.',counter_used:'Utilizzati {used} di {max} bilanci',counter_cooldown:'⏳ Prossimo bilancio disponibile {date} · accumula dati recenti',counter_limit:'✕ Limite di {max} bilanci raggiunto · prossimo {date}',counter_unlimited:'Utilizzati {used} bilanci',counter_sending:'Invio…',counter_error:'⚠ Invio fallito. Riprova più tardi.',counter_network:'⚠ Errore di connessione. Verifica internet.',
     cta_title:'Pronti per un risultato personale?',cta_desc:'La nutrizionista analizzerà personalmente i tuoi indicatori e creerà un preciso protocollo di nutrizione e supporto nutraceutico per la tua fase ormonale. Per donne 35+ e uomini 40+.',cta_f1:'Analisi personale dei tuoi indicatori',cta_f2:'Protocollo nutrizionale per la tua fase ormonale',cta_f3:'Integratori con dosaggi precisi',restart:'Ricomincia',view_plans:'Vedi i piani →',pdf_btn:'📄 Scarica report PDF',cta_max_title:'Vuoi un protocollo personalizzato?',cta_max_desc:'Passa a Maximum — ricevi un\'analisi esperta scritta nella tua lingua entro 48 ore.',cta_max_f1:'Analisi scritta da nutrizionista',cta_max_f2:'Protocollo per la tua fase ormonale',cta_max_f3:'Integratori e dosaggi personalizzati',cta_max_book:'Passa a Maximum →',
     disclaimer:'Questo strumento ha carattere informativo.',tagline:'Vivi. Non esistere soltanto.',back_home:'← Indietro',step_of:'Passo {n} di 15',your_result:'Il Tuo Risultato',
     res_good_title:'Buon recupero',res_good_sub:'I tuoi indicatori sono positivi.',res_warn_title:'Richiede attenzione',res_warn_sub:'Il tuo corpo ha bisogno di supporto.',res_alert_title:'Supporto necessario',res_alert_sub:'Il tuo corpo è sotto carico.',
@@ -4059,7 +4125,7 @@ const T={
     sym_fatigue:'עייפות',sym_anxiety:'חרדה',sym_foggy:'ערפל מנטלי',sym_mood:'תנודות במצב רוח',sym_palp:'דפיקות לב',sym_joint:'כאבי מפרקים',sym_nothing:'שום דבר חריג',
     energy_low:'1 — ללא אנרגיה',energy_high:'10 — מלא/ת אנרגיה',stress_mild:'מתון',stress_high:'עצים',
     next:'← הבא',show_result:'← הצג תוצאה',result_eyebrow:'ניתוח VIA‑L',readiness:'מוכנות',doctor_title:'⚠ ייעוץ רפואי',lab_title:'🧪 בדיקות מומלצות',
-    max_title:'הערכת המומחה שלך',max_desc:'הערכת Expert החודשית שלך. שלח/י עד 2 בקשות בחודש — הדיאטנית תכין ניתוח אישי כתוב של הפרופיל שלך תוך 48 שעות.',max_btn:'← שלח/י בקשה לדיאטנית',max_placeholder:'השאלה שלך או מה שברצונך להבהיר...',max_sent:'✓ הבקשה נשלחה! תשובה תוך 48 שעות.',
+    max_title:'הערכת המומחה שלך',max_desc:'הערכת Expert החודשית שלך. שלח/י עד 2 בקשות בחודש — הדיאטנית תכין ניתוח אישי כתוב של הפרופיל שלך תוך 48 שעות.',max_btn:'← שלח/י בקשה לדיאטנית',max_placeholder:'השאלה שלך או מה שברצונך להבהיר...',max_sent:'✓ הבקשה נשלחה! תשובה תוך 48 שעות.',counter_used:'{used} מתוך {max} ניתוחים ננוצלו',counter_cooldown:'⏳ הניתוח הבא יהיה זמין ב-{date} · אסוף נתונים טריים',counter_limit:'✕ מגבלת {max} ניתוחים מוצתה · הבא ב-{date}',counter_unlimited:'{used} ניתוחים ננוצלו',counter_sending:'שולח…',counter_error:'⚠ השליחה נכשלה. נסה שוב מאוחר יותר.',counter_network:'⚠ שגיאת חיבור. בדוק את החיבור לאינטרנט.',
     cta_title:'מוכן/ה לתוצאה אישית?',cta_desc:'הדיאטנית תנתח אישית את המדדים שלך ותכין פרוטוקול תזונה ותמיכה נוטריצבטית מדויק לשלב ההורמונלי שלך. לנשים 35+ ולגברים 40+.',cta_f1:'ניתוח אישי של המדדים שלך',cta_f2:'פרוטוקול תזונה לשלב ההורמונלי שלך',cta_f3:'תוספים עם מינונים מדויקים',restart:'התחל מחדש',view_plans:'← צפה בתוכניות',pdf_btn:'📄 הורד דו"ח PDF',cta_max_title:'רוצה פרוטוקול אישי?',cta_max_desc:'שדרג ל-Maximum — קבל ניתוח מקצועי בכתב בשפתך תוך 48 שעות.',cta_max_f1:'ניתוח תזונאי בכתב',cta_max_f2:'פרוטוקול לשלב ההורמונלי שלך',cta_max_f3:'תוספים ומינונים אישיים',cta_max_book:'← שדרג ל-Maximum',
     disclaimer:'כלי זה הוא למידע בלבד.',tagline:'חיה. לא רק קיים/ת.',back_home:'→ חזרה',step_of:'שלב {n} מתוך 15',your_result:'התוצאה שלך',
     res_good_title:'התאוששות טובה',res_good_sub:'המדדים שלך חיוביים.',res_warn_title:'דורש תשומת לב',res_warn_sub:'גופך זקוק לתמיכה.',res_alert_title:'תמיכה נחוצה',res_alert_sub:'גופך תחת עומס.',
@@ -4162,7 +4228,7 @@ const T={
     sym_fatigue:'疲労',sym_anxiety:'不安',sym_foggy:'頭の霧',sym_mood:'気分の波',sym_palp:'動悸',sym_joint:'関節痛',sym_nothing:'異常なし',
     energy_low:'1 — エネルギーなし',energy_high:'10 — 元気いっぱい',stress_mild:'軽度',stress_high:'強度',
     next:'次へ →',show_result:'結果を表示 →',result_eyebrow:'VIA‑L分析',readiness:'準備度',doctor_title:'⚠ 医療相談',lab_title:'🧪 推奨検査',
-    max_title:'あなたの専門家評価',max_desc:'月2回のExpert評価。月に最大2回リクエストを送信できます — 栄養士が48時間以内にあなたのプロフィールの個人的な書面分析を準備します。',max_btn:'栄養士にリクエストを送る →',max_placeholder:'ご質問または確認したいこと...',max_sent:'✓ リクエストが送信されました！48時間以内に回答します。',
+    max_title:'あなたの専門家評価',max_desc:'月2回のExpert評価。月に最大2回リクエストを送信できます — 栄養士が48時間以内にあなたのプロフィールの個人的な書面分析を準備します。',max_btn:'栄養士にリクエストを送る →',max_placeholder:'ご質問または確認したいこと...',max_sent:'✓ リクエストが送信されました！48時間以内に回答します。',counter_used:'{max}回中{used}回使用済み',counter_cooldown:'⏳ 次の評価は{date}に利用可能 · 新しいデータを蓄積してください',counter_limit:'✕ {max}回の評価上限に達しました · 次回は{date}',counter_unlimited:'{used}回の評価を使用済み',counter_sending:'送信中…',counter_error:'⚠ 送信に失敗しました。後でもう一度お試しください。',counter_network:'⚠ 接続エラー。インターネット接続を確認してください。',
     cta_title:'個人的な結果への準備はできていますか？',cta_desc:'栄養士があなたの指標を個別に分析し、あなたのホルモン段階に合わせた正確な栄養とサプリメントサポートプロトコルを作成します。女性35歳以上・男性40歳以上向け。',cta_f1:'あなたの指標の個別分析',cta_f2:'ホルモン段階に合わせた栄養プロトコル',cta_f3:'正確な用量のサプリメント',restart:'もう一度',view_plans:'プランを見る →',pdf_btn:'📄 PDFレポートをダウンロード',cta_max_title:'パーソナライズされたプロトコルをご希望ですか？',cta_max_desc:'Maximumにアップグレード — 48時間以内にあなたの言語で専門家の書面分析を取得。',cta_max_f1:'栄養士による書面分析',cta_max_f2:'ホルモン段階に合わせたプロトコル',cta_max_f3:'個別サプリメントと用量',cta_max_book:'Maximumにアップグレード →',
     disclaimer:'このツールは情報提供のみを目的としています。',tagline:'生きる。ただ存在するだけでなく。',back_home:'← 戻る',step_of:'ステップ {n} / 15',your_result:'あなたの結果',
     res_good_title:'良好な回復',res_good_sub:'あなたの指標は良好です。',res_warn_title:'注意が必要',res_warn_sub:'あなたの体はサポートを必要としています。',res_alert_title:'サポートが必要',res_alert_sub:'あなたの体は負荷を受けています。',
@@ -4265,7 +4331,7 @@ const T={
     sym_fatigue:'피로',sym_anxiety:'불안',sym_foggy:'정신적 안개',sym_mood:'기분 변동',sym_palp:'두근거림',sym_joint:'관절통',sym_nothing:'이상 없음',
     energy_low:'1 — 에너지 없음',energy_high:'10 — 활기참',stress_mild:'보통',stress_high:'심함',
     next:'다음 →',show_result:'결과 보기 →',result_eyebrow:'VIA‑L 분석',readiness:'준비도',doctor_title:'⚠ 의료 상담',lab_title:'🧪 권장 검사',
-    max_title:'전문가 평가',max_desc:'월 2회 Expert 평가. 월 최대 2회 요청을 보낼 수 있습니다 — 영양사가 48시간 이내에 귀하의 프로필에 대한 개인 서면 분석을 준비합니다.',max_btn:'영양사에게 요청 보내기 →',max_placeholder:'질문 또는 확인하고 싶은 것...',max_sent:'✓ 요청이 전송되었습니다! 48시간 이내에 답변 드립니다.',
+    max_title:'전문가 평가',max_desc:'월 2회 Expert 평가. 월 최대 2회 요청을 보낼 수 있습니다 — 영양사가 48시간 이내에 귀하의 프로필에 대한 개인 서면 분석을 준비합니다.',max_btn:'영양사에게 요청 보내기 →',max_placeholder:'질문 또는 확인하고 싶은 것...',max_sent:'✓ 요청이 전송되었습니다! 48시간 이내에 답변 드립니다.',counter_used:'{max}회 중 {used}회 사용',counter_cooldown:'⏳ 다음 분석은 {date}에 사용 가능 · 신선한 데이터를 축적하세요',counter_limit:'✕ {max}회 분석 한도에 도달 · 다음 분석 {date}',counter_unlimited:'{used}회 분석 사용',counter_sending:'전송 중…',counter_error:'⚠ 전송 실패. 나중에 다시 시도하세요.',counter_network:'⚠ 연결 오류. 인터넷 연결을 확인하세요.',
     cta_title:'개인 맞춤 결과를 원하시나요?',cta_desc:'영양사가 직접 지표를 분석하고 호르몬 단계에 맞는 정확한 영양 및 보조제 지원 프로토콜을 작성합니다. 여성 35세 이상 및 남성 40세 이상을 위한.',cta_f1:'지표에 대한 개인 분석',cta_f2:'호르몬 단계를 위한 영양 프로토콜',cta_f3:'정확한 복용량의 보충제',restart:'다시 시작',view_plans:'요금제 보기 →',pdf_btn:'📄 PDF 보고서 다운로드',cta_max_title:'개인화된 프로토콜을 원하시나요?',cta_max_desc:'Maximum으로 업그레이드 — 48시간 이내에 귀하의 언어로 전문가 서면 분석을 받으세요.',cta_max_f1:'영양사 서면 분석',cta_max_f2:'귀하의 호르몬 단계를 위한 프로토콜',cta_max_f3:'개인화된 보충제 및 복용량',cta_max_book:'Maximum으로 업그레이드 →',
     disclaimer:'이 도구는 정보 제공 목적으로만 사용됩니다.',tagline:'살아가세요. 단순히 존재하는 것이 아니라.',back_home:'← 뒤로',step_of:'{n}단계 / 15',your_result:'나의 결과',
     res_good_title:'좋은 회복',res_good_sub:'지표가 긍정적입니다.',res_warn_title:'주의 필요',res_warn_sub:'신체가 지원을 필요로 합니다.',res_alert_title:'지원 필요',res_alert_sub:'신체가 부하를 받고 있습니다.',
@@ -4405,6 +4471,8 @@ function setLang(l){
   if(_t12&&_gm)_t12.innerHTML=_gm.value==='male'?t('s12_title_m'):t('s12_title_f');
   initSliders();
   if(_lastResult){_rerendering=true;try{_showResultsInner();}finally{_rerendering=false;}if(document.getElementById('aiCard'))fetchAIAnalysis(_lastResult.data,l);}
+  // Перерисовать счётчик Expert-разборов с новыми переводами (если он отображён).
+  if(document.getElementById('expertCounter')?.style.display !== 'none') renderExpertCounter();
 }
 function t(k){return T[lang][k]||T.ru[k]||k;}
 function L(t){return t[lang]||t.en||t.ru||Object.values(t)[0];}
@@ -4456,6 +4524,7 @@ async function sendMaxRequest(){
   const code  = sessionStorage.getItem('vial_code') || '';
   const limitMsg = document.getElementById('maxLimitMsg');
   const btn   = document.getElementById('maxSendBtn');
+  const btnLabel = T[lang]?.max_btn || 'Надіслати запит нутриціологу →';
 
   // Email обязателен
   if (!email || !/\S+@\S+\.\S+/.test(email)) {
@@ -4464,54 +4533,12 @@ async function sendMaxRequest(){
     return;
   }
   document.getElementById('maxEmail').style.borderColor='var(--b1)';
-
-  // Клиентская проверка лимита 1×/месяц (localStorage) — dev-коды не ограничиваются
-  const DEV_CODES_LIST = ['VIAL-EXPERT-2024'];
-  const isDevCode = DEV_CODES_LIST.includes(code);
-  const limitKey = 'vial_expert_sent_' + (code || 'default');
-  const lastSent = isDevCode ? null : localStorage.getItem(limitKey);
-  if (lastSent) {
-    const daysSince = (Date.now() - parseInt(lastSent)) / (1000 * 60 * 60 * 24);
-    if (daysSince < 14) {
-      const nextDate = new Date(parseInt(lastSent) + 14 * 24 * 60 * 60 * 1000);
-      const locales = {ru:'ru-RU',uk:'uk-UA',en:'en-GB',es:'es-ES',de:'de-DE',pt:'pt-PT',fr:'fr-FR',pl:'pl-PL',it:'it-IT',he:'he-IL',ja:'ja-JP',ko:'ko-KR'};
-      const nextStr  = nextDate.toLocaleDateString(locales[lang]||'en-GB', {day:'numeric',month:'long'});
-      const prefixes = {
-        ru:'⏳ Expert-разбор доступен 2 раза в месяц. Следующий доступен с ',
-        uk:'⏳ Expert-розбір доступний 2 рази на місяць. Наступний доступний з ',
-        en:'⏳ Expert review is available 2 times per month. Next available from ',
-        es:'⏳ La revisión Expert está disponible 2 veces al mes. Próxima disponible desde ',
-        de:'⏳ Expert-Auswertung ist 2-mal pro Monat verfügbar. Nächste verfügbar ab ',
-        pt:'⏳ A avaliação Expert está disponível 2 vezes por mês. Próxima disponível a partir de ',
-        fr:'⏳ Le bilan Expert est disponible 2 fois par mois. Prochain disponible à partir du ',
-        pl:'⏳ Ocena Expert jest dostępna 2 razy w miesiącu. Następna dostępna od ',
-        it:'⏳ La valutazione Expert è disponibile 2 volte al mese. Prossima disponibile dal ',
-        he:'⏳ הערכת Expert זמינה פעמיים בחודש. הבאה זמינה מ-',
-        ja:'⏳ Expert評価は月2回利用できます。次回は',
-        ko:'⏳ Expert 평가는 월 2회 이용 가능합니다. 다음 가능일: '
-      };
-      limitMsg.textContent = (prefixes[lang] || prefixes.en) + nextStr + '.';
-      limitMsg.style.display='block';
-      return;
-    }
-  }
   limitMsg.style.display='none';
 
   btn.disabled = true;
-  btn.textContent = '⏳ Відправляємо...';
+  btn.textContent = '⏳ ' + (T[lang]?.counter_sending || 'Sending…');
 
   try {
-    const payload = {
-      code,
-      name,
-      email,
-      question: q,
-      lang,
-      analysisData: _analysisData || {}
-    };
-
-    // Image beacon GET — обходит redirect-проблему Apps Script (POST→GET redirect убивает body)
-    // GET с action=expert передаёт все данные как query params, doGet() их обрабатывает
     const params = new URLSearchParams({
       action:   'expert',
       code:     code,
@@ -4521,27 +4548,49 @@ async function sendMaxRequest(){
       lang:     lang,
       data:     JSON.stringify(_analysisData || {})
     });
-    const beacon = new Image();
-    beacon.src = APPS_SCRIPT_URL + '?' + params.toString();
+    const res  = await fetch(APPS_SCRIPT_URL + '?' + params.toString(), { redirect: 'follow' });
+    const data = await res.json();
 
-    if(!isDevCode) localStorage.setItem(limitKey, Date.now().toString());
-    btn.style.display = 'none';
-    document.getElementById('maxSent').style.display = 'block';
+    if (data && data.ok) {
+      // Запрос принят: обновляем локальный счётчик из ответа сервера.
+      saveExpertState({
+        used:    typeof data.used === 'number' ? data.used : (expertState.used + 1),
+        max:     (data.max === null || data.max === undefined) ? expertState.max : data.max,
+        next_at: data.next_available_at || null
+      });
+      renderExpertCounter();
+      btn.style.display = 'none';
+      document.getElementById('maxSent').style.display = 'block';
+      return;
+    }
+
+    // Отказ: сервер вернул reason ('monthly_limit' / 'cooldown_7d' / 'expired' / 'invalid').
+    if (data && (data.reason === 'cooldown_7d' || data.reason === 'monthly_limit')) {
+      saveExpertState({
+        used:    typeof data.used === 'number' ? data.used : expertState.used,
+        max:     (data.max === null || data.max === undefined) ? expertState.max : data.max,
+        next_at: data.next_date || null
+      });
+      renderExpertCounter();
+      btn.disabled = true;
+      btn.textContent = btnLabel;
+      return;
+    }
+
+    // Прочие ошибки (expired/invalid) — показываем сообщение в maxLimitMsg.
+    limitMsg.textContent = (T[lang]?.counter_error || '⚠ Request failed. Try again later.');
+    limitMsg.style.display='block';
+    btn.disabled = false;
+    btn.textContent = btnLabel;
 
   } catch(e) {
     console.error('Expert send error:', e);
-    limitMsg.textContent = lang==='ru'
-      ? '⚠ Ошибка соединения. Проверьте интернет и попробуйте снова.'
-      : lang==='en'
-      ? '⚠ Connection error. Check your internet and try again.'
-      : '⚠ Помилка з\'єднання. Перевірте інтернет і спробуйте ще раз.';
-    limitMsg.style.display = 'block';
+    limitMsg.textContent = (T[lang]?.counter_network || '⚠ Connection error. Check your internet and try again.');
+    limitMsg.style.display='block';
     btn.disabled = false;
-    btn.textContent = T[lang]?.max_btn || 'Надіслати запит нутриціологу →';
+    btn.textContent = btnLabel;
   }
 }
-
-function _sendMaxFallback() { /* disabled */ }
 
 // ══ BOTTOM NAV ════════════════════════════════════════════
 function navTo(tab){
