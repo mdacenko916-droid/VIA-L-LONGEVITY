@@ -346,7 +346,8 @@ async function handleTgTest(request, env, corsHeaders) {
 }
 
 // POST /draft  → принимает данные Expert-запроса от Apps Script, сохраняет
-// черновик в KV, отправляет нутрициологу карточку клиента с inline-кнопками.
+// черновик в KV, генерирует AI-bullet-points и отправляет нутрициологу
+// карточку клиента с inline-кнопками.
 async function handleDraft(request, env, corsHeaders) {
   if (!env.TELEGRAM_BOT_TOKEN || !env.NUTRITIONIST_CHAT_ID) {
     return jsonResponse({ ok: false, error: 'tg_secrets_missing' }, corsHeaders, 500);
@@ -358,10 +359,20 @@ async function handleDraft(request, env, corsHeaders) {
   try { payload = await request.json(); }
   catch (e) { return jsonResponse({ ok: false, error: 'invalid_json' }, corsHeaders, 400); }
 
+  // AI-ассистент: 5–7 наблюдений для нутрициолога. Fail-safe — если Claude
+  // упал, карточка всё равно отправится, просто без AI-блока.
+  let aiBullets = '';
+  try {
+    aiBullets = await generateAiBullets(env, payload);
+  } catch (e) {
+    console.error('generateAiBullets failed:', e?.message || e);
+  }
+
   // Сохраняем черновик в KV под уникальным request_id (TTL 7 дней).
   const requestId = crypto.randomUUID();
   await env.EXPERT_DRAFTS.put('draft:' + requestId, JSON.stringify({
     ...payload,
+    ai_bullets: aiBullets,
     status: 'pending',
     nutritionist_reply: null,
     created_at: new Date().toISOString()
@@ -369,14 +380,81 @@ async function handleDraft(request, env, corsHeaders) {
 
   const tg = await sendTelegram(
     env,
-    renderDraftCard(payload),
+    renderDraftCard(payload, aiBullets),
     { reply_markup: buildDraftKeyboard(requestId) }
   );
-  return jsonResponse({ ok: true, request_id: requestId, tg }, corsHeaders);
+  return jsonResponse({ ok: true, request_id: requestId, ai_used: !!aiBullets, tg }, corsHeaders);
 }
 
-// Рендер карточки клиента из payload draft.
-function renderDraftCard(payload) {
+// AI-ассистент: на основе биометрии/симптомов/паттернов KB просит Claude
+// дать 5–7 коротких bullet-points нутрициологу. НЕ финальный разбор —
+// только подсказки «на что обратить внимание».
+async function generateAiBullets(env, payload) {
+  if (!env.CLAUDE_API_KEY) return '';
+  const d = payload.data || {};
+
+  const bio = [];
+  if (d.hrv)        bio.push(`HRV ${d.hrv}мс`);
+  if (d.rhr)        bio.push(`ЧСС покоя ${d.rhr}`);
+  if (d.sleep_qual) bio.push(`качество сна ${d.sleep_qual}/10`);
+  if (d.deep)       bio.push(`глубокий сон ${d.deep}`);
+  if (d.wake)       bio.push(`пробуждения ${d.wake}`);
+  if (d.energy)     bio.push(`энергия ${d.energy}/10`);
+  if (d.anxiety)    bio.push(`тревога ${d.anxiety}/10`);
+  if (d.temp)       bio.push(`ночн. температура ${d.temp}`);
+  if (d.resp_rate)  bio.push(`ЧД ${d.resp_rate}`);
+
+  const symptoms     = Array.isArray(d.symptoms)      ? d.symptoms.join(', ')      : '';
+  const hormSymptoms = Array.isArray(d.horm_symptoms) ? d.horm_symptoms.join(', ') : '';
+  const hotflashes   = [d.hf_count, d.hf_intensity, d.hf_time].filter(Boolean).join(' · ');
+
+  let patterns = '';
+  try {
+    const ids = selectKBPatterns(d) || [];
+    patterns = ids.length ? ids.join(', ') : '';
+  } catch (e) { /* selectKBPatterns может бросить — игнорируем */ }
+
+  const ctx = [];
+  ctx.push(`Профиль: ${d.gender === 'male' ? 'мужчина' : 'женщина'}, ${d.age || '?'} лет, фаза «${d.phase || '?'}»`);
+  if (d.device)       ctx.push(`Источник данных (трекер): ${d.device}`);
+  if (bio.length)     ctx.push(`Биометрия: ${bio.join(', ')}`);
+  if (symptoms)       ctx.push(`Симптомы: ${symptoms}`);
+  if (hormSymptoms)   ctx.push(`Гормональные симптомы: ${hormSymptoms}`);
+  if (hotflashes)     ctx.push(`Приливы: ${hotflashes}`);
+  if (d.cycle_status) ctx.push(`Цикл: ${d.cycle_status}`);
+  if (payload.question) ctx.push(`Вопрос клиента: ${payload.question}`);
+  if (patterns)       ctx.push(`Активные KB-паттерны: ${patterns}`);
+
+  const prompt =
+    'Ты ассистент-аналитик нутрициолога VIA-L. Изучи данные клиента и выдай СТРОГО 5–7 коротких bullet-points: ' +
+    'что заметил в данных и на что нутрициологу обратить внимание при подготовке разбора. ' +
+    'Без вступления, без заключения — только список. Каждая строка начинается с маркера «• ». ' +
+    'Профессионально, конкретно, без воды. Ответ ТОЛЬКО на русском (нутрициолог работает на русском). ' +
+    'НЕ используй Markdown — никаких **, __, ~~, ` — пиши обычным текстом, для акцентов можно ВЕРХНИЙ регистр. ' +
+    'Не вставляй пустые строки между пунктами — каждая строка это отдельный bullet.\n\n' +
+    'Данные клиента:\n' + ctx.join('\n');
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': env.CLAUDE_API_KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 600,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+  });
+
+  if (!response.ok) return '';
+  const result = await response.json();
+  return (result.content?.[0]?.text || '').trim();
+}
+
+// Рендер карточки клиента из payload draft (+ опционально AI-bullet-points).
+function renderDraftCard(payload, aiBullets) {
   const d = payload.data || {};
   const lines = [];
   lines.push('📋 <b>Новый Expert-разбор</b>');
@@ -385,6 +463,7 @@ function renderDraftCard(payload) {
   lines.push(`<b>Код:</b> <code>${esc(payload.code)}</code> · <b>язык:</b> ${esc(payload.lang || 'ru')}`);
   lines.push('');
   lines.push(`<b>Профиль:</b> ${d.gender === 'male' ? 'М' : 'Ж'} · фаза ${esc(d.phase) || '—'}${d.age ? ' · ' + d.age + ' лет' : ''}`);
+  if (d.device) lines.push(`<b>Гаджет:</b> ${esc(d.device)}`);
   const bio = [];
   if (d.hrv)        bio.push(`HRV ${d.hrv}мс`);
   if (d.rhr)        bio.push(`ЧСС ${d.rhr}`);
@@ -400,7 +479,19 @@ function renderDraftCard(payload) {
     lines.push('<b>Вопрос клиента:</b>');
     lines.push(esc(payload.question));
   }
+  if (aiBullets) {
+    lines.push('');
+    lines.push('🤖 <b>AI-ассистент — обратите внимание:</b>');
+    lines.push(mdBoldToHtml(aiBullets));
+  }
   return lines.join('\n');
+}
+
+// Безопасное превращение оставшихся **…** в <b>…</b> для Telegram parse_mode=HTML.
+// Сначала экранируем HTML-спецсимволы, потом конвертируем markdown-bold.
+function mdBoldToHtml(s) {
+  if (!s) return '';
+  return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
 }
 
 function buildDraftKeyboard(requestId) {
