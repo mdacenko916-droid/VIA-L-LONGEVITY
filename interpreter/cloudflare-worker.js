@@ -247,15 +247,16 @@ export default {
     const path = url.pathname;
 
     try {
-      // Backstage Telegram bot — этап 1 (skeleton).
-      if (path === '/tg-test') return handleTgTest(request, env, corsHeaders);
-      if (path === '/draft')   return handleDraft(request, env, corsHeaders);
+      // Backstage Telegram bot
+      if (path === '/tg-test')    return handleTgTest(request, env, corsHeaders);
+      if (path === '/draft')      return handleDraft(request, env, corsHeaders);
+      if (path === '/tg-webhook') return handleTgWebhook(request, env, corsHeaders);
 
       // Default: AI-анализ для интерпретатора (старая логика по корню «/»).
       return handleAnalyze(request, env, corsHeaders);
 
     } catch (e) {
-      return new Response(JSON.stringify({ error: e.message }), {
+      return new Response(JSON.stringify({ error: e.message, stack: e.stack }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -344,16 +345,38 @@ async function handleTgTest(request, env, corsHeaders) {
   return jsonResponse({ ok: true, tg }, corsHeaders);
 }
 
-// POST /draft  → принимает данные Expert-запроса от Apps Script, отправляет
-// нутрициологу карточку клиента в Telegram. AI-анализ добавим на этапе 3.
+// POST /draft  → принимает данные Expert-запроса от Apps Script, сохраняет
+// черновик в KV, отправляет нутрициологу карточку клиента с inline-кнопками.
 async function handleDraft(request, env, corsHeaders) {
   if (!env.TELEGRAM_BOT_TOKEN || !env.NUTRITIONIST_CHAT_ID) {
     return jsonResponse({ ok: false, error: 'tg_secrets_missing' }, corsHeaders, 500);
+  }
+  if (!env.EXPERT_DRAFTS) {
+    return jsonResponse({ ok: false, error: 'kv_binding_missing' }, corsHeaders, 500);
   }
   let payload = {};
   try { payload = await request.json(); }
   catch (e) { return jsonResponse({ ok: false, error: 'invalid_json' }, corsHeaders, 400); }
 
+  // Сохраняем черновик в KV под уникальным request_id (TTL 7 дней).
+  const requestId = crypto.randomUUID();
+  await env.EXPERT_DRAFTS.put('draft:' + requestId, JSON.stringify({
+    ...payload,
+    status: 'pending',
+    nutritionist_reply: null,
+    created_at: new Date().toISOString()
+  }), { expirationTtl: 7 * 24 * 60 * 60 });
+
+  const tg = await sendTelegram(
+    env,
+    renderDraftCard(payload),
+    { reply_markup: buildDraftKeyboard(requestId) }
+  );
+  return jsonResponse({ ok: true, request_id: requestId, tg }, corsHeaders);
+}
+
+// Рендер карточки клиента из payload draft.
+function renderDraftCard(payload) {
   const d = payload.data || {};
   const lines = [];
   lines.push('📋 <b>Новый Expert-разбор</b>');
@@ -363,12 +386,12 @@ async function handleDraft(request, env, corsHeaders) {
   lines.push('');
   lines.push(`<b>Профиль:</b> ${d.gender === 'male' ? 'М' : 'Ж'} · фаза ${esc(d.phase) || '—'}${d.age ? ' · ' + d.age + ' лет' : ''}`);
   const bio = [];
-  if (d.hrv)         bio.push(`HRV ${d.hrv}мс`);
-  if (d.rhr)         bio.push(`ЧСС ${d.rhr}`);
-  if (d.sleep_qual)  bio.push(`сон ${d.sleep_qual}/10`);
-  if (d.energy)      bio.push(`энергия ${d.energy}/10`);
-  if (d.anxiety)     bio.push(`тревога ${d.anxiety}/10`);
-  if (bio.length)    lines.push(`<b>Биометрия:</b> ${bio.join(' · ')}`);
+  if (d.hrv)        bio.push(`HRV ${d.hrv}мс`);
+  if (d.rhr)        bio.push(`ЧСС ${d.rhr}`);
+  if (d.sleep_qual) bio.push(`сон ${d.sleep_qual}/10`);
+  if (d.energy)     bio.push(`энергия ${d.energy}/10`);
+  if (d.anxiety)    bio.push(`тревога ${d.anxiety}/10`);
+  if (bio.length)   lines.push(`<b>Биометрия:</b> ${bio.join(' · ')}`);
   if (Array.isArray(d.symptoms) && d.symptoms.length) {
     lines.push(`<b>Симптомы:</b> ${esc(d.symptoms.join(', '))}`);
   }
@@ -377,11 +400,163 @@ async function handleDraft(request, env, corsHeaders) {
     lines.push('<b>Вопрос клиента:</b>');
     lines.push(esc(payload.question));
   }
-  lines.push('');
-  lines.push('<i>AI-bullet-points будут добавлены на этапе 3.</i>');
+  return lines.join('\n');
+}
 
-  const tg = await sendTelegram(env, lines.join('\n'));
-  return jsonResponse({ ok: true, tg }, corsHeaders);
+function buildDraftKeyboard(requestId) {
+  return {
+    inline_keyboard: [[
+      { text: '✅ Утвердить',     callback_data: 'approve:' + requestId },
+      { text: '✏️ Редактировать', callback_data: 'edit:'    + requestId },
+      { text: '❌ Отклонить',     callback_data: 'reject:'  + requestId }
+    ]]
+  };
+}
+
+// POST /tg-webhook  → принимает callback_query (нажатие кнопки) или message
+// (реплай при редактировании) от Telegram.
+async function handleTgWebhook(request, env, corsHeaders) {
+  if (!env.TELEGRAM_BOT_TOKEN || !env.NUTRITIONIST_CHAT_ID || !env.EXPERT_DRAFTS) {
+    return jsonResponse({ ok: false, error: 'config_missing' }, corsHeaders, 500);
+  }
+  let update;
+  try { update = await request.json(); }
+  catch (e) { return jsonResponse({ ok: false, error: 'invalid_json' }, corsHeaders, 400); }
+
+  if (update.callback_query) {
+    return handleTgCallback(update.callback_query, env, corsHeaders);
+  }
+  if (update.message) {
+    return handleTgMessage(update.message, env, corsHeaders);
+  }
+  return jsonResponse({ ok: true, skipped: 'unsupported_update' }, corsHeaders);
+}
+
+async function handleTgCallback(cq, env, corsHeaders) {
+  const chatId    = cq.message?.chat?.id;
+  const messageId = cq.message?.message_id;
+  const cqData    = cq.data || '';
+  const colonIdx  = cqData.indexOf(':');
+  const action    = colonIdx >= 0 ? cqData.slice(0, colonIdx) : '';
+  const requestId = colonIdx >= 0 ? cqData.slice(colonIdx + 1) : '';
+
+  // Безопасность: реагируем только если callback пришёл от нашего нутрициолога.
+  if (chatId?.toString() !== env.NUTRITIONIST_CHAT_ID?.toString()) {
+    await tgAnswerCallback(env, cq.id, '');
+    return jsonResponse({ ok: false, error: 'foreign_chat' }, corsHeaders);
+  }
+  if (!action || !requestId) {
+    await tgAnswerCallback(env, cq.id, 'Неверные данные');
+    return jsonResponse({ ok: false, error: 'bad_callback_data' }, corsHeaders);
+  }
+
+  const raw = await env.EXPERT_DRAFTS.get('draft:' + requestId);
+  if (!raw) {
+    await tgAnswerCallback(env, cq.id, 'Запрос устарел');
+    return jsonResponse({ ok: false, error: 'draft_not_found' }, corsHeaders);
+  }
+  const draft = JSON.parse(raw);
+
+  if (action === 'approve') {
+    draft.status       = 'approved';
+    draft.approved_at  = new Date().toISOString();
+    // TODO (этап 5–6): отправить PDF клиенту через Apps Script callback.
+    await tgEditMessage(env, chatId, messageId,
+      '✅ <b>Утверждено</b>\n\nКлиент: <code>' + esc(draft.client_email) + '</code>\n' +
+      (draft.nutritionist_reply
+        ? '<i>Ответ нутрициолога будет отправлен (этапы 5–6 — PDF + email).</i>'
+        : '<i>Без правок · AI-черновик будет отправлен как есть.</i>')
+    );
+    await env.EXPERT_DRAFTS.delete('draft:' + requestId);
+    await tgAnswerCallback(env, cq.id, '✅ Утверждено');
+  }
+  else if (action === 'reject') {
+    draft.status = 'rejected';
+    // TODO: отправить клиенту вежливое сообщение «требуется уточнение».
+    await tgEditMessage(env, chatId, messageId,
+      '❌ <b>Отклонено</b>\n\nКлиент: <code>' + esc(draft.client_email) + '</code>'
+    );
+    await env.EXPERT_DRAFTS.delete('draft:' + requestId);
+    await tgAnswerCallback(env, cq.id, '❌ Отклонено');
+  }
+  else if (action === 'edit') {
+    // Включаем режим редактирования на 10 минут.
+    await env.EXPERT_DRAFTS.put('editing:' + chatId, requestId, { expirationTtl: 10 * 60 });
+    await tgSendMessage(env, chatId,
+      '✏️ <b>Режим редактирования</b>\n\nПришлите свой текст разбора одним сообщением. После — карточка вернётся с кнопками для подтверждения.\n\n<i>10 минут на правку.</i>'
+    );
+    await tgAnswerCallback(env, cq.id, 'Жду ваш текст');
+  }
+  else {
+    await tgAnswerCallback(env, cq.id, 'Неизвестное действие');
+  }
+
+  return jsonResponse({ ok: true }, corsHeaders);
+}
+
+async function handleTgMessage(msg, env, corsHeaders) {
+  const chatId = msg.chat?.id;
+  const text   = msg.text;
+
+  // Реагируем только на сообщения от нутрициолога и только когда есть активный режим редактирования.
+  if (chatId?.toString() !== env.NUTRITIONIST_CHAT_ID?.toString()) {
+    return jsonResponse({ ok: true, skipped: 'foreign_chat' }, corsHeaders);
+  }
+  if (!text) return jsonResponse({ ok: true, skipped: 'no_text' }, corsHeaders);
+
+  const editingRequestId = await env.EXPERT_DRAFTS.get('editing:' + chatId);
+  if (!editingRequestId) {
+    return jsonResponse({ ok: true, skipped: 'not_editing' }, corsHeaders);
+  }
+
+  const raw = await env.EXPERT_DRAFTS.get('draft:' + editingRequestId);
+  if (!raw) {
+    await tgSendMessage(env, chatId, '⚠ Черновик устарел или удалён. Начните заново — пришлите новый Expert-запрос.');
+    await env.EXPERT_DRAFTS.delete('editing:' + chatId);
+    return jsonResponse({ ok: false, error: 'draft_expired' }, corsHeaders);
+  }
+
+  const draft = JSON.parse(raw);
+  draft.nutritionist_reply = text;
+  draft.edited_at = new Date().toISOString();
+  await env.EXPERT_DRAFTS.put('draft:' + editingRequestId, JSON.stringify(draft), { expirationTtl: 7 * 24 * 60 * 60 });
+  await env.EXPERT_DRAFTS.delete('editing:' + chatId);
+
+  const preview = text.length > 500 ? text.slice(0, 500) + '…' : text;
+  await tgSendMessage(env, chatId,
+    '✏️ <b>Текст сохранён.</b>\n\n' + esc(preview) + '\n\n<i>Подтвердите отправку клиенту:</i>',
+    { reply_markup: buildDraftKeyboard(editingRequestId) }
+  );
+
+  return jsonResponse({ ok: true, saved: true }, corsHeaders);
+}
+
+// Telegram API helpers.
+async function tgSendMessage(env, chatId, text, extra = {}) {
+  const res = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true, ...extra })
+  });
+  return res.json();
+}
+
+async function tgEditMessage(env, chatId, messageId, text) {
+  const res = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/editMessageText`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, message_id: messageId, text, parse_mode: 'HTML', disable_web_page_preview: true })
+  });
+  return res.json();
+}
+
+async function tgAnswerCallback(env, callbackQueryId, text) {
+  const res = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ callback_query_id: callbackQueryId, text: text || '', show_alert: false })
+  });
+  return res.json();
 }
 
 // HTML-escape для Telegram parse_mode=HTML.

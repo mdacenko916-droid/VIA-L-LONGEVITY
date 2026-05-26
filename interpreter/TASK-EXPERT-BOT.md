@@ -1,6 +1,6 @@
 # Задача: Telegram-бот «Backstage» для тарифа PRO-EXPERT
 
-> **Статус:** этапы 1+2 завершены (25 мая). Этап 3 (AI-bullet-points) — следующий.
+> **Статус:** этапы 1+2+4 завершены (25–26 мая). Этап 3 (AI-bullet-points) — следующий.
 > **Тариф:** PRO-EXPERT (€79/мес).
 > **Цель:** AI готовит черновик персонального разбора для каждого Expert-запроса; нутрициолог утверждает/редактирует его в Telegram-боте; клиент получает финальный PDF на email.
 
@@ -81,7 +81,7 @@
 
 1. **✅ Скелет** (25 мая): создан бот `@viael_backstage_bot`, токен и chat_id `383599103` в Worker secrets. Подтверждено: `POST /tg-test` → бот пишет нутрициологу.
 2. **✅ Draft endpoint** (25 мая): Worker `/draft` принимает данные клиента и отправляет карточку в TG. Apps Script `notifyBackstageBot()` вызывает Worker после каждого Expert-запроса. Полный путь Клиент → Apps Script → Worker → Telegram работает.
-3. **Inline-keyboard**: добавить кнопки `Утвердить / Редактировать / Отклонить`, обработка callback'ов.
+3. ~~**Inline-keyboard**~~ **✅ Сделано (26 мая)**: каждая карточка имеет UUID `request_id`, полный draft сохраняется в Cloudflare KV (TTL 7 дней). Кнопки `✅ Утвердить / ✏️ Редактировать / ❌ Отклонить` через `inline_keyboard`. Webhook `vial-claude-proxy.viaelcom.workers.dev/tg-webhook` принимает `callback_query` + `message` (реплай при редактировании). Полный edit-flow проверен: бот принимает реплай → переписывает draft → возвращает карточку с кнопками. *Внутренне пронумеровано как «этап 4» — переход к AI-bullet-points отложен на следующий шаг.*
 4. **AI-помощник**: Worker подбирает KB-паттерны + вызывает Claude API → 5–7 bullet-points → добавляет в TG-сообщение перед кнопками.
 5. **PDF-рендер**: выбрать библиотеку (рекомендую `pdf-lib` — работает в Worker без npm-зависимостей), сделать шаблон.
 6. **Gmail-отправка через Apps Script callback**: Worker отдаёт base64 PDF в Apps Script, Apps Script шлёт клиенту email.
