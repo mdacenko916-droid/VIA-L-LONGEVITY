@@ -3226,11 +3226,16 @@ async function submitOnboarding() {
   btn.disabled = true;
   btn.textContent = '⏳ ' + (T[lang]?.onb_sending || 'Отправляем...');
 
+  // Apps Script Web App для POST делает 302 redirect на googleusercontent.com,
+  // что ломает чтение ответа через fetch (получаем HTML вместо JSON).
+  // Решение: отправляем в режиме no-cors (fire-and-forget) — сервер сделает
+  // работу (email + бот), мы не читаем ответ, но оптимистично показываем успех.
+  const code = sessionStorage.getItem('vial_code') || '';
   try {
-    const code = sessionStorage.getItem('vial_code') || '';
-    const res = await fetch(APPS_SCRIPT_URL, {
+    await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      mode:   'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },  // обходим CORS preflight
       body: JSON.stringify({
         action:       'elite_onboarding',
         code:         code,
@@ -3238,41 +3243,34 @@ async function submitOnboarding() {
         client_email: email,
         lang:         lang,
         answers:      answers
-      }),
-      redirect: 'follow'
+      })
     });
-    const data = await res.json();
-
-    if (data && data.ok) {
-      // Сохраняем имя/email для будущих недельных отчётов (предзаполнятся в форме).
-      if (name)  sessionStorage.setItem('vial_name', name);
-      if (email) sessionStorage.setItem('vial_email', email);
-      sessionStorage.setItem('vial_onboarding_done', '1');
-
-      btn.style.display = 'none';
-      document.getElementById('onbSentMsg').style.display = 'block';
-
-      // Через 3 секунды переходим к первому шагу биометрии.
-      setTimeout(() => {
-        document.getElementById('stepOnboarding')?.classList.remove('active');
-        document.getElementById('step0')?.classList.add('active');
-        const pb = document.querySelector('.progress-bar');
-        if (pb) pb.style.display = '';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }, 3000);
-    } else {
-      errEl.textContent = T[lang]?.onb_err_send || ('⚠ Ошибка отправки' + (data?.reason ? ': ' + data.reason : ''));
-      errEl.style.display = 'block';
-      btn.disabled = false;
-      btn.textContent = T[lang]?.onb_submit_btn || 'Отправить анкету нутрициологу →';
-    }
   } catch (e) {
-    console.error('Onboarding error:', e);
+    // Только сетевая ошибка (offline) попадёт сюда; HTTP-уровень в no-cors
+    // никогда не бросает.
+    console.error('Onboarding fetch failed:', e);
     errEl.textContent = T[lang]?.onb_err_network || '⚠ Ошибка соединения. Проверьте интернет и попробуйте снова.';
     errEl.style.display = 'block';
     btn.disabled = false;
     btn.textContent = T[lang]?.onb_submit_btn || 'Отправить анкету нутрициологу →';
+    return;
   }
+
+  // Запрос ушёл — показываем подтверждение и через 3 сек переходим к биометрии.
+  if (name)  sessionStorage.setItem('vial_name', name);
+  if (email) sessionStorage.setItem('vial_email', email);
+  sessionStorage.setItem('vial_onboarding_done', '1');
+
+  btn.style.display = 'none';
+  document.getElementById('onbSentMsg').style.display = 'block';
+
+  setTimeout(() => {
+    document.getElementById('stepOnboarding')?.classList.remove('active');
+    document.getElementById('step0')?.classList.add('active');
+    const pb = document.querySelector('.progress-bar');
+    if (pb) pb.style.display = '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 3000);
 }
 
 function gateError(reason){
