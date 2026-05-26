@@ -10,6 +10,8 @@
 // E: Дата истечения  F: JSON-массив дат Expert-запросов от клиента
 //                       (legacy: одна ISO-дата строкой — конвертируется автоматически)
 // G: JSON-массив дат отправленных клиенту PDF-отчётов (этап 7 backstage-бота)
+// H: ELITE Onboarding — JSON-объект ответов на onboarding-анкету,
+//    null/пусто = анкета ещё не пройдена. Используется только для ELITE-кодов.
 //
 // Статусы: FREE → ACTIVE → EXPIRED
 //
@@ -55,12 +57,13 @@ function doGet(e) {
   return validateCode(code);
 }
 
-// ── POST: приём Expert-запроса ИЛИ отправка готового отчёта клиенту ─────
+// ── POST: приём Expert-запроса, отправка отчёта или сохранение onboarding-анкеты ─────
 function doPost(e) {
   try {
     var payload = JSON.parse(e.postData.contents);
     var action  = (payload && payload.action) || '';
-    if (action === 'send_report') return handleSendReport(payload);
+    if (action === 'send_report')      return handleSendReport(payload);
+    if (action === 'elite_onboarding') return handleEliteOnboarding(payload);
     return handleExpertRequest(payload);
   } catch (err) {
     return respond({ ok: false, reason: 'error', message: err.toString() });
@@ -197,7 +200,9 @@ function validateCode(code) {
       sheet.getRange(i + 1, 5).setValue(expiry.toISOString());
       return respond({
         ok: true, plan: rowPlan, expiry: expiry.toISOString(),
-        expert_used: 0, expert_max: limitsFree.max, expert_next_at: null
+        expert_used: 0, expert_max: limitsFree.max, expert_next_at: null,
+        // Для ELITE при первой активации — onboarding обязателен. Для остальных — нет.
+        onboarding_required: limitsFree.isElite
       });
     }
 
@@ -205,9 +210,13 @@ function validateCode(code) {
       var expiryDate = new Date(rowExpiry);
       if (now < expiryDate) {
         var meta = expertStateFromHistory(parseExpertHistory(data[i][5]), now, rowPlan);
+        var planLimits = getPlanLimits(rowPlan);
+        // Колонка H (index 7) — JSON-объект onboarding-ответов; пусто = ещё не пройден.
+        var onboardingDone = !!(data[i][7] && data[i][7].toString().trim());
         return respond({
           ok: true, plan: rowPlan, expiry: expiryDate.toISOString(),
-          expert_used: meta.used, expert_max: meta.max, expert_next_at: meta.next_at
+          expert_used: meta.used, expert_max: meta.max, expert_next_at: meta.next_at,
+          onboarding_required: planLimits.isElite && !onboardingDone
         });
       }
       sheet.getRange(i + 1, 3).setValue('EXPIRED');
@@ -613,6 +622,116 @@ function jsLocale(lang) {
 function safeFilename(name, lang) {
   var base = 'VIA-L_' + (lang || 'ru') + '_' + (name || 'client');
   return base.replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_').slice(0, 64);
+}
+
+// ════════════════════════════════════════════════════════════════
+// ELITE ONBOARDING (одноразовая анкета-анамнез после первого входа)
+// ════════════════════════════════════════════════════════════════
+// Принимает POST из interpreter-elite.html (stepOnboarding) после того,
+// как клиент ELITE-программы заполнил начальную анкету.
+// Сохраняет JSON-ответы в колонку H Sheet, шлёт нутрициологу email-ом
+// полный текст анкеты + карточку в backstage-бот.
+
+var BACKSTAGE_ONBOARDING_URL = 'https://vial-claude-proxy.viaelcom.workers.dev/onboarding';
+
+function handleEliteOnboarding(p) {
+  var code  = (p.code  || '').toString().toUpperCase().trim();
+  var lang  = (p.lang  || 'ru').toString().toLowerCase();
+  var name  = p.client_name  || '';
+  var email = p.client_email || '';
+  var answers = p.answers || {};
+
+  if (!code) return respond({ ok: false, reason: 'no_code' });
+
+  // Найти строку и записать ответы в колонку H.
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+  var rows  = sheet.getDataRange().getValues();
+  var saved = false;
+  for (var i = 1; i < rows.length; i++) {
+    var rowCode = (rows[i][0] || '').toString().toUpperCase().trim();
+    if (rowCode !== code) continue;
+    var rowPlan = (rows[i][1] || '').toString().toUpperCase().trim();
+    var limits  = getPlanLimits(rowPlan);
+    if (!limits.isElite) return respond({ ok: false, reason: 'not_elite_plan' });
+
+    sheet.getRange(i + 1, 8).setValue(JSON.stringify({
+      completed_at: new Date().toISOString(),
+      lang:         lang,
+      client_name:  name,
+      client_email: email,
+      answers:      answers
+    }));
+    saved = true;
+    break;
+  }
+  // Для dev-кодов (не в таблице) — сохранения нет, но email + бот шлём всё равно.
+  if (!saved && code.indexOf('VIAL-') !== 0) {
+    return respond({ ok: false, reason: 'code_not_found' });
+  }
+
+  // Email нутрициологу.
+  sendOnboardingEmail(name, email, code, lang, answers);
+
+  // Карточка в Telegram-бот.
+  notifyBackstageOnboarding({
+    client_name: name, client_email: email,
+    code: code + (saved ? '' : ' [DEV]'),
+    lang: lang, answers: answers
+  });
+
+  return respond({ ok: true, saved: saved });
+}
+
+function sendOnboardingEmail(name, email, code, lang, a) {
+  var subject = '🧬 ELITE Onboarding · ' + (name || 'Клієнт') + ' · ' + new Date().toLocaleDateString('uk-UA');
+  var b = '═══════════════════════════════════════\n';
+  b += '  VIA-L · ELITE ONBOARDING · НАЧАЛЬНАЯ АНКЕТА\n';
+  b += '═══════════════════════════════════════\n\n';
+  b += 'Клиент:       ' + (name  || '—') + '\n';
+  b += 'Email:        ' + (email || '—') + '\n';
+  b += 'Код:          ' + code + '\n';
+  b += 'Язык анкеты:  ' + lang.toUpperCase() + '\n';
+  b += 'Дата:         ' + new Date().toLocaleString('uk-UA') + '\n\n';
+
+  function add(label, val) {
+    if (val === null || val === undefined || val === '') return;
+    if (Array.isArray(val)) val = val.join(', ');
+    b += '─── ' + label + ' ───\n' + val + '\n\n';
+  }
+  add('ГЛАВНАЯ ЦЕЛЬ',                    a.goal);
+  add('ОПЫТ (что пробовали)',            a.experience);
+  add('ПРИОРИТЕТ',                       a.priority);
+  add('TELEGRAM',                        a.telegram);
+  add('ЧАСОВОЙ ПОЯС',                    a.timezone);
+  add('ХРОНИЧЕСКИЕ ЗАБОЛЕВАНИЯ',         a.chronic);
+  add('ЛЕКАРСТВА',                       a.medications);
+  add('АЛЛЕРГИИ',                        a.allergies);
+  add('АУТОИММУННЫЕ ЗАБОЛЕВАНИЯ',        a.autoimmune);
+  add('ИЗЖОГА / ТЯЖЕСТЬ ПОСЛЕ ЕДЫ',      a.heartburn);
+  add('ИПП (омепразол и др.)',           a.ppi);
+  add('ИПП — препарат и дозировка',      a.ppi_detail);
+  add('АНТИБИОТИКИ за 6 мес',            a.antibiotics);
+  add('УДАЛЁН ЖЕЛЧНЫЙ ПУЗЫРЬ',           a.gallbladder);
+  add('ОПЫТ С БАДами',                   a.supplements_history);
+
+  b += '═══════════════════════════════════════\n';
+  b += 'Ответьте клиенту с программой ведения на: ' + (email || '—') + '\n';
+  b += '═══════════════════════════════════════\n';
+
+  GmailApp.sendEmail(MARINA_EMAIL, subject, b);
+}
+
+function notifyBackstageOnboarding(payload) {
+  try {
+    UrlFetchApp.fetch(BACKSTAGE_ONBOARDING_URL, {
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    });
+  } catch (e) {
+    Logger.log('notifyBackstageOnboarding failed: ' + e.toString());
+  }
 }
 
 // Backstage Telegram-бот: уведомление нутрициолога после Expert-запроса.

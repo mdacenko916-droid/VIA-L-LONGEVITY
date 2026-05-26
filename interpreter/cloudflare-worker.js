@@ -250,6 +250,7 @@ export default {
       // Backstage Telegram bot
       if (path === '/tg-test')    return handleTgTest(request, env, corsHeaders);
       if (path === '/draft')      return handleDraft(request, env, corsHeaders);
+      if (path === '/onboarding') return handleOnboarding(request, env, corsHeaders);
       if (path === '/tg-webhook') return handleTgWebhook(request, env, corsHeaders);
 
       // Default: AI-анализ для интерпретатора (старая логика по корню «/»).
@@ -752,6 +753,54 @@ async function tgAnswerCallback(env, callbackQueryId, text) {
     body: JSON.stringify({ callback_query_id: callbackQueryId, text: text || '', show_alert: false })
   });
   return res.json();
+}
+
+// POST /onboarding  → принимает заполненную ELITE onboarding-анкету от
+// Apps Script и шлёт нутрициологу карточку в Telegram. Без AI и без кнопок
+// утверждения — это исходные данные клиента, а не разбор.
+async function handleOnboarding(request, env, corsHeaders) {
+  if (!env.TELEGRAM_BOT_TOKEN || !env.NUTRITIONIST_CHAT_ID) {
+    return jsonResponse({ ok: false, error: 'tg_secrets_missing' }, corsHeaders, 500);
+  }
+  let payload = {};
+  try { payload = await request.json(); }
+  catch (e) { return jsonResponse({ ok: false, error: 'invalid_json' }, corsHeaders, 400); }
+
+  const a = payload.answers || {};
+  const lines = [];
+  lines.push('🧬 <b>ELITE Onboarding</b>');
+  lines.push(`<b>Клиент:</b> ${esc(payload.client_name) || '—'} · ${esc(payload.client_email) || '—'}`);
+  lines.push(`<b>Код:</b> <code>${esc(payload.code)}</code> · <b>язык:</b> ${esc(payload.lang || 'ru')}`);
+
+  function block(label, val) {
+    if (!val) return;
+    const text = Array.isArray(val) ? val.join(', ') : val.toString();
+    if (!text.trim()) return;
+    lines.push('');
+    lines.push(`<b>${esc(label)}:</b>`);
+    lines.push(esc(text.length > 400 ? text.slice(0, 400) + '…' : text));
+  }
+  block('Главная цель',           a.goal);
+  block('Опыт (что пробовали)',   a.experience);
+  block('Приоритет',              a.priority);
+  block('Telegram',               a.telegram);
+  block('Часовой пояс',           a.timezone);
+  block('Хронические заболевания', a.chronic);
+  block('Лекарства',              a.medications);
+  block('Аллергии',               a.allergies);
+  block('Аутоиммунные',           a.autoimmune);
+  block('Изжога / тяжесть',       a.heartburn);
+  block('ИПП (омепразол)',        a.ppi);
+  block('ИПП — препарат / доза',  a.ppi_detail);
+  block('Антибиотики за 6 мес',   a.antibiotics);
+  block('Желчный пузырь удалён',  a.gallbladder);
+  block('Опыт с БАДами',          a.supplements_history);
+
+  lines.push('');
+  lines.push('<i>Это начальная анкета-анамнез. Полный текст также пришёл на email.</i>');
+
+  const tg = await sendTelegram(env, lines.join('\n'));
+  return jsonResponse({ ok: true, tg }, corsHeaders);
 }
 
 // HTML-escape для Telegram parse_mode=HTML.
