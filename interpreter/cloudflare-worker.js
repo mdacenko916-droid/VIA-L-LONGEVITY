@@ -494,12 +494,22 @@ function mdBoldToHtml(s) {
   return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
 }
 
-function buildDraftKeyboard(requestId) {
+// mode='initial'    → две кнопки (нутрициолог обязан отредактировать перед отправкой)
+// mode='after_edit' → три кнопки, включая «✅ Отправить клиенту»
+function buildDraftKeyboard(requestId, mode) {
+  if (mode === 'after_edit') {
+    return {
+      inline_keyboard: [[
+        { text: '✅ Отправить клиенту', callback_data: 'approve:' + requestId },
+        { text: '✏️ Переписать',         callback_data: 'edit:'    + requestId },
+        { text: '❌ Отклонить',          callback_data: 'reject:'  + requestId }
+      ]]
+    };
+  }
   return {
     inline_keyboard: [[
-      { text: '✅ Утвердить',     callback_data: 'approve:' + requestId },
-      { text: '✏️ Редактировать', callback_data: 'edit:'    + requestId },
-      { text: '❌ Отклонить',     callback_data: 'reject:'  + requestId }
+      { text: '✏️ Написать ответ', callback_data: 'edit:'   + requestId },
+      { text: '❌ Отклонить',       callback_data: 'reject:' + requestId }
     ]]
   };
 }
@@ -549,17 +559,73 @@ async function handleTgCallback(cq, env, corsHeaders) {
   const draft = JSON.parse(raw);
 
   if (action === 'approve') {
-    draft.status       = 'approved';
-    draft.approved_at  = new Date().toISOString();
-    // TODO (этап 5–6): отправить PDF клиенту через Apps Script callback.
+    // Защита: на этом этапе у draft уже ДОЛЖЕН быть nutritionist_reply
+    // (кнопка «Отправить клиенту» доступна только в режиме after_edit).
+    if (!draft.nutritionist_reply) {
+      await tgAnswerCallback(env, cq.id, 'Сначала напишите ответ через ✏️ Редактировать');
+      return jsonResponse({ ok: false, error: 'no_reply_yet' }, corsHeaders);
+    }
+
+    // Перевод ответа на язык клиента (если он не ru/uk).
+    let finalReply = draft.nutritionist_reply;
+    const clientLang = (draft.lang || 'ru').toLowerCase();
+    if (clientLang !== 'ru' && clientLang !== 'uk') {
+      try {
+        finalReply = await translateReply(env, draft.nutritionist_reply, clientLang);
+      } catch (e) {
+        console.error('translateReply failed:', e?.message || e);
+        // Fallback: отправляем оригинал на ru с пометкой.
+        finalReply = '[' + clientLang.toUpperCase() + ' translation failed, original RU text below]\n\n' + draft.nutritionist_reply;
+      }
+    }
+
+    // Отправка PDF клиенту через Apps Script (action=send_report).
+    let sendResult = null;
+    if (env.APPS_SCRIPT_URL) {
+      try {
+        const r = await fetch(env.APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action:        'send_report',
+            client_name:   draft.client_name,
+            client_email:  draft.client_email,
+            code:          draft.code,
+            lang:          clientLang,
+            plan:          draft.plan,
+            week_no:       draft.week_no,
+            data:          draft.data,
+            question:      draft.question,
+            reply_text:    finalReply,
+            reply_orig:    draft.nutritionist_reply,
+            reply_lang:    'ru'
+          }),
+          redirect: 'follow'
+        });
+        sendResult = await r.json();
+      } catch (e) {
+        console.error('send_report call failed:', e?.message || e);
+        await tgAnswerCallback(env, cq.id, '⚠ Ошибка отправки клиенту');
+        return jsonResponse({ ok: false, error: 'apps_script_call_failed' }, corsHeaders);
+      }
+    } else {
+      console.error('APPS_SCRIPT_URL not set in env');
+    }
+
+    draft.status      = 'approved';
+    draft.approved_at = new Date().toISOString();
+    draft.send_result = sendResult;
+
+    const sentOk = sendResult && sendResult.ok;
     await tgEditMessage(env, chatId, messageId,
-      '✅ <b>Утверждено</b>\n\nКлиент: <code>' + esc(draft.client_email) + '</code>\n' +
-      (draft.nutritionist_reply
-        ? '<i>Ответ нутрициолога будет отправлен (этапы 5–6 — PDF + email).</i>'
-        : '<i>Без правок · AI-черновик будет отправлен как есть.</i>')
+      (sentOk ? '✅ <b>Отправлено клиенту</b>' : '⚠ <b>Утверждено, но отправка дала сбой</b>') +
+      '\n\nКлиент: <code>' + esc(draft.client_email) + '</code>' +
+      '\nЯзык: ' + esc(clientLang) +
+      (clientLang !== 'ru' && clientLang !== 'uk' ? ' <i>(переведено с ru)</i>' : '') +
+      (sentOk ? '' : '\n\n<code>' + esc(JSON.stringify(sendResult || {error:'no_response'})) + '</code>')
     );
     await env.EXPERT_DRAFTS.delete('draft:' + requestId);
-    await tgAnswerCallback(env, cq.id, '✅ Утверждено');
+    await tgAnswerCallback(env, cq.id, sentOk ? '✅ Отправлено клиенту' : '⚠ Сбой отправки');
   }
   else if (action === 'reject') {
     draft.status = 'rejected';
@@ -616,10 +682,48 @@ async function handleTgMessage(msg, env, corsHeaders) {
   const preview = text.length > 500 ? text.slice(0, 500) + '…' : text;
   await tgSendMessage(env, chatId,
     '✏️ <b>Текст сохранён.</b>\n\n' + esc(preview) + '\n\n<i>Подтвердите отправку клиенту:</i>',
-    { reply_markup: buildDraftKeyboard(editingRequestId) }
+    { reply_markup: buildDraftKeyboard(editingRequestId, 'after_edit') }
   );
 
   return jsonResponse({ ok: true, saved: true }, corsHeaders);
+}
+
+// Перевод ответа нутрициолога (ru) на язык клиента через Claude API.
+// Сохраняем структуру (абзацы, списки, переносы) и медицинскую точность.
+async function translateReply(env, text, targetLang) {
+  if (!env.CLAUDE_API_KEY) return text;
+
+  const langName = {
+    en: 'English', es: 'Spanish', de: 'German', pt: 'Portuguese',
+    fr: 'French',  pl: 'Polish',  it: 'Italian', he: 'Hebrew',
+    ja: 'Japanese', ko: 'Korean'
+  }[targetLang] || targetLang;
+
+  const prompt =
+    'Translate the following message from a clinical nutritionist (originally written in Russian) into ' + langName + '. ' +
+    'Preserve exact structure: paragraphs, bullet lists, line breaks, headings. ' +
+    'Keep medical and supplement names accurate (use international/Latin names where appropriate). ' +
+    'Tone: warm but professional, addressing the client directly. ' +
+    'OUTPUT: ONLY the translated text, no preamble, no commentary, no quotes around it.\n\n' +
+    'Original text:\n' + text;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': env.CLAUDE_API_KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 2000,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+  });
+
+  if (!response.ok) throw new Error('claude http ' + response.status);
+  const result = await response.json();
+  return (result.content?.[0]?.text || '').trim() || text;
 }
 
 // Telegram API helpers.

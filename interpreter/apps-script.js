@@ -54,10 +54,12 @@ function doGet(e) {
   return validateCode(code);
 }
 
-// ── POST: fallback приём Expert-запроса ───────────────────────
+// ── POST: приём Expert-запроса ИЛИ отправка готового отчёта клиенту ─────
 function doPost(e) {
   try {
     var payload = JSON.parse(e.postData.contents);
+    var action  = (payload && payload.action) || '';
+    if (action === 'send_report') return handleSendReport(payload);
     return handleExpertRequest(payload);
   } catch (err) {
     return respond({ ok: false, reason: 'error', message: err.toString() });
@@ -444,6 +446,133 @@ function respond(data) {
   return ContentService
     .createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ════════════════════════════════════════════════════════════════
+// SEND REPORT (этап 5–6 backstage-бота)
+// ════════════════════════════════════════════════════════════════
+// Принимает POST от Cloudflare Worker после того как нутрициолог нажал
+// «✅ Отправить клиенту». Worker уже перевёл текст на язык клиента.
+// Здесь: собираем Google Doc → PDF → отправляем клиенту email-ом.
+
+// Локализованные заголовки PDF-отчёта.
+var REPORT_LABELS = {
+  ru: { subject: 'Ваш персональный разбор · VIA-L', greeting: 'Здравствуйте', intro: 'Ваш персональный разбор от нутрициолога VIA-L во вложении.', email_body: 'Ваш разбор готов. Подробности в PDF-файле во вложении.\n\nС уважением,\nКоманда VIA-L · viaelcom@gmail.com', title: 'Персональный разбор VIA-L', date: 'Дата', plan: 'Тариф', week: 'неделя', profile: 'Профиль', age: 'возраст', gender_f: 'женский', gender_m: 'мужской', phase: 'фаза', device: 'Источник данных', biometrics: 'Биометрия', symptoms: 'Симптомы', client_question: 'Ваш вопрос', report: 'Разбор нутрициолога', signature: 'С уважением, Marina · VIA-L · viaelcom@gmail.com', disclaimer: 'Этот документ носит информационный характер и не заменяет очную консультацию врача.' },
+  uk: { subject: 'Ваш персональний розбір · VIA-L', greeting: 'Вітаємо', intro: 'Ваш персональний розбір від нутриціолога VIA-L у вкладенні.', email_body: 'Ваш розбір готовий. Деталі в PDF-файлі у вкладенні.\n\nЗ повагою,\nКоманда VIA-L · viaelcom@gmail.com', title: 'Персональний розбір VIA-L', date: 'Дата', plan: 'Тариф', week: 'тиждень', profile: 'Профіль', age: 'вік', gender_f: 'жіноча', gender_m: 'чоловіча', phase: 'фаза', device: 'Джерело даних', biometrics: 'Біометрія', symptoms: 'Симптоми', client_question: 'Ваше питання', report: 'Розбір нутриціолога', signature: 'З повагою, Marina · VIA-L · viaelcom@gmail.com', disclaimer: 'Цей документ має інформаційний характер і не замінює очну консультацію лікаря.' },
+  en: { subject: 'Your personal report · VIA-L', greeting: 'Hello', intro: 'Your personal report from a VIA-L nutritionist is attached.', email_body: 'Your report is ready. See the attached PDF for details.\n\nBest regards,\nThe VIA-L team · viaelcom@gmail.com', title: 'VIA-L Personal Report', date: 'Date', plan: 'Plan', week: 'week', profile: 'Profile', age: 'age', gender_f: 'female', gender_m: 'male', phase: 'phase', device: 'Data source', biometrics: 'Biometrics', symptoms: 'Symptoms', client_question: 'Your question', report: 'Nutritionist report', signature: 'Best regards, Marina · VIA-L · viaelcom@gmail.com', disclaimer: 'This document is informational and does not replace an in-person medical consultation.' },
+  es: { subject: 'Tu informe personal · VIA-L', greeting: 'Hola', intro: 'Tu informe personal del nutricionista VIA-L está adjunto.', email_body: 'Tu informe está listo. Detalles en el PDF adjunto.\n\nUn saludo,\nEl equipo VIA-L · viaelcom@gmail.com', title: 'Informe personal VIA-L', date: 'Fecha', plan: 'Plan', week: 'semana', profile: 'Perfil', age: 'edad', gender_f: 'femenino', gender_m: 'masculino', phase: 'fase', device: 'Fuente de datos', biometrics: 'Biometría', symptoms: 'Síntomas', client_question: 'Tu pregunta', report: 'Informe del nutricionista', signature: 'Un saludo, Marina · VIA-L · viaelcom@gmail.com', disclaimer: 'Este documento es informativo y no sustituye una consulta médica presencial.' },
+  de: { subject: 'Ihr persönlicher Bericht · VIA-L', greeting: 'Hallo', intro: 'Ihr persönlicher Bericht von der VIA-L Ernährungsberaterin ist beigefügt.', email_body: 'Ihr Bericht ist fertig. Details im angehängten PDF.\n\nMit freundlichen Grüßen,\nDas VIA-L Team · viaelcom@gmail.com', title: 'VIA-L Persönlicher Bericht', date: 'Datum', plan: 'Tarif', week: 'Woche', profile: 'Profil', age: 'Alter', gender_f: 'weiblich', gender_m: 'männlich', phase: 'Phase', device: 'Datenquelle', biometrics: 'Biometrie', symptoms: 'Symptome', client_question: 'Ihre Frage', report: 'Bericht der Ernährungsberaterin', signature: 'Mit freundlichen Grüßen, Marina · VIA-L · viaelcom@gmail.com', disclaimer: 'Dieses Dokument ist informativ und ersetzt keine ärztliche Konsultation vor Ort.' },
+  pt: { subject: 'Seu relatório pessoal · VIA-L', greeting: 'Olá', intro: 'Seu relatório pessoal da nutricionista VIA-L está em anexo.', email_body: 'Seu relatório está pronto. Detalhes no PDF em anexo.\n\nAtenciosamente,\nEquipe VIA-L · viaelcom@gmail.com', title: 'Relatório Pessoal VIA-L', date: 'Data', plan: 'Plano', week: 'semana', profile: 'Perfil', age: 'idade', gender_f: 'feminino', gender_m: 'masculino', phase: 'fase', device: 'Fonte de dados', biometrics: 'Biometria', symptoms: 'Sintomas', client_question: 'Sua pergunta', report: 'Relatório da nutricionista', signature: 'Atenciosamente, Marina · VIA-L · viaelcom@gmail.com', disclaimer: 'Este documento é informativo e não substitui consulta médica presencial.' },
+  fr: { subject: 'Votre bilan personnel · VIA-L', greeting: 'Bonjour', intro: 'Votre bilan personnel de la nutritionniste VIA-L est en pièce jointe.', email_body: "Votre bilan est prêt. Détails dans le PDF en pièce jointe.\n\nCordialement,\nL'équipe VIA-L · viaelcom@gmail.com", title: 'Bilan personnel VIA-L', date: 'Date', plan: 'Forfait', week: 'semaine', profile: 'Profil', age: 'âge', gender_f: 'féminin', gender_m: 'masculin', phase: 'phase', device: 'Source des données', biometrics: 'Biométrie', symptoms: 'Symptômes', client_question: 'Votre question', report: 'Bilan de la nutritionniste', signature: 'Cordialement, Marina · VIA-L · viaelcom@gmail.com', disclaimer: 'Ce document est informatif et ne remplace pas une consultation médicale en présentiel.' },
+  pl: { subject: 'Twój osobisty raport · VIA-L', greeting: 'Witaj', intro: 'Twój osobisty raport od dietetyka VIA-L jest w załączniku.', email_body: 'Twój raport jest gotowy. Szczegóły w załączonym PDF.\n\nZ poważaniem,\nZespół VIA-L · viaelcom@gmail.com', title: 'Osobisty raport VIA-L', date: 'Data', plan: 'Plan', week: 'tydzień', profile: 'Profil', age: 'wiek', gender_f: 'kobieta', gender_m: 'mężczyzna', phase: 'faza', device: 'Źródło danych', biometrics: 'Biometria', symptoms: 'Objawy', client_question: 'Twoje pytanie', report: 'Raport dietetyka', signature: 'Z poważaniem, Marina · VIA-L · viaelcom@gmail.com', disclaimer: 'Ten dokument ma charakter informacyjny i nie zastępuje konsultacji lekarskiej.' },
+  it: { subject: 'Il tuo report personale · VIA-L', greeting: 'Ciao', intro: 'Il tuo report personale della nutrizionista VIA-L è in allegato.', email_body: 'Il tuo report è pronto. Dettagli nel PDF allegato.\n\nCordiali saluti,\nIl team VIA-L · viaelcom@gmail.com', title: 'Report personale VIA-L', date: 'Data', plan: 'Piano', week: 'settimana', profile: 'Profilo', age: 'età', gender_f: 'femminile', gender_m: 'maschile', phase: 'fase', device: 'Fonte dei dati', biometrics: 'Biometria', symptoms: 'Sintomi', client_question: 'La tua domanda', report: 'Report della nutrizionista', signature: 'Cordiali saluti, Marina · VIA-L · viaelcom@gmail.com', disclaimer: 'Questo documento è informativo e non sostituisce una consultazione medica in presenza.' },
+  he: { subject: 'הדוח האישי שלך · VIA-L', greeting: 'שלום', intro: 'הדוח האישי שלך מהתזונאית של VIA-L מצורף.', email_body: 'הדוח שלך מוכן. פרטים בקובץ PDF המצורף.\n\nבברכה,\nצוות VIA-L · viaelcom@gmail.com', title: 'דוח אישי VIA-L', date: 'תאריך', plan: 'תוכנית', week: 'שבוע', profile: 'פרופיל', age: 'גיל', gender_f: 'נקבה', gender_m: 'זכר', phase: 'שלב', device: 'מקור נתונים', biometrics: 'ביומטריה', symptoms: 'תסמינים', client_question: 'השאלה שלך', report: 'דוח התזונאית', signature: 'בברכה, Marina · VIA-L · viaelcom@gmail.com', disclaimer: 'מסמך זה הוא מידעי בלבד ואינו מחליף ייעוץ רפואי פנים אל פנים.' },
+  ja: { subject: 'パーソナルレポート · VIA-L', greeting: 'こんにちは', intro: 'VIA-Lの栄養士からのパーソナルレポートが添付されています。', email_body: 'レポートの準備ができました。添付のPDFをご覧ください。\n\n敬具\nVIA-Lチーム · viaelcom@gmail.com', title: 'VIA-L パーソナルレポート', date: '日付', plan: 'プラン', week: '週', profile: 'プロフィール', age: '年齢', gender_f: '女性', gender_m: '男性', phase: '段階', device: 'データソース', biometrics: 'バイオメトリクス', symptoms: '症状', client_question: 'あなたの質問', report: '栄養士のレポート', signature: '敬具、Marina · VIA-L · viaelcom@gmail.com', disclaimer: 'この文書は情報提供のみを目的としており、対面での医療相談に代わるものではありません。' },
+  ko: { subject: '귀하의 개인 보고서 · VIA-L', greeting: '안녕하세요', intro: 'VIA-L 영양사의 개인 보고서가 첨부되어 있습니다.', email_body: '보고서가 준비되었습니다. 첨부된 PDF에서 자세한 내용을 확인하세요.\n\n감사합니다\nVIA-L 팀 · viaelcom@gmail.com', title: 'VIA-L 개인 보고서', date: '날짜', plan: '요금제', week: '주', profile: '프로필', age: '나이', gender_f: '여성', gender_m: '남성', phase: '단계', device: '데이터 소스', biometrics: '바이오메트릭', symptoms: '증상', client_question: '귀하의 질문', report: '영양사 보고서', signature: '감사합니다, Marina · VIA-L · viaelcom@gmail.com', disclaimer: '이 문서는 정보 제공용이며 대면 의료 상담을 대체하지 않습니다.' }
+};
+
+function reportLabels(lang) {
+  return REPORT_LABELS[lang] || REPORT_LABELS.ru;
+}
+
+function handleSendReport(p) {
+  var email = (p.client_email || '').toString().trim();
+  if (!email) return respond({ ok: false, error: 'no_client_email' });
+  var lang   = (p.lang || 'ru').toString().toLowerCase();
+  var labels = reportLabels(lang);
+  var d      = p.data || {};
+  var name   = p.client_name || '';
+
+  // 1. Создаём временный Google Doc.
+  var docTitle = 'VIA-L · ' + (name || labels.title) + ' · ' + new Date().toLocaleDateString('uk-UA');
+  var doc      = DocumentApp.create(docTitle);
+  var body     = doc.getBody();
+
+  // 2. Заполняем шапкой и метаданными.
+  var heading = body.appendParagraph(labels.title);
+  heading.setHeading(DocumentApp.ParagraphHeading.TITLE);
+
+  var dateLine = labels.date + ': ' + new Date().toLocaleDateString(jsLocale(lang)) +
+                 '   ·   ' + labels.plan + ': ' + (p.plan || '—') +
+                 (p.week_no ? ' (' + labels.week + ' ' + p.week_no + ')' : '');
+  body.appendParagraph(dateLine).setItalic(true);
+
+  // 3. Профиль клиента.
+  body.appendParagraph(labels.profile).setHeading(DocumentApp.ParagraphHeading.HEADING2);
+  var profileLine = (d.gender === 'male' ? labels.gender_m : labels.gender_f);
+  if (d.age)   profileLine += '   ·   ' + labels.age + ': ' + d.age;
+  if (d.phase) profileLine += '   ·   ' + labels.phase + ': ' + d.phase;
+  body.appendParagraph(profileLine);
+
+  if (d.device) body.appendParagraph(labels.device + ': ' + d.device);
+
+  // 4. Биометрия (если есть).
+  var bio = [];
+  if (d.hrv)        bio.push('HRV ' + d.hrv + ' ms');
+  if (d.rhr)        bio.push('RHR ' + d.rhr);
+  if (d.sleep_qual) bio.push('sleep ' + d.sleep_qual + '/10');
+  if (d.deep)       bio.push('deep ' + d.deep);
+  if (d.energy)     bio.push('energy ' + d.energy + '/10');
+  if (d.anxiety)    bio.push('anxiety ' + d.anxiety + '/10');
+  if (bio.length) {
+    body.appendParagraph(labels.biometrics).setHeading(DocumentApp.ParagraphHeading.HEADING2);
+    body.appendParagraph(bio.join('   ·   '));
+  }
+  if (Array.isArray(d.symptoms) && d.symptoms.length) {
+    body.appendParagraph(labels.symptoms + ': ' + d.symptoms.join(', '));
+  }
+
+  // 5. Вопрос клиента (если был).
+  if (p.question) {
+    body.appendParagraph(labels.client_question).setHeading(DocumentApp.ParagraphHeading.HEADING2);
+    body.appendParagraph(p.question);
+  }
+
+  // 6. Ответ нутрициолога (уже переведён Worker'ом на язык клиента).
+  body.appendParagraph(labels.report).setHeading(DocumentApp.ParagraphHeading.HEADING2);
+  var replyText = (p.reply_text || '').toString();
+  // Разбиваем на абзацы по двойному переводу строки, сохраняя структуру.
+  var paragraphs = replyText.split(/\n{2,}/);
+  for (var i = 0; i < paragraphs.length; i++) {
+    var para = paragraphs[i].trim();
+    if (para) body.appendParagraph(para);
+  }
+
+  // 7. Подпись и дисклеймер.
+  body.appendParagraph(''); // отступ
+  body.appendParagraph(labels.signature).setItalic(true);
+  body.appendParagraph(labels.disclaimer).setItalic(true).editAsText().setFontSize(9);
+
+  // 8. Сохраняем, экспортируем в PDF.
+  doc.saveAndClose();
+  var docFile = DriveApp.getFileById(doc.getId());
+  var pdfBlob = docFile.getAs('application/pdf').setName(safeFilename(name, lang) + '.pdf');
+
+  // 9. Отправляем клиенту email с PDF-вложением.
+  var subject = labels.subject;
+  var greet   = labels.greeting + (name ? ', ' + name : '') + '!';
+  var bodyTxt = greet + '\n\n' + labels.intro + '\n\n' + labels.email_body;
+  GmailApp.sendEmail(email, subject, bodyTxt, {
+    attachments: [pdfBlob],
+    name: 'VIA-L'
+  });
+
+  // 10. Удаляем временный Google Doc.
+  docFile.setTrashed(true);
+
+  return respond({ ok: true, sent_to: email, lang: lang, pdf_kb: Math.round(pdfBlob.getBytes().length / 1024) });
+}
+
+function jsLocale(lang) {
+  var map = { ru:'ru-RU', uk:'uk-UA', en:'en-GB', es:'es-ES', de:'de-DE',
+              pt:'pt-PT', fr:'fr-FR', pl:'pl-PL', it:'it-IT', he:'he-IL',
+              ja:'ja-JP', ko:'ko-KR' };
+  return map[lang] || 'en-GB';
+}
+
+function safeFilename(name, lang) {
+  var base = 'VIA-L_' + (lang || 'ru') + '_' + (name || 'client');
+  return base.replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_').slice(0, 64);
 }
 
 // Backstage Telegram-бот: уведомление нутрициолога после Expert-запроса.
