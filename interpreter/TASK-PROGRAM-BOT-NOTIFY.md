@@ -1,99 +1,161 @@
-# Задача: уведомление нутрициологу в Telegram при оплате программы ведения
+# Задача: онбординг клиентов программ ведения через Telegram-бот
 
 > **Статус:** не начато.
 > **Страницы:** `Menopauza-program.html`, `Andropauza-program.html`, `Antivikove-program.html`, `Estrogen-program.html`.
-> **Цель:** при нажатии «Оплатити супровід →» нутрициолог мгновенно получает карточку в `@viael_backstage_bot` с именем, email, программой и тарифом клиента.
+> **Цель:** после подтверждённой оплаты в Hotmart — клиент получает анкету-опросник, нутрициолог получает заполненную анкету + AI-разбор в Telegram, клиент выбирает дату и время первой 60-мин рабочей сессии.
+> **Важно:** это второй независимый поток бота — не пересекается с PRO-EXPERT backstage.
 
 ---
 
-## 1. Триггер
-
-Функция `confirmPayment()` в каждой из 4 страниц. Уже собирает:
-- `name` — из `#payName`
-- `email` — из `#payEmail`
-- `selOpt` — выбранный вариант (1 / 2 / 3)
-- `lang` — текущий язык
-- Hotmart-ссылка открывается параллельно — уведомление не блокирует переход.
-
----
-
-## 2. Карточка в Telegram
+## 1. Полный поток
 
 ```
-🌿 Новая заявка — Менопауза
-Имя:     Анна Иванова
-Email:   anna@example.com
-Тариф:   Супровід 3 міс · € 590
-Мова:    uk
-Час:     27 May 2026, 22:45 UTC
-```
+Hotmart: оплата подтверждена
+    │
+    ▼ Webhook POST → Worker /hotmart-webhook
+    │   {email, name, product_id, plan, offer_code}
+    │
+    ├─► Worker сохраняет заявку в KV {token → {email, name, program, plan, ts}}
+    │
+    ├─► Worker отправляет клиенту email:
+    │       «Оплата получена. Заполните анкету: https://via-l.com/program-intake.html?t=TOKEN»
+    │
+    └─► Worker → Telegram нутрициологу:
+            «💳 Новая оплата — Менопауза · Анна · anna@mail.com · €590 · 3 мес»
 
-Программа:
-- `Menopauza-program.html` → `🌿 Менопауза`
-- `Andropauza-program.html` → `⚡ Андропауза`
-- `Antivikove-program.html` → `✦ Антивіковий`
-- `Estrogen-program.html` → `🌸 Естроген`
+Клиент открывает program-intake.html?t=TOKEN
+    │   (токен валидируется через Worker /intake-validate → данные заявки)
+    │
+    ▼ Клиент заполняет анкету (4 секции, ~20 вопросов)
+    │
+    ▼ POST → Worker /intake-submit
+    │   {token, answers}
+    │
+    ├─► Worker → Claude API → AI-разбор ключевых паттернов
+    │
+    ├─► Worker → Telegram нутрициологу:
+    │       карточка «🧬 Анкета · Анна · Менопауза»
+    │       + AI-bullets (5–7 пунктов)
+    │       + кнопка [📅 Назначить сессию]
+    │
+    └─► Worker → email клиенту:
+            «Анкета принята. Нутрициолог свяжется в течение 24 ч.»
+            + ссылка на календарь 60-мин сессии
 
----
-
-## 3. Реализация
-
-### 3.1 Cloudflare Worker — новый endpoint `/program-notify`
-
-```
-POST /program-notify
-{
-  "program": "Menopauza",
-  "name": "Анна",
-  "email": "anna@example.com",
-  "option": 2,
-  "price": "€ 590",
-  "lang": "uk"
-}
-```
-
-Worker формирует текст карточки и отправляет `sendMessage` в `NUTRITIONIST_CHAT_ID` (уже есть в secrets).
-
-Ответ `{ ok: true }` — клиентский JS его игнорирует (fire-and-forget).
-
-### 3.2 Изменение в каждой из 4 страниц
-
-В `confirmPayment()` — добавить `fetch` к Worker **до** `window.open`:
-
-```js
-// fire-and-forget — не ждём ответа
-fetch('https://vial-claude-proxy.viaelcom.workers.dev/program-notify', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    program: 'Menopauza',   // строка-константа, разная для каждой страницы
-    name:    name,
-    email:   email,
-    option:  selOpt,
-    price:   PRICES[selOpt],
-    lang:    lang
-  })
-}).catch(() => {});  // ошибки сети не показываем клиенту
-
-window.open(url + '...', '_blank');
+Клиент выбирает дату и время в calendar-60min (новый модал на program-intake.html)
+    │
+    ▼ POST → Worker /schedule-session
+    │
+    ├─► Worker → Telegram нутрициологу:
+    │       «📅 Анна хочет сессию: 3 июня, 14:00 UTC+2»
+    │
+    └─► Worker → email клиенту: подтверждение + Zoom-ссылка (нутрициолог добавляет вручную)
 ```
 
 ---
 
-## 4. Что менять и где
+## 2. Анкета — структура (program-intake.html)
 
-| Файл | Что | Метод |
-|---|---|---|
-| `cloudflare-worker.js` | Новый `case '/program-notify'` | добавить |
-| `Menopauza-program.html` | `confirmPayment()` | +fetch, program='Menopauza' |
-| `Andropauza-program.html` | `confirmPayment()` | +fetch, program='Andropauza' |
-| `Antivikove-program.html` | `confirmPayment()` | +fetch, program='Antivikove' |
-| `Estrogen-program.html` | `confirmPayment()` | +fetch, program='Estrogen' |
+Отдельная страница, 4 секции, язык из token (uk/ru). Дизайн в стиле программ (светлый, gold).
+
+**Секция 1 — Контакты и цели**
+- Имя, возраст
+- Telegram @username (для связи)
+- Главная цель за 3 / 6 месяцев (свободный текст)
+- Что пробовали раньше, что не сработало
+
+**Секция 2 — Здоровье (анамнез)**
+- Хронические заболевания
+- Текущие медикаменты + дозы
+- Аллергии
+- Последние анализы: есть PDF / нет / планирую
+- Для женщин: фаза (цикл / перименопауза / менопауза / постменопауза), дата последней менструации, ГЗТ
+- Для мужчин: симптомы андропаузы, ТЗТ
+
+**Секция 3 — Образ жизни**
+- Сон: часов, проблемы (выбор: засыпание / пробуждения / качество / нет проблем)
+- Питание: типичный завтрак/обед/ужин (свободный текст)
+- Активность: тип + частота (select)
+- Стресс: уровень 1–10 + основной источник
+- Алкоголь (select: нет / редко / регулярно), кофеин (чашек в день)
+
+**Секция 4 — Добавки и трекер**
+- Что принимаете сейчас (название + доза + как давно)
+- Носимый трекер (Oura / Apple Watch / Garmin / нет)
+- Удобное время для созвонов (часовой пояс + временной слот)
 
 ---
 
-## 5. Порядок реализации
+## 3. Telegram-карточка нутрициологу
 
-1. Worker: добавить `/program-notify` endpoint → задеплоить → протестировать curl.
-2. `Menopauza-program.html`: добавить fetch → проверить в браузере (открывается Hotmart + уведомление в боте).
-3. Остальные 3 страницы — по одной, после ок на каждую.
+```
+🧬 Анкета заполнена · Менопауза
+━━━━━━━━━━━━━━━━━━━━━━━
+👤 Анна Иванова, 48 лет · @anna_i
+📧 anna@example.com · Тариф: 3 мес · €590
+Фаза: Перименопауза
+━━━━━━━━━━━━━━━━━━━━━━━
+🤖 AI-разбор:
+• Приоритет — стабилизация сна и снижение тревожности
+• Принимает Омепразол — ограничения по B12, Mg
+• Высокий стресс (8/10) — кортизол вероятно повышен
+• Алкоголь редко, активность низкая — потенциал роста
+• Данных трекера нет — запросить Oura/Apple Watch
+━━━━━━━━━━━━━━━━━━━━━━━
+[📋 Полная анкета]  [📅 Назначить сессию]
+```
+
+Кнопка «📋 Полная анкета» — ссылка на временную Google Doc (как в PRO-EXPERT) или inline Telegram.
+Кнопка «📅 Назначить сессию» — бот отправляет клиенту ссылку на calendar-60min.
+
+---
+
+## 4. Что строить
+
+| Компонент | Описание |
+|---|---|
+| Worker `/hotmart-webhook` | Принимает IPN от Hotmart, сохраняет в KV, шлёт email + TG |
+| Worker `/intake-validate` | GET?t=TOKEN → возвращает {program, name, lang} для формы |
+| Worker `/intake-submit` | Принимает анкету, вызывает Claude, шлёт в TG + email клиенту |
+| Worker `/schedule-session` | Принимает выбор даты → TG нутрициологу + email клиенту |
+| `program-intake.html` | Страница анкеты (uk/ru, токен в URL, 4 секции, календарь 60 мин) |
+| Hotmart Webhook | В настройках каждого продукта → URL Worker `/hotmart-webhook` |
+
+---
+
+## 5. Маппинг Hotmart product_id → программа
+
+Нужно выписать из Hotmart:
+
+| Product ID | Программа |
+|---|---|
+| ? | Menopauza |
+| ? | Andropauza |
+| ? | Antivikove |
+| ? | Estrogen |
+
+Заполнить перед реализацией Worker `/hotmart-webhook`.
+
+---
+
+## 6. Что уже есть и можно переиспользовать
+
+- `@viael_backstage_bot` — токен и chat_id уже в Worker secrets.
+- `generateAiBullets()` в Worker — адаптировать для программ (другой промпт, без биометрии трекера).
+- Шаблон email + Google Doc PDF из `handleSendReport()` — переиспользовать структуру.
+- Календарь 15-мин знакомства на program pages — взять UI за основу для calendar-60min.
+- KV Cloudflare — уже используется для draft-хранения в PRO-EXPERT.
+
+---
+
+## 7. Порядок реализации
+
+1. Выписать Hotmart product_id для всех 4 программ.
+2. Worker: `/hotmart-webhook` → сохранить в KV + TG-уведомление «новая оплата».
+3. Настроить Webhook URL в Hotmart (4 продукта).
+4. Протестировать: тестовая оплата → TG-уведомление.
+5. `program-intake.html` — скелет страницы (uk/ru, 4 секции).
+6. Worker: `/intake-validate` + `/intake-submit` + AI-разбор.
+7. Telegram-карточка с анкетой + AI-bullets.
+8. calendar-60min на `program-intake.html` + Worker `/schedule-session`.
+9. Протестировать полный цикл end-to-end.
