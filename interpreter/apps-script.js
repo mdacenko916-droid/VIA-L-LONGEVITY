@@ -250,147 +250,151 @@ function validateCode(code) {
 }
 
 // ── Отправка письма нутрициологу + подтверждение клиенту ─────
-// onboarding (опционально) — JSON-объект ELITE-анкеты-анамнеза, если она
-// заполнена с этим отчётом (приходит только один раз, с первым отчётом).
+// Принцип языков:
+//   • Письмо нутрициологу (MARINA_EMAIL) — ВСЕГДА на русском, без эмодзи
+//     (Gmail в plain-text портит некоторые эмодзи на ряде клиентов).
+//   • Подтверждение клиенту — на ЕГО языке (12 языков из CLIENT_CONFIRM).
+//
+// onboarding (опционально) — JSON-объект ELITE-анкеты-анамнеза, приходит
+// один раз с первым отчётом ELITE-клиента.
 function sendExpertEmail(name, email, question, d, lang, code, onboarding) {
-  var date = new Date().toLocaleString('uk-UA');
+  var date = new Date().toLocaleString('ru-RU');
   var isElite = code.indexOf('ELITE') !== -1;
-  var tier = isElite ? 'ELITE' : 'Pro + Expert';
-  var subject = (isElite ? '💎 ELITE-розбір · ' : '★ Expert-розбір · ') + (name || 'Клієнт') + ' · ' + new Date().toLocaleDateString('uk-UA');
+  var subject = (isElite ? 'ELITE-разбор · ' : 'Expert-разбор · ') + (name || 'Клиент') + ' · ' + new Date().toLocaleDateString('ru-RU');
 
   var b = '═══════════════════════════════════════\n';
-  b += '  VIA-L · ' + (isElite ? 'ELITE-РОЗБІР · ELITE' : 'EXPERT-РОЗБІР · Pro + Expert') + '\n';
+  b += '  VIA-L · ' + (isElite ? 'ELITE-РАЗБОР · ELITE' : 'EXPERT-РАЗБОР · Pro + Expert') + '\n';
   b += '═══════════════════════════════════════\n\n';
-  b += 'Клієнт:       ' + (name  || '—') + '\n';
+  b += 'Клиент:       ' + (name  || '—') + '\n';
   b += 'Email:        ' + (email || '—') + '\n';
-  b += 'Мова:         ' + lang.toUpperCase() + '\n';
-  b += 'Код доступу:  ' + code + '\n';
-  b += 'Дата запиту:  ' + date + '\n';
+  b += 'Язык:         ' + lang.toUpperCase() + '\n';
+  b += 'Код доступа:  ' + code + '\n';
+  b += 'Дата запроса: ' + date + '\n';
   if (d.device) b += 'Гаджет:       ' + d.device + '\n';
   b += '\n';
 
   if (question) {
-    b += '─── ПИТАННЯ КЛІЄНТА ─────────────────\n';
+    b += '─── ВОПРОС КЛИЕНТА ──────────────────\n';
     b += question + '\n\n';
   }
 
-  b += '─── ПРОФІЛЬ ─────────────────────────\n';
-  b += 'Стать: ' + (d.gender === 'male' ? 'Чоловік ♂' : 'Жінка ♀') + '\n';
+  b += '─── ПРОФИЛЬ ─────────────────────────\n';
+  b += 'Пол:   ' + (d.gender === 'male' ? 'Мужчина' : 'Женщина') + '\n';
   b += 'Фаза:  ' + (d.phase || '—') + '\n';
-  if (d.age)    b += 'Вік:   ' + d.age    + ' р.\n';
-  if (d.weight) b += 'Вага:  ' + d.weight + ' кг\n';
-  if (d.height) b += 'Зріст: ' + d.height + ' см\n';
+  if (d.age)    b += 'Возраст: ' + d.age    + ' лет\n';
+  if (d.weight) b += 'Вес:     ' + d.weight + ' кг\n';
+  if (d.height) b += 'Рост:    ' + d.height + ' см\n';
 
-  b += '\n─── ОСНОВНІ ПОКАЗНИКИ ───────────────\n';
+  b += '\n─── ОСНОВНЫЕ ПОКАЗАТЕЛИ ─────────────\n';
   b += 'HRV:          ' + d.hrv + ' мс';
   if (d.hrv_trend) b += '  (тренд: ' + d.hrv_trend + (d.hrv_dur ? ', ' + d.hrv_dur : '') + ')';
   b += '\n';
-  b += 'ЧСС спокою:   ' + d.rhr + ' уд/хв';
+  b += 'ЧСС покоя:    ' + d.rhr + ' уд/мин';
   if (d.rhr_comp) b += '  (' + d.rhr_comp + ')';
   b += '\n';
-  b += 'Якість сну:   ' + d.sleep_qual + '/10\n';
-  if (d.deep)  b += 'Глибокий сон: ' + d.deep + '\n';
-  if (d.wake)  b += 'Пробудження:  ' + d.wake + '\n';
-  b += 'Енергія:      ' + d.energy  + '/10\n';
-  b += 'Тривога:      ' + d.anxiety + '/10\n';
-  if (d.resp_rate) b += 'ЧД:           ' + d.resp_rate + ' дих/хв\n';
+  b += 'Качество сна: ' + d.sleep_qual + '/10\n';
+  if (d.deep)  b += 'Глубокий сон: ' + d.deep + '\n';
+  if (d.wake)  b += 'Пробуждения:  ' + d.wake + '\n';
+  b += 'Энергия:      ' + d.energy  + '/10\n';
+  b += 'Тревога:      ' + d.anxiety + '/10\n';
+  if (d.resp_rate) b += 'ЧД:           ' + d.resp_rate + ' дых/мин\n';
 
   if (d.temp || d.hotflash) {
-    b += '\n─── ТЕМПЕРАТУРА / ПРИПЛИВИ ──────────\n';
-    if (d.temp)         b += 'Нічна т-ра:   ' + d.temp       + '\n';
-    if (d.hotflash)     b += 'Припливи:     ' + d.hotflash   + '\n';
+    b += '\n─── ТЕМПЕРАТУРА / ПРИЛИВЫ ───────────\n';
+    if (d.temp)         b += 'Ночная т-ра:  ' + d.temp       + '\n';
+    if (d.hotflash)     b += 'Приливы:      ' + d.hotflash   + '\n';
     if (d.hotfreq)      b += 'Частота:      ' + d.hotfreq    + '\n';
-    if (d.hf_count)     b += 'Кількість:    ' + d.hf_count   + '\n';
-    if (d.hf_intensity) b += 'Інтенсивність:' + d.hf_intensity + '\n';
-    if (d.hf_time)      b += 'Час:          ' + d.hf_time    + '\n';
+    if (d.hf_count)     b += 'Количество:   ' + d.hf_count   + '\n';
+    if (d.hf_intensity) b += 'Интенсивность:' + d.hf_intensity + '\n';
+    if (d.hf_time)      b += 'Время:        ' + d.hf_time    + '\n';
   }
 
   if (d.symptoms && d.symptoms.length) {
-    b += '\n─── СИМПТОМИ ────────────────────────\n';
+    b += '\n─── СИМПТОМЫ ────────────────────────\n';
     b += d.symptoms.join(', ') + '\n';
   }
   if (d.horm_symptoms && d.horm_symptoms.length) {
-    b += 'Гормональні:  ' + d.horm_symptoms.join(', ') + '\n';
-    if (d.horm_intensity) b += 'Інтенсивність:' + d.horm_intensity + '\n';
+    b += 'Гормональные: ' + d.horm_symptoms.join(', ') + '\n';
+    if (d.horm_intensity) b += 'Интенсивность:' + d.horm_intensity + '\n';
   }
 
-  b += '\n─── КОГНІЦІЯ ────────────────────────\n';
-  if (d.memory)  b += 'Пам\'ять:      ' + d.memory  + '\n';
+  b += '\n─── КОГНИЦИЯ ────────────────────────\n';
+  if (d.memory)  b += 'Память:       ' + d.memory  + '\n';
   if (d.fog)     b += 'Туман:        ' + d.fog     + '\n';
-  if (d.cogndur) b += 'Тривалість:   ' + d.cogndur + '\n';
+  if (d.cogndur) b += 'Длительность: ' + d.cogndur + '\n';
 
-  b += '\n─── ХАРЧУВАННЯ ──────────────────────\n';
-  if (d.appetite)       b += 'Апетит:       ' + d.appetite       + '\n';
+  b += '\n─── ПИТАНИЕ ─────────────────────────\n';
+  if (d.appetite)       b += 'Аппетит:      ' + d.appetite       + '\n';
   if (d.eating_pattern) b += 'Режим:        ' + d.eating_pattern + '\n';
-  if (d.protein_intake) b += 'Білок:        ' + d.protein_intake + '\n';
+  if (d.protein_intake) b += 'Белок:        ' + d.protein_intake + '\n';
   if (d.alc)            b += 'Алкоголь:     ' + d.alc            + '\n';
 
-  b += '\n─── АКТИВНІСТЬ ──────────────────────\n';
-  if (d.act_types && d.act_types.length) b += 'Типи:         ' + d.act_types.join(', ') + '\n';
+  b += '\n─── АКТИВНОСТЬ ──────────────────────\n';
+  if (d.act_types && d.act_types.length) b += 'Типы:         ' + d.act_types.join(', ') + '\n';
   if (d.act_freq)     b += 'Частота:      ' + d.act_freq     + '\n';
-  if (d.act_recovery) b += 'Відновлення:  ' + d.act_recovery + '\n';
+  if (d.act_recovery) b += 'Восстановление:' + d.act_recovery + '\n';
 
   if (d.supplements && d.supplements.length) {
     b += '\n─── ДОБАВКИ ─────────────────────────\n';
     b += d.supplements.join(', ') + '\n';
   }
-  if (d.meds) b += 'Медикаменти:  ' + d.meds + '\n';
+  if (d.meds) b += 'Лекарства:    ' + d.meds + '\n';
 
-  b += '\n─── СТРЕС / НАСТРІЙ ─────────────────\n';
-  if (d.stress)         b += 'Стрес:        ' + d.stress         + '\n';
-  if (d.chronic_stress) b += 'Хрон. стрес:  ' + d.chronic_stress + '\n';
+  b += '\n─── СТРЕСС / НАСТРОЕНИЕ ─────────────\n';
+  if (d.stress)         b += 'Стресс:       ' + d.stress         + '\n';
+  if (d.chronic_stress) b += 'Хрон. стресс: ' + d.chronic_stress + '\n';
   if (d.cortisol_symp && d.cortisol_symp.length) b += 'Кортизол:     ' + d.cortisol_symp.join(', ') + '\n';
-  if (d.mood)        b += 'Настрій:      ' + d.mood        + '\n';
-  if (d.irritability) b += 'Дратівливість:' + d.irritability + '\n';
+  if (d.mood)        b += 'Настроение:   ' + d.mood        + '\n';
+  if (d.irritability) b += 'Раздражительность:' + d.irritability + '\n';
 
   if (d.cycle_status || d.last_period) {
     b += '\n─── ЦИКЛ ────────────────────────────\n';
     if (d.cycle_status) b += 'Цикл:         ' + d.cycle_status + '\n';
-    if (d.last_period)  b += 'Остання м-я:  ' + d.last_period  + '\n';
+    if (d.last_period)  b += 'Последняя м-я:' + d.last_period  + '\n';
     if (d.pms)          b += 'ПМС:          ' + d.pms          + '\n';
   }
 
   if (d.vitality || d.weekly_trend) {
-    b += '\n─── ТИЖНЕВИЙ ТРЕНД ──────────────────\n';
-    if (d.vitality)     b += 'Вітальність:  ' + d.vitality     + '\n';
+    b += '\n─── НЕДЕЛЬНЫЙ ТРЕНД ─────────────────\n';
+    if (d.vitality)     b += 'Витальность:  ' + d.vitality     + '\n';
     if (d.weekly_trend) b += 'Тренд:        ' + d.weekly_trend + '\n';
-    if (d.weekly_changes && d.weekly_changes.length) b += 'Зміни:        ' + d.weekly_changes.join(', ') + '\n';
-    if (d.events && d.events.length)                 b += 'Події:        ' + d.events.join(', ')          + '\n';
+    if (d.weekly_changes && d.weekly_changes.length) b += 'Изменения:    ' + d.weekly_changes.join(', ') + '\n';
+    if (d.events && d.events.length)                 b += 'События:      ' + d.events.join(', ')          + '\n';
   }
 
   if (d.bio) {
     var bio = d.bio;
     if (bio.fat || bio.muscle || bio.bmi || bio.bioage) {
-      b += '\n─── БІОІМПЕДАНС ─────────────────────\n';
+      b += '\n─── БИОИМПЕДАНС ─────────────────────\n';
       if (bio.fat)      b += 'Жир:          ' + bio.fat      + '%\n';
-      if (bio.muscle)   b += 'М\'язи:        ' + bio.muscle   + '%\n';
-      if (bio.visceral) b += 'Вісцер. жир:  ' + bio.visceral + '\n';
+      if (bio.muscle)   b += 'Мышцы:        ' + bio.muscle   + '%\n';
+      if (bio.visceral) b += 'Висцер. жир:  ' + bio.visceral + '\n';
       if (bio.water)    b += 'Вода:         ' + bio.water    + '%\n';
-      if (bio.bmi)      b += 'ІМТ:          ' + bio.bmi      + '\n';
+      if (bio.bmi)      b += 'ИМТ:          ' + bio.bmi      + '\n';
       if (bio.bmr)      b += 'ОО:           ' + bio.bmr      + ' ккал\n';
-      if (bio.bioage)   b += 'Біовік:       ' + bio.bioage   + '\n';
+      if (bio.bioage)   b += 'Биовозраст:   ' + bio.bioage   + '\n';
     }
   }
 
   if (d.labs) {
     var labs = d.labs;
     if (labs.vitd || labs.ferr || labs.tsh || labs.e2 || labs.prog || labs.test || labs.cort || labs.b12) {
-      b += '\n─── АНАЛІЗИ ─────────────────────────\n';
-      if (labs.vitd) b += 'Віт. D:       ' + labs.vitd + ' нг/мл\n';
-      if (labs.ferr) b += 'Феритин:      ' + labs.ferr + ' нг/мл\n';
-      if (labs.tsh)  b += 'ТТГ:          ' + labs.tsh  + ' мОд/л\n';
-      if (labs.e2)   b += 'Естрадіол:    ' + labs.e2   + ' пмоль/л\n';
+      b += '\n─── АНАЛИЗЫ ─────────────────────────\n';
+      if (labs.vitd) b += 'Вит. D:       ' + labs.vitd + ' нг/мл\n';
+      if (labs.ferr) b += 'Ферритин:     ' + labs.ferr + ' нг/мл\n';
+      if (labs.tsh)  b += 'ТТГ:          ' + labs.tsh  + ' мМЕ/л\n';
+      if (labs.e2)   b += 'Эстрадиол:    ' + labs.e2   + ' пмоль/л\n';
       if (labs.prog) b += 'Прогестерон:  ' + labs.prog + '\n';
       if (labs.test) b += 'Тестостерон:  ' + labs.test + '\n';
       if (labs.cort) b += 'Кортизол:     ' + labs.cort + '\n';
-      if (labs.b12)  b += 'Віт. B12:     ' + labs.b12  + '\n';
+      if (labs.b12)  b += 'Вит. B12:     ' + labs.b12  + '\n';
     }
   }
 
   // ELITE onboarding — анкета приходит ОДИН РАЗ с первым отчётом ELITE-клиента.
   if (onboarding) {
     b += '\n═══════════════════════════════════════\n';
-    b += '  🧬 ELITE ONBOARDING · НАЧАЛЬНАЯ АНКЕТА\n';
+    b += '  ELITE ONBOARDING · НАЧАЛЬНАЯ АНКЕТА\n';
     b += '═══════════════════════════════════════\n';
     var addOnb = function (label, val) {
       if (val === null || val === undefined || val === '') return;
@@ -416,24 +420,37 @@ function sendExpertEmail(name, email, question, d, lang, code, onboarding) {
   }
 
   b += '\n═══════════════════════════════════════\n';
-  b += 'Відповідь клієнту надіслати на: ' + (email || '—') + '\n';
+  b += 'Ответ клиенту отправить на: ' + (email || '—') + '\n';
   b += '═══════════════════════════════════════\n';
 
   GmailApp.sendEmail(MARINA_EMAIL, subject, b);
 
-  // Підтвердження клієнту
+  // ── Подтверждение клиенту на ЕГО языке ──────────────────────
   if (email) {
-    var cs = lang === 'ru' ? 'Ваш Expert-разбор принят · VIA-L' :
-             lang === 'uk' ? 'Ваш Expert-розбір прийнято · VIA-L' :
-                             'Your Expert Review received · VIA-L';
-    var cb = lang === 'ru' ?
-      'Здравствуйте' + (name ? ', ' + name : '') + '!\n\nМы получили ваш запрос на Expert-разбор. Нутрициолог подготовит персональный письменный анализ в течение 48 часов.\n\nС уважением,\nКоманда VIA-L · viaelcom@gmail.com' :
-      lang === 'uk' ?
-      'Вітаємо' + (name ? ', ' + name : '') + '!\n\nМи отримали ваш запит на Expert-розбір. Нутриціолог підготує персональний письмовий аналіз протягом 48 годин.\n\nЗ повагою,\nКоманда VIA-L · viaelcom@gmail.com' :
-      'Hello' + (name ? ', ' + name : '') + '!\n\nWe received your Expert review request. Your nutritionist will prepare a personalised written analysis within 48 hours.\n\nBest regards,\nThe VIA-L team · viaelcom@gmail.com';
-    GmailApp.sendEmail(email, cs, cb);
+    var conf = CLIENT_CONFIRM[lang] || CLIENT_CONFIRM.en;
+    var greet = conf.greet + (name ? ', ' + name : '') + '!';
+    var cb = greet + '\n\n' + conf.body + '\n\n' + conf.signoff + '\nКоманда VIA-L · viaelcom@gmail.com';
+    GmailApp.sendEmail(email, conf.subject, cb);
   }
 }
+
+// ── Подтверждение клиенту: 12 языков ─────────────────────────
+// Получает клиент сразу после отправки Expert/ELITE-запроса.
+// Подпись намеренно обезличенная: «Команда VIA-L», без личного имени.
+var CLIENT_CONFIRM = {
+  ru: { subject: 'Ваш запрос принят · VIA-L', greet: 'Здравствуйте',           body: 'Мы получили ваш запрос. Нутрициолог подготовит персональный письменный разбор в течение 48 часов.',                       signoff: 'С уважением,' },
+  uk: { subject: 'Ваш запит прийнято · VIA-L', greet: 'Вітаємо',                body: 'Ми отримали ваш запит. Нутриціолог підготує персональний письмовий розбір протягом 48 годин.',                            signoff: 'З повагою,' },
+  en: { subject: 'Your request received · VIA-L', greet: 'Hello',               body: 'We received your request. Your nutritionist will prepare a personalised written review within 48 hours.',                  signoff: 'Best regards,' },
+  es: { subject: 'Tu solicitud recibida · VIA-L', greet: 'Hola',                body: 'Hemos recibido tu solicitud. El nutricionista preparará un análisis personalizado por escrito en un plazo de 48 horas.',  signoff: 'Un saludo,' },
+  de: { subject: 'Ihre Anfrage erhalten · VIA-L', greet: 'Hallo',               body: 'Wir haben Ihre Anfrage erhalten. Die Ernährungsberaterin erstellt innerhalb von 48 Stunden eine persönliche Analyse.',     signoff: 'Mit freundlichen Grüßen,' },
+  pt: { subject: 'Sua solicitação recebida · VIA-L', greet: 'Olá',              body: 'Recebemos sua solicitação. A nutricionista preparará uma análise personalizada por escrito em até 48 horas.',              signoff: 'Atenciosamente,' },
+  fr: { subject: 'Votre demande reçue · VIA-L', greet: 'Bonjour',               body: 'Nous avons reçu votre demande. La nutritionniste préparera une analyse personnalisée par écrit sous 48 heures.',            signoff: 'Cordialement,' },
+  pl: { subject: 'Otrzymaliśmy Twoje zgłoszenie · VIA-L', greet: 'Witaj',       body: 'Otrzymaliśmy Twoje zgłoszenie. Dietetyk przygotuje osobistą pisemną analizę w ciągu 48 godzin.',                          signoff: 'Z poważaniem,' },
+  it: { subject: 'La tua richiesta ricevuta · VIA-L', greet: 'Ciao',            body: 'Abbiamo ricevuto la tua richiesta. La nutrizionista preparerà un\'analisi personalizzata per iscritto entro 48 ore.',     signoff: 'Cordiali saluti,' },
+  he: { subject: 'בקשתך התקבלה · VIA-L', greet: 'שלום',                          body: 'קיבלנו את בקשתך. התזונאית תכין ניתוח אישי בכתב תוך 48 שעות.',                                                          signoff: 'בברכה,' },
+  ja: { subject: 'リクエストを受け付けました · VIA-L', greet: 'こんにちは',         body: 'リクエストを受け付けました。栄養士が48時間以内にパーソナルな書面分析を作成します。',                                signoff: '敬具' },
+  ko: { subject: '요청이 접수되었습니다 · VIA-L', greet: '안녕하세요',              body: '요청을 받았습니다. 영양사가 48시간 이내에 개인 맞춤형 서면 분석을 준비할 것입니다.',                                signoff: '감사합니다,' }
+};
 
 // ── Helpers для тарифов и Expert-счётчика ─────────────────────
 // Возвращает параметры тарифа по содержимому колонки B.
