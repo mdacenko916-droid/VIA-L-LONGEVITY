@@ -5,7 +5,7 @@
 const SYSTEM_PROMPT = `════════════════════════════════════════
 РОЛЬ И ПРАВОВЫЕ РАМКИ (соблюдать строго)
 ════════════════════════════════════════
-Ты — Марина, нутрициолог-консультант по гормональному здоровью.
+Ты — нутрициолог-консультант VIA-L по гормональному здоровью.
 Ты НЕ врач и НЕ имеешь права: ставить диагнозы, назначать лекарственные препараты, интерпретировать анализы как медицинское заключение, давать медицинские советы.
 Ты имеешь право: рекомендовать продукты питания, нутрицевтики (витамины, минералы, растительные экстракты, аминокислоты), пищевые привычки и образ жизни.
 НИКОГДА не упоминай лекарственные препараты.
@@ -250,7 +250,6 @@ export default {
       // Backstage Telegram bot
       if (path === '/tg-test')    return handleTgTest(request, env, corsHeaders);
       if (path === '/draft')      return handleDraft(request, env, corsHeaders);
-      if (path === '/onboarding') return handleOnboarding(request, env, corsHeaders);
       if (path === '/tg-webhook') return handleTgWebhook(request, env, corsHeaders);
 
       // Default: AI-анализ для интерпретатора (старая логика по корню «/»).
@@ -485,6 +484,8 @@ function renderDraftCard(payload, aiBullets) {
     lines.push('🤖 <b>AI-ассистент — обратите внимание:</b>');
     lines.push(mdBoldToHtml(aiBullets));
   }
+  const onbLines = renderOnboardingBlock(payload.onboarding);
+  if (onbLines.length) onbLines.forEach(l => lines.push(l));
   return lines.join('\n');
 }
 
@@ -755,52 +756,34 @@ async function tgAnswerCallback(env, callbackQueryId, text) {
   return res.json();
 }
 
-// POST /onboarding  → принимает заполненную ELITE onboarding-анкету от
-// Apps Script и шлёт нутрициологу карточку в Telegram. Без AI и без кнопок
-// утверждения — это исходные данные клиента, а не разбор.
-async function handleOnboarding(request, env, corsHeaders) {
-  if (!env.TELEGRAM_BOT_TOKEN || !env.NUTRITIONIST_CHAT_ID) {
-    return jsonResponse({ ok: false, error: 'tg_secrets_missing' }, corsHeaders, 500);
-  }
-  let payload = {};
-  try { payload = await request.json(); }
-  catch (e) { return jsonResponse({ ok: false, error: 'invalid_json' }, corsHeaders, 400); }
-
-  const a = payload.answers || {};
-  const lines = [];
-  lines.push('🧬 <b>ELITE Onboarding</b>');
-  lines.push(`<b>Клиент:</b> ${esc(payload.client_name) || '—'} · ${esc(payload.client_email) || '—'}`);
-  lines.push(`<b>Код:</b> <code>${esc(payload.code)}</code> · <b>язык:</b> ${esc(payload.lang || 'ru')}`);
-
-  function block(label, val) {
+// Хелпер: возвращает строки секции «Onboarding-анамнез» для встраивания
+// в карточку backstage-бота. Используется в /draft, когда с отчётом пришла
+// анкета (поле onboarding в payload).
+function renderOnboardingBlock(onb) {
+  if (!onb || typeof onb !== 'object') return [];
+  const out = ['', '🧬 <b>ELITE Onboarding — анамнез:</b>'];
+  const add = (label, val) => {
     if (!val) return;
     const text = Array.isArray(val) ? val.join(', ') : val.toString();
     if (!text.trim()) return;
-    lines.push('');
-    lines.push(`<b>${esc(label)}:</b>`);
-    lines.push(esc(text.length > 400 ? text.slice(0, 400) + '…' : text));
-  }
-  block('Главная цель',           a.goal);
-  block('Опыт (что пробовали)',   a.experience);
-  block('Приоритет',              a.priority);
-  block('Telegram',               a.telegram);
-  block('Часовой пояс',           a.timezone);
-  block('Хронические заболевания', a.chronic);
-  block('Лекарства',              a.medications);
-  block('Аллергии',               a.allergies);
-  block('Аутоиммунные',           a.autoimmune);
-  block('Изжога / тяжесть',       a.heartburn);
-  block('ИПП (омепразол)',        a.ppi);
-  block('ИПП — препарат / доза',  a.ppi_detail);
-  block('Антибиотики за 6 мес',   a.antibiotics);
-  block('Желчный пузырь удалён',  a.gallbladder);
-  block('Опыт с БАДами',          a.supplements_history);
-
-  lines.push('');
-  lines.push('<i>Это начальная анкета-анамнез. Полный текст также пришёл на email.</i>');
-
-  const tg = await sendTelegram(env, lines.join('\n'));
-  return jsonResponse({ ok: true, tg }, corsHeaders);
+    out.push(`• <b>${esc(label)}:</b> ${esc(text.length > 200 ? text.slice(0, 200) + '…' : text)}`);
+  };
+  add('Цель',                  onb.goal);
+  add('Опыт',                  onb.experience);
+  add('Приоритет',             onb.priority);
+  add('Telegram',              onb.telegram);
+  add('Часовой пояс',          onb.timezone);
+  add('Хронические',           onb.chronic);
+  add('Лекарства',             onb.medications);
+  add('Аллергии',              onb.allergies);
+  add('Аутоиммунные',          onb.autoimmune);
+  add('Изжога',                onb.heartburn);
+  add('ИПП',                   onb.ppi);
+  add('ИПП — препарат',        onb.ppi_detail);
+  add('Антибиотики',           onb.antibiotics);
+  add('Желчный удалён',        onb.gallbladder);
+  add('Опыт с БАДами',         onb.supplements_history);
+  return out;
 }
 
 // HTML-escape для Telegram parse_mode=HTML.
