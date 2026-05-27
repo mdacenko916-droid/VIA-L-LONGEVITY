@@ -42,19 +42,23 @@ var BACKSTAGE_DRAFT_URL = 'https://vial-claude-proxy.viaelcom.workers.dev/draft'
 // Dev-коды — обходят проверку по таблице, не ограничены лимитом.
 // Используем только для разработки/тестирования бота.
 var DEV_CODES = ['VIAL-PRO-2024', 'VIAL-EXPERT-2024',
-                 'VIAL-ELITE-8W', 'VIAL-ELITE-12W'];
+                 'VIAL-ELITE-2024', 'VIAL-ELITE-8W', 'VIAL-ELITE-12W'];
 
 // ── GET: валидация кода ИЛИ приём Expert-запроса ─────────────
 function doGet(e) {
-  var action = (e.parameter && e.parameter.action) || '';
+  try {
+    var action = (e.parameter && e.parameter.action) || '';
 
-  if (action === 'expert') {
-    return handleExpertRequest(e.parameter);
+    if (action === 'expert') {
+      return handleExpertRequest(e.parameter);
+    }
+
+    var code = ((e.parameter && e.parameter.code) || '').toString().toUpperCase().trim();
+    if (!code) return respond({ ok: false, reason: 'no_code' });
+    return validateCode(code);
+  } catch (err) {
+    return respond({ ok: false, reason: 'error', message: err.toString() });
   }
-
-  var code = ((e.parameter && e.parameter.code) || '').toString().toUpperCase().trim();
-  if (!code) return respond({ ok: false, reason: 'no_code' });
-  return validateCode(code);
 }
 
 // ── POST: приём Expert-запроса или отправка готового отчёта клиенту ─────
