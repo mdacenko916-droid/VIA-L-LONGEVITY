@@ -400,15 +400,26 @@ async function handleHotmartWebhook(request, env, corsHeaders) {
   const amountStr   = amount ? `€${amount}` : product.price;
   const langFlag    = { uk: '🇺🇦', ru: '🇷🇺', es: '🇪🇸', en: '🇬🇧' }[lang] || '🌐';
 
+  const intakeLink = `https://via-l.com/program-intake.html?t=${token}`;
+
   await sendTelegram(env,
     `💳 <b>Новая оплата — ${programName}</b>\n`
     + `━━━━━━━━━━━━━━━━━━━━\n`
     + `👤 ${esc(buyerName)}\n`
     + `📧 <code>${esc(buyerEmail)}</code>\n`
     + `💰 ${amountStr} · ${product.plan}\n`
-    + `${langFlag} Анкета будет отправлена на ${lang.toUpperCase()}\n`
+    + `${langFlag} Мова клієнта: ${lang.toUpperCase()}\n`
     + `━━━━━━━━━━━━━━━━━━━━\n`
-    + `🔑 Token: <code>${token}</code>`
+    + `📋 <b>Посилання на анкету для клієнта:</b>\n`
+    + `<code>${intakeLink}</code>\n\n`
+    + `Надіслати клієнту в Telegram або на email.`
+  );
+
+  // Email клієнту — посилання на анкету
+  const et = EMAIL_T[lang] || EMAIL_T.uk;
+  await sendEmail(env, buyerEmail,
+    et.payment_subj(programName),
+    et.payment_body(buyerName, programName, intakeLink),
   );
 
   return jsonResponse({ ok: true, token, program: product.program, lang }, corsHeaders);
@@ -511,6 +522,13 @@ async function handleIntakeSubmit(request, env, corsHeaders) {
   }
 
   await sendTelegram(env, card, { reply_markup: buildIntakeKeyboard(token) });
+
+  // Email клієнту — підтвердження отримання анкети
+  const etLang = clientLang || intake.lang || 'uk';
+  const et2 = EMAIL_T[etLang] || EMAIL_T.uk;
+  const clientName2 = answers.name || intake.name || '';
+  await sendEmail(env, intake.email, et2.intake_subj, et2.intake_body(clientName2));
+
   return jsonResponse({ ok: true }, corsHeaders);
 }
 
@@ -639,6 +657,14 @@ async function handleScheduleSession(request, env, corsHeaders) {
     + `━━━━━━━━━━━━━━━━━━━━\n`
     + `🗓 <b>${dateStr}, ${time} UTC+2</b>\n\n`
     + `Відправте клієнту Zoom-посилання.`
+  );
+
+  // Email клієнту — підтвердження часу сесії
+  const schedLang = intake.submitted_lang || intake.lang || 'uk';
+  const et3 = EMAIL_T[schedLang] || EMAIL_T.uk;
+  await sendEmail(env, intake.email,
+    et3.sched_subj(dateStr, time),
+    et3.sched_body(clientName, dateStr, time),
   );
 
   return jsonResponse({ ok: true }, corsHeaders);
@@ -1152,6 +1178,109 @@ async function tgEditMessage(env, chatId, messageId, text) {
     body: JSON.stringify({ chat_id: chatId, message_id: messageId, text, parse_mode: 'HTML', disable_web_page_preview: true })
   });
   return res.json();
+}
+
+// ─────────────────────────────────────────────────────────────
+// Email via Resend — fail-safe (never throws)
+// ─────────────────────────────────────────────────────────────
+const EMAIL_FROM = 'VIA-L Longevity <team@via-l.com>';
+
+const EMAIL_T = {
+  uk: {
+    payment_subj:  (prog) => `VIA-L · ${prog} — заповніть анкету`,
+    payment_body:  (name, prog, link) =>
+      `<p>Привіт, <b>${name}</b>!</p>`
+      + `<p>Оплату підтверджено. Програма: <b>${prog}</b>.</p>`
+      + `<p>Перед першою сесією заповніть анкету (10–15 хв) — це допоможе нутрициологу підготуватися:</p>`
+      + `<p style="margin:24px 0"><a href="${link}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">Заповнити анкету →</a></p>`
+      + `<p style="color:#888;font-size:13px">Або скопіюйте посилання: ${link}</p>`,
+    intake_subj:   'VIA-L · Анкету отримано',
+    intake_body:   (name) =>
+      `<p>Привіт, <b>${name}</b>!</p>`
+      + `<p>Анкету отримано. Нутрициолог проаналізує відповіді та зв'яжеться протягом <b>24 годин</b> для узгодження першої сесії.</p>`,
+    sched_subj:    (date, time) => `VIA-L · Час сесії: ${date}, ${time}`,
+    sched_body:    (name, date, time) =>
+      `<p>Привіт, <b>${name}</b>!</p>`
+      + `<p>Ви обрали час для першої 60-хвилинної сесії: <b>${date}, ${time} UTC+2</b>.</p>`
+      + `<p>Нутрициолог підтвердить та надішле Zoom-посилання.</p>`,
+  },
+  ru: {
+    payment_subj:  (prog) => `VIA-L · ${prog} — заполните анкету`,
+    payment_body:  (name, prog, link) =>
+      `<p>Привет, <b>${name}</b>!</p>`
+      + `<p>Оплата подтверждена. Программа: <b>${prog}</b>.</p>`
+      + `<p>Перед первой сессией заполните анкету (10–15 мин) — это поможет нутрициологу подготовиться:</p>`
+      + `<p style="margin:24px 0"><a href="${link}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">Заполнить анкету →</a></p>`
+      + `<p style="color:#888;font-size:13px">Или скопируйте ссылку: ${link}</p>`,
+    intake_subj:   'VIA-L · Анкета получена',
+    intake_body:   (name) =>
+      `<p>Привет, <b>${name}</b>!</p>`
+      + `<p>Анкета получена. Нутрициолог проанализирует ответы и свяжется в течение <b>24 часов</b> для согласования первой сессии.</p>`,
+    sched_subj:    (date, time) => `VIA-L · Время сессии: ${date}, ${time}`,
+    sched_body:    (name, date, time) =>
+      `<p>Привет, <b>${name}</b>!</p>`
+      + `<p>Вы выбрали время для первой 60-минутной сессии: <b>${date}, ${time} UTC+2</b>.</p>`
+      + `<p>Нутрициолог подтвердит и пришлёт Zoom-ссылку.</p>`,
+  },
+  es: {
+    payment_subj:  (prog) => `VIA-L · ${prog} — complete el cuestionario`,
+    payment_body:  (name, prog, link) =>
+      `<p>Hola, <b>${name}</b>!</p>`
+      + `<p>Pago confirmado. Programa: <b>${prog}</b>.</p>`
+      + `<p>Antes de la primera sesión complete el cuestionario (10–15 min):</p>`
+      + `<p style="margin:24px 0"><a href="${link}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">Completar cuestionario →</a></p>`
+      + `<p style="color:#888;font-size:13px">O copie el enlace: ${link}</p>`,
+    intake_subj:   'VIA-L · Cuestionario recibido',
+    intake_body:   (name) =>
+      `<p>Hola, <b>${name}</b>!</p>`
+      + `<p>Cuestionario recibido. El nutricionista analizará las respuestas y se pondrá en contacto en <b>24 horas</b>.</p>`,
+    sched_subj:    (date, time) => `VIA-L · Sesión: ${date}, ${time}`,
+    sched_body:    (name, date, time) =>
+      `<p>Hola, <b>${name}</b>!</p>`
+      + `<p>Ha elegido el horario para la primera sesión de 60 min: <b>${date}, ${time} UTC+2</b>.</p>`
+      + `<p>El nutricionista confirmará y enviará el enlace de Zoom.</p>`,
+  },
+  en: {
+    payment_subj:  (prog) => `VIA-L · ${prog} — complete your questionnaire`,
+    payment_body:  (name, prog, link) =>
+      `<p>Hi <b>${name}</b>!</p>`
+      + `<p>Payment confirmed. Program: <b>${prog}</b>.</p>`
+      + `<p>Before your first session please complete a short questionnaire (10–15 min):</p>`
+      + `<p style="margin:24px 0"><a href="${link}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">Complete questionnaire →</a></p>`
+      + `<p style="color:#888;font-size:13px">Or copy the link: ${link}</p>`,
+    intake_subj:   'VIA-L · Questionnaire received',
+    intake_body:   (name) =>
+      `<p>Hi <b>${name}</b>!</p>`
+      + `<p>Your questionnaire has been received. The nutritionist will review your answers and contact you within <b>24 hours</b> to schedule the first session.</p>`,
+    sched_subj:    (date, time) => `VIA-L · Session: ${date}, ${time}`,
+    sched_body:    (name, date, time) =>
+      `<p>Hi <b>${name}</b>!</p>`
+      + `<p>You have selected a time for your first 60-minute session: <b>${date}, ${time} UTC+2</b>.</p>`
+      + `<p>The nutritionist will confirm and send a Zoom link.</p>`,
+  },
+};
+
+async function sendEmail(env, to, subject, bodyHtml) {
+  if (!env.BREVO_API_KEY || !to) return;
+  try {
+    await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': env.BREVO_API_KEY,
+      },
+      body: JSON.stringify({
+        sender: { name: 'VIA-L Longevity', email: 'viaelcom@gmail.com' },
+        to:      [{ email: to }],
+        subject,
+        htmlContent: `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1A1008;line-height:1.7">`
+          + bodyHtml
+          + `<hr style="margin:32px 0;border:none;border-top:1px solid #EDE9E2">`
+          + `<p style="color:#888;font-size:12px">VIA-L Longevity · <a href="https://via-l.com" style="color:#6B4F2A">via-l.com</a></p>`
+          + `</div>`,
+      }),
+    });
+  } catch (_) {}
 }
 
 async function tgAnswerCallback(env, callbackQueryId, text, showAlert = false) {
