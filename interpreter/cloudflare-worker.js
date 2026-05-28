@@ -227,11 +227,36 @@ hs-CRP: оптимум <1.0 мг/л; 1–3 = умеренный воспалит
 Максимум 400 слов. Стиль: тёплый, конкретный, как письмо от эксперта-друга.
 Завершить строкой: "⚕️ Этот анализ носит информационный характер и не заменяет консультацию врача."`;
 
+// ─────────────────────────────────────────────────────────────
+// PROGRAM INTAKE — Hotmart product_id mapping
+// ─────────────────────────────────────────────────────────────
+const HOTMART_PRODUCTS = {
+  7706092: { program: 'Menopauza',  plan: 'Разовая',       price: '€120' },
+  7705959: { program: 'Menopauza',  plan: 'Базова 8 тиж',  price: '€390' },
+  7706047: { program: 'Menopauza',  plan: 'Повна 12 тиж',  price: '€590' },
+  7706220: { program: 'Andropauza', plan: 'Разовая',       price: '€120' },
+  7706135: { program: 'Andropauza', plan: 'Базова 8 тиж',  price: '€390' },
+  7706176: { program: 'Andropauza', plan: 'Повна 12 тиж',  price: '€590' },
+  7706301: { program: 'Antivikove', plan: 'Разовая',       price: '€120' },
+  7706250: { program: 'Antivikove', plan: 'Базова 8 тиж',  price: '€390' },
+  7706270: { program: 'Antivikove', plan: 'Повна 12 тиж',  price: '€590' },
+  7706424: { program: 'Estrogen',   plan: 'Разовая',       price: '€120' },
+  7706337: { program: 'Estrogen',   plan: 'Базова 8 тиж',  price: '€390' },
+  7706370: { program: 'Estrogen',   plan: 'Повна 12 тиж',  price: '€590' },
+};
+
+const PROGRAM_NAMES = {
+  Menopauza:  'Менопауза',
+  Andropauza: 'Андропауза',
+  Antivikove: 'Антивікове харчування',
+  Estrogen:   'Естрогеновий метаболізм',
+};
+
 export default {
   async fetch(request, env) {
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     };
 
@@ -239,20 +264,31 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
+    const url  = new URL(request.url);
+    const path = url.pathname;
+
+    // GET routes
+    if (request.method === 'GET') {
+      if (path === '/intake-validate') return handleIntakeValidate(request, env, corsHeaders);
+      return new Response('Not found', { status: 404 });
+    }
+
     if (request.method !== 'POST') {
       return new Response('Method not allowed', { status: 405 });
     }
 
-    const url  = new URL(request.url);
-    const path = url.pathname;
-
     try {
       // Backstage Telegram bot
-      if (path === '/tg-test')    return handleTgTest(request, env, corsHeaders);
-      if (path === '/draft')      return handleDraft(request, env, corsHeaders);
-      if (path === '/tg-webhook') return handleTgWebhook(request, env, corsHeaders);
+      if (path === '/tg-test')          return handleTgTest(request, env, corsHeaders);
+      if (path === '/draft')            return handleDraft(request, env, corsHeaders);
+      if (path === '/tg-webhook')       return handleTgWebhook(request, env, corsHeaders);
 
-      // Default: AI-анализ для интерпретатора (старая логика по корню «/»).
+      // Program intake flow
+      if (path === '/hotmart-webhook')  return handleHotmartWebhook(request, env, corsHeaders);
+      if (path === '/intake-submit')    return handleIntakeSubmit(request, env, corsHeaders);
+      if (path === '/schedule-session') return handleScheduleSession(request, env, corsHeaders);
+
+      // Default: AI-анализ для интерпретатора
       return handleAnalyze(request, env, corsHeaders);
 
     } catch (e) {
@@ -263,6 +299,350 @@ export default {
     }
   },
 };
+
+// ─────────────────────────────────────────────────────────────
+// PROGRAM INTAKE — Hotmart webhook
+// Secrets needed: HOTMART_TOKEN, TELEGRAM_BOT_TOKEN, NUTRITIONIST_CHAT_ID
+// KV binding needed: PROGRAM_INTAKES
+// ─────────────────────────────────────────────────────────────
+// Определяет язык клиента по данным из Hotmart payload.
+// Проверяет locale, страну из нескольких возможных полей, домен email.
+function detectLangFromHotmart(data) {
+  const buyer    = data.buyer    || {};
+  const purchase = data.purchase || {};
+
+  // locale: "uk_UA", "ru_RU", "es_ES", "en_US"
+  const locale = buyer.locale || buyer.address?.locale || '';
+  if (locale) {
+    const code = locale.split(/[_-]/)[0].toLowerCase();
+    if (code === 'uk') return 'uk';
+    if (code === 'ru') return 'ru';
+    if (code === 'es') return 'es';
+    if (code === 'en') return 'en';
+  }
+
+  // Country ISO from various possible fields
+  const country = (
+    buyer.checkout_country?.iso ||
+    buyer.address?.country ||
+    purchase.checkout_country?.iso ||
+    purchase.address?.country || ''
+  ).toUpperCase();
+
+  const countryLang = {
+    UA: 'uk',
+    RU: 'ru', BY: 'ru', KZ: 'ru', MD: 'ru', AM: 'ru', GE: 'ru', AZ: 'ru',
+    IL: 'ru',
+    ES: 'es', MX: 'es', CO: 'es', AR: 'es', VE: 'es', CL: 'es', PE: 'es',
+    UY: 'es', EC: 'es', BO: 'es', PY: 'es', CR: 'es', PA: 'es', GT: 'es',
+  };
+  if (country && countryLang[country]) return countryLang[country];
+
+  // Email domain heuristic
+  const emailDomain = (buyer.email || '').split('@').pop()?.split('.').pop()?.toLowerCase();
+  if (emailDomain === 'ua')                   return 'uk';
+  if (['ru','by','kz'].includes(emailDomain)) return 'ru';
+
+  return 'uk'; // default
+}
+
+async function handleHotmartWebhook(request, env, corsHeaders) {
+  const hottok = request.headers.get('x-hotmart-hottok');
+  if (env.HOTMART_TOKEN && hottok !== env.HOTMART_TOKEN) {
+    return jsonResponse({ ok: false, error: 'invalid_token' }, corsHeaders, 401);
+  }
+
+  let body = {};
+  try { body = await request.json(); }
+  catch (e) { return jsonResponse({ ok: false, error: 'invalid_json' }, corsHeaders, 400); }
+
+  const event = body.event;
+  if (event !== 'PURCHASE_APPROVED') {
+    return jsonResponse({ ok: true, skipped: event }, corsHeaders);
+  }
+
+  const data       = body.data || {};
+  const productId  = data.product?.id;
+  const buyerName  = data.buyer?.name  || '—';
+  const buyerEmail = data.buyer?.email || '';
+  const amount     = data.purchase?.payment?.value;
+  const lang       = detectLangFromHotmart(data);
+
+  const product = HOTMART_PRODUCTS[productId];
+
+  if (!product) {
+    await sendTelegram(env,
+      `⚠️ <b>Hotmart: невідомий product_id</b>\n\n`
+      + `ID: <code>${productId}</code>\n`
+      + `Клієнт: ${esc(buyerName)} · <code>${esc(buyerEmail)}</code>\n`
+      + `Мова: ${lang}`
+    );
+    return jsonResponse({ ok: true, warning: 'unknown_product_id', productId }, corsHeaders);
+  }
+
+  const token = crypto.randomUUID();
+  if (env.PROGRAM_INTAKES) {
+    await env.PROGRAM_INTAKES.put('intake:' + token, JSON.stringify({
+      token,
+      email:      buyerEmail,
+      name:       buyerName,
+      program:    product.program,
+      plan:       product.plan,
+      price:      product.price,
+      product_id: productId,
+      lang,
+      status:     'pending',
+      ts:         new Date().toISOString(),
+    }), { expirationTtl: 90 * 24 * 60 * 60 });
+  }
+
+  const programName = PROGRAM_NAMES[product.program] || product.program;
+  const amountStr   = amount ? `€${amount}` : product.price;
+  const langFlag    = { uk: '🇺🇦', ru: '🇷🇺', es: '🇪🇸', en: '🇬🇧' }[lang] || '🌐';
+
+  await sendTelegram(env,
+    `💳 <b>Новая оплата — ${programName}</b>\n`
+    + `━━━━━━━━━━━━━━━━━━━━\n`
+    + `👤 ${esc(buyerName)}\n`
+    + `📧 <code>${esc(buyerEmail)}</code>\n`
+    + `💰 ${amountStr} · ${product.plan}\n`
+    + `${langFlag} Анкета будет отправлена на ${lang.toUpperCase()}\n`
+    + `━━━━━━━━━━━━━━━━━━━━\n`
+    + `🔑 Token: <code>${token}</code>`
+  );
+
+  return jsonResponse({ ok: true, token, program: product.program, lang }, corsHeaders);
+}
+
+// ─────────────────────────────────────────────────────────────
+// GET /intake-validate?t=TOKEN → {program, name, plan, lang}
+// ─────────────────────────────────────────────────────────────
+async function handleIntakeValidate(request, env, corsHeaders) {
+  if (!env.PROGRAM_INTAKES) {
+    return jsonResponse({ ok: false, error: 'kv_binding_missing' }, corsHeaders, 500);
+  }
+  const token = new URL(request.url).searchParams.get('t');
+  if (!token) return jsonResponse({ ok: false, error: 'missing_token' }, corsHeaders, 400);
+
+  const raw = await env.PROGRAM_INTAKES.get('intake:' + token);
+  if (!raw) return jsonResponse({ ok: false, error: 'invalid_or_expired_token' }, corsHeaders, 404);
+
+  const intake = JSON.parse(raw);
+  return jsonResponse({
+    ok:      true,
+    program: intake.program,
+    name:    intake.name,
+    plan:    intake.plan,
+    lang:    intake.lang,
+  }, corsHeaders);
+}
+
+// ─────────────────────────────────────────────────────────────
+// POST /intake-submit
+// Принимает анкету, переводит на русский через Claude,
+// отправляет карточку нутрициологу в Telegram.
+// ─────────────────────────────────────────────────────────────
+async function handleIntakeSubmit(request, env, corsHeaders) {
+  if (!env.PROGRAM_INTAKES) return jsonResponse({ ok: false, error: 'kv_binding_missing' }, corsHeaders, 500);
+
+  let body = {};
+  try { body = await request.json(); }
+  catch (e) { return jsonResponse({ ok: false, error: 'invalid_json' }, corsHeaders, 400); }
+
+  const { token, answers, lang: clientLang } = body;
+  if (!token || !answers) return jsonResponse({ ok: false, error: 'missing_fields' }, corsHeaders, 400);
+
+  const raw = await env.PROGRAM_INTAKES.get('intake:' + token);
+  if (!raw) return jsonResponse({ ok: false, error: 'invalid_token' }, corsHeaders, 404);
+
+  const intake = JSON.parse(raw);
+
+  // Save submitted answers to KV
+  await env.PROGRAM_INTAKES.put('intake:' + token, JSON.stringify({
+    ...intake,
+    status:         'submitted',
+    answers,
+    submitted_lang: clientLang || intake.lang,
+    submitted_at:   new Date().toISOString(),
+  }), { expirationTtl: 90 * 24 * 60 * 60 });
+
+  // Claude: translate to Russian + AI bullets (fail-safe)
+  let aiBlock = '';
+  try {
+    if (env.CLAUDE_API_KEY) {
+      aiBlock = await buildIntakeAiBlock(env, intake, answers, clientLang || intake.lang);
+    }
+  } catch (e) {
+    console.error('buildIntakeAiBlock failed:', e?.message);
+  }
+
+  // Build TG card (always in Russian for nutritionist)
+  const progName = PROGRAM_NAMES[intake.program] || intake.program;
+  const phases   = { cycle: 'Регулярный цикл', peri: 'Перименопауза', meno: 'Менопауза', post: 'Постменопауза' };
+  const langFlag = { uk: '🇺🇦', ru: '🇷🇺', es: '🇪🇸', en: '🇬🇧' }[clientLang || intake.lang] || '🌐';
+
+  let card = `🧬 <b>Анкета заполнена · ${progName}</b>\n`
+    + `━━━━━━━━━━━━━━━━━━━━\n`
+    + `👤 ${esc(answers.name || intake.name)}${answers.age ? ', ' + answers.age + ' лет' : ''}\n`
+    + (answers.telegram ? `✈️ ${esc(answers.telegram)}\n` : '')
+    + `📧 <code>${esc(intake.email)}</code>\n`
+    + `💰 ${intake.price} · ${intake.plan}\n`
+    + `${langFlag} Анкета заполнена на ${(clientLang || intake.lang).toUpperCase()}\n`;
+
+  if ((intake.program === 'Menopauza' || intake.program === 'Estrogen') && answers.phase) {
+    card += `🔬 Фаза: ${phases[answers.phase] || answers.phase}\n`;
+  }
+  if (intake.program === 'Andropauza' && answers.trt && answers.trt.toLowerCase() !== 'ні' && answers.trt.toLowerCase() !== 'нет') {
+    card += `💊 ЗТТ: ${esc(answers.trt)}\n`;
+  }
+
+  card += `━━━━━━━━━━━━━━━━━━━━\n`;
+
+  if (aiBlock) {
+    card += aiBlock;
+  } else {
+    // Fallback: raw fields (may be in client's language)
+    if (answers.goal)    card += `🎯 <b>Цель:</b> ${esc(answers.goal)}\n\n`;
+    if (answers.meds && !/^(нет|немає|no|none)$/i.test(answers.meds.trim())) {
+      card += `💊 <b>Медикаменты:</b> ${esc(answers.meds)}\n`;
+    }
+    card += `😴 Сон: ${answers.sleep_h || '—'} ч | Стресс: ${answers.stress || '—'}/10\n`;
+    if (answers.tracker && answers.tracker !== 'none') card += `⌚ Трекер: ${answers.tracker}\n`;
+  }
+
+  await sendTelegram(env, card, { reply_markup: buildIntakeKeyboard(token) });
+  return jsonResponse({ ok: true }, corsHeaders);
+}
+
+function buildIntakeKeyboard(token) {
+  return {
+    inline_keyboard: [[
+      { text: '📅 Назначить сессию', callback_data: 'sched:' + token },
+    ]],
+  };
+}
+
+// Claude: переводит анкету на русский + генерирует AI-bullets для нутрициолога.
+async function buildIntakeAiBlock(env, intake, answers, lang) {
+  const progName = PROGRAM_NAMES[intake.program] || intake.program;
+
+  const sleepIssueLabels = {
+    falling_asleep: 'трудно заснуть', night_wakings: 'ночные пробуждения',
+    poor_quality:   'неглубокий сон', none: 'нет проблем',
+  };
+  const sleepIssues = (answers.sleep_issues || []).map(k => sleepIssueLabels[k] || k).join(', ') || 'не указаны';
+
+  const femaleBlock = (intake.program === 'Menopauza' || intake.program === 'Estrogen')
+    ? `Фаза: ${answers.phase || '—'} | Последняя менструация: ${answers.lmp || '—'} | ГЗТ: ${answers.hrt || 'нет'}\n`
+    : '';
+  const maleBlock = intake.program === 'Andropauza'
+    ? `Симптомы андропаузы: ${answers.andro_symp || '—'} | ЗТТ: ${answers.trt || 'нет'}\n`
+    : '';
+
+  const prompt = `Ты — ассистент нутрициолога VIA-L. Клиент купил программу "${progName}" (${intake.plan}, ${intake.price}).
+Анкета заполнена на языке: ${lang}. Клиент может писать по-украински, по-русски, по-испански или по-английски.
+
+=== АНКЕТА КЛИЕНТА ===
+Имя: ${answers.name || '—'}, возраст: ${answers.age || '—'} лет
+Telegram: ${answers.telegram || '—'}
+Цель: ${answers.goal || '—'}
+Что пробовали раньше: ${answers.tried || '—'}
+Хронические заболевания: ${answers.chronic || '—'}
+Медикаменты + дозы: ${answers.meds || '—'}
+Аллергии: ${answers.allergy || '—'}
+Анализы: ${answers.labs || '—'}
+${femaleBlock}${maleBlock}Сон: ${answers.sleep_h || '—'} ч, проблемы со сном: ${sleepIssues}
+Стресс: ${answers.stress || '—'}/10, источник: ${answers.stress_src || '—'}
+Рацион: ${answers.food || '—'}
+Активность: ${answers.activity || '—'}, частота: ${answers.act_freq || '—'}
+Алкоголь: ${answers.alcohol || '—'} | Кофеин: ${answers.caffeine || '—'} чашек/день
+Добавки сейчас: ${answers.supps || '—'}
+Трекер: ${answers.tracker || 'нет'}
+Часовой пояс: ${answers.timezone || '—'} | Время созвонов: ${answers.time_slot || '—'}
+Доп. комментарии: ${answers.notes || '—'}
+=== КОНЕЦ АНКЕТЫ ===
+
+Задача — два блока на РУССКОМ языке:
+
+БЛОК 1: «📋 Ключевые данные» — 4–6 строк, переведи и структурируй самое важное из анкеты (цель, хронические, медикаменты, фаза/симптомы, рацион одной строкой, добавки). Если анкета заполнена не на русском — переведи.
+
+БЛОК 2: «🤖 AI-наблюдения» — 5–7 bullet-points для нутрициолога: приоритеты протокола, возможные дефициты, конфликты медикаментов с нутрицевтиками, что уточнить на первой сессии.
+
+Формат ответа строго:
+📋 <b>Ключевые данные</b>
+[строки]
+
+🤖 <b>AI-наблюдения</b>
+• [пункт]
+• [пункт]
+...`;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type':    'application/json',
+      'x-api-key':       env.CLAUDE_API_KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model:      'claude-haiku-4-5-20251001',
+      max_tokens: 700,
+      messages:   [{ role: 'user', content: prompt }],
+    }),
+  });
+
+  const result = await response.json();
+  return result.content?.[0]?.text || '';
+}
+
+// ─────────────────────────────────────────────────────────────
+// POST /schedule-session
+// {token, date, time} → TG нутрициологу + update KV
+// ─────────────────────────────────────────────────────────────
+async function handleScheduleSession(request, env, corsHeaders) {
+  let body = {};
+  try { body = await request.json(); } catch (_) {}
+
+  const { token, date, time } = body;
+  if (!token || !date || !time) {
+    return jsonResponse({ ok: false, error: 'missing_fields' }, corsHeaders, 400);
+  }
+
+  const raw = env.PROGRAM_INTAKES ? await env.PROGRAM_INTAKES.get('intake:' + token) : null;
+  if (!raw) return jsonResponse({ ok: false, error: 'invalid_token' }, corsHeaders, 404);
+
+  const intake = JSON.parse(raw);
+  const clientName = intake.answers?.name || intake.name || '—';
+  const progName   = PROGRAM_NAMES[intake.program] || intake.program;
+
+  // Format date nicely (YYYY-MM-DD → "3 июня 2026")
+  const [y, m, d] = date.split('-').map(Number);
+  const monthsRu  = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  const dateStr   = `${d} ${monthsRu[m - 1]} ${y}`;
+
+  // Save to KV
+  await env.PROGRAM_INTAKES.put('intake:' + token, JSON.stringify({
+    ...intake,
+    status:       'session_scheduled',
+    session_date: date,
+    session_time: time,
+    scheduled_at: new Date().toISOString(),
+  }), { expirationTtl: 90 * 24 * 60 * 60 });
+
+  // TG to nutritionist
+  await sendTelegram(env,
+    `📅 <b>Клієнт обрав час сесії</b>\n`
+    + `━━━━━━━━━━━━━━━━━━━━\n`
+    + `👤 <b>${esc(clientName)}</b>\n`
+    + `🧬 ${progName} · ${intake.plan}\n`
+    + `📧 <code>${esc(intake.email)}</code>\n`
+    + `━━━━━━━━━━━━━━━━━━━━\n`
+    + `🗓 <b>${dateStr}, ${time} UTC+2</b>\n\n`
+    + `Відправте клієнту Zoom-посилання.`
+  );
+
+  return jsonResponse({ ok: true }, corsHeaders);
+}
 
 // ─────────────────────────────────────────────────────────────
 // AI analyse endpoint (existing)
@@ -310,18 +690,20 @@ async function handleAnalyze(request, env, corsHeaders) {
 // Telegram backstage helpers
 // ─────────────────────────────────────────────────────────────
 async function sendTelegram(env, text, extra = {}) {
-  const tgUrl = `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`;
-  const body = {
-    chat_id: env.NUTRITIONIST_CHAT_ID,
-    text,
-    parse_mode: 'HTML',
-    disable_web_page_preview: true,
-    ...extra,
-  };
-  const res = await fetch(tgUrl, {
+  return sendTelegramTo(env, env.NUTRITIONIST_CHAT_ID, text, extra);
+}
+
+async function sendTelegramTo(env, chatId, text, extra = {}) {
+  const res = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      chat_id: chatId,
+      text,
+      parse_mode: 'HTML',
+      disable_web_page_preview: true,
+      ...extra,
+    }),
   });
   return res.json();
 }
@@ -553,6 +935,31 @@ async function handleTgCallback(cq, env, corsHeaders) {
     return jsonResponse({ ok: false, error: 'bad_callback_data' }, corsHeaders);
   }
 
+  // ── Scheduling button from program intake ──────────────────
+  if (action === 'sched') {
+    const intakeRaw = env.PROGRAM_INTAKES
+      ? await env.PROGRAM_INTAKES.get('intake:' + requestId)
+      : null;
+
+    if (!intakeRaw) {
+      await tgAnswerCallback(env, cq.id, 'Анкета не найдена или устарела', true);
+      return jsonResponse({ ok: false, error: 'intake_not_found' }, corsHeaders);
+    }
+
+    const intake     = JSON.parse(intakeRaw);
+    const clientName = intake.answers?.name || intake.name || '—';
+    const calLink    = 'https://via-l.com/program-intake.html?t=' + requestId + '&calendar=1';
+
+    await tgAnswerCallback(env, cq.id, '📅 Ссылка сформирована');
+    await sendTelegramTo(env, chatId,
+      `📅 <b>Ссылка на выбор времени сессии</b>\n\n`
+      + `Клиент: <b>${esc(clientName)}</b>\n\n`
+      + `Отправьте клиенту эту ссылку (в Telegram или email):\n`
+      + `<code>${calLink}</code>`,
+    );
+    return jsonResponse({ ok: true }, corsHeaders);
+  }
+
   const raw = await env.EXPERT_DRAFTS.get('draft:' + requestId);
   if (!raw) {
     await tgAnswerCallback(env, cq.id, 'Запрос устарел');
@@ -747,11 +1154,11 @@ async function tgEditMessage(env, chatId, messageId, text) {
   return res.json();
 }
 
-async function tgAnswerCallback(env, callbackQueryId, text) {
+async function tgAnswerCallback(env, callbackQueryId, text, showAlert = false) {
   const res = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ callback_query_id: callbackQueryId, text: text || '', show_alert: false })
+    body: JSON.stringify({ callback_query_id: callbackQueryId, text: text || '', show_alert: showAlert })
   });
   return res.json();
 }

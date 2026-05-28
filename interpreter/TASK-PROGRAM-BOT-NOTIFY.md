@@ -1,6 +1,6 @@
 # Задача: онбординг клиентов программ ведения через Telegram-бот
 
-> **Статус:** не начато.
+> **Статус:** в роботі — крок 2 ✅ (Worker /hotmart-webhook написано), крок 3 — треба налаштувати Webhook URL у Hotmart.
 > **Страницы:** `Menopauza-program.html`, `Andropauza-program.html`, `Antivikove-program.html`, `Estrogen-program.html`.
 > **Цель:** после подтверждённой оплаты в Hotmart — клиент получает анкету-опросник, нутрициолог получает заполненную анкету + AI-разбор в Telegram, клиент выбирает дату и время первой 60-мин рабочей сессии.
 > **Важно:** это второй независимый поток бота — не пересекается с PRO-EXPERT backstage.
@@ -125,16 +125,20 @@ Hotmart: оплата подтверждена
 
 ## 5. Маппинг Hotmart product_id → программа
 
-Нужно выписать из Hotmart:
-
-| Product ID | Программа |
-|---|---|
-| ? | Menopauza |
-| ? | Andropauza |
-| ? | Antivikove |
-| ? | Estrogen |
-
-Заполнить перед реализацией Worker `/hotmart-webhook`.
+| product_id | Программа | Тариф | Цена |
+|---|---|---|---|
+| 7706092 | Menopauza | Разовая | €120 |
+| 7705959 | Menopauza | Базовая 8 нед | €390 |
+| 7706047 | Menopauza | Полная 12 нед | €590 |
+| 7706220 | Andropauza | Разовая | €120 |
+| 7706135 | Andropauza | Базовая 8 нед | €390 |
+| 7706176 | Andropauza | Полная 12 нед | €590 |
+| 7706301 | Antivikove | Разовая | €120 |
+| 7706250 | Antivikove | Базовая 8 нед | €390 |
+| 7706270 | Antivikove | Полная 12 нед | €590 |
+| 7706424 | Estrogen | Разовая | €120 |
+| 7706337 | Estrogen | Базовая 8 нед | €390 |
+| 7706370 | Estrogen | Полная 12 нед | €590 |
 
 ---
 
@@ -150,10 +154,10 @@ Hotmart: оплата подтверждена
 
 ## 7. Порядок реализации
 
-1. Выписать Hotmart product_id для всех 4 программ.
-2. Worker: `/hotmart-webhook` → сохранить в KV + TG-уведомление «новая оплата».
-3. Настроить Webhook URL в Hotmart (4 продукта).
-4. Протестировать: тестовая оплата → TG-уведомление.
+1. ✅ Выписать Hotmart product_id для всех 4 программ.
+2. ✅ Worker: `/hotmart-webhook` → сохранить в KV + TG-уведомление «новая оплата».
+3. ⏳ Настроить Webhook URL в Hotmart (4 продукта) + добавить HOTMART_TOKEN и PROGRAM_INTAKES в Worker secrets/KV.
+4. ⏳ Протестировать: тестовая оплата → TG-уведомление.
 5. `program-intake.html` — скелет страницы (uk/ru, 4 секции).
 6. Worker: `/intake-validate` + `/intake-submit` + AI-разбор.
 7. Telegram-карточка с анкетой + AI-bullets.

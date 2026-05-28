@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Анкета клієнта · VIA-L</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cream:     #F5F3EF;
+      --cream-dk:  #EDE9E2;
+      --gold:      #6B4F2A;
+      --gold-lt:   #8B6030;
+      --gold-pale: #A07840;
+      --gold-xp:   #F4EDE3;
+      --text:      #0D0A05;
+      --text-mid:  #1A1008;
+      --text-lt:   #2E2010;
+      --line:      rgba(139,111,71,.15);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--cream);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      font-size: 17px;
+      line-height: 1.75;
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: grid; grid-template-columns: 1fr auto 1fr;
+      align-items: center; padding: 14px 32px;
+      background: rgba(245,243,239,.95);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav-back {
+      font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--text-lt); text-decoration: none;
+      display: flex; align-items: center; gap: 7px; transition: color .3s;
+    }
+    .nav-back:hover { color: var(--gold); }
+
+    /* ── LANG SWITCHER ── */
+    .lang-switcher { display: flex; gap: 6px; justify-content: flex-end; align-items: center; }
+    .lang-btn-flag {
+      background: none; border: 1px solid transparent; border-radius: 6px;
+      font-size: 20px; cursor: pointer; padding: 3px 5px; line-height: 1;
+      transition: border-color .2s, background .2s; opacity: .55;
+    }
+    .lang-btn-flag:hover { opacity: 1; background: var(--cream-dk); }
+    .lang-btn-flag.active { opacity: 1; border-color: var(--gold-pale); background: var(--gold-xp); }
+    .nav-logo-wrap { display: flex; flex-direction: column; align-items: center; text-decoration: none; justify-self: center; }
+    .nav-logo { font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 700; letter-spacing: 5px; color: var(--text); line-height: 1; }
+    .logo-line { height: 1px; background: var(--gold); margin: 3px 0; align-self: stretch; opacity: .75; }
+    .logo-sub { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--gold); font-weight: 500; }
+
+    /* ── LAYOUT ── */
+    main { max-width: 680px; margin: 0 auto; padding: 120px 24px 80px; }
+
+    /* ── STATES ── */
+    .state { display: none; }
+    .state.active { display: block; }
+
+    /* ── LOADING ── */
+    .loading-wrap { text-align: center; padding: 80px 0; }
+    .spinner {
+      width: 40px; height: 40px; border: 2px solid var(--line);
+      border-top-color: var(--gold); border-radius: 50%;
+      animation: spin .8s linear infinite; margin: 0 auto 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── ERROR ── */
+    .error-wrap { text-align: center; padding: 80px 0; }
+    .error-icon { font-size: 48px; margin-bottom: 16px; }
+    .error-title { font-family: 'Playfair Display', serif; font-size: 26px; color: var(--gold); margin-bottom: 12px; }
+    .error-text { color: var(--text-lt); max-width: 420px; margin: 0 auto; }
+
+    /* ── INTAKE HEADER ── */
+    .intake-header { margin-bottom: 40px; }
+    .intake-tag { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold-pale); margin-bottom: 12px; }
+    .intake-title { font-family: 'Playfair Display', serif; font-size: 32px; color: var(--text); margin-bottom: 6px; }
+    .intake-subtitle { font-size: 15px; color: var(--text-lt); }
+
+    /* ── PROGRESS ── */
+    .progress { display: flex; align-items: center; gap: 8px; margin-bottom: 44px; }
+    .ps { flex: 1; height: 3px; background: var(--line); border-radius: 2px; transition: background .4s; }
+    .ps.done { background: var(--gold); }
+    .ps.active { background: var(--gold-pale); }
+    .progress-label { font-size: 13px; color: var(--text-lt); white-space: nowrap; margin-left: 10px; }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-family: 'Playfair Display', serif; font-size: 22px; color: var(--gold);
+      margin-bottom: 28px; padding-bottom: 14px; border-bottom: 1px solid var(--line);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .section-num { font-size: 13px; letter-spacing: 2px; opacity: .55; font-family: 'DM Sans', sans-serif; }
+
+    /* ── FIELDS ── */
+    .field { margin-bottom: 22px; }
+    .field label {
+      display: block; font-size: 12px; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--gold-lt); margin-bottom: 8px; font-weight: 500;
+    }
+    .field input[type=text],
+    .field input[type=number],
+    .field input[type=date],
+    .field select,
+    .field textarea {
+      width: 100%; padding: 13px 16px;
+      background: #fff; border: 1px solid var(--line);
+      border-radius: 10px; font-family: 'DM Sans', sans-serif;
+      font-size: 16px; color: var(--text);
+      transition: border-color .2s, box-shadow .2s;
+      outline: none; -webkit-appearance: none; appearance: none;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: var(--gold-pale);
+      box-shadow: 0 0 0 3px rgba(160,120,64,.08);
+    }
+    .field textarea { resize: vertical; min-height: 88px; line-height: 1.6; }
+    .field select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238B6030' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center;
+      padding-right: 40px; cursor: pointer;
+    }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    /* ── CHECKBOXES ── */
+    .check-group { display: flex; flex-direction: column; gap: 8px; }
+    .check-item {
+      display: flex; align-items: center; gap: 12px; cursor: pointer;
+      font-size: 16px; color: var(--text-mid);
+      padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px;
+      transition: border-color .2s, background .2s;
+    }
+    .check-item:hover { border-color: var(--gold-pale); background: var(--gold-xp); }
+    .check-item input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--gold); cursor: pointer; flex-shrink: 0; }
+
+    /* ── RANGE ── */
+    .range-wrap { display: flex; align-items: center; gap: 14px; }
+    .field input[type=range] { flex: 1; accent-color: var(--gold); cursor: pointer; height: 4px; }
+    .range-val { font-size: 22px; font-weight: 500; color: var(--gold); min-width: 28px; text-align: center; }
+    .range-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-lt); margin-top: 6px; }
+
+    /* ── CONDITIONAL BLOCK ── */
+    .cond-block {
+      background: var(--gold-xp); border: 1px solid rgba(107,79,42,.12);
+      border-radius: 14px; padding: 20px 20px 4px; margin-bottom: 22px;
+    }
+
+    /* ── NAV BUTTONS ── */
+    .form-nav {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 44px; padding-top: 28px; border-top: 1px solid var(--line);
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--gold); color: #fff;
+      padding: 14px 32px; border-radius: 50px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px;
+      letter-spacing: 1.5px; text-transform: uppercase; font-weight: 500;
+      border: none; cursor: pointer;
+      transition: background .3s, box-shadow .3s, transform .15s;
+    }
+    .btn-primary:hover { background: var(--gold-lt); box-shadow: 0 8px 24px rgba(107,79,42,.22); }
+    .btn-primary:active { transform: scale(.98); }
+    .btn-primary:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+    .btn-ghost {
+      font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--text-lt); background: none; border: none; cursor: pointer;
+      padding: 8px 0; transition: color .3s; font-family: 'DM Sans', sans-serif;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .btn-ghost:hover { color: var(--gold); }
+
+    /* ── NOTICE ── */
+    .notice { font-size: 13px; color: var(--text-lt); margin-top: 20px; line-height: 1.65; }
+
+    /* ── SUCCESS ── */
+    .success-wrap { text-align: center; padding: 80px 0; }
+    .success-icon { font-size: 56px; margin-bottom: 24px; }
+    .success-title { font-family: 'Playfair Display', serif; font-size: 30px; color: var(--gold); margin-bottom: 16px; }
+    .success-text { color: var(--text-lt); max-width: 420px; margin: 0 auto; line-height: 1.85; }
+
+    /* ── CALENDAR ── */
+    .cal-header { margin-bottom: 36px; }
+    .cal-days {
+      display: flex; gap: 10px; overflow-x: auto;
+      padding-bottom: 12px; margin-bottom: 32px;
+      scrollbar-width: thin; scrollbar-color: var(--line) transparent;
+    }
+    .cal-day {
+      flex: 0 0 auto; width: 68px; text-align: center;
+      padding: 12px 8px; border: 1px solid var(--line);
+      border-radius: 14px; cursor: pointer; background: #fff;
+      transition: border-color .2s, background .2s, box-shadow .2s;
+      user-select: none;
+    }
+    .cal-day:hover { border-color: var(--gold-pale); background: var(--gold-xp); }
+    .cal-day.selected { border-color: var(--gold); background: var(--gold); color: #fff; box-shadow: 0 4px 16px rgba(107,79,42,.25); }
+    .cal-day-wd { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; opacity: .7; margin-bottom: 4px; }
+    .cal-day-d  { font-size: 22px; font-family: 'Playfair Display', serif; font-weight: 600; line-height: 1.1; }
+    .cal-day-m  { font-size: 11px; opacity: .7; margin-top: 3px; }
+    .cal-slots-title { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-lt); margin-bottom: 16px; font-weight: 500; }
+    .cal-slots {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+      gap: 10px; margin-bottom: 36px;
+    }
+    .cal-slot {
+      padding: 11px 6px; text-align: center; font-size: 15px; font-weight: 500;
+      border: 1px solid var(--line); border-radius: 10px; cursor: pointer;
+      background: #fff; transition: border-color .2s, background .2s, color .2s;
+      user-select: none;
+    }
+    .cal-slot:hover { border-color: var(--gold-pale); background: var(--gold-xp); }
+    .cal-slot.selected { border-color: var(--gold); background: var(--gold); color: #fff; }
+    .cal-notice { font-size: 13px; color: var(--text-lt); margin-bottom: 24px; line-height: 1.65; }
+    .cal-confirm { display: flex; justify-content: flex-end; }
+
+    @media (max-width: 600px) {
+      nav { padding: 12px 18px; }
+      .nav-logo { font-size: 16px; letter-spacing: 4px; }
+      main { padding: 100px 16px 60px; }
+      .field-row { grid-template-columns: 1fr; }
+      .intake-title { font-size: 26px; }
+      .form-nav { flex-direction: column-reverse; gap: 16px; align-items: stretch; }
+      .btn-primary { justify-content: center; }
+      .btn-ghost { justify-content: center; }
+      .cal-confirm { justify-content: stretch; }
+      .cal-confirm .btn-primary { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-back" id="navBack">← Головна</a>
+  <a href="/" class="nav-logo-wrap">
+    <span class="nav-logo">VIA-L</span>
+    <span class="logo-line"></span>
+    <span class="logo-sub">Longevity</span>
+  </a>
+  <div class="lang-switcher">
+    <button class="lang-btn-flag active" id="lf_uk" onclick="switchLang('uk')" title="Українська">🇺🇦</button>
+    <button class="lang-btn-flag"        id="lf_ru" onclick="switchLang('ru')" title="Русский">🇷🇺</button>
+    <button class="lang-btn-flag"        id="lf_es" onclick="switchLang('es')" title="Español">🇪🇸</button>
+    <button class="lang-btn-flag"        id="lf_en" onclick="switchLang('en')" title="English">🇬🇧</button>
+  </div>
+</nav>
+
+<main>
+
+  <!-- LOADING -->
+  <div id="stateLoading" class="state active">
+    <div class="loading-wrap">
+      <div class="spinner"></div>
+      <p style="color:var(--text-lt);font-size:15px;" id="loadingText">Перевірка посилання…</p>
+    </div>
+  </div>
+
+  <!-- ERROR -->
+  <div id="stateError" class="state">
+    <div class="error-wrap">
+      <div class="error-icon">⚠️</div>
+      <div class="error-title" id="errorTitle">Посилання недійсне</div>
+      <p class="error-text" id="errorText">Можливо, термін дії посилання вичерпано або воно вже було використано. Зверніться до команди VIA-L.</p>
+    </div>
+  </div>
+
+  <!-- FORM -->
+  <div id="stateForm" class="state">
+
+    <div class="intake-header">
+      <div class="intake-tag" id="intakeTag">Анкета клієнта</div>
+      <div class="intake-title" id="intakeTitle">Анкета</div>
+      <div class="intake-subtitle" id="intakeSubtitle"></div>
+    </div>
+
+    <div class="progress">
+      <div class="ps active" id="ps1"></div>
+      <div class="ps" id="ps2"></div>
+      <div class="ps" id="ps3"></div>
+      <div class="ps" id="ps4"></div>
+      <span class="progress-label" id="progressLabel">1 / 4</span>
+    </div>
+
+    <!-- ─── Section 1: Contacts & goals ─── -->
+    <div class="form-section" id="sec1">
+      <div class="section-title"><span class="section-num">01</span><span id="s1title">Контакти та цілі</span></div>
+
+      <div class="field-row">
+        <div class="field">
+          <label id="lbl_name">Ім'я та прізвище</label>
+          <input type="text" id="f_name" autocomplete="name">
+        </div>
+        <div class="field">
+          <label id="lbl_age">Вік</label>
+          <input type="number" id="f_age" min="18" max="99" placeholder="48">
+        </div>
+      </div>
+
+      <div class="field">
+        <label id="lbl_tg">Telegram @username</label>
+        <input type="text" id="f_tg" placeholder="@username">
+      </div>
+
+      <div class="field">
+        <label id="lbl_goal">Головна ціль за програму</label>
+        <textarea id="f_goal"></textarea>
+      </div>
+
+      <div class="field">
+        <label id="lbl_tried">Що пробували раніше — що не спрацювало?</label>
+        <textarea id="f_tried"></textarea>
+      </div>
+    </div>
+
+    <!-- ─── Section 2: Health ─── -->
+    <div class="form-section" id="sec2" style="display:none">
+      <div class="section-title"><span class="section-num">02</span><span id="s2title">Здоров'я та анамнез</span></div>
+
+      <div class="field">
+        <label id="lbl_chronic">Хронічні захворювання</label>
+        <textarea id="f_chronic" style="min-height:72px;" placeholder="або «немає»"></textarea>
+      </div>
+      <div class="field">
+        <label id="lbl_meds">Поточні медикаменти + дози</label>
+        <textarea id="f_meds" style="min-height:72px;" placeholder="назва · доза · як давно (або «немає»)"></textarea>
+      </div>
+      <div class="field">
+        <label id="lbl_allergy">Алергії</label>
+        <input type="text" id="f_allergy" placeholder="або «немає»">
+      </div>
+      <div class="field">
+        <label id="lbl_labs">Останні аналізи</label>
+        <select id="f_labs">
+          <option value="">— обрати —</option>
+          <option id="lopt_have" value="have">Є, можу надати PDF</option>
+          <option id="lopt_no"   value="no">Немає</option>
+          <option id="lopt_plan" value="plan">Планую здати</option>
+        </select>
+      </div>
+
+      <!-- Female: Menopauza / Estrogen -->
+      <div class="cond-block" id="secFemale" style="display:none">
+        <div class="field">
+          <label id="lbl_phase">Гормональна фаза</label>
+          <select id="f_phase">
+            <option value="">— обрати —</option>
+            <option id="fopt_cycle" value="cycle">Регулярний цикл</option>
+            <option id="fopt_peri"  value="peri">Перименопауза</option>
+            <option id="fopt_meno"  value="meno">Менопауза</option>
+            <option id="fopt_post"  value="post">Постменопауза</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="lbl_lmp">Дата останньої менструації</label>
+          <input type="date" id="f_lmp">
+        </div>
+        <div class="field">
+          <label id="lbl_hrt">Гормональна замісна терапія (ГЗТ)</label>
+          <input type="text" id="f_hrt" placeholder="препарат · доза · або «ні»">
+        </div>
+      </div>
+
+      <!-- Male: Andropauza -->
+      <div class="cond-block" id="secMale" style="display:none">
+        <div class="field">
+          <label id="lbl_andro">Симптоми андропаузи</label>
+          <textarea id="f_andro" style="min-height:72px;" placeholder="втома, зниження лібідо, зміна ваги…"></textarea>
+        </div>
+        <div class="field">
+          <label id="lbl_trt">Замісна терапія тестостероном (ЗТТ)</label>
+          <input type="text" id="f_trt" placeholder="препарат · доза · або «ні»">
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Section 3: Lifestyle ─── -->
+    <div class="form-section" id="sec3" style="display:none">
+      <div class="section-title"><span class="section-num">03</span><span id="s3title">Спосіб життя</span></div>
+
+      <div class="field-row">
+        <div class="field">
+          <label id="lbl_sleep_h">Годин сну на добу</label>
+          <input type="number" id="f_sleep_h" min="3" max="12" placeholder="7">
+        </div>
+        <div class="field">
+          <label id="lbl_stress">Рівень стресу (1–10)</label>
+          <div class="range-wrap">
+            <input type="range" id="f_stress" min="1" max="10" value="5"
+              oninput="document.getElementById('stressVal').textContent=this.value">
+            <span class="range-val" id="stressVal">5</span>
+          </div>
+          <div class="range-labels"><span>1</span><span>10</span></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label id="lbl_sleep_issues">Проблеми зі сном</label>
+        <div class="check-group">
+          <label class="check-item"><input type="checkbox" id="si_fall" value="falling_asleep"> <span id="lsi_fall">Важко заснути</span></label>
+          <label class="check-item"><input type="checkbox" id="si_wake" value="night_wakings">  <span id="lsi_wake">Нічні пробудження</span></label>
+          <label class="check-item"><input type="checkbox" id="si_qual" value="poor_quality">   <span id="lsi_qual">Неякісний сон</span></label>
+          <label class="check-item"><input type="checkbox" id="si_ok"   value="none">           <span id="lsi_ok">Проблем немає</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label id="lbl_stress_src">Головне джерело стресу</label>
+        <input type="text" id="f_stress_src">
+      </div>
+
+      <div class="field">
+        <label id="lbl_food">Типовий раціон (сніданок · обід · вечеря)</label>
+        <textarea id="f_food"></textarea>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label id="lbl_activity">Фізична активність</label>
+          <select id="f_activity">
+            <option value="">— обрати —</option>
+            <option id="aopt_none" value="none">Не займаюсь</option>
+            <option id="aopt_walk" value="walk">Ходьба / легке кардіо</option>
+            <option id="aopt_gym"  value="gym">Силові тренування</option>
+            <option id="aopt_yoga" value="yoga">Йога / пілатес</option>
+            <option id="aopt_mix"  value="mix">Змішане</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="lbl_act_freq">Частота</label>
+          <select id="f_act_freq">
+            <option value="">— обрати —</option>
+            <option id="afreq_rare"  value="1pw">1 раз / тиж</option>
+            <option id="afreq_23"    value="2-3pw">2–3 рази / тиж</option>
+            <option id="afreq_45"    value="4-5pw">4–5 разів / тиж</option>
+            <option id="afreq_daily" value="daily">Щодня</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label id="lbl_alcohol">Алкоголь</label>
+          <select id="f_alcohol">
+            <option value="">— обрати —</option>
+            <option id="alcopt_no"   value="no">Не вживаю</option>
+            <option id="alcopt_rare" value="rare">Рідко</option>
+            <option id="alcopt_reg"  value="regular">Регулярно</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="lbl_caffeine">Кофеїн (чашок на день)</label>
+          <input type="number" id="f_caffeine" min="0" max="10" placeholder="2">
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Section 4: Supplements & tracker ─── -->
+    <div class="form-section" id="sec4" style="display:none">
+      <div class="section-title"><span class="section-num">04</span><span id="s4title">Добавки та трекер</span></div>
+
+      <div class="field">
+        <label id="lbl_supps">Що приймаєте зараз</label>
+        <textarea id="f_supps" style="min-height:110px;" placeholder="назва · доза · як давно (кожна з нового рядка)&#10;або «нічого не приймаю»"></textarea>
+      </div>
+
+      <div class="field">
+        <label id="lbl_tracker">Носимий трекер</label>
+        <select id="f_tracker">
+          <option id="topt_none"   value="none">Немає</option>
+          <option id="topt_oura"   value="oura">Oura Ring</option>
+          <option id="topt_apple"  value="apple_watch">Apple Watch</option>
+          <option id="topt_garmin" value="garmin">Garmin</option>
+          <option id="topt_other"  value="other">Інший</option>
+        </select>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label id="lbl_tz">Часовий пояс</label>
+          <select id="f_tz">
+            <option value="UTC+2">UTC+2 (Київ)</option>
+            <option value="UTC+3">UTC+3 (Москва / Тель-Авів)</option>
+            <option value="UTC+1">UTC+1 (Варшава / Берлін)</option>
+            <option value="UTC+0">UTC+0 (Лондон)</option>
+            <option value="UTC-5">UTC-5 (Нью-Йорк)</option>
+            <option value="UTC-8">UTC-8 (Лос-Анджелес)</option>
+            <option value="UTC+4">UTC+4 (Дубай)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="lbl_slot">Зручний час для дзвінків</label>
+          <select id="f_slot">
+            <option id="slot_morning" value="morning">Ранок (8–11)</option>
+            <option id="slot_noon"    value="noon">День (12–15)</option>
+            <option id="slot_eve"     value="evening">Вечір (18–21)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label id="lbl_notes">Додаткові коментарі</label>
+        <textarea id="f_notes" style="min-height:72px;"></textarea>
+      </div>
+
+      <p class="notice" id="noticeText">Надсилаючи анкету, ви підтверджуєте що надана інформація є достовірною. Дані використовуються виключно для підготовки до першої сесії з нутрициологом.</p>
+    </div>
+
+    <!-- Navigation -->
+    <div class="form-nav">
+      <button class="btn-ghost" id="btnBack" onclick="goBack()" style="visibility:hidden">← <span id="btnBackLabel">Назад</span></button>
+      <button class="btn-primary" id="btnNext" onclick="goNext()"><span id="btnNextLabel">Далі</span> →</button>
+    </div>
+
+  </div><!-- /stateForm -->
+
+  <!-- SUCCESS -->
+  <div id="stateSuccess" class="state">
+    <div class="success-wrap">
+      <div class="success-icon">✨</div>
+      <div class="success-title" id="successTitle">Анкету надіслано</div>
+      <p class="success-text" id="successText">Нутрициолог отримає ваші дані та зв'яжеться протягом 24 годин для узгодження першої сесії.</p>
+    </div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div id="stateCalendar" class="state">
+    <div class="cal-header">
+      <div class="intake-tag" id="calTag">Виберіть час сесії</div>
+      <div class="intake-title" id="calTitle">60-хвилинна сесія з нутрициологом</div>
+      <div class="intake-subtitle" id="calSubtitle"></div>
+    </div>
+    <div id="calDays"></div>
+    <div id="calSlotsTitle" class="cal-slots-title" style="display:none"></div>
+    <div id="calSlots" class="cal-slots"></div>
+    <p class="cal-notice" id="calNotice"></p>
+    <div class="cal-confirm">
+      <button class="btn-primary" id="calBtn" onclick="confirmSession()" disabled>
+        <span id="calBtnLabel">Підтвердити час</span> →
+      </button>
+    </div>
+    <!-- session booked success -->
+    <div id="calDone" style="display:none; text-align:center; padding:60px 0;">
+      <div style="font-size:52px;margin-bottom:20px;">📅</div>
+      <div class="success-title" id="calDoneTitle">Час підтверджено</div>
+      <p class="success-text" id="calDoneText">Нутрициолог отримає сповіщення та надішле Zoom-посилання.</p>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const WORKER = 'https://interpreter.viaelcom.workers.dev';
+const TOTAL  = 4;
+
+let lang    = 'uk';
+let intake  = null;
+let section = 1;
+
+const T = {
+  es: {
+    cal_tag:        'Elegir hora de sesión',
+    cal_title:      'Sesión de 60 minutos con el nutricionista',
+    cal_slots_lbl:  'Elige una hora:',
+    cal_notice:     'El horario es orientativo (UTC+2). El nutricionista confirmará y enviará el enlace de Zoom.',
+    cal_confirm:    'Confirmar hora',
+    cal_done_title: 'Hora confirmada',
+    cal_done_text:  'El nutricionista recibirá la notificación y enviará el enlace de Zoom.',
+    cal_weekdays:   ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],
+    cal_months:     ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
+    loading:   'Verificando enlace…',
+    err_title: 'Enlace no válido',
+    err_text:  'El enlace ha expirado o ya fue utilizado. Contáctenos en VIA-L.',
+    tag:       'Cuestionario del cliente',
+    nav_back:  '← Inicio',
+    s1: "Contacto y objetivos", s2: "Salud y antecedentes", s3: "Estilo de vida", s4: "Suplementos y tracker",
+    lbl_name: "Nombre y apellido", lbl_age: "Edad", lbl_tg: "Telegram @username",
+    lbl_goal: "Objetivo principal del programa", lbl_tried: "¿Qué has probado antes y no funcionó?",
+    lbl_chronic: "Enfermedades crónicas", lbl_meds: "Medicamentos actuales + dosis",
+    lbl_allergy: "Alergias", lbl_labs: "Últimos análisis",
+    lopt_have: "Tengo, puedo compartir PDF", lopt_no: "No tengo", lopt_plan: "Planeando realizarlos",
+    lbl_phase: "Fase hormonal",
+    fopt_cycle: "Ciclo regular", fopt_peri: "Perimenopausia", fopt_meno: "Menopausia", fopt_post: "Postmenopausia",
+    lbl_lmp: "Fecha de última menstruación", lbl_hrt: "Terapia hormonal sustitutiva (THS)",
+    lbl_andro: "Síntomas de andropausia", lbl_trt: "Terapia de reemplazo de testosterona (TRT)",
+    lbl_sleep_h: "Horas de sueño por noche", lbl_stress: "Nivel de estrés (1–10)",
+    lbl_sleep_issues: "Problemas de sueño",
+    lsi_fall: "Dificultad para dormirse", lsi_wake: "Despertares nocturnos", lsi_qual: "Sueño no reparador", lsi_ok: "Sin problemas",
+    lbl_stress_src: "Principal fuente de estrés",
+    lbl_food: "Alimentación típica (desayuno · almuerzo · cena)",
+    lbl_activity: "Actividad física",
+    aopt_none: "No hago ejercicio", aopt_walk: "Caminata / cardio suave", aopt_gym: "Entrenamiento de fuerza",
+    aopt_yoga: "Yoga / pilates", aopt_mix: "Mixto",
+    lbl_act_freq: "Frecuencia",
+    afreq_rare: "1 vez / sem", afreq_23: "2–3 veces / sem", afreq_45: "4–5 veces / sem", afreq_daily: "Diario",
+    lbl_alcohol: "Alcohol",
+    alcopt_no: "No consumo", alcopt_rare: "Ocasionalmente", alcopt_reg: "Regularmente",
+    lbl_caffeine: "Cafeína (tazas por día)",
+    lbl_supps: "Suplementos actuales", lbl_tracker: "Dispositivo wearable",
+    topt_none: "Ninguno", topt_oura: "Oura Ring", topt_apple: "Apple Watch", topt_garmin: "Garmin", topt_other: "Otro",
+    lbl_tz: "Zona horaria", lbl_slot: "Horario preferido para llamadas",
+    slot_morning: "Mañana (8–11)", slot_noon: "Mediodía (12–15)", slot_eve: "Tarde (18–21)",
+    lbl_notes: "Comentarios adicionales",
+    notice: "Al enviar el cuestionario, confirma que la información proporcionada es veraz. Los datos se utilizan exclusivamente para preparar la primera sesión con el nutricionista.",
+    btn_next: "Siguiente", btn_submit: "Enviar cuestionario", btn_back: "Atrás",
+    progress: n => n + ' / ' + TOTAL,
+    subtitle: (name, plan) => name + ' · ' + plan,
+    success_title: "Cuestionario enviado",
+    success_text:  "El nutricionista recibirá sus datos y se pondrá en contacto en 24 horas para acordar la primera sesión.",
+  },
+  en: {
+    cal_tag:        'Choose session time',
+    cal_title:      '60-minute session with the nutritionist',
+    cal_slots_lbl:  'Choose a time:',
+    cal_notice:     'Times shown in UTC+2. The nutritionist will confirm and send a Zoom link.',
+    cal_confirm:    'Confirm time',
+    cal_done_title: 'Time confirmed',
+    cal_done_text:  'The nutritionist will be notified and will send you a Zoom link.',
+    cal_weekdays:   ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+    cal_months:     ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    loading:   'Verifying link…',
+    err_title: 'Link is invalid',
+    err_text:  'The link may have expired or already been used. Please contact VIA-L team.',
+    tag:       'Client Questionnaire',
+    nav_back:  '← Home',
+    s1: "Contact & Goals", s2: "Health & Medical History", s3: "Lifestyle", s4: "Supplements & Tracker",
+    lbl_name: "Full name", lbl_age: "Age", lbl_tg: "Telegram @username",
+    lbl_goal: "Main goal for this program", lbl_tried: "What have you tried before that didn't work?",
+    lbl_chronic: "Chronic conditions", lbl_meds: "Current medications + dosages",
+    lbl_allergy: "Allergies", lbl_labs: "Recent lab tests",
+    lopt_have: "I have them, can share PDF", lopt_no: "No tests", lopt_plan: "Planning to get tested",
+    lbl_phase: "Hormonal phase",
+    fopt_cycle: "Regular cycle", fopt_peri: "Perimenopause", fopt_meno: "Menopause", fopt_post: "Post-menopause",
+    lbl_lmp: "Date of last menstrual period", lbl_hrt: "Hormone Replacement Therapy (HRT)",
+    lbl_andro: "Andropause symptoms", lbl_trt: "Testosterone Replacement Therapy (TRT)",
+    lbl_sleep_h: "Hours of sleep per night", lbl_stress: "Stress level (1–10)",
+    lbl_sleep_issues: "Sleep issues",
+    lsi_fall: "Difficulty falling asleep", lsi_wake: "Night wakings", lsi_qual: "Poor sleep quality", lsi_ok: "No issues",
+    lbl_stress_src: "Main source of stress",
+    lbl_food: "Typical meals (breakfast · lunch · dinner)",
+    lbl_activity: "Physical activity",
+    aopt_none: "Not active", aopt_walk: "Walking / light cardio", aopt_gym: "Strength training",
+    aopt_yoga: "Yoga / pilates", aopt_mix: "Mixed",
+    lbl_act_freq: "Frequency",
+    afreq_rare: "1× / week", afreq_23: "2–3× / week", afreq_45: "4–5× / week", afreq_daily: "Daily",
+    lbl_alcohol: "Alcohol",
+    alcopt_no: "None", alcopt_rare: "Occasionally", alcopt_reg: "Regularly",
+    lbl_caffeine: "Caffeine (cups per day)",
+    lbl_supps: "Current supplements", lbl_tracker: "Wearable device",
+    topt_none: "None", topt_oura: "Oura Ring", topt_apple: "Apple Watch", topt_garmin: "Garmin", topt_other: "Other",
+    lbl_tz: "Time zone", lbl_slot: "Preferred call time",
+    slot_morning: "Morning (8–11)", slot_noon: "Afternoon (12–15)", slot_eve: "Evening (18–21)",
+    lbl_notes: "Additional comments",
+    notice: "By submitting this questionnaire, you confirm that the information provided is accurate. Data is used solely to prepare for your first session with the nutritionist.",
+    btn_next: "Next", btn_submit: "Submit questionnaire", btn_back: "Back",
+    progress: n => n + ' / ' + TOTAL,
+    subtitle: (name, plan) => name + ' · ' + plan,
+    success_title: "Questionnaire submitted",
+    success_text:  "The nutritionist will receive your data and contact you within 24 hours to schedule the first session.",
+  },
+  uk: {
+    cal_tag:        'Виберіть час сесії',
+    cal_title:      '60-хвилинна сесія з нутрициологом',
+    cal_slots_lbl:  'Виберіть час:',
+    cal_notice:     'Час вказано по UTC+2 (Київ). Нутрициолог підтвердить та надішле Zoom-посилання.',
+    cal_confirm:    'Підтвердити час',
+    cal_done_title: 'Час підтверджено',
+    cal_done_text:  'Нутрициолог отримає сповіщення та надішле Zoom-посилання.',
+    cal_weekdays:   ['Нд','Пн','Вт','Ср','Чт','Пт','Сб'],
+    cal_months:     ['Січ','Лют','Бер','Кві','Тра','Чер','Лип','Сер','Вер','Жов','Лис','Гру'],
+    loading:       'Перевірка посилання…',
+    err_title:     'Посилання недійсне',
+    err_text:      'Можливо, термін дії посилання вичерпано або воно вже було використано. Зверніться до команди VIA-L.',
+    tag:           'Анкета клієнта',
+    nav_back:      '← Головна',
+    s1: "Контакти та цілі", s2: "Здоров’я та анамнез", s3: "Спосіб життя", s4: "Добавки та трекер",
+    lbl_name: "Ім’я та прізвище", lbl_age: "Вік", lbl_tg: "Telegram @username",
+    lbl_goal: "Головна ціль за програму", lbl_tried: "Що пробували раніше — що не спрацювало?",
+    lbl_chronic: "Хронічні захворювання", lbl_meds: "Поточні медикаменти + дози",
+    lbl_allergy: "Алергії", lbl_labs: "Останні аналізи",
+    lopt_have: "Є, можу надати PDF", lopt_no: "Немає", lopt_plan: "Планую здати",
+    lbl_phase: "Гормональна фаза",
+    fopt_cycle: "Регулярний цикл", fopt_peri: "Перименопауза", fopt_meno: "Менопауза", fopt_post: "Постменопауза",
+    lbl_lmp: "Дата останньої менструації", lbl_hrt: "Гормональна замісна терапія (ГЗТ)",
+    lbl_andro: "Симптоми андропаузи", lbl_trt: "Замісна терапія тестостероном (ЗТТ)",
+    lbl_sleep_h: "Годин сну на добу", lbl_stress: "Рівень стресу (1–10)",
+    lbl_sleep_issues: "Проблеми зі сном",
+    lsi_fall: "Важко заснути", lsi_wake: "Нічні пробудження", lsi_qual: "Неякісний сон", lsi_ok: "Проблем немає",
+    lbl_stress_src: "Головне джерело стресу",
+    lbl_food: "Типовий раціон (сніданок · обід · вечеря)",
+    lbl_activity: "Фізична активність",
+    aopt_none: "Не займаюсь", aopt_walk: "Ходьба / легке кардіо", aopt_gym: "Силові тренування",
+    aopt_yoga: "Йога / пілатес", aopt_mix: "Змішане",
+    lbl_act_freq: "Частота",
+    afreq_rare: "1 раз / тиж", afreq_23: "2–3 рази / тиж", afreq_45: "4–5 разів / тиж", afreq_daily: "Щодня",
+    lbl_alcohol: "Алкоголь",
+    alcopt_no: "Не вживаю", alcopt_rare: "Рідко", alcopt_reg: "Регулярно",
+    lbl_caffeine: "Кофеїн (чашок на день)",
+    lbl_supps: "Що приймаєте зараз", lbl_tracker: "Носимий трекер",
+    topt_none: "Немає", topt_oura: "Oura Ring", topt_apple: "Apple Watch", topt_garmin: "Garmin", topt_other: "Інший",
+    lbl_tz: "Часовий пояс", lbl_slot: "Зручний час для дзвінків",
+    slot_morning: "Ранок (8–11)", slot_noon: "День (12–15)", slot_eve: "Вечір (18–21)",
+    lbl_notes: "Додаткові коментарі",
+    notice: "Надсилаючи анкету, ви підтверджуєте що надана інформація є достовірною. Дані використовуються виключно для підготовки до першої сесії з нутрициологом.",
+    btn_next: "Далі", btn_submit: "Надіслати анкету", btn_back: "Назад",
+    progress: n => n + ' / ' + TOTAL,
+    subtitle: (name, plan) => name + ' · ' + plan,
+    success_title: "Анкету надіслано",
+    success_text:  "Нутрициолог отримає ваші дані та зв’яжеться протягом 24 годин для узгодження першої сесії.",
+  },
+  ru: {
+    cal_tag:        'Выберите время сессии',
+    cal_title:      '60-минутная сессия с нутрициологом',
+    cal_slots_lbl:  'Выберите время:',
+    cal_notice:     'Время указано по UTC+2 (Киев). Нутрициолог подтвердит и пришлёт Zoom-ссылку.',
+    cal_confirm:    'Подтвердить время',
+    cal_done_title: 'Время подтверждено',
+    cal_done_text:  'Нутрициолог получит уведомление и пришлёт Zoom-ссылку.',
+    cal_weekdays:   ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'],
+    cal_months:     ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'],
+    loading:       'Проверка ссылки…',
+    err_title:     'Ссылка недействительна',
+    err_text:      'Возможно, срок действия ссылки истёк или она уже была использована. Обратитесь к команде VIA-L.',
+    tag:           'Анкета клиента',
+    nav_back:      '← Главная',
+    s1: "Контакты и цели", s2: "Здоровье и анамнез", s3: "Образ жизни", s4: "Добавки и трекер",
+    lbl_name: "Имя и фамилия", lbl_age: "Возраст", lbl_tg: "Telegram @username",
+    lbl_goal: "Главная цель за программу", lbl_tried: "Что пробовали раньше — что не сработало?",
+    lbl_chronic: "Хронические заболевания", lbl_meds: "Текущие медикаменты + дозы",
+    lbl_allergy: "Аллергии", lbl_labs: "Последние анализы",
+    lopt_have: "Есть, могу предоставить PDF", lopt_no: "Нет", lopt_plan: "Планирую сдать",
+    lbl_phase: "Гормональная фаза",
+    fopt_cycle: "Регулярный цикл", fopt_peri: "Перименопауза", fopt_meno: "Менопауза", fopt_post: "Постменопауза",
+    lbl_lmp: "Дата последней менструации", lbl_hrt: "Гормональная заместительная терапия (ГЗТ)",
+    lbl_andro: "Симптомы андропаузы", lbl_trt: "Заместительная терапия тестостероном (ЗТТ)",
+    lbl_sleep_h: "Часов сна в сутки", lbl_stress: "Уровень стресса (1–10)",
+    lbl_sleep_issues: "Проблемы со сном",
+    lsi_fall: "Трудно уснуть", lsi_wake: "Ночные пробуждения", lsi_qual: "Неглубокий сон", lsi_ok: "Проблем нет",
+    lbl_stress_src: "Главный источник стресса",
+    lbl_food: "Типичный рацион (завтрак · обед · ужин)",
+    lbl_activity: "Физическая активность",
+    aopt_none: "Не занимаюсь", aopt_walk: "Ходьба / лёгкое кардио", aopt_gym: "Силовые тренировки",
+    aopt_yoga: "Йога / пилатес", aopt_mix: "Смешанное",
+    lbl_act_freq: "Частота",
+    afreq_rare: "1 раз / нед", afreq_23: "2–3 раза / нед", afreq_45: "4–5 раз / нед", afreq_daily: "Ежедневно",
+    lbl_alcohol: "Алкоголь",
+    alcopt_no: "Не употребляю", alcopt_rare: "Редко", alcopt_reg: "Регулярно",
+    lbl_caffeine: "Кофеин (чашек в день)",
+    lbl_supps: "Что принимаете сейчас", lbl_tracker: "Носимый трекер",
+    topt_none: "Нет", topt_oura: "Oura Ring", topt_apple: "Apple Watch", topt_garmin: "Garmin", topt_other: "Другой",
+    lbl_tz: "Часовой пояс", lbl_slot: "Удобное время для звонков",
+    slot_morning: "Утро (8–11)", slot_noon: "День (12–15)", slot_eve: "Вечер (18–21)",
+    lbl_notes: "Дополнительные комментарии",
+    notice: "Отправляя анкету, вы подтверждаете достоверность предоставленных данных. Данные используются исключительно для подготовки к первой сессии с нутрициологом.",
+    btn_next: "Далее", btn_submit: "Отправить анкету", btn_back: "Назад",
+    progress: n => n + ' / ' + TOTAL,
+    subtitle: (name, plan) => name + ' · ' + plan,
+    success_title: "Анкета отправлена",
+    success_text:  "Нутрициолог получит ваши данные и свяжется в течение 24 часов для согласования первой сессии.",
+  }
+};
+
+const PROG_NAMES = {
+  Menopauza:  'Менопауза',
+  Andropauza: 'Андропауза',
+  Antivikove: 'Антивікове харчування',
+  Estrogen:   'Естрогеновий метаболізм',
+};
+
+function el(id) { return document.getElementById(id); }
+
+function showState(id) {
+  document.querySelectorAll('.state').forEach(s => s.classList.remove('active'));
+  el(id).classList.add('active');
+}
+
+function switchLang(l) {
+  applyLang(l);
+  // Update flag buttons
+  ['uk','ru','es','en'].forEach(code => {
+    const btn = el('lf_' + code);
+    if (btn) btn.classList.toggle('active', code === l);
+  });
+  // Update html lang
+  document.documentElement.lang = l === 'uk' ? 'uk' : l === 'ru' ? 'ru' : l === 'es' ? 'es' : 'en';
+  // Update program title if intake data is ready
+  if (intake) {
+    const t = T[l] || T.uk;
+    el('intakeTitle').textContent    = PROG_NAMES[intake.program] || intake.program;
+    el('intakeSubtitle').textContent = t.subtitle(intake.name, intake.plan);
+  }
+}
+
+function applyLang(l) {
+  lang = l;
+  const t = T[l] || T.uk;
+  const set = (id, val) => { const e = el(id); if (e) e.textContent = val; };
+  Object.keys(t).forEach(k => {
+    if (typeof t[k] === 'string') set(k, t[k]);
+  });
+  el('navBack').textContent = t.nav_back;
+  el('loadingText').textContent = t.loading;
+  el('errorTitle').textContent  = t.err_title;
+  el('errorText').textContent   = t.err_text;
+  el('intakeTag').textContent   = t.tag;
+  el('s1title').textContent = t.s1;
+  el('s2title').textContent = t.s2;
+  el('s3title').textContent = t.s3;
+  el('s4title').textContent = t.s4;
+  ['lbl_name','lbl_age','lbl_tg','lbl_goal','lbl_tried',
+   'lbl_chronic','lbl_meds','lbl_allergy','lbl_labs',
+   'lopt_have','lopt_no','lopt_plan',
+   'lbl_phase','fopt_cycle','fopt_peri','fopt_meno','fopt_post',
+   'lbl_lmp','lbl_hrt','lbl_andro','lbl_trt',
+   'lbl_sleep_h','lbl_stress','lbl_sleep_issues',
+   'lsi_fall','lsi_wake','lsi_qual','lsi_ok',
+   'lbl_stress_src','lbl_food','lbl_activity',
+   'aopt_none','aopt_walk','aopt_gym','aopt_yoga','aopt_mix',
+   'lbl_act_freq','afreq_rare','afreq_23','afreq_45','afreq_daily',
+   'lbl_alcohol','alcopt_no','alcopt_rare','alcopt_reg','lbl_caffeine',
+   'lbl_supps','lbl_tracker','topt_none','topt_oura','topt_apple','topt_garmin','topt_other',
+   'lbl_tz','lbl_slot','slot_morning','slot_noon','slot_eve',
+   'lbl_notes','noticeText','successTitle','successText',
+  ].forEach(id => set(id, t[id]));
+  updateNav();
+}
+
+function updateNav() {
+  const t = T[lang] || T.uk;
+  const isLast = section === TOTAL;
+  el('btnNextLabel').textContent  = isLast ? t.btn_submit : t.btn_next;
+  el('btnBackLabel').textContent  = t.btn_back;
+  el('progressLabel').textContent = t.progress(section);
+  el('btnBack').style.visibility  = section > 1 ? 'visible' : 'hidden';
+  for (let i = 1; i <= TOTAL; i++) {
+    el('ps' + i).className = 'ps' + (i < section ? ' done' : i === section ? ' active' : '');
+  }
+}
+
+function showSection(n) {
+  for (let i = 1; i <= TOTAL; i++) el('sec' + i).style.display = i === n ? 'block' : 'none';
+  section = n;
+  updateNav();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goNext() {
+  if (section < TOTAL) {
+    showSection(section + 1);
+  } else {
+    submitForm();
+  }
+}
+
+function goBack() {
+  if (section > 1) showSection(section - 1);
+}
+
+function collectAnswers() {
+  const sleepIssues = ['si_fall','si_wake','si_qual','si_ok']
+    .filter(id => el(id) && el(id).checked)
+    .map(id => el(id).value);
+  return {
+    name:        el('f_name').value.trim(),
+    age:         el('f_age').value,
+    telegram:    el('f_tg').value.trim(),
+    goal:        el('f_goal').value.trim(),
+    tried:       el('f_tried').value.trim(),
+    chronic:     el('f_chronic').value.trim(),
+    meds:        el('f_meds').value.trim(),
+    allergy:     el('f_allergy').value.trim(),
+    labs:        el('f_labs').value,
+    phase:       el('f_phase').value,
+    lmp:         el('f_lmp').value,
+    hrt:         el('f_hrt').value.trim(),
+    andro_symp:  el('f_andro').value.trim(),
+    trt:         el('f_trt').value.trim(),
+    sleep_h:     el('f_sleep_h').value,
+    sleep_issues: sleepIssues,
+    stress:      el('f_stress').value,
+    stress_src:  el('f_stress_src').value.trim(),
+    food:        el('f_food').value.trim(),
+    activity:    el('f_activity').value,
+    act_freq:    el('f_act_freq').value,
+    alcohol:     el('f_alcohol').value,
+    caffeine:    el('f_caffeine').value,
+    supps:       el('f_supps').value.trim(),
+    tracker:     el('f_tracker').value,
+    timezone:    el('f_tz').value,
+    time_slot:   el('f_slot').value,
+    notes:       el('f_notes').value.trim(),
+  };
+}
+
+async function submitForm() {
+  const btn = el('btnNext');
+  btn.disabled = true;
+  el('btnNextLabel').textContent = '…';
+
+  const token = new URLSearchParams(location.search).get('t');
+  try {
+    await fetch(WORKER + '/intake-submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, lang, answers: collectAnswers() }),
+    });
+  } catch (_) {}
+
+  showState('stateSuccess');
+}
+
+// ── CALENDAR ──────────────────────────────────────────────────
+let calSelectedDate = null;
+let calSelectedTime = null;
+
+function initCalendar() {
+  const t = T[lang] || T.uk;
+  el('calTag').textContent      = t.cal_tag;
+  el('calTitle').textContent    = t.cal_title;
+  el('calNotice').textContent   = t.cal_notice;
+  el('calBtnLabel').textContent = t.cal_confirm;
+  el('calDoneTitle').textContent = t.cal_done_title;
+  el('calDoneText').textContent  = t.cal_done_text;
+  if (intake) el('calSubtitle').textContent = t.subtitle(intake.name, intake.plan);
+
+  const days = el('calDays');
+  days.innerHTML = '';
+  const today = new Date();
+  for (let i = 1; i <= 21; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    if (d.getDay() === 0) continue; // skip Sunday
+    const iso = d.toISOString().slice(0, 10);
+    const div = document.createElement('div');
+    div.className = 'cal-day';
+    div.innerHTML = `<div class="cal-day-wd">${t.cal_weekdays[d.getDay()]}</div>`
+      + `<div class="cal-day-d">${d.getDate()}</div>`
+      + `<div class="cal-day-m">${t.cal_months[d.getMonth()]}</div>`;
+    div.onclick = () => selectDay(iso, div, t);
+    days.appendChild(div);
+  }
+}
+
+function selectDay(iso, dayEl, t) {
+  calSelectedDate = iso;
+  calSelectedTime = null;
+  document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('selected'));
+  dayEl.classList.add('selected');
+
+  const slots = el('calSlots');
+  slots.innerHTML = '';
+  const title = el('calSlotsTitle');
+  title.style.display = 'block';
+  title.textContent = t.cal_slots_lbl;
+
+  ['09:00','10:00','11:00','12:00','14:00','15:00','16:00','17:00','18:00','19:00'].forEach(time => {
+    const btn = document.createElement('div');
+    btn.className = 'cal-slot';
+    btn.textContent = time;
+    btn.onclick = () => selectTime(time, btn);
+    slots.appendChild(btn);
+  });
+  el('calBtn').disabled = true;
+}
+
+function selectTime(time, slotEl) {
+  calSelectedTime = time;
+  document.querySelectorAll('.cal-slot').forEach(s => s.classList.remove('selected'));
+  slotEl.classList.add('selected');
+  el('calBtn').disabled = false;
+}
+
+async function confirmSession() {
+  const btn = el('calBtn');
+  btn.disabled = true;
+  el('calBtnLabel').textContent = '…';
+
+  const token = new URLSearchParams(location.search).get('t');
+  try {
+    await fetch(WORKER + '/schedule-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, date: calSelectedDate, time: calSelectedTime }),
+    });
+  } catch (_) {}
+
+  // Show inline done message
+  el('calDays').style.display = 'none';
+  el('calSlotsTitle').style.display = 'none';
+  el('calSlots').style.display = 'none';
+  el('calNotice').style.display = 'none';
+  document.querySelector('.cal-confirm').style.display = 'none';
+  el('calDone').style.display = 'block';
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+async function init() {
+  showState('stateLoading');
+  const params = new URLSearchParams(location.search);
+  const token  = params.get('t');
+  const isCalendar = params.get('calendar') === '1';
+
+  if (!token) { showState('stateError'); return; }
+
+  try {
+    const res  = await fetch(WORKER + '/intake-validate?t=' + encodeURIComponent(token));
+    const data = await res.json();
+
+    if (!data.ok) { showState('stateError'); return; }
+
+    intake = data;
+    const l = ['uk','ru','es','en'].includes(data.lang) ? data.lang : 'uk';
+    switchLang(l);
+
+    if (isCalendar) {
+      initCalendar();
+      showState('stateCalendar');
+      return;
+    }
+
+    el('intakeTitle').textContent    = PROG_NAMES[data.program] || data.program;
+    el('intakeSubtitle').textContent = (T[l] || T.uk).subtitle(data.name, data.plan);
+    el('f_name').value               = data.name || '';
+
+    el('secFemale').style.display = (data.program === 'Menopauza' || data.program === 'Estrogen') ? 'block' : 'none';
+    el('secMale').style.display   = data.program === 'Andropauza' ? 'block' : 'none';
+
+    showSection(1);
+    showState('stateForm');
+
+  } catch (_) {
+    showState('stateError');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
