@@ -37,7 +37,7 @@ var MARINA_EMAIL = 'viaelcom@gmail.com';
 
 // Backstage Telegram-бот: после каждого Expert-запроса Apps Script зовёт
 // этот endpoint Cloudflare Worker, который шлёт карточку клиента нутрициологу.
-var BACKSTAGE_DRAFT_URL = 'https://vial-claude-proxy.viaelcom.workers.dev/draft';
+var BACKSTAGE_DRAFT_URL = 'https://interpreter.viaelcom-gmail-s-a.workers.dev/draft';
 
 // Dev-коды — обходят проверку по таблице, не ограничены лимитом.
 // Используем только для разработки/тестирования бота.
