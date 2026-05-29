@@ -66,7 +66,8 @@ function doPost(e) {
   try {
     var payload = JSON.parse(e.postData.contents);
     var action  = (payload && payload.action) || '';
-    if (action === 'send_report') return handleSendReport(payload);
+    if (action === 'send_report')  return handleSendReport(payload);
+    if (action === 'assign_code')  return handleAssignCode(payload);
     // Onboarding-анкета теперь приходит как поле `onboarding` в обычном
     // Expert-запросе (см. handleExpertRequest). Отдельного action нет.
     return handleExpertRequest(payload);
@@ -200,6 +201,30 @@ function handleExpertRequest(p) {
   return respond({ ok: false, reason: 'invalid' });
 }
 
+// ── Выдача кода для тарифа (вызывается Cloudflare Worker после оплаты) ───
+function handleAssignCode(p) {
+  var tier = (p.tier || '').toString().toUpperCase().trim();
+  if (!tier) return respond({ ok: false, reason: 'no_tier' });
+
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+  var data  = sheet.getDataRange().getValues();
+
+  for (var i = 1; i < data.length; i++) {
+    var rowCode   = (data[i][0] || '').toString().trim();
+    var rowTier   = (data[i][1] || '').toString().toUpperCase().trim();
+    var rowStatus = (data[i][2] || '').toString().toUpperCase().trim();
+
+    if (rowTier !== tier)    continue;
+    if (rowStatus !== 'FREE') continue;
+
+    sheet.getRange(i + 1, 3).setValue('ASSIGNED');
+    sheet.getRange(i + 1, 4).setValue(new Date().toISOString());
+    return respond({ ok: true, code: rowCode, tier: rowTier });
+  }
+
+  return respond({ ok: false, reason: 'no_codes_available', tier: tier });
+}
+
 // ── Валидация кода при входе ──────────────────────────────────
 function validateCode(code) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
@@ -214,7 +239,7 @@ function validateCode(code) {
 
     if (rowCode !== code) continue;
 
-    if (rowStatus === 'FREE') {
+    if (rowStatus === 'FREE' || rowStatus === 'ASSIGNED') {
       var limitsFree = getPlanLimits(rowPlan);
       var expiry = new Date(now.getTime() + limitsFree.subscriptionDays * 24 * 60 * 60 * 1000);
       sheet.getRange(i + 1, 3).setValue('ACTIVE');

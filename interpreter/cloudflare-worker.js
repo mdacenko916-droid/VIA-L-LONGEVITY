@@ -243,6 +243,11 @@ const HOTMART_PRODUCTS = {
   7706424: { program: 'Estrogen',   plan: 'Разовая',       price: '€120' },
   7706337: { program: 'Estrogen',   plan: 'Базова 8 тиж',  price: '€390' },
   7706370: { program: 'Estrogen',   plan: 'Повна 12 тиж',  price: '€590' },
+  // Interpreter tariffs
+  7838739: { type: 'interpreter', tier: 'PRO',       price: '$29/мес' },
+  7838826: { type: 'interpreter', tier: 'EXPERT',    price: '€79/мес' },
+  7838876: { type: 'interpreter', tier: 'ELITE-8W',  price: '€390' },
+  7838925: { type: 'interpreter', tier: 'ELITE-12W', price: '€590' },
 };
 
 const PROGRAM_NAMES = {
@@ -370,6 +375,10 @@ async function handleHotmartWebhook(request, env, corsHeaders) {
 
   const product = HOTMART_PRODUCTS[productId];
 
+  if (product?.type === 'interpreter') {
+    return handleInterpreterPurchase(product, buyerName, buyerEmail, lang, env, corsHeaders);
+  }
+
   if (!product) {
     await sendTelegram(env,
       `⚠️ <b>Hotmart: невідомий product_id</b>\n\n`
@@ -423,6 +432,62 @@ async function handleHotmartWebhook(request, env, corsHeaders) {
   );
 
   return jsonResponse({ ok: true, token, program: product.program, lang }, corsHeaders);
+}
+
+// ── Interpreter purchase: assign code + email buyer ───────────
+async function handleInterpreterPurchase(product, buyerName, buyerEmail, lang, env, corsHeaders) {
+  const TIER_NAMES = { PRO: 'PRO', EXPERT: 'PRO+EXPERT', 'ELITE-8W': 'ELITE 8 нед', 'ELITE-12W': 'ELITE 12 нед' };
+  const tierName = TIER_NAMES[product.tier] || product.tier;
+  const langFlag = { uk: '🇺🇦', ru: '🇷🇺', es: '🇪🇸', en: '🇬🇧' }[lang] || '🌐';
+
+  let code = null;
+  if (env.APPS_SCRIPT_URL) {
+    try {
+      const r = await fetch(env.APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'assign_code', tier: product.tier }),
+      });
+      const j = await r.json();
+      if (j.ok) code = j.code;
+    } catch (_) {}
+  }
+
+  await sendTelegram(env,
+    `🧬 <b>Інтерпретатор — ${tierName}</b>\n`
+    + `━━━━━━━━━━━━━━━━━━━━\n`
+    + `👤 ${esc(buyerName)}\n`
+    + `📧 <code>${esc(buyerEmail)}</code>\n`
+    + `💰 ${product.price}\n`
+    + `${langFlag} ${lang.toUpperCase()}\n`
+    + `━━━━━━━━━━━━━━━━━━━━\n`
+    + (code ? `🔑 Код: <code>${code}</code>` : `⚠️ Коди закінчились — видати вручну!`)
+  );
+
+  if (code && buyerEmail) {
+    await sendEmail(env, buyerEmail,
+      `VIA-L Interpreter ${tierName} — ваш код доступу`,
+      buildInterpreterEmailBody(buyerName, tierName, code, lang)
+    );
+  }
+
+  return jsonResponse({ ok: true, tier: product.tier, code: code || null }, corsHeaders);
+}
+
+function buildInterpreterEmailBody(name, tier, code, lang) {
+  const t = {
+    uk: { h: `Вітаємо, ${name}!`, msg: `Дякуємо за придбання VIA-L Interpreter ${tier}. Ваш код доступу:`, save: 'Збережіть код — він знадобиться для входу.', cta: 'Відкрити інтерпретатор' },
+    ru: { h: `Добро пожаловать, ${name}!`, msg: `Спасибо за покупку VIA-L Interpreter ${tier}. Ваш код доступа:`, save: 'Сохраните код — он понадобится для входа.', cta: 'Открыть интерпретатор' },
+    en: { h: `Welcome, ${name}!`, msg: `Thank you for purchasing VIA-L Interpreter ${tier}. Your access code:`, save: 'Save this code — you will need it to log in.', cta: 'Open Interpreter' },
+    es: { h: `Bienvenido, ${name}!`, msg: `Gracias por adquirir VIA-L Interpreter ${tier}. Tu código de acceso:`, save: 'Guarda este código — lo necesitarás para ingresar.', cta: 'Abrir Intérprete' },
+  }[lang] || { h: `Welcome, ${name}!`, msg: `Your VIA-L Interpreter ${tier} access code:`, save: 'Save this code to log in.', cta: 'Open Interpreter' };
+
+  return `<h2 style="color:#C49A3C">${t.h}</h2>`
+    + `<p>${t.msg}</p>`
+    + `<div style="background:#F8F4EC;border:2px solid #C49A3C;border-radius:12px;padding:20px 32px;text-align:center;margin:24px 0">`
+    + `<span style="font-family:monospace;font-size:26px;font-weight:700;letter-spacing:4px;color:#1A1008">${code}</span></div>`
+    + `<p style="color:#666;font-size:14px">${t.save}</p>`
+    + `<a href="https://via-l.com/interpreter" style="display:inline-block;background:#C49A3C;color:#0a0800;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600">${t.cta} →</a>`;
 }
 
 // ─────────────────────────────────────────────────────────────
