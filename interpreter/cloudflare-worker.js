@@ -460,7 +460,7 @@ async function handleHotmartWebhook(request, env, corsHeaders) {
 
 // ── Interpreter purchase: assign code + email buyer ───────────
 async function handleInterpreterPurchase(product, buyerName, buyerEmail, lang, env, corsHeaders) {
-  const TIER_NAMES = { PRO: 'PRO', EXPERT: 'PRO+EXPERT', 'ELITE-8W': 'ELITE 8 нед', 'ELITE-12W': 'ELITE 12 нед' };
+  const TIER_NAMES = { PRO: 'PRO', EXPERT: 'PRO+EXPERT', 'ELITE-8W': 'ELITE 8w', 'ELITE-12W': 'ELITE 12w' };
   const tierName = TIER_NAMES[product.tier] || product.tier;
   const langFlag = { uk: '🇺🇦', ru: '🇷🇺', es: '🇪🇸', en: '🇬🇧', de: '🇩🇪', pt: '🇧🇷', fr: '🇫🇷', pl: '🇵🇱', it: '🇮🇹', he: '🇮🇱', ja: '🇯🇵', ko: '🇰🇷' }[lang] || '🌐';
 
