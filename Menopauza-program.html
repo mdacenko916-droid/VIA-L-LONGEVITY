@@ -136,124 +136,75 @@
     /* ═══ HERO ═══ */
     #hero {
       min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: stretch;
+      margin-top: 0;
+      padding-top: 0;
       position: relative;
-      display: flex;
-      align-items: center;
-      overflow: hidden;
-      padding: 0;
+    }
+    .hero-left {
+      display: flex; flex-direction: column; justify-content: center;
+      padding: clamp(48px,8vh,96px) clamp(24px,4vw,64px) clamp(48px,8vh,80px) clamp(44px,6vw,112px);
+      position: relative; z-index: 1;
     }
     .hero-right {
-      position: absolute; inset: 0; z-index: 0;
-      overflow: hidden;
+      position: relative; overflow: hidden;
     }
     .hero-img {
       width: 100%; height: 100%;
       object-fit: cover; object-position: center top;
       display: block;
-      filter: brightness(1.18) saturate(0.88);
-    }
-    .hero-right::after {
-      content: '';
-      position: absolute; inset: 0;
-      background: linear-gradient(to top,
-        rgba(25,12,4,0.30) 0%,
-        rgba(25,12,4,0.10) 40%,
-        transparent 70%);
-      pointer-events: none;
     }
     .hero-right::before {
-      content: '';
-      position: absolute; bottom: 0; left: 0; right: 0;
-      height: 140px;
-      background: linear-gradient(to bottom, transparent 0%, #F5F3EF 75%, #F5F3EF 100%);
-      pointer-events: none;
-      z-index: 3;
+      content: none;
     }
-    .hero-left {
-      position: relative; z-index: 1;
-      display: flex; flex-direction: column; justify-content: center;
-      padding: clamp(96px,12vh,140px) clamp(44px,6vw,112px) clamp(80px,10vh,120px);
-      max-width: 600px;
+    .hero-right::after {
+      content: none;
     }
 
     .prog-tag {
       display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
     }
     .prog-tag::before { content: ''; width: 22px; height: 1px; background: var(--gold-pale); }
-    .prog-tag span { font-size: 15px; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(232,200,130,0.9); font-weight: 500; }
-    .prog-tag::before { background: rgba(232,200,130,0.4); }
+    .prog-tag span { font-size: 15px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); font-weight: 500; }
 
     .hero-title {
       font-family: 'Playfair Display', serif;
       font-size: clamp(36px, 3.6vw, 54px);
-      font-weight: 500; line-height: 1.1; color: #f5f0e8;
+      font-weight: 500; line-height: 1.1; color: var(--text);
       margin-bottom: 6px;
-      text-shadow:
-        0 0 6px rgba(0,0,0,1),
-        0 0 14px rgba(0,0,0,1),
-        0 0 28px rgba(0,0,0,0.9),
-        2px 2px 0 rgba(0,0,0,0.4),
-        -1px -1px 0 rgba(0,0,0,0.3);
     }
-    .hero-title em { font-style: italic; color: #f0cc80;
-      text-shadow:
-        0 0 6px rgba(0,0,0,1),
-        0 0 14px rgba(0,0,0,1),
-        0 0 28px rgba(0,0,0,0.9); }
+    .hero-title em { font-style: italic; color: var(--gold); }
     .hero-subtitle {
       font-family: 'Cormorant Garamond', serif;
       font-style: italic;
       font-size: clamp(20px, 2vw, 26px);
-      color: var(--text); margin-bottom: 24px; line-height: 1.35;
+      color: var(--text-mid); margin-bottom: 24px; line-height: 1.35;
     }
-    .hero-divider { width: 28px; height: 1px; background: rgba(232,200,130,0.4); margin-bottom: 20px; }
+    .hero-divider { width: 28px; height: 1px; background: var(--gold-pale); margin-bottom: 20px; }
     .hero-desc {
       font-size: clamp(18px,1vw,16px); font-weight: 400; line-height: 1.85;
-      color: rgba(245,240,230,0.80); max-width: 420px; margin-bottom: 32px;
+      color: var(--text-mid); max-width: 420px; margin-bottom: 32px;
     }
     .hero-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
     .pill {
       font-size: 15px; letter-spacing: 1.5px; text-transform: uppercase;
-      color: rgba(245,240,230,0.92); border: 0.5px solid rgba(245,240,230,0.45);
+      color: var(--gold); border: 0.5px solid rgba(139,111,71,.35);
       padding: 6px 14px; border-radius: 50px;
-      text-shadow: 0 0 8px rgba(0,0,0,1), 0 0 16px rgba(0,0,0,0.9);
     }
-    .btn-primary, .btn-secondary {
-      display: inline-block; font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
-      color: var(--text); border: 1px solid rgba(245,240,230,0.55);
-      background: rgba(245,243,239,.78); backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      padding: 13px 28px; border-radius: 50px; text-decoration: none;
-      font-weight: 500; transition: all .3s; cursor: pointer; font-family: 'DM Sans', sans-serif;
-      box-shadow: 0 2px 12px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.7);
+    .btn-primary {
+      display: inline-block; font-size: 15px; letter-spacing: 2.5px; text-transform: uppercase;
+      color: var(--text); border: 1px solid rgba(139,111,71,.4);
+      background: rgba(245,243,239,.6); backdrop-filter: blur(12px);
+      padding: 14px 36px; border-radius: 50px; text-decoration: none;
+      font-weight: 500; transition: all .3s;
+      box-shadow: 0 4px 24px rgba(139,111,71,.1), inset 0 1px 0 rgba(255,255,255,.8);
     }
-    .btn-primary:hover, .btn-secondary:hover { background: rgba(255,255,255,.92); }
-    .hero-note { margin-top: 12px; font-size: 14px; color: var(--text); opacity: 0.72; font-style: italic; }
+    .btn-primary:hover { background: rgba(255,255,255,.85); border-color: var(--gold-pale); box-shadow: 0 8px 28px rgba(139,111,71,.16); }
+    .hero-note { margin-top: 14px; font-size: 15px; color: var(--gold); opacity: .75; font-style: italic; }
 
     /* ═══ QUOTE BRIDGE ═══ */
-    .hero-mobile-info {
-      display: none;
-      background: var(--cream);
-      padding: 32px 24px 24px;
-    }
-    .hero-mobile-info-desc {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 16px; line-height: 1.75; color: var(--text-mid);
-      margin-bottom: 20px;
-    }
-    .hero-mobile-pills {
-      display: flex; flex-wrap: wrap; gap: 8px;
-    }
-    .hero-mobile-pill {
-      font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
-      color: var(--gold); border: 0.5px solid rgba(139,111,71,.35);
-      padding: 5px 12px; border-radius: 50px;
-      font-family: 'DM Sans', sans-serif;
-    }
-    @media (max-width: 900px) {
-      .hero-mobile-info { display: block; }
-    }
-
     .quote-bridge {
       background: var(--cream);
       border-top: 1px solid rgba(139,111,71,.08);
@@ -504,20 +455,10 @@
     /* ═══ RESPONSIVE ═══ */
     @media (max-width: 900px) {
       nav { padding: 14px 24px; }
-      #hero { min-height: 100vh; }
-      .hero-left {
-        position: absolute; bottom: 0; left: 0; right: 0;
-        max-width: 100%; padding: 0 24px 40px; background: none;
-        z-index: 4;
-      }
-      .hero-desc { display: none; }
-      .hero-pills { display: none; }
-      .hero-divider { display: none; }
-      .hero-title { font-size: 28px; margin-bottom: 4px; }
-      .hero-subtitle { font-size: 16px; margin-bottom: 18px; }
-      .hero-btns { flex-direction: row; flex-wrap: wrap; gap: 8px; }
-      .btn-primary { padding: 12px 22px; font-size: 13px; }
-      .btn-secondary { padding: 10px 16px; font-size: 13px; letter-spacing: 1.5px; }
+      #hero { grid-template-columns: 1fr; min-height: 100vh; margin-top: 0; padding-top: 0; position: relative; }
+      .hero-right { height: 55vw; min-height: 280px; }
+      .hero-right::before { content: none; }
+      .hero-left { padding: 32px 24px 40px; }
       .biochem-grid, .stages-grid, .included-layout { grid-template-columns: 1fr; }
       .stage-card.full-width { grid-column: span 1; }
       .for-whom-grid { grid-template-columns: 1fr; }
@@ -728,22 +669,18 @@
     <p class="hero-note" id="heroNote">✦ Знайомство — 15 хвилин, безкоштовно, без зобов'язань</p>
   </div>
   <div class="hero-right">
+    <!-- Placeholder: замінити на фото жінки 40+ у спокійній, преміальній атмосфері -->
+    <!-- Рекомендація для ChatGPT:
+         Фото: жінка 42–52 роки, елегантний вигляд, природне освітлення,
+         нейтральний кремовий або теплий беж фон, погляд впевненості,
+         м'який портрет або профіль. Без стокових поз.
+         Колірна гама: теплі кремові, золоті, м'яко-бежеві тони. -->
     <img class="hero-img"
       src="images/Менопауза & Перименопауза.PNG"
       alt="Жінка 40+ — VIA-L програма Менопауза"
       onerror="this.style.display='none';this.alt=''">
   </div>
 </section>
-
-<div class="hero-mobile-info">
-  <p class="hero-mobile-info-desc" id="heroDescMobile"></p>
-  <div class="hero-mobile-pills">
-    <span class="hero-mobile-pill" id="heroPill1m"></span>
-    <span class="hero-mobile-pill" id="heroPill2m"></span>
-    <span class="hero-mobile-pill" id="heroPill3m"></span>
-    <span class="hero-mobile-pill" id="heroPill4m"></span>
-  </div>
-</div>
 
 <!-- ═══ QUOTE BRIDGE ═══ -->
 
@@ -2028,11 +1965,6 @@ function localizePage() {
   setLocalizedElement('#heroPill2', mapKey('heroPill2'));
   setLocalizedElement('#heroPill3', mapKey('heroPill3'));
   setLocalizedElement('#heroPill4', mapKey('heroPill4'));
-  setLocalizedElement('#heroDescMobile', mapKey('heroDesc'));
-  setLocalizedElement('#heroPill1m', mapKey('heroPill1'));
-  setLocalizedElement('#heroPill2m', mapKey('heroPill2'));
-  setLocalizedElement('#heroPill3m', mapKey('heroPill3'));
-  setLocalizedElement('#heroPill4m', mapKey('heroPill4'));
   setLocalizedElement('#heroBtnSlots', mapKey('heroBtnSlots'));
   setLocalizedElement('#heroBtnProgram', mapKey('heroBtnProgram'));
   setLocalizedElement('#heroBtnPay', mapKey('heroBtnPay'));
