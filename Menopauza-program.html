@@ -1939,12 +1939,8 @@ const FLAGS = { uk: '🇺🇦', ru: '🇷🇺', es: '🇪🇸', en: '🇬🇧' }
 const LABELS = { uk: 'UA', ru: 'RU', es: 'ES', en: 'EN' };
 let lang = DEFAULT_LANG;
 
-function toDisplayLang(code) {
-  return code === 'uk' ? 'ua' : code;
-}
-
 function normalizeLang(code) {
-  if (code === 'ua') return 'uk';
+  if (code === 'ua') code = 'uk'; // legacy: migrate previously-stored 'ua' to 'uk'
   return SUPPORTED_LANGS.includes(code) ? code : DEFAULT_LANG;
 }
 
@@ -1956,8 +1952,7 @@ function renderLangSpans(translations, useHtml = false) {
   return SUPPORTED_LANGS
     .map((code) => {
       const value = translations[code] !== undefined ? translations[code] : translations[DEFAULT_LANG];
-      const langClass = toDisplayLang(code);
-      return `<span class="lang-content lang-${langClass}" data-lang="${langClass}">${useHtml ? value : escapeHtml(value)}</span>`;
+      return `<span class="lang-content lang-${code}" data-lang="${code}">${useHtml ? value : escapeHtml(value)}</span>`;
     })
     .join('');
 }
@@ -2110,10 +2105,9 @@ function localizePage() {
 
 function applyLanguage(langCode) {
   const normalized = normalizeLang(langCode);
-  const activeClass = toDisplayLang(normalized);
   lang = normalized;
   localStorage.setItem('selectedLang', normalized);
-  document.documentElement.setAttribute('data-current-lang', activeClass);
+  document.documentElement.setAttribute('data-current-lang', normalized);
 
   const currentFlag = document.getElementById('currentFlag');
   const currentLangLabel = document.getElementById('currentLangLabel');
@@ -2121,8 +2115,8 @@ function applyLanguage(langCode) {
   if (currentLangLabel) currentLangLabel.textContent = LABELS[normalized];
 
   document.querySelectorAll('.lang-option').forEach((option) => option.classList.toggle('active', option.dataset.lang === normalized));
-  document.querySelectorAll('.lang-content, .lang-ua, .lang-uk, .lang-ru, .lang-es, .lang-en').forEach((node) => {
-    const isActive = node.classList.contains('lang-' + activeClass) || node.dataset.lang === activeClass;
+  document.querySelectorAll('.lang-content, .lang-uk, .lang-ru, .lang-es, .lang-en').forEach((node) => {
+    const isActive = node.classList.contains('lang-' + normalized) || node.dataset.lang === normalized;
     const displayType = node.dataset.block === '1' ? 'block' : node.tagName === 'SPAN' ? 'inline' : 'block';
     node.style.display = isActive ? displayType : 'none';
   });
