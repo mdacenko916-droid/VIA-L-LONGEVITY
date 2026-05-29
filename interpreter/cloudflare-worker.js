@@ -212,6 +212,25 @@ hs-CRP: оптимум <1.0 мг/л; 1–3 = умеренный воспалит
 Кальций и железо — разное время (конкурируют за усвоение). Жирорастворимые — только с едой.
 
 ════════════════════════════════════════
+АНТРОПОМЕТРИЯ — ФОРМУЛЫ И ИНТЕРПРЕТАЦИЯ
+════════════════════════════════════════
+Если клиент предоставил вес/рост/талию — рассчитывай сам и включай в анализ.
+
+ИМТ (кг/м²) = вес (кг) / рост² (м²)
+<18.5 — дефицит массы тела | 18.5–24.9 — норма | 25–29.9 — избыточная масса | 30–34.9 — ожирение I | 35–39.9 — ожирение II | ≥40 — ожирение III
+
+WHtR (индекс талия/рост) = талия (см) / рост (см)
+Мужчины: <0.43 худой; 0.43–0.52 норма; 0.53–0.62 умеренный риск ССЗ; ≥0.63 высокий риск ССЗ
+Женщины: <0.42 худая; 0.42–0.48 норма; 0.49–0.57 умеренный риск ССЗ; ≥0.58 высокий риск ССЗ
+
+Клинически важно:
+• WHtR точнее ИМТ для прогноза метаболического синдрома и ССЗ
+• Нормальный ИМТ + высокий WHtR = скрытое абдоминальное ожирение — "метаболически тучный при нормальном весе"
+• Талия >102 см (муж) / >88 см (жен) — независимый фактор риска T2DM, гипертонии, ССЗ (ВОЗ)
+• Каждый SD ↑ ИМТ у мужчин = −2.42 нмоль/л тестостерона (ожирение важнее возраста)
+• ИМТ ≥25 у женщин в менопаузе: ↑ ароматаза → ↑ эстрон → ↑ эстрогеновая нагрузка → утяжеление симптоматики
+
+════════════════════════════════════════
 ФОРМАТ ОТВЕТА
 ════════════════════════════════════════
 **Общая картина** — 2–3 предложения: что биометрия говорит о состоянии, какой показатель требует внимания. Без диагнозов — только наблюдения нутрициолога.
@@ -320,10 +339,8 @@ function detectLangFromHotmart(data) {
   const locale = buyer.locale || buyer.address?.locale || '';
   if (locale) {
     const code = locale.split(/[_-]/)[0].toLowerCase();
-    if (code === 'uk') return 'uk';
-    if (code === 'ru') return 'ru';
-    if (code === 'es') return 'es';
-    if (code === 'en') return 'en';
+    const SUPPORTED = ['uk','ru','es','en','de','pt','fr','pl','it','he','ja','ko'];
+    if (SUPPORTED.includes(code)) return code;
   }
 
   // Country ISO from various possible fields
@@ -340,6 +357,13 @@ function detectLangFromHotmart(data) {
     IL: 'ru',
     ES: 'es', MX: 'es', CO: 'es', AR: 'es', VE: 'es', CL: 'es', PE: 'es',
     UY: 'es', EC: 'es', BO: 'es', PY: 'es', CR: 'es', PA: 'es', GT: 'es',
+    DE: 'de', AT: 'de', CH: 'de',
+    PT: 'pt', BR: 'pt',
+    FR: 'fr', BE: 'fr', LU: 'fr',
+    PL: 'pl',
+    IT: 'it',
+    JP: 'ja',
+    KR: 'ko',
   };
   if (country && countryLang[country]) return countryLang[country];
 
@@ -348,7 +372,7 @@ function detectLangFromHotmart(data) {
   if (emailDomain === 'ua')                   return 'uk';
   if (['ru','by','kz'].includes(emailDomain)) return 'ru';
 
-  return 'uk'; // default
+  return 'en'; // default
 }
 
 async function handleHotmartWebhook(request, env, corsHeaders) {
@@ -381,10 +405,10 @@ async function handleHotmartWebhook(request, env, corsHeaders) {
 
   if (!product) {
     await sendTelegram(env,
-      `⚠️ <b>Hotmart: невідомий product_id</b>\n\n`
+      `⚠️ <b>Hotmart: неизвестный product_id</b>\n\n`
       + `ID: <code>${productId}</code>\n`
-      + `Клієнт: ${esc(buyerName)} · <code>${esc(buyerEmail)}</code>\n`
-      + `Мова: ${lang}`
+      + `Клиент: ${esc(buyerName)} · <code>${esc(buyerEmail)}</code>\n`
+      + `Язык: ${lang}`
     );
     return jsonResponse({ ok: true, warning: 'unknown_product_id', productId }, corsHeaders);
   }
@@ -407,7 +431,7 @@ async function handleHotmartWebhook(request, env, corsHeaders) {
 
   const programName = PROGRAM_NAMES[product.program] || product.program;
   const amountStr   = amount ? `€${amount}` : product.price;
-  const langFlag    = { uk: '🇺🇦', ru: '🇷🇺', es: '🇪🇸', en: '🇬🇧' }[lang] || '🌐';
+  const langFlag    = { uk: '🇺🇦', ru: '🇷🇺', es: '🇪🇸', en: '🇬🇧', de: '🇩🇪', pt: '🇧🇷', fr: '🇫🇷', pl: '🇵🇱', it: '🇮🇹', he: '🇮🇱', ja: '🇯🇵', ko: '🇰🇷' }[lang] || '🌐';
 
   const intakeLink = `https://via-l.com/program-intake.html?t=${token}`;
 
@@ -417,15 +441,15 @@ async function handleHotmartWebhook(request, env, corsHeaders) {
     + `👤 ${esc(buyerName)}\n`
     + `📧 <code>${esc(buyerEmail)}</code>\n`
     + `💰 ${amountStr} · ${product.plan}\n`
-    + `${langFlag} Мова клієнта: ${lang.toUpperCase()}\n`
+    + `${langFlag} Язык клиента: ${lang.toUpperCase()}\n`
     + `━━━━━━━━━━━━━━━━━━━━\n`
-    + `📋 <b>Посилання на анкету для клієнта:</b>\n`
+    + `📋 <b>Ссылка на анкету для клиента:</b>\n`
     + `<code>${intakeLink}</code>\n\n`
-    + `Надіслати клієнту в Telegram або на email.`
+    + `Отправьте клиенту в Telegram или на email.`
   );
 
   // Email клієнту — посилання на анкету
-  const et = EMAIL_T[lang] || EMAIL_T.uk;
+  const et = EMAIL_T[lang] || EMAIL_T.en;
   await sendEmail(env, buyerEmail,
     et.payment_subj(programName),
     et.payment_body(buyerName, programName, intakeLink),
@@ -438,7 +462,7 @@ async function handleHotmartWebhook(request, env, corsHeaders) {
 async function handleInterpreterPurchase(product, buyerName, buyerEmail, lang, env, corsHeaders) {
   const TIER_NAMES = { PRO: 'PRO', EXPERT: 'PRO+EXPERT', 'ELITE-8W': 'ELITE 8 нед', 'ELITE-12W': 'ELITE 12 нед' };
   const tierName = TIER_NAMES[product.tier] || product.tier;
-  const langFlag = { uk: '🇺🇦', ru: '🇷🇺', es: '🇪🇸', en: '🇬🇧' }[lang] || '🌐';
+  const langFlag = { uk: '🇺🇦', ru: '🇷🇺', es: '🇪🇸', en: '🇬🇧', de: '🇩🇪', pt: '🇧🇷', fr: '🇫🇷', pl: '🇵🇱', it: '🇮🇹', he: '🇮🇱', ja: '🇯🇵', ko: '🇰🇷' }[lang] || '🌐';
 
   let code = null;
   if (env.APPS_SCRIPT_URL) {
@@ -454,21 +478,19 @@ async function handleInterpreterPurchase(product, buyerName, buyerEmail, lang, e
   }
 
   await sendTelegram(env,
-    `🧬 <b>Інтерпретатор — ${tierName}</b>\n`
+    `🧬 <b>Интерпретатор — ${tierName}</b>\n`
     + `━━━━━━━━━━━━━━━━━━━━\n`
     + `👤 ${esc(buyerName)}\n`
     + `📧 <code>${esc(buyerEmail)}</code>\n`
     + `💰 ${product.price}\n`
     + `${langFlag} ${lang.toUpperCase()}\n`
     + `━━━━━━━━━━━━━━━━━━━━\n`
-    + (code ? `🔑 Код: <code>${code}</code>` : `⚠️ Коди закінчились — видати вручну!`)
+    + (code ? `🔑 Код: <code>${code}</code>` : `⚠️ Коды закончились — выдать вручную!`)
   );
 
   if (code && buyerEmail) {
-    await sendEmail(env, buyerEmail,
-      `VIA-L Interpreter ${tierName} — ваш код доступу`,
-      buildInterpreterEmailBody(buyerName, tierName, code, lang)
-    );
+    const mail = buildInterpreterEmailBody(buyerName, tierName, code, lang);
+    await sendEmail(env, buyerEmail, mail.subject, mail.html);
   }
 
   return jsonResponse({ ok: true, tier: product.tier, code: code || null }, corsHeaders);
@@ -476,18 +498,27 @@ async function handleInterpreterPurchase(product, buyerName, buyerEmail, lang, e
 
 function buildInterpreterEmailBody(name, tier, code, lang) {
   const t = {
-    uk: { h: `Вітаємо, ${name}!`, msg: `Дякуємо за придбання VIA-L Interpreter ${tier}. Ваш код доступу:`, save: 'Збережіть код — він знадобиться для входу.', cta: 'Відкрити інтерпретатор' },
-    ru: { h: `Добро пожаловать, ${name}!`, msg: `Спасибо за покупку VIA-L Interpreter ${tier}. Ваш код доступа:`, save: 'Сохраните код — он понадобится для входа.', cta: 'Открыть интерпретатор' },
-    en: { h: `Welcome, ${name}!`, msg: `Thank you for purchasing VIA-L Interpreter ${tier}. Your access code:`, save: 'Save this code — you will need it to log in.', cta: 'Open Interpreter' },
-    es: { h: `Bienvenido, ${name}!`, msg: `Gracias por adquirir VIA-L Interpreter ${tier}. Tu código de acceso:`, save: 'Guarda este código — lo necesitarás para ingresar.', cta: 'Abrir Intérprete' },
-  }[lang] || { h: `Welcome, ${name}!`, msg: `Your VIA-L Interpreter ${tier} access code:`, save: 'Save this code to log in.', cta: 'Open Interpreter' };
+    uk: { subj: `VIA-L Interpreter ${tier} — ваш код доступу`,        h: `Вітаємо, ${name}!`,            msg: `Дякуємо за придбання VIA-L Interpreter ${tier}. Ваш код доступу:`,                  save: 'Збережіть код — він знадобиться для входу.',                  cta: 'Відкрити інтерпретатор' },
+    ru: { subj: `VIA-L Interpreter ${tier} — ваш код доступа`,        h: `Добро пожаловать, ${name}!`,   msg: `Спасибо за покупку VIA-L Interpreter ${tier}. Ваш код доступа:`,                   save: 'Сохраните код — он понадобится для входа.',                  cta: 'Открыть интерпретатор' },
+    en: { subj: `VIA-L Interpreter ${tier} — your access code`,       h: `Welcome, ${name}!`,           msg: `Thank you for purchasing VIA-L Interpreter ${tier}. Your access code:`,            save: 'Save this code — you will need it to log in.',               cta: 'Open Interpreter' },
+    es: { subj: `VIA-L Interpreter ${tier} — tu código de acceso`,    h: `Bienvenido, ${name}!`,        msg: `Gracias por adquirir VIA-L Interpreter ${tier}. Tu código de acceso:`,            save: 'Guarda este código — lo necesitarás para ingresar.',         cta: 'Abrir Intérprete' },
+    de: { subj: `VIA-L Interpreter ${tier} — Ihr Zugangscode`,        h: `Willkommen, ${name}!`,        msg: `Danke für den Kauf von VIA-L Interpreter ${tier}. Ihr Zugangscode:`,               save: 'Bewahren Sie diesen Code auf — Sie benötigen ihn zum Anmelden.', cta: 'Interpreter öffnen' },
+    pt: { subj: `VIA-L Interpreter ${tier} — seu código de acesso`,   h: `Bem-vindo, ${name}!`,         msg: `Obrigado por adquirir o VIA-L Interpreter ${tier}. Seu código de acesso:`,         save: 'Guarde este código — você precisará dele para entrar.',      cta: 'Abrir Interpretador' },
+    fr: { subj: `VIA-L Interpreter ${tier} — votre code d'accès`,     h: `Bienvenue, ${name} !`,        msg: `Merci d'avoir acheté VIA-L Interpreter ${tier}. Votre code d'accès :`,             save: 'Conservez ce code — il vous sera nécessaire pour vous connecter.', cta: 'Ouvrir l\'interpréteur' },
+    pl: { subj: `VIA-L Interpreter ${tier} — Twój kod dostępu`,       h: `Witamy, ${name}!`,            msg: `Dziękujemy za zakup VIA-L Interpreter ${tier}. Twój kod dostępu:`,                 save: 'Zachowaj ten kod — będzie potrzebny do logowania.',          cta: 'Otwórz interpreter' },
+    it: { subj: `VIA-L Interpreter ${tier} — il tuo codice di accesso`, h: `Benvenuto, ${name}!`,       msg: `Grazie per aver acquistato VIA-L Interpreter ${tier}. Il tuo codice di accesso:`,  save: 'Conserva questo codice — ti servirà per accedere.',          cta: 'Apri l\'interprete' },
+    he: { subj: `VIA-L Interpreter ${tier} — קוד הגישה שלך`,          h: `ברוך הבא, ${name}!`,          msg: `תודה שרכשת את VIA-L Interpreter ${tier}. קוד הגישה שלך:`,                          save: 'שמור את הקוד — תזדקק לו כדי להתחבר.',                        cta: 'פתח את המפענח' },
+    ja: { subj: `VIA-L Interpreter ${tier} — アクセスコード`,          h: `ようこそ、${name}さん！`,       msg: `VIA-L Interpreter ${tier} をご購入いただきありがとうございます。アクセスコード：`,  save: 'このコードは保存してください。ログインに必要です。',           cta: 'インタープリターを開く' },
+    ko: { subj: `VIA-L Interpreter ${tier} — 액세스 코드`,             h: `환영합니다, ${name}님!`,       msg: `VIA-L Interpreter ${tier} 구매해 주셔서 감사합니다. 액세스 코드:`,                 save: '이 코드를 저장하세요 — 로그인에 필요합니다.',                  cta: '인터프리터 열기' },
+  }[lang] || { subj: `VIA-L Interpreter ${tier} — your access code`, h: `Welcome, ${name}!`, msg: `Your VIA-L Interpreter ${tier} access code:`, save: 'Save this code to log in.', cta: 'Open Interpreter' };
 
-  return `<h2 style="color:#C49A3C">${t.h}</h2>`
+  const html = `<h2 style="color:#C49A3C">${t.h}</h2>`
     + `<p>${t.msg}</p>`
     + `<div style="background:#F8F4EC;border:2px solid #C49A3C;border-radius:12px;padding:20px 32px;text-align:center;margin:24px 0">`
     + `<span style="font-family:monospace;font-size:26px;font-weight:700;letter-spacing:4px;color:#1A1008">${code}</span></div>`
     + `<p style="color:#666;font-size:14px">${t.save}</p>`
     + `<a href="https://via-l.com/interpreter" style="display:inline-block;background:#C49A3C;color:#0a0800;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600">${t.cta} →</a>`;
+  return { subject: t.subj, html };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -555,7 +586,7 @@ async function handleIntakeSubmit(request, env, corsHeaders) {
   // Build TG card (always in Russian for nutritionist)
   const progName = PROGRAM_NAMES[intake.program] || intake.program;
   const phases   = { cycle: 'Регулярный цикл', peri: 'Перименопауза', meno: 'Менопауза', post: 'Постменопауза' };
-  const langFlag = { uk: '🇺🇦', ru: '🇷🇺', es: '🇪🇸', en: '🇬🇧' }[clientLang || intake.lang] || '🌐';
+  const langFlag = { uk: '🇺🇦', ru: '🇷🇺', es: '🇪🇸', en: '🇬🇧', de: '🇩🇪', pt: '🇧🇷', fr: '🇫🇷', pl: '🇵🇱', it: '🇮🇹', he: '🇮🇱', ja: '🇯🇵', ko: '🇰🇷' }[clientLang || intake.lang] || '🌐';
 
   let card = `🧬 <b>Анкета заполнена · ${progName}</b>\n`
     + `━━━━━━━━━━━━━━━━━━━━\n`
@@ -589,8 +620,8 @@ async function handleIntakeSubmit(request, env, corsHeaders) {
   await sendTelegram(env, card, { reply_markup: buildIntakeKeyboard(token) });
 
   // Email клієнту — підтвердження отримання анкети
-  const etLang = clientLang || intake.lang || 'uk';
-  const et2 = EMAIL_T[etLang] || EMAIL_T.uk;
+  const etLang = clientLang || intake.lang || 'en';
+  const et2 = EMAIL_T[etLang] || EMAIL_T.en;
   const clientName2 = answers.name || intake.name || '';
   await sendEmail(env, intake.email, et2.intake_subj, et2.intake_body(clientName2));
 
@@ -714,19 +745,19 @@ async function handleScheduleSession(request, env, corsHeaders) {
 
   // TG to nutritionist
   await sendTelegram(env,
-    `📅 <b>Клієнт обрав час сесії</b>\n`
+    `📅 <b>Клиент выбрал время сессии</b>\n`
     + `━━━━━━━━━━━━━━━━━━━━\n`
     + `👤 <b>${esc(clientName)}</b>\n`
     + `🧬 ${progName} · ${intake.plan}\n`
     + `📧 <code>${esc(intake.email)}</code>\n`
     + `━━━━━━━━━━━━━━━━━━━━\n`
     + `🗓 <b>${dateStr}, ${time} UTC+2</b>\n\n`
-    + `Відправте клієнту Zoom-посилання.`
+    + `Отправьте клиенту Zoom-ссылку.`
   );
 
   // Email клієнту — підтвердження часу сесії
-  const schedLang = intake.submitted_lang || intake.lang || 'uk';
-  const et3 = EMAIL_T[schedLang] || EMAIL_T.uk;
+  const schedLang = intake.submitted_lang || intake.lang || 'en';
+  const et3 = EMAIL_T[schedLang] || EMAIL_T.en;
   await sendEmail(env, intake.email,
     et3.sched_subj(dateStr, time),
     et3.sched_body(clientName, dateStr, time),
@@ -745,7 +776,7 @@ async function handleAnalyze(request, env, corsHeaders) {
     de: 'Deutsch', pt: 'português', fr: 'français', pl: 'polski',
     it: 'italiano', he: 'עברית', ja: '日本語', ko: '한국어',
   };
-  const langName = langMap[lang] || 'русском';
+  const langName = langMap[lang] || 'English';
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -933,7 +964,7 @@ function renderDraftCard(payload, aiBullets) {
   lines.push('📋 <b>Новый Expert-разбор</b>');
   lines.push(`<b>Тариф:</b> ${esc(payload.plan)}${payload.week_no ? ` · неделя ${esc(payload.week_no)}` : ''}`);
   lines.push(`<b>Клиент:</b> ${esc(payload.client_name) || '—'} · ${esc(payload.client_email) || '—'}`);
-  lines.push(`<b>Код:</b> <code>${esc(payload.code)}</code> · <b>язык:</b> ${esc(payload.lang || 'ru')}`);
+  lines.push(`<b>Код:</b> <code>${esc(payload.code)}</code> · <b>язык:</b> ${esc(payload.lang || 'en')}`);
   lines.push('');
   lines.push(`<b>Профиль:</b> ${d.gender === 'male' ? 'М' : 'Ж'} · фаза ${esc(d.phase) || '—'}${d.age ? ' · ' + d.age + ' лет' : ''}`);
   if (d.device) lines.push(`<b>Гаджет:</b> ${esc(d.device)}`);
@@ -1068,7 +1099,7 @@ async function handleTgCallback(cq, env, corsHeaders) {
 
     // Перевод ответа на язык клиента (если он не ru/uk).
     let finalReply = draft.nutritionist_reply;
-    const clientLang = (draft.lang || 'ru').toLowerCase();
+    const clientLang = (draft.lang || 'en').toLowerCase();
     if (clientLang !== 'ru' && clientLang !== 'uk') {
       try {
         finalReply = await translateReply(env, draft.nutritionist_reply, clientLang);
@@ -1508,6 +1539,29 @@ function buildUserMessage(data, lang) {
   const tempChaotic = /chaotic|хаот|chaos|caotique|caotico|カオス|혼란/i.test(data.temp || '');
   const tempSpike   = /spike|скачок|Sprung|pico|pointe|skok|picco|זינוק|急上昇|급등/i.test(data.temp || '');
 
+  // ── ANTHROPOMETRY CALCULATIONS ────────────────────────────────
+  const weightKg = parseFloat(data.weight) || null;
+  const heightCm = parseFloat(data.height) || null;
+  const waistCm  = parseFloat(data.waist)  || null;
+  let bmiCalc = null, bmiCat = '', whtrCalc = null, whtrCat = '';
+  if (weightKg && heightCm && heightCm > 0) {
+    bmiCalc = weightKg / Math.pow(heightCm / 100, 2);
+    bmiCat  = bmiCalc < 18.5 ? 'дефицит массы тела'
+            : bmiCalc < 25   ? 'норма'
+            : bmiCalc < 30   ? 'избыточная масса тела'
+            : bmiCalc < 35   ? 'ожирение I'
+            : bmiCalc < 40   ? 'ожирение II'
+            : 'ожирение III';
+  }
+  if (waistCm && heightCm && heightCm > 0) {
+    whtrCalc = waistCm / heightCm;
+    const thr = isFem ? [0.42, 0.49, 0.58] : [0.43, 0.53, 0.63];
+    whtrCat = whtrCalc < thr[0] ? 'ниже нормы'
+            : whtrCalc < thr[1] ? 'норма (низкий риск ССЗ)'
+            : whtrCalc < thr[2] ? 'умеренный кардиометаболический риск'
+            : 'высокий кардиометаболический риск';
+  }
+
   // ── PATTERN DETECTION ─────────────────────────────────────────
   const patterns = [];
 
@@ -1528,6 +1582,18 @@ function buildUserMessage(data, lang) {
   }
   if (data.bio && parseInt(data.bio.visceral) > 9 && energyVal <= 5 && stressHigh) {
     patterns.push('⚡ ПАТТЕРН F — Метаболическая нагрузка: повышенный висцеральный жир + низкая энергия + стресс. Нутритивная поддержка: берберин, хром, приоритет белку и клетчатке.');
+  }
+  if (bmiCalc && bmiCalc >= 30) {
+    const bmiNote = isFem
+      ? 'ИМТ ≥30 в ' + phaseName + ': ↑ ароматаза → ↑ эстрон → риск эстрогенового доминирования + ↑ воспаление. Нутритивная поддержка: DIM 150 мг + крестоцветные ежедневно + берберин 500 мг × 2 + клетчатка ≥35 г + белок ≥1.4 г/кг.'
+      : 'ИМТ ≥30: каждый SD ↑ ИМТ = −2.42 нмоль/л тестостерона. Нутритивная поддержка: берберин 500 мг × 2, цинк 25 мг, ашваганда 600 мг, ходьба 15 мин после еды, белок ≥1.6 г/кг.';
+    patterns.push('⚡ ПАТТЕРН M1 (ИМТ ' + bmiCalc.toFixed(1) + ' — ' + bmiCat + ') — ' + bmiNote);
+  }
+  if (bmiCalc && bmiCalc >= 25 && bmiCalc < 30 && whtrCalc && whtrCalc >= (isFem ? 0.49 : 0.53)) {
+    patterns.push('⚡ ПАТТЕРН M2 (ИМТ ' + bmiCalc.toFixed(1) + ', WHtR ' + whtrCalc.toFixed(2) + ') — Абдоминальное накопление жира при умеренном ИМТ. WHtR указывает на ' + whtrCat + '. Нутритивная поддержка: берберин 500 мг × 2, клетчатка ≥35 г, ходьба 15 мин после каждого приёма пищи.');
+  }
+  if (bmiCalc && bmiCalc < 25 && whtrCalc && whtrCalc >= (isFem ? 0.49 : 0.53)) {
+    patterns.push('⚡ ПАТТЕРН M3 (ИМТ ' + bmiCalc.toFixed(1) + ' — норма, WHtR ' + whtrCalc.toFixed(2) + ') — "Метаболически тучный при нормальном весе": скрытое абдоминальное ожирение. ИМТ вводит в заблуждение — WHtR точнее. Нутритивная поддержка: берберин, ограничение рафинированных углеводов, силовые нагрузки, ходьба после еды.');
   }
   if (hrvLow && energyVal <= 3 && sleepQual <= 4 && !stressHigh) {
     patterns.push('⚡ ПАТТЕРН G — Признаки истощения адаптационных ресурсов: всё угнетено без ощущения стресса. Нутритивная поддержка: адаптогены мягкого действия, витамин C, B5.');
@@ -1777,7 +1843,10 @@ function buildUserMessage(data, lang) {
     + 'Пол: ' + (isFem ? 'Женщина' : 'Мужчина') + ' | Фаза: ' + phaseName
     + (data.age    ? ' | Возраст: ' + data.age + ' лет' : '')
     + (data.weight ? ' | Вес: ' + data.weight + ' кг'   : '')
-    + (data.height ? ' | Рост: ' + data.height + ' см'  : '') + '\n'
+    + (data.height ? ' | Рост: ' + data.height + ' см'  : '')
+    + (bmiCalc     ? ' | ИМТ: ' + bmiCalc.toFixed(1) + ' кг/м² (' + bmiCat + ')' : '')
+    + (waistCm     ? ' | Талия: ' + waistCm + ' см'     : '')
+    + (whtrCalc    ? ' | WHtR: ' + whtrCalc.toFixed(2) + ' (' + whtrCat + ')' : '') + '\n'
     + 'HRV: ' + data.hrv + ' мс (' + hrvStatus + ') | Тренд: ' + (data.hrv_trend === 'below' ? 'падает' : data.hrv_trend === 'above' ? 'растёт' : 'стабилен') + '\n'
     + 'Сон: ' + sleepQual + '/10 | Глубокий: ' + deepContext + ' | Пробуждения: ' + wakeVal + '\n'
     + hfContext + '\n'
