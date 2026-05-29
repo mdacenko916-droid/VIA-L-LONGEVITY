@@ -48,7 +48,6 @@ html{
   height:100%;
   height: -webkit-fill-available;
   overflow:hidden;
-  background-color:#10131A;
 }
 html,body{
   max-width:100%;
@@ -1212,14 +1211,14 @@ footer{
   </div>
   <div class="lang-dropdown" id="langDropdown">
     <button class="lang-toggle" onclick="toggleLangMenu()">
-      <span id="langLabel">UK</span>
+      <span id="langLabel">EN</span>
       <svg viewBox="0 0 10 6"><path d="M1 1l4 4 4-4"/></svg>
     </button>
     <div class="lang-menu">
-      <div class="lang-option active" onclick="setLang('uk')"><span class="lang-flag">🇺🇦</span>Українська</div>
-      <div class="lang-option" onclick="setLang('ru')"><span class="lang-flag">🇷🇺</span>Русский</div>
-      <div class="lang-option" onclick="setLang('en')"><span class="lang-flag">🇬🇧</span>English</div>
+      <div class="lang-option active" onclick="setLang('en')"><span class="lang-flag">🇬🇧</span>English</div>
       <div class="lang-option" onclick="setLang('es')"><span class="lang-flag">🇪🇸</span>Español</div>
+      <div class="lang-option" onclick="setLang('uk')"><span class="lang-flag">🇺🇦</span>Українська</div>
+      <div class="lang-option" onclick="setLang('ru')"><span class="lang-flag">🇷🇺</span>Русский</div>
       <div class="lang-option" onclick="setLang('de')"><span class="lang-flag">🇩🇪</span>Deutsch</div>
       <div class="lang-option" onclick="setLang('pt')"><span class="lang-flag">🇧🇷</span>Português</div>
       <div class="lang-option" onclick="setLang('fr')"><span class="lang-flag">🇫🇷</span>Français</div>
@@ -1866,12 +1865,19 @@ footer{
         </div>
         <div class="manual-field">
           <label class="manual-label" data-t="s_prof_weight">Вес (кг)</label>
-          <input class="manual-input" id="prof-weight" type="number" min="30" max="250" placeholder="—">
+          <input class="manual-input" id="prof-weight" type="number" min="30" max="250" placeholder="—" oninput="calcProfMetrics()">
         </div>
         <div class="manual-field">
           <label class="manual-label" data-t="s_prof_height">Рост (см)</label>
-          <input class="manual-input" id="prof-height" type="number" min="100" max="230" placeholder="—">
+          <input class="manual-input" id="prof-height" type="number" min="100" max="230" placeholder="—" oninput="calcProfMetrics()">
         </div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:10px;align-items:flex-end;">
+        <div class="manual-field" style="flex:0 0 110px;">
+          <label class="manual-label" data-t="s_prof_waist">Талія (см)</label>
+          <input class="manual-input" id="prof-waist" type="number" min="40" max="200" placeholder="—" oninput="calcProfMetrics()">
+        </div>
+        <div id="prof-metrics" style="display:none;flex:1;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 12px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--b1);min-height:38px;"></div>
       </div>
       <div id="prof-err" style="font-size:12px;color:var(--alert);margin-top:8px;display:none;" data-t="prof_err">Заполните возраст, вес и рост</div>
       <div class="btn-row">
@@ -3799,7 +3805,8 @@ const T={
 };
 
 const LANG_FLAGS={'uk':'🇺🇦 UK','ru':'🇷🇺 RU','en':'🇬🇧 EN','es':'🇪🇸 ES','de':'🇩🇪 DE','pt':'🇧🇷 PT','fr':'🇫🇷 FR','pl':'🇵🇱 PL','it':'🇮🇹 IT','he':'🇮🇱 HE','ja':'🇯🇵 JA','ko':'🇰🇷 KO'};
-let lang='uk';
+['ru','uk','es','de','pt','fr','pl','it','he','ja','ko'].forEach(l=>{T[l]=Object.assign({},T.en,T[l]);});
+let lang='en';
 let _rerendering=false;
 function L(t){return t[lang]||t.en||t.ru||Object.values(t)[0];}
 function setLang(l){
@@ -3993,7 +4000,7 @@ function ouraSlider(id,val){
 function initSliders(){ouraSlider('hrv',55);ouraSlider('sq',6);ouraSlider('rhr',68);ouraSlider('en',6);ouraSlider('resp',15);ouraSlider('anx',3);}
 initSliders();
 let _lastResult=null;
-setLang(localStorage.getItem('selectedLang')||localStorage.getItem('vial_lang')||'uk');
+setLang(localStorage.getItem('selectedLang')||localStorage.getItem('vial_lang')||'en');
 
 // Hot flash detail toggle
 document.querySelectorAll('input[name="hf_count"]').forEach(r=>{
@@ -4004,12 +4011,44 @@ document.querySelectorAll('input[name="hf_count"]').forEach(r=>{
 });
 
 // ══ NAVIGATION ════════════════════════════════════════════
+function calcProfMetrics(){
+  const w=parseFloat(document.getElementById('prof-weight')?.value);
+  const h=parseFloat(document.getElementById('prof-height')?.value);
+  const wst=parseFloat(document.getElementById('prof-waist')?.value);
+  const g=getRadio('gender')||'female';
+  const box=document.getElementById('prof-metrics');
+  if(!box)return;
+  let parts=[];
+  if(w>0&&h>0){
+    const bmi=w/Math.pow(h/100,2),br=bmi.toFixed(1);
+    let cat,col;
+    if(bmi<18.5){cat=t('bmi_low');col='#60a5fa';}
+    else if(bmi<25){cat=t('bmi_ok');col='var(--ok)';}
+    else if(bmi<30){cat=t('bmi_over');col='#f59e0b';}
+    else{cat=t('bmi_obese');col='var(--alert)';}
+    parts.push(`<span style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.55);text-transform:uppercase;">ІМТ</span><span style="font-size:20px;font-weight:300;color:${col};margin:0 5px;">${br}</span><span style="font-size:10px;color:${col};">${cat}</span>`);
+  }
+  if(wst>0&&h>0){
+    const r=wst/h,rv=r.toFixed(2);
+    const thr=g==='male'?[0.43,0.53,0.63]:[0.42,0.49,0.58];
+    let cat,col;
+    if(r<thr[0]){cat=t('bmi_low');col='#60a5fa';}
+    else if(r<thr[1]){cat=t('bmi_ok');col='var(--ok)';}
+    else if(r<thr[2]){cat=t('bmi_over');col='#f59e0b';}
+    else{cat=t('bmi_obese');col='var(--alert)';}
+    parts.push(`<span style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.55);text-transform:uppercase;margin-left:4px;">WHtR</span><span style="font-size:20px;font-weight:300;color:${col};margin:0 5px;">${rv}</span><span style="font-size:10px;color:${col};">${cat}</span>`);
+  }
+  if(parts.length){box.innerHTML=parts.join('<span style="width:1px;height:22px;background:var(--b1);margin:0 4px;align-self:center;"></span>');box.style.display='flex';}
+  else{box.style.display='none';}
+}
+
 function goFromProfile(){
   const fields=['prof-age','prof-weight','prof-height'];
   let ok=true;
   fields.forEach(id=>{
     const el=document.getElementById(id);
-    if(!el||!el.value){
+    const v=parseFloat(el?.value);
+    if(!el||isNaN(v)||v<+(el.min||1)){
       if(el){el.classList.add('field-error');setTimeout(()=>el.classList.remove('field-error'),800);}
       ok=false;
     }
@@ -4576,6 +4615,7 @@ function _showResultsInner(){
     age:parseInt(document.getElementById('prof-age')?.value)||null,
     weight:parseFloat(document.getElementById('prof-weight')?.value)||null,
     height:parseFloat(document.getElementById('prof-height')?.value)||null,
+    waist:parseFloat(document.getElementById('prof-waist')?.value)||null,
     hrv:+document.getElementById('hrv').value,
     hrv_trend:getRadio('hrv_trend'),hrv_dur:getRadio('hrv_dur'),
     temp:getRadio('temp'),hotflash:getRadio('hotflash'),hotfreq:getRadio('hotfreq'),
