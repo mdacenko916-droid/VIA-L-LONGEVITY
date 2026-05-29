@@ -1108,6 +1108,9 @@
       to  {transform:rotateX(68deg) rotateZ(360deg);}
     }
 
+    .ig-anim-paused .ig-porbit,
+    .ig-anim-paused .ig-planet { animation-play-state: paused !important; }
+
     /* Приховуємо стару бігучу строку */
     .interp-ticker-wrap { display:none !important; }
 
@@ -5013,6 +5016,23 @@ console.log('[index.html] Parent click handler attached');
     rsT=setTimeout(rebuild,150);
   }
 
+  function pauseAnim(){
+    cancelAnimationFrame(animId); animId=null;
+    var root=document.getElementById('igRoot');
+    if(root) root.classList.add('ig-anim-paused');
+    ['igR1','igR2','igR3'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.style.animationPlayState='paused';
+    });
+  }
+  function resumeAnim(){
+    var root=document.getElementById('igRoot');
+    if(root) root.classList.remove('ig-anim-paused');
+    ['igR1','igR2','igR3'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.style.animationPlayState='running';
+    });
+    if(!animId) drawStars();
+  }
+
   function init(){
     med=document.getElementById('igMedallion'); if(!med)return;
     sc =document.getElementById('igStars');
@@ -5021,6 +5041,23 @@ console.log('[index.html] Parent click handler attached');
       if(!med.offsetWidth){ setTimeout(init,200); return; }
       initStars(); drawStars(); rebuild(); fixMobilePosition();
       window.addEventListener('resize',onResize);
+
+      var guidesSec=document.getElementById('guides');
+      if(guidesSec){
+        var scrollT;
+        var guidesIO=new IntersectionObserver(function(entries){
+          entries.forEach(function(e){ if(e.isIntersecting) resumeAnim(); else pauseAnim(); });
+        },{threshold:0.05});
+        guidesIO.observe(guidesSec);
+        window.addEventListener('scroll',function(){
+          pauseAnim();
+          clearTimeout(scrollT);
+          scrollT=setTimeout(function(){
+            var r=guidesSec.getBoundingClientRect();
+            if(r.bottom>0&&r.top<window.innerHeight) resumeAnim();
+          },200);
+        },{passive:true});
+      }
     },80);
   }
 
