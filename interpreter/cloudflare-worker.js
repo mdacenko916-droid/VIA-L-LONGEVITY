@@ -465,6 +465,7 @@ async function handleInterpreterPurchase(product, buyerName, buyerEmail, lang, e
   const langFlag = { uk: '🇺🇦', ru: '🇷🇺', es: '🇪🇸', en: '🇬🇧', de: '🇩🇪', pt: '🇧🇷', fr: '🇫🇷', pl: '🇵🇱', it: '🇮🇹', he: '🇮🇱', ja: '🇯🇵', ko: '🇰🇷' }[lang] || '🌐';
 
   let code = null;
+  let codeError = null;          // 'no_codes_available' | 'apps_script_unreachable' | 'apps_script_url_missing' | <other reason>
   if (env.APPS_SCRIPT_URL) {
     try {
       const r = await fetch(env.APPS_SCRIPT_URL, {
@@ -474,7 +475,12 @@ async function handleInterpreterPurchase(product, buyerName, buyerEmail, lang, e
       });
       const j = await r.json();
       if (j.ok) code = j.code;
-    } catch (_) {}
+      else      codeError = j.reason || 'apps_script_error';
+    } catch (e) {
+      codeError = 'apps_script_unreachable';
+    }
+  } else {
+    codeError = 'apps_script_url_missing';
   }
 
   await sendTelegram(env,
@@ -485,15 +491,30 @@ async function handleInterpreterPurchase(product, buyerName, buyerEmail, lang, e
     + `💰 ${product.price}\n`
     + `${langFlag} ${lang.toUpperCase()}\n`
     + `━━━━━━━━━━━━━━━━━━━━\n`
-    + (code ? `🔑 Код: <code>${code}</code>` : `⚠️ Коды закончились — выдать вручную!`)
+    + (code ? `🔑 Код: <code>${code}</code>` : `⚠️ Код НЕ выдан (${esc(codeError || 'unknown')}) — см. алярм ниже`)
   );
+
+  // Отдельный «жирный» алярм — только когда коды реально закончились в Sheets.
+  // Не срабатывает при сетевых сбоях Apps Script: там TG-сообщение выше уже показало причину.
+  if (codeError === 'no_codes_available') {
+    await sendTelegram(env,
+      `🚨 <b>КОДЫ ${esc(product.tier)} ЗАКОНЧИЛИСЬ</b>\n\n`
+      + `В Google Sheets нет ни одного <code>FREE</code>-кода тарифа <code>${esc(product.tier)}</code>.\n`
+      + `Покупатель ${esc(buyerName)} (<code>${esc(buyerEmail)}</code>) только что оплатил ${esc(product.price)} и <b>код не получил</b>.\n\n`
+      + `Что делать:\n`
+      + `1) Открыть <code>interpreter/code-generator.html</code>\n`
+      + `2) Сгенерировать новую партию кодов <code>${esc(product.tier)}</code>\n`
+      + `3) Загрузить CSV в Google Sheets (статус FREE)\n`
+      + `4) Выдать код покупателю вручную (письмом или в TG)`
+    );
+  }
 
   if (code && buyerEmail) {
     const mail = buildInterpreterEmailBody(buyerName, tierName, code, lang);
     await sendEmail(env, buyerEmail, mail.subject, mail.html);
   }
 
-  return jsonResponse({ ok: true, tier: product.tier, code: code || null }, corsHeaders);
+  return jsonResponse({ ok: true, tier: product.tier, code: code || null, code_error: codeError }, corsHeaders);
 }
 
 function buildInterpreterEmailBody(name, tier, code, lang) {
