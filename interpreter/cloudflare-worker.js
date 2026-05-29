@@ -1277,10 +1277,8 @@ async function tgEditMessage(env, chatId, messageId, text) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Email via Resend — fail-safe (never throws)
+// Email via Brevo — fail-safe (never throws)
 // ─────────────────────────────────────────────────────────────
-const EMAIL_FROM = 'VIA-L Longevity <team@via-l.com>';
-
 const EMAIL_T = {
   uk: {
     payment_subj:  (prog) => `VIA-L · ${prog} — заповніть анкету`,
