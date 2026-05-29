@@ -138,22 +138,26 @@
     /* ═══ HERO ═══ */
     #hero {
       min-height: 100vh;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      align-items: stretch;
-      margin-top: 0;
-      padding-top: 0;
       position: relative;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
     }
-    .hero-left {
-      display: flex; flex-direction: column; justify-content: center;
-      padding: clamp(48px,8vh,96px) clamp(24px,4vw,64px) clamp(48px,8vh,80px) clamp(44px,6vw,112px);
-      position: relative; z-index: 1;
+    .hero-right {
+      position: absolute; inset: 0; z-index: 0;
+      overflow: hidden;
     }
-    .hero-right { position: relative; overflow: hidden; }
     .hero-img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
-    .hero-right::before { content: none; }
-    .hero-right::after { content: none; }
+    .hero-left {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column; justify-content: center;
+      padding: clamp(96px,12vh,140px) clamp(44px,6vw,112px) clamp(80px,10vh,120px);
+      max-width: 600px;
+      background: linear-gradient(to right,
+        rgba(245,243,239,0.94) 0%,
+        rgba(245,243,239,0.80) 60%,
+        transparent 100%);
+    }
 
     .prog-tag { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
     .prog-tag::before { content: ''; width: 22px; height: 1px; background: var(--gold-pale); }
@@ -310,11 +314,16 @@
     /* ═══ RESPONSIVE ═══ */
     @media (max-width: 900px) {
       nav { padding: 14px 24px; }
-      #hero { grid-template-columns: 1fr; min-height: 100vh; margin-top: 0; padding-top: 0; position: relative; }
-      .hero-right { height: 90vw; min-height: 360px; }
-      .hero-img { object-position: center 18%; }
-      .hero-right::before { content: none; }
-      .hero-left { padding: 32px 24px 40px; }
+      #hero { min-height: 100vh; }
+      .hero-left {
+        max-width: 100%;
+        padding: 120px 24px 56px;
+        background: linear-gradient(to bottom,
+          transparent 0%,
+          rgba(245,243,239,0.82) 35%,
+          rgba(245,243,239,0.96) 65%,
+          rgba(245,243,239,1) 100%);
+      }
       .biochem-grid, .stages-grid { grid-template-columns: 1fr; }
       .stage-card.full-width { grid-column: span 1; }
       .for-whom-grid { grid-template-columns: 1fr; }
