@@ -426,7 +426,7 @@ async function handleHotmartWebhook(request, env, corsHeaders) {
       lang,
       status:     'pending',
       ts:         new Date().toISOString(),
-    }), { expirationTtl: 90 * 24 * 60 * 60 });
+    }), { expirationTtl: 180 * 24 * 60 * 60 });
   }
 
   const programName = PROGRAM_NAMES[product.program] || product.program;
@@ -592,7 +592,7 @@ async function handleIntakeSubmit(request, env, corsHeaders) {
     answers,
     submitted_lang: clientLang || intake.lang,
     submitted_at:   new Date().toISOString(),
-  }), { expirationTtl: 90 * 24 * 60 * 60 });
+  }), { expirationTtl: 180 * 24 * 60 * 60 });
 
   // Claude: translate to Russian + AI bullets (fail-safe)
   let aiBlock = '';
@@ -762,7 +762,7 @@ async function handleScheduleSession(request, env, corsHeaders) {
     session_date: date,
     session_time: time,
     scheduled_at: new Date().toISOString(),
-  }), { expirationTtl: 90 * 24 * 60 * 60 });
+  }), { expirationTtl: 180 * 24 * 60 * 60 });
 
   // TG to nutritionist
   await sendTelegram(env,
