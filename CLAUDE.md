@@ -16,7 +16,6 @@ There is **no build system, no package manager, no tests**. Files are served as-
 
 - `index.html` (~3.8k lines) — landing page. All CSS, JS, and translations are inline.
 - `*-program.html` — one self-contained page per program: `Menopauza`, `Andropauza`, `Antivikove`, `Estrogen`. Each is also fully inline.
-- `accompaniment-block.html` — standalone "програма супроводу" block (its own mini lang switcher).
 - `book/` — the guide flipbook system (see below).
 - `monogram/index .html` (note the space in the filename) — single-SVG logo asset.
 - `приложение   Oura копія/` — separate Oura Ring lab-interpreter app, **not part of the main site** (`<meta name="robots" content="noindex,nofollow">`).

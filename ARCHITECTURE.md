@@ -50,7 +50,6 @@ Script, **один** Telegram-бот (`@viael_backstage_bot`) и **один** а
 | `Andropauza-program.html` | Программа «Андропауза» | `.lang-content` CSS (uk=`ua`) | ✓ |
 | `Antivikove-program.html` | Программа «Антивозрастное питание» | `data-i18n` | ✓ |
 | `Estrogen-program.html` | Программа «Эстрогеновый метаболизм» | смешанная | ✓ |
-| `accompaniment-block.html` | Отдельный блок «програма супроводу» (свой мини-переключатель) | свой | — |
 | `program-intake.html` | Анкета-опросник после оплаты программы (токен в URL) | uk/ru | — (noindex по смыслу) |
 | `cabinet/index.html` | **Внутренний** кабинет нутрициолога — локальный CRM клиентов в `localStorage` | — | — |
 | `legal/{cookies,legal,privacy,terms}.html` | Юридические страницы | — | — |
