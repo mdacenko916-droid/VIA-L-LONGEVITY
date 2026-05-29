@@ -5042,19 +5042,18 @@ console.log('[index.html] Parent click handler attached');
       initStars(); drawStars(); rebuild(); fixMobilePosition();
       window.addEventListener('resize',onResize);
 
-      var guidesSec=document.getElementById('guides');
-      if(guidesSec){
+      var animSec=document.getElementById('interpreter')||med.closest('section')||med;
+      if(animSec){
         var scrollT;
-        var guidesIO=new IntersectionObserver(function(entries){
+        var animIO=new IntersectionObserver(function(entries){
           entries.forEach(function(e){ if(e.isIntersecting) resumeAnim(); else pauseAnim(); });
         },{threshold:0.05});
-        guidesIO.observe(guidesSec);
+        animIO.observe(animSec);
         window.addEventListener('scroll',function(){
-          pauseAnim();
           clearTimeout(scrollT);
           scrollT=setTimeout(function(){
-            var r=guidesSec.getBoundingClientRect();
-            if(r.bottom>0&&r.top<window.innerHeight) resumeAnim();
+            var r=animSec.getBoundingClientRect();
+            if(r.bottom>0&&r.top<window.innerHeight) resumeAnim(); else pauseAnim();
           },200);
         },{passive:true});
       }
