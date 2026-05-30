@@ -5064,6 +5064,21 @@ function renderHistory(){
 }
 
 // ══ OURA SLIDER ══════════════════════════════════════════
+const STATUS_I18N={
+  en:{'Низкий':'Low','Норма':'Normal','Высокий':'High','Плохо':'Poor','Good':'Good','Excellent':'Excellent','Normal':'Normal','Низкое':'Low','Высокое':'High','Low':'Low','Высокая':'High'},
+  uk:{'Низкий':'Низький','Норма':'Норма','Высокий':'Високий','Плохо':'Погано','Good':'Добре','Excellent':'Чудово','Normal':'Норма','Низкое':'Низьке','Высокое':'Високе','Low':'Низько','Высокая':'Висока'},
+  ru:{'Низкий':'Низкий','Норма':'Норма','Высокий':'Высокий','Плохо':'Плохо','Good':'Хорошо','Excellent':'Отлично','Normal':'Норма','Низкое':'Низкое','Высокое':'Высокое','Low':'Низкий','Высокая':'Высокая'},
+  es:{'Низкий':'Bajo','Норма':'Normal','Высокий':'Alto','Плохо':'Malo','Good':'Bueno','Excellent':'Excelente','Normal':'Normal','Низкое':'Bajo','Высокое':'Alto','Low':'Bajo','Высокая':'Alto'},
+  de:{'Низкий':'Niedrig','Норма':'Normal','Высокий':'Hoch','Плохо':'Schlecht','Good':'Gut','Excellent':'Ausgezeichnet','Normal':'Normal','Низкое':'Niedrig','Высокое':'Hoch','Low':'Niedrig','Высокая':'Hoch'},
+  pt:{'Низкий':'Baixo','Норма':'Normal','Высокий':'Alto','Плохо':'Ruim','Good':'Bom','Excellent':'Excelente','Normal':'Normal','Низкое':'Baixo','Высокое':'Alto','Low':'Baixo','Высокая':'Alto'},
+  fr:{'Низкий':'Bas','Норма':'Normal','Высокий':'Élevé','Плохо':'Mauvais','Good':'Bien','Excellent':'Excellent','Normal':'Normal','Низкое':'Bas','Высокое':'Élevé','Low':'Bas','Высокая':'Élevée'},
+  pl:{'Низкий':'Niskie','Норма':'Norma','Высокий':'Wysokie','Плохо':'Słabe','Good':'Dobre','Excellent':'Doskonałe','Normal':'Normalne','Низкое':'Niskie','Высокое':'Wysokie','Low':'Niskie','Высокая':'Wysokie'},
+  it:{'Низкий':'Basso','Норма':'Normale','Высокий':'Alto','Плохо':'Scarso','Good':'Buono','Excellent':'Eccellente','Normal':'Normale','Низкое':'Basso','Высокое':'Alto','Low':'Basso','Высокая':'Alto'},
+  he:{'Низкий':'נמוך','Норма':'תקין','Высокий':'גבוה','Плохо':'גרוע','Good':'טוב','Excellent':'מצוין','Normal':'תקין','Низкое':'נמוך','Высокое':'גבוה','Low':'נמוך','Высокая':'גבוה'},
+  ja:{'Низкий':'低い','Норма':'正常','Высокий':'高い','Плохо':'悪い','Good':'良好','Excellent':'優秀','Normal':'正常','Низкое':'低い','Высокое':'高い','Low':'低い','Высокая':'高い'},
+  ko:{'Низкий':'낮음','Норма':'정상','Высокий':'높음','Плохо':'나쁨','Good':'좋음','Excellent':'우수','Normal':'정상','Низкое':'낮음','Высокое':'높음','Low':'낮음','Высокая':'높음'},
+};
+function _statusT(s){return (STATUS_I18N[lang]&&STATUS_I18N[lang][s])||(STATUS_I18N.en&&STATUS_I18N.en[s])||s;}
 const SLIDER_CFG={
   hrv:{min:10,max:120,normLow:40,normHigh:80,unit:'мс',labels:{low:'Низкий',ok:'Норма',high:'Высокий'},color:{low:'#FF6B8A',ok:'#4ECCA3',high:'#4ECCA3'}},
   sq:{min:1,max:10,normLow:6,normHigh:8,unit:'/10',labels:{low:'Плохо',ok:'Good',high:'Excellent'},color:{low:'#FF6B8A',ok:'#4ECCA3',high:'#4ECCA3'}},
@@ -5087,7 +5102,7 @@ function ouraSlider(id,val){
   if(id==='rhr'){if(val<normLow){status=labels.low;clr=color.low;}else if(val<=normHigh){status=labels.ok;clr=color.ok;}else{status=labels.high;clr=color.high;}}
   else{if(val<normLow){status=labels.low;clr=color.low;}else if(val<=normHigh){status=labels.ok;clr=color.ok;}else{status=labels.high;clr=color.high;}}
   const statusEl=document.getElementById(id+'-status');
-  if(statusEl){statusEl.textContent=status;statusEl.style.color=clr;}
+  if(statusEl){statusEl.textContent=_statusT(status);statusEl.style.color=clr;}
   if(fill)fill.style.background=`linear-gradient(90deg,${clr}44,${clr}bb)`;
   if(marker)marker.style.boxShadow=`0 0 8px ${clr}88,0 2px 6px rgba(0,0,0,.4)`;
   const range=document.getElementById(id+'-range');
