@@ -582,19 +582,22 @@ function t(k){ return T[lang][k] || T.ru[k] || k; }   // fallback на ru
 | Worker root `https://interpreter.viaelcom.workers.dev/` | `GET /` | 404 (норма — root принимает только POST для AI) |
 | `POST /` AI-анализ | `curl POST {data,lang:'en'}` | ✅ 200, возвращает живой Claude markdown |
 | `POST /hotmart-webhook` | POST с пустым body + правильным token | 200 `{ok:true}` (skipped — нет event) |
-| **`POST /hotmart-webhook` с ЗАВЕДОМО НЕВЕРНЫМ `x-hotmart-hottok`** | `curl -H 'x-hotmart-hottok: wrong-token-test' …` | ⚠️ **200 `{ok:true,warning:'unknown_product_id'}`** — токен **не отверг запрос**, прошёл проверку |
+| `POST /hotmart-webhook` с заведомо НЕВЕРНЫМ `x-hotmart-hottok` | `curl -H 'x-hotmart-hottok: wrong' …` | ✅ 401 `{ok:false,error:'invalid_token'}` (после установки секрета 2026-05-30 21:35) |
+| `POST /hotmart-webhook` без заголовка `x-hotmart-hottok` | `curl …` | ✅ 401 — токен-валидация защищает endpoint |
 | KV `PROGRAM_INTAKES.put` | косвенно — через `/intake-submit` (не тестировано через curl) | предполагается ОК — KV namespace привязан |
 | KV `EXPERT_DRAFTS.put` | косвенно — через `/draft` | предполагается ОК |
 | Brevo email | косвенно — через `handleInterpreterPurchase` после выдачи кода | предполагается ОК (BREVO_API_KEY должен быть установлен) |
 | Telegram bot | не тестировано напрямую (требует токен) | предполагается ОК (бот в продакшне работает per [[project-program-bot]]) |
 
-#### 🚩 Красные флаги
+#### Заметки
 
-1. **`HOTMART_TOKEN` секрет, возможно, НЕ установлен в production.** Тест показал, что POST с произвольным `x-hotmart-hottok` принимается. Код Worker'а: `if (env.HOTMART_TOKEN && hottok !== env.HOTMART_TOKEN) return 401;` — если `env.HOTMART_TOKEN` пуст, проверка обходится. **Любой может спуфить webhook и тратить коды доступа.** Срочно: `wrangler secret list` чтобы подтвердить, и `wrangler secret put HOTMART_TOKEN` если не установлено. Ожидаемое значение: `vial-hotmart-2026` (из памяти [[project_program_bot]]).
+1. ✅ **HOTMART_TOKEN секрет установлен и работает** (подтверждено 2026-05-30 21:35 серией curl-тестов: левый токен → 401, правильный `vial-hotmart-2026` → 200). Webhook защищён от спуфинга.
 
-2. **`vial-claude-proxy` legacy worker всё ещё активен** (см. §8). Никто из кода на него не ходит, но он живёт. Можно удалить `wrangler delete vial-claude-proxy` для чистоты.
+2. **`vial-claude-proxy` legacy worker всё ещё активен** (см. §8). Никто из кода на него не ходит, но он живёт. Можно удалить `wrangler delete vial-claude-proxy` для чистоты, если хочешь.
 
 3. **Apps Script BACKSTAGE_DRAFT_URL** в `apps-script.js:40` — захардкожен. После любого изменения URL воркера нужно **вручную** пересохранить и задеплоить Apps Script (нет автодеплоя из репо). На 2026-05-30 значение корректное: `https://interpreter.viaelcom.workers.dev/draft`.
+
+4. **Тестовые curl-запросы к `/hotmart-webhook` могут шуметь в TG-боте** если они проходят token-валидацию: с правильным `x-hotmart-hottok` + body `{"event":"PURCHASE_APPROVED"}` без productId Worker отправит «⚠ Hotmart: неизвестный product_id» нутрициологу. При диагностических curl-тестах либо посылай пустой body `{}` (skipped, без TG), либо предупреди нутрициолога.
 
 ### 10.9 Оплата Hotmart → код доступа
 
