@@ -390,11 +390,35 @@ function t(k){ return T[lang][k] || T.ru[k] || k; }   // fallback на ru
 - **Worker:** `cd interpreter && wrangler deploy`.
 - **Apps Script:** вручную через script.google.com (автодеплоя нет).
 
-> ⚠️ **Два хостнейма Worker'а в коде** (требует верификации деплоя, см. §9):
-> страницы ИП и Apps Script зовут `vial-claude-proxy.viaelcom.workers.dev`,
-> а `program-intake.html` зовёт `interpreter.viaelcom.workers.dev`
-> (= имя из `wrangler.jsonc`). Вероятно, один и тот же код задеплоен под двумя
-> именами.
+### Cloudflare-инфраструктура — единый источник истины
+
+> Зафиксировано 2026-05-30 после проверки дашборда Cloudflare (`dash.cloudflare.com` → Workers & Pages).
+
+**Аккаунт:** `Viaelcom@gmail.com` (account subdomain: **`viaelcom`**, НЕ `viaelcom-gmail-s-a` — этот субдомен не существует и был ошибочно записан в одной из прошлых сессий).
+
+**Активные воркеры:**
+
+| Воркер | Production URL | Назначение | Деплоится из |
+|---|---|---|---|
+| **`interpreter`** | `https://interpreter.viaelcom.workers.dev` | основной: AI-прокси (`POST /`), Hotmart webhook (`/hotmart-webhook`), TG-бот (`/tg-webhook`, `/draft`), intake-API (`/intake-validate`, `/intake-submit`, `/schedule-session`) | `interpreter/cloudflare-worker.js` (+ `wrangler.jsonc`) |
+| `vial-claude-proxy` | `https://vial-claude-proxy.viaelcom.workers.dev` | **legacy**, отдаёт 404. Никто из кода на него не ходит. Оставлен как есть, чтобы случайно не сломать что-то скрытое (можно удалить через `wrangler delete vial-claude-proxy` если решишь почистить) | — |
+
+**Кто куда стучится** (после фикса 2026-05-30):
+
+| Файл | Константа | URL |
+|---|---|---|
+| `interpreter/interpreter-pro.html` | `AI_WORKER` | `https://interpreter.viaelcom.workers.dev` |
+| `interpreter/interpreter-pro-expert.html` | `AI_WORKER` | `https://interpreter.viaelcom.workers.dev` |
+| `interpreter/interpreter-elite.html` | `AI_WORKER` | `https://interpreter.viaelcom.workers.dev` |
+| `program-intake.html` | `WORKER` | `https://interpreter.viaelcom.workers.dev` |
+| `interpreter/apps-script.js` (Google Apps Script) | `BACKSTAGE_DRAFT_URL` | `https://interpreter.viaelcom.workers.dev/draft` |
+| Hotmart panel (webhook на 4 интерпретатор-продуктах и 4 программы-продуктах) | — | `https://interpreter.viaelcom.workers.dev/hotmart-webhook` |
+
+**Worker secrets** (через `wrangler secret put`, НЕ в `vars`): `CLAUDE_API_KEY`, `TELEGRAM_BOT_TOKEN`, `NUTRITIONIST_CHAT_ID`, `BREVO_API_KEY`, `APPS_SCRIPT_URL`, `HOTMART_TOKEN`.
+
+**Worker KV bindings:** `EXPERT_DRAFTS` (TTL 7д), `PROGRAM_INTAKES` (TTL 180д).
+
+> ⚠️ **Apps Script не деплоится автоматически** из репозитория. После любой правки `interpreter/apps-script.js` нужно: открыть `script.google.com` → проект интерпретатора → вставить новую версию → **Deploy → Manage deployments → New version**. Иначе backend будет работать на старом коде, а файл в репо — расходиться с реальностью.
 
 ---
 

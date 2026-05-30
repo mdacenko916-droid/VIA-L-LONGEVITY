@@ -266,9 +266,23 @@ HTTP-прокси между интерпретатором (браузер) и 
 }
 ```
 
-Секрет: `CLAUDE_API_KEY` — задаётся через `wrangler secret put CLAUDE_API_KEY`.
+Секреты (все через `wrangler secret put`, НЕ в `vars`): `CLAUDE_API_KEY`, `TELEGRAM_BOT_TOKEN`, `NUTRITIONIST_CHAT_ID`, `BREVO_API_KEY`, `APPS_SCRIPT_URL`, `HOTMART_TOKEN`.
 
-Деплой: `wrangler deploy` (Cloudflare Workers, edge-сеть).
+KV-биндинги: `EXPERT_DRAFTS` (TTL 7д), `PROGRAM_INTAKES` (TTL 180д).
+
+Деплой: `cd interpreter && wrangler deploy` (Cloudflare Workers, edge-сеть).
+
+### 5.2.1 Канонический URL воркера
+
+> Зафиксировано 2026-05-30 по дашборду Cloudflare. Полная картина инфраструктуры — в корневом [ARCHITECTURE.md § «Cloudflare-инфраструктура»](../ARCHITECTURE.md).
+
+Аккаунт: `Viaelcom@gmail.com`, **account subdomain — `viaelcom`** (НЕ `viaelcom-gmail-s-a`). Воркер `interpreter` живёт на:
+
+```
+https://interpreter.viaelcom.workers.dev
+```
+
+Все fetch'и из `interpreter-pro.html`, `interpreter-pro-expert.html`, `interpreter-elite.html`, `program-intake.html` (`AI_WORKER` / `WORKER` константа) и Apps Script (`BACKSTAGE_DRAFT_URL`) указывают на этот хостнейм. Любая другая форма (`viaelcom-gmail-s-a`, `vial-claude-proxy`) — устарела или ошибочна.
 
 ### 5.3 Модель
 
