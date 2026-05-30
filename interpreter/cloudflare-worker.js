@@ -807,6 +807,25 @@ async function handleAnalyze(request, env, corsHeaders) {
   };
   const bmiTerm = bmiTermMap[lang] || 'BMI';
 
+  // Глоссарий ключевых медицинских терминов на каждом языке —
+  // даём Claude готовые слова, чтобы он не "изобретал" псевдо-местные
+  // термины из русских корней (заметная проблема Haiku на pl/he/ja/ko).
+  const glossaryMap = {
+    en: 'Perimenopause / Menopause / Postmenopause / Andropause / Pre-andropause; HRV; insulin sensitivity; cortisol; abdominal obesity; supplement / dosage; nutritionist',
+    es: 'Perimenopausia / Menopausia / Postmenopausia / Andropausia / Preandropausia; VFC (HRV); sensibilidad a la insulina; cortisol; obesidad abdominal; suplemento / dosis; nutricionista',
+    de: 'Perimenopause / Menopause / Postmenopause / Andropause / Prä-Andropause; HRV; Insulinsensitivität; Cortisol; abdominale Adipositas; Nahrungsergänzungsmittel / Dosierung; Ernährungsberaterin',
+    pt: 'Perimenopausa / Menopausa / Pós-menopausa / Andropausa / Pré-andropausa; VFC (HRV); sensibilidade à insulina; cortisol; obesidade abdominal; suplemento / dosagem; nutricionista',
+    fr: 'Périménopause / Ménopause / Post-ménopause / Andropause / Pré-andropause; VFC (HRV); sensibilité à l\'insuline; cortisol; obésité abdominale; complément / posologie; spécialiste en nutrition',
+    pl: 'Perimenopauza / Menopauza / Postmenopauza / Andropauza / Preandropauza; HRV (zmienność rytmu serca); wrażliwość insulinowa; kortyzol; otyłość brzuszna; suplement / dawkowanie; dietetyczka',
+    it: 'Perimenopausa / Menopausa / Postmenopausa / Andropausa / Preandropausa; HRV (variabilità della frequenza cardiaca); sensibilità all\'insulina; cortisolo; obesità addominale; integratore / dosaggio; specialista in nutrizione',
+    he: 'פרי-מנופאוזה / מנופאוזה / פוסט-מנופאוזה / אנדרופאוזה / טרום-אנדרופאוזה; HRV; רגישות לאינסולין; קורטיזול; השמנה בטנית; תוסף / מינון; תזונאית',
+    ja: '周閉経期 / 閉経 / 閉経後 / アンドロポーズ / プレアンドロポーズ; HRV (心拍変動); インスリン感受性; コルチゾール; 腹部肥満; サプリメント / 投与量; 栄養士',
+    ko: '폐경전기 / 폐경 / 폐경후 / 남성갱년기 / 갱년기전; HRV (심박변이도); 인슐린 감수성; 코르티솔; 복부비만; 보충제 / 용량; 영양사',
+    ru: '(внутренний язык KB)',
+    uk: 'Перименопауза / Менопауза / Постменопауза / Андропауза / Передандропауза; ВСР (HRV); чутливість до інсуліну; кортизол; абдомінальне ожиріння; добавка / дозування; нутриціолог',
+  };
+  const glossary = glossaryMap[lang] || glossaryMap.en;
+
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -832,7 +851,14 @@ async function handleAnalyze(request, env, corsHeaders) {
             'Если входные данные пользователя содержат русские термины (например "Перименопауза", "ниже нормы") — переведи их на ' + langName + ' в своём ответе.\n' +
             'Локальные термины (используй ИМЕННО эти в своём ответе, НЕ оставляй русские аббревиатуры из KB):\n' +
             ' • "ИМТ" (Body Mass Index) → пиши: ' + bmiTerm + '\n' +
-            ' • "WHtR" → оставь как WHtR (универсальная аббревиатура).',
+            ' • "WHtR" → оставь как WHtR (универсальная аббревиатура).\n' +
+            '\n' +
+            'КРИТИЧНО — НЕ ИЗОБРЕТАЙ слова. Используй ТОЛЬКО реальные, существующие слова языка ' + langName + '. ' +
+            'Не транслитерируй русские термины в "псевдо-' + langName + '" — это создаёт несуществующие слова (например "Menstualizm", "Kapryma", "przemytowy" — это НЕ польский, это галлюцинация модели).\n' +
+            'Если ты не уверен в локальном термине — используй универсальный английский термин курсивом (например "*insulin sensitivity*", "*cortisol*").\n' +
+            '\n' +
+            'Глоссарий ключевых терминов на ' + langName + ' (используй именно эти формы):\n' +
+            glossary,
           cache_control: { type: 'ephemeral' },
         },
       ],
