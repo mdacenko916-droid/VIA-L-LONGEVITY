@@ -439,9 +439,249 @@ function t(k){ return T[lang][k] || T.ru[k] || k; }   // fallback на ru
 - [ ] `EMAIL_T` (письма потока программы) — только 4 языка; de/pt/fr/pl/it/he/ja/ko падают на en.
 - [ ] Reject-ветка Expert-разбора: TODO «отправить клиенту вежливое сообщение `требуется уточнение`» (`cloudflare-worker.js`, ~стр. 1163) — не реализовано.
 - [ ] Zoom-ссылка для сессии добавляется нутрициологом **вручную** (не автоматизировано).
-- [ ] Подтвердить деплой Worker под одним именем (см. §8, два хостнейма).
 - [ ] `cabinet/index.html` — данные только в `localStorage` одного браузера (нет синхронизации/бэкенда).
 - [ ] Неиспользуемая константа `EMAIL_FROM` в Worker (sender захардкожен в `sendEmail`).
+
+---
+
+## 10. Механика работы Интерпретатора — operational handbook
+
+> Зафиксировано 2026-05-30 чтением `cloudflare-worker.js`, `apps-script.js`,
+> `code-generator.html` и 4 интерпретатор-HTML. Все цифры/URL/обработчики
+> сверены с актуальным кодом. **Этот раздел читается каждой новой сессией —
+> не выдумывай альтернатив, ground truth здесь.**
+
+### 10.1 Кнопки на результирующей странице — по тарифам
+
+| Тариф | Кнопки в `stepResult` | JS-обработчик | Что делает |
+|---|---|---|---|
+| **VIO** (`interpreter-vio.html`) | `restart` · `downloadPDF` · `navTo('history')` · `navTo('home')` | стандартные | пройти заново · скачать PDF · перейти в историю · перейти на главную |
+| **PRO** (`interpreter-pro.html`) | `restart` · `downloadPDF` · `navTo(history/home)` · `checkCode` (re-auth) · `toggleGateVis` · `sendMaxRequest` (показывается?) | те же + Expert-блок если код активен | то же + кнопка «Pro+Expert» — апсейл-форма (запрос разбора нутрициолога), отправляет на Apps Script `?action=expert` |
+| **PRO+EXPERT** (`interpreter-pro-expert.html`) | `restart` · `downloadPDF` · `navTo(history/home)` · `sendMaxRequest` | те же | то же + основная функция: `sendMaxRequest()` шлёт письменный запрос разбора (до 2 в окне 30 дней, cooldown 7 дней) |
+| **ELITE** (`interpreter-elite.html`) | `restart` · `downloadPDF` · `navTo(history/home)` · `sendMaxRequest` · **`requestZoom`** · `window.location='index.html'` | те же + Zoom-блок | + еженедельный PDF (до 8 для 8w / 12 для 12w) + Zoom-запрос (только uk/ru — см. §10.6) |
+
+**Общий поток для всех тарифов** (после прохождения шагов):
+- кнопка «Показать результат →» вызывает `showResults()` (или `proceedFromStep15()` для PRO+EXPERT/ELITE — гейтит на Анкету при `_onboardingPending=true`)
+- `showResults` запускает `fetchAIAnalysis(data, lang)` → POST на Cloudflare Worker
+- параллельно отображаются клинические паттерны (KB) и блок Expert (если тариф позволяет)
+
+### 10.2 Анкета (Onboarding) — flow
+
+Применима к **ELITE** (живёт давно) и **PRO+EXPERT** (frontend закоммичен в `5124cca`, backend ещё нужно дописать в Apps Script).
+
+```
+Клиент жмёт «Показать результат» на step15
+        │
+        ▼ proceedFromStep15() → если _onboardingPending=true:
+        │   • прячет все .step, показывает stepOnboarding (HTML-блок ~140 строк)
+        │   • 3 секции, ~14 полей: Контакты / Цели / История здоровья
+        │
+        ▼ Клиент жмёт «Показать мой результат →» (submitOnboarding)
+        │   • валидация email
+        │   • window._onboardingAnswers = {...все поля...}
+        │   • переход на stepResult
+        │
+        ▼ Клиент жмёт «Отправить запрос нутрициологу →» (sendMaxRequest)
+        │   • POST на APPS_SCRIPT_URL?action=expert
+        │     params: action, code, name, email, question, lang,
+        │             data (биометрия), onboarding (JSON-строка ответов анкеты)
+        │
+        ▼ Apps Script handleExpert (apps-script.js:88+)
+            • сохраняет анкету в колонку H Sheet (один раз — повторно не пишет)
+            • вызывает POST BACKSTAGE_DRAFT_URL (= interpreter.viaelcom.workers.dev/draft)
+            • Worker handleDraft: пишет в KV EXPERT_DRAFTS (TTL 7д), генерирует AI-bullets, шлёт TG-карточку нутрициологу
+```
+
+- **Endpoint:** `https://script.google.com/.../exec?action=expert` (POST через URLSearchParams)
+- **Поля в payload:** `code`, `name`, `email`, `question`, `lang`, `data` (JSON биометрии), `onboarding` (JSON-строка) опционально
+- **Хранилище:** Sheet (Google Sheets) колонка H = JSON-объект ответов анкеты + lang + ts. Storage один раз — повторная анкета игнорируется
+- **Язык:** Анкета хранится на языке, на котором заполнялась (поле `lang` сохраняется). Сообщение нутрициологу в TG — на русском (нутрициолог работает на ru/uk, Worker не переводит анкету)
+- **Дублирование:** клиент видит/заполняет 1 раз за всю подписку (флаг `onboarding_required` из validateCode становится false после сохранения)
+
+### 10.3 Telegram-бот `@viael_backstage_bot`
+
+**Один бот для нутрициолога** — никаких клиентских ботов. Только back-stage.
+
+| Событие | Триггер | Сообщение генерируется | Куда | Как (Worker handler) |
+|---|---|---|---|---|
+| **Покупка ИП** | Hotmart `PURCHASE_APPROVED` → `/hotmart-webhook` | `🧬 Интерпретатор — TIER\n👤 имя\n📧 email\n💰 цена\n🇺🇦 язык\n🔑 Код` | `NUTRITIONIST_CHAT_ID` | `handleHotmartWebhook` → `handleInterpreterPurchase` → `sendTelegram` |
+| **Закончились коды тарифа** | Apps Script вернул `no_codes_available` | `🚨 КОДЫ {TIER} ЗАКОНЧИЛИСЬ` + инструкция | `NUTRITIONIST_CHAT_ID` | тот же `handleInterpreterPurchase` шлёт отдельный алерт |
+| **Покупка программы** | Hotmart `PURCHASE_APPROVED` для product_id программы | `🧬 Менопауза / Andro / Anti / Estro\n👤\n📧\n💰\n🇺🇦 + token-link на анкету` | `NUTRITIONIST_CHAT_ID` | `handleHotmartWebhook` (ветка programs) → KV `PROGRAM_INTAKES:intake:{token}` |
+| **Заполнена анкета программы** | клиент сабмитит `program-intake.html` → `/intake-submit` | блок «Программа: ... · Анкета 4 секции» с inline-кнопкой «📅 Назначить сессию» | `NUTRITIONIST_CHAT_ID` | `handleIntakeSubmit` |
+| **Выбрана дата сессии** | клиент жмёт календарь → `/schedule-session` | `📅 Клиент выбрал время · дата · время UTC+2` | `NUTRITIONIST_CHAT_ID` | `handleScheduleSession` |
+| **Expert-запрос (PRO+EXPERT / ELITE)** | Apps Script → POST `/draft` | детальная карточка: биометрия + симптомы + AI-bullets (5–7) + Anketa-блок (если ELITE) + inline-кнопки `📝 Ответить` `🔄 Перевести` | `NUTRITIONIST_CHAT_ID` | `handleDraft` → renders + sendTelegram + KV `EXPERT_DRAFTS:draft:{request_id}` TTL 7д |
+| **Inline-кнопка нажата нутрициологом** | Telegram callback_query → `/tg-webhook` | edit message + сохраняет состояние редактирования в KV `EXPERT_DRAFTS:editing:{chat_id}` (10 мин) | сам нутрициолог | `handleTgWebhook` → `handleTgCallback` |
+| **Нутрициолог ответил текстом** | `handleTgMessage` (text after «📝 Ответить») | `translateReply()` → Apps Script `{action:'send_report'}` → клиенту email с PDF | клиент (через Apps Script + Brevo) | `handleTgMessage` |
+
+**Идентификаторы:**
+- Bot username: `@viael_backstage_bot`
+- `NUTRITIONIST_CHAT_ID = 383599103` (хранится в Worker env, не в коде)
+- Webhook URL Telegram → Worker: `https://interpreter.viaelcom.workers.dev/tg-webhook`
+
+### 10.4 AI-анализ (handleAnalyze)
+
+| Параметр | Значение |
+|---|---|
+| **URL** | `POST https://interpreter.viaelcom.workers.dev/` (root, без префикса) |
+| **Method** | POST `application/json` |
+| **Body** | `{ data: {…биометрия…}, lang: 'en'\|... }` |
+| **Модель** | `claude-haiku-4-5-20251001` (Anthropic) |
+| **max_tokens** | 1600 |
+| **Cache control** | `cache_control: { type: 'ephemeral' }` на system-сообщение (5-минутный кэш) |
+| **System prompt структура** | `SYSTEM_PROMPT` (статичная клиническая KB, ~1500 строк на русском) + per-request language directive: «весь твой ответ на {langName}» + glossary 12 языков + BMI/IMC/ИМТ маппинг |
+| **User message** | `buildUserMessage(data, lang)` — структурированный summary биометрии и симптомов на русском |
+| **Response** | `{ analysis: "..." }` — markdown текст на языке пользователя |
+| **Запрос инициирует** | `fetchAIAnalysis(data, lang)` во всех 4 интерпретаторах (VIO + PRO + PRO+EXPERT + ELITE) после `showResults()` |
+| **Fallback** | Если Claude упал — UI показывает «⚠ Не удалось получить анализ. Попробуйте позже» |
+
+### 10.5 PDF-отчёт
+
+**Локальный PDF (генерируется в браузере):**
+- Кнопка `downloadPDF()` есть в `stepResult` всех 4 интерпретаторов
+- Использует `html2pdf.js` или встроенный механизм печати браузера (см. конкретный файл)
+- Сохраняется клиентом локально, на сервер не уходит
+
+**PDF от нутрициолога (PRO+EXPERT / ELITE):**
+- Не генерируется автоматически. Нутрициолог получает Expert-запрос (см. §10.3, ряд «Expert-запрос»), пишет ответ в TG-боте
+- Ответ через `handleTgMessage` → Apps Script `action=send_report` → Apps Script собирает HTML/PDF (используя `GmailApp` + Docs) и отправляет клиенту через Gmail/Brevo
+- Apps Script колонка G — JSON-массив дат отправленных PDF (счётчик лимита)
+
+### 10.6 Zoom и календарь
+
+**Zoom (ELITE-эксклюзив):**
+- Кнопка `Запросить Zoom →` в блоке `#zoomBlock` (line 3098 `interpreter-elite.html`)
+- Обработчик `requestZoom()` (line 3228) — отправляет запрос нутрициологу в TG
+- **Условие показа:** блок скрыт по умолчанию (`display:none`), показывается по логике приложения (вероятно только для uk/ru — `[[project_ip_tariffs]]` память подтверждает «ELITE Zoom-встречи опц. для uk/ru»). **Проверить** реальную условную логику в JS — флаг к доразбору
+- Zoom-ссылку и время нутрициолог отправляет вручную через TG/email — **не автоматизировано** (см. TODO §9)
+
+**Календарь (программы, не ИП):**
+- В `program-intake.html` есть `?calendar=1` режим с 21-дневной сеткой и слотами 09–19 UTC+2
+- Клиент выбирает дату/время → POST `/schedule-session` → KV PROGRAM_INTAKES обновляется + TG-уведомление нутрициологу
+
+### 10.7 Все секреты Worker'a (env variables)
+
+> Задаются через `wrangler secret put <NAME>` — никогда не в `vars`/файлах. Список из `wrangler.jsonc` комментариев + grep по коду:
+
+| Secret | Назначение | Используется в |
+|---|---|---|
+| `CLAUDE_API_KEY` | API-ключ Anthropic Claude для AI-анализа и AI-bullets | `handleAnalyze`, `generateAiBullets`, `translateReply` |
+| `TELEGRAM_BOT_TOKEN` | Токен @viael_backstage_bot | `sendTelegram*`, `tg*` функции |
+| `NUTRITIONIST_CHAT_ID` | `383599103` — chat нутрициолога для backstage-уведомлений | `sendTelegram` (default chat) |
+| `BREVO_API_KEY` | API Brevo (ex-Sendinblue) для транзакционных писем | `sendEmail` |
+| `APPS_SCRIPT_URL` | URL Google Apps Script web-app (валидация кодов, Expert-разборы, send_report) | `handleInterpreterPurchase`, `handleTgMessage`, и др. |
+| `HOTMART_TOKEN` | Ожидаемое значение заголовка `x-hotmart-hottok` для проверки подлинности webhook'а | `handleHotmartWebhook` |
+
+**KV namespaces** (заданы в `wrangler.jsonc`, не secret):
+- `EXPERT_DRAFTS` (id `646385ffc4d445f2b530dc8270249765`) — TTL 7д для draft'ов + 10 мин для editing-state
+- `PROGRAM_INTAKES` (id `f7e717d9bd6d4304aac8a28302b1dbfd`) — TTL 180д для intake-токенов программ
+
+### 10.8 Проверка доставки (health check от 2026-05-30)
+
+| Endpoint / Service | Тест | Результат |
+|---|---|---|
+| Worker root `https://interpreter.viaelcom.workers.dev/` | `GET /` | 404 (норма — root принимает только POST для AI) |
+| `POST /` AI-анализ | `curl POST {data,lang:'en'}` | ✅ 200, возвращает живой Claude markdown |
+| `POST /hotmart-webhook` | POST с пустым body + правильным token | 200 `{ok:true}` (skipped — нет event) |
+| **`POST /hotmart-webhook` с ЗАВЕДОМО НЕВЕРНЫМ `x-hotmart-hottok`** | `curl -H 'x-hotmart-hottok: wrong-token-test' …` | ⚠️ **200 `{ok:true,warning:'unknown_product_id'}`** — токен **не отверг запрос**, прошёл проверку |
+| KV `PROGRAM_INTAKES.put` | косвенно — через `/intake-submit` (не тестировано через curl) | предполагается ОК — KV namespace привязан |
+| KV `EXPERT_DRAFTS.put` | косвенно — через `/draft` | предполагается ОК |
+| Brevo email | косвенно — через `handleInterpreterPurchase` после выдачи кода | предполагается ОК (BREVO_API_KEY должен быть установлен) |
+| Telegram bot | не тестировано напрямую (требует токен) | предполагается ОК (бот в продакшне работает per [[project-program-bot]]) |
+
+#### 🚩 Красные флаги
+
+1. **`HOTMART_TOKEN` секрет, возможно, НЕ установлен в production.** Тест показал, что POST с произвольным `x-hotmart-hottok` принимается. Код Worker'а: `if (env.HOTMART_TOKEN && hottok !== env.HOTMART_TOKEN) return 401;` — если `env.HOTMART_TOKEN` пуст, проверка обходится. **Любой может спуфить webhook и тратить коды доступа.** Срочно: `wrangler secret list` чтобы подтвердить, и `wrangler secret put HOTMART_TOKEN` если не установлено. Ожидаемое значение: `vial-hotmart-2026` (из памяти [[project_program_bot]]).
+
+2. **`vial-claude-proxy` legacy worker всё ещё активен** (см. §8). Никто из кода на него не ходит, но он живёт. Можно удалить `wrangler delete vial-claude-proxy` для чистоты.
+
+3. **Apps Script BACKSTAGE_DRAFT_URL** в `apps-script.js:40` — захардкожен. После любого изменения URL воркера нужно **вручную** пересохранить и задеплоить Apps Script (нет автодеплоя из репо). На 2026-05-30 значение корректное: `https://interpreter.viaelcom.workers.dev/draft`.
+
+### 10.9 Оплата Hotmart → код доступа
+
+**1. Webhook URL** (настраивается в Hotmart panel для каждого product_id):
+```
+https://interpreter.viaelcom.workers.dev/hotmart-webhook
+```
+Header: `x-hotmart-hottok: vial-hotmart-2026` (на 2026-05-30 проверка может быть отключена — см. красный флаг §10.8).
+
+**2. product_id → tier mapping** (Worker `HOTMART_PRODUCTS`, lines 252–270):
+
+| product_id | Тариф | Цена | Code prefix (из `code-generator.html`) |
+|---|---|---|---|
+| `7838739` | PRO | $29/мес | **`VL-P-XXXXXXXX`** |
+| `7838826` | EXPERT | €79/мес | **`VL-X-XXXXXXXX`** |
+| `7838876` | ELITE-8W | €390 | **`VL-8-XXXXXXXX`** |
+| `7838925` | ELITE-12W | €590 | **`VL-12-XXXXXXXX`** |
+
+> Префиксы — `VL-P`, `VL-X`, `VL-8`, `VL-12` (НЕ `VL-E-`/`VL-L8-`/`VL-L12-` — последние были предположением, не реальностью). См. `interpreter/code-generator.html:157`.
+
+**3. Что происходит после успешной оплаты ИП:**
+
+```
+Hotmart POST /hotmart-webhook  (x-hotmart-hottok)
+        │
+        ▼ handleHotmartWebhook валидирует токен (если HOTMART_TOKEN установлен)
+        │   проверяет event === 'PURCHASE_APPROVED'
+        │   detectLangFromHotmart(data) — определяет язык клиента (12 опций)
+        │   HOTMART_PRODUCTS[productId] → tier
+        │
+        ▼ handleInterpreterPurchase  (если product.type === 'interpreter')
+        │   1) POST APPS_SCRIPT_URL {action:'assign_code', tier:'PRO'}
+        │   2) Apps Script handleAssignCode — ищет первую FREE-строку с этим tier
+        │      → меняет статус на ASSIGNED, ставит timestamp
+        │      → возвращает {ok:true, code:'VL-P-AB12CD34'}
+        │      → если нет FREE кодов: {ok:false, reason:'no_codes_available'}
+        │
+        ▼ Если код выдан:
+        │   • sendTelegram → карточка покупки нутрициологу
+        │   • sendEmail (Brevo) → клиенту: тариф, код, ссылка на ИП
+        │
+        ▼ Если кодов нет:
+            • sendTelegram → 🚨 алерт «КОДЫ {TIER} ЗАКОНЧИЛИСЬ»
+            • email клиенту НЕ отправляется (клиент платит, но кода нет — критично!)
+```
+
+**4. Где хранится код** (после генерации в `code-generator.html` → CSV → Google Sheets):
+- Google Sheet (один лист), колонки: `A=Код · B=Тариф · C=Статус · D=Дата активации · E=Истечение · F=Expert-history · G=PDF-history · H=Onboarding-JSON`
+- Статусы: `FREE` (свободен) → `ASSIGNED` (выдан клиенту, ещё не активен) → `ACTIVE` (клиент ввёл) → `EXPIRED` (срок вышел)
+
+**5. Доставка клиенту:**
+- Email от Brevo с темой типа `VIA-L Interpreter PRO — your access code` (12-язычные шаблоны в `buildInterpreterEmailBody`)
+- Sender: `viaelcom@gmail.com` (через Brevo)
+- Письмо содержит: код, ссылку «Open Interpreter», базовые инструкции
+- Hotmart также показывает страницу подтверждения после оплаты — это отдельный канал, не от нас
+
+**6. Ввод кода клиентом:**
+- На любой странице интерпретатора (`interpreter-vio/pro/pro-expert/elite.html`) первый экран — gate с полем `gateInput`
+- Кнопка «Увійти →» вызывает `checkCode()`:
+  ```
+  POST APPS_SCRIPT_URL?code=VL-P-AB12CD34
+  → Apps Script validateCode (apps-script.js:229+)
+    • FREE/ASSIGNED → переводит в ACTIVE, ставит expiry (30/56/84 дня)
+    • ACTIVE + срок не вышел → возвращает meta (плана, лимиты, onboarding_required)
+    • ACTIVE + истёк → переводит в EXPIRED, возвращает reason:'expired'
+    • EXPIRED → reason:'expired'
+    • нет в Sheet → reason:'invalid'
+  ```
+- На основе ответа: либо `gateUnlock(plan, code)` (показывает рабочий экран), либо `gateError(reason)` (показывает локализованное сообщение об ошибке — `gate_err_invalid`/`gate_err_used`/`gate_err_expired`/`gate_err_network`)
+
+**7. DEV-коды для тестирования** (обходят Apps Script, не записываются в Sheet):
+
+| Интерпретатор | DEV-коды |
+|---|---|
+| PRO | `VIAL-PRO-2024` |
+| PRO+EXPERT | `VIAL-EXPERT-2024` (без Анкеты) · `VIAL-EXPERT-ONB-2024` (с Анкетой) |
+| ELITE | `VIAL-ELITE-2024` · `VIAL-ELITE-8W` · `VIAL-ELITE-12W` |
+
+DEV-коды также допущены в Apps Script (`apps-script.js:43`) — там они получают плейсхолдер-email для send_report flow.
+
+**8. Что если код:**
+- **Неверный** (нет в Sheet) → `reason:'invalid'` → UI показывает «Code not found. Check your email.» (локализовано на 12 языках, ключ `gate_err_invalid`)
+- **Уже использован** (status=ACTIVE с истёкшим сроком) → `reason:'expired'` → «Your subscription has expired. Please renew.» (`gate_err_expired`)
+- **Истёк срок** (status=EXPIRED) → то же сообщение `gate_err_expired`
+- **Сетевая ошибка** → `reason:'network'` → «Connection error. Please try again.» (`gate_err_network`)
+
+(Кейса «уже использован но активен» нет — код переходит из FREE/ASSIGNED сразу в ACTIVE при первом входе, повторный вход с тем же кодом работает пока ACTIVE.)
 
 ---
 
