@@ -3225,12 +3225,28 @@ function renderExpertCounter(){
 }
 
 // ══ Zoom-консультация (только ru/uk) ═════════════════════════
+// Чтобы клиент не спамил TG нутрициолога после reload страницы — храним
+// timestamp последнего запроса в localStorage. В пределах ZOOM_COOLDOWN_MS
+// (24 часа) повторный клик не уйдёт, а UI показывает «уже отправлено».
+const ZOOM_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+function _zoomKey(){ return 'vial_zoom_requested_at:' + (sessionStorage.getItem('vial_code') || ''); }
+function _zoomRecentlyRequested(){
+  const ts = parseInt(localStorage.getItem(_zoomKey()) || '0', 10);
+  return ts && (Date.now() - ts) < ZOOM_COOLDOWN_MS;
+}
+function _zoomShowSentState(){
+  const btn = document.getElementById('zoomBtn');
+  const sent = document.getElementById('zoomSent');
+  if (btn) btn.style.display = 'none';
+  if (sent) sent.style.display = 'block';
+}
 async function requestZoom(){
-  const code = sessionStorage.getItem('vial_code') || '';
-  const email = (document.getElementById('maxEmail')?.value || '').trim();
   const btn = document.getElementById('zoomBtn');
   const sent = document.getElementById('zoomSent');
   if (!btn) return;
+  if (_zoomRecentlyRequested()) { _zoomShowSentState(); return; }
+  const code = sessionStorage.getItem('vial_code') || '';
+  const email = (document.getElementById('maxEmail')?.value || '').trim();
   btn.disabled = true;
   btn.textContent = '⏳ ' + (T[lang]?.counter_sending || 'Отправляем…');
   try {
@@ -3242,8 +3258,8 @@ async function requestZoom(){
     });
     // Image beacon (Apps Script примет, но ответ читать необязательно — отправка односторонняя).
     new Image().src = APPS_SCRIPT_URL + '?' + params.toString();
-    btn.style.display = 'none';
-    if (sent) sent.style.display = 'block';
+    localStorage.setItem(_zoomKey(), Date.now().toString());
+    _zoomShowSentState();
   } catch(e) {
     console.error('Zoom request error:', e);
     btn.disabled = false;
@@ -4865,6 +4881,9 @@ function setLang(l){
   // Zoom-блок виден только для ru/uk (фича работает только для русско/украиноязычных).
   const zoomBlock=document.getElementById('zoomBlock');
   if(zoomBlock)zoomBlock.style.display=(l==='ru'||l==='uk')?'block':'none';
+  // Если клиент уже запросил Zoom в последние 24ч — сразу показываем «отправлено»
+  // вместо активной кнопки (защита от повторных запросов после reload).
+  if (zoomBlock && (l==='ru'||l==='uk') && _zoomRecentlyRequested()) _zoomShowSentState();
   document.getElementById('langDropdown').classList.remove('open');
   initSliders();
   // Re-render report in new language if results already shown
