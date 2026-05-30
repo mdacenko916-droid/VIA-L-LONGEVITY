@@ -7,35 +7,37 @@
   <meta name="robots" content="noindex">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --cream: #F5F3EF; --cream-dk: #EDE9E2;
-      --gold: #6B4F2A; --gold-pale: #A07840;
+      --gold: #6B4F2A; --gold-lt: #8B6030; --gold-pale: #A07840;
       --text: #0D0A05; --text-mid: #1A1008; --text-lt: #2E2010;
       --line: rgba(139,111,71,.15);
     }
     html { scroll-behavior: smooth; }
     body { background: var(--cream); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 17px; line-height: 1.75; font-weight: 400; -webkit-font-smoothing: antialiased; }
-    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 200; display: flex; align-items: center; justify-content: space-between; padding: 14px 40px; background: rgba(245,243,239,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 200; display: flex; align-items: center; justify-content: space-between; padding: 14px 40px; background: rgba(245,243,239,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); flex-wrap: wrap; gap: 10px; }
     .nav-logo { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; letter-spacing: 8px; color: var(--text); text-decoration: none; }
     .nav-back { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); text-decoration: none; transition: opacity .2s; }
     .nav-back:hover { opacity: .7; }
-    .lang-bar { display: flex; gap: 6px; }
-    .lang-bar button { background: none; border: 1px solid var(--line); border-radius: 50px; padding: 4px 12px; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-lt); cursor: pointer; transition: border-color .2s, color .2s; font-family: 'DM Sans', sans-serif; }
+    .lang-bar { display: flex; gap: 5px; flex-wrap: wrap; }
+    .lang-bar button { background: none; border: 1px solid var(--line); border-radius: 50px; padding: 3px 10px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-lt); cursor: pointer; transition: border-color .2s, color .2s; font-family: 'DM Sans', sans-serif; }
     .lang-bar button:hover, .lang-bar button.active { border-color: var(--gold-pale); color: var(--gold); }
-    .page-wrap { max-width: 780px; margin: 0 auto; padding: 120px 40px 80px; }
+    .page-wrap { max-width: 820px; margin: 0 auto; padding: 140px 40px 80px; }
     .page-eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
     .page-eyebrow::before { content: ''; display: block; width: 22px; height: 1px; background: var(--gold-pale); flex-shrink: 0; }
     .page-eyebrow span { font-size: 13px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); font-weight: 500; }
     h1 { font-family: 'Playfair Display', serif; font-size: clamp(32px, 6vw, 48px); font-weight: 500; letter-spacing: .03em; color: var(--text); margin-bottom: 8px; line-height: 1.15; }
-    .page-date { font-size: 13px; color: var(--gold-pale); letter-spacing: 1px; margin-bottom: 48px; }
-    .divider { width: 40px; height: 1px; background: var(--gold-pale); margin: 40px 0; }
+    .page-date { font-size: 13px; color: var(--gold-pale); letter-spacing: 1px; margin-bottom: 28px; }
+    .lang-notice { font-size: 13px; color: var(--text-lt); background: rgba(160,120,64,.06); border-left: 2px solid var(--gold-pale); padding: 10px 16px; margin-bottom: 36px; font-style: italic; }
+    .divider { width: 40px; height: 1px; background: var(--gold-pale); margin: 36px 0; }
     h2 { font-family: 'DM Sans', sans-serif; font-size: 13px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); font-weight: 500; margin-bottom: 14px; }
     p { color: var(--text-mid); margin-bottom: 14px; }
     ul { color: var(--text-mid); margin-bottom: 14px; padding-left: 20px; }
     li { margin-bottom: 6px; }
+    code { background: rgba(160,120,64,.08); padding: 1px 6px; border-radius: 4px; font-size: 13px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
     a { color: var(--gold); text-decoration: none; }
     a:hover { text-decoration: underline; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 15px; }
@@ -43,17 +45,19 @@
     td { padding: 12px 14px; color: var(--text-mid); border-bottom: 1px solid var(--line); vertical-align: top; }
     tr:last-child td { border-bottom: none; }
     footer { background: var(--cream-dk); border-top: 1px solid var(--line); padding: 28px 40px; }
-    .footer-inner { max-width: 780px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .footer-inner { max-width: 820px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
     .footer-copy { font-size: 13px; color: var(--text-lt); opacity: .7; }
     .footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
     .footer-links a { font-size: 13px; color: var(--text-lt); opacity: .7; text-decoration: none; transition: opacity .2s; }
     .footer-links a:hover { opacity: 1; color: var(--gold); }
     [data-lang] { display: none; }
     [data-lang].active { display: block; }
+    html[lang="he"] [data-lang="he"] { direction: rtl; text-align: right; }
+    html[lang="he"] [data-lang="he"] ul { padding-right: 20px; padding-left: 0; }
     @media (max-width: 600px) {
-      nav { padding: 12px 20px; }
-      .page-wrap { padding: 100px 24px 60px; }
-      .lang-bar button { padding: 3px 9px; font-size: 12px; }
+      nav { padding: 12px 16px; }
+      .page-wrap { padding: 130px 22px 60px; }
+      .lang-bar button { padding: 2px 7px; font-size: 11px; }
       table { font-size: 14px; }
       th, td { padding: 8px 10px; }
       footer { padding: 24px 20px; }
@@ -66,163 +70,455 @@
 <nav>
   <a href="/" class="nav-logo">VIA‑L</a>
   <div class="lang-bar">
-    <button onclick="setLang('en')" id="btn-en" class="active">EN</button>
-    <button onclick="setLang('ua')" id="btn-ua">UA</button>
-    <button onclick="setLang('ru')" id="btn-ru">RU</button>
-    <button onclick="setLang('es')" id="btn-es">ES</button>
+    <button type="button" onclick="setLang('en')" id="btn-en" class="active">EN</button>
+    <button type="button" onclick="setLang('es')" id="btn-es">ES</button>
+    <button type="button" onclick="setLang('uk')" id="btn-uk">UK</button>
+    <button type="button" onclick="setLang('ru')" id="btn-ru">RU</button>
+    <button type="button" onclick="setLang('de')" id="btn-de">DE</button>
+    <button type="button" onclick="setLang('pt')" id="btn-pt">PT</button>
+    <button type="button" onclick="setLang('fr')" id="btn-fr">FR</button>
+    <button type="button" onclick="setLang('pl')" id="btn-pl">PL</button>
+    <button type="button" onclick="setLang('it')" id="btn-it">IT</button>
+    <button type="button" onclick="setLang('he')" id="btn-he">HE</button>
+    <button type="button" onclick="setLang('ja')" id="btn-ja">JA</button>
+    <button type="button" onclick="setLang('ko')" id="btn-ko">KO</button>
   </div>
   <a href="/" class="nav-back" id="back-link">← Back</a>
 </nav>
 
 <main class="page-wrap">
 
-  <!-- ══ ENGLISH ══ -->
+  <!-- ══ ENGLISH — AUTHORITATIVE ══ -->
   <div data-lang="en" class="active">
     <div class="page-eyebrow"><span>Cookie Policy</span></div>
     <h1>Cookie Policy</h1>
-    <p class="page-date">VIA-L · Last updated: May 2026</p>
+    <p class="page-date">VIA-L · Last updated: 30 May 2026</p>
 
-    <h2>What Are Cookies</h2>
-    <p>Cookies are small text files stored on your device when you visit a website. They help websites function correctly, remember your preferences, and collect usage data.</p>
+    <h2>1. What are cookies?</h2>
+    <p>Cookies are small text files that a website stores on your device when you visit. They are used to remember your preferences, keep you logged in, measure usage, or — in advertising contexts that VIA-L does not engage in — to track you across other sites. This policy explains how VIA-L uses cookies and similar storage on <a href="https://via-l.com">via-l.com</a> and the VIA-L Interpreter.</p>
 
     <div class="divider"></div>
 
-    <h2>Cookies We Use</h2>
+    <h2>2. Cookies and similar storage we use</h2>
     <table>
-      <tr><th>Cookie</th><th>Type</th><th>Purpose</th><th>Duration</th></tr>
-      <tr><td>via_lang</td><td>Essential</td><td>Remembers your language preference</td><td>1 year</td></tr>
-      <tr><td>via_cookie_consent</td><td>Essential</td><td>Stores your cookie consent choice</td><td>1 year</td></tr>
-      <tr><td>_ga, _ga_*</td><td>Analytics</td><td>Google Analytics — measures website traffic and behaviour</td><td>2 years</td></tr>
+      <tr><th>Name / category</th><th>Type</th><th>Purpose</th><th>Duration</th></tr>
+      <tr><td>selectedLang, vial_lang</td><td>localStorage (first-party)</td><td>Remember your chosen interface language across visits</td><td>Until you clear browser storage</td></tr>
+      <tr><td>vial_code, vial_name, vial_email</td><td>sessionStorage (first-party)</td><td>Remember your access code and pre-fill name/email for the nutritionist request form during the active session</td><td>Until you close the tab</td></tr>
+      <tr><td>vial_history_*</td><td>localStorage (first-party)</td><td>Store the local history of your Interpreter sessions so you can review past results</td><td>Until you clear browser storage</td></tr>
+      <tr><td>expert_state_*</td><td>localStorage (first-party)</td><td>Track your remaining Expert / Elite report quota and cooldown timers</td><td>Until you clear browser storage</td></tr>
+      <tr><td>Cloudflare <code>__cf_bm</code>, <code>_cfuvid</code></td><td>HTTP cookie (third-party — Cloudflare)</td><td>Bot management and request optimisation at the edge. Strictly necessary; set by the CDN/Worker layer.</td><td>30 minutes / per session</td></tr>
+      <tr><td>GitHub Pages session</td><td>HTTP cookie (third-party — GitHub)</td><td>Static-site delivery integrity. Strictly necessary.</td><td>Per session</td></tr>
     </table>
-    <p><strong>Essential cookies</strong> are required for the website to function and cannot be disabled.</p>
-    <p><strong>Analytics cookies</strong> are only set after you give your consent via the cookie banner.</p>
+    <p>VIA-L does not currently set any analytics or advertising cookies. If we add Google Analytics or similar in the future, an opt-in banner will be presented before any non-essential cookie is set.</p>
 
     <div class="divider"></div>
 
-    <h2>Your Choices</h2>
-    <p>When you first visit VIA-L, a cookie banner allows you to accept all cookies or accept essential cookies only. You can change your choice at any time by clearing your browser cookies and revisiting the site, or through your browser settings.</p>
-    <p>Most browsers allow you to manage cookies via their settings menu. Note that disabling cookies may affect certain website features.</p>
+    <h2>3. Legal basis (per region)</h2>
+    <ul>
+      <li><strong>EU / EEA / UK</strong> — Strictly necessary cookies are set on the legal basis of legitimate interest (no consent required, ePrivacy Directive 2002/58/EC Art. 5(3) carve-out). Any future analytical or advertising cookies will require prior opt-in consent.</li>
+      <li><strong>California (CCPA/CPRA)</strong> — VIA-L does not sell or share personal information collected through cookies. The "Do Not Sell or Share My Personal Information" link is therefore not displayed.</li>
+      <li><strong>Japan (APPI)</strong> — Strictly necessary cookies only; equivalent treatment under APPI principles.</li>
+      <li><strong>Korea (PIPA / Information &amp; Communications Network Act)</strong> — Strictly necessary storage only; any non-essential storage will require notice and consent.</li>
+      <li><strong>Brazil (LGPD)</strong> — Equivalent treatment under legitimate interest.</li>
+    </ul>
 
     <div class="divider"></div>
 
-    <h2>Third-Party Cookies</h2>
-    <p>Google Analytics sets cookies on our behalf to help us understand how visitors interact with the site. Google may transfer this data to servers in other countries. For more information, see <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a>.</p>
+    <h2>4. Managing and withdrawing consent</h2>
+    <p>Because VIA-L only uses strictly necessary first-party storage (plus the Cloudflare/GitHub infrastructure cookies above), no in-page banner is shown. You can still:</p>
+    <ul>
+      <li>Clear all storage at any time via your browser settings (Privacy / Site data).</li>
+      <li>Block third-party cookies in your browser — note that the Interpreter may load more slowly without Cloudflare bot management.</li>
+      <li>Use browser-level opt-out signals such as <strong>Global Privacy Control</strong> (GPC); we honour the GPC signal where applicable.</li>
+    </ul>
 
     <div class="divider"></div>
 
-    <h2>Contact</h2>
+    <h2>5. Browser-specific instructions</h2>
+    <ul>
+      <li><strong>Chrome:</strong> Settings → Privacy and security → Cookies and other site data</li>
+      <li><strong>Safari:</strong> Settings → Privacy → Manage Website Data</li>
+      <li><strong>Firefox:</strong> Settings → Privacy &amp; Security → Cookies and Site Data</li>
+      <li><strong>Edge:</strong> Settings → Cookies and site permissions</li>
+    </ul>
+
+    <div class="divider"></div>
+
+    <h2>6. Updates</h2>
+    <p>This Cookie Policy may be updated when we add or remove cookies. Material changes will be communicated by email and posted at the top of this page.</p>
+
+    <div class="divider"></div>
+
+    <h2>7. Contact</h2>
     <p>Questions about our use of cookies: <a href="mailto:viaelcom@gmail.com">viaelcom@gmail.com</a></p>
-  </div>
-
-  <!-- ══ UKRAINIAN ══ -->
-  <div data-lang="ua">
-    <div class="page-eyebrow"><span>Політика файлів cookie</span></div>
-    <h1>Політика cookie</h1>
-    <p class="page-date">VIA-L · Оновлено: Травень 2026</p>
-
-    <h2>Що таке файли cookie</h2>
-    <p>Cookie — це невеликі текстові файли, що зберігаються на вашому пристрої під час відвідування сайту. Вони допомагають сайту коректно працювати, запам'ятовувати налаштування та збирати статистику використання.</p>
 
     <div class="divider"></div>
 
-    <h2>Які cookie ми використовуємо</h2>
-    <table>
-      <tr><th>Cookie</th><th>Тип</th><th>Призначення</th><th>Термін</th></tr>
-      <tr><td>via_lang</td><td>Технічний</td><td>Зберігає вибір мови</td><td>1 рік</td></tr>
-      <tr><td>via_cookie_consent</td><td>Технічний</td><td>Зберігає вашу згоду на cookie</td><td>1 рік</td></tr>
-      <tr><td>_ga, _ga_*</td><td>Аналітичний</td><td>Google Analytics — вимірює трафік та поведінку на сайті</td><td>2 роки</td></tr>
-    </table>
-    <p><strong>Технічні cookie</strong> необхідні для роботи сайту і не можуть бути відключені.</p>
-    <p><strong>Аналітичні cookie</strong> встановлюються лише після вашої згоди через банер.</p>
-
-    <div class="divider"></div>
-
-    <h2>Ваш вибір</h2>
-    <p>При першому відвідуванні VIA-L з'являється банер, де ви можете прийняти всі cookie або лише технічно необхідні. Ви можете змінити вибір будь-коли, очистивши cookie у браузері та знову відвідавши сайт, або через налаштування браузера.</p>
-
-    <div class="divider"></div>
-
-    <h2>Сторонні cookie</h2>
-    <p>Google Analytics встановлює cookie від нашого імені для аналізу використання сайту. Детальніше — у <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Політиці конфіденційності Google</a>.</p>
-
-    <div class="divider"></div>
-
-    <h2>Контакт</h2>
-    <p>З питань використання cookie: <a href="mailto:viaelcom@gmail.com">viaelcom@gmail.com</a></p>
-  </div>
-
-  <!-- ══ RUSSIAN ══ -->
-  <div data-lang="ru">
-    <div class="page-eyebrow"><span>Политика файлов cookie</span></div>
-    <h1>Политика cookie</h1>
-    <p class="page-date">VIA-L · Обновлено: Май 2026</p>
-
-    <h2>Что такое файлы cookie</h2>
-    <p>Cookie — это небольшие текстовые файлы, сохраняемые на вашем устройстве при посещении сайта. Они помогают сайту корректно работать, запоминать настройки и собирать статистику использования.</p>
-
-    <div class="divider"></div>
-
-    <h2>Какие cookie мы используем</h2>
-    <table>
-      <tr><th>Cookie</th><th>Тип</th><th>Назначение</th><th>Срок</th></tr>
-      <tr><td>via_lang</td><td>Технический</td><td>Сохраняет выбор языка</td><td>1 год</td></tr>
-      <tr><td>via_cookie_consent</td><td>Технический</td><td>Сохраняет ваше согласие на cookie</td><td>1 год</td></tr>
-      <tr><td>_ga, _ga_*</td><td>Аналитический</td><td>Google Analytics — измеряет трафик и поведение на сайте</td><td>2 года</td></tr>
-    </table>
-    <p><strong>Технические cookie</strong> необходимы для работы сайта и не могут быть отключены.</p>
-    <p><strong>Аналитические cookie</strong> устанавливаются только после вашего согласия через баннер.</p>
-
-    <div class="divider"></div>
-
-    <h2>Ваш выбор</h2>
-    <p>При первом посещении VIA-L появляется баннер, где вы можете принять все cookie или только технически необходимые. Изменить выбор можно в любой момент, очистив cookie в браузере и повторно посетив сайт, или через настройки браузера.</p>
-
-    <div class="divider"></div>
-
-    <h2>Сторонние cookie</h2>
-    <p>Google Analytics устанавливает cookie от нашего имени для анализа использования сайта. Подробнее — в <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Политике конфиденциальности Google</a>.</p>
-
-    <div class="divider"></div>
-
-    <h2>Контакт</h2>
-    <p>По вопросам использования cookie: <a href="mailto:viaelcom@gmail.com">viaelcom@gmail.com</a></p>
+    <h2>8. Authoritative Version</h2>
+    <p>This Cookie Policy is published in 12 languages. The <strong>English version is the authoritative text</strong>. In the event of any discrepancy between translations, the English version prevails.</p>
   </div>
 
   <!-- ══ SPANISH ══ -->
   <div data-lang="es">
     <div class="page-eyebrow"><span>Política de Cookies</span></div>
     <h1>Política de Cookies</h1>
-    <p class="page-date">VIA-L · Última actualización: Mayo 2026</p>
+    <p class="page-date">VIA-L · Última actualización: 30 de mayo de 2026</p>
+    <p class="lang-notice">Traducción de cortesía. La versión inglesa es el texto autoritativo y prevalece en caso de discrepancia.</p>
 
-    <h2>¿Qué son las Cookies?</h2>
-    <p>Las cookies son pequeños archivos de texto que se almacenan en su dispositivo cuando visita un sitio web. Ayudan al sitio a funcionar correctamente, recordar sus preferencias y recopilar datos de uso.</p>
+    <h2>1. ¿Qué son las cookies?</h2>
+    <p>Pequeños archivos almacenados en su dispositivo al visitar el sitio. VIA-L las usa para recordar idioma, autenticación de sesión y métricas mínimas. <strong>No usa cookies publicitarias.</strong></p>
 
-    <div class="divider"></div>
+    <h2>2. Almacenamiento que utilizamos</h2>
+    <p><strong>localStorage / sessionStorage (primera parte):</strong> <code>selectedLang</code>, <code>vial_lang</code>, <code>vial_code</code>, <code>vial_name</code>, <code>vial_email</code>, <code>vial_history_*</code>, <code>expert_state_*</code>. <strong>Cookies de terceros (estrictamente necesarias):</strong> Cloudflare (<code>__cf_bm</code>, <code>_cfuvid</code>) para gestión de bots; GitHub Pages para entrega del sitio.</p>
+    <p>VIA-L no establece cookies de análisis ni publicitarias. Si agregamos Google Analytics u otra herramienta, mostraremos banner de opt-in.</p>
 
-    <h2>Cookies que Utilizamos</h2>
-    <table>
-      <tr><th>Cookie</th><th>Tipo</th><th>Finalidad</th><th>Duración</th></tr>
-      <tr><td>via_lang</td><td>Técnica</td><td>Guarda su preferencia de idioma</td><td>1 año</td></tr>
-      <tr><td>via_cookie_consent</td><td>Técnica</td><td>Almacena su elección sobre cookies</td><td>1 año</td></tr>
-      <tr><td>_ga, _ga_*</td><td>Analítica</td><td>Google Analytics — mide el tráfico y el comportamiento en el sitio</td><td>2 años</td></tr>
-    </table>
-    <p>Las <strong>cookies técnicas</strong> son necesarias para el funcionamiento del sitio y no pueden desactivarse.</p>
-    <p>Las <strong>cookies analíticas</strong> solo se instalan tras su consentimiento a través del banner de cookies.</p>
+    <h2>3. Base legal por región</h2>
+    <p><strong>UE/EEE/Reino Unido:</strong> cookies estrictamente necesarias bajo interés legítimo (Directiva ePrivacy 2002/58/CE Art. 5(3)). <strong>California (CCPA):</strong> no vendemos ni compartimos. <strong>Japón (APPI), Corea (PIPA/ITSA), Brasil (LGPD):</strong> tratamiento equivalente.</p>
 
-    <div class="divider"></div>
+    <h2>4. Gestión del consentimiento</h2>
+    <p>No mostramos banner porque solo usamos almacenamiento estrictamente necesario. Puede borrar el almacenamiento desde la configuración del navegador, bloquear cookies de terceros, o usar Global Privacy Control (GPC) — lo respetamos.</p>
 
-    <h2>Sus Opciones</h2>
-    <p>Al visitar VIA-L por primera vez, aparece un banner que le permite aceptar todas las cookies o solo las esenciales. Puede cambiar su elección en cualquier momento borrando las cookies del navegador y volviendo a visitar el sitio, o a través de la configuración de su navegador.</p>
+    <h2>5. Configuración del navegador</h2>
+    <p>Chrome: Configuración → Privacidad → Cookies. Safari: Preferencias → Privacidad. Firefox: Preferencias → Privacidad y seguridad. Edge: Configuración → Cookies y permisos del sitio.</p>
 
-    <div class="divider"></div>
+    <h2>6. Actualizaciones</h2>
+    <p>Cambios importantes se comunicarán por email.</p>
 
-    <h2>Cookies de Terceros</h2>
-    <p>Google Analytics instala cookies en nuestro nombre para analizar el uso del sitio. Para más información, consulte la <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Política de Privacidad de Google</a>.</p>
+    <h2>7. Contacto</h2>
+    <p>Consultas: <a href="mailto:viaelcom@gmail.com">viaelcom@gmail.com</a></p>
 
-    <div class="divider"></div>
+    <h2>8. Versión Autoritativa</h2>
+    <p>La <strong>versión inglesa es el texto autoritativo</strong> y prevalece en caso de discrepancia.</p>
+  </div>
 
-    <h2>Contacto</h2>
-    <p>Consultas sobre el uso de cookies: <a href="mailto:viaelcom@gmail.com">viaelcom@gmail.com</a></p>
+  <!-- ══ UKRAINIAN ══ -->
+  <div data-lang="uk">
+    <div class="page-eyebrow"><span>Політика cookies</span></div>
+    <h1>Політика cookies</h1>
+    <p class="page-date">VIA-L · Оновлено: 30 травня 2026</p>
+    <p class="lang-notice">Переклад для зручності. Англійська версія є автентичним текстом і має пріоритет у разі розбіжностей.</p>
+
+    <h2>1. Що таке cookies?</h2>
+    <p>Малі файли, що зберігаються на вашому пристрої при відвідуванні сайту. VIA-L використовує їх для запам'ятовування мови, автентифікації сесії та мінімальних метрик. <strong>Не використовує рекламні cookies.</strong></p>
+
+    <h2>2. Сховище, яке ми використовуємо</h2>
+    <p><strong>localStorage / sessionStorage (перша сторона):</strong> <code>selectedLang</code>, <code>vial_lang</code>, <code>vial_code</code>, <code>vial_name</code>, <code>vial_email</code>, <code>vial_history_*</code>, <code>expert_state_*</code>. <strong>Cookies третіх сторін (строго необхідні):</strong> Cloudflare (<code>__cf_bm</code>, <code>_cfuvid</code>) для управління ботами; GitHub Pages для доставки сайту.</p>
+    <p>VIA-L не встановлює аналітичних чи рекламних cookies. Якщо додамо Google Analytics — буде opt-in банер.</p>
+
+    <h2>3. Правова підстава за регіоном</h2>
+    <p><strong>ЄС/ЄЕЗ/Велика Британія:</strong> строго необхідні cookies на основі законного інтересу (Директива ePrivacy 2002/58/EC ст. 5(3)). <strong>Каліфорнія (CCPA):</strong> не продаємо і не передаємо. <strong>Японія (APPI), Корея (PIPA/ITSA):</strong> еквівалентний режим.</p>
+
+    <h2>4. Управління згодою</h2>
+    <p>Не показуємо банер, оскільки використовуємо тільки строго необхідне сховище. Ви можете очистити сховище в налаштуваннях браузера, заблокувати cookies третіх сторін, або використовувати Global Privacy Control (GPC) — ми його поважаємо.</p>
+
+    <h2>5. Налаштування браузера</h2>
+    <p>Chrome: Налаштування → Конфіденційність → Cookies. Safari: Налаштування → Конфіденційність. Firefox: Налаштування → Конфіденційність і безпека. Edge: Налаштування → Cookies і дозволи сайту.</p>
+
+    <h2>6. Оновлення</h2>
+    <p>Суттєві зміни — email.</p>
+
+    <h2>7. Контакт</h2>
+    <p>Запити: <a href="mailto:viaelcom@gmail.com">viaelcom@gmail.com</a></p>
+
+    <h2>8. Автентична версія</h2>
+    <p><strong>Англійська версія є автентичним текстом</strong> і має пріоритет.</p>
+  </div>
+
+  <!-- ══ RUSSIAN ══ -->
+  <div data-lang="ru">
+    <div class="page-eyebrow"><span>Политика cookies</span></div>
+    <h1>Политика cookies</h1>
+    <p class="page-date">VIA-L · Обновлено: 30 мая 2026</p>
+    <p class="lang-notice">Перевод для удобства. Английская версия является аутентичным текстом и имеет приоритет в случае разночтений.</p>
+
+    <h2>1. Что такое cookies?</h2>
+    <p>Малые файлы, сохраняемые на вашем устройстве при посещении сайта. VIA-L использует их для запоминания языка, аутентификации сессии и минимальных метрик. <strong>Не использует рекламные cookies.</strong></p>
+
+    <h2>2. Хранилище, которое мы используем</h2>
+    <p><strong>localStorage / sessionStorage (первая сторона):</strong> <code>selectedLang</code>, <code>vial_lang</code>, <code>vial_code</code>, <code>vial_name</code>, <code>vial_email</code>, <code>vial_history_*</code>, <code>expert_state_*</code>. <strong>Cookies третьих сторон (строго необходимые):</strong> Cloudflare (<code>__cf_bm</code>, <code>_cfuvid</code>) для управления ботами; GitHub Pages для доставки сайта.</p>
+    <p>VIA-L не устанавливает аналитических или рекламных cookies. Если добавим Google Analytics — будет opt-in баннер.</p>
+
+    <h2>3. Правовое основание по региону</h2>
+    <p><strong>ЕС/ЕЭП/Великобритания:</strong> строго необходимые cookies на основе законного интереса (Директива ePrivacy 2002/58/EC ст. 5(3)). <strong>Калифорния (CCPA):</strong> не продаём и не передаём. <strong>Япония (APPI), Корея (PIPA/ITSA):</strong> эквивалентный режим.</p>
+
+    <h2>4. Управление согласием</h2>
+    <p>Не показываем баннер, так как используем только строго необходимое хранилище. Вы можете очистить хранилище в настройках браузера, заблокировать cookies третьих сторон, или использовать Global Privacy Control (GPC) — мы его уважаем.</p>
+
+    <h2>5. Настройки браузера</h2>
+    <p>Chrome: Настройки → Конфиденциальность → Cookies. Safari: Настройки → Конфиденциальность. Firefox: Настройки → Приватность и защита. Edge: Настройки → Cookies и разрешения сайта.</p>
+
+    <h2>6. Обновления</h2>
+    <p>Существенные изменения — email.</p>
+
+    <h2>7. Контакт</h2>
+    <p>Запросы: <a href="mailto:viaelcom@gmail.com">viaelcom@gmail.com</a></p>
+
+    <h2>8. Аутентичная версия</h2>
+    <p><strong>Английская версия является аутентичным текстом</strong> и имеет приоритет.</p>
+  </div>
+
+  <!-- ══ GERMAN ══ -->
+  <div data-lang="de">
+    <div class="page-eyebrow"><span>Cookie-Richtlinie</span></div>
+    <h1>Cookie-Richtlinie</h1>
+    <p class="page-date">VIA-L · Zuletzt aktualisiert: 30. Mai 2026</p>
+    <p class="lang-notice">Übersetzung zur Erleichterung. Die englische Fassung ist maßgeblich und hat im Streitfall Vorrang.</p>
+
+    <h2>1. Was sind Cookies?</h2>
+    <p>Kleine Dateien, die beim Besuch auf Ihrem Gerät gespeichert werden. VIA-L verwendet sie für Sprache, Sitzungsauthentifizierung und minimale Messung. <strong>Keine Werbe-Cookies.</strong></p>
+
+    <h2>2. Verwendeter Speicher</h2>
+    <p><strong>localStorage / sessionStorage (eigene Domain):</strong> <code>selectedLang</code>, <code>vial_lang</code>, <code>vial_code</code>, <code>vial_name</code>, <code>vial_email</code>, <code>vial_history_*</code>, <code>expert_state_*</code>. <strong>Drittanbieter-Cookies (strikt notwendig):</strong> Cloudflare (<code>__cf_bm</code>, <code>_cfuvid</code>) Bot-Management; GitHub Pages Website-Auslieferung.</p>
+    <p>VIA-L setzt keine Analyse- oder Werbe-Cookies. Bei Hinzufügen wird Opt-in-Banner angezeigt.</p>
+
+    <h2>3. Rechtsgrundlage pro Region</h2>
+    <p><strong>EU/EWR/UK:</strong> strikt notwendige Cookies auf Basis berechtigtes Interesse (ePrivacy-RL 2002/58/EG Art. 5(3)). <strong>Kalifornien (CCPA):</strong> wir verkaufen und teilen nicht. <strong>Japan (APPI), Korea (PIPA/ITSA):</strong> äquivalente Behandlung.</p>
+
+    <h2>4. Einwilligungsverwaltung</h2>
+    <p>Kein Banner, da nur strikt notwendiger Speicher verwendet wird. Sie können den Speicher in den Browser-Einstellungen löschen, Drittanbieter-Cookies blockieren oder Global Privacy Control (GPC) nutzen — wir respektieren das Signal.</p>
+
+    <h2>5. Browser-Einstellungen</h2>
+    <p>Chrome: Einstellungen → Datenschutz → Cookies. Safari: Einstellungen → Datenschutz. Firefox: Einstellungen → Datenschutz &amp; Sicherheit. Edge: Einstellungen → Cookies und Websiteberechtigungen.</p>
+
+    <h2>6. Aktualisierungen</h2>
+    <p>Wesentliche Änderungen per E-Mail.</p>
+
+    <h2>7. Kontakt</h2>
+    <p>Anfragen: <a href="mailto:viaelcom@gmail.com">viaelcom@gmail.com</a></p>
+
+    <h2>8. Maßgebliche Fassung</h2>
+    <p>Die <strong>englische Fassung ist maßgeblich</strong> und hat im Streitfall Vorrang.</p>
+  </div>
+
+  <!-- ══ PORTUGUESE ══ -->
+  <div data-lang="pt">
+    <div class="page-eyebrow"><span>Política de Cookies</span></div>
+    <h1>Política de Cookies</h1>
+    <p class="page-date">VIA-L · Atualizado em: 30 de maio de 2026</p>
+    <p class="lang-notice">Tradução para conveniência. A versão em inglês é o texto autorizado e prevalece em caso de discrepância.</p>
+
+    <h2>1. O que são cookies?</h2>
+    <p>Pequenos arquivos armazenados no seu dispositivo. VIA-L os usa para idioma, autenticação de sessão e métricas mínimas. <strong>Sem cookies publicitários.</strong></p>
+
+    <h2>2. Armazenamento utilizado</h2>
+    <p><strong>localStorage / sessionStorage (primeira parte):</strong> <code>selectedLang</code>, <code>vial_lang</code>, <code>vial_code</code>, <code>vial_name</code>, <code>vial_email</code>, <code>vial_history_*</code>, <code>expert_state_*</code>. <strong>Cookies de terceiros (estritamente necessários):</strong> Cloudflare (<code>__cf_bm</code>, <code>_cfuvid</code>); GitHub Pages.</p>
+    <p>VIA-L não usa cookies de análise nem publicitários. Se adicionarmos, banner opt-in será mostrado.</p>
+
+    <h2>3. Base legal por região</h2>
+    <p><strong>UE/EEE/Reino Unido:</strong> estritamente necessários sob interesse legítimo (Diretiva ePrivacy 2002/58/CE Art. 5(3)). <strong>Califórnia (CCPA):</strong> não vendemos. <strong>Japão (APPI), Coreia (PIPA), Brasil (LGPD):</strong> tratamento equivalente.</p>
+
+    <h2>4. Gestão de consentimento</h2>
+    <p>Sem banner porque usamos só armazenamento essencial. Limpe armazenamento via navegador, bloqueie cookies de terceiros, ou use Global Privacy Control (GPC) — respeitamos.</p>
+
+    <h2>5. Configurações do navegador</h2>
+    <p>Chrome/Safari/Firefox/Edge: Configurações → Privacidade → Cookies.</p>
+
+    <h2>6. Atualizações</h2>
+    <p>Alterações importantes por email.</p>
+
+    <h2>7. Contato</h2>
+    <p><a href="mailto:viaelcom@gmail.com">viaelcom@gmail.com</a></p>
+
+    <h2>8. Versão Autorizada</h2>
+    <p>A <strong>versão em inglês é o texto autorizado</strong> e prevalece em caso de discrepância.</p>
+  </div>
+
+  <!-- ══ FRENCH ══ -->
+  <div data-lang="fr">
+    <div class="page-eyebrow"><span>Politique Cookies</span></div>
+    <h1>Politique Cookies</h1>
+    <p class="page-date">VIA-L · Dernière mise à jour : 30 mai 2026</p>
+    <p class="lang-notice">Traduction de courtoisie. La version anglaise fait foi et prévaut en cas de divergence.</p>
+
+    <h2>1. Que sont les cookies ?</h2>
+    <p>Petits fichiers stockés sur votre appareil. VIA-L les utilise pour la langue, l'authentification de session et des mesures minimales. <strong>Aucun cookie publicitaire.</strong></p>
+
+    <h2>2. Stockage utilisé</h2>
+    <p><strong>localStorage / sessionStorage (première partie) :</strong> <code>selectedLang</code>, <code>vial_lang</code>, <code>vial_code</code>, <code>vial_name</code>, <code>vial_email</code>, <code>vial_history_*</code>, <code>expert_state_*</code>. <strong>Cookies tiers (strictement nécessaires) :</strong> Cloudflare (<code>__cf_bm</code>, <code>_cfuvid</code>) ; GitHub Pages.</p>
+    <p>VIA-L ne pose pas de cookies analytiques ou publicitaires. Si nous en ajoutons, une bannière opt-in s'affichera.</p>
+
+    <h2>3. Base légale par région</h2>
+    <p><strong>UE/EEE/Royaume-Uni :</strong> strictement nécessaires sous intérêt légitime (Directive ePrivacy 2002/58/CE Art. 5(3)). <strong>Californie (CCPA) :</strong> nous ne vendons pas. <strong>Japon (APPI), Corée (PIPA) :</strong> traitement équivalent.</p>
+
+    <h2>4. Gestion du consentement</h2>
+    <p>Pas de bannière car uniquement stockage essentiel. Effacer le stockage via navigateur, bloquer les cookies tiers, utiliser Global Privacy Control (GPC) — nous le respectons.</p>
+
+    <h2>5. Paramètres du navigateur</h2>
+    <p>Chrome/Safari/Firefox/Edge : Paramètres → Confidentialité → Cookies.</p>
+
+    <h2>6. Mises à jour</h2>
+    <p>Modifications importantes par e-mail.</p>
+
+    <h2>7. Contact</h2>
+    <p><a href="mailto:viaelcom@gmail.com">viaelcom@gmail.com</a></p>
+
+    <h2>8. Version Faisant Foi</h2>
+    <p>La <strong>version anglaise fait foi</strong> et prévaut en cas de divergence.</p>
+  </div>
+
+  <!-- ══ POLISH ══ -->
+  <div data-lang="pl">
+    <div class="page-eyebrow"><span>Polityka Cookies</span></div>
+    <h1>Polityka Cookies</h1>
+    <p class="page-date">VIA-L · Ostatnia aktualizacja: 30 maja 2026</p>
+    <p class="lang-notice">Tłumaczenie dla wygody. Wersja angielska jest tekstem autorytatywnym i ma pierwszeństwo.</p>
+
+    <h2>1. Czym są cookies?</h2>
+    <p>Małe pliki przechowywane na urządzeniu. VIA-L używa ich do języka, uwierzytelniania sesji i minimalnych pomiarów. <strong>Brak cookies reklamowych.</strong></p>
+
+    <h2>2. Używane przechowywanie</h2>
+    <p><strong>localStorage / sessionStorage (pierwszej strony):</strong> <code>selectedLang</code>, <code>vial_lang</code>, <code>vial_code</code>, <code>vial_name</code>, <code>vial_email</code>, <code>vial_history_*</code>, <code>expert_state_*</code>. <strong>Cookies stron trzecich (ściśle niezbędne):</strong> Cloudflare (<code>__cf_bm</code>, <code>_cfuvid</code>); GitHub Pages.</p>
+    <p>VIA-L nie używa cookies analitycznych ani reklamowych. Po dodaniu — banner opt-in.</p>
+
+    <h2>3. Podstawa prawna wg regionu</h2>
+    <p><strong>UE/EOG/UK:</strong> ściśle niezbędne na podstawie uzasadnionego interesu (Dyrektywa ePrivacy 2002/58/WE Art. 5(3)). <strong>Kalifornia (CCPA):</strong> nie sprzedajemy. <strong>Japonia (APPI), Korea (PIPA):</strong> traktowanie równoważne.</p>
+
+    <h2>4. Zarządzanie zgodą</h2>
+    <p>Brak bannera, bo używamy tylko niezbędnego przechowywania. Wyczyść przechowywanie w ustawieniach przeglądarki, blokuj cookies stron trzecich, używaj Global Privacy Control (GPC) — respektujemy.</p>
+
+    <h2>5. Ustawienia przeglądarki</h2>
+    <p>Chrome/Safari/Firefox/Edge: Ustawienia → Prywatność → Cookies.</p>
+
+    <h2>6. Aktualizacje</h2>
+    <p>Istotne zmiany emailem.</p>
+
+    <h2>7. Kontakt</h2>
+    <p><a href="mailto:viaelcom@gmail.com">viaelcom@gmail.com</a></p>
+
+    <h2>8. Wersja Autorytatywna</h2>
+    <p><strong>Wersja angielska jest autorytatywna</strong> i ma pierwszeństwo.</p>
+  </div>
+
+  <!-- ══ ITALIAN ══ -->
+  <div data-lang="it">
+    <div class="page-eyebrow"><span>Informativa Cookie</span></div>
+    <h1>Informativa Cookie</h1>
+    <p class="page-date">VIA-L · Ultimo aggiornamento: 30 maggio 2026</p>
+    <p class="lang-notice">Traduzione di cortesia. La versione inglese è il testo autoritativo e prevale in caso di discrepanza.</p>
+
+    <h2>1. Cosa sono i cookie?</h2>
+    <p>Piccoli file memorizzati sul tuo dispositivo. VIA-L li usa per lingua, autenticazione di sessione e misurazioni minime. <strong>Nessun cookie pubblicitario.</strong></p>
+
+    <h2>2. Archiviazione utilizzata</h2>
+    <p><strong>localStorage / sessionStorage (prima parte):</strong> <code>selectedLang</code>, <code>vial_lang</code>, <code>vial_code</code>, <code>vial_name</code>, <code>vial_email</code>, <code>vial_history_*</code>, <code>expert_state_*</code>. <strong>Cookie di terze parti (strettamente necessari):</strong> Cloudflare (<code>__cf_bm</code>, <code>_cfuvid</code>); GitHub Pages.</p>
+    <p>VIA-L non usa cookie analitici o pubblicitari. Se aggiunti — banner opt-in.</p>
+
+    <h2>3. Base giuridica per regione</h2>
+    <p><strong>UE/SEE/UK:</strong> strettamente necessari su base di interesse legittimo (Direttiva ePrivacy 2002/58/CE Art. 5(3)). <strong>California (CCPA):</strong> non vendiamo. <strong>Giappone (APPI), Corea (PIPA):</strong> trattamento equivalente.</p>
+
+    <h2>4. Gestione del consenso</h2>
+    <p>Nessun banner perché usiamo solo archiviazione essenziale. Cancella archiviazione dal browser, blocca cookie di terze parti, usa Global Privacy Control (GPC) — lo rispettiamo.</p>
+
+    <h2>5. Impostazioni browser</h2>
+    <p>Chrome/Safari/Firefox/Edge: Impostazioni → Privacy → Cookie.</p>
+
+    <h2>6. Aggiornamenti</h2>
+    <p>Modifiche sostanziali via email.</p>
+
+    <h2>7. Contatto</h2>
+    <p><a href="mailto:viaelcom@gmail.com">viaelcom@gmail.com</a></p>
+
+    <h2>8. Versione Autoritativa</h2>
+    <p>La <strong>versione inglese è il testo autoritativo</strong> e prevale in caso di discrepanza.</p>
+  </div>
+
+  <!-- ══ HEBREW ══ -->
+  <div data-lang="he">
+    <div class="page-eyebrow"><span>מדיניות עוגיות</span></div>
+    <h1>מדיניות עוגיות</h1>
+    <p class="page-date">VIA-L · עודכן: 30 במאי 2026</p>
+    <p class="lang-notice">תרגום לנוחיות. הגרסה האנגלית היא הטקסט הסמכותי וגוברת במקרה של סתירה.</p>
+
+    <h2>1. מה זה עוגיות?</h2>
+    <p>קבצים קטנים המאוחסנים במכשירך. VIA-L משתמשת בהן לזיכרון שפה, אימות סשן ומדידות מינימליות. <strong>ללא עוגיות פרסום.</strong></p>
+
+    <h2>2. אחסון בו אנו משתמשים</h2>
+    <p><strong>localStorage / sessionStorage (צד ראשון):</strong> <code>selectedLang</code>, <code>vial_lang</code>, <code>vial_code</code>, <code>vial_name</code>, <code>vial_email</code>, <code>vial_history_*</code>, <code>expert_state_*</code>. <strong>עוגיות צד שלישי (הכרחיות):</strong> Cloudflare (<code>__cf_bm</code>, <code>_cfuvid</code>); GitHub Pages.</p>
+    <p>VIA-L אינה משתמשת בעוגיות אנליטיקה או פרסום. אם נוסיף — באנר opt-in יוצג.</p>
+
+    <h2>3. בסיס משפטי לפי אזור</h2>
+    <p><strong>EU/EEA/UK:</strong> הכרחיות על בסיס אינטרס לגיטימי (הנחיית ePrivacy 2002/58/EC סעיף 5(3)). <strong>קליפורניה (CCPA):</strong> איננו מוכרים. <strong>יפן (APPI), קוריאה (PIPA):</strong> טיפול שווה ערך.</p>
+
+    <h2>4. ניהול הסכמה</h2>
+    <p>ללא באנר כי משתמשים באחסון הכרחי בלבד. נקה אחסון מהדפדפן, חסום עוגיות צד שלישי, או השתמש ב-Global Privacy Control (GPC) — אנו מכבדים.</p>
+
+    <h2>5. הגדרות דפדפן</h2>
+    <p>Chrome/Safari/Firefox/Edge: הגדרות → פרטיות → עוגיות.</p>
+
+    <h2>6. עדכונים</h2>
+    <p>שינויים מהותיים באימייל.</p>
+
+    <h2>7. יצירת קשר</h2>
+    <p><a href="mailto:viaelcom@gmail.com">viaelcom@gmail.com</a></p>
+
+    <h2>8. גרסה סמכותית</h2>
+    <p>ה<strong>גרסה האנגלית היא הטקסט הסמכותי</strong> וגוברת במקרה של סתירה.</p>
+  </div>
+
+  <!-- ══ JAPANESE ══ -->
+  <div data-lang="ja">
+    <div class="page-eyebrow"><span>Cookieポリシー</span></div>
+    <h1>Cookieポリシー</h1>
+    <p class="page-date">VIA-L · 最終更新：2026年5月30日</p>
+    <p class="lang-notice">便宜上の翻訳です。英語版が正本であり、相違がある場合は英語版が優先します。</p>
+
+    <h2>1. Cookieとは？</h2>
+    <p>訪問時にデバイスに保存される小さなファイル。VIA-Lは言語、セッション認証、最小限の計測に使用します。<strong>広告Cookieは使用しません。</strong></p>
+
+    <h2>2. 使用するストレージ</h2>
+    <p><strong>localStorage / sessionStorage（ファーストパーティ）：</strong> <code>selectedLang</code>, <code>vial_lang</code>, <code>vial_code</code>, <code>vial_name</code>, <code>vial_email</code>, <code>vial_history_*</code>, <code>expert_state_*</code>。<strong>サードパーティCookie（必須）：</strong> Cloudflare (<code>__cf_bm</code>, <code>_cfuvid</code>)、GitHub Pages。</p>
+    <p>VIA-Lは分析・広告Cookieを設定しません。追加する場合はオプトインバナーを表示します。</p>
+
+    <h2>3. 地域別の法的根拠</h2>
+    <p><strong>EU/EEA/UK:</strong> 必須Cookieは正当な利益（ePrivacy指令 2002/58/EC 第5(3)条）。<strong>カリフォルニア (CCPA):</strong> 販売しません。<strong>日本 (APPI):</strong> 同等の取扱い。<strong>韓国 (PIPA):</strong> 同等。</p>
+
+    <h2>4. 同意の管理</h2>
+    <p>必須ストレージのみ使用のためバナー表示なし。ブラウザ設定でストレージ削除、サードパーティCookieブロック、またはGlobal Privacy Control (GPC) 使用可能 — 当社はGPCシグナルを尊重します。</p>
+
+    <h2>5. ブラウザ設定</h2>
+    <p>Chrome/Safari/Firefox/Edge: 設定 → プライバシー → Cookie。</p>
+
+    <h2>6. 更新</h2>
+    <p>重要な変更はメールで通知。</p>
+
+    <h2>7. お問い合わせ</h2>
+    <p><a href="mailto:viaelcom@gmail.com">viaelcom@gmail.com</a></p>
+
+    <h2>8. 正本</h2>
+    <p><strong>英語版が正本</strong>であり、相違がある場合は英語版が優先します。</p>
+  </div>
+
+  <!-- ══ KOREAN ══ -->
+  <div data-lang="ko">
+    <div class="page-eyebrow"><span>쿠키 정책</span></div>
+    <h1>쿠키 정책</h1>
+    <p class="page-date">VIA-L · 최종 업데이트: 2026년 5월 30일</p>
+    <p class="lang-notice">편의를 위한 번역입니다. 영문판이 정본이며, 불일치가 있는 경우 영문판이 우선합니다.</p>
+
+    <h2>1. 쿠키란?</h2>
+    <p>방문 시 기기에 저장되는 작은 파일. VIA-L은 언어, 세션 인증, 최소 측정에 사용합니다. <strong>광고 쿠키는 사용하지 않습니다.</strong></p>
+
+    <h2>2. 사용 저장소</h2>
+    <p><strong>localStorage / sessionStorage(자사):</strong> <code>selectedLang</code>, <code>vial_lang</code>, <code>vial_code</code>, <code>vial_name</code>, <code>vial_email</code>, <code>vial_history_*</code>, <code>expert_state_*</code>. <strong>제3자 쿠키(필수):</strong> Cloudflare(<code>__cf_bm</code>, <code>_cfuvid</code>); GitHub Pages.</p>
+    <p>VIA-L은 분석/광고 쿠키를 사용하지 않습니다. 추가 시 옵트인 배너 표시.</p>
+
+    <h2>3. 지역별 법적 근거</h2>
+    <p><strong>EU/EEA/UK:</strong> 정당한 이익 기반 필수 쿠키(ePrivacy 지침 2002/58/EC 제5(3)조). <strong>캘리포니아(CCPA):</strong> 판매하지 않습니다. <strong>일본(APPI), 한국(PIPA/정보통신망법):</strong> 동등한 처리.</p>
+
+    <h2>4. 동의 관리</h2>
+    <p>필수 저장소만 사용하므로 배너 없음. 브라우저 설정에서 저장소 삭제, 제3자 쿠키 차단, Global Privacy Control(GPC) 사용 — GPC 신호 존중.</p>
+
+    <h2>5. 브라우저 설정</h2>
+    <p>Chrome/Safari/Firefox/Edge: 설정 → 개인정보 → 쿠키.</p>
+
+    <h2>6. 업데이트</h2>
+    <p>중대한 변경은 이메일로 통지.</p>
+
+    <h2>7. 문의</h2>
+    <p><a href="mailto:viaelcom@gmail.com">viaelcom@gmail.com</a></p>
+
+    <h2>8. 정본</h2>
+    <p><strong>영문판이 정본</strong>이며, 번역과 불일치가 있는 경우 영문판이 우선합니다.</p>
   </div>
 
 </main>
@@ -240,7 +536,11 @@
 </footer>
 
 <script>
-  var backLabels = { en: '← Back', ua: '← Назад', ru: '← Назад', es: '← Volver' };
+  var backLabels = {
+    en:'← Back', es:'← Volver', uk:'← Назад', ru:'← Назад',
+    de:'← Zurück', pt:'← Voltar', fr:'← Retour', pl:'← Powrót',
+    it:'← Indietro', he:'→ חזרה', ja:'← 戻る', ko:'← 뒤로'
+  };
   function setLang(l) {
     document.querySelectorAll('[data-lang]').forEach(function(el) {
       el.classList.toggle('active', el.getAttribute('data-lang') === l);
@@ -249,13 +549,16 @@
       b.classList.toggle('active', b.id === 'btn-' + l);
     });
     document.getElementById('back-link').textContent = backLabels[l] || '← Back';
-    document.documentElement.lang = l === 'ua' ? 'uk' : l;
+    document.documentElement.lang = l;
+    try { localStorage.setItem('selectedLang', l); } catch(e){}
   }
   (function(){
-    var hl = (navigator.language || '').toLowerCase();
-    if (hl.startsWith('uk')) setLang('ua');
-    else if (hl.startsWith('ru')) setLang('ru');
-    else if (hl.startsWith('es')) setLang('es');
+    var saved = null;
+    try { saved = localStorage.getItem('selectedLang'); } catch(e){}
+    if (saved && backLabels[saved]) { setLang(saved); return; }
+    var hl = (navigator.language || '').toLowerCase().slice(0,2);
+    if (hl === 'uk' || hl === 'ua') setLang('uk');
+    else if (backLabels[hl]) setLang(hl);
     else setLang('en');
   })();
 </script>
