@@ -11,7 +11,9 @@
 //                       (legacy: одна ISO-дата строкой — конвертируется автоматически)
 // G: JSON-массив дат отправленных клиенту PDF-отчётов (этап 7 backstage-бота)
 // H: ELITE Onboarding — JSON-объект ответов на onboarding-анкету,
-//    null/пусто = анкета ещё не пройдена. Используется только для ELITE-кодов.
+//    null/пусто = анкета ещё не пройдена. Используется для PRO+EXPERT и ELITE
+//    (любой тариф, у которого hasExpert=true в getPlanLimits — то есть с доступом
+//    к Expert-разборам нутрициолога). Анкета даёт нутрициологу контекст для PDF.
 //
 // Статусы: FREE → ACTIVE → EXPIRED
 //
@@ -175,8 +177,8 @@ function handleExpertRequest(p) {
     sheet.getRange(i + 1, 6).setValue(JSON.stringify(
       historyAll.map(function (d) { return d.toISOString(); })
     ));
-    // ELITE onboarding: если анкета пришла с этим отчётом — сохраняем в колонку H
-    // (один раз; повторные отчёты не перетирают первую анкету).
+    // Onboarding (PRO+EXPERT и ELITE): если анкета пришла с этим отчётом —
+    // сохраняем в колонку H один раз; повторные отчёты не перетирают первую анкету.
     if (onboarding && !(rows[i][7] && rows[i][7].toString().trim())) {
       sheet.getRange(i + 1, 8).setValue(JSON.stringify({
         completed_at: now.toISOString(),
@@ -248,8 +250,9 @@ function validateCode(code) {
       return respond({
         ok: true, plan: rowPlan, expiry: expiry.toISOString(),
         expert_used: 0, expert_max: limitsFree.max, expert_next_at: null,
-        // Для ELITE при первой активации — onboarding обязателен. Для остальных — нет.
-        onboarding_required: limitsFree.isElite
+        // При первой активации для тарифов с Expert-разборами (PRO+EXPERT, ELITE) —
+        // анкета обязательна, чтобы нутрициолог получил контекст до первого PDF.
+        onboarding_required: limitsFree.hasExpert
       });
     }
 
@@ -263,7 +266,7 @@ function validateCode(code) {
         return respond({
           ok: true, plan: rowPlan, expiry: expiryDate.toISOString(),
           expert_used: meta.used, expert_max: meta.max, expert_next_at: meta.next_at,
-          onboarding_required: planLimits.isElite && !onboardingDone
+          onboarding_required: planLimits.hasExpert && !onboardingDone
         });
       }
       sheet.getRange(i + 1, 3).setValue('EXPIRED');
