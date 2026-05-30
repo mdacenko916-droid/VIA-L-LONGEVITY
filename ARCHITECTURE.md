@@ -599,6 +599,63 @@ function t(k){ return T[lang][k] || T.ru[k] || k; }   // fallback на ru
 
 4. **Тестовые curl-запросы к `/hotmart-webhook` могут шуметь в TG-боте** если они проходят token-валидацию: с правильным `x-hotmart-hottok` + body `{"event":"PURCHASE_APPROVED"}` без productId Worker отправит «⚠ Hotmart: неизвестный product_id» нутрициологу. При диагностических curl-тестах либо посылай пустой body `{}` (skipped, без TG), либо предупреди нутрициолога.
 
+### 10.10 Google Apps Script — проект и деплой
+
+> Зафиксировано 2026-05-30 по скриншоту панели script.google.com.
+
+| Параметр | Значение |
+|---|---|
+| **Имя проекта** | `Проект без названия` (untitled — не переименован) |
+| **URL проекта** | `https://script.google.com/u/0/home/projects/1DY7E8HEMxBxAMAiR73F0fr0CY32X0qMp7N4pPg2HTVB_AUNZ_wCbJHE/edit` |
+| **Project ID** | `1DY7E8HEMxBxAMAiR73F0fr0CY32X0qMp7N4pPg2HTVB_AUNZ_wCbJHE` |
+| **Файл кода** | `Код.gs` (одна вкладка, ~всё содержимое `interpreter/apps-script.js` из репо) |
+| **Манифест** | `appsscript.json` — см. ниже |
+| **Библиотеки** | пусто (`Бібліотеки` слева — без записей) |
+| **Сервисы** | пусто (`Сервіси` слева — без записей) |
+| **Web-app URL (deploy)** | Хранится в Worker secret `APPS_SCRIPT_URL` (значение вида `https://script.google.com/macros/s/AKfycb…/exec`) |
+
+**`appsscript.json` — манифест проекта:**
+
+```json
+{
+  "timeZone": "Europe/Kyiv",
+  "dependencies": {},
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/script.external_request",
+    "https://mail.google.com/",
+    "https://www.googleapis.com/auth/documents",
+    "https://www.googleapis.com/auth/drive"
+  ],
+  "webapp": {
+    "executeAs": "USER_DEPLOYING",
+    "access": "ANYONE_ANONYMOUS"
+  }
+}
+```
+
+**Что значит этот манифест:**
+- `timeZone: Europe/Kyiv` — все даты в Sheet (активация, истечение, история) записываются в киевском поясе
+- `oauthScopes` — права аккаунта владельца, которые скрипт использует:
+  - `/spreadsheets` — читать/писать в Google Sheet с кодами доступа
+  - `/script.external_request` — `UrlFetchApp` для вызова Cloudflare Worker (`BACKSTAGE_DRAFT_URL`)
+  - `mail.google.com/` — отправка писем через `GmailApp` (письма нутрициологу + клиенту)
+  - `/documents` + `/drive` — генерация и сохранение PDF (Google Docs → PDF в Drive → ссылка в письме)
+- `executeAs: USER_DEPLOYING` — скрипт выполняется от имени аккаунта, который сделал deploy (= владельца ящика `viaelcom@gmail.com`). Все письма уходят с этого ящика
+- `access: ANYONE_ANONYMOUS` — endpoint Apps Script публичный, без токена. Защита — через токены в URL (validateCode принимает только зарегистрированные коды из Sheet)
+
+**Процедура деплоя после правки `interpreter/apps-script.js` в репо:**
+
+1. Скопировать всё содержимое `interpreter/apps-script.js` (из git репо)
+2. Открыть проект: <https://script.google.com/u/0/home/projects/1DY7E8HEMxBxAMAiR73F0fr0CY32X0qMp7N4pPg2HTVB_AUNZ_wCbJHE/edit>
+3. Открыть файл `Код.gs` → выделить всё (Cmd+A) → вставить
+4. **Deploy → Manage deployments → выбрать существующий deployment → ✏ Edit → Version: New version → Deploy**
+5. URL deployment не меняется (тот же `APPS_SCRIPT_URL` в Worker остаётся валидным)
+
+> ⚠ Если случайно создашь **новый** deployment вместо «New version» существующего — получишь новый URL, и нужно будет обновить `APPS_SCRIPT_URL` секрет в Worker (`wrangler secret put APPS_SCRIPT_URL`). Всегда выбирай «New version» у уже существующего deployment.
+
 ### 10.9 Оплата Hotmart → код доступа
 
 **1. Webhook URL** (настраивается в Hotmart panel для каждого product_id):
