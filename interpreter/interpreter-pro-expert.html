@@ -522,6 +522,68 @@ main{
 #step15 .card{box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 -1px 0 rgba(0,0,0,.5) inset,0 16px 48px rgba(0,0,0,.6),0 0 60px rgba(196,154,60,.08);}
 #stepResult .card{box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 -1px 0 rgba(0,0,0,.5) inset,0 16px 48px rgba(0,0,0,.6),0 0 60px rgba(196,154,60,.08);}
 
+/* ══ ONBOARDING FORM — premium ═══════════════════════════ */
+#stepOnboarding .card{background:linear-gradient(145deg,#1E1535 0%,#16102A 60%,#120D22 100%);}
+#stepOnboarding .card::before{background:radial-gradient(circle,#7898ff,transparent 70%);}
+#stepOnboarding .card{box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 -1px 0 rgba(0,0,0,.5) inset,0 16px 48px rgba(0,0,0,.6),0 0 60px rgba(120,152,255,.12);}
+#stepOnboarding .input-group label{color:rgba(255,255,255,.92);}
+#stepOnboarding .step-desc{color:rgba(255,255,255,.85);}
+
+#stepOnboarding input[type=text],
+#stepOnboarding input[type=email],
+#stepOnboarding textarea,
+#stepOnboarding select{
+  width:100%;
+  background:rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:12px;
+  color:var(--t1);
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;
+  padding:11px 14px;
+  outline:none;
+  -webkit-appearance:none;appearance:none;
+  transition:border-color .2s,background .2s,box-shadow .2s;
+}
+#stepOnboarding select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(120,152,255,.7)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 14px center;
+  padding-right:36px;
+  cursor:pointer;
+}
+#stepOnboarding textarea{resize:vertical;line-height:1.65;min-height:68px;}
+#stepOnboarding input[type=text]:focus,
+#stepOnboarding input[type=email]:focus,
+#stepOnboarding textarea:focus,
+#stepOnboarding select:focus{
+  border-color:rgba(120,152,255,.5);
+  background:rgba(120,152,255,.06);
+  box-shadow:0 0 0 3px rgba(120,152,255,.08);
+}
+#stepOnboarding input::placeholder,
+#stepOnboarding textarea::placeholder{color:rgba(255,255,255,.28);}
+#stepOnboarding select option{background:#1E1535;color:rgba(255,255,255,.9);}
+
+.onb-section{margin-bottom:0;}
+.onb-section+.onb-section{
+  border-top:1px solid rgba(120,152,255,.12);
+  margin-top:22px;padding-top:20px;
+}
+.onb-section-label{
+  display:flex;align-items:center;gap:10px;
+  font-size:9px;letter-spacing:2.5px;text-transform:uppercase;
+  color:rgba(120,152,255,.6);
+  margin-bottom:18px;font-weight:500;
+}
+.onb-section-label::before,.onb-section-label::after{
+  content:'';flex:1;height:1px;
+}
+.onb-section-label::before{background:linear-gradient(90deg,transparent,rgba(120,152,255,.3));}
+.onb-section-label::after{background:linear-gradient(270deg,transparent,rgba(120,152,255,.3));}
+
+
+
 /* Card top accent line — coloured per step */
 .card-accent{
   position:absolute;top:0;left:24px;right:24px;height:1px;
@@ -2685,8 +2747,155 @@ footer{
       </div>
       <div class="btn-row">
         <button class="btn btn-back" onclick="goTo(14)">←</button>
-        <button class="btn btn-primary" onclick="showResults()"><span class="btn-label" data-t="show_result">Показать результат →</span></button>
+        <button class="btn btn-primary" onclick="proceedFromStep15()"><span class="btn-label" data-t="show_result">Показать результат →</span></button>
       </div>
+    </div>
+  </div>
+
+  <!-- PRO+EXPERT ONBOARDING (показывается только при первом входе клиента PRO+EXPERT,
+       управляется JS через checkCode → onboarding_required) -->
+  <div class="step" id="stepOnboarding">
+    <div class="card">
+      <div class="card-accent" style="background:linear-gradient(90deg,transparent,#7898ff,transparent);"></div>
+      <div class="step-badge" style="color:#7898ff;border-color:rgba(120,152,255,.3);background:rgba(120,152,255,.08);" data-t="onb_badge">🧬 PRO+EXPERT · Стартовая анкета · 5 минут</div>
+      <h2 class="step-title" data-t="onb_title">Анкета-анамнез</h2>
+      <p class="step-desc" data-t="onb_desc">Заполните один раз перед стартом программы. Нутрициолог получит ваши ответы и составит персональный протокол ведения. Биометрия с трекера идёт отдельно — это о вас.</p>
+
+      <div class="onb-section">
+        <div class="onb-section-label"><span data-t="onb_sec1">Контакты</span></div>
+        <div class="input-group">
+          <label for="onbName" data-t="onb_name_label">Ваше имя</label>
+          <input type="text" id="onbName" data-t-placeholder="onb_name_ph" placeholder="Имя">
+        </div>
+        <div class="input-group">
+          <label for="onbEmail" data-t="onb_email_label">Email (для PDF-разборов от нутрициолога)</label>
+          <input type="email" id="onbEmail" data-t-placeholder="onb_email_ph" placeholder="you@example.com">
+        </div>
+        <div class="input-group">
+          <label for="onbTelegram" data-t="onb_q4_label">Telegram (@username) — для быстрой связи</label>
+          <input type="text" id="onbTelegram" data-t-placeholder="onb_q4_ph" placeholder="@username">
+        </div>
+        <div class="input-group">
+          <label for="onbTimezone" data-t="onb_q5_label">Часовой пояс / город</label>
+          <select id="onbTimezone">
+            <option value=""                          data-t="onb_q_o_pick">Выберите...</option>
+            <option value="UTC+2 · Kyiv">             UTC+2 · Київ / Афины / Каир</option>
+            <option value="UTC+3 · Moscow">           UTC+3 · Москва / Стамбул / Рияд</option>
+            <option value="UTC+1 · Berlin">           UTC+1 · Берлин / Париж / Мадрид / Рим</option>
+            <option value="UTC+0 · London">           UTC+0 · Лондон / Лиссабон</option>
+            <option value="UTC-5 · New York">         UTC−5 · Нью-Йорк / Торонто</option>
+            <option value="UTC-8 · Los Angeles">      UTC−8 · Лос-Анджелес / Ванкувер</option>
+            <option value="UTC+4 · Dubai">            UTC+4 · Дубай / Баку / Ереван</option>
+            <option value="UTC+5 · Tashkent">         UTC+5 · Ташкент / Карачи / Алматы</option>
+            <option value="UTC+5:30 · Mumbai">        UTC+5:30 · Мумбай / Дели</option>
+            <option value="UTC+7 · Bangkok">          UTC+7 · Бангкок / Джакарта</option>
+            <option value="UTC+8 · Singapore">        UTC+8 · Сингапур / Гонконг / Пекин</option>
+            <option value="UTC+9 · Tokyo">            UTC+9 · Токио / Сеул</option>
+            <option value="UTC+10 · Sydney">          UTC+10 · Сидней / Мельбурн</option>
+            <option value="other"                     data-t="onb_q5_other">Другой — укажу в коментариях</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="onb-section">
+        <div class="onb-section-label"><span data-t="onb_sec2">Цели программы</span></div>
+        <div class="input-group">
+          <label for="onbGoal" data-t="onb_q1_label">1. Главная цель программы — что хотите получить за 8 / 12 недель</label>
+          <textarea id="onbGoal" rows="3" data-t-placeholder="onb_q1_ph" placeholder="Например: вернуть энергию, наладить сон, снизить тревожность..."></textarea>
+        </div>
+        <div class="input-group">
+          <label for="onbExperience" data-t="onb_q2_label">2. Что пробовали раньше — что работало, что нет</label>
+          <textarea id="onbExperience" rows="3" data-t-placeholder="onb_q2_ph" placeholder="Магний работал · Ашваганду пробовала — не зашла..."></textarea>
+        </div>
+        <div class="input-group">
+          <label for="onbPriority" data-t="onb_q3_label">3. Главный приоритет сейчас (что важнее всего)</label>
+          <select id="onbPriority">
+            <option value=""           data-t="onb_q_o_pick">Выберите...</option>
+            <option value="energy"     data-t="onb_q3_o1">Энергия / снижение усталости</option>
+            <option value="sleep"      data-t="onb_q3_o2">Сон</option>
+            <option value="weight"     data-t="onb_q3_o3">Вес / композиция тела</option>
+            <option value="skin"       data-t="onb_q3_o4">Кожа / волосы</option>
+            <option value="cognition"  data-t="onb_q3_o5">Когниции / память</option>
+            <option value="hormones"   data-t="onb_q3_o6">Гормональный баланс</option>
+            <option value="other"      data-t="onb_q3_o7">Другое</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="onb-section">
+        <div class="onb-section-label"><span data-t="onb_sec3">История здоровья</span></div>
+        <div class="input-group">
+          <label for="onbChronic" data-t="onb_q6_label">4. Хронические заболевания (если есть)</label>
+          <textarea id="onbChronic" rows="2" data-t-placeholder="onb_q6_ph" placeholder="—"></textarea>
+        </div>
+        <div class="input-group">
+          <label for="onbMedications" data-t="onb_q7_label">5. Лекарства, которые принимаете постоянно (с дозами)</label>
+          <textarea id="onbMedications" rows="2" data-t-placeholder="onb_q7_ph" placeholder="—"></textarea>
+        </div>
+        <div class="input-group">
+          <label for="onbAllergies" data-t="onb_q8_label">6. Аллергии</label>
+          <textarea id="onbAllergies" rows="2" data-t-placeholder="onb_q8_ph" placeholder="—"></textarea>
+        </div>
+        <div class="input-group">
+          <label for="onbAutoimmune" data-t="onb_q9_label">7. Аутоиммунные заболевания</label>
+          <select id="onbAutoimmune">
+            <option value=""          data-t="onb_q_o_pick">Выберите...</option>
+            <option value="none"      data-t="onb_q9_o1">Нет</option>
+            <option value="hashimoto" data-t="onb_q9_o2">Тиреоидит Хашимото</option>
+            <option value="ra"        data-t="onb_q9_o3">Ревматоидный артрит</option>
+            <option value="psoriasis" data-t="onb_q9_o4">Псориаз</option>
+            <option value="other"     data-t="onb_q9_o5">Другое (укажите в «Хронические заболевания»)</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label for="onbHeartburn" data-t="onb_q10_label">8. Изжога или тяжесть после еды?</label>
+          <select id="onbHeartburn">
+            <option value=""       data-t="onb_q_o_pick">Выберите...</option>
+            <option value="no"     data-t="onb_q_o_no">Нет</option>
+            <option value="rarely" data-t="onb_q_o_rarely">Редко (раз в месяц)</option>
+            <option value="weekly" data-t="onb_q_o_weekly">Раз в неделю</option>
+            <option value="daily"  data-t="onb_q_o_daily">Ежедневно</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label for="onbPpi" data-t="onb_q11_label">9. Принимаете ИПП (омепразол, рабепразол, эзомепразол и др.)?</label>
+          <select id="onbPpi">
+            <option value=""      data-t="onb_q_o_pick">Выберите...</option>
+            <option value="no"    data-t="onb_q_o_no">Нет</option>
+            <option value="yes"   data-t="onb_q_o_yes_curr">Да, сейчас</option>
+            <option value="past"  data-t="onb_q_o_yes_past">Принимал(а) ранее</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label for="onbPpiDetail" data-t="onb_q11_detail_label">Если да — какой препарат и дозировка</label>
+          <input type="text" id="onbPpiDetail" data-t-placeholder="onb_q11_detail_ph" placeholder="например: Омепразол 20 мг утром">
+        </div>
+        <div class="input-group">
+          <label for="onbAntibiotics" data-t="onb_q12_label">10. Антибиотики за последние 6 месяцев?</label>
+          <select id="onbAntibiotics">
+            <option value=""        data-t="onb_q_o_pick">Выберите...</option>
+            <option value="no"      data-t="onb_q_o_no">Нет</option>
+            <option value="1course" data-t="onb_q_o_1c">1 курс</option>
+            <option value="multi"   data-t="onb_q_o_multi">Несколько курсов</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label for="onbGallbladder" data-t="onb_q13_label">11. Удалён ли желчный пузырь?</label>
+          <select id="onbGallbladder">
+            <option value=""    data-t="onb_q_o_pick">Выберите...</option>
+            <option value="no"  data-t="onb_q_o_no">Нет</option>
+            <option value="yes" data-t="onb_q_o_yes">Да</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label for="onbSupplementsHistory" data-t="onb_q14_label">12. Опыт с БАДами — что принимали, что работало или не работало</label>
+          <textarea id="onbSupplementsHistory" rows="3" data-t-placeholder="onb_q14_ph" placeholder="—"></textarea>
+        </div>
+      </div>
+
+      <div id="onbErrorMsg" style="display:none;font-size:12px;color:#F5A623;background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.25);border-radius:10px;padding:10px 14px;margin-bottom:10px;"></div>
+
+      <button type="button" id="onbSubmitBtn" class="btn btn-primary" style="width:100%;background:linear-gradient(135deg,#7898ff,#5a7fde);color:#fff;border:none;" onclick="submitOnboarding()" data-t="onb_submit_btn">Показать мой результат →</button>
     </div>
   </div>
 
@@ -3048,9 +3257,15 @@ async function checkCode(){
   btn.querySelector('span').textContent='Перевірка…';
   document.getElementById('gateError').classList.remove('show');
 
-  // Тестовые коды разработчика (Pro+Expert = всегда MAX)
-  const DEV_CODES={'VIAL-EXPERT-2024':'MAX'};
-  if(DEV_CODES[v]){gateUnlock('MAX', v);return;}
+  // Тестовые коды разработчика (Pro+Expert = всегда MAX).
+  // VIAL-EXPERT-2024     — обычный флоу (без Анкеты), как раньше.
+  // VIAL-EXPERT-ONB-2024 — принудительно показывает онбординг-Анкету (проверка UX).
+  const DEV_CODES={'VIAL-EXPERT-2024':'MAX','VIAL-EXPERT-ONB-2024':'MAX'};
+  if(DEV_CODES[v]){
+    gateUnlock('MAX', v);
+    if (v === 'VIAL-EXPERT-ONB-2024') window._onboardingPending = true;
+    return;
+  }
 
   if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL==='YOUR_APPS_SCRIPT_URL_HERE'){
     if(v.startsWith('VL-')){ gateUnlock('MAX', v); } else { gateError('invalid'); }
@@ -3069,6 +3284,10 @@ async function checkCode(){
       });
       gateUnlock('MAX', v);
       renderExpertCounter();
+      // PRO+EXPERT onboarding: при первом входе (когда Apps Script возвращает
+      // onboarding_required=true, т.е. колонка Анкеты в Sheet пустая) — анкета
+      // показывается ПОСЛЕ последнего биометрического шага, перед stepResult.
+      window._onboardingPending = !!data.onboarding_required;
     }
     else { gateError(data.reason||'invalid'); }
   } catch(e){
@@ -4531,6 +4750,12 @@ async function sendMaxRequest(){
       lang:     lang,
       data:     JSON.stringify(_analysisData || {})
     });
+    // PRO+EXPERT onboarding: если анкета только что заполнена (на stepOnboarding),
+    // отправляем ответы вместе с биометрией. Apps Script сохранит в Sheet
+    // один раз и добавит блок в email + бот.
+    if (window._onboardingAnswers) {
+      params.set('onboarding', JSON.stringify(window._onboardingAnswers));
+    }
     const res  = await fetch(APPS_SCRIPT_URL + '?' + params.toString(), { redirect: 'follow' });
     const data = await res.json();
 
@@ -5268,6 +5493,89 @@ function renderProtocol24(data, score){
           </div>
         </div>`).join('')}
     </div>`).join('');
+}
+
+// ══ PRO+EXPERT ONBOARDING (paралл. реализация с Elite) ════════════════════════════════════════
+// Анкета показывается как ПОСЛЕДНИЙ шаг ИП (после step15, перед showResults).
+// Глобальный флаг _onboardingPending выставляется в checkCode(), если сервер
+// вернул onboarding_required=true. Ответы пакуются в _onboardingAnswers и
+// уходят к нутрициологу ВМЕСТЕ с биометрией одним запросом через sendMaxRequest.
+window._onboardingPending = false;
+window._onboardingAnswers = null;
+window._onboardingName    = '';
+window._onboardingEmail   = '';
+
+// Кнопка «Показать результат →» на step15: если онбординг ещё не пройден,
+// сначала показываем анкету, иначе сразу к stepResult.
+function proceedFromStep15() {
+  if (window._onboardingPending) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    const ob = document.getElementById('stepOnboarding');
+    if (ob) ob.classList.add('active');
+    const pb = document.querySelector('.progress-bar');
+    if (pb) pb.style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    showResults();
+  }
+}
+
+// Анкета — это просто доп. шаг PRO+EXPERT. Ответы пакуются в _onboardingAnswers
+// и уйдут к нутрициологу ВМЕСТЕ с биометрией через sendMaxRequest одним
+// запросом (один email, одна карточка в боте, одна запись в Sheet H).
+// На анкете НЕТ отдельной кнопки «Отправить» — только «Продолжить к биометрии».
+function submitOnboarding() {
+  const name  = (document.getElementById('onbName')?.value  || '').trim();
+  const email = (document.getElementById('onbEmail')?.value || '').trim();
+  const errEl = document.getElementById('onbErrorMsg');
+
+  if (!email || !/\S+@\S+\.\S+/.test(email)) {
+    errEl.textContent = T[lang]?.onb_err_email || '⚠ Введите корректный email — на него придут PDF-разборы.';
+    errEl.style.display = 'block';
+    document.getElementById('onbEmail')?.focus();
+    return;
+  }
+  errEl.style.display = 'none';
+
+  window._onboardingAnswers = {
+    goal:                 (document.getElementById('onbGoal')?.value || '').trim(),
+    experience:           (document.getElementById('onbExperience')?.value || '').trim(),
+    priority:             document.getElementById('onbPriority')?.value || '',
+    telegram:             (document.getElementById('onbTelegram')?.value || '').trim(),
+    timezone:             (document.getElementById('onbTimezone')?.value || '').trim(),
+    chronic:              (document.getElementById('onbChronic')?.value || '').trim(),
+    medications:          (document.getElementById('onbMedications')?.value || '').trim(),
+    allergies:            (document.getElementById('onbAllergies')?.value || '').trim(),
+    autoimmune:           document.getElementById('onbAutoimmune')?.value || '',
+    heartburn:            document.getElementById('onbHeartburn')?.value || '',
+    ppi:                  document.getElementById('onbPpi')?.value || '',
+    ppi_detail:           (document.getElementById('onbPpiDetail')?.value || '').trim(),
+    antibiotics:          document.getElementById('onbAntibiotics')?.value || '',
+    gallbladder:          document.getElementById('onbGallbladder')?.value || '',
+    supplements_history:  (document.getElementById('onbSupplementsHistory')?.value || '').trim()
+  };
+  window._onboardingName  = name;
+  window._onboardingEmail = email;
+
+  if (name)  sessionStorage.setItem('vial_name', name);
+  if (email) sessionStorage.setItem('vial_email', email);
+
+  // Переход к stepResult. Предзаполняем имя/email на форме недельного отчёта
+  // и скроллим к ней — пользователь видит готовую кнопку «Отправить», нажимает
+  // её один раз — и анкета + биометрия уходят одним запросом к нутрициологу.
+  document.getElementById('stepOnboarding')?.classList.remove('active');
+  const pb = document.querySelector('.progress-bar');
+  if (pb) pb.style.display = '';
+  showResults();
+
+  setTimeout(() => {
+    const nm = document.getElementById('maxName');
+    const em = document.getElementById('maxEmail');
+    if (nm && name)  nm.value = name;
+    if (em && email) em.value = email;
+    const block = document.getElementById('maxBlock');
+    if (block) block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 200);
 }
 
 // ══ RESULTS ENGINE ════════════════════════════════════════
