@@ -1378,7 +1378,7 @@ footer{
 <div id="scroll-area">
 
 <!-- HISTORY PANEL (inside scroll-area) -->
-<div id="historyPanel" style="display:none;position:absolute;top:var(--topbar-h,74px);left:0;right:0;bottom:0;z-index:400;background:#10131A;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 20px 40px;">
+<div id="historyPanel" style="display:none;position:fixed;top:var(--topbar-h,74px);left:0;right:0;bottom:0;z-index:400;background:#10131A;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 20px 40px;">
   <div style="max-width:600px;margin:0 auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
       <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--t1);" data-t="history_title">История сессий</div>
@@ -3473,53 +3473,35 @@ function navTo(tab){
 }
 
 // ══ HISTORY ═══════════════════════════════════════════════
+// VIO (бесплатный тариф): историю НЕ персистим — не оставляем данные о
+// здоровье в браузере бесплатника и сохраняем «динамику во времени» как
+// ценность платных тарифов. saveSession оставлен как no-op, чтобы вызов
+// в renderResult не падал.
 function saveSession(score,type,data){
-  const key='vial_history';
-  const history=JSON.parse(localStorage.getItem(key)||'[]');
-  const session={
-    date:new Date().toLocaleDateString(lang==='en'?'en-GB':'ru-RU',{day:'numeric',month:'short',year:'numeric'}),
-    score,type,
-    hrv:data.hrv,sleep:data.sleep_qual,rhr:data.rhr,energy:data.energy,
-    gender:data.gender,phase:data.phase,
-    ts:Date.now()
-  };
-  history.unshift(session);
-  if(history.length>12)history.pop();
-  localStorage.setItem(key,JSON.stringify(history));
+  /* no-op on free tier */
 }
 
 function renderHistory(){
-  const key='vial_history';
-  const history=JSON.parse(localStorage.getItem(key)||'[]');
   const el=document.getElementById('historyList');
-  if(!history.length){
-    el.innerHTML=`<div style="text-align:center;color:var(--t3);padding:40px 20px;font-size:14px;">${t('history_empty')}</div>`;
-    return;
-  }
-  el.innerHTML=history.map((s,i)=>{
-    const prev=history[i+1];
-    let compare='';
-    if(prev){
-      const diff=s.score-prev.score;
-      if(diff>3)compare=`<span style="color:var(--ok);font-size:11px;">↑ ${diff} ${t('compare_better')}</span>`;
-      else if(diff<-3)compare=`<span style="color:var(--alert);font-size:11px;">↓ ${Math.abs(diff)} ${t('compare_worse')}</span>`;
-      else compare=`<span style="color:var(--t3);font-size:11px;">→ ${t('compare_same')}</span>`;
-    }
-    const cols={'ok':'#4ECCA3','warn':'#F5A623','alert':'#FF6B8A'};
-    const clr=cols[s.type]||cols.ok;
-    return `<div style="background:#1A1F2B;border-radius:16px;border:1px solid var(--b1);padding:16px 18px;margin-bottom:10px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div style="font-size:12px;color:var(--t3);">${s.date}</div>
-        <div style="font-family:'DM Mono',monospace;font-size:24px;color:${clr};text-shadow:0 0 12px ${clr}66;">${s.score}</div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-        <span style="background:rgba(78,204,163,.1);border:1px solid rgba(78,204,163,.2);border-radius:8px;padding:4px 10px;font-size:11px;color:var(--ok);">HRV ${s.hrv}</span>
-        <span style="background:rgba(59,91,219,.1);border:1px solid rgba(59,91,219,.2);border-radius:8px;padding:4px 10px;font-size:11px;color:#7B9FE8;">💤 ${s.sleep}/10</span>
-        <span style="background:rgba(192,57,90,.1);border:1px solid rgba(192,57,90,.2);border-radius:8px;padding:4px 10px;font-size:11px;color:#E88AA0;">❤ ${s.rhr}</span>
-      </div>
-      ${compare}
-    </div>`;
-  }).join('');
+  if(!el)return;
+  const UP={
+    ru:'Сохранение истории и динамика показателей во времени доступны на тарифах PRO и выше.',
+    uk:'Збереження історії та динаміка показників у часі доступні на тарифах PRO і вище.',
+    en:'Saving your history and tracking dynamics over time are available on PRO and higher plans.',
+    es:'El guardado del historial y el seguimiento de la evolución están disponibles en los planes PRO y superiores.',
+    de:'Verlauf speichern und die Entwicklung über die Zeit verfolgen — verfügbar in den PRO-Tarifen und höher.',
+    pt:'Salvar o histórico e acompanhar a evolução ao longo do tempo estão disponíveis nos planos PRO e superiores.',
+    fr:'L\'enregistrement de l\'historique et le suivi de l\'évolution sont disponibles dans les forfaits PRO et supérieurs.',
+    pl:'Zapisywanie historii i śledzenie zmian w czasie dostępne są w planach PRO i wyższych.',
+    it:'Il salvataggio della cronologia e il monitoraggio nel tempo sono disponibili nei piani PRO e superiori.',
+    he:'שמירת ההיסטוריה ומעקב אחר השינויים לאורך זמן זמינים בתוכניות PRO ומעלה.',
+    ja:'履歴の保存と経時的な変化の追跡は、PRO以上のプランでご利用いただけます。',
+    ko:'기록 저장 및 시간 경과에 따른 변화 추적은 PRO 이상 요금제에서 제공됩니다.'
+  };
+  const msg=UP[lang]||UP.en;
+  el.innerHTML=`<div style="text-align:center;color:var(--t3);padding:48px 22px;font-size:14px;line-height:1.55;">
+    <div style="font-size:30px;margin-bottom:14px;opacity:.7;">🔒</div>${msg}
+  </div>`;
 }
 
 // ══ OURA SLIDER ══════════════════════════════════════════

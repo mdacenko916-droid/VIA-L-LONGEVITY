@@ -1236,11 +1236,16 @@ footer{
 <div id="scroll-area">
 
 <!-- HISTORY PANEL (inside scroll-area) -->
-<div id="historyPanel" style="display:none;position:absolute;inset:0;z-index:400;background:#10131A;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 20px 40px;">
+<div id="historyPanel" style="display:none;position:fixed;inset:0;z-index:700;background:#10131A;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 20px 40px;">
   <div style="max-width:600px;margin:0 auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
       <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--t1);" data-t="history_title">История сессий</div>
       <button onclick="navTo('home')" style="background:none;border:1px solid var(--b1);color:var(--t3);padding:6px 14px;border-radius:50px;font-size:11px;letter-spacing:1px;cursor:pointer;font-family:'DM Sans',sans-serif;">✕</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;">
+      <button id="histExportBtn" onclick="exportHistory()" style="background:rgba(78,204,163,.08);border:1px solid rgba(78,204,163,.25);color:var(--ok);padding:8px 16px;border-radius:50px;font-size:12px;letter-spacing:.5px;cursor:pointer;font-family:'DM Sans',sans-serif;">↓ Экспорт</button>
+      <button id="histImportBtn" onclick="document.getElementById('histImportInput').click()" style="background:rgba(78,204,163,.08);border:1px solid rgba(78,204,163,.25);color:var(--ok);padding:8px 16px;border-radius:50px;font-size:12px;letter-spacing:.5px;cursor:pointer;font-family:'DM Sans',sans-serif;">↑ Импорт</button>
+      <input id="histImportInput" type="file" accept="application/json,.json" onchange="importHistory(this)" style="display:none;">
     </div>
     <div id="historyList"></div>
   </div>
@@ -3929,7 +3934,7 @@ function saveSession(score,type,data){
     ts:Date.now()
   };
   history.unshift(session);
-  if(history.length>12)history.pop();
+  while(history.length>60)history.pop();
   localStorage.setItem(key,JSON.stringify(history));
 }
 
@@ -3937,6 +3942,9 @@ function renderHistory(){
   const key='vial_history';
   const history=JSON.parse(localStorage.getItem(key)||'[]');
   const el=document.getElementById('historyList');
+  const _ui=_histUI();
+  const _be=document.getElementById('histExportBtn');if(_be)_be.textContent='↓ '+_ui.exp;
+  const _bi=document.getElementById('histImportBtn');if(_bi)_bi.textContent='↑ '+_ui.imp;
   if(!history.length){
     el.innerHTML=`<div style="text-align:center;color:var(--t3);padding:40px 20px;font-size:14px;">${t('history_empty')}</div>`;
     return;
@@ -3965,6 +3973,58 @@ function renderHistory(){
       ${compare}
     </div>`;
   }).join('');
+}
+
+// ══ HISTORY EXPORT / IMPORT ═══════════════════════════════
+// Клиент сам владеет своей историей: выгрузка/загрузка файлом на устройстве,
+// в облако ничего не уходит (GDPR-friendly). Мерж по ts без дублей, лимит 60.
+function _histUI(){
+  const M={
+    ru:{exp:'Экспорт',imp:'Импорт',bad:'Не удалось прочитать файл истории.'},
+    uk:{exp:'Експорт',imp:'Імпорт',bad:'Не вдалося прочитати файл історії.'},
+    en:{exp:'Export',imp:'Import',bad:'Could not read the history file.'},
+    es:{exp:'Exportar',imp:'Importar',bad:'No se pudo leer el archivo de historial.'},
+    de:{exp:'Export',imp:'Import',bad:'Verlaufsdatei konnte nicht gelesen werden.'},
+    pt:{exp:'Exportar',imp:'Importar',bad:'Não foi possível ler o arquivo de histórico.'},
+    fr:{exp:'Exporter',imp:'Importer',bad:'Impossible de lire le fichier d\'historique.'},
+    pl:{exp:'Eksport',imp:'Import',bad:'Nie udało się odczytać pliku historii.'},
+    it:{exp:'Esporta',imp:'Importa',bad:'Impossibile leggere il file della cronologia.'},
+    he:{exp:'ייצוא',imp:'ייבוא',bad:'לא ניתן לקרוא את קובץ ההיסטוריה.'},
+    ja:{exp:'エクスポート',imp:'インポート',bad:'履歴ファイルを読み込めませんでした。'},
+    ko:{exp:'내보내기',imp:'가져오기',bad:'기록 파일을 읽을 수 없습니다.'}
+  };
+  return M[lang]||M.en;
+}
+function exportHistory(){
+  const history=JSON.parse(localStorage.getItem('vial_history')||'[]');
+  if(!history.length)return;
+  const payload={app:'vial-interpreter',v:1,exported:new Date().toISOString(),history};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='vial_history_'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(url);a.remove();},0);
+}
+function importHistory(input){
+  const file=input.files&&input.files[0];
+  input.value='';
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(){
+    try{
+      const parsed=JSON.parse(reader.result);
+      const incoming=Array.isArray(parsed)?parsed:(parsed&&Array.isArray(parsed.history)?parsed.history:null);
+      if(!incoming)throw 0;
+      const cur=JSON.parse(localStorage.getItem('vial_history')||'[]');
+      const byTs={};
+      cur.concat(incoming).forEach(function(s){if(s&&typeof s==='object'&&s.ts!=null)byTs[s.ts]=s;});
+      const merged=Object.keys(byTs).map(function(k){return byTs[k];}).sort(function(a,b){return (b.ts||0)-(a.ts||0);}).slice(0,60);
+      localStorage.setItem('vial_history',JSON.stringify(merged));
+      renderHistory();
+    }catch(e){alert(_histUI().bad);}
+  };
+  reader.readAsText(file);
 }
 
 // ══ OURA SLIDER ══════════════════════════════════════════
