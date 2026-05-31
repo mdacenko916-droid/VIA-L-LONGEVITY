@@ -43,7 +43,7 @@ var BACKSTAGE_DRAFT_URL = 'https://interpreter.viaelcom.workers.dev/draft';
 
 // Dev-коды — обходят проверку по таблице, не ограничены лимитом.
 // Используем только для разработки/тестирования бота.
-var DEV_CODES = ['VIAL-PRO-2024', 'VIAL-EXPERT-2024',
+var DEV_CODES = ['VIAL-PRO-2024', 'VIAL-EXPERT-2024', 'VIAL-EXPERT-ONB-2024',
                  'VIAL-ELITE-2024', 'VIAL-ELITE-8W', 'VIAL-ELITE-12W'];
 
 // ── GET: валидация кода ИЛИ приём Expert-запроса ─────────────

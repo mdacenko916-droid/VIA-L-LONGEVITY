@@ -1163,6 +1163,20 @@ async function handleTgCallback(cq, env, corsHeaders) {
       return jsonResponse({ ok: false, error: 'no_reply_yet' }, corsHeaders);
     }
 
+    // Защита от двойного клика: если отправка уже идёт (не дольше 2 минут) — выходим.
+    // Замок снимается сам через 120 с, чтобы зависшая отправка не блокировала повтор.
+    if (draft.status === 'sending' && draft.sending_at && (Date.now() - draft.sending_at) < 120000) {
+      await tgAnswerCallback(env, cq.id, '⏳ Уже отправляю, подождите…');
+      return jsonResponse({ ok: false, error: 'already_sending' }, corsHeaders);
+    }
+
+    // Мгновенный отклик кнопке (чтобы не жали повторно) + «замок» в KV
+    // ДО начала тяжёлой работы (перевод + генерация PDF, ~5-10 c).
+    await tgAnswerCallback(env, cq.id, '⏳ Отправляю клиенту…');
+    draft.status     = 'sending';
+    draft.sending_at = Date.now();
+    await env.EXPERT_DRAFTS.put('draft:' + requestId, JSON.stringify(draft), { expirationTtl: 7 * 24 * 60 * 60 });
+
     // Перевод ответа на язык клиента (если он не ru/uk).
     let finalReply = draft.nutritionist_reply;
     const clientLang = (draft.lang || 'en').toLowerCase();
@@ -1178,6 +1192,7 @@ async function handleTgCallback(cq, env, corsHeaders) {
 
     // Отправка PDF клиенту через Apps Script (action=send_report).
     let sendResult = null;
+    let sendError  = null;
     if (env.APPS_SCRIPT_URL) {
       try {
         const r = await fetch(env.APPS_SCRIPT_URL, {
@@ -1202,27 +1217,40 @@ async function handleTgCallback(cq, env, corsHeaders) {
         sendResult = await r.json();
       } catch (e) {
         console.error('send_report call failed:', e?.message || e);
-        await tgAnswerCallback(env, cq.id, '⚠ Ошибка отправки клиенту');
-        return jsonResponse({ ok: false, error: 'apps_script_call_failed' }, corsHeaders);
+        sendError = String(e?.message || e);
       }
     } else {
       console.error('APPS_SCRIPT_URL not set in env');
+      sendError = 'APPS_SCRIPT_URL not set';
     }
 
-    draft.status      = 'approved';
-    draft.approved_at = new Date().toISOString();
-    draft.send_result = sendResult;
+    const sentOk   = sendResult && sendResult.ok;
+    const langNote = (clientLang !== 'ru' && clientLang !== 'uk') ? ' <i>(переведено с ru)</i>' : '';
 
-    const sentOk = sendResult && sendResult.ok;
-    await tgEditMessage(env, chatId, messageId,
-      (sentOk ? '✅ <b>Отправлено клиенту</b>' : '⚠ <b>Утверждено, но отправка дала сбой</b>') +
-      '\n\nКлиент: <code>' + esc(draft.client_email) + '</code>' +
-      '\nЯзык: ' + esc(clientLang) +
-      (clientLang !== 'ru' && clientLang !== 'uk' ? ' <i>(переведено с ru)</i>' : '') +
-      (sentOk ? '' : '\n\n<code>' + esc(JSON.stringify(sendResult || {error:'no_response'})) + '</code>')
-    );
-    await env.EXPERT_DRAFTS.delete('draft:' + requestId);
-    await tgAnswerCallback(env, cq.id, sentOk ? '✅ Отправлено клиенту' : '⚠ Сбой отправки');
+    if (sentOk) {
+      draft.status      = 'approved';
+      draft.approved_at = new Date().toISOString();
+      draft.send_result = sendResult;
+      await tgEditMessage(env, chatId, messageId,
+        '✅ <b>Отправлено клиенту</b>' +
+        '\n\nКлиент: <code>' + esc(draft.client_email) + '</code>' +
+        '\nЯзык: ' + esc(clientLang) + langNote
+      );
+      await env.EXPERT_DRAFTS.delete('draft:' + requestId);
+    } else {
+      // Сбой: НЕ удаляем черновик — возвращаем кнопку «Повторить отправку».
+      draft.status      = 'send_failed';
+      draft.send_result = sendResult;
+      await env.EXPERT_DRAFTS.put('draft:' + requestId, JSON.stringify(draft), { expirationTtl: 7 * 24 * 60 * 60 });
+      await tgEditMessage(env, chatId, messageId,
+        '⚠ <b>Утверждено, но отправка дала сбой</b>' +
+        '\n\nКлиент: <code>' + esc(draft.client_email) + '</code>' +
+        '\nЯзык: ' + esc(clientLang) + langNote +
+        '\n\n<code>' + esc(JSON.stringify(sendResult || { error: sendError || 'no_response' })) + '</code>' +
+        '\n\nЧерновик сохранён — нажмите «Повторить».',
+        { inline_keyboard: [[{ text: '🔄 Повторить отправку', callback_data: 'approve:' + requestId }]] }
+      );
+    }
   }
   else if (action === 'reject') {
     draft.status = 'rejected';
@@ -1234,10 +1262,11 @@ async function handleTgCallback(cq, env, corsHeaders) {
     await tgAnswerCallback(env, cq.id, '❌ Отклонено');
   }
   else if (action === 'edit') {
-    // Включаем режим редактирования на 10 минут.
-    await env.EXPERT_DRAFTS.put('editing:' + chatId, requestId, { expirationTtl: 10 * 60 });
+    // Включаем режим редактирования на 48 часов (переживает ночь/выходные;
+    // меньше срока жизни черновика — 7 дней).
+    await env.EXPERT_DRAFTS.put('editing:' + chatId, requestId, { expirationTtl: 48 * 60 * 60 });
     await tgSendMessage(env, chatId,
-      '✏️ <b>Режим редактирования</b>\n\nПришлите свой текст разбора одним сообщением. После — карточка вернётся с кнопками для подтверждения.\n\n<i>10 минут на правку.</i>'
+      '✏️ <b>Режим редактирования</b>\n\nПришлите свой текст разбора одним сообщением. После — карточка вернётся с кнопками для подтверждения.\n\n<i>48 часов на правку.</i>'
     );
     await tgAnswerCallback(env, cq.id, 'Жду ваш текст');
   }
@@ -1333,11 +1362,13 @@ async function tgSendMessage(env, chatId, text, extra = {}) {
   return res.json();
 }
 
-async function tgEditMessage(env, chatId, messageId, text) {
+async function tgEditMessage(env, chatId, messageId, text, replyMarkup) {
+  const payload = { chat_id: chatId, message_id: messageId, text, parse_mode: 'HTML', disable_web_page_preview: true };
+  if (replyMarkup) payload.reply_markup = replyMarkup;
   const res = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/editMessageText`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: chatId, message_id: messageId, text, parse_mode: 'HTML', disable_web_page_preview: true })
+    body: JSON.stringify(payload)
   });
   return res.json();
 }
