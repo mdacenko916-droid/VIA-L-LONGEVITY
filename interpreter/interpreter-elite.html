@@ -3103,22 +3103,12 @@ footer{
     <div class="max-card" id="zoomBlock" style="display:none;background:linear-gradient(135deg,#1F1633 0%,#150E26 100%);border:1px solid rgba(157,108,255,.45);">
       <div class="max-badge" data-t="badge_zoom" style="background:rgba(157,108,255,.12);color:#9d6cff;border-color:rgba(157,108,255,.3);">🔮 ELITE · Видео-консультация</div>
       <div class="max-title" data-t="zoom_title">Запросить Zoom-созвон</div>
-      <div class="max-desc" data-t="zoom_desc">Выберите дату и время — ссылку на Zoom пришлём на ваш email.</div>
-      <div id="zoomPicker" style="margin:6px 0 10px;">
-        <div id="zoomDayLabel" style="font-size:12px;letter-spacing:.04em;color:#cbb8ff;margin-bottom:8px;">Дата</div>
-        <div id="zoomDays" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;"></div>
-        <div id="zoomTimeLabel" style="display:none;font-size:12px;letter-spacing:.04em;color:#cbb8ff;margin:12px 0 8px;">Время (UTC+2, Киев)</div>
-        <div id="zoomSlots" style="display:none;flex-wrap:wrap;gap:8px;"></div>
-        <input id="zoomEmail" type="email" placeholder="Ваш email" autocomplete="email"
-          style="width:100%;box-sizing:border-box;margin-top:14px;padding:13px 14px;border-radius:12px;border:1px solid rgba(157,108,255,.35);background:rgba(157,108,255,.06);color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;">
+      <div class="max-desc" data-t="zoom_desc">Выберите дату и время — ссылка на Zoom придёт на ваш email.</div>
+      <div style="margin-top:12px;border-radius:14px;overflow:hidden;background:#fff;">
+        <iframe src="https://cal.com/marynaviael/%D0%BA%D0%BE%D0%BD%D1%81%D1%83%D0%BB%D1%8C%D1%82%D0%B0%D1%86%D0%B8%D1%8F-60-%D0%BC%D0%B8%D0%BD?embed=true&embedType=inline&theme=light"
+          width="100%" height="600" frameborder="0" allow="camera; microphone"
+          style="border:none;min-height:560px;border-radius:14px;"></iframe>
       </div>
-      <button type="button" id="zoomBtn" onclick="bookEliteCall()" data-t="zoom_btn" disabled
-        style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px 24px;border-radius:14px;background:linear-gradient(135deg,#9d6cff,#7c4ddd);color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;letter-spacing:.05em;cursor:pointer;box-shadow:0 4px 20px rgba(157,108,255,.3);transition:transform .2s,opacity .2s;margin-top:4px;opacity:.5;"
-        onmouseover="if(!this.disabled)this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-        Записаться →
-      </button>
-      <div id="zoomErr" style="display:none;font-size:13px;color:var(--alert);text-align:center;padding:10px;margin-top:10px;"></div>
-      <div id="zoomSent" style="display:none;font-size:13px;color:var(--ok);text-align:center;padding:12px;background:var(--ok-dim);border-radius:12px;margin-top:10px;" data-t="zoom_sent">✓ Готово! Ссылка на Zoom придёт на ваш email.</div>
     </div>
 
     <!-- ELITE: Telegram щоденний чат -->
@@ -3236,121 +3226,6 @@ function renderExpertCounter(){
   el.style.color = color;
   el.style.borderColor = borderColor;
   el.style.display = 'block';
-}
-
-// ══ Zoom-консультация (только ru/uk) ═════════════════════════
-// Чтобы клиент не спамил TG нутрициолога после reload страницы — храним
-// timestamp последнего запроса в localStorage. В пределах ZOOM_COOLDOWN_MS
-// (24 часа) повторный клик не уйдёт, а UI показывает «уже отправлено».
-const ZOOM_COOLDOWN_MS = 24 * 60 * 60 * 1000;
-function _zoomKey(){ return 'vial_zoom_requested_at:' + (sessionStorage.getItem('vial_code') || ''); }
-function _zoomRecentlyRequested(){
-  const ts = parseInt(localStorage.getItem(_zoomKey()) || '0', 10);
-  return ts && (Date.now() - ts) < ZOOM_COOLDOWN_MS;
-}
-function _zoomShowSentState(){
-  const btn = document.getElementById('zoomBtn');
-  const sent = document.getElementById('zoomSent');
-  if (btn) btn.style.display = 'none';
-  if (sent) sent.style.display = 'block';
-}
-// Локальные подписи пикера (блок только uk/ru; fallback — ru).
-const EZ = {
-  ru: { day:'Дата', time:'Время (UTC+2, Киев)', email:'Ваш email', sending:'Отправляем…', err:'Не удалось записаться. Попробуйте позже.', wd:['Вс','Пн','Вт','Ср','Чт','Пт','Сб'], mo:['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'] },
-  uk: { day:'Дата', time:'Час (UTC+2, Київ)', email:'Ваш email', sending:'Надсилаємо…', err:'Не вдалося записатися. Спробуйте пізніше.', wd:['Нд','Пн','Вт','Ср','Чт','Пт','Сб'], mo:['січ','лют','бер','кві','тра','чер','лип','сер','вер','жов','лис','гру'] },
-};
-function _ez(){ return EZ[lang] || EZ.ru; }
-
-let _zSelDate = null, _zSelTime = null;
-const _Z_SLOTS = ['09:00','10:00','11:00','12:00','14:00','15:00','16:00','17:00','18:00','19:00'];
-
-function _zChipStyle(el, on){
-  el.style.cssText = 'padding:8px 10px;border-radius:10px;font-size:12px;cursor:pointer;white-space:nowrap;text-align:center;min-width:46px;transition:all .15s;font-family:\'DM Sans\',sans-serif;'
-    + (on ? 'background:#9d6cff;color:#fff;border:1px solid #9d6cff;' : 'background:rgba(157,108,255,.08);color:#cbb8ff;border:1px solid rgba(157,108,255,.35);');
-}
-function _zSyncBtn(){
-  const btn = document.getElementById('zoomBtn');
-  if (!btn) return;
-  const ready = !!(_zSelDate && _zSelTime);
-  btn.disabled = !ready;
-  btn.style.opacity = ready ? '1' : '.5';
-}
-function renderEliteCal(){
-  const daysEl = document.getElementById('zoomDays');
-  if (!daysEl) return;
-  const ez = _ez();
-  document.getElementById('zoomDayLabel').textContent = ez.day;
-  document.getElementById('zoomTimeLabel').textContent = ez.time;
-  const emEl = document.getElementById('zoomEmail');
-  if (emEl){ emEl.placeholder = ez.email; if(!emEl.value){ const m=(document.getElementById('maxEmail')?.value||'').trim(); if(m) emEl.value=m; } }
-  daysEl.innerHTML = '';
-  _zSelDate = null; _zSelTime = null;
-  document.getElementById('zoomTimeLabel').style.display = 'none';
-  document.getElementById('zoomSlots').style.display = 'none';
-  _zSyncBtn();
-  const today = new Date();
-  let added = 0;
-  for (let i = 1; i <= 25 && added < 14; i++){
-    const d = new Date(today); d.setDate(today.getDate() + i);
-    if (d.getDay() === 0) continue; // без воскресений
-    const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    const chip = document.createElement('div');
-    _zChipStyle(chip, false);
-    chip.innerHTML = `<div style="font-size:11px;opacity:.75">${ez.wd[d.getDay()]}</div><div style="font-size:14px;font-weight:600">${d.getDate()}</div><div style="font-size:10px;opacity:.6">${ez.mo[d.getMonth()]}</div>`;
-    chip.onclick = () => eliteSelectDay(iso, chip);
-    daysEl.appendChild(chip);
-    added++;
-  }
-}
-function eliteSelectDay(iso, el){
-  _zSelDate = iso; _zSelTime = null;
-  document.querySelectorAll('#zoomDays > div').forEach(c => _zChipStyle(c, false));
-  _zChipStyle(el, true);
-  const slots = document.getElementById('zoomSlots');
-  slots.innerHTML = '';
-  _Z_SLOTS.forEach(time => {
-    const chip = document.createElement('div');
-    _zChipStyle(chip, false);
-    chip.textContent = time;
-    chip.onclick = () => eliteSelectTime(time, chip);
-    slots.appendChild(chip);
-  });
-  document.getElementById('zoomTimeLabel').style.display = 'block';
-  slots.style.display = 'flex';
-  _zSyncBtn();
-}
-function eliteSelectTime(time, el){
-  _zSelTime = time;
-  document.querySelectorAll('#zoomSlots > div').forEach(c => _zChipStyle(c, false));
-  _zChipStyle(el, true);
-  _zSyncBtn();
-}
-async function bookEliteCall(){
-  const btn = document.getElementById('zoomBtn');
-  const errEl = document.getElementById('zoomErr');
-  if (!btn) return;
-  if (_zoomRecentlyRequested()) { _zoomShowSentState(); return; }
-  if (!_zSelDate || !_zSelTime) return;
-  const emailEl = document.getElementById('zoomEmail');
-  const email = (emailEl?.value || '').trim();
-  if (!email || !email.includes('@')) { if (emailEl){ emailEl.style.borderColor='var(--alert)'; emailEl.focus(); } return; }
-  const code = sessionStorage.getItem('vial_code') || '';
-  if (errEl) errEl.style.display = 'none';
-  btn.disabled = true; const _o = btn.textContent; btn.textContent = '⏳ ' + _ez().sending;
-  try {
-    const r = await fetch('https://interpreter.viaelcom.workers.dev/book-call', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ kind: 'elite60', lang, code, email, date: _zSelDate, time: _zSelTime, tz: 'UTC+2' }),
-    });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok || !j.ok) throw new Error('book_failed');
-    localStorage.setItem(_zoomKey(), Date.now().toString());
-    document.getElementById('zoomPicker').style.display = 'none';
-    _zoomShowSentState();
-  } catch(e) {
-    btn.disabled = false; btn.textContent = _o; _zSyncBtn();
-    if (errEl) { errEl.textContent = _ez().err; errEl.style.display = 'block'; }
-  }
 }
 
 // ══ ELITE ONBOARDING ════════════════════════════════════════
@@ -4966,12 +4841,7 @@ function setLang(l){
   if(ctaMarina)ctaMarina.style.display='block';
   // Zoom-блок виден только для ru/uk (фича работает только для русско/украиноязычных).
   const zoomBlock=document.getElementById('zoomBlock');
-  if(zoomBlock)zoomBlock.style.display=(l==='ru'||l==='uk')?'block':'none';
-  // Перерисовываем пикер на актуальном языке при показе блока.
-  if (zoomBlock && (l==='ru'||l==='uk') && typeof renderEliteCal==='function') renderEliteCal();
-  // Если клиент уже запросил Zoom в последние 24ч — сразу показываем «отправлено»
-  // вместо активной кнопки (защита от повторных запросов после reload).
-  if (zoomBlock && (l==='ru'||l==='uk') && _zoomRecentlyRequested()) _zoomShowSentState();
+  if(zoomBlock)zoomBlock.style.display=(l==='ru'||l==='uk')?'block':'none'; // Cal.com-эмбед внутри; запись ведёт Cal.com
   document.getElementById('langDropdown').classList.remove('open');
   initSliders();
   // Re-render report in new language if results already shown

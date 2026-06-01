@@ -1295,13 +1295,13 @@ async function handleTgCallback(cq, env, corsHeaders) {
 
     const intake     = JSON.parse(intakeRaw);
     const clientName = intake.answers?.name || intake.name || '—';
-    const calLink    = 'https://via-l.com/program-intake.html?t=' + requestId + '&calendar=1';
+    // Gate открывает нутрициолог этой кнопкой. Ссылка ведёт на Cal.com 60-мин
+    // event type (реальный календарь/занятость/видео); бронь уведомит TG через
+    // /cal-webhook. Кастом-календарь program-intake?calendar=1 больше не используется.
+    const calLink    = 'https://cal.com/marynaviael/%D0%BA%D0%BE%D0%BD%D1%81%D1%83%D0%BB%D1%8C%D1%82%D0%B0%D1%86%D0%B8%D1%8F-60-%D0%BC%D0%B8%D0%BD';
     const inviteLang = intake.submitted_lang || intake.lang || 'en';
     const eti        = EMAIL_T[inviteLang] || EMAIL_T.en;
 
-    // Письмо клиенту со ссылкой на календарь. Gate открывает нутрициолог этой
-    // кнопкой; время не фиксируется — клиент лишь предлагает слот, нутрициолог
-    // подтверждает/меняет (Zoom-комната постоянная, а не привязана ко времени).
     await sendEmail(env, intake.email, eti.calinvite_subj, eti.calinvite_body(clientName, calLink));
 
     await tgAnswerCallback(env, cq.id, '📅 Календарь отправлен клиенту');

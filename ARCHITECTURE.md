@@ -152,14 +152,12 @@ Sugar_40, Inflammation, Beauty). Протокол `postMessage` (`openBook` /
         │       → Email клиенту: «анкета получена»
         │
 3. Нутрициолог жмёт [📅 Назначить сессию] → бот САМ шлёт клиенту письмо
-        │   (calinvite_*) со ссылкой program-intake.html?t=TOKEN&calendar=1
-        │   и дублирует ссылку нутрициологу в TG (на случай ручной пересылки).
-        │   Это gate: календарь открывается, только когда нутрициолог посмотрел анкету.
+        │   (calinvite_*) со ссылкой на Cal.com 60-мин (cal.com/marynaviael/консультация-60-мин)
+        │   и дублирует ссылку нутрициологу в TG. Это gate: ссылка уходит,
+        │   только когда нутрициолог посмотрел анкету.
         │
-4. Клиент выбирает дату/время → POST Worker /schedule-session {token, date, time}
-        │   → KV status='session_scheduled'
-        │   → Telegram нутрициологу: «📅 Клиент выбрал время» + Zoom-ссылка (zoomTgLine)
-        │   → Email клиенту: подтверждение + Zoom-ссылка (zoomEmailBlock)
+4. Клиент бронирует в Cal.com → Cal.com шлёт письма/видео обеим сторонам
+        │   + webhook BOOKING_CREATED → Worker /cal-webhook → TG-карточка нутрициологу
 ```
 
 ---
@@ -183,35 +181,33 @@ Sugar_40, Inflammation, Beauty). Протокол `postMessage` (`openBook` /
 - Подпись HMAC-SHA256 проверяется, если задан секрет `CAL_WEBHOOK_SECRET` (`verifyCalSig`, header `x-cal-signature-256`); не задан → пропускаем.
 - `sendTelegramTo` делает **ретрай при 429/5xx** (учитывая `retry_after`) — иначе серия броней теряла карточки из-за flood-лимита Telegram.
 
-**C. 60-мин первая сессия программы (ПОСЛЕ оплаты, по токену) — пока СВОЯ система, не Cal.com.**
+**C. 60-мин первая сессия программы (ПОСЛЕ оплаты, по токену) — через Cal.com 60-мин event, с gate.**
 1. Оплата Hotmart → `/hotmart-webhook` → KV `PROGRAM_INTAKES:intake:{token}` + письмо со ссылкой на анкету + TG.
 2. Анкета → `/intake-submit` → `handleIntakeSubmit`: AI-bullets → TG-карточка с кнопкой **[📅 Назначить сессию]** + письмо «анкета получена».
-3. **Gate:** нутрициолог жмёт кнопку → `handleTgCallback` ветка `sched` → бот **сам шлёт клиенту письмо** `calinvite_*` со ссылкой `program-intake.html?t=TOKEN&calendar=1` + дублирует ссылку себе в TG. Календарь открывается только после просмотра анкеты.
-4. Клиент в кастом-календаре (21 день, слоты 09–19 UTC+2, рядом местное время через `slotLocalTime`) выбирает время → `POST /schedule-session` → `handleScheduleSession`: KV `status='session_scheduled'` + TG-карточка + письмо `sched_*`. Zoom-ссылка — из секрета `ZOOM_LINK` (`zoomEmailBlock`/`zoomTgLine`; нет секрета → fallback-фраза).
+3. **Gate:** нутрициолог жмёт кнопку → `handleTgCallback` ветка `sched` → бот **сам шлёт клиенту письмо** `calinvite_*` со ссылкой на **Cal.com 60-мин** (`cal.com/marynaviael/консультация-60-мин`) + дублирует ссылку себе в TG. Календарь открывается только после просмотра анкеты.
+4. Клиент бронирует в Cal.com → Cal.com шлёт письма/видео + webhook `BOOKING_CREATED` → `/cal-webhook` → TG-карточка нутрициологу.
 
-**D. 60-мин ELITE-видеоконсультация (внутри ИП, только uk/ru) — пока СВОЯ система, не Cal.com.**
-- Блок `#zoomBlock` в `interpreter-elite.html` (виден только uk/ru): пикер 14 рабочих дней + слоты + email → `bookEliteCall()` → `POST /book-call {kind:'elite60', code, email, date, time}` → `handleBookCall`: KV `book:<id>` + TG + письмо `elite_*` с Zoom-ссылкой. Cooldown 24ч в localStorage.
+**D. 60-мин ELITE-видеоконсультация (внутри ИП, только uk/ru) — через Cal.com 60-мин event.**
+- Блок `#zoomBlock` в `interpreter-elite.html` (виден только uk/ru, управляется в `setLang`) — **inline-эмбед** того же Cal.com 60-мин event. Бронь → письма Cal.com + TG через `/cal-webhook`. (Кастом-пикер и `bookEliteCall()` удалены.)
 
-**Общие принципы (для C/D — кастом-система):**
-- **Время НИЧЕГО не блокирует.** Слот = *предложение* клиента; free/busy НЕ проверяется (в отличие от Cal.com). Нутрициолог видит выбор в TG и может переиграть — Zoom-комната постоянная, не привязана ко времени.
-- **Канон UTC+2 (Киев)**; клиенту рядом показывается его местное время.
-- Zoom-ссылка — одна постоянная комната из `ZOOM_LINK` (НЕ уникальная на встречу; апгрейд = Zoom OAuth, не сделан).
+**Event types Cal.com (account `marynaviael`):**
+- `бесплатная-консультация` — 15 мин (поток A).
+- `консультация-60-мин` — 60 мин (потоки C и D, один event на оба).
 
 **Эндпоинты Worker (`cloudflare-worker.js`):**
 
 | Назначение | Эндпоинт | Хендлер |
 |---|---|---|
-| Cal.com webhook → TG (основной, поток A) | `POST /cal-webhook` | `handleCalWebhook` (+ `verifyCalSig`, `fmtCalTime`) |
-| 60-мин первая сессия (поток C) | `POST /schedule-session` | `handleScheduleSession` |
-| Gate-кнопка «Назначить сессию» (поток C) | TG callback `sched:` | `handleTgCallback` → письмо `calinvite_*` |
-| ELITE 60-мин (поток D) | `POST /book-call` | `handleBookCall` (`kind:'elite60'`) |
-| legacy intro (фронт переехал на Cal.com) | `POST /book-call` | `handleBookCall` (`kind:'intro'`) — больше не вызывается фронтом |
+| Cal.com webhook → TG (ВСЕ брони: A, C, D) | `POST /cal-webhook` | `handleCalWebhook` (+ `verifyCalSig`, `fmtCalTime`) |
+| Gate-кнопка «Назначить сессию» (поток C) | TG callback `sched:` | `handleTgCallback` → письмо `calinvite_*` со ссылкой на Cal.com 60-мин |
+| Покупка/анкета программы | `/hotmart-webhook`, `/intake-submit` | `handleHotmartWebhook`, `handleIntakeSubmit` |
 
-- KV `PROGRAM_INTAKES`: `intake:<token>` (поток C), `book:<id>` (поток D), TTL 180д.
-- Секреты: `ZOOM_LINK` (комната для C/D), `CAL_WEBHOOK_SECRET` (опц., подпись Cal.com). Деплой: `wrangler deploy`.
+- **Legacy (фронт больше не вызывает, оставлены в коде):** `POST /book-call` (`handleBookCall`), `POST /schedule-session` (`handleScheduleSession`), кастом-календарь `program-intake.html?calendar=1`. Можно удалить при следующей чистке.
+- KV `PROGRAM_INTAKES`: `intake:<token>` (анкета программы), TTL 180д.
+- Секреты: `CAL_WEBHOOK_SECRET` (опц., подпись Cal.com). `ZOOM_LINK` теперь нужен только legacy-путям. Деплой: `wrangler deploy`.
 - Cal.com webhook URL: `https://interpreter.viaelcom.workers.dev/cal-webhook`, событие `Booking created`.
 
-**Открытый пункт (для полного единообразия):** перевести потоки **C** и **D** тоже на Cal.com — нужен **60-минутный event type** в Cal.com. Тогда кастом-календарь `program-intake.html?calendar=1`, `#zoomBlock`-пикер и `/book-call` можно вывести из эксплуатации, оставив только Cal.com + `/cal-webhook`.
+**Итог: единая система — Cal.com везде** (15-мин знакомство + 60-мин сессии/ELITE), TG через `/cal-webhook`. Cal.com даёт реальную занятость, видео и письма; Worker — только уведомление в бот.
 
 ---
 
@@ -562,8 +558,7 @@ function t(k){ return T[lang][k] || T.ru[k] || k; }   // fallback на ru
 | **Покупка программы** | Hotmart `PURCHASE_APPROVED` для product_id программы | `🧬 Менопауза / Andro / Anti / Estro\n👤\n📧\n💰\n🇺🇦 + token-link на анкету` | `NUTRITIONIST_CHAT_ID` | `handleHotmartWebhook` (ветка programs) → KV `PROGRAM_INTAKES:intake:{token}` |
 | **Заполнена анкета программы** | клиент сабмитит `program-intake.html` → `/intake-submit` | блок «Программа: ... · Анкета 4 секции» с inline-кнопкой «📅 Назначить сессию» | `NUTRITIONIST_CHAT_ID` | `handleIntakeSubmit` |
 | **Выбрана дата сессии** | клиент жмёт календарь → `/schedule-session` | `📅 Клиент выбрал время · дата · время UTC+2` + Zoom-ссылка | `NUTRITIONIST_CHAT_ID` | `handleScheduleSession` |
-| **Бронь Cal.com** (15-мин знакомство, ОСНОВНОЙ путь) | Cal.com webhook `BOOKING_CREATED` → `/cal-webhook` | `📅 Новая запись (Cal.com) · имя · email · TZ · время · видео-ссылка` | `NUTRITIONIST_CHAT_ID` | `handleCalWebhook` |
-| **ELITE 60-мин** (своя система) | `/book-call` из `#zoomBlock` ИП | `📅 Новая запись на звонок · ELITE · имя · email · дата UTC+2` + Zoom-ссылка | `NUTRITIONIST_CHAT_ID` | `handleBookCall` (+ письмо `elite_*`) |
+| **Бронь Cal.com** (ВСЁ: 15-мин знакомство + 60-мин сессия/ELITE) | Cal.com webhook `BOOKING_CREATED` → `/cal-webhook` | `📅 Новая запись (Cal.com) · имя · email · TZ · время · видео-ссылка` | `NUTRITIONIST_CHAT_ID` | `handleCalWebhook` |
 | **Expert-запрос (PRO+EXPERT / ELITE)** | Apps Script → POST `/draft` | детальная карточка: биометрия + симптомы + AI-bullets (5–7) + Anketa-блок (если ELITE) + inline-кнопки `📝 Ответить` `🔄 Перевести` | `NUTRITIONIST_CHAT_ID` | `handleDraft` → renders + sendTelegram + KV `EXPERT_DRAFTS:draft:{request_id}` TTL 7д |
 | **Inline-кнопка нажата нутрициологом** | Telegram callback_query → `/tg-webhook` | edit message + сохраняет состояние редактирования в KV `EXPERT_DRAFTS:editing:{chat_id}` (10 мин) | сам нутрициолог | `handleTgWebhook` → `handleTgCallback` |
 | **Нутрициолог ответил текстом** | `handleTgMessage` (text after «📝 Ответить») | `translateReply()` → Apps Script `{action:'send_report'}` → клиенту email с PDF | клиент (через Apps Script + Brevo) | `handleTgMessage` |
