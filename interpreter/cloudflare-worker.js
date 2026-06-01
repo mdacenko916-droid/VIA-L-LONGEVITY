@@ -1031,18 +1031,28 @@ async function sendTelegram(env, text, extra = {}) {
 }
 
 async function sendTelegramTo(env, chatId, text, extra = {}) {
-  const res = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text,
-      parse_mode: 'HTML',
-      disable_web_page_preview: true,
-      ...extra,
-    }),
+  const url  = `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+  const body = JSON.stringify({
+    chat_id: chatId,
+    text,
+    parse_mode: 'HTML',
+    disable_web_page_preview: true,
+    ...extra,
   });
-  return res.json();
+  // Лёгкий ретрай: при всплеске уведомлений Telegram отвечает 429 (flood limit)
+  // с parameters.retry_after; без повтора сообщение терялось бы (баг «не пришла
+  // карточка от Estrogen» при серии тестовых броней). Также повторяем на 5xx.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+    if (res.ok) return res.json();
+    if ((res.status === 429 || res.status >= 500) && attempt < 2) {
+      let waitMs = 1200;
+      try { const j = await res.clone().json(); if (j?.parameters?.retry_after) waitMs = j.parameters.retry_after * 1000 + 250; } catch (_) {}
+      await new Promise(r => setTimeout(r, Math.min(waitMs, 6000)));
+      continue;
+    }
+    return res.json().catch(() => ({ ok: false }));
+  }
 }
 
 function jsonResponse(obj, corsHeaders, status = 200) {
