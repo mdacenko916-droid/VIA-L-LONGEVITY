@@ -14,6 +14,10 @@
 
 **Бизнес-модель:** доступ по коду (выдаётся при оплате на Hotmart). Четыре уровня тарифов с нарастающей глубиной анализа. ИП — мировой продукт (12 языков) и одновременно воронка в программы ведения нутрициолога (`via-l.com`, 4 языка, см. корневой `ARCHITECTURE.md`).
 
+**Языковая модель (важно, не путать с сайтом):** ИП рассчитан на **ВЕСЬ МИР**, основной язык — **английский (EN)** (базовый язык продукта и fallback по умолчанию). Все 12 языков (uk, ru, en, es, de, pt, fr, pl, it, he, ja, ko) — равноценная глобальная аудитория. ИП НЕ привязан к 4 рынкам и НЕ сводится к EN/ES/UK/RU — это сайт VIA-L рассчитан на 4 языка, а ИП глобальный. Любая новая `data-t`-строка добавляется сразу во все 12 секций T.
+
+**Основной email проекта:** `viaelcom@gmail.com` (он же аккаунт Cloudflare и адрес нутрициолога).
+
 ---
 
 ## 2. КАРТА ФАЙЛОВ
@@ -619,6 +623,49 @@ wrangler deploy
 7. **RTL для иврита.** `setLang('he')` переключает `document.documentElement.dir = 'rtl'`.
 
 8. **Имя в промптах.** Cloudflare Worker использует имя «Марина» в системной роли. Все вхождения в UI-текстах интерпретаторов и methodology.html заменены на нейтральное «нутрициолог/специалист».
+
+---
+
+## 15. ИНТЕГРАЦИЯ OURA RING — PRODUCTION OAUTH (задача + план)
+
+### 15.1 Статус (2026-06-01)
+- Письмо-запрос отправлено на **api@ouraring.com** от имени Ihor Datsenko (партнёрство «Works with Oura» + production-доступ к API). Контакт для ответа — `viaelcom@gmail.com`.
+- **Ждём от Oura:** `client_id` + `client_secret` + подтверждение redirect URI + подтверждение scopes и условий коммерческого/партнёрского доступа.
+- Зарегистрировать OAuth-приложение «без покупки нельзя» → поэтому идём через запрос партнёрства/доступа, а не через самостоятельную регистрацию.
+- **До получения credentials:** на проде работает только VIO в режиме Sandbox-демо. Production-механизм спроектирован, но не построен.
+
+### 15.2 Разделение по тарифам (продуктовое решение)
+- **VIO (free)** — Sandbox-демо: вкладка «✨ Demo» на карточке Oura → `fetchOuraSandbox()` тянет `api.ouraring.com/v2/sandbox/...` (auth — любая строка, шлём `Bearer demo`), усредняет 7 дней, при недоступности эндпоинта подставляет реалистичный fallback (`OURA_DEMO_FALLBACK`). VIO сам по сути демо — этого достаточно. `OURA_MODE='sandbox'`.
+- **PRO / PRO-EXPERT / ELITE** — настоящий **OAuth2 Authorization Code flow** (production API, реальное кольцо пользователя). Token-paste («Токен API») остаётся как fallback для продвинутых.
+
+### 15.3 Почему серверная часть обязательна
+`client_secret`, обмен `code → access_token` и refresh-токенов нельзя держать во фронте (утечёт; CORS на token-эндпоинте). Всё это живёт на **Cloudflare Worker** (`interpreter.viaelcom.workers.dev`, см. §5.2.1), у которого уже есть роутер, KV, секреты через `wrangler secret`, CORS и HMAC-подпись (как в `/cal-webhook`).
+
+### 15.4 Конфигурация (добавить при получении credentials)
+- Секреты: `wrangler secret put OURA_CLIENT_ID`, `OURA_CLIENT_SECRET`.
+- Новый KV namespace `OURA_TOKENS` (хранит `{access_token, refresh_token, expires_at}` по ключу `sid`).
+- Redirect URI: `https://interpreter.viaelcom.workers.dev/oura/callback`.
+- Scopes: `daily personal heartrate spo2` (+ детальный роут `sleep`).
+
+### 15.5 Три роута Worker
+- `GET /oura/start?sid=…` — собирает authorize-URL, `state` = HMAC(sid) (приём из `/cal-webhook`), 302 → `cloud.ouraring.com/oauth/authorize`.
+- `GET /oura/callback?code=&state=` — проверяет state, POST `api.ouraring.com/oauth/token` (grant_type=authorization_code + секрет) → токены в KV под `sid`, 302 обратно на `interpreter-pro.html?oura=connected`.
+- `GET /oura/metrics?sid=…` — берёт токен из KV (если `Date.now()>expires_at` → refresh через grant_type=refresh_token, обновляет KV), тянет v2-эндпоинты за 7 дней с **production** API, считает нормализованный `ex` (hrv, rhr, sleepHours, deepMin, tempDev, spo2, energy, readiness), отдаёт JSON. Access-token в браузер не попадает — Worker проксирует.
+
+### 15.6 Фронт (pro / pro-expert / elite)
+- Новая вкладка на карточке Oura «🔗 Подключить кольцо» → `connectOura()`: генерит/хранит `sid` (localStorage), открывает `/oura/start`.
+- По возврату (`?oura=connected`) → `fetchOuraLive()` дёргает `/oura/metrics?sid`, получает `ex` и кормит в **тот же** `applyExtracted` + `applyImportedToSliders` (см. §4.4) — pipeline заполнения шагов уже готов, меняется только источник данных.
+- `OURA_MODE` флипнуть с `'sandbox'` на `'production'`.
+- Все новые строки — во все 12 языков T (см. §4.3).
+
+### 15.7 Точность в production vs Sandbox
+С реальным OAuth доступен детальный роут `sleep` → **настоящие** `average_hrv` (HRV в мс) и `lowest_heart_rate` (истинный пульс покоя) + `temperature_delta`. В Sandbox их нет — там HRV/RHR приближались из `daily_readiness`. В production приближения убрать, брать реальные поля.
+
+### 15.8 Открытый вопрос
+Привязывать ли `sid` к коду доступа тарифа: тогда у ELITE данные кольца можно прокидывать нутрициологу через TG-флоу (§6.3). Альтернатива — анонимный `sid`. Решить при реализации.
+
+### 15.9 Известная проблема Sandbox
+На 2026-06-01 Sandbox-эндпоинты `daily_*` и `sleep` возвращают `Internal Server Error`; отвечает только `heartrate`. Поэтому VIO-демо опирается на fallback. Вопрос задан Oura в письме.
 
 ---
 
