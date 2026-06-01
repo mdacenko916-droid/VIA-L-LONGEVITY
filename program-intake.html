@@ -225,6 +225,7 @@
     }
     .cal-slot:hover { border-color: var(--gold-pale); background: var(--gold-xp); }
     .cal-slot.selected { border-color: var(--gold); background: var(--gold); color: #fff; }
+    .cal-slot small { display: block; font-size: 11px; font-weight: 400; opacity: .6; margin-top: 2px; }
     .cal-notice { font-size: 13px; color: var(--text-lt); margin-bottom: 24px; line-height: 1.65; }
     .cal-confirm { display: flex; justify-content: flex-end; }
 
@@ -575,7 +576,8 @@ const T = {
     cal_tag:        'Elegir hora de sesión',
     cal_title:      'Sesión de 60 minutos con el nutricionista',
     cal_slots_lbl:  'Elige una hora:',
-    cal_notice:     'El horario es orientativo (UTC+2). El nutricionista confirmará y enviará el enlace de Zoom.',
+    cal_notice:     'La hora sigue el horario del nutricionista (UTC+2, Kyiv). Si su zona es distinta, al lado se muestra su hora local. El nutricionista confirmará y enviará el enlace de Zoom.',
+    cal_yourtime:   'su hora',
     cal_confirm:    'Confirmar hora',
     cal_done_title: 'Hora confirmada',
     cal_done_text:  'El nutricionista recibirá la notificación y enviará el enlace de Zoom.',
@@ -625,7 +627,8 @@ const T = {
     cal_tag:        'Choose session time',
     cal_title:      '60-minute session with the nutritionist',
     cal_slots_lbl:  'Choose a time:',
-    cal_notice:     'Times shown in UTC+2. The nutritionist will confirm and send a Zoom link.',
+    cal_notice:     'Times follow the nutritionist’s schedule (UTC+2, Kyiv). If your zone differs, your local time is shown next to it. The nutritionist will confirm and send a Zoom link.',
+    cal_yourtime:   'your time',
     cal_confirm:    'Confirm time',
     cal_done_title: 'Time confirmed',
     cal_done_text:  'The nutritionist will be notified and will send you a Zoom link.',
@@ -675,7 +678,8 @@ const T = {
     cal_tag:        'Виберіть час сесії',
     cal_title:      '60-хвилинна сесія з нутрициологом',
     cal_slots_lbl:  'Виберіть час:',
-    cal_notice:     'Час вказано по UTC+2 (Київ). Нутрициолог підтвердить та надішле Zoom-посилання.',
+    cal_notice:     'Час — за графіком нутрициолога (UTC+2, Київ). Якщо ваш пояс інший — поруч показано ваш місцевий час. Нутрициолог підтвердить та надішле Zoom-посилання.',
+    cal_yourtime:   'ваш час',
     cal_confirm:    'Підтвердити час',
     cal_done_title: 'Час підтверджено',
     cal_done_text:  'Нутрициолог отримає сповіщення та надішле Zoom-посилання.',
@@ -725,7 +729,8 @@ const T = {
     cal_tag:        'Выберите время сессии',
     cal_title:      '60-минутная сессия с нутрициологом',
     cal_slots_lbl:  'Выберите время:',
-    cal_notice:     'Время указано по UTC+2 (Киев). Нутрициолог подтвердит и пришлёт Zoom-ссылку.',
+    cal_notice:     'Время — по графику нутрициолога (UTC+2, Киев). Если ваш пояс другой — рядом показано ваше местное время. Нутрициолог подтвердит и пришлёт Zoom-ссылку.',
+    cal_yourtime:   'ваше время',
     cal_confirm:    'Подтвердить время',
     cal_done_title: 'Время подтверждено',
     cal_done_text:  'Нутрициолог получит уведомление и пришлёт Zoom-ссылку.',
@@ -931,6 +936,8 @@ function initCalendar() {
   el('calTag').textContent      = t.cal_tag;
   el('calTitle').textContent    = t.cal_title;
   el('calNotice').textContent   = t.cal_notice;
+  // Смена пояса клиента — перерисовать местное время в слотах (выбор сохраняется).
+  el('f_tz').onchange = () => { if (calSelectedDate) renderSlots(); };
   el('calBtnLabel').textContent = t.cal_confirm;
   el('calDoneTitle').textContent = t.cal_done_title;
   el('calDoneText').textContent  = t.cal_done_text;
@@ -954,25 +961,42 @@ function initCalendar() {
   }
 }
 
-function selectDay(iso, dayEl, t) {
-  calSelectedDate = iso;
-  calSelectedTime = null;
-  document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('selected'));
-  dayEl.classList.add('selected');
+// Канон слотов — рабочие часы нутрициолога по UTC+2 (Киев).
+const CAL_SLOTS = ['09:00','10:00','11:00','12:00','14:00','15:00','16:00','17:00','18:00','19:00'];
 
+// Местное время клиента для канонического слота UTC+2; null — если пояс = UTC+2.
+function slotLocalTime(canon) {
+  const off = parseInt(String(el('f_tz').value || 'UTC+2').replace(/[^0-9+-]/g, ''), 10);
+  if (isNaN(off) || off === 2) return null;
+  const [h, m] = canon.split(':').map(Number);
+  const local = (((h - 2 + off) % 24) + 24) % 24;
+  return String(local).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+}
+
+function renderSlots() {
+  const t = T[lang] || T.uk;
   const slots = el('calSlots');
   slots.innerHTML = '';
   const title = el('calSlotsTitle');
   title.style.display = 'block';
   title.textContent = t.cal_slots_lbl;
 
-  ['09:00','10:00','11:00','12:00','14:00','15:00','16:00','17:00','18:00','19:00'].forEach(time => {
+  CAL_SLOTS.forEach(time => {
     const btn = document.createElement('div');
-    btn.className = 'cal-slot';
-    btn.textContent = time;
+    btn.className = 'cal-slot' + (time === calSelectedTime ? ' selected' : '');
+    const local = slotLocalTime(time);
+    btn.innerHTML = time + (local ? `<small>${local} ${t.cal_yourtime}</small>` : '');
     btn.onclick = () => selectTime(time, btn);
     slots.appendChild(btn);
   });
+}
+
+function selectDay(iso, dayEl, t) {
+  calSelectedDate = iso;
+  calSelectedTime = null;
+  document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('selected'));
+  dayEl.classList.add('selected');
+  renderSlots();
   el('calBtn').disabled = true;
 }
 
