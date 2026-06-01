@@ -4505,9 +4505,11 @@ const OURA_BASE=OURA_MODE==='sandbox'
   : 'https://api.ouraring.com/v2/usercollection/';
 // Realistic 35+/40+ baseline used to fill any Sandbox endpoint that's unavailable.
 const OURA_DEMO_FALLBACK={hrv:42,rhr:62,readiness:74,sleepHours:7.2,deepMin:78,tempDev:0.3,spo2:97,energy:6};
+// Status that re-translates on language switch (carries its own data-t key).
+function setDemoStatus(type,key){const el=document.getElementById('oura-demo-status');if(!el)return;el.className='import-status '+type;el.setAttribute('data-t',key);el.innerHTML=t(key);}
 async function fetchOuraSandbox(){
   const badge=document.getElementById('oura-sandbox-badge');
-  setStatus('oura-demo-status','loading',t('status_oura_demo_loading'));
+  setDemoStatus('loading','status_oura_demo_loading');
   const end=new Date(),start=new Date(Date.now()-6*86400000); // 7-day window
   const ds=x=>x.toISOString().slice(0,10),sd=ds(start),ed=ds(end);
   const tok=OURA_MODE==='sandbox'?'demo':(document.getElementById('oura-token-input')?.value.trim()||'demo');
@@ -4549,7 +4551,7 @@ async function fetchOuraSandbox(){
   renderPreview('oura-demo-grid',ex);
   document.getElementById('oura-demo-preview').classList.add('show');
   if(badge)badge.style.display='inline-flex';
-  setStatus('oura-demo-status','success',t('status_oura_demo_ok'));
+  setDemoStatus('success','status_oura_demo_ok');
   updateImportSummary();
 }
 function parseSamsungCSV(text,filename){
