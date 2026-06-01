@@ -1610,6 +1610,7 @@ function selectKBPatterns(data) {
   const supp = Array.isArray(data.supplements)   ? data.supplements   : [];
   const gsm  = Array.isArray(data.gsm)           ? data.gsm           : [];
   const uro  = Array.isArray(data.urology)       ? data.urology       : [];
+  const gi   = Array.isArray(data.gi)            ? data.gi            : [];
   const has  = (arr, ...vals) => vals.some(v => arr.includes(v));
 
   const stressHigh  = data.chronic_stress === 'high' || data.chronic_stress === 'burnout'
@@ -1647,20 +1648,22 @@ function selectKBPatterns(data) {
     add('P-F6', (tempDown && lowEnergy) || (tempDown && has(horm,'hair_loss','weight_gain'))
       || data.meds === 'thyroid' || (num(labs.tsh) != null && num(labs.tsh) > 2.5));
     // P-F7 инсулинорезистентность
-    add('P-F7', (visceral != null && visceral > 9) || has(horm,'weight_gain') || data.appetite === 'cravings');
+    add('P-F7', (visceral != null && visceral > 9) || has(horm,'weight_gain') || data.appetite === 'cravings'
+      || num(labs.glucose) > 5.6 || num(labs.hba1c) > 5.7 || num(labs.homa) > 2.5);
     // P-F8 воспаление
-    add('P-F8', has(sym,'joint') || (visceral != null && visceral > 12));
+    add('P-F8', has(sym,'joint') || (visceral != null && visceral > 12) || num(labs.crp) > 3);
     // P-F9 нейромедиаторы (NEW)
     add('P-F9', anx >= 6 || data.mood === 'swings' || data.mood === 'low'
       || data.irritability === 'high' || has(sym,'anxiety','mood') || has(cort,'irritable'));
     // P-F10 когнитивный туман
     add('P-F10', fogHi || memHi || has(sym,'foggy'));
-    // P-F11 кишечник (вход неполный — см. PATTERN-REGISTRY §5)
-    add('P-F11', has(supp,'probiotics'));
+    // P-F11 кишечник
+    add('P-F11', has(gi,'bloating','constipation','diarrhea','reflux') || has(supp,'probiotics'));
     // P-F12 кости
     add('P-F12', phase === 'post' && (age >= 55 || (num(labs.vitd) != null && num(labs.vitd) < 50)));
     // P-F13 сердечно-сосудистый
-    add('P-F13', has(sym,'palpitations') || data.rhr_comp === 'high');
+    add('P-F13', has(sym,'palpitations') || data.rhr_comp === 'high'
+      || num(labs.ldl) > 3.4 || num(labs.apob) > 1.0 || num(labs.tg) > 1.7);
     // P-F14 кожа/коллаген (NEW)
     add('P-F14', has(horm,'dry_skin','hair_loss')
       || ((phase === 'post' || phase === 'meno') && age >= 50) || has(supp,'collagen'));
@@ -1681,15 +1684,17 @@ function selectKBPatterns(data) {
     // P-M2 ГГН/кортизол
     add('P-M2', stressHigh || cortLoad || (hrv < 35 && stressHigh && anx >= 5));
     // P-M3 метаболический синдром
-    add('P-M3', (visceral != null && visceral > 9) || has(horm,'belly_fat') || data.appetite === 'cravings');
+    add('P-M3', (visceral != null && visceral > 9) || has(horm,'belly_fat') || data.appetite === 'cravings'
+      || num(labs.glucose) > 5.6 || num(labs.hba1c) > 5.7 || num(labs.homa) > 2.5);
     // P-M4 воспаление
-    add('P-M4', has(sym,'joint') || (visceral != null && visceral > 12));
+    add('P-M4', has(sym,'joint') || (visceral != null && visceral > 12) || num(labs.crp) > 3);
     // P-M5 щитовидка
     add('P-M5', (tempDown && lowEnergy) || data.meds === 'thyroid' || (num(labs.tsh) != null && num(labs.tsh) > 2.5));
-    // P-M6 кишечник (вход неполный)
-    add('P-M6', has(supp,'probiotics'));
+    // P-M6 кишечник
+    add('P-M6', has(gi,'bloating','constipation','diarrhea','reflux') || has(supp,'probiotics'));
     // P-M7 сердечно-сосудистый
-    add('P-M7', has(sym,'palpitations') || data.rhr_comp === 'high');
+    add('P-M7', has(sym,'palpitations') || data.rhr_comp === 'high'
+      || num(labs.ldl) > 3.4 || num(labs.apob) > 1.0 || num(labs.tg) > 1.7);
     // P-M8 когнитивный туман
     add('P-M8', fogHi || memHi || has(sym,'foggy'));
     // P-M9 сон/СОАС
@@ -1988,6 +1993,10 @@ function buildUserMessage(data, lang) {
     if (l.tg) {
       const v = parseFloat(l.tg);
       notes.push('Триглицериды: ' + l.tg + ' ммоль/л → ' + (v > 2.3 ? '[высокие — омега-3 ≥3 г EPA/сут, ↓ рафинированные углеводы и алкоголь]' : v > 1.7 ? '[умеренно повышены]' : '[норма ✓]'));
+    }
+    if (l.apob) {
+      const v = parseFloat(l.apob);
+      notes.push('ApoB: ' + l.apob + ' г/л → ' + (v > 1.2 ? '[высокий — ключевой маркер атерогенных частиц, превосходит ЛПНП; омега-3 + берберин + ↓ насыщенных жиров; обсудить с врачом]' : v > 1.0 ? '[умеренно повышен]' : '[норма ✓]'));
     }
     if (l.crp) {
       const v = parseFloat(l.crp);
