@@ -1439,12 +1439,27 @@ footer{
     </div>
     <div class="source-body">
       <div class="method-tabs">
-        <button class="method-tab active" data-t="tab_token" onclick="setMethod('oura','token')">🔑 Токен API</button>
+        <button class="method-tab active" data-t="tab_oura_demo" onclick="setMethod('oura','demo')">✨ Demo</button>
+        <button class="method-tab" data-t="tab_token" onclick="setMethod('oura','token')">🔑 Токен API</button>
         <button class="method-tab" data-t="tab_file" onclick="setMethod('oura','file')">📁 Файл</button>
       </div>
 
+      <!-- Demo method (Oura Sandbox — no account / no token) -->
+      <div id="oura-demo">
+        <div style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;" data-t="instr_oura_demo">
+          Спробуйте без пристрою: підвантажимо демо-показники з Oura Sandbox і автоматично заповнимо кроки аналізу.
+        </div>
+        <button class="token-btn" style="width:100%;" data-t="btn_oura_demo" onclick="fetchOuraSandbox()">✨ Завантажити демо-дані</button>
+        <span class="source-badge" id="oura-sandbox-badge" data-t="badge_oura_sandbox" style="display:none;margin-top:12px;background:rgba(196,150,60,0.14);border:1px solid rgba(196,150,60,0.35);color:#c4963c;">Demo · Oura Sandbox</span>
+        <div class="import-status" id="oura-demo-status"></div>
+        <div class="imported-preview" id="oura-demo-preview">
+          <div style="font-size:11px;color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;" data-t="status_loaded">✓ Данные загружены</div>
+          <div class="preview-grid" id="oura-demo-grid"></div>
+        </div>
+      </div>
+
       <!-- Token method -->
-      <div id="oura-token">
+      <div id="oura-token" style="display:none;">
         <div style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;" data-t="instr_oura_token">
           Откройте <b style="color:var(--t1);">cloud.ouraring.com</b> → Personal Access Tokens → Create token → вставьте сюда:
         </div>
@@ -3401,6 +3416,22 @@ const T={
 };
 
 const LANG_FLAGS={'ru':'🇷🇺 RU','uk':'🇺🇦 UK','en':'🇬🇧 EN','es':'🇪🇸 ES','de':'🇩🇪 DE','pt':'🇧🇷 PT','fr':'🇫🇷 FR','pl':'🇵🇱 PL','it':'🇮🇹 IT','he':'🇮🇱 HE','ja':'🇯🇵 JA','ko':'🇰🇷 KO'};
+// ── Oura Sandbox demo strings (uk first, all 12 languages) ──
+const _ouraDemoT={
+  uk:{tab_oura_demo:'✨ Демо',instr_oura_demo:'Спробуйте без пристрою: підвантажимо демо-показники з Oura Sandbox і автоматично заповнимо кроки аналізу.',btn_oura_demo:'✨ Завантажити демо-дані',badge_oura_sandbox:'Demo · Oura Sandbox',status_oura_demo_loading:'⏳ Підключаємось до Oura Sandbox…',status_oura_demo_ok:'✓ Демо-дані Oura завантажено'},
+  ru:{tab_oura_demo:'✨ Демо',instr_oura_demo:'Попробуйте без устройства: подгрузим демо-показатели из Oura Sandbox и автоматически заполним шаги анализа.',btn_oura_demo:'✨ Загрузить демо-данные',badge_oura_sandbox:'Demo · Oura Sandbox',status_oura_demo_loading:'⏳ Подключаемся к Oura Sandbox…',status_oura_demo_ok:'✓ Демо-данные Oura загружены'},
+  en:{tab_oura_demo:'✨ Demo',instr_oura_demo:'Try it without a device: we pull demo metrics from the Oura Sandbox and auto-fill the analysis steps.',btn_oura_demo:'✨ Load demo data',badge_oura_sandbox:'Demo · Oura Sandbox',status_oura_demo_loading:'⏳ Connecting to Oura Sandbox…',status_oura_demo_ok:'✓ Oura demo data loaded'},
+  es:{tab_oura_demo:'✨ Demo',instr_oura_demo:'Pruébalo sin dispositivo: cargamos métricas de demostración del Oura Sandbox y rellenamos los pasos del análisis.',btn_oura_demo:'✨ Cargar datos demo',badge_oura_sandbox:'Demo · Oura Sandbox',status_oura_demo_loading:'⏳ Conectando con Oura Sandbox…',status_oura_demo_ok:'✓ Datos demo de Oura cargados'},
+  de:{tab_oura_demo:'✨ Demo',instr_oura_demo:'Ohne Gerät ausprobieren: Wir laden Demo-Werte aus der Oura Sandbox und füllen die Analyseschritte automatisch aus.',btn_oura_demo:'✨ Demodaten laden',badge_oura_sandbox:'Demo · Oura Sandbox',status_oura_demo_loading:'⏳ Verbindung zur Oura Sandbox…',status_oura_demo_ok:'✓ Oura-Demodaten geladen'},
+  pt:{tab_oura_demo:'✨ Demo',instr_oura_demo:'Experimente sem dispositivo: carregamos métricas de demonstração do Oura Sandbox e preenchemos as etapas da análise.',btn_oura_demo:'✨ Carregar dados demo',badge_oura_sandbox:'Demo · Oura Sandbox',status_oura_demo_loading:'⏳ Conectando ao Oura Sandbox…',status_oura_demo_ok:'✓ Dados demo do Oura carregados'},
+  fr:{tab_oura_demo:'✨ Démo',instr_oura_demo:'Essayez sans appareil : nous récupérons des données de démo depuis le Sandbox Oura et remplissons automatiquement les étapes d’analyse.',btn_oura_demo:'✨ Charger les données démo',badge_oura_sandbox:'Demo · Oura Sandbox',status_oura_demo_loading:'⏳ Connexion au Sandbox Oura…',status_oura_demo_ok:'✓ Données démo Oura chargées'},
+  pl:{tab_oura_demo:'✨ Demo',instr_oura_demo:'Wypróbuj bez urządzenia: pobierzemy dane demo z Oura Sandbox i automatycznie wypełnimy kroki analizy.',btn_oura_demo:'✨ Wczytaj dane demo',badge_oura_sandbox:'Demo · Oura Sandbox',status_oura_demo_loading:'⏳ Łączenie z Oura Sandbox…',status_oura_demo_ok:'✓ Wczytano dane demo Oura'},
+  it:{tab_oura_demo:'✨ Demo',instr_oura_demo:'Provalo senza dispositivo: carichiamo metriche demo dall’Oura Sandbox e compiliamo automaticamente i passaggi dell’analisi.',btn_oura_demo:'✨ Carica dati demo',badge_oura_sandbox:'Demo · Oura Sandbox',status_oura_demo_loading:'⏳ Connessione a Oura Sandbox…',status_oura_demo_ok:'✓ Dati demo Oura caricati'},
+  he:{tab_oura_demo:'✨ דמו',instr_oura_demo:'נסו בלי מכשיר: נטען נתוני דמו מ-Oura Sandbox ונמלא אוטומטית את שלבי הניתוח.',btn_oura_demo:'✨ טען נתוני דמו',badge_oura_sandbox:'Demo · Oura Sandbox',status_oura_demo_loading:'⏳ מתחבר ל-Oura Sandbox…',status_oura_demo_ok:'✓ נתוני דמו של Oura נטענו'},
+  ja:{tab_oura_demo:'✨ デモ',instr_oura_demo:'デバイスなしでお試し：Oura Sandbox からデモ指標を取得し、分析ステップを自動入力します。',btn_oura_demo:'✨ デモデータを読み込む',badge_oura_sandbox:'Demo · Oura Sandbox',status_oura_demo_loading:'⏳ Oura Sandbox に接続中…',status_oura_demo_ok:'✓ Oura のデモデータを読み込みました'},
+  ko:{tab_oura_demo:'✨ 데모',instr_oura_demo:'기기 없이 체험: Oura Sandbox에서 데모 지표를 불러와 분석 단계를 자동으로 채웁니다.',btn_oura_demo:'✨ 데모 데이터 불러오기',badge_oura_sandbox:'Demo · Oura Sandbox',status_oura_demo_loading:'⏳ Oura Sandbox에 연결 중…',status_oura_demo_ok:'✓ Oura 데모 데이터 로드 완료'}
+};
+Object.keys(_ouraDemoT).forEach(l=>{T[l]=Object.assign(T[l]||{},_ouraDemoT[l]);});
 ['ru','uk','es','de','pt','fr','pl','it','he','ja','ko'].forEach(l=>{T[l]=Object.assign({},T.en,T[l]);});
 let lang='en';
 let _rerendering=false;
@@ -4326,6 +4357,7 @@ sessionStorage.setItem('vial_basic','1');
 (function(){
   const p = new URLSearchParams(window.location.search);
   const dev = p.get('device');
+  const ouraAuto = p.get('oura') === 'auto';
   if(!dev) return;
   setTimeout(function(){
     const card = document.getElementById('card-' + dev);
@@ -4333,6 +4365,11 @@ sessionStorage.setItem('vial_basic','1');
       openImport();
       toggleCard(dev);
       card.scrollIntoView({behavior:'smooth', block:'center'});
+      // Came from "Підключити Oura автоматично" → pull the Sandbox demo straight away.
+      if(ouraAuto && dev === 'oura'){
+        setMethod('oura','demo');
+        fetchOuraSandbox();
+      }
     }
   }, 500);
 })();
@@ -4363,7 +4400,7 @@ function toggleCard(id){const card=document.getElementById('card-'+id),isOpen=ca
 function setMethod(source,method){
   const card=document.getElementById('card-'+source);
   const tabs=card.querySelectorAll('.method-tab');
-  if(source==='oura'){document.getElementById('oura-token').style.display=method==='token'?'block':'none';document.getElementById('oura-file').style.display=method==='file'?'block':'none';tabs[0].classList.toggle('active',method==='token');tabs[1].classList.toggle('active',method==='file');}
+  if(source==='oura'){document.getElementById('oura-demo').style.display=method==='demo'?'block':'none';document.getElementById('oura-token').style.display=method==='token'?'block':'none';document.getElementById('oura-file').style.display=method==='file'?'block':'none';tabs[0].classList.toggle('active',method==='demo');tabs[1].classList.toggle('active',method==='token');tabs[2].classList.toggle('active',method==='file');}
   else if(source==='apple'){document.getElementById('apple-file').style.display=method==='file'?'block':'none';document.getElementById('apple-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
   else if(source==='fitbit'){document.getElementById('fitbit-token').style.display=method==='token'?'block':'none';document.getElementById('fitbit-file').style.display=method==='file'?'block':'none';tabs[0].classList.toggle('active',method==='token');tabs[1].classList.toggle('active',method==='file');}
   else if(source==='samsung'){document.getElementById('samsung-file').style.display=method==='file'?'block':'none';document.getElementById('samsung-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
@@ -4459,6 +4496,62 @@ function renderPreview(gridId,data){
 }
 function setStatus(id,type,msg){const el=document.getElementById(id);if(!el)return;el.className='import-status '+type;el.textContent=msg;}
 function updateImportSummary(){const s=document.getElementById('import-summary'),g=document.getElementById('import-summary-grid');if(!s||!g)return;const count=Object.keys(importedData).filter(k=>importedData[k]!=null&&k!=='source').length;if(count>0){s.style.display='block';renderPreview('import-summary-grid',importedData);}}
+
+// ══ OURA SANDBOX (demo) ══════════════════════════════════
+// Flip to 'production' once a real OAuth/token flow is wired in.
+const OURA_MODE='sandbox';
+const OURA_BASE=OURA_MODE==='sandbox'
+  ? 'https://api.ouraring.com/v2/sandbox/usercollection/'
+  : 'https://api.ouraring.com/v2/usercollection/';
+// Realistic 35+/40+ baseline used to fill any Sandbox endpoint that's unavailable.
+const OURA_DEMO_FALLBACK={hrv:42,rhr:62,readiness:74,sleepHours:7.2,deepMin:78,tempDev:0.3,spo2:97,energy:6};
+async function fetchOuraSandbox(){
+  const badge=document.getElementById('oura-sandbox-badge');
+  setStatus('oura-demo-status','loading',t('status_oura_demo_loading'));
+  const end=new Date(),start=new Date(Date.now()-6*86400000); // 7-day window
+  const ds=x=>x.toISOString().slice(0,10),sd=ds(start),ed=ds(end);
+  const tok=OURA_MODE==='sandbox'?'demo':(document.getElementById('oura-token-input')?.value.trim()||'demo');
+  const h={'Authorization':'Bearer '+tok};
+  const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+  const get=async(ep,q)=>{try{const r=await fetch(OURA_BASE+ep+'?'+q,{headers:h});if(!r.ok)return null;return await r.json();}catch(e){return null;}};
+  const ex={};
+  // daily_readiness → readiness score · HRV (from hrv_balance) · night temp deviation
+  const rd=await get('daily_readiness',`start_date=${sd}&end_date=${ed}`);
+  if(rd&&rd.data&&rd.data.length){
+    const sc=avg(rd.data.map(x=>x.score).filter(v=>v!=null));if(sc!=null)ex.readiness=Math.round(sc);
+    const hb=avg(rd.data.map(x=>x.contributors&&x.contributors.hrv_balance).filter(v=>v!=null));if(hb!=null)ex.hrv=Math.round(hb*0.8+20);
+    const td=avg(rd.data.map(x=>x.temperature_deviation).filter(v=>v!=null));if(td!=null)ex.tempDev=parseFloat(td.toFixed(2));
+  }
+  // daily_sleep → total sleep hours (or derived from score) · deep sleep minutes
+  const sl=await get('daily_sleep',`start_date=${sd}&end_date=${ed}`);
+  if(sl&&sl.data&&sl.data.length){
+    const dur=avg(sl.data.map(x=>x.total_sleep_duration).filter(v=>v!=null));
+    if(dur!=null)ex.sleepHours=parseFloat((dur/3600).toFixed(1));
+    else{const ss=avg(sl.data.map(x=>x.score).filter(v=>v!=null));if(ss!=null)ex.sleepHours=parseFloat((5+ss/100*3.5).toFixed(1));}
+    const dd=avg(sl.data.map(x=>x.deep_sleep_duration).filter(v=>v!=null));if(dd!=null)ex.deepMin=Math.round(dd/60);
+  }
+  // heartrate → resting HR estimate (mean of lowest 20% of readings)
+  const hr=await get('heartrate',`start_datetime=${sd}T00:00:00+00:00&end_datetime=${ed}T23:59:59+00:00`);
+  if(hr&&hr.data&&hr.data.length){
+    const bpm=hr.data.map(x=>x.bpm).filter(v=>v>30&&v<200).sort((a,b)=>a-b);
+    if(bpm.length){const n=Math.max(1,Math.round(bpm.length*0.2));ex.rhr=Math.round(avg(bpm.slice(0,n)));}
+  }
+  // daily_spo2 → average overnight SpO₂
+  const sp=await get('daily_spo2',`start_date=${sd}&end_date=${ed}`);
+  if(sp&&sp.data&&sp.data.length){const s=avg(sp.data.map(x=>x.spo2_percentage&&x.spo2_percentage.average).filter(v=>v!=null));if(s!=null)ex.spo2=parseFloat(s.toFixed(1));}
+  // daily_activity → energy proxy from activity score (1–10)
+  const ac=await get('daily_activity',`start_date=${sd}&end_date=${ed}`);
+  if(ac&&ac.data&&ac.data.length){const as=avg(ac.data.map(x=>x.score).filter(v=>v!=null));if(as!=null)ex.energy=Math.min(10,Math.max(1,Math.round(as/10)));}
+  // Backfill gaps so the demo always completes, even when Sandbox endpoints 500.
+  Object.keys(OURA_DEMO_FALLBACK).forEach(k=>{if(ex[k]==null)ex[k]=OURA_DEMO_FALLBACK[k];});
+  applyExtracted(ex,'oura');
+  applyImportedToSliders();
+  renderPreview('oura-demo-grid',ex);
+  document.getElementById('oura-demo-preview').classList.add('show');
+  if(badge)badge.style.display='inline-flex';
+  setStatus('oura-demo-status','success',t('status_oura_demo_ok'));
+  updateImportSummary();
+}
 function parseSamsungCSV(text,filename){
   const out={};
   try{

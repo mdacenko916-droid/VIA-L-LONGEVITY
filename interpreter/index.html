@@ -782,6 +782,13 @@ footer a:hover { color: var(--gold); }
   <div class="wrap">
     <div class="section-label" data-t="section_devices">Оберіть ваш пристрій</div>
     <div class="devices-grid" id="devicesGrid"></div>
+    <div id="oura-actions" style="display:none;max-width:440px;margin:18px auto 0;text-align:center;">
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button type="button" data-t="oura_connect_auto" onclick="ouraAuto()" style="padding:14px 22px;border-radius:50px;border:none;cursor:pointer;font-size:15px;font-weight:600;color:#0A0D14;background:linear-gradient(135deg,#c4963c,#a07820);box-shadow:0 6px 20px rgba(196,150,60,0.3);">Підключити Oura автоматично</button>
+        <button type="button" data-t="oura_enter_manual" onclick="ouraManual()" style="padding:13px 22px;border-radius:50px;cursor:pointer;font-size:14px;font-weight:500;color:#b8924a;background:rgba(184,146,74,0.08);border:1px solid rgba(184,146,74,0.3);">Ввести вручну</button>
+      </div>
+      <div data-t="oura_demo_note" style="margin-top:10px;font-size:12px;color:rgba(184,146,74,0.75);letter-spacing:0.3px;">Demo · Oura Sandbox — без акаунта і токена</div>
+    </div>
   </div>
 </section>
 
@@ -1053,16 +1060,44 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.1 });
 observer.observe(grid);
 
+// Oura integration mode — switch to 'production' once OAuth/real token is wired.
+const OURA_MODE = 'sandbox';
+
 function selectDevice(id) {
   selectedDevice = id;
   // Highlight selected
   document.querySelectorAll('.dev-slot').forEach(s => {
     s.style.opacity = s.dataset.id === id ? '1' : '0.35';
   });
-  // Scroll to plans
+  const oa = document.getElementById('oura-actions');
+  // Oura gets a dedicated auto/manual choice; other devices go straight to plans.
+  if (id === 'oura') {
+    if (oa) {
+      oa.style.display = 'block';
+      setTimeout(() => oa.scrollIntoView({ behavior: 'smooth', block: 'center' }), 250);
+    }
+    return;
+  }
+  if (oa) oa.style.display = 'none';
   setTimeout(() => {
     document.getElementById('plans').scrollIntoView({ behavior: 'smooth' });
   }, 300);
+}
+
+// "Підключити Oura автоматично" → free Vio interpreter, auto-pull Oura Sandbox demo.
+function ouraAuto() {
+  selectedDevice = 'oura';
+  const overlay = document.getElementById('transition-overlay');
+  if (overlay) overlay.classList.add('active');
+  setTimeout(() => { window.location.href = './interpreter-vio.html?device=oura&oura=auto'; }, 600);
+}
+
+// "Ввести вручну" → Vio interpreter; user fills the analysis steps by hand.
+function ouraManual() {
+  selectedDevice = 'oura';
+  const overlay = document.getElementById('transition-overlay');
+  if (overlay) overlay.classList.add('active');
+  setTimeout(() => { window.location.href = './interpreter-vio.html'; }, 600);
 }
 
 function goToInterpreter(file) {
@@ -2002,6 +2037,23 @@ const T = {
     plan_elite_feat: T.en.plan_elite_feat,
   }, nav[l]);
 });
+
+// ── Oura Sandbox demo strings (uk first, all 12 languages) ──
+const _ouraT = {
+  uk: { oura_connect_auto: 'Підключити Oura автоматично', oura_enter_manual: 'Ввести вручну', oura_demo_note: 'Demo · Oura Sandbox — без акаунта і токена' },
+  ru: { oura_connect_auto: 'Подключить Oura автоматически', oura_enter_manual: 'Ввести вручную', oura_demo_note: 'Demo · Oura Sandbox — без аккаунта и токена' },
+  en: { oura_connect_auto: 'Connect Oura automatically', oura_enter_manual: 'Enter manually', oura_demo_note: 'Demo · Oura Sandbox — no account or token' },
+  es: { oura_connect_auto: 'Conectar Oura automáticamente', oura_enter_manual: 'Introducir manualmente', oura_demo_note: 'Demo · Oura Sandbox — sin cuenta ni token' },
+  de: { oura_connect_auto: 'Oura automatisch verbinden', oura_enter_manual: 'Manuell eingeben', oura_demo_note: 'Demo · Oura Sandbox — ohne Konto oder Token' },
+  pt: { oura_connect_auto: 'Conectar Oura automaticamente', oura_enter_manual: 'Inserir manualmente', oura_demo_note: 'Demo · Oura Sandbox — sem conta ou token' },
+  fr: { oura_connect_auto: 'Connecter Oura automatiquement', oura_enter_manual: 'Saisir manuellement', oura_demo_note: 'Demo · Oura Sandbox — sans compte ni jeton' },
+  pl: { oura_connect_auto: 'Połącz Oura automatycznie', oura_enter_manual: 'Wprowadź ręcznie', oura_demo_note: 'Demo · Oura Sandbox — bez konta i tokenu' },
+  it: { oura_connect_auto: 'Collega Oura automaticamente', oura_enter_manual: 'Inserisci manualmente', oura_demo_note: 'Demo · Oura Sandbox — senza account né token' },
+  he: { oura_connect_auto: 'חבר את Oura אוטומטית', oura_enter_manual: 'הזן ידנית', oura_demo_note: 'Demo · Oura Sandbox — ללא חשבון או טוקן' },
+  ja: { oura_connect_auto: 'Oura を自動で接続', oura_enter_manual: '手動で入力', oura_demo_note: 'Demo · Oura Sandbox — アカウント・トークン不要' },
+  ko: { oura_connect_auto: 'Oura 자동 연결', oura_enter_manual: '수동 입력', oura_demo_note: 'Demo · Oura Sandbox — 계정·토큰 불필요' }
+};
+Object.keys(_ouraT).forEach(l => { if (T[l]) Object.assign(T[l], _ouraT[l]); });
 
 function setLang(l) {
   lang = l;
