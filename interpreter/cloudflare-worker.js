@@ -310,12 +310,8 @@ export default {
       // Program intake flow
       if (path === '/hotmart-webhook')  return handleHotmartWebhook(request, env, corsHeaders);
       if (path === '/intake-submit')    return handleIntakeSubmit(request, env, corsHeaders);
-      if (path === '/schedule-session') return handleScheduleSession(request, env, corsHeaders);
 
-      // Call booking (legacy custom-slot fallback — фронт переведён на Cal.com)
-      if (path === '/book-call')        return handleBookCall(request, env, corsHeaders);
-
-      // Cal.com webhook → TG-карточка нутрициологу (основной механизм записи)
+      // Cal.com webhook → TG-карточка нутрициологу (единый механизм записи)
       if (path === '/cal-webhook')      return handleCalWebhook(request, env, corsHeaders);
 
       // Default: AI-анализ для интерпретатора
@@ -734,147 +730,6 @@ ${femaleBlock}${maleBlock}Сон: ${answers.sleep_h || '—'} ч, проблем
 
   const result = await response.json();
   return result.content?.[0]?.text || '';
-}
-
-// ─────────────────────────────────────────────────────────────
-// POST /schedule-session
-// {token, date, time} → TG нутрициологу + update KV
-// ─────────────────────────────────────────────────────────────
-async function handleScheduleSession(request, env, corsHeaders) {
-  let body = {};
-  try { body = await request.json(); } catch (_) {}
-
-  const { token, date, time } = body;
-  if (!token || !date || !time) {
-    return jsonResponse({ ok: false, error: 'missing_fields' }, corsHeaders, 400);
-  }
-
-  const raw = env.PROGRAM_INTAKES ? await env.PROGRAM_INTAKES.get('intake:' + token) : null;
-  if (!raw) return jsonResponse({ ok: false, error: 'invalid_token' }, corsHeaders, 404);
-
-  const intake = JSON.parse(raw);
-  const clientName = intake.answers?.name || intake.name || '—';
-  const progName   = PROGRAM_NAMES[intake.program] || intake.program;
-
-  // Format date nicely (YYYY-MM-DD → "3 июня 2026")
-  const [y, m, d] = date.split('-').map(Number);
-  const monthsRu  = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-  const dateStr   = `${d} ${monthsRu[m - 1]} ${y}`;
-
-  // Save to KV
-  await env.PROGRAM_INTAKES.put('intake:' + token, JSON.stringify({
-    ...intake,
-    status:       'session_scheduled',
-    session_date: date,
-    session_time: time,
-    scheduled_at: new Date().toISOString(),
-  }), { expirationTtl: 180 * 24 * 60 * 60 });
-
-  // TG to nutritionist
-  await sendTelegram(env,
-    `📅 <b>Клиент выбрал время сессии</b>\n`
-    + `━━━━━━━━━━━━━━━━━━━━\n`
-    + `👤 <b>${esc(clientName)}</b>\n`
-    + `🧬 ${progName} · ${intake.plan}\n`
-    + `📧 <code>${esc(intake.email)}</code>\n`
-    + `━━━━━━━━━━━━━━━━━━━━\n`
-    + `🗓 <b>${dateStr}, ${time} UTC+2</b>\n\n`
-    + zoomTgLine(env)
-  );
-
-  // Email клієнту — підтвердження часу сесії
-  const schedLang = intake.submitted_lang || intake.lang || 'en';
-  const et3 = EMAIL_T[schedLang] || EMAIL_T.en;
-  await sendEmail(env, intake.email,
-    et3.sched_subj(dateStr, time),
-    et3.sched_body(clientName, dateStr, time, zoomEmailBlock(env, schedLang)),
-  );
-
-  return jsonResponse({ ok: true }, corsHeaders);
-}
-
-// ─────────────────────────────────────────────────────────────
-// Zoom-ссылка: общий источник для писем и TG.
-// Если секрет ZOOM_LINK не задан — graceful fallback на текущую
-// формулировку «нутрициолог пришлёт ссылку» (ничего не ломается).
-// ─────────────────────────────────────────────────────────────
-const ZOOM_T = {
-  uk: { join: 'Приєднатися до Zoom', or: 'Або скопіюйте посилання:', fallback: 'Нутрициолог підтвердить та надішле Zoom-посилання.' },
-  ru: { join: 'Подключиться к Zoom', or: 'Или скопируйте ссылку:',   fallback: 'Нутрициолог подтвердит и пришлёт Zoom-ссылку.' },
-  es: { join: 'Unirse a Zoom',       or: 'O copie el enlace:',        fallback: 'El nutricionista confirmará y enviará el enlace de Zoom.' },
-  en: { join: 'Join Zoom',           or: 'Or copy the link:',         fallback: 'The nutritionist will confirm and send a Zoom link.' },
-};
-
-function zoomEmailBlock(env, lang) {
-  const z = ZOOM_T[lang] || ZOOM_T.en;
-  if (!env.ZOOM_LINK) return `<p>${z.fallback}</p>`;
-  return `<p style="margin:24px 0"><a href="${env.ZOOM_LINK}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">${z.join} →</a></p>`
-    + `<p style="color:#888;font-size:13px">${z.or} ${env.ZOOM_LINK}</p>`;
-}
-
-function zoomTgLine(env) {
-  if (!env.ZOOM_LINK) return 'Отправьте клиенту Zoom-ссылку.';
-  return `🔗 Zoom: <code>${esc(env.ZOOM_LINK)}</code>`;
-}
-
-// ─────────────────────────────────────────────────────────────
-// POST /book-call
-// 15-мин знакомство (лендинги) + ELITE 60-мин (ИП, uk/ru).
-// {kind:'intro'|'elite60', program?, lang, name?, email, date, time, tz?, code?}
-// → KV book:<id> + TG нутрициологу + письмо клиенту (с Zoom-ссылкой).
-// ─────────────────────────────────────────────────────────────
-async function handleBookCall(request, env, corsHeaders) {
-  let body = {};
-  try { body = await request.json(); } catch (_) {}
-
-  const { kind, program, name, email, date, time, tz, code } = body;
-  const lang = body.lang || 'uk';
-  if (!email || !email.includes('@') || !date || !time) {
-    return jsonResponse({ ok: false, error: 'missing_fields' }, corsHeaders, 400);
-  }
-
-  const isElite  = kind === 'elite60';
-  const bookId   = (kind || 'call') + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  const clientTz = tz || 'UTC+2';
-
-  // Save to KV (fail-safe — уведомления уйдут даже без KV)
-  if (env.PROGRAM_INTAKES) {
-    await env.PROGRAM_INTAKES.put('book:' + bookId, JSON.stringify({
-      kind: kind || 'call', program: program || null, code: code || null,
-      name: name || '', email, lang, date, time, tz: clientTz,
-      status: 'booked', created_at: new Date().toISOString(),
-    }), { expirationTtl: 180 * 24 * 60 * 60 });
-  }
-
-  // Pretty date (RU для карточки нутрициолога)
-  const [y, m, d] = String(date).split('-').map(Number);
-  const monthsRu  = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-  const dateStr   = (y && m && d) ? `${d} ${monthsRu[m - 1]} ${y}` : String(date);
-
-  const kindLabel = isElite ? '🔮 ELITE · видео-консультация 60 мин' : '✦ Знакомство · 15 мин';
-  const progName  = program ? (PROGRAM_NAMES[program] || program) : '';
-
-  // TG нутрициологу (всегда по-русски)
-  const card = `📅 <b>Новая запись на звонок</b>\n`
-    + `━━━━━━━━━━━━━━━━━━━━\n`
-    + `${kindLabel}\n`
-    + (name ? `👤 <b>${esc(name)}</b>\n` : '')
-    + `📧 <code>${esc(email)}</code>\n`
-    + (progName ? `🧬 ${esc(progName)}\n` : '')
-    + (code ? `🔑 <code>${esc(code)}</code>\n` : '')
-    + `━━━━━━━━━━━━━━━━━━━━\n`
-    + `🗓 <b>${dateStr}, ${time} UTC+2</b>\n`
-    + (clientTz !== 'UTC+2' ? `🌍 Пояс клиента: ${esc(clientTz)}\n` : '')
-    + `\n` + zoomTgLine(env);
-  await sendTelegram(env, card);
-
-  // Письмо клиенту (локализованное, с Zoom-ссылкой)
-  const et      = EMAIL_T[lang] || EMAIL_T.en;
-  const subjFn  = isElite ? et.elite_subj : et.intro_subj;
-  const bodyFn  = isElite ? et.elite_body : et.intro_body;
-  await sendEmail(env, email, subjFn(dateStr, time), bodyFn(name || '', dateStr, time, zoomEmailBlock(env, lang)));
-
-  return jsonResponse({ ok: true }, corsHeaders);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1572,21 +1427,6 @@ const EMAIL_T = {
       + `<p>Нутрициолог переглянув вашу анкету. Оберіть зручний день і час для першої 60-хвилинної сесії:</p>`
       + `<p style="margin:24px 0"><a href="${link}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">Обрати час →</a></p>`
       + `<p style="color:#888;font-size:13px">Або скопіюйте посилання: ${link}</p>`,
-    sched_subj:    (date, time) => `VIA-L · Час сесії: ${date}, ${time}`,
-    sched_body:    (name, date, time, zoom) =>
-      `<p>Привіт, <b>${name}</b>!</p>`
-      + `<p>Ви обрали час для першої 60-хвилинної сесії: <b>${date}, ${time} UTC+2</b>.</p>`
-      + zoom,
-    intro_subj:    (date, time) => `VIA-L · Знайомство: ${date}, ${time}`,
-    intro_body:    (name, date, time, zoom) =>
-      `<p>Привіт${name ? ', <b>' + name + '</b>' : ''}!</p>`
-      + `<p>Ви записані на безкоштовне 15-хвилинне знайомство: <b>${date}, ${time} UTC+2</b>.</p>`
-      + zoom,
-    elite_subj:    (date, time) => `VIA-L ELITE · Відеоконсультація: ${date}, ${time}`,
-    elite_body:    (name, date, time, zoom) =>
-      `<p>Привіт${name ? ', <b>' + name + '</b>' : ''}!</p>`
-      + `<p>Ви записані на персональну 60-хвилинну відеоконсультацію ELITE: <b>${date}, ${time} UTC+2</b>.</p>`
-      + zoom,
   },
   ru: {
     payment_subj:  (prog) => `VIA-L · ${prog} — заполните анкету`,
@@ -1606,21 +1446,6 @@ const EMAIL_T = {
       + `<p>Нутрициолог посмотрел вашу анкету. Выберите удобный день и время для первой 60-минутной сессии:</p>`
       + `<p style="margin:24px 0"><a href="${link}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">Выбрать время →</a></p>`
       + `<p style="color:#888;font-size:13px">Или скопируйте ссылку: ${link}</p>`,
-    sched_subj:    (date, time) => `VIA-L · Время сессии: ${date}, ${time}`,
-    sched_body:    (name, date, time, zoom) =>
-      `<p>Привет, <b>${name}</b>!</p>`
-      + `<p>Вы выбрали время для первой 60-минутной сессии: <b>${date}, ${time} UTC+2</b>.</p>`
-      + zoom,
-    intro_subj:    (date, time) => `VIA-L · Знакомство: ${date}, ${time}`,
-    intro_body:    (name, date, time, zoom) =>
-      `<p>Привет${name ? ', <b>' + name + '</b>' : ''}!</p>`
-      + `<p>Вы записаны на бесплатное 15-минутное знакомство: <b>${date}, ${time} UTC+2</b>.</p>`
-      + zoom,
-    elite_subj:    (date, time) => `VIA-L ELITE · Видео-консультация: ${date}, ${time}`,
-    elite_body:    (name, date, time, zoom) =>
-      `<p>Привет${name ? ', <b>' + name + '</b>' : ''}!</p>`
-      + `<p>Вы записаны на персональную 60-минутную видео-консультацию ELITE: <b>${date}, ${time} UTC+2</b>.</p>`
-      + zoom,
   },
   es: {
     payment_subj:  (prog) => `VIA-L · ${prog} — complete el cuestionario`,
@@ -1640,21 +1465,6 @@ const EMAIL_T = {
       + `<p>El nutricionista ha revisado su cuestionario. Elija un día y una hora para la primera sesión de 60 min:</p>`
       + `<p style="margin:24px 0"><a href="${link}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">Elegir hora →</a></p>`
       + `<p style="color:#888;font-size:13px">O copie el enlace: ${link}</p>`,
-    sched_subj:    (date, time) => `VIA-L · Sesión: ${date}, ${time}`,
-    sched_body:    (name, date, time, zoom) =>
-      `<p>Hola, <b>${name}</b>!</p>`
-      + `<p>Ha elegido el horario para la primera sesión de 60 min: <b>${date}, ${time} UTC+2</b>.</p>`
-      + zoom,
-    intro_subj:    (date, time) => `VIA-L · Sesión de presentación: ${date}, ${time}`,
-    intro_body:    (name, date, time, zoom) =>
-      `<p>Hola${name ? ', <b>' + name + '</b>' : ''}!</p>`
-      + `<p>Reservó una sesión de presentación gratuita de 15 min: <b>${date}, ${time} UTC+2</b>.</p>`
-      + zoom,
-    elite_subj:    (date, time) => `VIA-L ELITE · Videoconsulta: ${date}, ${time}`,
-    elite_body:    (name, date, time, zoom) =>
-      `<p>Hola${name ? ', <b>' + name + '</b>' : ''}!</p>`
-      + `<p>Reservó una videoconsulta personal ELITE de 60 min: <b>${date}, ${time} UTC+2</b>.</p>`
-      + zoom,
   },
   en: {
     payment_subj:  (prog) => `VIA-L · ${prog} — complete your questionnaire`,
@@ -1674,21 +1484,6 @@ const EMAIL_T = {
       + `<p>The nutritionist has reviewed your questionnaire. Choose a day and time for your first 60-minute session:</p>`
       + `<p style="margin:24px 0"><a href="${link}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">Choose time →</a></p>`
       + `<p style="color:#888;font-size:13px">Or copy the link: ${link}</p>`,
-    sched_subj:    (date, time) => `VIA-L · Session: ${date}, ${time}`,
-    sched_body:    (name, date, time, zoom) =>
-      `<p>Hi <b>${name}</b>!</p>`
-      + `<p>You have selected a time for your first 60-minute session: <b>${date}, ${time} UTC+2</b>.</p>`
-      + zoom,
-    intro_subj:    (date, time) => `VIA-L · Intro call: ${date}, ${time}`,
-    intro_body:    (name, date, time, zoom) =>
-      `<p>Hi${name ? ' <b>' + name + '</b>' : ''}!</p>`
-      + `<p>You're booked for a free 15-minute intro call: <b>${date}, ${time} UTC+2</b>.</p>`
-      + zoom,
-    elite_subj:    (date, time) => `VIA-L ELITE · Video consultation: ${date}, ${time}`,
-    elite_body:    (name, date, time, zoom) =>
-      `<p>Hi${name ? ' <b>' + name + '</b>' : ''}!</p>`
-      + `<p>You're booked for a personal 60-minute ELITE video consultation: <b>${date}, ${time} UTC+2</b>.</p>`
-      + zoom,
   },
 };
 

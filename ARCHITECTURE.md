@@ -202,9 +202,9 @@ Sugar_40, Inflammation, Beauty). Протокол `postMessage` (`openBook` /
 | Gate-кнопка «Назначить сессию» (поток C) | TG callback `sched:` | `handleTgCallback` → письмо `calinvite_*` со ссылкой на Cal.com 60-мин |
 | Покупка/анкета программы | `/hotmart-webhook`, `/intake-submit` | `handleHotmartWebhook`, `handleIntakeSubmit` |
 
-- **Legacy (фронт больше не вызывает, оставлены в коде):** `POST /book-call` (`handleBookCall`), `POST /schedule-session` (`handleScheduleSession`), кастом-календарь `program-intake.html?calendar=1`. Можно удалить при следующей чистке.
+- **Удалено 2026-06-01 (Worker):** `/book-call` + `handleBookCall`, `/schedule-session` + `handleScheduleSession`, `zoomEmailBlock`/`zoomTgLine`/`ZOOM_T`, ключи `EMAIL_T.sched_*`/`intro_*`/`elite_*`. Осталась inert (никуда не ведёт) только фронт-разметка: кастом-календарь в `program-intake.html?calendar=1` и мёртвый calendar-JS в 4 `*-program.html` — переплетены с живой анкетой/лендингами, оставлены намеренно.
 - KV `PROGRAM_INTAKES`: `intake:<token>` (анкета программы), TTL 180д.
-- Секреты: `CAL_WEBHOOK_SECRET` (опц., подпись Cal.com). `ZOOM_LINK` теперь нужен только legacy-путям. Деплой: `wrangler deploy`.
+- Секреты: `CAL_WEBHOOK_SECRET` (опц., подпись Cal.com). `ZOOM_LINK` больше НЕ используется (можно удалить: `wrangler secret delete ZOOM_LINK`). Деплой: `wrangler deploy`.
 - Cal.com webhook URL: `https://interpreter.viaelcom.workers.dev/cal-webhook`, событие `Booking created`.
 
 **Итог: единая система — Cal.com везде** (15-мин знакомство + 60-мин сессии/ELITE), TG через `/cal-webhook`. Cal.com даёт реальную занятость, видео и письма; Worker — только уведомление в бот.
@@ -312,7 +312,7 @@ FREE → (assign_code после оплаты) → ASSIGNED → (первый в
 
 | Функция | Маршрут / роль |
 |---|---|
-| `fetch()` | роутер: GET `/intake-validate`; POST `/tg-test`, `/draft`, `/tg-webhook`, `/hotmart-webhook`, `/intake-submit`, `/schedule-session`, `/book-call`, `/cal-webhook`, иначе → `handleAnalyze` |
+| `fetch()` | роутер: GET `/intake-validate`; POST `/tg-test`, `/draft`, `/tg-webhook`, `/hotmart-webhook`, `/intake-submit`, `/cal-webhook`, иначе → `handleAnalyze` |
 | `handleAnalyze` | POST `{data, lang}` → Claude Haiku (`SYSTEM_PROMPT` + `buildUserMessage`, prompt caching) → `{analysis}` |
 | `buildUserMessage` / `selectKBPatterns` | сборка контекста (нормы, паттерны A–G, ИМТ/WHtR, анализы, KB-паттерны) |
 | `handleHotmartWebhook` / `detectLangFromHotmart` | приём оплаты → ветка программы или интерпретатора |
@@ -463,7 +463,7 @@ function t(k){ return T[lang][k] || T.ru[k] || k; }   // fallback на ru
 | `interpreter/apps-script.js` (Google Apps Script) | `BACKSTAGE_DRAFT_URL` | `https://interpreter.viaelcom.workers.dev/draft` |
 | Hotmart panel (webhook на 4 интерпретатор-продуктах и 4 программы-продуктах) | — | `https://interpreter.viaelcom.workers.dev/hotmart-webhook` |
 
-**Worker secrets** (через `wrangler secret put`, НЕ в `vars`): `CLAUDE_API_KEY`, `TELEGRAM_BOT_TOKEN`, `NUTRITIONIST_CHAT_ID`, `BREVO_API_KEY`, `APPS_SCRIPT_URL`, `HOTMART_TOKEN`, `ZOOM_LINK` (постоянная Zoom-комната для потоков C/D; опц. — иначе graceful fallback), `CAL_WEBHOOK_SECRET` (опц. — проверка подписи Cal.com webhook).
+**Worker secrets** (через `wrangler secret put`, НЕ в `vars`): `CLAUDE_API_KEY`, `TELEGRAM_BOT_TOKEN`, `NUTRITIONIST_CHAT_ID`, `BREVO_API_KEY`, `APPS_SCRIPT_URL`, `HOTMART_TOKEN`, `CAL_WEBHOOK_SECRET` (опц. — проверка подписи Cal.com webhook). `ZOOM_LINK` — БОЛЬШЕ НЕ ИСПОЛЬЗУЕТСЯ (legacy-код удалён 2026-06-01, секрет можно удалить).
 
 **Worker KV bindings:** `EXPERT_DRAFTS` (TTL 7д), `PROGRAM_INTAKES` (TTL 180д).
 
