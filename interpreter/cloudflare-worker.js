@@ -1611,6 +1611,7 @@ function selectKBPatterns(data) {
   const gsm  = Array.isArray(data.gsm)           ? data.gsm           : [];
   const uro  = Array.isArray(data.urology)       ? data.urology       : [];
   const gi   = Array.isArray(data.gi)            ? data.gi            : [];
+  const bone = Array.isArray(data.bone_risk)     ? data.bone_risk     : [];
   const has  = (arr, ...vals) => vals.some(v => arr.includes(v));
 
   const stressHigh  = data.chronic_stress === 'high' || data.chronic_stress === 'burnout'
@@ -1646,7 +1647,7 @@ function selectKBPatterns(data) {
     add('P-F5', lowEnergy && (tiredRecov || has(sym,'fatigue')) && (hrv < 30 || deepLow));
     // P-F6 щитовидка
     add('P-F6', (tempDown && lowEnergy) || (tempDown && has(horm,'hair_loss','weight_gain'))
-      || data.meds === 'thyroid' || (num(labs.tsh) != null && num(labs.tsh) > 2.5));
+      || has(sym,'cold') || data.meds === 'thyroid' || (num(labs.tsh) != null && num(labs.tsh) > 2.5));
     // P-F7 инсулинорезистентность
     add('P-F7', (visceral != null && visceral > 9) || has(horm,'weight_gain') || data.appetite === 'cravings'
       || num(labs.glucose) > 5.6 || num(labs.hba1c) > 5.7 || num(labs.homa) > 2.5);
@@ -1660,7 +1661,8 @@ function selectKBPatterns(data) {
     // P-F11 кишечник
     add('P-F11', has(gi,'bloating','constipation','diarrhea','reflux') || has(supp,'probiotics'));
     // P-F12 кости
-    add('P-F12', phase === 'post' && (age >= 55 || (num(labs.vitd) != null && num(labs.vitd) < 50)));
+    add('P-F12', (phase === 'post' && (age >= 55 || (num(labs.vitd) != null && num(labs.vitd) < 50)))
+      || has(bone,'prior_fracture','height_loss','family_osteoporosis','early_menopause'));
     // P-F13 сердечно-сосудистый
     add('P-F13', has(sym,'palpitations') || data.rhr_comp === 'high'
       || num(labs.ldl) > 3.4 || num(labs.apob) > 1.0 || num(labs.tg) > 1.7);
@@ -1676,7 +1678,8 @@ function selectKBPatterns(data) {
     // P-F17 нарушения сна
     add('P-F17', sleep <= 4 || data.deep === 'none' || /multiple/i.test(wake));
     // P-F18 B12/фолат
-    add('P-F18', (num(labs.b12) != null && num(labs.b12) < 300) || (has(sym,'fatigue') && has(sym,'foggy')));
+    add('P-F18', (num(labs.b12) != null && num(labs.b12) < 300) || has(sym,'numbness')
+      || (has(sym,'fatigue') && has(sym,'foggy')));
   } else {
     // P-M1 тестостерон/андропауза
     add('P-M1', phase === 'andro'
@@ -1689,7 +1692,7 @@ function selectKBPatterns(data) {
     // P-M4 воспаление
     add('P-M4', has(sym,'joint') || (visceral != null && visceral > 12) || num(labs.crp) > 3);
     // P-M5 щитовидка
-    add('P-M5', (tempDown && lowEnergy) || data.meds === 'thyroid' || (num(labs.tsh) != null && num(labs.tsh) > 2.5));
+    add('P-M5', (tempDown && lowEnergy) || has(sym,'cold') || data.meds === 'thyroid' || (num(labs.tsh) != null && num(labs.tsh) > 2.5));
     // P-M6 кишечник
     add('P-M6', has(gi,'bloating','constipation','diarrhea','reflux') || has(supp,'probiotics'));
     // P-M7 сердечно-сосудистый
