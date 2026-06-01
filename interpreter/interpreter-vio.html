@@ -317,7 +317,7 @@ body::before{
 
 /* ── Hero block header (logo only) ── */
 .hero-block-header{display:block;text-align:center;margin-bottom:0;margin-top:20px;}
-.hero-monogram{width:88px;height:90px;margin:0 auto 8px;}
+.hero-monogram{width:120px;height:120px;margin:0 auto 8px;}
 .hero-block-name{
   font-family:'Playfair Display',serif;
   font-size:clamp(42px,11vw,62px);letter-spacing:14px;text-transform:uppercase;
@@ -387,8 +387,10 @@ main{
   margin-bottom:12px;
   overflow:hidden;
   width:100%;
-  -webkit-backdrop-filter:blur(16px);
-  backdrop-filter:blur(16px);
+  /* backdrop blur отключён: фон карточек непрозрачный (.95+), blur невидим,
+     но вызывал мерцание шагов при display:none→block + fadeUp transform */
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
   box-shadow:
     0 1px 0 rgba(255,255,255,.08) inset,
     0 -1px 0 rgba(0,0,0,.4) inset,
@@ -1082,13 +1084,11 @@ footer{
 
 /* ── Hero VL monogram ── */
 /* .hero-monogram moved to hero-block-header section above */
-.hero-monogram svg{
+.hero-monogram img{
   width:100%;height:100%;
-  filter:drop-shadow(0 0 14px rgba(196,154,60,.84)) drop-shadow(0 0 38px rgba(196,154,60,.45)) drop-shadow(0 0 78px rgba(196,154,60,.20));
-  animation:logo-float 6s ease-in-out infinite;
-  will-change:transform;
+  object-fit:contain;
+  display:block;
 }
-@keyframes logo-float{0%,100%{transform:translateY(0);}50%{transform:translateY(-9px);}}
 .hero-brand{
   font-family:'Playfair Display',serif;font-size:17px;letter-spacing:9px;
   color:var(--t1);margin-bottom:3px;
@@ -1957,16 +1957,7 @@ footer{
   <div class="hero-block-header">
     <div class="flare-ring-wrap">
       <div class="hero-monogram">
-        <svg viewBox="0 0 335 340" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="h-gold" x1="0" y1="0" x2="335" y2="340" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#E8C46A"/>
-              <stop offset="50%" stop-color="#C49A3C"/>
-              <stop offset="100%" stop-color="#8B6B22"/>
-            </linearGradient>
-          </defs>
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M153.972 0.575971C86.3115 6.79897 27.6765 52.656 7.54753 115.09C1.53453 133.74 -0.0334622 144.128 0.000537849 165.09C0.0495378 196.331 6.06354 219.476 21.2985 247.061C45.4175 290.731 92.1245 323.787 142.361 332.741C157.959 335.521 185.285 335.737 200.825 333.204C253.728 324.579 298.024 294.082 324.777 247.865L328.38 241.639L326.204 240.115C325.006 239.276 323.491 238.59 322.836 238.59C322.18 238.59 319.947 241.628 317.873 245.34C305.858 266.845 287.231 286.775 266.863 299.918C208.912 337.312 137.117 337.459 80.6935 300.3C45.2895 276.983 20.0005 240.742 11.1165 200.59C6.94454 181.735 5.97355 169.491 7.37755 153.463C11.3936 107.628 33.1695 68.391 69.9715 40.683C99.6925 18.305 132.639 7.35499 170.472 7.28099C201.525 7.21999 228.833 14.315 254.811 29.191C281.652 44.562 305.102 68.973 318.359 95.34C320.087 98.778 321.652 101.59 321.837 101.59C322.504 101.59 328.472 99.388 328.472 99.142C328.472 99.004 326.174 94.66 323.365 89.49C301.093 48.499 260.551 16.742 216.472 5.75898C197.257 0.970984 172.235 -1.10403 153.972 0.575971ZM55.4715 71.09C55.4715 73.361 55.8605 73.592 59.7215 73.612C65.7755 73.643 71.8716 76.723 74.8616 81.261C76.2486 83.367 81.2805 94.09 86.0445 105.09C90.8085 116.09 99.7686 136.79 105.956 151.09C112.143 165.39 120.586 184.74 124.719 194.09C128.851 203.44 136.835 221.665 142.461 234.59C148.087 247.515 154.514 262.271 156.742 267.38C158.97 272.49 161.171 276.904 161.632 277.189C162.691 277.843 178.275 246.262 179.132 241.726C179.713 238.649 179.589 238.418 177.676 239.025C174.77 239.947 174.066 238.681 162.061 210.958C156.376 197.83 149.24 181.465 146.203 174.59C108.799 89.915 106.551 84.048 109.439 78.651C110.954 75.82 116.242 73.59 121.44 73.59C125.074 73.59 125.472 73.343 125.472 71.09V68.59H90.4715H55.4715V71.09ZM221.472 70.95C221.472 73.061 222.025 73.368 226.722 73.855C236.566 74.875 240.486 78.424 240.459 86.29C240.439 92.294 235.464 106.495 222.566 137.365C219.764 144.071 217.472 149.75 217.472 149.986C217.472 150.221 219.321 150.727 221.58 151.108C226.745 151.981 226.985 151.718 232.554 139.09C234.98 133.59 241.991 118.965 248.134 106.59C261.857 78.945 265.062 75.255 276.526 73.897C280.892 73.38 281.472 73.035 281.472 70.951V68.59H251.472H221.472V70.95ZM168.472 163.976C168.472 166.04 169.084 166.455 172.991 167.041C175.483 167.414 178.734 168.771 180.239 170.066L182.969 172.414L182.971 224.087L182.972 275.76L180.679 277.62C179.418 278.643 176.38 279.781 173.929 280.149C170.584 280.65 169.472 281.259 169.472 282.587C169.472 283.581 170.458 284.615 171.722 284.945C172.959 285.269 195.572 285.434 221.972 285.312L269.972 285.09L270.623 273.09C270.981 266.49 271.566 258.503 271.923 255.34C272.525 249.999 272.425 249.59 270.522 249.59C269.394 249.59 268.18 249.478 267.824 249.34C267.468 249.202 266.426 251.79 265.509 255.09C263.427 262.582 261.442 266.355 257.811 269.726C251.19 275.873 243.693 277.59 223.479 277.59C209.222 277.59 208.519 277.495 207.029 275.367C205.67 273.428 205.472 266.762 205.472 222.949C205.472 195.342 205.752 172.025 206.093 171.135C206.984 168.812 211.79 166.59 215.922 166.59C219.042 166.59 219.472 166.287 219.472 164.09V161.59H193.972H168.472V163.976Z" fill="url(#h-gold)"/>
-        </svg>
+        <img src="Logo/4-min.png" alt="VIA-L" class="hero-monogram-img">
       </div>
 
     </div>
@@ -4887,6 +4878,8 @@ function applyManualFull(){const fields={hrv:'mm-hrv',rhr:'mm-rhr',sleepHours:'m
   }
 
   function draw(){
+    raf = requestAnimationFrame(draw);
+    if(draw._s=!draw._s) return; /* throttle to ~30fps — halves CPU */
     if(!w) resize();
     ctx.clearRect(0,0,w,h);
     t += 0.62;
@@ -4921,8 +4914,6 @@ function applyManualFull(){const fields={hrv:'mm-hrv',rhr:'mm-rhr',sleepHours:'m
     ctx.fillStyle = gr; ctx.fill();
     ctx.beginPath(); ctx.arc(fx,fy,2.4,0,Math.PI*2);
     ctx.fillStyle = 'rgba(210,180,255,0.96)'; ctx.fill();
-
-    raf = requestAnimationFrame(draw);
   }
 
   /* Start / stop tied to step visibility */
@@ -4990,6 +4981,8 @@ window.addEventListener('resize', function(){
       return y;
     }
     function draw(){
+      raf=requestAnimationFrame(draw);
+      if(draw._s=!draw._s) return; /* throttle to ~30fps — halves CPU */
       if(!w)resize();
       ctx.clearRect(0,0,w,h);
       t+=0.62;
@@ -5006,7 +4999,6 @@ window.addEventListener('resize', function(){
       ctx.beginPath(); ctx.arc(fx,fy,2.5,0,Math.PI*2);
       ctx.fillStyle=dotColor; ctx.fill();
       ctx.shadowBlur=0;
-      raf=requestAnimationFrame(draw);
     }
     function start(){if(!raf){resize();draw();}}
     function stop(){if(raf){cancelAnimationFrame(raf);raf=null;}}
