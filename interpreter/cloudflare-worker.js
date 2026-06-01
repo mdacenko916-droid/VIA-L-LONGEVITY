@@ -312,8 +312,11 @@ export default {
       if (path === '/intake-submit')    return handleIntakeSubmit(request, env, corsHeaders);
       if (path === '/schedule-session') return handleScheduleSession(request, env, corsHeaders);
 
-      // Call booking (15-мин знакомство с лендингов + ELITE 60-мин из ИП)
+      // Call booking (legacy custom-slot fallback — фронт переведён на Cal.com)
       if (path === '/book-call')        return handleBookCall(request, env, corsHeaders);
+
+      // Cal.com webhook → TG-карточка нутрициологу (основной механизм записи)
+      if (path === '/cal-webhook')      return handleCalWebhook(request, env, corsHeaders);
 
       // Default: AI-анализ для интерпретатора
       return handleAnalyze(request, env, corsHeaders);
@@ -871,6 +874,65 @@ async function handleBookCall(request, env, corsHeaders) {
   const bodyFn  = isElite ? et.elite_body : et.intro_body;
   await sendEmail(env, email, subjFn(dateStr, time), bodyFn(name || '', dateStr, time, zoomEmailBlock(env, lang)));
 
+  return jsonResponse({ ok: true }, corsHeaders);
+}
+
+// ─────────────────────────────────────────────────────────────
+// POST /cal-webhook — Cal.com → TG-карточка нутрициологу.
+// Cal.com сам ведёт календарь/видео/письма; единственное, чего он не
+// делает — пинг в Telegram-бот. Этот эндпоинт закрывает разрыв.
+// Подпись (HMAC-SHA256 тела секретом) проверяется, если задан CAL_WEBHOOK_SECRET.
+// ─────────────────────────────────────────────────────────────
+async function verifyCalSig(env, rawBody, sig) {
+  if (!env.CAL_WEBHOOK_SECRET) return true;       // не настроено → пропускаем
+  if (!sig) return false;
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(env.CAL_WEBHOOK_SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const mac = await crypto.subtle.sign('HMAC', key, enc.encode(rawBody));
+  const hex = [...new Uint8Array(mac)].map(b => b.toString(16).padStart(2, '0')).join('');
+  return hex === String(sig).toLowerCase();
+}
+
+function fmtCalTime(iso, tz) {
+  try {
+    return new Intl.DateTimeFormat('ru-RU', {
+      timeZone: tz || 'Europe/Kyiv', day: 'numeric', month: 'long', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    }).format(new Date(iso));
+  } catch (_) { return String(iso || '—'); }
+}
+
+async function handleCalWebhook(request, env, corsHeaders) {
+  const raw = await request.text();
+  const sig = request.headers.get('x-cal-signature-256') || '';
+  if (!(await verifyCalSig(env, raw, sig))) {
+    return jsonResponse({ ok: false, error: 'bad_signature' }, corsHeaders, 401);
+  }
+
+  let body = {};
+  try { body = JSON.parse(raw); } catch (_) {}
+  const ev  = body.triggerEvent || '';
+  const p   = body.payload || {};
+  const att = (Array.isArray(p.attendees) && p.attendees[0]) || {};
+  const tz  = att.timeZone || p.organizer?.timeZone || 'Europe/Kyiv';
+  const when = fmtCalTime(p.startTime, tz);
+  const url  = p.metadata?.videoCallUrl || p.videoCallData?.url
+            || (typeof p.location === 'string' ? p.location : '') || '';
+
+  const head = ev === 'BOOKING_CANCELLED'   ? '❌ <b>Отмена записи</b> (Cal.com)'
+             : ev === 'BOOKING_RESCHEDULED' ? '🔄 <b>Перенос записи</b> (Cal.com)'
+             :                                '📅 <b>Новая запись</b> (Cal.com)';
+
+  const card = head + `\n━━━━━━━━━━━━━━━━━━━━\n`
+    + (p.title ? `${esc(p.title)}\n` : '')
+    + (att.name ? `👤 <b>${esc(att.name)}</b>\n` : '')
+    + (att.email ? `📧 <code>${esc(att.email)}</code>\n` : '')
+    + `🌍 ${esc(tz)}\n`
+    + `━━━━━━━━━━━━━━━━━━━━\n`
+    + `🗓 <b>${esc(when)}</b>\n`
+    + (url ? `🎥 ${esc(url)}` : '');
+
+  await sendTelegram(env, card);
   return jsonResponse({ ok: true }, corsHeaders);
 }
 
