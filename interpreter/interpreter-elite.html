@@ -3103,13 +3103,22 @@ footer{
     <div class="max-card" id="zoomBlock" style="display:none;background:linear-gradient(135deg,#1F1633 0%,#150E26 100%);border:1px solid rgba(157,108,255,.45);">
       <div class="max-badge" data-t="badge_zoom" style="background:rgba(157,108,255,.12);color:#9d6cff;border-color:rgba(157,108,255,.3);">🔮 ELITE · Видео-консультация</div>
       <div class="max-title" data-t="zoom_title">Запросить Zoom-созвон</div>
-      <div class="max-desc" data-t="zoom_desc">Назначить личный созвон с нутрициологом — ссылку и время пришлёт нутрициолог в Telegram или email.</div>
-      <button type="button" id="zoomBtn" onclick="requestZoom()" data-t="zoom_btn"
-        style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px 24px;border-radius:14px;background:linear-gradient(135deg,#9d6cff,#7c4ddd);color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;letter-spacing:.05em;cursor:pointer;box-shadow:0 4px 20px rgba(157,108,255,.3);transition:transform .2s;margin-top:4px;"
-        onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-        Запросить Zoom →
+      <div class="max-desc" data-t="zoom_desc">Выберите дату и время — ссылку на Zoom пришлём на ваш email.</div>
+      <div id="zoomPicker" style="margin:6px 0 10px;">
+        <div id="zoomDayLabel" style="font-size:12px;letter-spacing:.04em;color:#cbb8ff;margin-bottom:8px;">Дата</div>
+        <div id="zoomDays" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;"></div>
+        <div id="zoomTimeLabel" style="display:none;font-size:12px;letter-spacing:.04em;color:#cbb8ff;margin:12px 0 8px;">Время (UTC+2, Киев)</div>
+        <div id="zoomSlots" style="display:none;flex-wrap:wrap;gap:8px;"></div>
+        <input id="zoomEmail" type="email" placeholder="Ваш email" autocomplete="email"
+          style="width:100%;box-sizing:border-box;margin-top:14px;padding:13px 14px;border-radius:12px;border:1px solid rgba(157,108,255,.35);background:rgba(157,108,255,.06);color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;">
+      </div>
+      <button type="button" id="zoomBtn" onclick="bookEliteCall()" data-t="zoom_btn" disabled
+        style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px 24px;border-radius:14px;background:linear-gradient(135deg,#9d6cff,#7c4ddd);color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;letter-spacing:.05em;cursor:pointer;box-shadow:0 4px 20px rgba(157,108,255,.3);transition:transform .2s,opacity .2s;margin-top:4px;opacity:.5;"
+        onmouseover="if(!this.disabled)this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+        Записаться →
       </button>
-      <div id="zoomSent" style="display:none;font-size:13px;color:var(--ok);text-align:center;padding:12px;background:var(--ok-dim);border-radius:12px;margin-top:10px;" data-t="zoom_sent">✓ Заявка отправлена! Нутрициолог пришлёт ссылку и время.</div>
+      <div id="zoomErr" style="display:none;font-size:13px;color:var(--alert);text-align:center;padding:10px;margin-top:10px;"></div>
+      <div id="zoomSent" style="display:none;font-size:13px;color:var(--ok);text-align:center;padding:12px;background:var(--ok-dim);border-radius:12px;margin-top:10px;" data-t="zoom_sent">✓ Готово! Ссылка на Zoom придёт на ваш email.</div>
     </div>
 
     <!-- ELITE: Telegram щоденний чат -->
@@ -3245,30 +3254,102 @@ function _zoomShowSentState(){
   if (btn) btn.style.display = 'none';
   if (sent) sent.style.display = 'block';
 }
-async function requestZoom(){
+// Локальные подписи пикера (блок только uk/ru; fallback — ru).
+const EZ = {
+  ru: { day:'Дата', time:'Время (UTC+2, Киев)', email:'Ваш email', sending:'Отправляем…', err:'Не удалось записаться. Попробуйте позже.', wd:['Вс','Пн','Вт','Ср','Чт','Пт','Сб'], mo:['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'] },
+  uk: { day:'Дата', time:'Час (UTC+2, Київ)', email:'Ваш email', sending:'Надсилаємо…', err:'Не вдалося записатися. Спробуйте пізніше.', wd:['Нд','Пн','Вт','Ср','Чт','Пт','Сб'], mo:['січ','лют','бер','кві','тра','чер','лип','сер','вер','жов','лис','гру'] },
+};
+function _ez(){ return EZ[lang] || EZ.ru; }
+
+let _zSelDate = null, _zSelTime = null;
+const _Z_SLOTS = ['09:00','10:00','11:00','12:00','14:00','15:00','16:00','17:00','18:00','19:00'];
+
+function _zChipStyle(el, on){
+  el.style.cssText = 'padding:8px 10px;border-radius:10px;font-size:12px;cursor:pointer;white-space:nowrap;text-align:center;min-width:46px;transition:all .15s;font-family:\'DM Sans\',sans-serif;'
+    + (on ? 'background:#9d6cff;color:#fff;border:1px solid #9d6cff;' : 'background:rgba(157,108,255,.08);color:#cbb8ff;border:1px solid rgba(157,108,255,.35);');
+}
+function _zSyncBtn(){
   const btn = document.getElementById('zoomBtn');
-  const sent = document.getElementById('zoomSent');
+  if (!btn) return;
+  const ready = !!(_zSelDate && _zSelTime);
+  btn.disabled = !ready;
+  btn.style.opacity = ready ? '1' : '.5';
+}
+function renderEliteCal(){
+  const daysEl = document.getElementById('zoomDays');
+  if (!daysEl) return;
+  const ez = _ez();
+  document.getElementById('zoomDayLabel').textContent = ez.day;
+  document.getElementById('zoomTimeLabel').textContent = ez.time;
+  const emEl = document.getElementById('zoomEmail');
+  if (emEl){ emEl.placeholder = ez.email; if(!emEl.value){ const m=(document.getElementById('maxEmail')?.value||'').trim(); if(m) emEl.value=m; } }
+  daysEl.innerHTML = '';
+  _zSelDate = null; _zSelTime = null;
+  document.getElementById('zoomTimeLabel').style.display = 'none';
+  document.getElementById('zoomSlots').style.display = 'none';
+  _zSyncBtn();
+  const today = new Date();
+  let added = 0;
+  for (let i = 1; i <= 25 && added < 14; i++){
+    const d = new Date(today); d.setDate(today.getDate() + i);
+    if (d.getDay() === 0) continue; // без воскресений
+    const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const chip = document.createElement('div');
+    _zChipStyle(chip, false);
+    chip.innerHTML = `<div style="font-size:11px;opacity:.75">${ez.wd[d.getDay()]}</div><div style="font-size:14px;font-weight:600">${d.getDate()}</div><div style="font-size:10px;opacity:.6">${ez.mo[d.getMonth()]}</div>`;
+    chip.onclick = () => eliteSelectDay(iso, chip);
+    daysEl.appendChild(chip);
+    added++;
+  }
+}
+function eliteSelectDay(iso, el){
+  _zSelDate = iso; _zSelTime = null;
+  document.querySelectorAll('#zoomDays > div').forEach(c => _zChipStyle(c, false));
+  _zChipStyle(el, true);
+  const slots = document.getElementById('zoomSlots');
+  slots.innerHTML = '';
+  _Z_SLOTS.forEach(time => {
+    const chip = document.createElement('div');
+    _zChipStyle(chip, false);
+    chip.textContent = time;
+    chip.onclick = () => eliteSelectTime(time, chip);
+    slots.appendChild(chip);
+  });
+  document.getElementById('zoomTimeLabel').style.display = 'block';
+  slots.style.display = 'flex';
+  _zSyncBtn();
+}
+function eliteSelectTime(time, el){
+  _zSelTime = time;
+  document.querySelectorAll('#zoomSlots > div').forEach(c => _zChipStyle(c, false));
+  _zChipStyle(el, true);
+  _zSyncBtn();
+}
+async function bookEliteCall(){
+  const btn = document.getElementById('zoomBtn');
+  const errEl = document.getElementById('zoomErr');
   if (!btn) return;
   if (_zoomRecentlyRequested()) { _zoomShowSentState(); return; }
+  if (!_zSelDate || !_zSelTime) return;
+  const emailEl = document.getElementById('zoomEmail');
+  const email = (emailEl?.value || '').trim();
+  if (!email || !email.includes('@')) { if (emailEl){ emailEl.style.borderColor='var(--alert)'; emailEl.focus(); } return; }
   const code = sessionStorage.getItem('vial_code') || '';
-  const email = (document.getElementById('maxEmail')?.value || '').trim();
-  btn.disabled = true;
-  btn.textContent = '⏳ ' + (T[lang]?.counter_sending || 'Отправляем…');
+  if (errEl) errEl.style.display = 'none';
+  btn.disabled = true; const _o = btn.textContent; btn.textContent = '⏳ ' + _ez().sending;
   try {
-    const params = new URLSearchParams({
-      action: 'zoom_request',
-      code:   code,
-      email:  email,
-      lang:   lang
+    const r = await fetch('https://interpreter.viaelcom.workers.dev/book-call', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind: 'elite60', lang, code, email, date: _zSelDate, time: _zSelTime, tz: 'UTC+2' }),
     });
-    // Image beacon (Apps Script примет, но ответ читать необязательно — отправка односторонняя).
-    new Image().src = APPS_SCRIPT_URL + '?' + params.toString();
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok) throw new Error('book_failed');
     localStorage.setItem(_zoomKey(), Date.now().toString());
+    document.getElementById('zoomPicker').style.display = 'none';
     _zoomShowSentState();
   } catch(e) {
-    console.error('Zoom request error:', e);
-    btn.disabled = false;
-    btn.textContent = T[lang]?.zoom_btn || 'Запросить Zoom →';
+    btn.disabled = false; btn.textContent = _o; _zSyncBtn();
+    if (errEl) { errEl.textContent = _ez().err; errEl.style.display = 'block'; }
   }
 }
 
@@ -3472,7 +3553,7 @@ const T={
     result_eyebrow:'Анализ VIA‑L',readiness:'Готовность',
     doctor_title:'⚠ Консультация с врачом',
     lab_title:'🧪 Рекомендуемые анализы',
-    max_title:'Ваш еженедельный анализ',max_desc:'Отправляйте запрос раз в неделю — нутрициолог готовит PDF-отчёт с анализом вашего профиля и персональными рекомендациями в течение 48 часов.',max_btn:'Отправить запрос нутрициологу →',max_placeholder:'Ваш вопрос или что изменилось за неделю...',max_sent:'✓ Запрос отправлен! PDF-отчёт в течение 48 часов.',counter_used:'Отправлено {used} из {max} отчётов',counter_cooldown:'⏳ Следующий отчёт доступен {date}',counter_program_limit:'✓ Программа завершена · все {max} отчётов использованы',counter_sending:'Отправляем…',counter_error:'⚠ Не удалось отправить. Попробуйте позже.',counter_network:'⚠ Ошибка соединения. Проверьте интернет.',badge_zoom:'🔮 ELITE · Видео-консультация',zoom_title:'Запросить Zoom-созвон',zoom_desc:'Назначить личный созвон с нутрициологом — ссылку и время пришлёт нутрициолог в Telegram или email.',zoom_btn:'Запросить Zoom →',zoom_sent:'✓ Заявка отправлена! Нутрициолог пришлёт ссылку и время.',onb_badge:'🧬 ELITE · Стартовая анкета · 5 минут',onb_title:'Анкета-анамнез',onb_desc:'Заполните один раз перед стартом программы. Нутрициолог получит ваши ответы и составит персональный протокол ведения. Биометрия с трекера идёт отдельно — это о вас.',onb_name_label:'Ваше имя',onb_name_ph:'Имя',onb_email_label:'Email (для PDF-разборов от нутрициолога)',onb_email_ph:'you@example.com',onb_q1_label:'1. Главная цель программы — что хотите получить за 8 / 12 недель',onb_q1_ph:'Например: вернуть энергию, наладить сон, снизить тревожность...',onb_q2_label:'2. Что пробовали раньше — что работало, что нет',onb_q2_ph:'Магний работал · Ашваганду пробовала — не зашла...',onb_q3_label:'3. Главный приоритет сейчас (что важнее всего)',onb_q3_o1:'Энергия / снижение усталости',onb_q3_o2:'Сон',onb_q3_o3:'Вес / композиция тела',onb_q3_o4:'Кожа / волосы',onb_q3_o5:'Когниции / память',onb_q3_o6:'Гормональный баланс',onb_q3_o7:'Другое',onb_q4_label:'Telegram (@username) — для быстрой связи',onb_q4_ph:'@username',onb_q5_label:'Часовой пояс / город',onb_q5_ph:'UTC+2 · Киев',onb_q6_label:'4. Хронические заболевания (если есть)',onb_q6_ph:'—',onb_q7_label:'5. Лекарства, которые принимаете постоянно (с дозами)',onb_q7_ph:'—',onb_q8_label:'6. Аллергии',onb_q8_ph:'—',onb_q9_label:'7. Аутоиммунные заболевания',onb_q9_o1:'Нет',onb_q9_o2:'Тиреоидит Хашимото',onb_q9_o3:'Ревматоидный артрит',onb_q9_o4:'Псориаз',onb_q9_o5:'Другое (укажите в «Хронические заболевания»)',onb_q10_label:'8. Изжога или тяжесть после еды?',onb_q11_label:'9. Принимаете ИПП (омепразол, рабепразол, эзомепразол и др.)?',onb_q11_detail_label:'Если да — какой препарат и дозировка',onb_q11_detail_ph:'например: Омепразол 20 мг утром',onb_q5_other:'Другой — укажу в коментариях',onb_q12_label:'10. Антибиотики за последние 6 месяцев?',onb_q13_label:'11. Удалён ли желчный пузырь?',onb_q14_label:'12. Опыт с БАДами — что принимали, что работало или не работало',onb_q14_ph:'—',onb_q_o_pick:'Выберите...',onb_q_o_no:'Нет',onb_q_o_yes:'Да',onb_q_o_yes_curr:'Да, сейчас',onb_q_o_yes_past:'Принимал(а) ранее',onb_q_o_rarely:'Редко (раз в месяц)',onb_q_o_weekly:'Раз в неделю',onb_q_o_daily:'Ежедневно',onb_q_o_1c:'1 курс',onb_q_o_multi:'Несколько курсов',onb_submit_btn:'Показать мой результат →',onb_sending:'Отправляем...',onb_sent_msg:'✓ Анкета принята. Нутрициолог получил ваши ответы и начнёт составлять программу. Переходим к биометрии...',onb_err_email:'⚠ Введите корректный email — на него придут PDF-разборы.',onb_err_send:'⚠ Не удалось отправить. Попробуйте ещё раз.',onb_err_network:'⚠ Ошибка соединения. Проверьте интернет.',onb_sec1:'Контакты',onb_sec2:'Цели программы',onb_sec3:'История здоровья',
+    max_title:'Ваш еженедельный анализ',max_desc:'Отправляйте запрос раз в неделю — нутрициолог готовит PDF-отчёт с анализом вашего профиля и персональными рекомендациями в течение 48 часов.',max_btn:'Отправить запрос нутрициологу →',max_placeholder:'Ваш вопрос или что изменилось за неделю...',max_sent:'✓ Запрос отправлен! PDF-отчёт в течение 48 часов.',counter_used:'Отправлено {used} из {max} отчётов',counter_cooldown:'⏳ Следующий отчёт доступен {date}',counter_program_limit:'✓ Программа завершена · все {max} отчётов использованы',counter_sending:'Отправляем…',counter_error:'⚠ Не удалось отправить. Попробуйте позже.',counter_network:'⚠ Ошибка соединения. Проверьте интернет.',badge_zoom:'🔮 ELITE · Видео-консультация',zoom_title:'Записаться на видео-консультацию',zoom_desc:'Выберите дату и время — ссылку на Zoom пришлём на ваш email.',zoom_btn:'Записаться →',zoom_sent:'✓ Готово! Ссылка на Zoom придёт на ваш email.',onb_badge:'🧬 ELITE · Стартовая анкета · 5 минут',onb_title:'Анкета-анамнез',onb_desc:'Заполните один раз перед стартом программы. Нутрициолог получит ваши ответы и составит персональный протокол ведения. Биометрия с трекера идёт отдельно — это о вас.',onb_name_label:'Ваше имя',onb_name_ph:'Имя',onb_email_label:'Email (для PDF-разборов от нутрициолога)',onb_email_ph:'you@example.com',onb_q1_label:'1. Главная цель программы — что хотите получить за 8 / 12 недель',onb_q1_ph:'Например: вернуть энергию, наладить сон, снизить тревожность...',onb_q2_label:'2. Что пробовали раньше — что работало, что нет',onb_q2_ph:'Магний работал · Ашваганду пробовала — не зашла...',onb_q3_label:'3. Главный приоритет сейчас (что важнее всего)',onb_q3_o1:'Энергия / снижение усталости',onb_q3_o2:'Сон',onb_q3_o3:'Вес / композиция тела',onb_q3_o4:'Кожа / волосы',onb_q3_o5:'Когниции / память',onb_q3_o6:'Гормональный баланс',onb_q3_o7:'Другое',onb_q4_label:'Telegram (@username) — для быстрой связи',onb_q4_ph:'@username',onb_q5_label:'Часовой пояс / город',onb_q5_ph:'UTC+2 · Киев',onb_q6_label:'4. Хронические заболевания (если есть)',onb_q6_ph:'—',onb_q7_label:'5. Лекарства, которые принимаете постоянно (с дозами)',onb_q7_ph:'—',onb_q8_label:'6. Аллергии',onb_q8_ph:'—',onb_q9_label:'7. Аутоиммунные заболевания',onb_q9_o1:'Нет',onb_q9_o2:'Тиреоидит Хашимото',onb_q9_o3:'Ревматоидный артрит',onb_q9_o4:'Псориаз',onb_q9_o5:'Другое (укажите в «Хронические заболевания»)',onb_q10_label:'8. Изжога или тяжесть после еды?',onb_q11_label:'9. Принимаете ИПП (омепразол, рабепразол, эзомепразол и др.)?',onb_q11_detail_label:'Если да — какой препарат и дозировка',onb_q11_detail_ph:'например: Омепразол 20 мг утром',onb_q5_other:'Другой — укажу в коментариях',onb_q12_label:'10. Антибиотики за последние 6 месяцев?',onb_q13_label:'11. Удалён ли желчный пузырь?',onb_q14_label:'12. Опыт с БАДами — что принимали, что работало или не работало',onb_q14_ph:'—',onb_q_o_pick:'Выберите...',onb_q_o_no:'Нет',onb_q_o_yes:'Да',onb_q_o_yes_curr:'Да, сейчас',onb_q_o_yes_past:'Принимал(а) ранее',onb_q_o_rarely:'Редко (раз в месяц)',onb_q_o_weekly:'Раз в неделю',onb_q_o_daily:'Ежедневно',onb_q_o_1c:'1 курс',onb_q_o_multi:'Несколько курсов',onb_submit_btn:'Показать мой результат →',onb_sending:'Отправляем...',onb_sent_msg:'✓ Анкета принята. Нутрициолог получил ваши ответы и начнёт составлять программу. Переходим к биометрии...',onb_err_email:'⚠ Введите корректный email — на него придут PDF-разборы.',onb_err_send:'⚠ Не удалось отправить. Попробуйте ещё раз.',onb_err_network:'⚠ Ошибка соединения. Проверьте интернет.',onb_sec1:'Контакты',onb_sec2:'Цели программы',onb_sec3:'История здоровья',
     tg_title:'Ваш персональный Telegram-канал',tg_desc:'Ежедневная связь с нутрициологом. Задавайте вопросы, делитесь результатами — нутрициолог отвечает в течение 24 часов в рабочие дни.',tg_btn:'Открыть Telegram-чат →',
     pkg_8w_label:'8 недель',pkg_8w_desc:'Чат + еженедельный PDF',pkg_12w_label:'12 недель',pkg_12w_desc:'Чат + еженедельный PDF',pkg_best:'Выгоднее',pkg_select:'Выбрать →',
     cta_title:'Хотите персональное ведение?',cta_desc:'Нутрициолог разберёт ваши показатели лично — еженедельный Zoom и протокол питания под вашу гормональную фазу.',cta_f1:'Персональный разбор показателей',cta_f2:'Протокол питания под вашу фазу',cta_f3:'Добавки с точными дозировками',restart:'Пройти заново',book:'Записаться на программу →',cta_max_title:'Ваш план ELITE',cta_max_desc:'Выберите программу — ежедневный доступ в Telegram к нутрициологу и еженедельный PDF-анализ от ИИ и нутрициолога.',cta_max_f1:'Ежедневный Telegram-чат с нутрициологом',cta_max_f2:'Еженедельный PDF — анализ ИИ + нутрициолог',cta_max_f3:'Персональный протокол питания',cta_max_book:'Выбрать программу →',elite_sent:'✓ Заявка отправлена! Специалист свяжется с вами в Telegram.',
@@ -3591,7 +3672,7 @@ const T={
     sym_fatigue:'Втома',sym_anxiety:'Тривожність',sym_foggy:'Туман',sym_mood:'Перепади',sym_palp:'Серцебиття',sym_joint:'Суглоби',sym_nothing:'Нічого особливого',
     energy_low:'1 — немає сил',energy_high:'10 — енергія',stress_mild:'Помірний',stress_high:'Сильний',
     next:'Далі →',show_result:'Показати результат →',result_eyebrow:'Аналіз VIA‑L',readiness:'Готовність',doctor_title:'⚠ Консультація з лікарем',lab_title:'🧪 Рекомендовані аналізи',
-    max_title:'Ваш тижневий аналіз',max_desc:'Надсилайте запит раз на тиждень — нутриціолог готує PDF-звіт з аналізом вашого профілю та персональними рекомендаціями протягом 48 годин.',max_btn:'Надіслати запит нутриціологу →',max_placeholder:'Ваше запитання або що змінилось за тиждень...',max_sent:'✓ Запит надіслано! PDF-звіт протягом 48 годин.',counter_used:'Надіслано {used} з {max} звітів',counter_cooldown:'⏳ Наступний звіт доступний {date}',counter_program_limit:'✓ Програму завершено · всі {max} звітів використано',counter_sending:'Надсилаємо…',counter_error:'⚠ Не вдалося надіслати. Спробуйте пізніше.',counter_network:'⚠ Помилка з\'єднання. Перевірте інтернет.',badge_zoom:'🔮 ELITE · Відеоконсультація',zoom_title:'Запросити Zoom-зустріч',zoom_desc:'Призначити особисту зустріч з нутриціологом — посилання та час надішле нутриціолог у Telegram або email.',zoom_btn:'Запросити Zoom →',zoom_sent:'✓ Заявку надіслано! Нутриціолог надішле посилання і час.',onb_badge:'🧬 ELITE · Стартова анкета · 5 хвилин',onb_title:'Анкета-анамнез',onb_desc:'Заповніть один раз перед стартом програми. Нутриціолог отримає ваші відповіді й складе персональний протокол ведення. Біометрія з трекера йде окремо — це про вас.',onb_name_label:"Ваше ім'я",onb_name_ph:"Ім'я",onb_email_label:'Email (для PDF-розборів від нутриціолога)',onb_email_ph:'you@example.com',onb_q1_label:'1. Головна мета програми — що хочете отримати за 8 / 12 тижнів',onb_q1_ph:'Наприклад: повернути енергію, налагодити сон, знизити тривожність...',onb_q2_label:'2. Що пробували раніше — що працювало, що ні',onb_q2_ph:'Магній працював · Ашваганду пробувала — не зайшла...',onb_q3_label:'3. Головний пріоритет зараз (що важливіше за все)',onb_q3_o1:'Енергія / зниження втоми',onb_q3_o2:'Сон',onb_q3_o3:'Вага / композиція тіла',onb_q3_o4:'Шкіра / волосся',onb_q3_o5:"Когніції / пам'ять",onb_q3_o6:'Гормональний баланс',onb_q3_o7:'Інше',onb_q4_label:"Telegram (@username) — для швидкого зв'язку",onb_q4_ph:'@username',onb_q5_label:'Часовий пояс / місто',onb_q5_ph:'UTC+2 · Київ',onb_q6_label:'4. Хронічні захворювання (якщо є)',onb_q6_ph:'—',onb_q7_label:'5. Ліки, які приймаєте постійно (з дозами)',onb_q7_ph:'—',onb_q8_label:'6. Алергії',onb_q8_ph:'—',onb_q9_label:'7. Аутоімунні захворювання',onb_q9_o1:'Немає',onb_q9_o2:'Тиреоїдит Хашимото',onb_q9_o3:'Ревматоїдний артрит',onb_q9_o4:'Псоріаз',onb_q9_o5:'Інше (вкажіть у «Хронічні захворювання»)',onb_q10_label:'8. Печія або тяжкість після їжі?',onb_q11_label:'9. Приймаєте ІПП (омепразол, рабепразол, езомепразол та ін.)?',onb_q11_detail_label:'Якщо так — який препарат і дозування',onb_q11_detail_ph:'наприклад: Омепразол 20 мг зранку',onb_q5_other:'Інший — вкажу в коментарях',onb_q12_label:'10. Антибіотики за останні 6 місяців?',onb_q13_label:'11. Видалений жовчний міхур?',onb_q14_label:'12. Досвід з БАДами — що приймали, що працювало або не працювало',onb_q14_ph:'—',onb_q_o_pick:'Виберіть...',onb_q_o_no:'Немає',onb_q_o_yes:'Так',onb_q_o_yes_curr:'Так, зараз',onb_q_o_yes_past:'Приймав(ла) раніше',onb_q_o_rarely:'Рідко (раз на місяць)',onb_q_o_weekly:'Раз на тиждень',onb_q_o_daily:'Щодня',onb_q_o_1c:'1 курс',onb_q_o_multi:'Кілька курсів',onb_submit_btn:'Показати мій результат →',onb_sending:'Надсилаємо...',onb_sent_msg:'✓ Анкету прийнято. Нутриціолог отримав ваші відповіді та почне складати програму. Переходимо до біометрії...',onb_err_email:'⚠ Введіть коректний email — на нього прийдуть PDF-розбори.',onb_err_send:'⚠ Не вдалося надіслати. Спробуйте ще раз.',onb_err_network:"⚠ Помилка з'єднання. Перевірте інтернет.",onb_sec1:'Контакти',onb_sec2:'Цілі програми',onb_sec3:'Історія здоров\'я',
+    max_title:'Ваш тижневий аналіз',max_desc:'Надсилайте запит раз на тиждень — нутриціолог готує PDF-звіт з аналізом вашого профілю та персональними рекомендаціями протягом 48 годин.',max_btn:'Надіслати запит нутриціологу →',max_placeholder:'Ваше запитання або що змінилось за тиждень...',max_sent:'✓ Запит надіслано! PDF-звіт протягом 48 годин.',counter_used:'Надіслано {used} з {max} звітів',counter_cooldown:'⏳ Наступний звіт доступний {date}',counter_program_limit:'✓ Програму завершено · всі {max} звітів використано',counter_sending:'Надсилаємо…',counter_error:'⚠ Не вдалося надіслати. Спробуйте пізніше.',counter_network:'⚠ Помилка з\'єднання. Перевірте інтернет.',badge_zoom:'🔮 ELITE · Відеоконсультація',zoom_title:'Записатися на відеоконсультацію',zoom_desc:'Оберіть дату і час — посилання на Zoom надішлемо на ваш email.',zoom_btn:'Записатися →',zoom_sent:'✓ Готово! Посилання на Zoom прийде на ваш email.',onb_badge:'🧬 ELITE · Стартова анкета · 5 хвилин',onb_title:'Анкета-анамнез',onb_desc:'Заповніть один раз перед стартом програми. Нутриціолог отримає ваші відповіді й складе персональний протокол ведення. Біометрія з трекера йде окремо — це про вас.',onb_name_label:"Ваше ім'я",onb_name_ph:"Ім'я",onb_email_label:'Email (для PDF-розборів від нутриціолога)',onb_email_ph:'you@example.com',onb_q1_label:'1. Головна мета програми — що хочете отримати за 8 / 12 тижнів',onb_q1_ph:'Наприклад: повернути енергію, налагодити сон, знизити тривожність...',onb_q2_label:'2. Що пробували раніше — що працювало, що ні',onb_q2_ph:'Магній працював · Ашваганду пробувала — не зайшла...',onb_q3_label:'3. Головний пріоритет зараз (що важливіше за все)',onb_q3_o1:'Енергія / зниження втоми',onb_q3_o2:'Сон',onb_q3_o3:'Вага / композиція тіла',onb_q3_o4:'Шкіра / волосся',onb_q3_o5:"Когніції / пам'ять",onb_q3_o6:'Гормональний баланс',onb_q3_o7:'Інше',onb_q4_label:"Telegram (@username) — для швидкого зв'язку",onb_q4_ph:'@username',onb_q5_label:'Часовий пояс / місто',onb_q5_ph:'UTC+2 · Київ',onb_q6_label:'4. Хронічні захворювання (якщо є)',onb_q6_ph:'—',onb_q7_label:'5. Ліки, які приймаєте постійно (з дозами)',onb_q7_ph:'—',onb_q8_label:'6. Алергії',onb_q8_ph:'—',onb_q9_label:'7. Аутоімунні захворювання',onb_q9_o1:'Немає',onb_q9_o2:'Тиреоїдит Хашимото',onb_q9_o3:'Ревматоїдний артрит',onb_q9_o4:'Псоріаз',onb_q9_o5:'Інше (вкажіть у «Хронічні захворювання»)',onb_q10_label:'8. Печія або тяжкість після їжі?',onb_q11_label:'9. Приймаєте ІПП (омепразол, рабепразол, езомепразол та ін.)?',onb_q11_detail_label:'Якщо так — який препарат і дозування',onb_q11_detail_ph:'наприклад: Омепразол 20 мг зранку',onb_q5_other:'Інший — вкажу в коментарях',onb_q12_label:'10. Антибіотики за останні 6 місяців?',onb_q13_label:'11. Видалений жовчний міхур?',onb_q14_label:'12. Досвід з БАДами — що приймали, що працювало або не працювало',onb_q14_ph:'—',onb_q_o_pick:'Виберіть...',onb_q_o_no:'Немає',onb_q_o_yes:'Так',onb_q_o_yes_curr:'Так, зараз',onb_q_o_yes_past:'Приймав(ла) раніше',onb_q_o_rarely:'Рідко (раз на місяць)',onb_q_o_weekly:'Раз на тиждень',onb_q_o_daily:'Щодня',onb_q_o_1c:'1 курс',onb_q_o_multi:'Кілька курсів',onb_submit_btn:'Показати мій результат →',onb_sending:'Надсилаємо...',onb_sent_msg:'✓ Анкету прийнято. Нутриціолог отримав ваші відповіді та почне складати програму. Переходимо до біометрії...',onb_err_email:'⚠ Введіть коректний email — на нього прийдуть PDF-розбори.',onb_err_send:'⚠ Не вдалося надіслати. Спробуйте ще раз.',onb_err_network:"⚠ Помилка з'єднання. Перевірте інтернет.",onb_sec1:'Контакти',onb_sec2:'Цілі програми',onb_sec3:'Історія здоров\'я',
     tg_title:'Ваш персональний Telegram-канал',tg_desc:'Щоденний зв\'язок з нутриціологом. Задавайте питання, діліться результатами — спеціаліст відповідає протягом 24 годин у робочі дні.',tg_btn:'Відкрити Telegram-чат →',
     pkg_8w_label:'8 тижнів',pkg_8w_desc:'Чат + щотижневий PDF',pkg_12w_label:'12 тижнів',pkg_12w_desc:'Чат + щотижневий PDF',pkg_best:'Вигідніше',pkg_select:'Обрати →',
     cta_title:'Хочете персональне ведення?',cta_desc:'Нутриціолог особисто розбере ваші показники — щотижневий Zoom і протокол харчування під вашу гормональну фазу.',cta_f1:'Персональний розбір показників',cta_f2:'Протокол харчування під вашу фазу',cta_f3:'Добавки з точними дозуваннями',restart:'Пройти знову',book:'Записатися на програму →',pdf_btn:'📄 Завантажити PDF-звіт',cta_max_title:'Ваш план ELITE',cta_max_desc:'Оберіть програму — щоденний доступ до нутриціолога в Telegram і щотижневий PDF-аналіз від ШІ та нутриціолога.',cta_max_f1:'Щоденний Telegram-чат з нутриціологом',cta_max_f2:'Щотижневий PDF — аналіз ШІ + нутриціолог',cta_max_f3:'Персональний протокол харчування',cta_max_book:'Обрати програму →',elite_sent:'✓ Заявку надіслано! Спеціаліст зв\'яжеться з вами в Telegram.',
@@ -4886,6 +4967,8 @@ function setLang(l){
   // Zoom-блок виден только для ru/uk (фича работает только для русско/украиноязычных).
   const zoomBlock=document.getElementById('zoomBlock');
   if(zoomBlock)zoomBlock.style.display=(l==='ru'||l==='uk')?'block':'none';
+  // Перерисовываем пикер на актуальном языке при показе блока.
+  if (zoomBlock && (l==='ru'||l==='uk') && typeof renderEliteCal==='function') renderEliteCal();
   // Если клиент уже запросил Zoom в последние 24ч — сразу показываем «отправлено»
   // вместо активной кнопки (защита от повторных запросов после reload).
   if (zoomBlock && (l==='ru'||l==='uk') && _zoomRecentlyRequested()) _zoomShowSentState();

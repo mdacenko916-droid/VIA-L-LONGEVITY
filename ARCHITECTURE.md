@@ -156,9 +156,26 @@ Sugar_40, Inflammation, Beauty). Протокол `postMessage` (`openBook` /
         │
 4. Клиент выбирает дату/время → POST Worker /schedule-session {token, date, time}
         │   → KV status='session_scheduled'
-        │   → Telegram нутрициологу: «📅 Клиент выбрал время»
-        │   → Email клиенту: подтверждение (Zoom-ссылку нутрициолог шлёт вручную)
+        │   → Telegram нутрициологу: «📅 Клиент выбрал время» + Zoom-ссылка (zoomTgLine)
+        │   → Email клиенту: подтверждение + Zoom-ссылка (zoomEmailBlock)
 ```
+
+---
+
+### Запись на звонок: три потока + Zoom-ссылка
+
+Все три потока шлют **уведомление клиенту (email) и нутрициологу (Telegram) с Zoom-ссылкой**. Источник ссылки — секрет Worker **`ZOOM_LINK`** (постоянная Zoom-комната). Если секрет не задан — graceful fallback на фразу «нутрициолог пришлёт ссылку» (хелперы `zoomEmailBlock(env,lang)` / `zoomTgLine(env)` в `cloudflare-worker.js`).
+
+| Поток | Где | Куда шлёт | kind | Контекст |
+|---|---|---|---|---|
+| **15-мин знакомство** (бесплатно) | модалка `#calModal` в `*-program.html` (4 шт.) — собирает имя+email, `confirmBooking()` | `POST /book-call` → `handleBookCall` | `intro` | анонимно; `program` из `PROGRAM_KEY` страницы |
+| **60-мин первая сессия** (после оплаты) | `program-intake.html?calendar=1` | `POST /schedule-session` | — | по `token` интейка в KV |
+| **60-мин ELITE** (uk/ru) | пикер дата+время в `#zoomBlock` интерпретатора ELITE, `bookEliteCall()` | `POST /book-call` → `handleBookCall` | `elite60` | `code` доступа + email из `#zoomEmail` |
+
+- `/book-call` пишет бронь в KV `book:<id>` (TTL 180д), затем TG-карточка + письмо (`EMAIL_T[lang].intro_*` / `elite_*`).
+- Канон времени везде **UTC+2**; пояс клиента (если задан и ≠ UTC+2) добавляется отдельной строкой в TG-карточку.
+- **Занятость слотов НЕ проверяется** — слоты статичны, два клиента могут выбрать один слот (фаза 2, не реализовано).
+- Деплой требует `wrangler secret put ZOOM_LINK` (постоянный URL Zoom-комнаты нутрициолога).
 
 ---
 
@@ -263,7 +280,7 @@ FREE → (assign_code после оплаты) → ASSIGNED → (первый в
 
 | Функция | Маршрут / роль |
 |---|---|
-| `fetch()` | роутер: GET `/intake-validate`; POST `/tg-test`, `/draft`, `/tg-webhook`, `/hotmart-webhook`, `/intake-submit`, `/schedule-session`, иначе → `handleAnalyze` |
+| `fetch()` | роутер: GET `/intake-validate`; POST `/tg-test`, `/draft`, `/tg-webhook`, `/hotmart-webhook`, `/intake-submit`, `/schedule-session`, `/book-call`, иначе → `handleAnalyze` |
 | `handleAnalyze` | POST `{data, lang}` → Claude Haiku (`SYSTEM_PROMPT` + `buildUserMessage`, prompt caching) → `{analysis}` |
 | `buildUserMessage` / `selectKBPatterns` | сборка контекста (нормы, паттерны A–G, ИМТ/WHtR, анализы, KB-паттерны) |
 | `handleHotmartWebhook` / `detectLangFromHotmart` | приём оплаты → ветка программы или интерпретатора |
@@ -414,7 +431,7 @@ function t(k){ return T[lang][k] || T.ru[k] || k; }   // fallback на ru
 | `interpreter/apps-script.js` (Google Apps Script) | `BACKSTAGE_DRAFT_URL` | `https://interpreter.viaelcom.workers.dev/draft` |
 | Hotmart panel (webhook на 4 интерпретатор-продуктах и 4 программы-продуктах) | — | `https://interpreter.viaelcom.workers.dev/hotmart-webhook` |
 
-**Worker secrets** (через `wrangler secret put`, НЕ в `vars`): `CLAUDE_API_KEY`, `TELEGRAM_BOT_TOKEN`, `NUTRITIONIST_CHAT_ID`, `BREVO_API_KEY`, `APPS_SCRIPT_URL`, `HOTMART_TOKEN`.
+**Worker secrets** (через `wrangler secret put`, НЕ в `vars`): `CLAUDE_API_KEY`, `TELEGRAM_BOT_TOKEN`, `NUTRITIONIST_CHAT_ID`, `BREVO_API_KEY`, `APPS_SCRIPT_URL`, `HOTMART_TOKEN`, `ZOOM_LINK` (постоянная Zoom-комната для писем/TG; опционально — без неё graceful fallback).
 
 **Worker KV bindings:** `EXPERT_DRAFTS` (TTL 7д), `PROGRAM_INTAKES` (TTL 180д).
 
@@ -508,7 +525,8 @@ function t(k){ return T[lang][k] || T.ru[k] || k; }   // fallback на ru
 | **Закончились коды тарифа** | Apps Script вернул `no_codes_available` | `🚨 КОДЫ {TIER} ЗАКОНЧИЛИСЬ` + инструкция | `NUTRITIONIST_CHAT_ID` | тот же `handleInterpreterPurchase` шлёт отдельный алерт |
 | **Покупка программы** | Hotmart `PURCHASE_APPROVED` для product_id программы | `🧬 Менопауза / Andro / Anti / Estro\n👤\n📧\n💰\n🇺🇦 + token-link на анкету` | `NUTRITIONIST_CHAT_ID` | `handleHotmartWebhook` (ветка programs) → KV `PROGRAM_INTAKES:intake:{token}` |
 | **Заполнена анкета программы** | клиент сабмитит `program-intake.html` → `/intake-submit` | блок «Программа: ... · Анкета 4 секции» с inline-кнопкой «📅 Назначить сессию» | `NUTRITIONIST_CHAT_ID` | `handleIntakeSubmit` |
-| **Выбрана дата сессии** | клиент жмёт календарь → `/schedule-session` | `📅 Клиент выбрал время · дата · время UTC+2` | `NUTRITIONIST_CHAT_ID` | `handleScheduleSession` |
+| **Выбрана дата сессии** | клиент жмёт календарь → `/schedule-session` | `📅 Клиент выбрал время · дата · время UTC+2` + Zoom-ссылка | `NUTRITIONIST_CHAT_ID` | `handleScheduleSession` |
+| **Запись на звонок** (15-мин знакомство / ELITE 60-мин) | `/book-call` из `*-program.html` или `#zoomBlock` ИП | `📅 Новая запись на звонок · тип · имя · email · дата UTC+2` + Zoom-ссылка | `NUTRITIONIST_CHAT_ID` | `handleBookCall` (+ письмо клиенту `intro_*`/`elite_*`) |
 | **Expert-запрос (PRO+EXPERT / ELITE)** | Apps Script → POST `/draft` | детальная карточка: биометрия + симптомы + AI-bullets (5–7) + Anketa-блок (если ELITE) + inline-кнопки `📝 Ответить` `🔄 Перевести` | `NUTRITIONIST_CHAT_ID` | `handleDraft` → renders + sendTelegram + KV `EXPERT_DRAFTS:draft:{request_id}` TTL 7д |
 | **Inline-кнопка нажата нутрициологом** | Telegram callback_query → `/tg-webhook` | edit message + сохраняет состояние редактирования в KV `EXPERT_DRAFTS:editing:{chat_id}` (10 мин) | сам нутрициолог | `handleTgWebhook` → `handleTgCallback` |
 | **Нутрициолог ответил текстом** | `handleTgMessage` (text after «📝 Ответить») | `translateReply()` → Apps Script `{action:'send_report'}` → клиенту email с PDF | клиент (через Apps Script + Brevo) | `handleTgMessage` |

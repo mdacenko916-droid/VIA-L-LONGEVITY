@@ -1167,6 +1167,10 @@
       <div class="cal-grid" id="calGrid"></div>
       <div class="cal-slots-title" id="calSlotsTitle">Доступний час</div>
       <div class="cal-slots" id="calSlots"><span class="cal-slots-empty" id="calSlotsEmpty">Оберіть день, щоб побачити слоти</span></div>
+      <div id="calContact" style="display:none">
+        <div class="pay-field"><label class="pay-label" id="calNameLabel">Ваше ім'я</label><input class="pay-input" id="calName" type="text" placeholder="Олександр" style="width:100%;box-sizing:border-box"></div>
+        <div class="pay-field" style="margin-top:12px"><label class="pay-label" id="calEmailLabel">Email</label><input class="pay-input" id="calEmail" type="email" placeholder="your@email.com" style="width:100%;box-sizing:border-box"></div>
+      </div>
       <button class="btn-primary cal-confirm-btn" id="calConfirmBtn" onclick="confirmBooking()" style="display:none">Підтвердити знайомство →</button>
       <p class="cal-confirm-note" id="calNote" style="display:none">Посилання на відеозустріч прийде на вашу пошту</p>
     </div>
@@ -1403,6 +1407,10 @@ const TEXTS = {
   calSlotsEmpty: { uk: 'Оберіть день, щоб побачити слоти', ru: 'Выберите день, чтобы увидеть слоты', es: 'Selecciona un día para ver horarios', en: 'Select a day to see slots' },
   calConfirm: { uk: 'Підтвердити знайомство →', ru: 'Подтвердить знакомство →', es: 'Confirmar sesión →', en: 'Confirm introduction →' },
   calNote: { uk: 'Посилання на відеозустріч прийде на вашу пошту', ru: 'Ссылка на видеовстречу придёт на вашу почту', es: 'El enlace llegará a tu correo', en: 'A video call link will be sent to your email' },
+  calNameLabel: { uk: "Ваше ім'я", ru: 'Ваше имя', es: 'Tu nombre', en: 'Your name' },
+  calEmailLabel: { uk: 'Email', ru: 'Email', es: 'Email', en: 'Email' },
+  bookSending: { uk: 'Надсилаємо…', ru: 'Отправляем…', es: 'Enviando…', en: 'Sending…' },
+  bookErr: { uk: 'Не вдалося записатися. Спробуйте ще раз.', ru: 'Не удалось записаться. Попробуйте ещё раз.', es: 'No se pudo reservar. Inténtelo de nuevo.', en: 'Booking failed. Please try again.' },
   payTag: { uk: '✦ Програма супроводу · VIA-L', ru: '✦ Программа сопровождения · VIA-L', es: '✦ Programa de acompañamiento · VIA-L', en: '✦ Accompaniment programme · VIA-L' },
   payTitle: { uk: 'Оберіть формат програми', ru: 'Выберите формат программы', es: 'Elige el formato', en: 'Choose your format' },
   payIntro: { uk: 'Програма супроводу — персональна робота з нутриціологом протягом 12 тижнів.', ru: 'Программа сопровождения — персональная работа с нутрициологом в течение 12 недель.', es: 'Programa de acompañamiento — trabajo personal con nutricionista durante 12 semanas.', en: 'The accompaniment programme — personal work with a nutritionist over 12 weeks.' },
@@ -1708,12 +1716,12 @@ function renderCalendar() {
   if (!monthTitle || !grid || !slots) return;
 
   const months = {
-    ua: ['Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень', 'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень'],
+    uk: ['Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень', 'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень'],
     ru: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'],
     es: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
     en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
   };
-  const days = { ua: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'], ru: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'], es: ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do'], en: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'] };
+  const days = { uk: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'], ru: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'], es: ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do'], en: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'] };
   monthTitle.textContent = months[STATE.lang][STATE.calMonth] + ' ' + STATE.calYear;
   grid.innerHTML = '';
   days[STATE.lang].forEach((d) => { const n = document.createElement('div'); n.className = 'cal-day-name'; n.textContent = d; grid.appendChild(n); });
@@ -1732,6 +1740,8 @@ function renderCalendar() {
     grid.appendChild(e);
   }
   slots.innerHTML = `<span class="cal-slots-empty">${TEXTS.calSlotsEmpty[STATE.lang]}</span>`;
+  const cc = document.getElementById('calContact');
+  if (cc) cc.style.display = 'none';
   if (confirmBtn) confirmBtn.style.display = 'none';
   if (note) note.style.display = 'none';
 }
@@ -1762,6 +1772,8 @@ function selectTime(time, element) {
   element.classList.add('selected');
   const confirmBtn = document.getElementById('calConfirmBtn');
   const note = document.getElementById('calNote');
+  const cc = document.getElementById('calContact');
+  if (cc) cc.style.display = 'block';
   if (confirmBtn) confirmBtn.style.display = 'block';
   if (note) note.style.display = 'block';
 }
@@ -1775,13 +1787,33 @@ function changeMonth(direction) {
   renderCalendar();
 }
 
-function confirmBooking() {
+const WORKER_URL = 'https://interpreter.viaelcom.workers.dev';
+const PROGRAM_KEY = 'Andropauza';
+async function confirmBooking() {
   if (!STATE.selectedDay || !STATE.selectedTime) return;
   const body = document.getElementById('calBody');
   if (!body) return;
-  const months = { ua: ['січня', 'лютого', 'березня', 'квітня', 'травня', 'червня', 'липня', 'серпня', 'вересня', 'жовтня', 'листопада', 'грудня'], ru: ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'], es: ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'], en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] };
-  const text = { uk: '✓ Зустріч заброньована на ', ru: '✓ Встреча забронирована на ', es: '✓ Sesión reservada el ', en: '✓ Session booked for ' };
-  body.innerHTML = `<div class="cal-success"><div class="cal-success-icon">✦</div><div class="cal-success-title">${text[STATE.lang]}${STATE.selectedDay} ${months[STATE.lang][STATE.calMonth]} ${STATE.lang === 'en' ? 'at' : STATE.lang === 'ru' ? 'в' : STATE.lang === 'es' ? 'a las' : 'о'} ${STATE.selectedTime}</div><p class="cal-success-desc">${TEXTS.calNote[STATE.lang]}</p></div>`;
+  const lang = STATE.lang;
+  const name = document.getElementById('calName').value.trim();
+  const emailEl = document.getElementById('calEmail');
+  const email = emailEl.value.trim();
+  if (!email || !email.includes('@')) { emailEl.style.borderColor = 'rgba(200,80,50,.6)'; emailEl.focus(); return; }
+  const btn = document.getElementById('calConfirmBtn');
+  const note = document.getElementById('calNote');
+  btn.disabled = true;
+  note.style.display = 'block'; note.style.color = ''; note.textContent = TEXTS.bookSending[lang];
+  const isoDate = `${STATE.calYear}-${String(STATE.calMonth + 1).padStart(2, '0')}-${String(STATE.selectedDay).padStart(2, '0')}`;
+  try {
+    const r = await fetch(WORKER_URL + '/book-call', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind: 'intro', program: PROGRAM_KEY, lang, name, email, date: isoDate, time: STATE.selectedTime, tz: 'UTC+2' }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok) throw new Error('book_failed');
+    const months = { uk: ['січня', 'лютого', 'березня', 'квітня', 'травня', 'червня', 'липня', 'серпня', 'вересня', 'жовтня', 'листопада', 'грудня'], ru: ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'], es: ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'], en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] };
+    const text = { uk: '✓ Зустріч заброньована на ', ru: '✓ Встреча забронирована на ', es: '✓ Sesión reservada el ', en: '✓ Session booked for ' };
+    body.innerHTML = `<div class="cal-success"><div class="cal-success-icon">✦</div><div class="cal-success-title">${text[lang]}${STATE.selectedDay} ${months[lang][STATE.calMonth]} ${lang === 'en' ? 'at' : lang === 'ru' ? 'в' : lang === 'es' ? 'a las' : 'о'} ${STATE.selectedTime}</div><p class="cal-success-desc">${TEXTS.calNote[lang]}</p></div>`;
+  } catch (e) {
+    btn.disabled = false; note.textContent = TEXTS.bookErr[lang]; note.style.color = 'rgba(200,80,50,.9)';
+  }
 }
 
 let selOpt=1;function selectOpt(option) { selOpt=option;[1, 2, 3].forEach((idx) => { const card = document.getElementById('opt' + idx); if (card) card.classList.toggle('selected', idx === option); }); const total = document.getElementById('payTotalPrice'); if (total) total.textContent = PRICES[option] || PRICES[1]; }
@@ -1884,6 +1916,8 @@ function localizePage() {
   setLocalizedElement('#calTitle', TEXTS.calTitle);
   setLocalizedElement('#calDesc', TEXTS.calDesc);
   setLocalizedElement('#calSlotsTitle', TEXTS.calSlotsTitle);
+  setLocalizedElement('#calNameLabel', TEXTS.calNameLabel);
+  setLocalizedElement('#calEmailLabel', TEXTS.calEmailLabel);
   setLocalizedElement('#calConfirmBtn', TEXTS.calConfirm);
   setLocalizedElement('#calNote', TEXTS.calNote);
   setLocalizedElement('#payTag', TEXTS.payTag);

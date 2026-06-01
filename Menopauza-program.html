@@ -1176,6 +1176,10 @@
       <div class="cal-grid" id="calGrid"></div>
       <div class="cal-slots-title" id="calSlotsTitle">Доступний час</div>
       <div class="cal-slots" id="calSlots"><span class="cal-slots-empty" id="calSlotsEmpty">Оберіть день, щоб побачити слоти</span></div>
+      <div id="calContact" style="display:none">
+        <div class="pay-field"><label class="pay-label" id="calNameLabel">Ваше ім'я</label><input class="pay-input" id="calName" type="text" placeholder="Марина" style="width:100%;box-sizing:border-box"></div>
+        <div class="pay-field" style="margin-top:12px"><label class="pay-label" id="calEmailLabel">Email</label><input class="pay-input" id="calEmail" type="email" placeholder="your@email.com" style="width:100%;box-sizing:border-box"></div>
+      </div>
       <button class="btn-primary cal-confirm-btn" id="calConfirmBtn" onclick="confirmBooking()" style="display:none">Підтвердити знайомство →</button>
       <p class="cal-confirm-note" id="calNote" style="display:none">Посилання на відеозустріч прийде на вашу пошту</p>
     </div>
@@ -1335,6 +1339,7 @@ const LANGS = {
     calDesc:"Оберіть зручний день та час для 15-хвилинного знайомства. Без зобов\'язань.",
     calSlotsTitle:'Доступний час', calSlotsEmpty:'Оберіть день, щоб побачити слоти',
     calConfirm:'Підтвердити знайомство →', calNote:'Посилання на відеозустріч прийде на вашу пошту',
+    calNameLabel:"Ваше ім'я", calEmailLabel:'Email', bookSending:'Надсилаємо…', bookErr:'Не вдалося записатися. Спробуйте ще раз.',
     payTag:'✦ Програма супроводу · VIA-L', payTitle:'Оберіть формат програми',
     payIntro:'Програма супроводу — персональна робота з нутриціологом протягом 12 тижнів.',
     opt1Name:'Базова програма · 8 тижнів', opt1Desc:'Консультація, аналіз аналізів, протокол, 3 сесії супроводу',
@@ -1463,6 +1468,7 @@ const LANGS = {
     calDesc:'Выберите удобный день и время для 15-минутного знакомства. Без обязательств.',
     calSlotsTitle:'Доступное время', calSlotsEmpty:'Выберите день, чтобы увидеть слоты',
     calConfirm:'Подтвердить знакомство →', calNote:'Ссылка на видеовстречу придёт на вашу почту',
+    calNameLabel:'Ваше имя', calEmailLabel:'Email', bookSending:'Отправляем…', bookErr:'Не удалось записаться. Попробуйте ещё раз.',
     payTag:'✦ Программа сопровождения · VIA-L', payTitle:'Выберите формат программы',
     payIntro:'Программа сопровождения — персональная работа с нутрициологом в течение 12 недель.',
     opt1Name:'Базовая программа · 8 недель', opt1Desc:'Консультация, анализ показателей, протокол, 3 сессии',
@@ -1591,6 +1597,7 @@ const LANGS = {
     calDesc:'Elige un día y hora para una sesión de conocimiento de 15 minutos. Sin compromiso.',
     calSlotsTitle:'Horarios disponibles', calSlotsEmpty:'Selecciona un día para ver horarios',
     calConfirm:'Confirmar sesión →', calNote:'El enlace a la videollamada llegará a tu correo',
+    calNameLabel:'Tu nombre', calEmailLabel:'Email', bookSending:'Enviando…', bookErr:'No se pudo reservar. Inténtelo de nuevo.',
     payTag:'✦ Programa de acompañamiento · VIA-L', payTitle:'Elige el formato del programa',
     payIntro:'El programa de acompañamiento es trabajo personal con una nutricionista durante 12 semanas.',
     opt1Name:'Programa básico · 8 semanas', opt1Desc:'Consulta, análisis, protocolo, 3 sesiones de seguimiento',
@@ -1719,6 +1726,7 @@ const LANGS = {
     calDesc:'Choose a convenient day and time for a free 15-minute introduction. No commitment.',
     calSlotsTitle:'Available times', calSlotsEmpty:'Select a day to see available slots',
     calConfirm:'Confirm introduction →', calNote:'A video call link will be sent to your email',
+    calNameLabel:'Your name', calEmailLabel:'Email', bookSending:'Sending…', bookErr:'Booking failed. Please try again.',
     payTag:'✦ Accompaniment programme · VIA-L', payTitle:'Choose your programme format',
     payIntro:'The accompaniment programme is personal work with a nutritionist over 12 weeks.',
     opt1Name:'Basic programme · 8 weeks', opt1Desc:'Consultation, analysis, protocol, 3 support sessions',
@@ -2095,7 +2103,7 @@ function localizePage() {
   });
   setLocalizedElement('.acc-note', mapKey('accNote'));
 
-  ['ctaEy','ctaDesc','ctaBtn1','ctaBtn2','ctaNote','calTag','calTitle','calDesc','calSlotsTitle','calSlotsEmpty','calConfirm','calNote','payTag','payTitle','payIntro','opt1Name','opt1Desc','opt2Name','opt2Desc','opt3Name','opt3Desc','payNameLabel','payTotalLabel','payBtn','paySecure'].forEach((id) => {
+  ['ctaEy','ctaDesc','ctaBtn1','ctaBtn2','ctaNote','calTag','calTitle','calDesc','calSlotsTitle','calSlotsEmpty','calNameLabel','calEmailLabel','calConfirm','calNote','payTag','payTitle','payIntro','opt1Name','opt1Desc','opt2Name','opt2Desc','opt3Name','opt3Desc','payNameLabel','payTotalLabel','payBtn','paySecure'].forEach((id) => {
     const selector = id === 'calConfirm' ? '#calConfirmBtn' : '#' + id;
     setLocalizedElement(selector, mapKey(id));
   });
@@ -2181,6 +2189,7 @@ function selectDay(d){
   selDay=d;selTime=null;
   document.getElementById('calConfirmBtn').style.display='none';
   document.getElementById('calNote').style.display='none';
+  document.getElementById('calContact').style.display='none';
   renderCalendar();
   const s=document.getElementById('calSlots');s.innerHTML='';
   SLOTS.filter((_,i)=>i%2===0||i===1).forEach(t=>{
@@ -2192,6 +2201,7 @@ function selectTime(t,el){
   selTime=t;
   document.querySelectorAll('.time-slot').forEach(s=>s.classList.remove('selected'));
   el.classList.add('selected');
+  document.getElementById('calContact').style.display='block';
   document.getElementById('calConfirmBtn').style.display='block';
   document.getElementById('calNote').style.display='block';
 }
@@ -2202,12 +2212,34 @@ function changeMonth(dir){
   selDay=null;selTime=null;
   renderCalendar();
   document.getElementById('calSlots').innerHTML='<span class="cal-slots-empty">'+LANGS[lang].calSlotsEmpty+'</span>';
+  document.getElementById('calContact').style.display='none';
   document.getElementById('calConfirmBtn').style.display='none';
   document.getElementById('calNote').style.display='none';
 }
-function confirmBooking(){
+const WORKER_URL='https://interpreter.viaelcom.workers.dev';
+const PROGRAM_KEY='Menopauza';
+async function confirmBooking(){
   const t=LANGS[lang];
-  document.getElementById('calBody').innerHTML=`<div class="cal-success"><div class="cal-success-icon">✦</div><div class="cal-success-title">${t.bookMsg(selDay,t.months[calMonth],selTime)}</div><p class="cal-success-desc">${t.bookDesc}</p></div>`;
+  if(!selDay||!selTime)return;
+  const name=document.getElementById('calName').value.trim();
+  const emailEl=document.getElementById('calEmail');
+  const email=emailEl.value.trim();
+  if(!email||!email.includes('@')){emailEl.style.borderColor='rgba(200,80,50,.6)';emailEl.focus();return;}
+  const btn=document.getElementById('calConfirmBtn');
+  const note=document.getElementById('calNote');
+  btn.disabled=true;
+  note.style.display='block';note.style.color='';note.textContent=t.bookSending;
+  const isoDate=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(selDay).padStart(2,'0')}`;
+  try{
+    const r=await fetch(WORKER_URL+'/book-call',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({kind:'intro',program:PROGRAM_KEY,lang,name,email,date:isoDate,time:selTime,tz:'UTC+2'})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.ok)throw new Error('book_failed');
+    document.getElementById('calBody').innerHTML=`<div class="cal-success"><div class="cal-success-icon">✦</div><div class="cal-success-title">${t.bookMsg(selDay,t.months[calMonth],selTime)}</div><p class="cal-success-desc">${t.bookDesc}</p></div>`;
+  }catch(e){
+    btn.disabled=false;
+    note.textContent=t.bookErr;note.style.color='rgba(200,80,50,.9)';
+  }
 }
 
 /* ── PAYMENT ── */
