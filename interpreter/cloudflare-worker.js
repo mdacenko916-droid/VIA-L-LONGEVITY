@@ -1224,12 +1224,20 @@ async function handleTgCallback(cq, env, corsHeaders) {
     const intake     = JSON.parse(intakeRaw);
     const clientName = intake.answers?.name || intake.name || '—';
     const calLink    = 'https://via-l.com/program-intake.html?t=' + requestId + '&calendar=1';
+    const inviteLang = intake.submitted_lang || intake.lang || 'en';
+    const eti        = EMAIL_T[inviteLang] || EMAIL_T.en;
 
-    await tgAnswerCallback(env, cq.id, '📅 Ссылка сформирована');
+    // Письмо клиенту со ссылкой на календарь. Gate открывает нутрициолог этой
+    // кнопкой; время не фиксируется — клиент лишь предлагает слот, нутрициолог
+    // подтверждает/меняет (Zoom-комната постоянная, а не привязана ко времени).
+    await sendEmail(env, intake.email, eti.calinvite_subj, eti.calinvite_body(clientName, calLink));
+
+    await tgAnswerCallback(env, cq.id, '📅 Календарь отправлен клиенту');
     await sendTelegramTo(env, chatId,
-      `📅 <b>Ссылка на выбор времени сессии</b>\n\n`
-      + `Клиент: <b>${esc(clientName)}</b>\n\n`
-      + `Отправьте клиенту эту ссылку (в Telegram или email):\n`
+      `📅 <b>Календарь отправлен клиенту на email</b>\n\n`
+      + `Клиент: <b>${esc(clientName)}</b>\n`
+      + `📧 <code>${esc(intake.email)}</code>\n\n`
+      + `Если нужно — продублируйте ссылку в Telegram:\n`
       + `<code>${calLink}</code>`,
     );
     return jsonResponse({ ok: true }, corsHeaders);
@@ -1486,6 +1494,12 @@ const EMAIL_T = {
     intake_body:   (name) =>
       `<p>Привіт, <b>${name}</b>!</p>`
       + `<p>Анкету отримано. Нутрициолог проаналізує відповіді та зв'яжеться протягом <b>24 годин</b> для узгодження першої сесії.</p>`,
+    calinvite_subj: 'VIA-L · Оберіть час першої сесії',
+    calinvite_body: (name, link) =>
+      `<p>Привіт, <b>${name}</b>!</p>`
+      + `<p>Нутрициолог переглянув вашу анкету. Оберіть зручний день і час для першої 60-хвилинної сесії:</p>`
+      + `<p style="margin:24px 0"><a href="${link}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">Обрати час →</a></p>`
+      + `<p style="color:#888;font-size:13px">Або скопіюйте посилання: ${link}</p>`,
     sched_subj:    (date, time) => `VIA-L · Час сесії: ${date}, ${time}`,
     sched_body:    (name, date, time, zoom) =>
       `<p>Привіт, <b>${name}</b>!</p>`
@@ -1514,6 +1528,12 @@ const EMAIL_T = {
     intake_body:   (name) =>
       `<p>Привет, <b>${name}</b>!</p>`
       + `<p>Анкета получена. Нутрициолог проанализирует ответы и свяжется в течение <b>24 часов</b> для согласования первой сессии.</p>`,
+    calinvite_subj: 'VIA-L · Выберите время первой сессии',
+    calinvite_body: (name, link) =>
+      `<p>Привет, <b>${name}</b>!</p>`
+      + `<p>Нутрициолог посмотрел вашу анкету. Выберите удобный день и время для первой 60-минутной сессии:</p>`
+      + `<p style="margin:24px 0"><a href="${link}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">Выбрать время →</a></p>`
+      + `<p style="color:#888;font-size:13px">Или скопируйте ссылку: ${link}</p>`,
     sched_subj:    (date, time) => `VIA-L · Время сессии: ${date}, ${time}`,
     sched_body:    (name, date, time, zoom) =>
       `<p>Привет, <b>${name}</b>!</p>`
@@ -1542,6 +1562,12 @@ const EMAIL_T = {
     intake_body:   (name) =>
       `<p>Hola, <b>${name}</b>!</p>`
       + `<p>Cuestionario recibido. El nutricionista analizará las respuestas y se pondrá en contacto en <b>24 horas</b>.</p>`,
+    calinvite_subj: 'VIA-L · Elija la hora de su primera sesión',
+    calinvite_body: (name, link) =>
+      `<p>Hola, <b>${name}</b>!</p>`
+      + `<p>El nutricionista ha revisado su cuestionario. Elija un día y una hora para la primera sesión de 60 min:</p>`
+      + `<p style="margin:24px 0"><a href="${link}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">Elegir hora →</a></p>`
+      + `<p style="color:#888;font-size:13px">O copie el enlace: ${link}</p>`,
     sched_subj:    (date, time) => `VIA-L · Sesión: ${date}, ${time}`,
     sched_body:    (name, date, time, zoom) =>
       `<p>Hola, <b>${name}</b>!</p>`
@@ -1570,6 +1596,12 @@ const EMAIL_T = {
     intake_body:   (name) =>
       `<p>Hi <b>${name}</b>!</p>`
       + `<p>Your questionnaire has been received. The nutritionist will review your answers and contact you within <b>24 hours</b> to schedule the first session.</p>`,
+    calinvite_subj: 'VIA-L · Choose your first session time',
+    calinvite_body: (name, link) =>
+      `<p>Hi <b>${name}</b>!</p>`
+      + `<p>The nutritionist has reviewed your questionnaire. Choose a day and time for your first 60-minute session:</p>`
+      + `<p style="margin:24px 0"><a href="${link}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">Choose time →</a></p>`
+      + `<p style="color:#888;font-size:13px">Or copy the link: ${link}</p>`,
     sched_subj:    (date, time) => `VIA-L · Session: ${date}, ${time}`,
     sched_body:    (name, date, time, zoom) =>
       `<p>Hi <b>${name}</b>!</p>`

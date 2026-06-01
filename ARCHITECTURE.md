@@ -151,8 +151,10 @@ Sugar_40, Inflammation, Beauty). Протокол `postMessage` (`openBook` /
         │       → Telegram карточка нутрициологу + кнопка [📅 Назначить сессию]
         │       → Email клиенту: «анкета получена»
         │
-3. Нутрициолог жмёт [📅 Назначить сессию] → бот формирует ссылку
-        │   program-intake.html?t=TOKEN&calendar=1
+3. Нутрициолог жмёт [📅 Назначить сессию] → бот САМ шлёт клиенту письмо
+        │   (calinvite_*) со ссылкой program-intake.html?t=TOKEN&calendar=1
+        │   и дублирует ссылку нутрициологу в TG (на случай ручной пересылки).
+        │   Это gate: календарь открывается, только когда нутрициолог посмотрел анкету.
         │
 4. Клиент выбирает дату/время → POST Worker /schedule-session {token, date, time}
         │   → KV status='session_scheduled'
@@ -162,20 +164,41 @@ Sugar_40, Inflammation, Beauty). Протокол `postMessage` (`openBook` /
 
 ---
 
-### Запись на звонок: три потока + Zoom-ссылка
+### Запись на консультации: ПОЛНЫЙ алгоритм (3 потока) + Zoom-ссылка
 
-Все три потока шлют **уведомление клиенту (email) и нутрициологу (Telegram) с Zoom-ссылкой**. Источник ссылки — секрет Worker **`ZOOM_LINK`** (постоянная Zoom-комната). Если секрет не задан — graceful fallback на фразу «нутрициолог пришлёт ссылку» (хелперы `zoomEmailBlock(env,lang)` / `zoomTgLine(env)` в `cloudflare-worker.js`).
+> Настроено и подтверждено end-to-end 2026-06-01. Все три потока шлют **уведомление клиенту (email) и нутрициологу (Telegram) с Zoom-ссылкой**.
 
-| Поток | Где | Куда шлёт | kind | Контекст |
+**Принципы, общие для всех потоков:**
+- **Источник Zoom-ссылки** — секрет Worker **`ZOOM_LINK`** (одна постоянная персональная Zoom-комната нутрициолога). Вставляется автоматически в письмо клиенту и в TG-карточку. Хелперы `zoomEmailBlock(env,lang)` (HTML-кнопка + raw-ссылка) и `zoomTgLine(env)` (строка `🔗 Zoom: …`). Если секрет не задан — **graceful fallback** на фразу «нутрициолог пришлёт ссылку», без ошибок. Апгрейд до уникальных ссылок на встречу = отдельная работа (Zoom Server-to-Server OAuth), НЕ сделано.
+- **Время НИЧЕГО не блокирует.** Слот, выбранный клиентом, — это *предложение*, а не бронь в чьём-то календаре. Реальной проверки занятости (free/busy) НЕТ — сетка слотов статична, два клиента теоретически могут выбрать один слот (фаза 2, не реализовано). Нутрициолог всегда видит выбор в TG и может переиграть дату/время с клиентом — Zoom-комната постоянная, не привязана ко времени.
+- **Канон времени — UTC+2 (Киев).** На бэкенд всегда уходит UTC+2. Где у клиента есть выбор пояса — рядом показывается его местное время (`slotLocalTime` в `program-intake.html`); пояс клиента (если ≠ UTC+2) добавляется строкой в TG-карточку.
+
+**Поток 1 — 15-мин знакомство (бесплатно, ДО покупки, самообслуживание):**
+1. Клиент на лендинге `*-program.html` (4 шт.) жмёт «Свободные слоты на знакомство» → модалка `#calModal`: календарь (Пн–Сб, +2 дня…+21, слоты 09–19) → выбирает день+слот → появляются поля **имя+email**.
+2. `confirmBooking()` → `POST /book-call {kind:'intro', program:PROGRAM_KEY, lang, name, email, date, time, tz:'UTC+2'}`.
+3. `handleBookCall`: KV `book:<id>` (TTL 180д) → TG-карточка нутрициологу + письмо клиенту (`EMAIL_T[lang].intro_*`) с Zoom-ссылкой.
+
+**Поток 2 — 60-мин первая сессия (ПОСЛЕ оплаты программы, по токену, с gate):**
+1. Оплата на Hotmart → `/hotmart-webhook` → KV `PROGRAM_INTAKES:intake:{token}` + письмо клиенту со ссылкой на анкету `program-intake.html?t=TOKEN` + TG-карточка нутрициологу.
+2. Клиент заполняет анкету (4 секции) → `/intake-submit` → `handleIntakeSubmit`: Claude AI-bullets → TG-карточка нутрициологу с inline-кнопкой **[📅 Назначить сессию]** + письмо клиенту «анкета получена».
+3. **Gate:** нутрициолог жмёт [📅 Назначить сессию] → `handleTgCallback` ветка `sched` → бот **сам шлёт клиенту письмо** (`calinvite_*`) со ссылкой `program-intake.html?t=TOKEN&calendar=1` + дублирует ссылку нутрициологу в TG. Календарь открывается только когда нутрициолог посмотрел анкету.
+4. Клиент в календаре (21 день, слоты 09–19 UTC+2 + местное время) выбирает дату/время → `POST /schedule-session` → `handleScheduleSession`: KV `status='session_scheduled'` + TG-карточка нутрициологу (с Zoom-ссылкой) + письмо клиенту (`sched_*`, с Zoom-ссылкой).
+
+**Поток 3 — 60-мин ELITE-видеоконсультация (внутри ИП, только uk/ru):**
+1. В интерпретаторе ELITE блок `#zoomBlock` (виден только uk/ru, управляется в `setLang`) — пикер: лента из 14 рабочих дней + слоты 09–19 UTC+2 + поле email (префилл из `#maxEmail`).
+2. `bookEliteCall()` → `POST /book-call {kind:'elite60', lang, code, email, date, time, tz:'UTC+2'}`. Антиспам: cooldown 24ч в localStorage по коду доступа.
+3. `handleBookCall`: KV `book:<id>` → TG-карточка нутрициологу + письмо клиенту (`EMAIL_T[lang].elite_*`) с Zoom-ссылкой.
+
+**Сводка эндпоинтов/файлов:**
+
+| Поток | Фронт | Эндпоинт | kind | EMAIL_T |
 |---|---|---|---|---|
-| **15-мин знакомство** (бесплатно) | модалка `#calModal` в `*-program.html` (4 шт.) — собирает имя+email, `confirmBooking()` | `POST /book-call` → `handleBookCall` | `intro` | анонимно; `program` из `PROGRAM_KEY` страницы |
-| **60-мин первая сессия** (после оплаты) | `program-intake.html?calendar=1` | `POST /schedule-session` | — | по `token` интейка в KV |
-| **60-мин ELITE** (uk/ru) | пикер дата+время в `#zoomBlock` интерпретатора ELITE, `bookEliteCall()` | `POST /book-call` → `handleBookCall` | `elite60` | `code` доступа + email из `#zoomEmail` |
+| 15-мин знакомство | `#calModal` в `*-program.html` ×4, `confirmBooking()` | `POST /book-call` → `handleBookCall` | `intro` | `intro_*` |
+| 60-мин первая сессия | `program-intake.html?calendar=1` (gate: TG-кнопка `sched`) | `POST /schedule-session` → `handleScheduleSession` | — | `calinvite_*` (приглашение) + `sched_*` (подтверждение) |
+| 60-мин ELITE | `#zoomBlock` ИП, `bookEliteCall()` | `POST /book-call` → `handleBookCall` | `elite60` | `elite_*` |
 
-- `/book-call` пишет бронь в KV `book:<id>` (TTL 180д), затем TG-карточка + письмо (`EMAIL_T[lang].intro_*` / `elite_*`).
-- Канон времени везде **UTC+2**; пояс клиента (если задан и ≠ UTC+2) добавляется отдельной строкой в TG-карточку.
-- **Занятость слотов НЕ проверяется** — слоты статичны, два клиента могут выбрать один слот (фаза 2, не реализовано).
-- Деплой требует `wrangler secret put ZOOM_LINK` (постоянный URL Zoom-комнаты нутрициолога).
+- KV `PROGRAM_INTAKES`: `intake:<token>` (потоки 2) и `book:<id>` (потоки 1/3), TTL 180д.
+- Деплой Worker: `wrangler deploy`. Секрет: `wrangler secret put ZOOM_LINK` (постоянный URL Zoom-комнаты).
 
 ---
 
