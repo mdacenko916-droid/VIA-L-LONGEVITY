@@ -5468,26 +5468,29 @@ function renderProModules(data, score, type){
 // ── MODULE 1: БИОЛОГИЧЕСКАЯ НАГРУЗКА ─────────────────────
 function renderBioLoad(data, score, type){
   const load = 100 - score; // нагрузка = обратное от готовности
+  const _tch = (typeof window!=="undefined" && window.__touched && window.__touched.size) ? window.__touched : null;
+  const _seen = (...ks) => !_tch || ks.some(k=>_tch.has(k));
   const components = [
     {label: L({ru:'Восстановление',uk:'Відновлення',en:'Recovery',es:'Recuperación',de:'Erholung',pt:'Recuperação',fr:'Récupération',pl:'Regeneracja',it:'Recupero',he:'התאוששות',ja:'回復',ko:'회복'}),
-     val: data.hrv_trend==='below'?Math.round(40+Math.random()*20):Math.round(65+Math.random()*20),
+     val: _seen('hrv','hrv_trend')?(data.hrv_trend==='below'?Math.round(40+Math.random()*20):Math.round(65+Math.random()*20)):null,
      color:'#4ECCA3'},
     {label: L({ru:'Качество сна',uk:'Якість сну',en:'Sleep Quality',es:'Calidad sueño',de:'Schlafqualität',pt:'Qualidade sono',fr:'Qualité du sommeil',pl:'Jakość snu',it:'Qualità del sonno',he:'איכות שינה',ja:'睡眠の質',ko:'수면 질'}),
-     val: Math.round(data.sleep_qual*10),
+     val: _seen('sleep_qual')?Math.round(data.sleep_qual*10):null,
      color:'#3B5BDB'},
     {label: L({ru:'Стресс-баланс',uk:'Стрес-баланс',en:'Stress Balance',es:'Balance estrés',de:'Stressbalance',pt:'Equilíbrio estresse',fr:'Équilibre stress',pl:'Bilans stresu',it:'Bilancio stress',he:'איזון סטרס',ja:'ストレスバランス',ko:'스트레스 균형'}),
-     val: data.stress==='high'?30:data.stress==='mild'?55:75,
+     val: _seen('stress')?(data.stress==='high'?30:data.stress==='mild'?55:75):null,
      color:'#C49A3C'},
     {label: L({ru:'Темп. норма',uk:'Темп. норма',en:'Temp Normal',es:'Temp. normal',de:'Temp. normal',pt:'Temp. normal',fr:'Temp. normale',pl:'Temp. norma',it:'Temp. normale',he:'טמפ. תקינה',ja:'体温正常',ko:'체온 정상'}),
-     val: data.temp==='normal'?85:data.temp==='spike'?35:55,
+     val: _seen('temp')?(data.temp==='normal'?85:data.temp==='spike'?35:55):null,
      color:'#F5A623'},
   ];
 
   const clr = type==='ok'?'#4ECCA3':type==='warn'?'#F5A623':'#FF6B8A';
   const circ = 251;
-  const offset = circ - (circ * score / 100);
+  const _missing = components.some(c=>c.val==null);
+  const offset = _missing ? circ : circ - (circ * score / 100);
 
-  document.getElementById('bioNum').textContent = score;
+  document.getElementById('bioNum').textContent = _missing ? '—' : score;
   document.getElementById('bioNum').style.color = clr;
   const arc = document.getElementById('bioArc');
   arc.style.stroke = clr;
@@ -5497,13 +5500,13 @@ function renderBioLoad(data, score, type){
   const lbl = score>=65?L({ru:'ресурса в норме',uk:'ресурс OK',en:'resource OK',es:'recurso OK',de:'Ressource OK',pt:'recurso OK',fr:'ressource OK',pl:'zasób OK',it:'risorsa OK',he:'משאב תקין',ja:'リソース正常',ko:'자원 정상'}):
                score>=40?L({ru:'умеренная нагрузка',uk:'помірне навантаження',en:'moderate load',es:'carga moderada',de:'moderate Belastung',pt:'carga moderada',fr:'charge modérée',pl:'umiarkowane obciążenie',it:'carico moderato',he:'עומס מתון',ja:'適度な負荷',ko:'보통 부하'}):
                L({ru:'высокая нагрузка',uk:'висока нагрузка',en:'high load',es:'carga alta',de:'hohe Belastung',pt:'carga alta',fr:'charge élevée',pl:'wysokie obciążenie',it:'carico elevato',he:'עומס גבוה',ja:'高負荷',ko:'높은 부하'});
-  document.getElementById('bioLbl').textContent = lbl;
+  document.getElementById('bioLbl').textContent = _missing ? L({ru:'неполные данные — внесите сон/HRV/стресс',uk:'неповні дані — внесіть сон/HRV/стрес',en:'incomplete data — add sleep/HRV/stress',es:'datos incompletos — añade sueño/HRV/estrés',de:'unvollständige Daten — Schlaf/HRV/Stress ergänzen',pt:'dados incompletos — adicione sono/HRV/estresse',fr:'données incomplètes — ajoutez sommeil/HRV/stress',pl:'niepełne dane — dodaj sen/HRV/stres',it:'dati incompleti — aggiungi sonno/HRV/stress',he:'נתונים חלקיים — הוסף שינה/HRV/לחץ',ja:'データ不足 — 睡眠/HRV/ストレスを入力',ko:'데이터 부족 — 수면/HRV/스트레스 입력'}) : lbl;
 
   document.getElementById('bioBars').innerHTML = components.map(c=>`
     <div class="bio-bar-row">
       <div class="bio-bar-label">${c.label}</div>
-      <div class="bio-bar-track"><div class="bio-bar-fill" style="width:0%;background:${c.color};box-shadow:0 0 6px ${c.color}66;" data-w="${c.val}"></div></div>
-      <div class="bio-bar-val">${c.val}%</div>
+      <div class="bio-bar-track"><div class="bio-bar-fill" style="width:0%;background:${c.color};box-shadow:0 0 6px ${c.color}66;" data-w="${c.val==null?0:c.val}"></div></div>
+      <div class="bio-bar-val">${c.val==null?'—':c.val+'%'}</div>
     </div>`).join('');
 
   const explain = score>=65 ?
