@@ -1806,6 +1806,13 @@ function buildUserMessage(data, lang) {
             : whtrCalc < thr[2] ? 'умеренный кардиометаболический риск'
             : 'высокий кардиометаболический риск';
   }
+  // BMR (Mifflin-St Jeor) — вычисляется из веса/роста/возраста/пола; не требует биоимпеданса
+  let bmrCalc = null, maintLow = null, maintHigh = null;
+  if (weightKg && heightCm && heightCm > 0) {
+    bmrCalc   = Math.round(10 * weightKg + 6.25 * heightCm - 5 * age + (isFem ? -161 : 5));
+    maintLow  = Math.round(bmrCalc * 1.3);  // малоподвижный
+    maintHigh = Math.round(bmrCalc * 1.5);  // лёгкая активность
+  }
 
   // ── PATTERN DETECTION ─────────────────────────────────────────
   const patterns = [];
@@ -2106,6 +2113,7 @@ function buildUserMessage(data, lang) {
     + (bmiCalc     ? ' | ИМТ: ' + bmiCalc.toFixed(1) + ' кг/м² (' + bmiCat + ')' : '')
     + (waistCm     ? ' | Талия: ' + waistCm + ' см'     : '')
     + (whtrCalc    ? ' | WHtR: ' + whtrCalc.toFixed(2) + ' (' + whtrCat + ')' : '') + '\n'
+    + (bmrCalc     ? 'Энергобаланс (расчёт, не биоимпеданс): BMR ~' + bmrCalc + ' ккал/день (Mifflin-St Jeor); ориентир поддержания веса ~' + maintLow + '–' + maintHigh + ' ккал/день (малоподвижный→лёгкая активность). Для снижения веса — дефицит ~15–20% от поддержания, не ниже BMR; приоритет белку ' + (isFem ? '1.6–2.2' : '1.6–2.0') + ' г/кг.\n' : '')
     + 'HRV: ' + data.hrv + ' мс (' + hrvStatus + ') | Тренд: ' + (data.hrv_trend === 'below' ? 'падает' : data.hrv_trend === 'above' ? 'растёт' : 'стабилен') + '\n'
     + 'Сон: ' + sleepQual + '/10 | Глубокий: ' + deepContext + ' | Пробуждения: ' + wakeVal + '\n'
     + hfContext + '\n'
