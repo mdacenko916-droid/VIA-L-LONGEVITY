@@ -902,7 +902,8 @@ async function handleAnalyze(request, env, corsHeaders) {
       'anthropic-beta': 'prompt-caching-2024-07-31',
     },
     body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
+      // Тяжёлые для маленькой модели языки (RTL/CJK) — на Sonnet: Haiku галлюцинирует иврит/арабский
+      model: ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
       max_tokens: 2600, // запас под токеноёмкие языки (he/ja/ko) — иначе ответ обрывается на полуслове
       system: [
         {
