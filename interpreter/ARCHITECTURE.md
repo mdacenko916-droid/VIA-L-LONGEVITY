@@ -671,4 +671,23 @@ wrangler deploy
 
 ---
 
+## 16. ИНТЕГРАЦИИ ДРУГИХ УСТРОЙСТВ — КАРТА И СТАТУСЫ (вторая волна)
+
+На лендинге 10 устройств (§7.2). Модель доступа у вендоров разная — три категории. Архитектура авто-сопряжения везде та же, что у Oura (§15.3–15.6): server-side OAuth на Worker + единый `applyExtracted`-pipeline (§4.4). Условия доступа перепроверять в момент сборки (меняются).
+
+### 16.1 Требуют партнёрского/коммерческого запроса (заявка подана)
+- **Oura** — партнёрский трек, см. §15. Заявка 2026-06-02, ждём sales.
+- **Garmin** — Garmin Connect Developer Program (нужны **Health API** + **Women's Health API**: сон, HRV, пульс покоя, стресс, Body Battery, SpO₂, шаги + цикловые данные — важно для женской секции). **Коммерция платная (license fee), есть бесплатная eval-фаза.** Заявка отправлена 2026-06-02 через форму «Contact Garmin Health» (`garmin.com/en-US/forms/wellnesspartner/`) — «A Garmin associate will be in touch». Callback URI планируем `…workers.dev/garmin/callback`.
+
+### 16.2 Self-serve OAuth — писать никому не нужно, строим сами когда дойдут руки
+- **Fitbit** (dev.fitbit.com, OAuth2 + PKCE), **WHOOP** (developer.whoop.com), **Polar** (Polar AccessLink), **Withings** (developer.withings.com — для коммерции возможен платный тариф/ревью). Та же серверная схема, что в §15.
+- Это самые быстрые расширения авто-подключения помимо Oura — без ожидания вендоров.
+
+### 16.3 Нет публичного веб-API → только файл/ручной ввод (как сейчас)
+- **Apple Watch / Health** — HealthKit на устройстве, облачного API нет. Веб-авто-сопряжение невозможно; только `export.xml` или отдельное iOS-приложение (большая отдельная задача).
+- **Samsung Health** — партнёрский доступ закрыт/ограничен, SDK только Android.
+- **Xiaomi / Amazfit (Zepp)** — публичного OAuth нет, только экспорт.
+
+---
+
 *Конец документа.*
