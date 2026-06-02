@@ -1621,7 +1621,9 @@ function esc(s) {
 // Читает реальные поля/токены анкеты (не локализованный текст) — см. PATTERN-REGISTRY.md.
 function selectKBPatterns(data) {
   const isFem  = data.gender !== 'male';
-  const phase  = data.phase || 'other';
+  let   phase  = data.phase || 'other';
+  // Guard: мужчина не может быть в женской фазе (пери/мено/пост) → андропауза
+  if (!isFem && (phase === 'peri' || phase === 'meno' || phase === 'post')) phase = 'andro';
   const bio    = data.bio  || {};
   const labs   = data.labs || {};
   const age    = parseInt(data.age) || 50;
@@ -1764,7 +1766,9 @@ function buildUserMessage(data, lang) {
     peri: 'Перименопауза', meno: 'Менопауза', post: 'Постменопауза',
     andro: 'Андропауза', preandro: 'Предандропауза', other: 'Другое',
   };
-  const phase = data.phase || 'other';
+  let phase = data.phase || 'other';
+  // Guard: мужчина не может быть в женской фазе (пери/мено/пост) → андропауза
+  if (!isFem && (phase === 'peri' || phase === 'meno' || phase === 'post')) phase = 'andro';
   const phaseName = phaseMap[phase] || phase;
 
   // ── REFERENCE NORMS ───────────────────────────────────────────
