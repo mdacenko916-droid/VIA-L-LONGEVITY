@@ -903,7 +903,7 @@ async function handleAnalyze(request, env, corsHeaders) {
     },
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1600,
+      max_tokens: 2600, // запас под токеноёмкие языки (he/ja/ko) — иначе ответ обрывается на полуслове
       system: [
         {
           type: 'text',
