@@ -3917,7 +3917,9 @@ function renderCircadian(data, score){
 // ── MODULE 3: ГОРМОНАЛЬНЫЙ ТРЕКЕР ────────────────────────
 function renderHormonePhase(data){
   const isMale = data.gender === 'male';
-  const phase = data.phase || (isMale ? 'andro' : 'peri');
+  let phase = data.phase || (isMale ? 'andro' : 'peri');
+  // Мужская «Другое»/утечка женской фазы → андропауза (иначе трекер показывает «Пост» с обвалом тестостерона)
+  if (isMale && phase !== 'andro' && phase !== 'pre_andro') phase = 'andro';
 
   // Phase track
   const phases = isMale ? [
