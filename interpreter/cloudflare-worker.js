@@ -1062,14 +1062,19 @@ async function generateAiBullets(env, payload) {
     patterns = ids.length ? ids.join(', ') : '';
   } catch (e) { /* selectKBPatterns может бросить — игнорируем */ }
 
+  const isMale = d.gender === 'male';
+  let phaseLbl = d.phase || '?';
+  if (isMale && (phaseLbl === 'peri' || phaseLbl === 'meno' || phaseLbl === 'post')) phaseLbl = 'андропауза';
+
   const ctx = [];
-  ctx.push(`Профиль: ${d.gender === 'male' ? 'мужчина' : 'женщина'}, ${d.age || '?'} лет, фаза «${d.phase || '?'}»`);
+  ctx.push(`Профиль: ${isMale ? 'мужчина' : 'женщина'}, ${d.age || '?'} лет, фаза «${phaseLbl}»`);
   if (d.device)       ctx.push(`Источник данных (трекер): ${d.device}`);
   if (bio.length)     ctx.push(`Биометрия: ${bio.join(', ')}`);
   if (symptoms)       ctx.push(`Симптомы: ${symptoms}`);
   if (hormSymptoms)   ctx.push(`Гормональные симптомы: ${hormSymptoms}`);
-  if (hotflashes)     ctx.push(`Приливы: ${hotflashes}`);
-  if (d.cycle_status) ctx.push(`Цикл: ${d.cycle_status}`);
+  // Женские поля (цикл/приливы) — только для женщин, иначе у мужчины «регулярный цикл»
+  if (!isMale && hotflashes)     ctx.push(`Приливы: ${hotflashes}`);
+  if (!isMale && d.cycle_status) ctx.push(`Цикл: ${d.cycle_status}`);
   if (payload.question) ctx.push(`Вопрос клиента: ${payload.question}`);
   if (patterns)       ctx.push(`Активные KB-паттерны: ${patterns}`);
 
@@ -1078,6 +1083,10 @@ async function generateAiBullets(env, payload) {
     'что заметил в данных и на что нутрициологу обратить внимание при подготовке разбора. ' +
     'Без вступления, без заключения — только список. Каждая строка начинается с маркера «• ». ' +
     'Профессионально, конкретно, без воды. Ответ ТОЛЬКО на русском (нутрициолог работает на русском). ' +
+    (isMale
+      ? 'Клиент — МУЖЧИНА: НЕ упоминай менструальный цикл, приливы, эстроген-доминирование, ПМС, женские фазы — это ошибка. Используй мужскую рамку (тестостерон, андропауза, простата). '
+      : '') +
+    'Коды P-Mx/P-Fx — это внутренние KB-паттерны; НЕ выдумывай их механизмы и расшифровки (напр. не приписывай тестостероновому паттерну инсулинорезистентность). Если не уверен в смысле кода — не интерпретируй его. ' +
     'НЕ используй Markdown — никаких **, __, ~~, ` — пиши обычным текстом, для акцентов можно ВЕРХНИЙ регистр. ' +
     'Не вставляй пустые строки между пунктами — каждая строка это отдельный bullet.\n\n' +
     'Данные клиента:\n' + ctx.join('\n');
