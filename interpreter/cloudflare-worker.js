@@ -2115,6 +2115,15 @@ function buildUserMessage(data, lang) {
     ? 'ЖАЛОБЫ ПО СИСТЕМАМ (отметил клиент — затронь бережно и адресно, особенно деликатные/красные флаги): ' + _compl.join(' | ') + '\n'
     : '';
 
+  // ── НЕ ВВЕДЁННЫЕ КЛИЕНТОМ ПОЛЯ (honest "не указано") ──
+  // Фронт присылает _skipped — список «мягких» полей, которых клиент не трогал
+  // (остались на дефолте). Их нельзя выдавать ИИ как реальные находки.
+  const sk = new Set(Array.isArray(data._skipped) ? data._skipped : []);
+  const SK = (k, s) => sk.has(k) ? 'не указано (клиент не вводил)' : s;
+  const skipNote = sk.size
+    ? '⚠️ ВАЖНО: часть данных клиент НЕ вводил — они помечены «не указано». НЕ интерпретируй их, НЕ приписывай клиенту значения или находки и НЕ строй паттерны на неуказанных показателях. Работай только по реально введённым данным. Если не хватает ключевого (сон, энергия, HRV, симптомы) — в «Общей картине» мягко, без давления, предложи внести эти данные (кольцо Oura или самооценка), чтобы разбор был точнее.\n\n'
+    : '';
+
   // ── KB PATTERN SELECTION ──────────────────────────────────────
   const kbPatterns = selectKBPatterns(data);
   const kbBlock = kbPatterns.length
@@ -2127,12 +2136,13 @@ function buildUserMessage(data, lang) {
   const circadianBlock = circadian.length ? '══ ПАТТЕРНЫ СНА ══\n' + circadian.join('\n') + '\n\n' : '';
   const symptomBlock   = symRules.length  ? '══ СИМПТОМ → НУТРИТИВНАЯ ПОДДЕРЖКА ══\n' + symRules.join('\n') + '\n\n' : '';
 
-  return '══ РЕФЕРЕНСНЫЕ НОРМЫ ══\n'
-    + 'HRV (' + age + ' лет): норма ' + hrvNormLow + '–' + hrvNormHigh + ' мс | клиент: ' + data.hrv + ' мс → ' + hrvStatus + '\n'
-    + 'ЧСС покоя: норма ' + (isFem ? '60–75' : '55–70') + ' уд/мин | клиент: ' + rhrVal + ' уд/мин → ' + rhrStatus + '\n'
-    + 'Глубокий сон: норма 90–110 мин | клиент: ' + deepContext + '\n'
-    + 'Частота дыхания: норма 12–16 вд/мин | клиент: ' + respRate + ' вд/мин' + (respRate > 18 ? ' [выше нормы]' : '') + '\n'
-    + 'Качество сна: ' + sleepQual + '/10 → ' + sleepStatus + '\n\n'
+  return skipNote
+    + '══ РЕФЕРЕНСНЫЕ НОРМЫ ══\n'
+    + 'HRV (' + age + ' лет): норма ' + hrvNormLow + '–' + hrvNormHigh + ' мс | клиент: ' + SK('hrv', data.hrv + ' мс → ' + hrvStatus) + '\n'
+    + 'ЧСС покоя: норма ' + (isFem ? '60–75' : '55–70') + ' уд/мин | клиент: ' + SK('rhr', rhrVal + ' уд/мин → ' + rhrStatus) + '\n'
+    + 'Глубокий сон: норма 90–110 мин | клиент: ' + SK('deep', deepContext) + '\n'
+    + 'Частота дыхания: норма 12–16 вд/мин | клиент: ' + SK('resp_rate', respRate + ' вд/мин' + (respRate > 18 ? ' [выше нормы]' : '')) + '\n'
+    + 'Качество сна: ' + SK('sleep_qual', sleepQual + '/10 → ' + sleepStatus) + '\n\n'
 
     + patternBlock
     + circadianBlock
@@ -2151,12 +2161,12 @@ function buildUserMessage(data, lang) {
     + (waistCm     ? ' | Талия: ' + waistCm + ' см'     : '')
     + (whtrCalc    ? ' | WHtR: ' + whtrCalc.toFixed(2) + ' (' + whtrCat + ')' : '') + '\n'
     + (bmrCalc     ? 'Энергобаланс (расчёт, не биоимпеданс): BMR ~' + bmrCalc + ' ккал/день (Mifflin-St Jeor); ориентир поддержания веса ~' + maintLow + '–' + maintHigh + ' ккал/день (малоподвижный→лёгкая активность). Для снижения веса — дефицит ~15–20% от поддержания, не ниже BMR; приоритет белку ' + (isFem ? '1.6–2.2' : '1.6–2.0') + ' г/кг.\n' : '')
-    + 'HRV: ' + data.hrv + ' мс (' + hrvStatus + ') | Тренд: ' + (data.hrv_trend === 'below' ? 'падает' : data.hrv_trend === 'above' ? 'растёт' : 'стабилен') + '\n'
-    + 'Сон: ' + sleepQual + '/10 | Глубокий: ' + deepContext + ' | Пробуждения: ' + wakeVal + '\n'
-    + hfContext + '\n'
-    + 'Дыхание: ' + respRate + ' вд/мин | Пульс покоя: ' + rhrVal + ' уд/мин\n'
-    + 'Энергия: ' + energyVal + '/10 | Тревога: ' + anxietyVal + '/10 | Настроение: ' + data.mood + ' | Раздражительность: ' + data.irritability + '\n'
-    + 'Температура ночью: ' + data.temp + ' | Стресс: ' + data.stress + ' | Алкоголь вчера: ' + data.alc + '\n'
+    + 'HRV: ' + SK('hrv', data.hrv + ' мс (' + hrvStatus + ')') + ' | Тренд: ' + SK('hrv_trend', (data.hrv_trend === 'below' ? 'падает' : data.hrv_trend === 'above' ? 'растёт' : 'стабилен')) + '\n'
+    + 'Сон: ' + SK('sleep_qual', sleepQual + '/10') + ' | Глубокий: ' + SK('deep', deepContext) + ' | Пробуждения: ' + SK('wake', wakeVal) + '\n'
+    + (sk.has('hf_count') ? 'Приливы: не указано (клиент не вводил)' : hfContext) + '\n'
+    + 'Дыхание: ' + SK('resp_rate', respRate + ' вд/мин') + ' | Пульс покоя: ' + SK('rhr', rhrVal + ' уд/мин') + '\n'
+    + 'Энергия: ' + SK('energy', energyVal + '/10') + ' | Тревога: ' + SK('anxiety', anxietyVal + '/10') + ' | Настроение: ' + SK('mood', data.mood) + ' | Раздражительность: ' + SK('irritability', data.irritability) + '\n'
+    + 'Температура ночью: ' + SK('temp', data.temp) + ' | Стресс: ' + SK('stress', data.stress) + ' | Алкоголь вчера: ' + data.alc + '\n'
     + 'Симптомы: ' + (symptoms.length ? symptoms.join(', ') : 'не указаны') + '\n'
     + complaintsContext
     + bioContext + '\n'

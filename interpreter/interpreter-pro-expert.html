@@ -4739,6 +4739,10 @@ document.querySelectorAll('input[name=device]').forEach(el=>{
   });
 });
 // ══ GENDER TOGGLE ════════════════════════════════════════
+window.__touched=window.__touched||new Set();
+window.__SOFTSKIP=['hrv','hrv_trend','sleep_qual','deep','wake','rhr','resp_rate','energy','anxiety','mood','irritability','stress','temp','hf_count'];
+document.addEventListener('input',function(e){var t=e.target;if(t&&(t.name||t.id))window.__touched.add(t.name||t.id);},true);
+document.addEventListener('change',function(e){var t=e.target;if(t&&(t.name||t.id))window.__touched.add(t.name||t.id);},true);
 document.querySelectorAll('input[name=gender]').forEach(el=>{
   el.addEventListener('change',()=>{
     const male=el.value==='male';
@@ -5719,6 +5723,7 @@ function _showResultsInner(){
   const data={
     gender:getRadio('gender')||'female',
     phase:getRadio('phase')||'peri',
+    _skipped:(window.__SOFTSKIP||[]).filter(function(k){return !(window.__touched&&window.__touched.has(k));}),
     age:parseInt(document.getElementById('prof-age')?.value)||null,
     weight:parseFloat(document.getElementById('prof-weight')?.value)||null,
     height:parseFloat(document.getElementById('prof-height')?.value)||null,
