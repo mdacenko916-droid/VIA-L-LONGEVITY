@@ -4184,6 +4184,7 @@ function showResults(){
     setTimeout(()=>div.remove(), 15000);
   }
 }
+function seenF(){var t=(typeof window!=='undefined'&&window.__touched&&window.__touched.size)?window.__touched:null;if(!t)return true;for(var i=0;i<arguments.length;i++){if(t.has(arguments[i]))return true;}return false;}
 function _showResultsInner(){
   const data={
     gender:getRadio('gender')||'female',
@@ -4319,6 +4320,17 @@ function _showResultsInner(){
 
   const il=document.getElementById('insightsList');
   il.innerHTML='';
+    var _keep=ins.filter(function(o){
+    if(o.t!=='ok')return true;
+    if(o.i==='\u{1F493}'&&!seenF('hrv','hrv_trend'))return false;
+    if(o.i==='\u{1FAC1}'&&!seenF('resp_rate'))return false;
+    if(o.i==='\u{1F321}\uFE0F'&&!seenF('temp'))return false;
+    if(o.i==='\u{1F525}'&&!seenF('hf_count'))return false;
+    if(o.i==='\u{1F4C8}'&&!seenF('weekly_trend'))return false;
+    if(o.i==='\u{1F9E0}'&&!seenF('mood','anxiety'))return false;
+    return true;
+  });
+  ins.length=0;Array.prototype.push.apply(ins,_keep);
   ins.forEach((o,i)=>{
     const d=document.createElement('div');
     d.className=`insight ${o.t} cascade-item`;
