@@ -2097,6 +2097,24 @@ function buildUserMessage(data, lang) {
     if (bn.length) bioContext = '\nСОСТАВ ТЕЛА: ' + bn.join(' | ');
   }
 
+  // ── ЖАЛОБЫ ПО СИСТЕМАМ (GSM / урология / ЖКТ-проктология → видит ИИ) ──
+  const COMPLAINT_LBL = {
+    vaginal_dryness:'сухость влагалища', dyspareunia:'дискомфорт при близости', urinary_urgency:'частое/ургентное мочеиспускание', recurrent_uti:'рецидивные ИМП/циститы',
+    stress_incontinence:'подтекание мочи при кашле/нагрузке', urge_incontinence:'подтекание при резком позыве', prolapse:'ощущение выпячивания/опущения',
+    nocturia:'ночные позывы', weak_stream:'слабая струя', incomplete_emptying:'неполное опорожнение', frequency:'частое мочеиспускание днём',
+    bloating:'вздутие/газы', constipation:'запоры', diarrhea:'диарея/жидкий стул', reflux:'изжога/рефлюкс',
+    rectal_bleeding:'кровь при дефекации', hemorrhoids:'геморрой/узлы', fecal_incontinence:'недержание газов/кала', straining:'сильное натуживание',
+  };
+  const flagC = (arr) => (Array.isArray(arr) ? arr : []).filter(t => t && !String(t).startsWith('none') && COMPLAINT_LBL[t]).map(t => COMPLAINT_LBL[t]);
+  const _gsmC = flagC(data.gsm), _uroC = flagC(data.urology), _giC = flagC(data.gi);
+  const _compl = [];
+  if (_gsmC.length) _compl.push('мочеполовое/интимное — ' + _gsmC.join(', '));
+  if (_uroC.length) _compl.push('мочеиспускание/простата — ' + _uroC.join(', '));
+  if (_giC.length)  _compl.push('ЖКТ/проктология — ' + _giC.join(', '));
+  const complaintsContext = _compl.length
+    ? 'ЖАЛОБЫ ПО СИСТЕМАМ (отметил клиент — затронь бережно и адресно, особенно деликатные/красные флаги): ' + _compl.join(' | ') + '\n'
+    : '';
+
   // ── KB PATTERN SELECTION ──────────────────────────────────────
   const kbPatterns = selectKBPatterns(data);
   const kbBlock = kbPatterns.length
@@ -2140,6 +2158,7 @@ function buildUserMessage(data, lang) {
     + 'Энергия: ' + energyVal + '/10 | Тревога: ' + anxietyVal + '/10 | Настроение: ' + data.mood + ' | Раздражительность: ' + data.irritability + '\n'
     + 'Температура ночью: ' + data.temp + ' | Стресс: ' + data.stress + ' | Алкоголь вчера: ' + data.alc + '\n'
     + 'Симптомы: ' + (symptoms.length ? symptoms.join(', ') : 'не указаны') + '\n'
+    + complaintsContext
     + bioContext + '\n'
     + labsContext;
 }
