@@ -6,6 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Marketing site for a longevity / clinical-nutrition practice (menopause, andropause, anti-aging, estrogen metabolism). The `.nojekyll` file is also present in case GitHub Pages serves a fallback. Git remote: `github.com/mdacenko916-droid/VIA-L-LONGEVITY`.
 
+## Two products in one repo + where the architecture lives
+
+This repo holds **two products**, each with its own ARCHITECTURE.md (NOT auto-loaded each session — open the relevant one before non-trivial work):
+- **Marketing site** (repo root: `index.html`, `*-program.html`, `book/`, booking) — European market, **4 languages** (uk/ru/en/es). Top-level map of the whole repo: [`ARCHITECTURE.md`](ARCHITECTURE.md) (site + ИП + backend + integrations; §0 «два продукта»).
+- **Interpreter / ИП** (`interpreter/`) — global wearable-biomarker interpreter + nutritionist funnel, **12 languages**, primary EN. Deep-dive: [`interpreter/ARCHITECTURE.md`](interpreter/ARCHITECTURE.md) (file map §2, tariffs §3, deploy §12, wearable integrations §15–16). Do **not** conflate ИП's 12-lang/global model with the site's 4-lang one.
+
+### Hosting & deploy (no build system)
+- `via-l.com` = **GitHub Pages from this repo**. All HTML (site **and** interpreter) deploys automatically on `git push origin main` (~1–2 min). There is **no separate "upload to site" step** — the push *is* the deploy.
+- **Cloudflare Worker** (`interpreter/cloudflare-worker.js`, domain `interpreter.viaelcom.workers.dev`) deploys separately: `cd interpreter && wrangler deploy`. Secrets via `wrangler secret put NAME`; KV namespaces in `interpreter/wrangler.jsonc`.
+
 ## Build / run
 
 There is **no build system, no package manager, no tests**. Files are served as-is.
