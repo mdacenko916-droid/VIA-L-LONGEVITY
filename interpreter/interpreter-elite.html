@@ -6369,6 +6369,19 @@ function _showResultsInner(){
     else if(data.energy<=3)qol-=10;
     // Resp rate
     if(data.resp_rate>22||data.resp_rate<10)qol-=8;
+    // ── Мужские/андро + системные жалобы (раньше QoL считался ТОЛЬКО по женским полям → мужчина застывал на 100) ──
+    const _qArr=(a)=>Array.isArray(a)?a.filter(x=>x&&!String(x).startsWith('none')&&x!=='nothing'):[];
+    // Витальность (муж+жен): нет драйва — прямой удар по качеству жизни
+    if(data.vitality==='low')qol-=12;
+    else if(data.vitality==='moderate')qol-=5;
+    // Ключевые гормональные симптомы (либидо / эрекция / потеря мышц / хрон. усталость)
+    const _qHorm=_qArr(data.horm_symptoms).filter(s=>['libido_male','libido_low','erectile_dysfunction','muscle_loss','fatigue_chronic'].includes(s)).length;
+    qol-=Math.min(15,_qHorm*6);
+    // Системные жалобы — их видит ИИ, а QoL игнорировал
+    qol-=Math.min(12,_qArr(data.gi).length*4);        // ЖКТ / проктология
+    qol-=Math.min(12,_qArr(data.urology).length*4);   // мочеиспускание / простата
+    qol-=Math.min(9,_qArr(data.gsm).length*3);        // мочеполовое / интимное
+    if(Array.isArray(data.symptoms)&&data.symptoms.includes('joint'))qol-=5;
     qol=Math.max(10,Math.min(100,Math.round(qol)));
     const clrQ=qol>=70?'#4ECCA3':qol>=45?'#F5A623':'#FF6B8A';
     const qolCard=document.getElementById('qolCard');
