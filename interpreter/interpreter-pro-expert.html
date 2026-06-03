@@ -5269,7 +5269,8 @@ function renderBioLoad(data, score, type){
      val: _seen('hrv','hrv_trend')?(data.hrv_trend==='below'?Math.round(40+Math.random()*20):Math.round(65+Math.random()*20)):null,
      color:'#4ECCA3'},
     {label: L({ru:'Качество сна',uk:'Якість сну',en:'Sleep Quality',es:'Calidad sueño',de:'Schlafqualität',pt:'Qualidade do sono',fr:'Qualité du sommeil',pl:'Jakość snu',it:'Qualità del sonno',he:'איכות שינה',ja:'睡眠の質',ko:'수면 질'}),
-     val: _seen('sleep_qual')?Math.round(data.sleep_qual*10):null,
+     // самооценка × объективные маркёры: бар не может быть 100% при провале глубокого сна/частых пробуждениях
+     val: _seen('sleep_qual')?(function(){var v=data.sleep_qual*10;if(data.deep==='none')v-=35;else if(data.deep==='low')v-=20;if(data.wake==='multiple')v-=15;else if(data.wake==='early')v-=8;return Math.max(10,Math.min(100,Math.round(v)));})():null,
      color:'#3B5BDB'},
     {label: L({ru:'Стресс-баланс',uk:'Стрес-баланс',en:'Stress Balance',es:'Balance estrés',de:'Stressbalance',pt:'Balanço estresse',fr:'Équilibre stress',pl:'Balans stresu',it:'Equilibrio stress',he:'איזון מתח',ja:'ストレスバランス',ko:'스트레스 균형'}),
      val: _seen('stress')?(data.stress==='high'?30:data.stress==='mild'?55:75):null,
@@ -5282,9 +5283,9 @@ function renderBioLoad(data, score, type){
   const clr = type==='ok'?'#4ECCA3':type==='warn'?'#F5A623':'#FF6B8A';
   const circ = 251;
   const _missing = components.some(c=>c.val==null);
-  const offset = _missing ? circ : circ - (circ * score / 100);
+  const offset = _missing ? circ : circ - (circ * load / 100);
 
-  document.getElementById('bioNum').textContent = _missing ? '—' : score;
+  document.getElementById('bioNum').textContent = _missing ? '—' : load;
   document.getElementById('bioNum').style.color = clr;
   const arc = document.getElementById('bioArc');
   arc.style.stroke = clr;
