@@ -388,6 +388,9 @@ export default {
       // Клиентский бот заботы (@viael_care_bot) → переписка клиент↔нутрициолог через Topics
       if (path === '/care-webhook')     return handleCareWebhook(request, env, corsHeaders);
 
+      // Цифровая анкета здоровья (book/anketa) → структурированная карточка в топик клиента
+      if (path === '/anketa-submit')    return handleAnketaSubmit(request, env, corsHeaders);
+
       // Default: AI-анализ для интерпретатора
       return handleAnalyze(request, env, corsHeaders);
 
@@ -2548,8 +2551,9 @@ const CARE_PHRASES = {
   },
 };
 
-// Чистый публичный URL полной анкеты здоровья (GitHub Pages via-l.com).
-const CARE_ANKETA_URL = 'https://via-l.com/book/anketa/via-l-anketa-zdorovya.pdf';
+// Веб-форма полной анкеты здоровья (110 Q × 12 яз, GitHub Pages via-l.com).
+// Заполненная анкета возвращается POST-ом на /anketa-submit (см. handleAnketaSubmit).
+const CARE_ANKETA_FORM = 'https://via-l.com/book/anketa/';
 
 function careLang(code){
   if(!code) return 'en';
@@ -2637,7 +2641,9 @@ async function handleCareWebhook(request, env, corsHeaders){
           let rA; try{ rA = JSON.parse(rawA); }catch(_){ rA=null; }
           if(rA){
             const cl = (await env.EXPERT_DRAFTS.get('care_lang:'+rA.clientId)) || rA.lang || 'en';
-            await careSend(env, rA.clientId, carePhrase('anketa_invite', cl).replace('{link}', CARE_ANKETA_URL));
+            // Ссылка на веб-форму с «обратным адресом»: topic = id этого топика → анкета вернётся сюда.
+            const anketaLink = CARE_ANKETA_FORM + '?lang=' + cl + '&topic=' + threadId;
+            await careSend(env, rA.clientId, carePhrase('anketa_invite', cl).replace('{link}', anketaLink));
             await careSend(env, env.NUTRITIONIST_GROUP_ID, '✅ Анкета отправлена клиенту', { message_thread_id: threadId });
           }
         }
@@ -2701,4 +2707,89 @@ async function handleCareWebhook(request, env, corsHeaders){
   }
 
   return jsonResponse({ok:true}, corsHeaders);
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// ЦИФРОВАЯ АНКЕТА ЗДОРОВЬЯ (book/anketa, 110 Q × 12 яз) → /anketa-submit
+// Форма сама несёт email+имя (поля contact/name). Возврат заполненной анкеты:
+// POST {topic?, lang, answers:{id:{q,v}}, ts}. v = строка|число|массив|объект.
+//  → структурированная RU-карточка нутрициологу в TG (в топик, если открыта из
+//    /anketa; иначе создаём топик по имени+email) + email-подтверждение клиенту.
+// Email — гарантированный якорь, TG-топик опционально. См. ARCHITECTURE §17.
+// ════════════════════════════════════════════════════════════════════════
+
+// Короткое подтверждение клиенту (4 языка + EN-fallback; полная локализация — позже).
+const ANKETA_MAIL = {
+  ru:{subj:'Анкета здоровья принята · VIA-L', body:n=>`<p>Здравствуйте${n?', '+n:''}!</p><p>Спасибо 🌿 Ваша анкета здоровья получена — нутрициолог изучит ответы и вернётся с персональными рекомендациями.</p>`},
+  uk:{subj:'Анкету здоров’я прийнято · VIA-L', body:n=>`<p>Вітаю${n?', '+n:''}!</p><p>Дякуємо 🌿 Вашу анкету здоров’я отримано — нутриціолог вивчить відповіді й повернеться з персональними рекомендаціями.</p>`},
+  es:{subj:'Cuestionario de salud recibido · VIA-L', body:n=>`<p>¡Hola${n?', '+n:''}!</p><p>Gracias 🌿 Hemos recibido tu cuestionario de salud — tu nutricionista revisará las respuestas y volverá con recomendaciones personales.</p>`},
+  en:{subj:'Health questionnaire received · VIA-L', body:n=>`<p>Hello${n?', '+n:''}!</p><p>Thank you 🌿 We’ve received your health questionnaire — your nutritionist will review your answers and come back with personal recommendations.</p>`},
+};
+
+function anketaVal(v){
+  if(Array.isArray(v)) return v.join(', ');
+  if(v && typeof v==='object') return Object.entries(v).map(([k,x])=>`    – ${k}: ${x}`).join('\n');
+  return String(v);
+}
+
+// Разбивка строк карточки на куски ≤ limit (лимит Telegram 4096; держим запас под
+// перевод, т.к. кириллица токеноёмкая и careTranslate ограничен 2000 токенов).
+function anketaChunks(lines, limit=2500){
+  const out=[]; let buf='';
+  for(const ln of lines){
+    if(buf && (buf+'\n'+ln).length>limit){ out.push(buf); buf=''; }
+    buf = buf ? buf+'\n'+ln : ln;
+  }
+  if(buf) out.push(buf);
+  return out;
+}
+
+async function handleAnketaSubmit(request, env, corsHeaders){
+  if(!env.CLIENT_BOT_TOKEN || !env.NUTRITIONIST_GROUP_ID || !env.EXPERT_DRAFTS){
+    return jsonResponse({ok:false, error:'care bot not configured'}, corsHeaders, 503);
+  }
+  let body;
+  try{ body = await request.json(); }catch(_){ return jsonResponse({ok:false, error:'bad json'}, corsHeaders, 400); }
+  const answers = body.answers;
+  if(!answers || typeof answers!=='object' || !Object.keys(answers).length){
+    return jsonResponse({ok:false, error:'answers required'}, corsHeaders, 400);
+  }
+  const lang = careLang(body.lang);
+  const get = id => answers[id]?.v;
+  const name    = (typeof get('name')==='string' && get('name').trim()) ? get('name').trim() : '';
+  const contact = (typeof get('contact')==='string') ? get('contact').trim() : '';
+  const emailM  = contact.match(/[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+/);
+  const email   = emailM ? emailM[0] : '';
+
+  // ── Куда нутрициологу: в топик (если открыта из /anketa) либо создаём новый ──
+  let topicId = body.topic ? String(body.topic).replace(/\D/g,'') : '';
+  if(topicId && !(await env.EXPERT_DRAFTS.get('care_client:'+topicId))) topicId = ''; // чужой/несуществующий
+  if(!topicId){
+    topicId = await careCreateTopic(env, ((name||'Клиент')+' · анкета · '+lang.toUpperCase()).slice(0,128));
+  }
+  const extra = topicId ? { message_thread_id: Number(topicId) } : {};
+
+  // ── Сборка карточки: метки вопросов уже RU; значения — как ввёл клиент ──
+  const header = `📋 АНКЕТА ЗДОРОВЬЯ · ${name||'Клиент'}${email?' · '+email:''} · ${lang.toUpperCase()}`;
+  const lines = [header, ''];
+  for(const item of Object.values(answers)){
+    if(!item || item.v==null || item.v==='') continue;
+    const val = anketaVal(item.v), q = item.q || '';
+    lines.push(val.includes('\n') ? `• ${q}:\n${val}` : `• ${q}: ${val}`);
+  }
+
+  // ── Доставка: чанк → (если не ru/uk) перевод свободного текста на RU → топик ──
+  const needTr = (lang!=='ru' && lang!=='uk');
+  for(const chunk of anketaChunks(lines)){
+    const out = needTr ? await careTranslate(env, chunk, lang, 'ru') : chunk;
+    await careSend(env, env.NUTRITIONIST_GROUP_ID, out, extra);
+  }
+
+  // ── Подтверждение клиенту на email (гарантированный канал) ──
+  if(email){
+    const t = ANKETA_MAIL[lang] || ANKETA_MAIL.en;
+    await sendEmail(env, email, t.subj, t.body(name));
+  }
+
+  return jsonResponse({ok:true, topic:topicId||null, emailed:!!email}, corsHeaders);
 }

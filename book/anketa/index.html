@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>VÍA-L · Анкета здоровья клиента</title>
+<style>
+  :root{
+    --green:#14342b; --green2:#1f4d40; --gold:#c4a05a; --gold-d:#a8893f;
+    --cream:#f7f4ec; --ink:#23241f; --muted:#6b6f66; --line:#e2ddcf;
+    --ok:#2e7d5b; --card:#ffffff;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--cream); color:var(--ink); line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:720px; margin:0 auto; padding:0 16px 120px}
+  header.top{
+    background:linear-gradient(135deg,var(--green),var(--green2)); color:#fff;
+    padding:28px 16px 22px; text-align:center;
+  }
+  header.top .logo{font-weight:700; letter-spacing:.18em; font-size:26px}
+  header.top .logo span{color:var(--gold)}
+  header.top .tag{letter-spacing:.32em; font-size:10px; opacity:.8; margin-top:4px}
+  header.top h1{font-size:18px; font-weight:600; margin:16px 0 4px}
+  header.top p{font-size:13px; opacity:.85; margin:0; max-width:540px; margin:0 auto}
+  .langbar{display:flex; justify-content:flex-end; margin-bottom:6px}
+  #langSel{background:rgba(255,255,255,.12); color:#fff; border:1px solid rgba(255,255,255,.3); border-radius:8px; padding:6px 10px; font-size:13px; font-family:inherit; cursor:pointer}
+  #langSel option{color:#23241f}
+  /* progress */
+  .progress{position:sticky; top:0; z-index:20; background:var(--cream); padding:10px 0 6px; border-bottom:1px solid var(--line)}
+  .progress .bar{height:6px; background:var(--line); border-radius:6px; overflow:hidden}
+  .progress .bar i{display:block; height:100%; width:0; background:var(--gold); transition:width .3s}
+  .progress .lbl{font-size:12px; color:var(--muted); margin-top:6px; display:flex; justify-content:space-between}
+  /* section card */
+  .sec{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 16px; margin:16px 0; box-shadow:0 1px 2px rgba(20,52,43,.04)}
+  .sec > h2{margin:0 0 2px; font-size:16px; color:var(--green); display:flex; align-items:center; gap:8px}
+  .sec > h2 .chip{background:var(--green); color:#fff; font-size:11px; font-weight:700; border-radius:6px; padding:2px 7px}
+  .sec > .subnote{font-size:12px; color:var(--muted); margin:4px 0 12px}
+  .sub{font-size:13px; font-weight:600; color:var(--gold-d); text-transform:uppercase; letter-spacing:.04em; margin:18px 0 8px}
+  /* question */
+  .q{margin:14px 0}
+  .q > label.qt{display:block; font-size:14px; font-weight:500; margin-bottom:7px}
+  .q > label.qt b{color:var(--gold-d); margin-right:6px; font-weight:700}
+  .hint{font-size:12px; color:var(--muted); margin:-2px 0 7px}
+  input[type=text], input[type=date], input[type=number], textarea{
+    width:100%; border:1px solid var(--line); border-radius:9px; padding:10px 12px; font-size:14px;
+    font-family:inherit; background:#fff; color:var(--ink);
+  }
+  input:focus, textarea:focus{outline:none; border-color:var(--gold)}
+  textarea{min-height:64px; resize:vertical}
+  .dob{display:flex; gap:8px}
+  .dob select{flex:1; min-width:0; border:1px solid var(--line); border-radius:9px; padding:10px 8px; font-size:14px; font-family:inherit; background:#fff; color:var(--ink)}
+  .dob select:focus{outline:none; border-color:var(--gold)}
+  .dobsep{align-self:center; color:var(--muted); font-weight:700; padding:0 1px}
+  /* radio & checkbox as chips */
+  .opts{display:flex; flex-wrap:wrap; gap:8px}
+  .opts.col{flex-direction:column}
+  .opt{position:relative}
+  .opt input{position:absolute; opacity:0; pointer-events:none}
+  .opt span{display:block; border:1px solid var(--line); border-radius:9px; padding:9px 12px; font-size:13px; cursor:pointer; background:#fff; transition:.15s; -webkit-user-select:none; user-select:none}
+  .opt input:checked + span{border-color:var(--green); background:var(--green); color:#fff; font-weight:600}
+  .opt input:focus-visible + span{box-shadow:0 0 0 2px var(--gold)}
+  /* scale */
+  .scale .ends{display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-bottom:4px}
+  .scale .row{display:flex; align-items:center; gap:12px}
+  .scale input[type=range]{flex:1; accent-color:var(--green)}
+  .scale .val{min-width:34px; text-align:center; font-weight:700; font-size:18px; color:var(--green); border:1px solid var(--line); border-radius:8px; padding:2px 0}
+  /* lab group */
+  .lab{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  @media(max-width:480px){ .lab{grid-template-columns:1fr} }
+  .lab .li label{display:block; font-size:12px; color:var(--muted); margin-bottom:3px}
+  .lab .li input{padding:8px 10px}
+  /* consent + submit */
+  .consent{display:flex; gap:10px; align-items:flex-start; font-size:13px; color:var(--muted)}
+  .consent input{margin-top:3px}
+  .actions{position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--line); padding:12px 16px; z-index:30}
+  .actions .inner{max-width:720px; margin:0 auto; display:flex; gap:10px; align-items:center}
+  button.submit{flex:1; background:var(--gold); color:#3a2f12; border:0; border-radius:11px; padding:14px; font-size:15px; font-weight:700; cursor:pointer}
+  button.submit:disabled{opacity:.45; cursor:not-allowed}
+  /* preview (dev) */
+  .preview{background:#0f1c18; color:#cfe8dd; border-radius:12px; padding:14px; font-size:12px; white-space:pre-wrap; word-break:break-word; margin-top:10px; max-height:50vh; overflow:auto}
+  .draftnote{font-size:11px; color:var(--muted); text-align:center; margin-top:8px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="langbar"><select id="langSel" aria-label="Language"></select></div>
+  <div class="logo">VÍA<span>·</span>L</div>
+  <div class="tag">WELLNESS &amp; LONGEVITY</div>
+  <h1 id="h1">Анкета здоровья клиента</h1>
+  <p id="sub">Гормональный статус · ЖКТ · Метаболизм · Нутриентный статус · Образ жизни.</p>
+</header>
+
+<div class="wrap">
+  <div class="progress">
+    <div class="bar"><i id="pbar"></i></div>
+    <div class="lbl"><span id="pcount">0 из 0</span><span id="ppct">0%</span></div>
+  </div>
+
+  <form id="anketa" autocomplete="off"></form>
+
+  <div class="actions">
+    <div class="inner">
+      <button class="submit" id="btnSubmit" type="button" disabled>Отправить анкету</button>
+    </div>
+  </div>
+  <div class="draftnote">Черновой каркас · только русский · отправка пока показывает структуру (без сервера)</div>
+  <pre class="preview" id="preview" hidden></pre>
+</div>
+
+<script>
+/* ──────────────────────────────────────────────────────────────────────────
+   СХЕМА АНКЕТЫ — единый источник правды (110 вопросов, блоки A–M).
+   Типы поля:
+     text      — короткий текст
+     textarea  — длинный ответ
+     radio     — один выбор из opts
+     check     — мультивыбор из opts
+     scale     — слайдер 0–10 (lo/hi подписи концов)
+     lab       — группа числовых/текстовых маркеров (fields[])
+   Секции с sex:'f'|'m' показываются только нужному полу (ветвление по «Пол»).
+   ────────────────────────────────────────────────────────────────────────── */
+const YNU = ['Да','Нет','Иногда / не уверен(а)'];
+
+const SCHEMA = [
+  { id:'intro', title:'Основные данные', chip:'', fields:[
+    {id:'date', n:'', t:'text', q:'Дата заполнения', ph:'дд.мм.гггг'},
+    {id:'name', n:'', t:'text', q:'Имя и фамилия'},
+    {id:'birth', n:'', t:'dob', q:'Дата рождения / возраст'},
+    {id:'sex', n:'', t:'radio', q:'Пол', opts:['Женский','Мужской'], control:true},
+    {id:'contact', n:'', t:'text', q:'Контакт (e-mail / телефон)'},
+  ]},
+
+  { id:'A', title:'Общий анамнез и образ жизни', chip:'A', groups:[
+    {sub:'A1. Основные данные и цели', fields:[
+      {id:'a1', n:1, t:'lab', q:'Каков ваш рост и текущий вес?', fields:[{k:'height',l:'Рост, см'},{k:'weight',l:'Вес, кг'}]},
+      {id:'a2', n:2, t:'radio', q:'Как изменился ваш вес за последние 12 месяцев?', opts:['Снизился более чем на 5 кг','Снизился на 1–5 кг','Стабильный','Вырос на 1–5 кг','Вырос более чем на 5 кг']},
+      {id:'a3', n:3, t:'textarea', q:'Какова ваша основная цель при работе со специалистом Vía-L?'},
+      {id:'a4', n:4, t:'textarea', q:'Какие три показателя качества жизни вам наиболее важно улучшить?'},
+      {id:'a5', n:5, t:'textarea', q:'Были ли попытки изменить питание или образ жизни ранее? Что сработало / не сработало?'},
+    ]},
+    {sub:'A2. Анамнез здоровья', fields:[
+      {id:'a6', n:6, t:'textarea', q:'Перечислите все подтверждённые диагнозы и хронические заболевания'},
+      {id:'a7', n:7, t:'textarea', q:'Текущие лекарственные препараты (название, доза, длительность)'},
+      {id:'a8', n:8, t:'textarea', q:'Принимаемые БАД, витамины, спортивное питание'},
+      {id:'a9', n:9, t:'textarea', q:'Аллергии или непереносимость (пищевые, лекарственные)'},
+      {id:'a10', n:10, t:'textarea', q:'Операции или госпитализации за последние 5 лет (год и причина)'},
+      {id:'a11', n:11, t:'check', q:'Семейный анамнез: заболевания у близких родственников', opts:['Сердечно-сосудистые заболевания','Сахарный диабет 2 типа','Онкологические заболевания','Остеопороз','Аутоиммунные заболевания','Деменция / Альцгеймер','Щитовидная железа','Ожирение']},
+      {id:'a12', n:12, t:'radio', q:'Проходили ли комплексные лабораторные обследования за 12 месяцев?', opts:YNU},
+      {id:'a12b', n:'', t:'textarea', q:'Если да — дата и основные результаты (или приложите копию)'},
+    ]},
+  ]},
+
+  { id:'B', title:'Питание и метаболизм', chip:'B', groups:[
+    {sub:'B1. Пищевые привычки', fields:[
+      {id:'b13', n:13, t:'radio', q:'Сколько раз в день вы едите (включая перекусы)?', opts:['1–2 раза','3 раза','4–5 раз','6 и более']},
+      {id:'b14', n:14, t:'textarea', q:'Опишите типичный день питания (завтрак, обед, ужин, перекусы)'},
+      {id:'b15', n:15, t:'check', q:'Есть ли в рационе намеренные ограничения?', opts:['Вегетарианство','Веганство','Безглютеновое','Безлактозное','Низкоуглеводное / кето','Интервальное голодание','Халяль / Кошер','Нет']},
+      {id:'b16', n:16, t:'check', q:'Как часто вы употребляете следующие продукты?', opts:['Красное мясо (>3 р/нед)','Рыба и морепродукты (>2 р/нед)','Молочные продукты ежедневно','Яйца ежедневно','Ультрапереработанные продукты (>3 р/нед)','Сладкое / кондитерское ежедневно','Алкоголь (>3 р/нед)','Овощи/зелень каждый приём пищи']},
+      {id:'b17', n:17, t:'radio', q:'Сколько чистой воды вы выпиваете в день?', opts:['Менее 1 л','1–1,5 л','1,5–2 л','Более 2 л']},
+      {id:'b18', n:18, t:'radio', q:'Отмечаете ли переедание, бесконтрольное поедание, эмоциональный аппетит?', opts:YNU},
+      {id:'b19', n:19, t:'radio', q:'Как изменился аппетит за последние 6–12 месяцев?', opts:['Увеличился','Снизился','Не изменился','Нестабильный / скачки']},
+      {id:'b20', n:20, t:'textarea', q:'Есть ли тяга к определённым продуктам (сладкое, солёное, жирное, кофеин)?'},
+    ]},
+    {sub:'B2. Метаболические маркеры (по анализам)', labhint:true, fields:[
+      {id:'b21', n:21, t:'lab', q:'Углеводный обмен', fields:[{k:'glu',l:'Глюкоза натощак'},{k:'hba1c',l:'HbA1c'},{k:'ins',l:'Инсулин натощак'},{k:'homa',l:'HOMA-IR'}]},
+      {id:'b22', n:22, t:'lab', q:'Липидный профиль', fields:[{k:'chol',l:'Общий холестерин'},{k:'ldl',l:'ЛПНП'},{k:'hdl',l:'ЛПВП'},{k:'tg',l:'Триглицериды'}]},
+      {id:'b23', n:23, t:'check', q:'Есть ли признаки инсулинорезистентности?', opts:['Сложно похудеть даже при диете','Тёмные пятна в складках кожи','Сильная сонливость после еды','Постоянная тяга к сладкому','Нет признаков','Не знаю']},
+    ]},
+  ]},
+
+  { id:'C', title:'Желудочно-кишечный тракт', chip:'C', groups:[
+    {sub:'C1. Пищеварение и симптомы', fields:[
+      {id:'c24', n:24, t:'scale', q:'Как вы оцениваете своё пищеварение в целом?', lo:'очень плохое', hi:'отличное'},
+      {id:'c25', n:25, t:'check', q:'Отмечаете ли следующие симптомы?', opts:['Вздутие живота','Метеоризм (газообразование)','Изжога / рефлюкс','Тошнота','Боли / спазмы в животе','Диарея','Запоры','Чередование диареи и запоров']},
+      {id:'c26', n:26, t:'radio', q:'Как часто у вас стул?', opts:['1–3 раза/день','1 раз в день','1 раз в 2–3 дня','Реже 1 раза в 3 дня']},
+      {id:'c27', n:27, t:'radio', q:'Характер стула по Бристольской шкале?', opts:['Тип 1–2 (твёрдый, «овечий»)','Тип 3–4 (норма)','Тип 5–6 (мягкий)','Тип 7 (водянистый)']},
+      {id:'c28', n:28, t:'radio', q:'Есть ли непереваренная пища в стуле, слизь или кровь?', opts:YNU},
+      {id:'c29', n:29, t:'textarea', q:'Диагнозы: СРК, ГЭРБ, гастрит, язва, болезнь Крона, целиакия, дисбактериоз?'},
+      {id:'c30', n:30, t:'radio', q:'Принимали ли антибиотики за последние 12 месяцев?', opts:YNU},
+    ]},
+    {sub:'C2. Связь с питанием и образом жизни', fields:[
+      {id:'c31', n:31, t:'textarea', q:'Ухудшение пищеварения после определённых продуктов? Каких?'},
+      {id:'c32', n:32, t:'radio', q:'Влияет ли стресс на работу кишечника?', opts:YNU},
+      {id:'c33', n:33, t:'radio', q:'Употребляете ли ферментированные продукты (кефир, йогурт, квашеная капуста, кимчи)?', opts:['Ежедневно','3–4 раза/нед','Редко','Никогда']},
+      {id:'c34', n:34, t:'textarea', q:'Принимаете/принимали пробиотики? Препарат и длительность'},
+    ]},
+  ]},
+
+  { id:'D', title:'Энергия, сон и стресс-реакция', chip:'D', groups:[
+    {sub:'D1. Уровень энергии', fields:[
+      {id:'d35', n:35, t:'scale', q:'Средний уровень энергии в течение дня', lo:'полное истощение', hi:'высокая энергия'},
+      {id:'d36', n:36, t:'check', q:'В какое время суток энергия наиболее низкая?', opts:['Утром при пробуждении','В первой половине дня','После обеда (13–15 ч)','Вечером','Равномерно низкий']},
+      {id:'d37', n:37, t:'radio', q:'Хроническая усталость, не проходящая после отдыха?', opts:YNU},
+      {id:'d38', n:38, t:'radio', q:'Упадок сил после еды?', opts:YNU},
+    ]},
+    {sub:'D2. Сон', fields:[
+      {id:'d39', n:39, t:'radio', q:'Сколько часов вы спите в среднем?', opts:['Менее 5 ч','5–6 ч','7–8 ч','Более 9 ч']},
+      {id:'d40', n:40, t:'scale', q:'Как вы оцениваете качество сна?', lo:'очень плохое', hi:'отличное'},
+      {id:'d41', n:41, t:'check', q:'Нарушения сна?', opts:['Трудности с засыпанием','Частые пробуждения ночью','Раннее пробуждение (не заснуть снова)','Поверхностный сон','Апноэ (или подозрение)','Ночная потливость','Нет нарушений','Дневная сонливость несмотря на сон']},
+      {id:'d42', n:42, t:'radio', q:'Регулярно ли ложитесь и встаёте в одно время?', opts:YNU},
+    ]},
+    {sub:'D3. Стресс и психоэмоциональное состояние', fields:[
+      {id:'d43', n:43, t:'scale', q:'Уровень хронического стресса в жизни', lo:'стресса нет', hi:'постоянный высокий'},
+      {id:'d44', n:44, t:'check', q:'Как проявляется стресс в организме?', opts:['Учащённое сердцебиение','Мышечное напряжение / боли','Раздражительность','Тревога / панические атаки','Нарушения сна','Переедание или потеря аппетита','Желудочно-кишечные расстройства','Снижение либидо']},
+      {id:'d45', n:45, t:'check', q:'Практикуете ли методы управления стрессом?', opts:['Медитация / дыхательные практики','Йога / растяжка','Прогулки на природе','Психотерапия','Нет','Другое']},
+    ]},
+  ]},
+
+  { id:'E', title:'Физическая активность и мышечная функция', chip:'E', fields:[
+    {id:'e46', n:46, t:'radio', q:'Какова ваша текущая физическая активность?', opts:['Сидячий образ жизни','Лёгкая активность (прогулки)','Умеренная (3–4 р/нед)','Высокая (5+ р/нед)','Профессиональный спорт']},
+    {id:'e47', n:47, t:'check', q:'Какие виды тренировок вы выполняете?', opts:['Силовые тренировки','Кардио (бег, велосипед, плавание)','HIIT / интервальные','Йога / пилатес','Танцы / групповые классы','Не тренируюсь']},
+    {id:'e48', n:48, t:'radio', q:'Снижение мышечной силы или выносливости за 1–2 года?', opts:YNU},
+    {id:'e49', n:49, t:'textarea', q:'Боли в суставах, мышцах или ограничения подвижности?'},
+    {id:'e50', n:50, t:'textarea', q:'Данные о составе тела (% жира, мышечная масса)?'},
+  ]},
+
+  { id:'F', title:'Кожа, волосы, ногти', chip:'F', subnote:'Маркеры нутриентного статуса', fields:[
+    {id:'f51', n:51, t:'check', q:'Изменения кожи за последние 1–2 года?', opts:['Сухость / шелушение','Акне / высыпания','Снижение упругости / дряблость','Пигментация','Медленное заживление ран','Без изменений']},
+    {id:'f52', n:52, t:'check', q:'Состояние волос', opts:['Выпадение усилилось','Истончение','Сухость / ломкость','Изменение текстуры','Без изменений']},
+    {id:'f53', n:53, t:'check', q:'Состояние ногтей', opts:['Ломкие','Расслаиваются','Белые пятна','Медленный рост','Без изменений']},
+  ]},
+
+  { id:'G', title:'Щитовидная железа и надпочечники', chip:'G', labhint:true, fields:[
+    {id:'g54', n:54, t:'check', q:'Поставленный диагноз по щитовидной железе?', opts:['Гипотиреоз','Гипертиреоз','Аутоиммунный тиреоидит (Хашимото)','Узловой зоб','Нет','Не обследовался(ась)']},
+    {id:'g55', n:55, t:'lab', q:'Показатели щитовидной железы', fields:[{k:'tsh',l:'ТТГ'},{k:'t3',l:'Т3 свободный'},{k:'t4',l:'Т4 свободный'},{k:'atpo',l:'АТ-ТПО'},{k:'date',l:'Дата'}]},
+    {id:'g56', n:56, t:'check', q:'Симптомы нарушения работы щитовидной железы?', opts:['Постоянная зябкость','Чувство жара / потливость','Сухая кожа и запоры (гипо)','Учащённое сердцебиение (гипер)','Необъяснимый набор или потеря веса','Выраженная усталость','Нет симптомов','Выпадение волос, в т.ч. бровей']},
+    {id:'g57', n:57, t:'check', q:'Признаки хронической дисфункции надпочечников?', opts:['Утренняя разбитость (не встать)','Пик энергии после 21:00','Тяга к солёному','Непереносимость стресса','Частые инфекционные заболевания','Низкое давление / головокружение']},
+    {id:'g58', n:58, t:'textarea', q:'Известен ли уровень кортизола (утренний или суточный профиль)?'},
+  ]},
+
+  { id:'H', title:'Сердечно-сосудистая и костная системы', chip:'H', labhint:true, fields:[
+    {id:'h59', n:59, t:'lab', q:'Типичное артериальное давление', fields:[{k:'sys',l:'Систолическое'},{k:'dia',l:'Диастолическое'}]},
+    {id:'h60', n:60, t:'check', q:'Симптомы со стороны сердца?', opts:['Учащённое сердцебиение','Нерегулярный ритм','Ощущение давления в груди','Одышка при нагрузке','Отёки ног','Нет']},
+    {id:'h61', n:61, t:'radio', q:'Диагностирован остеопороз или остеопения?', opts:YNU},
+    {id:'h62', n:62, t:'radio', q:'Переломы при незначительных травмах?', opts:YNU},
+    {id:'h63', n:63, t:'lab', q:'Показатели', fields:[{k:'vitd',l:'Витамин D (25-OH)'},{k:'ca',l:'Кальций'},{k:'mg',l:'Магний'}]},
+  ]},
+
+  { id:'I', title:'Только для женщин: гормональный статус и перименопауза', chip:'I', sex:'f',
+    subnote:'Заполняется только клиентами женского пола. Вся информация строго конфиденциальна.', groups:[
+    {sub:'I1. Менструальный цикл и репродуктивный статус', fields:[
+      {id:'i64', n:64, t:'radio', q:'Текущий репродуктивный статус?', opts:['Регулярный цикл','Нерегулярный цикл','Перименопауза','Менопауза (12+ мес без менструаций)','Постменопауза','Хирургическая менопауза']},
+      {id:'i65', n:65, t:'text', q:'Если цикл есть: длина цикла и длительность менструации'},
+      {id:'i66', n:66, t:'check', q:'Изменился ли цикл за 1–2 года?', opts:['Стал короче (<24 дней)','Стал длиннее (>35 дней)','Пропуски циклов','Более обильные выделения','Более скудные выделения','Межменструальные кровотечения','Без изменений','Цикла нет (менопауза)']},
+      {id:'i67', n:67, t:'text', q:'Дата последней менструации (ПМД)'},
+      {id:'i68', n:68, t:'text', q:'Беременности и роды? Укажите количество'},
+      {id:'i69', n:69, t:'check', q:'Гормональные контрацептивы или ЗГТ?', opts:['КОК (таблетки)','Гормональная спираль','Пластырь / гель / кольцо','ЗГТ системная','Местная гормональная терапия','Принимала ранее','Нет']},
+      {id:'i70', n:70, t:'textarea', q:'Если принимаете ЗГТ — название, доза, длительность'},
+    ]},
+    {sub:'I2. Симптомы перименопаузы / менопаузы', fields:[
+      {id:'i71', n:71, t:'scale', q:'Выраженность приливов жара', lo:'нет', hi:'очень сильные'},
+      {id:'i72', n:72, t:'check', q:'Вазомоторные и другие симптомы?', opts:['Приливы жара днём','Ночная потливость','Ознобы / перепады температуры','Учащённое сердцебиение','Приливы сопровождаются тревогой','Нет']},
+      {id:'i73', n:73, t:'check', q:'Изменения в настроении и психоэмоциональном фоне?', opts:['Раздражительность','Перепады настроения','Тревожность (новая или усилилась)','Депрессивное состояние','Плаксивость','Сложности с концентрацией','«Туман в голове»','Нет изменений']},
+      {id:'i74', n:74, t:'check', q:'Когнитивные изменения?', opts:['Снижение памяти','Сложности с концентрацией','Замедленное мышление','Нет изменений']},
+      {id:'i75', n:75, t:'check', q:'Урогенитальные симптомы?', opts:['Сухость и дискомфорт во влагалище','Зуд / жжение','Болезненность при половом акте','Учащённое мочеиспускание','Недержание мочи (при кашле, смехе)','Повторяющиеся инфекции МВП','Снижение либидо','Нет']},
+      {id:'i76', n:76, t:'radio', q:'Изменения в распределении жировой ткани (живот, бёдра)?', opts:YNU},
+      {id:'i77', n:77, t:'textarea', q:'Изменилась ли реакция на физические нагрузки (восстановление, переносимость)?'},
+    ]},
+    {sub:'I3. Гормональные анализы', labhint:true, fields:[
+      {id:'i78', n:78, t:'lab', q:'Гормональные показатели', fields:[{k:'fsh',l:'ФСГ'},{k:'lh',l:'ЛГ'},{k:'e2',l:'Эстрадиол (Е2)'},{k:'prog',l:'Прогестерон'},{k:'amh',l:'АМГ'}]},
+      {id:'i79', n:79, t:'lab', q:'Андрогены', fields:[{k:'tt',l:'Тестостерон общий'},{k:'ft',l:'Свободный тестостерон'},{k:'dheas',l:'ДГЭА-С'},{k:'prl',l:'Пролактин'}]},
+      {id:'i80', n:80, t:'radio', q:'Проводилась денситометрия (плотность костей)?', opts:['Да — норма','Да — остеопения','Да — остеопороз','Нет']},
+    ]},
+    {sub:'I4. Гинекологический анамнез', fields:[
+      {id:'i81', n:81, t:'textarea', q:'Диагнозы: эндометриоз, миома, поликистоз яичников (СПКЯ), мастопатия?'},
+      {id:'i82', n:82, t:'textarea', q:'Когда последний раз: УЗИ малого таза, маммография, мазок Папаниколау?'},
+    ]},
+  ]},
+
+  { id:'J', title:'Только для мужчин: гормональный статус и андропауза', chip:'J', sex:'m',
+    subnote:'Заполняется только клиентами мужского пола. Вся информация строго конфиденциальна.', groups:[
+    {sub:'J1. Симптомы андропаузы (снижения тестостерона)', fields:[
+      {id:'j83', n:83, t:'scale', q:'Общий уровень витальности и «жизненного тонуса» за год', lo:'очень низкий', hi:'как в молодости'},
+      {id:'j84', n:84, t:'check', q:'Симптомы дефицита тестостерона?', opts:['Снижение либидо','Эректильная дисфункция','Снижение утренних эрекций','Уменьшение объёма яичек','Снижение мышечной массы и силы','Увеличение жировой ткани (особенно живот)','Увеличение грудных желёз (гинекомастия)','Нет']},
+      {id:'j85', n:85, t:'check', q:'Изменения в настроении и психоэмоциональном фоне?', opts:['Раздражительность / вспыльчивость','Снижение мотивации','Апатия, потеря интереса к жизни','Тревожность','Депрессивное состояние','«Туман в голове»','Снижение уверенности в себе','Нет изменений']},
+      {id:'j86', n:86, t:'radio', q:'Приливы жара или ночная потливость?', opts:YNU},
+      {id:'j87', n:87, t:'radio', q:'Снижение конкурентного духа, целеустремлённости, инициативности?', opts:YNU},
+      {id:'j88', n:88, t:'textarea', q:'Изменилась переносимость нагрузок и скорость восстановления?'},
+    ]},
+    {sub:'J2. Метаболические и сердечно-сосудистые риски (35+)', fields:[
+      {id:'j89', n:89, t:'text', q:'Окружность талии?', hint:'Повышенный риск: >94 см'},
+      {id:'j90', n:90, t:'check', q:'Метаболический синдром или его компоненты?', opts:['Абдоминальное ожирение (живот)','Высокие триглицериды','Низкий ЛПВП','Высокое давление','Высокая глюкоза / преддиабет','Не диагностирован']},
+      {id:'j91', n:91, t:'check', q:'Симптомы нижних мочевыводящих путей / простаты?', opts:['Учащённое мочеиспускание (ночью)','Слабая струя мочи','Неполное опорожнение мочевого пузыря','Жжение при мочеиспускании','Боль в промежности','Нет']},
+      {id:'j92', n:92, t:'text', q:'Когда последний раз сдавали ПСА (PSA)? Результат'},
+    ]},
+    {sub:'J3. Гормональные анализы', labhint:true, fields:[
+      {id:'j93', n:93, t:'lab', q:'Гормональные показатели', fields:[{k:'tt',l:'Тестостерон общий'},{k:'ft',l:'Свободный тест-н'},{k:'shbg',l:'ГСПГ'},{k:'e2',l:'Эстрадиол (Е2)'}]},
+      {id:'j94', n:94, t:'lab', q:'Дополнительно', fields:[{k:'lh',l:'ЛГ'},{k:'fsh',l:'ФСГ'},{k:'prl',l:'Пролактин'},{k:'dheas',l:'ДГЭА-С'},{k:'cort',l:'Кортизол'}]},
+      {id:'j95', n:95, t:'textarea', q:'Препараты тестостерона или иная ГЗТ? (название, форма, доза, длительность)'},
+      {id:'j96', n:96, t:'radio', q:'Препараты для эректильной функции или фертильности?', opts:YNU},
+    ]},
+  ]},
+
+  { id:'K', title:'Нутриентный статус и лабораторные данные', chip:'K', labhint:true, groups:[
+    {sub:'K1. Ключевые нутриенты', fields:[
+      {id:'k97', n:97, t:'lab', q:'Показатели (укажите значения и дату)', fields:[{k:'vitd',l:'Витамин D (25-OH)'},{k:'b12',l:'B12'},{k:'folate',l:'Фолат'},{k:'iron',l:'Железо'},{k:'ferr',l:'Ферритин'}]},
+      {id:'k98', n:98, t:'lab', q:'Дополнительно', fields:[{k:'zn',l:'Цинк'},{k:'mg',l:'Магний'},{k:'o3',l:'Омега-3 индекс'},{k:'hcy',l:'Гомоцистеин'},{k:'crp',l:'СРБ (CRP)'}]},
+      {id:'k99', n:99, t:'textarea', q:'Общий анализ крови (ОАК): есть ли отклонения?'},
+      {id:'k100', n:100, t:'check', q:'Симптомы дефицита нутриентов?', opts:['Онемение / покалывание конечностей (B12)','Мышечные судороги (Mg, Ca)','Ломкость волос и ногтей (Fe, Zn, биотин)','Усталость / бледность (железо/B12)','Частые инфекции (Zn, D, A)','Нет характерных симптомов']},
+    ]},
+  ]},
+
+  { id:'L', title:'Образ жизни: вредные привычки и среда', chip:'L', fields:[
+    {id:'l101', n:101, t:'radio', q:'Курение', opts:['Никогда не курил(а)','Бросил(а)','Курю','Электронные сигареты / вейп']},
+    {id:'l101b', n:'', t:'text', q:'Уточнение (год отказа / сигарет в день)'},
+    {id:'l102', n:102, t:'radio', q:'Алкоголь', opts:['Не употребляю','Редко (праздники)','1–3 бокала/нед','4–7 бокалов/нед','Более 7 бокалов/нед']},
+    {id:'l103', n:103, t:'check', q:'Работа (условия)', opts:['Преимущественно сидячая','Физический труд','Стрессовая / ненормированная','Ночные смены','Удалённая / дома','Воздействие токсинов / химикатов']},
+    {id:'l104', n:104, t:'radio', q:'Сколько времени проводите на открытом воздухе (солнечный свет)?', opts:['Менее 30 мин/день','30–60 мин/день','1–2 ч/день','Более 2 ч/день']},
+    {id:'l105', n:105, t:'textarea', q:'Устройства для мониторинга здоровья (умные часы, трекер)? Что отслеживаете?'},
+  ]},
+
+  { id:'M', title:'Дополнительная информация и готовность к изменениям', chip:'M', fields:[
+    {id:'m106', n:106, t:'textarea', q:'Главное препятствие для улучшения вашего здоровья?'},
+    {id:'m107', n:107, t:'scale', q:'Насколько готовы к изменению пищевых привычек?', lo:'не готов(а)', hi:'полностью готов(а)'},
+    {id:'m108', n:108, t:'scale', q:'Насколько готовы к изменению образа жизни (сон, активность, стресс)?', lo:'не готов(а)', hi:'полностью готов(а)'},
+    {id:'m109', n:109, t:'textarea', q:'Есть ли что-то важное о здоровье, не охваченное анкетой?'},
+    {id:'m110', n:110, t:'textarea', q:'Какой результат через 3 месяца будет для вас показателем успеха?'},
+  ]},
+];
+
+/* ── Рендер ─────────────────────────────────────────────────────────────── */
+const form = document.getElementById('anketa');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ── i18n: фразовый словарь. Ключ = RU-строка из схемы. Значения радио/чекбоксов
+   НЕ переводятся (остаются RU как канон для нутрициолога) — переводится только показ.
+   Цепочка: LANG==='ru' → оригинал; иначе TR[LANG] || TR.en || оригинал. ───────── */
+const TR = { en: {
+  // —— статика интерфейса ——
+  'Анкета здоровья клиента':'Client Health Questionnaire',
+  'Гормональный статус · ЖКТ · Метаболизм · Нутриентный статус · Образ жизни. Отвечайте честно — пустые поля можно пропустить.':'Hormonal status · GI · Metabolism · Nutrient status · Lifestyle. Answer honestly — you may skip blank fields.',
+  'Отправить анкету':'Submit questionnaire',
+  'из':'of',
+  'Анкета отправлена — спасибо! Нутрициолог свяжется с вами.':'Questionnaire sent — thank you! Your nutritionist will be in touch.',
+  'Не удалось отправить. Проверьте связь и попробуйте ещё раз.':'Could not send. Check your connection and try again.',
+  'Отправляем…':'Sending…',
+  'День':'Day','Месяц':'Month','Год':'Year',
+  'Январь':'January','Февраль':'February','Март':'March','Апрель':'April','Май':'May','Июнь':'June','Июль':'July','Август':'August','Сентябрь':'September','Октябрь':'October','Ноябрь':'November','Декабрь':'December',
+  'Согласие на обработку данных (GDPR): подтверждаю достоверность сведений и даю согласие на их обработку специалистом Vía-L исключительно для нутрициологического консультирования.':'Consent to data processing (GDPR): I confirm the information is accurate and consent to its processing by a Vía-L specialist solely for nutrition consulting.',
+  'Черновой каркас · отправка пока показывает структуру (без сервера)':'Draft build · submit currently shows the structure (no server yet)',
+  'СТРУКТУРА ДЛЯ НУТРИЦИОЛОГА (черновик, на сервер пока не уходит):':'STRUCTURE FOR THE NUTRITIONIST (draft, not sent to a server yet):',
+  'По данным анализов — впишите значение или оставьте пустым, если не знаете.':'From lab tests — enter a value or leave blank if unknown.',
+  'По данным анализов — оставьте пустым, если не знаете.':'From lab tests — leave blank if unknown.',
+  // —— секции / подзаголовки ——
+  'Основные данные':'Basic information',
+  'Общий анамнез и образ жизни':'General history & lifestyle',
+  'A1. Основные данные и цели':'A1. Key data & goals',
+  'A2. Анамнез здоровья':'A2. Health history',
+  'Питание и метаболизм':'Nutrition & metabolism',
+  'B1. Пищевые привычки':'B1. Eating habits',
+  'B2. Метаболические маркеры (по анализам)':'B2. Metabolic markers (lab)',
+  'Желудочно-кишечный тракт':'Gastrointestinal tract',
+  'C1. Пищеварение и симптомы':'C1. Digestion & symptoms',
+  'C2. Связь с питанием и образом жизни':'C2. Link to diet & lifestyle',
+  'Энергия, сон и стресс-реакция':'Energy, sleep & stress response',
+  'D1. Уровень энергии':'D1. Energy level',
+  'D2. Сон':'D2. Sleep',
+  'D3. Стресс и психоэмоциональное состояние':'D3. Stress & psycho-emotional state',
+  'Физическая активность и мышечная функция':'Physical activity & muscle function',
+  'Кожа, волосы, ногти':'Skin, hair, nails',
+  'Маркеры нутриентного статуса':'Markers of nutrient status',
+  'Щитовидная железа и надпочечники':'Thyroid & adrenal glands',
+  'Сердечно-сосудистая и костная системы':'Cardiovascular & skeletal systems',
+  'Только для женщин: гормональный статус и перименопауза':'Women only: hormonal status & perimenopause',
+  'Заполняется только клиентами женского пола. Вся информация строго конфиденциальна.':'For female clients only. All information is strictly confidential.',
+  'I1. Менструальный цикл и репродуктивный статус':'I1. Menstrual cycle & reproductive status',
+  'I2. Симптомы перименопаузы / менопаузы':'I2. Perimenopause / menopause symptoms',
+  'I3. Гормональные анализы':'I3. Hormone labs',
+  'I4. Гинекологический анамнез':'I4. Gynecological history',
+  'Только для мужчин: гормональный статус и андропауза':'Men only: hormonal status & andropause',
+  'Заполняется только клиентами мужского пола. Вся информация строго конфиденциальна.':'For male clients only. All information is strictly confidential.',
+  'J1. Симптомы андропаузы (снижения тестостерона)':'J1. Andropause symptoms (low testosterone)',
+  'J2. Метаболические и сердечно-сосудистые риски (35+)':'J2. Metabolic & cardiovascular risks (35+)',
+  'J3. Гормональные анализы':'J3. Hormone labs',
+  'Нутриентный статус и лабораторные данные':'Nutrient status & lab data',
+  'K1. Ключевые нутриенты':'K1. Key nutrients',
+  'Образ жизни: вредные привычки и среда':'Lifestyle: habits & environment',
+  'Дополнительная информация и готовность к изменениям':'Additional information & readiness to change',
+  // —— общие значения ——
+  'Да':'Yes','Нет':'No','Иногда / не уверен(а)':'Sometimes / not sure',
+  'Без изменений':'No changes','Нет изменений':'No changes','Не знаю':'Don’t know','Другое':'Other',
+  'Нет признаков':'No signs','Нет симптомов':'No symptoms','Нет нарушений':'None',
+  // —— intro ——
+  'дд.мм.гггг':'dd.mm.yyyy',
+  'Дата заполнения':'Date completed','Имя и фамилия':'Full name','Дата рождения / возраст':'Date of birth / age',
+  'Пол':'Sex','Женский':'Female','Мужской':'Male','Контакт (e-mail / телефон)':'Contact (e-mail / phone)','Специалист Vía-L':'Vía-L specialist',
+  // —— A ——
+  'Каков ваш рост и текущий вес?':'Your height and current weight?','Рост, см':'Height, cm','Вес, кг':'Weight, kg',
+  'Как изменился ваш вес за последние 12 месяцев?':'How has your weight changed over the past 12 months?',
+  'Снизился более чем на 5 кг':'Dropped more than 5 kg','Снизился на 1–5 кг':'Dropped 1–5 kg','Стабильный':'Stable','Вырос на 1–5 кг':'Gained 1–5 kg','Вырос более чем на 5 кг':'Gained more than 5 kg',
+  'Какова ваша основная цель при работе со специалистом Vía-L?':'What is your main goal in working with a Vía-L specialist?',
+  'Какие три показателя качества жизни вам наиболее важно улучшить?':'Which three quality-of-life measures matter most to improve?',
+  'Были ли попытки изменить питание или образ жизни ранее? Что сработало / не сработало?':'Have you tried changing diet or lifestyle before? What worked / didn’t?',
+  'Перечислите все подтверждённые диагнозы и хронические заболевания':'List all confirmed diagnoses and chronic conditions',
+  'Текущие лекарственные препараты (название, доза, длительность)':'Current medications (name, dose, duration)',
+  'Принимаемые БАД, витамины, спортивное питание':'Supplements, vitamins, sports nutrition taken',
+  'Аллергии или непереносимость (пищевые, лекарственные)':'Allergies or intolerances (food, drug)',
+  'Операции или госпитализации за последние 5 лет (год и причина)':'Surgeries or hospitalizations in the last 5 years (year and reason)',
+  'Семейный анамнез: заболевания у близких родственников':'Family history: conditions in close relatives',
+  'Сердечно-сосудистые заболевания':'Cardiovascular disease','Сахарный диабет 2 типа':'Type 2 diabetes','Онкологические заболевания':'Cancer','Остеопороз':'Osteoporosis','Аутоиммунные заболевания':'Autoimmune disease','Деменция / Альцгеймер':'Dementia / Alzheimer’s','Щитовидная железа':'Thyroid disease','Ожирение':'Obesity',
+  'Проходили ли комплексные лабораторные обследования за 12 месяцев?':'Have you had comprehensive lab tests in the past 12 months?',
+  'Если да — дата и основные результаты (или приложите копию)':'If yes — date and key results (or attach a copy)',
+  // —— B ——
+  'Сколько раз в день вы едите (включая перекусы)?':'How many times a day do you eat (incl. snacks)?',
+  '1–2 раза':'1–2 times','3 раза':'3 times','4–5 раз':'4–5 times','6 и более':'6 or more',
+  'Опишите типичный день питания (завтрак, обед, ужин, перекусы)':'Describe a typical day of eating (breakfast, lunch, dinner, snacks)',
+  'Есть ли в рационе намеренные ограничения?':'Any intentional dietary restrictions?',
+  'Вегетарианство':'Vegetarian','Веганство':'Vegan','Безглютеновое':'Gluten-free','Безлактозное':'Lactose-free','Низкоуглеводное / кето':'Low-carb / keto','Интервальное голодание':'Intermittent fasting','Халяль / Кошер':'Halal / Kosher',
+  'Как часто вы употребляете следующие продукты?':'How often do you eat the following?',
+  'Красное мясо (>3 р/нед)':'Red meat (>3×/wk)','Рыба и морепродукты (>2 р/нед)':'Fish & seafood (>2×/wk)','Молочные продукты ежедневно':'Dairy daily','Яйца ежедневно':'Eggs daily','Ультрапереработанные продукты (>3 р/нед)':'Ultra-processed foods (>3×/wk)','Сладкое / кондитерское ежедневно':'Sweets / confectionery daily','Алкоголь (>3 р/нед)':'Alcohol (>3×/wk)','Овощи/зелень каждый приём пищи':'Vegetables/greens at every meal',
+  'Сколько чистой воды вы выпиваете в день?':'How much plain water do you drink per day?',
+  'Менее 1 л':'Less than 1 L','1–1,5 л':'1–1.5 L','1,5–2 л':'1.5–2 L','Более 2 л':'More than 2 L',
+  'Отмечаете ли переедание, бесконтрольное поедание, эмоциональный аппетит?':'Do you notice overeating, binge eating, or emotional appetite?',
+  'Как изменился аппетит за последние 6–12 месяцев?':'How has your appetite changed over the past 6–12 months?',
+  'Увеличился':'Increased','Снизился':'Decreased','Не изменился':'Unchanged','Нестабильный / скачки':'Unstable / fluctuating',
+  'Есть ли тяга к определённым продуктам (сладкое, солёное, жирное, кофеин)?':'Cravings for certain foods (sweet, salty, fatty, caffeine)?',
+  'Углеводный обмен':'Carbohydrate metabolism','Глюкоза натощак':'Fasting glucose','Инсулин натощак':'Fasting insulin',
+  'Липидный профиль':'Lipid profile','Общий холестерин':'Total cholesterol','ЛПНП':'LDL','ЛПВП':'HDL','Триглицериды':'Triglycerides',
+  'Есть ли признаки инсулинорезистентности?':'Any signs of insulin resistance?',
+  'Сложно похудеть даже при диете':'Hard to lose weight even on a diet','Тёмные пятна в складках кожи':'Dark patches in skin folds','Сильная сонливость после еды':'Strong drowsiness after meals','Постоянная тяга к сладкому':'Constant sugar cravings',
+  // —— C ——
+  'Как вы оцениваете своё пищеварение в целом?':'How do you rate your digestion overall?',
+  'Отмечаете ли следующие симптомы?':'Do you notice the following symptoms?',
+  'Вздутие живота':'Bloating','Метеоризм (газообразование)':'Flatulence (gas)','Изжога / рефлюкс':'Heartburn / reflux','Тошнота':'Nausea','Боли / спазмы в животе':'Abdominal pain / cramps','Диарея':'Diarrhea','Запоры':'Constipation','Чередование диареи и запоров':'Alternating diarrhea and constipation',
+  'Как часто у вас стул?':'How often do you have bowel movements?',
+  '1–3 раза/день':'1–3×/day','1 раз в день':'Once a day','1 раз в 2–3 дня':'Once every 2–3 days','Реже 1 раза в 3 дня':'Less than once every 3 days',
+  'Характер стула по Бристольской шкале?':'Stool type on the Bristol scale?',
+  'Тип 1–2 (твёрдый, «овечий»)':'Type 1–2 (hard, “pebbles”)','Тип 3–4 (норма)':'Type 3–4 (normal)','Тип 5–6 (мягкий)':'Type 5–6 (soft)','Тип 7 (водянистый)':'Type 7 (watery)',
+  'Есть ли непереваренная пища в стуле, слизь или кровь?':'Undigested food, mucus, or blood in stool?',
+  'Диагнозы: СРК, ГЭРБ, гастрит, язва, болезнь Крона, целиакия, дисбактериоз?':'Diagnoses: IBS, GERD, gastritis, ulcer, Crohn’s, celiac, dysbiosis?',
+  'Принимали ли антибиотики за последние 12 месяцев?':'Have you taken antibiotics in the past 12 months?',
+  'Ухудшение пищеварения после определённых продуктов? Каких?':'Worse digestion after certain foods? Which?',
+  'Влияет ли стресс на работу кишечника?':'Does stress affect your gut?',
+  'Употребляете ли ферментированные продукты (кефир, йогурт, квашеная капуста, кимчи)?':'Do you eat fermented foods (kefir, yogurt, sauerkraut, kimchi)?',
+  'Ежедневно':'Daily','3–4 раза/нед':'3–4×/wk','Редко':'Rarely','Никогда':'Never',
+  'Принимаете/принимали пробиотики? Препарат и длительность':'Do/did you take probiotics? Product and duration',
+  // —— D ——
+  'Средний уровень энергии в течение дня':'Average energy level during the day',
+  'В какое время суток энергия наиболее низкая?':'When during the day is your energy lowest?',
+  'Утром при пробуждении':'In the morning on waking','В первой половине дня':'In the first half of the day','После обеда (13–15 ч)':'After lunch (1–3 PM)','Вечером':'In the evening','Равномерно низкий':'Evenly low',
+  'Хроническая усталость, не проходящая после отдыха?':'Chronic fatigue that doesn’t resolve after rest?',
+  'Упадок сил после еды?':'Energy crash after eating?',
+  'Сколько часов вы спите в среднем?':'How many hours do you sleep on average?',
+  'Менее 5 ч':'Less than 5 h','5–6 ч':'5–6 h','7–8 ч':'7–8 h','Более 9 ч':'More than 9 h',
+  'Как вы оцениваете качество сна?':'How do you rate your sleep quality?',
+  'Нарушения сна?':'Sleep disturbances?',
+  'Трудности с засыпанием':'Trouble falling asleep','Частые пробуждения ночью':'Frequent night awakenings','Раннее пробуждение (не заснуть снова)':'Early waking (can’t fall back asleep)','Поверхностный сон':'Light sleep','Апноэ (или подозрение)':'Apnea (or suspected)','Ночная потливость':'Night sweats','Дневная сонливость несмотря на сон':'Daytime sleepiness despite sleep',
+  'Регулярно ли ложитесь и встаёте в одно время?':'Do you go to bed and wake at consistent times?',
+  'Уровень хронического стресса в жизни':'Level of chronic stress in your life',
+  'Как проявляется стресс в организме?':'How does stress show up in your body?',
+  'Учащённое сердцебиение':'Rapid heartbeat','Мышечное напряжение / боли':'Muscle tension / pain','Раздражительность':'Irritability','Тревога / панические атаки':'Anxiety / panic attacks','Нарушения сна':'Sleep disturbances','Переедание или потеря аппетита':'Overeating or loss of appetite','Желудочно-кишечные расстройства':'GI upset','Снижение либидо':'Lower libido',
+  'Практикуете ли методы управления стрессом?':'Do you practice stress-management methods?',
+  'Медитация / дыхательные практики':'Meditation / breathwork','Йога / растяжка':'Yoga / stretching','Прогулки на природе':'Walks in nature','Психотерапия':'Psychotherapy',
+  // —— E ——
+  'Какова ваша текущая физическая активность?':'What is your current physical activity?',
+  'Сидячий образ жизни':'Sedentary','Лёгкая активность (прогулки)':'Light (walking)','Умеренная (3–4 р/нед)':'Moderate (3–4×/wk)','Высокая (5+ р/нед)':'High (5+×/wk)','Профессиональный спорт':'Professional sport',
+  'Какие виды тренировок вы выполняете?':'What types of training do you do?',
+  'Силовые тренировки':'Strength training','Кардио (бег, велосипед, плавание)':'Cardio (running, cycling, swimming)','HIIT / интервальные':'HIIT / intervals','Йога / пилатес':'Yoga / Pilates','Танцы / групповые классы':'Dance / group classes','Не тренируюсь':'I don’t train',
+  'Снижение мышечной силы или выносливости за 1–2 года?':'Loss of muscle strength or endurance over 1–2 years?',
+  'Боли в суставах, мышцах или ограничения подвижности?':'Joint or muscle pain, or limited mobility?',
+  'Данные о составе тела (% жира, мышечная масса)?':'Body-composition data (% fat, muscle mass)?',
+  // —— F ——
+  'Изменения кожи за последние 1–2 года?':'Skin changes over the past 1–2 years?',
+  'Сухость / шелушение':'Dryness / flaking','Акне / высыпания':'Acne / breakouts','Снижение упругости / дряблость':'Loss of firmness / sagging','Пигментация':'Pigmentation','Медленное заживление ран':'Slow wound healing',
+  'Состояние волос':'Hair condition','Выпадение усилилось':'Increased shedding','Истончение':'Thinning','Сухость / ломкость':'Dryness / brittleness','Изменение текстуры':'Texture change',
+  'Состояние ногтей':'Nail condition','Ломкие':'Brittle','Расслаиваются':'Peeling','Белые пятна':'White spots','Медленный рост':'Slow growth',
+  // —— G ——
+  'Поставленный диагноз по щитовидной железе?':'Diagnosed thyroid condition?',
+  'Гипотиреоз':'Hypothyroidism','Гипертиреоз':'Hyperthyroidism','Аутоиммунный тиреоидит (Хашимото)':'Autoimmune thyroiditis (Hashimoto’s)','Узловой зоб':'Nodular goiter','Не обследовался(ась)':'Not tested',
+  'Показатели щитовидной железы':'Thyroid markers','ТТГ':'TSH','Т3 свободный':'Free T3','Т4 свободный':'Free T4','АТ-ТПО':'TPO antibodies','Дата':'Date',
+  'Симптомы нарушения работы щитовидной железы?':'Symptoms of thyroid dysfunction?',
+  'Постоянная зябкость':'Constant chilliness','Чувство жара / потливость':'Heat / sweating','Сухая кожа и запоры (гипо)':'Dry skin & constipation (hypo)','Учащённое сердцебиение (гипер)':'Rapid heartbeat (hyper)','Необъяснимый набор или потеря веса':'Unexplained weight gain or loss','Выраженная усталость':'Marked fatigue','Выпадение волос, в т.ч. бровей':'Hair loss, incl. eyebrows',
+  'Признаки хронической дисфункции надпочечников?':'Signs of chronic adrenal dysfunction?',
+  'Утренняя разбитость (не встать)':'Morning exhaustion (can’t get up)','Пик энергии после 21:00':'Energy peak after 9 PM','Тяга к солёному':'Salt cravings','Непереносимость стресса':'Stress intolerance','Частые инфекционные заболевания':'Frequent infections','Низкое давление / головокружение':'Low blood pressure / dizziness',
+  'Известен ли уровень кортизола (утренний или суточный профиль)?':'Do you know your cortisol (morning or daily profile)?',
+  // —— H ——
+  'Типичное артериальное давление':'Typical blood pressure','Систолическое':'Systolic','Диастолическое':'Diastolic',
+  'Симптомы со стороны сердца?':'Cardiac symptoms?',
+  'Нерегулярный ритм':'Irregular rhythm','Ощущение давления в груди':'Chest pressure','Одышка при нагрузке':'Shortness of breath on exertion','Отёки ног':'Leg swelling',
+  'Диагностирован остеопороз или остеопения?':'Diagnosed osteoporosis or osteopenia?',
+  'Переломы при незначительных травмах?':'Fractures from minor trauma?',
+  'Показатели':'Markers','Витамин D (25-OH)':'Vitamin D (25-OH)','Кальций':'Calcium','Магний':'Magnesium',
+  // —— I ——
+  'Текущий репродуктивный статус?':'Current reproductive status?',
+  'Регулярный цикл':'Regular cycle','Нерегулярный цикл':'Irregular cycle','Перименопауза':'Perimenopause','Менопауза (12+ мес без менструаций)':'Menopause (12+ months without periods)','Постменопауза':'Postmenopause','Хирургическая менопауза':'Surgical menopause',
+  'Если цикл есть: длина цикла и длительность менструации':'If you have a cycle: cycle length and period duration',
+  'Изменился ли цикл за 1–2 года?':'Has your cycle changed over 1–2 years?',
+  'Стал короче (<24 дней)':'Shorter (<24 days)','Стал длиннее (>35 дней)':'Longer (>35 days)','Пропуски циклов':'Skipped cycles','Более обильные выделения':'Heavier flow','Более скудные выделения':'Lighter flow','Межменструальные кровотечения':'Intermenstrual bleeding','Цикла нет (менопауза)':'No cycle (menopause)',
+  'Дата последней менструации (ПМД)':'Date of last menstrual period (LMP)',
+  'Беременности и роды? Укажите количество':'Pregnancies and births? Give the number',
+  'Гормональные контрацептивы или ЗГТ?':'Hormonal contraception or HRT?',
+  'КОК (таблетки)':'Combined pill','Гормональная спираль':'Hormonal IUD','Пластырь / гель / кольцо':'Patch / gel / ring','ЗГТ системная':'Systemic HRT','Местная гормональная терапия':'Local hormone therapy','Принимала ранее':'Used previously',
+  'Если принимаете ЗГТ — название, доза, длительность':'If on HRT — name, dose, duration',
+  'Выраженность приливов жара':'Severity of hot flashes',
+  'Вазомоторные и другие симптомы?':'Vasomotor and other symptoms?',
+  'Приливы жара днём':'Hot flashes during the day','Ознобы / перепады температуры':'Chills / temperature swings','Приливы сопровождаются тревогой':'Hot flashes with anxiety',
+  'Изменения в настроении и психоэмоциональном фоне?':'Changes in mood and emotional state?',
+  'Перепады настроения':'Mood swings','Тревожность (новая или усилилась)':'Anxiety (new or worsened)','Депрессивное состояние':'Depressed mood','Плаксивость':'Tearfulness','Сложности с концентрацией':'Difficulty concentrating','«Туман в голове»':'“Brain fog”',
+  'Когнитивные изменения?':'Cognitive changes?',
+  'Снижение памяти':'Memory decline','Замедленное мышление':'Slowed thinking',
+  'Урогенитальные симптомы?':'Urogenital symptoms?',
+  'Сухость и дискомфорт во влагалище':'Vaginal dryness and discomfort','Зуд / жжение':'Itching / burning','Болезненность при половом акте':'Pain during intercourse','Учащённое мочеиспускание':'Frequent urination','Недержание мочи (при кашле, смехе)':'Urinary leakage (cough, laugh)','Повторяющиеся инфекции МВП':'Recurrent UTIs',
+  'Изменения в распределении жировой ткани (живот, бёдра)?':'Changes in fat distribution (belly, hips)?',
+  'Изменилась ли реакция на физические нагрузки (восстановление, переносимость)?':'Has your response to exercise changed (recovery, tolerance)?',
+  'Гормональные показатели':'Hormone markers','ФСГ':'FSH','ЛГ':'LH','Эстрадиол (Е2)':'Estradiol (E2)','Прогестерон':'Progesterone','АМГ':'AMH',
+  'Андрогены':'Androgens','Тестостерон общий':'Total testosterone','Свободный тестостерон':'Free testosterone','ДГЭА-С':'DHEA-S','Пролактин':'Prolactin',
+  'Проводилась денситометрия (плотность костей)?':'Have you had a DEXA (bone density) scan?',
+  'Да — норма':'Yes — normal','Да — остеопения':'Yes — osteopenia','Да — остеопороз':'Yes — osteoporosis',
+  'Диагнозы: эндометриоз, миома, поликистоз яичников (СПКЯ), мастопатия?':'Diagnoses: endometriosis, fibroids, PCOS, mastopathy?',
+  'Когда последний раз: УЗИ малого таза, маммография, мазок Папаниколау?':'When last: pelvic ultrasound, mammography, Pap smear?',
+  // —— J ——
+  'Общий уровень витальности и «жизненного тонуса» за год':'Overall vitality and “life tone” over the past year',
+  'Симптомы дефицита тестостерона?':'Symptoms of low testosterone?',
+  'Эректильная дисфункция':'Erectile dysfunction','Снижение утренних эрекций':'Fewer morning erections','Уменьшение объёма яичек':'Reduced testicle size','Снижение мышечной массы и силы':'Loss of muscle mass and strength','Увеличение жировой ткани (особенно живот)':'Increased body fat (esp. belly)','Увеличение грудных желёз (гинекомастия)':'Breast enlargement (gynecomastia)',
+  'Раздражительность / вспыльчивость':'Irritability / short temper','Снижение мотивации':'Reduced motivation','Апатия, потеря интереса к жизни':'Apathy, loss of interest','Тревожность':'Anxiety','Снижение уверенности в себе':'Lower self-confidence',
+  'Приливы жара или ночная потливость?':'Hot flashes or night sweats?',
+  'Снижение конкурентного духа, целеустремлённости, инициативности?':'Reduced competitiveness, drive, initiative?',
+  'Изменилась переносимость нагрузок и скорость восстановления?':'Changed exercise tolerance and recovery speed?',
+  'Окружность талии?':'Waist circumference?','Повышенный риск: >94 см':'Elevated risk: >94 cm',
+  'Метаболический синдром или его компоненты?':'Metabolic syndrome or its components?',
+  'Абдоминальное ожирение (живот)':'Abdominal obesity (belly)','Высокие триглицериды':'High triglycerides','Низкий ЛПВП':'Low HDL','Высокое давление':'High blood pressure','Высокая глюкоза / преддиабет':'High glucose / prediabetes','Не диагностирован':'Not diagnosed',
+  'Симптомы нижних мочевыводящих путей / простаты?':'Lower urinary tract / prostate symptoms?',
+  'Учащённое мочеиспускание (ночью)':'Frequent urination (at night)','Слабая струя мочи':'Weak urine stream','Неполное опорожнение мочевого пузыря':'Incomplete bladder emptying','Жжение при мочеиспускании':'Burning on urination','Боль в промежности':'Perineal pain',
+  'Когда последний раз сдавали ПСА (PSA)? Результат':'When did you last test PSA? Result',
+  'Свободный тест-н':'Free testosterone','ГСПГ':'SHBG',
+  'Дополнительно':'Additional','Кортизол':'Cortisol',
+  'Препараты тестостерона или иная ГЗТ? (название, форма, доза, длительность)':'Testosterone or other HRT? (name, form, dose, duration)',
+  'Препараты для эректильной функции или фертильности?':'Medications for erectile function or fertility?',
+  // —— K ——
+  'Показатели (укажите значения и дату)':'Markers (give values and date)','B12':'B12','Фолат':'Folate','Железо':'Iron','Ферритин':'Ferritin',
+  'Цинк':'Zinc','Омега-3 индекс':'Omega-3 index','Гомоцистеин':'Homocysteine','СРБ (CRP)':'CRP',
+  'Общий анализ крови (ОАК): есть ли отклонения?':'Complete blood count (CBC): any abnormalities?',
+  'Симптомы дефицита нутриентов?':'Symptoms of nutrient deficiency?',
+  'Онемение / покалывание конечностей (B12)':'Numbness / tingling in limbs (B12)','Мышечные судороги (Mg, Ca)':'Muscle cramps (Mg, Ca)','Ломкость волос и ногтей (Fe, Zn, биотин)':'Brittle hair and nails (Fe, Zn, biotin)','Усталость / бледность (железо/B12)':'Fatigue / pallor (iron/B12)','Частые инфекции (Zn, D, A)':'Frequent infections (Zn, D, A)','Нет характерных симптомов':'No characteristic symptoms',
+  // —— L ——
+  'Курение':'Smoking','Никогда не курил(а)':'Never smoked','Бросил(а)':'Quit','Курю':'Currently smoke','Электронные сигареты / вейп':'E-cigarettes / vape',
+  'Уточнение (год отказа / сигарет в день)':'Details (year quit / cigarettes per day)',
+  'Алкоголь':'Alcohol','Не употребляю':'Don’t drink','Редко (праздники)':'Rarely (holidays)','1–3 бокала/нед':'1–3 drinks/wk','4–7 бокалов/нед':'4–7 drinks/wk','Более 7 бокалов/нед':'More than 7 drinks/wk',
+  'Работа (условия)':'Work (conditions)','Преимущественно сидячая':'Mostly sedentary','Физический труд':'Physical labor','Стрессовая / ненормированная':'Stressful / irregular hours','Ночные смены':'Night shifts','Удалённая / дома':'Remote / from home','Воздействие токсинов / химикатов':'Exposure to toxins / chemicals',
+  'Сколько времени проводите на открытом воздухе (солнечный свет)?':'How much time do you spend outdoors (sunlight)?',
+  'Менее 30 мин/день':'Less than 30 min/day','30–60 мин/день':'30–60 min/day','1–2 ч/день':'1–2 h/day','Более 2 ч/день':'More than 2 h/day',
+  'Устройства для мониторинга здоровья (умные часы, трекер)? Что отслеживаете?':'Health-monitoring devices (smartwatch, tracker)? What do you track?',
+  // —— M ——
+  'Главное препятствие для улучшения вашего здоровья?':'Main obstacle to improving your health?',
+  'Насколько готовы к изменению пищевых привычек?':'How ready are you to change eating habits?',
+  'Насколько готовы к изменению образа жизни (сон, активность, стресс)?':'How ready are you to change your lifestyle (sleep, activity, stress)?',
+  'Есть ли что-то важное о здоровье, не охваченное анкетой?':'Anything important about your health not covered here?',
+  'Какой результат через 3 месяца будет для вас показателем успеха?':'What result in 3 months would mean success for you?',
+  // —— подписи шкал ——
+  'очень плохое':'very poor','отличное':'excellent','полное истощение':'total exhaustion','высокая энергия':'high energy',
+  'стресса нет':'no stress','постоянный высокий':'constant high','нет':'none','очень сильные':'very severe',
+  'очень низкий':'very low','как в молодости':'like in youth','не готов(а)':'not ready','полностью готов(а)':'fully ready',
+}, es: {
+  'Анкета здоровья клиента':'Cuestionario de salud del cliente',
+  'Гормональный статус · ЖКТ · Метаболизм · Нутриентный статус · Образ жизни. Отвечайте честно — пустые поля можно пропустить.':'Estado hormonal · Digestivo · Metabolismo · Estado nutricional · Estilo de vida. Responda con sinceridad — puede dejar campos en blanco.',
+  'Отправить анкету':'Enviar cuestionario','из':'de',
+  'Анкета отправлена — спасибо! Нутрициолог свяжется с вами.':'Cuestionario enviado — ¡gracias! Su nutricionista se pondrá en contacto.',
+  'Не удалось отправить. Проверьте связь и попробуйте ещё раз.':'No se pudo enviar. Compruebe la conexión e inténtelo de nuevo.',
+  'Отправляем…':'Enviando…',
+  'День':'Día','Месяц':'Mes','Год':'Año',
+  'Январь':'Enero','Февраль':'Febrero','Март':'Marzo','Апрель':'Abril','Май':'Mayo','Июнь':'Junio','Июль':'Julio','Август':'Agosto','Сентябрь':'Septiembre','Октябрь':'Octubre','Ноябрь':'Noviembre','Декабрь':'Diciembre',
+  'Согласие на обработку данных (GDPR): подтверждаю достоверность сведений и даю согласие на их обработку специалистом Vía-L исключительно для нутрициологического консультирования.':'Consentimiento de tratamiento de datos (RGPD): confirmo que la información es veraz y autorizo su tratamiento por un especialista de Vía-L únicamente para el asesoramiento nutricional.',
+  'Черновой каркас · отправка пока показывает структуру (без сервера)':'Versión preliminar · el envío muestra la estructura por ahora (sin servidor)',
+  'СТРУКТУРА ДЛЯ НУТРИЦИОЛОГА (черновик, на сервер пока не уходит):':'ESTRUCTURA PARA EL NUTRICIONISTA (borrador, aún no se envía al servidor):',
+  'По данным анализов — впишите значение или оставьте пустым, если не знаете.':'Según los análisis — escriba el valor o déjelo en blanco si no lo sabe.',
+  'По данным анализов — оставьте пустым, если не знаете.':'Según los análisis — déjelo en blanco si no lo sabe.',
+  'Основные данные':'Datos básicos','Общий анамнез и образ жизни':'Antecedentes generales y estilo de vida',
+  'A1. Основные данные и цели':'A1. Datos clave y objetivos','A2. Анамнез здоровья':'A2. Historial de salud',
+  'Питание и метаболизм':'Nutrición y metabolismo','B1. Пищевые привычки':'B1. Hábitos alimentarios','B2. Метаболические маркеры (по анализам)':'B2. Marcadores metabólicos (análisis)',
+  'Желудочно-кишечный тракт':'Tracto gastrointestinal','C1. Пищеварение и симптомы':'C1. Digestión y síntomas','C2. Связь с питанием и образом жизни':'C2. Relación con dieta y estilo de vida',
+  'Энергия, сон и стресс-реакция':'Energía, sueño y respuesta al estrés','D1. Уровень энергии':'D1. Nivel de energía','D2. Сон':'D2. Sueño','D3. Стресс и психоэмоциональное состояние':'D3. Estrés y estado psicoemocional',
+  'Физическая активность и мышечная функция':'Actividad física y función muscular','Кожа, волосы, ногти':'Piel, cabello, uñas','Маркеры нутриентного статуса':'Marcadores del estado nutricional',
+  'Щитовидная железа и надпочечники':'Tiroides y glándulas suprarrenales','Сердечно-сосудистая и костная системы':'Sistemas cardiovascular y óseo',
+  'Только для женщин: гормональный статус и перименопауза':'Solo para mujeres: estado hormonal y perimenopausia',
+  'Заполняется только клиентами женского пола. Вся информация строго конфиденциальна.':'Lo completan solo las clientas. Toda la información es estrictamente confidencial.',
+  'I1. Менструальный цикл и репродуктивный статус':'I1. Ciclo menstrual y estado reproductivo','I2. Симптомы перименопаузы / менопаузы':'I2. Síntomas de perimenopausia / menopausia','I3. Гормональные анализы':'I3. Análisis hormonales','I4. Гинекологический анамнез':'I4. Antecedentes ginecológicos',
+  'Только для мужчин: гормональный статус и андропауза':'Solo para hombres: estado hormonal y andropausia',
+  'Заполняется только клиентами мужского пола. Вся информация строго конфиденциальна.':'Lo completan solo los clientes varones. Toda la información es estrictamente confidencial.',
+  'J1. Симптомы андропаузы (снижения тестостерона)':'J1. Síntomas de andropausia (testosterona baja)','J2. Метаболические и сердечно-сосудистые риски (35+)':'J2. Riesgos metabólicos y cardiovasculares (35+)','J3. Гормональные анализы':'J3. Análisis hormonales',
+  'Нутриентный статус и лабораторные данные':'Estado nutricional y datos de laboratorio','K1. Ключевые нутриенты':'K1. Nutrientes clave',
+  'Образ жизни: вредные привычки и среда':'Estilo de vida: hábitos nocivos y entorno','Дополнительная информация и готовность к изменениям':'Información adicional y disposición al cambio',
+  'Да':'Sí','Нет':'No','Иногда / не уверен(а)':'A veces / no estoy seguro(a)','Без изменений':'Sin cambios','Нет изменений':'Sin cambios','Не знаю':'No lo sé','Другое':'Otro','Нет признаков':'Sin signos','Нет симптомов':'Sin síntomas','Нет нарушений':'Ninguno',
+  'дд.мм.гггг':'dd.mm.aaaa',
+  'Дата заполнения':'Fecha de cumplimentación','Имя и фамилия':'Nombre y apellidos','Дата рождения / возраст':'Fecha de nacimiento / edad','Пол':'Sexo','Женский':'Femenino','Мужской':'Masculino','Контакт (e-mail / телефон)':'Contacto (e-mail / teléfono)','Специалист Vía-L':'Especialista de Vía-L',
+  'Каков ваш рост и текущий вес?':'¿Cuál es su estatura y peso actual?','Рост, см':'Estatura, cm','Вес, кг':'Peso, kg',
+  'Как изменился ваш вес за последние 12 месяцев?':'¿Cómo ha cambiado su peso en los últimos 12 meses?','Снизился более чем на 5 кг':'Bajó más de 5 kg','Снизился на 1–5 кг':'Bajó 1–5 kg','Стабильный':'Estable','Вырос на 1–5 кг':'Subió 1–5 kg','Вырос более чем на 5 кг':'Subió más de 5 kg',
+  'Какова ваша основная цель при работе со специалистом Vía-L?':'¿Cuál es su objetivo principal al trabajar con un especialista de Vía-L?',
+  'Какие три показателя качества жизни вам наиболее важно улучшить?':'¿Qué tres aspectos de la calidad de vida le importa más mejorar?',
+  'Были ли попытки изменить питание или образ жизни ранее? Что сработало / не сработало?':'¿Ha intentado cambiar su dieta o estilo de vida antes? ¿Qué funcionó / no funcionó?',
+  'Перечислите все подтверждённые диагнозы и хронические заболевания':'Enumere todos los diagnósticos confirmados y enfermedades crónicas',
+  'Текущие лекарственные препараты (название, доза, длительность)':'Medicamentos actuales (nombre, dosis, duración)','Принимаемые БАД, витамины, спортивное питание':'Suplementos, vitaminas, nutrición deportiva que toma',
+  'Аллергии или непереносимость (пищевые, лекарственные)':'Alergias o intolerancias (alimentarias, medicamentosas)','Операции или госпитализации за последние 5 лет (год и причина)':'Cirugías u hospitalizaciones en los últimos 5 años (año y motivo)',
+  'Семейный анамнез: заболевания у близких родственников':'Antecedentes familiares: enfermedades en parientes cercanos',
+  'Сердечно-сосудистые заболевания':'Enfermedad cardiovascular','Сахарный диабет 2 типа':'Diabetes tipo 2','Онкологические заболевания':'Cáncer','Остеопороз':'Osteoporosis','Аутоиммунные заболевания':'Enfermedad autoinmune','Деменция / Альцгеймер':'Demencia / Alzheimer','Щитовидная железа':'Enfermedad tiroidea','Ожирение':'Obesidad',
+  'Проходили ли комплексные лабораторные обследования за 12 месяцев?':'¿Se ha hecho análisis de laboratorio completos en los últimos 12 meses?','Если да — дата и основные результаты (или приложите копию)':'Si es así — fecha y resultados clave (o adjunte una copia)',
+  'Сколько раз в день вы едите (включая перекусы)?':'¿Cuántas veces come al día (incl. tentempiés)?','1–2 раза':'1–2 veces','3 раза':'3 veces','4–5 раз':'4–5 veces','6 и более':'6 o más',
+  'Опишите типичный день питания (завтрак, обед, ужин, перекусы)':'Describa un día típico de comidas (desayuno, almuerzo, cena, tentempiés)',
+  'Есть ли в рационе намеренные ограничения?':'¿Sigue alguna restricción dietética intencionada?','Вегетарианство':'Vegetariana','Веганство':'Vegana','Безглютеновое':'Sin gluten','Безлактозное':'Sin lactosa','Низкоуглеводное / кето':'Baja en carbohidratos / keto','Интервальное голодание':'Ayuno intermitente','Халяль / Кошер':'Halal / Kosher',
+  'Как часто вы употребляете следующие продукты?':'¿Con qué frecuencia consume los siguientes alimentos?','Красное мясо (>3 р/нед)':'Carne roja (>3×/sem)','Рыба и морепродукты (>2 р/нед)':'Pescado y marisco (>2×/sem)','Молочные продукты ежедневно':'Lácteos a diario','Яйца ежедневно':'Huevos a diario','Ультрапереработанные продукты (>3 р/нед)':'Ultraprocesados (>3×/sem)','Сладкое / кондитерское ежедневно':'Dulces / bollería a diario','Алкоголь (>3 р/нед)':'Alcohol (>3×/sem)','Овощи/зелень каждый приём пищи':'Verduras en cada comida',
+  'Сколько чистой воды вы выпиваете в день?':'¿Cuánta agua pura bebe al día?','Менее 1 л':'Menos de 1 L','1–1,5 л':'1–1,5 L','1,5–2 л':'1,5–2 L','Более 2 л':'Más de 2 L',
+  'Отмечаете ли переедание, бесконтрольное поедание, эмоциональный аппетит?':'¿Nota atracones, comer sin control o apetito emocional?',
+  'Как изменился аппетит за последние 6–12 месяцев?':'¿Cómo ha cambiado su apetito en los últimos 6–12 meses?','Увеличился':'Aumentó','Снизился':'Disminuyó','Не изменился':'Sin cambios','Нестабильный / скачки':'Inestable / fluctuante',
+  'Есть ли тяга к определённым продуктам (сладкое, солёное, жирное, кофеин)?':'¿Tiene antojos de ciertos alimentos (dulce, salado, graso, cafeína)?',
+  'Углеводный обмен':'Metabolismo de carbohidratos','Глюкоза натощак':'Glucosa en ayunas','Инсулин натощак':'Insulina en ayunas','Липидный профиль':'Perfil lipídico','Общий холестерин':'Colesterol total','ЛПНП':'LDL','ЛПВП':'HDL','Триглицериды':'Triglicéridos',
+  'Есть ли признаки инсулинорезистентности?':'¿Hay signos de resistencia a la insulina?','Сложно похудеть даже при диете':'Difícil bajar de peso incluso con dieta','Тёмные пятна в складках кожи':'Manchas oscuras en pliegues de la piel','Сильная сонливость после еды':'Mucha somnolencia tras comer','Постоянная тяга к сладкому':'Antojo constante de dulce',
+  'Как вы оцениваете своё пищеварение в целом?':'¿Cómo califica su digestión en general?','Отмечаете ли следующие симптомы?':'¿Presenta los siguientes síntomas?',
+  'Вздутие живота':'Hinchazón abdominal','Метеоризм (газообразование)':'Flatulencia (gases)','Изжога / рефлюкс':'Acidez / reflujo','Тошнота':'Náuseas','Боли / спазмы в животе':'Dolor / cólicos abdominales','Диарея':'Diarrea','Запоры':'Estreñimiento','Чередование диареи и запоров':'Alternancia de diarrea y estreñimiento',
+  'Как часто у вас стул?':'¿Con qué frecuencia evacúa?','1–3 раза/день':'1–3×/día','1 раз в день':'Una vez al día','1 раз в 2–3 дня':'Una vez cada 2–3 días','Реже 1 раза в 3 дня':'Menos de una vez cada 3 días',
+  'Характер стула по Бристольской шкале?':'¿Tipo de heces según la escala de Bristol?','Тип 1–2 (твёрдый, «овечий»)':'Tipo 1–2 (duro, “bolitas”)','Тип 3–4 (норма)':'Tipo 3–4 (normal)','Тип 5–6 (мягкий)':'Tipo 5–6 (blando)','Тип 7 (водянистый)':'Tipo 7 (líquido)',
+  'Есть ли непереваренная пища в стуле, слизь или кровь?':'¿Hay alimentos sin digerir, moco o sangre en las heces?','Диагнозы: СРК, ГЭРБ, гастрит, язва, болезнь Крона, целиакия, дисбактериоз?':'Diagnósticos: SII, ERGE, gastritis, úlcera, Crohn, celiaquía, disbiosis?','Принимали ли антибиотики за последние 12 месяцев?':'¿Ha tomado antibióticos en los últimos 12 meses?',
+  'Ухудшение пищеварения после определённых продуктов? Каких?':'¿Empeora la digestión tras ciertos alimentos? ¿Cuáles?','Влияет ли стресс на работу кишечника?':'¿El estrés afecta a su intestino?','Употребляете ли ферментированные продукты (кефир, йогурт, квашеная капуста, кимчи)?':'¿Consume alimentos fermentados (kéfir, yogur, chucrut, kimchi)?','Ежедневно':'A diario','3–4 раза/нед':'3–4×/sem','Редко':'Rara vez','Никогда':'Nunca','Принимаете/принимали пробиотики? Препарат и длительность':'¿Toma/tomó probióticos? Producto y duración',
+  'Средний уровень энергии в течение дня':'Nivel medio de energía durante el día','В какое время суток энергия наиболее низкая?':'¿En qué momento del día baja más su energía?','Утром при пробуждении':'Por la mañana al despertar','В первой половине дня':'En la primera mitad del día','После обеда (13–15 ч)':'Después de comer (13–15 h)','Вечером':'Por la noche','Равномерно низкий':'Uniformemente baja',
+  'Хроническая усталость, не проходящая после отдыха?':'¿Fatiga crónica que no mejora con el descanso?','Упадок сил после еды?':'¿Bajón de energía tras comer?',
+  'Сколько часов вы спите в среднем?':'¿Cuántas horas duerme de media?','Менее 5 ч':'Menos de 5 h','5–6 ч':'5–6 h','7–8 ч':'7–8 h','Более 9 ч':'Más de 9 h','Как вы оцениваете качество сна?':'¿Cómo califica la calidad de su sueño?','Нарушения сна?':'¿Alteraciones del sueño?',
+  'Трудности с засыпанием':'Dificultad para conciliar el sueño','Частые пробуждения ночью':'Despertares frecuentes por la noche','Раннее пробуждение (не заснуть снова)':'Despertar temprano (sin volver a dormir)','Поверхностный сон':'Sueño ligero','Апноэ (или подозрение)':'Apnea (o sospecha)','Ночная потливость':'Sudores nocturnos','Дневная сонливость несмотря на сон':'Somnolencia diurna a pesar de dormir',
+  'Регулярно ли ложитесь и встаёте в одно время?':'¿Se acuesta y levanta a horas regulares?','Уровень хронического стресса в жизни':'Nivel de estrés crónico en su vida','Как проявляется стресс в организме?':'¿Cómo se manifiesta el estrés en su cuerpo?',
+  'Учащённое сердцебиение':'Palpitaciones','Мышечное напряжение / боли':'Tensión / dolor muscular','Раздражительность':'Irritabilidad','Тревога / панические атаки':'Ansiedad / ataques de pánico','Нарушения сна':'Alteraciones del sueño','Переедание или потеря аппетита':'Comer en exceso o pérdida de apetito','Желудочно-кишечные расстройства':'Molestias digestivas','Снижение либидо':'Disminución de la libido',
+  'Практикуете ли методы управления стрессом?':'¿Practica métodos de manejo del estrés?','Медитация / дыхательные практики':'Meditación / respiración','Йога / растяжка':'Yoga / estiramientos','Прогулки на природе':'Paseos en la naturaleza','Психотерапия':'Psicoterapia',
+  'Какова ваша текущая физическая активность?':'¿Cuál es su actividad física actual?','Сидячий образ жизни':'Sedentaria','Лёгкая активность (прогулки)':'Ligera (caminar)','Умеренная (3–4 р/нед)':'Moderada (3–4×/sem)','Высокая (5+ р/нед)':'Alta (5+×/sem)','Профессиональный спорт':'Deporte profesional',
+  'Какие виды тренировок вы выполняете?':'¿Qué tipos de entrenamiento realiza?','Силовые тренировки':'Entrenamiento de fuerza','Кардио (бег, велосипед, плавание)':'Cardio (correr, bici, natación)','HIIT / интервальные':'HIIT / intervalos','Йога / пилатес':'Yoga / pilates','Танцы / групповые классы':'Baile / clases grupales','Не тренируюсь':'No entreno',
+  'Снижение мышечной силы или выносливости за 1–2 года?':'¿Pérdida de fuerza o resistencia muscular en 1–2 años?','Боли в суставах, мышцах или ограничения подвижности?':'¿Dolor articular o muscular, o movilidad limitada?','Данные о составе тела (% жира, мышечная масса)?':'¿Datos de composición corporal (% grasa, masa muscular)?',
+  'Изменения кожи за последние 1–2 года?':'¿Cambios en la piel en los últimos 1–2 años?','Сухость / шелушение':'Sequedad / descamación','Акне / высыпания':'Acné / brotes','Снижение упругости / дряблость':'Pérdida de firmeza / flacidez','Пигментация':'Pigmentación','Медленное заживление ран':'Cicatrización lenta',
+  'Состояние волос':'Estado del cabello','Выпадение усилилось':'Mayor caída','Истончение':'Adelgazamiento','Сухость / ломкость':'Sequedad / fragilidad','Изменение текстуры':'Cambio de textura',
+  'Состояние ногтей':'Estado de las uñas','Ломкие':'Quebradizas','Расслаиваются':'Se descaman','Белые пятна':'Manchas blancas','Медленный рост':'Crecimiento lento',
+  'Поставленный диагноз по щитовидной железе?':'¿Diagnóstico tiroideo establecido?','Гипотиреоз':'Hipotiroidismo','Гипертиреоз':'Hipertiroidismo','Аутоиммунный тиреоидит (Хашимото)':'Tiroiditis autoinmune (Hashimoto)','Узловой зоб':'Bocio nodular','Не обследовался(ась)':'Sin estudiar',
+  'Показатели щитовидной железы':'Marcadores tiroideos','ТТГ':'TSH','Т3 свободный':'T3 libre','Т4 свободный':'T4 libre','АТ-ТПО':'Anti-TPO','Дата':'Fecha',
+  'Симптомы нарушения работы щитовидной железы?':'¿Síntomas de disfunción tiroidea?','Постоянная зябкость':'Sensación constante de frío','Чувство жара / потливость':'Calor / sudoración','Сухая кожа и запоры (гипо)':'Piel seca y estreñimiento (hipo)','Учащённое сердцебиение (гипер)':'Palpitaciones (hiper)','Необъяснимый набор или потеря веса':'Aumento o pérdida de peso inexplicables','Выраженная усталость':'Fatiga marcada','Выпадение волос, в т.ч. бровей':'Caída del cabello, incl. cejas',
+  'Признаки хронической дисфункции надпочечников?':'¿Signos de disfunción suprarrenal crónica?','Утренняя разбитость (не встать)':'Agotamiento matinal (no poder levantarse)','Пик энергии после 21:00':'Pico de energía después de las 21:00','Тяга к солёному':'Antojo de sal','Непереносимость стресса':'Intolerancia al estrés','Частые инфекционные заболевания':'Infecciones frecuentes','Низкое давление / головокружение':'Presión baja / mareos',
+  'Известен ли уровень кортизола (утренний или суточный профиль)?':'¿Conoce su cortisol (matinal o perfil diario)?',
+  'Типичное артериальное давление':'Presión arterial habitual','Систолическое':'Sistólica','Диастолическое':'Diastólica','Симптомы со стороны сердца?':'¿Síntomas cardíacos?','Нерегулярный ритм':'Ritmo irregular','Ощущение давления в груди':'Presión en el pecho','Одышка при нагрузке':'Falta de aire al esfuerzo','Отёки ног':'Hinchazón de piernas',
+  'Диагностирован остеопороз или остеопения?':'¿Diagnóstico de osteoporosis u osteopenia?','Переломы при незначительных травмах?':'¿Fracturas por traumatismos leves?','Показатели':'Marcadores','Витамин D (25-OH)':'Vitamina D (25-OH)','Кальций':'Calcio','Магний':'Magnesio',
+  'Текущий репродуктивный статус?':'¿Estado reproductivo actual?','Регулярный цикл':'Ciclo regular','Нерегулярный цикл':'Ciclo irregular','Перименопауза':'Perimenopausia','Менопауза (12+ мес без менструаций)':'Menopausia (12+ meses sin regla)','Постменопауза':'Posmenopausia','Хирургическая менопауза':'Menopausia quirúrgica',
+  'Если цикл есть: длина цикла и длительность менструации':'Si tiene ciclo: duración del ciclo y de la regla','Изменился ли цикл за 1–2 года?':'¿Ha cambiado su ciclo en 1–2 años?','Стал короче (<24 дней)':'Más corto (<24 días)','Стал длиннее (>35 дней)':'Más largo (>35 días)','Пропуски циклов':'Ciclos ausentes','Более обильные выделения':'Sangrado más abundante','Более скудные выделения':'Sangrado más escaso','Межменструальные кровотечения':'Sangrado intermenstrual','Цикла нет (менопауза)':'Sin ciclo (menopausia)',
+  'Дата последней менструации (ПМД)':'Fecha de la última regla (FUR)','Беременности и роды? Укажите количество':'¿Embarazos y partos? Indique la cantidad','Гормональные контрацептивы или ЗГТ?':'¿Anticonceptivos hormonales o THS?','КОК (таблетки)':'Píldora combinada','Гормональная спираль':'DIU hormonal','Пластырь / гель / кольцо':'Parche / gel / anillo','ЗГТ системная':'THS sistémica','Местная гормональная терапия':'Terapia hormonal local','Принимала ранее':'Tomé anteriormente','Если принимаете ЗГТ — название, доза, длительность':'Si toma THS — nombre, dosis, duración',
+  'Выраженность приливов жара':'Intensidad de los sofocos','Вазомоторные и другие симптомы?':'¿Síntomas vasomotores y otros?','Приливы жара днём':'Sofocos durante el día','Ознобы / перепады температуры':'Escalofríos / cambios de temperatura','Приливы сопровождаются тревогой':'Sofocos con ansiedad',
+  'Изменения в настроении и психоэмоциональном фоне?':'¿Cambios en el ánimo y el estado emocional?','Перепады настроения':'Cambios de humor','Тревожность (новая или усилилась)':'Ansiedad (nueva o aumentada)','Депрессивное состояние':'Estado depresivo','Плаксивость':'Llanto fácil','Сложности с концентрацией':'Dificultad para concentrarse','«Туман в голове»':'“Niebla mental”',
+  'Когнитивные изменения?':'¿Cambios cognitivos?','Снижение памяти':'Pérdida de memoria','Замедленное мышление':'Pensamiento lento',
+  'Урогенитальные симптомы?':'¿Síntomas urogenitales?','Сухость и дискомфорт во влагалище':'Sequedad y molestia vaginal','Зуд / жжение':'Picor / ardor','Болезненность при половом акте':'Dolor en las relaciones','Учащённое мочеиспускание':'Micción frecuente','Недержание мочи (при кашле, смехе)':'Incontinencia urinaria (al toser, reír)','Повторяющиеся инфекции МВП':'Infecciones urinarias recurrentes',
+  'Изменения в распределении жировой ткани (живот, бёдра)?':'¿Cambios en la distribución de la grasa (abdomen, caderas)?','Изменилась ли реакция на физические нагрузки (восстановление, переносимость)?':'¿Ha cambiado su respuesta al ejercicio (recuperación, tolerancia)?',
+  'Гормональные показатели':'Marcadores hormonales','ФСГ':'FSH','ЛГ':'LH','Эстрадиол (Е2)':'Estradiol (E2)','Прогестерон':'Progesterona','АМГ':'AMH','Андрогены':'Andrógenos','Тестостерон общий':'Testosterona total','Свободный тестостерон':'Testosterona libre','ДГЭА-С':'DHEA-S','Пролактин':'Prolactina',
+  'Проводилась денситометрия (плотность костей)?':'¿Se ha hecho una densitometría (densidad ósea)?','Да — норма':'Sí — normal','Да — остеопения':'Sí — osteopenia','Да — остеопороз':'Sí — osteoporosis',
+  'Диагнозы: эндометриоз, миома, поликистоз яичников (СПКЯ), мастопатия?':'Diagnósticos: endometriosis, miomas, SOP, mastopatía?','Когда последний раз: УЗИ малого таза, маммография, мазок Папаниколау?':'¿Última vez: ecografía pélvica, mamografía, citología (Papanicolaou)?',
+  'Общий уровень витальности и «жизненного тонуса» за год':'Nivel general de vitalidad y “tono vital” durante el último año','Симптомы дефицита тестостерона?':'¿Síntomas de testosterona baja?','Эректильная дисфункция':'Disfunción eréctil','Снижение утренних эрекций':'Menos erecciones matinales','Уменьшение объёма яичек':'Reducción del tamaño testicular','Снижение мышечной массы и силы':'Pérdida de masa y fuerza muscular','Увеличение жировой ткани (особенно живот)':'Aumento de grasa corporal (sobre todo abdomen)','Увеличение грудных желёз (гинекомастия)':'Aumento mamario (ginecomastia)',
+  'Раздражительность / вспыльчивость':'Irritabilidad / mal genio','Снижение мотивации':'Menor motivación','Апатия, потеря интереса к жизни':'Apatía, pérdida de interés','Тревожность':'Ansiedad','Снижение уверенности в себе':'Menor confianza en sí mismo',
+  'Приливы жара или ночная потливость?':'¿Sofocos o sudores nocturnos?','Снижение конкурентного духа, целеустремлённости, инициативности?':'¿Menor espíritu competitivo, determinación, iniciativa?','Изменилась переносимость нагрузок и скорость восстановления?':'¿Ha cambiado la tolerancia al ejercicio y la recuperación?',
+  'Окружность талии?':'¿Circunferencia de cintura?','Повышенный риск: >94 см':'Riesgo elevado: >94 cm','Метаболический синдром или его компоненты?':'¿Síndrome metabólico o sus componentes?','Абдоминальное ожирение (живот)':'Obesidad abdominal','Высокие триглицериды':'Triglicéridos altos','Низкий ЛПВП':'HDL bajo','Высокое давление':'Presión alta','Высокая глюкоза / преддиабет':'Glucosa alta / prediabetes','Не диагностирован':'No diagnosticado',
+  'Симптомы нижних мочевыводящих путей / простаты?':'¿Síntomas del tracto urinario inferior / próstata?','Учащённое мочеиспускание (ночью)':'Micción frecuente (nocturna)','Слабая струя мочи':'Chorro urinario débil','Неполное опорожнение мочевого пузыря':'Vaciado incompleto de la vejiga','Жжение при мочеиспускании':'Ardor al orinar','Боль в промежности':'Dolor perineal',
+  'Когда последний раз сдавали ПСА (PSA)? Результат':'¿Cuándo se hizo el PSA por última vez? Resultado','Свободный тест-н':'Testosterona libre','ГСПГ':'SHBG','Дополнительно':'Adicional','Кортизол':'Cortisol','Препараты тестостерона или иная ГЗТ? (название, форма, доза, длительность)':'¿Testosterona u otra THS? (nombre, forma, dosis, duración)','Препараты для эректильной функции или фертильности?':'¿Medicamentos para la función eréctil o la fertilidad?',
+  'Показатели (укажите значения и дату)':'Marcadores (indique valores y fecha)','B12':'B12','Фолат':'Folato','Железо':'Hierro','Ферритин':'Ferritina','Цинк':'Zinc','Омега-3 индекс':'Índice omega-3','Гомоцистеин':'Homocisteína','СРБ (CRP)':'PCR (CRP)','Общий анализ крови (ОАК): есть ли отклонения?':'Hemograma completo: ¿hay alteraciones?',
+  'Симптомы дефицита нутриентов?':'¿Síntomas de carencia de nutrientes?','Онемение / покалывание конечностей (B12)':'Entumecimiento / hormigueo en extremidades (B12)','Мышечные судороги (Mg, Ca)':'Calambres musculares (Mg, Ca)','Ломкость волос и ногтей (Fe, Zn, биотин)':'Cabello y uñas frágiles (Fe, Zn, biotina)','Усталость / бледность (железо/B12)':'Fatiga / palidez (hierro/B12)','Частые инфекции (Zn, D, A)':'Infecciones frecuentes (Zn, D, A)','Нет характерных симптомов':'Sin síntomas característicos',
+  'Курение':'Tabaquismo','Никогда не курил(а)':'Nunca he fumado','Бросил(а)':'Lo dejé','Курю':'Fumo actualmente','Электронные сигареты / вейп':'Cigarrillos electrónicos / vapeo','Уточнение (год отказа / сигарет в день)':'Detalles (año que lo dejó / cigarrillos al día)',
+  'Алкоголь':'Alcohol','Не употребляю':'No bebo','Редко (праздники)':'Rara vez (fiestas)','1–3 бокала/нед':'1–3 copas/sem','4–7 бокалов/нед':'4–7 copas/sem','Более 7 бокалов/нед':'Más de 7 copas/sem',
+  'Работа (условия)':'Trabajo (condiciones)','Преимущественно сидячая':'Mayormente sedentario','Физический труд':'Trabajo físico','Стрессовая / ненормированная':'Estresante / horario irregular','Ночные смены':'Turnos nocturnos','Удалённая / дома':'Remoto / desde casa','Воздействие токсинов / химикатов':'Exposición a tóxicos / químicos',
+  'Сколько времени проводите на открытом воздухе (солнечный свет)?':'¿Cuánto tiempo pasa al aire libre (luz solar)?','Менее 30 мин/день':'Menos de 30 min/día','30–60 мин/день':'30–60 min/día','1–2 ч/день':'1–2 h/día','Более 2 ч/день':'Más de 2 h/día','Устройства для мониторинга здоровья (умные часы, трекер)? Что отслеживаете?':'¿Dispositivos de monitoreo de salud (reloj inteligente, pulsera)? ¿Qué controla?',
+  'Главное препятствие для улучшения вашего здоровья?':'¿Cuál es el principal obstáculo para mejorar su salud?','Насколько готовы к изменению пищевых привычек?':'¿Cuán dispuesto(a) está a cambiar sus hábitos alimentarios?','Насколько готовы к изменению образа жизни (сон, активность, стресс)?':'¿Cuán dispuesto(a) está a cambiar su estilo de vida (sueño, actividad, estrés)?','Есть ли что-то важное о здоровье, не охваченное анкетой?':'¿Hay algo importante sobre su salud que no se haya cubierto aquí?','Какой результат через 3 месяца будет для вас показателем успеха?':'¿Qué resultado en 3 meses sería para usted señal de éxito?',
+  'очень плохое':'muy mala','отличное':'excelente','полное истощение':'agotamiento total','высокая энергия':'mucha energía','стресса нет':'sin estrés','постоянный высокий':'constante alto','нет':'ninguno','очень сильные':'muy intensos','очень низкий':'muy bajo','как в молодости':'como de joven','не готов(а)':'nada dispuesto(a)','полностью готов(а)':'totalmente dispuesto(a)',
+}, uk: {
+  'Анкета здоровья клиента':'Анкета здоров’я клієнта',
+  'Гормональный статус · ЖКТ · Метаболизм · Нутриентный статус · Образ жизни. Отвечайте честно — пустые поля можно пропустить.':'Гормональний статус · ШКТ · Метаболізм · Нутрієнтний статус · Спосіб життя. Відповідайте чесно — порожні поля можна пропустити.',
+  'Отправить анкету':'Надіслати анкету','из':'з',
+  'Анкета отправлена — спасибо! Нутрициолог свяжется с вами.':'Анкету надіслано — дякуємо! Нутриціолог зв’яжеться з вами.',
+  'Не удалось отправить. Проверьте связь и попробуйте ещё раз.':'Не вдалося надіслати. Перевірте зв’язок і спробуйте ще раз.',
+  'Отправляем…':'Надсилаємо…',
+  'День':'День','Месяц':'Місяць','Год':'Рік',
+  'Январь':'Січень','Февраль':'Лютий','Март':'Березень','Апрель':'Квітень','Май':'Травень','Июнь':'Червень','Июль':'Липень','Август':'Серпень','Сентябрь':'Вересень','Октябрь':'Жовтень','Ноябрь':'Листопад','Декабрь':'Грудень',
+  'Согласие на обработку данных (GDPR): подтверждаю достоверность сведений и даю согласие на их обработку специалистом Vía-L исключительно для нутрициологического консультирования.':'Згода на обробку даних (GDPR): підтверджую достовірність відомостей і даю згоду на їх обробку фахівцем Vía-L виключно для нутриціологічного консультування.',
+  'Черновой каркас · отправка пока показывает структуру (без сервера)':'Чорновий каркас · надсилання поки що показує структуру (без сервера)',
+  'СТРУКТУРА ДЛЯ НУТРИЦИОЛОГА (черновик, на сервер пока не уходит):':'СТРУКТУРА ДЛЯ НУТРИЦІОЛОГА (чернетка, на сервер поки не надсилається):',
+  'По данным анализов — впишите значение или оставьте пустым, если не знаете.':'За даними аналізів — впишіть значення або залиште порожнім, якщо не знаєте.',
+  'По данным анализов — оставьте пустым, если не знаете.':'За даними аналізів — залиште порожнім, якщо не знаєте.',
+  'Основные данные':'Основні дані','Общий анамнез и образ жизни':'Загальний анамнез і спосіб життя','A1. Основные данные и цели':'A1. Основні дані та цілі','A2. Анамнез здоровья':'A2. Анамнез здоров’я',
+  'Питание и метаболизм':'Харчування та метаболізм','B1. Пищевые привычки':'B1. Харчові звички','B2. Метаболические маркеры (по анализам)':'B2. Метаболічні маркери (за аналізами)',
+  'Желудочно-кишечный тракт':'Шлунково-кишковий тракт','C1. Пищеварение и симптомы':'C1. Травлення та симптоми','C2. Связь с питанием и образом жизни':'C2. Зв’язок із харчуванням і способом життя',
+  'Энергия, сон и стресс-реакция':'Енергія, сон і стрес-реакція','D1. Уровень энергии':'D1. Рівень енергії','D2. Сон':'D2. Сон','D3. Стресс и психоэмоциональное состояние':'D3. Стрес і психоемоційний стан',
+  'Физическая активность и мышечная функция':'Фізична активність і м’язова функція','Кожа, волосы, ногти':'Шкіра, волосся, нігті','Маркеры нутриентного статуса':'Маркери нутрієнтного статусу',
+  'Щитовидная железа и надпочечники':'Щитоподібна залоза та надниркові залози','Сердечно-сосудистая и костная системы':'Серцево-судинна та кісткова системи',
+  'Только для женщин: гормональный статус и перименопауза':'Лише для жінок: гормональний статус і перименопауза',
+  'Заполняется только клиентами женского пола. Вся информация строго конфиденциальна.':'Заповнюється лише клієнтками. Уся інформація суворо конфіденційна.',
+  'I1. Менструальный цикл и репродуктивный статус':'I1. Менструальний цикл і репродуктивний статус','I2. Симптомы перименопаузы / менопаузы':'I2. Симптоми перименопаузи / менопаузи','I3. Гормональные анализы':'I3. Гормональні аналізи','I4. Гинекологический анамнез':'I4. Гінекологічний анамнез',
+  'Только для мужчин: гормональный статус и андропауза':'Лише для чоловіків: гормональний статус і андропауза',
+  'Заполняется только клиентами мужского пола. Вся информация строго конфиденциальна.':'Заповнюється лише клієнтами-чоловіками. Уся інформація суворо конфіденційна.',
+  'J1. Симптомы андропаузы (снижения тестостерона)':'J1. Симптоми андропаузи (зниження тестостерону)','J2. Метаболические и сердечно-сосудистые риски (35+)':'J2. Метаболічні та серцево-судинні ризики (35+)','J3. Гормональные анализы':'J3. Гормональні аналізи',
+  'Нутриентный статус и лабораторные данные':'Нутрієнтний статус і лабораторні дані','K1. Ключевые нутриенты':'K1. Ключові нутрієнти',
+  'Образ жизни: вредные привычки и среда':'Спосіб життя: шкідливі звички та середовище','Дополнительная информация и готовность к изменениям':'Додаткова інформація та готовність до змін',
+  'Да':'Так','Нет':'Ні','Иногда / не уверен(а)':'Іноді / не впевнений(а)','Без изменений':'Без змін','Нет изменений':'Без змін','Не знаю':'Не знаю','Другое':'Інше','Нет признаков':'Немає ознак','Нет симптомов':'Немає симптомів','Нет нарушений':'Немає',
+  'дд.мм.гггг':'дд.мм.рррр',
+  'Дата заполнения':'Дата заповнення','Имя и фамилия':'Ім’я та прізвище','Дата рождения / возраст':'Дата народження / вік','Пол':'Стать','Женский':'Жіноча','Мужской':'Чоловіча','Контакт (e-mail / телефон)':'Контакт (e-mail / телефон)','Специалист Vía-L':'Фахівець Vía-L',
+  'Каков ваш рост и текущий вес?':'Який ваш зріст і поточна вага?','Рост, см':'Зріст, см','Вес, кг':'Вага, кг',
+  'Как изменился ваш вес за последние 12 месяцев?':'Як змінилася ваша вага за останні 12 місяців?','Снизился более чем на 5 кг':'Зменшилася більш ніж на 5 кг','Снизился на 1–5 кг':'Зменшилася на 1–5 кг','Стабильный':'Стабільна','Вырос на 1–5 кг':'Зросла на 1–5 кг','Вырос более чем на 5 кг':'Зросла більш ніж на 5 кг',
+  'Какова ваша основная цель при работе со специалистом Vía-L?':'Яка ваша основна мета у співпраці з фахівцем Vía-L?',
+  'Какие три показателя качества жизни вам наиболее важно улучшить?':'Які три показники якості життя вам найважливіше покращити?',
+  'Были ли попытки изменить питание или образ жизни ранее? Что сработало / не сработало?':'Чи були спроби змінити харчування або спосіб життя раніше? Що спрацювало / не спрацювало?',
+  'Перечислите все подтверждённые диагнозы и хронические заболевания':'Перелічіть усі підтверджені діагнози та хронічні захворювання',
+  'Текущие лекарственные препараты (название, доза, длительность)':'Поточні ліки (назва, доза, тривалість)','Принимаемые БАД, витамины, спортивное питание':'БАДи, вітаміни, спортивне харчування, які приймаєте',
+  'Аллергии или непереносимость (пищевые, лекарственные)':'Алергії чи непереносимість (харчові, медикаментозні)','Операции или госпитализации за последние 5 лет (год и причина)':'Операції чи госпіталізації за останні 5 років (рік і причина)',
+  'Семейный анамнез: заболевания у близких родственников':'Сімейний анамнез: захворювання у близьких родичів',
+  'Сердечно-сосудистые заболевания':'Серцево-судинні захворювання','Сахарный диабет 2 типа':'Цукровий діабет 2 типу','Онкологические заболевания':'Онкологічні захворювання','Остеопороз':'Остеопороз','Аутоиммунные заболевания':'Аутоімунні захворювання','Деменция / Альцгеймер':'Деменція / Альцгеймер','Щитовидная железа':'Щитоподібна залоза','Ожирение':'Ожиріння',
+  'Проходили ли комплексные лабораторные обследования за 12 месяцев?':'Чи проходили комплексні лабораторні обстеження за 12 місяців?','Если да — дата и основные результаты (или приложите копию)':'Якщо так — дата й основні результати (або додайте копію)',
+  'Сколько раз в день вы едите (включая перекусы)?':'Скільки разів на день ви їсте (разом із перекусами)?','1–2 раза':'1–2 рази','3 раза':'3 рази','4–5 раз':'4–5 разів','6 и более':'6 і більше',
+  'Опишите типичный день питания (завтрак, обед, ужин, перекусы)':'Опишіть типовий день харчування (сніданок, обід, вечеря, перекуси)',
+  'Есть ли в рационе намеренные ограничения?':'Чи є в раціоні навмисні обмеження?','Вегетарианство':'Вегетаріанство','Веганство':'Веганство','Безглютеновое':'Безглютенове','Безлактозное':'Безлактозне','Низкоуглеводное / кето':'Низьковуглеводне / кето','Интервальное голодание':'Інтервальне голодування','Халяль / Кошер':'Халяль / Кошер',
+  'Как часто вы употребляете следующие продукты?':'Як часто ви вживаєте такі продукти?','Красное мясо (>3 р/нед)':'Червоне м’ясо (>3 р/тиж)','Рыба и морепродукты (>2 р/нед)':'Риба та морепродукти (>2 р/тиж)','Молочные продукты ежедневно':'Молочні продукти щодня','Яйца ежедневно':'Яйця щодня','Ультрапереработанные продукты (>3 р/нед)':'Ультраоброблені продукти (>3 р/тиж)','Сладкое / кондитерское ежедневно':'Солодке / кондитерське щодня','Алкоголь (>3 р/нед)':'Алкоголь (>3 р/тиж)','Овощи/зелень каждый приём пищи':'Овочі/зелень за кожного прийому їжі',
+  'Сколько чистой воды вы выпиваете в день?':'Скільки чистої води ви випиваєте на день?','Менее 1 л':'Менше 1 л','1–1,5 л':'1–1,5 л','1,5–2 л':'1,5–2 л','Более 2 л':'Понад 2 л',
+  'Отмечаете ли переедание, бесконтрольное поедание, эмоциональный аппетит?':'Чи помічаєте переїдання, безконтрольне харчування, емоційний апетит?',
+  'Как изменился аппетит за последние 6–12 месяцев?':'Як змінився апетит за останні 6–12 місяців?','Увеличился':'Збільшився','Снизился':'Зменшився','Не изменился':'Без змін','Нестабильный / скачки':'Нестабільний / стрибки',
+  'Есть ли тяга к определённым продуктам (сладкое, солёное, жирное, кофеин)?':'Чи є тяга до певних продуктів (солодке, солоне, жирне, кофеїн)?',
+  'Углеводный обмен':'Вуглеводний обмін','Глюкоза натощак':'Глюкоза натще','Инсулин натощак':'Інсулін натще','Липидный профиль':'Ліпідний профіль','Общий холестерин':'Загальний холестерин','ЛПНП':'ЛПНЩ','ЛПВП':'ЛПВЩ','Триглицериды':'Тригліцериди',
+  'Есть ли признаки инсулинорезистентности?':'Чи є ознаки інсулінорезистентності?','Сложно похудеть даже при диете':'Важко схуднути навіть на дієті','Тёмные пятна в складках кожи':'Темні плями у складках шкіри','Сильная сонливость после еды':'Сильна сонливість після їжі','Постоянная тяга к сладкому':'Постійна тяга до солодкого',
+  'Как вы оцениваете своё пищеварение в целом?':'Як ви оцінюєте своє травлення загалом?','Отмечаете ли следующие симптомы?':'Чи помічаєте такі симптоми?',
+  'Вздутие живота':'Здуття живота','Метеоризм (газообразование)':'Метеоризм (газоутворення)','Изжога / рефлюкс':'Печія / рефлюкс','Тошнота':'Нудота','Боли / спазмы в животе':'Біль / спазми в животі','Диарея':'Діарея','Запоры':'Закрепи','Чередование диареи и запоров':'Чергування діареї та закрепів',
+  'Как часто у вас стул?':'Як часто у вас випорожнення?','1–3 раза/день':'1–3 рази/день','1 раз в день':'1 раз на день','1 раз в 2–3 дня':'1 раз на 2–3 дні','Реже 1 раза в 3 дня':'Рідше 1 разу на 3 дні',
+  'Характер стула по Бристольской шкале?':'Характер випорожнень за Бристольською шкалою?','Тип 1–2 (твёрдый, «овечий»)':'Тип 1–2 (твердий, «овечий»)','Тип 3–4 (норма)':'Тип 3–4 (норма)','Тип 5–6 (мягкий)':'Тип 5–6 (м’який)','Тип 7 (водянистый)':'Тип 7 (водянистий)',
+  'Есть ли непереваренная пища в стуле, слизь или кровь?':'Чи є неперетравлена їжа у випорожненнях, слиз або кров?','Диагнозы: СРК, ГЭРБ, гастрит, язва, болезнь Крона, целиакия, дисбактериоз?':'Діагнози: СПК, ГЕРХ, гастрит, виразка, хвороба Крона, целіакія, дисбактеріоз?','Принимали ли антибиотики за последние 12 месяцев?':'Чи приймали антибіотики за останні 12 місяців?',
+  'Ухудшение пищеварения после определённых продуктов? Каких?':'Погіршення травлення після певних продуктів? Яких?','Влияет ли стресс на работу кишечника?':'Чи впливає стрес на роботу кишківника?','Употребляете ли ферментированные продукты (кефир, йогурт, квашеная капуста, кимчи)?':'Чи вживаєте ферментовані продукти (кефір, йогурт, квашена капуста, кімчі)?','Ежедневно':'Щодня','3–4 раза/нед':'3–4 рази/тиж','Редко':'Рідко','Никогда':'Ніколи','Принимаете/принимали пробиотики? Препарат и длительность':'Приймаєте/приймали пробіотики? Препарат і тривалість',
+  'Средний уровень энергии в течение дня':'Середній рівень енергії протягом дня','В какое время суток энергия наиболее низкая?':'У який час доби енергія найнижча?','Утром при пробуждении':'Уранці після пробудження','В первой половине дня':'У першій половині дня','После обеда (13–15 ч)':'Після обіду (13–15 год)','Вечером':'Увечері','Равномерно низкий':'Рівномірно низький',
+  'Хроническая усталость, не проходящая после отдыха?':'Хронічна втома, що не минає після відпочинку?','Упадок сил после еды?':'Занепад сил після їжі?',
+  'Сколько часов вы спите в среднем?':'Скільки годин ви спите в середньому?','Менее 5 ч':'Менше 5 год','5–6 ч':'5–6 год','7–8 ч':'7–8 год','Более 9 ч':'Понад 9 год','Как вы оцениваете качество сна?':'Як ви оцінюєте якість сну?','Нарушения сна?':'Порушення сну?',
+  'Трудности с засыпанием':'Труднощі із засинанням','Частые пробуждения ночью':'Часті пробудження вночі','Раннее пробуждение (не заснуть снова)':'Раннє пробудження (не заснути знову)','Поверхностный сон':'Поверхневий сон','Апноэ (или подозрение)':'Апное (чи підозра)','Ночная потливость':'Нічна пітливість','Дневная сонливость несмотря на сон':'Денна сонливість попри сон',
+  'Регулярно ли ложитесь и встаёте в одно время?':'Чи регулярно лягаєте та встаєте в один час?','Уровень хронического стресса в жизни':'Рівень хронічного стресу в житті','Как проявляется стресс в организме?':'Як проявляється стрес в організмі?',
+  'Учащённое сердцебиение':'Прискорене серцебиття','Мышечное напряжение / боли':'М’язове напруження / біль','Раздражительность':'Дратівливість','Тревога / панические атаки':'Тривога / панічні атаки','Нарушения сна':'Порушення сну','Переедание или потеря аппетита':'Переїдання або втрата апетиту','Желудочно-кишечные расстройства':'Шлунково-кишкові розлади','Снижение либидо':'Зниження лібідо',
+  'Практикуете ли методы управления стрессом?':'Чи практикуєте методи керування стресом?','Медитация / дыхательные практики':'Медитація / дихальні практики','Йога / растяжка':'Йога / розтяжка','Прогулки на природе':'Прогулянки на природі','Психотерапия':'Психотерапія',
+  'Какова ваша текущая физическая активность?':'Яка ваша поточна фізична активність?','Сидячий образ жизни':'Сидячий спосіб життя','Лёгкая активность (прогулки)':'Легка активність (прогулянки)','Умеренная (3–4 р/нед)':'Помірна (3–4 р/тиж)','Высокая (5+ р/нед)':'Висока (5+ р/тиж)','Профессиональный спорт':'Професійний спорт',
+  'Какие виды тренировок вы выполняете?':'Які види тренувань ви виконуєте?','Силовые тренировки':'Силові тренування','Кардио (бег, велосипед, плавание)':'Кардіо (біг, велосипед, плавання)','HIIT / интервальные':'HIIT / інтервальні','Йога / пилатес':'Йога / пілатес','Танцы / групповые классы':'Танці / групові заняття','Не тренируюсь':'Не тренуюся',
+  'Снижение мышечной силы или выносливости за 1–2 года?':'Зниження м’язової сили чи витривалості за 1–2 роки?','Боли в суставах, мышцах или ограничения подвижности?':'Біль у суглобах, м’язах або обмеження рухливості?','Данные о составе тела (% жира, мышечная масса)?':'Дані про склад тіла (% жиру, м’язова маса)?',
+  'Изменения кожи за последние 1–2 года?':'Зміни шкіри за останні 1–2 роки?','Сухость / шелушение':'Сухість / лущення','Акне / высыпания':'Акне / висипання','Снижение упругости / дряблость':'Зниження пружності / в’ялість','Пигментация':'Пігментація','Медленное заживление ран':'Повільне загоєння ран',
+  'Состояние волос':'Стан волосся','Выпадение усилилось':'Випадіння посилилося','Истончение':'Стоншення','Сухость / ломкость':'Сухість / ламкість','Изменение текстуры':'Зміна текстури',
+  'Состояние ногтей':'Стан нігтів','Ломкие':'Ламкі','Расслаиваются':'Розшаровуються','Белые пятна':'Білі плями','Медленный рост':'Повільне зростання',
+  'Поставленный диагноз по щитовидной железе?':'Встановлений діагноз щодо щитоподібної залози?','Гипотиреоз':'Гіпотиреоз','Гипертиреоз':'Гіпертиреоз','Аутоиммунный тиреоидит (Хашимото)':'Аутоімунний тиреоїдит (Хашимото)','Узловой зоб':'Вузловий зоб','Не обследовался(ась)':'Не обстежувався(лась)',
+  'Показатели щитовидной железы':'Показники щитоподібної залози','ТТГ':'ТТГ','Т3 свободный':'Т3 вільний','Т4 свободный':'Т4 вільний','АТ-ТПО':'АТ-ТПО','Дата':'Дата',
+  'Симптомы нарушения работы щитовидной железы?':'Симптоми порушення роботи щитоподібної залози?','Постоянная зябкость':'Постійне відчуття холоду','Чувство жара / потливость':'Відчуття жару / пітливість','Сухая кожа и запоры (гипо)':'Суха шкіра та закрепи (гіпо)','Учащённое сердцебиение (гипер)':'Прискорене серцебиття (гіпер)','Необъяснимый набор или потеря веса':'Незрозумілий набір або втрата ваги','Выраженная усталость':'Виражена втома','Выпадение волос, в т.ч. бровей':'Випадіння волосся, зокрема брів',
+  'Признаки хронической дисфункции надпочечников?':'Ознаки хронічної дисфункції надниркових залоз?','Утренняя разбитость (не встать)':'Ранкова розбитість (важко встати)','Пик энергии после 21:00':'Пік енергії після 21:00','Тяга к солёному':'Тяга до солоного','Непереносимость стресса':'Непереносимість стресу','Частые инфекционные заболевания':'Часті інфекційні захворювання','Низкое давление / головокружение':'Низький тиск / запаморочення',
+  'Известен ли уровень кортизола (утренний или суточный профиль)?':'Чи відомий рівень кортизолу (ранковий або добовий профіль)?',
+  'Типичное артериальное давление':'Типовий артеріальний тиск','Систолическое':'Систолічний','Диастолическое':'Діастолічний','Симптомы со стороны сердца?':'Симптоми з боку серця?','Нерегулярный ритм':'Нерегулярний ритм','Ощущение давления в груди':'Відчуття тиску в грудях','Одышка при нагрузке':'Задишка при навантаженні','Отёки ног':'Набряки ніг',
+  'Диагностирован остеопороз или остеопения?':'Діагностовано остеопороз чи остеопенію?','Переломы при незначительных травмах?':'Переломи за незначних травм?','Показатели':'Показники','Витамин D (25-OH)':'Вітамін D (25-OH)','Кальций':'Кальцій','Магний':'Магній',
+  'Текущий репродуктивный статус?':'Поточний репродуктивний статус?','Регулярный цикл':'Регулярний цикл','Нерегулярный цикл':'Нерегулярний цикл','Перименопауза':'Перименопауза','Менопауза (12+ мес без менструаций)':'Менопауза (12+ міс без менструацій)','Постменопауза':'Постменопауза','Хирургическая менопауза':'Хірургічна менопауза',
+  'Если цикл есть: длина цикла и длительность менструации':'Якщо цикл є: довжина циклу та тривалість менструації','Изменился ли цикл за 1–2 года?':'Чи змінився цикл за 1–2 роки?','Стал короче (<24 дней)':'Став коротшим (<24 днів)','Стал длиннее (>35 дней)':'Став довшим (>35 днів)','Пропуски циклов':'Пропуски циклів','Более обильные выделения':'Рясніші виділення','Более скудные выделения':'Мізерніші виділення','Межменструальные кровотечения':'Міжменструальні кровотечі','Цикла нет (менопауза)':'Циклу немає (менопауза)',
+  'Дата последней менструации (ПМД)':'Дата останньої менструації (ПДМ)','Беременности и роды? Укажите количество':'Вагітності та пологи? Зазначте кількість','Гормональные контрацептивы или ЗГТ?':'Гормональні контрацептиви чи ЗГТ?','КОК (таблетки)':'КОК (таблетки)','Гормональная спираль':'Гормональна спіраль','Пластырь / гель / кольцо':'Пластир / гель / кільце','ЗГТ системная':'ЗГТ системна','Местная гормональная терапия':'Місцева гормональна терапія','Принимала ранее':'Приймала раніше','Если принимаете ЗГТ — название, доза, длительность':'Якщо приймаєте ЗГТ — назва, доза, тривалість',
+  'Выраженность приливов жара':'Вираженість припливів жару','Вазомоторные и другие симптомы?':'Вазомоторні та інші симптоми?','Приливы жара днём':'Припливи жару вдень','Ознобы / перепады температуры':'Озноб / перепади температури','Приливы сопровождаются тревогой':'Припливи супроводжуються тривогою',
+  'Изменения в настроении и психоэмоциональном фоне?':'Зміни в настрої та психоемоційному стані?','Перепады настроения':'Перепади настрою','Тревожность (новая или усилилась)':'Тривожність (нова чи посилилася)','Депрессивное состояние':'Депресивний стан','Плаксивость':'Плаксивість','Сложности с концентрацией':'Складнощі з концентрацією','«Туман в голове»':'«Туман у голові»',
+  'Когнитивные изменения?':'Когнітивні зміни?','Снижение памяти':'Зниження пам’яті','Замедленное мышление':'Уповільнене мислення',
+  'Урогенитальные симптомы?':'Урогенітальні симптоми?','Сухость и дискомфорт во влагалище':'Сухість і дискомфорт у піхві','Зуд / жжение':'Свербіж / печіння','Болезненность при половом акте':'Болісність під час статевого акту','Учащённое мочеиспускание':'Прискорене сечовипускання','Недержание мочи (при кашле, смехе)':'Нетримання сечі (при кашлі, сміху)','Повторяющиеся инфекции МВП':'Повторювані інфекції СВШ',
+  'Изменения в распределении жировой ткани (живот, бёдра)?':'Зміни в розподілі жирової тканини (живіт, стегна)?','Изменилась ли реакция на физические нагрузки (восстановление, переносимость)?':'Чи змінилася реакція на фізичні навантаження (відновлення, переносимість)?',
+  'Гормональные показатели':'Гормональні показники','ФСГ':'ФСГ','ЛГ':'ЛГ','Эстрадиол (Е2)':'Естрадіол (Е2)','Прогестерон':'Прогестерон','АМГ':'АМГ','Андрогены':'Андрогени','Тестостерон общий':'Тестостерон загальний','Свободный тестостерон':'Вільний тестостерон','ДГЭА-С':'ДГЕА-С','Пролактин':'Пролактин',
+  'Проводилась денситометрия (плотность костей)?':'Чи проводилася денситометрія (щільність кісток)?','Да — норма':'Так — норма','Да — остеопения':'Так — остеопенія','Да — остеопороз':'Так — остеопороз',
+  'Диагнозы: эндометриоз, миома, поликистоз яичников (СПКЯ), мастопатия?':'Діагнози: ендометріоз, міома, полікістоз яєчників (СПКЯ), мастопатія?','Когда последний раз: УЗИ малого таза, маммография, мазок Папаниколау?':'Коли востаннє: УЗД малого таза, мамографія, мазок Папаніколау?',
+  'Общий уровень витальности и «жизненного тонуса» за год':'Загальний рівень вітальності та «життєвого тонусу» за рік','Симптомы дефицита тестостерона?':'Симптоми дефіциту тестостерону?','Эректильная дисфункция':'Еректильна дисфункція','Снижение утренних эрекций':'Зниження ранкових ерекцій','Уменьшение объёма яичек':'Зменшення об’єму яєчок','Снижение мышечной массы и силы':'Зниження м’язової маси та сили','Увеличение жировой ткани (особенно живот)':'Збільшення жирової тканини (особливо живіт)','Увеличение грудных желёз (гинекомастия)':'Збільшення грудних залоз (гінекомастія)',
+  'Раздражительность / вспыльчивость':'Дратівливість / запальність','Снижение мотивации':'Зниження мотивації','Апатия, потеря интереса к жизни':'Апатія, втрата інтересу до життя','Тревожность':'Тривожність','Снижение уверенности в себе':'Зниження впевненості в собі',
+  'Приливы жара или ночная потливость?':'Припливи жару чи нічна пітливість?','Снижение конкурентного духа, целеустремлённости, инициативности?':'Зниження конкурентного духу, цілеспрямованості, ініціативності?','Изменилась переносимость нагрузок и скорость восстановления?':'Чи змінилася переносимість навантажень і швидкість відновлення?',
+  'Окружность талии?':'Обхват талії?','Повышенный риск: >94 см':'Підвищений ризик: >94 см','Метаболический синдром или его компоненты?':'Метаболічний синдром чи його компоненти?','Абдоминальное ожирение (живот)':'Абдомінальне ожиріння (живіт)','Высокие триглицериды':'Високі тригліцериди','Низкий ЛПВП':'Низький ЛПВЩ','Высокое давление':'Високий тиск','Высокая глюкоза / преддиабет':'Висока глюкоза / переддіабет','Не диагностирован':'Не діагностований',
+  'Симптомы нижних мочевыводящих путей / простаты?':'Симптоми нижніх сечовивідних шляхів / простати?','Учащённое мочеиспускание (ночью)':'Прискорене сечовипускання (вночі)','Слабая струя мочи':'Слабкий струмінь сечі','Неполное опорожнение мочевого пузыря':'Неповне спорожнення сечового міхура','Жжение при мочеиспускании':'Печіння при сечовипусканні','Боль в промежности':'Біль у промежині',
+  'Когда последний раз сдавали ПСА (PSA)? Результат':'Коли востаннє складали ПСА (PSA)? Результат','Свободный тест-н':'Вільний тестостерон','ГСПГ':'ГЗСГ','Дополнительно':'Додатково','Кортизол':'Кортизол','Препараты тестостерона или иная ГЗТ? (название, форма, доза, длительность)':'Препарати тестостерону чи інша ГЗТ? (назва, форма, доза, тривалість)','Препараты для эректильной функции или фертильности?':'Препарати для еректильної функції чи фертильності?',
+  'Показатели (укажите значения и дату)':'Показники (зазначте значення та дату)','B12':'B12','Фолат':'Фолат','Железо':'Залізо','Ферритин':'Феритин','Цинк':'Цинк','Омега-3 индекс':'Омега-3 індекс','Гомоцистеин':'Гомоцистеїн','СРБ (CRP)':'СРБ (CRP)','Общий анализ крови (ОАК): есть ли отклонения?':'Загальний аналіз крові (ЗАК): чи є відхилення?',
+  'Симптомы дефицита нутриентов?':'Симптоми дефіциту нутрієнтів?','Онемение / покалывание конечностей (B12)':'Оніміння / поколювання кінцівок (B12)','Мышечные судороги (Mg, Ca)':'М’язові судоми (Mg, Ca)','Ломкость волос и ногтей (Fe, Zn, биотин)':'Ламкість волосся та нігтів (Fe, Zn, біотин)','Усталость / бледность (железо/B12)':'Втома / блідість (залізо/B12)','Частые инфекции (Zn, D, A)':'Часті інфекції (Zn, D, A)','Нет характерных симптомов':'Немає характерних симптомів',
+  'Курение':'Куріння','Никогда не курил(а)':'Ніколи не курив(ла)','Бросил(а)':'Кинув(ла)','Курю':'Курю','Электронные сигареты / вейп':'Електронні сигарети / вейп','Уточнение (год отказа / сигарет в день)':'Уточнення (рік відмови / сигарет на день)',
+  'Алкоголь':'Алкоголь','Не употребляю':'Не вживаю','Редко (праздники)':'Рідко (свята)','1–3 бокала/нед':'1–3 келихи/тиж','4–7 бокалов/нед':'4–7 келихів/тиж','Более 7 бокалов/нед':'Понад 7 келихів/тиж',
+  'Работа (условия)':'Робота (умови)','Преимущественно сидячая':'Переважно сидяча','Физический труд':'Фізична праця','Стрессовая / ненормированная':'Стресова / ненормована','Ночные смены':'Нічні зміни','Удалённая / дома':'Віддалена / вдома','Воздействие токсинов / химикатов':'Вплив токсинів / хімікатів',
+  'Сколько времени проводите на открытом воздухе (солнечный свет)?':'Скільки часу проводите на свіжому повітрі (сонячне світло)?','Менее 30 мин/день':'Менше 30 хв/день','30–60 мин/день':'30–60 хв/день','1–2 ч/день':'1–2 год/день','Более 2 ч/день':'Понад 2 год/день','Устройства для мониторинга здоровья (умные часы, трекер)? Что отслеживаете?':'Пристрої для моніторингу здоров’я (розумний годинник, трекер)? Що відстежуєте?',
+  'Главное препятствие для улучшения вашего здоровья?':'Головна перешкода для покращення вашого здоров’я?','Насколько готовы к изменению пищевых привычек?':'Наскільки готові до зміни харчових звичок?','Насколько готовы к изменению образа жизни (сон, активность, стресс)?':'Наскільки готові до зміни способу життя (сон, активність, стрес)?','Есть ли что-то важное о здоровье, не охваченное анкетой?':'Чи є щось важливе про здоров’я, не охоплене анкетою?','Какой результат через 3 месяца будет для вас показателем успеха?':'Який результат через 3 місяці буде для вас показником успіху?',
+  'очень плохое':'дуже погане','отличное':'відмінне','полное истощение':'повне виснаження','высокая энергия':'висока енергія','стресса нет':'стресу немає','постоянный высокий':'постійний високий','нет':'немає','очень сильные':'дуже сильні','очень низкий':'дуже низький','как в молодости':'як замолоду','не готов(а)':'не готовий(а)','полностью готов(а)':'повністю готовий(а)',
+}};
+let LANG = 'en';
+const tr = s => LANG==='ru' ? s : ((TR[LANG] && TR[LANG][s]) || (TR.en && TR.en[s]) || s);
+
+function fieldHTML(f){
+  const num = f.n ? `<b>${f.n}.</b>` : '';
+  const hint = f.hint ? `<div class="hint">${esc(tr(f.hint))}</div>` : '';
+  let body = '';
+  if(f.t==='text'){
+    let val='';
+    if(f.id==='date'){ const d=new Date(),p=n=>String(n).padStart(2,'0'); val=` value="${p(d.getDate())}.${p(d.getMonth()+1)}.${d.getFullYear()}" autocomplete="off"`; }
+    body = `<input type="${f.input||'text'}" name="${f.id}"${f.ph?` placeholder="${esc(tr(f.ph))}"`:''}${val}>`;
+  } else if(f.t==='textarea'){
+    body = `<textarea name="${f.id}"></textarea>`;
+  } else if(f.t==='radio' || f.t==='check'){
+    const type = f.t==='radio' ? 'radio' : 'checkbox';
+    const col = f.opts.length>4 || f.opts.some(o=>tr(o).length>22) ? ' col' : '';
+    body = `<div class="opts${col}">` + f.opts.map((o,i)=>
+      `<label class="opt"><input type="${type}" name="${f.id}" value="${esc(o)}"${f.control?` data-control="1"`:''}><span>${esc(tr(o))}</span></label>`
+    ).join('') + `</div>`;
+  } else if(f.t==='scale'){
+    body = `<div class="scale">
+      <div class="ends"><span>0 — ${esc(tr(f.lo))}</span><span>${esc(tr(f.hi))} — 10</span></div>
+      <div class="row"><input type="range" min="0" max="10" value="5" name="${f.id}" oninput="this.closest('.scale').querySelector('.val').textContent=this.value"><div class="val">5</div></div>
+    </div>`;
+  } else if(f.t==='lab'){
+    body = `<div class="lab">` + f.fields.map(li=>
+      `<div class="li"><label>${esc(tr(li.l))}</label><input type="text" name="${f.id}.${li.k}"></div>`
+    ).join('') + `</div>`;
+  } else if(f.t==='dob'){
+    const now=new Date().getFullYear(), yFrom=f.yFrom||now, yTo=f.yTo||(f.yearsBack!=null?now-f.yearsBack:1930);
+    const MON=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+    const op=(v,t)=>`<option value="${v}">${esc(t)}</option>`;
+    let dd=`<option value="">${esc(tr('День'))}</option>`; for(let d=1;d<=31;d++) dd+=op(d,d);
+    let mm=`<option value="">${esc(tr('Месяц'))}</option>`; MON.forEach((m,i)=>mm+=op(i+1, f.numMonth?(i+1):tr(m)));
+    let yy=`<option value="">${esc(tr('Год'))}</option>`; for(let y=yFrom;y>=yTo;y--) yy+=op(y,y);
+    const sep = f.sep ? `<span class="dobsep">${esc(f.sep)}</span>` : '';
+    body = `<div class="dob"><select name="${f.id}.d">${dd}</select>${sep}<select name="${f.id}.m">${mm}</select>${sep}<select name="${f.id}.y">${yy}</select></div>`;
+  }
+  return `<div class="q"><label class="qt">${num} ${esc(tr(f.q))}</label>${hint}${body}</div>`;
+}
+
+function sectionHTML(s){
+  const chip = s.chip ? `<span class="chip">${s.chip}</span>` : '';
+  const note = s.subnote ? `<div class="subnote">${esc(tr(s.subnote))}</div>` : '';
+  const labnote = s.labhint ? `<div class="subnote">${esc(tr('По данным анализов — впишите значение или оставьте пустым, если не знаете.'))}</div>` : '';
+  let inner = '';
+  if(s.groups){
+    inner = s.groups.map(g=>{
+      const gnote = g.labhint ? `<div class="subnote">${esc(tr('По данным анализов — оставьте пустым, если не знаете.'))}</div>` : '';
+      return `<div class="sub">${esc(tr(g.sub))}</div>${gnote}` + g.fields.map(fieldHTML).join('');
+    }).join('');
+  } else {
+    inner = s.fields.map(fieldHTML).join('');
+  }
+  return `<section class="sec" data-sec="${s.id}"${s.sex?` data-sex="${s.sex}"`:''}>
+    <h2>${chip}${esc(tr(s.title))}</h2>${note}${labnote}${inner}</section>`;
+}
+
+const CONSENT_KEY='Согласие на обработку данных (GDPR): подтверждаю достоверность сведений и даю согласие на их обработку специалистом Vía-L исключительно для нутрициологического консультирования.';
+function build(){
+  form.innerHTML = SCHEMA.map(sectionHTML).join('') + `
+    <section class="sec">
+      <label class="consent"><input type="checkbox" id="consent">
+      <span>${esc(tr(CONSENT_KEY))}</span></label>
+    </section>`;
+  wire();
+}
+
+/* ── Ветвление по полу (пере-биндится при каждом build) ─────────────────── */
+function applySex(){
+  const sex = (form.querySelector('input[name="sex"]:checked')||{}).value;
+  const secI=form.querySelector('[data-sex="f"]'), secJ=form.querySelector('[data-sex="m"]');
+  secI.style.display = sex==='Женский' ? '' : 'none';
+  secJ.style.display = sex==='Мужской' ? '' : 'none';
+  updateProgress();
+}
+function wire(){
+  form.querySelectorAll('input[name="sex"]').forEach(r=>r.addEventListener('change', applySex));
+  const c=document.getElementById('consent'); if(c) c.addEventListener('change', updateProgress);
+  applySex(); // прячет I/J пока пол не выбран и восстанавливает состояние
+}
+
+/* ── Прогресс + активация кнопки ────────────────────────────────────────── */
+const pbar=document.getElementById('pbar'), pcount=document.getElementById('pcount'),
+      ppct=document.getElementById('ppct'), btn=document.getElementById('btnSubmit');
+function visibleFields(){
+  // считаем «вопросы» как уникальные name без учёта lab-подполей и скрытых секций
+  const seen=new Set(), list=[];
+  form.querySelectorAll('section.sec').forEach(sec=>{
+    if(sec.style.display==='none') return;
+    sec.querySelectorAll('[name]').forEach(el=>{
+      if(el.id==='consent') return;
+      const base=el.name.split('.')[0];
+      if(seen.has(base)) return; seen.add(base); list.push(base);
+    });
+  });
+  return list;
+}
+function isFilled(base){
+  const els=[...form.querySelectorAll(`[name="${base}"], [name^="${base}."]`)];
+  return els.some(el=>{
+    if(el.type==='checkbox'||el.type==='radio') return el.checked;
+    if(el.type==='range') return false; // слайдер не считаем «обязательным»
+    return el.value.trim()!=='';
+  });
+}
+function updateProgress(){
+  const all=visibleFields().filter(b=>{
+    const el=form.querySelector(`[name="${b}"]`);
+    return !(el && el.type==='range');
+  });
+  const done=all.filter(isFilled).length;
+  const pct=all.length?Math.round(done/all.length*100):0;
+  pbar.style.width=pct+'%'; pcount.textContent=`${done} ${tr('из')} ${all.length}`; ppct.textContent=pct+'%';
+  const c=document.getElementById('consent');
+  btn.disabled = !(c && c.checked);
+}
+form.addEventListener('input', updateProgress);
+form.addEventListener('change', updateProgress);
+
+/* ── Сбор данных (черновик: показываем структуру) ───────────────────────── */
+function collect(){
+  const out={};
+  SCHEMA.forEach(s=>{
+    const sec=form.querySelector(`[data-sec="${s.id}"]`);
+    if(sec && sec.style.display==='none') return;
+    const fields = s.groups ? s.groups.flatMap(g=>g.fields) : s.fields;
+    fields.forEach(f=>{
+      if(f.t==='lab'){
+        const grp={};
+        f.fields.forEach(li=>{ const v=form.querySelector(`[name="${f.id}.${li.k}"]`).value.trim(); if(v) grp[li.l]=v; });
+        if(Object.keys(grp).length) out[f.id]={q:f.q, v:grp};
+      } else if(f.t==='dob'){
+        const g=k=>form.querySelector(`[name="${f.id}.${k}"]`).value;
+        const d=g('d'), mo=g('m'), y=g('y');
+        if(d&&mo&&y){ const p=n=>String(n).padStart(2,'0'); out[f.id]={q:f.q, v:`${y}-${p(mo)}-${p(d)}`}; }
+      } else if(f.t==='check'){
+        const v=[...form.querySelectorAll(`[name="${f.id}"]:checked`)].map(e=>e.value);
+        if(v.length) out[f.id]={q:f.q, v};
+      } else if(f.t==='radio'){
+        const e=form.querySelector(`[name="${f.id}"]:checked`);
+        if(e) out[f.id]={q:f.q, v:e.value};
+      } else if(f.t==='scale'){
+        out[f.id]={q:f.q, v:Number(form.querySelector(`[name="${f.id}"]`).value)};
+      } else {
+        const v=form.querySelector(`[name="${f.id}"]`).value.trim();
+        if(v) out[f.id]={q:f.q, v};
+      }
+    });
+  });
+  return out;
+}
+/* ── Отправка: ?topic= → POST в воркер; без topic — debug-превью структуры ── */
+const ENDPOINT='https://interpreter.viaelcom.workers.dev/anketa-submit';
+const TOPIC=new URLSearchParams(location.search).get('topic')||'';
+async function submitAnketa(){
+  const data=collect();
+  const pre=document.getElementById('preview');
+  if(!TOPIC){ // прямое открытие / dev — показываем структуру, ничего не шлём
+    pre.hidden=false; pre.style.background='';
+    pre.textContent=tr('СТРУКТУРА ДЛЯ НУТРИЦИОЛОГА (черновик, на сервер пока не уходит):')+'\n\n'+JSON.stringify(data,null,2);
+    pre.scrollIntoView({behavior:'smooth'}); return;
+  }
+  btn.disabled=true; const prev=btn.textContent; btn.textContent=tr('Отправляем…');
+  try{
+    const r=await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({topic:TOPIC, lang:LANG, answers:data, ts:Date.now()})});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    form.style.display='none'; document.querySelector('.actions').style.display='none';
+    pre.hidden=false; pre.style.background='#143a2b';
+    pre.textContent='✓ '+tr('Анкета отправлена — спасибо! Нутрициолог свяжется с вами.');
+    pre.scrollIntoView({behavior:'smooth'});
+  }catch(e){
+    btn.disabled=false; btn.textContent=prev;
+    pre.hidden=false; pre.style.background='#5a1f1f';
+    pre.textContent='⚠ '+tr('Не удалось отправить. Проверьте связь и попробуйте ещё раз.');
+  }
+}
+btn.addEventListener('click', submitAnketa);
+
+/* ── Статика интерфейса (перерисовывается при смене языка) ──────────────── */
+const SUB_KEY='Гормональный статус · ЖКТ · Метаболизм · Нутриентный статус · Образ жизни. Отвечайте честно — пустые поля можно пропустить.';
+const DRAFT_KEY='Черновой каркас · отправка пока показывает структуру (без сервера)';
+function applyStatic(){
+  document.getElementById('h1').textContent = tr('Анкета здоровья клиента');
+  document.getElementById('sub').textContent = tr(SUB_KEY);
+  btn.textContent = tr('Отправить анкету');
+  const dn=document.querySelector('.draftnote'); if(dn) dn.textContent = tr(DRAFT_KEY);
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = (LANG==='he'||LANG==='ar') ? 'rtl' : 'ltr';
+}
+
+/* ── Языки (порядок и метки как в ИП) ──────────────────────────────────── */
+const LANGS=[['en','🇬🇧 English'],['es','🇪🇸 Español'],['uk','🇺🇦 Українська'],['ru','🇷🇺 Русский'],
+  ['de','🇩🇪 Deutsch'],['pt','🇧🇷 Português'],['fr','🇫🇷 Français'],['pl','🇵🇱 Polski'],
+  ['it','🇮🇹 Italiano'],['he','🇮🇱 עברית'],['ja','🇯🇵 日本語'],['ko','🇰🇷 한국어']];
+const VALID=LANGS.map(x=>x[0]);
+const langSel=document.getElementById('langSel');
+LANGS.forEach(([c,n])=>{ const o=document.createElement('option'); o.value=c; o.textContent=n; langSel.appendChild(o); });
+function setLang(l){
+  LANG = VALID.includes(l) ? l : 'en';
+  try{ localStorage.setItem('vial_anketa_lang', LANG); }catch(e){}
+  langSel.value = LANG;
+  applyStatic();
+  build();
+}
+langSel.addEventListener('change', e=>setLang(e.target.value));
+
+const urlLang=new URLSearchParams(location.search).get('lang');
+let saved=null; try{ saved=localStorage.getItem('vial_anketa_lang'); }catch(e){}
+setLang(VALID.includes(urlLang) ? urlLang : (VALID.includes(saved) ? saved : 'en'));
+</script>
+</body>
+</html>
