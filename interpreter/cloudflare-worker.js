@@ -340,7 +340,7 @@ const PROGRAM_NAMES = {
 };
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -389,7 +389,7 @@ export default {
       if (path === '/care-webhook')     return handleCareWebhook(request, env, corsHeaders);
 
       // Цифровая анкета здоровья (book/anketa) → структурированная карточка в топик клиента
-      if (path === '/anketa-submit')    return handleAnketaSubmit(request, env, corsHeaders);
+      if (path === '/anketa-submit')    return handleAnketaSubmit(request, env, corsHeaders, ctx);
 
       // Default: AI-анализ для интерпретатора
       return handleAnalyze(request, env, corsHeaders);
@@ -2784,7 +2784,7 @@ async function anketaSummary(env, answers, lang){
   }catch(_){ return ''; }
 }
 
-async function handleAnketaSubmit(request, env, corsHeaders){
+async function handleAnketaSubmit(request, env, corsHeaders, ctx){
   if(!env.CLIENT_BOT_TOKEN || !env.NUTRITIONIST_GROUP_ID || !env.EXPERT_DRAFTS){
     return jsonResponse({ok:false, error:'care bot not configured'}, corsHeaders, 503);
   }
@@ -2794,7 +2794,17 @@ async function handleAnketaSubmit(request, env, corsHeaders){
   if(!answers || typeof answers!=='object' || !Object.keys(answers).length){
     return jsonResponse({ok:false, error:'answers required'}, corsHeaders, 400);
   }
-  const lang = careLang(body.lang);
+  // Тяжёлая часть (ИИ-сводка ~15–20с + доставка + email) уходит в ФОН: клиент не ждёт
+  // ответ Sonnet, форма получает «✓ отправлено» мгновенно; ctx.waitUntil держит воркер
+  // живым, карточка прилетает нутрициологу через несколько секунд. Без ctx (локально) —
+  // выполняем синхронно.
+  const job = deliverAnketa(env, body, answers, careLang(body.lang));
+  if(ctx && ctx.waitUntil) ctx.waitUntil(job); else await job;
+  return jsonResponse({ok:true}, corsHeaders);
+}
+
+// Фоновая доставка анкеты: топик → ИИ-сводка → полные ответы → email клиенту.
+async function deliverAnketa(env, body, answers, lang){
   const get = id => answers[id]?.v;
   const name    = (typeof get('name')==='string' && get('name').trim()) ? get('name').trim() : '';
   const contact = (typeof get('contact')==='string') ? get('contact').trim() : '';
@@ -2808,7 +2818,6 @@ async function handleAnketaSubmit(request, env, corsHeaders){
     topicId = await careCreateTopic(env, ((name||'Клиент')+' · анкета · '+lang.toUpperCase()).slice(0,128));
   }
   const extra = topicId ? { message_thread_id: Number(topicId) } : {};
-
   const idline = `${name||'Клиент'}${email?' · '+email:''} · ${lang.toUpperCase()}`;
 
   // ── Сообщение 1: ИИ-сводка для нутрициолога (RU, перевод встроен) ──
@@ -2836,6 +2845,4 @@ async function handleAnketaSubmit(request, env, corsHeaders){
     const t = ANKETA_MAIL[lang] || ANKETA_MAIL.en;
     await sendEmail(env, email, t.subj, t.body(name));
   }
-
-  return jsonResponse({ok:true, topic:topicId||null, emailed:!!email}, corsHeaders);
 }
