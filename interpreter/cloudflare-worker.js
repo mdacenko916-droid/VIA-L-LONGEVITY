@@ -2501,8 +2501,11 @@ async function handleCareWebhook(request, env, corsHeaders){
     const raw = await env.EXPERT_DRAFTS.get('care_client:'+threadId);
     if(!raw) return jsonResponse({ok:true}, corsHeaders);                          // топик не наш
     let rec; try{ rec = JSON.parse(raw); }catch(_){ return jsonResponse({ok:true}, corsHeaders); }
+    // Язык берём ТЕКУЩИЙ (care_lang), а не замороженный в топике: клиент мог
+    // сменить язык (/start en) уже после создания топика.
+    const clang = (await env.EXPERT_DRAFTS.get('care_lang:'+rec.clientId)) || rec.lang || 'en';
     let out = text;
-    if(rec.lang!=='ru' && rec.lang!=='uk') out = await careTranslate(env, text, 'ru', rec.lang);
+    if(clang!=='ru' && clang!=='uk') out = await careTranslate(env, text, 'ru', clang);
     await careSend(env, rec.clientId, out);
     return jsonResponse({ok:true}, corsHeaders);
   }
@@ -2524,6 +2527,10 @@ async function handleCareWebhook(request, env, corsHeaders){
       await careSend(env, clientId, carePhrase('hello_welcome', lang));
       return jsonResponse({ok:true}, corsHeaders);
     }
+
+    // фиксируем текущий язык клиента, чтобы ответная ветка нутрициолога знала, на
+    // какой язык переводить (read-first выше сохраняет «прилипчивость» выбора).
+    await env.EXPERT_DRAFTS.put('care_lang:'+clientId, lang);
 
     const cname = [msg.from?.first_name, msg.from?.last_name].filter(Boolean).join(' ') || ('client '+clientId);
     let topicId = await env.EXPERT_DRAFTS.get('care_topic:'+clientId);
