@@ -4714,6 +4714,20 @@ function seenF(){var t=(typeof window!=='undefined'&&window.__touched&&window.__
 // Клэмп биоимпеданса: number-инпуты пропускают любое введённое с клавиатуры значение (min/max ограничивают только стрелки).
 // Нереальные значения (висцеральный 500, биовозраст 300, мышцы 10%) → null, чтобы их не увидели ни карточки, ни ИИ, ни QoL, ни doc-referral.
 function bioClamp(id,lo,hi){var v=parseFloat(document.getElementById(id)?.value);return(isFinite(v)&&v>=lo&&v<=hi)?v:null;}
+// Взаимоисключение «ничего из перечисленного / не тренируюсь» с остальными чекбоксами внутри группы .chips.
+// Раньше можно было отметить и «ничего», и конкретные симптомы одновременно — логическое противоречие.
+document.addEventListener('change',function(e){
+  var el=e.target;
+  if(!el||el.type!=='checkbox'||!el.checked)return;
+  var grp=el.closest&&el.closest('.chips');if(!grp)return;
+  var isNone=/^(nothing|none)/.test(el.value||'');
+  var boxes=grp.querySelectorAll('input[type="checkbox"]');
+  for(var i=0;i<boxes.length;i++){
+    var b=boxes[i];if(b===el||!b.checked)continue;
+    var bNone=/^(nothing|none)/.test(b.value||'');
+    if(isNone||bNone)b.checked=false; // выбрали «ничего» → снять все; выбрали реальное → снять «ничего»
+  }
+});
 function _showResultsInner(){
   const data={
     gender:getRadio('gender')||'female',
