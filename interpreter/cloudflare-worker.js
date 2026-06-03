@@ -2767,12 +2767,16 @@ async function anketaSummary(env, answers, lang){
     'ПРАВИЛА: только систематизируй ответы клиента, ничего не выдумывай; нет данных — '+
     '«не указано». НЕ ставь диагнозы — медицинские находки помечай «рекомендовать '+
     'консультацию врача». Не выходи за рамки нутрициологии. Тон — забота, не приговор. '+
-    'Без вступлений и заключений — только сводка по шаблону.';
+    'Без вступлений и заключений — только сводка по шаблону.\n'+
+    'ФОРМАТ ВЫВОДА — ПРОСТОЙ ТЕКСТ для Telegram (parse_mode НЕ используется): '+
+    'НЕ используй markdown-таблицы, символы | и решётки #/##/###, жирный **…**. '+
+    'Только эмодзи-подзаголовки из шаблона, пункты через «•» или «–», и переносы строк. '+
+    'Анализы давай списком «• Показатель: значение — статус», а не таблицей.';
   try{
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':env.CLAUDE_API_KEY,'anthropic-version':'2023-06-01'},
-      body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:1500, system, messages:[{role:'user',content:src}] }),
+      body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:3000, system, messages:[{role:'user',content:src}] }),
     });
     if(!res.ok) return '';
     const j = await res.json();
