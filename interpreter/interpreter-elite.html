@@ -5786,6 +5786,9 @@ function showResults(){
   }
 }
 function seenF(){var t=(typeof window!=='undefined'&&window.__touched&&window.__touched.size)?window.__touched:null;if(!t)return true;for(var i=0;i<arguments.length;i++){if(t.has(arguments[i]))return true;}return false;}
+// Клэмп биоимпеданса: number-инпуты пропускают любое введённое с клавиатуры значение (min/max ограничивают только стрелки).
+// Нереальные значения (висцеральный 500, биовозраст 300, мышцы 10%) → null, чтобы их не увидели ни карточки, ни ИИ, ни QoL, ни doc-referral.
+function bioClamp(id,lo,hi){var v=parseFloat(document.getElementById(id)?.value);return(isFinite(v)&&v>=lo&&v<=hi)?v:null;}
 function _showResultsInner(){
   const data={
     gender:getRadio('gender')||'female',
@@ -5822,11 +5825,11 @@ function _showResultsInner(){
     chronic_stress:getRadio('chronic_stress'),
     cortisol_symp:getChecked(['cort2','cort3','cort4','cort5','cort6','cort7']),
     bio:{
-      fat:parseFloat(document.getElementById('bio-fat')?.value)||null,
-      muscle:parseFloat(document.getElementById('bio-muscle')?.value)||null,
-      visceral:parseFloat(document.getElementById('bio-visceral')?.value)||null,
-      bmi:parseFloat(document.getElementById('bio-bmi')?.value)||null,
-      bioage:parseFloat(document.getElementById('bio-bioage')?.value)||null,
+      fat:bioClamp('bio-fat',3,60),
+      muscle:bioClamp('bio-muscle',20,70),
+      visceral:bioClamp('bio-visceral',1,40),
+      bmi:bioClamp('bio-bmi',10,70),
+      bioage:bioClamp('bio-bioage',15,120),
     },
     hf_count:getRadio('hf_count'),
     hf_intensity:getRadio('hf_intensity'),
