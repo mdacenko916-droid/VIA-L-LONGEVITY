@@ -5049,10 +5049,22 @@ function goFromProfile(){
   if(err)err.style.display='none';
   goTo(1);
 }
+// Числовые подсказки-референсы в плейсхолдеры биоимпеданса (по полу/возрасту) — без слов, работают во всех языках.
+function setBioHints(){
+  var male=(typeof getRadio==='function'&&getRadio('gender')==='male');
+  var age=parseInt(document.getElementById('prof-age')?.value);
+  var set=function(id,ph){var el=document.getElementById(id);if(el&&!el.value)el.placeholder=ph;};
+  set('bio-fat',male?'10–25':'18–32');     // % жира, типичный диапазон
+  set('bio-muscle',male?'33–45':'28–40');  // % мышц
+  set('bio-visceral','1–12');              // норма висцерального
+  set('bio-bmi','18.5–25');                // норма ИМТ
+  set('bio-bioage',age?String(age):'—');   // ориентир = паспортный возраст
+}
 function goTo(n){
   document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
   const target = document.getElementById(n==='result'?'stepResult':'step'+n);
   if(target) target.classList.add('active');
+  if(target&&target.querySelector&&target.querySelector('#bio-fat'))setBioHints();
   updateProgress(n);
   setTimeout(()=>{ if(target) target.scrollIntoView({behavior:'smooth', block:'start'}); }, 80);
 }
