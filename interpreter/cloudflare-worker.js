@@ -357,6 +357,10 @@ export default {
     // GET routes
     if (request.method === 'GET') {
       if (path === '/intake-validate') return handleIntakeValidate(request, env, corsHeaders);
+      // Fitbit OAuth2 (self-serve) — connect ring/device, pull 7-day metrics
+      if (path === '/fitbit/start')    return handleFitbitStart(request, env, corsHeaders);
+      if (path === '/fitbit/callback') return handleFitbitCallback(request, env, corsHeaders);
+      if (path === '/fitbit/metrics')  return handleFitbitMetrics(request, env, corsHeaders);
       return new Response('Not found', { status: 404 });
     }
 
@@ -979,6 +983,143 @@ function jsonResponse(obj, corsHeaders, status = 200) {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
+}
+
+// ─────────────────────────────────────────────────────────────
+// FITBIT OAuth2 (self-serve) — connect device, pull 7-day metrics.
+// Secrets:  FITBIT_CLIENT_ID, FITBIT_CLIENT_SECRET (wrangler secret put).
+// KV:       WEARABLE_TOKENS (token store, keyed fitbit:<sid>, TTL 2h).
+// Register app at dev.fitbit.com (OAuth 2.0 "Server"), redirect URI:
+//   https://interpreter.viaelcom.workers.dev/fitbit/callback
+// Reusable template for the future Oura/Garmin OAuth (see ARCHITECTURE §15–16).
+// ─────────────────────────────────────────────────────────────
+const FITBIT_AUTH_URL  = 'https://www.fitbit.com/oauth2/authorize';
+const FITBIT_TOKEN_URL = 'https://api.fitbit.com/oauth2/token';
+const FITBIT_API       = 'https://api.fitbit.com';
+const FITBIT_SCOPES    = 'heartrate sleep oxygen_saturation temperature activity profile';
+const FITBIT_RETURN_ALLOW = ['https://via-l.com/', 'http://localhost', 'http://127.0.0.1'];
+const FITBIT_DEFAULT_RET  = 'https://via-l.com/interpreter/interpreter-pro.html';
+
+// sid + return URL are ASCII (base36 id / https URL) → plain btoa is safe.
+function b64urlEncode(str){ return btoa(str).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+function b64urlDecode(str){ str = str.replace(/-/g,'+').replace(/_/g,'/'); while (str.length % 4) str += '='; return atob(str); }
+async function hmacHex(secret, msg){
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name:'HMAC', hash:'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(msg));
+  return [...new Uint8Array(sig)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+const fitbitRedirectUri = (url) => url.origin + '/fitbit/callback';
+
+async function handleFitbitStart(request, env, corsHeaders){
+  if (!env.FITBIT_CLIENT_ID || !env.FITBIT_CLIENT_SECRET) {
+    return jsonResponse({ ok:false, error:'fitbit_secrets_missing' }, corsHeaders, 500);
+  }
+  const url = new URL(request.url);
+  const sid = url.searchParams.get('sid');
+  let ret = url.searchParams.get('ret') || FITBIT_DEFAULT_RET;
+  if (!sid) return jsonResponse({ ok:false, error:'sid_required' }, corsHeaders, 400);
+  if (!FITBIT_RETURN_ALLOW.some(p => ret.startsWith(p))) ret = FITBIT_DEFAULT_RET;
+
+  const payload = b64urlEncode(JSON.stringify({ sid, ret }));
+  const state = payload + '.' + await hmacHex(env.FITBIT_CLIENT_SECRET, payload);
+
+  const auth = new URL(FITBIT_AUTH_URL);
+  auth.searchParams.set('response_type', 'code');
+  auth.searchParams.set('client_id', env.FITBIT_CLIENT_ID);
+  auth.searchParams.set('scope', FITBIT_SCOPES);
+  auth.searchParams.set('redirect_uri', fitbitRedirectUri(url));
+  auth.searchParams.set('state', state);
+  return Response.redirect(auth.toString(), 302);
+}
+
+async function handleFitbitCallback(request, env, corsHeaders){
+  const url = new URL(request.url);
+  const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state') || '';
+  const errParam = url.searchParams.get('error');
+
+  // verify + parse signed state (CSRF protection, same trick as /cal-webhook)
+  const dot = state.lastIndexOf('.');
+  let sid = '', ret = FITBIT_DEFAULT_RET;
+  if (dot > 0) {
+    const payload = state.slice(0, dot), sig = state.slice(dot + 1);
+    const expect = await hmacHex(env.FITBIT_CLIENT_SECRET || '', payload);
+    if (sig === expect) { try { const o = JSON.parse(b64urlDecode(payload)); sid = o.sid || ''; if (o.ret) ret = o.ret; } catch(e){} }
+  }
+  const back = (status) => Response.redirect(ret + (ret.includes('?') ? '&' : '?') + 'fitbit=' + status + (sid ? '&sid=' + encodeURIComponent(sid) : ''), 302);
+
+  if (errParam || !code || !sid) return back('error');
+
+  const basic = btoa(env.FITBIT_CLIENT_ID + ':' + env.FITBIT_CLIENT_SECRET);
+  const r = await fetch(FITBIT_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Authorization': 'Basic ' + basic, 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type:'authorization_code', code, redirect_uri: fitbitRedirectUri(url), client_id: env.FITBIT_CLIENT_ID }).toString(),
+  });
+  if (!r.ok) return back('error');
+  const tok = await r.json();
+  if (!env.WEARABLE_TOKENS) return back('error');
+  await env.WEARABLE_TOKENS.put('fitbit:' + sid, JSON.stringify({
+    access_token: tok.access_token,
+    refresh_token: tok.refresh_token,
+    expires_at: Date.now() + (tok.expires_in || 28800) * 1000,
+    user_id: tok.user_id || '-',
+  }), { expirationTtl: 2 * 60 * 60 });
+  return back('connected');
+}
+
+async function fitbitRefresh(env, rec){
+  const basic = btoa(env.FITBIT_CLIENT_ID + ':' + env.FITBIT_CLIENT_SECRET);
+  const r = await fetch(FITBIT_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Authorization': 'Basic ' + basic, 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type:'refresh_token', refresh_token: rec.refresh_token }).toString(),
+  });
+  if (!r.ok) return null;
+  const tok = await r.json();
+  return { access_token: tok.access_token, refresh_token: tok.refresh_token || rec.refresh_token, expires_at: Date.now() + (tok.expires_in || 28800) * 1000, user_id: rec.user_id };
+}
+
+// GET /fitbit/metrics?sid=… → normalized 7-day-averaged ex {hrv,rhr,sleepHours,deepMin,spo2,tempDev}
+async function handleFitbitMetrics(request, env, corsHeaders){
+  const url = new URL(request.url);
+  const sid = url.searchParams.get('sid');
+  if (!sid) return jsonResponse({ ok:false, error:'sid_required' }, corsHeaders, 400);
+  if (!env.WEARABLE_TOKENS) return jsonResponse({ ok:false, error:'kv_binding_missing' }, corsHeaders, 500);
+
+  const raw = await env.WEARABLE_TOKENS.get('fitbit:' + sid);
+  if (!raw) return jsonResponse({ ok:false, error:'not_connected' }, corsHeaders, 404);
+  let rec = JSON.parse(raw);
+  if (Date.now() > rec.expires_at - 60000) {
+    const refreshed = await fitbitRefresh(env, rec);
+    if (!refreshed) return jsonResponse({ ok:false, error:'refresh_failed' }, corsHeaders, 401);
+    rec = refreshed;
+    await env.WEARABLE_TOKENS.put('fitbit:' + sid, JSON.stringify(rec), { expirationTtl: 2 * 60 * 60 });
+  }
+
+  const h = { 'Authorization': 'Bearer ' + rec.access_token, 'Accept-Language': 'en_US' };
+  const sd = new Date(Date.now() - 6 * 86400000).toISOString().slice(0,10);
+  const ed = new Date().toISOString().slice(0,10);
+  const avg = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : null;
+  const get = async (p) => { try { const r = await fetch(FITBIT_API + p, { headers: h }); if (!r.ok) return null; return await r.json(); } catch(e){ return null; } };
+
+  const ex = {};
+  const hrv = await get(`/1/user/-/hrv/date/${sd}/${ed}.json`);
+  if (hrv && hrv.hrv) { const v = avg(hrv.hrv.map(x=>x.value && x.value.dailyRmssd).filter(n=>n!=null)); if (v!=null) ex.hrv = Math.round(v); }
+  const hr = await get(`/1/user/-/activities/heart/date/${sd}/${ed}.json`);
+  if (hr && hr['activities-heart']) { const v = avg(hr['activities-heart'].map(x=>x.value && x.value.restingHeartRate).filter(n=>n!=null)); if (v!=null) ex.rhr = Math.round(v); }
+  const sl = await get(`/1.2/user/-/sleep/date/${sd}/${ed}.json`);
+  if (sl && sl.sleep && sl.sleep.length) {
+    const mins = avg(sl.sleep.map(x=>x.minutesAsleep).filter(n=>n!=null)); if (mins!=null) ex.sleepHours = +(mins/60).toFixed(1);
+    const deep = avg(sl.sleep.map(x=>x.levels && x.levels.summary && x.levels.summary.deep && x.levels.summary.deep.minutes).filter(n=>n!=null)); if (deep!=null) ex.deepMin = Math.round(deep);
+  }
+  const sp = await get(`/1/user/-/spo2/date/${sd}/${ed}.json`);
+  if (Array.isArray(sp)) { const v = avg(sp.map(x=>x.value && x.value.avg).filter(n=>n!=null)); if (v!=null) ex.spo2 = +v.toFixed(1); }
+  const tp = await get(`/1/user/-/temp/skin/date/${sd}/${ed}.json`);
+  if (tp && tp.tempSkin) { const v = avg(tp.tempSkin.map(x=>x.value && x.value.nightlyRelative).filter(n=>n!=null)); if (v!=null) ex.tempDev = +v.toFixed(2); }
+
+  return jsonResponse({ ok:true, ex }, corsHeaders);
 }
 
 // POST /tg-test  → отправляет нутрициологу контрольное сообщение.

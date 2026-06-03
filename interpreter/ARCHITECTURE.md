@@ -679,9 +679,15 @@ wrangler deploy
 - **Oura** — партнёрский трек, см. §15. Заявка 2026-06-02, ждём sales.
 - **Garmin** — Garmin Connect Developer Program (нужны **Health API** + **Women's Health API**: сон, HRV, пульс покоя, стресс, Body Battery, SpO₂, шаги + цикловые данные — важно для женской секции). **Коммерция платная (license fee), есть бесплатная eval-фаза.** Заявка отправлена 2026-06-02 через форму «Contact Garmin Health» (`garmin.com/en-US/forms/wellnesspartner/`) — «A Garmin associate will be in touch». Callback URI планируем `…workers.dev/garmin/callback`.
 
-### 16.2 Self-serve OAuth — писать никому не нужно, строим сами когда дойдут руки
-- **Fitbit** (dev.fitbit.com, OAuth2 + PKCE), **WHOOP** (developer.whoop.com), **Polar** (Polar AccessLink), **Withings** (developer.withings.com — для коммерции возможен платный тариф/ревью). Та же серверная схема, что в §15.
-- Это самые быстрые расширения авто-подключения помимо Oura — без ожидания вендоров.
+### 16.2 Self-serve OAuth — писать никому не нужно, строим сами
+- **Fitbit** (dev.fitbit.com), **WHOOP** (developer.whoop.com), **Polar** (Polar AccessLink), **Withings** (developer.withings.com — для коммерции возможен платный тариф/ревью). Та же серверная схема, что в §15.
+
+**Fitbit — РЕАЛИЗОВАНО (2026-06-XX, эталон), ждёт настройки и деплоя:**
+- **Worker** (`cloudflare-worker.js`): GET-роуты `/fitbit/start`, `/fitbit/callback`, `/fitbit/metrics` + `fitbitRefresh`. OAuth2 confidential-client (Basic-auth обмен `code→token`, без PKCE — секрет на сервере). `state` подписан HMAC(FITBIT_CLIENT_SECRET) (приём из `/cal-webhook`, без KV на старте). Токены в KV `WEARABLE_TOKENS` (`fitbit:<sid>`, TTL 2ч), авто-refresh в `/metrics`. `/metrics` тянет за 7 дней и усредняет: HRV `dailyRmssd` (мс!), restingHeartRate, sleep (часы+deep), spo2.avg, temp/skin `nightlyRelative` → отдаёт `{ok,ex}`.
+- **Фронт** — `interpreter-pro.html` (эталон): вкладка «🔗 Подключить» на карточке Fitbit → `connectFitbit()` (генерит `sid`, редирект на `/fitbit/start?sid&ret`). Возврат `?fitbit=connected&sid` → `fetchFitbitLive()` → `/fitbit/metrics` → существующий `applyExtracted`+`applyImportedToSliders` (§4.4). Строки на 12 языков. Token/File-вкладки сохранены как fallback.
+- **Чтобы заработало (делает владелец):** (1) зарегать app на **dev.fitbit.com** (OAuth 2.0 «Server»), redirect URI `https://interpreter.viaelcom.workers.dev/fitbit/callback`, scopes `heartrate sleep oxygen_saturation temperature activity profile`; (2) `wrangler secret put FITBIT_CLIENT_ID` + `FITBIT_CLIENT_SECRET`; (3) `wrangler kv namespace create WEARABLE_TOKENS` → вписать id в `wrangler.jsonc` (сейчас плейсхолдер, без него деплой упадёт); (4) `wrangler deploy`.
+- **TODO после проверки PRO:** тиражировать вкладку на `interpreter-pro-expert.html` и `interpreter-elite.html` (ждёт ОК — правило «не размножать по тарифам без спроса»). VIO остаётся на Sandbox-демо.
+- Остальные (WHOOP/Polar/Withings) — тем же каркасом, когда дойдут руки.
 
 ### 16.3 Нет публичного веб-API → только файл/ручной ввод (как сейчас)
 - **Apple Watch / Health** — HealthKit на устройстве, облачного API нет. Веб-авто-сопряжение невозможно; только `export.xml` или отдельное iOS-приложение (большая отдельная задача).
