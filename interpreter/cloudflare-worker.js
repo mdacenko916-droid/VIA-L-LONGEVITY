@@ -2417,7 +2417,24 @@ const CARE_PHRASES = {
     ja:'ありがとうございます 🌿 ご質問を栄養士にお伝えしました。営業時間内、通常48時間以内にお返事します — あなたを忘れません。',
     ko:'감사합니다 🌿 질문을 영양사에게 전달했습니다. 영업 시간 내, 보통 48시간 이내에 답변드립니다 — 잊지 않겠습니다.',
   },
+  anketa_invite: {
+    ru:'Чтобы вести вас точно, нутрициологу нужна полная картина 🌿 Заполните, пожалуйста, анкету здоровья — спокойно, можно в несколько заходов: {link}\n\nЕсть свежие анализы — впишите значения или приложите фото/PDF. Нет под рукой — не переживайте, подскажем, что сдать. Лучше заполнить за 2–3 дня до встречи.',
+    uk:'Щоб вести вас точно, нутриціологу потрібна повна картина 🌿 Заповніть, будь ласка, анкету здоров’я — спокійно, можна в кілька заходів: {link}\n\nЄ свіжі аналізи — впишіть значення або додайте фото/PDF. Немає під рукою — не хвилюйтеся, підкажемо, що здати. Краще заповнити за 2–3 дні до зустрічі.',
+    en:'To guide you precisely, your nutritionist needs the full picture 🌿 Please fill in the health questionnaire — take your time, in several sittings if needed: {link}\n\nIf you have recent lab results, enter the values or attach a photo/PDF. Don’t have them yet — no worries, we’ll tell you what to take. Best to complete it 2–3 days before your session.',
+    es:'Para guiarte con precisión, tu nutricionista necesita el panorama completo 🌿 Completa el cuestionario de salud — con calma, en varias veces si hace falta: {link}\n\nSi tienes análisis recientes, escribe los valores o adjunta una foto/PDF. ¿No los tienes aún? Tranquilo/a, te diremos qué hacer. Mejor completarlo 2–3 días antes de la sesión.',
+    de:'Damit dich deine Ernährungsberaterin genau begleiten kann, braucht sie das Gesamtbild 🌿 Bitte fülle den Gesundheitsfragebogen aus — in Ruhe, gern in mehreren Schritten: {link}\n\nWenn du aktuelle Laborwerte hast, trage sie ein oder hänge ein Foto/PDF an. Noch keine? Kein Problem, wir sagen dir, was zu tun ist. Am besten 2–3 Tage vor dem Termin.',
+    pt:'Para guiar você com precisão, sua nutricionista precisa do quadro completo 🌿 Preencha o questionário de saúde — com calma, em várias etapas se precisar: {link}\n\nSe tiver exames recentes, insira os valores ou anexe foto/PDF. Ainda não tem? Sem preocupação, diremos o que fazer. Melhor concluir 2–3 dias antes da sessão.',
+    fr:'Pour vous accompagner avec précision, votre nutritionniste a besoin du tableau complet 🌿 Remplissez le questionnaire de santé — tranquillement, en plusieurs fois si besoin : {link}\n\nSi vous avez des analyses récentes, saisissez les valeurs ou joignez une photo/PDF. Pas encore ? Pas d’inquiétude, on vous dira quoi faire. Idéalement 2–3 jours avant la séance.',
+    pl:'Aby prowadzić Cię precyzyjnie, dietetyk potrzebuje pełnego obrazu 🌿 Wypełnij ankietę zdrowia — spokojnie, w kilku podejściach: {link}\n\nMasz świeże wyniki badań — wpisz wartości lub dołącz zdjęcie/PDF. Jeszcze nie masz? Spokojnie, podpowiemy, co zrobić. Najlepiej wypełnić 2–3 dni przed sesją.',
+    it:'Per seguirti con precisione, la tua nutrizionista ha bisogno del quadro completo 🌿 Compila il questionario sulla salute — con calma, anche in più volte: {link}\n\nSe hai esami recenti, inserisci i valori o allega foto/PDF. Non li hai ancora? Tranquillo/a, ti diremo cosa fare. Meglio completarlo 2–3 giorni prima della sessione.',
+    he:'כדי שהתזונאית תלווה אותך במדויק, היא צריכה תמונה מלאה 🌿 אנא מלא/י את שאלון הבריאות — בנחת, אפשר בכמה פעמים: {link}\n\nאם יש בדיקות עדכניות, הזן/י ערכים או צרף/י תמונה/PDF. אין עדיין? אל דאגה, נכוון אותך. עדיף להשלים 2–3 ימים לפני הפגישה.',
+    ja:'栄養士が的確にサポートできるよう、全体像が必要です 🌿 健康問診票のご記入をお願いします — ゆっくり、何回かに分けてもOK：{link}\n\n最近の検査結果があれば数値を入力するか写真/PDFを添付してください。まだない場合もご安心を、何を受ければよいかお伝えします。セッションの2〜3日前までにご記入いただけると助かります。',
+    ko:'영양사가 정확히 도와드리도록 전체 그림이 필요합니다 🌿 건강 설문지를 작성해 주세요 — 천천히, 여러 번 나눠 해도 좋습니다: {link}\n\n최근 검사 결과가 있으면 수치를 입력하거나 사진/PDF를 첨부해 주세요. 아직 없으셔도 괜찮습니다, 무엇을 받으면 되는지 알려드리겠습니다. 세션 2~3일 전까지 작성해 주시면 좋습니다.',
+  },
 };
+
+// Чистый публичный URL полной анкеты здоровья (GitHub Pages via-l.com).
+const CARE_ANKETA_URL = 'https://via-l.com/book/anketa/via-l-anketa-zdorovya.pdf';
 
 function careLang(code){
   if(!code) return 'en';
@@ -2497,7 +2514,21 @@ async function handleCareWebhook(request, env, corsHeaders){
     const threadId = msg.message_thread_id;
     if(!text || !threadId) return jsonResponse({ok:true}, corsHeaders);            // сервисные / General
     if(msg.from?.username === 'viael_care_bot') return jsonResponse({ok:true}, corsHeaders);
-    if(text.startsWith('/')) return jsonResponse({ok:true}, corsHeaders);          // команды нутрициолога
+    if(text.startsWith('/')){
+      // Команда нутрициолога в топике клиента: /anketa → отправить клиенту анкету.
+      if(text.trim().split(/\s+/)[0].toLowerCase()==='/anketa'){
+        const rawA = await env.EXPERT_DRAFTS.get('care_client:'+threadId);
+        if(rawA){
+          let rA; try{ rA = JSON.parse(rawA); }catch(_){ rA=null; }
+          if(rA){
+            const cl = (await env.EXPERT_DRAFTS.get('care_lang:'+rA.clientId)) || rA.lang || 'en';
+            await careSend(env, rA.clientId, carePhrase('anketa_invite', cl).replace('{link}', CARE_ANKETA_URL));
+            await careSend(env, env.NUTRITIONIST_GROUP_ID, '✅ Анкета отправлена клиенту', { message_thread_id: threadId });
+          }
+        }
+      }
+      return jsonResponse({ok:true}, corsHeaders);                                 // прочие команды/служебное
+    }
     const raw = await env.EXPERT_DRAFTS.get('care_client:'+threadId);
     if(!raw) return jsonResponse({ok:true}, corsHeaders);                          // топик не наш
     let rec; try{ rec = JSON.parse(raw); }catch(_){ return jsonResponse({ok:true}, corsHeaders); }
