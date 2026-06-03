@@ -2744,6 +2744,42 @@ function anketaChunks(lines, limit=2500){
   return out;
 }
 
+// ИИ-структурирование: сырые ответы (язык клиента) → клиническая сводка на RU.
+// Один вызов Sonnet 4.6 (анкета — разовое событие; качество важнее цены). Перевод
+// встроен (вход на любом языке → выход RU). Возвращает '' при ошибке/без ключа.
+async function anketaSummary(env, answers, lang){
+  if(!env.CLAUDE_API_KEY) return '';
+  const NAMES = {uk:'Ukrainian',ru:'Russian',en:'English',es:'Spanish',de:'German',pt:'Portuguese',fr:'French',pl:'Polish',it:'Italian',he:'Hebrew',ja:'Japanese',ko:'Korean'};
+  const src = Object.values(answers).filter(it=>it && it.v!=null && it.v!=='')
+    .map(it=>`${it.q||''}: ${anketaVal(it.v).replace(/\n\s*/g,'; ').trim()}`).join('\n');
+  if(!src) return '';
+  const system =
+    'Ты — клинический ассистент нутрициолога VIA-L. На входе — ответы клиента из анкеты '+
+    'здоровья (до 110 вопросов; язык клиента: '+(NAMES[lang]||lang)+'). Сделай СЖАТУЮ '+
+    'структурированную сводку ДЛЯ НУТРИЦИОЛОГА на РУССКОМ языке строго по шаблону:\n'+
+    '🎯 Цель клиента\n'+
+    '🚩 Красные флаги (что требует внимания / направления к врачу; нет — пиши «нет явных»)\n'+
+    '🔑 Ключевые жалобы по системам (энергия·сон / ЖКТ / гормоны / кожа·волосы / др.)\n'+
+    '🧪 Анализы (что есть, что вне нормы, чего не хватает — доспросить)\n'+
+    '💊 Лекарства и добавки (текущее + возможные дубли/взаимодействия)\n'+
+    '🍽 Образ жизни (питание·сон·стресс·активность — точки коррекции)\n'+
+    '📌 Фокус ведения (3–5 пунктов: с чего начать + что уточнить)\n\n'+
+    'ПРАВИЛА: только систематизируй ответы клиента, ничего не выдумывай; нет данных — '+
+    '«не указано». НЕ ставь диагнозы — медицинские находки помечай «рекомендовать '+
+    'консультацию врача». Не выходи за рамки нутрициологии. Тон — забота, не приговор. '+
+    'Без вступлений и заключений — только сводка по шаблону.';
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':env.CLAUDE_API_KEY,'anthropic-version':'2023-06-01'},
+      body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:1500, system, messages:[{role:'user',content:src}] }),
+    });
+    if(!res.ok) return '';
+    const j = await res.json();
+    return (j.content?.[0]?.text||'').trim();
+  }catch(_){ return ''; }
+}
+
 async function handleAnketaSubmit(request, env, corsHeaders){
   if(!env.CLIENT_BOT_TOKEN || !env.NUTRITIONIST_GROUP_ID || !env.EXPERT_DRAFTS){
     return jsonResponse({ok:false, error:'care bot not configured'}, corsHeaders, 503);
@@ -2769,20 +2805,26 @@ async function handleAnketaSubmit(request, env, corsHeaders){
   }
   const extra = topicId ? { message_thread_id: Number(topicId) } : {};
 
-  // ── Сборка карточки: метки вопросов уже RU; значения — как ввёл клиент ──
-  const header = `📋 АНКЕТА ЗДОРОВЬЯ · ${name||'Клиент'}${email?' · '+email:''} · ${lang.toUpperCase()}`;
-  const lines = [header, ''];
+  const idline = `${name||'Клиент'}${email?' · '+email:''} · ${lang.toUpperCase()}`;
+
+  // ── Сообщение 1: ИИ-сводка для нутрициолога (RU, перевод встроен) ──
+  // Падение ИИ (нет ключа / ошибка) не блокирует доставку — полные ответы уйдут всё равно.
+  const summary = await anketaSummary(env, answers, lang);
+  if(summary){
+    for(const chunk of anketaChunks([`🧬 СВОДКА ДЛЯ НУТРИЦИОЛОГА · ${idline}`, '', ...summary.split('\n')])){
+      await careSend(env, env.NUTRITIONIST_GROUP_ID, chunk, extra);
+    }
+  }
+
+  // ── Сообщение 2: полные ответы как есть (язык клиента) — первоисточник ──
+  const lines = [`📋 ПОЛНЫЕ ОТВЕТЫ · ${idline}`, ''];
   for(const item of Object.values(answers)){
     if(!item || item.v==null || item.v==='') continue;
     const val = anketaVal(item.v), q = item.q || '';
     lines.push(val.includes('\n') ? `• ${q}:\n${val}` : `• ${q}: ${val}`);
   }
-
-  // ── Доставка: чанк → (если не ru/uk) перевод свободного текста на RU → топик ──
-  const needTr = (lang!=='ru' && lang!=='uk');
   for(const chunk of anketaChunks(lines)){
-    const out = needTr ? await careTranslate(env, chunk, lang, 'ru') : chunk;
-    await careSend(env, env.NUTRITIONIST_GROUP_ID, out, extra);
+    await careSend(env, env.NUTRITIONIST_GROUP_ID, chunk, extra);
   }
 
   // ── Подтверждение клиенту на email (гарантированный канал) ──
