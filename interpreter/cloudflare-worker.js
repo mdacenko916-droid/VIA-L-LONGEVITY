@@ -2590,6 +2590,29 @@ async function careCreateTopic(env, name){
   return j?.result?.message_thread_id || null;
 }
 
+// Отправка в топик клиента с авто-пересозданием. Если нутрициолог удалил топик,
+// Telegram отвечает «message thread not found» → создаём новый, обновляем KV
+// (care_topic/care_client), чистим висячую обратную привязку и шлём заново. Закрывает
+// баг «клиент пропал после удаления его топика».
+async function careRelayToTopic(env, clientId, lang, cname, text){
+  const send = tid => careSend(env, env.NUTRITIONIST_GROUP_ID, text,
+    tid ? { message_thread_id: Number(tid) } : {});
+  let topicId = await env.EXPERT_DRAFTS.get('care_topic:'+clientId);
+  let res = topicId ? await send(topicId) : null;
+  const threadGone = res && res.ok===false && /thread not found/i.test(res.description||'');
+  if(!topicId || threadGone){
+    const fresh = await careCreateTopic(env, cname+' · '+lang.toUpperCase());
+    if(fresh){
+      if(threadGone && topicId) await env.EXPERT_DRAFTS.delete('care_client:'+topicId);
+      await env.EXPERT_DRAFTS.put('care_topic:'+clientId, String(fresh));
+      await env.EXPERT_DRAFTS.put('care_client:'+fresh, JSON.stringify({clientId, lang, name:cname}));
+      topicId = fresh;
+      await send(topicId);
+    }
+  }
+  return topicId;
+}
+
 // Перевод с авто-роутингом модели: he/ja/ko → Sonnet 4.6 (Haiku галлюцинирует),
 // остальные → Haiku (дёшево). ru/uk не переводим — это решает вызывающий код.
 async function careTranslate(env, text, fromLang, toLang){
@@ -2685,14 +2708,6 @@ async function handleCareWebhook(request, env, corsHeaders){
     await env.EXPERT_DRAFTS.put('care_lang:'+clientId, lang);
 
     const cname = [msg.from?.first_name, msg.from?.last_name].filter(Boolean).join(' ') || ('client '+clientId);
-    let topicId = await env.EXPERT_DRAFTS.get('care_topic:'+clientId);
-    if(!topicId){
-      topicId = await careCreateTopic(env, cname+' · '+lang.toUpperCase());
-      if(topicId){
-        await env.EXPERT_DRAFTS.put('care_topic:'+clientId, String(topicId));
-        await env.EXPERT_DRAFTS.put('care_client:'+topicId, JSON.stringify({clientId, lang, name:cname}));
-      }
-    }
 
     // реле: оригинал + (если не ru/uk) перевод на ru для нутрициолога
     let relay = '👤 '+cname+(lang!=='ru'&&lang!=='uk' ? ' ('+lang.toUpperCase()+')' : '')+':\n'+text;
@@ -2700,8 +2715,8 @@ async function handleCareWebhook(request, env, corsHeaders){
       const ru = await careTranslate(env, text, lang, 'ru');
       relay += '\n\n🔁 RU: '+ru;
     }
-    const extra = topicId ? { message_thread_id: Number(topicId) } : {};
-    await careSend(env, env.NUTRITIONIST_GROUP_ID, relay, extra);
+    // в топик клиента с авто-пересозданием, если нутрициолог удалил топик
+    await careRelayToTopic(env, clientId, lang, cname, relay);
     await careSend(env, clientId, carePhrase('passed_to_specialist', lang));
     return jsonResponse({ok:true}, corsHeaders);
   }
