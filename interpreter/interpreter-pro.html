@@ -1550,10 +1550,22 @@ footer{
     </div>
     <div class="source-body">
       <div class="method-tabs">
-        <button class="method-tab active" onclick="setMethod('whoop','file')">📁 Файл (CSV)</button>
+        <button class="method-tab active" data-t="tab_whoop_connect" onclick="setMethod('whoop','connect')">🔗 Подключить</button>
+        <button class="method-tab" onclick="setMethod('whoop','file')">📁 Файл (CSV)</button>
         <button class="method-tab" onclick="setMethod('whoop','manual')">✏️ Вручную</button>
       </div>
-      <div id="whoop-file">
+      <div id="whoop-connect">
+        <div data-t="instr_whoop_connect" style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;">
+          Войдите в свой аккаунт WHOOP — мы безопасно подтянем восстановление, HRV, сон и SpO₂ за 7 дней и заполним шаги анализа.
+        </div>
+        <button class="token-btn" style="width:100%;" data-t="btn_whoop_connect" onclick="connectWearable('whoop')">🔗 Подключить WHOOP</button>
+        <div class="import-status" id="whoop-connect-status"></div>
+        <div class="imported-preview" id="whoop-connect-preview">
+          <div style="font-size:11px;color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;" data-t="status_loaded">✓ Данные загружены</div>
+          <div class="preview-grid" id="whoop-connect-grid"></div>
+        </div>
+      </div>
+      <div id="whoop-file" style="display:none;">
         <div data-t="instr_whoop" style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;">
           <b style="color:var(--t1);">WHOOP App</b> → Профиль → Настройки → Export Data → получите письмо → скачайте CSV:<br>
           <span style="color:var(--t3);margin-top:4px;display:block;">• <b>recovery.csv</b> — HRV, RHR, восстановление<br>• <b>sleeps.csv</b> — стадии сна<br>• <b>workouts.csv</b> — нагрузка / Strain</span>
@@ -3857,6 +3869,22 @@ const _fitbitT={
 Object.keys(_fitbitT).forEach(l=>{if(T[l])Object.assign(T[l],_fitbitT[l]);});
 const _fitbitNoData={uk:'ℹ️ У вашому акаунті Google немає даних Fitbit',ru:'ℹ️ В вашем аккаунте Google нет данных Fitbit',en:'ℹ️ No Fitbit data found in your Google account',es:'ℹ️ No hay datos de Fitbit en tu cuenta de Google',de:'ℹ️ In deinem Google-Konto wurden keine Fitbit-Daten gefunden',pt:'ℹ️ Nenhum dado do Fitbit na sua conta Google',fr:'ℹ️ Aucune donnée Fitbit dans votre compte Google',pl:'ℹ️ Brak danych Fitbit na koncie Google',it:'ℹ️ Nessun dato Fitbit nel tuo account Google',he:'ℹ️ לא נמצאו נתוני Fitbit בחשבון Google שלך',ja:'ℹ️ Google アカウントに Fitbit のデータがありません',ko:'ℹ️ Google 계정에 Fitbit 데이터가 없습니다'};
 Object.keys(_fitbitNoData).forEach(l=>{if(T[l])T[l].status_fitbit_nodata=_fitbitNoData[l];});
+// ── WHOOP OAuth connect strings (uk first, all 12 languages) ──
+const _whoopT={
+  uk:{tab_whoop_connect:'🔗 Підключити',instr_whoop_connect:'Увійдіть у свій акаунт WHOOP — ми безпечно підтягнемо відновлення, HRV, сон і SpO₂ за 7 днів і заповнимо кроки аналізу.',btn_whoop_connect:'🔗 Підключити WHOOP',status_whoop_connecting:'⏳ Підключаємось до WHOOP…',status_whoop_ok:'✓ Дані WHOOP завантажено',status_whoop_err:'⚠ Не вдалося отримати дані WHOOP',status_whoop_nodata:'ℹ️ У вашому акаунті WHOOP немає даних за останні дні'},
+  ru:{tab_whoop_connect:'🔗 Подключить',instr_whoop_connect:'Войдите в свой аккаунт WHOOP — мы безопасно подтянем восстановление, HRV, сон и SpO₂ за 7 дней и заполним шаги анализа.',btn_whoop_connect:'🔗 Подключить WHOOP',status_whoop_connecting:'⏳ Подключаемся к WHOOP…',status_whoop_ok:'✓ Данные WHOOP загружены',status_whoop_err:'⚠ Не удалось получить данные WHOOP',status_whoop_nodata:'ℹ️ В вашем аккаунте WHOOP нет данных за последние дни'},
+  en:{tab_whoop_connect:'🔗 Connect',instr_whoop_connect:'Sign in to your WHOOP account — we securely pull recovery, HRV, sleep and SpO₂ for the last 7 days and fill the analysis steps.',btn_whoop_connect:'🔗 Connect WHOOP',status_whoop_connecting:'⏳ Connecting to WHOOP…',status_whoop_ok:'✓ WHOOP data loaded',status_whoop_err:'⚠ Could not fetch WHOOP data',status_whoop_nodata:'ℹ️ No recent WHOOP data found in your account'},
+  es:{tab_whoop_connect:'🔗 Conectar',instr_whoop_connect:'Inicia sesión en tu cuenta WHOOP — extraemos de forma segura recuperación, HRV, sueño y SpO₂ de los últimos 7 días.',btn_whoop_connect:'🔗 Conectar WHOOP',status_whoop_connecting:'⏳ Conectando con WHOOP…',status_whoop_ok:'✓ Datos de WHOOP cargados',status_whoop_err:'⚠ No se pudieron obtener los datos de WHOOP',status_whoop_nodata:'ℹ️ No hay datos recientes de WHOOP en tu cuenta'},
+  de:{tab_whoop_connect:'🔗 Verbinden',instr_whoop_connect:'Melde dich bei deinem WHOOP-Konto an — wir laden sicher Erholung, HRV, Schlaf und SpO₂ der letzten 7 Tage.',btn_whoop_connect:'🔗 WHOOP verbinden',status_whoop_connecting:'⏳ Verbindung zu WHOOP…',status_whoop_ok:'✓ WHOOP-Daten geladen',status_whoop_err:'⚠ WHOOP-Daten konnten nicht geladen werden',status_whoop_nodata:'ℹ️ Keine aktuellen WHOOP-Daten in deinem Konto'},
+  pt:{tab_whoop_connect:'🔗 Conectar',instr_whoop_connect:'Entre na sua conta WHOOP — buscamos com segurança recuperação, HRV, sono e SpO₂ dos últimos 7 dias.',btn_whoop_connect:'🔗 Conectar WHOOP',status_whoop_connecting:'⏳ Conectando ao WHOOP…',status_whoop_ok:'✓ Dados do WHOOP carregados',status_whoop_err:'⚠ Não foi possível obter os dados do WHOOP',status_whoop_nodata:'ℹ️ Nenhum dado recente do WHOOP na sua conta'},
+  fr:{tab_whoop_connect:'🔗 Connecter',instr_whoop_connect:'Connectez-vous à votre compte WHOOP — nous récupérons en toute sécurité récupération, VFC, sommeil et SpO₂ des 7 derniers jours.',btn_whoop_connect:'🔗 Connecter WHOOP',status_whoop_connecting:'⏳ Connexion à WHOOP…',status_whoop_ok:'✓ Données WHOOP chargées',status_whoop_err:'⚠ Impossible de récupérer les données WHOOP',status_whoop_nodata:'ℹ️ Aucune donnée WHOOP récente dans votre compte'},
+  pl:{tab_whoop_connect:'🔗 Połącz',instr_whoop_connect:'Zaloguj się do konta WHOOP — bezpiecznie pobierzemy regenerację, HRV, sen i SpO₂ z ostatnich 7 dni.',btn_whoop_connect:'🔗 Połącz WHOOP',status_whoop_connecting:'⏳ Łączenie z WHOOP…',status_whoop_ok:'✓ Wczytano dane WHOOP',status_whoop_err:'⚠ Nie udało się pobrać danych WHOOP',status_whoop_nodata:'ℹ️ Brak ostatnich danych WHOOP na koncie'},
+  it:{tab_whoop_connect:'🔗 Collega',instr_whoop_connect:'Accedi al tuo account WHOOP — recuperiamo in sicurezza recupero, HRV, sonno e SpO₂ degli ultimi 7 giorni.',btn_whoop_connect:'🔗 Collega WHOOP',status_whoop_connecting:'⏳ Connessione a WHOOP…',status_whoop_ok:'✓ Dati WHOOP caricati',status_whoop_err:'⚠ Impossibile recuperare i dati WHOOP',status_whoop_nodata:'ℹ️ Nessun dato WHOOP recente nel tuo account'},
+  he:{tab_whoop_connect:'🔗 חיבור',instr_whoop_connect:'התחבר לחשבון WHOOP שלך — נמשוך באופן מאובטח התאוששות, HRV, שינה ו-SpO₂ מ-7 הימים האחרונים.',btn_whoop_connect:'🔗 חבר את WHOOP',status_whoop_connecting:'⏳ מתחבר ל-WHOOP…',status_whoop_ok:'✓ נתוני WHOOP נטענו',status_whoop_err:'⚠ לא ניתן היה לקבל נתוני WHOOP',status_whoop_nodata:'ℹ️ אין נתוני WHOOP אחרונים בחשבונך'},
+  ja:{tab_whoop_connect:'🔗 接続',instr_whoop_connect:'WHOOP アカウントにサインイン — 直近7日間の回復・HRV・睡眠・SpO₂ を安全に取得します。',btn_whoop_connect:'🔗 WHOOP を接続',status_whoop_connecting:'⏳ WHOOP に接続中…',status_whoop_ok:'✓ WHOOP のデータを読み込みました',status_whoop_err:'⚠ WHOOP のデータを取得できませんでした',status_whoop_nodata:'ℹ️ アカウントに最近の WHOOP データがありません'},
+  ko:{tab_whoop_connect:'🔗 연결',instr_whoop_connect:'WHOOP 계정에 로그인하세요 — 최근 7일 회복·HRV·수면·SpO₂를 안전하게 가져옵니다.',btn_whoop_connect:'🔗 WHOOP 연결',status_whoop_connecting:'⏳ WHOOP에 연결 중…',status_whoop_ok:'✓ WHOOP 데이터 로드 완료',status_whoop_err:'⚠ WHOOP 데이터를 가져오지 못했습니다',status_whoop_nodata:'ℹ️ 계정에 최근 WHOOP 데이터가 없습니다'}
+};
+Object.keys(_whoopT).forEach(l=>{if(T[l])Object.assign(T[l],_whoopT[l]);});
 let lang='en';
 let _rerendering=false;
 function L(t){return t[lang]||t.en||t.ru||Object.values(t)[0];}
@@ -5282,7 +5310,7 @@ function setMethod(source,method){
   else if(source==='apple'){document.getElementById('apple-file').style.display=method==='file'?'block':'none';document.getElementById('apple-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
   else if(source==='fitbit'){document.getElementById('fitbit-connect').style.display=method==='connect'?'block':'none';document.getElementById('fitbit-token').style.display=method==='token'?'block':'none';document.getElementById('fitbit-file').style.display=method==='file'?'block':'none';tabs[0].classList.toggle('active',method==='connect');tabs[1].classList.toggle('active',method==='token');tabs[2].classList.toggle('active',method==='file');}
   else if(source==='samsung'){document.getElementById('samsung-file').style.display=method==='file'?'block':'none';document.getElementById('samsung-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
-  else if(source==='whoop'){document.getElementById('whoop-file').style.display=method==='file'?'block':'none';document.getElementById('whoop-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
+  else if(source==='whoop'){document.getElementById('whoop-connect').style.display=method==='connect'?'block':'none';document.getElementById('whoop-file').style.display=method==='file'?'block':'none';document.getElementById('whoop-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='connect');tabs[1].classList.toggle('active',method==='file');tabs[2].classList.toggle('active',method==='manual');}
   else if(source==='xiaomi'){document.getElementById('xiaomi-file').style.display=method==='file'?'block':'none';document.getElementById('xiaomi-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
   else if(source==='withings'){document.getElementById('withings-file').style.display=method==='file'?'block':'none';document.getElementById('withings-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
   else if(source==='amazfit'){document.getElementById('amazfit-file').style.display=method==='file'?'block':'none';document.getElementById('amazfit-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
@@ -5729,6 +5757,49 @@ function applyAmazfitManual(){
 
 // ══ AI ANALYSIS ═══════════════════════════════════════════
 const AI_WORKER = 'https://interpreter.viaelcom.workers.dev';
+
+// ══ Generic wearable OAuth connect (WHOOP/Polar/Withings; Fitbit has its own) ══
+function connectWearable(vendor){
+  let sid = localStorage.getItem('vial_' + vendor + '_sid');
+  if(!sid){ sid = Date.now().toString(36) + Math.random().toString(36).slice(2,10); localStorage.setItem('vial_' + vendor + '_sid', sid); }
+  setStatus(vendor + '-connect-status','loading',t('status_' + vendor + '_connecting'));
+  location.href = AI_WORKER + '/' + vendor + '/start?sid=' + encodeURIComponent(sid) + '&ret=' + encodeURIComponent(location.origin + location.pathname);
+}
+async function fetchWearableLive(vendor, sid){
+  setStatus(vendor + '-connect-status','loading',t('status_' + vendor + '_connecting'));
+  try{
+    const r = await fetch(AI_WORKER + '/' + vendor + '/metrics?sid=' + encodeURIComponent(sid));
+    const j = await r.json();
+    if(j && j.ok && j.ex && Object.keys(j.ex).length){
+      applyExtracted(j.ex, vendor);
+      applyImportedToSliders();
+      renderPreview(vendor + '-connect-grid', j.ex);
+      document.getElementById(vendor + '-connect-preview').classList.add('show');
+      setStatus(vendor + '-connect-status','success',t('status_' + vendor + '_ok'));
+      updateImportSummary();
+    } else if(j && j.ok){
+      setStatus(vendor + '-connect-status','error',t('status_' + vendor + '_nodata'));
+    } else {
+      setStatus(vendor + '-connect-status','error',t('status_' + vendor + '_err'));
+    }
+  }catch(e){ setStatus(vendor + '-connect-status','error',t('status_' + vendor + '_err')); }
+}
+(function(){
+  const p = new URLSearchParams(location.search);
+  ['whoop','polar','withings'].forEach(function(v){
+    const flag = p.get(v);
+    if(!flag) return;
+    const sid = p.get('sid') || localStorage.getItem('vial_' + v + '_sid');
+    history.replaceState(null, '', location.origin + location.pathname);
+    setTimeout(function(){
+      try{ if(typeof openImport === 'function') openImport(); }catch(e){}
+      try{ toggleCard(v); }catch(e){}
+      try{ setMethod(v,'connect'); }catch(e){}
+      if(flag === 'connected' && sid) fetchWearableLive(v, sid);
+      else setStatus(v + '-connect-status','error',t('status_' + v + '_err'));
+    }, 400);
+  });
+})();
 
 async function fetchAIAnalysis(data, lang) {
   const card = document.getElementById('aiCard');

@@ -699,7 +699,11 @@ wrangler deploy
 - ⚠️ Точный синтаксис `filter=` и форма value сверены по докам/примерам (developers.google.com/health), но финально проверить на живом токене.
 - **Тираж выполнен:** вкладка «Подключить» есть во всех трёх платных тарифах (pro/expert/elite). VIO остаётся на Sandbox-демо.
 - ⚠️ Live-данные не проверены: у владельца нет Fitbit. OAuth-флоу проверен end-to-end (consent + возврат), но разбор данных верифицируется только на Google-аккаунте с реальной историей Fitbit.
-- Остальные (WHOOP/Polar/Withings) — тем же каркасом, когда дойдут руки.
+**WHOOP — РЕАЛИЗОВАНО (self-serve OAuth2):**
+- **Worker**: GET `/whoop/start|callback|metrics` + `whoopRefresh`. OAuth2 (`api.prod.whoop.com/oauth/oauth2/auth|token`, scope `read:recovery read:sleep offline`, refresh через `offline`). Токены KV `whoop:<sid>` (TTL 2ч). `/metrics` за 7 дней: `/v2/recovery` → `score.{hrv_rmssd_milli→hrv (нормализую сек/мс), resting_heart_rate→rhr, spo2_percentage→spo2, recovery_score→energy}`, `/v2/activity/sleep` → `stage_summary.{slow_wave+light+rem→sleepHours, slow_wave→deepMin}`. tempDev опущен (skin_temp абсолютный).
+- **Фронт** — все 3 платных тарифа: вкладка «🔗 Подключить» на карточке WHOOP → **обобщённый** `connectWearable('whoop')`/`fetchWearableLive('whoop',sid)` (один модуль на whoop/polar/withings, возврат `?whoop=connected&sid`). Строки на 12 языков (`_whoopT`), три исхода как у Fitbit (данные/пусто/ошибка). File/Manual сохранены.
+- **Чтобы заработало (владелец):** зарегать app на **developer.whoop.com**, redirect URI `https://interpreter.viaelcom.workers.dev/whoop/callback`, scopes `read:recovery read:sleep offline`; `wrangler secret put WHOOP_CLIENT_ID` + `WHOOP_CLIENT_SECRET`; `wrangler deploy`.
+- Остальные (Polar/Withings) — тем же обобщённым каркасом (нужны только worker-роуты + карточка + i18n; фронт-функции `connectWearable`/`fetchWearableLive` уже общие).
 
 ### 16.3 Нет публичного веб-API → только файл/ручной ввод (как сейчас)
 - **Apple Watch / Health** — HealthKit на устройстве, облачного API нет. Веб-авто-сопряжение невозможно; только `export.xml` или отдельное iOS-приложение (большая отдельная задача).

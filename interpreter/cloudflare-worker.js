@@ -361,6 +361,10 @@ export default {
       if (path === '/fitbit/start')    return handleFitbitStart(request, env, corsHeaders);
       if (path === '/fitbit/callback') return handleFitbitCallback(request, env, corsHeaders);
       if (path === '/fitbit/metrics')  return handleFitbitMetrics(request, env, corsHeaders);
+      // WHOOP OAuth2 (self-serve)
+      if (path === '/whoop/start')     return handleWhoopStart(request, env, corsHeaders);
+      if (path === '/whoop/callback')  return handleWhoopCallback(request, env, corsHeaders);
+      if (path === '/whoop/metrics')   return handleWhoopMetrics(request, env, corsHeaders);
       return new Response('Not found', { status: 404 });
     }
 
@@ -1160,6 +1164,117 @@ async function handleFitbitMetrics(request, env, corsHeaders){
     if (deep!=null) ex.deepMin = Math.round(deep);
   }
 
+  return jsonResponse({ ok:true, ex }, corsHeaders);
+}
+
+// ─────────────────────────────────────────────────────────────
+// WHOOP OAuth2 (self-serve). Register app at developer.whoop.com.
+// Secrets: WHOOP_CLIENT_ID, WHOOP_CLIENT_SECRET. KV: WEARABLE_TOKENS (whoop:<sid>).
+// Redirect URI: https://interpreter.viaelcom.workers.dev/whoop/callback
+// ─────────────────────────────────────────────────────────────
+const WHOOP_AUTH_URL  = 'https://api.prod.whoop.com/oauth/oauth2/auth';
+const WHOOP_TOKEN_URL = 'https://api.prod.whoop.com/oauth/oauth2/token';
+const WHOOP_API       = 'https://api.prod.whoop.com/developer';
+const WHOOP_SCOPES    = 'read:recovery read:sleep offline';
+
+async function handleWhoopStart(request, env, corsHeaders){
+  if (!env.WHOOP_CLIENT_ID || !env.WHOOP_CLIENT_SECRET) return jsonResponse({ ok:false, error:'whoop_secrets_missing' }, corsHeaders, 500);
+  const url = new URL(request.url);
+  const sid = url.searchParams.get('sid');
+  let ret = url.searchParams.get('ret') || FITBIT_DEFAULT_RET;
+  if (!sid) return jsonResponse({ ok:false, error:'sid_required' }, corsHeaders, 400);
+  if (!FITBIT_RETURN_ALLOW.some(p => ret.startsWith(p))) ret = FITBIT_DEFAULT_RET;
+  const payload = b64urlEncode(JSON.stringify({ sid, ret }));
+  const state = payload + '.' + await hmacHex(env.WHOOP_CLIENT_SECRET, payload);
+  const auth = new URL(WHOOP_AUTH_URL);
+  auth.searchParams.set('response_type', 'code');
+  auth.searchParams.set('client_id', env.WHOOP_CLIENT_ID);
+  auth.searchParams.set('redirect_uri', url.origin + '/whoop/callback');
+  auth.searchParams.set('scope', WHOOP_SCOPES);
+  auth.searchParams.set('state', state);
+  return Response.redirect(auth.toString(), 302);
+}
+
+async function handleWhoopCallback(request, env, corsHeaders){
+  const url = new URL(request.url);
+  const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state') || '';
+  const errParam = url.searchParams.get('error');
+  const dot = state.lastIndexOf('.');
+  let sid = '', ret = FITBIT_DEFAULT_RET;
+  if (dot > 0) {
+    const payload = state.slice(0, dot), sig = state.slice(dot + 1);
+    if (sig === await hmacHex(env.WHOOP_CLIENT_SECRET || '', payload)) { try { const o = JSON.parse(b64urlDecode(payload)); sid = o.sid || ''; if (o.ret) ret = o.ret; } catch(e){} }
+  }
+  const back = (status) => Response.redirect(ret + (ret.includes('?') ? '&' : '?') + 'whoop=' + status + (sid ? '&sid=' + encodeURIComponent(sid) : ''), 302);
+  if (errParam || !code || !sid) return back('error');
+  const r = await fetch(WHOOP_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type:'authorization_code', code, redirect_uri: url.origin + '/whoop/callback', client_id: env.WHOOP_CLIENT_ID, client_secret: env.WHOOP_CLIENT_SECRET }).toString(),
+  });
+  if (!r.ok) return back('error');
+  const tok = await r.json();
+  if (!tok.access_token || !env.WEARABLE_TOKENS) return back('error');
+  await env.WEARABLE_TOKENS.put('whoop:' + sid, JSON.stringify({
+    access_token: tok.access_token, refresh_token: tok.refresh_token || '', expires_at: Date.now() + (tok.expires_in || 3600) * 1000,
+  }), { expirationTtl: 2 * 60 * 60 });
+  return back('connected');
+}
+
+async function whoopRefresh(env, rec){
+  if (!rec.refresh_token) return null;
+  const r = await fetch(WHOOP_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type:'refresh_token', refresh_token: rec.refresh_token, client_id: env.WHOOP_CLIENT_ID, client_secret: env.WHOOP_CLIENT_SECRET, scope:'offline' }).toString(),
+  });
+  if (!r.ok) return null;
+  const tok = await r.json();
+  return { access_token: tok.access_token, refresh_token: tok.refresh_token || rec.refresh_token, expires_at: Date.now() + (tok.expires_in || 3600) * 1000 };
+}
+
+// GET /whoop/metrics?sid=… → 7-day-averaged ex {hrv,rhr,spo2,sleepHours,deepMin,energy}
+async function handleWhoopMetrics(request, env, corsHeaders){
+  const url = new URL(request.url);
+  const sid = url.searchParams.get('sid');
+  if (!sid) return jsonResponse({ ok:false, error:'sid_required' }, corsHeaders, 400);
+  if (!env.WEARABLE_TOKENS) return jsonResponse({ ok:false, error:'kv_binding_missing' }, corsHeaders, 500);
+  const raw = await env.WEARABLE_TOKENS.get('whoop:' + sid);
+  if (!raw) return jsonResponse({ ok:false, error:'not_connected' }, corsHeaders, 404);
+  let rec = JSON.parse(raw);
+  if (Date.now() > rec.expires_at - 60000) {
+    const refreshed = await whoopRefresh(env, rec);
+    if (!refreshed) return jsonResponse({ ok:false, error:'refresh_failed' }, corsHeaders, 401);
+    rec = refreshed;
+    await env.WEARABLE_TOKENS.put('whoop:' + sid, JSON.stringify(rec), { expirationTtl: 2 * 60 * 60 });
+  }
+  const h = { 'Authorization': 'Bearer ' + rec.access_token };
+  const startISO = new Date(Date.now() - 7 * 86400000).toISOString();
+  const endISO   = new Date().toISOString();
+  const avg = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : null;
+  const hrvMs = v => { let n = Number(v); if (!isFinite(n) || n <= 0) return null; if (n < 1) n = n * 1000; return n; }; // hrv_rmssd_milli is sometimes seconds
+  const get = async (p) => { try { const r = await fetch(WHOOP_API + p, { headers: h }); if (!r.ok) return null; return await r.json(); } catch(e){ return null; } };
+
+  const ex = {};
+  const rcv = await get(`/v2/recovery?start=${encodeURIComponent(startISO)}&end=${encodeURIComponent(endISO)}&limit=25`);
+  const rRecs = (rcv && rcv.records) || [];
+  if (rRecs.length) {
+    let v;
+    v = avg(rRecs.map(x => hrvMs(x.score && x.score.hrv_rmssd_milli)).filter(n=>n!=null)); if (v!=null) ex.hrv = Math.round(v);
+    v = avg(rRecs.map(x => Number(x.score && x.score.resting_heart_rate)).filter(n=>isFinite(n)&&n>0)); if (v!=null) ex.rhr = Math.round(v);
+    v = avg(rRecs.map(x => Number(x.score && x.score.spo2_percentage)).filter(n=>isFinite(n)&&n>0)); if (v!=null) ex.spo2 = +v.toFixed(1);
+    v = avg(rRecs.map(x => Number(x.score && x.score.recovery_score)).filter(n=>isFinite(n)&&n>=0)); if (v!=null) ex.energy = Math.min(10, Math.max(1, Math.round(v/10)));
+  }
+  const slp = await get(`/v2/activity/sleep?start=${encodeURIComponent(startISO)}&end=${encodeURIComponent(endISO)}&limit=25`);
+  const sRecs = (slp && slp.records) || [];
+  if (sRecs.length) {
+    const ss = x => (x.score && x.score.stage_summary) || {};
+    const asleep = avg(sRecs.map(x => { const s = ss(x); const tot = Number(s.total_slow_wave_sleep_time_milli||0) + Number(s.total_light_sleep_time_milli||0) + Number(s.total_rem_sleep_time_milli||0); return tot > 0 ? tot : null; }).filter(n=>n!=null));
+    if (asleep!=null) ex.sleepHours = +(asleep/3600000).toFixed(1);
+    const deep = avg(sRecs.map(x => { const d = Number(ss(x).total_slow_wave_sleep_time_milli); return isFinite(d)&&d>0 ? d : null; }).filter(n=>n!=null));
+    if (deep!=null) ex.deepMin = Math.round(deep/60000);
+  }
   return jsonResponse({ ok:true, ex }, corsHeaders);
 }
 
