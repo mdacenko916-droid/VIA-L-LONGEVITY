@@ -1559,11 +1559,24 @@ footer{
     </div>
     <div class="source-body">
       <div class="method-tabs">
-        <button class="method-tab active" onclick="setMethod('fitbit','token')" data-t="tab_api_token">🔑 Токен API</button>
+        <button class="method-tab active" data-t="tab_fitbit_connect" onclick="setMethod('fitbit','connect')">🔗 Подключить</button>
+        <button class="method-tab" onclick="setMethod('fitbit','token')" data-t="tab_api_token">🔑 Токен API</button>
         <button class="method-tab" onclick="setMethod('fitbit','file')" data-t="tab_file">📁 Файл</button>
       </div>
+      <!-- Connect method (OAuth2 via Google Health — no token, no file) -->
+      <div id="fitbit-connect">
+        <div data-t="instr_fitbit_connect" style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;">
+          Войдите в свой аккаунт Fitbit — мы безопасно подтянем показатели за 7 дней и автоматически заполним шаги анализа. Токен не вводится.
+        </div>
+        <button class="token-btn" style="width:100%;" data-t="btn_fitbit_connect" onclick="connectFitbit()">🔗 Подключить Fitbit</button>
+        <div class="import-status" id="fitbit-connect-status"></div>
+        <div class="imported-preview" id="fitbit-connect-preview">
+          <div style="font-size:11px;color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;" data-t="status_loaded">✓ Данные загружены</div>
+          <div class="preview-grid" id="fitbit-connect-grid"></div>
+        </div>
+      </div>
       <!-- Token method -->
-      <div id="fitbit-token">
+      <div id="fitbit-token" style="display:none;">
         <div data-t="instr_fitbit_token" style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;">
           Откройте <b style="color:var(--t1);">dev.fitbit.com</b> → Manage → Register an App → Personal App → скопируйте Access Token:
         </div>
@@ -4641,6 +4654,24 @@ const T={
 
 const LANG_FLAGS={'ru':'🇷🇺 RU','uk':'🇺🇦 UK','en':'🇬🇧 EN','es':'🇪🇸 ES','de':'🇩🇪 DE','pt':'🇧🇷 PT','fr':'🇫🇷 FR','pl':'🇵🇱 PL','it':'🇮🇹 IT','he':'🇮🇱 HE','ja':'🇯🇵 JA','ko':'🇰🇷 KO'};
 ['ru','uk','es','de','pt','fr','pl','it','he','ja','ko'].forEach(l=>{T[l]=Object.assign({},T.en,T[l]);});
+// ── Fitbit (Google Health) OAuth connect strings (uk first, all 12 languages) ──
+const _fitbitT={
+  uk:{tab_fitbit_connect:'🔗 Підключити',instr_fitbit_connect:'Увійдіть у свій акаунт Fitbit — ми безпечно підтягнемо показники за 7 днів і автоматично заповнимо кроки аналізу. Токен не потрібен.',btn_fitbit_connect:'🔗 Підключити Fitbit',status_fitbit_connecting:'⏳ Підключаємось до Fitbit…',status_fitbit_ok:'✓ Дані Fitbit завантажено',status_fitbit_err:'⚠ Не вдалося отримати дані Fitbit'},
+  ru:{tab_fitbit_connect:'🔗 Подключить',instr_fitbit_connect:'Войдите в свой аккаунт Fitbit — мы безопасно подтянем показатели за 7 дней и автоматически заполним шаги анализа. Токен не вводится.',btn_fitbit_connect:'🔗 Подключить Fitbit',status_fitbit_connecting:'⏳ Подключаемся к Fitbit…',status_fitbit_ok:'✓ Данные Fitbit загружены',status_fitbit_err:'⚠ Не удалось получить данные Fitbit'},
+  en:{tab_fitbit_connect:'🔗 Connect',instr_fitbit_connect:'Sign in to your Fitbit account — we securely pull your last 7 days and auto-fill the analysis steps. No token needed.',btn_fitbit_connect:'🔗 Connect Fitbit',status_fitbit_connecting:'⏳ Connecting to Fitbit…',status_fitbit_ok:'✓ Fitbit data loaded',status_fitbit_err:'⚠ Could not fetch Fitbit data'},
+  es:{tab_fitbit_connect:'🔗 Conectar',instr_fitbit_connect:'Inicia sesión en tu cuenta Fitbit — extraemos de forma segura tus últimos 7 días y rellenamos los pasos del análisis. Sin token.',btn_fitbit_connect:'🔗 Conectar Fitbit',status_fitbit_connecting:'⏳ Conectando con Fitbit…',status_fitbit_ok:'✓ Datos de Fitbit cargados',status_fitbit_err:'⚠ No se pudieron obtener los datos de Fitbit'},
+  de:{tab_fitbit_connect:'🔗 Verbinden',instr_fitbit_connect:'Melde dich bei deinem Fitbit-Konto an — wir laden sicher deine letzten 7 Tage und füllen die Analyseschritte automatisch aus. Kein Token nötig.',btn_fitbit_connect:'🔗 Fitbit verbinden',status_fitbit_connecting:'⏳ Verbindung zu Fitbit…',status_fitbit_ok:'✓ Fitbit-Daten geladen',status_fitbit_err:'⚠ Fitbit-Daten konnten nicht geladen werden'},
+  pt:{tab_fitbit_connect:'🔗 Conectar',instr_fitbit_connect:'Entre na sua conta Fitbit — buscamos com segurança os seus últimos 7 dias e preenchemos as etapas da análise. Sem token.',btn_fitbit_connect:'🔗 Conectar Fitbit',status_fitbit_connecting:'⏳ Conectando ao Fitbit…',status_fitbit_ok:'✓ Dados do Fitbit carregados',status_fitbit_err:'⚠ Não foi possível obter os dados do Fitbit'},
+  fr:{tab_fitbit_connect:'🔗 Connecter',instr_fitbit_connect:'Connectez-vous à votre compte Fitbit — nous récupérons en toute sécurité vos 7 derniers jours et remplissons les étapes d’analyse. Aucun jeton requis.',btn_fitbit_connect:'🔗 Connecter Fitbit',status_fitbit_connecting:'⏳ Connexion à Fitbit…',status_fitbit_ok:'✓ Données Fitbit chargées',status_fitbit_err:'⚠ Impossible de récupérer les données Fitbit'},
+  pl:{tab_fitbit_connect:'🔗 Połącz',instr_fitbit_connect:'Zaloguj się do konta Fitbit — bezpiecznie pobierzemy ostatnie 7 dni i automatycznie wypełnimy kroki analizy. Bez tokenu.',btn_fitbit_connect:'🔗 Połącz Fitbit',status_fitbit_connecting:'⏳ Łączenie z Fitbit…',status_fitbit_ok:'✓ Wczytano dane Fitbit',status_fitbit_err:'⚠ Nie udało się pobrać danych Fitbit'},
+  it:{tab_fitbit_connect:'🔗 Collega',instr_fitbit_connect:'Accedi al tuo account Fitbit — recuperiamo in sicurezza gli ultimi 7 giorni e compiliamo automaticamente i passaggi dell’analisi. Nessun token.',btn_fitbit_connect:'🔗 Collega Fitbit',status_fitbit_connecting:'⏳ Connessione a Fitbit…',status_fitbit_ok:'✓ Dati Fitbit caricati',status_fitbit_err:'⚠ Impossibile recuperare i dati Fitbit'},
+  he:{tab_fitbit_connect:'🔗 חיבור',instr_fitbit_connect:'התחבר לחשבון Fitbit שלך — נמשוך באופן מאובטח את 7 הימים האחרונים ונמלא אוטומטית את שלבי הניתוח. ללא טוקן.',btn_fitbit_connect:'🔗 חבר את Fitbit',status_fitbit_connecting:'⏳ מתחבר ל-Fitbit…',status_fitbit_ok:'✓ נתוני Fitbit נטענו',status_fitbit_err:'⚠ לא ניתן היה לקבל נתוני Fitbit'},
+  ja:{tab_fitbit_connect:'🔗 接続',instr_fitbit_connect:'Fitbit アカウントにサインイン — 直近7日間のデータを安全に取得し、分析ステップを自動入力します。トークン不要。',btn_fitbit_connect:'🔗 Fitbit を接続',status_fitbit_connecting:'⏳ Fitbit に接続中…',status_fitbit_ok:'✓ Fitbit のデータを読み込みました',status_fitbit_err:'⚠ Fitbit のデータを取得できませんでした'},
+  ko:{tab_fitbit_connect:'🔗 연결',instr_fitbit_connect:'Fitbit 계정에 로그인하세요 — 최근 7일 데이터를 안전하게 가져와 분석 단계를 자동으로 채웁니다. 토큰 불필요.',btn_fitbit_connect:'🔗 Fitbit 연결',status_fitbit_connecting:'⏳ Fitbit에 연결 중…',status_fitbit_ok:'✓ Fitbit 데이터 로드 완료',status_fitbit_err:'⚠ Fitbit 데이터를 가져오지 못했습니다'}
+};
+Object.keys(_fitbitT).forEach(l=>{if(T[l])Object.assign(T[l],_fitbitT[l]);});
+const _fitbitNoData={uk:'ℹ️ У вашому акаунті Google немає даних Fitbit',ru:'ℹ️ В вашем аккаунте Google нет данных Fitbit',en:'ℹ️ No Fitbit data found in your Google account',es:'ℹ️ No hay datos de Fitbit en tu cuenta de Google',de:'ℹ️ In deinem Google-Konto wurden keine Fitbit-Daten gefunden',pt:'ℹ️ Nenhum dado do Fitbit na sua conta Google',fr:'ℹ️ Aucune donnée Fitbit dans votre compte Google',pl:'ℹ️ Brak danych Fitbit na koncie Google',it:'ℹ️ Nessun dato Fitbit nel tuo account Google',he:'ℹ️ לא נמצאו נתוני Fitbit בחשבון Google שלך',ja:'ℹ️ Google アカウントに Fitbit のデータがありません',ko:'ℹ️ Google 계정에 Fitbit 데이터가 없습니다'};
+Object.keys(_fitbitNoData).forEach(l=>{if(T[l])T[l].status_fitbit_nodata=_fitbitNoData[l];});
 let lang='en';
 let _analysisData=null;
 let _rerendering=false;
@@ -6235,7 +6266,7 @@ function setMethod(source,method){
   const tabs=card.querySelectorAll('.method-tab');
   if(source==='oura'){document.getElementById('oura-token').style.display=method==='token'?'block':'none';document.getElementById('oura-file').style.display=method==='file'?'block':'none';tabs[0].classList.toggle('active',method==='token');tabs[1].classList.toggle('active',method==='file');}
   else if(source==='apple'){document.getElementById('apple-file').style.display=method==='file'?'block':'none';document.getElementById('apple-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
-  else if(source==='fitbit'){document.getElementById('fitbit-token').style.display=method==='token'?'block':'none';document.getElementById('fitbit-file').style.display=method==='file'?'block':'none';tabs[0].classList.toggle('active',method==='token');tabs[1].classList.toggle('active',method==='file');}
+  else if(source==='fitbit'){document.getElementById('fitbit-connect').style.display=method==='connect'?'block':'none';document.getElementById('fitbit-token').style.display=method==='token'?'block':'none';document.getElementById('fitbit-file').style.display=method==='file'?'block':'none';tabs[0].classList.toggle('active',method==='connect');tabs[1].classList.toggle('active',method==='token');tabs[2].classList.toggle('active',method==='file');}
   else if(source==='samsung'){document.getElementById('samsung-file').style.display=method==='file'?'block':'none';document.getElementById('samsung-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
   else if(source==='whoop'){document.getElementById('whoop-file').style.display=method==='file'?'block':'none';document.getElementById('whoop-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
   else if(source==='xiaomi'){document.getElementById('xiaomi-file').style.display=method==='file'?'block':'none';document.getElementById('xiaomi-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
@@ -6684,6 +6715,49 @@ function applyAmazfitManual(){
 
 // ══ AI ANALYSIS ═══════════════════════════════════════════
 const AI_WORKER = 'https://interpreter.viaelcom.workers.dev';
+
+// ══ FITBIT (Google Health) OAuth CONNECT ══════════════════════════════════
+const FITBIT_CONNECT_BASE = AI_WORKER + '/fitbit';
+function connectFitbit(){
+  let sid = localStorage.getItem('vial_fitbit_sid');
+  if(!sid){ sid = Date.now().toString(36) + Math.random().toString(36).slice(2,10); localStorage.setItem('vial_fitbit_sid', sid); }
+  setStatus('fitbit-connect-status','loading',t('status_fitbit_connecting'));
+  const ret = location.origin + location.pathname;
+  location.href = FITBIT_CONNECT_BASE + '/start?sid=' + encodeURIComponent(sid) + '&ret=' + encodeURIComponent(ret);
+}
+async function fetchFitbitLive(sid){
+  setStatus('fitbit-connect-status','loading',t('status_fitbit_connecting'));
+  try{
+    const r = await fetch(FITBIT_CONNECT_BASE + '/metrics?sid=' + encodeURIComponent(sid));
+    const j = await r.json();
+    if(j && j.ok && j.ex && Object.keys(j.ex).length){
+      applyExtracted(j.ex,'fitbit');
+      applyImportedToSliders();
+      renderPreview('fitbit-connect-grid', j.ex);
+      document.getElementById('fitbit-connect-preview').classList.add('show');
+      setStatus('fitbit-connect-status','success',t('status_fitbit_ok'));
+      updateImportSummary();
+    } else if(j && j.ok){
+      setStatus('fitbit-connect-status','error',t('status_fitbit_nodata'));
+    } else {
+      setStatus('fitbit-connect-status','error',t('status_fitbit_err'));
+    }
+  }catch(e){ setStatus('fitbit-connect-status','error',t('status_fitbit_err')); }
+}
+(function(){
+  const p = new URLSearchParams(location.search);
+  const fb = p.get('fitbit');
+  if(!fb) return;
+  const sid = p.get('sid') || localStorage.getItem('vial_fitbit_sid');
+  history.replaceState(null, '', location.origin + location.pathname);
+  setTimeout(function(){
+    try{ if(typeof openImport === 'function') openImport(); }catch(e){}
+    try{ toggleCard('fitbit'); }catch(e){}
+    try{ setMethod('fitbit','connect'); }catch(e){}
+    if(fb === 'connected' && sid) fetchFitbitLive(sid);
+    else setStatus('fitbit-connect-status','error',t('status_fitbit_err'));
+  }, 400);
+})();
 
 async function fetchAIAnalysis(data, lang) {
   const card = document.getElementById('aiCard');

@@ -3855,6 +3855,8 @@ const _fitbitT={
   ko:{tab_fitbit_connect:'🔗 연결',instr_fitbit_connect:'Fitbit 계정에 로그인하세요 — 최근 7일 데이터를 안전하게 가져와 분석 단계를 자동으로 채웁니다. 토큰 불필요.',btn_fitbit_connect:'🔗 Fitbit 연결',status_fitbit_connecting:'⏳ Fitbit에 연결 중…',status_fitbit_ok:'✓ Fitbit 데이터 로드 완료',status_fitbit_err:'⚠ Fitbit 데이터를 가져오지 못했습니다'}
 };
 Object.keys(_fitbitT).forEach(l=>{if(T[l])Object.assign(T[l],_fitbitT[l]);});
+const _fitbitNoData={uk:'ℹ️ У вашому акаунті Google немає даних Fitbit',ru:'ℹ️ В вашем аккаунте Google нет данных Fitbit',en:'ℹ️ No Fitbit data found in your Google account',es:'ℹ️ No hay datos de Fitbit en tu cuenta de Google',de:'ℹ️ In deinem Google-Konto wurden keine Fitbit-Daten gefunden',pt:'ℹ️ Nenhum dado do Fitbit na sua conta Google',fr:'ℹ️ Aucune donnée Fitbit dans votre compte Google',pl:'ℹ️ Brak danych Fitbit na koncie Google',it:'ℹ️ Nessun dato Fitbit nel tuo account Google',he:'ℹ️ לא נמצאו נתוני Fitbit בחשבון Google שלך',ja:'ℹ️ Google アカウントに Fitbit のデータがありません',ko:'ℹ️ Google 계정에 Fitbit 데이터가 없습니다'};
+Object.keys(_fitbitNoData).forEach(l=>{if(T[l])T[l].status_fitbit_nodata=_fitbitNoData[l];});
 let lang='en';
 let _rerendering=false;
 function L(t){return t[lang]||t.en||t.ru||Object.values(t)[0];}
@@ -5868,13 +5870,19 @@ async function fetchFitbitLive(sid){
   try{
     const r = await fetch(FITBIT_CONNECT_BASE + '/metrics?sid=' + encodeURIComponent(sid));
     const j = await r.json();
-    if(!j.ok || !j.ex || !Object.keys(j.ex).length) throw new Error('no_data');
-    applyExtracted(j.ex,'fitbit');
-    applyImportedToSliders();
-    renderPreview('fitbit-connect-grid', j.ex);
-    document.getElementById('fitbit-connect-preview').classList.add('show');
-    setStatus('fitbit-connect-status','success',t('status_fitbit_ok'));
-    updateImportSummary();
+    if(j && j.ok && j.ex && Object.keys(j.ex).length){
+      applyExtracted(j.ex,'fitbit');
+      applyImportedToSliders();
+      renderPreview('fitbit-connect-grid', j.ex);
+      document.getElementById('fitbit-connect-preview').classList.add('show');
+      setStatus('fitbit-connect-status','success',t('status_fitbit_ok'));
+      updateImportSummary();
+    } else if(j && j.ok){
+      // OAuth succeeded but Google Health has no Fitbit data for this account
+      setStatus('fitbit-connect-status','error',t('status_fitbit_nodata'));
+    } else {
+      setStatus('fitbit-connect-status','error',t('status_fitbit_err'));
+    }
   }catch(e){ setStatus('fitbit-connect-status','error',t('status_fitbit_err')); }
 }
 // Return leg of the OAuth redirect: interpreter-pro.html?fitbit=connected&sid=…
