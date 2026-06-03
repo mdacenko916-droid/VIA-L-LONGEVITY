@@ -2510,11 +2510,17 @@ async function handleCareWebhook(request, env, corsHeaders){
   // ── ВЕТКА 2: клиент пишет боту в личку ──
   if(msg.chat?.type === 'private'){
     const clientId = msg.chat.id;
-    const lang = careLang(msg.from?.language_code);
     const text = (msg.text||'').trim();
-    await env.EXPERT_DRAFTS.put('care_lang:'+clientId, lang);
+    // Язык: сначала ранее выбранный (deep-link из ИП / персональный), иначе язык
+    // интерфейса Telegram. Не перезаписываем на каждом сообщении — выбор «прилипает».
+    let lang = await env.EXPERT_DRAFTS.get('care_lang:'+clientId) || careLang(msg.from?.language_code);
 
-    if(text==='/start' || text===''){
+    if(text==='' || text==='/start' || text.startsWith('/start ')){
+      // deep-link «t.me/viael_care_bot?start=<lang>» приходит как «/start <lang>» —
+      // берём язык, выбранный клиентом в ИП, а не язык интерфейса Telegram.
+      const payload = text.split(/\s+/)[1];
+      if(payload && CARE_SUPPORTED.includes(payload.toLowerCase())) lang = payload.toLowerCase();
+      await env.EXPERT_DRAFTS.put('care_lang:'+clientId, lang);
       await careSend(env, clientId, carePhrase('hello_welcome', lang));
       return jsonResponse({ok:true}, corsHeaders);
     }
