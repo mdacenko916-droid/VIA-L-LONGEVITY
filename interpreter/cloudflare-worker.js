@@ -506,13 +506,21 @@ async function handleHotmartWebhook(request, env, corsHeaders) {
       status:     'pending',
       ts:         new Date().toISOString(),
     }), { expirationTtl: 180 * 24 * 60 * 60 });
+    // Метка «это программный клиент» по email → /cal-webhook не шлёт ему ELITE-письмо
+    // с анкетой (он уже получил большую анкету этим письмом об оплате).
+    if (buyerEmail) {
+      await env.PROGRAM_INTAKES.put('prog_email:' + buyerEmail.toLowerCase(), token, { expirationTtl: 180 * 24 * 60 * 60 });
+    }
   }
 
   const programName = PROGRAM_NAMES[product.program] || product.program;
   const amountStr   = amount ? `€${amount}` : product.price;
   const langFlag    = { uk: '🇺🇦', ru: '🇷🇺', es: '🇪🇸', en: '🇬🇧', de: '🇩🇪', pt: '🇧🇷', fr: '🇫🇷', pl: '🇵🇱', it: '🇮🇹', he: '🇮🇱', ja: '🇯🇵', ko: '🇰🇷' }[lang] || '🌐';
 
-  const intakeLink = `https://via-l.com/program-intake.html?t=${token}`;
+  // Большая анкета здоровья (110 Q, book/anketa) с программным токеном — заполненная
+  // вернётся в backstage с кнопкой «📅 Назначить сессию» (см. deliverAnketaProgram).
+  // program-intake.html больше не используется.
+  const intakeLink = `https://via-l.com/book/anketa/?lang=${lang}&intake=${token}`;
 
   await sendTelegram(env,
     `💳 <b>Новая оплата — ${programName}</b>\n`
@@ -834,6 +842,22 @@ function fmtCalTime(iso, tz) {
   } catch (_) { return String(iso || '—'); }
 }
 
+// Письмо клиенту со ссылкой на анкету после брони 60-мин сессии. Cal.com free-план НЕ
+// даёт кастомизировать workflow-письма (нужен платный Teams), поэтому шлём сами из
+// /cal-webhook. Это письмо идёт ТОЛЬКО ELITE/несвязанным (программные клиенты уже
+// заполнили большую анкету при оплате — гейт по prog_email в handleCalWebhook). ИП —
+// мировой продукт: письмо EN-led + нота, что анкета доступна на 12 языках (форма сама
+// переключает язык; src=elite → форма шлёт сабмит и идёт в care-путь).
+const CAL_ANKETA_LINK = 'https://via-l.com/book/anketa/?src=elite&lang=en';
+const CAL_ANKETA_MAIL = {
+  subj: '📋 Health questionnaire before your VIA-L session',
+  body:
+      `<p>📋 Before our session, please fill in the health questionnaire so your specialist comes prepared specifically for you. Take your time — you can complete it in several sittings. If you have recent lab results, enter the values or attach a photo/PDF:</p>`
+    + `<p style="margin:24px 0"><a href="${CAL_ANKETA_LINK}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">Open the questionnaire →</a></p>`
+    + `<p style="color:#888;font-size:13px">Or copy the link: ${CAL_ANKETA_LINK}</p>`
+    + `<p style="color:#888;font-size:13px">🌍 The questionnaire is available in 12 languages — choose yours at the top of the form.</p>`,
+};
+
 async function handleCalWebhook(request, env, corsHeaders) {
   const raw = await request.text();
   const sig = request.headers.get('x-cal-signature-256') || '';
@@ -865,6 +889,21 @@ async function handleCalWebhook(request, env, corsHeaders) {
     + (url ? `🎥 ${esc(url)}` : '');
 
   await sendTelegram(env, card);
+
+  // Анкета клиенту: только при СОЗДАНИИ брони и только для сессии (≥45 мин) — 15-мин
+  // знакомство анкету не получает. Длительность из start/end (не зависит от названия
+  // event type); запасной гейт — «60» в названии/слаге. Падение письма брони не ломает.
+  const startMs = Date.parse(p.startTime), endMs = Date.parse(p.endTime);
+  const durMin  = (isFinite(startMs) && isFinite(endMs)) ? (endMs - startMs) / 60000 : NaN;
+  const isSession = durMin >= 45
+    || /(^|\D)60(\D|$)/.test(String(p.title || '') + ' ' + String(p.eventType?.slug || p.type || ''));
+  if (ev === 'BOOKING_CREATED' && att.email && isSession) {
+    // Программные клиенты уже заполнили большую анкету при оплате (метка prog_email) —
+    // им письмо НЕ шлём. Остаются ELITE/несвязанные — им и идёт ссылка на анкету.
+    const isProgram = env.PROGRAM_INTAKES && await env.PROGRAM_INTAKES.get('prog_email:' + att.email.toLowerCase());
+    if (!isProgram) await sendEmail(env, att.email, CAL_ANKETA_MAIL.subj, CAL_ANKETA_MAIL.body);
+  }
+
   return jsonResponse({ ok: true }, corsHeaders);
 }
 
@@ -1787,7 +1826,7 @@ const EMAIL_T = {
     payment_body:  (name, prog, link) =>
       `<p>Привіт, <b>${name}</b>!</p>`
       + `<p>Оплату підтверджено. Програма: <b>${prog}</b>.</p>`
-      + `<p>Перед першою сесією заповніть анкету (10–15 хв) — це допоможе нутрициологу підготуватися:</p>`
+      + `<p>Перед першою сесією заповніть анкету здоров’я — спокійно, можна в кілька заходів; є свіжі аналізи — впишіть або додайте фото. Це допоможе нутрициологу підготуватися саме по вам:</p>`
       + `<p style="margin:24px 0"><a href="${link}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">Заповнити анкету →</a></p>`
       + `<p style="color:#888;font-size:13px">Або скопіюйте посилання: ${link}</p>`,
     intake_subj:   'VIA-L · Анкету отримано',
@@ -1806,7 +1845,7 @@ const EMAIL_T = {
     payment_body:  (name, prog, link) =>
       `<p>Привет, <b>${name}</b>!</p>`
       + `<p>Оплата подтверждена. Программа: <b>${prog}</b>.</p>`
-      + `<p>Перед первой сессией заполните анкету (10–15 мин) — это поможет нутрициологу подготовиться:</p>`
+      + `<p>Перед первой сессией заполните анкету здоровья — спокойно, можно в несколько заходов; есть свежие анализы — впишите или приложите фото. Это поможет нутрициологу подготовиться именно по вам:</p>`
       + `<p style="margin:24px 0"><a href="${link}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">Заполнить анкету →</a></p>`
       + `<p style="color:#888;font-size:13px">Или скопируйте ссылку: ${link}</p>`,
     intake_subj:   'VIA-L · Анкета получена',
@@ -1825,7 +1864,7 @@ const EMAIL_T = {
     payment_body:  (name, prog, link) =>
       `<p>Hola, <b>${name}</b>!</p>`
       + `<p>Pago confirmado. Programa: <b>${prog}</b>.</p>`
-      + `<p>Antes de la primera sesión complete el cuestionario (10–15 min):</p>`
+      + `<p>Antes de la primera sesión complete el cuestionario de salud — con calma, en varias veces si hace falta; si tiene análisis recientes, escríbalos o adjunte una foto. Ayudará al nutricionista a prepararse para usted:</p>`
       + `<p style="margin:24px 0"><a href="${link}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">Completar cuestionario →</a></p>`
       + `<p style="color:#888;font-size:13px">O copie el enlace: ${link}</p>`,
     intake_subj:   'VIA-L · Cuestionario recibido',
@@ -1844,7 +1883,7 @@ const EMAIL_T = {
     payment_body:  (name, prog, link) =>
       `<p>Hi <b>${name}</b>!</p>`
       + `<p>Payment confirmed. Program: <b>${prog}</b>.</p>`
-      + `<p>Before your first session please complete a short questionnaire (10–15 min):</p>`
+      + `<p>Before your first session please complete the health questionnaire — take your time, in several sittings if needed; if you have recent lab results, enter them or attach a photo. It helps your nutritionist prepare specifically for you:</p>`
       + `<p style="margin:24px 0"><a href="${link}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">Complete questionnaire →</a></p>`
       + `<p style="color:#888;font-size:13px">Or copy the link: ${link}</p>`,
     intake_subj:   'VIA-L · Questionnaire received',
@@ -3027,6 +3066,19 @@ async function deliverAnketa(env, body, answers, lang){
   const emailM  = contact.match(/[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+/);
   const email   = emailM ? emailM[0] : '';
 
+  // ── Программная анкета (ссылка из письма об оплате, ?intake=<token>) ──
+  // Полная сводка → BACKSTAGE-бот (NUTRITIONIST_CHAT_ID) с кнопкой «📅 Назначить сессию»
+  // (callback sched: обрабатывает /tg-webhook) → планирование Cal сохраняется. Care-путь
+  // (care-группа) для таких НЕ выполняется. Невалидный токен → падаем в обычный care-путь.
+  const intakeToken = (typeof body.intake==='string' && body.intake.trim()) ? body.intake.trim() : '';
+  if(intakeToken && env.PROGRAM_INTAKES){
+    const rawI = await env.PROGRAM_INTAKES.get('intake:'+intakeToken);
+    if(rawI){
+      let intake=null; try{ intake = JSON.parse(rawI); }catch(_){ intake=null; }
+      if(intake){ await deliverAnketaProgram(env, intake, intakeToken, answers, lang, name, email); return; }
+    }
+  }
+
   // ── Куда нутрициологу: в топик (если открыта из /anketa) либо создаём новый ──
   let topicId = body.topic ? String(body.topic).replace(/\D/g,'') : '';
   if(topicId && !(await env.EXPERT_DRAFTS.get('care_client:'+topicId))) topicId = ''; // чужой/несуществующий
@@ -3060,5 +3112,51 @@ async function deliverAnketa(env, body, answers, lang){
   if(email){
     const t = ANKETA_MAIL[lang] || ANKETA_MAIL.en;
     await sendEmail(env, email, t.subj, t.body(name));
+  }
+}
+
+// Программная анкета: полная сводка + ответы + кнопка «📅 Назначить сессию» в BACKSTAGE-бота
+// (NUTRITIONIST_CHAT_ID). HTML parse_mode → текст экранируем esc(). Обновляем запись интейка
+// (status=submitted, answers) — её читает колбэк sched: при назначении сессии.
+async function deliverAnketaProgram(env, intake, token, answers, lang, name, email){
+  const progName = PROGRAM_NAMES[intake.program] || intake.program;
+  const flag = {uk:'🇺🇦',ru:'🇷🇺',es:'🇪🇸',en:'🇬🇧',de:'🇩🇪',pt:'🇧🇷',fr:'🇫🇷',pl:'🇵🇱',it:'🇮🇹',he:'🇮🇱',ja:'🇯🇵',ko:'🇰🇷'}[lang]||'🌐';
+  const cName  = name  || intake.name  || 'Клиент';
+  const cEmail = email || intake.email || '';
+
+  await env.PROGRAM_INTAKES.put('intake:'+token, JSON.stringify({
+    ...intake, status:'submitted', answers, submitted_lang:lang, submitted_at:new Date().toISOString(),
+  }), { expirationTtl: 180*24*60*60 });
+
+  const head = `🧬 <b>Анкета здоровья · ${esc(progName)}</b>\n`
+    + `━━━━━━━━━━━━━━━━━━━━\n`
+    + `👤 <b>${esc(cName)}</b>\n`
+    + (cEmail ? `📧 <code>${esc(cEmail)}</code>\n` : '')
+    + `💰 ${esc(intake.price)} · ${esc(intake.plan)}\n`
+    + `${flag} Заполнена на ${lang.toUpperCase()}\n`
+    + `━━━━━━━━━━━━━━━━━━━━`;
+
+  // ИИ-сводка (RU); падение ИИ не блокирует — ниже идут полные ответы и кнопка.
+  const summary = await anketaSummary(env, answers, lang);
+  const sumLines = summary ? [head, '', ...summary.split('\n').map(esc)] : [head];
+  for(const chunk of anketaChunks(sumLines, 3500)) await sendTelegram(env, chunk);
+
+  // Полные ответы (первоисточник, язык клиента).
+  const ansLines = ['📋 <b>ПОЛНЫЕ ОТВЕТЫ</b>', ''];
+  for(const item of Object.values(answers)){
+    if(!item || item.v==null || item.v==='') continue;
+    const val = anketaVal(item.v), q = item.q || '';
+    ansLines.push(val.includes('\n') ? `• <b>${esc(q)}:</b>\n${esc(val)}` : `• <b>${esc(q)}:</b> ${esc(val)}`);
+  }
+  for(const chunk of anketaChunks(ansLines, 3500)) await sendTelegram(env, chunk);
+
+  // Кнопка планирования (тот же механизм, что был у program-intake).
+  await sendTelegram(env, '✅ Анкета здоровья получена. Когда будете готовы — назначьте первую 60-мин сессию:',
+    { reply_markup: buildIntakeKeyboard(token) });
+
+  // Подтверждение клиенту на email.
+  if(cEmail){
+    const t = ANKETA_MAIL[lang] || ANKETA_MAIL.en;
+    await sendEmail(env, cEmail, t.subj, t.body(cName));
   }
 }
