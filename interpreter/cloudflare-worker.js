@@ -2700,6 +2700,19 @@ async function handleCareWebhook(request, env, corsHeaders){
       if(payload && CARE_SUPPORTED.includes(payload.toLowerCase())) lang = payload.toLowerCase();
       await env.EXPERT_DRAFTS.put('care_lang:'+clientId, lang);
       await careSend(env, clientId, carePhrase('hello_welcome', lang));
+      // Переход в ведение: при ПЕРВОМ подключении (топика ещё нет) сразу создаём+привязываем
+      // топик, уведомляем нутрициолога и автоматически выдаём клиенту анкету с «обратным
+      // адресом» (&topic=<id> → заполненная анкета вернётся в его топик). Повторный /start
+      // топик уже видит → анкету не дублируем. Ручной /anketa остаётся как ре-выдача.
+      if(!(await env.EXPERT_DRAFTS.get('care_topic:'+clientId))){
+        const cname = [msg.from?.first_name, msg.from?.last_name].filter(Boolean).join(' ') || ('client '+clientId);
+        const announce = '🆕 Клиент подключился к ведению:\n👤 '+cname+' ('+lang.toUpperCase()+')\nАнкета здоровья отправлена автоматически.';
+        const topicId = await careRelayToTopic(env, clientId, lang, cname, announce);
+        if(topicId){
+          const anketaLink = CARE_ANKETA_FORM + '?lang=' + lang + '&topic=' + topicId;
+          await careSend(env, clientId, carePhrase('anketa_invite', lang).replace('{link}', anketaLink));
+        }
+      }
       return jsonResponse({ok:true}, corsHeaders);
     }
 
@@ -2739,6 +2752,14 @@ const ANKETA_MAIL = {
   uk:{subj:'Анкету здоров’я прийнято · VIA-L', body:n=>`<p>Вітаю${n?', '+n:''}!</p><p>Дякуємо 🌿 Вашу анкету здоров’я отримано — нутриціолог вивчить відповіді й повернеться з персональними рекомендаціями.</p>`},
   es:{subj:'Cuestionario de salud recibido · VIA-L', body:n=>`<p>¡Hola${n?', '+n:''}!</p><p>Gracias 🌿 Hemos recibido tu cuestionario de salud — tu nutricionista revisará las respuestas y volverá con recomendaciones personales.</p>`},
   en:{subj:'Health questionnaire received · VIA-L', body:n=>`<p>Hello${n?', '+n:''}!</p><p>Thank you 🌿 We’ve received your health questionnaire — your nutritionist will review your answers and come back with personal recommendations.</p>`},
+  de:{subj:'Gesundheitsfragebogen erhalten · VIA-L', body:n=>`<p>Hallo${n?', '+n:''}!</p><p>Danke 🌿 Wir haben deinen Gesundheitsfragebogen erhalten — deine Ernährungsberaterin prüft die Antworten und meldet sich mit persönlichen Empfehlungen.</p>`},
+  pt:{subj:'Questionário de saúde recebido · VIA-L', body:n=>`<p>Olá${n?', '+n:''}!</p><p>Obrigado 🌿 Recebemos o seu questionário de saúde — a sua nutricionista vai analisar as respostas e voltar com recomendações personalizadas.</p>`},
+  fr:{subj:'Questionnaire de santé reçu · VIA-L', body:n=>`<p>Bonjour${n?', '+n:''} !</p><p>Merci 🌿 Nous avons bien reçu votre questionnaire de santé — votre nutritionniste examinera vos réponses et reviendra avec des recommandations personnalisées.</p>`},
+  pl:{subj:'Ankieta zdrowia odebrana · VIA-L', body:n=>`<p>Cześć${n?', '+n:''}!</p><p>Dziękujemy 🌿 Otrzymaliśmy Twoją ankietę zdrowia — dietetyk przeanalizuje odpowiedzi i wróci z osobistymi rekomendacjami.</p>`},
+  it:{subj:'Questionario sulla salute ricevuto · VIA-L', body:n=>`<p>Ciao${n?', '+n:''}!</p><p>Grazie 🌿 Abbiamo ricevuto il tuo questionario sulla salute — la tua nutrizionista esaminerà le risposte e tornerà con raccomandazioni personali.</p>`},
+  he:{subj:'שאלון הבריאות התקבל · VIA-L', body:n=>`<p dir="rtl">שלום${n?', '+n:''}!</p><p dir="rtl">תודה 🌿 קיבלנו את שאלון הבריאות שלך — התזונאית תעיין בתשובות ותחזור עם המלצות אישיות.</p>`},
+  ja:{subj:'健康問診票を受け取りました · VIA-L', body:n=>`<p>こんにちは${n?'、'+n:''}！</p><p>ありがとうございます 🌿 健康問診票を受け取りました — 栄養士が回答を確認し、個別のご提案をお持ちします。</p>`},
+  ko:{subj:'건강 설문지가 접수되었습니다 · VIA-L', body:n=>`<p>안녕하세요${n?', '+n:''}!</p><p>감사합니다 🌿 건강 설문지를 받았습니다 — 영양사가 답변을 검토한 뒤 개인 맞춤 권장 사항을 가지고 돌아오겠습니다.</p>`},
 };
 
 function anketaVal(v){
