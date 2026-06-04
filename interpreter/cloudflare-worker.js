@@ -606,7 +606,14 @@ async function handleInterpreterPurchase(product, buyerName, buyerEmail, lang, e
 
   if (code && buyerEmail) {
     const mail = buildInterpreterEmailBody(buyerName, tierName, code, lang);
-    await sendEmail(env, buyerEmail, mail.subject, mail.html);
+    // ELITE: вкладываем ссылку на полную анкету здоровья (110 Q) уже в ПЕРВОЕ письмо —
+    // все ELITE-клиенты получают её сразу, не дожидаясь брони Zoom. Анкета EN-led (выбор
+    // языка внутри формы); src=elite → сабмит уходит нутрициологу в care-группу.
+    const isElite = String(product.tier).startsWith('ELITE');
+    const html = isElite
+      ? mail.html + `<hr style="margin:28px 0;border:none;border-top:1px solid #EDE9E2">` + CAL_ANKETA_MAIL.body
+      : mail.html;
+    await sendEmail(env, buyerEmail, mail.subject, html);
   }
 
   return jsonResponse({ ok: true, tier: product.tier, code: code || null, code_error: codeError }, corsHeaders);
