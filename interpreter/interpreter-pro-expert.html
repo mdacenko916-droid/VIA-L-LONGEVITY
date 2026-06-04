@@ -1479,20 +1479,35 @@ footer{
       <span class="source-chevron">›</span>
     </div>
     <div class="source-body">
-      <div data-t="instr_polar" style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;">
-        flow.polar.com → Training → Export session → CSV<br>
-        <span style="color:var(--t3);">Или: Polar Flow App → Дневник → сессия → Поделиться</span>
+      <div class="method-tabs">
+        <button class="method-tab active" data-t="tab_polar_connect" onclick="setMethod('polar','connect')">🔗 Підключити</button>
+        <button class="method-tab" data-t="tab_file" onclick="setMethod('polar','file')">📁 Файл</button>
       </div>
-      <div class="drop-zone" id="polar-drop" ondragover="dragOver(event,'polar-drop')" ondragleave="dragLeave('polar-drop')" ondrop="dropFile(event,'polar')">
-        <input type="file" accept=".csv,.json" onchange="handleFile(this,'polar')">
-        <div class="drop-icon">📈</div>
-        <div class="drop-title" data-t="drop_title">Загрузите CSV файл</div>
-        <div data-t="hint_polar" class="drop-hint">Поддерживается: CSV из Polar Flow</div>
+      <div id="polar-connect">
+        <div data-t="instr_polar_connect" style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;">Увійдіть у свій акаунт Polar Flow — ми безпечно підтягнемо HRV, пульс, сон і Nightly Recharge за 7 днів.</div>
+        <button class="token-btn" style="width:100%;" data-t="btn_polar_connect" onclick="connectWearable('polar')">🔗 Підключити Polar</button>
+        <div class="import-status" id="polar-connect-status"></div>
+        <div class="imported-preview" id="polar-connect-preview">
+          <div style="font-size:11px;color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;" data-t="import_loaded">✓ Дані завантажено</div>
+          <div class="preview-grid" id="polar-connect-grid"></div>
+        </div>
       </div>
-      <div class="import-status" id="polar-status"></div>
-      <div class="imported-preview" id="polar-preview">
-        <div style="font-size:11px;color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;" data-t="import_loaded">✓ Данные загружены</div>
-        <div class="preview-grid" id="polar-preview-grid"></div>
+      <div id="polar-file" style="display:none;">
+        <div data-t="instr_polar" style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;">
+          flow.polar.com → Training → Export session → CSV<br>
+          <span style="color:var(--t3);">Или: Polar Flow App → Дневник → сессия → Поделиться</span>
+        </div>
+        <div class="drop-zone" id="polar-drop" ondragover="dragOver(event,'polar-drop')" ondragleave="dragLeave('polar-drop')" ondrop="dropFile(event,'polar')">
+          <input type="file" accept=".csv,.json" onchange="handleFile(this,'polar')">
+          <div class="drop-icon">📈</div>
+          <div class="drop-title" data-t="drop_title">Загрузите CSV файл</div>
+          <div data-t="hint_polar" class="drop-hint">Поддерживается: CSV из Polar Flow</div>
+        </div>
+        <div class="import-status" id="polar-status"></div>
+        <div class="imported-preview" id="polar-preview">
+          <div style="font-size:11px;color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;" data-t="import_loaded">✓ Данные загружены</div>
+          <div class="preview-grid" id="polar-preview-grid"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -4700,6 +4715,21 @@ const _whoopT={
   ko:{tab_whoop_connect:'🔗 연결',instr_whoop_connect:'WHOOP 계정에 로그인하세요 — 최근 7일 회복·HRV·수면·SpO₂를 안전하게 가져옵니다.',btn_whoop_connect:'🔗 WHOOP 연결',status_whoop_connecting:'⏳ WHOOP에 연결 중…',status_whoop_ok:'✓ WHOOP 데이터 로드 완료',status_whoop_err:'⚠ WHOOP 데이터를 가져오지 못했습니다',status_whoop_nodata:'ℹ️ 계정에 최근 WHOOP 데이터가 없습니다'}
 };
 Object.keys(_whoopT).forEach(l=>{if(T[l])Object.assign(T[l],_whoopT[l]);});
+const _polarT={
+  uk:{tab_polar_connect:'🔗 Підключити',instr_polar_connect:'Увійдіть у свій акаунт Polar Flow — ми безпечно підтягнемо HRV, пульс, сон і Nightly Recharge за 7 днів і заповнимо кроки аналізу.',btn_polar_connect:'🔗 Підключити Polar',status_polar_connecting:'⏳ Підключаємось до Polar…',status_polar_ok:'✓ Дані Polar завантажено',status_polar_err:'⚠ Не вдалося отримати дані Polar',status_polar_nodata:'ℹ️ У вашому акаунті Polar немає даних за останні дні'},
+  ru:{tab_polar_connect:'🔗 Подключить',instr_polar_connect:'Войдите в свой аккаунт Polar Flow — мы безопасно подтянем HRV, пульс, сон и Nightly Recharge за 7 дней и заполним шаги анализа.',btn_polar_connect:'🔗 Подключить Polar',status_polar_connecting:'⏳ Подключаемся к Polar…',status_polar_ok:'✓ Данные Polar загружены',status_polar_err:'⚠ Не удалось получить данные Polar',status_polar_nodata:'ℹ️ В вашем аккаунте Polar нет данных за последние дни'},
+  en:{tab_polar_connect:'🔗 Connect',instr_polar_connect:'Sign in to your Polar Flow account — we securely pull HRV, heart rate, sleep and Nightly Recharge for the last 7 days and fill the analysis steps.',btn_polar_connect:'🔗 Connect Polar',status_polar_connecting:'⏳ Connecting to Polar…',status_polar_ok:'✓ Polar data loaded',status_polar_err:'⚠ Could not fetch Polar data',status_polar_nodata:'ℹ️ No recent Polar data found in your account'},
+  es:{tab_polar_connect:'🔗 Conectar',instr_polar_connect:'Inicia sesión en tu cuenta Polar Flow — extraemos de forma segura HRV, frecuencia cardíaca, sueño y Nightly Recharge de los últimos 7 días.',btn_polar_connect:'🔗 Conectar Polar',status_polar_connecting:'⏳ Conectando con Polar…',status_polar_ok:'✓ Datos de Polar cargados',status_polar_err:'⚠ No se pudieron obtener los datos de Polar',status_polar_nodata:'ℹ️ No hay datos recientes de Polar en tu cuenta'},
+  de:{tab_polar_connect:'🔗 Verbinden',instr_polar_connect:'Melde dich bei deinem Polar Flow-Konto an — wir laden sicher HRV, Puls, Schlaf und Nightly Recharge der letzten 7 Tage.',btn_polar_connect:'🔗 Polar verbinden',status_polar_connecting:'⏳ Verbindung zu Polar…',status_polar_ok:'✓ Polar-Daten geladen',status_polar_err:'⚠ Polar-Daten konnten nicht geladen werden',status_polar_nodata:'ℹ️ Keine aktuellen Polar-Daten in deinem Konto'},
+  pt:{tab_polar_connect:'🔗 Conectar',instr_polar_connect:'Entre na sua conta Polar Flow — buscamos com segurança HRV, frequência cardíaca, sono e Nightly Recharge dos últimos 7 dias.',btn_polar_connect:'🔗 Conectar Polar',status_polar_connecting:'⏳ Conectando ao Polar…',status_polar_ok:'✓ Dados do Polar carregados',status_polar_err:'⚠ Não foi possível obter os dados do Polar',status_polar_nodata:'ℹ️ Nenhum dado recente do Polar na sua conta'},
+  fr:{tab_polar_connect:'🔗 Connecter',instr_polar_connect:'Connectez-vous à votre compte Polar Flow — nous récupérons en toute sécurité HRV, fréquence cardiaque, sommeil et Nightly Recharge des 7 derniers jours.',btn_polar_connect:'🔗 Connecter Polar',status_polar_connecting:'⏳ Connexion à Polar…',status_polar_ok:'✓ Données Polar chargées',status_polar_err:'⚠ Impossible de récupérer les données Polar',status_polar_nodata:'ℹ️ Aucune donnée Polar récente dans votre compte'},
+  pl:{tab_polar_connect:'🔗 Połącz',instr_polar_connect:'Zaloguj się do konta Polar Flow — bezpiecznie pobierzemy HRV, tętno, sen i Nightly Recharge z ostatnich 7 dni.',btn_polar_connect:'🔗 Połącz Polar',status_polar_connecting:'⏳ Łączenie z Polar…',status_polar_ok:'✓ Wczytano dane Polar',status_polar_err:'⚠ Nie udało się pobrać danych Polar',status_polar_nodata:'ℹ️ Brak ostatnich danych Polar na koncie'},
+  it:{tab_polar_connect:'🔗 Collega',instr_polar_connect:'Accedi al tuo account Polar Flow — recuperiamo in sicurezza HRV, frequenza cardiaca, sonno e Nightly Recharge degli ultimi 7 giorni.',btn_polar_connect:'🔗 Collega Polar',status_polar_connecting:'⏳ Connessione a Polar…',status_polar_ok:'✓ Dati Polar caricati',status_polar_err:'⚠ Impossibile recuperare i dati Polar',status_polar_nodata:'ℹ️ Nessun dato Polar recente nel tuo account'},
+  he:{tab_polar_connect:'🔗 חיבור',instr_polar_connect:'התחבר לחשבון Polar Flow שלך — נמשוך באופן מאובטח HRV, דופק, שינה ו-Nightly Recharge מ-7 הימים האחרונים.',btn_polar_connect:'🔗 חבר את Polar',status_polar_connecting:'⏳ מתחבר ל-Polar…',status_polar_ok:'✓ נתוני Polar נטענו',status_polar_err:'⚠ לא ניתן היה לקבל נתוני Polar',status_polar_nodata:'ℹ️ אין נתוני Polar אחרונים בחשבונך'},
+  ja:{tab_polar_connect:'🔗 接続',instr_polar_connect:'Polar Flow アカウントにサインイン — 直近7日間の HRV・心拍数・睡眠・Nightly Recharge を安全に取得します。',btn_polar_connect:'🔗 Polar を接続',status_polar_connecting:'⏳ Polar に接続中…',status_polar_ok:'✓ Polar のデータを読み込みました',status_polar_err:'⚠ Polar のデータを取得できませんでした',status_polar_nodata:'ℹ️ アカウントに最近の Polar データがありません'},
+  ko:{tab_polar_connect:'🔗 연결',instr_polar_connect:'Polar Flow 계정에 로그인하세요 — 최근 7일 HRV·심박수·수면·Nightly Recharge를 안전하게 가져옵니다.',btn_polar_connect:'🔗 Polar 연결',status_polar_connecting:'⏳ Polar에 연결 중…',status_polar_ok:'✓ Polar 데이터 로드 완료',status_polar_err:'⚠ Polar 데이터를 가져오지 못했습니다',status_polar_nodata:'ℹ️ 계정에 최근 Polar 데이터가 없습니다'}
+};
+Object.keys(_polarT).forEach(l=>{if(T[l])Object.assign(T[l],_polarT[l]);});
 let lang='en';
 let _analysisData=null;
 let _rerendering=false;
@@ -6297,6 +6327,7 @@ function setMethod(source,method){
   else if(source==='fitbit'){document.getElementById('fitbit-connect').style.display=method==='connect'?'block':'none';document.getElementById('fitbit-token').style.display=method==='token'?'block':'none';document.getElementById('fitbit-file').style.display=method==='file'?'block':'none';tabs[0].classList.toggle('active',method==='connect');tabs[1].classList.toggle('active',method==='token');tabs[2].classList.toggle('active',method==='file');}
   else if(source==='samsung'){document.getElementById('samsung-file').style.display=method==='file'?'block':'none';document.getElementById('samsung-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
   else if(source==='whoop'){document.getElementById('whoop-connect').style.display=method==='connect'?'block':'none';document.getElementById('whoop-file').style.display=method==='file'?'block':'none';document.getElementById('whoop-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='connect');tabs[1].classList.toggle('active',method==='file');tabs[2].classList.toggle('active',method==='manual');}
+  else if(source==='polar'){document.getElementById('polar-connect').style.display=method==='connect'?'block':'none';document.getElementById('polar-file').style.display=method==='file'?'block':'none';tabs[0].classList.toggle('active',method==='connect');tabs[1].classList.toggle('active',method==='file');}
   else if(source==='xiaomi'){document.getElementById('xiaomi-file').style.display=method==='file'?'block':'none';document.getElementById('xiaomi-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
   else if(source==='withings'){document.getElementById('withings-file').style.display=method==='file'?'block':'none';document.getElementById('withings-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
   else if(source==='amazfit'){document.getElementById('amazfit-file').style.display=method==='file'?'block':'none';document.getElementById('amazfit-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}

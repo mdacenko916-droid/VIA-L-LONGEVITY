@@ -365,6 +365,10 @@ export default {
       if (path === '/whoop/start')     return handleWhoopStart(request, env, corsHeaders);
       if (path === '/whoop/callback')  return handleWhoopCallback(request, env, corsHeaders);
       if (path === '/whoop/metrics')   return handleWhoopMetrics(request, env, corsHeaders);
+      // Polar AccessLink
+      if (path === '/polar/start')     return handlePolarStart(request, env, corsHeaders);
+      if (path === '/polar/callback')  return handlePolarCallback(request, env, corsHeaders);
+      if (path === '/polar/metrics')   return handlePolarMetrics(request, env, corsHeaders);
       return new Response('Not found', { status: 404 });
     }
 
@@ -1317,6 +1321,118 @@ async function handleWhoopMetrics(request, env, corsHeaders){
     const deep = avg(sRecs.map(x => { const d = Number(ss(x).total_slow_wave_sleep_time_milli); return isFinite(d)&&d>0 ? d : null; }).filter(n=>n!=null));
     if (deep!=null) ex.deepMin = Math.round(deep/60000);
   }
+  return jsonResponse({ ok:true, ex }, corsHeaders);
+}
+
+// ─────────────────────────────────────────────────────────────
+// Polar AccessLink OAuth2. Register app at admin.polaraccesslink.com.
+// Secrets: POLAR_CLIENT_ID, POLAR_CLIENT_SECRET. KV: WEARABLE_TOKENS (polar:<sid>).
+// Redirect URI: https://interpreter.viaelcom.workers.dev/polar/callback
+// ─────────────────────────────────────────────────────────────
+const POLAR_AUTH_URL  = 'https://flow.polar.com/oauth2/authorization';
+const POLAR_TOKEN_URL = 'https://polarremote.com/v2/oauth2/token';
+const POLAR_API       = 'https://www.polaraccesslink.com/v3';
+const POLAR_SCOPES    = 'accesslink.read_all';
+
+async function handlePolarStart(request, env, corsHeaders) {
+  if (!env.POLAR_CLIENT_ID || !env.POLAR_CLIENT_SECRET) return jsonResponse({ ok:false, error:'polar_secrets_missing' }, corsHeaders, 500);
+  const url = new URL(request.url);
+  const sid = url.searchParams.get('sid');
+  let ret = url.searchParams.get('ret') || FITBIT_DEFAULT_RET;
+  if (!sid) return jsonResponse({ ok:false, error:'sid_required' }, corsHeaders, 400);
+  if (!FITBIT_RETURN_ALLOW.some(p => ret.startsWith(p))) ret = FITBIT_DEFAULT_RET;
+  const payload = b64urlEncode(JSON.stringify({ sid, ret }));
+  const state = payload + '.' + await hmacHex(env.POLAR_CLIENT_SECRET, payload);
+  const auth = new URL(POLAR_AUTH_URL);
+  auth.searchParams.set('client_id', env.POLAR_CLIENT_ID);
+  auth.searchParams.set('response_type', 'code');
+  auth.searchParams.set('scope', POLAR_SCOPES);
+  auth.searchParams.set('state', state);
+  return Response.redirect(auth.toString(), 302);
+}
+
+async function handlePolarCallback(request, env, corsHeaders) {
+  const url = new URL(request.url);
+  const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state') || '';
+  const errParam = url.searchParams.get('error');
+  const dot = state.lastIndexOf('.');
+  let sid = '', ret = FITBIT_DEFAULT_RET;
+  if (dot > 0) {
+    const payload = state.slice(0, dot), sig = state.slice(dot + 1);
+    if (sig === await hmacHex(env.POLAR_CLIENT_SECRET || '', payload)) { try { const o = JSON.parse(b64urlDecode(payload)); sid = o.sid || ''; if (o.ret) ret = o.ret; } catch(e){} }
+  }
+  const back = (status) => Response.redirect(ret + (ret.includes('?') ? '&' : '?') + 'polar=' + status + (sid ? '&sid=' + encodeURIComponent(sid) : ''), 302);
+  if (errParam || !code || !sid) return back('error');
+  const creds = btoa(env.POLAR_CLIENT_ID + ':' + env.POLAR_CLIENT_SECRET);
+  const r = await fetch(POLAR_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Authorization': 'Basic ' + creds, 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+    body: new URLSearchParams({ grant_type: 'authorization_code', code }).toString(),
+  });
+  if (!r.ok) return back('error');
+  const tok = await r.json();
+  if (!tok.access_token || !env.WEARABLE_TOKENS) return back('error');
+  // Register user with our app (idempotent — 409 = already registered, that's fine)
+  await fetch(POLAR_API + '/users', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + tok.access_token, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({ 'member-id': sid }),
+  });
+  await env.WEARABLE_TOKENS.put('polar:' + sid, JSON.stringify({
+    access_token: tok.access_token,
+    user_id: tok.x_user_id || '',
+    expires_at: Date.now() + (tok.expires_in || 21600) * 1000,
+  }), { expirationTtl: 25 * 3600 });
+  return back('connected');
+}
+
+// GET /polar/metrics?sid=… → 7-day-averaged ex {hrv,rhr,sleepHours,deepMin,energy}
+async function handlePolarMetrics(request, env, corsHeaders) {
+  const url = new URL(request.url);
+  const sid = url.searchParams.get('sid');
+  if (!sid) return jsonResponse({ ok:false, error:'sid_required' }, corsHeaders, 400);
+  if (!env.WEARABLE_TOKENS) return jsonResponse({ ok:false, error:'kv_binding_missing' }, corsHeaders, 500);
+  const raw = await env.WEARABLE_TOKENS.get('polar:' + sid);
+  if (!raw) return jsonResponse({ ok:false, error:'not_connected' }, corsHeaders, 404);
+  const rec = JSON.parse(raw);
+  if (Date.now() > rec.expires_at - 60000) return jsonResponse({ ok:false, error:'token_expired' }, corsHeaders, 401);
+  const h = { 'Authorization': 'Bearer ' + rec.access_token, 'Accept': 'application/json' };
+  const userId = rec.user_id;
+  const to   = new Date().toISOString().slice(0, 10);
+  const from = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+  const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+  const get = async (p) => { try { const r = await fetch(POLAR_API + p, { headers: h }); if (!r.ok) return null; return await r.json(); } catch(e){ return null; } };
+
+  const ex = {};
+
+  // Physical info → rhr
+  const phys = await get(`/users/${userId}/physical-information`);
+  if (phys && phys.resting_heart_rate) ex.rhr = phys.resting_heart_rate;
+
+  // Nightly Recharge → hrv (sdnn_avg / ans_charge proxy), energy
+  const nr = await get(`/users/${userId}/nightly-recharge?from=${from}&to=${to}`);
+  const nrList = Array.isArray(nr) ? nr : (nr && nr.recharges ? nr.recharges : []);
+  if (nrList.length) {
+    const sdnnVals = nrList.map(x => Number(x.sdnn_avg || x.hrv_avg || 0)).filter(n => isFinite(n) && n > 0);
+    if (sdnnVals.length) ex.hrv = Math.round(avg(sdnnVals));
+    const statusVals = nrList.map(x => Number(x.nightly_recharge_status)).filter(n => isFinite(n) && n > 0);
+    if (statusVals.length) ex.energy = Math.min(10, Math.max(1, Math.round(avg(statusVals) / 3 * 10)));
+  }
+
+  // Sleep → sleepHours, deepMin
+  const slp = await get(`/users/${userId}/sleep?from=${from}&to=${to}`);
+  const slpList = Array.isArray(slp) ? slp : (slp && slp.nights ? slp.nights : slp && slp.night ? slp.night : []);
+  if (slpList.length) {
+    const totalVals = slpList.map(x => {
+      const t = Number(x.total_sleep_time || 0) || (Number(x.light_sleep||0) + Number(x.deep_sleep||0) + Number(x.rem_sleep||0));
+      return t > 0 ? t : null;
+    }).filter(n => n != null);
+    if (totalVals.length) ex.sleepHours = +(avg(totalVals) / 3600).toFixed(1);
+    const deepVals = slpList.map(x => Number(x.deep_sleep)).filter(n => isFinite(n) && n > 0);
+    if (deepVals.length) ex.deepMin = Math.round(avg(deepVals) / 60);
+  }
+
   return jsonResponse({ ok:true, ex }, corsHeaders);
 }
 
