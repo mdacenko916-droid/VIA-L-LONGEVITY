@@ -2639,6 +2639,56 @@ async function careTranslate(env, text, fromLang, toLang){
   }catch(_){ return text; }
 }
 
+// ════════════════════════════════════════════════════════════════════════
+// FAQ-ПАМЯТЬ «ЭТАЛОН»: база подтверждённых нутрициологом пар «вопрос→ответ».
+// Хранится ОДНИМ KV-ключом faq:db (массив {q,a,ts}, текст на ru). Пополняется
+// ТОЛЬКО по кнопке «⭐ В эталон» (человек подтверждает — никакого авто-сбора).
+// При новом вопросе клиента бот ищет похожий по СМЫСЛУ (один дешёвый вызов Haiku:
+// синонимы/перефраз считаются совпадением — keyword-матч их не ловит) и ПОДСКАЗЫВАЕТ
+// нутрициологу в топик (клиенту авто не шлём — выдачу тоже решает человек).
+async function faqLoad(env){
+  try{ return JSON.parse(await env.EXPERT_DRAFTS.get('faq:db')) || []; }catch(_){ return []; }
+}
+async function faqAdd(env, q, a){
+  if(!q || !a) return false;
+  const db = await faqLoad(env);
+  db.push({ q:String(q).slice(0,500), a:String(a).slice(0,1500), ts:Date.now() });
+  while(db.length>500) db.shift();   // держим базу компактной (последние 500 пар)
+  await env.EXPERT_DRAFTS.put('faq:db', JSON.stringify(db));
+  return true;
+}
+// Семантический поиск: даём Haiku новый вопрос + нумерованный список эталонных вопросов,
+// модель возвращает индекс совпадающего ПО СМЫСЛУ (или -1). Ловит синонимы/перефраз.
+// Без ключа/при ошибке/пустой базе → null (подсказка просто не появится).
+async function faqMatch(env, q){
+  const db = await faqLoad(env);
+  if(!db.length || !env.CLAUDE_API_KEY || !q) return null;
+  const list = db.map((e,i)=>`${i}: ${e.q}`).join('\n');
+  const system =
+    'Ты сопоставляешь НОВЫЙ вопрос клиента со списком ранее отвеченных вопросов (эталоны).'+
+    ' Верни ТОЛЬКО номер (индекс) того эталонного вопроса, который СЕМАНТИЧЕСКИ про то же'+
+    ' самое — синонимы и перефраз считаются совпадением (напр. «последний приём пищи» ='+
+    ' «самый поздний ужин»). Если по смыслу явного совпадения нет — верни -1.'+
+    ' Ответ — ТОЛЬКО одно целое число, без слов и пояснений.';
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':env.CLAUDE_API_KEY,'anthropic-version':'2023-06-01'},
+      body: JSON.stringify({ model:'claude-haiku-4-5-20251001', max_tokens:8, system,
+        messages:[{role:'user',content:'Новый вопрос: '+q+'\n\nЭталонные вопросы:\n'+list}] }),
+    });
+    if(!res.ok) return null;
+    const j = await res.json();
+    const idx = parseInt((j.content?.[0]?.text||'').match(/-?\d+/)?.[0], 10);
+    return (Number.isInteger(idx) && idx>=0 && idx<db.length) ? db[idx] : null;
+  }catch(_){ return null; }
+}
+async function careAnswerCallback(env, id, text){
+  try{ await fetch(`https://api.telegram.org/bot${env.CLIENT_BOT_TOKEN}/answerCallbackQuery`,
+    { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ callback_query_id:id, text:text||'' }) }); }catch(_){}
+}
+
 async function handleCareWebhook(request, env, corsHeaders){
   if(request.method!=='POST') return jsonResponse({ok:true}, corsHeaders);
   if(!env.CLIENT_BOT_TOKEN || !env.NUTRITIONIST_GROUP_ID || !env.EXPERT_DRAFTS){
@@ -2646,6 +2696,22 @@ async function handleCareWebhook(request, env, corsHeaders){
   }
   let update;
   try{ update = await request.json(); }catch(_){ return jsonResponse({ok:true}, corsHeaders); }
+
+  // ── Кнопка «⭐ В эталон» в топике нутрициолога → сохранить пару в FAQ-память ──
+  if(update.callback_query){
+    const cq = update.callback_query;
+    if(String(cq.message?.chat?.id) === String(env.NUTRITIONIST_GROUP_ID) && (cq.data||'').startsWith('faqsave:')){
+      const threadId = (cq.data.split(':')[1]||'').replace(/\D/g,'');
+      let saved=false;
+      const rawP = threadId ? await env.EXPERT_DRAFTS.get('care_lastpair:'+threadId) : null;
+      if(rawP){ try{ const p=JSON.parse(rawP); saved=await faqAdd(env, p.q, p.a); }catch(_){} }
+      await careAnswerCallback(env, cq.id, saved ? '⭐ Сохранено в эталон' : 'Нет свежей пары вопрос/ответ');
+    }else{
+      await careAnswerCallback(env, cq.id, '');
+    }
+    return jsonResponse({ok:true}, corsHeaders);
+  }
+
   const msg = update.message || update.edited_message;
   if(!msg) return jsonResponse({ok:true}, corsHeaders);
   const groupId = String(env.NUTRITIONIST_GROUP_ID);
@@ -2682,6 +2748,16 @@ async function handleCareWebhook(request, env, corsHeaders){
     let out = text;
     if(clang!=='ru' && clang!=='uk') out = await careTranslate(env, text, 'ru', clang);
     await careSend(env, rec.clientId, out);
+    // FAQ-память: если есть свежий вопрос клиента — предложить сохранить пару в эталон.
+    // text здесь = ответ нутрициолога на ru (до перевода) → база остаётся русскоязычной.
+    const lastq = await env.EXPERT_DRAFTS.get('care_lastq:'+rec.clientId);
+    if(lastq){
+      await env.EXPERT_DRAFTS.put('care_lastpair:'+threadId, JSON.stringify({q:lastq, a:text}), {expirationTtl: 7*24*60*60});
+      await careSend(env, env.NUTRITIONIST_GROUP_ID, '✅ Ответ доставлен клиенту.\nСохранить этот ответ как эталонный для похожих вопросов?', {
+        message_thread_id: threadId,
+        reply_markup: { inline_keyboard: [[{ text:'⭐ Сохранить в эталон', callback_data:'faqsave:'+threadId }]] },
+      });
+    }
     return jsonResponse({ok:true}, corsHeaders);
   }
 
@@ -2723,14 +2799,25 @@ async function handleCareWebhook(request, env, corsHeaders){
     const cname = [msg.from?.first_name, msg.from?.last_name].filter(Boolean).join(' ') || ('client '+clientId);
 
     // реле: оригинал + (если не ru/uk) перевод на ru для нутрициолога
+    let qForFaq = text;   // ru-вариант вопроса для FAQ-памяти (база русскоязычная)
     let relay = '👤 '+cname+(lang!=='ru'&&lang!=='uk' ? ' ('+lang.toUpperCase()+')' : '')+':\n'+text;
     if(lang!=='ru' && lang!=='uk'){
       const ru = await careTranslate(env, text, lang, 'ru');
+      qForFaq = ru;
       relay += '\n\n🔁 RU: '+ru;
     }
     // в топик клиента с авто-пересозданием, если нутрициолог удалил топик
-    await careRelayToTopic(env, clientId, lang, cname, relay);
+    const topicId = await careRelayToTopic(env, clientId, lang, cname, relay);
     await careSend(env, clientId, carePhrase('passed_to_specialist', lang));
+    // FAQ-память: запоминаем вопрос (для кнопки «⭐ В эталон» к будущему ответу) и
+    // подсказываем нутрициологу похожий подтверждённый ответ (клиенту авто НЕ шлём).
+    await env.EXPERT_DRAFTS.put('care_lastq:'+clientId, qForFaq, {expirationTtl: 30*24*60*60});
+    const hit = await faqMatch(env, qForFaq);
+    if(hit && topicId){
+      await careSend(env, env.NUTRITIONIST_GROUP_ID,
+        '💡 Похожий эталонный ответ (FAQ-память):\n'+hit.a+'\n\n— на вопрос: '+hit.q,
+        { message_thread_id: Number(topicId) });
+    }
     return jsonResponse({ok:true}, corsHeaders);
   }
 
