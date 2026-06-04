@@ -366,9 +366,13 @@ export default {
       if (path === '/whoop/callback')  return handleWhoopCallback(request, env, corsHeaders);
       if (path === '/whoop/metrics')   return handleWhoopMetrics(request, env, corsHeaders);
       // Polar AccessLink
-      if (path === '/polar/start')     return handlePolarStart(request, env, corsHeaders);
-      if (path === '/polar/callback')  return handlePolarCallback(request, env, corsHeaders);
-      if (path === '/polar/metrics')   return handlePolarMetrics(request, env, corsHeaders);
+      if (path === '/polar/start')       return handlePolarStart(request, env, corsHeaders);
+      if (path === '/polar/callback')    return handlePolarCallback(request, env, corsHeaders);
+      if (path === '/polar/metrics')     return handlePolarMetrics(request, env, corsHeaders);
+      // Withings Health API
+      if (path === '/withings/start')    return handleWithingsStart(request, env, corsHeaders);
+      if (path === '/withings/callback') return handleWithingsCallback(request, env, corsHeaders);
+      if (path === '/withings/metrics')  return handleWithingsMetrics(request, env, corsHeaders);
       return new Response('Not found', { status: 404 });
     }
 
@@ -1431,6 +1435,125 @@ async function handlePolarMetrics(request, env, corsHeaders) {
     if (totalVals.length) ex.sleepHours = +(avg(totalVals) / 3600).toFixed(1);
     const deepVals = slpList.map(x => Number(x.deep_sleep)).filter(n => isFinite(n) && n > 0);
     if (deepVals.length) ex.deepMin = Math.round(avg(deepVals) / 60);
+  }
+
+  return jsonResponse({ ok:true, ex }, corsHeaders);
+}
+
+// ─────────────────────────────────────────────────────────────
+// Withings Health API OAuth2. Register app at developer.withings.com.
+// Secrets: WITHINGS_CLIENT_ID, WITHINGS_CLIENT_SECRET. KV: WEARABLE_TOKENS (withings:<sid>).
+// Redirect URI: https://interpreter.viaelcom.workers.dev/withings/callback
+// Scopes: user.sleepevents,user.metrics,user.activity
+// ─────────────────────────────────────────────────────────────
+const WITHINGS_AUTH_URL  = 'https://account.withings.com/oauth2_user/authorize2';
+const WITHINGS_TOKEN_URL = 'https://wbsapi.withings.net/v2/oauth2';
+const WITHINGS_API       = 'https://wbsapi.withings.net';
+const WITHINGS_SCOPES    = 'user.sleepevents,user.metrics,user.activity';
+
+async function handleWithingsStart(request, env, corsHeaders) {
+  if (!env.WITHINGS_CLIENT_ID || !env.WITHINGS_CLIENT_SECRET) return jsonResponse({ ok:false, error:'withings_secrets_missing' }, corsHeaders, 500);
+  const url = new URL(request.url);
+  const sid = url.searchParams.get('sid');
+  let ret = url.searchParams.get('ret') || FITBIT_DEFAULT_RET;
+  if (!sid) return jsonResponse({ ok:false, error:'sid_required' }, corsHeaders, 400);
+  if (!FITBIT_RETURN_ALLOW.some(p => ret.startsWith(p))) ret = FITBIT_DEFAULT_RET;
+  const payload = b64urlEncode(JSON.stringify({ sid, ret }));
+  const state = payload + '.' + await hmacHex(env.WITHINGS_CLIENT_SECRET, payload);
+  const auth = new URL(WITHINGS_AUTH_URL);
+  auth.searchParams.set('response_type', 'code');
+  auth.searchParams.set('client_id', env.WITHINGS_CLIENT_ID);
+  auth.searchParams.set('scope', WITHINGS_SCOPES);
+  auth.searchParams.set('redirect_uri', url.origin + '/withings/callback');
+  auth.searchParams.set('state', state);
+  return Response.redirect(auth.toString(), 302);
+}
+
+async function handleWithingsCallback(request, env, corsHeaders) {
+  const url = new URL(request.url);
+  const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state') || '';
+  const errParam = url.searchParams.get('error');
+  const dot = state.lastIndexOf('.');
+  let sid = '', ret = FITBIT_DEFAULT_RET;
+  if (dot > 0) {
+    const payload = state.slice(0, dot), sig = state.slice(dot + 1);
+    if (sig === await hmacHex(env.WITHINGS_CLIENT_SECRET || '', payload)) { try { const o = JSON.parse(b64urlDecode(payload)); sid = o.sid || ''; if (o.ret) ret = o.ret; } catch(e){} }
+  }
+  const back = (status) => Response.redirect(ret + (ret.includes('?') ? '&' : '?') + 'withings=' + status + (sid ? '&sid=' + encodeURIComponent(sid) : ''), 302);
+  if (errParam || !code || !sid) return back('error');
+  const r = await fetch(WITHINGS_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ action:'requesttoken', grant_type:'authorization_code', client_id:env.WITHINGS_CLIENT_ID, client_secret:env.WITHINGS_CLIENT_SECRET, code, redirect_uri:url.origin+'/withings/callback' }).toString(),
+  });
+  if (!r.ok) return back('error');
+  const j = await r.json();
+  if (j.status !== 0 || !j.body || !j.body.access_token || !env.WEARABLE_TOKENS) return back('error');
+  const tok = j.body;
+  await env.WEARABLE_TOKENS.put('withings:' + sid, JSON.stringify({
+    access_token: tok.access_token, refresh_token: tok.refresh_token || '', user_id: tok.userid || '',
+    expires_at: Date.now() + (tok.expires_in || 10800) * 1000,
+  }), { expirationTtl: 25 * 3600 });
+  return back('connected');
+}
+
+async function withingsRefresh(env, rec) {
+  if (!rec.refresh_token) return null;
+  const r = await fetch(WITHINGS_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ action:'refreshtoken', grant_type:'refresh_token', client_id:env.WITHINGS_CLIENT_ID, client_secret:env.WITHINGS_CLIENT_SECRET, refresh_token:rec.refresh_token }).toString(),
+  });
+  if (!r.ok) return null;
+  const j = await r.json();
+  if (j.status !== 0 || !j.body || !j.body.access_token) return null;
+  const tok = j.body;
+  return { access_token:tok.access_token, refresh_token:tok.refresh_token||rec.refresh_token, user_id:rec.user_id, expires_at:Date.now()+(tok.expires_in||10800)*1000 };
+}
+
+// GET /withings/metrics?sid=… → 7-day-averaged ex {hrv,rhr,sleepHours,deepMin,spo2}
+async function handleWithingsMetrics(request, env, corsHeaders) {
+  const url = new URL(request.url);
+  const sid = url.searchParams.get('sid');
+  if (!sid) return jsonResponse({ ok:false, error:'sid_required' }, corsHeaders, 400);
+  if (!env.WEARABLE_TOKENS) return jsonResponse({ ok:false, error:'kv_binding_missing' }, corsHeaders, 500);
+  const raw = await env.WEARABLE_TOKENS.get('withings:' + sid);
+  if (!raw) return jsonResponse({ ok:false, error:'not_connected' }, corsHeaders, 404);
+  let rec = JSON.parse(raw);
+  if (Date.now() > rec.expires_at - 60000) {
+    const refreshed = await withingsRefresh(env, rec);
+    if (!refreshed) return jsonResponse({ ok:false, error:'refresh_failed' }, corsHeaders, 401);
+    rec = refreshed;
+    await env.WEARABLE_TOKENS.put('withings:' + sid, JSON.stringify(rec), { expirationTtl: 25 * 3600 });
+  }
+  const h = { 'Authorization': 'Bearer ' + rec.access_token };
+  const toDate   = new Date().toISOString().slice(0, 10);
+  const fromDate = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+  const toTs     = Math.floor(Date.now() / 1000);
+  const fromTs   = toTs - 7 * 86400;
+  const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+  const get = async (p) => { try { const r = await fetch(WITHINGS_API + p, { headers:h }); if (!r.ok) return null; const j = await r.json(); return j.status === 0 ? j.body : null; } catch(e){ return null; } };
+
+  const ex = {};
+
+  // Sleep summary → hrv (sdnn_1), rhr (hr_min), sleepHours, deepMin
+  const slp = await get(`/v2/sleep?action=getsummary&startdateymd=${fromDate}&enddateymd=${toDate}&data_fields=total_sleep_time,deep_sleep_duration,rem_sleep_duration,sleep_score,hr_average,hr_min,sdnn_1`);
+  const slpList = (slp && slp.series) || [];
+  if (slpList.length) {
+    const d = k => slpList.map(x => Number((x.data||{})[k])).filter(n=>isFinite(n)&&n>0);
+    const v = avg(d('sdnn_1')); if (v!=null) ex.hrv = Math.round(v);
+    const r = avg(d('hr_min'));  if (r!=null) ex.rhr = Math.round(r);
+    const t = avg(d('total_sleep_time')); if (t!=null) ex.sleepHours = +(t/3600).toFixed(1);
+    const dp = avg(d('deep_sleep_duration')); if (dp!=null) ex.deepMin = Math.round(dp/60);
+  }
+
+  // SpO2 (meastype 54)
+  const spo2m = await get(`/measure?action=getmeas&meastypes=54&category=1&startdate=${fromTs}&enddate=${toTs}`);
+  const spo2Grps = (spo2m && spo2m.measuregrps) || [];
+  if (spo2Grps.length) {
+    const vals = spo2Grps.flatMap(g => (g.measures||[]).filter(m=>m.type===54).map(m=>m.value * Math.pow(10, m.unit))).filter(n=>isFinite(n)&&n>0);
+    const v = avg(vals); if (v!=null) ex.spo2 = +v.toFixed(1);
   }
 
   return jsonResponse({ ok:true, ex }, corsHeaders);

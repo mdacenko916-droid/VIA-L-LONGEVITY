@@ -1675,10 +1675,20 @@ footer{
     </div>
     <div class="source-body">
       <div class="method-tabs">
-        <button class="method-tab active" onclick="setMethod('withings','file')">📁 Файл (CSV)</button>
+        <button class="method-tab active" data-t="tab_withings_connect" onclick="setMethod('withings','connect')">🔗 Підключити</button>
+        <button class="method-tab" onclick="setMethod('withings','file')">📁 Файл (CSV)</button>
         <button class="method-tab" onclick="setMethod('withings','manual')">✏️ Вручную</button>
       </div>
-      <div id="withings-file">
+      <div id="withings-connect">
+        <div data-t="instr_withings_connect" style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;">Увійдіть у свій акаунт Withings — ми безпечно підтягнемо HRV, пульс, сон і SpO₂ за 7 днів.</div>
+        <button class="token-btn" style="width:100%;" data-t="btn_withings_connect" onclick="connectWearable('withings')">🔗 Підключити Withings</button>
+        <div class="import-status" id="withings-connect-status"></div>
+        <div class="imported-preview" id="withings-connect-preview">
+          <div style="font-size:11px;color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">✓ Дані завантажено</div>
+          <div class="preview-grid" id="withings-connect-grid"></div>
+        </div>
+      </div>
+      <div id="withings-file" style="display:none;">
         <div data-t="instr_withings" style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;">
           <b style="color:var(--t1);">Health Mate App</b> → Профиль → Настройки → Экспортировать данные → CSV<br>
           <b style="color:var(--t1);">Или через сайт:</b> account.withings.com → Настройки → Скачать данные<br>
@@ -3915,6 +3925,21 @@ const _polarT = {
   ko:{tab_polar_connect:'🔗 연결',instr_polar_connect:'Polar Flow 계정에 로그인하세요 — 최근 7일 HRV·심박수·수면·Nightly Recharge를 안전하게 가져옵니다.',btn_polar_connect:'🔗 Polar 연결',status_polar_connecting:'⏳ Polar에 연결 중…',status_polar_ok:'✓ Polar 데이터 로드 완료',status_polar_err:'⚠ Polar 데이터를 가져오지 못했습니다',status_polar_nodata:'ℹ️ 계정에 최근 Polar 데이터가 없습니다'}
 };
 Object.keys(_polarT).forEach(l=>{if(T[l])Object.assign(T[l],_polarT[l]);});
+const _withingsT = {
+  uk:{tab_withings_connect:'🔗 Підключити',instr_withings_connect:'Увійдіть у свій акаунт Withings — ми безпечно підтягнемо HRV, пульс, сон і SpO₂ за 7 днів і заповнимо кроки аналізу.',btn_withings_connect:'🔗 Підключити Withings',status_withings_connecting:'⏳ Підключаємось до Withings…',status_withings_ok:'✓ Дані Withings завантажено',status_withings_err:'⚠ Не вдалося отримати дані Withings',status_withings_nodata:'ℹ️ У вашому акаунті Withings немає даних за останні дні'},
+  ru:{tab_withings_connect:'🔗 Подключить',instr_withings_connect:'Войдите в свой аккаунт Withings — мы безопасно подтянем HRV, пульс, сон и SpO₂ за 7 дней и заполним шаги анализа.',btn_withings_connect:'🔗 Подключить Withings',status_withings_connecting:'⏳ Подключаемся к Withings…',status_withings_ok:'✓ Данные Withings загружены',status_withings_err:'⚠ Не удалось получить данные Withings',status_withings_nodata:'ℹ️ В вашем аккаунте Withings нет данных за последние дни'},
+  en:{tab_withings_connect:'🔗 Connect',instr_withings_connect:'Sign in to your Withings account — we securely pull HRV, heart rate, sleep and SpO₂ for the last 7 days and fill the analysis steps.',btn_withings_connect:'🔗 Connect Withings',status_withings_connecting:'⏳ Connecting to Withings…',status_withings_ok:'✓ Withings data loaded',status_withings_err:'⚠ Could not fetch Withings data',status_withings_nodata:'ℹ️ No recent Withings data found in your account'},
+  es:{tab_withings_connect:'🔗 Conectar',instr_withings_connect:'Inicia sesión en tu cuenta Withings — extraemos de forma segura HRV, frecuencia cardíaca, sueño y SpO₂ de los últimos 7 días.',btn_withings_connect:'🔗 Conectar Withings',status_withings_connecting:'⏳ Conectando con Withings…',status_withings_ok:'✓ Datos de Withings cargados',status_withings_err:'⚠ No se pudieron obtener los datos de Withings',status_withings_nodata:'ℹ️ No hay datos recientes de Withings en tu cuenta'},
+  de:{tab_withings_connect:'🔗 Verbinden',instr_withings_connect:'Melde dich bei deinem Withings-Konto an — wir laden sicher HRV, Puls, Schlaf und SpO₂ der letzten 7 Tage.',btn_withings_connect:'🔗 Withings verbinden',status_withings_connecting:'⏳ Verbindung zu Withings…',status_withings_ok:'✓ Withings-Daten geladen',status_withings_err:'⚠ Withings-Daten konnten nicht geladen werden',status_withings_nodata:'ℹ️ Keine aktuellen Withings-Daten in deinem Konto'},
+  pt:{tab_withings_connect:'🔗 Conectar',instr_withings_connect:'Entre na sua conta Withings — buscamos com segurança HRV, frequência cardíaca, sono e SpO₂ dos últimos 7 dias.',btn_withings_connect:'🔗 Conectar Withings',status_withings_connecting:'⏳ Conectando ao Withings…',status_withings_ok:'✓ Dados do Withings carregados',status_withings_err:'⚠ Não foi possível obter os dados do Withings',status_withings_nodata:'ℹ️ Nenhum dado recente do Withings na sua conta'},
+  fr:{tab_withings_connect:'🔗 Connecter',instr_withings_connect:'Connectez-vous à votre compte Withings — nous récupérons en toute sécurité HRV, fréquence cardiaque, sommeil et SpO₂ des 7 derniers jours.',btn_withings_connect:'🔗 Connecter Withings',status_withings_connecting:'⏳ Connexion à Withings…',status_withings_ok:'✓ Données Withings chargées',status_withings_err:'⚠ Impossible de récupérer les données Withings',status_withings_nodata:'ℹ️ Aucune donnée Withings récente dans votre compte'},
+  pl:{tab_withings_connect:'🔗 Połącz',instr_withings_connect:'Zaloguj się do konta Withings — bezpiecznie pobierzemy HRV, tętno, sen i SpO₂ z ostatnich 7 dni.',btn_withings_connect:'🔗 Połącz Withings',status_withings_connecting:'⏳ Łączenie z Withings…',status_withings_ok:'✓ Wczytano dane Withings',status_withings_err:'⚠ Nie udało się pobrać danych Withings',status_withings_nodata:'ℹ️ Brak ostatnich danych Withings na koncie'},
+  it:{tab_withings_connect:'🔗 Collega',instr_withings_connect:'Accedi al tuo account Withings — recuperiamo in sicurezza HRV, frequenza cardiaca, sonno e SpO₂ degli ultimi 7 giorni.',btn_withings_connect:'🔗 Collega Withings',status_withings_connecting:'⏳ Connessione a Withings…',status_withings_ok:'✓ Dati Withings caricati',status_withings_err:'⚠ Impossibile recuperare i dati Withings',status_withings_nodata:'ℹ️ Nessun dato Withings recente nel tuo account'},
+  he:{tab_withings_connect:'🔗 חיבור',instr_withings_connect:'התחבר לחשבון Withings שלך — נמשוך באופן מאובטח HRV, דופק, שינה ו-SpO₂ מ-7 הימים האחרונים.',btn_withings_connect:'🔗 חבר את Withings',status_withings_connecting:'⏳ מתחבר ל-Withings…',status_withings_ok:'✓ נתוני Withings נטענו',status_withings_err:'⚠ לא ניתן היה לקבל נתוני Withings',status_withings_nodata:'ℹ️ אין נתוני Withings אחרונים בחשבונך'},
+  ja:{tab_withings_connect:'🔗 接続',instr_withings_connect:'Withings アカウントにサインイン — 直近7日間の HRV・心拍数・睡眠・SpO₂ を安全に取得します。',btn_withings_connect:'🔗 Withings を接続',status_withings_connecting:'⏳ Withings に接続中…',status_withings_ok:'✓ Withings のデータを読み込みました',status_withings_err:'⚠ Withings のデータを取得できませんでした',status_withings_nodata:'ℹ️ アカウントに最近の Withings データがありません'},
+  ko:{tab_withings_connect:'🔗 연결',instr_withings_connect:'Withings 계정에 로그인하세요 — 최근 7일 HRV·심박수·수면·SpO₂를 안전하게 가져옵니다.',btn_withings_connect:'🔗 Withings 연결',status_withings_connecting:'⏳ Withings에 연결 중…',status_withings_ok:'✓ Withings 데이터 로드 완료',status_withings_err:'⚠ Withings 데이터를 가져오지 못했습니다',status_withings_nodata:'ℹ️ 계정에 최근 Withings 데이터가 없습니다'}
+};
+Object.keys(_withingsT).forEach(l=>{if(T[l])Object.assign(T[l],_withingsT[l]);});
 let lang='en';
 let _rerendering=false;
 function L(t){return t[lang]||t.en||t.ru||Object.values(t)[0];}
@@ -5343,7 +5368,7 @@ function setMethod(source,method){
   else if(source==='whoop'){document.getElementById('whoop-connect').style.display=method==='connect'?'block':'none';document.getElementById('whoop-file').style.display=method==='file'?'block':'none';document.getElementById('whoop-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='connect');tabs[1].classList.toggle('active',method==='file');tabs[2].classList.toggle('active',method==='manual');}
   else if(source==='polar'){document.getElementById('polar-connect').style.display=method==='connect'?'block':'none';document.getElementById('polar-file').style.display=method==='file'?'block':'none';tabs[0].classList.toggle('active',method==='connect');tabs[1].classList.toggle('active',method==='file');}
   else if(source==='xiaomi'){document.getElementById('xiaomi-file').style.display=method==='file'?'block':'none';document.getElementById('xiaomi-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
-  else if(source==='withings'){document.getElementById('withings-file').style.display=method==='file'?'block':'none';document.getElementById('withings-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
+  else if(source==='withings'){document.getElementById('withings-connect').style.display=method==='connect'?'block':'none';document.getElementById('withings-file').style.display=method==='file'?'block':'none';document.getElementById('withings-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='connect');tabs[1].classList.toggle('active',method==='file');tabs[2].classList.toggle('active',method==='manual');}
   else if(source==='amazfit'){document.getElementById('amazfit-file').style.display=method==='file'?'block':'none';document.getElementById('amazfit-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
 }
 function dragOver(e,id){e.preventDefault();document.getElementById(id).classList.add('dragover');}
