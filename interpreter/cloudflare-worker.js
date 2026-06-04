@@ -1924,10 +1924,15 @@ async function handleTgCallback(cq, env, corsHeaders) {
       // EXPERT: после ПЕРВОГО PDF — приглашение клиенту на полную анкету (110 Q),
       // даёт нутрициологу контекст для второго разбора. Приём — /anketa-submit
       // (новый топик в care-группе, как у ELITE). ELITE получают анкету через Cal/care;
-      // PRO до этой ветки не доходит (hasExpert=false). Гейт по первому отчёту, чтобы
-      // не дублировать со вторым PDF; dev-коды (reports_sent_total=0) не триггерят.
+      // PRO до этой ветки не доходит (hasExpert=false). Прод-гейт — только первый отчёт
+      // (reports_sent_total===1), чтобы не дублировать со вторым PDF. Dev-коды в Sheet не
+      // пишутся (всегда 0) → для них пускаем по флагу dev, чтобы механизм был тестируем
+      // end-to-end (plan='DEV' + 'EXPERT' в коде = VIAL-EXPERT-* dev-код).
       let anketaNote = '';
-      if (draft.plan === 'EXPERT' && sendResult.reports_sent_total === 1 && draft.client_email) {
+      const _isDev    = draft.plan === 'DEV';
+      const _isExpert = draft.plan === 'EXPERT' || (_isDev && /EXPERT/i.test(draft.code || ''));
+      const _firstPdf = sendResult.reports_sent_total === 1;
+      if (_isExpert && (_firstPdf || _isDev) && draft.client_email) {
         const am = buildExpertAnketaMail(clientLang);
         try {
           await sendEmail(env, draft.client_email, am.subj, am.body);
