@@ -987,22 +987,103 @@ inline-кнопкой `⭐ В эталон` (`callback_data faqsave:<threadId>`)
 топик, обновляет `care_topic`/`care_client`, чистит висячую обратную привязку и шлёт
 заново. (До фикса чистилось руками: `wrangler kv key delete care_topic:<id> --remote`.)
 
-### 18.10 Единая анкета для программ и ELITE (2026-06-04, в проде)
+### 18.10 ПОЛНЫЙ механизм анкеты: программы VIA-L + ELITE (ИП) → нутрициолог (2026-06-04, в проде)
 
-Маленькая `program-intake.html` выведена из флоу — **все клиенты заполняют большую
-`book/anketa` (110 Q)**. Маршрутизация по параметрам ссылки (форма шлёт на сервер при
-любом из `topic`/`intake`/`src`; голый URL — dev-превью):
+Маленькая `program-intake.html` выведена из флоу — **все клиенты (и 4 программы, и ELITE)
+заполняют ОДНУ большую анкету `book/anketa/index.html` (110 Q, 12 яз)**. Различается только
+способ доставки ссылки и маршрут сводки нутрициологу. Ниже — сквозной механизм.
 
-- **Программы (4 шт):** письмо об оплате (`handleHotmartWebhook`, `EMAIL_T.payment_body`)
-  даёт `book/anketa/?lang=<lang>&intake=<token>`. При покупке кроме `intake:<token>`
-  пишется метка `prog_email:<email>` (TTL 180д). Сабмит с `intake` → `deliverAnketaProgram`:
-  полная сводка + ответы + кнопка **«📅 Назначить сессию»** уходят в **backstage-бота**
-  (`NUTRITIONIST_CHAT_ID`, callback `sched:` в `/tg-webhook`) — планирование Cal сохранено.
-- **ELITE/несвязанные:** при брони 60-мин Cal `/cal-webhook` шлёт **EN-led** письмо со
-  ссылкой `book/anketa/?src=elite&lang=en` + нота «доступна на 12 языков». Гейт: если у
-  email есть `prog_email` → НЕ шлём (программный клиент уже заполнил при оплате). Сабмит с
-  `src` (без `intake`) → обычный care-путь (топик по имени+email в care-группе).
-- `program-intake.html` и `/intake-submit` оставлены дремлющими (ничего на них не ведёт).
+#### Два Telegram-бота (не путать — разные токены/чаты/вебхуки)
+- **Backstage-бот** — `TELEGRAM_BOT_TOKEN`, личный чат нутрициолога `NUTRITIONIST_CHAT_ID`,
+  вебхук `POST /tg-webhook`. Ведёт: карточки оплаты, ИИ-сводку программной анкеты, кнопку
+  «📅 Назначить сессию» (callback `sched:`), Expert-PDF-флоу. Отправка — `sendTelegram()`
+  (`parse_mode: HTML` → текст экранируем `esc()`).
+- **Care-бот** `@viael_care_bot` — `CLIENT_BOT_TOKEN`, Topics-супергруппа
+  `NUTRITIONIST_GROUP_ID`, вебхук `POST /care-webhook`. Ведёт: ведение/переписку,
+  топик-на-клиента, ELITE/care-анкету. Отправка — `careSend()` (без parse_mode, plain).
+
+#### Общая форма `book/anketa/index.html` → `POST /anketa-submit`
+- Параметры ссылки: `lang`, и один из маршрутов — `topic` (care), `intake` (программа),
+  `src` (ELITE). Гейт отправки: `SEND = !!(topic||intake||src)`; голый URL без них —
+  только dev-превью (на сервер ничего не уходит).
+- Тело POST: `{ topic, intake, src, lang, answers, ts }`, где `answers = { <id>:{q,v} }`
+  (q — текст вопроса, v — строка/число/массив/объект).
+- `handleAnketaSubmit(request, env, corsHeaders, ctx)`: валидирует `answers` → запускает
+  `deliverAnketa(...)` в ФОНЕ через `ctx.waitUntil` (Sonnet ~15–20 с не блокирует клиента;
+  форма мгновенно показывает «✓ отправлено») → отвечает `{ok:true}` сразу.
+
+#### Маршрутизация в `deliverAnketa(env, body, answers, lang)`
+Извлекает `name`/`contact`/`email` из `answers`. Затем:
+1. **Есть валидный `body.intake`** (в KV `PROGRAM_INTAKES` есть `intake:<token>`) →
+   `deliverAnketaProgram(...)` и `return` (программный путь).
+2. **Иначе** (`topic`/`src` или ничего) → care-путь: топик из `body.topic` (сверяется с
+   `care_client:<topic>`) либо `careCreateTopic()` по имени+email → ИИ-сводка → полные
+   ответы → email — всё в **care-группу** (`NUTRITIONIST_GROUP_ID`, `careSend` чанками).
+   Сюда попадают ELITE (`src=elite`) и любые care-сабмиты из `/anketa` care-бота.
+
+#### ИИ-обработка — `anketaSummary(env, answers, lang)`
+Один вызов **Sonnet 4.6** (анкета — разовое событие, качество важнее цены). Вход — значения
+ответов клиента (любой из 12 языков), выход — клиническая сводка **на RU** по жёсткому
+шаблону: 🎯 цель · 🚩 красные флаги (с пометкой «рекомендовать врача») · 🔑 жалобы по
+системам · 🧪 анализы (что есть/вне нормы/доспросить) · 💊 лекарства/добавки · 🍽 образ
+жизни · 📌 фокус ведения. Формат — простой текст для Telegram (без markdown-таблиц/##/**).
+Падение ИИ не блокирует доставку — полные ответы уходят всё равно.
+
+#### Путь 1 — ПРОГРАММЫ (4 шт): покупка → анкета → backstage + планирование
+1. **Покупка.** Hotmart `PURCHASE_APPROVED` → `POST /hotmart-webhook`
+   (`handleHotmartWebhook`). По `product.id` из таблицы `HOTMART_PRODUCTS` (12 id =
+   4 программы × 3 тарифа) определяется программа/тариф/цена; язык — `detectLangFromHotmart`.
+   Пишутся: `intake:<token>` (запись клиента, TTL 180д) и метка `prog_email:<email>` (TTL
+   180д). Нутрициологу — карточка оплаты в **backstage**. Клиенту — письмо
+   `EMAIL_T[lang].payment_body` со ссылкой **`https://via-l.com/book/anketa/?lang=<lang>&intake=<token>`**.
+2. **Заполнение.** Клиент открывает ссылку → форма (есть `intake` → `SEND=true`) → `POST
+   /anketa-submit` с `intake=<token>`.
+3. **Доставка** — `deliverAnketaProgram(env, intake, token, answers, lang, name, email)`:
+   - обновляет `intake:<token>` → `status:'submitted'` + `answers` (читается колбэком `sched:`);
+   - ИИ-сводка (Sonnet, RU) + полные ответы → **backstage-бот** (`sendTelegram`, HTML, `esc`,
+     чанки ≤3500) с шапкой «🧬 Анкета здоровья · <Программа>»;
+   - финальное сообщение с кнопкой **«📅 Назначить сессию»** (`buildIntakeKeyboard(token)` →
+     `callback_data sched:<token>`);
+   - письмо-подтверждение клиенту `ANKETA_MAIL[lang]`.
+4. **Планирование.** Нутрициолог жмёт «📅 Назначить сессию» → `POST /tg-webhook` →
+   `handleTgCallback` ветка `sched:` → читает `intake:<token>` → шлёт клиенту письмо
+   `calinvite_body` со ссылкой на **Cal.com 60-мин** → «📅 Календарь отправлен клиенту».
+5. **Бронь.** Клиент выбирает время в Cal → Cal `BOOKING_CREATED` → `POST /cal-webhook` →
+   карточка о записи в backstage. ELITE-письмо с анкетой ему НЕ шлётся (есть `prog_email`).
+
+#### Путь 2 — ELITE (ИП, мировой): бронь 60-мин → EN-письмо с анкетой → care-группа
+1. ELITE покупается в ИП (`handleInterpreterPurchase`, отдельно от программ) — `prog_email`
+   НЕ ставится. Запись на 60-мин — inline-эмбед Cal.com (`#zoomBlock` в `interpreter-elite.html`).
+2. **Бронь.** Cal `BOOKING_CREATED` → `POST /cal-webhook` (`handleCalWebhook`). Гейты:
+   событие — создание; длительность ≥45 мин (из `startTime`/`endTime`, запас — «60» в
+   названии); есть `att.email`; **нет** метки `prog_email:<email>` (иначе это программный
+   клиент — пропускаем). При прохождении — письмо **`CAL_ANKETA_MAIL`** (EN-led + нота
+   «доступна на 12 языках») со ссылкой **`book/anketa/?src=elite&lang=en`**. Cal free-план
+   не даёт править workflow-письма → шлём сами из воркера (`sendEmail`/Brevo).
+3. **Заполнение.** Клиент открывает ссылку (есть `src` → `SEND=true`) → `POST /anketa-submit`
+   с `src=elite` (без `intake`) → care-путь (`deliverAnketa`): ИИ-сводка + полные ответы в
+   **care-группу** новым топиком по имени+email + письмо-подтверждение `ANKETA_MAIL`.
+   (ELITE — мировой; Zoom-консультации по факту uk/ru, но анкета и письмо глобальны.)
+
+#### Внешние API в схеме
+- **Hotmart** (вход): вебхук покупки → `/hotmart-webhook`.
+- **Anthropic** (обработка): Sonnet 4.6 — `anketaSummary` (клиническая сводка); Haiku —
+  `careTranslate`/`faqMatch` в care-боте.
+- **Telegram Bot API** (доставка): два бота (выше). `sendTelegram`/`careSend`, кнопки,
+  `copyMessage` (медиа), `answerCallbackQuery`.
+- **Cal.com** (планирование): event types 15/60-мин, вебхук `BOOKING_*` → `/cal-webhook`;
+  Cal сам ведёт календарь (Google), видео (Cal Video), письма обеим сторонам.
+- **Brevo** (email): `sendEmail` — все письма клиенту (оплата, анкета, calinvite, подтверждение).
+
+#### KV-ключи
+- `PROGRAM_INTAKES`: `intake:<token>` (запись клиента программы + answers после сабмита),
+  `prog_email:<email>` (метка «программный» для гейта ELITE-письма).
+- `EXPERT_DRAFTS` (care): `care_topic:<clientId>`, `care_client:<topicId>`,
+  `care_lang:<clientId>`, `faq:db`, `care_lastq`/`care_lastpair` (FAQ-память, §16).
+
+#### Дремлющее (намеренно не удалено)
+`program-intake.html` и `/intake-submit` (`handleIntakeSubmit`) больше ничем не вызываются
+(ссылка нигде не ведёт), но оставлены в коде на случай отката. Можно удалить отдельной задачей.
 
 ### 18.9 Что отложено (см. §19 / задачи)
 - ~~Полная локализация email-подтверждения на 12 языков~~ ✅ (ANKETA_MAIL 12 яз, 2026-06-04).
