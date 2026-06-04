@@ -604,16 +604,23 @@ async function handleInterpreterPurchase(product, buyerName, buyerEmail, lang, e
     );
   }
 
+  // Связка «код → клиент» для «одного топика»: и сабмит анкеты, и /start care-бота находят
+  // топик клиента по коду (code_topic). Здесь сохраняем язык/имя/email под кодом.
+  if (code && env.EXPERT_DRAFTS) {
+    await env.EXPERT_DRAFTS.put('code_owner:' + String(code).toUpperCase(),
+      JSON.stringify({ email: buyerEmail || '', name: buyerName || '', lang }),
+      { expirationTtl: 200 * 24 * 60 * 60 });
+    // метка «клиент интерпретатора» — чтобы Cal-письмо НЕ дублировало анкету (он уже
+    // получил её в подтверждении Expert-заявки, со ссылкой по коду).
+    if (buyerEmail) await env.EXPERT_DRAFTS.put('interp_email:' + buyerEmail.toLowerCase(), '1',
+      { expirationTtl: 200 * 24 * 60 * 60 });
+  }
+
+  // Ссылку на анкету в письме НЕ дублируем: её даёт локализованное письмо-подтверждение
+  // Expert-заявки (apps-script CLIENT_CONFIRM, 12 яз) — каждый EXPERT/ELITE получает её там.
   if (code && buyerEmail) {
     const mail = buildInterpreterEmailBody(buyerName, tierName, code, lang);
-    // ELITE: вкладываем ссылку на полную анкету здоровья (110 Q) уже в ПЕРВОЕ письмо —
-    // все ELITE-клиенты получают её сразу, не дожидаясь брони Zoom. Анкета EN-led (выбор
-    // языка внутри формы); src=elite → сабмит уходит нутрициологу в care-группу.
-    const isElite = String(product.tier).startsWith('ELITE');
-    const html = isElite
-      ? mail.html + `<hr style="margin:28px 0;border:none;border-top:1px solid #EDE9E2">` + CAL_ANKETA_MAIL.body
-      : mail.html;
-    await sendEmail(env, buyerEmail, mail.subject, html);
+    await sendEmail(env, buyerEmail, mail.subject, mail.html);
   }
 
   return jsonResponse({ ok: true, tier: product.tier, code: code || null, code_error: codeError }, corsHeaders);
@@ -915,8 +922,12 @@ async function handleCalWebhook(request, env, corsHeaders) {
   if (ev === 'BOOKING_CREATED' && att.email && isSession) {
     // Программные клиенты уже заполнили большую анкету при оплате (метка prog_email) —
     // им письмо НЕ шлём. Остаются ELITE/несвязанные — им и идёт ссылка на анкету.
-    const isProgram = env.PROGRAM_INTAKES && await env.PROGRAM_INTAKES.get('prog_email:' + att.email.toLowerCase());
-    if (!isProgram) await sendEmail(env, att.email, CAL_ANKETA_MAIL.subj, CAL_ANKETA_MAIL.body);
+    const lcEmail   = att.email.toLowerCase();
+    const isProgram = env.PROGRAM_INTAKES && await env.PROGRAM_INTAKES.get('prog_email:' + lcEmail);
+    // Клиенты интерпретатора (EXPERT/ELITE) уже получили анкету в подтверждении со ссылкой
+    // по коду → Cal-письмо им не шлём (иначе codeless-ссылка создаст топик-двойник).
+    const isInterp  = env.EXPERT_DRAFTS && await env.EXPERT_DRAFTS.get('interp_email:' + lcEmail);
+    if (!isProgram && !isInterp) await sendEmail(env, att.email, CAL_ANKETA_MAIL.subj, CAL_ANKETA_MAIL.body);
   }
 
   return jsonResponse({ ok: true }, corsHeaders);
@@ -3128,22 +3139,40 @@ async function handleCareWebhook(request, env, corsHeaders){
     let lang = await env.EXPERT_DRAFTS.get('care_lang:'+clientId) || careLang(msg.from?.language_code);
 
     if(text==='/start' || text.startsWith('/start ')){
-      // deep-link «t.me/viael_care_bot?start=<lang>» приходит как «/start <lang>» —
-      // берём язык, выбранный клиентом в ИП, а не язык интерфейса Telegram.
+      // deep-link приходит как «/start <payload>». payload = ЛИБО язык (старое поведение),
+      // ЛИБО КОД доступа (новое): код связывает анкету и переписку в ОДИН топик через
+      // code_topic:<код>. Язык/имя клиента берём из code_owner (записан при покупке).
       const payload = text.split(/\s+/)[1];
-      if(payload && CARE_SUPPORTED.includes(payload.toLowerCase())) lang = payload.toLowerCase();
+      let startCode = '';
+      if(payload){
+        if(CARE_SUPPORTED.includes(payload.toLowerCase())) lang = payload.toLowerCase();
+        else startCode = payload.toUpperCase();
+      }
+      let owner = null;
+      if(startCode){
+        const rawO = await env.EXPERT_DRAFTS.get('code_owner:'+startCode);
+        if(rawO){ try{ owner = JSON.parse(rawO); }catch(_){ } }
+        if(owner && owner.lang) lang = owner.lang;
+      }
       await env.EXPERT_DRAFTS.put('care_lang:'+clientId, lang);
       await careSend(env, clientId, carePhrase('hello_welcome', lang));
-      // Переход в ведение: при ПЕРВОМ подключении (топика ещё нет) сразу создаём+привязываем
-      // топик, уведомляем нутрициолога и автоматически выдаём клиенту анкету с «обратным
-      // адресом» (&topic=<id> → заполненная анкета вернётся в его топик). Повторный /start
-      // топик уже видит → анкету не дублируем. Ручной /anketa остаётся как ре-выдача.
+      // Первое подключение: привязываем топик. Если сабмит анкеты уже создал топик под
+      // этим кодом (code_topic) — ПЕРЕИСПОЛЬЗУЕМ его (анкета + чат в одном топике!), иначе
+      // создаём новый и записываем code_topic. Повторный /start топик уже видит — не дублируем.
       if(!(await env.EXPERT_DRAFTS.get('care_topic:'+clientId))){
-        const cname = [msg.from?.first_name, msg.from?.last_name].filter(Boolean).join(' ') || ('client '+clientId);
-        const announce = '🆕 Клиент подключился к ведению:\n👤 '+cname+' ('+lang.toUpperCase()+')\nАнкета здоровья отправлена автоматически.';
-        const topicId = await careRelayToTopic(env, clientId, lang, cname, announce);
+        const cname = (owner && owner.name) || [msg.from?.first_name, msg.from?.last_name].filter(Boolean).join(' ') || ('client '+clientId);
+        const announce = '🆕 Клиент подключился к ведению:\n👤 '+cname+' ('+lang.toUpperCase()+')';
+        let topicId = startCode ? await env.EXPERT_DRAFTS.get('code_topic:'+startCode) : '';
         if(topicId){
-          const anketaLink = CARE_ANKETA_FORM + '?lang=' + lang + '&topic=' + topicId;
+          await env.EXPERT_DRAFTS.put('care_topic:'+clientId, String(topicId));
+          await env.EXPERT_DRAFTS.put('care_client:'+topicId, JSON.stringify({clientId, lang, name:cname}));
+          await careSend(env, env.NUTRITIONIST_GROUP_ID, announce, { message_thread_id: Number(topicId) });
+        } else {
+          topicId = await careRelayToTopic(env, clientId, lang, cname, announce);
+          if(topicId && startCode) await env.EXPERT_DRAFTS.put('code_topic:'+startCode, String(topicId));
+        }
+        if(topicId){
+          const anketaLink = CARE_ANKETA_FORM + '?lang=' + lang + (startCode ? '&code='+encodeURIComponent(startCode) : '&topic='+topicId);
           await careSend(env, clientId, carePhrase('anketa_invite', lang).replace('{link}', anketaLink));
         }
       }
@@ -3325,11 +3354,16 @@ async function deliverAnketa(env, body, answers, lang){
     }
   }
 
-  // ── Куда нутрициологу: в топик (если открыта из /anketa) либо создаём новый ──
+  // ── Куда нутрициологу: топик из /anketa, либо по КОДУ (связка с перепиской), либо новый ──
+  // code_topic:<код> — единый «адрес» топика клиента: его пишет и сабмит анкеты, и /start
+  // care-бота. Кто первый — создаёт, второй переиспользует → анкета и чат в ОДНОМ топике.
+  const code = (typeof body.code==='string' && body.code.trim()) ? body.code.trim().toUpperCase() : '';
   let topicId = body.topic ? String(body.topic).replace(/\D/g,'') : '';
   if(topicId && !(await env.EXPERT_DRAFTS.get('care_client:'+topicId))) topicId = ''; // чужой/несуществующий
+  if(!topicId && code) topicId = (await env.EXPERT_DRAFTS.get('code_topic:'+code)) || '';
   if(!topicId){
     topicId = await careCreateTopic(env, ((name||'Клиент')+' · анкета · '+lang.toUpperCase()).slice(0,128));
+    if(topicId && code) await env.EXPERT_DRAFTS.put('code_topic:'+code, String(topicId));
   }
   const extra = topicId ? { message_thread_id: Number(topicId) } : {};
   const idline = `${name||'Клиент'}${email?' · '+email:''} · ${lang.toUpperCase()}`;

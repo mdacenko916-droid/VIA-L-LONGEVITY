@@ -457,11 +457,17 @@ function sendExpertEmail(name, email, question, d, lang, code, onboarding) {
 
   GmailApp.sendEmail(MARINA_EMAIL, subject, b);
 
-  // ── Подтверждение клиенту на ЕГО языке ──────────────────────
+  // ── Подтверждение клиенту на ЕГО языке + ссылка на полную анкету ──
   if (email) {
     var conf = CLIENT_CONFIRM[lang] || CLIENT_CONFIRM.en;
     var greet = conf.greet + (name ? ', ' + name : '') + '!';
-    var cb = greet + '\n\n' + conf.body + '\n\n' + conf.signoff + '\nКоманда VIA-L · viaelcom@gmail.com';
+    // Полная анкета здоровья: клиент получает её СРАЗУ, на своём языке. Код «приклеен»
+    // к ссылке (?code=<код>) — чтобы заполненная анкета и переписка в Telegram сошлись
+    // в ОДИН топик у нутрициолога. Доходит сюда только EXPERT/ELITE (у PRO нет доступа).
+    var cleanCode = code.replace(/\s*\[DEV\]\s*/i, '').trim();
+    var anketaUrl = 'https://via-l.com/book/anketa/?code=' + encodeURIComponent(cleanCode) + '&lang=' + encodeURIComponent(lang);
+    var inv = ANKETA_INVITE[lang] || ANKETA_INVITE.en;
+    var cb = greet + '\n\n' + conf.body + '\n\n' + inv + '\n' + anketaUrl + '\n\n' + conf.signoff + '\nКоманда VIA-L · viaelcom@gmail.com';
     GmailApp.sendEmail(email, conf.subject, cb);
   }
 }
@@ -482,6 +488,23 @@ var CLIENT_CONFIRM = {
   he: { subject: 'בקשתך התקבלה · VIA-L', greet: 'שלום',                          body: 'קיבלנו את בקשתך. התזונאית תכין ניתוח אישי בכתב תוך 48 שעות.',                                                          signoff: 'בברכה,' },
   ja: { subject: 'リクエストを受け付けました · VIA-L', greet: 'こんにちは',         body: 'リクエストを受け付けました。栄養士が48時間以内にパーソナルな書面分析を作成します。',                                signoff: '敬具' },
   ko: { subject: '요청이 접수되었습니다 · VIA-L', greet: '안녕하세요',              body: '요청을 받았습니다. 영양사가 48시간 이내에 개인 맞춤형 서면 분석을 준비할 것입니다.',                                signoff: '감사합니다,' }
+};
+
+// ── Приглашение заполнить полную анкету здоровья (12 языков) ──
+// Идёт строкой в письме-подтверждении вместе со ссылкой ?code=<код>.
+var ANKETA_INVITE = {
+  ru: 'Чтобы разбор был максимально точным, заполните, пожалуйста, анкету здоровья (можно в несколько заходов):',
+  uk: 'Щоб розбір був максимально точним, заповніть, будь ласка, анкету здоров’я (можна в кілька заходів):',
+  en: 'To make your review as precise as possible, please fill in the health questionnaire (you can do it in several sittings):',
+  es: 'Para que tu análisis sea lo más preciso posible, completa el cuestionario de salud (puedes hacerlo en varias veces):',
+  de: 'Damit Ihre Analyse möglichst genau wird, füllen Sie bitte den Gesundheitsfragebogen aus (gern in mehreren Schritten):',
+  pt: 'Para que sua análise seja a mais precisa possível, preencha o questionário de saúde (pode fazer em várias etapas):',
+  fr: 'Pour que votre analyse soit la plus précise possible, remplissez le questionnaire de santé (vous pouvez le faire en plusieurs fois) :',
+  pl: 'Aby analiza była jak najdokładniejsza, wypełnij ankietę zdrowia (możesz w kilku podejściach):',
+  it: 'Per rendere la tua analisi il più precisa possibile, compila il questionario sulla salute (puoi farlo in più volte):',
+  he: 'כדי שהניתוח יהיה מדויק ככל האפשר, אנא מלא/י את שאלון הבריאות (אפשר בכמה פעמים):',
+  ja: '分析をできるだけ正確にするため、健康問診票のご記入をお願いします（数回に分けてもOKです）：',
+  ko: '분석을 최대한 정확하게 하기 위해 건강 설문지를 작성해 주세요(여러 번에 나눠 작성해도 됩니다):'
 };
 
 // ── Helpers для тарифов и Expert-счётчика ─────────────────────

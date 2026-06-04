@@ -4934,8 +4934,9 @@ const _urlDevice=new URLSearchParams(location.search).get('device')||null;
 function setLang(l){
   lang=l;
   document.getElementById('langLabel').textContent=LANG_FLAGS[l]||l.toUpperCase();
-  // Кнопка чата заботы → бот с языком, выбранным в ИП (deep-link ?start=<lang>)
-  var _care=document.getElementById('careChatBtn'); if(_care) _care.href='https://t.me/viael_care_bot?start='+l;
+  // Кнопка чата заботы → бот. Несём КОД доступа (?start=<код>) — он связывает анкету и
+  // переписку в один топик. Если кода ещё нет (до активации) — fallback на язык.
+  var _care=document.getElementById('careChatBtn'); if(_care){ var _cc=(sessionStorage.getItem('vial_code')||'').toUpperCase(); _care.href='https://t.me/viael_care_bot?start='+(_cc||l); }
   document.querySelectorAll('.lang-option').forEach(o=>{
     o.classList.toggle('active',o.textContent.includes(l.toUpperCase())||
       (l==='ru'&&o.textContent.includes('Русский'))||
