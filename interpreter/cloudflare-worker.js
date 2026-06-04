@@ -866,22 +866,6 @@ const CAL_ANKETA_MAIL = {
     + `<p style="color:#888;font-size:13px">🌍 The questionnaire is available in 12 languages — choose yours at the top of the form.</p>`,
 };
 
-// EXPERT-тариф: после ПЕРВОГО PDF-разбора клиент получает приглашение на полную
-// анкету (110 Q) — она даёт нутрициологу контекст для второго разбора. Приём — тот же
-// /anketa-submit (без intake/topic → новый топик в care-группе, как у ELITE). EN-led +
-// нота про 12 языков (форма сама переключает язык); ссылка открывает форму на языке клиента.
-function buildExpertAnketaMail(lang) {
-  const link = 'https://via-l.com/book/anketa/?src=expert&lang=' + encodeURIComponent(lang || 'en');
-  return {
-    subj: '📋 Optional health questionnaire — VIA-L',
-    body:
-        `<p>📋 To make your next personal report deeper, you can fill in the full health questionnaire — your specialist will use it for context. Take your time, you can complete it in several sittings. If you have recent lab results, enter the values or attach a photo/PDF:</p>`
-      + `<p style="margin:24px 0"><a href="${link}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">Open the questionnaire →</a></p>`
-      + `<p style="color:#888;font-size:13px">Or copy the link: ${link}</p>`
-      + `<p style="color:#888;font-size:13px">🌍 The questionnaire is available in 12 languages — choose yours at the top of the form.</p>`,
-  };
-}
-
 async function handleCalWebhook(request, env, corsHeaders) {
   const raw = await request.text();
   const sig = request.headers.get('x-cal-signature-256') || '';
@@ -1920,33 +1904,10 @@ async function handleTgCallback(cq, env, corsHeaders) {
       draft.status      = 'approved';
       draft.approved_at = new Date().toISOString();
       draft.send_result = sendResult;
-
-      // EXPERT: после ПЕРВОГО PDF — приглашение клиенту на полную анкету (110 Q),
-      // даёт нутрициологу контекст для второго разбора. Приём — /anketa-submit
-      // (новый топик в care-группе, как у ELITE). ELITE получают анкету через Cal/care;
-      // PRO до этой ветки не доходит (hasExpert=false). Прод-гейт — только первый отчёт
-      // (reports_sent_total===1), чтобы не дублировать со вторым PDF. Dev-коды в Sheet не
-      // пишутся (всегда 0) → для них пускаем по флагу dev, чтобы механизм был тестируем
-      // end-to-end (plan='DEV' + 'EXPERT' в коде = VIAL-EXPERT-* dev-код).
-      let anketaNote = '';
-      const _isDev    = draft.plan === 'DEV';
-      const _isExpert = draft.plan === 'EXPERT' || (_isDev && /EXPERT/i.test(draft.code || ''));
-      const _firstPdf = sendResult.reports_sent_total === 1;
-      if (_isExpert && (_firstPdf || _isDev) && draft.client_email) {
-        const am = buildExpertAnketaMail(clientLang);
-        try {
-          await sendEmail(env, draft.client_email, am.subj, am.body);
-          anketaNote = '\n📋 Анкета (110 Q) отправлена клиенту';
-        } catch (e) {
-          console.error('expert anketa invite failed:', e?.message || e);
-          anketaNote = '\n⚠ Анкету клиенту отправить не удалось';
-        }
-      }
-
       await tgEditMessage(env, chatId, messageId,
         '✅ <b>Отправлено клиенту</b>' +
         '\n\nКлиент: <code>' + esc(draft.client_email) + '</code>' +
-        '\nЯзык: ' + esc(clientLang) + langNote + anketaNote
+        '\nЯзык: ' + esc(clientLang) + langNote
       );
       await env.EXPERT_DRAFTS.delete('draft:' + requestId);
     } else {
