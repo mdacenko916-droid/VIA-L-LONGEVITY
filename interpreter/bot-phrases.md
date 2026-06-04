@@ -1,5 +1,14 @@
 # Библиотека фраз клиентского бота VIA-L (сид)
 
+> **Статус реализации (2026-06-04).** В прод (`CARE_PHRASES`, 12 языков) заведены и
+> подключены к реальным триггерам **7 ключей**: `hello_welcome`, `anketa_invite`,
+> `passed_to_specialist`, `got_attachment` (клиент прислал фото/файл/голосовое — копируем
+> в топик), `zoom_invite` (нутрициолог дал `/zoom <ссылка>`), `error_unsupported` (стикер/
+> без текста), `error_generic` (релей не прошёл). Остальные ключи ниже — **спека/TODO**:
+> заводить только когда появится реальный триггер (доставка разбора, напоминания о Zoom,
+> классификатор FAQ), иначе мёртвые фразы. Динамический FAQ уже закрыт FAQ-памятью
+> «эталон» (ARCHITECTURE §16), поэтому статические `faq_*` — низкий приоритет.
+
 > Статический словарь — НЕ гонять через Claude. Перевести один раз на 12 языков
 > (uk/ru/en/es/de/pt/fr/pl/it/he/ja/ko) и хранить как `T`-объект в воркере (паттерн
 > интерпретаторов, §4.3 ARCHITECTURE). Выбор по языку клиента из draft.
@@ -46,6 +55,9 @@
   - en: «Thank you for trusting us with this 🌿 Your questionnaire is with the nutritionist. I've organised it, the specialist will refine it — everything will be ready for your session.»
 
 ## 5. Zoom
+- `zoom_invite` ✅ **в проде** — выдаётся командой нутрициолога `/zoom <ссылка>` в топике
+  - ru: «Ваша онлайн-консультация 🌿 Ссылка для подключения:\n{link}\n\nПодключитесь, пожалуйста, за пару минут до начала. До встречи!»
+  - en: «Your online consultation 🌿 Link to join:\n{link}\n\nPlease join a couple of minutes before the start. See you!»
 - `zoom_booked`
   - ru: «Встреча забронирована ✅ Ссылка придёт на почту. Перед созвоном гляну, всё ли есть у специалиста — и напомню вам.»
   - en: «Your session is booked ✅ The link will arrive by email. Before the call I'll make sure the specialist has everything — and remind you.»
@@ -54,6 +66,9 @@
   - en: «A gentle reminder about tomorrow's session 💛 New questions? Send them ahead and the specialist will include them.»
 
 ## 6. Переписка — сервисные реплики
+- `got_attachment` ✅ **в проде** — клиент прислал фото/файл/голосовое/видео (оригинал копируется в топик)
+  - ru: «Спасибо 🌿 Получили ваше вложение и передали нутрициологу. Вернёмся с ответом на вашем языке.»
+  - en: «Thank you 🌿 We've received your attachment and passed it to your nutritionist. We'll come back with an answer in your language.»
 - `passed_to_specialist`
   - ru: «Передал(а) ваш вопрос нутрициологу. Отвечаем в рабочее время, обычно в течение 48 часов — вы точно не потеряетесь.»
   - en: «I've passed your question to the nutritionist. We reply during working hours, usually within 48 hours — you won't be forgotten.»
@@ -83,12 +98,12 @@
   - en: «This is an important medical question — it needs a doctor, and I care about your health too much to guess. The nutritionist can also point you to the right specialist.»
 
 ## 8. Сервис / ошибки
-- `error_generic`
+- `error_generic` ✅ **в проде** — релей вопроса не прошёл (не создался топик)
   - ru: «Кажется, что-то подвисло на моей стороне 🙈 Повторите, пожалуйста, через минуту — я никуда не денусь.»
-  - en: «Looks like something hiccuped on my side 🙈 Please try again in a minute — I'm not going anywhere.»
-- `error_unsupported`
-  - ru: «Пока я понимаю текст и фото/файлы. Голосовые расшифрую чуть позже — напишите словами, если удобно 🌿»
-  - en: «For now I handle text and photos/files. Voice notes come later — please write it out if you can 🌿»
+  - en: «Something seems to have hiccuped on my side 🙈 Please try again in a minute — I'm not going anywhere.»
+- `error_unsupported` ✅ **в проде** — сообщение без текста и без релеящегося медиа (стикер/локация/контакт)
+  - ru: «Пока я понимаю текст, фото и файлы. Напишите, пожалуйста, словами — и я всё передам нутрициологу 🌿»
+  - en: «For now I understand text, photos and files. Please write it in words — and I'll pass everything to your nutritionist 🌿»
 
 ---
 

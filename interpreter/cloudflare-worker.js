@@ -2549,6 +2549,62 @@ const CARE_PHRASES = {
     ja:'栄養士が的確にサポートできるよう、全体像が必要です 🌿 健康問診票のご記入をお願いします — ゆっくり、何回かに分けてもOK：{link}\n\n最近の検査結果があれば数値を入力するか写真/PDFを添付してください。まだない場合もご安心を、何を受ければよいかお伝えします。セッションの2〜3日前までにご記入いただけると助かります。',
     ko:'영양사가 정확히 도와드리도록 전체 그림이 필요합니다 🌿 건강 설문지를 작성해 주세요 — 천천히, 여러 번 나눠 해도 좋습니다: {link}\n\n최근 검사 결과가 있으면 수치를 입력하거나 사진/PDF를 첨부해 주세요. 아직 없으셔도 괜찮습니다, 무엇을 받으면 되는지 알려드리겠습니다. 세션 2~3일 전까지 작성해 주시면 좋습니다.',
   },
+  got_attachment: {
+    ru:'Спасибо 🌿 Получили ваше вложение и передали нутрициологу. Вернёмся с ответом на вашем языке.',
+    uk:'Дякуємо 🌿 Отримали ваше вкладення й передали нутриціологу. Повернемося з відповіддю вашою мовою.',
+    en:'Thank you 🌿 We’ve received your attachment and passed it to your nutritionist. We’ll come back with an answer in your language.',
+    es:'Gracias 🌿 Hemos recibido tu archivo y se lo hemos pasado a tu nutricionista. Volveremos con una respuesta en tu idioma.',
+    de:'Danke 🌿 Wir haben deinen Anhang erhalten und an deine Ernährungsberaterin weitergeleitet. Wir melden uns mit einer Antwort in deiner Sprache.',
+    pt:'Obrigado 🌿 Recebemos o seu anexo e o encaminhamos à nutricionista. Voltaremos com uma resposta no seu idioma.',
+    fr:'Merci 🌿 Nous avons bien reçu votre pièce jointe et l’avons transmise à votre nutritionniste. Nous reviendrons avec une réponse dans votre langue.',
+    pl:'Dziękujemy 🌿 Otrzymaliśmy Twój załącznik i przekazaliśmy go dietetykowi. Wrócimy z odpowiedzią w Twoim języku.',
+    it:'Grazie 🌿 Abbiamo ricevuto il tuo allegato e l’abbiamo passato alla nutrizionista. Torneremo con una risposta nella tua lingua.',
+    he:'תודה 🌿 קיבלנו את הקובץ שצירפת והעברנו אותו לתזונאית. נחזור עם תשובה בשפה שלך.',
+    ja:'ありがとうございます 🌿 添付ファイルを受け取り、栄養士にお渡ししました。あなたの言語でお返事します。',
+    ko:'감사합니다 🌿 첨부파일을 받아 영양사에게 전달했습니다. 당신의 언어로 답변드리겠습니다.',
+  },
+  zoom_invite: {
+    ru:'Ваша онлайн-консультация 🌿 Ссылка для подключения:\n{link}\n\nПодключитесь, пожалуйста, за пару минут до начала. До встречи!',
+    uk:'Ваша онлайн-консультація 🌿 Посилання для підключення:\n{link}\n\nПідключіться, будь ласка, за кілька хвилин до початку. До зустрічі!',
+    en:'Your online consultation 🌿 Link to join:\n{link}\n\nPlease join a couple of minutes before the start. See you!',
+    es:'Tu consulta online 🌿 Enlace para conectarte:\n{link}\n\nConéctate un par de minutos antes de empezar. ¡Nos vemos!',
+    de:'Deine Online-Beratung 🌿 Link zum Beitreten:\n{link}\n\nBitte tritt ein paar Minuten vor Beginn bei. Bis bald!',
+    pt:'A sua consulta online 🌿 Link para entrar:\n{link}\n\nEntre alguns minutos antes do início. Até já!',
+    fr:'Votre consultation en ligne 🌿 Lien pour rejoindre :\n{link}\n\nConnectez-vous quelques minutes avant le début. À bientôt !',
+    pl:'Twoja konsultacja online 🌿 Link do dołączenia:\n{link}\n\nDołącz kilka minut przed rozpoczęciem. Do zobaczenia!',
+    it:'La tua consulenza online 🌿 Link per partecipare:\n{link}\n\nCollegati un paio di minuti prima dell’inizio. A presto!',
+    he:'הייעוץ המקוון שלך 🌿 קישור להצטרפות:\n{link}\n\nאנא הצטרף/י כמה דקות לפני תחילת המפגש. נתראה!',
+    ja:'オンライン相談のご案内 🌿 参加リンク:\n{link}\n\n開始の数分前にご参加ください。お会いできるのを楽しみにしています！',
+    ko:'온라인 상담 안내 🌿 참여 링크:\n{link}\n\n시작 몇 분 전에 입장해 주세요. 곧 뵙겠습니다!',
+  },
+  error_unsupported: {
+    ru:'Пока я понимаю текст, фото и файлы. Напишите, пожалуйста, словами — и я всё передам нутрициологу 🌿',
+    uk:'Поки що я розумію текст, фото та файли. Напишіть, будь ласка, словами — і я все передам нутриціологу 🌿',
+    en:'For now I understand text, photos and files. Please write it in words — and I’ll pass everything to your nutritionist 🌿',
+    es:'Por ahora entiendo texto, fotos y archivos. Escríbelo con palabras, por favor — y se lo paso todo a tu nutricionista 🌿',
+    de:'Im Moment verstehe ich Text, Fotos und Dateien. Bitte schreib es in Worten — und ich leite alles an deine Ernährungsberaterin weiter 🌿',
+    pt:'Por enquanto entendo texto, fotos e ficheiros. Escreva em palavras, por favor — e passo tudo à nutricionista 🌿',
+    fr:'Pour l’instant je comprends le texte, les photos et les fichiers. Écrivez-le en mots, s’il vous plaît — et je transmets tout à votre nutritionniste 🌿',
+    pl:'Na razie rozumiem tekst, zdjęcia i pliki. Napisz proszę słowami — a wszystko przekażę dietetykowi 🌿',
+    it:'Per ora capisco testo, foto e file. Scrivilo a parole, per favore — e passo tutto alla nutrizionista 🌿',
+    he:'בינתיים אני מבין טקסט, תמונות וקבצים. כתבו במילים, בבקשה — ואעביר הכול לתזונאית 🌿',
+    ja:'今はテキスト・写真・ファイルに対応しています。お手数ですが文章でお書きください — すべて栄養士にお伝えします 🌿',
+    ko:'지금은 텍스트·사진·파일을 이해합니다. 번거로우시겠지만 글로 적어 주세요 — 모두 영양사에게 전달하겠습니다 🌿',
+  },
+  error_generic: {
+    ru:'Кажется, что-то подвисло на моей стороне 🙈 Повторите, пожалуйста, через минуту — я никуда не денусь.',
+    uk:'Здається, щось підвисло на моєму боці 🙈 Повторіть, будь ласка, за хвилину — я нікуди не дінуся.',
+    en:'Something seems to have hiccuped on my side 🙈 Please try again in a minute — I’m not going anywhere.',
+    es:'Parece que algo se atascó de mi lado 🙈 Inténtalo de nuevo en un minuto — no me voy a ningún lado.',
+    de:'Auf meiner Seite hat etwas gehakt 🙈 Bitte versuch es in einer Minute noch einmal — ich bin gleich wieder da.',
+    pt:'Parece que algo travou do meu lado 🙈 Tente novamente daqui a um minuto — não vou a lado nenhum.',
+    fr:'On dirait que quelque chose a coincé de mon côté 🙈 Réessayez dans une minute — je ne bouge pas.',
+    pl:'Wygląda, że coś się zacięło po mojej stronie 🙈 Spróbuj ponownie za minutę — nigdzie się nie wybieram.',
+    it:'Sembra che qualcosa si sia inceppato dalla mia parte 🙈 Riprova tra un minuto — non vado da nessuna parte.',
+    he:'נראה שמשהו נתקע אצלי 🙈 נסו שוב בעוד דקה — אני לא הולך לשום מקום.',
+    ja:'こちら側で少し不具合が出たようです 🙈 1分ほどしてからもう一度お試しください — ずっとここにいます。',
+    ko:'제 쪽에서 잠시 문제가 생긴 것 같아요 🙈 1분 뒤에 다시 보내 주세요 — 어디 가지 않아요.',
+  },
 };
 
 // Веб-форма полной анкеты здоровья (110 Q × 12 яз, GitHub Pages via-l.com).
@@ -2688,6 +2744,15 @@ async function careAnswerCallback(env, id, text){
     { method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ callback_query_id:id, text:text||'' }) }); }catch(_){}
 }
+// Копия медиа-сообщения клиента (фото анализов, голосовое, документ) в его топик —
+// чтобы нутрициолог видел оригинал вложения, а не терял его. copyMessage сохраняет
+// подпись/файл без пометки «переслано».
+async function careCopyMessage(env, fromChatId, messageId, topicId){
+  try{ await fetch(`https://api.telegram.org/bot${env.CLIENT_BOT_TOKEN}/copyMessage`,
+    { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ chat_id: env.NUTRITIONIST_GROUP_ID, from_chat_id: fromChatId,
+        message_id: messageId, message_thread_id: Number(topicId) }) }); }catch(_){}
+}
 
 async function handleCareWebhook(request, env, corsHeaders){
   if(request.method!=='POST') return jsonResponse({ok:true}, corsHeaders);
@@ -2723,17 +2788,25 @@ async function handleCareWebhook(request, env, corsHeaders){
     if(!text || !threadId) return jsonResponse({ok:true}, corsHeaders);            // сервисные / General
     if(msg.from?.username === 'viael_care_bot') return jsonResponse({ok:true}, corsHeaders);
     if(text.startsWith('/')){
-      // Команда нутрициолога в топике клиента: /anketa → отправить клиенту анкету.
-      if(text.trim().split(/\s+/)[0].toLowerCase()==='/anketa'){
-        const rawA = await env.EXPERT_DRAFTS.get('care_client:'+threadId);
-        if(rawA){
-          let rA; try{ rA = JSON.parse(rawA); }catch(_){ rA=null; }
-          if(rA){
-            const cl = (await env.EXPERT_DRAFTS.get('care_lang:'+rA.clientId)) || rA.lang || 'en';
-            // Ссылка на веб-форму с «обратным адресом»: topic = id этого топика → анкета вернётся сюда.
-            const anketaLink = CARE_ANKETA_FORM + '?lang=' + cl + '&topic=' + threadId;
-            await careSend(env, rA.clientId, carePhrase('anketa_invite', cl).replace('{link}', anketaLink));
-            await careSend(env, env.NUTRITIONIST_GROUP_ID, '✅ Анкета отправлена клиенту', { message_thread_id: threadId });
+      // Команды нутрициолога в топике клиента (язык клиента берём текущий — care_lang):
+      //   /anketa            → выдать клиенту веб-анкету (ссылка вернётся в этот топик).
+      //   /zoom <ссылка>     → выдать клиенту приглашение на онлайн-консультацию.
+      const cmd = text.trim().split(/\s+/)[0].toLowerCase();
+      const rawA = await env.EXPERT_DRAFTS.get('care_client:'+threadId);
+      let rA=null; if(rawA){ try{ rA = JSON.parse(rawA); }catch(_){ rA=null; } }
+      if(rA){
+        const cl = (await env.EXPERT_DRAFTS.get('care_lang:'+rA.clientId)) || rA.lang || 'en';
+        if(cmd==='/anketa'){
+          const anketaLink = CARE_ANKETA_FORM + '?lang=' + cl + '&topic=' + threadId;
+          await careSend(env, rA.clientId, carePhrase('anketa_invite', cl).replace('{link}', anketaLink));
+          await careSend(env, env.NUTRITIONIST_GROUP_ID, '✅ Анкета отправлена клиенту', { message_thread_id: threadId });
+        }else if(cmd==='/zoom'){
+          const link = text.trim().split(/\s+/).slice(1).join(' ').trim();
+          if(/^https?:\/\//i.test(link)){
+            await careSend(env, rA.clientId, carePhrase('zoom_invite', cl).replace('{link}', link));
+            await careSend(env, env.NUTRITIONIST_GROUP_ID, '✅ Ссылка на Zoom отправлена клиенту', { message_thread_id: threadId });
+          }else{
+            await careSend(env, env.NUTRITIONIST_GROUP_ID, 'Использование: /zoom <ссылка на встречу>', { message_thread_id: threadId });
           }
         }
       }
@@ -2769,7 +2842,7 @@ async function handleCareWebhook(request, env, corsHeaders){
     // интерфейса Telegram. Не перезаписываем на каждом сообщении — выбор «прилипает».
     let lang = await env.EXPERT_DRAFTS.get('care_lang:'+clientId) || careLang(msg.from?.language_code);
 
-    if(text==='' || text==='/start' || text.startsWith('/start ')){
+    if(text==='/start' || text.startsWith('/start ')){
       // deep-link «t.me/viael_care_bot?start=<lang>» приходит как «/start <lang>» —
       // берём язык, выбранный клиентом в ИП, а не язык интерфейса Telegram.
       const payload = text.split(/\s+/)[1];
@@ -2798,6 +2871,22 @@ async function handleCareWebhook(request, env, corsHeaders){
 
     const cname = [msg.from?.first_name, msg.from?.last_name].filter(Boolean).join(' ') || ('client '+clientId);
 
+    // Вложение без текста (фото анализов, голосовое, документ, видео) — копируем оригинал
+    // в топик клиента, чтобы нутрициолог его видел. Раньше такое сообщение (text==='')
+    // ошибочно попадало в ветку /start и терялось.
+    const hasMedia = !!(msg.photo||msg.document||msg.voice||msg.audio||msg.video||msg.video_note||msg.animation);
+    if(!text && hasMedia){
+      const header = '👤 '+cname+(lang!=='ru'&&lang!=='uk' ? ' ('+lang.toUpperCase()+')' : '')+' прислал(а) вложение:';
+      const topicId = await careRelayToTopic(env, clientId, lang, cname, header);
+      if(topicId) await careCopyMessage(env, clientId, msg.message_id, topicId);
+      await careSend(env, clientId, carePhrase('got_attachment', lang));
+      return jsonResponse({ok:true}, corsHeaders);
+    }
+    if(!text){   // прочее без текста (стикер/локация/контакт) — мягко просим словами
+      await careSend(env, clientId, carePhrase('error_unsupported', lang));
+      return jsonResponse({ok:true}, corsHeaders);
+    }
+
     // реле: оригинал + (если не ru/uk) перевод на ru для нутрициолога
     let qForFaq = text;   // ru-вариант вопроса для FAQ-памяти (база русскоязычная)
     let relay = '👤 '+cname+(lang!=='ru'&&lang!=='uk' ? ' ('+lang.toUpperCase()+')' : '')+':\n'+text;
@@ -2808,6 +2897,10 @@ async function handleCareWebhook(request, env, corsHeaders){
     }
     // в топик клиента с авто-пересозданием, если нутрициолог удалил топик
     const topicId = await careRelayToTopic(env, clientId, lang, cname, relay);
+    if(!topicId){   // релей не прошёл (не создался топик) — честно говорим клиенту
+      await careSend(env, clientId, carePhrase('error_generic', lang));
+      return jsonResponse({ok:true}, corsHeaders);
+    }
     await careSend(env, clientId, carePhrase('passed_to_specialist', lang));
     // FAQ-память: запоминаем вопрос (для кнопки «⭐ В эталон» к будущему ответу) и
     // подсказываем нутрициологу похожий подтверждённый ответ (клиенту авто НЕ шлём).
