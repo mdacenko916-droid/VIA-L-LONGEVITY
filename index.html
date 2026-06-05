@@ -2196,6 +2196,9 @@
       0 0 0 11px rgba(210, 175, 110, 0.35),
       0 28px 64px rgba(0, 0, 0, 0.45);
     isolation: isolate;
+    background-size: cover;
+    background-position: center;
+    background-color: #0a0e1a;
   }
 
   /* Нотч (Dynamic Island) */
@@ -2224,57 +2227,36 @@
     z-index: 5;
   }
 
-  /* Верхняя часть — иконка на градиентном фоне */
-  #directionModal .modal-image {
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 42%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--screen-top, #E8DCC8);
-    z-index: 1;
-  }
+  #directionModal .modal-image { display: none; }
 
-  #directionModal .modal-image::before {
-    content: attr(data-icon);
-    font-size: 64px;
-    opacity: 0.55;
-    filter: saturate(0.8);
-  }
-
-  /* Разделительная линия — тонкая золотая */
-  #directionModal .modal-image::after {
-    content: "";
-    position: absolute;
-    bottom: 0; left: 16px; right: 16px;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(184,146,74,0.4), transparent);
-  }
-
-  /* Нижняя часть — текст на кремовом фоне */
+  /* Текстовый слой — на весь экран модала с тёмным градиентом снизу */
   #directionModal .modal-body {
     position: absolute;
-    top: 42%; left: 0; right: 0; bottom: 0;
-    padding: 20px 18px 22px;
+    top: 0; left: 0; right: 0; bottom: 0;
+    padding: 20px 18px 24px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-end;
     z-index: 4;
-    background: var(--screen-bottom, #F5F0E8);
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.90) 0%,
+      rgba(0, 0, 0, 0.60) 42%,
+      rgba(0, 0, 0, 0.08) 100%
+    );
   }
 
   #directionModal .modal-close {
     position: absolute;
     top: 14px;
     right: 14px;
-    width: 26px;
-    height: 26px;
-    background: rgba(184,146,74,0.12);
-    border: 1px solid rgba(184,146,74,0.25);
+    width: 28px;
+    height: 28px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.25);
     border-radius: 50%;
-    font-size: 14px;
-    color: rgba(61, 42, 18, 0.6);
+    font-size: 15px;
+    color: rgba(255,255,255,0.75);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -2284,36 +2266,37 @@
     line-height: 1;
   }
 
-  #directionModal .modal-close:hover { background: rgba(184,146,74,0.22); color: #3D2A12; }
+  #directionModal .modal-close:hover { background: rgba(0,0,0,0.55); color: #fff; }
   #directionModal .modal-num { display: none; }
 
   #directionModal .modal-title {
     font-family: "Cormorant Garamond", serif;
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 600;
-    color: #3D2A12;
+    color: #F8F0E0;
     line-height: 1.25;
     margin-bottom: 10px;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.6);
   }
 
   #directionModal .modal-text {
-    font-size: 15px;
+    font-size: 13.5px;
     line-height: 1.55;
-    color: rgba(61, 42, 18, 0.72);
-    flex: 1;
+    color: rgba(240, 230, 210, 0.88);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
   }
 
   #directionModal .modal-tag {
     display: inline-block;
-    font-size: 11px;
+    font-size: 10px;
     letter-spacing: 0.15em;
     text-transform: uppercase;
-    color: #8B6030;
-    background: rgba(184,146,74,0.1);
-    border: 1px solid rgba(184,146,74,0.3);
+    color: #D4AC6E;
+    background: rgba(184,146,74,0.18);
+    border: 1px solid rgba(184,146,74,0.45);
     border-radius: 12px;
     padding: 5px 12px;
-    margin-top: 10px;
+    margin-top: 12px;
     font-weight: 500;
     width: fit-content;
     align-self: flex-start;
@@ -4476,14 +4459,14 @@ const directionsData = {
 };
 
 const directionsMeta = {
-  1: { screenTop: '#EAD8BE', screenBottom: '#F5EFE4', icon: '🥗' },
-  2: { screenTop: '#D8E0D0', screenBottom: '#EDF0E8', icon: '⏳' },
-  3: { screenTop: '#D0D8E8', screenBottom: '#E8ECF4', icon: '🧬' },
-  4: { screenTop: '#E0D0D8', screenBottom: '#F2EAF0', icon: '⚖️' }
+  1: { bgImage: 'images/dir-bg-1.jpg' },
+  2: { bgImage: 'images/dir-bg-2.jpg' },
+  3: { bgImage: 'images/dir-bg-3.jpg' },
+  4: { bgImage: 'images/dir-bg-4.jpg' }
 };
 
 function getDirections() {
-  var lang = document.documentElement.lang || 'ru';
+  var lang = document.documentElement.lang || 'uk';
   var langData = directionsData[lang] || directionsData['ru'];
   var result = {};
   for (var k in langData) {
@@ -4500,10 +4483,9 @@ function openDirectionModal(num, cardEl) {
   const data = getDirections()[num];
   if (!data) return;
   const modalImage = document.getElementById('modalImage');
-  const modalContent = document.querySelector('.modal-content');
+  const modalContent = document.querySelector('#directionModal .modal-content');
   modalImage.setAttribute('data-icon', data.icon);
-  modalContent.style.setProperty('--screen-top', data.screenTop);
-  modalContent.style.setProperty('--screen-bottom', data.screenBottom);
+  modalContent.style.backgroundImage = 'url(' + data.bgImage + ')';
   document.getElementById('modalNum').textContent = data.num;
   document.getElementById('modalTitle').textContent = data.title;
   document.getElementById('modalDesc').textContent = data.desc;
