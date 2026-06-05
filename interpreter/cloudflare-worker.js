@@ -531,6 +531,12 @@ async function handleHotmartWebhook(request, env, corsHeaders) {
 
   const programName = PROGRAM_NAMES[product.program] || product.program;
   const amountStr   = amount ? `€${amount}` : product.price;
+
+  // Карточка в кабинете — сразу при оплате (ключ = token, тот же у анкеты программы).
+  await cabinetUpsertFromPayment(env, {
+    code: token, name: buyerName, email: buyerEmail, lang,
+    product, program: programName, tier: product.plan, price: product.price, paidAmount: amountStr,
+  });
   const langFlag    = { uk: '🇺🇦', ru: '🇷🇺', es: '🇪🇸', en: '🇬🇧', de: '🇩🇪', pt: '🇧🇷', fr: '🇫🇷', pl: '🇵🇱', it: '🇮🇹', he: '🇮🇱', ja: '🇯🇵', ko: '🇰🇷' }[lang] || '🌐';
 
   // Большая анкета здоровья (110 Q, book/anketa) с программным токеном — заполненная
@@ -622,6 +628,15 @@ async function handleInterpreterPurchase(product, buyerName, buyerEmail, lang, e
     // получил её в подтверждении Expert-заявки, со ссылкой по коду).
     if (buyerEmail) await env.EXPERT_DRAFTS.put('interp_email:' + buyerEmail.toLowerCase(), '1',
       { expirationTtl: 200 * 24 * 60 * 60 });
+
+    // Карточка в кабинете — при оплате (ключ = код доступа, тот же у care-анкеты).
+    // PRO в кабинет НЕ пишем (спека §2: только EXPERT/ELITE).
+    if (product.tier !== 'PRO') {
+      await cabinetUpsertFromPayment(env, {
+        code: String(code).toUpperCase(), name: buyerName, email: buyerEmail, lang,
+        product, program: 'Интерпретатор (ИП)', tier: tierName, price: product.price, paidAmount: product.price,
+      });
+    }
   }
 
   // Ссылку на анкету в письме НЕ дублируем: её даёт локализованное письмо-подтверждение
@@ -3505,6 +3520,58 @@ async function deliverAnketaProgram(env, intake, token, answers, lang, name, ema
     const t = ANKETA_MAIL[lang] || ANKETA_MAIL.en;
     await sendEmail(env, cEmail, t.subj, t.body(cName));
   }
+}
+
+// ─────────────────────────────────────────────────────────────
+// КАБИНЕТ: карточка рождается при ОПЛАТЕ (спека §2). Hotmart-вебхук уже знает
+// имя/email/программу/тариф/язык — пишем карточку в D1 сразу, статус «new».
+// Ключ = тот же код, по которому позже придёт анкета (token у программ сайта,
+// код доступа у ИП) → анкета до-обогащает ТУ ЖЕ карточку, не создавая дубль.
+// Формат сопровождения (Zoom/PDF/Разовая) и длительность — по тарифу+языку.
+// ─────────────────────────────────────────────────────────────
+function cabinetTariffMeta(product, lang){
+  const ukRu = (lang === 'uk' || lang === 'ru');
+  if (product.type === 'interpreter') {
+    if (product.tier === 'EXPERT')    return { duration: 4,  format: 'pdf'  };           // 2 PDF / 30 дн
+    if (product.tier === 'ELITE-8W')  return { duration: 8,  format: ukRu ? 'zoom' : 'pdf' };
+    if (product.tier === 'ELITE-12W') return { duration: 12, format: ukRu ? 'zoom' : 'pdf' };
+    return { duration: null, format: 'pdf' };                                            // PRO в кабинет не пишем
+  }
+  const plan = product.plan || '';
+  if (plan.includes('Разов')) return { duration: 1,  format: 'once' };                   // разовая (только uk/ru)
+  if (plan.includes('8'))     return { duration: 8,  format: ukRu ? 'zoom' : 'pdf' };
+  if (plan.includes('12'))    return { duration: 12, format: ukRu ? 'zoom' : 'pdf' };
+  return { duration: null, format: ukRu ? 'zoom' : 'pdf' };
+}
+
+// Создаёт/обновляет карточку в D1 в момент оплаты. status='new' ставится только при
+// INSERT (на конфликте не трогаем статус — у уже ведомого клиента он не сбросится).
+// start_date НЕ задаём — старт ведения проставляет специалист в кабинете.
+async function cabinetUpsertFromPayment(env, { code, name, email, lang, product, program, tier, price, paidAmount }){
+  if (!env.DB || !code) return;
+  const meta = cabinetTariffMeta(product, lang);
+  const now  = Date.now();
+  let existing = null;
+  try { existing = await env.DB.prepare('SELECT data FROM clients WHERE code=?').bind(code).first(); } catch(_){}
+  let data = {};
+  try { data = JSON.parse(existing?.data || '{}'); } catch(_){}
+  data.payment = { tier: tier||'', price: price||'', paid_amount: paidAmount||'', paid_at: new Date().toISOString() };
+  const productKind = product.type === 'interpreter' ? 'interpreter' : 'site';
+  try {
+    await env.DB.prepare(
+      `INSERT INTO clients (code,name,email,lang,product,program,tier,price,format,duration_weeks,status,data,created_at,updated_at)
+       VALUES (?,?,?,?,?,?,?,?,?,?,'new',?,?,?)
+       ON CONFLICT(code) DO UPDATE SET
+         name=CASE WHEN excluded.name!='' THEN excluded.name ELSE name END,
+         email=CASE WHEN excluded.email!='' THEN excluded.email ELSE email END,
+         lang=excluded.lang, product=excluded.product, program=excluded.program,
+         tier=excluded.tier, price=excluded.price, format=excluded.format,
+         duration_weeks=excluded.duration_weeks, data=excluded.data, updated_at=excluded.updated_at`
+    ).bind(
+      code, name||'', email||'', lang||'', productKind, program||'', tier||'',
+      price||'', meta.format, meta.duration, JSON.stringify(data), now, now
+    ).run();
+  } catch(_){}
 }
 
 // ─────────────────────────────────────────────────────────────
