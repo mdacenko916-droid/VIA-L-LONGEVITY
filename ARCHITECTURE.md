@@ -170,8 +170,8 @@ Sugar_40, Inflammation, Beauty). Протокол `postMessage` (`openBook` /
 - Event type: `cal.com/marynaviael/бесплатная-консультация` (URL-encoded в коде).
 - Встроен **inline-эмбедом** (`<iframe ...?embed=true&embedType=inline&theme=light>`) в модалку `#calModal`.
 - Точки входа (все открывают одну и ту же модалку):
-  - **index.html** — `openCalModal()`: hero, блок 5 (FOR WHOM), блок 6 (REVIEWS/истории), контакты, футер.
-  - **4 `*-program.html`** — кнопки «знакомство» → `openModal('calModal')` (тело модалки = тот же Cal.com-iframe).
+  - **index.html** — `openCalModal()`: hero, блок 5 (FOR WHOM), блок 6 (REVIEWS/истории), блок 9 (booking card), футер (иконка), guides-modal. **⚠️ Для `en`/`es` все 6 точек скрыты — см. §5.2a.**
+  - **4 `*-program.html`** — кнопки «знакомство» → `openModal('calModal')` (тело модалки = тот же Cal.com-iframe). **⚠️ Для `en`/`es` кнопки intro и hero-note скрыты — см. §5.2a.**
 - Клиент бронирует прямо в Cal.com → Cal.com шлёт письма (организатору `viaelcom@gmail.com` + клиенту) и **webhook** (см. ниже).
 
 **B. Telegram-уведомление о брони Cal.com — `POST /cal-webhook` → `handleCalWebhook`.**
@@ -352,6 +352,51 @@ function t(k){ return T[lang][k] || T.ru[k] || k; }   // fallback на ru
    `Menopauza-program.html` (там Ukrainian = `ua`, не `uk`!).
 
 Сайт поддерживает 4 языка: `uk/ru/es/en`. Выбор в `localStorage.selectedLang`.
+
+### 5.2a Языковое разграничение доступа к записи (uk/ru vs en/es)
+
+**Логика:** 15-минутная бесплатная консультация (`#calModal`) — сервис только для украино- и русскоязычной аудитории. Англоязычные и испаноязычные пользователи её не видят. Реализовано двумя слоями: **CSS `!important`** (надёжно даже если JS не отработал) + правильный `id` на каждом элементе.
+
+#### Что видит uk/ru — полный доступ к записи
+
+| Страница | Элемент | id |
+|---|---|---|
+| `index.html` | Кнопка героя «Записатися на безкоштовну консультацію» | `heroCalBtn` |
+| `index.html` | Бейдж героя «✦ 15 хв · безкоштовно, без зобов'язань ✦» | `heroNote2` |
+| `index.html` | Кнопка блока «Для кого» | `forWhomCalBtn` |
+| `index.html` | Кнопка блока «Відгуки / Client stories» | `reviewsCalBtn` |
+| `index.html` | Карточка записи в блоке 9 (Booking) | `b9CalCard` |
+| `index.html` | Иконка-календарь в футере | `footerCalBtn` |
+| `index.html` | Кнопка в модалке гайдов «Coming soon» | `gmodalCalBtn` |
+| `Menopauza-program.html` | Кнопка знакомства в герое + в аккомпанименте + hero note | `heroBtnSlots`, `acc_btn1`, `heroNote` |
+| `Andropauza-program.html` | Кнопка знакомства в герое + в аккомпанименте + hero note | `heroBtnSlots`, `accBtnSlots`, `heroNote` |
+| `Antivikove-program.html` | Кнопка знакомства в герое + в аккомпанименте + hero note | `heroBtnSlots`, `accBtnSlots`, `.hero-note[data-i18n="hero_note"]` |
+| `Estrogen-program.html` | Кнопка знакомства в герое + в аккомпанименте + hero note | `heroBtnSlots`, `accBtnSlots`, `hero_note` |
+
+#### Что НЕ видит en/es — всё перечисленное выше скрыто
+
+#### Реализация CSS (по файлам)
+
+**`index.html`** — блок `<style>` перед `</body>`:
+```css
+html[lang="en"] #heroCalBtn,   html[lang="es"] #heroCalBtn,
+html[lang="en"] #heroNote2,    html[lang="es"] #heroNote2,
+html[lang="en"] #forWhomCalBtn,html[lang="es"] #forWhomCalBtn,
+html[lang="en"] #reviewsCalBtn,html[lang="es"] #reviewsCalBtn,
+html[lang="en"] #b9CalCard,    html[lang="es"] #b9CalCard,
+html[lang="en"] #footerCalBtn, html[lang="es"] #footerCalBtn,
+html[lang="en"] #gmodalCalBtn, html[lang="es"] #gmodalCalBtn { display:none !important; }
+```
+Селектор — `html[lang]` (устанавливается через `document.documentElement.lang = lang` в `applyLang()`).
+
+**`Menopauza-program.html`**, **`Andropauza-program.html`** — те же id, но **селектор `html[data-current-lang]`** (у этих двух страниц Ukrainian = `ua`, не `uk`):
+```css
+html[data-current-lang="en"] #heroBtnSlots, html[data-current-lang="es"] #heroBtnSlots, ...
+```
+
+**`Antivikove-program.html`**, **`Estrogen-program.html`** — селектор `html[lang]` (как index.html).
+
+> ⚠️ Смешивать `html[lang]` и `html[data-current-lang]` нельзя — это разные атрибуты разных систем i18n. Перед добавлением нового правила grep страницу на `setLang\|applyLang\|data-current-lang`.
 
 ### 5.3 Бэкенд-локализация (письма и отчёты)
 
