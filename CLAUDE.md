@@ -8,6 +8,8 @@ Marketing site for a longevity / clinical-nutrition practice (menopause, andropa
 
 ## Two products in one repo + where the architecture lives
 
+**Tasks live in one place:** open tasks → [`tasks/TODO.md`](tasks/TODO.md) (single living list; a closed task is deleted from it). Completed work → journal in [`ARCHITECTURE.md`](ARCHITECTURE.md) §9 + detailed mechanics in the relevant `interpreter/ARCHITECTURE.md` §. Read `tasks/TODO.md` at the start of a session to know what's still open.
+
 This repo holds **two products**, each with its own ARCHITECTURE.md (NOT auto-loaded each session — open the relevant one before non-trivial work):
 - **Marketing site** (repo root: `index.html`, `*-program.html`, `book/`, booking) — European market, **4 languages** (uk/ru/en/es). Top-level map of the whole repo: [`ARCHITECTURE.md`](ARCHITECTURE.md) (site + ИП + backend + integrations; §0 «два продукта»).
 - **Interpreter / ИП** (`interpreter/`) — global wearable-biomarker interpreter + nutritionist funnel, **12 languages**, primary EN. Deep-dive: [`interpreter/ARCHITECTURE.md`](interpreter/ARCHITECTURE.md) (file map §2, tariffs §3, deploy §12, wearable integrations §15–16). Do **not** conflate ИП's 12-lang/global model with the site's 4-lang one.

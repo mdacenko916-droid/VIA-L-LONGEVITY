@@ -1945,9 +1945,18 @@ async function handleTgCallback(cq, env, corsHeaders) {
   }
   else if (action === 'reject') {
     draft.status = 'rejected';
-    // TODO: отправить клиенту вежливое сообщение «требуется уточнение».
+    // Клиенту — вежливое письмо «нужна доработка» (без слова «отклонено»), на его языке.
+    let rejectSent = false, rejectErr = null;
+    try {
+      const rejLang = (draft.lang || 'en').toLowerCase();
+      const ret = EMAIL_T[rejLang] || EMAIL_T.en;
+      const r = await sendEmail(env, draft.client_email, ret.reject_subj, ret.reject_body);
+      rejectSent = !!(r && r.ok !== false);
+    } catch (e) { rejectErr = e.message; }
     await tgEditMessage(env, chatId, messageId,
-      '❌ <b>Отклонено</b>\n\nКлиент: <code>' + esc(draft.client_email) + '</code>'
+      '❌ <b>Отклонено</b>\n\nКлиент: <code>' + esc(draft.client_email) + '</code>' +
+      (rejectSent ? '\n📧 Клиенту отправлено письмо «нужна доработка».'
+                  : '\n⚠ Письмо клиенту НЕ ушло' + (rejectErr ? ': ' + esc(rejectErr) : '') + '.')
     );
     await env.EXPERT_DRAFTS.delete('draft:' + requestId);
     await tgAnswerCallback(env, cq.id, '❌ Отклонено');
@@ -2096,6 +2105,10 @@ const EMAIL_T = {
       + `<p>Нутрициолог переглянув вашу анкету. Оберіть зручний день і час для першої 60-хвилинної сесії:</p>`
       + `<p style="margin:24px 0"><a href="${link}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">Обрати час →</a></p>`
       + `<p style="color:#888;font-size:13px">Або скопіюйте посилання: ${link}</p>`,
+    reject_subj:   'VIA-L · Ваш розбір — потрібне невелике доопрацювання',
+    reject_body:
+      `<p>Вітаємо!</p>`
+      + `<p>Дякуємо за заявку. Ваш персональний розбір потребує додаткового уточнення нашим фахівцем — ми повернемося до вас з готовим результатом найближчим часом. Дякуємо за терпіння 🌿</p>`,
   },
   ru: {
     payment_subj:  (prog) => `VIA-L · ${prog} — заполните анкету`,
@@ -2115,6 +2128,10 @@ const EMAIL_T = {
       + `<p>Нутрициолог посмотрел вашу анкету. Выберите удобный день и время для первой 60-минутной сессии:</p>`
       + `<p style="margin:24px 0"><a href="${link}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">Выбрать время →</a></p>`
       + `<p style="color:#888;font-size:13px">Или скопируйте ссылку: ${link}</p>`,
+    reject_subj:   'VIA-L · Ваш разбор — нужна небольшая доработка',
+    reject_body:
+      `<p>Здравствуйте!</p>`
+      + `<p>Благодарим за заявку. Ваш персональный разбор требует дополнительного уточнения нашим специалистом — мы вернёмся к вам с готовым результатом в ближайшее время. Спасибо за терпение 🌿</p>`,
   },
   es: {
     payment_subj:  (prog) => `VIA-L · ${prog} — complete el cuestionario`,
@@ -2134,6 +2151,10 @@ const EMAIL_T = {
       + `<p>El nutricionista ha revisado su cuestionario. Elija un día y una hora para la primera sesión de 60 min:</p>`
       + `<p style="margin:24px 0"><a href="${link}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">Elegir hora →</a></p>`
       + `<p style="color:#888;font-size:13px">O copie el enlace: ${link}</p>`,
+    reject_subj:   'VIA-L · Su análisis — requiere un pequeño ajuste',
+    reject_body:
+      `<p>¡Hola!</p>`
+      + `<p>Gracias por su solicitud. Su análisis personalizado requiere una aclaración adicional por parte de nuestro especialista — le enviaremos el resultado final en breve. Gracias por su paciencia 🌿</p>`,
   },
   en: {
     payment_subj:  (prog) => `VIA-L · ${prog} — complete your questionnaire`,
@@ -2153,13 +2174,17 @@ const EMAIL_T = {
       + `<p>The nutritionist has reviewed your questionnaire. Choose a day and time for your first 60-minute session:</p>`
       + `<p style="margin:24px 0"><a href="${link}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">Choose time →</a></p>`
       + `<p style="color:#888;font-size:13px">Or copy the link: ${link}</p>`,
+    reject_subj:   'VIA-L · Your analysis — a small refinement needed',
+    reject_body:
+      `<p>Hello!</p>`
+      + `<p>Thank you for your request. Your personalized analysis needs an additional review by our specialist — we will get back to you with the final result shortly. Thank you for your patience 🌿</p>`,
   },
 };
 
 async function sendEmail(env, to, subject, bodyHtml) {
-  if (!env.BREVO_API_KEY || !to) return;
+  if (!env.BREVO_API_KEY || !to) return { ok: false };
   try {
-    await fetch('https://api.brevo.com/v3/smtp/email', {
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -2176,7 +2201,8 @@ async function sendEmail(env, to, subject, bodyHtml) {
           + `</div>`,
       }),
     });
-  } catch (_) {}
+    return res;
+  } catch (_) { return { ok: false }; }
 }
 
 async function tgAnswerCallback(env, callbackQueryId, text, showAlert = false) {
