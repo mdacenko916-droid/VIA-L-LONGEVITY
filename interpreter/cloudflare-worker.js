@@ -400,10 +400,12 @@ export default {
       if (path === '/anketa-submit')    return handleAnketaSubmit(request, env, corsHeaders, ctx);
 
       // Кабинет нутрициолога (CRM на D1) — см. docs/CABINET-MODEL.md
-      if (path === '/cabinet-auth')     return handleCabinetAuth(request, env, corsHeaders);
-      if (path === '/cabinet/clients')  return handleCabinetClients(request, env, corsHeaders);
-      if (path === '/cabinet/save')     return handleCabinetSave(request, env, corsHeaders);
-      if (path === '/cabinet/delete')   return handleCabinetDelete(request, env, corsHeaders);
+      if (path === '/cabinet-auth')        return handleCabinetAuth(request, env, corsHeaders);
+      if (path === '/cabinet/clients')     return handleCabinetClients(request, env, corsHeaders);
+      if (path === '/cabinet/save')        return handleCabinetSave(request, env, corsHeaders);
+      if (path === '/cabinet/delete')      return handleCabinetDelete(request, env, corsHeaders);
+      if (path === '/cabinet/ai-draft')    return handleCabinetAiDraft(request, env, corsHeaders);
+      if (path === '/cabinet/tg-send')     return handleCabinetTgSend(request, env, corsHeaders);
 
       // Default: AI-анализ для интерпретатора
       return handleAnalyze(request, env, corsHeaders);
@@ -3608,4 +3610,73 @@ async function handleCabinetDelete(request, env, corsHeaders){
   if(!code) return jsonResponse({ ok:false, error:'no_code' }, corsHeaders, 400);
   await env.DB.prepare('DELETE FROM clients WHERE code=?').bind(code).run();
   return jsonResponse({ ok:true }, corsHeaders);
+}
+
+// Этап 4: ИИ-черновик ответа клиенту (для нутрициолога, в кабинете).
+// Собирает контекст из D1 (анкета, биометрия, последние сообщения) и генерирует черновик через Claude Haiku.
+async function handleCabinetAiDraft(request, env, corsHeaders){
+  if(!await cabinetCheckAuth(request, env)) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  if(!env.CLAUDE_API_KEY) return jsonResponse({ok:false,error:'no_claude_key'}, corsHeaders, 500);
+  let body={};
+  try{ body=await request.json(); }catch(_){}
+  const code=String(body.code||'').trim();
+  if(!code) return jsonResponse({ok:false,error:'no_code'}, corsHeaders, 400);
+
+  const row=await env.DB.prepare('SELECT name,lang,program,tier,data FROM clients WHERE code=?').bind(code).first();
+  if(!row) return jsonResponse({ok:false,error:'not_found'}, corsHeaders, 404);
+
+  let data={};
+  try{ data=JSON.parse(row.data||'{}'); }catch(_){}
+
+  const anketa   = data.anketa || {};
+  const bio      = (data.biometrics||[]).slice(-4);
+  const msgs     = (data.messages||[]).slice(-8);
+
+  const ctxLines = [
+    `Клиент: ${row.name||'Клиент'} · Программа: ${row.program||'—'} · Тариф: ${row.tier||'—'} · Язык: ${row.lang||'—'}`,
+    anketa.summary ? `Анкета (ИИ-сводка): ${anketa.summary}` : null,
+    bio.length ? 'Последние биометрики:\n' + bio.map(b=>`  Нед.${b.week||'?'}: Сон ${b.sleep||'?'}ч, ЧСС ${b.rhr||'?'}, HRV ${b.hrv||'?'}`).join('\n') : null,
+    msgs.length ? 'Последние сообщения:\n' + msgs.map(m=>`  [${m.dir==='in'?'Клиент':'Нутрициолог'}] ${m.text||''}`).join('\n') : null,
+  ].filter(Boolean).join('\n');
+
+  const prompt =
+    'Ты ассистент нутрициолога VIA-L. Составь черновик ответного сообщения клиенту на РУССКОМ языке. ' +
+    'Тон: профессиональный, тёплый, конкретный. Только нутрициологические рекомендации — не ставь диагнозы, не назначай лекарства. ' +
+    'Объём: 3–5 предложений. БЕЗ Markdown-разметки (никаких ** __ —). ' +
+    'БЕЗ вступления «Здравствуйте» и подписи — только суть ответа.\n\n' +
+    'Данные клиента:\n' + ctxLines;
+
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':env.CLAUDE_API_KEY,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:500,messages:[{role:'user',content:prompt}]}),
+    });
+    const j = await res.json();
+    const draft = j?.content?.[0]?.text || '';
+    return jsonResponse({ok:true, draft}, corsHeaders);
+  }catch(e){
+    return jsonResponse({ok:false,error:e.message}, corsHeaders, 500);
+  }
+}
+
+// Этап 4: отправка сообщения в ТГ-топик клиента (care-группа, через CLIENT_BOT_TOKEN).
+// Ищет topicId по code_topic:<code> в EXPERT_DRAFTS.
+async function handleCabinetTgSend(request, env, corsHeaders){
+  if(!await cabinetCheckAuth(request, env)) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  if(!env.CLIENT_BOT_TOKEN || !env.NUTRITIONIST_GROUP_ID) return jsonResponse({ok:false,error:'tg_not_configured'}, corsHeaders, 500);
+  let body={};
+  try{ body=await request.json(); }catch(_){}
+  const code = String(body.code||'').trim();
+  const text = String(body.text||'').trim();
+  if(!code || !text) return jsonResponse({ok:false,error:'missing_fields'}, corsHeaders, 400);
+
+  let topicId = '';
+  if(env.EXPERT_DRAFTS) topicId = (await env.EXPERT_DRAFTS.get('code_topic:'+code)) || '';
+
+  const extra = topicId ? {message_thread_id: Number(topicId)} : {};
+  const res = await careSend(env, env.NUTRITIONIST_GROUP_ID, text, extra);
+  const ok = !!(res && (res.ok || res.result));
+  return jsonResponse({ok, topicId: topicId||null}, corsHeaders);
 }
