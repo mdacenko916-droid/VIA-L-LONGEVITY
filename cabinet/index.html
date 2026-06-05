@@ -347,6 +347,15 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 .bio-wk td:first-child{border-left:3px solid #000;font-weight:700;}
 .sched-done td{color:#999 !important;text-decoration:line-through;}
 .sched-check{width:16px;height:16px;cursor:pointer;accent-color:#000;margin:0;}
+/* Статус-бейджи */
+.badge{display:inline-block;padding:1px 7px;font-size:10px;font-weight:700;border:1px solid transparent;vertical-align:middle;}
+.badge-active{background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7;}
+.badge-new{background:#e3f2fd;color:#1565c0;border-color:#90caf9;}
+.badge-pause{background:#fff3e0;color:#e65100;border-color:#ffcc80;}
+.badge-done{background:#f5f5f5;color:#757575;border-color:#e0e0e0;}
+/* Вкладки: горизонтальный скролл на мобайле */
+.tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
 </style>
 </head>
 <body>
@@ -394,7 +403,14 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
       <div class="sidebar-search">
-        <input type="text" placeholder="Поиск клиента..." id="searchInput" oninput="filterClients()">
+        <input type="text" placeholder="Поиск — имя, email, код, программа..." id="searchInput" oninput="filterClients()">
+        <select id="statusFilter" onchange="filterClients()" style="margin-top:6px;width:100%;padding:6px 10px;border:1px solid #ccc;font-size:11px;font-family:inherit;background:#fff;outline:none;">
+          <option value="">Все статусы</option>
+          <option value="active">Активные</option>
+          <option value="new">Новые</option>
+          <option value="pause">Пауза</option>
+          <option value="done">Завершённые</option>
+        </select>
       </div>
       <div class="client-list" id="clientList"></div>
     </div>
@@ -470,7 +486,56 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
         <option value="other">Другое</option>
       </select>
     </div>
-    <div class="form-row">
+    <div class="form-row-2" style="margin-top:14px;">
+      <div class="form-row" style="margin:0">
+        <label>Код доступа</label>
+        <input class="form-input" id="f-code" type="text" placeholder="EXPERT-XXXX">
+      </div>
+      <div class="form-row" style="margin:0">
+        <label>Статус</label>
+        <select class="form-select" id="f-status">
+          <option value="active">Активен</option>
+          <option value="new">Новый</option>
+          <option value="pause">Пауза</option>
+          <option value="done">Завершён</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row-2" style="margin-top:14px;">
+      <div class="form-row" style="margin:0">
+        <label>Программа / продукт</label>
+        <input class="form-input" id="f-program" type="text" placeholder="Menopauza / ELITE">
+      </div>
+      <div class="form-row" style="margin:0">
+        <label>Тариф</label>
+        <input class="form-input" id="f-tier" type="text" placeholder="8 нед / ELITE-8W">
+      </div>
+    </div>
+    <div class="form-row-2" style="margin-top:14px;">
+      <div class="form-row" style="margin:0">
+        <label>Цена</label>
+        <input class="form-input" id="f-price" type="text" placeholder="€390">
+      </div>
+      <div class="form-row" style="margin:0">
+        <label>Формат</label>
+        <select class="form-select" id="f-format">
+          <option value="zoom">Zoom</option>
+          <option value="pdf">PDF</option>
+          <option value="once">Разовая</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row-2" style="margin-top:14px;">
+      <div class="form-row" style="margin:0">
+        <label>Дата старта</label>
+        <input class="form-input" id="f-start-date" type="date">
+      </div>
+      <div class="form-row" style="margin:0">
+        <label>Длительность (нед.)</label>
+        <input class="form-input" id="f-duration" type="number" placeholder="8" min="1" max="52">
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:14px;">
       <label>Заметка при создании</label>
       <textarea class="form-input" id="f-note" rows="3" placeholder="Жалобы, цель, особенности..."></textarea>
     </div>
@@ -493,6 +558,10 @@ let clients = [];
 let selectedId = null;
 let editingId = null;
 let currentTab = 'overview';
+let listPage = 1;
+const PAGE_SIZE = 25;
+const STATUS_LABEL = {active:'Активен',new:'Новый',pause:'Пауза',done:'Завершён'};
+const STATUS_BADGE  = {active:'active',new:'new',pause:'pause',done:'done'};
 
 function getToken(){ return sessionStorage.getItem(TOKEN_KEY) || ''; }
 
@@ -537,7 +606,7 @@ async function enterApp(){
   document.getElementById('gate').style.display='none';
   document.getElementById('app').classList.add('visible');
   await loadData();
-  renderClientList();
+  renderClientList(document.getElementById('searchInput')?.value||'', document.getElementById('statusFilter')?.value||'');
   // show mobile menu btn on small screens
   if(window.innerWidth<768) document.getElementById('mobileMenuBtn').style.display='';
 }
@@ -571,32 +640,46 @@ async function migrateLocal(){
     if(!c.code) c.code = c.id || genId();
     try{ const j = await api('/cabinet/save',{ client:c }); if(j && j.ok) n++; }catch(_){}
   }
-  await loadData(); renderClientList();
+  await loadData(); renderClientList(document.getElementById('searchInput')?.value||'', document.getElementById('statusFilter')?.value||'');
   alert('Импортировано: '+n+' / '+old.length);
 }
 
 // ── CLIENT LIST ───────────────────────────────────────────
-function renderClientList(filter=''){
+function renderClientList(filter='', statusFilter=''){
   const list = document.getElementById('clientList');
-  const filtered = clients.filter(c=>c.name.toLowerCase().includes(filter.toLowerCase()));
+  const q = filter.toLowerCase();
+  const filtered = clients.filter(c=>{
+    if(statusFilter && (c.status||'active') !== statusFilter) return false;
+    if(!q) return true;
+    return (c.name||'').toLowerCase().includes(q)
+      || (c.email||'').toLowerCase().includes(q)
+      || (c.code||'').toLowerCase().includes(q)
+      || (c.program||'').toLowerCase().includes(q)
+      || (c.tier||'').toLowerCase().includes(q);
+  });
   if(!filtered.length){
     list.innerHTML=`<div class="empty-list">Клиентов не найдено.<br>Нажмите «+ Новый клиент»</div>`;
     return;
   }
-  list.innerHTML = filtered.map(c=>{
-    const last = (c.sessions||[]).slice(-1)[0];
-    const scoreClass = last ? (last.type==='ok'?'score-ok':last.type==='warn'?'score-warn':'score-alert') : '';
-    const scoreVal = last ? last.score : '—';
-    const lastDate = last ? last.date : 'Нет сессий';
+  const page = filtered.slice(0, listPage * PAGE_SIZE);
+  const more = filtered.length > page.length;
+  list.innerHTML = page.map(c=>{
+    const st = c.status || 'active';
+    const badge = `<span class="badge badge-${STATUS_BADGE[st]||'active'}">${STATUS_LABEL[st]||st}</span>`;
+    const meta = [c.program||c.phase_label||'', c.age?(c.age+' л.'):''].filter(Boolean).join(' · ');
     return `<div class="client-item${selectedId===c.id?' active':''}" onclick="selectClient('${c.id}')">
-      <div class="client-name">${c.name}</div>
-      <div class="client-meta">${c.phase_label||''}${c.age?' · '+c.age+' л.':''} · ${lastDate}</div>
-      <div class="client-score ${scoreClass}">${scoreVal}</div>
+      <div class="client-name">${esc(c.name)} ${badge}</div>
+      <div class="client-meta">${esc(meta)}${c.start_date?' · с '+c.start_date:''}</div>
     </div>`;
-  }).join('');
+  }).join('')
+  + (more ? `<div style="padding:10px 16px;"><button style="width:100%;padding:8px;border:1px dashed #aaa;background:none;cursor:pointer;font-size:12px;font-family:inherit;" onclick="listPage++;renderClientList(document.getElementById('searchInput').value,document.getElementById('statusFilter').value)">Показать ещё (${filtered.length - page.length})</button></div>` : '');
 }
 function filterClients(){
-  renderClientList(document.getElementById('searchInput').value);
+  listPage = 1;
+  renderClientList(
+    document.getElementById('searchInput').value,
+    document.getElementById('statusFilter').value
+  );
 }
 
 // ── SELECT CLIENT ─────────────────────────────────────────
@@ -616,17 +699,23 @@ function renderClientDetail(){
   det.style.display='flex';
 
   // Header
-  const last = (c.sessions||[]).slice(-1)[0];
-  const clr = last?(last.type==='ok'?'var(--ok)':last.type==='warn'?'var(--warn)':'var(--alert)'):'var(--t3)';
+  const st = c.status || 'active';
+  const stBadge = `<span class="badge badge-${STATUS_BADGE[st]||'active'}">${STATUS_LABEL[st]||st}</span>`;
+  const metaParts = [c.email, c.phone, c.program||c.phase_label||'', c.age?(c.age+' л.'):'', c.price].filter(Boolean);
   document.getElementById('clientHeaderEl').innerHTML=`
     <div class="client-header-top">
-      <div>
-        <div class="client-header-name">${c.name}</div>
-        <div class="client-header-meta">${c.email||''}${c.phone?' · '+c.phone:''} · ${c.phase_label||''} · ${c.age||'?'} л.</div>
+      <div style="flex:1;">
+        <div class="client-header-name">${esc(c.name)} ${stBadge}</div>
+        <div class="client-header-meta">${esc(metaParts.join(' · '))}</div>
+        ${c.start_date?`<div style="font-size:11px;color:#888;margin-top:2px;">Старт: ${c.start_date}${c.duration_weeks?' · '+c.duration_weeks+' нед.':''} · ${c.format||'zoom'}</div>`:''}
       </div>
-      <div class="client-header-score">
-        <div class="score-big" style="color:${clr}">${last?last.score:'—'}</div>
-        <div class="score-big-lbl">Readiness</div>
+      <div>
+        <select onchange="quickStatus('${c.id}',this.value)" style="border:1px solid #ccc;padding:4px 8px;font-size:11px;font-family:inherit;background:#fff;outline:none;cursor:pointer;">
+          <option value="active" ${st==='active'?'selected':''}>Активен</option>
+          <option value="new" ${st==='new'?'selected':''}>Новый</option>
+          <option value="pause" ${st==='pause'?'selected':''}>Пауза</option>
+          <option value="done" ${st==='done'?'selected':''}>Завершён</option>
+        </select>
       </div>
     </div>
     <div class="header-actions">
@@ -1147,9 +1236,13 @@ const PHASE_LABELS={regular:'Регулярный цикл',peri:'Перимен
 function openAddClient(){
   editingId=null;
   document.getElementById('modalTitle').textContent='Новый клиент';
-  ['name','email','phone','age','note'].forEach(f=>document.getElementById('f-'+f).value='');
+  ['name','email','phone','age','note','code','program','tier','price','start-date','duration'].forEach(f=>{
+    const el=document.getElementById('f-'+f); if(el) el.value='';
+  });
   document.getElementById('f-gender').value='female';
   document.getElementById('f-phase').value='peri';
+  document.getElementById('f-status').value='active';
+  document.getElementById('f-format').value='zoom';
   document.getElementById('clientModal').classList.add('open');
 }
 function openEditClient(id){
@@ -1162,43 +1255,70 @@ function openEditClient(id){
   document.getElementById('f-age').value=c.age||'';
   document.getElementById('f-gender').value=c.gender||'female';
   document.getElementById('f-phase').value=c.phase||'peri';
+  document.getElementById('f-code').value=c.code||'';
+  document.getElementById('f-status').value=c.status||'active';
+  document.getElementById('f-program').value=c.program||'';
+  document.getElementById('f-tier').value=c.tier||'';
+  document.getElementById('f-price').value=c.price||'';
+  document.getElementById('f-format').value=c.format||'zoom';
+  document.getElementById('f-start-date').value=c.start_date||'';
+  document.getElementById('f-duration').value=c.duration_weeks||'';
   document.getElementById('f-note').value='';
   document.getElementById('clientModal').classList.add('open');
 }
 function closeModal(){ document.getElementById('clientModal').classList.remove('open'); }
+
+function quickStatus(id, val){
+  const c=clients.find(x=>x.id===id); if(!c)return;
+  c.status=val; saveData();
+  renderClientDetail();
+  renderClientList(document.getElementById('searchInput')?.value||'', document.getElementById('statusFilter')?.value||'');
+}
+function readModalFields(){
+  return {
+    name:     document.getElementById('f-name').value.trim(),
+    email:    document.getElementById('f-email').value.trim(),
+    phone:    document.getElementById('f-phone').value.trim(),
+    age:      parseInt(document.getElementById('f-age').value)||'',
+    gender:   document.getElementById('f-gender').value,
+    phase:    document.getElementById('f-phase').value,
+    code:     document.getElementById('f-code').value.trim().toUpperCase()||'',
+    status:   document.getElementById('f-status').value,
+    program:  document.getElementById('f-program').value.trim(),
+    tier:     document.getElementById('f-tier').value.trim(),
+    price:    document.getElementById('f-price').value.trim(),
+    format:   document.getElementById('f-format').value,
+    start_date:     document.getElementById('f-start-date').value||'',
+    duration_weeks: parseInt(document.getElementById('f-duration').value)||'',
+  };
+}
 async function saveClient(){
-  const name=document.getElementById('f-name').value.trim(); if(!name){alert('Введите имя');return;}
+  const fields = readModalFields();
+  if(!fields.name){alert('Введите имя');return;}
   const note=document.getElementById('f-note').value.trim();
-  const phase=document.getElementById('f-phase').value;
   let cur;
   if(editingId){
     const c=clients.find(x=>x.id===editingId); if(!c) return;
-    c.name=name; c.email=document.getElementById('f-email').value.trim();
-    c.phone=document.getElementById('f-phone').value.trim();
-    c.age=parseInt(document.getElementById('f-age').value)||'';
-    c.gender=document.getElementById('f-gender').value;
-    c.phase=phase; c.phase_label=PHASE_LABELS[phase];
+    Object.assign(c, fields);
+    c.phase_label=PHASE_LABELS[fields.phase];
+    if(!fields.code) c.code=c.code||c.id; // не затирать существующий код
     if(note){if(!c.notes)c.notes=[];c.notes.push({text:note,date:new Date().toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'}),ts:Date.now()});}
     cur=c;
   } else {
     const c={
-      id:genId(),name,
-      email:document.getElementById('f-email').value.trim(),
-      phone:document.getElementById('f-phone').value.trim(),
-      age:parseInt(document.getElementById('f-age').value)||'',
-      gender:document.getElementById('f-gender').value,
-      phase,phase_label:PHASE_LABELS[phase],
+      id:genId(), ...fields,
+      phase_label:PHASE_LABELS[fields.phase],
       created:Date.now(),
       sessions:[],protocol:[],labs:{},notes:[]
     };
+    if(!c.code) c.code=c.id;
     if(note) c.notes.push({text:note,date:new Date().toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'}),ts:Date.now()});
     clients.unshift(c);
     selectedId=c.id;
     cur=c;
   }
-  // сохраняем конкретного клиента (не полагаемся на selectedId)
   try{ await api('/cabinet/save',{ client:cur }); }catch(_){}
-  closeModal(); renderClientList(); renderClientDetail();
+  closeModal(); renderClientList(document.getElementById('searchInput')?.value||'', document.getElementById('statusFilter')?.value||''); renderClientDetail();
 }
 
 // ── DELETE CLIENT ─────────────────────────────────────────
@@ -1207,7 +1327,7 @@ async function deleteClient(id){
   try{ await api('/cabinet/delete',{ code:id }); }catch(_){}
   clients=clients.filter(x=>x.id!==id);
   if(selectedId===id){ selectedId=null; document.getElementById('placeholder').style.display='flex'; document.getElementById('clientDetail').style.display='none'; }
-  renderClientList();
+  renderClientList(document.getElementById('searchInput')?.value||'', document.getElementById('statusFilter')?.value||'');
 }
 
 // ── EXPORT / IMPORT ───────────────────────────────────────
