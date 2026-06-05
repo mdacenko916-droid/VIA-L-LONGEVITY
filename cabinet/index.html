@@ -343,6 +343,10 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 .marked-r{border-left:4px solid #ef5350 !important;background:#ffebee !important;}
 /* курсор в режиме маркера */
 .marker-on .lab-card,.marker-on .session-row,.marker-on .note-item,.marker-on .protocol-table tbody tr{cursor:crosshair;}
+/* Биометрия / расписание: переиспользуют protocol-table; дополнительные правила */
+.bio-wk td:first-child{border-left:3px solid #000;font-weight:700;}
+.sched-done td{color:#999 !important;text-decoration:line-through;}
+.sched-check{width:16px;height:16px;cursor:pointer;accent-color:#000;margin:0;}
 </style>
 </head>
 <body>
@@ -414,6 +418,9 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
           <div class="tab" onclick="switchTab('labs')">Анализы</div>
           <div class="tab" onclick="switchTab('notes')">Заметки</div>
           <div class="tab" onclick="switchTab('anketa')">Анкета</div>
+          <div class="tab" onclick="switchTab('biometrics')">Биометрия</div>
+          <div class="tab" onclick="switchTab('schedule')">Сессии</div>
+          <div class="tab" onclick="switchTab('breakdowns')">Разборы</div>
         </div>
         <div class="tab-content" id="tabContent"></div>
       </div>
@@ -629,7 +636,7 @@ function renderClientDetail(){
 
   // Tabs
   document.querySelectorAll('.tab').forEach((t,i)=>{
-    const names=['overview','protocol','labs','notes','anketa'];
+    const names=['overview','protocol','labs','notes','anketa','biometrics','schedule','breakdowns'];
     t.classList.toggle('active', names[i]===currentTab);
   });
 
@@ -640,7 +647,7 @@ function renderClientDetail(){
 function switchTab(tab){
   currentTab = tab;
   document.querySelectorAll('.tab').forEach((t,i)=>{
-    const names=['overview','protocol','labs','notes','anketa'];
+    const names=['overview','protocol','labs','notes','anketa','biometrics','schedule','breakdowns'];
     t.classList.toggle('active', names[i]===tab);
   });
   renderTabContent();
@@ -655,6 +662,9 @@ function renderTabContent(){
   else if(currentTab==='labs') el.innerHTML = renderLabs(c);
   else if(currentTab==='notes') el.innerHTML = renderNotes(c);
   else if(currentTab==='anketa') el.innerHTML = renderAnketa(c);
+  else if(currentTab==='biometrics') el.innerHTML = renderBiometrics(c);
+  else if(currentTab==='schedule') el.innerHTML = renderSchedule(c);
+  else if(currentTab==='breakdowns') el.innerHTML = renderBreakdowns(c);
 }
 
 // ── ANKETA TAB ──────────────────────────────────────────
@@ -677,6 +687,115 @@ function renderAnketa(c){
   }).join('');
   return html;
 }
+
+// ── BIOMETRICS TAB ──────────────────────────────────────────
+function renderBiometrics(c){
+  const bio = c.biometrics || [];
+  const KEY_WEEKS = new Set([1,4,8]);
+  const rows = bio.map((b,i)=>{
+    const wk = parseInt(b.week)||0;
+    const cls = KEY_WEEKS.has(wk) ? ' class="bio-wk"' : '';
+    return `<tr${cls}>
+      <td><input class="proto-input" type="number" min="1" value="${esc(String(b.week||''))}" oninput="updateBio(${i},'week',this.value)" style="width:40px;"></td>
+      <td><input class="proto-input" type="date" value="${esc(b.date||'')}" oninput="updateBio(${i},'date',this.value)"></td>
+      <td><input class="proto-input" type="number" step="0.1" min="0" value="${esc(String(b.sleep||''))}" oninput="updateBio(${i},'sleep',this.value)" placeholder="—"></td>
+      <td><input class="proto-input" type="number" min="0" value="${esc(String(b.rhr||''))}" oninput="updateBio(${i},'rhr',this.value)" placeholder="—"></td>
+      <td><input class="proto-input" type="number" min="0" value="${esc(String(b.hrv||''))}" oninput="updateBio(${i},'hrv',this.value)" placeholder="—"></td>
+      <td><input class="proto-input" type="number" min="0" value="${esc(String(b.steps||''))}" oninput="updateBio(${i},'steps',this.value)" placeholder="—"></td>
+      <td><input class="proto-input" type="number" step="0.1" min="0" value="${esc(String(b.weight||''))}" oninput="updateBio(${i},'weight',this.value)" placeholder="—"></td>
+      <td><button class="proto-del" onclick="deleteBio(${i})">×</button></td>
+    </tr>`;
+  }).join('');
+  return `
+    <div class="section-title">Биометрия по неделям</div>
+    <p style="font-size:12px;color:#888;margin-bottom:12px;">Недели 1, 4, 8 — отмечены жирной линией (ключевые точки динамики).</p>
+    <table class="protocol-table">
+      <thead><tr><th>Нед.</th><th>Дата</th><th>Сон (ч)</th><th>ЧСС покоя</th><th>HRV (мс)</th><th>Шаги</th><th>Вес (кг)</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <button class="add-row-btn" onclick="addBioRow()">+ Добавить неделю</button>`;
+}
+function updateBio(i,field,val){ const c=clients.find(x=>x.id===selectedId); if(!c)return; if(!c.biometrics)c.biometrics=[]; c.biometrics[i][field]=val; saveData(); }
+function deleteBio(i){ const c=clients.find(x=>x.id===selectedId); if(!c)return; c.biometrics.splice(i,1); saveData(); renderTabContent(); }
+function addBioRow(){ const c=clients.find(x=>x.id===selectedId); if(!c)return; if(!c.biometrics)c.biometrics=[]; const last=c.biometrics[c.biometrics.length-1]; const wk=(last?parseInt(last.week)||0:0)+1; c.biometrics.push({week:wk,date:'',sleep:'',rhr:'',hrv:'',steps:'',weight:''}); saveData(); renderTabContent(); }
+
+// ── SCHEDULE TAB ──────────────────────────────────────────
+function renderSchedule(c){
+  const sched = c.schedule || [];
+  const rows = sched.map((s,i)=>{
+    const doneCls = s.done ? ' class="sched-done"' : '';
+    return `<tr${doneCls}>
+      <td style="text-align:center;"><input type="checkbox" class="sched-check" ${s.done?'checked':''} onchange="updateSched(${i},'done',this.checked);renderTabContent()"></td>
+      <td style="color:#888;">${i+1}</td>
+      <td><input class="proto-input" type="date" value="${esc(s.date||'')}" oninput="updateSched(${i},'date',this.value)"></td>
+      <td><select style="background:transparent;border:none;outline:none;font-size:12px;font-family:inherit;" onchange="updateSched(${i},'type',this.value)">
+        <option value="zoom" ${s.type==='zoom'?'selected':''}>Zoom</option>
+        <option value="pdf" ${s.type==='pdf'?'selected':''}>PDF</option>
+        <option value="once" ${s.type==='once'?'selected':''}>Разовая</option>
+      </select></td>
+      <td><input class="proto-input" value="${esc(s.link||'')}" oninput="updateSched(${i},'link',this.value)" placeholder="ссылка"></td>
+      <td><input class="proto-input" value="${esc(s.notes||'')}" oninput="updateSched(${i},'notes',this.value)" placeholder="заметка"></td>
+      <td><button class="proto-del" onclick="deleteSched(${i})">×</button></td>
+    </tr>`;
+  }).join('');
+  const autoBtn = c.start_date ? `<button class="topbtn primary" onclick="autoGenSchedule()" style="font-size:11px;margin-right:8px;">⚡ Авто от старта</button>` : '';
+  return `
+    <div class="section-title">Расписание сессий / PDF</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      ${autoBtn}<button class="add-row-btn" style="width:auto;display:inline-flex;" onclick="addSchedRow()">+ Добавить точку</button>
+    </div>
+    <table class="protocol-table">
+      <thead><tr><th>✓</th><th>#</th><th>Дата</th><th>Тип</th><th>Ссылка</th><th>Заметки</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+function updateSched(i,field,val){ const c=clients.find(x=>x.id===selectedId); if(!c)return; if(!c.schedule)c.schedule=[]; c.schedule[i][field]=val; saveData(); }
+function deleteSched(i){ const c=clients.find(x=>x.id===selectedId); if(!c)return; c.schedule.splice(i,1); saveData(); renderTabContent(); }
+function addSchedRow(){ const c=clients.find(x=>x.id===selectedId); if(!c)return; if(!c.schedule)c.schedule=[]; const fmt=(c.format||'').includes('pdf')?'pdf':(c.format||'').includes('once')?'once':'zoom'; c.schedule.push({date:'',type:fmt,done:false,link:'',notes:''}); saveData(); renderTabContent(); }
+function autoGenSchedule(){
+  const c=clients.find(x=>x.id===selectedId); if(!c||!c.start_date)return;
+  const n=parseInt(c.duration_weeks)||8;
+  const fmt=(c.format||'').includes('pdf')?'pdf':(c.format||'').includes('once')?'once':'zoom';
+  const start=new Date(c.start_date);
+  c.schedule=Array.from({length:n},(_,i)=>{
+    const d=new Date(start); d.setDate(d.getDate()+i*7);
+    return {date:d.toISOString().slice(0,10),type:fmt,done:false,link:'',notes:''};
+  });
+  saveData(); renderTabContent();
+}
+
+// ── BREAKDOWNS TAB ──────────────────────────────────────────
+function renderBreakdowns(c){
+  const bd = c.breakdowns || [];
+  const statusLabel = {draft:'Черновик',sent:'Отправлен',approved:'Утверждён'};
+  const rows = bd.map((b,i)=>`
+    <tr>
+      <td style="color:#888;">${i+1}</td>
+      <td><input class="proto-input" type="date" value="${esc(b.date||'')}" oninput="updateBd(${i},'date',this.value)"></td>
+      <td><select style="background:transparent;border:none;outline:none;font-size:12px;font-family:inherit;" onchange="updateBd(${i},'type',this.value)">
+        <option value="ai" ${b.type==='ai'?'selected':''}>ИИ-разбор</option>
+        <option value="pdf" ${b.type==='pdf'?'selected':''}>PDF-отчёт</option>
+        <option value="zoom" ${b.type==='zoom'?'selected':''}>Zoom-конспект</option>
+      </select></td>
+      <td><select style="background:transparent;border:none;outline:none;font-size:12px;font-family:inherit;" onchange="updateBd(${i},'status',this.value)">
+        <option value="draft" ${b.status==='draft'?'selected':''}>Черновик</option>
+        <option value="sent" ${b.status==='sent'?'selected':''}>Отправлен</option>
+        <option value="approved" ${b.status==='approved'?'selected':''}>Утверждён</option>
+      </select></td>
+      <td><input class="proto-input" value="${esc(b.notes||'')}" oninput="updateBd(${i},'notes',this.value)" placeholder="заметка"></td>
+      <td><button class="proto-del" onclick="deleteBd(${i})">×</button></td>
+    </tr>`).join('');
+  return `
+    <div class="section-title">Разборы ИИ и PDF-отчёты</div>
+    <table class="protocol-table">
+      <thead><tr><th>#</th><th>Дата</th><th>Тип</th><th>Статус</th><th>Заметки</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <button class="add-row-btn" onclick="addBdRow()">+ Добавить разбор</button>`;
+}
+function updateBd(i,field,val){ const c=clients.find(x=>x.id===selectedId); if(!c)return; if(!c.breakdowns)c.breakdowns=[]; c.breakdowns[i][field]=val; saveData(); }
+function deleteBd(i){ const c=clients.find(x=>x.id===selectedId); if(!c)return; c.breakdowns.splice(i,1); saveData(); renderTabContent(); }
+function addBdRow(){ const c=clients.find(x=>x.id===selectedId); if(!c)return; if(!c.breakdowns)c.breakdowns=[]; c.breakdowns.push({date:new Date().toISOString().slice(0,10),type:'ai',status:'draft',notes:''}); saveData(); renderTabContent(); }
 
 // ── OVERVIEW TAB ──────────────────────────────────────────
 function renderOverview(c){
