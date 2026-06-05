@@ -3552,6 +3552,9 @@ function cabinetRowToClient(r){
   try { data = JSON.parse(r.data || '{}'); } catch(_){}
   return {
     ...data,
+    // code — сквозной первичный ключ (спека §2). Фронт идентифицирует карточку по id;
+    // у клиентов из воронки (deliverAnketa*) id нет — подставляем code, иначе карточка не откроется.
+    id: data.id || r.code,
     code:r.code, name:r.name, email:r.email, tg:r.tg, phone:r.phone, lang:r.lang,
     product:r.product, program:r.program, tier:r.tier, duration_weeks:r.duration_weeks,
     price:r.price, format:r.format, start_date:r.start_date, end_date:r.end_date,
