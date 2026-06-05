@@ -406,6 +406,7 @@ export default {
       if (path === '/cabinet/delete')      return handleCabinetDelete(request, env, corsHeaders);
       if (path === '/cabinet/ai-draft')    return handleCabinetAiDraft(request, env, corsHeaders);
       if (path === '/cabinet/tg-send')     return handleCabinetTgSend(request, env, corsHeaders);
+      if (path === '/cabinet/leads')       return handleCabinetLeads(request, env, corsHeaders);
 
       // Default: AI-анализ для интерпретатора
       return handleAnalyze(request, env, corsHeaders, ctx);
@@ -940,12 +941,19 @@ async function handleCalWebhook(request, env, corsHeaders) {
 
   await sendTelegram(env, card);
 
-  // Реальная бронь → карточка кабинета (по email). Календарь покажет фактический Zoom.
+  // Реальная бронь → кабинет (по email). Сначала пробуем привязать к карточке
+  // (оплаченный клиент → запись в c.schedule, фактический Zoom в календаре). Если
+  // карточки нет — это лид (15-мин знакомство до оплаты): сохраняем отдельно, чтобы
+  // оно тоже было видно в календаре кабинета (секция «Знакомства»), не засоряя
+  // список клиентов. Отмена — снимаем и с карточки, и из лидов.
   if (att.email) {
-    await cabinetIngestCalBooking(env, {
-      email: att.email, ev, uid: p.uid || p.bookingId || '',
-      startTime: p.startTime, title: p.title || '', url,
-    });
+    const calArgs = { email: att.email, ev, uid: p.uid || p.bookingId || '',
+      startTime: p.startTime, title: p.title || '', url, name: att.name || '' };
+    const linked = await cabinetIngestCalBooking(env, calArgs);
+    if (!linked) {
+      if (ev === 'BOOKING_CANCELLED') await cabinetDeleteCalLead(env, calArgs.uid);
+      else                           await cabinetSaveCalLead(env, calArgs);
+    }
   }
 
   // Анкета клиенту: только при СОЗДАНИИ брони и только для сессии (≥45 мин) — 15-мин
@@ -3640,10 +3648,10 @@ async function cabinetIngestIpAnalysis(env, code, data, analysisText, lang){
 // отмене). Так календарь кабинета показывает ФАКТИЧЕСКИЕ Zoom, а не только план.
 // Нет карточки с таким email → выходим (знакомство до оплаты / внешний бронирующий).
 async function cabinetIngestCalBooking(env, b){
-  if(!env.DB || !b.email) return;
+  if(!env.DB || !b.email) return false;
   let row = null;
   try{ row = await env.DB.prepare('SELECT code,data FROM clients WHERE lower(email)=lower(?) LIMIT 1').bind(b.email).first(); }catch(_){}
-  if(!row) return;
+  if(!row) return false;                              // нет карточки → вызывающий сохранит как лид
   let d = {}; try{ d = JSON.parse(row.data || '{}'); }catch(_){ return; }
   if(!Array.isArray(d.schedule)) d.schedule = [];
   const uid     = b.uid || (b.startTime + '|' + b.email);
@@ -3667,6 +3675,23 @@ async function cabinetIngestCalBooking(env, b){
   d.schedule.sort((a,c) => String(a.date||'').localeCompare(String(c.date||'')));
   try{ await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?')
     .bind(JSON.stringify(d), Date.now(), row.code).run(); }catch(_){}
+  return true;
+}
+
+// Лид (15-мин знакомство до оплаты — карточки ещё нет). Храним в KV, чтобы бронь
+// была видна в календаре кабинета (секция «Знакомства»). TTL 90 дн; ключ по uid.
+async function cabinetSaveCalLead(env, b){
+  if(!env.EXPERT_DRAFTS || !b.email) return;
+  const uid = b.uid || (b.startTime + '|' + b.email);
+  await env.EXPERT_DRAFTS.put('cal_lead:' + uid, JSON.stringify({
+    name: b.name || '', email: b.email, date: (b.startTime || '').slice(0,10),
+    time: b.startTime ? (new Date(b.startTime).toISOString().slice(11,16) + ' UTC') : '',
+    url: b.url || '', title: b.title || '',
+  }), { expirationTtl: 90 * 24 * 60 * 60 });
+}
+async function cabinetDeleteCalLead(env, uid){
+  if(!env.EXPERT_DRAFTS || !uid) return;
+  await env.EXPERT_DRAFTS.delete('cal_lead:' + uid);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -3940,4 +3965,24 @@ async function handleCabinetTgSend(request, env, corsHeaders){
   const res = await careSend(env, env.NUTRITIONIST_GROUP_ID, text, extra);
   const ok = !!(res && (res.ok || res.result));
   return jsonResponse({ok, topicId: topicId||null}, corsHeaders);
+}
+
+// Лиды-знакомства (Cal.com-брони без оплаченной карточки) для секции «Знакомства»
+// в календаре кабинета. Возвращаем только будущие, отсортированные по дате.
+async function handleCabinetLeads(request, env, corsHeaders){
+  if(!await cabinetCheckAuth(request, env)) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  if(!env.EXPERT_DRAFTS) return jsonResponse({ok:true, leads:[]}, corsHeaders);
+  const today = new Date().toISOString().slice(0,10);
+  const leads = [];
+  try{
+    const list = await env.EXPERT_DRAFTS.list({ prefix:'cal_lead:' });
+    for(const k of (list.keys||[])){
+      const raw = await env.EXPERT_DRAFTS.get(k.name);
+      if(!raw) continue;
+      let v=null; try{ v=JSON.parse(raw); }catch(_){ continue; }
+      if(v && v.date && v.date >= today) leads.push(v);
+    }
+  }catch(_){}
+  leads.sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+  return jsonResponse({ok:true, leads}, corsHeaders);
 }
