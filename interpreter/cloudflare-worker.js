@@ -3403,6 +3403,22 @@ async function deliverAnketa(env, body, answers, lang){
   // ── Сообщение 1: ИИ-сводка для нутрициолога (RU, перевод встроен) ──
   // Падение ИИ (нет ключа / ошибка) не блокирует доставку — полные ответы уйдут всё равно.
   const summary = await anketaSummary(env, answers, lang);
+
+  // Этап 2: D1 — уписываем клиента + анкету (care path = EXPERT/ELITE по коду доступа)
+  if(env.DB && code){
+    const now = Date.now();
+    let existing = null;
+    try{ existing = await env.DB.prepare('SELECT data FROM clients WHERE code=?').bind(code).first(); }catch(_){}
+    let dData = {};
+    try{ dData = JSON.parse(existing?.data||'{}'); }catch(_){}
+    dData.anketa = { answers, submitted_at: new Date().toISOString(), lang, summary: summary||'' };
+    try{
+      await env.DB.prepare(
+        'INSERT INTO clients (code,name,email,lang,product,status,data,created_at,updated_at) VALUES (?,?,?,?,\'interpreter\',\'active\',?,?,?) ON CONFLICT(code) DO UPDATE SET name=CASE WHEN excluded.name!=\'\' THEN excluded.name ELSE name END, email=CASE WHEN excluded.email!=\'\' THEN excluded.email ELSE email END, lang=excluded.lang, data=excluded.data, updated_at=excluded.updated_at'
+      ).bind(code, name||'', email||'', lang, JSON.stringify(dData), now, now).run();
+    }catch(_){}
+  }
+
   if(summary){
     for(const chunk of anketaChunks([`🧬 СВОДКА ДЛЯ НУТРИЦИОЛОГА · ${idline}`, '', ...summary.split('\n')])){
       await careSend(env, env.NUTRITIONIST_GROUP_ID, chunk, extra);
@@ -3450,6 +3466,22 @@ async function deliverAnketaProgram(env, intake, token, answers, lang, name, ema
 
   // ИИ-сводка (RU); падение ИИ не блокирует — ниже идут полные ответы и кнопка.
   const summary = await anketaSummary(env, answers, lang);
+
+  // Этап 2: D1 — уписываем клиента + анкету (program path = site program)
+  if(env.DB){
+    const now = Date.now();
+    let existing = null;
+    try{ existing = await env.DB.prepare('SELECT data FROM clients WHERE code=?').bind(token).first(); }catch(_){}
+    let dData = {};
+    try{ dData = JSON.parse(existing?.data||'{}'); }catch(_){}
+    dData.anketa = { answers, submitted_at: new Date().toISOString(), lang, summary: summary||'' };
+    try{
+      await env.DB.prepare(
+        'INSERT INTO clients (code,name,email,lang,product,program,tier,price,status,data,created_at,updated_at) VALUES (?,?,?,?,\'site\',?,?,?,\'active\',?,?,?) ON CONFLICT(code) DO UPDATE SET name=CASE WHEN excluded.name!=\'\' THEN excluded.name ELSE name END, email=CASE WHEN excluded.email!=\'\' THEN excluded.email ELSE email END, lang=excluded.lang, data=excluded.data, updated_at=excluded.updated_at'
+      ).bind(token, cName, cEmail, lang, intake.program||'', intake.plan||'', intake.price||'', JSON.stringify(dData), now, now).run();
+    }catch(_){}
+  }
+
   const sumLines = summary ? [head, '', ...summary.split('\n').map(esc)] : [head];
   for(const chunk of anketaChunks(sumLines, 3500)) await sendTelegram(env, chunk);
 

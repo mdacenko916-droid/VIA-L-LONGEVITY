@@ -413,6 +413,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
           <div class="tab" onclick="switchTab('protocol')">Протокол</div>
           <div class="tab" onclick="switchTab('labs')">Анализы</div>
           <div class="tab" onclick="switchTab('notes')">Заметки</div>
+          <div class="tab" onclick="switchTab('anketa')">Анкета</div>
         </div>
         <div class="tab-content" id="tabContent"></div>
       </div>
@@ -628,7 +629,7 @@ function renderClientDetail(){
 
   // Tabs
   document.querySelectorAll('.tab').forEach((t,i)=>{
-    const names=['overview','protocol','labs','notes'];
+    const names=['overview','protocol','labs','notes','anketa'];
     t.classList.toggle('active', names[i]===currentTab);
   });
 
@@ -639,7 +640,7 @@ function renderClientDetail(){
 function switchTab(tab){
   currentTab = tab;
   document.querySelectorAll('.tab').forEach((t,i)=>{
-    const names=['overview','protocol','labs','notes'];
+    const names=['overview','protocol','labs','notes','anketa'];
     t.classList.toggle('active', names[i]===tab);
   });
   renderTabContent();
@@ -653,6 +654,28 @@ function renderTabContent(){
   else if(currentTab==='protocol') el.innerHTML = renderProtocol(c);
   else if(currentTab==='labs') el.innerHTML = renderLabs(c);
   else if(currentTab==='notes') el.innerHTML = renderNotes(c);
+  else if(currentTab==='anketa') el.innerHTML = renderAnketa(c);
+}
+
+// ── ANKETA TAB ──────────────────────────────────────────
+function renderAnketa(c){
+  const a = c.anketa;
+  if(!a || !a.answers) return '<p style="color:#999;padding:16px;">Анкета ещё не получена.</p>';
+  const dt = a.submitted_at ? new Date(a.submitted_at).toLocaleString('ru') : '';
+  const flags = {uk:'🇺🇦',ru:'🇷🇺',en:'🇬🇧',es:'🇪🇸',de:'🇩🇪',pt:'🇧🇷',fr:'🇫🇷',pl:'🇵🇱',it:'🇮🇹',he:'🇮🇱',ja:'🇯🇵',ko:'🇰🇷'};
+  const flag = flags[a.lang]||'🌐';
+  let html = `<div style="font-size:13px;color:#666;margin-bottom:16px;">${flag} ${(a.lang||'').toUpperCase()} · ${dt}</div>`;
+  if(a.summary){
+    html += `<div style="background:#f8f8f8;border:1px solid #ddd;padding:12px 16px;margin-bottom:20px;white-space:pre-wrap;font-size:13px;line-height:1.6;">${esc(a.summary)}</div>`;
+  }
+  html += Object.values(a.answers).filter(x=>x&&x.v!=null&&x.v!=='').map(item=>{
+    const v = Array.isArray(item.v) ? item.v.join(', ') : String(item.v);
+    return `<div style="padding:8px 0;border-bottom:1px solid #eee;">
+      <div style="font-size:11px;color:#999;margin-bottom:2px;">${esc(item.q||'')}</div>
+      <div style="font-size:13px;color:#000;">${esc(v)}</div>
+    </div>`;
+  }).join('');
+  return html;
 }
 
 // ── OVERVIEW TAB ──────────────────────────────────────────
