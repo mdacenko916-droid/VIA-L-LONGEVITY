@@ -710,41 +710,66 @@ function addDefaultProtocol(){
 
 // ── LABS TAB ──────────────────────────────────────────────
 const LAB_FIELDS=[
-  {id:'vitd',name:'Витамин D',unit:'нмоль/л',ref:'75–150',low:50,high:250},
-  {id:'ferr',name:'Ферритин',unit:'мкг/л',ref:'50–100',low:20,high:200},
-  {id:'tsh',name:'ТТГ',unit:'мМЕ/л',ref:'0.4–4.0',low:0.3,high:4.5},
-  {id:'e2',name:'Эстрадиол',unit:'пг/мл',ref:'20–350',low:15,high:500},
-  {id:'prog',name:'Прогестерон',unit:'нмоль/л',ref:'0.5–25',low:0.3,high:60},
-  {id:'test',name:'Тестостерон',unit:'нмоль/л',ref:'10–35',low:5,high:50},
-  {id:'cort',name:'Кортизол (утро)',unit:'нмоль/л',ref:'150–600',low:100,high:700},
-  {id:'b12',name:'Витамин B12',unit:'пмоль/л',ref:'148–616',low:100,high:800},
+  // Гормоны
+  {g:'Гормоны',    id:'e2',     name:'Эстрадиол',      unit:'пг/мл',    ref:'20–350',  low:15,  high:500},
+  {g:'Гормоны',    id:'prog',   name:'Прогестерон',    unit:'нмоль/л',  ref:'0.5–25',  low:0.3, high:60},
+  {g:'Гормоны',    id:'test',   name:'Тестостерон',    unit:'нмоль/л',  ref:'10–35',   low:5,   high:50},
+  {g:'Гормоны',    id:'cort',   name:'Кортизол (утро)',unit:'нмоль/л',  ref:'150–600', low:100, high:700},
+  {g:'Гормоны',    id:'tsh',    name:'ТТГ',            unit:'мМЕ/л',    ref:'0.4–4.0', low:0.3, high:4.5},
+  // Нутриенты
+  {g:'Нутриенты',  id:'vitd',   name:'Витамин D',      unit:'нмоль/л',  ref:'75–150',  low:50,  high:250},
+  {g:'Нутриенты',  id:'b12',    name:'Витамин B12',    unit:'пмоль/л',  ref:'148–616', low:100, high:800},
+  {g:'Нутриенты',  id:'ferr',   name:'Ферритин',       unit:'мкг/л',    ref:'50–100',  low:20,  high:200},
+  // ОАК — Общий анализ крови
+  {g:'ОАК',        id:'hgb',    name:'Гемоглобин',     unit:'г/л',      ref:'120–170', low:110, high:175},
+  {g:'ОАК',        id:'rbc',    name:'Эритроциты',     unit:'×10¹²/л',  ref:'3.8–5.7', low:3.5, high:6.0},
+  {g:'ОАК',        id:'wbc',    name:'Лейкоциты',      unit:'×10⁹/л',   ref:'4.0–9.0', low:3.5, high:10},
+  {g:'ОАК',        id:'plt',    name:'Тромбоциты',     unit:'×10⁹/л',   ref:'150–400', low:100, high:450},
+  {g:'ОАК',        id:'mcv',    name:'MCV',            unit:'фл',       ref:'80–100',  low:75,  high:105},
+  {g:'ОАК',        id:'hct',    name:'Гематокрит',     unit:'%',        ref:'36–52',   low:32,  high:55},
+  // ОАМ — Общий анализ мочи
+  {g:'ОАМ',        id:'u_ph',   name:'pH мочи',        unit:'',         ref:'4.5–8.0', low:4.5, high:8.0},
+  {g:'ОАМ',        id:'u_prot', name:'Белок мочи',     unit:'г/л',      ref:'< 0.03',  low:0,   high:0.03},
+  {g:'ОАМ',        id:'u_leu',  name:'Лейк. мочи',     unit:'в п/з',    ref:'0–5',     low:0,   high:5},
+  // Маркеры воспаления
+  {g:'Воспаление', id:'crp',    name:'СРБ (вч)',        unit:'мг/л',     ref:'< 1.0',   low:0,   high:1.0},
+  {g:'Воспаление', id:'hcy',    name:'Гомоцистеин',    unit:'мкмоль/л', ref:'5–15',    low:5,   high:15},
 ];
 function labStatus(val,f){
-  if(!val) return '';
-  if(val<f.low) return '<span class="lab-status" style="color:var(--alert)">↓ Низко</span>';
-  if(val>f.high) return '<span class="lab-status" style="color:var(--warn)">↑ Выше нормы</span>';
-  if(val<f.low*1.3 || val>f.high*0.85) return '<span class="lab-status" style="color:var(--warn)">⚠ Субоптимально</span>';
+  if(!val && val!==0) return '';
+  const v = parseFloat(val);
+  if(isNaN(v)) return '';
+  if(f.low > 0 && v < f.low) return '<span class="lab-status" style="color:var(--alert)">↓ Низко</span>';
+  if(v > f.high) return '<span class="lab-status" style="color:var(--warn)">↑ Выше нормы</span>';
+  if((f.low > 0 && v < f.low*1.3) || v > f.high*0.85) return '<span class="lab-status" style="color:var(--warn)">⚠ Субоптимально</span>';
   return '<span class="lab-status" style="color:var(--ok)">✓ В норме</span>';
+}
+function labCard(f, labs){
+  return `<div class="lab-card">
+    <div class="lab-name">${f.name}</div>
+    <div style="display:flex;align-items:baseline;gap:6px;">
+      <input class="lab-input" type="number" value="${labs[f.id]||''}" placeholder="—"
+        onchange="updateLab('${f.id}',this.value)" style="width:80px;">
+      <span style="font-size:11px;color:var(--t3);">${f.unit}</span>
+    </div>
+    <div class="lab-ref">Норма: ${f.ref}</div>
+    ${labStatus(labs[f.id],f)}
+  </div>`;
 }
 function renderLabs(c){
   const labs = c.labs||{};
+  const groups = [...new Set(LAB_FIELDS.map(f=>f.g))];
+  const sections = groups.map(g=>`
+    <div style="font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.08em;margin:20px 0 8px;">${g}</div>
+    <div class="labs-grid">${LAB_FIELDS.filter(f=>f.g===g).map(f=>labCard(f,labs)).join('')}</div>
+  `).join('');
   return `
     <div class="section-title">Лабораторные показатели</div>
     <div class="lab-date-row">
       <label>Дата анализов:</label>
       <input type="date" value="${labs.date||''}" onchange="updateLab('date',this.value)">
     </div>
-    <div class="labs-grid">${LAB_FIELDS.map(f=>`
-      <div class="lab-card">
-        <div class="lab-name">${f.name}</div>
-        <div style="display:flex;align-items:baseline;gap:6px;">
-          <input class="lab-input" type="number" value="${labs[f.id]||''}" placeholder="—"
-            onchange="updateLab('${f.id}',this.value)" style="width:80px;">
-          <span style="font-size:11px;color:var(--t3);">${f.unit}</span>
-        </div>
-        <div class="lab-ref">Норма: ${f.ref}</div>
-        ${labStatus(labs[f.id],f)}
-      </div>`).join('')}</div>`;
+    ${sections}`;
 }
 function updateLab(field,val){
   const c=clients.find(x=>x.id===selectedId); if(!c) return;
