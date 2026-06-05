@@ -1034,37 +1034,81 @@ function updateBd(i,field,val){ const c=clients.find(x=>x.id===selectedId); if(!
 function deleteBd(i){ const c=clients.find(x=>x.id===selectedId); if(!c)return; c.breakdowns.splice(i,1); saveData(); renderTabContent(); }
 function addBdRow(){ const c=clients.find(x=>x.id===selectedId); if(!c)return; if(!c.breakdowns)c.breakdowns=[]; c.breakdowns.push({date:new Date().toISOString().slice(0,10),type:'ai',status:'draft',notes:''}); saveData(); renderTabContent(); }
 
-// ── OVERVIEW TAB ──────────────────────────────────────────
+// ── OVERVIEW TAB — живая сводка по клиенту ───────────────────
 function renderOverview(c){
-  const last = (c.sessions||[]).slice(-1)[0];
-  const clr = last?(last.type==='ok'?'var(--ok)':last.type==='warn'?'var(--warn)':'var(--alert)'):'var(--t3)';
-  const metricCards = last ? `
+  const today = new Date().toISOString().slice(0,10);
+
+  // Расчёт даты окончания: старт + длительность (нед.)
+  let endDate = c.end_date || '';
+  if(!endDate && c.start_date && c.duration_weeks){
+    const d=new Date(c.start_date); d.setDate(d.getDate()+parseInt(c.duration_weeks)*7);
+    endDate = d.toISOString().slice(0,10);
+  }
+
+  // Прогресс по расписанию
+  const sched = c.schedule||[];
+  const doneN = sched.filter(s=>s.done).length;
+  const totalN = sched.length;
+  const next = sched.find(s=>!s.done && (s.date||'') >= today) || sched.find(s=>!s.done);
+
+  // Биометрика
+  const bio = c.biometrics||[];
+  const lastBio = bio[bio.length-1];
+
+  // Анкета / переписка
+  const hasAnketa = !!(c.anketa && c.anketa.answers);
+  const msgs = c.messages||[];
+  const lastMsg = msgs[msgs.length-1];
+  const lastIn  = [...msgs].reverse().find(m=>m.dir==='in');
+  const needsReply = lastIn && (!lastMsg || lastMsg.dir==='in');
+
+  // Верхние карточки
+  const cards = `
     <div class="metrics-row">
-      <div class="metric-card"><div class="metric-lbl">HRV</div><div class="metric-val" style="color:${clr}">${last.hrv||'—'}</div><div class="metric-sub">мс</div></div>
-      <div class="metric-card"><div class="metric-lbl">ЧСС покоя</div><div class="metric-val">${last.rhr||'—'}</div><div class="metric-sub">уд/мин</div></div>
-      <div class="metric-card"><div class="metric-lbl">Сон</div><div class="metric-val">${last.sleep||'—'}</div><div class="metric-sub">ч</div></div>
-      <div class="metric-card"><div class="metric-lbl">Энергия</div><div class="metric-val">${last.energy||'—'}</div><div class="metric-sub">/ 10</div></div>
-    </div>` : `<p style="color:var(--t3);font-size:13px;margin-bottom:20px;">Сессий ещё нет. Клиент ещё не прошёл анализ.</p>`;
+      <div class="metric-card"><div class="metric-lbl">Прогресс</div><div class="metric-val">${totalN?doneN+'/'+totalN:'—'}</div><div class="metric-sub">${totalN?'сессий проведено':'нет расписания'}</div></div>
+      <div class="metric-card"><div class="metric-lbl">Биометрия</div><div class="metric-val">${bio.length||'—'}</div><div class="metric-sub">${bio.length?'недель внесено':'нет данных'}</div></div>
+      <div class="metric-card"><div class="metric-lbl">Анкета</div><div class="metric-val" style="font-size:18px;">${hasAnketa?'✓':'—'}</div><div class="metric-sub">${hasAnketa?'получена':'не получена'}</div></div>
+      <div class="metric-card"><div class="metric-lbl">Сообщений</div><div class="metric-val">${msgs.length||'—'}</div><div class="metric-sub">${needsReply?'⚠ нужен ответ':'в переписке'}</div></div>
+    </div>`;
 
-  const sessions = c.sessions||[];
-  const sessionsHTML = sessions.length ? `
-    <div class="section-title">История сессий</div>
-    <div class="sessions-list">${sessions.slice().reverse().map((s,ri)=>{
-      const i = sessions.length-1-ri;
-      const sc2 = s.type==='ok'?'var(--ok)':s.type==='warn'?'var(--warn)':'var(--alert)';
-      return `<div class="session-row${mkCls(c.marks,'session_'+i)}" onclick="markEl(event,'session',${i})">
-        <div class="session-date">${s.date}</div>
-        <div class="session-score" style="color:${sc2}">${s.score}</div>
-        <div class="session-metrics">
-          ${s.hrv?`<span class="session-metric">HRV ${s.hrv}</span>`:''}
-          ${s.rhr?`<span class="session-metric">ЧСС ${s.rhr}</span>`:''}
-          ${s.sleep?`<span class="session-metric">Сон ${s.sleep}ч</span>`:''}
-          ${s.energy?`<span class="session-metric">Энергия ${s.energy}</span>`:''}
-        </div>
-      </div>`;
-    }).join('')}</div>` : '';
+  // Профиль
+  const row=(k,v)=>v?`<tr><td style="padding:4px 12px 4px 0;color:#888;font-size:12px;white-space:nowrap;">${k}</td><td style="padding:4px 0;font-size:13px;">${esc(String(v))}</td></tr>`:'';
+  const profile = `
+    <div class="section-title">Профиль</div>
+    <table style="border-collapse:collapse;margin-bottom:20px;">
+      ${row('Код доступа', c.code)}
+      ${row('Программа', c.program)}
+      ${row('Тариф', c.tier)}
+      ${row('Цена', c.price)}
+      ${row('Формат', c.format)}
+      ${row('Старт', c.start_date)}
+      ${row('Длительность', c.duration_weeks?c.duration_weeks+' нед.':'')}
+      ${row('Окончание', endDate)}
+      ${row('Язык', (c.lang||'').toUpperCase())}
+    </table>`;
 
-  return metricCards + sessionsHTML;
+  // Ближайшая точка
+  const nextBlock = next ? `
+    <div class="section-title">Ближайшая точка</div>
+    <div style="border:1px solid #ddd;padding:12px 16px;margin-bottom:20px;">
+      <span style="font-weight:600;">${esc(next.date||'дата не задана')}</span>
+      <span style="color:#888;"> · ${next.type==='pdf'?'PDF':next.type==='once'?'Разовая':'Zoom'}</span>
+      ${next.notes?`<div style="font-size:12px;color:#666;margin-top:4px;">${esc(next.notes)}</div>`:''}
+    </div>` : '';
+
+  // Последняя биометрика
+  const bioBlock = lastBio ? `
+    <div class="section-title">Последняя биометрика (нед. ${esc(String(lastBio.week||'?'))})</div>
+    <div style="border:1px solid #ddd;padding:12px 16px;margin-bottom:20px;font-size:13px;">
+      ${[lastBio.date?'Дата: '+lastBio.date:'', lastBio.sleep?'Сон '+lastBio.sleep+'ч':'', lastBio.rhr?'ЧСС '+lastBio.rhr:'', lastBio.hrv?'HRV '+lastBio.hrv:'', lastBio.steps?'Шаги '+lastBio.steps:'', lastBio.weight?'Вес '+lastBio.weight+'кг':''].filter(Boolean).join(' · ')||'—'}
+    </div>` : '';
+
+  // Анкета-сводка (краткая)
+  const ankBlock = hasAnketa && c.anketa.summary ? `
+    <div class="section-title">Сводка анкеты (ИИ)</div>
+    <div style="background:#f8f8f8;border:1px solid #ddd;padding:12px 16px;white-space:pre-wrap;font-size:13px;line-height:1.6;">${esc(c.anketa.summary)}</div>` : '';
+
+  return cards + profile + nextBlock + bioBlock + ankBlock;
 }
 
 // ── PROTOCOL TAB ──────────────────────────────────────────
