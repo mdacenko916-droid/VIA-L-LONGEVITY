@@ -525,6 +525,15 @@ html[data-current-lang="en"] #heroBtnSlots, html[data-current-lang="es"] #heroBt
 
 ### Журнал выполненного (что уже в проде + `main`)
 
+- **2026-06-06** — Кабинет нутрициолога, **Этапы 2–5 + аудит + «полный функционал»** —
+  ПОЛНОСТЬЮ в проде. Подробности и схема работы — новый **§11 «Кабинет нутрициолога»**.
+  Кратко: ингест анкет в D1 (Этап 2); вкладки Биометрия/Сессии/Разборы (Этап 3);
+  Переписка + ИИ-черновик + отправка в ТГ (Этап 4); поиск/группировка/статусы/мобайл (Этап 5);
+  фикс `id=code` (анкетные карточки не открывались); живой «Обзор» вместо мёртвого
+  прототипа; **карточка рождается при оплате** (Hotmart→D1); **автоингест данных ИП**
+  (биометрика+ИИ-разбор по коду); **вид Календарь**; **бот-напоминалка (Cron 09:00 UTC)**
+  с заботливым тоном, зовущим пройти ИП; **Cal.com-брони→карточка** + секция «Знакомства»
+  (лиды). Ключевая ценность бота — **ЗАБОТА** (прописана в клиентских текстах).
 - **2026-06-05** — Кабинет нутрициолога, **Этап 1 (фундамент)** — закрыты обе дыры прототипа.
   Хранилище: новый **D1** `vial-cabinet` (id `b4ee9324…`, биндинг `env.DB`), схема
   `interpreter/cabinet-schema.sql` (таблица `clients`: поля шапки новой модели + JSON-колонка
@@ -877,6 +886,113 @@ DEV-коды также допущены в Apps Script (`apps-script.js:43`) �
 
 ---
 
+## 11. КАБИНЕТ НУТРИЦИОЛОГА (CRM на D1)
+
+Рабочее место специалиста — «1С, только лёгкое». **Всё досье клиента собирается и
+разбирается В КАБИНЕТЕ, а не в Telegram.** Источник правды = кабинет; Telegram = слой
+уведомлений. Модель-спека: [`docs/CABINET-MODEL.md`](docs/CABINET-MODEL.md).
+
+### 11.1 Где что лежит
+
+| Что | Где |
+|---|---|
+| Фронт кабинета (1 файл, всё inline) | [`cabinet/index.html`](cabinet/index.html) |
+| Бэкенд (маршруты `/cabinet/*`, ингесты, cron) | [`interpreter/cloudflare-worker.js`](interpreter/cloudflare-worker.js) |
+| Схема БД | [`interpreter/cabinet-schema.sql`](interpreter/cabinet-schema.sql) |
+| Хранилище | Cloudflare **D1** `vial-cabinet` (id `b4ee9324…`, биндинг `env.DB`) |
+| Сессии входа / лиды / связки | KV `EXPERT_DRAFTS` (`cabinet_sess:*`, `cal_lead:*`, `code_topic:*`, `care_client:*`) |
+| URL воркера | `https://interpreter.viaelcom.workers.dev` |
+| URL кабинета | `https://via-l.com/cabinet/` (GitHub Pages) |
+
+### 11.2 Модель данных (D1 `clients`)
+
+Одна таблица `clients`: колонки-«шапка» (`code` PK, `name`, `email`, `tg`, `phone`,
+`lang`, `product`, `program`, `tier`, `price`, `format`, `duration_weeks`, `start_date`,
+`end_date`, `status`, `gender`, `age`, `phase`, `created_at`, `updated_at`) + **JSON-колонка
+`data`** со всем досье вкладок: `data.anketa`, `data.biometrics[]`, `data.schedule[]`,
+`data.breakdowns[]`, `data.messages[]`, `data.protocol[]`, `data.labs`, `data.notes[]`,
+`data.marks`, `data.payment`, `data.last_data_nudge`.
+
+**`code` — сквозной ключ** (тот же у оплаты, анкеты, ТГ-топика). Фронт оперирует `c.id`;
+для карточек из воронки `cabinetRowToClient` подставляет `id = data.id || code` — иначе
+анкетные карточки не открывались (баг закрыт). В базу попадают **только оплаченные**:
+сайт-программы (Разовая/8нед/12нед) + ИП **EXPERT/ELITE**. НЕ попадают VIO и PRO.
+
+### 11.3 Как клиент попадает в кабинет (3 источника, все по `code`)
+
+1. **Оплата** (Hotmart webhook) → `cabinetUpsertFromPayment`: карточка рождается сразу,
+   `status='new'`. Формат/длительность выводятся из тарифа+языка (`cabinetTariffMeta`):
+   разовая=`once`/1нед; 8-12нед uk/ru=`zoom`, иначе `pdf`; EXPERT=`pdf`/4нед;
+   ELITE uk/ru=`zoom`, иначе `pdf`. Ключ: token (программы) / код доступа (ИП).
+   Реальная сумма — в `data.payment`.
+2. **Анкета** (`deliverAnketa` / `deliverAnketaProgram`) → до-обогащает ту же карточку:
+   `data.anketa = {answers, summary (ИИ-сводка), submitted_at, lang}`.
+3. **Прохождение ИП** (`handleAnalyze`, фронты pro-expert/elite шлют `code`) →
+   `cabinetIngestIpAnalysis` (фоном, `ctx.waitUntil`): добавляет недельный срез
+   биометрики (hrv/rhr/weight) + лог ИИ-разбора (`source:'ip'`, текст+метрики).
+   **UPDATE-only** — если карточки нет (VIO/PRO/аноним), запись пропускается.
+
+Плюс **Cal.com** (`handleCalWebhook`): реальная бронь по email → `cabinetIngestCalBooking`
+пишет в `data.schedule` (`source:'cal'`, `cal_uid`; перенос обновляет, отмена помечает
+`cancelled`). Бронь без карточки (15-мин знакомство до оплаты) → лид в KV `cal_lead:*`.
+
+### 11.4 Маршруты воркера (все POST, Bearer-токен кроме auth)
+
+| Маршрут | Назначение |
+|---|---|
+| `/cabinet-auth` | вход по `CABINET_PASS` → токен в `cabinet_sess:*` (TTL 12ч, rate-limit 8/10мин/IP) |
+| `/cabinet/clients` | список карточек (D1 `SELECT … ORDER BY updated_at DESC`) |
+| `/cabinet/save` | upsert карточки по `code` |
+| `/cabinet/delete` | удалить карточку |
+| `/cabinet/ai-draft` | ИИ-черновик ответа клиенту (Claude Haiku, контекст из анкеты+биометрики+сообщений) |
+| `/cabinet/tg-send` | отправить текст клиенту в ТГ-топик (`code_topic` → `careSend`) |
+| `/cabinet/leads` | будущие знакомства-лиды (Cal.com без карточки) для календаря |
+
+### 11.5 Интерфейс кабинета (`cabinet/index.html`)
+
+Два **вида** (переключатель в шапке, БЕЗ отдельных страниц — общий вход/данные):
+- **👥 Клиенты** — sidebar (поиск имя/email/код/программа + фильтр статуса + сортировка,
+  группировка по статусу с счётчиками, пагинация 25) и карточка с вкладками:
+  **Обзор** (живая сводка: прогресс сессий, недель биометрики, анкета, переписка + «нужен
+  ответ»; профиль с расчётным окончанием; ближайшая точка; последняя биометрика; ИИ-сводка),
+  **Протокол**, **Анализы**, **Заметки**, **Анкета**, **Биометрия** (нед 1/4/8 выделены),
+  **Сессии** (план+факт, авто-расписание от start_date, метка 📅 Cal у реальных броней),
+  **Разборы** (ручные + 📲 ИП с раскрывающимся текстом), **Переписка** (лог + ⚡ИИ-черновик
+  + отправка в ТГ). Глобальный маркер-инструмент (заливка/цвет текста) в шапке.
+- **📅 Календарь** — агенда всех встреч (Сегодня/Завтра/Неделя/Позже) из расписаний всех
+  карточек, клик → карточка; отдельная секция **🤝 Знакомства** (лиды Cal.com).
+
+### 11.6 Бот: автоматизация (Cron + забота)
+
+**Cron Trigger** `0 9 * * *` (09:00 UTC ≈ 11–12 ЕС), `scheduled()` → `runDailyReminders`:
+обходит активные карточки, шлёт клиенту в ТГ-личку (через care-бота, с переводом
+`careTranslate` на язык клиента) + копию в топик нутрициолога. Триггеры: Zoom за 24ч и в
+день встречи; для ИП — заботливо зовёт **пройти шаги в интерпретаторе** со ссылкой по
+тарифу (`ipLinkFor`); «нет данных ≥5 дней» — мягкий пинг. Дедуп — пометки в карточке
+(`reminded_24h`/`reminded_day`/`last_data_nudge`). Писать можно только тем, кто нажал
+`/start` у care-бота (правило Telegram).
+
+**ЗАБОТА — главная ценность бота VIA-L.** Все КЛИЕНТСКИЕ тексты (напоминания +
+`/cabinet/ai-draft`) — тёплые, поддерживающие, без давления. Внутренние тексты для
+нутрициолога (сводки/аналитика) — сухая конкретика.
+
+### 11.7 Деплой и push (важно!)
+
+- **Фронт кабинета** `cabinet/index.html` → деплоится как весь сайт: **`git push origin main`**
+  = деплой на `via-l.com/cabinet/` (GitHub Pages, ~1–2 мин). Отдельного «залить» нет.
+- **Воркер** `interpreter/cloudflare-worker.js` (вся логика `/cabinet/*`, ингесты, cron) →
+  **`cd interpreter && wrangler deploy`** (домен `interpreter.viaelcom.workers.dev`). Push в
+  git воркер НЕ деплоит — нужен `wrangler deploy` отдельно. Cron-триггер регистрируется при
+  деплое (в выводе видно `schedule: 0 9 * * *`).
+- **Порядок при правке обоих:** правка → `node --input-type=module < cloudflare-worker.js`
+  (синтаксис-чек воркера) и проверка inline-JS кабинета → `wrangler deploy` → `git push`.
+- **Секреты** (репо публичный, только `wrangler secret put NAME`): `CABINET_PASS` (пароль
+  входа). Остальные общие с ИП — см. §10.7. БД-миграции: `wrangler d1 execute vial-cabinet
+  --remote --file=interpreter/cabinet-schema.sql`.
+
+---
+
 *Связанные документы: [`CLAUDE.md`](CLAUDE.md) (правила работы с репозиторием),
+[`docs/CABINET-MODEL.md`](docs/CABINET-MODEL.md) (модель кабинета),
 [`interpreter/ARCHITECTURE.md`](interpreter/ARCHITECTURE.md) (детали ИП),
 [`interpreter/knowledge-base.md`](interpreter/knowledge-base.md) (клиническая база).*
