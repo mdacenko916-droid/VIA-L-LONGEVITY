@@ -744,12 +744,25 @@ function labStatus(val,f){
   if((f.low > 0 && v < f.low*1.3) || v > f.high*0.85) return '<span class="lab-status" style="color:var(--warn)">⚠ Субоптимально</span>';
   return '<span class="lab-status" style="color:var(--ok)">✓ В норме</span>';
 }
+const LAB_HL = {
+  '':  {bg:'',            border:'',        btn:'#cccccc', title:'Выделить цветом'},
+  'y': {bg:'#fffde7',     border:'#f9d835', btn:'#f9d835', title:'Жёлтый → зелёный'},
+  'g': {bg:'#f1f8e9',     border:'#8bc34a', btn:'#8bc34a', title:'Зелёный → оранжевый'},
+  'o': {bg:'#fff3e0',     border:'#ff9800', btn:'#ff9800', title:'Оранжевый → снять'},
+};
+const LAB_HL_CYCLE = ['', 'y', 'g', 'o'];
 function labCard(f, labs){
-  const mk = labs[f.id+'_m'];
-  return `<div class="lab-card" style="${mk?'border-color:var(--alert);background:var(--alert-dim);':''}">
+  const hl  = labs[f.id+'_hl'] || '';
+  const s   = LAB_HL[hl] || LAB_HL[''];
+  const cardStyle = hl ? `border-color:${s.border};background:${s.bg};` : '';
+  return `<div class="lab-card" style="${cardStyle}">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;">
       <div class="lab-name">${f.name}</div>
-      <button onclick="toggleLabMark('${f.id}')" title="Отметить красным" style="background:none;border:none;cursor:pointer;font-size:15px;padding:0;line-height:1;color:${mk?'var(--alert)':'var(--b2)'};">⚑</button>
+      <button onclick="cycleLabColor('${f.id}')" title="${s.title}" style="
+        background:${s.btn};border:none;cursor:pointer;width:14px;height:14px;
+        border-radius:2px;padding:0;flex-shrink:0;margin-top:1px;
+        box-shadow:0 0 0 1px rgba(0,0,0,.18);
+      "></button>
     </div>
     <div style="display:flex;align-items:baseline;gap:6px;">
       <input class="lab-input" type="number" value="${labs[f.id]||''}" placeholder="—"
@@ -760,10 +773,12 @@ function labCard(f, labs){
     ${labStatus(labs[f.id],f)}
   </div>`;
 }
-function toggleLabMark(id){
+function cycleLabColor(id){
   const c=clients.find(x=>x.id===selectedId); if(!c) return;
   if(!c.labs) c.labs={};
-  c.labs[id+'_m'] = c.labs[id+'_m'] ? 0 : 1;
+  const cur = c.labs[id+'_hl'] || '';
+  const next = LAB_HL_CYCLE[(LAB_HL_CYCLE.indexOf(cur)+1) % LAB_HL_CYCLE.length];
+  c.labs[id+'_hl'] = next;
   saveData(); renderTabContent();
 }
 function renderLabs(c){
