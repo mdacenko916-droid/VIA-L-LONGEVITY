@@ -1,22 +1,21 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
-<title>VIA·L — Кабінет нутриціолога</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&family=Oswald:wght@200;300;400&display=swap" rel="stylesheet">
+<title>VIA·L — Кабинет нутрициолога</title>
 <style>
 :root{
-  --gold:#c4963c;--gold-lt:#e2b96a;--gold-dim:rgba(196,150,60,.15);--gold-glow:rgba(196,150,60,.08);
-  /* Палитра переведена на светлую тему (см. cabinet/TASK-REDESIGN.md).
-     Имена переменных сохранены, чтобы не править весь файл — меняются ТОЛЬКО значения. */
-  --dark:#ffffff;--dark2:#fafaf7;--dark3:#f1efea;
-  --surface:#ffffff;--surface-2:#fbfaf7;--surface-3:rgba(0,0,0,.04);
-  --t1:#1a1a1a;--t2:#5a5550;--t3:#9c958c;
-  --b1:rgba(0,0,0,.08);--b2:rgba(0,0,0,.16);
-  --ok:#3aa37f;--warn:#C97914;--alert:#D24565;
-  --ok-dim:rgba(58,163,127,.1);--warn-dim:rgba(201,121,20,.1);--alert-dim:rgba(210,69,101,.1);
+  /* 1С-стиль: белый фон, чёрный контрастный текст, серые линии, без золота.
+     Имена переменных сохранены — меняются ТОЛЬКО значения. */
+  --gold:#1a1a1a;--gold-lt:#000000;--gold-dim:#ececec;--gold-glow:#f4f4f4;
+  --dark:#ffffff;--dark2:#f4f4f4;--dark3:#e6e6e6;
+  --surface:#ffffff;--surface-2:#f7f7f7;--surface-3:#f0f0f0;
+  --t1:#000000;--t2:#222222;--t3:#555555;
+  --b1:#cfcfcf;--b2:#9a9a9a;
+  --ok:#1a7a4f;--warn:#9a5400;--alert:#b3002d;
+  --ok-dim:#e7f2ec;--warn-dim:#f4ece0;--alert-dim:#f7e6ea;
   --sidebar-w:260px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -291,6 +290,35 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
   .labs-grid{grid-template-columns:1fr;}
   .tab{padding:10px 12px;font-size:11px;}
 }
+
+/* ═══════════ 1С-FLAT SKIN — белый фон, чёрный контрастный текст ═══════════
+   Поверх существующих правил: убираем декор (золото, градиенты, скругления,
+   тени, декоративные шрифты, разрядку, капс). Меняем только вид, не разметку. */
+*{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  letter-spacing:normal !important;
+  text-transform:none !important;
+}
+#gate{background:#fff !important;}
+.gate-box{border:1px solid #9a9a9a !important;}
+.gate-title,.client-header-name,.section-title,.modal-title,.gate-logo,.topbar-logo{
+  color:#000 !important;font-weight:700 !important;
+}
+/* плоские чёрные/серые кнопки вместо золотых градиентов */
+.gate-btn,.btn-save{background:#1a1a1a !important;color:#fff !important;font-weight:600 !important;}
+.gate-btn:hover,.btn-save:hover{background:#000 !important;transform:none !important;}
+.topbtn.primary{background:#e6e6e6 !important;color:#000 !important;border-color:#9a9a9a !important;}
+.topbtn.primary:hover{background:#d8d8d8 !important;}
+.note-save-btn{background:#e6e6e6 !important;color:#000 !important;border-color:#9a9a9a !important;}
+/* активные состояния — чёрным, не золотом */
+.tab.active{color:#000 !important;border-bottom:2px solid #000 !important;font-weight:600 !important;}
+.client-item.active{background:#ececec !important;border-left:3px solid #000 !important;}
+.lab-input:focus{border-bottom-color:#000 !important;}
+.add-row-btn:hover{border-color:#000 !important;color:#000 !important;}
+/* таблицы/карточки — чёткая серая сетка */
+.metric-card,.session-row,.lab-card,.note-item,.modal,.gate-box{border:1px solid #cfcfcf !important;}
 </style>
 </head>
 <body>
@@ -299,11 +327,11 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 <div id="gate">
   <div class="gate-box">
     <div class="gate-logo">VIA·L — CABINET</div>
-    <div class="gate-title">Кабінет нутриціолога</div>
-    <div class="gate-sub">Введіть пароль адміністратора для доступу до бази клієнтів.</div>
+    <div class="gate-title">Кабинет нутрициолога</div>
+    <div class="gate-sub">Введите пароль администратора для доступа к базе клиентов.</div>
     <input class="gate-input" id="gateInput" type="password" maxlength="32" placeholder="· · · · · · · ·" autocomplete="current-password">
-    <div class="gate-error" id="gateError">Невірний пароль</div>
-    <button class="gate-btn" onclick="checkGate()">Увійти →</button>
+    <div class="gate-error" id="gateError">Неверный пароль</div>
+    <button class="gate-btn" onclick="checkGate()">Войти →</button>
   </div>
 </div>
 
@@ -314,11 +342,11 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
   <div class="topbar">
     <div class="topbar-logo">VIA·L &mdash; Cabinet</div>
     <div class="topbar-actions">
-      <button class="topbtn" id="mobileMenuBtn" style="display:none;" onclick="toggleSidebar()">☰ Клієнти</button>
-      <button class="topbtn primary" onclick="openAddClient()">+ Новий клієнт</button>
-      <button class="topbtn" onclick="migrateLocal()" title="Імпорт зі старого локального сховища у базу">⇪ Імпорт</button>
-      <button class="topbtn" onclick="exportData()">↓ Експорт</button>
-      <button class="topbtn" onclick="lockApp()" title="Вийти">⎋</button>
+      <button class="topbtn" id="mobileMenuBtn" style="display:none;" onclick="toggleSidebar()">☰ Клиенты</button>
+      <button class="topbtn primary" onclick="openAddClient()">+ Новый клиент</button>
+      <button class="topbtn" onclick="migrateLocal()" title="Импорт из старого локального хранилища в базу">⇪ Импорт</button>
+      <button class="topbtn" onclick="exportData()">↓ Экспорт</button>
+      <button class="topbtn" onclick="lockApp()" title="Выйти">⎋</button>
     </div>
   </div>
 
@@ -327,7 +355,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
       <div class="sidebar-search">
-        <input type="text" placeholder="Пошук клієнта..." id="searchInput" oninput="filterClients()">
+        <input type="text" placeholder="Поиск клиента..." id="searchInput" oninput="filterClients()">
       </div>
       <div class="client-list" id="clientList"></div>
     </div>
@@ -339,17 +367,17 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
           <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
         </svg>
-        <p>Оберіть клієнта зі списку або додайте нового</p>
+        <p>Выберите клиента из списка или добавьте нового</p>
       </div>
 
       <!-- Client Detail -->
       <div id="clientDetail" style="display:none;flex:1;display:none;flex-direction:column;overflow:hidden;">
         <div class="client-header" id="clientHeaderEl"></div>
         <div class="tabs" id="tabsEl">
-          <div class="tab active" onclick="switchTab('overview')">Огляд</div>
+          <div class="tab active" onclick="switchTab('overview')">Обзор</div>
           <div class="tab" onclick="switchTab('protocol')">Протокол</div>
-          <div class="tab" onclick="switchTab('labs')">Аналізи</div>
-          <div class="tab" onclick="switchTab('notes')">Нотатки</div>
+          <div class="tab" onclick="switchTab('labs')">Анализы</div>
+          <div class="tab" onclick="switchTab('notes')">Заметки</div>
         </div>
         <div class="tab-content" id="tabContent"></div>
       </div>
@@ -360,10 +388,10 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 <!-- ADD/EDIT CLIENT MODAL -->
 <div class="modal-overlay" id="clientModal">
   <div class="modal">
-    <div class="modal-title" id="modalTitle">Новий клієнт</div>
+    <div class="modal-title" id="modalTitle">Новый клиент</div>
     <div class="form-row">
-      <label>ПІБ</label>
-      <input class="form-input" id="f-name" type="text" placeholder="Ім'я та прізвище">
+      <label>ФИО</label>
+      <input class="form-input" id="f-name" type="text" placeholder="Имя и фамилия">
     </div>
     <div class="form-row-2">
       <div class="form-row" style="margin:0">
@@ -377,34 +405,34 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
     </div>
     <div class="form-row-2" style="margin-top:14px;">
       <div class="form-row" style="margin:0">
-        <label>Вік</label>
+        <label>Возраст</label>
         <input class="form-input" id="f-age" type="number" placeholder="47" min="18" max="99">
       </div>
       <div class="form-row" style="margin:0">
-        <label>Стать</label>
+        <label>Пол</label>
         <select class="form-select" id="f-gender">
-          <option value="female">Жінка</option>
-          <option value="male">Чоловік</option>
+          <option value="female">Женщина</option>
+          <option value="male">Мужчина</option>
         </select>
       </div>
     </div>
     <div class="form-row" style="margin-top:14px;">
-      <label>Гормональна фаза</label>
+      <label>Гормональная фаза</label>
       <select class="form-select" id="f-phase">
-        <option value="regular">Регулярний цикл</option>
+        <option value="regular">Регулярный цикл</option>
         <option value="peri">Перименопауза</option>
         <option value="post">Постменопауза</option>
         <option value="andro">Андропауза</option>
-        <option value="other">Інше</option>
+        <option value="other">Другое</option>
       </select>
     </div>
     <div class="form-row">
-      <label>Нотатка при створенні</label>
-      <textarea class="form-input" id="f-note" rows="3" placeholder="Скарги, мета, особливості..."></textarea>
+      <label>Заметка при создании</label>
+      <textarea class="form-input" id="f-note" rows="3" placeholder="Жалобы, цель, особенности..."></textarea>
     </div>
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal()">Скасувати</button>
-      <button class="btn-save" onclick="saveClient()">Зберегти →</button>
+      <button class="btn-cancel" onclick="closeModal()">Отменить</button>
+      <button class="btn-save" onclick="saveClient()">Сохранить →</button>
     </div>
   </div>
 </div>
@@ -449,11 +477,11 @@ async function checkGate(){
       return;
     }
     document.getElementById('gateError').textContent =
-      j.error === 'rate_limited' ? 'Забагато спроб — зачекайте 10 хв'
-      : j.error === 'cabinet_not_configured' ? 'Кабінет ще не налаштовано (немає CABINET_PASS)'
-      : 'Невірний пароль';
+      j.error === 'rate_limited' ? 'Слишком много попыток — подождите 10 мин'
+      : j.error === 'cabinet_not_configured' ? 'Кабинет ещё не настроен (нет CABINET_PASS)'
+      : 'Неверный пароль';
   }catch(_){
-    document.getElementById('gateError').textContent = 'Помилка зʼєднання з сервером';
+    document.getElementById('gateError').textContent = 'Ошибка соединения с сервером';
   }
   inp.classList.add('error');
   document.getElementById('gateError').style.display='block';
@@ -492,15 +520,15 @@ function genId(){ return Date.now().toString(36)+Math.random().toString(36).slic
 async function migrateLocal(){
   let old=[];
   try{ old = JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(_){}
-  if(!old.length){ alert('У локальному сховищі цього браузера немає клієнтів для імпорту.'); return; }
-  if(!confirm('Імпортувати '+old.length+' клієнт(ів) зі старого локального сховища в базу?\n(Локальна копія залишиться як резерв.)')) return;
+  if(!old.length){ alert('В локальном хранилище этого браузера нет клиентов для импорта.'); return; }
+  if(!confirm('Импортировать '+old.length+' клиент(ов) из старого локального хранилища в базу?\n(Локальная копия останется как резерв.)')) return;
   let n=0;
   for(const c of old){
     if(!c.code) c.code = c.id || genId();
     try{ const j = await api('/cabinet/save',{ client:c }); if(j && j.ok) n++; }catch(_){}
   }
   await loadData(); renderClientList();
-  alert('Імпортовано: '+n+' / '+old.length);
+  alert('Импортировано: '+n+' / '+old.length);
 }
 
 // ── CLIENT LIST ───────────────────────────────────────────
@@ -508,17 +536,17 @@ function renderClientList(filter=''){
   const list = document.getElementById('clientList');
   const filtered = clients.filter(c=>c.name.toLowerCase().includes(filter.toLowerCase()));
   if(!filtered.length){
-    list.innerHTML=`<div class="empty-list">Клієнтів не знайдено.<br>Натисніть «+ Новий клієнт»</div>`;
+    list.innerHTML=`<div class="empty-list">Клиентов не найдено.<br>Нажмите «+ Новый клиент»</div>`;
     return;
   }
   list.innerHTML = filtered.map(c=>{
     const last = (c.sessions||[]).slice(-1)[0];
     const scoreClass = last ? (last.type==='ok'?'score-ok':last.type==='warn'?'score-warn':'score-alert') : '';
     const scoreVal = last ? last.score : '—';
-    const lastDate = last ? last.date : 'Немає сесій';
+    const lastDate = last ? last.date : 'Нет сессий';
     return `<div class="client-item${selectedId===c.id?' active':''}" onclick="selectClient('${c.id}')">
       <div class="client-name">${c.name}</div>
-      <div class="client-meta">${c.phase_label||''}${c.age?' · '+c.age+' р.':''} · ${lastDate}</div>
+      <div class="client-meta">${c.phase_label||''}${c.age?' · '+c.age+' л.':''} · ${lastDate}</div>
       <div class="client-score ${scoreClass}">${scoreVal}</div>
     </div>`;
   }).join('');
@@ -550,7 +578,7 @@ function renderClientDetail(){
     <div class="client-header-top">
       <div>
         <div class="client-header-name">${c.name}</div>
-        <div class="client-header-meta">${c.email||''}${c.phone?' · '+c.phone:''} · ${c.phase_label||''} · ${c.age||'?'} р.</div>
+        <div class="client-header-meta">${c.email||''}${c.phone?' · '+c.phone:''} · ${c.phase_label||''} · ${c.age||'?'} л.</div>
       </div>
       <div class="client-header-score">
         <div class="score-big" style="color:${clr}">${last?last.score:'—'}</div>
@@ -558,9 +586,9 @@ function renderClientDetail(){
       </div>
     </div>
     <div class="header-actions">
-      <button class="topbtn" onclick="openEditClient('${c.id}')">✎ Редагувати</button>
+      <button class="topbtn" onclick="openEditClient('${c.id}')">✎ Редактировать</button>
       <button class="topbtn primary" onclick="generatePDF('${c.id}')">↓ PDF</button>
-      <button class="topbtn" onclick="deleteClient('${c.id}')" style="color:var(--alert)">✕ Видалити</button>
+      <button class="topbtn" onclick="deleteClient('${c.id}')" style="color:var(--alert)">✕ Удалить</button>
     </div>`;
 
   // Tabs
@@ -599,13 +627,13 @@ function renderOverview(c){
   const metricCards = last ? `
     <div class="metrics-row">
       <div class="metric-card"><div class="metric-lbl">HRV</div><div class="metric-val" style="color:${clr}">${last.hrv||'—'}</div><div class="metric-sub">мс</div></div>
-      <div class="metric-card"><div class="metric-lbl">ЧСС спокою</div><div class="metric-val">${last.rhr||'—'}</div><div class="metric-sub">уд/хв</div></div>
-      <div class="metric-card"><div class="metric-lbl">Сон</div><div class="metric-val">${last.sleep||'—'}</div><div class="metric-sub">год</div></div>
-      <div class="metric-card"><div class="metric-lbl">Енергія</div><div class="metric-val">${last.energy||'—'}</div><div class="metric-sub">/ 10</div></div>
-    </div>` : `<p style="color:var(--t3);font-size:13px;margin-bottom:20px;">Сесій ще немає. Клієнт ще не пройшов аналіз.</p>`;
+      <div class="metric-card"><div class="metric-lbl">ЧСС покоя</div><div class="metric-val">${last.rhr||'—'}</div><div class="metric-sub">уд/мин</div></div>
+      <div class="metric-card"><div class="metric-lbl">Сон</div><div class="metric-val">${last.sleep||'—'}</div><div class="metric-sub">ч</div></div>
+      <div class="metric-card"><div class="metric-lbl">Энергия</div><div class="metric-val">${last.energy||'—'}</div><div class="metric-sub">/ 10</div></div>
+    </div>` : `<p style="color:var(--t3);font-size:13px;margin-bottom:20px;">Сессий ещё нет. Клиент ещё не прошёл анализ.</p>`;
 
   const sessionsHTML = (c.sessions||[]).length ? `
-    <div class="section-title">Історія сесій</div>
+    <div class="section-title">История сессий</div>
     <div class="sessions-list">${(c.sessions||[]).slice().reverse().map(s=>{
       const sc2 = s.type==='ok'?'var(--ok)':s.type==='warn'?'var(--warn)':'var(--alert)';
       return `<div class="session-row">
@@ -614,8 +642,8 @@ function renderOverview(c){
         <div class="session-metrics">
           ${s.hrv?`<span class="session-metric">HRV ${s.hrv}</span>`:''}
           ${s.rhr?`<span class="session-metric">ЧСС ${s.rhr}</span>`:''}
-          ${s.sleep?`<span class="session-metric">Сон ${s.sleep}г</span>`:''}
-          ${s.energy?`<span class="session-metric">Енергія ${s.energy}</span>`:''}
+          ${s.sleep?`<span class="session-metric">Сон ${s.sleep}ч</span>`:''}
+          ${s.energy?`<span class="session-metric">Энергия ${s.energy}</span>`:''}
         </div>
       </div>`;
     }).join('')}</div>` : '';
@@ -627,24 +655,24 @@ function renderOverview(c){
 function renderProtocol(c){
   const rows = (c.protocol||[]).map((p,i)=>`
     <tr>
-      <td><input class="proto-input" style="font-size:13px;color:var(--t1);font-weight:500;" value="${esc(p.name)}" oninput="updateProto(${i},'name',this.value)" placeholder="Назва добавки"></td>
+      <td><input class="proto-input" style="font-size:13px;color:var(--t1);font-weight:500;" value="${esc(p.name)}" oninput="updateProto(${i},'name',this.value)" placeholder="Название добавки"></td>
       <td><input class="proto-input" value="${esc(p.dose)}" oninput="updateProto(${i},'dose',this.value)" placeholder="300 мг"></td>
-      <td><input class="proto-input" value="${esc(p.timing)}" oninput="updateProto(${i},'timing',this.value)" placeholder="вечір"></td>
+      <td><input class="proto-input" value="${esc(p.timing)}" oninput="updateProto(${i},'timing',this.value)" placeholder="вечер"></td>
       <td><input class="proto-input" value="${esc(p.notes||'')}" oninput="updateProto(${i},'notes',this.value)" placeholder="..."></td>
       <td><button class="proto-del" onclick="deleteProto(${i})">×</button></td>
     </tr>`).join('');
 
   return `
-    <div class="section-title">Нутрієнтний протокол</div>
+    <div class="section-title">Нутриентный протокол</div>
     <table class="protocol-table">
       <thead><tr>
-        <th>Добавка</th><th>Доза</th><th>Час прийому</th><th>Нотатка</th><th></th>
+        <th>Добавка</th><th>Доза</th><th>Время приёма</th><th>Заметка</th><th></th>
       </tr></thead>
       <tbody id="protoBody">${rows}</tbody>
     </table>
-    <button class="add-row-btn" onclick="addProtoRow()">+ Додати добавку</button>
+    <button class="add-row-btn" onclick="addProtoRow()">+ Добавить добавку</button>
     <div style="margin-top:12px;">
-      <button class="topbtn primary" onclick="addDefaultProtocol()" style="font-size:11px;">⚡ Авто-протокол по останній сесії</button>
+      <button class="topbtn primary" onclick="addDefaultProtocol()" style="font-size:11px;">⚡ Авто-протокол по последней сессии</button>
     </div>`;
 }
 function updateProto(idx,field,val){
@@ -666,44 +694,44 @@ function addDefaultProtocol(){
   const last=(c.sessions||[]).slice(-1)[0];
   const isMale = c.gender==='male';
   const base = isMale ? [
-    {name:'Магній гліцинат',dose:'300 мг',timing:'вечір',notes:'Сон, стрес, HRV'},
-    {name:'Омега-3 EPA+DHA',dose:'2 г',timing:'з їжею',notes:'Запалення, когніція'},
-    {name:'Вітамін D3 + К2',dose:'2000 МО',timing:'ранок',notes:'Проконтролювати рівень'},
-    {name:'Цинк',dose:'25 мг',timing:'ранок',notes:'Тестостерон, імунітет'},
+    {name:'Магний глицинат',dose:'300 мг',timing:'вечер',notes:'Сон, стресс, HRV'},
+    {name:'Омега-3 EPA+DHA',dose:'2 г',timing:'с едой',notes:'Воспаление, когниция'},
+    {name:'Витамин D3 + К2',dose:'2000 МЕ',timing:'утро',notes:'Проконтролировать уровень'},
+    {name:'Цинк',dose:'25 мг',timing:'утро',notes:'Тестостерон, иммунитет'},
   ] : [
-    {name:'Магній гліцинат',dose:'300 мг',timing:'вечір',notes:'Сон, стрес, ПМС'},
-    {name:'Омега-3 EPA+DHA',dose:'2 г',timing:'з їжею',notes:'Запалення, когніція'},
-    {name:'Вітамін D3 + К2',dose:'2000 МО',timing:'ранок',notes:'Проконтролювати рівень'},
-    {name:'Цинк + селен',dose:'25 мг / 100 мкг',timing:'ранок',notes:'Щитовидна, репродуктивне'},
+    {name:'Магний глицинат',dose:'300 мг',timing:'вечер',notes:'Сон, стресс, ПМС'},
+    {name:'Омега-3 EPA+DHA',dose:'2 г',timing:'с едой',notes:'Воспаление, когниция'},
+    {name:'Витамин D3 + К2',dose:'2000 МЕ',timing:'утро',notes:'Проконтролировать уровень'},
+    {name:'Цинк + селен',dose:'25 мг / 100 мкг',timing:'утро',notes:'Щитовидная, репродуктивное'},
   ];
-  if(last && last.score < 50) base.push({name:'Ашваганда KSM-66',dose:'300 мг',timing:'ранок',notes:'Стрес, кортизол'});
+  if(last && last.score < 50) base.push({name:'Ашваганда KSM-66',dose:'300 мг',timing:'утро',notes:'Стресс, кортизол'});
   c.protocol = base; saveData(); renderTabContent();
 }
 
 // ── LABS TAB ──────────────────────────────────────────────
 const LAB_FIELDS=[
-  {id:'vitd',name:'Вітамін D',unit:'нмоль/л',ref:'75–150',low:50,high:250},
-  {id:'ferr',name:'Феритин',unit:'мкг/л',ref:'50–100',low:20,high:200},
+  {id:'vitd',name:'Витамин D',unit:'нмоль/л',ref:'75–150',low:50,high:250},
+  {id:'ferr',name:'Ферритин',unit:'мкг/л',ref:'50–100',low:20,high:200},
   {id:'tsh',name:'ТТГ',unit:'мМЕ/л',ref:'0.4–4.0',low:0.3,high:4.5},
-  {id:'e2',name:'Естрадіол',unit:'пг/мл',ref:'20–350',low:15,high:500},
+  {id:'e2',name:'Эстрадиол',unit:'пг/мл',ref:'20–350',low:15,high:500},
   {id:'prog',name:'Прогестерон',unit:'нмоль/л',ref:'0.5–25',low:0.3,high:60},
   {id:'test',name:'Тестостерон',unit:'нмоль/л',ref:'10–35',low:5,high:50},
-  {id:'cort',name:'Кортизол (ранок)',unit:'нмоль/л',ref:'150–600',low:100,high:700},
-  {id:'b12',name:'Вітамін B12',unit:'пмоль/л',ref:'148–616',low:100,high:800},
+  {id:'cort',name:'Кортизол (утро)',unit:'нмоль/л',ref:'150–600',low:100,high:700},
+  {id:'b12',name:'Витамин B12',unit:'пмоль/л',ref:'148–616',low:100,high:800},
 ];
 function labStatus(val,f){
   if(!val) return '';
-  if(val<f.low) return '<span class="lab-status" style="color:var(--alert)">↓ Низько</span>';
-  if(val>f.high) return '<span class="lab-status" style="color:var(--warn)">↑ Вище норми</span>';
+  if(val<f.low) return '<span class="lab-status" style="color:var(--alert)">↓ Низко</span>';
+  if(val>f.high) return '<span class="lab-status" style="color:var(--warn)">↑ Выше нормы</span>';
   if(val<f.low*1.3 || val>f.high*0.85) return '<span class="lab-status" style="color:var(--warn)">⚠ Субоптимально</span>';
-  return '<span class="lab-status" style="color:var(--ok)">✓ В нормі</span>';
+  return '<span class="lab-status" style="color:var(--ok)">✓ В норме</span>';
 }
 function renderLabs(c){
   const labs = c.labs||{};
   return `
-    <div class="section-title">Лабораторні показники</div>
+    <div class="section-title">Лабораторные показатели</div>
     <div class="lab-date-row">
-      <label>Дата аналізів:</label>
+      <label>Дата анализов:</label>
       <input type="date" value="${labs.date||''}" onchange="updateLab('date',this.value)">
     </div>
     <div class="labs-grid">${LAB_FIELDS.map(f=>`
@@ -728,10 +756,10 @@ function updateLab(field,val){
 function renderNotes(c){
   const notes=(c.notes||[]);
   return `
-    <div class="section-title">Нотатки лікаря</div>
+    <div class="section-title">Заметки специалиста</div>
     <div class="note-composer">
-      <textarea class="note-textarea" id="noteText" placeholder="Нотатка, спостереження, рекомендація..."></textarea>
-      <button class="note-save-btn" onclick="addNote()">Зберегти нотатку</button>
+      <textarea class="note-textarea" id="noteText" placeholder="Заметка, наблюдение, рекомендация..."></textarea>
+      <button class="note-save-btn" onclick="addNote()">Сохранить заметку</button>
     </div>
     <div id="notesList">${notes.length ? notes.slice().reverse().map((n,i)=>`
       <div class="note-item">
@@ -740,13 +768,13 @@ function renderNotes(c){
           <button class="note-del" onclick="deleteNote(${notes.length-1-i})">✕</button>
         </div>
         <div class="note-text">${esc(n.text)}</div>
-      </div>`).join('') : `<p style="color:var(--t3);font-size:13px;">Нотаток поки немає.</p>`}</div>`;
+      </div>`).join('') : `<p style="color:var(--t3);font-size:13px;">Заметок пока нет.</p>`}</div>`;
 }
 function addNote(){
   const c=clients.find(x=>x.id===selectedId); if(!c) return;
   const text=document.getElementById('noteText').value.trim(); if(!text) return;
   if(!c.notes) c.notes=[];
-  c.notes.push({text,date:new Date().toLocaleDateString('uk-UA',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}),ts:Date.now()});
+  c.notes.push({text,date:new Date().toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}),ts:Date.now()});
   saveData(); renderTabContent();
 }
 function deleteNote(idx){
@@ -755,10 +783,10 @@ function deleteNote(idx){
 }
 
 // ── ADD / EDIT CLIENT MODAL ───────────────────────────────
-const PHASE_LABELS={regular:'Регулярний цикл',peri:'Перименопауза',post:'Постменопауза',andro:'Андропауза',other:'Інше'};
+const PHASE_LABELS={regular:'Регулярный цикл',peri:'Перименопауза',post:'Постменопауза',andro:'Андропауза',other:'Другое'};
 function openAddClient(){
   editingId=null;
-  document.getElementById('modalTitle').textContent='Новий клієнт';
+  document.getElementById('modalTitle').textContent='Новый клиент';
   ['name','email','phone','age','note'].forEach(f=>document.getElementById('f-'+f).value='');
   document.getElementById('f-gender').value='female';
   document.getElementById('f-phase').value='peri';
@@ -767,7 +795,7 @@ function openAddClient(){
 function openEditClient(id){
   editingId=id;
   const c=clients.find(x=>x.id===id); if(!c) return;
-  document.getElementById('modalTitle').textContent='Редагувати клієнта';
+  document.getElementById('modalTitle').textContent='Редактировать клиента';
   document.getElementById('f-name').value=c.name||'';
   document.getElementById('f-email').value=c.email||'';
   document.getElementById('f-phone').value=c.phone||'';
@@ -779,7 +807,7 @@ function openEditClient(id){
 }
 function closeModal(){ document.getElementById('clientModal').classList.remove('open'); }
 async function saveClient(){
-  const name=document.getElementById('f-name').value.trim(); if(!name){alert('Введіть ім\'я');return;}
+  const name=document.getElementById('f-name').value.trim(); if(!name){alert('Введите имя');return;}
   const note=document.getElementById('f-note').value.trim();
   const phase=document.getElementById('f-phase').value;
   let cur;
@@ -790,7 +818,7 @@ async function saveClient(){
     c.age=parseInt(document.getElementById('f-age').value)||'';
     c.gender=document.getElementById('f-gender').value;
     c.phase=phase; c.phase_label=PHASE_LABELS[phase];
-    if(note){if(!c.notes)c.notes=[];c.notes.push({text:note,date:new Date().toLocaleDateString('uk-UA',{day:'numeric',month:'short',year:'numeric'}),ts:Date.now()});}
+    if(note){if(!c.notes)c.notes=[];c.notes.push({text:note,date:new Date().toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'}),ts:Date.now()});}
     cur=c;
   } else {
     const c={
@@ -803,7 +831,7 @@ async function saveClient(){
       created:Date.now(),
       sessions:[],protocol:[],labs:{},notes:[]
     };
-    if(note) c.notes.push({text:note,date:new Date().toLocaleDateString('uk-UA',{day:'numeric',month:'short',year:'numeric'}),ts:Date.now()});
+    if(note) c.notes.push({text:note,date:new Date().toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'}),ts:Date.now()});
     clients.unshift(c);
     selectedId=c.id;
     cur=c;
@@ -815,7 +843,7 @@ async function saveClient(){
 
 // ── DELETE CLIENT ─────────────────────────────────────────
 async function deleteClient(id){
-  if(!confirm('Видалити клієнта? Всі дані буде втрачено.')) return;
+  if(!confirm('Удалить клиента? Все данные будут потеряны.')) return;
   try{ await api('/cabinet/delete',{ code:id }); }catch(_){}
   clients=clients.filter(x=>x.id!==id);
   if(selectedId===id){ selectedId=null; document.getElementById('placeholder').style.display='flex'; document.getElementById('clientDetail').style.display='none'; }
@@ -837,7 +865,7 @@ function generatePDF(id){
   const last=(c.sessions||[]).slice(-1)[0];
   const labs=c.labs||{};
   const proto=(c.protocol||[]);
-  const date=new Date().toLocaleDateString('uk-UA',{day:'numeric',month:'long',year:'numeric'});
+  const date=new Date().toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'});
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
   <style>
     body{font-family:'Georgia',serif;color:#1a1a1a;max-width:700px;margin:0 auto;padding:40px 32px;font-size:14px;}
@@ -858,23 +886,23 @@ function generatePDF(id){
     .footer{margin-top:40px;padding-top:16px;border-top:1px solid #e8e4de;font-size:11px;color:#999;text-align:center;}
   </style></head><body>
   <h1>${c.name}</h1>
-  <div class="sub">${c.phase_label||''} · ${c.age||''}${c.age?' р.':''} · ${date}</div>
-  ${last?`<h2>Результат аналізу</h2>
-  <div class="score-box"><div class="score-num">${last.score}</div><div><div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#999;">Readiness Score</div><div style="font-size:16px;margin-top:4px;">${last.score>=65?'Добре відновлення':last.score>=40?'Потребує уваги':'Сигнал'}</div><div style="font-size:12px;color:#666;margin-top:2px;">${last.date}</div></div></div>
+  <div class="sub">${c.phase_label||''} · ${c.age||''}${c.age?' л.':''} · ${date}</div>
+  ${last?`<h2>Результат анализа</h2>
+  <div class="score-box"><div class="score-num">${last.score}</div><div><div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#999;">Readiness Score</div><div style="font-size:16px;margin-top:4px;">${last.score>=65?'Хорошее восстановление':last.score>=40?'Требует внимания':'Сигнал'}</div><div style="font-size:12px;color:#666;margin-top:2px;">${last.date}</div></div></div>
   <div class="metrics">
     <div class="m"><div class="m-val">${last.hrv||'—'}</div><div class="m-lbl">HRV мс</div></div>
-    <div class="m"><div class="m-val">${last.rhr||'—'}</div><div class="m-lbl">ЧСС уд/хв</div></div>
-    <div class="m"><div class="m-val">${last.sleep||'—'}</div><div class="m-lbl">Сон год</div></div>
-    <div class="m"><div class="m-val">${last.energy||'—'}</div><div class="m-lbl">Енергія /10</div></div>
+    <div class="m"><div class="m-val">${last.rhr||'—'}</div><div class="m-lbl">ЧСС уд/мин</div></div>
+    <div class="m"><div class="m-val">${last.sleep||'—'}</div><div class="m-lbl">Сон ч</div></div>
+    <div class="m"><div class="m-val">${last.energy||'—'}</div><div class="m-lbl">Энергия /10</div></div>
   </div>`:''}
-  ${proto.length?`<h2>Нутрієнтний протокол</h2>
-  <table><thead><tr><th>Добавка</th><th>Доза</th><th>Час прийому</th><th>Примітка</th></tr></thead>
+  ${proto.length?`<h2>Нутриентный протокол</h2>
+  <table><thead><tr><th>Добавка</th><th>Доза</th><th>Время приёма</th><th>Примечание</th></tr></thead>
   <tbody>${proto.map(p=>`<tr><td>${p.name}</td><td>${p.dose}</td><td>${p.timing}</td><td style="color:#666;">${p.notes||''}</td></tr>`).join('')}</tbody></table>`:''}
-  ${Object.keys(labs).filter(k=>k!=='date'&&labs[k]).length?`<h2>Лабораторні показники${labs.date?' ('+labs.date+')':''}</h2>
-  <table><thead><tr><th>Показник</th><th>Значення</th><th>Норма</th></tr></thead>
+  ${Object.keys(labs).filter(k=>k!=='date'&&labs[k]).length?`<h2>Лабораторные показатели${labs.date?' ('+labs.date+')':''}</h2>
+  <table><thead><tr><th>Показатель</th><th>Значение</th><th>Норма</th></tr></thead>
   <tbody>${LAB_FIELDS.filter(f=>labs[f.id]).map(f=>`<tr><td>${f.name}</td><td><b>${labs[f.id]}</b> ${f.unit}</td><td style="color:#999;">${f.ref}</td></tr>`).join('')}</tbody></table>`:''}
-  ${(c.notes||[]).length?`<h2>Нотатки лікаря</h2>${(c.notes||[]).slice(-3).map(n=>`<div class="note"><div class="note-date">${n.date}</div>${n.text}</div>`).join('')}`:''}
-  <div class="footer">VIA·L Longevity — Персональний протокол · Не є медичним висновком · via-l.com</div>
+  ${(c.notes||[]).length?`<h2>Заметки специалиста</h2>${(c.notes||[]).slice(-3).map(n=>`<div class="note"><div class="note-date">${n.date}</div>${n.text}</div>`).join('')}`:''}
+  <div class="footer">VIA·L Longevity — Персональный протокол · Не является медицинским заключением · via-l.com</div>
   </body></html>`;
   const w=window.open('','_blank');
   w.document.write(html); w.document.close();
