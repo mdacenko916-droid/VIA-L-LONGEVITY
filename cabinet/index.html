@@ -356,6 +356,8 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 /* Вкладки: горизонтальный скролл на мобайле */
 .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
 .tabs::-webkit-scrollbar{display:none;}
+/* Заголовок группы статуса в списке клиентов */
+.group-head{padding:6px 16px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;background:#f5f5f5;border-bottom:1px solid #e0e0e0;position:sticky;top:0;}
 </style>
 </head>
 <body>
@@ -404,14 +406,22 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
     <div class="sidebar" id="sidebar">
       <div class="sidebar-search">
         <input type="text" placeholder="Поиск — имя, email, код, программа..." id="searchInput" oninput="filterClients()">
-        <select id="statusFilter" onchange="filterClients()" style="margin-top:6px;width:100%;padding:6px 10px;border:1px solid #ccc;font-size:11px;font-family:inherit;background:#fff;outline:none;">
-          <option value="">Все статусы</option>
-          <option value="active">Активные</option>
-          <option value="new">Новые</option>
-          <option value="pause">Пауза</option>
-          <option value="done">Завершённые</option>
-        </select>
+        <div style="display:flex;gap:6px;margin-top:6px;">
+          <select id="statusFilter" onchange="filterClients()" style="flex:1;padding:6px 8px;border:1px solid #ccc;font-size:11px;font-family:inherit;background:#fff;outline:none;">
+            <option value="">Все статусы</option>
+            <option value="active">Активные</option>
+            <option value="new">Новые</option>
+            <option value="pause">Пауза</option>
+            <option value="done">Завершённые</option>
+          </select>
+          <select id="sortBy" onchange="filterClients()" style="flex:1;padding:6px 8px;border:1px solid #ccc;font-size:11px;font-family:inherit;background:#fff;outline:none;">
+            <option value="updated">↻ По активности</option>
+            <option value="name">А-Я по имени</option>
+            <option value="start">По дате старта</option>
+          </select>
+        </div>
       </div>
+      <div id="listCount" style="padding:6px 12px;font-size:11px;color:#888;border-bottom:1px solid #e0e0e0;"></div>
       <div class="client-list" id="clientList"></div>
     </div>
 
@@ -606,7 +616,7 @@ async function enterApp(){
   document.getElementById('gate').style.display='none';
   document.getElementById('app').classList.add('visible');
   await loadData();
-  renderClientList(document.getElementById('searchInput')?.value||'', document.getElementById('statusFilter')?.value||'');
+  refreshList();
   // show mobile menu btn on small screens
   if(window.innerWidth<768) document.getElementById('mobileMenuBtn').style.display='';
 }
@@ -640,15 +650,17 @@ async function migrateLocal(){
     if(!c.code) c.code = c.id || genId();
     try{ const j = await api('/cabinet/save',{ client:c }); if(j && j.ok) n++; }catch(_){}
   }
-  await loadData(); renderClientList(document.getElementById('searchInput')?.value||'', document.getElementById('statusFilter')?.value||'');
+  await loadData(); refreshList();
   alert('Импортировано: '+n+' / '+old.length);
 }
 
 // ── CLIENT LIST ───────────────────────────────────────────
-function renderClientList(filter='', statusFilter=''){
+const STATUS_ORDER = {active:0, new:1, pause:2, done:3};
+function renderClientList(filter='', statusFilter='', sortBy='updated'){
   const list = document.getElementById('clientList');
+  const countEl = document.getElementById('listCount');
   const q = filter.toLowerCase();
-  const filtered = clients.filter(c=>{
+  let filtered = clients.filter(c=>{
     if(statusFilter && (c.status||'active') !== statusFilter) return false;
     if(!q) return true;
     return (c.name||'').toLowerCase().includes(q)
@@ -657,36 +669,66 @@ function renderClientList(filter='', statusFilter=''){
       || (c.program||'').toLowerCase().includes(q)
       || (c.tier||'').toLowerCase().includes(q);
   });
+
+  // Группируем по статусу только когда конкретный статус НЕ выбран.
+  const grouped = !statusFilter;
+  const cmp = (a,b)=>{
+    if(grouped){
+      const so = (STATUS_ORDER[a.status||'active']??9) - (STATUS_ORDER[b.status||'active']??9);
+      if(so) return so;
+    }
+    if(sortBy==='name')  return (a.name||'').localeCompare(b.name||'','ru');
+    if(sortBy==='start') return (b.start_date||'').localeCompare(a.start_date||''); // свежие старты сверху
+    return (b.updated_at||0) - (a.updated_at||0); // по активности (дефолт)
+  };
+  filtered = filtered.slice().sort(cmp);
+
+  if(countEl) countEl.textContent = 'Всего: ' + filtered.length + (q||statusFilter ? ' (отфильтровано)' : '');
+
   if(!filtered.length){
     list.innerHTML=`<div class="empty-list">Клиентов не найдено.<br>Нажмите «+ Новый клиент»</div>`;
     return;
   }
   const page = filtered.slice(0, listPage * PAGE_SIZE);
   const more = filtered.length > page.length;
-  list.innerHTML = page.map(c=>{
+
+  let html = '', prevStatus = null;
+  for(const c of page){
     const st = c.status || 'active';
+    if(grouped && st !== prevStatus){
+      const cnt = filtered.filter(x=>(x.status||'active')===st).length;
+      html += `<div class="group-head">${STATUS_LABEL[st]||st} · ${cnt}</div>`;
+      prevStatus = st;
+    }
     const badge = `<span class="badge badge-${STATUS_BADGE[st]||'active'}">${STATUS_LABEL[st]||st}</span>`;
     const meta = [c.program||c.phase_label||'', c.age?(c.age+' л.'):''].filter(Boolean).join(' · ');
-    return `<div class="client-item${selectedId===c.id?' active':''}" onclick="selectClient('${c.id}')">
+    html += `<div class="client-item${selectedId===c.id?' active':''}" onclick="selectClient('${c.id}')">
       <div class="client-name">${esc(c.name)} ${badge}</div>
       <div class="client-meta">${esc(meta)}${c.start_date?' · с '+c.start_date:''}</div>
     </div>`;
-  }).join('')
-  + (more ? `<div style="padding:10px 16px;"><button style="width:100%;padding:8px;border:1px dashed #aaa;background:none;cursor:pointer;font-size:12px;font-family:inherit;" onclick="listPage++;renderClientList(document.getElementById('searchInput').value,document.getElementById('statusFilter').value)">Показать ещё (${filtered.length - page.length})</button></div>` : '');
+  }
+  if(more){
+    html += `<div style="padding:10px 16px;"><button style="width:100%;padding:8px;border:1px dashed #aaa;background:none;cursor:pointer;font-size:12px;font-family:inherit;" onclick="listPage++;refreshList()">Показать ещё (${filtered.length - page.length})</button></div>`;
+  }
+  list.innerHTML = html;
+}
+function refreshList(){
+  renderClientList(
+    document.getElementById('searchInput')?.value||'',
+    document.getElementById('statusFilter')?.value||'',
+    document.getElementById('sortBy')?.value||'updated'
+  );
 }
 function filterClients(){
   listPage = 1;
-  renderClientList(
-    document.getElementById('searchInput').value,
-    document.getElementById('statusFilter').value
-  );
+  refreshList();
 }
 
 // ── SELECT CLIENT ─────────────────────────────────────────
 function selectClient(id){
   selectedId = id;
   currentTab = 'overview';
-  renderClientList(document.getElementById('searchInput').value);
+  refreshList();
   renderClientDetail();
   if(window.innerWidth<768) document.getElementById('sidebar').classList.remove('open');
 }
@@ -1272,7 +1314,7 @@ function quickStatus(id, val){
   const c=clients.find(x=>x.id===id); if(!c)return;
   c.status=val; saveData();
   renderClientDetail();
-  renderClientList(document.getElementById('searchInput')?.value||'', document.getElementById('statusFilter')?.value||'');
+  refreshList();
 }
 function readModalFields(){
   return {
@@ -1318,7 +1360,7 @@ async function saveClient(){
     cur=c;
   }
   try{ await api('/cabinet/save',{ client:cur }); }catch(_){}
-  closeModal(); renderClientList(document.getElementById('searchInput')?.value||'', document.getElementById('statusFilter')?.value||''); renderClientDetail();
+  closeModal(); refreshList(); renderClientDetail();
 }
 
 // ── DELETE CLIENT ─────────────────────────────────────────
@@ -1327,7 +1369,7 @@ async function deleteClient(id){
   try{ await api('/cabinet/delete',{ code:id }); }catch(_){}
   clients=clients.filter(x=>x.id!==id);
   if(selectedId===id){ selectedId=null; document.getElementById('placeholder').style.display='flex'; document.getElementById('clientDetail').style.display='none'; }
-  renderClientList(document.getElementById('searchInput')?.value||'', document.getElementById('statusFilter')?.value||'');
+  refreshList();
 }
 
 // ── EXPORT / IMPORT ───────────────────────────────────────
