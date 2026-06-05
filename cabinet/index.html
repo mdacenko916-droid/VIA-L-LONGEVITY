@@ -1132,7 +1132,7 @@ function renderProtocol(c){
     </table>
     <button class="add-row-btn" onclick="addProtoRow()">+ Добавить добавку</button>
     <div style="margin-top:12px;">
-      <button class="topbtn primary" onclick="addDefaultProtocol()" style="font-size:11px;">⚡ Авто-протокол по последней сессии</button>
+      <button class="topbtn primary" onclick="addDefaultProtocol()" style="font-size:11px;">⚡ Базовый протокол по полу</button>
     </div>`;
 }
 function updateProto(idx,field,val){
@@ -1151,7 +1151,6 @@ function addProtoRow(){
 }
 function addDefaultProtocol(){
   const c=clients.find(x=>x.id===selectedId); if(!c) return;
-  const last=(c.sessions||[]).slice(-1)[0];
   const isMale = c.gender==='male';
   const base = isMale ? [
     {name:'Магний глицинат',dose:'300 мг',timing:'вечер',notes:'Сон, стресс, HRV'},
@@ -1164,7 +1163,10 @@ function addDefaultProtocol(){
     {name:'Витамин D3 + К2',dose:'2000 МЕ',timing:'утро',notes:'Проконтролировать уровень'},
     {name:'Цинк + селен',dose:'25 мг / 100 мкг',timing:'утро',notes:'Щитовидная, репродуктивное'},
   ];
-  if(last && last.score < 50) base.push({name:'Ашваганда KSM-66',dose:'300 мг',timing:'утро',notes:'Стресс, кортизол'});
+  // Ашваганда — по реальному сигналу: низкий HRV в последней биометрике (<40 мс = сниженная вариабельность/стресс).
+  const lastBio=(c.biometrics||[]).slice(-1)[0];
+  const hrv=lastBio?parseInt(lastBio.hrv):0;
+  if(hrv && hrv<40) base.push({name:'Ашваганда KSM-66',dose:'300 мг',timing:'утро',notes:'Низкий HRV — стресс, кортизол'});
   c.protocol = base; saveData(); renderTabContent();
 }
 
@@ -1428,22 +1430,29 @@ function exportData(){
 // ── PDF ───────────────────────────────────────────────────
 function generatePDF(id){
   const c=clients.find(x=>x.id===id); if(!c) return;
-  const last=(c.sessions||[]).slice(-1)[0];
   const labs=c.labs||{};
   const proto=(c.protocol||[]);
+  const bio=(c.biometrics||[]);
   const date=new Date().toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'});
+
+  // Расчётное окончание ведения
+  let endDate=c.end_date||'';
+  if(!endDate && c.start_date && c.duration_weeks){
+    const d=new Date(c.start_date); d.setDate(d.getDate()+parseInt(c.duration_weeks)*7);
+    endDate=d.toISOString().slice(0,10);
+  }
+  const progParts=[c.program, c.tier, c.price, c.format].filter(Boolean).join(' · ');
+  const dateParts=[c.start_date?'старт '+c.start_date:'', endDate?'до '+endDate:'', c.duration_weeks?c.duration_weeks+' нед.':''].filter(Boolean).join(' · ');
+
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
   <style>
     body{font-family:'Georgia',serif;color:#1a1a1a;max-width:700px;margin:0 auto;padding:40px 32px;font-size:14px;}
     h1{font-size:28px;font-weight:400;margin-bottom:4px;color:#1a1a1a;}
     .sub{color:#666;font-size:13px;margin-bottom:32px;}
     h2{font-size:16px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:#c4963c;margin:28px 0 12px;padding-bottom:6px;border-bottom:1px solid #e8e4de;}
-    .score-box{display:flex;align-items:center;gap:20px;background:#f8f6f2;border-radius:12px;padding:20px;margin-bottom:24px;}
-    .score-num{font-size:56px;font-family:'Courier New',monospace;font-weight:300;line-height:1;color:${last?(last.type==='ok'?'#4ECCA3':last.type==='warn'?'#F5A623':'#FF6B8A'):'#666'};}
-    .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
-    .m{background:#f8f6f2;border-radius:8px;padding:12px;text-align:center;}
-    .m-val{font-size:22px;font-family:'Courier New',monospace;font-weight:300;}
-    .m-lbl{font-size:10px;color:#666;letter-spacing:1.5px;text-transform:uppercase;margin-top:4px;}
+    .prog-box{background:#f8f6f2;border-radius:12px;padding:16px 20px;margin-bottom:24px;}
+    .prog-box .pl{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#999;margin-bottom:4px;}
+    .prog-box .pv{font-size:15px;}
     table{width:100%;border-collapse:collapse;}
     td,th{padding:8px 10px;text-align:left;border-bottom:1px solid #e8e4de;font-size:13px;}
     th{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#999;font-weight:400;}
@@ -1451,16 +1460,12 @@ function generatePDF(id){
     .note-date{font-size:11px;color:#999;margin-bottom:4px;}
     .footer{margin-top:40px;padding-top:16px;border-top:1px solid #e8e4de;font-size:11px;color:#999;text-align:center;}
   </style></head><body>
-  <h1>${c.name}</h1>
-  <div class="sub">${c.phase_label||''} · ${c.age||''}${c.age?' л.':''} · ${date}</div>
-  ${last?`<h2>Результат анализа</h2>
-  <div class="score-box"><div class="score-num">${last.score}</div><div><div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#999;">Readiness Score</div><div style="font-size:16px;margin-top:4px;">${last.score>=65?'Хорошее восстановление':last.score>=40?'Требует внимания':'Сигнал'}</div><div style="font-size:12px;color:#666;margin-top:2px;">${last.date}</div></div></div>
-  <div class="metrics">
-    <div class="m"><div class="m-val">${last.hrv||'—'}</div><div class="m-lbl">HRV мс</div></div>
-    <div class="m"><div class="m-val">${last.rhr||'—'}</div><div class="m-lbl">ЧСС уд/мин</div></div>
-    <div class="m"><div class="m-val">${last.sleep||'—'}</div><div class="m-lbl">Сон ч</div></div>
-    <div class="m"><div class="m-val">${last.energy||'—'}</div><div class="m-lbl">Энергия /10</div></div>
-  </div>`:''}
+  <h1>${esc(c.name)}</h1>
+  <div class="sub">${[c.phase_label, c.age?c.age+' л.':''].filter(Boolean).join(' · ')}${c.phase_label||c.age?' · ':''}${date}</div>
+  ${progParts?`<div class="prog-box"><div class="pl">Программа ведения</div><div class="pv">${esc(progParts)}</div>${dateParts?`<div style="font-size:12px;color:#666;margin-top:6px;">${esc(dateParts)}</div>`:''}</div>`:''}
+  ${bio.length?`<h2>Динамика биометрики</h2>
+  <table><thead><tr><th>Нед.</th><th>Дата</th><th>Сон</th><th>ЧСС</th><th>HRV</th><th>Шаги</th><th>Вес</th></tr></thead>
+  <tbody>${bio.map(b=>`<tr><td>${esc(String(b.week||''))}</td><td>${esc(b.date||'')}</td><td>${esc(String(b.sleep||'—'))}</td><td>${esc(String(b.rhr||'—'))}</td><td>${esc(String(b.hrv||'—'))}</td><td>${esc(String(b.steps||'—'))}</td><td>${esc(String(b.weight||'—'))}</td></tr>`).join('')}</tbody></table>`:''}
   ${proto.length?`<h2>Нутриентный протокол</h2>
   <table><thead><tr><th>Добавка</th><th>Доза</th><th>Время приёма</th><th>Примечание</th></tr></thead>
   <tbody>${proto.map(p=>`<tr><td>${p.name}</td><td>${p.dose}</td><td>${p.timing}</td><td style="color:#666;">${p.notes||''}</td></tr>`).join('')}</tbody></table>`:''}
