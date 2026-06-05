@@ -417,6 +417,11 @@ export default {
       });
     }
   },
+
+  // Cron Trigger (см. wrangler.jsonc "triggers.crons") — ежедневные напоминания клиентам.
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(runDailyReminders(env));
+  },
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -3620,6 +3625,99 @@ async function cabinetIngestIpAnalysis(env, code, data, analysisText, lang){
 
   await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?')
     .bind(JSON.stringify(d), Date.now(), code).run();
+}
+
+// ─────────────────────────────────────────────────────────────
+// БОТ-НАПОМИНАЛКА (Cron Trigger) — раз в день обходит активные карточки и шлёт
+// клиентам напоминания в их ТГ-личку через care-бота. Триггеры:
+//  • Zoom за 24 ч / в день встречи; • запрос данных за 24 ч / в день (PDF-формат);
+//  • «нет данных N дней» — мягкий пинг. Дедуп: пометки в самой карточке (reminded_*,
+//  last_data_nudge). Отправить можно только тем, у кого есть care-чат (нажал /start
+//  у бота) — остальные пропускаются (Telegram не даёт писать первым).
+// ─────────────────────────────────────────────────────────────
+const REMIND_NO_DATA_DAYS = 5;
+
+function daysBetweenISO(a, b){
+  const da = new Date(a + 'T00:00:00Z'), db = new Date(b + 'T00:00:00Z');
+  return Math.round((db - da) / 86400000);
+}
+
+// code → topicId (code_topic) → clientId+lang (care_client / care_lang). null если чата нет.
+async function resolveClientChat(env, code){
+  if(!env.EXPERT_DRAFTS || !code) return null;
+  const topicId = await env.EXPERT_DRAFTS.get('code_topic:' + String(code).toUpperCase());
+  if(!topicId) return null;
+  const raw = await env.EXPERT_DRAFTS.get('care_client:' + topicId);
+  if(!raw) return null;
+  let r = null; try{ r = JSON.parse(raw); }catch(_){ return null; }
+  if(!r.clientId) return null;
+  const lang = (await env.EXPERT_DRAFTS.get('care_lang:' + r.clientId)) || r.lang || 'en';
+  return { clientId: r.clientId, lang, topicId };
+}
+
+// Шлёт клиенту (с переводом на его язык) + кладёт копию в топик нутрициолога для прозрачности.
+async function sendClientReminder(env, ctx, ruText){
+  let out = ruText;
+  if(ctx.lang !== 'ru' && ctx.lang !== 'uk'){
+    try{ out = await careTranslate(env, ruText, 'ru', ctx.lang); }catch(_){}
+  }
+  await careSend(env, ctx.clientId, out);
+  if(ctx.topicId){
+    await careSend(env, env.NUTRITIONIST_GROUP_ID, '🔔 Бот напомнил клиенту: ' + ruText, { message_thread_id: Number(ctx.topicId) });
+  }
+}
+
+async function runDailyReminders(env){
+  if(!env.DB) return;
+  const todayStr    = new Date().toISOString().slice(0,10);
+  const tomorrow    = new Date(); tomorrow.setUTCDate(tomorrow.getUTCDate()+1);
+  const tomorrowStr = tomorrow.toISOString().slice(0,10);
+
+  let results = [];
+  try{
+    const q = await env.DB.prepare("SELECT code,data FROM clients WHERE status IN ('active','new')").all();
+    results = q.results || [];
+  }catch(_){ return; }
+
+  for(const row of results){
+    let d = {}; try{ d = JSON.parse(row.data || '{}'); }catch(_){ continue; }
+    const cc = await resolveClientChat(env, row.code);
+    if(!cc) continue;                                   // нет care-чата — написать нельзя
+    let changed = false;
+
+    // 1+2+4 — точки расписания (Zoom/PDF) за 24 ч и в день встречи
+    for(const s of (d.schedule || [])){
+      if(!s.date || s.done) continue;
+      const isZoom = s.type === 'zoom' || s.type === 'once';
+      if(s.date === tomorrowStr && !s.reminded_24h){
+        await sendClientReminder(env, cc, isZoom
+          ? `Напоминание: завтра у нас онлайн-встреча.${s.link ? ' Ссылка: ' + s.link : ''}`
+          : `Напоминание: завтра готовлю ваш персональный разбор. Пришлите, пожалуйста, свежие данные с устройства и пару слов о самочувствии.`);
+        s.reminded_24h = true; changed = true;
+      }
+      if(s.date === todayStr && !s.reminded_day){
+        await sendClientReminder(env, cc, isZoom
+          ? `Сегодня у нас онлайн-встреча.${s.link ? ' Ссылка: ' + s.link : ''} До скорого!`
+          : `Сегодня готовлю ваш разбор — спасибо, что присылаете данные.`);
+        s.reminded_day = true; changed = true;
+      }
+    }
+
+    // 3 — «нет данных N дней»: последняя биометрика старше порога + не пинговали недавно
+    const lastBio = (d.biometrics || []).slice(-1)[0];
+    const sinceData  = lastBio?.date ? daysBetweenISO(lastBio.date, todayStr) : 999;
+    const sinceNudge = d.last_data_nudge ? daysBetweenISO(d.last_data_nudge, todayStr) : 999;
+    if(sinceData >= REMIND_NO_DATA_DAYS && sinceNudge >= REMIND_NO_DATA_DAYS){
+      await sendClientReminder(env, cc,
+        `Давно не было ваших данных — как самочувствие? Пришлите, пожалуйста, свежие показатели (шаги, сон, пульс), чтобы я продолжил вести вас точно.`);
+      d.last_data_nudge = todayStr; changed = true;
+    }
+
+    if(changed){
+      try{ await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?')
+        .bind(JSON.stringify(d), Date.now(), row.code).run(); }catch(_){}
+    }
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
