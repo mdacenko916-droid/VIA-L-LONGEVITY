@@ -321,11 +321,21 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 .metric-card,.session-row,.lab-card,.note-item,.modal,.gate-box{border:1px solid #cfcfcf !important;}
 /* маркер-панель */
 .mkr-bar{display:flex;align-items:center;gap:3px;border-left:1px solid var(--b1);margin-left:4px;padding-left:8px;}
-.mkr-label{font-size:11px;color:var(--t3);margin-right:2px;}
 .mkr-swatch{width:16px;height:16px;border:2px solid transparent;cursor:pointer;padding:0;flex-shrink:0;display:inline-block;}
 .mkr-swatch.active{border-color:#000 !important;}
 .mkr-erase{width:16px;height:16px;border:2px solid transparent;cursor:pointer;padding:0;flex-shrink:0;background:var(--surface-3);font-size:10px;line-height:12px;}
 .mkr-erase.active{border-color:#000 !important;}
+.mkr-mode{background:none;border:1px solid var(--b1);cursor:pointer;font-size:11px;padding:1px 5px;color:var(--t3);line-height:1.4;font-weight:400;}
+.mkr-mode.active{border-color:#000;color:#000;font-weight:700;}
+.mkr-div{width:1px;height:14px;background:var(--b1);margin:0 2px;flex-shrink:0;}
+/* заливка — синий */
+.marked-b{border-left:4px solid #42a5f5 !important;background:#e3f2fd !important;}
+/* цвет текста (тёмные читаемые версии) */
+.tc-y,.tc-y *{color:#c47d00 !important;}
+.tc-g,.tc-g *{color:#2e7d32 !important;}
+.tc-o,.tc-o *{color:#bf5000 !important;}
+.tc-r,.tc-r *{color:#c62828 !important;}
+.tc-b,.tc-b *{color:#1565c0 !important;}
 /* выделение маркером — левая полоса + фон */
 .marked-y{border-left:4px solid #fdd835 !important;background:#fffde7 !important;}
 .marked-g{border-left:4px solid #66bb6a !important;background:#f1f8e9 !important;}
@@ -360,13 +370,16 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
       <button class="topbtn primary" onclick="openAddClient()">+ Новый клиент</button>
       <button class="topbtn" onclick="migrateLocal()" title="Импорт из старого локального хранилища в базу">⇪ Импорт</button>
       <button class="topbtn" onclick="exportData()">↓ Экспорт</button>
-      <div class="mkr-bar" title="Маркер: выберите цвет, затем кликайте на любой элемент">
-        <span class="mkr-label">🖍</span>
-        <button type="button" id="mkr-y" class="mkr-swatch" onclick="setMarker('y')" title="Жёлтый" style="background:#fdd835;"></button>
+      <div class="mkr-bar" title="🖍 — заливка фона · A — цвет текста · выберите режим, затем цвет, кликайте на элемент">
+        <button type="button" id="mkr-mode-fill" class="mkr-mode active" onclick="setMarkerMode('fill')" title="Режим: заливка фона">🖍</button>
+        <button type="button" id="mkr-mode-text" class="mkr-mode" onclick="setMarkerMode('text')" title="Режим: цвет текста">A</button>
+        <div class="mkr-div"></div>
+        <button type="button" id="mkr-y" class="mkr-swatch" onclick="setMarker('y')" title="Жёлтый / Янтарный" style="background:#fdd835;"></button>
         <button type="button" id="mkr-g" class="mkr-swatch" onclick="setMarker('g')" title="Зелёный" style="background:#66bb6a;"></button>
         <button type="button" id="mkr-o" class="mkr-swatch" onclick="setMarker('o')" title="Оранжевый" style="background:#ffa726;"></button>
         <button type="button" id="mkr-r" class="mkr-swatch" onclick="setMarker('r')" title="Красный" style="background:#ef5350;"></button>
-        <button type="button" id="mkr-e" class="mkr-erase" onclick="setMarker('e')" title="Ластик — снять выделение">✕</button>
+        <button type="button" id="mkr-b" class="mkr-swatch" onclick="setMarker('b')" title="Синий" style="background:#42a5f5;"></button>
+        <button type="button" id="mkr-e" class="mkr-erase" onclick="setMarker('e')" title="Ластик — снять всё выделение с элемента">✕</button>
       </div>
       <button class="topbtn" onclick="lockApp()" title="Выйти">⎋</button>
     </div>
@@ -769,14 +782,20 @@ function labStatus(val,f){
   return '<span class="lab-status" style="color:var(--ok)">✓ В норме</span>';
 }
 // ── ГЛОБАЛЬНЫЙ МАРКЕР ────────────────────────────────────
-// Один инструмент для всего кабинета: выбираешь цвет в топбаре,
-// кликаешь на любой элемент (анализ, сессия, строка протокола, заметка) → выделяется.
-// Повторный клик тем же цветом или ластик — снимает. Хранится в c.marks.
+// Режим 🖍 (fill) — заливка фона. Режим A (text) — цвет текста.
+// Выбрать режим → выбрать цвет → кликать на элементы. Хранится в c.marks.
 let markerColor = '';
+let markerMode  = 'fill'; // 'fill' | 'text'
+
+function setMarkerMode(mode){
+  markerMode = mode;
+  document.getElementById('mkr-mode-fill').classList.toggle('active', mode==='fill');
+  document.getElementById('mkr-mode-text').classList.toggle('active', mode==='text');
+}
 
 function setMarker(col){
   markerColor = (markerColor === col) ? '' : col;
-  ['y','g','o','r'].forEach(k=>{
+  ['y','g','o','r','b'].forEach(k=>{
     const b = document.getElementById('mkr-'+k);
     if(b) b.classList.toggle('active', markerColor===k);
   });
@@ -792,15 +811,22 @@ function markEl(e, type, id){
   e.stopPropagation();
   const c = clients.find(x=>x.id===selectedId); if(!c) return;
   if(!c.marks) c.marks={};
-  const key = type+'_'+id;
-  if(markerColor==='e' || c.marks[key]===markerColor){ delete c.marks[key]; }
-  else { c.marks[key] = markerColor; }
+  if(markerColor==='e'){
+    // ластик снимает и заливку и цвет текста
+    delete c.marks[type+'_'+id];
+    delete c.marks[type+'_'+id+'_tc'];
+  } else {
+    const key = markerMode==='text' ? type+'_'+id+'_tc' : type+'_'+id;
+    if(c.marks[key]===markerColor){ delete c.marks[key]; }
+    else { c.marks[key] = markerColor; }
+  }
   saveData(); renderTabContent();
 }
 
 function mkCls(marks, key){
-  const col = (marks||{})[key];
-  return col ? ' marked-'+col : '';
+  const fc = (marks||{})[key];
+  const tc = (marks||{})[key+'_tc'];
+  return (fc ? ' marked-'+fc : '') + (tc ? ' tc-'+tc : '');
 }
 
 function labCard(f, labs, marks){
