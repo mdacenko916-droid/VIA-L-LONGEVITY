@@ -3704,6 +3704,16 @@ async function cabinetDeleteCalLead(env, uid){
 // ─────────────────────────────────────────────────────────────
 const REMIND_NO_DATA_DAYS = 5;
 
+// Ссылка на интерпретатор клиента по тарифу (куда «пройти шаги ИП»). Только для
+// ИП-клиентов (product='interpreter'); site-программы ИП не проходят.
+function ipLinkFor(product, tier){
+  if(product !== 'interpreter') return '';
+  const t = String(tier || '').toUpperCase();
+  if(t.includes('ELITE'))  return 'https://via-l.com/interpreter/interpreter-elite.html';
+  if(t.includes('EXPERT')) return 'https://via-l.com/interpreter/interpreter-pro-expert.html';
+  return 'https://via-l.com/interpreter';
+}
+
 function daysBetweenISO(a, b){
   const da = new Date(a + 'T00:00:00Z'), db = new Date(b + 'T00:00:00Z');
   return Math.round((db - da) / 86400000);
@@ -3742,7 +3752,7 @@ async function runDailyReminders(env){
 
   let results = [];
   try{
-    const q = await env.DB.prepare("SELECT code,data FROM clients WHERE status IN ('active','new')").all();
+    const q = await env.DB.prepare("SELECT code,data,product,tier FROM clients WHERE status IN ('active','new')").all();
     results = q.results || [];
   }catch(_){ return; }
 
@@ -3752,6 +3762,14 @@ async function runDailyReminders(env){
     if(!cc) continue;                                   // нет care-чата — написать нельзя
     let changed = false;
 
+    // ИП-клиент проходит шаги в интерпретаторе (импорт с устройства + анализ) —
+    // данные сами улетают в кабинет. Он НИЧЕГО не присылает и не знает про PDF
+    // (PDF готовит нутрициолог). Поэтому для ИП зовём пройти ИП со ссылкой;
+    // site-программы интерпретатор не проходят → нейтрально про самочувствие.
+    const isIp   = row.product === 'interpreter';
+    const ipLink = ipLinkFor(row.product, row.tier);
+    const ipCall = ipLink ? ` Пройдите, пожалуйста, шаги в интерпретаторе (импорт данных с устройства + анализ) — это пара минут, а данные сами придут ко мне: ${ipLink}` : '';
+
     // 1+2+4 — точки расписания (Zoom/PDF) за 24 ч и в день встречи.
     // Тон — ЗАБОТА (ключевая ценность VIA-L): тепло, поддержка, без давления.
     for(const s of (d.schedule || [])){
@@ -3760,24 +3778,29 @@ async function runDailyReminders(env){
       if(s.date === tomorrowStr && !s.reminded_24h){
         await sendClientReminder(env, cc, isZoom
           ? `Здравствуйте! 🌿 С заботой напоминаю: завтра у нас с вами онлайн-встреча, я очень жду нашего разговора.${s.link ? ' Ссылка для подключения: ' + s.link : ''} Берегите себя.`
-          : `Здравствуйте! 🌿 Завтра я подготовлю для вас персональный разбор. Если будет несложно, поделитесь свежими данными с устройства и парой слов о самочувствии — так я смогу позаботиться о вас точнее. Спасибо вам.`);
+          : (isIp
+              ? `Здравствуйте! 🌿 Завтра я подготовлю для вас персональный разбор.${ipCall} Спасибо вам, берегите себя!`
+              : `Здравствуйте! 🌿 Завтра я подготовлю для вас персональный разбор. Поделитесь, пожалуйста, парой слов о самочувствии — так я смогу позаботиться о вас точнее. Спасибо вам.`));
         s.reminded_24h = true; changed = true;
       }
       if(s.date === todayStr && !s.reminded_day){
         await sendClientReminder(env, cc, isZoom
           ? `Доброе утро! 🌿 Сегодня у нас онлайн-встреча — я уже готовлюсь к нашему разговору.${s.link ? ' Ссылка: ' + s.link : ''} До скорой встречи, берегите себя!`
-          : `Доброе утро! 🌿 Сегодня готовлю ваш разбор. Спасибо, что заботитесь о себе и делитесь данными — это очень помогает мне вести вас бережно.`);
+          : (isIp
+              ? `Доброе утро! 🌿 Сегодня готовлю ваш разбор. Если ещё не успели — пройдите шаги в интерпретаторе, чтобы я учёл свежие данные:${ipLink ? ' ' + ipLink : ''} Спасибо, что заботитесь о себе!`
+              : `Доброе утро! 🌿 Сегодня готовлю ваш разбор. Спасибо, что вы со мной — поделитесь, как ваше самочувствие.`));
         s.reminded_day = true; changed = true;
       }
     }
 
-    // 3 — «нет данных N дней»: мягкая забота, без упрёка и давления.
+    // 3 — «нет данных N дней»: мягкая забота, без упрёка. Для ИП — зовём пройти ИП.
     const lastBio = (d.biometrics || []).slice(-1)[0];
     const sinceData  = lastBio?.date ? daysBetweenISO(lastBio.date, todayStr) : 999;
     const sinceNudge = d.last_data_nudge ? daysBetweenISO(d.last_data_nudge, todayStr) : 999;
     if(sinceData >= REMIND_NO_DATA_DAYS && sinceNudge >= REMIND_NO_DATA_DAYS){
-      await sendClientReminder(env, cc,
-        `Здравствуйте! 🌿 Давно не было от вас вестей — как ваше самочувствие? Поделитесь, пожалуйста, свежими показателями (шаги, сон, пульс), когда будет удобно. Я рядом и забочусь о вашем результате.`);
+      await sendClientReminder(env, cc, isIp
+        ? `Здравствуйте! 🌿 Давно не было ваших данных — как самочувствие? Когда будет удобно, пройдите шаги в интерпретаторе, чтобы я продолжил вести вас точно:${ipLink ? ' ' + ipLink : ''} Я рядом и забочусь о вашем результате.`
+        : `Здравствуйте! 🌿 Давно не было от вас вестей — как ваше самочувствие? Поделитесь, пожалуйста, когда будет удобно. Я рядом и забочусь о вашем результате.`);
       d.last_data_nudge = todayStr; changed = true;
     }
 
