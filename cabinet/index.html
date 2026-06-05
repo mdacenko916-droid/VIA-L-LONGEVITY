@@ -745,8 +745,12 @@ function labStatus(val,f){
   return '<span class="lab-status" style="color:var(--ok)">✓ В норме</span>';
 }
 function labCard(f, labs){
-  return `<div class="lab-card">
-    <div class="lab-name">${f.name}</div>
+  const mk = labs[f.id+'_m'];
+  return `<div class="lab-card" style="${mk?'border-color:var(--alert);background:var(--alert-dim);':''}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div class="lab-name">${f.name}</div>
+      <button onclick="toggleLabMark('${f.id}')" title="Отметить красным" style="background:none;border:none;cursor:pointer;font-size:15px;padding:0;line-height:1;color:${mk?'var(--alert)':'var(--b2)'};">⚑</button>
+    </div>
     <div style="display:flex;align-items:baseline;gap:6px;">
       <input class="lab-input" type="number" value="${labs[f.id]||''}" placeholder="—"
         onchange="updateLab('${f.id}',this.value)" style="width:80px;">
@@ -755,6 +759,12 @@ function labCard(f, labs){
     <div class="lab-ref">Норма: ${f.ref}</div>
     ${labStatus(labs[f.id],f)}
   </div>`;
+}
+function toggleLabMark(id){
+  const c=clients.find(x=>x.id===selectedId); if(!c) return;
+  if(!c.labs) c.labs={};
+  c.labs[id+'_m'] = c.labs[id+'_m'] ? 0 : 1;
+  saveData(); renderTabContent();
 }
 function renderLabs(c){
   const labs = c.labs||{};
