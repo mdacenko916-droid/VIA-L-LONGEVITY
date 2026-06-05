@@ -1004,26 +1004,38 @@ function autoGenSchedule(){
 // ── BREAKDOWNS TAB ──────────────────────────────────────────
 function renderBreakdowns(c){
   const bd = c.breakdowns || [];
-  const statusLabel = {draft:'Черновик',sent:'Отправлен',approved:'Утверждён'};
-  const rows = bd.map((b,i)=>`
-    <tr>
+  const rows = bd.map((b,i)=>{
+    const isIp = b.source==='ip';
+    const srcBadge = isIp ? '<span style="font-size:10px;background:#e3f2fd;color:#1565c0;padding:1px 6px;border:1px solid #90caf9;white-space:nowrap;">📲 ИП</span> ' : '';
+    const main = `<tr>
       <td style="color:#888;">${i+1}</td>
       <td><input class="proto-input" type="date" value="${esc(b.date||'')}" oninput="updateBd(${i},'date',this.value)"></td>
-      <td><select style="background:transparent;border:none;outline:none;font-size:12px;font-family:inherit;" onchange="updateBd(${i},'type',this.value)">
+      <td>${srcBadge}<select style="background:transparent;border:none;outline:none;font-size:12px;font-family:inherit;" onchange="updateBd(${i},'type',this.value)">
         <option value="ai" ${b.type==='ai'?'selected':''}>ИИ-разбор</option>
         <option value="pdf" ${b.type==='pdf'?'selected':''}>PDF-отчёт</option>
         <option value="zoom" ${b.type==='zoom'?'selected':''}>Zoom-конспект</option>
       </select></td>
       <td><select style="background:transparent;border:none;outline:none;font-size:12px;font-family:inherit;" onchange="updateBd(${i},'status',this.value)">
+        <option value="received" ${b.status==='received'?'selected':''}>Получен</option>
         <option value="draft" ${b.status==='draft'?'selected':''}>Черновик</option>
         <option value="sent" ${b.status==='sent'?'selected':''}>Отправлен</option>
         <option value="approved" ${b.status==='approved'?'selected':''}>Утверждён</option>
       </select></td>
       <td><input class="proto-input" value="${esc(b.notes||'')}" oninput="updateBd(${i},'notes',this.value)" placeholder="заметка"></td>
       <td><button class="proto-del" onclick="deleteBd(${i})">×</button></td>
-    </tr>`).join('');
+    </tr>`;
+    const m = b.metrics||{};
+    const mLine = [m.hrv?'HRV '+m.hrv:'', m.rhr?'ЧСС '+m.rhr:'', m.energy?'Энергия '+m.energy:'', m.device?'· '+m.device:''].filter(Boolean).join(' · ');
+    const textRow = (isIp && b.text) ? `<tr><td colspan="6" style="padding:0 12px 12px;border-bottom:1px solid var(--b1);">
+      <details>
+        <summary style="cursor:pointer;font-size:12px;color:#1565c0;">Показать разбор ИП${mLine?' · '+esc(mLine):''}</summary>
+        <div style="white-space:pre-wrap;font-size:12px;line-height:1.6;background:#f8f8f8;border:1px solid #ddd;padding:10px 12px;margin-top:6px;">${esc(b.text)}</div>
+      </details></td></tr>` : '';
+    return main + textRow;
+  }).join('');
   return `
     <div class="section-title">Разборы ИИ и PDF-отчёты</div>
+    <p style="font-size:12px;color:#888;margin-bottom:12px;">Разборы с меткой 📲 ИП приходят автоматически из интерпретатора по коду доступа клиента.</p>
     <table class="protocol-table">
       <thead><tr><th>#</th><th>Дата</th><th>Тип</th><th>Статус</th><th>Заметки</th><th></th></tr></thead>
       <tbody>${rows}</tbody>

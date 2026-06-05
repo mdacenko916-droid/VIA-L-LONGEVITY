@@ -408,7 +408,7 @@ export default {
       if (path === '/cabinet/tg-send')     return handleCabinetTgSend(request, env, corsHeaders);
 
       // Default: AI-анализ для интерпретатора
-      return handleAnalyze(request, env, corsHeaders);
+      return handleAnalyze(request, env, corsHeaders, ctx);
 
     } catch (e) {
       return new Response(JSON.stringify({ error: e.message, stack: e.stack }), {
@@ -959,8 +959,8 @@ async function handleCalWebhook(request, env, corsHeaders) {
 // ─────────────────────────────────────────────────────────────
 // AI analyse endpoint (existing)
 // ─────────────────────────────────────────────────────────────
-async function handleAnalyze(request, env, corsHeaders) {
-  const { data, lang } = await request.json();
+async function handleAnalyze(request, env, corsHeaders, ctx) {
+  const { data, lang, code } = await request.json();
   const langMap = {
     ru: 'русском', uk: 'украинском', en: 'English', es: 'español',
     de: 'Deutsch', pt: 'português', fr: 'français', pl: 'polski',
@@ -1038,6 +1038,13 @@ async function handleAnalyze(request, env, corsHeaders) {
 
   const result = await response.json();
   const text = result.content?.[0]?.text || result.error?.message || 'Ошибка генерации';
+
+  // Ингест в карточку кабинета: срез биометрики + ИИ-разбор. Привязка по коду доступа.
+  // UPDATE-only (карточка должна уже существовать = EXPERT/ELITE, созданная при оплате):
+  // VIO/PRO/анонимные прогоны без карточки игнорируются. В фоне — не задерживает ответ клиенту.
+  if (code && env.DB && text && ctx) {
+    ctx.waitUntil(cabinetIngestIpAnalysis(env, code, data, text, lang).catch(() => {}));
+  }
 
   return new Response(JSON.stringify({ analysis: text }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -3572,6 +3579,47 @@ async function cabinetUpsertFromPayment(env, { code, name, email, lang, product,
       price||'', meta.format, meta.duration, JSON.stringify(data), now, now
     ).run();
   } catch(_){}
+}
+
+// Ингест данных ИП-интерпретатора в карточку кабинета (вызывается из handleAnalyze).
+// Привязка по коду доступа EXPERT/ELITE. UPDATE-only: если карточки нет — выходим
+// (VIO/PRO/анонимные прогоны карточку не создают). Кладём: (1) недельный срез
+// биометрики чистым маппингом ИП→кабинет (дедуп — один срез в день); (2) лог
+// ИИ-разбора с полным текстом + ИП-метрики для контекста нутрициолога.
+async function cabinetIngestIpAnalysis(env, code, data, analysisText, lang){
+  if(!env.DB || !code) return;
+  data = data || {};
+  code = String(code).toUpperCase();
+  const row = await env.DB.prepare('SELECT data FROM clients WHERE code=?').bind(code).first();
+  if(!row) return;
+  let d = {};
+  try{ d = JSON.parse(row.data || '{}'); }catch(_){}
+  const today = new Date().toISOString().slice(0,10);
+
+  // (1) Недельный срез биометрики — только чистый маппинг (hrv/rhr/weight). Один срез в день.
+  if(!Array.isArray(d.biometrics)) d.biometrics = [];
+  if(!d.biometrics.some(b => b.date === today)){
+    const prevWeek = d.biometrics.length ? (parseInt(d.biometrics[d.biometrics.length-1].week) || d.biometrics.length) : 0;
+    d.biometrics.push({
+      week: prevWeek + 1, date: today,
+      sleep:'', rhr: data.rhr || '', hrv: data.hrv || '', steps:'', weight: data.weight || '',
+    });
+  }
+
+  // (2) Лог ИИ-разбора. Полный срез ИП — в metrics (контекст для нутрициолога).
+  if(!Array.isArray(d.breakdowns)) d.breakdowns = [];
+  d.breakdowns.push({
+    date: today, type:'ai', status:'received', source:'ip', lang: lang || '',
+    text: String(analysisText).slice(0, 6000),
+    metrics: {
+      hrv:data.hrv||'', rhr:data.rhr||'', sleep_qual:data.sleep_qual||'', energy:data.energy||'',
+      anxiety:data.anxiety||'', temp:data.temp||'', weight:data.weight||'', device:data.device||'',
+    },
+  });
+  if(d.breakdowns.length > 50) d.breakdowns = d.breakdowns.slice(-50);
+
+  await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?')
+    .bind(JSON.stringify(d), Date.now(), code).run();
 }
 
 // ─────────────────────────────────────────────────────────────
