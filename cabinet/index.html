@@ -382,6 +382,8 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
     <div class="topbar-logo">VIA·L &mdash; Cabinet</div>
     <div class="topbar-actions">
       <button class="topbtn" id="mobileMenuBtn" style="display:none;" onclick="toggleSidebar()">☰ Клиенты</button>
+      <button class="topbtn" id="viewClientsBtn" onclick="switchView('clients')" style="font-weight:600;border-bottom:2px solid #000;">👥 Клиенты</button>
+      <button class="topbtn" id="viewCalendarBtn" onclick="switchView('calendar')">📅 Календарь</button>
       <button class="topbtn primary" onclick="openAddClient()">+ Новый клиент</button>
       <button class="topbtn" onclick="migrateLocal()" title="Импорт из старого локального хранилища в базу">⇪ Импорт</button>
       <button class="topbtn" onclick="exportData()">↓ Экспорт</button>
@@ -453,6 +455,9 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
       </div>
     </div>
   </div>
+
+  <!-- CALENDAR VIEW -->
+  <div id="calendarView" style="display:none;flex:1;overflow-y:auto;padding:24px;background:#fff;"></div>
 </div>
 
 <!-- ADD/EDIT CLIENT MODAL -->
@@ -722,6 +727,80 @@ function refreshList(){
 function filterClients(){
   listPage = 1;
   refreshList();
+}
+
+// ── VIEW SWITCH (Клиенты / Календарь) ─────────────────────
+function switchView(view){
+  const mainEl = document.querySelector('.main');
+  const calEl  = document.getElementById('calendarView');
+  const bClients = document.getElementById('viewClientsBtn');
+  const bCal     = document.getElementById('viewCalendarBtn');
+  const isCal = view==='calendar';
+  mainEl.style.display = isCal ? 'none' : '';
+  calEl.style.display  = isCal ? 'block' : 'none';
+  bClients.style.borderBottom = isCal ? '2px solid transparent' : '2px solid #000';
+  bClients.style.fontWeight   = isCal ? '400' : '600';
+  bCal.style.borderBottom     = isCal ? '2px solid #000' : '2px solid transparent';
+  bCal.style.fontWeight       = isCal ? '600' : '400';
+  if(isCal) renderCalendar();
+}
+
+// ── CALENDAR VIEW — агенда ближайших встреч из расписаний всех клиентов ──
+function renderCalendar(){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayStr = today.toISOString().slice(0,10);
+  // Собираем все точки расписания всех клиентов
+  const items = [];
+  for(const c of clients){
+    for(const s of (c.schedule||[])){
+      if(!s.date) continue;
+      items.push({ date:s.date, type:s.type||'zoom', done:!!s.done, notes:s.notes||'', link:s.link||'',
+        clientId:c.id, clientName:c.name||'Клиент', program:c.program||'', status:c.status||'active',
+        hrv:(c.biometrics||[]).slice(-1)[0]?.hrv||'' });
+    }
+  }
+  // Только будущие/сегодня и невыполненные — то, что впереди
+  const upcoming = items.filter(i=>i.date>=todayStr && !i.done).sort((a,b)=>a.date.localeCompare(b.date));
+
+  // Группировка по близости
+  const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
+  const tomorrowStr = tomorrow.toISOString().slice(0,10);
+  const weekEnd = new Date(today); weekEnd.setDate(weekEnd.getDate()+7);
+  const weekEndStr = weekEnd.toISOString().slice(0,10);
+  const groups = { today:[], tomorrow:[], week:[], later:[] };
+  for(const i of upcoming){
+    if(i.date===todayStr) groups.today.push(i);
+    else if(i.date===tomorrowStr) groups.tomorrow.push(i);
+    else if(i.date<=weekEndStr) groups.week.push(i);
+    else groups.later.push(i);
+  }
+
+  const typeLabel = t => t==='pdf'?'📄 PDF':t==='once'?'🎥 Разовая':'🎥 Zoom';
+  const itemRow = i => `
+    <div onclick="openFromCalendar('${i.clientId}')" style="display:flex;align-items:center;gap:14px;padding:10px 14px;border:1px solid #e0e0e0;margin-bottom:6px;cursor:pointer;background:#fff;">
+      <div style="font-family:monospace;font-size:13px;color:#555;width:90px;flex-shrink:0;">${i.date}</div>
+      <div style="font-size:12px;width:90px;flex-shrink:0;">${typeLabel(i.type)}</div>
+      <div style="flex:1;font-size:13px;font-weight:600;">${esc(i.clientName)}${i.program?`<span style="font-weight:400;color:#888;"> · ${esc(i.program)}</span>`:''}</div>
+      ${i.hrv?`<div style="font-size:11px;color:#888;">HRV ${esc(String(i.hrv))}</div>`:''}
+      ${i.notes?`<div style="font-size:11px;color:#888;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(i.notes)}</div>`:''}
+    </div>`;
+  const section = (title, arr) => arr.length ? `<div class="section-title" style="margin-top:18px;">${title} · ${arr.length}</div>${arr.map(itemRow).join('')}` : '';
+
+  const total = upcoming.length;
+  const el = document.getElementById('calendarView');
+  el.innerHTML = `
+    <div class="section-title">Календарь встреч</div>
+    <p style="font-size:12px;color:#888;margin-bottom:8px;">Ближайшие точки расписания всех клиентов. Клик — открыть карточку. Всего впереди: ${total}.</p>
+    ${total ? '' : '<p style="color:#999;font-size:13px;">Запланированных встреч нет. Расписание задаётся в карточке клиента (вкладка «Сессии»).</p>'}
+    ${section('🔴 Сегодня', groups.today)}
+    ${section('🟠 Завтра', groups.tomorrow)}
+    ${section('📅 На этой неделе', groups.week)}
+    ${section('… Позже', groups.later)}`;
+}
+function openFromCalendar(id){
+  switchView('clients');
+  selectClient(id);
+  switchTab('schedule');
 }
 
 // ── SELECT CLIENT ─────────────────────────────────────────
