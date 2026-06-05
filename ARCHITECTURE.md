@@ -480,6 +480,16 @@ function t(k){ return T[lang][k] || T.ru[k] || k; }   // fallback на ru
 
 ### Журнал выполненного (что уже в проде + `main`)
 
+- **2026-06-05** — Кабинет нутрициолога, **Этап 1 (фундамент)** — закрыты обе дыры прототипа.
+  Хранилище: новый **D1** `vial-cabinet` (id `b4ee9324…`, биндинг `env.DB`), схема
+  `interpreter/cabinet-schema.sql` (таблица `clients`: поля шапки новой модели + JSON-колонка
+  `data` под досье вкладок до Этапов 2–4). Авторизация: пароль ушёл из HTML в секрет
+  `CABINET_PASS`; воркер-маршруты `/cabinet-auth` (токен в `EXPERT_DRAFTS` `cabinet_sess:*`,
+  TTL 12ч, rate-limit 8/10мин по IP) + `/cabinet/clients|save|delete` (Bearer-проверка, D1
+  upsert по `code`); в CORS добавлен `Authorization`. Фронт `cabinet/index.html`: gate бьёт в
+  воркер, CRUD через D1, кнопка «⇪ Імпорт» для разовой миграции из localStorage. Воркер
+  задеплоен, эндпоинты прогнаны живым смоук-тестом (auth/list/save/delete). Спека —
+  `docs/CABINET-MODEL.md`; следующий — Этап 2 (ингест анкет в D1).
 - **2026-06-05** — KB мягкое обогащение из библиотеки Perry Academy (`Infa Cloude/books/`,
   план `LIBRARY-MAP.md`) — ВЫПОЛНЕНО полностью: физиология/образ-жизни/поведенческий фрейминг
   без новых доз/DOI, честная атрибуция (Shelby Harris, Laurie Mintz, Stacy Sims, Jayne Morgan,

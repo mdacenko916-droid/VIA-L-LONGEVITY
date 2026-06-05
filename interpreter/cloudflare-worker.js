@@ -344,7 +344,7 @@ export default {
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     };
 
     if (request.method === 'OPTIONS') {
@@ -398,6 +398,12 @@ export default {
 
       // Цифровая анкета здоровья (book/anketa) → структурированная карточка в топик клиента
       if (path === '/anketa-submit')    return handleAnketaSubmit(request, env, corsHeaders, ctx);
+
+      // Кабинет нутрициолога (CRM на D1) — см. docs/CABINET-MODEL.md
+      if (path === '/cabinet-auth')     return handleCabinetAuth(request, env, corsHeaders);
+      if (path === '/cabinet/clients')  return handleCabinetClients(request, env, corsHeaders);
+      if (path === '/cabinet/save')     return handleCabinetSave(request, env, corsHeaders);
+      if (path === '/cabinet/delete')   return handleCabinetDelete(request, env, corsHeaders);
 
       // Default: AI-анализ для интерпретатора
       return handleAnalyze(request, env, corsHeaders);
@@ -3465,4 +3471,109 @@ async function deliverAnketaProgram(env, intake, token, answers, lang, name, ema
     const t = ANKETA_MAIL[lang] || ANKETA_MAIL.en;
     await sendEmail(env, cEmail, t.subj, t.body(cName));
   }
+}
+
+// ─────────────────────────────────────────────────────────────
+// КАБИНЕТ НУТРИЦИОЛОГА — лёгкий CRM на D1. См. docs/CABINET-MODEL.md.
+// Этап 1: закрывает обе дыры прототипа — пароль уезжает из HTML в секрет
+// CABINET_PASS (проверка в воркере + сессия-токен в KV + rate-limit), а данные
+// клиентов переезжают из localStorage в D1 (env.DB). Источник правды = кабинет.
+// Защищённые маршруты /cabinet/* требуют заголовок `Authorization: Bearer <token>`.
+// ─────────────────────────────────────────────────────────────
+async function cabinetCheckAuth(request, env){
+  if(!env.EXPERT_DRAFTS) return false;
+  const h = request.headers.get('Authorization') || '';
+  const token = h.startsWith('Bearer ') ? h.slice(7) : '';
+  if(!token) return false;
+  return !!(await env.EXPERT_DRAFTS.get('cabinet_sess:' + token));
+}
+
+async function handleCabinetAuth(request, env, corsHeaders){
+  if(!env.CABINET_PASS || !env.EXPERT_DRAFTS){
+    return jsonResponse({ ok:false, error:'cabinet_not_configured' }, corsHeaders, 500);
+  }
+  // rate-limit: 8 неудачных попыток за 10 мин на IP
+  const ip      = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const failKey = 'cabinet_fail:' + ip;
+  const fails   = parseInt(await env.EXPERT_DRAFTS.get(failKey) || '0', 10);
+  if(fails >= 8) return jsonResponse({ ok:false, error:'rate_limited' }, corsHeaders, 429);
+
+  let body = {};
+  try { body = await request.json(); } catch(_){}
+  const pass = String(body.password || '');
+  if(pass !== env.CABINET_PASS){
+    await env.EXPERT_DRAFTS.put(failKey, String(fails + 1), { expirationTtl: 600 });
+    return jsonResponse({ ok:false, error:'bad_password' }, corsHeaders, 401);
+  }
+  await env.EXPERT_DRAFTS.delete(failKey);
+  const token = crypto.randomUUID().replace(/-/g,'') + crypto.randomUUID().replace(/-/g,'');
+  await env.EXPERT_DRAFTS.put('cabinet_sess:' + token, '1', { expirationTtl: 12 * 60 * 60 });
+  return jsonResponse({ ok:true, token }, corsHeaders);
+}
+
+// D1-строка → объект клиента (полное досье лежит в JSON-колонке data; колонки —
+// зеркало для списка/поиска). Возвращаем плоский объект в форме, которую ждёт фронт.
+function cabinetRowToClient(r){
+  let data = {};
+  try { data = JSON.parse(r.data || '{}'); } catch(_){}
+  return {
+    ...data,
+    code:r.code, name:r.name, email:r.email, tg:r.tg, phone:r.phone, lang:r.lang,
+    product:r.product, program:r.program, tier:r.tier, duration_weeks:r.duration_weeks,
+    price:r.price, format:r.format, start_date:r.start_date, end_date:r.end_date,
+    status:r.status, gender:r.gender, age:r.age, phase:r.phase,
+    created_at:r.created_at, updated_at:r.updated_at,
+  };
+}
+
+async function handleCabinetClients(request, env, corsHeaders){
+  if(!await cabinetCheckAuth(request, env)) return jsonResponse({ ok:false, error:'unauthorized' }, corsHeaders, 401);
+  if(!env.DB) return jsonResponse({ ok:false, error:'d1_missing' }, corsHeaders, 500);
+  const { results } = await env.DB.prepare('SELECT * FROM clients ORDER BY updated_at DESC').all();
+  return jsonResponse({ ok:true, clients:(results || []).map(cabinetRowToClient) }, corsHeaders);
+}
+
+async function handleCabinetSave(request, env, corsHeaders){
+  if(!await cabinetCheckAuth(request, env)) return jsonResponse({ ok:false, error:'unauthorized' }, corsHeaders, 401);
+  if(!env.DB) return jsonResponse({ ok:false, error:'d1_missing' }, corsHeaders, 500);
+
+  let c = {};
+  try { c = (await request.json()).client || {}; } catch(_){}
+  const code = String(c.code || c.id || '');           // до Этапа 2 код = id прототипа
+  if(!code) return jsonResponse({ ok:false, error:'no_code' }, corsHeaders, 400);
+
+  const now  = Date.now();
+  const data = JSON.stringify(c);                       // полное досье целиком
+  const age  = (c.age === '' || c.age == null) ? null : parseInt(c.age, 10);
+  const dur  = (c.duration_weeks == null || c.duration_weeks === '') ? null : parseInt(c.duration_weeks, 10);
+
+  await env.DB.prepare(`
+    INSERT INTO clients
+      (code,name,email,tg,phone,lang,product,program,tier,duration_weeks,price,format,
+       start_date,end_date,status,gender,age,phase,data,created_at,updated_at)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    ON CONFLICT(code) DO UPDATE SET
+      name=excluded.name, email=excluded.email, tg=excluded.tg, phone=excluded.phone, lang=excluded.lang,
+      product=excluded.product, program=excluded.program, tier=excluded.tier, duration_weeks=excluded.duration_weeks,
+      price=excluded.price, format=excluded.format, start_date=excluded.start_date, end_date=excluded.end_date,
+      status=excluded.status, gender=excluded.gender, age=excluded.age, phase=excluded.phase,
+      data=excluded.data, updated_at=excluded.updated_at
+  `).bind(
+    code, c.name||'', c.email||'', c.tg||'', c.phone||'', c.lang||'',
+    c.product||'', c.program||'', c.tier||'', dur, c.price||'', c.format||'',
+    c.start_date||'', c.end_date||'', c.status||'active', c.gender||'', age, c.phase||'',
+    data, c.created_at || now, now
+  ).run();
+
+  return jsonResponse({ ok:true, code }, corsHeaders);
+}
+
+async function handleCabinetDelete(request, env, corsHeaders){
+  if(!await cabinetCheckAuth(request, env)) return jsonResponse({ ok:false, error:'unauthorized' }, corsHeaders, 401);
+  if(!env.DB) return jsonResponse({ ok:false, error:'d1_missing' }, corsHeaders, 500);
+  let code = '';
+  try { const b = await request.json(); code = String(b.code || b.id || ''); } catch(_){}
+  if(!code) return jsonResponse({ ok:false, error:'no_code' }, corsHeaders, 400);
+  await env.DB.prepare('DELETE FROM clients WHERE code=?').bind(code).run();
+  return jsonResponse({ ok:true }, corsHeaders);
 }
