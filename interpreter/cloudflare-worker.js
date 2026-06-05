@@ -940,6 +940,14 @@ async function handleCalWebhook(request, env, corsHeaders) {
 
   await sendTelegram(env, card);
 
+  // Реальная бронь → карточка кабинета (по email). Календарь покажет фактический Zoom.
+  if (att.email) {
+    await cabinetIngestCalBooking(env, {
+      email: att.email, ev, uid: p.uid || p.bookingId || '',
+      startTime: p.startTime, title: p.title || '', url,
+    });
+  }
+
   // Анкета клиенту: только при СОЗДАНИИ брони и только для сессии (≥45 мин) — 15-мин
   // знакомство анкету не получает. Длительность из start/end (не зависит от названия
   // event type); запасной гейт — «60» в названии/слаге. Падение письма брони не ломает.
@@ -3625,6 +3633,40 @@ async function cabinetIngestIpAnalysis(env, code, data, analysisText, lang){
 
   await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?')
     .bind(JSON.stringify(d), Date.now(), code).run();
+}
+
+// Ингест реальной Cal.com-брони в карточку (вызов из handleCalWebhook). Привязка
+// по email. Пишем в c.schedule с source='cal' + cal_uid (для апдейта при переносе/
+// отмене). Так календарь кабинета показывает ФАКТИЧЕСКИЕ Zoom, а не только план.
+// Нет карточки с таким email → выходим (знакомство до оплаты / внешний бронирующий).
+async function cabinetIngestCalBooking(env, b){
+  if(!env.DB || !b.email) return;
+  let row = null;
+  try{ row = await env.DB.prepare('SELECT code,data FROM clients WHERE lower(email)=lower(?) LIMIT 1').bind(b.email).first(); }catch(_){}
+  if(!row) return;
+  let d = {}; try{ d = JSON.parse(row.data || '{}'); }catch(_){ return; }
+  if(!Array.isArray(d.schedule)) d.schedule = [];
+  const uid     = b.uid || (b.startTime + '|' + b.email);
+  const date    = (b.startTime || '').slice(0,10);
+  const timeStr = b.startTime ? (new Date(b.startTime).toISOString().slice(11,16) + ' UTC') : '';
+  const idx = d.schedule.findIndex(s => s.cal_uid && s.cal_uid === uid);
+
+  if(b.ev === 'BOOKING_CANCELLED'){
+    if(idx < 0) return;
+    d.schedule[idx].cancelled = true;
+    d.schedule[idx].notes = 'Отменена (Cal.com)';
+  } else {
+    const entry = {
+      date, type:'zoom', done:false, link: b.url || '', source:'cal', cal_uid: uid,
+      cancelled:false, notes: ['Cal.com', timeStr, b.title].filter(Boolean).join(' · '),
+    };
+    if(idx >= 0) d.schedule[idx] = { ...d.schedule[idx], ...entry };
+    else d.schedule.push(entry);
+  }
+  // упорядочим по дате — календарь и вкладка «Сессии» читают как есть
+  d.schedule.sort((a,c) => String(a.date||'').localeCompare(String(c.date||'')));
+  try{ await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?')
+    .bind(JSON.stringify(d), Date.now(), row.code).run(); }catch(_){}
 }
 
 // ─────────────────────────────────────────────────────────────

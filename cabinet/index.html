@@ -754,13 +754,13 @@ function renderCalendar(){
   for(const c of clients){
     for(const s of (c.schedule||[])){
       if(!s.date) continue;
-      items.push({ date:s.date, type:s.type||'zoom', done:!!s.done, notes:s.notes||'', link:s.link||'',
+      items.push({ date:s.date, type:s.type||'zoom', done:!!s.done, cancelled:!!s.cancelled, source:s.source||'', notes:s.notes||'', link:s.link||'',
         clientId:c.id, clientName:c.name||'Клиент', program:c.program||'', status:c.status||'active',
         hrv:(c.biometrics||[]).slice(-1)[0]?.hrv||'' });
     }
   }
-  // Только будущие/сегодня и невыполненные — то, что впереди
-  const upcoming = items.filter(i=>i.date>=todayStr && !i.done).sort((a,b)=>a.date.localeCompare(b.date));
+  // Только будущие/сегодня, невыполненные и не отменённые — то, что впереди
+  const upcoming = items.filter(i=>i.date>=todayStr && !i.done && !i.cancelled).sort((a,b)=>a.date.localeCompare(b.date));
 
   // Группировка по близости
   const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
@@ -779,7 +779,7 @@ function renderCalendar(){
   const itemRow = i => `
     <div onclick="openFromCalendar('${i.clientId}')" style="display:flex;align-items:center;gap:14px;padding:10px 14px;border:1px solid #e0e0e0;margin-bottom:6px;cursor:pointer;background:#fff;">
       <div style="font-family:monospace;font-size:13px;color:#555;width:90px;flex-shrink:0;">${i.date}</div>
-      <div style="font-size:12px;width:90px;flex-shrink:0;">${typeLabel(i.type)}</div>
+      <div style="font-size:12px;width:90px;flex-shrink:0;">${typeLabel(i.type)}${i.source==='cal'?' <span style="font-size:9px;background:#e8f5e9;color:#2e7d32;padding:0 4px;border:1px solid #a5d6a7;">Cal</span>':''}</div>
       <div style="flex:1;font-size:13px;font-weight:600;">${esc(i.clientName)}${i.program?`<span style="font-weight:400;color:#888;"> · ${esc(i.program)}</span>`:''}</div>
       ${i.hrv?`<div style="font-size:11px;color:#888;">HRV ${esc(String(i.hrv))}</div>`:''}
       ${i.notes?`<div style="font-size:11px;color:#888;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(i.notes)}</div>`:''}
@@ -1039,10 +1039,11 @@ function addBioRow(){ const c=clients.find(x=>x.id===selectedId); if(!c)return; 
 function renderSchedule(c){
   const sched = c.schedule || [];
   const rows = sched.map((s,i)=>{
-    const doneCls = s.done ? ' class="sched-done"' : '';
+    const doneCls = (s.done || s.cancelled) ? ' class="sched-done"' : '';
+    const calBadge = s.source==='cal' ? '<span style="font-size:9px;background:#e8f5e9;color:#2e7d32;padding:0 4px;border:1px solid #a5d6a7;white-space:nowrap;">📅 Cal</span> ' : '';
     return `<tr${doneCls}>
       <td style="text-align:center;"><input type="checkbox" class="sched-check" ${s.done?'checked':''} onchange="updateSched(${i},'done',this.checked);renderTabContent()"></td>
-      <td style="color:#888;">${i+1}</td>
+      <td style="color:#888;">${calBadge}${i+1}</td>
       <td><input class="proto-input" type="date" value="${esc(s.date||'')}" oninput="updateSched(${i},'date',this.value)"></td>
       <td><select style="background:transparent;border:none;outline:none;font-size:12px;font-family:inherit;" onchange="updateSched(${i},'type',this.value)">
         <option value="zoom" ${s.type==='zoom'?'selected':''}>Zoom</option>
