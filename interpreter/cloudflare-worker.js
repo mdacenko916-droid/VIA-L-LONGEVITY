@@ -406,6 +406,7 @@ export default {
       if (path === '/cabinet/delete')      return handleCabinetDelete(request, env, corsHeaders);
       if (path === '/cabinet/ai-draft')    return handleCabinetAiDraft(request, env, corsHeaders);
       if (path === '/cabinet/tg-send')     return handleCabinetTgSend(request, env, corsHeaders);
+      if (path === '/cabinet/translate')   return handleCabinetTranslate(request, env, corsHeaders);
       if (path === '/cabinet/leads')       return handleCabinetLeads(request, env, corsHeaders);
 
       // Платформа, Шаг 2: пациент подключается к специалисту по его коду + согласие.
@@ -4001,8 +4002,32 @@ async function handleCabinetDelete(request, env, corsHeaders){
   return jsonResponse({ ok:true }, corsHeaders);
 }
 
+// Платформа, Шаг 5 (мост перевода). Имена языков для промпта + выбор модели
+// (he/ja/ko/ar → Sonnet, как в careTranslate и основном ИП — не откатывать, см. memory).
+const CAB_LANG_NAMES = {uk:'украинском',ru:'русском',en:'английском',es:'испанском',de:'немецком',pt:'португальском',fr:'французском',pl:'польском',it:'итальянском',he:'иврите',ja:'японском',ko:'корейском'};
+function cabModelForLang(l){ return ['he','ja','ko','ar'].includes(l) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001'; }
+async function cabSpecialistLang(env, sess){
+  if(!env.DB || !sess) return 'ru';
+  try{ const sp = await env.DB.prepare('SELECT lang FROM specialists WHERE id=?').bind(sess.id).first(); return (sp && sp.lang) || 'ru'; }catch(_){ return 'ru'; }
+}
+
+// Шаг 5: перевод произвольного текста на язык вошедшего специалиста (кнопки «Перевести»
+// на анкете/переписке). Движок — careTranslate (тот же роутинг модели).
+async function handleCabinetTranslate(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  if(!env.CLAUDE_API_KEY) return jsonResponse({ok:false,error:'no_claude_key'}, corsHeaders, 500);
+  let b={}; try{ b=await request.json(); }catch(_){}
+  const text = String(b.text||'');
+  if(!text) return jsonResponse({ok:false,error:'no_text'}, corsHeaders, 400);
+  const to   = String(b.to||'').trim() || await cabSpecialistLang(env, sess);
+  const from = String(b.from||'').trim();
+  const translated = await careTranslate(env, text, from, to);
+  return jsonResponse({ok:true, text:translated, to}, corsHeaders);
+}
+
 // Этап 4: ИИ-черновик ответа клиенту (для нутрициолога, в кабинете).
-// Собирает контекст из D1 (анкета, биометрия, последние сообщения) и генерирует черновик через Claude Haiku.
+// Шаг 5: черновик генерируется на ЯЗЫКЕ ВОШЕДШЕГО специалиста (владелец ru → как раньше).
 async function handleCabinetAiDraft(request, env, corsHeaders){
   const sess = await cabinetSession(request, env);
   if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
@@ -4013,6 +4038,9 @@ async function handleCabinetAiDraft(request, env, corsHeaders){
   const code=String(body.code||'').trim();
   if(!code) return jsonResponse({ok:false,error:'no_code'}, corsHeaders, 400);
   if(!await cabinetOwns(env, sess, code)) return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
+
+  const spLang   = await cabSpecialistLang(env, sess);          // язык вошедшего специалиста
+  const langName = CAB_LANG_NAMES[spLang] || 'русском';
 
   const row=await env.DB.prepare('SELECT name,lang,program,tier,data FROM clients WHERE code=?').bind(code).first();
   if(!row) return jsonResponse({ok:false,error:'not_found'}, corsHeaders, 404);
@@ -4032,7 +4060,7 @@ async function handleCabinetAiDraft(request, env, corsHeaders){
   ].filter(Boolean).join('\n');
 
   const prompt =
-    'Ты ассистент нутрициолога VIA-L. Составь черновик ответного сообщения клиенту на РУССКОМ языке. ' +
+    'Ты ассистент нутрициолога VIA-L. Составь черновик ответного сообщения клиенту на ' + langName + ' языке. ' +
     'ГЛАВНАЯ ЦЕННОСТЬ VIA-L — ЗАБОТА о клиенте: пиши тепло, по-человечески, с искренней поддержкой и вниманием к его состоянию, ' +
     'без давления и формализма; клиент должен чувствовать, что о нём заботятся, а не обрабатывают. ' +
     'При этом оставайся профессиональным и конкретным. Только нутрициологические рекомендации — не ставь диагнозы, не назначай лекарства. ' +
@@ -4044,7 +4072,7 @@ async function handleCabinetAiDraft(request, env, corsHeaders){
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':env.CLAUDE_API_KEY,'anthropic-version':'2023-06-01'},
-      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:500,messages:[{role:'user',content:prompt}]}),
+      body:JSON.stringify({model:cabModelForLang(spLang),max_tokens:500,messages:[{role:'user',content:prompt}]}),
     });
     const j = await res.json();
     const draft = j?.content?.[0]?.text || '';
@@ -4067,13 +4095,25 @@ async function handleCabinetTgSend(request, env, corsHeaders){
   if(!code || !text) return jsonResponse({ok:false,error:'missing_fields'}, corsHeaders, 400);
   if(env.DB && !await cabinetOwns(env, sess, code)) return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
 
+  // Шаг 5: авто-перевод на язык пациента, если он отличается от языка специалиста.
+  let outText = text, translated = false;
+  if(env.DB){
+    const spLang = await cabSpecialistLang(env, sess);
+    let clientLang = '';
+    try{ const cl = await env.DB.prepare('SELECT lang FROM clients WHERE code=?').bind(code).first(); clientLang = (cl && cl.lang) || ''; }catch(_){}
+    if(clientLang && spLang && clientLang !== spLang){
+      const t = await careTranslate(env, text, spLang, clientLang);
+      if(t && t !== text){ outText = t; translated = true; }
+    }
+  }
+
   let topicId = '';
   if(env.EXPERT_DRAFTS) topicId = (await env.EXPERT_DRAFTS.get('code_topic:'+code)) || '';
 
   const extra = topicId ? {message_thread_id: Number(topicId)} : {};
-  const res = await careSend(env, env.NUTRITIONIST_GROUP_ID, text, extra);
+  const res = await careSend(env, env.NUTRITIONIST_GROUP_ID, outText, extra);
   const ok = !!(res && (res.ok || res.result));
-  return jsonResponse({ok, topicId: topicId||null}, corsHeaders);
+  return jsonResponse({ok, topicId: topicId||null, translated}, corsHeaders);
 }
 
 // Лиды-знакомства (Cal.com-брони без оплаченной карточки) для секции «Знакомства»
