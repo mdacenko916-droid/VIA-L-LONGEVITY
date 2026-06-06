@@ -671,6 +671,7 @@ let editingSpecId = null;
 const PAGE_SIZE = 25;
 const STATUS_LABEL = {active:'Активен',new:'Новый',pause:'Пауза',done:'Завершён'};
 function statusLabel(st){ const v=t('st_'+st); return v==='st_'+st ? (st||'') : v; }
+function phaseLabel(p){ if(!p) return ''; const v=t('phase_'+p); return v==='phase_'+p ? p : v; }
 const STATUS_BADGE  = {active:'active',new:'new',pause:'pause',done:'done'};
 
 // ── I18N (локализация кабинета, партия 1: навигация + вход) ──────────
@@ -765,6 +766,51 @@ const T = {
   sort_updated:{ru:"↻ По активности",uk:"↻ За активністю",en:"↻ By activity",es:"↻ Por actividad",de:"↻ Nach Aktivität",pt:"↻ Por atividade",fr:"↻ Par activité",pl:"↻ Wg aktywności",it:"↻ Per attività",he:"↻ לפי פעילות",ja:"↻ アクティビティ順",ko:"↻ 활동순"},
   sort_name:{ru:"А-Я по имени",uk:"А-Я за ім'ям",en:"A-Z by name",es:"A-Z por nombre",de:"A-Z nach Name",pt:"A-Z por nome",fr:"A-Z par nom",pl:"A-Z wg imienia",it:"A-Z per nome",he:"א-ת לפי שם",ja:"名前順 A-Z",ko:"이름순 A-Z"},
   sort_start:{ru:"По дате старта",uk:"За датою старту",en:"By start date",es:"Por fecha de inicio",de:"Nach Startdatum",pt:"Por data de início",fr:"Par date de début",pl:"Wg daty startu",it:"Per data di inizio",he:"לפי תאריך התחלה",ja:"開始日順",ko:"시작일순"},
+  // — вкладка «Обзор» + шапка карточки (партия 3a) —
+  ov_progress:{ru:"Прогресс",uk:"Прогрес",en:"Progress",es:"Progreso",de:"Fortschritt",pt:"Progresso",fr:"Progression",pl:"Postęp",it:"Progresso",he:"התקדמות",ja:"進捗",ko:"진행"},
+  ov_sessions_done:{ru:"сессий проведено",uk:"сесій проведено",en:"sessions done",es:"sesiones hechas",de:"Sitzungen erledigt",pt:"sessões feitas",fr:"séances faites",pl:"sesji odbytych",it:"sessioni fatte",he:"מפגשים בוצעו",ja:"セッション完了",ko:"세션 완료"},
+  ov_no_sched:{ru:"нет расписания",uk:"немає розкладу",en:"no schedule",es:"sin agenda",de:"kein Zeitplan",pt:"sem agenda",fr:"pas de planning",pl:"brak harmonogramu",it:"nessun calendario",he:"אין לוח זמנים",ja:"予定なし",ko:"일정 없음"},
+  ov_weeks_added:{ru:"недель внесено",uk:"тижнів внесено",en:"weeks entered",es:"semanas registradas",de:"Wochen erfasst",pt:"semanas inseridas",fr:"semaines saisies",pl:"tygodni wpisano",it:"settimane inserite",he:"שבועות הוזנו",ja:"週入力済み",ko:"주 입력됨"},
+  ov_no_data:{ru:"нет данных",uk:"немає даних",en:"no data",es:"sin datos",de:"keine Daten",pt:"sem dados",fr:"aucune donnée",pl:"brak danych",it:"nessun dato",he:"אין נתונים",ja:"データなし",ko:"데이터 없음"},
+  ov_received:{ru:"получена",uk:"отримано",en:"received",es:"recibido",de:"erhalten",pt:"recebido",fr:"reçu",pl:"otrzymano",it:"ricevuto",he:"התקבל",ja:"受領済み",ko:"수신됨"},
+  ov_not_received:{ru:"не получена",uk:"не отримано",en:"not received",es:"no recibido",de:"nicht erhalten",pt:"não recebido",fr:"non reçu",pl:"nie otrzymano",it:"non ricevuto",he:"לא התקבל",ja:"未受領",ko:"미수신"},
+  ov_needs_reply:{ru:"⚠ нужен ответ",uk:"⚠ потрібна відповідь",en:"⚠ needs reply",es:"⚠ requiere respuesta",de:"⚠ Antwort nötig",pt:"⚠ precisa resposta",fr:"⚠ réponse requise",pl:"⚠ wymaga odpowiedzi",it:"⚠ richiede risposta",he:"⚠ דורש מענה",ja:"⚠ 返信が必要",ko:"⚠ 답변 필요"},
+  ov_in_chat:{ru:"в переписке",uk:"у листуванні",en:"in conversation",es:"en conversación",de:"im Gespräch",pt:"em conversa",fr:"en conversation",pl:"w korespondencji",it:"in conversazione",he:"בהתכתבות",ja:"やり取り中",ko:"대화 중"},
+  ov_profile:{ru:"Профиль",uk:"Профіль",en:"Profile",es:"Perfil",de:"Profil",pt:"Perfil",fr:"Profil",pl:"Profil",it:"Profilo",he:"פרופיל",ja:"プロフィール",ko:"프로필"},
+  ov_program:{ru:"Программа",uk:"Програма",en:"Program",es:"Programa",de:"Programm",pt:"Programa",fr:"Programme",pl:"Program",it:"Programma",he:"תוכנית",ja:"プログラム",ko:"프로그램"},
+  ov_start:{ru:"Старт",uk:"Старт",en:"Start",es:"Inicio",de:"Start",pt:"Início",fr:"Début",pl:"Start",it:"Inizio",he:"התחלה",ja:"開始",ko:"시작"},
+  ov_duration:{ru:"Длительность",uk:"Тривалість",en:"Duration",es:"Duración",de:"Dauer",pt:"Duração",fr:"Durée",pl:"Czas trwania",it:"Durata",he:"משך",ja:"期間",ko:"기간"},
+  ov_end:{ru:"Окончание",uk:"Завершення",en:"End",es:"Fin",de:"Ende",pt:"Fim",fr:"Fin",pl:"Koniec",it:"Fine",he:"סיום",ja:"終了",ko:"종료"},
+  ov_lang:{ru:"Язык",uk:"Мова",en:"Language",es:"Idioma",de:"Sprache",pt:"Idioma",fr:"Langue",pl:"Język",it:"Lingua",he:"שפה",ja:"言語",ko:"언어"},
+  ov_next:{ru:"Ближайшая точка",uk:"Найближча точка",en:"Next session",es:"Próxima cita",de:"Nächster Termin",pt:"Próximo ponto",fr:"Prochain point",pl:"Najbliższy punkt",it:"Prossimo punto",he:"המפגש הבא",ja:"次の予定",ko:"다음 일정"},
+  ov_date_unset:{ru:"дата не задана",uk:"дата не задана",en:"date not set",es:"fecha sin definir",de:"Datum nicht gesetzt",pt:"data não definida",fr:"date non définie",pl:"data nieustalona",it:"data non impostata",he:"תאריך לא נקבע",ja:"日付未設定",ko:"날짜 미정"},
+  ov_last_bio:{ru:"Последняя биометрика",uk:"Остання біометрика",en:"Latest biometrics",es:"Última biometría",de:"Letzte Biometrie",pt:"Última biometria",fr:"Dernière biométrie",pl:"Ostatnia biometria",it:"Ultima biometria",he:"ביומטריה אחרונה",ja:"最新バイオメトリクス",ko:"최근 생체지표"},
+  ov_anketa_summary:{ru:"Сводка анкеты (ИИ)",uk:"Зведення анкети (ШІ)",en:"Questionnaire summary (AI)",es:"Resumen del cuestionario (IA)",de:"Fragebogen-Zusammenfassung (KI)",pt:"Resumo do questionário (IA)",fr:"Résumé du questionnaire (IA)",pl:"Podsumowanie ankiety (AI)",it:"Riepilogo questionario (IA)",he:"סיכום השאלון (AI)",ja:"問診票の要約（AI）",ko:"설문 요약(AI)"},
+  bio_date:{ru:"Дата",uk:"Дата",en:"Date",es:"Fecha",de:"Datum",pt:"Data",fr:"Date",pl:"Data",it:"Data",he:"תאריך",ja:"日付",ko:"날짜"},
+  bio_sleep:{ru:"Сон",uk:"Сон",en:"Sleep",es:"Sueño",de:"Schlaf",pt:"Sono",fr:"Sommeil",pl:"Sen",it:"Sonno",he:"שינה",ja:"睡眠",ko:"수면"},
+  bio_rhr:{ru:"ЧСС",uk:"ЧСС",en:"RHR",es:"FCR",de:"Ruhepuls",pt:"FCR",fr:"FCR",pl:"Tętno sp.",it:"FCR",he:"דופק מנוחה",ja:"安静時心拍",ko:"안정시 심박"},
+  bio_steps:{ru:"Шаги",uk:"Кроки",en:"Steps",es:"Pasos",de:"Schritte",pt:"Passos",fr:"Pas",pl:"Kroki",it:"Passi",he:"צעדים",ja:"歩数",ko:"걸음"},
+  bio_weight:{ru:"Вес",uk:"Вага",en:"Weight",es:"Peso",de:"Gewicht",pt:"Peso",fr:"Poids",pl:"Waga",it:"Peso",he:"משקל",ja:"体重",ko:"체중"},
+  u_wk:{ru:"нед.",uk:"тиж.",en:"wk",es:"sem.",de:"Wo.",pt:"sem.",fr:"sem.",pl:"tyg.",it:"sett.",he:"שב'",ja:"週",ko:"주"},
+  u_h:{ru:"ч",uk:"год",en:"h",es:"h",de:"Std",pt:"h",fr:"h",pl:"godz",it:"h",he:"שע'",ja:"時間",ko:"시간"},
+  u_kg:{ru:"кг",uk:"кг",en:"kg",es:"kg",de:"kg",pt:"kg",fr:"kg",pl:"kg",it:"kg",he:"ק\"ג",ja:"kg",ko:"kg"},
+  u_years:{ru:"л.",uk:"р.",en:"y.o.",es:"años",de:"J.",pt:"anos",fr:"ans",pl:"lat",it:"anni",he:"שנים",ja:"歳",ko:"세"},
+  hdr_edit:{ru:"✎ Редактировать",uk:"✎ Редагувати",en:"✎ Edit",es:"✎ Editar",de:"✎ Bearbeiten",pt:"✎ Editar",fr:"✎ Modifier",pl:"✎ Edytuj",it:"✎ Modifica",he:"✎ עריכה",ja:"✎ 編集",ko:"✎ 편집"},
+  hdr_delete:{ru:"✕ Удалить",uk:"✕ Видалити",en:"✕ Delete",es:"✕ Eliminar",de:"✕ Löschen",pt:"✕ Excluir",fr:"✕ Supprimer",pl:"✕ Usuń",it:"✕ Elimina",he:"✕ מחיקה",ja:"✕ 削除",ko:"✕ 삭제"},
+  // — панель «Специалисты» (партия 3a) —
+  sp_panel_title:{ru:"Специалисты",uk:"Спеціалісти",en:"Specialists",es:"Especialistas",de:"Spezialisten",pt:"Especialistas",fr:"Spécialistes",pl:"Specjaliści",it:"Specialisti",he:"מומחים",ja:"専門家",ko:"전문가"},
+  sp_loading:{ru:"Загрузка…",uk:"Завантаження…",en:"Loading…",es:"Cargando…",de:"Lädt…",pt:"Carregando…",fr:"Chargement…",pl:"Ładowanie…",it:"Caricamento…",he:"טוען…",ja:"読み込み中…",ko:"불러오는 중…"},
+  sp_only_owner:{ru:"Доступно только владельцу.",uk:"Доступно лише власнику.",en:"Owner only.",es:"Solo para el propietario.",de:"Nur für den Inhaber.",pt:"Apenas para o proprietário.",fr:"Réservé au propriétaire.",pl:"Tylko dla właściciela.",it:"Solo per il proprietario.",he:"לבעלים בלבד.",ja:"オーナー専用です。",ko:"소유자 전용입니다."},
+  sp_load_err:{ru:"Ошибка загрузки.",uk:"Помилка завантаження.",en:"Loading error.",es:"Error de carga.",de:"Ladefehler.",pt:"Erro de carregamento.",fr:"Erreur de chargement.",pl:"Błąd ładowania.",it:"Errore di caricamento.",he:"שגיאת טעינה.",ja:"読み込みエラー。",ko:"불러오기 오류."},
+  sp_owner_badge:{ru:"владелец",uk:"власник",en:"owner",es:"propietario",de:"Inhaber",pt:"proprietário",fr:"propriétaire",pl:"właściciel",it:"proprietario",he:"בעלים",ja:"オーナー",ko:"소유자"},
+  sp_panel_hint:{ru:"Каждый специалист входит по своему логину и видит только своих пациентов. Реф-код пациент вводит в приложении, чтобы подключиться. Не оплачена абонплата → вход закрывается, данные сохраняются.",uk:"Кожен спеціаліст входить за своїм логіном і бачить лише своїх пацієнтів. Реф-код пацієнт вводить у застосунку, щоб підключитися. Не сплачено абонплату → вхід закривається, дані зберігаються.",en:"Each specialist signs in with their own login and sees only their patients. The patient enters the ref code in the app to connect. If the subscription is unpaid, access is closed and data is kept.",es:"Cada especialista entra con su propio usuario y ve solo a sus pacientes. El paciente introduce el código ref. en la app para conectarse. Si no se paga la suscripción, se cierra el acceso y se conservan los datos.",de:"Jeder Spezialist meldet sich mit eigenem Login an und sieht nur seine Patienten. Der Patient gibt den Ref-Code in der App ein, um sich zu verbinden. Bei unbezahltem Abo wird der Zugang gesperrt, Daten bleiben erhalten.",pt:"Cada especialista entra com seu próprio login e vê apenas seus pacientes. O paciente insere o código ref. no app para conectar. Se a assinatura não for paga, o acesso é fechado e os dados são mantidos.",fr:"Chaque spécialiste se connecte avec son identifiant et ne voit que ses patients. Le patient saisit le code réf. dans l'app pour se connecter. Abonnement impayé → accès fermé, données conservées.",pl:"Każdy specjalista loguje się własnym loginem i widzi tylko swoich pacjentów. Pacjent wpisuje kod ref. w aplikacji, aby się połączyć. Brak opłaty → dostęp zamknięty, dane zachowane.",it:"Ogni specialista accede con il proprio login e vede solo i suoi pazienti. Il paziente inserisce il codice ref. nell'app per collegarsi. Abbonamento non pagato → accesso chiuso, dati conservati.",he:"כל מומחה נכנס עם שם המשתמש שלו ורואה רק את המטופלים שלו. המטופל מזין את קוד ההפניה באפליקציה כדי להתחבר. מנוי שלא שולם → הגישה נחסמת, הנתונים נשמרים.",ja:"各専門家は自分のログインで入り、自分の患者のみ閲覧できます。患者はアプリで紹介コードを入力して接続します。サブスク未払い→アクセス停止、データは保持。",ko:"각 전문가는 자신의 로그인으로 들어가 자신의 환자만 봅니다. 환자는 앱에서 추천 코드를 입력해 연결합니다. 구독 미결제 시 접근이 차단되고 데이터는 보존됩니다."},
+  sp_add:{ru:"+ Новый специалист",uk:"+ Новий спеціаліст",en:"+ New specialist",es:"+ Nuevo especialista",de:"+ Neuer Spezialist",pt:"+ Novo especialista",fr:"+ Nouveau spécialiste",pl:"+ Nowy specjalista",it:"+ Nuovo specialista",he:"+ מומחה חדש",ja:"+ 新規専門家",ko:"+ 새 전문가"},
+  col_refcode:{ru:"Реф-код",uk:"Реф-код",en:"Ref code",es:"Código ref.",de:"Ref-Code",pt:"Código ref.",fr:"Code réf.",pl:"Kod ref.",it:"Codice ref.",he:"קוד הפניה",ja:"紹介コード",ko:"추천 코드"},
+  col_access:{ru:"Доступ",uk:"Доступ",en:"Access",es:"Acceso",de:"Zugang",pt:"Acesso",fr:"Accès",pl:"Dostęp",it:"Accesso",he:"גישה",ja:"アクセス",ko:"접근"},
+  col_patients:{ru:"Пациентов",uk:"Пацієнтів",en:"Patients",es:"Pacientes",de:"Patienten",pt:"Pacientes",fr:"Patients",pl:"Pacjenci",it:"Pazienti",he:"מטופלים",ja:"患者数",ko:"환자 수"},
+  badge_paid:{ru:"активен",uk:"активний",en:"active",es:"activo",de:"aktiv",pt:"ativo",fr:"actif",pl:"aktywny",it:"attivo",he:"פעיל",ja:"有効",ko:"활성"},
+  badge_unpaid:{ru:"не оплачен",uk:"не оплачено",en:"unpaid",es:"sin pagar",de:"unbezahlt",pt:"não pago",fr:"impayé",pl:"nieopłacony",it:"non pagato",he:"לא שולם",ja:"未払い",ko:"미결제"},
+  badge_off:{ru:"откл.",uk:"вимк.",en:"off",es:"inact.",de:"aus",pt:"inat.",fr:"inact.",pl:"wył.",it:"off",he:"כבוי",ja:"無効",ko:"꺼짐"},
 };
 let uiLang = localStorage.getItem('vial_cabinet_uilang') || 'ru';
 function t(k){ const e = T[k]; return e ? (e[uiLang] || e.ru || k) : k; }
@@ -960,25 +1006,25 @@ function switchView(view){
 }
 
 // ── SPECIALISTS VIEW (панель владельца) ───────────────────
-const SPECIALTY_LABEL = {nutritionist:'Нутрициолог',gynecologist:'Гинеколог',endocrinologist:'Эндокринолог',andrologist:'Андролог',other:'Другое'};
+function specialtyLabel(sp){ if(!sp) return ''; const v=t('spec_'+sp); return v==='spec_'+sp ? sp : v; }
 async function renderSpecialists(){
   const el = document.getElementById('specialistsView');
-  el.innerHTML = '<div class="section-title">Специалисты</div><p style="color:#888;font-size:13px;">Загрузка…</p>';
+  el.innerHTML = `<div class="section-title">${t('sp_panel_title')}</div><p style="color:#888;font-size:13px;">${t('sp_loading')}</p>`;
   let list = [];
   try{
     const j = await api('/cabinet/specialists');
-    if(!j || !j.ok){ el.innerHTML = '<div class="section-title">Специалисты</div><p style="color:var(--alert);font-size:13px;">Доступно только владельцу.</p>'; return; }
+    if(!j || !j.ok){ el.innerHTML = `<div class="section-title">${t('sp_panel_title')}</div><p style="color:var(--alert);font-size:13px;">${t('sp_only_owner')}</p>`; return; }
     list = j.specialists || [];
-  }catch(_){ el.innerHTML = '<div class="section-title">Специалисты</div><p style="color:var(--alert);font-size:13px;">Ошибка загрузки.</p>'; return; }
+  }catch(_){ el.innerHTML = `<div class="section-title">${t('sp_panel_title')}</div><p style="color:var(--alert);font-size:13px;">${t('sp_load_err')}</p>`; return; }
   specialistsCache = list;
   const rows = list.map(s=>`
     <tr>
-      <td>${esc(s.name||'—')} ${s.role==='owner'?'<span class="badge badge-new">владелец</span>':''}</td>
+      <td>${esc(s.name||'—')} ${s.role==='owner'?`<span class="badge badge-new">${t('sp_owner_badge')}</span>`:''}</td>
       <td>${esc(s.login||'—')}</td>
-      <td>${esc(SPECIALTY_LABEL[s.specialty]||s.specialty||'')}</td>
+      <td>${esc(specialtyLabel(s.specialty))}</td>
       <td><span style="font-family:monospace;">${esc(s.ref_code||'')}</span></td>
       <td>${esc((s.lang||'').toUpperCase())}</td>
-      <td><span class="badge badge-${s.access_status==='lapsed'?'pause':'active'}">${s.access_status==='lapsed'?'не оплачен':'активен'}</span>${s.status==='disabled'?' <span class="badge badge-done">откл.</span>':''}</td>
+      <td><span class="badge badge-${s.access_status==='lapsed'?'pause':'active'}">${s.access_status==='lapsed'?t('badge_unpaid'):t('badge_paid')}</span>${s.status==='disabled'?` <span class="badge badge-done">${t('badge_off')}</span>`:''}</td>
       <td style="text-align:center;">${s.clients||0}</td>
       <td style="white-space:nowrap;">
         <button class="topbtn" onclick="openEditSpecialist(${s.id})">✎</button>
@@ -986,11 +1032,11 @@ async function renderSpecialists(){
       </td>
     </tr>`).join('');
   el.innerHTML = `
-    <div class="section-title">Специалисты</div>
-    <p style="font-size:12px;color:#888;margin-bottom:12px;">Каждый специалист входит по своему логину и видит только своих пациентов. Реф-код пациент вводит в приложении, чтобы подключиться. Не оплачена абонплата → вход закрывается, данные сохраняются.</p>
-    <button class="topbtn primary" onclick="openAddSpecialist()" style="margin-bottom:14px;">+ Новый специалист</button>
+    <div class="section-title">${t('sp_panel_title')}</div>
+    <p style="font-size:12px;color:#888;margin-bottom:12px;">${t('sp_panel_hint')}</p>
+    <button class="topbtn primary" onclick="openAddSpecialist()" style="margin-bottom:14px;">${t('sp_add')}</button>
     <table class="protocol-table">
-      <thead><tr><th>Имя</th><th>Логин</th><th>Профиль</th><th>Реф-код</th><th>Язык</th><th>Доступ</th><th>Пациентов</th><th></th></tr></thead>
+      <thead><tr><th>${t('sp_name')}</th><th>${t('sp_login')}</th><th>${t('sp_specialty')}</th><th>${t('col_refcode')}</th><th>${t('ov_lang')}</th><th>${t('col_access')}</th><th>${t('col_patients')}</th><th></th></tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
 }
@@ -1153,13 +1199,13 @@ function renderClientDetail(){
   // Header
   const st = c.status || 'active';
   const stBadge = `<span class="badge badge-${STATUS_BADGE[st]||'active'}">${statusLabel(st)}</span>`;
-  const metaParts = [c.email, c.phone, c.program||c.phase_label||'', c.age?(c.age+' л.'):'', c.price].filter(Boolean);
+  const metaParts = [c.email, c.phone, c.program||phaseLabel(c.phase)||'', c.age?(c.age+' '+t('u_years')):'', c.price].filter(Boolean);
   document.getElementById('clientHeaderEl').innerHTML=`
     <div class="client-header-top">
       <div style="flex:1;">
         <div class="client-header-name">${esc(c.name)} ${stBadge}</div>
         <div class="client-header-meta">${esc(metaParts.join(' · '))}</div>
-        ${c.start_date?`<div style="font-size:11px;color:#888;margin-top:2px;">Старт: ${c.start_date}${c.duration_weeks?' · '+c.duration_weeks+' нед.':''} · ${c.format||'zoom'}</div>`:''}
+        ${c.start_date?`<div style="font-size:11px;color:#888;margin-top:2px;">${t('ov_start')}: ${c.start_date}${c.duration_weeks?' · '+c.duration_weeks+' '+t('u_wk'):''} · ${c.format||'zoom'}</div>`:''}
       </div>
       <div>
         <select onchange="quickStatus('${c.id}',this.value)" style="border:1px solid #ccc;padding:4px 8px;font-size:11px;font-family:inherit;background:#fff;outline:none;cursor:pointer;">
@@ -1171,9 +1217,9 @@ function renderClientDetail(){
       </div>
     </div>
     <div class="header-actions">
-      <button class="topbtn" onclick="openEditClient('${c.id}')">✎ Редактировать</button>
+      <button class="topbtn" onclick="openEditClient('${c.id}')">${t('hdr_edit')}</button>
       <button class="topbtn primary" onclick="generatePDF('${c.id}')">↓ PDF</button>
-      <button class="topbtn" onclick="deleteClient('${c.id}')" style="color:var(--alert)">✕ Удалить</button>
+      <button class="topbtn" onclick="deleteClient('${c.id}')" style="color:var(--alert)">${t('hdr_delete')}</button>
     </div>`;
 
   // Tabs
@@ -1523,47 +1569,47 @@ function renderOverview(c){
   // Верхние карточки
   const cards = `
     <div class="metrics-row">
-      <div class="metric-card"><div class="metric-lbl">Прогресс</div><div class="metric-val">${totalN?doneN+'/'+totalN:'—'}</div><div class="metric-sub">${totalN?'сессий проведено':'нет расписания'}</div></div>
-      <div class="metric-card"><div class="metric-lbl">Биометрия</div><div class="metric-val">${bio.length||'—'}</div><div class="metric-sub">${bio.length?'недель внесено':'нет данных'}</div></div>
-      <div class="metric-card"><div class="metric-lbl">Анкета</div><div class="metric-val" style="font-size:18px;">${hasAnketa?'✓':'—'}</div><div class="metric-sub">${hasAnketa?'получена':'не получена'}</div></div>
-      <div class="metric-card"><div class="metric-lbl">Сообщений</div><div class="metric-val">${msgs.length||'—'}</div><div class="metric-sub">${needsReply?'⚠ нужен ответ':'в переписке'}</div></div>
+      <div class="metric-card"><div class="metric-lbl">${t('ov_progress')}</div><div class="metric-val">${totalN?doneN+'/'+totalN:'—'}</div><div class="metric-sub">${totalN?t('ov_sessions_done'):t('ov_no_sched')}</div></div>
+      <div class="metric-card"><div class="metric-lbl">${t('tab_biometrics')}</div><div class="metric-val">${bio.length||'—'}</div><div class="metric-sub">${bio.length?t('ov_weeks_added'):t('ov_no_data')}</div></div>
+      <div class="metric-card"><div class="metric-lbl">${t('tab_anketa')}</div><div class="metric-val" style="font-size:18px;">${hasAnketa?'✓':'—'}</div><div class="metric-sub">${hasAnketa?t('ov_received'):t('ov_not_received')}</div></div>
+      <div class="metric-card"><div class="metric-lbl">${t('tab_messages')}</div><div class="metric-val">${msgs.length||'—'}</div><div class="metric-sub">${needsReply?t('ov_needs_reply'):t('ov_in_chat')}</div></div>
     </div>`;
 
   // Профиль
   const row=(k,v)=>v?`<tr><td style="padding:4px 12px 4px 0;color:#888;font-size:12px;white-space:nowrap;">${k}</td><td style="padding:4px 0;font-size:13px;">${esc(String(v))}</td></tr>`:'';
   const profile = `
-    <div class="section-title">Профиль</div>
+    <div class="section-title">${t('ov_profile')}</div>
     <table style="border-collapse:collapse;margin-bottom:20px;">
-      ${row('Код доступа', c.code)}
-      ${row('Программа', c.program)}
-      ${row('Тариф', c.tier)}
-      ${row('Цена', c.price)}
-      ${row('Формат', c.format)}
-      ${row('Старт', c.start_date)}
-      ${row('Длительность', c.duration_weeks?c.duration_weeks+' нед.':'')}
-      ${row('Окончание', endDate)}
-      ${row('Язык', (c.lang||'').toUpperCase())}
+      ${row(t('f_code'), c.code)}
+      ${row(t('ov_program'), c.program)}
+      ${row(t('f_tier'), c.tier)}
+      ${row(t('f_price'), c.price)}
+      ${row(t('f_format'), c.format)}
+      ${row(t('ov_start'), c.start_date)}
+      ${row(t('ov_duration'), c.duration_weeks?c.duration_weeks+' '+t('u_wk'):'')}
+      ${row(t('ov_end'), endDate)}
+      ${row(t('ov_lang'), (c.lang||'').toUpperCase())}
     </table>`;
 
   // Ближайшая точка
   const nextBlock = next ? `
-    <div class="section-title">Ближайшая точка</div>
+    <div class="section-title">${t('ov_next')}</div>
     <div style="border:1px solid #ddd;padding:12px 16px;margin-bottom:20px;">
-      <span style="font-weight:600;">${esc(next.date||'дата не задана')}</span>
-      <span style="color:#888;"> · ${next.type==='pdf'?'PDF':next.type==='once'?'Разовая':'Zoom'}</span>
+      <span style="font-weight:600;">${esc(next.date||t('ov_date_unset'))}</span>
+      <span style="color:#888;"> · ${next.type==='pdf'?'PDF':next.type==='once'?t('format_once'):'Zoom'}</span>
       ${next.notes?`<div style="font-size:12px;color:#666;margin-top:4px;">${esc(next.notes)}</div>`:''}
     </div>` : '';
 
   // Последняя биометрика
   const bioBlock = lastBio ? `
-    <div class="section-title">Последняя биометрика (нед. ${esc(String(lastBio.week||'?'))})</div>
+    <div class="section-title">${t('ov_last_bio')} (${t('u_wk')} ${esc(String(lastBio.week||'?'))})</div>
     <div style="border:1px solid #ddd;padding:12px 16px;margin-bottom:20px;font-size:13px;">
-      ${[lastBio.date?'Дата: '+lastBio.date:'', lastBio.sleep?'Сон '+lastBio.sleep+'ч':'', lastBio.rhr?'ЧСС '+lastBio.rhr:'', lastBio.hrv?'HRV '+lastBio.hrv:'', lastBio.steps?'Шаги '+lastBio.steps:'', lastBio.weight?'Вес '+lastBio.weight+'кг':''].filter(Boolean).join(' · ')||'—'}
+      ${[lastBio.date?t('bio_date')+': '+lastBio.date:'', lastBio.sleep?t('bio_sleep')+' '+lastBio.sleep+t('u_h'):'', lastBio.rhr?t('bio_rhr')+' '+lastBio.rhr:'', lastBio.hrv?'HRV '+lastBio.hrv:'', lastBio.steps?t('bio_steps')+' '+lastBio.steps:'', lastBio.weight?t('bio_weight')+' '+lastBio.weight+t('u_kg'):''].filter(Boolean).join(' · ')||'—'}
     </div>` : '';
 
   // Анкета-сводка (краткая)
   const ankBlock = hasAnketa && c.anketa.summary ? `
-    <div class="section-title">Сводка анкеты (ИИ)</div>
+    <div class="section-title">${t('ov_anketa_summary')}</div>
     <div style="background:#f8f8f8;border:1px solid #ddd;padding:12px 16px;white-space:pre-wrap;font-size:13px;line-height:1.6;">${esc(c.anketa.summary)}</div>` : '';
 
   return cards + profile + nextBlock + bioBlock + ankBlock;
