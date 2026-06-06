@@ -413,6 +413,11 @@ export default {
       if (path === '/specialist/connect')  return handleSpecialistConnect(request, env, corsHeaders);
       if (path === '/specialist/unlink')   return handleSpecialistUnlink(request, env, corsHeaders);
 
+      // Платформа, Шаг 6: панель владельца — управление специалистами (только role=owner).
+      if (path === '/cabinet/specialists')       return handleCabinetSpecialists(request, env, corsHeaders);
+      if (path === '/cabinet/specialist-save')   return handleCabinetSpecialistSave(request, env, corsHeaders);
+      if (path === '/cabinet/specialist-delete') return handleCabinetSpecialistDelete(request, env, corsHeaders);
+
       // Default: AI-анализ для интерпретатора
       return handleAnalyze(request, env, corsHeaders, ctx);
 
@@ -3826,16 +3831,39 @@ async function runDailyReminders(env){
 // клиентов переезжают из localStorage в D1 (env.DB). Источник правды = кабинет.
 // Защищённые маршруты /cabinet/* требуют заголовок `Authorization: Bearer <token>`.
 // ─────────────────────────────────────────────────────────────
-async function cabinetCheckAuth(request, env){
-  if(!env.EXPERT_DRAFTS) return false;
+// Сессия кабинета → { id, role } вошедшего специалиста, или null. Платформа, Шаг 3:
+// токен теперь хранит, КТО вошёл (specialist_id + role), а не просто '1'.
+// Старый формат значения '1' трактуем как владельца №1 (обратная совместимость токенов).
+async function cabinetSession(request, env){
+  if(!env.EXPERT_DRAFTS) return null;
   const h = request.headers.get('Authorization') || '';
   const token = h.startsWith('Bearer ') ? h.slice(7) : '';
-  if(!token) return false;
-  return !!(await env.EXPERT_DRAFTS.get('cabinet_sess:' + token));
+  if(!token) return null;
+  const raw = await env.EXPERT_DRAFTS.get('cabinet_sess:' + token);
+  if(!raw) return null;
+  if(raw === '1') return { id:1, role:'owner' };
+  try { const s = JSON.parse(raw); if(s && s.id) return { id:s.id, role:s.role || 'specialist' }; } catch(_){}
+  return { id:1, role:'owner' };
+}
+
+// PBKDF2 (есть в Workers) — пароль специалиста хранится как "saltHex:hashHex".
+function _cabHex(buf){ return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join(''); }
+function _cabUnhex(h){ const a=new Uint8Array(h.length/2); for(let i=0;i<a.length;i++) a[i]=parseInt(h.substr(i*2,2),16); return a; }
+async function cabinetHashPassword(password, saltHex){
+  const salt = saltHex ? _cabUnhex(saltHex) : crypto.getRandomValues(new Uint8Array(16));
+  const key  = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), { name:'PBKDF2' }, false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name:'PBKDF2', salt, iterations:100000, hash:'SHA-256' }, key, 256);
+  return _cabHex(salt) + ':' + _cabHex(bits);
+}
+async function cabinetVerifyPassword(password, stored){
+  if(!stored || stored.indexOf(':') < 0) return false;
+  const saltHex = stored.split(':')[0];
+  const calc = await cabinetHashPassword(password, saltHex);
+  return calc === stored;
 }
 
 async function handleCabinetAuth(request, env, corsHeaders){
-  if(!env.CABINET_PASS || !env.EXPERT_DRAFTS){
+  if(!env.EXPERT_DRAFTS){
     return jsonResponse({ ok:false, error:'cabinet_not_configured' }, corsHeaders, 500);
   }
   // rate-limit: 8 неудачных попыток за 10 мин на IP
@@ -3846,15 +3874,33 @@ async function handleCabinetAuth(request, env, corsHeaders){
 
   let body = {};
   try { body = await request.json(); } catch(_){}
-  const pass = String(body.password || '');
-  if(pass !== env.CABINET_PASS){
+  const login = String(body.login || '').trim();
+  const pass  = String(body.password || '');
+
+  let session = null;
+  if(login){
+    // Вход специалиста по логину+паролю (только активный и с оплаченным доступом).
+    if(env.DB){
+      const sp = await env.DB.prepare(
+        "SELECT id,role,pass_hash,status,access_status FROM specialists WHERE lower(login)=lower(?)"
+      ).bind(login).first();
+      if(sp && sp.status !== 'disabled' && sp.access_status !== 'lapsed'
+         && await cabinetVerifyPassword(pass, sp.pass_hash || '')){
+        session = { id: sp.id, role: sp.role || 'specialist' };
+      }
+    }
+  } else if(env.CABINET_PASS && pass === env.CABINET_PASS){
+    session = { id:1, role:'owner' };          // владелец через секрет CABINET_PASS
+  }
+
+  if(!session){
     await env.EXPERT_DRAFTS.put(failKey, String(fails + 1), { expirationTtl: 600 });
     return jsonResponse({ ok:false, error:'bad_password' }, corsHeaders, 401);
   }
   await env.EXPERT_DRAFTS.delete(failKey);
   const token = crypto.randomUUID().replace(/-/g,'') + crypto.randomUUID().replace(/-/g,'');
-  await env.EXPERT_DRAFTS.put('cabinet_sess:' + token, '1', { expirationTtl: 12 * 60 * 60 });
-  return jsonResponse({ ok:true, token }, corsHeaders);
+  await env.EXPERT_DRAFTS.put('cabinet_sess:' + token, JSON.stringify(session), { expirationTtl: 12 * 60 * 60 });
+  return jsonResponse({ ok:true, token, role: session.role }, corsHeaders);
 }
 
 // D1-строка → объект клиента (полное досье лежит в JSON-колонке data; колонки —
@@ -3871,25 +3917,40 @@ function cabinetRowToClient(r){
     product:r.product, program:r.program, tier:r.tier, duration_weeks:r.duration_weeks,
     price:r.price, format:r.format, start_date:r.start_date, end_date:r.end_date,
     status:r.status, gender:r.gender, age:r.age, phase:r.phase,
+    specialist_id:r.specialist_id,
     created_at:r.created_at, updated_at:r.updated_at,
   };
 }
 
 async function handleCabinetClients(request, env, corsHeaders){
-  if(!await cabinetCheckAuth(request, env)) return jsonResponse({ ok:false, error:'unauthorized' }, corsHeaders, 401);
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ ok:false, error:'unauthorized' }, corsHeaders, 401);
   if(!env.DB) return jsonResponse({ ok:false, error:'d1_missing' }, corsHeaders, 500);
-  const { results } = await env.DB.prepare('SELECT * FROM clients ORDER BY updated_at DESC').all();
-  return jsonResponse({ ok:true, clients:(results || []).map(cabinetRowToClient) }, corsHeaders);
+  // Владелец видит всех; специалист — только своих (specialist_id = его id).
+  const { results } = sess.role === 'owner'
+    ? await env.DB.prepare('SELECT * FROM clients ORDER BY updated_at DESC').all()
+    : await env.DB.prepare('SELECT * FROM clients WHERE specialist_id=? ORDER BY updated_at DESC').bind(sess.id).all();
+  return jsonResponse({ ok:true, clients:(results || []).map(cabinetRowToClient), role:sess.role }, corsHeaders);
 }
 
 async function handleCabinetSave(request, env, corsHeaders){
-  if(!await cabinetCheckAuth(request, env)) return jsonResponse({ ok:false, error:'unauthorized' }, corsHeaders, 401);
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ ok:false, error:'unauthorized' }, corsHeaders, 401);
   if(!env.DB) return jsonResponse({ ok:false, error:'d1_missing' }, corsHeaders, 500);
 
   let c = {};
   try { c = (await request.json()).client || {}; } catch(_){}
   const code = String(c.code || c.id || '');           // до Этапа 2 код = id прототипа
   if(!code) return jsonResponse({ ok:false, error:'no_code' }, corsHeaders, 400);
+
+  // Владелец правит любого; специалист — только своего. Решаем специалиста для записи.
+  const existing = await env.DB.prepare('SELECT specialist_id FROM clients WHERE code=?').bind(code).first();
+  if(sess.role !== 'owner' && existing && existing.specialist_id != null && existing.specialist_id !== sess.id){
+    return jsonResponse({ ok:false, error:'forbidden' }, corsHeaders, 403);
+  }
+  const specId = sess.role === 'owner'
+    ? (c.specialist_id != null ? c.specialist_id : (existing ? existing.specialist_id : 1))
+    : sess.id;                                          // специалист всегда сохраняет на себя
 
   const now  = Date.now();
   const data = JSON.stringify(c);                       // полное досье целиком
@@ -3899,30 +3960,39 @@ async function handleCabinetSave(request, env, corsHeaders){
   await env.DB.prepare(`
     INSERT INTO clients
       (code,name,email,tg,phone,lang,product,program,tier,duration_weeks,price,format,
-       start_date,end_date,status,gender,age,phase,data,created_at,updated_at)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+       start_date,end_date,status,gender,age,phase,specialist_id,data,created_at,updated_at)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     ON CONFLICT(code) DO UPDATE SET
       name=excluded.name, email=excluded.email, tg=excluded.tg, phone=excluded.phone, lang=excluded.lang,
       product=excluded.product, program=excluded.program, tier=excluded.tier, duration_weeks=excluded.duration_weeks,
       price=excluded.price, format=excluded.format, start_date=excluded.start_date, end_date=excluded.end_date,
       status=excluded.status, gender=excluded.gender, age=excluded.age, phase=excluded.phase,
-      data=excluded.data, updated_at=excluded.updated_at
+      specialist_id=excluded.specialist_id, data=excluded.data, updated_at=excluded.updated_at
   `).bind(
     code, c.name||'', c.email||'', c.tg||'', c.phone||'', c.lang||'',
     c.product||'', c.program||'', c.tier||'', dur, c.price||'', c.format||'',
     c.start_date||'', c.end_date||'', c.status||'active', c.gender||'', age, c.phase||'',
-    data, c.created_at || now, now
+    specId, data, c.created_at || now, now
   ).run();
 
   return jsonResponse({ ok:true, code }, corsHeaders);
 }
 
+// Проверка «этот клиент принадлежит вошедшему» (владельцу — любой). true = можно.
+async function cabinetOwns(env, sess, code){
+  if(sess.role === 'owner') return true;
+  const r = await env.DB.prepare('SELECT specialist_id FROM clients WHERE code=?').bind(code).first();
+  return !!(r && r.specialist_id === sess.id);
+}
+
 async function handleCabinetDelete(request, env, corsHeaders){
-  if(!await cabinetCheckAuth(request, env)) return jsonResponse({ ok:false, error:'unauthorized' }, corsHeaders, 401);
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ ok:false, error:'unauthorized' }, corsHeaders, 401);
   if(!env.DB) return jsonResponse({ ok:false, error:'d1_missing' }, corsHeaders, 500);
   let code = '';
   try { const b = await request.json(); code = String(b.code || b.id || ''); } catch(_){}
   if(!code) return jsonResponse({ ok:false, error:'no_code' }, corsHeaders, 400);
+  if(!await cabinetOwns(env, sess, code)) return jsonResponse({ ok:false, error:'forbidden' }, corsHeaders, 403);
   await env.DB.prepare('DELETE FROM clients WHERE code=?').bind(code).run();
   return jsonResponse({ ok:true }, corsHeaders);
 }
@@ -3930,13 +4000,15 @@ async function handleCabinetDelete(request, env, corsHeaders){
 // Этап 4: ИИ-черновик ответа клиенту (для нутрициолога, в кабинете).
 // Собирает контекст из D1 (анкета, биометрия, последние сообщения) и генерирует черновик через Claude Haiku.
 async function handleCabinetAiDraft(request, env, corsHeaders){
-  if(!await cabinetCheckAuth(request, env)) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
   if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
   if(!env.CLAUDE_API_KEY) return jsonResponse({ok:false,error:'no_claude_key'}, corsHeaders, 500);
   let body={};
   try{ body=await request.json(); }catch(_){}
   const code=String(body.code||'').trim();
   if(!code) return jsonResponse({ok:false,error:'no_code'}, corsHeaders, 400);
+  if(!await cabinetOwns(env, sess, code)) return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
 
   const row=await env.DB.prepare('SELECT name,lang,program,tier,data FROM clients WHERE code=?').bind(code).first();
   if(!row) return jsonResponse({ok:false,error:'not_found'}, corsHeaders, 404);
@@ -3981,13 +4053,15 @@ async function handleCabinetAiDraft(request, env, corsHeaders){
 // Этап 4: отправка сообщения в ТГ-топик клиента (care-группа, через CLIENT_BOT_TOKEN).
 // Ищет topicId по code_topic:<code> в EXPERT_DRAFTS.
 async function handleCabinetTgSend(request, env, corsHeaders){
-  if(!await cabinetCheckAuth(request, env)) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
   if(!env.CLIENT_BOT_TOKEN || !env.NUTRITIONIST_GROUP_ID) return jsonResponse({ok:false,error:'tg_not_configured'}, corsHeaders, 500);
   let body={};
   try{ body=await request.json(); }catch(_){}
   const code = String(body.code||'').trim();
   const text = String(body.text||'').trim();
   if(!code || !text) return jsonResponse({ok:false,error:'missing_fields'}, corsHeaders, 400);
+  if(env.DB && !await cabinetOwns(env, sess, code)) return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
 
   let topicId = '';
   if(env.EXPERT_DRAFTS) topicId = (await env.EXPERT_DRAFTS.get('code_topic:'+code)) || '';
@@ -4001,7 +4075,10 @@ async function handleCabinetTgSend(request, env, corsHeaders){
 // Лиды-знакомства (Cal.com-брони без оплаченной карточки) для секции «Знакомства»
 // в календаре кабинета. Возвращаем только будущие, отсортированные по дате.
 async function handleCabinetLeads(request, env, corsHeaders){
-  if(!await cabinetCheckAuth(request, env)) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  // Лиды-знакомства — воронка основателя; показываем только владельцу.
+  if(sess.role !== 'owner') return jsonResponse({ok:true, leads:[]}, corsHeaders);
   if(!env.EXPERT_DRAFTS) return jsonResponse({ok:true, leads:[]}, corsHeaders);
   const today = new Date().toISOString().slice(0,10);
   // Email-ы уже оплативших клиентов — таких НЕ показываем в «знакомствах» (у них есть карточка).
@@ -4109,4 +4186,89 @@ async function handleSpecialistUnlink(request, env, corsHeaders){
     .bind(JSON.stringify(data), Date.now(), code).run();
 
   return jsonResponse({ ok:true }, corsHeaders);
+}
+
+// ─────────────────────────────────────────────────────────────
+// ПЛАТФОРМА, ШАГ 6 — панель владельца: управление специалистами.
+// Только role=owner. См. docs/PLATFORM-MODEL.md §7. Пароли — PBKDF2 (cabinetHashPassword).
+// ─────────────────────────────────────────────────────────────
+async function handleCabinetSpecialists(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  if(sess.role !== 'owner') return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  // pass_hash НЕ отдаём наружу.
+  const { results } = await env.DB.prepare(
+    `SELECT s.id,s.name,s.login,s.lang,s.specialty,s.role,s.ref_code,s.access_status,s.access_paid_until,s.status,s.created_at,
+            (SELECT count(*) FROM clients c WHERE c.specialist_id=s.id) AS clients
+     FROM specialists s ORDER BY s.id`
+  ).all();
+  return jsonResponse({ok:true, specialists: results || []}, corsHeaders);
+}
+
+async function handleCabinetSpecialistSave(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  if(sess.role !== 'owner') return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+
+  let s = {};
+  try { s = (await request.json()).specialist || {}; } catch(_){}
+  const id        = s.id ? parseInt(s.id, 10) : null;
+  const name      = String(s.name || '').trim();
+  const login     = String(s.login || '').trim();
+  const lang      = String(s.lang || 'ru').trim() || 'ru';
+  const specialty = String(s.specialty || 'nutritionist').trim() || 'nutritionist';
+  const role      = (s.role === 'owner') ? 'owner' : 'specialist';
+  const refCode   = String(s.ref_code || '').trim().toUpperCase();
+  const accessSt  = (s.access_status === 'lapsed') ? 'lapsed' : 'active';
+  const paidUntil = String(s.access_paid_until || '').trim() || null;
+  const status    = (s.status === 'disabled') ? 'disabled' : 'active';
+  const password  = String(s.password || '');
+
+  if(!login)   return jsonResponse({ok:false,error:'login_required'},    corsHeaders, 400);
+  if(!refCode) return jsonResponse({ok:false,error:'ref_code_required'}, corsHeaders, 400);
+
+  // Уникальность login/ref_code (кроме самого себя)
+  const dup = await env.DB.prepare(
+    'SELECT id FROM specialists WHERE (lower(login)=lower(?) OR upper(ref_code)=?) AND id<>?'
+  ).bind(login, refCode, id || -1).first();
+  if(dup) return jsonResponse({ok:false,error:'login_or_code_taken'}, corsHeaders, 409);
+
+  if(id){
+    if(password){
+      const ph = await cabinetHashPassword(password);
+      await env.DB.prepare(
+        'UPDATE specialists SET name=?,login=?,pass_hash=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,status=? WHERE id=?'
+      ).bind(name, login, ph, lang, specialty, role, refCode, accessSt, paidUntil, status, id).run();
+    } else {
+      await env.DB.prepare(
+        'UPDATE specialists SET name=?,login=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,status=? WHERE id=?'
+      ).bind(name, login, lang, specialty, role, refCode, accessSt, paidUntil, status, id).run();
+    }
+    return jsonResponse({ok:true, id}, corsHeaders);
+  }
+
+  if(!password) return jsonResponse({ok:false,error:'password_required'}, corsHeaders, 400);
+  const ph = await cabinetHashPassword(password);
+  const res = await env.DB.prepare(
+    'INSERT INTO specialists (name,login,pass_hash,lang,specialty,role,ref_code,access_status,access_paid_until,status,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)'
+  ).bind(name, login, ph, lang, specialty, role, refCode, accessSt, paidUntil, status, Date.now()).run();
+  return jsonResponse({ok:true, id: res.meta && res.meta.last_row_id}, corsHeaders);
+}
+
+async function handleCabinetSpecialistDelete(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  if(sess.role !== 'owner') return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  let id = 0;
+  try { id = parseInt((await request.json()).id, 10); } catch(_){}
+  if(!id)      return jsonResponse({ok:false,error:'no_id'}, corsHeaders, 400);
+  if(id === 1) return jsonResponse({ok:false,error:'cannot_delete_owner'}, corsHeaders, 400);
+  // Защита от «сирот»: не удаляем специалиста, у которого ещё есть пациенты.
+  const cnt = await env.DB.prepare('SELECT count(*) AS n FROM clients WHERE specialist_id=?').bind(id).first();
+  if(cnt && cnt.n > 0) return jsonResponse({ok:false,error:'has_clients', clients:cnt.n}, corsHeaders, 409);
+  await env.DB.prepare('DELETE FROM specialists WHERE id=?').bind(id).run();
+  return jsonResponse({ok:true}, corsHeaders);
 }
