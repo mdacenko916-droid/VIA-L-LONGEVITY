@@ -408,6 +408,11 @@ export default {
       if (path === '/cabinet/tg-send')     return handleCabinetTgSend(request, env, corsHeaders);
       if (path === '/cabinet/leads')       return handleCabinetLeads(request, env, corsHeaders);
 
+      // Платформа, Шаг 2: пациент подключается к специалисту по его коду + согласие.
+      // См. docs/PLATFORM-MODEL.md §3 (публичные ручки, без cabinet-auth).
+      if (path === '/specialist/connect')  return handleSpecialistConnect(request, env, corsHeaders);
+      if (path === '/specialist/unlink')   return handleSpecialistUnlink(request, env, corsHeaders);
+
       // Default: AI-анализ для интерпретатора
       return handleAnalyze(request, env, corsHeaders, ctx);
 
@@ -3615,6 +3620,9 @@ async function cabinetIngestIpAnalysis(env, code, data, analysisText, lang){
   if(!row) return;
   let d = {};
   try{ d = JSON.parse(row.data || '{}'); }catch(_){}
+  // Пациент отозвал согласие (Шаг 2, /specialist/unlink) → новые разборы не пишем.
+  // У платных EXPERT/ELITE поля sharing нет (undefined) → ингест работает как прежде.
+  if(d.sharing === false) return;
   const today = new Date().toISOString().slice(0,10);
 
   // (1) Недельный срез биометрики — только чистый маппинг (hrv/rhr/weight). Один срез в день.
@@ -4014,4 +4022,91 @@ async function handleCabinetLeads(request, env, corsHeaders){
   }catch(_){}
   leads.sort((a,b)=>String(a.date).localeCompare(String(b.date)));
   return jsonResponse({ok:true, leads}, corsHeaders);
+}
+
+// ─────────────────────────────────────────────────────────────
+// ПЛАТФОРМА, ШАГ 2 — пациент подключается к специалисту.
+// Пациент уже пользуется ИП (подписка в App Store/Google Play). Он вводит КОД
+// СПЕЦИАЛИСТА (specialists.ref_code) и даёт СОГЛАСИЕ → создаётся/привязывается
+// карточка под этим специалистом, и его ИП-разборы текут в неё по уже работающему
+// ингесту (cabinetIngestIpAnalysis по коду). См. docs/PLATFORM-MODEL.md §3.
+// ─────────────────────────────────────────────────────────────
+
+// Код пациента: P + 6 знаков (без похожих 0/O/1/I). Под ним пациент проходит ИП,
+// по нему же разборы попадают в его карточку.
+function genPatientCode(){
+  const al = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for(let i=0;i<6;i++) s += al[Math.floor(Math.random()*al.length)];
+  return 'P' + s;
+}
+
+async function handleSpecialistConnect(request, env, corsHeaders){
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  let b = {};
+  try { b = await request.json(); } catch(_){}
+  const refCode = String(b.ref_code || '').trim().toUpperCase();
+  const email   = String(b.email || '').trim();
+  const name    = String(b.name || '').trim();
+  const consent = b.consent === true || b.consent === 'true';
+  if(!refCode) return jsonResponse({ok:false,error:'no_ref_code'},     corsHeaders, 400);
+  if(!email)   return jsonResponse({ok:false,error:'no_email'},        corsHeaders, 400);
+  if(!consent) return jsonResponse({ok:false,error:'consent_required'},corsHeaders, 400);
+
+  // Специалист по его коду
+  const sp = await env.DB.prepare(
+    "SELECT id,name,lang FROM specialists WHERE upper(ref_code)=? AND status='active'"
+  ).bind(refCode).first();
+  if(!sp) return jsonResponse({ok:false,error:'specialist_not_found'}, corsHeaders, 404);
+
+  const now = Date.now();
+  // Уже есть карточка этого пациента (по email)? — переиспользуем код, иначе генерим новый.
+  let existing = null;
+  try { existing = await env.DB.prepare('SELECT code,data FROM clients WHERE lower(email)=lower(?) LIMIT 1').bind(email).first(); } catch(_){}
+
+  const code = existing ? existing.code : genPatientCode();
+  let data = {};
+  try { data = JSON.parse(existing?.data || '{}'); } catch(_){}
+  data.consent = { at: new Date().toISOString(), ref_code: refCode, specialist_id: sp.id };
+  data.sharing = true;
+
+  await env.DB.prepare(`
+    INSERT INTO clients (code,name,email,lang,product,status,specialist_id,data,created_at,updated_at)
+    VALUES (?,?,?,?,'interpreter','active',?,?,?,?)
+    ON CONFLICT(code) DO UPDATE SET
+      name=CASE WHEN excluded.name!='' THEN excluded.name ELSE name END,
+      email=excluded.email, specialist_id=excluded.specialist_id,
+      data=excluded.data, updated_at=excluded.updated_at
+  `).bind(code, name, email, sp.lang || '', sp.id, JSON.stringify(data), now, now).run();
+
+  // code_owner — чтобы ИП/care знали имя/email/язык по коду (как у платных тарифов).
+  if(env.EXPERT_DRAFTS){
+    await env.EXPERT_DRAFTS.put('code_owner:'+code,
+      JSON.stringify({ email, name, lang: sp.lang || '' }),
+      { expirationTtl: 200*24*60*60 });
+  }
+
+  return jsonResponse({ ok:true, code, specialist_name: sp.name || '' }, corsHeaders);
+}
+
+async function handleSpecialistUnlink(request, env, corsHeaders){
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  let b = {};
+  try { b = await request.json(); } catch(_){}
+  const code = String(b.code || '').trim().toUpperCase();
+  if(!code) return jsonResponse({ok:false,error:'no_code'}, corsHeaders, 400);
+
+  const row = await env.DB.prepare('SELECT data FROM clients WHERE code=?').bind(code).first();
+  if(!row) return jsonResponse({ok:false,error:'not_found'}, corsHeaders, 404);
+  let data = {};
+  try { data = JSON.parse(row.data || '{}'); } catch(_){}
+  data.sharing = false;
+  if(data.consent) data.consent.withdrawn_at = new Date().toISOString();
+
+  // Отвязка: карточка остаётся, но не закреплена за специалистом (Шаг 3 фильтрует по
+  // specialist_id), а sharing=false останавливает приток новых разборов (см. ингест).
+  await env.DB.prepare('UPDATE clients SET specialist_id=NULL, data=?, updated_at=? WHERE code=?')
+    .bind(JSON.stringify(data), Date.now(), code).run();
+
+  return jsonResponse({ ok:true }, corsHeaders);
 }
