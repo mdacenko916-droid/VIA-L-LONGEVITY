@@ -367,8 +367,9 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
   <div class="gate-box">
     <div class="gate-logo">VIA·L — CABINET</div>
     <div class="gate-title">Кабинет нутрициолога</div>
-    <div class="gate-sub">Введите пароль администратора для доступа к базе клиентов.</div>
-    <input class="gate-input" id="gateInput" type="password" maxlength="32" placeholder="· · · · · · · ·" autocomplete="current-password">
+    <div class="gate-sub">Логин специалиста и пароль. Владельцу — логин оставить пустым, ввести пароль администратора.</div>
+    <input class="gate-input" id="gateLogin" type="text" maxlength="40" placeholder="логин специалиста (пусто — владелец)" autocomplete="username" style="letter-spacing:normal;text-align:left;font-family:inherit;margin-bottom:8px;">
+    <input class="gate-input" id="gateInput" type="password" maxlength="64" placeholder="пароль" autocomplete="current-password">
     <div class="gate-error" id="gateError">Неверный пароль</div>
     <button class="gate-btn" onclick="checkGate()">Войти →</button>
   </div>
@@ -593,10 +594,11 @@ async function api(path, body){
 // ── GATE ─────────────────────────────────────────────────
 async function checkGate(){
   const inp = document.getElementById('gateInput');
+  const login = (document.getElementById('gateLogin')?.value || '').trim();
   try{
     const r = await fetch(API + '/cabinet-auth', {
       method:'POST', headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ password: inp.value }),
+      body: JSON.stringify({ login, password: inp.value }),
     });
     const j = await r.json();
     if(j.ok && j.token){
