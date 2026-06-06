@@ -3996,6 +3996,12 @@ async function handleCabinetLeads(request, env, corsHeaders){
   if(!await cabinetCheckAuth(request, env)) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
   if(!env.EXPERT_DRAFTS) return jsonResponse({ok:true, leads:[]}, corsHeaders);
   const today = new Date().toISOString().slice(0,10);
+  // Email-ы уже оплативших клиентов — таких НЕ показываем в «знакомствах» (у них есть карточка).
+  const paid = new Set();
+  try{
+    const rows = env.DB ? (await env.DB.prepare('SELECT email FROM clients').all()).results : [];
+    for(const r of (rows||[])){ if(r.email) paid.add(String(r.email).toLowerCase()); }
+  }catch(_){}
   const leads = [];
   try{
     const list = await env.EXPERT_DRAFTS.list({ prefix:'cal_lead:' });
@@ -4003,7 +4009,7 @@ async function handleCabinetLeads(request, env, corsHeaders){
       const raw = await env.EXPERT_DRAFTS.get(k.name);
       if(!raw) continue;
       let v=null; try{ v=JSON.parse(raw); }catch(_){ continue; }
-      if(v && v.date && v.date >= today) leads.push(v);
+      if(v && v.date && v.date >= today && !paid.has(String(v.email||'').toLowerCase())) leads.push(v);
     }
   }catch(_){}
   leads.sort((a,b)=>String(a.date).localeCompare(String(b.date)));

@@ -1088,6 +1088,7 @@ function deleteSched(i){ const c=clients.find(x=>x.id===selectedId); if(!c)retur
 function addSchedRow(){ const c=clients.find(x=>x.id===selectedId); if(!c)return; if(!c.schedule)c.schedule=[]; const fmt=(c.format||'').includes('pdf')?'pdf':(c.format||'').includes('once')?'once':'zoom'; c.schedule.push({date:'',type:fmt,done:false,link:'',notes:''}); saveData(); renderTabContent(); }
 function autoGenSchedule(){
   const c=clients.find(x=>x.id===selectedId); if(!c||!c.start_date)return;
+  if((c.schedule||[]).length && !confirm('Это перезапишет всё текущее расписание, включая встречи, подтянутые с Cal.com. Продолжить?')) return;
   const n=parseInt(c.duration_weeks)||8;
   const fmt=(c.format||'').includes('pdf')?'pdf':(c.format||'').includes('once')?'once':'zoom';
   const start=new Date(c.start_date);
@@ -1521,7 +1522,8 @@ async function saveClient(){
 // ── DELETE CLIENT ─────────────────────────────────────────
 async function deleteClient(id){
   if(!confirm('Удалить клиента? Все данные будут потеряны.')) return;
-  try{ await api('/cabinet/delete',{ code:id }); }catch(_){}
+  const c=clients.find(x=>x.id===id);
+  try{ await api('/cabinet/delete',{ code:(c&&c.code)||id }); }catch(_){}
   clients=clients.filter(x=>x.id!==id);
   if(selectedId===id){ selectedId=null; document.getElementById('placeholder').style.display='flex'; document.getElementById('clientDetail').style.display='none'; }
   refreshList();
