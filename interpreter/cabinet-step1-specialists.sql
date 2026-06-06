@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS specialists (
   id                INTEGER PRIMARY KEY AUTOINCREMENT,
   name              TEXT,
   login             TEXT UNIQUE,
+  email             TEXT,                       -- для матчинга абонплаты (Шаг 4)
   pass_hash         TEXT,
   lang              TEXT DEFAULT 'ru',          -- рабочий язык (интерфейс + ИИ-черновик)
   specialty         TEXT DEFAULT 'nutritionist',-- gynecologist | endocrinologist | nutritionist | …

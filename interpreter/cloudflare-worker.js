@@ -418,6 +418,9 @@ export default {
       if (path === '/cabinet/specialist-save')   return handleCabinetSpecialistSave(request, env, corsHeaders);
       if (path === '/cabinet/specialist-delete') return handleCabinetSpecialistDelete(request, env, corsHeaders);
 
+      // Платформа, Шаг 4: абонплата специалиста (Hotmart-подписка на доступ к платформе).
+      if (path === '/specialist-access-webhook') return handleSpecialistAccessWebhook(request, env, corsHeaders);
+
       // Default: AI-анализ для интерпретатора
       return handleAnalyze(request, env, corsHeaders, ctx);
 
@@ -432,6 +435,7 @@ export default {
   // Cron Trigger (см. wrangler.jsonc "triggers.crons") — ежедневные напоминания клиентам.
   async scheduled(event, env, ctx) {
     ctx.waitUntil(runDailyReminders(env));
+    ctx.waitUntil(expireSpecialistAccess(env));   // Шаг 4: закрыть доступ при истёкшей абонплате
   },
 };
 
@@ -4199,7 +4203,7 @@ async function handleCabinetSpecialists(request, env, corsHeaders){
   if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
   // pass_hash НЕ отдаём наружу.
   const { results } = await env.DB.prepare(
-    `SELECT s.id,s.name,s.login,s.lang,s.specialty,s.role,s.ref_code,s.access_status,s.access_paid_until,s.status,s.created_at,
+    `SELECT s.id,s.name,s.login,s.email,s.lang,s.specialty,s.role,s.ref_code,s.access_status,s.access_paid_until,s.status,s.created_at,
             (SELECT count(*) FROM clients c WHERE c.specialist_id=s.id) AS clients
      FROM specialists s ORDER BY s.id`
   ).all();
@@ -4217,6 +4221,7 @@ async function handleCabinetSpecialistSave(request, env, corsHeaders){
   const id        = s.id ? parseInt(s.id, 10) : null;
   const name      = String(s.name || '').trim();
   const login     = String(s.login || '').trim();
+  const email     = String(s.email || '').trim();      // для матчинга абонплаты (Шаг 4)
   const lang      = String(s.lang || 'ru').trim() || 'ru';
   const specialty = String(s.specialty || 'nutritionist').trim() || 'nutritionist';
   const role      = (s.role === 'owner') ? 'owner' : 'specialist';
@@ -4239,12 +4244,12 @@ async function handleCabinetSpecialistSave(request, env, corsHeaders){
     if(password){
       const ph = await cabinetHashPassword(password);
       await env.DB.prepare(
-        'UPDATE specialists SET name=?,login=?,pass_hash=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,status=? WHERE id=?'
-      ).bind(name, login, ph, lang, specialty, role, refCode, accessSt, paidUntil, status, id).run();
+        'UPDATE specialists SET name=?,login=?,email=?,pass_hash=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,status=? WHERE id=?'
+      ).bind(name, login, email, ph, lang, specialty, role, refCode, accessSt, paidUntil, status, id).run();
     } else {
       await env.DB.prepare(
-        'UPDATE specialists SET name=?,login=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,status=? WHERE id=?'
-      ).bind(name, login, lang, specialty, role, refCode, accessSt, paidUntil, status, id).run();
+        'UPDATE specialists SET name=?,login=?,email=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,status=? WHERE id=?'
+      ).bind(name, login, email, lang, specialty, role, refCode, accessSt, paidUntil, status, id).run();
     }
     return jsonResponse({ok:true, id}, corsHeaders);
   }
@@ -4252,8 +4257,8 @@ async function handleCabinetSpecialistSave(request, env, corsHeaders){
   if(!password) return jsonResponse({ok:false,error:'password_required'}, corsHeaders, 400);
   const ph = await cabinetHashPassword(password);
   const res = await env.DB.prepare(
-    'INSERT INTO specialists (name,login,pass_hash,lang,specialty,role,ref_code,access_status,access_paid_until,status,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)'
-  ).bind(name, login, ph, lang, specialty, role, refCode, accessSt, paidUntil, status, Date.now()).run();
+    'INSERT INTO specialists (name,login,email,pass_hash,lang,specialty,role,ref_code,access_status,access_paid_until,status,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
+  ).bind(name, login, email, ph, lang, specialty, role, refCode, accessSt, paidUntil, status, Date.now()).run();
   return jsonResponse({ok:true, id: res.meta && res.meta.last_row_id}, corsHeaders);
 }
 
@@ -4271,4 +4276,69 @@ async function handleCabinetSpecialistDelete(request, env, corsHeaders){
   if(cnt && cnt.n > 0) return jsonResponse({ok:false,error:'has_clients', clients:cnt.n}, corsHeaders, 409);
   await env.DB.prepare('DELETE FROM specialists WHERE id=?').bind(id).run();
   return jsonResponse({ok:true}, corsHeaders);
+}
+
+// ─────────────────────────────────────────────────────────────
+// ПЛАТФОРМА, ШАГ 4 — абонплата специалиста (Hotmart-подписка на доступ к платформе).
+// Отдельный URL: повесить в Hotmart на платёжный продукт «доступ к платформе».
+// Матчинг по email специалиста (specialists.email — заполняет владелец в панели).
+// PURCHASE_APPROVED/COMPLETE → active + продлить access_paid_until на 31 день;
+// REFUNDED/CHARGEBACK/PROTEST → lapsed (вход закрыт). CANCELLATION не трогаем — доступ
+// дотекает до paid_until, а cron (expireSpecialistAccess) закроет по сроку.
+// См. docs/PLATFORM-MODEL.md §5. Провайдер — открытый вопрос §9 (по умолчанию Hotmart).
+// ─────────────────────────────────────────────────────────────
+async function handleSpecialistAccessWebhook(request, env, corsHeaders){
+  const hottok = request.headers.get('x-hotmart-hottok');
+  if (env.HOTMART_TOKEN && hottok !== env.HOTMART_TOKEN) {
+    return jsonResponse({ ok:false, error:'invalid_token' }, corsHeaders, 401);
+  }
+  if(!env.DB) return jsonResponse({ ok:false, error:'d1_missing' }, corsHeaders, 500);
+  let body = {};
+  try { body = await request.json(); } catch(e){ return jsonResponse({ ok:false, error:'invalid_json' }, corsHeaders, 400); }
+  const event = body.event || '';
+  const data  = body.data || {};
+  const email = ((data.buyer && data.buyer.email) || '').trim();
+  if(!email) return jsonResponse({ ok:true, skipped:'no_email' }, corsHeaders);
+
+  const sp = await env.DB.prepare('SELECT id FROM specialists WHERE lower(email)=lower(?) LIMIT 1').bind(email).first();
+  if(!sp){
+    await sendTelegram(env,
+      `⚠️ <b>Абонплата: специалист не найден</b>\n\nEmail <code>${esc(email)}</code> оплатил доступ (<code>${esc(event)}</code>), `
+      + `но в кабинете нет специалиста с таким email. Заведите его (🩺 Специалисты) и впишите этот email.`
+    ).catch(()=>{});
+    return jsonResponse({ ok:true, warning:'specialist_not_found', email }, corsHeaders);
+  }
+
+  const APPROVE = ['PURCHASE_APPROVED','PURCHASE_COMPLETE'];
+  const REVOKE  = ['PURCHASE_REFUNDED','PURCHASE_CHARGEBACK','PURCHASE_PROTEST'];
+
+  if(APPROVE.includes(event)){
+    const today = new Date().toISOString().slice(0,10);
+    const cur = await env.DB.prepare('SELECT access_paid_until FROM specialists WHERE id=?').bind(sp.id).first();
+    // продлеваем от max(сегодня, текущая дата окончания) на 31 день
+    const base = (cur && cur.access_paid_until && cur.access_paid_until > today)
+      ? new Date(cur.access_paid_until + 'T00:00:00Z') : new Date();
+    base.setUTCDate(base.getUTCDate() + 31);
+    const until = base.toISOString().slice(0,10);
+    await env.DB.prepare("UPDATE specialists SET access_status='active', access_paid_until=? WHERE id=?").bind(until, sp.id).run();
+    return jsonResponse({ ok:true, specialist:sp.id, access_paid_until:until }, corsHeaders);
+  }
+  if(REVOKE.includes(event)){
+    await env.DB.prepare("UPDATE specialists SET access_status='lapsed' WHERE id=?").bind(sp.id).run();
+    return jsonResponse({ ok:true, specialist:sp.id, access_status:'lapsed' }, corsHeaders);
+  }
+  return jsonResponse({ ok:true, skipped:event }, corsHeaders);
+}
+
+// Cron (ежедневно): специалистам с истёкшим сроком оплаты ставим lapsed → вход закрыт.
+// Владельца (role='owner') не трогаем — он не платит абонплату.
+async function expireSpecialistAccess(env){
+  if(!env.DB) return;
+  const today = new Date().toISOString().slice(0,10);
+  try{
+    await env.DB.prepare(
+      "UPDATE specialists SET access_status='lapsed' WHERE access_status='active' AND role<>'owner' "
+      + "AND access_paid_until IS NOT NULL AND access_paid_until<>'' AND access_paid_until < ?"
+    ).bind(today).run();
+  }catch(_){}
 }
