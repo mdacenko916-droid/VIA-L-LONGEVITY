@@ -380,6 +380,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
     <input class="gate-input" id="gateInput" type="password" maxlength="64" data-i18n-ph="gate_pass_ph" placeholder="пароль" autocomplete="current-password">
     <div class="gate-error" id="gateError" data-i18n="gate_err">Неверный пароль</div>
     <button class="gate-btn" onclick="checkGate()" data-i18n="gate_btn">Войти →</button>
+    <div id="pwaInstall" style="display:none;margin-top:16px;"></div>
   </div>
 </div>
 
@@ -702,6 +703,8 @@ const T = {
   gate_pass_ph:{ru:"пароль",uk:"пароль",en:"password",es:"contraseña",de:"Passwort",pt:"senha",fr:"mot de passe",pl:"hasło",it:"password",he:"סיסמה",ja:"パスワード",ko:"비밀번호"},
   gate_err:{ru:"Неверный пароль",uk:"Невірний пароль",en:"Wrong password",es:"Contraseña incorrecta",de:"Falsches Passwort",pt:"Senha incorreta",fr:"Mot de passe incorrect",pl:"Nieprawidłowe hasło",it:"Password errata",he:"סיסמה שגויה",ja:"パスワードが違います",ko:"비밀번호가 틀렸습니다"},
   gate_btn:{ru:"Войти →",uk:"Увійти →",en:"Sign in →",es:"Entrar →",de:"Anmelden →",pt:"Entrar →",fr:"Se connecter →",pl:"Zaloguj →",it:"Accedi →",he:"כניסה →",ja:"ログイン →",ko:"로그인 →"},
+  pwa_install:{ru:"Установить приложение",uk:"Встановити застосунок",en:"Install app",es:"Instalar la app",de:"App installieren",pt:"Instalar o app",fr:"Installer l'app",pl:"Zainstaluj aplikację",it:"Installa l'app",he:"התקן אפליקציה",ja:"アプリをインストール",ko:"앱 설치"},
+  pwa_ios_hint:{ru:"Чтобы установить: нажмите «Поделиться» ↑ → «На экран „Домой\"»",uk:"Щоб встановити: натисніть «Поділитися» ↑ → «На екран „Додому\"»",en:"To install: tap Share ↑ → \"Add to Home Screen\"",es:"Para instalar: pulsa Compartir ↑ → \"Añadir a pantalla de inicio\"",de:"Zum Installieren: Teilen ↑ → „Zum Home-Bildschirm\"",pt:"Para instalar: toque em Compartilhar ↑ → \"Adicionar à Tela de Início\"",fr:"Pour installer : Partager ↑ → « Sur l'écran d'accueil »",pl:"Aby zainstalować: Udostępnij ↑ → „Do ekranu początkowego\"",it:"Per installare: Condividi ↑ → \"Aggiungi a Home\"",he:"להתקנה: שיתוף ↑ → «הוסף למסך הבית»",ja:"インストール：共有 ↑ →「ホーム画面に追加」",ko:"설치하려면: 공유 ↑ → \"홈 화면에 추가\""},
   mobile_clients:{ru:"☰ Клиенты",uk:"☰ Клієнти",en:"☰ Clients",es:"☰ Clientes",de:"☰ Klienten",pt:"☰ Clientes",fr:"☰ Clients",pl:"☰ Klienci",it:"☰ Clienti",he:"☰ לקוחות",ja:"☰ クライアント",ko:"☰ 고객"},
   nav_clients:{ru:"👥 Клиенты",uk:"👥 Клієнти",en:"👥 Clients",es:"👥 Clientes",de:"👥 Klienten",pt:"👥 Clientes",fr:"👥 Clients",pl:"👥 Klienci",it:"👥 Clienti",he:"👥 לקוחות",ja:"👥 クライアント",ko:"👥 고객"},
   nav_calendar:{ru:"📅 Календарь",uk:"📅 Календар",en:"📅 Calendar",es:"📅 Calendario",de:"📅 Kalender",pt:"📅 Calendário",fr:"📅 Calendrier",pl:"📅 Kalendarz",it:"📅 Calendario",he:"📅 יומן",ja:"📅 カレンダー",ko:"📅 캘린더"},
@@ -2176,8 +2179,23 @@ function generatePDF(id){
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); }
 
+// ── PWA INSTALL — кнопка установки (Android/десктоп) / подсказка (iOS) ──
+let deferredPrompt = null;
+function pwaStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
+function pwaIsIOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream; }
+function showInstallUI(kind){
+  const el = document.getElementById('pwaInstall'); if(!el || pwaStandalone()) return;
+  el.innerHTML = (kind === 'android')
+    ? `<button class="gate-btn" style="background:#e6e6e6 !important;color:#000 !important;box-shadow:none !important;" onclick="doInstall()">📲 ${t('pwa_install')}</button>`
+    : `<div style="font-size:12px;color:#666;line-height:1.5;">📲 ${t('pwa_ios_hint')}</div>`;
+  el.style.display = '';
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; showInstallUI('android'); });
+async function doInstall(){ if(!deferredPrompt) return; deferredPrompt.prompt(); try{ await deferredPrompt.userChoice; }catch(_){} deferredPrompt = null; const el=document.getElementById('pwaInstall'); if(el) el.style.display='none'; }
+
 // ── INIT ──────────────────────────────────────────────────
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
+if(pwaIsIOS() && !pwaStandalone()) showInstallUI('ios');   // iOS: подсказка «Поделиться → На экран Домой»
 applyI18n();                       // локализуем экран входа на языке из localStorage (или ru)
 if(getToken()) enterApp();
 
