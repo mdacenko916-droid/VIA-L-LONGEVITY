@@ -37,10 +37,15 @@ CREATE TABLE IF NOT EXISTS clients (
 
   data           TEXT,               -- JSON: полное досье клиента (sessions/protocol/labs/notes/…) до Этапов 2–4
 
+  -- Платформа, Шаг 1: чей это клиент (см. docs/PLATFORM-MODEL.md §3, миграция cabinet-step1-specialists.sql).
+  -- DEFAULT 1 = основатель; для свежей БД таблицу specialists и запись №1 создаёт та же миграция.
+  specialist_id  INTEGER DEFAULT 1,
+
   created_at     INTEGER,
   updated_at     INTEGER
 );
 
-CREATE INDEX IF NOT EXISTS idx_clients_status  ON clients(status);
-CREATE INDEX IF NOT EXISTS idx_clients_email   ON clients(email);
+CREATE INDEX IF NOT EXISTS idx_clients_status     ON clients(status);
+CREATE INDEX IF NOT EXISTS idx_clients_email      ON clients(email);
+CREATE INDEX IF NOT EXISTS idx_clients_specialist ON clients(specialist_id);
 CREATE INDEX IF NOT EXISTS idx_clients_updated ON clients(updated_at DESC);
