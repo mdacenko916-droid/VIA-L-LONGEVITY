@@ -674,12 +674,22 @@ let editingId = null;
 let currentTab = 'overview';
 let listPage = 1;
 let myRole = 'specialist';        // роль вошедшего (owner видит всех + панель «Специалисты»)
+let mySpecialty = 'nutritionist'; // профиль вошедшего → какие вкладки показывать
 let specialistsCache = [];        // последний список специалистов (для openEditSpecialist)
 let editingSpecId = null;
 const PAGE_SIZE = 25;
 const STATUS_LABEL = {active:'Активен',new:'Новый',pause:'Пауза',done:'Завершён'};
 function statusLabel(st){ const v=t('st_'+st); return v==='st_'+st ? (st||'') : v; }
 function phaseLabel(p){ if(!p) return ''; const v=t('phase_'+p); return v==='phase_'+p ? p : v; }
+// Вид под профиль: нутрициолог видит все вкладки; остальные специалисты — без
+// нутри-вкладок «Протокол»/«Анализы» (настраивается тут). Скрытие по специальности ВОШЕДШЕГО.
+const TAB_NAMES = ['overview','protocol','labs','notes','anketa','biometrics','schedule','breakdowns','messages'];
+function hiddenTabsFor(sp){ return sp === 'nutritionist' ? [] : ['protocol','labs']; }
+function applyTabProfile(){
+  const hide = hiddenTabsFor(mySpecialty);
+  document.querySelectorAll('#tabsEl .tab').forEach((el,i)=>{ el.style.display = hide.includes(TAB_NAMES[i]) ? 'none' : ''; });
+  if(hide.includes(currentTab)) currentTab = 'overview';   // активная вкладка скрыта → на обзор
+}
 const STATUS_BADGE  = {active:'active',new:'new',pause:'pause',done:'done'};
 
 // ── I18N (локализация кабинета, партия 1: навигация + вход) ──────────
@@ -1065,6 +1075,7 @@ async function loadData(){
     const j = await api('/cabinet/clients');
     clients = (j && j.clients) || [];
     if(j && j.role) myRole = j.role;
+    if(j && j.specialty) mySpecialty = j.specialty;
   }catch(_){ clients = []; }
 }
 // Сохраняет ТЕКУЩЕГО выбранного клиента (почти все правки идут по selectedId).
@@ -1393,10 +1404,10 @@ function renderClientDetail(){
       <button class="topbtn" onclick="deleteClient('${c.id}')" style="color:var(--alert)">${t('hdr_delete')}</button>
     </div>`;
 
-  // Tabs
+  // Tabs — вид под профиль (скрыть нутри-вкладки для не-нутрициологов) + подсветка активной
+  applyTabProfile();
   document.querySelectorAll('.tab').forEach((t,i)=>{
-    const names=['overview','protocol','labs','notes','anketa','biometrics','schedule','breakdowns','messages'];
-    t.classList.toggle('active', names[i]===currentTab);
+    t.classList.toggle('active', TAB_NAMES[i]===currentTab);
   });
 
   renderTabContent();
