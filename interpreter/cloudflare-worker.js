@@ -3905,7 +3905,10 @@ async function handleCabinetAuth(request, env, corsHeaders){
   await env.EXPERT_DRAFTS.delete(failKey);
   const token = crypto.randomUUID().replace(/-/g,'') + crypto.randomUUID().replace(/-/g,'');
   await env.EXPERT_DRAFTS.put('cabinet_sess:' + token, JSON.stringify(session), { expirationTtl: 12 * 60 * 60 });
-  return jsonResponse({ ok:true, token, role: session.role }, corsHeaders);
+  // язык интерфейса = рабочий язык вошедшего (Шаг локализации кабинета)
+  let lang = 'ru';
+  if(env.DB){ try{ const r = await env.DB.prepare('SELECT lang FROM specialists WHERE id=?').bind(session.id).first(); if(r && r.lang) lang = r.lang; }catch(_){} }
+  return jsonResponse({ ok:true, token, role: session.role, lang }, corsHeaders);
 }
 
 // D1-строка → объект клиента (полное досье лежит в JSON-колонке data; колонки —
