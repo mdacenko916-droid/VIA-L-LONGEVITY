@@ -18,6 +18,7 @@
 | [`PLATFORM-MODEL.md`](PLATFORM-MODEL.md) | **источник правды:** специалисты, денежные потоки, привязка по коду+согласие, этапы, онлайн/офлайн |
 | [`MOBILE-APP-MODEL.md`](MOBILE-APP-MODEL.md) | приложение пациента (ИП): Capacitor-обёртка, магазины, PRO→IAP / EXPERT-ELITE→Hotmart, носимые |
 | [`CABINET-MODEL.md`](CABINET-MODEL.md) | базовая модель кабинета, откуда выросла платформа |
+| [`ADVISOR-MODEL.md`](ADVISOR-MODEL.md) | ИИ-советник: один движок, поведение по тарифу (self-serve отвечает, под специалистом — отходит) |
 
 ## Где что ещё (по необходимости)
 

@@ -412,6 +412,7 @@ export default {
 
       // Цифровая анкета здоровья (book/anketa) → структурированная карточка в топик клиента
       if (path === '/anketa-submit')    return handleAnketaSubmit(request, env, corsHeaders, ctx);
+      if (path === '/advisor-chat')     return handleAdvisorChat(request, env, corsHeaders);
 
       // Кабинет нутрициолога (CRM на D1) — см. docs/CABINET-MODEL.md
       if (path === '/cabinet-auth')        return handleCabinetAuth(request, env, corsHeaders);
@@ -3148,6 +3149,61 @@ async function faqMatch(env, q){
     return (Number.isInteger(idx) && idx>=0 && idx<db.length) ? db[idx] : null;
   }catch(_){ return null; }
 }
+// ── ИИ-СОВЕТНИК (один движок, поведение по тарифу) — спека docs/ADVISOR-MODEL.md ──
+// Тёплый советник: self-serve (free/vio/pro) отвечает сам + грунтовка из FAQ-памяти;
+// human-led (expert/elite/specialist) отходит и направляет к живому специалисту (правило
+// «ИИ сам клиенту в платном ведении не пишет»). Гайдрейлы: без диагнозов/обещаний/цен.
+async function handleAdvisorChat(request, env, corsHeaders){
+  if(request.method!=='POST') return jsonResponse({ok:false,error:'method'}, corsHeaders, 405);
+  if(!env.CLAUDE_API_KEY)      return jsonResponse({ok:false,error:'no_ai'}, corsHeaders, 503);
+  let body={}; try{ body = await request.json(); }catch(_){}
+  const lang = String(body.lang||'en').slice(0,5);
+  const tier = String(body.tier||'free').toLowerCase();
+  let msgs = Array.isArray(body.messages) ? body.messages : [];
+  msgs = msgs.filter(m=>m && (m.role==='user'||m.role==='assistant') && typeof m.content==='string')
+             .slice(-12).map(m=>({role:m.role, content:m.content.slice(0,2000)}));
+  if(!msgs.length || msgs[msgs.length-1].role!=='user')
+    return jsonResponse({ok:false,error:'no_message'}, corsHeaders, 400);
+  const lastUser = msgs[msgs.length-1].content;
+  const humanLed = ['expert','elite','specialist'].includes(tier);
+
+  // Грунтовка из FAQ-памяти — только для self-serve (где советник реально отвечает).
+  let faqCtx = '';
+  if(!humanLed){ const hit = await faqMatch(env, lastUser);
+    if(hit) faqCtx = `\n\nПроверенный ответ из базы (используй как основу, можно переформулировать):\nВ: ${hit.q}\nО: ${hit.a}`; }
+
+  const model    = ['he','ar','ja','ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001';
+  const langName = CAB_LANG_NAMES[lang] || 'английском';
+
+  const system = humanLed
+    ? (`Ты — ассистент VIA·L. Этого пользователя ВЕДЁТ живой специалист. Твоя роль — НЕ давать `+
+       `медицинских советов и разборов, а коротко и тепло направлять к его специалисту `+
+       `(«обсудите это с вашим специалистом — он видит ваши данные и ведёт вас»). Можешь помочь `+
+       `с навигацией по сервису и общими бытовыми вопросами. Без диагнозов и обещаний. `+
+       `Отвечай кратко, по-человечески, на ${langName} языке.`)
+    : (`Ты — тёплый, заботливый ИИ-советник VIA·L (направление: пред-менопауза, андропауза, `+
+       `долголетие, нутрициология). Тон — забота, БЕЗ давления и продаж в лоб. Помогаешь разобраться `+
+       `в вопросе и мягко подсказываешь подходящий следующий шаг по тарифам VIA·L:\n`+
+       `• VIO — базовый разбор биомаркеров;\n`+
+       `• PRO — полный инструмент: Интерпретатор + ИИ-разбор + носимые устройства (подписка);\n`+
+       `• EXPERT — PRO + анкета + ведение специалистом (письменные рекомендации/PDF);\n`+
+       `• ELITE — EXPERT + Zoom-сессии со специалистом.\n`+
+       `Точную цену НЕ называй — предложи посмотреть на странице тарифов. ЖЁСТКИЕ ПРАВИЛА: ты НЕ ставишь `+
+       `диагнозов, НЕ обещаешь результатов лечения, НЕ заменяешь врача; при тревожных симптомах советуешь `+
+       `обратиться к врачу. Отвечай кратко и по-человечески, на ${langName} языке.`+ faqCtx);
+
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':env.CLAUDE_API_KEY,'anthropic-version':'2023-06-01'},
+      body: JSON.stringify({ model, max_tokens:600, system, messages: msgs }),
+    });
+    if(!res.ok) return jsonResponse({ok:false,error:'ai_error'}, corsHeaders, 502);
+    const j = await res.json();
+    return jsonResponse({ok:true, reply: j.content?.[0]?.text || ''}, corsHeaders);
+  }catch(_){ return jsonResponse({ok:false,error:'ai_error'}, corsHeaders, 502); }
+}
+
 async function careAnswerCallback(env, id, text){
   try{ await fetch(`https://api.telegram.org/bot${env.CLIENT_BOT_TOKEN}/answerCallbackQuery`,
     { method:'POST', headers:{'Content-Type':'application/json'},

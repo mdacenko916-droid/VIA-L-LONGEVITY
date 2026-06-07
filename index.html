@@ -5204,5 +5204,90 @@ html[lang="en"] #b9CalCard,      html[lang="es"] #b9CalCard,
 html[lang="en"] #footerCalBtn,   html[lang="es"] #footerCalBtn,
 html[lang="en"] #gmodalCalBtn,   html[lang="es"] #gmodalCalBtn { display:none !important; }
 </style>
+
+<!-- ════ ИИ-СОВЕТНИК VIA·L (верх воронки, tier=free) — спека docs/ADVISOR-MODEL.md ════ -->
+<style>
+#vlAdvBtn{position:fixed;right:20px;bottom:20px;z-index:9998;width:60px;height:60px;border-radius:50%;
+  background:#111;color:#c4963c;border:1px solid #c4963c;font-size:26px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.3);
+  display:flex;align-items:center;justify-content:center;transition:transform .15s;}
+#vlAdvBtn:hover{transform:scale(1.06);}
+#vlAdvPanel{position:fixed;right:20px;bottom:20px;z-index:9999;width:min(380px,calc(100vw - 32px));height:min(560px,calc(100vh - 40px));
+  background:#fff;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.35);display:none;flex-direction:column;overflow:hidden;
+  font-family:-apple-system,'Segoe UI',Roboto,sans-serif;}
+#vlAdvPanel.open{display:flex;}
+#vlAdvHead{background:#111;color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
+#vlAdvHead .t{font-weight:600;font-size:15px;}#vlAdvHead .t span{color:#c4963c;}
+#vlAdvHead .s{font-size:11px;color:#bbb;margin-top:2px;}
+#vlAdvClose{background:none;border:0;color:#fff;font-size:22px;cursor:pointer;line-height:1;}
+#vlAdvMsgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:#faf8f4;}
+.vlAdvMsg{max-width:85%;padding:9px 12px;border-radius:12px;font-size:14px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word;}
+.vlAdvMsg.u{align-self:flex-end;background:#c4963c;color:#fff;border-bottom-right-radius:3px;}
+.vlAdvMsg.a{align-self:flex-start;background:#fff;color:#222;border:1px solid #ececec;border-bottom-left-radius:3px;}
+.vlAdvMsg.a.typing{color:#999;font-style:italic;}
+#vlAdvFoot{display:flex;gap:8px;padding:10px;border-top:1px solid #eee;background:#fff;}
+#vlAdvInput{flex:1;border:1px solid #ddd;border-radius:10px;padding:9px 11px;font-size:14px;font-family:inherit;resize:none;max-height:90px;outline:none;}
+#vlAdvInput:focus{border-color:#c4963c;}
+#vlAdvSend{background:#111;color:#c4963c;border:0;border-radius:10px;padding:0 16px;font-size:14px;font-weight:600;cursor:pointer;}
+#vlAdvSend:disabled{opacity:.5;cursor:default;}
+#vlAdvDisc{font-size:10px;color:#aaa;text-align:center;padding:0 10px 8px;background:#fff;}
+</style>
+<button id="vlAdvBtn" aria-label="VIA·L advisor" onclick="vlAdvOpen()">✦</button>
+<div id="vlAdvPanel" role="dialog" aria-label="VIA·L advisor">
+  <div id="vlAdvHead">
+    <div><div class="t">VÍA<span>·</span>L</div><div class="s" id="vlAdvSub"></div></div>
+    <button id="vlAdvClose" onclick="vlAdvClose()" aria-label="Close">×</button>
+  </div>
+  <div id="vlAdvMsgs"></div>
+  <div id="vlAdvFoot">
+    <textarea id="vlAdvInput" rows="1"></textarea>
+    <button id="vlAdvSend" onclick="vlAdvSendMsg()">→</button>
+  </div>
+  <div id="vlAdvDisc" data-adv="disc"></div>
+</div>
+<script>
+(function(){
+  var API='https://interpreter.viaelcom.workers.dev/advisor-chat';
+  var I18N={
+    uk:{sub:'ІІ-радник · турбота, без тиску',ph:'Напишіть запитання…',greet:'Вітаю! Я ІІ-радник VIA·L. Спитайте про пременопаузу, андропаузу, довголіття — підкажу та допоможу зорієнтуватися. Чим допомогти?',disc:'ІІ-радник не ставить діагнозів і не замінює лікаря.',err:'Не вдалося відповісти. Спробуйте ще раз.'},
+    ru:{sub:'ИИ-советник · забота, без давления',ph:'Напишите вопрос…',greet:'Здравствуйте! Я ИИ-советник VIA·L. Спросите про пременопаузу, андропаузу, долголетие — подскажу и помогу сориентироваться. Чем помочь?',disc:'ИИ-советник не ставит диагнозов и не заменяет врача.',err:'Не удалось ответить. Попробуйте ещё раз.'},
+    en:{sub:'AI advisor · caring, no pressure',ph:'Type your question…',greet:'Hello! I’m the VIA·L AI advisor. Ask me about pre-menopause, andropause, longevity — I’ll help you find your way. How can I help?',disc:'The AI advisor does not diagnose and does not replace a doctor.',err:'Could not reply. Please try again.'},
+    es:{sub:'Asesor IA · cuidado, sin presión',ph:'Escribe tu pregunta…',greet:'¡Hola! Soy el asesor IA de VIA·L. Pregúntame sobre premenopausia, andropausia, longevidad — te ayudaré a orientarte. ¿En qué puedo ayudarte?',disc:'El asesor IA no diagnostica ni sustituye a un médico.',err:'No se pudo responder. Inténtalo de nuevo.'}
+  };
+  function lang(){ var l; try{ l=localStorage.getItem('selectedLang'); }catch(e){} return I18N[l]?l:'uk'; }
+  function tr(){ return I18N[lang()]; }
+  var history=[], started=false, busy=false;
+  function el(id){ return document.getElementById(id); }
+  function add(role,text){
+    var d=document.createElement('div'); d.className='vlAdvMsg '+(role==='user'?'u':'a'); d.textContent=text;
+    el('vlAdvMsgs').appendChild(d); el('vlAdvMsgs').scrollTop=el('vlAdvMsgs').scrollHeight; return d;
+  }
+  window.vlAdvOpen=function(){
+    el('vlAdvBtn').style.display='none'; el('vlAdvPanel').classList.add('open');
+    var t=tr(); el('vlAdvSub').textContent=t.sub; el('vlAdvInput').placeholder=t.ph; el('vlAdvDisc').textContent=t.disc;
+    if(!started){ started=true; add('assistant',t.greet); }
+    el('vlAdvInput').focus();
+  };
+  window.vlAdvClose=function(){ el('vlAdvPanel').classList.remove('open'); el('vlAdvBtn').style.display='flex'; };
+  window.vlAdvSendMsg=function(){
+    if(busy) return; var inp=el('vlAdvInput'); var q=(inp.value||'').trim(); if(!q) return;
+    inp.value=''; add('user',q); history.push({role:'user',content:q}); if(history.length>12) history=history.slice(-12);
+    busy=true; el('vlAdvSend').disabled=true;
+    var typing=add('assistant','…'); typing.classList.add('typing');
+    fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({lang:lang(),tier:'free',messages:history})})
+      .then(function(r){return r.json();}).then(function(j){
+        typing.remove();
+        if(j&&j.ok&&j.reply){ add('assistant',j.reply); history.push({role:'assistant',content:j.reply}); }
+        else add('assistant',tr().err);
+      }).catch(function(){ typing.remove(); add('assistant',tr().err); })
+      .then(function(){ busy=false; el('vlAdvSend').disabled=false; el('vlAdvInput').focus(); });
+  };
+  document.addEventListener('DOMContentLoaded',function(){
+    var inp=el('vlAdvInput'); if(!inp) return;
+    inp.addEventListener('keydown',function(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); vlAdvSendMsg(); } });
+    inp.addEventListener('input',function(){ inp.style.height='auto'; inp.style.height=Math.min(inp.scrollHeight,90)+'px'; });
+  });
+})();
+</script>
 </body>
 </html>
