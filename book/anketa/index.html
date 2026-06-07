@@ -2335,11 +2335,18 @@ function sectionHTML(s){
 }
 
 const CONSENT_KEY='Согласие на обработку данных (GDPR): подтверждаю достоверность сведений и даю согласие на их обработку специалистом Vía-L исключительно для нутрициологического консультирования.';
+// При де-брендинге (?ref) данные обрабатывает сам специалист, а не Vía-L — подставляем его имя
+// вместо бренда «Vía-L» (единый токен во всех 12 переводах), чтобы согласие было «на того». §10.
+function consentText(){
+  let s = tr(CONSENT_KEY);
+  if(REF && SPEC_NAME) s = s.split('Vía-L').join(SPEC_NAME);
+  return s;
+}
 function build(){
   form.innerHTML = SCHEMA.map(sectionHTML).join('') + `
     <section class="sec">
       <label class="consent"><input type="checkbox" id="consent">
-      <span>${esc(tr(CONSENT_KEY))}</span></label>
+      <span>${esc(consentText())}</span></label>
     </section>`;
   wire();
 }
@@ -2501,7 +2508,10 @@ if(REF){
   const logo=document.querySelector('header.top .logo'); if(logo) logo.style.display='none';
   const tag =document.querySelector('header.top .tag');  if(tag)  tag.style.display='none';
   fetch(ENDPOINT.replace('/anketa-submit','/specialist-by-ref')+'?ref='+encodeURIComponent(REF))
-    .then(r=>r.json()).then(j=>{ if(j&&j.ok&&j.name){ SPEC_NAME=j.name; applyStatic(); } }).catch(()=>{});
+    .then(r=>r.json()).then(j=>{ if(j&&j.ok&&j.name){
+      SPEC_NAME=j.name; applyStatic();
+      const cs=document.querySelector('.consent span'); if(cs) cs.textContent=consentText(); // согласие — на имя специалиста
+    } }).catch(()=>{});
 }
 </script>
 </body>
