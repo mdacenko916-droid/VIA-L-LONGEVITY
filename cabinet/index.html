@@ -709,6 +709,15 @@ let editingSpecId = null;
 const PAGE_SIZE = 25;
 const STATUS_LABEL = {active:'Активен',new:'Новый',pause:'Пауза',done:'Завершён'};
 function statusLabel(st){ const v=t('st_'+st); return v==='st_'+st ? (st||'') : v; }
+// Индикатор «кормит ли пациент кабинет» (канал 1, §10): есть ИП-разборы/биометрия → зелёный;
+// привязан, но данных ещё нет → серый «ждёт»; обычный платный клиент основателя → ничего.
+function dataBadge(c){
+  const hasData   = (Array.isArray(c.breakdowns)&&c.breakdowns.length) || (Array.isArray(c.biometrics)&&c.biometrics.length);
+  const connected = c.sharing===true || (c.consent && c.consent.ref_code);
+  if(hasData)   return ` <span class="badge badge-active" title="${t('pro_active')}">${t('pro_active')}</span>`;
+  if(connected) return ` <span class="badge badge-done" title="${t('pro_waiting')}">${t('pro_waiting')}</span>`;
+  return '';
+}
 function phaseLabel(p){ if(!p) return ''; const v=t('phase_'+p); return v==='phase_'+p ? p : v; }
 // Вид под профиль: нутрициолог видит все вкладки; остальные специалисты — без
 // нутри-вкладок «Протокол»/«Анализы» (настраивается тут). Скрытие по специальности ВОШЕДШЕГО.
@@ -738,6 +747,8 @@ const T = {
   nav_calendar:{ru:"📅 Календарь",uk:"📅 Календар",en:"📅 Calendar",es:"📅 Calendario",de:"📅 Kalender",pt:"📅 Calendário",fr:"📅 Calendrier",pl:"📅 Kalendarz",it:"📅 Calendario",he:"📅 יומן",ja:"📅 カレンダー",ko:"📅 캘린더"},
   nav_specialists:{ru:"🩺 Специалисты",uk:"🩺 Спеціалісти",en:"🩺 Specialists",es:"🩺 Especialistas",de:"🩺 Spezialisten",pt:"🩺 Especialistas",fr:"🩺 Spécialistes",pl:"🩺 Specjaliści",it:"🩺 Specialisti",he:"🩺 מומחים",ja:"🩺 専門家",ko:"🩺 전문가"},
   nav_mylink:{ru:"🔗 Моя ссылка",uk:"🔗 Моє посилання",en:"🔗 My link",es:"🔗 Mi enlace",de:"🔗 Mein Link",pt:"🔗 Meu link",fr:"🔗 Mon lien",pl:"🔗 Mój link",it:"🔗 Il mio link",he:"🔗 הקישור שלי",ja:"🔗 マイリンク",ko:"🔗 내 링크"},
+  pro_active:{ru:"Данные ✓",uk:"Дані ✓",en:"Data ✓",es:"Datos ✓",de:"Daten ✓",pt:"Dados ✓",fr:"Données ✓",pl:"Dane ✓",it:"Dati ✓",he:"נתונים ✓",ja:"データ ✓",ko:"데이터 ✓"},
+  pro_waiting:{ru:"Ждёт данных",uk:"Очікує даних",en:"No data yet",es:"Sin datos aún",de:"Noch keine Daten",pt:"Sem dados ainda",fr:"Pas encore de données",pl:"Brak danych",it:"Nessun dato ancora",he:"אין נתונים עדיין",ja:"データ待ち",ko:"데이터 대기 중"},
   ml_title:{ru:"Моя ссылка для приглашения",uk:"Моє посилання для запрошення",en:"My invitation link",es:"Mi enlace de invitación",de:"Mein Einladungslink",pt:"Meu link de convite",fr:"Mon lien d'invitation",pl:"Mój link zaproszenia",it:"Il mio link d'invito",he:"קישור ההזמנה שלי",ja:"招待リンク",ko:"초대 링크"},
   ml_hint:{ru:"Размещайте её в рекламе, соцсетях, на визитке. Пациент перейдёт, заполнит анкету и подключится к вам.",uk:"Розміщуйте його в рекламі, соцмережах, на візитці. Пацієнт перейде, заповнить анкету та підключиться до вас.",en:"Put it in ads, social media, on your business card. The patient opens it, fills the questionnaire and connects to you.",es:"Colócalo en anuncios, redes sociales, en tu tarjeta. El paciente lo abre, rellena el cuestionario y se conecta contigo.",de:"Platzieren Sie ihn in Anzeigen, sozialen Netzwerken, auf der Visitenkarte. Der Patient öffnet ihn, füllt den Fragebogen aus und verbindet sich mit Ihnen.",pt:"Coloque-o em anúncios, redes sociais, no cartão de visita. O paciente abre, preenche o questionário e conecta-se a você.",fr:"Placez-le dans vos publicités, réseaux sociaux, sur votre carte. Le patient l'ouvre, remplit le questionnaire et se connecte à vous.",pl:"Umieść go w reklamach, mediach społecznościowych, na wizytówce. Pacjent otworzy, wypełni ankietę i połączy się z Tobą.",it:"Mettilo negli annunci, sui social, sul biglietto da visita. Il paziente lo apre, compila il questionario e si collega a te.",he:"הציבו אותו בפרסומות, ברשתות החברתיות, על כרטיס הביקור. המטופל ייכנס, ימלא את השאלון ויתחבר אליכם.",ja:"広告、SNS、名刺に掲載してください。患者さんが開いてアンケートに記入し、あなたに接続します。",ko:"광고, SNS, 명함에 넣으세요. 환자가 열어 설문을 작성하고 당신과 연결됩니다."},
   ml_link_label:{ru:"Ссылка",uk:"Посилання",en:"Link",es:"Enlace",de:"Link",pt:"Link",fr:"Lien",pl:"Link",it:"Link",he:"קישור",ja:"リンク",ko:"링크"},
@@ -1223,7 +1234,7 @@ function renderClientList(filter='', statusFilter='', sortBy='updated'){
     const badge = `<span class="badge badge-${STATUS_BADGE[st]||'active'}">${statusLabel(st)}</span>`;
     const meta = [c.program||c.phase_label||'', c.age?(c.age+' л.'):''].filter(Boolean).join(' · ');
     html += `<div class="client-item${selectedId===c.id?' active':''}" onclick="selectClient('${c.id}')">
-      <div class="client-name">${esc(c.name)} ${badge}</div>
+      <div class="client-name">${esc(c.name)} ${badge}${dataBadge(c)}</div>
       <div class="client-meta">${esc(meta)}${c.start_date?' · с '+c.start_date:''}</div>
     </div>`;
   }
@@ -1459,7 +1470,7 @@ function renderClientDetail(){
   document.getElementById('clientHeaderEl').innerHTML=`
     <div class="client-header-top">
       <div style="flex:1;">
-        <div class="client-header-name">${esc(c.name)} ${stBadge}</div>
+        <div class="client-header-name">${esc(c.name)} ${stBadge}${dataBadge(c)}</div>
         <div class="client-header-meta">${esc(metaParts.join(' · '))}</div>
         ${c.start_date?`<div style="font-size:11px;color:#888;margin-top:2px;">${t('ov_start')}: ${c.start_date}${c.duration_weeks?' · '+c.duration_weeks+' '+t('u_wk'):''} · ${c.format||'zoom'}</div>`:''}
       </div>
