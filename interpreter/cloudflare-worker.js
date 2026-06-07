@@ -357,6 +357,8 @@ export default {
     // GET routes
     if (request.method === 'GET') {
       if (path === '/intake-validate') return handleIntakeValidate(request, env, corsHeaders);
+      // Имя/профиль специалиста по реф-коду — анкета `book/anketa?ref=` де-брендит шапку (§10).
+      if (path === '/specialist-by-ref') return handleSpecialistByRef(request, env, corsHeaders);
       // Fitbit OAuth2 (self-serve) — connect ring/device, pull 7-day metrics
       if (path === '/fitbit/start')    return handleFitbitStart(request, env, corsHeaders);
       if (path === '/fitbit/callback') return handleFitbitCallback(request, env, corsHeaders);
@@ -3433,6 +3435,16 @@ async function deliverAnketa(env, body, answers, lang){
   const emailM  = contact.match(/[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+/);
   const email   = emailM ? emailM[0] : '';
 
+  // ── Анкета по реф-ссылке специалиста (?ref=<код>, канал 1, спека §10) ──
+  // Привязываем пациента к специалисту (specialist_id), пишем анкету + согласие в его
+  // карточку кабинета. Care-путь основателя (его TG-группа) для таких НЕ выполняется.
+  const refCode = (typeof body.ref==='string' && body.ref.trim()) ? body.ref.trim().toUpperCase() : '';
+  if(refCode && env.DB){
+    let sp=null;
+    try{ sp = await env.DB.prepare("SELECT id,name,lang FROM specialists WHERE upper(ref_code)=? AND status='active'").bind(refCode).first(); }catch(_){}
+    if(sp){ await deliverAnketaRef(env, sp, refCode, answers, lang, name, email); return; }
+  }
+
   // ── Программная анкета (ссылка из письма об оплате, ?intake=<token>) ──
   // Полная сводка → BACKSTAGE-бот (NUTRITIONIST_CHAT_ID) с кнопкой «📅 Назначить сессию»
   // (callback sched: обрабатывает /tg-webhook) → планирование Cal сохраняется. Care-путь
@@ -4166,6 +4178,47 @@ function genPatientCode(){
   let s = '';
   for(let i=0;i<6;i++) s += al[Math.floor(Math.random()*al.length)];
   return 'P' + s;
+}
+
+// Анкета по реф-ссылке (канал 1): привязать пациента к специалисту + записать анкету/согласие
+// в его карточку. Реюз карточки по email, иначе новый код пациента. ИП-разборы потекут по коду.
+async function deliverAnketaRef(env, sp, refCode, answers, lang, name, email){
+  if(!env.DB) return;
+  const now = Date.now();
+  let existing = null;
+  if(email){ try{ existing = await env.DB.prepare('SELECT code,data FROM clients WHERE lower(email)=lower(?) LIMIT 1').bind(email).first(); }catch(_){} }
+  const code = existing ? existing.code : genPatientCode();
+  let dData = {};
+  try{ dData = JSON.parse(existing?.data||'{}'); }catch(_){}
+  const summary = await anketaSummary(env, answers, lang);
+  dData.anketa  = { answers, submitted_at: new Date().toISOString(), lang, summary: summary||'' };
+  dData.consent = { at: new Date().toISOString(), ref_code: refCode, specialist_id: sp.id };
+  dData.sharing = true;
+  await env.DB.prepare(`
+    INSERT INTO clients (code,name,email,lang,product,status,specialist_id,data,created_at,updated_at)
+    VALUES (?,?,?,?,'interpreter','active',?,?,?,?)
+    ON CONFLICT(code) DO UPDATE SET
+      name=CASE WHEN excluded.name!='' THEN excluded.name ELSE name END,
+      email=CASE WHEN excluded.email!='' THEN excluded.email ELSE email END,
+      lang=excluded.lang, specialist_id=excluded.specialist_id,
+      data=excluded.data, updated_at=excluded.updated_at
+  `).bind(code, name||'', email||'', sp.lang||lang||'', sp.id, JSON.stringify(dData), now, now).run();
+  if(env.EXPERT_DRAFTS){
+    await env.EXPERT_DRAFTS.put('code_owner:'+code,
+      JSON.stringify({ email, name, lang: sp.lang||lang||'' }),
+      { expirationTtl: 200*24*60*60 });
+  }
+}
+
+// Публичный GET: имя/профиль активного специалиста по его реф-коду (для де-брендинга анкеты).
+async function handleSpecialistByRef(request, env, corsHeaders){
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  const ref = String(new URL(request.url).searchParams.get('ref')||'').trim().toUpperCase();
+  if(!ref) return jsonResponse({ok:false,error:'no_ref'}, corsHeaders, 400);
+  let sp=null;
+  try{ sp = await env.DB.prepare("SELECT name,specialty FROM specialists WHERE upper(ref_code)=? AND status='active'").bind(ref).first(); }catch(_){}
+  if(!sp) return jsonResponse({ok:false,error:'not_found'}, corsHeaders, 404);
+  return jsonResponse({ok:true, name: sp.name||'', specialty: sp.specialty||''}, corsHeaders);
 }
 
 async function handleSpecialistConnect(request, env, corsHeaders){

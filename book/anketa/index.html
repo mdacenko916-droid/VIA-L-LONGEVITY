@@ -2435,7 +2435,8 @@ const TOPIC=_Q.get('topic')||'';
 const INTAKE=_Q.get('intake')||'';   // программный токен (анкета после оплаты программы)
 const SRC=_Q.get('src')||'';         // источник, напр. elite (письмо из Cal)
 const CODE=_Q.get('code')||'';       // код доступа — связка анкеты и переписки в один топик
-const SEND=!!(TOPIC||INTAKE||SRC||CODE); // слать на сервер при любом маршрут-параметре; голый URL — превью
+const REF=(_Q.get('ref')||'').trim().toUpperCase(); // реф-код специалиста (канал 1, §10) — привязка пациента
+const SEND=!!(TOPIC||INTAKE||SRC||CODE||REF); // слать на сервер при любом маршрут-параметре; голый URL — превью
 async function submitAnketa(){
   const data=collect();
   const pre=document.getElementById('preview');
@@ -2447,7 +2448,7 @@ async function submitAnketa(){
   btn.disabled=true; const prev=btn.textContent; btn.textContent=tr('Отправляем…');
   try{
     const r=await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({topic:TOPIC, intake:INTAKE, src:SRC, code:CODE, lang:LANG, answers:data, ts:Date.now()})});
+      body:JSON.stringify({topic:TOPIC, intake:INTAKE, src:SRC, code:CODE, ref:REF, lang:LANG, answers:data, ts:Date.now()})});
     if(!r.ok) throw new Error('HTTP '+r.status);
     form.style.display='none'; document.querySelector('.actions').style.display='none';
     pre.hidden=false; pre.style.background='#143a2b';
@@ -2464,8 +2465,9 @@ btn.addEventListener('click', submitAnketa);
 /* ── Статика интерфейса (перерисовывается при смене языка) ──────────────── */
 const SUB_KEY='Гормональный статус · ЖКТ · Метаболизм · Нутриентный статус · Образ жизни. Отвечайте честно — пустые поля можно пропустить.';
 const DRAFT_KEY='Черновой каркас · отправка пока показывает структуру (без сервера)';
+let SPEC_NAME='';   // имя специалиста по ?ref — заменяет бренд VIA-L в шапке (де-брендинг, §10)
 function applyStatic(){
-  document.getElementById('h1').textContent = tr('Анкета здоровья клиента');
+  document.getElementById('h1').textContent = SPEC_NAME || tr('Анкета здоровья клиента');
   document.getElementById('sub').textContent = tr(SUB_KEY);
   btn.textContent = tr('Отправить анкету');
   const dn=document.querySelector('.draftnote'); if(dn){ if(SEND){ dn.style.display='none'; } else { dn.textContent = tr(DRAFT_KEY); } }
@@ -2492,6 +2494,15 @@ langSel.addEventListener('change', e=>setLang(e.target.value));
 const urlLang=new URLSearchParams(location.search).get('lang');
 let saved=null; try{ saved=localStorage.getItem('vial_anketa_lang'); }catch(e){}
 setLang(VALID.includes(urlLang) ? urlLang : (VALID.includes(saved) ? saved : 'en'));
+
+// ── Де-брендинг под специалиста: при ?ref прячем логотип VIA-L и тег,
+//    подставляем имя специалиста в шапку (это уже его анкета, не наша). §10.
+if(REF){
+  const logo=document.querySelector('header.top .logo'); if(logo) logo.style.display='none';
+  const tag =document.querySelector('header.top .tag');  if(tag)  tag.style.display='none';
+  fetch(ENDPOINT.replace('/anketa-submit','/specialist-by-ref')+'?ref='+encodeURIComponent(REF))
+    .then(r=>r.json()).then(j=>{ if(j&&j.ok&&j.name){ SPEC_NAME=j.name; applyStatic(); } }).catch(()=>{});
+}
 </script>
 </body>
 </html>
