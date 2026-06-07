@@ -157,9 +157,11 @@ POST/cross-origin не трогает) + meta в head. Адрес для уст�
     (Claude + грунтовка `faqMatch`, he/ar/ja/ko→Sonnet, гайдрейлы без диагнозов/обещаний/цен) +
     плавающий чат-виджет на `index.html` (4 языка uk/ru/en/es, тон «забота»). Human-led режим
     (expert/elite/specialist) уже отвечает «отойти → к специалисту».
-  - ✅ **Слой 2 — ИП self-serve (`tier=pro`)** (2026-06-07): чат-виджет в `interpreter/index.html`
-    на 12 языков (читает `vial_lang`, RTL для he), tier=pro. На публичном лендинге ИП кода/тарифа
-    пользователя нет → режим self-serve; строгий human-led (слой 3) — для приложения пациента.
+  - ✅ **Слой 2 — ИП self-serve** (2026-06-07): чат-виджет на 12 языков (читает `vial_lang`, RTL для
+    he) на страницах-инструментах: `interpreter/index.html` (лендинг), `interpreter-vio.html`
+    (`tier=vio`), `interpreter-pro.html` (`tier=pro`). Режим self-serve; строгий human-led (слой 3) —
+    для приложения пациента. ⏳ EXPERT/ELITE-страницы (`interpreter-pro-expert.html`,
+    `interpreter-elite.html`) — пока БЕЗ советника (там ведёт человек; решить: human-led режим или не ставить).
   - **Слой 3 — human-led в ИП** ⏳: режим «отойти, направить к специалисту» для EXPERT/ELITE/привязанных
     (бэкенд готов, нужен фронт-переключатель режима по тарифу).
 - **Юридические документы (к юристу ЕС; реализация — не код, а тексты + click-accept).** Спека —
