@@ -3905,10 +3905,11 @@ async function handleCabinetAuth(request, env, corsHeaders){
   await env.EXPERT_DRAFTS.delete(failKey);
   const token = crypto.randomUUID().replace(/-/g,'') + crypto.randomUUID().replace(/-/g,'');
   await env.EXPERT_DRAFTS.put('cabinet_sess:' + token, JSON.stringify(session), { expirationTtl: 12 * 60 * 60 });
-  // язык интерфейса + профиль вошедшего (локализация + вид под профиль)
-  let lang = 'ru', specialty = 'nutritionist';
-  if(env.DB){ try{ const r = await env.DB.prepare('SELECT lang,specialty FROM specialists WHERE id=?').bind(session.id).first(); if(r){ if(r.lang) lang = r.lang; if(r.specialty) specialty = r.specialty; } }catch(_){} }
-  return jsonResponse({ ok:true, token, role: session.role, lang, specialty }, corsHeaders);
+  // язык интерфейса + профиль вошедшего (локализация + вид под профиль) + реф-код/имя
+  // (реф-код нужен фронту для блока «Моя ссылка для приглашения» — канал 1, спека §10).
+  let lang = 'ru', specialty = 'nutritionist', refCode = '', name = '';
+  if(env.DB){ try{ const r = await env.DB.prepare('SELECT lang,specialty,ref_code,name FROM specialists WHERE id=?').bind(session.id).first(); if(r){ if(r.lang) lang = r.lang; if(r.specialty) specialty = r.specialty; if(r.ref_code) refCode = r.ref_code; if(r.name) name = r.name; } }catch(_){} }
+  return jsonResponse({ ok:true, token, role: session.role, lang, specialty, ref_code: refCode, name }, corsHeaders);
 }
 
 // D1-строка → объект клиента (полное досье лежит в JSON-колонке data; колонки —
@@ -3938,9 +3939,9 @@ async function handleCabinetClients(request, env, corsHeaders){
   const { results } = sess.role === 'owner'
     ? await env.DB.prepare('SELECT * FROM clients ORDER BY updated_at DESC').all()
     : await env.DB.prepare('SELECT * FROM clients WHERE specialist_id=? ORDER BY updated_at DESC').bind(sess.id).all();
-  let specialty = 'nutritionist';
-  try{ const sp = await env.DB.prepare('SELECT specialty FROM specialists WHERE id=?').bind(sess.id).first(); if(sp && sp.specialty) specialty = sp.specialty; }catch(_){}
-  return jsonResponse({ ok:true, clients:(results || []).map(cabinetRowToClient), role:sess.role, specialty }, corsHeaders);
+  let specialty = 'nutritionist', refCode = '', name = '';
+  try{ const sp = await env.DB.prepare('SELECT specialty,ref_code,name FROM specialists WHERE id=?').bind(sess.id).first(); if(sp){ if(sp.specialty) specialty = sp.specialty; if(sp.ref_code) refCode = sp.ref_code; if(sp.name) name = sp.name; } }catch(_){}
+  return jsonResponse({ ok:true, clients:(results || []).map(cabinetRowToClient), role:sess.role, specialty, ref_code: refCode, name }, corsHeaders);
 }
 
 async function handleCabinetSave(request, env, corsHeaders){

@@ -394,6 +394,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
       <button class="topbtn" id="viewClientsBtn" onclick="switchView('clients')" style="font-weight:600;border-bottom:2px solid #000;" data-i18n="nav_clients">👥 Клиенты</button>
       <button class="topbtn" id="viewCalendarBtn" onclick="switchView('calendar')" data-i18n="nav_calendar">📅 Календарь</button>
       <button class="topbtn" id="viewSpecialistsBtn" onclick="switchView('specialists')" style="display:none;" data-i18n="nav_specialists">🩺 Специалисты</button>
+      <button class="topbtn" id="myLinkBtn" onclick="openMyLink()" data-i18n="nav_mylink">🔗 Моя ссылка</button>
       <button class="topbtn primary" onclick="openAddClient()" data-i18n="btn_new_client">+ Новый клиент</button>
       <button class="topbtn" onclick="migrateLocal()" data-i18n="btn_import" title="Импорт из старого локального хранилища в базу">⇪ Импорт</button>
       <button class="topbtn" onclick="exportData()" data-i18n="btn_export">↓ Экспорт</button>
@@ -660,6 +661,32 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
   </div>
 </div>
 
+<!-- Моя ссылка для приглашения (канал 1 — специалист приводит сам, спека §10) -->
+<div class="modal-overlay" id="myLinkModal">
+  <div class="modal">
+    <div class="modal-title" data-i18n="ml_title">Моя ссылка для приглашения</div>
+    <p style="font-size:12px;color:#888;margin:-6px 0 14px;" data-i18n="ml_hint">Размещайте её в рекламе, соцсетях, на визитке. Пациент перейдёт, заполнит анкету и подключится к вам.</p>
+    <div class="form-row">
+      <label data-i18n="ml_link_label">Ссылка</label>
+      <input class="form-input" id="ml-link" type="text" readonly onclick="this.select()" style="font-family:monospace;font-size:13px;">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+      <button class="topbtn primary" onclick="copyMyLink()" id="ml-copy-btn" data-i18n="ml_copy">Копировать ссылку</button>
+      <button class="topbtn" onclick="copyMyMsg()" id="ml-msg-btn" data-i18n="ml_copy_msg">Копировать сообщение</button>
+    </div>
+    <div class="form-row" style="margin-top:14px;">
+      <label data-i18n="ml_msg_label">Готовое сообщение пациенту</label>
+      <textarea class="form-input" id="ml-msg" rows="4" readonly onclick="this.select()" style="font-size:13px;resize:vertical;"></textarea>
+    </div>
+    <div style="text-align:center;margin-top:14px;">
+      <img id="ml-qr" alt="QR" width="180" height="180" style="border-radius:10px;background:#fff;padding:8px;display:none;">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeMyLink()" data-i18n="btn_close">Закрыть</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── BACKEND (Cloudflare Worker + D1) ──────────────────────
 // Пароль больше НЕ в HTML — проверяется воркером (/cabinet-auth), данные клиентов
@@ -675,6 +702,8 @@ let currentTab = 'overview';
 let listPage = 1;
 let myRole = 'specialist';        // роль вошедшего (owner видит всех + панель «Специалисты»)
 let mySpecialty = 'nutritionist'; // профиль вошедшего → какие вкладки показывать
+let myRefCode = '';               // реф-код вошедшего (блок «Моя ссылка»)
+let myName    = '';               // имя вошедшего специалиста
 let specialistsCache = [];        // последний список специалистов (для openEditSpecialist)
 let editingSpecId = null;
 const PAGE_SIZE = 25;
@@ -708,6 +737,17 @@ const T = {
   nav_clients:{ru:"👥 Клиенты",uk:"👥 Клієнти",en:"👥 Clients",es:"👥 Clientes",de:"👥 Klienten",pt:"👥 Clientes",fr:"👥 Clients",pl:"👥 Klienci",it:"👥 Clienti",he:"👥 לקוחות",ja:"👥 クライアント",ko:"👥 고객"},
   nav_calendar:{ru:"📅 Календарь",uk:"📅 Календар",en:"📅 Calendar",es:"📅 Calendario",de:"📅 Kalender",pt:"📅 Calendário",fr:"📅 Calendrier",pl:"📅 Kalendarz",it:"📅 Calendario",he:"📅 יומן",ja:"📅 カレンダー",ko:"📅 캘린더"},
   nav_specialists:{ru:"🩺 Специалисты",uk:"🩺 Спеціалісти",en:"🩺 Specialists",es:"🩺 Especialistas",de:"🩺 Spezialisten",pt:"🩺 Especialistas",fr:"🩺 Spécialistes",pl:"🩺 Specjaliści",it:"🩺 Specialisti",he:"🩺 מומחים",ja:"🩺 専門家",ko:"🩺 전문가"},
+  nav_mylink:{ru:"🔗 Моя ссылка",uk:"🔗 Моє посилання",en:"🔗 My link",es:"🔗 Mi enlace",de:"🔗 Mein Link",pt:"🔗 Meu link",fr:"🔗 Mon lien",pl:"🔗 Mój link",it:"🔗 Il mio link",he:"🔗 הקישור שלי",ja:"🔗 マイリンク",ko:"🔗 내 링크"},
+  ml_title:{ru:"Моя ссылка для приглашения",uk:"Моє посилання для запрошення",en:"My invitation link",es:"Mi enlace de invitación",de:"Mein Einladungslink",pt:"Meu link de convite",fr:"Mon lien d'invitation",pl:"Mój link zaproszenia",it:"Il mio link d'invito",he:"קישור ההזמנה שלי",ja:"招待リンク",ko:"초대 링크"},
+  ml_hint:{ru:"Размещайте её в рекламе, соцсетях, на визитке. Пациент перейдёт, заполнит анкету и подключится к вам.",uk:"Розміщуйте його в рекламі, соцмережах, на візитці. Пацієнт перейде, заповнить анкету та підключиться до вас.",en:"Put it in ads, social media, on your business card. The patient opens it, fills the questionnaire and connects to you.",es:"Colócalo en anuncios, redes sociales, en tu tarjeta. El paciente lo abre, rellena el cuestionario y se conecta contigo.",de:"Platzieren Sie ihn in Anzeigen, sozialen Netzwerken, auf der Visitenkarte. Der Patient öffnet ihn, füllt den Fragebogen aus und verbindet sich mit Ihnen.",pt:"Coloque-o em anúncios, redes sociais, no cartão de visita. O paciente abre, preenche o questionário e conecta-se a você.",fr:"Placez-le dans vos publicités, réseaux sociaux, sur votre carte. Le patient l'ouvre, remplit le questionnaire et se connecte à vous.",pl:"Umieść go w reklamach, mediach społecznościowych, na wizytówce. Pacjent otworzy, wypełni ankietę i połączy się z Tobą.",it:"Mettilo negli annunci, sui social, sul biglietto da visita. Il paziente lo apre, compila il questionario e si collega a te.",he:"הציבו אותו בפרסומות, ברשתות החברתיות, על כרטיס הביקור. המטופל ייכנס, ימלא את השאלון ויתחבר אליכם.",ja:"広告、SNS、名刺に掲載してください。患者さんが開いてアンケートに記入し、あなたに接続します。",ko:"광고, SNS, 명함에 넣으세요. 환자가 열어 설문을 작성하고 당신과 연결됩니다."},
+  ml_link_label:{ru:"Ссылка",uk:"Посилання",en:"Link",es:"Enlace",de:"Link",pt:"Link",fr:"Lien",pl:"Link",it:"Link",he:"קישור",ja:"リンク",ko:"링크"},
+  ml_copy:{ru:"Копировать ссылку",uk:"Копіювати посилання",en:"Copy link",es:"Copiar enlace",de:"Link kopieren",pt:"Copiar link",fr:"Copier le lien",pl:"Kopiuj link",it:"Copia link",he:"העתקת קישור",ja:"リンクをコピー",ko:"링크 복사"},
+  ml_copy_msg:{ru:"Копировать сообщение",uk:"Копіювати повідомлення",en:"Copy message",es:"Copiar mensaje",de:"Nachricht kopieren",pt:"Copiar mensagem",fr:"Copier le message",pl:"Kopiuj wiadomość",it:"Copia messaggio",he:"העתקת הודעה",ja:"メッセージをコピー",ko:"메시지 복사"},
+  ml_msg_label:{ru:"Готовое сообщение пациенту",uk:"Готове повідомлення пацієнту",en:"Ready message for the patient",es:"Mensaje listo para el paciente",de:"Fertige Nachricht an den Patienten",pt:"Mensagem pronta para o paciente",fr:"Message prêt pour le patient",pl:"Gotowa wiadomość dla pacjenta",it:"Messaggio pronto per il paziente",he:"הודעה מוכנה למטופל",ja:"患者さんへの定型メッセージ",ko:"환자에게 보낼 메시지"},
+  ml_msg_template:{ru:"Здравствуйте! Чтобы мы могли начать работу, заполните, пожалуйста, короткую анкету здоровья по ссылке: {link} — после этого я буду видеть ваши данные и смогу сопровождать вас. Спасибо и берегите себя 🌿",uk:"Вітаю! Щоб ми могли почати роботу, заповніть, будь ласка, коротку анкету здоров'я за посиланням: {link} — після цього я бачитиму ваші дані та зможу супроводжувати вас. Дякую та бережіть себе 🌿",en:"Hello! To get started, please fill in a short health questionnaire here: {link} — after that I'll see your data and can guide you. Thank you and take care 🌿",es:"¡Hola! Para empezar, rellena por favor un breve cuestionario de salud aquí: {link} — después podré ver tus datos y acompañarte. Gracias y cuídate 🌿",de:"Hallo! Um zu beginnen, füllen Sie bitte einen kurzen Gesundheitsfragebogen aus: {link} — danach sehe ich Ihre Daten und kann Sie begleiten. Danke und passen Sie auf sich auf 🌿",pt:"Olá! Para começarmos, preencha por favor um breve questionário de saúde aqui: {link} — depois disso poderei ver os seus dados e acompanhá-lo. Obrigado e cuide-se 🌿",fr:"Bonjour ! Pour commencer, remplissez s'il vous plaît un court questionnaire de santé ici : {link} — ensuite je verrai vos données et pourrai vous accompagner. Merci et prenez soin de vous 🌿",pl:"Dzień dobry! Aby zacząć, wypełnij proszę krótką ankietę zdrowia tutaj: {link} — potem zobaczę Twoje dane i będę mógł Cię prowadzić. Dziękuję i dbaj o siebie 🌿",it:"Salve! Per iniziare, compila per favore un breve questionario sulla salute qui: {link} — dopodiché vedrò i tuoi dati e potrò seguirti. Grazie e abbi cura di te 🌿",he:"שלום! כדי שנתחיל, אנא מלאו שאלון בריאות קצר כאן: {link} — לאחר מכן אוכל לראות את הנתונים שלכם וללוות אתכם. תודה ושמרו על עצמכם 🌿",ja:"こんにちは！始めるために、こちらの短い健康アンケートにご記入ください：{link} — その後あなたのデータを確認し、サポートできます。ありがとうございます、お大事に🌿",ko:"안녕하세요! 시작하려면 여기 짧은 건강 설문을 작성해 주세요: {link} — 이후 귀하의 데이터를 보고 함께할 수 있습니다. 감사합니다, 건강 유의하세요 🌿"},
+  ml_copied:{ru:"Скопировано ✓",uk:"Скопійовано ✓",en:"Copied ✓",es:"Copiado ✓",de:"Kopiert ✓",pt:"Copiado ✓",fr:"Copié ✓",pl:"Skopiowano ✓",it:"Copiato ✓",he:"הועתק ✓",ja:"コピーしました ✓",ko:"복사됨 ✓"},
+  ml_no_code:{ru:"Реф-код не задан. Обратитесь к владельцу платформы.",uk:"Реф-код не задано. Зверніться до власника платформи.",en:"No ref code set. Contact the platform owner.",es:"No hay código de referencia. Contacta con el propietario de la plataforma.",de:"Kein Ref-Code gesetzt. Wenden Sie sich an den Plattform-Inhaber.",pt:"Sem código de referência. Contacte o proprietário da plataforma.",fr:"Aucun code de parrainage. Contactez le propriétaire de la plateforme.",pl:"Brak kodu ref. Skontaktuj się z właścicielem platformy.",it:"Nessun codice ref. Contatta il proprietario della piattaforma.",he:"לא הוגדר קוד הפניה. פנו לבעלים של הפלטפורמה.",ja:"紹介コードが未設定です。プラットフォーム所有者にご連絡ください。",ko:"추천 코드가 없습니다. 플랫폼 소유자에게 문의하세요."},
+  btn_close:{ru:"Закрыть",uk:"Закрити",en:"Close",es:"Cerrar",de:"Schließen",pt:"Fechar",fr:"Fermer",pl:"Zamknij",it:"Chiudi",he:"סגירה",ja:"閉じる",ko:"닫기"},
   btn_new_client:{ru:"+ Новый клиент",uk:"+ Новий клієнт",en:"+ New client",es:"+ Nuevo cliente",de:"+ Neuer Klient",pt:"+ Novo cliente",fr:"+ Nouveau client",pl:"+ Nowy klient",it:"+ Nuovo cliente",he:"+ לקוח חדש",ja:"+ 新規クライアント",ko:"+ 새 고객"},
   btn_import:{ru:"⇪ Импорт",uk:"⇪ Імпорт",en:"⇪ Import",es:"⇪ Importar",de:"⇪ Import",pt:"⇪ Importar",fr:"⇪ Importer",pl:"⇪ Import",it:"⇪ Importa",he:"⇪ ייבוא",ja:"⇪ インポート",ko:"⇪ 가져오기"},
   btn_export:{ru:"↓ Экспорт",uk:"↓ Експорт",en:"↓ Export",es:"↓ Exportar",de:"↓ Export",pt:"↓ Exportar",fr:"↓ Exporter",pl:"↓ Eksport",it:"↓ Esporta",he:"↓ ייצוא",ja:"↓ エクスポート",ko:"↓ 내보내기"},
@@ -1038,6 +1078,9 @@ async function checkGate(){
       sessionStorage.setItem(TOKEN_KEY, j.token);
       // язык интерфейса = язык специалиста (если пользователь не выбрал свой вручную)
       if(j.lang && !localStorage.getItem('vial_cabinet_uilang')) uiLang = j.lang;
+      if(j.role) myRole = j.role;
+      myRefCode = j.ref_code || '';
+      myName    = j.name || '';
       enterApp();
       return;
     }
@@ -1071,6 +1114,33 @@ function lockApp(){
   location.reload();
 }
 
+// ── «Моя ссылка для приглашения» (канал 1, спека docs/PLATFORM-MODEL.md §10) ──
+// Постоянная персональная ссылка специалиста: пациент по ней открывает анкету,
+// заполняет, подключается (ref запоминается → привязка по коду+согласию).
+function inviteLink(code){ return location.origin + '/book/anketa/?ref=' + encodeURIComponent(code); }
+function inviteMsg(code){
+  return t('ml_msg_template').replace('{link}', inviteLink(code)).replace('{name}', myName || '');
+}
+function openMyLink(){
+  if(!myRefCode){ alert(t('ml_no_code')); return; }
+  const link = inviteLink(myRefCode);
+  document.getElementById('ml-link').value = link;
+  document.getElementById('ml-msg').value  = inviteMsg(myRefCode);
+  const qr = document.getElementById('ml-qr');
+  qr.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(link);
+  qr.style.display = 'inline-block';
+  document.getElementById('myLinkModal').classList.add('open');
+}
+function closeMyLink(){ document.getElementById('myLinkModal').classList.remove('open'); }
+function copyMyLink(){ copyToClip(document.getElementById('ml-link').value, 'ml-copy-btn'); }
+function copyMyMsg(){  copyToClip(document.getElementById('ml-msg').value,  'ml-msg-btn'); }
+function copyToClip(text, btnId){
+  const btn = document.getElementById(btnId), prev = btn.textContent;
+  const done = ()=>{ btn.textContent = t('ml_copied'); setTimeout(()=>{ btn.textContent = prev; }, 1500); };
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done).catch(()=>done()); }
+  else { const el = (btnId==='ml-msg-btn') ? document.getElementById('ml-msg') : document.getElementById('ml-link'); el.select(); try{ document.execCommand('copy'); }catch(_){} done(); }
+}
+
 // ── DATA (D1 через воркер) ────────────────────────────────
 async function loadData(){
   try{
@@ -1078,6 +1148,8 @@ async function loadData(){
     clients = (j && j.clients) || [];
     if(j && j.role) myRole = j.role;
     if(j && j.specialty) mySpecialty = j.specialty;
+    if(j && typeof j.ref_code === 'string') myRefCode = j.ref_code;
+    if(j && typeof j.name === 'string') myName = j.name;
   }catch(_){ clients = []; }
 }
 // Сохраняет ТЕКУЩЕГО выбранного клиента (почти все правки идут по selectedId).
