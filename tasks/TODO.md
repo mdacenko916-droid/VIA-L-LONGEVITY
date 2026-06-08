@@ -132,8 +132,12 @@ POST/cross-origin не трогает) + meta в head. Адрес для уст�
 - ✅ **Слой 0 — скаффолд** (2026-06-08): `app/package.json` + `capacitor.config.json`
   (`appId=com.viael.interpreter`, `server.url`→живой ИП) + `www/` фолбэк + `.gitignore` (ios/android
   генерятся локально). Сборку/запуск делает владелец на Mac: `cd app && npm install && npx cap add ios android && npx cap open ios`.
-- ⏳ **HealthKit (iOS)** — главный смысл: чтение Apple Health/Apple Watch → каркас носимых ИП
-  (у Apple нет веб-API, только нативно). Требует плагин + прокидывание данных в веб-ИП + тест на устройстве.
+- 🔨 **HealthKit (iOS)** — код написан (2026-06-08), ждёт сборки+теста на устройстве: плагин
+  `@perfood/capacitor-healthkit` в `app/package.json`; мост `interpreter/healthkit-bridge.js` (читает
+  HRV/пульс/сон/deep/VO2 → авто-заполняет поля карточки Apple `m-hrv/m-rhr/m-sleep/m-deep/m-vo2` →
+  `applyManual()`); кнопка «📲 Apple Health» на `interpreter-pro.html` (видна ТОЛЬКО в приложении,
+  на вебе скрыта). Осталось (на Mac): `npx cap add ios`, HealthKit-capability + Info.plist
+  (`app/HEALTHKIT.md`), тест на iPhone, сверить имена типов/парсинг, перенос кнопки на pro-expert/elite.
 - ⏳ Health Connect (Android), push, проверка экрана «Мой специалист» в обёртке, IAP для PRO, публикация.
 - Нужно от владельца: Node+Xcode+Android Studio на Mac, аккаунты Apple ($99/год) / Google ($25).
 - Потом: PWA (значок на экран, телефон/планшет — ВОПРОС владельца); RTL для иврита; вид под

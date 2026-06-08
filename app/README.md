@@ -36,8 +36,11 @@ npx cap open android     # открыть в Android Studio → Run
 
 ## Дорожная карта (этапы из MOBILE-APP-MODEL.md §5)
 
-- [x] **Слой 0 — скаффолд** (этот коммит): Capacitor-обёртка грузит живой ИП.
-- [ ] **HealthKit (iOS)** — чтение Apple Health/Apple Watch → в каркас носимых ИП. ← главный смысл
+- [x] **Слой 0 — скаффолд**: Capacitor-обёртка грузит живой ИП.
+- [~] **HealthKit (iOS)** — код готов, ждёт сборки+теста на устройстве (см. `HEALTHKIT.md`):
+  плагин `@perfood/capacitor-healthkit` + мост `../interpreter/healthkit-bridge.js` (читает HRV/пульс/
+  сон/VO2 → поля карточки Apple) + кнопка «📲 Apple Health» на `interpreter-pro.html` (видна только
+  в приложении). Осталось: Xcode-capability + Info.plist, проверка на iPhone, перенос на pro-expert/elite.
 - [ ] **Health Connect (Android)** — Samsung/Xiaomi и пр.
 - [ ] **Push-уведомления** (напоминалка в телефоне).
 - [ ] **Вход по коду доступа** — уже есть в вебе (экран «Мой специалист»); проверить в обёртке.
