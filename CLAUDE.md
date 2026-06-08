@@ -20,7 +20,9 @@ This repo holds **two products**, each with its own ARCHITECTURE.md (NOT auto-lo
 
 ## Build / run
 
-There is **no build system, no package manager, no tests**. Files are served as-is.
+There is **no build system, no package manager, no tests** for the website/ИП. Files are served as-is.
+
+**Exception — `app/`:** the native patient app (Capacitor wrapper of the web-ИП) lives in `app/` and *does* have npm/Capacitor. It is isolated and does **not** affect the GitHub Pages deploy of the site. Build it on a Mac (`cd app && npm install && npx cap add ios android`). See `app/README.md`.
 
 - Local preview: open `index.html` in a browser, or use VS Code Live Preview (configured default path is `/about-premium-preview.html` in `.vscode/settings.json` — that file may not exist; override or use `/index.html`).
 
