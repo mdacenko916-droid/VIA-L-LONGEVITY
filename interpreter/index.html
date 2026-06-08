@@ -165,11 +165,19 @@ header {
 }
 
 .devices-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 20px 12px;
-  max-width: 960px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  max-width: 1000px;
   margin: 0 auto;
+}
+.dev-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 20px 12px;
+  width: 100%;
 }
 
 /* ── DEVICE SLOT ── */
@@ -177,6 +185,7 @@ header {
   display: flex; flex-direction: column; align-items: center;
   cursor: pointer;
   opacity: 0;
+  width: 180px;
   background: transparent;
   transform: translateY(40px);
   transition: opacity .6s ease, transform .6s ease;
@@ -214,7 +223,7 @@ header {
 .dev-stage-glb {
   perspective: none;
   background: transparent;
-  width: 204px; height: 204px;
+  width: 100%; max-width: 200px; aspect-ratio: 1; height: auto;
   padding: 8px;
   box-sizing: border-box;
   display: flex;
@@ -233,8 +242,13 @@ header {
   filter: drop-shadow(0 0 26px var(--glow)) drop-shadow(0 0 10px var(--glow)) !important;
 }
 .dev-slot[data-id="oura"] .dev-img {
-  width: 80px; height: 80px;
-  max-width: 80px; max-height: 80px;
+  width: 56px; height: 56px;
+  max-width: 56px; max-height: 56px;
+}
+.dev-slot[data-id="ultrahuman"] .dev-img {
+  width: 115px; height: 115px;
+  max-width: 115px; max-height: 115px;
+  transform: rotate(-11deg);
 }
 
 /* ── WATCH TYPE ── */
@@ -575,7 +589,7 @@ footer a:hover { color: var(--gold); }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
-  .devices-grid { grid-template-columns: repeat(4, 1fr); }
+  .dev-slot { width: 30%; }
   header { padding: 12px 20px; }
   .menu-btn span { display: none; }
   .logo-title { display: none; }
@@ -590,14 +604,16 @@ footer a:hover { color: var(--gold); }
   .plans-grid { grid-template-columns: 1fr; max-width: 420px; }
 }
 @media (max-width: 640px) {
-  .devices-grid { grid-template-columns: repeat(3, 1fr); gap: 16px 8px; }
+  .dev-slot { width: 30%; }
+  .dev-row { gap: 16px 8px; }
   .hero { padding: 110px 0 40px; }
   .dev-metrics { display: none; }
   .dev-stage-glb { width: 100%; height: auto; aspect-ratio: 1; max-width: 100%; }
-  .dev-slot[data-id="oura"] .dev-img { width: 60%; height: 60%; max-width: none; max-height: none; }
+  .dev-slot[data-id="oura"] .dev-img { width: 40%; height: 40%; max-width: none; max-height: none; }
+  .dev-slot[data-id="ultrahuman"] .dev-img { width: 79%; height: 79%; max-width: none; max-height: none; }
 }
 @media (max-width: 400px) {
-  .devices-grid { grid-template-columns: repeat(2, 1fr); }
+  .dev-slot { width: 44%; }
 }
 
 /* ── LANG SWITCHER ── */
@@ -862,7 +878,7 @@ footer a:hover { color: var(--gold); }
 <script>
 const DEVICES = [
   {
-    id: 'oura', name: 'Oura Ring', sub: 'Gen 3 / Gen 4', type: 'png',
+    id: 'oura', name: 'Oura Ring', sub: 'Gen 3 / 4 / 5', type: 'png',
     photo: './images-in/Oura%20Ring%20Gen%204%20gold.PNG',
     badge: 'best',
     glow: 'rgba(196,150,60,0.45)',
@@ -930,6 +946,13 @@ const DEVICES = [
     badge: 'good',
     glow: 'rgba(0,190,170,0.35)',
     metrics: ['m_hrv', 'm_sleep', 'm_hr', 'm_pai', 'm_stress']
+  },
+  {
+    id: 'ultrahuman', name: 'Ultrahuman', sub: 'Ring Air', type: 'png',
+    photo: './images-in/Ultrahuman%20Ring%20Air%20gold.PNG',
+    badge: 'best',
+    glow: 'rgba(150,110,220,0.42)',
+    metrics: ['m_hrv', 'm_sleep', 'm_temp', 'm_hr', 'm_recovery']
   }
 ];
 
@@ -1000,6 +1023,21 @@ function buildDeviceHTML(d) {
       <div class="dev-sub">${d.sub}</div>
       <span class="dev-badge ${badgeClass}">${badgeText}</span>
     </div>`;
+}
+
+// Device layout: row 1 = rings, row 2 = watches (by relevance), row 3 = other models.
+const DEVICE_ROWS = [
+  ['oura', 'ultrahuman'],
+  ['apple', 'garmin', 'samsung', 'withings'],
+  ['polar', 'fitbit', 'whoop', 'xiaomi', 'amazfit']
+];
+function renderDevices() {
+  const g = document.getElementById('devicesGrid');
+  if (!g) return;
+  g.innerHTML = DEVICE_ROWS.map(row =>
+    `<div class="dev-row">${row.map(id => buildDeviceHTML(DEVICES.find(d => d.id === id))).join('')}</div>`
+  ).join('');
+  g.querySelectorAll('.dev-slot').forEach(s => s.classList.add('visible'));
 }
 
 // Grid is rendered by setLang() at init — do not render here (T not yet defined)
@@ -2029,11 +2067,7 @@ function setLang(l) {
     if (T[l] && T[l][k] !== undefined) el.innerHTML = T[l][k];
   });
   // Re-render device grid (badges + metrics are in JS)
-  const grid = document.getElementById('devicesGrid');
-  if (grid) {
-    grid.innerHTML = DEVICES.map(buildDeviceHTML).join('');
-    grid.querySelectorAll('.dev-slot').forEach(s => s.classList.add('visible'));
-  }
+  renderDevices();
   // Close dropdown
   document.getElementById('langWrap').classList.remove('open');
 }
