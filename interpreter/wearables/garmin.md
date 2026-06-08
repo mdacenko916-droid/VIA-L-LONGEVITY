@@ -7,14 +7,17 @@
 - Заявка подавалась через форму «Contact Garmin Health» — **ответа нет неделями**.
 
 ## Сделано
-- Подана заявка (первая попытка).
+- 1-я попытка (раньше) — без ответа.
+- ✅ **2026-06-08: подана повторно** (контакт `integration@via-l.com`, текст с OAuth 2.0
+  PKCE, запрошены Health API + Women's Health API).
 
 ## В процессе
-- Ничего — ждём ответа, которого нет.
+- Ждём ответ/одобрение Garmin. Норма ответа — около **2 рабочих дней**. Следить за
+  входящими на `integration@via-l.com`. Если тишина >1 недели — пинг или агрегатор (см. README).
 
 ## В ожидании
-- Одобрение Garmin. У них норма ответа — около **2 рабочих дней**, поэтому молчание
-  означает, что заявка, скорее всего, не дошла или попала не туда.
+- Одобрение бизнес-аккаунта → приглашение на интеграционный звонок → доступ к порталу
+  с кодами (Client ID/Secret).
 
 ## Что нужно сделать
 1. **Переподать заявку** через `developer.garmin.com/gc-developer-program` — как
@@ -33,3 +36,33 @@
   будущего приложения подключится **без кодов** (см. [app-health-store.md](app-health-store.md)).
   Веб-коды Garmin нужны лишь для веб-клиентов и чтобы добрать HRV. Переподать по разу — и
   спокойно ждать, без нервов.
+- ℹ️ **OAuth:** Garmin перешёл на **OAuth 2.0 (PKCE)**; старый OAuth 1.0a отключается
+  **31.12.2026**. В заявке указывать 2.0 (PKCE) — это актуально (миф про «только 1.0a» устарел).
+
+## Готовый текст заявки (на 2026-06-08, для повторной подачи)
+Куда: developer.garmin.com/gc-developer-program (как юрлицо), либо форма
+garmin.com/en-US/forms/developercontactus/. Контактный e-mail: **integration@via-l.com**
+(корпоративный домен — снижает риск авто-отказа; заведён на Namecheap-пересылке → gmail).
+
+Поля: Company = `[юр. название]`, Website = `https://via-l.com`,
+Email = `integration@via-l.com`, Country = `[страна]`, APIs = **Health API + Women's Health API**.
+
+Use case (вставить целиком):
+```
+VIA-L (via-l.com) is a digital longevity and clinical-nutrition service that
+interprets wearable biomarkers into personalized nutrition guidance, with a
+strong focus on women's health (menopause) and men's health (andropause).
+
+We would like to integrate the Garmin Health API and Women's Health API so our
+users can connect their Garmin account and securely import sleep, HRV, resting
+heart rate, stress, Body Battery, SpO2, steps and menstrual-cycle data. The
+cycle data is important for our women's-health section.
+
+All data is processed server-side via Garmin's OAuth 2.0 (PKCE) flow on our
+Cloudflare Worker backend and used solely to generate the user's own nutritional
+interpretation — never resold or shared with third parties.
+
+OAuth redirect URI: https://interpreter.viaelcom.workers.dev/garmin/callback
+Business email: integration@via-l.com
+We are EU-based and ready for the integration call.
+```
