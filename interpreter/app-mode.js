@@ -58,6 +58,8 @@
         'html.app-mode .menu-item[data-t="nav_site"],html.app-mode .cabinet-btn{display:none !important;}' +
         // верхние текстовые ссылки убираем — они уезжают в нижний таб-бар
         'html.app-mode .topbar-home{display:none !important;}' +
+        // на входе app: рекламный подзаголовок-перечисление устройств лишний (есть на вебе)
+        'html.app-mode .hero-desc{display:none !important;}' +
         // логотип Logo_IP компактнее в приложении (на вебе остаётся 50px)
         'html.app-mode .lang-logo-img{height:42px !important;}' +
         // кнопки шага: как в браузере — горизонтально, короткая «назад» + длинная «далее»
