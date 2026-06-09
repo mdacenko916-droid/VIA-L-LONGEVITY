@@ -3504,6 +3504,7 @@ function navTo(tab){
   const hp=document.getElementById('historyPanel');
   if(tab==='history'){hp.style.display='block';renderHistory();}
   else hp.style.display='none';
+  if(tab==='home') goTo(0);   // «Сегодня» = домой: возврат на стартовый экран (ответы сохраняются)
 }
 
 // ══ HISTORY ═══════════════════════════════════════════════
@@ -3632,10 +3633,13 @@ function goTo(n){
   if(target) target.classList.add('active');
   document.getElementById('app').setAttribute('data-step', n);
   updateProgress(n);
+  // В приложении hero (логотип/заголовок/кнопка импорта) — только на входе (step0); дальше прячем.
+  if (window.Capacitor) { var _hero=document.querySelector('.hero'); if(_hero) _hero.style.display = (n===0) ? '' : 'none'; }
   setTimeout(()=>{
     const target2 = document.getElementById(n==='result'?'stepResult':'step'+n);
-    if(target2) target2.scrollIntoView({behavior:'smooth', block:'start'});
-  }, 80);
+    // В приложении — мгновенная привязка шага к верхнему краю (строго); на вебе — плавно.
+    if(target2) target2.scrollIntoView({behavior: window.Capacitor ? 'auto' : 'smooth', block:'start'});
+  }, window.Capacitor ? 0 : 80);
 }
 function updateProgress(n){
   const lbl=document.getElementById('progressLbl');
