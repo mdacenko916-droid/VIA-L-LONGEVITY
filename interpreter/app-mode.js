@@ -75,6 +75,28 @@
     // Платёж внутри приложения НЕ ведём на Hotmart (PRO-покупка появится через IAP магазина).
     window._openHotmart = function(){ alert(NOTE[noteLang()]); };
     appShell();
+    // Логотип топ-бара в приложении = «домой» ВНУТРИ инструмента, а не выход на лендинг.
+    // (href="./index.html" в webview выкидывал на страницу-лендинг — выглядело как «уход на сайт».)
+    var logo = document.querySelector('.lang-logo');
+    if (logo && !logo.hasAttribute('data-app-home')) {
+      logo.setAttribute('data-app-home', '1');
+      logo.removeAttribute('href');
+      logo.style.cursor = 'pointer';
+      logo.addEventListener('click', function(e){
+        e.preventDefault();
+        if (typeof window.navTo === 'function') window.navTo('home');
+      });
+    }
+    // Внешние ссылки оплаты Hotmart запрещены в приложении (anti-steering Apple) и засоряют
+    // экран результата. Прячем их: если строка состоит только из таких ссылок — прячем строку
+    // целиком (чисто), иначе только саму ссылку (чтобы не задеть текст рядом, напр. на гейте).
+    document.querySelectorAll('a[href*="pay.hotmart.com"]').forEach(function(a){
+      var p = a.parentElement;
+      var onlyLinks = p && Array.prototype.every.call(p.children, function(c){
+        return c.tagName === 'A' && /pay\.hotmart\.com/.test(c.href);
+      });
+      (onlyLinks ? p : a).style.display = 'none';
+    });
     return true;
   }
 
