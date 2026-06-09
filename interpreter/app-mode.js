@@ -60,6 +60,9 @@
         'html.app-mode .topbar-home{display:none !important;}' +
         // на входе app: рекламный подзаголовок-перечисление устройств лишний (есть на вебе)
         'html.app-mode .hero-desc{display:none !important;}' +
+        // строгие переходы шагов в app: появление без «падения» сверху — только проявление
+        'html.app-mode .step.active{animation:appStepIn .18s ease both !important;}' +
+        '@keyframes appStepIn{from{opacity:0}to{opacity:1}}' +
         // логотип Logo_IP компактнее в приложении (на вебе остаётся 50px)
         'html.app-mode .lang-logo-img{height:42px !important;}' +
         // кнопки шага: как в браузере — горизонтально, короткая «назад» + длинная «далее»

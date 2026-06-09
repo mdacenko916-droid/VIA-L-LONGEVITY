@@ -4306,7 +4306,8 @@ function goTo(n){
   if(target) target.classList.add('active');
   if(target&&target.querySelector&&target.querySelector('#bio-fat'))setBioHints();
   updateProgress(n);
-  setTimeout(()=>{ if(target) target.scrollIntoView({behavior:'smooth', block:'start'}); }, 80);
+  // В приложении — мгновенная привязка шага к верхнему краю (строго, без доскролла); на вебе — плавно.
+  setTimeout(()=>{ if(target) target.scrollIntoView({behavior: window.Capacitor ? 'auto' : 'smooth', block:'start'}); }, window.Capacitor ? 0 : 80);
   // retrigger ECG heartbeat
   const ep=document.getElementById('ecgPath');
   if(ep){ep.classList.remove('run');void ep.offsetWidth;ep.classList.add('run');}
