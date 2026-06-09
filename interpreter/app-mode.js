@@ -63,6 +63,10 @@
         // строгие переходы шагов в app: появление без «падения» сверху — только проявление
         'html.app-mode .step.active{animation:appStepIn .18s ease both !important;}' +
         '@keyframes appStepIn{from{opacity:0}to{opacity:1}}' +
+        // плотный режим: меньше прокрутки вниз — поджимаем вертикальные отступы шага
+        'html.app-mode .progress-wrap{margin-bottom:16px !important;}' +
+        'html.app-mode .card{padding:16px 14px !important;margin-bottom:8px !important;}' +
+        'html.app-mode .btn-row{margin-top:14px !important;}' +
         // логотип Logo_IP компактнее в приложении (на вебе остаётся 50px)
         'html.app-mode .lang-logo-img{height:42px !important;}' +
         // кнопки шага: как в браузере — горизонтально, короткая «назад» + длинная «далее»
