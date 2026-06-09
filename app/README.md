@@ -37,6 +37,9 @@ npx cap open android     # открыть в Android Studio → Run
 ## Дорожная карта (этапы из MOBILE-APP-MODEL.md §5)
 
 - [x] **Слой 0 — скаффолд**: Capacitor-обёртка грузит живой ИП.
+- [x] **Режим приложения** (`../interpreter/app-mode.js`, на всех ИП-страницах): внутри обёртки
+  прячет EXPERT/ELITE + любые Hotmart-ссылки (anti-steering) + «← Сайт»/«Кабінет»; остаются VIO+PRO.
+  На вебе — no-op. ⏳ дальше: ввод кода доступа (EXPERT/ELITE с сайта) + IAP для PRO.
 - [~] **HealthKit (iOS)** — код готов, ждёт сборки+теста на устройстве (см. `HEALTHKIT.md`):
   плагин `@perfood/capacitor-healthkit` + мост `../interpreter/healthkit-bridge.js` (читает HRV/пульс/
   сон/VO2 → поля карточки Apple) + кнопка «📲 Apple Health» на `interpreter-pro.html` (видна только
