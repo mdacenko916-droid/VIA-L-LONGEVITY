@@ -34,8 +34,11 @@
       css.textContent =
         'html.app-mode .plan-expert,html.app-mode .plan-elite{display:none !important;}' +
         'html.app-mode .menu-item[data-t="nav_site"],html.app-mode .cabinet-btn{display:none !important;}' +
-        // шапка (логотип + язык) опускается ниже статус-бара/Dynamic Island
-        'html.app-mode header{padding-top:calc(env(safe-area-inset-top,0px) + 12px) !important;}';
+        // лендинг: шапка <header> опускается ниже статус-бара/Dynamic Island
+        'html.app-mode header{padding-top:calc(env(safe-area-inset-top,0px) + 12px) !important;}' +
+        // страницы-инструменты (VIO/PRO): весь контейнер #app сдвигаем ниже системной зоны
+        // (низ уже учитывает env(safe-area-inset-bottom) в .bottom-nav)
+        'html.app-mode #app{top:env(safe-area-inset-top,0px) !important;}';
       (document.head || html).appendChild(css);
     }
     // Платёж внутри приложения НЕ ведём на Hotmart (PRO-покупка появится через IAP магазина).
