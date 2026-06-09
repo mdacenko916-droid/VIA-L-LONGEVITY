@@ -64,6 +64,8 @@
         // (на узком экране базовый @media ставит их в столбик и растягивает «назад»)
         'html.app-mode .btn-row{flex-direction:row !important;}' +
         'html.app-mode .btn-back{flex:0 0 auto !important;}' +
+        // футер-ссылка «← На главную» в приложении лишняя (логотип уже = домой)
+        'html.app-mode .footer-back{display:none !important;}' +
         // лендинг: шапка <header> ниже статус-бара/Dynamic Island
         'html.app-mode header{padding-top:calc(env(safe-area-inset-top,0px) + 12px) !important;}' +
         // инструменты (VIO/PRO): весь #app ниже системной зоны (низ уже учтён в .bottom-nav)
