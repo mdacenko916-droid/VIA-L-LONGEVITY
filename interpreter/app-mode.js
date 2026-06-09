@@ -60,6 +60,10 @@
         'html.app-mode .topbar-home{display:none !important;}' +
         // логотип Logo_IP компактнее в приложении (на вебе остаётся 50px)
         'html.app-mode .lang-logo-img{height:42px !important;}' +
+        // кнопки шага: как в браузере — горизонтально, короткая «назад» + длинная «далее»
+        // (на узком экране базовый @media ставит их в столбик и растягивает «назад»)
+        'html.app-mode .btn-row{flex-direction:row !important;}' +
+        'html.app-mode .btn-back{flex:0 0 auto !important;}' +
         // лендинг: шапка <header> ниже статус-бара/Dynamic Island
         'html.app-mode header{padding-top:calc(env(safe-area-inset-top,0px) + 12px) !important;}' +
         // инструменты (VIO/PRO): весь #app ниже системной зоны (низ уже учтён в .bottom-nav)
