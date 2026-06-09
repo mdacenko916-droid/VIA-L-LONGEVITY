@@ -4306,6 +4306,9 @@ function goTo(n){
   if(target) target.classList.add('active');
   if(target&&target.querySelector&&target.querySelector('#bio-fat'))setBioHints();
   updateProgress(n);
+  // В приложении hero (большой логотип/заголовок/кнопка импорта) — только на входе (step0);
+  // на остальных шагах прячем, чтобы вверху не было лишнего текста при скролле. На вебе не трогаем.
+  if (window.Capacitor) { var _hero=document.querySelector('.hero'); if(_hero) _hero.style.display = (n===0) ? '' : 'none'; }
   // В приложении — мгновенная привязка шага к верхнему краю (строго, без доскролла); на вебе — плавно.
   setTimeout(()=>{ if(target) target.scrollIntoView({behavior: window.Capacitor ? 'auto' : 'smooth', block:'start'}); }, window.Capacitor ? 0 : 80);
   // retrigger ECG heartbeat
