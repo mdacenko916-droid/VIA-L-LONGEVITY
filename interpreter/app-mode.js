@@ -29,15 +29,12 @@
   function noteLang(){ var l = curLang(); return NOTE[l] ? l : 'en'; }
 
   // Перестройка под app (только страницы-инструменты, где есть нижний таб-бар). Идемпотентно.
+  // Логотип топ-бара = Logo_IP.png (уже в разметке, класс .lang-logo-img). В app только
+  // делаем его компактнее (CSS) и переносим «Специалист» в нижний таб-бар.
   function appShell(){
     var nav = document.querySelector('.bottom-nav');
     if (!nav) return;
-    // 1) компактный логотип VL вместо крупной линейной монограммы (логотип = «домой»)
-    var logoA = document.querySelector('#topbar .lang-logo');
-    if (logoA && !logoA.querySelector('img')) {
-      logoA.innerHTML = '<img src="Logo/4-min.png" alt="VL" style="height:40px;width:auto;display:block;filter:drop-shadow(0 0 6px rgba(196,154,60,.35));">';
-    }
-    // 2) «Специалист» в нижний таб-бар (верхние текстовые ссылки скрыты через CSS)
+    // «Специалист» в нижний таб-бар (верхние текстовые ссылки скрыты через CSS)
     if (!nav.querySelector('[data-appnav="spec"]')) {
       var b = document.createElement('button');
       b.className = 'bottom-nav-item';
@@ -61,6 +58,8 @@
         'html.app-mode .menu-item[data-t="nav_site"],html.app-mode .cabinet-btn{display:none !important;}' +
         // верхние текстовые ссылки убираем — они уезжают в нижний таб-бар
         'html.app-mode .topbar-home{display:none !important;}' +
+        // логотип Logo_IP компактнее в приложении (на вебе остаётся 50px)
+        'html.app-mode .lang-logo-img{height:42px !important;}' +
         // лендинг: шапка <header> ниже статус-бара/Dynamic Island
         'html.app-mode header{padding-top:calc(env(safe-area-inset-top,0px) + 12px) !important;}' +
         // инструменты (VIO/PRO): весь #app ниже системной зоны (низ уже учтён в .bottom-nav)
