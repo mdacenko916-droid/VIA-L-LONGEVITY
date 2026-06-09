@@ -1,10 +1,11 @@
 /* VIA·L — «режим приложения». Когда ИП открыт ВНУТРИ нативной обёртки (Capacitor),
-   прячем то, что нельзя в App Store / Google Play:
-   • тарифы EXPERT / ELITE,
-   • любые ссылки на внешнюю оплату Hotmart (правило anti-steering — иначе ревью отклонит),
-   • ссылку «← Сайт» и кнопку «Кабінет» (кабинет — для специалистов, не для пациента).
-   Остаются: VIO (бесплатно) + PRO. На обычном вебе скрипт НИЧЕГО не меняет.
-   Спека: docs/MOBILE-APP-MODEL.md §2. Подключён ко всем ИП-страницам. */
+   приводим вид к «как родное приложение»:
+   • прячем тарифы EXPERT/ELITE и любые ссылки на внешнюю оплату Hotmart (anti-steering),
+     ссылку «← Сайт» и «Кабінет» (кабинет — для специалистов, не для пациента);
+   • safe-area: контент ниже статус-бара/«чёлки»;
+   • компактный логотип VL вверху (он же = «домой»), а ссылка «🩺 Специалист» уезжает
+     в нижний таб-бар (стандартная app-навигация; решает тесноту и обрезанный пункт).
+   На обычном вебе скрипт НИЧЕГО не меняет. Спека: docs/MOBILE-APP-MODEL.md §2. */
 (function(){
   var NOTE = {
     uk:'Придбання PRO у застосунку зʼявиться найближчим часом через магазин застосунків.',
@@ -20,34 +21,59 @@
     ja:'アプリ内のPRO購入は近日アプリストアより対応予定です。',
     ko:'앱 내 PRO 구매는 곧 앱스토어를 통해 제공됩니다.'
   };
-  function noteLang(){ try { var l = localStorage.getItem('vial_lang'); return NOTE[l] ? l : 'en'; } catch(e){ return 'en'; } }
+  var SPEC = {
+    uk:'Спеціаліст',ru:'Специалист',en:'Specialist',es:'Especialista',de:'Spezialist',
+    pt:'Especialista',fr:'Spécialiste',pl:'Specjalista',it:'Specialista',he:'מומחה',ja:'専門家',ko:'전문가'
+  };
+  function curLang(){ try { return localStorage.getItem('vial_lang') || 'en'; } catch(e){ return 'en'; } }
+  function noteLang(){ var l = curLang(); return NOTE[l] ? l : 'en'; }
+
+  // Перестройка под app (только страницы-инструменты, где есть нижний таб-бар). Идемпотентно.
+  function appShell(){
+    var nav = document.querySelector('.bottom-nav');
+    if (!nav) return;
+    // 1) компактный логотип VL вместо крупной линейной монограммы (логотип = «домой»)
+    var logoA = document.querySelector('#topbar .lang-logo');
+    if (logoA && !logoA.querySelector('img')) {
+      logoA.innerHTML = '<img src="Logo/4-min.png" alt="VL" style="height:40px;width:auto;display:block;filter:drop-shadow(0 0 6px rgba(196,154,60,.35));">';
+    }
+    // 2) «Специалист» в нижний таб-бар (верхние текстовые ссылки скрыты через CSS)
+    if (!nav.querySelector('[data-appnav="spec"]')) {
+      var b = document.createElement('button');
+      b.className = 'bottom-nav-item';
+      b.setAttribute('data-appnav', 'spec');
+      b.innerHTML = '<div class="bottom-nav-icon">🩺</div><span>' + (SPEC[curLang()] || SPEC.en) + '</span>';
+      b.onclick = function(){ location.href = './my-specialist.html'; };
+      nav.appendChild(b);
+    }
+  }
 
   function apply(){
     if (!window.Capacitor) return false;                 // только внутри приложения
     var html = document.documentElement;
     if (!html.classList.contains('app-mode')) {
       html.classList.add('app-mode');
-      // Системные отступы «чёлки»/статус-бара: включаем viewport-fit=cover (иначе env() = 0)
       var vp = document.querySelector('meta[name="viewport"]');
       if (vp && vp.content.indexOf('viewport-fit') < 0) vp.setAttribute('content', vp.content + ', viewport-fit=cover');
       var css = document.createElement('style');
       css.textContent =
         'html.app-mode .plan-expert,html.app-mode .plan-elite{display:none !important;}' +
         'html.app-mode .menu-item[data-t="nav_site"],html.app-mode .cabinet-btn{display:none !important;}' +
-        // лендинг: шапка <header> опускается ниже статус-бара/Dynamic Island
+        // верхние текстовые ссылки убираем — они уезжают в нижний таб-бар
+        'html.app-mode .topbar-home{display:none !important;}' +
+        // лендинг: шапка <header> ниже статус-бара/Dynamic Island
         'html.app-mode header{padding-top:calc(env(safe-area-inset-top,0px) + 12px) !important;}' +
-        // страницы-инструменты (VIO/PRO): весь контейнер #app сдвигаем ниже системной зоны
-        // (низ уже учитывает env(safe-area-inset-bottom) в .bottom-nav)
+        // инструменты (VIO/PRO): весь #app ниже системной зоны (низ уже учтён в .bottom-nav)
         'html.app-mode #app{top:env(safe-area-inset-top,0px) !important;}';
       (document.head || html).appendChild(css);
     }
     // Платёж внутри приложения НЕ ведём на Hotmart (PRO-покупка появится через IAP магазина).
     window._openHotmart = function(){ alert(NOTE[noteLang()]); };
+    appShell();
     return true;
   }
 
-  if (!apply()) {                                        // Capacitor мог инжектиться чуть позже
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
-    setTimeout(apply, 800);
-  }
+  apply();                                               // сразу
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
+  setTimeout(apply, 800);                                // на случай позднего инжекта Capacitor / DOM
 })();
