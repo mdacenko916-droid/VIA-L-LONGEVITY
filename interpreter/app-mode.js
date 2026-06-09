@@ -27,10 +27,15 @@
     var html = document.documentElement;
     if (!html.classList.contains('app-mode')) {
       html.classList.add('app-mode');
+      // Системные отступы «чёлки»/статус-бара: включаем viewport-fit=cover (иначе env() = 0)
+      var vp = document.querySelector('meta[name="viewport"]');
+      if (vp && vp.content.indexOf('viewport-fit') < 0) vp.setAttribute('content', vp.content + ', viewport-fit=cover');
       var css = document.createElement('style');
       css.textContent =
         'html.app-mode .plan-expert,html.app-mode .plan-elite{display:none !important;}' +
-        'html.app-mode .menu-item[data-t="nav_site"],html.app-mode .cabinet-btn{display:none !important;}';
+        'html.app-mode .menu-item[data-t="nav_site"],html.app-mode .cabinet-btn{display:none !important;}' +
+        // шапка (логотип + язык) опускается ниже статус-бара/Dynamic Island
+        'html.app-mode header{padding-top:calc(env(safe-area-inset-top,0px) + 12px) !important;}';
       (document.head || html).appendChild(css);
     }
     // Платёж внутри приложения НЕ ведём на Hotmart (PRO-покупка появится через IAP магазина).
