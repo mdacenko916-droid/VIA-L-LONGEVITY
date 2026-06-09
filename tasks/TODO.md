@@ -136,9 +136,21 @@ POST/cross-origin не трогает) + meta в head. Адрес для уст�
   `@perfood/capacitor-healthkit` в `app/package.json`; мост `interpreter/healthkit-bridge.js` (читает
   HRV/пульс/сон/deep/VO2 → авто-заполняет поля карточки Apple `m-hrv/m-rhr/m-sleep/m-deep/m-vo2` →
   `applyManual()`); кнопка «📲 Apple Health» на `interpreter-pro.html` (видна ТОЛЬКО в приложении,
-  на вебе скрыта). Осталось (на Mac): `npx cap add ios`, HealthKit-capability + Info.plist
-  (`app/HEALTHKIT.md`), тест на iPhone, сверить имена типов/парсинг, перенос кнопки на pro-expert/elite.
-- ⏳ Health Connect (Android), push, проверка экрана «Мой специалист» в обёртке, IAP для PRO, публикация.
+  на вебе скрыта). ✅ **Собрано и запущено на iPhone владельца (2026-06-09):** `npx cap add ios`,
+  HealthKit-capability + Info.plist (`NSHealth*UsageDescription`), CocoaPods; плагин запинен
+  `^2.0.0-alpha.2` (Capacitor 6, `npm i --legacy-peer-deps`). Вход по dev-коду `VIAL-PRO-2024`.
+  ⏳ Осталось: проверить **реальное чтение Apple Health** на устройстве (кнопка «📲 Apple Health»),
+  сверить имена типов/парсинг, перенос кнопки на pro-expert/elite. Гоча: `app/ios` в .gitignore →
+  правки Info.plist в репо не персистятся (см. [[project_app_iap_plan]]).
+- ✅ **App-вид / UX (2026-06-09, общий `interpreter/app-mode.js`):** строгие переходы шагов
+  (мгновенно, к верхнему краю), авто-фиксация коротких шагов (влезает → не скроллится), hero только
+  на входе (step0), футер скрыт, плотные отступы, верхний отступ под компактный логотип, логотип =
+  декор/«домой», таб «Сегодня» → «Главная» (12 яз), скрыты внешние Hotmart-ссылки (anti-steering).
+  Паритет во всех 4 инструментах (vio/pro/pro-expert/elite).
+- ⏳ **«Импорт из устройства» — добавить Ultrahuman** (карточка/опция в экране импорта ИП; зависит
+  от партнёрского доступа Ultrahuman — см. §1 «Носимые, вторая волна»).
+- ⏳ **IAP для PRO** — встроить Apple In-App Purchase (план — [[project_app_iap_plan]]).
+- ⏳ Health Connect (Android), push, проверка экрана «Мой специалист» в обёртке, публикация.
 - Нужно от владельца: Node+Xcode+Android Studio на Mac, аккаунты Apple ($99/год) / Google ($25).
 - Потом: PWA (значок на экран, телефон/планшет — ВОПРОС владельца); RTL для иврита; вид под
   профиль (не-нутрициолог). Кабинет специалиста = веб-PWA; магазинное app — это ИП пациента.
