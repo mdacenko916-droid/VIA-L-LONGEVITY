@@ -3639,6 +3639,9 @@ function goTo(n){
     const target2 = document.getElementById(n==='result'?'stepResult':'step'+n);
     // В приложении — мгновенная привязка шага к верхнему краю (строго); на вебе — плавно.
     if(target2) target2.scrollIntoView({behavior: window.Capacitor ? 'auto' : 'smooth', block:'start'});
+    // В приложении: шаг, который влезает в экран, фиксируем намертво (без скролла/«резинки»);
+    // если выше экрана — оставляем прокрутку. Авто, без ручной разметки шагов.
+    if(window.Capacitor){var sa=document.getElementById('scroll-area');if(sa)sa.style.overflowY=(sa.scrollHeight<=sa.clientHeight+1)?'hidden':'auto';}
   }, window.Capacitor ? 0 : 80);
 }
 function updateProgress(n){
