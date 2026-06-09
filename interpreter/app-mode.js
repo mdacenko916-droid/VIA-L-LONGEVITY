@@ -64,7 +64,10 @@
         'html.app-mode .step.active{animation:appStepIn .18s ease both !important;}' +
         '@keyframes appStepIn{from{opacity:0}to{opacity:1}}' +
         // плотный режим: меньше прокрутки вниз — поджимаем вертикальные отступы шага
-        'html.app-mode .progress-wrap{margin-bottom:16px !important;}' +
+        // верхний отступ под компактный app-логотип (42px), а не под веб-логотип (50px) —
+        // поднимает карточки к верху и убирает лишнюю высоту (почти-влезающие шаги фиксируются)
+        'html.app-mode #scroll-area{padding-top:64px !important;}' +
+        'html.app-mode .progress-wrap{margin-bottom:10px !important;}' +
         'html.app-mode .card{padding:16px 14px !important;margin-bottom:8px !important;}' +
         'html.app-mode .btn-row{margin-top:14px !important;}' +
         // логотип Logo_IP компактнее в приложении (на вебе остаётся 50px)
