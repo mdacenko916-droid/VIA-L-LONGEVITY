@@ -3963,6 +3963,7 @@ let _rerendering=false;
 function L(t){return t[lang]||t.en||t.ru||Object.values(t)[0];}
 function setLang(l){
   lang=l;
+  if(typeof updateProgress==='function')updateProgress(window._curStep!=null?window._curStep:0);   // перевести лейбл прогресса
   localStorage.setItem('vial_lang', l);
   document.getElementById('langLabel').textContent=LANG_FLAGS[l]||l.toUpperCase();
   document.querySelectorAll('.lang-option').forEach(o=>{
@@ -4300,6 +4301,7 @@ function setBioHints(){
   set('bio-bioage',age?String(age):'—');   // ориентир = паспортный возраст
 }
 function goTo(n){
+  window._curStep = n;   // запоминаем шаг — чтобы лейбл прогресса перевести при смене языка
   document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
   const target = document.getElementById(n==='result'?'stepResult':'step'+n);
   if(target) target.classList.add('active');

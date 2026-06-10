@@ -4775,6 +4775,7 @@ const _urlDevice=new URLSearchParams(location.search).get('device')||null;
 const importedData={hrv:null,rhr:null,sleepHours:null,deepMin:null,tempDev:null,energy:null,vo2:null,source:null};
 function setLang(l){
   lang=l;
+  if(typeof updateProgress==='function')updateProgress(window._curStep!=null?window._curStep:0);   // перевести лейбл прогресса
   document.getElementById('langLabel').textContent=LANG_FLAGS[l]||l.toUpperCase();
   document.querySelectorAll('.lang-option').forEach(o=>{
     o.classList.toggle('active',o.textContent.includes(l.toUpperCase())||
@@ -5188,6 +5189,7 @@ function setBioHints(){
   set('bio-bioage',age?String(age):'—');   // ориентир = паспортный возраст
 }
 function goTo(n){
+  window._curStep = n;   // запоминаем шаг для перевода лейбла
   document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
   const target = document.getElementById(n==='result'?'stepResult':'step'+n);
   if(target) target.classList.add('active');

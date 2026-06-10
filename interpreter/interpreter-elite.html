@@ -4945,6 +4945,7 @@ function L(t){return t[lang]||t.en||t.ru||Object.values(t)[0];}
 const _urlDevice=new URLSearchParams(location.search).get('device')||null;
 function setLang(l){
   lang=l;
+  if(typeof updateProgress==='function')updateProgress(window._curStep!=null?window._curStep:0);   // перевести лейбл прогресса
   document.getElementById('langLabel').textContent=LANG_FLAGS[l]||l.toUpperCase();
   // Кнопка чата заботы → бот. Несём КОД доступа (?start=<код>) — он связывает анкету и
   // переписку в один топик. Если кода ещё нет (до активации) — fallback на язык.
@@ -5365,6 +5366,7 @@ function setBioHints(){
   set('bio-bioage',age?String(age):'—');   // ориентир = паспортный возраст
 }
 function goTo(n){
+  window._curStep = n;   // запоминаем шаг для перевода лейбла
   document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
   const target = document.getElementById(n==='result'?'stepResult':'step'+n);
   if(target) target.classList.add('active');
