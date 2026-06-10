@@ -1167,6 +1167,7 @@ async function loadData(){
 // Сохраняет ТЕКУЩЕГО выбранного клиента (почти все правки идут по selectedId).
 function saveData(){
   const c = clients.find(x=>x.id===selectedId);
+  if(c && c._light) return;   // карточка ещё не догружена — не перезаписываем досье лёгким объектом
   if(c) api('/cabinet/save', { client:c })
     .then(j=>{ if(j && j.ok===false && j.error==='client_too_large') alert(t('save_too_large')); })
     .catch(()=>{});
@@ -1444,19 +1445,34 @@ async function renderCalendar(){
     ${section(t('cal_later'), groups.later)}
     ${leadsSection}`;
 }
-function openFromCalendar(id){
+async function openFromCalendar(id){
   switchView('clients');
-  selectClient(id);
+  await selectClient(id);   // дождаться догрузки досье, затем открыть вкладку расписания
   switchTab('schedule');
 }
 
 // ── SELECT CLIENT ─────────────────────────────────────────
-function selectClient(id){
+async function selectClient(id){
   selectedId = id;
   currentTab = 'overview';
   refreshList();
+  const c = clients.find(x=>x.id===id);
+  if(c && c._light) await hydrateClient(id);   // догрузить полное досье перед показом карточки
+  if(selectedId!==id) return;                  // успели переключиться на другого — не рисуем
   renderClientDetail();
   if(window.innerWidth<768) document.getElementById('sidebar').classList.remove('open');
+}
+// Список грузит только шапку (без тяжёлого data); полное досье карточки тянем по требованию.
+async function hydrateClient(id){
+  const c = clients.find(x=>x.id===id);
+  if(!c || !c._light) return;
+  try{
+    const j = await api('/cabinet/client', { code: c.code });
+    if(j && j.ok && j.client){
+      const idx = clients.findIndex(x=>x.id===id);
+      if(idx>=0){ j.client.id = id; j.client._light = false; clients[idx] = j.client; }
+    }
+  }catch(_){}
 }
 
 function renderClientDetail(){

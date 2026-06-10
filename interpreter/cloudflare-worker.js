@@ -417,6 +417,7 @@ export default {
       // Кабинет нутрициолога (CRM на D1) — см. docs/CABINET-MODEL.md
       if (path === '/cabinet-auth')        return handleCabinetAuth(request, env, corsHeaders);
       if (path === '/cabinet/clients')     return handleCabinetClients(request, env, corsHeaders);
+      if (path === '/cabinet/client')      return handleCabinetClient(request, env, corsHeaders);
       if (path === '/cabinet/save')        return handleCabinetSave(request, env, corsHeaders);
       if (path === '/cabinet/delete')      return handleCabinetDelete(request, env, corsHeaders);
       if (path === '/cabinet/ai-draft')    return handleCabinetAiDraft(request, env, corsHeaders);
@@ -4008,6 +4009,38 @@ async function handleCabinetAuth(request, env, corsHeaders){
   return jsonResponse({ ok:true, token, role: session.role, lang, specialty, ref_code: refCode, name }, corsHeaders);
 }
 
+// Лёгкий список: колонки-шапка + только нужные списку/календарю куски data через
+// json_extract (НЕ тянем тяжёлые anketa/messages/protocol). Чинит лимит ответа D1.
+const CABINET_LIST_COLS = `code,name,email,tg,phone,lang,product,program,tier,duration_weeks,price,format,
+  start_date,end_date,status,gender,age,phase,specialist_id,created_at,updated_at,
+  json_extract(data,'$.phase_label')         AS phase_label,
+  json_extract(data,'$.schedule')            AS j_schedule,
+  json_array_length(data,'$.biometrics')     AS bio_n,
+  json_array_length(data,'$.breakdowns')     AS bd_n,
+  json_extract(data,'$.biometrics[#-1].hrv') AS last_hrv,
+  json_extract(data,'$.sharing')             AS sharing,
+  json_extract(data,'$.consent.ref_code')    AS consent_ref`;
+
+// D1-строка лёгкого запроса → объект для списка/календаря (без полного досье).
+function cabinetRowToLight(r){
+  let schedule = [];
+  try { schedule = r.j_schedule ? JSON.parse(r.j_schedule) : []; } catch(_){}
+  const bioN = r.bio_n || 0, bdN = r.bd_n || 0;
+  return {
+    id: r.code, code:r.code, name:r.name, email:r.email, tg:r.tg, phone:r.phone, lang:r.lang,
+    product:r.product, program:r.program, tier:r.tier, duration_weeks:r.duration_weeks,
+    price:r.price, format:r.format, start_date:r.start_date, end_date:r.end_date,
+    status:r.status, gender:r.gender, age:r.age, phase:r.phase, phase_label:r.phase_label||'',
+    specialist_id:r.specialist_id, created_at:r.created_at, updated_at:r.updated_at,
+    schedule,                                              // календарю нужны все будущие точки
+    biometrics: bioN > 0 ? [{ hrv: r.last_hrv }] : [],     // календарю нужен только последний hrv
+    breakdowns: bdN > 0 ? new Array(bdN) : [],             // бейджу нужна только длина
+    sharing: r.sharing === 1 || r.sharing === true,
+    consent: r.consent_ref ? { ref_code: r.consent_ref } : undefined,
+    _light: true,                                          // полное досье ещё не загружено
+  };
+}
+
 // D1-строка → объект клиента (полное досье лежит в JSON-колонке data; колонки —
 // зеркало для списка/поиска). Возвращаем плоский объект в форме, которую ждёт фронт.
 function cabinetRowToClient(r){
@@ -4032,12 +4065,27 @@ async function handleCabinetClients(request, env, corsHeaders){
   if(!sess) return jsonResponse({ ok:false, error:'unauthorized' }, corsHeaders, 401);
   if(!env.DB) return jsonResponse({ ok:false, error:'d1_missing' }, corsHeaders, 500);
   // Владелец видит всех; специалист — только своих (specialist_id = его id).
+  // Лёгкий запрос: без тяжёлого data, только колонки-шапка + производные (CABINET_LIST_COLS).
   const { results } = sess.role === 'owner'
-    ? await env.DB.prepare('SELECT * FROM clients ORDER BY updated_at DESC').all()
-    : await env.DB.prepare('SELECT * FROM clients WHERE specialist_id=? ORDER BY updated_at DESC').bind(sess.id).all();
+    ? await env.DB.prepare('SELECT ' + CABINET_LIST_COLS + ' FROM clients ORDER BY updated_at DESC').all()
+    : await env.DB.prepare('SELECT ' + CABINET_LIST_COLS + ' FROM clients WHERE specialist_id=? ORDER BY updated_at DESC').bind(sess.id).all();
   let specialty = 'nutritionist', refCode = '', name = '';
   try{ const sp = await env.DB.prepare('SELECT specialty,ref_code,name FROM specialists WHERE id=?').bind(sess.id).first(); if(sp){ if(sp.specialty) specialty = sp.specialty; if(sp.ref_code) refCode = sp.ref_code; if(sp.name) name = sp.name; } }catch(_){}
-  return jsonResponse({ ok:true, clients:(results || []).map(cabinetRowToClient), role:sess.role, specialty, ref_code: refCode, name }, corsHeaders);
+  return jsonResponse({ ok:true, clients:(results || []).map(cabinetRowToLight), role:sess.role, specialty, ref_code: refCode, name }, corsHeaders);
+}
+
+// Полное досье одного клиента (карточка по требованию) — изоляция через cabinetOwns.
+async function handleCabinetClient(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ ok:false, error:'unauthorized' }, corsHeaders, 401);
+  if(!env.DB) return jsonResponse({ ok:false, error:'d1_missing' }, corsHeaders, 500);
+  let code = '';
+  try { const b = await request.json(); code = String(b.code || b.id || ''); } catch(_){}
+  if(!code) return jsonResponse({ ok:false, error:'no_code' }, corsHeaders, 400);
+  if(!await cabinetOwns(env, sess, code)) return jsonResponse({ ok:false, error:'forbidden' }, corsHeaders, 403);
+  const r = await env.DB.prepare('SELECT * FROM clients WHERE code=?').bind(code).first();
+  if(!r) return jsonResponse({ ok:false, error:'not_found' }, corsHeaders, 404);
+  return jsonResponse({ ok:true, client: cabinetRowToClient(r) }, corsHeaders);
 }
 
 async function handleCabinetSave(request, env, corsHeaders){
