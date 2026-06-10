@@ -70,6 +70,15 @@
         'html.app-mode .progress-wrap{margin-bottom:10px !important;}' +
         'html.app-mode .card{padding:16px 14px !important;margin-bottom:8px !important;}' +
         'html.app-mode .btn-row{margin-top:14px !important;}' +
+        // результат: убираем горизонтальный «слив» (overflow-x:clip иногда не работает в iOS WebView)
+        'html.app-mode,html.app-mode body{overflow-x:hidden !important;}' +
+        'html.app-mode #scroll-area{overflow-x:hidden !important;}' +
+        'html.app-mode .pro-module{overflow:hidden;}' +
+        // читаемость разбора «ВАШ РЕЗУЛЬТАТ»: крупнее + контрастнее (тело — белее, как в Telegram)
+        'html.app-mode .mod-explain,html.app-mode .nutri-text{font-size:14px !important;color:var(--t1) !important;line-height:1.6 !important;}' +
+        'html.app-mode .nutri-title,html.app-mode .prot-name{font-size:14.5px !important;}' +
+        'html.app-mode .nutri-dose,html.app-mode .prot-detail,html.app-mode .insight-text,html.app-mode .mod-sub{font-size:13px !important;color:var(--t2) !important;}' +
+        'html.app-mode .nutri-nutrient{font-size:12px !important;}' +
         // логотип Logo_IP компактнее в приложении (на вебе остаётся 50px)
         'html.app-mode .lang-logo-img{height:42px !important;}' +
         // кнопки шага: как в браузере — горизонтально, короткая «назад» + длинная «далее»
