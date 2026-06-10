@@ -80,6 +80,16 @@
         'html.app-mode .tl-time,html.app-mode .prot-time,html.app-mode .circ-nutr-time,html.app-mode .mod-sub,html.app-mode .horm-name,html.app-mode .bio-bar-label,html.app-mode .bio-bar-val{font-size:13px !important;color:var(--t2) !important;}' +
         // мини-подзаголовки/eyebrow/дисклеймер/бейджи — не мельче 12px (никакого микротекста)
         'html.app-mode .result-eyebrow,html.app-mode .result-steps-label,html.app-mode .circ-nutr-title,html.app-mode .prot-block-title,html.app-mode .disclaimer,html.app-mode .horm-status,html.app-mode .nutri-nutrient,html.app-mode .bio-lbl,html.app-mode .score-lbl,html.app-mode .max-badge{font-size:12px !important;}' +
+        // ползунок: у .slider-labels не было CSS → подписи краёв слипались («сил10») и налезали на шкалу.
+        // Разносим по краям, компактно, с отступом от шкалы.
+        'html.app-mode .slider-labels{display:flex !important;justify-content:space-between !important;gap:16px !important;font-size:11px !important;color:var(--t3) !important;margin-top:10px !important;line-height:1.35 !important;}' +
+        // заголовок шага — ярко-белый (тонкий Playfair казался серым)
+        'html.app-mode .step-title{color:#fff !important;}' +
+        // вывод QoL + текст анализа ИИ + «Рекомендуемые анализы» + фичи CTA → 15px, контрастно (как ТГ)
+        'html.app-mode #qolDesc{font-size:15px !important;color:rgba(255,255,255,.92) !important;line-height:1.6 !important;}' +
+        'html.app-mode #aiResult{font-size:15px !important;color:rgba(255,255,255,.92) !important;line-height:1.7 !important;}' +
+        'html.app-mode .rec-list li{font-size:15px !important;color:rgba(255,255,255,.92) !important;}' +
+        'html.app-mode #cta-marina span[data-t^="cta_f"]{font-size:14.5px !important;color:rgba(255,255,255,.9) !important;}' +
         // ── ЕДИНЫЙ ШАБЛОН ШАГОВ (0 → результат) ──
         // убрать разноцветные свечения за карточками (у каждого шага свой цвет → пестро)
         'html.app-mode .card::before{display:none !important;}' +
