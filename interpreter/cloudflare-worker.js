@@ -3942,9 +3942,9 @@ async function cabinetSession(request, env){
   if(!token) return null;
   const raw = await env.EXPERT_DRAFTS.get('cabinet_sess:' + token);
   if(!raw) return null;
-  if(raw === '1') return { id:1, role:'owner' };
+  if(raw === '1') return { id:1, role:'owner' };          // легаси-токен '1' = владелец
   try { const s = JSON.parse(raw); if(s && s.id) return { id:s.id, role:s.role || 'specialist' }; } catch(_){}
-  return { id:1, role:'owner' };
+  return null;                                            // битое/непонятное значение → не пускаем (раньше ошибочно пускали владельцем)
 }
 
 // PBKDF2 (есть в Workers) — пароль специалиста хранится как "saltHex:hashHex".
@@ -4088,6 +4088,7 @@ async function handleCabinetSave(request, env, corsHeaders){
 // Проверка «этот клиент принадлежит вошедшему» (владельцу — любой). true = можно.
 async function cabinetOwns(env, sess, code){
   if(sess.role === 'owner') return true;
+  if(!env.DB) return false;                              // нет БД — проверить владение нельзя → не пускаем
   const r = await env.DB.prepare('SELECT specialist_id FROM clients WHERE code=?').bind(code).first();
   return !!(r && r.specialist_id === sess.id);
 }
@@ -4195,7 +4196,7 @@ async function handleCabinetTgSend(request, env, corsHeaders){
   const code = String(body.code||'').trim();
   const text = String(body.text||'').trim();
   if(!code || !text) return jsonResponse({ok:false,error:'missing_fields'}, corsHeaders, 400);
-  if(env.DB && !await cabinetOwns(env, sess, code)) return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
+  if(!await cabinetOwns(env, sess, code)) return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
 
   // Шаг 5: авто-перевод на язык пациента, если он отличается от языка специалиста.
   let outText = text, translated = false;
