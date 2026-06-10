@@ -41,7 +41,7 @@
       b.className = 'bottom-nav-item';
       b.setAttribute('data-appnav', 'spec');
       b.innerHTML = '<div class="bottom-nav-icon">🩺</div><span class="appnav-spec-label"></span>';
-      b.onclick = function(){ location.href = './my-specialist.html'; };
+      b.onclick = function(){ location.href = './my-specialist.html?lang=' + encodeURIComponent(curLang()); };
       nav.appendChild(b);
     }
     // текст обновляем КАЖДЫЙ раз — иначе застревает на языке создания кнопки

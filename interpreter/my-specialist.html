@@ -303,7 +303,7 @@ async function unlink(){
 
 // ── init ──
 codeEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('email').focus();}});
-setLang((function(){try{return localStorage.getItem('vial_lang')||'en';}catch(e){return 'en';}})());
+setLang((function(){try{var p=new URLSearchParams(location.search).get('lang');if(p)return p;return localStorage.getItem('vial_lang')||'en';}catch(e){return 'en';}})());
 // уже подключён?
 (function(){
   let link=null;try{link=JSON.parse(localStorage.getItem(LINK_KEY)||'null');}catch(e){}
