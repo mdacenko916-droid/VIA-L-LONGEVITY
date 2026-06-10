@@ -88,8 +88,15 @@
         // вывод QoL + текст анализа ИИ + «Рекомендуемые анализы» + фичи CTA → 15px, контрастно (как ТГ)
         'html.app-mode #qolDesc{font-size:15px !important;color:rgba(255,255,255,.92) !important;line-height:1.6 !important;}' +
         'html.app-mode #aiResult{font-size:15px !important;color:rgba(255,255,255,.92) !important;line-height:1.7 !important;}' +
-        'html.app-mode .rec-list li{font-size:15px !important;color:rgba(255,255,255,.92) !important;}' +
+        'html.app-mode .rec-list li{font-size:15px !important;color:#fff !important;}' +
         'html.app-mode #cta-marina span[data-t^="cta_f"]{font-size:14.5px !important;color:rgba(255,255,255,.9) !important;}' +
+        // хвосты: добиваем оставшееся мелкое/тусклое до нормы
+        'html.app-mode .doctor-alert{font-size:14px !important;color:rgba(255,170,170,.95) !important;}' +
+        'html.app-mode .doctor-alert strong{font-size:14.5px !important;}' +
+        'html.app-mode .prot-tag{font-size:11.5px !important;}' +
+        'html.app-mode .max-textarea{font-size:15px !important;}' +
+        'html.app-mode .max-btn{font-size:14px !important;}' +
+        'html.app-mode .score-badge{font-size:12.5px !important;}' +
         // ── ЕДИНЫЙ ШАБЛОН ШАГОВ (0 → результат) ──
         // убрать разноцветные свечения за карточками (у каждого шага свой цвет → пестро)
         'html.app-mode .card::before{display:none !important;}' +
