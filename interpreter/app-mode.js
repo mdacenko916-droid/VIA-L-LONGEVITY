@@ -74,12 +74,12 @@
         'html.app-mode,html.app-mode body{overflow-x:hidden !important;}' +
         'html.app-mode #scroll-area{overflow-x:hidden !important;}' +
         'html.app-mode .pro-module{overflow:hidden;}' +
-        // «ВАШ РЕЗУЛЬТАТ» — ЕДИНЫЙ размер/контраст текста во всех блоках (как основной текст / ТГ):
-        // всё читаемое тело и заголовки строк — 14px, ярко (.9 белого); иерархия — через жирность/цвет.
-        'html.app-mode .mod-explain,html.app-mode .nutri-text,html.app-mode .nutri-title,html.app-mode .nutri-dose,html.app-mode .prot-name,html.app-mode .prot-detail,html.app-mode .tl-name,html.app-mode .tl-detail,html.app-mode .circ-nutr-item,html.app-mode .insight-text,html.app-mode .insight-title{font-size:14px !important;line-height:1.55 !important;color:rgba(255,255,255,.9) !important;}' +
-        // мелкие подписи-метки (время/мини-подзаголовки) — компактные, но чуть ярче
-        'html.app-mode .tl-time,html.app-mode .prot-time,html.app-mode .circ-nutr-time,html.app-mode .mod-sub{font-size:11.5px !important;color:var(--t2) !important;}' +
-        'html.app-mode .nutri-nutrient{font-size:12px !important;}' +
+        // «ВАШ РЕЗУЛЬТАТ» — НЕТ мелкого текста: вся проза/тело в каждом блоке = 15px, контрастно (.92), как ТГ.
+        'html.app-mode .mod-explain,html.app-mode .nutri-text,html.app-mode .nutri-title,html.app-mode .nutri-dose,html.app-mode .prot-name,html.app-mode .prot-detail,html.app-mode .tl-name,html.app-mode .tl-detail,html.app-mode .circ-nutr-item,html.app-mode .insight-text,html.app-mode .insight-title,html.app-mode .cta-desc,html.app-mode .max-desc,html.app-mode .source-name,html.app-mode .source-desc,html.app-mode .result-sub{font-size:15px !important;line-height:1.55 !important;color:rgba(255,255,255,.92) !important;}' +
+        // имена строк/времена/значения — не мельче 13px
+        'html.app-mode .tl-time,html.app-mode .prot-time,html.app-mode .circ-nutr-time,html.app-mode .mod-sub,html.app-mode .horm-name,html.app-mode .bio-bar-label,html.app-mode .bio-bar-val{font-size:13px !important;color:var(--t2) !important;}' +
+        // мини-подзаголовки/eyebrow/дисклеймер/бейджи — не мельче 12px (никакого микротекста)
+        'html.app-mode .result-eyebrow,html.app-mode .result-steps-label,html.app-mode .circ-nutr-title,html.app-mode .prot-block-title,html.app-mode .disclaimer,html.app-mode .horm-status,html.app-mode .nutri-nutrient,html.app-mode .bio-lbl,html.app-mode .score-lbl,html.app-mode .max-badge{font-size:12px !important;}' +
         // ── ЕДИНЫЙ ШАБЛОН ШАГОВ (0 → результат) ──
         // убрать разноцветные свечения за карточками (у каждого шага свой цвет → пестро)
         'html.app-mode .card::before{display:none !important;}' +
