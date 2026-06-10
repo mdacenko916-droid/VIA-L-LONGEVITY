@@ -106,6 +106,8 @@
         'html.app-mode .max-textarea{font-size:15px !important;}' +
         'html.app-mode .max-btn{font-size:14px !important;}' +
         'html.app-mode .score-badge{font-size:12.5px !important;}' +
+        // панель «История» (fixed inset:0) — отступ под чёлку/Dynamic Island, иначе ✕ не виден
+        'html.app-mode #historyPanel{padding-top:calc(env(safe-area-inset-top,0px) + 20px) !important;}' +
         // iOS автозумит страницу при фокусе на поле со шрифтом <16px (отсюда «страница шире и ездит»
         // при открытии советника/ввода). Делаем все поля ввода 16px — зум отключается.
         'html.app-mode input,html.app-mode textarea,html.app-mode select{font-size:16px !important;}' +
