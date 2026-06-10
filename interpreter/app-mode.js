@@ -79,6 +79,16 @@
         'html.app-mode .nutri-title,html.app-mode .prot-name{font-size:14.5px !important;}' +
         'html.app-mode .nutri-dose,html.app-mode .prot-detail,html.app-mode .insight-text,html.app-mode .mod-sub{font-size:13px !important;color:var(--t2) !important;}' +
         'html.app-mode .nutri-nutrient{font-size:12px !important;}' +
+        // ── ЕДИНЫЙ ШАБЛОН ШАГОВ (0 → результат) ──
+        // убрать разноцветные свечения за карточками (у каждого шага свой цвет → пестро)
+        'html.app-mode .card::before{display:none !important;}' +
+        // метки полей/секций были бледные (.72 / 10px) — ярче и крупнее, читаемо
+        'html.app-mode .manual-label,html.app-mode .input-group label{color:rgba(255,255,255,.92) !important;font-size:11px !important;}' +
+        // единые читаемые размеры: подзаголовок, чипы выбора, кнопки, бейдж шага
+        'html.app-mode .step-desc{color:rgba(255,255,255,.85) !important;font-size:13.5px !important;}' +
+        'html.app-mode .chip label{font-size:12.5px !important;}' +
+        'html.app-mode .btn,html.app-mode .btn-primary,html.app-mode .btn-back{font-size:12.5px !important;}' +
+        'html.app-mode .step-badge{font-size:10px !important;}' +
         // логотип Logo_IP компактнее в приложении (на вебе остаётся 50px)
         'html.app-mode .lang-logo-img{height:42px !important;}' +
         // кнопки шага: как в браузере — горизонтально, короткая «назад» + длинная «далее»
