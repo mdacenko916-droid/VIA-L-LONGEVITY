@@ -97,6 +97,9 @@
         'html.app-mode .max-textarea{font-size:15px !important;}' +
         'html.app-mode .max-btn{font-size:14px !important;}' +
         'html.app-mode .score-badge{font-size:12.5px !important;}' +
+        // iOS автозумит страницу при фокусе на поле со шрифтом <16px (отсюда «страница шире и ездит»
+        // при открытии советника/ввода). Делаем все поля ввода 16px — зум отключается.
+        'html.app-mode input,html.app-mode textarea,html.app-mode select{font-size:16px !important;}' +
         // ── ЕДИНЫЙ ШАБЛОН ШАГОВ (0 → результат) ──
         // убрать разноцветные свечения за карточками (у каждого шага свой цвет → пестро)
         'html.app-mode .card::before{display:none !important;}' +
