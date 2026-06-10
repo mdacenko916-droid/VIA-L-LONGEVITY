@@ -132,16 +132,16 @@ POST/cross-origin не трогает) + meta в head. Адрес для уст�
 - ✅ **Слой 0 — скаффолд** (2026-06-08): `app/package.json` + `capacitor.config.json`
   (`appId=com.viael.interpreter`, `server.url`→живой ИП) + `www/` фолбэк + `.gitignore` (ios/android
   генерятся локально). Сборку/запуск делает владелец на Mac: `cd app && npm install && npx cap add ios android && npx cap open ios`.
-- 🔨 **HealthKit (iOS)** — код написан (2026-06-08), ждёт сборки+теста на устройстве: плагин
-  `@perfood/capacitor-healthkit` в `app/package.json`; мост `interpreter/healthkit-bridge.js` (читает
-  HRV/пульс/сон/deep/VO2 → авто-заполняет поля карточки Apple `m-hrv/m-rhr/m-sleep/m-deep/m-vo2` →
-  `applyManual()`); кнопка «📲 Apple Health» на `interpreter-pro.html` (видна ТОЛЬКО в приложении,
-  на вебе скрыта). ✅ **Собрано и запущено на iPhone владельца (2026-06-09):** `npx cap add ios`,
-  HealthKit-capability + Info.plist (`NSHealth*UsageDescription`), CocoaPods; плагин запинен
-  `^2.0.0-alpha.2` (Capacitor 6, `npm i --legacy-peer-deps`). Вход по dev-коду `VIAL-PRO-2024`.
-  ⏳ Осталось: проверить **реальное чтение Apple Health** на устройстве (кнопка «📲 Apple Health»),
-  сверить имена типов/парсинг, перенос кнопки на pro-expert/elite. Гоча: `app/ios` в .gitignore →
-  правки Info.plist в репо не персистятся (см. [[project_app_iap_plan]]).
+- ✅ **HealthKit (iOS) — РАБОТАЕТ на устройстве (2026-06-10).** Это и есть путь Oura (web-API закрыт,
+  PAT Oura убрал из обычных аккаунтов): кольцо → Oura app → Apple Health → наш мост. Авторизация
+  запрашивает HRV+VO2 (подтверждено на телефоне Marina), данные импортируются и применяются.
+  Мост `interpreter/healthkit-bridge.js` (HRV/пульс/сон/deep/VO2 → `m-*` → `applyManual()`), кнопка
+  «📲 Apple Health» теперь во ВСЕХ платных (pro/pro-expert/elite, видна только в app).
+  **Плагин: `@perfood/capacitor-healthkit` 1.3.2 + патч** (`app/patches/`, `postinstall:patch-package`):
+  alpha.2 не читал HRV/VO2 — откатили на 1.3.2 и допатчили Swift (HRV→ms, VO2→mL/kg·min, авторизация
+  под именами sample). Сборка: `npm i --legacy-peer-deps`, `LANG=en_US.UTF-8 npx cap sync ios`.
+  ⏳ Хвост: сверить реальные ЦИФРЫ (что заполнилось не пусто) на ночных данных кольца; источник
+  помечается «Apple-manual» (косметика). Гоча: `app/ios` в .gitignore (см. [[project_app_iap_plan]]).
 - ✅ **App-вид / UX (2026-06-09, общий `interpreter/app-mode.js`):** строгие переходы шагов
   (мгновенно, к верхнему краю), авто-фиксация коротких шагов (влезает → не скроллится), hero только
   на входе (step0), футер скрыт, плотные отступы, верхний отступ под компактный логотип, логотип =
