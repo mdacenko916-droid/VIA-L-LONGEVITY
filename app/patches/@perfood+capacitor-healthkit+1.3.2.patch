@@ -1,0 +1,43 @@
+diff --git a/node_modules/@perfood/capacitor-healthkit/ios/Plugin/CapacitorHealthkitPlugin.swift b/node_modules/@perfood/capacitor-healthkit/ios/Plugin/CapacitorHealthkitPlugin.swift
+index 0c5d95c..93b134b 100644
+--- a/node_modules/@perfood/capacitor-healthkit/ios/Plugin/CapacitorHealthkitPlugin.swift
++++ b/node_modules/@perfood/capacitor-healthkit/ios/Plugin/CapacitorHealthkitPlugin.swift
+@@ -64,6 +64,10 @@ public class CapacitorHealthkitPlugin: CAPPlugin {
+             return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.restingHeartRate)!
+         case "respiratoryRate":
+             return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.respiratoryRate)!
++        case "heartRateVariability":
++            return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.heartRateVariabilitySDNN)!
++        case "vo2Max":
++            return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.vo2Max)!
+         case "bodyFat":
+             return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyFatPercentage)!
+         case "oxygenSaturation":
+@@ -110,6 +114,14 @@ public class CapacitorHealthkitPlugin: CAPPlugin {
+                 types.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.restingHeartRate)!)
+             case "respiratoryRate":
+                 types.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.respiratoryRate)!)
++            case "heartRateVariability":
++                types.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.heartRateVariabilitySDNN)!)
++            case "vo2Max":
++                types.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.vo2Max)!)
++            case "sleepAnalysis":
++                types.insert(HKObjectType.categoryType(forIdentifier: HKCategoryTypeIdentifier.sleepAnalysis)!)
++            case "stepCount":
++                types.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.stepCount)!)
+             case "bodyFat":
+                 types.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyFatPercentage)!)
+             case "oxygenSaturation":
+@@ -424,6 +436,12 @@ public class CapacitorHealthkitPlugin: CAPPlugin {
+                 } else if sampleName == "oxygenSaturation" {
+                     unit = HKUnit.percent()
+                     unitName = "percent"
++                } else if sampleName == "heartRateVariability" {
++                    unit = HKUnit.secondUnit(with: .milli)
++                    unitName = "ms"
++                } else if sampleName == "vo2Max" {
++                    unit = HKUnit(from: "ml/kg*min")
++                    unitName = "mL/min·kg"
+                 } else if sample.quantityType.is(compatibleWith: HKUnit.meter()) {
+                     unit = HKUnit.meter()
+                     unitName = "meter"
