@@ -35,13 +35,22 @@
     var nav = document.querySelector('.bottom-nav');
     if (!nav) return;
     // «Специалист» в нижний таб-бар (верхние текстовые ссылки скрыты через CSS)
-    if (!nav.querySelector('[data-appnav="spec"]')) {
-      var b = document.createElement('button');
+    var b = nav.querySelector('[data-appnav="spec"]');
+    if (!b) {
+      b = document.createElement('button');
       b.className = 'bottom-nav-item';
       b.setAttribute('data-appnav', 'spec');
-      b.innerHTML = '<div class="bottom-nav-icon">🩺</div><span>' + (SPEC[curLang()] || SPEC.en) + '</span>';
+      b.innerHTML = '<div class="bottom-nav-icon">🩺</div><span class="appnav-spec-label"></span>';
       b.onclick = function(){ location.href = './my-specialist.html'; };
       nav.appendChild(b);
+    }
+    // текст обновляем КАЖДЫЙ раз — иначе застревает на языке создания кнопки
+    var lbl = b.querySelector('.appnav-spec-label');
+    if (lbl) lbl.textContent = SPEC[curLang()] || SPEC.en;
+    // следим за сменой языка (setLang ставит <html data-lang>) → перерисовать подпись
+    if (!window._appSpecObs) {
+      window._appSpecObs = new MutationObserver(appShell);
+      window._appSpecObs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-lang'] });
     }
   }
 
