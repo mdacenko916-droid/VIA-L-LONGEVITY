@@ -6124,7 +6124,7 @@ async function fetchFitbitLive(sid){
   var history=[], started=false, busy=false;
   function el(id){ return document.getElementById(id); }
   function add(role,text){
-    var d=document.createElement('div'); d.className='vlAdvMsg '+(role==='user'?'u':'a'); d.textContent=text;
+    var d=document.createElement('div'); d.className='vlAdvMsg '+(role==='user'?'u':'a'); d.innerHTML=text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*([^*]+?)\*\*/g,'<strong>$1</strong>');
     el('vlAdvMsgs').appendChild(d); el('vlAdvMsgs').scrollTop=el('vlAdvMsgs').scrollHeight; return d;
   }
   window.vlAdvOpen=function(){
