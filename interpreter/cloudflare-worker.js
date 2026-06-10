@@ -4050,6 +4050,11 @@ async function handleCabinetSave(request, env, corsHeaders){
   const code = String(c.code || c.id || '');           // до Этапа 2 код = id прототипа
   if(!code) return jsonResponse({ ok:false, error:'no_code' }, corsHeaders, 400);
 
+  // Анти-разбухание досье (CABINET-MODEL §8): режем неограниченно растущие массивы,
+  // чтобы строка клиента не упёрлась в лимит ответа D1 раньше времени.
+  if(Array.isArray(c.messages) && c.messages.length > 300) c.messages = c.messages.slice(-300);
+  if(Array.isArray(c.notes)    && c.notes.length    > 300) c.notes    = c.notes.slice(-300);
+
   // Владелец правит любого; специалист — только своего. Решаем специалиста для записи.
   const existing = await env.DB.prepare('SELECT specialist_id FROM clients WHERE code=?').bind(code).first();
   if(sess.role !== 'owner' && existing && existing.specialist_id != null && existing.specialist_id !== sess.id){
@@ -4061,6 +4066,7 @@ async function handleCabinetSave(request, env, corsHeaders){
 
   const now  = Date.now();
   const data = JSON.stringify(c);                       // полное досье целиком
+  if(data.length > 262144) return jsonResponse({ ok:false, error:'client_too_large' }, corsHeaders, 413); // потолок ~256 КБ на карточку
   const age  = (c.age === '' || c.age == null) ? null : parseInt(c.age, 10);
   const dur  = (c.duration_weeks == null || c.duration_weeks === '') ? null : parseInt(c.duration_weeks, 10);
 
