@@ -1,6 +1,8 @@
 # Garmin
 
-**Краткий статус:** ждём вендора. Заявка отправлена, ответа нет. Кода в воркере ещё нет.
+**Краткий статус:** ждём вендора. 3 заявки (последняя 2026-06-11, полные реквизиты юрлица
+VIA-L/UA через developercontactus). Кода в воркере ещё нет. НЕ блокер — app читает Garmin
+через Apple Health / Health Connect.
 
 ## Сейчас (как есть)
 - Кнопка-карточка Garmin в списке устройств показывается, но авто-подключение не работает.
@@ -10,6 +12,15 @@
 - 1-я попытка (раньше) — без ответа.
 - ✅ **2026-06-08: подана повторно** (контакт `integration@via-l.com`, текст с OAuth 2.0
   PKCE, запрошены Health API + Women's Health API).
+- ✅ **2026-06-11: 3-я подача — финальная, с полными реквизитами юрлица.** Через форму
+  **`garmin.com/en-US/forms/developercontactus/`** (Name: Ihor Datsenko, Company: **VIA-L**,
+  Email: integration@via-l.com, Country: **Ukraine / Zaporiz'ka Oblast'**, программа:
+  **Garmin Connect Developer Program**, Message: use case с Health+Women's Health API, OAuth 2.0
+  PKCE, redirect `…/garmin/callback`, GDPR). Ответ формы: «We'll be in touch soon».
+  ⚠️ **Канал:** форма живёт ИМЕННО на `garmin.com/en-US/forms/developercontactus/` —
+  на `developer.garmin.com/gc-developer-program/overview` формы НЕТ (только обзор).
+  В выпадашке «developer program» наш пункт = **Garmin Connect Developer Program**
+  (НЕ «Garmin Health SDKs» — то мобильные device-SDK).
 
 ## В процессе
 - Ждём ответ/одобрение Garmin. Норма ответа — около **2 рабочих дней**. Следить за
