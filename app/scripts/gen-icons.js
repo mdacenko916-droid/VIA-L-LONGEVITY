@@ -18,7 +18,7 @@ const SRC_SVG = path.join(APP, 'assets', 'icon-source.svg');
 const SRC_PNG = path.join(APP, 'assets', 'icon-source.png');
 const PREVIEW = path.join(APP, 'assets', 'icon-1024.png');
 const IOS_ICON = path.join(APP, 'ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png');
-const BG = { r: 17, g: 17, b: 17 }; // #111111 — фон самой эмблемы (углы iOS скругляет сама)
+const BG = { r: 0, g: 0, b: 0 }; // чёрный — под космический фон Logo-IP (углы iOS скругляет сама)
 
 async function main() {
   // SVG приоритетнее — вектор рисуется чётко в любом размере (без апскейл-мыла).
