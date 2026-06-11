@@ -40,7 +40,7 @@
       b = document.createElement('button');
       b.className = 'bottom-nav-item';
       b.setAttribute('data-appnav', 'spec');
-      b.innerHTML = '<div class="bottom-nav-icon">🩺</div><span class="appnav-spec-label"></span>';
+      b.innerHTML = '<img class="bottom-nav-icon" src="Logo/tab-specialist.png" alt=""><span class="appnav-spec-label"></span>';
       b.onclick = function(){ location.href = './my-specialist.html?lang=' + encodeURIComponent(curLang()); };
       nav.appendChild(b);
     }

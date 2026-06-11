@@ -40,7 +40,7 @@ async function main() {
   const buf = await sharp(SRC, isSvg ? { density: 512 } : undefined)
     .resize(1024, 1024, { fit: 'cover', kernel: 'lanczos3' })
     .flatten({ background: BG })
-    .png()
+    .png({ compressionLevel: 9, effort: 10 })
     .toBuffer();
 
   fs.writeFileSync(PREVIEW, buf);
@@ -59,7 +59,7 @@ async function main() {
     .png().toBuffer();
   const splash = await sharp({ create: { width: 2732, height: 2732, channels: 3, background: BG } })
     .composite([{ input: logoOnSplash, gravity: 'centre' }])
-    .png().toBuffer();
+    .png({ compressionLevel: 9, effort: 10 }).toBuffer();
   fs.writeFileSync(path.join(APP, 'assets', 'splash-2732.png'), splash);
   console.log('✓ app/assets/splash-2732.png');
   const SPLASH_DIR = path.join(APP, 'ios/App/App/Assets.xcassets/Splash.imageset');
