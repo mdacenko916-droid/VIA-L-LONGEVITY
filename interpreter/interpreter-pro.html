@@ -5404,8 +5404,7 @@ function toggleCard(id){const card=document.getElementById('card-'+id),isOpen=ca
 function setMethod(source,method){
   const card=document.getElementById('card-'+source);
   const tabs=card.querySelectorAll('.method-tab');
-  if(source==='oura'){document.getElementById('oura-token').style.display=method==='token'?'block':'none';document.getElementById('oura-file').style.display=method==='file'?'block':'none';tabs[0].classList.toggle('active',method==='token');tabs[1].classList.toggle('active',method==='file');}
-  else if(source==='apple'){document.getElementById('apple-file').style.display=method==='file'?'block':'none';document.getElementById('apple-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
+  if(source==='apple'){document.getElementById('apple-file').style.display=method==='file'?'block':'none';document.getElementById('apple-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
   else if(source==='fitbit'){document.getElementById('fitbit-connect').style.display=method==='connect'?'block':'none';document.getElementById('fitbit-token').style.display=method==='token'?'block':'none';document.getElementById('fitbit-file').style.display=method==='file'?'block':'none';tabs[0].classList.toggle('active',method==='connect');tabs[1].classList.toggle('active',method==='token');tabs[2].classList.toggle('active',method==='file');}
   else if(source==='samsung'){document.getElementById('samsung-file').style.display=method==='file'?'block':'none';document.getElementById('samsung-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='file');tabs[1].classList.toggle('active',method==='manual');}
   else if(source==='whoop'){document.getElementById('whoop-connect').style.display=method==='connect'?'block':'none';document.getElementById('whoop-file').style.display=method==='file'?'block':'none';document.getElementById('whoop-manual').style.display=method==='manual'?'block':'none';tabs[0].classList.toggle('active',method==='connect');tabs[1].classList.toggle('active',method==='file');tabs[2].classList.toggle('active',method==='manual');}
@@ -5630,25 +5629,6 @@ async function fetchFitbit(){
     setStatus('fitbit-status','success','✓ Данные Fitbit загружены успешно');
     updateImportSummary();
   }catch(err){setStatus('fitbit-status','error','⚠ '+err.message);}
-}
-async function fetchOura(){
-  const token=document.getElementById('oura-token-input').value.trim();
-  if(!token){setStatus('oura-status','error','Введите Personal Access Token');return;}
-  setStatus('oura-status','loading','⏳ Подключаемся к Oura API...');
-  try{
-    const today=new Date().toISOString().slice(0,10),yest=new Date(Date.now()-86400000).toISOString().slice(0,10),h={'Authorization':'Bearer '+token};
-    const [rr,sr]=await Promise.all([fetch(`https://api.ouraring.com/v2/usercollection/daily_readiness?start_date=${yest}&end_date=${today}`,{headers:h}),fetch(`https://api.ouraring.com/v2/usercollection/daily_sleep?start_date=${yest}&end_date=${today}`,{headers:h})]);
-    if(!rr.ok)throw new Error('Неверный токен. Проверьте права доступа.');
-    const [rd,sl]=await Promise.all([rr.json(),sr.json()]);
-    const ex={};
-    const last_rd=rd.data?.[rd.data.length-1];if(last_rd){ex.rhr=last_rd.contributors?.resting_heart_rate||null;ex.readiness=last_rd.score||null;ex.hrv=last_rd.contributors?.hrv_balance?Math.round(last_rd.contributors.hrv_balance*0.8+20):null;}
-    const last_sl=sl.data?.[sl.data.length-1];if(last_sl){ex.sleepHours=(last_sl.total_sleep_duration||0)/3600;ex.deepMin=(last_sl.deep_sleep_duration||0)/60;ex.tempDev=last_sl.average_breath||null;}
-    applyExtracted(ex,'oura');
-    renderPreview('oura-preview-grid',ex);
-    document.getElementById('oura-preview').classList.add('show');
-    setStatus('oura-status','success','✓ Данные Oura загружены успешно');
-    updateImportSummary();
-  }catch(err){setStatus('oura-status','error','⚠ '+err.message);}
 }
 function parseWhoopCSV(text,filename){
   const out={};
