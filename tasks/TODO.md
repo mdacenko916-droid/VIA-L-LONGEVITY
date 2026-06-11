@@ -141,7 +141,10 @@ POST/cross-origin не трогает) + meta в head. Адрес для уст�
   alpha.2 не читал HRV/VO2 — откатили на 1.3.2 и допатчили Swift (HRV→ms, VO2→mL/kg·min, авторизация
   под именами sample). Сборка: `npm i --legacy-peer-deps`, `LANG=en_US.UTF-8 npx cap sync ios`.
   ⏳ Хвост: сверить реальные ЦИФРЫ (что заполнилось не пусто) на ночных данных кольца; источник
-  помечается «Apple-manual» (косметика). Гоча: `app/ios` в .gitignore (см. [[project_app_iap_plan]]).
+  помечается «Apple-manual» (косметика).
+  ✅ **Гоча Info.plist решена (2026-06-11):** `ios/` в .gitignore → при пересоздании терялись
+  `NSHealth*`-ключи и HealthKit-entitlement. Скрипт `app/scripts/setup-ios.js` (`npm run setup:ios`,
+  авто после `npm run add:ios`) идемпотентно их восстанавливает. См. [[project_app_iap_plan]].
 - ✅ **App-вид / UX (2026-06-09, общий `interpreter/app-mode.js`):** строгие переходы шагов
   (мгновенно, к верхнему краю), авто-фиксация коротких шагов (влезает → не скроллится), hero только
   на входе (step0), футер скрыт, плотные отступы, верхний отступ под компактный логотип, логотип =

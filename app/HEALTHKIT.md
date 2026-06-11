@@ -16,16 +16,19 @@ Health и авто-заполняет ими карточку «Apple Health» �
 3. Тап → запрос разрешений Apple Health → чтение HRV / пульс покоя / сон / deep / VO2 max за
    последние дни → запись в поля `m-hrv/m-rhr/m-sleep/m-deep/m-vo2` → `applyManual()`.
 
-## Что нужно сделать в Xcode после `npx cap add ios` (на Mac)
+## Что нужно сделать после `npx cap add ios` (на Mac)
 
-1. **Capability HealthKit:** target → *Signing & Capabilities* → `+ Capability` → **HealthKit**.
-   (добавит entitlement `com.apple.developer.healthkit`). Требует Apple Developer аккаунта.
-2. **Права в Info.plist** (target → Info, или `ios/App/App/Info.plist`):
-   - `NSHealthShareUsageDescription` — «VIA·L читает показатели здоровья (HRV, пульс, сон, VO2),
-     чтобы дать нутрициологическую интерпретацию. Данные не покидают ваше устройство без вашего согласия.»
-   - `NSHealthUpdateUsageDescription` — то же (некоторые версии плагина требуют ключ записи, даже
-     если мы только читаем).
-3. `npx cap sync` после установки плагина.
+> ⚠️ `ios/` в `.gitignore` (генерится локально), поэтому при каждом пересоздании Capacitor пишет
+> чистые Info.plist / App.entitlements **без наших ключей** → HealthKit/Oura ломается. Чтобы это
+> не приходилось чинить руками, есть скрипт **`npm run setup:ios`** (`app/scripts/setup-ios.js`) —
+> идемпотентно дописывает оба `NSHealth*`-ключа и entitlement `com.apple.developer.healthkit`.
+> Он **автоматически запускается** после `npm run add:ios`. Пункты 1–2 ниже он закрывает сам.
+
+1. **Capability HealthKit** → entitlement `com.apple.developer.healthkit` (скрипт добавляет; в Xcode
+   останется только подписать target своим Apple Developer аккаунтом).
+2. **Права в Info.plist** — `NSHealthShareUsageDescription` и `NSHealthUpdateUsageDescription`
+   (скрипт добавляет оба; второй нужен, т.к. некоторые версии плагина требуют ключ записи).
+3. `LANG=en_US.UTF-8 npx cap sync ios` после установки плагина.
 
 ## ⚠️ Проверить на устройстве (симулятор Health не отдаёт данные)
 
