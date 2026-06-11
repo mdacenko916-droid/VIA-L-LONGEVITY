@@ -1826,7 +1826,7 @@ function addBdRow(){ const c=clients.find(x=>x.id===selectedId); if(!c)return; i
 
 // ── OVERVIEW TAB — живая сводка по клиенту ───────────────────
 // ── ДИНАМИКА НЕДЕЛИ (из c.dyn — дневные срезы ИП, копит воркер) ──────
-function _weekUIc(){
+function _weekUIc(lng){
   const M={
     ru:{title:'Динамика за неделю',sub:'среднее за 7 дней · стрелка — к прошлой неделе',hrv:'HRV',sleep:'Сон',rhr:'Пульс покоя',energy:'Энергия',qol:'Качество жизни',anx:'Тревога',score:'Готовность'},
     uk:{title:'Динаміка за тиждень',sub:'середнє за 7 днів · стрілка — до минулого тижня',hrv:'HRV',sleep:'Сон',rhr:'Пульс спокою',energy:'Енергія',qol:'Якість життя',anx:'Тривога',score:'Готовність'},
@@ -1841,7 +1841,7 @@ function _weekUIc(){
     ja:{title:'週間ダイナミクス',sub:'7日間平均 · 矢印は先週比',hrv:'HRV',sleep:'睡眠',rhr:'安静時心拍',energy:'エネルギー',qol:'生活の質',anx:'不安',score:'準備度'},
     ko:{title:'주간 변화',sub:'7일 평균 · 화살표는 지난주 대비',hrv:'HRV',sleep:'수면',rhr:'안정시 심박',energy:'에너지',qol:'삶의 질',anx:'불안',score:'준비도'}
   };
-  return M[uiLang]||M.ru;
+  return M[lng||uiLang]||M.ru;
 }
 function weeklyTrendC(dyn){
   const arr=(dyn||[]).filter(x=>x&&x.ts);
@@ -2300,6 +2300,11 @@ function generatePDF(id){
   const L=k=>tl(k,pdfLang);
   const date=new Date().toLocaleDateString(PDF_LOCALE[pdfLang]||'en-US',{day:'numeric',month:'long',year:'numeric'});
 
+  // Динамика недели (если ≥2 дня данных) — сводка в начало отчёта, на языке пациента
+  const _w=weeklyTrendC(c.dyn), _wui=_weekUIc(pdfLang);
+  const _dynRow=m=>{const good=m.trend===0?0:(m.trend===m.dir?1:-1);const arr=m.trend>0?'↑':m.trend<0?'↓':'→';const col=good>0?'#1a7f37':good<0?'#c0392b':'#999';const d=m.delta==null?'—':(m.delta>0?'+':'')+m.delta.toFixed(m.dec);return `<tr><td>${esc(_wui[m.k])}</td><td style="text-align:right;font-weight:600;">${m.a.toFixed(m.dec)}</td><td style="text-align:right;color:${col};">${arr} ${d}</td></tr>`;};
+  const dynHtml=_w?`<h2>${esc(_wui.title)}</h2><div style="font-size:12px;color:#888;margin-bottom:8px;">${esc(_wui.sub)}</div><table><tbody>${_w.metrics.map(_dynRow).join('')}</tbody></table>`:'';
+
   // Расчётное окончание ведения
   let endDate=c.end_date||'';
   if(!endDate && c.start_date && c.duration_weeks){
@@ -2328,6 +2333,7 @@ function generatePDF(id){
   <h1>${esc(c.name)}</h1>
   <div class="sub">${[c.phase?tl('phase_'+c.phase,pdfLang):'', c.age?c.age+' '+L('u_years'):''].filter(Boolean).join(' · ')}${(c.phase||c.age)?' · ':''}${date}</div>
   ${progParts?`<div class="prog-box"><div class="pl">${L('pdf_program')}</div><div class="pv">${esc(progParts)}</div>${dateParts?`<div style="font-size:12px;color:#666;margin-top:6px;">${esc(dateParts)}</div>`:''}</div>`:''}
+  ${dynHtml}
   ${bio.length?`<h2>${L('pdf_bio_title')}</h2>
   <table><thead><tr><th>${L('col_wk')}</th><th>${L('bio_date')}</th><th>${L('bio_sleep')}</th><th>${L('bio_rhr')}</th><th>HRV</th><th>${L('bio_steps')}</th><th>${L('bio_weight')}</th></tr></thead>
   <tbody>${bio.map(b=>`<tr><td>${esc(String(b.week||''))}</td><td>${esc(b.date||'')}</td><td>${esc(String(b.sleep||'—'))}</td><td>${esc(String(b.rhr||'—'))}</td><td>${esc(String(b.hrv||'—'))}</td><td>${esc(String(b.steps||'—'))}</td><td>${esc(String(b.weight||'—'))}</td></tr>`).join('')}</tbody></table>`:''}
