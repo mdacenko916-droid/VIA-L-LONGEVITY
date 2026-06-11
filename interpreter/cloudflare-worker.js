@@ -3754,6 +3754,19 @@ async function cabinetIngestIpAnalysis(env, code, data, analysisText, lang){
   });
   if(d.breakdowns.length > 50) d.breakdowns = d.breakdowns.slice(-50);
 
+  // (3) Дневной срез для «Динамики недели» в кабинете — полный набор метрик,
+  // один на день (свежий перезаписывает), кап 30 дней. Источник для weeklyTrend.
+  if(!Array.isArray(d.dyn)) d.dyn = [];
+  const _num = x => { const v = parseFloat(x); return isNaN(v) ? null : v; };
+  const dynEntry = {
+    date: today, ts: Date.now(),
+    hrv:_num(data.hrv), sleep:_num(data.sleep_qual), rhr:_num(data.rhr),
+    energy:_num(data.energy), qol:_num(data._qol), anxiety:_num(data.anxiety), score:_num(data._score),
+  };
+  const _di = d.dyn.findIndex(x => x.date === today);
+  if(_di >= 0) d.dyn[_di] = dynEntry; else d.dyn.push(dynEntry);
+  if(d.dyn.length > 30) d.dyn = d.dyn.slice(-30);
+
   await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?')
     .bind(JSON.stringify(d), Date.now(), code).run();
 }

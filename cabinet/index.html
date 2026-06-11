@@ -1825,6 +1825,74 @@ function deleteBd(i){ const c=clients.find(x=>x.id===selectedId); if(!c)return; 
 function addBdRow(){ const c=clients.find(x=>x.id===selectedId); if(!c)return; if(!c.breakdowns)c.breakdowns=[]; c.breakdowns.push({date:new Date().toISOString().slice(0,10),type:'ai',status:'draft',notes:''}); saveData(); renderTabContent(); }
 
 // ── OVERVIEW TAB — живая сводка по клиенту ───────────────────
+// ── ДИНАМИКА НЕДЕЛИ (из c.dyn — дневные срезы ИП, копит воркер) ──────
+function _weekUIc(){
+  const M={
+    ru:{title:'Динамика за неделю',sub:'среднее за 7 дней · стрелка — к прошлой неделе',hrv:'HRV',sleep:'Сон',rhr:'Пульс покоя',energy:'Энергия',qol:'Качество жизни',anx:'Тревога',score:'Готовность'},
+    uk:{title:'Динаміка за тиждень',sub:'середнє за 7 днів · стрілка — до минулого тижня',hrv:'HRV',sleep:'Сон',rhr:'Пульс спокою',energy:'Енергія',qol:'Якість життя',anx:'Тривога',score:'Готовність'},
+    en:{title:'Weekly dynamics',sub:'7-day average · arrow vs last week',hrv:'HRV',sleep:'Sleep',rhr:'Resting HR',energy:'Energy',qol:'Quality of life',anx:'Anxiety',score:'Readiness'},
+    es:{title:'Dinámica semanal',sub:'promedio de 7 días · flecha vs semana pasada',hrv:'HRV',sleep:'Sueño',rhr:'FC en reposo',energy:'Energía',qol:'Calidad de vida',anx:'Ansiedad',score:'Preparación'},
+    de:{title:'Wöchentliche Dynamik',sub:'7-Tage-Schnitt · Pfeil vs. Vorwoche',hrv:'HRV',sleep:'Schlaf',rhr:'Ruhepuls',energy:'Energie',qol:'Lebensqualität',anx:'Angst',score:'Bereitschaft'},
+    pt:{title:'Dinâmica semanal',sub:'média de 7 dias · seta vs semana passada',hrv:'HRV',sleep:'Sono',rhr:'FC repouso',energy:'Energia',qol:'Qualidade de vida',anx:'Ansiedade',score:'Prontidão'},
+    fr:{title:'Dynamique hebdomadaire',sub:'moyenne 7 jours · flèche vs semaine passée',hrv:'HRV',sleep:'Sommeil',rhr:'FC repos',energy:'Énergie',qol:'Qualité de vie',anx:'Anxiété',score:'Préparation'},
+    pl:{title:'Dynamika tygodnia',sub:'średnia z 7 dni · strzałka vs poprzedni tydzień',hrv:'HRV',sleep:'Sen',rhr:'Tętno spocz.',energy:'Energia',qol:'Jakość życia',anx:'Lęk',score:'Gotowość'},
+    it:{title:'Dinamica settimanale',sub:'media 7 giorni · freccia vs settimana scorsa',hrv:'HRV',sleep:'Sonno',rhr:'FC riposo',energy:'Energia',qol:'Qualità della vita',anx:'Ansia',score:'Prontezza'},
+    he:{title:'דינמיקה שבועית',sub:'ממוצע 7 ימים · חץ מול שבוע שעבר',hrv:'HRV',sleep:'שינה',rhr:'דופק מנוחה',energy:'אנרגיה',qol:'איכות חיים',anx:'חרדה',score:'מוכנות'},
+    ja:{title:'週間ダイナミクス',sub:'7日間平均 · 矢印は先週比',hrv:'HRV',sleep:'睡眠',rhr:'安静時心拍',energy:'エネルギー',qol:'生活の質',anx:'不安',score:'準備度'},
+    ko:{title:'주간 변화',sub:'7일 평균 · 화살표는 지난주 대비',hrv:'HRV',sleep:'수면',rhr:'안정시 심박',energy:'에너지',qol:'삶의 질',anx:'불안',score:'준비도'}
+  };
+  return M[uiLang]||M.ru;
+}
+function weeklyTrendC(dyn){
+  const arr=(dyn||[]).filter(x=>x&&x.ts);
+  if(arr.length<2) return null;
+  const now=Date.now(),DAY=86400000;
+  const wk=arr.filter(s=>now-s.ts<7*DAY);
+  const pr=arr.filter(s=>now-s.ts>=7*DAY&&now-s.ts<14*DAY);
+  if(wk.length<2) return null;
+  const avg=(a,k)=>{const v=a.map(s=>s[k]).filter(x=>x!=null&&!isNaN(x));return v.length?v.reduce((p,c)=>p+c,0)/v.length:null;};
+  const defs=[['hrv','hrv',1,0],['sleep','sleep',1,1],['rhr','rhr',-1,0],['energy','energy',1,1],['qol','qol',1,0],['anx','anxiety',-1,1],['score','score',1,0]];
+  const metrics=defs.map(([k,sk,dir,dec])=>{
+    const a=avg(wk,sk),p=avg(pr,sk); if(a==null)return null;
+    const series=wk.slice().sort((x,y)=>x.ts-y.ts).map(s=>s[sk]).filter(x=>x!=null&&!isNaN(x));
+    let delta=null,trend=0;
+    if(p!=null){delta=a-p;const thr=Math.abs(p)*0.03||0.3;trend=Math.abs(delta)<thr?0:(delta>0?1:-1);}
+    return {k,dir,dec,a,p,delta,trend,series};
+  }).filter(Boolean);
+  return {wk,pr,metrics};
+}
+function renderDynamics(c){
+  const w=weeklyTrendC(c.dyn),ui=_weekUIc();
+  if(!w) return '';
+  const spark=(series,good)=>{
+    if(series.length<2)return '';
+    const mn=Math.min(...series),mx=Math.max(...series),rng=mx-mn||1,W=70,H=22;
+    const pts=series.map((v,i)=>`${(i/(series.length-1)*W).toFixed(1)},${(H-((v-mn)/rng)*H).toFixed(1)}`).join(' ');
+    const col=good>0?'#1a7f37':good<0?'#c0392b':'#b8860b';
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  };
+  const rows=w.metrics.map(m=>{
+    const good=m.trend===0?0:(m.trend===m.dir?1:-1);
+    let badge='<span style="color:#999;font-size:12px;">—</span>';
+    if(m.delta!=null){
+      const arr=m.trend>0?'↑':m.trend<0?'↓':'→';
+      const col=good>0?'#1a7f37':good<0?'#c0392b':'#999';
+      badge=`<span style="color:${col};font-size:12px;font-weight:600;">${arr} ${(m.delta>0?'+':'')+m.delta.toFixed(m.dec)}</span>`;
+    }
+    return `<tr>
+      <td style="padding:6px 12px 6px 0;font-size:13px;color:#444;">${ui[m.k]}</td>
+      <td style="padding:6px 8px;line-height:0;">${spark(m.series,good)}</td>
+      <td style="padding:6px 12px;text-align:right;font-size:14px;font-weight:600;">${m.a.toFixed(m.dec)}</td>
+      <td style="padding:6px 0;text-align:right;">${badge}</td>
+    </tr>`;
+  }).join('');
+  return `
+    <div class="section-title">📈 ${ui.title}</div>
+    <div style="border:1px solid #ddd;padding:8px 16px;margin-bottom:20px;">
+      <div style="font-size:11px;color:#999;margin:4px 0 6px;">${ui.sub}</div>
+      <table style="border-collapse:collapse;width:100%;">${rows}</table>
+    </div>`;
+}
 function renderOverview(c){
   const today = new Date().toISOString().slice(0,10);
 
@@ -1898,7 +1966,8 @@ function renderOverview(c){
     <div class="section-title">${t('ov_anketa_summary')}</div>
     <div style="background:#f8f8f8;border:1px solid #ddd;padding:12px 16px;white-space:pre-wrap;font-size:13px;line-height:1.6;">${esc(c.anketa.summary)}</div>` : '';
 
-  return cards + profile + nextBlock + bioBlock + ankBlock;
+  const dynBlock = renderDynamics(c);
+  return cards + dynBlock + profile + nextBlock + bioBlock + ankBlock;
 }
 
 // ── PROTOCOL TAB ──────────────────────────────────────────
