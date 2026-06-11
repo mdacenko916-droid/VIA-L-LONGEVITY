@@ -52,6 +52,22 @@ async function main() {
   } else {
     console.warn('iOS не сгенерирован — нет ios/. Сначала `npm run add:ios`, потом `npm run icons`.');
   }
+
+  // ── Splash (заставка запуска): лого по центру на чёрном, 2732×2732 ──
+  const logoOnSplash = await sharp(SRC, isSvg ? { density: 512 } : undefined)
+    .resize(1100, 1100, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .png().toBuffer();
+  const splash = await sharp({ create: { width: 2732, height: 2732, channels: 3, background: BG } })
+    .composite([{ input: logoOnSplash, gravity: 'centre' }])
+    .png().toBuffer();
+  fs.writeFileSync(path.join(APP, 'assets', 'splash-2732.png'), splash);
+  console.log('✓ app/assets/splash-2732.png');
+  const SPLASH_DIR = path.join(APP, 'ios/App/App/Assets.xcassets/Splash.imageset');
+  if (fs.existsSync(SPLASH_DIR)) {
+    for (const f of ['splash-2732x2732.png', 'splash-2732x2732-1.png', 'splash-2732x2732-2.png'])
+      fs.writeFileSync(path.join(SPLASH_DIR, f), splash);
+    console.log('✓ iOS Splash обновлён (3 файла)');
+  }
   console.log('Готово.');
 }
 main().catch(e => { console.error('Ошибка:', e.message); process.exit(1); });
