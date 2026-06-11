@@ -1302,6 +1302,7 @@ footer{
       <button id="histImportBtn" onclick="document.getElementById('histImportInput').click()" style="background:rgba(78,204,163,.08);border:1px solid rgba(78,204,163,.25);color:var(--ok);padding:8px 16px;border-radius:50px;font-size:12px;letter-spacing:.5px;cursor:pointer;font-family:'DM Sans',sans-serif;">↑ Импорт</button>
       <input id="histImportInput" type="file" accept="application/json,.json" onchange="importHistory(this)" style="display:none;">
     </div>
+    <div id="weeklyTrend" style="margin-bottom:18px;"></div>
     <div id="historyList"></div>
   </div>
 </div>
@@ -5162,6 +5163,7 @@ function saveSession(score,type,data){
     date:new Date().toLocaleDateString(lang==='en'?'en-GB':'ru-RU',{day:'numeric',month:'short',year:'numeric'}),
     score,type,
     hrv:data.hrv,sleep:data.sleep_qual,rhr:data.rhr,energy:data.energy,
+    qol:data._qol,mood:data.mood,anxiety:data.anxiety,
     gender:data.gender,phase:data.phase,
     ts:Date.now()
   };
@@ -5171,6 +5173,7 @@ function saveSession(score,type,data){
 }
 
 function renderHistory(){
+  renderWeekly();
   const key='vial_history';
   const history=JSON.parse(localStorage.getItem(key)||'[]');
   const el=document.getElementById('historyList');
@@ -5205,6 +5208,78 @@ function renderHistory(){
       ${compare}
     </div>`;
   }).join('');
+}
+
+// ══ WEEKLY DYNAMICS ═══════════════════════════════════════
+// Динамика недели из истории (localStorage). Один движок — для PRO-клиента
+// (эта витрина) и для специалиста (та же сводка уйдёт в кабинет, этап C).
+function _weekUI(){
+  const M={
+    ru:{title:'Динамика за неделю',sub:'среднее за 7 дней · стрелка — к прошлой неделе',need:'Нужно ≥2 разбора за неделю, чтобы показать динамику.',hrv:'HRV',sleep:'Сон',rhr:'Пульс покоя',energy:'Энергия',qol:'Качество жизни',anx:'Тревога',score:'Готовность'},
+    uk:{title:'Динаміка за тиждень',sub:'середнє за 7 днів · стрілка — до минулого тижня',need:'Потрібно ≥2 розбори за тиждень.',hrv:'HRV',sleep:'Сон',rhr:'Пульс спокою',energy:'Енергія',qol:'Якість життя',anx:'Тривога',score:'Готовність'},
+    en:{title:'Weekly dynamics',sub:'7-day average · arrow vs last week',need:'Need ≥2 analyses this week to show dynamics.',hrv:'HRV',sleep:'Sleep',rhr:'Resting HR',energy:'Energy',qol:'Quality of life',anx:'Anxiety',score:'Readiness'},
+    es:{title:'Dinámica semanal',sub:'promedio de 7 días · flecha vs semana pasada',need:'Se necesitan ≥2 análisis esta semana.',hrv:'HRV',sleep:'Sueño',rhr:'FC en reposo',energy:'Energía',qol:'Calidad de vida',anx:'Ansiedad',score:'Preparación'},
+    de:{title:'Wöchentliche Dynamik',sub:'7-Tage-Schnitt · Pfeil vs. Vorwoche',need:'≥2 Analysen diese Woche nötig.',hrv:'HRV',sleep:'Schlaf',rhr:'Ruhepuls',energy:'Energie',qol:'Lebensqualität',anx:'Angst',score:'Bereitschaft'},
+    pt:{title:'Dinâmica semanal',sub:'média de 7 dias · seta vs semana passada',need:'São necessárias ≥2 análises nesta semana.',hrv:'HRV',sleep:'Sono',rhr:'FC repouso',energy:'Energia',qol:'Qualidade de vida',anx:'Ansiedade',score:'Prontidão'},
+    fr:{title:'Dynamique hebdomadaire',sub:'moyenne 7 jours · flèche vs semaine passée',need:'≥2 analyses cette semaine requises.',hrv:'HRV',sleep:'Sommeil',rhr:'FC repos',energy:'Énergie',qol:'Qualité de vie',anx:'Anxiété',score:'Préparation'},
+    pl:{title:'Dynamika tygodnia',sub:'średnia z 7 dni · strzałka vs poprzedni tydzień',need:'Potrzebne ≥2 analizy w tym tygodniu.',hrv:'HRV',sleep:'Sen',rhr:'Tętno spocz.',energy:'Energia',qol:'Jakość życia',anx:'Lęk',score:'Gotowość'},
+    it:{title:'Dinamica settimanale',sub:'media 7 giorni · freccia vs settimana scorsa',need:'Servono ≥2 analisi questa settimana.',hrv:'HRV',sleep:'Sonno',rhr:'FC riposo',energy:'Energia',qol:'Qualità della vita',anx:'Ansia',score:'Prontezza'},
+    he:{title:'דינמיקה שבועית',sub:'ממוצע 7 ימים · חץ מול שבוע שעבר',need:'נדרשים ≥2 ניתוחים השבוע.',hrv:'HRV',sleep:'שינה',rhr:'דופק מנוחה',energy:'אנרגיה',qol:'איכות חיים',anx:'חרדה',score:'מוכנות'},
+    ja:{title:'週間ダイナミクス',sub:'7日間平均 · 矢印は先週比',need:'今週2回以上の分析が必要です。',hrv:'HRV',sleep:'睡眠',rhr:'安静時心拍',energy:'エネルギー',qol:'生活の質',anx:'不安',score:'準備度'},
+    ko:{title:'주간 변화',sub:'7일 평균 · 화살표는 지난주 대비',need:'이번 주 2회 이상 분석이 필요합니다.',hrv:'HRV',sleep:'수면',rhr:'안정시 심박',energy:'에너지',qol:'삶의 질',anx:'불안',score:'준비도'}
+  };
+  return M[lang]||M.en;
+}
+function weeklyTrend(){
+  const h=JSON.parse(localStorage.getItem('vial_history')||'[]');
+  const now=Date.now(),DAY=86400000;
+  const wk=h.filter(s=>s.ts&&now-s.ts<7*DAY);
+  const pr=h.filter(s=>s.ts&&now-s.ts>=7*DAY&&now-s.ts<14*DAY);
+  if(wk.length<2)return null;
+  const avg=(arr,k)=>{const v=arr.map(s=>s[k]).filter(x=>x!=null&&!isNaN(x));return v.length?v.reduce((a,b)=>a+b,0)/v.length:null;};
+  // key · поле в сессии · goodDir(+1 рост=лучше,-1 падение=лучше) · знаков после запятой
+  const defs=[['hrv','hrv',1,0],['sleep','sleep',1,1],['rhr','rhr',-1,0],['energy','energy',1,1],['qol','qol',1,0],['anx','anxiety',-1,1],['score','score',1,0]];
+  const metrics=defs.map(([k,sk,dir,dec])=>{
+    const a=avg(wk,sk),p=avg(pr,sk);
+    if(a==null)return null;
+    const series=wk.slice().reverse().map(s=>s[sk]).filter(x=>x!=null&&!isNaN(x));
+    let delta=null,trend=0;
+    if(p!=null){delta=a-p;const thr=Math.abs(p)*0.03||0.3;trend=Math.abs(delta)<thr?0:(delta>0?1:-1);}
+    return {k,dir,dec,a,p,delta,trend,series};
+  }).filter(Boolean);
+  return {wk,pr,metrics};
+}
+function renderWeekly(){
+  const box=document.getElementById('weeklyTrend');if(!box)return;
+  const w=weeklyTrend(),ui=_weekUI();
+  if(!w){box.innerHTML=`<div style="background:#1A1F2B;border:1px solid var(--b1);border-radius:16px;padding:16px 18px;color:var(--t3);font-size:12px;line-height:1.7;">📈 <b style="color:var(--t2);">${ui.title}</b><br>${ui.need}</div>`;return;}
+  const spark=(series,good)=>{
+    if(series.length<2)return '';
+    const mn=Math.min(...series),mx=Math.max(...series),rng=mx-mn||1,W=64,H=20;
+    const pts=series.map((v,i)=>`${(i/(series.length-1)*W).toFixed(1)},${(H-((v-mn)/rng)*H).toFixed(1)}`).join(' ');
+    const col=good>0?'#4ECCA3':good<0?'#FF6B8A':'#C49A3C';
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  };
+  const rows=w.metrics.map(m=>{
+    const good=m.trend===0?0:(m.trend===m.dir?1:-1);
+    let badge=`<span style="color:var(--t3);font-size:11px;">—</span>`;
+    if(m.delta!=null){
+      const arr=m.trend>0?'↑':m.trend<0?'↓':'→';
+      const col=good>0?'#4ECCA3':good<0?'#FF6B8A':'var(--t3)';
+      badge=`<span style="color:${col};font-size:11px;font-family:'DM Mono',monospace;">${arr} ${(m.delta>0?'+':'')+m.delta.toFixed(m.dec)}</span>`;
+    }
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05);">
+      <div style="flex:1;font-size:12px;color:var(--t2);">${ui[m.k]}</div>
+      <div style="flex-shrink:0;line-height:0;">${spark(m.series,good)}</div>
+      <div style="width:46px;text-align:right;font-family:'DM Mono',monospace;font-size:13px;color:var(--t1);">${m.a.toFixed(m.dec)}</div>
+      <div style="width:54px;text-align:right;">${badge}</div>
+    </div>`;
+  }).join('');
+  box.innerHTML=`<div style="background:linear-gradient(145deg,#1C1A12,#161408);border:1px solid var(--gold-dim);border-radius:16px;padding:16px 18px;">
+    <div style="font-family:'Playfair Display',serif;font-size:16px;color:var(--t1);">📈 ${ui.title}</div>
+    <div style="font-size:10px;color:var(--t3);letter-spacing:.5px;margin-bottom:8px;">${ui.sub}</div>
+    ${rows}
+  </div>`;
 }
 
 // ══ HISTORY EXPORT / IMPORT ═══════════════════════════════
@@ -6573,6 +6648,7 @@ function _showResultsInner(){
     qol-=Math.min(9,_qArr(data.gsm).length*3);        // мочеполовое / интимное
     if(Array.isArray(data.symptoms)&&data.symptoms.includes('joint'))qol-=5;
     qol=Math.max(10,Math.min(100,Math.round(qol)));
+    data._qol=qol;
     const clrQ=qol>=70?'#4ECCA3':qol>=45?'#F5A623':'#FF6B8A';
     const qolCard=document.getElementById('qolCard');
     qolCard.style.display='block';
