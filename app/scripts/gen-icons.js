@@ -14,22 +14,30 @@ const path = require('path');
 const sharp = require('sharp');
 
 const APP = path.resolve(__dirname, '..');
-const SRC = path.join(APP, 'assets', 'icon-source.png');
+const SRC_SVG = path.join(APP, 'assets', 'icon-source.svg');
+const SRC_PNG = path.join(APP, 'assets', 'icon-source.png');
 const PREVIEW = path.join(APP, 'assets', 'icon-1024.png');
 const IOS_ICON = path.join(APP, 'ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png');
-const BG = { r: 0, g: 0, b: 0 }; // фон под прозрачными углами эмблемы
+const BG = { r: 17, g: 17, b: 17 }; // #111111 — фон самой эмблемы (углы iOS скругляет сама)
 
 async function main() {
+  // SVG приоритетнее — вектор рисуется чётко в любом размере (без апскейл-мыла).
+  const isSvg = fs.existsSync(SRC_SVG);
+  const SRC = isSvg ? SRC_SVG : SRC_PNG;
   if (!fs.existsSync(SRC)) {
-    console.error('Нет ' + path.relative(APP, SRC) + ' — положи мастер-иконку (1024×1024 PNG).');
+    console.error('Нет мастера: положи app/assets/icon-source.svg (вектор, лучше всего) ' +
+      'или icon-source.png (1024×1024).');
     process.exit(1);
   }
-  const meta = await sharp(SRC).metadata();
-  if (meta.width < 1024 || meta.height < 1024) {
-    console.warn(`⚠️  Источник ${meta.width}×${meta.height} < 1024 — иконка будет мягкой. ` +
-      `Замени app/assets/icon-source.png на 1024×1024 (лучше 2048) и перезапусти.`);
+  if (!isSvg) {
+    const meta = await sharp(SRC).metadata();
+    if (meta.width < 1024 || meta.height < 1024) {
+      console.warn(`⚠️  PNG-источник ${meta.width}×${meta.height} < 1024 — иконка будет мягкой. ` +
+        `Дай SVG (app/assets/icon-source.svg) или PNG 1024×1024+.`);
+    }
   }
-  const buf = await sharp(SRC)
+  // density высокий — чтобы вектор растеризовался резко под 1024.
+  const buf = await sharp(SRC, isSvg ? { density: 512 } : undefined)
     .resize(1024, 1024, { fit: 'cover', kernel: 'lanczos3' })
     .flatten({ background: BG })
     .png()
