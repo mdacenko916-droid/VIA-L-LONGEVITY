@@ -38,6 +38,7 @@ async function main() {
   }
   // density высокий — чтобы вектор растеризовался резко под 1024.
   const buf = await sharp(SRC, isSvg ? { density: 512 } : undefined)
+    .trim()                                          // срезаем прозрачные поля → логотип на всю плитку
     .resize(1024, 1024, { fit: 'cover', kernel: 'lanczos3' })
     .flatten({ background: BG })
     .png({ compressionLevel: 9, effort: 10 })
