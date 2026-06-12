@@ -11,7 +11,12 @@
   // Доступно ли нативное чтение здоровья (мы внутри iOS-приложения с плагином).
   window.healthkitAvailable = function(){ return !!hk(); };
 
-  var READ_TYPES = ['heartRate','restingHeartRate','heartRateVariability','stepCount','sleepAnalysis','vo2Max'];
+  // Базовые типы + опциональные (могут отсутствовать в старой версии плагина / на старых часах —
+  // темп. запястья только Series 8+/Ultra). Авторизацию опц. типов изолируем: если на них падает,
+  // повторяем только по базовым, чтобы один неизвестный тип не сломал весь доступ к Health.
+  var CORE_TYPES = ['heartRate','restingHeartRate','heartRateVariability','stepCount','sleepAnalysis','vo2Max','oxygenSaturation'];
+  var OPT_TYPES  = ['appleSleepingWristTemperature'];
+  var READ_TYPES = CORE_TYPES.concat(OPT_TYPES);
 
   function daysAgoISO(n){ var d = new Date(); d.setDate(d.getDate() - n); return d.toISOString(); }
   function nowISO(){ return new Date().toISOString(); }
@@ -20,7 +25,11 @@
   window.healthkitAuthorize = async function(){
     var p = hk(); if(!p) return false;
     try { await p.requestAuthorization({ all: [], read: READ_TYPES, write: [] }); return true; }
-    catch(e){ return false; }
+    catch(e){
+      // Опциональный тип мог не поддерживаться версией плагина → пробуем только базовые.
+      try { await p.requestAuthorization({ all: [], read: CORE_TYPES, write: [] }); return true; }
+      catch(e2){ return false; }
+    }
   };
 
   // Последняя запись по типу за N дней (или null).
@@ -85,6 +94,24 @@
     if(hrvVal != null && !isNaN(hrvVal)) out.hrv = Math.round(hrvVal);
     var rhr = await lastSample('restingHeartRate');     if(rhr && rhr.value != null) out.rhr = Math.round(Number(rhr.value));
     var vo2 = await lastSample('vo2Max');               if(vo2 && vo2.value != null) out.vo2 = Math.round(Number(vo2.value));
+    // SpO2: последний замер. Apple хранит долей 0–1 → переводим в проценты.
+    var spo2 = await lastSample('oxygenSaturation');
+    if(spo2 && spo2.value != null){ var sv = Number(spo2.value); if(sv > 0 && sv <= 1) sv *= 100; if(sv >= 70 && sv <= 100) out.spo2 = Math.round(sv); }
+    // Темп. запястья (Series 8+/Ultra): Apple отдаёт абсолютную ночную темп., а «отклонение» считает
+    // у себя и НЕ отдаёт через API → считаем сами: последняя ночь минус базовая линия (среднее за
+    // 14 дней). Если тип не поддержан плагином/часами — тихо пропускаем (out.tempDev остаётся пустым).
+    try {
+      var pw = hk();
+      var wt = await pw.queryHKitSampleType({ sampleName: 'appleSleepingWristTemperature', startDate: daysAgoISO(14), endDate: nowISO(), limit: 0 });
+      var wrows = (wt && wt.resultData) || [];
+      var wvals = wrows.map(function(s){ return Number(s.value); }).filter(function(n){ return isFinite(n) && n > 20 && n < 45; });
+      if(wvals.length >= 3){
+        var base = wvals.reduce(function(a,b){ return a + b; }, 0) / wvals.length;
+        wrows.sort(function(a,b){ return new Date(b.endDate || b.startDate) - new Date(a.endDate || a.startDate); });
+        var latest = Number(wrows[0].value);
+        if(isFinite(latest)) out.tempDev = Math.round((latest - base) * 10) / 10; // °C, 1 знак
+      }
+    } catch(e){}
     return out;
   };
 
@@ -95,6 +122,15 @@
     set('m-hrv', data.hrv); set('m-rhr', data.rhr); set('m-sleep', data.sleep);
     set('m-deep', data.deep); set('m-vo2', data.vo2);
     if(typeof window.applyManual === 'function') window.applyManual();
+    // SpO2 и темп. отклонение нет среди m-* полей карточки → кладём напрямую через applyExtracted
+    // (applyManual к тому же округлил бы tempDev до целого, потеряв доли °C).
+    var extra = {};
+    if(data.spo2 != null)    extra.spo2 = data.spo2;
+    if(data.tempDev != null) extra.tempDev = data.tempDev;
+    if(Object.keys(extra).length && typeof window.applyExtracted === 'function'){
+      window.applyExtracted(extra, 'apple');
+      if(typeof window.updateImportSummary === 'function') window.updateImportSummary();
+    }
     return Object.keys(data).length > 0;
   };
 })();
