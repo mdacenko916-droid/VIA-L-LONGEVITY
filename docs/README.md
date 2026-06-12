@@ -19,6 +19,7 @@
 | [`MOBILE-APP-MODEL.md`](MOBILE-APP-MODEL.md) | приложение пациента (ИП): Capacitor-обёртка, магазины, PRO→IAP / EXPERT-ELITE→Hotmart, носимые |
 | [`CABINET-MODEL.md`](CABINET-MODEL.md) | базовая модель кабинета, откуда выросла платформа |
 | [`ADVISOR-MODEL.md`](ADVISOR-MODEL.md) | ИИ-советник: один движок, поведение по тарифу (self-serve отвечает, под специалистом — отходит) |
+| [`TARIFF-DATA-SOURCE-MODEL.md`](TARIFF-DATA-SOURCE-MODEL.md) | тарифы по источнику данных (PRO=гаджет / VIO=ручной freemium→€9.99), Apple IAP vs Hotmart + проверка App Store для EXPERT/ELITE, карта 16 шагов, индикатор полноты, VIO-vs-PRO |
 
 ## Где что ещё (по необходимости)
 
