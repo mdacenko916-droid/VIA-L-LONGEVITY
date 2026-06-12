@@ -1380,7 +1380,7 @@ async function handleFitbitCallback(request, env, corsHeaders){
       client_secret: env.GHEALTH_CLIENT_SECRET,
     }).toString(),
   });
-  if (!r.ok) return back('error');
+  if (!r.ok) { console.log('FITBIT-DEBUG token exchange failed', r.status, await r.text()); return back('error'); }
   const tok = await r.json();
   if (!tok.access_token || !env.WEARABLE_TOKENS) return back('error');
   await env.WEARABLE_TOKENS.put('fitbit:' + sid, JSON.stringify({
@@ -1432,17 +1432,20 @@ async function handleFitbitMetrics(request, env, corsHeaders){
   const startISO = new Date(Date.now() - 7 * 86400000).toISOString();
   const endISO   = new Date(Date.now() + 86400000).toISOString();
   const sd = new Date(Date.now() - 7 * 86400000).toISOString().slice(0,10);
-  const ed = new Date().toISOString().slice(0,10);
+  // Daily-kind filters accept only >= and < (not <=) → exclusive upper bound = tomorrow.
+  const ed = new Date(Date.now() + 86400000).toISOString().slice(0,10);
   const num = v => { const n = Number(v); return Number.isFinite(n) ? n : null; };
   const avg = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : null;
   // GET dataPoints of a type filtered by a time range (filter is URL-encoded).
   const gh = async (type, filter) => {
     try {
       const r = await fetch(`${GH_API}/${type}/dataPoints?pageSize=1000&filter=${encodeURIComponent(filter)}`, { headers: h });
-      if (!r.ok) return [];
+      if (!r.ok) { console.log('FITBIT-DEBUG gh ' + type + ' failed', r.status, (await r.text()).slice(0, 500)); return []; }
       const j = await r.json();
+      console.log('FITBIT-DEBUG gh ' + type + ' points:', (j.dataPoints || []).length);
+      if ((j.dataPoints || []).length) console.log('FITBIT-DEBUG sample ' + type + ':', JSON.stringify(j.dataPoints[0]).slice(0, 400));
       return j.dataPoints || [];
-    } catch(e){ return []; }
+    } catch(e){ console.log('FITBIT-DEBUG gh ' + type + ' exception', String(e)); return []; }
   };
 
   const ex = {};
@@ -1450,7 +1453,7 @@ async function handleFitbitMetrics(request, env, corsHeaders){
   const hrv = await gh('heart-rate-variability', `heart_rate_variability.sample_time.physical_time>="${startISO}" AND heart_rate_variability.sample_time.physical_time<"${endISO}"`);
   { const v = avg(hrv.map(d => num(d.heartRateVariability && d.heartRateVariability.rmssdMillis)).filter(n=>n!=null)); if (v!=null) ex.hrv = Math.round(v); }
   // Daily resting heart rate
-  const rhr = await gh('daily-resting-heart-rate', `daily_resting_heart_rate.date>="${sd}" AND daily_resting_heart_rate.date<="${ed}"`);
+  const rhr = await gh('daily-resting-heart-rate', `daily_resting_heart_rate.date>="${sd}" AND daily_resting_heart_rate.date<"${ed}"`);
   { const v = avg(rhr.map(d => num(d.dailyRestingHeartRate && d.dailyRestingHeartRate.beatsPerMinute)).filter(n=>n!=null)); if (v!=null) ex.rhr = Math.round(v); }
   // SpO2 — sample type
   const spo2 = await gh('oxygen-saturation', `oxygen_saturation.sample_time.physical_time>="${startISO}" AND oxygen_saturation.sample_time.physical_time<"${endISO}"`);
@@ -3183,6 +3186,7 @@ function buildUserMessage(data, lang) {
     + 'Симптомы: ' + (symptoms.length ? symptoms.join(', ') : 'не указаны') + '\n'
     + complaintsContext
     + bioContext + '\n'
+    + (data.training && data.training.count ? 'Тренировки (с кольца, 7 дн): ' + data.training.count + ' сессий' + (data.training.intensity ? ', последняя интенсивность ' + data.training.intensity : '') + (data.training.activity ? ' (' + data.training.activity + ')' : '') + '. Применяй HRV-направленную нагрузку: тяжёлые/интенсивные сессии — только в дни восстановленного ночного HRV; падающий HRV неделю → снизить объём, добавить сон/восстановление.\n' : '')
     + labsContext;
 }
 
