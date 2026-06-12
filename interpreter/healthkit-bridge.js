@@ -35,14 +35,27 @@
     } catch(e){ return null; }
   }
 
+  // Среднее значение по типу за окно [startISO, endISO] (или null, если в окне нет сэмплов).
+  // Нужно для HRV: Apple пишет SDNN множеством разовых замеров (в т.ч. дневных от Watch),
+  // а сопоставимо с ночной агрегацией кольца только среднее за период сна, а не последний сэмпл.
+  async function avgInWindow(sampleName, startISO, endISO){
+    var p = hk(); if(!p) return null;
+    try {
+      var r = await p.queryHKitSampleType({ sampleName: sampleName, startDate: startISO, endDate: endISO, limit: 0 });
+      var arr = (r && r.resultData) || [];
+      var sum = 0, n = 0;
+      arr.forEach(function(s){ if(s && s.value != null && !isNaN(Number(s.value))){ sum += Number(s.value); n++; } });
+      return n ? (sum / n) : null;
+    } catch(e){ return null; }
+  }
+
   // Читает метрики и нормализует в форму полей карточки Apple ИП.
   window.healthkitRead = async function(){
     if(!hk()) return null;
     var out = {};
-    var hrv = await lastSample('heartRateVariability'); if(hrv && hrv.value != null) out.hrv = Math.round(Number(hrv.value));
-    var rhr = await lastSample('restingHeartRate');     if(rhr && rhr.value != null) out.rhr = Math.round(Number(rhr.value));
-    var vo2 = await lastSample('vo2Max');               if(vo2 && vo2.value != null) out.vo2 = Math.round(Number(vo2.value));
-    // Сон за прошедшую ночь: суммируем интервалы «asleep/core/rem/deep», deep — отдельно.
+    // Сон за прошедшую ночь: суммируем интервалы «asleep/core/rem/deep» (deep — отдельно) и
+    // заодно находим окно сна [nightStart, nightEnd] — оно нужно для ночного усреднения HRV ниже.
+    var nightStart = null, nightEnd = null;
     try {
       var p = hk();
       var sl = await p.queryHKitSampleType({ sampleName: 'sleepAnalysis', startDate: daysAgoISO(1), endDate: nowISO(), limit: 0 });
@@ -52,12 +65,26 @@
         var mins = (new Date(s.endDate) - new Date(s.startDate)) / 60000;
         if(!(mins > 0)) return;
         var v = String(s.value != null ? s.value : (s.sleepState || '')).toLowerCase();
-        if(v.indexOf('deep') >= 0){ deepMin += mins; asleepMin += mins; }
-        else if(v.indexOf('asleep') >= 0 || v.indexOf('core') >= 0 || v.indexOf('rem') >= 0){ asleepMin += mins; }
+        var asleep = false;
+        if(v.indexOf('deep') >= 0){ deepMin += mins; asleepMin += mins; asleep = true; }
+        else if(v.indexOf('asleep') >= 0 || v.indexOf('core') >= 0 || v.indexOf('rem') >= 0){ asleepMin += mins; asleep = true; }
+        if(asleep){
+          var st = new Date(s.startDate), en = new Date(s.endDate);
+          if(!nightStart || st < nightStart) nightStart = st;
+          if(!nightEnd   || en > nightEnd)   nightEnd   = en;
+        }
       });
       if(asleepMin > 0) out.sleep = Math.round(asleepMin / 6) / 10; // часы, 1 знак
       if(deepMin > 0)   out.deep  = Math.round(deepMin);
     } catch(e){}
+    // HRV (SDNN): среднее по сэмплам внутри окна сна, сопоставимо с ночной HRV кольца.
+    // Фолбэк на последний сэмпл, если ночь не размечена (нет sleepAnalysis за сутки).
+    var hrvVal = null;
+    if(nightStart && nightEnd) hrvVal = await avgInWindow('heartRateVariability', nightStart.toISOString(), nightEnd.toISOString());
+    if(hrvVal == null){ var hrv = await lastSample('heartRateVariability'); if(hrv && hrv.value != null) hrvVal = Number(hrv.value); }
+    if(hrvVal != null && !isNaN(hrvVal)) out.hrv = Math.round(hrvVal);
+    var rhr = await lastSample('restingHeartRate');     if(rhr && rhr.value != null) out.rhr = Math.round(Number(rhr.value));
+    var vo2 = await lastSample('vo2Max');               if(vo2 && vo2.value != null) out.vo2 = Math.round(Number(vo2.value));
     return out;
   };
 
