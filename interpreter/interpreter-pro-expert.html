@@ -1305,6 +1305,7 @@ footer{
       <input id="histImportInput" type="file" accept="application/json,.json" onchange="importHistory(this)" style="display:none;">
     </div>
     <div id="weeklyTrend" style="margin-bottom:18px;"></div>
+    <div id="weeklyReport" style="margin-bottom:18px;"></div>
     <div id="historyList"></div>
   </div>
 </div>
@@ -4997,6 +4998,7 @@ function saveSession(score,type,data){
 
 function renderHistory(){
   renderWeekly();
+  renderWeeklyReportUI();
   const key='vial_history';
   const history=JSON.parse(localStorage.getItem(key)||'[]');
   const el=document.getElementById('historyList');
@@ -5103,6 +5105,82 @@ function renderWeekly(){
     <div style="font-size:10px;color:var(--t3);letter-spacing:.5px;margin-bottom:8px;">${ui.sub}</div>
     ${rows}
   </div>`;
+}
+
+// ══ WEEKLY AI REPORT ══════════════════════════════════════
+// Связный AI-разбор недельной динамики. Частота — 1 раз в 7 дней (гейт ниже на
+// localStorage): только так видна реальная картина изменений, а не дневной шум.
+// В EXPERT/ELITE тот же разбор уходит специалисту в кабинет (воркер, по коду доступа).
+function _wrUI(){
+  const M={
+    ru:{title:'Недельный AI-разбор',sub:'связный разбор динамики · раз в неделю',get:'Получить разбор',load:'Готовлю разбор…',lock:'Следующий разбор — через',days:'дн.',err:'Не удалось получить разбор. Попробуйте позже.',from:'от'},
+    uk:{title:'Тижневий AI-розбір',sub:'звʼязний розбір динаміки · раз на тиждень',get:'Отримати розбір',load:'Готую розбір…',lock:'Наступний розбір — через',days:'дн.',err:'Не вдалося отримати розбір. Спробуйте пізніше.',from:'від'},
+    en:{title:'Weekly AI review',sub:'coherent dynamics review · once a week',get:'Get review',load:'Preparing…',lock:'Next review in',days:'d',err:'Could not get the review. Try again later.',from:'from'},
+    es:{title:'Análisis semanal IA',sub:'análisis coherente de la dinámica · una vez por semana',get:'Obtener análisis',load:'Preparando…',lock:'Próximo análisis en',days:'d',err:'No se pudo obtener el análisis. Inténtalo más tarde.',from:'del'},
+    de:{title:'Wöchentliche KI-Auswertung',sub:'zusammenhängende Dynamik-Auswertung · einmal pro Woche',get:'Auswertung abrufen',load:'Wird erstellt…',lock:'Nächste Auswertung in',days:'T',err:'Auswertung konnte nicht geladen werden. Später erneut versuchen.',from:'vom'},
+    pt:{title:'Análise semanal IA',sub:'análise coerente da dinâmica · uma vez por semana',get:'Obter análise',load:'Preparando…',lock:'Próxima análise em',days:'d',err:'Não foi possível obter a análise. Tente mais tarde.',from:'de'},
+    fr:{title:'Analyse hebdo IA',sub:'analyse cohérente de la dynamique · une fois par semaine',get:'Obtenir l’analyse',load:'Préparation…',lock:'Prochaine analyse dans',days:'j',err:'Impossible d’obtenir l’analyse. Réessayez plus tard.',from:'du'},
+    pl:{title:'Tygodniowa analiza AI',sub:'spójna analiza dynamiki · raz w tygodniu',get:'Pobierz analizę',load:'Przygotowuję…',lock:'Następna analiza za',days:'dn.',err:'Nie udało się pobrać analizy. Spróbuj później.',from:'z'},
+    it:{title:'Analisi settimanale IA',sub:'analisi coerente della dinamica · una volta a settimana',get:'Ottieni analisi',load:'Preparazione…',lock:'Prossima analisi tra',days:'g',err:'Impossibile ottenere l’analisi. Riprova più tardi.',from:'del'},
+    he:{title:'סקירה שבועית AI',sub:'סקירה רציפה של הדינמיקה · פעם בשבוע',get:'קבל סקירה',load:'מכין…',lock:'הסקירה הבאה בעוד',days:'ימ׳',err:'לא ניתן היה לקבל את הסקירה. נסה מאוחר יותר.',from:'מ־'},
+    ja:{title:'週間AIレビュー',sub:'動向の総合レビュー · 週1回',get:'レビューを取得',load:'作成中…',lock:'次のレビューまで',days:'日',err:'レビューを取得できませんでした。後でお試しください。',from:''},
+    ko:{title:'주간 AI 리뷰',sub:'변화 종합 리뷰 · 주 1회',get:'리뷰 받기',load:'준비 중…',lock:'다음 리뷰까지',days:'일',err:'리뷰를 가져오지 못했습니다. 나중에 다시 시도하세요.',from:''}
+  };
+  return M[lang]||M.en;
+}
+// Гейт 1/нед: {canGen, daysLeft, cached, cachedDate} из localStorage.
+function _wrGate(){
+  const DAY=86400000, now=Date.now();
+  const last=parseInt(localStorage.getItem('vial_weekly_last')||'0',10);
+  const left=last?Math.ceil((7*DAY-(now-last))/DAY):0;
+  return { canGen: !last || (now-last)>=7*DAY, daysLeft: left>0?left:0,
+           cached: localStorage.getItem('vial_weekly_text')||'', cachedDate: localStorage.getItem('vial_weekly_date')||'' };
+}
+function _wrMd(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  .replace(/^#{1,3}\s*(.+)$/gm,'<strong style="display:block;margin:10px 0 4px;">$1</strong>')
+  .replace(/\*\*([^*]+?)\*\*/g,'<strong>$1</strong>'); }
+function renderWeeklyReportUI(){
+  const box=document.getElementById('weeklyReport'); if(!box) return;
+  const w=weeklyTrend(); if(!w){ box.innerHTML=''; return; } // <2 анализов — динамика уже показала подсказку
+  const ui=_wrUI(), g=_wrGate();
+  let inner='';
+  if(g.cached){
+    inner += `<div style="font-size:13px;line-height:1.7;color:var(--t2);">${_wrMd(g.cached)}</div>`;
+    if(g.cachedDate) inner += `<div style="font-size:10px;color:var(--t3);margin-top:8px;">${ui.from} ${g.cachedDate}</div>`;
+  }
+  if(g.canGen){
+    inner += `<button id="wrBtn" onclick="genWeeklyReport()" style="margin-top:${g.cached?'12px':'0'};background:var(--gold);color:#10141C;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;">${ui.get}</button>`;
+  } else {
+    inner += `<div style="margin-top:${g.cached?'12px':'0'};font-size:11px;color:var(--t3);">⏳ ${ui.lock} ${g.daysLeft} ${ui.days}</div>`;
+  }
+  box.innerHTML=`<div style="background:linear-gradient(145deg,#161A22,#10141C);border:1px solid var(--gold-dim);border-radius:16px;padding:16px 18px;">
+    <div style="font-family:'Playfair Display',serif;font-size:16px;color:var(--t1);">✦ ${ui.title}</div>
+    <div style="font-size:10px;color:var(--t3);letter-spacing:.5px;margin-bottom:10px;">${ui.sub}</div>${inner}</div>`;
+}
+async function genWeeklyReport(){
+  const w=weeklyTrend(); if(!w) return;
+  const ui=_wrUI();
+  const btn=document.getElementById('wrBtn'); if(btn){ btn.disabled=true; btn.textContent=ui.load; }
+  const summary={ n:w.wk.length, metrics:w.metrics.map(m=>({ key:m.k, avg:+m.a.toFixed(m.dec),
+    prev:m.p!=null?+m.p.toFixed(m.dec):null, delta:m.delta!=null?+m.delta.toFixed(m.dec):null })) };
+  const code=(window.sessionStorage&&sessionStorage.getItem('vial_code'))||'';
+  try{
+    const res=await fetch('https://interpreter.viaelcom.workers.dev/weekly-report',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({summary,lang,code})});
+    const json=await res.json();
+    if(!json.report) throw new Error('no report');
+    localStorage.setItem('vial_weekly_text',json.report);
+    localStorage.setItem('vial_weekly_last',String(Date.now()));
+    localStorage.setItem('vial_weekly_date',new Date().toISOString().slice(0,10));
+    renderWeeklyReportUI();
+  }catch(e){
+    if(btn){ btn.disabled=false; btn.textContent=ui.get; }
+    const box=document.getElementById('weeklyReport');
+    if(box&&box.firstElementChild){ const er=document.createElement('div');
+      er.style.cssText='margin-top:10px;font-size:11px;color:#FF6B8A;'; er.textContent='⚠ '+ui.err;
+      box.firstElementChild.appendChild(er); }
+  }
 }
 
 // ══ HISTORY EXPORT / IMPORT ═══════════════════════════════

@@ -452,6 +452,7 @@ export default {
       // Цифровая анкета здоровья (book/anketa) → структурированная карточка в топик клиента
       if (path === '/anketa-submit')    return handleAnketaSubmit(request, env, corsHeaders, ctx);
       if (path === '/advisor-chat')     return handleAdvisorChat(request, env, corsHeaders);
+      if (path === '/weekly-report')    return handleWeeklyReport(request, env, corsHeaders, ctx);
 
       // Кабинет нутрициолога (CRM на D1) — см. docs/CABINET-MODEL.md
       if (path === '/cabinet-auth')        return handleCabinetAuth(request, env, corsHeaders);
@@ -1140,6 +1141,115 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
   return new Response(JSON.stringify({ analysis: text }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
+}
+
+// ─────────────────────────────────────────────────────────────
+// НЕДЕЛЬНЫЙ AI-РАЗБОР ДИНАМИКИ (PRO/EXPERT/ELITE).
+// Клиент шлёт компактную 7-дневную сводку (средние + дельты к прошлой неделе),
+// мы возвращаем короткий связный разбор (4–6 фраз). Частота 1 раз/нед держится
+// гейтом на клиенте (localStorage); здесь — серверный дедуп ингеста (см. ниже).
+// Для EXPERT/ELITE (есть code) тот же разбор кладётся в карточку кабинета →
+// специалист видит его во вкладке «Разборы» (type:'weekly').
+// ─────────────────────────────────────────────────────────────
+function buildWeeklyUserMessage(summary, lang) {
+  summary = summary || {};
+  const labels = {
+    hrv:'HRV', sleep:'Sleep quality', rhr:'Resting heart rate', energy:'Energy',
+    qol:'Quality of life', anx:'Anxiety', score:'Readiness',
+  };
+  const goodUp = { hrv:1, sleep:1, rhr:-1, energy:1, qol:1, anx:-1, score:1 };
+  const lines = (summary.metrics || []).map(m => {
+    const label = labels[m.key] || m.key;
+    let trend = 'no prior-week baseline';
+    if (m.delta != null) {
+      const dirWord = m.delta > 0 ? 'up' : (m.delta < 0 ? 'down' : 'flat');
+      const better  = m.delta === 0 ? 'stable' : (((m.delta > 0 ? 1 : -1) === (goodUp[m.key] || 1)) ? 'improved' : 'worsened');
+      trend = `${dirWord} ${m.delta > 0 ? '+' : ''}${m.delta} vs last week (${better})`;
+    }
+    return `- ${label}: 7-day average ${m.avg}; ${trend}`;
+  });
+  return 'Weekly biometric & wellbeing summary (' + (summary.n || 0) + ' analyses logged this week):\n' +
+         (lines.length ? lines.join('\n') : '(no metrics available)') +
+         '\n\nWrite the short weekly review now.';
+}
+
+async function handleWeeklyReport(request, env, corsHeaders, ctx) {
+  const { summary, lang, code } = await request.json();
+  const langMap = {
+    ru: 'русском', uk: 'украинском', en: 'English', es: 'español',
+    de: 'Deutsch', pt: 'português', fr: 'français', pl: 'polski',
+    it: 'italiano', he: 'עברית', ja: '日本語', ko: '한국어',
+  };
+  const langName = langMap[lang] || 'English';
+
+  const weeklySystem =
+    'You are a longevity & clinical-nutrition EDUCATOR writing a SHORT weekly review of a ' +
+    "client's wearable / wellbeing dynamics. This is educational reflection, NOT medical advice, " +
+    'diagnosis, or treatment.\n' +
+    'WRITE: 4–6 warm, supportive sentences. Care is the core value — encourage, never pressure or scare.\n' +
+    'COVER, based ONLY on the numbers given (never invent metrics or values):\n' +
+    '1) what improved this week, 2) what worsened or needs attention, 3) the single most likely ' +
+    'behavioural driver, 4) ONE small, doable focus for the coming week (an "experiment", not a list).\n' +
+    'Refer to a profile specialist generically if relevant ("your specialist") — never invent a personal name.\n' +
+    'End with one short, gentle non-medical disclaimer line.\n\n' +
+    '════════════════════════════════════════\n' +
+    'ЯЗЫК ОТВЕТА — КРИТИЧНО\n' +
+    '════════════════════════════════════════\n' +
+    'ВЕСЬ ответ ДОЛЖЕН быть на: ' + langName + '. Эти инструкции по-русски — это твоя внутренняя ' +
+    'база, а НЕ язык ответа. Не смешивай языки, не изобретай псевдо-локальные слова: если не уверен ' +
+    'в термине — оставь универсальный английский курсивом (например *HRV*, *cortisol*).';
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': env.CLAUDE_API_KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
+      max_tokens: 900,
+      system: weeklySystem,
+      messages: [{ role: 'user', content: buildWeeklyUserMessage(summary, lang) }],
+    }),
+  });
+
+  const result = await response.json();
+  const text = result.content?.[0]?.text || result.error?.message || 'Ошибка генерации';
+
+  // EXPERT/ELITE (есть код доступа) → тот же разбор в карточку кабинета, в фоне.
+  if (code && env.DB && text && ctx) {
+    ctx.waitUntil(cabinetIngestWeekly(env, code, text, lang).catch(() => {}));
+  }
+
+  return new Response(JSON.stringify({ report: text }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+// Кладёт недельный разбор в карточку как breakdowns[type:'weekly']. Дедуп: если запись
+// weekly моложе 6 дней уже есть — заменяем её (защита от обхода клиентского гейта сбросом
+// localStorage), иначе добавляем. Только UPDATE существующей карточки (EXPERT/ELITE).
+async function cabinetIngestWeekly(env, code, text, lang) {
+  if (!env.DB || !code) return;
+  code = String(code).toUpperCase();
+  const row = await env.DB.prepare('SELECT data FROM clients WHERE code=?').bind(code).first();
+  if (!row) return;
+  let d = {};
+  try { d = JSON.parse(row.data || '{}'); } catch (_) {}
+  if (d.sharing === false) return;
+  if (!Array.isArray(d.breakdowns)) d.breakdowns = [];
+  const today = new Date().toISOString().slice(0, 10);
+  const entry = {
+    date: today, type: 'weekly', status: 'received', source: 'ip', lang: lang || '',
+    text: String(text).slice(0, 6000),
+  };
+  const SIX_DAYS = 6 * 86400000;
+  const idx = d.breakdowns.findIndex(b => b.type === 'weekly' && b.date && (Date.now() - new Date(b.date).getTime()) < SIX_DAYS);
+  if (idx >= 0) d.breakdowns[idx] = entry; else d.breakdowns.push(entry);
+  if (d.breakdowns.length > 50) d.breakdowns = d.breakdowns.slice(-50);
+  await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?')
+    .bind(JSON.stringify(d), Date.now(), code).run();
 }
 
 // ─────────────────────────────────────────────────────────────
