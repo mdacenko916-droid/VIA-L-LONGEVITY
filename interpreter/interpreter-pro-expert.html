@@ -7082,6 +7082,10 @@ function ouraSyncLang(){
 function connectOura(){
   let sid=localStorage.getItem('vial_oura_sid');
   if(!sid){ sid=Date.now().toString(36)+Math.random().toString(36).slice(2,10); localStorage.setItem('vial_oura_sid',sid); }
+  // Помечаем «ждём возврата из OAuth». В нативном app вход открывается в системном браузере и
+  // обратно НЕ редиректит → ловим возврат через visibilitychange и до-тягиваем по sid (токен уже
+  // в KV воркера). В обычном браузере срабатывает редирект-IIFE ниже.
+  localStorage.setItem('vial_oura_pending', String(Date.now()));
   setStatus('oura-connect-status','loading',_ouraUI().connecting);
   location.href=AI_WORKER+'/oura/start?sid='+encodeURIComponent(sid)+'&ret='+encodeURIComponent(location.origin+location.pathname);
 }
@@ -7092,6 +7096,7 @@ async function fetchOuraLive(sid){
     const r=await fetch(AI_WORKER+'/oura/metrics?sid='+encodeURIComponent(sid));
     const j=await r.json();
     if(j.ok&&j.ex&&Object.keys(j.ex).length){
+      localStorage.removeItem('vial_oura_pending');
       applyExtracted(j.ex,'oura');
       renderPreview('oura-connect-grid',j.ex);
       document.getElementById('oura-connect-preview').classList.add('show');
@@ -7113,6 +7118,14 @@ async function fetchOuraLive(sid){
     else setStatus('oura-connect-status','error',_ouraUI().err);
   },400);
 })();
+// Возврат в приложение после OAuth в системном браузере (нативный app): при показе вкладки,
+// если есть «ожидание» (≤10 мин) и sid — до-тягиваем метрики (токен уже сохранён воркером по sid).
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState!=='visible') return;
+  var pend=parseInt(localStorage.getItem('vial_oura_pending')||'0',10);
+  var sid=localStorage.getItem('vial_oura_sid');
+  if(pend && sid && (Date.now()-pend)<600000){ try{ if(typeof openImport==='function') openImport(); }catch(e){} try{ toggleCard('oura'); }catch(e){} fetchOuraLive(sid); }
+});
 try{ ouraSyncLang(); }catch(e){}
 
 // ══ FITBIT (Google Health) OAuth CONNECT ══════════════════════════════════
