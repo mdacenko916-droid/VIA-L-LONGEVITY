@@ -427,6 +427,10 @@ export default {
       if (path === '/withings/start')    return handleWithingsStart(request, env, corsHeaders);
       if (path === '/withings/callback') return handleWithingsCallback(request, env, corsHeaders);
       if (path === '/withings/metrics')  return handleWithingsMetrics(request, env, corsHeaders);
+
+      if (path === '/oura/start')        return handleOuraStart(request, env, corsHeaders);
+      if (path === '/oura/callback')     return handleOuraCallback(request, env, corsHeaders);
+      if (path === '/oura/metrics')      return handleOuraMetrics(request, env, corsHeaders);
       return new Response('Not found', { status: 404 });
     }
 
@@ -1806,6 +1810,130 @@ async function handleWithingsMetrics(request, env, corsHeaders) {
     const v = avg(vals); if (v!=null) ex.spo2 = +v.toFixed(1);
   }
 
+  return jsonResponse({ ok:true, ex }, corsHeaders);
+}
+
+// ─────────────────────────────────────────────────────────────
+// Oura Ring API v2 (OAuth2). Self-serve app at cloud.ouraring.com/oauth/applications
+// (НЕ требует партнёрства; дефолтный лимит 10 пользователей — см. wearables/oura.md).
+// Secrets: OURA_CLIENT_ID, OURA_CLIENT_SECRET. KV: WEARABLE_TOKENS (oura:<sid>).
+// Redirect URI: https://interpreter.viaelcom.workers.dev/oura/callback
+// Scopes: personal daily heartrate workout spo2 (stress/cardio идут под daily).
+// Docs: cloud.ouraring.com/docs · developer.ouraring.com. ⚠️ Имена полей сверить
+// на первом живом ответе — парсинг ниже защищён (null отфильтровывается, не падает).
+// ─────────────────────────────────────────────────────────────
+const OURA_AUTH_URL  = 'https://cloud.ouraring.com/oauth/authorize';
+const OURA_TOKEN_URL = 'https://api.ouraring.com/oauth/token';
+const OURA_API       = 'https://api.ouraring.com';
+const OURA_SCOPES    = 'personal daily heartrate workout spo2';
+
+async function handleOuraStart(request, env, corsHeaders){
+  if (!env.OURA_CLIENT_ID || !env.OURA_CLIENT_SECRET) return jsonResponse({ ok:false, error:'oura_secrets_missing' }, corsHeaders, 500);
+  const url = new URL(request.url);
+  const sid = url.searchParams.get('sid');
+  let ret = url.searchParams.get('ret') || FITBIT_DEFAULT_RET;
+  if (!sid) return jsonResponse({ ok:false, error:'sid_required' }, corsHeaders, 400);
+  if (!FITBIT_RETURN_ALLOW.some(p => ret.startsWith(p))) ret = FITBIT_DEFAULT_RET;
+  const payload = b64urlEncode(JSON.stringify({ sid, ret }));
+  const state = payload + '.' + await hmacHex(env.OURA_CLIENT_SECRET, payload);
+  const auth = new URL(OURA_AUTH_URL);
+  auth.searchParams.set('response_type', 'code');
+  auth.searchParams.set('client_id', env.OURA_CLIENT_ID);
+  auth.searchParams.set('redirect_uri', url.origin + '/oura/callback');
+  auth.searchParams.set('scope', OURA_SCOPES);
+  auth.searchParams.set('state', state);
+  return Response.redirect(auth.toString(), 302);
+}
+
+async function handleOuraCallback(request, env, corsHeaders){
+  const url = new URL(request.url);
+  const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state') || '';
+  const errParam = url.searchParams.get('error');
+  const dot = state.lastIndexOf('.');
+  let sid = '', ret = FITBIT_DEFAULT_RET;
+  if (dot > 0) {
+    const payload = state.slice(0, dot), sig = state.slice(dot + 1);
+    if (sig === await hmacHex(env.OURA_CLIENT_SECRET || '', payload)) { try { const o = JSON.parse(b64urlDecode(payload)); sid = o.sid || ''; if (o.ret) ret = o.ret; } catch(e){} }
+  }
+  const back = (status) => Response.redirect(ret + (ret.includes('?') ? '&' : '?') + 'oura=' + status + (sid ? '&sid=' + encodeURIComponent(sid) : ''), 302);
+  if (errParam || !code || !sid) return back('error');
+  const r = await fetch(OURA_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type:'authorization_code', code, redirect_uri: url.origin + '/oura/callback', client_id: env.OURA_CLIENT_ID, client_secret: env.OURA_CLIENT_SECRET }).toString(),
+  });
+  if (!r.ok) return back('error');
+  const tok = await r.json();
+  if (!tok.access_token || !env.WEARABLE_TOKENS) return back('error');
+  await env.WEARABLE_TOKENS.put('oura:' + sid, JSON.stringify({
+    access_token: tok.access_token, refresh_token: tok.refresh_token || '', expires_at: Date.now() + (tok.expires_in || 86400) * 1000,
+  }), { expirationTtl: 30 * 24 * 3600 });
+  return back('connected');
+}
+
+async function ouraRefresh(env, rec){
+  if (!rec.refresh_token) return null;
+  const r = await fetch(OURA_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type:'refresh_token', refresh_token: rec.refresh_token, client_id: env.OURA_CLIENT_ID, client_secret: env.OURA_CLIENT_SECRET }).toString(),
+  });
+  if (!r.ok) return null;
+  const tok = await r.json();
+  if (!tok.access_token) return null;
+  return { access_token: tok.access_token, refresh_token: tok.refresh_token || rec.refresh_token, expires_at: Date.now() + (tok.expires_in || 86400) * 1000 };
+}
+
+// GET /oura/metrics?sid=… → 7-дневное ex {hrv,rhr,sleepHours,deepMin,spo2,energy} + тренировки.
+// HRV у Oura = average_hrv (ms, ночной RMSSD) — это и есть «настоящая» цифра кольца.
+async function handleOuraMetrics(request, env, corsHeaders){
+  const url = new URL(request.url);
+  const sid = url.searchParams.get('sid');
+  if (!sid) return jsonResponse({ ok:false, error:'sid_required' }, corsHeaders, 400);
+  if (!env.WEARABLE_TOKENS) return jsonResponse({ ok:false, error:'kv_binding_missing' }, corsHeaders, 500);
+  const raw = await env.WEARABLE_TOKENS.get('oura:' + sid);
+  if (!raw) return jsonResponse({ ok:false, error:'not_connected' }, corsHeaders, 404);
+  let rec = JSON.parse(raw);
+  if (Date.now() > rec.expires_at - 60000) {
+    const refreshed = await ouraRefresh(env, rec);
+    if (!refreshed) return jsonResponse({ ok:false, error:'refresh_failed' }, corsHeaders, 401);
+    rec = refreshed;
+    await env.WEARABLE_TOKENS.put('oura:' + sid, JSON.stringify(rec), { expirationTtl: 30 * 24 * 3600 });
+  }
+  const h = { 'Authorization': 'Bearer ' + rec.access_token };
+  const end   = new Date().toISOString().slice(0,10);
+  const start = new Date(Date.now() - 7 * 86400000).toISOString().slice(0,10);
+  const avg = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : null;
+  const get = async (path) => { try { const r = await fetch(`${OURA_API}${path}?start_date=${start}&end_date=${end}`, { headers:h }); if (!r.ok) return null; const j = await r.json(); return (j && j.data) || []; } catch(e){ return null; } };
+
+  const ex = {};
+  // Sleep → hrv (average_hrv), rhr (lowest_heart_rate), sleepHours, deepMin. Берём ночной сон.
+  const sleep = await get('/v2/usercollection/sleep') || [];
+  const night = sleep.filter(s => s && (s.type === 'long_sleep' || s.type === 'sleep'));
+  const useSleep = night.length ? night : sleep;
+  if (useSleep.length) {
+    let v;
+    v = avg(useSleep.map(s => Number(s.average_hrv)).filter(n=>isFinite(n)&&n>0));        if (v!=null) ex.hrv = Math.round(v);
+    v = avg(useSleep.map(s => Number(s.lowest_heart_rate)).filter(n=>isFinite(n)&&n>0));  if (v!=null) ex.rhr = Math.round(v);
+    v = avg(useSleep.map(s => Number(s.total_sleep_duration)).filter(n=>isFinite(n)&&n>0)); if (v!=null) ex.sleepHours = +(v/3600).toFixed(1);
+    v = avg(useSleep.map(s => Number(s.deep_sleep_duration)).filter(n=>isFinite(n)&&n>0));  if (v!=null) ex.deepMin = Math.round(v/60);
+  }
+  // Readiness → energy (score 0–100 → 1–10)
+  const rdy = await get('/v2/usercollection/daily_readiness') || [];
+  if (rdy.length) { const v = avg(rdy.map(x => Number(x && x.score)).filter(n=>isFinite(n)&&n>0)); if (v!=null) ex.energy = Math.min(10, Math.max(1, Math.round(v/10))); }
+  // SpO2 → spo2_percentage.average
+  const spo2 = await get('/v2/usercollection/daily_spo2') || [];
+  if (spo2.length) { const v = avg(spo2.map(x => Number(x && x.spo2_percentage && x.spo2_percentage.average)).filter(n=>isFinite(n)&&n>0)); if (v!=null) ex.spo2 = +v.toFixed(1); }
+  // Workout → сводка нагрузки за неделю (для модуля ДВИЖЕНИЕ + HRV-направленной нагрузки)
+  const wk = await get('/v2/usercollection/workout') || [];
+  if (wk.length) {
+    ex.workouts7d = wk.length;
+    const last = wk[wk.length - 1] || {};
+    if (last.intensity) ex.trainIntensity = String(last.intensity);
+    if (last.day)       ex.trainDay = String(last.day);
+    if (last.activity)  ex.trainActivity = String(last.activity);
+  }
   return jsonResponse({ ok:true, ex }, corsHeaders);
 }
 

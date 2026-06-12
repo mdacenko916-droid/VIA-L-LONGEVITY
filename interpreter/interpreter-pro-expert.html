@@ -1351,7 +1351,14 @@ footer{
       <span class="source-chevron">›</span>
     </div>
     <div class="source-body">
-      <div data-t="instr_oura_connect" style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;">В приложении кольцо читается через <b style="color:var(--t1);">Apple Health</b> (кнопка ниже). Прямое онлайн-подключение Oura — скоро. Пока — файл экспорта Oura или ручной ввод.</div>
+      <div id="oura-connect-intro" style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;"></div>
+      <button class="token-btn" style="width:100%;" id="oura-connect-btn" onclick="connectOura()">🔗 Oura</button>
+      <div class="import-status" id="oura-connect-status"></div>
+      <div class="imported-preview" id="oura-connect-preview">
+        <div style="font-size:11px;color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">✓ Oura</div>
+        <div class="preview-grid" id="oura-connect-grid"></div>
+      </div>
+      <div id="oura-or-div" style="text-align:center;font-size:11px;color:var(--t3);margin:14px 0 10px;">— или —</div>
 
       <!-- File method -->
       <div id="oura-file">
@@ -4823,6 +4830,7 @@ function setLang(l){
     const k=el.getAttribute('data-t-placeholder');
     if(T[l][k]!==undefined)el.placeholder=T[l][k];
   });
+  try{ ouraSyncLang(); }catch(e){}
   // CTA block — обезличенно: «нутрициолог», без личных имён.
   const isLocal=(l==='ru'||l==='uk');
   const ctaMarina=document.getElementById('cta-marina');
@@ -7044,6 +7052,67 @@ async function fetchWearableLive(vendor, sid){
     }, 400);
   });
 })();
+
+// ── Oura Ring — прямое OAuth-подключение (self-serve, ≤10 польз.; см. wearables/oura.md).
+// Строки локализованы в _ouraUI (12 языков) и синхронизируются в setLang → ouraSyncLang().
+function _ouraUI(){
+  const M={
+    ru:{intro:'Войдите в аккаунт Oura — за 7 дней подтянем HRV, сон, готовность, SpO₂ и тренировки.',btn:'🔗 Подключить кольцо Oura',connecting:'Подключаем Oura…',ok:'Данные Oura загружены',nodata:'Нет данных Oura за 7 дней',err:'Не удалось подключить Oura. Попробуйте ещё раз.',or:'или'},
+    uk:{intro:'Увійдіть в акаунт Oura — за 7 днів підтягнемо HRV, сон, готовність, SpO₂ і тренування.',btn:'🔗 Підключити каблучку Oura',connecting:'Підключаємо Oura…',ok:'Дані Oura завантажено',nodata:'Немає даних Oura за 7 днів',err:'Не вдалося підключити Oura. Спробуйте ще раз.',or:'або'},
+    en:{intro:'Sign in to your Oura account — we’ll pull 7 days of HRV, sleep, readiness, SpO₂ and workouts.',btn:'🔗 Connect Oura Ring',connecting:'Connecting Oura…',ok:'Oura data loaded',nodata:'No Oura data for the last 7 days',err:'Could not connect Oura. Please try again.',or:'or'},
+    es:{intro:'Inicia sesión en tu cuenta Oura — extraeremos 7 días de HRV, sueño, preparación, SpO₂ y entrenamientos.',btn:'🔗 Conectar anillo Oura',connecting:'Conectando Oura…',ok:'Datos de Oura cargados',nodata:'Sin datos de Oura de los últimos 7 días',err:'No se pudo conectar Oura. Inténtalo de nuevo.',or:'o'},
+    de:{intro:'Melde dich in deinem Oura-Konto an — wir holen 7 Tage HRV, Schlaf, Bereitschaft, SpO₂ und Workouts.',btn:'🔗 Oura-Ring verbinden',connecting:'Oura wird verbunden…',ok:'Oura-Daten geladen',nodata:'Keine Oura-Daten der letzten 7 Tage',err:'Oura konnte nicht verbunden werden. Bitte erneut versuchen.',or:'oder'},
+    pt:{intro:'Entre na sua conta Oura — vamos puxar 7 dias de HRV, sono, prontidão, SpO₂ e treinos.',btn:'🔗 Conectar anel Oura',connecting:'Conectando Oura…',ok:'Dados da Oura carregados',nodata:'Sem dados da Oura nos últimos 7 dias',err:'Não foi possível conectar a Oura. Tente novamente.',or:'ou'},
+    fr:{intro:'Connectez-vous à votre compte Oura — nous récupérons 7 jours de HRV, sommeil, préparation, SpO₂ et entraînements.',btn:'🔗 Connecter la bague Oura',connecting:'Connexion à Oura…',ok:'Données Oura chargées',nodata:'Aucune donnée Oura sur les 7 derniers jours',err:'Impossible de connecter Oura. Réessayez.',or:'ou'},
+    pl:{intro:'Zaloguj się na konto Oura — pobierzemy 7 dni HRV, snu, gotowości, SpO₂ i treningów.',btn:'🔗 Połącz pierścień Oura',connecting:'Łączenie z Oura…',ok:'Dane Oura wczytane',nodata:'Brak danych Oura z ostatnich 7 dni',err:'Nie udało się połączyć Oura. Spróbuj ponownie.',or:'lub'},
+    it:{intro:'Accedi al tuo account Oura — recupereremo 7 giorni di HRV, sonno, prontezza, SpO₂ e allenamenti.',btn:'🔗 Connetti anello Oura',connecting:'Connessione a Oura…',ok:'Dati Oura caricati',nodata:'Nessun dato Oura negli ultimi 7 giorni',err:'Impossibile connettere Oura. Riprova.',or:'o'},
+    he:{intro:'התחבר לחשבון Oura — נמשוך 7 ימים של HRV, שינה, מוכנות, SpO₂ ואימונים.',btn:'🔗 חבר טבעת Oura',connecting:'מתחבר ל-Oura…',ok:'נתוני Oura נטענו',nodata:'אין נתוני Oura ל-7 הימים האחרונים',err:'לא ניתן היה להתחבר ל-Oura. נסה שוב.',or:'או'},
+    ja:{intro:'Ouraアカウントにログイン — 7日分のHRV・睡眠・準備度・SpO₂・ワークアウトを取得します。',btn:'🔗 Ouraリングを接続',connecting:'Oura接続中…',ok:'Ouraデータを読み込みました',nodata:'過去7日間のOuraデータがありません',err:'Ouraに接続できませんでした。もう一度お試しください。',or:'または'},
+    ko:{intro:'Oura 계정에 로그인하세요 — 최근 7일간의 HRV·수면·준비도·SpO₂·운동을 가져옵니다.',btn:'🔗 Oura 링 연결',connecting:'Oura 연결 중…',ok:'Oura 데이터 불러옴',nodata:'최근 7일간 Oura 데이터 없음',err:'Oura 연결에 실패했습니다. 다시 시도하세요.',or:'또는'}
+  };
+  return M[lang]||M.en;
+}
+function ouraSyncLang(){
+  const ui=_ouraUI();
+  const intro=document.getElementById('oura-connect-intro'); if(intro) intro.textContent=ui.intro;
+  const btn=document.getElementById('oura-connect-btn'); if(btn) btn.textContent=ui.btn;
+  const ord=document.getElementById('oura-or-div'); if(ord) ord.textContent='— '+ui.or+' —';
+}
+function connectOura(){
+  let sid=localStorage.getItem('vial_oura_sid');
+  if(!sid){ sid=Date.now().toString(36)+Math.random().toString(36).slice(2,10); localStorage.setItem('vial_oura_sid',sid); }
+  setStatus('oura-connect-status','loading',_ouraUI().connecting);
+  location.href=AI_WORKER+'/oura/start?sid='+encodeURIComponent(sid)+'&ret='+encodeURIComponent(location.origin+location.pathname);
+}
+async function fetchOuraLive(sid){
+  const ui=_ouraUI();
+  setStatus('oura-connect-status','loading',ui.connecting);
+  try{
+    const r=await fetch(AI_WORKER+'/oura/metrics?sid='+encodeURIComponent(sid));
+    const j=await r.json();
+    if(j.ok&&j.ex&&Object.keys(j.ex).length){
+      applyExtracted(j.ex,'oura');
+      renderPreview('oura-connect-grid',j.ex);
+      document.getElementById('oura-connect-preview').classList.add('show');
+      setStatus('oura-connect-status','success',ui.ok);
+      if(typeof updateImportSummary==='function') updateImportSummary();
+    } else if(j.ok){ setStatus('oura-connect-status','error',ui.nodata); }
+    else { setStatus('oura-connect-status','error',ui.err); }
+  }catch(e){ setStatus('oura-connect-status','error',ui.err); }
+}
+(function(){
+  const p=new URLSearchParams(location.search);
+  const flag=p.get('oura'); if(!flag) return;
+  const sid=p.get('sid')||localStorage.getItem('vial_oura_sid');
+  history.replaceState(null,'',location.origin+location.pathname);
+  setTimeout(function(){
+    try{ if(typeof openImport==='function') openImport(); }catch(e){}
+    try{ toggleCard('oura'); }catch(e){}
+    if(flag==='connected'&&sid) fetchOuraLive(sid);
+    else setStatus('oura-connect-status','error',_ouraUI().err);
+  },400);
+})();
+try{ ouraSyncLang(); }catch(e){}
 
 // ══ FITBIT (Google Health) OAuth CONNECT ══════════════════════════════════
 const FITBIT_CONNECT_BASE = AI_WORKER + '/fitbit';

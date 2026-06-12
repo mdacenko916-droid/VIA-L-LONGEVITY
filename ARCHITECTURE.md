@@ -525,6 +525,19 @@ html[data-current-lang="en"] #heroBtnSlots, html[data-current-lang="es"] #heroBt
 
 ### Журнал выполненного (что уже в проде + `main`)
 
+- **2026-06-12 (c)** — **Прямая интеграция Oura Ring (OAuth2) построена и задеплоена.** Выяснилось
+  (офиц. доки), что партнёрство для кодов НЕ нужно — регистрация приложения самообслуживающая
+  (дефолт 10 польз.; одобрение только для >10, его Becky отклонила). Владелец зарегистрировал
+  приложение, Client ID заложен (`wrangler secret put OURA_CLIENT_ID`). В воркере — роуты
+  `/oura/start|callback|metrics` (`handleOura*`, по образцу WHOOP: OAuth2 + refresh, KV `oura:<sid>`,
+  scopes `personal daily heartrate workout spo2`). Метрики 7-дн: HRV=`average_hrv` (ночной RMSSD —
+  «настоящая» цифра кольца), RHR=`lowest_heart_rate`, сон/deep, SpO2, readiness→energy, +
+  **тренировки** (`/v2/usercollection/workout`). Фронт (pro/pro-expert/elite): кнопка «🔗 Подключить
+  кольцо Oura» в карточке Oura — self-contained `_ouraUI`/`connectOura`/`fetchOuraLive` (12 языков,
+  синхрон в `setLang`), generic-флоу `connectWearable` не трогали. Воркер `c3cb99c0`, `node --check`
+  ОК на воркере + 3 JS-блоках. ⏳ Остаётся: владелец кладёт `OURA_CLIENT_SECRET`, живой OAuth-тест +
+  сверка имён полей Oura v2; фаст-фоллоу — завести тренировки в `buildUserMessage`. Детали —
+  `interpreter/wearables/oura.md`.
 - **2026-06-12 (b)** — **KB-дообогащение N-3: андропауза × носимые метрики (честность вывода).**
   Из подборки `interpreter/Infa Cloude/N-3` (20 txt по тестостерону) вытянут самый продукт-релевантный
   пласт — связка HRV / пульса покоя / восстановления / стресса с тестостероном, которой в KB не было.

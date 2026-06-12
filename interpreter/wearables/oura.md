@@ -31,13 +31,20 @@ SDNN) — он же покрывает клиентов без прямого п
 - Старый путь с ручным токеном (теперь мёртв — Oura его отключил).
 
 ## В процессе / следующий шаг
-- 🎯 **Главный блокер — рабочий аккаунт/кольцо Oura у владельца** (не партнёрка!). Как только аккаунт
-  активен: вход на `cloud.ouraring.com/oauth/applications` → зарегистрировать приложение (сайт
-  via-l.com, redirect `https://interpreter.viaelcom.workers.dev/oura/callback`) → прислать мне
-  Client ID, Secret через `wrangler secret put` → я делаю роуты `/oura/*` → прямой Oura для ≤10
-  клиентов. ⏳ Проверить вживую, что под активным аккаунтом кнопка регистрации реально доступна
-  (прошлые провалы были без аккаунта — стоит перепроверить лично).
-- Параллельно Apple Health уже работает как путь данных Oura без кодов.
+- ✅ **2026-06-12: приложение Oura зарегистрировано (self-serve), интеграция ПОСТРОЕНА и задеплоена.**
+  Client ID `65bcca60-…` заложен (`wrangler secret put OURA_CLIENT_ID`). В воркере — роуты
+  `/oura/start` `/oura/callback` `/oura/metrics` (по образцу WHOOP; OAuth2, refresh, KV `oura:<sid>`,
+  scopes `personal daily heartrate workout spo2`). Метрики: HRV=`average_hrv` (ночной RMSSD!),
+  RHR=`lowest_heart_rate`, сон/deep, SpO2, readiness→energy, + **тренировки** (`/v2/usercollection/workout`).
+  Фронт: кнопка «🔗 Подключить кольцо Oura» в карточке Oura всех трёх тарифов (self-contained
+  `_ouraUI`/`connectOura`/`fetchOuraLive`, 12 языков, синхрон в setLang).
+- 🔑 **ОСТАЛОСЬ от владельца: заложить Client Secret** — `cd interpreter && wrangler secret put OURA_CLIENT_SECRET`
+  (вставить секрет по запросу). Без него `/oura/start` отвечает `oura_secrets_missing`.
+- ⏳ **Живой тест:** после секрета — нажать «Подключить кольцо», пройти OAuth, проверить что метрики
+  пришли. ⚠️ Имена полей Oura v2 сверить на первом ответе (парсинг защищён — null не падает, но
+  если поле названо иначе, метрика будет пустой → поправить в `handleOuraMetrics`).
+- ⏭️ **Фаст-фоллоу:** завести тренировки (`ex.workouts7d/trainIntensity/...`) в AI-разбор —
+  сейчас они тянутся и кладутся в `importedData`, но в промпт (`buildUserMessage`) ещё не переданы.
 
 ## В ожидании (пассивно — НЕ инициировать)
 - 🔴 **Партнёрский трек / одобрение для >10 пользователей — ОТКЛОНЁН 2026-06-12** (тикет #6994484,
@@ -46,15 +53,11 @@ SDNN) — он же покрывает клиентов без прямого п
   реально упрёмся в лимит 10 (= появятся >10 платящих Oura-клиентов) — тогда у заявки будет вес.
 
 ## Что нужно сделать
-1. **Получить от Oura коды** (Client ID/Secret) — через партнёрский трек (Becky) или вместе
-   с дошедшим кольцом/аккаунтом. Самостоятельная регистрация закрыта (см. «Краткий статус»).
-2. **Владелец:** прислать мне **Client ID** (открыто), а **Client Secret** заложить командой
-   `wrangler secret put OURA_CLIENT_ID` и `wrangler secret put OURA_CLIENT_SECRET`.
-   Redirect URI: `https://interpreter.viaelcom.workers.dev/oura/callback`.
-3. **Я:** написать в воркере три адреса `/oura/start`, `/oura/callback`, `/oura/metrics`
-   (по образцу Fitbit/WHOOP) и кнопку «🔗 Подключить кольцо» во всех трёх платных тарифах.
-4. **Я:** убрать устаревшие инструкции про Personal Access Token (12 языков).
-5. `wrangler deploy` — и Oura включён.
+1. ✅ Самообслуживающая регистрация приложения Oura — СДЕЛАНО (партнёрство не требуется до 10 польз.).
+2. ✅ Client ID заложен; роуты `/oura/*` + кнопка подключения ×3 тарифа — СДЕЛАНО и задеплоено.
+3. 🔑 **Владелец:** `wrangler secret put OURA_CLIENT_SECRET` (единственное оставшееся).
+4. ⏳ Живой OAuth-тест на кольце + сверка имён полей Oura v2 в `handleOuraMetrics`.
+5. ⏭️ Завести тренировки в AI-промпт (`buildUserMessage`).
 
 ## Зачем прямой Oura, если кольцо уже читается через Apple Health (причина и необходимость)
 Apple Health — это **широкий канал-приёмник** (Watch, кольцо через Oura app, и т.д.), он нужен и
