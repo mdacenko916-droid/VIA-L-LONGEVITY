@@ -7133,6 +7133,9 @@ const FITBIT_CONNECT_BASE = AI_WORKER + '/fitbit';
 function connectFitbit(){
   let sid = localStorage.getItem('vial_fitbit_sid');
   if(!sid){ sid = Date.now().toString(36) + Math.random().toString(36).slice(2,10); localStorage.setItem('vial_fitbit_sid', sid); }
+  // В нативном app вход уходит в системный браузер и обратно не редиректит → помечаем «ждём»
+  // и ловим возврат через visibilitychange (до-тягиваем по sid, токен уже в KV воркера).
+  localStorage.setItem('vial_fitbit_pending', String(Date.now()));
   setStatus('fitbit-connect-status','loading',t('status_fitbit_connecting'));
   const ret = location.origin + location.pathname;
   location.href = FITBIT_CONNECT_BASE + '/start?sid=' + encodeURIComponent(sid) + '&ret=' + encodeURIComponent(ret);
@@ -7143,6 +7146,7 @@ async function fetchFitbitLive(sid){
     const r = await fetch(FITBIT_CONNECT_BASE + '/metrics?sid=' + encodeURIComponent(sid));
     const j = await r.json();
     if(j && j.ok && j.ex && Object.keys(j.ex).length){
+      localStorage.removeItem('vial_fitbit_pending');
       applyExtracted(j.ex,'fitbit');
       applyImportedToSliders();
       renderPreview('fitbit-connect-grid', j.ex);
@@ -7170,6 +7174,14 @@ async function fetchFitbitLive(sid){
     else setStatus('fitbit-connect-status','error',t('status_fitbit_err'));
   }, 400);
 })();
+// Возврат в приложение после OAuth в системном браузере (нативный app): при показе вкладки,
+// если есть «ожидание» (≤10 мин) и sid — до-тягиваем метрики (токен уже в KV воркера).
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState!=='visible') return;
+  var pend=parseInt(localStorage.getItem('vial_fitbit_pending')||'0',10);
+  var sid=localStorage.getItem('vial_fitbit_sid');
+  if(pend && sid && (Date.now()-pend)<600000){ try{ if(typeof openImport==='function') openImport(); }catch(e){} try{ toggleCard('fitbit'); }catch(e){} try{ setMethod('fitbit','connect'); }catch(e){} fetchFitbitLive(sid); }
+});
 
 async function fetchAIAnalysis(data, lang) {
   const card = document.getElementById('aiCard');
