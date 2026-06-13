@@ -2791,7 +2791,7 @@ footer{
           <div class="chip"><input type="checkbox" id="wk3p" value="mood_better"><label for="wk3p" data-t="wc_mood_better">Настроение лучше</label></div>
           <div class="chip"><input type="checkbox" id="wk4p" value="sleep_worse"><label for="wk4p" data-t="wc_sleep_worse">Сон ухудшился</label></div>
           <div class="chip"><input type="checkbox" id="wk5p" value="energy_worse"><label for="wk5p" data-t="wc_energy_worse">Меньше энергии</label></div>
-          <div class="chip"><input type="checkbox" id="wk6p" value="hotflash_worse"><label for="wk6p" data-t="wc_hf_worse">Больше приливов</label></div>
+          <div class="chip" id="wk-hf-chip"><input type="checkbox" id="wk6p" value="hotflash_worse"><label for="wk6p" data-t="wc_hf_worse">Больше приливов</label></div>
           <div class="chip"><input type="checkbox" id="wk7p" value="stable"><label for="wk7p" data-t="wc_stable">Всё стабильно</label></div>
         </div>
       </div>
@@ -3928,6 +3928,9 @@ document.querySelectorAll('input[name=gender]').forEach(el=>{
     const _cf=document.getElementById('cycle-female'); if(_cf)_cf.style.display=male?'none':'block';
     const _cm=document.getElementById('cycle-male');   if(_cm)_cm.style.display=male?'block':'none';
     const _ct=document.getElementById('step11-title'); if(_ct)_ct.textContent=t(male?'s11_title_m':'s11_title');
+    // Недельная динамика: «больше приливов» — только для женщин (у мужчин убираем и снимаем галочку)
+    const _whf=document.getElementById('wk-hf-chip'); if(_whf)_whf.style.display=male?'none':'';
+    const _whfc=document.getElementById('wk6p'); if(_whfc&&male)_whfc.checked=false;
   });
 });
 
