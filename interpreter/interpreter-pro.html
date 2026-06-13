@@ -1925,28 +1925,16 @@ footer{
         </div>
       </div>
       <div class="divider"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div class="manual-field">
           <label class="manual-label" data-t="s_prof_age">Возраст</label>
           <input class="manual-input" id="prof-age" type="number" min="18" max="99" placeholder="—">
         </div>
         <div class="manual-field">
-          <label class="manual-label" data-t="s_prof_weight">Вес (кг)</label>
-          <input class="manual-input" id="prof-weight" type="number" min="30" max="250" placeholder="—" oninput="calcProfMetrics()">
-        </div>
-        <div class="manual-field">
           <label class="manual-label" data-t="s_prof_height">Рост (см)</label>
-          <input class="manual-input" id="prof-height" type="number" min="100" max="230" placeholder="—" oninput="calcProfMetrics()">
+          <input class="manual-input" id="prof-height" type="number" min="100" max="230" placeholder="—">
         </div>
       </div>
-      <div style="margin-top:10px;display:flex;gap:10px;align-items:flex-end;">
-        <div class="manual-field" style="flex:0 0 110px;">
-          <label class="manual-label" data-t="s_prof_waist">Талія (см)</label>
-          <input class="manual-input" id="prof-waist" type="number" min="40" max="200" placeholder="—" oninput="calcProfMetrics()">
-        </div>
-        <div id="prof-metrics" style="display:none;flex:1;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 12px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--b1);min-height:38px;"></div>
-      </div>
-      <div id="prof-err" style="font-size:12px;color:var(--alert);margin-top:8px;display:none;" data-t="prof_err">Заполните возраст, вес и рост</div>
       <div class="btn-row">
         <button class="btn btn-primary" onclick="goFromProfile()"><span class="btn-label" data-t="next">Далее →</span></button>
       </div>
@@ -2729,6 +2717,17 @@ footer{
       <div class="step-badge" data-t="s14_badge">14 / 14 · Динаміка</div>
       <h2 class="step-title" data-t="s14_title">Самопочуття за останній тиждень</h2>
       <p class="step-desc" data-t="s14_desc">Порівняйте з минулим тижнем — це виявить тренд.</p>
+      <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:14px;">
+        <div class="manual-field" style="flex:0 0 92px;">
+          <label class="manual-label" data-t="s_prof_weight">Вес (кг)</label>
+          <input class="manual-input" id="prof-weight" type="number" min="30" max="250" placeholder="—" oninput="calcProfMetrics()">
+        </div>
+        <div class="manual-field" style="flex:0 0 92px;">
+          <label class="manual-label" data-t="s_prof_waist">Талія (см)</label>
+          <input class="manual-input" id="prof-waist" type="number" min="40" max="200" placeholder="—" oninput="calcProfMetrics()">
+        </div>
+        <div id="prof-metrics" style="display:none;flex:1;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 12px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--b1);min-height:38px;"></div>
+      </div>
       <div class="input-group">
         <label data-t="s14_l1">Загальна динаміка</label>
         <div class="chips">
@@ -4403,6 +4402,7 @@ let _lastResult=null;
 // ИП — мировой продукт (12 языков), дефолт EN. Свой ключ vial_lang;
 // НЕ наследуем selectedLang с 4-язычного сайта VIA-L.
 setLang(localStorage.getItem('vial_lang')||'en');
+loadProfile();
 
 // Hot flash detail toggle
 document.querySelectorAll('input[name="hf_count"]').forEach(r=>{
@@ -4444,22 +4444,31 @@ function calcProfMetrics(){
   else{box.style.display='none';}
 }
 
-function goFromProfile(){
-  const fields=['prof-age','prof-weight','prof-height'];
-  let ok=true;
-  fields.forEach(id=>{
-    const el=document.getElementById(id);
-    const v=parseFloat(el?.value);
-    if(!el||isNaN(v)||v<+(el.min||1)){
-      if(el){el.classList.add('field-error');setTimeout(()=>el.classList.remove('field-error'),800);}
-      ok=false;
-    }
-  });
-  const err=document.getElementById('prof-err');
-  if(!ok){if(err)err.style.display='block';return;}
-  if(err)err.style.display='none';
-  goTo(1);
+// Профиль помнится между входами: пол/возраст/рост не меняются ежедневно,
+// вес/талия — раз в неделю (в недельном шаге). Блок прохода снят: можно идти дальше,
+// даже не заполнив (точность анализа просто будет ниже — данные опциональны).
+function saveProfile(){
+  try{
+    localStorage.setItem('vial_profile',JSON.stringify({
+      gender:getRadio('gender'),phase:getRadio('phase'),
+      age:document.getElementById('prof-age')?.value||'',
+      height:document.getElementById('prof-height')?.value||'',
+      weight:document.getElementById('prof-weight')?.value||'',
+      waist:document.getElementById('prof-waist')?.value||''
+    }));
+  }catch(e){}
 }
+function loadProfile(){
+  try{
+    const p=JSON.parse(localStorage.getItem('vial_profile')||'null');if(!p)return;
+    const set=(id,v)=>{const el=document.getElementById(id);if(el&&v)el.value=v;};
+    set('prof-age',p.age);set('prof-height',p.height);set('prof-weight',p.weight);set('prof-waist',p.waist);
+    if(p.gender){const g=document.querySelector('input[name=gender][value="'+p.gender+'"]');if(g&&!g.checked){g.checked=true;g.dispatchEvent(new Event('change'));}}
+    if(p.phase){const ph=document.querySelector('input[name=phase][value="'+p.phase+'"]');if(ph)ph.checked=true;}
+    if(typeof calcProfMetrics==='function')calcProfMetrics();
+  }catch(e){}
+}
+function goFromProfile(){ saveProfile(); goTo(1); }
 // Числовые подсказки-референсы в плейсхолдеры биоимпеданса (по полу/возрасту) — без слов, работают во всех языках.
 function setBioHints(){
   var male=(typeof getRadio==='function'&&getRadio('gender')==='male');
@@ -5034,6 +5043,7 @@ function renderProtocol24(data, score){
 
 // ══ RESULTS ENGINE ════════════════════════════════════════
 function showResults(){
+  if(typeof saveProfile==='function')saveProfile();
   try {
     _showResultsInner();
   } catch(e) {
