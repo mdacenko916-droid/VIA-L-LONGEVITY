@@ -2624,23 +2624,6 @@ footer{
           </div>
         </div>
         <div class="input-group">
-          <label data-t="s11_l2">Остання менструація</label>
-          <div class="chips">
-            <div class="chip"><input type="radio" name="last_period" id="lp1" value="recent" checked><label for="lp1" data-t="lp_recent">Менше 3 місяців тому</label></div>
-            <div class="chip"><input type="radio" name="last_period" id="lp2" value="months"><label for="lp2" data-t="lp_months">3–12 місяців тому</label></div>
-            <div class="chip"><input type="radio" name="last_period" id="lp3" value="year"><label for="lp3" data-t="lp_year">Більше 12 місяців тому</label></div>
-          </div>
-        </div>
-        <div class="input-group">
-          <label data-t="s11_l3">ПМС симптоми</label>
-          <div class="chips">
-            <div class="chip"><input type="radio" name="pms" id="pms1" value="none" checked><label for="pms1" data-t="pms_none">Немає</label></div>
-            <div class="chip"><input type="radio" name="pms" id="pms2" value="mild"><label for="pms2" data-t="pms_mild">Легкий</label></div>
-            <div class="chip"><input type="radio" name="pms" id="pms3" value="moderate"><label for="pms3" data-t="pms_moderate">Помірний</label></div>
-            <div class="chip"><input type="radio" name="pms" id="pms4" value="severe"><label for="pms4" data-t="pms_severe">Виражений</label></div>
-          </div>
-        </div>
-        <div class="input-group">
           <label data-t="gsm_l">Інтимне та сечостатеве здоров'я</label>
           <div class="chips">
             <div class="chip"><input type="checkbox" id="gsm1" value="vaginal_dryness"><label for="gsm1" data-t="gsm_dry">Сухість піхви</label></div>
@@ -2727,6 +2710,25 @@ footer{
           <input class="manual-input" id="prof-waist" type="number" min="40" max="200" placeholder="—" oninput="calcProfMetrics()">
         </div>
         <div id="prof-metrics" style="display:none;flex:1;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 12px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--b1);min-height:38px;"></div>
+      </div>
+      <div id="weekly-female">
+        <div class="input-group">
+          <label data-t="s11_l2">Остання менструація</label>
+          <div class="chips">
+            <div class="chip"><input type="radio" name="last_period" id="lp1" value="recent" checked><label for="lp1" data-t="lp_recent">Менше 3 місяців тому</label></div>
+            <div class="chip"><input type="radio" name="last_period" id="lp2" value="months"><label for="lp2" data-t="lp_months">3–12 місяців тому</label></div>
+            <div class="chip"><input type="radio" name="last_period" id="lp3" value="year"><label for="lp3" data-t="lp_year">Більше 12 місяців тому</label></div>
+          </div>
+        </div>
+        <div class="input-group">
+          <label data-t="s11_l3">ПМС симптоми</label>
+          <div class="chips">
+            <div class="chip"><input type="radio" name="pms" id="pms1" value="none" checked><label for="pms1" data-t="pms_none">Немає</label></div>
+            <div class="chip"><input type="radio" name="pms" id="pms2" value="mild"><label for="pms2" data-t="pms_mild">Легкий</label></div>
+            <div class="chip"><input type="radio" name="pms" id="pms3" value="moderate"><label for="pms3" data-t="pms_moderate">Помірний</label></div>
+            <div class="chip"><input type="radio" name="pms" id="pms4" value="severe"><label for="pms4" data-t="pms_severe">Виражений</label></div>
+          </div>
+        </div>
       </div>
       <div class="input-group">
         <label data-t="s14_l1">Загальна динаміка</label>
@@ -4042,6 +4044,9 @@ document.querySelectorAll('input[name=gender]').forEach(el=>{
     // Update step 12 title
     const t12=document.getElementById('step12-title');
     if(t12)t12.textContent=male?'Витальность и мужское здоровье':'Цикл и репродуктивное здоровье';
+    // Недельный шаг: «последняя менструация» + ПМС — только для женщин
+    const wf=document.getElementById('weekly-female');
+    if(wf)wf.style.display=male?'none':'block';
   });
 });
 
@@ -4447,6 +4452,7 @@ function calcProfMetrics(){
 // Профиль помнится между входами: пол/возраст/рост не меняются ежедневно,
 // вес/талия — раз в неделю (в недельном шаге). Блок прохода снят: можно идти дальше,
 // даже не заполнив (точность анализа просто будет ниже — данные опциональны).
+const _SUP_IDS=['sup1','sup2','sup3','sup4','sup5','sup6','sup7','sup8','sup9','sup10','sup11'];
 function saveProfile(){
   try{
     localStorage.setItem('vial_profile',JSON.stringify({
@@ -4454,7 +4460,8 @@ function saveProfile(){
       age:document.getElementById('prof-age')?.value||'',
       height:document.getElementById('prof-height')?.value||'',
       weight:document.getElementById('prof-weight')?.value||'',
-      waist:document.getElementById('prof-waist')?.value||''
+      waist:document.getElementById('prof-waist')?.value||'',
+      supplements:getChecked(_SUP_IDS),meds:getRadio('meds'),cycle_status:getRadio('cycle_status')
     }));
   }catch(e){}
 }
@@ -4465,6 +4472,10 @@ function loadProfile(){
     set('prof-age',p.age);set('prof-height',p.height);set('prof-weight',p.weight);set('prof-waist',p.waist);
     if(p.gender){const g=document.querySelector('input[name=gender][value="'+p.gender+'"]');if(g&&!g.checked){g.checked=true;g.dispatchEvent(new Event('change'));}}
     if(p.phase){const ph=document.querySelector('input[name=phase][value="'+p.phase+'"]');if(ph)ph.checked=true;}
+    // База, меняется редко: добавки/лекарства/статус цикла — предзаполняем из прошлого раза.
+    if(Array.isArray(p.supplements))_SUP_IDS.forEach(id=>{const el=document.getElementById(id);if(el)el.checked=p.supplements.includes(el.value);});
+    const setRadio=(name,v)=>{if(!v)return;const el=document.querySelector('input[name='+name+'][value="'+v+'"]');if(el)el.checked=true;};
+    setRadio('meds',p.meds);setRadio('cycle_status',p.cycle_status);
     if(typeof calcProfMetrics==='function')calcProfMetrics();
   }catch(e){}
 }
