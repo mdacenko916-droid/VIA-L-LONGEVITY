@@ -385,6 +385,7 @@ main{
   animation:fadeUp .5s cubic-bezier(.16,1,.3,1) both;
 }
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 /* ══ CARD — FLOATING WITH DYNAMIC LIGHTING ══════════════ */
 .card{
@@ -2505,6 +2506,18 @@ footer{
       <span id="doctorText"></span>
     </div>
 
+    <!-- AI ANALYSIS CARD (VIO → /analyze, как PRO) -->
+    <div id="aiCard" style="display:none;margin-bottom:12px;" class="card">
+      <div class="card-accent" style="background:linear-gradient(90deg,transparent,rgba(120,152,255,.5),transparent);"></div>
+      <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--t1);margin-bottom:14px;">✦ <span id="aiTitle">Персональный анализ ИИ</span></div>
+      <div id="aiLoading" style="display:flex;align-items:center;gap:10px;color:var(--t2);font-size:13px;">
+        <div style="width:18px;height:18px;border:2px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;"></div>
+        <span id="aiLoadingTxt">Анализирую ваши данные…</span>
+      </div>
+      <div id="aiResult" style="display:none;font-size:13px;color:var(--t2);line-height:1.85;white-space:pre-wrap;"></div>
+      <div id="aiError" style="display:none;font-size:12px;color:#FF6B8A;margin-top:8px;"></div>
+    </div>
+
     <div class="insights" id="insightsList"></div>
     <div id="recSections"></div>
 
@@ -3504,7 +3517,7 @@ function setLang(l){
   if(ctaMarina)ctaMarina.style.display='block';
   document.getElementById('langDropdown').classList.remove('open');
   initSliders();
-  if(_lastResult){_rerendering=true;try{_showResultsInner();}finally{_rerendering=false;}}
+  if(_lastResult){_rerendering=true;try{_showResultsInner();}finally{_rerendering=false;}if(document.getElementById('aiCard'))fetchAIAnalysis(_lastResult.data,l);}
 }
 function t(k){return T[lang][k]||T.ru[k]||k;}
 
@@ -4237,6 +4250,43 @@ function showResults(){
   }
 }
 function seenF(){var t=(typeof window!=='undefined'&&window.__touched&&window.__touched.size)?window.__touched:null;if(!t)return true;for(var i=0;i<arguments.length;i++){if(t.has(arguments[i]))return true;}return false;}
+// ══ AI-РАЗБОР (VIO теперь использует тот же движок /analyze, что и PRO — «второй PRO без гаджета») ══
+// Без HRV/SpO₂/биометрии (нет гаджета) — воркер подставит дефолты, ИИ трактует по симптомам.
+const AI_WORKER = 'https://interpreter.viaelcom.workers.dev';
+async function fetchAIAnalysis(data, lang){
+  var L = lang || (typeof localStorage!=='undefined' && localStorage.getItem('vial_lang')) || 'en';
+  var M={
+    ru:{t:'Персональный анализ ИИ',load:'Анализирую ваши данные…',err:'Не удалось получить анализ. Попробуйте позже.'},
+    uk:{t:'Персональний аналіз ШІ',load:'Аналізую ваші дані…',err:'Не вдалося отримати аналіз. Спробуйте пізніше.'},
+    en:{t:'Personalized AI analysis',load:'Analyzing your data…',err:'Could not load analysis. Try again later.'},
+    es:{t:'Análisis personalizado con IA',load:'Analizando tus datos…',err:'No se pudo cargar el análisis. Inténtalo más tarde.'},
+    de:{t:'Personalisierte KI-Analyse',load:'Deine Daten werden analysiert…',err:'Analyse konnte nicht geladen werden. Später erneut versuchen.'},
+    pt:{t:'Análise personalizada de IA',load:'Analisando seus dados…',err:'Não foi possível carregar a análise. Tente mais tarde.'},
+    fr:{t:'Analyse IA personnalisée',load:'Analyse de vos données…',err:'Impossible de charger l’analyse. Réessayez plus tard.'},
+    pl:{t:'Spersonalizowana analiza AI',load:'Analizuję Twoje dane…',err:'Nie udało się załadować analizy. Spróbuj później.'},
+    it:{t:'Analisi IA personalizzata',load:'Analisi dei tuoi dati…',err:'Impossibile caricare l’analisi. Riprova più tardi.'},
+    he:{t:'ניתוח AI מותאם אישית',load:'מנתח את הנתונים שלך…',err:'לא ניתן היה לטעון את הניתוח. נסה מאוחר יותר.'},
+    ja:{t:'パーソナルAI分析',load:'データを分析しています…',err:'分析を読み込めませんでした。後でお試しください。'},
+    ko:{t:'개인 맞춤 AI 분석',load:'데이터를 분석하는 중…',err:'분석을 불러오지 못했습니다. 나중에 다시 시도하세요.'}
+  };
+  var ui=M[L]||M.en;
+  var card=document.getElementById('aiCard'); if(!card) return;
+  var loading=document.getElementById('aiLoading'), result=document.getElementById('aiResult'), err=document.getElementById('aiError');
+  var tt=document.getElementById('aiTitle'); if(tt) tt.textContent=ui.t;
+  var lt=document.getElementById('aiLoadingTxt'); if(lt) lt.textContent=ui.load;
+  card.style.display='block'; loading.style.display='flex'; result.style.display='none'; err.style.display='none';
+  try{
+    var res=await fetch(AI_WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data,lang:L})});
+    var json=await res.json();
+    if(json.analysis){
+      result.innerHTML=json.analysis.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/^#{1,3}\s*(.+)$/gm,'<strong style="display:block;margin:14px 0 4px;">$1</strong>')
+        .replace(/\*\*([^*]+?)\*\*/g,'<strong>$1</strong>');
+      loading.style.display='none'; result.style.display='block';
+    } else { throw new Error(json.error||'No response'); }
+  }catch(e){ loading.style.display='none'; err.textContent='⚠ '+ui.err; err.style.display='block'; }
+}
+
 function _showResultsInner(){
   const data={
     gender:getRadio('gender')||'female',
@@ -4406,6 +4456,7 @@ function _showResultsInner(){
 
   // Store for PDF
   _lastResult={score,type,insights:ins,recs,docR,labs,data};
+  if(typeof fetchAIAnalysis==='function' && !_rerendering) fetchAIAnalysis(data, (typeof lang!=='undefined'?lang:null));
 
   // Render PRO modules
   renderProModules(data, score, type);
