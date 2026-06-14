@@ -1906,24 +1906,6 @@ footer{
         </div>
       </div>
       <div class="divider"></div>
-      <div class="input-group" id="phase-female">
-        <label data-t="s_prof_l2">Фаза (женщины)</label>
-        <div class="chips">
-          <div class="chip"><input type="radio" name="phase" id="ph1" value="peri" checked><label for="ph1" data-t="phase_peri">Перименопауза</label></div>
-          <div class="chip"><input type="radio" name="phase" id="ph2" value="meno"><label for="ph2" data-t="phase_meno">Менопауза</label></div>
-          <div class="chip"><input type="radio" name="phase" id="ph3" value="post"><label for="ph3" data-t="phase_post">Постменопауза</label></div>
-          <div class="chip"><input type="radio" name="phase" id="ph4" value="other"><label for="ph4" data-t="phase_other">Другое</label></div>
-        </div>
-      </div>
-      <div class="input-group" id="phase-male" style="display:none;">
-        <label data-t="s_prof_l3">Фаза (мужчины)</label>
-        <div class="chips">
-          <div class="chip"><input type="radio" name="phase" id="ph5" value="andro"><label for="ph5" data-t="phase_andro">Андропауза</label></div>
-          <div class="chip"><input type="radio" name="phase" id="ph6" value="pre_andro"><label for="ph6" data-t="phase_preandro">Предандропауза</label></div>
-          <div class="chip"><input type="radio" name="phase" id="ph7" value="other"><label for="ph7" data-t="phase_other">Другое</label></div>
-        </div>
-      </div>
-      <div class="divider"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div class="manual-field">
           <label class="manual-label" data-t="s_prof_age">Возраст</label>
@@ -1933,6 +1915,17 @@ footer{
           <label class="manual-label" data-t="s_prof_height">Рост (см)</label>
           <input class="manual-input" id="prof-height" type="number" min="100" max="230" placeholder="—">
         </div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:10px;align-items:flex-end;">
+        <div class="manual-field" style="flex:0 0 92px;">
+          <label class="manual-label" data-t="s_prof_weight">Вес (кг)</label>
+          <input class="manual-input" id="prof-weight" type="number" min="30" max="250" placeholder="—" oninput="calcProfMetrics()">
+        </div>
+        <div class="manual-field" style="flex:0 0 92px;">
+          <label class="manual-label" data-t="s_prof_waist">Талія (см)</label>
+          <input class="manual-input" id="prof-waist" type="number" min="40" max="200" placeholder="—" oninput="calcProfMetrics()">
+        </div>
+        <div id="prof-metrics" style="display:none;flex:1;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 12px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--b1);min-height:38px;"></div>
       </div>
       <div class="btn-row">
         <button class="btn btn-primary" onclick="goFromProfile()"><span class="btn-label" data-t="next">Далее →</span></button>
@@ -1977,25 +1970,6 @@ footer{
           </div>
         </div>
         <div class="input-hint" data-t="s0_hint">Oura · Fitbit · Samsung · Garmin · Polar · Apple Watch · WHOOP · Xiaomi · Withings · Amazfit → HRV</div>
-      </div>
-      <div class="divider"></div>
-      <div class="input-group">
-        <label data-t="s0_l2">По сравнению с вашей нормой</label>
-        <div class="chips">
-          <div class="chip"><input type="radio" name="hrv_trend" id="ht1" value="above" checked><label for="ht1" data-t="above_norm">Выше нормы</label></div>
-          <div class="chip"><input type="radio" name="hrv_trend" id="ht2" value="normal"><label for="ht2" data-t="in_norm">В норме</label></div>
-          <div class="chip"><input type="radio" name="hrv_trend" id="ht3" value="below"><label for="ht3" data-t="below_norm">Ниже нормы</label></div>
-          <div class="chip"><input type="radio" name="hrv_trend" id="ht4" value="unknown"><label for="ht4" data-t="dont_know">Не знаю</label></div>
-        </div>
-      </div>
-      <div class="input-group">
-        <label data-t="s0_l3">Это продолжается уже</label>
-        <div class="chips">
-          <div class="chip"><input type="radio" name="hrv_dur" id="hd1" value="today" checked><label for="hd1" data-t="dur_today">Только сегодня</label></div>
-          <div class="chip"><input type="radio" name="hrv_dur" id="hd2" value="week"><label for="hd2" data-t="dur_week">3–7 дней</label></div>
-          <div class="chip"><input type="radio" name="hrv_dur" id="hd3" value="weeks"><label for="hd3" data-t="dur_weeks">2–3 недели</label></div>
-          <div class="chip"><input type="radio" name="hrv_dur" id="hd4" value="month"><label for="hd4" data-t="dur_month">Больше месяца</label></div>
-        </div>
       </div>
       <div class="btn-row">
         <button class="btn btn-back" onclick="goTo(0)">←</button>
@@ -2467,8 +2441,7 @@ footer{
       <div class="input-group">
         <label data-t="s8_l2">Частота на тиждень</label>
         <div class="chips">
-          <div class="chip"><input type="radio" name="act_freq" id="af1" value="none" checked><label for="af1" data-t="act_freq_0">0</label></div>
-          <div class="chip"><input type="radio" name="act_freq" id="af2" value="low"><label for="af2" data-t="act_freq_low">1–2 рази</label></div>
+          <div class="chip"><input type="radio" name="act_freq" id="af2" value="low" checked><label for="af2" data-t="act_freq_low">1–2 рази</label></div>
           <div class="chip"><input type="radio" name="act_freq" id="af3" value="moderate"><label for="af3" data-t="act_freq_mod">3–4 рази</label></div>
           <div class="chip"><input type="radio" name="act_freq" id="af4" value="high"><label for="af4" data-t="act_freq_high">5+ разів</label></div>
         </div>
@@ -2669,17 +2642,6 @@ footer{
       <div class="step-badge" data-t="s14_badge">14 / 14 · Динаміка</div>
       <h2 class="step-title" data-t="s14_title">Самопочуття за останній тиждень</h2>
       <p class="step-desc" data-t="s14_desc">Порівняйте з минулим тижнем — це виявить тренд.</p>
-      <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:14px;">
-        <div class="manual-field" style="flex:0 0 92px;">
-          <label class="manual-label" data-t="s_prof_weight">Вес (кг)</label>
-          <input class="manual-input" id="prof-weight" type="number" min="30" max="250" placeholder="—" oninput="calcProfMetrics()">
-        </div>
-        <div class="manual-field" style="flex:0 0 92px;">
-          <label class="manual-label" data-t="s_prof_waist">Талія (см)</label>
-          <input class="manual-input" id="prof-waist" type="number" min="40" max="200" placeholder="—" oninput="calcProfMetrics()">
-        </div>
-        <div id="prof-metrics" style="display:none;flex:1;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 12px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--b1);min-height:38px;"></div>
-      </div>
       <div id="weekly-female">
         <div class="input-group">
           <label data-t="s11_l3">ПМС симптоми</label>
@@ -3988,9 +3950,6 @@ document.addEventListener('change',function(e){var t=e.target;if(t&&(t.name||t.i
 document.querySelectorAll('input[name=gender]').forEach(el=>{
   el.addEventListener('change',()=>{
     const male=el.value==='male';
-    document.getElementById('phase-female').style.display=male?'none':'block';
-    document.getElementById('phase-male').style.display=male?'block':'none';
-    var __phM=document.getElementById('ph5'),__phF=document.getElementById('ph1');if(male){if(__phM)__phM.checked=true;}else{if(__phF)__phF.checked=true;}
     // Hot flash section — females only
     const hfSec=document.getElementById('hf-section');
     if(hfSec)hfSec.style.display=male?'none':'block';
@@ -4588,14 +4547,12 @@ function restart(){
   document.getElementById('resp_rate').value=15;ouraSlider('resp',15);
   document.getElementById('anxiety').value=3;ouraSlider('anx',3);
   const hfd=document.getElementById('hf-detail');if(hfd)hfd.style.display='none';
-  ['gf','hd1','tp1','hf1','hfq1','dp1','wk1','rc1','al1','st1','ph1','hfc1','md1','irr1'].forEach(id=>{
+  ['gf','tp1','hf1','hfq1','dp1','wk1','rc1','al1','st1','hfc1','md1','irr1'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.checked=true;
   });
   document.querySelectorAll('input[type=checkbox]').forEach(el=>el.checked=false);
   document.getElementById('doctorAlert').classList.remove('visible');
   document.getElementById('labCard').style.display='none';
-  document.getElementById('phase-female').style.display='block';
-  document.getElementById('phase-male').style.display='none';
   const hfSec=document.getElementById('hf-section');if(hfSec)hfSec.style.display='block';
   ['prof-age','prof-weight','prof-height'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
 }
@@ -5153,7 +5110,6 @@ function _showResultsInner(){
     height:parseFloat(document.getElementById('prof-height')?.value)||null,
     waist:parseFloat(document.getElementById('prof-waist')?.value)||null,
     hrv:+document.getElementById('hrv').value,
-    hrv_trend:getRadio('hrv_trend'),hrv_dur:getRadio('hrv_dur'),
     temp:getRadio('temp'),hotflash:getRadio('hotflash'),hotfreq:getRadio('hotfreq'),
     sleep_qual:+document.getElementById('sleep_qual').value,
     deep:getRadio('deep'),wake:getRadio('wake'),
