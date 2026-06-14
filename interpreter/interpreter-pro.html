@@ -1209,6 +1209,14 @@ footer{
 .gp-lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:rgba(255,255,255,.55);margin-top:3px;}
 .gp-src{font-size:9px;color:#4ADE80;margin-top:1px;}
 .gp-head{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,.6);margin:0 0 9px;display:flex;align-items:center;gap:7px;}
+/* Одностраничный поток «День»/«Неделя»: шаги стопкой на одной прокрутке */
+.step.flow-show{display:block !important;animation:none !important;}
+body.flow-mode .progress-wrap{display:none;}
+body.flow-mode .step .btn-row{display:none;}
+body.flow-mode .step{margin-bottom:14px;}
+body.flow-mode #scroll-area{padding-bottom:150px;}
+#flow-footer{position:fixed;left:0;right:0;bottom:62px;z-index:50;padding:10px 16px 12px;background:linear-gradient(to top,rgba(8,6,14,.97) 55%,rgba(8,6,14,0));display:none;}
+#flow-footer .btn{width:100%;max-width:560px;margin:0 auto;display:block;}
 </style>
 </head>
 <body>
@@ -2926,6 +2934,7 @@ footer{
 </div>
 
 <!-- BOTTOMBAR -->
+<div id="flow-footer"><button class="btn btn-primary" id="flow-btn" type="button"></button></div>
 <div id="bottombar">
 <nav class="bottom-nav">
   <button class="bottom-nav-item active" id="nav-home" onclick="navTo('home')">
@@ -4511,7 +4520,20 @@ function loadProfile(){
     if(typeof updateDeviceBanners==='function')updateDeviceBanners();if(typeof renderGadgetPanel==='function')renderGadgetPanel();
   }catch(e){}
 }
-function goFromProfile(){ saveProfile(); goTo(1); }
+function goFromProfile(){ saveProfile(); showDaily(); }
+// ── Одностраничные потоки «День» / «Неделя»: шаги показываем стопкой на одной прокрутке ──
+const FLOW_DAILY=[1,2,3,4,8], FLOW_WEEKLY=[5,6,7,9,10,11];
+function _flowFooter(label,fn){var f=document.getElementById('flow-footer'),b=document.getElementById('flow-btn');if(!f||!b)return;b.textContent=label;b.onclick=fn;f.style.display='block';}
+function _hideFlowFooter(){var f=document.getElementById('flow-footer');if(f)f.style.display='none';}
+function _showFlow(list){
+  document.body.classList.add('flow-mode');
+  document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active','flow-show');});
+  var r=document.getElementById('stepResult');if(r)r.classList.remove('active');
+  list.forEach(function(n){var s=document.getElementById('step'+n);if(s)s.classList.add('flow-show');});
+  var sa=document.getElementById('scroll-area');if(sa)sa.scrollTop=0;else window.scrollTo(0,0);
+}
+function showDaily(){ _showFlow(FLOW_DAILY); if(typeof renderGadgetPanel==='function')renderGadgetPanel(); _flowFooter(t('next'), showWeekly); }
+function showWeekly(){ _showFlow(FLOW_WEEKLY); _flowFooter(t('show_result'), function(){ document.body.classList.remove('flow-mode'); _hideFlowFooter(); showResults(); }); }
 // Числовые подсказки-референсы в плейсхолдеры биоимпеданса (по полу/возрасту) — без слов, работают во всех языках.
 function setBioHints(){
   var male=(typeof getRadio==='function'&&getRadio('gender')==='male');
@@ -4525,7 +4547,8 @@ function setBioHints(){
 }
 function goTo(n){
   window._curStep = n;   // запоминаем шаг — чтобы лейбл прогресса перевести при смене языка
-  document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+  document.body.classList.remove('flow-mode'); if(typeof _hideFlowFooter==='function')_hideFlowFooter();
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('active','flow-show'));
   const target = document.getElementById(n==='result'?'stepResult':'step'+n);
   if(target) target.classList.add('active');
   if(target&&target.querySelector&&target.querySelector('#bio-fat'))setBioHints();
