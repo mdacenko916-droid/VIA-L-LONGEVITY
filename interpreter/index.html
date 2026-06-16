@@ -779,16 +779,10 @@ footer a:hover { color: var(--gold); }
 <!-- DEVICES -->
 <section class="devices-section">
   <div class="wrap">
-    <div class="section-label" data-t="section_devices">Оберіть ваш пристрій</div>
+    <div class="section-label" data-t="section_devices">Синхронизируем данные с ваших устройств</div>
     <p class="devices-sub" data-t="hero_oura">С трекером — данные подтянутся сами. Без трекера — короткие вопросы.</p>
     <div class="devices-grid" id="devicesGrid"></div>
-    <div id="oura-actions" style="display:none;max-width:440px;margin:18px auto 0;text-align:center;">
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <button type="button" data-t="oura_connect_auto" onclick="ouraAuto()" style="padding:14px 22px;border-radius:50px;border:none;cursor:pointer;font-size:15px;font-weight:600;color:#0A0D14;background:linear-gradient(135deg,#c4963c,#a07820);box-shadow:0 6px 20px rgba(196,150,60,0.3);">Підключити Oura автоматично</button>
-        <button type="button" data-t="oura_enter_manual" onclick="ouraManual()" style="padding:13px 22px;border-radius:50px;cursor:pointer;font-size:14px;font-weight:500;color:#b8924a;background:rgba(184,146,74,0.08);border:1px solid rgba(184,146,74,0.3);">Ввести вручну</button>
-      </div>
-      <div data-t="oura_demo_note" style="margin-top:10px;font-size:12px;color:rgba(184,146,74,0.75);letter-spacing:0.3px;">Demo · Oura Sandbox — без акаунта і токена</div>
-    </div>
+
   </div>
 </section>
 
@@ -992,14 +986,8 @@ function buildDeviceHTML(d) {
     return `
     <div class="dev-slot" data-id="${d.id}" onclick="selectDevice('${d.id}')">
       <div class="dev-stage dev-stage-glb" style="--glow:${d.glow}">
-        <ul class="dev-metrics">
-          <div class="dev-metrics-list">${metricsHTML}</div>
-        </ul>
-        <img class="dev-img" src="${d.photo}" alt="${d.name} ${d.sub}" loading="lazy">
+        <img class="dev-img" src="${d.photo}" alt="" loading="lazy">
       </div>
-      <div class="dev-label">${d.name}</div>
-      <div class="dev-sub">${d.sub}</div>
-      <span class="dev-badge ${badgeClass}">${badgeText}</span>
     </div>`;
   }
 
@@ -1052,9 +1040,7 @@ function buildDeviceHTML(d) {
 
 // Device layout: row 1 = rings, row 2 = watches (by relevance), row 3 = other models.
 const DEVICE_ROWS = [
-  ['oura', 'ultrahuman'],
-  ['apple', 'garmin', 'samsung', 'withings'],
-  ['polar', 'fitbit', 'whoop', 'xiaomi', 'amazfit']
+  ['oura', 'apple']
 ];
 function renderDevices() {
   const g = document.getElementById('devicesGrid');
@@ -1087,23 +1073,8 @@ const OURA_MODE = 'sandbox';
 
 function selectDevice(id) {
   selectedDevice = id;
-  // Highlight selected
-  document.querySelectorAll('.dev-slot').forEach(s => {
-    s.style.opacity = s.dataset.id === id ? '1' : '0.35';
-  });
-  const oa = document.getElementById('oura-actions');
-  // Oura gets a dedicated auto/manual choice; other devices go straight to plans.
-  if (id === 'oura') {
-    if (oa) {
-      oa.style.display = 'block';
-      setTimeout(() => oa.scrollIntoView({ behavior: 'smooth', block: 'center' }), 250);
-    }
-    return;
-  }
-  if (oa) oa.style.display = 'none';
-  setTimeout(() => {
-    document.getElementById('plans').scrollIntoView({ behavior: 'smooth' });
-  }, 300);
+  document.querySelectorAll('.dev-slot').forEach(s => { s.style.opacity = s.dataset.id === id ? '1' : '0.45'; });
+  setTimeout(() => { var p=document.getElementById('plans'); if(p) p.scrollIntoView({ behavior: 'smooth' }); }, 280);
 }
 
 // "Підключити Oura автоматично" → free Vio interpreter, auto-pull Oura Sandbox demo.
@@ -1171,7 +1142,7 @@ const T = {
     hero_h1: 'Ми не показуємо дані — ми <em>пояснюємо</em>, що з вами відбувається',
     hero_sub: 'І як адаптуватися до наступного етапу життя. Показники трекера й симптоми → зрозуміле пояснення змін і конкретні кроки.',
     hero_oura: 'З трекером — дані підтягнуться самі. Без трекера — короткі запитання.',q_lead: 'Більшості не потрібен графік HRV за 180 днів — потрібні відповіді на три питання:',q1: 'Що зі мною відбувається?',q2: 'Чому це відбувається?',q3: 'Що мені робити сьогодні?',
-    section_devices: 'Оберіть ваш пристрій',
+    section_devices: 'Синхронізуємо дані з ваших пристроїв',
     badge_best_dev: '★ Найкращий',
     badge_good_dev: 'Хороший',
     m_hrv: 'ВСР / HRV',
@@ -1251,7 +1222,7 @@ const T = {
     hero_h1: 'Мы не показываем данные — мы <em>объясняем</em>, что с вами происходит',
     hero_sub: 'И как адаптироваться к следующему этапу жизни. Показатели трекера и симптомы → понятное объяснение перемен и конкретные шаги.',
     hero_oura: 'С трекером — данные подтянутся сами. Без трекера — короткие вопросы.',q_lead: 'Большинству не нужен график HRV за 180 дней — нужны ответы на три вопроса:',q1: 'Что со мной происходит?',q2: 'Почему это происходит?',q3: 'Что мне делать сегодня?',qa1_body: 'Ваш организм проходит период возрастной перестройки.<br><br>Изменения сна, энергии, настроения и восстановления могут быть связаны не только с нагрузкой или стрессом, но и с естественными гормональными изменениями, которые начинаются у женщин после 35+ и у мужчин после 40+.<br><br>Мы анализируем ваши данные и симптомы, чтобы понять, какие изменения происходят именно у вас.',qa2_body: 'Организм начинает работать по новым правилам.<br><br>То, что раньше проходило незаметно — недосып, стресс, перегрузка — теперь влияет сильнее.<br><br>Ваши показатели помогают определить, какие процессы сейчас оказывают наибольшее влияние:<br>— гормональная перестройка<br>— накопленный стресс<br>— нарушение восстановления<br>— изменения качества сна<br>— снижение адаптационных ресурсов организма<br><br>Мы ищем причины, а не просто показываем цифры.',qa3_body: 'Получите рекомендации, которые соответствуют вашему текущему состоянию.<br><br>Не универсальные советы из интернета, а персональные действия на основе ваших данных:<br>✓ как лучше восстановиться сегодня<br>✓ какая нагрузка будет полезна именно сейчас<br>✓ что поможет улучшить сон и энергию<br>✓ на что стоит обратить внимание в ближайшие дни<br><br>Маленькие правильные шаги помогают легче пройти период изменений и сохранить качество жизни.',qa_sell: 'Большинству людей не нужен график HRV за 180 дней.<br><br>Нужно понять, какие изменения происходят в организме, почему они происходят именно сейчас и как <span class="qa-hl">сохранить энергию, здоровье и качество жизни на следующем этапе</span>.',
-    section_devices: 'Выберите ваше устройство',
+    section_devices: 'Синхронизируем данные с ваших устройств',
     badge_best_dev: '★ Лучший',
     badge_good_dev: 'Хороший',
     m_hrv: 'ВСР / HRV',
@@ -1331,7 +1302,7 @@ const T = {
     hero_h1: 'We don\'t show data — we <em>explain</em> what\'s happening to you',
     hero_sub: 'And how to adapt to your next life stage. Device metrics and symptoms → a clear explanation of the changes and concrete steps.',
     hero_oura: 'With a device — data syncs automatically. Without — just answer a few questions.',q_lead: 'Most people don\'t need a 180-day HRV chart — they need answers to three questions:',q1: 'What\'s happening to me?',q2: 'Why is it happening?',q3: 'What should I do today?',
-    section_devices: 'Choose your device',
+    section_devices: 'We sync data from your devices',
     badge_best_dev: '★ Best',
     badge_good_dev: 'Good',
     m_hrv: 'HRV',
@@ -1416,7 +1387,7 @@ const T = {
       hero_h1: 'No mostramos datos — <em>explicamos</em> qué te está pasando',
       hero_sub: 'Y cómo adaptarte a tu siguiente etapa de vida. Métricas del dispositivo y síntomas → una explicación clara de los cambios y pasos concretos.',
       hero_oura: 'Con dispositivo — los datos se sincronizan solos. Sin él — solo unas preguntas.',q_lead: 'La mayoría no necesita un gráfico de VFC de 180 días — necesita respuestas a tres preguntas:',q1: '¿Qué me está pasando?',q2: '¿Por qué ocurre?',q3: '¿Qué hago hoy?',
-      section_devices: 'Elige tu dispositivo',
+      section_devices: 'Sincronizamos los datos de tus dispositivos',
       badge_best_dev: '★ Mejor',
       badge_good_dev: 'Bueno',
       plans_title: 'Tres niveles de análisis',
@@ -1489,7 +1460,7 @@ const T = {
       hero_h1: 'Wir zeigen keine Daten — wir <em>erklären</em>, was mit Ihnen geschieht',
       hero_sub: 'Und wie Sie sich an die nächste Lebensphase anpassen. Gerätedaten und Symptome → eine klare Erklärung der Veränderungen und konkrete Schritte.',
       hero_oura: 'Mit Gerät — Daten kommen automatisch. Ohne — nur ein paar Fragen.',q_lead: 'Die meisten brauchen kein 180-Tage-HRV-Diagramm — sondern Antworten auf drei Fragen:',q1: 'Was geschieht mit mir?',q2: 'Warum passiert das?',q3: 'Was soll ich heute tun?',
-      section_devices: 'Wähle dein Gerät',
+      section_devices: 'Wir synchronisieren Daten von Ihren Geräten',
       badge_best_dev: '★ Beste',
       badge_good_dev: 'Gut',
       plans_title: 'Drei Analyseebenen',
@@ -1562,7 +1533,7 @@ const T = {
       hero_h1: 'Não mostramos dados — <em>explicamos</em> o que está acontecendo com você',
       hero_sub: 'E como se adaptar à próxima fase da vida. Métricas do dispositivo e sintomas → uma explicação clara das mudanças e passos concretos.',
       hero_oura: 'Com dispositivo — os dados sincronizam sozinhos. Sem ele — só algumas perguntas.',q_lead: 'A maioria não precisa de um gráfico de VFC de 180 dias — precisa de respostas a três perguntas:',q1: 'O que está acontecendo comigo?',q2: 'Por que está acontecendo?',q3: 'O que faço hoje?',
-      section_devices: 'Escolha seu dispositivo',
+      section_devices: 'Sincronizamos os dados dos seus dispositivos',
       badge_best_dev: '★ Melhor',
       badge_good_dev: 'Bom',
       plans_title: 'Três níveis de análise',
@@ -1635,7 +1606,7 @@ const T = {
       hero_h1: 'Nous ne montrons pas de données — nous <em>expliquons</em> ce qui vous arrive',
       hero_sub: 'Et comment s\'adapter à la prochaine étape de la vie. Données de l\'appareil et symptômes → une explication claire des changements et des étapes concrètes.',
       hero_oura: 'Avec un appareil — les données se synchronisent seules. Sans — quelques questions.',q_lead: 'La plupart n\'ont pas besoin d\'un graphique VFC de 180 jours — mais de réponses à trois questions :',q1: 'Que m\'arrive-t-il ?',q2: 'Pourquoi ?',q3: 'Que faire aujourd\'hui ?',
-      section_devices: 'Choisissez votre appareil',
+      section_devices: 'Nous synchronisons les données de vos appareils',
       badge_best_dev: '★ Meilleur',
       badge_good_dev: 'Bon',
       plans_title: 'Trois niveaux d\'analyse',
@@ -1708,7 +1679,7 @@ const T = {
       hero_h1: 'Nie pokazujemy danych — <em>wyjaśniamy</em>, co się z tobą dzieje',
       hero_sub: 'I jak dostosować się do kolejnego etapu życia. Dane z urządzenia i objawy → jasne wyjaśnienie zmian i konkretne kroki.',
       hero_oura: 'Z urządzeniem — dane synchronizują się same. Bez — kilka pytań.',q_lead: 'Większość nie potrzebuje wykresu HRV z 180 dni — potrzebuje odpowiedzi na trzy pytania:',q1: 'Co się ze mną dzieje?',q2: 'Dlaczego tak się dzieje?',q3: 'Co mam dziś zrobić?',
-      section_devices: 'Wybierz swoje urządzenie',
+      section_devices: 'Synchronizujemy dane z Twoich urządzeń',
       badge_best_dev: '★ Najlepszy',
       badge_good_dev: 'Dobry',
       plans_title: 'Trzy poziomy analizy',
@@ -1781,7 +1752,7 @@ const T = {
       hero_h1: 'Non mostriamo dati — <em>spieghiamo</em> cosa ti sta succedendo',
       hero_sub: 'E come adattarti alla prossima fase della vita. Dati del dispositivo e sintomi → una spiegazione chiara dei cambiamenti e passi concreti.',
       hero_oura: 'Con un dispositivo — i dati si sincronizzano da soli. Senza — poche domande.',q_lead: 'La maggioranza non ha bisogno di un grafico HRV di 180 giorni — ma di risposte a tre domande:',q1: 'Cosa mi sta succedendo?',q2: 'Perché succede?',q3: 'Cosa faccio oggi?',
-      section_devices: 'Scegli il tuo dispositivo',
+      section_devices: 'Sincronizziamo i dati dai tuoi dispositivi',
       badge_best_dev: '★ Migliore',
       badge_good_dev: 'Buono',
       plans_title: 'Tre livelli di analisi',
@@ -1854,7 +1825,7 @@ const T = {
       hero_h1: 'אנחנו לא מציגים נתונים — אנחנו <em>מסבירים</em> מה קורה לך',
       hero_sub: 'ואיך להסתגל לשלב הבא בחיים. נתוני המכשיר והתסמינים → הסבר ברור של השינויים וצעדים מעשיים.',
       hero_oura: 'עם מכשיר — הנתונים מסתנכרנים לבד. בלי — כמה שאלות קצרות.',q_lead: 'לרובם לא צריך גרף HRV של 180 יום — צריך תשובות לשלוש שאלות:',q1: 'מה קורה לי?',q2: 'למה זה קורה?',q3: 'מה לעשות היום?',
-      section_devices: 'בחר את המכשיר שלך',
+      section_devices: 'מסנכרנים נתונים מהמכשירים שלך',
       badge_best_dev: '★ מומלץ',
       badge_good_dev: 'טוב',
       plans_title: 'שלושה רמות של ניתוח',
@@ -1927,7 +1898,7 @@ const T = {
       hero_h1: 'データを見せるのではなく、何が起きているかを<em>説明</em>します',
       hero_sub: 'そして人生の次のステージへの適応も。デバイスのデータと症状 → 変化のわかりやすい説明と具体的なステップ。',
       hero_oura: 'デバイスがあればデータは自動取得。なければ簡単な質問に答えるだけ。',q_lead: 'ほとんどの人に180日分のHRVグラフは不要 — 必要なのは3つの問いへの答え:',q1: '私に何が起きている?',q2: 'なぜ起きている?',q3: '今日何をすべき?',
-      section_devices: 'デバイスを選択',
+      section_devices: 'お使いのデバイスのデータを同期します',
       badge_best_dev: '★ 最良',
       badge_good_dev: '良好',
       plans_title: '3段階の分析',
@@ -2000,7 +1971,7 @@ const T = {
       hero_h1: '데이터를 보여주지 않고, 무슨 일이 일어나는지 <em>설명</em>합니다',
       hero_sub: '그리고 인생의 다음 단계에 적응하는 법까지. 기기 데이터와 증상 → 변화에 대한 명확한 설명과 구체적인 단계.',
       hero_oura: '기기가 있으면 데이터 자동 동기화. 없으면 간단한 질문 몇 개.',q_lead: '대부분은 180일 HRV 그래프가 필요 없습니다 — 세 가지 질문의 답이 필요합니다:',q1: '나에게 무슨 일이?',q2: '왜 그럴까?',q3: '오늘 무엇을 해야 할까?',
-      section_devices: '기기를 선택하세요',
+      section_devices: '기기의 데이터를 동기화합니다',
       badge_best_dev: '★ 최고',
       badge_good_dev: '좋음',
       plans_title: '3단계 분석',
