@@ -4129,7 +4129,7 @@ function renderCard(){
   html+='<button onclick="navTo(\'home\')" style="margin-top:14px;background:rgba(196,150,60,.1);border:1px solid rgba(196,150,60,.32);color:var(--gold-lt);padding:9px 20px;border-radius:50px;font-size:12px;letter-spacing:.5px;cursor:pointer;font-family:\'DM Sans\',sans-serif;">'+t('card_edit')+'</button>';
   html+=_cSec(t('card_tracker'));
   var D=(typeof importedData!=='undefined'&&importedData)?importedData:{};
-  var anyT=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','energy'].some(function(k){return D[k]!=null;});
+  var anyT=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','vo2','energy','readiness'].some(function(k){return D[k]!=null;});
   if(anyT){
     if(D.hrv!=null)html+=_cRow(t('lbl_hrv'),Math.round(D.hrv));
     if(D.rhr!=null)html+=_cRow(t('lbl_rhr'),Math.round(D.rhr));
@@ -4137,7 +4137,9 @@ function renderCard(){
     if(D.deepMin!=null)html+=_cRow(t('lbl_deep_sleep'),Math.round(D.deepMin));
     if(D.tempDev!=null)html+=_cRow('🌡️ Темп.',(D.tempDev>0?'+':'')+D.tempDev+'°C');
     if(D.spo2!=null)html+=_cRow('SpO₂',Math.round(D.spo2)+'%');
+    if(D.vo2!=null)html+=_cRow('VO₂',Math.round(D.vo2));
     if(D.energy!=null)html+=_cRow('🔋',Math.round(D.energy)+'/10');
+    if(D.readiness!=null)html+=_cRow('◎',Math.round(D.readiness)+'%');
   }else{
     html+='<div style="color:var(--t3);font-size:13px;padding:10px 2px;">'+t('card_empty')+'</div>';
   }
@@ -4175,6 +4177,7 @@ function _saveDaily(){
       day:new Date().toISOString().slice(0,10), ts:Date.now(),
       hrv:importedData.hrv, rhr:importedData.rhr, sleepHours:importedData.sleepHours,
       deepMin:importedData.deepMin, spo2:importedData.spo2, tempDev:importedData.tempDev,
+      vo2:importedData.vo2, energy:importedData.energy, readiness:importedData.readiness,
       hf_count:getRadio('hf_count'), hf_intensity:getRadio('hf_intensity')
     };
     var arr=[]; try{arr=JSON.parse(localStorage.getItem('vial_daily')||'[]')||[];}catch(e){}
@@ -4195,6 +4198,12 @@ function _renderDaily(){
       if(r.hrv!=null)p.push('HRV '+Math.round(r.hrv));
       if(r.rhr!=null)p.push(t('lbl_rhr')+' '+Math.round(r.rhr));
       if(r.sleepHours!=null)p.push(t('lbl_sleep')+' '+(+r.sleepHours).toFixed(1));
+      if(r.deepMin!=null)p.push('Deep '+Math.round(r.deepMin));
+      if(r.spo2!=null)p.push('SpO₂ '+Math.round(r.spo2));
+      if(r.tempDev!=null)p.push('🌡 '+(+r.tempDev).toFixed(1));
+      if(r.vo2!=null)p.push('VO₂ '+Math.round(r.vo2));
+      if(r.energy!=null)p.push('⚡ '+Math.round(r.energy));
+      if(r.readiness!=null)p.push('◎ '+Math.round(r.readiness)+'%');
       if(r.hf_count&&r.hf_count!=='none')p.push('🔥 '+(hf[r.hf_count]||r.hf_count));
       return '<div style="display:flex;justify-content:space-between;gap:12px;padding:8px 2px;border-bottom:1px solid var(--b1);font-size:12px;"><span style="color:var(--t2);">'+r.date+'</span><span style="color:var(--t1);text-align:right;">'+(p.join(' · ')||'—')+'</span></div>';
     }).join('');
@@ -4638,7 +4647,8 @@ function renderGadgetPanel(){
     {lbl:'Темп.',unit:'°C',v:D.tempDev},
     {lbl:'VO₂',unit:'',v:D.vo2},
     {lbl:'SpO₂',unit:'%',v:D.spo2},
-    {lbl:t('dc_sleep')==='Sleep'?'Energy':'Энергия',unit:'/10',v:D.energy}
+    {lbl:t('dc_sleep')==='Sleep'?'Energy':'Энергия',unit:'/10',v:D.energy},
+    {lbl:t('dc_sleep')==='Sleep'?'Readiness':'Готов.',unit:'%',v:D.readiness}
   ];
   box.innerHTML=M.map(function(m){
     const got=m.v!=null&&!isNaN(m.v);
