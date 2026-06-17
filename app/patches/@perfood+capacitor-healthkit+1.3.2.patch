@@ -1,5 +1,5 @@
 diff --git a/node_modules/@perfood/capacitor-healthkit/ios/Plugin/CapacitorHealthkitPlugin.swift b/node_modules/@perfood/capacitor-healthkit/ios/Plugin/CapacitorHealthkitPlugin.swift
-index 0c5d95c..93b134b 100644
+index 0c5d95c..dd84997 100644
 --- a/node_modules/@perfood/capacitor-healthkit/ios/Plugin/CapacitorHealthkitPlugin.swift
 +++ b/node_modules/@perfood/capacitor-healthkit/ios/Plugin/CapacitorHealthkitPlugin.swift
 @@ -64,6 +64,10 @@ public class CapacitorHealthkitPlugin: CAPPlugin {
@@ -13,7 +13,20 @@ index 0c5d95c..93b134b 100644
          case "bodyFat":
              return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyFatPercentage)!
          case "oxygenSaturation":
-@@ -110,6 +114,14 @@ public class CapacitorHealthkitPlugin: CAPPlugin {
+@@ -76,6 +80,12 @@ public class CapacitorHealthkitPlugin: CAPPlugin {
+             return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bloodPressureSystolic)!
+         case "bloodPressureDiastolic":
+             return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bloodPressureDiastolic)!
++        case "appleSleepingWristTemperature":
++            if #available(iOS 16.0, *) {
++                return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.appleSleepingWristTemperature)!
++            } else {
++                return nil
++            }
+         default:
+             return nil
+         }
+@@ -110,6 +120,14 @@ public class CapacitorHealthkitPlugin: CAPPlugin {
                  types.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.restingHeartRate)!)
              case "respiratoryRate":
                  types.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.respiratoryRate)!)
@@ -28,7 +41,38 @@ index 0c5d95c..93b134b 100644
              case "bodyFat":
                  types.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyFatPercentage)!)
              case "oxygenSaturation":
-@@ -424,6 +436,12 @@ public class CapacitorHealthkitPlugin: CAPPlugin {
+@@ -122,6 +140,10 @@ public class CapacitorHealthkitPlugin: CAPPlugin {
+                 types.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bloodPressureSystolic)!)
+             case "bloodPressureDiastolic":
+                 types.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bloodPressureDiastolic)!)
++            case "appleSleepingWristTemperature":
++                if #available(iOS 16.0, *) {
++                    types.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.appleSleepingWristTemperature)!)
++                }
+             default:
+                 print("no match in case: " + item)
+             }
+@@ -320,7 +342,18 @@ public class CapacitorHealthkitPlugin: CAPPlugin {
+                 let sleepED = sample.endDate as NSDate
+                 let sleepInterval = sleepED.timeIntervalSince(sleepSD as Date)
+                 let sleepHoursBetweenDates = sleepInterval / 3600
+-                let sleepState = (sample.value == HKCategoryValueSleepAnalysis.inBed.rawValue) ? "InBed" : "Asleep"
++                var sleepState = "Asleep"
++                if sample.value == HKCategoryValueSleepAnalysis.inBed.rawValue {
++                    sleepState = "InBed"
++                } else if #available(iOS 16.0, *) {
++                    switch sample.value {
++                    case HKCategoryValueSleepAnalysis.awake.rawValue: sleepState = "Awake"
++                    case HKCategoryValueSleepAnalysis.asleepCore.rawValue: sleepState = "AsleepCore"
++                    case HKCategoryValueSleepAnalysis.asleepDeep.rawValue: sleepState = "AsleepDeep"
++                    case HKCategoryValueSleepAnalysis.asleepREM.rawValue: sleepState = "AsleepREM"
++                    default: sleepState = "Asleep"
++                    }
++                }
+                 let constructedSample: [String: Any] = [
+                     "uuid": sample.uuid.uuidString,
+                     "timeZone": getTimeZoneString(sample: sample) as String,
+@@ -424,6 +457,12 @@ public class CapacitorHealthkitPlugin: CAPPlugin {
                  } else if sampleName == "oxygenSaturation" {
                      unit = HKUnit.percent()
                      unitName = "percent"
