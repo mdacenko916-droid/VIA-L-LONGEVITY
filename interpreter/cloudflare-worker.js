@@ -1922,9 +1922,14 @@ async function handleOuraMetrics(request, env, corsHeaders){
     v = avg(useSleep.map(s => Number(s.total_sleep_duration)).filter(n=>isFinite(n)&&n>0)); if (v!=null) ex.sleepHours = +(v/3600).toFixed(1);
     v = avg(useSleep.map(s => Number(s.deep_sleep_duration)).filter(n=>isFinite(n)&&n>0));  if (v!=null) ex.deepMin = Math.round(v/60);
   }
-  // Readiness → energy (score 0–100 → 1–10)
+  // Readiness → readiness (score 0–100) + tempDev (ночное отклонение температуры).
+  // Совпадает с импортом Oura-файла (parseOuraJSON): готовность отдаём как есть, энергию НЕ подменяем.
   const rdy = await get('/v2/usercollection/daily_readiness') || [];
-  if (rdy.length) { const v = avg(rdy.map(x => Number(x && x.score)).filter(n=>isFinite(n)&&n>0)); if (v!=null) ex.energy = Math.min(10, Math.max(1, Math.round(v/10))); }
+  if (rdy.length) {
+    let v;
+    v = avg(rdy.map(x => Number(x && x.score)).filter(n=>isFinite(n)&&n>0));           if (v!=null) ex.readiness = Math.round(v);
+    v = avg(rdy.map(x => Number(x && x.temperature_deviation)).filter(n=>isFinite(n))); if (v!=null) ex.tempDev = +v.toFixed(1);
+  }
   // SpO2 → spo2_percentage.average
   const spo2 = await get('/v2/usercollection/daily_spo2') || [];
   if (spo2.length) { const v = avg(spo2.map(x => Number(x && x.spo2_percentage && x.spo2_percentage.average)).filter(n=>isFinite(n)&&n>0)); if (v!=null) ex.spo2 = +v.toFixed(1); }

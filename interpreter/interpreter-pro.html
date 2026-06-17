@@ -3913,6 +3913,33 @@ const T={
 
 const LANG_FLAGS={'uk':'🇺🇦 UK','ru':'🇷🇺 RU','en':'🇬🇧 EN','es':'🇪🇸 ES','de':'🇩🇪 DE','pt':'🇧🇷 PT','fr':'🇫🇷 FR','pl':'🇵🇱 PL','it':'🇮🇹 IT','he':'🇮🇱 HE','ja':'🇯🇵 JA','ko':'🇰🇷 KO'};
 ['ru','uk','es','de','pt','fr','pl','it','he','ja','ko'].forEach(l=>{T[l]=Object.assign({},T.en,T[l]);});
+// Подписи 9 показателей трекера в карточке — человеческим языком, на 12 языках
+const _GLAB={
+  hrv:{ru:'Вариабельность пульса',uk:'Варіабельність пульсу',en:'Heart-rate variability',es:'Variabilidad del pulso',de:'Herzfrequenzvariabilität',pt:'Variabilidade do pulso',fr:'Variabilité du pouls',pl:'Zmienność tętna',it:'Variabilità del polso',he:'שונות הדופק',ja:'心拍変動',ko:'심박 변이도'},
+  rhr:{ru:'Пульс покоя',uk:'Пульс спокою',en:'Resting pulse',es:'Pulso en reposo',de:'Ruhepuls',pt:'Pulso em repouso',fr:'Pouls au repos',pl:'Tętno spoczynkowe',it:'Polso a riposo',he:'דופק במנוחה',ja:'安静時心拍',ko:'안정시 맥박'},
+  sleepHours:{ru:'Сон',uk:'Сон',en:'Sleep',es:'Sueño',de:'Schlaf',pt:'Sono',fr:'Sommeil',pl:'Sen',it:'Sonno',he:'שינה',ja:'睡眠',ko:'수면'},
+  deepMin:{ru:'Глубокий сон',uk:'Глибокий сон',en:'Deep sleep',es:'Sueño profundo',de:'Tiefschlaf',pt:'Sono profundo',fr:'Sommeil profond',pl:'Sen głęboki',it:'Sonno profondo',he:'שינה עמוקה',ja:'深い睡眠',ko:'깊은 수면'},
+  tempDev:{ru:'Температура',uk:'Температура',en:'Temperature',es:'Temperatura',de:'Temperatur',pt:'Temperatura',fr:'Température',pl:'Temperatura',it:'Temperatura',he:'טמפרטורה',ja:'体温',ko:'체온'},
+  spo2:{ru:'Кислород в крови',uk:'Кисень у крові',en:'Blood oxygen',es:'Oxígeno en sangre',de:'Blutsauerstoff',pt:'Oxigênio no sangue',fr:'Oxygène sanguin',pl:'Tlen we krwi',it:'Ossigeno nel sangue',he:'חמצן בדם',ja:'血中酸素',ko:'혈중 산소'},
+  vo2:{ru:'Аэробная форма',uk:'Аеробна форма',en:'Aerobic fitness',es:'Forma aeróbica',de:'Aerobe Fitness',pt:'Forma aeróbica',fr:'Forme aérobie',pl:'Forma aerobowa',it:'Forma aerobica',he:'כושר אירובי',ja:'有酸素フィットネス',ko:'유산소 능력'},
+  energy:{ru:'Энергия',uk:'Енергія',en:'Energy',es:'Energía',de:'Energie',pt:'Energia',fr:'Énergie',pl:'Energia',it:'Energia',he:'אנרגיה',ja:'エネルギー',ko:'에너지'},
+  readiness:{ru:'Готовность',uk:'Готовність',en:'Readiness',es:'Preparación',de:'Bereitschaft',pt:'Prontidão',fr:'Disponibilité',pl:'Gotowość',it:'Prontezza',he:'מוכנות',ja:'準備度',ko:'준비도'}
+};
+Object.keys(_GLAB).forEach(function(k){Object.keys(_GLAB[k]).forEach(function(l){if(!T[l])T[l]={};T[l]['glab_'+k]=_GLAB[k][l];});});
+const _GHINT={ru:'Нажмите на любой показатель, чтобы вписать значение вручную',uk:'Натисніть на будь-який показник, щоб вписати значення вручну',en:'Tap any metric to fill in the value manually',es:'Toca cualquier métrica para introducir el valor manualmente',de:'Tippe auf einen Wert, um ihn manuell einzugeben',pt:'Toque em qualquer métrica para inserir o valor manualmente',fr:'Touchez une mesure pour saisir la valeur manuellement',pl:'Dotknij dowolny wskaźnik, aby wpisać wartość ręcznie',it:'Tocca un valore per inserirlo manualmente',he:'הקש על מדד כדי להזין ערך ידנית',ja:'項目をタップして手動で入力',ko:'항목을 눌러 직접 입력하세요'};
+Object.keys(_GHINT).forEach(function(l){if(!T[l])T[l]={};T[l]['gp_edit_hint']=_GHINT[l];});
+// Диапазоны для ручного ввода показателей в карточке (clamp + единица + формат)
+const _GMETA={
+  hrv:{min:10,max:200,step:1,u:'ms',f:function(v){return Math.round(v);}},
+  rhr:{min:30,max:120,step:1,u:'bpm',f:function(v){return Math.round(v);}},
+  sleepHours:{min:0,max:14,step:0.1,u:'h',f:function(v){return (+v).toFixed(1);}},
+  deepMin:{min:0,max:240,step:1,u:'min',f:function(v){return Math.round(v);}},
+  tempDev:{min:-2,max:2,step:0.1,u:'°C',f:function(v){return (v>0?'+':'')+(+v).toFixed(1);}},
+  spo2:{min:80,max:100,step:1,u:'%',f:function(v){return Math.round(v);}},
+  vo2:{min:15,max:80,step:1,u:'',f:function(v){return Math.round(v);}},
+  energy:{min:1,max:10,step:1,u:'/10',f:function(v){return Math.round(v);}},
+  readiness:{min:0,max:100,step:1,u:'%',f:function(v){return Math.round(v);}}
+};
 // ── Fitbit OAuth connect strings (uk first, all 12 languages) ──
 const _fitbitT={
   uk:{tab_fitbit_connect:'🔗 Підключити',instr_fitbit_connect:'Увійдіть у свій акаунт Fitbit — ми безпечно підтягнемо показники за 7 днів і автоматично заповнимо кроки аналізу. Токен не потрібен.',btn_fitbit_connect:'🔗 Підключити Fitbit',status_fitbit_connecting:'⏳ Підключаємось до Fitbit…',status_fitbit_ok:'✓ Дані Fitbit завантажено',status_fitbit_err:'⚠ Не вдалося отримати дані Fitbit'},
@@ -4105,6 +4132,30 @@ function _fixMetric(n){
   var nh=document.getElementById('nav-home');if(nh)nh.classList.add('active');
   goTo(n);
 }
+// Ручной ввод показателя прямо в окошке карточки (инлайн), значение сохраняется и переживает перезагрузку.
+function _gEdit(k){
+  var box=document.getElementById('gbox-'+k); if(!box||!_GMETA[k])return;
+  var m=_GMETA[k];
+  var cur=(typeof importedData!=='undefined'&&importedData&&importedData[k]!=null)?importedData[k]:'';
+  box.onclick=null;
+  box.style.borderColor='var(--gold-lt)';
+  box.innerHTML='<input id="gin-'+k+'" type="number" inputmode="decimal" step="'+m.step+'" min="'+m.min+'" max="'+m.max+'" value="'+cur+'" '
+    +'onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur();}else if(event.key===\'Escape\'){renderCard();}" onblur="_gSave(\''+k+'\')" '
+    +'style="width:100%;background:transparent;border:none;outline:none;text-align:center;font-family:inherit;font-size:19px;font-weight:600;color:var(--t1);">'
+    +'<div style="font-size:10px;color:var(--gold-lt);margin-top:6px;letter-spacing:.2px;">'+t('glab_'+k)+(m.u?' · '+m.u:'')+'</div>';
+  var inp=document.getElementById('gin-'+k); if(inp){inp.focus();inp.select();}
+}
+function _gSave(k){
+  var inp=document.getElementById('gin-'+k); var m=_GMETA[k];
+  if(!inp||!m){renderCard();return;}
+  var raw=(inp.value||'').trim();
+  if(raw===''){ importedData[k]=null; }
+  else{ var n=parseFloat(raw.replace(',','.')); if(!isNaN(n)){ importedData[k]=Math.min(m.max,Math.max(m.min,n)); } }
+  try{_saveImported();}catch(e){}
+  // funnel-метрики (HRV/пульс/сон/темп/энергия) подтягиваем в форму, чтобы разбор учёл правку
+  if(typeof applyImportedToSliders==='function'){try{applyImportedToSliders();}catch(e){}}
+  renderCard();
+}
 function renderCard(){
   var box=document.getElementById('cardBody'); if(!box)return;
   if(typeof saveProfile==='function'){try{saveProfile();}catch(e){}}  // синхрон: карточка показывает то, что сейчас в профиле
@@ -4116,13 +4167,6 @@ function renderCard(){
   var ccl=C.pct>=80?'#4ADE80':C.pct>=50?'#FBBF24':'#F87171';
   html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;"><span style="font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--t2);">📊 '+t('dc_title')+'</span><span style="font-size:16px;font-weight:600;color:'+ccl+';">'+C.pct+'%</span></div>';
   html+='<div style="display:flex;gap:6px;flex-wrap:wrap;">'+C.cats.map(function(c){return '<span style="font-size:11px;padding:3px 8px;border-radius:8px;border:1px solid '+(c.ok?'rgba(74,222,128,.4)':'rgba(255,255,255,.14)')+';color:'+(c.ok?'#4ADE80':'rgba(255,255,255,.4)')+';">'+(c.ok?'✓ ':'')+c.n+'</span>';}).join('')+'</div>';
-  // Задачи: метрики, которые НЕ пришли с трекера (PRO всегда с гаджетом) — даём ввести вручную точечно
-  var _gd=[{k:'hrv',s:1,l:'HRV'},{k:'rhr',s:4,l:t('lbl_rhr')},{k:'sleepHours',s:3,l:t('lbl_sleep')},{k:'tempDev',s:2,l:t('s1_title')}];
-  var _miss=(typeof importedData!=='undefined'&&importedData.source)?_gd.filter(function(d){return importedData[d.k]==null;}):[];
-  if(_miss.length){
-    html+=_cSec('⚠ '+t('card_tasks'));
-    _miss.forEach(function(d){html+='<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 2px;border-bottom:1px solid var(--b1);font-size:13px;"><span style="color:var(--t1);">'+d.l+'</span><button onclick="_fixMetric('+d.s+')" style="background:rgba(196,150,60,.12);border:1px solid rgba(196,150,60,.35);color:var(--gold-lt);padding:6px 14px;border-radius:50px;font-size:11px;cursor:pointer;font-family:\'DM Sans\',sans-serif;white-space:nowrap;">'+t('card_edit')+'</button></div>';});
-  }
   html+=_cSec(t('card_profile'));
   var g=P.gender==='male'?t('gender_m'):P.gender==='female'?t('gender_f'):'';
   html+=_cRow(t('s_prof_l1'),g);
@@ -4140,22 +4184,31 @@ function renderCard(){
     if(P.cyclelen)html+=_cRow(t('cyc_len'),P.cyclelen);
     if(!P.cycle_status&&!P.lastperiod&&!P.cyclelen)html+='<div style="color:var(--t3);font-size:13px;padding:10px 2px;">'+t('card_empty')+'</div>';
   }
+  // Данные с трекера — 9 окошек, всегда видны; любое можно дополнить вручную (тап по окошку)
   var D=(typeof importedData!=='undefined'&&importedData)?importedData:{};
-  var _gc=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','vo2','energy','readiness'].filter(function(k){return D[k]!=null;}).length;
-  html+=_cSec(t('card_tracker')+(_gc?' · '+_gc+'/9':''));
-  if(_gc>0){
-    if(D.hrv!=null)html+=_cRow(t('lbl_hrv'),Math.round(D.hrv));
-    if(D.rhr!=null)html+=_cRow(t('lbl_rhr'),Math.round(D.rhr));
-    if(D.sleepHours!=null)html+=_cRow(t('lbl_sleep'),(+D.sleepHours).toFixed(1));
-    if(D.deepMin!=null)html+=_cRow(t('lbl_deep_sleep'),Math.round(D.deepMin));
-    if(D.tempDev!=null)html+=_cRow('🌡️ Темп.',(D.tempDev>0?'+':'')+D.tempDev+'°C');
-    if(D.spo2!=null)html+=_cRow('SpO₂',Math.round(D.spo2)+'%');
-    if(D.vo2!=null)html+=_cRow('VO₂',Math.round(D.vo2));
-    if(D.energy!=null)html+=_cRow('🔋',Math.round(D.energy)+'/10');
-    if(D.readiness!=null)html+=_cRow('◎',Math.round(D.readiness)+'%');
-  }else{
-    html+='<div style="color:var(--t3);font-size:13px;padding:10px 2px;">'+t('card_empty')+'</div>';
+  var _gkeys=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','vo2','energy','readiness'];
+  // если в текущем импорте пусто — берём последний дневной снимок, чтобы данные оставались в карточке после перезагрузки
+  if(!_gkeys.some(function(k){return D[k]!=null;})){
+    try{var _da=JSON.parse(localStorage.getItem('vial_daily')||'[]')||[];
+      if(_da.length){var _last=_da.slice().sort(function(a,b){return (b.ts||0)-(a.ts||0);})[0]||{};
+        // подсеять живое хранилище из дневного снимка — чтобы правка одного окошка не сбрасывала остальные
+        if(typeof importedData!=='undefined'&&importedData){_gkeys.forEach(function(k){if(importedData[k]==null&&_last[k]!=null)importedData[k]=_last[k];});try{_saveImported();}catch(e){}D=importedData;}
+        else D=_last;}
+    }catch(e){}
   }
+  var _gc=_gkeys.filter(function(k){return D[k]!=null;}).length;
+  html+=_cSec(t('card_tracker')+' · '+_gc+'/9');
+  html+='<div style="font-size:11px;color:var(--t3);margin:2px 0 8px;">'+t('gp_edit_hint')+'</div>';
+  html+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">';
+  _gkeys.forEach(function(k){
+    var m=_GMETA[k], has=D[k]!=null, v=has?m.f(D[k]):'—';
+    html+='<div id="gbox-'+k+'" onclick="_gEdit(\''+k+'\')" style="position:relative;cursor:pointer;border:1px solid '+(has?'rgba(196,150,60,.32)':'var(--b1)')+';border-radius:12px;padding:13px 6px;text-align:center;background:'+(has?'rgba(196,150,60,.07)':'transparent')+';">'
+      +'<div style="position:absolute;top:6px;right:8px;font-size:11px;color:var(--t3);">✎</div>'
+      +'<div style="font-size:19px;font-weight:600;line-height:1;color:'+(has?'var(--t1)':'var(--t3)')+';">'+v+((has&&m.u)?'<span style="font-size:9px;color:var(--t3);font-weight:400;"> '+m.u+'</span>':'')+'</div>'
+      +'<div style="font-size:10px;color:var(--t2);margin-top:6px;letter-spacing:.2px;line-height:1.25;">'+t('glab_'+k)+'</div>'
+      +'</div>';
+  });
+  html+='</div>';
   html+=_cSec(t('card_results'));
   if(hist.length){
     hist.slice(0,8).forEach(function(s){html+=_cRow(s.date,(s.score!=null?s.score:'—'));});
