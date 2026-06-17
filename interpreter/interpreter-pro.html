@@ -4132,29 +4132,37 @@ function _fixMetric(n){
   var nh=document.getElementById('nav-home');if(nh)nh.classList.add('active');
   goTo(n);
 }
-// Ручной ввод показателя прямо в окошке карточки (инлайн), значение сохраняется и переживает перезагрузку.
-function _gEdit(k){
-  var box=document.getElementById('gbox-'+k); if(!box||!_GMETA[k])return;
+// Ручной ввод показателя прямо в окошке (инлайн) — работает и в панели под кнопками, и в карточке.
+// box — сам элемент окошка (передаётся через this), чтобы одни функции обслуживали обе сетки.
+function _gEdit(k,box){
+  if(!box||!_GMETA[k])return;
   var m=_GMETA[k];
   var cur=(typeof importedData!=='undefined'&&importedData&&importedData[k]!=null)?importedData[k]:'';
-  box.onclick=null;
   box.style.borderColor='var(--gold-lt)';
-  box.innerHTML='<input id="gin-'+k+'" type="number" inputmode="decimal" step="'+m.step+'" min="'+m.min+'" max="'+m.max+'" value="'+cur+'" '
-    +'onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur();}else if(event.key===\'Escape\'){renderCard();}" onblur="_gSave(\''+k+'\')" '
-    +'style="width:100%;background:transparent;border:none;outline:none;text-align:center;font-family:inherit;font-size:19px;font-weight:600;color:var(--t1);">'
-    +'<div style="font-size:10px;color:var(--gold-lt);margin-top:6px;letter-spacing:.2px;">'+t('glab_'+k)+(m.u?' · '+m.u:'')+'</div>';
-  var inp=document.getElementById('gin-'+k); if(inp){inp.focus();inp.select();}
+  box.innerHTML='<input class="ginp" type="number" inputmode="decimal" step="'+m.step+'" min="'+m.min+'" max="'+m.max+'" value="'+cur+'" '
+    +'onclick="event.stopPropagation();" '
+    +'onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur();}else if(event.key===\'Escape\'){_gRefresh();}" onblur="_gSave(\''+k+'\',this)" '
+    +'style="width:100%;background:transparent;border:none;outline:none;text-align:center;font-family:inherit;font-size:18px;font-weight:600;color:var(--t1);">'
+    +'<div style="font-size:10px;color:var(--gold-lt);margin-top:5px;letter-spacing:.2px;">'+t('glab_'+k)+(m.u?' · '+m.u:'')+'</div>';
+  var inp=box.querySelector('.ginp'); if(inp){inp.focus();inp.select();}
 }
-function _gSave(k){
-  var inp=document.getElementById('gin-'+k); var m=_GMETA[k];
-  if(!inp||!m){renderCard();return;}
+function _gSave(k,inp){
+  var m=_GMETA[k];
+  if(!inp||!m){_gRefresh();return;}
   var raw=(inp.value||'').trim();
   if(raw===''){ importedData[k]=null; }
   else{ var n=parseFloat(raw.replace(',','.')); if(!isNaN(n)){ importedData[k]=Math.min(m.max,Math.max(m.min,n)); } }
   try{_saveImported();}catch(e){}
   // funnel-метрики (HRV/пульс/сон/темп/энергия) подтягиваем в форму, чтобы разбор учёл правку
   if(typeof applyImportedToSliders==='function'){try{applyImportedToSliders();}catch(e){}}
-  renderCard();
+  if(typeof _markManual==='function'){try{_markManual(k);}catch(e){}}
+  _gRefresh();
+}
+// Перерисовать ту сетку, что сейчас на экране (панель под кнопками и/или открытую карточку).
+function _gRefresh(){
+  var cp=document.getElementById('cardPanel');
+  if(cp&&cp.style.display!=='none'&&typeof renderCard==='function'){try{renderCard();}catch(e){}}
+  if(typeof renderGadgetPanel==='function'){try{renderGadgetPanel();}catch(e){}}
 }
 function renderCard(){
   var box=document.getElementById('cardBody'); if(!box)return;
@@ -4174,7 +4182,7 @@ function renderCard(){
   html+=_cRow(t('s_prof_height'),P.height);
   html+=_cRow(t('s_prof_weight'),P.weight);
   html+=_cRow(t('s_prof_waist'),P.waist);
-  html+='<button onclick="navTo(\'home\')" style="margin-top:14px;background:rgba(196,150,60,.1);border:1px solid rgba(196,150,60,.32);color:var(--gold-lt);padding:9px 20px;border-radius:50px;font-size:12px;letter-spacing:.5px;cursor:pointer;font-family:\'DM Sans\',sans-serif;">'+t('card_edit')+'</button>';
+  html+='<button onclick="_fixMetric(0)" style="margin-top:14px;background:rgba(196,150,60,.1);border:1px solid rgba(196,150,60,.32);color:var(--gold-lt);padding:9px 20px;border-radius:50px;font-size:12px;letter-spacing:.5px;cursor:pointer;font-family:\'DM Sans\',sans-serif;">'+t('card_edit')+'</button>';
   // Цикл — только для женщин (канон: цикл в карточке)
   if(P.gender==='female'){
     html+=_cSec(t('dc_cycle'));
@@ -4202,7 +4210,7 @@ function renderCard(){
   html+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">';
   _gkeys.forEach(function(k){
     var m=_GMETA[k], has=D[k]!=null, v=has?m.f(D[k]):'—';
-    html+='<div id="gbox-'+k+'" onclick="_gEdit(\''+k+'\')" style="position:relative;cursor:pointer;border:1px solid '+(has?'rgba(196,150,60,.32)':'var(--b1)')+';border-radius:12px;padding:13px 6px;text-align:center;background:'+(has?'rgba(196,150,60,.07)':'transparent')+';">'
+    html+='<div onclick="_gEdit(\''+k+'\',this)" style="position:relative;cursor:pointer;border:1px solid '+(has?'rgba(196,150,60,.32)':'var(--b1)')+';border-radius:12px;padding:13px 6px;text-align:center;background:'+(has?'rgba(196,150,60,.07)':'transparent')+';">'
       +'<div style="position:absolute;top:6px;right:8px;font-size:11px;color:var(--t3);">✎</div>'
       +'<div style="font-size:19px;font-weight:600;line-height:1;color:'+(has?'var(--t1)':'var(--t3)')+';">'+v+((has&&m.u)?'<span style="font-size:9px;color:var(--t3);font-weight:400;"> '+m.u+'</span>':'')+'</div>'
       +'<div style="font-size:10px;color:var(--t2);margin-top:6px;letter-spacing:.2px;line-height:1.25;">'+t('glab_'+k)+'</div>'
@@ -4705,23 +4713,13 @@ function renderGadgetPanel(){
   const D=(typeof importedData!=='undefined')?importedData:{};
   const src=_autoSource()?srcName(_autoSource()):null;
   if(!src){wrap.style.display='none';return;}
-  const M=[
-    {lbl:'HRV',unit:'мс',v:D.hrv},
-    {lbl:t('dc_rhr'),unit:'',v:D.rhr},
-    {lbl:t('dc_sleep'),unit:'ч',v:D.sleepHours},
-    {lbl:'Deep',unit:'мин',v:D.deepMin},
-    {lbl:'Темп.',unit:'°C',v:D.tempDev},
-    {lbl:'VO₂',unit:'',v:D.vo2},
-    {lbl:'SpO₂',unit:'%',v:D.spo2},
-    {lbl:t('dc_sleep')==='Sleep'?'Energy':'Энергия',unit:'/10',v:D.energy},
-    {lbl:t('dc_sleep')==='Sleep'?'Readiness':'Готов.',unit:'%',v:D.readiness}
-  ];
-  box.innerHTML=M.map(function(m){
-    const got=m.v!=null&&!isNaN(m.v);
-    return '<div class="gp-tile '+(got?'got':'miss')+'">'
-      +(got?('<div class="gp-val">'+m.v+(m.unit?'<span class="gp-unit"> '+m.unit+'</span>':'')+'</div>')
-            :'<div class="gp-val miss">—</div>')
-      +'<div class="gp-lbl">'+m.lbl+'</div>'
+  const keys=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','vo2','energy','readiness'];
+  box.innerHTML=keys.map(function(k){
+    const m=_GMETA[k], got=D[k]!=null&&!isNaN(D[k]), v=got?m.f(D[k]):'—';
+    return '<div class="gp-tile '+(got?'got':'miss')+'" onclick="_gEdit(\''+k+'\',this)" style="position:relative;cursor:pointer;">'
+      +'<div style="position:absolute;top:4px;right:6px;font-size:10px;color:var(--t3);">✎</div>'
+      +'<div class="gp-val'+(got?'':' miss')+'">'+v+(got&&m.u?'<span class="gp-unit"> '+m.u+'</span>':'')+'</div>'
+      +'<div class="gp-lbl">'+t('glab_'+k)+'</div>'
       +(got?'<div class="gp-src">✓ '+src+'</div>':'')
       +'</div>';
   }).join('');
@@ -4852,7 +4850,10 @@ function showWeekly(){ if(typeof _saveDaily==='function')_saveDaily(); _showFlow
 // Структура 1 (первый вход): ВСЕ блоки одной стопкой на одной прокрутке, без перехода страниц.
 // Объективный шаг, целиком закрытый трекером (пока HRV), пропускаем — он уже в панели гаджета.
 const FLOW_ALL=[0,2,4,5,6,7,8,9,10,11];   // профиль + субъективные блоки; объективные (HRV/сон) — в окошке гаджета
-function _allFlow(){ return FLOW_ALL.filter(function(n){ var m=_AUTO_STEP_METRIC[n]; return !(m && typeof importedData!=='undefined' && importedData[m]!=null); }); }
+// Профиль (возраст/рост/вес) — разовый онбординг: заполнен → убираем из стопки навсегда,
+// данные живут в «Моя карточка», правка оттуда (кнопка «Изменить» → _fixMetric(0)).
+function _profileDone(){ try{var p=JSON.parse(localStorage.getItem('vial_profile')||'{}')||{}; return !!(p.age&&p.height&&p.weight);}catch(e){return false;} }
+function _allFlow(){ return FLOW_ALL.filter(function(n){ if(n===0&&_profileDone())return false; var m=_AUTO_STEP_METRIC[n]; return !(m && typeof importedData!=='undefined' && importedData[m]!=null); }); }
 function showAll(){ _showFlow(_allFlow()); if(typeof renderGadgetPanel==='function')renderGadgetPanel(); _flowFooter(t('show_result'), function(){ if(typeof _saveDaily==='function')_saveDaily(); document.body.classList.remove('flow-mode'); _hideFlowFooter(); showResults(); }); }
 // Сворачивание тяжёлых групп вариантов в «выпадающее окошко» (видно вопрос+выбранное, разворот по тапу).
 // Сворачиваем только группы с ≥6 вариантами или мультивыбором; слайдеры и короткие группы — открыты.
