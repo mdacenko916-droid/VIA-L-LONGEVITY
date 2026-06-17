@@ -1266,6 +1266,8 @@ body.flow-mode #scroll-area{padding-bottom:150px;}
 .imp-btn .imp-ic img.hl-hc{height:72px;}
 .imp-btn .imp-ic img.hl-gad{height:72px;}
 .imp-pro{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-family:'Cormorant Garamond',serif;font-size:16px;letter-spacing:2px;color:var(--gold-lt);border:1px solid rgba(196,150,60,.4);border-radius:10px;padding:2px 11px;}
+.imp-cnt{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:1px;color:inherit;opacity:.9;white-space:nowrap;}
+.imp-cnt:empty{display:none;}
 /* Два режима панели импорта: mode-all = Apple Health/Health Connect+ручной (.m-all); mode-full = вендоры (.m-full) */
 #importPanel.mode-all .source-card{display:none;}
 #importPanel.mode-all .source-card.m-all{display:block;}
@@ -1952,10 +1954,12 @@ body.flow-mode #scroll-area{padding-bottom:150px;}
     <button onclick="openImport('all')" class="imp-btn imp-btn-health">
       <span class="imp-ic"><img src="images-in/apple-health.png" class="hl-logo" alt="Apple Health"><img src="images-in/health-connect.png" class="hl-logo hl-hc" alt="Health Connect"></span>
       <span class="imp-txt"><b data-t="imp_health_t">Импорт через Apple Health / Health Connect</b><small data-t="imp_health_s">Подключите любой трекер и импортируйте данные</small></span>
+      <span class="imp-cnt" id="imp-cnt-all"></span>
     </button>
     <button onclick="openImport('full')" class="imp-btn imp-btn-direct">
       <span class="imp-ic"><img src="images-in/auto.png" class="hl-gad" alt="Устройства"></span>
       <span class="imp-txt"><b data-t="imp_direct_t">Прямая интеграция устройства</b><small data-t="imp_direct_s">Oura · Fitbit · Polar · Withings</small></span>
+      <span class="imp-cnt" id="imp-cnt-full"></span>
     </button>
   </div>
 </div>
@@ -4127,10 +4131,10 @@ function renderCard(){
   html+=_cRow(t('s_prof_weight'),P.weight);
   html+=_cRow(t('s_prof_waist'),P.waist);
   html+='<button onclick="navTo(\'home\')" style="margin-top:14px;background:rgba(196,150,60,.1);border:1px solid rgba(196,150,60,.32);color:var(--gold-lt);padding:9px 20px;border-radius:50px;font-size:12px;letter-spacing:.5px;cursor:pointer;font-family:\'DM Sans\',sans-serif;">'+t('card_edit')+'</button>';
-  html+=_cSec(t('card_tracker'));
   var D=(typeof importedData!=='undefined'&&importedData)?importedData:{};
-  var anyT=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','vo2','energy','readiness'].some(function(k){return D[k]!=null;});
-  if(anyT){
+  var _gc=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','vo2','energy','readiness'].filter(function(k){return D[k]!=null;}).length;
+  html+=_cSec(t('card_tracker')+(_gc?' · '+_gc+'/9':''));
+  if(_gc>0){
     if(D.hrv!=null)html+=_cRow(t('lbl_hrv'),Math.round(D.hrv));
     if(D.rhr!=null)html+=_cRow(t('lbl_rhr'),Math.round(D.rhr));
     if(D.sleepHours!=null)html+=_cRow(t('lbl_sleep'),(+D.sleepHours).toFixed(1));
@@ -6072,7 +6076,7 @@ function renderPreview(gridId,data){
   el.innerHTML=Object.keys(labels).filter(k=>data[k]!=null).map(k=>`<div class="preview-metric"><div class="preview-val">${typeof data[k]==='number'?data[k].toFixed(k==='sleepHours'||k==='tempDev'?1:0):data[k]}</div><div class="preview-lbl">${labels[k]} ${units[k]}</div></div>`).join('');
 }
 function setStatus(id,type,msg){const el=document.getElementById(id);if(!el)return;el.className='import-status '+type;el.textContent=msg;}
-function updateImportSummary(){const s=document.getElementById('import-summary'),g=document.getElementById('import-summary-grid');if(s&&g){const count=Object.keys(importedData).filter(k=>importedData[k]!=null&&k!=='source').length;if(count>0){s.style.display='block';renderPreview('import-summary-grid',importedData);}}if(typeof updateDeviceBanners==='function')updateDeviceBanners();if(typeof renderGadgetPanel==='function')renderGadgetPanel();}
+function updateImportSummary(){const s=document.getElementById('import-summary'),g=document.getElementById('import-summary-grid');const gc=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','vo2','energy','readiness'].filter(k=>importedData[k]!=null).length;const ca=document.getElementById('imp-cnt-all'),cf=document.getElementById('imp-cnt-full');if(ca)ca.textContent=gc?gc+'/9':'';if(cf)cf.textContent=gc?gc+'/9':'';if(s&&g){const count=Object.keys(importedData).filter(k=>importedData[k]!=null&&k!=='source').length;if(count>0){s.style.display='block';renderPreview('import-summary-grid',importedData);}}if(typeof updateDeviceBanners==='function')updateDeviceBanners();if(typeof renderGadgetPanel==='function')renderGadgetPanel();}
 function parseSamsungCSV(text){
   const out={};
   try{
