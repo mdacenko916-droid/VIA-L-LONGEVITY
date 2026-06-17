@@ -69,7 +69,7 @@ class HealthConnectVialPlugin : Plugin() {
     }
 
     @PluginMethod
-    fun requestPermissions(call: PluginCall) {
+    override fun requestPermissions(call: PluginCall) {
         val c = client() ?: run { call.reject("Health Connect unavailable"); return }
         CoroutineScope(Dispatchers.IO).launch {
             try {
