@@ -4131,6 +4131,15 @@ function renderCard(){
   html+=_cRow(t('s_prof_weight'),P.weight);
   html+=_cRow(t('s_prof_waist'),P.waist);
   html+='<button onclick="navTo(\'home\')" style="margin-top:14px;background:rgba(196,150,60,.1);border:1px solid rgba(196,150,60,.32);color:var(--gold-lt);padding:9px 20px;border-radius:50px;font-size:12px;letter-spacing:.5px;cursor:pointer;font-family:\'DM Sans\',sans-serif;">'+t('card_edit')+'</button>';
+  // Цикл — только для женщин (канон: цикл в карточке)
+  if(P.gender==='female'){
+    html+=_cSec(t('dc_cycle'));
+    var _cs={regular:t('cyc_regular'),irregular:t('cyc_irregular'),absent:t('cyc_absent')};
+    if(P.cycle_status)html+=_cRow(t('s11_l1'),_cs[P.cycle_status]||P.cycle_status);
+    if(P.lastperiod)html+=_cRow(t('cyc_lastdate'),P.lastperiod);
+    if(P.cyclelen)html+=_cRow(t('cyc_len'),P.cyclelen);
+    if(!P.cycle_status&&!P.lastperiod&&!P.cyclelen)html+='<div style="color:var(--t3);font-size:13px;padding:10px 2px;">'+t('card_empty')+'</div>';
+  }
   var D=(typeof importedData!=='undefined'&&importedData)?importedData:{};
   var _gc=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','vo2','energy','readiness'].filter(function(k){return D[k]!=null;}).length;
   html+=_cSec(t('card_tracker')+(_gc?' · '+_gc+'/9':''));
