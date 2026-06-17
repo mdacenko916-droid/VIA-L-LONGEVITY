@@ -154,7 +154,16 @@ POST/cross-origin не трогает) + meta в head. Адрес для уст�
   инструмента (vio/pro/pro-expert/elite) + `desc_ultrahuman` ×12 языков (2026-06-11). Осталось:
   вкладка «🔗 Подключить» (OAuth) — когда придут Client ID/Secret от партнёрского трека Ultrahuman.
 - ⏳ **IAP для PRO** — встроить Apple In-App Purchase (план — [[project_app_iap_plan]]).
-- ⏳ Health Connect (Android), push, проверка экрана «Мой специалист» в обёртке, публикация.
+- 🟡 **Health Connect (Android) — КОД ГОТОВ, ждёт сборки/проверки на устройстве (2026-06-17).**
+  Готовых плагинов под наши метрики нет (все требуют Cap7 + ни один не отдаёт HRV) → сделан
+  СВОЙ локальный плагин `app/plugins/health-connect` (`@viael/health-connect`, Kotlin на
+  `androidx.health.connect`): читает HRV(RMSSD)/пульс покоя/VO2/SpO₂/сон-стадии/шаги → нормализует
+  в нативе. JS-мост `interpreter/healthconnect-bridge.js` (зеркало healthkit-bridge), кнопка `#hc-btn`
+  «⌚ Health Connect» в карточке импорта (видна только в Android-app, как Apple-кнопка). Зависимость
+  `file:plugins/health-connect` в `app/package.json`. **Ручные шаги владельца** (minSdk≥26, activity-
+  обоснование прав, провайдер HC) — `app/plugins/health-connect/README.md`. ⚠️ tempDev в HC нет.
+  ⏳ Проверить на Android (у владельца Huawei с Play Market): пишет ли его Fitbit HRV/сон в Health Connect.
+- ⏳ Push, проверка экрана «Мой специалист» в обёртке, публикация.
 - Нужно от владельца: Node+Xcode+Android Studio на Mac, аккаунты Apple ($99/год) / Google ($25).
 - Потом: PWA (значок на экран, телефон/планшет — ВОПРОС владельца); RTL для иврита; вид под
   профиль (не-нутрициолог). Кабинет специалиста = веб-PWA; магазинное app — это ИП пациента.

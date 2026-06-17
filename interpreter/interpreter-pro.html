@@ -1416,6 +1416,8 @@ body.flow-mode #scroll-area{padding-bottom:150px;}
 
       <!-- Только внутри приложения (Capacitor + HealthKit): авто-чтение Apple Health. См. app/HEALTHKIT.md -->
       <button id="apple-hk-btn" class="token-btn" style="width:100%;margin-bottom:12px;display:none;" onclick="appleHKImport(this)">📲 Apple Health</button>
+      <!-- Только внутри приложения на Android (Capacitor + плагин HealthConnectVial): авто-чтение Health Connect. См. app/plugins/health-connect -->
+      <button id="hc-btn" class="token-btn" style="width:100%;margin-bottom:12px;display:none;" onclick="healthConnectImport(this)">⌚ Health Connect</button>
 
       <div id="apple-file">
         <div data-t="instr_apple_file" style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;">
@@ -6815,6 +6817,8 @@ document.addEventListener('visibilitychange',function(){
 
 <!-- HealthKit-мост (Apple Watch → ИП). Активен только внутри приложения; на вебе no-op. app/HEALTHKIT.md -->
 <script src="healthkit-bridge.js"></script>
+<!-- Health Connect-мост (Android → ИП). Активен только в Android-приложении; на вебе/iOS no-op. app/plugins/health-connect -->
+<script src="healthconnect-bridge.js"></script>
 <script>
 function appleHKImport(btn){
   if(btn.disabled) return; var t=btn.textContent; btn.disabled=true; btn.textContent='…';

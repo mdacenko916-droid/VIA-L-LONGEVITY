@@ -1,0 +1,45 @@
+// Локальный Capacitor-плагин Health Connect (Android). Self-contained: сам тянет
+// Kotlin Gradle plugin, чтобы не зависеть от наличия kotlin classpath в корне app.
+buildscript {
+    ext.hc_kotlin_version = '1.9.24'
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$hc_kotlin_version"
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    namespace "com.viael.healthconnect"
+    compileSdk project.hasProperty('compileSdkVersion') ? rootProject.ext.compileSdkVersion : 34
+    defaultConfig {
+        // Health Connect требует Android 8+ (API 26); реально доступен с Android 9+.
+        minSdkVersion 26
+        targetSdkVersion project.hasProperty('targetSdkVersion') ? rootProject.ext.targetSdkVersion : 34
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+}
+
+repositories {
+    google()
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':capacitor-android')
+    // Если Gradle не найдёт версию — поставь актуальную с developer.android.com/health-and-fitness/health-connect
+    implementation "androidx.health.connect:connect-client:1.1.0-rc01"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
+    implementation "androidx.activity:activity-ktx:1.8.2"
+}
