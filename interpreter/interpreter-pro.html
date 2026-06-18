@@ -4961,7 +4961,7 @@ function _markPeriodicDone(){
     if(ch)localStorage.setItem('vial_steplast',JSON.stringify(map));
   }catch(e){}
 }
-function _allFlow(){ return FLOW_ALL.filter(function(n){ if(!_stepDue(n))return false; if(_hfHidden(n))return false; var m=_AUTO_STEP_METRIC[n]; return !(m && typeof importedData!=='undefined' && importedData[m]!=null); }); }
+function _allFlow(){ return FLOW_ALL.filter(function(n){ if(n===11 && !_profileDone())return false; /* динамика — сравнение с прошлой неделей: в первый проход скрываем */ if(!_stepDue(n))return false; if(_hfHidden(n))return false; var m=_AUTO_STEP_METRIC[n]; return !(m && typeof importedData!=='undefined' && importedData[m]!=null); }); }
 function showAll(){ _showFlow(_allFlow()); if(typeof renderGadgetPanel==='function')renderGadgetPanel(); _flowFooter(t('show_result'), function(){ if(typeof _saveDaily==='function')_saveDaily(); document.body.classList.remove('flow-mode'); _hideFlowFooter(); showResults(); }); }
 // Сворачивание тяжёлых групп вариантов в «выпадающее окошко» (видно вопрос+выбранное, разворот по тапу).
 // Сворачиваем только группы с ≥6 вариантами или мультивыбором; слайдеры и короткие группы — открыты.
