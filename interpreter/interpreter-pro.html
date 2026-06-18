@@ -2612,12 +2612,13 @@ body.flow-mode #scroll-area{padding-bottom:150px;}
           <div class="chip"><input type="radio" name="meds" id="med2" value="thyroid"><label for="med2" data-t="med_thyroid">Щитоподібна залоза</label></div>
           <div class="chip"><input type="radio" name="meds" id="med3" value="antidep"><label for="med3" data-t="med_antidep">Антидепресанти</label></div>
           <div class="chip"><input type="radio" name="meds" id="med4" value="contraceptive"><label for="med4" data-t="med_coc">КОК / контрацептиви</label></div>
-          <div class="chip"><input type="radio" name="meds" id="med5" value="other_meds"><label for="med5" data-t="med_other">Інші</label></div>
+          <div class="chip"><input type="radio" name="meds" id="med5" value="other_meds" onchange="_toggleMedsOther()"><label for="med5" data-t="med_other">Інші</label></div>
         </div>
+        <input type="text" id="meds_other" class="manual-input" maxlength="160" placeholder="Впишите препарат и дозировку" style="display:none;margin-top:10px;text-align:left;letter-spacing:0;text-transform:none;">
       </div>
       <div class="btn-row">
-        <button class="btn btn-back" onclick="goTo(8)">←</button>
-        <button class="btn btn-primary" onclick="goTo(10)"><span class="btn-label" data-t="next">Далі →</span></button>
+        <button class="btn btn-back" onclick="goFromNutrition()">←</button>
+        <button class="btn btn-primary" onclick="goFromNutrition()"><span class="btn-label" data-t="next">Далі →</span></button>
       </div>
     </div>
   </div>
@@ -3973,6 +3974,8 @@ const _LS={
   ls_alc:{ru:'Алкоголь за последние сутки?',uk:'Алкоголь за останню добу?',en:'Alcohol in the past 24 hours?',es:'¿Alcohol en las últimas 24 horas?',de:'Alkohol in den letzten 24 Stunden?',pt:'Álcool nas últimas 24 horas?',fr:'Alcool ces dernières 24 heures ?',pl:'Alkohol w ciągu ostatniej doby?',it:'Alcol nelle ultime 24 ore?',he:'אלכוהול ב-24 השעות האחרונות?',ja:'過去24時間のアルコール?',ko:'지난 24시간 동안 음주?'}
 };
 Object.keys(_LS).forEach(function(k){Object.keys(_LS[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_LS[k][l];});});
+const _MEDO={meds_other_ph:{ru:'Впишите препарат и дозировку',uk:'Впишіть препарат і дозування',en:'Enter medication and dosage',es:'Escribe el medicamento y la dosis',de:'Medikament und Dosierung eingeben',pt:'Digite o medicamento e a dose',fr:'Indiquez le médicament et la dose',pl:'Wpisz lek i dawkę',it:'Inserisci farmaco e dose',he:'הזינו תרופה ומינון',ja:'薬剤名と用量を入力',ko:'약물과 용량을 입력하세요'}};
+Object.keys(_MEDO).forEach(function(k){Object.keys(_MEDO[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_MEDO[k][l];});});
 // Диапазоны для ручного ввода показателей в карточке (clamp + единица + формат)
 const _GMETA={
   hrv:{min:10,max:200,step:1,u:'ms',f:function(v){return Math.round(v);}},
@@ -4252,6 +4255,19 @@ function renderCard(){
     html+=_cRow(t('gi_l'),_join(P.gi,_giMap));
     html+=_cRow(t('procto_l'),_join(P.gi,_arMap));
     html+='<button onclick="_fixMetric(7)" style="margin-top:14px;background:rgba(196,150,60,.1);border:1px solid rgba(196,150,60,.32);color:var(--gold-lt);padding:9px 20px;border-radius:50px;font-size:12px;letter-spacing:.5px;cursor:pointer;font-family:\'DM Sans\',sans-serif;">'+t('card_edit')+'</button>';
+  })();
+  // Добавки и медикаменты — база (первичный проход), хранится в карточке; правка → шаг 9
+  (function(){
+    var _sup={magnesium:'sup_mag',vitd:'sup_vitd',omega3:'sup_omega',b_complex:'sup_bcomp',zinc:'sup_zinc',iron:'sup_iron',collagen:'sup_coll',probiotics:'sup_prob',adaptogens:'sup_adapt',hrt:'sup_hrt',none_sup:'sup_none'};
+    var _med={no:'med_no',thyroid:'med_thyroid',antidep:'med_antidep',contraceptive:'med_coc',other_meds:'med_other'};
+    var supTxt=Array.isArray(P.supplements)?P.supplements.map(function(v){return _sup[v]?t(_sup[v]):null;}).filter(Boolean).join(', '):'';
+    var medTxt=(P.meds&&_med[P.meds])?t(_med[P.meds]):'';
+    if(P.meds==='other_meds'&&P.meds_other)medTxt+=': '+P.meds_other;
+    if(!supTxt&&(!P.meds||P.meds==='no')&&!P.meds_other)return;
+    html+=_cSec(t('s9_title'));
+    html+=_cRow(t('s9_l1'),supTxt);
+    html+=_cRow(t('s9_l2'),medTxt);
+    html+='<button onclick="_fixMetric(9)" style="margin-top:14px;background:rgba(196,150,60,.1);border:1px solid rgba(196,150,60,.32);color:var(--gold-lt);padding:9px 20px;border-radius:50px;font-size:12px;letter-spacing:.5px;cursor:pointer;font-family:\'DM Sans\',sans-serif;">'+t('card_edit')+'</button>';
   })();
   // Данные с трекера — 8 приборных окошек (energy убрана — субъективна, живёт в шаге «Образ жизни»)
   var D=(typeof importedData!=='undefined'&&importedData)?importedData:{};
@@ -4706,7 +4722,7 @@ function saveProfile(){
       waist:document.getElementById('prof-waist')?.value||'',
       lastperiod:document.getElementById('prof-lastperiod')?.value||'',
       cyclelen:document.getElementById('prof-cyclelen')?.value||'',
-      supplements:getChecked(_SUP_IDS),meds:getRadio('meds'),cycle_status:getRadio('cycle_status'),
+      supplements:getChecked(_SUP_IDS),meds:getRadio('meds'),meds_other:(document.getElementById('meds_other')?document.getElementById('meds_other').value:''),cycle_status:getRadio('cycle_status'),
       // Питание — базовая анкета (первичный проход), хранится в карточке
       diet_restrict:getChecked(['dr1','dr2','dr3','dr4','dr5','dr6','dr7','dr8']),
       eating_pattern:getRadio('eating_pattern'),
@@ -4797,6 +4813,7 @@ function _markManual(metric){window._manualMetrics[metric]=true;if(typeof update
   const map={hrv:'hrv',sleep_qual:'sleepHours',rhr:'rhr'};
   Object.keys(map).forEach(function(id){const el=document.getElementById(id);if(el)el.addEventListener('change',function(){_markManual(map[id]);});});
   document.querySelectorAll('input[name=temp]').forEach(function(el){el.addEventListener('change',function(){_markManual('tempDev');});});
+  document.querySelectorAll('input[name=meds]').forEach(function(el){el.addEventListener('change',function(){if(typeof _toggleMedsOther==='function')_toggleMedsOther();});});
 })();
 // Полнота данных (общий расчёт для экрана результата И карточки): что покрыто и чего не хватает.
 function _completeness(){
@@ -4886,16 +4903,25 @@ function loadProfile(){
     _checkByVal(['gi1','gi2','gi3','gi4','gi5','gi6','gi7','gi10','gi11','gi12','gi13'],p.gi);
     const setRadio=(name,v)=>{if(!v)return;const el=document.querySelector('input[name='+name+'][value="'+v+'"]');if(el)el.checked=true;};
     setRadio('meds',p.meds);setRadio('cycle_status',p.cycle_status);setRadio('eating_pattern',p.eating_pattern);
+    if(p.meds_other){const mo=document.getElementById('meds_other');if(mo)mo.value=p.meds_other;}
+    if(typeof _toggleMedsOther==='function')_toggleMedsOther();
     if(typeof calcProfMetrics==='function')calcProfMetrics();
     if(typeof renderCycleDay==='function')renderCycleDay();
     if(typeof updateDeviceBanners==='function')updateDeviceBanners();if(typeof renderGadgetPanel==='function')renderGadgetPanel();
   }catch(e){}
 }
 function goFromProfile(){ saveProfile(); showAll(); }
-// Правка питания из карточки (single-step): сохранить базу и вернуться к стопке
+// Правка питания/добавок из карточки (single-step): сохранить базу и вернуться к стопке
 function goFromNutrition(){ saveProfile(); showAll(); }
+// «Другие» медикаменты — показать строку для своего препарата
+function _toggleMedsOther(){
+  var el=document.getElementById('meds_other'); if(!el)return;
+  var show=(typeof getRadio==='function')&&getRadio('meds')==='other_meds';
+  el.style.display=show?'block':'none';
+  if(show&&typeof t==='function')el.placeholder=t('meds_other_ph');
+}
 // ── Одностраничные потоки «День» / «Неделя»: шаги показываем стопкой на одной прокрутке ──
-const FLOW_DAILY=[2,4,5,6], FLOW_WEEKLY=[8,9,10,11];   // ежедневно: приливы(2)/самочувствие(4)/образ жизни(5)/когниция(6); недельно: активность(8)/добавки(9)/стресс(10)/динамика(11); HRV(1)/Сон(3) приборные; Питание(7) — первичный проход
+const FLOW_DAILY=[2,4,5,6], FLOW_WEEKLY=[8,10,11];   // ежедневно: приливы(2)/самочувствие(4)/образ жизни(5)/когниция(6); недельно: активность(8)/стресс(10)/динамика(11); приборные HRV(1)/Сон(3); первичный проход: Питание(7)+Добавки(9)
 // Приборные поля (HRV, пульс, сон, температура) держим в DOM, но НЕ показываем шагами —
 // значения втекают из панели через applyImportedToSliders. Шаги остаются только субъективные.
 const _AUTO_STEP_METRIC={};
@@ -4926,7 +4952,7 @@ const FLOW_ALL=[0,2,4,5,6,7,8,9,10,11];   // профиль + субъектив
 // данные живут в «Моя карточка», правка оттуда (кнопка «Изменить» → _fixMetric(0)).
 function _profileDone(){ try{var p=JSON.parse(localStorage.getItem('vial_profile')||'{}')||{}; return !!(p.age&&p.height&&p.weight);}catch(e){return false;} }
 // Питание (step7) — базовая анкета: как и профиль, спрашиваем только первый раз, потом живёт в карточке
-function _allFlow(){ return FLOW_ALL.filter(function(n){ if((n===0||n===7)&&_profileDone())return false; if(_hfHidden(n))return false; var m=_AUTO_STEP_METRIC[n]; return !(m && typeof importedData!=='undefined' && importedData[m]!=null); }); }
+function _allFlow(){ return FLOW_ALL.filter(function(n){ if((n===0||n===7||n===9)&&_profileDone())return false; if(_hfHidden(n))return false; var m=_AUTO_STEP_METRIC[n]; return !(m && typeof importedData!=='undefined' && importedData[m]!=null); }); }
 function showAll(){ _showFlow(_allFlow()); if(typeof renderGadgetPanel==='function')renderGadgetPanel(); _flowFooter(t('show_result'), function(){ if(typeof _saveDaily==='function')_saveDaily(); document.body.classList.remove('flow-mode'); _hideFlowFooter(); showResults(); }); }
 // Сворачивание тяжёлых групп вариантов в «выпадающее окошко» (видно вопрос+выбранное, разворот по тапу).
 // Сворачиваем только группы с ≥6 вариантами или мультивыбором; слайдеры и короткие группы — открыты.
