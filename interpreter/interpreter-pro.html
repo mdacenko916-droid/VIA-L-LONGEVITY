@@ -1231,11 +1231,16 @@ body.flow-mode .progress-wrap{display:none;}
 body.flow-mode .step .btn-row{display:none;}
 body.flow-mode .step{margin-bottom:14px;}
 body.flow-mode #scroll-area{padding-bottom:150px;}
+/* Заголовки-разделители групп по ритму (Настройка / Сегодня / Раз в неделю / Раз в 2 недели) */
+.flow-group-head{font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold-lt);margin:24px 0 12px;padding-bottom:9px;border-bottom:1px solid rgba(196,150,60,.25);}
+.flow-group-head:first-child{margin-top:4px;}
+body:not(.flow-mode) .flow-group-head{display:none;}
 /* Широкий экран (десктоп/планшет): задействуем ширину — шире контент, «День»/«Неделя» в 2 колонки */
 @media(min-width:880px){
   main{max-width:880px;}
   body.flow-mode main{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;align-items:start;}
   body.flow-mode main>.step{margin-bottom:14px;}
+  body.flow-mode main>.flow-group-head{grid-column:1/-1;}
   #flow-footer .btn{max-width:880px;}
 }
 #flow-footer{position:fixed;left:0;right:0;bottom:62px;z-index:50;padding:10px 16px 12px;background:linear-gradient(to top,rgba(8,6,14,.97) 55%,rgba(8,6,14,0));display:none;}
@@ -2009,6 +2014,10 @@ body.flow-mode #scroll-area{padding-bottom:150px;}
       <div class="step-badge" data-t="s_prof_badge">00 / 14 · Профиль</div>
       <h2 class="step-title" data-t="s_prof_title">Ваш профиль</h2>
       <p class="step-desc" data-t="s_prof_desc">Это определяет точность рекомендаций. Гормональная фаза влияет на интерпретацию всех показателей.</p>
+      <div class="input-group">
+        <label data-t="s_prof_name">Имя</label>
+        <input type="text" id="prof-name" class="manual-input" maxlength="40" placeholder="—" style="text-align:left;letter-spacing:0;text-transform:none;">
+      </div>
       <div class="input-group">
         <label data-t="s_prof_l1">Пол</label>
         <div class="chips">
@@ -3958,6 +3967,16 @@ const _PMS={
   pmsy_none:{ru:'Ничего из перечисленного',uk:'Нічого з переліченого',en:'None of the above',es:'Ninguno de los anteriores',de:'Nichts davon',pt:'Nenhum dos acima',fr:'Aucun de ces symptômes',pl:'Żaden z powyższych',it:'Nessuno dei precedenti',he:'אף אחד מהנ״ל',ja:'いずれもない',ko:'해당 없음'}
 };
 Object.keys(_PMS).forEach(function(k){Object.keys(_PMS[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_PMS[k][l];});});
+// Имя в профиле + заголовки групп по ритму
+const _NAV={
+  s_prof_name:{ru:'Имя',uk:'Ім’я',en:'Name',es:'Nombre',de:'Name',pt:'Nome',fr:'Prénom',pl:'Imię',it:'Nome',he:'שם',ja:'名前',ko:'이름'},
+  fh_setup:{ru:'Настройка · один раз',uk:'Налаштування · один раз',en:'Setup · one-time',es:'Configuración · una vez',de:'Einrichtung · einmalig',pt:'Configuração · uma vez',fr:'Configuration · une fois',pl:'Konfiguracja · jednorazowo',it:'Configurazione · una volta',he:'הגדרה · פעם אחת',ja:'初期設定・1回のみ',ko:'설정 · 1회'},
+  fh_now:{ru:'Как вы сейчас',uk:'Як ви зараз',en:'How you are now',es:'Cómo estás ahora',de:'Wie es dir gerade geht',pt:'Como você está agora',fr:'Comment vous allez maintenant',pl:'Jak się teraz czujesz',it:'Come stai ora',he:'איך את/ה עכשיו',ja:'今の状態',ko:'지금 상태'},
+  fh_today:{ru:'Сегодня',uk:'Сьогодні',en:'Today',es:'Hoy',de:'Heute',pt:'Hoje',fr:'Aujourd’hui',pl:'Dziś',it:'Oggi',he:'היום',ja:'今日',ko:'오늘'},
+  fh_weekly:{ru:'Раз в неделю',uk:'Раз на тиждень',en:'Weekly',es:'Una vez por semana',de:'Wöchentlich',pt:'Semanalmente',fr:'Une fois par semaine',pl:'Raz w tygodniu',it:'Settimanale',he:'פעם בשבוע',ja:'週1回',ko:'주 1회'},
+  fh_biweekly:{ru:'Раз в 2 недели',uk:'Раз на 2 тижні',en:'Every 2 weeks',es:'Cada 2 semanas',de:'Alle 2 Wochen',pt:'A cada 2 semanas',fr:'Toutes les 2 semaines',pl:'Co 2 tygodnie',it:'Ogni 2 settimane',he:'אחת לשבועיים',ja:'2週間に1回',ko:'2주에 1회'}
+};
+Object.keys(_NAV).forEach(function(k){Object.keys(_NAV[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_NAV[k][l];});});
 // Диапазоны для ручного ввода показателей в карточке (clamp + единица + формат)
 const _GMETA={
   hrv:{min:10,max:200,step:1,u:'ms',f:function(v){return Math.round(v);}},
@@ -4207,6 +4226,7 @@ function renderCard(){
   html+='<div style="display:flex;gap:6px;flex-wrap:wrap;">'+C.cats.map(function(c){return '<span style="font-size:11px;padding:3px 8px;border-radius:8px;border:1px solid '+(c.ok?'rgba(74,222,128,.4)':'rgba(255,255,255,.14)')+';color:'+(c.ok?'#4ADE80':'rgba(255,255,255,.4)')+';">'+(c.ok?'✓ ':'')+c.n+'</span>';}).join('')+'</div>';
   html+=_cSec(t('card_profile'));
   var g=P.gender==='male'?t('gender_m'):P.gender==='female'?t('gender_f'):'';
+  if(P.name)html+=_cRow(t('s_prof_name'),P.name);
   html+=_cRow(t('s_prof_l1'),g);
   html+=_cRow(t('s_prof_age'),P.age);
   html+=_cRow(t('s_prof_height'),P.height);
@@ -4701,6 +4721,7 @@ const _SUP_IDS=['sup1','sup2','sup3','sup4','sup5','sup6','sup7','sup8','sup9','
 function saveProfile(){
   try{
     localStorage.setItem('vial_profile',JSON.stringify({
+      name:(document.getElementById('prof-name')?document.getElementById('prof-name').value:''),
       gender:getRadio('gender'),phase:getRadio('phase'),
       age:document.getElementById('prof-age')?.value||'',
       height:document.getElementById('prof-height')?.value||'',
@@ -4878,6 +4899,7 @@ function loadProfile(){
   try{
     const p=JSON.parse(localStorage.getItem('vial_profile')||'null');if(!p)return;
     const set=(id,v)=>{const el=document.getElementById(id);if(el&&v)el.value=v;};
+    set('prof-name',p.name);
     set('prof-age',p.age);set('prof-height',p.height);set('prof-weight',p.weight);set('prof-waist',p.waist);
     set('prof-lastperiod',p.lastperiod);set('prof-cyclelen',p.cyclelen);
     if(p.gender){const g=document.querySelector('input[name=gender][value="'+p.gender+'"]');if(g&&!g.checked){g.checked=true;g.dispatchEvent(new Event('change'));}}
@@ -4924,11 +4946,28 @@ function _dailyFlow(){
 }
 function _flowFooter(label,fn){var f=document.getElementById('flow-footer'),b=document.getElementById('flow-btn');if(!f||!b)return;b.textContent=label;b.onclick=fn;f.style.display='block';}
 function _hideFlowFooter(){var f=document.getElementById('flow-footer');if(f)f.style.display='none';}
+// Подписи групп по ритму. На первом проходе daily звучит как «Как вы сейчас», дальше — «Сегодня».
+function _flowHead(cad,firstPass){
+  if(cad==='base')return t('fh_setup');
+  if(cad==='daily')return firstPass?t('fh_now'):t('fh_today');
+  if(cad==='weekly')return t('fh_weekly');
+  if(cad==='biweekly')return t('fh_biweekly');
+  return '';
+}
 function _showFlow(list){
   document.body.classList.add('flow-mode');
   document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active','flow-show');});
+  document.querySelectorAll('.flow-group-head').forEach(function(h){h.remove();});
   var r=document.getElementById('stepResult');if(r)r.classList.remove('active');
-  list.forEach(function(n){var s=document.getElementById('step'+n);if(s)s.classList.add('flow-show');});
+  var main=document.querySelector('main'); var firstPass=(typeof _profileDone==='function')&&!_profileDone();
+  // Группируем по ритму и вставляем заголовок-разделитель перед каждой группой
+  ['base','daily','weekly','biweekly'].forEach(function(cad){
+    var grp=list.filter(function(n){return (STEP_CADENCE[n]||'daily')===cad;});
+    if(!grp.length||!main)return;
+    var h=document.createElement('div'); h.className='flow-group-head'; h.textContent=_flowHead(cad,firstPass);
+    main.appendChild(h);
+    grp.forEach(function(n){var s=document.getElementById('step'+n);if(s){s.classList.add('flow-show');main.appendChild(s);}});
+  });
   var sa=document.getElementById('scroll-area');if(sa)sa.scrollTop=0;else window.scrollTo(0,0);
 }
 function showDaily(){ _showFlow(_dailyFlow()); if(typeof renderGadgetPanel==='function')renderGadgetPanel(); _flowFooter(t('next'), showWeekly); }
