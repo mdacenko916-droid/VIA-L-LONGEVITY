@@ -1213,6 +1213,18 @@ footer{
 .gp-src{font-size:9px;color:#4ADE80;margin-top:1px;}
 .gp-head{font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold-lt);margin:0 0 7px;display:flex;align-items:center;gap:7px;}
 .gp-note{font-size:11.5px;line-height:1.45;color:var(--t2);margin:0 0 11px;}
+/* Приливы и жар — два блока (интенсивность/частота) с круглыми вариантами по шаблону */
+.hf-block{margin:20px 0 4px;}
+.hf-head{font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold-lt);display:flex;align-items:center;gap:7px;margin:0 0 6px;}
+.hf-q{font-size:12.5px;color:var(--t2);margin:0 0 15px;line-height:1.4;}
+.hf-opts{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.hf-opt{display:flex;flex-direction:column;align-items:center;gap:9px;cursor:pointer;text-align:center;}
+.hf-opt input{position:absolute;opacity:0;width:0;height:0;pointer-events:none;}
+.hf-circle{width:44px;height:44px;border-radius:50%;border:1.5px solid rgba(196,150,60,.4);background:transparent;transition:all .2s;flex:none;}
+.hf-opt:hover .hf-circle{border-color:rgba(226,185,90,.7);}
+.hf-opt input:checked + .hf-circle{background:radial-gradient(circle at 50% 38%, #F4CE78, #C0963C);border-color:#E2B95A;box-shadow:0 0 16px rgba(226,185,90,.45);}
+.hf-lbl2{font-size:10.5px;color:var(--t2);line-height:1.25;}
+.hf-opt input:checked ~ .hf-lbl2{color:var(--t1);font-weight:500;}
 /* Одностраничный поток «День»/«Неделя»: шаги стопкой на одной прокрутке */
 .step.flow-show{display:block !important;animation:none !important;}
 body.flow-mode .progress-wrap{display:none;}
@@ -2188,23 +2200,30 @@ body.flow-mode #scroll-area{padding-bottom:150px;}
         </div>
       </div>
       <div id="hf-section">
-      <div class="input-group">
-        <label data-t="s1_hf_count">Приливы за день</label>
-        <div class="chips">
-          <div class="chip"><input type="radio" name="hf_count" id="hfc1" value="none" checked><label for="hfc1" data-t="hf_0">Не было</label></div>
-          <div class="chip"><input type="radio" name="hf_count" id="hfc2" value="low"><label for="hfc2" data-t="hf_1">1–2</label></div>
-          <div class="chip"><input type="radio" name="hf_count" id="hfc3" value="mid"><label for="hfc3" data-t="hf_35">3–5</label></div>
-          <div class="chip"><input type="radio" name="hf_count" id="hfc4" value="high"><label for="hfc4" data-t="hf_6p">6+</label></div>
+        <!-- ИНТЕНСИВНОСТЬ (5 уровней, всегда видна) -->
+        <div class="hf-block">
+          <div class="hf-head">🔥 <span data-t="hf_int_h">Интенсивность</span></div>
+          <div class="hf-q" data-t="hf_int_q">Насколько сильным был самый сильный прилив?</div>
+          <div class="hf-opts">
+            <label class="hf-opt"><input type="radio" name="hf_intensity" value="none" checked><span class="hf-circle"></span><span class="hf-lbl2" data-t="hf_0">Не было</span></label>
+            <label class="hf-opt"><input type="radio" name="hf_intensity" value="mild"><span class="hf-circle"></span><span class="hf-lbl2" data-t="io_mild">Слабая</span></label>
+            <label class="hf-opt"><input type="radio" name="hf_intensity" value="moderate"><span class="hf-circle"></span><span class="hf-lbl2" data-t="io_mod">Умеренная</span></label>
+            <label class="hf-opt"><input type="radio" name="hf_intensity" value="intense"><span class="hf-circle"></span><span class="hf-lbl2" data-t="io_strong">Сильная</span></label>
+            <label class="hf-opt"><input type="radio" name="hf_intensity" value="severe"><span class="hf-circle"></span><span class="hf-lbl2" data-t="io_vstrong">Очень сильная</span></label>
+          </div>
         </div>
-      </div>
-      <div class="input-group" id="hf-detail" style="display:none;">
-        <label data-t="s1_hf_int">Интенсивность приливов</label>
-        <div class="chips">
-          <div class="chip"><input type="radio" name="hf_intensity" id="hfi1" value="mild" checked><label for="hfi1" data-t="hf_mild">Слабые</label></div>
-          <div class="chip"><input type="radio" name="hf_intensity" id="hfi2" value="moderate"><label for="hfi2" data-t="hf_mod">Умеренные</label></div>
-          <div class="chip"><input type="radio" name="hf_intensity" id="hfi3" value="intense"><label for="hfi3" data-t="hf_strong">Сильные</label></div>
+        <!-- ЧАСТОТА (5 уровней) -->
+        <div class="hf-block">
+          <div class="hf-head">〰️ <span data-t="hf_freq_h">Частота</span></div>
+          <div class="hf-q" data-t="hf_freq_q">Сколько приливов было за последние сутки?</div>
+          <div class="hf-opts">
+            <label class="hf-opt"><input type="radio" name="hf_count" value="none" checked><span class="hf-circle"></span><span class="hf-lbl2" data-t="hf_0">Не было</span></label>
+            <label class="hf-opt"><input type="radio" name="hf_count" value="low"><span class="hf-circle"></span><span class="hf-lbl2" data-t="fo_12">1–2 раза</span></label>
+            <label class="hf-opt"><input type="radio" name="hf_count" value="mid"><span class="hf-circle"></span><span class="hf-lbl2" data-t="fo_35">3–5 раз</span></label>
+            <label class="hf-opt"><input type="radio" name="hf_count" value="high"><span class="hf-circle"></span><span class="hf-lbl2" data-t="fo_610">6–10 раз</span></label>
+            <label class="hf-opt"><input type="radio" name="hf_count" value="veryhigh"><span class="hf-circle"></span><span class="hf-lbl2" data-t="fo_10p">Более 10 раз</span></label>
+          </div>
         </div>
-      </div>
       </div>
       <div class="btn-row">
         <button class="btn btn-back" onclick="goTo(0)">←</button>
@@ -3934,9 +3953,21 @@ const _GONCE={ru:'🔁 Разбор — раз в день. Показатели
 Object.keys(_GONCE).forEach(function(l){if(!T[l])T[l]={};T[l]['gp_once']=_GONCE[l];});
 // Шаг бывш. «Температура» переименован в «Приливы» (поле температуры ушло в панель трекера, осталось субъективное)
 const _HFL={
-  hf_badge:{ru:'🔥 Приливы',uk:'🔥 Припливи',en:'🔥 Hot flashes',es:'🔥 Sofocos',de:'🔥 Hitzewallungen',pt:'🔥 Ondas de calor',fr:'🔥 Bouffées de chaleur',pl:'🔥 Uderzenia gorąca',it:'🔥 Vampate',he:'🔥 גלי חום',ja:'🔥 ホットフラッシュ',ko:'🔥 안면홍조'},
-  hf_title:{ru:'Приливы',uk:'Припливи',en:'Hot flashes',es:'Sofocos',de:'Hitzewallungen',pt:'Ondas de calor',fr:'Bouffées de chaleur',pl:'Uderzenia gorąca',it:'Vampate di calore',he:'גלי חום',ja:'ホットフラッシュ',ko:'안면홍조'},
-  hf_desc:{ru:'Сколько приливов было за прошедший день и насколько сильные.',uk:'Скільки припливів було за минулий день і наскільки сильні.',en:'How many hot flashes you had over the past day and how strong.',es:'Cuántos sofocos tuviste en el último día y qué tan intensos.',de:'Wie viele Hitzewallungen du am letzten Tag hattest und wie stark.',pt:'Quantas ondas de calor você teve no último dia e quão fortes.',fr:'Combien de bouffées de chaleur au cours de la dernière journée et leur intensité.',pl:'Ile uderzeń gorąca było w ostatnim dniu i jak silne.',it:'Quante vampate hai avuto nell’ultimo giorno e quanto forti.',he:'כמה גלי חום היו ביום האחרון ובאיזו עוצמה.',ja:'前日のホットフラッシュの回数と強さ。',ko:'지난 하루 동안 안면홍조 횟수와 강도.'}
+  hf_badge:{ru:'🔥 Приливы и жар',uk:'🔥 Припливи і жар',en:'🔥 Hot flashes',es:'🔥 Sofocos',de:'🔥 Hitzewallungen',pt:'🔥 Ondas de calor',fr:'🔥 Bouffées de chaleur',pl:'🔥 Uderzenia gorąca',it:'🔥 Vampate',he:'🔥 גלי חום',ja:'🔥 ホットフラッシュ',ko:'🔥 안면홍조'},
+  hf_title:{ru:'Приливы и жар',uk:'Припливи і жар',en:'Hot flashes',es:'Sofocos',de:'Hitzewallungen',pt:'Ondas de calor',fr:'Bouffées de chaleur',pl:'Uderzenia gorąca',it:'Vampate di calore',he:'גלי חום',ja:'ホットフラッシュ',ko:'안면홍조'},
+  hf_desc:{ru:'Укажите, как проявлялись приливы за последние 24 часа.',uk:'Вкажіть, як проявлялися припливи за останні 24 години.',en:'Tell us how your hot flashes were over the past 24 hours.',es:'Indica cómo fueron tus sofocos en las últimas 24 horas.',de:'Gib an, wie deine Hitzewallungen in den letzten 24 Stunden waren.',pt:'Indique como foram suas ondas de calor nas últimas 24 horas.',fr:'Indiquez comment se sont manifestées vos bouffées de chaleur ces dernières 24 heures.',pl:'Wskaż, jak wyglądały uderzenia gorąca w ciągu ostatnich 24 godzin.',it:'Indica come sono state le tue vampate nelle ultime 24 ore.',he:'ציינו כיצד התבטאו גלי החום ב-24 השעות האחרונות.',ja:'過去24時間のホットフラッシュの様子を教えてください。',ko:'지난 24시간 동안 안면홍조가 어땠는지 알려주세요.'},
+  hf_int_h:{ru:'Интенсивность',uk:'Інтенсивність',en:'Intensity',es:'Intensidad',de:'Intensität',pt:'Intensidade',fr:'Intensité',pl:'Intensywność',it:'Intensità',he:'עוצמה',ja:'強さ',ko:'강도'},
+  hf_int_q:{ru:'Насколько сильным был самый сильный прилив?',uk:'Наскільки сильним був найсильніший приплив?',en:'How strong was your strongest hot flash?',es:'¿Qué tan fuerte fue el sofoco más intenso?',de:'Wie stark war die stärkste Hitzewallung?',pt:'Quão forte foi a onda de calor mais intensa?',fr:'Quelle était l’intensité de la bouffée la plus forte ?',pl:'Jak silne było najsilniejsze uderzenie gorąca?',it:'Quanto è stata forte la vampata più intensa?',he:'כמה חזק היה גל החום החזק ביותר?',ja:'最も強かったほてりはどのくらいでしたか？',ko:'가장 강했던 홍조는 어느 정도였나요?'},
+  io_mild:{ru:'Слабая',uk:'Слабка',en:'Mild',es:'Leve',de:'Leicht',pt:'Leve',fr:'Légère',pl:'Łagodna',it:'Lieve',he:'קלה',ja:'弱い',ko:'약함'},
+  io_mod:{ru:'Умеренная',uk:'Помірна',en:'Moderate',es:'Moderada',de:'Mäßig',pt:'Moderada',fr:'Modérée',pl:'Umiarkowana',it:'Moderata',he:'בינונית',ja:'中程度',ko:'보통'},
+  io_strong:{ru:'Сильная',uk:'Сильна',en:'Strong',es:'Fuerte',de:'Stark',pt:'Forte',fr:'Forte',pl:'Silna',it:'Forte',he:'חזקה',ja:'強い',ko:'강함'},
+  io_vstrong:{ru:'Очень сильная',uk:'Дуже сильна',en:'Very strong',es:'Muy fuerte',de:'Sehr stark',pt:'Muito forte',fr:'Très forte',pl:'Bardzo silna',it:'Molto forte',he:'חזקה מאוד',ja:'非常に強い',ko:'매우 강함'},
+  hf_freq_h:{ru:'Частота',uk:'Частота',en:'Frequency',es:'Frecuencia',de:'Häufigkeit',pt:'Frequência',fr:'Fréquence',pl:'Częstotliwość',it:'Frequenza',he:'תדירות',ja:'頻度',ko:'빈도'},
+  hf_freq_q:{ru:'Сколько приливов было за последние сутки?',uk:'Скільки припливів було за останню добу?',en:'How many hot flashes did you have in the past day?',es:'¿Cuántos sofocos tuviste en el último día?',de:'Wie viele Hitzewallungen hattest du am letzten Tag?',pt:'Quantas ondas de calor você teve no último dia?',fr:'Combien de bouffées de chaleur avez-vous eues ces dernières 24 heures ?',pl:'Ile uderzeń gorąca było w ciągu ostatniej doby?',it:'Quante vampate hai avuto nell’ultimo giorno?',he:'כמה גלי חום היו לך ביממה האחרונה?',ja:'過去1日でほてりは何回ありましたか？',ko:'지난 하루 동안 홍조가 몇 번 있었나요?'},
+  fo_12:{ru:'1–2 раза',uk:'1–2 рази',en:'1–2 times',es:'1–2 veces',de:'1–2 Mal',pt:'1–2 vezes',fr:'1–2 fois',pl:'1–2 razy',it:'1–2 volte',he:'1–2 פעמים',ja:'1〜2回',ko:'1–2회'},
+  fo_35:{ru:'3–5 раз',uk:'3–5 разів',en:'3–5 times',es:'3–5 veces',de:'3–5 Mal',pt:'3–5 vezes',fr:'3–5 fois',pl:'3–5 razy',it:'3–5 volte',he:'3–5 פעמים',ja:'3〜5回',ko:'3–5회'},
+  fo_610:{ru:'6–10 раз',uk:'6–10 разів',en:'6–10 times',es:'6–10 veces',de:'6–10 Mal',pt:'6–10 vezes',fr:'6–10 fois',pl:'6–10 razy',it:'6–10 volte',he:'6–10 פעמים',ja:'6〜10回',ko:'6–10회'},
+  fo_10p:{ru:'Более 10 раз',uk:'Більше 10 разів',en:'More than 10',es:'Más de 10',de:'Mehr als 10',pt:'Mais de 10',fr:'Plus de 10',pl:'Ponad 10 razy',it:'Più di 10',he:'יותר מ-10',ja:'10回以上',ko:'10회 이상'}
 };
 Object.keys(_HFL).forEach(function(k){Object.keys(_HFL[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_HFL[k][l];});});
 // Шаг бывш. «Пульс и симптомы» → «Самочувствие» (пульс ушёл в панель трекера, осталось субъективное)
@@ -4283,7 +4314,7 @@ function _renderDaily(){
   var box=document.getElementById('dailyList'); if(!box)return;
   var arr=[]; try{arr=JSON.parse(localStorage.getItem('vial_daily')||'[]')||[];}catch(e){}
   if(!arr.length){box.innerHTML='';return;}
-  var hf={none:'0',low:'1–2',mid:'3–5',high:'6+'};
+  var hf={none:'0',low:'1–2',mid:'3–5',high:'6–10',veryhigh:'10+'};
   box.innerHTML='<div style="font-family:\'Oswald\',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-lt);margin:6px 0 8px;">'+t('daily_title')+'</div>'
     +arr.slice(0,14).map(function(r){
       var p=[];
@@ -4611,13 +4642,7 @@ setLang(localStorage.getItem('vial_lang')||'en');
 loadProfile();
 try{_restoreAnswers();}catch(e){}  // «как вчера»: подтянуть ответы прошлой сессии
 
-// Hot flash detail toggle
-document.querySelectorAll('input[name="hf_count"]').forEach(r=>{
-  r.addEventListener('change',()=>{
-    const d=document.getElementById('hf-detail');
-    if(d)d.style.display=r.value==='none'?'none':'block';
-  });
-});
+// Приливы: интенсивность и частота — два независимых блока, всегда видны (тоггл больше не нужен)
 
 // ══ NAVIGATION ════════════════════════════════════════════
 function calcProfMetrics(){
@@ -4848,8 +4873,11 @@ const FLOW_DAILY=[2,4,8], FLOW_WEEKLY=[5,6,7,9,10,11];   // HRV(1) и Сон(3) 
 // Приборные поля (HRV, пульс, сон, температура) держим в DOM, но НЕ показываем шагами —
 // значения втекают из панели через applyImportedToSliders. Шаги остаются только субъективные.
 const _AUTO_STEP_METRIC={};
+// Приливы (step2) показываем только женщинам
+function _hfHidden(n){return n===2 && (typeof getRadio==='function') && getRadio('gender')==='male';}
 function _dailyFlow(){
   return FLOW_DAILY.filter(function(n){
+    if(_hfHidden(n))return false;
     var m=_AUTO_STEP_METRIC[n];
     return !(m && typeof importedData!=='undefined' && importedData[m]!=null);
   });
@@ -4871,7 +4899,7 @@ const FLOW_ALL=[0,2,4,5,6,7,8,9,10,11];   // профиль + субъектив
 // Профиль (возраст/рост/вес) — разовый онбординг: заполнен → убираем из стопки навсегда,
 // данные живут в «Моя карточка», правка оттуда (кнопка «Изменить» → _fixMetric(0)).
 function _profileDone(){ try{var p=JSON.parse(localStorage.getItem('vial_profile')||'{}')||{}; return !!(p.age&&p.height&&p.weight);}catch(e){return false;} }
-function _allFlow(){ return FLOW_ALL.filter(function(n){ if(n===0&&_profileDone())return false; var m=_AUTO_STEP_METRIC[n]; return !(m && typeof importedData!=='undefined' && importedData[m]!=null); }); }
+function _allFlow(){ return FLOW_ALL.filter(function(n){ if(n===0&&_profileDone())return false; if(_hfHidden(n))return false; var m=_AUTO_STEP_METRIC[n]; return !(m && typeof importedData!=='undefined' && importedData[m]!=null); }); }
 function showAll(){ _showFlow(_allFlow()); if(typeof renderGadgetPanel==='function')renderGadgetPanel(); _flowFooter(t('show_result'), function(){ if(typeof _saveDaily==='function')_saveDaily(); document.body.classList.remove('flow-mode'); _hideFlowFooter(); showResults(); }); }
 // Сворачивание тяжёлых групп вариантов в «выпадающее окошко» (видно вопрос+выбранное, разворот по тапу).
 // Сворачиваем только группы с ≥6 вариантами или мультивыбором; слайдеры и короткие группы — открыты.
@@ -5593,8 +5621,9 @@ function _showResultsInner(){
       bmi:bioClamp('bio-bmi',10,70),
       bioage:bioClamp('bio-bioage',15,120),
     },
-    hf_count:getRadio('hf_count'),
-    hf_intensity:getRadio('hf_intensity'),
+    // 5-й уровень нормализуем к существующим кодам движка: veryhigh→high, severe→intense (логика оценки не меняется)
+    hf_count:(function(v){return v==='veryhigh'?'high':v;})(getRadio('hf_count')),
+    hf_intensity:(function(v){return v==='severe'?'intense':v;})(getRadio('hf_intensity')),
     resp_rate:+document.getElementById('resp_rate').value,
     mood:_mapMood(+getRadio('mood')||7),
     anxiety:+document.getElementById('anxiety').value,
