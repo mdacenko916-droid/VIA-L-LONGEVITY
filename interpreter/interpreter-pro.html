@@ -4711,8 +4711,8 @@ function renderGadgetPanel(){
   const wrap=document.getElementById('gadget-panel-wrap'),box=document.getElementById('gadget-panel');
   if(!wrap||!box)return;
   const D=(typeof importedData!=='undefined')?importedData:{};
-  const src=_autoSource()?srcName(_autoSource()):null;
-  if(!src){wrap.style.display='none';return;}
+  const src=_autoSource()?srcName(_autoSource()):null;   // галочку «✓ устройство» ставим только тем, что реально пришли с гаджета
+  // Панель присутствует всегда — это поверхность ввода: что пусто, клиент дополняет вручную (с гаджетом или без).
   const keys=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','vo2','energy','readiness'];
   box.innerHTML=keys.map(function(k){
     const m=_GMETA[k], got=D[k]!=null&&!isNaN(D[k]), v=got?m.f(D[k]):'—';
@@ -4720,7 +4720,7 @@ function renderGadgetPanel(){
       +'<div style="position:absolute;top:4px;right:6px;font-size:10px;color:var(--t3);">✎</div>'
       +'<div class="gp-val'+(got?'':' miss')+'">'+v+(got&&m.u?'<span class="gp-unit"> '+m.u+'</span>':'')+'</div>'
       +'<div class="gp-lbl">'+t('glab_'+k)+'</div>'
-      +(got?'<div class="gp-src">✓ '+src+'</div>':'')
+      +(got&&src?'<div class="gp-src">✓ '+src+'</div>':'')
       +'</div>';
   }).join('');
   wrap.style.display='block';
