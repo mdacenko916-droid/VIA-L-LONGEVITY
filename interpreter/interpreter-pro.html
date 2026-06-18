@@ -4196,9 +4196,9 @@ function renderCard(){
     if(P.cyclelen)html+=_cRow(t('cyc_len'),P.cyclelen);
     if(!P.cycle_status&&!P.lastperiod&&!P.cyclelen)html+='<div style="color:var(--t3);font-size:13px;padding:10px 2px;">'+t('card_empty')+'</div>';
   }
-  // Данные с трекера — 9 окошек, всегда видны; любое можно дополнить вручную (тап по окошку)
+  // Данные с трекера — 8 приборных окошек (energy убрана — субъективна, живёт в шаге «Образ жизни»)
   var D=(typeof importedData!=='undefined'&&importedData)?importedData:{};
-  var _gkeys=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','vo2','energy','readiness'];
+  var _gkeys=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','vo2','readiness'];
   // если в текущем импорте пусто — берём последний дневной снимок, чтобы данные оставались в карточке после перезагрузки
   if(!_gkeys.some(function(k){return D[k]!=null;})){
     try{var _da=JSON.parse(localStorage.getItem('vial_daily')||'[]')||[];
@@ -4210,7 +4210,7 @@ function renderCard(){
   }
   var _gc=_gkeys.filter(function(k){return D[k]!=null;}).length;
   // Карточка = архив: показатели подтянулись из панели при «Показать результат». Здесь только просмотр (read-only).
-  html+=_cSec(t('card_tracker')+' · '+_gc+'/9');
+  html+=_cSec(t('card_tracker')+' · '+_gc+'/8');
   html+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;">';
   _gkeys.forEach(function(k){
     var m=_GMETA[k], has=D[k]!=null, v=has?m.f(D[k]):'—';
@@ -4254,7 +4254,8 @@ function _saveDaily(){
       day:new Date().toISOString().slice(0,10), ts:Date.now(),
       hrv:importedData.hrv, rhr:importedData.rhr, sleepHours:importedData.sleepHours,
       deepMin:importedData.deepMin, spo2:importedData.spo2, tempDev:importedData.tempDev,
-      vo2:importedData.vo2, energy:importedData.energy, readiness:importedData.readiness,
+      vo2:importedData.vo2, readiness:importedData.readiness,
+      energy:(document.getElementById('energy')?+document.getElementById('energy').value:null),   // субъективная бодрость за вчера, не прибор
       hf_count:getRadio('hf_count'), hf_intensity:getRadio('hf_intensity')
     };
     var arr=[]; try{arr=JSON.parse(localStorage.getItem('vial_daily')||'[]')||[];}catch(e){}
@@ -4716,7 +4717,7 @@ function renderGadgetPanel(){
   const D=(typeof importedData!=='undefined')?importedData:{};
   const src=_autoSource()?srcName(_autoSource()):null;   // галочку «✓ устройство» ставим только тем, что реально пришли с гаджета
   // Панель присутствует всегда — это поверхность ввода: что пусто, клиент дополняет вручную (с гаджетом или без).
-  const keys=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','vo2','energy','readiness'];
+  const keys=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','vo2','readiness'];   // energy убрана — субъективна (см. шаг «Образ жизни»); прибор её даёт по-разному/не у всех
   box.innerHTML=keys.map(function(k){
     const m=_GMETA[k], got=D[k]!=null&&!isNaN(D[k]), v=got?m.f(D[k]):'—';
     return '<div class="gp-tile '+(got?'got':'miss')+'" onclick="_gEdit(\''+k+'\',this)" style="position:relative;cursor:pointer;">'
@@ -6029,7 +6030,7 @@ function closeImport(skip){document.getElementById('importPanel').classList.remo
 function applyImportedToSliders(){
   if(importedData.hrv!=null){const el=document.getElementById('hrv');el.value=Math.min(120,Math.max(10,Math.round(importedData.hrv)));ouraSlider('hrv',+el.value);}
   if(importedData.rhr!=null){const el=document.getElementById('rhr');el.value=Math.min(110,Math.max(40,Math.round(importedData.rhr)));ouraSlider('rhr',+el.value);}
-  if(importedData.energy!=null){const el=document.getElementById('energy');el.value=Math.min(10,Math.max(1,Math.round(importedData.energy)));ouraSlider('en',+el.value);}
+  // energy НЕ подтягиваем с прибора — это субъективный шаг «Образ жизни» (часто device-energy = просто шаги)
   if(importedData.sleepHours!=null){const h=importedData.sleepHours,sq=h>=7.5?8:h>=6?6:h>=5?4:2,el=document.getElementById('sleep_qual');el.value=sq;ouraSlider('sq',sq);if(importedData.deepMin!=null){const d=importedData.deepMin;if(d>=90)document.getElementById('dp1').checked=true;else if(d>=30)document.getElementById('dp2').checked=true;else document.getElementById('dp3').checked=true;}}
   if(importedData.tempDev!=null){const d=importedData.tempDev;if(Math.abs(d)<=0.1)document.getElementById('tp1').checked=true;else if(d>0.1&&d<0.5)document.getElementById('tp2').checked=true;else if(d>=0.5)document.getElementById('tp3').checked=true;else document.getElementById('tp4').checked=true;}
   showImportBanner();
@@ -6142,7 +6143,7 @@ function renderPreview(gridId,data){
   el.innerHTML=Object.keys(labels).filter(k=>data[k]!=null).map(k=>`<div class="preview-metric"><div class="preview-val">${typeof data[k]==='number'?data[k].toFixed(k==='sleepHours'||k==='tempDev'?1:0):data[k]}</div><div class="preview-lbl">${labels[k]} ${units[k]}</div></div>`).join('');
 }
 function setStatus(id,type,msg){const el=document.getElementById(id);if(!el)return;el.className='import-status '+type;el.textContent=msg;}
-function updateImportSummary(){const s=document.getElementById('import-summary'),g=document.getElementById('import-summary-grid');const gc=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','vo2','energy','readiness'].filter(k=>importedData[k]!=null).length;const ca=document.getElementById('imp-cnt-all'),cf=document.getElementById('imp-cnt-full');if(ca)ca.textContent=gc?gc+'/9':'';if(cf)cf.textContent=gc?gc+'/9':'';if(s&&g){const count=Object.keys(importedData).filter(k=>importedData[k]!=null&&k!=='source').length;if(count>0){s.style.display='block';renderPreview('import-summary-grid',importedData);}}if(typeof updateDeviceBanners==='function')updateDeviceBanners();if(typeof renderGadgetPanel==='function')renderGadgetPanel();}
+function updateImportSummary(){const s=document.getElementById('import-summary'),g=document.getElementById('import-summary-grid');const gc=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','vo2','readiness'].filter(k=>importedData[k]!=null).length;const ca=document.getElementById('imp-cnt-all'),cf=document.getElementById('imp-cnt-full');if(ca)ca.textContent=gc?gc+'/8':'';if(cf)cf.textContent=gc?gc+'/8':'';if(s&&g){const count=Object.keys(importedData).filter(k=>importedData[k]!=null&&k!=='source').length;if(count>0){s.style.display='block';renderPreview('import-summary-grid',importedData);}}if(typeof updateDeviceBanners==='function')updateDeviceBanners();if(typeof renderGadgetPanel==='function')renderGadgetPanel();}
 function parseSamsungCSV(text){
   const out={};
   try{
