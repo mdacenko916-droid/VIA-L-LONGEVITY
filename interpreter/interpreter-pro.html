@@ -2172,11 +2172,12 @@ body.flow-mode #scroll-area{padding-bottom:150px;}
   <div class="step" id="step2">
     <div class="card">
       <div class="card-accent"></div>
-      <div class="step-badge" data-t="s1_badge">02 / 14 · Температура</div>
-      <h2 class="step-title" data-t="s1_title">Ночное отклонение температуры</h2>
-      <p class="step-desc" data-t="s1_desc">Устройство показывает отклонение от базовой линии. Нас интересует прошлая ночь.</p>
+      <div class="step-badge" data-t="hf_badge">🔥 Приливы</div>
+      <h2 class="step-title" data-t="hf_title">Приливы</h2>
+      <p class="step-desc" data-t="hf_desc">Сколько приливов было за прошедший день и насколько сильные.</p>
       <div class="dev-banner" id="dev-banner-2" style="display:none;align-items:center;gap:8px;margin:0 0 14px;padding:9px 13px;border-radius:11px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);font-size:12.5px;color:#4ADE80;"></div>
-      <div class="input-group">
+      <!-- Температура ушла в панель «Данные с трекера» (приборная метрика). Поле скрыто, но в DOM — значение втекает из панели для разбора. -->
+      <div class="input-group" id="temp-group" style="display:none;">
         <label data-t="s1_l1">Отклонение прошлой ночью</label>
         <div class="chips">
           <div class="chip"><input type="radio" name="temp" id="tp1" value="normal" checked><label for="tp1" data-t="temp_norm">В норме (±0.1°C)</label></div>
@@ -2187,7 +2188,6 @@ body.flow-mode #scroll-area{padding-bottom:150px;}
         </div>
       </div>
       <div id="hf-section">
-      <div class="divider"></div>
       <div class="input-group">
         <label data-t="s1_hf_count">Приливы за день</label>
         <div class="chips">
@@ -2315,11 +2315,12 @@ body.flow-mode #scroll-area{padding-bottom:150px;}
   <div class="step" id="step4">
     <div class="card">
       <div class="card-accent"></div>
-      <div class="step-badge" data-t="s3_badge">04 / 14 · Пульс и симптомы</div>
-      <h2 class="step-title" data-t="s3_title">Пульс покоя и самочувствие</h2>
-      <p class="step-desc" data-t="s3_desc">Пульс покоя и симптомы, которые вы замечаете сегодня.</p>
+      <div class="step-badge" data-t="wb_badge">💗 Самочувствие</div>
+      <h2 class="step-title" data-t="wb_title">Самочувствие</h2>
+      <p class="step-desc" data-t="wb_desc">Симптомы, которые замечаете сегодня.</p>
       <div class="dev-banner" id="dev-banner-4" style="display:none;align-items:center;gap:8px;margin:0 0 14px;padding:9px 13px;border-radius:11px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);font-size:12.5px;color:#4ADE80;"></div>
-      <div class="input-group">
+      <!-- Пульс ушёл в панель «Данные с трекера». Ползунок и «по сравнению с обычным» скрыты, но в DOM — значения для разбора. -->
+      <div class="input-group" id="rhr-group" style="display:none;">
         <label data-t="s3_l1">Пульс покоя (RHR)</label>
         <div class="oura-slider-wrap">
           <div class="hrv-vital">
@@ -2350,7 +2351,7 @@ body.flow-mode #scroll-area{padding-bottom:150px;}
           </div>
         </div>
       </div>
-      <div class="input-group">
+      <div class="input-group" id="rhr-comp-group" style="display:none;">
         <label data-t="s3_l2">По сравнению с обычным</label>
         <div class="chips">
           <div class="chip"><input type="radio" name="rhr_comp" id="rc1" value="normal" checked><label for="rc1" data-t="rhr_norm">Как обычно</label></div>
@@ -2359,7 +2360,6 @@ body.flow-mode #scroll-area{padding-bottom:150px;}
           <div class="chip"><input type="radio" name="rhr_comp" id="rc4" value="low"><label for="rc4" data-t="rhr_low">Ниже обычного</label></div>
         </div>
       </div>
-      <div class="divider"></div>
       <div class="input-group">
         <label data-t="s3_l3">Что замечаете сейчас</label>
         <div class="chips">
@@ -3932,6 +3932,20 @@ const _GHINT={ru:'Нажмите на любой показатель, чтоб�
 Object.keys(_GHINT).forEach(function(l){if(!T[l])T[l]={};T[l]['gp_edit_hint']=_GHINT[l];});
 const _GONCE={ru:'🔁 Разбор — раз в день. Показатели с трекера за прошедшую ночь.',uk:'🔁 Розбір — раз на день. Показники з трекера за минулу ніч.',en:'🔁 Run the analysis once a day. Tracker data is from the past night.',es:'🔁 Haz el análisis una vez al día. Los datos del tracker son de la noche anterior.',de:'🔁 Mach die Auswertung einmal täglich. Tracker-Daten stammen aus der letzten Nacht.',pt:'🔁 Faça a análise uma vez por dia. Os dados do tracker são da noite anterior.',fr:'🔁 Faites l’analyse une fois par jour. Les données du tracker datent de la nuit précédente.',pl:'🔁 Rób analizę raz dziennie. Dane z trackera są z minionej nocy.',it:'🔁 Fai l’analisi una volta al giorno. I dati del tracker sono della notte precedente.',he:'🔁 בצעו את הניתוח פעם ביום. נתוני הטרקר הם מהלילה האחרון.',ja:'🔁 分析は1日1回。トラッカーのデータは前夜のものです。',ko:'🔁 분석은 하루 한 번. 트래커 데이터는 지난밤 기준입니다.'};
 Object.keys(_GONCE).forEach(function(l){if(!T[l])T[l]={};T[l]['gp_once']=_GONCE[l];});
+// Шаг бывш. «Температура» переименован в «Приливы» (поле температуры ушло в панель трекера, осталось субъективное)
+const _HFL={
+  hf_badge:{ru:'🔥 Приливы',uk:'🔥 Припливи',en:'🔥 Hot flashes',es:'🔥 Sofocos',de:'🔥 Hitzewallungen',pt:'🔥 Ondas de calor',fr:'🔥 Bouffées de chaleur',pl:'🔥 Uderzenia gorąca',it:'🔥 Vampate',he:'🔥 גלי חום',ja:'🔥 ホットフラッシュ',ko:'🔥 안면홍조'},
+  hf_title:{ru:'Приливы',uk:'Припливи',en:'Hot flashes',es:'Sofocos',de:'Hitzewallungen',pt:'Ondas de calor',fr:'Bouffées de chaleur',pl:'Uderzenia gorąca',it:'Vampate di calore',he:'גלי חום',ja:'ホットフラッシュ',ko:'안면홍조'},
+  hf_desc:{ru:'Сколько приливов было за прошедший день и насколько сильные.',uk:'Скільки припливів було за минулий день і наскільки сильні.',en:'How many hot flashes you had over the past day and how strong.',es:'Cuántos sofocos tuviste en el último día y qué tan intensos.',de:'Wie viele Hitzewallungen du am letzten Tag hattest und wie stark.',pt:'Quantas ondas de calor você teve no último dia e quão fortes.',fr:'Combien de bouffées de chaleur au cours de la dernière journée et leur intensité.',pl:'Ile uderzeń gorąca było w ostatnim dniu i jak silne.',it:'Quante vampate hai avuto nell’ultimo giorno e quanto forti.',he:'כמה גלי חום היו ביום האחרון ובאיזו עוצמה.',ja:'前日のホットフラッシュの回数と強さ。',ko:'지난 하루 동안 안면홍조 횟수와 강도.'}
+};
+Object.keys(_HFL).forEach(function(k){Object.keys(_HFL[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_HFL[k][l];});});
+// Шаг бывш. «Пульс и симптомы» → «Самочувствие» (пульс ушёл в панель трекера, осталось субъективное)
+const _WBL={
+  wb_badge:{ru:'💗 Самочувствие',uk:'💗 Самопочуття',en:'💗 Wellbeing',es:'💗 Bienestar',de:'💗 Befinden',pt:'💗 Bem-estar',fr:'💗 Bien-être',pl:'💗 Samopoczucie',it:'💗 Benessere',he:'💗 הרגשה',ja:'💗 体調',ko:'💗 컨디션'},
+  wb_title:{ru:'Самочувствие',uk:'Самопочуття',en:'Wellbeing',es:'Bienestar',de:'Befinden',pt:'Bem-estar',fr:'Bien-être',pl:'Samopoczucie',it:'Benessere',he:'הרגשה כללית',ja:'体調',ko:'컨디션'},
+  wb_desc:{ru:'Симптомы, которые замечаете сегодня.',uk:'Симптоми, які помічаєте сьогодні.',en:'Symptoms you notice today.',es:'Síntomas que notas hoy.',de:'Symptome, die du heute bemerkst.',pt:'Sintomas que você nota hoje.',fr:'Symptômes que vous remarquez aujourd’hui.',pl:'Objawy, które zauważasz dziś.',it:'Sintomi che noti oggi.',he:'תסמינים שאתה מבחין בהם היום.',ja:'今日感じる症状。',ko:'오늘 느끼는 증상.'}
+};
+Object.keys(_WBL).forEach(function(k){Object.keys(_WBL[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_WBL[k][l];});});
 // Диапазоны для ручного ввода показателей в карточке (clamp + единица + формат)
 const _GMETA={
   hrv:{min:10,max:200,step:1,u:'ms',f:function(v){return Math.round(v);}},
@@ -4689,9 +4703,10 @@ function _autoSource(){var d=(typeof importedData!=='undefined')?importedData:nu
 function updateDeviceBanners(){
   const src=_autoSource();
   const D=(typeof importedData!=='undefined')?importedData:{};
-  // какой показатель отвечает за каждый приборный шаг (HRV/температура/сон/пульс)
+  // Приборные шаги убраны из показа — индикатор источника несёт панель «Данные с трекера».
+  // Per-step баннеры отключены (цикл пуст); элементы dev-banner-* остаются скрытыми по умолчанию.
   const METRIC={1:'hrv',2:'tempDev',3:'sleepHours',4:'rhr'};
-  [1,2,3,4].forEach(function(n){
+  [].forEach(function(n){
     const b=document.getElementById('dev-banner-'+n);if(!b)return;
     if(!src){b.style.display='none';return;}
     const got=D[METRIC[n]]!=null;
@@ -4829,11 +4844,10 @@ function loadProfile(){
 }
 function goFromProfile(){ saveProfile(); showAll(); }
 // ── Одностраничные потоки «День» / «Неделя»: шаги показываем стопкой на одной прокрутке ──
-const FLOW_DAILY=[1,2,4,8], FLOW_WEEKLY=[5,6,7,9,10,11];   // Сон (3) убран — закрывает гаджет
-// Минимум ручного в день: шаг, который ЦЕЛИКОМ закрывает трекер, в ежедневном потоке пропускаем
-// (данные уже в панели «Данные с гаджета»). Сейчас это только чисто приборный HRV (step1).
-// Смешанные шаги (температура+приливы, пульс+симптомы) НЕ трогаем — там есть субъективное, прибор его не меряет.
-const _AUTO_STEP_METRIC={1:'hrv'};
+const FLOW_DAILY=[2,4,8], FLOW_WEEKLY=[5,6,7,9,10,11];   // HRV(1) и Сон(3) убраны из показа — целиком приборные, ввод в панели «Данные с трекера»
+// Приборные поля (HRV, пульс, сон, температура) держим в DOM, но НЕ показываем шагами —
+// значения втекают из панели через applyImportedToSliders. Шаги остаются только субъективные.
+const _AUTO_STEP_METRIC={};
 function _dailyFlow(){
   return FLOW_DAILY.filter(function(n){
     var m=_AUTO_STEP_METRIC[n];
