@@ -2631,7 +2631,7 @@ body.flow-mode #scroll-area{padding-bottom:150px;}
       <h2 class="step-title" data-t="s10_title">Стрес і кортизол</h2>
       <p class="step-desc" style="border-color:rgba(239,68,68,.3);" data-t="s10_desc">Хронічний стрес — один з головних факторів гормонального дисбалансу.</p>
       <div class="input-group">
-        <label data-t="s10_l1">Рівень хронічного стресу (останні 3 місяці)</label>
+        <label data-t="str_q1">Уровень стресса за последние 2 недели</label>
         <div class="chips">
           <div class="chip"><input type="radio" name="chronic_stress" id="cst1" value="low" checked><label for="cst1" data-t="cst_low">Низький</label></div>
           <div class="chip"><input type="radio" name="chronic_stress" id="cst2" value="moderate"><label for="cst2" data-t="cst_moderate">Помірний</label></div>
@@ -2640,7 +2640,7 @@ body.flow-mode #scroll-area{padding-bottom:150px;}
         </div>
       </div>
       <div class="input-group">
-        <label data-t="s10_l2">Симптоми високого кортизолу</label>
+        <label data-t="str_q2">Какие из этих состояний вы замечаете у себя? (за последние 2 недели)</label>
         <div class="chips">
           <div class="chip"><input type="checkbox" id="cort2" value="insomnia"><label for="cort2" data-t="cort_insomnia">Важко заснути — думки не вимикаються</label></div>
           <div class="chip"><input type="checkbox" id="cort3" value="afternoon_crash"><label for="cort3" data-t="cort_crash">Спад після 14:00</label></div>
@@ -3976,6 +3976,12 @@ const _LS={
 Object.keys(_LS).forEach(function(k){Object.keys(_LS[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_LS[k][l];});});
 const _MEDO={meds_other_ph:{ru:'Впишите препарат и дозировку',uk:'Впишіть препарат і дозування',en:'Enter medication and dosage',es:'Escribe el medicamento y la dosis',de:'Medikament und Dosierung eingeben',pt:'Digite o medicamento e a dose',fr:'Indiquez le médicament et la dose',pl:'Wpisz lek i dawkę',it:'Inserisci farmaco e dose',he:'הזינו תרופה ומינון',ja:'薬剤名と用量を入力',ko:'약물과 용량을 입력하세요'}};
 Object.keys(_MEDO).forEach(function(k){Object.keys(_MEDO[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_MEDO[k][l];});});
+// Стресс/кортизол — рамка «за последние 2 недели»
+const _STR={
+  str_q1:{ru:'Уровень стресса за последние 2 недели',uk:'Рівень стресу за останні 2 тижні',en:'Stress level over the past 2 weeks',es:'Nivel de estrés en las últimas 2 semanas',de:'Stresslevel der letzten 2 Wochen',pt:'Nível de estresse nas últimas 2 semanas',fr:'Niveau de stress ces 2 dernières semaines',pl:'Poziom stresu w ciągu ostatnich 2 tygodni',it:'Livello di stress nelle ultime 2 settimane',he:'רמת הלחץ בשבועיים האחרונים',ja:'過去2週間のストレスレベル',ko:'지난 2주간 스트레스 수준'},
+  str_q2:{ru:'Какие из этих состояний вы замечаете у себя? (за последние 2 недели)',uk:'Які з цих станів ви помічаєте у себе? (за останні 2 тижні)',en:'Which of these do you notice in yourself? (past 2 weeks)',es:'¿Cuáles de estos estados notas en ti? (últimas 2 semanas)',de:'Welche dieser Zustände bemerkst du bei dir? (letzte 2 Wochen)',pt:'Quais destes estados você nota em si? (últimas 2 semanas)',fr:'Lesquels de ces états remarquez-vous chez vous ? (2 dernières semaines)',pl:'Które z tych stanów u siebie zauważasz? (ostatnie 2 tygodnie)',it:'Quali di questi stati noti in te? (ultime 2 settimane)',he:'אילו מהמצבים האלה את מזהה אצלך? (שבועיים אחרונים)',ja:'これらのうち、自分に当てはまるものは？（過去2週間）',ko:'다음 중 자신에게 해당하는 것은? (지난 2주간)'}
+};
+Object.keys(_STR).forEach(function(k){Object.keys(_STR[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_STR[k][l];});});
 // Диапазоны для ручного ввода показателей в карточке (clamp + единица + формат)
 const _GMETA={
   hrv:{min:10,max:200,step:1,u:'ms',f:function(v){return Math.round(v);}},
@@ -4951,8 +4957,29 @@ const FLOW_ALL=[0,2,4,5,6,7,8,9,10,11];   // профиль + субъектив
 // Профиль (возраст/рост/вес) — разовый онбординг: заполнен → убираем из стопки навсегда,
 // данные живут в «Моя карточка», правка оттуда (кнопка «Изменить» → _fixMetric(0)).
 function _profileDone(){ try{var p=JSON.parse(localStorage.getItem('vial_profile')||'{}')||{}; return !!(p.age&&p.height&&p.weight);}catch(e){return false;} }
-// Питание (step7) — базовая анкета: как и профиль, спрашиваем только первый раз, потом живёт в карточке
-function _allFlow(){ return FLOW_ALL.filter(function(n){ if((n===0||n===7||n===9)&&_profileDone())return false; if(_hfHidden(n))return false; var m=_AUTO_STEP_METRIC[n]; return !(m && typeof importedData!=='undefined' && importedData[m]!=null); }); }
+// ── КАДЕНС блоков (что когда показывать) ──────────────────────────────────────
+// base = только первичный проход (потом живёт в карточке); daily = каждый день;
+// weekly = раз в неделю; biweekly = раз в 2 недели. Первый проход = всё «due», показываем сразу.
+const STEP_CADENCE={0:'base',2:'daily',4:'daily',5:'daily',6:'daily',7:'base',8:'weekly',9:'base',10:'biweekly',11:'weekly'};
+function _stepLastMap(){try{return JSON.parse(localStorage.getItem('vial_steplast')||'{}')||{};}catch(e){return {};}}
+function _stepDue(n){
+  var c=STEP_CADENCE[n];
+  if(c==='base')return !_profileDone();
+  if(c==='weekly'||c==='biweekly'){
+    var last=_stepLastMap()[n]; if(!last)return true;
+    return (Date.now()-last) >= (c==='biweekly'?14:7)*86400000;
+  }
+  return true;   // daily и без каденса — всегда
+}
+// После завершённой сессии отмечаем периодические блоки, которые были показаны (due), как «сделано сейчас».
+function _markPeriodicDone(){
+  try{var map=_stepLastMap(),ch=false;
+    Object.keys(STEP_CADENCE).forEach(function(n){var c=STEP_CADENCE[n];
+      if((c==='weekly'||c==='biweekly')&&_stepDue(+n)){map[n]=Date.now();ch=true;}});
+    if(ch)localStorage.setItem('vial_steplast',JSON.stringify(map));
+  }catch(e){}
+}
+function _allFlow(){ return FLOW_ALL.filter(function(n){ if(!_stepDue(n))return false; if(_hfHidden(n))return false; var m=_AUTO_STEP_METRIC[n]; return !(m && typeof importedData!=='undefined' && importedData[m]!=null); }); }
 function showAll(){ _showFlow(_allFlow()); if(typeof renderGadgetPanel==='function')renderGadgetPanel(); _flowFooter(t('show_result'), function(){ if(typeof _saveDaily==='function')_saveDaily(); document.body.classList.remove('flow-mode'); _hideFlowFooter(); showResults(); }); }
 // Сворачивание тяжёлых групп вариантов в «выпадающее окошко» (видно вопрос+выбранное, разворот по тапу).
 // Сворачиваем только группы с ≥6 вариантами или мультивыбором; слайдеры и короткие группы — открыты.
@@ -5579,6 +5606,7 @@ function renderProtocol24(data, score){
 // ══ RESULTS ENGINE ════════════════════════════════════════
 function showResults(){
   if(typeof saveProfile==='function')saveProfile();
+  if(typeof _markPeriodicDone==='function')_markPeriodicDone();  // недельные/двухнедельные блоки отмечаем выполненными
   if(typeof _snapshotAnswers==='function')_snapshotAnswers();  // «как вчера»: сохранить ответы для следующего раза
   try {
     _showResultsInner();
