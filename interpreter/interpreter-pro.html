@@ -2692,37 +2692,6 @@ body.flow-mode #scroll-area{padding-bottom:150px;}
       <div class="step-badge" data-t="s14_badge">14 / 14 · Динаміка</div>
       <h2 class="step-title" data-t="s14_title">Самопочуття за останній тиждень</h2>
       <p class="step-desc" data-t="s14_desc">Порівняйте з минулим тижнем — це виявить тренд.</p>
-      <div class="divider"></div>
-      <div class="input-group">
-        <label data-t="s3_mood">Настроение сегодня</label>
-        <div class="chips">
-          <div class="chip"><input type="radio" name="mood" id="mo1" value="1"><label for="mo1">1</label></div>
-          <div class="chip"><input type="radio" name="mood" id="mo2" value="2"><label for="mo2">2</label></div>
-          <div class="chip"><input type="radio" name="mood" id="mo3" value="3"><label for="mo3">3</label></div>
-          <div class="chip"><input type="radio" name="mood" id="mo4" value="4"><label for="mo4">4</label></div>
-          <div class="chip"><input type="radio" name="mood" id="mo5" value="5"><label for="mo5">5</label></div>
-          <div class="chip"><input type="radio" name="mood" id="mo6" value="6"><label for="mo6">6</label></div>
-          <div class="chip"><input type="radio" name="mood" id="mo7" value="7" checked><label for="mo7">7</label></div>
-          <div class="chip"><input type="radio" name="mood" id="mo8" value="8"><label for="mo8">8</label></div>
-          <div class="chip"><input type="radio" name="mood" id="mo9" value="9"><label for="mo9">9</label></div>
-          <div class="chip"><input type="radio" name="mood" id="mo10" value="10"><label for="mo10">10</label></div>
-        </div>
-      </div>
-      <div class="input-group">
-        <label data-t="s3_irr">Раздражительность</label>
-        <div class="chips">
-          <div class="chip"><input type="radio" name="irritability" id="ir1" value="1" checked><label for="ir1">1</label></div>
-          <div class="chip"><input type="radio" name="irritability" id="ir2" value="2"><label for="ir2">2</label></div>
-          <div class="chip"><input type="radio" name="irritability" id="ir3" value="3"><label for="ir3">3</label></div>
-          <div class="chip"><input type="radio" name="irritability" id="ir4" value="4"><label for="ir4">4</label></div>
-          <div class="chip"><input type="radio" name="irritability" id="ir5" value="5"><label for="ir5">5</label></div>
-          <div class="chip"><input type="radio" name="irritability" id="ir6" value="6"><label for="ir6">6</label></div>
-          <div class="chip"><input type="radio" name="irritability" id="ir7" value="7"><label for="ir7">7</label></div>
-          <div class="chip"><input type="radio" name="irritability" id="ir8" value="8"><label for="ir8">8</label></div>
-          <div class="chip"><input type="radio" name="irritability" id="ir9" value="9"><label for="ir9">9</label></div>
-          <div class="chip"><input type="radio" name="irritability" id="ir10" value="10"><label for="ir10">10</label></div>
-        </div>
-      </div>
       <div class="input-group">
         <label data-t="s14_l1">Загальна динаміка</label>
         <div class="chips">
@@ -4349,7 +4318,6 @@ function _saveDaily(){
       energy:(document.getElementById('energy')?+document.getElementById('energy').value:null),   // субъективная бодрость за вчера, не прибор
       hf_count:getRadio('hf_count'), hf_intensity:getRadio('hf_intensity'),
       // ежедневные субъективные блоки — копим по дням для недельного разбора из карточки
-      symptoms:getChecked(['sym1','sym2','sym3','sym4','sym5','sym6','sym7','sym8','sym9']),
       memory:getRadio('memory'), fog:getRadio('fog'),
       stress:(document.getElementById('stress')?+document.getElementById('stress').value:null), alc:getRadio('alc')
     };
@@ -4941,7 +4909,7 @@ function _toggleMedsOther(){
   if(show&&typeof t==='function')el.placeholder=t('meds_other_ph');
 }
 // ── Одностраничные потоки «День» / «Неделя»: шаги показываем стопкой на одной прокрутке ──
-const FLOW_DAILY=[2,4,5,6], FLOW_WEEKLY=[8,10,11];   // ежедневно: приливы(2)/самочувствие(4)/образ жизни(5)/когниция(6); недельно: активность(8)/стресс(10)/динамика(11); приборные HRV(1)/Сон(3); первичный проход: Питание(7)+Добавки(9)
+const FLOW_DAILY=[2,5,6], FLOW_WEEKLY=[8,10,11];   // ежедневно: приливы(2)/образ жизни(5)/когниция(6); недельно: активность(8)/стресс(10)/динамика(11); приборные HRV(1)/Сон(3); первичный проход: Питание(7)+Добавки(9); «Самочувствие»(4) удалён
 // Приборные поля (HRV, пульс, сон, температура) держим в DOM, но НЕ показываем шагами —
 // значения втекают из панели через applyImportedToSliders. Шаги остаются только субъективные.
 const _AUTO_STEP_METRIC={};
@@ -4967,14 +4935,14 @@ function showDaily(){ _showFlow(_dailyFlow()); if(typeof renderGadgetPanel==='fu
 function showWeekly(){ if(typeof _saveDaily==='function')_saveDaily(); _showFlow(FLOW_WEEKLY); _flowFooter(t('show_result'), function(){ document.body.classList.remove('flow-mode'); _hideFlowFooter(); showResults(); }); }
 // Структура 1 (первый вход): ВСЕ блоки одной стопкой на одной прокрутке, без перехода страниц.
 // Объективный шаг, целиком закрытый трекером (пока HRV), пропускаем — он уже в панели гаджета.
-const FLOW_ALL=[0,2,4,5,6,7,8,9,10,11];   // профиль + субъективные блоки; объективные (HRV/сон) — в окошке гаджета
+const FLOW_ALL=[0,2,5,6,7,8,9,10,11];   // профиль + субъективные блоки; объективные (HRV/сон) — в окошке гаджета; «Самочувствие»(4) удалён
 // Профиль (возраст/рост/вес) — разовый онбординг: заполнен → убираем из стопки навсегда,
 // данные живут в «Моя карточка», правка оттуда (кнопка «Изменить» → _fixMetric(0)).
 function _profileDone(){ try{var p=JSON.parse(localStorage.getItem('vial_profile')||'{}')||{}; return !!(p.age&&p.height&&p.weight);}catch(e){return false;} }
 // ── КАДЕНС блоков (что когда показывать) ──────────────────────────────────────
 // base = только первичный проход (потом живёт в карточке); daily = каждый день;
 // weekly = раз в неделю; biweekly = раз в 2 недели. Первый проход = всё «due», показываем сразу.
-const STEP_CADENCE={0:'base',2:'daily',4:'daily',5:'daily',6:'daily',7:'base',8:'weekly',9:'base',10:'biweekly',11:'weekly'};
+const STEP_CADENCE={0:'base',2:'daily',5:'daily',6:'daily',7:'base',8:'weekly',9:'base',10:'biweekly',11:'weekly'};
 function _stepLastMap(){try{return JSON.parse(localStorage.getItem('vial_steplast')||'{}')||{};}catch(e){return {};}}
 function _stepDue(n){
   var c=STEP_CADENCE[n];
