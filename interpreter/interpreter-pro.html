@@ -1253,11 +1253,11 @@ body.flow-mode #scroll-area{padding-bottom:150px;}
 .ds-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:4px;}
 .ds-top .ds-q{font-size:13px;color:var(--t1);}
 .ds-top .ds-v{font-size:13px;font-weight:600;white-space:nowrap;}
-.ds-sub{font-size:11px;color:var(--t3);margin:0 0 12px;}
+.ds-sub{font-size:13px;color:var(--t2);line-height:1.5;margin:0 0 12px;}
 .ds-range{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:8px;outline:none;background:#222;cursor:pointer;}
 .ds-range::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.5);cursor:pointer;}
 .ds-range::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:none;cursor:pointer;}
-.ds-anchors{font-size:11px;color:var(--t2);line-height:1.7;margin-top:12px;}
+.ds-anchors{font-size:13px;color:var(--t2);line-height:1.7;margin-top:12px;}
 .ds-anchors>div{display:flex;gap:6px;}
 .ds-anchors .a10::before{content:'●';color:#4ADE80;}
 .ds-anchors .a5::before{content:'●';color:#FBBF24;}
@@ -2406,10 +2406,10 @@ body.flow-mode #scroll-area{padding-bottom:150px;}
       <div class="card-accent"></div>
       <div class="step-badge" data-t="s4_badge">05 / 14 · Образ жизни</div>
       <h2 class="step-title" data-t="s4_title">Энергия и образ жизни</h2>
-      <p class="step-desc" data-t="s4_desc">Последние вопросы для точных рекомендаций.</p>
+      <p class="step-desc" data-t="ls_desc">За последние сутки — несколько вопросов для точных рекомендаций.</p>
       <div class="input-group ds" id="ds-energy">
         <div class="ds-top"><span class="ds-q" data-t="ds_en_q">Жизненный тонус</span><span class="ds-v"><b id="energy-num">6</b>/10 · <span id="energy-word">—</span></span></div>
-        <div class="ds-sub" data-t="ds_en_sub">За вчерашний день — запас физических и умственных сил</div>
+        <div class="ds-sub" data-t="ls_en_sub">За последние сутки — запас физических и умственных сил</div>
         <input type="range" id="energy" class="ds-range" min="1" max="10" value="6" oninput="dsScale('energy',+this.value)">
         <div class="ds-anchors">
           <div class="a10" data-t="ds_en_10">10 — идеальное самочувствие: ясная голова, лёгкая концентрация, сил на весь день.</div>
@@ -2419,7 +2419,7 @@ body.flow-mode #scroll-area{padding-bottom:150px;}
       </div>
       <div class="divider"></div>
       <div class="input-group">
-        <label data-t="s4_l2">Алкоголь вчера?</label>
+        <label data-t="ls_alc">Алкоголь за последние сутки?</label>
         <div class="chips">
           <div class="chip"><input type="radio" name="alc" id="alc0" value="0" checked><label for="alc0" data-t="opt_no">Нет</label></div>
           <div class="chip"><input type="radio" name="alc" id="alc1" value="1"><label for="alc1" data-t="opt_yes">Да</label></div>
@@ -2427,7 +2427,7 @@ body.flow-mode #scroll-area{padding-bottom:150px;}
       </div>
       <div class="input-group ds" id="ds-stress">
         <div class="ds-top"><span class="ds-q" data-t="ds_str_q">Внутреннее напряжение</span><span class="ds-v"><b id="stress-num">1</b>/10 · <span id="stress-word">—</span></span></div>
-        <div class="ds-sub" data-t="ds_str_sub">Нагрузка на нервную систему за вчерашний день</div>
+        <div class="ds-sub" data-t="ls_str_sub">Нагрузка на нервную систему за последние сутки</div>
         <input type="range" id="stress" class="ds-range" min="1" max="10" value="1" oninput="dsScale('stress',+this.value)">
         <div class="ds-anchors ds-anchors-stress">
           <div class="a1" data-t="ds_str_1">1 — абсолютный покой: комфорт, безопасность, расслабление.</div>
@@ -3965,6 +3965,14 @@ const _COG={
   cog_fog_q:{ru:'Туман в голове за последние сутки',uk:'Туман у голові за останню добу',en:'Brain fog over the past 24 hours',es:'Niebla mental en las últimas 24 horas',de:'Hirnnebel in den letzten 24 Stunden',pt:'Névoa mental nas últimas 24 horas',fr:'Brouillard mental ces dernières 24 heures',pl:'Mgła mózgowa w ciągu ostatniej doby',it:'Annebbiamento mentale nelle ultime 24 ore',he:'ערפל מוחי ב-24 השעות האחרונות',ja:'過去24時間のブレインフォグ',ko:'지난 24시간 동안의 브레인 포그'}
 };
 Object.keys(_COG).forEach(function(k){Object.keys(_COG[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_COG[k][l];});});
+// Образ жизни — ежедневный, рамка «за последние сутки»
+const _LS={
+  ls_desc:{ru:'За последние сутки — несколько вопросов для точных рекомендаций.',uk:'За останню добу — кілька питань для точних рекомендацій.',en:'Over the past 24 hours — a few questions for precise recommendations.',es:'En las últimas 24 horas — unas preguntas para recomendaciones precisas.',de:'In den letzten 24 Stunden — einige Fragen für präzise Empfehlungen.',pt:'Nas últimas 24 horas — algumas perguntas para recomendações precisas.',fr:'Ces dernières 24 heures — quelques questions pour des recommandations précises.',pl:'W ciągu ostatniej doby — kilka pytań dla trafnych zaleceń.',it:'Nelle ultime 24 ore — alcune domande per consigli precisi.',he:'ב-24 השעות האחרונות — כמה שאלות להמלצות מדויקות.',ja:'過去24時間について — 正確な提案のためのいくつかの質問。',ko:'지난 24시간에 대해 — 정확한 제안을 위한 몇 가지 질문.'},
+  ls_en_sub:{ru:'За последние сутки — запас физических и умственных сил',uk:'За останню добу — запас фізичних і розумових сил',en:'Over the past 24 hours — your physical and mental reserves',es:'En las últimas 24 horas — tus reservas físicas y mentales',de:'In den letzten 24 Stunden — deine körperlichen und geistigen Reserven',pt:'Nas últimas 24 horas — suas reservas físicas e mentais',fr:'Ces dernières 24 heures — vos réserves physiques et mentales',pl:'W ciągu ostatniej doby — zapas sił fizycznych i umysłowych',it:'Nelle ultime 24 ore — le tue riserve fisiche e mentali',he:'ב-24 השעות האחרונות — עתודות גופניות ונפשיות',ja:'過去24時間の身体的・精神的な余力',ko:'지난 24시간 동안의 신체적·정신적 에너지'},
+  ls_str_sub:{ru:'Нагрузка на нервную систему за последние сутки',uk:'Навантаження на нервову систему за останню добу',en:'Load on your nervous system over the past 24 hours',es:'Carga sobre el sistema nervioso en las últimas 24 horas',de:'Belastung des Nervensystems in den letzten 24 Stunden',pt:'Carga no sistema nervoso nas últimas 24 horas',fr:'Charge sur le système nerveux ces dernières 24 heures',pl:'Obciążenie układu nerwowego w ciągu ostatniej doby',it:'Carico sul sistema nervoso nelle ultime 24 ore',he:'העומס על מערכת העצבים ב-24 השעות האחרונות',ja:'過去24時間の神経系への負荷',ko:'지난 24시간 동안 신경계에 가해진 부담'},
+  ls_alc:{ru:'Алкоголь за последние сутки?',uk:'Алкоголь за останню добу?',en:'Alcohol in the past 24 hours?',es:'¿Alcohol en las últimas 24 horas?',de:'Alkohol in den letzten 24 Stunden?',pt:'Álcool nas últimas 24 horas?',fr:'Alcool ces dernières 24 heures ?',pl:'Alkohol w ciągu ostatniej doby?',it:'Alcol nelle ultime 24 ore?',he:'אלכוהול ב-24 השעות האחרונות?',ja:'過去24時間のアルコール?',ko:'지난 24시간 동안 음주?'}
+};
+Object.keys(_LS).forEach(function(k){Object.keys(_LS[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_LS[k][l];});});
 // Диапазоны для ручного ввода показателей в карточке (clamp + единица + формат)
 const _GMETA={
   hrv:{min:10,max:200,step:1,u:'ms',f:function(v){return Math.round(v);}},
@@ -4308,7 +4316,8 @@ function _saveDaily(){
       hf_count:getRadio('hf_count'), hf_intensity:getRadio('hf_intensity'),
       // ежедневные субъективные блоки — копим по дням для недельного разбора из карточки
       symptoms:getChecked(['sym1','sym2','sym3','sym4','sym5','sym6','sym7','sym8','sym9']),
-      memory:getRadio('memory'), fog:getRadio('fog')
+      memory:getRadio('memory'), fog:getRadio('fog'),
+      stress:(document.getElementById('stress')?+document.getElementById('stress').value:null), alc:getRadio('alc')
     };
     var arr=[]; try{arr=JSON.parse(localStorage.getItem('vial_daily')||'[]')||[];}catch(e){}
     arr=arr.filter(function(r){return r.day!==rec.day;});
@@ -4886,7 +4895,7 @@ function goFromProfile(){ saveProfile(); showAll(); }
 // Правка питания из карточки (single-step): сохранить базу и вернуться к стопке
 function goFromNutrition(){ saveProfile(); showAll(); }
 // ── Одностраничные потоки «День» / «Неделя»: шаги показываем стопкой на одной прокрутке ──
-const FLOW_DAILY=[2,4,6,8], FLOW_WEEKLY=[5,9,10,11];   // HRV(1)/Сон(3) приборные; Когниция(6)→ежедневно; Питание(7)→только первичный проход (база в карточке)
+const FLOW_DAILY=[2,4,5,6], FLOW_WEEKLY=[8,9,10,11];   // ежедневно: приливы(2)/самочувствие(4)/образ жизни(5)/когниция(6); недельно: активность(8)/добавки(9)/стресс(10)/динамика(11); HRV(1)/Сон(3) приборные; Питание(7) — первичный проход
 // Приборные поля (HRV, пульс, сон, температура) держим в DOM, но НЕ показываем шагами —
 // значения втекают из панели через applyImportedToSliders. Шаги остаются только субъективные.
 const _AUTO_STEP_METRIC={};
