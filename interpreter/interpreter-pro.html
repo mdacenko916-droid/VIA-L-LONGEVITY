@@ -4305,7 +4305,10 @@ function _saveDaily(){
       deepMin:importedData.deepMin, spo2:importedData.spo2, tempDev:importedData.tempDev,
       vo2:importedData.vo2, readiness:importedData.readiness,
       energy:(document.getElementById('energy')?+document.getElementById('energy').value:null),   // субъективная бодрость за вчера, не прибор
-      hf_count:getRadio('hf_count'), hf_intensity:getRadio('hf_intensity')
+      hf_count:getRadio('hf_count'), hf_intensity:getRadio('hf_intensity'),
+      // ежедневные субъективные блоки — копим по дням для недельного разбора из карточки
+      symptoms:getChecked(['sym1','sym2','sym3','sym4','sym5','sym6','sym7','sym8','sym9']),
+      memory:getRadio('memory'), fog:getRadio('fog')
     };
     var arr=[]; try{arr=JSON.parse(localStorage.getItem('vial_daily')||'[]')||[];}catch(e){}
     arr=arr.filter(function(r){return r.day!==rec.day;});
