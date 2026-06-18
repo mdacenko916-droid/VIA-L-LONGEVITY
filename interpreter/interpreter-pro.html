@@ -2451,7 +2451,7 @@ body.flow-mode #scroll-area{padding-bottom:150px;}
       <h2 class="step-title" data-t="s5_title">Когнітивні симптоми</h2>
       <p class="step-desc" style="border-color:rgba(139,92,246,.3);" data-t="s5_desc">Мозок чутливий до гормональних змін. Відповідайте чесно — це допоможе точніше визначити паттерн.</p>
       <div class="input-group">
-        <label data-t="s5_l1">Память/концентрация (1–10)</label>
+        <label data-t="cog_mem_q">Память/концентрация за последние сутки (1–10)</label>
         <div class="chips">
           <div class="chip"><input type="radio" name="memory" id="mem1" value="1"><label for="mem1">1</label></div>
           <div class="chip"><input type="radio" name="memory" id="mem2" value="2"><label for="mem2">2</label></div>
@@ -2465,31 +2465,12 @@ body.flow-mode #scroll-area{padding-bottom:150px;}
           <div class="chip"><input type="radio" name="memory" id="mem10" value="10"><label for="mem10">10</label></div>
         </div>
       </div>
-      <div class="input-group">
-        <label data-t="cog_mem_days">Память: дней из 7 с трудностями</label>
-        <div class="chips">
-          <div class="chip"><input type="radio" name="mem_days" id="mdd0" value="0" checked><label for="mdd0">0</label></div>
-          <div class="chip"><input type="radio" name="mem_days" id="mdd1" value="1"><label for="mdd1">1</label></div>
-          <div class="chip"><input type="radio" name="mem_days" id="mdd2" value="2"><label for="mdd2">2</label></div>
-          <div class="chip"><input type="radio" name="mem_days" id="mdd3" value="3"><label for="mdd3">3</label></div>
-          <div class="chip"><input type="radio" name="mem_days" id="mdd4" value="4"><label for="mdd4">4</label></div>
-          <div class="chip"><input type="radio" name="mem_days" id="mdd5" value="5"><label for="mdd5">5</label></div>
-          <div class="chip"><input type="radio" name="mem_days" id="mdd6" value="6"><label for="mdd6">6</label></div>
-          <div class="chip"><input type="radio" name="mem_days" id="mdd7" value="7"><label for="mdd7">7</label></div>
-        </div>
-      </div>
       <div class="divider"></div>
       <div class="input-group">
-        <label data-t="s5_l2">Туман в голове — дней из 7</label>
+        <label data-t="cog_fog_q">Туман в голове за последние сутки</label>
         <div class="chips">
-          <div class="chip"><input type="radio" name="fog" id="fog0" value="0" checked><label for="fog0">0</label></div>
-          <div class="chip"><input type="radio" name="fog" id="fog1" value="1"><label for="fog1">1</label></div>
-          <div class="chip"><input type="radio" name="fog" id="fog2" value="2"><label for="fog2">2</label></div>
-          <div class="chip"><input type="radio" name="fog" id="fog3" value="3"><label for="fog3">3</label></div>
-          <div class="chip"><input type="radio" name="fog" id="fog4" value="4"><label for="fog4">4</label></div>
-          <div class="chip"><input type="radio" name="fog" id="fog5" value="5"><label for="fog5">5</label></div>
-          <div class="chip"><input type="radio" name="fog" id="fog6" value="6"><label for="fog6">6</label></div>
-          <div class="chip"><input type="radio" name="fog" id="fog7" value="7"><label for="fog7">7</label></div>
+          <div class="chip"><input type="radio" name="fog" id="fog0" value="0" checked><label for="fog0" data-t="opt_no">Нет</label></div>
+          <div class="chip"><input type="radio" name="fog" id="fog1" value="3"><label for="fog1" data-t="opt_yes">Да</label></div>
         </div>
       </div>
       <div class="btn-row">
@@ -3978,6 +3959,12 @@ const _WBL={
   wb_q:{ru:'Что замечали за последние сутки',uk:'Що помічали за останню добу',en:'What you noticed in the past day',es:'Qué notaste en el último día',de:'Was du am letzten Tag bemerkt hast',pt:'O que você notou no último dia',fr:'Ce que vous avez remarqué ces dernières 24 heures',pl:'Co zauważyłeś w ciągu ostatniej doby',it:'Cosa hai notato nell’ultimo giorno',he:'מה הבחנת ביממה האחרונה',ja:'過去1日で気づいたこと',ko:'지난 하루 동안 느낀 것'}
 };
 Object.keys(_WBL).forEach(function(k){Object.keys(_WBL[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_WBL[k][l];});});
+// Когниция — ежедневные метрики «за последние сутки» (память + туман Да/Нет)
+const _COG={
+  cog_mem_q:{ru:'Память/концентрация за последние сутки (1–10)',uk:'Пам’ять/концентрація за останню добу (1–10)',en:'Memory/focus over the past 24 hours (1–10)',es:'Memoria/concentración en las últimas 24 horas (1–10)',de:'Gedächtnis/Konzentration der letzten 24 Stunden (1–10)',pt:'Memória/concentração nas últimas 24 horas (1–10)',fr:'Mémoire/concentration ces dernières 24 heures (1–10)',pl:'Pamięć/koncentracja w ciągu ostatniej doby (1–10)',it:'Memoria/concentrazione nelle ultime 24 ore (1–10)',he:'זיכרון/ריכוז ב-24 השעות האחרונות (1–10)',ja:'過去24時間の記憶力/集中力 (1–10)',ko:'지난 24시간 동안의 기억력/집중력 (1–10)'},
+  cog_fog_q:{ru:'Туман в голове за последние сутки',uk:'Туман у голові за останню добу',en:'Brain fog over the past 24 hours',es:'Niebla mental en las últimas 24 horas',de:'Hirnnebel in den letzten 24 Stunden',pt:'Névoa mental nas últimas 24 horas',fr:'Brouillard mental ces dernières 24 heures',pl:'Mgła mózgowa w ciągu ostatniej doby',it:'Annebbiamento mentale nelle ultime 24 ore',he:'ערפל מוחי ב-24 השעות האחרונות',ja:'過去24時間のブレインフォグ',ko:'지난 24시간 동안의 브레인 포그'}
+};
+Object.keys(_COG).forEach(function(k){Object.keys(_COG[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_COG[k][l];});});
 // Диапазоны для ручного ввода показателей в карточке (clamp + единица + формат)
 const _GMETA={
   hrv:{min:10,max:200,step:1,u:'ms',f:function(v){return Math.round(v);}},
@@ -4870,7 +4857,7 @@ function loadProfile(){
 }
 function goFromProfile(){ saveProfile(); showAll(); }
 // ── Одностраничные потоки «День» / «Неделя»: шаги показываем стопкой на одной прокрутке ──
-const FLOW_DAILY=[2,4,8], FLOW_WEEKLY=[5,6,7,9,10,11];   // HRV(1) и Сон(3) убраны из показа — целиком приборные, ввод в панели «Данные с трекера»
+const FLOW_DAILY=[2,4,6,8], FLOW_WEEKLY=[5,7,9,10,11];   // HRV(1) и Сон(3) убраны (приборные); Когниция(6) → ежедневно (память/туман забываются к концу недели)
 // Приборные поля (HRV, пульс, сон, температура) держим в DOM, но НЕ показываем шагами —
 // значения втекают из панели через applyImportedToSliders. Шаги остаются только субъективные.
 const _AUTO_STEP_METRIC={};
