@@ -2533,8 +2533,8 @@ body.flow-mode #scroll-area{padding-bottom:150px;}
       </div>
 
       <div class="btn-row">
-        <button class="btn btn-back" onclick="goTo(6)">←</button>
-        <button class="btn btn-primary" onclick="goTo(8)"><span class="btn-label" data-t="next">Далі →</span></button>
+        <button class="btn btn-back" onclick="goFromNutrition()">←</button>
+        <button class="btn btn-primary" onclick="goFromNutrition()"><span class="btn-label" data-t="next">Далі →</span></button>
       </div>
     </div>
   </div>
@@ -4229,6 +4229,22 @@ function renderCard(){
     if(P.cyclelen)html+=_cRow(t('cyc_len'),P.cyclelen);
     if(!P.cycle_status&&!P.lastperiod&&!P.cyclelen)html+='<div style="color:var(--t3);font-size:13px;padding:10px 2px;">'+t('card_empty')+'</div>';
   }
+  // Питание — базовая анкета (первичный проход), хранится в карточке; правка → шаг 7
+  (function(){
+    var _diet={none_diet:'dr_none',vegetarian:'dr_vegetarian',vegan:'dr_vegan',gluten_free:'dr_gluten',lactose_free:'dr_lactose',keto:'dr_keto','if':'dr_if',allergy:'dr_allergy'};
+    var _eat={regular:'eat_regular','2meals':'eat_2meals',split:'eat_split',chaotic:'eat_chaotic'};
+    var _giMap={none_gi:'gi_none',bloating:'gi_bloat',constipation:'gi_constip',diarrhea:'gi_diarr',reflux:'gi_reflux',heaviness:'gi_heavy'};
+    var _arMap={none_ar:'gi_ar_none',hemorrhoids:'gi_hemor',fissure:'gi_fissure',itch:'gi_itch',rectal_bleeding:'gi_blood'};
+    var _join=function(arr,map){return Array.isArray(arr)?arr.map(function(v){return map[v]?t(map[v]):null;}).filter(Boolean).join(', '):'';};
+    var has=(Array.isArray(P.diet_restrict)&&P.diet_restrict.length)||P.eating_pattern||(Array.isArray(P.gi)&&P.gi.length);
+    if(!has)return;
+    html+=_cSec(t('s7_title'));
+    html+=_cRow(t('s7_l1'),_join(P.diet_restrict,_diet));
+    html+=_cRow(t('s7_l2'),(P.eating_pattern&&_eat[P.eating_pattern])?t(_eat[P.eating_pattern]):'');
+    html+=_cRow(t('gi_l'),_join(P.gi,_giMap));
+    html+=_cRow(t('procto_l'),_join(P.gi,_arMap));
+    html+='<button onclick="_fixMetric(7)" style="margin-top:14px;background:rgba(196,150,60,.1);border:1px solid rgba(196,150,60,.32);color:var(--gold-lt);padding:9px 20px;border-radius:50px;font-size:12px;letter-spacing:.5px;cursor:pointer;font-family:\'DM Sans\',sans-serif;">'+t('card_edit')+'</button>';
+  })();
   // Данные с трекера — 8 приборных окошек (energy убрана — субъективна, живёт в шаге «Образ жизни»)
   var D=(typeof importedData!=='undefined'&&importedData)?importedData:{};
   var _gkeys=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','vo2','readiness'];
@@ -4678,7 +4694,11 @@ function saveProfile(){
       waist:document.getElementById('prof-waist')?.value||'',
       lastperiod:document.getElementById('prof-lastperiod')?.value||'',
       cyclelen:document.getElementById('prof-cyclelen')?.value||'',
-      supplements:getChecked(_SUP_IDS),meds:getRadio('meds'),cycle_status:getRadio('cycle_status')
+      supplements:getChecked(_SUP_IDS),meds:getRadio('meds'),cycle_status:getRadio('cycle_status'),
+      // Питание — базовая анкета (первичный проход), хранится в карточке
+      diet_restrict:getChecked(['dr1','dr2','dr3','dr4','dr5','dr6','dr7','dr8']),
+      eating_pattern:getRadio('eating_pattern'),
+      gi:getChecked(['gi1','gi2','gi3','gi4','gi5','gi6','gi7','gi10','gi11','gi12','gi13'])
     }));
   }catch(e){}
 }
@@ -4848,16 +4868,22 @@ function loadProfile(){
     if(p.phase){const ph=document.querySelector('input[name=phase][value="'+p.phase+'"]');if(ph)ph.checked=true;}
     // База, меняется редко: добавки/лекарства/статус цикла — предзаполняем из прошлого раза.
     if(Array.isArray(p.supplements))_SUP_IDS.forEach(id=>{const el=document.getElementById(id);if(el)el.checked=p.supplements.includes(el.value);});
+    // Питание-база (первичный проход): восстановить выбор, чтобы разбор учитывал даже при скрытом шаге
+    const _checkByVal=(ids,arr)=>{if(!Array.isArray(arr))return;ids.forEach(id=>{const el=document.getElementById(id);if(el)el.checked=arr.includes(el.value);});};
+    _checkByVal(['dr1','dr2','dr3','dr4','dr5','dr6','dr7','dr8'],p.diet_restrict);
+    _checkByVal(['gi1','gi2','gi3','gi4','gi5','gi6','gi7','gi10','gi11','gi12','gi13'],p.gi);
     const setRadio=(name,v)=>{if(!v)return;const el=document.querySelector('input[name='+name+'][value="'+v+'"]');if(el)el.checked=true;};
-    setRadio('meds',p.meds);setRadio('cycle_status',p.cycle_status);
+    setRadio('meds',p.meds);setRadio('cycle_status',p.cycle_status);setRadio('eating_pattern',p.eating_pattern);
     if(typeof calcProfMetrics==='function')calcProfMetrics();
     if(typeof renderCycleDay==='function')renderCycleDay();
     if(typeof updateDeviceBanners==='function')updateDeviceBanners();if(typeof renderGadgetPanel==='function')renderGadgetPanel();
   }catch(e){}
 }
 function goFromProfile(){ saveProfile(); showAll(); }
+// Правка питания из карточки (single-step): сохранить базу и вернуться к стопке
+function goFromNutrition(){ saveProfile(); showAll(); }
 // ── Одностраничные потоки «День» / «Неделя»: шаги показываем стопкой на одной прокрутке ──
-const FLOW_DAILY=[2,4,6,8], FLOW_WEEKLY=[5,7,9,10,11];   // HRV(1) и Сон(3) убраны (приборные); Когниция(6) → ежедневно (память/туман забываются к концу недели)
+const FLOW_DAILY=[2,4,6,8], FLOW_WEEKLY=[5,9,10,11];   // HRV(1)/Сон(3) приборные; Когниция(6)→ежедневно; Питание(7)→только первичный проход (база в карточке)
 // Приборные поля (HRV, пульс, сон, температура) держим в DOM, но НЕ показываем шагами —
 // значения втекают из панели через applyImportedToSliders. Шаги остаются только субъективные.
 const _AUTO_STEP_METRIC={};
@@ -4887,7 +4913,8 @@ const FLOW_ALL=[0,2,4,5,6,7,8,9,10,11];   // профиль + субъектив
 // Профиль (возраст/рост/вес) — разовый онбординг: заполнен → убираем из стопки навсегда,
 // данные живут в «Моя карточка», правка оттуда (кнопка «Изменить» → _fixMetric(0)).
 function _profileDone(){ try{var p=JSON.parse(localStorage.getItem('vial_profile')||'{}')||{}; return !!(p.age&&p.height&&p.weight);}catch(e){return false;} }
-function _allFlow(){ return FLOW_ALL.filter(function(n){ if(n===0&&_profileDone())return false; if(_hfHidden(n))return false; var m=_AUTO_STEP_METRIC[n]; return !(m && typeof importedData!=='undefined' && importedData[m]!=null); }); }
+// Питание (step7) — базовая анкета: как и профиль, спрашиваем только первый раз, потом живёт в карточке
+function _allFlow(){ return FLOW_ALL.filter(function(n){ if((n===0||n===7)&&_profileDone())return false; if(_hfHidden(n))return false; var m=_AUTO_STEP_METRIC[n]; return !(m && typeof importedData!=='undefined' && importedData[m]!=null); }); }
 function showAll(){ _showFlow(_allFlow()); if(typeof renderGadgetPanel==='function')renderGadgetPanel(); _flowFooter(t('show_result'), function(){ if(typeof _saveDaily==='function')_saveDaily(); document.body.classList.remove('flow-mode'); _hideFlowFooter(); showResults(); }); }
 // Сворачивание тяжёлых групп вариантов в «выпадающее окошко» (видно вопрос+выбранное, разворот по тапу).
 // Сворачиваем только группы с ≥6 вариантами или мультивыбором; слайдеры и короткие группы — открыты.
