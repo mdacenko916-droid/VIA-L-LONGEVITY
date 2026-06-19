@@ -4467,6 +4467,31 @@ function weeklyTrend(){
   }).filter(Boolean);
   return {wk,pr,metrics};
 }
+// Агрегатор ДНЕВНЫХ данных (vial_daily) за 7 дней — то, чего нет в vial_history:
+// приливы/температура/SpO₂/память/туман/стресс/алкоголь + разовый контекст профиля
+// (фаза/ПМС/питание). Питает недельный AI-разбор реальной картиной, а не 7 полями истории.
+// null — если за неделю нет дневных записей (тогда разбор работает как раньше).
+function _weeklyDaily(){
+  var arr=[]; try{arr=JSON.parse(localStorage.getItem('vial_daily')||'[]')||[];}catch(e){}
+  var now=Date.now(),DAY=86400000;
+  var wk=arr.filter(function(r){return r.ts&&now-r.ts<7*DAY;});
+  if(!wk.length)return null;
+  var avg=function(k){var v=wk.map(function(r){return r[k];}).filter(function(x){return x!=null&&x!==''&&!isNaN(x);});return v.length?+(v.reduce(function(a,b){return a+(+b);},0)/v.length).toFixed(2):null;};
+  var modal=function(k){var c={},best=null,bn=0;wk.forEach(function(r){var x=r[k];if(x==null||x==='')return;c[x]=(c[x]||0)+1;if(c[x]>bn){bn=c[x];best=x;}});return best;};
+  var cnt=function(k,pred){return wk.filter(function(r){return pred(r[k]);}).length;};
+  var P={}; try{P=JSON.parse(localStorage.getItem('vial_profile')||'{}')||{};}catch(e){}
+  return {
+    days:wk.length,
+    hfDays:cnt('hf_count',function(x){return x&&x!=='none';}),
+    hfCount:modal('hf_count'), hfIntensity:modal('hf_intensity'),
+    tempDev:avg('tempDev'), spo2:avg('spo2'), stress:avg('stress'),
+    memory:avg('memory'), fogDays:cnt('fog',function(x){return x!=null&&+x>0;}),
+    alcDays:cnt('alc',function(x){return x!=null&&+x>0;}),
+    profile:{ phase:P.phase||null,
+              pms:(P.pms_symptoms||[]).filter(function(s){return s&&s!=='none_pms';}),
+              diet:(P.diet_restrict||[]), eating:P.eating_pattern||null }
+  };
+}
 function renderWeekly(){
   const box=document.getElementById('weeklyTrend');if(!box)return;
   const w=weeklyTrend(),ui=_weekUI();
@@ -4559,11 +4584,12 @@ async function genWeeklyReport(){
   const btn=document.getElementById('wrBtn'); if(btn){ btn.disabled=true; btn.textContent=ui.load; }
   const summary={ n:w.wk.length, metrics:w.metrics.map(m=>({ key:m.k, avg:+m.a.toFixed(m.dec),
     prev:m.p!=null?+m.p.toFixed(m.dec):null, delta:m.delta!=null?+m.delta.toFixed(m.dec):null })) };
+  const daily=(typeof _weeklyDaily==='function')?_weeklyDaily():null;  // дневные агрегаты + контекст профиля
   const code=(window.sessionStorage&&sessionStorage.getItem('vial_code'))||'';
   try{
     const res=await fetch('https://interpreter.viaelcom.workers.dev/weekly-report',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({summary,lang,code})});
+      body:JSON.stringify({summary,daily,lang,code})});
     const json=await res.json();
     if(!json.report) throw new Error('no report');
     localStorage.setItem('vial_weekly_text',json.report);

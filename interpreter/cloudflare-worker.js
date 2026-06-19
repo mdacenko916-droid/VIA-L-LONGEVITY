@@ -1156,7 +1156,7 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
 // Для EXPERT/ELITE (есть code) тот же разбор кладётся в карточку кабинета →
 // специалист видит его во вкладке «Разборы» (type:'weekly').
 // ─────────────────────────────────────────────────────────────
-function buildWeeklyUserMessage(summary, lang) {
+function buildWeeklyUserMessage(summary, daily, lang) {
   summary = summary || {};
   const labels = {
     hrv:'HRV', sleep:'Sleep quality', rhr:'Resting heart rate', energy:'Energy',
@@ -1173,13 +1173,38 @@ function buildWeeklyUserMessage(summary, lang) {
     }
     return `- ${label}: 7-day average ${m.avg}; ${trend}`;
   });
-  return 'Weekly biometric & wellbeing summary (' + (summary.n || 0) + ' analyses logged this week):\n' +
-         (lines.length ? lines.join('\n') : '(no metrics available)') +
-         '\n\nWrite the short weekly review now.';
+  let out = 'Weekly biometric & wellbeing summary (' + (summary.n || 0) + ' analyses logged this week):\n' +
+            (lines.length ? lines.join('\n') : '(no metrics available)');
+
+  // Дневная детализация из vial_daily (приливы/температура/SpO₂/память/туман/стресс/алкоголь)
+  // + разовый контекст профиля. Опционально: старый клиент / EXPERT-кабинет шлют без daily —
+  // тогда out идентичен прежнему сообщению (обратная совместимость).
+  if (daily && daily.days) {
+    const hfC = { none:'none', low:'1–2/day', mid:'3–5/day', high:'6–10/day', veryhigh:'10+/day' };
+    const hfI = { none:'none', mild:'mild', moderate:'moderate', intense:'strong', severe:'very strong' };
+    const d = [];
+    if (daily.hfDays != null)  d.push(`- Hot flashes: ${daily.hfDays}/${daily.days} days; typical ${hfC[daily.hfCount]||daily.hfCount||'—'}, intensity ${hfI[daily.hfIntensity]||daily.hfIntensity||'—'}`);
+    if (daily.tempDev != null) d.push(`- Body-temp deviation: ${daily.tempDev} avg`);
+    if (daily.spo2 != null)    d.push(`- SpO₂: ${daily.spo2}% avg`);
+    if (daily.memory != null)  d.push(`- Memory self-rating: ${daily.memory}/10 avg`);
+    if (daily.fogDays != null) d.push(`- Brain fog: ${daily.fogDays}/${daily.days} days`);
+    if (daily.stress != null)  d.push(`- Stress: ${daily.stress}/10 avg`);
+    if (daily.alcDays != null) d.push(`- Alcohol: ${daily.alcDays}/${daily.days} days`);
+    if (d.length) out += '\n\nDaily detail logged this week:\n' + d.join('\n');
+
+    const p = daily.profile || {};
+    const ctx = [];
+    if (p.phase)                 ctx.push('cycle phase: ' + p.phase);
+    if (p.pms && p.pms.length)   ctx.push('PMS symptoms: ' + p.pms.join(', '));
+    if (p.diet && p.diet.length) ctx.push('dietary restrictions: ' + p.diet.join(', '));
+    if (p.eating)                ctx.push('eating pattern: ' + p.eating);
+    if (ctx.length) out += '\n\nClient context: ' + ctx.join('; ') + '.';
+  }
+  return out + '\n\nWrite the short weekly review now.';
 }
 
 async function handleWeeklyReport(request, env, corsHeaders, ctx) {
-  const { summary, lang, code } = await request.json();
+  const { summary, daily, lang, code } = await request.json();
   const langMap = {
     ru: 'русском', uk: 'украинском', en: 'English', es: 'español',
     de: 'Deutsch', pt: 'português', fr: 'français', pl: 'polski',
@@ -1195,6 +1220,9 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
     'COVER, based ONLY on the numbers given (never invent metrics or values):\n' +
     '1) what improved this week, 2) what worsened or needs attention, 3) the single most likely ' +
     'behavioural driver, 4) ONE small, doable focus for the coming week (an "experiment", not a list).\n' +
+    'If a "Daily detail logged this week" block and/or "Client context" are provided, USE them — ' +
+    'they reflect what the person actually logged each day (hot flashes, temperature, SpO₂, memory, ' +
+    'brain fog, stress, alcohol) and their profile (cycle phase, PMS, diet); ground the review in them.\n' +
     'Refer to a profile specialist generically if relevant ("your specialist") — never invent a personal name.\n' +
     'End with one short, gentle non-medical disclaimer line.\n\n' +
     '════════════════════════════════════════\n' +
@@ -1215,7 +1243,7 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
       model: ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
       max_tokens: 900,
       system: weeklySystem,
-      messages: [{ role: 'user', content: buildWeeklyUserMessage(summary, lang) }],
+      messages: [{ role: 'user', content: buildWeeklyUserMessage(summary, daily, lang) }],
     }),
   });
 
