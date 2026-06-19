@@ -1928,7 +1928,7 @@ async function handleOuraMetrics(request, env, corsHeaders){
   if (rdy.length) {
     let v;
     v = avg(rdy.map(x => Number(x && x.score)).filter(n=>isFinite(n)&&n>0));           if (v!=null) ex.readiness = Math.round(v);
-    v = avg(rdy.map(x => Number(x && x.temperature_deviation)).filter(n=>isFinite(n))); if (v!=null) ex.tempDev = +v.toFixed(1);
+    v = avg(rdy.map(x => Number(x && x.temperature_deviation)).filter(n=>isFinite(n))); if (v!=null) ex.tempDev = +v.toFixed(2);   // 2 знака — мелкие отклонения (0.02) не теряем
   }
   // SpO2 → spo2_percentage.average
   const spo2 = await get('/v2/usercollection/daily_spo2') || [];
