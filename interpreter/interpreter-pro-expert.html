@@ -1275,6 +1275,19 @@ footer{
 .gate-ring{background:rgba(120,152,255,.1)!important;border-color:rgba(120,152,255,.3)!important;box-shadow:0 0 22px rgba(120,152,255,.22)!important;}
 .gate-ring svg{fill:#9db4ff!important;}
 .gate-sub{color:rgba(157,180,255,.85)!important;}
+/* ── Гаджет-панель (read-only зеркало трекера) — порт из pro, юнит 1; цвет EXPERT (синий) ── */
+#gadget-panel-wrap{margin:0 0 4px;}
+.gadget-panel{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0;}
+@media(max-width:560px){.gadget-panel{grid-template-columns:repeat(2,minmax(0,1fr));}}
+.gp-tile{padding:9px 8px;border-radius:11px;background:rgba(255,255,255,.04);border:1px solid var(--b1);text-align:center;}
+.gp-tile.got{border-color:rgba(34,197,94,.32);background:rgba(34,197,94,.07);}
+.gp-tile.miss{border-color:rgba(251,191,36,.3);}
+.gp-val{font-size:18px;font-weight:500;color:var(--t1);line-height:1.1;}
+.gp-val.miss{font-size:20px;color:#FBBF24;}
+.gp-unit{font-size:9px;color:rgba(255,255,255,.7);}
+.gp-lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:rgba(255,255,255,.88);margin-top:3px;font-weight:500;}
+.gp-src{font-size:9px;color:#4ADE80;margin-top:1px;}
+.gp-head{font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#7898ff;margin:0 0 7px;display:flex;align-items:center;gap:7px;}
 </style>
 </head>
 <body>
@@ -1981,6 +1994,14 @@ footer{
       <div class="progress-dot " id="pd14"></div>
     </div>
     <div class="progress-lbl" id="progressLbl">Pro · Крок 1 з 16</div>
+  </div>
+
+  <!-- Гаджет-панель: read-only сводка подтянутых с трекера показателей (скрыта, пока данных нет) -->
+  <div id="gadget-panel-wrap" style="display:none;">
+    <div class="card">
+      <div class="gp-head">📲 <span id="gp-title-txt">Tracker data</span></div>
+      <div class="gadget-panel" id="gadget-panel"></div>
+    </div>
   </div>
 
   <!-- STEP 0: PROFILE (NEW) -->
@@ -4833,6 +4854,45 @@ let _rerendering=false;
 let _lastResult=null;
 const _urlDevice=new URLSearchParams(location.search).get('device')||null;
 const importedData={hrv:null,rhr:null,sleepHours:null,deepMin:null,tempDev:null,energy:null,vo2:null,source:null};
+// ── Гаджет-панель (read-only зеркало importedData) — порт из pro, юнит 1 ──
+// Показывает 8 приборных окошек с тем, что подтянулось с трекера. Не трогает движок анкеты:
+// ввод по-прежнему идёт через шаги, панель — лишь сводка «что пришло с устройства».
+const _GMETA={
+  hrv:{u:'ms',f:function(v){return Math.round(v);}}, rhr:{u:'bpm',f:function(v){return Math.round(v);}},
+  sleepHours:{u:'h',f:function(v){return (+v).toFixed(1);}}, deepMin:{u:'min',f:function(v){return Math.round(v);}},
+  tempDev:{u:'°C',f:function(v){return (v>0?'+':'')+(+v).toFixed(2);}}, spo2:{u:'%',f:function(v){return Math.round(v);}},
+  vo2:{u:'',f:function(v){return Math.round(v);}}, readiness:{u:'%',f:function(v){return Math.round(v);}}
+};
+const _GLAB={
+  hrv:{ru:'HRV',uk:'HRV',en:'HRV',es:'HRV',de:'HRV',pt:'HRV',fr:'HRV',pl:'HRV',it:'HRV',he:'HRV',ja:'HRV',ko:'HRV'},
+  rhr:{ru:'Пульс покоя',uk:'Пульс спокою',en:'Resting pulse',es:'Pulso en reposo',de:'Ruhepuls',pt:'Pulso em repouso',fr:'Pouls au repos',pl:'Tętno spoczynkowe',it:'Polso a riposo',he:'דופק במנוחה',ja:'安静時心拍',ko:'안정시 맥박'},
+  sleepHours:{ru:'Сон',uk:'Сон',en:'Sleep',es:'Sueño',de:'Schlaf',pt:'Sono',fr:'Sommeil',pl:'Sen',it:'Sonno',he:'שינה',ja:'睡眠',ko:'수면'},
+  deepMin:{ru:'Глубокий сон',uk:'Глибокий сон',en:'Deep sleep',es:'Sueño profundo',de:'Tiefschlaf',pt:'Sono profundo',fr:'Sommeil profond',pl:'Sen głęboki',it:'Sonno profondo',he:'שינה עמוקה',ja:'深い睡眠',ko:'깊은 수면'},
+  tempDev:{ru:'Температура',uk:'Температура',en:'Temperature',es:'Temperatura',de:'Temperatur',pt:'Temperatura',fr:'Température',pl:'Temperatura',it:'Temperatura',he:'טמפרטורה',ja:'体温',ko:'체온'},
+  spo2:{ru:'Кислород в крови',uk:'Кисень у крові',en:'Blood oxygen',es:'Oxígeno en sangre',de:'Blutsauerstoff',pt:'Oxigênio no sangue',fr:'Oxygène sanguin',pl:'Tlen we krwi',it:'Ossigeno nel sangue',he:'חמצן בדם',ja:'血中酸素',ko:'혈중 산소'},
+  vo2:{ru:'Аэробная форма',uk:'Аеробна форма',en:'Aerobic fitness',es:'Forma aeróbica',de:'Aerobe Fitness',pt:'Forma aeróbica',fr:'Forme aérobie',pl:'Forma aerobowa',it:'Forma aerobica',he:'כושר אירובי',ja:'有酸素フィットネス',ko:'유산소 능력'},
+  readiness:{ru:'Готовность',uk:'Готовність',en:'Readiness',es:'Preparación',de:'Bereitschaft',pt:'Prontidão',fr:'Disponibilité',pl:'Gotowość',it:'Prontezza',he:'מוכנות',ja:'準備度',ko:'준비도'}
+};
+const _GP_SRC={fitbit:'Fitbit',oura:'Oura',samsung:'Samsung Health',whoop:'WHOOP',xiaomi:'Xiaomi',garmin:'Garmin',polar:'Polar',withings:'Withings',apple:'Apple Health','apple-manual':'Apple Health'};
+function _gpAutoSource(){var d=importedData;return (d&&d.source&&d.source!=='manual'&&d.source!=='apple-manual')?d.source:null;}
+function renderGadgetPanel(){
+  var wrap=document.getElementById('gadget-panel-wrap'),box=document.getElementById('gadget-panel');
+  if(!wrap||!box)return;
+  var D=importedData||{}, keys=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','vo2','readiness'];
+  if(!keys.some(function(k){return D[k]!=null&&!isNaN(D[k]);})){wrap.style.display='none';return;}  // нет ни одной метрики — панель скрыта
+  var s=_gpAutoSource(), src=s?(_GP_SRC[s]||s.charAt(0).toUpperCase()+s.slice(1)):null;
+  var tt=document.getElementById('gp-title-txt');
+  if(tt)tt.textContent=L({ru:'Данные с трекера',uk:'Дані з трекера',en:'Tracker data',es:'Datos del tracker',de:'Tracker-Daten',pt:'Dados do tracker',fr:'Données du tracker',pl:'Dane z trackera',it:'Dati del tracker',he:'נתוני המכשיר',ja:'トラッカーのデータ',ko:'트래커 데이터'});
+  box.innerHTML=keys.map(function(k){
+    var m=_GMETA[k], got=D[k]!=null&&!isNaN(D[k]), v=got?m.f(D[k]):'—', lbl=(_GLAB[k]&&(_GLAB[k][lang]||_GLAB[k].en))||k;
+    return '<div class="gp-tile '+(got?'got':'miss')+'">'
+      +'<div class="gp-val'+(got?'':' miss')+'">'+v+(got&&m.u?'<span class="gp-unit"> '+m.u+'</span>':'')+'</div>'
+      +'<div class="gp-lbl">'+lbl+'</div>'
+      +(got&&src?'<div class="gp-src">✓ '+src+'</div>':'')
+      +'</div>';
+  }).join('');
+  wrap.style.display='block';
+}
 function setLang(l){
   lang=l;
   if(typeof updateProgress==='function')updateProgress(window._curStep!=null?window._curStep:0);   // перевести лейбл прогресса
@@ -4884,6 +4944,7 @@ function setLang(l){
   if(_lastResult){_rerendering=true;try{_showResultsInner();}finally{_rerendering=false;}if(document.getElementById('aiCard'))fetchAIAnalysis(_lastResult.data,l);}
   // Перерисовать счётчик Expert-разборов с новыми переводами (если он отображён).
   if(document.getElementById('expertCounter')?.style.display !== 'none') renderExpertCounter();
+  if(typeof renderGadgetPanel==='function')renderGadgetPanel();   // перевести подписи панели трекера
 }
 function t(k){return T[lang][k]||T.ru[k]||k;}
 function L(t){return t[lang]||t.en||t.ru||Object.values(t)[0];}
@@ -6588,6 +6649,7 @@ function applyImportedToSliders(){
   if(importedData.sleepHours!=null){const h=importedData.sleepHours,sq=h>=7.5?8:h>=6?6:h>=5?4:2,el=document.getElementById('sleep_qual');el.value=sq;ouraSlider('sq',sq);if(importedData.deepMin!=null){const d=importedData.deepMin;if(d>=90)document.getElementById('dp1').checked=true;else if(d>=30)document.getElementById('dp2').checked=true;else document.getElementById('dp3').checked=true;}}
   if(importedData.tempDev!=null){const d=importedData.tempDev;if(Math.abs(d)<=0.1)document.getElementById('tp1').checked=true;else if(d>0.1&&d<0.5)document.getElementById('tp2').checked=true;else if(d>=0.5)document.getElementById('tp3').checked=true;else document.getElementById('tp4').checked=true;}
   showImportBanner();
+  if(typeof renderGadgetPanel==='function')renderGadgetPanel();
 }
 function showImportBanner(){
   if(!importedData.source)return;
@@ -6699,7 +6761,7 @@ function renderPreview(gridId,data){
   el.innerHTML=Object.keys(labels).filter(k=>data[k]!=null).map(k=>`<div class="preview-metric"><div class="preview-val">${typeof data[k]==='number'?data[k].toFixed(k==='sleepHours'||k==='tempDev'?1:0):data[k]}</div><div class="preview-lbl">${labels[k]} ${units[k]}</div></div>`).join('');
 }
 function setStatus(id,type,msg){const el=document.getElementById(id);if(!el)return;el.className='import-status '+type;el.textContent=msg;}
-function updateImportSummary(){const s=document.getElementById('import-summary'),g=document.getElementById('import-summary-grid');if(!s||!g)return;const count=Object.keys(importedData).filter(k=>importedData[k]!=null&&k!=='source').length;if(count>0){s.style.display='block';renderPreview('import-summary-grid',importedData);}}
+function updateImportSummary(){const s=document.getElementById('import-summary'),g=document.getElementById('import-summary-grid');if(!s||!g)return;const count=Object.keys(importedData).filter(k=>importedData[k]!=null&&k!=='source').length;if(count>0){s.style.display='block';renderPreview('import-summary-grid',importedData);}if(typeof renderGadgetPanel==='function')renderGadgetPanel();}
 function parseSamsungCSV(text){
   const out={};
   try{
