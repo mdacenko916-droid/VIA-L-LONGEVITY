@@ -2317,14 +2317,6 @@ footer{
           </div>
         </div>
       </div>
-      <div class="input-group">
-        <label data-t="s1_l3">Как часто на неделе?</label>
-        <div class="chips">
-          <div class="chip"><input type="radio" name="hotfreq" id="hfq1" value="rare" checked><label for="hfq1" data-t="freq_rare">Редко (0–2 дня)</label></div>
-          <div class="chip"><input type="radio" name="hotfreq" id="hfq2" value="often"><label for="hfq2" data-t="freq_often">Часто (3–5 дней)</label></div>
-          <div class="chip"><input type="radio" name="hotfreq" id="hfq3" value="daily"><label for="hfq3" data-t="freq_daily">Почти каждую ночь</label></div>
-        </div>
-      </div>
       </div>
       <div class="btn-row">
         <button class="btn btn-back" onclick="goTo(0)">←</button>
@@ -2598,29 +2590,24 @@ footer{
       <div class="input-group">
         <label data-t="s6_l1">Память и концентрация</label>
         <div class="chips">
-          <div class="chip"><input type="radio" name="memory" id="mem1" value="good" checked><label for="mem1" data-t="mem_good">Без изменений</label></div>
-          <div class="chip"><input type="radio" name="memory" id="mem2" value="slight"><label for="mem2" data-t="mem_slight">Чуть хуже обычного</label></div>
-          <div class="chip"><input type="radio" name="memory" id="mem3" value="poor"><label for="mem3" data-t="mem_poor">Заметно хуже</label></div>
-          <div class="chip"><input type="radio" name="memory" id="mem4" value="severe"><label for="mem4" data-t="mem_severe">Сильно нарушена</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem1" value="1"><label for="mem1">1</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem2" value="2"><label for="mem2">2</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem3" value="3"><label for="mem3">3</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem4" value="4"><label for="mem4">4</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem5" value="5"><label for="mem5">5</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem6" value="6"><label for="mem6">6</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem7" value="7"><label for="mem7">7</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem8" value="8" checked><label for="mem8">8</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem9" value="9"><label for="mem9">9</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem10" value="10"><label for="mem10">10</label></div>
         </div>
       </div>
       <div class="divider"></div>
       <div class="input-group">
         <label data-t="s6_l2">Туман в голове (brain fog)</label>
         <div class="chips">
-          <div class="chip"><input type="radio" name="fog" id="fog1" value="none" checked><label for="fog1" data-t="no">Нет</label></div>
-          <div class="chip"><input type="radio" name="fog" id="fog2" value="morning"><label for="fog2" data-t="fog_morning">Только утром</label></div>
-          <div class="chip"><input type="radio" name="fog" id="fog3" value="daily"><label for="fog3" data-t="fog_daily">Большую часть дня</label></div>
-          <div class="chip"><input type="radio" name="fog" id="fog4" value="constant"><label for="fog4" data-t="fog_constant">Постоянно</label></div>
-        </div>
-      </div>
-      <div class="input-group">
-        <label data-t="s6_l3">Как давно заметили изменения?</label>
-        <div class="chips">
-          <div class="chip"><input type="radio" name="cogndur" id="cd1" value="none" checked><label for="cd1" data-t="cogdur_none">Не замечаю</label></div>
-          <div class="chip"><input type="radio" name="cogndur" id="cd2" value="weeks"><label for="cd2" data-t="cogdur_weeks">Несколько недель</label></div>
-          <div class="chip"><input type="radio" name="cogndur" id="cd3" value="months"><label for="cd3" data-t="cogdur_months">Несколько месяцев</label></div>
-          <div class="chip"><input type="radio" name="cogndur" id="cd4" value="year"><label for="cd4" data-t="cogdur_year">Больше года</label></div>
+          <div class="chip"><input type="radio" name="fog" id="fog0" value="0" checked><label for="fog0" data-t="no">Нет</label></div>
+          <div class="chip"><input type="radio" name="fog" id="fog1" value="3"><label for="fog1" data-t="yes">Да</label></div>
         </div>
       </div>
       <div class="btn-row">
@@ -5238,6 +5225,7 @@ function saveSession(score,type,data){
   history.unshift(session);
   while(history.length>60)history.pop();
   localStorage.setItem(key,JSON.stringify(history));
+  if(typeof _saveDaily==='function')_saveDaily();   // дневной снимок для недельного разбора
 }
 
 function renderHistory(){
@@ -5414,7 +5402,7 @@ async function genWeeklyReport(){
   try{
     const res=await fetch('https://interpreter.viaelcom.workers.dev/weekly-report',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({summary,lang,code})});
+      body:JSON.stringify({summary,daily:(typeof _weeklyDaily==='function'?_weeklyDaily():null),lang,code})});
     const json=await res.json();
     if(!json.report) throw new Error('no report');
     localStorage.setItem('vial_weekly_text',json.report);
@@ -6209,6 +6197,10 @@ document.addEventListener('change',function(e){
     else if(opp&&b.value===opp)b.checked=false;    // улучшилось ↔ ухудшилось по тому же показателю
   }
 });
+// Маппинг упрощённого ввода когниции в категории движка (как в pro): вход память 1–10 / туман 0|3,
+// инсайт-ветки ниже по-прежнему читают severe/poor/slight/good и constant/daily/morning/none.
+function _mapMem(n){return n<=3?'severe':n<=5?'poor':n<=7?'slight':'good';}
+function _mapFog(d){return d>=5?'constant':d>=3?'daily':d>=1?'morning':'none';}
 function _showResultsInner(){
   const data={
     gender:getRadio('gender')||'female',
@@ -6229,9 +6221,8 @@ function _showResultsInner(){
     training:(typeof importedData!=='undefined'&&importedData.source&&importedData.workouts7d!=null)?{count:importedData.workouts7d,intensity:importedData.trainIntensity||'',activity:importedData.trainActivity||'',day:importedData.trainDay||''}:null,
     alc:getRadio('alc'),stress:getRadio('stress'),
     // PRO fields
-    memory:getRadio('memory'),
-    fog:getRadio('fog'),
-    cogndur:getRadio('cogndur'),
+    memory:_mapMem(+getRadio('memory')||8),
+    fog:_mapFog(+getRadio('fog')||0),
     horm_symptoms:getChecked(['hs1','hs2','hs4','hs5','hs6','hs7','hs8','hm1','hm2','hm3','hm4','hm5','hm6','hm8']),
     horm_intensity:getRadio('horm_intensity'),
     appetite:getRadio('appetite'),
@@ -6844,10 +6835,10 @@ function _showResultsInner(){
 const importedData={hrv:null,rhr:null,sleepHours:null,deepMin:null,tempDev:null,energy:null,vo2:null,source:null};
 // ── Гаджет-панель (read-only зеркало importedData) — порт из pro ──
 const _GMETA={
-  hrv:{u:'ms',f:function(v){return Math.round(v);}}, rhr:{u:'bpm',f:function(v){return Math.round(v);}},
-  sleepHours:{u:'h',f:function(v){return (+v).toFixed(1);}}, deepMin:{u:'min',f:function(v){return Math.round(v);}},
-  tempDev:{u:'°C',f:function(v){return (v>0?'+':'')+(+v).toFixed(2);}}, spo2:{u:'%',f:function(v){return Math.round(v);}},
-  vo2:{u:'',f:function(v){return Math.round(v);}}, readiness:{u:'%',f:function(v){return Math.round(v);}}
+  hrv:{min:10,max:200,step:1,u:'ms',f:function(v){return Math.round(v);}}, rhr:{min:30,max:120,step:1,u:'bpm',f:function(v){return Math.round(v);}},
+  sleepHours:{min:0,max:14,step:0.1,u:'h',f:function(v){return (+v).toFixed(1);}}, deepMin:{min:0,max:240,step:1,u:'min',f:function(v){return Math.round(v);}},
+  tempDev:{min:-2,max:2,step:0.01,u:'°C',f:function(v){return (v>0?'+':'')+(+v).toFixed(2);}}, spo2:{min:80,max:100,step:1,u:'%',f:function(v){return Math.round(v);}},
+  vo2:{min:15,max:80,step:1,u:'',f:function(v){return Math.round(v);}}, readiness:{min:0,max:100,step:1,u:'%',f:function(v){return Math.round(v);}}
 };
 const _GLAB={
   hrv:{ru:'HRV',uk:'HRV',en:'HRV',es:'HRV',de:'HRV',pt:'HRV',fr:'HRV',pl:'HRV',it:'HRV',he:'HRV',ja:'HRV',ko:'HRV'},
@@ -6871,13 +6862,82 @@ function renderGadgetPanel(){
   if(tt)tt.textContent=L({ru:'Данные с трекера',uk:'Дані з трекера',en:'Tracker data',es:'Datos del tracker',de:'Tracker-Daten',pt:'Dados do tracker',fr:'Données du tracker',pl:'Dane z trackera',it:'Dati del tracker',he:'נתוני המכשיר',ja:'トラッカーのデータ',ko:'트래커 데이터'});
   box.innerHTML=keys.map(function(k){
     var m=_GMETA[k], got=D[k]!=null&&!isNaN(D[k]), v=got?m.f(D[k]):'—', lbl=(_GLAB[k]&&(_GLAB[k][lang]||_GLAB[k].en))||k;
-    return '<div class="gp-tile '+(got?'got':'miss')+'">'
+    return '<div class="gp-tile '+(got?'got':'miss')+'" onclick="_gEdit(\''+k+'\',this)" style="position:relative;cursor:pointer;">'
+      +'<div style="position:absolute;top:4px;right:6px;font-size:10px;color:var(--t3);">✎</div>'
       +'<div class="gp-val'+(got?'':' miss')+'">'+v+(got&&m.u?'<span class="gp-unit"> '+m.u+'</span>':'')+'</div>'
       +'<div class="gp-lbl">'+lbl+'</div>'
       +(got&&src?'<div class="gp-src">✓ '+src+'</div>':'')
       +'</div>';
   }).join('');
   wrap.style.display='block';
+}
+// Инлайн-правка плитки: клик → числовое поле; правка пишет в importedData, тянет в шаги анкеты и копит.
+function _saveImported(){try{localStorage.setItem('vial_imported',JSON.stringify(importedData));}catch(e){}}
+function _gEdit(k,box){
+  if(!box||!_GMETA[k])return;
+  var m=_GMETA[k], cur=(importedData&&importedData[k]!=null)?importedData[k]:'';
+  box.style.borderColor='var(--gold-lt)';
+  box.innerHTML='<input class="ginp" type="number" inputmode="decimal" step="'+m.step+'" min="'+m.min+'" max="'+m.max+'" value="'+cur+'" '
+    +'onclick="event.stopPropagation();" '
+    +'onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur();}else if(event.key===\'Escape\'){_gRefresh();}" onblur="_gSave(\''+k+'\',this)" '
+    +'style="width:100%;background:transparent;border:none;outline:none;text-align:center;font-family:inherit;font-size:18px;font-weight:600;color:var(--t1);">'
+    +'<div style="font-size:10px;color:var(--gold-lt);margin-top:5px;letter-spacing:.2px;">'+((_GLAB[k]&&(_GLAB[k][lang]||_GLAB[k].en))||k)+(m.u?' · '+m.u:'')+'</div>';
+  var inp=box.querySelector('.ginp'); if(inp){inp.focus();inp.select();}
+}
+function _gSave(k,inp){
+  var m=_GMETA[k];
+  if(!inp||!m){_gRefresh();return;}
+  var raw=(inp.value||'').trim();
+  if(raw===''){ importedData[k]=null; }
+  else{ var n=parseFloat(raw.replace(',','.')); if(!isNaN(n)){ importedData[k]=Math.min(m.max,Math.max(m.min,n)); } }
+  if(importedData.source==null)importedData.source='manual';
+  try{_saveImported();}catch(e){}
+  if(typeof applyImportedToSliders==='function'){try{applyImportedToSliders();}catch(e){}}
+  _gRefresh();
+}
+function _gRefresh(){ if(typeof renderGadgetPanel==='function'){try{renderGadgetPanel();}catch(e){}} }
+// Восстановление подтянутых/правленых показателей с прошлого раза (как в pro).
+try{var _imp=JSON.parse(localStorage.getItem('vial_imported')||'null');if(_imp&&typeof _imp==='object')Object.keys(_imp).forEach(function(k){if(_imp[k]!=null)importedData[k]=_imp[k];});}catch(e){}
+// Дневной снимок (как в pro): приборные + приливы/память/туман/стресс/алкоголь. Поля совпали с pro после A3/A4.
+function _saveDaily(){
+  try{
+    var D=(typeof importedData!=='undefined'&&importedData)?importedData:{};
+    var sMap={no:1,mild:5,high:9}, st=sMap[getRadio('stress')];
+    var rec={
+      date:new Date().toLocaleDateString(lang==='en'?'en-GB':'ru-RU',{day:'numeric',month:'short'}),
+      day:new Date().toISOString().slice(0,10), ts:Date.now(),
+      hrv:D.hrv, rhr:D.rhr, sleepHours:D.sleepHours, deepMin:D.deepMin,
+      spo2:D.spo2, tempDev:D.tempDev, vo2:D.vo2, readiness:D.readiness,
+      energy:(document.getElementById('energy')?+document.getElementById('energy').value:null),
+      hf_count:getRadio('hf_count'), hf_intensity:getRadio('hf_intensity'),
+      memory:getRadio('memory'), fog:getRadio('fog'),
+      stress:(st!=null?st:null), alc:getRadio('alc'), phase:getRadio('phase')
+    };
+    var arr=[]; try{arr=JSON.parse(localStorage.getItem('vial_daily')||'[]')||[];}catch(e){}
+    arr=arr.filter(function(r){return r.day!==rec.day;});
+    arr.unshift(rec);
+    while(arr.length>90)arr.pop();
+    localStorage.setItem('vial_daily',JSON.stringify(arr));
+  }catch(e){}
+}
+// Недельный агрегатор по дням (идентичен pro — поля совпали): приливы/темп/SpO₂/память/туман/стресс/алкоголь.
+function _weeklyDaily(){
+  var arr=[]; try{arr=JSON.parse(localStorage.getItem('vial_daily')||'[]')||[];}catch(e){}
+  var now=Date.now(),DAY=86400000;
+  var wk=arr.filter(function(r){return r.ts&&now-r.ts<7*DAY;});
+  if(!wk.length)return null;
+  var avg=function(k){var v=wk.map(function(r){return r[k];}).filter(function(x){return x!=null&&x!==''&&!isNaN(x);});return v.length?+(v.reduce(function(a,b){return a+(+b);},0)/v.length).toFixed(2):null;};
+  var modal=function(k){var c={},best=null,bn=0;wk.forEach(function(r){var x=r[k];if(x==null||x==='')return;c[x]=(c[x]||0)+1;if(c[x]>bn){bn=c[x];best=x;}});return best;};
+  var cnt=function(pred){return wk.filter(pred).length;};
+  return {
+    days:wk.length,
+    hfDays:cnt(function(r){return r.hf_count&&r.hf_count!=='none';}),
+    hfCount:modal('hf_count'), hfIntensity:modal('hf_intensity'),
+    tempDev:avg('tempDev'), spo2:avg('spo2'), stress:avg('stress'),
+    memory:avg('memory'), fogDays:cnt(function(r){return r.fog!=null&&+r.fog>0;}),
+    alcDays:cnt(function(r){return r.alc==='yes';}),
+    profile:{ phase:modal('phase')||null }
+  };
 }
 function openImport(){const sa=document.getElementById('scroll-area');if(sa){sa.scrollTo({top:0,behavior:'instant'});sa.style.overflowY='hidden';}const tb=document.getElementById('topbar');if(tb)tb.style.background='#10131A';document.getElementById('importPanel').classList.add('open');}
 function closeImport(skip){document.getElementById('importPanel').classList.remove('open');const sa=document.getElementById('scroll-area');if(sa)sa.style.overflowY='auto';const tb=document.getElementById('topbar');if(tb)tb.style.background='';if(!skip&&importedData.source)applyImportedToSliders();}
@@ -6990,7 +7050,7 @@ function parseCSV(text,source){
   if(out.energy&&out.energy>10)out.energy=Math.min(10,Math.round(out.energy/10));
   return out;
 }
-function applyExtracted(ex,source){Object.keys(ex).forEach(k=>{if(ex[k]!=null)importedData[k]=ex[k];});importedData.source=source;}
+function applyExtracted(ex,source){Object.keys(ex).forEach(k=>{if(ex[k]!=null)importedData[k]=ex[k];});importedData.source=source;if(typeof _saveImported==='function')_saveImported();}
 function renderPreview(gridId,data){
   const labels={hrv:'HRV',rhr:'Пульс',sleepHours:'Сон',deepMin:'Deep',tempDev:'Темп.',energy:'Энергия',readiness:'Готов.',vo2:'VO2'};
   const units={hrv:'мс',rhr:'уд/м',sleepHours:'ч',deepMin:'мин',tempDev:'°C',energy:'/10',readiness:'%',vo2:''};
@@ -7240,8 +7300,8 @@ function applyXiaomiManual(){
   setStatus('xiaomi-manual-status','success','✓ Данные Xiaomi применены');
   updateImportSummary();
 }
-function applyManual(){const fields={hrv:'m-hrv',rhr:'m-rhr',sleepHours:'m-sleep',deepMin:'m-deep',tempDev:'m-temp',vo2:'m-vo2'};let n=0;Object.keys(fields).forEach(k=>{const v=parseFloat(document.getElementById(fields[k])?.value);if(!isNaN(v)){importedData[k]=v;n++;}});importedData.source='apple-manual';if(n>0){setStatus('manual-status','success',`✓ Применено ${n} показателей`);updateImportSummary();}else setStatus('manual-status','error','Введите хотя бы один показатель');}
-function applyManualFull(){const fields={hrv:'mm-hrv',rhr:'mm-rhr',sleepHours:'mm-sleep',deepMin:'mm-deep',tempDev:'mm-temp',energy:'mm-energy'};let n=0;Object.keys(fields).forEach(k=>{const v=parseFloat(document.getElementById(fields[k])?.value);if(!isNaN(v)){importedData[k]=v;n++;}});importedData.source='manual';if(n>0){setStatus('manual-full-status','success',`✓ Применено ${n} показателей`);updateImportSummary();}else setStatus('manual-full-status','error','Введите хотя бы один показатель');}
+function applyManual(){const fields={hrv:'m-hrv',rhr:'m-rhr',sleepHours:'m-sleep',deepMin:'m-deep',tempDev:'m-temp',vo2:'m-vo2'};let n=0;Object.keys(fields).forEach(k=>{const v=parseFloat(document.getElementById(fields[k])?.value);if(!isNaN(v)){importedData[k]=v;n++;}});importedData.source='apple-manual';if(typeof _saveImported==='function')_saveImported();if(n>0){setStatus('manual-status','success',`✓ Применено ${n} показателей`);updateImportSummary();}else setStatus('manual-status','error','Введите хотя бы один показатель');}
+function applyManualFull(){const fields={hrv:'mm-hrv',rhr:'mm-rhr',sleepHours:'mm-sleep',deepMin:'mm-deep',tempDev:'mm-temp',energy:'mm-energy'};let n=0;Object.keys(fields).forEach(k=>{const v=parseFloat(document.getElementById(fields[k])?.value);if(!isNaN(v)){importedData[k]=v;n++;}});importedData.source='manual';if(typeof _saveImported==='function')_saveImported();if(n>0){setStatus('manual-full-status','success',`✓ Применено ${n} показателей`);updateImportSummary();}else setStatus('manual-full-status','error','Введите хотя бы один показатель');}
 
 function parseWithingsCSV(text,filename){
   const out={};
