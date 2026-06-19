@@ -2336,34 +2336,12 @@ footer{
         </div>
       </div>
       <div class="input-group">
-        <label data-t="s3_anx">Тревожность (1–10)</label>
-        <div class="oura-slider-wrap">
-          <div class="hrv-vital">
-            <div class="rings-wrap" style="--ring-clr:rgba(192,57,90,.65)">
-              <div class="pulse-ring"></div><div class="pulse-ring"></div><div class="pulse-ring"></div>
-            </div>
-            <div class="oura-display">
-              <div class="oura-number" id="anx-num">3</div>
-              <div class="oura-unit">/ 10</div>
-              <div class="oura-status" id="anx-status">Low</div>
-            </div>
-          </div>
-          <canvas id="ecg-anx" class="ecg-canvas"></canvas>
-          <div class="oura-track-wrap">
-            <div class="oura-track" id="anx-track">
-              <div class="oura-fill" id="anx-fill"></div>
-              <div class="oura-range" id="anx-range"></div>
-              <div class="oura-marker" id="anx-marker"></div>
-              <input class="oura-input" type="range" id="anxiety" min="1" max="10" value="3"
-                oninput="ouraSlider('anx',+this.value)">
-            </div>
-            <div class="oura-range-labels">
-              <span class="oura-label-min">1</span>
-              <span class="oura-label-norm-start" id="anx-nl">1</span>
-              <span class="oura-label-norm-end" id="anx-nr">4</span>
-              <span class="oura-label-max">10</span>
-            </div>
-          </div>
+        <label data-t="anx_q">Тревожность</label>
+        <div class="chips">
+          <div class="chip"><input type="radio" name="anxiety" id="anx1" value="1" checked><label for="anx1" data-t="anx_none">Отсутствует</label></div>
+          <div class="chip"><input type="radio" name="anxiety" id="anx2" value="4"><label for="anx2" data-t="anx_mild">Лёгкая</label></div>
+          <div class="chip"><input type="radio" name="anxiety" id="anx3" value="7"><label for="anx3" data-t="anx_mod">Умеренная</label></div>
+          <div class="chip"><input type="radio" name="anxiety" id="anx4" value="9"><label for="anx4" data-t="anx_high">Выраженная</label></div>
         </div>
       </div>
       <div class="input-group">
@@ -4776,6 +4754,15 @@ const _PMS={
   pmsy_none:{ru:'Ничего из перечисленного',uk:'Нічого з переліченого',en:'None of the above',es:'Ninguno de los anteriores',de:'Nichts davon',pt:'Nenhum dos acima',fr:'Aucun de ces symptômes',pl:'Żaden z powyższych',it:'Nessuno dei precedenti',he:'אף אחד מהנ״ל',ja:'いずれもない',ko:'해당 없음'}
 };
 Object.keys(_PMS).forEach(function(k){Object.keys(_PMS[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_PMS[k][l];});});
+// ── Тревожность — 4 уровня вместо ползунка (как новый pro) ──
+const _ANX={
+  anx_q:{ru:'Тревожность',uk:'Тривожність',en:'Anxiety',es:'Ansiedad',de:'Ängstlichkeit',pt:'Ansiedade',fr:'Anxiété',pl:'Lęk',it:'Ansia',he:'חרדה',ja:'不安',ko:'불안'},
+  anx_none:{ru:'Отсутствует',uk:'Відсутня',en:'None',es:'Ausente',de:'Keine',pt:'Ausente',fr:'Absente',pl:'Brak',it:'Assente',he:'אין',ja:'なし',ko:'없음'},
+  anx_mild:{ru:'Лёгкая',uk:'Легка',en:'Mild',es:'Leve',de:'Leicht',pt:'Leve',fr:'Légère',pl:'Łagodny',it:'Lieve',he:'קלה',ja:'軽い',ko:'약함'},
+  anx_mod:{ru:'Умеренная',uk:'Помірна',en:'Moderate',es:'Moderada',de:'Mäßig',pt:'Moderada',fr:'Modérée',pl:'Umiarkowany',it:'Moderata',he:'בינונית',ja:'中程度',ko:'보통'},
+  anx_high:{ru:'Выраженная',uk:'Виражена',en:'Marked',es:'Marcada',de:'Ausgeprägt',pt:'Acentuada',fr:'Marquée',pl:'Wyraźny',it:'Marcata',he:'בולטת',ja:'強い',ko:'심함'}
+};
+Object.keys(_ANX).forEach(function(k){Object.keys(_ANX[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_ANX[k][l];});});
 // ── Fitbit (Google Health) OAuth connect strings (uk first, all 12 languages) ──
 const _fitbitT={
   uk:{tab_fitbit_connect:'🔗 Підключити',instr_fitbit_connect:'Увійдіть у свій акаунт Fitbit — ми безпечно підтягнемо показники за 7 днів і автоматично заповнимо кроки аналізу. Токен не потрібен.',btn_fitbit_connect:'🔗 Підключити Fitbit',status_fitbit_connecting:'⏳ Підключаємось до Fitbit…',status_fitbit_ok:'✓ Дані Fitbit завантажено',status_fitbit_err:'⚠ Не вдалося отримати дані Fitbit'},
@@ -5356,7 +5343,7 @@ function ouraSlider(id,val){
   const nl=document.getElementById(id+'-nl');const nr=document.getElementById(id+'-nr');
   if(nl)nl.style.left=(nlp*100)+'%';if(nr)nr.style.left=(nrp*100)+'%';
 }
-function initSliders(){ouraSlider('hrv',55);ouraSlider('sq',6);ouraSlider('rhr',68);ouraSlider('en',6);ouraSlider('resp',15);ouraSlider('anx',3);}
+function initSliders(){ouraSlider('hrv',55);ouraSlider('sq',6);ouraSlider('rhr',68);ouraSlider('en',6);ouraSlider('resp',15);}
 initSliders();
 // ИП — мировой продукт (12 языков), дефолт EN. Свой ключ vial_lang;
 // НЕ наследуем selectedLang с 4-язычного сайта VIA-L.
@@ -5462,7 +5449,6 @@ function restart(){
   document.getElementById('rhr').value=68;ouraSlider('rhr',68);
   document.getElementById('energy').value=6;ouraSlider('en',6);
   document.getElementById('resp_rate').value=15;ouraSlider('resp',15);
-  document.getElementById('anxiety').value=3;ouraSlider('anx',3);
   const hfd=document.getElementById('hf-detail');if(hfd)hfd.style.display='none';
   ['gf','hd1','tp1','hf1','hfq1','dp1','wk1','rc1','al1','st1','ph1','hfc1','md1','irr1'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.checked=true;
@@ -6155,7 +6141,7 @@ function _showResultsInner(){
     hf_time:getRadio('hf_time'),
     resp_rate:+document.getElementById('resp_rate').value,
     mood:getRadio('mood'),
-    anxiety:+document.getElementById('anxiety').value,
+    anxiety:+(getRadio('anxiety')||1),
     irritability:getRadio('irritability'),
     cycle_status:getRadio('cycle_status'),
     last_period:getRadio('last_period'),
