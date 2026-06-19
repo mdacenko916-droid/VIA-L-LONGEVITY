@@ -4858,10 +4858,10 @@ const importedData={hrv:null,rhr:null,sleepHours:null,deepMin:null,tempDev:null,
 // Показывает 8 приборных окошек с тем, что подтянулось с трекера. Не трогает движок анкеты:
 // ввод по-прежнему идёт через шаги, панель — лишь сводка «что пришло с устройства».
 const _GMETA={
-  hrv:{u:'ms',f:function(v){return Math.round(v);}}, rhr:{u:'bpm',f:function(v){return Math.round(v);}},
-  sleepHours:{u:'h',f:function(v){return (+v).toFixed(1);}}, deepMin:{u:'min',f:function(v){return Math.round(v);}},
-  tempDev:{u:'°C',f:function(v){return (v>0?'+':'')+(+v).toFixed(2);}}, spo2:{u:'%',f:function(v){return Math.round(v);}},
-  vo2:{u:'',f:function(v){return Math.round(v);}}, readiness:{u:'%',f:function(v){return Math.round(v);}}
+  hrv:{min:10,max:200,step:1,u:'ms',f:function(v){return Math.round(v);}}, rhr:{min:30,max:120,step:1,u:'bpm',f:function(v){return Math.round(v);}},
+  sleepHours:{min:0,max:14,step:0.1,u:'h',f:function(v){return (+v).toFixed(1);}}, deepMin:{min:0,max:240,step:1,u:'min',f:function(v){return Math.round(v);}},
+  tempDev:{min:-2,max:2,step:0.01,u:'°C',f:function(v){return (v>0?'+':'')+(+v).toFixed(2);}}, spo2:{min:80,max:100,step:1,u:'%',f:function(v){return Math.round(v);}},
+  vo2:{min:15,max:80,step:1,u:'',f:function(v){return Math.round(v);}}, readiness:{min:0,max:100,step:1,u:'%',f:function(v){return Math.round(v);}}
 };
 const _GLAB={
   hrv:{ru:'HRV',uk:'HRV',en:'HRV',es:'HRV',de:'HRV',pt:'HRV',fr:'HRV',pl:'HRV',it:'HRV',he:'HRV',ja:'HRV',ko:'HRV'},
@@ -4885,7 +4885,8 @@ function renderGadgetPanel(){
   if(tt)tt.textContent=L({ru:'Данные с трекера',uk:'Дані з трекера',en:'Tracker data',es:'Datos del tracker',de:'Tracker-Daten',pt:'Dados do tracker',fr:'Données du tracker',pl:'Dane z trackera',it:'Dati del tracker',he:'נתוני המכשיר',ja:'トラッカーのデータ',ko:'트래커 데이터'});
   box.innerHTML=keys.map(function(k){
     var m=_GMETA[k], got=D[k]!=null&&!isNaN(D[k]), v=got?m.f(D[k]):'—', lbl=(_GLAB[k]&&(_GLAB[k][lang]||_GLAB[k].en))||k;
-    return '<div class="gp-tile '+(got?'got':'miss')+'">'
+    return '<div class="gp-tile '+(got?'got':'miss')+'" onclick="_gEdit(\''+k+'\',this)" style="position:relative;cursor:pointer;">'
+      +'<div style="position:absolute;top:4px;right:6px;font-size:10px;color:var(--t3);">✎</div>'
       +'<div class="gp-val'+(got?'':' miss')+'">'+v+(got&&m.u?'<span class="gp-unit"> '+m.u+'</span>':'')+'</div>'
       +'<div class="gp-lbl">'+lbl+'</div>'
       +(got&&src?'<div class="gp-src">✓ '+src+'</div>':'')
@@ -4893,6 +4894,33 @@ function renderGadgetPanel(){
   }).join('');
   wrap.style.display='block';
 }
+// Инлайн-правка плитки: клик → числовое поле; правка пишет в importedData, тянет в шаги анкеты и копит.
+function _saveImported(){try{localStorage.setItem('vial_imported',JSON.stringify(importedData));}catch(e){}}
+function _gEdit(k,box){
+  if(!box||!_GMETA[k])return;
+  var m=_GMETA[k], cur=(importedData&&importedData[k]!=null)?importedData[k]:'';
+  box.style.borderColor='#7898ff';
+  box.innerHTML='<input class="ginp" type="number" inputmode="decimal" step="'+m.step+'" min="'+m.min+'" max="'+m.max+'" value="'+cur+'" '
+    +'onclick="event.stopPropagation();" '
+    +'onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur();}else if(event.key===\'Escape\'){_gRefresh();}" onblur="_gSave(\''+k+'\',this)" '
+    +'style="width:100%;background:transparent;border:none;outline:none;text-align:center;font-family:inherit;font-size:18px;font-weight:600;color:var(--t1);">'
+    +'<div style="font-size:10px;color:#7898ff;margin-top:5px;letter-spacing:.2px;">'+((_GLAB[k]&&(_GLAB[k][lang]||_GLAB[k].en))||k)+(m.u?' · '+m.u:'')+'</div>';
+  var inp=box.querySelector('.ginp'); if(inp){inp.focus();inp.select();}
+}
+function _gSave(k,inp){
+  var m=_GMETA[k];
+  if(!inp||!m){_gRefresh();return;}
+  var raw=(inp.value||'').trim();
+  if(raw===''){ importedData[k]=null; }
+  else{ var n=parseFloat(raw.replace(',','.')); if(!isNaN(n)){ importedData[k]=Math.min(m.max,Math.max(m.min,n)); } }
+  if(importedData.source==null)importedData.source='manual';   // правка вручную = источник «вручную»
+  try{_saveImported();}catch(e){}
+  if(typeof applyImportedToSliders==='function'){try{applyImportedToSliders();}catch(e){}}   // тянем правку в шаги, чтобы разбор учёл
+  _gRefresh();
+}
+function _gRefresh(){ if(typeof renderGadgetPanel==='function'){try{renderGadgetPanel();}catch(e){}} }
+// Восстановление подтянутых/правленых показателей с прошлого раза (как в pro).
+try{var _imp=JSON.parse(localStorage.getItem('vial_imported')||'null');if(_imp&&typeof _imp==='object')Object.keys(_imp).forEach(function(k){if(_imp[k]!=null)importedData[k]=_imp[k];});}catch(e){}
 function setLang(l){
   lang=l;
   if(typeof updateProgress==='function')updateProgress(window._curStep!=null?window._curStep:0);   // перевести лейбл прогресса
@@ -6753,7 +6781,7 @@ function parseCSV(text,source){
   if(out.energy&&out.energy>10)out.energy=Math.min(10,Math.round(out.energy/10));
   return out;
 }
-function applyExtracted(ex,source){Object.keys(ex).forEach(k=>{if(ex[k]!=null)importedData[k]=ex[k];});importedData.source=source;}
+function applyExtracted(ex,source){Object.keys(ex).forEach(k=>{if(ex[k]!=null)importedData[k]=ex[k];});importedData.source=source;if(typeof _saveImported==='function')_saveImported();}
 function renderPreview(gridId,data){
   const labels={hrv:'HRV',rhr:'Пульс',sleepHours:'Сон',deepMin:'Deep',tempDev:'Темп.',energy:'Энергия',readiness:'Готов.',vo2:'VO2'};
   const units={hrv:'мс',rhr:'уд/м',sleepHours:'ч',deepMin:'мин',tempDev:'°C',energy:'/10',readiness:'%',vo2:''};
@@ -7003,8 +7031,8 @@ function applyXiaomiManual(){
   setStatus('xiaomi-manual-status','success','✓ Данные Xiaomi применены');
   updateImportSummary();
 }
-function applyManual(){const fields={hrv:'m-hrv',rhr:'m-rhr',sleepHours:'m-sleep',deepMin:'m-deep',tempDev:'m-temp',vo2:'m-vo2'};let n=0;Object.keys(fields).forEach(k=>{const v=parseFloat(document.getElementById(fields[k])?.value);if(!isNaN(v)){importedData[k]=v;n++;}});importedData.source='apple-manual';if(n>0){setStatus('manual-status','success',`✓ Применено ${n} показателей`);updateImportSummary();}else setStatus('manual-status','error','Введите хотя бы один показатель');}
-function applyManualFull(){const fields={hrv:'mm-hrv',rhr:'mm-rhr',sleepHours:'mm-sleep',deepMin:'mm-deep',tempDev:'mm-temp',energy:'mm-energy'};let n=0;Object.keys(fields).forEach(k=>{const v=parseFloat(document.getElementById(fields[k])?.value);if(!isNaN(v)){importedData[k]=v;n++;}});importedData.source='manual';if(n>0){setStatus('manual-full-status','success',`✓ Применено ${n} показателей`);updateImportSummary();}else setStatus('manual-full-status','error','Введите хотя бы один показатель');}
+function applyManual(){const fields={hrv:'m-hrv',rhr:'m-rhr',sleepHours:'m-sleep',deepMin:'m-deep',tempDev:'m-temp',vo2:'m-vo2'};let n=0;Object.keys(fields).forEach(k=>{const v=parseFloat(document.getElementById(fields[k])?.value);if(!isNaN(v)){importedData[k]=v;n++;}});importedData.source='apple-manual';if(typeof _saveImported==='function')_saveImported();if(n>0){setStatus('manual-status','success',`✓ Применено ${n} показателей`);updateImportSummary();}else setStatus('manual-status','error','Введите хотя бы один показатель');}
+function applyManualFull(){const fields={hrv:'mm-hrv',rhr:'mm-rhr',sleepHours:'mm-sleep',deepMin:'mm-deep',tempDev:'mm-temp',energy:'mm-energy'};let n=0;Object.keys(fields).forEach(k=>{const v=parseFloat(document.getElementById(fields[k])?.value);if(!isNaN(v)){importedData[k]=v;n++;}});importedData.source='manual';if(typeof _saveImported==='function')_saveImported();if(n>0){setStatus('manual-full-status','success',`✓ Применено ${n} показателей`);updateImportSummary();}else setStatus('manual-full-status','error','Введите хотя бы один показатель');}
 
 function parseWithingsCSV(text,filename){
   const out={};
