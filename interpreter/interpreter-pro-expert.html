@@ -2453,29 +2453,24 @@ footer{
       <div class="input-group">
         <label data-t="s6_l1">Память и концентрация</label>
         <div class="chips">
-          <div class="chip"><input type="radio" name="memory" id="mem1" value="good" checked><label for="mem1" data-t="mem_good">Без изменений</label></div>
-          <div class="chip"><input type="radio" name="memory" id="mem2" value="slight"><label for="mem2" data-t="mem_slight">Чуть хуже обычного</label></div>
-          <div class="chip"><input type="radio" name="memory" id="mem3" value="poor"><label for="mem3" data-t="mem_poor">Заметно хуже</label></div>
-          <div class="chip"><input type="radio" name="memory" id="mem4" value="severe"><label for="mem4" data-t="mem_severe">Сильно нарушена</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem1" value="1"><label for="mem1">1</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem2" value="2"><label for="mem2">2</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem3" value="3"><label for="mem3">3</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem4" value="4"><label for="mem4">4</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem5" value="5"><label for="mem5">5</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem6" value="6"><label for="mem6">6</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem7" value="7"><label for="mem7">7</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem8" value="8" checked><label for="mem8">8</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem9" value="9"><label for="mem9">9</label></div>
+          <div class="chip"><input type="radio" name="memory" id="mem10" value="10"><label for="mem10">10</label></div>
         </div>
       </div>
       <div class="divider"></div>
       <div class="input-group">
         <label data-t="s6_l2">Туман в голове (brain fog)</label>
         <div class="chips">
-          <div class="chip"><input type="radio" name="fog" id="fog1" value="none" checked><label for="fog1" data-t="no">Нет</label></div>
-          <div class="chip"><input type="radio" name="fog" id="fog2" value="morning"><label for="fog2" data-t="fog_morning">Только утром</label></div>
-          <div class="chip"><input type="radio" name="fog" id="fog3" value="daily"><label for="fog3" data-t="fog_daily">Большую часть дня</label></div>
-          <div class="chip"><input type="radio" name="fog" id="fog4" value="constant"><label for="fog4" data-t="fog_constant">Постоянно</label></div>
-        </div>
-      </div>
-      <div class="input-group">
-        <label data-t="s6_l3">Как давно заметили изменения?</label>
-        <div class="chips">
-          <div class="chip"><input type="radio" name="cogndur" id="cd1" value="none" checked><label for="cd1" data-t="cogdur_none">Не замечаю</label></div>
-          <div class="chip"><input type="radio" name="cogndur" id="cd2" value="weeks"><label for="cd2" data-t="cogdur_weeks">Несколько недель</label></div>
-          <div class="chip"><input type="radio" name="cogndur" id="cd3" value="months"><label for="cd3" data-t="cogdur_months">Несколько месяцев</label></div>
-          <div class="chip"><input type="radio" name="cogndur" id="cd4" value="year"><label for="cd4" data-t="cogdur_year">Больше года</label></div>
+          <div class="chip"><input type="radio" name="fog" id="fog0" value="0" checked><label for="fog0" data-t="no">Нет</label></div>
+          <div class="chip"><input type="radio" name="fog" id="fog1" value="3"><label for="fog1" data-t="yes">Да</label></div>
         </div>
       </div>
       <div class="btn-row">
@@ -6182,6 +6177,10 @@ document.addEventListener('change',function(e){
     else if(opp&&b.value===opp)b.checked=false;    // улучшилось ↔ ухудшилось по тому же показателю
   }
 });
+// Маппинг упрощённого ввода когниции в категории движка (как в pro): вход память 1–10 / туман 0|3,
+// а инсайт-ветки ниже по-прежнему читают severe/poor/slight/good и constant/daily/morning/none.
+function _mapMem(n){return n<=3?'severe':n<=5?'poor':n<=7?'slight':'good';}
+function _mapFog(d){return d>=5?'constant':d>=3?'daily':d>=1?'morning':'none';}
 function _showResultsInner(){
   const data={
     gender:getRadio('gender')||'female',
@@ -6202,9 +6201,8 @@ function _showResultsInner(){
     training:(typeof importedData!=='undefined'&&importedData.source&&importedData.workouts7d!=null)?{count:importedData.workouts7d,intensity:importedData.trainIntensity||'',activity:importedData.trainActivity||'',day:importedData.trainDay||''}:null,
     alc:getRadio('alc'),stress:getRadio('stress'),
     // PRO fields
-    memory:getRadio('memory'),
-    fog:getRadio('fog'),
-    cogndur:getRadio('cogndur'),
+    memory:_mapMem(+getRadio('memory')||8),
+    fog:_mapFog(+getRadio('fog')||0),
     horm_symptoms:getChecked(['hs1','hs2','hs4','hs5','hs6','hs7','hs8','hm1','hm2','hm3','hm4','hm5','hm6','hm8']),
     horm_intensity:getRadio('horm_intensity'),
     appetite:getRadio('appetite'),
