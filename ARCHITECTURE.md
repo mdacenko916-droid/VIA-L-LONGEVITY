@@ -525,6 +525,12 @@ html[data-current-lang="en"] #heroBtnSlots, html[data-current-lang="es"] #heroBt
 
 ### Журнал выполненного (что уже в проде + `main`)
 
+- **2026-06-20 (b)** — **ELITE: приём+анализ данных = PRO (A1–A4 + дневной агрегатор, зеркало expert).**
+  A1 гаджет-панель (золото) → A2 редактируемые плитки + `vial_imported` → A3 когниция pro-формат
+  (`_mapMem`/`_mapFog`, cogndur убран) → A4 убран лишний `hotfreq` (у elite `hf_count`/`hf_intensity`
+  уже эмитились → pro-ветки приливов были живыми) → `_saveDaily`/`_weeklyDaily` + `daily` в `/weekly-report`.
+  Обкатанная связка ELITE (Zoom/Cal.com-эмбед, PDF `generatePDF`, Google Apps Script заявки) — НЕ тронута.
+  `node`-чек ок, баланс div ровный. Остаётся VIO (отдельная модель) + общий дизайн-проход A5.
 - **2026-06-20** — **EXPERT: приём+анализ данных доведён до паритета с PRO (A2–A4 + дневной агрегатор).**
   Канон: EXPERT = PRO + слой специалиста; обкатанные пост-шаговые кнопки (заявка `sendMaxRequest`,
   гейт `APPS_SCRIPT_URL`, CTA) НЕ трогали. **A2:** гаджет-панель → редактируемые плитки (`_gEdit`/`_gSave`)
