@@ -525,6 +525,15 @@ html[data-current-lang="en"] #heroBtnSlots, html[data-current-lang="es"] #heroBt
 
 ### Журнал выполненного (что уже в проде + `main`)
 
+- **2026-06-19 (b)** — **EXPERT, юнит 1 порта из PRO: read-only гаджет-панель.** Установлена
+  родословная: `interpreter-pro.html` и `interpreter-pro-expert.html` родились одним коммитом
+  (`f9ed143`, 17.05), различались 57 строк; pro пересобран в июне (гаджет-панель/каденс/`vial_daily`),
+  expert застрял на старой базе + получил онбординг/счётчик. Метод — **forward-port интейка pro в
+  expert, результат-экран/кнопки (заявка `sendMaxRequest`, гейт, CTA, Cal.com у elite) не трогаем.**
+  A1: панель «Данные с трекера» (8 окошек, read-only зеркало `importedData`, синий акцент, ×12 языков,
+  сверху потока, видна только при наличии данных) — CSS `.gp-*`, `_GMETA`/`_GLAB`/`renderGadgetPanel`,
+  рендер в `applyImportedToSliders`/`updateImportSummary`/`setLang`. Чисто аддитивно, движок анкеты не
+  тронут. `node`-чек ок, в проде. План — `tasks/TODO.md` §0 Этап A.
 - **2026-06-19** — **Недельный AI-разбор расширен на `vial_daily` + профиль (PRO).** Раньше разбор
   опирался только на 7 числовых полей `vial_history` (`weeklyTrend`), не видя половины внесённого за
   неделю. Добавлен клиентский агрегатор `_weeklyDaily()` (`interpreter-pro.html`): за 7 дней из
