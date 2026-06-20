@@ -376,6 +376,14 @@ body.flow-mode footer,body.flow-mode .legal-links{display:none;}
 /* Кнопка результата — инлайн в конце ленты блоков (доходишь только пройдя всё) */
 #flow-footer{padding:8px 0 28px;display:none;}
 #flow-footer .btn{width:100%;max-width:560px;margin:0 auto;display:block;}
+/* Сворачиваемые тяжёлые группы вариантов (как в pro): видно вопрос+выбранное, разворот по тапу */
+.input-group.vc-collapsible>.vc-head{cursor:pointer;display:flex;align-items:flex-start;gap:10px;}
+.input-group.vc-collapsible>.vc-head>label{margin:0;flex:1 1 auto;min-width:0;overflow-wrap:anywhere;}
+.vc-badge{font-size:11px;color:#9db4ff;margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:55%;text-align:right;}
+.vc-chev{color:var(--t3);font-size:11px;transition:transform .2s;flex:0 0 auto;}
+.input-group.vc-collapsed>.vc-head>.vc-chev{transform:rotate(-90deg);}
+.input-group.vc-collapsed>.vc-body{display:none;}
+.vc-body{margin-top:10px;}
 
 /* ══ STEP ════════════════════════════════════════════════ */
 .step{
@@ -5059,8 +5067,36 @@ function _renderDietLabels(){
   set('dr-l7',{ru:'Интервальное голодание',uk:'Інтервальне голодування',en:'Intermittent fasting',es:'Ayuno intermitente',de:'Intervallfasten',pt:'Jejum intermitente',fr:'Jeûne intermittent',pl:'Post przerywany',it:'Digiuno intermittente',he:'צום לסירוגין',ja:'間欠的断食',ko:'간헐적 단식'});
   set('dr-l8',{ru:'Аллергии',uk:'Алергії',en:'Allergies',es:'Alergias',de:'Allergien',pt:'Alergias',fr:'Allergies',pl:'Alergie',it:'Allergie',he:'אלרגיות',ja:'アレルギー',ko:'알레르기'});
 }
+// Сворачивание тяжёлых групп вариантов в «выпадающее окошко» (как в pro): группы с ≥6 вариантами
+// или мультивыбором сворачиваются (видно вопрос+выбранное, разворот по тапу); слайдеры/короткие — открыты.
+function initCollapsibles(){
+  document.querySelectorAll('.step .input-group').forEach(function(g){
+    if(g.dataset.vc) return;
+    var label=g.querySelector(':scope > label'); if(!label) return;
+    var chips=g.querySelector(':scope > .chips'); if(!chips) return;
+    var n=chips.querySelectorAll('.chip').length;
+    var hasCheck=!!chips.querySelector('input[type="checkbox"]');
+    if(!(n>=6 || hasCheck || g.dataset.collapse)) return;
+    g.dataset.vc='1';
+    g.classList.add('vc-collapsible','vc-collapsed');
+    var head=document.createElement('div'); head.className='vc-head';
+    var badge=document.createElement('span'); badge.className='vc-badge';
+    var chev=document.createElement('span'); chev.className='vc-chev'; chev.textContent='▾';
+    label.parentNode.insertBefore(head,label);
+    head.appendChild(label); head.appendChild(badge); head.appendChild(chev);
+    var body=document.createElement('div'); body.className='vc-body';
+    for(var node=head.nextSibling;node;){ var next=node.nextSibling; body.appendChild(node); node=next; }
+    g.appendChild(body);
+    function upd(){
+      if(hasCheck){ var c=chips.querySelectorAll('input[type="checkbox"]:checked').length; badge.textContent=c?('• '+c):''; }
+      else { var r=chips.querySelector('input[type="radio"]:checked'); badge.textContent=(r&&r.nextElementSibling)?r.nextElementSibling.textContent.trim():''; }
+    }
+    head.addEventListener('click',function(){ g.classList.toggle('vc-collapsed'); });
+    chips.addEventListener('change',upd); upd();
+  });
+}
 // Вход в воронку = сразу вся лента (профиль + блоки) на одной странице (как pro).
-function startFunnel(){ if(typeof _renderImpBtns==='function')_renderImpBtns(); if(typeof _renderDietLabels==='function')_renderDietLabels(); if(typeof showAll==='function') showAll(); }
+function startFunnel(){ if(typeof _renderImpBtns==='function')_renderImpBtns(); if(typeof _renderDietLabels==='function')_renderDietLabels(); if(typeof initCollapsibles==='function')initCollapsibles(); if(typeof showAll==='function') showAll(); }
 // Рендерим одностраничную ленту сразу на загрузке (и за гейтом — гейт блокирует ввод отдельно).
 (function(){ function _s(){ try{startFunnel();}catch(e){console.error('startFunnel',e);} } if(document.readyState!=='loading')_s(); else document.addEventListener('DOMContentLoaded',_s); })();
 function setLang(l){
