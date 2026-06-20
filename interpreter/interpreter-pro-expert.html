@@ -354,7 +354,8 @@ main{
 }
 
 /* ══ PROGRESS ════════════════════════════════════════════ */
-.progress-wrap{margin-bottom:32px;}
+/* Прогресс-бар (15 точек + «Шаг N из 15») убран: поток одностраничный, нумерация шагов устарела (как в pro) */
+.progress-wrap{display:none;}
 .progress-bar{display:flex;gap:4px;margin-bottom:8px;}
 .progress-dot{flex:1;height:2px;background:var(--surface-3);border-radius:2px;transition:all .4s;}
 .progress-dot.done{background:var(--gold);}
@@ -2011,11 +2012,14 @@ footer{
     <div class="progress-lbl" id="progressLbl">Pro · Крок 1 з 16</div>
   </div>
 
-  <!-- Гаджет-панель: read-only сводка подтянутых с трекера показателей (скрыта, пока данных нет) -->
+  <!-- Гаджет-панель: всегда видна — поверхность ввода (тап по плитке = ручной ввод) + кнопка интеграции -->
   <div id="gadget-panel-wrap" style="display:none;">
     <div class="card">
       <div class="gp-head">📲 <span id="gp-title-txt">Tracker data</span></div>
       <div class="gadget-panel" id="gadget-panel"></div>
+      <button onclick="openImport()" style="width:100%;margin-top:12px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border-radius:50px;background:rgba(120,152,255,.10);border:1px solid rgba(120,152,255,.4);color:#9db4ff;font-size:12px;font-weight:600;letter-spacing:.4px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;">
+        📡 <span data-t="import_btn">Імпорт з пристрою</span>
+      </button>
     </div>
   </div>
 
@@ -4884,7 +4888,8 @@ function renderGadgetPanel(){
   var wrap=document.getElementById('gadget-panel-wrap'),box=document.getElementById('gadget-panel');
   if(!wrap||!box)return;
   var D=importedData||{}, keys=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','vo2','readiness'];
-  if(!keys.some(function(k){return D[k]!=null&&!isNaN(D[k]);})){wrap.style.display='none';return;}  // нет ни одной метрики — панель скрыта
+  // Панель присутствует ВСЕГДА (как в pro) — это поверхность ввода: пустые плитки клиент дополняет
+  // вручную (тап → _gEdit), с гаджетом или без. HRV/сон/темп убраны из потока — живут здесь.
   var s=_gpAutoSource(), src=s?(_GP_SRC[s]||s.charAt(0).toUpperCase()+s.slice(1)):null;
   var tt=document.getElementById('gp-title-txt');
   if(tt)tt.textContent=L({ru:'Данные с трекера',uk:'Дані з трекера',en:'Tracker data',es:'Datos del tracker',de:'Tracker-Daten',pt:'Dados do tracker',fr:'Données du tracker',pl:'Dane z trackera',it:'Dati del tracker',he:'נתוני המכשיר',ja:'トラッカーのデータ',ko:'트래커 데이터'});
@@ -4973,8 +4978,8 @@ function _weeklyDaily(){
 // гаджет-панель (значения втекают в слайдеры через applyImportedToSliders, см. 4905).
 // Терминал потока = существующий proceedFromStep15() → анкета/результат → кабинет-кнопки.
 // Замороженная зона (proceedFromStep15/submitOnboarding/showResults/stepResult) не трогается.
-const STEP_CADENCE={4:'daily',5:'daily',6:'daily',7:'daily',8:'base',9:'weekly',10:'base',11:'biweekly',12:'base',13:'base',14:'weekly'};
-const FLOW_ALL=[4,5,6,7,8,9,10,11,12,13,14];
+const STEP_CADENCE={4:'daily',5:'daily',6:'daily',7:'daily',8:'base',9:'weekly',10:'base',11:'biweekly',12:'base',14:'weekly'};
+const FLOW_ALL=[4,5,6,7,8,9,10,11,12,14];   // step13 «Состав тела» исключён из ленты (в pro-потоке его нет)
 // Гормональные симптомы(7) и Цикл/репро(12) — только женщинам.
 function _flowHidden(n){var male=(typeof getRadio==='function'&&getRadio('gender')==='male');return male&&(n===7||n===12);}
 function _flowList(){return FLOW_ALL.filter(function(n){return !_flowHidden(n);});}
@@ -5043,6 +5048,8 @@ function setLang(l){
     const k=el.getAttribute('data-t');
     if(T[l][k]!==undefined)el.innerHTML=T[l][k];
   });
+  // Бейджи шагов: срезаем устаревшую нумерацию «NN / NN ·» — остаётся иконка + название (как в pro)
+  document.querySelectorAll('.step-badge').forEach(b=>{ b.innerHTML=b.innerHTML.replace(/^\s*\d+\s*\/\s*\d+\s*[·•∙]\s*/,''); });
   document.querySelectorAll('[data-t-placeholder]').forEach(el=>{
     const k=el.getAttribute('data-t-placeholder');
     if(T[l][k]!==undefined)el.placeholder=T[l][k];
