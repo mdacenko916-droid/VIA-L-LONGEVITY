@@ -5000,11 +5000,11 @@ function _weeklyDaily(){
 // гаджет-панель (значения втекают в слайдеры через applyImportedToSliders, см. 4905).
 // Терминал потока = существующий proceedFromStep15() → анкета/результат → кабинет-кнопки.
 // Замороженная зона (proceedFromStep15/submitOnboarding/showResults/stepResult) не трогается.
-const STEP_CADENCE={0:'base',2:'daily',5:'daily',6:'daily',7:'daily',8:'base',9:'weekly',10:'base',11:'biweekly',12:'base',14:'weekly'};
-const FLOW_ALL=[0,2,5,6,7,8,9,10,11,12,14];   // step0 профиль; step2 приливы+темп. Исключены: step1 HRV/step3 сон/step13 состав тела (гаджет); step4 «Пульс покоя+симптомы» (в pro нет — rhr_comp/symptoms/mood/irr скрыты с дефолтами как в pro; тревожность перенесена в «Стресс»)
-// Гормональные симптомы(7) — только женщинам (указание владельца). Цикл(12) остаётся мужчинам
-// (внутри мужской вариант — витальность при андропаузе, как в pro), пол переключает контент внутри шага.
-function _flowHidden(n){var male=(typeof getRadio==='function'&&getRadio('gender')==='male');return male&&(n===7);}
+const STEP_CADENCE={0:'base',2:'daily',5:'daily',6:'daily',8:'base',9:'weekly',10:'base',11:'biweekly',12:'base',14:'weekly'};
+const FLOW_ALL=[0,2,5,6,8,9,10,11,12,14];   // step0 профиль; step2 приливы+темп. Исключены: step1 HRV/step3 сон/step13 состав тела (гаджет); step4 «Пульс покоя+симптомы» и step7 «Гормональные симптомы» (в pro их нет — гормон.сигнал через приливы/туман/цикл; поля скрыты с дефолтами; тревожность → «Стресс»)
+// Цикл и репродуктивное здоровье(12) — только женщинам (указание владельца). step7 «Гормон.симптомы»
+// убран из ленты целиком (в pro нет). Пол переключает контент внутри шагов через gender-handler.
+function _flowHidden(n){var male=(typeof getRadio==='function'&&getRadio('gender')==='male');return male&&(n===12);}
 function _flowList(){return FLOW_ALL.filter(function(n){return !_flowHidden(n);});}
 function _flowHead(cad){
   if(cad==='base')return L({ru:'Настройка · один раз',uk:'Налаштування · один раз',en:'Setup · one-time',es:'Configuración · una vez',de:'Einrichtung · einmalig',pt:'Configuração · uma vez',fr:'Configuration · une fois',pl:'Konfiguracja · jednorazowo',it:'Configurazione · una volta',he:'הגדרה · פעם אחת',ja:'初期設定・1回のみ',ko:'설정 · 1회'});
