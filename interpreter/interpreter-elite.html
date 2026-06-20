@@ -5092,7 +5092,24 @@ const _GP_SRC={fitbit:'Fitbit',oura:'Oura',samsung:'Samsung Health',whoop:'WHOOP
 const STEP_CADENCE={0:'base',2:'daily',5:'daily',6:'daily',8:'base',9:'weekly',10:'base',11:'biweekly',12:'base',14:'weekly'};
 const FLOW_ALL=[0,2,5,6,8,9,10,11,12,14];
 function _flowHidden(n){var male=(typeof getRadio==='function'&&getRadio('gender')==='male');return male&&(n===2||n===12);}
-function _flowList(){return FLOW_ALL.filter(function(n){return !_flowHidden(n);});}
+// Каденс (как в pro): weekly/biweekly блоки показываем не каждый раз, а раз в 7/14 дней (state в vial_steplast).
+function _stepLastMap(){try{return JSON.parse(localStorage.getItem('vial_steplast')||'{}')||{};}catch(e){return {};}}
+function _stepDue(n){
+  var c=STEP_CADENCE[n];
+  if(c==='weekly'||c==='biweekly'){
+    var last=_stepLastMap()[n]; if(!last)return true;
+    return (Date.now()-last) >= (c==='biweekly'?14:7)*86400000;
+  }
+  return true;   // base/daily — всегда
+}
+function _markPeriodicDone(){
+  try{var map=_stepLastMap(),ch=false;
+    Object.keys(STEP_CADENCE).forEach(function(n){var c=STEP_CADENCE[n];
+      if((c==='weekly'||c==='biweekly')&&_stepDue(+n)){map[n]=Date.now();ch=true;}});
+    if(ch)localStorage.setItem('vial_steplast',JSON.stringify(map));
+  }catch(e){}
+}
+function _flowList(){return FLOW_ALL.filter(function(n){return !_flowHidden(n)&&_stepDue(n);});}
 function _flowHead(cad){
   if(cad==='base')return L({ru:'Настройка · один раз',uk:'Налаштування · один раз',en:'Setup · one-time',es:'Configuración · una vez',de:'Einrichtung · einmalig',pt:'Configuração · uma vez',fr:'Configuration · une fois',pl:'Konfiguracja · jednorazowo',it:'Configurazione · una volta',he:'הגדרה · פעם אחת',ja:'初期設定・1回のみ',ko:'설정 · 1회'});
   if(cad==='daily')return L({ru:'Сегодня',uk:'Сьогодні',en:'Today',es:'Hoy',de:'Heute',pt:'Hoje',fr:'Aujourd’hui',pl:'Dziś',it:'Oggi',he:'היום',ja:'今日',ko:'오늘'});
@@ -6402,6 +6419,7 @@ function renderProtocol24(data, score){
 // ══ RESULTS ENGINE ════════════════════════════════════════
 function showResults(){
   try {
+    if(typeof _markPeriodicDone==='function')_markPeriodicDone();  // недельные/двухнедельные блоки отмечаем выполненными (как в pro)
     _showResultsInner();
   } catch(e) {
     const div = document.createElement('div');
