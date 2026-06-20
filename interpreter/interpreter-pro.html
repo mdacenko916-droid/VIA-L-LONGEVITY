@@ -4283,25 +4283,35 @@ function _renderDaily(){
   var arr=[]; try{arr=JSON.parse(localStorage.getItem('vial_daily')||'[]')||[];}catch(e){}
   if(!arr.length){box.innerHTML='';return;}
   var hf={none:'0',low:'1–2',mid:'3–5',high:'6–10',veryhigh:'10+'};
-  var hfi={mild:'▁',moderate:'▃',intense:'▅',severe:'▇'};   // интенсивность приливов — компактная шкала
+  // Словесные подписи (без иконок — премиальный вид). Приборные тянут из _GLAB; субъективные — здесь.
+  var LBL={
+    energy:{ru:'Энергия',uk:'Енергія',en:'Energy',es:'Energía',de:'Energie',pt:'Energia',fr:'Énergie',pl:'Energia',it:'Energia',he:'אנרגיה',ja:'エネルギー',ko:'에너지'},
+    memory:{ru:'Память',uk:'Памʼять',en:'Memory',es:'Memoria',de:'Gedächtnis',pt:'Memória',fr:'Mémoire',pl:'Pamięć',it:'Memoria',he:'זיכרון',ja:'記憶',ko:'기억'},
+    fog:{ru:'Туман в голове',uk:'Туман у голові',en:'Brain fog',es:'Niebla mental',de:'Gehirnnebel',pt:'Névoa mental',fr:'Brouillard mental',pl:'Mgła mózgowa',it:'Nebbia mentale',he:'ערפל מוחי',ja:'ブレインフォグ',ko:'브레인 포그'},
+    stress:{ru:'Стресс',uk:'Стрес',en:'Stress',es:'Estrés',de:'Stress',pt:'Estresse',fr:'Stress',pl:'Stres',it:'Stress',he:'מתח',ja:'ストレス',ko:'스트레스'},
+    alc:{ru:'Алкоголь',uk:'Алкоголь',en:'Alcohol',es:'Alcohol',de:'Alkohol',pt:'Álcool',fr:'Alcool',pl:'Alkohol',it:'Alcol',he:'אלכוהול',ja:'アルコール',ko:'알코올'},
+    hf:{ru:'Приливы',uk:'Припливи',en:'Hot flashes',es:'Sofocos',de:'Hitzewallungen',pt:'Ondas de calor',fr:'Bouffées de chaleur',pl:'Uderzenia gorąca',it:'Vampate',he:'גלי חום',ja:'ホットフラッシュ',ko:'안면홍조'}
+  };
+  var uH={ru:'ч',uk:'год',en:'h',es:'h',de:'Std',pt:'h',fr:'h',pl:'godz',it:'h',he:'ש׳',ja:'時間',ko:'시간'};
+  var uMin={ru:'мин',uk:'хв',en:'min',es:'min',de:'Min',pt:'min',fr:'min',pl:'min',it:'min',he:'דק׳',ja:'分',ko:'분'};
   box.innerHTML='<div style="font-family:\'Oswald\',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-lt);margin:6px 0 8px;">'+t('daily_title')+'</div>'
     +arr.slice(0,14).map(function(r){
       var p=[];
-      if(r.hrv!=null)p.push('HRV '+Math.round(r.hrv));
-      if(r.rhr!=null)p.push(t('lbl_rhr')+' '+Math.round(r.rhr));
-      if(r.sleepHours!=null)p.push(t('lbl_sleep')+' '+(+r.sleepHours).toFixed(1));
-      if(r.deepMin!=null)p.push('Deep '+Math.round(r.deepMin));
-      if(r.spo2!=null)p.push('SpO₂ '+Math.round(r.spo2));
-      if(r.tempDev!=null)p.push('🌡 '+(+r.tempDev).toFixed(2));
-      if(r.vo2!=null)p.push('VO₂ '+Math.round(r.vo2));
-      if(r.energy!=null)p.push('⚡ '+Math.round(r.energy));
-      if(r.readiness!=null)p.push('◎ '+Math.round(r.readiness)+'%');
-      if(r.hf_count&&r.hf_count!=='none')p.push('🔥 '+(hf[r.hf_count]||r.hf_count)+(r.hf_intensity&&r.hf_intensity!=='none'?' '+(hfi[r.hf_intensity]||''):''));
-      if(r.memory!=null)p.push('🧠 '+r.memory);
-      if(r.fog!=null&&r.fog!='0'&&r.fog!=0)p.push('🌫');
-      if(r.stress!=null)p.push('😣 '+r.stress);
-      if(r.alc!=null&&r.alc!='0'&&r.alc!=0)p.push('🍷');
-      return '<div style="display:flex;justify-content:space-between;gap:12px;padding:8px 2px;border-bottom:1px solid var(--b1);font-size:12px;"><span style="color:var(--t2);">'+r.date+'</span><span style="color:var(--t1);text-align:right;">'+(p.join(' · ')||'—')+'</span></div>';
+      if(r.hrv!=null)p.push(L(_GLAB.hrv)+' '+Math.round(r.hrv));
+      if(r.rhr!=null)p.push(L(_GLAB.rhr)+' '+Math.round(r.rhr));
+      if(r.sleepHours!=null)p.push(L(_GLAB.sleepHours)+' '+(+r.sleepHours).toFixed(1)+' '+L(uH));
+      if(r.deepMin!=null)p.push(L(_GLAB.deepMin)+' '+Math.round(r.deepMin)+' '+L(uMin));
+      if(r.spo2!=null)p.push(L(_GLAB.spo2)+' '+Math.round(r.spo2)+'%');
+      if(r.tempDev!=null&&Math.abs(r.tempDev)>=0.005)p.push(L(_GLAB.tempDev)+' '+(r.tempDev>0?'+':'')+(+r.tempDev).toFixed(2)+'°C');
+      if(r.vo2!=null)p.push(L(_GLAB.vo2)+' '+Math.round(r.vo2));
+      if(r.readiness!=null)p.push(L(_GLAB.readiness)+' '+Math.round(r.readiness)+'%');
+      if(r.energy!=null)p.push(L(LBL.energy)+' '+Math.round(r.energy)+'/10');
+      if(r.hf_count&&r.hf_count!=='none')p.push(L(LBL.hf)+' '+(hf[r.hf_count]||r.hf_count));
+      if(r.memory!=null)p.push(L(LBL.memory)+' '+r.memory);
+      if(r.fog!=null&&r.fog!='0'&&r.fog!=0)p.push(L(LBL.fog));
+      if(r.stress!=null)p.push(L(LBL.stress)+' '+r.stress+'/10');
+      if(r.alc!=null&&r.alc!='0'&&r.alc!=0&&r.alc!=='no')p.push(L(LBL.alc));
+      return '<div style="padding:9px 2px;border-bottom:1px solid var(--b1);"><div style="color:var(--gold-lt);font-size:11px;letter-spacing:.5px;margin-bottom:3px;">'+r.date+'</div><div style="color:var(--t1);font-size:12px;line-height:1.6;">'+(p.join(' · ')||'—')+'</div></div>';
     }).join('');
 }
 function renderHistory(){
@@ -4769,7 +4779,7 @@ function renderGadgetPanel(){
   // Панель присутствует всегда — это поверхность ввода: что пусто, клиент дополняет вручную (с гаджетом или без).
   const keys=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','vo2','readiness'];   // energy убрана — субъективна (см. шаг «Образ жизни»); прибор её даёт по-разному/не у всех
   box.innerHTML=keys.map(function(k){
-    const m=_GMETA[k], got=D[k]!=null&&!isNaN(D[k]), v=got?m.f(D[k]):'—';
+    const m=_GMETA[k], got=D[k]!=null&&!isNaN(D[k])&&!(k==='tempDev'&&Math.abs(D[k])<0.005), v=got?m.f(D[k]):'—';
     return '<div class="gp-tile '+(got?'got':'miss')+'" onclick="_gEdit(\''+k+'\',this)" style="position:relative;cursor:pointer;">'
       +'<div style="position:absolute;top:4px;right:6px;font-size:10px;color:var(--t3);">✎</div>'
       +'<div class="gp-val'+(got?'':' miss')+'">'+v+(got&&m.u?'<span class="gp-unit"> '+m.u+'</span>':'')+'</div>'
