@@ -4212,8 +4212,6 @@ function renderCard(){
     var _giMap={none_gi:'gi_none',bloating:'gi_bloat',constipation:'gi_constip',diarrhea:'gi_diarr',reflux:'gi_reflux',heaviness:'gi_heavy'};
     var _arMap={none_ar:'gi_ar_none',hemorrhoids:'gi_hemor',fissure:'gi_fissure',itch:'gi_itch',rectal_bleeding:'gi_blood'};
     var _join=function(arr,map){return Array.isArray(arr)?arr.map(function(v){return map[v]?t(map[v]):null;}).filter(Boolean).join(', '):'';};
-    var has=(Array.isArray(P.diet_restrict)&&P.diet_restrict.length)||P.eating_pattern||(Array.isArray(P.gi)&&P.gi.length);
-    if(!has)return;
     html+=_cSec(t('s7_title'));
     html+=_cRow(t('s7_l1'),_join(P.diet_restrict,_diet));
     html+=_cRow(t('s7_l2'),(P.eating_pattern&&_eat[P.eating_pattern])?t(_eat[P.eating_pattern]):'');
@@ -4228,7 +4226,6 @@ function renderCard(){
     var supTxt=Array.isArray(P.supplements)?P.supplements.map(function(v){return _sup[v]?t(_sup[v]):null;}).filter(Boolean).join(', '):'';
     var medTxt=(P.meds&&_med[P.meds])?t(_med[P.meds]):'';
     if(P.meds==='other_meds'&&P.meds_other)medTxt+=': '+P.meds_other;
-    if(!supTxt&&(!P.meds||P.meds==='no')&&!P.meds_other)return;
     html+=_cSec(t('s9_title'));
     html+=_cRow(t('s9_l1'),supTxt);
     html+=_cRow(t('s9_l2'),medTxt);
@@ -4284,6 +4281,7 @@ function _renderDaily(){
   var arr=[]; try{arr=JSON.parse(localStorage.getItem('vial_daily')||'[]')||[];}catch(e){}
   if(!arr.length){box.innerHTML='';return;}
   var hf={none:'0',low:'1–2',mid:'3–5',high:'6–10',veryhigh:'10+'};
+  var hfi={mild:'▁',moderate:'▃',intense:'▅',severe:'▇'};   // интенсивность приливов — компактная шкала
   box.innerHTML='<div style="font-family:\'Oswald\',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-lt);margin:6px 0 8px;">'+t('daily_title')+'</div>'
     +arr.slice(0,14).map(function(r){
       var p=[];
@@ -4296,7 +4294,11 @@ function _renderDaily(){
       if(r.vo2!=null)p.push('VO₂ '+Math.round(r.vo2));
       if(r.energy!=null)p.push('⚡ '+Math.round(r.energy));
       if(r.readiness!=null)p.push('◎ '+Math.round(r.readiness)+'%');
-      if(r.hf_count&&r.hf_count!=='none')p.push('🔥 '+(hf[r.hf_count]||r.hf_count));
+      if(r.hf_count&&r.hf_count!=='none')p.push('🔥 '+(hf[r.hf_count]||r.hf_count)+(r.hf_intensity&&r.hf_intensity!=='none'?' '+(hfi[r.hf_intensity]||''):''));
+      if(r.memory!=null)p.push('🧠 '+r.memory);
+      if(r.fog!=null&&r.fog!='0'&&r.fog!=0)p.push('🌫');
+      if(r.stress!=null)p.push('😣 '+r.stress);
+      if(r.alc!=null&&r.alc!='0'&&r.alc!=0)p.push('🍷');
       return '<div style="display:flex;justify-content:space-between;gap:12px;padding:8px 2px;border-bottom:1px solid var(--b1);font-size:12px;"><span style="color:var(--t2);">'+r.date+'</span><span style="color:var(--t1);text-align:right;">'+(p.join(' · ')||'—')+'</span></div>';
     }).join('');
 }
