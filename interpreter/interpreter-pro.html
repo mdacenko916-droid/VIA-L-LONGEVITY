@@ -4234,30 +4234,7 @@ function renderCard(){
     html+=_cRow(t('s9_l2'),medTxt);
     html+='<button onclick="_fixMetric(9)" style="margin-top:14px;background:rgba(196,150,60,.1);border:1px solid rgba(196,150,60,.32);color:var(--gold-lt);padding:9px 20px;border-radius:50px;font-size:12px;letter-spacing:.5px;cursor:pointer;font-family:\'DM Sans\',sans-serif;">'+t('card_edit')+'</button>';
   })();
-  // Данные с трекера — 8 приборных окошек (energy убрана — субъективна, живёт в шаге «Образ жизни»)
-  var D=(typeof importedData!=='undefined'&&importedData)?importedData:{};
-  var _gkeys=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','vo2','readiness'];
-  // если в текущем импорте пусто — берём последний дневной снимок, чтобы данные оставались в карточке после перезагрузки
-  if(!_gkeys.some(function(k){return D[k]!=null;})){
-    try{var _da=JSON.parse(localStorage.getItem('vial_daily')||'[]')||[];
-      if(_da.length){var _last=_da.slice().sort(function(a,b){return (b.ts||0)-(a.ts||0);})[0]||{};
-        // подсеять живое хранилище из дневного снимка — чтобы правка одного окошка не сбрасывала остальные
-        if(typeof importedData!=='undefined'&&importedData){_gkeys.forEach(function(k){if(importedData[k]==null&&_last[k]!=null)importedData[k]=_last[k];});try{_saveImported();}catch(e){}D=importedData;}
-        else D=_last;}
-    }catch(e){}
-  }
-  var _gc=_gkeys.filter(function(k){return D[k]!=null;}).length;
-  // Карточка = архив: показатели подтянулись из панели при «Показать результат». Здесь только просмотр (read-only).
-  html+=_cSec(t('card_tracker')+' · '+_gc+'/8');
-  html+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;">';
-  _gkeys.forEach(function(k){
-    var m=_GMETA[k], has=D[k]!=null, v=has?m.f(D[k]):'—';
-    html+='<div style="border:1px solid '+(has?'rgba(196,150,60,.32)':'var(--b1)')+';border-radius:12px;padding:13px 6px;text-align:center;background:'+(has?'rgba(196,150,60,.07)':'transparent')+';">'
-      +'<div style="font-size:19px;font-weight:600;line-height:1;color:'+(has?'var(--t1)':'#FBBF24')+';">'+v+((has&&m.u)?'<span style="font-size:9px;color:var(--t2);font-weight:400;"> '+m.u+'</span>':'')+'</div>'
-      +'<div style="font-size:10px;color:rgba(255,255,255,.88);margin-top:6px;letter-spacing:.2px;line-height:1.25;font-weight:500;">'+t('glab_'+k)+'</div>'
-      +'</div>';
-  });
-  html+='</div>';
+  // «Данные с трекера» (8 окошек) убраны из шапки — приборные показатели видны в «По дням» ниже.
   box.innerHTML=html;
   // Архив целиком в карточке: недельная динамика + AI-разбор + «По дням» + сессии (бывшая вкладка «История»)
   if(typeof renderHistory==='function')renderHistory();
