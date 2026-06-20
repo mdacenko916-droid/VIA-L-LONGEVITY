@@ -923,6 +923,22 @@ footer{
 .footer-back{display:inline-block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--t3);text-decoration:none;border:1px solid var(--b1);padding:8px 20px;border-radius:50px;transition:all .3s;}
 .footer-back:hover{border-color:var(--b2);color:var(--gold);}
 
+/* ══ IMPORT BUTTONS (две кнопки в hero, как в pro; синий = тариф EXPERT) ════ */
+.imp-btn{display:flex;align-items:center;gap:13px;width:100%;max-width:460px;box-sizing:border-box;margin:10px auto 0;padding:13px 15px;border-radius:16px;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif;position:relative;color:var(--t1);background:linear-gradient(145deg,#11162a,#0a0e1c);border:1px solid rgba(120,152,255,.45);box-shadow:0 6px 22px rgba(0,0,0,.4);transition:transform .15s ease,border-color .2s,box-shadow .2s;}
+.imp-btn:hover{transform:translateY(-1px);border-color:rgba(120,152,255,.85);box-shadow:0 8px 28px rgba(120,152,255,.2);}
+.imp-btn .imp-ic{flex-shrink:0;width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(120,152,255,.12);border:1px solid rgba(120,152,255,.32);color:#9db4ff;}
+.imp-btn .imp-ic svg{width:24px;height:24px;}
+.imp-btn .imp-txt{display:flex;flex-direction:column;gap:3px;line-height:1.25;flex:1;min-width:0;}
+.imp-btn .imp-txt b{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9db4ff;}
+.imp-btn .imp-txt small{font-size:11px;color:var(--t2);font-weight:400;text-transform:none;letter-spacing:0;}
+.imp-badge{position:absolute;top:-8px;right:14px;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,#7898ff,#5a7fde);padding:3px 9px;border-radius:50px;box-shadow:0 2px 8px rgba(120,152,255,.4);}
+.imp-go{flex-shrink:0;color:#9db4ff;font-size:19px;line-height:1;opacity:.75;}
+/* Два режима панели импорта: mode-all = Apple Health/Health Connect+ручной (.m-all); mode-full = вендоры (.m-full) */
+#importPanel.mode-all .source-card{display:none;}
+#importPanel.mode-all .source-card.m-all{display:block;}
+#importPanel.mode-full .source-card{display:none;}
+#importPanel.mode-full .source-card.m-full{display:block;}
+
 /* ══ IMPORT PANEL ════════════════════════════════════════ */
 #importPanel{
   position:absolute;inset:0;z-index:300;
@@ -1397,7 +1413,7 @@ footer{
   </div>
 
   <!-- OURA -->
-  <div class="source-card" id="card-oura">
+  <div class="source-card m-full" id="card-oura">
     <div class="source-header" onclick="toggleCard('oura')">
       <div class="source-icon oura">💍</div>
       <div class="source-info">
@@ -1438,7 +1454,7 @@ footer{
   </div>
 
   <!-- APPLE HEALTH -->
-  <div class="source-card" id="card-apple">
+  <div class="source-card m-all" id="card-apple">
     <div class="source-header" onclick="toggleCard('apple')">
       <div class="source-icon apple">🍎</div>
       <div class="source-info">
@@ -1491,7 +1507,7 @@ footer{
   </div>
 
   <!-- GARMIN -->
-  <div class="source-card" id="card-garmin">
+  <div class="source-card m-full" id="card-garmin">
     <div class="source-header" onclick="toggleCard('garmin')">
       <div class="source-icon garmin">⌚</div>
       <div class="source-info">
@@ -1521,7 +1537,7 @@ footer{
   </div>
 
   <!-- POLAR -->
-  <div class="source-card" id="card-polar">
+  <div class="source-card m-full" id="card-polar">
     <div class="source-header" onclick="toggleCard('polar')">
       <div class="source-icon polar">🔴</div>
       <div class="source-info">
@@ -1566,7 +1582,7 @@ footer{
   </div>
 
   <!-- SAMSUNG GALAXY WATCH / SAMSUNG HEALTH -->
-  <div class="source-card" id="card-samsung">
+  <div class="source-card m-full" id="card-samsung">
     <div class="source-header" onclick="toggleCard('samsung')">
       <div class="source-icon samsung">🔵</div>
       <div class="source-info">
@@ -1615,7 +1631,7 @@ footer{
   </div>
 
   <!-- FITBIT AIR / GOOGLE HEALTH -->
-  <div class="source-card" id="card-fitbit">
+  <div class="source-card m-full" id="card-fitbit">
     <div class="source-header" onclick="toggleCard('fitbit')">
       <div class="source-icon fitbit">📡</div>
       <div class="source-info">
@@ -1682,7 +1698,7 @@ footer{
   </div>
 
   <!-- WHOOP 5.0 -->
-  <div class="source-card" id="card-whoop">
+  <div class="source-card m-full" id="card-whoop">
     <div class="source-header" onclick="toggleCard('whoop')">
       <div class="source-icon whoop">⚡</div>
       <div class="source-info">
@@ -1743,7 +1759,7 @@ footer{
   </div>
 
   <!-- XIAOMI SMART BAND / MI FITNESS -->
-  <div class="source-card" id="card-xiaomi">
+  <div class="source-card m-full" id="card-xiaomi">
     <div class="source-header" onclick="toggleCard('xiaomi')">
       <div class="source-icon xiaomi">🟠</div>
       <div class="source-info">
@@ -1792,7 +1808,7 @@ footer{
   </div>
 
   <!-- WITHINGS -->
-  <div class="source-card" id="card-withings">
+  <div class="source-card m-full" id="card-withings">
     <div class="source-header" onclick="toggleCard('withings')">
       <div class="source-icon withings">🔵</div>
       <div class="source-info">
@@ -1852,7 +1868,7 @@ footer{
   </div>
 
   <!-- AMAZFIT -->
-  <div class="source-card" id="card-amazfit">
+  <div class="source-card m-full" id="card-amazfit">
     <div class="source-header" onclick="toggleCard('amazfit')">
       <div class="source-icon amazfit">⚡</div>
       <div class="source-info">
@@ -1903,7 +1919,7 @@ footer{
   </div>
 
   <!-- ULTRAHUMAN -->
-  <div class="source-card" id="card-ultrahuman">
+  <div class="source-card m-full" id="card-ultrahuman">
     <div class="source-header" onclick="toggleCard('ultrahuman')">
       <div class="source-icon ultrahuman">💍</div>
       <div class="source-info">
@@ -1929,7 +1945,7 @@ footer{
   </div>
 
   <!-- MANUAL -->
-  <div class="source-card" id="card-manual">
+  <div class="source-card m-all" id="card-manual">
     <div class="source-header" onclick="toggleCard('manual')">
       <div class="source-icon manual">✏️</div>
       <div class="source-info">
@@ -1981,9 +1997,17 @@ footer{
   <div class="hero-eyebrow" data-t="hero_badge">Разработано действующим членом Perry Academy</div>
   <h1 class="hero-title" data-t="hero_title">Інтерпретатор даних<br><em>носимого пристрою</em></h1>
   <p class="hero-desc" data-t="hero_desc">Oura Menopause Insights (Gen3, Ring 4 & Ring 5) · Garmin · Polar · Apple Watch → нутриціологічні рекомендації.</p>
-  <div style="margin-top:16px;">
-    <button onclick="openImport()" style="display:inline-flex;align-items:center;gap:8px;padding:13px 28px;border-radius:50px;background:linear-gradient(135deg,#E2B95A,#C49A3C);border:none;color:#160F02;font-size:13px;font-weight:700;letter-spacing:.5px;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 6px 22px rgba(196,154,60,.4);transition:all .2s;">
-      <span data-t="import_btn">📡 Імпорт з пристрою</span>
+  <div style="margin-top:16px;max-width:460px;margin-left:auto;margin-right:auto;">
+    <button class="imp-btn" onclick="openImport('all')">
+      <span class="imp-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.5-7-9.4A3.85 3.85 0 0 1 12 7a3.85 3.85 0 0 1 7 3.6C19 15.5 12 20 12 20Z"/><path d="M8.5 12.4h2l1-2 1.6 3.6 1-1.6h1.4"/></svg></span>
+      <span class="imp-txt"><b id="imp-health-t"></b><small id="imp-health-s"></small></span>
+      <span class="imp-badge" id="imp-recommended"></span>
+      <span class="imp-go">→</span>
+    </button>
+    <button class="imp-btn" onclick="openImport('full')">
+      <span class="imp-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="6.5" width="10" height="11" rx="3"/><path d="M9.2 6.5 9.7 3.6h4.6l.5 2.9M9.2 17.5l.5 2.9h4.6l.5-2.9"/><circle cx="12" cy="12" r="1.7"/></svg></span>
+      <span class="imp-txt"><b id="imp-direct-t"></b><small id="imp-direct-s"></small></span>
+      <span class="imp-go">→</span>
     </button>
   </div>
 </div>
@@ -5017,8 +5041,17 @@ function showAll(){
     proceedFromStep15();
   });
 }
+// Подписи двух кнопок импорта (в T у pro их нет — задаём инлайн на 12 языков).
+function _renderImpBtns(){
+  var set=function(id,o){var el=document.getElementById(id);if(el)el.textContent=L(o);};
+  set('imp-health-t',{ru:'Импорт через Apple Health / Health Connect',uk:'Імпорт через Apple Health / Health Connect',en:'Import via Apple Health / Health Connect',es:'Importar vía Apple Health / Health Connect',de:'Import über Apple Health / Health Connect',pt:'Importar via Apple Health / Health Connect',fr:'Import via Apple Health / Health Connect',pl:'Import przez Apple Health / Health Connect',it:'Importa via Apple Health / Health Connect',he:'ייבוא דרך Apple Health / Health Connect',ja:'Apple Health / Health Connect 経由でインポート',ko:'Apple Health / Health Connect로 가져오기'});
+  set('imp-health-s',{ru:'Подключите любой трекер и импортируйте данные',uk:'Підключіть будь-який трекер та імпортуйте дані',en:'Connect any tracker and import data',es:'Conecta cualquier tracker e importa datos',de:'Verbinde einen Tracker und importiere Daten',pt:'Conecte qualquer tracker e importe dados',fr:'Connectez un tracker et importez les données',pl:'Podłącz dowolny tracker i zaimportuj dane',it:'Collega qualsiasi tracker e importa i dati',he:'חברו כל גשש וייבאו נתונים',ja:'任意のトラッカーを接続してデータをインポート',ko:'아무 트래커나 연결해 데이터 가져오기'});
+  set('imp-direct-t',{ru:'Прямая интеграция устройства',uk:'Пряма інтеграція пристрою',en:'Direct device integration',es:'Integración directa del dispositivo',de:'Direkte Geräteintegration',pt:'Integração direta do dispositivo',fr:"Intégration directe de l'appareil",pl:'Bezpośrednia integracja urządzenia',it:'Integrazione diretta del dispositivo',he:'אינטגרציה ישירה של המכשיר',ja:'デバイスの直接連携',ko:'기기 직접 연동'});
+  set('imp-direct-s',{ru:'Oura · Fitbit · Polar · Withings',uk:'Oura · Fitbit · Polar · Withings',en:'Oura · Fitbit · Polar · Withings',es:'Oura · Fitbit · Polar · Withings',de:'Oura · Fitbit · Polar · Withings',pt:'Oura · Fitbit · Polar · Withings',fr:'Oura · Fitbit · Polar · Withings',pl:'Oura · Fitbit · Polar · Withings',it:'Oura · Fitbit · Polar · Withings',he:'Oura · Fitbit · Polar · Withings',ja:'Oura · Fitbit · Polar · Withings',ko:'Oura · Fitbit · Polar · Withings'});
+  set('imp-recommended',{ru:'Рекомендуем',uk:'Рекомендуємо',en:'Recommended',es:'Recomendado',de:'Empfohlen',pt:'Recomendado',fr:'Recommandé',pl:'Zalecane',it:'Consigliato',he:'מומלץ',ja:'おすすめ',ko:'추천'});
+}
 // Вход в воронку = сразу вся лента (профиль + блоки) на одной странице (как pro).
-function startFunnel(){ if(typeof showAll==='function') showAll(); }
+function startFunnel(){ if(typeof _renderImpBtns==='function')_renderImpBtns(); if(typeof showAll==='function') showAll(); }
 // Рендерим одностраничную ленту сразу на загрузке (и за гейтом — гейт блокирует ввод отдельно).
 (function(){ function _s(){ try{startFunnel();}catch(e){console.error('startFunnel',e);} } if(document.readyState!=='loading')_s(); else document.addEventListener('DOMContentLoaded',_s); })();
 function setLang(l){
@@ -5054,6 +5087,7 @@ function setLang(l){
   });
   // Бейджи шагов: срезаем устаревшую нумерацию «NN / NN ·» — остаётся иконка + название (как в pro)
   document.querySelectorAll('.step-badge').forEach(b=>{ b.innerHTML=b.innerHTML.replace(/^\s*\d+\s*\/\s*\d+\s*[·•∙]\s*/,''); });
+  if(typeof _renderImpBtns==='function')_renderImpBtns();   // подписи двух кнопок импорта на текущем языке
   document.querySelectorAll('[data-t-placeholder]').forEach(el=>{
     const k=el.getAttribute('data-t-placeholder');
     if(T[l][k]!==undefined)el.placeholder=T[l][k];
@@ -6782,7 +6816,7 @@ function _showResultsInner(){
 }
 
 // ══ IMPORT DATA STORE ════════════════════════════════════
-function openImport(){const sa=document.getElementById('scroll-area');if(sa){sa.scrollTo({top:0,behavior:'instant'});sa.style.overflowY='hidden';}const tb=document.getElementById('topbar');if(tb)tb.style.background='#10131A';document.getElementById('importPanel').classList.add('open');}
+function openImport(mode){const p=document.getElementById('importPanel');p.classList.remove('mode-all','mode-full');if(mode==='all')p.classList.add('mode-all');else if(mode==='full')p.classList.add('mode-full');const sa=document.getElementById('scroll-area');if(sa){sa.scrollTo({top:0,behavior:'instant'});sa.style.overflowY='hidden';}const tb=document.getElementById('topbar');if(tb)tb.style.background='#10131A';p.classList.add('open');}
 function closeImport(skip){document.getElementById('importPanel').classList.remove('open');const sa=document.getElementById('scroll-area');if(sa)sa.style.overflowY='auto';const tb=document.getElementById('topbar');if(tb)tb.style.background='';if(!skip&&importedData.source)applyImportedToSliders();}
 function applyImportedToSliders(){
   if(importedData.hrv!=null){const el=document.getElementById('hrv');el.value=Math.min(120,Math.max(10,Math.round(importedData.hrv)));ouraSlider('hrv',+el.value);}
