@@ -5593,6 +5593,8 @@ function showResults(){
   try {
     _showResultsInner();
     if(typeof renderDataCompleteness==='function')renderDataCompleteness();
+    // Авто: на 7-й день (гейт открыт) + есть ≥2 анализа → недельный разбор генерится сам (1/нед). В EXPERT/ELITE уходит в кабинет специалиста.
+    try{ if(typeof _wrGate==='function'&&_wrGate().canGen&&typeof weeklyTrend==='function'&&weeklyTrend()&&typeof genWeeklyReport==='function')genWeeklyReport(); }catch(e){}
   } catch(e) {
     const div = document.createElement('div');
     div.style.cssText = 'position:fixed;top:60px;left:10px;right:10px;background:#ff4444;color:#fff;padding:16px;border-radius:12px;z-index:9999;font-size:12px;font-family:monospace;word-break:break-all;';
