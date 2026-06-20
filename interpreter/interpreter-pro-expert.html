@@ -2012,14 +2012,11 @@ footer{
     <div class="progress-lbl" id="progressLbl">Pro · Крок 1 з 16</div>
   </div>
 
-  <!-- Гаджет-панель: всегда видна — поверхность ввода (тап по плитке = ручной ввод) + кнопка интеграции -->
+  <!-- Гаджет-панель: всегда видна — поверхность ввода (тап по плитке = ручной ввод HRV/сон/темп) -->
   <div id="gadget-panel-wrap" style="display:none;">
     <div class="card">
       <div class="gp-head">📲 <span id="gp-title-txt">Tracker data</span></div>
       <div class="gadget-panel" id="gadget-panel"></div>
-      <button onclick="openImport()" style="width:100%;margin-top:12px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border-radius:50px;background:rgba(120,152,255,.10);border:1px solid rgba(120,152,255,.4);color:#9db4ff;font-size:12px;font-weight:600;letter-spacing:.4px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;">
-        📡 <span data-t="import_btn">Імпорт з пристрою</span>
-      </button>
     </div>
   </div>
 
@@ -3317,6 +3314,7 @@ function gateUnlock(plan, code){
   setTimeout(()=>g.style.display='none',500);
   sessionStorage.setItem('vial_access', plan);
   if(code) sessionStorage.setItem('vial_code', code);
+  if(typeof startFunnel==='function') setTimeout(startFunnel,60);   // после входа — сразу одностраничная лента
 }
 
 // ══ EXPERT COUNTER STATE ══════════════════════════════════
@@ -4978,10 +4976,11 @@ function _weeklyDaily(){
 // гаджет-панель (значения втекают в слайдеры через applyImportedToSliders, см. 4905).
 // Терминал потока = существующий proceedFromStep15() → анкета/результат → кабинет-кнопки.
 // Замороженная зона (proceedFromStep15/submitOnboarding/showResults/stepResult) не трогается.
-const STEP_CADENCE={4:'daily',5:'daily',6:'daily',7:'daily',8:'base',9:'weekly',10:'base',11:'biweekly',12:'base',14:'weekly'};
-const FLOW_ALL=[4,5,6,7,8,9,10,11,12,14];   // step13 «Состав тела» исключён из ленты (в pro-потоке его нет)
-// Гормональные симптомы(7) и Цикл/репро(12) — только женщинам.
-function _flowHidden(n){var male=(typeof getRadio==='function'&&getRadio('gender')==='male');return male&&(n===7||n===12);}
+const STEP_CADENCE={0:'base',4:'daily',5:'daily',6:'daily',7:'daily',8:'base',9:'weekly',10:'base',11:'biweekly',12:'base',14:'weekly'};
+const FLOW_ALL=[0,4,5,6,7,8,9,10,11,12,14];   // step0 профиль — первый блок ленты (одна страница, как pro); step13 «Состав тела» исключён
+// Гормональные симптомы(7) — только женщинам (указание владельца). Цикл(12) остаётся мужчинам
+// (внутри мужской вариант — витальность при андропаузе, как в pro), пол переключает контент внутри шага.
+function _flowHidden(n){var male=(typeof getRadio==='function'&&getRadio('gender')==='male');return male&&(n===7);}
 function _flowList(){return FLOW_ALL.filter(function(n){return !_flowHidden(n);});}
 function _flowHead(cad){
   if(cad==='base')return L({ru:'Настройка · один раз',uk:'Налаштування · один раз',en:'Setup · one-time',es:'Configuración · una vez',de:'Einrichtung · einmalig',pt:'Configuração · uma vez',fr:'Configuration · une fois',pl:'Konfiguracja · jednorazowo',it:'Configurazione · una volta',he:'הגדרה · פעם אחת',ja:'初期設定・1回のみ',ko:'설정 · 1회'});
@@ -5012,11 +5011,15 @@ function showAll(){
   _showFlow(_flowList());
   if(typeof renderGadgetPanel==='function')renderGadgetPanel();
   _flowFooter(t('show_result'),function(){
+    if(typeof _validateProfile==='function'&&!_validateProfile()){var s=document.getElementById('step0');if(s)s.scrollIntoView({behavior:'smooth',block:'start'});return;}
     if(typeof _saveDaily==='function')_saveDaily();
     document.body.classList.remove('flow-mode');_hideFlowFooter();
     proceedFromStep15();
   });
 }
+// Вход в воронку = сразу вся лента (профиль + блоки) на одной странице (как pro).
+function startFunnel(){ if(typeof showAll==='function'){try{showAll();}catch(e){}} }
+(function(){ function _s(){ if(sessionStorage.getItem('vial_access')) startFunnel(); } if(document.readyState!=='loading')_s(); else document.addEventListener('DOMContentLoaded',_s); })();
 function setLang(l){
   lang=l;
   if(typeof updateProgress==='function')updateProgress(window._curStep!=null?window._curStep:0);   // перевести лейбл прогресса
@@ -5109,6 +5112,8 @@ document.querySelectorAll('input[name=gender]').forEach(el=>{
     // Update step 12 title
     const t12=document.getElementById('step12-title');
     if(t12)t12.innerHTML=male?t('s12_title_m'):t('s12_title_f');
+    // В одностраничном потоке перерисовываем ленту, чтобы step7 (гормоны) скрылся/появился по полу
+    if(document.body.classList.contains('flow-mode')&&typeof showAll==='function')showAll();
   });
 });
 
@@ -5578,7 +5583,7 @@ function calcProfMetrics(){
   else{box.style.display='none';}
 }
 
-function goFromProfile(){
+function _validateProfile(){
   const fields=['prof-age','prof-weight','prof-height'];
   let ok=true;
   fields.forEach(id=>{
@@ -5590,10 +5595,11 @@ function goFromProfile(){
     }
   });
   const err=document.getElementById('prof-err');
-  if(!ok){if(err)err.style.display='block';return;}
+  if(!ok){if(err)err.style.display='block';return false;}
   if(err)err.style.display='none';
-  showAll();   // одностраничный поток (PRO-стиль) вместо пошаговой пагинации goTo(1)
+  return true;
 }
+function goFromProfile(){ if(_validateProfile())showAll(); }   // legacy «Далее» (в потоке скрыта); профиль теперь первый блок ленты
 // Числовые подсказки-референсы в плейсхолдеры биоимпеданса (по полу/возрасту) — без слов, работают во всех языках.
 function setBioHints(){
   var male=(typeof getRadio==='function'&&getRadio('gender')==='male');
