@@ -4177,11 +4177,6 @@ function renderCard(){
   var P={}; try{P=JSON.parse(localStorage.getItem('vial_profile')||'{}')||{};}catch(e){}
   var hist=[]; try{hist=JSON.parse(localStorage.getItem('vial_history')||'[]')||[];}catch(e){}
   var html='';
-  // Полнота данных — сразу вверху карточки (честность: видно, чего не хватает для точного разбора)
-  var C=_completeness();
-  var ccl=C.pct>=80?'#4ADE80':C.pct>=50?'#FBBF24':'#F87171';
-  html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;"><span style="font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--t2);">📊 '+t('dc_title')+'</span><span style="font-size:16px;font-weight:600;color:'+ccl+';">'+C.pct+'%</span></div>';
-  html+='<div style="display:flex;gap:6px;flex-wrap:wrap;">'+C.cats.map(function(c){return '<span style="font-size:11px;padding:3px 8px;border-radius:8px;border:1px solid '+(c.ok?'rgba(74,222,128,.4)':'rgba(255,255,255,.14)')+';color:'+(c.ok?'#4ADE80':'rgba(255,255,255,.4)')+';">'+(c.ok?'✓ ':'')+c.n+'</span>';}).join('')+'</div>';
   html+=_cSec(t('card_profile'));
   var g=P.gender==='male'?t('gender_m'):P.gender==='female'?t('gender_f'):'';
   if(P.name)html+=_cRow(t('s_prof_name'),P.name);
