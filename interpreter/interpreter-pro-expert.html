@@ -2389,15 +2389,6 @@ footer{
         </div>
       </div>
       <div class="input-group">
-        <label data-t="anx_q">Тревожность</label>
-        <div class="chips">
-          <div class="chip"><input type="radio" name="anxiety" id="anx1" value="1" checked><label for="anx1" data-t="anx_none">Отсутствует</label></div>
-          <div class="chip"><input type="radio" name="anxiety" id="anx2" value="4"><label for="anx2" data-t="anx_mild">Лёгкая</label></div>
-          <div class="chip"><input type="radio" name="anxiety" id="anx3" value="7"><label for="anx3" data-t="anx_mod">Умеренная</label></div>
-          <div class="chip"><input type="radio" name="anxiety" id="anx4" value="9"><label for="anx4" data-t="anx_high">Выраженная</label></div>
-        </div>
-      </div>
-      <div class="input-group">
         <label data-t="s3_irr">Раздражительность</label>
         <div class="chips">
           <div class="chip"><input type="radio" name="irritability" id="irr1" value="none" checked><label for="irr1" data-t="irr_none">Нет</label></div>
@@ -2727,6 +2718,15 @@ footer{
           <div class="chip"><input type="checkbox" id="cort5" value="irritable"><label for="cort5" data-t="cort_irr">Раздражительность</label></div>
           <div class="chip"><input type="checkbox" id="cort6" value="second_wind"><label for="cort6" data-t="cort_wind">Второе дыхание после 22:00</label></div>
           <div class="chip"><input type="checkbox" id="cort7" value="none_cort"><label for="cort7" data-t="cort_none">Ничего</label></div>
+        </div>
+      </div>
+      <div class="input-group">
+        <label data-t="anx_q">Тревожность</label>
+        <div class="chips">
+          <div class="chip"><input type="radio" name="anxiety" id="anx1" value="1" checked><label for="anx1" data-t="anx_none">Отсутствует</label></div>
+          <div class="chip"><input type="radio" name="anxiety" id="anx2" value="4"><label for="anx2" data-t="anx_mild">Лёгкая</label></div>
+          <div class="chip"><input type="radio" name="anxiety" id="anx3" value="7"><label for="anx3" data-t="anx_mod">Умеренная</label></div>
+          <div class="chip"><input type="radio" name="anxiety" id="anx4" value="9"><label for="anx4" data-t="anx_high">Выраженная</label></div>
         </div>
       </div>
       <div class="btn-row">
@@ -5000,8 +5000,8 @@ function _weeklyDaily(){
 // гаджет-панель (значения втекают в слайдеры через applyImportedToSliders, см. 4905).
 // Терминал потока = существующий proceedFromStep15() → анкета/результат → кабинет-кнопки.
 // Замороженная зона (proceedFromStep15/submitOnboarding/showResults/stepResult) не трогается.
-const STEP_CADENCE={0:'base',2:'daily',4:'daily',5:'daily',6:'daily',7:'daily',8:'base',9:'weekly',10:'base',11:'biweekly',12:'base',14:'weekly'};
-const FLOW_ALL=[0,2,4,5,6,7,8,9,10,11,12,14];   // step0 профиль (как pro); step2 приливы+темп — дневной субъективный блок (как pro); step1 HRV/step3 сон/step13 состав тела исключены (объективное → гаджет)
+const STEP_CADENCE={0:'base',2:'daily',5:'daily',6:'daily',7:'daily',8:'base',9:'weekly',10:'base',11:'biweekly',12:'base',14:'weekly'};
+const FLOW_ALL=[0,2,5,6,7,8,9,10,11,12,14];   // step0 профиль; step2 приливы+темп. Исключены: step1 HRV/step3 сон/step13 состав тела (гаджет); step4 «Пульс покоя+симптомы» (в pro нет — rhr_comp/symptoms/mood/irr скрыты с дефолтами как в pro; тревожность перенесена в «Стресс»)
 // Гормональные симптомы(7) — только женщинам (указание владельца). Цикл(12) остаётся мужчинам
 // (внутри мужской вариант — витальность при андропаузе, как в pro), пол переключает контент внутри шага.
 function _flowHidden(n){var male=(typeof getRadio==='function'&&getRadio('gender')==='male');return male&&(n===7);}
