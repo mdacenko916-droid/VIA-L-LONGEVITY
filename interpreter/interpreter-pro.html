@@ -4241,10 +4241,12 @@ function renderCard(){
 function saveSession(score,type,data){
   const key='vial_history';
   const history=JSON.parse(localStorage.getItem(key)||'[]');
+  const D=(typeof importedData!=='undefined'&&importedData)?importedData:{};
   const session={
     date:new Date().toLocaleDateString(lang==='en'?'en-GB':'ru-RU',{day:'numeric',month:'short',year:'numeric'}),
     score,type,
     hrv:data.hrv,sleep:data.sleep_qual,rhr:data.rhr,energy:data.energy,
+    deepMin:D.deepMin,spo2:D.spo2,tempDev:D.tempDev,vo2:D.vo2,readiness:D.readiness,sleepHours:D.sleepHours,
     qol:data._qol,mood:data.mood,anxiety:data.anxiety,
     gender:data.gender,phase:data.phase,
     ts:Date.now()
@@ -4333,9 +4335,14 @@ function renderHistory(){
         <div style="font-family:'DM Mono',monospace;font-size:24px;color:${clr};text-shadow:0 0 12px ${clr}66;">${s.score}</div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-        <span style="background:rgba(78,204,163,.1);border:1px solid rgba(78,204,163,.2);border-radius:8px;padding:4px 10px;font-size:11px;color:var(--ok);">HRV ${s.hrv}</span>
-        <span style="background:rgba(59,91,219,.1);border:1px solid rgba(59,91,219,.2);border-radius:8px;padding:4px 10px;font-size:11px;color:#7B9FE8;">💤 ${s.sleep}/10</span>
-        <span style="background:rgba(192,57,90,.1);border:1px solid rgba(192,57,90,.2);border-radius:8px;padding:4px 10px;font-size:11px;color:#E88AA0;">❤ ${s.rhr}</span>
+        ${s.hrv!=null?`<span style="background:rgba(78,204,163,.1);border:1px solid rgba(78,204,163,.2);border-radius:8px;padding:4px 10px;font-size:11px;color:var(--ok);">HRV ${s.hrv}</span>`:''}
+        ${s.sleep!=null?`<span style="background:rgba(59,91,219,.1);border:1px solid rgba(59,91,219,.2);border-radius:8px;padding:4px 10px;font-size:11px;color:#7B9FE8;">💤 ${s.sleep}/10</span>`:''}
+        ${s.rhr!=null?`<span style="background:rgba(192,57,90,.1);border:1px solid rgba(192,57,90,.2);border-radius:8px;padding:4px 10px;font-size:11px;color:#E88AA0;">❤ ${s.rhr}</span>`:''}
+        ${s.deepMin!=null?`<span style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.2);border-radius:8px;padding:4px 10px;font-size:11px;color:#A98CF0;">Deep ${Math.round(s.deepMin)}</span>`:''}
+        ${s.spo2!=null?`<span style="background:rgba(78,204,163,.1);border:1px solid rgba(78,204,163,.2);border-radius:8px;padding:4px 10px;font-size:11px;color:var(--ok);">SpO₂ ${Math.round(s.spo2)}</span>`:''}
+        ${s.tempDev!=null?`<span style="background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.2);border-radius:8px;padding:4px 10px;font-size:11px;color:#F5C06A;">🌡 ${(+s.tempDev).toFixed(2)}</span>`:''}
+        ${s.vo2!=null?`<span style="background:rgba(59,91,219,.1);border:1px solid rgba(59,91,219,.2);border-radius:8px;padding:4px 10px;font-size:11px;color:#7B9FE8;">VO₂ ${Math.round(s.vo2)}</span>`:''}
+        ${s.readiness!=null?`<span style="background:rgba(196,150,60,.1);border:1px solid rgba(196,150,60,.2);border-radius:8px;padding:4px 10px;font-size:11px;color:var(--gold-lt);">◎ ${Math.round(s.readiness)}%</span>`:''}
       </div>
       ${compare}
     </div>`;
