@@ -5018,8 +5018,9 @@ function showAll(){
   });
 }
 // Вход в воронку = сразу вся лента (профиль + блоки) на одной странице (как pro).
-function startFunnel(){ if(typeof showAll==='function'){try{showAll();}catch(e){}} }
-(function(){ function _s(){ if(sessionStorage.getItem('vial_access')) startFunnel(); } if(document.readyState!=='loading')_s(); else document.addEventListener('DOMContentLoaded',_s); })();
+function startFunnel(){ if(typeof showAll==='function') showAll(); }
+// Рендерим одностраничную ленту сразу на загрузке (и за гейтом — гейт блокирует ввод отдельно).
+(function(){ function _s(){ try{startFunnel();}catch(e){console.error('startFunnel',e);} } if(document.readyState!=='loading')_s(); else document.addEventListener('DOMContentLoaded',_s); })();
 function setLang(l){
   lang=l;
   if(typeof updateProgress==='function')updateProgress(window._curStep!=null?window._curStep:0);   // перевести лейбл прогресса
