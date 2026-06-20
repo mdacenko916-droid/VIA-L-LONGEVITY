@@ -2861,51 +2861,6 @@ footer{
       </div>
       <div class="btn-row">
         <button class="btn btn-back" onclick="goTo(12)">←</button>
-        <button class="btn btn-primary" onclick="goTo(14)"><span class="btn-label" data-t="next">Далее →</span></button>
-      </div>
-    </div>
-  </div>
-
-  <!-- STEP 15: САМОЧУВСТВИЕ ЗА НЕДЕЛЮ -->
-  <div class="step" id="step14">
-    <div class="card">
-      <div class="card-accent"></div>
-      <div class="step-badge" data-t="s15_badge">14 / 14 · Динамика</div>
-      <h2 class="step-title" data-t="s15_title">Самочувствие за последнюю неделю</h2>
-      <p class="step-desc" data-t="s15_desc">Сравните с прошлой неделей — это выявит тренд.</p>
-      <div class="input-group">
-        <label data-t="s15_l1">Общая динамика</label>
-        <div class="chips">
-          <div class="chip"><input type="radio" name="weekly_trend" id="wt1" value="better" checked><label for="wt1" data-t="wt_better">Лучше 📈</label></div>
-          <div class="chip"><input type="radio" name="weekly_trend" id="wt2" value="same"><label for="wt2" data-t="wt_same">Без изменений →</label></div>
-          <div class="chip"><input type="radio" name="weekly_trend" id="wt3" value="worse"><label for="wt3" data-t="wt_worse">Хуже 📉</label></div>
-        </div>
-      </div>
-      <div class="input-group">
-        <label data-t="s15_l2">Что изменилось?</label>
-        <div class="chips">
-          <div class="chip"><input type="checkbox" id="wk1p" value="sleep_better"><label for="wk1p" data-t="wk_sleep_better">Сон лучше</label></div>
-          <div class="chip"><input type="checkbox" id="wk2p" value="energy_better"><label for="wk2p" data-t="wk_energy_better">Больше энергии</label></div>
-          <div class="chip"><input type="checkbox" id="wk3p" value="mood_better"><label for="wk3p" data-t="wk_mood_better">Настроение лучше</label></div>
-          <div class="chip"><input type="checkbox" id="wk4p" value="sleep_worse"><label for="wk4p" data-t="wk_sleep_worse">Сон ухудшился</label></div>
-          <div class="chip"><input type="checkbox" id="wk5p" value="energy_worse"><label for="wk5p" data-t="wk_energy_worse">Меньше энергии</label></div>
-          <div class="chip"><input type="checkbox" id="wk6p" value="hotflash_worse"><label for="wk6p" data-t="wk_hotflash_worse">Больше приливов</label></div>
-          <div class="chip"><input type="checkbox" id="wk7p" value="stable"><label for="wk7p" data-t="wk_stable">Всё стабильно</label></div>
-        </div>
-      </div>
-      <div class="input-group">
-        <label data-t="s15_l3">Значимые события на неделе</label>
-        <div class="chips">
-          <div class="chip"><input type="checkbox" id="ev1" value="travel"><label for="ev1" data-t="ev_travel">Перелёт / смена часового пояса</label></div>
-          <div class="chip"><input type="checkbox" id="ev2" value="illness"><label for="ev2" data-t="ev_illness">Болезнь</label></div>
-          <div class="chip"><input type="checkbox" id="ev3" value="new_supps"><label for="ev3" data-t="ev_new_supps">Начал(а) новые добавки</label></div>
-          <div class="chip"><input type="checkbox" id="ev4" value="overtraining"><label for="ev4" data-t="ev_overtraining">Перетренировка</label></div>
-          <div class="chip"><input type="checkbox" id="ev5" value="emotional"><label for="ev5" data-t="ev_emotional">Сильное эмоциональное событие</label></div>
-          <div class="chip"><input type="checkbox" id="ev6" value="nothing_ev"><label for="ev6" data-t="ev_nothing">Ничего особенного</label></div>
-        </div>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-back" onclick="goTo(13)">←</button>
         <button class="btn btn-primary" onclick="proceedFromStep15()"><span class="btn-label" data-t="show_result">Показать результат →</span></button>
       </div>
     </div>
@@ -5011,8 +4966,8 @@ function _weeklyDaily(){
 // гаджет-панель (значения втекают в слайдеры через applyImportedToSliders, см. 4905).
 // Терминал потока = существующий proceedFromStep15() → анкета/результат → кабинет-кнопки.
 // Замороженная зона (proceedFromStep15/submitOnboarding/showResults/stepResult) не трогается.
-const STEP_CADENCE={0:'base',2:'daily',5:'daily',6:'daily',8:'base',9:'weekly',10:'base',11:'biweekly',12:'base',14:'weekly'};
-const FLOW_ALL=[0,2,5,6,8,9,10,11,12,14];   // step0 профиль; step2 приливы+темп. Исключены: step1 HRV/step3 сон/step13 состав тела (гаджет); step4 «Пульс покоя+симптомы» и step7 «Гормональные симптомы» (в pro их нет — гормон.сигнал через приливы/туман/цикл; поля скрыты с дефолтами; тревожность → «Стресс»)
+const STEP_CADENCE={0:'base',2:'daily',5:'daily',6:'daily',8:'base',9:'weekly',10:'base',11:'biweekly',12:'base'};
+const FLOW_ALL=[0,2,5,6,8,9,10,11,12];   // step0 профиль; step2 приливы+темп. Исключены: step1 HRV/step3 сон/step13 состав тела (гаджет); step4 «Пульс покоя+симптомы», step7 «Гормональные симптомы» и недельная «Динамика»(step14 «Самочувствие за неделю») — в pro их нет
 // Цикл и репродуктивное здоровье(12) — только женщинам (указание владельца). step7 «Гормон.симптомы»
 // убран из ленты целиком (в pro нет). Пол переключает контент внутри шагов через gender-handler.
 function _flowHidden(n){var male=(typeof getRadio==='function'&&getRadio('gender')==='male');return male&&(n===2||n===12);}
@@ -6514,9 +6469,6 @@ function _showResultsInner(){
     urology:getChecked(['uro1','uro2','uro3','uro4','uro5']),
     bone_risk:getChecked(['bone1','bone2','bone3','bone4','bone5']),
     breast:getChecked(['breast1','breast2','breast3','breast4']),
-    weekly_trend:getRadio('weekly_trend'),
-    weekly_changes:getChecked(['wk1p','wk2p','wk3p','wk4p','wk5p','wk6p','wk7p']),
-    events:getChecked(['ev1','ev2','ev3','ev4','ev5','ev6']),
     labs:{
       vitd:parseFloat(document.getElementById('lab-vitd')?.value)||null,
       ferr:parseFloat(document.getElementById('lab-ferr')?.value)||null,

@@ -2702,54 +2702,6 @@ body.flow-mode footer,body.flow-mode .legal-links{display:none;}
       </div>
       <div class="btn-row">
         <button class="btn btn-back" onclick="goTo(9)">←</button>
-        <button class="btn btn-primary" onclick="goTo(11)"><span class="btn-label" data-t="next">Далі →</span></button>
-      </div>
-    </div>
-  </div>
-
-  <!-- STEP 12: ЦИКЛ / ВИТАЛЬНОСТЬ -->
-
-  <!-- STEP 14: БИОИМПЕДАНС -->
-  <!-- STEP 15: САМОЧУВСТВИЕ ЗА НЕДЕЛЮ -->
-  <div class="step" id="step11">
-    <div class="card">
-      <div class="card-accent"></div>
-      <div class="step-badge" data-t="s14_badge">14 / 14 · Динаміка</div>
-      <h2 class="step-title" data-t="s14_title">Самопочуття за останній тиждень</h2>
-      <p class="step-desc" data-t="s14_desc">Порівняйте з минулим тижнем — це виявить тренд.</p>
-      <div class="input-group">
-        <label data-t="s14_l1">Загальна динаміка</label>
-        <div class="chips">
-          <div class="chip"><input type="radio" name="weekly_trend" id="wt1" value="better" checked><label for="wt1" data-t="wt_better">Краще 📈</label></div>
-          <div class="chip"><input type="radio" name="weekly_trend" id="wt2" value="same"><label for="wt2" data-t="wt_same">Без змін →</label></div>
-          <div class="chip"><input type="radio" name="weekly_trend" id="wt3" value="worse"><label for="wt3" data-t="wt_worse">Гірше 📉</label></div>
-        </div>
-      </div>
-      <div class="input-group">
-        <label data-t="s14_l2">Що змінилось?</label>
-        <div class="chips">
-          <div class="chip"><input type="checkbox" id="wk1p" value="sleep_better"><label for="wk1p" data-t="wc_sleep_better">Сон кращий</label></div>
-          <div class="chip"><input type="checkbox" id="wk2p" value="energy_better"><label for="wk2p" data-t="wc_energy_better">Більше енергії</label></div>
-          <div class="chip"><input type="checkbox" id="wk3p" value="mood_better"><label for="wk3p" data-t="wc_mood_better">Настрій кращий</label></div>
-          <div class="chip"><input type="checkbox" id="wk4p" value="sleep_worse"><label for="wk4p" data-t="wc_sleep_worse">Сон погіршився</label></div>
-          <div class="chip"><input type="checkbox" id="wk5p" value="energy_worse"><label for="wk5p" data-t="wc_energy_worse">Менше енергії</label></div>
-          <div class="chip"><input type="checkbox" id="wk6p" value="hotflash_worse"><label for="wk6p" data-t="wc_hf_worse">Більше припливів</label></div>
-          <div class="chip"><input type="checkbox" id="wk7p" value="stable"><label for="wk7p" data-t="wc_stable">Все стабільно</label></div>
-        </div>
-      </div>
-      <div class="input-group">
-        <label data-t="s14_l3">Значущі події за тиждень</label>
-        <div class="chips">
-          <div class="chip"><input type="checkbox" id="ev1" value="travel"><label for="ev1" data-t="ev_travel">Переліт / зміна часового поясу</label></div>
-          <div class="chip"><input type="checkbox" id="ev2" value="illness"><label for="ev2" data-t="ev_ill">Хвороба</label></div>
-          <div class="chip"><input type="checkbox" id="ev3" value="new_supps"><label for="ev3" data-t="ev_supps">Почав(ла) нові добавки</label></div>
-          <div class="chip"><input type="checkbox" id="ev4" value="overtraining"><label for="ev4" data-t="ev_over">Перетренованість</label></div>
-          <div class="chip"><input type="checkbox" id="ev5" value="emotional"><label for="ev5" data-t="ev_emotional">Сильна емоційна подія</label></div>
-          <div class="chip"><input type="checkbox" id="ev6" value="nothing_ev"><label for="ev6" data-t="ev_nothing">Нічого особливого</label></div>
-        </div>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-back" onclick="goTo(10)">←</button>
         <button class="btn btn-primary" onclick="showResults()"><span class="btn-label" data-t="show_result">Показати результат →</span></button>
       </div>
     </div>
@@ -4979,7 +4931,7 @@ function _toggleMedsOther(){
   if(show&&typeof t==='function')el.placeholder=t('meds_other_ph');
 }
 // ── Одностраничные потоки «День» / «Неделя»: шаги показываем стопкой на одной прокрутке ──
-const FLOW_DAILY=[2,5,6], FLOW_WEEKLY=[8,10,11];   // ежедневно: приливы(2)/образ жизни(5)/когниция(6); недельно: активность(8)/стресс(10)/динамика(11); приборные HRV(1)/Сон(3); первичный проход: Питание(7)+Добавки(9); «Самочувствие»(4) удалён
+const FLOW_DAILY=[2,5,6], FLOW_WEEKLY=[8,10];   // ежедневно: приливы(2)/образ жизни(5)/когниция(6); недельно: активность(8)/стресс(10); приборные HRV(1)/Сон(3); первичный проход: Питание(7)+Добавки(9); «Самочувствие»(4) и недельная «Динамика»(11) удалены
 // Приборные поля (HRV, пульс, сон, температура) держим в DOM, но НЕ показываем шагами —
 // значения втекают из панели через applyImportedToSliders. Шаги остаются только субъективные.
 const _AUTO_STEP_METRIC={};
@@ -5024,14 +4976,14 @@ function showDaily(){ _showFlow(_dailyFlow()); if(typeof renderGadgetPanel==='fu
 function showWeekly(){ if(typeof _saveDaily==='function')_saveDaily(); _showFlow(FLOW_WEEKLY); _flowFooter(t('show_result'), function(){ document.body.classList.remove('flow-mode'); _hideFlowFooter(); showResults(); }); }
 // Структура 1 (первый вход): ВСЕ блоки одной стопкой на одной прокрутке, без перехода страниц.
 // Объективный шаг, целиком закрытый трекером (пока HRV), пропускаем — он уже в панели гаджета.
-const FLOW_ALL=[0,2,5,6,7,8,9,10,11];   // профиль + субъективные блоки; объективные (HRV/сон) — в окошке гаджета; «Самочувствие»(4) удалён
+const FLOW_ALL=[0,2,5,6,7,8,9,10];   // профиль + субъективные блоки; объективные (HRV/сон) — в окошке гаджета; «Самочувствие»(4) и недельная «Динамика»(11) удалены
 // Профиль (возраст/рост/вес) — разовый онбординг: заполнен → убираем из стопки навсегда,
 // данные живут в «Моя карточка», правка оттуда (кнопка «Изменить» → _fixMetric(0)).
 function _profileDone(){ try{var p=JSON.parse(localStorage.getItem('vial_profile')||'{}')||{}; return !!(p.age&&p.height&&p.weight);}catch(e){return false;} }
 // ── КАДЕНС блоков (что когда показывать) ──────────────────────────────────────
 // base = только первичный проход (потом живёт в карточке); daily = каждый день;
 // weekly = раз в неделю; biweekly = раз в 2 недели. Первый проход = всё «due», показываем сразу.
-const STEP_CADENCE={0:'base',2:'daily',5:'daily',6:'daily',7:'base',8:'weekly',9:'base',10:'biweekly',11:'weekly'};
+const STEP_CADENCE={0:'base',2:'daily',5:'daily',6:'daily',7:'base',8:'weekly',9:'base',10:'biweekly'};
 function _stepLastMap(){try{return JSON.parse(localStorage.getItem('vial_steplast')||'{}')||{};}catch(e){return {};}}
 function _stepDue(n){
   var c=STEP_CADENCE[n];
@@ -5050,7 +5002,7 @@ function _markPeriodicDone(){
     if(ch)localStorage.setItem('vial_steplast',JSON.stringify(map));
   }catch(e){}
 }
-function _allFlow(){ return FLOW_ALL.filter(function(n){ if(n===11 && !_profileDone())return false; /* динамика — сравнение с прошлой неделей: в первый проход скрываем */ if(!_stepDue(n))return false; if(_hfHidden(n))return false; var m=_AUTO_STEP_METRIC[n]; return !(m && typeof importedData!=='undefined' && importedData[m]!=null); }); }
+function _allFlow(){ return FLOW_ALL.filter(function(n){ if(!_stepDue(n))return false; if(_hfHidden(n))return false; var m=_AUTO_STEP_METRIC[n]; return !(m && typeof importedData!=='undefined' && importedData[m]!=null); }); }
 function showAll(){ _showFlow(_allFlow()); if(typeof renderGadgetPanel==='function')renderGadgetPanel(); _flowFooter(t('show_result'), function(){ if(typeof _saveDaily==='function')_saveDaily(); document.body.classList.remove('flow-mode'); _hideFlowFooter(); showResults(); }); }
 // Сворачивание тяжёлых групп вариантов в «выпадающее окошко» (видно вопрос+выбранное, разворот по тапу).
 // Сворачиваем только группы с ≥6 вариантами или мультивыбором; слайдеры и короткие группы — открыты.
@@ -5791,9 +5743,6 @@ function _showResultsInner(){
     urology:getChecked(['uro1','uro2','uro3','uro4','uro5']),
     bone_risk:getChecked(['bone1','bone2','bone3','bone4','bone5']),
     breast:getChecked(['breast1','breast2','breast3','breast4']),
-    weekly_trend:getRadio('weekly_trend'),
-    weekly_changes:getChecked(['wk1p','wk2p','wk3p','wk4p','wk5p','wk6p','wk7p']),
-    events:getChecked(['ev1','ev2','ev3','ev4','ev5','ev6']),
     labs:{
       vitd:parseFloat(document.getElementById('lab-vitd')?.value)||null,
       ferr:parseFloat(document.getElementById('lab-ferr')?.value)||null,
