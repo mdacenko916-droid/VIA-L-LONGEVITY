@@ -1345,14 +1345,15 @@ body.flow-mode footer,body.flow-mode .legal-links{display:none;}
 <!-- SCROLL AREA -->
 <div id="scroll-area">
 
-<!-- HISTORY PANEL (inside scroll-area) -->
-<div id="historyPanel" style="display:none;position:fixed;inset:0;z-index:700;background:#10131A;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 20px 40px;">
+<!-- CARD PANEL (Моя карточка) — единый архив клиента: профиль/цикл/трекер + недельная динамика/разбор + По дням + сессии -->
+<div id="cardPanel" style="display:none;position:fixed;inset:0;z-index:700;background:#10131A;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 20px 90px;">
   <div style="max-width:600px;margin:0 auto;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
-      <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--t1);" data-t="history_title">История сессий</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--t1);" data-t="card_title">Моя карточка</div>
       <button onclick="navTo('home')" style="background:none;border:1px solid var(--b1);color:var(--t3);padding:6px 14px;border-radius:50px;font-size:11px;letter-spacing:1px;cursor:pointer;font-family:'DM Sans',sans-serif;">✕</button>
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;">
+    <div id="cardBody"></div>
+    <div style="display:flex;gap:8px;margin:18px 0;flex-wrap:wrap;">
       <button id="histExportBtn" onclick="exportHistory()" style="background:rgba(78,204,163,.08);border:1px solid rgba(78,204,163,.25);color:var(--ok);padding:8px 16px;border-radius:50px;font-size:12px;letter-spacing:.5px;cursor:pointer;font-family:'DM Sans',sans-serif;">↓ Экспорт</button>
       <button id="histImportBtn" onclick="document.getElementById('histImportInput').click()" style="background:rgba(78,204,163,.08);border:1px solid rgba(78,204,163,.25);color:var(--ok);padding:8px 16px;border-radius:50px;font-size:12px;letter-spacing:.5px;cursor:pointer;font-family:'DM Sans',sans-serif;">↑ Импорт</button>
       <input id="histImportInput" type="file" accept="application/json,.json" onchange="importHistory(this)" style="display:none;">
@@ -1361,17 +1362,6 @@ body.flow-mode footer,body.flow-mode .legal-links{display:none;}
     <div id="weeklyReport" style="margin-bottom:18px;"></div>
     <div id="dailyList" style="margin-bottom:18px;"></div>
     <div id="historyList"></div>
-  </div>
-</div>
-
-<!-- CARD PANEL (Моя карточка) -->
-<div id="cardPanel" style="display:none;position:fixed;inset:0;z-index:700;background:#10131A;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 20px 90px;">
-  <div style="max-width:600px;margin:0 auto;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-      <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--t1);" data-t="card_title">Моя карточка</div>
-      <button onclick="navTo('home')" style="background:none;border:1px solid var(--b1);color:var(--t3);padding:6px 14px;border-radius:50px;font-size:11px;letter-spacing:1px;cursor:pointer;font-family:'DM Sans',sans-serif;">✕</button>
-    </div>
-    <div id="cardBody"></div>
   </div>
 </div>
 
@@ -2965,10 +2955,6 @@ body.flow-mode footer,body.flow-mode .legal-links{display:none;}
     <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="#e2b95a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20c0-3.6 2.9-6.3 6.5-6.3s6.5 2.7 6.5 6.3"/></svg>
     <span data-t="nav_card">Карточка</span>
   </button>
-  <button class="bottom-nav-item" id="nav-history" onclick="navTo('history')">
-    <img class="bottom-nav-icon" src="Logo/tab-history.png" alt="">
-    <span data-t="nav_history">История</span>
-  </button>
 </nav>
 </div><!-- /bottombar -->
 
@@ -4139,9 +4125,7 @@ function navTo(tab){
   var __ip=document.getElementById('importPanel');if(__ip&&__ip.classList.contains('open')&&typeof closeImport==='function')closeImport(true);
   document.querySelectorAll('.bottom-nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+tab)?.classList.add('active');
-  const hp=document.getElementById('historyPanel');
   const cp=document.getElementById('cardPanel');
-  if(hp){hp.style.display=(tab==='history')?'block':'none';if(tab==='history')renderHistory();}
   if(cp){cp.style.display=(tab==='card')?'block':'none';if(tab==='card')renderCard();}
   if(tab==='home'){ if(typeof startFunnel==='function')startFunnel(); else goTo(0); }   // «Сегодня» = домой: вся стопка (профиль + блоки)
 }
@@ -4274,13 +4258,9 @@ function renderCard(){
       +'</div>';
   });
   html+='</div>';
-  html+=_cSec(t('card_results'));
-  if(hist.length){
-    hist.slice(0,8).forEach(function(s){html+=_cRow(s.date,(s.score!=null?s.score:'—'));});
-  }else{
-    html+='<div style="color:var(--t3);font-size:13px;padding:10px 2px;">'+t('card_empty')+'</div>';
-  }
   box.innerHTML=html;
+  // Архив целиком в карточке: недельная динамика + AI-разбор + «По дням» + сессии (бывшая вкладка «История»)
+  if(typeof renderHistory==='function')renderHistory();
 }
 
 // ══ HISTORY ═══════════════════════════════════════════════
