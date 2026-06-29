@@ -1490,6 +1490,8 @@ footer{
 
       <!-- Только внутри приложения (Capacitor + HealthKit): авто-чтение Apple Health. См. app/HEALTHKIT.md -->
       <button id="apple-hk-btn" class="token-btn" style="width:100%;margin-bottom:12px;display:none;" onclick="appleHKImport(this)">📲 Apple Health</button>
+      <!-- Только внутри приложения на Android (Capacitor + плагин HealthConnectVial): авто-чтение Health Connect. См. app/plugins/health-connect -->
+      <button id="hc-btn" class="token-btn" style="width:100%;margin-bottom:12px;display:none;" onclick="healthConnectImport(this)">⌚ Health Connect</button>
 
       <div id="apple-file">
         <div data-t="instr_apple_file" style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;">
@@ -1525,7 +1527,7 @@ footer{
   </div>
 
   <!-- GARMIN -->
-  <div class="source-card m-full" id="card-garmin">
+  <div class="source-card" id="card-garmin">
     <div class="source-header" onclick="toggleCard('garmin')">
       <div class="source-icon garmin">⌚</div>
       <div class="source-info">
@@ -1600,7 +1602,7 @@ footer{
   </div>
 
   <!-- SAMSUNG GALAXY WATCH / SAMSUNG HEALTH -->
-  <div class="source-card m-full" id="card-samsung">
+  <div class="source-card" id="card-samsung">
     <div class="source-header" onclick="toggleCard('samsung')">
       <div class="source-icon samsung">🔵</div>
       <div class="source-info">
@@ -1716,7 +1718,7 @@ footer{
   </div>
 
   <!-- WHOOP 5.0 -->
-  <div class="source-card m-full" id="card-whoop">
+  <div class="source-card" id="card-whoop">
     <div class="source-header" onclick="toggleCard('whoop')">
       <div class="source-icon whoop">⚡</div>
       <div class="source-info">
@@ -1777,7 +1779,7 @@ footer{
   </div>
 
   <!-- XIAOMI SMART BAND / MI FITNESS -->
-  <div class="source-card m-full" id="card-xiaomi">
+  <div class="source-card" id="card-xiaomi">
     <div class="source-header" onclick="toggleCard('xiaomi')">
       <div class="source-icon xiaomi">🟠</div>
       <div class="source-info">
@@ -1886,7 +1888,7 @@ footer{
   </div>
 
   <!-- AMAZFIT -->
-  <div class="source-card m-full" id="card-amazfit">
+  <div class="source-card" id="card-amazfit">
     <div class="source-header" onclick="toggleCard('amazfit')">
       <div class="source-icon amazfit">⚡</div>
       <div class="source-info">
@@ -1937,7 +1939,7 @@ footer{
   </div>
 
   <!-- ULTRAHUMAN -->
-  <div class="source-card m-full" id="card-ultrahuman">
+  <div class="source-card" id="card-ultrahuman">
     <div class="source-header" onclick="toggleCard('ultrahuman')">
       <div class="source-icon ultrahuman">💍</div>
       <div class="source-info">
@@ -8110,6 +8112,7 @@ async function fetchAIAnalysis(data, lang) {
 </script>
 
 <script src="healthkit-bridge.js"></script>
+<script src="healthconnect-bridge.js"></script>
 <script>
 function appleHKImport(btn){
   if(btn.disabled) return; var t=btn.textContent; btn.disabled=true; btn.textContent='…';
