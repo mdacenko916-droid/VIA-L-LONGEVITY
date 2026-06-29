@@ -2905,12 +2905,13 @@ footer{
       <div class="input-group">
         <label data-t="s10_l2">Регулярные лекарства</label>
         <div class="chips">
-          <div class="chip"><input type="radio" name="meds" id="med1" value="no" checked><label for="med1" data-t="med_no">Нет</label></div>
-          <div class="chip"><input type="radio" name="meds" id="med2" value="thyroid"><label for="med2" data-t="med_thy">Щитовидная железа</label></div>
-          <div class="chip"><input type="radio" name="meds" id="med3" value="antidep"><label for="med3" data-t="med_anti">Антидепрессанты</label></div>
-          <div class="chip"><input type="radio" name="meds" id="med4" value="contraceptive"><label for="med4" data-t="med_contra">КОК / контрацептивы</label></div>
-          <div class="chip"><input type="radio" name="meds" id="med5" value="other_meds"><label for="med5" data-t="med_other">Другие</label></div>
+          <div class="chip"><input type="radio" name="meds" id="med1" value="no" checked onchange="_toggleMedsOther()"><label for="med1" data-t="med_no">Нет</label></div>
+          <div class="chip"><input type="radio" name="meds" id="med2" value="thyroid" onchange="_toggleMedsOther()"><label for="med2" data-t="med_thy">Щитовидная железа</label></div>
+          <div class="chip"><input type="radio" name="meds" id="med3" value="antidep" onchange="_toggleMedsOther()"><label for="med3" data-t="med_anti">Антидепрессанты</label></div>
+          <div class="chip"><input type="radio" name="meds" id="med4" value="contraceptive" onchange="_toggleMedsOther()"><label for="med4" data-t="med_contra">КОК / контрацептивы</label></div>
+          <div class="chip"><input type="radio" name="meds" id="med5" value="other_meds" onchange="_toggleMedsOther()"><label for="med5" data-t="med_other">Другие</label></div>
         </div>
+        <input type="text" id="meds_other" class="manual-input" maxlength="160" data-t-placeholder="meds_other_ph" placeholder="Впишите препарат и дозировку" style="display:none;margin-top:10px;text-align:left;letter-spacing:0;text-transform:none;">
       </div>
       <div class="btn-row">
         <button class="btn btn-back" onclick="goTo(9)">←</button>
@@ -5180,6 +5181,8 @@ function startFunnel(){ if(typeof _renderImpBtns==='function')_renderImpBtns(); 
 (function(){ function _s(){ if(sessionStorage.getItem('vial_access')){ try{startFunnel();}catch(e){console.error('startFunnel',e);} } } if(document.readyState!=='loading')_s(); else document.addEventListener('DOMContentLoaded',_s); })();
 /* cyc_lastdate/cyc_len — поле даты/длины цикла, перенесено из pro (12 языков) */
 (function(){var _C={"ru":["Дата последней менструации","Длина цикла (дней)"],"uk":["Дата останньої менструації","Довжина циклу (днів)"],"en":["Date of last period","Cycle length (days)"],"es":["Fecha de la última menstruación","Duración del ciclo (días)"],"de":["Datum der letzten Menstruation","Zykluslänge (Tage)"],"pt":["Data da última menstruação","Duração do ciclo (dias)"],"fr":["Date des dernières règles","Durée du cycle (jours)"],"pl":["Data ostatniej miesiączki","Długość cyklu (dni)"],"it":["Data dell\\'ultima mestruazione","Durata del ciclo (giorni)"],"he":["תאריך הווסת האחרונה","אורך המחזור (ימים)"],"ja":["最終月経の日付","周期の長さ(日)"],"ko":["마지막 생리 날짜","주기 길이(일)"]};Object.keys(_C).forEach(function(l){if(typeof T!=='undefined'&&T[l]){T[l].cyc_lastdate=_C[l][0];T[l].cyc_len=_C[l][1];}});})();
+/* meds_other_ph — плейсхолдер поля «другие лекарства», перенесён из pro (12 языков) */
+(function(){var _M={"ru":"Впишите препарат и дозировку","uk":"Впишіть препарат і дозування","en":"Enter medication and dosage","es":"Escribe el medicamento y la dosis","de":"Medikament und Dosierung eingeben","pt":"Digite o medicamento e a dose","fr":"Indiquez le médicament et la dose","pl":"Wpisz lek i dawkę","it":"Inserisci farmaco e dose","he":"הזינו תרופה ומינון","ja":"薬剤名と用量を入力","ko":"약물과 용량을 입력하세요"};Object.keys(_M).forEach(function(l){if(typeof T!=='undefined'&&T[l])T[l].meds_other_ph=_M[l];});})();
 function setLang(l){
   lang=l;
   if(typeof updateProgress==='function')updateProgress(window._curStep!=null?window._curStep:0);   // перевести лейбл прогресса
@@ -5905,6 +5908,7 @@ function _lastPeriodBucket(){   // «когда была последняя ме
   if(!(d>=0))return null;
   return d>365?'year':d>90?'months':'recent';
 }
+function _toggleMedsOther(){var el=document.getElementById('meds_other');if(el)el.style.display=(getRadio('meds')==='other_meds')?'block':'none';}
 function determinePhase(){
   var male=getRadio('gender')==='male';
   var age=parseInt((document.getElementById('prof-age')||{}).value)||0;
@@ -6511,6 +6515,7 @@ function _showResultsInner(){
     act_recovery:getRadio('act_recovery'),
     supplements:getChecked(['sup1','sup2','sup3','sup4','sup5','sup6','sup7','sup8','sup9','sup10','sup11']),
     meds:getRadio('meds'),
+    meds_other:(document.getElementById('meds_other')||{}).value||'',
     chronic_stress:getRadio('chronic_stress'),
     cortisol_symp:getChecked(['cort2','cort3','cort4','cort5','cort6','cort7']),
     bio:{
@@ -6529,9 +6534,11 @@ function _showResultsInner(){
     irritability:getRadio('irritability'),
     cycle_status:getRadio('cycle_status'),
     last_period:_lastPeriodBucket(),
+    cycle_len:parseInt((document.getElementById('prof-cyclelen')||{}).value)||null,
     pms:(function(){var s=getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss6','pmss7','pmss8','pmss9','pmss10','pmss11']).filter(function(v){return v!=='none_pms';});return s.length>=7?'severe':s.length>=4?'moderate':s.length>=1?'mild':'none';})(),
     pms_symptoms:getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss6','pmss7','pmss8','pmss9','pmss10','pmss11']),
     vitality:getRadio('vitality'),
+    male_mood:getRadio('male_mood'),
     gsm:getChecked(['gsm1','gsm2','gsm3','gsm4','gsm5','gsm6','gsm7','gsm8']),
     urology:getChecked(['uro1','uro2','uro3','uro4','uro5']),
     bone_risk:getChecked(['bone1','bone2','bone3','bone4','bone5']),

@@ -3185,6 +3185,23 @@ function buildUserMessage(data, lang) {
   const circadianBlock = circadian.length ? '══ ПАТТЕРНЫ СНА ══\n' + circadian.join('\n') + '\n\n' : '';
   const symptomBlock   = symRules.length  ? '══ СИМПТОМ → НУТРИТИВНАЯ ПОДДЕРЖКА ══\n' + symRules.join('\n') + '\n\n' : '';
 
+  // ── ПОЛНЫЕ ДАННЫЕ АНКЕТЫ — чтобы НИ ОДНО введённое клиентом поле не потерялось в анализе ──
+  const _J = a => (Array.isArray(a) && a.length) ? a.join(', ') : '—';
+  const fullDataBlock =
+      '\n══ ПОЛНЫЕ ДАННЫЕ АНКЕТЫ — это ввёл клиент; ОБЯЗАТЕЛЬНО учти КАЖДЫЙ пункт ниже в разборе и рекомендациях, ничего не игнорируй ══\n'
+    + 'Питание · ограничения/диета: ' + _J(data.diet_restrict) + ' | режим питания: ' + (data.eating_pattern || '—') + '\n'
+    + 'Физическая активность · виды: ' + _J(data.act_types) + ' | частота: ' + (data.act_freq || '—') + ' | восстановление после нагрузки: ' + (data.act_recovery || '—') + '\n'
+    + 'Добавки (принимает): ' + _J(data.supplements) + '\n'
+    + 'Лекарства: ' + (data.meds || '—') + (data.meds_other ? ' | другие: ' + data.meds_other : '') + '\n'
+    + 'Хронический стресс: ' + (data.chronic_stress || '—') + ' | симптомы кортизола: ' + _J(data.cortisol_symp) + '\n'
+    + 'Гормональные симптомы: ' + _J(data.horm_symptoms) + (data.horm_intensity ? ' | интенсивность: ' + data.horm_intensity : '') + '\n'
+    + (isFem
+        ? 'Цикл · статус: ' + (data.cycle_status || '—') + ' | давность последней менструации: ' + (data.last_period || '—') + (data.cycle_len ? ' | длина цикла: ' + data.cycle_len + ' дн' : '') + (data.cycle_day ? ' | день цикла: ' + data.cycle_day : '') + (data.cycle_phase ? ' | фаза цикла: ' + data.cycle_phase : '') + '\n'
+          + 'ПМС · тяжесть: ' + (data.pms || '—') + ' | симптомы: ' + _J(data.pms_symptoms) + '\n'
+        : 'Мужское здоровье · витальность: ' + (data.vitality || '—') + ' | настроение/мотивация: ' + (data.male_mood || '—') + '\n')
+    + 'Риск по костям: ' + _J(data.bone_risk) + '\n'
+    + 'ИНСТРУКЦИЯ: каждый ненулевой пункт выше должен быть отражён в анализе хотя бы одной конкретной нутритивной рекомендацией или комментарием; пункты «—» (не указано) не интерпретируй.\n';
+
   return skipNote
     + '══ РЕФЕРЕНСНЫЕ НОРМЫ ══\n'
     + 'HRV (' + age + ' лет): норма ' + hrvNormLow + '–' + hrvNormHigh + ' мс | клиент: ' + SK('hrv', data.hrv + ' мс → ' + hrvStatus) + '\n'
@@ -3220,7 +3237,8 @@ function buildUserMessage(data, lang) {
     + complaintsContext
     + bioContext + '\n'
     + (data.training && data.training.count ? 'Тренировки (с кольца, 7 дн): ' + data.training.count + ' сессий' + (data.training.intensity ? ', последняя интенсивность ' + data.training.intensity : '') + (data.training.activity ? ' (' + data.training.activity + ')' : '') + '. Применяй HRV-направленную нагрузку: тяжёлые/интенсивные сессии — только в дни восстановленного ночного HRV; падающий HRV неделю → снизить объём, добавить сон/восстановление.\n' : '')
-    + labsContext;
+    + labsContext
+    + fullDataBlock;
 }
 
 // ════════════════════════════════════════════════════════════════════════
