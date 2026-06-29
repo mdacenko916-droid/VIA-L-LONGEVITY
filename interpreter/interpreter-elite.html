@@ -2231,7 +2231,7 @@ footer{
       </div>
       <!-- Фаза теперь вычисляется (determinePhase) из цикла/приливов/возраста, как в pro — ручной селектор убран -->
       <div class="divider"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;">
         <div class="manual-field">
           <label class="manual-label" data-t="s_prof_age">Возраст</label>
           <input class="manual-input" id="prof-age" type="number" min="18" max="99" placeholder="—">
@@ -2244,15 +2244,114 @@ footer{
           <label class="manual-label" data-t="s_prof_height">Рост (см)</label>
           <input class="manual-input" id="prof-height" type="number" min="100" max="230" placeholder="—" oninput="calcProfMetrics()">
         </div>
-      </div>
-      <div style="margin-top:10px;display:flex;gap:10px;align-items:flex-end;">
-        <div class="manual-field" style="flex:0 0 110px;">
+        <div class="manual-field">
           <label class="manual-label" data-t="s_prof_waist">Талія (см)</label>
           <input class="manual-input" id="prof-waist" type="number" min="40" max="200" placeholder="—" oninput="calcProfMetrics()">
         </div>
-        <div id="prof-metrics" style="display:none;flex:1;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 12px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--b1);min-height:38px;"></div>
       </div>
+      <div id="prof-metrics" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;margin-top:10px;padding:7px 12px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--b1);min-height:38px;"></div>
       <div id="prof-err" style="font-size:12px;color:var(--alert);margin-top:8px;display:none;" data-t="prof_err">Заполните возраст, вес и рост</div>
+      <div class="divider"></div>
+      <h3 class="step-title" id="step12-title" data-t="s12_title_f" style="font-size:18px;margin:6px 0 2px;">Цикл и репродуктивное здоровье</h3>
+      <p class="step-desc" data-t="s12_desc" style="border-color:rgba(244,114,182,.3);">Помогает точнее определить фазу и подобрать рекомендации.</p>
+      <div id="cycle-female">
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:6px;">
+          <div class="manual-field" style="flex:1 1 200px;min-width:0;">
+            <label class="manual-label" data-t="cyc_lastdate">Дата последней менструации</label>
+            <input class="manual-input" id="prof-lastperiod" type="date" style="max-width:100%;height:44px;box-sizing:border-box;">
+          </div>
+          <div class="manual-field" style="flex:1 1 200px;min-width:0;">
+            <label class="manual-label" data-t="cyc_len">Длина цикла (дней)</label>
+            <input class="manual-input" id="prof-cyclelen" type="number" min="20" max="45" value="28" style="height:44px;box-sizing:border-box;">
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="input-group">
+          <label data-t="s12_lf1">Статус цикла</label>
+          <div class="chips">
+            <div class="chip"><input type="radio" name="cycle_status" id="cyc1" value="regular" checked><label for="cyc1" data-t="cyc_reg">Регулярный (21–35 дней)</label></div>
+            <div class="chip"><input type="radio" name="cycle_status" id="cyc2" value="irregular"><label for="cyc2" data-t="cyc_irreg">Нерегулярный</label></div>
+            <div class="chip"><input type="radio" name="cycle_status" id="cyc3" value="absent"><label for="cyc3" data-t="cyc_abs">Отсутствует</label></div>
+          </div>
+        </div>
+        <div class="input-group">
+          <label data-t="pms_q">Какие симптомы обычно появляются у вас за 5–10 дней до начала менструации?</label>
+          <div class="chips">
+            <div class="chip"><input type="checkbox" id="pmss1" value="irritability"><label for="pmss1" data-t="pmsy_irrit">Раздражительность</label></div>
+            <div class="chip"><input type="checkbox" id="pmss2" value="mood_swings"><label for="pmss2" data-t="pmsy_mood">Перепады настроения</label></div>
+            <div class="chip"><input type="checkbox" id="pmss3" value="anxiety_tearful"><label for="pmss3" data-t="pmsy_anx">Тревожность или плаксивость</label></div>
+            <div class="chip"><input type="checkbox" id="pmss4" value="sweet_craving"><label for="pmss4" data-t="pmsy_crav">Тяга к сладкому или усиление аппетита</label></div>
+            <div class="chip"><input type="checkbox" id="pmss5" value="swelling"><label for="pmss5" data-t="pmsy_swell">Отёчность</label></div>
+            <div class="chip"><input type="checkbox" id="pmss6" value="breast_tender"><label for="pmss6" data-t="pmsy_breast">Болезненность или чувствительность груди</label></div>
+            <div class="chip"><input type="checkbox" id="pmss7" value="fatigue"><label for="pmss7" data-t="pmsy_fatigue">Усталость, снижение энергии</label></div>
+            <div class="chip"><input type="checkbox" id="pmss8" value="headache"><label for="pmss8" data-t="pmsy_head">Головные боли</label></div>
+            <div class="chip"><input type="checkbox" id="pmss9" value="bloating"><label for="pmss9" data-t="pmsy_bloat">Вздутие живота</label></div>
+            <div class="chip"><input type="checkbox" id="pmss10" value="sleep_issue"><label for="pmss10" data-t="pmsy_sleep">Нарушение сна</label></div>
+            <div class="chip"><input type="checkbox" id="pmss11" value="none_pms"><label for="pmss11" data-t="pmsy_none">Ничего из перечисленного</label></div>
+          </div>
+        </div>
+        <div class="input-group">
+          <label data-t="gsm_l">Интимное и мочеполовое здоровье</label>
+          <div class="chips">
+            <div class="chip"><input type="checkbox" id="gsm1" value="vaginal_dryness"><label for="gsm1" data-t="gsm_dry">Сухость влагалища</label></div>
+            <div class="chip"><input type="checkbox" id="gsm2" value="dyspareunia"><label for="gsm2" data-t="gsm_pain">Боль/дискомфорт при близости</label></div>
+            <div class="chip"><input type="checkbox" id="gsm3" value="urinary_urgency"><label for="gsm3" data-t="gsm_urg">Частое/ургентное мочеиспускание</label></div>
+            <div class="chip"><input type="checkbox" id="gsm4" value="recurrent_uti"><label for="gsm4" data-t="gsm_uti">Рецидивные ИМП/циститы</label></div>
+            <div class="chip"><input type="checkbox" id="gsm6" value="stress_incontinence"><label for="gsm6" data-t="gsm_si">Підтікання сечі при кашлі/навантаженні</label></div>
+            <div class="chip"><input type="checkbox" id="gsm7" value="urge_incontinence"><label for="gsm7" data-t="gsm_ui">Підтікання при різкому позиві</label></div>
+            <div class="chip"><input type="checkbox" id="gsm8" value="prolapse"><label for="gsm8" data-t="gsm_prolapse">Відчуття випинання/опущення</label></div>
+            <div class="chip"><input type="checkbox" id="gsm5" value="none_gsm"><label for="gsm5" data-t="gsm_none">Нет / не актуально</label></div>
+          </div>
+        </div>
+        <div class="input-group">
+          <label data-t="bone_l">Здоровье костей</label>
+          <div class="chips">
+            <div class="chip"><input type="checkbox" id="bone1" value="prior_fracture"><label for="bone1" data-t="bone_fracture">Был перелом (от лёгкой травмы)</label></div>
+            <div class="chip"><input type="checkbox" id="bone2" value="height_loss"><label for="bone2" data-t="bone_height">Снижение роста (&gt;2 см)</label></div>
+            <div class="chip"><input type="checkbox" id="bone3" value="family_osteoporosis"><label for="bone3" data-t="bone_family">Остеопороз в семье</label></div>
+            <div class="chip"><input type="checkbox" id="bone4" value="early_menopause"><label for="bone4" data-t="bone_earlymeno">Ранняя менопауза (&lt;45)</label></div>
+            <div class="chip"><input type="checkbox" id="bone5" value="none_bone"><label for="bone5" data-t="bone_none">Нет</label></div>
+          </div>
+        </div>
+        <div class="input-group">
+          <label data-t="breast_l">Здоровье груди</label>
+          <div class="chips">
+            <div class="chip"><input type="checkbox" id="breast1" value="breast_pain"><label for="breast1" data-t="breast_pain">Боль/чувствительность груди</label></div>
+            <div class="chip"><input type="checkbox" id="breast2" value="breast_lump"><label for="breast2" data-t="breast_lump">Уплотнение/узел в груди</label></div>
+            <div class="chip"><input type="checkbox" id="breast3" value="family_breast_cancer"><label for="breast3" data-t="breast_family">Рак груди в семье</label></div>
+            <div class="chip"><input type="checkbox" id="breast4" value="none_breast"><label for="breast4" data-t="breast_none">Нет / не актуально</label></div>
+          </div>
+        </div>
+      </div>
+      <div id="cycle-male" style="display:none;">
+        <div class="input-group">
+          <label data-t="s12_lm1">Витальность и жизненная сила</label>
+          <div class="chips">
+            <div class="chip"><input type="radio" name="vitality" id="vit1" value="high" checked><label for="vit1" data-t="vit_high">Высокая</label></div>
+            <div class="chip"><input type="radio" name="vitality" id="vit2" value="moderate"><label for="vit2" data-t="vit_mod">Умеренная — бывают спады</label></div>
+            <div class="chip"><input type="radio" name="vitality" id="vit3" value="low"><label for="vit3" data-t="vit_low">Низкая — нет драйва</label></div>
+          </div>
+        </div>
+        <div class="input-group">
+          <label data-t="s12_lm2">Настроение и мотивация</label>
+          <div class="chips">
+            <div class="chip"><input type="radio" name="male_mood" id="mm1" value="good" checked><label for="mm1" data-t="mm_good">Хорошее, стабильное</label></div>
+            <div class="chip"><input type="radio" name="male_mood" id="mm2" value="flat"><label for="mm2" data-t="mm_flat">Приглушённое</label></div>
+            <div class="chip"><input type="radio" name="male_mood" id="mm3" value="irritable"><label for="mm3" data-t="mm_irr">Раздражительность</label></div>
+            <div class="chip"><input type="radio" name="male_mood" id="mm4" value="depressed"><label for="mm4" data-t="mm_dep">Подавленность</label></div>
+          </div>
+        </div>
+        <div class="input-group">
+          <label data-t="uro_l">Мочеиспускание и простата</label>
+          <div class="chips">
+            <div class="chip"><input type="checkbox" id="uro1" value="nocturia"><label for="uro1" data-t="uro_noct">Ночные позывы (1+ за ночь)</label></div>
+            <div class="chip"><input type="checkbox" id="uro2" value="weak_stream"><label for="uro2" data-t="uro_stream">Слабая струя</label></div>
+            <div class="chip"><input type="checkbox" id="uro3" value="incomplete_emptying"><label for="uro3" data-t="uro_empty">Чувство неполного опорожнения</label></div>
+            <div class="chip"><input type="checkbox" id="uro4" value="frequency"><label for="uro4" data-t="uro_freq">Частое мочеиспускание днём</label></div>
+            <div class="chip"><input type="checkbox" id="uro5" value="none_uro"><label for="uro5" data-t="uro_none">Нет / не актуально</label></div>
+          </div>
+        </div>
+      </div>
       <div class="btn-row">
         <button class="btn btn-primary" onclick="goFromProfile()"><span class="btn-label" data-t="next">Далее →</span></button>
       </div>
@@ -2859,115 +2958,6 @@ footer{
       <div class="btn-row">
         <button class="btn btn-back" onclick="goTo(10)">←</button>
         <button class="btn btn-primary" onclick="goTo(12)"><span class="btn-label" data-t="next">Далее →</span></button>
-      </div>
-    </div>
-  </div>
-
-  <!-- STEP 12: ЦИКЛ / ВИТАЛЬНОСТЬ -->
-  <div class="step" id="step12">
-    <div class="card">
-      <div class="card-accent" style="background:linear-gradient(90deg,transparent,rgba(244,114,182,.5),transparent);"></div>
-      <div class="step-badge" data-t="s12_badge" style="background:rgba(244,114,182,.1);border-color:rgba(244,114,182,.3);color:#F472B6;">12 / 14 · Цикл</div>
-      <h2 class="step-title" id="step12-title" data-t="s12_title_f">Цикл и репродуктивное здоровье</h2>
-      <p class="step-desc" data-t="s12_desc" style="border-color:rgba(244,114,182,.3);">Помогает точнее определить фазу и подобрать рекомендации.</p>
-      <div id="cycle-female">
-        <div class="input-group">
-          <label data-t="s12_lf1">Статус цикла</label>
-          <div class="chips">
-            <div class="chip"><input type="radio" name="cycle_status" id="cyc1" value="regular" checked><label for="cyc1" data-t="cyc_reg">Регулярный (21–35 дней)</label></div>
-            <div class="chip"><input type="radio" name="cycle_status" id="cyc2" value="irregular"><label for="cyc2" data-t="cyc_irreg">Нерегулярный</label></div>
-            <div class="chip"><input type="radio" name="cycle_status" id="cyc3" value="absent"><label for="cyc3" data-t="cyc_abs">Отсутствует</label></div>
-          </div>
-        </div>
-        <div class="input-group">
-          <label data-t="s12_lf2">Последняя менструация</label>
-          <div class="chips">
-            <div class="chip"><input type="radio" name="last_period" id="lp1" value="recent" checked><label for="lp1" data-t="lp_rec">Менее 3 месяцев назад</label></div>
-            <div class="chip"><input type="radio" name="last_period" id="lp2" value="months"><label for="lp2" data-t="lp_months">3–12 месяцев назад</label></div>
-            <div class="chip"><input type="radio" name="last_period" id="lp3" value="year"><label for="lp3" data-t="lp_year">Более 12 месяцев назад</label></div>
-          </div>
-        </div>
-        <div class="input-group">
-          <label data-t="pms_q">Какие симптомы обычно появляются у вас за 5–10 дней до начала менструации?</label>
-          <div class="chips">
-            <div class="chip"><input type="checkbox" id="pmss1" value="irritability"><label for="pmss1" data-t="pmsy_irrit">Раздражительность</label></div>
-            <div class="chip"><input type="checkbox" id="pmss2" value="mood_swings"><label for="pmss2" data-t="pmsy_mood">Перепады настроения</label></div>
-            <div class="chip"><input type="checkbox" id="pmss3" value="anxiety_tearful"><label for="pmss3" data-t="pmsy_anx">Тревожность или плаксивость</label></div>
-            <div class="chip"><input type="checkbox" id="pmss4" value="sweet_craving"><label for="pmss4" data-t="pmsy_crav">Тяга к сладкому или усиление аппетита</label></div>
-            <div class="chip"><input type="checkbox" id="pmss5" value="swelling"><label for="pmss5" data-t="pmsy_swell">Отёчность</label></div>
-            <div class="chip"><input type="checkbox" id="pmss6" value="breast_tender"><label for="pmss6" data-t="pmsy_breast">Болезненность или чувствительность груди</label></div>
-            <div class="chip"><input type="checkbox" id="pmss7" value="fatigue"><label for="pmss7" data-t="pmsy_fatigue">Усталость, снижение энергии</label></div>
-            <div class="chip"><input type="checkbox" id="pmss8" value="headache"><label for="pmss8" data-t="pmsy_head">Головные боли</label></div>
-            <div class="chip"><input type="checkbox" id="pmss9" value="bloating"><label for="pmss9" data-t="pmsy_bloat">Вздутие живота</label></div>
-            <div class="chip"><input type="checkbox" id="pmss10" value="sleep_issue"><label for="pmss10" data-t="pmsy_sleep">Нарушение сна</label></div>
-            <div class="chip"><input type="checkbox" id="pmss11" value="none_pms"><label for="pmss11" data-t="pmsy_none">Ничего из перечисленного</label></div>
-          </div>
-        </div>
-        <div class="input-group">
-          <label data-t="gsm_l">Интимное и мочеполовое здоровье</label>
-          <div class="chips">
-            <div class="chip"><input type="checkbox" id="gsm1" value="vaginal_dryness"><label for="gsm1" data-t="gsm_dry">Сухость влагалища</label></div>
-            <div class="chip"><input type="checkbox" id="gsm2" value="dyspareunia"><label for="gsm2" data-t="gsm_pain">Боль/дискомфорт при близости</label></div>
-            <div class="chip"><input type="checkbox" id="gsm3" value="urinary_urgency"><label for="gsm3" data-t="gsm_urg">Частое/ургентное мочеиспускание</label></div>
-            <div class="chip"><input type="checkbox" id="gsm4" value="recurrent_uti"><label for="gsm4" data-t="gsm_uti">Рецидивные ИМП/циститы</label></div>
-            <div class="chip"><input type="checkbox" id="gsm6" value="stress_incontinence"><label for="gsm6" data-t="gsm_si">Підтікання сечі при кашлі/навантаженні</label></div>
-            <div class="chip"><input type="checkbox" id="gsm7" value="urge_incontinence"><label for="gsm7" data-t="gsm_ui">Підтікання при різкому позиві</label></div>
-            <div class="chip"><input type="checkbox" id="gsm8" value="prolapse"><label for="gsm8" data-t="gsm_prolapse">Відчуття випинання/опущення</label></div>
-            <div class="chip"><input type="checkbox" id="gsm5" value="none_gsm"><label for="gsm5" data-t="gsm_none">Нет / не актуально</label></div>
-          </div>
-        </div>
-        <div class="input-group">
-          <label data-t="bone_l">Здоровье костей</label>
-          <div class="chips">
-            <div class="chip"><input type="checkbox" id="bone1" value="prior_fracture"><label for="bone1" data-t="bone_fracture">Был перелом (от лёгкой травмы)</label></div>
-            <div class="chip"><input type="checkbox" id="bone2" value="height_loss"><label for="bone2" data-t="bone_height">Снижение роста (&gt;2 см)</label></div>
-            <div class="chip"><input type="checkbox" id="bone3" value="family_osteoporosis"><label for="bone3" data-t="bone_family">Остеопороз в семье</label></div>
-            <div class="chip"><input type="checkbox" id="bone4" value="early_menopause"><label for="bone4" data-t="bone_earlymeno">Ранняя менопауза (&lt;45)</label></div>
-            <div class="chip"><input type="checkbox" id="bone5" value="none_bone"><label for="bone5" data-t="bone_none">Нет</label></div>
-          </div>
-        </div>
-        <div class="input-group">
-          <label data-t="breast_l">Здоровье груди</label>
-          <div class="chips">
-            <div class="chip"><input type="checkbox" id="breast1" value="breast_pain"><label for="breast1" data-t="breast_pain">Боль/чувствительность груди</label></div>
-            <div class="chip"><input type="checkbox" id="breast2" value="breast_lump"><label for="breast2" data-t="breast_lump">Уплотнение/узел в груди</label></div>
-            <div class="chip"><input type="checkbox" id="breast3" value="family_breast_cancer"><label for="breast3" data-t="breast_family">Рак груди в семье</label></div>
-            <div class="chip"><input type="checkbox" id="breast4" value="none_breast"><label for="breast4" data-t="breast_none">Нет / не актуально</label></div>
-          </div>
-        </div>
-      </div>
-      <div id="cycle-male" style="display:none;">
-        <div class="input-group">
-          <label data-t="s12_lm1">Витальность и жизненная сила</label>
-          <div class="chips">
-            <div class="chip"><input type="radio" name="vitality" id="vit1" value="high" checked><label for="vit1" data-t="vit_high">Высокая</label></div>
-            <div class="chip"><input type="radio" name="vitality" id="vit2" value="moderate"><label for="vit2" data-t="vit_mod">Умеренная — бывают спады</label></div>
-            <div class="chip"><input type="radio" name="vitality" id="vit3" value="low"><label for="vit3" data-t="vit_low">Низкая — нет драйва</label></div>
-          </div>
-        </div>
-        <div class="input-group">
-          <label data-t="s12_lm2">Настроение и мотивация</label>
-          <div class="chips">
-            <div class="chip"><input type="radio" name="male_mood" id="mm1" value="good" checked><label for="mm1" data-t="mm_good">Хорошее, стабильное</label></div>
-            <div class="chip"><input type="radio" name="male_mood" id="mm2" value="flat"><label for="mm2" data-t="mm_flat">Приглушённое</label></div>
-            <div class="chip"><input type="radio" name="male_mood" id="mm3" value="irritable"><label for="mm3" data-t="mm_irr">Раздражительность</label></div>
-            <div class="chip"><input type="radio" name="male_mood" id="mm4" value="depressed"><label for="mm4" data-t="mm_dep">Подавленность</label></div>
-          </div>
-        </div>
-        <div class="input-group">
-          <label data-t="uro_l">Мочеиспускание и простата</label>
-          <div class="chips">
-            <div class="chip"><input type="checkbox" id="uro1" value="nocturia"><label for="uro1" data-t="uro_noct">Ночные позывы (1+ за ночь)</label></div>
-            <div class="chip"><input type="checkbox" id="uro2" value="weak_stream"><label for="uro2" data-t="uro_stream">Слабая струя</label></div>
-            <div class="chip"><input type="checkbox" id="uro3" value="incomplete_emptying"><label for="uro3" data-t="uro_empty">Чувство неполного опорожнения</label></div>
-            <div class="chip"><input type="checkbox" id="uro4" value="frequency"><label for="uro4" data-t="uro_freq">Частое мочеиспускание днём</label></div>
-            <div class="chip"><input type="checkbox" id="uro5" value="none_uro"><label for="uro5" data-t="uro_none">Нет / не актуально</label></div>
-          </div>
-        </div>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-back" onclick="goTo(11)">←</button>
-        <button class="btn btn-primary" onclick="goTo(13)"><span class="btn-label" data-t="next">Далее →</span></button>
       </div>
     </div>
   </div>
@@ -5053,9 +5043,9 @@ const _GP_SRC={fitbit:'Fitbit',oura:'Oura',samsung:'Samsung Health',whoop:'WHOOP
 // HRV/темп/сон — гаджет-панель; терминал = существующий proceedFromStep15() → анкета/результат →
 // кабинет-кнопки ELITE (Zoom/Cal/PDF) НЕ трогаются. Блоки = pro (приливы в ленте, без «Пульс покоя»/
 // «Гормон.симптомы»/«Состав тела»; тревожность в «Стрессе»; Цикл только женщинам; питание=pro).
-const STEP_CADENCE={0:'base',2:'daily',5:'daily',6:'daily',8:'base',9:'weekly',10:'base',11:'biweekly',12:'base'};
-const FLOW_ALL=[0,2,5,6,8,9,10,11,12];   // недельная «Динамика»(step14 «Самочувствие за неделю») удалена — в pro её нет
-function _flowHidden(n){var male=(typeof getRadio==='function'&&getRadio('gender')==='male');return male&&(n===2||n===12);}
+const STEP_CADENCE={0:'base',2:'daily',5:'daily',6:'daily',8:'base',9:'weekly',10:'base',11:'biweekly'};
+const FLOW_ALL=[0,2,5,6,8,9,10,11];   // step0 профиль (+цикл вшит внутрь, как в pro); недельная «Динамика» удалена; step12 (цикл) вшит в step0
+function _flowHidden(n){var male=(typeof getRadio==='function'&&getRadio('gender')==='male');return male&&(n===2);}
 // Каденс (как в pro): weekly/biweekly блоки показываем не каждый раз, а раз в 7/14 дней (state в vial_steplast).
 function _stepLastMap(){try{return JSON.parse(localStorage.getItem('vial_steplast')||'{}')||{};}catch(e){return {};}}
 function _stepDue(n){
@@ -5188,6 +5178,8 @@ function initCollapsibles(){
 function startFunnel(){ if(typeof _renderImpBtns==='function')_renderImpBtns(); if(typeof _renderDietLabels==='function')_renderDietLabels(); if(typeof _renderHotflash==='function')_renderHotflash(); if(typeof initCollapsibles==='function')initCollapsibles(); if(typeof showAll==='function') showAll(); }
 // Рендерим одностраничную ленту только ПОСЛЕ входа (как в pro): без кода gate закрывает страницу.
 (function(){ function _s(){ if(sessionStorage.getItem('vial_access')){ try{startFunnel();}catch(e){console.error('startFunnel',e);} } } if(document.readyState!=='loading')_s(); else document.addEventListener('DOMContentLoaded',_s); })();
+/* cyc_lastdate/cyc_len — поле даты/длины цикла, перенесено из pro (12 языков) */
+(function(){var _C={"ru":["Дата последней менструации","Длина цикла (дней)"],"uk":["Дата останньої менструації","Довжина циклу (днів)"],"en":["Date of last period","Cycle length (days)"],"es":["Fecha de la última menstruación","Duración del ciclo (días)"],"de":["Datum der letzten Menstruation","Zykluslänge (Tage)"],"pt":["Data da última menstruação","Duração do ciclo (dias)"],"fr":["Date des dernières règles","Durée du cycle (jours)"],"pl":["Data ostatniej miesiączki","Długość cyklu (dni)"],"it":["Data dell\\'ultima mestruazione","Durata del ciclo (giorni)"],"he":["תאריך הווסת האחרונה","אורך המחזור (ימים)"],"ja":["最終月経の日付","周期の長さ(日)"],"ko":["마지막 생리 날짜","주기 길이(일)"]};Object.keys(_C).forEach(function(l){if(typeof T!=='undefined'&&T[l]){T[l].cyc_lastdate=_C[l][0];T[l].cyc_len=_C[l][1];}});})();
 function setLang(l){
   lang=l;
   if(typeof updateProgress==='function')updateProgress(window._curStep!=null?window._curStep:0);   // перевести лейбл прогресса
@@ -5429,7 +5421,7 @@ function saveProfile(){
       height:(document.getElementById('prof-height')||{}).value||'',
       weight:(document.getElementById('prof-weight')||{}).value||'',
       waist:(document.getElementById('prof-waist')||{}).value||'',
-      cycleStatus:_radioLabel('cycle_status'), lastPeriod:_radioLabel('last_period'),
+      cycleStatus:_radioLabel('cycle_status'), lastPeriod:(document.getElementById('prof-lastperiod')||{}).value||'',
       pms:_checkedLabels(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss6','pmss7','pmss8','pmss9','pmss10','pmss11']),
       diet:_checkedLabels(['dr1','dr2','dr3','dr4','dr5','dr6','dr7','dr8']),
       eating:_radioLabel('eating_pattern'),
@@ -5906,6 +5898,13 @@ function restart(){
   ['prof-age','prof-weight','prof-height'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
 }
 function getRadio(n){const el=document.querySelector(`input[name="${n}"]:checked`);return el?el.value:null;}
+function _lastPeriodBucket(){   // «когда была последняя менструация» из даты prof-lastperiod (как в pro)
+  var el=document.getElementById('prof-lastperiod');
+  if(!el||!el.value)return null;
+  var d=(Date.now()-new Date(el.value).getTime())/86400000;
+  if(!(d>=0))return null;
+  return d>365?'year':d>90?'months':'recent';
+}
 function determinePhase(){
   var male=getRadio('gender')==='male';
   var age=parseInt((document.getElementById('prof-age')||{}).value)||0;
@@ -5915,7 +5914,7 @@ function determinePhase(){
     return (age>=50||low)?'andro':'pre_andro';
   }
   var cs=getRadio('cycle_status');
-  var lp=getRadio('last_period');
+  var lp=_lastPeriodBucket();
   var hf=getRadio('hf_count')&&getRadio('hf_count')!=='none';
   if(lp==='year'||cs==='absent')return 'post';
   if(cs==='irregular'||lp==='months'||(hf&&age>=48))return 'meno';
@@ -6529,7 +6528,7 @@ function _showResultsInner(){
     anxiety:+(getRadio('anxiety')||1),
     irritability:getRadio('irritability'),
     cycle_status:getRadio('cycle_status'),
-    last_period:getRadio('last_period'),
+    last_period:_lastPeriodBucket(),
     pms:(function(){var s=getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss6','pmss7','pmss8','pmss9','pmss10','pmss11']).filter(function(v){return v!=='none_pms';});return s.length>=7?'severe':s.length>=4?'moderate':s.length>=1?'mild':'none';})(),
     pms_symptoms:getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss6','pmss7','pmss8','pmss9','pmss10','pmss11']),
     vitality:getRadio('vitality'),
