@@ -3201,6 +3201,17 @@ function buildUserMessage(data, lang) {
           + 'ПМС · тяжесть: ' + (data.pms || '—') + ' | симптомы: ' + _J(data.pms_symptoms) + '\n'
         : 'Мужское здоровье · витальность: ' + (data.vitality || '—') + ' | настроение/мотивация: ' + (data.male_mood || '—') + '\n')
     + 'Риск по костям: ' + _J(data.bone_risk) + '\n'
+    + (function(d){ if(!d) return '';
+        var p=[
+          (d.vo2!=null ? 'VO₂max (аэробная форма) ' + d.vo2 : ''),
+          (d.spo2!=null ? 'SpO₂ ' + d.spo2 + '%' : ''),
+          (d.readiness!=null ? 'готовность ' + d.readiness : ''),
+          (d.sleepHours!=null ? 'сон ' + d.sleepHours + ' ч' : ''),
+          (d.deepMin!=null ? 'глубокий сон ' + d.deepMin + ' мин' : ''),
+          (d.tempDev!=null ? 'отклонение температуры ' + d.tempDev + '°C' : '')
+        ].filter(Boolean);
+        return p.length ? 'Приборные показатели с трекера: ' + p.join(', ') + '\n' : '';
+      })(data.device)
     + 'ИНСТРУКЦИЯ: каждый ненулевой пункт выше должен быть отражён в анализе хотя бы одной конкретной нутритивной рекомендацией или комментарием; пункты «—» (не указано) не интерпретируй.\n';
 
   return skipNote
