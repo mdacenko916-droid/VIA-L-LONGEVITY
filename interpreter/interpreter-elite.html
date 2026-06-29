@@ -1352,6 +1352,7 @@ footer{
 .gp-lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:rgba(255,255,255,.88);margin-top:3px;font-weight:500;}
 .gp-src{font-size:9px;color:#4ADE80;margin-top:1px;}
 .gp-head{font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold-lt);margin:0 0 7px;display:flex;align-items:center;gap:7px;}
+.gp-note{font-size:11.5px;line-height:1.45;color:var(--t2);margin:0 0 11px;}
 </style>
 </head>
 <body>
@@ -2200,6 +2201,7 @@ footer{
   <div id="gadget-panel-wrap" style="display:none;">
     <div class="card">
       <div class="gp-head">📲 <span id="gp-title-txt">Tracker data</span></div>
+      <div class="gp-note" id="gp-once-txt"></div>
       <div class="gadget-panel" id="gadget-panel"></div>
     </div>
   </div>
@@ -7113,7 +7115,9 @@ function renderGadgetPanel(){
   // Панель присутствует ВСЕГДА (как в pro) — поверхность ввода: пустые плитки клиент дополняет вручную.
   var s=_gpAutoSource(), src=s?(_GP_SRC[s]||s.charAt(0).toUpperCase()+s.slice(1)):null;
   var tt=document.getElementById('gp-title-txt');
-  if(tt)tt.textContent=L({ru:'Данные с трекера',uk:'Дані з трекера',en:'Tracker data',es:'Datos del tracker',de:'Tracker-Daten',pt:'Dados do tracker',fr:'Données du tracker',pl:'Dane z trackera',it:'Dati del tracker',he:'נתוני המכשיר',ja:'トラッカーのデータ',ko:'트래커 데이터'});
+  if(tt)tt.textContent=L({ru:'Данные с трекера сегодня',uk:'Дані з трекера сьогодні',en:'Tracker data today',es:'Datos del tracker hoy',de:'Tracker-Daten heute',pt:'Dados do tracker hoje',fr:'Données du tracker aujourd’hui',pl:'Dane z trackera dzisiaj',it:'Dati del tracker oggi',he:'נתוני המכשיר היום',ja:'今日のトラッカーのデータ',ko:'오늘의 트래커 데이터'});
+  var nt=document.getElementById('gp-once-txt');
+  if(nt)nt.textContent=L({ru:'🔁 Разбор — раз в день. Показатели с трекера за прошедшую ночь.',uk:'🔁 Розбір — раз на день. Показники з трекера за минулу ніч.',en:'🔁 Run the analysis once a day. Tracker data is from the past night.',es:'🔁 Haz el análisis una vez al día. Los datos del tracker son de la noche anterior.',de:'🔁 Mach die Auswertung einmal täglich. Tracker-Daten stammen aus der letzten Nacht.',pt:'🔁 Faça a análise uma vez por dia. Os dados do tracker são da noite anterior.',fr:'🔁 Faites l’analyse une fois par jour. Les données du tracker datent de la nuit précédente.',pl:'🔁 Rób analizę raz dziennie. Dane z trackera są z minionej nocy.',it:'🔁 Fai l’analisi una volta al giorno. I dati del tracker sono della notte precedente.',he:'🔁 בצעו את הניתוח פעם ביום. נתוני הטרקר הם מהלילה האחרון.',ja:'🔁 分析は1日1回。トラッカーのデータは前夜のものです。',ko:'🔁 분석은 하루 한 번. 트래커 데이터는 지난밤 기준입니다.'});
   box.innerHTML=keys.map(function(k){
     var m=_GMETA[k], got=D[k]!=null&&!isNaN(D[k])&&!(k==='tempDev'&&Math.abs(D[k])<0.005), v=got?m.f(D[k]):'—', lbl=(_GLAB[k]&&(_GLAB[k][lang]||_GLAB[k].en))||k;
     return '<div class="gp-tile '+(got?'got':'miss')+'" onclick="_gEdit(\''+k+'\',this)" style="position:relative;cursor:pointer;">'
