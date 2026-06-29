@@ -3151,6 +3151,7 @@ function buildUserMessage(data, lang) {
     nocturia:'ночные позывы', weak_stream:'слабая струя', incomplete_emptying:'неполное опорожнение', frequency:'частое мочеиспускание днём',
     bloating:'вздутие/газы', constipation:'запоры', diarrhea:'диарея/жидкий стул', reflux:'изжога/рефлюкс',
     rectal_bleeding:'кровь при дефекации', hemorrhoids:'геморрой/узлы', fecal_incontinence:'недержание газов/кала', straining:'сильное натуживание',
+    heaviness:'тяжесть после еды', fissure:'анальная трещина', itch:'анальный зуд/дискомфорт',
     breast_pain:'боль/чувствительность груди', breast_lump:'уплотнение/узел в груди', family_breast_cancer:'рак груди в семье',
   };
   const flagC = (arr) => (Array.isArray(arr) ? arr : []).filter(t => t && !String(t).startsWith('none') && COMPLAINT_LBL[t]).map(t => COMPLAINT_LBL[t]);
