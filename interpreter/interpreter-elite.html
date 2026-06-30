@@ -2803,8 +2803,9 @@ footer{
           <div class="chip"><input type="checkbox" id="dr5" value="lactose_free"><label for="dr5" id="dr-l5"></label></div>
           <div class="chip"><input type="checkbox" id="dr6" value="keto"><label for="dr6" id="dr-l6"></label></div>
           <div class="chip"><input type="checkbox" id="dr7" value="if"><label for="dr7" id="dr-l7"></label></div>
-          <div class="chip"><input type="checkbox" id="dr8" value="allergy"><label for="dr8" id="dr-l8"></label></div>
+          <div class="chip"><input type="checkbox" id="dr8" value="allergy" onchange="var a=document.getElementById('allergy');if(a)a.style.display=this.checked?'block':'none';"><label for="dr8" id="dr-l8"></label></div>
         </div>
+        <input type="text" id="allergy" data-t-placeholder="allergy_ph" class="manual-input" maxlength="160" placeholder="На что? (орехи, лактоза, глютен…)" style="display:none;margin-top:10px;text-align:left;letter-spacing:0;text-transform:none;">
       </div>
       <div class="input-group">
         <label data-t="s8_l2">Режим питания</label>
@@ -4934,6 +4935,7 @@ const T={
 
 const LANG_FLAGS={'ru':'🇷🇺 RU','uk':'🇺🇦 UK','en':'🇬🇧 EN','es':'🇪🇸 ES','de':'🇩🇪 DE','pt':'🇧🇷 PT','fr':'🇫🇷 FR','pl':'🇵🇱 PL','it':'🇮🇹 IT','he':'🇮🇱 HE','ja':'🇯🇵 JA','ko':'🇰🇷 KO'};
 ['ru','uk','es','de','pt','fr','pl','it','he','ja','ko'].forEach(l=>{T[l]=Object.assign({},T.en,T[l]);});
+;(function(){var c={ allergy_ph:{ru:'На что? (орехи, лактоза, глютен…)',uk:'На що? (горіхи, лактоза, глютен…)',en:'To what? (nuts, lactose, gluten…)',es:'¿A qué? (frutos secos, lactosa, gluten…)',de:'Worauf? (Nüsse, Laktose, Gluten…)',pt:'A quê? (nozes, lactose, glúten…)',fr:'À quoi ? (noix, lactose, gluten…)',pl:'Na co? (orzechy, laktoza, gluten…)',it:'A cosa? (noci, lattosio, glutine…)',he:'למה? (אגוזים, לקטוז, גלוטן…)',ja:'何に？（ナッツ、乳糖、グルテン…）',ko:'무엇에? (견과류, 유당, 글루텐…)'} };Object.keys(c).forEach(function(k){Object.keys(c[k]).forEach(function(l){if(T[l])T[l][k]=c[k][l];});});})();
 // ── ПМС-чеклист + тревожность 4 уровня (как новый pro) ──
 const _PMS={
   pms_q:{ru:'Какие симптомы обычно появляются у вас за 5–10 дней до начала менструации?',uk:'Які симптоми зазвичай з’являються у вас за 5–10 днів до початку менструації?',en:'Which symptoms usually appear 5–10 days before your period?',es:'¿Qué síntomas suelen aparecer 5–10 días antes de tu menstruación?',de:'Welche Symptome treten bei dir meist 5–10 Tage vor der Menstruation auf?',pt:'Quais sintomas costumam aparecer 5–10 dias antes da menstruação?',fr:'Quels symptômes apparaissent habituellement 5 à 10 jours avant vos règles ?',pl:'Jakie objawy zwykle pojawiają się 5–10 dni przed miesiączką?',it:'Quali sintomi compaiono di solito 5–10 giorni prima del ciclo?',he:'אילו תסמינים מופיעים אצלך בדרך כלל 5–10 ימים לפני הווסת?',ja:'生理の5〜10日前に通常現れる症状は？',ko:'생리 5–10일 전에 보통 나타나는 증상은?'},
@@ -5447,6 +5449,9 @@ function saveProfile(){
     }));
   }catch(e){}
 }
+// Инлайн-правка веса/талии прямо в карточке (меняются со временем) → vial_profile + синхрон с профилем.
+function _cardSaveNum(field,val){var P={};try{P=JSON.parse(localStorage.getItem('vial_profile')||'{}')||{};}catch(e){}P[field]=(val||'').trim();try{localStorage.setItem('vial_profile',JSON.stringify(P));}catch(e){}var inp=document.getElementById('prof-'+field);if(inp)inp.value=P[field];}
+function _cEditNum(field,label,val){return '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:7px 2px;border-bottom:1px solid var(--b1);font-size:13px;"><span style="color:var(--t2);">'+label+'</span><input type="number" value="'+(val==null||val===''?'':val)+'" placeholder="—" oninput="_cardSaveNum(\''+field+'\',this.value)" style="width:74px;background:rgba(255,255,255,.05);border:1px solid var(--b1);border-radius:8px;color:var(--t1);font-weight:600;text-align:center;padding:5px 6px;font-family:inherit;font-size:14px;"></div>';}
 function renderCard(){
   var box=document.getElementById('cardBody'); if(!box)return;
   try{saveProfile();}catch(e){}
@@ -5457,8 +5462,8 @@ function renderCard(){
   html+=_cRow(t('s_prof_l1'),P.genderLabel);
   html+=_cRow(t('s_prof_age'),P.age);
   html+=_cRow(t('s_prof_height'),P.height);
-  html+=_cRow(t('s_prof_weight'),P.weight);
-  html+=_cRow(t('s_prof_waist'),P.waist);
+  html+=_cEditNum('weight',t('s_prof_weight'),P.weight);
+  html+=_cEditNum('waist',t('s_prof_waist'),P.waist);
   if(P.gender==='female'){
     html+=_cSec(t('s12_title_f'));
     html+=_cRow(t('s12_lf1'),P.cycleStatus);
@@ -6522,6 +6527,7 @@ function _showResultsInner(){
     horm_symptoms:getChecked(['hs1','hs2','hs4','hs5','hs6','hs7','hs8','hm1','hm2','hm3','hm4','hm5','hm6','hm8']),
     horm_intensity:getRadio('horm_intensity'),
     diet_restrict:getChecked(['dr1','dr2','dr3','dr4','dr5','dr6','dr7','dr8']),
+    allergy:(document.getElementById('allergy')?document.getElementById('allergy').value:'').trim(),
     eating_pattern:getRadio('eating_pattern'),
     gi:getChecked(['gi1','gi2','gi3','gi4','gi5','gi6','gi7','gi10','gi11','gi12','gi13']),
     act_types:getChecked(['act1','act2','act3','act4','act5','act6']),
