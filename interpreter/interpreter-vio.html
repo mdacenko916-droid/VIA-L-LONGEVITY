@@ -1659,12 +1659,13 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
     </g>
   </svg>
 
-  <!-- ① Бейдж под дугой горизонта -->
-  <div class="hero-eyebrow" style="display:block;margin-top:8px;" data-t="hero_badge">Разработано действующим членом Perry Academy</div>
+  <!-- ① Бейдж убран (Perry Academy) — велнес/App Store -->
+  <div class="hero-eyebrow" style="display:none;" data-t="hero_badge"></div>
 
-  <!-- ⑥ Заголовок + описание -->
-  <h1 class="hero-title" data-t="hero_title">Интерпретатор<br><em>вашего самочувствия</em></h1>
-  <p class="hero-desc" data-t="hero_desc">Ответьте на несколько вопросов о самочувствии — и получите нутрициологическую интерпретацию на доказательной базе. Без гаджета — для женщин в период гормональных перемен и мужчин со снижением возрастной витальности.</p>
+  <!-- ⑥ Заголовок + описание + нижний подзаголовок -->
+  <h1 class="hero-title" data-t="hero_title">Анализатор<br><em>вашего самочувствия</em></h1>
+  <p class="hero-desc" data-t="hero_desc">Ответьте на несколько вопросов о вашем образе жизни — и получите персональные нутрициологические рекомендации на основе научных данных.</p>
+  <p class="hero-desc" style="opacity:.72;font-size:.9em;margin-top:8px;" data-t="hero_sub">Без носимых устройств и фитнес-трекеров — эффективное решение для естественного баланса в периоды естественных внутренних перестроек у женщин и оптимизации возрастной витальности у мужчин.</p>
 
   <!-- VIO — ручной тариф без гаджета: кнопка импорта устройства убрана; вход сразу в опросник ниже.
        Демо (Oura Sandbox) и панель импорта остаются в коде, но недоступны (нет точки входа) — удалим в чистке. -->
@@ -2444,7 +2445,7 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
   <div id="consent-gate">
     <div class="consent-card">
       <h3 data-t="consent_title">Важно</h3>
-      <p data-t="consent_body">Это приложение — не медицинское средство. Оно не ставит диагнозы и не заменяет консультацию врача. Все результаты носят информационный характер для оптимизации образа жизни.</p>
+      <p data-t="consent_body">Рекомендации Интеллектуального Помощника (ИП) основаны на масштабных научных исследованиях в области долголетия, превентивного подхода и управления образом жизни. Настоящее приложение не является медицинским средством, не ставит диагнозы и не заменяет консультацию врача. Все результаты анализа носят исключительно информационный характер для оптимизации ваших привычек.</p>
       <label class="consent-check"><input type="checkbox" id="consent-cb" onchange="_consentToggle()"><span data-t="consent_check">Понимаю и соглашаюсь</span></label>
       <button id="consent-btn" onclick="_consentAccept()" data-t="consent_btn">Продолжить</button>
     </div>
@@ -2727,14 +2728,10 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
 </div><!-- /app -->
 
 <script>
-// ══ ACCESS — VIO платный: гейт-код (VIAL-VIO-2024) ════════
-const VIO_CODES=['VIAL-VIO-2024'];
-function _vioAuthed(){ try{return localStorage.getItem('vial_vio_access')==='1';}catch(e){return false;} }
-function gateError(){ var e=document.getElementById('gateError'),i=document.getElementById('gateInput'); if(e)e.classList.add('show'); if(i){i.classList.add('error');setTimeout(function(){i.classList.remove('error');},400);} }
-function gateUnlock(){ try{localStorage.setItem('vial_vio_access','1');}catch(e){} var g=document.getElementById('gate'); if(g)g.style.display='none'; if(typeof startFunnel==='function')startFunnel(); }
-function checkCode(){ var i=document.getElementById('gateInput'); if(!i)return; var v=i.value.trim().toUpperCase().replace(/\s+/g,''); if(VIO_CODES.indexOf(v)>=0){ gateUnlock(); } else { gateError(); } }
-// вход по Enter + показ гейта при загрузке, если не авторизован
-(function(){ var i=document.getElementById('gateInput'); if(i)i.addEventListener('keydown',function(e){ if(e.key==='Enter'){e.preventDefault();checkCode();} }); var g=document.getElementById('gate'); if(g)g.style.display=_vioAuthed()?'none':'flex'; })();
+// ══ ACCESS — VIO без пароля (продажа в App Store/Google Play) ════════
+// Гейт-код убран целиком; на входе — только дисклеймер «Важно» (согласие).
+function checkCode(){}   // no-op (кнопка #gate скрыта)
+(function(){ var g=document.getElementById('gate'); if(g)g.style.display='none'; })();
 
 // ══ LANG DROPDOWN ═════════════════════════════════════════
 function toggleLangMenu(){
@@ -3722,7 +3719,12 @@ Object.keys(_PMS).forEach(function(k){Object.keys(_PMS[k]).forEach(function(l){i
 "s_ns_title":{"ru":"Новые симптомы","uk":"Нові симптоми","en":"New symptoms","es":"Síntomas nuevos","de":"Neue Symptome","pt":"Sintomas novos","fr":"Nouveaux symptômes","pl":"Nowe objawy","it":"Nuovi sintomi","he":"תסמינים חדשים","ja":"新しい症状","ko":"새로운 증상"},
 "s_ns_desc":{"ru":"Отметьте, если за последнюю неделю появилось что-то новое в самочувствии.","uk":"Зазначте, якщо за останній тиждень зʼявилося щось нове в самопочутті.","en":"Note anything new in how you feel over the past week.","es":"Indica si esta semana apareció algo nuevo en cómo te sientes.","de":"Notieren Sie, ob in der letzten Woche etwas Neues in Ihrem Befinden aufgetreten ist.","pt":"Anote se surgiu algo novo no seu bem-estar na última semana.","fr":"Notez si quelque chose de nouveau est apparu dans votre ressenti cette semaine.","pl":"Zaznacz, czy w ostatnim tygodniu pojawiło się coś nowego w samopoczuciu.","it":"Indica se nellultima settimana è comparso qualcosa di nuovo nel tuo benessere.","he":"ציינו אם בשבוע האחרון הופיע משהו חדש בתחושה שלכם.","ja":"この1週間で体調に新しく現れたことがあれば記入してください。","ko":"지난 한 주 동안 컨디션에 새로 나타난 것이 있으면 적어주세요."},
 "s_ns_q":{"ru":"📝 Какие появились новые симптомы?","uk":"📝 Які зʼявилися нові симптоми?","en":"📝 What new symptoms have appeared?","es":"📝 ¿Qué síntomas nuevos han aparecido?","de":"📝 Welche neuen Symptome sind aufgetreten?","pt":"📝 Quais sintomas novos surgiram?","fr":"📝 Quels nouveaux symptômes sont apparus ?","pl":"📝 Jakie nowe objawy się pojawiły?","it":"📝 Quali nuovi sintomi sono comparsi?","he":"📝 אילו תסמינים חדשים הופיעו?","ja":"📝 新しく現れた症状は何ですか？","ko":"📝 어떤 새로운 증상이 나타났나요?"},
-"s_ns_ph":{"ru":"Опишите своими словами (или оставьте пустым)","uk":"Опишіть своїми словами (або залиште порожнім)","en":"Describe in your own words (or leave blank)","es":"Descríbelo con tus palabras (o déjalo vacío)","de":"Mit eigenen Worten beschreiben (oder leer lassen)","pt":"Descreva com suas palavras (ou deixe em branco)","fr":"Décrivez avec vos mots (ou laissez vide)","pl":"Opisz własnymi słowami (lub zostaw puste)","it":"Descrivi con parole tue (o lascia vuoto)","he":"תארו במילים שלכם (או השאירו ריק)","ja":"自由に記入してください（空欄でも可）","ko":"자유롭게 적어주세요 (비워도 됩니다)"}
+"s_ns_ph":{"ru":"Опишите своими словами (или оставьте пустым)","uk":"Опишіть своїми словами (або залиште порожнім)","en":"Describe in your own words (or leave blank)","es":"Descríbelo con tus palabras (o déjalo vacío)","de":"Mit eigenen Worten beschreiben (oder leer lassen)","pt":"Descreva com suas palavras (ou deixe em branco)","fr":"Décrivez avec vos mots (ou laissez vide)","pl":"Opisz własnymi słowami (lub zostaw puste)","it":"Descrivi con parole tue (o lascia vuoto)","he":"תארו במילים שלכם (או השאירו ריק)","ja":"自由に記入してください（空欄でも可）","ko":"자유롭게 적어주세요 (비워도 됩니다)"},
+"hero_title":{"ru":"Анализатор<br><em>вашего самочувствия</em>","uk":"Аналізатор<br><em>вашого самопочуття</em>","en":"Your wellbeing<br><em>analyzer</em>","es":"Analizador<br><em>de tu bienestar</em>","de":"Analysator<br><em>Ihres Wohlbefindens</em>","pt":"Analisador<br><em>do seu bem-estar</em>","fr":"Analyseur<br><em>de votre bien-être</em>","pl":"Analizator<br><em>Twojego samopoczucia</em>","it":"Analizzatore<br><em>del tuo benessere</em>","he":"מנתח<br><em>הרווחה שלך</em>","ja":"あなたの調子の<br><em>アナライザー</em>","ko":"당신의 컨디션<br><em>분석기</em>"},
+"hero_desc":{"ru":"Ответьте на несколько вопросов о вашем образе жизни — и получите персональные нутрициологические рекомендации на основе научных данных.","uk":"Дайте відповідь на кілька запитань про ваш спосіб життя — і отримайте персональні нутриціологічні рекомендації на основі наукових даних.","en":"Answer a few questions about your lifestyle — and get personalized nutrition recommendations based on scientific evidence.","es":"Responde unas preguntas sobre tu estilo de vida y recibe recomendaciones nutricionales personalizadas basadas en datos científicos.","de":"Beantworte ein paar Fragen zu deinem Lebensstil – und erhalte personalisierte Ernährungsempfehlungen auf wissenschaftlicher Basis.","pt":"Responda a algumas perguntas sobre o seu estilo de vida e receba recomendações nutricionais personalizadas com base em dados científicos.","fr":"Répondez à quelques questions sur votre mode de vie et recevez des recommandations nutritionnelles personnalisées fondées sur des données scientifiques.","pl":"Odpowiedz na kilka pytań o swój styl życia i otrzymaj spersonalizowane zalecenia żywieniowe oparte na danych naukowych.","it":"Rispondi ad alcune domande sul tuo stile di vita e ricevi raccomandazioni nutrizionali personalizzate basate su dati scientifici.","he":"ענו על כמה שאלות על אורח החיים שלכם — וקבלו המלצות תזונה מותאמות אישית המבוססות על נתונים מדעיים.","ja":"あなたのライフスタイルについていくつかの質問に答えると、科学的データに基づくパーソナルな栄養アドバイスが得られます。","ko":"당신의 생활 습관에 대한 몇 가지 질문에 답하면 과학적 데이터에 기반한 맞춤형 영양 권장 사항을 받을 수 있습니다."},
+"hero_sub":{"ru":"Без носимых устройств и фитнес-трекеров — эффективное решение для естественного баланса в периоды естественных внутренних перестроек у женщин и оптимизации возрастной витальности у мужчин.","uk":"Без носимих пристроїв і фітнес-трекерів — ефективне рішення для природного балансу в періоди природних внутрішніх перебудов у жінок та оптимізації вікової вітальності у чоловіків.","en":"No wearables or fitness trackers — an effective solution for natural balance during women’s natural internal transitions and for optimizing age-related vitality in men.","es":"Sin dispositivos portátiles ni pulseras de actividad — una solución eficaz para el equilibrio natural durante los cambios internos naturales en las mujeres y para optimizar la vitalidad por edad en los hombres.","de":"Ohne Wearables und Fitness-Tracker – eine wirksame Lösung für das natürliche Gleichgewicht in Zeiten natürlicher innerer Umstellungen bei Frauen und zur Optimierung der altersbedingten Vitalität bei Männern.","pt":"Sem dispositivos vestíveis nem pulseiras de atividade — uma solução eficaz para o equilíbrio natural nos períodos de transições internas naturais nas mulheres e para otimizar a vitalidade ligada à idade nos homens.","fr":"Sans objets connectés ni trackers d’activité — une solution efficace pour l’équilibre naturel pendant les transitions internes naturelles chez les femmes et pour optimiser la vitalité liée à l’âge chez les hommes.","pl":"Bez urządzeń ubieralnych i opasek fitness — skuteczne rozwiązanie dla naturalnej równowagi w okresach naturalnych wewnętrznych przemian u kobiet i optymalizacji witalności związanej z wiekiem u mężczyzn.","it":"Senza dispositivi indossabili né fitness tracker — una soluzione efficace per l’equilibrio naturale nei periodi di transizioni interne naturali nelle donne e per ottimizzare la vitalità legata all’età negli uomini.","he":"ללא מכשירים לבישים וגששי כושר — פתרון יעיל לאיזון טבעי בתקופות של שינויים פנימיים טבעיים אצל נשים ולאופטימיזציה של החיוניות הקשורה לגיל אצל גברים.","ja":"ウェアラブルやフィットネストラッカーなし — 女性の自然な内的変化の時期における自然なバランスと、男性の加齢に伴う活力の最適化のための効果的なソリューション。","ko":"웨어러블 기기나 피트니스 트래커 없이 — 여성의 자연스러운 내적 변화 시기의 자연스러운 균형과 남성의 나이에 따른 활력 최적화를 위한 효과적인 솔루션."},
+"consent_body":{"ru":"Рекомендации Интеллектуального Помощника (ИП) основаны на масштабных научных исследованиях в области долголетия, превентивного подхода и управления образом жизни. Настоящее приложение не является медицинским средством, не ставит диагнозы и не заменяет консультацию врача. Все результаты анализа носят исключительно информационный характер для оптимизации ваших привычек.","uk":"Рекомендації Інтелектуального Помічника (ІП) ґрунтуються на масштабних наукових дослідженнях у сфері довголіття, превентивного підходу та управління способом життя. Цей застосунок не є медичним засобом, не ставить діагнози та не замінює консультацію лікаря. Усі результати аналізу мають виключно інформаційний характер для оптимізації ваших звичок.","en":"The recommendations of the Intelligent Assistant (IA) are based on large-scale scientific research in longevity, preventive approaches and lifestyle management. This app is not a medical device, does not make diagnoses and does not replace a doctor’s consultation. All analysis results are for informational purposes only, to help optimize your habits.","es":"Las recomendaciones del Asistente Inteligente (AI) se basan en amplias investigaciones científicas sobre longevidad, enfoque preventivo y gestión del estilo de vida. Esta aplicación no es un dispositivo médico, no realiza diagnósticos ni sustituye la consulta con un médico. Todos los resultados del análisis tienen carácter meramente informativo para optimizar tus hábitos.","de":"Die Empfehlungen des Intelligenten Assistenten (IA) basieren auf umfangreicher wissenschaftlicher Forschung zu Langlebigkeit, Prävention und Lebensstil-Management. Diese App ist kein Medizinprodukt, stellt keine Diagnosen und ersetzt keine ärztliche Beratung. Alle Analyseergebnisse dienen ausschließlich der Information zur Optimierung Ihrer Gewohnheiten.","pt":"As recomendações do Assistente Inteligente (AI) baseiam-se em amplas pesquisas científicas sobre longevidade, abordagem preventiva e gestão do estilo de vida. Este aplicativo não é um dispositivo médico, não faz diagnósticos e não substitui a consulta médica. Todos os resultados da análise têm caráter meramente informativo para otimizar os seus hábitos.","fr":"Les recommandations de l’Assistant Intelligent (AI) reposent sur de vastes recherches scientifiques en matière de longévité, d’approche préventive et de gestion du mode de vie. Cette application n’est pas un dispositif médical, n’établit pas de diagnostics et ne remplace pas une consultation médicale. Tous les résultats d’analyse ont un caractère purement informatif afin d’optimiser vos habitudes.","pl":"Zalecenia Inteligentnego Asystenta (IA) opierają się na szeroko zakrojonych badaniach naukowych w zakresie długowieczności, podejścia prewencyjnego i zarządzania stylem życia. Ta aplikacja nie jest wyrobem medycznym, nie stawia diagnoz i nie zastępuje konsultacji lekarskiej. Wszystkie wyniki analizy mają charakter wyłącznie informacyjny, aby pomóc zoptymalizować Twoje nawyki.","it":"Le raccomandazioni dell’Assistente Intelligente (AI) si basano su ampie ricerche scientifiche in materia di longevità, approccio preventivo e gestione dello stile di vita. Questa app non è un dispositivo medico, non formula diagnosi e non sostituisce il consulto medico. Tutti i risultati dell’analisi hanno carattere puramente informativo per ottimizzare le tue abitudini.","he":"ההמלצות של העוזר החכם (IA) מבוססות על מחקר מדעי נרחב בתחומי אריכות ימים, גישה מונעת וניהול אורח חיים. אפליקציה זו אינה מכשיר רפואי, אינה מאבחנת ואינה מחליפה התייעצות עם רופא. כל תוצאות הניתוח הן למטרות מידע בלבד, כדי לסייע בשיפור ההרגלים שלך.","ja":"インテリジェント・アシスタント（IA）の推奨は、長寿・予防的アプローチ・ライフスタイル管理に関する大規模な科学研究に基づいています。本アプリは医療機器ではなく、診断を行わず、医師の診察に代わるものではありません。すべての分析結果は、習慣の最適化を目的とした情報提供のみを目的としています。","ko":"인텔리전트 어시스턴트(IA)의 권장 사항은 장수, 예방적 접근 및 생활 습관 관리에 관한 대규모 과학 연구에 기반합니다. 이 앱은 의료기기가 아니며 진단을 내리지 않고 의사의 상담을 대체하지 않습니다. 모든 분석 결과는 습관 최적화를 돕기 위한 정보 제공 목적일 뿐입니다."},
+"card_legal":{"ru":"Правовая информация","uk":"Правова інформація","en":"Legal information","es":"Información legal","de":"Rechtliche Hinweise","pt":"Informação legal","fr":"Informations légales","pl":"Informacje prawne","it":"Informazioni legali","he":"מידע משפטי","ja":"法的情報","ko":"법적 정보"}
 };Object.keys(W3).forEach(function(k){Object.keys(W3[k]).forEach(function(l){if(T[l])T[l][k]=W3[k][l];});});})();
 let lang='en';
 let _rerendering=false;
@@ -3969,6 +3971,9 @@ function renderCard(){
   } else {
     html+='<div style="color:var(--t3);font-size:13px;padding:10px 2px;">'+t('history_empty')+'</div>';
   }
+  // Правовая информация / дисклеймер — всегда доступен (требование App Store)
+  html+='<div style="margin-top:16px;">'+sec(t('card_legal'))+'</div>';
+  html+='<div style="font-size:12px;color:var(--t2);line-height:1.6;padding:2px 2px 10px;">'+t('consent_body')+'</div>';
   box.innerHTML=html;
   var hl=document.getElementById('historyList'); if(hl)hl.innerHTML='';
   if(typeof renderWeeklyReportUI==='function')renderWeeklyReportUI();
@@ -4294,12 +4299,12 @@ function initCollapsibles(){
   });
 }
 function startFunnel(){ showAll(); }
-if(typeof _vioAuthed==='function'&&_vioAuthed())startFunnel();   // C1 · лента только после ввода кода доступа
+startFunnel();   // C1 · сразу одна лента (пароль убран)
 
 /* App Store: consent gate logic */
 function _consentToggle(){var cb=document.getElementById('consent-cb'),b=document.getElementById('consent-btn');if(b)b.classList.toggle('on',!!(cb&&cb.checked));}
 function _consentAccept(){var cb=document.getElementById('consent-cb');if(!cb||!cb.checked)return;try{localStorage.setItem('vial_consent','1');}catch(e){}var g=document.getElementById('consent-gate');if(g)g.classList.remove('show');}
-(function(){var ok;try{ok=localStorage.getItem('vial_consent');}catch(e){}if(!ok){var g=document.getElementById('consent-gate');if(g)g.classList.add('show');}})();
+(function(){ var ok;try{ok=localStorage.getItem('vial_consent');}catch(e){}if(!ok){var g=document.getElementById('consent-gate');if(g)g.classList.add('show');}})();   // «Важно» первым на входе (App Store дисклеймер)
 
 // ── Блок СОН: шкала 1–10 квадратами (красный→зелёный) + эмодзи + авто-скролл ──
 function _sqColor(n){ return 'hsl('+((n-1)/9*120)+',58%,42%)'; }
@@ -5334,7 +5339,7 @@ function _showResultsInner(){
 
 }
 
-// VIO платный — гейт-код управляется checkCode()/gateUnlock() выше
+// VIO без пароля (продажа в сторах) — гейт #gate скрыт, на входе только «Важно»
 
 // Auto-open device card from URL ?device=oura etc.
 (function(){
