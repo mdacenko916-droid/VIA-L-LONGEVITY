@@ -4188,22 +4188,39 @@ function goFromProfile(){
 // гормоны → цикл → питание → активность → энергия → добавки → вес. step11 (Динамика) исключён.
 const FLOW_ALL=[0,1,2,3,8,9,10,7,6,4,13,12];   // step5 (Состав тела/биоимпеданс) удалён; step13 = Стресс/кортизол
 // Каденс группирует блоки под заголовки «Настройка · один раз» / «Сегодня».
-const STEP_CADENCE={0:'base',9:'base',10:'base',7:'base',6:'base',12:'base',
-                    1:'daily',2:'daily',3:'daily',8:'daily',4:'daily',13:'daily'};
+const STEP_CADENCE={0:'base',9:'base',10:'base',7:'base',12:'base',
+                    1:'daily',2:'daily',3:'daily',8:'daily',4:'daily',
+                    6:'weekly',13:'biweekly'};   // активность — раз/нед; стресс+кортизол — раз/2нед
 function _flowHead(cad){
   if(cad==='base')return L({ru:'Настройка · один раз',uk:'Налаштування · один раз',en:'Setup · one-time',es:'Configuración · una vez',de:'Einrichtung · einmalig',pt:'Configuração · uma vez',fr:'Configuration · une fois',pl:'Konfiguracja · jednorazowo',it:'Configurazione · una volta',he:'הגדרה · פעם אחת',ja:'初期設定・1回のみ',ko:'설정 · 1회'});
   if(cad==='daily')return L({ru:'Сегодня',uk:'Сьогодні',en:'Today',es:'Hoy',de:'Heute',pt:'Hoje',fr:'Aujourd’hui',pl:'Dziś',it:'Oggi',he:'היום',ja:'今日',ko:'오늘'});
+  if(cad==='weekly')return L({ru:'Раз в неделю',uk:'Раз на тиждень',en:'Weekly',es:'Una vez por semana',de:'Wöchentlich',pt:'Semanalmente',fr:'Une fois par semaine',pl:'Raz w tygodniu',it:'Settimanale',he:'פעם בשבוע',ja:'週1回',ko:'주 1회'});
+  if(cad==='biweekly')return L({ru:'Раз в 2 недели',uk:'Раз на 2 тижні',en:'Every 2 weeks',es:'Cada 2 semanas',de:'Alle 2 Wochen',pt:'A cada 2 semanas',fr:'Toutes les 2 semaines',pl:'Co 2 tygodnie',it:'Ogni 2 settimane',he:'אחת לשבועיים',ja:'2週間に1回',ko:'2주에 1회'});
   return '';
 }
-function _flowHidden(n){ if(n===10&&getRadio('gender')==='male')return true; return false; }   // step10(Цикл) скрыт мужчинам — поглощён в Гормоны
-function _flowList(){ return FLOW_ALL.filter(function(n){return !_flowHidden(n);}); }
+// step10(Цикл), step1(Приливы), step8(Туман/когниция) скрыты мужчинам
+function _flowHidden(n){ var male=getRadio('gender')==='male'; if(male&&(n===10||n===1||n===8))return true; return false; }
+// Гейтинг периодических блоков по дате (как PRO): weekly ≥7дн, biweekly ≥14дн; base/daily всегда.
+function _stepLastMap(){ try{ return JSON.parse(localStorage.getItem('vial_steplast')||'{}')||{}; }catch(e){ return {}; } }
+function _stepDue(n){
+  var c=STEP_CADENCE[n];
+  if(c==='weekly'||c==='biweekly'){ var last=_stepLastMap()[n]; if(!last)return true; return (Date.now()-last) >= (c==='biweekly'?14:7)*86400000; }
+  return true;
+}
+function _markPeriodicDone(){
+  try{ var map=_stepLastMap(),ch=false;
+    Object.keys(STEP_CADENCE).forEach(function(n){ var c=STEP_CADENCE[n]; if((c==='weekly'||c==='biweekly')&&!_flowHidden(+n)&&_stepDue(+n)){ map[n]=Date.now(); ch=true; } });
+    if(ch)localStorage.setItem('vial_steplast',JSON.stringify(map));
+  }catch(e){}
+}
+function _flowList(){ return FLOW_ALL.filter(function(n){return !_flowHidden(n) && _stepDue(n);}); }
 function _showFlow(list){
   document.body.classList.add('flow-mode');
   document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active','flow-show');});
   document.querySelectorAll('.flow-group-head').forEach(function(h){h.remove();});
   var r=document.getElementById('stepResult');if(r)r.classList.remove('active');
   var main=document.querySelector('main');if(!main)return;
-  ['base','daily'].forEach(function(cad){
+  ['base','daily','weekly','biweekly'].forEach(function(cad){
     var grp=list.filter(function(n){return (STEP_CADENCE[n]||'daily')===cad;});
     if(!grp.length)return;
     var h=document.createElement('div');h.className='flow-group-head';h.textContent=_flowHead(cad);
@@ -5019,6 +5036,7 @@ function triggerParticleBurst(){
 function showResults(){
   // Выходим из ленты перед показом результата (иначе flow-mode скрыл бы stepResult).
   document.body.classList.remove('flow-mode'); _hideFlowFooter();
+  if(typeof _markPeriodicDone==='function')_markPeriodicDone();   // отметить weekly/biweekly блоки как заполненные
   triggerLensFlare();
   try {
     _showResultsInner();
