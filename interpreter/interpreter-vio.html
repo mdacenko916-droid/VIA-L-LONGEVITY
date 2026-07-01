@@ -2727,8 +2727,14 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
 </div><!-- /app -->
 
 <script>
-// ══ ACCESS — Vio бесплатный, ворота убраны ════════════════
-document.getElementById('gate').style.display='none';
+// ══ ACCESS — VIO платный: гейт-код (VIAL-VIO-2024) ════════
+const VIO_CODES=['VIAL-VIO-2024'];
+function _vioAuthed(){ try{return localStorage.getItem('vial_vio_access')==='1';}catch(e){return false;} }
+function gateError(){ var e=document.getElementById('gateError'),i=document.getElementById('gateInput'); if(e)e.classList.add('show'); if(i){i.classList.add('error');setTimeout(function(){i.classList.remove('error');},400);} }
+function gateUnlock(){ try{localStorage.setItem('vial_vio_access','1');}catch(e){} var g=document.getElementById('gate'); if(g)g.style.display='none'; if(typeof startFunnel==='function')startFunnel(); }
+function checkCode(){ var i=document.getElementById('gateInput'); if(!i)return; var v=i.value.trim().toUpperCase().replace(/\s+/g,''); if(VIO_CODES.indexOf(v)>=0){ gateUnlock(); } else { gateError(); } }
+// вход по Enter + показ гейта при загрузке, если не авторизован
+(function(){ var i=document.getElementById('gateInput'); if(i)i.addEventListener('keydown',function(e){ if(e.key==='Enter'){e.preventDefault();checkCode();} }); var g=document.getElementById('gate'); if(g)g.style.display=_vioAuthed()?'none':'flex'; })();
 
 // ══ LANG DROPDOWN ═════════════════════════════════════════
 function toggleLangMenu(){
@@ -4288,7 +4294,7 @@ function initCollapsibles(){
   });
 }
 function startFunnel(){ showAll(); }
-startFunnel();   // C1 · сразу одна лента (FLOW_ALL/STEP_CADENCE уже инициализированы выше)
+if(typeof _vioAuthed==='function'&&_vioAuthed())startFunnel();   // C1 · лента только после ввода кода доступа
 
 /* App Store: consent gate logic */
 function _consentToggle(){var cb=document.getElementById('consent-cb'),b=document.getElementById('consent-btn');if(b)b.classList.toggle('on',!!(cb&&cb.checked));}
@@ -5328,9 +5334,7 @@ function _showResultsInner(){
 
 }
 
-// V10 is free — gate bypassed automatically
-document.getElementById('gate').style.display='none';
-sessionStorage.setItem('vial_basic','1');
+// VIO платный — гейт-код управляется checkCode()/gateUnlock() выше
 
 // Auto-open device card from URL ?device=oura etc.
 (function(){
