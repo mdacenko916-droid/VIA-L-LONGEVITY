@@ -1451,6 +1451,17 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
 .chips.stress-grid .chip.stress-none{grid-column:1 / -1;}
 .chips.stress-grid .chip label{min-height:48px;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:12px;font-size:14px;font-weight:500;width:100%;box-sizing:border-box;}
 /* Приливы: 3 равные плитки */
+.hf-block{margin:20px 0 4px;}
+.hf-head{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#b48af0;display:flex;align-items:center;gap:7px;margin:0 0 6px;}
+.hf-q{font-size:12.5px;color:rgba(255,255,255,.6);margin:0 0 15px;line-height:1.4;}
+.hf-opts{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.hf-opt{display:flex;flex-direction:column;align-items:center;gap:9px;cursor:pointer;text-align:center;}
+.hf-opt input{position:absolute;opacity:0;width:0;height:0;pointer-events:none;}
+.hf-circle{width:44px;height:44px;border-radius:50%;border:1.5px solid rgba(180,138,240,.4);background:transparent;transition:all .2s;flex:none;}
+.hf-opt:hover .hf-circle{border-color:rgba(180,138,240,.7);}
+.hf-opt input:checked + .hf-circle{background:radial-gradient(circle at 50% 38%, #d9c2ff, #b48af0);border-color:#c9a8f5;box-shadow:0 0 16px rgba(180,138,240,.45);}
+.hf-lbl2{font-size:10.5px;color:rgba(255,255,255,.6);line-height:1.25;}
+.hf-opt input:checked ~ .hf-lbl2{color:#fff;font-weight:500;}
 .chips.hf-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
 .chips.hf-grid .chip{margin:0;}
 .chips.hf-grid .chip label{min-height:50px;display:flex;align-items:center;justify-content:center;gap:5px;border-radius:12px;font-size:13px;font-weight:500;width:100%;box-sizing:border-box;line-height:1.2;text-align:center;}
@@ -1750,17 +1761,33 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
       <div class="card-accent"></div>
       <button type="button" class="help-btn" onclick="openHelp('hotflash')" aria-label="info">ℹ</button>
       <div class="step-badge" data-t="s1_badge">Приливы</div>
-      <h2 class="step-title" data-t="s1_title">Приливы и ночной жар</h2>
-      <p class="step-desc" data-t="s1_desc">🌡️ Отметьте ваше состояние за сегодня.</p>
+      <h2 class="step-title" data-t="s1_title">Приливы и жар</h2>
+      <p class="step-desc" data-t="hf_desc">Укажите, как проявлялись приливы за последние 24 часа.</p>
       <div id="hf-section">
-      <div class="input-group">
-        <label data-t="s1_l2">Просыпались от жара / потоотделения?</label>
-        <div class="chips hf-grid">
-          <div class="chip"><input type="radio" name="hotflash" id="hf1" value="no" checked><label for="hf1" data-t="hf_no">🟢 Нет</label></div>
-          <div class="chip"><input type="radio" name="hotflash" id="hf2" value="once"><label for="hf2" data-t="hf_once">🟡 Один раз</label></div>
-          <div class="chip"><input type="radio" name="hotflash" id="hf3" value="multiple"><label for="hf3" data-t="hf_multi">🔴 Несколько</label></div>
+        <!-- ИНТЕНСИВНОСТЬ (5 уровней) -->
+        <div class="hf-block">
+          <div class="hf-head">🔥 <span data-t="hf_int_h">Интенсивность</span></div>
+          <div class="hf-q" data-t="hf_int_q">Насколько сильным был самый сильный прилив?</div>
+          <div class="hf-opts">
+            <label class="hf-opt"><input type="radio" name="hf_intensity" value="none" checked><span class="hf-circle"></span><span class="hf-lbl2" data-t="hf_0">Не было</span></label>
+            <label class="hf-opt"><input type="radio" name="hf_intensity" value="mild"><span class="hf-circle"></span><span class="hf-lbl2" data-t="io_mild">Слабая</span></label>
+            <label class="hf-opt"><input type="radio" name="hf_intensity" value="moderate"><span class="hf-circle"></span><span class="hf-lbl2" data-t="io_mod">Умеренная</span></label>
+            <label class="hf-opt"><input type="radio" name="hf_intensity" value="intense"><span class="hf-circle"></span><span class="hf-lbl2" data-t="io_strong">Сильная</span></label>
+            <label class="hf-opt"><input type="radio" name="hf_intensity" value="severe"><span class="hf-circle"></span><span class="hf-lbl2" data-t="io_vstrong">Очень сильная</span></label>
+          </div>
         </div>
-      </div>
+        <!-- ЧАСТОТА (5 уровней) -->
+        <div class="hf-block">
+          <div class="hf-head">〰️ <span data-t="hf_freq_h">Частота</span></div>
+          <div class="hf-q" data-t="hf_freq_q">Сколько приливов было за последние сутки?</div>
+          <div class="hf-opts">
+            <label class="hf-opt"><input type="radio" name="hf_count" value="none" checked><span class="hf-circle"></span><span class="hf-lbl2" data-t="hf_0">Не было</span></label>
+            <label class="hf-opt"><input type="radio" name="hf_count" value="low"><span class="hf-circle"></span><span class="hf-lbl2" data-t="fo_12">1–2 раза</span></label>
+            <label class="hf-opt"><input type="radio" name="hf_count" value="mid"><span class="hf-circle"></span><span class="hf-lbl2" data-t="fo_35">3–5 раз</span></label>
+            <label class="hf-opt"><input type="radio" name="hf_count" value="high"><span class="hf-circle"></span><span class="hf-lbl2" data-t="fo_610">6–10 раз</span></label>
+            <label class="hf-opt"><input type="radio" name="hf_count" value="veryhigh"><span class="hf-circle"></span><span class="hf-lbl2" data-t="fo_10p">Более 10 раз</span></label>
+          </div>
+        </div>
       </div>
       <div class="btn-row">
         <button class="btn btn-back" onclick="goTo(0)">←</button>
@@ -1978,7 +2005,7 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
           <div class="chip"><input type="radio" name="act_freq" id="af4" value="high" onchange="_actFreqChange()"><label for="af4" data-t="act_freq_high">🔥 5+ раз</label></div>
         </div>
       </div>
-      <div class="input-group" id="act-recovery-group" style="display:none;">
+      <div class="input-group" id="act-recovery-group">
         <label data-t="s8_l3">🧘 Самочувствие после тренировок</label>
         <div class="chips cog-grid">
           <div class="chip"><input type="radio" name="act_recovery" id="ar1" value="great" checked><label for="ar1" data-t="rec_great">💪 Прилив сил</label></div>
@@ -2318,6 +2345,39 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
     </div>
   </div>
 
+  <!-- STEP: СТРЕСС И КОРТИЗОЛ (перенос из PRO, дизайн VIO) -->
+  <div class="step" id="step13">
+    <div class="card">
+      <div class="card-accent" style="background:linear-gradient(90deg,transparent,rgba(180,138,240,.5),transparent);"></div>
+      <div class="step-badge" style="background:rgba(180,138,240,.1);border-color:rgba(180,138,240,.3);color:#b48af0;" data-t="s10_badge">Стресс</div>
+      <h2 class="step-title" data-t="s10_title">Стресс и кортизол</h2>
+      <p class="step-desc" style="border-color:rgba(180,138,240,.3);" data-t="s10_desc">Хронический стресс — один из главных факторов гормонального дисбаланса.</p>
+      <div class="input-group">
+        <label data-t="s10_l1">😰 Уровень хронического стресса (последние 3 месяца)</label>
+        <div class="chips cog-grid">
+          <div class="chip"><input type="radio" name="chronic_stress" id="cst1" value="low" checked><label for="cst1" data-t="cst_low">🟢 Низкий</label></div>
+          <div class="chip"><input type="radio" name="chronic_stress" id="cst2" value="moderate"><label for="cst2" data-t="cst_moderate">🟡 Умеренный</label></div>
+          <div class="chip"><input type="radio" name="chronic_stress" id="cst3" value="high"><label for="cst3" data-t="cst_high">🟠 Высокий</label></div>
+          <div class="chip"><input type="radio" name="chronic_stress" id="cst4" value="burnout"><label for="cst4" data-t="cst_burnout">🔴 Выгорание</label></div>
+        </div>
+      </div>
+      <div class="input-group">
+        <label data-t="s10_l2">⚡ Маркеры высокого кортизола</label>
+        <div class="chips sup-grid" id="cort-list">
+          <div class="chip sup-full"><input type="checkbox" id="cort7" value="none_cort" onchange="_giNone(this,'cort-list')"><label for="cort7" data-t="cort_none">✨ Ничего</label></div>
+          <div class="chip sup-full"><input type="checkbox" id="cort2" value="insomnia" onchange="_giNone(this,'cort-list')"><label for="cort2" data-t="cort_insomnia">😵‍💫 Трудно заснуть — ум не выключается</label></div>
+          <div class="chip"><input type="checkbox" id="cort3" value="afternoon_crash" onchange="_giNone(this,'cort-list')"><label for="cort3" data-t="cort_crash">📉 Спад после 14:00</label></div>
+          <div class="chip"><input type="checkbox" id="cort4" value="sugar_craving" onchange="_giNone(this,'cort-list')"><label for="cort4" data-t="cort_sugar">🍰 Тяга к сахару вечером</label></div>
+          <div class="chip"><input type="checkbox" id="cort5" value="irritable" onchange="_giNone(this,'cort-list')"><label for="cort5" data-t="cort_irr">😤 Раздражительность</label></div>
+          <div class="chip sup-full"><input type="checkbox" id="cort6" value="second_wind" onchange="_giNone(this,'cort-list')"><label for="cort6" data-t="cort_wind">🌙 Второе дыхание после 22:00</label></div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-back" onclick="goTo(4)">←</button>
+        <button class="btn btn-primary" onclick="goTo(12)"><span class="btn-label" data-t="next">Далее →</span></button>
+      </div>
+    </div>
+  </div>
   <!-- STEP 13: ДОБАВКИ И МЕДИКАМЕНТЫ (перенос из PRO, ручной) -->
   <div class="step" id="step12">
     <div class="card">
@@ -3604,7 +3664,38 @@ Object.keys(_PMS).forEach(function(k){Object.keys(_PMS[k]).forEach(function(l){i
 "ph_menstrual":{ru:"Менструация",uk:"Менструація",en:"Menstruation",es:"Menstruación",de:"Menstruation",pt:"Menstruação",fr:"Menstruation",pl:"Menstruacja",it:"Mestruazione",he:"וסת",ja:"月経期",ko:"월경기"},
 "ph_follicular":{ru:"Фолликулярная фаза",uk:"Фолікулярна фаза",en:"Follicular phase",es:"Fase folicular",de:"Follikelphase",pt:"Fase folicular",fr:"Phase folliculaire",pl:"Faza folikularna",it:"Fase follicolare",he:"שלב זקיקי",ja:"卵胞期",ko:"난포기"},
 "ph_ovulation":{ru:"Овуляция",uk:"Овуляція",en:"Ovulation",es:"Ovulación",de:"Eisprung",pt:"Ovulação",fr:"Ovulation",pl:"Owulacja",it:"Ovulazione",he:"ביוץ",ja:"排卵期",ko:"배란기"},
-"ph_luteal":{ru:"Лютеиновая фаза",uk:"Лютеїнова фаза",en:"Luteal phase",es:"Fase lútea",de:"Lutealphase",pt:"Fase lútea",fr:"Phase lutéale",pl:"Faza lutealna",it:"Fase luteale",he:"שלב לוטאלי",ja:"黄体期",ko:"황체기"}
+"ph_luteal":{ru:"Лютеиновая фаза",uk:"Лютеїнова фаза",en:"Luteal phase",es:"Fase lútea",de:"Lutealphase",pt:"Fase lútea",fr:"Phase lutéale",pl:"Faza lutealna",it:"Fase luteale",he:"שלב לוטאלי",ja:"黄体期",ko:"황체기"},
+"hf_int_h":{"ru":"Интенсивность","uk":"Інтенсивність","en":"Intensity","es":"Intensidad","de":"Intensität","pt":"Intensidade","fr":"Intensité","pl":"Intensywność","it":"Intensità","he":"עוצמה","ja":"強さ","ko":"강도"},
+"hf_int_q":{"ru":"Насколько сильным был самый сильный прилив?","uk":"Наскільки сильним був найсильніший приплив?","en":"How strong was your strongest hot flash?","es":"¿Qué tan fuerte fue el sofoco más intenso?","de":"Wie stark war die stärkste Hitzewallung?","pt":"Quão forte foi a onda de calor mais intensa?","fr":"Quelle était l’intensité de la bouffée la plus forte ?","pl":"Jak silne było najsilniejsze uderzenie gorąca?","it":"Quanto è stata forte la vampata più intensa?","he":"כמה חזק היה גל החום החזק ביותר?","ja":"最も強かったほてりはどのくらいでしたか？","ko":"가장 강했던 홍조는 어느 정도였나요?"},
+"hf_freq_h":{"ru":"Частота","uk":"Частота","en":"Frequency","es":"Frecuencia","de":"Häufigkeit","pt":"Frequência","fr":"Fréquence","pl":"Częstotliwość","it":"Frequenza","he":"תדירות","ja":"頻度","ko":"빈도"},
+"hf_freq_q":{"ru":"Сколько приливов было за последние сутки?","uk":"Скільки припливів було за останню добу?","en":"How many hot flashes did you have in the past day?","es":"¿Cuántos sofocos tuviste en el último día?","de":"Wie viele Hitzewallungen hattest du am letzten Tag?","pt":"Quantas ondas de calor você teve no último dia?","fr":"Combien de bouffées de chaleur avez-vous eues ces dernières 24 heures ?","pl":"Ile uderzeń gorąca było w ciągu ostatniej doby?","it":"Quante vampate hai avuto nell’ultimo giorno?","he":"כמה גלי חום היו לך ביממה האחרונה?","ja":"過去1日でほてりは何回ありましたか？","ko":"지난 하루 동안 홍조가 몇 번 있었나요?"},
+"io_mild":{"ru":"Слабая","uk":"Слабка","en":"Mild","es":"Leve","de":"Leicht","pt":"Leve","fr":"Légère","pl":"Łagodna","it":"Lieve","he":"קלה","ja":"弱い","ko":"약함"},
+"io_mod":{"ru":"Умеренная","uk":"Помірна","en":"Moderate","es":"Moderada","de":"Mäßig","pt":"Moderada","fr":"Modérée","pl":"Umiarkowana","it":"Moderata","he":"בינונית","ja":"中程度","ko":"보통"},
+"io_strong":{"ru":"Сильная","uk":"Сильна","en":"Strong","es":"Fuerte","de":"Stark","pt":"Forte","fr":"Forte","pl":"Silna","it":"Forte","he":"חזקה","ja":"強い","ko":"강함"},
+"io_vstrong":{"ru":"Очень сильная","uk":"Дуже сильна","en":"Very strong","es":"Muy fuerte","de":"Sehr stark","pt":"Muito forte","fr":"Très forte","pl":"Bardzo silna","it":"Molto forte","he":"חזקה מאוד","ja":"非常に強い","ko":"매우 강함"},
+"fo_12":{"ru":"1–2 раза","uk":"1–2 рази","en":"1–2 times","es":"1–2 veces","de":"1–2 Mal","pt":"1–2 vezes","fr":"1–2 fois","pl":"1–2 razy","it":"1–2 volte","he":"1–2 פעמים","ja":"1〜2回","ko":"1–2회"},
+"fo_35":{"ru":"3–5 раз","uk":"3–5 разів","en":"3–5 times","es":"3–5 veces","de":"3–5 Mal","pt":"3–5 vezes","fr":"3–5 fois","pl":"3–5 razy","it":"3–5 volte","he":"3–5 פעמים","ja":"3〜5回","ko":"3–5회"},
+"fo_610":{"ru":"6–10 раз","uk":"6–10 разів","en":"6–10 times","es":"6–10 veces","de":"6–10 Mal","pt":"6–10 vezes","fr":"6–10 fois","pl":"6–10 razy","it":"6–10 volte","he":"6–10 פעמים","ja":"6〜10回","ko":"6–10회"},
+"fo_10p":{"ru":"Более 10 раз","uk":"Більше 10 разів","en":"More than 10","es":"Más de 10","de":"Mehr als 10","pt":"Mais de 10","fr":"Plus de 10","pl":"Ponad 10 razy","it":"Più di 10","he":"יותר מ-10","ja":"10回以上","ko":"10회 이상"},
+"hf_desc":{"ru":"Укажите, как проявлялись приливы за последние 24 часа.","uk":"Вкажіть, як проявлялися припливи за останні 24 години.","en":"Tell us how your hot flashes were over the past 24 hours.","es":"Indica cómo fueron tus sofocos en las últimas 24 horas.","de":"Gib an, wie deine Hitzewallungen in den letzten 24 Stunden waren.","pt":"Indique como foram suas ondas de calor nas últimas 24 horas.","fr":"Indiquez comment se sont manifestées vos bouffées de chaleur ces dernières 24 heures.","pl":"Wskaż, jak wyglądały uderzenia gorąca w ciągu ostatnich 24 godzin.","it":"Indica come sono state le tue vampate nelle ultime 24 ore.","he":"ציינו כיצד התבטאו גלי החום ב-24 השעות האחרונות.","ja":"過去24時間のホットフラッシュの様子を教えてください。","ko":"지난 24시간 동안 안면홍조가 어땠는지 알려주세요."},
+"hf_0":{"ru":"Не было","uk":"Не було","en":"None","es":"Ninguno","de":"Keine","pt":"Nenhuma","fr":"Aucune","pl":"Brak","it":"Nessuna","he":"לא היו","ja":"なし","ko":"없음"},
+"s10_title":{"ru":"Стресс и кортизол","uk":"Стрес і кортизол","en":"Stress & Cortisol","es":"Estrés y cortisol","de":"Stress & Cortisol","pt":"Estresse e cortisol","fr":"Stress et cortisol","pl":"Stres i kortyzol","it":"Stress e cortisolo","he":"סטרס וקורטיזול","ja":"ストレスとコルチゾール","ko":"스트레스와 코르티솔"},
+"s10_desc":{"ru":"Хронический стресс — один из главных факторов гормонального дисбаланса.","uk":"Хронічний стрес — один з головних факторів гормонального дисбалансу.","en":"Chronic stress is one of the main factors in hormonal imbalance.","es":"El estrés crónico es uno de los principales factores del desequilibrio hormonal.","de":"Chronischer Stress ist einer der Hauptfaktoren für hormonelles Ungleichgewicht.","pt":"O estresse crônico é um dos principais fatores do desequilíbrio hormonal.","fr":"Le stress chronique est l'un des principaux facteurs du déséquilibre hormonal.","pl":"Przewlekły stres jest jednym z głównych czynników zaburzeń hormonalnych.","it":"Lo stress cronico è uno dei principali fattori dello squilibrio ormonale.","he":"סטרס כרוני הוא אחד הגורמים המרכזיים לחוסר איזון הורמונלי.","ja":"慢性ストレスはホルモン不均衡の主な原因の一つです。","ko":"만성 스트레스는 호르몬 불균형의 주요 원인 중 하나입니다."},
+"s10_l1":{"ru":"😰 Уровень хронического стресса (последние 3 месяца)","uk":"😰 Рівень хронічного стресу (останні 3 місяці)","en":"😰 Chronic stress level (last 3 months)","es":"😰 Nivel de estrés crónico (últimos 3 meses)","de":"😰 Chronischer Stresslevel (letzte 3 Monate)","pt":"😰 Nível de estresse crônico (últimos 3 meses)","fr":"😰 Niveau de stress chronique (3 derniers mois)","pl":"😰 Poziom stresu przewlekłego (ostatnie 3 miesiące)","it":"😰 Livello di stress cronico (ultimi 3 mesi)","he":"😰 רמת סטרס כרוני (3 חודשים אחרונים)","ja":"😰 慢性ストレスレベル（過去3ヶ月）","ko":"😰 만성 스트레스 수준 (최근 3개월)"},
+"s10_l2":{"ru":"⚡ Маркеры высокого кортизола","uk":"⚡ Маркери високого кортизолу","en":"⚡ High cortisol markers","es":"⚡ Marcadores de cortisol alto","de":"⚡ Marker für hohen Cortisolspiegel","pt":"⚡ Marcadores de cortisol alto","fr":"⚡ Marqueurs de cortisol élevé","pl":"⚡ Markery wysokiego kortyzolu","it":"⚡ Marcatori di cortisolo alto","he":"⚡ סמנים של קורטיזול גבוה","ja":"⚡ 高コルチゾールのマーカー","ko":"⚡ 높은 코르티솔 마커"},
+"cst_low":{"ru":"🟢 Низкий","uk":"🟢 Низький","en":"🟢 Low","es":"🟢 Bajo","de":"🟢 Niedrig","pt":"🟢 Baixo","fr":"🟢 Faible","pl":"🟢 Niski","it":"🟢 Basso","he":"🟢 נמוכה","ja":"🟢 低い","ko":"🟢 낮음"},
+"cst_moderate":{"ru":"🟡 Умеренный","uk":"🟡 Помірний","en":"🟡 Moderate","es":"🟡 Moderado","de":"🟡 Moderat","pt":"🟡 Moderado","fr":"🟡 Modéré","pl":"🟡 Umiarkowany","it":"🟡 Moderato","he":"🟡 בינונית","ja":"🟡 中程度","ko":"🟡 중간"},
+"cst_high":{"ru":"🟠 Высокий","uk":"🟠 Високий","en":"🟠 High","es":"🟠 Alto","de":"🟠 Hoch","pt":"🟠 Alto","fr":"🟠 Élevé","pl":"🟠 Wysoki","it":"🟠 Alto","he":"🟠 גבוהה","ja":"🟠 高い","ko":"🟠 높음"},
+"cst_burnout":{"ru":"🔴 Выгорание","uk":"🔴 Вигорання","en":"🔴 Burnout","es":"🔴 Agotamiento","de":"🔴 Burnout","pt":"🔴 Burnout","fr":"🔴 Burn-out","pl":"🔴 Wypalenie","it":"🔴 Burnout","he":"🔴 שחיקה","ja":"🔴 燃え尽き","ko":"🔴 번아웃"},
+"cort_insomnia":{"ru":"😵‍💫 Трудно заснуть — ум не выключается","uk":"😵‍💫 Важко заснути — думки не вимикаються","en":"😵‍💫 Hard to sleep — mind won't stop","es":"😵‍💫 Difícil dormir — mente activa","de":"😵‍💫 Schwer einzuschlafen — Gedanken stoppen nicht","pt":"😵‍💫 Difícil adormecer — mente agitada","fr":"😵‍💫 Difficile à s'endormir — esprit agité","pl":"😵‍💫 Trudności z zasypianiem — umysł nie milknie","it":"😵‍💫 Difficoltà ad addormentarsi — mente iperattiva","he":"😵‍💫 קשה להירדם — מחשבות לא נפסקות","ja":"😵‍💫 寝つけない — 思考が止まらない","ko":"😵‍💫 잠들기 어려움 — 생각이 멈추지 않음"},
+"cort_crash":{"ru":"📉 Спад после 14:00","uk":"📉 Спад після 14:00","en":"📉 Crash after 2 PM","es":"📉 Bajón después de las 14:00","de":"📉 Einbruch nach 14:00 Uhr","pt":"📉 Queda após 14h","fr":"📉 Baisse après 14h","pl":"📉 Spadek po 14:00","it":"📉 Calo dopo le 14:00","he":"📉 ירידה אחרי 14:00","ja":"📉 14時以降のクラッシュ","ko":"📉 14시 이후 에너지 급락"},
+"cort_sugar":{"ru":"🍰 Тяга к сахару вечером","uk":"🍰 Тяга до цукру ввечері","en":"🍰 Sugar cravings in evening","es":"🍰 Antojos de azúcar por la tarde","de":"🍰 Süßhunger am Abend","pt":"🍰 Vontade de doce à noite","fr":"🍰 Envies de sucre le soir","pl":"🍰 Ochota na cukier wieczorem","it":"🍰 Voglia di dolci la sera","he":"🍰 תשוקה לסוכר בערב","ja":"🍰 夜の糖分渇望","ko":"🍰 저녁 단것 욕구"},
+"cort_irr":{"ru":"😤 Раздражительность","uk":"😤 Дратівливість","en":"😤 Irritability","es":"😤 Irritabilidad","de":"😤 Reizbarkeit","pt":"😤 Irritabilidade","fr":"😤 Irritabilité","pl":"😤 Drażliwość","it":"😤 Irritabilità","he":"😤 עצבנות","ja":"😤 イライラ","ko":"😤 짜증"},
+"cort_wind":{"ru":"🌙 Второе дыхание после 22:00","uk":"🌙 Друге дихання після 22:00","en":"🌙 Second wind after 10 PM","es":"🌙 Segundo aire después de las 22:00","de":"🌙 Zweiter Wind nach 22:00 Uhr","pt":"🌙 Segundo fôlego após 22h","fr":"🌙 Second souffle après 22h","pl":"🌙 Drugi oddech po 22:00","it":"🌙 Seconda energia dopo le 22:00","he":"🌙 גל שני של אנרגיה אחרי 22:00","ja":"🌙 22時以降の第二のエネルギー波","ko":"🌙 22시 이후 2차 에너지 파동"},
+"cort_none":{"ru":"✨ Ничего","uk":"✨ Нічого","en":"✨ None","es":"✨ Ninguno","de":"✨ Keins","pt":"✨ Nenhum","fr":"✨ Aucun","pl":"✨ Żadne","it":"✨ Nessuno","he":"✨ כלום","ja":"✨ なし","ko":"✨ 없음"},
+"rec_exhausted":{"ru":"Истощён(а)","uk":"Виснаження","en":"Exhausted","es":"Agotada","de":"Erschöpft","pt":"Exausta","fr":"Épuisé(e)","pl":"Wyczerpana","it":"Esausta","he":"תשוש/ה","ja":"消耗","ko":"기진맥진"},
+"s1_title":{"ru":"Приливы и жар","uk":"Припливи та жар","en":"Hot flashes","es":"Sofocos","de":"Hitzewallungen","pt":"Fogachos","fr":"Bouffées de chaleur","pl":"Uderzenia gorąca","it":"Vampate di calore","he":"גלי חום","ja":"ホットフラッシュ","ko":"안면홍조"},
+"s10_badge":{"ru":"Стресс","uk":"Стрес","en":"Stress","es":"Estrés","de":"Stress","pt":"Estresse","fr":"Stress","pl":"Stres","it":"Stress","he":"סטרס","ja":"ストレス","ko":"스트레스"}
 };Object.keys(W3).forEach(function(k){Object.keys(W3[k]).forEach(function(l){if(T[l])T[l][k]=W3[k][l];});});})();
 let lang='en';
 let _rerendering=false;
@@ -3680,8 +3771,8 @@ function _medsChange(){
 }
 // Активность: «Самочувствие после тренировок» скрыто, если частота = 0 (нет тренировок)
 function _actFreqChange(){
-  var g=document.getElementById('act-recovery-group'), none=document.getElementById('af1');
-  if(g)g.style.display=(none&&none.checked)?'none':'block';
+  // «Самочувствие после тренировок» всегда видно (как в PRO)
+  var g=document.getElementById('act-recovery-group'); if(g)g.style.display='block';
 }
 // «Безопасная гавань»: «Всё в норме» (value none*) эксклюзивит симптомы в блоке (ЖКТ/проктология)
 function _giNone(inp,listId){
@@ -3783,7 +3874,7 @@ function saveSession(score,type,data){
       day:new Date().toISOString().slice(0,10),
       score:score, type:type,
       sleep:data.sleep_qual, rhr:data.rhr, energy:data.energy,
-      hotflash:data.hotflash, stress:data.stress,
+      hotflash:data.hf_count, stress:data.stress,
       gender:data.gender, phase:data.phase,
       ts:Date.now()
     };
@@ -3882,7 +3973,7 @@ function _saveDaily(){
     var gv=function(id){var el=document.getElementById(id);return el?+el.value:null;};
     var rec={ day:new Date().toISOString().slice(0,10), ts:Date.now(),
       sleep_qual:gv('sleep_qual'), sleep_hours:gv('sleep_hours'), rhr:gv('rhr'), energy:gv('energy'),
-      hotflash:getRadio('hotflash'), hotfreq:getRadio('hotfreq'),
+      hotflash:getRadio('hf_count'), hotfreq:getRadio('hotfreq'),
       memory:getRadio('memory'), fog:getRadio('fog'), stress:getRadio('stress'), alc:getRadio('alc') };
     var arr=[]; try{arr=JSON.parse(localStorage.getItem('vial_daily')||'[]')||[];}catch(e){}
     arr=arr.filter(function(r){return r.day!==rec.day;});
@@ -3900,7 +3991,7 @@ function _weeklyDaily(){
   var cnt=function(k,pred){return wk.filter(function(r){return pred(r[k]);}).length;};
   var P={}; try{P=JSON.parse(localStorage.getItem('vial_profile')||'{}')||{};}catch(e){}
   return { days:wk.length,
-    hfDays:cnt('hotflash',function(x){return x&&x!=='no';}), hotflash:modal('hotflash'), hotfreq:modal('hotfreq'),
+    hfDays:cnt('hotflash',function(x){return x&&x!=='none';}), hotflash:modal('hotflash'), hotfreq:modal('hotfreq'),
     sleep:avg('sleep_qual'), rhr:avg('rhr'), energy:avg('energy'), stress:modal('stress'), memory:modal('memory'),
     fogDays:cnt('fog',function(x){return x&&x!=='none'&&x!=='0';}), alcDays:cnt('alc',function(x){return x&&x!=='0'&&x!=='no';}),
     profile:{ phase:P.phase||null, gender:P.gender||null } };
@@ -4095,10 +4186,10 @@ function goFromProfile(){
 /* ===== C1 · FLOW-движок VIO (одна лента, без пагинации; фиолет) ===== */
 // Порядок блоков (решение владельца): профиль → приливы → сон → пульс → когниция →
 // гормоны → цикл → питание → активность → энергия → добавки → вес. step11 (Динамика) исключён.
-const FLOW_ALL=[0,1,2,3,8,9,10,7,6,4,12];   // step5 (Состав тела/биоимпеданс) удалён по решению владельца
+const FLOW_ALL=[0,1,2,3,8,9,10,7,6,4,13,12];   // step5 (Состав тела/биоимпеданс) удалён; step13 = Стресс/кортизол
 // Каденс группирует блоки под заголовки «Настройка · один раз» / «Сегодня».
 const STEP_CADENCE={0:'base',9:'base',10:'base',7:'base',6:'base',12:'base',
-                    1:'daily',2:'daily',3:'daily',8:'daily',4:'daily'};
+                    1:'daily',2:'daily',3:'daily',8:'daily',4:'daily',13:'daily'};
 function _flowHead(cad){
   if(cad==='base')return L({ru:'Настройка · один раз',uk:'Налаштування · один раз',en:'Setup · one-time',es:'Configuración · una vez',de:'Einrichtung · einmalig',pt:'Configuração · uma vez',fr:'Configuration · une fois',pl:'Konfiguracja · jednorazowo',it:'Configurazione · una volta',he:'הגדרה · פעם אחת',ja:'初期設定・1回のみ',ko:'설정 · 1회'});
   if(cad==='daily')return L({ru:'Сегодня',uk:'Сьогодні',en:'Today',es:'Hoy',de:'Heute',pt:'Hoje',fr:'Aujourd’hui',pl:'Dziś',it:'Oggi',he:'היום',ja:'今日',ko:'오늘'});
@@ -4772,7 +4863,7 @@ function renderNutriCorr(data){
     });
   }
 
-  if(data.hotflash==='multiple'){
+  if(data.hf_count==='mid'||data.hf_count==='high'||data.hf_count==='veryhigh'||data.hf_intensity==='intense'||data.hf_intensity==='severe'){
     corrs.push({
       icon:'🌡️',
       signal: L({ru:'Скачки температуры + приливы',uk:'Стрибки температури',en:'Temp spikes + hot flashes',es:'Picos de temperatura + sofocos',de:'Temperaturspitzen + Hitzewallungen',pt:'Picos de temperatura + fogachos',fr:'Pics de température + bouffées de chaleur',pl:'Skoki temperatury + uderzenia gorąca',it:'Picchi di temperatura + vampate',he:'עליות טמפרטורה + גלי חום',ja:'体温スパイク + ほてり',ko:'체온 스파이크 + 열감'}),
@@ -5014,8 +5105,8 @@ function determinePhase(){
     var low=!!(hm.fatigue_chronic||hm.libido_male||hm.erectile_dysfunction||hm.muscle_loss);
     return (age>=50||low)?'andro':'pre_andro';
   }
-  var cs=getRadio('cycle_status'),lp=_lpBucket(),hf=getRadio('hotflash');
-  var hasHf=hf&&hf!=='no';
+  var cs=getRadio('cycle_status'),lp=_lpBucket(),hf=getRadio('hf_count');
+  var hasHf=hf&&hf!=='none';
   if(lp==='year'||cs==='absent')return 'post';
   if(cs==='irregular'||lp==='months'||(hasHf&&age>=48))return 'meno';
   return 'peri';
@@ -5030,7 +5121,7 @@ function _showResultsInner(){
     weight:parseFloat(document.getElementById('prof-weight')?.value)||null,
     height:parseFloat(document.getElementById('prof-height')?.value)||null,
     waist:parseFloat(document.getElementById('prof-waist')?.value)||null,
-    hotflash:getRadio('hotflash'),hf_count:(function(){var h=getRadio('hotflash');return h==='multiple'?'high':h==='once'?'low':'none';})(),
+    hf_count:getRadio('hf_count'),hf_intensity:getRadio('hf_intensity'),
     sleep_qual:+document.getElementById('sleep_qual').value,
     sleep_hours:parseFloat(document.getElementById('sleep_hours')?.value)||null,
     deep:getRadio('deep'),wake:getRadio('wake'),
@@ -5038,6 +5129,7 @@ function _showResultsInner(){
     symptoms:getChecked(['sym1','sym2','sym3','sym4','sym5','sym6','sym7','sym8','sym9']),
     energy:+document.getElementById('energy').value,
     alc:getRadio('alc'),stress:getRadio('stress'),
+    chronic_stress:getRadio('chronic_stress'),cortisol_symp:getChecked(['cort2','cort3','cort4','cort5','cort6','cort7']),
     act_types:getChecked(['act1','act2','act3','act4','act5','act6']),act_freq:getRadio('act_freq'),act_recovery:getRadio('act_recovery'),
     appetite:getRadio('appetite'),cravings:!!(document.getElementById('crav1')&&document.getElementById('crav1').checked),eating_pattern:getRadio('eating_pattern'),protein_intake:getRadio('protein_intake'),gi:getChecked(['gi1','gi2','gi3','gi4','gi5','gi6','gi7','gi8','gi9','gi_ar_none']),
     memory:getRadio('memory'),fog:getRadio('fog'),
@@ -5056,7 +5148,7 @@ function _showResultsInner(){
   const isMale=data.gender==='male';
 
   // Hot flashes
-  if(data.hotflash==='multiple'){
+  if(data.hf_count==='mid'||data.hf_count==='high'||data.hf_count==='veryhigh'||data.hf_intensity==='intense'||data.hf_intensity==='severe'){
     ins.push({t:'warn',i:'🌡️',h:L({ru:'Признаки нестабильных гормонов',uk:'Ознаки нестабільних гормонів',en:'Unstable Hormone Signs',es:'Signos hormonales inestables',de:'Instabile Hormonsignale',pt:'Sinais de hormônios instáveis',fr:'Signes hormonaux instables',pl:'Oznaki niestabilnych hormonów',it:'Segni di ormoni instabili',he:'סימני הורמונים לא יציבים',ja:'不安定なホルモンの兆候',ko:'불안정한 호르몬 징후'}),
     b:L({ru:isMale?'Ночные перепады температуры у мужчин могут отражать уровень тестостерона.':'Скачки температуры и приливы — тепловые волны. При необходимости обсудите с врачом.',uk:isMale?'Нічні перепади можуть відображати рівень тестостерону.':'Скачки температури — теплові хвилі.',en:isMale?'Night temperature fluctuations in men can reflect testosterone levels.':'Night spikes and hot flashes are heat waves. Discuss with your doctor if needed.',es:isMale?'Las fluctuaciones de temperatura pueden reflejar los niveles de testosterona.':'Los sofocos son oleadas de calor.',de:isMale?'Nächtliche Temperaturschwankungen können den Testosteronspiegel widerspiegeln.':'Nachtspitzen und Hitzewallungen sind Hitzewellen.',pt:isMale?'Flutuações de temperatura noturna podem refletir os níveis de testosterona.':'Picos noturnos e fogachos são ondas de calor.',fr:isMale?'Les fluctuations de température nocturnes peuvent refléter le taux de testostérone.':'Les bouffées de chaleur sont des ondes de chaleur.',pl:isMale?'Nocne wahania temperatury mogą odzwierciedlać poziom testosteronu.':'Uderzenia gorąca to fale gorąca.',it:isMale?'Le fluttuazioni di temperatura notturna possono riflettere i livelli di testosterone.':'Le vampate sono ondate di calore.',he:isMale?'תנודות טמפרטורה ליליות עשויות לשקף את רמת הטסטוסטרון.':'גלי חום הם תופעה נפוצה.',ja:isMale?'夜間の体温変動は男性のテストステロン値を反映することがあります。':'ほてりと体温スパイクは熱の波です。',ko:isMale?'야간 체온 변동은 남성의 테스토스테론 수준을 반영할 수 있습니다.':'야간 스파이크와 열감은 열의 파동입니다.'})});
     score-=12;
