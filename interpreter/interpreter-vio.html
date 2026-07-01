@@ -4675,7 +4675,7 @@ function downloadPDF(){
     <div class="metric"><div class="metric-label">${L({ru:'Энергия',uk:'Енергія',en:'Energy',es:'Energía',de:'Energie',pt:'Energia',fr:'Énergie',pl:'Energia',it:'Energia',he:'אנרגיה',ja:'エネルギー',ko:'에너지'})}</div><div class="metric-val">${data.energy}</div><div class="metric-unit">/10</div></div>
   </div>
   <h3>${L({ru:'Анализ показателей',uk:'Аналіз показників',en:'Metrics Analysis',es:'Análisis',de:'Kennzahlenanalyse',pt:'Análise de Métricas',fr:'Analyse des Métriques',pl:'Analiza Wskaźników',it:'Analisi delle Metriche',he:'ניתוח מדדים',ja:'指標分析',ko:'지표 분석'})}</h3>
-  ${insights.map(o=>`<div class="insight"><div class="insight-title">${o.i} ${o.h}</div><div class="insight-text">${o.b}</div></div>`).join('')}
+  ${insights.map(o=>`<div class="insight"><div class="insight-title">${o.i} ${(typeof _wl==='function'?_wl(o.h):o.h)}</div><div class="insight-text">${(typeof _wl==='function'?_wl(o.b):o.b)}</div></div>`).join('')}
   ${Object.values(recs).map(r=>`<h3>${r.h}</h3>${r.l.map(i=>`<div class="rec-item">${i}</div>`).join('')}`).join('')}
   ${labs.length?`<h3>${t('lab_title')}</h3>${labs.map(l=>`<div class="lab-item">· ${l}</div>`).join('')}`:''}
   <div class="footer">VIA-L Longevity · via-l.com · ${date}<br>${t('disclaimer')}</div>
@@ -4984,13 +4984,13 @@ function renderNutriCorr(data){
       <div style="font-size:20px;flex-shrink:0;margin-top:2px;">${c.icon}</div>
       <div style="flex:1;">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
-          <div style="font-size:11px;color:var(--t3);">${c.signal}</div>
+          <div style="font-size:11px;color:var(--t3);">${_wl(c.signal)}</div>
           <div style="color:var(--gold);font-size:12px;">→</div>
-          ${c.nutrients.map(n=>`<span class="nutri-nutrient">${n}</span>`).join('')}
+          ${c.nutrients.map(n=>`<span class="nutri-nutrient">${_wl(n)}</span>`).join('')}
         </div>
-        <div class="nutri-title">${c.title}</div>
-        <div class="nutri-text">${c.text}</div>
-        <div class="nutri-dose">📍 ${c.dose}</div>
+        <div class="nutri-title">${_wl(c.title)}</div>
+        <div class="nutri-text">${_wl(c.text)}</div>
+        <div class="nutri-dose">📍 ${_wl(c.dose)}</div>
       </div>
     </div>`).join('');
 }
@@ -5141,7 +5141,7 @@ async function fetchAIAnalysis(data, lang){
     var res=await fetch(AI_WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data,lang:L,tier:'vio'})});
     var json=await res.json();
     if(json.analysis){
-      result.innerHTML=json.analysis.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      result.innerHTML=(typeof _wl==='function'?_wl(json.analysis):json.analysis).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
         .replace(/^#{1,3}\s*(.+)$/gm,'<strong style="display:block;margin:14px 0 4px;">$1</strong>')
         .replace(/\*\*([^*]+?)\*\*/g,'<strong>$1</strong>');
       loading.style.display='none'; result.style.display='block';
@@ -5191,6 +5191,21 @@ function determinePhase(){
   if(lp==='year'||cs==='absent')return 'post';
   if(cs==='irregular'||lp==='months'||(hasHf&&age>=48))return 'meno';
   return 'peri';
+}
+// Велнес-санитайзер видимого текста разбора (App Store): названия гормонов→баланс, HRV→восстановление, щитовидка→энергообмен
+var _WLB={ru:'внутренний баланс',uk:'внутрішній баланс',en:'internal balance',es:'equilibrio interno',de:'inneres Gleichgewicht',pt:'equilíbrio interno',fr:'équilibre interne',pl:'wewnętrzna równowaga',it:'equilibrio interno',he:'איזון פנימי',ja:'内的バランス',ko:'내적 균형'};
+var _WLR={ru:'восстановление',uk:'відновлення',en:'recovery',es:'recuperación',de:'Erholung',pt:'recuperação',fr:'récupération',pl:'regeneracja',it:'recupero',he:'התאוששות',ja:'回復力',ko:'회복력'};
+var _WLM={ru:'энергообмен',uk:'енергообмін',en:'energy metabolism',es:'metabolismo energético',de:'Energiestoffwechsel',pt:'metabolismo energético',fr:'métabolisme énergétique',pl:'metabolizm energii',it:'metabolismo energetico',he:'חילוף אנרגיה',ja:'エネルギー代謝',ko:'에너지 대사'};
+function _wl(s){ if(!s||typeof s!=='string')return s; var L=(typeof lang!=='undefined'?lang:'ru');
+  var hb=_WLB[L]||_WLB.ru, rc=_WLR[L]||_WLR.ru, mt=_WLM[L]||_WLM.ru;
+  try{
+    s=s.replace(/(?:эстроген|прогестерон|тестостерон|кортизол|estrog|oestrog|progester|testoster|cortisol|kortyzol|kortisol|östrog|œstrog|estróg)\p{L}*/giu, hb);
+    s=s.replace(/エストロゲン|プロゲステロン|テストステロン|コルチゾール|에스트로겐|프로게스테론|테스토스테론|코르티솔|אסטרוגן|פרוגסטרון|טסטוסטרון|קורטיזול/gu, hb);
+    s=s.replace(/\bHRV\b|ВСР/gi, rc);
+    s=s.replace(/щитовидн\p{L}*\s+желез\p{L}*|thyroid\s+gland|glande\s+thyroïde|glándula\s+tiroides|Schilddrüse\p{L}*/giu, mt);
+    s=s.replace(/(?:щитовид|тиреотроп|thyroid|tiroid|thyroïd|tarczyc|tiroide)\p{L}*|\bТТГ\b|\bTSH\b|甲状腺|갑상선|בלוטת התריס/giu, mt);
+  }catch(e){}
+  return s;
 }
 function _showResultsInner(){
   if(typeof saveProfile==='function'){try{saveProfile();}catch(e){}}   // профиль → карточка (vial_profile)
@@ -5341,7 +5356,7 @@ function _showResultsInner(){
     const d=document.createElement('div');
     d.className=`insight ${o.t} cascade-item`;
     d.style.animationDelay=(i*.09)+'s';
-    d.innerHTML=`<div class="insight-icon">${o.i}</div><div><div class="insight-title">${o.h}</div><div class="insight-text">${o.b}</div></div>`;
+    d.innerHTML=`<div class="insight-icon">${o.i}</div><div><div class="insight-title">${_wl(o.h)}</div><div class="insight-text">${_wl(o.b)}</div></div>`;
     il.appendChild(d);
   });
 
@@ -5351,7 +5366,7 @@ function _showResultsInner(){
     const d=document.createElement('div');
     d.className='rec-section cascade-item';
     d.style.animationDelay=((ins.length+i)*.09)+'s';
-    d.innerHTML=`<div class="rec-title">${r.h}</div><ul class="rec-list">${r.l.map(i=>`<li>${i}</li>`).join('')}</ul>`;
+    d.innerHTML=`<div class="rec-title">${_wl(r.h)}</div><ul class="rec-list">${r.l.map(i=>`<li>${_wl(i)}</li>`).join('')}</ul>`;
     rs.appendChild(d);
   });
 
