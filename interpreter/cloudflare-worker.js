@@ -3214,6 +3214,7 @@ function buildUserMessage(data, lang) {
       '\n══ ПОЛНЫЕ ДАННЫЕ АНКЕТЫ — это ввёл клиент; ОБЯЗАТЕЛЬНО учти КАЖДЫЙ пункт ниже в разборе и рекомендациях, ничего не игнорируй ══\n'
     + 'Питание · ограничения/диета: ' + _J(data.diet_restrict) + ' | режим питания: ' + (data.eating_pattern || '—') + '\n'
     + ((data.protein_intake || data.cravings || data.allergy) ? 'Питание (доп.): ' + (data.protein_intake ? 'потребление белка: ' + data.protein_intake : '') + (data.cravings ? ' | тяга к сладкому/еде: да' : '') + (data.allergy ? ' | аллергии: ' + data.allergy : '') + '\n' : '')
+    + (data.new_symptoms ? 'Новые симптомы за неделю (со слов клиента): ' + data.new_symptoms + '\n' : '')
     + 'Физическая активность · виды: ' + _J(data.act_types) + ' | частота: ' + (data.act_freq || '—') + ' | восстановление после нагрузки: ' + (data.act_recovery || '—') + '\n'
     + 'Добавки (принимает): ' + _J(data.supplements) + '\n'
     + 'Лекарства: ' + (data.meds || '—') + (data.meds_other ? ' | другие: ' + data.meds_other : '') + '\n'
