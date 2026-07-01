@@ -2693,7 +2693,8 @@ function selectKBPatterns(data) {
 
   // токены-массивы (значения чекбоксов анкеты)
   const sym  = Array.isArray(data.symptoms)      ? data.symptoms      : [];
-  const horm = Array.isArray(data.horm_symptoms) ? data.horm_symptoms : [];
+  const horm = Array.isArray(data.horm_symptoms) ? data.horm_symptoms
+             : ((data.horm_female || data.horm_male) ? Object.keys(Object.assign({}, data.horm_female || {}, data.horm_male || {})) : []);
   const cort = Array.isArray(data.cortisol_symp) ? data.cortisol_symp : [];
   const supp = Array.isArray(data.supplements)   ? data.supplements   : [];
   const gsm  = Array.isArray(data.gsm)           ? data.gsm           : [];
@@ -2738,7 +2739,7 @@ function selectKBPatterns(data) {
     add('P-F6', (tempDown && lowEnergy) || (tempDown && has(horm,'hair_loss','weight_gain'))
       || has(sym,'cold') || data.meds === 'thyroid' || (num(labs.tsh) != null && num(labs.tsh) > 2.5));
     // P-F7 инсулинорезистентность
-    add('P-F7', (visceral != null && visceral > 9) || has(horm,'weight_gain') || data.appetite === 'cravings'
+    add('P-F7', (visceral != null && visceral > 9) || has(horm,'weight_gain') || (data.appetite === 'cravings' || data.cravings === true)
       || num(labs.glucose) > 5.6 || num(labs.hba1c) > 5.7 || num(labs.homa) > 2.5);
     // P-F8 воспаление
     add('P-F8', has(sym,'joint') || (visceral != null && visceral > 12) || num(labs.crp) > 3);
@@ -2786,7 +2787,7 @@ function selectKBPatterns(data) {
     // P-M2 ГГН/кортизол
     add('P-M2', stressHigh || cortLoad || (hrv < 35 && stressHigh && anx >= 5));
     // P-M3 метаболический синдром
-    add('P-M3', (visceral != null && visceral > 9) || has(horm,'belly_fat') || data.appetite === 'cravings'
+    add('P-M3', (visceral != null && visceral > 9) || has(horm,'belly_fat') || (data.appetite === 'cravings' || data.cravings === true)
       || num(labs.glucose) > 5.6 || num(labs.hba1c) > 5.7 || num(labs.homa) > 2.5);
     // P-M4 воспаление
     add('P-M4', has(sym,'joint') || (visceral != null && visceral > 12) || num(labs.crp) > 3);
@@ -3212,11 +3213,12 @@ function buildUserMessage(data, lang) {
   const fullDataBlock =
       '\n══ ПОЛНЫЕ ДАННЫЕ АНКЕТЫ — это ввёл клиент; ОБЯЗАТЕЛЬНО учти КАЖДЫЙ пункт ниже в разборе и рекомендациях, ничего не игнорируй ══\n'
     + 'Питание · ограничения/диета: ' + _J(data.diet_restrict) + ' | режим питания: ' + (data.eating_pattern || '—') + '\n'
+    + ((data.protein_intake || data.cravings || data.allergy) ? 'Питание (доп.): ' + (data.protein_intake ? 'потребление белка: ' + data.protein_intake : '') + (data.cravings ? ' | тяга к сладкому/еде: да' : '') + (data.allergy ? ' | аллергии: ' + data.allergy : '') + '\n' : '')
     + 'Физическая активность · виды: ' + _J(data.act_types) + ' | частота: ' + (data.act_freq || '—') + ' | восстановление после нагрузки: ' + (data.act_recovery || '—') + '\n'
     + 'Добавки (принимает): ' + _J(data.supplements) + '\n'
     + 'Лекарства: ' + (data.meds || '—') + (data.meds_other ? ' | другие: ' + data.meds_other : '') + '\n'
     + 'Хронический стресс: ' + (data.chronic_stress || '—') + ' | симптомы кортизола: ' + _J(data.cortisol_symp) + '\n'
-    + 'Гормональные симптомы: ' + _J(data.horm_symptoms) + (data.horm_intensity ? ' | интенсивность: ' + data.horm_intensity : '') + '\n'
+    + 'Гормональные симптомы: ' + ((Array.isArray(data.horm_symptoms) && data.horm_symptoms.length) ? _J(data.horm_symptoms) : ((data.horm_female || data.horm_male) ? (Object.entries(Object.assign({}, data.horm_female || {}, data.horm_male || {})).map(function(e){ return e[0] + ' (' + e[1] + ')'; }).join(', ') || '—') : '—')) + (data.horm_intensity ? ' | интенсивность: ' + data.horm_intensity : '') + '\n'
     + (isFem
         ? 'Цикл · статус: ' + (data.cycle_status || '—') + (data.heavy_period ? ' | обильные менструации: ' + (data.heavy_period === 'yes' ? 'да' : 'нет') : '') + ' | давность последней менструации: ' + (data.last_period || '—') + (data.cycle_len ? ' | длина цикла: ' + data.cycle_len + ' дн' : '') + (data.cycle_day ? ' | день цикла: ' + data.cycle_day : '') + (data.cycle_phase ? ' | фаза цикла: ' + data.cycle_phase : '') + '\n'
           + 'ПМС · тяжесть: ' + (data.pms || '—') + ' | симптомы: ' + _J(data.pms_symptoms) + '\n'

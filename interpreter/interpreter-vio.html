@@ -2160,6 +2160,18 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
       <h2 class="step-title" id="step10-title" data-t="s11_title">Цикл и репродуктивное здоровье</h2>
       <p class="step-desc" style="border-color:rgba(244,114,182,.3);" data-t="s11_desc">Помогает точнее определить фазу и подобрать рекомендации.</p>
       <div id="cycle-female">
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;" id="cyc-date-row">
+          <div class="manual-field" style="flex:1 1 200px;min-width:0;">
+            <label class="manual-label" data-t="cyc_lastdate">Дата последней менструации</label>
+            <input class="manual-input" id="prof-lastperiod" type="date" style="max-width:100%;height:44px;box-sizing:border-box;" oninput="renderCycleDay()">
+          </div>
+          <div class="manual-field" style="flex:1 1 200px;min-width:0;">
+            <label class="manual-label" data-t="cyc_len">Длина цикла (дней)</label>
+            <input class="manual-input" id="prof-cyclelen" type="number" min="20" max="45" value="28" style="height:44px;box-sizing:border-box;" oninput="renderCycleDay()">
+          </div>
+        </div>
+        <div id="cycle-day-info" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0 4px;padding:10px 14px;border-radius:12px;background:rgba(244,114,182,.08);border:1px solid rgba(244,114,182,.25);"></div>
+        <div class="divider"></div>
         <div class="input-group">
           <label data-t="s11_l1">🩸 Статус цикла</label>
           <div class="chips sup-grid">
@@ -3585,7 +3597,14 @@ Object.keys(_PMS).forEach(function(k){Object.keys(_PMS[k]).forEach(function(l){i
 "hours_unit":{ru:"ч",uk:"год",en:"h",es:"h",de:"Std.",pt:"h",fr:"h",pl:"godz.",it:"h",he:"ש'",ja:"時間",ko:"시간"},
 "heavy_q":{ru:"🩸 Обильные менструации",uk:"🩸 Рясні менструації",en:"🩸 Heavy periods",es:"🩸 Menstruaciones abundantes",de:"🩸 Starke Menstruation",pt:"🩸 Menstruação intensa",fr:"🩸 Règles abondantes",pl:"🩸 Obfite miesiączki",it:"🩸 Mestruazioni abbondanti",he:"🩸 מחזור כבד",ja:"🩸 経血が多い",ko:"🩸 월경 과다"},
 "heavy_yes":{ru:"⚠️ Да, обильные",uk:"⚠️ Так, рясні",en:"⚠️ Yes, heavy",es:"⚠️ Sí, abundantes",de:"⚠️ Ja, stark",pt:"⚠️ Sim, intensas",fr:"⚠️ Oui, abondantes",pl:"⚠️ Tak, obfite",it:"⚠️ Sì, abbondanti",he:"⚠️ כן, כבד",ja:"⚠️ はい、多い",ko:"⚠️ 예, 많음"},
-"heavy_no":{ru:"🟢 Нет, обычные",uk:"🟢 Ні, звичайні",en:"🟢 No, normal",es:"🟢 No, normales",de:"🟢 Nein, normal",pt:"🟢 Não, normais",fr:"🟢 Non, normales",pl:"🟢 Nie, zwykłe",it:"🟢 No, normali",he:"🟢 לא, רגיל",ja:"🟢 いいえ、普通",ko:"🟢 아니요, 보통"}
+"heavy_no":{ru:"🟢 Нет, обычные",uk:"🟢 Ні, звичайні",en:"🟢 No, normal",es:"🟢 No, normales",de:"🟢 Nein, normal",pt:"🟢 Não, normais",fr:"🟢 Non, normales",pl:"🟢 Nie, zwykłe",it:"🟢 No, normali",he:"🟢 לא, רגיל",ja:"🟢 いいえ、普通",ko:"🟢 아니요, 보통"},
+"cyc_lastdate":{ru:"Дата последней менструации",uk:"Дата останньої менструації",en:"Date of last period",es:"Fecha de la última menstruación",de:"Datum der letzten Menstruation",pt:"Data da última menstruação",fr:"Date des dernières règles",pl:"Data ostatniej miesiączki",it:"Data dell'ultima mestruazione",he:"תאריך הווסת האחרונה",ja:"最終月経の日付",ko:"마지막 월경일"},
+"cyc_len":{ru:"Длина цикла (дней)",uk:"Довжина циклу (днів)",en:"Cycle length (days)",es:"Duración del ciclo (días)",de:"Zykluslänge (Tage)",pt:"Duração do ciclo (dias)",fr:"Durée du cycle (jours)",pl:"Długość cyklu (dni)",it:"Durata del ciclo (giorni)",he:"אורך המחזור (ימים)",ja:"周期の長さ（日）",ko:"주기 길이 (일)"},
+"cyc_day":{ru:"День цикла",uk:"День циклу",en:"Cycle day",es:"Día del ciclo",de:"Zyklustag",pt:"Dia do ciclo",fr:"Jour du cycle",pl:"Dzień cyklu",it:"Giorno del ciclo",he:"יום במחזור",ja:"周期の日",ko:"주기 일차"},
+"ph_menstrual":{ru:"Менструация",uk:"Менструація",en:"Menstruation",es:"Menstruación",de:"Menstruation",pt:"Menstruação",fr:"Menstruation",pl:"Menstruacja",it:"Mestruazione",he:"וסת",ja:"月経期",ko:"월경기"},
+"ph_follicular":{ru:"Фолликулярная фаза",uk:"Фолікулярна фаза",en:"Follicular phase",es:"Fase folicular",de:"Follikelphase",pt:"Fase folicular",fr:"Phase folliculaire",pl:"Faza folikularna",it:"Fase follicolare",he:"שלב זקיקי",ja:"卵胞期",ko:"난포기"},
+"ph_ovulation":{ru:"Овуляция",uk:"Овуляція",en:"Ovulation",es:"Ovulación",de:"Eisprung",pt:"Ovulação",fr:"Ovulation",pl:"Owulacja",it:"Ovulazione",he:"ביוץ",ja:"排卵期",ko:"배란기"},
+"ph_luteal":{ru:"Лютеиновая фаза",uk:"Лютеїнова фаза",en:"Luteal phase",es:"Fase lútea",de:"Lutealphase",pt:"Fase lútea",fr:"Phase lutéale",pl:"Faza lutealna",it:"Fase luteale",he:"שלב לוטאלי",ja:"黄体期",ko:"황체기"}
 };Object.keys(W3).forEach(function(k){Object.keys(W3[k]).forEach(function(l){if(T[l])T[l][k]=W3[k][l];});});})();
 let lang='en';
 let _rerendering=false;
@@ -3683,6 +3702,7 @@ function _cycleChange(){
   if(pm)pm.style.display=(cs==='absent')?'none':'block';
   var hv=document.getElementById('cyc-heavy-block');
   if(hv)hv.style.display=(cs==='absent')?'none':'block';
+  if(typeof renderCycleDay==='function')renderCycleDay();
 }
 // Гормоны (аккордеон): клик по симптому → раскрыть тяжесть; интенсивность пер-симптомная; «нет симптомов» сбрасывает всё
 function _hormItem(el){ return el.closest?el.closest('.horm-item'):null; }
@@ -4379,6 +4399,9 @@ function restart(){
   goTo(0);
   document.getElementById('sleep_qual').value=6;if(typeof renderSleepScale==='function')renderSleepScale();
   var _sh=document.getElementById('sleep_hours');if(_sh)_sh.value=7.5;
+  var _lp=document.getElementById('prof-lastperiod');if(_lp)_lp.value='';
+  var _cl=document.getElementById('prof-cyclelen');if(_cl)_cl.value=28;
+  if(typeof renderCycleDay==='function')renderCycleDay();
   document.getElementById('rhr').value=68;
   if(_pulseTimer){clearInterval(_pulseTimer);_pulseTimer=null;}
   if(typeof _pulseShow==='function')_pulseShow('idle');
@@ -4955,6 +4978,33 @@ async function fetchAIAnalysis(data, lang){
 }
 
 // Фаза — НЕ ручной выбор: ИП предполагает её (не диагноз) по полу/возрасту/циклу/приливам/витальности.
+function cycleInfo(){
+  try{
+    var d=document.getElementById('prof-lastperiod')?document.getElementById('prof-lastperiod').value:'';
+    var len=parseInt(document.getElementById('prof-cyclelen')?document.getElementById('prof-cyclelen').value:'');
+    if(!d||!(len>=20&&len<=45))return null;
+    var start=new Date(d+'T00:00:00'), now=new Date();
+    var diff=Math.floor((now-start)/86400000); if(!isFinite(diff)||diff<0)return null;
+    var day=(diff%len)+1, ovu=len-14;
+    var phase = day<=5?'menstrual' : day<ovu-1?'follicular' : day<=ovu+1?'ovulation' : 'luteal';
+    return {day:day,len:len,phase:phase,daysSince:diff};
+  }catch(e){return null;}
+}
+function _lpBucket(){
+  var ci=cycleInfo();
+  if(ci)return ci.daysSince>365?'year':ci.daysSince>90?'months':'recent';
+  return null;
+}
+function renderCycleDay(){
+  var box=document.getElementById('cycle-day-info'); if(!box)return;
+  var ci=cycleInfo();
+  if(!ci||getRadio('cycle_status')==='absent'){box.style.display='none';return;}
+  var ph={menstrual:t('ph_menstrual'),follicular:t('ph_follicular'),ovulation:t('ph_ovulation'),luteal:t('ph_luteal')}[ci.phase];
+  box.style.display='flex';
+  box.innerHTML='<span style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.6);">'+t('cyc_day')+'</span>'
+    +'<span style="font-size:24px;font-weight:300;color:#F472B6;">'+ci.day+'</span>'
+    +'<span style="font-size:13px;color:#F9A8D4;">· '+ph+'</span>';
+}
 function determinePhase(){
   var male=getRadio('gender')==='male';
   var ageEl=document.getElementById('prof-age');
@@ -4964,7 +5014,7 @@ function determinePhase(){
     var low=!!(hm.fatigue_chronic||hm.libido_male||hm.erectile_dysfunction||hm.muscle_loss);
     return (age>=50||low)?'andro':'pre_andro';
   }
-  var cs=getRadio('cycle_status'),lp=getRadio('last_period'),hf=getRadio('hotflash');
+  var cs=getRadio('cycle_status'),lp=_lpBucket(),hf=getRadio('hotflash');
   var hasHf=hf&&hf!=='no';
   if(lp==='year'||cs==='absent')return 'post';
   if(cs==='irregular'||lp==='months'||(hasHf&&age>=48))return 'meno';
@@ -4980,7 +5030,7 @@ function _showResultsInner(){
     weight:parseFloat(document.getElementById('prof-weight')?.value)||null,
     height:parseFloat(document.getElementById('prof-height')?.value)||null,
     waist:parseFloat(document.getElementById('prof-waist')?.value)||null,
-    hotflash:getRadio('hotflash'),
+    hotflash:getRadio('hotflash'),hf_count:(function(){var h=getRadio('hotflash');return h==='multiple'?'high':h==='once'?'low':'none';})(),
     sleep_qual:+document.getElementById('sleep_qual').value,
     sleep_hours:parseFloat(document.getElementById('sleep_hours')?.value)||null,
     deep:getRadio('deep'),wake:getRadio('wake'),
@@ -4992,8 +5042,7 @@ function _showResultsInner(){
     appetite:getRadio('appetite'),cravings:!!(document.getElementById('crav1')&&document.getElementById('crav1').checked),eating_pattern:getRadio('eating_pattern'),protein_intake:getRadio('protein_intake'),gi:getChecked(['gi1','gi2','gi3','gi4','gi5','gi6','gi7','gi8','gi9','gi_ar_none']),
     memory:getRadio('memory'),fog:getRadio('fog'),
     horm_female:(typeof _hormMap==='function'?_hormMap('horm-acc'):{}),horm_male:(typeof _hormMap==='function'?_hormMap('horm-male-acc'):{}),
-    cycle_status:getRadio('cycle_status'),heavy_period:(getRadio('cycle_status')==='absent'?null:getRadio('heavy_period')),last_period:getRadio('last_period'),early_meno:getRadio('early_meno'),pms:(function(){var s=getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9']).filter(function(v){return v!=='none_pms';});return s.length>=5?'severe':s.length>=3?'moderate':s.length>=1?'mild':'none';})(),pms_symptoms:getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9']),gsm:getChecked(['gsm1','gsm2','gsm3','gsm4','gsm5','gsm6','gsm7','gsm8']),bone:getChecked(['bone1','bone2','bone3','bone4','bone5']),breast:getChecked(['breast1','breast2','breast3','breast4']),
-    weekly_trend:getRadio('weekly_trend'),weekly_changes:getChecked(['wk1p','wk2p','wk3p','wk4p','wk5p','wk6p','wk7p']),weekly_events:getChecked(['ev1','ev2','ev3','ev4','ev5','ev6']),
+    cycle_status:getRadio('cycle_status'),heavy_period:(getRadio('cycle_status')==='absent'?null:getRadio('heavy_period')),last_period:_lpBucket(),cycle_len:(cycleInfo()||{}).len||null,cycle_day:(getRadio('cycle_status')==='absent'?null:(cycleInfo()||{}).day||null),cycle_phase:(getRadio('cycle_status')==='absent'?null:(cycleInfo()||{}).phase||null),pms:(function(){var s=getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9']).filter(function(v){return v!=='none_pms';});return s.length>=5?'severe':s.length>=3?'moderate':s.length>=1?'mild':'none';})(),pms_symptoms:getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9']),gsm:getChecked(['gsm1','gsm2','gsm3','gsm4','gsm5','gsm6','gsm7','gsm8']),bone_risk:(function(){var b=getChecked(['bone1','bone2','bone3','bone5']).filter(function(v){return v!=='none_bone';});if(getRadio('early_meno')==='yes')b.push('early_menopause');return b;})(),breast:getChecked(['breast1','breast2','breast3','breast4']),
     supplements:getChecked(['sup1','sup2','sup3','sup4','sup5','sup6','sup7','sup8','sup9','sup10','sup11']),meds:getChecked(['med2','med3','med4','med5']),
     meds_other:(document.getElementById('meds_other')?document.getElementById('meds_other').value:'').trim(),
     allergy:(document.getElementById('allergy')?document.getElementById('allergy').value:'').trim(),
