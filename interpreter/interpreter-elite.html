@@ -2803,7 +2803,13 @@ footer{
           <div class="chip"><input type="checkbox" id="dr5" value="lactose_free"><label for="dr5" id="dr-l5"></label></div>
           <div class="chip"><input type="checkbox" id="dr6" value="keto"><label for="dr6" id="dr-l6"></label></div>
           <div class="chip"><input type="checkbox" id="dr7" value="if"><label for="dr7" id="dr-l7"></label></div>
-          <div class="chip"><input type="checkbox" id="dr8" value="allergy" onchange="var a=document.getElementById('allergy');if(a)a.style.display=this.checked?'block':'none';"><label for="dr8" id="dr-l8"></label></div>
+        </div>
+      </div>
+      <div class="input-group">
+        <label data-t="allergy_l">🌾 Аллергии и непереносимость</label>
+        <div class="chips">
+          <div class="chip"><input type="radio" name="allergy_has" id="alg_no" value="no" checked onchange="_allergyToggle()"><label for="alg_no" data-t="alg_no">🟢 Нет</label></div>
+          <div class="chip"><input type="radio" name="allergy_has" id="alg_yes" value="yes" onchange="_allergyToggle()"><label for="alg_yes" data-t="alg_yes">⚠️ Есть</label></div>
         </div>
         <input type="text" id="allergy" data-t-placeholder="allergy_ph" class="manual-input" maxlength="160" placeholder="На что? (орехи, лактоза, глютен…)" style="display:none;margin-top:10px;text-align:left;letter-spacing:0;text-transform:none;">
       </div>
@@ -2846,6 +2852,19 @@ footer{
   </div>
 
   <!-- STEP 9: ФИЗИЧЕСКАЯ АКТИВНОСТЬ -->
+  <!-- STEP: НОВЫЕ СИМПТОМЫ (weekly, оба пола) -->
+  <div class="step" id="step14">
+    <div class="card">
+      <div class="card-accent"></div>
+      <div class="step-badge" data-t="s_ns_badge">Симптомы</div>
+      <h2 class="step-title" data-t="s_ns_title">Новые симптомы</h2>
+      <p class="step-desc" data-t="s_ns_desc">Отметьте, если за последнюю неделю появилось что-то новое в самочувствии.</p>
+      <div class="input-group">
+        <label data-t="s_ns_q">📝 Какие появились новые симптомы?</label>
+        <textarea id="new_symptoms" data-t-placeholder="s_ns_ph" class="manual-input" rows="3" maxlength="300" placeholder="Опишите своими словами (или оставьте пустым)" style="margin-top:6px;text-align:left;letter-spacing:0;text-transform:none;resize:vertical;"></textarea>
+      </div>
+    </div>
+  </div>
   <div class="step" id="step9">
     <div class="card">
       <div class="card-accent" style="background:linear-gradient(90deg,transparent,rgba(251,146,60,.5),transparent);"></div>
@@ -5024,6 +5043,16 @@ const _withingsT={
   ko:{tab_withings_connect:'🔗 연결',instr_withings_connect:'Withings 계정에 로그인하세요 — 최근 7일 HRV·심박수·수면·SpO₂를 안전하게 가져옵니다.',btn_withings_connect:'🔗 Withings 연결',status_withings_connecting:'⏳ Withings에 연결 중…',status_withings_ok:'✓ Withings 데이터 로드 완료',status_withings_err:'⚠ Withings 데이터를 가져오지 못했습니다',status_withings_nodata:'ℹ️ 계정에 최근 Withings 데이터가 없습니다'}
 };
 Object.keys(_withingsT).forEach(l=>{if(T[l])Object.assign(T[l],_withingsT[l]);});
+;(function(){var _NSK={
+  allergy_l:{ru:"🌾 Аллергии и непереносимость",uk:"🌾 Алергії та непереносимість",en:"🌾 Allergies & intolerances",es:"🌾 Alergias e intolerancias",de:"🌾 Allergien & Unverträglichkeiten",pt:"🌾 Alergias e intolerâncias",fr:"🌾 Allergies et intolérances",pl:"🌾 Alergie i nietolerancje",it:"🌾 Allergie e intolleranze",he:"🌾 אלרגיות ורגישויות",ja:"🌾 アレルギー・不耐性",ko:"🌾 알레르기 및 불내성"},
+  alg_no:{ru:"🟢 Нет",uk:"🟢 Немає",en:"🟢 No",es:"🟢 No",de:"🟢 Nein",pt:"🟢 Não",fr:"🟢 Non",pl:"🟢 Nie",it:"🟢 No",he:"🟢 לא",ja:"🟢 なし",ko:"🟢 없음"},
+  alg_yes:{ru:"⚠️ Есть",uk:"⚠️ Є",en:"⚠️ Yes",es:"⚠️ Sí",de:"⚠️ Ja",pt:"⚠️ Sim",fr:"⚠️ Oui",pl:"⚠️ Tak",it:"⚠️ Sì",he:"⚠️ כן",ja:"⚠️ あり",ko:"⚠️ 있음"},
+  s_ns_badge:{ru:"Симптомы",uk:"Симптоми",en:"Symptoms",es:"Síntomas",de:"Symptome",pt:"Sintomas",fr:"Symptômes",pl:"Objawy",it:"Sintomi",he:"תסמינים",ja:"症状",ko:"증상"},
+  s_ns_title:{ru:"Новые симптомы",uk:"Нові симптоми",en:"New symptoms",es:"Síntomas nuevos",de:"Neue Symptome",pt:"Sintomas novos",fr:"Nouveaux symptômes",pl:"Nowe objawy",it:"Nuovi sintomi",he:"תסמינים חדשים",ja:"新しい症状",ko:"새로운 증상"},
+  s_ns_desc:{ru:"Отметьте, если за последнюю неделю появилось что-то новое в самочувствии.",uk:"Зазначте, якщо за останній тиждень зʼявилося щось нове в самопочутті.",en:"Note anything new in how you feel over the past week.",es:"Indica si esta semana apareció algo nuevo en cómo te sientes.",de:"Notieren Sie, ob in der letzten Woche etwas Neues in Ihrem Befinden aufgetreten ist.",pt:"Anote se surgiu algo novo no seu bem-estar na última semana.",fr:"Notez si quelque chose de nouveau est apparu dans votre ressenti cette semaine.",pl:"Zaznacz, czy w ostatnim tygodniu pojawiło się coś nowego w samopoczuciu.",it:"Indica se nellultima settimana è comparso qualcosa di nuovo nel tuo benessere.",he:"ציינו אם בשבוע האחרון הופיע משהו חדש בתחושה שלכם.",ja:"この1週間で体調に新しく現れたことがあれば記入してください。",ko:"지난 한 주 동안 컨디션에 새로 나타난 것이 있으면 적어주세요."},
+  s_ns_q:{ru:"📝 Какие появились новые симптомы?",uk:"📝 Які зʼявилися нові симптоми?",en:"📝 What new symptoms have appeared?",es:"📝 ¿Qué síntomas nuevos han aparecido?",de:"📝 Welche neuen Symptome sind aufgetreten?",pt:"📝 Quais sintomas novos surgiram?",fr:"📝 Quels nouveaux symptômes sont apparus ?",pl:"📝 Jakie nowe objawy się pojawiły?",it:"📝 Quali nuovi sintomi sono comparsi?",he:"📝 אילו תסמינים חדשים הופיעו?",ja:"📝 新しく現れた症状は何ですか？",ko:"📝 어떤 새로운 증상이 나타났나요?"},
+  s_ns_ph:{ru:"Опишите своими словами (или оставьте пустым)",uk:"Опишіть своїми словами (або залиште порожнім)",en:"Describe in your own words (or leave blank)",es:"Descríbelo con tus palabras (o déjalo vacío)",de:"Mit eigenen Worten beschreiben (oder leer lassen)",pt:"Descreva com suas palavras (ou deixe em branco)",fr:"Décrivez avec vos mots (ou laissez vide)",pl:"Opisz własnymi słowami (lub zostaw puste)",it:"Descrivi con parole tue (o lascia vuoto)",he:"תארו במילים שלכם (או השאירו ריק)",ja:"自由に記入してください（空欄でも可）",ko:"자유롭게 적어주세요 (비워도 됩니다)"}
+};Object.keys(_NSK).forEach(function(k){Object.keys(_NSK[k]).forEach(function(l){if(T[l])T[l][k]=_NSK[k][l];});});})();
 let lang='en';
 let _analysisData=null;
 let _rerendering=false;
@@ -5055,8 +5084,8 @@ const _GP_SRC={fitbit:'Fitbit',oura:'Oura',samsung:'Samsung Health',whoop:'WHOOP
 // HRV/темп/сон — гаджет-панель; терминал = существующий proceedFromStep15() → анкета/результат →
 // кабинет-кнопки ELITE (Zoom/Cal/PDF) НЕ трогаются. Блоки = pro (приливы в ленте, без «Пульс покоя»/
 // «Гормон.симптомы»/«Состав тела»; тревожность в «Стрессе»; Цикл только женщинам; питание=pro).
-const STEP_CADENCE={0:'base',2:'daily',5:'daily',6:'daily',8:'base',9:'weekly',10:'base',11:'biweekly'};
-const FLOW_ALL=[0,2,5,6,8,9,10,11];   // step0 профиль (+цикл вшит внутрь, как в pro); недельная «Динамика» удалена; step12 (цикл) вшит в step0
+const STEP_CADENCE={0:'base',2:'daily',5:'daily',6:'daily',8:'base',9:'weekly',10:'base',11:'biweekly',14:'weekly'};
+const FLOW_ALL=[0,2,5,6,8,9,14,10,11];   // step0 профиль (+цикл вшит внутрь, как в pro); недельная «Динамика» удалена; step12 (цикл) вшит в step0
 function _flowHidden(n){var male=(typeof getRadio==='function'&&getRadio('gender')==='male');return male&&(n===2);}
 // Каденс (как в pro): weekly/biweekly блоки показываем не каждый раз, а раз в 7/14 дней (state в vial_steplast).
 function _stepLastMap(){try{return JSON.parse(localStorage.getItem('vial_steplast')||'{}')||{};}catch(e){return {};}}
@@ -5441,7 +5470,7 @@ function saveProfile(){
       waist:(document.getElementById('prof-waist')||{}).value||'',
       cycleStatus:_radioLabel('cycle_status'), lastPeriod:(document.getElementById('prof-lastperiod')||{}).value||'',
       pms:_checkedLabels(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss6','pmss7','pmss8','pmss9','pmss10','pmss11']),
-      diet:_checkedLabels(['dr1','dr2','dr3','dr4','dr5','dr6','dr7','dr8']),
+      diet:_checkedLabels(['dr1','dr2','dr3','dr4','dr5','dr6','dr7']),
       eating:_radioLabel('eating_pattern'),
       gi:_checkedLabels(['gi1','gi2','gi3','gi4','gi5','gi6','gi7','gi8','gi9']),
       supplements:_checkedLabels(['sup1','sup2','sup3','sup4','sup5','sup6','sup7','sup8','sup9','sup10','sup11']),
@@ -5919,6 +5948,7 @@ function restart(){
   ['prof-age','prof-weight','prof-height'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
 }
 function getRadio(n){const el=document.querySelector(`input[name="${n}"]:checked`);return el?el.value:null;}
+function _allergyToggle(){var y=(typeof getRadio==='function'&&getRadio('allergy_has')==='yes');var a=document.getElementById('allergy');if(a)a.style.display=y?'block':'none';}
 function _lastPeriodBucket(){   // «когда была последняя менструация» из даты prof-lastperiod (как в pro)
   var el=document.getElementById('prof-lastperiod');
   if(!el||!el.value)return null;
@@ -6526,8 +6556,9 @@ function _showResultsInner(){
     fog:_mapFog(+getRadio('fog')||0),
     horm_symptoms:getChecked(['hs1','hs2','hs4','hs5','hs6','hs7','hs8','hm1','hm2','hm3','hm4','hm5','hm6','hm8']),
     horm_intensity:getRadio('horm_intensity'),
-    diet_restrict:getChecked(['dr1','dr2','dr3','dr4','dr5','dr6','dr7','dr8']),
-    allergy:(document.getElementById('allergy')?document.getElementById('allergy').value:'').trim(),
+    diet_restrict:getChecked(['dr1','dr2','dr3','dr4','dr5','dr6','dr7']),
+    allergy:(typeof getRadio==='function'&&getRadio('allergy_has')==='yes'&&document.getElementById('allergy')?document.getElementById('allergy').value:'').trim(),
+    new_symptoms:(document.getElementById('new_symptoms')?document.getElementById('new_symptoms').value:'').trim(),
     eating_pattern:getRadio('eating_pattern'),
     gi:getChecked(['gi1','gi2','gi3','gi4','gi5','gi6','gi7','gi10','gi11','gi12','gi13']),
     act_types:getChecked(['act1','act2','act3','act4','act5','act6']),
