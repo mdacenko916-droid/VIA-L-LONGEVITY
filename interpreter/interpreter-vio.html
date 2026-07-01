@@ -421,6 +421,11 @@ main{
   filter:blur(55px);
   opacity:.22;
   transition:opacity .4s;
+  /* мерцание «северное сияние» убрано: размытый ореол вынесен на отдельный
+     GPU-слой, чтобы WebKit не пере-размывал его при каждом скролле */
+  transform:translateZ(0);
+  -webkit-backface-visibility:hidden;backface-visibility:hidden;
+  will-change:transform;
 }
 /* hover-glow убран — тоже мерцал при скролле под курсором */
 
@@ -1184,19 +1189,9 @@ footer{
   height:2px;
 }
 
-/* 2. Holographic shimmer — card hover */
-.card::after{
-  background:linear-gradient(135deg,
-    rgba(255,255,255,0) 0%,
-    rgba(255,255,255,.08) 38%,
-    rgba(255,255,255,.13) 50%,
-    rgba(255,255,255,.08) 62%,
-    rgba(255,255,255,0) 100%) !important;
-  background-size:260% 260% !important;
-  background-position:0% 0% !important;
-  transition:background-position .7s ease !important;
-}
-.card:hover::after{background-position:100% 100% !important;}
+/* 2. Holographic shimmer — УБРАНО: при наведении блок мерцал свечением
+   (::after сдвигал background-position → световой блик проезжал по карте).
+   .card::after остаётся статичным стеклянным бликом из базового правила выше. */
 
 /* 3. Staggered cascade — result items */
 @keyframes fade-up-in{
