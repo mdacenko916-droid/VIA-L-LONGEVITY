@@ -3218,7 +3218,7 @@ function buildUserMessage(data, lang) {
     + 'Хронический стресс: ' + (data.chronic_stress || '—') + ' | симптомы кортизола: ' + _J(data.cortisol_symp) + '\n'
     + 'Гормональные симптомы: ' + _J(data.horm_symptoms) + (data.horm_intensity ? ' | интенсивность: ' + data.horm_intensity : '') + '\n'
     + (isFem
-        ? 'Цикл · статус: ' + (data.cycle_status || '—') + ' | давность последней менструации: ' + (data.last_period || '—') + (data.cycle_len ? ' | длина цикла: ' + data.cycle_len + ' дн' : '') + (data.cycle_day ? ' | день цикла: ' + data.cycle_day : '') + (data.cycle_phase ? ' | фаза цикла: ' + data.cycle_phase : '') + '\n'
+        ? 'Цикл · статус: ' + (data.cycle_status || '—') + (data.heavy_period ? ' | обильные менструации: ' + (data.heavy_period === 'yes' ? 'да' : 'нет') : '') + ' | давность последней менструации: ' + (data.last_period || '—') + (data.cycle_len ? ' | длина цикла: ' + data.cycle_len + ' дн' : '') + (data.cycle_day ? ' | день цикла: ' + data.cycle_day : '') + (data.cycle_phase ? ' | фаза цикла: ' + data.cycle_phase : '') + '\n'
           + 'ПМС · тяжесть: ' + (data.pms || '—') + ' | симптомы: ' + _J(data.pms_symptoms) + '\n'
         : 'Мужское здоровье · витальность: ' + (data.vitality || '—') + ' | настроение/мотивация: ' + (data.male_mood || '—') + '\n')
     + 'Риск по костям: ' + _J(data.bone_risk) + '\n'
@@ -3261,7 +3261,7 @@ function buildUserMessage(data, lang) {
     + (whtrCalc    ? ' | WHtR: ' + whtrCalc.toFixed(2) + ' (' + whtrCat + ')' : '') + '\n'
     + (bmrCalc     ? 'Энергобаланс (расчёт, не биоимпеданс): BMR ~' + bmrCalc + ' ккал/день (Mifflin-St Jeor); ориентир поддержания веса ~' + maintLow + '–' + maintHigh + ' ккал/день (малоподвижный→лёгкая активность). Для снижения веса — дефицит ~15–20% от поддержания, не ниже BMR; приоритет белку ' + (isFem ? '1.6–2.2' : '1.6–2.0') + ' г/кг.\n' : '')
     + 'HRV: ' + SK('hrv', data.hrv + ' мс (' + hrvStatus + ')') + ' | Тренд: ' + SK('hrv_trend', (data.hrv_trend === 'below' ? 'падает' : data.hrv_trend === 'above' ? 'растёт' : 'стабилен')) + '\n'
-    + 'Сон: ' + SK('sleep_qual', sleepQual + '/10') + ' | Глубокий: ' + SK('deep', deepContext) + ' | Пробуждения: ' + SK('wake', wakeVal) + '\n'
+    + 'Сон: ' + SK('sleep_qual', sleepQual + '/10') + (data.sleep_hours ? ' | Часов сна: ' + data.sleep_hours + ' ч' : '') + ' | Глубокий: ' + SK('deep', deepContext) + ' | Пробуждения: ' + SK('wake', wakeVal) + '\n'
     + (sk.has('hf_count') ? 'Приливы: не указано (клиент не вводил)' : hfContext) + '\n'
     + 'Дыхание: ' + SK('resp_rate', respRate + ' вд/мин') + ' | Пульс покоя: ' + SK('rhr', rhrVal + ' уд/мин') + '\n'
     + 'Энергия: ' + SK('energy', energyVal + '/10') + ' | Тревога: ' + SK('anxiety', anxietyVal + '/10') + ' | Настроение: ' + SK('mood', data.mood) + ' | Раздражительность: ' + SK('irritability', data.irritability) + '\n'
