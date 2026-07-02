@@ -2467,14 +2467,6 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
           </div>
         </div>
         <div class="score-badge ok" id="scoreBadge">Добре</div>
-        <div class="result-steps-row">
-          <div class="result-step-dot done"></div>
-          <div class="result-step-dot done"></div>
-          <div class="result-step-dot done"></div>
-          <div class="result-step-dot done"></div>
-          <div class="result-step-dot done"></div>
-          <span class="result-steps-label">V10 · 5 кроків</span>
-        </div>
       </div>
     </div>
 
@@ -5067,6 +5059,7 @@ function showResults(){
   if(((window.__touched&&window.__touched.size)||0) < 3){ _showNoDataGate(); return; }
   // Выходим из ленты перед показом результата (иначе flow-mode скрыл бы stepResult).
   document.body.classList.remove('flow-mode'); _hideFlowFooter();
+  document.querySelectorAll('.flow-group-head').forEach(function(h){h.remove();});   // убрать каденс-заголовки «Настройка/Сегодня» с экрана результата
   if(typeof _markPeriodicDone==='function')_markPeriodicDone();   // отметить weekly/biweekly блоки как заполненные
   triggerLensFlare();
   try {
