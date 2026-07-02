@@ -5119,6 +5119,8 @@ function showResults(){
   triggerLensFlare();
   try {
     _showResultsInner();
+    // Авто-недельный разбор: на 7-й день (гейт открыт) + есть тренд (≥2 анализа) — генерится сам, как в PRO.
+    try{ if(typeof _wrGate==='function'&&_wrGate().canGen&&typeof weeklyTrend==='function'&&weeklyTrend()&&typeof genWeeklyReport==='function')genWeeklyReport(); }catch(e2){}
   } catch(e) {
     const div = document.createElement('div');
     div.style.cssText = 'position:fixed;top:60px;left:10px;right:10px;background:#ff4444;color:#fff;padding:16px;border-radius:12px;z-index:9999;font-size:12px;font-family:monospace;word-break:break-all;';
