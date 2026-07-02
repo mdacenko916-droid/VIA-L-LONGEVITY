@@ -1132,6 +1132,7 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
             'ВЕСЬ твой ответ ДОЛЖЕН быть на: ' + langName + '.\n' +
             'Инструкции и клиническая база ВЫШЕ написаны по-русски только потому, что это твоя внутренняя экспертная база — это НЕ язык ответа.\n' +
             'Ответ пользователю — строго и полностью на ' + langName + ': заголовки разделов, текст рекомендаций, названия продуктов и добавок, дозировки, единицы, дисклеймер в конце — всё на ' + langName + '. Не смешивай языки. Не вставляй русские слова в перевод.\n' +
+            'РЕГИСТР ОБРАЩЕНИЯ: обращайся к пользователю уважительно, на «вы» (рус./укр.); в других языках — вежливая форма (usted, Sie, vous, Lei и т.п.). НЕ на «ты», не фамильярно.\n' +
             'Если входные данные пользователя содержат русские термины (например "Перименопауза", "ниже нормы") — переведи их на ' + langName + ' в своём ответе.\n' +
             'Локальные термины (используй ИМЕННО эти в своём ответе, НЕ оставляй русские аббревиатуры из KB):\n' +
             ' • "ИМТ" (Body Mass Index) → пиши: ' + bmiTerm + '\n' +
@@ -2766,7 +2767,7 @@ function selectKBPatterns(data) {
     // P-F16 аутоиммунные (вход неполный)
     add('P-F16', data.meds === 'thyroid' && num(labs.tsh) != null && num(labs.tsh) > 4);
     // P-F17 нарушения сна
-    add('P-F17', sleep <= 4 || data.deep === 'none' || /multiple/i.test(wake));
+    add('P-F17', sleep <= 4 || data.deep === 'none' || data.deep === 'low' || /multiple|many/i.test(wake) || (data.sleep_hours && data.sleep_hours < 6));
     // P-F18 B12/фолат
     add('P-F18', (num(labs.b12) != null && num(labs.b12) < 300) || has(sym,'numbness')
       || (has(sym,'fatigue') && has(sym,'foggy')));
@@ -2801,7 +2802,7 @@ function selectKBPatterns(data) {
     // P-M8 когнитивный туман
     add('P-M8', fogHi || memHi || has(sym,'foggy'));
     // P-M9 сон/СОАС
-    add('P-M9', sleep <= 4 || data.deep === 'none');
+    add('P-M9', sleep <= 4 || data.deep === 'none' || data.deep === 'low' || /multiple|many/i.test(wake) || (data.sleep_hours && data.sleep_hours < 6));
     // P-M10 простата/ДГПЖ (вход из Шага 12: data.urology)
     add('P-M10', age >= 45 && has(uro,'nocturia','weak_stream','incomplete_emptying','frequency'));
     // P-M11 эректильная дисфункция как ССС-сигнал (прокси: ЭД-токен или низкое либидо + ССС-риск)
