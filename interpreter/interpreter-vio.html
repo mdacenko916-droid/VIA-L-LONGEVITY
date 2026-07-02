@@ -3848,7 +3848,7 @@ document.querySelectorAll('input[name=gender]').forEach(el=>{
     // Цикл/репродуктивное: женский/мужской набор + заголовок по полу (перенос из PRO)
     const _cf=document.getElementById('cycle-female'); if(_cf)_cf.style.display=male?'none':'block';
     const _cm=document.getElementById('cycle-male');   if(_cm)_cm.style.display=male?'block':'none';
-    setTimeout(function(){ if(document.body.classList.contains('flow-mode')&&typeof showAll==='function')showAll(); },0);   // пере-рендер ленты: скрыть/показать step10 по полу
+    setTimeout(function(){ if(document.body.classList.contains('flow-mode')&&typeof showAll==='function'){ var _sa=document.getElementById('scroll-area'); var _y=_sa?_sa.scrollTop:0; showAll(); if(_sa)_sa.scrollTop=_y; else window.scrollTo(0,_y); } },0);   // пере-рендер ленты по полу (сохраняем позицию скролла — не улетать вверх)
     const _ct=document.getElementById('step10-title'); if(_ct)_ct.textContent=t(male?'s11_title_m':'s11_title');
     // Недельная динамика: «больше приливов» — только для женщин (у мужчин убираем и снимаем галочку)
     const _whf=document.getElementById('wk-hf-chip'); if(_whf)_whf.style.display=male?'none':'';
@@ -3864,7 +3864,7 @@ function navTo(tab){
   const hp=document.getElementById('historyPanel');
   if(tab==='card'){hp.style.display='block';renderCard();}
   else hp.style.display='none';
-  if(tab==='home') goTo(0);   // «Сегодня» = домой: возврат на стартовый экран (ответы сохраняются)
+  if(tab==='home'){ if(_lastResult){ goTo('result'); } else { goTo(0); } }   // «Сегодня»: есть результат — вернуть его (не терять при переключении), иначе на старт
 }
 
 // ══ HISTORY ═══════════════════════════════════════════════
