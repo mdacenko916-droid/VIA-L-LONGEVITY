@@ -5348,6 +5348,15 @@ function _showResultsInner(){
   }
 
   score=Math.max(10,Math.min(100,score));
+  // Честность при неполных данных: «Готовность» тянем к нейтральному (55) пропорц. покрытию ключевых блоков (window.__touched). Полные данные — без изменений.
+  (function(){
+    var T=(typeof window!=='undefined'&&window.__touched&&window.__touched.size)?window.__touched:null; if(!T)return;
+    var dims=[['sleep_qual','sleep_hours','deep','wake'],['energy'],['stress','chronic_stress','cort2','cort3','cort4','cort5','cort6','cort7'],['rhr'],['sym1','sym2','sym3','sym4','sym5','sym6','sym7','sym8','sym9'],['memory','fog'],['appetite','eating_pattern','protein_intake','crav1','gi1','gi2','gi3','gi4','gi5','gi6','gi7','gi8','gi9'],['act_freq','act_recovery','act1','act2','act3','act4','act5','act6']];
+    if(data.gender!=='male'){ dims.push(['hf_count','hf_intensity']); dims.push(['cycle_status','heavy_period','pmss1','pmss2','pmss3','pmss4','pmss5','pmss9']); }
+    var cov=0; dims.forEach(function(g){ if(g.some(function(k){return T.has(k);}))cov++; });
+    var ratio=cov/dims.length;
+    if(ratio<1){ var neutral=55; score=Math.round(neutral+(score-neutral)*ratio); score=Math.max(10,Math.min(100,score)); }
+  })();
   let type='ok',title,sub;
   if(score>=65){title=t('res_good_title');sub=t('res_good_sub');}
   else if(score>=40){type='warn';title=t('res_warn_title');sub=t('res_warn_sub');}
