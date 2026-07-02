@@ -3760,6 +3760,10 @@ Object.keys(_PMS).forEach(function(k){Object.keys(_PMS[k]).forEach(function(l){i
 let lang='en';
 let _rerendering=false;
 let _lastResult=null;
+window.__touched=window.__touched||new Set();
+window.__SOFTSKIP=['hrv','hrv_trend','sleep_qual','deep','wake','rhr','resp_rate','energy','anxiety','mood','irritability','stress','temp','hf_count'];
+document.addEventListener('input',function(e){var t=e.target;if(t&&(t.name||t.id))window.__touched.add(t.name||t.id);},true);
+document.addEventListener('change',function(e){var t=e.target;if(t&&(t.name||t.id))window.__touched.add(t.name||t.id);},true);
 function L(t){return t[lang]||t.en||t.ru||Object.values(t)[0];}
 function setLang(l){
   lang=l;
@@ -5096,7 +5100,19 @@ function triggerParticleBurst(){
     setTimeout(()=>p.remove(),1500);
   }
 }
+function _showNoDataGate(){
+  var L=(typeof lang!=='undefined'?lang:'ru');
+  var M={ru:'Пока нечего анализировать. Ответьте хотя бы на несколько вопросов выше — и я подготовлю персональный разбор.',uk:'Поки немає що аналізувати. Дайте відповідь хоча б на кілька запитань вище — і я підготую персональний розбір.',en:'Nothing to analyze yet. Answer at least a few questions above and I’ll prepare your personal overview.',es:'Aún no hay nada que analizar. Responde al menos algunas preguntas arriba y prepararé tu resumen personal.',de:'Noch nichts zu analysieren. Beantworte oben mindestens ein paar Fragen, dann erstelle ich deine persönliche Übersicht.',pt:'Ainda não há nada para analisar. Responda pelo menos algumas perguntas acima e prepararei sua visão personalizada.',fr:'Rien à analyser pour l’instant. Répondez à au moins quelques questions ci-dessus et je préparerai votre bilan personnel.',pl:'Nie ma jeszcze czego analizować. Odpowiedz na przynajmniej kilka pytań powyżej, a przygotuję Twój osobisty przegląd.',it:'Non c’è ancora nulla da analizzare. Rispondi ad almeno alcune domande sopra e preparerò il tuo riepilogo personale.',he:'עדיין אין מה לנתח. ענו על כמה שאלות למעלה ואכין עבורכם סקירה אישית.',ja:'まだ分析するものがありません。上の質問にいくつか答えていただければ、個別のまとめを用意します。',ko:'아직 분석할 내용이 없습니다. 위 질문에 몇 가지만 답해 주시면 개인 맞춤 요약을 준비하겠습니다.'};
+  var old=document.getElementById('_nodata_gate'); if(old)old.remove();
+  var d=document.createElement('div'); d.id='_nodata_gate';
+  d.style.cssText='position:fixed;left:50%;top:24px;transform:translateX(-50%);max-width:92%;background:rgba(30,26,44,.97);border:1px solid rgba(180,138,240,.5);color:#fff;padding:14px 18px;border-radius:14px;z-index:99999;font-size:14px;line-height:1.5;box-shadow:0 12px 40px rgba(0,0,0,.55);text-align:center;';
+  d.textContent=M[L]||M.ru;
+  document.body.appendChild(d);
+  try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){window.scrollTo(0,0);}
+  setTimeout(function(){d.style.transition='opacity .5s';d.style.opacity='0';setTimeout(function(){if(d.parentNode)d.remove();},500);},5200);
+}
 function showResults(){
+  if(((window.__touched&&window.__touched.size)||0) < 3){ _showNoDataGate(); return; }
   // Выходим из ленты перед показом результата (иначе flow-mode скрыл бы stepResult).
   document.body.classList.remove('flow-mode'); _hideFlowFooter();
   if(typeof _markPeriodicDone==='function')_markPeriodicDone();   // отметить weekly/biweekly блоки как заполненные
@@ -5225,6 +5241,7 @@ function _wl(s){ if(!s||typeof s!=='string')return s; var L=(typeof lang!=='unde
 function _showResultsInner(){
   if(typeof saveProfile==='function'){try{saveProfile();}catch(e){}}   // профиль → карточка (vial_profile)
   const data={
+    _skipped:(window.__SOFTSKIP||[]).filter(function(k){return !(window.__touched&&window.__touched.has(k));}),
     gender:getRadio('gender')||'female',
     phase:determinePhase(),
     name:(document.getElementById('prof-name')?document.getElementById('prof-name').value:'').trim(),
