@@ -2470,16 +2470,27 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
       </div>
     </div>
 
-    <!-- МОДАЛ ЦИРКАДНОГО ОКНА (пилот) -->
-    <div id="circModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(8,6,14,.72);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeCircModal()">
-      <div style="width:100%;max-width:520px;max-height:86vh;overflow-y:auto;background:linear-gradient(160deg,#1a1426,#120d1e);border:1px solid rgba(180,138,240,.35);border-radius:22px 22px 0 0;padding:20px 20px 30px;box-shadow:0 -8px 40px rgba(0,0,0,.5);">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+    <!-- МОДАЛ ЦИРКАДНОГО ОКНА — BottomSheet (репарентится в <body> при открытии) -->
+    <style>
+      #circModal{position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);display:none;opacity:0;transition:opacity .25s ease;}
+      #circModal.open{opacity:1;}
+      #circModal .cm-sheet{position:fixed;left:0;right:0;bottom:0;width:100%;max-height:85vh;overflow-y:auto;background:linear-gradient(160deg,#1a1426,#120d1e);border-top:1px solid rgba(180,138,240,.3);border-radius:24px 24px 0 0;padding:0 20px calc(28px + env(safe-area-inset-bottom));box-shadow:0 -10px 44px rgba(0,0,0,.55);transform:translateY(100%);transition:transform .34s cubic-bezier(.32,.72,0,1);}
+      #circModal.open .cm-sheet{transform:translateY(0);}
+      #circModal .cm-handle{width:44px;height:4px;background:#4a4458;border-radius:99px;margin:12px auto 10px;}
+      #circModal .cm-head{display:flex;align-items:center;gap:10px;}
+      #circModal .cm-tabs{display:flex;gap:6px;margin:14px 0 16px;flex-wrap:wrap;}
+      #circModal .cm-bodytext{font-size:14px;color:var(--t2);line-height:1.7;}
+    </style>
+    <div id="circModal" onclick="if(event.target===this)closeCircModal()">
+      <div class="cm-sheet">
+        <div class="cm-handle"></div>
+        <div class="cm-head">
           <span id="cm-time" style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:.05em;color:#b48af0;background:rgba(180,138,240,.14);padding:3px 10px;border-radius:20px;"></span>
           <div id="cm-name" style="font-family:'Playfair Display',serif;font-size:19px;color:var(--t1);flex:1;"></div>
           <button onclick="closeCircModal()" style="background:none;border:none;color:var(--t3);font-size:26px;line-height:1;cursor:pointer;">×</button>
         </div>
-        <div id="cm-tabs" style="display:flex;gap:6px;margin:14px 0 16px;flex-wrap:wrap;"></div>
-        <div id="cm-body" style="font-size:14px;color:var(--t2);line-height:1.7;"></div>
+        <div id="cm-tabs" class="cm-tabs"></div>
+        <div id="cm-body" class="cm-bodytext"></div>
       </div>
     </div>
 
@@ -4835,12 +4846,15 @@ function _circTabs(t, data){
 var _CM='food';
 function openCircWindow(i){
   var s=(window._circSlots||[])[i]; if(!s)return;
+  var m=document.getElementById('circModal');
+  if(m.parentElement!==document.body) document.body.appendChild(m);   // выйти из transform-предка → fixed от вьюпорта
   window._CM_SLOT=s; _CM='food';
   document.getElementById('cm-time').textContent=s.t;
   document.getElementById('cm-name').textContent=s.name;
   _renderCircTabs();
-  document.getElementById('circModal').style.display='flex';
+  m.style.display='block';
   document.body.style.overflow='hidden';
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){ m.classList.add('open'); }); });   // слайд снизу
 }
 function switchCircTab(t){ _CM=t; _renderCircTabs(); }
 function _renderCircTabs(){
@@ -4855,7 +4869,12 @@ function _renderCircTabs(){
     ? items.map(function(x){return '<div style="padding:9px 0 9px 18px;position:relative;border-bottom:1px solid rgba(255,255,255,.06);"><span style="position:absolute;left:0;color:#b48af0;top:9px;">•</span>'+x+'</div>';}).join('')
     : '<div style="color:var(--t3);padding:8px 0;">'+L({ru:'Для этого окна особых указаний нет — просто следуйте общему ритму дня.',en:'Nothing special for this window — just follow your general day rhythm.'})+'</div>';
 }
-function closeCircModal(){ var m=document.getElementById('circModal'); if(m)m.style.display='none'; document.body.style.overflow=''; }
+function closeCircModal(){
+  var m=document.getElementById('circModal'); if(!m)return;
+  m.classList.remove('open');            // слайд вниз + фейд оверлея
+  document.body.style.overflow='';
+  setTimeout(function(){ m.style.display='none'; }, 340);
+}
 
 // ── MODULE 3: ГОРМОНАЛЬНЫЙ ТРЕКЕР ────────────────────────
 function renderHormonePhase(data){
