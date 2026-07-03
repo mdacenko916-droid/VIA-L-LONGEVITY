@@ -2466,6 +2466,20 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
         </div>
         <div class="timeline" id="circTimeline"></div>
         <div class="circ-nutrition" id="circNutrition"></div>
+        <div id="dayBlueprint"></div>
+      </div>
+    </div>
+
+    <!-- МОДАЛ ЦИРКАДНОГО ОКНА (пилот) -->
+    <div id="circModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(8,6,14,.72);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeCircModal()">
+      <div style="width:100%;max-width:520px;max-height:86vh;overflow-y:auto;background:linear-gradient(160deg,#1a1426,#120d1e);border:1px solid rgba(180,138,240,.35);border-radius:22px 22px 0 0;padding:20px 20px 30px;box-shadow:0 -8px 40px rgba(0,0,0,.5);">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+          <span id="cm-time" style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:.05em;color:#b48af0;background:rgba(180,138,240,.14);padding:3px 10px;border-radius:20px;"></span>
+          <div id="cm-name" style="font-family:'Playfair Display',serif;font-size:19px;color:var(--t1);flex:1;"></div>
+          <button onclick="closeCircModal()" style="background:none;border:none;color:var(--t3);font-size:26px;line-height:1;cursor:pointer;">×</button>
+        </div>
+        <div id="cm-tabs" style="display:flex;gap:6px;margin:14px 0 16px;flex-wrap:wrap;"></div>
+        <div id="cm-body" style="font-size:14px;color:var(--t2);line-height:1.7;"></div>
       </div>
     </div>
 
@@ -4713,14 +4727,17 @@ function renderCircadian(data, score){
     {t:'19–22',type:'rest',dot:'#3B5BDB',name:L({ru:'Переход ко сну',uk:'Перехід до сну',en:'Wind down',es:'Preparación para dormir',de:'Schlafvorbereitung',pt:'Preparação para dormir',fr:'Transition vers le sommeil',pl:'Przejście do snu',it:'Transizione al sonno',he:'מעבר לשינה',ja:'就寝準備',ko:'수면 준비'}),detail:L({ru:'Магниевые продукты, белковый перекус, тусклый свет',uk:'Магнієві продукти, протеїновий перекус, тьмяне світло',en:'Magnesium-rich foods, a protein snack, dim light',es:'Alimentos ricos en magnesio, snack proteico, luz tenue',de:'Magnesiumreiche Lebensmittel, Protein-Snack, gedimmtes Licht',pt:'Alimentos ricos em magnésio, lanche proteico, luz suave',fr:'Aliments riches en magnésium, collation protéinée, lumière tamisée',pl:'Produkty bogate w magnez, przekąska białkowa, przyciemnione światło',it:'Alimenti ricchi di magnesio, spuntino proteico, luce soffusa',he:'מזון עשיר במגנזיום, חטיף חלבוני, אור עמום',ja:'マグネシウムを含む食品、プロテインスナック、薄暗い照明',ko:'마그네슘이 풍부한 음식, 단백질 간식, 어두운 조명'})},
   ];
 
-  document.getElementById('circTimeline').innerHTML = slots.map(s=>`
-    <div class="tl-row ${s.type}">
+  window._circSlots = slots.map(function(s){ s.tabs=_circTabs(s.t, data); return s; });
+  document.getElementById('circTimeline').innerHTML = slots.map((s,i)=>`
+    <div class="tl-row ${s.type}" onclick="openCircWindow(${i})" style="cursor:pointer;">
       <div class="tl-time">${s.t}</div>
       <div class="tl-content">
         <div class="tl-dot" style="background:${s.dot};box-shadow:0 0 6px ${s.dot}88;"></div>
-        <div><div class="tl-name">${s.name}</div><div class="tl-detail">${s.detail}</div></div>
+        <div style="flex:1;"><div class="tl-name">${s.name}</div><div class="tl-detail">${s.detail}</div></div>
+        <div style="align-self:center;color:#b48af0;font-size:19px;opacity:.65;">›</div>
       </div>
     </div>`).join('');
+  renderDayBlueprint(data);
 
   // Nutrition timing
   const nutrItems = isFemale ? [
@@ -4743,6 +4760,102 @@ function renderCircadian(data, score){
   // и дублировало ИИ-разбор. Прячем контейнер. nutrItems выше больше не используется.
   var _cn=document.getElementById('circNutrition'); if(_cn){_cn.innerHTML='';_cn.style.display='none';}
 }
+
+// ═══ ПИЛОТ: ПАМЯТКА ДНЯ + КЛИКАБЕЛЬНЫЕ ОКНА (RU/EN — формат; остальные языки после утверждения) ═══
+function _actFactor(data){ var f=data.act_freq; return f==='high'?1.6 : f==='mod'?1.5 : f==='low'?1.3 : 1.2; }
+
+function renderDayBlueprint(data){
+  var box=document.getElementById('dayBlueprint'); if(!box)return;
+  var w=parseFloat(data.weight)||null, factor=_actFactor(data);
+  var head='<div style="font-family:\'Playfair Display\',serif;font-size:17px;color:var(--t1);margin:20px 0 3px;">'+L({ru:'🧭 Памятка дня — ориентиры',en:'🧭 Day blueprint — orientations'})+'</div>'
+    +'<div style="font-size:11px;color:var(--t3);margin-bottom:12px;line-height:1.5;">'+L({ru:'Общие велнес-ориентиры под ваш вес и активность. Это не диета и не назначение.',en:'General wellness orientations for your weight and activity. Not a diet or a prescription.'})+'</div>';
+  var card;
+  var cardStyle='background:linear-gradient(150deg,#1b1528,#130e1f);border:1px solid rgba(180,138,240,.28);border-radius:16px;padding:15px 16px;';
+  if(!w){
+    card='<div style="'+cardStyle+'font-size:13px;color:var(--t2);">💪 '+L({ru:'Укажите вес в профиле — и здесь появится ваш персональный белковый ориентир с расчётом и списком «где взять».',en:'Add your weight in the profile — your personal protein orientation with the amount and a “where to get it” list will appear here.'})+'</div>';
+  } else {
+    var target=Math.round(w*factor), perMeal=Math.round(target/3);
+    var flist=[
+      L({ru:'Индейка/курица (готовое): ~130 г = 30 г белка',en:'Turkey/chicken (cooked): ~130 g = 30 g protein'}),
+      L({ru:'Лосось или тунец: ~140 г = 30 г белка',en:'Salmon or tuna: ~140 g = 30 g protein'}),
+      L({ru:'Яйца: 4–5 шт = 30 г белка',en:'Eggs: 4–5 = 30 g protein'}),
+      L({ru:'Творог 5%: ~180 г = 30 г белка',en:'Cottage cheese 5%: ~180 g = 30 g protein'})
+    ];
+    card='<div style="'+cardStyle+'">'
+      +'<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;">'
+        +'<div style="font-size:14px;font-weight:600;color:var(--t1);">💪 '+L({ru:'Белок — строительный ориентир',en:'Protein — building orientation'})+'</div>'
+        +'<div style="font-family:\'Playfair Display\',serif;font-size:24px;color:#b48af0;white-space:nowrap;">≈ '+target+' '+L({ru:'г',en:'g'})+'</div>'
+      +'</div>'
+      +'<div style="font-size:11px;color:var(--t3);margin-top:2px;">'+L({ru:'ориентир ≈ '+factor+' г на кг вашего веса ('+w+' кг), под вашу активность',en:'orientation ≈ '+factor+' g per kg of your weight ('+w+' kg), for your activity'})+'</div>'
+      +'<div style="font-size:13px;color:var(--ok,#4ECCA3);margin:10px 0 12px;line-height:1.5;">→ '+L({ru:'Распределите на 3 приёма (~'+perMeal+' г за раз) — для ровного тонуса и энергии.',en:'Split across 3 meals (~'+perMeal+' g each) — for steady tone and energy.'})+'</div>'
+      +'<div style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;">'+L({ru:'Где взять — порция ≈ 30 г белка',en:'Where to get it — ~30 g protein portion'})+'</div>'
+      + flist.map(function(x){return '<div style="font-size:13px;color:var(--t2);padding:5px 0 5px 16px;position:relative;border-bottom:1px solid rgba(255,255,255,.05);"><span style="position:absolute;left:0;color:#b48af0;">·</span>'+x+'</div>';}).join('')
+      +'</div>';
+  }
+  box.innerHTML=head+card;
+}
+
+function _circTabs(t, data){
+  var w=parseFloat(data.weight)||70, per=Math.round(w*_actFactor(data)/3), h=parseInt(t);
+  var T={food:[],move:[],sleep:[],light:[]};
+  if(h<=8){
+    T.food=[L({ru:'Белковый завтрак ~'+per+' г белка в течение 30–60 мин после подъёма (яйца, творог, рыба).',en:'Protein breakfast ~'+per+' g within 30–60 min of waking (eggs, cottage cheese, fish).'}),L({ru:'Стакан воды сразу после пробуждения.',en:'A glass of water right after waking.'}),L({ru:'Кофе лучше через 60–90 мин после подъёма, не натощак.',en:'Coffee is better 60–90 min after waking, not on an empty stomach.'})];
+    T.move=[L({ru:'Лёгкая разминка или короткая прогулка 5–10 мин.',en:'Light mobility or a 5–10 min walk.'})];
+    T.sleep=[L({ru:'Держите постоянное время подъёма — это якорь вашего ритма.',en:'Keep a consistent wake time — it anchors your rhythm.'})];
+    T.light=[L({ru:'☀️ Яркий дневной свет 10–15 мин — заряжает бодрость и помогает вечернему сну.',en:'☀️ 10–15 min of bright daylight — powers alertness and supports evening sleep.'})];
+  } else if(h<=12){
+    T.food=[L({ru:'Вода под рукой. При голоде — горсть орехов или йогурт (ровная энергия).',en:'Keep water nearby. If hungry — a handful of nuts or yogurt (steady energy).'})];
+    T.move=[L({ru:'После сидячей работы — 2–3 мин движения каждый час.',en:'After sitting — 2–3 min of movement each hour.'})];
+    T.sleep=[];
+    T.light=[L({ru:'Работайте у окна или при ярком свете — держит фокус.',en:'Work by a window or in bright light — keeps focus.'})];
+  } else if(h<=14){
+    T.food=[L({ru:'Основной приём: белок ~'+per+' г + овощи + сложные углеводы.',en:'Main meal: protein ~'+per+' g + vegetables + complex carbs.'})];
+    T.move=[L({ru:'🚶 Прогулка 10–15 мин после обеда — лучший момент дня для неё, ровнее энергия.',en:'🚶 A 10–15 min post-lunch walk — the best moment of the day, steadier energy.'})];
+    T.sleep=[L({ru:'Короткий отдых 10–20 мин допустим, но не позже 15:00.',en:'A 10–20 min rest is fine, but not after 3pm.'})];
+    T.light=[];
+  } else if(h<=16){
+    T.food=[L({ru:'Лёгкий перекус с белком, если нужна энергия. Кофеин — только до ~14:00.',en:'A light protein snack if you need energy. Caffeine only before ~2pm.'})];
+    T.move=[L({ru:'Смена активности и короткая прогулка мягко проводят через спад.',en:'Switching tasks and a short walk ease you through the dip.'})];
+    T.sleep=[];
+    T.light=[L({ru:'Дневной свет помогает пройти послеобеденный спад.',en:'Daylight helps you move through the afternoon dip.'})];
+  } else if(h<=19){
+    T.food=[L({ru:'Если тренировка — лёгкий перекус за 60–90 мин (банан + белок).',en:'If training — a light snack 60–90 min before (banana + protein).'})];
+    T.move=[L({ru:'💪 Оптимальное окно для силовой/тренировки — тело разогрето.',en:'💪 Best window for strength/training — the body is warmed up.'}),L({ru:'Начните с малого: 2–3 подхода простых упражнений.',en:'Start small: 2–3 sets of simple exercises.'})];
+    T.sleep=[];
+    T.light=[];
+  } else {
+    T.food=[L({ru:'Лёгкий ужин с белком ~'+per+' г за ~3 ч до сна. Продукты с магнием (зелень, семечки).',en:'A light protein dinner ~'+per+' g about 3 h before bed. Magnesium-rich foods (greens, seeds).'}),L({ru:'Без позднего кофеина и алкоголя — они «съедают» глубокий сон.',en:'No late caffeine or alcohol — they eat into deep sleep.'})];
+    T.move=[L({ru:'Мягкая растяжка или спокойная прогулка — без интенсива.',en:'Gentle stretching or a calm walk — no intensity.'})];
+    T.sleep=[L({ru:'Ритуал спокойствия за час до сна. Прохладная тёмная спальня.',en:'A wind-down ritual an hour before bed. A cool, dark bedroom.'}),L({ru:'Дыхание 4-7-8 перед сном — успокаивает нервную систему.',en:'4-7-8 breathing before bed — calms the nervous system.'})];
+    T.light=[L({ru:'🌙 Тусклый тёплый свет; экраны убрать за ~40 мин до сна.',en:'🌙 Dim warm light; put screens away ~40 min before bed.'})];
+  }
+  return T;
+}
+
+var _CM='food';
+function openCircWindow(i){
+  var s=(window._circSlots||[])[i]; if(!s)return;
+  window._CM_SLOT=s; _CM='food';
+  document.getElementById('cm-time').textContent=s.t;
+  document.getElementById('cm-name').textContent=s.name;
+  _renderCircTabs();
+  document.getElementById('circModal').style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function switchCircTab(t){ _CM=t; _renderCircTabs(); }
+function _renderCircTabs(){
+  var s=window._CM_SLOT; if(!s)return;
+  var tabs=[['food','🍽 '+L({ru:'Еда',en:'Food'})],['move','🏃 '+L({ru:'Движение',en:'Move'})],['sleep','😴 '+L({ru:'Сон',en:'Sleep'})],['light','💡 '+L({ru:'Свет',en:'Light'})]];
+  document.getElementById('cm-tabs').innerHTML=tabs.map(function(tb){
+    var on=tb[0]===_CM;
+    return '<button onclick="switchCircTab(\''+tb[0]+'\')" style="flex:1;min-width:64px;padding:8px 6px;border-radius:12px;border:1px solid '+(on?'rgba(180,138,240,.55)':'rgba(255,255,255,.1)')+';background:'+(on?'rgba(180,138,240,.18)':'transparent')+';color:'+(on?'#d9c2fb':'var(--t3)')+';font-family:\'DM Sans\',sans-serif;font-size:12px;cursor:pointer;transition:all .15s;">'+tb[1]+'</button>';
+  }).join('');
+  var items=s.tabs[_CM]||[];
+  document.getElementById('cm-body').innerHTML = items.length
+    ? items.map(function(x){return '<div style="padding:9px 0 9px 18px;position:relative;border-bottom:1px solid rgba(255,255,255,.06);"><span style="position:absolute;left:0;color:#b48af0;top:9px;">•</span>'+x+'</div>';}).join('')
+    : '<div style="color:var(--t3);padding:8px 0;">'+L({ru:'Для этого окна особых указаний нет — просто следуйте общему ритму дня.',en:'Nothing special for this window — just follow your general day rhythm.'})+'</div>';
+}
+function closeCircModal(){ var m=document.getElementById('circModal'); if(m)m.style.display='none'; document.body.style.overflow=''; }
 
 // ── MODULE 3: ГОРМОНАЛЬНЫЙ ТРЕКЕР ────────────────────────
 function renderHormonePhase(data){
