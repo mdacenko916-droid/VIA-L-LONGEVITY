@@ -625,6 +625,7 @@ export default {
       if (path === '/specialist-access-webhook') return handleSpecialistAccessWebhook(request, env, corsHeaders);
 
       // Default: AI-анализ для интерпретатора
+      if (path === '/day-plan') return handleDayPlan(request, env, corsHeaders, ctx);
       return handleAnalyze(request, env, corsHeaders, ctx);
 
     } catch (e) {
@@ -1318,6 +1319,71 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
   }
 
   return new Response(JSON.stringify({ analysis: text }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// ПАМЯТКА ДНЯ (персональная, ИИ) — /day-plan → строгий JSON по схеме.
+// Тот же персональный корм (buildUserMessage: биометрия + активные паттерны) и та же
+// велнес-база, что и /analyze; вывод структурирован (утро/обед/вечер/движение/вода/сон),
+// чтобы клиент отрендерил его в блок «Памятка дня». Клиент держит детерминированный фолбэк.
+// ─────────────────────────────────────────────────────────────
+async function handleDayPlan(request, env, corsHeaders, ctx) {
+  const { data, lang, tier } = await request.json();
+  const langMap = {
+    ru: 'русском', uk: 'украинском', en: 'English', es: 'español',
+    de: 'Deutsch', pt: 'português', fr: 'français', pl: 'polski',
+    it: 'italiano', he: 'עברית', ja: '日本語', ko: '한국어',
+  };
+  const langName = langMap[lang] || 'English';
+  const isWellness = ['vio', 'pro'].includes(String(tier || '').toLowerCase());
+  const base = isWellness ? (WELLNESS_SYSTEM_PROMPT + WELLNESS_KB) : SYSTEM_PROMPT;
+
+  const schema =
+    '\n\n════════════════════════════════════════\n' +
+    'ЗАДАЧА СЕЙЧАС: ПЕРСОНАЛЬНАЯ «ПАМЯТКА ДНЯ» — ВЫВОД СТРОГО JSON\n' +
+    '════════════════════════════════════════\n' +
+    'ВАЖНО: ИГНОРИРУЙ раздел «ФОРМАТ ОТВЕТА»/«~900 слов» выше — сейчас формат вывода = ТОЛЬКО валидный JSON (без markdown, без ```), без текста вокруг. Схема:\n' +
+    '{"morning":[{"title":"...","items":["..."],"variants":false}],"lunch":[...],"evening":[...],"activity":[...],"water":[...],"sleep":[...]}\n' +
+    'Каждый раздел — массив секций вида {"title":строка,"items":[строки],"variants":true|false}. variants:true → это меню на выбор (пункты — альтернативные варианты; клиент покажет их нумерованными «выберите один»).\n' +
+    '• morning: секции «Утренний старт», «Разминка», «Завтрак · выберите один (~N г белка)» (variants:true, 4–6 вариантов с бытовой граммовкой), «Нутрицевтики (утро)».\n' +
+    '• lunch: «Обед · выберите один (~N г белка + овощи + медленные углеводы)» (variants:true, 4–6), «Нутрицевтики (обед)».\n' +
+    '• evening: «Ужин за ~3 ч до сна · выберите один (легче)» (variants:true, 4–6), «Важно вечером», «Нутрицевтики (вечер)».\n' +
+    '• activity: 1–2 секции под возраст/пол/активность/восстановление и сигналы.\n' +
+    '• water: 1 секция «Водный баланс» — литраж из веса (~35 мл/кг) + тайминг.\n' +
+    '• sleep: секция «Практики сна» (Perry/CBT-I) + при наличии жалоб секция «Под ваши сигналы».\n' +
+    'ПЕРСОНАЛИЗИРУЙ СТРОГО под пол/возраст/вес/фазу/сигналы и АКТИВНЫЕ ПАТТЕРНЫ из сообщения — НИКАКИХ шаблонов. Учитывай особенности периода перемен (пери/андропауза) для этого пола. N г белка = вес × 1.2–1.6 в зависимости от активности, делить на 3 приёма. Всё в велнес-словах, дозы как ориентиры (без «нормы/диеты/назначения»). ВСЕ строки — на ' + langName + '. Верни ТОЛЬКО JSON.';
+
+  const guard = isWellness
+    ? '\n\n[WELLNESS] Без диагнозов и болезней; без гормонов-замеров (кортизол/эстроген/прогестерон/тестостерон/инсулин); «менопауза/андропауза» → «переходный этап»/«возрастная витальность». Не цитируй исследования/числа РКИ. Дозы — только как ориентиры.'
+    : '\n\n[EXPERT/ELITE] Клинический язык допустим, но без claims «лечит/предотвращает/устраняет болезнь».';
+
+  let plan = null, raw = '';
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': env.CLAUDE_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'prompt-caching-2024-07-31',
+      },
+      body: JSON.stringify({
+        model: ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
+        max_tokens: 3000,
+        system: [{ type: 'text', text: base + guard + schema, cache_control: { type: 'ephemeral' } }],
+        messages: [{ role: 'user', content: buildUserMessage(data, lang, tier) }],
+      }),
+    });
+    const result = await response.json();
+    raw = (result.content && result.content[0] && result.content[0].text) || '';
+    let t = raw.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
+    try { plan = JSON.parse(t); }
+    catch (e) { const m = t.match(/\{[\s\S]*\}/); if (m) { try { plan = JSON.parse(m[0]); } catch (e2) {} } }
+  } catch (e) { raw = 'fetch_error: ' + e.message; }
+
+  return new Response(JSON.stringify(plan ? { plan } : { error: 'parse', raw: raw.slice(0, 300) }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 }

@@ -4898,8 +4898,10 @@ function renderDayBlueprint(data){
   var box=document.getElementById('dayBlueprint'); if(!box)return;
   window._bpData=data;
   var w=parseFloat(data.weight)||null;
+  var aiOn=!!window._bpAI;
+  var status='<div style="font-size:10.5px;margin-bottom:8px;line-height:1.4;color:'+(aiOn?'#4ECCA3':'var(--t3)')+';">'+(aiOn?('✨ '+L({ru:'Персонализировано ИИ под ваши данные, пол и фазу',en:'Personalized by AI for your data, sex and phase'})):('⏳ '+L({ru:'ИИ подбирает памятку под вас… показан базовый план',en:'AI is tailoring your plan… showing a base plan meanwhile'})))+'</div>';
   var head='<div style="font-family:\'Playfair Display\',serif;font-size:17px;color:var(--t1);margin:20px 0 3px;">🧭 '+L({ru:'Памятка дня',en:'Day plan'})+'</div>'
-    +'<div style="font-size:11px;color:var(--t3);margin-bottom:12px;line-height:1.5;">'+L({ru:'Ваш план на день — коротко и по делу. Нажмите раздел, чтобы раскрыть. Общие велнес-ориентиры под ваши данные, не диета и не назначение.',en:'Your day plan — short and practical. Tap a section to expand. General wellness orientations, not a diet or prescription.'})+'</div>';
+    +'<div style="font-size:11px;color:var(--t3);margin-bottom:6px;line-height:1.5;">'+L({ru:'Ваш план на день — коротко и по делу. Нажмите раздел, чтобы раскрыть. Общие велнес-ориентиры под ваши данные, не диета и не назначение.',en:'Your day plan — short and practical. Tap a section to expand. General wellness orientations, not a diet or prescription.'})+'</div>'+status;
   if(!w) head+='<div style="'+_BP_CS+'font-size:12px;color:var(--t3);">📋 '+L({ru:'Укажите вес в профиле — расчёты (белок, вода) станут персональными.',en:'Add weight in your profile — protein and water calculations will personalize.'})+'</div>';
   var rows=_bpChapters().map(function(r){
     return '<div onclick="openBpChapter(\''+r.id+'\')" style="display:flex;align-items:center;gap:13px;padding:14px;margin-bottom:8px;background:linear-gradient(150deg,#1b1528,#130e1f);border:1px solid rgba(180,138,240,.22);border-radius:14px;cursor:pointer;">'
@@ -4909,12 +4911,24 @@ function renderDayBlueprint(data){
   }).join('');
   var dl='<button onclick="downloadDayPlan()" style="width:100%;margin-top:4px;padding:13px;border-radius:14px;border:1px solid rgba(180,138,240,.4);background:rgba(180,138,240,.12);color:#d9c2fb;font-family:\'DM Sans\',sans-serif;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">📥 '+L({ru:'Скачать памятку дня',en:'Download day plan'})+'</button>';
   box.innerHTML=head+rows+dl;
+  if(!window._bpAI && !window._bpAILoading && typeof fetchDayPlan==='function') fetchDayPlan(data);
+}
+async function fetchDayPlan(data){
+  window._bpAILoading=true;
+  try{
+    var L=(typeof lang!=='undefined'&&lang)||(typeof localStorage!=='undefined'&&localStorage.getItem('vial_lang'))||'en';
+    var res=await fetch(AI_WORKER+'/day-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:data,lang:L,tier:'vio'})});
+    var json=await res.json();
+    window._bpAILoading=false;
+    if(json&&json.plan&&typeof json.plan==='object'&&json.plan.morning){ window._bpAI=json.plan; renderDayBlueprint(data); }
+  }catch(e){ window._bpAILoading=false; }
 }
 function openBpChapter(id){
   var data=window._bpData||{}, chs=_bpChapters(), meta=null;
   for(var i=0;i<chs.length;i++) if(chs[i].id===id) meta=chs[i];
   if(!meta)return;
-  openSheet(meta.icon, meta.title, _bpRenderSecs(_bpChapterData(id,data)));
+  var secs=(window._bpAI && Array.isArray(window._bpAI[id])) ? window._bpAI[id] : _bpChapterData(id,data);
+  openSheet(meta.icon, meta.title, _bpRenderSecs(secs));
 }
 function openSheet(icon, title, bodyHtml){
   var m=document.getElementById('circModal');
@@ -4929,7 +4943,7 @@ function openSheet(icon, title, bodyHtml){
 function downloadDayPlan(){
   var data=window._bpData||{}, chs=_bpChapters();
   var body=chs.map(function(r){
-    var secs=_bpChapterData(r.id,data);
+    var secs=(window._bpAI && Array.isArray(window._bpAI[r.id])) ? window._bpAI[r.id] : _bpChapterData(r.id,data);
     return '<section><h2>'+r.icon+' '+r.title+'</h2>'+secs.map(function(s){return '<h3>'+s.title+'</h3><ul>'+s.items.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>';}).join('')+'</section>';
   }).join('');
   var nm=(data.name?(', '+data.name):'');
@@ -5605,6 +5619,7 @@ function _showResultsInner(){
   if(typeof fetchAIAnalysis==='function' && !_rerendering) fetchAIAnalysis(data, (typeof lang!=='undefined'?lang:null));
 
   // Render PRO modules
+  window._bpAI=null; window._bpAILoading=false;   // новый результат → ИИ пересобирает памятку
   renderProModules(data, score, type);
 
   goTo('result');
