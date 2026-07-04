@@ -1462,7 +1462,7 @@ function buildWeeklyUserMessage(summary, daily, lang) {
     const p = daily.profile || {};
     const ctx = [];
     if (p.phase)                 ctx.push('cycle phase: ' + p.phase);
-    if (p.pms && p.pms.length)   ctx.push('PMS symptoms: ' + p.pms.join(', '));
+    if (p.pms && p.pms.length)   ctx.push('Comfort markers before a new rhythm: ' + p.pms.join(', '));
     if (p.diet && p.diet.length) ctx.push('dietary restrictions: ' + p.diet.join(', '));
     if (p.eating)                ctx.push('eating pattern: ' + p.eating);
     if (ctx.length) out += '\n\nClient context: ' + ctx.join('; ') + '.';
@@ -1489,7 +1489,7 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
     'behavioural driver, 4) ONE small, doable focus for the coming week (an "experiment", not a list).\n' +
     'If a "Daily detail logged this week" block and/or "Client context" are provided, USE them — ' +
     'they reflect what the person actually logged each day (hot flashes, temperature, SpO₂, memory, ' +
-    'brain fog, stress, alcohol) and their profile (cycle phase, PMS, diet); ground the review in them.\n' +
+    'brain fog, stress, alcohol) and their profile (cycle phase, comfort markers, diet); ground the review in them.\n' +
     'Refer to a profile specialist generically if relevant ("your specialist") — never invent a personal name.\n' +
     'End with one short, gentle non-medical disclaimer line.\n\n' +
     '════════════════════════════════════════\n' +
@@ -3146,6 +3146,8 @@ const _FEED_DEMED = [
   [/Shelby\s*Harris/gi, 'велнес-эксперты'],
   [/бессонниц[а-яё]*/gi, 'беспокойный сон'],
   [/инсомни[а-яё]*/gi, 'беспокойный сон'],
+  [/ПМС/g, 'маркеры комфорта перед новым ритмом'],   // VIO/PRO: убрать ПМС-ярлык из корма (App Store 1.4.1)
+  [/предменструальн[а-яё]*/gi, 'перед новым ритмом'],
   [/терапи[а-яё]*\s*перв[а-яё]*\s*лини[а-яё]*/gi, 'первый шаг образа жизни'],
   // общая клин. лексика
   [/нутритивн[а-яё]*\s*поддержк[а-яё]*/gi, 'велнес-поддержка'],
