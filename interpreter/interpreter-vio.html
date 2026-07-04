@@ -4913,6 +4913,12 @@ function renderDayBlueprint(data){
   box.innerHTML=head+rows+dl;
   if(!window._bpAI && !window._bpAILoading && typeof fetchDayPlan==='function') fetchDayPlan(data);
 }
+function _cleanPlan(p){
+  // сетка безопасности: убрать редкие проскоки исследовательской лексики из ИИ-JSON
+  var re=/\s*\(?(?:мета[- ]?анализ\w*|РКИ|RCT|N\s*=\s*\d+|\d+\s*РКИ)[^).,;]*\)?/gi;
+  try{ Object.keys(p).forEach(function(k){ if(Array.isArray(p[k])) p[k].forEach(function(s){ if(s&&Array.isArray(s.items)) s.items=s.items.map(function(x){return String(x).replace(re,'').replace(/\s{2,}/g,' ').replace(/\s+([.,;])/g,'$1').trim();}); }); }); }catch(e){}
+  return p;
+}
 async function fetchDayPlan(data){
   window._bpAILoading=true;
   try{
@@ -4920,7 +4926,7 @@ async function fetchDayPlan(data){
     var res=await fetch(AI_WORKER+'/day-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:data,lang:L,tier:'vio'})});
     var json=await res.json();
     window._bpAILoading=false;
-    if(json&&json.plan&&typeof json.plan==='object'&&json.plan.morning){ window._bpAI=json.plan; renderDayBlueprint(data); }
+    if(json&&json.plan&&typeof json.plan==='object'&&json.plan.morning){ window._bpAI=_cleanPlan(json.plan); renderDayBlueprint(data); }
   }catch(e){ window._bpAILoading=false; }
 }
 function openBpChapter(id){
