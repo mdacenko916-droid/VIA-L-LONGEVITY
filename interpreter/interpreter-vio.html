@@ -5428,7 +5428,8 @@ function _wl(s){ if(!s||typeof s!=='string')return s; var L=(typeof lang!=='unde
     s=s.replace(/вздути\p{L}*(?:\s*\/?\s*газ\p{L}*)?|метеоризм\p{L}*|запор\p{L}*|диаре\p{L}*|изжог\p{L}*|рефлюкс\p{L}*|геморро\p{L}*|недержани\p{L}*|натуживани\p{L}*|(?:неполн\p{L}*\s*)?опорожнени\p{L}*|пролапс\p{L}*|bloating|constipation|diarrh\p{L}*|heartburn|reflux|h[ae]morrhoid\p{L}*|incontinence|straining/giu, _gut);
     // рецептурные препараты (App Store 1.4.1) → нейтральный фактор ритма
     var _med=({ru:'дополнительные факторы ритма',uk:'додаткові фактори ритму',en:'additional rhythm factors',es:'factores de ritmo adicionales',de:'zusätzliche Rhythmus-Faktoren',pt:'fatores de ritmo adicionais',fr:'facteurs de rythme',it:'fattori di ritmo',pl:'czynniki rytmu',he:'גורמי מקצב',ja:'リズム要因',ko:'리듬 요인'})[L]||'additional rhythm factors';
-    s=s.replace(/антидепрессант\p{L}*|antidepressant\p{L}*|\bЗГТ\b|\bКОК\b|контрацептив\p{L}*|contracepti\p{L}*|\bHRT\b|\bMHT\b|антидепресант\p{L}*/giu, _med);
+    s=s.replace(/антидепрессант\p{L}*|antidepressant\p{L}*|контрацептив\p{L}*|contracepti\p{L}*|\bHRT\b|\bMHT\b|антидепресант\p{L}*/giu, _med);
+    s=s.replace(/(?<![\p{L}])(?:ЗГТ|КОК)(?![\p{L}])/gu, _med);   // регистрозависимо (кириллич. аббревиатуры)
     s=s.replace(/лекарствен\p{L}*\s+(?:взаимодействи\p{L}*|совместимост\p{L}*)|drug\s+interaction\p{L}*/giu, 'сочетание велнес-ориентиров');
     // хвостовое служебное слово (EN-порядок): «hh levels/activity» → hh
     [hn,hg,mt,rc].forEach(function(w){ if(!w)return; s=s.replace(new RegExp(_wesc(w)+'\\s+(?:'+_WLG+')','giu'), w); });
