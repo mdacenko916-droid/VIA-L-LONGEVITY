@@ -4777,12 +4777,16 @@ function _bpChapterData(id, data){
       'Омлет из 3 яиц + тыквенные семечки (цинк) + зелень',
       'Творог ~180 г + грецкий орех + ягоды',
       'Скумбрия/лосось + цельнозерновой тост + авокадо',
-      'Греческий йогурт + миндаль + семена чиа'
+      'Греческий йогурт + миндаль + семена чиа',
+      'Яичница из 3 яиц + цельнозерновой тост + помидоры',
+      'Овсянка + порция протеина + орехи + банан'
     ]:[
       'Омлет из 2–3 яиц + авокадо + горсть зелени',
       'Творог 5% ~180 г + ягоды + 1 ст. л. молотого льна',
       'Греческий йогурт + орехи + семена чиа',
-      'Овсянка на воде + порция протеина + ягоды'
+      'Овсянка на воде + порция протеина + ягоды',
+      'Цельнозерновой тост + яйцо-пашот + авокадо',
+      'Смузи: кефир + ягоды + протеин + 1 ст. л. льна'
     ];
     var supp=isMale?[
       'Витамин D3 + K2 с жирной едой — ориентир, значение индивидуально',
@@ -4803,17 +4807,19 @@ function _bpChapterData(id, data){
         'Лёгкая разминка или короткая прогулка 5–10 мин',
         '3–5 глубоких вдохов с длинным выдохом — спокойный тонус'
       ]},
-      {title:'Еда — завтрак (~'+per+' г белка)', items:bf},
+      {title:'Завтрак · выберите один (~'+per+' г белка)', variants:true, items:bf},
       {title:'Нутрицевтики (утро)', items:supp}
     ];
   }
   if(id==='lunch'){
     return [
-      {title:'Еда — обед (~'+per+' г белка + овощи + медленные углеводы)', items:[
+      {title:'Обед · выберите один (~'+per+' г белка + овощи + медленные углеводы)', variants:true, items:[
         'Индейка/курица ~130 г + гречка + большой салат с оливковым маслом',
         'Лосось/тунец ~140 г + бурый рис + брокколи',
         'Чечевица/нут + тушёные овощи + зелень (растительный день)',
-        'Постная говядина + запечённый батат + листовые овощи'
+        'Постная говядина + запечённый батат + листовые овощи',
+        'Куриная грудка + киноа + овощи-гриль',
+        'Тёплый салат: фасоль + яйцо + авокадо + зелень'
       ]},
       {title:'Нутрицевтики (обед)', items:[
         'Обычно дополнительно не нужно — фокус на цельной еде',
@@ -4823,12 +4829,13 @@ function _bpChapterData(id, data){
   }
   if(id==='evening'){
     var din=isMale?[
-      'Белая рыба + тушёные овощи','Куриная грудка + большой салат','Омлет + овощи-гриль','Тёплый овощной суп + порция белка'
+      'Белая рыба + тушёные овощи','Куриная грудка + большой салат','Омлет + овощи-гриль','Тёплый овощной суп + порция белка','Индейка + тушёная капуста','Творог + орехи (лёгкий поздний вариант)'
     ]:[
-      'Белая рыба + тушёные овощи','Творог + зелень + 1 ст. л. льна','Омлет + большой салат','Тёплый овощной суп + порция белка'
+      'Белая рыба + тушёные овощи','Творог + зелень + 1 ст. л. льна','Омлет + большой салат','Тёплый овощной суп + порция белка','Запечённая курица + брокколи на пару','Греческий йогурт + орехи (лёгкий поздний вариант)'
     ];
     return [
-      {title:'Еда — ужин за ~3 ч до сна (легче, меньше поздних углеводов)', items:din.concat(['Без позднего кофеина и алкоголя — они «съедают» глубокий сон'])},
+      {title:'Ужин за ~3 ч до сна · выберите один (легче)', variants:true, items:din},
+      {title:'Важно вечером', items:['Без позднего кофеина и алкоголя — они «съедают» глубокий сон']},
       {title:'Нутрицевтики (вечер)', items:[
         'Магний — стандартный ориентир ~400 мг для спокойствия перед сном (форму обсудите со специалистом)',
         'Чай ромашка/мелисса — мягкое расслабление'
@@ -4878,8 +4885,13 @@ function _bpChapterData(id, data){
 }
 function _bpRenderSecs(secs){
   return secs.map(function(s){
-    return '<div style="margin:16px 0 4px;font-family:\'DM Sans\',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#b48af0;">• '+s.title+' •</div>'
-      + s.items.map(function(x){return '<div style="font-size:14px;color:var(--t2);line-height:1.65;padding:6px 0 6px 16px;position:relative;"><span style="position:absolute;left:0;color:#6b5b8a;top:6px;">–</span>'+x+'</div>';}).join('');
+    var head='<div style="margin:16px 0 4px;font-family:\'DM Sans\',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#b48af0;">• '+s.title+' •</div>';
+    if(s.variants){
+      var note='<div style="font-size:11px;color:var(--t3);margin:0 0 9px;">'+L({ru:'Выберите любой один вариант',en:'Pick any one option'})+'</div>';
+      var opts=s.items.map(function(x,i){return '<div style="display:flex;gap:11px;align-items:flex-start;background:rgba(180,138,240,.06);border:1px solid rgba(180,138,240,.15);border-radius:11px;padding:10px 12px;margin:6px 0;"><div style="font-size:12px;font-weight:700;color:#b48af0;flex-shrink:0;min-width:16px;line-height:1.5;">'+(i+1)+'</div><div style="font-size:14px;color:var(--t2);line-height:1.5;">'+x+'</div></div>';}).join('');
+      return head+note+opts;
+    }
+    return head + s.items.map(function(x){return '<div style="font-size:14px;color:var(--t2);line-height:1.65;padding:6px 0 6px 16px;position:relative;"><span style="position:absolute;left:0;color:#6b5b8a;top:6px;">–</span>'+x+'</div>';}).join('');
   }).join('');
 }
 function renderDayBlueprint(data){
