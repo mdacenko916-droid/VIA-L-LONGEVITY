@@ -4740,12 +4740,12 @@ function renderCircadian(data, score){
 
   window._circSlots = slots.map(function(s){ s.tabs=_circTabs(s.t, data); return s; });
   document.getElementById('circTimeline').innerHTML = slots.map((s,i)=>`
-    <div class="tl-row ${s.type}" onclick="openCircWindow(${i})" style="cursor:pointer;">
+    <div class="tl-row ${s.type}">
       <div class="tl-time">${s.t}</div>
       <div class="tl-content">
         <div class="tl-dot" style="background:${s.dot};box-shadow:0 0 6px ${s.dot}88;"></div>
         <div style="flex:1;"><div class="tl-name">${s.name}</div><div class="tl-detail">${s.detail}</div></div>
-        <div style="align-self:center;color:#b48af0;font-size:19px;opacity:.65;">›</div>
+        
       </div>
     </div>`).join('');
   renderDayBlueprint(data);
@@ -4776,85 +4776,181 @@ function renderCircadian(data, score){
 function _actFactor(data){ var f=data.act_freq; return f==='high'?1.6 : f==='mod'?1.5 : f==='low'?1.3 : 1.2; }
 
 var _BP_CS='background:linear-gradient(150deg,#1b1528,#130e1f);border:1px solid rgba(180,138,240,.28);border-radius:16px;padding:15px 16px;margin-bottom:12px;';
-function _bpCard(icon,title,value,sub,cta,wlabel,items){
-  var li=items.map(function(x){return '<div style="font-size:13px;color:var(--t2);padding:5px 0 5px 16px;position:relative;border-bottom:1px solid rgba(255,255,255,.05);"><span style="position:absolute;left:0;color:#b48af0;">·</span>'+x+'</div>';}).join('');
-  return '<div style="'+_BP_CS+'">'
-    +'<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;">'
-      +'<div style="font-size:14px;font-weight:600;color:var(--t1);">'+icon+' '+title+'</div>'
-      +(value?'<div style="font-family:\'Playfair Display\',serif;font-size:22px;color:#b48af0;white-space:nowrap;">'+value+'</div>':'')
-    +'</div>'
-    +(sub?'<div style="font-size:11px;color:var(--t3);margin-top:2px;line-height:1.4;">'+sub+'</div>':'')
-    +(cta?'<div style="font-size:13px;color:#4ECCA3;margin:10px 0 12px;line-height:1.5;">→ '+cta+'</div>':'')
-    +(wlabel?'<div style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;">'+wlabel+'</div>':'')
-    +li+'</div>';
+// ═══ ПАМЯТКА ДНЯ — 6 глав → BottomSheet (детерминированно, из велнес-базы; RU-пилот, i18n позже) ═══
+function _bpChapters(){
+  return [
+    {id:'morning', icon:'☀️', title:'Утро',               teaser:'Старт • разминка • завтрак • нутрицевтики'},
+    {id:'lunch',   icon:'🍽', title:'Обед',               teaser:'Меню и поддержка'},
+    {id:'evening', icon:'🌙', title:'Вечер',              teaser:'Ужин за 3 ч до сна • нутрицевтики'},
+    {id:'activity',icon:'🏋️', title:'Физическая нагрузка', teaser:'Под возраст, пол и активность'},
+    {id:'water',   icon:'💧', title:'Вода',               teaser:'Ориентир под массу тела'},
+    {id:'sleep',   icon:'😴', title:'Сон',                teaser:'Практики под ваши сигналы (Perry Academy)'}
+  ];
+}
+function _bpChapterData(id, data){
+  var w=parseFloat(data.weight)||70, per=Math.round(w*_actFactor(data)/3), isMale=data.gender==='male';
+  var age=parseInt(data.age)||48, over40=age>=40, f=data.act_freq;
+  if(id==='morning'){
+    var bf=isMale?[
+      'Омлет из 3 яиц + тыквенные семечки (цинк) + зелень',
+      'Творог ~180 г + грецкий орех + ягоды',
+      'Скумбрия/лосось + цельнозерновой тост + авокадо',
+      'Греческий йогурт + миндаль + семена чиа'
+    ]:[
+      'Омлет из 2–3 яиц + авокадо + горсть зелени',
+      'Творог 5% ~180 г + ягоды + 1 ст. л. молотого льна',
+      'Греческий йогурт + орехи + семена чиа',
+      'Овсянка на воде + порция протеина + ягоды'
+    ];
+    var supp=isMale?[
+      'Витамин D3 + K2 с жирной едой — ориентир, значение индивидуально',
+      'Омега-3 ~2 г с едой — сердце и мозг',
+      'Цинк — из еды (тыквенные семечки, яйца); добавкой лишь при недостатке'
+    ]:[
+      'Витамин D3 + K2 с жирной едой — ориентир, значение индивидуально',
+      'Омега-3 ~2 г с едой',
+      '1 ст. л. молотого льна — мягкая растительная поддержка баланса'
+    ];
+    return [
+      {title:'Утренний старт', items:[
+        'Стакан воды 250–300 мл сразу после пробуждения',
+        'Дневной свет 10–15 мин в первый час — бодрость и вечерний сон',
+        'Кофе лучше через 60–90 мин после подъёма, не натощак'
+      ]},
+      {title:'Разминка', items:[
+        'Лёгкая разминка или короткая прогулка 5–10 мин',
+        '3–5 глубоких вдохов с длинным выдохом — спокойный тонус'
+      ]},
+      {title:'Еда — завтрак (~'+per+' г белка)', items:bf},
+      {title:'Нутрицевтики (утро)', items:supp}
+    ];
+  }
+  if(id==='lunch'){
+    return [
+      {title:'Еда — обед (~'+per+' г белка + овощи + медленные углеводы)', items:[
+        'Индейка/курица ~130 г + гречка + большой салат с оливковым маслом',
+        'Лосось/тунец ~140 г + бурый рис + брокколи',
+        'Чечевица/нут + тушёные овощи + зелень (растительный день)',
+        'Постная говядина + запечённый батат + листовые овощи'
+      ]},
+      {title:'Нутрицевтики (обед)', items:[
+        'Обычно дополнительно не нужно — фокус на цельной еде',
+        'Клетчатка: добавьте зелень/овощи для ровного пищеварения'
+      ]}
+    ];
+  }
+  if(id==='evening'){
+    var din=isMale?[
+      'Белая рыба + тушёные овощи','Куриная грудка + большой салат','Омлет + овощи-гриль','Тёплый овощной суп + порция белка'
+    ]:[
+      'Белая рыба + тушёные овощи','Творог + зелень + 1 ст. л. льна','Омлет + большой салат','Тёплый овощной суп + порция белка'
+    ];
+    return [
+      {title:'Еда — ужин за ~3 ч до сна (легче, меньше поздних углеводов)', items:din.concat(['Без позднего кофеина и алкоголя — они «съедают» глубокий сон'])},
+      {title:'Нутрицевтики (вечер)', items:[
+        'Магний — стандартный ориентир ~400 мг для спокойствия перед сном (форму обсудите со специалистом)',
+        'Чай ромашка/мелисса — мягкое расслабление'
+      ]}
+    ];
+  }
+  if(id==='activity'){
+    var it=[];
+    it.push(over40?'Силовые 2–3×/нед — ключевая основа с возрастом (сила мышц и крепость костей). Начните с малого: 2–3 подхода простых упражнений.':'Силовые 2–3×/нед — фундамент тонуса и формы, маленькими шагами.');
+    it.push('Ходьба 10–15 мин сразу после еды — лучший момент для ровной энергии.');
+    it.push('Йога/растяжка — для нервной системы и восстановления.');
+    if(data.act_recovery==='exhausted') it.push('Вы отмечаете истощение после нагрузок — снизьте интенсивность, добавьте день полного отдыха и приоритет сну.');
+    if(f==='0'||f==='low') it.push('Старт: ежедневная прогулка + 1 короткая силовая, наращивайте постепенно.');
+    else if(f==='high') it.push('Высокая активность — следите за восстановлением: 1–2 дня отдыха, достаточно белка и сна.');
+    it.push(isMale?'Комбо силовая + короткое кардио поддерживает тонус и обмен.':'Опорная и силовая берегут крепость костей; избегайте резких скручиваний с весом.');
+    it.push('Интенсивное — лучше утром/днём; вечером — мягкое (йога, прогулка), чтобы не мешать сну.');
+    return [{title:'Движение — под вас', items:it}];
+  }
+  if(id==='water'){
+    var target=(w*35/1000).toFixed(1);
+    return [{title:'Водный баланс', items:[
+      'Ваш ориентир: ≈ '+target+' л/день (≈ 35 мл на кг массы тела '+w+' кг)',
+      'В активные дни и в жару +250–500 мл',
+      'По стакану каждые 1.5–2 ч до 19:00 — чтобы не будить себя ночью',
+      'Источники: чистая вода, травяные чаи без сахара'
+    ]}];
+  }
+  if(id==='sleep'){
+    var base=[
+      'Фиксированное время подъёма — главный якорь ритма (даже в выходные)',
+      'Кровать — только для сна. Не спится ~20 мин → встать, тихое тусклое занятие, вернуться при сонливости',
+      'Не смотрите на часы ночью — снижает тревогу о сне',
+      'Прохладная тёмная спальня, ритуал спокойствия за час до сна',
+      'Дыхание 4-7-8 перед сном',
+      'Продукты с магнием вечером; без позднего кофеина и алкоголя'
+    ];
+    var pers=[];
+    if(data.hf_count==='mid'||data.hf_count==='high'||data.hf_count==='veryhigh') pers.push('Ночной жар: прохладная спальня, лёгкий ужин, дышащая ткань — меньше пробуждений.');
+    if(data.wake==='early') pers.push('Ранние пробуждения: белковый перекус + продукты с магнием перед сном.');
+    if(/high|выс/i.test(data.stress||'')||(parseInt(data.anxiety)||0)>=5) pers.push('Тревожный ум: 5 мин майндфулнес днём и дыхание вечером — легче отпускать мысли ночью.');
+    var secs=[{title:'Практики сна (основа)', items:base}];
+    if(pers.length) secs.push({title:'Под ваши сигналы', items:pers});
+    secs.push({title:'Важно', items:['Основа — поведение и ритм (принципы Perry Academy / CBT-I), а не только добавки. Носимые могут быть неточны — ориентир на самочувствие днём.']});
+    return secs;
+  }
+  return [];
+}
+function _bpRenderSecs(secs){
+  return secs.map(function(s){
+    return '<div style="margin:16px 0 4px;font-family:\'DM Sans\',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#b48af0;">• '+s.title+' •</div>'
+      + s.items.map(function(x){return '<div style="font-size:14px;color:var(--t2);line-height:1.65;padding:6px 0 6px 16px;position:relative;"><span style="position:absolute;left:0;color:#6b5b8a;top:6px;">–</span>'+x+'</div>';}).join('');
+  }).join('');
 }
 function renderDayBlueprint(data){
   var box=document.getElementById('dayBlueprint'); if(!box)return;
-  var w=parseFloat(data.weight)||null, factor=_actFactor(data), f=data.act_freq;
-  var head='<div style="font-family:\'Playfair Display\',serif;font-size:17px;color:var(--t1);margin:20px 0 3px;">'+L({ru:'🧭 Памятка дня — ориентиры',en:'🧭 Day blueprint — orientations'})+'</div>'
-    +'<div style="font-size:11px;color:var(--t3);margin-bottom:12px;line-height:1.5;">'+L({ru:'Общие велнес-ориентиры под ваш вес и активность. Это не диета и не назначение.',en:'General wellness orientations for your weight and activity. Not a diet or a prescription.'})+'</div>';
-  if(!w){
-    box.innerHTML=head+'<div style="'+_BP_CS+'font-size:13px;color:var(--t2);">📋 '+L({ru:'Укажите вес в профиле — и здесь появятся ваши персональные ориентиры по белкам, жирам, углеводам, клетчатке, воде и добавкам с расчётом и списком «где взять».',en:'Add your weight in the profile — your personal orientations for protein, fats, carbs, fiber, water and supplements will appear here with amounts and a “where to get it” list.'})+'</div>';
-    return;
-  }
-  var gram=L({ru:'г',en:'g'}), g30=L({ru:'Где взять — порция ≈ 30 г белка',en:'Where to get it — ~30 g protein portion'});
-  // расчёты (велнес-ориентиры)
-  var protein=Math.round(w*factor), perMeal=Math.round(protein/3);
-  var fat=Math.round(w*1.0);
-  var carbF=(f==='high'?3.5:f==='mod'?2.7:2.0), carbs=Math.round(w*carbF);
-  var fiber=30;
-  var water=(w*35/1000).toFixed(1);
-  var cards=[
-    // БЕЛКИ
-    _bpCard('💪',L({ru:'Белок — строительный ориентир',en:'Protein — building block'}),'≈ '+protein+' '+gram,
-      L({ru:'≈ '+factor+' г на кг ('+w+' кг), под вашу активность',en:'≈ '+factor+' g per kg ('+w+' kg), for your activity'}),
-      L({ru:'Распределите на 3 приёма (~'+perMeal+' г за раз) — ровный тонус и энергия.',en:'Split across 3 meals (~'+perMeal+' g each) — steady tone and energy.'}),
-      g30,[
-      L({ru:'Индейка/курица (готовое): ~130 г',en:'Turkey/chicken (cooked): ~130 g'}),
-      L({ru:'Лосось или тунец: ~140 г',en:'Salmon or tuna: ~140 g'}),
-      L({ru:'Яйца: 4–5 шт',en:'Eggs: 4–5'}),
-      L({ru:'Творог 5%: ~180 г',en:'Cottage cheese 5%: ~180 g'})]),
-    // ЖИРЫ
-    _bpCard('🥑',L({ru:'Жиры — энергетический баланс',en:'Fats — energy balance'}),'≈ '+fat+' '+gram,
-      L({ru:'≈ 1 г на кг; фокус на цельных источниках в первой половине дня',en:'≈ 1 g per kg; focus on whole sources earlier in the day'}),
-      L({ru:'Выбирайте цельные источники: авокадо, оливковое масло, орехи, жирная рыба.',en:'Choose whole sources: avocado, olive oil, nuts, oily fish.'}),
-      L({ru:'Где взять — порция ≈ 15 г жиров',en:'Where to get it — ~15 g fat portion'}),[
-      L({ru:'Авокадо: 1 среднее = ~15 г',en:'Avocado: 1 medium = ~15 g'}),
-      L({ru:'Оливковое масло: 1 ст. ложка = ~14 г',en:'Olive oil: 1 tbsp = ~14 g'}),
-      L({ru:'Миндаль/грецкий орех: 30 г (горсть) = ~15 г',en:'Almonds/walnuts: 30 g (a handful) = ~15 g'})]),
-    // УГЛЕВОДЫ
-    _bpCard('🌾',L({ru:'Углеводы — ресурс сил',en:'Carbs — energy resource'}),'≈ '+carbs+' '+gram,
-      L({ru:'под вашу активность; больше — в дни нагрузок',en:'scaled to your activity; more on active days'}),
-      L({ru:'Медленные источники — ровная энергия без резких скачков.',en:'Slow-release sources — steady energy without spikes.'}),
-      L({ru:'Где взять — вес сухого продукта',en:'Where to get it — dry product weight'}),[
-      L({ru:'Гречка/бурый рис (сухие): 100 г ≈ 70 г углеводов',en:'Buckwheat/brown rice (dry): 100 g ≈ 70 g carbs'}),
-      L({ru:'Овсяные хлопья: 100 г ≈ 60 г',en:'Oats: 100 g ≈ 60 g'}),
-      L({ru:'Батат/картофель печёный: 100 г ≈ 20 г',en:'Sweet potato/potato (baked): 100 g ≈ 20 g'})]),
-    // КЛЕТЧАТКА
-    _bpCard('🥦',L({ru:'Клетчатка — растительные волокна',en:'Fiber — plant volume'}),'≈ '+fiber+' '+gram,
-      L({ru:'общий велнес-ориентир для лёгкости и ровного пищеварения',en:'a general wellness orientation for lightness and steady digestion'}),
-      L({ru:'Добавляйте зелень и овощи к каждому приёму пищи.',en:'Add greens and vegetables to every meal.'}),
-      L({ru:'Где взять — на 100 г продукта',en:'Where to get it — per 100 g'}),[
-      L({ru:'Брокколи/цветная капуста: 100 г ≈ 3 г',en:'Broccoli/cauliflower: 100 g ≈ 3 g'}),
-      L({ru:'Шпинат/листья салата: 100 г ≈ 2 г',en:'Spinach/leafy greens: 100 g ≈ 2 g'}),
-      L({ru:'Семена чиа/льна: 2 ст. ложки ≈ 10 г',en:'Chia/flax seeds: 2 tbsp ≈ 10 g'})]),
-    // ВОДА
-    _bpCard('💧',L({ru:'Вода — водный баланс',en:'Water — hydration'}),'≈ '+water+' '+L({ru:'л',en:'L'}),
-      L({ru:'≈ 35 мл на кг вашего веса',en:'≈ 35 ml per kg of your weight'}),
-      L({ru:'По стакану каждые 1.5–2 ч до 19:00 — чтобы не будить себя ночью.',en:'A glass every 1.5–2 h until 7pm — so night rest isn’t interrupted.'}),
-      L({ru:'Источники',en:'Sources'}),[
-      L({ru:'Чистая вода без газа',en:'Still water'}),
-      L({ru:'Травяные чаи без сахара',en:'Herbal teas, unsweetened'})]),
-    // ДОБАВКИ
-    _bpCard('🌿',L({ru:'Добавки — велнес-поддержка',en:'Supplements — wellness support'}),'',
-      L({ru:'необязательная опция; форму и целесообразность обсудите со специалистом',en:'an optional add-on; discuss the form and need with a specialist'}),
-      L({ru:'Впишите пару базовых ориентиров в утренний и вечерний ритуал.',en:'Fit a couple of basic orientations into your morning and evening ritual.'}),
-      L({ru:'Базовые велнес-ориентиры',en:'Basic wellness orientations'}),[
-      L({ru:'Вечер: магний — стандартный ориентир ~400 мг для спокойствия перед сном',en:'Evening: magnesium — a standard orientation ~400 mg for calm before sleep'}),
-      L({ru:'Утро: витамин D3 как поддержка дневного тонуса (значение — индивидуально)',en:'Morning: vitamin D3 to support daytime tone (amount is individual)'}),
-      L({ru:'Омега-3 — типичный ориентир ~2 г с едой, для сердца и мозга',en:'Omega-3 — a typical orientation ~2 g with food, for heart and brain'})])
-  ];
-  box.innerHTML=head+cards.join('');
+  window._bpData=data;
+  var w=parseFloat(data.weight)||null;
+  var head='<div style="font-family:\'Playfair Display\',serif;font-size:17px;color:var(--t1);margin:20px 0 3px;">🧭 '+L({ru:'Памятка дня',en:'Day plan'})+'</div>'
+    +'<div style="font-size:11px;color:var(--t3);margin-bottom:12px;line-height:1.5;">'+L({ru:'Ваш план на день — коротко и по делу. Нажмите раздел, чтобы раскрыть. Общие велнес-ориентиры под ваши данные, не диета и не назначение.',en:'Your day plan — short and practical. Tap a section to expand. General wellness orientations, not a diet or prescription.'})+'</div>';
+  if(!w) head+='<div style="'+_BP_CS+'font-size:12px;color:var(--t3);">📋 '+L({ru:'Укажите вес в профиле — расчёты (белок, вода) станут персональными.',en:'Add weight in your profile — protein and water calculations will personalize.'})+'</div>';
+  var rows=_bpChapters().map(function(r){
+    return '<div onclick="openBpChapter(\''+r.id+'\')" style="display:flex;align-items:center;gap:13px;padding:14px;margin-bottom:8px;background:linear-gradient(150deg,#1b1528,#130e1f);border:1px solid rgba(180,138,240,.22);border-radius:14px;cursor:pointer;">'
+      +'<div style="font-size:22px;width:30px;text-align:center;flex-shrink:0;">'+r.icon+'</div>'
+      +'<div style="flex:1;min-width:0;"><div style="font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:600;color:var(--t1);letter-spacing:.03em;text-transform:uppercase;">'+r.title+'</div><div style="font-size:11px;color:var(--t3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+r.teaser+'</div></div>'
+      +'<div style="color:#b48af0;font-size:20px;opacity:.6;flex-shrink:0;">›</div></div>';
+  }).join('');
+  var dl='<button onclick="downloadDayPlan()" style="width:100%;margin-top:4px;padding:13px;border-radius:14px;border:1px solid rgba(180,138,240,.4);background:rgba(180,138,240,.12);color:#d9c2fb;font-family:\'DM Sans\',sans-serif;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">📥 '+L({ru:'Скачать памятку дня',en:'Download day plan'})+'</button>';
+  box.innerHTML=head+rows+dl;
+}
+function openBpChapter(id){
+  var data=window._bpData||{}, chs=_bpChapters(), meta=null;
+  for(var i=0;i<chs.length;i++) if(chs[i].id===id) meta=chs[i];
+  if(!meta)return;
+  openSheet(meta.icon, meta.title, _bpRenderSecs(_bpChapterData(id,data)));
+}
+function openSheet(icon, title, bodyHtml){
+  var m=document.getElementById('circModal');
+  if(m.parentElement!==document.body) document.body.appendChild(m);
+  document.getElementById('cm-time').textContent=icon;
+  document.getElementById('cm-name').textContent=title;
+  document.getElementById('cm-tabs').innerHTML='';
+  document.getElementById('cm-body').innerHTML=bodyHtml;
+  m.style.display='block'; document.body.style.overflow='hidden';
+  requestAnimationFrame(function(){requestAnimationFrame(function(){m.classList.add('open');});});
+}
+function downloadDayPlan(){
+  var data=window._bpData||{}, chs=_bpChapters();
+  var body=chs.map(function(r){
+    var secs=_bpChapterData(r.id,data);
+    return '<section><h2>'+r.icon+' '+r.title+'</h2>'+secs.map(function(s){return '<h3>'+s.title+'</h3><ul>'+s.items.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>';}).join('')+'</section>';
+  }).join('');
+  var nm=(data.name?(', '+data.name):'');
+  var html='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Памятка дня</title>'
+    +'<style>body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:640px;margin:0 auto;padding:28px 22px;color:#1c1a22;line-height:1.5;}'
+    +'h1{font-size:22px;margin:0 0 4px;}p.d{font-size:11px;color:#888;margin:0 0 18px;}'
+    +'section{margin:0 0 16px;padding:14px 16px;border:1px solid #e5e0ef;border-radius:12px;}'
+    +'h2{font-size:17px;margin:0 0 8px;color:#5b3fa0;}h3{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#9a7fd0;margin:12px 0 4px;}'
+    +'ul{margin:0;padding-left:18px;}li{margin:4px 0;font-size:14px;}@media print{section{break-inside:avoid;}}</style></head><body>'
+    +'<h1>🧭 Моя памятка дня'+nm+'</h1><p class="d">Общие велнес-ориентиры под ваши данные. Информация носит ознакомительный велнес-характер и не является персональной диетой или медицинским назначением.</p>'
+    +body+'</body></html>';
+  var wnd=window.open('','_blank');
+  if(!wnd){ alert('Разрешите всплывающие окна, чтобы сохранить памятку в PDF.'); return; }
+  wnd.document.write(html); wnd.document.close();
+  setTimeout(function(){ try{wnd.focus();wnd.print();}catch(e){} }, 400);
 }
 
 function _circTabs(t, data){
