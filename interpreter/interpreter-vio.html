@@ -3840,11 +3840,40 @@ function saveSession(score,type,data){
   }catch(e){}
 }
 
+// ══ ШИФРОВАНИЕ ЧУВСТВИТЕЛЬНЫХ ДАННЫХ (AES-GCM, неизвлекаемый ключ в IndexedDB) ══════════
+// Персональные данные (профиль/история/дневник) не лежат в localStorage открытым текстом.
+// Ключ (extractable:false) хранится в IndexedDB — сырой ключ недоступен JS. Работает в браузере
+// и внутри Capacitor-WebView. Если crypto/IndexedDB недоступны — прозрачный откат на localStorage
+// (приложение не ломается). Sync-совместимость: расшифровка в память при старте, шифрование при записи.
+var _SEC={ready:false,key:null,cache:{},keys:['vial_profile','vial_history','vial_daily','vial_weekly_text']};
+function _secIdb(){return new Promise(function(res,rej){try{var r=indexedDB.open('vial_sec',1);r.onupgradeneeded=function(){r.result.createObjectStore('k');};r.onsuccess=function(){res(r.result);};r.onerror=function(){rej(r.error);};}catch(e){rej(e);}});}
+function _secIdbGet(db,k){return new Promise(function(res,rej){var t=db.transaction('k','readonly').objectStore('k').get(k);t.onsuccess=function(){res(t.result);};t.onerror=function(){rej(t.error);};});}
+function _secIdbPut(db,k,v){return new Promise(function(res,rej){var t=db.transaction('k','readwrite').objectStore('k').put(v,k);t.onsuccess=function(){res();};t.onerror=function(){rej(t.error);};});}
+async function _secGetKey(){try{var db=await _secIdb();var key=await _secIdbGet(db,'aes');if(!key){key=await crypto.subtle.generateKey({name:'AES-GCM',length:256},false,['encrypt','decrypt']);await _secIdbPut(db,'aes',key);}return key;}catch(e){return null;}}
+async function _secEnc(str){var iv=crypto.getRandomValues(new Uint8Array(12));var ct=await crypto.subtle.encrypt({name:'AES-GCM',iv:iv},_SEC.key,new TextEncoder().encode(str));var b=new Uint8Array(iv.length+ct.byteLength);b.set(iv,0);b.set(new Uint8Array(ct),iv.length);var s='';for(var i=0;i<b.length;i++)s+=String.fromCharCode(b[i]);return btoa(s);}
+async function _secDec(b64){try{var raw=atob(b64);var b=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)b[i]=raw.charCodeAt(i);var iv=b.slice(0,12),ct=b.slice(12);var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:iv},_SEC.key,ct);return new TextDecoder().decode(pt);}catch(e){return null;}}
+async function _secInit(){
+  try{
+    if(!(window.crypto&&crypto.subtle&&window.indexedDB))return;
+    _SEC.key=await _secGetKey(); if(!_SEC.key)return;
+    for(var i=0;i<_SEC.keys.length;i++){ var k=_SEC.keys[i];
+      var plain=localStorage.getItem(k);            // плейнтекст = первый запуск ИЛИ запись до готовности → свежее, приоритет над старым __e
+      if(plain!=null){ _SEC.cache[k]=plain; var e=await _secEnc(plain); if(e){localStorage.setItem(k+'__e',e);localStorage.removeItem(k);} }
+      else { var enc=localStorage.getItem(k+'__e'); if(enc!=null){ var d=await _secDec(enc); if(d!=null)_SEC.cache[k]=d; } }
+    }
+    _SEC.ready=true;
+  }catch(e){ _SEC.ready=false; }
+}
+var _secReady=_secInit();   // старт как можно раньше; профиль читается только после навигации пользователя
+function secGet(k){ if(_SEC.ready&&_SEC.keys.indexOf(k)>=0) return (k in _SEC.cache)?_SEC.cache[k]:null; return localStorage.getItem(k); }
+function secSet(k,v){ if(_SEC.keys.indexOf(k)>=0){ _SEC.cache[k]=v; if(_SEC.ready){ _secEnc(v).then(function(e){ if(e){localStorage.setItem(k+'__e',e);localStorage.removeItem(k);} }); return; } } localStorage.setItem(k,v); }
+function secRemove(k){ if(_SEC.keys.indexOf(k)>=0){ delete _SEC.cache[k]; localStorage.removeItem(k+'__e'); } localStorage.removeItem(k); }
+
 // ══ КАРТОЧКА КЛИЕНТА (vial_profile) ═══════════════════════
 // VIO — платный тариф €9.90: профиль вводится один раз и хранится. Вес/талия редактируются прямо в карточке.
 function saveProfile(){
   try{
-    var P={}; try{P=JSON.parse(localStorage.getItem('vial_profile')||'{}')||{};}catch(e){}
+    var P={}; try{P=JSON.parse(secGet('vial_profile')||'{}')||{};}catch(e){}
     var gv=function(id){var el=document.getElementById(id);return el?(el.value||'').trim():'';};
     var prof={
       name:gv('prof-name')||P.name||'',
@@ -3857,11 +3886,11 @@ function saveProfile(){
       act_types:(function(){var a=(typeof getChecked==='function')?getChecked(['act1','act2','act3','act4','act5','act6']):[];return a.length?a:(Array.isArray(P.act_types)?P.act_types:[]);})(),
       act_recovery:getRadio('act_recovery')||P.act_recovery||''
     };
-    localStorage.setItem('vial_profile',JSON.stringify(prof));
+    secSet('vial_profile',JSON.stringify(prof));
   }catch(e){}
 }
 function _restoreActivity(){
-  try{var P=JSON.parse(localStorage.getItem('vial_profile')||'{}')||{};
+  try{var P=JSON.parse(secGet('vial_profile')||'{}')||{};
     if(P.act_freq){var r=document.querySelector('input[name="act_freq"][value="'+P.act_freq+'"]');if(r)r.checked=true;}
     if(P.act_recovery){var r2=document.querySelector('input[name="act_recovery"][value="'+P.act_recovery+'"]');if(r2)r2.checked=true;}
     if(Array.isArray(P.act_types)){['act1','act2','act3','act4','act5','act6'].forEach(function(id){var c=document.getElementById(id);if(c)c.checked=(P.act_types.indexOf(c.value)>=0);});}
@@ -3869,15 +3898,15 @@ function _restoreActivity(){
 }
 (function(){ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',_restoreActivity);else _restoreActivity(); })();
 function _cardSaveNum(field,val){
-  var P={}; try{P=JSON.parse(localStorage.getItem('vial_profile')||'{}')||{};}catch(e){}
+  var P={}; try{P=JSON.parse(secGet('vial_profile')||'{}')||{};}catch(e){}
   P[field]=(val||'').trim();
-  try{localStorage.setItem('vial_profile',JSON.stringify(P));}catch(e){}
+  try{secSet('vial_profile',JSON.stringify(P));}catch(e){}
   var inp=document.getElementById('prof-'+field); if(inp)inp.value=P[field];   // синхрон с профилем воронки
 }
 function renderCard(){
   if(typeof saveProfile==='function'){try{saveProfile();}catch(e){}}  // синхрон: карточка = что сейчас в профиле
   var box=document.getElementById('cardBody'); if(!box)return;
-  var P={}; try{P=JSON.parse(localStorage.getItem('vial_profile')||'{}')||{};}catch(e){}
+  var P={}; try{P=JSON.parse(secGet('vial_profile')||'{}')||{};}catch(e){}
   var row=function(l,v){return '<div style="display:flex;justify-content:space-between;gap:12px;padding:9px 2px;border-bottom:1px solid var(--b1);font-size:13px;"><span style="color:var(--t2);">'+l+'</span><span style="color:var(--t1);text-align:right;font-weight:500;">'+((v==null||v==='')?'—':v)+'</span></div>';};
   var sec=function(s){return '<div style="font-family:\'Oswald\',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#b48af0;margin:8px 0 6px;">'+s+'</div>';};
   var editNum=function(field,label,val){return '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:7px 2px;border-bottom:1px solid var(--b1);font-size:13px;"><span style="color:var(--t2);">'+label+'</span><input type="number" value="'+(val==null?'':val)+'" placeholder="—" oninput="_cardSaveNum(\''+field+'\',this.value)" style="width:74px;background:rgba(180,138,240,.08);border:1px solid rgba(180,138,240,.3);border-radius:8px;color:var(--t1);font-weight:600;text-align:center;padding:5px 6px;font-family:inherit;font-size:14px;"></div>';};
@@ -3899,7 +3928,7 @@ function renderCard(){
   html+=row(t('s8_l3'), (P.act_recovery&&_arm[P.act_recovery])?t(_arm[P.act_recovery]):'—');
   html+='<button onclick="navTo(\'home\')" style="margin-top:16px;background:rgba(180,138,240,.12);border:1px solid rgba(180,138,240,.35);color:#b48af0;padding:9px 20px;border-radius:50px;font-size:12px;letter-spacing:.5px;cursor:pointer;font-family:\'DM Sans\',sans-serif;">'+t('card_edit')+'</button>';
   // Динамика разборов: сохранённые сессии со сравнением счёта
-  var hist=[]; try{hist=JSON.parse(localStorage.getItem('vial_history')||'[]')||[];}catch(e){}
+  var hist=[]; try{hist=JSON.parse(secGet('vial_history')||'[]')||[];}catch(e){}
   html+='<div style="margin-top:8px;">'+sec(t('card_dynamics'))+'</div>';
   html+='<div style="font-size:11px;color:var(--t3);margin:-2px 0 8px;line-height:1.5;">'+L({ru:'«Готовность» (0–100) и изменение к прошлому разбору',uk:'«Готовність» (0–100) і зміна до попереднього',en:'“Readiness” (0–100) and change vs previous',es:'«Preparación» (0–100) y cambio vs anterior',de:'„Bereitschaft" (0–100) und Änderung zum vorigen',pt:'“Prontidão” (0–100) e mudança vs anterior',fr:'« Préparation » (0–100) et évolution',pl:'„Gotowość" (0–100) i zmiana względem poprzedniego',it:'«Prontezza» (0–100) e variazione',he:'«מוכנות» (0–100) ושינוי מהקודם',ja:'「準備度」(0–100)と前回比',ko:'"준비도"(0–100)와 이전 대비 변화'})+'</div>';
   if(hist.length){
@@ -3928,7 +3957,7 @@ function renderCard(){
 // ══ НЕДЕЛЬНЫЙ AI-РАЗБОР (как PRO, адаптирован под VIO без гаджета) ═══════════
 // Тренд по сохранённым разборам (vial_history): сон/пульс/энергия/готовность, 7 дней vs пред. неделя.
 function weeklyTrend(){
-  var h=[]; try{h=JSON.parse(localStorage.getItem('vial_history')||'[]')||[];}catch(e){}
+  var h=[]; try{h=JSON.parse(secGet('vial_history')||'[]')||[];}catch(e){}
   var now=Date.now(),DAY=86400000;
   var wk=h.filter(function(s){return s.ts&&now-s.ts<7*DAY;});
   var pr=h.filter(function(s){return s.ts&&now-s.ts>=7*DAY&&now-s.ts<14*DAY;});
@@ -3953,21 +3982,21 @@ function _saveDaily(){
       sleep_qual:gv('sleep_qual'), sleep_hours:gv('sleep_hours'), rhr:gv('rhr'), energy:gv('energy'),
       hotflash:getRadio('hf_count'), hotfreq:getRadio('hotfreq'),
       memory:getRadio('memory'), fog:getRadio('fog'), stress:getRadio('stress'), alc:getRadio('alc') };
-    var arr=[]; try{arr=JSON.parse(localStorage.getItem('vial_daily')||'[]')||[];}catch(e){}
+    var arr=[]; try{arr=JSON.parse(secGet('vial_daily')||'[]')||[];}catch(e){}
     arr=arr.filter(function(r){return r.day!==rec.day;});
     arr.unshift(rec); while(arr.length>90)arr.pop();
-    localStorage.setItem('vial_daily',JSON.stringify(arr));
+    secSet('vial_daily',JSON.stringify(arr));
   }catch(e){}
 }
 function _weeklyDaily(){
-  var arr=[]; try{arr=JSON.parse(localStorage.getItem('vial_daily')||'[]')||[];}catch(e){}
+  var arr=[]; try{arr=JSON.parse(secGet('vial_daily')||'[]')||[];}catch(e){}
   var now=Date.now(),DAY=86400000;
   var wk=arr.filter(function(r){return r.ts&&now-r.ts<7*DAY;});
   if(!wk.length)return null;
   var avg=function(k){var v=wk.map(function(r){return r[k];}).filter(function(x){return x!=null&&x!==''&&!isNaN(x);});return v.length?+(v.reduce(function(a,b){return a+(+b);},0)/v.length).toFixed(2):null;};
   var modal=function(k){var c={},best=null,bn=0;wk.forEach(function(r){var x=r[k];if(x==null||x==='')return;c[x]=(c[x]||0)+1;if(c[x]>bn){bn=c[x];best=x;}});return best;};
   var cnt=function(k,pred){return wk.filter(function(r){return pred(r[k]);}).length;};
-  var P={}; try{P=JSON.parse(localStorage.getItem('vial_profile')||'{}')||{};}catch(e){}
+  var P={}; try{P=JSON.parse(secGet('vial_profile')||'{}')||{};}catch(e){}
   return { days:wk.length,
     hfDays:cnt('hotflash',function(x){return x&&x!=='none';}), hotflash:modal('hotflash'), hotfreq:modal('hotfreq'),
     sleep:avg('sleep_qual'), rhr:avg('rhr'), energy:avg('energy'), stress:modal('stress'), memory:modal('memory'),
@@ -3996,7 +4025,7 @@ function _wrGate(){
   var last=parseInt(localStorage.getItem('vial_weekly_last')||'0',10);
   var left=last?Math.ceil((7*DAY-(now-last))/DAY):0;
   return { canGen: !last || (now-last)>=7*DAY, daysLeft: left>0?left:0,
-           cached: localStorage.getItem('vial_weekly_text')||'', cachedDate: localStorage.getItem('vial_weekly_date')||'' };
+           cached: secGet('vial_weekly_text')||'', cachedDate: localStorage.getItem('vial_weekly_date')||'' };
 }
 function _wrMd(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
   .replace(/^#{1,3}\s*(.+)$/gm,'<strong style="display:block;margin:10px 0 4px;">$1</strong>')
@@ -4028,7 +4057,7 @@ async function genWeeklyReport(){
       body:JSON.stringify({summary:summary,daily:daily,lang:lang,code:'',tier:'vio'})});
     var json=await res.json();
     if(!json.report) throw new Error('no report');
-    localStorage.setItem('vial_weekly_text',json.report);
+    secSet('vial_weekly_text',json.report);
     localStorage.setItem('vial_weekly_last',String(Date.now()));
     localStorage.setItem('vial_weekly_date',new Date().toISOString().slice(0,10));
     renderWeeklyReportUI();
@@ -4039,7 +4068,7 @@ async function genWeeklyReport(){
   }
 }
 function dlWeeklyReport(){
-  var txt=localStorage.getItem('vial_weekly_text')||''; if(!txt) return;
+  var txt=secGet('vial_weekly_text')||''; if(!txt) return;
   var ui=_wrUI(), date=localStorage.getItem('vial_weekly_date')||new Date().toISOString().slice(0,10);
   var plain=String(txt).replace(/^#{1,3}\s*/gm,'').replace(/\*\*([^*]+?)\*\*/g,'$1');
   var body=ui.title+' — '+date+'\n\n'+plain+'\n';
@@ -4382,7 +4411,7 @@ function pulseDirect(){
 function _rhrZone(r){ r=+r; if(!r||isNaN(r))return 'normal'; if(r<55)return 'low'; if(r<=75)return 'normal'; if(r<=90)return 'slightly_high'; return 'high'; }
 function _rhrZoneColor(r){ var z=_rhrZone(r); return z==='low'?'#7aa7ff':z==='normal'?'#5ec27a':z==='slightly_high'?'#f0c846':'#e06b6b'; }
 function _rhrBaseline(){
-  var h=[]; try{h=JSON.parse(localStorage.getItem('vial_history')||'[]')||[];}catch(e){}
+  var h=[]; try{h=JSON.parse(secGet('vial_history')||'[]')||[];}catch(e){}
   var v=h.map(function(s){return s.rhr;}).filter(function(x){return x!=null&&!isNaN(x)&&x>=40&&x<=160;});
   return v.length>=3?Math.round(v.reduce(function(a,b){return a+(+b);},0)/v.length):null;
 }
