@@ -3005,7 +3005,7 @@ function selectKBPatterns(data) {
     add('P-F11', has(gi,'bloating','gi_heaviness','constipation','gi_slow','diarrhea','gi_fast','reflux','gi_inner') || has(supp,'probiotics'));
     // P-F12 кости
     add('P-F12', (phase === 'post' && (age >= 55 || (num(labs.vitd) != null && num(labs.vitd) < 50)))
-      || has(bone,'load_sensitivity','posture_shift','hereditary_tone','prior_fracture','height_loss','family_osteoporosis','early_menopause'));
+      || has(bone,'load_sensitivity','posture_shift','hereditary_tone','balance_trait','prior_fracture','height_loss','family_osteoporosis','early_menopause'));
     // P-F13 сердечно-сосудистый
     add('P-F13', has(sym,'palpitations') || data.rhr_comp === 'high'
       || num(labs.ldl) > 3.4 || num(labs.apob) > 1.0 || num(labs.tg) > 1.7);
@@ -3013,7 +3013,7 @@ function selectKBPatterns(data) {
     add('P-F14', has(horm,'dry_skin','hair_loss')
       || ((phase === 'post' || phase === 'meno') && age >= 50) || has(supp,'collagen'));
     // P-F15 GSM (вход из Шага 12: data.gsm)
-    add('P-F15', has(gsm,'vaginal_dryness','dyspareunia','urinary_urgency','recurrent_uti')
+    add('P-F15', has(gsm,'vaginal_dryness','dyspareunia','urinary_urgency','recurrent_uti','hydration_shift','comfort_need','pelvic_tension','pelvic_sensory')
       || has(horm,'libido_low')
       || ((phase === 'post' || phase === 'meno') && (data.cycle_status === 'absent' || data.last_period === 'year')));
     // P-F16 аутоиммунные (вход неполный)
@@ -3026,9 +3026,9 @@ function selectKBPatterns(data) {
     // P-F19 аноректальное/проктология (прокси: запор/проктологические токены; вход неполный)
     add('P-F19', has(gi,'constipation','gi_slow','hemorrhoids','lower_sens','rectal_bleeding','lower_flag','fecal_incontinence','core_tone','straining','fiber_absorp'));
     // P-F20 тазовое дно: пролапс + недержание мочи (прокси: урология/GSM; вход неполный)
-    add('P-F20', has(uro,'incontinence','stress_incontinence','urge_incontinence','prolapse')
+    add('P-F20', has(uro,'incontinence','stress_incontinence','urge_incontinence','support_shift','tone_shift','prolapse')
       || has(gsm,'incontinence','prolapse')
-      || ((phase === 'post' || phase === 'meno') && has(gsm,'urinary_urgency') && has(uro,'frequency')));
+      || ((phase === 'post' || phase === 'meno') && has(gsm,'urinary_urgency','pelvic_tension') && has(uro,'frequency')));
     // P-F21 здоровье груди / питание (вход из Шага 12: data.breast; + модифицируемый риск постменопаузы)
     add('P-F21', has(breast,'breast_pain','cyclic_comfort','breast_lump','tissue_tension','family_profile','family_breast_cancer','mastalgia')
       || has(horm,'breast_pain','breast_tenderness','breast_lump','mastalgia')
@@ -3547,7 +3547,8 @@ function buildUserMessage(data, lang, tier) {
   const COMPLAINT_LBL = {
     // App Store 1.4.1 — велнес-лейблы (это ярлыки для «корма» ИИ; логика/ключи не меняются)
     vaginal_dryness:'интимный комфорт и увлажнённость', dyspareunia:'комфорт при близости', urinary_urgency:'сигналы мочевого комфорта', recurrent_uti:'чувствительность мочевого комфорта',
-    stress_incontinence:'тонус мышц центра тела', urge_incontinence:'тонус мышц центра тела', prolapse:'ощущение глубокого тонуса',
+    hydration_shift:'интимный комфорт и увлажнённость', comfort_need:'комфорт при близости', pelvic_tension:'сигналы мочевого комфорта', pelvic_sensory:'чувствительность мочевого комфорта',
+    stress_incontinence:'тонус мышц центра тела', urge_incontinence:'тонус мышц центра тела', support_shift:'тонус мышц центра тела', tone_shift:'тонус мышц центра тела', prolapse:'ощущение глубокого тонуса',
     nocturia:'ночные подъёмы', weak_stream:'ритм оттока', incomplete_emptying:'специфика усвоения клетчатки', frequency:'частота днём',
     bloating:'ощущение тяжести', gi_heaviness:'ощущение тяжести', constipation:'замедленный ритм', gi_slow:'замедленный ритм', diarrhea:'ускоренный ритм', gi_fast:'ускоренный ритм', reflux:'внутренний дискомфорт', gi_inner:'внутренний дискомфорт',
     rectal_bleeding:'чувствительность нижнего отдела', lower_flag:'чувствительность нижнего отдела', hemorrhoids:'специфика усвоения', lower_sens:'специфика усвоения', fecal_incontinence:'тонус мышц центра тела', core_tone:'тонус мышц центра тела', straining:'специфика усвоения клетчатки', fiber_absorp:'специфика усвоения клетчатки',
