@@ -5626,6 +5626,10 @@ function _showResultsInner(){
 
   // Render PRO modules
   window._bpAI=null; window._bpAILoading=false;   // новый результат → ИИ пересобирает памятку
+  // #1: запускаем ИИ-«Памятку дня» СРАЗУ, параллельно с /analyze (не лениво из renderDayBlueprint) —
+  // сетевой запрос стартует на этом кадре, пока считается остальной результат; базовый план всё равно
+  // отрисуется мгновенно, а lazy-вызов внутри renderDayBlueprint сам себя погасит (guard _bpAILoading).
+  if(typeof fetchDayPlan==='function') fetchDayPlan(data);
   renderProModules(data, score, type);
 
   goTo('result');
