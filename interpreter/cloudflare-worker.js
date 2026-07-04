@@ -3002,7 +3002,7 @@ function selectKBPatterns(data) {
     add('P-F11', has(gi,'bloating','constipation','diarrhea','reflux') || has(supp,'probiotics'));
     // P-F12 кости
     add('P-F12', (phase === 'post' && (age >= 55 || (num(labs.vitd) != null && num(labs.vitd) < 50)))
-      || has(bone,'prior_fracture','height_loss','family_osteoporosis','early_menopause'));
+      || has(bone,'load_sensitivity','posture_shift','hereditary_tone','prior_fracture','height_loss','family_osteoporosis','early_menopause'));
     // P-F13 сердечно-сосудистый
     add('P-F13', has(sym,'palpitations') || data.rhr_comp === 'high'
       || num(labs.ldl) > 3.4 || num(labs.apob) > 1.0 || num(labs.tg) > 1.7);
@@ -3027,7 +3027,7 @@ function selectKBPatterns(data) {
       || has(gsm,'incontinence','prolapse')
       || ((phase === 'post' || phase === 'meno') && has(gsm,'urinary_urgency') && has(uro,'frequency')));
     // P-F21 здоровье груди / питание (вход из Шага 12: data.breast; + модифицируемый риск постменопаузы)
-    add('P-F21', has(breast,'breast_pain','breast_lump','family_breast_cancer','mastalgia')
+    add('P-F21', has(breast,'breast_pain','cyclic_comfort','breast_lump','tissue_tension','family_profile','family_breast_cancer','mastalgia')
       || has(horm,'breast_pain','breast_tenderness','breast_lump','mastalgia')
       || ((phase === 'post' || phase === 'meno') && (has(horm,'weight_gain') || (visceral != null && visceral > 9))));
   } else {
@@ -3148,6 +3148,13 @@ const _FEED_DEMED = [
   [/инсомни[а-яё]*/gi, 'беспокойный сон'],
   [/ПМС/g, 'маркеры комфорта перед новым ритмом'],   // VIO/PRO: убрать ПМС-ярлык из корма (App Store 1.4.1)
   [/предменструальн[а-яё]*/gi, 'перед новым ритмом'],
+  // онко/остео/травма-триггеры (App Store 1.4.1) → велнес
+  [/рак[а]?\s*груди[а-яё]*/gi, 'исторические особенности семейного профиля'],
+  [/остеопороз[а-яё]*/gi, 'крепость и тонус опоры'],
+  [/остеопени[а-яё]*/gi, 'крепость и тонус опоры'],
+  [/уплотнени[а-яё]*(\s*\/\s*узел)?/gi, 'ощущение напряжения в тканях'],
+  [/перелом[а-яё]*/gi, 'высокая чувствительность к нагрузкам'],
+  [/масталги[а-яё]*/gi, 'циклический дискомфорт'],
   [/терапи[а-яё]*\s*перв[а-яё]*\s*лини[а-яё]*/gi, 'первый шаг образа жизни'],
   // общая клин. лексика
   [/нутритивн[а-яё]*\s*поддержк[а-яё]*/gi, 'велнес-поддержка'],
@@ -3519,7 +3526,7 @@ function buildUserMessage(data, lang, tier) {
     bloating:'вздутие/газы', constipation:'запоры', diarrhea:'диарея/жидкий стул', reflux:'изжога/рефлюкс',
     rectal_bleeding:'кровь при дефекации', hemorrhoids:'геморрой/узлы', fecal_incontinence:'недержание газов/кала', straining:'сильное натуживание',
     heaviness:'тяжесть после еды', fissure:'анальная трещина', itch:'анальный зуд/дискомфорт',
-    breast_pain:'боль/чувствительность груди', breast_lump:'уплотнение/узел в груди', family_breast_cancer:'рак груди в семье',
+    breast_pain:'циклический дискомфорт верхней части тела', cyclic_comfort:'циклический дискомфорт верхней части тела', breast_lump:'ощущение напряжения в тканях', tissue_tension:'ощущение напряжения в тканях', family_breast_cancer:'исторические особенности семейного профиля', family_profile:'исторические особенности семейного профиля',
   };
   const flagC = (arr) => (Array.isArray(arr) ? arr : []).filter(t => t && !String(t).startsWith('none') && COMPLAINT_LBL[t]).map(t => COMPLAINT_LBL[t]);
   const _gsmC = flagC(data.gsm), _uroC = flagC(data.urology), _giC = flagC(data.gi), _breastC = flagC(data.breast);
