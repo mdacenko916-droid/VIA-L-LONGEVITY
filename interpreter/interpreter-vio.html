@@ -4760,13 +4760,14 @@ function _actFactor(data){ var f=data.act_freq; return f==='high'?1.6 : f==='mod
 var _BP_CS='background:linear-gradient(150deg,#1b1528,#130e1f);border:1px solid rgba(180,138,240,.28);border-radius:16px;padding:15px 16px;margin-bottom:12px;';
 // ═══ ПАМЯТКА ДНЯ — 6 глав → BottomSheet (детерминированно, из велнес-базы; RU-пилот, i18n позже) ═══
 function _bpChapters(){
+  // Заголовки глав видны ВСЕГДА (в т.ч. при ИИ-плане). L() отдаёт en для всех не-RU языков.
   return [
-    {id:'morning', icon:'☀️', title:'Утро',               teaser:'Старт • разминка • завтрак • нутрицевтики'},
-    {id:'lunch',   icon:'🍽', title:'Обед',               teaser:'Меню и поддержка'},
-    {id:'evening', icon:'🌙', title:'Вечер',              teaser:'Ужин за 3 ч до сна • нутрицевтики'},
-    {id:'activity',icon:'🏋️', title:'Физическая нагрузка', teaser:'Под возраст, пол и активность'},
-    {id:'water',   icon:'💧', title:'Вода',               teaser:'Ориентир под массу тела'},
-    {id:'sleep',   icon:'😴', title:'Сон',                teaser:'Практики под ваши сигналы (Perry Academy)'}
+    {id:'morning', icon:'☀️', title:L({ru:'Утро',en:'Morning'}),               teaser:L({ru:'Старт • разминка • завтрак • нутрицевтики',en:'Start • warm-up • breakfast • supplements'})},
+    {id:'lunch',   icon:'🍽', title:L({ru:'Обед',en:'Lunch'}),                  teaser:L({ru:'Меню и поддержка',en:'Menu and support'})},
+    {id:'evening', icon:'🌙', title:L({ru:'Вечер',en:'Evening'}),               teaser:L({ru:'Ужин за 3 ч до сна • нутрицевтики',en:'Dinner ~3 h before sleep • supplements'})},
+    {id:'activity',icon:'🏋️', title:L({ru:'Физическая нагрузка',en:'Movement'}), teaser:L({ru:'Под возраст, пол и активность',en:'For your age, sex and activity'})},
+    {id:'water',   icon:'💧', title:L({ru:'Вода',en:'Water'}),                   teaser:L({ru:'Ориентир под массу тела',en:'Guideline by body weight'})},
+    {id:'sleep',   icon:'😴', title:L({ru:'Сон',en:'Sleep'}),                    teaser:L({ru:'Практики под ваши сигналы (Perry Academy)',en:'Practices for your signals (Perry Academy)'})}
   ];
 }
 function _bpChapterData(id, data){
@@ -4774,111 +4775,111 @@ function _bpChapterData(id, data){
   var age=parseInt(data.age)||48, over40=age>=40, f=data.act_freq;
   if(id==='morning'){
     var bf=isMale?[
-      'Омлет из 3 яиц + тыквенные семечки (цинк) + зелень',
-      'Творог ~180 г + грецкий орех + ягоды',
-      'Скумбрия/лосось + цельнозерновой тост + авокадо',
-      'Греческий йогурт + миндаль + семена чиа',
-      'Яичница из 3 яиц + цельнозерновой тост + помидоры',
-      'Овсянка + порция протеина + орехи + банан'
+      L({ru:'Омлет из 3 яиц + тыквенные семечки (цинк) + зелень',en:'3-egg omelette + pumpkin seeds (zinc) + greens'}),
+      L({ru:'Творог ~180 г + грецкий орех + ягоды',en:'Cottage cheese ~180 g + walnuts + berries'}),
+      L({ru:'Скумбрия/лосось + цельнозерновой тост + авокадо',en:'Mackerel/salmon + wholegrain toast + avocado'}),
+      L({ru:'Греческий йогурт + миндаль + семена чиа',en:'Greek yogurt + almonds + chia seeds'}),
+      L({ru:'Яичница из 3 яиц + цельнозерновой тост + помидоры',en:'3-egg scramble + wholegrain toast + tomatoes'}),
+      L({ru:'Овсянка + порция протеина + орехи + банан',en:'Oatmeal + a scoop of protein + nuts + banana'})
     ]:[
-      'Омлет из 2–3 яиц + авокадо + горсть зелени',
-      'Творог 5% ~180 г + ягоды + 1 ст. л. молотого льна',
-      'Греческий йогурт + орехи + семена чиа',
-      'Овсянка на воде + порция протеина + ягоды',
-      'Цельнозерновой тост + яйцо-пашот + авокадо',
-      'Смузи: кефир + ягоды + протеин + 1 ст. л. льна'
+      L({ru:'Омлет из 2–3 яиц + авокадо + горсть зелени',en:'2–3-egg omelette + avocado + a handful of greens'}),
+      L({ru:'Творог 5% ~180 г + ягоды + 1 ст. л. молотого льна',en:'Cottage cheese ~180 g + berries + 1 tbsp ground flaxseed'}),
+      L({ru:'Греческий йогурт + орехи + семена чиа',en:'Greek yogurt + nuts + chia seeds'}),
+      L({ru:'Овсянка на воде + порция протеина + ягоды',en:'Oatmeal on water + a scoop of protein + berries'}),
+      L({ru:'Цельнозерновой тост + яйцо-пашот + авокадо',en:'Wholegrain toast + poached egg + avocado'}),
+      L({ru:'Смузи: кефир + ягоды + протеин + 1 ст. л. льна',en:'Smoothie: kefir + berries + protein + 1 tbsp flaxseed'})
     ];
     var supp=isMale?[
-      'Витамин D3 + K2 с жирной едой — ориентир, значение индивидуально',
-      'Омега-3 ~2 г с едой — сердце и мозг',
-      'Цинк — из еды (тыквенные семечки, яйца); добавкой лишь при недостатке'
+      L({ru:'Витамин D3 + K2 с жирной едой — ориентир, значение индивидуально',en:'Vitamin D3 + K2 with a fatty meal — a guideline, individual amounts vary'}),
+      L({ru:'Омега-3 ~2 г с едой — сердце и мозг',en:'Omega-3 ~2 g with food — heart and brain'}),
+      L({ru:'Цинк — из еды (тыквенные семечки, яйца); добавкой лишь при недостатке',en:'Zinc — from food (pumpkin seeds, eggs); a supplement only if lacking'})
     ]:[
-      'Витамин D3 + K2 с жирной едой — ориентир, значение индивидуально',
-      'Омега-3 ~2 г с едой',
-      '1 ст. л. молотого льна — мягкая растительная поддержка баланса'
+      L({ru:'Витамин D3 + K2 с жирной едой — ориентир, значение индивидуально',en:'Vitamin D3 + K2 with a fatty meal — a guideline, individual amounts vary'}),
+      L({ru:'Омега-3 ~2 г с едой',en:'Omega-3 ~2 g with food'}),
+      L({ru:'1 ст. л. молотого льна — мягкая растительная поддержка баланса',en:'1 tbsp ground flaxseed — gentle plant support for inner balance'})
     ];
     return [
-      {title:'Утренний старт', items:[
-        'Стакан воды 250–300 мл сразу после пробуждения',
-        'Дневной свет 10–15 мин в первый час — бодрость и вечерний сон',
-        'Кофе лучше через 60–90 мин после подъёма, не натощак'
+      {title:L({ru:'Утренний старт',en:'Morning start'}), items:[
+        L({ru:'Стакан воды 250–300 мл сразу после пробуждения',en:'A glass of water 250–300 ml right after waking'}),
+        L({ru:'Дневной свет 10–15 мин в первый час — бодрость и вечерний сон',en:'Daylight 10–15 min in the first hour — alertness and evening sleep'}),
+        L({ru:'Кофе лучше через 60–90 мин после подъёма, не натощак',en:'Coffee is better 60–90 min after waking, not on an empty stomach'})
       ]},
-      {title:'Разминка', items:[
-        'Лёгкая разминка или короткая прогулка 5–10 мин',
-        '3–5 глубоких вдохов с длинным выдохом — спокойный тонус'
+      {title:L({ru:'Разминка',en:'Warm-up'}), items:[
+        L({ru:'Лёгкая разминка или короткая прогулка 5–10 мин',en:'Light warm-up or a short 5–10 min walk'}),
+        L({ru:'3–5 глубоких вдохов с длинным выдохом — спокойный тонус',en:'3–5 deep breaths with a long exhale — calm tone'})
       ]},
-      {title:'Завтрак · выберите один (~'+per+' г белка)', variants:true, items:bf},
-      {title:'Нутрицевтики (утро)', items:supp}
+      {title:L({ru:'Завтрак · выберите один (~'+per+' г белка)',en:'Breakfast · pick one (~'+per+' g protein)'}), variants:true, items:bf},
+      {title:L({ru:'Нутрицевтики (утро)',en:'Supplements (morning)'}), items:supp}
     ];
   }
   if(id==='lunch'){
     return [
-      {title:'Обед · выберите один (~'+per+' г белка + овощи + медленные углеводы)', variants:true, items:[
-        'Индейка/курица ~130 г + гречка + большой салат с оливковым маслом',
-        'Лосось/тунец ~140 г + бурый рис + брокколи',
-        'Чечевица/нут + тушёные овощи + зелень (растительный день)',
-        'Постная говядина + запечённый батат + листовые овощи',
-        'Куриная грудка + киноа + овощи-гриль',
-        'Тёплый салат: фасоль + яйцо + авокадо + зелень'
+      {title:L({ru:'Обед · выберите один (~'+per+' г белка + овощи + медленные углеводы)',en:'Lunch · pick one (~'+per+' g protein + vegetables + slow carbs)'}), variants:true, items:[
+        L({ru:'Индейка/курица ~130 г + гречка + большой салат с оливковым маслом',en:'Turkey/chicken ~130 g + buckwheat + a large salad with olive oil'}),
+        L({ru:'Лосось/тунец ~140 г + бурый рис + брокколи',en:'Salmon/tuna ~140 g + brown rice + broccoli'}),
+        L({ru:'Чечевица/нут + тушёные овощи + зелень (растительный день)',en:'Lentils/chickpeas + stewed vegetables + greens (plant-based day)'}),
+        L({ru:'Постная говядина + запечённый батат + листовые овощи',en:'Lean beef + baked sweet potato + leafy greens'}),
+        L({ru:'Куриная грудка + киноа + овощи-гриль',en:'Chicken breast + quinoa + grilled vegetables'}),
+        L({ru:'Тёплый салат: фасоль + яйцо + авокадо + зелень',en:'Warm salad: beans + egg + avocado + greens'})
       ]},
-      {title:'Нутрицевтики (обед)', items:[
-        'Обычно дополнительно не нужно — фокус на цельной еде',
-        'Клетчатка: добавьте зелень/овощи для ровного пищеварения'
+      {title:L({ru:'Нутрицевтики (обед)',en:'Supplements (lunch)'}), items:[
+        L({ru:'Обычно дополнительно не нужно — фокус на цельной еде',en:'Usually nothing extra is needed — focus on whole food'}),
+        L({ru:'Клетчатка: добавьте зелень/овощи для ровного пищеварения',en:'Fiber: add greens/vegetables for smooth digestion'})
       ]}
     ];
   }
   if(id==='evening'){
     var din=isMale?[
-      'Белая рыба + тушёные овощи','Куриная грудка + большой салат','Омлет + овощи-гриль','Тёплый овощной суп + порция белка','Индейка + тушёная капуста','Творог + орехи (лёгкий поздний вариант)'
+      L({ru:'Белая рыба + тушёные овощи',en:'White fish + stewed vegetables'}),L({ru:'Куриная грудка + большой салат',en:'Chicken breast + a large salad'}),L({ru:'Омлет + овощи-гриль',en:'Omelette + grilled vegetables'}),L({ru:'Тёплый овощной суп + порция белка',en:'Warm vegetable soup + a portion of protein'}),L({ru:'Индейка + тушёная капуста',en:'Turkey + stewed cabbage'}),L({ru:'Творог + орехи (лёгкий поздний вариант)',en:'Cottage cheese + nuts (light late option)'})
     ]:[
-      'Белая рыба + тушёные овощи','Творог + зелень + 1 ст. л. льна','Омлет + большой салат','Тёплый овощной суп + порция белка','Запечённая курица + брокколи на пару','Греческий йогурт + орехи (лёгкий поздний вариант)'
+      L({ru:'Белая рыба + тушёные овощи',en:'White fish + stewed vegetables'}),L({ru:'Творог + зелень + 1 ст. л. льна',en:'Cottage cheese + greens + 1 tbsp flaxseed'}),L({ru:'Омлет + большой салат',en:'Omelette + a large salad'}),L({ru:'Тёплый овощной суп + порция белка',en:'Warm vegetable soup + a portion of protein'}),L({ru:'Запечённая курица + брокколи на пару',en:'Baked chicken + steamed broccoli'}),L({ru:'Греческий йогурт + орехи (лёгкий поздний вариант)',en:'Greek yogurt + nuts (light late option)'})
     ];
     return [
-      {title:'Ужин за ~3 ч до сна · выберите один (легче)', variants:true, items:din},
-      {title:'Важно вечером', items:['Без позднего кофеина и алкоголя — они «съедают» глубокий сон']},
-      {title:'Нутрицевтики (вечер)', items:[
-        'Магний — стандартный ориентир ~400 мг для спокойствия перед сном (форму обсудите со специалистом)',
-        'Чай ромашка/мелисса — мягкое расслабление'
+      {title:L({ru:'Ужин за ~3 ч до сна · выберите один (легче)',en:'Dinner ~3 h before sleep · pick one (lighter)'}), variants:true, items:din},
+      {title:L({ru:'Важно вечером',en:'Important in the evening'}), items:[L({ru:'Без позднего кофеина и алкоголя — они «съедают» глубокий сон',en:'No late caffeine or alcohol — they eat into deep sleep'})]},
+      {title:L({ru:'Нутрицевтики (вечер)',en:'Supplements (evening)'}), items:[
+        L({ru:'Магний — стандартный ориентир ~400 мг для спокойствия перед сном (форму обсудите со специалистом)',en:'Magnesium — a common guideline ~400 mg for calm before sleep (discuss the form with a specialist)'}),
+        L({ru:'Чай ромашка/мелисса — мягкое расслабление',en:'Chamomile/lemon balm tea — gentle relaxation'})
       ]}
     ];
   }
   if(id==='activity'){
     var it=[];
-    it.push(over40?'Силовые 2–3×/нед — ключевая основа с возрастом (сила мышц и крепость костей). Начните с малого: 2–3 подхода простых упражнений.':'Силовые 2–3×/нед — фундамент тонуса и формы, маленькими шагами.');
-    it.push('Ходьба 10–15 мин сразу после еды — лучший момент для ровной энергии.');
-    it.push('Йога/растяжка — для нервной системы и восстановления.');
-    if(data.act_recovery==='exhausted') it.push('Вы отмечаете истощение после нагрузок — снизьте интенсивность, добавьте день полного отдыха и приоритет сну.');
-    if(f==='0'||f==='low') it.push('Старт: ежедневная прогулка + 1 короткая силовая, наращивайте постепенно.');
-    else if(f==='high') it.push('Высокая активность — следите за восстановлением: 1–2 дня отдыха, достаточно белка и сна.');
-    it.push(isMale?'Комбо силовая + короткое кардио поддерживает тонус и обмен.':'Опорная и силовая берегут крепость костей; избегайте резких скручиваний с весом.');
-    it.push('Интенсивное — лучше утром/днём; вечером — мягкое (йога, прогулка), чтобы не мешать сну.');
-    return [{title:'Движение — под вас', items:it}];
+    it.push(over40?L({ru:'Силовые 2–3×/нед — ключевая основа с возрастом (сила мышц и крепость костей). Начните с малого: 2–3 подхода простых упражнений.',en:'Strength 2–3×/week — a key foundation with age (muscle strength and bone sturdiness). Start small: 2–3 sets of simple moves.'}):L({ru:'Силовые 2–3×/нед — фундамент тонуса и формы, маленькими шагами.',en:'Strength 2–3×/week — the base of tone and shape, in small steps.'}));
+    it.push(L({ru:'Ходьба 10–15 мин сразу после еды — лучший момент для ровной энергии.',en:'A 10–15 min walk right after meals — the best moment for steady energy.'}));
+    it.push(L({ru:'Йога/растяжка — для нервной системы и восстановления.',en:'Yoga/stretching — for the nervous system and recovery.'}));
+    if(data.act_recovery==='exhausted') it.push(L({ru:'Вы отмечаете истощение после нагрузок — снизьте интенсивность, добавьте день полного отдыха и приоритет сну.',en:'You note exhaustion after workouts — lower intensity, add a full rest day and prioritize sleep.'}));
+    if(f==='0'||f==='low') it.push(L({ru:'Старт: ежедневная прогулка + 1 короткая силовая, наращивайте постепенно.',en:'Start: a daily walk + 1 short strength session, build up gradually.'}));
+    else if(f==='high') it.push(L({ru:'Высокая активность — следите за восстановлением: 1–2 дня отдыха, достаточно белка и сна.',en:'High activity — watch recovery: 1–2 rest days, enough protein and sleep.'}));
+    it.push(isMale?L({ru:'Комбо силовая + короткое кардио поддерживает тонус и обмен.',en:'A combo of strength + short cardio supports tone and metabolism.'}):L({ru:'Опорная и силовая берегут крепость костей; избегайте резких скручиваний с весом.',en:'Weight-bearing and strength protect bone sturdiness; avoid sharp loaded twists.'}));
+    it.push(L({ru:'Интенсивное — лучше утром/днём; вечером — мягкое (йога, прогулка), чтобы не мешать сну.',en:'Intense work is better in the morning/day; evenings — gentle (yoga, a walk) so sleep is undisturbed.'}));
+    return [{title:L({ru:'Движение — под вас',en:'Movement — for you'}), items:it}];
   }
   if(id==='water'){
     var target=(w*35/1000).toFixed(1);
-    return [{title:'Водный баланс', items:[
-      'Ваш ориентир: ≈ '+target+' л/день (≈ 35 мл на кг массы тела '+w+' кг)',
-      'В активные дни и в жару +250–500 мл',
-      'По стакану каждые 1.5–2 ч до 19:00 — чтобы не будить себя ночью',
-      'Источники: чистая вода, травяные чаи без сахара'
+    return [{title:L({ru:'Водный баланс',en:'Water balance'}), items:[
+      L({ru:'Ваш ориентир: ≈ '+target+' л/день (≈ 35 мл на кг массы тела '+w+' кг)',en:'Your guideline: ≈ '+target+' L/day (≈ 35 ml per kg of body weight, '+w+' kg)'}),
+      L({ru:'В активные дни и в жару +250–500 мл',en:'On active days and in heat +250–500 ml'}),
+      L({ru:'По стакану каждые 1.5–2 ч до 19:00 — чтобы не будить себя ночью',en:'A glass every 1.5–2 h until 7 pm — so you don’t wake yourself at night'}),
+      L({ru:'Источники: чистая вода, травяные чаи без сахара',en:'Sources: plain water, unsweetened herbal teas'})
     ]}];
   }
   if(id==='sleep'){
     var base=[
-      'Фиксированное время подъёма — главный якорь ритма (даже в выходные)',
-      'Кровать — только для сна. Не спится ~20 мин → встать, тихое тусклое занятие, вернуться при сонливости',
-      'Не смотрите на часы ночью — снижает тревогу о сне',
-      'Прохладная тёмная спальня, ритуал спокойствия за час до сна',
-      'Дыхание 4-7-8 перед сном',
-      'Продукты с магнием вечером; без позднего кофеина и алкоголя'
+      L({ru:'Фиксированное время подъёма — главный якорь ритма (даже в выходные)',en:'A fixed wake-up time — the main anchor of rhythm (even on weekends)'}),
+      L({ru:'Кровать — только для сна. Не спится ~20 мин → встать, тихое тусклое занятие, вернуться при сонливости',en:'Bed is only for sleep. Not sleeping ~20 min → get up, a quiet dim activity, return when drowsy'}),
+      L({ru:'Не смотрите на часы ночью — снижает тревогу о сне',en:'Don’t check the clock at night — it lowers anxiety about sleep'}),
+      L({ru:'Прохладная тёмная спальня, ритуал спокойствия за час до сна',en:'A cool dark bedroom, a calming ritual an hour before sleep'}),
+      L({ru:'Дыхание 4-7-8 перед сном',en:'4-7-8 breathing before sleep'}),
+      L({ru:'Продукты с магнием вечером; без позднего кофеина и алкоголя',en:'Magnesium-rich foods in the evening; no late caffeine or alcohol'})
     ];
     var pers=[];
-    if(data.hf_count==='mid'||data.hf_count==='high'||data.hf_count==='veryhigh') pers.push('Ночной жар: прохладная спальня, лёгкий ужин, дышащая ткань — меньше пробуждений.');
-    if(data.wake==='early') pers.push('Ранние пробуждения: белковый перекус + продукты с магнием перед сном.');
-    if(/high|выс/i.test(data.stress||'')||(parseInt(data.anxiety)||0)>=5) pers.push('Тревожный ум: 5 мин майндфулнес днём и дыхание вечером — легче отпускать мысли ночью.');
-    var secs=[{title:'Практики сна (основа)', items:base}];
-    if(pers.length) secs.push({title:'Под ваши сигналы', items:pers});
-    secs.push({title:'Важно', items:['Основа — поведение и ритм (принципы Perry Academy / CBT-I), а не только добавки. Носимые могут быть неточны — ориентир на самочувствие днём.']});
+    if(data.hf_count==='mid'||data.hf_count==='high'||data.hf_count==='veryhigh') pers.push(L({ru:'Ночной жар: прохладная спальня, лёгкий ужин, дышащая ткань — меньше пробуждений.',en:'Night warmth: a cool bedroom, a light dinner, breathable fabric — fewer awakenings.'}));
+    if(data.wake==='early') pers.push(L({ru:'Ранние пробуждения: белковый перекус + продукты с магнием перед сном.',en:'Early awakenings: a protein snack + magnesium-rich foods before sleep.'}));
+    if(/high|выс/i.test(data.stress||'')||(parseInt(data.anxiety)||0)>=5) pers.push(L({ru:'Тревожный ум: 5 мин майндфулнес днём и дыхание вечером — легче отпускать мысли ночью.',en:'An anxious mind: 5 min of mindfulness by day and breathing in the evening — easier to let thoughts go at night.'}));
+    var secs=[{title:L({ru:'Практики сна (основа)',en:'Sleep practices (base)'}), items:base}];
+    if(pers.length) secs.push({title:L({ru:'Под ваши сигналы',en:'For your signals'}), items:pers});
+    secs.push({title:L({ru:'Важно',en:'Important'}), items:[L({ru:'Основа — поведение и ритм (принципы Perry Academy / CBT-I), а не только добавки. Носимые могут быть неточны — ориентир на самочувствие днём.',en:'The base is behavior and rhythm (Perry Academy / CBT-I principles), not just supplements. Wearables can be inaccurate — go by how you feel during the day.'})]});
     return secs;
   }
   return [];
@@ -4953,16 +4954,16 @@ function downloadDayPlan(){
     return '<section><h2>'+r.icon+' '+r.title+'</h2>'+secs.map(function(s){return '<h3>'+s.title+'</h3><ul>'+s.items.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>';}).join('')+'</section>';
   }).join('');
   var nm=(data.name?(', '+data.name):'');
-  var html='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Памятка дня</title>'
+  var html='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+L({ru:'Памятка дня',en:'Day plan'})+'</title>'
     +'<style>body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:640px;margin:0 auto;padding:28px 22px;color:#1c1a22;line-height:1.5;}'
     +'h1{font-size:22px;margin:0 0 4px;}p.d{font-size:11px;color:#888;margin:0 0 18px;}'
     +'section{margin:0 0 16px;padding:14px 16px;border:1px solid #e5e0ef;border-radius:12px;}'
     +'h2{font-size:17px;margin:0 0 8px;color:#5b3fa0;}h3{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#9a7fd0;margin:12px 0 4px;}'
     +'ul{margin:0;padding-left:18px;}li{margin:4px 0;font-size:14px;}@media print{section{break-inside:avoid;}}</style></head><body>'
-    +'<h1>🧭 Моя памятка дня'+nm+'</h1><p class="d">Общие велнес-ориентиры под ваши данные. Информация носит ознакомительный велнес-характер и не является персональной диетой или медицинским назначением.</p>'
+    +'<h1>🧭 '+L({ru:'Моя памятка дня',en:'My day plan'})+nm+'</h1><p class="d">'+L({ru:'Общие велнес-ориентиры под ваши данные. Информация носит ознакомительный велнес-характер и не является персональной диетой или медицинским назначением.',en:'General wellness orientations for your data. This is educational wellness information, not a personal diet or medical prescription.'})+'</p>'
     +body+'</body></html>';
   var wnd=window.open('','_blank');
-  if(!wnd){ alert('Разрешите всплывающие окна, чтобы сохранить памятку в PDF.'); return; }
+  if(!wnd){ alert(L({ru:'Разрешите всплывающие окна, чтобы сохранить памятку в PDF.',en:'Allow pop-ups to save the day plan as PDF.'})); return; }
   wnd.document.write(html); wnd.document.close();
   setTimeout(function(){ try{wnd.focus();wnd.print();}catch(e){} }, 400);
 }
