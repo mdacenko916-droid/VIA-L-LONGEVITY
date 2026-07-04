@@ -3024,7 +3024,7 @@ function selectKBPatterns(data) {
     add('P-F18', (num(labs.b12) != null && num(labs.b12) < 300) || has(sym,'numbness')
       || (has(sym,'fatigue') && has(sym,'foggy')));
     // P-F19 аноректальное/проктология (прокси: запор/проктологические токены; вход неполный)
-    add('P-F19', has(gi,'constipation','gi_slow','hemorrhoids','lower_sens','rectal_bleeding','lower_flag','fecal_incontinence','core_tone','straining','fiber_absorp'));
+    add('P-F19', has(gi,'constipation','gi_slow','hemorrhoids','lower_sens','rectal_bleeding','lower_flag','fecal_incontinence','core_tone','straining','fiber_absorp','fiber_response'));
     // P-F20 тазовое дно: пролапс + недержание мочи (прокси: урология/GSM; вход неполный)
     add('P-F20', has(uro,'incontinence','stress_incontinence','urge_incontinence','support_shift','tone_shift','prolapse')
       || has(gsm,'incontinence','prolapse')
@@ -3552,7 +3552,7 @@ function buildUserMessage(data, lang, tier) {
     nocturia:'ночные подъёмы', weak_stream:'ритм оттока', incomplete_emptying:'специфика усвоения клетчатки', frequency:'частота днём',
     night_waking:'ночные подъёмы', fluid_flow:'ритм оттока', pelvic_tone:'специфика усвоения клетчатки', daytime_hydration:'частота днём',
     bloating:'ощущение тяжести', gi_heaviness:'ощущение тяжести', constipation:'замедленный ритм', gi_slow:'замедленный ритм', diarrhea:'ускоренный ритм', gi_fast:'ускоренный ритм', reflux:'внутренний дискомфорт', gi_inner:'внутренний дискомфорт',
-    rectal_bleeding:'чувствительность нижнего отдела', lower_flag:'чувствительность нижнего отдела', hemorrhoids:'специфика усвоения', lower_sens:'специфика усвоения', fecal_incontinence:'тонус мышц центра тела', core_tone:'тонус мышц центра тела', straining:'специфика усвоения клетчатки', fiber_absorp:'специфика усвоения клетчатки',
+    rectal_bleeding:'чувствительность нижнего отдела', lower_flag:'чувствительность нижнего отдела', hemorrhoids:'специфика усвоения', lower_sens:'специфика усвоения', fecal_incontinence:'тонус мышц центра тела', core_tone:'тонус мышц центра тела', straining:'специфика усвоения клетчатки', fiber_absorp:'специфика усвоения клетчатки', fiber_response:'специфика усвоения клетчатки',
     heaviness:'внутренний дискомфорт', fissure:'чувствительность нижнего отдела', itch:'чувствительность нижнего отдела', fiber_spec:'специфика усвоения клетчатки', deep_tone:'ощущение глубокого тонуса',
     breast_pain:'циклический дискомфорт верхней части тела', cyclic_comfort:'циклический дискомфорт верхней части тела', breast_lump:'ощущение напряжения в тканях', tissue_tension:'ощущение напряжения в тканях', family_breast_cancer:'исторические особенности семейного профиля', family_profile:'исторические особенности семейного профиля',
   };
