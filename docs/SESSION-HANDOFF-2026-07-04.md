@@ -1,0 +1,42 @@
+# Хендофф 2026-07-04 (VIO: велнес-KB-форк + ИИ-«Памятка дня»)
+
+> Прочитать первым в новом чате. Всё ниже **ЗАДЕПЛОЕНО В ПРОД** (воркер + git push). Продолжение сессии 2026-07-02/03.
+
+## Контекст: что за продукт
+`interpreter/` — ИП (интерпретатор), 12 языков. Тариф **VIO** (€9.90, App Store) = «PRO без гаджета», subjective-first.
+Весь фокус этих сессий — **де-медикализация VIO под Apple 1.4.1 / EU MDR / FTC**, стиль Oura/Whoop, БЕЗ потери глубины.
+Деплой: HTML → `git push origin main` (GitHub Pages, via-l.com); воркер → `cd interpreter && wrangler deploy` (авторизован, viaelcom@gmail.com).
+Тест: VSCode Live Preview; синтакс inline-JS — `vm.Script` по всем `<script>`. Прод-тест воркера — `curl .../analyze` и `.../day-plan`.
+
+## Что сделано и в проде (2026-07-04)
+
+### 1. Форк базы знаний по тарифу (устранил корень утечек)
+- **VIO/PRO** → `WELLNESS_SYSTEM_PROMPT` + `WELLNESS_KB` (велнес-нативная база: сон/стресс/питание/движение/этапы + велнес-версии ВСЕХ паттернов `[P-F1..P-F18]`/`[P-M1..P-M11]`, те же ID, дистилляция из `interpreter/Infa Cloude` без гормонов/диагнозов/РКИ-чисел). Клин. глоссарий для VIO пропускается.
+- **EXPERT/ELITE** → клиническая `SYSTEM_PROMPT` + глоссарий (без изменений).
+- `selectKBPatterns(data)` резолвится в обоих (раньше для VIO «используй P-F3» висело без определения).
+- Раньше боролись слоями-подавителями (`deMedicalizeFeed`/`_wl`/wellnessGuard) — они ОСТАЛИСЬ как defense-in-depth, но теперь модели «нечего течь».
+
+### 2. «Памятка дня» — теперь ИИ-генерация (принцип владельца: не шаблон!)
+- Циркадный таймлайн (06–08…19–22) **удалён** как дубль.
+- Блок **«🧭 Памятка дня»** (внутри карточки `mod-circadian`) = **6 кликабельных строк-глав**: Утро · Обед · Вечер · Физнагрузка · Вода · Сон → нативный **BottomSheet** (`#circModal`, репарент в `<body>`, слайд снизу, drag-handle).
+- Контент генерит воркер **`/day-plan`** (`handleDayPlan`) → строгий JSON `{morning:[{title,items,variants}], lunch, evening, activity, water, sleep}`, на велнес-базе, из того же `buildUserMessage`-корма (с активными паттернами). **Персонально** под пол/возраст/вес/фазу/сигналы. Меню еды `variants:true` → нумерованные «выберите один».
+- Клиент: `fetchDayPlan`→`window._bpAI`→`_cleanPlan`→`renderDayBlueprint`; `openBpChapter`/`downloadDayPlan` берут `_bpAI`, иначе **детерминированный фолбэк** `_bpChapterData` (RU). Индикатор «✨ Персонализировано ИИ» / «⏳ базовый план». Скачивание = print-to-PDF.
+- ИИ пишет на языке юзера → 12 языков памятки автоматом (фолбэк пока RU).
+
+## Ключевые места в коде
+- `interpreter/cloudflare-worker.js`: `SYSTEM_PROMPT` (клин. KB, стр ~5), `WELLNESS_SYSTEM_PROMPT` + `WELLNESS_KB` (велнес), `WELLNESS_STYLE_OURA`, `deMedicalizeFeed`/`_FEED_DEMED`, `handleAnalyze`, **`handleDayPlan`** (роут `/day-plan`), `selectKBPatterns`, `buildUserMessage`.
+- `interpreter/interpreter-vio.html`: `renderDayBlueprint`/`_bpChapterData`/`_bpChapters`/`_bpRenderSecs`/`openBpChapter`/`fetchDayPlan`/`_cleanPlan`/`downloadDayPlan`/`openSheet`/`closeCircModal`; BottomSheet `#circModal`; override-слои терминов вопросов `WRED`/`WRED2` (перед `window.__SOFTSKIP=`); клиентский `_wl`.
+
+## 🔴 Осталось (мои предложения, приоритет сверху)
+1. **Убрать задержку памятки:** звать `/day-plan` параллельно с `/analyze` в `_showResultsInner`, не лениво из `renderDayBlueprint`.
+2. **Углубить меню/нутрицевтики** под фазу (пери/зрелый) и мужские паттерны — прямо в промпте `/day-plan`.
+3. **Граммовка порций под вес** внутри каждого варианта меню.
+4. **Native-напоминалки** по главам (Capacitor local notifications) + сохранение PDF/картинки в Файлы.
+5. Фолбэк памятки на 12 языков (или убрать, если ИИ-путь надёжен).
+6. Паритет памятки/велнес-KB в PRO.
+7. **Глазной тест владельца:** пройти VIO как жен-пери-плохой-сон и как муж-45+ → памятки должны различаться.
+
+## Правила (не забыть)
+- Весь новый контент VIO — велнес (без гормонов/диагнозов/менопаузы/РКИ; дозы = ориентиры). Термины вопросов править в `WRED`/`WRED2`, велнес-KB в `WELLNESS_KB`/`WELLNESS_SYSTEM_PROMPT`.
+- EXPERT/ELITE = клиника, но claim-safe и не-приказно; правки VIO туда обычно НЕ зеркалить.
+- Коммит+push и `wrangler deploy` — только по готовности; всё текущее уже в проде.
