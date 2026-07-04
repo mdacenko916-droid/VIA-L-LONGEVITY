@@ -3028,7 +3028,7 @@ function selectKBPatterns(data) {
     // P-F20 тазовое дно: пролапс + недержание мочи (прокси: урология/GSM; вход неполный)
     add('P-F20', has(uro,'incontinence','stress_incontinence','urge_incontinence','support_shift','tone_shift','prolapse')
       || has(gsm,'incontinence','prolapse')
-      || ((phase === 'post' || phase === 'meno') && has(gsm,'urinary_urgency','pelvic_tension') && has(uro,'frequency')));
+      || ((phase === 'post' || phase === 'meno') && has(gsm,'urinary_urgency','pelvic_tension') && has(uro,'frequency','daytime_hydration')));
     // P-F21 здоровье груди / питание (вход из Шага 12: data.breast; + модифицируемый риск постменопаузы)
     add('P-F21', has(breast,'breast_pain','cyclic_comfort','breast_lump','tissue_tension','family_profile','family_breast_cancer','mastalgia')
       || has(horm,'breast_pain','breast_tenderness','breast_lump','mastalgia')
@@ -3036,7 +3036,7 @@ function selectKBPatterns(data) {
   } else {
     // P-M1 тестостерон/андропауза
     add('P-M1', phase === 'andro'
-      || (has(horm,'libido_male','muscle_loss','fatigue_chronic') && energy <= 5) || data.vitality === 'low');
+      || (has(horm,'libido_male','muscle_loss','fatigue_chronic','intimacy_rhythm','muscle_tone','energy_baseline') && energy <= 5) || data.vitality === 'low');
     // P-M2 ГГН/кортизол
     add('P-M2', stressHigh || cortLoad || (hrv < 35 && stressHigh && anx >= 5));
     // P-M3 метаболический синдром
@@ -3056,10 +3056,10 @@ function selectKBPatterns(data) {
     // P-M9 сон/СОАС
     add('P-M9', sleep <= 4 || data.deep === 'none' || data.deep === 'low' || /multiple|many/i.test(wake) || (data.sleep_hours && data.sleep_hours < 6));
     // P-M10 простата/ДГПЖ (вход из Шага 12: data.urology)
-    add('P-M10', age >= 45 && has(uro,'nocturia','weak_stream','incomplete_emptying','frequency'));
+    add('P-M10', age >= 45 && has(uro,'nocturia','weak_stream','incomplete_emptying','frequency','night_waking','fluid_flow','pelvic_tone','daytime_hydration'));
     // P-M11 эректильная дисфункция как ССС-сигнал (прокси: ЭД-токен или низкое либидо + ССС-риск)
-    add('P-M11', has(horm,'erectile','erectile_dysfunction')
-      || (has(horm,'libido_male') && ((visceral != null && visceral > 9)
+    add('P-M11', has(horm,'erectile','erectile_dysfunction','stamina_trend')
+      || (has(horm,'libido_male','intimacy_rhythm') && ((visceral != null && visceral > 9)
           || data.rhr_comp === 'high' || num(labs.ldl) > 3.4 || num(labs.glucose) > 5.6 || num(labs.hba1c) > 5.7)));
   }
 
@@ -3550,6 +3550,7 @@ function buildUserMessage(data, lang, tier) {
     hydration_shift:'интимный комфорт и увлажнённость', comfort_need:'комфорт при близости', pelvic_tension:'сигналы мочевого комфорта', pelvic_sensory:'чувствительность мочевого комфорта',
     stress_incontinence:'тонус мышц центра тела', urge_incontinence:'тонус мышц центра тела', support_shift:'тонус мышц центра тела', tone_shift:'тонус мышц центра тела', prolapse:'ощущение глубокого тонуса',
     nocturia:'ночные подъёмы', weak_stream:'ритм оттока', incomplete_emptying:'специфика усвоения клетчатки', frequency:'частота днём',
+    night_waking:'ночные подъёмы', fluid_flow:'ритм оттока', pelvic_tone:'специфика усвоения клетчатки', daytime_hydration:'частота днём',
     bloating:'ощущение тяжести', gi_heaviness:'ощущение тяжести', constipation:'замедленный ритм', gi_slow:'замедленный ритм', diarrhea:'ускоренный ритм', gi_fast:'ускоренный ритм', reflux:'внутренний дискомфорт', gi_inner:'внутренний дискомфорт',
     rectal_bleeding:'чувствительность нижнего отдела', lower_flag:'чувствительность нижнего отдела', hemorrhoids:'специфика усвоения', lower_sens:'специфика усвоения', fecal_incontinence:'тонус мышц центра тела', core_tone:'тонус мышц центра тела', straining:'специфика усвоения клетчатки', fiber_absorp:'специфика усвоения клетчатки',
     heaviness:'внутренний дискомфорт', fissure:'чувствительность нижнего отдела', itch:'чувствительность нижнего отдела', fiber_spec:'специфика усвоения клетчатки', deep_tone:'ощущение глубокого тонуса',
