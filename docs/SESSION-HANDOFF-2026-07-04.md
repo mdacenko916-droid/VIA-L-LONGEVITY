@@ -27,8 +27,11 @@
 - `interpreter/cloudflare-worker.js`: `SYSTEM_PROMPT` (клин. KB, стр ~5), `WELLNESS_SYSTEM_PROMPT` + `WELLNESS_KB` (велнес), `WELLNESS_STYLE_OURA`, `deMedicalizeFeed`/`_FEED_DEMED`, `handleAnalyze`, **`handleDayPlan`** (роут `/day-plan`), `selectKBPatterns`, `buildUserMessage`.
 - `interpreter/interpreter-vio.html`: `renderDayBlueprint`/`_bpChapterData`/`_bpChapters`/`_bpRenderSecs`/`openBpChapter`/`fetchDayPlan`/`_cleanPlan`/`downloadDayPlan`/`openSheet`/`closeCircModal`; BottomSheet `#circModal`; override-слои терминов вопросов `WRED`/`WRED2` (перед `window.__SOFTSKIP=`); клиентский `_wl`.
 
+## Добавлено 2026-07-04 (сессия 2, в проде — коммит d4100fb)
+- **Принцип тарелки-конструктора** в «отдел еда» (3 места): клин.модуль ПИТАНИЕ (EXPERT/ELITE), велнес-KB ПИТАНИЕ (VIO/PRO велнес-словами), промпт `/day-plan` (ядро меню-вариантов). Суть: гарвардская тарелка КАЖДЫЙ приём (½ овощи/клетчатка · ¼ белок · ¼ медленные углеводы) + правило 80/20 (80% цельная еда, 20% кафе/праздники без вины) + «учить собирать тарелку, а НЕ выдавать готовое меню; дефициты — преимущественно из еды». Проверено curl: заголовки завтрака/обеда теперь «соберите тарелку · ½ овощи + ¼ белок + ¼ медл.углеводы · выберите один».
+- ✅ **#1 закрыт:** `fetchDayPlan()` поднят в `_showResultsInner` — стартует параллельно с `fetchAIAnalysis`, не лениво из `renderDayBlueprint` (lazy-вызов гасится guard `_bpAILoading`). Задержка памятки убрана.
+
 ## 🔴 Осталось (мои предложения, приоритет сверху)
-1. **Убрать задержку памятки:** звать `/day-plan` параллельно с `/analyze` в `_showResultsInner`, не лениво из `renderDayBlueprint`.
 2. **Углубить меню/нутрицевтики** под фазу (пери/зрелый) и мужские паттерны — прямо в промпте `/day-plan`.
 3. **Граммовка порций под вес** внутри каждого варианта меню.
 4. **Native-напоминалки** по главам (Capacitor local notifications) + сохранение PDF/картинки в Файлы.
