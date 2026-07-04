@@ -5416,6 +5416,13 @@ function _wl(s){ if(!s||typeof s!=='string')return s; var L=(typeof lang!=='unde
     s=s.replace(new RegExp('работ\\p{L}+\\s+'+_wesc(mt),'giu'), mt);
     // HRV/ВСР → восстановление
     s=s.replace(/\bHRV\b|ВСР/gi, rc);
+    // онко/остео/анамнез (App Store 1.4.1) → велнес. Стемы диакритико-безопасны
+    var _bone=({ru:'тонус опоры',uk:'тонус опори',en:'structural resilience',es:'resiliencia estructural',de:'strukturelle Belastbarkeit',pt:'resiliência estrutural',fr:'résilience structurelle',it:'resilienza strutturale',pl:'odporność strukturalna',he:'חוסן מבני',ja:'構造的なしなやかさ',ko:'구조적 회복력'})[L]||'structural resilience';
+    var _upper=({ru:'комфорт верхней части тела',uk:'комфорт верхньої частини тіла',en:'upper-body comfort',es:'confort de la parte superior',de:'Oberkörper-Komfort',pt:'conforto da parte superior',fr:'confort du haut du corps',it:'comfort della parte superiore',pl:'komfort górnej części ciała',he:'נוחות פלג גוף עליון',ja:'上半身の快適さ',ko:'상체 편안함'})[L]||'upper-body comfort';
+    var _fam=({ru:'исторические особенности семейного профиля',uk:'історичні особливості сімейного профілю',en:'historical family profile traits',es:'rasgos del perfil familiar',de:'Merkmale des Familienprofils',pt:'traços do perfil familiar',fr:'traits du profil familial',it:'tratti del profilo familiare',pl:'cechy profilu rodzinnego',he:'מאפייני פרופיל משפחתי',ja:'家族プロフィールの特徴',ko:'가족 프로필 특성'})[L]||'historical family profile traits';
+    s=s.replace(/хрупкост\p{L}*\s+кост\p{L}*|остеопороз\p{L}*|остеопени\p{L}*|перелом\p{L}*|osteoporos\p{L}*|osteoporose\p{L}*|osteoporosi\p{L}*|ostéoporose\p{L}*|osteoporoza\p{L}*|bone\s+fragility/giu, _bone);
+    s=s.replace(/рак\p{L}*\s+груд\p{L}*|уплотнени\p{L}*(?:\s*\/\s*узел)?|масталги\p{L}*|breast\s+cancer|breast\s+lump|mastalgia|c[aá]ncer\s+de\s+mama|Brustkrebs\p{L}*/giu, _upper);
+    s=s.replace(/семейн\p{L}*\s+анамнез\p{L}*|анамнез\p{L}*|family\s+history|antecedentes\s+familiares|Familienanamnese\p{L}*/giu, _fam);
     // хвостовое служебное слово (EN-порядок): «hh levels/activity» → hh
     [hn,hg,mt,rc].forEach(function(w){ if(!w)return; s=s.replace(new RegExp(_wesc(w)+'\\s+(?:'+_WLG+')','giu'), w); });
     // тавтология: удвоение слова и удвоение велнес-фразы
