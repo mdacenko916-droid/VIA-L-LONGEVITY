@@ -2767,7 +2767,7 @@ function navTo(tab){
 function saveSession(score,type,data){
   try{
     var key='vial_history';
-    var history=[]; try{history=JSON.parse(localStorage.getItem(key)||'[]')||[];}catch(e){}
+    var history=[]; try{history=JSON.parse(secGet(key)||'[]')||[];}catch(e){}
     var session={
       date:new Date().toLocaleDateString(lang==='en'?'en-GB':'ru-RU',{day:'numeric',month:'short',year:'numeric'}),
       day:new Date().toISOString().slice(0,10),
@@ -2777,9 +2777,10 @@ function saveSession(score,type,data){
       gender:data.gender, phase:data.phase,
       ts:Date.now()
     };
-    history.unshift(session);   // как PRO: храним каждый разбор (динамика + недельный тренд)
+    history=history.filter(function(s){return s.day!==session.day;});  // B: 1 разбор/день (как _saveDaily) — без дублей в динамике/недельных средних
+    history.unshift(session);
     while(history.length>120)history.pop();
-    localStorage.setItem(key,JSON.stringify(history));
+    secSet(key,JSON.stringify(history));   // через шифрослой (secGet читает то же, что пишем)
   }catch(e){}
 }
 
@@ -2955,6 +2956,24 @@ function _cardTrends(){
   var recent=arr.slice(0,30).reverse(); // старые→новые, до 30 дней
   var ser=function(k){return recent.map(function(r){return r[k];}).filter(function(x){return x!=null&&x!==''&&!isNaN(x);}).map(Number);};
   return { sleep:ser('sleep_qual'), energy:ser('energy'), rhr:ser('rhr') };
+}
+// Пункт A: личная норма для дневного /analyze — медиана прошлых дней (без сегодняшнего) + «вчера».
+// Строится ДО _saveDaily (сегодняшний снимок ещё не записан), поэтому это чистая история клиента.
+function _baselineFromDaily(){
+  var arr=[]; try{arr=JSON.parse(secGet('vial_daily')||'[]')||[];}catch(e){}
+  var today=new Date().toISOString().slice(0,10);
+  var hist=arr.filter(function(r){return r.day!==today;}); // прошлые дни = личная норма
+  if(hist.length<2)return null;
+  var recent=hist.slice(0,30); // до 30 прошлых дней, newest-first
+  var col=function(k){return recent.map(function(r){return r[k];});};
+  var mets={},any=false;
+  ['sleep_qual','energy','rhr','sleep_hours'].forEach(function(k){
+    var med=_med(col(k)); if(med==null)return;
+    var prev=recent[0]?recent[0][k]:null;
+    mets[k]={usual:+(+med).toFixed(1), prev:(prev!=null&&prev!==''&&!isNaN(prev))?+prev:null};
+    any=true;
+  });
+  return any?{days:hist.length,metrics:mets}:null;
 }
 function _spark(vals,color){
   var W=88,H=24,p=3;
@@ -4565,6 +4584,7 @@ function _showResultsInner(){
     meds_other:(document.getElementById('meds_other')?document.getElementById('meds_other').value:'').trim(),
     allergy:(document.getElementById('allergy')?document.getElementById('allergy').value:'').trim(),
     lifestyle_notes:(document.getElementById('lifestyle_notes')?document.getElementById('lifestyle_notes').value:'').trim(),
+    baseline:(typeof _baselineFromDaily==='function'?_baselineFromDaily():null),
     bio:{
       fat:parseFloat(document.getElementById('bio-fat')?.value)||null,
       muscle:parseFloat(document.getElementById('bio-muscle')?.value)||null,

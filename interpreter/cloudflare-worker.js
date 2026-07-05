@@ -3618,6 +3618,29 @@ function buildUserMessage(data, lang, tier) {
       })(data.device)
     + 'ИНСТРУКЦИЯ: каждый ненулевой пункт выше должен быть отражён в анализе хотя бы одной конкретной нутритивной рекомендацией или комментарием; пункты «—» (не указано) не интерпретируй.\n';
 
+  // Пункт A: ЛИЧНАЯ норма клиента (медиана прошлых дней из vial_daily) — чтобы ИИ сравнивал
+  // сегодня с индивидуальным baseline, а не только с общими референсами.
+  const baselineBlock = (function(b){
+    if(!b || !b.metrics) return '';
+    const lbl = { sleep_qual:'Качество сна', energy:'Энергия', rhr:'Пульс покоя', sleep_hours:'Часы сна' };
+    const today = { sleep_qual:sleepQual, energy:energyVal, rhr:rhrVal, sleep_hours:(parseFloat(data.sleep_hours)||null) };
+    const rows = Object.keys(b.metrics).map(function(k){
+      const m=b.metrics[k]; if(!m||m.usual==null) return '';
+      const t=today[k]; let cmp='';
+      if(t!=null){
+        const d=t-m.usual, thr=Math.max(Math.abs(m.usual)*0.1,0.5);
+        const better=(k==='rhr')?d<0:d>0;   // для пульса покоя ниже = лучше
+        cmp = Math.abs(d)<thr ? ' → как обычно' : (better?' → лучше личной нормы':' → хуже личной нормы');
+      }
+      return '• '+(lbl[k]||k)+': обычно ~'+m.usual+(t!=null?(', сегодня '+t):'')+cmp+'\n';
+    }).filter(Boolean).join('');
+    if(!rows) return '';
+    return '══ ЛИЧНАЯ НОРМА КЛИЕНТА (по '+(b.days||0)+' предыдущим дням) ══\n'
+      + rows
+      + 'ВАЖНО: сравнивай сегодняшние значения с ЛИЧНОЙ нормой клиента выше, а не только с общими референсами. '
+      + 'Если сегодня хуже личной нормы — мягко отметь это и дай велнес-акцент; если лучше или как обычно — поддержи.\n\n';
+  })(data.baseline);
+
   const _feed = skipNote
     + '══ РЕФЕРЕНСНЫЕ НОРМЫ ══\n'
     + 'HRV (' + age + ' лет): норма ' + hrvNormLow + '–' + hrvNormHigh + ' мс | клиент: ' + SK('hrv', data.hrv + ' мс → ' + hrvStatus) + '\n'
@@ -3626,6 +3649,7 @@ function buildUserMessage(data, lang, tier) {
     + 'Частота дыхания: норма покоя 12–20 вд/мин | клиент: ' + SK('resp_rate', respRate + ' вд/мин' + (respRate > 20 ? ' [выше нормы]' : '')) + '\n'
     + 'Качество сна: ' + SK('sleep_qual', sleepQual + '/10 → ' + sleepStatus) + '\n\n'
 
+    + baselineBlock
     + patternBlock
     + circadianBlock
     + symptomBlock
