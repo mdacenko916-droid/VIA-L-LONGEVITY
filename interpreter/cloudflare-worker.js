@@ -1451,7 +1451,7 @@ function buildWeeklyUserMessage(summary, daily, lang) {
   // тогда out идентичен прежнему сообщению (обратная совместимость).
   if (daily && daily.days) {
     const hfC = { none:'none', low:'1–2/day', mid:'3–5/day', high:'6–10/day', veryhigh:'10+/day' };
-    const hfI = { none:'none', mild:'mild', moderate:'moderate', intense:'strong', severe:'very strong' };
+    const hfI = { none:'none', mild:'mild', moderate:'moderate', intense:'strong', high:'strong', severe:'very strong', veryhigh:'very strong' };
     const d = [];
     if (daily.hfDays != null)  d.push(`- Hot flashes: ${daily.hfDays}/${daily.days} days; typical ${hfC[daily.hfCount]||daily.hfCount||'—'}, intensity ${hfI[daily.hfIntensity]||daily.hfIntensity||'—'}`);
     if (daily.tempDev != null) d.push(`- Body-temp deviation: ${daily.tempDev} avg`);
