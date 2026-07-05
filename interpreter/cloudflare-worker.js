@@ -2990,15 +2990,15 @@ function selectKBPatterns(data) {
     add('P-F5', lowEnergy && (tiredRecov || has(sym,'fatigue')) && (hrv < 30 || deepLow));
     // P-F6 щитовидка
     add('P-F6', (tempDown && lowEnergy) || (tempDown && has(horm,'hair_loss','weight_gain'))
-      || has(sym,'cold') || (data.meds === 'thyroid' || data.meds === 'energy_factor') || (num(labs.tsh) != null && num(labs.tsh) > 2.5));
+      || has(sym,'cold','cool_sensitivity') || (data.meds === 'thyroid' || data.meds === 'energy_factor') || (num(labs.tsh) != null && num(labs.tsh) > 2.5));
     // P-F7 инсулинорезистентность
     add('P-F7', (visceral != null && visceral > 9) || has(horm,'weight_gain') || (data.appetite === 'cravings' || data.cravings === true)
       || num(labs.glucose) > 5.6 || num(labs.hba1c) > 5.7 || num(labs.homa) > 2.5);
     // P-F8 воспаление
-    add('P-F8', has(sym,'joint') || (visceral != null && visceral > 12) || num(labs.crp) > 3);
+    add('P-F8', has(sym,'joint','movement_stiff') || (visceral != null && visceral > 12) || num(labs.crp) > 3);
     // P-F9 нейромедиаторы (NEW)
     add('P-F9', anx >= 6 || data.mood === 'swings' || data.mood === 'low'
-      || data.irritability === 'high' || has(sym,'anxiety','mood') || has(cort,'irritable'));
+      || data.irritability === 'high' || has(sym,'anxiety','mood','restless_mind') || has(cort,'irritable'));
     // P-F10 когнитивный туман
     add('P-F10', fogHi || memHi || has(sym,'foggy'));
     // P-F11 кишечник
@@ -3007,7 +3007,7 @@ function selectKBPatterns(data) {
     add('P-F12', (phase === 'post' && (age >= 55 || (num(labs.vitd) != null && num(labs.vitd) < 50)))
       || has(bone,'load_sensitivity','posture_shift','hereditary_tone','balance_trait','prior_fracture','height_loss','family_osteoporosis','early_menopause'));
     // P-F13 сердечно-сосудистый
-    add('P-F13', has(sym,'palpitations') || data.rhr_comp === 'high'
+    add('P-F13', has(sym,'palpitations','pulse_awareness') || data.rhr_comp === 'high'
       || num(labs.ldl) > 3.4 || num(labs.apob) > 1.0 || num(labs.tg) > 1.7);
     // P-F14 кожа/коллаген (NEW)
     add('P-F14', has(horm,'dry_skin','hair_loss')
@@ -3021,7 +3021,7 @@ function selectKBPatterns(data) {
     // P-F17 нарушения сна
     add('P-F17', sleep <= 4 || data.deep === 'none' || data.deep === 'low' || /multiple|many/i.test(wake) || (data.sleep_hours && data.sleep_hours < 6));
     // P-F18 B12/фолат
-    add('P-F18', (num(labs.b12) != null && num(labs.b12) < 300) || has(sym,'numbness')
+    add('P-F18', (num(labs.b12) != null && num(labs.b12) < 300) || has(sym,'numbness','sensory_shift')
       || (has(sym,'fatigue') && has(sym,'foggy')));
     // P-F19 аноректальное/проктология (прокси: запор/проктологические токены; вход неполный)
     add('P-F19', has(gi,'constipation','gi_slow','hemorrhoids','lower_sens','rectal_bleeding','lower_flag','fecal_incontinence','core_tone','straining','fiber_absorp','fiber_response'));
@@ -3043,13 +3043,13 @@ function selectKBPatterns(data) {
     add('P-M3', (visceral != null && visceral > 9) || has(horm,'belly_fat') || (data.appetite === 'cravings' || data.cravings === true)
       || num(labs.glucose) > 5.6 || num(labs.hba1c) > 5.7 || num(labs.homa) > 2.5);
     // P-M4 воспаление
-    add('P-M4', has(sym,'joint') || (visceral != null && visceral > 12) || num(labs.crp) > 3);
+    add('P-M4', has(sym,'joint','movement_stiff') || (visceral != null && visceral > 12) || num(labs.crp) > 3);
     // P-M5 щитовидка
-    add('P-M5', (tempDown && lowEnergy) || has(sym,'cold') || (data.meds === 'thyroid' || data.meds === 'energy_factor') || (num(labs.tsh) != null && num(labs.tsh) > 2.5));
+    add('P-M5', (tempDown && lowEnergy) || has(sym,'cold','cool_sensitivity') || (data.meds === 'thyroid' || data.meds === 'energy_factor') || (num(labs.tsh) != null && num(labs.tsh) > 2.5));
     // P-M6 кишечник
     add('P-M6', has(gi,'bloating','gi_heaviness','constipation','gi_slow','diarrhea','gi_fast','reflux','gi_inner') || has(supp,'probiotics'));
     // P-M7 сердечно-сосудистый
-    add('P-M7', has(sym,'palpitations') || data.rhr_comp === 'high'
+    add('P-M7', has(sym,'palpitations','pulse_awareness') || data.rhr_comp === 'high'
       || num(labs.ldl) > 3.4 || num(labs.apob) > 1.0 || num(labs.tg) > 1.7);
     // P-M8 когнитивный туман
     add('P-M8', fogHi || memHi || has(sym,'foggy'));
@@ -3369,7 +3369,7 @@ function buildUserMessage(data, lang, tier) {
   if (symptoms.some(s => /прилив|жар|flash|calor|Hitze|bouffée|vampata|גלי חום|ほてり|열감/i.test(s))) {
     symRules.push('Приливы: шалфей или чёрный кохош (растительная поддержка), магний 400 мг вечером, фитоэстрогены (кунжут, соя, льняное семя), исключить алкоголь + острое + кофе вечером');
   }
-  if (symptoms.some(s => /сустав|arthri|joint|dolor articular|Gelenk|articul|כאב מפרק|関節|관절/i.test(s))) {
+  if (symptoms.some(s => /сустав|arthri|joint|movement_stiff|dolor articular|Gelenk|articul|כאב מפרק|関節|관절/i.test(s))) {
     symRules.push('Суставный дискомфорт: коллаген тип II 40 мг натощак или тип I/III 10–15 г с витамином C, босвеллия 500 мг, омега-3 3–4 г');
   }
   if (symptoms.some(s => /туман|когни|brain fog|memoria|Gehirn|brouillard|mgła|nebbia|ערפל|脳霧|브레인 포그/i.test(s))) {
@@ -3381,7 +3381,7 @@ function buildUserMessage(data, lang, tier) {
   if (symptoms.some(s => /вес|набор|overweight|sobrepeso|Übergewicht|surpoids|nadwaga|sovrappeso|עודף משקל|体重増加|체중 증가/i.test(s))) {
     symRules.push('Управление весом: берберин 500 мг × 2 с едой, хром 200 мкг, акцент на белок и клетчатку, ограничение рафинированных углеводов');
   }
-  if (symptoms.some(s => /тревог|паник|anxiety|ansiedad|Angst|anxiété|niepokój|ansia|חרדה|不安|불안/i.test(s))) {
+  if (symptoms.some(s => /тревог|паник|anxiety|restless_mind|ansiedad|Angst|anxiété|niepokój|ansia|חרדה|不安|불안/i.test(s))) {
     symRules.push('Тревожность: L-теанин 200 мг, магний глицинат 400 мг вечером, ашваганда 300–600 мг, ограничить кофеин после 12:00');
   }
   if (symptoms.some(s => /сухост|vaginal|libido|Libido|חשק|性욕|성욕/i.test(s))) {
