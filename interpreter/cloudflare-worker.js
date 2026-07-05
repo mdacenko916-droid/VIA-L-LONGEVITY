@@ -2957,7 +2957,7 @@ function selectKBPatterns(data) {
   const breast = Array.isArray(data.breast)      ? data.breast        : [];
   const has  = (arr, ...vals) => vals.some(v => arr.includes(v));
 
-  const stressHigh  = data.chronic_stress === 'high' || data.chronic_stress === 'burnout'
+  const stressHigh  = data.chronic_stress === 'high' || data.chronic_stress === 'burnout' || data.chronic_stress === 'needs_recovery'
                    || /high|выс|hoch|élevé|alto/i.test(data.stress || '');
   const tempDown    = temp === 'down';
   const tempUnstable= temp === 'chaotic' || temp === 'spike';
