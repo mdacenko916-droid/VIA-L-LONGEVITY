@@ -2962,7 +2962,7 @@ function selectKBPatterns(data) {
   const tempDown    = temp === 'down';
   const tempUnstable= temp === 'chaotic' || temp === 'spike';
   const lowEnergy   = energy <= 4;
-  const tiredRecov  = data.act_recovery === 'tired' || data.act_recovery === 'exhausted';
+  const tiredRecov  = data.act_recovery === 'tired' || data.act_recovery === 'exhausted' || data.act_recovery === 'spent';
   const hadHotflash = data.hf_count && data.hf_count !== 'none';
   const fogHi       = fog === 'daily' || fog === 'constant' || fog === 'allday';
   const memHi       = memory === 'poor' || memory === 'severe' || memory === 'slower' || memory === 'support';
