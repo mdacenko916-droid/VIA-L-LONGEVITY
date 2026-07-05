@@ -2964,8 +2964,8 @@ function selectKBPatterns(data) {
   const lowEnergy   = energy <= 4;
   const tiredRecov  = data.act_recovery === 'tired' || data.act_recovery === 'exhausted';
   const hadHotflash = data.hf_count && data.hf_count !== 'none';
-  const fogHi       = fog === 'daily' || fog === 'constant';
-  const memHi       = memory === 'poor' || memory === 'severe';
+  const fogHi       = fog === 'daily' || fog === 'constant' || fog === 'allday';
+  const memHi       = memory === 'poor' || memory === 'severe' || memory === 'slower' || memory === 'support';
   const cortLoad    = cort.filter(c => c && c !== 'none_cort').length >= 2;
   const deepLow     = data.deep === 'none' || data.deep === 'low';
 
