@@ -2862,7 +2862,7 @@ function saveProfile(){
       lastperiod:gv('prof-lastperiod')||P.lastperiod||'',
       cyclelen:gv('prof-cyclelen')||P.cyclelen||'',
       early_meno:getRadio('early_meno')||P.early_meno||'',
-      gsm:keepArr(gc(['gsm1','gsm2','gsm3','gsm4','gsm5','gsm6','gsm7','gsm8']),P.gsm),
+      gsm:keepArr(gc(['gsm1','gsm2','gsm3','gsm4','gsm5','gsm6','gsm7']),P.gsm),
       bone:keepArr(gc(['bone1','bone2','bone3','bone5']),P.bone),
       breast:keepArr(gc(['breast1','breast2','breast3','breast4']),P.breast),
       // 6. Стресс-фон
@@ -2920,7 +2920,7 @@ function _restoreCard(){
     sH('horm-acc',P.horm_female); sH('horm-male-acc',P.horm_male);
     // 5. Цикл
     sR('cycle_status',P.cycle_status); sR('heavy_period',P.heavy_period); sV('prof-lastperiod',P.lastperiod); sV('prof-cyclelen',P.cyclelen); sR('early_meno',P.early_meno);
-    sC(['gsm1','gsm2','gsm3','gsm4','gsm5','gsm6','gsm7','gsm8'],P.gsm); sC(['bone1','bone2','bone3','bone5'],P.bone); sC(['breast1','breast2','breast3','breast4'],P.breast);
+    sC(['gsm1','gsm2','gsm3','gsm4','gsm5','gsm6','gsm7'],P.gsm); sC(['bone1','bone2','bone3','bone5'],P.bone); sC(['breast1','breast2','breast3','breast4'],P.breast);
     // 6. Стресс-фон
     sR('chronic_stress',P.chronic_stress); sC(['cort2','cort3','cort4','cort5','cort6','cort7'],P.cortisol_symp);
     // 7. ПМС
@@ -3099,7 +3099,7 @@ function renderCard(){
   var fmtDate=function(d){ if(!d)return '—'; try{return new Date(d).toLocaleDateString(_loc[lang]||'en-GB',{day:'numeric',month:'short',year:'numeric'});}catch(e){return d;} };
   var SUP=['sup1','sup2','sup3','sup4','sup5','sup6','sup7','sup8','sup9','sup10','sup11'],MED=['med2','med3','med4','med5'],
       GI=['gi1','gi2','gi3','gi4','gi5'],ACT=['act1','act2','act3','act4','act5','act6'],
-      GSM=['gsm1','gsm2','gsm3','gsm4','gsm5','gsm6','gsm7','gsm8'],BONE=['bone1','bone2','bone3','bone5'],
+      GSM=['gsm1','gsm2','gsm3','gsm4','gsm5','gsm6','gsm7'],BONE=['bone1','bone2','bone3','bone5'],
       BREAST=['breast1','breast2','breast3','breast4'],PMS=['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9'],CORT=['cort2','cort3','cort4','cort5','cort6','cort7'];
 
   // ── HERO (профиль) ──
@@ -4875,7 +4875,7 @@ function _showResultsInner(){
     appetite:getRadio('appetite'),cravings:!!(document.getElementById('crav1')&&document.getElementById('crav1').checked),move_today:getRadio('move_today'),eating_pattern:getRadio('eating_pattern'),protein_intake:getRadio('protein_intake'),gi:getChecked(['gi1','gi2','gi3','gi4','gi5']),
     memory:getRadio('memory'),fog:getRadio('fog'),
     horm_female:(typeof _hormMap==='function'?_hormMap('horm-acc'):{}),horm_male:(typeof _hormMap==='function'?_hormMap('horm-male-acc'):{}),
-    cycle_status:getRadio('cycle_status'),heavy_period:(getRadio('cycle_status')==='absent'?null:getRadio('heavy_period')),last_period:_lpBucket(),cycle_len:(cycleInfo()||{}).len||null,cycle_day:(getRadio('cycle_status')==='absent'?null:(cycleInfo()||{}).day||null),cycle_phase:(getRadio('cycle_status')==='absent'?null:(cycleInfo()||{}).phase||null),pms:(function(){var s=getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9']).filter(function(v){return v!=='none_pms';});return s.length>=5?'severe':s.length>=3?'moderate':s.length>=1?'mild':'none';})(),pms_symptoms:getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9']),gsm:getChecked(['gsm1','gsm2','gsm3','gsm4','gsm5','gsm6','gsm7','gsm8']),bone_risk:(function(){var b=getChecked(['bone1','bone2','bone3','bone5']).filter(function(v){return v!=='none_bone';});if(getRadio('early_meno')==='yes')b.push('early_menopause');return b;})(),breast:getChecked(['breast1','breast2','breast3','breast4']),
+    cycle_status:getRadio('cycle_status'),heavy_period:(getRadio('cycle_status')==='absent'?null:getRadio('heavy_period')),last_period:_lpBucket(),cycle_len:(cycleInfo()||{}).len||null,cycle_day:(getRadio('cycle_status')==='absent'?null:(cycleInfo()||{}).day||null),cycle_phase:(getRadio('cycle_status')==='absent'?null:(cycleInfo()||{}).phase||null),pms:(function(){var s=getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9']).filter(function(v){return v!=='none_pms';});return s.length>=5?'severe':s.length>=3?'moderate':s.length>=1?'mild':'none';})(),pms_symptoms:getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9']),gsm:getChecked(['gsm1','gsm2','gsm3','gsm4','gsm5','gsm6','gsm7']),bone_risk:(function(){var b=getChecked(['bone1','bone2','bone3','bone5']).filter(function(v){return v!=='none_bone';});if(getRadio('early_meno')==='yes')b.push('early_menopause');return b;})(),breast:getChecked(['breast1','breast2','breast3','breast4']),
     supplements:getChecked(['sup1','sup2','sup3','sup4','sup5','sup6','sup7','sup8','sup9','sup10','sup11']),meds:getChecked(['med2','med3','med4','med5']),
     meds_other:(document.getElementById('meds_other')?document.getElementById('meds_other').value:'').trim(),
     allergy:(document.getElementById('allergy')?document.getElementById('allergy').value:'').trim(),
