@@ -3070,7 +3070,8 @@ function _vcCSS(){ if(document.getElementById('vcard-css'))return; var s=documen
   +".vc-dyn{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:8px 0;}"
   +".vd-cell{background:rgba(180,138,240,.06);border:1px solid rgba(180,138,240,.16);border-radius:12px;padding:10px 6px;text-align:center;}"
   +".vd-l{font-size:10px;color:var(--t3);}.vd-v{font-weight:700;font-size:22px;color:var(--t1);margin:2px 0;}.vd-d{font-size:11px;font-weight:600;}"
-  +".vc-span{grid-column:1/-1;}";
+  +".vc-span{grid-column:1/-1;}"
+  +".vc-day>summary::-webkit-details-marker{display:none;}.vc-day>summary>span:first-child{transition:transform .2s;display:inline-block;}.vc-day[open]>summary>span:first-child{transform:rotate(90deg);}";
   (document.head||document.body).appendChild(s);
 }
 // Полнота заполнения профиля (для прогресс-бара/стимула) — только всегда-отвечаемые пункты, 100% достижим
@@ -3239,6 +3240,17 @@ function renderCard(){
   // Новичок (данных ещё нет): объясняем, что динамика набирается — а не «пусто/баг»
   if(!dynInner)dynInner='<div class="vc-empty" style="line-height:1.5;">'+L({ru:'Здесь появится ваша динамика — она набирается с каждым анализом. Загляните через пару заходов.',uk:'Тут зʼявиться ваша динаміка — вона накопичується з кожним аналізом. Завітайте за кілька заходів.',en:'Your dynamics will appear here — they build up with each check-in. Come back after a couple of check-ins.',es:'Aquí aparecerá tu evolución — se acumula con cada análisis. Vuelve tras un par de análisis.',de:'Hier erscheint deine Entwicklung — sie baut sich mit jedem Check-in auf. Schau nach ein paar Check-ins wieder vorbei.',pt:'Sua evolução aparecerá aqui — acumula-se a cada análise. Volte após alguns registros.',fr:'Votre évolution apparaîtra ici — elle se construit à chaque bilan. Revenez après quelques bilans.',pl:'Tu pojawi się Twoja dynamika — buduje się z każdą analizą. Wróć po kilku analizach.',it:'Qui apparirà la tua evoluzione — si accumula a ogni analisi. Torna dopo qualche check-in.',he:'כאן תופיע הדינמיקה שלך — היא נבנית עם כל בדיקה. חזרו אחרי כמה בדיקות.',ja:'ここに変化が表示されます——分析ごとに蓄積されます。数回後にまたご覧ください。',ko:'여기에 변화가 표시됩니다 — 분석할 때마다 쌓입니다. 몇 번 후에 다시 확인하세요.'})+'</div>';
   html+=_vcSec('📊',t('card_dynamics'),dynInner,true,true);
+
+  // ── История дневных разборов ИИ (сохранённый текст по дням) ──
+  var _aid=(typeof _aiDailyGet==='function')?_aiDailyGet():[];
+  if(_aid.length){
+    var _hInner=_aid.slice(0,31).map(function(e){
+      var dt=e.day; try{dt=new Date(e.day).toLocaleDateString(_loc[lang]||'en-GB',{day:'numeric',month:'short',year:'numeric'});}catch(x){}
+      var body=(typeof _aiMd==='function')?_aiMd(e.analysis||''):_esc(e.analysis||'');
+      return '<details class="vc-day"><summary style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid rgba(180,138,240,.1);font-size:13px;color:var(--t1);"><span style="color:#b48af0;">›</span>'+_esc(dt)+'</summary><div style="font-size:12.5px;color:var(--t2);line-height:1.55;padding:8px 0 12px;">'+body+'</div></details>';
+    }).join('');
+    html+=_vcSec('📅',L({ru:'История разборов',uk:'Історія розборів',en:'Analysis history',es:'Historial de análisis',de:'Analyse-Verlauf',pt:'Histórico de análises',fr:'Historique des analyses',pl:'Historia analiz',it:'Cronologia analisi',he:'היסטוריית ניתוחים',ja:'分析履歴',ko:'분석 기록'}),_hInner,false,true);
+  }
 
   html+='</div>'; // .vcard-grid
 
@@ -4177,12 +4189,12 @@ var _BP_CS='background:linear-gradient(150deg,#1b1528,#130e1f);border:1px solid 
 function _bpChapters(){
   // Заголовки глав видны ВСЕГДА (в т.ч. при ИИ-плане). L() отдаёт en для всех не-RU языков.
   return [
-    {id:'morning', icon:'☀️', title:L({ru:'Утро',en:'Morning'}),               teaser:L({ru:'Старт • разминка • завтрак • добавки',en:'Start • warm-up • breakfast • supplements'})},
-    {id:'lunch',   icon:'🍽', title:L({ru:'Обед',en:'Lunch'}),                  teaser:L({ru:'Меню и поддержка',en:'Menu and support'})},
-    {id:'evening', icon:'🌙', title:L({ru:'Вечер',en:'Evening'}),               teaser:L({ru:'Ужин за 3 ч до сна • добавки',en:'Dinner ~3 h before sleep • supplements'})},
-    {id:'activity',icon:'🏋️', title:L({ru:'Физическая нагрузка',en:'Movement'}), teaser:L({ru:'Под возраст, пол и активность',en:'For your age, sex and activity'})},
-    {id:'water',   icon:'💧', title:L({ru:'Вода',en:'Water'}),                   teaser:L({ru:'Ориентир под массу тела',en:'Guideline by body weight'})},
-    {id:'sleep',   icon:'😴', title:L({ru:'Сон',en:'Sleep'}),                    teaser:L({ru:'Поведенческие ориентиры вечера',en:'Evening behavior tips'})}
+    {id:'morning', icon:'☀️', title:L({ru:'Утро',uk:'Ранок',en:'Morning',es:'Mañana',de:'Morgen',pt:'Manhã',fr:'Matin',pl:'Poranek',it:'Mattina',he:'בוקר',ja:'朝',ko:'아침'}), teaser:L({ru:'Старт • разминка • завтрак • добавки',uk:'Старт • розминка • сніданок • добавки',en:'Start • warm-up • breakfast • supplements',es:'Inicio • calentamiento • desayuno • suplementos',de:'Start • Aufwärmen • Frühstück • Präparate',pt:'Início • aquecimento • café da manhã • suplementos',fr:'Départ • échauffement • petit-déjeuner • compléments',pl:'Start • rozgrzewka • śniadanie • suplementy',it:'Avvio • riscaldamento • colazione • integratori',he:'התחלה • חימום • ארוחת בוקר • תוספים',ja:'スタート • ウォームアップ • 朝食 • サプリ',ko:'시작 • 준비운동 • 아침 • 보충제'})},
+    {id:'lunch',   icon:'🍽', title:L({ru:'Обед',uk:'Обід',en:'Lunch',es:'Almuerzo',de:'Mittag',pt:'Almoço',fr:'Déjeuner',pl:'Obiad',it:'Pranzo',he:'צהריים',ja:'昼',ko:'점심'}), teaser:L({ru:'Меню и поддержка',uk:'Меню та підтримка',en:'Menu and support',es:'Menú y apoyo',de:'Menü und Unterstützung',pt:'Menu e apoio',fr:'Menu et soutien',pl:'Menu i wsparcie',it:'Menu e supporto',he:'תפריט ותמיכה',ja:'メニューとサポート',ko:'메뉴와 지원'})},
+    {id:'evening', icon:'🌙', title:L({ru:'Вечер',uk:'Вечір',en:'Evening',es:'Noche',de:'Abend',pt:'Noite',fr:'Soir',pl:'Wieczór',it:'Sera',he:'ערב',ja:'夜',ko:'저녁'}), teaser:L({ru:'Ужин за 3 ч до сна • добавки',uk:'Вечеря за 3 год до сну • добавки',en:'Dinner ~3 h before sleep • supplements',es:'Cena ~3 h antes de dormir • suplementos',de:'Abendessen ~3 Std vor dem Schlafen • Präparate',pt:'Jantar ~3 h antes de dormir • suplementos',fr:'Dîner ~3 h avant le coucher • compléments',pl:'Kolacja ~3 h przed snem • suplementy',it:'Cena ~3 h prima di dormire • integratori',he:'ארוחת ערב ~3 שעות לפני השינה • תוספים',ja:'就寝3時間前の夕食 • サプリ',ko:'취침 3시간 전 저녁 • 보충제'})},
+    {id:'activity',icon:'🏋️', title:L({ru:'Физическая нагрузка',uk:'Фізична активність',en:'Movement',es:'Movimiento',de:'Bewegung',pt:'Movimento',fr:'Activité',pl:'Ruch',it:'Movimento',he:'תנועה',ja:'運動',ko:'운동'}), teaser:L({ru:'Под возраст, пол и активность',uk:'Під вік, стать та активність',en:'For your age, sex and activity',es:'Según tu edad, sexo y actividad',de:'Nach Alter, Geschlecht und Aktivität',pt:'Conforme idade, sexo e atividade',fr:'Selon l’âge, le sexe et l’activité',pl:'Według wieku, płci i aktywności',it:'In base a età, sesso e attività',he:'לפי גיל, מין ופעילות',ja:'年齢・性別・活動量に合わせて',ko:'나이·성별·활동량에 맞춰'})},
+    {id:'water',   icon:'💧', title:L({ru:'Вода',uk:'Вода',en:'Water',es:'Agua',de:'Wasser',pt:'Água',fr:'Eau',pl:'Woda',it:'Acqua',he:'מים',ja:'水分',ko:'수분'}), teaser:L({ru:'Ориентир под массу тела',uk:'Орієнтир під масу тіла',en:'Guideline by body weight',es:'Referencia según el peso corporal',de:'Richtwert nach Körpergewicht',pt:'Referência pelo peso corporal',fr:'Repère selon le poids corporel',pl:'Wskazówka według masy ciała',it:'Riferimento in base al peso corporeo',he:'הנחיה לפי משקל הגוף',ja:'体重に応じた目安',ko:'체중에 따른 기준'})},
+    {id:'sleep',   icon:'😴', title:L({ru:'Сон',uk:'Сон',en:'Sleep',es:'Sueño',de:'Schlaf',pt:'Sono',fr:'Sommeil',pl:'Sen',it:'Sonno',he:'שינה',ja:'睡眠',ko:'수면'}), teaser:L({ru:'Поведенческие ориентиры вечера',uk:'Поведінкові орієнтири вечора',en:'Evening behavior tips',es:'Pautas de conducta para la noche',de:'Verhaltenstipps für den Abend',pt:'Dicas de comportamento para a noite',fr:'Repères comportementaux du soir',pl:'Wskazówki wieczorne',it:'Consigli comportamentali serali',he:'הרגלי ערב מומלצים',ja:'夜の行動のヒント',ko:'저녁 행동 팁'})}
   ];
 }
 function _bpChapterData(id, data){
@@ -4733,6 +4745,20 @@ function seenF(){var t=(typeof window!=='undefined'&&window.__touched&&window.__
 // ══ AI-РАЗБОР (VIO теперь использует тот же движок /analyze, что и PRO — «второй PRO без гаджета») ══
 // Без HRV/SpO₂/биометрии (нет гаджета) — воркер подставит дефолты, ИИ трактует по симптомам.
 const AI_WORKER = 'https://interpreter.viaelcom.workers.dev';
+// ═══ ДНЕВНОЙ AI-РАЗБОР: кэш 1×/день (экономия токенов + стабильность + история прошлых дней) ═══
+function _dayKey(){ return new Date().toISOString().slice(0,10); }
+function _sigOf(o){ try{var s=JSON.stringify(o),h=0;for(var i=0;i<s.length;i++){h=((h<<5)-h+s.charCodeAt(i))|0;}return ''+h;}catch(e){return '';} }
+function _aiMd(txt){ return (typeof _wl==='function'?_wl(txt):txt).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/^#{1,3}\s*(.+)$/gm,'<strong style="display:block;margin:14px 0 4px;">$1</strong>').replace(/\*\*([^*]+?)\*\*/g,'<strong>$1</strong>'); }
+function _aiDailyGet(){ try{return JSON.parse(secGet('vial_ai_daily')||'[]')||[];}catch(e){return [];} }
+function _aiDailySave(analysis,lang,sig){
+  try{ var arr=_aiDailyGet(), day=_dayKey();
+    arr=arr.filter(function(e){return e.day!==day;});           // 1 запись/день (перезапись)
+    arr.unshift({day:day,lang:lang,sig:sig,analysis:analysis,ts:Date.now()});
+    while(arr.length>92)arr.pop();                              // ~3 мес истории
+    secSet('vial_ai_daily',JSON.stringify(arr));
+  }catch(e){}
+}
+function _aiDailyToday(lang,sig){ var day=_dayKey(), e=_aiDailyGet().filter(function(x){return x.day===day;})[0]; return (e&&e.lang===lang&&e.sig===sig)?e:null; }
 async function fetchAIAnalysis(data, lang){
   var L = lang || (typeof localStorage!=='undefined' && localStorage.getItem('vial_lang')) || 'en';
   var M={
@@ -4755,13 +4781,15 @@ async function fetchAIAnalysis(data, lang){
   var tt=document.getElementById('aiTitle'); if(tt) tt.textContent=ui.t;
   var lt=document.getElementById('aiLoadingTxt'); if(lt) lt.textContent=ui.load;
   card.style.display='block'; loading.style.display='flex'; result.style.display='none'; err.style.display='none';
+  // Кэш дня: тот же день + язык + неизменные данные → читаем сохранённый текст, БЕЗ вызова API (экономия токенов + один и тот же совет весь день)
+  var sig=_sigOf(data), cached=_aiDailyToday(L,sig);
+  if(cached&&cached.analysis){ result.innerHTML=_aiMd(cached.analysis); loading.style.display='none'; result.style.display='block'; return; }
   try{
     var res=await fetch(AI_WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data,lang:L,tier:'vio'})});
     var json=await res.json();
     if(json.analysis){
-      result.innerHTML=(typeof _wl==='function'?_wl(json.analysis):json.analysis).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-        .replace(/^#{1,3}\s*(.+)$/gm,'<strong style="display:block;margin:14px 0 4px;">$1</strong>')
-        .replace(/\*\*([^*]+?)\*\*/g,'<strong>$1</strong>');
+      _aiDailySave(json.analysis,L,sig);        // фиксируем разбор дня (перезапись 1×/день) → история + повторные заходы без API
+      result.innerHTML=_aiMd(json.analysis);
       loading.style.display='none'; result.style.display='block';
     } else { throw new Error(json.error||'No response'); }
   }catch(e){ loading.style.display='none'; err.textContent='⚠ '+ui.err; err.style.display='block'; }
