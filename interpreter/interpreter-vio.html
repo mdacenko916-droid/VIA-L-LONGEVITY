@@ -1563,6 +1563,7 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
       <button onclick="navTo('home')" style="background:none;border:1px solid var(--b1);color:var(--t3);padding:6px 14px;border-radius:50px;font-size:11px;letter-spacing:1px;cursor:pointer;font-family:'DM Sans',sans-serif;">✕</button>
     </div>
     <div id="weeklyReport" style="margin-bottom:18px;"></div>
+    <div id="monthlyReport" style="margin-bottom:18px;"></div>
     <div id="cardBody"></div>
     <div id="historyList"></div>
   </div>
@@ -2798,7 +2799,7 @@ function saveSession(score,type,data){
 // Ключ (extractable:false) хранится в IndexedDB — сырой ключ недоступен JS. Работает в браузере
 // и внутри Capacitor-WebView. Если crypto/IndexedDB недоступны — прозрачный откат на localStorage
 // (приложение не ломается). Sync-совместимость: расшифровка в память при старте, шифрование при записи.
-var _SEC={ready:false,key:null,cache:{},keys:['vial_profile','vial_history','vial_daily','vial_weekly_text']};
+var _SEC={ready:false,key:null,cache:{},keys:['vial_profile','vial_history','vial_daily','vial_weekly_text','vial_monthly_text']};
 function _secIdb(){return new Promise(function(res,rej){try{var r=indexedDB.open('vial_sec',1);r.onupgradeneeded=function(){r.result.createObjectStore('k');};r.onsuccess=function(){res(r.result);};r.onerror=function(){rej(r.error);};}catch(e){rej(e);}});}
 function _secIdbGet(db,k){return new Promise(function(res,rej){var t=db.transaction('k','readonly').objectStore('k').get(k);t.onsuccess=function(){res(t.result);};t.onerror=function(){rej(t.error);};});}
 function _secIdbPut(db,k,v){return new Promise(function(res,rej){var t=db.transaction('k','readwrite').objectStore('k').put(v,k);t.onsuccess=function(){res();};t.onerror=function(){rej(t.error);};});}
@@ -3243,15 +3244,17 @@ function renderCard(){
   box.innerHTML=html;
   var hl=document.getElementById('historyList'); if(hl)hl.innerHTML='';
   if(typeof renderWeeklyReportUI==='function')renderWeeklyReportUI();
+  if(typeof renderMonthlyReportUI==='function')renderMonthlyReportUI();
 }
 
 // ══ НЕДЕЛЬНЫЙ AI-РАЗБОР (как PRO, адаптирован под VIO без гаджета) ═══════════
 // Тренд по сохранённым разборам (vial_history): сон/пульс/энергия/готовность, 7 дней vs пред. неделя.
-function weeklyTrend(){
+function weeklyTrend(win){
+  win=win||7;   // окно в днях: 7=неделя (по умолч.), 30=месяц — текущее окно vs предыдущее такое же
   var h=[]; try{h=JSON.parse(secGet('vial_history')||'[]')||[];}catch(e){}
   var now=Date.now(),DAY=86400000;
-  var wk=h.filter(function(s){return s.ts&&now-s.ts<7*DAY;});
-  var pr=h.filter(function(s){return s.ts&&now-s.ts>=7*DAY&&now-s.ts<14*DAY;});
+  var wk=h.filter(function(s){return s.ts&&now-s.ts<win*DAY;});
+  var pr=h.filter(function(s){return s.ts&&now-s.ts>=win*DAY&&now-s.ts<2*win*DAY;});
   if(wk.length<2)return null;
   var avg=function(arr,k){var v=arr.map(function(s){return s[k];}).filter(function(x){return x!=null&&!isNaN(x);});return v.length?v.reduce(function(a,b){return a+(+b);},0)/v.length:null;};
   var defs=[['sleep','sleep',1,1],['rhr','rhr',-1,0],['energy','energy',1,1],['score','score',1,0]];
@@ -3285,10 +3288,11 @@ function _saveDaily(){
     secSet('vial_daily',JSON.stringify(arr));
   }catch(e){}
 }
-function _weeklyDaily(){
+function _weeklyDaily(win){
+  win=win||7;
   var arr=[]; try{arr=JSON.parse(secGet('vial_daily')||'[]')||[];}catch(e){}
   var now=Date.now(),DAY=86400000;
-  var wk=arr.filter(function(r){return r.ts&&now-r.ts<7*DAY;});
+  var wk=arr.filter(function(r){return r.ts&&now-r.ts<win*DAY;});
   if(!wk.length)return null;
   var avg=function(k){var v=wk.map(function(r){return r[k];}).filter(function(x){return x!=null&&x!==''&&!isNaN(x);});return v.length?+(v.reduce(function(a,b){return a+(+b);},0)/v.length).toFixed(2):null;};
   var modal=function(k){var c={},best=null,bn=0;wk.forEach(function(r){var x=r[k];if(x==null||x==='')return;c[x]=(c[x]||0)+1;if(c[x]>bn){bn=c[x];best=x;}});return best;};
@@ -3372,6 +3376,80 @@ function dlWeeklyReport(){
   var blob=new Blob([body],{type:'text/plain;charset=utf-8'});
   var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download='VIA-L-weekly-'+date+'.txt'; document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },0);
+}
+
+// ══ МЕСЯЧНЫЙ AI-РАЗБОР (3-й уровень: день→неделя→месяц) — то же ядро, окно 30 дней, гейт 1×/мес ══
+function monthlyTrend(){ return weeklyTrend(30); }
+function _mrLabels(){
+  var T={
+    ru:{title:'Месячный AI-разбор',sub:'сводка динамики за месяц · раз в месяц'},
+    uk:{title:'Місячний AI-розбір',sub:'зведення динаміки за місяць · раз на місяць'},
+    en:{title:'Monthly AI review',sub:'monthly dynamics summary · once a month'},
+    es:{title:'Análisis mensual IA',sub:'resumen mensual de la dinámica · una vez al mes'},
+    de:{title:'Monatliche KI-Auswertung',sub:'monatliche Dynamik-Zusammenfassung · einmal im Monat'},
+    pt:{title:'Análise mensal IA',sub:'resumo mensal da dinâmica · uma vez por mês'},
+    fr:{title:'Analyse mensuelle IA',sub:'synthèse mensuelle de la dynamique · une fois par mois'},
+    pl:{title:'Miesięczna analiza AI',sub:'miesięczne podsumowanie dynamiki · raz w miesiącu'},
+    it:{title:'Analisi mensile IA',sub:'sintesi mensile della dinamica · una volta al mese'},
+    he:{title:'סקירה חודשית AI',sub:'סיכום דינמיקה חודשי · פעם בחודש'},
+    ja:{title:'月間AIレビュー',sub:'月間の動向サマリー · 月1回'},
+    ko:{title:'월간 AI 리뷰',sub:'월간 변화 요약 · 월 1회'}
+  };
+  return Object.assign({},_wrUI(),T[lang]||T.en);
+}
+function _mrGate(){
+  var DAY=86400000, now=Date.now();
+  var last=parseInt(localStorage.getItem('vial_monthly_last')||'0',10);
+  var left=last?Math.ceil((30*DAY-(now-last))/DAY):0;
+  return { canGen: !last || (now-last)>=30*DAY, daysLeft: left>0?left:0,
+           cached: secGet('vial_monthly_text')||'', cachedDate: localStorage.getItem('vial_monthly_date')||'' };
+}
+function renderMonthlyReportUI(){
+  var box=document.getElementById('monthlyReport'); if(!box) return;
+  var w=monthlyTrend(); if(!w){ box.innerHTML=''; return; }
+  var ui=_mrLabels(), g=_mrGate(), inner='';
+  if(g.cached){
+    inner += '<div style="font-size:13px;line-height:1.7;color:var(--t2);">'+_wrMd(g.cached)+'</div>';
+    inner += '<div style="margin-top:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;"><button onclick="dlMonthlyReport()" style="background:transparent;color:#b48af0;border:1px solid rgba(180,138,240,.4);border-radius:9px;padding:7px 13px;font-size:12px;cursor:pointer;">⬇ '+ui.dl+'</button>'+(g.cachedDate?'<span style="font-size:10px;color:var(--t3);">'+ui.from+' '+g.cachedDate+'</span>':'')+'</div>';
+  }
+  if(g.canGen){
+    inner += '<button id="mrBtn" onclick="genMonthlyReport()" style="margin-top:'+(g.cached?'12px':'0')+';background:linear-gradient(135deg,#c9a8f5,#9b6ff0);color:#150f22;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;">'+ui.get+'</button>';
+  } else {
+    inner += '<div style="margin-top:'+(g.cached?'12px':'0')+';font-size:11px;color:var(--t3);">⏳ '+ui.lock+' '+g.daysLeft+' '+ui.days+'</div>';
+  }
+  box.innerHTML='<div style="background:linear-gradient(145deg,#1a1426,#120d1e);border:1px solid rgba(180,138,240,.3);border-radius:16px;padding:16px 18px;"><div style="font-family:\'Playfair Display\',serif;font-size:16px;color:var(--t1);">✦ '+ui.title+'</div><div style="font-size:10px;color:var(--t3);letter-spacing:.5px;margin-bottom:10px;">'+ui.sub+'</div>'+inner+'</div>';
+}
+async function genMonthlyReport(){
+  var w=monthlyTrend(); if(!w) return;
+  var ui=_mrLabels();
+  var btn=document.getElementById('mrBtn'); if(btn){ btn.disabled=true; btn.textContent=ui.load; }
+  var summary={ n:w.wk.length, metrics:w.metrics.map(function(m){return { key:m.k, avg:+m.a.toFixed(m.dec), prev:m.p!=null?+m.p.toFixed(m.dec):null, delta:m.delta!=null?+m.delta.toFixed(m.dec):null };}) };
+  var daily=(typeof _weeklyDaily==='function')?_weeklyDaily(30):null;
+  try{
+    var res=await fetch('https://interpreter.viaelcom.workers.dev/weekly-report',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({summary:summary,daily:daily,lang:lang,code:'',tier:'vio',period:'month'})});
+    var json=await res.json();
+    if(!json.report) throw new Error('no report');
+    secSet('vial_monthly_text',json.report);
+    localStorage.setItem('vial_monthly_last',String(Date.now()));
+    localStorage.setItem('vial_monthly_date',new Date().toISOString().slice(0,10));
+    renderMonthlyReportUI();
+  }catch(e){
+    if(btn){ btn.disabled=false; btn.textContent=ui.get; }
+    var box=document.getElementById('monthlyReport');
+    if(box&&box.firstElementChild){ var er=document.createElement('div'); er.style.cssText='margin-top:10px;font-size:11px;color:#FF6B8A;'; er.textContent='⚠ '+ui.err; box.firstElementChild.appendChild(er); }
+  }
+}
+function dlMonthlyReport(){
+  var txt=secGet('vial_monthly_text')||''; if(!txt) return;
+  var ui=_mrLabels(), date=localStorage.getItem('vial_monthly_date')||new Date().toISOString().slice(0,10);
+  var plain=String(txt).replace(/^#{1,3}\s*/gm,'').replace(/\*\*([^*]+?)\*\*/g,'$1');
+  var body=ui.title+' — '+date+'\n\n'+plain+'\n';
+  var blob=new Blob([body],{type:'text/plain;charset=utf-8'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='VIA-L-monthly-'+date+'.txt'; document.body.appendChild(a); a.click();
   setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },0);
 }
 
@@ -4606,6 +4684,7 @@ function showResults(){
     _showResultsInner();
     // Авто-недельный разбор: на 7-й день (гейт открыт) + есть тренд (≥2 анализа) — генерится сам, как в PRO.
     try{ if(typeof _wrGate==='function'&&_wrGate().canGen&&typeof weeklyTrend==='function'&&weeklyTrend()&&typeof genWeeklyReport==='function')genWeeklyReport(); }catch(e2){}
+    try{ if(typeof _mrGate==='function'&&_mrGate().canGen&&typeof monthlyTrend==='function'&&monthlyTrend()&&typeof genMonthlyReport==='function')genMonthlyReport(); }catch(e3){}
   } catch(e) {
     const div = document.createElement('div');
     div.style.cssText = 'position:fixed;top:60px;left:10px;right:10px;background:#ff4444;color:#fff;padding:16px;border-radius:12px;z-index:9999;font-size:12px;font-family:monospace;word-break:break-all;';

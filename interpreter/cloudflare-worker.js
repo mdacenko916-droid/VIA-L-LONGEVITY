@@ -1426,8 +1426,13 @@ async function handleDayPlan(request, env, corsHeaders, ctx) {
 // Для EXPERT/ELITE (есть code) тот же разбор кладётся в карточку кабинета →
 // специалист видит его во вкладке «Разборы» (type:'weekly').
 // ─────────────────────────────────────────────────────────────
-function buildWeeklyUserMessage(summary, daily, lang) {
+function buildWeeklyUserMessage(summary, daily, lang, period) {
   summary = summary || {};
+  const isM = period === 'month';
+  const spanN = isM ? 30 : 7;
+  const thisP = isM ? 'this month' : 'this week';
+  const lastP = isM ? 'last month' : 'last week';
+  const adjP  = isM ? 'Monthly' : 'Weekly';
   const labels = {
     hrv:'HRV', sleep:'Sleep quality', rhr:'Resting heart rate', energy:'Energy',
     qol:'Quality of life', anx:'Anxiety', score:'Readiness',
@@ -1435,15 +1440,15 @@ function buildWeeklyUserMessage(summary, daily, lang) {
   const goodUp = { hrv:1, sleep:1, rhr:-1, energy:1, qol:1, anx:-1, score:1 };
   const lines = (summary.metrics || []).map(m => {
     const label = labels[m.key] || m.key;
-    let trend = 'no prior-week baseline';
+    let trend = 'no prior baseline';
     if (m.delta != null) {
       const dirWord = m.delta > 0 ? 'up' : (m.delta < 0 ? 'down' : 'flat');
       const better  = m.delta === 0 ? 'stable' : (((m.delta > 0 ? 1 : -1) === (goodUp[m.key] || 1)) ? 'improved' : 'worsened');
-      trend = `${dirWord} ${m.delta > 0 ? '+' : ''}${m.delta} vs last week (${better})`;
+      trend = `${dirWord} ${m.delta > 0 ? '+' : ''}${m.delta} vs ${lastP} (${better})`;
     }
-    return `- ${label}: 7-day average ${m.avg}; ${trend}`;
+    return `- ${label}: ${spanN}-day average ${m.avg}; ${trend}`;
   });
-  let out = 'Weekly biometric & wellbeing summary (' + (summary.n || 0) + ' analyses logged this week):\n' +
+  let out = adjP + ' biometric & wellbeing summary (' + (summary.n || 0) + ' analyses logged ' + thisP + '):\n' +
             (lines.length ? lines.join('\n') : '(no metrics available)');
 
   // Дневная детализация из vial_daily (приливы/температура/SpO₂/память/туман/стресс/алкоголь)
@@ -1460,7 +1465,7 @@ function buildWeeklyUserMessage(summary, daily, lang) {
     if (daily.fogDays != null) d.push(`- Brain fog: ${daily.fogDays}/${daily.days} days`);
     if (daily.stress != null)  d.push(`- Stress: ${daily.stress}/10 avg`);
     if (daily.alcDays != null) d.push(`- Alcohol: ${daily.alcDays}/${daily.days} days`);
-    if (d.length) out += '\n\nDaily detail logged this week:\n' + d.join('\n');
+    if (d.length) out += '\n\nDaily detail logged ' + thisP + ':\n' + d.join('\n');
 
     const p = daily.profile || {};
     const ctx = [];
@@ -1470,27 +1475,31 @@ function buildWeeklyUserMessage(summary, daily, lang) {
     if (p.eating)                ctx.push('eating pattern: ' + p.eating);
     if (ctx.length) out += '\n\nClient context: ' + ctx.join('; ') + '.';
   }
-  return out + '\n\nWrite the short weekly review now.';
+  return out + '\n\nWrite the short ' + (isM ? 'monthly' : 'weekly') + ' review now.';
 }
 
 async function handleWeeklyReport(request, env, corsHeaders, ctx) {
-  const { summary, daily, lang, code, tier } = await request.json();
+  const { summary, daily, lang, code, tier, period } = await request.json();
   const langMap = {
     ru: 'русском', uk: 'украинском', en: 'English', es: 'español',
     de: 'Deutsch', pt: 'português', fr: 'français', pl: 'polski',
     it: 'italiano', he: 'עברית', ja: '日本語', ko: '한국어',
   };
   const langName = langMap[lang] || 'English';
+  const isMonth = period === 'month';
+  const perAdj  = isMonth ? 'monthly' : 'weekly';   // 3-й уровень: месячный разбор — то же ядро, другое окно/каденс
+  const perThis = isMonth ? 'this month' : 'this week';
+  const perNext = isMonth ? 'coming month' : 'coming week';
 
   const weeklySystem =
-    'You are a longevity & clinical-nutrition EDUCATOR writing a SHORT weekly review of a ' +
+    'You are a longevity & clinical-nutrition EDUCATOR writing a SHORT ' + perAdj + ' review of a ' +
     "client's wearable / wellbeing dynamics. This is educational reflection, NOT medical advice, " +
     'diagnosis, or treatment.\n' +
     'WRITE: 4–6 warm, supportive sentences. Care is the core value — encourage, never pressure or scare.\n' +
     'COVER, based ONLY on the numbers given (never invent metrics or values):\n' +
-    '1) what improved this week, 2) what worsened or needs attention, 3) the single most likely ' +
-    'behavioural driver, 4) ONE small, doable focus for the coming week (an "experiment", not a list).\n' +
-    'If a "Daily detail logged this week" block and/or "Client context" are provided, USE them — ' +
+    '1) what improved ' + perThis + ', 2) what worsened or needs attention, 3) the single most likely ' +
+    'behavioural driver, 4) ONE small, doable focus for the ' + perNext + ' (an "experiment", not a list).\n' +
+    'If a "Daily detail" block and/or "Client context" are provided, USE them — ' +
     'they reflect what the person actually logged each day (hot flashes, temperature, SpO₂, memory, ' +
     'brain fog, stress, alcohol) and their profile (cycle phase, comfort markers, diet); ground the review in them.\n' +
     'Refer to a profile specialist generically if relevant ("your specialist") — never invent a personal name.\n' +
@@ -1517,7 +1526,7 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
       model: ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
       max_tokens: 900,
       system: weeklySystem,
-      messages: [{ role: 'user', content: buildWeeklyUserMessage(summary, daily, lang) }],
+      messages: [{ role: 'user', content: buildWeeklyUserMessage(summary, daily, lang, period) }],
     }),
   });
 
