@@ -3595,7 +3595,7 @@ function buildUserMessage(data, lang, tier) {
     + 'Питание · ограничения/диета: ' + _J(data.diet_restrict) + ' | режим питания: ' + (data.eating_pattern || '—') + '\n'
     + ((data.protein_intake || data.cravings || data.allergy) ? 'Питание (доп.): ' + (data.protein_intake ? 'потребление белка: ' + data.protein_intake : '') + (data.cravings ? ' | тяга к сладкому/еде: да' : '') + (data.allergy ? ' | аллергии: ' + data.allergy : '') + '\n' : '')
     + ((data.lifestyle_notes || data.new_symptoms) ? 'Контекст образа жизни за неделю (со слов клиента): ' + (data.lifestyle_notes || data.new_symptoms) + '\n' : '')
-    + 'Физическая активность · виды: ' + _J(data.act_types) + ' | частота: ' + (data.act_freq || '—') + ' | восстановление после нагрузки: ' + (data.act_recovery || '—') + '\n'
+    + 'Физическая активность · виды: ' + _J(data.act_types) + ' | частота: ' + (data.act_freq || '—') + ' | восстановление после нагрузки: ' + (data.act_recovery || '—') + (data.move_today ? ' | движение сегодня: ' + ({active:'активный день',light:'немного',sedentary:'сидячий день'}[data.move_today] || data.move_today) : '') + '\n'
     + 'Добавки (принимает): ' + _J(data.supplements) + '\n'
     + 'Лекарства: ' + (data.meds || '—') + (data.meds_other ? ' | другие: ' + data.meds_other : '') + '\n'
     + 'Хронический стресс: ' + (data.chronic_stress || '—') + ' | симптомы кортизола: ' + _J(data.cortisol_symp) + '\n'
@@ -3622,17 +3622,21 @@ function buildUserMessage(data, lang, tier) {
   // сегодня с индивидуальным baseline, а не только с общими референсами.
   const baselineBlock = (function(b){
     if(!b || !b.metrics) return '';
-    const lbl = { sleep_qual:'Качество сна', energy:'Энергия', rhr:'Пульс покоя', sleep_hours:'Часы сна' };
-    const today = { sleep_qual:sleepQual, energy:energyVal, rhr:rhrVal, sleep_hours:(parseFloat(data.sleep_hours)||null) };
+    const lbl = { sleep_qual:'Качество сна', energy:'Энергия', rhr:'Пульс покоя', sleep_hours:'Часы сна', weight:'Вес (кг)', waist:'Талия (см)' };
+    const unit = { weight:' кг', waist:' см' };
+    const neutral = { weight:1, waist:1 };   // вес/талия: рост/снижение не «хорошо/плохо» — нейтрально
+    const today = { sleep_qual:sleepQual, energy:energyVal, rhr:rhrVal, sleep_hours:(parseFloat(data.sleep_hours)||null), weight:(parseFloat(data.weight)||null), waist:(parseFloat(data.waist)||null) };
     const rows = Object.keys(b.metrics).map(function(k){
       const m=b.metrics[k]; if(!m||m.usual==null) return '';
       const t=today[k]; let cmp='';
       if(t!=null){
-        const d=t-m.usual, thr=Math.max(Math.abs(m.usual)*0.1,0.5);
-        const better=(k==='rhr')?d<0:d>0;   // для пульса покоя ниже = лучше
-        cmp = Math.abs(d)<thr ? ' → как обычно' : (better?' → лучше личной нормы':' → хуже личной нормы');
+        const d=t-m.usual, thr=neutral[k]?(k==='weight'?1.5:2):Math.max(Math.abs(m.usual)*0.1,0.5);
+        if(Math.abs(d)<thr) cmp=' → как обычно';
+        else if(neutral[k]) cmp=(d>0?' → выше обычного':' → ниже обычного');
+        else { const better=(k==='rhr')?d<0:d>0; cmp=(better?' → лучше личной нормы':' → хуже личной нормы'); }
       }
-      return '• '+(lbl[k]||k)+': обычно ~'+m.usual+(t!=null?(', сегодня '+t):'')+cmp+'\n';
+      const u=unit[k]||'';
+      return '• '+(lbl[k]||k)+': обычно ~'+m.usual+u+(t!=null?(', сегодня '+t+u):'')+cmp+'\n';
     }).filter(Boolean).join('');
     if(!rows) return '';
     return '══ ЛИЧНАЯ НОРМА КЛИЕНТА (по '+(b.days||0)+' предыдущим дням) ══\n'
