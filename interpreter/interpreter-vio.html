@@ -3215,7 +3215,8 @@ function renderCard(){
   }
   // мини-тренды сон/энергия/пульс (личный ориентир «обычно»)
   var _tr=_cardTrends();
-  if(_tr.sleep.length>=2||_tr.energy.length>=2||_tr.rhr.length>=2||_tr.weight.length>=2||_tr.waist.length>=2){
+  var _trendsShown=(_tr.sleep.length>=2||_tr.energy.length>=2||_tr.rhr.length>=2||_tr.weight.length>=2||_tr.waist.length>=2);
+  if(_trendsShown){
     var _usu=function(v){return L({ru:'обычно ~'+v,uk:'зазвичай ~'+v,en:'usually ~'+v,es:'normalmente ~'+v,de:'meist ~'+v,pt:'normalmente ~'+v,fr:'habituellement ~'+v,pl:'zwykle ~'+v,it:'di solito ~'+v,he:'בדרך כלל ~'+v,ja:'通常 ~'+v,ko:'보통 ~'+v});};
     var _metrics=[
       {key:'sleep', lbl:L({ru:'Сон',uk:'Сон',en:'Sleep',es:'Sueño',de:'Schlaf',pt:'Sono',fr:'Sommeil',pl:'Sen',it:'Sonno',he:'שינה',ja:'睡眠',ko:'수면'}), unit:'/10', dir:1, col:'#7CC6FF'},
@@ -3233,7 +3234,10 @@ function renderCard(){
       dynInner+='<div class="vc-row"><span class="vc-l" style="min-width:64px;">'+m.lbl+'</span><span style="color:var(--t3);font-size:11px;white-space:nowrap;">'+_usu(_fmt(base)+m.unit)+'</span><span style="flex:1;display:flex;justify-content:center;min-width:0;">'+_spark(vals,m.col)+'</span><span style="display:flex;align-items:center;gap:6px;"><span style="color:'+m.col+';font-weight:600;">'+_fmt(last)+'</span>'+arrow+'</span></div>';
     });
   }
-  if(!dynInner)dynInner='<div class="vc-empty">'+t('history_empty')+'</div>';
+  // Подсказка «идёт накопление»: готовность есть, но мини-графиков пока нет (мало точек)
+  if(dynInner && !_trendsShown){ dynInner+='<div class="vc-empty" style="margin-top:8px;line-height:1.5;">'+L({ru:'Мини-графики (сон, энергия, вес…) появятся после нескольких заходов — данные копятся.',uk:'Міні-графіки (сон, енергія, вага…) зʼявляться після кількох заходів — дані накопичуються.',en:'Mini-charts (sleep, energy, weight…) appear after a few check-ins — data is still accumulating.',es:'Los mini-gráficos (sueño, energía, peso…) aparecen tras varios análisis — se están acumulando datos.',de:'Mini-Diagramme (Schlaf, Energie, Gewicht…) erscheinen nach einigen Check-ins — Daten sammeln sich noch.',pt:'Mini-gráficos (sono, energia, peso…) aparecem após alguns registros — os dados estão se acumulando.',fr:'Les mini-graphiques (sommeil, énergie, poids…) apparaissent après quelques bilans — les données sʼaccumulent.',pl:'Mini-wykresy (sen, energia, waga…) pojawią się po kilku analizach — dane się gromadzą.',it:'I mini-grafici (sonno, energia, peso…) compaiono dopo alcuni check-in — i dati si stanno accumulando.',he:'מיני-גרפים (שינה, אנרגיה, משקל…) יופיעו אחרי כמה בדיקות — הנתונים מצטברים.',ja:'ミニグラフ（睡眠・エネルギー・体重…）は数回の記録後に表示されます——データを蓄積中です。',ko:'미니 차트(수면, 에너지, 체중…)는 몇 번의 기록 후 표시됩니다 — 데이터가 쌓이는 중입니다.'})+'</div>'; }
+  // Новичок (данных ещё нет): объясняем, что динамика набирается — а не «пусто/баг»
+  if(!dynInner)dynInner='<div class="vc-empty" style="line-height:1.5;">'+L({ru:'Здесь появится ваша динамика — она набирается с каждым анализом. Загляните через пару заходов.',uk:'Тут зʼявиться ваша динаміка — вона накопичується з кожним аналізом. Завітайте за кілька заходів.',en:'Your dynamics will appear here — they build up with each check-in. Come back after a couple of check-ins.',es:'Aquí aparecerá tu evolución — se acumula con cada análisis. Vuelve tras un par de análisis.',de:'Hier erscheint deine Entwicklung — sie baut sich mit jedem Check-in auf. Schau nach ein paar Check-ins wieder vorbei.',pt:'Sua evolução aparecerá aqui — acumula-se a cada análise. Volte após alguns registros.',fr:'Votre évolution apparaîtra ici — elle se construit à chaque bilan. Revenez après quelques bilans.',pl:'Tu pojawi się Twoja dynamika — buduje się z każdą analizą. Wróć po kilku analizach.',it:'Qui apparirà la tua evoluzione — si accumula a ogni analisi. Torna dopo qualche check-in.',he:'כאן תופיע הדינמיקה שלך — היא נבנית עם כל בדיקה. חזרו אחרי כמה בדיקות.',ja:'ここに変化が表示されます——分析ごとに蓄積されます。数回後にまたご覧ください。',ko:'여기에 변화가 표시됩니다 — 분석할 때마다 쌓입니다. 몇 번 후에 다시 확인하세요.'})+'</div>';
   html+=_vcSec('📊',t('card_dynamics'),dynInner,true,true);
 
   html+='</div>'; // .vcard-grid
