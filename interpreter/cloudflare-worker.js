@@ -628,6 +628,7 @@ export default {
 
       // Default: AI-анализ для интерпретатора
       if (path === '/day-plan') return handleDayPlan(request, env, corsHeaders, ctx);
+      if (path === '/ai-memory') return handleAiMemory(request, env, corsHeaders, ctx);
       return handleAnalyze(request, env, corsHeaders, ctx);
 
     } catch (e) {
@@ -1414,6 +1415,97 @@ async function handleDayPlan(request, env, corsHeaders, ctx) {
   }
 
   return new Response(JSON.stringify(plan ? { plan } : { error: 'parse', raw: raw.slice(0, 300) }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// AI-ПАМЯТЬ О КЛИЕНТЕ — /ai-memory → строгий JSON {memory:[],focus:[]}.
+// Накапливаемая: получает ПРЕДЫДУЩУЮ память + свежие тренды (месяц) и обновляет её.
+// «focus» = «зоны внимания» (велнес-ориентиры, НЕ диагнозы/риски). Каденс — раз в месяц (клиент).
+// ─────────────────────────────────────────────────────────────
+function buildMemoryUserMessage(profile, summary, daily, prevMemory) {
+  profile = profile || {};
+  const p = ['Профиль: пол ' + (profile.gender || '—') + ', возраст ' + (profile.age || '—') + ', этап ' + (profile.phase || '—')];
+  if (profile.goal) p.push('Цель клиента: ' + profile.goal);
+  if (Array.isArray(profile.priorities) && profile.priorities.length) p.push('Приоритеты: ' + profile.priorities.join(', '));
+  let out = 'ДАННЫЕ КЛИЕНТА ДЛЯ ПАМЯТИ:\n' + p.join('\n') + '\n';
+  if (summary && Array.isArray(summary.metrics) && summary.metrics.length) {
+    out += '\nМесячные тренды (30-дн. среднее; дельта к прошлому месяцу):\n' +
+      summary.metrics.map(m => '- ' + m.key + ': ' + m.avg + (m.delta != null ? ' (' + (m.delta > 0 ? '+' : '') + m.delta + ')' : '')).join('\n') + '\n';
+  }
+  if (daily && daily.days) {
+    const d = [];
+    if (daily.sleep != null)   d.push('сон ' + daily.sleep + '/10 в среднем');
+    if (daily.energy != null)  d.push('энергия ' + daily.energy + '/10');
+    if (daily.stress != null)  d.push('стресс ' + daily.stress);
+    if (daily.fogDays != null) d.push('туман ' + daily.fogDays + '/' + daily.days + ' дн.');
+    if (daily.alcDays != null) d.push('алкоголь ' + daily.alcDays + '/' + daily.days + ' дн.');
+    if (d.length) out += '\nДневная детализация за месяц: ' + d.join(', ') + '.\n';
+  }
+  if (prevMemory) {
+    if (Array.isArray(prevMemory.memory) && prevMemory.memory.length)
+      out += '\nПРЕДЫДУЩАЯ ПАМЯТЬ (сохрани верное, уточни изменившееся, добавь новое):\n' + prevMemory.memory.map(x => '- ' + x).join('\n') + '\n';
+    if (Array.isArray(prevMemory.focus) && prevMemory.focus.length)
+      out += '\nПрошлые зоны внимания:\n' + prevMemory.focus.map(x => '- ' + x).join('\n') + '\n';
+  }
+  return out + '\nСформируй обновлённую AI-память клиента строго в JSON.';
+}
+
+async function handleAiMemory(request, env, corsHeaders, ctx) {
+  const { profile, summary, daily, prevMemory, lang, tier } = await request.json();
+  const langMap = {
+    ru: 'русском', uk: 'украинском', en: 'English', es: 'español',
+    de: 'Deutsch', pt: 'português', fr: 'français', pl: 'polski',
+    it: 'italiano', he: 'עברית', ja: '日本語', ko: '한국어',
+  };
+  const langName = langMap[lang] || 'English';
+  const isWellness = ['vio', 'pro'].includes(String(tier || '').toLowerCase());
+  const base = isWellness ? (WELLNESS_SYSTEM_PROMPT + WELLNESS_KB) : SYSTEM_PROMPT;
+
+  const schema =
+    '\n\n════════════════════════════════════════\n' +
+    'ЗАДАЧА СЕЙЧАС: AI-ПАМЯТЬ О КЛИЕНТЕ — ВЫВОД СТРОГО JSON\n' +
+    '════════════════════════════════════════\n' +
+    'ИГНОРИРУЙ форматы/объёмы ответа выше. Сейчас формат вывода = ТОЛЬКО валидный JSON (без markdown, без ```), без текста вокруг. Схема:\n' +
+    '{"memory":["..."],"focus":["..."]}\n' +
+    '• memory: 3–6 коротких заметок — что стабильно известно о клиенте (повторяющиеся паттерны, что ему помогает, контекст образа жизни, как реагирует на изменения). Это НАКАПЛИВАЕМАЯ память: если дана «ПРЕДЫДУЩАЯ ПАМЯТЬ» — сохрани верное, уточни изменившееся, добавь новое; НЕ сбрасывай и НЕ выдумывай.\n' +
+    '• focus: 2–4 «зоны внимания» — на чём клиенту стоит сфокусироваться по велнесу (сон, энергия, движение, питание, восстановление, тонус). Это НЕ диагнозы, НЕ болезни и НЕ «риски» — мягкие велнес-ориентиры в поддерживающем тоне.\n' +
+    'Каждая строка — ОДНА короткая законченная фраза ≤ ~14 слов, на ' + langName + '. Опирайся ТОЛЬКО на данные ниже, ничего не выдумывай. Если данных мало — верни то, что уверенно следует, короче. Верни ТОЛЬКО JSON.';
+
+  const guard = isWellness
+    ? '\n\n[WELLNESS] Без диагнозов и болезней; без слов «гормон/гормональный», «диагноз», «маркер», «симптом», «синдром», «терапия», «лечение», «риск» → «сигнал», «признак», «ориентир», «зона внимания». Не называй гормоны/приборные метрики как замеры. «менопауза/андропауза» → «переходный этап»/«возрастная витальность». Всё как поддержка образа жизни и восстановления.'
+    : '\n\n[EXPERT/ELITE] Клинический язык допустим, но без claims «лечит/предотвращает болезнь».';
+
+  let out = null, raw = '';
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': env.CLAUDE_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'prompt-caching-2024-07-31',
+      },
+      body: JSON.stringify({
+        model: ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        system: [{ type: 'text', text: base + guard + schema, cache_control: { type: 'ephemeral' } }],
+        messages: [{ role: 'user', content: buildMemoryUserMessage(profile, summary, daily, prevMemory) }],
+      }),
+    });
+    const result = await response.json();
+    raw = (result.content && result.content[0] && result.content[0].text) || '';
+    let t = raw.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
+    try { out = JSON.parse(t); }
+    catch (e) { const m = t.match(/\{[\s\S]*\}/); if (m) { try { out = JSON.parse(m[0]); } catch (e2) {} } }
+  } catch (e) { raw = 'fetch_error: ' + e.message; }
+
+  let mem = out && Array.isArray(out.memory) ? out.memory.map(x => String(x)) : [];
+  let foc = out && Array.isArray(out.focus) ? out.focus.map(x => String(x)) : [];
+  if (isWellness) { mem = mem.map(x => deMedicalizeFeed(x)); foc = foc.map(x => deMedicalizeFeed(x)); }
+
+  return new Response(JSON.stringify((mem.length || foc.length) ? { memory: mem, focus: foc } : { error: 'parse', raw: raw.slice(0, 300) }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 }

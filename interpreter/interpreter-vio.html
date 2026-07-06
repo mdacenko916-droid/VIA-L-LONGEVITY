@@ -1564,6 +1564,7 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
     </div>
     <div id="weeklyReport" style="margin-bottom:18px;"></div>
     <div id="monthlyReport" style="margin-bottom:18px;"></div>
+    <div id="aiMemoryBox" style="margin-bottom:18px;display:flex;flex-direction:column;gap:10px;"></div>
     <div id="cardBody"></div>
     <div id="historyList"></div>
   </div>
@@ -2799,7 +2800,7 @@ function saveSession(score,type,data){
 // Ключ (extractable:false) хранится в IndexedDB — сырой ключ недоступен JS. Работает в браузере
 // и внутри Capacitor-WebView. Если crypto/IndexedDB недоступны — прозрачный откат на localStorage
 // (приложение не ломается). Sync-совместимость: расшифровка в память при старте, шифрование при записи.
-var _SEC={ready:false,key:null,cache:{},keys:['vial_profile','vial_history','vial_daily','vial_weekly_text','vial_monthly_text']};
+var _SEC={ready:false,key:null,cache:{},keys:['vial_profile','vial_history','vial_daily','vial_weekly_text','vial_monthly_text','vial_ai_memory']};
 function _secIdb(){return new Promise(function(res,rej){try{var r=indexedDB.open('vial_sec',1);r.onupgradeneeded=function(){r.result.createObjectStore('k');};r.onsuccess=function(){res(r.result);};r.onerror=function(){rej(r.error);};}catch(e){rej(e);}});}
 function _secIdbGet(db,k){return new Promise(function(res,rej){var t=db.transaction('k','readonly').objectStore('k').get(k);t.onsuccess=function(){res(t.result);};t.onerror=function(){rej(t.error);};});}
 function _secIdbPut(db,k,v){return new Promise(function(res,rej){var t=db.transaction('k','readwrite').objectStore('k').put(v,k);t.onsuccess=function(){res();};t.onerror=function(){rej(t.error);};});}
@@ -3245,6 +3246,7 @@ function renderCard(){
   var hl=document.getElementById('historyList'); if(hl)hl.innerHTML='';
   if(typeof renderWeeklyReportUI==='function')renderWeeklyReportUI();
   if(typeof renderMonthlyReportUI==='function')renderMonthlyReportUI();
+  if(typeof renderAiMemoryUI==='function')renderAiMemoryUI();
 }
 
 // ══ НЕДЕЛЬНЫЙ AI-РАЗБОР (как PRO, адаптирован под VIO без гаджета) ═══════════
@@ -3436,6 +3438,7 @@ async function genMonthlyReport(){
     localStorage.setItem('vial_monthly_last',String(Date.now()));
     localStorage.setItem('vial_monthly_date',new Date().toISOString().slice(0,10));
     renderMonthlyReportUI();
+    if(typeof genAiMemory==='function')genAiMemory(summary,daily);   // AI-память обновляется на месячном каденсе
   }catch(e){
     if(btn){ btn.disabled=false; btn.textContent=ui.get; }
     var box=document.getElementById('monthlyReport');
@@ -3451,6 +3454,35 @@ function dlMonthlyReport(){
   var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download='VIA-L-monthly-'+date+'.txt'; document.body.appendChild(a); a.click();
   setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },0);
+}
+
+// ══ AI-ПАМЯТЬ О КЛИЕНТЕ (накапливаемая) + ЗОНЫ ВНИМАНИЯ — обновляется с месячным разбором ══
+async function genAiMemory(summary,daily){
+  try{
+    var P={}; try{P=JSON.parse(secGet('vial_profile')||'{}')||{};}catch(e){}
+    var prof={ gender:P.gender||null, age:P.age||null, phase:P.phase||null, goal:P.goal||'', priorities:P.priorities||[] };
+    var prev=null; try{prev=JSON.parse(secGet('vial_ai_memory')||'null');}catch(e){}
+    var res=await fetch('https://interpreter.viaelcom.workers.dev/ai-memory',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({profile:prof,summary:summary,daily:daily,prevMemory:prev,lang:lang,tier:'vio'})});
+    var json=await res.json();
+    if(json&&(Array.isArray(json.memory)||Array.isArray(json.focus))){
+      secSet('vial_ai_memory',JSON.stringify({memory:json.memory||[],focus:json.focus||[],updated:new Date().toISOString().slice(0,10)}));
+      if(typeof renderAiMemoryUI==='function')renderAiMemoryUI();
+    }
+  }catch(e){}
+}
+function renderAiMemoryUI(){
+  var box=document.getElementById('aiMemoryBox'); if(!box) return;
+  var m=null; try{m=JSON.parse(secGet('vial_ai_memory')||'null');}catch(e){}
+  if(!m||(!(m.memory&&m.memory.length)&&!(m.focus&&m.focus.length))){ box.innerHTML=''; return; }
+  var esc=(typeof _esc==='function')?_esc:function(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+  var list=function(arr){ return '<ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.7;color:var(--t2);">'+(arr||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>'; };
+  var html='';
+  if(m.memory&&m.memory.length) html+=_vcSec('🧠', L({ru:'Что ИИ запомнил',uk:'Що ШІ запамʼятав',en:'What the AI remembers',es:'Lo que la IA recuerda',de:'Woran sich die KI erinnert',pt:'O que a IA lembra',fr:'Ce dont l’IA se souvient',pl:'Co zapamiętała AI',it:'Cosa ricorda l’IA',he:'מה ה-AI זוכר',ja:'AIが記憶したこと',ko:'AI가 기억한 것'}), list(m.memory), false, true);
+  if(m.focus&&m.focus.length) html+=_vcSec('🎯', L({ru:'Зоны внимания',uk:'Зони уваги',en:'Focus areas',es:'Áreas de enfoque',de:'Fokusbereiche',pt:'Áreas de foco',fr:'Points d’attention',pl:'Obszary uwagi',it:'Aree di attenzione',he:'תחומי מיקוד',ja:'注目ポイント',ko:'집중 영역'}), list(m.focus), false, true);
+  if(m.updated) html+='<div style="font-size:10px;color:var(--t3);margin:4px 2px 0;">'+L({ru:'Обновлено ИИ',uk:'Оновлено ШІ',en:'Updated by AI',es:'Actualizado por IA',de:'Von KI aktualisiert',pt:'Atualizado pela IA',fr:'Mis à jour par l’IA',pl:'Zaktualizowane przez AI',it:'Aggiornato dall’IA',he:'עודכן על ידי AI',ja:'AIが更新',ko:'AI가 업데이트'})+' · '+esc(m.updated)+'</div>';
+  box.innerHTML=html;
 }
 
 function renderHistory(){
