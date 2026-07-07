@@ -1332,18 +1332,18 @@ body.flow-mode footer,body.flow-mode .legal-links{display:none;}
       <svg viewBox="0 0 10 6"><path d="M1 1l4 4 4-4"/></svg>
     </button>
     <div class="lang-menu">
-      <div class="lang-option active" onclick="setLang('en')"><span class="lang-flag">🇬🇧</span>English</div>
-      <div class="lang-option" onclick="setLang('es')"><span class="lang-flag">🇪🇸</span>Español</div>
-      <div class="lang-option" onclick="setLang('uk')"><span class="lang-flag">🇺🇦</span>Українська</div>
-      <div class="lang-option" onclick="setLang('ru')"><span class="lang-flag">🇷🇺</span>Русский</div>
-      <div class="lang-option" onclick="setLang('de')"><span class="lang-flag">🇩🇪</span>Deutsch</div>
-      <div class="lang-option" onclick="setLang('pt')"><span class="lang-flag">🇧🇷</span>Português</div>
-      <div class="lang-option" onclick="setLang('fr')"><span class="lang-flag">🇫🇷</span>Français</div>
-      <div class="lang-option" onclick="setLang('pl')"><span class="lang-flag">🇵🇱</span>Polski</div>
-      <div class="lang-option" onclick="setLang('it')"><span class="lang-flag">🇮🇹</span>Italiano</div>
-      <div class="lang-option" onclick="setLang('he')"><span class="lang-flag">🇮🇱</span>עברית</div>
-      <div class="lang-option" onclick="setLang('ja')"><span class="lang-flag">🇯🇵</span>日本語</div>
-      <div class="lang-option" onclick="setLang('ko')"><span class="lang-flag">🇰🇷</span>한국어</div>
+      <div class="lang-option active" onclick="pickLang('en')"><span class="lang-flag">🇬🇧</span>English</div>
+      <div class="lang-option" onclick="pickLang('es')"><span class="lang-flag">🇪🇸</span>Español</div>
+      <div class="lang-option" onclick="pickLang('uk')"><span class="lang-flag">🇺🇦</span>Українська</div>
+      <div class="lang-option" onclick="pickLang('ru')"><span class="lang-flag">🇷🇺</span>Русский</div>
+      <div class="lang-option" onclick="pickLang('de')"><span class="lang-flag">🇩🇪</span>Deutsch</div>
+      <div class="lang-option" onclick="pickLang('pt')"><span class="lang-flag">🇧🇷</span>Português</div>
+      <div class="lang-option" onclick="pickLang('fr')"><span class="lang-flag">🇫🇷</span>Français</div>
+      <div class="lang-option" onclick="pickLang('pl')"><span class="lang-flag">🇵🇱</span>Polski</div>
+      <div class="lang-option" onclick="pickLang('it')"><span class="lang-flag">🇮🇹</span>Italiano</div>
+      <div class="lang-option" onclick="pickLang('he')"><span class="lang-flag">🇮🇱</span>עברית</div>
+      <div class="lang-option" onclick="pickLang('ja')"><span class="lang-flag">🇯🇵</span>日本語</div>
+      <div class="lang-option" onclick="pickLang('ko')"><span class="lang-flag">🇰🇷</span>한국어</div>
     </div>
   </div>
 </div>
@@ -3300,6 +3300,28 @@ let _rerendering=false;
 function L(t){return t[lang]||t.en||t.ru||Object.values(t)[0];}
 /* badge_test — метка «РЕЖИМ ТЕСТ» на устройствах, 12 языков */
 (function(){var _B={"ru":"РЕЖИМ ТЕСТ","uk":"ТЕСТ-РЕЖИМ","en":"TEST MODE","es":"MODO PRUEBA","de":"TESTMODUS","pt":"MODO TESTE","fr":"MODE TEST","pl":"TRYB TESTOWY","it":"MODALITÀ TEST","he":"מצב בדיקה","ja":"テストモード","ko":"테스트 모드"};Object.keys(_B).forEach(function(l){if(typeof T!=='undefined'&&T[l])T[l].badge_test=_B[l];});})();
+// ═══ ЯЗЫК ПО УСТРОЙСТВУ (как Google Health): при первом входе берём язык iPhone/iPad ═══
+// navigator.language в WKWebView (Capacitor) следует системному языку устройства.
+var _SUPP_LANGS=['ru','uk','en','es','de','pt','fr','pl','it','he','ja','ko'];
+function _detectLang(){
+  try{
+    var cands=(navigator.languages&&navigator.languages.length)?navigator.languages:[navigator.language||navigator.userLanguage||'en'];
+    for(var i=0;i<cands.length;i++){
+      var p=(cands[i]||'').toLowerCase().split('-')[0];
+      if(p==='iw'||p==='ji')p='he';                 // legacy-коды iOS для иврита
+      if(p==='nb'||p==='nn')p='en';                 // норвежский не поддержан → EN
+      if(_SUPP_LANGS.indexOf(p)>=0)return p;
+    }
+  }catch(e){}
+  return 'en';                                       // безопасный дефолт
+}
+// Стартовый язык: если пользователь выбрал вручную — уважаем; иначе следуем языку устройства.
+function _initLang(){
+  try{ if(localStorage.getItem('vial_lang_manual')==='1'){ var s=localStorage.getItem('vial_lang'); if(s&&_SUPP_LANGS.indexOf(s)>=0)return s; } }catch(e){}
+  return _detectLang();
+}
+// Ручной выбор из пикера → фиксируем как явный (перестаём авто-следовать устройству).
+function pickLang(l){ try{localStorage.setItem('vial_lang_manual','1');}catch(e){} setLang(l); }
 function setLang(l){
   lang=l;
   if(typeof updateProgress==='function')updateProgress(window._curStep!=null?window._curStep:0);   // перевести лейбл прогресса
@@ -3944,7 +3966,7 @@ initSliders();
 let _lastResult=null;
 // ИП — мировой продукт (12 языков), дефолт EN. Свой ключ vial_lang;
 // НЕ наследуем selectedLang с 4-язычного сайта VIA-L.
-setLang(localStorage.getItem('vial_lang')||'en');
+setLang(_initLang());   // язык устройства при первом входе; ручной выбор (pickLang) имеет приоритет
 loadProfile();
 try{_restoreAnswers();}catch(e){}  // «как вчера»: подтянуть ответы прошлой сессии
 
