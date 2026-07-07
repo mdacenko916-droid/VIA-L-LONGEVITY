@@ -2822,7 +2822,7 @@ function saveSession(score,type,data){
 // Ключ (extractable:false) хранится в IndexedDB — сырой ключ недоступен JS. Работает в браузере
 // и внутри Capacitor-WebView. Если crypto/IndexedDB недоступны — прозрачный откат на localStorage
 // (приложение не ломается). Sync-совместимость: расшифровка в память при старте, шифрование при записи.
-var _SEC={ready:false,key:null,cache:{},keys:['vial_profile','vial_history','vial_daily','vial_weekly_text','vial_monthly_text','vial_ai_memory']};
+var _SEC={ready:false,key:null,cache:{},keys:['vial_profile','vial_history','vial_daily','vial_weekly_text','vial_monthly_text','vial_ai_memory','vial_ai_daily']};
 function _secIdb(){return new Promise(function(res,rej){try{var r=indexedDB.open('vial_sec',1);r.onupgradeneeded=function(){r.result.createObjectStore('k');};r.onsuccess=function(){res(r.result);};r.onerror=function(){rej(r.error);};}catch(e){rej(e);}});}
 function _secIdbGet(db,k){return new Promise(function(res,rej){var t=db.transaction('k','readonly').objectStore('k').get(k);t.onsuccess=function(){res(t.result);};t.onerror=function(){rej(t.error);};});}
 function _secIdbPut(db,k,v){return new Promise(function(res,rej){var t=db.transaction('k','readwrite').objectStore('k').put(v,k);t.onsuccess=function(){res();};t.onerror=function(){rej(t.error);};});}
