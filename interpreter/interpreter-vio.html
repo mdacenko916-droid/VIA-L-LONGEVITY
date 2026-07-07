@@ -3339,10 +3339,12 @@ function _weeklyDaily(win){
   var cnt=function(k,pred){return wk.filter(function(r){return pred(r[k]);}).length;};
   var P={}; try{P=JSON.parse(secGet('vial_profile')||'{}')||{};}catch(e){}
   return { days:wk.length,
-    hfDays:cnt('hotflash',function(x){return x&&x!=='none';}), hotflash:modal('hotflash'), hotfreq:modal('hotfreq'),
+    hfDays:cnt('hotflash',function(x){return x&&x!=='none';}), hfCount:modal('hotflash'), hfIntensity:null,   // имена под воркер (PRO-совместимо); интенсивности по дням у VIO нет
     sleep:avg('sleep_qual'), rhr:avg('rhr'), energy:avg('energy'), stress:modal('stress'), memory:modal('memory'),
     fogDays:cnt('fog',function(x){return x&&x!=='none'&&x!=='0';}), alcDays:cnt('alc',function(x){return x&&x!=='0'&&x!=='no';}),
-    profile:{ phase:P.phase||null, gender:P.gender||null } };
+    profile:{ phase:P.phase||null, gender:P.gender||null,
+      goal:P.goal||null, priorities:(Array.isArray(P.priorities)&&P.priorities.length?P.priorities:null),
+      eating:P.eating_pattern||null, pms:(Array.isArray(P.pms_symptoms)&&P.pms_symptoms.length?P.pms_symptoms:null) } };
 }
 function _wrUI(){
   var M={

@@ -1553,9 +1553,9 @@ function buildWeeklyUserMessage(summary, daily, lang, period) {
     if (daily.hfDays != null)  d.push(`- Hot flashes: ${daily.hfDays}/${daily.days} days; typical ${hfC[daily.hfCount]||daily.hfCount||'—'}, intensity ${hfI[daily.hfIntensity]||daily.hfIntensity||'—'}`);
     if (daily.tempDev != null) d.push(`- Body-temp deviation: ${daily.tempDev} avg`);
     if (daily.spo2 != null)    d.push(`- SpO₂: ${daily.spo2}% avg`);
-    if (daily.memory != null)  d.push(`- Memory self-rating: ${daily.memory}/10 avg`);
+    if (daily.memory != null)  d.push(`- Memory: ${typeof daily.memory === 'number' ? daily.memory + '/10 avg' : 'mostly ' + daily.memory}`);
     if (daily.fogDays != null) d.push(`- Brain fog: ${daily.fogDays}/${daily.days} days`);
-    if (daily.stress != null)  d.push(`- Stress: ${daily.stress}/10 avg`);
+    if (daily.stress != null)  d.push(`- Stress: ${typeof daily.stress === 'number' ? daily.stress + '/10 avg' : 'mostly ' + daily.stress}`);
     if (daily.alcDays != null) d.push(`- Alcohol: ${daily.alcDays}/${daily.days} days`);
     if (d.length) out += '\n\nDaily detail logged ' + thisP + ':\n' + d.join('\n');
 
@@ -1565,7 +1565,9 @@ function buildWeeklyUserMessage(summary, daily, lang, period) {
     if (p.pms && p.pms.length)   ctx.push('Comfort markers before a new rhythm: ' + p.pms.join(', '));
     if (p.diet && p.diet.length) ctx.push('dietary restrictions: ' + p.diet.join(', '));
     if (p.eating)                ctx.push('eating pattern: ' + p.eating);
+    if (p.goal) ctx.unshift('client goal: ' + String(p.goal).slice(0, 200) + ((p.priorities && p.priorities.length) ? ' (focus: ' + p.priorities.join(', ') + ')' : ''));
     if (ctx.length) out += '\n\nClient context: ' + ctx.join('; ') + '.';
+    if (p.goal) out += '\nFrame what improved and the next-' + (isM ? 'month' : 'week') + ' focus around this stated goal.';
   }
   return out + '\n\nWrite the short ' + (isM ? 'monthly' : 'weekly') + ' review now.';
 }
