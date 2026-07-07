@@ -3693,8 +3693,10 @@ function buildUserMessage(data, lang, tier) {
   const _J = a => (Array.isArray(a) && a.length) ? a.join(', ') : '—';
   const fullDataBlock =
       '\n══ ПОЛНЫЕ ДАННЫЕ АНКЕТЫ — это ввёл клиент; ОБЯЗАТЕЛЬНО учти КАЖДЫЙ пункт ниже в разборе и рекомендациях, ничего не игнорируй ══\n'
+    + ((data.goal || (Array.isArray(data.priorities) && data.priorities.length)) ? '🎯 ЦЕЛЬ КЛИЕНТА: ' + (data.goal ? String(data.goal).trim().slice(0, 300) : '—') + ((Array.isArray(data.priorities) && data.priorities.length) ? ' | приоритеты/фокус: ' + data.priorities.join(', ') : '') + ' — ПОДСТРОЙ разбор, акценты и рекомендации под эту цель клиента.\n' : '')
     + 'Питание · ограничения/диета: ' + _J(data.diet_restrict) + ' | режим питания: ' + (data.eating_pattern || '—') + '\n'
-    + ((data.protein_intake || data.cravings || data.allergy) ? 'Питание (доп.): ' + (data.protein_intake ? 'потребление белка: ' + data.protein_intake : '') + (data.cravings ? ' | тяга к сладкому/еде: да' : '') + (data.allergy ? ' | аллергии: ' + data.allergy : '') + '\n' : '')
+    + ((data.protein_intake || data.appetite || data.cravings || data.allergy) ? 'Питание (доп.): ' + [(data.protein_intake ? 'потребление белка: ' + data.protein_intake : ''), (data.appetite ? 'аппетит: ' + data.appetite : ''), (data.cravings ? 'тяга к сладкому/еде: да' : ''), (data.allergy ? 'аллергии: ' + data.allergy : '')].filter(Boolean).join(' | ') + '\n' : '')
+    + ((data.memory || data.fog) ? 'Ясность ума · память: ' + (data.memory || '—') + ' | туман в голове: ' + (data.fog || '—') + '\n' : '')
     + ((data.lifestyle_notes || data.new_symptoms) ? 'Контекст образа жизни за неделю (со слов клиента): ' + (data.lifestyle_notes || data.new_symptoms) + '\n' : '')
     + 'Физическая активность · виды: ' + _J(data.act_types) + ' | частота: ' + (data.act_freq || '—') + ' | восстановление после нагрузки: ' + (data.act_recovery || '—') + (data.move_today ? ' | движение сегодня: ' + ({active:'активный день',light:'немного',sedentary:'сидячий день'}[data.move_today] || data.move_today) : '') + '\n'
     + 'Добавки (принимает): ' + _J(data.supplements) + '\n'
