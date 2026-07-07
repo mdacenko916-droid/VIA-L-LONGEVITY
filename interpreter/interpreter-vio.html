@@ -2822,7 +2822,7 @@ function saveSession(score,type,data){
 // Ключ (extractable:false) хранится в IndexedDB — сырой ключ недоступен JS. Работает в браузере
 // и внутри Capacitor-WebView. Если crypto/IndexedDB недоступны — прозрачный откат на localStorage
 // (приложение не ломается). Sync-совместимость: расшифровка в память при старте, шифрование при записи.
-var _SEC={ready:false,key:null,cache:{},keys:['vial_profile','vial_history','vial_daily','vial_weekly_text','vial_monthly_text','vial_ai_memory','vial_ai_daily']};
+var _SEC={ready:false,key:null,cache:{},keys:['vial_profile','vial_history','vial_daily','vial_weekly_text','vial_monthly_text','vial_ai_memory','vial_ai_daily','vial_day_plan']};
 function _secIdb(){return new Promise(function(res,rej){try{var r=indexedDB.open('vial_sec',1);r.onupgradeneeded=function(){r.result.createObjectStore('k');};r.onsuccess=function(){res(r.result);};r.onerror=function(){rej(r.error);};}catch(e){rej(e);}});}
 function _secIdbGet(db,k){return new Promise(function(res,rej){var t=db.transaction('k','readonly').objectStore('k').get(k);t.onsuccess=function(){res(t.result);};t.onerror=function(){rej(t.error);};});}
 function _secIdbPut(db,k,v){return new Promise(function(res,rej){var t=db.transaction('k','readwrite').objectStore('k').put(v,k);t.onsuccess=function(){res();};t.onerror=function(){rej(t.error);};});}
@@ -4371,14 +4371,21 @@ function _cleanPlan(p){
   try{ Object.keys(p).forEach(function(k){ if(Array.isArray(p[k])) p[k].forEach(function(s){ if(s&&Array.isArray(s.items)) s.items=s.items.map(function(x){return String(x).replace(re,'').replace(/\s{2,}/g,' ').replace(/\s+([.,;])/g,'$1').trim();}); }); }); }catch(e){}
   return p;
 }
+// Кэш «Памятки дня» 1×/день (как /analyze): повтор-заход того же дня с теми же данными → без вызова /day-plan
+function _dpGet(){ try{return JSON.parse(secGet('vial_day_plan')||'[]')||[];}catch(e){return [];} }
+function _dpSave(plan,lang,sig){ try{var arr=_dpGet(),day=_dayKey();arr=arr.filter(function(e){return e.day!==day;});arr.unshift({day:day,lang:lang,sig:sig,plan:plan,ts:Date.now()});while(arr.length>14)arr.pop();secSet('vial_day_plan',JSON.stringify(arr));}catch(e){} }
+function _dpToday(lang,sig){ var day=_dayKey(),e=_dpGet().filter(function(x){return x.day===day;})[0]; return (e&&e.lang===lang&&e.sig===sig&&e.plan)?e.plan:null; }
 async function fetchDayPlan(data){
   window._bpAILoading=true;
+  var L=(typeof lang!=='undefined'&&lang)||(typeof localStorage!=='undefined'&&localStorage.getItem('vial_lang'))||'en';
+  var sig=(typeof _sigOf==='function')?_sigOf(data):'';
+  var cached=_dpToday(L,sig);
+  if(cached){ window._bpAILoading=false; window._bpAI=cached; renderDayBlueprint(data); return; }   // из кэша, без API
   try{
-    var L=(typeof lang!=='undefined'&&lang)||(typeof localStorage!=='undefined'&&localStorage.getItem('vial_lang'))||'en';
     var res=await fetch(AI_WORKER+'/day-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:data,lang:L,tier:'vio'})});
     var json=await res.json();
     window._bpAILoading=false;
-    if(json&&json.plan&&typeof json.plan==='object'&&json.plan.morning){ window._bpAI=_cleanPlan(json.plan); renderDayBlueprint(data); }
+    if(json&&json.plan&&typeof json.plan==='object'&&json.plan.morning){ var cp=_cleanPlan(json.plan); _dpSave(cp,L,sig); window._bpAI=cp; renderDayBlueprint(data); }   // сохранить план дня → повторные заходы без API
   }catch(e){ window._bpAILoading=false; }
 }
 function openBpChapter(id){
