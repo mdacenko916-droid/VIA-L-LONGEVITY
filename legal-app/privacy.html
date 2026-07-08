@@ -18,10 +18,13 @@
     }
     html { scroll-behavior: smooth; }
     body { background: var(--cream); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 17px; line-height: 1.75; font-weight: 400; -webkit-font-smoothing: antialiased; }
-    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 200; display: flex; align-items: center; justify-content: space-between; padding: 14px 40px; background: rgba(245,243,239,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); flex-wrap: wrap; gap: 10px; }
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 200; display: flex; align-items: center; justify-content: space-between; padding: 14px 40px; background: rgba(245,243,239,0.92); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); flex-wrap: wrap; gap: 10px; }
     .nav-logo { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; letter-spacing: 8px; color: var(--text); text-decoration: none; }
-    .nav-back { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); text-decoration: none; transition: opacity .2s; }
+    .nav-back { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); text-decoration: none; transition: opacity .2s; cursor: pointer; }
     .nav-back:hover { opacity: .7; }
+    .lang-bar { display: flex; gap: 5px; flex-wrap: wrap; }
+    .lang-bar button { background: none; border: 1px solid var(--line); border-radius: 50px; padding: 3px 10px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-lt); cursor: pointer; transition: border-color .2s, color .2s; font-family: 'DM Sans', sans-serif; }
+    .lang-bar button:hover, .lang-bar button.active { border-color: var(--gold-pale); color: var(--gold); }
     .page-wrap { max-width: 820px; margin: 0 auto; padding: 140px 40px 80px; }
     .page-eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
     .page-eyebrow::before { content: ''; display: block; width: 22px; height: 1px; background: var(--gold-pale); flex-shrink: 0; }
@@ -29,9 +32,7 @@
     h1 { font-family: 'Playfair Display', serif; font-size: clamp(32px, 6vw, 48px); font-weight: 500; letter-spacing: .03em; color: var(--text); margin-bottom: 8px; line-height: 1.15; }
     .page-date { font-size: 13px; color: var(--gold-pale); letter-spacing: 1px; margin-bottom: 28px; }
     .intro { font-size: 15px; color: var(--text-lt); background: rgba(160,120,64,.06); border-left: 2px solid var(--gold-pale); padding: 12px 18px; margin-bottom: 36px; }
-    .divider { width: 40px; height: 1px; background: var(--gold-pale); margin: 36px 0; }
     h2 { font-family: 'DM Sans', sans-serif; font-size: 13px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); font-weight: 500; margin: 30px 0 14px; }
-    h3 { font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; color: var(--text); margin: 18px 0 8px; }
     p { color: var(--text-mid); margin-bottom: 14px; }
     ul { color: var(--text-mid); margin-bottom: 14px; padding-left: 20px; }
     li { margin-bottom: 6px; }
@@ -41,12 +42,16 @@
     footer { background: var(--cream-dk); border-top: 1px solid var(--line); padding: 28px 40px; margin-top: 40px; }
     .footer-inner { max-width: 820px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
     .footer-copy { font-size: 13px; color: var(--text-lt); opacity: .7; }
-    .footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
-    .footer-links a { font-size: 13px; color: var(--text-lt); opacity: .7; text-decoration: none; transition: opacity .2s; }
+    .footer-links a { font-size: 13px; color: var(--text-lt); opacity: .7; text-decoration: none; }
     .footer-links a:hover { opacity: 1; color: var(--gold); }
+    [data-lang] { display: none; }
+    [data-lang].active { display: block; }
+    html[lang="he"] [data-lang="he"] { direction: rtl; text-align: right; }
+    html[lang="he"] [data-lang="he"] ul { padding-right: 20px; padding-left: 0; }
     @media (max-width: 600px) {
       nav { padding: 12px 16px; }
       .page-wrap { padding: 130px 22px 60px; }
+      .lang-bar button { padding: 2px 7px; font-size: 11px; }
       footer { padding: 24px 20px; }
       .footer-inner { flex-direction: column; text-align: center; }
     }
@@ -56,69 +61,613 @@
 
 <nav>
   <span class="nav-logo">VIA·L</span>
-  <a href="./index.html" class="nav-back">← Back to app</a>
+  <div class="lang-bar">
+    <button onclick="setLang('en')" id="btn-en" class="active">EN</button>
+    <button onclick="setLang('es')" id="btn-es">ES</button>
+    <button onclick="setLang('uk')" id="btn-uk">UK</button>
+    <button onclick="setLang('ru')" id="btn-ru">RU</button>
+    <button onclick="setLang('de')" id="btn-de">DE</button>
+    <button onclick="setLang('pt')" id="btn-pt">PT</button>
+    <button onclick="setLang('fr')" id="btn-fr">FR</button>
+    <button onclick="setLang('pl')" id="btn-pl">PL</button>
+    <button onclick="setLang('it')" id="btn-it">IT</button>
+    <button onclick="setLang('he')" id="btn-he">HE</button>
+    <button onclick="setLang('ja')" id="btn-ja">JA</button>
+    <button onclick="setLang('ko')" id="btn-ko">KO</button>
+  </div>
+  <a href="./index.html" class="nav-back" id="back-link">← Back to app</a>
 </nav>
 
 <main class="page-wrap">
-  <div class="page-eyebrow"><span>Privacy Policy</span></div>
-  <h1>Privacy Policy</h1>
-  <p class="page-date">VIA·L AI assistant · Last updated: 7 July 2026</p>
 
-  <p class="intro">This policy explains how the <strong>VIA·L AI assistant</strong> app handles your information. The app is a general <strong>wellness and educational tool</strong>. It is <strong>not a medical device</strong>, does not provide medical advice, diagnosis or treatment, and is not a substitute for a qualified professional.</p>
+  <!-- ============ EN ============ -->
+  <div data-lang="en" class="active">
+    <div class="page-eyebrow"><span>Privacy Policy</span></div>
+    <h1>Privacy Policy</h1>
+    <p class="page-date">VIA·L AI assistant · Last updated: 7 July 2026</p>
+    <p class="intro">This policy explains how the <strong>VIA·L AI assistant</strong> app handles your information. The app is a general <strong>wellness and educational tool</strong>. It is <strong>not a medical device</strong>, does not provide medical advice, diagnosis or treatment, and is not a substitute for a qualified professional.</p>
+    <h2>1. Who we are</h2>
+    <p>The controller of your data is <strong>Maryna Datsenko</strong>, an Individual Entrepreneur (FOP) registered in Ukraine ("we", "us"). We have not appointed a Data Protection Officer; all privacy requests are handled directly by the controller.</p>
+    <p>Privacy contact: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · General support: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. Scope</h2>
+    <p>This policy applies only to the <strong>VIA·L AI assistant</strong> mobile application and its tiers (VIO — free; PRO — subscription). It does not cover any separate website or service.</p>
+    <h2>3. What the app is</h2>
+    <p>The app lets you record self-reported wellness markers (such as sleep quality, energy, activity, nutrition habits and personal goals) and, in the PRO tier, optionally read wellness metrics from Apple Health or Health Connect with your permission. It uses an artificial-intelligence model to return <strong>general, non-medical nutrition and lifestyle suggestions</strong> for education and self-care.</p>
+    <h2>4. Information we process</h2>
+    <ul>
+      <li><strong>Wellness inputs you enter</strong> — subjective self-ratings and lifestyle markers you choose to provide.</li>
+      <li><strong>Wearable metrics (PRO, optional)</strong> — data you explicitly authorise the app to read from Apple Health / Health Connect on your device.</li>
+      <li><strong>Your goals and focus areas</strong> — to personalise the suggestions.</li>
+      <li><strong>Minimal technical data</strong> — app version and the network request needed to generate an AI response.</li>
+    </ul>
+    <p>The app has <strong>no account and no login</strong>. We do not ask for your name, email or contact details to use it.</p>
+    <p>Because these inputs can relate to your physical wellbeing, we treat them as a special category of personal data and process them only with your <strong>explicit consent</strong> (GDPR Article 6(1)(a) and Article 9(2)(a)). You can withdraw consent at any time by deleting your data in the app or uninstalling it.</p>
+    <h2>5. Where your data is stored</h2>
+    <p>Your wellness inputs and history are stored <strong>locally on your device</strong>, in encrypted form, and are <strong>not kept on our servers</strong>. To generate an AI suggestion, the relevant inputs for that request are sent over an encrypted connection to our processing service and to the AI provider, used only to produce your response, and are <strong>not retained</strong> beyond the short technical lifetime of the request.</p>
+    <h2>6. Service providers</h2>
+    <ul>
+      <li><strong>Anthropic PBC (USA)</strong> — provides the AI model (Claude) that generates suggestions from the inputs sent for a request.</li>
+      <li><strong>Cloudflare, Inc. (USA)</strong> — hosts the request-relay service; any temporary technical storage uses automatic expiry.</li>
+      <li><strong>Apple / Google</strong> — distribute the app and provide the on-device health-data permission (Apple Health / Health Connect). They receive only what their platforms require for app distribution.</li>
+    </ul>
+    <p>We do <strong>not sell</strong> your personal information and do not use it for advertising.</p>
+    <h2>7. International transfers</h2>
+    <p>The providers above may process request data in the United States. Such transfers rely on the European Commission's <strong>Standard Contractual Clauses</strong> and each provider's supplementary safeguards.</p>
+    <h2>8. Retention</h2>
+    <p>On-device data remains until you clear it in the app or uninstall the app — you are in control. Data sent for an AI request is transient and expires automatically (typically within days). We keep no wellness history on our own servers.</p>
+    <h2>9. Your rights</h2>
+    <p>Depending on where you live, you may have the right to access, correct, delete, restrict or object to processing, to data portability, and to withdraw consent. Because your data lives on your device, you can exercise most of these directly in the app at any time.</p>
+    <p><strong>EU/UK (GDPR):</strong> you also have the right to lodge a complaint with your local supervisory authority. <strong>California (CCPA/CPRA):</strong> you have the right to know, delete and opt out of "sale"/"sharing" — we do neither.</p>
+    <p>To make a request, contact <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. We respond within 30 days (15 days for California requests).</p>
+    <h2>10. Children</h2>
+    <p>The app is intended for adults <strong>aged 18 and over</strong>. We do not knowingly collect data from minors. If you believe a minor has used the app, contact <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> and we will assist.</p>
+    <h2>11. Security</h2>
+    <p>Wellness data is encrypted at rest on your device and sent over encrypted (TLS) connections. No method of storage or transmission is completely secure, but we apply measures appropriate to the sensitivity of the data.</p>
+    <h2>12. Changes</h2>
+    <p>We may update this policy. Material changes will be reflected by the "Last updated" date above and, where appropriate, highlighted in the app.</p>
+    <h2>13. Contact</h2>
+    <p>Privacy enquiries: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · General support: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
 
-  <h2>1. Who we are</h2>
-  <p>The controller of your data is <strong>Maryna Datsenko</strong>, an Individual Entrepreneur (FOP) registered in Ukraine ("we", "us"). We have not appointed a Data Protection Officer; all privacy requests are handled directly by the controller.</p>
-  <p>Privacy contact: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · General support: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  <!-- ============ ES ============ -->
+  <div data-lang="es">
+    <div class="page-eyebrow"><span>Política de Privacidad</span></div>
+    <h1>Política de Privacidad</h1>
+    <p class="page-date">VIA·L AI assistant · Última actualización: 7 de julio de 2026</p>
+    <p class="intro">Esta política explica cómo la app <strong>VIA·L AI assistant</strong> trata tu información. La app es una <strong>herramienta general de bienestar y educación</strong>. <strong>No es un producto sanitario</strong>, no ofrece asesoramiento médico, diagnóstico ni tratamiento, y no sustituye a un profesional cualificado.</p>
+    <h2>1. Quiénes somos</h2>
+    <p>El responsable de tus datos es <strong>Maryna Datsenko</strong>, Empresaria Individual (FOP) registrada en Ucrania ("nosotros"). No hemos designado un Delegado de Protección de Datos; el responsable gestiona directamente todas las solicitudes de privacidad.</p>
+    <p>Contacto de privacidad: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Soporte general: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. Alcance</h2>
+    <p>Esta política se aplica únicamente a la aplicación móvil <strong>VIA·L AI assistant</strong> y sus niveles (VIO — gratuito; PRO — suscripción). No cubre ningún sitio web ni servicio independiente.</p>
+    <h2>3. Qué es la app</h2>
+    <p>La app te permite registrar marcadores de bienestar autodeclarados (como calidad del sueño, energía, actividad, hábitos de nutrición y objetivos personales) y, en el nivel PRO, leer opcionalmente métricas de bienestar de Apple Health o Health Connect con tu permiso. Utiliza un modelo de inteligencia artificial para ofrecer <strong>sugerencias generales y no médicas de nutrición y estilo de vida</strong> con fines educativos y de autocuidado.</p>
+    <h2>4. Información que tratamos</h2>
+    <ul>
+      <li><strong>Datos de bienestar que introduces</strong> — autoevaluaciones subjetivas y marcadores de estilo de vida que decides facilitar.</li>
+      <li><strong>Métricas de wearables (PRO, opcional)</strong> — datos que autorizas expresamente a leer desde Apple Health / Health Connect en tu dispositivo.</li>
+      <li><strong>Tus objetivos y áreas de enfoque</strong> — para personalizar las sugerencias.</li>
+      <li><strong>Datos técnicos mínimos</strong> — versión de la app y la solicitud de red necesaria para generar una respuesta de IA.</li>
+    </ul>
+    <p>La app <strong>no tiene cuenta ni inicio de sesión</strong>. No pedimos tu nombre, correo ni datos de contacto para usarla.</p>
+    <p>Dado que estos datos pueden referirse a tu bienestar físico, los tratamos como categoría especial de datos personales y solo con tu <strong>consentimiento explícito</strong> (RGPD Artículo 6(1)(a) y Artículo 9(2)(a)). Puedes retirar el consentimiento en cualquier momento borrando tus datos en la app o desinstalándola.</p>
+    <h2>5. Dónde se almacenan tus datos</h2>
+    <p>Tus datos de bienestar e historial se almacenan <strong>localmente en tu dispositivo</strong>, cifrados, y <strong>no se conservan en nuestros servidores</strong>. Para generar una sugerencia de IA, los datos necesarios para esa solicitud se envían por conexión cifrada a nuestro servicio de procesamiento y al proveedor de IA, se usan solo para producir tu respuesta y <strong>no se conservan</strong> más allá de la breve vida técnica de la solicitud.</p>
+    <h2>6. Proveedores de servicios</h2>
+    <ul>
+      <li><strong>Anthropic PBC (EE. UU.)</strong> — proporciona el modelo de IA (Claude) que genera las sugerencias a partir de los datos enviados en una solicitud.</li>
+      <li><strong>Cloudflare, Inc. (EE. UU.)</strong> — aloja el servicio de retransmisión de solicitudes; cualquier almacenamiento técnico temporal usa expiración automática.</li>
+      <li><strong>Apple / Google</strong> — distribuyen la app y ofrecen el permiso de datos de salud en el dispositivo (Apple Health / Health Connect). Solo reciben lo que sus plataformas requieren para la distribución.</li>
+    </ul>
+    <p><strong>No vendemos</strong> tu información personal ni la usamos para publicidad.</p>
+    <h2>7. Transferencias internacionales</h2>
+    <p>Los proveedores anteriores pueden procesar datos de la solicitud en Estados Unidos. Dichas transferencias se basan en las <strong>Cláusulas Contractuales Tipo</strong> de la Comisión Europea y en las garantías adicionales de cada proveedor.</p>
+    <h2>8. Conservación</h2>
+    <p>Los datos en el dispositivo permanecen hasta que los borres en la app o la desinstales — tú tienes el control. Los datos enviados para una solicitud de IA son transitorios y expiran automáticamente (normalmente en días). No conservamos historial de bienestar en nuestros servidores.</p>
+    <h2>9. Tus derechos</h2>
+    <p>Según dónde vivas, puedes tener derecho a acceder, corregir, borrar, limitar u oponerte al tratamiento, a la portabilidad y a retirar el consentimiento. Como tus datos están en tu dispositivo, puedes ejercer la mayoría directamente en la app en cualquier momento.</p>
+    <p><strong>UE/RU (RGPD):</strong> también tienes derecho a reclamar ante tu autoridad de control local. <strong>California (CCPA/CPRA):</strong> tienes derecho a saber, borrar y excluirte de la "venta"/"compartición" — no hacemos ninguna.</p>
+    <p>Para una solicitud, escribe a <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. Respondemos en 30 días (15 para solicitudes de California).</p>
+    <h2>10. Menores</h2>
+    <p>La app está destinada a adultos <strong>mayores de 18 años</strong>. No recopilamos datos de menores a sabiendas. Si crees que un menor ha usado la app, escribe a <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> y te ayudaremos.</p>
+    <h2>11. Seguridad</h2>
+    <p>Los datos de bienestar se cifran en reposo en tu dispositivo y se envían por conexiones cifradas (TLS). Ningún método de almacenamiento o transmisión es totalmente seguro, pero aplicamos medidas acordes a la sensibilidad de los datos.</p>
+    <h2>12. Cambios</h2>
+    <p>Podemos actualizar esta política. Los cambios sustanciales se reflejarán en la fecha de "Última actualización" y, cuando proceda, se destacarán en la app.</p>
+    <h2>13. Contacto</h2>
+    <p>Consultas de privacidad: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Soporte general: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
 
-  <h2>2. Scope</h2>
-  <p>This policy applies only to the <strong>VIA·L AI assistant</strong> mobile application and its tiers (VIO — free; PRO — subscription). It does not cover any separate website or service.</p>
+  <!-- ============ UK ============ -->
+  <div data-lang="uk">
+    <div class="page-eyebrow"><span>Політика конфіденційності</span></div>
+    <h1>Політика конфіденційності</h1>
+    <p class="page-date">VIA·L AI assistant · Останнє оновлення: 7 липня 2026</p>
+    <p class="intro">Ця політика пояснює, як застосунок <strong>VIA·L AI assistant</strong> обробляє вашу інформацію. Застосунок — це загальний <strong>велнес- та освітній інструмент</strong>. Він <strong>не є медичним виробом</strong>, не надає медичних порад, діагностики чи лікування та не замінює кваліфікованого фахівця.</p>
+    <h2>1. Хто ми</h2>
+    <p>Контролером ваших даних є <strong>Марина Даценко</strong>, фізична особа-підприємець (ФОП), зареєстрована в Україні («ми»). Ми не призначали Уповноваженого із захисту даних; усі запити щодо конфіденційності обробляє безпосередньо контролер.</p>
+    <p>Контакт з питань конфіденційності: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Загальна підтримка: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. Сфера дії</h2>
+    <p>Ця політика стосується лише мобільного застосунку <strong>VIA·L AI assistant</strong> та його рівнів (VIO — безкоштовний; PRO — підписка). Вона не поширюється на будь-який окремий вебсайт чи сервіс.</p>
+    <h2>3. Що таке застосунок</h2>
+    <p>Застосунок дозволяє записувати самозвітні велнес-показники (як-от якість сну, енергію, активність, звички харчування та особисті цілі) і, у рівні PRO, за бажанням зчитувати велнес-метрики з Apple Health або Health Connect з вашого дозволу. Він використовує модель штучного інтелекту, щоб надавати <strong>загальні, немедичні поради щодо харчування та способу життя</strong> для освіти й самодогляду.</p>
+    <h2>4. Яку інформацію ми обробляємо</h2>
+    <ul>
+      <li><strong>Велнес-дані, які ви вводите</strong> — суб'єктивні самооцінки та показники способу життя, які ви вирішуєте надати.</li>
+      <li><strong>Метрики носимих пристроїв (PRO, опційно)</strong> — дані, які ви прямо дозволяєте зчитувати з Apple Health / Health Connect на вашому пристрої.</li>
+      <li><strong>Ваші цілі та фокус</strong> — для персоналізації порад.</li>
+      <li><strong>Мінімальні технічні дані</strong> — версія застосунку та мережевий запит, потрібний для генерації відповіді ШІ.</li>
+    </ul>
+    <p>Застосунок <strong>не має облікового запису та входу</strong>. Ми не запитуємо ваше ім'я, електронну пошту чи контактні дані для користування.</p>
+    <p>Оскільки ці дані можуть стосуватися вашого фізичного самопочуття, ми вважаємо їх особливою категорією персональних даних і обробляємо лише за вашою <strong>явною згодою</strong> (GDPR Стаття 6(1)(a) та Стаття 9(2)(a)). Ви можете відкликати згоду будь-коли, видаливши свої дані в застосунку або видаливши застосунок.</p>
+    <h2>5. Де зберігаються ваші дані</h2>
+    <p>Ваші велнес-дані та історія зберігаються <strong>локально на вашому пристрої</strong> у зашифрованому вигляді й <strong>не зберігаються на наших серверах</strong>. Щоб згенерувати пораду ШІ, потрібні для запиту дані передаються шифрованим з'єднанням до нашого сервісу обробки та до постачальника ШІ, використовуються лише для формування відповіді й <strong>не зберігаються</strong> понад короткий технічний час запиту.</p>
+    <h2>6. Постачальники послуг</h2>
+    <ul>
+      <li><strong>Anthropic PBC (США)</strong> — надає модель ШІ (Claude), що формує поради з надісланих у запиті даних.</li>
+      <li><strong>Cloudflare, Inc. (США)</strong> — хостить сервіс ретрансляції запитів; будь-яке тимчасове технічне зберігання має автоматичне завершення терміну.</li>
+      <li><strong>Apple / Google</strong> — розповсюджують застосунок і надають дозвіл на дані здоров'я на пристрої (Apple Health / Health Connect). Вони отримують лише те, що потрібно їхнім платформам для розповсюдження.</li>
+    </ul>
+    <p>Ми <strong>не продаємо</strong> вашу персональну інформацію та не використовуємо її для реклами.</p>
+    <h2>7. Міжнародні передачі</h2>
+    <p>Наведені постачальники можуть обробляти дані запиту у США. Такі передачі ґрунтуються на <strong>Стандартних договірних положеннях</strong> Європейської Комісії та додаткових гарантіях кожного постачальника.</p>
+    <h2>8. Зберігання</h2>
+    <p>Дані на пристрої залишаються, доки ви не очистите їх у застосунку або не видалите застосунок — контроль у вас. Дані, надіслані для запиту ШІ, є тимчасовими й завершуються автоматично (зазвичай протягом днів). Ми не зберігаємо велнес-історію на власних серверах.</p>
+    <h2>9. Ваші права</h2>
+    <p>Залежно від місця проживання, ви можете мати право на доступ, виправлення, видалення, обмеження чи заперечення обробки, на перенесення даних і на відкликання згоди. Оскільки ваші дані на вашому пристрої, більшість із цього ви можете зробити прямо в застосунку будь-коли.</p>
+    <p><strong>ЄС/Велика Британія (GDPR):</strong> ви також маєте право подати скаргу до місцевого наглядового органу. <strong>Каліфорнія (CCPA/CPRA):</strong> ви маєте право знати, видаляти та відмовитися від «продажу»/«поширення» — ми не робимо ні того, ні іншого.</p>
+    <p>Щоб надіслати запит, пишіть на <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. Ми відповідаємо протягом 30 днів (15 для запитів із Каліфорнії).</p>
+    <h2>10. Діти</h2>
+    <p>Застосунок призначений для дорослих <strong>18 років і старше</strong>. Ми свідомо не збираємо дані неповнолітніх. Якщо ви вважаєте, що застосунком скористалася неповнолітня особа, напишіть на <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>, і ми допоможемо.</p>
+    <h2>11. Безпека</h2>
+    <p>Велнес-дані шифруються на вашому пристрої та передаються шифрованими (TLS) з'єднаннями. Жоден метод зберігання чи передачі не є цілком безпечним, але ми застосовуємо заходи, відповідні чутливості даних.</p>
+    <h2>12. Зміни</h2>
+    <p>Ми можемо оновлювати цю політику. Суттєві зміни відображатимуться у даті «Останнє оновлення» та, за потреби, виділятимуться в застосунку.</p>
+    <h2>13. Контакт</h2>
+    <p>Запити щодо конфіденційності: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Загальна підтримка: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
 
-  <h2>3. What the app is</h2>
-  <p>The app lets you record self-reported wellness markers (such as sleep quality, energy, activity, nutrition habits and personal goals) and, in the PRO tier, optionally read wellness metrics from Apple Health or Health Connect with your permission. It uses an artificial-intelligence model to return <strong>general, non-medical nutrition and lifestyle suggestions</strong> for education and self-care.</p>
+  <!-- ============ RU ============ -->
+  <div data-lang="ru">
+    <div class="page-eyebrow"><span>Политика конфиденциальности</span></div>
+    <h1>Политика конфиденциальности</h1>
+    <p class="page-date">VIA·L AI assistant · Последнее обновление: 7 июля 2026</p>
+    <p class="intro">Эта политика объясняет, как приложение <strong>VIA·L AI assistant</strong> обращается с вашей информацией. Приложение — это общий <strong>велнес- и образовательный инструмент</strong>. Оно <strong>не является медицинским изделием</strong>, не даёт медицинских советов, диагностики или лечения и не заменяет квалифицированного специалиста.</p>
+    <h2>1. Кто мы</h2>
+    <p>Контролёр ваших данных — <strong>Марина Даценко</strong>, физическое лицо-предприниматель (ФОП), зарегистрированная в Украине («мы»). Мы не назначали Уполномоченного по защите данных; все запросы по конфиденциальности обрабатывает непосредственно контролёр.</p>
+    <p>Контакт по конфиденциальности: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Общая поддержка: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. Область применения</h2>
+    <p>Эта политика распространяется только на мобильное приложение <strong>VIA·L AI assistant</strong> и его уровни (VIO — бесплатный; PRO — подписка). Она не охватывает какой-либо отдельный сайт или сервис.</p>
+    <h2>3. Что такое приложение</h2>
+    <p>Приложение позволяет записывать самостоятельно вводимые велнес-показатели (например, качество сна, энергию, активность, привычки питания и личные цели) и, в уровне PRO, по желанию считывать велнес-метрики из Apple Health или Health Connect с вашего разрешения. Оно использует модель искусственного интеллекта, чтобы давать <strong>общие, немедицинские рекомендации по питанию и образу жизни</strong> в образовательных целях и для самопомощи.</p>
+    <h2>4. Какую информацию мы обрабатываем</h2>
+    <ul>
+      <li><strong>Велнес-данные, которые вы вводите</strong> — субъективные самооценки и показатели образа жизни, которые вы решаете предоставить.</li>
+      <li><strong>Метрики носимых устройств (PRO, опционально)</strong> — данные, которые вы прямо разрешаете считывать из Apple Health / Health Connect на вашем устройстве.</li>
+      <li><strong>Ваши цели и фокус</strong> — для персонализации рекомендаций.</li>
+      <li><strong>Минимальные технические данные</strong> — версия приложения и сетевой запрос, необходимый для генерации ответа ИИ.</li>
+    </ul>
+    <p>В приложении <strong>нет аккаунта и входа</strong>. Мы не запрашиваем ваше имя, почту или контактные данные для использования.</p>
+    <p>Поскольку эти данные могут относиться к вашему физическому самочувствию, мы считаем их особой категорией персональных данных и обрабатываем только с вашего <strong>явного согласия</strong> (GDPR Статья 6(1)(a) и Статья 9(2)(a)). Вы можете отозвать согласие в любой момент, удалив свои данные в приложении или удалив приложение.</p>
+    <h2>5. Где хранятся ваши данные</h2>
+    <p>Ваши велнес-данные и история хранятся <strong>локально на вашем устройстве</strong> в зашифрованном виде и <strong>не хранятся на наших серверах</strong>. Чтобы сгенерировать рекомендацию ИИ, нужные для запроса данные передаются по шифрованному соединению нашему сервису обработки и провайдеру ИИ, используются только для формирования вашего ответа и <strong>не сохраняются</strong> сверх короткого технического времени запроса.</p>
+    <h2>6. Поставщики услуг</h2>
+    <ul>
+      <li><strong>Anthropic PBC (США)</strong> — предоставляет модель ИИ (Claude), формирующую рекомендации из отправленных в запросе данных.</li>
+      <li><strong>Cloudflare, Inc. (США)</strong> — хостит сервис ретрансляции запросов; любое временное техническое хранение имеет автоматическое истечение срока.</li>
+      <li><strong>Apple / Google</strong> — распространяют приложение и предоставляют разрешение на данные здоровья на устройстве (Apple Health / Health Connect). Они получают лишь то, что нужно их платформам для распространения.</li>
+    </ul>
+    <p>Мы <strong>не продаём</strong> вашу персональную информацию и не используем её для рекламы.</p>
+    <h2>7. Международные передачи</h2>
+    <p>Указанные поставщики могут обрабатывать данные запроса в США. Такие передачи основаны на <strong>Стандартных договорных положениях</strong> Европейской комиссии и дополнительных гарантиях каждого поставщика.</p>
+    <h2>8. Хранение</h2>
+    <p>Данные на устройстве остаются, пока вы не очистите их в приложении или не удалите приложение — контроль у вас. Данные, отправленные для запроса ИИ, временные и истекают автоматически (обычно в течение дней). Мы не храним велнес-историю на собственных серверах.</p>
+    <h2>9. Ваши права</h2>
+    <p>В зависимости от места проживания у вас может быть право на доступ, исправление, удаление, ограничение или возражение против обработки, на переносимость данных и на отзыв согласия. Поскольку ваши данные на вашем устройстве, большинство из этого вы можете сделать прямо в приложении в любое время.</p>
+    <p><strong>ЕС/Великобритания (GDPR):</strong> у вас также есть право подать жалобу в местный надзорный орган. <strong>Калифорния (CCPA/CPRA):</strong> у вас есть право знать, удалять и отказаться от «продажи»/«передачи» — мы не делаем ни того, ни другого.</p>
+    <p>Чтобы отправить запрос, пишите на <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. Мы отвечаем в течение 30 дней (15 для запросов из Калифорнии).</p>
+    <h2>10. Дети</h2>
+    <p>Приложение предназначено для взрослых <strong>18 лет и старше</strong>. Мы сознательно не собираем данные несовершеннолетних. Если вы считаете, что приложением воспользовался несовершеннолетний, напишите на <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>, и мы поможем.</p>
+    <h2>11. Безопасность</h2>
+    <p>Велнес-данные шифруются на вашем устройстве и передаются по шифрованным (TLS) соединениям. Ни один метод хранения или передачи не является полностью безопасным, но мы применяем меры, соответствующие чувствительности данных.</p>
+    <h2>12. Изменения</h2>
+    <p>Мы можем обновлять эту политику. Существенные изменения отразятся в дате «Последнее обновление» и, при необходимости, будут выделены в приложении.</p>
+    <h2>13. Контакт</h2>
+    <p>Запросы по конфиденциальности: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Общая поддержка: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
 
-  <h2>4. Information we process</h2>
-  <ul>
-    <li><strong>Wellness inputs you enter</strong> — subjective self-ratings and lifestyle markers you choose to provide.</li>
-    <li><strong>Wearable metrics (PRO, optional)</strong> — data you explicitly authorise the app to read from Apple Health / Health Connect on your device.</li>
-    <li><strong>Your goals and focus areas</strong> — to personalise the suggestions.</li>
-    <li><strong>Minimal technical data</strong> — app version and the network request needed to generate an AI response.</li>
-  </ul>
-  <p>The app has <strong>no account and no login</strong>. We do not ask for your name, email or contact details to use it.</p>
-  <p>Because these inputs can relate to your physical wellbeing, we treat them as a special category of personal data and process them only with your <strong>explicit consent</strong> (GDPR Article 6(1)(a) and Article 9(2)(a)). You can withdraw consent at any time by deleting your data in the app or uninstalling it.</p>
+  <!-- ============ DE ============ -->
+  <div data-lang="de">
+    <div class="page-eyebrow"><span>Datenschutzerklärung</span></div>
+    <h1>Datenschutzerklärung</h1>
+    <p class="page-date">VIA·L AI assistant · Zuletzt aktualisiert: 7. Juli 2026</p>
+    <p class="intro">Diese Erklärung beschreibt, wie die App <strong>VIA·L AI assistant</strong> mit deinen Daten umgeht. Die App ist ein allgemeines <strong>Wellness- und Bildungstool</strong>. Sie ist <strong>kein Medizinprodukt</strong>, bietet keine medizinische Beratung, Diagnose oder Behandlung und ersetzt keine qualifizierte Fachkraft.</p>
+    <h2>1. Wer wir sind</h2>
+    <p>Verantwortliche für deine Daten ist <strong>Maryna Datsenko</strong>, Einzelunternehmerin (FOP), registriert in der Ukraine („wir"). Wir haben keinen Datenschutzbeauftragten bestellt; alle Datenschutzanfragen bearbeitet die Verantwortliche direkt.</p>
+    <p>Datenschutz-Kontakt: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Allgemeiner Support: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. Geltungsbereich</h2>
+    <p>Diese Erklärung gilt nur für die mobile App <strong>VIA·L AI assistant</strong> und ihre Stufen (VIO — kostenlos; PRO — Abonnement). Sie umfasst keine separate Website oder Dienstleistung.</p>
+    <h2>3. Was die App ist</h2>
+    <p>Mit der App kannst du selbst angegebene Wellness-Marker erfassen (z. B. Schlafqualität, Energie, Aktivität, Ernährungsgewohnheiten und persönliche Ziele) und in der PRO-Stufe optional mit deiner Erlaubnis Wellness-Werte aus Apple Health oder Health Connect lesen. Sie nutzt ein KI-Modell, um <strong>allgemeine, nicht-medizinische Ernährungs- und Lebensstil-Empfehlungen</strong> zur Bildung und Selbstfürsorge zu geben.</p>
+    <h2>4. Welche Daten wir verarbeiten</h2>
+    <ul>
+      <li><strong>Von dir eingegebene Wellness-Daten</strong> — subjektive Selbsteinschätzungen und Lebensstil-Marker, die du bereitstellst.</li>
+      <li><strong>Wearable-Werte (PRO, optional)</strong> — Daten, die du der App ausdrücklich zum Lesen aus Apple Health / Health Connect auf deinem Gerät erlaubst.</li>
+      <li><strong>Deine Ziele und Fokusbereiche</strong> — zur Personalisierung der Empfehlungen.</li>
+      <li><strong>Minimale technische Daten</strong> — App-Version und die für eine KI-Antwort nötige Netzwerkanfrage.</li>
+    </ul>
+    <p>Die App hat <strong>kein Konto und keine Anmeldung</strong>. Wir fragen zur Nutzung nicht nach Name, E-Mail oder Kontaktdaten.</p>
+    <p>Da diese Daten dein körperliches Wohlbefinden betreffen können, behandeln wir sie als besondere Kategorie personenbezogener Daten und verarbeiten sie nur mit deiner <strong>ausdrücklichen Einwilligung</strong> (DSGVO Art. 6 Abs. 1 lit. a und Art. 9 Abs. 2 lit. a). Du kannst die Einwilligung jederzeit widerrufen, indem du deine Daten in der App löschst oder die App deinstallierst.</p>
+    <h2>5. Wo deine Daten gespeichert werden</h2>
+    <p>Deine Wellness-Daten und dein Verlauf werden <strong>lokal auf deinem Gerät</strong> verschlüsselt gespeichert und <strong>nicht auf unseren Servern</strong> aufbewahrt. Zur Erstellung einer KI-Empfehlung werden die für die Anfrage nötigen Daten verschlüsselt an unseren Verarbeitungsdienst und den KI-Anbieter gesendet, nur zur Erzeugung deiner Antwort genutzt und <strong>nicht</strong> über die kurze technische Lebensdauer der Anfrage hinaus aufbewahrt.</p>
+    <h2>6. Dienstleister</h2>
+    <ul>
+      <li><strong>Anthropic PBC (USA)</strong> — stellt das KI-Modell (Claude) bereit, das Empfehlungen aus den für eine Anfrage gesendeten Daten erzeugt.</li>
+      <li><strong>Cloudflare, Inc. (USA)</strong> — hostet den Anfrage-Relay-Dienst; jegliche vorübergehende technische Speicherung nutzt automatischen Ablauf.</li>
+      <li><strong>Apple / Google</strong> — vertreiben die App und stellen die Gesundheitsdaten-Berechtigung auf dem Gerät (Apple Health / Health Connect) bereit. Sie erhalten nur das, was ihre Plattformen für den Vertrieb benötigen.</li>
+    </ul>
+    <p>Wir <strong>verkaufen</strong> deine personenbezogenen Daten nicht und nutzen sie nicht für Werbung.</p>
+    <h2>7. Internationale Übermittlungen</h2>
+    <p>Die genannten Anbieter können Anfragedaten in den USA verarbeiten. Solche Übermittlungen beruhen auf den <strong>Standardvertragsklauseln</strong> der Europäischen Kommission und den ergänzenden Garantien jedes Anbieters.</p>
+    <h2>8. Speicherdauer</h2>
+    <p>Daten auf dem Gerät bleiben, bis du sie in der App löschst oder die App deinstallierst — du hast die Kontrolle. Für eine KI-Anfrage gesendete Daten sind flüchtig und laufen automatisch ab (in der Regel innerhalb von Tagen). Wir bewahren keinen Wellness-Verlauf auf unseren Servern auf.</p>
+    <h2>9. Deine Rechte</h2>
+    <p>Je nach Wohnort hast du möglicherweise das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung oder Widerspruch, auf Datenübertragbarkeit und auf Widerruf der Einwilligung. Da deine Daten auf deinem Gerät liegen, kannst du das meiste jederzeit direkt in der App tun.</p>
+    <p><strong>EU/UK (DSGVO):</strong> du hast zudem das Recht, dich bei deiner lokalen Aufsichtsbehörde zu beschweren. <strong>Kalifornien (CCPA/CPRA):</strong> du hast das Recht auf Auskunft, Löschung und Widerspruch gegen „Verkauf"/„Weitergabe" — wir tun beides nicht.</p>
+    <p>Für eine Anfrage schreibe an <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. Wir antworten innerhalb von 30 Tagen (15 Tage bei Anfragen aus Kalifornien).</p>
+    <h2>10. Kinder</h2>
+    <p>Die App richtet sich an Erwachsene <strong>ab 18 Jahren</strong>. Wir erheben wissentlich keine Daten von Minderjährigen. Wenn du glaubst, dass ein Minderjähriger die App genutzt hat, schreibe an <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> und wir helfen.</p>
+    <h2>11. Sicherheit</h2>
+    <p>Wellness-Daten werden auf deinem Gerät verschlüsselt gespeichert und über verschlüsselte (TLS) Verbindungen gesendet. Keine Speicher- oder Übertragungsmethode ist völlig sicher, aber wir treffen der Sensibilität der Daten angemessene Maßnahmen.</p>
+    <h2>12. Änderungen</h2>
+    <p>Wir können diese Erklärung aktualisieren. Wesentliche Änderungen spiegeln sich im Datum „Zuletzt aktualisiert" wider und werden ggf. in der App hervorgehoben.</p>
+    <h2>13. Kontakt</h2>
+    <p>Datenschutzanfragen: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Allgemeiner Support: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
 
-  <h2>5. Where your data is stored</h2>
-  <p>Your wellness inputs and history are stored <strong>locally on your device</strong>, in encrypted form, and are <strong>not kept on our servers</strong>. To generate an AI suggestion, the relevant inputs for that request are sent over an encrypted connection to our processing service and to the AI provider, used only to produce your response, and are <strong>not retained</strong> beyond the short technical lifetime of the request.</p>
+  <!-- ============ PT ============ -->
+  <div data-lang="pt">
+    <div class="page-eyebrow"><span>Política de Privacidade</span></div>
+    <h1>Política de Privacidade</h1>
+    <p class="page-date">VIA·L AI assistant · Última atualização: 7 de julho de 2026</p>
+    <p class="intro">Esta política explica como a app <strong>VIA·L AI assistant</strong> trata as suas informações. A app é uma <strong>ferramenta geral de bem-estar e educação</strong>. <strong>Não é um dispositivo médico</strong>, não fornece aconselhamento médico, diagnóstico ou tratamento e não substitui um profissional qualificado.</p>
+    <h2>1. Quem somos</h2>
+    <p>A responsável pelos seus dados é <strong>Maryna Datsenko</strong>, Empresária em Nome Individual (FOP) registada na Ucrânia ("nós"). Não nomeámos um Encarregado de Proteção de Dados; a responsável trata diretamente de todos os pedidos de privacidade.</p>
+    <p>Contacto de privacidade: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Suporte geral: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. Âmbito</h2>
+    <p>Esta política aplica-se apenas à aplicação móvel <strong>VIA·L AI assistant</strong> e aos seus níveis (VIO — gratuito; PRO — subscrição). Não abrange qualquer site ou serviço separado.</p>
+    <h2>3. O que é a app</h2>
+    <p>A app permite registar marcadores de bem-estar autodeclarados (como qualidade do sono, energia, atividade, hábitos alimentares e objetivos pessoais) e, no nível PRO, ler opcionalmente métricas de bem-estar do Apple Health ou Health Connect com a sua permissão. Utiliza um modelo de inteligência artificial para dar <strong>sugestões gerais e não médicas de nutrição e estilo de vida</strong> para educação e autocuidado.</p>
+    <h2>4. Informação que tratamos</h2>
+    <ul>
+      <li><strong>Dados de bem-estar que introduz</strong> — autoavaliações subjetivas e marcadores de estilo de vida que decide fornecer.</li>
+      <li><strong>Métricas de wearables (PRO, opcional)</strong> — dados que autoriza expressamente a ler do Apple Health / Health Connect no seu dispositivo.</li>
+      <li><strong>Os seus objetivos e áreas de foco</strong> — para personalizar as sugestões.</li>
+      <li><strong>Dados técnicos mínimos</strong> — versão da app e o pedido de rede necessário para gerar uma resposta de IA.</li>
+    </ul>
+    <p>A app <strong>não tem conta nem início de sessão</strong>. Não pedimos o seu nome, email ou contactos para a usar.</p>
+    <p>Como estes dados podem referir-se ao seu bem-estar físico, tratamo-los como categoria especial de dados pessoais e apenas com o seu <strong>consentimento explícito</strong> (RGPD Artigo 6.º(1)(a) e Artigo 9.º(2)(a)). Pode retirar o consentimento a qualquer momento apagando os seus dados na app ou desinstalando-a.</p>
+    <h2>5. Onde os seus dados são guardados</h2>
+    <p>Os seus dados de bem-estar e histórico são guardados <strong>localmente no seu dispositivo</strong>, cifrados, e <strong>não são mantidos nos nossos servidores</strong>. Para gerar uma sugestão de IA, os dados necessários para o pedido são enviados por ligação cifrada ao nosso serviço de processamento e ao fornecedor de IA, usados apenas para produzir a sua resposta e <strong>não retidos</strong> além da curta vida técnica do pedido.</p>
+    <h2>6. Prestadores de serviços</h2>
+    <ul>
+      <li><strong>Anthropic PBC (EUA)</strong> — fornece o modelo de IA (Claude) que gera sugestões a partir dos dados enviados num pedido.</li>
+      <li><strong>Cloudflare, Inc. (EUA)</strong> — aloja o serviço de retransmissão de pedidos; qualquer armazenamento técnico temporário usa expiração automática.</li>
+      <li><strong>Apple / Google</strong> — distribuem a app e fornecem a permissão de dados de saúde no dispositivo (Apple Health / Health Connect). Recebem apenas o que as suas plataformas exigem para a distribuição.</li>
+    </ul>
+    <p><strong>Não vendemos</strong> as suas informações pessoais nem as usamos para publicidade.</p>
+    <h2>7. Transferências internacionais</h2>
+    <p>Os fornecedores acima podem processar dados do pedido nos Estados Unidos. Tais transferências baseiam-se nas <strong>Cláusulas Contratuais-Tipo</strong> da Comissão Europeia e nas garantias suplementares de cada fornecedor.</p>
+    <h2>8. Conservação</h2>
+    <p>Os dados no dispositivo permanecem até os apagar na app ou desinstalar a app — o controlo é seu. Os dados enviados para um pedido de IA são transitórios e expiram automaticamente (normalmente em dias). Não guardamos histórico de bem-estar nos nossos servidores.</p>
+    <h2>9. Os seus direitos</h2>
+    <p>Consoante o local onde vive, pode ter direito de acesso, retificação, apagamento, limitação ou oposição ao tratamento, portabilidade e retirada do consentimento. Como os seus dados estão no seu dispositivo, pode exercer a maioria diretamente na app a qualquer momento.</p>
+    <p><strong>UE/RU (RGPD):</strong> tem ainda o direito de apresentar reclamação à sua autoridade de controlo local. <strong>Califórnia (CCPA/CPRA):</strong> tem o direito de saber, apagar e recusar a "venda"/"partilha" — não fazemos nenhuma.</p>
+    <p>Para um pedido, escreva para <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. Respondemos em 30 dias (15 para pedidos da Califórnia).</p>
+    <h2>10. Crianças</h2>
+    <p>A app destina-se a adultos com <strong>18 anos ou mais</strong>. Não recolhemos conscientemente dados de menores. Se acredita que um menor usou a app, escreva para <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> e ajudaremos.</p>
+    <h2>11. Segurança</h2>
+    <p>Os dados de bem-estar são cifrados em repouso no seu dispositivo e enviados por ligações cifradas (TLS). Nenhum método de armazenamento ou transmissão é totalmente seguro, mas aplicamos medidas adequadas à sensibilidade dos dados.</p>
+    <h2>12. Alterações</h2>
+    <p>Podemos atualizar esta política. Alterações materiais serão refletidas na data de "Última atualização" e, quando adequado, destacadas na app.</p>
+    <h2>13. Contacto</h2>
+    <p>Questões de privacidade: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Suporte geral: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
 
-  <h2>6. Service providers</h2>
-  <ul>
-    <li><strong>Anthropic PBC (USA)</strong> — provides the AI model (Claude) that generates suggestions from the inputs sent for a request.</li>
-    <li><strong>Cloudflare, Inc. (USA)</strong> — hosts the request-relay service; any temporary technical storage uses automatic expiry.</li>
-    <li><strong>Apple / Google</strong> — distribute the app and provide the on-device health-data permission (Apple Health / Health Connect). They receive only what their platforms require for app distribution.</li>
-  </ul>
-  <p>We do <strong>not sell</strong> your personal information and do not use it for advertising.</p>
+  <!-- ============ FR ============ -->
+  <div data-lang="fr">
+    <div class="page-eyebrow"><span>Politique de confidentialité</span></div>
+    <h1>Politique de confidentialité</h1>
+    <p class="page-date">VIA·L AI assistant · Dernière mise à jour : 7 juillet 2026</p>
+    <p class="intro">Cette politique explique comment l'application <strong>VIA·L AI assistant</strong> traite vos informations. L'application est un <strong>outil général de bien-être et d'éducation</strong>. Ce <strong>n'est pas un dispositif médical</strong>, elle ne fournit pas de conseil médical, de diagnostic ni de traitement et ne remplace pas un professionnel qualifié.</p>
+    <h2>1. Qui nous sommes</h2>
+    <p>Le responsable de vos données est <strong>Maryna Datsenko</strong>, entrepreneure individuelle (FOP) enregistrée en Ukraine (« nous »). Nous n'avons pas désigné de délégué à la protection des données ; toutes les demandes relatives à la vie privée sont traitées directement par la responsable.</p>
+    <p>Contact confidentialité : <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Support général : <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. Champ d'application</h2>
+    <p>Cette politique s'applique uniquement à l'application mobile <strong>VIA·L AI assistant</strong> et à ses niveaux (VIO — gratuit ; PRO — abonnement). Elle ne couvre aucun site web ni service distinct.</p>
+    <h2>3. Ce qu'est l'application</h2>
+    <p>L'application vous permet d'enregistrer des marqueurs de bien-être auto-déclarés (comme la qualité du sommeil, l'énergie, l'activité, les habitudes alimentaires et vos objectifs personnels) et, dans le niveau PRO, de lire en option des mesures de bien-être depuis Apple Health ou Health Connect avec votre autorisation. Elle utilise un modèle d'intelligence artificielle pour fournir des <strong>suggestions générales et non médicales de nutrition et de mode de vie</strong>, à des fins d'éducation et d'auto-soin.</p>
+    <h2>4. Informations que nous traitons</h2>
+    <ul>
+      <li><strong>Données de bien-être que vous saisissez</strong> — auto-évaluations subjectives et marqueurs de mode de vie que vous choisissez de fournir.</li>
+      <li><strong>Mesures d'objets connectés (PRO, facultatif)</strong> — données que vous autorisez expressément l'application à lire depuis Apple Health / Health Connect sur votre appareil.</li>
+      <li><strong>Vos objectifs et axes de focus</strong> — pour personnaliser les suggestions.</li>
+      <li><strong>Données techniques minimales</strong> — version de l'application et requête réseau nécessaire pour générer une réponse d'IA.</li>
+    </ul>
+    <p>L'application <strong>n'a ni compte ni connexion</strong>. Nous ne demandons ni nom, ni e-mail, ni coordonnées pour l'utiliser.</p>
+    <p>Comme ces données peuvent concerner votre bien-être physique, nous les traitons comme une catégorie particulière de données personnelles et uniquement avec votre <strong>consentement explicite</strong> (RGPD article 6(1)(a) et article 9(2)(a)). Vous pouvez retirer votre consentement à tout moment en supprimant vos données dans l'application ou en la désinstallant.</p>
+    <h2>5. Où vos données sont stockées</h2>
+    <p>Vos données de bien-être et votre historique sont stockés <strong>localement sur votre appareil</strong>, sous forme chiffrée, et <strong>ne sont pas conservés sur nos serveurs</strong>. Pour générer une suggestion d'IA, les données nécessaires à la requête sont envoyées par connexion chiffrée à notre service de traitement et au fournisseur d'IA, utilisées uniquement pour produire votre réponse et <strong>non conservées</strong> au-delà de la brève durée technique de la requête.</p>
+    <h2>6. Prestataires</h2>
+    <ul>
+      <li><strong>Anthropic PBC (États-Unis)</strong> — fournit le modèle d'IA (Claude) qui génère les suggestions à partir des données envoyées pour une requête.</li>
+      <li><strong>Cloudflare, Inc. (États-Unis)</strong> — héberge le service de relais des requêtes ; tout stockage technique temporaire utilise une expiration automatique.</li>
+      <li><strong>Apple / Google</strong> — distribuent l'application et fournissent l'autorisation d'accès aux données de santé sur l'appareil (Apple Health / Health Connect). Ils ne reçoivent que ce que leurs plateformes exigent pour la distribution.</li>
+    </ul>
+    <p>Nous <strong>ne vendons pas</strong> vos informations personnelles et ne les utilisons pas à des fins publicitaires.</p>
+    <h2>7. Transferts internationaux</h2>
+    <p>Les prestataires ci-dessus peuvent traiter les données de requête aux États-Unis. Ces transferts reposent sur les <strong>clauses contractuelles types</strong> de la Commission européenne et les garanties supplémentaires de chaque prestataire.</p>
+    <h2>8. Conservation</h2>
+    <p>Les données sur l'appareil demeurent jusqu'à ce que vous les effaciez dans l'application ou la désinstalliez — vous gardez le contrôle. Les données envoyées pour une requête d'IA sont éphémères et expirent automatiquement (généralement en quelques jours). Nous ne conservons aucun historique de bien-être sur nos serveurs.</p>
+    <h2>9. Vos droits</h2>
+    <p>Selon votre lieu de résidence, vous pouvez avoir le droit d'accès, de rectification, d'effacement, de limitation ou d'opposition au traitement, à la portabilité et au retrait du consentement. Comme vos données se trouvent sur votre appareil, vous pouvez exercer l'essentiel directement dans l'application à tout moment.</p>
+    <p><strong>UE/RU (RGPD) :</strong> vous avez aussi le droit d'introduire une réclamation auprès de votre autorité de contrôle locale. <strong>Californie (CCPA/CPRA) :</strong> vous avez le droit de savoir, de supprimer et de refuser la « vente »/« partage » — nous ne faisons ni l'un ni l'autre.</p>
+    <p>Pour une demande, écrivez à <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. Nous répondons sous 30 jours (15 jours pour les demandes de Californie).</p>
+    <h2>10. Enfants</h2>
+    <p>L'application est destinée aux adultes de <strong>18 ans et plus</strong>. Nous ne collectons pas sciemment de données de mineurs. Si vous pensez qu'un mineur a utilisé l'application, écrivez à <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> et nous vous aiderons.</p>
+    <h2>11. Sécurité</h2>
+    <p>Les données de bien-être sont chiffrées au repos sur votre appareil et envoyées via des connexions chiffrées (TLS). Aucune méthode de stockage ou de transmission n'est totalement sûre, mais nous appliquons des mesures adaptées à la sensibilité des données.</p>
+    <h2>12. Modifications</h2>
+    <p>Nous pouvons mettre à jour cette politique. Les changements importants seront reflétés dans la date de « Dernière mise à jour » et, le cas échéant, signalés dans l'application.</p>
+    <h2>13. Contact</h2>
+    <p>Questions de confidentialité : <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Support général : <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
 
-  <h2>7. International transfers</h2>
-  <p>The providers above may process request data in the United States. Such transfers rely on the European Commission's <strong>Standard Contractual Clauses</strong> and each provider's supplementary safeguards.</p>
+  <!-- ============ PL ============ -->
+  <div data-lang="pl">
+    <div class="page-eyebrow"><span>Polityka prywatności</span></div>
+    <h1>Polityka prywatności</h1>
+    <p class="page-date">VIA·L AI assistant · Ostatnia aktualizacja: 7 lipca 2026</p>
+    <p class="intro">Niniejsza polityka wyjaśnia, jak aplikacja <strong>VIA·L AI assistant</strong> postępuje z Twoimi informacjami. Aplikacja to ogólne <strong>narzędzie wellness i edukacyjne</strong>. <strong>Nie jest wyrobem medycznym</strong>, nie udziela porad medycznych, diagnozy ani leczenia i nie zastępuje wykwalifikowanego specjalisty.</p>
+    <h2>1. Kim jesteśmy</h2>
+    <p>Administratorem Twoich danych jest <strong>Maryna Datsenko</strong>, jednoosobowa działalność gospodarcza (FOP) zarejestrowana na Ukrainie („my"). Nie wyznaczyliśmy Inspektora Ochrony Danych; wszystkie zapytania dotyczące prywatności obsługuje bezpośrednio administrator.</p>
+    <p>Kontakt ws. prywatności: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Wsparcie ogólne: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. Zakres</h2>
+    <p>Niniejsza polityka dotyczy wyłącznie aplikacji mobilnej <strong>VIA·L AI assistant</strong> i jej poziomów (VIO — bezpłatny; PRO — subskrypcja). Nie obejmuje żadnej odrębnej strony ani usługi.</p>
+    <h2>3. Czym jest aplikacja</h2>
+    <p>Aplikacja pozwala rejestrować samodzielnie podawane wskaźniki wellness (np. jakość snu, energię, aktywność, nawyki żywieniowe i cele osobiste) oraz — w poziomie PRO — opcjonalnie odczytywać wskaźniki wellness z Apple Health lub Health Connect za Twoją zgodą. Wykorzystuje model sztucznej inteligencji, aby udzielać <strong>ogólnych, niemedycznych sugestii dotyczących odżywiania i stylu życia</strong> w celach edukacyjnych i samopomocy.</p>
+    <h2>4. Jakie dane przetwarzamy</h2>
+    <ul>
+      <li><strong>Dane wellness, które wprowadzasz</strong> — subiektywne samooceny i wskaźniki stylu życia, które zdecydujesz się podać.</li>
+      <li><strong>Wskaźniki z urządzeń noszonych (PRO, opcjonalnie)</strong> — dane, na których odczyt z Apple Health / Health Connect na Twoim urządzeniu wyraźnie zezwalasz.</li>
+      <li><strong>Twoje cele i obszary skupienia</strong> — do personalizacji sugestii.</li>
+      <li><strong>Minimalne dane techniczne</strong> — wersja aplikacji i zapytanie sieciowe potrzebne do wygenerowania odpowiedzi AI.</li>
+    </ul>
+    <p>Aplikacja <strong>nie ma konta ani logowania</strong>. Do korzystania nie prosimy o imię, e-mail ani dane kontaktowe.</p>
+    <p>Ponieważ dane te mogą dotyczyć Twojego samopoczucia fizycznego, traktujemy je jako szczególną kategorię danych osobowych i przetwarzamy wyłącznie za Twoją <strong>wyraźną zgodą</strong> (RODO art. 6 ust. 1 lit. a i art. 9 ust. 2 lit. a). Zgodę możesz wycofać w każdej chwili, usuwając dane w aplikacji lub odinstalowując ją.</p>
+    <h2>5. Gdzie przechowywane są Twoje dane</h2>
+    <p>Twoje dane wellness i historia są przechowywane <strong>lokalnie na Twoim urządzeniu</strong> w formie zaszyfrowanej i <strong>nie są przechowywane na naszych serwerach</strong>. Aby wygenerować sugestię AI, dane potrzebne do danego zapytania są wysyłane szyfrowanym połączeniem do naszej usługi przetwarzania i do dostawcy AI, używane wyłącznie do wytworzenia odpowiedzi i <strong>nie są przechowywane</strong> poza krótkim czasem technicznym zapytania.</p>
+    <h2>6. Dostawcy usług</h2>
+    <ul>
+      <li><strong>Anthropic PBC (USA)</strong> — dostarcza model AI (Claude), który generuje sugestie z danych wysłanych w zapytaniu.</li>
+      <li><strong>Cloudflare, Inc. (USA)</strong> — hostuje usługę przekazywania zapytań; wszelkie tymczasowe przechowywanie techniczne wygasa automatycznie.</li>
+      <li><strong>Apple / Google</strong> — dystrybuują aplikację i zapewniają uprawnienie do danych zdrowotnych na urządzeniu (Apple Health / Health Connect). Otrzymują tylko to, czego ich platformy wymagają do dystrybucji.</li>
+    </ul>
+    <p><strong>Nie sprzedajemy</strong> Twoich danych osobowych i nie używamy ich do reklam.</p>
+    <h2>7. Przekazywanie międzynarodowe</h2>
+    <p>Powyżsi dostawcy mogą przetwarzać dane zapytania w USA. Takie przekazania opierają się na <strong>Standardowych klauzulach umownych</strong> Komisji Europejskiej oraz dodatkowych zabezpieczeniach każdego dostawcy.</p>
+    <h2>8. Przechowywanie</h2>
+    <p>Dane na urządzeniu pozostają, dopóki nie usuniesz ich w aplikacji lub nie odinstalujesz aplikacji — kontrolę masz Ty. Dane wysłane do zapytania AI są ulotne i wygasają automatycznie (zwykle w ciągu dni). Nie przechowujemy historii wellness na własnych serwerach.</p>
+    <h2>9. Twoje prawa</h2>
+    <p>W zależności od miejsca zamieszkania możesz mieć prawo dostępu, sprostowania, usunięcia, ograniczenia lub sprzeciwu wobec przetwarzania, prawo do przenoszenia danych oraz do wycofania zgody. Ponieważ Twoje dane są na Twoim urządzeniu, większość z nich możesz zrealizować bezpośrednio w aplikacji w dowolnym momencie.</p>
+    <p><strong>UE/UK (RODO):</strong> masz też prawo wnieść skargę do lokalnego organu nadzorczego. <strong>Kalifornia (CCPA/CPRA):</strong> masz prawo wiedzieć, usuwać i sprzeciwić się „sprzedaży"/„udostępnianiu" — nie robimy żadnego.</p>
+    <p>Aby złożyć wniosek, napisz na <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. Odpowiadamy w ciągu 30 dni (15 dla wniosków z Kalifornii).</p>
+    <h2>10. Dzieci</h2>
+    <p>Aplikacja jest przeznaczona dla osób dorosłych <strong>w wieku 18 lat i starszych</strong>. Świadomie nie zbieramy danych osób niepełnoletnich. Jeśli sądzisz, że aplikacji użyła osoba niepełnoletnia, napisz na <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>, a pomożemy.</p>
+    <h2>11. Bezpieczeństwo</h2>
+    <p>Dane wellness są szyfrowane w spoczynku na Twoim urządzeniu i wysyłane przez szyfrowane (TLS) połączenia. Żadna metoda przechowywania ani przesyłania nie jest w pełni bezpieczna, ale stosujemy środki odpowiednie do wrażliwości danych.</p>
+    <h2>12. Zmiany</h2>
+    <p>Możemy aktualizować tę politykę. Istotne zmiany będą odzwierciedlone w dacie „Ostatnia aktualizacja" i w stosownych przypadkach wyróżnione w aplikacji.</p>
+    <h2>13. Kontakt</h2>
+    <p>Zapytania dotyczące prywatności: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Wsparcie ogólne: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
 
-  <h2>8. Retention</h2>
-  <p>On-device data remains until you clear it in the app or uninstall the app — you are in control. Data sent for an AI request is transient and expires automatically (typically within days). We keep no wellness history on our own servers.</p>
+  <!-- ============ IT ============ -->
+  <div data-lang="it">
+    <div class="page-eyebrow"><span>Informativa sulla privacy</span></div>
+    <h1>Informativa sulla privacy</h1>
+    <p class="page-date">VIA·L AI assistant · Ultimo aggiornamento: 7 luglio 2026</p>
+    <p class="intro">Questa informativa spiega come l'app <strong>VIA·L AI assistant</strong> tratta le tue informazioni. L'app è uno <strong>strumento generale di benessere ed educazione</strong>. <strong>Non è un dispositivo medico</strong>, non fornisce consulenza medica, diagnosi o trattamento e non sostituisce un professionista qualificato.</p>
+    <h2>1. Chi siamo</h2>
+    <p>Il titolare dei tuoi dati è <strong>Maryna Datsenko</strong>, imprenditrice individuale (FOP) registrata in Ucraina ("noi"). Non abbiamo nominato un Responsabile della protezione dei dati; tutte le richieste sulla privacy sono gestite direttamente dal titolare.</p>
+    <p>Contatto privacy: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Supporto generale: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. Ambito</h2>
+    <p>Questa informativa si applica solo all'applicazione mobile <strong>VIA·L AI assistant</strong> e ai suoi livelli (VIO — gratuito; PRO — abbonamento). Non copre alcun sito web o servizio separato.</p>
+    <h2>3. Cos'è l'app</h2>
+    <p>L'app ti consente di registrare indicatori di benessere autodichiarati (come qualità del sonno, energia, attività, abitudini alimentari e obiettivi personali) e, nel livello PRO, di leggere facoltativamente metriche di benessere da Apple Health o Health Connect con il tuo permesso. Utilizza un modello di intelligenza artificiale per fornire <strong>suggerimenti generali e non medici su nutrizione e stile di vita</strong>, a scopo educativo e di autocura.</p>
+    <h2>4. Informazioni che trattiamo</h2>
+    <ul>
+      <li><strong>Dati di benessere che inserisci</strong> — autovalutazioni soggettive e indicatori di stile di vita che scegli di fornire.</li>
+      <li><strong>Metriche da dispositivi indossabili (PRO, facoltativo)</strong> — dati che autorizzi espressamente l'app a leggere da Apple Health / Health Connect sul tuo dispositivo.</li>
+      <li><strong>I tuoi obiettivi e aree di focus</strong> — per personalizzare i suggerimenti.</li>
+      <li><strong>Dati tecnici minimi</strong> — versione dell'app e la richiesta di rete necessaria a generare una risposta dell'IA.</li>
+    </ul>
+    <p>L'app <strong>non ha account né login</strong>. Non chiediamo nome, e-mail o recapiti per usarla.</p>
+    <p>Poiché questi dati possono riguardare il tuo benessere fisico, li trattiamo come categoria particolare di dati personali e solo con il tuo <strong>consenso esplicito</strong> (GDPR art. 6(1)(a) e art. 9(2)(a)). Puoi revocare il consenso in qualsiasi momento eliminando i tuoi dati nell'app o disinstallandola.</p>
+    <h2>5. Dove sono conservati i tuoi dati</h2>
+    <p>I tuoi dati di benessere e la cronologia sono conservati <strong>localmente sul tuo dispositivo</strong>, in forma cifrata, e <strong>non sono mantenuti sui nostri server</strong>. Per generare un suggerimento dell'IA, i dati necessari alla richiesta sono inviati tramite connessione cifrata al nostro servizio di elaborazione e al fornitore di IA, usati solo per produrre la tua risposta e <strong>non conservati</strong> oltre la breve vita tecnica della richiesta.</p>
+    <h2>6. Fornitori di servizi</h2>
+    <ul>
+      <li><strong>Anthropic PBC (USA)</strong> — fornisce il modello di IA (Claude) che genera i suggerimenti dai dati inviati per una richiesta.</li>
+      <li><strong>Cloudflare, Inc. (USA)</strong> — ospita il servizio di inoltro delle richieste; ogni archiviazione tecnica temporanea usa scadenza automatica.</li>
+      <li><strong>Apple / Google</strong> — distribuiscono l'app e forniscono l'autorizzazione ai dati sanitari sul dispositivo (Apple Health / Health Connect). Ricevono solo ciò che le loro piattaforme richiedono per la distribuzione.</li>
+    </ul>
+    <p><strong>Non vendiamo</strong> le tue informazioni personali e non le usiamo per pubblicità.</p>
+    <h2>7. Trasferimenti internazionali</h2>
+    <p>I fornitori sopra indicati possono trattare i dati della richiesta negli Stati Uniti. Tali trasferimenti si basano sulle <strong>Clausole contrattuali tipo</strong> della Commissione europea e sulle garanzie supplementari di ciascun fornitore.</p>
+    <h2>8. Conservazione</h2>
+    <p>I dati sul dispositivo restano finché non li cancelli nell'app o disinstalli l'app — il controllo è tuo. I dati inviati per una richiesta all'IA sono transitori e scadono automaticamente (di norma entro giorni). Non conserviamo cronologia di benessere sui nostri server.</p>
+    <h2>9. I tuoi diritti</h2>
+    <p>A seconda di dove vivi, puoi avere diritto di accesso, rettifica, cancellazione, limitazione od opposizione al trattamento, alla portabilità e alla revoca del consenso. Poiché i tuoi dati sono sul tuo dispositivo, puoi esercitare la maggior parte direttamente nell'app in qualsiasi momento.</p>
+    <p><strong>UE/UK (GDPR):</strong> hai anche il diritto di presentare reclamo alla tua autorità di controllo locale. <strong>California (CCPA/CPRA):</strong> hai il diritto di sapere, cancellare e rifiutare la "vendita"/"condivisione" — non facciamo né l'una né l'altra.</p>
+    <p>Per una richiesta scrivi a <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. Rispondiamo entro 30 giorni (15 per le richieste della California).</p>
+    <h2>10. Minori</h2>
+    <p>L'app è destinata agli adulti di <strong>18 anni e oltre</strong>. Non raccogliamo consapevolmente dati di minori. Se ritieni che un minore abbia usato l'app, scrivi a <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> e ti aiuteremo.</p>
+    <h2>11. Sicurezza</h2>
+    <p>I dati di benessere sono cifrati a riposo sul tuo dispositivo e inviati tramite connessioni cifrate (TLS). Nessun metodo di archiviazione o trasmissione è del tutto sicuro, ma applichiamo misure adeguate alla sensibilità dei dati.</p>
+    <h2>12. Modifiche</h2>
+    <p>Possiamo aggiornare questa informativa. Le modifiche sostanziali saranno riflesse nella data di "Ultimo aggiornamento" e, ove opportuno, evidenziate nell'app.</p>
+    <h2>13. Contatto</h2>
+    <p>Richieste sulla privacy: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Supporto generale: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
 
-  <h2>9. Your rights</h2>
-  <p>Depending on where you live, you may have the right to access, correct, delete, restrict or object to processing, to data portability, and to withdraw consent. Because your data lives on your device, you can exercise most of these directly in the app at any time.</p>
-  <p><strong>EU/UK (GDPR):</strong> you also have the right to lodge a complaint with your local supervisory authority. <strong>California (CCPA/CPRA):</strong> you have the right to know, delete and opt out of "sale"/"sharing" — we do neither.</p>
-  <p>To make a request, contact <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. We respond within 30 days (15 days for California requests).</p>
+  <!-- ============ HE ============ -->
+  <div data-lang="he">
+    <div class="page-eyebrow"><span>מדיניות פרטיות</span></div>
+    <h1>מדיניות פרטיות</h1>
+    <p class="page-date">VIA·L AI assistant · עודכן לאחרונה: 7 ביולי 2026</p>
+    <p class="intro">מדיניות זו מסבירה כיצד אפליקציית <strong>VIA·L AI assistant</strong> מטפלת במידע שלך. האפליקציה היא <strong>כלי כללי לרווחה וחינוך</strong>. היא <strong>אינה מכשיר רפואי</strong>, אינה מספקת ייעוץ רפואי, אבחון או טיפול, ואינה תחליף לאיש מקצוע מוסמך.</p>
+    <h2>1. מי אנחנו</h2>
+    <p>בעל השליטה בנתונים שלך הוא <strong>מרינה דצנקו</strong>, עוסקת יחידה (FOP) הרשומה באוקראינה («אנחנו»). לא מינינו ממונה על הגנת מידע; כל הפניות בנושא פרטיות מטופלות ישירות על ידי בעל השליטה.</p>
+    <p>יצירת קשר לפרטיות: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · תמיכה כללית: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. תחולה</h2>
+    <p>מדיניות זו חלה רק על אפליקציית המובייל <strong>VIA·L AI assistant</strong> ורמותיה (VIO — חינם; PRO — מנוי). היא אינה מכסה אתר או שירות נפרד כלשהו.</p>
+    <h2>3. מה האפליקציה</h2>
+    <p>האפליקציה מאפשרת לרשום סמני רווחה שדיווחת בעצמך (כמו איכות שינה, אנרגיה, פעילות, הרגלי תזונה ומטרות אישיות), וברמת PRO — לקרוא באופן אופציונלי נתוני רווחה מ-Apple Health או Health Connect באישורך. היא משתמשת במודל בינה מלאכותית כדי לספק <strong>הצעות כלליות ולא-רפואיות בתזונה ואורח חיים</strong> לחינוך וטיפול עצמי.</p>
+    <h2>4. מידע שאנו מעבדים</h2>
+    <ul>
+      <li><strong>נתוני רווחה שאתה מזין</strong> — הערכות עצמיות סובייקטיביות וסמני אורח חיים שאתה בוחר לספק.</li>
+      <li><strong>מדדים מהתקנים לבישים (PRO, אופציונלי)</strong> — נתונים שאתה מאשר במפורש לאפליקציה לקרוא מ-Apple Health / Health Connect במכשירך.</li>
+      <li><strong>המטרות ותחומי המיקוד שלך</strong> — להתאמה אישית של ההצעות.</li>
+      <li><strong>נתונים טכניים מינימליים</strong> — גרסת האפליקציה והבקשה הרשתית הדרושה ליצירת תשובת AI.</li>
+    </ul>
+    <p>לאפליקציה <strong>אין חשבון ואין התחברות</strong>. איננו מבקשים את שמך, דוא"ל או פרטי קשר לשימוש בה.</p>
+    <p>מכיוון שנתונים אלו עשויים לגעת ברווחתך הגופנית, אנו מתייחסים אליהם כאל קטגוריה מיוחדת של נתונים אישיים ומעבדים אותם רק ב<strong>הסכמתך המפורשת</strong> (GDPR סעיף 6(1)(a) וסעיף 9(2)(a)). ניתן לחזור מההסכמה בכל עת על ידי מחיקת הנתונים באפליקציה או הסרתה.</p>
+    <h2>5. היכן מאוחסנים הנתונים שלך</h2>
+    <p>נתוני הרווחה וההיסטוריה שלך מאוחסנים <strong>מקומית במכשירך</strong> בצורה מוצפנת, ו<strong>אינם נשמרים בשרתינו</strong>. כדי ליצור הצעת AI, הנתונים הדרושים לאותה בקשה נשלחים בחיבור מוצפן לשירות העיבוד שלנו ולספק ה-AI, משמשים רק להפקת תשובתך, ו<strong>אינם נשמרים</strong> מעבר לחיי הבקשה הטכניים הקצרים.</p>
+    <h2>6. ספקי שירות</h2>
+    <ul>
+      <li><strong>Anthropic PBC (ארה"ב)</strong> — מספקת את מודל ה-AI (Claude) שמפיק הצעות מהנתונים שנשלחו בבקשה.</li>
+      <li><strong>Cloudflare, Inc. (ארה"ב)</strong> — מארחת את שירות העברת הבקשות; כל אחסון טכני זמני פג באופן אוטומטי.</li>
+      <li><strong>Apple / Google</strong> — מפיצות את האפליקציה ומספקות את הרשאת נתוני הבריאות במכשיר (Apple Health / Health Connect). הן מקבלות רק את הנדרש לפלטפורמות שלהן להפצה.</li>
+    </ul>
+    <p>אנו <strong>לא מוכרים</strong> את המידע האישי שלך ולא משתמשים בו לפרסום.</p>
+    <h2>7. העברות בין-לאומיות</h2>
+    <p>הספקים לעיל עשויים לעבד את נתוני הבקשה בארצות הברית. העברות אלו נסמכות על <strong>סעיפי החוזה הסטנדרטיים</strong> של הנציבות האירופית ועל אמצעי ההגנה המשלימים של כל ספק.</p>
+    <h2>8. שמירה</h2>
+    <p>נתונים במכשיר נשמרים עד שתמחק אותם באפליקציה או תסיר את האפליקציה — השליטה בידיך. נתונים שנשלחו לבקשת AI הם זמניים ופגים אוטומטית (בדרך כלל תוך ימים). איננו שומרים היסטוריית רווחה בשרתינו.</p>
+    <h2>9. הזכויות שלך</h2>
+    <p>בהתאם למקום מגוריך, ייתכן שתהיה לך זכות לגישה, תיקון, מחיקה, הגבלה או התנגדות לעיבוד, לניוד נתונים ולחזרה מהסכמה. מכיוון שהנתונים שלך במכשירך, את רובם תוכל לממש ישירות באפליקציה בכל עת.</p>
+    <p><strong>האיחוד האירופי/בריטניה (GDPR):</strong> יש לך גם זכות להגיש תלונה לרשות הפיקוח המקומית. <strong>קליפורניה (CCPA/CPRA):</strong> יש לך זכות לדעת, למחוק ולסרב ל«מכירה»/«שיתוף» — איננו עושים אף אחת מהן.</p>
+    <p>להגשת בקשה, כתוב אל <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. אנו משיבים תוך 30 יום (15 יום לבקשות מקליפורניה).</p>
+    <h2>10. קטינים</h2>
+    <p>האפליקציה מיועדת למבוגרים <strong>בני 18 ומעלה</strong>. איננו אוספים ביודעין נתונים מקטינים. אם לדעתך קטין השתמש באפליקציה, כתוב אל <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> ונסייע.</p>
+    <h2>11. אבטחה</h2>
+    <p>נתוני רווחה מוצפנים במנוחה במכשירך ונשלחים בחיבורים מוצפנים (TLS). אף שיטת אחסון או שידור אינה בטוחה לחלוטין, אך אנו מיישמים אמצעים ההולמים את רגישות הנתונים.</p>
+    <h2>12. שינויים</h2>
+    <p>אנו עשויים לעדכן מדיניות זו. שינויים מהותיים ישתקפו בתאריך «עודכן לאחרונה» ובמקרים המתאימים יודגשו באפליקציה.</p>
+    <h2>13. יצירת קשר</h2>
+    <p>פניות בנושא פרטיות: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · תמיכה כללית: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
 
-  <h2>10. Children</h2>
-  <p>The app is intended for adults <strong>aged 18 and over</strong>. We do not knowingly collect data from minors. If you believe a minor has used the app, contact <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> and we will assist.</p>
+  <!-- ============ JA ============ -->
+  <div data-lang="ja">
+    <div class="page-eyebrow"><span>プライバシーポリシー</span></div>
+    <h1>プライバシーポリシー</h1>
+    <p class="page-date">VIA·L AI assistant · 最終更新: 2026年7月7日</p>
+    <p class="intro">本ポリシーは、アプリ <strong>VIA·L AI assistant</strong> がお客様の情報をどのように取り扱うかを説明します。本アプリは一般的な<strong>ウェルネスおよび教育のためのツール</strong>です。<strong>医療機器ではなく</strong>、医療上の助言・診断・治療を提供せず、有資格の専門家に代わるものではありません。</p>
+    <h2>1. 事業者情報</h2>
+    <p>データ管理者は、ウクライナに登録された個人事業主（FOP）である <strong>Maryna Datsenko</strong>（「当社」）です。データ保護責任者は選任していません。プライバシーに関するお問い合わせはすべて管理者が直接対応します。</p>
+    <p>プライバシー窓口: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · 一般サポート: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. 適用範囲</h2>
+    <p>本ポリシーはモバイルアプリ <strong>VIA·L AI assistant</strong> とそのプラン（VIO — 無料、PRO — サブスクリプション）にのみ適用されます。独立したウェブサイトやサービスは対象外です。</p>
+    <h2>3. アプリの概要</h2>
+    <p>本アプリでは、自己申告のウェルネス指標（睡眠の質、エネルギー、活動、食習慣、個人の目標など）を記録でき、PRO プランではお客様の許可のもと Apple Health または Health Connect からウェルネス数値を任意で読み取れます。AI モデルを用いて、教育とセルフケアのための<strong>一般的かつ非医療的な栄養・ライフスタイルの提案</strong>を返します。</p>
+    <h2>4. 取り扱う情報</h2>
+    <ul>
+      <li><strong>お客様が入力するウェルネス情報</strong> — 提供を選択した主観的な自己評価やライフスタイル指標。</li>
+      <li><strong>ウェアラブル数値（PRO、任意）</strong> — 端末上の Apple Health / Health Connect から読み取ることを明示的に許可したデータ。</li>
+      <li><strong>お客様の目標・重点領域</strong> — 提案のパーソナライズのため。</li>
+      <li><strong>最小限の技術データ</strong> — アプリのバージョンおよび AI 応答生成に必要なネットワークリクエスト。</li>
+    </ul>
+    <p>本アプリには<strong>アカウントもログインもありません</strong>。利用にあたり氏名・メール・連絡先はお尋ねしません。</p>
+    <p>これらの情報は身体的な健やかさに関わり得るため、特別な種類の個人データとして扱い、<strong>明示的な同意</strong>（GDPR 第6条(1)(a)および第9条(2)(a)）に基づいてのみ処理します。同意はアプリ内でデータを削除するか、アプリをアンインストールすることでいつでも撤回できます。</p>
+    <h2>5. データの保存場所</h2>
+    <p>お客様のウェルネス情報と履歴は<strong>端末内にローカルで暗号化して保存</strong>され、<strong>当社サーバーには保持されません</strong>。AI 提案の生成にあたり、その要求に必要なデータのみを暗号化通信で当社の処理サービスおよび AI プロバイダーに送信し、応答の生成のみに使用し、要求の短い技術的存続期間を超えて<strong>保持しません</strong>。</p>
+    <h2>6. サービス提供者</h2>
+    <ul>
+      <li><strong>Anthropic PBC（米国）</strong> — 送信されたデータから提案を生成する AI モデル（Claude）を提供。</li>
+      <li><strong>Cloudflare, Inc.（米国）</strong> — 要求中継サービスをホスト。一時的な技術保存には自動失効を使用。</li>
+      <li><strong>Apple / Google</strong> — アプリを配信し、端末上の健康データ権限（Apple Health / Health Connect）を提供。配信に必要な範囲のみを受領します。</li>
+    </ul>
+    <p>当社はお客様の個人情報を<strong>販売せず</strong>、広告にも使用しません。</p>
+    <h2>7. 国際移転</h2>
+    <p>上記の提供者は要求データを米国で処理する場合があります。かかる移転は欧州委員会の<strong>標準契約条項</strong>および各提供者の補完的保護措置に基づきます。</p>
+    <h2>8. 保存期間</h2>
+    <p>端末内のデータは、アプリで消去するかアプリをアンインストールするまで残ります — 管理はお客様にあります。AI 要求のために送信されたデータは一時的で、自動的に失効します（通常は数日以内）。当社サーバーにウェルネス履歴は保持しません。</p>
+    <h2>9. お客様の権利</h2>
+    <p>お住まいの地域により、アクセス・訂正・削除・制限・異議、データポータビリティ、同意撤回の権利がある場合があります。データは端末内にあるため、その多くをいつでもアプリ内で直接行えます。</p>
+    <p><strong>EU/英国（GDPR）:</strong> 現地の監督機関に苦情を申し立てる権利もあります。<strong>カリフォルニア（CCPA/CPRA）:</strong> 知る・削除する・「販売」/「共有」をオプトアウトする権利があります — 当社はいずれも行いません。</p>
+    <p>ご請求は <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> までご連絡ください。30日以内（カリフォルニアの請求は15日以内）に回答します。</p>
+    <h2>10. 未成年者</h2>
+    <p>本アプリは<strong>18歳以上</strong>の成人向けです。未成年者のデータを故意に収集しません。未成年者が利用したと思われる場合は <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> までご連絡ください。対応します。</p>
+    <h2>11. セキュリティ</h2>
+    <p>ウェルネスデータは端末内で保存時に暗号化され、暗号化（TLS）接続で送信されます。完全に安全な保存・送信方法は存在しませんが、データの機微性に見合った対策を講じます。</p>
+    <h2>12. 変更</h2>
+    <p>本ポリシーは更新することがあります。重要な変更は上記「最終更新」日に反映し、必要に応じてアプリ内で強調表示します。</p>
+    <h2>13. お問い合わせ</h2>
+    <p>プライバシーに関するお問い合わせ: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · 一般サポート: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
 
-  <h2>11. Security</h2>
-  <p>Wellness data is encrypted at rest on your device and sent over encrypted (TLS) connections. No method of storage or transmission is completely secure, but we apply measures appropriate to the sensitivity of the data.</p>
+  <!-- ============ KO ============ -->
+  <div data-lang="ko">
+    <div class="page-eyebrow"><span>개인정보처리방침</span></div>
+    <h1>개인정보처리방침</h1>
+    <p class="page-date">VIA·L AI assistant · 최종 업데이트: 2026년 7월 7일</p>
+    <p class="intro">본 방침은 <strong>VIA·L AI assistant</strong> 앱이 귀하의 정보를 어떻게 처리하는지 설명합니다. 이 앱은 일반적인 <strong>웰니스 및 교육 도구</strong>입니다. <strong>의료기기가 아니며</strong> 의학적 조언·진단·치료를 제공하지 않고 자격을 갖춘 전문가를 대체하지 않습니다.</p>
+    <h2>1. 우리는 누구인가</h2>
+    <p>데이터 관리자는 우크라이나에 등록된 개인사업자(FOP) <strong>Maryna Datsenko</strong>("당사")입니다. 데이터 보호 책임자는 지정하지 않았으며, 모든 개인정보 관련 요청은 관리자가 직접 처리합니다.</p>
+    <p>개인정보 문의: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · 일반 지원: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. 적용 범위</h2>
+    <p>본 방침은 모바일 앱 <strong>VIA·L AI assistant</strong> 및 그 등급(VIO — 무료, PRO — 구독)에만 적용됩니다. 별도의 웹사이트나 서비스는 포함하지 않습니다.</p>
+    <h2>3. 앱 소개</h2>
+    <p>이 앱을 통해 자가 보고 웰니스 지표(수면의 질, 에너지, 활동, 식습관, 개인 목표 등)를 기록할 수 있으며, PRO 등급에서는 귀하의 허가하에 Apple Health 또는 Health Connect의 웰니스 수치를 선택적으로 읽을 수 있습니다. AI 모델을 사용하여 교육 및 자가 관리를 위한 <strong>일반적·비의료적 영양 및 생활습관 제안</strong>을 제공합니다.</p>
+    <h2>4. 처리하는 정보</h2>
+    <ul>
+      <li><strong>귀하가 입력하는 웰니스 데이터</strong> — 제공하기로 선택한 주관적 자가 평가 및 생활습관 지표.</li>
+      <li><strong>웨어러블 수치(PRO, 선택)</strong> — 기기의 Apple Health / Health Connect에서 읽도록 명시적으로 허가한 데이터.</li>
+      <li><strong>귀하의 목표 및 집중 영역</strong> — 제안 개인화를 위해.</li>
+      <li><strong>최소한의 기술 데이터</strong> — 앱 버전 및 AI 응답 생성을 위해 필요한 네트워크 요청.</li>
+    </ul>
+    <p>이 앱에는 <strong>계정과 로그인이 없습니다</strong>. 사용을 위해 이름, 이메일, 연락처를 요구하지 않습니다.</p>
+    <p>이러한 데이터는 귀하의 신체적 웰빙과 관련될 수 있으므로 특별한 범주의 개인정보로 취급하며, 귀하의 <strong>명시적 동의</strong>(GDPR 제6조(1)(a) 및 제9조(2)(a))에 근거해서만 처리합니다. 동의는 앱에서 데이터를 삭제하거나 앱을 제거하여 언제든지 철회할 수 있습니다.</p>
+    <h2>5. 데이터 저장 위치</h2>
+    <p>귀하의 웰니스 데이터와 기록은 <strong>기기 내에 로컬로 암호화되어 저장</strong>되며 <strong>당사 서버에 보관되지 않습니다</strong>. AI 제안을 생성하기 위해 해당 요청에 필요한 데이터만 암호화 연결을 통해 당사 처리 서비스와 AI 제공업체로 전송되어 응답 생성에만 사용되며, 요청의 짧은 기술적 수명을 넘어 <strong>보관되지 않습니다</strong>.</p>
+    <h2>6. 서비스 제공업체</h2>
+    <ul>
+      <li><strong>Anthropic PBC(미국)</strong> — 요청 시 전송된 데이터로 제안을 생성하는 AI 모델(Claude)을 제공.</li>
+      <li><strong>Cloudflare, Inc.(미국)</strong> — 요청 중계 서비스를 호스팅하며, 임시 기술 저장은 자동 만료를 사용.</li>
+      <li><strong>Apple / Google</strong> — 앱을 배포하고 기기 내 건강 데이터 권한(Apple Health / Health Connect)을 제공. 배포에 필요한 범위만 수령합니다.</li>
+    </ul>
+    <p>당사는 귀하의 개인정보를 <strong>판매하지 않으며</strong> 광고에 사용하지 않습니다.</p>
+    <h2>7. 국제 이전</h2>
+    <p>위 제공업체는 요청 데이터를 미국에서 처리할 수 있습니다. 이러한 이전은 유럽위원회의 <strong>표준계약조항</strong> 및 각 제공업체의 보완적 보호조치에 근거합니다.</p>
+    <h2>8. 보관</h2>
+    <p>기기 내 데이터는 앱에서 삭제하거나 앱을 제거할 때까지 유지되며 — 통제권은 귀하에게 있습니다. AI 요청을 위해 전송된 데이터는 일시적이며 자동으로 만료됩니다(보통 며칠 이내). 당사 서버에 웰니스 기록을 보관하지 않습니다.</p>
+    <h2>9. 귀하의 권리</h2>
+    <p>거주 지역에 따라 열람·정정·삭제·처리 제한 또는 반대, 데이터 이동, 동의 철회의 권리가 있을 수 있습니다. 데이터가 기기 내에 있으므로 대부분은 언제든지 앱에서 직접 행사할 수 있습니다.</p>
+    <p><strong>EU/영국(GDPR):</strong> 현지 감독기관에 민원을 제기할 권리도 있습니다. <strong>캘리포니아(CCPA/CPRA):</strong> 알 권리, 삭제, "판매"/"공유" 거부 권리가 있으며 — 당사는 어느 것도 하지 않습니다.</p>
+    <p>요청은 <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>으로 문의하세요. 30일 이내(캘리포니아 요청은 15일 이내)에 답변합니다.</p>
+    <h2>10. 아동</h2>
+    <p>이 앱은 <strong>만 18세 이상</strong> 성인을 위한 것입니다. 미성년자의 데이터를 고의로 수집하지 않습니다. 미성년자가 앱을 사용했다고 생각되면 <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>으로 문의해 주세요. 도와드리겠습니다.</p>
+    <h2>11. 보안</h2>
+    <p>웰니스 데이터는 기기 내에서 저장 시 암호화되고 암호화(TLS) 연결로 전송됩니다. 완전히 안전한 저장·전송 방법은 없지만, 데이터 민감도에 적절한 조치를 적용합니다.</p>
+    <h2>12. 변경</h2>
+    <p>본 방침은 업데이트될 수 있습니다. 중요한 변경은 위 "최종 업데이트" 날짜에 반영되며 필요 시 앱 내에서 강조됩니다.</p>
+    <h2>13. 문의</h2>
+    <p>개인정보 문의: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · 일반 지원: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
 
-  <h2>12. Changes</h2>
-  <p>We may update this policy. Material changes will be reflected by the "Last updated" date above and, where appropriate, highlighted in the app.</p>
-
-  <h2>13. Contact</h2>
-  <p>Privacy enquiries: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · General support: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
 </main>
 
 <footer>
@@ -127,6 +676,33 @@
     <span class="footer-links"><a href="./terms.html">Terms of Service</a></span>
   </div>
 </footer>
+
+<script>
+  var backLabels = {
+    en:'← Back to app', es:'← Volver a la app', uk:'← Назад до застосунку', ru:'← Назад в приложение',
+    de:'← Zurück zur App', pt:'← Voltar à app', fr:'← Retour à l\'app', pl:'← Powrót do aplikacji',
+    it:'← Torna all\'app', he:'→ חזרה לאפליקציה', ja:'← アプリに戻る', ko:'← 앱으로 돌아가기'
+  };
+  function setLang(l) {
+    document.querySelectorAll('[data-lang]').forEach(function(el) {
+      el.classList.toggle('active', el.getAttribute('data-lang') === l);
+    });
+    document.querySelectorAll('.lang-bar button').forEach(function(b) {
+      b.classList.toggle('active', b.id === 'btn-' + l);
+    });
+    var bl = document.getElementById('back-link'); if (bl) bl.textContent = backLabels[l] || '← Back to app';
+    document.documentElement.lang = l;
+    try { localStorage.setItem('selectedLang', l); } catch(e){}
+  }
+  (function(){
+    var saved = null;
+    try { saved = localStorage.getItem('selectedLang'); } catch(e){}
+    if (saved && backLabels[saved]) { setLang(saved); return; }
+    var hl = (navigator.language || '').toLowerCase().slice(0,2);
+    if (hl === 'ua') hl = 'uk';
+    if (backLabels[hl]) setLang(hl); else setLang('en');
+  })();
+</script>
 
 </body>
 </html>

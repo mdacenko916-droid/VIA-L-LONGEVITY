@@ -18,10 +18,13 @@
     }
     html { scroll-behavior: smooth; }
     body { background: var(--cream); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 17px; line-height: 1.75; font-weight: 400; -webkit-font-smoothing: antialiased; }
-    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 200; display: flex; align-items: center; justify-content: space-between; padding: 14px 40px; background: rgba(245,243,239,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); flex-wrap: wrap; gap: 10px; }
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 200; display: flex; align-items: center; justify-content: space-between; padding: 14px 40px; background: rgba(245,243,239,0.92); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); flex-wrap: wrap; gap: 10px; }
     .nav-logo { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; letter-spacing: 8px; color: var(--text); text-decoration: none; }
-    .nav-back { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); text-decoration: none; transition: opacity .2s; }
+    .nav-back { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); text-decoration: none; transition: opacity .2s; cursor: pointer; }
     .nav-back:hover { opacity: .7; }
+    .lang-bar { display: flex; gap: 5px; flex-wrap: wrap; }
+    .lang-bar button { background: none; border: 1px solid var(--line); border-radius: 50px; padding: 3px 10px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-lt); cursor: pointer; transition: border-color .2s, color .2s; font-family: 'DM Sans', sans-serif; }
+    .lang-bar button:hover, .lang-bar button.active { border-color: var(--gold-pale); color: var(--gold); }
     .page-wrap { max-width: 820px; margin: 0 auto; padding: 140px 40px 80px; }
     .page-eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
     .page-eyebrow::before { content: ''; display: block; width: 22px; height: 1px; background: var(--gold-pale); flex-shrink: 0; }
@@ -39,12 +42,16 @@
     footer { background: var(--cream-dk); border-top: 1px solid var(--line); padding: 28px 40px; margin-top: 40px; }
     .footer-inner { max-width: 820px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
     .footer-copy { font-size: 13px; color: var(--text-lt); opacity: .7; }
-    .footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
-    .footer-links a { font-size: 13px; color: var(--text-lt); opacity: .7; text-decoration: none; transition: opacity .2s; }
+    .footer-links a { font-size: 13px; color: var(--text-lt); opacity: .7; text-decoration: none; }
     .footer-links a:hover { opacity: 1; color: var(--gold); }
+    [data-lang] { display: none; }
+    [data-lang].active { display: block; }
+    html[lang="he"] [data-lang="he"] { direction: rtl; text-align: right; }
+    html[lang="he"] [data-lang="he"] ul { padding-right: 20px; padding-left: 0; }
     @media (max-width: 600px) {
       nav { padding: 12px 16px; }
       .page-wrap { padding: 130px 22px 60px; }
+      .lang-bar button { padding: 2px 7px; font-size: 11px; }
       footer { padding: 24px 20px; }
       .footer-inner { flex-direction: column; text-align: center; }
     }
@@ -54,63 +61,553 @@
 
 <nav>
   <span class="nav-logo">VIA·L</span>
-  <a href="./index.html" class="nav-back">← Back to app</a>
+  <div class="lang-bar">
+    <button onclick="setLang('en')" id="btn-en" class="active">EN</button>
+    <button onclick="setLang('es')" id="btn-es">ES</button>
+    <button onclick="setLang('uk')" id="btn-uk">UK</button>
+    <button onclick="setLang('ru')" id="btn-ru">RU</button>
+    <button onclick="setLang('de')" id="btn-de">DE</button>
+    <button onclick="setLang('pt')" id="btn-pt">PT</button>
+    <button onclick="setLang('fr')" id="btn-fr">FR</button>
+    <button onclick="setLang('pl')" id="btn-pl">PL</button>
+    <button onclick="setLang('it')" id="btn-it">IT</button>
+    <button onclick="setLang('he')" id="btn-he">HE</button>
+    <button onclick="setLang('ja')" id="btn-ja">JA</button>
+    <button onclick="setLang('ko')" id="btn-ko">KO</button>
+  </div>
+  <a href="./index.html" class="nav-back" id="back-link">← Back to app</a>
 </nav>
 
 <main class="page-wrap">
-  <div class="page-eyebrow"><span>Terms of Service</span></div>
-  <h1>Terms of Service</h1>
-  <p class="page-date">VIA·L AI assistant · Last updated: 7 July 2026</p>
 
-  <p class="intro">These Terms govern your use of the <strong>VIA·L AI assistant</strong> app. By using the app you agree to them. Please read the wellness disclaimer in section 3 carefully.</p>
+  <!-- ============ EN ============ -->
+  <div data-lang="en" class="active">
+    <div class="page-eyebrow"><span>Terms of Service</span></div>
+    <h1>Terms of Service</h1>
+    <p class="page-date">VIA·L AI assistant · Last updated: 7 July 2026</p>
+    <p class="intro">These Terms govern your use of the <strong>VIA·L AI assistant</strong> app. By using the app you agree to them. Please read the wellness disclaimer in section 3 carefully.</p>
+    <h2>1. Who we are</h2>
+    <p>The app is provided by <strong>Maryna Datsenko</strong>, an Individual Entrepreneur (FOP) registered in Ukraine ("we", "us"). Contact: <a href="mailto:support@via-l.com">support@via-l.com</a>.</p>
+    <h2>2. The service</h2>
+    <p>The <strong>VIA·L AI assistant</strong> is a general wellness and educational app. It lets you record self-reported wellness markers and, in the PRO tier, optionally read wellness metrics from Apple Health or Health Connect with your permission, and returns general nutrition and lifestyle suggestions generated by an artificial-intelligence model. It is offered in a free tier (VIO) and a paid subscription tier (PRO).</p>
+    <h2>3. Wellness disclaimer — important</h2>
+    <p>The app is <strong>not a medical device</strong> and does <strong>not</strong> provide medical advice, diagnosis, treatment or a professional opinion. Its content is for <strong>general education and self-care only</strong>. It does not replace consultation with a qualified professional.</p>
+    <ul>
+      <li>Always seek professional guidance before making changes to your nutrition, supplements, physical activity or lifestyle, and before acting on anything in the app.</li>
+      <li>Never disregard or delay professional advice because of something you read in the app.</li>
+      <li>AI-generated suggestions may be incomplete or inaccurate; use your own judgement.</li>
+      <li>The app is not intended to detect, prevent or manage any condition. In an emergency, contact your local emergency services.</li>
+    </ul>
+    <h2>4. Eligibility</h2>
+    <p>You must be <strong>18 or older</strong> to use the app. By using it, you confirm that you meet this requirement.</p>
+    <h2>5. Subscriptions and payments</h2>
+    <p>The PRO tier is a paid subscription purchased and managed through your app store (Apple App Store or Google Play).</p>
+    <ul>
+      <li>Payment is charged to your app-store account at confirmation of purchase.</li>
+      <li>Subscriptions renew automatically unless you turn off auto-renew at least 24 hours before the end of the current period.</li>
+      <li>You manage or cancel your subscription in your app-store account settings; deleting the app does not cancel a subscription.</li>
+      <li>Refunds are handled by the app store under its policies and your statutory consumer rights.</li>
+    </ul>
+    <h2>6. Acceptable use</h2>
+    <p>You agree to use the app only for lawful, personal purposes. You may not misuse the app, attempt to disrupt or reverse-engineer it, or rely on it as a medical or emergency service.</p>
+    <h2>7. Intellectual property</h2>
+    <p>The app, its design and content are owned by us or our licensors and are protected by law. We grant you a personal, non-transferable, revocable licence to use the app. The wellness inputs you enter remain yours.</p>
+    <h2>8. Disclaimer of warranties</h2>
+    <p>The app is provided <strong>"as is"</strong> and <strong>"as available"</strong>, without warranties of any kind, to the fullest extent permitted by law. We do not warrant that suggestions are accurate, complete or suitable for you, or that the app will be uninterrupted or error-free.</p>
+    <h2>9. Limitation of liability</h2>
+    <p>To the fullest extent permitted by law, we are not liable for any indirect, incidental or consequential damages arising from your use of the app or reliance on its content. Nothing in these Terms limits liability that cannot be excluded under applicable law, including your mandatory consumer rights.</p>
+    <h2>10. Governing law and your consumer rights</h2>
+    <p>These Terms are governed by the laws of Ukraine. This does <strong>not</strong> deprive you of the protection of the mandatory consumer-protection rules of your country of residence, which continue to apply. If you are in the EU, you may also use the European Commission's Online Dispute Resolution platform at <a href="https://ec.europa.eu/consumers/odr" rel="noopener">ec.europa.eu/consumers/odr</a>.</p>
+    <h2>11. Changes</h2>
+    <p>We may update these Terms. Material changes will be reflected by the "Last updated" date above and, where appropriate, highlighted in the app. Continued use after an update means you accept the revised Terms.</p>
+    <h2>12. Contact</h2>
+    <p>General support: <a href="mailto:support@via-l.com">support@via-l.com</a> · Privacy: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a></p>
+  </div>
 
-  <h2>1. Who we are</h2>
-  <p>The app is provided by <strong>Maryna Datsenko</strong>, an Individual Entrepreneur (FOP) registered in Ukraine ("we", "us"). Contact: <a href="mailto:support@via-l.com">support@via-l.com</a>.</p>
+  <!-- ============ ES ============ -->
+  <div data-lang="es">
+    <div class="page-eyebrow"><span>Términos del Servicio</span></div>
+    <h1>Términos del Servicio</h1>
+    <p class="page-date">VIA·L AI assistant · Última actualización: 7 de julio de 2026</p>
+    <p class="intro">Estos Términos rigen tu uso de la app <strong>VIA·L AI assistant</strong>. Al usar la app los aceptas. Lee con atención el aviso de bienestar de la sección 3.</p>
+    <h2>1. Quiénes somos</h2>
+    <p>La app es proporcionada por <strong>Maryna Datsenko</strong>, Empresaria Individual (FOP) registrada en Ucrania ("nosotros"). Contacto: <a href="mailto:support@via-l.com">support@via-l.com</a>.</p>
+    <h2>2. El servicio</h2>
+    <p>La <strong>VIA·L AI assistant</strong> es una app general de bienestar y educación. Te permite registrar marcadores de bienestar autodeclarados y, en el nivel PRO, leer opcionalmente métricas de bienestar de Apple Health o Health Connect con tu permiso, y ofrece sugerencias generales de nutrición y estilo de vida generadas por un modelo de inteligencia artificial. Se ofrece en un nivel gratuito (VIO) y un nivel de suscripción de pago (PRO).</p>
+    <h2>3. Aviso de bienestar — importante</h2>
+    <p>La app <strong>no es un producto sanitario</strong> y <strong>no</strong> ofrece asesoramiento médico, diagnóstico, tratamiento ni opinión profesional. Su contenido es <strong>solo para educación general y autocuidado</strong>. No sustituye la consulta con un profesional cualificado.</p>
+    <ul>
+      <li>Busca siempre orientación profesional antes de cambiar tu nutrición, suplementos, actividad física o estilo de vida, y antes de actuar según algo de la app.</li>
+      <li>Nunca ignores ni retrases el consejo profesional por algo que leas en la app.</li>
+      <li>Las sugerencias generadas por IA pueden ser incompletas o inexactas; usa tu propio criterio.</li>
+      <li>La app no está pensada para detectar, prevenir ni gestionar ninguna afección. En una emergencia, contacta con los servicios de emergencia locales.</li>
+    </ul>
+    <h2>4. Elegibilidad</h2>
+    <p>Debes ser <strong>mayor de 18 años</strong> para usar la app. Al usarla, confirmas que cumples este requisito.</p>
+    <h2>5. Suscripciones y pagos</h2>
+    <p>El nivel PRO es una suscripción de pago comprada y gestionada a través de tu tienda de apps (Apple App Store o Google Play).</p>
+    <ul>
+      <li>El pago se carga a tu cuenta de la tienda al confirmar la compra.</li>
+      <li>Las suscripciones se renuevan automáticamente salvo que desactives la renovación automática al menos 24 horas antes del fin del periodo actual.</li>
+      <li>Gestionas o cancelas la suscripción en los ajustes de tu cuenta de la tienda; borrar la app no cancela la suscripción.</li>
+      <li>Los reembolsos los gestiona la tienda según sus políticas y tus derechos legales de consumidor.</li>
+    </ul>
+    <h2>6. Uso aceptable</h2>
+    <p>Aceptas usar la app solo con fines lícitos y personales. No puedes hacer un uso indebido, intentar interrumpirla o realizar ingeniería inversa, ni confiar en ella como servicio médico o de emergencia.</p>
+    <h2>7. Propiedad intelectual</h2>
+    <p>La app, su diseño y su contenido son de nuestra propiedad o de nuestros licenciantes y están protegidos por la ley. Te concedemos una licencia personal, intransferible y revocable para usar la app. Los datos de bienestar que introduces siguen siendo tuyos.</p>
+    <h2>8. Exención de garantías</h2>
+    <p>La app se ofrece <strong>"tal cual"</strong> y <strong>"según disponibilidad"</strong>, sin garantías de ningún tipo, en la máxima medida permitida por la ley. No garantizamos que las sugerencias sean exactas, completas o adecuadas para ti, ni que la app funcione sin interrupciones o errores.</p>
+    <h2>9. Limitación de responsabilidad</h2>
+    <p>En la máxima medida permitida por la ley, no somos responsables de daños indirectos, incidentales o consecuentes derivados del uso de la app o de la confianza en su contenido. Nada en estos Términos limita la responsabilidad que no pueda excluirse conforme a la ley aplicable, incluidos tus derechos imperativos de consumidor.</p>
+    <h2>10. Ley aplicable y tus derechos de consumidor</h2>
+    <p>Estos Términos se rigen por las leyes de Ucrania. Esto <strong>no</strong> te priva de la protección de las normas imperativas de protección al consumidor de tu país de residencia, que siguen aplicándose. Si estás en la UE, también puedes usar la plataforma de Resolución de Litigios en Línea de la Comisión Europea en <a href="https://ec.europa.eu/consumers/odr" rel="noopener">ec.europa.eu/consumers/odr</a>.</p>
+    <h2>11. Cambios</h2>
+    <p>Podemos actualizar estos Términos. Los cambios sustanciales se reflejarán en la fecha de "Última actualización" y, cuando proceda, se destacarán en la app. El uso continuado tras una actualización implica que aceptas los Términos revisados.</p>
+    <h2>12. Contacto</h2>
+    <p>Soporte general: <a href="mailto:support@via-l.com">support@via-l.com</a> · Privacidad: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a></p>
+  </div>
 
-  <h2>2. The service</h2>
-  <p>The <strong>VIA·L AI assistant</strong> is a general wellness and educational app. It lets you record self-reported wellness markers and, in the PRO tier, optionally read wellness metrics from Apple Health or Health Connect with your permission, and returns general nutrition and lifestyle suggestions generated by an artificial-intelligence model. It is offered in a free tier (VIO) and a paid subscription tier (PRO).</p>
+  <!-- ============ UK ============ -->
+  <div data-lang="uk">
+    <div class="page-eyebrow"><span>Умови надання послуг</span></div>
+    <h1>Умови надання послуг</h1>
+    <p class="page-date">VIA·L AI assistant · Останнє оновлення: 7 липня 2026</p>
+    <p class="intro">Ці Умови регулюють використання застосунку <strong>VIA·L AI assistant</strong>. Користуючись застосунком, ви їх приймаєте. Уважно прочитайте велнес-застереження в розділі 3.</p>
+    <h2>1. Хто ми</h2>
+    <p>Застосунок надає <strong>Марина Даценко</strong>, фізична особа-підприємець (ФОП), зареєстрована в Україні («ми»). Контакт: <a href="mailto:support@via-l.com">support@via-l.com</a>.</p>
+    <h2>2. Послуга</h2>
+    <p><strong>VIA·L AI assistant</strong> — це загальний велнес- та освітній застосунок. Він дозволяє записувати самозвітні велнес-показники і, у рівні PRO, за бажанням зчитувати велнес-метрики з Apple Health або Health Connect з вашого дозволу, та надає загальні поради щодо харчування й способу життя, згенеровані моделлю штучного інтелекту. Він пропонується у безкоштовному рівні (VIO) та платному рівні за підпискою (PRO).</p>
+    <h2>3. Велнес-застереження — важливо</h2>
+    <p>Застосунок <strong>не є медичним виробом</strong> і <strong>не</strong> надає медичних порад, діагностики, лікування чи фахового висновку. Його вміст призначений <strong>лише для загальної освіти та самодогляду</strong>. Він не замінює консультацію кваліфікованого фахівця.</p>
+    <ul>
+      <li>Завжди звертайтеся до фахівця, перш ніж змінювати харчування, добавки, фізичну активність чи спосіб життя, і перш ніж діяти за будь-чим із застосунку.</li>
+      <li>Ніколи не ігноруйте й не відкладайте фахову пораду через щось прочитане в застосунку.</li>
+      <li>Згенеровані ШІ поради можуть бути неповними чи неточними; покладайтеся на власне судження.</li>
+      <li>Застосунок не призначений виявляти, запобігати чи керувати будь-яким станом. У разі невідкладної ситуації зверніться до місцевих екстрених служб.</li>
+    </ul>
+    <h2>4. Право користування</h2>
+    <p>Для користування застосунком вам має бути <strong>18 років або більше</strong>. Користуючись ним, ви підтверджуєте відповідність цій вимозі.</p>
+    <h2>5. Підписки та платежі</h2>
+    <p>Рівень PRO — це платна підписка, придбана й керована через ваш магазин застосунків (Apple App Store або Google Play).</p>
+    <ul>
+      <li>Оплата стягується з вашого облікового запису магазину при підтвердженні покупки.</li>
+      <li>Підписки поновлюються автоматично, якщо ви не вимкнете автопоновлення щонайменше за 24 години до кінця поточного періоду.</li>
+      <li>Ви керуєте підпискою чи скасовуєте її в налаштуваннях облікового запису магазину; видалення застосунку не скасовує підписку.</li>
+      <li>Повернення коштів здійснює магазин згідно зі своїми правилами та вашими законними правами споживача.</li>
+    </ul>
+    <h2>6. Прийнятне використання</h2>
+    <p>Ви погоджуєтеся використовувати застосунок лише в законних, особистих цілях. Ви не можете зловживати застосунком, намагатися порушувати його роботу чи здійснювати зворотну розробку, або покладатися на нього як на медичну чи екстрену службу.</p>
+    <h2>7. Інтелектуальна власність</h2>
+    <p>Застосунок, його дизайн і вміст належать нам або нашим ліцензіарам і захищені законом. Ми надаємо вам особисту, без права передачі, відкличну ліцензію на користування застосунком. Введені вами велнес-дані залишаються вашими.</p>
+    <h2>8. Відмова від гарантій</h2>
+    <p>Застосунок надається <strong>«як є»</strong> та <strong>«як доступно»</strong>, без будь-яких гарантій, у максимально дозволеній законом мірі. Ми не гарантуємо, що поради точні, повні чи придатні для вас, або що застосунок працюватиме безперебійно й без помилок.</p>
+    <h2>9. Обмеження відповідальності</h2>
+    <p>У максимально дозволеній законом мірі ми не несемо відповідальності за непрямі, побічні чи наслідкові збитки, що виникають унаслідок користування застосунком чи покладання на його вміст. Ніщо в цих Умовах не обмежує відповідальність, яку не можна виключити за чинним законодавством, включно з вашими імперативними правами споживача.</p>
+    <h2>10. Застосовне право та ваші права споживача</h2>
+    <p>Ці Умови регулюються законодавством України. Це <strong>не</strong> позбавляє вас захисту імперативних норм захисту прав споживача вашої країни проживання, які продовжують діяти. Якщо ви в ЄС, ви також можете скористатися платформою онлайн-врегулювання спорів Європейської Комісії за адресою <a href="https://ec.europa.eu/consumers/odr" rel="noopener">ec.europa.eu/consumers/odr</a>.</p>
+    <h2>11. Зміни</h2>
+    <p>Ми можемо оновлювати ці Умови. Суттєві зміни відображатимуться у даті «Останнє оновлення» і, за потреби, виділятимуться в застосунку. Подальше користування після оновлення означає прийняття змінених Умов.</p>
+    <h2>12. Контакт</h2>
+    <p>Загальна підтримка: <a href="mailto:support@via-l.com">support@via-l.com</a> · Конфіденційність: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a></p>
+  </div>
 
-  <h2>3. Wellness disclaimer — important</h2>
-  <p>The app is <strong>not a medical device</strong> and does <strong>not</strong> provide medical advice, diagnosis, treatment or a professional opinion. Its content is for <strong>general education and self-care only</strong>. It does not replace consultation with a qualified professional.</p>
-  <ul>
-    <li>Always seek professional guidance before making changes to your nutrition, supplements, physical activity or lifestyle, and before acting on anything in the app.</li>
-    <li>Never disregard or delay professional advice because of something you read in the app.</li>
-    <li>AI-generated suggestions may be incomplete or inaccurate; use your own judgement.</li>
-    <li>The app is not intended to detect, prevent or manage any condition. In an emergency, contact your local emergency services.</li>
-  </ul>
+  <!-- ============ RU ============ -->
+  <div data-lang="ru">
+    <div class="page-eyebrow"><span>Условия оказания услуг</span></div>
+    <h1>Условия оказания услуг</h1>
+    <p class="page-date">VIA·L AI assistant · Последнее обновление: 7 июля 2026</p>
+    <p class="intro">Эти Условия регулируют использование приложения <strong>VIA·L AI assistant</strong>. Используя приложение, вы их принимаете. Внимательно прочтите велнес-оговорку в разделе 3.</p>
+    <h2>1. Кто мы</h2>
+    <p>Приложение предоставляет <strong>Марина Даценко</strong>, физическое лицо-предприниматель (ФОП), зарегистрированная в Украине («мы»). Контакт: <a href="mailto:support@via-l.com">support@via-l.com</a>.</p>
+    <h2>2. Услуга</h2>
+    <p><strong>VIA·L AI assistant</strong> — это общее велнес- и образовательное приложение. Оно позволяет записывать самостоятельно вводимые велнес-показатели и, в уровне PRO, по желанию считывать велнес-метрики из Apple Health или Health Connect с вашего разрешения, и выдаёт общие рекомендации по питанию и образу жизни, сформированные моделью искусственного интеллекта. Оно предлагается в бесплатном уровне (VIO) и платном уровне по подписке (PRO).</p>
+    <h2>3. Велнес-оговорка — важно</h2>
+    <p>Приложение <strong>не является медицинским изделием</strong> и <strong>не</strong> даёт медицинских советов, диагностики, лечения или профессионального заключения. Его содержимое предназначено <strong>только для общего образования и самопомощи</strong>. Оно не заменяет консультацию квалифицированного специалиста.</p>
+    <ul>
+      <li>Всегда обращайтесь к специалисту, прежде чем менять питание, добавки, физическую активность или образ жизни, и прежде чем действовать по чему-либо из приложения.</li>
+      <li>Никогда не игнорируйте и не откладывайте профессиональный совет из-за прочитанного в приложении.</li>
+      <li>Сформированные ИИ рекомендации могут быть неполными или неточными; полагайтесь на собственное суждение.</li>
+      <li>Приложение не предназначено выявлять, предотвращать или контролировать какое-либо состояние. В экстренной ситуации обратитесь в местные экстренные службы.</li>
+    </ul>
+    <h2>4. Право использования</h2>
+    <p>Для использования приложения вам должно быть <strong>18 лет или больше</strong>. Используя его, вы подтверждаете соответствие этому требованию.</p>
+    <h2>5. Подписки и платежи</h2>
+    <p>Уровень PRO — это платная подписка, приобретаемая и управляемая через ваш магазин приложений (Apple App Store или Google Play).</p>
+    <ul>
+      <li>Оплата списывается с вашего аккаунта магазина при подтверждении покупки.</li>
+      <li>Подписки продлеваются автоматически, если вы не отключите автопродление не менее чем за 24 часа до конца текущего периода.</li>
+      <li>Вы управляете подпиской или отменяете её в настройках аккаунта магазина; удаление приложения не отменяет подписку.</li>
+      <li>Возвраты обрабатывает магазин согласно своим правилам и вашим законным правам потребителя.</li>
+    </ul>
+    <h2>6. Приемлемое использование</h2>
+    <p>Вы соглашаетесь использовать приложение только в законных, личных целях. Вы не вправе злоупотреблять приложением, пытаться нарушать его работу или проводить обратную разработку, а также полагаться на него как на медицинскую или экстренную службу.</p>
+    <h2>7. Интеллектуальная собственность</h2>
+    <p>Приложение, его дизайн и содержимое принадлежат нам или нашим лицензиарам и защищены законом. Мы предоставляем вам личную, непередаваемую, отзывную лицензию на использование приложения. Введённые вами велнес-данные остаются вашими.</p>
+    <h2>8. Отказ от гарантий</h2>
+    <p>Приложение предоставляется <strong>«как есть»</strong> и <strong>«как доступно»</strong>, без каких-либо гарантий, в максимально допустимой законом мере. Мы не гарантируем, что рекомендации точны, полны или подходят вам, или что приложение будет работать без перерывов и ошибок.</p>
+    <h2>9. Ограничение ответственности</h2>
+    <p>В максимально допустимой законом мере мы не несём ответственности за косвенные, случайные или последующие убытки, возникающие из использования приложения или доверия к его содержимому. Ничто в этих Условиях не ограничивает ответственность, которую нельзя исключить по применимому праву, включая ваши императивные права потребителя.</p>
+    <h2>10. Применимое право и ваши права потребителя</h2>
+    <p>Эти Условия регулируются законодательством Украины. Это <strong>не</strong> лишает вас защиты императивных норм защиты прав потребителя вашей страны проживания, которые продолжают действовать. Если вы в ЕС, вы также можете воспользоваться платформой онлайн-урегулирования споров Европейской комиссии по адресу <a href="https://ec.europa.eu/consumers/odr" rel="noopener">ec.europa.eu/consumers/odr</a>.</p>
+    <h2>11. Изменения</h2>
+    <p>Мы можем обновлять эти Условия. Существенные изменения отразятся в дате «Последнее обновление» и, при необходимости, будут выделены в приложении. Продолжение использования после обновления означает принятие изменённых Условий.</p>
+    <h2>12. Контакт</h2>
+    <p>Общая поддержка: <a href="mailto:support@via-l.com">support@via-l.com</a> · Конфиденциальность: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a></p>
+  </div>
 
-  <h2>4. Eligibility</h2>
-  <p>You must be <strong>18 or older</strong> to use the app. By using it, you confirm that you meet this requirement.</p>
+  <!-- ============ DE ============ -->
+  <div data-lang="de">
+    <div class="page-eyebrow"><span>Nutzungsbedingungen</span></div>
+    <h1>Nutzungsbedingungen</h1>
+    <p class="page-date">VIA·L AI assistant · Zuletzt aktualisiert: 7. Juli 2026</p>
+    <p class="intro">Diese Bedingungen regeln deine Nutzung der App <strong>VIA·L AI assistant</strong>. Mit der Nutzung stimmst du ihnen zu. Bitte lies den Wellness-Hinweis in Abschnitt 3 aufmerksam.</p>
+    <h2>1. Wer wir sind</h2>
+    <p>Die App wird bereitgestellt von <strong>Maryna Datsenko</strong>, Einzelunternehmerin (FOP), registriert in der Ukraine („wir"). Kontakt: <a href="mailto:support@via-l.com">support@via-l.com</a>.</p>
+    <h2>2. Der Dienst</h2>
+    <p>Die <strong>VIA·L AI assistant</strong> ist eine allgemeine Wellness- und Bildungs-App. Du kannst selbst angegebene Wellness-Marker erfassen und in der PRO-Stufe optional mit deiner Erlaubnis Wellness-Werte aus Apple Health oder Health Connect lesen; die App liefert allgemeine Ernährungs- und Lebensstil-Empfehlungen, die von einem KI-Modell erzeugt werden. Sie wird in einer kostenlosen Stufe (VIO) und einer kostenpflichtigen Abo-Stufe (PRO) angeboten.</p>
+    <h2>3. Wellness-Hinweis — wichtig</h2>
+    <p>Die App ist <strong>kein Medizinprodukt</strong> und bietet <strong>keine</strong> medizinische Beratung, Diagnose, Behandlung oder fachliche Meinung. Ihre Inhalte dienen <strong>nur der allgemeinen Bildung und Selbstfürsorge</strong>. Sie ersetzt nicht die Konsultation einer qualifizierten Fachkraft.</p>
+    <ul>
+      <li>Hole stets fachlichen Rat ein, bevor du Ernährung, Nahrungsergänzung, Bewegung oder Lebensstil änderst und bevor du auf Inhalte der App reagierst.</li>
+      <li>Ignoriere oder verzögere fachlichen Rat niemals wegen etwas, das du in der App liest.</li>
+      <li>KI-generierte Empfehlungen können unvollständig oder ungenau sein; nutze dein eigenes Urteil.</li>
+      <li>Die App ist nicht dazu bestimmt, einen Zustand zu erkennen, zu verhindern oder zu behandeln. Kontaktiere im Notfall die örtlichen Notdienste.</li>
+    </ul>
+    <h2>4. Zugangsvoraussetzung</h2>
+    <p>Du musst <strong>18 Jahre oder älter</strong> sein, um die App zu nutzen. Mit der Nutzung bestätigst du, diese Voraussetzung zu erfüllen.</p>
+    <h2>5. Abonnements und Zahlungen</h2>
+    <p>Die PRO-Stufe ist ein kostenpflichtiges Abo, das über deinen App-Store (Apple App Store oder Google Play) gekauft und verwaltet wird.</p>
+    <ul>
+      <li>Die Zahlung wird bei Kaufbestätigung deinem App-Store-Konto belastet.</li>
+      <li>Abos verlängern sich automatisch, sofern du die automatische Verlängerung nicht mindestens 24 Stunden vor Ende des laufenden Zeitraums deaktivierst.</li>
+      <li>Du verwaltest oder kündigst das Abo in den Einstellungen deines App-Store-Kontos; das Löschen der App kündigt kein Abo.</li>
+      <li>Rückerstattungen wickelt der App-Store nach seinen Richtlinien und deinen gesetzlichen Verbraucherrechten ab.</li>
+    </ul>
+    <h2>6. Zulässige Nutzung</h2>
+    <p>Du verpflichtest dich, die App nur zu rechtmäßigen, persönlichen Zwecken zu nutzen. Du darfst die App nicht missbrauchen, ihren Betrieb stören, sie zurückentwickeln oder dich auf sie als medizinischen oder Notfalldienst verlassen.</p>
+    <h2>7. Geistiges Eigentum</h2>
+    <p>Die App, ihr Design und ihre Inhalte gehören uns oder unseren Lizenzgebern und sind gesetzlich geschützt. Wir gewähren dir eine persönliche, nicht übertragbare, widerrufliche Lizenz zur Nutzung der App. Die von dir eingegebenen Wellness-Daten bleiben deine.</p>
+    <h2>8. Gewährleistungsausschluss</h2>
+    <p>Die App wird <strong>„wie besehen"</strong> und <strong>„wie verfügbar"</strong> bereitgestellt, ohne jegliche Gewährleistung, soweit gesetzlich zulässig. Wir gewährleisten nicht, dass Empfehlungen zutreffend, vollständig oder für dich geeignet sind oder dass die App unterbrechungs- und fehlerfrei läuft.</p>
+    <h2>9. Haftungsbeschränkung</h2>
+    <p>Soweit gesetzlich zulässig, haften wir nicht für indirekte, zufällige oder Folgeschäden aus der Nutzung der App oder dem Vertrauen auf ihre Inhalte. Nichts in diesen Bedingungen beschränkt eine Haftung, die nach geltendem Recht nicht ausgeschlossen werden kann, einschließlich deiner zwingenden Verbraucherrechte.</p>
+    <h2>10. Anwendbares Recht und deine Verbraucherrechte</h2>
+    <p>Diese Bedingungen unterliegen dem Recht der Ukraine. Dies <strong>nimmt</strong> dir nicht den Schutz der zwingenden Verbraucherschutzvorschriften deines Wohnsitzlandes, die weiterhin gelten. In der EU kannst du auch die Online-Streitbeilegungsplattform der Europäischen Kommission unter <a href="https://ec.europa.eu/consumers/odr" rel="noopener">ec.europa.eu/consumers/odr</a> nutzen.</p>
+    <h2>11. Änderungen</h2>
+    <p>Wir können diese Bedingungen aktualisieren. Wesentliche Änderungen werden im Datum „Zuletzt aktualisiert" widergespiegelt und ggf. in der App hervorgehoben. Die weitere Nutzung nach einer Aktualisierung bedeutet, dass du die geänderten Bedingungen akzeptierst.</p>
+    <h2>12. Kontakt</h2>
+    <p>Allgemeiner Support: <a href="mailto:support@via-l.com">support@via-l.com</a> · Datenschutz: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a></p>
+  </div>
 
-  <h2>5. Subscriptions and payments</h2>
-  <p>The PRO tier is a paid subscription purchased and managed through your app store (Apple App Store or Google Play).</p>
-  <ul>
-    <li>Payment is charged to your app-store account at confirmation of purchase.</li>
-    <li>Subscriptions renew automatically unless you turn off auto-renew at least 24 hours before the end of the current period.</li>
-    <li>You manage or cancel your subscription in your app-store account settings; deleting the app does not cancel a subscription.</li>
-    <li>Refunds are handled by the app store under its policies and your statutory consumer rights.</li>
-  </ul>
+  <!-- ============ PT ============ -->
+  <div data-lang="pt">
+    <div class="page-eyebrow"><span>Termos de Serviço</span></div>
+    <h1>Termos de Serviço</h1>
+    <p class="page-date">VIA·L AI assistant · Última atualização: 7 de julho de 2026</p>
+    <p class="intro">Estes Termos regem o seu uso da app <strong>VIA·L AI assistant</strong>. Ao usar a app, aceita-os. Leia com atenção o aviso de bem-estar na secção 3.</p>
+    <h2>1. Quem somos</h2>
+    <p>A app é fornecida por <strong>Maryna Datsenko</strong>, Empresária em Nome Individual (FOP) registada na Ucrânia ("nós"). Contacto: <a href="mailto:support@via-l.com">support@via-l.com</a>.</p>
+    <h2>2. O serviço</h2>
+    <p>A <strong>VIA·L AI assistant</strong> é uma app geral de bem-estar e educação. Permite registar marcadores de bem-estar autodeclarados e, no nível PRO, ler opcionalmente métricas de bem-estar do Apple Health ou Health Connect com a sua permissão, e devolve sugestões gerais de nutrição e estilo de vida geradas por um modelo de inteligência artificial. É oferecida num nível gratuito (VIO) e num nível de subscrição pago (PRO).</p>
+    <h2>3. Aviso de bem-estar — importante</h2>
+    <p>A app <strong>não é um dispositivo médico</strong> e <strong>não</strong> fornece aconselhamento médico, diagnóstico, tratamento ou opinião profissional. O seu conteúdo destina-se <strong>apenas a educação geral e autocuidado</strong>. Não substitui a consulta de um profissional qualificado.</p>
+    <ul>
+      <li>Procure sempre orientação profissional antes de alterar a sua nutrição, suplementos, atividade física ou estilo de vida, e antes de agir com base em algo da app.</li>
+      <li>Nunca ignore nem adie o aconselhamento profissional por causa de algo que leu na app.</li>
+      <li>As sugestões geradas por IA podem ser incompletas ou imprecisas; use o seu próprio critério.</li>
+      <li>A app não se destina a detetar, prevenir ou gerir qualquer condição. Numa emergência, contacte os serviços de emergência locais.</li>
+    </ul>
+    <h2>4. Elegibilidade</h2>
+    <p>Tem de ter <strong>18 anos ou mais</strong> para usar a app. Ao usá-la, confirma que cumpre este requisito.</p>
+    <h2>5. Subscrições e pagamentos</h2>
+    <p>O nível PRO é uma subscrição paga adquirida e gerida através da sua loja de apps (Apple App Store ou Google Play).</p>
+    <ul>
+      <li>O pagamento é cobrado à sua conta da loja na confirmação da compra.</li>
+      <li>As subscrições renovam-se automaticamente, salvo se desativar a renovação automática pelo menos 24 horas antes do fim do período atual.</li>
+      <li>Gere ou cancela a subscrição nas definições da sua conta da loja; apagar a app não cancela a subscrição.</li>
+      <li>Os reembolsos são tratados pela loja segundo as suas políticas e os seus direitos legais de consumidor.</li>
+    </ul>
+    <h2>6. Uso aceitável</h2>
+    <p>Concorda em usar a app apenas para fins lícitos e pessoais. Não pode utilizá-la indevidamente, tentar perturbá-la ou fazer engenharia inversa, nem confiar nela como serviço médico ou de emergência.</p>
+    <h2>7. Propriedade intelectual</h2>
+    <p>A app, o seu design e conteúdo pertencem-nos ou aos nossos licenciadores e estão protegidos por lei. Concedemos-lhe uma licença pessoal, intransmissível e revogável para usar a app. Os dados de bem-estar que introduz continuam a ser seus.</p>
+    <h2>8. Exclusão de garantias</h2>
+    <p>A app é fornecida <strong>"tal como está"</strong> e <strong>"conforme disponível"</strong>, sem garantias de qualquer tipo, na máxima medida permitida por lei. Não garantimos que as sugestões sejam exatas, completas ou adequadas para si, nem que a app funcione sem interrupções ou erros.</p>
+    <h2>9. Limitação de responsabilidade</h2>
+    <p>Na máxima medida permitida por lei, não somos responsáveis por danos indiretos, incidentais ou consequenciais decorrentes do uso da app ou da confiança no seu conteúdo. Nada nestes Termos limita a responsabilidade que não possa ser excluída ao abrigo da lei aplicável, incluindo os seus direitos imperativos de consumidor.</p>
+    <h2>10. Lei aplicável e os seus direitos de consumidor</h2>
+    <p>Estes Termos regem-se pelas leis da Ucrânia. Isto <strong>não</strong> o priva da proteção das normas imperativas de defesa do consumidor do seu país de residência, que continuam a aplicar-se. Se estiver na UE, pode ainda usar a plataforma de Resolução de Litígios em Linha da Comissão Europeia em <a href="https://ec.europa.eu/consumers/odr" rel="noopener">ec.europa.eu/consumers/odr</a>.</p>
+    <h2>11. Alterações</h2>
+    <p>Podemos atualizar estes Termos. Alterações materiais serão refletidas na data de "Última atualização" e, quando adequado, destacadas na app. O uso continuado após uma atualização significa que aceita os Termos revistos.</p>
+    <h2>12. Contacto</h2>
+    <p>Suporte geral: <a href="mailto:support@via-l.com">support@via-l.com</a> · Privacidade: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a></p>
+  </div>
 
-  <h2>6. Acceptable use</h2>
-  <p>You agree to use the app only for lawful, personal purposes. You may not misuse the app, attempt to disrupt or reverse-engineer it, or rely on it as a medical or emergency service.</p>
+  <!-- ============ FR ============ -->
+  <div data-lang="fr">
+    <div class="page-eyebrow"><span>Conditions d'utilisation</span></div>
+    <h1>Conditions d'utilisation</h1>
+    <p class="page-date">VIA·L AI assistant · Dernière mise à jour : 7 juillet 2026</p>
+    <p class="intro">Ces Conditions régissent votre utilisation de l'application <strong>VIA·L AI assistant</strong>. En utilisant l'application, vous les acceptez. Veuillez lire attentivement l'avertissement bien-être à la section 3.</p>
+    <h2>1. Qui nous sommes</h2>
+    <p>L'application est fournie par <strong>Maryna Datsenko</strong>, entrepreneure individuelle (FOP) enregistrée en Ukraine (« nous »). Contact : <a href="mailto:support@via-l.com">support@via-l.com</a>.</p>
+    <h2>2. Le service</h2>
+    <p>La <strong>VIA·L AI assistant</strong> est une application générale de bien-être et d'éducation. Elle vous permet d'enregistrer des marqueurs de bien-être auto-déclarés et, dans le niveau PRO, de lire en option des mesures de bien-être depuis Apple Health ou Health Connect avec votre autorisation, et renvoie des suggestions générales de nutrition et de mode de vie générées par un modèle d'intelligence artificielle. Elle est proposée en niveau gratuit (VIO) et en niveau payant par abonnement (PRO).</p>
+    <h2>3. Avertissement bien-être — important</h2>
+    <p>L'application <strong>n'est pas un dispositif médical</strong> et ne fournit <strong>pas</strong> de conseil médical, de diagnostic, de traitement ni d'avis professionnel. Son contenu est destiné <strong>uniquement à l'éducation générale et à l'auto-soin</strong>. Elle ne remplace pas la consultation d'un professionnel qualifié.</p>
+    <ul>
+      <li>Demandez toujours l'avis d'un professionnel avant de modifier votre nutrition, vos compléments, votre activité physique ou votre mode de vie, et avant d'agir sur la base d'un élément de l'application.</li>
+      <li>N'ignorez jamais et ne retardez jamais un avis professionnel à cause de ce que vous lisez dans l'application.</li>
+      <li>Les suggestions générées par l'IA peuvent être incomplètes ou inexactes ; faites preuve de votre propre jugement.</li>
+      <li>L'application n'est pas destinée à détecter, prévenir ou gérer une quelconque affection. En cas d'urgence, contactez les services d'urgence locaux.</li>
+    </ul>
+    <h2>4. Admissibilité</h2>
+    <p>Vous devez avoir <strong>18 ans ou plus</strong> pour utiliser l'application. En l'utilisant, vous confirmez remplir cette condition.</p>
+    <h2>5. Abonnements et paiements</h2>
+    <p>Le niveau PRO est un abonnement payant acheté et géré via votre boutique d'applications (Apple App Store ou Google Play).</p>
+    <ul>
+      <li>Le paiement est prélevé sur votre compte de boutique à la confirmation de l'achat.</li>
+      <li>Les abonnements se renouvellent automatiquement, sauf si vous désactivez le renouvellement automatique au moins 24 heures avant la fin de la période en cours.</li>
+      <li>Vous gérez ou résiliez l'abonnement dans les réglages de votre compte de boutique ; supprimer l'application ne résilie pas l'abonnement.</li>
+      <li>Les remboursements sont gérés par la boutique selon ses politiques et vos droits légaux de consommateur.</li>
+    </ul>
+    <h2>6. Utilisation acceptable</h2>
+    <p>Vous acceptez d'utiliser l'application uniquement à des fins licites et personnelles. Vous ne pouvez pas en faire un usage abusif, tenter de la perturber ou de la désosser, ni vous y fier comme à un service médical ou d'urgence.</p>
+    <h2>7. Propriété intellectuelle</h2>
+    <p>L'application, sa conception et son contenu nous appartiennent ou appartiennent à nos concédants et sont protégés par la loi. Nous vous accordons une licence personnelle, non transférable et révocable d'utilisation de l'application. Les données de bien-être que vous saisissez restent les vôtres.</p>
+    <h2>8. Exclusion de garanties</h2>
+    <p>L'application est fournie <strong>« en l'état »</strong> et <strong>« selon disponibilité »</strong>, sans garantie d'aucune sorte, dans toute la mesure permise par la loi. Nous ne garantissons pas que les suggestions soient exactes, complètes ou adaptées à vous, ni que l'application soit ininterrompue ou sans erreur.</p>
+    <h2>9. Limitation de responsabilité</h2>
+    <p>Dans toute la mesure permise par la loi, nous ne sommes pas responsables des dommages indirects, accessoires ou consécutifs découlant de votre utilisation de l'application ou de la confiance accordée à son contenu. Rien dans ces Conditions ne limite une responsabilité qui ne peut être exclue en vertu du droit applicable, y compris vos droits impératifs de consommateur.</p>
+    <h2>10. Droit applicable et vos droits de consommateur</h2>
+    <p>Ces Conditions sont régies par le droit ukrainien. Cela <strong>ne</strong> vous prive pas de la protection des règles impératives de protection des consommateurs de votre pays de résidence, qui continuent de s'appliquer. Si vous êtes dans l'UE, vous pouvez aussi utiliser la plateforme de Règlement en Ligne des Litiges de la Commission européenne à l'adresse <a href="https://ec.europa.eu/consumers/odr" rel="noopener">ec.europa.eu/consumers/odr</a>.</p>
+    <h2>11. Modifications</h2>
+    <p>Nous pouvons mettre à jour ces Conditions. Les changements importants seront reflétés dans la date de « Dernière mise à jour » et, le cas échéant, signalés dans l'application. La poursuite de l'utilisation après une mise à jour vaut acceptation des Conditions révisées.</p>
+    <h2>12. Contact</h2>
+    <p>Support général : <a href="mailto:support@via-l.com">support@via-l.com</a> · Confidentialité : <a href="mailto:privacy@via-l.com">privacy@via-l.com</a></p>
+  </div>
 
-  <h2>7. Intellectual property</h2>
-  <p>The app, its design and content are owned by us or our licensors and are protected by law. We grant you a personal, non-transferable, revocable licence to use the app. The wellness inputs you enter remain yours.</p>
+  <!-- ============ PL ============ -->
+  <div data-lang="pl">
+    <div class="page-eyebrow"><span>Warunki korzystania</span></div>
+    <h1>Warunki korzystania</h1>
+    <p class="page-date">VIA·L AI assistant · Ostatnia aktualizacja: 7 lipca 2026</p>
+    <p class="intro">Niniejsze Warunki regulują korzystanie z aplikacji <strong>VIA·L AI assistant</strong>. Korzystając z aplikacji, akceptujesz je. Prosimy uważnie przeczytać zastrzeżenie wellness w sekcji 3.</p>
+    <h2>1. Kim jesteśmy</h2>
+    <p>Aplikację udostępnia <strong>Maryna Datsenko</strong>, jednoosobowa działalność gospodarcza (FOP) zarejestrowana na Ukrainie („my"). Kontakt: <a href="mailto:support@via-l.com">support@via-l.com</a>.</p>
+    <h2>2. Usługa</h2>
+    <p><strong>VIA·L AI assistant</strong> to ogólna aplikacja wellness i edukacyjna. Pozwala rejestrować samodzielnie podawane wskaźniki wellness oraz — w poziomie PRO — opcjonalnie odczytywać wskaźniki wellness z Apple Health lub Health Connect za Twoją zgodą, i zwraca ogólne sugestie dotyczące odżywiania i stylu życia wygenerowane przez model sztucznej inteligencji. Jest oferowana w poziomie bezpłatnym (VIO) i płatnym poziomie subskrypcji (PRO).</p>
+    <h2>3. Zastrzeżenie wellness — ważne</h2>
+    <p>Aplikacja <strong>nie jest wyrobem medycznym</strong> i <strong>nie</strong> udziela porad medycznych, diagnozy, leczenia ani opinii specjalisty. Jej treść służy <strong>wyłącznie ogólnej edukacji i samopomocy</strong>. Nie zastępuje konsultacji z wykwalifikowanym specjalistą.</p>
+    <ul>
+      <li>Zawsze zasięgnij porady specjalisty przed zmianą odżywiania, suplementów, aktywności fizycznej lub stylu życia oraz przed działaniem na podstawie czegokolwiek z aplikacji.</li>
+      <li>Nigdy nie lekceważ ani nie odkładaj porady specjalisty z powodu czegoś przeczytanego w aplikacji.</li>
+      <li>Sugestie wygenerowane przez AI mogą być niekompletne lub niedokładne; kieruj się własnym osądem.</li>
+      <li>Aplikacja nie służy do wykrywania, zapobiegania ani leczenia jakiegokolwiek stanu. W nagłym przypadku skontaktuj się z lokalnymi służbami ratunkowymi.</li>
+    </ul>
+    <h2>4. Uprawnienie do korzystania</h2>
+    <p>Aby korzystać z aplikacji, musisz mieć <strong>ukończone 18 lat</strong>. Korzystając z niej, potwierdzasz spełnienie tego wymogu.</p>
+    <h2>5. Subskrypcje i płatności</h2>
+    <p>Poziom PRO to płatna subskrypcja kupowana i zarządzana przez Twój sklep z aplikacjami (Apple App Store lub Google Play).</p>
+    <ul>
+      <li>Płatność jest pobierana z Twojego konta w sklepie przy potwierdzeniu zakupu.</li>
+      <li>Subskrypcje odnawiają się automatycznie, chyba że wyłączysz autoodnawianie co najmniej 24 godziny przed końcem bieżącego okresu.</li>
+      <li>Subskrypcją zarządzasz lub anulujesz ją w ustawieniach konta w sklepie; usunięcie aplikacji nie anuluje subskrypcji.</li>
+      <li>Zwroty obsługuje sklep zgodnie ze swoimi zasadami i Twoimi ustawowymi prawami konsumenta.</li>
+    </ul>
+    <h2>6. Dozwolone korzystanie</h2>
+    <p>Zgadzasz się korzystać z aplikacji wyłącznie w celach zgodnych z prawem i osobistych. Nie możesz nadużywać aplikacji, próbować zakłócać jej działania lub poddawać jej inżynierii wstecznej, ani polegać na niej jak na usłudze medycznej lub ratunkowej.</p>
+    <h2>7. Własność intelektualna</h2>
+    <p>Aplikacja, jej projekt i treść należą do nas lub naszych licencjodawców i są chronione prawem. Udzielamy Ci osobistej, nieprzenoszalnej, odwoływalnej licencji na korzystanie z aplikacji. Wprowadzone przez Ciebie dane wellness pozostają Twoje.</p>
+    <h2>8. Wyłączenie gwarancji</h2>
+    <p>Aplikacja jest udostępniana <strong>„w stanie, w jakim jest"</strong> i <strong>„w miarę dostępności"</strong>, bez jakichkolwiek gwarancji, w najszerszym zakresie dozwolonym prawem. Nie gwarantujemy, że sugestie są dokładne, kompletne lub odpowiednie dla Ciebie, ani że aplikacja będzie działać nieprzerwanie i bezbłędnie.</p>
+    <h2>9. Ograniczenie odpowiedzialności</h2>
+    <p>W najszerszym zakresie dozwolonym prawem nie ponosimy odpowiedzialności za szkody pośrednie, uboczne ani następcze wynikające z korzystania z aplikacji lub polegania na jej treści. Żadne z postanowień tych Warunków nie ogranicza odpowiedzialności, której nie można wyłączyć na mocy obowiązującego prawa, w tym Twoich bezwzględnych praw konsumenta.</p>
+    <h2>10. Prawo właściwe i Twoje prawa konsumenta</h2>
+    <p>Niniejsze Warunki podlegają prawu Ukrainy. <strong>Nie</strong> pozbawia to Cię ochrony wynikającej z bezwzględnie obowiązujących przepisów o ochronie konsumentów Twojego kraju zamieszkania, które nadal obowiązują. Jeśli jesteś w UE, możesz też skorzystać z platformy Internetowego Rozstrzygania Sporów Komisji Europejskiej pod adresem <a href="https://ec.europa.eu/consumers/odr" rel="noopener">ec.europa.eu/consumers/odr</a>.</p>
+    <h2>11. Zmiany</h2>
+    <p>Możemy aktualizować niniejsze Warunki. Istotne zmiany zostaną odzwierciedlone w dacie „Ostatnia aktualizacja" i w stosownych przypadkach wyróżnione w aplikacji. Dalsze korzystanie po aktualizacji oznacza akceptację zmienionych Warunków.</p>
+    <h2>12. Kontakt</h2>
+    <p>Wsparcie ogólne: <a href="mailto:support@via-l.com">support@via-l.com</a> · Prywatność: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a></p>
+  </div>
 
-  <h2>8. Disclaimer of warranties</h2>
-  <p>The app is provided <strong>"as is"</strong> and <strong>"as available"</strong>, without warranties of any kind, to the fullest extent permitted by law. We do not warrant that suggestions are accurate, complete or suitable for you, or that the app will be uninterrupted or error-free.</p>
+  <!-- ============ IT ============ -->
+  <div data-lang="it">
+    <div class="page-eyebrow"><span>Termini di servizio</span></div>
+    <h1>Termini di servizio</h1>
+    <p class="page-date">VIA·L AI assistant · Ultimo aggiornamento: 7 luglio 2026</p>
+    <p class="intro">Questi Termini regolano il tuo uso dell'app <strong>VIA·L AI assistant</strong>. Usando l'app li accetti. Leggi con attenzione l'avviso benessere alla sezione 3.</p>
+    <h2>1. Chi siamo</h2>
+    <p>L'app è fornita da <strong>Maryna Datsenko</strong>, imprenditrice individuale (FOP) registrata in Ucraina ("noi"). Contatto: <a href="mailto:support@via-l.com">support@via-l.com</a>.</p>
+    <h2>2. Il servizio</h2>
+    <p>La <strong>VIA·L AI assistant</strong> è un'app generale di benessere ed educazione. Ti consente di registrare indicatori di benessere autodichiarati e, nel livello PRO, di leggere facoltativamente metriche di benessere da Apple Health o Health Connect con il tuo permesso, e restituisce suggerimenti generali su nutrizione e stile di vita generati da un modello di intelligenza artificiale. È offerta in un livello gratuito (VIO) e in un livello a pagamento in abbonamento (PRO).</p>
+    <h2>3. Avviso benessere — importante</h2>
+    <p>L'app <strong>non è un dispositivo medico</strong> e <strong>non</strong> fornisce consulenza medica, diagnosi, trattamento o parere professionale. I suoi contenuti sono <strong>solo per educazione generale e autocura</strong>. Non sostituisce la consulenza di un professionista qualificato.</p>
+    <ul>
+      <li>Chiedi sempre il parere di un professionista prima di modificare nutrizione, integratori, attività fisica o stile di vita e prima di agire in base a qualcosa nell'app.</li>
+      <li>Non ignorare né rinviare mai un parere professionale per qualcosa che leggi nell'app.</li>
+      <li>I suggerimenti generati dall'IA possono essere incompleti o imprecisi; usa il tuo giudizio.</li>
+      <li>L'app non è destinata a rilevare, prevenire o gestire alcuna condizione. In caso di emergenza, contatta i servizi di emergenza locali.</li>
+    </ul>
+    <h2>4. Requisiti</h2>
+    <p>Devi avere <strong>18 anni o più</strong> per usare l'app. Usandola, confermi di soddisfare questo requisito.</p>
+    <h2>5. Abbonamenti e pagamenti</h2>
+    <p>Il livello PRO è un abbonamento a pagamento acquistato e gestito tramite il tuo app store (Apple App Store o Google Play).</p>
+    <ul>
+      <li>Il pagamento è addebitato al tuo account dello store alla conferma dell'acquisto.</li>
+      <li>Gli abbonamenti si rinnovano automaticamente salvo che tu disattivi il rinnovo automatico almeno 24 ore prima della fine del periodo in corso.</li>
+      <li>Gestisci o annulli l'abbonamento nelle impostazioni dell'account dello store; eliminare l'app non annulla l'abbonamento.</li>
+      <li>I rimborsi sono gestiti dallo store secondo le sue politiche e i tuoi diritti di consumatore previsti dalla legge.</li>
+    </ul>
+    <h2>6. Uso consentito</h2>
+    <p>Accetti di usare l'app solo per scopi leciti e personali. Non puoi usarla in modo improprio, tentare di comprometterla o decodificarla, né farvi affidamento come servizio medico o di emergenza.</p>
+    <h2>7. Proprietà intellettuale</h2>
+    <p>L'app, il suo design e i contenuti appartengono a noi o ai nostri licenzianti e sono protetti dalla legge. Ti concediamo una licenza personale, non trasferibile e revocabile per usare l'app. I dati di benessere che inserisci restano tuoi.</p>
+    <h2>8. Esclusione di garanzie</h2>
+    <p>L'app è fornita <strong>"così com'è"</strong> e <strong>"come disponibile"</strong>, senza garanzie di alcun tipo, nella massima misura consentita dalla legge. Non garantiamo che i suggerimenti siano accurati, completi o adatti a te, né che l'app funzioni senza interruzioni o errori.</p>
+    <h2>9. Limitazione di responsabilità</h2>
+    <p>Nella massima misura consentita dalla legge, non siamo responsabili per danni indiretti, incidentali o consequenziali derivanti dall'uso dell'app o dall'affidamento sui suoi contenuti. Nulla in questi Termini limita la responsabilità che non può essere esclusa dalla legge applicabile, inclusi i tuoi diritti inderogabili di consumatore.</p>
+    <h2>10. Legge applicabile e i tuoi diritti di consumatore</h2>
+    <p>Questi Termini sono regolati dalle leggi dell'Ucraina. Ciò <strong>non</strong> ti priva della protezione delle norme inderogabili di tutela del consumatore del tuo paese di residenza, che continuano ad applicarsi. Se sei nell'UE, puoi anche usare la piattaforma di Risoluzione delle Controversie Online della Commissione europea all'indirizzo <a href="https://ec.europa.eu/consumers/odr" rel="noopener">ec.europa.eu/consumers/odr</a>.</p>
+    <h2>11. Modifiche</h2>
+    <p>Possiamo aggiornare questi Termini. Le modifiche sostanziali saranno riflesse nella data di "Ultimo aggiornamento" e, ove opportuno, evidenziate nell'app. L'uso continuato dopo un aggiornamento significa che accetti i Termini rivisti.</p>
+    <h2>12. Contatto</h2>
+    <p>Supporto generale: <a href="mailto:support@via-l.com">support@via-l.com</a> · Privacy: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a></p>
+  </div>
 
-  <h2>9. Limitation of liability</h2>
-  <p>To the fullest extent permitted by law, we are not liable for any indirect, incidental or consequential damages arising from your use of the app or reliance on its content. Nothing in these Terms limits liability that cannot be excluded under applicable law, including your mandatory consumer rights.</p>
+  <!-- ============ HE ============ -->
+  <div data-lang="he">
+    <div class="page-eyebrow"><span>תנאי שימוש</span></div>
+    <h1>תנאי שימוש</h1>
+    <p class="page-date">VIA·L AI assistant · עודכן לאחרונה: 7 ביולי 2026</p>
+    <p class="intro">תנאים אלו חלים על השימוש שלך באפליקציית <strong>VIA·L AI assistant</strong>. בשימוש באפליקציה אתה מסכים להם. אנא קרא בעיון את הבהרת הרווחה בסעיף 3.</p>
+    <h2>1. מי אנחנו</h2>
+    <p>האפליקציה מסופקת על ידי <strong>מרינה דצנקו</strong>, עוסקת יחידה (FOP) הרשומה באוקראינה («אנחנו»). יצירת קשר: <a href="mailto:support@via-l.com">support@via-l.com</a>.</p>
+    <h2>2. השירות</h2>
+    <p><strong>VIA·L AI assistant</strong> היא אפליקציה כללית לרווחה וחינוך. היא מאפשרת לרשום סמני רווחה שדיווחת בעצמך, וברמת PRO — לקרוא באופן אופציונלי נתוני רווחה מ-Apple Health או Health Connect באישורך, ומחזירה הצעות כלליות בתזונה ואורח חיים שנוצרו על ידי מודל בינה מלאכותית. היא מוצעת ברמה חינמית (VIO) וברמת מנוי בתשלום (PRO).</p>
+    <h2>3. הבהרת רווחה — חשוב</h2>
+    <p>האפליקציה <strong>אינה מכשיר רפואי</strong> ו<strong>אינה</strong> מספקת ייעוץ רפואי, אבחון, טיפול או חוות דעת מקצועית. תוכנה נועד <strong>לחינוך כללי וטיפול עצמי בלבד</strong>. הוא אינו מחליף התייעצות עם איש מקצוע מוסמך.</p>
+    <ul>
+      <li>תמיד היוועץ באיש מקצוע לפני שינוי תזונה, תוספים, פעילות גופנית או אורח חיים, ולפני פעולה על סמך דבר מה באפליקציה.</li>
+      <li>לעולם אל תתעלם או תדחה ייעוץ מקצועי בגלל דבר שקראת באפליקציה.</li>
+      <li>הצעות שנוצרו על ידי AI עשויות להיות חלקיות או לא מדויקות; הפעל שיקול דעת עצמאי.</li>
+      <li>האפליקציה אינה מיועדת לזהות, למנוע או לנהל מצב כלשהו. במקרה חירום, פנה לשירותי החירום המקומיים.</li>
+    </ul>
+    <h2>4. כשירות</h2>
+    <p>עליך להיות <strong>בן 18 ומעלה</strong> כדי להשתמש באפליקציה. בשימוש בה אתה מאשר כי אתה עומד בדרישה זו.</p>
+    <h2>5. מנויים ותשלומים</h2>
+    <p>רמת PRO היא מנוי בתשלום הנרכש ומנוהל דרך חנות האפליקציות שלך (Apple App Store או Google Play).</p>
+    <ul>
+      <li>התשלום נגבה מחשבון החנות שלך עם אישור הרכישה.</li>
+      <li>מנויים מתחדשים אוטומטית אלא אם תכבה את החידוש האוטומטי לפחות 24 שעות לפני תום התקופה הנוכחית.</li>
+      <li>אתה מנהל או מבטל את המנוי בהגדרות חשבון החנות; מחיקת האפליקציה אינה מבטלת מנוי.</li>
+      <li>החזרים מטופלים על ידי החנות בהתאם למדיניותה ולזכויות הצרכן החוקיות שלך.</li>
+    </ul>
+    <h2>6. שימוש מקובל</h2>
+    <p>אתה מסכים להשתמש באפליקציה למטרות חוקיות ואישיות בלבד. אינך רשאי לעשות בה שימוש לרעה, לנסות לשבש אותה או לבצע בה הנדסה לאחור, או להסתמך עליה כשירות רפואי או חירום.</p>
+    <h2>7. קניין רוחני</h2>
+    <p>האפליקציה, העיצוב והתוכן שלה שייכים לנו או לנותני הרישיון שלנו ומוגנים בחוק. אנו מעניקים לך רישיון אישי, בלתי-ניתן להעברה וניתן לביטול לשימוש באפליקציה. נתוני הרווחה שאתה מזין נותרים שלך.</p>
+    <h2>8. כתב ויתור על אחריות</h2>
+    <p>האפליקציה מסופקת <strong>«כפי שהיא»</strong> ו<strong>«כפי שזמינה»</strong>, ללא אחריות מכל סוג, במידה המרבית המותרת בחוק. איננו מתחייבים שההצעות מדויקות, שלמות או מתאימות לך, או שהאפליקציה תפעל ללא הפרעות ותקלות.</p>
+    <h2>9. הגבלת אחריות</h2>
+    <p>במידה המרבית המותרת בחוק, איננו אחראים לנזקים עקיפים, מקריים או תוצאתיים הנובעים משימושך באפליקציה או מהסתמכות על תוכנה. אין בתנאים אלו כדי להגביל אחריות שלא ניתן להחריג לפי הדין החל, לרבות זכויות הצרכן הכופות שלך.</p>
+    <h2>10. הדין החל וזכויות הצרכן שלך</h2>
+    <p>תנאים אלו כפופים לדיני אוקראינה. אין בכך כדי <strong>לשלול</strong> ממך את ההגנה של כללי הגנת הצרכן הכופים במדינת מגוריך, אשר ממשיכים לחול. אם אתה באיחוד האירופי, תוכל גם להשתמש בפלטפורמת יישוב המחלוקות המקוון של הנציבות האירופית בכתובת <a href="https://ec.europa.eu/consumers/odr" rel="noopener">ec.europa.eu/consumers/odr</a>.</p>
+    <h2>11. שינויים</h2>
+    <p>אנו עשויים לעדכן תנאים אלו. שינויים מהותיים ישתקפו בתאריך «עודכן לאחרונה» ובמקרים המתאימים יודגשו באפליקציה. המשך שימוש לאחר עדכון פירושו הסכמה לתנאים המעודכנים.</p>
+    <h2>12. יצירת קשר</h2>
+    <p>תמיכה כללית: <a href="mailto:support@via-l.com">support@via-l.com</a> · פרטיות: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a></p>
+  </div>
 
-  <h2>10. Governing law and your consumer rights</h2>
-  <p>These Terms are governed by the laws of Ukraine. This does <strong>not</strong> deprive you of the protection of the mandatory consumer-protection rules of your country of residence, which continue to apply. If you are in the EU, you may also use the European Commission's Online Dispute Resolution platform at <a href="https://ec.europa.eu/consumers/odr" rel="noopener">ec.europa.eu/consumers/odr</a>.</p>
+  <!-- ============ JA ============ -->
+  <div data-lang="ja">
+    <div class="page-eyebrow"><span>利用規約</span></div>
+    <h1>利用規約</h1>
+    <p class="page-date">VIA·L AI assistant · 最終更新: 2026年7月7日</p>
+    <p class="intro">本規約は、アプリ <strong>VIA·L AI assistant</strong> の利用に適用されます。アプリを利用することで本規約に同意したものとみなされます。第3項のウェルネスに関する注意を必ずお読みください。</p>
+    <h2>1. 事業者情報</h2>
+    <p>本アプリは、ウクライナに登録された個人事業主（FOP）である <strong>Maryna Datsenko</strong>（「当社」）が提供します。連絡先: <a href="mailto:support@via-l.com">support@via-l.com</a>。</p>
+    <h2>2. 本サービス</h2>
+    <p><strong>VIA·L AI assistant</strong> は一般的なウェルネス・教育アプリです。自己申告のウェルネス指標を記録でき、PRO プランではお客様の許可のもと Apple Health または Health Connect からウェルネス数値を任意で読み取り、AI モデルが生成する一般的な栄養・ライフスタイルの提案を返します。無料プラン（VIO）と有料サブスクリプションプラン（PRO）で提供されます。</p>
+    <h2>3. ウェルネスに関する注意 — 重要</h2>
+    <p>本アプリは<strong>医療機器ではなく</strong>、医療上の助言・診断・治療・専門的意見を<strong>提供しません</strong>。その内容は<strong>一般的な教育とセルフケアのみ</strong>を目的とします。有資格の専門家への相談に代わるものではありません。</p>
+    <ul>
+      <li>栄養、サプリメント、運動、生活習慣を変える前、また本アプリの内容に基づいて行動する前に、必ず専門家の助言を求めてください。</li>
+      <li>本アプリで読んだ内容を理由に、専門家の助言を無視したり遅らせたりしないでください。</li>
+      <li>AI が生成する提案は不完全または不正確な場合があります。ご自身の判断を用いてください。</li>
+      <li>本アプリはいかなる状態の検出・予防・管理も目的としません。緊急時は現地の緊急サービスに連絡してください。</li>
+    </ul>
+    <h2>4. 利用資格</h2>
+    <p>本アプリの利用には<strong>18歳以上</strong>である必要があります。利用することで、この要件を満たすことを確認したものとします。</p>
+    <h2>5. サブスクリプションと支払い</h2>
+    <p>PRO プランは、お客様のアプリストア（Apple App Store または Google Play）で購入・管理する有料サブスクリプションです。</p>
+    <ul>
+      <li>購入確定時に、お客様のアプリストアアカウントに料金が請求されます。</li>
+      <li>現在の期間終了の少なくとも24時間前に自動更新をオフにしない限り、サブスクリプションは自動更新されます。</li>
+      <li>サブスクリプションはアプリストアアカウントの設定で管理・解約します。アプリの削除では解約されません。</li>
+      <li>返金はアプリストアがそのポリシーおよびお客様の法定消費者権利に従って処理します。</li>
+    </ul>
+    <h2>6. 許容される利用</h2>
+    <p>本アプリを適法かつ個人的な目的にのみ利用することに同意します。本アプリの不正利用、妨害、リバースエンジニアリングを行うこと、または医療・緊急サービスとして依拠することはできません。</p>
+    <h2>7. 知的財産</h2>
+    <p>本アプリ、そのデザインおよびコンテンツは当社または当社のライセンサーに帰属し、法律で保護されています。当社は、本アプリを利用するための個人的・譲渡不可・撤回可能なライセンスを付与します。お客様が入力したウェルネス情報はお客様に帰属します。</p>
+    <h2>8. 保証の否認</h2>
+    <p>本アプリは、法律で認められる最大限の範囲で、いかなる保証もなく<strong>「現状のまま」</strong>および<strong>「利用可能な範囲で」</strong>提供されます。提案が正確・完全・お客様に適切であること、または本アプリが中断なく無誤で動作することを保証しません。</p>
+    <h2>9. 責任の制限</h2>
+    <p>法律で認められる最大限の範囲で、当社は本アプリの利用またはその内容への依拠から生じる間接的・付随的・結果的損害について責任を負いません。本規約のいかなる規定も、法定の消費者権利を含め、適用法の下で排除できない責任を制限しません。</p>
+    <h2>10. 準拠法とお客様の消費者権利</h2>
+    <p>本規約はウクライナ法に準拠します。これはお客様の居住国の強行的な消費者保護規定による保護を<strong>奪うものではなく</strong>、当該規定は引き続き適用されます。EU 内の場合、欧州委員会のオンライン紛争解決プラットフォーム（<a href="https://ec.europa.eu/consumers/odr" rel="noopener">ec.europa.eu/consumers/odr</a>）も利用できます。</p>
+    <h2>11. 変更</h2>
+    <p>当社は本規約を更新することがあります。重要な変更は上記「最終更新」日に反映し、必要に応じてアプリ内で強調表示します。更新後も利用を続ける場合、改訂後の規約に同意したものとみなされます。</p>
+    <h2>12. お問い合わせ</h2>
+    <p>一般サポート: <a href="mailto:support@via-l.com">support@via-l.com</a> · プライバシー: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a></p>
+  </div>
 
-  <h2>11. Changes</h2>
-  <p>We may update these Terms. Material changes will be reflected by the "Last updated" date above and, where appropriate, highlighted in the app. Continued use after an update means you accept the revised Terms.</p>
+  <!-- ============ KO ============ -->
+  <div data-lang="ko">
+    <div class="page-eyebrow"><span>서비스 이용약관</span></div>
+    <h1>서비스 이용약관</h1>
+    <p class="page-date">VIA·L AI assistant · 최종 업데이트: 2026년 7월 7일</p>
+    <p class="intro">본 약관은 <strong>VIA·L AI assistant</strong> 앱 이용에 적용됩니다. 앱을 이용하면 본 약관에 동의하는 것입니다. 제3조의 웰니스 고지를 주의 깊게 읽어 주세요.</p>
+    <h2>1. 우리는 누구인가</h2>
+    <p>본 앱은 우크라이나에 등록된 개인사업자(FOP) <strong>Maryna Datsenko</strong>("당사")가 제공합니다. 문의: <a href="mailto:support@via-l.com">support@via-l.com</a>.</p>
+    <h2>2. 서비스</h2>
+    <p><strong>VIA·L AI assistant</strong>는 일반적인 웰니스 및 교육 앱입니다. 자가 보고 웰니스 지표를 기록할 수 있으며, PRO 등급에서는 귀하의 허가하에 Apple Health 또는 Health Connect의 웰니스 수치를 선택적으로 읽고, AI 모델이 생성한 일반적인 영양 및 생활습관 제안을 제공합니다. 무료 등급(VIO)과 유료 구독 등급(PRO)으로 제공됩니다.</p>
+    <h2>3. 웰니스 고지 — 중요</h2>
+    <p>본 앱은 <strong>의료기기가 아니며</strong> 의학적 조언·진단·치료 또는 전문적 견해를 <strong>제공하지 않습니다</strong>. 그 내용은 <strong>일반적인 교육 및 자가 관리 전용</strong>입니다. 자격을 갖춘 전문가와의 상담을 대체하지 않습니다.</p>
+    <ul>
+      <li>영양, 보충제, 신체 활동 또는 생활습관을 변경하기 전, 그리고 앱의 내용을 근거로 행동하기 전에 항상 전문가의 안내를 받으세요.</li>
+      <li>앱에서 읽은 내용을 이유로 전문가의 조언을 무시하거나 미루지 마세요.</li>
+      <li>AI가 생성한 제안은 불완전하거나 부정확할 수 있으니 스스로 판단하세요.</li>
+      <li>본 앱은 어떤 상태도 감지·예방·관리하기 위한 것이 아닙니다. 응급 상황에서는 현지 응급 서비스에 연락하세요.</li>
+    </ul>
+    <h2>4. 이용 자격</h2>
+    <p>앱을 이용하려면 <strong>만 18세 이상</strong>이어야 합니다. 이용함으로써 이 요건을 충족함을 확인합니다.</p>
+    <h2>5. 구독 및 결제</h2>
+    <p>PRO 등급은 귀하의 앱 스토어(Apple App Store 또는 Google Play)를 통해 구매·관리되는 유료 구독입니다.</p>
+    <ul>
+      <li>구매 확정 시 귀하의 앱 스토어 계정으로 요금이 청구됩니다.</li>
+      <li>현재 기간 종료 최소 24시간 전에 자동 갱신을 끄지 않으면 구독은 자동으로 갱신됩니다.</li>
+      <li>구독은 앱 스토어 계정 설정에서 관리·해지합니다. 앱 삭제로는 구독이 해지되지 않습니다.</li>
+      <li>환불은 앱 스토어가 자체 정책 및 귀하의 법정 소비자 권리에 따라 처리합니다.</li>
+    </ul>
+    <h2>6. 허용되는 이용</h2>
+    <p>귀하는 앱을 합법적이고 개인적인 목적으로만 이용하는 데 동의합니다. 앱을 오용하거나 방해 또는 역설계를 시도하거나 의료 또는 응급 서비스로 의존해서는 안 됩니다.</p>
+    <h2>7. 지식재산권</h2>
+    <p>앱, 그 디자인 및 콘텐츠는 당사 또는 당사의 라이선서에게 귀속되며 법률로 보호됩니다. 당사는 앱 이용을 위한 개인적·양도 불가·철회 가능 라이선스를 부여합니다. 귀하가 입력한 웰니스 데이터는 귀하의 것입니다.</p>
+    <h2>8. 보증의 부인</h2>
+    <p>앱은 법이 허용하는 최대 범위에서 어떠한 보증도 없이 <strong>"있는 그대로"</strong> 및 <strong>"이용 가능한 상태로"</strong> 제공됩니다. 당사는 제안이 정확·완전하거나 귀하에게 적합하다는 것, 또는 앱이 중단 없고 오류 없이 작동한다는 것을 보증하지 않습니다.</p>
+    <h2>9. 책임의 제한</h2>
+    <p>법이 허용하는 최대 범위에서, 당사는 앱 이용 또는 그 콘텐츠에 대한 신뢰에서 발생하는 간접적·부수적·결과적 손해에 대해 책임지지 않습니다. 본 약관의 어떤 조항도 법정 소비자 권리를 포함하여 적용법상 배제할 수 없는 책임을 제한하지 않습니다.</p>
+    <h2>10. 준거법 및 귀하의 소비자 권리</h2>
+    <p>본 약관은 우크라이나법을 준거법으로 합니다. 이는 귀하 거주국의 강행적 소비자 보호 규정에 따른 보호를 <strong>박탈하지 않으며</strong>, 해당 규정은 계속 적용됩니다. EU에 거주하는 경우, 유럽위원회의 온라인 분쟁 해결 플랫폼(<a href="https://ec.europa.eu/consumers/odr" rel="noopener">ec.europa.eu/consumers/odr</a>)도 이용할 수 있습니다.</p>
+    <h2>11. 변경</h2>
+    <p>당사는 본 약관을 업데이트할 수 있습니다. 중요한 변경은 위 "최종 업데이트" 날짜에 반영되며 필요 시 앱 내에서 강조됩니다. 업데이트 후 계속 이용하면 개정된 약관에 동의하는 것입니다.</p>
+    <h2>12. 문의</h2>
+    <p>일반 지원: <a href="mailto:support@via-l.com">support@via-l.com</a> · 개인정보: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a></p>
+  </div>
 
-  <h2>12. Contact</h2>
-  <p>General support: <a href="mailto:support@via-l.com">support@via-l.com</a> · Privacy: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a></p>
 </main>
 
 <footer>
@@ -119,6 +616,33 @@
     <span class="footer-links"><a href="./privacy.html">Privacy Policy</a></span>
   </div>
 </footer>
+
+<script>
+  var backLabels = {
+    en:'← Back to app', es:'← Volver a la app', uk:'← Назад до застосунку', ru:'← Назад в приложение',
+    de:'← Zurück zur App', pt:'← Voltar à app', fr:'← Retour à l\'app', pl:'← Powrót do aplikacji',
+    it:'← Torna all\'app', he:'→ חזרה לאפליקציה', ja:'← アプリに戻る', ko:'← 앱으로 돌아가기'
+  };
+  function setLang(l) {
+    document.querySelectorAll('[data-lang]').forEach(function(el) {
+      el.classList.toggle('active', el.getAttribute('data-lang') === l);
+    });
+    document.querySelectorAll('.lang-bar button').forEach(function(b) {
+      b.classList.toggle('active', b.id === 'btn-' + l);
+    });
+    var bl = document.getElementById('back-link'); if (bl) bl.textContent = backLabels[l] || '← Back to app';
+    document.documentElement.lang = l;
+    try { localStorage.setItem('selectedLang', l); } catch(e){}
+  }
+  (function(){
+    var saved = null;
+    try { saved = localStorage.getItem('selectedLang'); } catch(e){}
+    if (saved && backLabels[saved]) { setLang(saved); return; }
+    var hl = (navigator.language || '').toLowerCase().slice(0,2);
+    if (hl === 'ua') hl = 'uk';
+    if (backLabels[hl]) setLang(hl); else setLang('en');
+  })();
+</script>
 
 </body>
 </html>
