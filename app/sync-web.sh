@@ -34,8 +34,9 @@ cp "$IP/my-specialist.html"       "$WWW/"
 cp -R "$IP/Logo"       "$WWW/Logo"
 cp -R "$IP/images-in"  "$WWW/images-in"
 
-# Юр-страницы: в вебе лежат в ../legal → в изолированном бандле кладём в www/legal
-cp -R "$ROOT/legal"    "$WWW/legal"
+# Юр-страницы приложения: чистый app-only комплект legal-app/ (Privacy+Terms, 12 языков,
+# без мед-бизнеса/медсайта/«Interpreter») → в бандл как www/legal. Старые legal/ — для сайта.
+cp -R "$ROOT/legal-app" "$WWW/legal"
 
 # Переписать пути ../legal/ → legal/ (в бандле нет родительской папки)
 sed -i '' 's#\.\./legal/#legal/#g' "$WWW/index.html"
