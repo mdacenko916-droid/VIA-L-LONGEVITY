@@ -6303,13 +6303,21 @@ document.addEventListener('visibilitychange',function(){
     el('vlAdvInput').focus();
   };
   window.vlAdvClose=function(){ el('vlAdvPanel').classList.remove('open'); el('vlAdvBtn').style.display='flex'; };
+  // Контекст клиента для советника: профиль (цель/приоритеты/пол/возраст) + текст последнего
+  // велнес-разбора (#aiResult, уже очищен). Даёт советнику отвечать по ЕГО данным. Всё опционально.
+  function _advCtx(){ try{
+    var g=(typeof secGet==='function')?secGet:function(k){return localStorage.getItem(k);};
+    var P={}; try{P=JSON.parse(g('vial_profile')||'{}')||{};}catch(e){}
+    var an=''; var r=document.getElementById('aiResult'); if(r&&r.style.display!=='none') an=(r.textContent||'').trim();
+    return {gender:P.gender||'',age:P.age||null,goal:P.goal||'',priorities:Array.isArray(P.priorities)?P.priorities:[],analysis:an.slice(0,2500)};
+  }catch(e){ return null; } }
   window.vlAdvSendMsg=function(){
     if(busy) return; var inp=el('vlAdvInput'); var q=(inp.value||'').trim(); if(!q) return;
     inp.value=''; add('user',q); history.push({role:'user',content:q}); if(history.length>12) history=history.slice(-12);
     busy=true; el('vlAdvSend').disabled=true;
     var typing=add('assistant','…'); typing.classList.add('typing');
     fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({lang:lng(),tier:specLink()?'specialist':'pro',messages:history})})
+      body:JSON.stringify({lang:lng(),tier:specLink()?'specialist':'pro',messages:history,ctx:_advCtx()})})
       .then(function(r){return r.json();}).then(function(j){
         typing.remove();
         if(j&&j.ok&&j.reply){ add('assistant',j.reply); history.push({role:'assistant',content:j.reply}); }

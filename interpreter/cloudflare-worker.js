@@ -3044,8 +3044,20 @@ function selectKBPatterns(data) {
   const wake   = data.wake || '';
   const fog    = data.fog || '';
   const memory = data.memory || '';
-  const visceral = bio.visceral != null && bio.visceral !== '' ? parseInt(bio.visceral) : null;
+  let   visceral = bio.visceral != null && bio.visceral !== '' ? parseInt(bio.visceral) : null;
   const num = (v) => (v == null || v === '' ? null : parseFloat(v));
+  // Мост талия/рост → псевдо-висцеральный индекс, когда прямого биоимпеданс-замера нет
+  // (ручные тарифы вроде VIO). WHtR = талия/рост (нейтральный индекс, уже вводится клиентом);
+  // маппим на пороги детектора visceral>9 (повышенный) и >12 (высокий), чтобы обмен/воспаление/
+  // ССС-паттерны (P-F7/8/13/21, P-M3/4) не оставались слепыми при отсутствии весов.
+  if (visceral == null) {
+    const _wa = parseFloat(data.waist), _ht = parseFloat(data.height);
+    if (_wa > 0 && _ht > 0) {
+      const whtr = _wa / _ht;
+      if (whtr >= 0.6) visceral = 13;
+      else if (whtr >= 0.5) visceral = 10;
+    }
+  }
 
   // токены-массивы (значения чекбоксов анкеты)
   const sym  = Array.isArray(data.symptoms)      ? data.symptoms      : [];
@@ -3058,6 +3070,9 @@ function selectKBPatterns(data) {
   const gi   = Array.isArray(data.gi)            ? data.gi            : [];
   const bone = Array.isArray(data.bone_risk)     ? data.bone_risk     : [];
   const breast = Array.isArray(data.breast)      ? data.breast        : [];
+  // meds приходит массивом чекбоксов (VIO) ИЛИ строкой (иные потоки) — нормализуем в массив,
+  // иначе сравнение data.meds === '...' на массиве всегда ложно и весь сигнал по лекарствам мёртв.
+  const meds = Array.isArray(data.meds) ? data.meds : (data.meds ? [data.meds] : []);
   const has  = (arr, ...vals) => vals.some(v => arr.includes(v));
 
   const stressHigh  = data.chronic_stress === 'high' || data.chronic_stress === 'burnout' || data.chronic_stress === 'needs_recovery'
@@ -3081,10 +3096,10 @@ function selectKBPatterns(data) {
       || (phase === 'meno' && (data.hf_count === 'high' || has(horm,'dry_skin')))
       || (phase === 'peri' && (tempUnstable || hadHotflash || has(horm,'heavy_period','irregular_cycle'))));
     // P-F2 эстроген — метаболизм/детокс
-    add('P-F2', phase === 'peri' && (has(horm,'heavy_period','weight_gain') || (data.meds === 'contraceptive' || data.meds === 'cycle_factor')));
+    add('P-F2', phase === 'peri' && (has(horm,'heavy_period','weight_gain') || data.heavy_period === 'yes' || has(meds,'contraceptive','cycle_factor')));
     // P-F3 прогестерон
     add('P-F3', ((phase === 'peri' || phase === 'meno') && /multiple|early/i.test(wake) && anx >= 4)
-      || data.pms === 'severe' || data.pms === 'moderate' || has(horm,'heavy_period'));
+      || data.pms === 'severe' || data.pms === 'moderate' || has(horm,'heavy_period') || data.heavy_period === 'yes');
     // P-F4 ГГН/кортизол
     add('P-F4', stressHigh || cortLoad
       || (hrv < 30 && (stressHigh || anx >= 6) && lowEnergy)
@@ -3093,7 +3108,7 @@ function selectKBPatterns(data) {
     add('P-F5', lowEnergy && (tiredRecov || has(sym,'fatigue')) && (hrv < 30 || deepLow));
     // P-F6 щитовидка
     add('P-F6', (tempDown && lowEnergy) || (tempDown && has(horm,'hair_loss','weight_gain'))
-      || has(sym,'cold','cool_sensitivity') || (data.meds === 'thyroid' || data.meds === 'energy_factor') || (num(labs.tsh) != null && num(labs.tsh) > 2.5));
+      || has(sym,'cold','cool_sensitivity') || has(meds,'thyroid','energy_factor') || (num(labs.tsh) != null && num(labs.tsh) > 2.5));
     // P-F7 инсулинорезистентность
     add('P-F7', (visceral != null && visceral > 9) || has(horm,'weight_gain') || (data.appetite === 'cravings' || data.cravings === true)
       || num(labs.glucose) > 5.6 || num(labs.hba1c) > 5.7 || num(labs.homa) > 2.5);
@@ -3120,7 +3135,7 @@ function selectKBPatterns(data) {
       || has(horm,'libido_low')
       || ((phase === 'post' || phase === 'meno') && (data.cycle_status === 'absent' || data.last_period === 'year')));
     // P-F16 аутоиммунные (вход неполный)
-    add('P-F16', (data.meds === 'thyroid' || data.meds === 'energy_factor') && num(labs.tsh) != null && num(labs.tsh) > 4);
+    add('P-F16', has(meds,'thyroid','energy_factor') && num(labs.tsh) != null && num(labs.tsh) > 4);
     // P-F17 нарушения сна
     add('P-F17', sleep <= 4 || data.deep === 'none' || data.deep === 'low' || /multiple|many/i.test(wake) || (data.sleep_hours && data.sleep_hours < 6));
     // P-F18 B12/фолат
@@ -3130,7 +3145,7 @@ function selectKBPatterns(data) {
     add('P-F19', has(gi,'constipation','gi_slow','hemorrhoids','lower_sens','rectal_bleeding','lower_flag','fecal_incontinence','core_tone','straining','fiber_absorp','fiber_response'));
     // P-F20 тазовое дно: пролапс + недержание мочи (прокси: урология/GSM; вход неполный)
     add('P-F20', has(uro,'incontinence','stress_incontinence','urge_incontinence','support_shift','tone_shift','prolapse')
-      || has(gsm,'incontinence','prolapse')
+      || has(gsm,'incontinence','prolapse','support_shift','tone_shift')
       || ((phase === 'post' || phase === 'meno') && has(gsm,'urinary_urgency','pelvic_tension') && has(uro,'frequency','daytime_hydration')));
     // P-F21 здоровье груди / питание (вход из Шага 12: data.breast; + модифицируемый риск постменопаузы)
     add('P-F21', has(breast,'breast_pain','cyclic_comfort','breast_lump','tissue_tension','family_profile','family_breast_cancer','mastalgia')
@@ -3148,7 +3163,7 @@ function selectKBPatterns(data) {
     // P-M4 воспаление
     add('P-M4', has(sym,'joint','movement_stiff') || (visceral != null && visceral > 12) || num(labs.crp) > 3);
     // P-M5 щитовидка
-    add('P-M5', (tempDown && lowEnergy) || has(sym,'cold','cool_sensitivity') || (data.meds === 'thyroid' || data.meds === 'energy_factor') || (num(labs.tsh) != null && num(labs.tsh) > 2.5));
+    add('P-M5', (tempDown && lowEnergy) || has(sym,'cold','cool_sensitivity') || has(meds,'thyroid','energy_factor') || (num(labs.tsh) != null && num(labs.tsh) > 2.5));
     // P-M6 кишечник
     add('P-M6', has(gi,'bloating','gi_heaviness','constipation','gi_slow','diarrhea','gi_fast','reflux','gi_inner') || has(supp,'probiotics'));
     // P-M7 сердечно-сосудистый
@@ -3693,6 +3708,13 @@ function buildUserMessage(data, lang, tier) {
 
   // ── ПОЛНЫЕ ДАННЫЕ АНКЕТЫ — чтобы НИ ОДНО введённое клиентом поле не потерялось в анализе ──
   const _J = a => (Array.isArray(a) && a.length) ? a.join(', ') : '—';
+  // meds приходит массивом токенов-чекбоксов (VIO) — переводим в читаемые велнес-ярлыки,
+  // иначе к ИИ уходят сырые коды («energy_factor,cycle_factor»). App Store 1.4.1 — без мед-названий.
+  const _MEDS_LBL = { energy_factor:'фактор энергии/обмена', emotion_factor:'фактор настроения', cycle_factor:'фактор цикла', other_factor:'другой фактор',
+                      thyroid:'фактор энергии/обмена', contraceptive:'фактор цикла', antidepressant:'фактор настроения' };
+  const _medsStr = Array.isArray(data.meds)
+    ? (data.meds.filter(Boolean).map(m => _MEDS_LBL[m] || m).join(', ') || '—')
+    : (data.meds ? (_MEDS_LBL[data.meds] || data.meds) : '—');
   const fullDataBlock =
       '\n══ ПОЛНЫЕ ДАННЫЕ АНКЕТЫ — это ввёл клиент; ОБЯЗАТЕЛЬНО учти КАЖДЫЙ пункт ниже в разборе и рекомендациях, ничего не игнорируй ══\n'
     + ((data.goal || (Array.isArray(data.priorities) && data.priorities.length)) ? '🎯 ЦЕЛЬ КЛИЕНТА: ' + (data.goal ? String(data.goal).trim().slice(0, 300) : '—') + ((Array.isArray(data.priorities) && data.priorities.length) ? ' | приоритеты/фокус: ' + data.priorities.join(', ') : '') + ' — ПОДСТРОЙ разбор, акценты и рекомендации под эту цель клиента.\n' : '')
@@ -3702,7 +3724,7 @@ function buildUserMessage(data, lang, tier) {
     + ((data.lifestyle_notes || data.new_symptoms) ? 'Контекст образа жизни за неделю (со слов клиента): ' + (data.lifestyle_notes || data.new_symptoms) + '\n' : '')
     + 'Физическая активность · виды: ' + _J(data.act_types) + ' | частота: ' + (data.act_freq || '—') + ' | восстановление после нагрузки: ' + (data.act_recovery || '—') + (data.move_today ? ' | движение сегодня: ' + ({active:'активный день',light:'немного',sedentary:'сидячий день'}[data.move_today] || data.move_today) : '') + '\n'
     + 'Добавки (принимает): ' + _J(data.supplements) + '\n'
-    + 'Лекарства: ' + (data.meds || '—') + (data.meds_other ? ' | другие: ' + data.meds_other : '') + '\n'
+    + 'Лекарства: ' + _medsStr + (data.meds_other ? ' | другие: ' + data.meds_other : '') + '\n'
     + 'Хронический стресс: ' + (data.chronic_stress || '—') + ' | симптомы кортизола: ' + _J(data.cortisol_symp) + '\n'
     + 'Гормональные симптомы: ' + ((Array.isArray(data.horm_symptoms) && data.horm_symptoms.length) ? _J(data.horm_symptoms) : ((data.horm_female || data.horm_male) ? (Object.entries(Object.assign({}, data.horm_female || {}, data.horm_male || {})).map(function(e){ return e[0] + ' (' + e[1] + ')'; }).join(', ') || '—') : '—')) + (data.horm_intensity ? ' | интенсивность: ' + data.horm_intensity : '') + '\n'
     + (isFem
@@ -4059,6 +4081,26 @@ async function handleAdvisorChat(request, env, corsHeaders){
   if(!humanLed){ const hit = await faqMatch(env, lastUser);
     if(hit) faqCtx = `\n\nПроверенный ответ из базы (используй как основу, можно переформулировать):\nВ: ${hit.q}\nО: ${hit.a}`; }
 
+  // Контекст клиента (профиль + последний велнес-разбор) — чтобы советник отвечал ПО ЕГО данным,
+  // а не как общий бот. Только self-serve (vio/pro). Разбор уже велнес-очищен на клиенте;
+  // велнес-гардрейл в system остаётся — модель не выдаёт мед-терминов в ответе.
+  let clientCtx = '';
+  if(!humanLed && body.ctx && typeof body.ctx === 'object'){
+    const c = body.ctx;
+    const prof = [
+      c.gender ? ('пол: ' + (c.gender === 'male' ? 'мужчина' : 'женщина')) : '',
+      c.age ? ('возраст: ' + c.age) : '',
+      c.goal ? ('цель: ' + String(c.goal).slice(0,300)) : '',
+      (Array.isArray(c.priorities) && c.priorities.length) ? ('приоритеты: ' + c.priorities.slice(0,3).join(', ')) : '',
+    ].filter(Boolean).join(' | ');
+    const analysis = (typeof c.analysis === 'string' && c.analysis.trim()) ? c.analysis.trim().slice(0,2500) : '';
+    if(prof || analysis){
+      clientCtx = '\n\n[КОНТЕКСТ КЛИЕНТА — отвечай по ЕГО данным, а не общими словами; НЕ выдумывай числа/показатели, которых тут нет; всё в велнес-рамке]\n'
+        + (prof ? ('Профиль: ' + prof + '\n') : '')
+        + (analysis ? ('Его последний велнес-разбор (опирайся на него):\n' + analysis + '\n') : '');
+    }
+  }
+
   const model    = ['he','ar','ja','ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001';
   const langName = CAB_LANG_NAMES[lang] || 'английском';
 
@@ -4090,7 +4132,7 @@ async function handleAdvisorChat(request, env, corsHeaders){
        `СТИЛЬ — МОТИВАЦИОННЫЙ (MI, Клиффорд): веди диалог, а не лекцию. ОАРР: открытые вопросы, отражай смысл/чувства («похоже, вам важно…»), отмечай сильные стороны (аффирмация), резюмируй. ВЫЯВЛЯЙ цель и собственные причины клиента («какой результат для ВАС главный?») и поддерживай его слова в пользу изменений. НЕ исправительный рефлекс: не заваливай советами, не спорь, не пугай — амбивалентность («хочу, но…») это норма. Совет — по запросу/с разрешения, через «выявить–сообщить–выявить», давай меню вариантов, а не приказ. При колебаниях — шкала уверенности 0–10 и ОДИН маленький эксперимент на неделю. Уважай автономию, без предвзятости к весу (о здоровье и самочувствии, не о «килограммах»). Всё — в образовательной рамке, без медицины.`+ faqCtx +
        (['vio','pro'].includes(tier) ?
         `\n\n[WELLNESS — App Store] Это велнес-приложение, НЕ медицинское. НЕ ставь диагнозы, НЕ называй болезни/состояния/органы как объект диагностики. НЕ ПРЕДПОЛАГАЙ конкретные состояния даже как гипотезу («возможно/похоже на X») и НЕ советуй «проверьте, нет ли у вас X» (апноэ/СОАС, диабет, тиреоидит и т.п.) — нейтрально «если сохраняется, обсудите со специалистом», без названия. ЗАПРЕЩЕНЫ слова: «диагноз», «маркер», «симптом», «синдром», «патология», «терапия», «лечение» → «сигнал», «признак», «ориентир». НЕ называй гормоны/приборные метрики как замеры (эстроген/тестостерон/прогестерон/кортизол/ТТГ/HRV) — говори «баланс», «ритмы», «энергия», «нагрузка». НЕ используй «менопауза/перименопауза/андропауза/климакс» — говори «период естественных перемен», «переходный этап», «возрастная витальность», «индивидуальный биоритм». Всё в велнес-рамке образа жизни.`
-        : ''));
+        : '') + clientCtx);
 
   try{
     const res = await fetch('https://api.anthropic.com/v1/messages', {
