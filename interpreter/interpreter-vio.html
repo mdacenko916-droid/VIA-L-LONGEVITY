@@ -3633,7 +3633,8 @@ const STEP_CADENCE={0:'base',9:'base',10:'base',7:'base',12:'base',
                     6:'weekly',14:'weekly',13:'biweekly'};   // активность+новые симптомы — раз/нед; стресс+кортизол — раз/2нед
 function _flowHead(cad){
   if(cad==='base')return L({ru:'Настройка · один раз',uk:'Налаштування · один раз',en:'Setup · one-time',es:'Configuración · una vez',de:'Einrichtung · einmalig',pt:'Configuração · uma vez',fr:'Configuration · une fois',pl:'Konfiguracja · jednorazowo',it:'Configurazione · una volta',he:'הגדרה · פעם אחת',ja:'初期設定・1回のみ',ko:'설정 · 1회'});
-  if(cad==='daily')return L({ru:'Сегодня',uk:'Сьогодні',en:'Today',es:'Hoy',de:'Heute',pt:'Hoje',fr:'Aujourd’hui',pl:'Dziś',it:'Oggi',he:'היום',ja:'今日',ko:'오늘'});
+  if(cad==='daily')return L({ru:'За прошедшие сутки',uk:'За минулу добу',en:'Past 24 hours',es:'Últimas 24 horas',de:'Letzte 24 Stunden',pt:'Últimas 24 horas',fr:'Dernières 24 heures',pl:'Ostatnie 24 godziny',it:'Ultime 24 ore',he:'24 השעות האחרונות',ja:'過去24時間',ko:'지난 24시간'});
+  if(cad==='now')return L({ru:'Прямо сейчас',uk:'Просто зараз',en:'Right now',es:'Ahora mismo',de:'Jetzt gerade',pt:'Agora mesmo',fr:'En ce moment',pl:'Teraz',it:'Proprio ora',he:'ממש עכשיו',ja:'今この瞬間',ko:'지금 바로'});
   if(cad==='weekly')return L({ru:'Раз в неделю',uk:'Раз на тиждень',en:'Weekly',es:'Una vez por semana',de:'Wöchentlich',pt:'Semanalmente',fr:'Une fois par semaine',pl:'Raz w tygodniu',it:'Settimanale',he:'פעם בשבוע',ja:'週1回',ko:'주 1회'});
   if(cad==='biweekly')return L({ru:'Раз в 2 недели',uk:'Раз на 2 тижні',en:'Every 2 weeks',es:'Cada 2 semanas',de:'Alle 2 Wochen',pt:'A cada 2 semanas',fr:'Toutes les 2 semaines',pl:'Co 2 tygodnie',it:'Ogni 2 settimane',he:'אחת לשבועיים',ja:'2週間に1回',ko:'2주에 1회'});
   return '';
@@ -3660,10 +3661,17 @@ function _showFlow(list){
   document.querySelectorAll('.flow-group-head').forEach(function(h){h.remove();});
   var r=document.getElementById('stepResult');if(r)r.classList.remove('active');
   var main=document.querySelector('main');if(!main)return;
-  ['base','daily','weekly','biweekly'].forEach(function(cad){
-    var grp=list.filter(function(n){return (STEP_CADENCE[n]||'daily')===cad;});
+  // Дневную группу делим на две зоны: «За прошедшие сутки» (ретроспектива) и «Прямо сейчас» (живой замер — пульс, step3).
+  var _NOW=[3];
+  [['base',    function(n){return (STEP_CADENCE[n]||'daily')==='base';}],
+   ['daily',   function(n){return (STEP_CADENCE[n]||'daily')==='daily' && _NOW.indexOf(n)<0;}],
+   ['now',     function(n){return (STEP_CADENCE[n]||'daily')==='daily' && _NOW.indexOf(n)>=0;}],
+   ['weekly',  function(n){return STEP_CADENCE[n]==='weekly';}],
+   ['biweekly',function(n){return STEP_CADENCE[n]==='biweekly';}]
+  ].forEach(function(sec){
+    var grp=list.filter(sec[1]);
     if(!grp.length)return;
-    var h=document.createElement('div');h.className='flow-group-head';h.textContent=_flowHead(cad);
+    var h=document.createElement('div');h.className='flow-group-head';h.textContent=_flowHead(sec[0]);
     main.appendChild(h);
     grp.forEach(function(n){var s=document.getElementById('step'+n);if(s){s.classList.add('flow-show');main.appendChild(s);}});
   });
