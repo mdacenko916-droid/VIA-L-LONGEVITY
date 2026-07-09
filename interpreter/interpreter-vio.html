@@ -3748,6 +3748,7 @@ function _showFlow(list){
 function _flowFooter(label,fn){var f=document.getElementById('flow-footer'),b=document.getElementById('flow-btn');if(!f||!b)return;if(label)b.textContent=label;if(fn)b.onclick=fn;f.style.display='block';}
 function _hideFlowFooter(){var f=document.getElementById('flow-footer');if(f)f.style.display='none';}
 function showAll(){
+  if(typeof _passedToday==='function'&&_passedToday()){ _showDailyDoneGate(); return; }   // сегодня уже пройдено → лента не показывается (гейт не обойти ни из goTo, ни из смены языка)
   _showFlow(_flowList());
   initCollapsibles();
   _flowFooter(t('show_result'),showResults);
@@ -4859,6 +4860,7 @@ function _showDailyDoneGate(){
   var sa=document.getElementById('scroll-area'); if(sa)sa.scrollTop=0; else window.scrollTo(0,0);
 }
 function showResults(){
+  if(typeof _passedToday==='function'&&_passedToday()){ _showDailyDoneGate(); return; }   // повторный проход за сегодня заблокирован (разбор один в день)
   if(((window.__touched&&window.__touched.size)||0) < 3){ _showNoDataGate(); return; }
   // Выходим из ленты перед показом результата (иначе flow-mode скрыл бы stepResult).
   document.body.classList.remove('flow-mode'); _hideFlowFooter();
