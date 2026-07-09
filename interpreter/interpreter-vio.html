@@ -1956,15 +1956,15 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
       <div class="input-group">
         <label data-t="s8_l1">🤸 Тип активности (можно несколько)</label>
         <div class="chips sup-grid">
-          <div class="chip"><input type="checkbox" id="act1" value="strength"><label for="act1" data-t="act_strength">🏋️ Силовые</label></div>
-          <div class="chip"><input type="checkbox" id="act2" value="cardio"><label for="act2" data-t="act_cardio">🏃 Кардио</label></div>
-          <div class="chip"><input type="checkbox" id="act3" value="yoga"><label for="act3" data-t="act_yoga">🧘 Йога / пилатес</label></div>
-          <div class="chip"><input type="checkbox" id="act4" value="walking"><label for="act4" data-t="act_walking">🚶 Ходьба</label></div>
-          <div class="chip"><input type="checkbox" id="act5" value="hiit"><label for="act5" data-t="act_hiit">🔥 HIIT</label></div>
-          <div class="chip"><input type="checkbox" id="act6" value="none_act"><label for="act6" data-t="act_none">🛑 Не тренируюсь</label></div>
+          <div class="chip"><input type="checkbox" id="act1" value="strength" onchange="_actTypeChange()"><label for="act1" data-t="act_strength">🏋️ Силовые</label></div>
+          <div class="chip"><input type="checkbox" id="act2" value="cardio" onchange="_actTypeChange()"><label for="act2" data-t="act_cardio">🏃 Кардио</label></div>
+          <div class="chip"><input type="checkbox" id="act3" value="yoga" onchange="_actTypeChange()"><label for="act3" data-t="act_yoga">🧘 Йога / пилатес</label></div>
+          <div class="chip"><input type="checkbox" id="act4" value="walking" onchange="_actTypeChange()"><label for="act4" data-t="act_walking">🚶 Ходьба</label></div>
+          <div class="chip"><input type="checkbox" id="act5" value="hiit" onchange="_actTypeChange()"><label for="act5" data-t="act_hiit">🔥 HIIT</label></div>
+          <div class="chip"><input type="checkbox" id="act6" value="none_act" onchange="_actTypeChange()"><label for="act6" data-t="act_none">🛑 Не тренируюсь</label></div>
         </div>
       </div>
-      <div class="input-group">
+      <div class="input-group" id="act-freq-group" style="display:none;">
         <label data-t="s8_l2">👟 Частота тренировок в неделю</label>
         <div class="chips cog-grid">
           <div class="chip"><input type="radio" name="act_freq" id="af1" value="none" checked onchange="_actFreqChange()"><label for="af1" data-t="act_freq_0">🛑 0 (Нет)</label></div>
@@ -2737,6 +2737,19 @@ function _actFreqChange(){
   if(freq&&freq!=='none'){ g.style.display='block'; }
   else{ g.style.display='none'; document.querySelectorAll('input[name="act_recovery"]').forEach(function(r){r.checked=false;}); }
 }
+// «Частота тренировок» имеет смысл только если выбран РЕАЛЬНЫЙ тип активности.
+// «Не тренируюсь» (act6) эксклюзивит остальные типы и прячет частоту/самочувствие.
+function _actTypeChange(){
+  var none=document.getElementById('act6'), fg=document.getElementById('act-freq-group');
+  var reals=['act1','act2','act3','act4','act5'];
+  if(none&&none.checked){ reals.forEach(function(id){var c=document.getElementById(id);if(c)c.checked=false;}); }
+  var anyReal=reals.some(function(id){var c=document.getElementById(id);return c&&c.checked;});
+  if(anyReal&&none)none.checked=false;   // выбрали реальный тип → снять «не тренируюсь»
+  if(fg){
+    if(anyReal){ fg.style.display='block'; }
+    else { fg.style.display='none'; var af=document.getElementById('af1'); if(af)af.checked=true; if(typeof _actFreqChange==='function')_actFreqChange(); }
+  }
+}
 // «Безопасная гавань»: «Всё в норме» (value none*) эксклюзивит симптомы в блоке (ЖКТ/проктология)
 function _giNone(inp,listId){
   var box=document.getElementById(listId); if(!box)return;
@@ -3009,6 +3022,7 @@ function _restoreCard(){
     if(typeof _cycleChange==='function')_cycleChange();
     if(typeof _medsChange==='function')_medsChange();
     if(typeof _allergyToggle==='function')_allergyToggle();
+    if(typeof _actTypeChange==='function')_actTypeChange();   // частота видна только при выбранном типе активности
     if(typeof _actFreqChange==='function')_actFreqChange();
     if(typeof renderCycleDay==='function')renderCycleDay();
   }catch(e){}
@@ -3726,8 +3740,24 @@ function _showFlow(list){
   document.body.classList.add('flow-mode');
   document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active','flow-show');});
   document.querySelectorAll('.flow-group-head').forEach(function(h){h.remove();});
+  document.querySelectorAll('.flow-intro').forEach(function(h){h.remove();});
   var r=document.getElementById('stepResult');if(r)r.classList.remove('active');
   var main=document.querySelector('main');if(!main)return;
+  // Тёплый заход перед первым блоком — «начало пути», перевод из чтения в участие.
+  (function(){
+    var setup=(typeof _setupDone==='function'&&_setupDone());
+    var ttl=setup
+      ? L({ru:'Сегодняшний check-in',uk:'Сьогоднішній check-in',en:'Today’s check-in',es:'Registro de hoy',de:'Heutiger Check-in',pt:'Check-in de hoje',fr:'Point du jour',pl:'Dzisiejszy check-in',it:'Check-in di oggi',he:'צ׳ק-אין של היום',ja:'今日のチェックイン',ko:'오늘의 체크인'})
+      : L({ru:'Добро пожаловать в VIO',uk:'Ласкаво просимо до VIO',en:'Welcome to VIO',es:'Bienvenida a VIO',de:'Willkommen bei VIO',pt:'Bem-vinda ao VIO',fr:'Bienvenue sur VIO',pl:'Witaj w VIO',it:'Benvenuta in VIO',he:'ברוכים הבאים ל-VIO',ja:'VIOへようこそ',ko:'VIO에 오신 것을 환영합니다'});
+    var sub=setup
+      ? L({ru:'Ответьте на несколько вопросов о прошедших сутках — и VIO подготовит персональный разбор.',uk:'Дайте відповідь на кілька запитань про минулу добу — і VIO підготує персональний розбір.',en:'Answer a few questions about your past 24 hours — and VIO will prepare a personal overview.',es:'Responde unas preguntas sobre tus últimas 24 horas y VIO preparará tu resumen personal.',de:'Beantworte ein paar Fragen zu deinen letzten 24 Stunden — und VIO erstellt deine persönliche Übersicht.',pt:'Responda a algumas perguntas sobre as últimas 24 horas — e o VIO preparará seu resumo pessoal.',fr:'Répondez à quelques questions sur vos dernières 24 heures — et VIO préparera votre bilan personnel.',pl:'Odpowiedz na kilka pytań o ostatnie 24 godziny — a VIO przygotuje Twój osobisty przegląd.',it:'Rispondi ad alcune domande sulle tue ultime 24 ore — e VIO preparerà il tuo riepilogo personale.',he:'ענו על כמה שאלות על 24 השעות האחרונות — ו-VIO יכין סקירה אישית.',ja:'過去24時間についていくつかの質問に答えると、VIOがあなたの個別のまとめを用意します。',ko:'지난 24시간에 대한 몇 가지 질문에 답하면 VIO가 개인 맞춤 요약을 준비합니다.'})
+      : L({ru:'Расскажите немного о себе — это нужно один раз, чтобы VIO подготовил персональный разбор.',uk:'Розкажіть трохи про себе — це потрібно один раз, щоб VIO підготував персональний розбір.',en:'Tell us a little about yourself — just once, so VIO can prepare a personal overview.',es:'Cuéntanos un poco sobre ti — solo una vez, para que VIO prepare tu resumen personal.',de:'Erzähl uns etwas über dich — nur einmal, damit VIO deine persönliche Übersicht erstellen kann.',pt:'Conte-nos um pouco sobre você — apenas uma vez, para o VIO preparar seu resumo pessoal.',fr:'Parlez-nous un peu de vous — une seule fois, pour que VIO prépare votre bilan personnel.',pl:'Opowiedz nam trochę o sobie — tylko raz, aby VIO przygotował Twój osobisty przegląd.',it:'Raccontaci un po’ di te — una sola volta, così VIO prepara il tuo riepilogo personale.',he:'ספרו לנו קצת על עצמכם — פעם אחת, כדי ש-VIO יכין סקירה אישית.',ja:'あなたについて少し教えてください（初回のみ）。VIOが個別のまとめを用意します。',ko:'자신에 대해 조금 알려주세요 — 처음 한 번만, VIO가 개인 맞춤 요약을 준비합니다.'});
+    var d=document.createElement('div'); d.className='flow-intro';
+    d.style.cssText='max-width:600px;margin:16px auto 2px;padding:0 26px;text-align:center;';
+    d.innerHTML='<div style="font-family:\'Playfair Display\',serif;font-size:19px;color:#fff;margin-bottom:8px;">'+ttl+'</div>'
+      +'<div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.6;">'+sub+'</div>';
+    main.appendChild(d);
+  })();
   // Дневную группу делим на две зоны: «За прошедшие сутки» (ретроспектива) и «Прямо сейчас» (живой замер — пульс, step3).
   var _NOW=[3];
   [['base',    function(n){return (STEP_CADENCE[n]||'daily')==='base';}],
@@ -4839,7 +4869,7 @@ function _passedToday(){ try{ return localStorage.getItem('vial_lastpass')===_da
 function _showDailyDoneGate(){
   document.body.classList.add('flow-mode'); _hideFlowFooter();
   document.querySelectorAll('.step').forEach(function(s){s.classList.remove('flow-show','active');});
-  document.querySelectorAll('.flow-group-head').forEach(function(h){h.remove();});
+  document.querySelectorAll('.flow-group-head,.flow-intro').forEach(function(h){h.remove();});
   var r=document.getElementById('stepResult'); if(r)r.classList.remove('active');
   var main=document.querySelector('main'); if(!main)return;
   var old=document.getElementById('daily-done-gate'); if(old)old.remove();
@@ -4864,7 +4894,7 @@ function showResults(){
   if(((window.__touched&&window.__touched.size)||0) < 3){ _showNoDataGate(); return; }
   // Выходим из ленты перед показом результата (иначе flow-mode скрыл бы stepResult).
   document.body.classList.remove('flow-mode'); _hideFlowFooter();
-  document.querySelectorAll('.flow-group-head').forEach(function(h){h.remove();});   // убрать каденс-заголовки «Настройка/Сегодня» с экрана результата
+  document.querySelectorAll('.flow-group-head,.flow-intro').forEach(function(h){h.remove();});   // убрать каденс-заголовки и интро с экрана результата
   if(typeof _markPeriodicDone==='function')_markPeriodicDone();   // отметить weekly/biweekly блоки как заполненные
   triggerLensFlare();
   try {
