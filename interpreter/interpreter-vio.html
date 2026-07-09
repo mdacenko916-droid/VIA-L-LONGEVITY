@@ -3020,7 +3020,16 @@ function _restoreActivity(){
     if(Array.isArray(P.act_types)){['act1','act2','act3','act4','act5','act6'].forEach(function(id){var c=document.getElementById(id);if(c)c.checked=(P.act_types.indexOf(c.value)>=0);});}
   }catch(e){}
 }
-(function(){ var _r=function(){ try{_restoreActivity();}catch(e){} try{_restoreCard();}catch(e){} }; if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',_r);else _r(); })();
+(function(){ var _r=function(){ try{_restoreActivity();}catch(e){} try{_restoreCard();}catch(e){} }; if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',_r);else _r();
+  // _SEC (шифрослой) готов асинхронно — на перезагрузке профиль расшифровывается ПОЗЖЕ первого _restoreCard.
+  // Перезапускаем восстановление после готовности и перерисовываем ленту (чтобы base-блоки скрылись по _setupDone).
+  // Не перетираем, если пользователь уже начал вводить.
+  try{ if(window._secReady&&window._secReady.then) window._secReady.then(function(){
+    if(window.__touched&&window.__touched.size)return;
+    _r();
+    try{ if(typeof _passedToday==='function'&&!_passedToday()&&document.body.classList.contains('flow-mode')&&typeof showAll==='function') showAll(); }catch(e){}
+  }); }catch(e){}
+})();
 function _cardSaveNum(field,val){
   var P={}; try{P=JSON.parse(secGet('vial_profile')||'{}')||{};}catch(e){}
   P[field]=(val||'').trim();
@@ -3694,7 +3703,11 @@ function _flowHead(cad){
   return '';
 }
 // step10(Цикл), step1(Приливы), step8(Туман/когниция) скрыты мужчинам
-function _flowHidden(n){ var male=getRadio('gender')==='male'; if(male&&(n===10||n===1))return true; return false; }  // муж: скрыт цикл(10)+приливы(1); когниция(8) доступна всем
+// Настройка сделана = профиль (пол+возраст) сохранён → base-блоки живут в Карточке, из дневной ленты убраны.
+function _setupDone(){ try{ var P=JSON.parse(secGet('vial_profile')||'{}')||{}; return !!(P.gender && P.age); }catch(e){ return false; } }
+function _flowHidden(n){ var male=getRadio('gender')==='male'; if(male&&(n===10||n===1))return true;   // муж: скрыт цикл(10)+приливы(1); когниция(8) доступна всем
+  if(STEP_CADENCE[n]==='base' && _setupDone()) return true;   // разовые base-блоки (профиль/баланс/ритм/питание/добавки) — только в Карточке; данные в анализ идут из _restoreCard
+  return false; }
 // Гейтинг периодических блоков по дате (как PRO): weekly ≥7дн, biweekly ≥14дн; base/daily всегда.
 function _stepLastMap(){ try{ return JSON.parse(localStorage.getItem('vial_steplast')||'{}')||{}; }catch(e){ return {}; } }
 function _stepDue(n){
