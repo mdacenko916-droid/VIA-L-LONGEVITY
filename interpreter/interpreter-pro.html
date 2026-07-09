@@ -3616,7 +3616,7 @@ function saveSession(score,type,data){
     ts:Date.now()
   };
   history.unshift(session);
-  while(history.length>60)history.pop();
+  while(history.length>1500)history.pop();   // хранение на годы (сессии; было 60); старше покрывает бэкап
   localStorage.setItem(key,JSON.stringify(history));
 }
 
@@ -3638,7 +3638,7 @@ function _saveDaily(){
     var arr=[]; try{arr=JSON.parse(localStorage.getItem('vial_daily')||'[]')||[];}catch(e){}
     arr=arr.filter(function(r){return r.day!==rec.day;});
     arr.unshift(rec);
-    while(arr.length>90)arr.pop();
+    while(arr.length>1500)arr.pop();   // хранение на годы (~4 г дневных метрик; было 90); старше покрывает бэкап
     localStorage.setItem('vial_daily',JSON.stringify(arr));
   }catch(e){}
 }

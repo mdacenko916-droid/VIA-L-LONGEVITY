@@ -2812,7 +2812,7 @@ function saveSession(score,type,data){
     };
     history=history.filter(function(s){return s.day!==session.day;});  // B: 1 разбор/день (как _saveDaily) — без дублей в динамике/недельных средних
     history.unshift(session);
-    while(history.length>120)history.pop();
+    while(history.length>1500)history.pop();   // хранение на годы (сессии; было 120); старше покрывает бэкап
     secSet(key,JSON.stringify(history));   // через шифрослой (secGet читает то же, что пишем)
   }catch(e){}
 }
@@ -3377,7 +3377,7 @@ function _saveDaily(){
       weight:pf('prof-weight'), waist:pf('prof-waist') };
     var arr=[]; try{arr=JSON.parse(secGet('vial_daily')||'[]')||[];}catch(e){}
     arr=arr.filter(function(r){return r.day!==rec.day;});
-    arr.unshift(rec); while(arr.length>90)arr.pop();
+    arr.unshift(rec); while(arr.length>1500)arr.pop();   // хранение на годы (~4 г дневных метрик; было 90); старше покрывает бэкап
     secSet('vial_daily',JSON.stringify(arr));
   }catch(e){}
 }
@@ -4846,7 +4846,7 @@ function _aiDailySave(analysis,lang,sig){
   try{ var arr=_aiDailyGet(), day=_dayKey();
     arr=arr.filter(function(e){return e.day!==day;});           // 1 запись/день (перезапись)
     arr.unshift({day:day,lang:lang,sig:sig,analysis:analysis,ts:Date.now()});
-    while(arr.length>92)arr.pop();                              // ~3 мес истории
+    while(arr.length>730)arr.pop();                             // хранение на годы (~2 г дневных разборов; было 92, текст тяжелее метрик); старше — в бэкапе
     secSet('vial_ai_daily',JSON.stringify(arr));
   }catch(e){}
 }
