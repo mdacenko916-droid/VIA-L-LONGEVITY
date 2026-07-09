@@ -1575,11 +1575,11 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
 <div id="scroll-area">
 
 <!-- HISTORY PANEL (inside scroll-area) -->
-<div id="historyPanel" style="display:none;position:fixed;top:var(--topbar-h,74px);left:0;right:0;bottom:0;z-index:400;background:#10131A;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 20px 40px;">
-  <div style="max-width:600px;margin:0 auto;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
-      <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--t1);" data-t="nav_card">Мой профиль</div>
-      <button onclick="navTo('home')" style="background:none;border:1px solid var(--b1);color:var(--t3);padding:6px 14px;border-radius:50px;font-size:11px;letter-spacing:1px;cursor:pointer;font-family:'DM Sans',sans-serif;">✕</button>
+<div id="historyPanel" style="display:none;position:fixed;top:84px;left:50%;transform:translateX(-50%);width:calc(100% - 26px);max-width:820px;max-height:calc(100dvh - 104px);z-index:400;background:rgba(20,24,36,.60);backdrop-filter:blur(24px) saturate(1.15);-webkit-backdrop-filter:blur(24px) saturate(1.15);border:1px solid rgba(180,138,240,.28);border-radius:26px;box-shadow:0 26px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.06);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:22px 22px 28px;">
+  <div style="max-width:760px;margin:0 auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div style="font-family:'Playfair Display',serif;font-size:23px;color:var(--t1);" data-t="nav_card">Мой профиль</div>
+      <button onclick="navTo('home')" aria-label="Close" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);border:1px solid rgba(180,138,240,.3);color:var(--t2);border-radius:50%;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;line-height:1;flex-shrink:0;">✕</button>
     </div>
     <div id="weeklyReport" style="margin-bottom:18px;"></div>
     <div id="monthlyReport" style="margin-bottom:18px;"></div>
@@ -2820,8 +2820,9 @@ function navTo(tab){
   document.querySelectorAll('.bottom-nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+tab)?.classList.add('active');
   const hp=document.getElementById('historyPanel');
-  if(tab==='card'){hp.style.display='block';renderCard();}
-  else hp.style.display='none';
+  var _mainEl=document.querySelector('main');   // за стеклянным модалом карточки прячем ленту → виден звёздный фон + лого (модал накрывает «VIO»)
+  if(tab==='card'){ hp.style.display='block'; if(_mainEl)_mainEl.style.display='none'; renderCard(); }
+  else { hp.style.display='none'; if(_mainEl)_mainEl.style.display=''; }
   if(tab==='home'){ if(_lastResult){ goTo('result'); } else if(_passedToday()){ _showDailyDoneGate(); } else { goTo(0); } }   // «Сегодня»: результат в памяти → показать; сегодня уже пройдено → гейт; иначе старт
 }
 
@@ -3819,6 +3820,7 @@ function showAll(){
 function _editProfile(){
   window.__editMode=true;
   var hp=document.getElementById('historyPanel'); if(hp)hp.style.display='none';
+  var _m=document.querySelector('main'); if(_m)_m.style.display='';   // вернуть ленту (была скрыта под модалом карточки)
   document.querySelectorAll('.bottom-nav-item').forEach(function(b){b.classList.remove('active');});
   var nh=document.getElementById('nav-home'); if(nh)nh.classList.add('active');
   showAll();
