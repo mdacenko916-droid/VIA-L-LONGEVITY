@@ -1511,15 +1511,23 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
 #consent-btn.on{opacity:1;pointer-events:auto;}
 .result-disc{font-size:11px;line-height:1.45;color:var(--t3);background:rgba(180,138,240,.07);border:1px solid rgba(180,138,240,.18);border-radius:10px;padding:8px 11px;margin-bottom:14px;}
 /* Путь Б — структурный разбор: вступление + карточки-темы «превью + раскрытие» */
-.ai-intro{font-size:13.5px;color:var(--t2);line-height:1.8;margin-bottom:6px;}
-.ai-sec{border-top:1px solid rgba(180,138,240,.14);padding:15px 0 4px;}
-.ai-sec-h{display:flex;align-items:center;gap:9px;font-family:'Playfair Display',serif;font-size:16px;color:var(--t1);margin-bottom:8px;}
-.ai-sec-ic{font-size:19px;line-height:1;}
-.ai-sec-sum{font-size:13.5px;color:var(--t2);line-height:1.75;}
-.ai-sec-more{margin-top:10px;background:none;border:none;color:#b48af0;font-size:12.5px;font-weight:600;cursor:pointer;padding:4px 0;font-family:inherit;letter-spacing:.2px;}
-.ai-sec-more:hover{color:#c9a8f5;}
+#aiCard{padding:26px 22px;}   /* больше воздуха — «дорогое» ощущение (Oura/Levels) */
+@media(max-width:480px){#aiCard{padding:22px 18px;}}
+.ai-intro{font-size:14px;color:var(--t2);line-height:1.85;margin-bottom:10px;}
+.ai-sec{border-top:1px solid rgba(180,138,240,.12);padding:22px 0 6px;}
+.ai-sec:first-of-type{border-top:none;padding-top:8px;}
+.ai-sec-h{display:flex;align-items:center;gap:10px;font-family:'Playfair Display',serif;font-size:16.5px;color:var(--t1);margin-bottom:9px;}
+.ai-sec-ic{font-size:20px;line-height:1;}
+.ai-sec-pill{font-family:'DM Sans',sans-serif;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#1a1206;background:linear-gradient(135deg,#e7c77a,#c9962f);padding:3px 9px;border-radius:20px;white-space:nowrap;}
+.ai-sec-sum{font-size:14px;color:var(--t2);line-height:1.8;}
+.ai-sec-more{margin-top:12px;background:none;border:none;color:#a883e6;font-size:12px;font-weight:500;cursor:pointer;padding:2px 0;font-family:inherit;letter-spacing:.2px;opacity:.9;}
+.ai-sec-more:hover{opacity:1;color:#c9a8f5;}
 .ai-sec-more.open{color:var(--t3);}
-.ai-sec-det{font-size:13px;color:var(--t2);line-height:1.75;margin-top:8px;padding:12px 14px;background:rgba(180,138,240,.05);border-radius:12px;border-left:2px solid rgba(180,138,240,.3);}
+/* Детали — часть карточки: тонкий левый акцент + воздух, без «серой коробки» (Apple Health/Oura-стиль) */
+.ai-sec-det{font-size:13.5px;color:var(--t2);line-height:1.8;margin-top:12px;padding:2px 0 4px 18px;border-left:2px solid rgba(180,138,240,.28);background:linear-gradient(90deg,rgba(180,138,240,.035),transparent 60%);}
+/* Микроподзаголовки внутри деталей — «VIO объясняет вывод», а не сплошной текст */
+.ai-subh{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#c9a8f5;margin:14px 0 5px;}
+.ai-sec-det .ai-subh:first-child{margin-top:2px;}
 </style>
 </head>
 <body>
@@ -4963,9 +4971,13 @@ function _dayKey(){ return new Date().toISOString().slice(0,10); }
 function _sigOf(o){ try{var s=JSON.stringify(o),h=0;for(var i=0;i<s.length;i++){h=((h<<5)-h+s.charCodeAt(i))|0;}return ''+h;}catch(e){return '';} }
 function _aiMd(txt){ return (typeof _wl==='function'?_wl(txt):txt).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/^#{1,3}\s*(.+)$/gm,'<strong style="display:block;margin:14px 0 4px;">$1</strong>').replace(/\*\*([^*]+?)\*\*/g,'<strong>$1</strong>'); }
 // ── Путь Б: структурный разбор (вступление целиком + темы «превью + раскрытие») ──
-function _mdOnly(txt){ return String(txt==null?'':txt).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/^#{1,3}\s*(.+)$/gm,'<strong style="display:block;margin:14px 0 4px;">$1</strong>').replace(/\*\*([^*]+?)\*\*/g,'<strong>$1</strong>'); }
+function _mdOnly(txt){ return String(txt==null?'':txt).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  .replace(/^#{1,3}\s*(.+)$/gm,'<div class="ai-subh">$1</div>')
+  .replace(/^\s*\*\*([^*]+?)\*\*\s*:?\s*$/gm,'<div class="ai-subh">$1</div>')   // строка-«**Подзаголовок**» → микро-заголовок
+  .replace(/\*\*([^*]+?)\*\*/g,'<strong>$1</strong>'); }
 function _moreLbl(){ return L({ru:'Почему я так думаю →',uk:'Чому я так вважаю →',en:'Why I think so →',es:'Por qué lo pienso →',de:'Warum ich das denke →',pt:'Por que penso assim →',fr:'Pourquoi je pense cela →',pl:'Dlaczego tak sądzę →',it:'Perché lo penso →',he:'← למה אני חושב כך',ja:'なぜそう考えるか →',ko:'왜 그렇게 생각할까 →'}); }
 function _lessLbl(){ return L({ru:'Свернуть ↑',uk:'Згорнути ↑',en:'Collapse ↑',es:'Ocultar ↑',de:'Einklappen ↑',pt:'Recolher ↑',fr:'Replier ↑',pl:'Zwiń ↑',it:'Comprimi ↑',he:'↑ כווץ',ja:'閉じる ↑',ko:'접기 ↑'}); }
+function _moreLbl_pri(){ return L({ru:'Главный приоритет',uk:'Головний пріоритет',en:'Top priority',es:'Prioridad principal',de:'Top-Priorität',pt:'Prioridade principal',fr:'Priorité nº 1',pl:'Priorytet',it:'Priorità',he:'עדיפות עליונה',ja:'最優先',ko:'최우선'}); }
 function _toggleDetail(btn){ var d=btn.nextElementSibling; if(!d)return; var open=d.style.display!=='none'; d.style.display=open?'none':'block'; btn.textContent=open?_moreLbl():_lessLbl(); btn.classList.toggle('open',!open); }
 function _renderAnalysis(raw){
   var text=(typeof _wl==='function')?_wl(String(raw==null?'':raw)):String(raw==null?'':raw);
@@ -4975,8 +4987,10 @@ function _renderAnalysis(raw){
   for(var i=0;i<parts.length;i++){
     var ds=parts[i].split(/\n?\[\[D\]\]\s*\n?/), headsum=ds[0]||'', detail=(ds[1]||'').trim();
     var nl=headsum.indexOf('\n'), head=(nl<0?headsum:headsum.slice(0,nl)).trim(), summary=(nl<0?'':headsum.slice(nl+1)).trim();
-    var bar=head.indexOf('|'), icon=(bar<0?'':head.slice(0,bar)).trim(), title=(bar<0?head:head.slice(bar+1)).trim();
-    html+='<div class="ai-sec"><div class="ai-sec-h">'+(icon?('<span class="ai-sec-ic">'+_esc(icon)+'</span>'):'')+'<span>'+_esc(title)+'</span></div>'
+    var hp=head.split('|'), icon=(hp[0]||'').trim(), title=(hp[1]||'').trim(), flag=(hp[2]||'').trim().toLowerCase();
+    if(!title){ title=icon; icon=''; }   // если разделителя нет — весь head в заголовок
+    var pill=(flag.indexOf('prior')>=0)?('<span class="ai-sec-pill">'+_moreLbl_pri()+'</span>'):'';
+    html+='<div class="ai-sec"><div class="ai-sec-h">'+(icon?('<span class="ai-sec-ic">'+_esc(icon)+'</span>'):'')+'<span style="flex:1;">'+_esc(title)+'</span>'+pill+'</div>'
       +'<div class="ai-sec-sum">'+_mdOnly(summary)+'</div>';
     if(detail) html+='<button type="button" class="ai-sec-more" onclick="_toggleDetail(this)">'+_moreLbl()+'</button><div class="ai-sec-det" style="display:none;">'+_mdOnly(detail)+'</div>';
     html+='</div>';
