@@ -105,7 +105,7 @@ body::before{
 
 /* ── Scroll area — fills full space, topbar floats above ── */
 #scroll-area{
-  padding-top:8px;           /* поднято на ~диаметр круга лого (было 96px) — лого к уровню кнопок топбара */
+  padding-top:26px;          /* лого поднят к кнопкам, но не режется сверху (было 96px→8, 8 обрезал верх лого) */
   flex:1 1 auto;
   overflow-y:auto;
   overflow-x:hidden;
@@ -197,7 +197,9 @@ body::before{
   backdrop-filter:blur(20px);
   border-top:1px solid var(--b1);
   position:relative;z-index:1;
+  transition:transform .32s cubic-bezier(.4,0,.2,1),opacity .28s ease;
 }
+.bottom-nav.nav-hidden{transform:translateY(110%);opacity:0;pointer-events:none;}
 .bottom-nav-item{
   display:flex;flex-direction:column;align-items:center;gap:4px;
   font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
@@ -2821,8 +2823,9 @@ function navTo(tab){
   document.getElementById('nav-'+tab)?.classList.add('active');
   const hp=document.getElementById('historyPanel');
   var _mainEl=document.querySelector('main');   // за стеклянным модалом карточки прячем ленту → виден звёздный фон + лого (модал накрывает «VIO»)
-  if(tab==='card'){ hp.style.display='block'; if(_mainEl)_mainEl.style.display='none'; renderCard(); }
-  else { hp.style.display='none'; if(_mainEl)_mainEl.style.display=''; }
+  var _nav=document.querySelector('.bottom-nav');   // при открытом профиле нижняя навигация не нужна → плавно скрываем (iOS-стиль)
+  if(tab==='card'){ hp.style.display='block'; if(_mainEl)_mainEl.style.display='none'; if(_nav)_nav.classList.add('nav-hidden'); renderCard(); }
+  else { hp.style.display='none'; if(_mainEl)_mainEl.style.display=''; if(_nav)_nav.classList.remove('nav-hidden'); }
   if(tab==='home'){ if(_lastResult){ goTo('result'); } else if(_passedToday()){ _showDailyDoneGate(); } else { goTo(0); } }   // «Сегодня»: результат в памяти → показать; сегодня уже пройдено → гейт; иначе старт
 }
 
@@ -3158,11 +3161,11 @@ function _vcCSS(){ if(document.getElementById('vcard-css'))return; var s=documen
   +".vp-txt b{color:#c9b0f0;font-weight:600;}"
   +".vcard-grid{display:grid;grid-template-columns:1fr;gap:12px;}"
   +"@media(min-width:720px){.vcard-grid{grid-template-columns:1fr 1fr;align-items:start;max-width:800px;margin-left:auto;margin-right:auto;}.vc-span{grid-column:auto;}}"
-  +"details.vcard-sec{background:rgba(255,255,255,.015);border:1px solid rgba(180,138,240,.18);border-radius:16px;overflow:hidden;}"
+  +"details.vcard-sec{background:rgba(6,9,18,.42);border:1px solid rgba(180,138,240,.22);border-radius:16px;overflow:hidden;}"
   +"details.vcard-sec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 16px;min-height:64px;box-sizing:border-box;}"
   +"details.vcard-sec>summary::-webkit-details-marker{display:none;}"
-  +".vc-ic{font-size:16px;}.vc-tt{font-family:'Oswald',sans-serif;font-size:12.5px;letter-spacing:1px;text-transform:uppercase;color:#ece4fb;}"
-  +".vc-chev{margin-left:auto;color:#b48af0;font-size:20px;line-height:1;transition:transform .2s;}"
+  +".vc-ic{font-size:16px;}.vc-tt{font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:#fff;font-weight:500;}"
+  +".vc-chev{margin-left:auto;color:#cdb2ff;font-size:20px;line-height:1;transition:transform .2s;}"
   +"details.vcard-sec[open]>summary .vc-chev{transform:rotate(90deg);}"
   +".vcard-sec-body{padding:0 16px 14px;}"
   +".vc-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(180,138,240,.1);font-size:13px;}"
@@ -3821,6 +3824,7 @@ function _editProfile(){
   window.__editMode=true;
   var hp=document.getElementById('historyPanel'); if(hp)hp.style.display='none';
   var _m=document.querySelector('main'); if(_m)_m.style.display='';   // вернуть ленту (была скрыта под модалом карточки)
+  var _nv=document.querySelector('.bottom-nav'); if(_nv)_nv.classList.remove('nav-hidden');
   document.querySelectorAll('.bottom-nav-item').forEach(function(b){b.classList.remove('active');});
   var nh=document.getElementById('nav-home'); if(nh)nh.classList.add('active');
   showAll();
