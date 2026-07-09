@@ -5066,6 +5066,10 @@ function _wl(s){ if(!s||typeof s!=='string')return s; var L=(typeof lang!=='unde
     s=s.replace(/(?:щитовид|тиреотроп|thyroid|tiroid|thyroïd|tarczyc|tiroide|гипотиреоз|гипертиреоз|гіпотиреоз|гіпертиреоз|hypothyr|hyperthyr|hipotiroid|hipertiroid|hipotireoid|hipertireoid|ipotiroid|ipertiroid)\p{L}*|ТТГ|\bTSH\b|ФСГ|\bFSH\b|甲状腺|갑상선|בלוטת התריס/giu, mt);
     s=s.replace(new RegExp('работ\\p{L}+\\s+'+_wesc(mt),'giu'), mt);
     s=s.replace(/\bHRV\b|ВСР/gi, rc);
+    // приливы (мн.) / hot flashes → тепловые волны; ед.ч. «прилив» НЕ трогаем (прилив сил/энергии)
+    var _hw=({ru:'тепловые волны',uk:'теплові хвилі',en:'heat waves',es:'oleadas de calor',de:'Hitzewellen',pt:'ondas de calor',fr:'ondes de chaleur',pl:'fale gorąca',it:'ondate di calore',he:'גלי חום',ja:'熱の波',ko:'열의 파동'})[L]||'heat waves';
+    s=s.replace(/приливы|приливов|приливах|приливам|приливами|hot\s*flash\p{L}*|hot\s*flush\p{L}*|sofocos?|Hitzewallung\p{L}*|fogachos?|bouffées?\s+de\s+chaleur|uderzeni\p{L}*\s+gorąc\p{L}*|vampat[ae]|ほてり|のぼせ|ホットフラッシュ|안면\s*홍조/giu, _hw);
+    s=s.replace(/гормональн\p{L}*\s+фон\p{L}*/giu, hn);
     [hn,hg,mt,rc].forEach(function(w){ if(!w)return; s=s.replace(new RegExp(_wesc(w)+'\\s+(?:'+_WLG+')','giu'), w); });
     s=s.replace(/(\p{L}{3,})(?:\s+\1)+/giu, '$1');
     [hn,hg,mt,rc].forEach(function(w){ if(!w)return; var e=_wesc(w); s=s.replace(new RegExp(e+'(?:\\s+(?:и|та|and|y|und|e|et|i|oraz)\\s+|\\s+)'+e,'giu'), w); });
