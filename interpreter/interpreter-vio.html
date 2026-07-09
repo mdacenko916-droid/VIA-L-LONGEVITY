@@ -2846,7 +2846,7 @@ function saveSession(score,type,data){
 // Ключ (extractable:false) хранится в IndexedDB — сырой ключ недоступен JS. Работает в браузере
 // и внутри Capacitor-WebView. Если crypto/IndexedDB недоступны — прозрачный откат на localStorage
 // (приложение не ломается). Sync-совместимость: расшифровка в память при старте, шифрование при записи.
-var _SEC={ready:false,key:null,cache:{},keys:['vial_profile','vial_history','vial_daily','vial_weekly_text','vial_monthly_text','vial_ai_memory','vial_ai_daily','vial_day_plan']};
+var _SEC={ready:false,key:null,cache:{},keys:['vial_profile','vial_history','vial_daily','vial_weekly_text','vial_monthly_text','vial_ai_memory','vial_ai_daily','vial_day_plan','vial_lastdata']};
 function _secIdb(){return new Promise(function(res,rej){try{var r=indexedDB.open('vial_sec',1);r.onupgradeneeded=function(){r.result.createObjectStore('k');};r.onsuccess=function(){res(r.result);};r.onerror=function(){rej(r.error);};}catch(e){rej(e);}});}
 function _secIdbGet(db,k){return new Promise(function(res,rej){var t=db.transaction('k','readonly').objectStore('k').get(k);t.onsuccess=function(){res(t.result);};t.onerror=function(){rej(t.error);};});}
 function _secIdbPut(db,k,v){return new Promise(function(res,rej){var t=db.transaction('k','readwrite').objectStore('k').put(v,k);t.onsuccess=function(){res();};t.onerror=function(){rej(t.error);};});}
@@ -4876,6 +4876,20 @@ function _showNoDataGate(){
 // Модель VIO: один проход/день (данные за прошедшие сутки — вчера уже не изменится).
 // После прохода повторно ленту не показываем: разбор в Карточке, вопросы — к советнику.
 function _passedToday(){ try{ return localStorage.getItem('vial_lastpass')===_dayKey(); }catch(e){ return false; } }
+// Показать сегодняшний результат целиком (разбор + памятка дня: питание/движение/сон/вода/нутриенты)
+// из сохранённых данных прохода — после перезагрузки, с гейта. Разбор и памятка берутся из кэша дня (без API).
+function _viewTodayResult(){
+  var d=null; try{ d=JSON.parse(secGet('vial_lastdata')||'null'); }catch(e){}
+  if(!d||typeof d!=='object'){ if(typeof navTo==='function')navTo('card'); return; }
+  window.__viewData=d;
+  try{
+    document.body.classList.remove('flow-mode'); if(typeof _hideFlowFooter==='function')_hideFlowFooter();
+    document.querySelectorAll('.flow-group-head,.flow-intro').forEach(function(h){h.remove();});
+    var g=document.getElementById('daily-done-gate'); if(g)g.remove();
+    _showResultsInner();   // рендерит результат из __viewData, разбор/памятку тянет из кэша дня, сам делает goTo('result')
+  }catch(e){ if(typeof navTo==='function')navTo('card'); }
+  finally{ window.__viewData=null; }
+}
 function _showDailyDoneGate(){
   document.body.classList.add('flow-mode'); _hideFlowFooter();
   document.querySelectorAll('.step').forEach(function(s){s.classList.remove('flow-show','active');});
@@ -4894,7 +4908,7 @@ function _showDailyDoneGate(){
   d.innerHTML='<div style="font-size:44px;line-height:1;margin-bottom:12px;">🌙</div>'
     +'<div style="font-family:\'Playfair Display\',serif;font-size:20px;color:#fff;margin-bottom:10px;">'+title+'</div>'
     +'<div style="font-size:13.5px;color:rgba(255,255,255,.72);line-height:1.6;margin-bottom:6px;">'+sub+'</div>'
-    +'<button onclick="navTo(\'card\')" style="'+btn+'">🗂️ '+bCard+'</button>'
+    +'<button onclick="_viewTodayResult()" style="'+btn+'">📊 '+bCard+'</button>'
     +'<button onclick="if(window.vlAdvOpen)window.vlAdvOpen()" style="'+btn+'">💬 '+bAdv+'</button>';
   main.appendChild(d);
   var sa=document.getElementById('scroll-area'); if(sa)sa.scrollTop=0; else window.scrollTo(0,0);
@@ -5099,7 +5113,7 @@ function _wl(s){ if(!s||typeof s!=='string')return s; var L=(typeof lang!=='unde
 }
 function _showResultsInner(){
   if(typeof saveProfile==='function'){try{saveProfile();}catch(e){}}   // профиль → карточка (vial_profile)
-  const data={
+  const data=window.__viewData||{   // режим просмотра: данные из хранилища (перезагрузка/гейт), а не из DOM
     _skipped:(window.__SOFTSKIP||[]).filter(function(k){return !(window.__touched&&window.__touched.has(k));}),
     gender:getRadio('gender')||'female',
     phase:determinePhase(),
@@ -5293,12 +5307,13 @@ function _showResultsInner(){
   const rs=document.getElementById('recSections');
   if(rs)rs.innerHTML='';
 
-  // Save to history (skip on language re-render)
-  if(!_rerendering)saveSession(score,type,data);
-  if(!_rerendering&&typeof _saveDaily==='function')_saveDaily();   // дневной снимок для недельного AI-разбора
+  // Save to history (skip on language re-render И в режиме просмотра — не дублировать)
+  if(!_rerendering&&!window.__viewData)saveSession(score,type,data);
+  if(!_rerendering&&!window.__viewData&&typeof _saveDaily==='function')_saveDaily();   // дневной снимок для недельного AI-разбора
 
-  // Store for PDF
+  // Store for PDF + для повторного показа результата после перезагрузки (гейт «Посмотреть мой разбор»)
   _lastResult={score,type,insights:ins,recs,docR,labs,data};
+  if(!window.__viewData){ try{secSet('vial_lastdata',JSON.stringify(data));}catch(e){} }
   if(typeof fetchAIAnalysis==='function' && !_rerendering) fetchAIAnalysis(data, (typeof lang!=='undefined'?lang:null));
 
   // Render PRO modules
