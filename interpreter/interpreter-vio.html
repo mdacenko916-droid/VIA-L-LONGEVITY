@@ -3243,13 +3243,15 @@ function renderCard(){
     +'</div>';
 
   html+='<div class="vcard-grid">';
+  // Секции собираются в переменные, затем выводятся в порядке логики/важности (см. join ниже)
+  var _secAct='',_secNut='',_secSup='',_secBal='',_secRhythm='',_secStress='',_secLife='',_secGoal='',_secBaseline='',_secDyn='',_secDay='',_secHist='',_secBackup='',_secLegal='';
 
   // ── Активность (s8) ──
   var _afm={none:'act_freq_0',low:'act_freq_low',moderate:'act_freq_mod',high:'act_freq_high'},_arm={great:'rec_great',ok:'rec_ok',tired:'rec_tired',exhausted:'rec_exhausted'};
   var actInner=_row(t('s8_l2'),(P.act_freq&&_afm[P.act_freq])?t(_afm[P.act_freq]):'—')
     +'<div class="vc-sub">'+t('s8_l1')+'</div>'+(_vcChips(ACT,P.act_types)||'<div class="vc-empty">—</div>')
     +((P.act_recovery&&_arm[P.act_recovery])?_row(t('s8_l3'),t(_arm[P.act_recovery])):'');
-  html+=_vcSec('🏃',t('s8_title'),actInner,false);
+  _secAct=_vcSec('🏃',t('s8_title'),actInner,false);
 
   // ── Питание (s7) ──
   var nutInner=_row(t('s7_l2')||L({ru:'Режим питания',uk:'Режим харчування',en:'Eating pattern',es:'Patrón alimentario',de:'Essverhalten',pt:'Padrão alimentar',fr:'Rythme alimentaire',pl:'Wzorzec żywienia',it:'Modello alimentare',he:'דפוס אכילה',ja:'食事パターン',ko:'식사 패턴'}),_vcRad('eating_pattern',P.eating_pattern)||'—')
@@ -3258,18 +3260,18 @@ function renderCard(){
     +(P.cravings==='yes'?_row(L({ru:'Тяга к сладкому',uk:'Потяг до солодкого',en:'Sweet cravings',es:'Antojos de dulce',de:'Heißhunger auf Süßes',pt:'Vontade de doce',fr:'Envies de sucré',pl:'Ochota na słodycze',it:'Voglia di dolci',he:'חשק למתוק',ja:'甘い物への欲求',ko:'단 것 갈망'}),'✓'):'')
     +(function(){var c=_vcChips(GI,(P.gi||[]).filter(function(v){return !/^none/.test(v);}));return c?'<div class="vc-sub">'+L({ru:'Пищеварение',uk:'Травлення',en:'Digestion',es:'Digestión',de:'Verdauung',pt:'Digestão',fr:'Digestion',pl:'Trawienie',it:'Digestione',he:'עיכול',ja:'消化',ko:'소화'})+'</div>'+c:'';})()
     +(P.allergy?_row(t('allergy_l')||L({ru:'Непереносимости',uk:'Непереносимість',en:'Intolerances',es:'Intolerancias',de:'Unverträglichkeiten',pt:'Intolerâncias',fr:'Intolérances',pl:'Nietolerancje',it:'Intolleranze',he:'רגישויות',ja:'不耐性',ko:'못 견디는 것'}),_esc(P.allergy)):'');
-  html+=_vcSec('🍽️',t('s7_title'),nutInner,false);
+  _secNut=_vcSec('🍽️',t('s7_title'),nutInner,false);
 
   // ── Добавки и препараты (s9) ──
   var supChips=_vcChips(SUP,(P.supplements||[]).filter(function(v){return v!=='none_sup';}));
   var medChips=_vcChips(MED,P.meds);
   var supInner=(supChips?('<div class="vc-sub">'+(t('s9_l1')||L({ru:'Добавки',uk:'Добавки',en:'Supplements',es:'Suplementos',de:'Präparate',pt:'Suplementos',fr:'Compléments',pl:'Suplementy',it:'Integratori',he:'תוספים',ja:'サプリ',ko:'보충제'}))+'</div>'+supChips):'')
     +(medChips||P.meds_other?('<div class="vc-sub">'+L({ru:'Препараты',uk:'Препарати',en:'Medications',es:'Medicamentos',de:'Präparate',pt:'Medicamentos',fr:'Médicaments',pl:'Leki',it:'Farmaci',he:'תרופות',ja:'服用中',ko:'복용약'})+'</div>'+(medChips||'')+(P.meds_other?'<div class="vc-chips"><span class="vc-chip">'+_esc(P.meds_other)+'</span></div>':'')):'');
-  html+=_vcSec('💊',t('s9_title'),supInner,false);
+  _secSup=_vcSec('💊',t('s9_title'),supInner,false);
 
   // ── Сигналы баланса и тонуса (s6) — гормональные симптомы + тяжесть (НЕ «гормональный профиль») ──
   var hormMap=isMale?P.horm_male:P.horm_female, hormAcc=isMale?'horm-male-acc':'horm-acc';
-  html+=_vcSec('🌿',t('s6_title'),_vcHorm(hormMap,hormAcc),false);
+  _secBal=_vcSec('🌿',t('s6_title'),_vcHorm(hormMap,hormAcc),false);
 
   // ── Женский ритм и самочувствие (s11) — только женщины ──
   if(!isMale){
@@ -3280,18 +3282,18 @@ function renderCard(){
       +(P.heavy_period==='yes'?_row(L({ru:'Обильная фаза',uk:'Рясна фаза',en:'Heavy phase',es:'Fase intensa',de:'Intensive Phase',pt:'Fase intensa',fr:'Phase intense',pl:'Intensywna faza',it:'Fase intensa',he:'שלב עוצמתי',ja:'多い時期',ko:'양 많은 시기'}),'✓'):'')
       +(function(){var c=_vcChips(PMS,(P.pms_symptoms||[]).filter(function(v){return v!=='none_pms';}));return c?'<div class="vc-sub">'+(t('s11_l3')||L({ru:'Маркеры перед новым ритмом',uk:'Маркери перед новим ритмом',en:'Markers before a new rhythm',es:'Marcadores antes de un nuevo ritmo',de:'Marker vor neuem Rhythmus',pt:'Marcadores antes de novo ritmo',fr:'Marqueurs avant un nouveau rythme',pl:'Markery przed nowym rytmem',it:'Marcatori prima di un nuovo ritmo',he:'סמנים לפני קצב חדש',ja:'新しいリズム前のサイン',ko:'새 리듬 전 신호'}))+'</div>'+c:'';})()
       +(function(){var c=_vcChips(GSM.concat(BONE).concat(BREAST),(P.gsm||[]).concat(P.bone||[]).concat(P.breast||[]).filter(function(v){return !/^none/.test(v);}));return c?'<div class="vc-sub">'+L({ru:'Комфорт и самочувствие',uk:'Комфорт і самопочуття',en:'Comfort & wellbeing',es:'Confort y bienestar',de:'Komfort & Wohlbefinden',pt:'Conforto e bem-estar',fr:'Confort et bien-être',pl:'Komfort i samopoczucie',it:'Comfort e benessere',he:'נוחות ורווחה',ja:'快適さと調子',ko:'편안함과 컨디션'})+'</div>'+c:'';})();
-    html+=_vcSec('🌸',t('s11_title'),cycInner,false);
+    _secRhythm=_vcSec('🌸',t('s11_title'),cycInner,false);
   }
 
   // ── Стресс и восстановление (s10) ──
   var _cstm={low:'cst_low',moderate:'cst_mod',high:'cst_high',burnout:'cst_burn'};
   var strInner=_row(L({ru:'Фоновый стресс',uk:'Фоновий стрес',en:'Background stress',es:'Estrés de fondo',de:'Grundstress',pt:'Estresse de fundo',fr:'Stress de fond',pl:'Stres tła',it:'Stress di fondo',he:'לחץ רקע',ja:'ベースのストレス',ko:'평상시 스트레스'}),_vcRad('chronic_stress',P.chronic_stress)||'—')
     +(function(){var c=_vcChips(CORT,(P.cortisol_symp||[]).filter(function(v){return !/^none/.test(v);}));return c?'<div class="vc-sub">'+L({ru:'Сигналы',uk:'Сигнали',en:'Signals',es:'Señales',de:'Signale',pt:'Sinais',fr:'Signaux',pl:'Sygnały',it:'Segnali',he:'אותות',ja:'サイン',ko:'신호'})+'</div>'+c:'';})();
-  html+=_vcSec('🧘',t('s10_title'),strInner,false);
+  _secStress=_vcSec('🧘',t('s10_title'),strInner,false);
 
   // ── Контекст образа жизни (s_ns / lifestyle_notes) — показываем только если заполнено ──
   if(P.lifestyle_notes){
-    html+=_vcSec(_cardIcon('lifestyle'),t('s_ns_title'),'<div style="font-size:13px;color:var(--t2);line-height:1.55;white-space:pre-wrap;">'+_esc(P.lifestyle_notes)+'</div>',false);
+    _secLife=_vcSec(_cardIcon('lifestyle'),t('s_ns_title'),'<div style="font-size:13px;color:var(--t2);line-height:1.55;white-space:pre-wrap;">'+_esc(P.lifestyle_notes)+'</div>',false);
   }
 
   // ── Цель и приоритеты (новый ввод) ──
@@ -3299,7 +3301,7 @@ function renderCard(){
   var goalInner='<textarea class="vc-goal" rows="2" placeholder="'+_esc(L({ru:'Опишите вашу главную цель…',uk:'Опишіть вашу головну мету…',en:'Describe your main goal…',es:'Describe tu objetivo principal…',de:'Beschreibe dein Hauptziel…',pt:'Descreva seu objetivo principal…',fr:'Décrivez votre objectif principal…',pl:'Opisz swój główny cel…',it:'Descrivi il tuo obiettivo principale…',he:'תארו את המטרה העיקרית…',ja:'主な目標を記入…',ko:'주요 목표를 적어주세요…'}))+'" oninput="_cardSaveGoal(this.value)">'+_esc(P.goal||'')+'</textarea>'
     +'<div class="vc-sub">'+L({ru:'Фокус (до 3)',uk:'Фокус (до 3)',en:'Focus (up to 3)',es:'Enfoque (hasta 3)',de:'Fokus (bis 3)',pt:'Foco (até 3)',fr:'Focus (jusqu’à 3)',pl:'Fokus (do 3)',it:'Focus (fino a 3)',he:'פוקוס (עד 3)',ja:'重点（最大3）',ko:'집중 (최대 3)'})+'</div>'
     +'<div class="vc-chips">'+_VC_PRI.map(function(p){return '<button type="button" class="vc-pri'+(pris.indexOf(p.v)>=0?' on':'')+'" onclick="_cardTogglePri(\''+p.v+'\',this)">'+_esc(L(p.l))+'</button>';}).join('')+'</div>';
-  html+=_vcSec(_cardIcon('goal'),L({ru:'Цель и приоритеты',uk:'Мета і пріоритети',en:'Goal & priorities',es:'Objetivo y prioridades',de:'Ziel & Prioritäten',pt:'Objetivo e prioridades',fr:'Objectif et priorités',pl:'Cel i priorytety',it:'Obiettivo e priorità',he:'מטרה ועדיפויות',ja:'目標と優先事項',ko:'목표와 우선순위'}),goalInner,false);
+  _secGoal=_vcSec(_cardIcon('goal'),L({ru:'Цель и приоритеты',uk:'Мета і пріоритети',en:'Goal & priorities',es:'Objetivo y prioridades',de:'Ziel & Prioritäten',pt:'Objetivo e prioridades',fr:'Objectif et priorités',pl:'Cel i priorytety',it:'Obiettivo e priorità',he:'מטרה ועדיפויות',ja:'目標と優先事項',ko:'목표와 우선순위'}),goalInner,false);
 
   // ── Ваш ориентир (Baseline) ──
   var bl=(typeof _baselineFromDaily==='function')?_baselineFromDaily():null, blInner='';
@@ -3312,7 +3314,7 @@ function renderCard(){
     if(mm.sleep_hours)ts.push(_tile('🌙',_fmt(mm.sleep_hours.usual)+L({ru:'ч',uk:'год',en:'h',es:'h',de:'Std',pt:'h',fr:'h',pl:'godz',it:'h',he:'ש',ja:'時間',ko:'시간'}),L({ru:'Часы сна',uk:'Години сну',en:'Sleep hours',es:'Horas de sueño',de:'Schlafstunden',pt:'Horas de sono',fr:'Heures de sommeil',pl:'Godziny snu',it:'Ore di sonno',he:'שעות שינה',ja:'睡眠時間',ko:'수면 시간'})));
     blInner='<div class="vc-tiles">'+ts.join('')+'</div><div class="vc-empty">'+L({ru:'Ваш ориентир по '+bl.days+' дн.',uk:'Ваш орієнтир за '+bl.days+' дн.',en:'Your usual over '+bl.days+' days',es:'Tu referencia en '+bl.days+' días',de:'Dein Richtwert über '+bl.days+' Tage',pt:'Sua referência em '+bl.days+' dias',fr:'Votre repère sur '+bl.days+' jours',pl:'Twój punkt odniesienia z '+bl.days+' dni',it:'Il tuo riferimento su '+bl.days+' giorni',he:'הרגיל שלך ב-'+bl.days+' ימים',ja:bl.days+'日間の目安',ko:bl.days+'일 기준'})+'</div>';
   }
-  html+=_vcSec(_cardIcon('orient'),L({ru:'Ваш ориентир (Baseline)',uk:'Ваш орієнтир (Baseline)',en:'Your baseline',es:'Tu base',de:'Deine Basislinie',pt:'Sua base',fr:'Votre repère',pl:'Twoja baza',it:'La tua base',he:'קו הבסיס שלך',ja:'あなたの基準',ko:'나의 기준'}),blInner,false);
+  _secBaseline=_vcSec(_cardIcon('orient'),L({ru:'Ваш ориентир (Baseline)',uk:'Ваш орієнтир (Baseline)',en:'Your baseline',es:'Tu base',de:'Deine Basislinie',pt:'Sua base',fr:'Votre repère',pl:'Twoja baza',it:'La tua base',he:'קו הבסיס שלך',ja:'あなたの基準',ko:'나의 기준'}),blInner,false);
 
   // ── Динамика (готовность сегодня/неделя/месяц + мини-тренды) ──
   var hist=[]; try{hist=JSON.parse(secGet('vial_history')||'[]')||[];}catch(e){}
@@ -3354,11 +3356,11 @@ function renderCard(){
   if(dynInner && !_trendsShown){ dynInner+='<div class="vc-empty" style="margin-top:8px;line-height:1.5;">'+L({ru:'Мини-графики (сон, энергия, вес…) появятся после нескольких заходов — данные копятся.',uk:'Міні-графіки (сон, енергія, вага…) зʼявляться після кількох заходів — дані накопичуються.',en:'Mini-charts (sleep, energy, weight…) appear after a few check-ins — data is still accumulating.',es:'Los mini-gráficos (sueño, energía, peso…) aparecen tras varios análisis — se están acumulando datos.',de:'Mini-Diagramme (Schlaf, Energie, Gewicht…) erscheinen nach einigen Check-ins — Daten sammeln sich noch.',pt:'Mini-gráficos (sono, energia, peso…) aparecem após alguns registros — os dados estão se acumulando.',fr:'Les mini-graphiques (sommeil, énergie, poids…) apparaissent après quelques bilans — les données sʼaccumulent.',pl:'Mini-wykresy (sen, energia, waga…) pojawią się po kilku analizach — dane się gromadzą.',it:'I mini-grafici (sonno, energia, peso…) compaiono dopo alcuni check-in — i dati si stanno accumulando.',he:'מיני-גרפים (שינה, אנרגיה, משקל…) יופיעו אחרי כמה בדיקות — הנתונים מצטברים.',ja:'ミニグラフ（睡眠・エネルギー・体重…）は数回の記録後に表示されます——データを蓄積中です。',ko:'미니 차트(수면, 에너지, 체중…)는 몇 번의 기록 후 표시됩니다 — 데이터가 쌓이는 중입니다.'})+'</div>'; }
   // Новичок (данных ещё нет): объясняем, что динамика набирается — а не «пусто/баг»
   if(!dynInner)dynInner='<div class="vc-empty" style="line-height:1.5;">'+L({ru:'Здесь появится ваша динамика — она набирается с каждым анализом. Загляните через пару заходов.',uk:'Тут зʼявиться ваша динаміка — вона накопичується з кожним аналізом. Завітайте за кілька заходів.',en:'Your dynamics will appear here — they build up with each check-in. Come back after a couple of check-ins.',es:'Aquí aparecerá tu evolución — se acumula con cada análisis. Vuelve tras un par de análisis.',de:'Hier erscheint deine Entwicklung — sie baut sich mit jedem Check-in auf. Schau nach ein paar Check-ins wieder vorbei.',pt:'Sua evolução aparecerá aqui — acumula-se a cada análise. Volte após alguns registros.',fr:'Votre évolution apparaîtra ici — elle se construit à chaque bilan. Revenez après quelques bilans.',pl:'Tu pojawi się Twoja dynamika — buduje się z każdą analizą. Wróć po kilku analizach.',it:'Qui apparirà la tua evoluzione — si accumula a ogni analisi. Torna dopo qualche check-in.',he:'כאן תופיע הדינמיקה שלך — היא נבנית עם כל בדיקה. חזרו אחרי כמה בדיקות.',ja:'ここに変化が表示されます——分析ごとに蓄積されます。数回後にまたご覧ください。',ko:'여기에 변화가 표시됩니다 — 분석할 때마다 쌓입니다. 몇 번 후에 다시 확인하세요.'})+'</div>';
-  html+=_vcSec(_cardIcon('dynamics'),t('card_dynamics'),dynInner,true,true);
+  _secDyn=_vcSec(_cardIcon('dynamics'),t('card_dynamics'),dynInner,false,true);
 
   // ── Памятка дня (питание/движение/сон/вода/нутриенты) — сегодняшний план из кэша ──
   var _dpInner=(typeof _renderDayPlanCard==='function')?_renderDayPlanCard():'';
-  if(_dpInner) html+=_vcSec(_cardIcon('dayplan'),L({ru:'Памятка дня',uk:'Пам’ятка дня',en:'Day plan',es:'Plan del día',de:'Tagesplan',pt:'Plano do dia',fr:'Plan du jour',pl:'Plan dnia',it:'Piano del giorno',he:'תוכנית היום',ja:'今日のプラン',ko:'오늘의 플랜'}),_dpInner,true,true);
+  if(_dpInner) _secDay=_vcSec(_cardIcon('dayplan'),L({ru:'Памятка дня',uk:'Пам’ятка дня',en:'Day plan',es:'Plan del día',de:'Tagesplan',pt:'Plano do dia',fr:'Plan du jour',pl:'Plan dnia',it:'Piano del giorno',he:'תוכנית היום',ja:'今日のプラン',ko:'오늘의 플랜'}),_dpInner,false,true);
 
   // ── История дневных разборов ИИ (сохранённый текст по дням) ──
   var _aid=(typeof _aiDailyGet==='function')?_aiDailyGet():[];
@@ -3368,7 +3370,7 @@ function renderCard(){
       var body=(typeof _renderAnalysis==='function')?_renderAnalysis(e.analysis||''):(typeof _aiMd==='function'?_aiMd(e.analysis||''):_esc(e.analysis||''));
       return '<details class="vc-day"><summary style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid rgba(180,138,240,.1);font-size:13px;color:var(--t1);"><span style="color:#b48af0;">›</span>'+_esc(dt)+'</summary><div style="font-size:12.5px;color:var(--t2);line-height:1.55;padding:8px 0 12px;">'+body+'</div></details>';
     }).join('');
-    html+=_vcSec(_cardIcon('history'),L({ru:'История разборов',uk:'Історія розборів',en:'Analysis history',es:'Historial de análisis',de:'Analyse-Verlauf',pt:'Histórico de análises',fr:'Historique des analyses',pl:'Historia analiz',it:'Cronologia analisi',he:'היסטוריית ניתוחים',ja:'分析履歴',ko:'분석 기록'}),_hInner,false,true);
+    _secHist=_vcSec(_cardIcon('history'),L({ru:'История разборов',uk:'Історія розборів',en:'Analysis history',es:'Historial de análisis',de:'Analyse-Verlauf',pt:'Histórico de análises',fr:'Historique des analyses',pl:'Historia analiz',it:'Cronologia analisi',he:'היסטוריית ניתוחים',ja:'分析履歴',ko:'분석 기록'}),_hInner,false,true);
   }
 
   // ── Резервная копия (данные под контролем клиента, Уровень 3) ──
@@ -3378,10 +3380,13 @@ function renderCard(){
     +'<button onclick="vlBackupExport()" style="'+_bkBtn+'">💾 '+L({ru:'Сохранить копию',uk:'Зберегти копію',en:'Save backup',es:'Guardar copia',de:'Backup speichern',pt:'Salvar backup',fr:'Enregistrer la sauvegarde',pl:'Zapisz kopię',it:'Salva backup',he:'שמור גיבוי',ja:'バックアップを保存',ko:'백업 저장'})+'</button>'
     +'<button onclick="document.getElementById(\'vlBkFile\').click()" style="'+_bkBtn+'">📥 '+L({ru:'Восстановить из копии',uk:'Відновити з копії',en:'Restore from backup',es:'Restaurar desde copia',de:'Aus Backup wiederherstellen',pt:'Restaurar do backup',fr:'Restaurer depuis la sauvegarde',pl:'Przywróć z kopii',it:'Ripristina dal backup',he:'שחזר מגיבוי',ja:'バックアップから復元',ko:'백업에서 복원'})+'</button>'
     +'<input type="file" id="vlBkFile" accept=".vlbackup,application/octet-stream,application/json" style="display:none" onchange="if(this.files&&this.files[0])vlBackupImport(this.files[0]);this.value=\'\';">';
-  html+=_vcSec(_cardIcon('backup'),L({ru:'Резервная копия',uk:'Резервна копія',en:'Backup',es:'Copia de seguridad',de:'Sicherung',pt:'Backup',fr:'Sauvegarde',pl:'Kopia zapasowa',it:'Backup',he:'גיבוי',ja:'バックアップ',ko:'백업'}),_bkInner,false,true);
+  _secBackup=_vcSec(_cardIcon('backup'),L({ru:'Резервная копия',uk:'Резервна копія',en:'Backup',es:'Copia de seguridad',de:'Sicherung',pt:'Backup',fr:'Sauvegarde',pl:'Kopia zapasowa',it:'Backup',he:'גיבוי',ja:'バックアップ',ko:'백업'}),_bkInner,false,true);
 
   // ── Правовая информация / дисклеймер (App Store) ──
-  html+=_vcSec('⚖️',t('card_legal'),'<div style="font-size:12px;color:var(--t2);line-height:1.6;">'+t('consent_body')+'</div>',false,true);
+  _secLegal=_vcSec('⚖️',t('card_legal'),'<div style="font-size:12px;color:var(--t2);line-height:1.6;">'+t('consent_body')+'</div>',false,true);
+  // Порядок по логике/важности: сперва профиль (грид), затем результаты/инструменты (полноширинные)
+  html+=[_secGoal,_secAct,_secNut,_secSup,_secStress,_secBal,_secRhythm,_secLife,_secBaseline,   // «что я о себе указал»
+         _secDyn,_secDay,_secHist,_secBackup,_secLegal].join('');                                 // «что показывает система / инструменты»
   html+='</div>'; // .vcard-grid
   html+='</div>'; // .vcard-wrap
 
