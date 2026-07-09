@@ -2815,6 +2815,7 @@ document.querySelectorAll('input[name=gender]').forEach(el=>{
 
 // ══ BOTTOM NAV ════════════════════════════════════════════
 function navTo(tab){
+  window.__editMode=false;   // любой переход по нижней навигации выходит из режима правки профиля
   var __ip=document.getElementById('importPanel');if(__ip&&__ip.classList.contains('open')&&typeof closeImport==='function')closeImport(true);
   document.querySelectorAll('.bottom-nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+tab)?.classList.add('active');
@@ -3218,7 +3219,7 @@ function renderCard(){
   var html='<div class="vcard-wrap">';
   html+='<div class="vcard-hero"><div class="vh-top">'
     +'<div><div class="vh-name">'+_esc(P.name||'—')+'</div><div class="vh-sub">'+[g,P.age?(P.age+' '+L({ru:'лет',uk:'р.',en:'yrs',es:'años',de:'J.',pt:'anos',fr:'ans',pl:'lat',it:'anni',he:'שנים',ja:'歳',ko:'세'})):''].filter(Boolean).join(' · ')+'</div></div>'
-    +'<button class="vh-edit-btn" onclick="navTo(\'home\')">'+L({ru:'Изменить профиль',uk:'Змінити профіль',en:'Edit profile',es:'Editar perfil',de:'Profil bearbeiten',pt:'Editar perfil',fr:'Modifier le profil',pl:'Edytuj profil',it:'Modifica profilo',he:'עריכת פרופיל',ja:'プロフィールを編集',ko:'프로필 편집'})+'</button></div>'
+    +'<button class="vh-edit-btn" onclick="_editProfile()">'+L({ru:'Изменить профиль',uk:'Змінити профіль',en:'Edit profile',es:'Editar perfil',de:'Profil bearbeiten',pt:'Editar perfil',fr:'Modifier le profil',pl:'Edytuj profil',it:'Modifica profilo',he:'עריכת פרופיל',ja:'プロフィールを編集',ko:'프로필 편집'})+'</button></div>'
     +'<div class="vh-grid">'
     +'<div class="vh-cell"><div class="vh-l">'+t('s_prof_age')+'</div><div class="vh-v">'+(P.age?(_esc(P.age)+' '+L({ru:'лет',uk:'р.',en:'yrs',es:'años',de:'J.',pt:'anos',fr:'ans',pl:'lat',it:'anni',he:'שנים',ja:'歳',ko:'세'})):'—')+'</div></div>'
     +'<div class="vh-cell"><div class="vh-l">'+t('s_prof_height')+'</div><div class="vh-v">'+(P.height?_esc(P.height):'—')+'</div></div>'
@@ -3743,7 +3744,7 @@ function _flowHead(cad){
 // Настройка сделана = профиль (пол+возраст) сохранён → base-блоки живут в Карточке, из дневной ленты убраны.
 function _setupDone(){ try{ var P=JSON.parse(secGet('vial_profile')||'{}')||{}; return !!(P.gender && P.age); }catch(e){ return false; } }
 function _flowHidden(n){ var male=getRadio('gender')==='male'; if(male&&(n===10||n===1))return true;   // муж: скрыт цикл(10)+приливы(1); когниция(8) доступна всем
-  if(STEP_CADENCE[n]==='base' && _setupDone()) return true;   // разовые base-блоки (профиль/баланс/ритм/питание/добавки) — только в Карточке; данные в анализ идут из _restoreCard
+  if(STEP_CADENCE[n]==='base' && _setupDone() && !window.__editMode) return true;   // разовые base-блоки скрыты в дневной ленте; в режиме «Изменить профиль» (__editMode) — показываем для правки
   return false; }
 // Гейтинг периодических блоков по дате (как PRO): weekly ≥7дн, biweekly ≥14дн; base/daily всегда.
 function _stepLastMap(){ try{ return JSON.parse(localStorage.getItem('vial_steplast')||'{}')||{}; }catch(e){ return {}; } }
@@ -3769,6 +3770,13 @@ function _showFlow(list){
   // Тёплый заход перед первым блоком — «начало пути», перевод из чтения в участие.
   (function(){
     var setup=(typeof _setupDone==='function'&&_setupDone());
+    if(window.__editMode){
+      var d0=document.createElement('div'); d0.className='flow-intro';
+      d0.style.cssText='max-width:600px;margin:16px auto 2px;padding:0 26px;text-align:center;';
+      d0.innerHTML='<div style="font-family:\'Playfair Display\',serif;font-size:19px;color:#fff;margin-bottom:8px;">'+L({ru:'Изменение профиля',uk:'Редагування профілю',en:'Edit profile',es:'Editar perfil',de:'Profil bearbeiten',pt:'Editar perfil',fr:'Modifier le profil',pl:'Edycja profilu',it:'Modifica profilo',he:'עריכת פרופיל',ja:'プロフィール編集',ko:'프로필 편집'})+'</div>'
+        +'<div style="font-size:13.5px;color:var(--t2);line-height:1.6;">'+L({ru:'Поправьте что нужно и нажмите «Сохранить и вернуться».',uk:'Виправте потрібне та натисніть «Зберегти й повернутися».',en:'Update what you need, then tap “Save & return”.',es:'Actualiza lo necesario y pulsa «Guardar y volver».',de:'Ändere, was nötig ist, und tippe auf „Speichern & zurück“.',pt:'Atualize o necessário e toque em “Salvar e voltar”.',fr:'Modifiez ce qu’il faut, puis touchez « Enregistrer et revenir ».',pl:'Popraw, co trzeba, i naciśnij „Zapisz i wróć”.',it:'Aggiorna ciò che serve e tocca “Salva e torna”.',he:'עדכנו מה שצריך ולחצו «שמור וחזור».',ja:'必要な項目を更新して「保存して戻る」をタップ。',ko:'필요한 항목을 수정하고 “저장하고 돌아가기”를 누르세요.'})+'</div>';
+      main.appendChild(d0); return;
+    }
     var ttl=setup
       ? L({ru:'Сегодняшний check-in',uk:'Сьогоднішній check-in',en:'Today’s check-in',es:'Registro de hoy',de:'Heutiger Check-in',pt:'Check-in de hoje',fr:'Point du jour',pl:'Dzisiejszy check-in',it:'Check-in di oggi',he:'צ׳ק-אין של היום',ja:'今日のチェックイン',ko:'오늘의 체크인'})
       : L({ru:'Добро пожаловать в VIO',uk:'Ласкаво просимо до VIO',en:'Welcome to VIO',es:'Bienvenida a VIO',de:'Willkommen bei VIO',pt:'Bem-vinda ao VIO',fr:'Bienvenue sur VIO',pl:'Witaj w VIO',it:'Benvenuta in VIO',he:'ברוכים הבאים ל-VIO',ja:'VIOへようこそ',ko:'VIO에 오신 것을 환영합니다'});
@@ -3801,10 +3809,25 @@ function _showFlow(list){
 function _flowFooter(label,fn){var f=document.getElementById('flow-footer'),b=document.getElementById('flow-btn');if(!f||!b)return;if(label)b.textContent=label;if(fn)b.onclick=fn;f.style.display='block';}
 function _hideFlowFooter(){var f=document.getElementById('flow-footer');if(f)f.style.display='none';}
 function showAll(){
-  if(typeof _passedToday==='function'&&_passedToday()){ _showDailyDoneGate(); return; }   // сегодня уже пройдено → лента не показывается (гейт не обойти ни из goTo, ни из смены языка)
+  if(!window.__editMode && typeof _passedToday==='function'&&_passedToday()){ _showDailyDoneGate(); return; }   // сегодня пройдено → гейт (кроме режима правки профиля)
   _showFlow(_flowList());
   initCollapsibles();
-  _flowFooter(t('show_result'),showResults);
+  if(window.__editMode){ _flowFooter(L({ru:'Сохранить и вернуться',uk:'Зберегти й повернутися',en:'Save & return',es:'Guardar y volver',de:'Speichern & zurück',pt:'Salvar e voltar',fr:'Enregistrer et revenir',pl:'Zapisz i wróć',it:'Salva e torna',he:'שמור וחזור',ja:'保存して戻る',ko:'저장하고 돌아가기'}),_saveProfileDone); }
+  else { _flowFooter(t('show_result'),showResults); }
+}
+// Режим «Изменить профиль»: показать base-блоки (профиль/цикл/добавки/меды), обойти дневной гейт.
+function _editProfile(){
+  window.__editMode=true;
+  var hp=document.getElementById('historyPanel'); if(hp)hp.style.display='none';
+  document.querySelectorAll('.bottom-nav-item').forEach(function(b){b.classList.remove('active');});
+  var nh=document.getElementById('nav-home'); if(nh)nh.classList.add('active');
+  showAll();
+  var sa=document.getElementById('scroll-area'); if(sa)sa.scrollTop=0; else window.scrollTo(0,0);
+}
+function _saveProfileDone(){
+  try{ if(typeof saveProfile==='function')saveProfile(); }catch(e){}   // сохранить правки профиля
+  window.__editMode=false;
+  if(typeof navTo==='function')navTo('card');
 }
 // C2 · Сворачивание тяжёлых групп вариантов в «выпадающее окошко» (как PRO): группы с ≥6 вариантами
 // или мультивыбором сворачиваются (видно вопрос+выбранное, разворот по тапу); слайдеры/короткие — открыты.
