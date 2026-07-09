@@ -30,7 +30,7 @@
   /* Text */
   --t1: rgba(255,255,255,.96);
   --t2: rgba(255,255,255,.90);   /* поднят с .82 — контраст текста карточки/разбора */
-  --t3: rgba(255,255,255,.80);   /* поднят .55→.68→.80 — вторичный текст читаем на тёмных карточках (WCAG AA) */
+  --t3: rgba(255,255,255,.86);   /* поднят .55→.68→.80 — вторичный текст читаем на тёмных карточках (WCAG AA) */
 
   /* Status — Oura palette */
   --ok:        #4ECCA3;
@@ -1327,7 +1327,7 @@ footer{
 
 /* Hormone Phase */
 .phase-track{display:flex;border-radius:10px;overflow:hidden;height:34px;margin-bottom:20px;}
-.phase-seg{display:flex;align-items:center;justify-content:center;font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.5);font-weight:500;position:relative;}
+.phase-seg{display:flex;align-items:center;justify-content:center;font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:var(--t2);font-weight:500;position:relative;}
 .phase-seg.current{color:#fff;font-weight:600;}
 .phase-seg.current::after{content:'▼';position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--gold);}
 .hormone-table{display:flex;flex-direction:column;gap:7px;}
@@ -3155,11 +3155,11 @@ function _vcCSS(){ if(document.getElementById('vcard-css'))return; var s=documen
   +".vp-txt{margin-top:8px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--t3);}"
   +".vp-txt b{color:#c9b0f0;font-weight:600;}"
   +".vcard-grid{display:grid;grid-template-columns:1fr;gap:12px;}"
-  +"@media(min-width:720px){.vcard-grid{grid-template-columns:1fr 1fr;align-items:start;}}"
+  +"@media(min-width:720px){.vcard-grid{grid-template-columns:1fr 1fr;align-items:start;max-width:800px;margin-left:auto;margin-right:auto;}.vc-span{grid-column:auto;}}"
   +"details.vcard-sec{background:rgba(255,255,255,.015);border:1px solid rgba(180,138,240,.18);border-radius:16px;overflow:hidden;}"
-  +"details.vcard-sec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:14px 16px;}"
+  +"details.vcard-sec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:14px 16px;min-height:56px;box-sizing:border-box;}"
   +"details.vcard-sec>summary::-webkit-details-marker{display:none;}"
-  +".vc-ic{font-size:16px;}.vc-tt{font-family:'Oswald',sans-serif;font-size:12.5px;letter-spacing:1px;text-transform:uppercase;color:#c9b0f0;}"
+  +".vc-ic{font-size:16px;}.vc-tt{font-family:'Oswald',sans-serif;font-size:12.5px;letter-spacing:1px;text-transform:uppercase;color:#ece4fb;}"
   +".vc-chev{margin-left:auto;color:#b48af0;font-size:20px;line-height:1;transition:transform .2s;}"
   +"details.vcard-sec[open]>summary .vc-chev{transform:rotate(90deg);}"
   +".vcard-sec-body{padding:0 16px 14px;}"
@@ -3702,7 +3702,7 @@ function calcProfMetrics(){
     else if(bmi<25){cat=t('bmi_ok');col='var(--ok)';}
     else if(bmi<30){cat=t('bmi_over');col='#f59e0b';}
     else{cat=t('bmi_obese');col='var(--alert)';}
-    parts.push(`<span style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.55);text-transform:uppercase;">ІМТ</span><span style="font-size:20px;font-weight:300;color:${col};margin:0 5px;">${br}</span><span style="font-size:10px;color:${col};">${cat}</span>`);
+    parts.push(`<span style="font-size:10px;letter-spacing:1px;color:var(--t2);text-transform:uppercase;">ІМТ</span><span style="font-size:20px;font-weight:300;color:${col};margin:0 5px;">${br}</span><span style="font-size:10px;color:${col};">${cat}</span>`);
   }
   if(wst>0 && h>0){
     const r=wst/h, rv=r.toFixed(2);
@@ -3712,7 +3712,7 @@ function calcProfMetrics(){
     else if(r<thr[1]){cat=t('bmi_ok');col='var(--ok)';}
     else if(r<thr[2]){cat=t('bmi_over');col='#f59e0b';}
     else{cat=t('bmi_obese');col='var(--alert)';}
-    parts.push(`<span style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.55);text-transform:uppercase;margin-left:4px;">WHtR</span><span style="font-size:20px;font-weight:300;color:${col};margin:0 5px;">${rv}</span><span style="font-size:10px;color:${col};">${cat}</span>`);
+    parts.push(`<span style="font-size:10px;letter-spacing:1px;color:var(--t2);text-transform:uppercase;margin-left:4px;">WHtR</span><span style="font-size:20px;font-weight:300;color:${col};margin:0 5px;">${rv}</span><span style="font-size:10px;color:${col};">${cat}</span>`);
   }
   if(parts.length){
     box.innerHTML=parts.join('<span style="width:1px;height:22px;background:var(--b1);margin:0 4px;align-self:center;"></span>');
@@ -4123,16 +4123,16 @@ function downloadPDF(){
     body{font-family:'Georgia',serif;background:#fff;color:#1A1A2E;padding:40px;}
     .header{text-align:center;border-bottom:2px solid #C49A3C;padding-bottom:20px;margin-bottom:28px;}
     .logo{font-size:28px;letter-spacing:8px;color:#1A1A2E;margin-bottom:4px;}
-    .date{font-size:12px;color:#888;letter-spacing:1px;}
+    .date{font-size:12px;color:var(--t2);letter-spacing:1px;}
     .score-box{display:flex;align-items:center;gap:20px;background:#F8F6F2;border-radius:12px;padding:20px;margin-bottom:24px;}
     .score-num{font-size:56px;font-family:'Courier New',monospace;color:${clr};font-weight:300;line-height:1;}
-    .score-label{font-size:14px;color:#666;letter-spacing:1px;text-transform:uppercase;}
+    .score-label{font-size:14px;color:var(--t2);letter-spacing:1px;text-transform:uppercase;}
     .score-title{font-size:22px;color:#1A1A2E;margin-top:4px;}
     .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:24px;}
     .metric{background:#F8F6F2;border-radius:10px;padding:14px;text-align:center;}
-    .metric-label{font-size:10px;color:#888;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+    .metric-label{font-size:10px;color:var(--t2);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
     .metric-val{font-size:28px;font-family:'Courier New',monospace;color:#1A1A2E;}
-    .metric-unit{font-size:11px;color:#888;}
+    .metric-unit{font-size:11px;color:var(--t2);}
     h3{font-size:14px;letter-spacing:2px;text-transform:uppercase;color:#C49A3C;margin:20px 0 10px;}
     .insight{border-left:3px solid #C49A3C;padding:8px 12px;margin-bottom:8px;background:#FAFAF8;}
     .insight-title{font-weight:bold;font-size:13px;margin-bottom:3px;}
@@ -4140,7 +4140,7 @@ function downloadPDF(){
     .rec-item{font-size:12px;padding:4px 0 4px 16px;position:relative;color:#444;line-height:1.5;}
     .rec-item::before{content:'·';position:absolute;left:4px;color:#C49A3C;font-size:16px;}
     .lab-item{font-size:12px;padding:4px 0;color:#444;line-height:1.5;}
-    .footer{margin-top:32px;padding-top:16px;border-top:1px solid #EEE;font-size:10px;color:#AAA;text-align:center;line-height:1.6;}
+    .footer{margin-top:32px;padding-top:16px;border-top:1px solid #EEE;font-size:10px;color:var(--t2);text-align:center;line-height:1.6;}
     @media screen and (max-width:520px){body{padding:18px;overflow-x:hidden;}.metrics{grid-template-columns:repeat(2,minmax(0,1fr));}.score-num{font-size:46px;}.metric-val{font-size:24px;}}
     @media print{body{padding:20px;}}
   <\/style><\/head><body>
@@ -4563,7 +4563,7 @@ function downloadDayPlan(){
   var nm=(data.name?(', '+data.name):'');
   var html='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+L({ru:'Памятка дня',en:'Day plan'})+'</title>'
     +'<style>body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:640px;margin:0 auto;padding:28px 22px;color:#1c1a22;line-height:1.5;}'
-    +'h1{font-size:22px;margin:0 0 4px;}p.d{font-size:11px;color:#888;margin:0 0 18px;}'
+    +'h1{font-size:22px;margin:0 0 4px;}p.d{font-size:11px;color:#666;margin:0 0 18px;}'
     +'section{margin:0 0 16px;padding:14px 16px;border:1px solid #e5e0ef;border-radius:12px;}'
     +'h2{font-size:17px;margin:0 0 8px;color:#5b3fa0;}h3{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#9a7fd0;margin:12px 0 4px;}'
     +'ul{margin:0;padding-left:18px;}li{margin:4px 0;font-size:14px;}@media print{section{break-inside:avoid;}}</style></head><body>'
@@ -5083,7 +5083,7 @@ function renderCycleDay(){
   if(!ci||getRadio('cycle_status')==='absent'){box.style.display='none';return;}
   var ph={menstrual:t('ph_menstrual'),follicular:t('ph_follicular'),ovulation:t('ph_ovulation'),luteal:t('ph_luteal')}[ci.phase];
   box.style.display='flex';
-  box.innerHTML='<span style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.6);">'+t('cyc_day')+'</span>'
+  box.innerHTML='<span style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--t2);">'+t('cyc_day')+'</span>'
     +'<span style="font-size:24px;font-weight:300;color:#F472B6;">'+ci.day+'</span>'
     +'<span style="font-size:13px;color:#F9A8D4;">· '+ph+'</span>';
 }
@@ -6081,19 +6081,19 @@ window.addEventListener('resize', function(){
 #vlAdvPanel.open{display:flex;}
 #vlAdvHead{background:#111;color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
 #vlAdvHead .t{font-weight:600;font-size:15px;}#vlAdvHead .t span{color:#c4963c;}
-#vlAdvHead .s{font-size:11px;color:#bbb;margin-top:2px;}
+#vlAdvHead .s{font-size:11px;color:var(--t2);margin-top:2px;}
 #vlAdvClose{background:none;border:0;color:#fff;font-size:22px;cursor:pointer;line-height:1;}
 #vlAdvMsgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:#faf8f4;}
 .vlAdvMsg{max-width:85%;padding:9px 12px;border-radius:12px;font-size:16px;line-height:1.5;font-weight:400;white-space:pre-wrap;word-wrap:break-word;}
 .vlAdvMsg.u{align-self:flex-end;background:#c4963c;color:#fff;border-bottom-right-radius:3px;}
 .vlAdvMsg.a{align-self:flex-start;background:#fff;color:#000;border:1px solid #ececec;border-bottom-left-radius:3px;}
-.vlAdvMsg.a.typing{color:#999;font-style:italic;}
+.vlAdvMsg.a.typing{color:var(--t2);font-style:italic;}
 #vlAdvFoot{display:flex;gap:8px;padding:10px;border-top:1px solid #eee;background:#fff;}
 #vlAdvInput{flex:1;border:1px solid #ddd;border-radius:10px;padding:9px 11px;font-size:14px;font-family:inherit;resize:none;max-height:90px;outline:none;}
 #vlAdvInput:focus{border-color:#c4963c;}
 #vlAdvSend{background:#111;color:#c4963c;border:0;border-radius:10px;padding:0 16px;font-size:14px;font-weight:600;cursor:pointer;}
 #vlAdvSend:disabled{opacity:.5;cursor:default;}
-#vlAdvDisc{font-size:10px;color:#aaa;text-align:center;padding:0 10px 8px;background:#fff;}
+#vlAdvDisc{font-size:10px;color:var(--t2);text-align:center;padding:0 10px 8px;background:#fff;}
 /* ═══ Единый ФИОЛЕТОВЫЙ тон тарифа VIO (аддитивный override, структуру/JS не трогаем) ═══ */
 .step>.card{
   background:linear-gradient(145deg,#150f24 0%,#110b1c 60%,#0e0818 100%)!important;
