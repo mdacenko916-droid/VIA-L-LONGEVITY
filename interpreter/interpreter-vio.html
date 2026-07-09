@@ -5995,7 +5995,7 @@ window.addEventListener('resize', function(){
       body:JSON.stringify({lang:lng(),tier:'vio',messages:history,ctx:_advCtx()})})
       .then(function(r){return r.json();}).then(function(j){
         typing.remove();
-        if(j&&j.ok&&j.reply){ add('assistant',j.reply); history.push({role:'assistant',content:j.reply}); }
+        if(j&&j.ok&&j.reply){ var _r=(typeof _wl==='function')?_wl(j.reply):j.reply; add('assistant',_r); history.push({role:'assistant',content:_r}); }
         else add('assistant',tr().err);
       }).catch(function(){ typing.remove(); add('assistant',tr().err); })
       .then(function(){ busy=false; el('vlAdvSend').disabled=false; el('vlAdvInput').focus(); });
