@@ -3822,6 +3822,8 @@ function renderEnergyScale(){
 }
 function setEnergy(n){
   var inp=document.getElementById('energy'); if(inp)inp.value=n;
+  try{window.__touched&&window.__touched.add('energy');}catch(e){}   // кастом-виджет ставит value без input-события → сам помечаем «тронуто» (см. setSleepQual)
+
   document.querySelectorAll('#en-scale .sq-btn').forEach(function(b,i){ b.classList.toggle('active',(i+1)===n); });
   _enBadge(n);
 }
@@ -3844,6 +3846,8 @@ function renderSleepScale(){
 }
 function setSleepQual(n){
   var inp=document.getElementById('sleep_qual'); if(inp)inp.value=n;
+  try{window.__touched&&window.__touched.add('sleep_qual');}catch(e){}   // кастом-виджет ставит value без input-события → сам помечаем «тронуто», иначе честностный _skipped считает поле незаполненным
+
   document.querySelectorAll('#sq-scale .sq-btn').forEach(function(b,i){ b.classList.toggle('active',(i+1)===n); });
   _sqEmoji(n);
   var nx=document.getElementById('sq-deep'); if(nx)setTimeout(function(){ nx.scrollIntoView({behavior:'smooth',block:'center'}); },130);
