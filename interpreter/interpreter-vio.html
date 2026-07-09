@@ -1518,6 +1518,7 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
 .ai-sec:first-of-type{border-top:none;padding-top:8px;}
 .ai-sec-h{display:flex;align-items:center;gap:10px;font-family:'Playfair Display',serif;font-size:16.5px;color:var(--t1);margin-bottom:9px;}
 .ai-sec-ic{font-size:20px;line-height:1;}
+.ai-sec-img{width:34px;height:34px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 0 5px rgba(226,185,90,.25));}
 .ai-sec-pill{font-family:'DM Sans',sans-serif;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#1a1206;background:linear-gradient(135deg,#e7c77a,#c9962f);padding:3px 9px;border-radius:20px;white-space:nowrap;}
 .ai-sec-sum{font-size:14px;color:var(--t2);line-height:1.8;}
 .ai-sec-more{margin-top:12px;background:none;border:none;color:#a883e6;font-size:12px;font-weight:500;cursor:pointer;padding:2px 0;font-family:inherit;letter-spacing:.2px;opacity:.9;}
@@ -3192,6 +3193,7 @@ function _cardCompletion(P){
   var total=checks.length, filled=checks.filter(Boolean).length;
   return {filled:filled,total:total,pct:Math.round(filled/total*100)};
 }
+function _cardIcon(slug){ return '<img src="icons/'+slug+'.webp" alt="" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;" onerror="this.style.display=\'none\'">'; }
 function _vcSec(icon,title,inner,open,span){
   if(!inner)inner='<div class="vc-empty">'+L({ru:'Не заполнено',uk:'Не заповнено',en:'Not filled in',es:'Sin completar',de:'Nicht ausgefüllt',pt:'Não preenchido',fr:'Non renseigné',pl:'Nie wypełniono',it:'Non compilato',he:'לא מולא',ja:'未入力',ko:'미입력'})+'</div>';
   return '<details class="vcard-sec'+(span?' vc-span':'')+'"'+(open?' open':'')+'><summary><span class="vc-ic">'+icon+'</span><span class="vc-tt">'+title+'</span><span class="vc-chev">›</span></summary><div class="vcard-sec-body">'+inner+'</div></details>';
@@ -3292,7 +3294,7 @@ function renderCard(){
   var goalInner='<textarea class="vc-goal" rows="2" placeholder="'+_esc(L({ru:'Опишите вашу главную цель…',uk:'Опишіть вашу головну мету…',en:'Describe your main goal…',es:'Describe tu objetivo principal…',de:'Beschreibe dein Hauptziel…',pt:'Descreva seu objetivo principal…',fr:'Décrivez votre objectif principal…',pl:'Opisz swój główny cel…',it:'Descrivi il tuo obiettivo principale…',he:'תארו את המטרה העיקרית…',ja:'主な目標を記入…',ko:'주요 목표를 적어주세요…'}))+'" oninput="_cardSaveGoal(this.value)">'+_esc(P.goal||'')+'</textarea>'
     +'<div class="vc-sub">'+L({ru:'Фокус (до 3)',uk:'Фокус (до 3)',en:'Focus (up to 3)',es:'Enfoque (hasta 3)',de:'Fokus (bis 3)',pt:'Foco (até 3)',fr:'Focus (jusqu’à 3)',pl:'Fokus (do 3)',it:'Focus (fino a 3)',he:'פוקוס (עד 3)',ja:'重点（最大3）',ko:'집중 (최대 3)'})+'</div>'
     +'<div class="vc-chips">'+_VC_PRI.map(function(p){return '<button type="button" class="vc-pri'+(pris.indexOf(p.v)>=0?' on':'')+'" onclick="_cardTogglePri(\''+p.v+'\',this)">'+_esc(L(p.l))+'</button>';}).join('')+'</div>';
-  html+=_vcSec('🎯',L({ru:'Цель и приоритеты',uk:'Мета і пріоритети',en:'Goal & priorities',es:'Objetivo y prioridades',de:'Ziel & Prioritäten',pt:'Objetivo e prioridades',fr:'Objectif et priorités',pl:'Cel i priorytety',it:'Obiettivo e priorità',he:'מטרה ועדיפויות',ja:'目標と優先事項',ko:'목표와 우선순위'}),goalInner,true);
+  html+=_vcSec(_cardIcon('goal'),L({ru:'Цель и приоритеты',uk:'Мета і пріоритети',en:'Goal & priorities',es:'Objetivo y prioridades',de:'Ziel & Prioritäten',pt:'Objetivo e prioridades',fr:'Objectif et priorités',pl:'Cel i priorytety',it:'Obiettivo e priorità',he:'מטרה ועדיפויות',ja:'目標と優先事項',ko:'목표와 우선순위'}),goalInner,true);
 
   // ── Ваш ориентир (Baseline) ──
   var bl=(typeof _baselineFromDaily==='function')?_baselineFromDaily():null, blInner='';
@@ -3305,7 +3307,7 @@ function renderCard(){
     if(mm.sleep_hours)ts.push(_tile('🌙',_fmt(mm.sleep_hours.usual)+L({ru:'ч',uk:'год',en:'h',es:'h',de:'Std',pt:'h',fr:'h',pl:'godz',it:'h',he:'ש',ja:'時間',ko:'시간'}),L({ru:'Часы сна',uk:'Години сну',en:'Sleep hours',es:'Horas de sueño',de:'Schlafstunden',pt:'Horas de sono',fr:'Heures de sommeil',pl:'Godziny snu',it:'Ore di sonno',he:'שעות שינה',ja:'睡眠時間',ko:'수면 시간'})));
     blInner='<div class="vc-tiles">'+ts.join('')+'</div><div class="vc-empty">'+L({ru:'Ваш ориентир по '+bl.days+' дн.',uk:'Ваш орієнтир за '+bl.days+' дн.',en:'Your usual over '+bl.days+' days',es:'Tu referencia en '+bl.days+' días',de:'Dein Richtwert über '+bl.days+' Tage',pt:'Sua referência em '+bl.days+' dias',fr:'Votre repère sur '+bl.days+' jours',pl:'Twój punkt odniesienia z '+bl.days+' dni',it:'Il tuo riferimento su '+bl.days+' giorni',he:'הרגיל שלך ב-'+bl.days+' ימים',ja:bl.days+'日間の目安',ko:bl.days+'일 기준'})+'</div>';
   }
-  html+=_vcSec('📈',L({ru:'Ваш ориентир (Baseline)',uk:'Ваш орієнтир (Baseline)',en:'Your baseline',es:'Tu base',de:'Deine Basislinie',pt:'Sua base',fr:'Votre repère',pl:'Twoja baza',it:'La tua base',he:'קו הבסיס שלך',ja:'あなたの基準',ko:'나의 기준'}),blInner,false);
+  html+=_vcSec(_cardIcon('dynamics'),L({ru:'Ваш ориентир (Baseline)',uk:'Ваш орієнтир (Baseline)',en:'Your baseline',es:'Tu base',de:'Deine Basislinie',pt:'Sua base',fr:'Votre repère',pl:'Twoja baza',it:'La tua base',he:'קו הבסיס שלך',ja:'あなたの基準',ko:'나의 기준'}),blInner,false);
 
   // ── Динамика (готовность сегодня/неделя/месяц + мини-тренды) ──
   var hist=[]; try{hist=JSON.parse(secGet('vial_history')||'[]')||[];}catch(e){}
@@ -3351,7 +3353,7 @@ function renderCard(){
 
   // ── Памятка дня (питание/движение/сон/вода/нутриенты) — сегодняшний план из кэша ──
   var _dpInner=(typeof _renderDayPlanCard==='function')?_renderDayPlanCard():'';
-  if(_dpInner) html+=_vcSec('🧭',L({ru:'Памятка дня',uk:'Пам’ятка дня',en:'Day plan',es:'Plan del día',de:'Tagesplan',pt:'Plano do dia',fr:'Plan du jour',pl:'Plan dnia',it:'Piano del giorno',he:'תוכנית היום',ja:'今日のプラン',ko:'오늘의 플랜'}),_dpInner,true,true);
+  if(_dpInner) html+=_vcSec(_cardIcon('dayplan'),L({ru:'Памятка дня',uk:'Пам’ятка дня',en:'Day plan',es:'Plan del día',de:'Tagesplan',pt:'Plano do dia',fr:'Plan du jour',pl:'Plan dnia',it:'Piano del giorno',he:'תוכנית היום',ja:'今日のプラン',ko:'오늘의 플랜'}),_dpInner,true,true);
 
   // ── История дневных разборов ИИ (сохранённый текст по дням) ──
   var _aid=(typeof _aiDailyGet==='function')?_aiDailyGet():[];
@@ -3373,7 +3375,7 @@ function renderCard(){
     +'<button onclick="vlBackupExport()" style="'+_bkBtn+'">💾 '+L({ru:'Сохранить копию',uk:'Зберегти копію',en:'Save backup',es:'Guardar copia',de:'Backup speichern',pt:'Salvar backup',fr:'Enregistrer la sauvegarde',pl:'Zapisz kopię',it:'Salva backup',he:'שמור גיבוי',ja:'バックアップを保存',ko:'백업 저장'})+'</button>'
     +'<button onclick="document.getElementById(\'vlBkFile\').click()" style="'+_bkBtn+'">📥 '+L({ru:'Восстановить из копии',uk:'Відновити з копії',en:'Restore from backup',es:'Restaurar desde copia',de:'Aus Backup wiederherstellen',pt:'Restaurar do backup',fr:'Restaurer depuis la sauvegarde',pl:'Przywróć z kopii',it:'Ripristina dal backup',he:'שחזר מגיבוי',ja:'バックアップから復元',ko:'백업에서 복원'})+'</button>'
     +'<input type="file" id="vlBkFile" accept=".vlbackup,application/octet-stream,application/json" style="display:none" onchange="if(this.files&&this.files[0])vlBackupImport(this.files[0]);this.value=\'\';">';
-  html+=_vcSec('🔐',L({ru:'Резервная копия',uk:'Резервна копія',en:'Backup',es:'Copia de seguridad',de:'Sicherung',pt:'Backup',fr:'Sauvegarde',pl:'Kopia zapasowa',it:'Backup',he:'גיבוי',ja:'バックアップ',ko:'백업'}),_bkInner,false,true);
+  html+=_vcSec(_cardIcon('backup'),L({ru:'Резервная копия',uk:'Резервна копія',en:'Backup',es:'Copia de seguridad',de:'Sicherung',pt:'Backup',fr:'Sauvegarde',pl:'Kopia zapasowa',it:'Backup',he:'גיבוי',ja:'バックアップ',ko:'백업'}),_bkInner,false,true);
 
   // ── Правовая информация / дисклеймер (App Store) ──
   html+=_vcSec('⚖️',t('card_legal'),'<div style="font-size:12px;color:var(--t2);line-height:1.6;">'+t('consent_body')+'</div>',false,true);
@@ -4979,6 +4981,18 @@ function _moreLbl(){ return L({ru:'Почему я так думаю →',uk:'Ч
 function _lessLbl(){ return L({ru:'Свернуть ↑',uk:'Згорнути ↑',en:'Collapse ↑',es:'Ocultar ↑',de:'Einklappen ↑',pt:'Recolher ↑',fr:'Replier ↑',pl:'Zwiń ↑',it:'Comprimi ↑',he:'↑ כווץ',ja:'閉じる ↑',ko:'접기 ↑'}); }
 function _moreLbl_pri(){ return L({ru:'Главный приоритет',uk:'Головний пріоритет',en:'Top priority',es:'Prioridad principal',de:'Top-Priorität',pt:'Prioridade principal',fr:'Priorité nº 1',pl:'Priorytet',it:'Priorità',he:'עדיפות עליונה',ja:'最優先',ko:'최우선'}); }
 function _toggleDetail(btn){ var d=btn.nextElementSibling; if(!d)return; var open=d.style.display!=='none'; d.style.display=open?'none':'block'; btn.textContent=open?_moreLbl():_lessLbl(); btn.classList.toggle('open',!open); }
+// Тема разбора → золотая иконка (RU/EN и ключевые формы; фолбэк — эмодзи от ИИ)
+function _themeIcon(t){ t=(t||'').toLowerCase();
+  var M=[['sleep',['сон','сну','сна','sleep','sueñ','schlaf','sono','sommeil','sonno','睡眠','수면','שינה']],
+    ['nutrition',['питан','пищ','еда','nutri','ernähr','alimenta','żywien','食事','영양','תזונה']],
+    ['energy',['энерг','усталост','туман','energ','エネル','에너지','אנרג','fatigue']],
+    ['movement',['движен','нагрузк','актив','movement','bewegung','movimiento','movimento','ruch','運動','운동','תנוע']],
+    ['stress',['стресс','восстанов','нерв','stress','estrés','ストレス','스트레스','לחץ']],
+    ['rhythm',['ритм','цикл','менстру','баланс','переход','rhythm','cycle','リズム','리듬']],
+    ['intimacy',['интим','либидо','близост','intima','intimacy','親密','친밀']]];
+  for(var i=0;i<M.length;i++)for(var j=0;j<M[i][1].length;j++)if(t.indexOf(M[i][1][j])>=0)return M[i][0];
+  return '';
+}
 function _renderAnalysis(raw){
   var text=(typeof _wl==='function')?_wl(String(raw==null?'':raw)):String(raw==null?'':raw);
   if(text.indexOf('[[S]]')<0) return _mdOnly(text);   // старый/неструктурный → обычный рендер (обратная совместимость)
@@ -4990,7 +5004,8 @@ function _renderAnalysis(raw){
     var hp=head.split('|'), icon=(hp[0]||'').trim(), title=(hp[1]||'').trim(), flag=(hp[2]||'').trim().toLowerCase();
     if(!title){ title=icon; icon=''; }   // если разделителя нет — весь head в заголовок
     var pill=(flag.indexOf('prior')>=0)?('<span class="ai-sec-pill">'+_moreLbl_pri()+'</span>'):'';
-    html+='<div class="ai-sec"><div class="ai-sec-h">'+(icon?('<span class="ai-sec-ic">'+_esc(icon)+'</span>'):'')+'<span style="flex:1;">'+_esc(title)+'</span>'+pill+'</div>'
+    var _ti=_themeIcon(title), iconHtml=_ti?('<img class="ai-sec-img" src="icons/'+_ti+'.webp" alt="" onerror="this.style.display=\'none\'">'):(icon?('<span class="ai-sec-ic">'+_esc(icon)+'</span>'):'');
+    html+='<div class="ai-sec"><div class="ai-sec-h">'+iconHtml+'<span style="flex:1;">'+_esc(title)+'</span>'+pill+'</div>'
       +'<div class="ai-sec-sum">'+_mdOnly(summary)+'</div>';
     if(detail) html+='<button type="button" class="ai-sec-more" onclick="_toggleDetail(this)">'+_moreLbl()+'</button><div class="ai-sec-det" style="display:none;">'+_mdOnly(detail)+'</div>';
     html+='</div>';
