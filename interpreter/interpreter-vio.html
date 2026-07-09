@@ -3341,6 +3341,10 @@ function renderCard(){
   if(!dynInner)dynInner='<div class="vc-empty" style="line-height:1.5;">'+L({ru:'Здесь появится ваша динамика — она набирается с каждым анализом. Загляните через пару заходов.',uk:'Тут зʼявиться ваша динаміка — вона накопичується з кожним аналізом. Завітайте за кілька заходів.',en:'Your dynamics will appear here — they build up with each check-in. Come back after a couple of check-ins.',es:'Aquí aparecerá tu evolución — se acumula con cada análisis. Vuelve tras un par de análisis.',de:'Hier erscheint deine Entwicklung — sie baut sich mit jedem Check-in auf. Schau nach ein paar Check-ins wieder vorbei.',pt:'Sua evolução aparecerá aqui — acumula-se a cada análise. Volte após alguns registros.',fr:'Votre évolution apparaîtra ici — elle se construit à chaque bilan. Revenez après quelques bilans.',pl:'Tu pojawi się Twoja dynamika — buduje się z każdą analizą. Wróć po kilku analizach.',it:'Qui apparirà la tua evoluzione — si accumula a ogni analisi. Torna dopo qualche check-in.',he:'כאן תופיע הדינמיקה שלך — היא נבנית עם כל בדיקה. חזרו אחרי כמה בדיקות.',ja:'ここに変化が表示されます——分析ごとに蓄積されます。数回後にまたご覧ください。',ko:'여기에 변화가 표시됩니다 — 분석할 때마다 쌓입니다. 몇 번 후에 다시 확인하세요.'})+'</div>';
   html+=_vcSec('📊',t('card_dynamics'),dynInner,true,true);
 
+  // ── Памятка дня (питание/движение/сон/вода/нутриенты) — сегодняшний план из кэша ──
+  var _dpInner=(typeof _renderDayPlanCard==='function')?_renderDayPlanCard():'';
+  if(_dpInner) html+=_vcSec('🧭',L({ru:'Памятка дня',uk:'Пам’ятка дня',en:'Day plan',es:'Plan del día',de:'Tagesplan',pt:'Plano do dia',fr:'Plan du jour',pl:'Plan dnia',it:'Piano del giorno',he:'תוכנית היום',ja:'今日のプラン',ko:'오늘의 플랜'}),_dpInner,true,true);
+
   // ── История дневных разборов ИИ (сохранённый текст по дням) ──
   var _aid=(typeof _aiDailyGet==='function')?_aiDailyGet():[];
   if(_aid.length){
@@ -4484,6 +4488,21 @@ function renderDayBlueprint(data){
   var dl='<button onclick="downloadDayPlan()" style="width:100%;margin-top:4px;padding:13px;border-radius:14px;border:1px solid rgba(180,138,240,.4);background:rgba(180,138,240,.12);color:#d9c2fb;font-family:\'DM Sans\',sans-serif;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">📥 '+L({ru:'Скачать памятку дня',en:'Download day plan'})+'</button>';
   box.innerHTML=head+rows+dl;
   if(!window._bpAI && !window._bpAILoading && typeof fetchDayPlan==='function') fetchDayPlan(data);
+}
+// Памятка дня в Карточке: те же главы, что на результате, из сохранённого плана дня (кэш) + data.
+// Клик по главе → та же модалка openBpChapter (использует window._bpData/_bpAI, которые здесь и ставим).
+function _renderDayPlanCard(){
+  var d=null; try{ d=JSON.parse(secGet('vial_lastdata')||'null'); }catch(e){}
+  var arr=(typeof _dpGet==='function')?_dpGet():[]; var pe=arr.filter(function(x){return x.day===_dayKey();})[0];
+  var plan=(pe&&pe.plan&&typeof pe.plan==='object')?pe.plan:null;
+  if(!d&&!plan) return '';
+  window._bpData=d||{}; window._bpAI=plan;
+  return _bpChapters().map(function(r){
+    return '<div onclick="openBpChapter(\''+r.id+'\')" style="display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:7px;background:linear-gradient(150deg,#1b1528,#130e1f);border:1px solid rgba(180,138,240,.2);border-radius:12px;cursor:pointer;">'
+      +'<div style="font-size:20px;width:28px;text-align:center;flex-shrink:0;">'+r.icon+'</div>'
+      +'<div style="flex:1;min-width:0;"><div style="font-family:\'DM Sans\',sans-serif;font-size:13px;font-weight:600;color:var(--t1);text-transform:uppercase;letter-spacing:.03em;">'+r.title+'</div><div style="font-size:11px;color:var(--t3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+r.teaser+'</div></div>'
+      +'<div style="color:#b48af0;font-size:18px;opacity:.6;flex-shrink:0;">›</div></div>';
+  }).join('');
 }
 function _cleanPlan(p){
   // сетка безопасности: убрать редкие проскоки исследовательской лексики из ИИ-JSON
