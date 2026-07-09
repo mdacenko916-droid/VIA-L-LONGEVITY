@@ -1510,6 +1510,16 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
 #consent-btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:600;color:#150f22;background:linear-gradient(135deg,#c9a8f5,#9b6ff0);cursor:pointer;opacity:.45;pointer-events:none;transition:opacity .2s;}
 #consent-btn.on{opacity:1;pointer-events:auto;}
 .result-disc{font-size:11px;line-height:1.45;color:var(--t3);background:rgba(180,138,240,.07);border:1px solid rgba(180,138,240,.18);border-radius:10px;padding:8px 11px;margin-bottom:14px;}
+/* Путь Б — структурный разбор: вступление + карточки-темы «превью + раскрытие» */
+.ai-intro{font-size:13.5px;color:var(--t2);line-height:1.8;margin-bottom:6px;}
+.ai-sec{border-top:1px solid rgba(180,138,240,.14);padding:15px 0 4px;}
+.ai-sec-h{display:flex;align-items:center;gap:9px;font-family:'Playfair Display',serif;font-size:16px;color:var(--t1);margin-bottom:8px;}
+.ai-sec-ic{font-size:19px;line-height:1;}
+.ai-sec-sum{font-size:13.5px;color:var(--t2);line-height:1.75;}
+.ai-sec-more{margin-top:10px;background:none;border:none;color:#b48af0;font-size:12.5px;font-weight:600;cursor:pointer;padding:4px 0;font-family:inherit;letter-spacing:.2px;}
+.ai-sec-more:hover{color:#c9a8f5;}
+.ai-sec-more.open{color:var(--t3);}
+.ai-sec-det{font-size:13px;color:var(--t2);line-height:1.75;margin-top:8px;padding:12px 14px;background:rgba(180,138,240,.05);border-radius:12px;border-left:2px solid rgba(180,138,240,.3);}
 </style>
 </head>
 <body>
@@ -3336,7 +3346,7 @@ function renderCard(){
   if(_aid.length){
     var _hInner=_aid.slice(0,31).map(function(e){
       var dt=e.day; try{dt=new Date(e.day).toLocaleDateString(_loc[lang]||'en-GB',{day:'numeric',month:'short',year:'numeric'});}catch(x){}
-      var body=(typeof _aiMd==='function')?_aiMd(e.analysis||''):_esc(e.analysis||'');
+      var body=(typeof _renderAnalysis==='function')?_renderAnalysis(e.analysis||''):(typeof _aiMd==='function'?_aiMd(e.analysis||''):_esc(e.analysis||''));
       return '<details class="vc-day"><summary style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid rgba(180,138,240,.1);font-size:13px;color:var(--t1);"><span style="color:#b48af0;">›</span>'+_esc(dt)+'</summary><div style="font-size:12.5px;color:var(--t2);line-height:1.55;padding:8px 0 12px;">'+body+'</div></details>';
     }).join('');
     html+=_vcSec('📅',L({ru:'История разборов',uk:'Історія розборів',en:'Analysis history',es:'Historial de análisis',de:'Analyse-Verlauf',pt:'Histórico de análises',fr:'Historique des analyses',pl:'Historia analiz',it:'Cronologia analisi',he:'היסטוריית ניתוחים',ja:'分析履歴',ko:'분석 기록'}),_hInner,false,true);
@@ -4919,6 +4929,27 @@ const AI_WORKER = 'https://interpreter.viaelcom.workers.dev';
 function _dayKey(){ return new Date().toISOString().slice(0,10); }
 function _sigOf(o){ try{var s=JSON.stringify(o),h=0;for(var i=0;i<s.length;i++){h=((h<<5)-h+s.charCodeAt(i))|0;}return ''+h;}catch(e){return '';} }
 function _aiMd(txt){ return (typeof _wl==='function'?_wl(txt):txt).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/^#{1,3}\s*(.+)$/gm,'<strong style="display:block;margin:14px 0 4px;">$1</strong>').replace(/\*\*([^*]+?)\*\*/g,'<strong>$1</strong>'); }
+// ── Путь Б: структурный разбор (вступление целиком + темы «превью + раскрытие») ──
+function _mdOnly(txt){ return String(txt==null?'':txt).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/^#{1,3}\s*(.+)$/gm,'<strong style="display:block;margin:14px 0 4px;">$1</strong>').replace(/\*\*([^*]+?)\*\*/g,'<strong>$1</strong>'); }
+function _moreLbl(){ return L({ru:'Почему я так думаю →',uk:'Чому я так вважаю →',en:'Why I think so →',es:'Por qué lo pienso →',de:'Warum ich das denke →',pt:'Por que penso assim →',fr:'Pourquoi je pense cela →',pl:'Dlaczego tak sądzę →',it:'Perché lo penso →',he:'← למה אני חושב כך',ja:'なぜそう考えるか →',ko:'왜 그렇게 생각할까 →'}); }
+function _lessLbl(){ return L({ru:'Свернуть ↑',uk:'Згорнути ↑',en:'Collapse ↑',es:'Ocultar ↑',de:'Einklappen ↑',pt:'Recolher ↑',fr:'Replier ↑',pl:'Zwiń ↑',it:'Comprimi ↑',he:'↑ כווץ',ja:'閉じる ↑',ko:'접기 ↑'}); }
+function _toggleDetail(btn){ var d=btn.nextElementSibling; if(!d)return; var open=d.style.display!=='none'; d.style.display=open?'none':'block'; btn.textContent=open?_moreLbl():_lessLbl(); btn.classList.toggle('open',!open); }
+function _renderAnalysis(raw){
+  var text=(typeof _wl==='function')?_wl(String(raw==null?'':raw)):String(raw==null?'':raw);
+  if(text.indexOf('[[S]]')<0) return _mdOnly(text);   // старый/неструктурный → обычный рендер (обратная совместимость)
+  var parts=text.split(/\n?\[\[S\]\]\s*/), intro=parts.shift(), html='';
+  if(intro&&intro.trim()) html+='<div class="ai-intro">'+_mdOnly(intro.trim())+'</div>';
+  for(var i=0;i<parts.length;i++){
+    var ds=parts[i].split(/\n?\[\[D\]\]\s*\n?/), headsum=ds[0]||'', detail=(ds[1]||'').trim();
+    var nl=headsum.indexOf('\n'), head=(nl<0?headsum:headsum.slice(0,nl)).trim(), summary=(nl<0?'':headsum.slice(nl+1)).trim();
+    var bar=head.indexOf('|'), icon=(bar<0?'':head.slice(0,bar)).trim(), title=(bar<0?head:head.slice(bar+1)).trim();
+    html+='<div class="ai-sec"><div class="ai-sec-h">'+(icon?('<span class="ai-sec-ic">'+_esc(icon)+'</span>'):'')+'<span>'+_esc(title)+'</span></div>'
+      +'<div class="ai-sec-sum">'+_mdOnly(summary)+'</div>';
+    if(detail) html+='<button type="button" class="ai-sec-more" onclick="_toggleDetail(this)">'+_moreLbl()+'</button><div class="ai-sec-det" style="display:none;">'+_mdOnly(detail)+'</div>';
+    html+='</div>';
+  }
+  return html;
+}
 function _aiDailyGet(){ try{return JSON.parse(secGet('vial_ai_daily')||'[]')||[];}catch(e){return [];} }
 function _aiDailySave(analysis,lang,sig){
   try{ var arr=_aiDailyGet(), day=_dayKey();
@@ -4953,13 +4984,13 @@ async function fetchAIAnalysis(data, lang){
   card.style.display='block'; loading.style.display='flex'; result.style.display='none'; err.style.display='none'; if(disc)disc.style.display='none';
   // Кэш дня: тот же день + язык + неизменные данные → читаем сохранённый текст, БЕЗ вызова API (экономия токенов + один и тот же совет весь день)
   var sig=_sigOf(data), cached=_aiDailyToday(L,sig);
-  if(cached&&cached.analysis){ result.innerHTML=_aiMd(cached.analysis); loading.style.display='none'; result.style.display='block'; if(disc)disc.style.display='block'; return; }
+  if(cached&&cached.analysis){ result.innerHTML=_renderAnalysis(cached.analysis); loading.style.display='none'; result.style.display='block'; if(disc)disc.style.display='block'; return; }
   try{
-    var res=await fetch(AI_WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data,lang:L,tier:'vio'})});
+    var res=await fetch(AI_WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data,lang:L,tier:'vio',structured:true})});
     var json=await res.json();
     if(json.analysis){
       _aiDailySave(json.analysis,L,sig);        // фиксируем разбор дня (перезапись 1×/день) → история + повторные заходы без API
-      result.innerHTML=_aiMd(json.analysis);
+      result.innerHTML=_renderAnalysis(json.analysis);
       loading.style.display='none'; result.style.display='block'; if(disc)disc.style.display='block';
     } else { throw new Error(json.error||'No response'); }
   }catch(e){ loading.style.display='none'; err.textContent='⚠ '+ui.err; err.style.display='block'; }
