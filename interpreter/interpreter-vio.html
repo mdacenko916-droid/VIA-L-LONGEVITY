@@ -4469,14 +4469,15 @@ function _bpChapterData(id, data){
   return [];
 }
 function _bpRenderSecs(secs){
+  var W=function(t){return (typeof _wl==='function')?_wl(String(t==null?'':t)):String(t==null?'':t);};   // велнес-пояс: приливы→тепловые волны, гормональный фон→внутренний баланс, дозы трав и т.д.
   return secs.map(function(s){
-    var head='<div style="margin:16px 0 4px;font-family:\'DM Sans\',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#b48af0;">• '+s.title+' •</div>';
+    var head='<div style="margin:16px 0 4px;font-family:\'DM Sans\',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#b48af0;">• '+W(s.title)+' •</div>';
     if(s.variants){
       var note='<div style="font-size:11px;color:var(--t3);margin:0 0 9px;">'+L({ru:'Выберите любой один вариант',en:'Pick any one option'})+'</div>';
-      var opts=s.items.map(function(x,i){return '<div style="display:flex;gap:11px;align-items:flex-start;background:rgba(180,138,240,.06);border:1px solid rgba(180,138,240,.15);border-radius:11px;padding:10px 12px;margin:6px 0;"><div style="font-size:12px;font-weight:700;color:#b48af0;flex-shrink:0;min-width:16px;line-height:1.5;">'+(i+1)+'</div><div style="font-size:14px;color:var(--t2);line-height:1.5;">'+x+'</div></div>';}).join('');
+      var opts=s.items.map(function(x,i){return '<div style="display:flex;gap:11px;align-items:flex-start;background:rgba(180,138,240,.06);border:1px solid rgba(180,138,240,.15);border-radius:11px;padding:10px 12px;margin:6px 0;"><div style="font-size:12px;font-weight:700;color:#b48af0;flex-shrink:0;min-width:16px;line-height:1.5;">'+(i+1)+'</div><div style="font-size:14px;color:var(--t2);line-height:1.5;">'+W(x)+'</div></div>';}).join('');
       return head+note+opts;
     }
-    return head + s.items.map(function(x){return '<div style="font-size:14px;color:var(--t2);line-height:1.65;padding:6px 0 6px 16px;position:relative;"><span style="position:absolute;left:0;color:#6b5b8a;top:6px;">–</span>'+x+'</div>';}).join('');
+    return head + s.items.map(function(x){return '<div style="font-size:14px;color:var(--t2);line-height:1.65;padding:6px 0 6px 16px;position:relative;"><span style="position:absolute;left:0;color:#b48af0;top:6px;">–</span>'+W(x)+'</div>';}).join('');
   }).join('');
 }
 function renderDayBlueprint(data){
@@ -4557,7 +4558,8 @@ function downloadDayPlan(){
   var data=window._bpData||{}, chs=_bpChapters();
   var body=chs.map(function(r){
     var secs=(window._bpAI && Array.isArray(window._bpAI[r.id])) ? window._bpAI[r.id] : _bpChapterData(r.id,data);
-    return '<section><h2>'+r.icon+' '+r.title+'</h2>'+secs.map(function(s){return '<h3>'+s.title+'</h3><ul>'+s.items.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>';}).join('')+'</section>';
+    var W=function(t){return (typeof _wl==='function')?_wl(String(t==null?'':t)):String(t==null?'':t);};
+    return '<section><h2>'+r.icon+' '+r.title+'</h2>'+secs.map(function(s){return '<h3>'+W(s.title)+'</h3><ul>'+s.items.map(function(x){return '<li>'+W(x)+'</li>';}).join('')+'</ul>';}).join('')+'</section>';
   }).join('');
   var nm=(data.name?(', '+data.name):'');
   var html='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+L({ru:'Памятка дня',en:'Day plan'})+'</title>'
