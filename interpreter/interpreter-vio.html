@@ -5085,6 +5085,8 @@ function _wl(s){ if(!s||typeof s!=='string')return s; var L=(typeof lang!=='unde
     s=s.replace(/\s*[-–—]?\s*(?:KSM|КСМ)[-\s]?66/gi,'');
     s=s.replace(new RegExp('('+_hrb+')([^().]{0,40}?)\\s*\\([^)]*?\\d[\\d.,–\\-\\s]*(?:мг|mg|мкг)[^)]*?\\)','giu'),'$1$2');
     s=s.replace(new RegExp('('+_hrb+')([^.]{0,40}?)\\s*[—–-]?\\s*(?:стандартный ориентир\\s*)?[~≈]?\\d[\\d.,–\\-\\s]*(?:мг|mg|мкг)','giu'),'$1$2');
+    // Скобочные сырые коды/значения полей, которые модель иногда цитирует ((yes),(none),(load_sensitivity),(hard_unwind)…) — убрать. Только в скобках → безопасно для всех языков.
+    s=s.replace(/\s*\((?:yes|no|high|low|mid|none|normal|decreased|increased|irregular|[a-z]{2,}(?:_[a-z]+)+)\)/gi,'');
     s=s.replace(/[ \t]{2,}/g,' ').replace(/[ \t]+([,.;)])/g,'$1');
     s=s.replace(/лекарствен\p{L}*\s+(?:взаимодействи\p{L}*|совместимост\p{L}*)|drug\s+interaction\p{L}*/giu, 'сочетание велнес-ориентиров');
     // хвостовое служебное слово (EN-порядок): «hh levels/activity» → hh
