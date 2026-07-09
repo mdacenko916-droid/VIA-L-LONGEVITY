@@ -5016,7 +5016,13 @@ function _wl(s){ if(!s||typeof s!=='string')return s; var L=(typeof lang!=='unde
     // рецептурные препараты (App Store 1.4.1) → нейтральный фактор ритма
     var _med=({ru:'дополнительные факторы ритма',uk:'додаткові фактори ритму',en:'additional rhythm factors',es:'factores de ritmo adicionales',de:'zusätzliche Rhythmus-Faktoren',pt:'fatores de ritmo adicionais',fr:'facteurs de rythme',it:'fattori di ritmo',pl:'czynniki rytmu',he:'גורמי מקצב',ja:'リズム要因',ko:'리듬 요인'})[L]||'additional rhythm factors';
     s=s.replace(/антидепрессант\p{L}*|antidepressant\p{L}*|контрацептив\p{L}*|contracepti\p{L}*|\bHRT\b|\bMHT\b|антидепресант\p{L}*/giu, _med);
-    s=s.replace(/(?<![\p{L}])(?:ЗГТ|КОК)(?![\p{L}])/gu, _med);   // регистрозависимо (кириллич. аббревиатуры)
+    s=s.replace(/(?<![\p{L}])(?:ЗГТ|ХЗТ|МГТ|КОК)(?![\p{L}])/gu, _med);   // регистрозависимо (кириллич. аббревиатуры; ХЗТ — частая опечатка ЗГТ у модели)
+    // Гормональные травы/адаптогены: снять дозу/форму (мг/KSM-66) — модель даёт их мимо гардрейла. Привязка к ИМЕНИ травы → магний/D3 (у нутриентов) НЕ трогаем.
+    var _hrb='(?:витекс\\p{L}*|vitex|ашваганд\\p{L}*|ashwagandha|родиол\\p{L}*|rhodiola|шалфе\\p{L}*|дон-?квай|солодк\\p{L}*|красн\\p{L}*\\s+клевер)';
+    s=s.replace(/\s*[-–—]?\s*(?:KSM|КСМ)[-\s]?66/gi,'');
+    s=s.replace(new RegExp('('+_hrb+')([^().]{0,40}?)\\s*\\([^)]*?\\d[\\d.,–\\-\\s]*(?:мг|mg|мкг)[^)]*?\\)','giu'),'$1$2');
+    s=s.replace(new RegExp('('+_hrb+')([^.]{0,40}?)\\s*[—–-]?\\s*(?:стандартный ориентир\\s*)?[~≈]?\\d[\\d.,–\\-\\s]*(?:мг|mg|мкг)','giu'),'$1$2');
+    s=s.replace(/[ \t]{2,}/g,' ').replace(/[ \t]+([,.;)])/g,'$1');
     s=s.replace(/лекарствен\p{L}*\s+(?:взаимодействи\p{L}*|совместимост\p{L}*)|drug\s+interaction\p{L}*/giu, 'сочетание велнес-ориентиров');
     // хвостовое служебное слово (EN-порядок): «hh levels/activity» → hh
     [hn,hg,mt,rc].forEach(function(w){ if(!w)return; s=s.replace(new RegExp(_wesc(w)+'\\s+(?:'+_WLG+')','giu'), w); });
