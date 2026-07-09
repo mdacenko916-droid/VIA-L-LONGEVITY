@@ -1280,7 +1280,7 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
     body: JSON.stringify({
       // Тяжёлые для маленькой модели языки (RTL/CJK) — на Sonnet: Haiku галлюцинирует иврит/арабский
       model: ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
-      max_tokens: 2600, // запас под токеноёмкие языки (he/ja/ko) — иначе ответ обрывается на полуслове
+      max_tokens: 5000, // было 2600 — глубокий VIO-разбор (интро+3 слоя+сон+питание) на русском/CJK упирался и обрывался на полуслове («…помогает эн»). Haiku 4.5 держит до 64K; платится только за реально сгенерённое
       system: [
         {
           type: 'text',
