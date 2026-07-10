@@ -434,7 +434,7 @@ const GUARDRAIL_FALLBACK = {
 // Filter 1 намеренно СПЕЦИФИЧЕН (медицинско-каузально-абсолютные маркеры), а не «у вас»/«you have»
 // (они benign и частые в вежливой речи) → guardrail срабатывает редко и по делу, экономя вызовы.
 // NB: \b не работает с кириллицей в JS-regex → у русских терминов границы слова НЕ ставим (bare-формы ловят словоформы).
-const AI_RISK_RE = /(diagnos|\bdisease\b|\bsyndrome\b|patholog|\btreatment\b|\btherap|\bsymptom|\bmeans that\b|\bindicates\b|\bproves\b|диагноз|синдром|патолог|симптом|означает|свидетельств|подтвержда|является причиной|вызвал|привод(?:ит|ят) к|привёл к)/i;
+const AI_RISK_RE = /(diagnos|\bdisease\b|\bdisorder\b|\bsyndrome\b|patholog|\btreatment\b|\btherap|\bsymptom|\bmeans that\b|\bindicates\b|\bproves\b|диагноз|болезн|заболеван|синдром|патолог|симптом|означает|свидетельств|подтвержда|является причиной|вызвал|привод(?:ит|ят) к|привёл к)/i;
 
 // Дешёвый разовый вызов Haiku (self-check / смягчение). maxTokens мал для check, большой для rewrite.
 async function callClaudeSimple(prompt, env, maxTokens) {
@@ -451,21 +451,32 @@ async function callClaudeSimple(prompt, env, maxTokens) {
 
 // Возвращает исходный текст (если чисто) или смягчённый (если self-check дал FAIL).
 async function wellnessGuardrail(text, env, langName, lang) {
-  if (!text || !AI_RISK_RE.test(text)) return text;   // Filter 1: нет risk-паттерна → без LLM-вызовов
+  const t0 = Date.now();
+  // Лог для smoke-теста (виден в `wrangler tail`): action = clean | pass | softened | fallback
+  const log = (action, selfcheck) => { try { console.log('[GUARDRAIL] ' + JSON.stringify({ lang, risk: action !== 'clean', selfcheck: selfcheck || null, regen: action === 'softened' || action === 'fallback', ms: Date.now() - t0, action })); } catch (_) {} };
+
+  // Обязательный дисклеймер («не медицинский диагноз» / «not a medical diagnosis») содержит слово-триггер «диагноз».
+  // Он есть в КАЖДОМ ответе → без этой очистки Filter 1 срабатывал бы всегда и self-check терял смысл «только при risk».
+  const scanText = (text || '')
+    .replace(/не\s+(?:является\s+)?медицинск[а-яё]*\s+диагноз[а-яё]*/gi, ' ')
+    .replace(/not a medical diagnos\w*/gi, ' ');
+  if (!text || !AI_RISK_RE.test(scanText)) { log('clean'); return text; }   // Filter 1: нет risk-паттерна → без LLM-вызовов
   const verdict = await callClaudeSimple(
     'You are a compliance checker for an Apple App Store wellness app (Guideline 1.4.1). '
   + 'Does the TEXT do ANY of: (1) diagnose or name/suggest a disease or disorder; (2) sound like medical advice or a clinical conclusion; '
   + '(3) claim certainty about a health state; (4) assert causation between metrics; (5) interpret a single metric in isolation? '
   + 'Reply with exactly one word: PASS or FAIL.\n\nTEXT:\n' + text, env, 8);
-  if (!/FAIL/i.test(verdict)) return text;             // self-check PASS → оставляем как есть
+  if (!/FAIL/i.test(verdict)) { log('pass', 'PASS'); return text; }     // self-check PASS → оставляем как есть
   const softened = await callClaudeSimple(            // одна перегенерация-смягчение
     'Rewrite the wellness text below in the softer, supportive voice of a personal wellbeing coach. '
   + 'Keep the SAME meaning, structure, markdown formatting and language (' + langName + '). '
   + 'Rules: observations, not diagnoses; no disease names; no certainty words (means/indicates/proves → "may suggest"); '
   + 'no causation ("X causes Y" → "X may be one factor"); never interpret a single metric in isolation; keep any final disclaimer. '
   + 'Output ONLY the rewritten text, nothing else.\n\nTEXT:\n' + text, env, 8000);
+  const ok = softened && softened.trim().length > 40;
+  log(ok ? 'softened' : 'fallback', 'FAIL');
   // Двойной сбой (self-check=FAIL И смягчение не удалось) — текст заведомо рискованный → нейтральный фолбэк, НЕ исходный.
-  return (softened && softened.trim().length > 40) ? softened : (GUARDRAIL_FALLBACK[lang] || GUARDRAIL_FALLBACK.en);
+  return ok ? softened : (GUARDRAIL_FALLBACK[lang] || GUARDRAIL_FALLBACK.en);
 }
 
 const WELLNESS_STYLE_OURA =
