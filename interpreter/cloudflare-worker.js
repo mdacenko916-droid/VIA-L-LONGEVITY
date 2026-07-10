@@ -385,6 +385,89 @@ WHtR (индекс талия/рост) = талия (см) / рост (см)
 // приказной «ФОРМАТ ОТВЕТА» базы (схема ПРОБЛЕМА→РЕШЕНИЕ→ДОЗА, «обязательно», «необходимость»).
 // EXPERT/ELITE (Hotmart, клиника) этот слой НЕ получают. Основа — рекомендация владельца.
 // ─────────────────────────────────────────────────────────────
+// ── App Store 1.4.1: правила безопасности формулировок динамического текста (ВСЕ тарифы) ──
+const AI_SAFETY_RULES = `
+
+════════════════════════════════════════
+БЕЗОПАСНОСТЬ ФОРМУЛИРОВОК (App Store 1.4.1) — строго, на языке вывода
+════════════════════════════════════════
+• НЕ трактуй ни один показатель ИЗОЛИРОВАННО. Любое наблюдение — только в общей картине: сон, восстановление, активность, стресс, питание, субъективное самочувствие. (Never interpret any single metric in isolation.)
+• БЕЗ причинно-следственных утверждений: НЕ «X вызвал / привёл к / объясняет / является причиной Y» (EN: caused / leads to / explains). Только: «может быть одним из факторов», «иногда сопровождается», «может влиять».
+• БЕЗ абсолютов и категоричности: запрещены «означает», «свидетельствует», «подтверждает», «доказывает», «говорит о том, что» (EN: means / indicates / proves / demonstrates / confirms). Замена: «может указывать», «похоже», «возможно», «стоит обратить внимание».
+• НЕ интерпретируй ОТСУТСТВУЮЩИЕ данные. Незаполненный раздел — не додумывай («возможно, вам не хватает…», «стоит увеличить…»). Пиши: «на основании доступных данных это оценить нельзя; для полной картины полезно учитывать …».
+• УВЕРЕННОСТЬ ПО ПОЛНОТЕ ДАННЫХ: данных мало → усиль смягчители (может/возможно/похоже/иногда); данных много → чуть увереннее, но ВСЕГДА без диагнозов и без констатации состояния как факта.
+`;
+
+// ── Few-shot: тон «наблюдение, не диагноз» (только велнес VIO/PRO) ──
+const FEW_SHOT_SAFE = `
+
+════════════════════════════════════════
+ПРИМЕРЫ ТОНА — следуй ИМЕННО так (❌ не писать · ✅ писать)
+════════════════════════════════════════
+❌ У вас признаки истощения. ✅ Ваши ответы могут говорить о повышенной потребности в восстановлении.
+❌ Это свидетельствует о дефиците. ✅ Это может быть поводом мягко обратить внимание на питание и отдых.
+❌ Недостаток сна вызвал падение энергии. ✅ Недосып может быть одним из факторов, влияющих на энергию.
+❌ Высокий пульс означает стресс. ✅ Более высокий пульс в покое иногда сопровождает повышенную нагрузку — стоит смотреть его вместе со сном и самочувствием.
+❌ У вас, вероятно, нарушение сна. ✅ Сон в последние дни выглядит менее восстановительным, чем обычно.
+❌ Вам не хватает белка. ✅ Если хочется поддержать тонус, можно обратить внимание на полноценный источник белка в течение дня.
+❌ Это приводит к выгоранию. ✅ Такие периоды иногда ощущаются как усталость; небольшие шаги восстановления обычно помогают.
+`;
+
+// Нейтральный фолбэк (App Store 1.4.1): показывать ТОЛЬКО когда self-check дал FAIL и перегенерация не удалась —
+// лучше «временно недоступно», чем заведомо рискованный исходный текст. Ключ — язык вывода (2 буквы).
+const GUARDRAIL_FALLBACK = {
+  ru: 'Персональный разбор временно недоступен. Пожалуйста, попробуйте немного позже.',
+  en: 'Your personal insights are temporarily unavailable. Please try again a little later.',
+  uk: 'Персональний розбір тимчасово недоступний. Будь ласка, спробуйте трохи пізніше.',
+  es: 'Tus recomendaciones personales no están disponibles temporalmente. Inténtalo de nuevo más tarde.',
+  de: 'Deine persönliche Auswertung ist vorübergehend nicht verfügbar. Bitte versuche es später erneut.',
+  fr: 'Votre bilan personnel est temporairement indisponible. Veuillez réessayer un peu plus tard.',
+  pt: 'Sua análise pessoal está temporariamente indisponível. Tente novamente mais tarde.',
+  it: 'Il tuo resoconto personale è temporaneamente non disponibile. Riprova più tardi.',
+  pl: 'Twoje osobiste podsumowanie jest chwilowo niedostępne. Spróbuj ponownie później.',
+  he: 'הניתוח האישי שלך אינו זמין כרגע. נסה שוב מאוחר יותר.',
+  ja: 'パーソナル分析は現在ご利用いただけません。しばらくしてからもう一度お試しください。',
+  ko: '개인 분석을 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.',
+};
+
+// ── Выходной guardrail (App Store 1.4.1): Filter 1 (regex) всегда; self-check+regen — только при risk ──
+// Filter 1 намеренно СПЕЦИФИЧЕН (медицинско-каузально-абсолютные маркеры), а не «у вас»/«you have»
+// (они benign и частые в вежливой речи) → guardrail срабатывает редко и по делу, экономя вызовы.
+// NB: \b не работает с кириллицей в JS-regex → у русских терминов границы слова НЕ ставим (bare-формы ловят словоформы).
+const AI_RISK_RE = /(diagnos|\bdisease\b|\bsyndrome\b|patholog|\btreatment\b|\btherap|\bsymptom|\bmeans that\b|\bindicates\b|\bproves\b|диагноз|синдром|патолог|симптом|означает|свидетельств|подтвержда|является причиной|вызвал|привод(?:ит|ят) к|привёл к)/i;
+
+// Дешёвый разовый вызов Haiku (self-check / смягчение). maxTokens мал для check, большой для rewrite.
+async function callClaudeSimple(prompt, env, maxTokens) {
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-api-key': env.CLAUDE_API_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: maxTokens, temperature: 0.2, messages: [{ role: 'user', content: prompt }] }),
+    });
+    const j = await r.json();
+    return j.content?.[0]?.text || '';
+  } catch (e) { return ''; }
+}
+
+// Возвращает исходный текст (если чисто) или смягчённый (если self-check дал FAIL).
+async function wellnessGuardrail(text, env, langName, lang) {
+  if (!text || !AI_RISK_RE.test(text)) return text;   // Filter 1: нет risk-паттерна → без LLM-вызовов
+  const verdict = await callClaudeSimple(
+    'You are a compliance checker for an Apple App Store wellness app (Guideline 1.4.1). '
+  + 'Does the TEXT do ANY of: (1) diagnose or name/suggest a disease or disorder; (2) sound like medical advice or a clinical conclusion; '
+  + '(3) claim certainty about a health state; (4) assert causation between metrics; (5) interpret a single metric in isolation? '
+  + 'Reply with exactly one word: PASS or FAIL.\n\nTEXT:\n' + text, env, 8);
+  if (!/FAIL/i.test(verdict)) return text;             // self-check PASS → оставляем как есть
+  const softened = await callClaudeSimple(            // одна перегенерация-смягчение
+    'Rewrite the wellness text below in the softer, supportive voice of a personal wellbeing coach. '
+  + 'Keep the SAME meaning, structure, markdown formatting and language (' + langName + '). '
+  + 'Rules: observations, not diagnoses; no disease names; no certainty words (means/indicates/proves → "may suggest"); '
+  + 'no causation ("X causes Y" → "X may be one factor"); never interpret a single metric in isolation; keep any final disclaimer. '
+  + 'Output ONLY the rewritten text, nothing else.\n\nTEXT:\n' + text, env, 8000);
+  // Двойной сбой (self-check=FAIL И смягчение не удалось) — текст заведомо рискованный → нейтральный фолбэк, НЕ исходный.
+  return (softened && softened.trim().length > 40) ? softened : (GUARDRAIL_FALLBACK[lang] || GUARDRAIL_FALLBACK.en);
+}
+
 const WELLNESS_STYLE_OURA =
   '\n\n════════════════════════════════════════\n' +
   'СТИЛЬ ОТВЕТА — ВЕЛНЕС-ГАЙД (Oura / Whoop) — для ВСЕХ ТАРИФОВ — ПЕРЕКРЫВАЕТ «ФОРМАТ ОТВЕТА» И ТОН ВЫШЕ\n' +
@@ -1299,6 +1382,7 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
     body: JSON.stringify({
       // Тяжёлые для маленькой модели языки (RTL/CJK) — на Sonnet: Haiku галлюцинирует иврит/арабский
       model: ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
+      temperature: 0.35, // App Store 1.4.1: понижена вариативность разбора → меньше риск неожиданных мед-интерпретаций
       max_tokens: 8000, // было 5000 — расширенный VIO-разбор (интро+3 слоя+сон+питание+движение+добавки) на русском обрывался на последней секции («…ашваганда обыч»). Haiku 4.5 держит до 64K; платится только за реально сгенерённое
       system: [
         {
@@ -1325,7 +1409,10 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
             // Велнес-тарифам он не нужен и вреден (реинтродуцирует клин. термины) → пропускаем.
             (isWellness ? '' : ('Глоссарий ключевых терминов на ' + langName + ' (используй именно эти формы):\n' + glossary)) +
             wellnessGuard +
-            WELLNESS_STYLE_OURA,   // велнес-стиль Oura — универсально для ВСЕХ тарифов (EU/US требования к сайту касаются и EXPERT/ELITE)
+            WELLNESS_STYLE_OURA +
+            AI_SAFETY_RULES +                       // правила безопасности формулировок (все тарифы): не изолированно, без каузальности/абсолютов, не додумывать пропуски
+            (isWellness ? FEW_SHOT_SAFE : ''),       // few-shot «наблюдение, не диагноз» — только велнес (VIO/PRO)
+
           cache_control: { type: 'ephemeral' },
         },
       ],
@@ -1334,7 +1421,12 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
   });
 
   const result = await response.json();
-  const text = result.content?.[0]?.text || result.error?.message || 'Ошибка генерации';
+  let text = result.content?.[0]?.text || result.error?.message || 'Ошибка генерации';
+
+  // App Store 1.4.1 — выходной guardrail (только велнес VIO/PRO; при risk-паттерне: self-check → мягкая перегенерация)
+  if (isWellness && !result.error) {
+    try { text = await wellnessGuardrail(text, env, langName, lang); } catch (e) { /* сбой самого guardrail (не FAIL) → оставить исходный */ }
+  }
 
   // Ингест в карточку кабинета: срез биометрики + ИИ-разбор. Привязка по коду доступа.
   // UPDATE-only (карточка должна уже существовать = EXPERT/ELITE, созданная при оплате):
