@@ -430,6 +430,10 @@ const GUARDRAIL_FALLBACK = {
   ko: '개인 분석을 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.',
 };
 
+// Накопительная статистика guardrail (в пределах isolate; при пересоздании сбрасывается —
+// надёжный итог считать агрегацией per-event логов: grep '[GUARDRAIL]' | подсчёт по полю action).
+const _gStats = { clean: 0, hit: 0, fail: 0, regen: 0, fallback: 0 };
+
 // ── Выходной guardrail (App Store 1.4.1): Filter 1 (regex) всегда; self-check+regen — только при risk ──
 // Filter 1 намеренно СПЕЦИФИЧЕН (медицинско-каузально-абсолютные маркеры), а не «у вас»/«you have»
 // (они benign и частые в вежливой речи) → guardrail срабатывает редко и по делу, экономя вызовы.
@@ -453,7 +457,14 @@ async function callClaudeSimple(prompt, env, maxTokens) {
 async function wellnessGuardrail(text, env, langName, lang) {
   const t0 = Date.now();
   // Лог для smoke-теста (виден в `wrangler tail`): action = clean | pass | softened | fallback
-  const log = (action, selfcheck) => { try { console.log('[GUARDRAIL] ' + JSON.stringify({ lang, risk: action !== 'clean', selfcheck: selfcheck || null, regen: action === 'softened' || action === 'fallback', ms: Date.now() - t0, action })); } catch (_) {} };
+  const log = (action, selfcheck) => { try {
+    // накопить статистику (см. _gStats): clean | regex_hit | selfcheck_fail | regen | fallback
+    if (action === 'clean') _gStats.clean++; else _gStats.hit++;
+    if (selfcheck === 'FAIL') _gStats.fail++;
+    if (action === 'softened' || action === 'fallback') _gStats.regen++;
+    if (action === 'fallback') _gStats.fallback++;
+    console.log('[GUARDRAIL] ' + JSON.stringify({ lang, risk: action !== 'clean', selfcheck: selfcheck || null, regen: action === 'softened' || action === 'fallback', ms: Date.now() - t0, action, totals: _gStats }));
+  } catch (_) {} };
 
   // Обязательный дисклеймер («не медицинский диагноз» / «not a medical diagnosis») содержит слово-триггер «диагноз».
   // Он есть в КАЖДОМ ответе → без этой очистки Filter 1 срабатывал бы всегда и self-check терял смысл «только при risk».
