@@ -398,7 +398,11 @@ const AI_SAFETY_RULES = `
 • УВЕРЕННОСТЬ ПО ПОЛНОТЕ ДАННЫХ: данных мало → усиль смягчители (может/возможно/похоже/иногда); данных много → чуть увереннее, но ВСЕГДА без диагнозов и без констатации состояния как факта.
 • НЕ ЦИТИРУЙ дословно формулировки и клинические слова из вопроса пользователя (не зеркаль «вы спрашиваете, есть ли у вас X», «Do I have X?»). Тепло признай беспокойство СВОИМИ, велнес-словами и мягко переведи в ориентиры образа жизни, сна, энергии и восстановления. Оставайся тёплым и поддерживающим — НЕ сухим и НЕ отмахивающимся.
 • НЕ ИСКЛЮЧАЙ причину так же, как не подтверждаешь: на прямой вопрос «это X (гормоны/андропауза/перименопауза…)?» НЕЛЬЗЯ ни утверждать X, ни уверенно ИСКЛЮЧАТЬ X в пользу другой причины («это не возрастное, а усталость») — устройство X не измеряет, оснований исключить тоже нет. Формула: опиши паттерн + «точный ответ на ваш вопрос даст только осмотр/анализ у специалиста». (EN: don't rule OUT a cause any more than you'd rule one in — "this may not be age-related, it's likely fatigue" is exclusion-claim.)
-• HEDGING ПО ДЕЛУ, не инфляцией: смягчители «может/возможно/похоже» — там, где есть реальная неопределённость (причины, интерпретации метрик). Для действий, фактов и наблюдений пиши прямо, без «может» на каждую фразу («Ложитесь раньше», не «это может помочь лечь раньше»). Максимум 1–2 «может» на абзац — иначе текст звучит расплывчато и теряет доверие, а не становится безопаснее.
+• КАЛИБРОВКА УВЕРЕННОСТИ (три уровня — эксперт уверен в общеизвестном, сдержан только о данных клиента):
+  1) ОБЩЕЕ ЗНАНИЕ и советы-действия — пиши УВЕРЕННО, без смягчителей: «Клетчатка держит сахар ровнее», «Прохладная спальня помогает глубокому сну», «Ложитесь раньше». Общий факт о питании/сне/движении — НЕ claim о клиенте, «может» здесь не нужен и звучит как неуверенность эксперта.
+  2) ИНТЕРПРЕТАЦИЯ ДАННЫХ КЛИЕНТА (его метрики → его состояние) — ОДИН смягчитель на мысль, и РАЗНООБРАЗЬ слова: «похоже», «часто идёт рука об руку», «обычно», «нередко» — не монотонное «может» в каждой фразе. НЕ ставь 2-3 смягчителя подряд в одном абзаце.
+  3) РЕЗУЛЬТАТ ДЛЯ КЛИЕНТА — не обещай как факт будущего (см. правило выше).
+  Ошибка, которой избегать: одинаково мямлить про всё («клетчатка может помочь… сон может улучшиться… это может работать») — текст теряет доверие и НЕ становится безопаснее.
 `;
 
 // ── Few-shot: тон «наблюдение, не диагноз» (только велнес VIO/PRO) ──
@@ -447,7 +451,7 @@ const GUARDRAIL_FALLBACK = {
 // exclusion-claim: «это НЕ X, а Y» / «приборы показывают, что не X» — модель уверенно ИСКЛЮЧАЕТ причину, которую
 // не измеряла, ровно так же недопустимо, как уверенно её УТВЕРЖДАТЬ (см. AI_SAFETY_RULES). Промпт-запрет один
 // вероятностный не удержал (живой smoke 2026-07-11: «это не возрастное, а усталость» проехало) → добавлено в Filter 1.
-const AI_RISK_RE = /(diagnos|\bdisease\b|\bdisorder\b|\bsyndrome\b|patholog|\btreatment\b|\btherap|\bmeans that\b|\bindicates\b|\bproves\b|\bdirect(?:ly)?\s+(?:result|consequence|effect)|directly\s+affect|this\s+is\s+not\b.{0,40}\bbut\b|device[s]?\s+show|диагноз|болезн|заболеван|синдром|патолог|означает|свидетельств|подтвержда|является причиной|вызвал|привод(?:ит|ят) к|привёл к|прям[а-яё]*\s+следстви|прям[а-яё]*\s+результат|напрямую\s+влия|это\s+не\s+возрастн[а-яё]*|это\s+не\s+гормональн[а-яё]*|приборы?\s+показыва|прибор[а-яё]*\s+не\s+(?:измеря|показыва))/i;
+const AI_RISK_RE = /(diagnos|\bdisease\b|\bdisorder\b|\bsyndrome\b|patholog|\btreatment\b|\btherap|\bmeans that\b|\bindicates\b|\bproves\b|\bdirect(?:ly)?\s+(?:result|consequence|effect)|directly\s+affect|this\s+is\s+not\b.{0,40}\bbut\b|device[s]?\s+show|диагноз|болезн|заболеван|синдром|патолог|означает|свидетельств|подтвержда|является причиной|вызвал|привод(?:ит|ят) к|привёл к|прям[а-яё]*\s+следстви|прям[а-яё]*\s+результат|напрямую\s+влия|это\s+не\s+возрастн[а-яё]*|это\s+не\s+гормональн[а-яё]*|приборы?\s+показыва|прибор[а-яё]*\s+не\s+(?:измеря|показыва)|\+[^=+\n]{0,60}=\s*[а-яёa-z])/i;
 
 // Дешёвый разовый вызов Haiku (self-check / смягчение). maxTokens мал для check, большой для rewrite.
 async function callClaudeSimple(prompt, env, maxTokens) {
@@ -484,8 +488,9 @@ async function wellnessGuardrail(text, env, langName, lang) {
   const softened = await callClaudeSimple(            // одна перегенерация-смягчение
     'Rewrite the wellness text below in the softer, supportive voice of a personal wellbeing coach. '
   + 'Keep the SAME meaning, structure, markdown formatting and language (' + langName + '). '
-  + 'Rules: observations, not diagnoses; no disease names; no certainty words (means/indicates/proves → "may suggest"); '
-  + 'no causation ("X causes Y" → "X may be one factor"); never interpret a single metric in isolation; keep any final disclaimer. '
+  + 'Rules: observations, not diagnoses; no disease names; never rule a cause IN or OUT for the client; no causation about the client ("X causes Y" → "X often goes along with Y") and NO equation formulas ("A + B = C" → rephrase as a soft observation); never interpret a single metric in isolation; keep any final disclaimer. '
+  + 'CALIBRATED confidence — soften ONLY claims about the CLIENT\'s data/state (his metrics → his condition: use "may suggest", "often goes along with", ONE softener per thought, varied wording); '
+  + 'general knowledge and action advice stay CONFIDENT as-is ("fiber steadies blood sugar", "go to bed earlier") — do NOT insert "may/might" into every sentence; hedging everything sounds evasive, not safer. '
   + 'Output ONLY the rewritten text, nothing else.\n\nTEXT:\n' + text, env, 8000);
   const ok = softened && softened.trim().length > 40;
   log(ok ? 'softened' : 'fallback', 'FAIL');
@@ -584,7 +589,7 @@ const WELLNESS_STYLE_OURA =
   '• ЧТО СДЕЛАТЬ — 3–5 коротких ДЕЙСТВИЙ чек-пунктами, каждый с новой строки начиная с «☐ », императив и конкретно: «☐ Ложитесь и вставайте в одно время», «☐ 10 минут ходьбы после обеда». Варианты выбора (завтрак/ужин) — тоже «☐ ».\n' +
   '• «Если вы уже используете добавки/практики» — ☐, рамка «если», НЕ назначение.\n' +
   '• ПОЧЕМУ это помогает — 1–2 короткие фразы научно-бытового контекста ПОСЛЕ чек-листа (глубина гайда, но не раздувай в несколько экранов).\n' +
-  '• HEDGING ПО ДЕЛУ: смягчители «может/возможно/похоже» — ТОЛЬКО для причинности и интерпретаций (claim-риск). Для простых действий и фактов пиши прямо: «Начните с…», а не «можно было бы попробовать начать». Не более 1–2 «может» на абзац.\n';
+  '• КАЛИБРОВКА УВЕРЕННОСТИ: общее знание и действия — УВЕРЕННО без «может» («Клетчатка держит сахар ровнее», «Начните с…»); интерпретация ДАННЫХ КЛИЕНТА — один смягчитель на мысль, разными словами (похоже/часто/обычно), не монотонное «может» подряд; результат не обещать. Не мямли одинаково про всё.\n';
 
 // ─────────────────────────────────────────────────────────────
 // ВЕЛНЕС-НАТИВНАЯ БАЗА ЗНАНИЙ (VIO/PRO, App Store). Заменяет клиническую SYSTEM_PROMPT
