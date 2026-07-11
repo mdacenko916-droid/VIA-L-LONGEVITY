@@ -1408,8 +1408,10 @@ body.flow-mode .step.flow-show{display:block!important;}
 body.flow-mode .step-badge{display:none;}        /* убираем бейджи-номера «NN/NN» */
 body.flow-mode .btn-row{display:none;}            /* убираем «Далее →» / «←» */
 body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N из M» (строку ШАГ) */
-.flow-group-head{font-family:'Playfair Display',serif;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#b48af0;margin:36px auto 4px;max-width:600px;padding:0 26px;opacity:.92;}
+.flow-group-head{margin:36px auto 4px;max-width:600px;padding:0 26px;}
 .flow-group-head:first-of-type{margin-top:6px;}
+.fgh-t{display:block;font-family:'Playfair Display',serif;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#b48af0;opacity:.92;}
+.fgh-s{display:block;font-size:13.5px;color:var(--t2);margin-top:3px;letter-spacing:.2px;line-height:1.4;}
 #flow-footer{display:none;position:static;z-index:40;margin-top:10px;padding:26px 24px calc(34px + env(safe-area-inset-bottom));background:none;text-align:center;}
 #flow-btn{width:100%;max-width:600px;padding:16px 24px;border:none;border-radius:14px;font-size:15px;font-weight:600;letter-spacing:.4px;color:#150f22;background:linear-gradient(135deg,#c9a8f5,#9b6ff0);cursor:pointer;box-shadow:0 8px 28px rgba(155,111,240,.34);}
 #flow-btn:active{transform:translateY(1px);}
@@ -3826,13 +3828,23 @@ const FLOW_ALL=[0,1,2,3,8,9,10,7,6,14,4,13,12];   // step5 удалён; step13=
 const STEP_CADENCE={0:'base',9:'base',10:'base',7:'base',12:'base',
                     1:'daily',2:'daily',3:'daily',8:'daily',4:'daily',
                     6:'weekly',14:'weekly',13:'biweekly'};   // активность+новые симптомы — раз/нед; стресс+кортизол — раз/2нед
+// Каденс-заголовок: верхняя строка — ЭТАП (что это), нижняя — периодичность (когда/как часто).
+// Премиальный «наставнический» формат вместо сухого ярлыка.
 function _flowHead(cad){
-  if(cad==='base')return L({ru:'Настройка · один раз',uk:'Налаштування · один раз',en:'Setup · one-time',es:'Configuración · una vez',de:'Einrichtung · einmalig',pt:'Configuração · uma vez',fr:'Configuration · une fois',pl:'Konfiguracja · jednorazowo',it:'Configurazione · una volta',he:'הגדרה · פעם אחת',ja:'初期設定・1回のみ',ko:'설정 · 1회'});
-  if(cad==='daily')return L({ru:'За прошедшие сутки',uk:'За минулу добу',en:'Past 24 hours',es:'Últimas 24 horas',de:'Letzte 24 Stunden',pt:'Últimas 24 horas',fr:'Dernières 24 heures',pl:'Ostatnie 24 godziny',it:'Ultime 24 ore',he:'24 השעות האחרונות',ja:'過去24時間',ko:'지난 24시간'});
-  if(cad==='now')return L({ru:'Прямо сейчас',uk:'Просто зараз',en:'Right now',es:'Ahora mismo',de:'Jetzt gerade',pt:'Agora mesmo',fr:'En ce moment',pl:'Teraz',it:'Proprio ora',he:'ממש עכשיו',ja:'今この瞬間',ko:'지금 바로'});
-  if(cad==='weekly')return L({ru:'Раз в неделю',uk:'Раз на тиждень',en:'Weekly',es:'Una vez por semana',de:'Wöchentlich',pt:'Semanalmente',fr:'Une fois par semaine',pl:'Raz w tygodniu',it:'Settimanale',he:'פעם בשבוע',ja:'週1回',ko:'주 1회'});
-  if(cad==='biweekly')return L({ru:'Раз в 2 недели',uk:'Раз на 2 тижні',en:'Every 2 weeks',es:'Cada 2 semanas',de:'Alle 2 Wochen',pt:'A cada 2 semanas',fr:'Toutes les 2 semaines',pl:'Co 2 tygodnie',it:'Ogni 2 settimane',he:'אחת לשבועיים',ja:'2週間に1回',ko:'2주에 1회'});
-  return '';
+  var M={
+    base:{ t:{ru:'Настройка профиля',uk:'Налаштування профілю',en:'Profile setup',es:'Configuración del perfil',de:'Profil einrichten',pt:'Configuração do perfil',fr:'Configuration du profil',pl:'Konfiguracja profilu',it:'Configurazione del profilo',he:'הגדרת פרופיל',ja:'プロフィール設定',ko:'프로필 설정'},
+           s:{ru:'Заполняется один раз',uk:'Заповнюється один раз',en:'One-time setup',es:'Se completa una vez',de:'Einmalig auszufüllen',pt:'Preenchido uma vez',fr:'À remplir une fois',pl:'Wypełniane raz',it:'Da compilare una volta',he:'ממולא פעם אחת',ja:'初回のみ入力',ko:'한 번만 입력'} },
+    daily:{ t:{ru:'Ежедневный обзор',uk:'Щоденний огляд',en:'Daily check-in',es:'Revisión diaria',de:'Täglicher Überblick',pt:'Revisão diária',fr:'Bilan quotidien',pl:'Codzienny przegląd',it:'Panoramica quotidiana',he:'סקירה יומית',ja:'デイリーレビュー',ko:'일일 리뷰'},
+            s:{ru:'За прошедшие сутки',uk:'За минулу добу',en:'Past 24 hours',es:'Últimas 24 horas',de:'Letzte 24 Stunden',pt:'Últimas 24 horas',fr:'Dernières 24 heures',pl:'Ostatnie 24 godziny',it:'Ultime 24 ore',he:'24 השעות האחרונות',ja:'過去24時間',ko:'지난 24시간'} },
+    now:{ t:{ru:'Текущее самочувствие',uk:'Поточне самопочуття',en:'How you feel now',es:'Cómo te sientes ahora',de:'Aktuelles Befinden',pt:'Como você se sente agora',fr:'Votre ressenti actuel',pl:'Twoje obecne samopoczucie',it:'Come ti senti ora',he:'איך אתם מרגישים עכשיו',ja:'今の体調',ko:'현재 컨디션'},
+          s:{ru:'Прямо сейчас',uk:'Просто зараз',en:'Right now',es:'Ahora mismo',de:'Jetzt gerade',pt:'Agora mesmo',fr:'En ce moment',pl:'Teraz',it:'Proprio ora',he:'ממש עכשיו',ja:'今この瞬間',ko:'지금 바로'} },
+    weekly:{ t:{ru:'Еженедельный обзор',uk:'Щотижневий огляд',en:'Weekly review',es:'Revisión semanal',de:'Wöchentlicher Überblick',pt:'Revisão semanal',fr:'Bilan hebdomadaire',pl:'Cotygodniowy przegląd',it:'Panoramica settimanale',he:'סקירה שבועית',ja:'週次レビュー',ko:'주간 리뷰'},
+             s:{ru:'Раз в неделю',uk:'Раз на тиждень',en:'Weekly',es:'Una vez por semana',de:'Wöchentlich',pt:'Semanalmente',fr:'Une fois par semaine',pl:'Raz w tygodniu',it:'Settimanale',he:'פעם בשבוע',ja:'週1回',ko:'주 1회'} },
+    biweekly:{ t:{ru:'Долгосрочная динамика',uk:'Довгострокова динаміка',en:'Long-term trend',es:'Tendencia a largo plazo',de:'Langzeit-Trend',pt:'Tendência de longo prazo',fr:'Tendance à long terme',pl:'Trend długoterminowy',it:'Andamento a lungo termine',he:'מגמה ארוכת טווח',ja:'長期トレンド',ko:'장기 추세'},
+               s:{ru:'Раз в 2 недели',uk:'Раз на 2 тижні',en:'Every 2 weeks',es:'Cada 2 semanas',de:'Alle 2 Wochen',pt:'A cada 2 semanas',fr:'Toutes les 2 semaines',pl:'Co 2 tygodnie',it:'Ogni 2 settimane',he:'אחת לשבועיים',ja:'2週間に1回',ko:'2주에 1회'} },
+  };
+  var m=M[cad]; if(!m)return {t:'',s:''};
+  return {t:L(m.t), s:L(m.s)};
 }
 // step10(Цикл), step1(Приливы), step8(Туман/когниция) скрыты мужчинам
 // Настройка сделана = профиль (пол+возраст) сохранён → base-блоки живут в Карточке, из дневной ленты убраны.
@@ -3893,7 +3905,11 @@ function _showFlow(list){
   ].forEach(function(sec){
     var grp=list.filter(sec[1]);
     if(!grp.length)return;
-    var h=document.createElement('div');h.className='flow-group-head';h.textContent=_flowHead(sec[0]);
+    var _hd=_flowHead(sec[0]);
+    var h=document.createElement('div');h.className='flow-group-head';
+    var _ht=document.createElement('span');_ht.className='fgh-t';_ht.textContent=_hd.t;
+    var _hs=document.createElement('span');_hs.className='fgh-s';_hs.textContent=_hd.s;
+    h.appendChild(_ht);h.appendChild(_hs);
     main.appendChild(h);
     grp.forEach(function(n){var s=document.getElementById('step'+n);if(s){s.classList.add('flow-show');main.appendChild(s);}});
   });
