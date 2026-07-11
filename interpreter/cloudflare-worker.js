@@ -480,26 +480,31 @@ async function wellnessGuardrail(text, env, langName, lang) {
   return ok ? softened : (GUARDRAIL_FALLBACK[lang] || GUARDRAIL_FALLBACK.en);
 }
 
-// Детерминированный финальный скраб абсолютных бан-слов (гормоны/менопауза/приливы) — гарантия, которую
+// Детерминированный финальный скраб хард-банов (гормоны/менопауза/приливы/органы/ЖКТ…) — гарантия, которую
 // вероятностный regex→regen дать не может (regen недетерминирован). Применяется ПОСЛЕ guardrail, только велнес.
-// RU/UK: переиспользуем готовый грамматичный deMedicalizeFeed, но защищаем дисклеймер «не медицинский диагноз»
-//        (иначе «диагноз»→«ориентир» испортит обязательную юр-фразу). EN: узкий список (табл. _FEED_DEMED — кириллица).
+// RU: переиспользуем грамматичный _FEED_DEMED, но БЕЗ правила «диагноз»→«ориентир» — «диагноз» легитимен в
+//     дисклеймере, который ГЕНЕРИТ МОДЕЛЬ с вариациями (защита по точной строке ненадёжна). «Диагноз»-как-концепт
+//     держит семантический guardrail (AI_RISK_RE ловит «диагноз» → self-check → regen). EN: узкий список.
 const _EN_HARD_SCRUB = [
   [/\bperimenopaus\w*/gi, 'early transition'], [/\bpostmenopaus\w*/gi, 'mature stage'],
   [/\bmenopaus\w*/gi, 'natural transition'], [/\bandropaus\w*/gi, 'age-related vitality'],
-  [/\bhormonal\b/gi, 'internal-balance'], [/\bhormones?\b/gi, 'internal balance'],
+  [/\bhormonal\b/gi, 'internal-balance'], [/\bhormones?\b/gi, 'internal balance'],   // hormonal — отдельным правилом (подстроки hormone не содержит)
   [/\bhot flash\w*/gi, 'heat waves'], [/\bnight sweats?\b/gi, 'night heat waves'],
   [/\bestrogen\w*/gi, 'internal balance'], [/\bprogesterone\b/gi, 'internal balance'],
   [/\btestosterone\b/gi, 'male vitality'], [/\bcortisol\b/gi, 'stress-and-recovery rhythms'],
 ];
+let _ruAnalysisScrub = null; // ленивая инициализация (_FEED_DEMED определён ниже по файлу — const, без hoist; берём в рантайме)
+function _getRuScrub() {
+  if (!_ruAnalysisScrub) {
+    _ruAnalysisScrub = _FEED_DEMED
+      .filter(r => r[0].source !== 'диагноз[а-яё]*')   // «диагноз» не скрабим (дисклеймер + семантика)
+      .concat([[/приливы?[а-яё]*/gi, 'тепловые волны'], [/ночн[а-яё]*\s+пот[а-яё]*/gi, 'ночные тепловые волны']]);
+  }
+  return _ruAnalysisScrub;
+}
 function wellnessHardScrub(text, lang) {
   if (!text) return text;
-  if (lang === 'ru') {
-    const held = [];
-    let t = text.replace(/не\s+(?:является\s+)?медицинск[а-яё]*\s+диагноз[а-яё]*/gi, m => { held.push(m); return '[[GRD' + (held.length - 1) + ']]'; });
-    t = deMedicalizeFeed(t);
-    return t.replace(/\[\[GRD(\d+)\]\]/g, (_, i) => held[+i]);
-  }
+  if (lang === 'ru') return _getRuScrub().reduce((s, [re, to]) => s.replace(re, to), text);
   if (lang === 'en') return _EN_HARD_SCRUB.reduce((s, [re, to]) => s.replace(re, to), text);
   return text; // прочие языки — семантический guardrail (детерм. скраб только для primary-рынков RU/EN)
 }
