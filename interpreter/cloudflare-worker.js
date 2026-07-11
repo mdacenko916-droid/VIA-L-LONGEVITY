@@ -444,7 +444,10 @@ const GUARDRAIL_FALLBACK = {
 // REFRAME (term ≠ claim): физио-термины «hormone/hormonal/гормон/symptom/симптом» УБРАНЫ из триггеров —
 // слово само по себе не риск (Apple Health называет их прямо). Ловим только CLAIM-маркеры: диагноз/болезнь/
 // каузальность/абсолюты/лечение. «syndrome/синдром/patholog/патолог» = диагноз-класс → остаются.
-const AI_RISK_RE = /(diagnos|\bdisease\b|\bdisorder\b|\bsyndrome\b|patholog|\btreatment\b|\btherap|\bmeans that\b|\bindicates\b|\bproves\b|\bdirect(?:ly)?\s+(?:result|consequence|effect)|directly\s+affect|диагноз|болезн|заболеван|синдром|патолог|означает|свидетельств|подтвержда|является причиной|вызвал|привод(?:ит|ят) к|привёл к|прям[а-яё]*\s+следстви|прям[а-яё]*\s+результат|напрямую\s+влия)/i;
+// exclusion-claim: «это НЕ X, а Y» / «приборы показывают, что не X» — модель уверенно ИСКЛЮЧАЕТ причину, которую
+// не измеряла, ровно так же недопустимо, как уверенно её УТВЕРЖДАТЬ (см. AI_SAFETY_RULES). Промпт-запрет один
+// вероятностный не удержал (живой smoke 2026-07-11: «это не возрастное, а усталость» проехало) → добавлено в Filter 1.
+const AI_RISK_RE = /(diagnos|\bdisease\b|\bdisorder\b|\bsyndrome\b|patholog|\btreatment\b|\btherap|\bmeans that\b|\bindicates\b|\bproves\b|\bdirect(?:ly)?\s+(?:result|consequence|effect)|directly\s+affect|this\s+is\s+not\b.{0,40}\bbut\b|device[s]?\s+show|диагноз|болезн|заболеван|синдром|патолог|означает|свидетельств|подтвержда|является причиной|вызвал|привод(?:ит|ят) к|привёл к|прям[а-яё]*\s+следстви|прям[а-яё]*\s+результат|напрямую\s+влия|это\s+не\s+возрастн[а-яё]*|это\s+не\s+гормональн[а-яё]*|приборы?\s+показыва|прибор[а-яё]*\s+не\s+(?:измеря|показыва))/i;
 
 // Дешёвый разовый вызов Haiku (self-check / смягчение). maxTokens мал для check, большой для rewrite.
 async function callClaudeSimple(prompt, env, maxTokens) {
