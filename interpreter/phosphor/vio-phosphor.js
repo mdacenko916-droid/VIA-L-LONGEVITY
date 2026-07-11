@@ -11,6 +11,7 @@
   var MAP = {
     // — UI controls / actions —
     "✓": "check", "✅": "check-circle", "❌": "x-circle", "✕": "x", "➕": "plus",
+    "👍": "thumbs-up", "👎": "thumbs-down",
     "🔄": "arrows-clockwise", "🔀": "shuffle", "✏": "pencil-simple", "📝": "note-pencil",
     "🖨": "printer", "📁": "folder", "📄": "file", "📖": "book-open", "🔑": "key",
     "🔒": "lock-simple", "🔗": "link", "💾": "floppy-disk", "📥": "download-simple",
