@@ -1620,8 +1620,10 @@ async function handleDayPlan(request, env, corsHeaders, ctx) {
         if (!Array.isArray(plan[k])) return;
         plan[k].forEach(function (sec) {
           if (!sec) return;
-          if (typeof sec.title === 'string') sec.title = deMedicalizeFeed(sec.title);
-          if (Array.isArray(sec.items)) sec.items = sec.items.map(function (x) { return deMedicalizeFeed(String(x)); });
+          if (typeof sec.title === 'string') sec.title = _stripCodeTokens(deMedicalizeFeed(sec.title));
+          if (Array.isArray(sec.items)) sec.items = sec.items
+            .filter(function (x) { return !_HERB_RE.test(String(x)); })                      // гормональные травы (витекс/ашваганда…) — выкинуть пункт целиком
+            .map(function (x) { return _stripCodeTokens(deMedicalizeFeed(String(x))); });     // + вырез утёкших snake_case-кодов
         });
       });
     } catch (e) {}
