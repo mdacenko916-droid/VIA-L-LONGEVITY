@@ -1552,21 +1552,37 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
 #consent-btn.on{opacity:1;pointer-events:auto;}
 .result-disc{font-size:11px;line-height:1.45;color:var(--t3);background:rgba(180,138,240,.07);border:1px solid rgba(180,138,240,.18);border-radius:10px;padding:8px 11px;margin-bottom:14px;}
 /* Путь Б — структурный разбор: вступление + карточки-темы «превью + раскрытие» */
-#aiCard{padding:26px 22px;}   /* больше воздуха — «дорогое» ощущение (Oura/Levels) */
+#aiCard{padding:26px 22px;overflow:clip;}   /* больше воздуха — «дорогое» ощущение (Oura/Levels); clip вместо hidden — иначе липкая шапка .ai-sec-h не работает */
 @media(max-width:480px){#aiCard{padding:22px 18px;}}
 .ai-intro{font-size:14px;color:var(--t2);line-height:1.85;margin-bottom:10px;}
-.ai-sec{border-top:1px solid rgba(180,138,240,.12);padding:22px 0 6px;}
-.ai-sec:first-of-type{border-top:none;padding-top:8px;}
+/* ── Стек рекомендаций (accordion): одна открыта, плавная высота, липкая шапка ── */
+.ai-sec{border:1px solid rgba(180,138,240,.16);border-radius:18px;padding:16px 18px 14px;margin:12px 0 0;background:linear-gradient(160deg,rgba(180,138,240,.05),rgba(20,24,36,.30));transition:border-color .28s ease;}
+.ai-sec:first-of-type{margin-top:4px;}
+.ai-sec.has-det:not(.open){cursor:pointer;}
+.ai-sec.has-det:not(.open):hover{border-color:rgba(180,138,240,.32);}
+.ai-sec.open{border-color:rgba(226,185,90,.32);}
 .ai-sec-h{display:flex;align-items:center;gap:10px;font-family:'Playfair Display',serif;font-size:16.5px;color:var(--t1);margin-bottom:9px;}
+.ai-sec.open>.ai-sec-h{position:sticky;top:76px;z-index:6;background:rgba(15,17,28,.92);-webkit-backdrop-filter:blur(14px) saturate(1.1);backdrop-filter:blur(14px) saturate(1.1);margin:-6px -10px 9px;padding:8px 10px;border-radius:13px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.35);}
+@media(max-width:480px){.ai-sec.open>.ai-sec-h{top:66px;}}
+.ai-sec-chev{margin-left:2px;flex-shrink:0;color:#c9a8f5;font-size:15px;transition:transform .28s ease;}
+.ai-sec.open .ai-sec-chev{transform:rotate(180deg);}
 .ai-sec-ic{font-size:20px;line-height:1;}
 .ai-sec-img{width:34px;height:34px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 0 5px rgba(226,185,90,.25));}
 .ai-sec-pill{font-family:'DM Sans',sans-serif;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#1a1206;background:linear-gradient(135deg,#e7c77a,#c9962f);padding:3px 9px;border-radius:20px;white-space:nowrap;}
 .ai-sec-sum{font-size:14px;color:var(--t2);line-height:1.8;}
-.ai-sec-more{margin-top:12px;background:none;border:none;color:#a883e6;font-size:12px;font-weight:500;cursor:pointer;padding:2px 0;font-family:inherit;letter-spacing:.2px;opacity:.9;}
-.ai-sec-more:hover{opacity:1;color:#c9a8f5;}
-.ai-sec-more.open{color:var(--t3);}
+.ai-sec-more,.ai-sec-coll{display:flex;align-items:center;gap:6px;margin-top:12px;background:none;border:none;color:#a883e6;font-size:12px;font-weight:500;cursor:pointer;padding:2px 0;font-family:inherit;letter-spacing:.2px;opacity:.9;}
+.ai-sec-more:hover,.ai-sec-coll:hover{opacity:1;color:#c9a8f5;}
+.ai-sec-more .ph{font-size:13px;transition:transform .28s ease;}
+.ai-sec.open .ai-sec-more .ph{transform:rotate(180deg);}
+.ai-sec-coll{margin-top:16px;}
+.ai-sec-coll .ph{font-size:13px;}
+/* Плавное раскрытие высоты (grid-rows 0fr→1fr, 280мс) */
+.ai-sec-det-wrap{display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s cubic-bezier(.4,0,.2,1);}
+.ai-sec.open .ai-sec-det-wrap{grid-template-rows:1fr;}
+.ai-sec-det-wrap>.ai-sec-det{overflow:hidden;min-height:0;}
+@media(prefers-reduced-motion:reduce){.ai-sec-det-wrap,.ai-sec-chev,.ai-sec-more .ph{transition:none;}}
 /* Детали — часть карточки: тонкий левый акцент + воздух, без «серой коробки» (Apple Health/Oura-стиль) */
-.ai-sec-det{font-size:13.5px;color:var(--t2);line-height:1.8;margin-top:12px;padding:2px 0 4px 18px;border-left:2px solid rgba(180,138,240,.28);background:linear-gradient(90deg,rgba(180,138,240,.035),transparent 60%);}
+.ai-sec-det{font-size:13.5px;color:var(--t2);line-height:1.8;margin-top:0;padding:14px 0 4px 18px;border-left:2px solid rgba(180,138,240,.28);background:linear-gradient(90deg,rgba(180,138,240,.035),transparent 60%);}
 /* Микроподзаголовки внутри деталей — «VIO объясняет вывод», а не сплошной текст */
 .ai-subh{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#c9a8f5;margin:14px 0 5px;}
 .ai-sec-det .ai-subh:first-child{margin-top:2px;}
@@ -5162,7 +5178,26 @@ function _mdOnly(txt){ return String(txt==null?'':txt).replace(/&/g,'&amp;').rep
 function _moreLbl(){ return L({ru:'Почему я так думаю →',uk:'Чому я так вважаю →',en:'Why I think so →',es:'Por qué lo pienso →',de:'Warum ich das denke →',pt:'Por que penso assim →',fr:'Pourquoi je pense cela →',pl:'Dlaczego tak sądzę →',it:'Perché lo penso →',he:'← למה אני חושב כך',ja:'なぜそう考えるか →',ko:'왜 그렇게 생각할까 →'}); }
 function _lessLbl(){ return L({ru:'Свернуть ↑',uk:'Згорнути ↑',en:'Collapse ↑',es:'Ocultar ↑',de:'Einklappen ↑',pt:'Recolher ↑',fr:'Replier ↑',pl:'Zwiń ↑',it:'Comprimi ↑',he:'↑ כווץ',ja:'閉じる ↑',ko:'접기 ↑'}); }
 function _moreLbl_pri(){ return L({ru:'Главный приоритет',uk:'Головний пріоритет',en:'Top priority',es:'Prioridad principal',de:'Top-Priorität',pt:'Prioridade principal',fr:'Priorité nº 1',pl:'Priorytet',it:'Priorità',he:'עדיפות עליונה',ja:'最優先',ko:'최우선'}); }
-function _toggleDetail(btn){ var d=btn.nextElementSibling; if(!d)return; var open=d.style.display!=='none'; d.style.display=open?'none':'block'; btn.textContent=open?_moreLbl():_lessLbl(); btn.classList.toggle('open',!open); }
+// ── Стек рекомендаций: одна открытая карточка, плавная высота, без скачков скролла ──
+function _moreLblTxt(){ return _moreLbl().replace(/^\s*[←→]\s*|\s*[←→]\s*$/g,''); }
+function _collLbl(){ return L({ru:'Свернуть',uk:'Згорнути',en:'Collapse',es:'Ocultar',de:'Einklappen',pt:'Recolher',fr:'Réduire',pl:'Zwiń',it:'Riduci',he:'לכווץ',ja:'閉じる',ko:'접기'}); }
+function _secAnchor(el,ms){ var sa=document.getElementById('scroll-area'); if(!sa)return; var top=el.getBoundingClientRect().top,t0=performance.now();
+  (function step(){ var d=el.getBoundingClientRect().top-top; if(d)sa.scrollTop+=d; if(performance.now()-t0<ms)requestAnimationFrame(step); })(); }
+function _secSet(sec,on){
+  if(!sec||sec.classList.contains('open')===!!on)return;
+  if(on){
+    var cur=document.querySelector('.ai-sec.open'); if(cur&&cur!==sec)cur.classList.remove('open');   // стек: открыта только одна
+    sec.classList.add('open'); _secAnchor(sec,360);   // карточка не «прыгает», пока соседка сверху схлопывается
+  } else {
+    sec.classList.remove('open');
+    var sa=document.getElementById('scroll-area');
+    if(sa&&sec.getBoundingClientRect().top<64) sa.scrollTo({top:sa.scrollTop+sec.getBoundingClientRect().top-84,behavior:'smooth'});   // свернули снизу длинного текста → вернуть шапку карточки в поле зрения
+  }
+}
+function _secTap(sec,ev){ if(!sec.classList.contains('has-det')||sec.classList.contains('open'))return; _secSet(sec,true); }
+function _secHeadTap(head,ev){ var sec=head.parentNode; if(sec&&sec.classList.contains('open')){ if(ev)ev.stopPropagation(); _secSet(sec,false); } }
+function _toggleDetail(btn,ev){ if(ev)ev.stopPropagation(); var sec=btn.closest('.ai-sec'); if(sec)_secSet(sec,!sec.classList.contains('open')); }
+function _secCollapse(btn,ev){ if(ev)ev.stopPropagation(); var sec=btn.closest('.ai-sec'); if(sec)_secSet(sec,false); }
 // Тема разбора → золотая иконка (RU/EN и ключевые формы; фолбэк — эмодзи от ИИ)
 function _themeIcon(t){ t=(t||'').toLowerCase();
   var M=[['sleep',['сон','сну','сна','sleep','sueñ','schlaf','sono','sommeil','sonno','睡眠','수면','שינה']],
@@ -5188,9 +5223,11 @@ function _renderAnalysis(raw){
     if(!title){ title=icon; icon=''; }   // если разделителя нет — весь head в заголовок
     var pill=(flag.indexOf('prior')>=0)?('<span class="ai-sec-pill">'+_moreLbl_pri()+'</span>'):'';
     var _ti=_themeIcon(title), iconHtml=_ti?('<img class="ai-sec-img" src="icons/'+_ti+'.webp" alt="" onerror="this.style.display=\'none\'">'):(icon?('<span class="ai-sec-ic">'+_esc(icon)+'</span>'):'');
-    html+='<div class="ai-sec"><div class="ai-sec-h">'+iconHtml+'<span style="flex:1;">'+_esc(title)+'</span>'+pill+'</div>'
+    html+='<div class="ai-sec'+(detail?' has-det':'')+'" onclick="_secTap(this,event)"><div class="ai-sec-h" onclick="_secHeadTap(this,event)">'+iconHtml+'<span style="flex:1;">'+_esc(title)+'</span>'+pill+(detail?'<i class="ph ph-caret-down ai-sec-chev" aria-hidden="true"></i>':'')+'</div>'
       +'<div class="ai-sec-sum">'+_mdOnly(summary)+'</div>';
-    if(detail) html+='<button type="button" class="ai-sec-more" onclick="_toggleDetail(this)">'+_moreLbl()+'</button><div class="ai-sec-det" style="display:none;">'+_mdOnly(detail)+'</div>';
+    if(detail) html+='<button type="button" class="ai-sec-more" onclick="_toggleDetail(this,event)">'+_esc(_moreLblTxt())+' <i class="ph ph-caret-down" aria-hidden="true"></i></button>'
+      +'<div class="ai-sec-det-wrap"><div class="ai-sec-det">'+_mdOnly(detail)
+      +'<button type="button" class="ai-sec-coll" onclick="_secCollapse(this,event)">'+_esc(_collLbl())+' <i class="ph ph-caret-up" aria-hidden="true"></i></button></div></div>';
     html+='</div>';
   }
   return html;
