@@ -2897,7 +2897,7 @@ function saveSession(score,type,data){
     var history=[]; try{history=JSON.parse(secGet(key)||'[]')||[];}catch(e){}
     var session={
       date:new Date().toLocaleDateString(lang==='en'?'en-GB':'ru-RU',{day:'numeric',month:'short',year:'numeric'}),
-      day:new Date().toISOString().slice(0,10),
+      day:_dayKey(),
       score:score, type:type,
       sleep:data.sleep_qual, rhr:data.rhr, energy:data.energy,
       hotflash:data.hf_count, stress:data.stress,
@@ -2962,7 +2962,7 @@ async function vlBackupExport(){
     var key=await _bkKey(pass,salt);
     var ct=await crypto.subtle.encrypt({name:'AES-GCM',iv:iv},key,new TextEncoder().encode(plain));
     var file=new Blob([JSON.stringify({v:1,salt:_bkB64(salt),iv:_bkB64(iv),ct:_bkB64(new Uint8Array(ct))})],{type:'application/octet-stream'});
-    var a=document.createElement('a'); a.href=URL.createObjectURL(file); a.download='via-l-backup-'+new Date().toISOString().slice(0,10)+'.vlbackup';
+    var a=document.createElement('a'); a.href=URL.createObjectURL(file); a.download='via-l-backup-'+_dayKey()+'.vlbackup';
     document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(function(){URL.revokeObjectURL(a.href);},3000);
     alert(L({ru:'✓ Резервная копия сохранена. Держите файл и пароль в надёжном месте.',uk:'✓ Резервну копію збережено. Тримайте файл і пароль у надійному місці.',en:'✓ Backup saved. Keep the file and password somewhere safe.',es:'✓ Copia guardada. Guarde el archivo y la contraseña en lugar seguro.',de:'✓ Backup gespeichert. Datei und Passwort sicher aufbewahren.',pt:'✓ Backup salvo. Guarde o arquivo e a senha em local seguro.',fr:'✓ Sauvegarde enregistrée. Conservez le fichier et le mot de passe en lieu sûr.',pl:'✓ Kopia zapisana. Przechowuj plik i hasło w bezpiecznym miejscu.',it:'✓ Backup salvato. Conserva file e password in un luogo sicuro.',he:'✓ הגיבוי נשמר. שמרו את הקובץ והסיסמה במקום בטוח.',ja:'✓ バックアップを保存しました。ファイルとパスワードは安全な場所に。',ko:'✓ 백업 저장됨. 파일과 비밀번호를 안전하게 보관하세요.'}));
   }catch(e){ alert(L({ru:'Не удалось создать копию.',uk:'Не вдалося створити копію.',en:'Could not create backup.',es:'No se pudo crear la copia.',de:'Backup fehlgeschlagen.',pt:'Não foi possível criar o backup.',fr:'Échec de la sauvegarde.',pl:'Nie udało się utworzyć kopii.',it:'Impossibile creare il backup.',he:'יצירת הגיבוי נכשלה.',ja:'バックアップを作成できませんでした。',ko:'백업을 만들 수 없습니다.'})); }
@@ -3050,8 +3050,8 @@ function saveProfile(){
       // Цель и приоритеты (вводятся в карточке) + метки времени — перенос из хранилища
       goal:(gv('vcard-goal')||P.goal||''),
       priorities:(Array.isArray(P.priorities)?P.priorities:[]),
-      created:(P.created||new Date().toISOString().slice(0,10)),
-      updated:new Date().toISOString().slice(0,10)
+      created:(P.created||_dayKey()),
+      updated:_dayKey()
     };
     secSet('vial_profile',JSON.stringify(prof));
   }catch(e){}
@@ -3152,7 +3152,7 @@ function _cardTrends(){
 // Строится ДО _saveDaily (сегодняшний снимок ещё не записан), поэтому это чистая история клиента.
 function _baselineFromDaily(){
   var arr=[]; try{arr=JSON.parse(secGet('vial_daily')||'[]')||[];}catch(e){}
-  var today=new Date().toISOString().slice(0,10);
+  var today=_dayKey();
   var hist=arr.filter(function(r){return r.day!==today;}); // прошлые дни = личная норма
   if(hist.length<2)return null;
   var recent=hist.slice(0,30); // до 30 прошлых дней, newest-first
@@ -3519,7 +3519,7 @@ function _saveDaily(){
   try{
     var gv=function(id){var el=document.getElementById(id);return el?+el.value:null;};
     var pf=function(id){var el=document.getElementById(id);return el?(parseFloat(el.value)||null):null;};
-    var rec={ day:new Date().toISOString().slice(0,10), ts:Date.now(),
+    var rec={ day:_dayKey(), ts:Date.now(),
       sleep_qual:gv('sleep_qual'), sleep_hours:gv('sleep_hours'), rhr:gv('rhr'), energy:gv('energy'),
       hotflash:getRadio('hf_count'), hotfreq:getRadio('hotfreq'),
       memory:getRadio('memory'), fog:getRadio('fog'), stress:getRadio('stress'), alc:getRadio('alc'),
@@ -3609,7 +3609,7 @@ async function genWeeklyReport(){
     if(!json.report) throw new Error('no report');
     secSet('vial_weekly_text',json.report);
     localStorage.setItem('vial_weekly_last',String(Date.now()));
-    localStorage.setItem('vial_weekly_date',new Date().toISOString().slice(0,10));
+    localStorage.setItem('vial_weekly_date',_dayKey());
     renderWeeklyReportUI();
   }catch(e){
     if(btn){ btn.disabled=false; btn.textContent=ui.get; }
@@ -3619,7 +3619,7 @@ async function genWeeklyReport(){
 }
 function dlWeeklyReport(){
   var txt=secGet('vial_weekly_text')||''; if(!txt) return;
-  var ui=_wrUI(), date=localStorage.getItem('vial_weekly_date')||new Date().toISOString().slice(0,10);
+  var ui=_wrUI(), date=localStorage.getItem('vial_weekly_date')||_dayKey();
   var plain=String(txt).replace(/^#{1,3}\s*/gm,'').replace(/\*\*([^*]+?)\*\*/g,'$1');
   var body=ui.title+' — '+date+'\n\n'+plain+'\n';
   var blob=new Blob([body],{type:'text/plain;charset=utf-8'});
@@ -3683,7 +3683,7 @@ async function genMonthlyReport(){
     if(!json.report) throw new Error('no report');
     secSet('vial_monthly_text',json.report);
     localStorage.setItem('vial_monthly_last',String(Date.now()));
-    localStorage.setItem('vial_monthly_date',new Date().toISOString().slice(0,10));
+    localStorage.setItem('vial_monthly_date',_dayKey());
     renderMonthlyReportUI();
     if(typeof genAiMemory==='function')genAiMemory(summary,daily);   // AI-память обновляется на месячном каденсе
   }catch(e){
@@ -3694,7 +3694,7 @@ async function genMonthlyReport(){
 }
 function dlMonthlyReport(){
   var txt=secGet('vial_monthly_text')||''; if(!txt) return;
-  var ui=_mrLabels(), date=localStorage.getItem('vial_monthly_date')||new Date().toISOString().slice(0,10);
+  var ui=_mrLabels(), date=localStorage.getItem('vial_monthly_date')||_dayKey();
   var plain=String(txt).replace(/^#{1,3}\s*/gm,'').replace(/\*\*([^*]+?)\*\*/g,'$1');
   var body=ui.title+' — '+date+'\n\n'+plain+'\n';
   var blob=new Blob([body],{type:'text/plain;charset=utf-8'});
@@ -3714,7 +3714,7 @@ async function genAiMemory(summary,daily){
       body:JSON.stringify({profile:prof,summary:summary,daily:daily,prevMemory:prev,lang:lang,tier:'vio'})});
     var json=await res.json();
     if(json&&(Array.isArray(json.memory)||Array.isArray(json.focus))){
-      secSet('vial_ai_memory',JSON.stringify({memory:json.memory||[],focus:json.focus||[],updated:new Date().toISOString().slice(0,10)}));
+      secSet('vial_ai_memory',JSON.stringify({memory:json.memory||[],focus:json.focus||[],updated:_dayKey()}));
       if(typeof renderAiMemoryUI==='function')renderAiMemoryUI();
     }
   }catch(e){}
@@ -5129,7 +5129,7 @@ function seenF(){var t=(typeof window!=='undefined'&&window.__touched&&window.__
 // Без HRV/SpO₂/биометрии (нет гаджета) — воркер подставит дефолты, ИИ трактует по симптомам.
 const AI_WORKER = 'https://interpreter.viaelcom.workers.dev';
 // ═══ ДНЕВНОЙ AI-РАЗБОР: кэш 1×/день (экономия токенов + стабильность + история прошлых дней) ═══
-function _dayKey(){ return new Date().toISOString().slice(0,10); }
+function _dayKey(d){ d=d||new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }   // ЛОКАЛЬНАЯ дата устройства (не UTC!): «новый день» = локальная полночь клиента
 function _sigOf(o){ try{var s=JSON.stringify(o),h=0;for(var i=0;i<s.length;i++){h=((h<<5)-h+s.charCodeAt(i))|0;}return ''+h;}catch(e){return '';} }
 function _aiMd(txt){ return (typeof _wl==='function'?_wl(txt):txt).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/^#{1,3}\s*(.+)$/gm,'<strong style="display:block;margin:14px 0 4px;">$1</strong>').replace(/\*\*([^*]+?)\*\*/g,'<strong>$1</strong>'); }
 // ── Путь Б: структурный разбор (вступление целиком + темы «превью + раскрытие») ──
@@ -5648,7 +5648,7 @@ function parseAppleXML(text){
   out.vo2=latest('HKQuantityTypeIdentifierVO2Max');
   const sleepR=(byType['HKCategoryTypeIdentifierSleepAnalysis']||[]);
   const yest=new Date();yest.setDate(yest.getDate()-1);
-  const ds=[new Date().toISOString().slice(0,10),yest.toISOString().slice(0,10)];
+  const ds=[_dayKey(),_dayKey(yest)];
   let tot=0,deep=0;
   sleepR.forEach(r=>{if(r.date&&ds.some(d=>r.date.startsWith(d))){if(['HKCategoryValueSleepAnalysisAsleepCore','HKCategoryValueSleepAnalysisAsleep','HKCategoryValueSleepAnalysisInBed'].includes(r.val))tot+=3600;if(r.val==='HKCategoryValueSleepAnalysisAsleepDeep')deep+=3600;}});
   if(tot>0)out.sleepHours=tot/3600;
