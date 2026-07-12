@@ -1628,6 +1628,17 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
   </div>
 </div>
 
+<!-- APPROACH PANEL — «Наш подход и научная основа», стеклянный модал в стиле Карточки -->
+<div id="approachPanel" style="display:none;position:fixed;top:84px;left:50%;transform:translateX(-50%);width:calc(100% - 26px);max-width:820px;max-height:calc(100dvh - 104px);z-index:400;background:rgba(20,24,36,.60);backdrop-filter:blur(24px) saturate(1.15);-webkit-backdrop-filter:blur(24px) saturate(1.15);border:1px solid rgba(180,138,240,.28);border-radius:26px;box-shadow:0 26px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.06);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:22px 22px 28px;">
+  <div style="max-width:760px;margin:0 auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;">
+      <div style="font-family:'Playfair Display',serif;font-size:23px;color:var(--t1);" data-t="approach_row">Our approach &amp; the science</div>
+      <button onclick="closeApproach()" aria-label="Close" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);border:1px solid rgba(180,138,240,.3);color:var(--t2);border-radius:50%;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;line-height:1;flex-shrink:0;">✕</button>
+    </div>
+    <div id="approachBody" style="font-size:14px;line-height:1.75;color:var(--t2);white-space:pre-line;"></div>
+  </div>
+</div>
+
 <!-- GATE -->
 <div id="gate" style="display:none">
   <div class="gate-box">
@@ -2875,6 +2886,7 @@ document.querySelectorAll('input[name=gender]').forEach(el=>{
 function navTo(tab){
   window.__editMode=false;   // любой переход по нижней навигации выходит из режима правки профиля
   var __ip=document.getElementById('importPanel');if(__ip&&__ip.classList.contains('open')&&typeof closeImport==='function')closeImport(true);
+  var __ap=document.getElementById('approachPanel');if(__ap)__ap.style.display='none';   // открытый «Наш подход» закрывается любым переходом
   document.querySelectorAll('.bottom-nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+tab)?.classList.add('active');
   const hp=document.getElementById('historyPanel');
@@ -4050,12 +4062,19 @@ function openHelp(k){
   var sh=document.getElementById('help-sheet'); if(sh)sh.classList.add('open');
 }
 function closeHelp(){ var sh=document.getElementById('help-sheet'); if(sh)sh.classList.remove('open'); }
-// «Наш подход и научная основа» — credibility-лист из профиля (переиспользуем help-sheet)
+// «Наш подход и научная основа» — стеклянный модал в стиле Карточки (лента+футер прячутся, как navTo('card'))
 function openApproach(){
-  var ti=document.getElementById('help-title'),bo=document.getElementById('help-body');
-  if(ti)ti.textContent=t('approach_row');
-  if(bo){bo.textContent=t('approach_body');bo.style.whiteSpace='pre-line';}
-  var sh=document.getElementById('help-sheet'); if(sh)sh.classList.add('open');
+  var p=document.getElementById('approachPanel'); if(!p)return;
+  var b=document.getElementById('approachBody'); if(b)b.textContent=t('approach_body');
+  var hp=document.getElementById('historyPanel'); if(hp)hp.style.display='none';
+  var m=document.querySelector('main'); if(m)m.style.display='none';
+  var n=document.querySelector('.bottom-nav'); if(n)n.classList.add('nav-hidden');
+  p.style.display='block'; p.scrollTop=0;
+}
+function closeApproach(){
+  var p=document.getElementById('approachPanel'); if(p)p.style.display='none';
+  var m=document.querySelector('main'); if(m)m.style.display='';
+  var n=document.querySelector('.bottom-nav'); if(n)n.classList.remove('nav-hidden');
 }
 function renderSleepScale(){
   var box=document.getElementById('sq-scale'); if(!box)return;
