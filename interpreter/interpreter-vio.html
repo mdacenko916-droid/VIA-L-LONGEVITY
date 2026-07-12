@@ -2293,16 +2293,7 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
             <div class="chip"><input type="radio" name="male_mood" id="mm4" value="depressed"><label for="mm4" data-t="mm_dep">Подавленность</label></div>
           </div>
         </div>
-        <div class="input-group">
-          <label data-t="uro_l">Комфорт мочеиспускания</label>
-          <div class="chips sup-grid" id="uro-list">
-            <div class="chip sup-full"><input type="checkbox" id="uro5" value="none_uro" onchange="_giNone(this,'uro-list')"><label for="uro5" data-t="uro_none">✨ Нет / не актуально</label></div>
-            <div class="chip"><input type="checkbox" id="uro1" value="night_waking" onchange="_giNone(this,'uro-list')"><label for="uro1" data-t="uro_noct">🌙 Встаю ночью в туалет</label></div>
-            <div class="chip"><input type="checkbox" id="uro2" value="fluid_flow" onchange="_giNone(this,'uro-list')"><label for="uro2" data-t="uro_stream">🌊 Изменение напора в туалете</label></div>
-            <div class="chip"><input type="checkbox" id="uro3" value="pelvic_tone" onchange="_giNone(this,'uro-list')"><label for="uro3" data-t="uro_empty">⏳ Чувство незавершённости после туалета</label></div>
-            <div class="chip"><input type="checkbox" id="uro4" value="daytime_hydration" onchange="_giNone(this,'uro-list')"><label for="uro4" data-t="uro_freq">☀️ Чаще хожу в туалет днём</label></div>
-          </div>
-        </div>
+        <!-- уро-сигналы живут в «Гормональных сигналах» (horm-male-acc, hmy_*) — дубль-список удалён, данные собирает _hormMap -->
       </div>
     </div>
   </div>
@@ -3010,6 +3001,9 @@ function saveProfile(){
       // 4. Гормональный профиль (карты {симптом:тяжесть})
       horm_female:keepMap(hf,P.horm_female),
       horm_male:keepMap(hm,P.horm_male),
+      // 5. Ритм (муж): витальность + настроение/мотивация
+      vitality:getRadio('vitality')||P.vitality||'',
+      male_mood:getRadio('male_mood')||P.male_mood||'',
       // 5. Цикл (жен)
       cycle_status:getRadio('cycle_status')||P.cycle_status||'',
       heavy_period:getRadio('heavy_period')||P.heavy_period||'',
@@ -3074,6 +3068,7 @@ function _restoreCard(){
     sH('horm-acc',P.horm_female); sH('horm-male-acc',P.horm_male);
     // 5. Цикл
     sR('cycle_status',P.cycle_status); sR('heavy_period',P.heavy_period); sV('prof-lastperiod',P.lastperiod); sV('prof-cyclelen',P.cyclelen); sR('early_meno',P.early_meno);
+    sR('vitality',P.vitality); sR('male_mood',P.male_mood);   // ритм (муж)
     sC(['gsm1','gsm2','gsm3','gsm4','gsm5','gsm6','gsm7'],P.gsm); sC(['bone1','bone2','bone3','bone5'],P.bone); sC(['breast1','breast2','breast3','breast4'],P.breast);
     // 6. Стресс-фон
     sR('chronic_stress',P.chronic_stress); sC(['cort2','cort3','cort4','cort5','cort6','cort7'],P.cortisol_symp);
@@ -3362,6 +3357,13 @@ function renderCard(){
       +(function(){var c=_vcChips(PMS,(P.pms_symptoms||[]).filter(function(v){return v!=='none_pms';}));return c?'<div class="vc-sub">'+(t('s11_l3')||L({ru:'Маркеры перед новым ритмом',uk:'Маркери перед новим ритмом',en:'Markers before a new rhythm',es:'Marcadores antes de un nuevo ritmo',de:'Marker vor neuem Rhythmus',pt:'Marcadores antes de novo ritmo',fr:'Marqueurs avant un nouveau rythme',pl:'Markery przed nowym rytmem',it:'Marcatori prima di un nuovo ritmo',he:'סמנים לפני קצב חדש',ja:'新しいリズム前のサイン',ko:'새 리듬 전 신호'}))+'</div>'+c:'';})()
       +(function(){var c=_vcChips(GSM.concat(BONE).concat(BREAST),(P.gsm||[]).concat(P.bone||[]).concat(P.breast||[]).filter(function(v){return !/^none/.test(v);}));return c?'<div class="vc-sub">'+L({ru:'Комфорт и самочувствие',uk:'Комфорт і самопочуття',en:'Comfort & wellbeing',es:'Confort y bienestar',de:'Komfort & Wohlbefinden',pt:'Conforto e bem-estar',fr:'Confort et bien-être',pl:'Komfort i samopoczucie',it:'Comfort e benessere',he:'נוחות ורווחה',ja:'快適さと調子',ko:'편안함과 컨디션'})+'</div>'+c:'';})();
     _secRhythm=_vcSec('rhythm',t('s11_title'),cycInner,false);
+  } else {
+    // ── Мужская витальность и тонус (s11_m) — паритет с женским «Ритмом» ──
+    var _vtm={high:'vit_high',moderate:'vit_moderate',low:'vit_low'},
+        _mmm={good:'mm_good',flat:'mm_flat',irritable:'mm_irr',depressed:'mm_dep'};
+    var cycInnerM=_row(t('s11_l4'),(P.vitality&&_vtm[P.vitality])?t(_vtm[P.vitality]):'—')
+      +_row(t('s11_l5'),(P.male_mood&&_mmm[P.male_mood])?t(_mmm[P.male_mood]):'—');
+    _secRhythm=_vcSec('rhythm',t('s11_title_m'),cycInnerM,false);
   }
 
   // ── Стресс и восстановление (s10) ──
@@ -5314,6 +5316,7 @@ function _showResultsInner(){
     appetite:getRadio('appetite'),cravings:!!(document.getElementById('crav1')&&document.getElementById('crav1').checked),move_today:getRadio('move_today'),eating_pattern:getRadio('eating_pattern'),protein_intake:getRadio('protein_intake'),gi:getChecked(['gi1','gi2','gi3','gi4','gi5']),
     memory:getRadio('memory'),fog:getRadio('fog'),
     horm_female:(typeof _hormMap==='function'?_hormMap('horm-acc'):{}),horm_male:(typeof _hormMap==='function'?_hormMap('horm-male-acc'):{}),
+    vitality:(getRadio('gender')==='male'?getRadio('vitality'):null),male_mood:(getRadio('gender')==='male'?getRadio('male_mood'):null),
     cycle_status:getRadio('cycle_status'),heavy_period:(getRadio('cycle_status')==='absent'?null:getRadio('heavy_period')),last_period:_lpBucket(),cycle_len:(cycleInfo()||{}).len||null,cycle_day:(getRadio('cycle_status')==='absent'?null:(cycleInfo()||{}).day||null),cycle_phase:(getRadio('cycle_status')==='absent'?null:(cycleInfo()||{}).phase||null),pms:(function(){var s=getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9']).filter(function(v){return v!=='none_pms';});return s.length>=5?'severe':s.length>=3?'moderate':s.length>=1?'mild':'none';})(),pms_symptoms:getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9']),gsm:getChecked(['gsm1','gsm2','gsm3','gsm4','gsm5','gsm6','gsm7']),bone_risk:(function(){var b=getChecked(['bone1','bone2','bone3','bone5']).filter(function(v){return v!=='none_bone';});if(getRadio('early_meno')==='yes')b.push('early_menopause');return b;})(),breast:getChecked(['breast1','breast2','breast3','breast4']),
     supplements:getChecked(['sup1','sup2','sup3','sup4','sup5','sup6','sup7','sup8','sup9','sup10','sup11']),meds:getChecked(['med2','med3','med4','med5']),
     meds_other:(document.getElementById('meds_other')?document.getElementById('meds_other').value:'').trim(),
@@ -5435,6 +5438,7 @@ function _showResultsInner(){
     var T=(typeof window!=='undefined'&&window.__touched&&window.__touched.size)?window.__touched:null; if(!T)return;
     var dims=[['sleep_qual','sleep_hours','deep','wake'],['energy'],['stress','chronic_stress','cort2','cort3','cort4','cort5','cort6','cort7'],['rhr'],['sym1','sym2','sym3','sym4','sym5','sym6','sym7','sym8','sym9'],['memory','fog'],['appetite','eating_pattern','protein_intake','crav1','gi1','gi2','gi3','gi4','gi5'],['act_freq','act_recovery','act1','act2','act3','act4','act5','act6']];
     if(data.gender!=='male'){ dims.push(['hf_count','hf_intensity']); dims.push(['cycle_status','heavy_period','pmss1','pmss2','pmss3','pmss4','pmss5','pmss9']); }
+    else { dims.push(['vitality','male_mood']); }
     var cov=0; dims.forEach(function(g){ if(g.some(function(k){return T.has(k);}))cov++; });
     var ratio=cov/dims.length;
     if(ratio<1){ var neutral=55; score=Math.round(neutral+(score-neutral)*ratio); score=Math.max(10,Math.min(100,score)); }
