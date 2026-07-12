@@ -1561,6 +1561,23 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
 .ai-sec.has-det:not(.open){cursor:pointer;}
 .ai-sec.has-det:not(.open):hover{border-color:rgba(180,138,240,.32);}
 .ai-sec.open{border-color:rgba(226,185,90,.32);}
+/* Цветовая тема карточки по смыслу рекомендации (как в макете: сон-фиолет, энергия-зелень…) — приглушённые тона VIO */
+.ai-th-sleep{border-color:rgba(180,138,240,.26);background:linear-gradient(160deg,rgba(180,138,240,.11),rgba(20,24,36,.32));}
+.ai-th-sleep.open,.ai-th-sleep.has-det:not(.open):hover{border-color:rgba(180,138,240,.5);}
+.ai-th-energy{border-color:rgba(127,209,150,.24);background:linear-gradient(160deg,rgba(127,209,150,.09),rgba(20,24,36,.32));}
+.ai-th-energy.open,.ai-th-energy.has-det:not(.open):hover{border-color:rgba(127,209,150,.45);}
+.ai-th-nutrition{border-color:rgba(226,185,90,.26);background:linear-gradient(160deg,rgba(226,185,90,.09),rgba(20,24,36,.32));}
+.ai-th-nutrition.open,.ai-th-nutrition.has-det:not(.open):hover{border-color:rgba(226,185,90,.48);}
+.ai-th-movement{border-color:rgba(111,168,255,.24);background:linear-gradient(160deg,rgba(111,168,255,.09),rgba(20,24,36,.32));}
+.ai-th-movement.open,.ai-th-movement.has-det:not(.open):hover{border-color:rgba(111,168,255,.45);}
+.ai-th-stress{border-color:rgba(94,200,194,.24);background:linear-gradient(160deg,rgba(94,200,194,.09),rgba(20,24,36,.32));}
+.ai-th-stress.open,.ai-th-stress.has-det:not(.open):hover{border-color:rgba(94,200,194,.45);}
+.ai-th-balance{border-color:rgba(224,143,184,.24);background:linear-gradient(160deg,rgba(224,143,184,.09),rgba(20,24,36,.32));}
+.ai-th-balance.open,.ai-th-balance.has-det:not(.open):hover{border-color:rgba(224,143,184,.45);}
+.ai-th-rhythm{border-color:rgba(217,143,224,.24);background:linear-gradient(160deg,rgba(217,143,224,.09),rgba(20,24,36,.32));}
+.ai-th-rhythm.open,.ai-th-rhythm.has-det:not(.open):hover{border-color:rgba(217,143,224,.45);}
+.ai-th-intimacy{border-color:rgba(255,157,176,.22);background:linear-gradient(160deg,rgba(255,157,176,.08),rgba(20,24,36,.32));}
+.ai-th-intimacy.open,.ai-th-intimacy.has-det:not(.open):hover{border-color:rgba(255,157,176,.42);}
 .ai-sec-h{display:flex;align-items:center;gap:10px;font-family:'Playfair Display',serif;font-size:16.5px;color:var(--t1);margin-bottom:9px;}
 .ai-sec.open>.ai-sec-h{position:sticky;top:76px;z-index:6;background:rgba(15,17,28,.92);-webkit-backdrop-filter:blur(14px) saturate(1.1);backdrop-filter:blur(14px) saturate(1.1);margin:-6px -10px 9px;padding:8px 10px;border-radius:13px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.35);}
 @media(max-width:480px){.ai-sec.open>.ai-sec-h{top:66px;}}
@@ -5228,7 +5245,7 @@ function _renderAnalysis(raw){
     if(!title){ title=icon; icon=''; }   // если разделителя нет — весь head в заголовок
     var pill=(flag.indexOf('prior')>=0)?('<span class="ai-sec-pill">'+_moreLbl_pri()+'</span>'):'';
     var _ti=_themeIcon(title), iconHtml=_ti?('<img class="ai-sec-img" src="icons/'+_ti+'.webp" alt="" onerror="this.style.display=\'none\'">'):(icon?('<span class="ai-sec-ic">'+_esc(icon)+'</span>'):'');
-    html+='<div class="ai-sec'+(detail?' has-det':'')+'" onclick="_secTap(this,event)"><div class="ai-sec-h" onclick="_secHeadTap(this,event)">'+iconHtml+'<span style="flex:1;">'+_esc(title)+'</span>'+pill+(detail?'<i class="ph ph-caret-down ai-sec-chev" aria-hidden="true"></i>':'')+'</div>'
+    html+='<div class="ai-sec'+(detail?' has-det':'')+(_ti?(' ai-th-'+_ti):'')+'" onclick="_secTap(this,event)"><div class="ai-sec-h" onclick="_secHeadTap(this,event)">'+iconHtml+'<span style="flex:1;">'+_esc(title)+'</span>'+pill+(detail?'<i class="ph ph-caret-down ai-sec-chev" aria-hidden="true"></i>':'')+'</div>'
       +'<div class="ai-sec-sum">'+_mdOnly(summary)+'</div>';
     if(detail) html+='<button type="button" class="ai-sec-more" onclick="_toggleDetail(this,event)">'+_esc(_moreLblTxt())+' <i class="ph ph-caret-down" aria-hidden="true"></i></button>'
       +'<div class="ai-sec-det-wrap"><div class="ai-sec-det">'+_mdOnly(detail)
