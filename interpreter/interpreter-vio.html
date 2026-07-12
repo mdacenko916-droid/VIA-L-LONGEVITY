@@ -1564,6 +1564,7 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
 .ai-sec-h{display:flex;align-items:center;gap:10px;font-family:'Playfair Display',serif;font-size:16.5px;color:var(--t1);margin-bottom:9px;}
 .ai-sec.open>.ai-sec-h{position:sticky;top:76px;z-index:6;background:rgba(15,17,28,.92);-webkit-backdrop-filter:blur(14px) saturate(1.1);backdrop-filter:blur(14px) saturate(1.1);margin:-6px -10px 9px;padding:8px 10px;border-radius:13px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.35);}
 @media(max-width:480px){.ai-sec.open>.ai-sec-h{top:66px;}}
+#historyPanel .ai-sec.open>.ai-sec-h{top:4px;}   /* панель профиля — свой скролл-контейнер: липнуть у её верха, а не на 76px ниже */
 .ai-sec-chev{margin-left:2px;flex-shrink:0;color:#c9a8f5;font-size:15px;transition:transform .28s ease;}
 .ai-sec.open .ai-sec-chev{transform:rotate(180deg);}
 .ai-sec-ic{font-size:20px;line-height:1;}
@@ -5181,17 +5182,21 @@ function _moreLbl_pri(){ return L({ru:'Главный приоритет',uk:'Г
 // ── Стек рекомендаций: одна открытая карточка, плавная высота, без скачков скролла ──
 function _moreLblTxt(){ return _moreLbl().replace(/^\s*[←→]\s*|\s*[←→]\s*$/g,''); }
 function _collLbl(){ return L({ru:'Свернуть',uk:'Згорнути',en:'Collapse',es:'Ocultar',de:'Einklappen',pt:'Recolher',fr:'Réduire',pl:'Zwiń',it:'Riduci',he:'לכווץ',ja:'閉じる',ko:'접기'}); }
-function _secAnchor(el,ms){ var sa=document.getElementById('scroll-area'); if(!sa)return; var top=el.getBoundingClientRect().top,t0=performance.now();
+function _secScroller(el){ var p=el&&el.parentNode;   // ближайший скролл-контейнер: лента (#scroll-area) или панель профиля (#historyPanel)
+  while(p&&p.nodeType===1){ try{ var o=getComputedStyle(p).overflowY; if(o==='auto'||o==='scroll')return p; }catch(e){} p=p.parentNode; }
+  return document.getElementById('scroll-area'); }
+function _secAnchor(el,ms){ var sa=_secScroller(el); if(!sa)return; var top=el.getBoundingClientRect().top,t0=performance.now();
   (function step(){ var d=el.getBoundingClientRect().top-top; if(d)sa.scrollTop+=d; if(performance.now()-t0<ms)requestAnimationFrame(step); })(); }
 function _secSet(sec,on){
   if(!sec||sec.classList.contains('open')===!!on)return;
   if(on){
-    var cur=document.querySelector('.ai-sec.open'); if(cur&&cur!==sec)cur.classList.remove('open');   // стек: открыта только одна
+    var cur=document.querySelector('.ai-sec.open'); if(cur&&cur!==sec)cur.classList.remove('open');   // стек: открыта только одна (в т.ч. между днями истории)
     sec.classList.add('open'); _secAnchor(sec,360);   // карточка не «прыгает», пока соседка сверху схлопывается
   } else {
     sec.classList.remove('open');
-    var sa=document.getElementById('scroll-area');
-    if(sa&&sec.getBoundingClientRect().top<64) sa.scrollTo({top:sa.scrollTop+sec.getBoundingClientRect().top-84,behavior:'smooth'});   // свернули снизу длинного текста → вернуть шапку карточки в поле зрения
+    var sa=_secScroller(sec);
+    if(sa){ var saTop=sa.getBoundingClientRect().top;
+      if(sec.getBoundingClientRect().top<saTop+60) sa.scrollTo({top:sa.scrollTop+sec.getBoundingClientRect().top-saTop-20,behavior:'smooth'}); }   // свернули снизу длинного текста → вернуть шапку карточки в поле зрения
   }
 }
 function _secTap(sec,ev){ if(!sec.classList.contains('has-det')||sec.classList.contains('open'))return; _secSet(sec,true); }
