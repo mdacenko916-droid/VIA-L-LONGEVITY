@@ -4723,12 +4723,14 @@ function _renderDayPlanCard(){
   }).join('');
 }
 function _cleanPlan(p){
-  // сетка безопасности: убрать редкие проскоки исследовательской лексики из ИИ-JSON
-  var re=/\s*\(?(?:мета[- ]?анализ\w*|РКИ|RCT|N\s*=\s*\d+|\d+\s*РКИ)[^).,;]*\)?/gi;
+  // сетка безопасности: убрать редкие проскоки исследовательской лексики из ИИ-JSON.
+  // ⚠️ Граница слова перед аббревиатурой ОБЯЗАТЕЛЬНА: «РКИ»+/i без неё матчил «рки» внутри «Яркий»
+  // и выгрызал «Яркий свет (окно, балкон или лампа)» → битый пункт «–Я…» (баг RC2 §4, пойман 2026-07-12)
+  var re=/(^|[^0-9A-Za-zА-Яа-яЁё])\s*\(?(?:мета[- ]?анализ\w*|РКИ(?![а-яё])|RCT|N\s*=\s*\d+|\d+\s*РКИ)[^).,;]*\)?/gi;
   var alnum=function(x){return String(x).replace(/[^0-9A-Za-zА-Яа-яЁё]/g,'').length;};
   try{ Object.keys(p).forEach(function(k){ if(Array.isArray(p[k])) p[k].forEach(function(s){ if(s&&Array.isArray(s.items)) s.items=s.items
     .map(function(x){
-      var orig=String(x), cleaned=orig.replace(re,'').replace(/\s{2,}/g,' ').replace(/\s+([.,;])/g,'$1').trim();
+      var orig=String(x), cleaned=orig.replace(re,'$1').replace(/\s{2,}/g,' ').replace(/\s+([.,;])/g,'$1').trim();
       return (alnum(cleaned)<4 && alnum(orig)>12) ? orig.trim() : cleaned;   // защита от гуттинга: чистка выгрызла пункт почти в ноль → вернуть исходный
     })
     .filter(function(x){ return x && alnum(x)>=4; });   // отбросить вырожденные обрезки («–Я», висячие символы)
