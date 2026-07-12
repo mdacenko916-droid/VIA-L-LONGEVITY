@@ -3908,7 +3908,7 @@ function buildUserMessage(data, lang, tier) {
     + ((data.protein_intake || data.appetite || data.cravings || data.allergy) ? 'Питание (доп.): ' + [(data.protein_intake ? 'потребление белка: ' + data.protein_intake : ''), (data.appetite ? 'аппетит: ' + data.appetite : ''), (data.cravings ? 'тяга к сладкому/еде: да' : ''), (data.allergy ? 'аллергии: ' + data.allergy : '')].filter(Boolean).join(' | ') + '\n' : '')
     + ((data.memory || data.fog) ? 'Ясность ума · память: ' + (data.memory || '—') + ' | туман в голове: ' + (data.fog || '—') + '\n' : '')
     + ((data.lifestyle_notes || data.new_symptoms) ? 'Контекст образа жизни за неделю (со слов клиента): ' + (data.lifestyle_notes || data.new_symptoms) + '\n' : '')
-    + 'Физическая активность · виды: ' + _J(data.act_types) + ' | частота: ' + (data.act_freq || '—') + ' | восстановление после нагрузки: ' + (data.act_recovery || '—') + (data.move_today ? ' | движение сегодня: ' + ({active:'активный день',light:'немного',sedentary:'сидячий день'}[data.move_today] || data.move_today) : '') + '\n'
+    + 'Физическая активность · виды: ' + _J(data.act_types) + ' | частота: ' + (data.act_freq || '—') + ' | восстановление после нагрузки: ' + (data.act_recovery || '—') + (data.move_today ? ' | движение за прошедшие сутки: ' + ({sedentary:'сидячий день',light:'немного двигался',walk:'много ходил',cardio:'кардио/бег',strength:'силовая тренировка',active:'активный день'}[data.move_today] || data.move_today) : '') + '\n'
     + 'Добавки (принимает): ' + _J(data.supplements) + '\n'
     + 'Лекарства: ' + _medsStr + (data.meds_other ? ' | другие: ' + data.meds_other : '') + '\n'
     + 'Хронический стресс: ' + (data.chronic_stress || '—') + ' | симптомы кортизола: ' + _J(data.cortisol_symp) + '\n'
