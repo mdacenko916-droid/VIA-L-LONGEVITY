@@ -2490,8 +2490,11 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
       <div class="card-accent"></div>
       <div class="result-eyebrow" data-t="result_eyebrow">Анализ VIA‑L</div>
       <div class="result-disc" data-t="result_disclaimer">ℹ️ Информационно, не медицинский диагноз. Не заменяет консультацию врача.</div>
-      <h2 class="result-title" id="res-title"></h2>
-      <p class="result-sub" id="res-subtitle"></p>
+      <!-- Заголовок-вердикт («Стоит обратить внимание / Сейчас телу нужна поддержка») скрыт по решению
+           владельца 2026-07-13: «Сегодня» компактный, суть несут кольцо готовности и ИИ-разбор.
+           Элементы в DOM (display:none) — их textContent читает PDF-шаблон. -->
+      <h2 class="result-title" id="res-title" style="display:none;"></h2>
+      <p class="result-sub" id="res-subtitle" style="display:none;"></p>
       <div class="score-wrap">
         <div class="score-ring-outer">
           <svg class="score-svg" viewBox="0 0 160 160">
@@ -2516,7 +2519,12 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
     <!-- AI ANALYSIS CARD (VIO → /analyze, как PRO) -->
     <div id="aiCard" style="display:none;margin-bottom:12px;" class="card">
       <div class="card-accent" style="background:linear-gradient(90deg,transparent,rgba(120,152,255,.5),transparent);"></div>
-      <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--t1);margin-bottom:14px;">✦ <span id="aiTitle">Персональный анализ ИИ</span></div>
+      <!-- Свёрнут по умолчанию (владелец 2026-07-13): «Сегодня» компактный, клиент раскрывает по желанию -->
+      <div onclick="var b=document.getElementById('aiBody'),c=document.getElementById('aiChev');var open=b.style.display==='none';b.style.display=open?'block':'none';c.style.transform=open?'rotate(90deg)':'';" style="display:flex;align-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent;">
+        <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--t1);flex:1;">✦ <span id="aiTitle">Персональный анализ ИИ</span></div>
+        <div id="aiChev" style="color:#b48af0;font-size:20px;opacity:.6;transition:transform .25s ease;flex-shrink:0;">›</div>
+      </div>
+      <div id="aiBody" style="display:none;padding-top:14px;">
       <div id="aiLoading" style="display:flex;align-items:center;gap:10px;color:var(--t2);font-size:13px;">
         <div style="width:18px;height:18px;border:2px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;"></div>
         <span id="aiLoadingTxt">Анализирую ваши данные…</span>
@@ -2524,6 +2532,7 @@ body.flow-mode .progress-wrap{display:none;}      /* убираем «Шаг N �
       <div id="aiResult" style="display:none;font-size:13px;color:var(--t2);line-height:1.85;white-space:pre-wrap;"></div>
       <div id="aiError" style="display:none;font-size:12px;color:#FF6B8A;margin-top:8px;"></div>
       <div id="aiDisc" data-t="result_disclaimer" style="display:none;font-size:11px;color:var(--t3);line-height:1.6;margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08);">ℹ️ Информационно, не медицинский диагноз. Не заменяет консультацию врача.</div>
+      </div>
     </div>
 
     <!-- 4-блочная раскладка результата (шапка · ИИ-разбор · циркадный · CTA): инсайты/care-карточки скрыты, глубину несёт ИИ-разбор -->
@@ -4584,7 +4593,7 @@ var _BP_CS='background:linear-gradient(150deg,#1b1528,#130e1f);border:1px solid 
 // ═══ ПАМЯТКА ДНЯ — 6 глав → BottomSheet (детерминированно, из велнес-базы; RU-пилот, i18n позже) ═══
 function _bpChapters(){
   // Заголовки глав видны ВСЕГДА (в т.ч. при ИИ-плане). L() отдаёт en для всех не-RU языков.
-  return [
+  var chs=[
     {id:'morning', icon:'☀️', title:L({ru:'Утро',uk:'Ранок',en:'Morning',es:'Mañana',de:'Morgen',pt:'Manhã',fr:'Matin',pl:'Poranek',it:'Mattina',he:'בוקר',ja:'朝',ko:'아침'}), teaser:L({ru:'Старт • разминка • завтрак • добавки',uk:'Старт • розминка • сніданок • добавки',en:'Start • warm-up • breakfast • supplements',es:'Inicio • calentamiento • desayuno • suplementos',de:'Start • Aufwärmen • Frühstück • Präparate',pt:'Início • aquecimento • café da manhã • suplementos',fr:'Départ • échauffement • petit-déjeuner • compléments',pl:'Start • rozgrzewka • śniadanie • suplementy',it:'Avvio • riscaldamento • colazione • integratori',he:'התחלה • חימום • ארוחת בוקר • תוספים',ja:'スタート • ウォームアップ • 朝食 • サプリ',ko:'시작 • 준비운동 • 아침 • 보충제'})},
     {id:'lunch',   icon:'🍽', title:L({ru:'Обед',uk:'Обід',en:'Lunch',es:'Almuerzo',de:'Mittag',pt:'Almoço',fr:'Déjeuner',pl:'Obiad',it:'Pranzo',he:'צהריים',ja:'昼',ko:'점심'}), teaser:L({ru:'Меню и поддержка',uk:'Меню та підтримка',en:'Menu and support',es:'Menú y apoyo',de:'Menü und Unterstützung',pt:'Menu e apoio',fr:'Menu et soutien',pl:'Menu i wsparcie',it:'Menu e supporto',he:'תפריט ותמיכה',ja:'メニューとサポート',ko:'메뉴와 지원'})},
     {id:'evening', icon:'🌙', title:L({ru:'Вечер',uk:'Вечір',en:'Evening',es:'Noche',de:'Abend',pt:'Noite',fr:'Soir',pl:'Wieczór',it:'Sera',he:'ערב',ja:'夜',ko:'저녁'}), teaser:L({ru:'Ужин за 3 ч до сна • добавки',uk:'Вечеря за 3 год до сну • добавки',en:'Dinner ~3 h before sleep • supplements',es:'Cena ~3 h antes de dormir • suplementos',de:'Abendessen ~3 Std vor dem Schlafen • Präparate',pt:'Jantar ~3 h antes de dormir • suplementos',fr:'Dîner ~3 h avant le coucher • compléments',pl:'Kolacja ~3 h przed snem • suplementy',it:'Cena ~3 h prima di dormire • integratori',he:'ארוחת ערב ~3 שעות לפני השינה • תוספים',ja:'就寝3時間前の夕食 • サプリ',ko:'취침 3시간 전 저녁 • 보충제'})},
@@ -4592,6 +4601,15 @@ function _bpChapters(){
     {id:'water',   icon:'💧', title:L({ru:'Вода',uk:'Вода',en:'Water',es:'Agua',de:'Wasser',pt:'Água',fr:'Eau',pl:'Woda',it:'Acqua',he:'מים',ja:'水分',ko:'수분'}), teaser:L({ru:'Ориентир под массу тела',uk:'Орієнтир під масу тіла',en:'Guideline by body weight',es:'Referencia según el peso corporal',de:'Richtwert nach Körpergewicht',pt:'Referência pelo peso corporal',fr:'Repère selon le poids corporel',pl:'Wskazówka według masy ciała',it:'Riferimento in base al peso corporeo',he:'הנחיה לפי משקל הגוף',ja:'体重に応じた目安',ko:'체중에 따른 기준'})},
     {id:'sleep',   icon:'😴', title:L({ru:'Сон',uk:'Сон',en:'Sleep',es:'Sueño',de:'Schlaf',pt:'Sono',fr:'Sommeil',pl:'Sen',it:'Sonno',he:'שינה',ja:'睡眠',ko:'수면'}), teaser:L({ru:'Поведенческие ориентиры вечера',uk:'Поведінкові орієнтири вечора',en:'Evening behavior tips',es:'Pautas de conducta para la noche',de:'Verhaltenstipps für den Abend',pt:'Dicas de comportamento para a noite',fr:'Repères comportementaux du soir',pl:'Wskazówki wieczorne',it:'Consigli comportamentali serali',he:'הרגלי ערב מומלצים',ja:'夜の行動のヒント',ko:'저녁 행동 팁'})}
   ];
+  // «Разбор дня» — полный текст сегодняшнего ИИ-разбора доп. главой (владелец 2026-07-13, сам разбор
+  // на экране «Сегодня» свёрнут); глава появляется только когда разбор уже сгенерирован (кэш vial_ai_daily)
+  try{
+    var _ae=(typeof _aiDailyGet==='function')?_aiDailyGet().filter(function(x){return x.day===_dayKey();})[0]:null;
+    if(_ae&&_ae.analysis) chs.push({id:'analysis', icon:'✦',
+      title:L({ru:'Разбор дня',uk:'Розбір дня',en:'Today’s analysis',es:'Análisis del día',de:'Analyse des Tages',pt:'Análise do dia',fr:'Analyse du jour',pl:'Analiza dnia',it:'Analisi del giorno',he:'ניתוח היום',ja:'今日の分析',ko:'오늘의 분석'}),
+      teaser:L({ru:'Полный текст ИИ-разбора',uk:'Повний текст ШІ-розбору',en:'Full AI analysis text',es:'Texto completo del análisis',de:'Volltext der KI-Analyse',pt:'Texto completo da análise',fr:'Texte complet de l’analyse',pl:'Pełny tekst analizy AI',it:'Testo completo dell’analisi',he:'הטקסט המלא של הניתוח',ja:'AI分析の全文',ko:'AI 분석 전문'})});
+  }catch(e){}
+  return chs;
 }
 function _bpChapterData(id, data){
   var w=parseFloat(data.weight)||70, per=Math.round(w*_actFactor(data)/3), isMale=data.gender==='male';
@@ -4770,8 +4788,13 @@ function _platePhiloHTML(light){
     ja:'カロリー計算は教えません。正しいお皿の組み立て方を教えます。そのイメージが習慣になれば、健康的な食事に計算は不要になります。',
     ko:'칼로리 계산을 가르치지 않습니다. 올바른 한 접시를 구성하는 법을 가르칩니다. 그 이미지가 습관이 되면 건강한 식사에 더 이상 계산이 필요 없습니다.'});
   var leg=function(color,emoji,frac,txt){return '<div style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:'+c.t2+';line-height:1.35;"><span style="width:10px;height:10px;border-radius:3px;background:'+color+';flex-shrink:0;"></span>'+emoji+' <b>'+frac+'</b>&nbsp;'+txt+'</div>';};
+  // фото тарелки владельца поверх SVG-схемы (круглая обрезка гасит градиентный фон);
+  // нет фото/не загрузилось → onerror снимает img, остаётся SVG. Абс. URL — печать живёт в about:blank
+  var pURL=''; try{ pURL=new URL('food/plate_harvard.webp',location.href).href; }catch(e){ pURL='food/plate_harvard.webp'; }
+  var plate='<div style="position:relative;width:118px;height:118px;flex-shrink:0;">'+_plateSVG(118)
+    +'<img src="'+pURL+'" alt="" loading="lazy" onerror="this.remove()" style="position:absolute;inset:0;width:118px;height:118px;border-radius:50%;object-fit:cover;"></div>';
   return '<div style="border:1px solid '+c.border+';background:'+c.bg+';border-radius:14px;padding:13px 14px;margin:6px 0 10px;">'
-    +'<div style="display:flex;gap:14px;align-items:center;">'+_plateSVG(118)
+    +'<div style="display:flex;gap:14px;align-items:center;">'+plate
     +'<div style="display:flex;flex-direction:column;gap:7px;min-width:0;">'
       +leg('#5fae7f','🥗','½',veg)+leg('#e2b95a','🍗','¼',prot)+leg('#b48af0','🌾','¼',carb)
       +'<div style="font-size:11px;color:'+c.t3+';">'+extra+'</div>'
@@ -4887,6 +4910,14 @@ async function fetchDayPlan(data){
   }catch(e){ window._bpAILoading=false; }
 }
 function openBpChapter(id){
+  if(id==='analysis'){   // полный текст сегодняшнего ИИ-разбора (кэш дня), не secs-структура
+    try{
+      var _ae=_aiDailyGet().filter(function(x){return x.day===_dayKey();})[0];
+      if(_ae&&_ae.analysis) openSheet('✦', L({ru:'Разбор дня',uk:'Розбір дня',en:'Today’s analysis',es:'Análisis del día',de:'Analyse des Tages',pt:'Análise do dia',fr:'Analyse du jour',pl:'Analiza dnia',it:'Analisi del giorno',he:'ניתוח היום',ja:'今日の分析',ko:'오늘의 분석'}),
+        '<div style="font-size:13px;color:var(--t2);line-height:1.85;white-space:pre-wrap;padding-top:6px;">'+_renderAnalysis(_ae.analysis)+'</div>');
+    }catch(e){}
+    return;
+  }
   var data=window._bpData||{}, chs=_bpChapters(), meta=null;
   for(var i=0;i<chs.length;i++) if(chs[i].id===id) meta=chs[i];
   if(!meta)return;
