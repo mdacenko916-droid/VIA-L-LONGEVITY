@@ -4676,16 +4676,46 @@ function _bpChapterData(id, data){
   }
   return [];
 }
+// Фото-каталог блюд «Памятки дня» (docs/FOOD-PHOTO-SPEC.md): воркер помечает вариант меню
+// меткой [dish:KEY] в конце пункта → здесь вырезаем метку и рендерим фото interpreter/food/KEY.webp
+// + ориентир БЖУ стандартной порции (числа языконезависимы; персональная граммовка белка — в тексте ИИ).
+// Пункт без метки / с неизвестным KEY / без фото (onerror) рендерится текстом, как раньше.
+var _DISH={
+  bf_eggs_veg:{p:28,f:12,c:30}, bf_omelet_cheese:{p:29,f:13,c:30}, bf_cottage_berries:{p:26,f:14,c:28},
+  bf_yogurt_fruit:{p:27,f:9,c:34}, bf_buckwheat_chicken:{p:33,f:8,c:28}, bf_salmon_plate:{p:27,f:17,c:26},
+  ln_salmon_quinoa:{p:32,f:17,c:28}, ln_chicken_salad:{p:35,f:12,c:26}, ln_beef_rice:{p:34,f:14,c:30},
+  ln_whitefish_veg:{p:28,f:8,c:26}, ln_legumes:{p:18,f:9,c:52}, ln_tofu_rice:{p:20,f:12,c:30},
+  dn_baked_fish:{p:23,f:9,c:10}, dn_turkey_broccoli:{p:32,f:6,c:8}, dn_egg_avocado:{p:13,f:18,c:18},
+  dn_cottage_light:{p:22,f:12,c:18}, dn_chicken_light:{p:30,f:7,c:15}, dn_soup_fish:{p:20,f:6,c:12},
+  sn_nuts_fruit:{p:6,f:16,c:22}, sn_yogurt_berries:{p:10,f:4,c:12}, sn_hummus_veg:{p:8,f:12,c:18}, sn_eggs_cucumber:{p:13,f:10,c:3}
+};
+function _dishOf(x){
+  x=String(x==null?'':x);
+  var m=x.match(/\s*\[dish:([a-z][a-z0-9_]*)\]\s*/);
+  if(!m) return {key:null,text:x};
+  return {key:(_DISH[m[1]]?m[1]:null), text:(x.slice(0,m.index)+' '+x.slice(m.index+m[0].length)).replace(/\s{2,}/g,' ').trim()};
+}
+function _dishMacros(d){
+  return '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;font-size:11.5px;color:var(--t3);">'
+    +'<span>🥚 ≈'+d.p+' '+L({ru:'г белка',en:'g protein'})+'</span>'
+    +'<span>🫒 ≈'+d.f+' '+L({ru:'г жиров',en:'g fat'})+'</span>'
+    +'<span>🌾 ≈'+d.c+' '+L({ru:'г углеводов',en:'g carbs'})+'</span></div>';
+}
 function _bpRenderSecs(secs){
   var W=function(t){return (typeof _wl==='function')?_wl(String(t==null?'':t)):String(t==null?'':t);};   // велнес-пояс: приливы→тепловые волны, гормональный фон→гормональный баланс, дозы трав и т.д.
   return secs.map(function(s){
     var head='<div style="margin:16px 0 4px;font-family:\'DM Sans\',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#b48af0;">• '+W(s.title)+' •</div>';
     if(s.variants){
       var note='<div style="font-size:11px;color:var(--t3);margin:0 0 9px;">'+L({ru:'Выберите любой один вариант',en:'Pick any one option'})+'</div>';
-      var opts=s.items.map(function(x,i){return '<div style="display:flex;gap:11px;align-items:flex-start;background:rgba(180,138,240,.06);border:1px solid rgba(180,138,240,.15);border-radius:11px;padding:10px 12px;margin:6px 0;"><div style="font-size:12px;font-weight:700;color:#b48af0;flex-shrink:0;min-width:16px;line-height:1.5;">'+(i+1)+'</div><div style="font-size:14px;color:var(--t2);line-height:1.5;">'+W(x)+'</div></div>';}).join('');
+      var opts=s.items.map(function(x,i){
+        var dp=_dishOf(x);
+        var photo=dp.key?'<img src="food/'+dp.key+'.webp" alt="" loading="lazy" onerror="this.remove()" style="width:74px;height:74px;flex-shrink:0;border-radius:12px;object-fit:contain;">':'';
+        var body='<div style="font-size:14px;color:var(--t2);line-height:1.5;">'+W(dp.text)+(dp.key?_dishMacros(_DISH[dp.key]):'')+'</div>';
+        return '<div style="display:flex;gap:11px;align-items:flex-start;background:rgba(180,138,240,.06);border:1px solid rgba(180,138,240,.15);border-radius:11px;padding:10px 12px;margin:6px 0;"><div style="font-size:12px;font-weight:700;color:#b48af0;flex-shrink:0;min-width:16px;line-height:1.5;">'+(i+1)+'</div>'+photo+body+'</div>';
+      }).join('');
       return head+note+opts;
     }
-    return head + s.items.map(function(x){return '<div style="font-size:14px;color:var(--t2);line-height:1.65;padding:6px 0 6px 16px;position:relative;"><span style="position:absolute;left:0;color:#b48af0;top:6px;">–</span>'+W(x)+'</div>';}).join('');
+    return head + s.items.map(function(x){return '<div style="font-size:14px;color:var(--t2);line-height:1.65;padding:6px 0 6px 16px;position:relative;"><span style="position:absolute;left:0;color:#b48af0;top:6px;">–</span>'+W(_dishOf(x).text)+'</div>';}).join('');
   }).join('');
 }
 function renderDayBlueprint(data){
@@ -4776,7 +4806,7 @@ function downloadDayPlan(){
   var body=chs.map(function(r){
     var secs=(window._bpAI && Array.isArray(window._bpAI[r.id])) ? window._bpAI[r.id] : _bpChapterData(r.id,data);
     var W=function(t){return (typeof _wl==='function')?_wl(String(t==null?'':t)):String(t==null?'':t);};
-    return '<section><h2>'+r.icon+' '+r.title+'</h2>'+secs.map(function(s){return '<h3>'+W(s.title)+'</h3><ul>'+s.items.map(function(x){return '<li>'+W(x)+'</li>';}).join('')+'</ul>';}).join('')+'</section>';
+    return '<section><h2>'+r.icon+' '+r.title+'</h2>'+secs.map(function(s){return '<h3>'+W(s.title)+'</h3><ul>'+s.items.map(function(x){return '<li>'+W(_dishOf(x).text)+'</li>';}).join('')+'</ul>';}).join('')+'</section>';
   }).join('');
   var nm=(data.name?(', '+data.name):'');
   var html='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+L({ru:'Памятка дня',en:'Day plan'})+'</title>'
