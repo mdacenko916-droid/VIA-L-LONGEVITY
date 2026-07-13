@@ -525,6 +525,18 @@ html[data-current-lang="en"] #heroBtnSlots, html[data-current-lang="es"] #heroBt
 
 ### Журнал выполненного (что уже в проде + `main`)
 
+- **2026-07-13** — **PRO = строение VIO (interpreter-pro.html, сессия «задача PRO»).** (1) Единая лента
+  с зонами каденса VIO (`FLOW_ALL=[0,7,9,2,3,5,6,1,8,14,10]`, `_NOW=[1]`, двухстрочные `_flowHead` 12 яз,
+  flow-intro); мёртвый 2-стадийный `showDaily/showWeekly` удалён. (2) Гаджет-приоритет: `_AUTO_STEP_METRIC=
+  {1:'hrv',3:'sleepHours'}` — приборные шаги HRV/Сон вернулись в ленту и авто-скрываются при импорте
+  (`_reflowSteps` из `closeImport`/`_gRefresh`). (3) Гейт «1 проход/день» + ЛОКАЛЬНЫЙ `_dayKey` (6 UTC-ключей
+  заменены; Fitbit API — внешний, оставлен). (4) Памятка дня: порт blueprint-стека VIO (главы, `_DISH`+фото
+  `[dish:KEY]`, тарелка+«Принцип VIA·L», кэш `vial_day_plan` 1×/день, печать) на `tier:'pro'`, localStorage
+  вместо шифрослоя, золотая палитра; кэш разбора `vial_ai_daily` подключён к fetchAIAnalysis. (5) Нав-паритет:
+  топбар без ссылок на маркетинг-index (App Store), лого=«домой», футер 4 таба Подход·Сегодня·Наставник·Карточка
+  (phosphor), модалы approachPanel/dayplanPanel/circModal. (6) Косметика: убраны pulse-rings+ECG-анимации,
+  фикс step6 (шапка «Когниция» вместо «Биоимпеданс»), step14 undefined-статики. Память: project-pro-vio-parity.
+
 - **2026-07-13** — **VIO «Памятка дня»: фото блюд (a97486f, воркер `1d8ed8d4`).** 22 webp
   (`interpreter/food/`, 512px ~23КБ, из PNG владельца по `docs/FOOD-PHOTO-SPEC.md`); воркер `/day-plan`
   получил каталог в промпте и метит variants-пункты `[dish:KEY]` (в пост-фильтре метка снимается ДО

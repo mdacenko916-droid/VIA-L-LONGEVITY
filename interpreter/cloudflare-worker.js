@@ -3922,7 +3922,8 @@ function buildUserMessage(data, lang, tier) {
     + 'Питание · ограничения/диета: ' + _J(data.diet_restrict) + ' | режим питания: ' + (data.eating_pattern || '—') + '\n'
     + ((data.protein_intake || data.appetite || data.cravings || data.allergy) ? 'Питание (доп.): ' + [(data.protein_intake ? 'потребление белка: ' + data.protein_intake : ''), (data.appetite ? 'аппетит: ' + data.appetite : ''), (data.cravings ? 'тяга к сладкому/еде: да' : ''), (data.allergy ? 'аллергии: ' + data.allergy : '')].filter(Boolean).join(' | ') + '\n' : '')
     + ((data.memory || data.fog) ? 'Ясность ума · память: ' + (data.memory || '—') + ' | туман в голове: ' + (data.fog || '—') + '\n' : '')
-    + ((data.lifestyle_notes || data.new_symptoms) ? 'Контекст образа жизни за неделю (со слов клиента): ' + (data.lifestyle_notes || data.new_symptoms) + '\n' : '')
+    + (data.new_symptoms ? 'Новые симптомы за неделю (со слов клиента, сигнал — обрати внимание на тренд): ' + data.new_symptoms + '\n' : '')
+    + (data.lifestyle_notes ? 'События/контекст недели (со слов клиента — учитывай как бытовое объяснение сдвигов метрик, не как ухудшение): ' + data.lifestyle_notes + '\n' : '')
     + 'Физическая активность · виды: ' + _J(data.act_types) + ' | частота: ' + (data.act_freq || '—') + ' | восстановление после нагрузки: ' + (data.act_recovery || '—') + (data.move_today ? ' | движение за прошедшие сутки: ' + ({sedentary:'сидячий день',light:'немного двигался',walk:'много ходил',cardio:'кардио/бег',strength:'силовая тренировка',active:'активный день'}[data.move_today] || data.move_today) : '') + '\n'
     + 'Добавки (принимает): ' + _J(data.supplements) + '\n'
     + 'Лекарства: ' + _medsStr + (data.meds_other ? ' | другие: ' + data.meds_other : '') + '\n'
