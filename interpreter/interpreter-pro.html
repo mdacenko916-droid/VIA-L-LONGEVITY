@@ -3827,22 +3827,32 @@ function renderWeekly(){
 // В EXPERT/ELITE тот же разбор уходит специалисту в кабинет (воркер, по коду доступа).
 function _wrUI(){
   const M={
-    ru:{title:'Недельный AI-разбор',sub:'связный разбор динамики · раз в неделю',get:'Получить разбор',load:'Готовлю разбор…',lock:'Следующий разбор — через',days:'дн.',err:'Не удалось получить разбор. Попробуйте позже.',from:'от',dl:'Скачать разбор'},
-    uk:{title:'Тижневий AI-розбір',sub:'звʼязний розбір динаміки · раз на тиждень',get:'Отримати розбір',load:'Готую розбір…',lock:'Наступний розбір — через',days:'дн.',err:'Не вдалося отримати розбір. Спробуйте пізніше.',from:'від',dl:'Завантажити розбір'},
-    en:{title:'Weekly AI review',sub:'coherent dynamics review · once a week',get:'Get review',load:'Preparing…',lock:'Next review in',days:'d',err:'Could not get the review. Try again later.',from:'from',dl:'Download review'},
-    es:{title:'Análisis semanal IA',sub:'análisis coherente de la dinámica · una vez por semana',get:'Obtener análisis',load:'Preparando…',lock:'Próximo análisis en',days:'d',err:'No se pudo obtener el análisis. Inténtalo más tarde.',from:'del',dl:'Descargar análisis'},
-    de:{title:'Wöchentliche KI-Auswertung',sub:'zusammenhängende Dynamik-Auswertung · einmal pro Woche',get:'Auswertung abrufen',load:'Wird erstellt…',lock:'Nächste Auswertung in',days:'T',err:'Auswertung konnte nicht geladen werden. Später erneut versuchen.',from:'vom',dl:'Auswertung herunterladen'},
-    pt:{title:'Análise semanal IA',sub:'análise coerente da dinâmica · uma vez por semana',get:'Obter análise',load:'Preparando…',lock:'Próxima análise em',days:'d',err:'Não foi possível obter a análise. Tente mais tarde.',from:'de',dl:'Baixar análise'},
-    fr:{title:'Analyse hebdo IA',sub:'analyse cohérente de la dynamique · une fois par semaine',get:'Obtenir l’analyse',load:'Préparation…',lock:'Prochaine analyse dans',days:'j',err:'Impossible d’obtenir l’analyse. Réessayez plus tard.',from:'du',dl:'Télécharger l’analyse'},
-    pl:{title:'Tygodniowa analiza AI',sub:'spójna analiza dynamiki · raz w tygodniu',get:'Pobierz analizę',load:'Przygotowuję…',lock:'Następna analiza za',days:'dn.',err:'Nie udało się pobrać analizy. Spróbuj później.',from:'z',dl:'Pobierz analizę'},
-    it:{title:'Analisi settimanale IA',sub:'analisi coerente della dinamica · una volta a settimana',get:'Ottieni analisi',load:'Preparazione…',lock:'Prossima analisi tra',days:'g',err:'Impossibile ottenere l’analisi. Riprova più tardi.',from:'del',dl:'Scarica analisi'},
-    he:{title:'סקירה שבועית AI',sub:'סקירה רציפה של הדינמיקה · פעם בשבוע',get:'קבל סקירה',load:'מכין…',lock:'הסקירה הבאה בעוד',days:'ימ׳',err:'לא ניתן היה לקבל את הסקירה. נסה מאוחר יותר.',from:'מ־',dl:'הורד סקירה'},
-    ja:{title:'週間AIレビュー',sub:'動向の総合レビュー · 週1回',get:'レビューを取得',load:'作成中…',lock:'次のレビューまで',days:'日',err:'レビューを取得できませんでした。後でお試しください。',from:'',dl:'レビューをダウンロード'},
-    ko:{title:'주간 AI 리뷰',sub:'변화 종합 리뷰 · 주 1회',get:'리뷰 받기',load:'준비 중…',lock:'다음 리뷰까지',days:'일',err:'리뷰를 가져오지 못했습니다. 나중에 다시 시도하세요.',from:'',dl:'리뷰 다운로드'}
+    ru:{title:'Недельный AI-разбор',sub:'связный разбор динамики · раз в неделю',get:'Получить разбор',load:'Готовлю разбор…',lock:'Следующий разбор — через',days:'дн.',err:'Не удалось получить разбор. Попробуйте позже.',from:'от',dl:'Скачать разбор',wait:"Откроется после {n} дней записей — уже {m}"},
+    uk:{title:'Тижневий AI-розбір',sub:'звʼязний розбір динаміки · раз на тиждень',get:'Отримати розбір',load:'Готую розбір…',lock:'Наступний розбір — через',days:'дн.',err:'Не вдалося отримати розбір. Спробуйте пізніше.',from:'від',dl:'Завантажити розбір',wait:"Відкриється після {n} днів записів — вже {m}"},
+    en:{title:'Weekly AI review',sub:'coherent dynamics review · once a week',get:'Get review',load:'Preparing…',lock:'Next review in',days:'d',err:'Could not get the review. Try again later.',from:'from',dl:'Download review',wait:"Unlocks after {n} days of logs — {m} so far"},
+    es:{title:'Análisis semanal IA',sub:'análisis coherente de la dinámica · una vez por semana',get:'Obtener análisis',load:'Preparando…',lock:'Próximo análisis en',days:'d',err:'No se pudo obtener el análisis. Inténtalo más tarde.',from:'del',dl:'Descargar análisis',wait:"Se desbloquea tras {n} días de registros — ya {m}"},
+    de:{title:'Wöchentliche KI-Auswertung',sub:'zusammenhängende Dynamik-Auswertung · einmal pro Woche',get:'Auswertung abrufen',load:'Wird erstellt…',lock:'Nächste Auswertung in',days:'T',err:'Auswertung konnte nicht geladen werden. Später erneut versuchen.',from:'vom',dl:'Auswertung herunterladen',wait:"Öffnet nach {n} Tagen mit Einträgen — bisher {m}"},
+    pt:{title:'Análise semanal IA',sub:'análise coerente da dinâmica · uma vez por semana',get:'Obter análise',load:'Preparando…',lock:'Próxima análise em',days:'d',err:'Não foi possível obter a análise. Tente mais tarde.',from:'de',dl:'Baixar análise',wait:"Abre após {n} dias de registros — já {m}"},
+    fr:{title:'Analyse hebdo IA',sub:'analyse cohérente de la dynamique · une fois par semaine',get:'Obtenir l’analyse',load:'Préparation…',lock:'Prochaine analyse dans',days:'j',err:'Impossible d’obtenir l’analyse. Réessayez plus tard.',from:'du',dl:'Télécharger l’analyse',wait:"Se débloque après {n} jours de suivi — déjà {m}"},
+    pl:{title:'Tygodniowa analiza AI',sub:'spójna analiza dynamiki · raz w tygodniu',get:'Pobierz analizę',load:'Przygotowuję…',lock:'Następna analiza za',days:'dn.',err:'Nie udało się pobrać analizy. Spróbuj później.',from:'z',dl:'Pobierz analizę',wait:"Odblokuje się po {n} dniach zapisów — już {m}"},
+    it:{title:'Analisi settimanale IA',sub:'analisi coerente della dinamica · una volta a settimana',get:'Ottieni analisi',load:'Preparazione…',lock:'Prossima analisi tra',days:'g',err:'Impossibile ottenere l’analisi. Riprova più tardi.',from:'del',dl:'Scarica analisi',wait:"Si sblocca dopo {n} giorni di registrazioni — già {m}"},
+    he:{title:'סקירה שבועית AI',sub:'סקירה רציפה של הדינמיקה · פעם בשבוע',get:'קבל סקירה',load:'מכין…',lock:'הסקירה הבאה בעוד',days:'ימ׳',err:'לא ניתן היה לקבל את הסקירה. נסה מאוחר יותר.',from:'מ־',dl:'הורד סקירה',wait:"ייפתח אחרי {n} ימי רישום — עד כה {m}"},
+    ja:{title:'週間AIレビュー',sub:'動向の総合レビュー · 週1回',get:'レビューを取得',load:'作成中…',lock:'次のレビューまで',days:'日',err:'レビューを取得できませんでした。後でお試しください。',from:'',dl:'レビューをダウンロード',wait:"記録{n}日で利用可能 — 現在{m}日"},
+    ko:{title:'주간 AI 리뷰',sub:'변화 종합 리뷰 · 주 1회',get:'리뷰 받기',load:'준비 중…',lock:'다음 리뷰까지',days:'일',err:'리뷰를 가져오지 못했습니다. 나중에 다시 시도하세요.',from:'',dl:'리뷰 다운로드',wait:"기록 {n}일 후 열림 — 현재 {m}일"}
   };
   return M[lang]||M.en;
 }
 // Гейт 1/нед: {canGen, daysLeft, cached, cachedDate} из localStorage.
+// Гейт по НАКОПЛЕННЫМ ДАННЫМ: weeklyTrend отдаёт окно уже с 2 записей — без этого разбор
+// предлагался (и авто-генерился) на 2-й день. Открывается после N уникальных дней записей.
+var _WR_MIN_DAYS=5;
+function _histDays(arr){
+  var d={};(arr||[]).forEach(function(s){ if(s&&s.ts){ var t=new Date(s.ts); d[t.getFullYear()+'-'+(t.getMonth()+1)+'-'+t.getDate()]=1; } });
+  return Object.keys(d).length;
+}
+function _wrWaitNote(ui,need,have){
+  return '<div style="font-size:11px;color:var(--t3);">🔒 '+String(ui.wait||'').replace('{n}',need).replace('{m}',have)+'</div>';
+}
 function _wrGate(){
   const DAY=86400000, now=Date.now();
   const last=parseInt(localStorage.getItem('vial_weekly_last')||'0',10);
@@ -3856,7 +3866,10 @@ function _wrMd(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').r
 function renderWeeklyReportUI(){
   const box=document.getElementById('weeklyReport'); if(!box) return;
   const w=weeklyTrend(); if(!w){ box.innerHTML=''; return; } // <2 анализов — динамика уже показала подсказку
-  const ui=_wrUI(), g=_wrGate();
+  const ui=_wrUI(); let g=_wrGate();
+  const have=_histDays(w.wk);
+  // миграция: разбор, сгенерированный ДО гейта по данным (из <5 дней), снять и вернуть таймер
+  if(g.cached && have<_WR_MIN_DAYS){ try{ localStorage.removeItem('vial_weekly_text'); localStorage.removeItem('vial_weekly_last'); localStorage.removeItem('vial_weekly_date'); }catch(e){} g=_wrGate(); }
   let inner='';
   if(g.cached){
     inner += `<div style="font-size:13px;line-height:1.7;color:var(--t2);">${_wrMd(g.cached)}</div>`;
@@ -3865,7 +3878,9 @@ function renderWeeklyReportUI(){
       ${g.cachedDate?`<span style="font-size:10px;color:var(--t3);">${ui.from} ${g.cachedDate}</span>`:''}
     </div>`;
   }
-  if(g.canGen){
+  if(g.canGen && have<_WR_MIN_DAYS){
+    inner += `<div style="margin-top:${g.cached?'12px':'0'};">`+_wrWaitNote(ui,_WR_MIN_DAYS,have)+`</div>`;
+  } else if(g.canGen){
     inner += `<button id="wrBtn" onclick="genWeeklyReport()" style="margin-top:${g.cached?'12px':'0'};background:var(--gold);color:#10141C;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;">${ui.get}</button>`;
   } else {
     inner += `<div style="margin-top:${g.cached?'12px':'0'};font-size:11px;color:var(--t3);">⏳ ${ui.lock} ${g.daysLeft} ${ui.days}</div>`;
@@ -3876,6 +3891,7 @@ function renderWeeklyReportUI(){
 }
 async function genWeeklyReport(){
   const w=weeklyTrend(); if(!w) return;
+  if(_histDays(w.wk)<_WR_MIN_DAYS) return;   // гейт по данным (авто-вызов и старый DOM)
   const ui=_wrUI();
   const btn=document.getElementById('wrBtn'); if(btn){ btn.disabled=true; btn.textContent=ui.load; }
   const summary={ n:w.wk.length, metrics:w.metrics.map(m=>({ key:m.k, avg:+m.a.toFixed(m.dec),
