@@ -3397,6 +3397,22 @@ function renderCard(){
     +'<div class="vh-cell"><div class="vh-l">'+t('s_prof_weight')+'</div><div class="vh-v">'+(P.weight?_esc(P.weight):'—')+'</div></div>'
     +'<div class="vh-cell"><div class="vh-l">'+t('s_prof_waist')+'</div><div class="vh-v">'+(P.waist?_esc(P.waist):'—')+'</div></div>'
     +'</div>';
+  // ── Энергетический ориентир (владелец 2026-07-13): калории живут ТОЛЬКО здесь — не на «Сегодня»,
+  // не в меню, не в советах. BMR Mifflin-St Jeor × активность, диапазон ±5%; честный образовательный
+  // ориентир с дисклеймером «считать ежедневно не нужно» (философия VIO: тарелка вместо бухгалтерии).
+  var _tdee=(function(){
+    var w=parseFloat(P.weight),h=parseFloat(P.height),a=parseInt(P.age);
+    if(!w||!h||!a||!P.gender)return null;
+    var bmr=10*w+6.25*h-5*a+(isMale?5:-161);
+    var d=null; try{d=JSON.parse(secGet('vial_lastdata')||'null')||{};}catch(e){d={};}
+    var af={none:1.25,low:1.35,moderate:1.5,high:1.7}[d.act_freq||P.act_freq]||1.4;
+    var t0=bmr*af;
+    return {lo:Math.round(t0*0.95/50)*50, hi:Math.round(t0*1.05/50)*50};
+  })();
+  if(_tdee) html+='<div style="margin-top:10px;padding:10px 13px;border:1px solid rgba(180,138,240,.2);background:rgba(180,138,240,.05);border-radius:12px;">'
+    +'<div style="font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#b48af0;font-weight:700;">⚡ '+L({ru:'Энергетический ориентир',uk:'Енергетичний орієнтир',en:'Energy guideline',es:'Referencia energética',de:'Energie-Richtwert',pt:'Referência energética',fr:'Repère énergétique',pl:'Orientacyjne zapotrzebowanie',it:'Riferimento energetico',he:'הכוונה אנרגטית',ja:'エネルギーの目安',ko:'에너지 기준'})+'</div>'
+    +'<div style="font-size:15px;color:var(--t1);font-weight:600;margin-top:3px;">≈ '+_tdee.lo+'–'+_tdee.hi+' '+L({ru:'ккал/сутки',uk:'ккал/добу',en:'kcal/day',es:'kcal/día',de:'kcal/Tag',pt:'kcal/dia',fr:'kcal/jour',pl:'kcal/dzień',it:'kcal/giorno',he:'קק"ל ליום',ja:'kcal/日',ko:'kcal/일'})+'</div>'
+    +'<div style="font-size:10.5px;color:var(--t3);line-height:1.55;margin-top:4px;">'+L({ru:'Рассчитано автоматически по вашим данным и используется только для персональных рекомендаций — ежедневно считать калории не нужно.',uk:'Розраховано автоматично за вашими даними і використовується лише для персональних рекомендацій — щодня рахувати калорії не потрібно.',en:'Calculated automatically from your data and used only to personalize recommendations — no need to count calories daily.',es:'Se calcula automáticamente con tus datos y se usa solo para personalizar recomendaciones — no necesitas contar calorías a diario.',de:'Wird automatisch aus deinen Daten berechnet und nur zur Personalisierung genutzt — Kalorien musst du nicht täglich zählen.',pt:'Calculado automaticamente com seus dados e usado apenas para personalizar recomendações — não é preciso contar calorias todo dia.',fr:'Calculé automatiquement à partir de vos données et utilisé uniquement pour personnaliser les recommandations — inutile de compter les calories au quotidien.',pl:'Obliczane automatycznie na podstawie Twoich danych i używane tylko do personalizacji zaleceń — nie musisz codziennie liczyć kalorii.',it:'Calcolato automaticamente dai tuoi dati e usato solo per personalizzare i consigli — non serve contare le calorie ogni giorno.',he:'מחושב אוטומטית מהנתונים שלך ומשמש רק להתאמת ההמלצות — אין צורך לספור קלוריות מדי יום.',ja:'あなたのデータから自動計算され、提案のパーソナライズにのみ使われます。毎日カロリーを数える必要はありません。',ko:'입력한 데이터로 자동 계산되며 맞춤 추천에만 사용됩니다 — 매일 칼로리를 셀 필요는 없습니다.'})+'</div></div>';
   // Прогресс заполнения профиля — стимул пройти все разделы (или дата в программе, когда всё готово)
   var _comp=_cardCompletion(P);
   var _compTxt=_comp.pct===0
@@ -4610,10 +4626,10 @@ function _bpChapters(){
   // Порядок = ХРОНОЛОГИЯ ДНЯ (владелец 2026-07-13): Разбор → Утро → День → Вода → Активность → Вечер → Сон —
   // клиент «проживает» день сверху вниз. Глава «День» = обед + дневные ориентиры (id 'lunch' не трогаем: ключ схемы воркера).
   var chs=[
-    {id:'morning', icon:'🌅', title:L({ru:'Утро',uk:'Ранок',en:'Morning',es:'Mañana',de:'Morgen',pt:'Manhã',fr:'Matin',pl:'Poranek',it:'Mattina',he:'בוקר',ja:'朝',ko:'아침'}), teaser:L({ru:'Старт • разминка • завтрак • добавки',uk:'Старт • розминка • сніданок • добавки',en:'Start • warm-up • breakfast • supplements',es:'Inicio • calentamiento • desayuno • suplementos',de:'Start • Aufwärmen • Frühstück • Präparate',pt:'Início • aquecimento • café da manhã • suplementos',fr:'Départ • échauffement • petit-déjeuner • compléments',pl:'Start • rozgrzewka • śniadanie • suplementy',it:'Avvio • riscaldamento • colazione • integratori',he:'התחלה • חימום • ארוחת בוקר • תוספים',ja:'スタート • ウォームアップ • 朝食 • サプリ',ko:'시작 • 준비운동 • 아침 • 보충제'})},
+    {id:'morning', icon:'<i class="ph ph-sun-horizon" style="color:var(--gold-lt);"></i>', pr:'🌅', title:L({ru:'Утро',uk:'Ранок',en:'Morning',es:'Mañana',de:'Morgen',pt:'Manhã',fr:'Matin',pl:'Poranek',it:'Mattina',he:'בוקר',ja:'朝',ko:'아침'}), teaser:L({ru:'Старт • разминка • завтрак • добавки',uk:'Старт • розминка • сніданок • добавки',en:'Start • warm-up • breakfast • supplements',es:'Inicio • calentamiento • desayuno • suplementos',de:'Start • Aufwärmen • Frühstück • Präparate',pt:'Início • aquecimento • café da manhã • suplementos',fr:'Départ • échauffement • petit-déjeuner • compléments',pl:'Start • rozgrzewka • śniadanie • suplementy',it:'Avvio • riscaldamento • colazione • integratori',he:'התחלה • חימום • ארוחת בוקר • תוספים',ja:'スタート • ウォームアップ • 朝食 • サプリ',ko:'시작 • 준비운동 • 아침 • 보충제'})},
     {id:'lunch',   icon:'☀️', title:L({ru:'День',uk:'День',en:'Daytime',es:'Día',de:'Tag',pt:'Dia',fr:'Journée',pl:'Dzień',it:'Giorno',he:'יום',ja:'日中',ko:'낮'}), teaser:L({ru:'Обед • дневные ориентиры',uk:'Обід • денні орієнтири',en:'Lunch • daytime tips',es:'Almuerzo • pautas del día',de:'Mittagessen • Tagesimpulse',pt:'Almoço • dicas do dia',fr:'Déjeuner • repères de la journée',pl:'Obiad • wskazówki na dzień',it:'Pranzo • consigli diurni',he:'צהריים • טיפים ליום',ja:'昼食 • 日中のヒント',ko:'점심 • 낮 시간 팁'})},
     {id:'water',   icon:'💧', title:L({ru:'Вода',uk:'Вода',en:'Water',es:'Agua',de:'Wasser',pt:'Água',fr:'Eau',pl:'Woda',it:'Acqua',he:'מים',ja:'水分',ko:'수분'}), teaser:L({ru:'Ориентир под массу тела',uk:'Орієнтир під масу тіла',en:'Guideline by body weight',es:'Referencia según el peso corporal',de:'Richtwert nach Körpergewicht',pt:'Referência pelo peso corporal',fr:'Repère selon le poids corporel',pl:'Wskazówka według masy ciała',it:'Riferimento in base al peso corporeo',he:'הנחיה לפי משקל הגוף',ja:'体重に応じた目安',ko:'체중에 따른 기준'})},
-    {id:'activity',icon:'👣', title:L({ru:'Активность',uk:'Активність',en:'Movement',es:'Movimiento',de:'Bewegung',pt:'Movimento',fr:'Activité',pl:'Ruch',it:'Movimento',he:'תנועה',ja:'運動',ko:'운동'}), teaser:L({ru:'Под возраст, пол и активность',uk:'Під вік, стать та активність',en:'For your age, sex and activity',es:'Según tu edad, sexo y actividad',de:'Nach Alter, Geschlecht und Aktivität',pt:'Conforme idade, sexo e atividade',fr:'Selon l’âge, le sexe et l’activité',pl:'Według wieku, płci i aktywności',it:'In base a età, sesso e attività',he:'לפי גיל, מין ופעילות',ja:'年齢・性別・活動量に合わせて',ko:'나이·성별·활동량에 맞춰'})},
+    {id:'activity',icon:'<i class="ph ph-footprints" style="color:var(--gold-lt);"></i>', pr:'👣', title:L({ru:'Активность',uk:'Активність',en:'Movement',es:'Movimiento',de:'Bewegung',pt:'Movimento',fr:'Activité',pl:'Ruch',it:'Movimento',he:'תנועה',ja:'運動',ko:'운동'}), teaser:L({ru:'Под возраст, пол и активность',uk:'Під вік, стать та активність',en:'For your age, sex and activity',es:'Según tu edad, sexo y actividad',de:'Nach Alter, Geschlecht und Aktivität',pt:'Conforme idade, sexo e atividade',fr:'Selon l’âge, le sexe et l’activité',pl:'Według wieku, płci i aktywności',it:'In base a età, sesso e attività',he:'לפי גיל, מין ופעילות',ja:'年齢・性別・活動量に合わせて',ko:'나이·성별·활동량에 맞춰'})},
     {id:'evening', icon:'🌙', title:L({ru:'Вечер',uk:'Вечір',en:'Evening',es:'Noche',de:'Abend',pt:'Noite',fr:'Soir',pl:'Wieczór',it:'Sera',he:'ערב',ja:'夜',ko:'저녁'}), teaser:L({ru:'Ужин за 3 ч до сна • добавки',uk:'Вечеря за 3 год до сну • добавки',en:'Dinner ~3 h before sleep • supplements',es:'Cena ~3 h antes de dormir • suplementos',de:'Abendessen ~3 Std vor dem Schlafen • Präparate',pt:'Jantar ~3 h antes de dormir • suplementos',fr:'Dîner ~3 h avant le coucher • compléments',pl:'Kolacja ~3 h przed snem • suplementy',it:'Cena ~3 h prima di dormire • integratori',he:'ארוחת ערב ~3 שעות לפני השינה • תוספים',ja:'就寝3時間前の夕食 • サプリ',ko:'취침 3시간 전 저녁 • 보충제'})},
     {id:'sleep',   icon:'😴', title:L({ru:'Сон',uk:'Сон',en:'Sleep',es:'Sueño',de:'Schlaf',pt:'Sono',fr:'Sommeil',pl:'Sen',it:'Sonno',he:'שינה',ja:'睡眠',ko:'수면'}), teaser:L({ru:'Поведенческие ориентиры вечера',uk:'Поведінкові орієнтири вечора',en:'Evening behavior tips',es:'Pautas de conducta para la noche',de:'Verhaltenstipps für den Abend',pt:'Dicas de comportamento para a noite',fr:'Repères comportementaux du soir',pl:'Wskazówki wieczorne',it:'Consigli comportamentali serali',he:'הרגלי ערב מומלצים',ja:'夜の行動のヒント',ko:'저녁 행동 팁'})}
   ];
@@ -4858,7 +4874,29 @@ function _platePhiloHTML(light){
     +'<div style="border-top:1px solid '+c.border+';margin-top:11px;padding-top:10px;">'
       +'<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:'+c.accent+';margin-bottom:4px;">✨ '+ptit+'</div>'
       +'<div style="font-size:12.5px;color:'+c.t2+';line-height:1.55;">'+philo+'</div>'
+      +(light?'':'<div style="margin-top:6px;"><span onclick="openWhyCalories()" style="font-size:12px;color:'+c.accent+';cursor:pointer;-webkit-tap-highlight-color:transparent;">'+L({ru:'Почему?',uk:'Чому?',en:'Why?',es:'¿Por qué?',de:'Warum?',pt:'Por quê?',fr:'Pourquoi ?',pl:'Dlaczego?',it:'Perché?',he:'למה?',ja:'なぜ？',ko:'왜?'})+' →</span></div>')
     +'</div></div>';
+}
+// «Почему без подсчёта калорий?» — шит под слоганом (владелец 2026-07-13): 95% запомнят девиз,
+// 5% любопытных получат объяснение. В печать ссылка не идёт (light).
+function openWhyCalories(){
+  openSheet('💡',
+    L({ru:'Почему мы не просим считать калории?',uk:'Чому ми не просимо рахувати калорії?',en:'Why we don’t ask you to count calories',es:'Por qué no pedimos contar calorías',de:'Warum wir keine Kalorien zählen lassen',pt:'Por que não pedimos para contar calorias',fr:'Pourquoi nous ne demandons pas de compter les calories',pl:'Dlaczego nie prosimy o liczenie kalorii',it:'Perché non chiediamo di contare le calorie',he:'למה אנחנו לא מבקשים לספור קלוריות',ja:'なぜカロリー計算を求めないのか',ko:'왜 칼로리 계산을 요구하지 않나요'}),
+    '<div style="font-size:13.5px;color:var(--t2);line-height:1.75;padding-top:6px;">'
+    +L({
+      ru:'Калорийность действительно важна, но ежедневный подсчёт подходит не всем и часто становится причиной отказа от здоровых привычек. Поэтому VIO использует калории как внутренний ориентир для персонализации рекомендаций, а вам предлагает более простой и устойчивый способ — собирать сбалансированную тарелку по принципу гарвардской модели. Ваш расчётный ориентир виден в Профиле.',
+      uk:'Калорійність справді важлива, але щоденний підрахунок підходить не всім і часто стає причиною відмови від здорових звичок. Тому VIO використовує калорії як внутрішній орієнтир для персоналізації рекомендацій, а вам пропонує простіший і стійкіший спосіб — збирати збалансовану тарілку за гарвардською моделлю. Ваш розрахунковий орієнтир — у Профілі.',
+      en:'Calories do matter, but daily counting doesn’t suit everyone and often becomes the reason healthy habits get abandoned. So VIO uses calories as an internal reference to personalize your recommendations, and offers you a simpler, more sustainable way — building a balanced plate on the Harvard model. Your estimated guideline is shown in your Profile.',
+      es:'Las calorías importan, pero contarlas a diario no es para todos y a menudo lleva a abandonar los hábitos saludables. Por eso VIO usa las calorías como referencia interna para personalizar recomendaciones y te propone un camino más simple y sostenible: montar un plato equilibrado según el modelo de Harvard. Tu referencia estimada está en el Perfil.',
+      de:'Kalorien sind wichtig, aber tägliches Zählen passt nicht zu jedem und führt oft dazu, dass gesunde Gewohnheiten aufgegeben werden. Deshalb nutzt VIO Kalorien als internen Richtwert zur Personalisierung — und bietet dir einen einfacheren, nachhaltigeren Weg: den ausgewogenen Teller nach dem Harvard-Modell. Dein geschätzter Richtwert steht im Profil.',
+      pt:'As calorias importam, mas contá-las todo dia não serve para todos e muitas vezes leva ao abandono de hábitos saudáveis. Por isso o VIO usa calorias como referência interna para personalizar recomendações e propõe um caminho mais simples e sustentável — montar um prato equilibrado pelo modelo de Harvard. Sua referência estimada está no Perfil.',
+      fr:'Les calories comptent, mais le comptage quotidien ne convient pas à tous et fait souvent abandonner les bonnes habitudes. VIO utilise donc les calories comme repère interne pour personnaliser les recommandations, et vous propose une voie plus simple et durable : composer une assiette équilibrée selon le modèle de Harvard. Votre repère estimé figure dans le Profil.',
+      pl:'Kalorie mają znaczenie, ale codzienne liczenie nie każdemu służy i często prowadzi do porzucenia zdrowych nawyków. Dlatego VIO używa kalorii jako wewnętrznego punktu odniesienia do personalizacji zaleceń, a Tobie proponuje prostszy, trwalszy sposób — komponowanie zbilansowanego talerza według modelu harwardzkiego. Twój szacunkowy punkt odniesienia znajdziesz w Profilu.',
+      it:'Le calorie contano, ma contarle ogni giorno non è adatto a tutti e spesso porta ad abbandonare le buone abitudini. Per questo VIO usa le calorie come riferimento interno per personalizzare i consigli e ti propone una via più semplice e sostenibile: comporre un piatto equilibrato secondo il modello di Harvard. Il tuo riferimento stimato è nel Profilo.',
+      he:'קלוריות אכן חשובות, אבל ספירה יומית לא מתאימה לכולם ולעיתים קרובות גורמת לזניחת הרגלים בריאים. לכן VIO משתמש בקלוריות כהכוונה פנימית להתאמת ההמלצות, ומציע לך דרך פשוטה ויציבה יותר — להרכיב צלחת מאוזנת לפי מודל הרווארד. ההכוונה המשוערת שלך מופיעה בפרופיל.',
+      ja:'カロリーは確かに重要ですが、毎日の計算は誰にでも合うわけではなく、健康的な習慣をやめる原因になりがちです。そのためVIOはカロリーを内部の目安としてパーソナライズにのみ使い、あなたにはよりシンプルで続けやすい方法 — ハーバードモデルのバランスの良いお皿 — を提案します。推定の目安はプロフィールで確認できます。',
+      ko:'칼로리는 분명 중요하지만, 매일 세는 것은 누구에게나 맞지 않고 건강한 습관을 포기하게 만드는 원인이 되곤 합니다. 그래서 VIO는 칼로리를 추천 개인화를 위한 내부 기준으로만 사용하고, 더 간단하고 지속 가능한 방법 — 하버드 모델에 따른 균형 잡힌 한 접시 — 를 제안합니다. 예상 기준치는 프로필에서 볼 수 있습니다.'
+    })+'</div>');
 }
 // Модал «Памятка дня» (вкладка «Сегодня»): тарелка+принцип+главы из кэша дня, ничего лишнего.
 // Главы открываются шторкой circModal ПОВЕРХ модала (z-index 9998 > 400) — закрыл главу → снова список.
@@ -4996,7 +5034,7 @@ function openBpChapter(id){
 function openSheet(icon, title, bodyHtml){
   var m=document.getElementById('circModal');
   if(m.parentElement!==document.body) document.body.appendChild(m);
-  document.getElementById('cm-time').textContent=icon;
+  document.getElementById('cm-time').innerHTML=icon;   // innerHTML: иконки глав теперь бывают phosphor-<i> (textContent показал бы сырой тег)
   document.getElementById('cm-name').textContent=title;
   document.getElementById('cm-tabs').innerHTML='';
   document.getElementById('cm-body').innerHTML=bodyHtml;
@@ -5012,12 +5050,12 @@ function downloadDayPlan(){
     if(r.id==='analysis'){   // глава «Разбор дня» — не secs-структура: полный текст из кэша
       try{
         var _ae=_aiDailyGet().filter(function(x){return x.day===_dayKey();})[0];
-        if(_ae&&_ae.analysis) return '<section><h2>'+r.icon+' '+r.title+'</h2><div style="font-size:13px;line-height:1.7;white-space:pre-wrap;">'+W(_ae.analysis).replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</div></section>';
+        if(_ae&&_ae.analysis) return '<section><h2>'+(r.pr||r.icon)+' '+r.title+'</h2><div style="font-size:13px;line-height:1.7;white-space:pre-wrap;">'+W(_ae.analysis).replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</div></section>';
       }catch(e){}
       return '';
     }
     var secs=(window._bpAI && Array.isArray(window._bpAI[r.id])) ? window._bpAI[r.id] : _bpChapterData(r.id,data);
-    return '<section><h2>'+r.icon+' '+r.title+'</h2>'+secs.map(function(s){
+    return '<section><h2>'+(r.pr||r.icon)+' '+r.title+'</h2>'+secs.map(function(s){   // pr = эмодзи-фолбэк печати (phosphor-шрифта в print-документе нет)
       var h='<h3>'+W(s.title)+'</h3>';
       if(s.variants){
         return h+s.items.map(function(x,i){
