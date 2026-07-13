@@ -4752,10 +4752,47 @@ var _DISH={
   dn_cottage_light:{p:22,f:12,c:18}, dn_chicken_light:{p:30,f:7,c:15}, dn_soup_fish:{p:20,f:6,c:12},
   sn_nuts_fruit:{p:6,f:16,c:22}, sn_yogurt_berries:{p:10,f:4,c:12}, sn_hummus_veg:{p:8,f:12,c:18}, sn_eggs_cucumber:{p:13,f:10,c:3}
 };
+// Страховка от забытой метки (баг владельца 2026-07-13: «творог+груша+семечки» без фото, хотя это
+// dn_cottage_light): пункт без [dish:KEY] сверяем с каталогом по ключевым продуктам (ru/uk/en — осн.
+// языки + en-фолбэк остальных). Фото ставится ТОЛЬКО при однозначном совпадении (ровно одно блюдо).
+var _DISH_SIG=[
+  ['bf_eggs_veg',[/яичниц|яєчн|fried egg|scrambl/i,/шпинат|черри|spinach|cherry|помидор|томат|tomato/i]],
+  ['bf_omelet_cheese',[/омлет|omelet/i,/гречк|салат|сыр|сир\b|buckwheat|salad|cheese/i]],
+  ['bf_cottage_berries',[/творог|творож|cottage/i,/черник|чорниц|ягод|ягід|малин|смородин|berr/i]],
+  ['bf_yogurt_fruit',[/йогурт|yog(h?)urt/i,/банан|banana/i]],
+  ['bf_buckwheat_chicken',[/куриц|курин|курк|chicken/i,/гречк|buckwheat/i,/свекл|свёкл|буряк|beet/i]],
+  ['bf_salmon_plate',[/лосос|salmon/i,/спарж|asparagus/i]],
+  ['ln_salmon_quinoa',[/лосос|salmon/i,/киноа|кіноа|quinoa/i]],
+  ['ln_chicken_salad',[/куриц|курин|курк|chicken/i,/батат|sweet potato/i]],
+  ['ln_beef_rice',[/говядин|яловичин|beef/i,/рис\b|rice/i]],
+  ['ln_whitefish_veg',[/треск|тріск|\bcod\b|бел(ая|ой) рыб|біл(а|ої) риб|white ?fish/i,/перловк|barley|свекл|свёкл|морков|carrot/i]],
+  ['ln_legumes',[/\bнут\b|фасол|квасол|chickpea|\bbeans?\b/i,/брокколи|капуст|хлеб|хліб|broccoli|cabbage|bread/i]],
+  ['ln_tofu_rice',[/тофу|tofu/i]],
+  ['dn_baked_fish',[/форел|trout/i]],
+  ['dn_turkey_broccoli',[/индейк|індичк|індик|turkey/i,/брокколи|broccoli/i]],
+  ['dn_egg_avocado',[/пашот|poached/i,/авокадо|avocado/i]],
+  ['dn_cottage_light',[/творог|творож|cottage/i,/груш|pear/i]],
+  ['dn_chicken_light',[/куриц|курин|курк|chicken/i,/огур|огірк|cucumber|помидор|томат|tomato/i]],
+  ['dn_soup_fish',[/суп|soup/i,/рыб|риб|fish/i]],
+  ['sn_nuts_fruit',[/орех|горіх|минда|мигда|almond|walnut|nuts/i,/яблок|яблук|apple|груш|pear/i]],
+  ['sn_yogurt_berries',[/йогурт|кефир|кефір|yog(h?)urt|kefir/i,/черник|чорниц|ягод|ягід|малин|berr/i]],
+  ['sn_hummus_veg',[/хумус|hummus/i]],
+  ['sn_eggs_cucumber',[/варён|варен|boiled/i,/яйц|яєц|egg/i,/огур|огірк|cucumber/i]]
+];
+function _dishGuess(t){
+  t=String(t==null?'':t);
+  var hits=[];
+  for(var i=0;i<_DISH_SIG.length;i++){
+    var ok=true, sig=_DISH_SIG[i][1];
+    for(var j=0;j<sig.length;j++) if(!sig[j].test(t)){ ok=false; break; }
+    if(ok) hits.push(_DISH_SIG[i][0]);
+  }
+  return hits.length===1?hits[0]:null;   // двусмысленно/нет совпадения → без фото (честный текст)
+}
 function _dishOf(x){
   x=String(x==null?'':x);
   var m=x.match(/\s*\[dish:([a-z][a-z0-9_]*)\]\s*/);
-  if(!m) return {key:null,text:x};
+  if(!m) return {key:_dishGuess(x),text:x};
   return {key:(_DISH[m[1]]?m[1]:null), text:(x.slice(0,m.index)+' '+x.slice(m.index+m[0].length)).replace(/\s{2,}/g,' ').trim()};
 }
 function _dishMacros(d){
