@@ -4803,10 +4803,23 @@ function openSheet(icon, title, bodyHtml){
 }
 function downloadDayPlan(){
   var data=window._bpData||{}, chs=_bpChapters();
+  var foodBase='';
+  try{ foodBase=new URL('food/',location.href).href; }catch(e){ foodBase='food/'; }   // абсолютный URL: документ открыт в window.open('') (about:blank), относительный путь там не разрешится
   var body=chs.map(function(r){
     var secs=(window._bpAI && Array.isArray(window._bpAI[r.id])) ? window._bpAI[r.id] : _bpChapterData(r.id,data);
     var W=function(t){return (typeof _wl==='function')?_wl(String(t==null?'':t)):String(t==null?'':t);};
-    return '<section><h2>'+r.icon+' '+r.title+'</h2>'+secs.map(function(s){return '<h3>'+W(s.title)+'</h3><ul>'+s.items.map(function(x){return '<li>'+W(_dishOf(x).text)+'</li>';}).join('')+'</ul>';}).join('')+'</section>';
+    return '<section><h2>'+r.icon+' '+r.title+'</h2>'+secs.map(function(s){
+      var h='<h3>'+W(s.title)+'</h3>';
+      if(s.variants){
+        return h+s.items.map(function(x,i){
+          var dp=_dishOf(x), d=dp.key?_DISH[dp.key]:null;
+          var img=dp.key?'<img src="'+foodBase+dp.key+'.webp" alt="" onerror="this.remove()">':'';
+          var mac=d?'<div class="mac">≈'+d.p+' '+L({ru:'г белка',en:'g protein'})+' · ≈'+d.f+' '+L({ru:'г жиров',en:'g fat'})+' · ≈'+d.c+' '+L({ru:'г углеводов',en:'g carbs'})+'</div>':'';
+          return '<div class="opt"><span class="n">'+(i+1)+'</span>'+img+'<div class="tx">'+W(dp.text)+mac+'</div></div>';
+        }).join('');
+      }
+      return h+'<ul>'+s.items.map(function(x){return '<li>'+W(_dishOf(x).text)+'</li>';}).join('')+'</ul>';
+    }).join('')+'</section>';
   }).join('');
   var nm=(data.name?(', '+data.name):'');
   var html='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+L({ru:'Памятка дня',en:'Day plan'})+'</title>'
@@ -4814,13 +4827,25 @@ function downloadDayPlan(){
     +'h1{font-size:22px;margin:0 0 4px;}p.d{font-size:11px;color:#666;margin:0 0 18px;}'
     +'section{margin:0 0 16px;padding:14px 16px;border:1px solid #e5e0ef;border-radius:12px;}'
     +'h2{font-size:17px;margin:0 0 8px;color:#5b3fa0;}h3{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#9a7fd0;margin:12px 0 4px;}'
-    +'ul{margin:0;padding-left:18px;}li{margin:4px 0;font-size:14px;}@media print{section{break-inside:avoid;}}</style></head><body>'
+    +'ul{margin:0;padding-left:18px;}li{margin:4px 0;font-size:14px;}'
+    +'.opt{display:flex;gap:10px;align-items:flex-start;border:1px solid #ece7f6;border-radius:10px;padding:8px 10px;margin:6px 0;break-inside:avoid;}'
+    +'.opt .n{font-size:12px;font-weight:700;color:#5b3fa0;min-width:16px;line-height:1.5;flex-shrink:0;}'
+    +'.opt img{width:64px;height:64px;object-fit:contain;flex-shrink:0;}'
+    +'.opt .tx{font-size:13.5px;line-height:1.45;}.opt .mac{font-size:11px;color:#666;margin-top:3px;}'
+    +'@media print{section,.opt{break-inside:avoid;}}</style></head><body>'
     +'<h1>🧭 '+L({ru:'Моя памятка дня',en:'My day plan'})+nm+'</h1><p class="d">'+L({ru:'Общие велнес-ориентиры под ваши данные. Информация носит образовательный велнес-характер, не является персональной диетой, медицинским назначением или диагнозом и не заменяет консультацию врача.',en:'General wellness orientations for your data. This is educational wellness information — not a personal diet, medical prescription, or diagnosis, and not a substitute for a doctor.'})+'</p>'
     +body+'</body></html>';
   var wnd=window.open('','_blank');
   if(!wnd){ alert(L({ru:'Разрешите всплывающие окна, чтобы сохранить памятку в PDF.',en:'Allow pop-ups to save the day plan as PDF.'})); return; }
   wnd.document.write(html); wnd.document.close();
-  setTimeout(function(){ try{wnd.focus();wnd.print();}catch(e){} }, 400);
+  // печатать только когда фото блюд догрузились (иначе в PDF пустые места); потолок ожидания ~3 с
+  var t0=Date.now();
+  (function waitImgs(){
+    var ok=true;
+    try{ var im=wnd.document.images; for(var i=0;i<im.length;i++) if(!im[i].complete) ok=false; }catch(e){}
+    if(ok||Date.now()-t0>3000){ setTimeout(function(){ try{wnd.focus();wnd.print();}catch(e){} },150); }
+    else setTimeout(waitImgs,200);
+  })();
 }
 
 function _circTabs(t, data){
