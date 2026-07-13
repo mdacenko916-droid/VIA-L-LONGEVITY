@@ -5016,12 +5016,16 @@ async function fetchDayPlan(data){
     if(json&&json.plan&&typeof json.plan==='object'&&json.plan.morning){ var cp=_cleanPlan(json.plan); _dpSave(cp,L,sig); window._bpAI=cp; renderDayBlueprint(data); }   // сохранить план дня → повторные заходы без API
   }catch(e){ window._bpAILoading=false; }
 }
+// Дисклеймер внутри модалки главы (RC2-бэклог: на экране-родителе был, в самой модалке — нет)
+function _bpDisc(){
+  return '<div style="font-size:10px;color:var(--t3);line-height:1.5;margin-top:14px;padding-top:9px;border-top:1px solid rgba(255,255,255,.08);">ℹ️ '+L({ru:'Общие велнес-ориентиры под ваши данные — не медицинская рекомендация и не замена консультации врача.',en:'General wellness guidance for your data — not medical advice and not a substitute for a doctor.'})+'</div>';
+}
 function openBpChapter(id){
   if(id==='analysis'){   // полный текст сегодняшнего ИИ-разбора (кэш дня), не secs-структура
     try{
       var _ae=_aiDailyGet().filter(function(x){return x.day===_dayKey();})[0];
       if(_ae&&_ae.analysis) openSheet('<i class="ph ph-brain" style="color:var(--gold-lt);"></i>', L({ru:'Разбор дня',uk:'Розбір дня',en:'Today’s analysis',es:'Análisis del día',de:'Analyse des Tages',pt:'Análise do dia',fr:'Analyse du jour',pl:'Analiza dnia',it:'Analisi del giorno',he:'ניתוח היום',ja:'今日の分析',ko:'오늘의 분석'}),
-        '<div style="font-size:13px;color:var(--t2);line-height:1.85;white-space:pre-wrap;padding-top:6px;">'+_renderAnalysis(_ae.analysis)+'</div>');
+        '<div style="font-size:13px;color:var(--t2);line-height:1.85;white-space:pre-wrap;padding-top:6px;">'+_renderAnalysis(_ae.analysis)+'</div>'+_bpDisc());
     }catch(e){}
     return;
   }
@@ -5029,7 +5033,7 @@ function openBpChapter(id){
   for(var i=0;i<chs.length;i++) if(chs[i].id===id) meta=chs[i];
   if(!meta)return;
   var secs=(window._bpAI && Array.isArray(window._bpAI[id])) ? window._bpAI[id] : _bpChapterData(id,data);
-  openSheet(meta.icon, meta.title, _bpRenderSecs(secs));
+  openSheet(meta.icon, meta.title, _bpRenderSecs(secs)+_bpDisc());
 }
 function openSheet(icon, title, bodyHtml){
   var m=document.getElementById('circModal');
