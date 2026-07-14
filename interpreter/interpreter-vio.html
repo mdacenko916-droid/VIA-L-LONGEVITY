@@ -1591,10 +1591,9 @@ body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important
 .ai-th-intimacy{border-color:rgba(255,157,176,.22);background:linear-gradient(160deg,rgba(255,157,176,.08),rgba(20,24,36,.32));}
 .ai-th-intimacy.open,.ai-th-intimacy.has-det:not(.open):hover{border-color:rgba(255,157,176,.42);}
 .ai-sec-h{display:flex;align-items:center;gap:10px;font-family:'Playfair Display',serif;font-size:16.5px;color:var(--t1);margin-bottom:9px;}
-/* Sticky-заголовок убран (владелец 2026-07-14): в модалах (глава «Разбор дня») точка top:76px попадала
-   в середину модала → заголовок «отцеплялся» и висел поверх скроллящегося текста. Теперь заголовок
-   скроллится вместе с текстом карточки (как в PRO — паритет). */
-.ai-sec.open>.ai-sec-h{cursor:pointer;}
+.ai-sec.open>.ai-sec-h{position:sticky;top:76px;z-index:6;background:rgba(15,17,28,.92);-webkit-backdrop-filter:blur(14px) saturate(1.1);backdrop-filter:blur(14px) saturate(1.1);margin:-6px -10px 9px;padding:8px 10px;border-radius:13px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.35);}
+@media(max-width:480px){.ai-sec.open>.ai-sec-h{top:66px;}}
+#historyPanel .ai-sec.open>.ai-sec-h{top:4px;}   /* панель профиля — свой скролл-контейнер: липнуть у её верха, а не на 76px ниже */
 .ai-sec-chev{margin-left:2px;flex-shrink:0;color:#c9a8f5;font-size:15px;transition:transform .28s ease;}
 .ai-sec.open .ai-sec-chev{transform:rotate(180deg);}
 .ai-sec-ic{font-size:20px;line-height:1;}
@@ -2503,9 +2502,9 @@ body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important
            Элементы в DOM (display:none) — их textContent читает PDF-шаблон. -->
       <h2 class="result-title" id="res-title" style="display:none;"></h2>
       <p class="result-sub" id="res-subtitle" style="display:none;"></p>
-      <!-- Кольцо «Готовность» ВОЗВРАЩЕНО (владелец 2026-07-14): блок 1 = Анализ VIA-L + дисклеймер + кольцо.
-           Вердикт (res-title/res-subtitle) остаётся скрытым — решение владельца 13.07. Паритет с PRO. -->
-      <div class="score-wrap">
+      <!-- Кольцо «Готовность» скрыто (владелец 2026-07-13, «Сегодня» = только памятка);
+           score считается по-прежнему (история/PDF), setScore крутит скрытые элементы -->
+      <div class="score-wrap" style="display:none;">
         <div class="score-ring-outer">
           <svg class="score-svg" viewBox="0 0 160 160">
             <circle class="score-track" cx="80" cy="80" r="67"/>
@@ -4461,7 +4460,10 @@ function downloadPDF(){
     <div class="metric"><div class="metric-label">RHR</div><div class="metric-val">${data.rhr}</div><div class="metric-unit">${t('bpm')}</div></div>
     <div class="metric"><div class="metric-label">${L({ru:'Энергия',uk:'Енергія',en:'Energy',es:'Energía',de:'Energie',pt:'Energia',fr:'Énergie',pl:'Energia',it:'Energia',he:'אנרגיה',ja:'エネルギー',ko:'에너지'})}</div><div class="metric-val">${data.energy}</div><div class="metric-unit">/10</div></div>
   </div>
-  ${Object.values(recs).map(r=>{var items=r.l.map(i=>_scrubProto(_wl(i))).filter(Boolean);return items.length?`<h3>${_wl(r.h)}</h3>${items.map(i=>`<div class="rec-item">${i}</div>`).join('')}`:'';}).join('')}
+  <h3>${L({ru:'Анализ показателей',uk:'Аналіз показників',en:'Metrics Analysis',es:'Análisis',de:'Kennzahlenanalyse',pt:'Análise de Métricas',fr:'Analyse des Métriques',pl:'Analiza Wskaźników',it:'Analisi delle Metriche',he:'ניתוח מדדים',ja:'指標分析',ko:'지표 분석'})}</h3>
+  ${insights.map(o=>`<div class="insight"><div class="insight-title">${o.i} ${(typeof _wl==='function'?_wl(o.h):o.h)}</div><div class="insight-text">${(typeof _wl==='function'?_wl(o.b):o.b)}</div></div>`).join('')}
+  ${Object.values(recs).map(r=>`<h3>${r.h}</h3>${r.l.map(i=>`<div class="rec-item">${i}</div>`).join('')}`).join('')}
+  ${labs.length?`<h3>${t('lab_title')}</h3>${labs.map(l=>`<div class="lab-item">· ${l}</div>`).join('')}`:''}
   <div class="footer">VIA-L Longevity · via-l.com · ${date}<br>${t('disclaimer')}</div>
   <\/body><\/html>`;
   // Show HTML in overlay for printing/saving
@@ -5569,30 +5571,17 @@ function _themeIcon(t){ t=(t||'').toLowerCase();
 function _renderAnalysis(raw){
   var text=(typeof _wl==='function')?_wl(String(raw==null?'':raw)):String(raw==null?'':raw);
   if(text.indexOf('[[S]]')<0) return _mdOnly(text);   // старый/неструктурный → обычный рендер (обратная совместимость)
-  var parts=text.split(/\n?\[\[S\]\]\s*/), intro=parts.shift(), secs=[], html='';
-  for(var i=0;i<parts.length;i++){
-    var ds=parts[i].split(/\n?\[\[D\]\]\s*\n?/), headsum=ds[0]||'', det=(ds[1]||'').trim();
-    var nl=headsum.indexOf('\n'), head=(nl<0?headsum:headsum.slice(0,nl)).trim(), sum=(nl<0?'':headsum.slice(nl+1)).trim();
-    var hp=head.split('|'), ic=(hp[0]||'').trim(), ti=(hp[1]||'').trim(), fl=(hp[2]||'').trim().toLowerCase();
-    if(!ti){ ti=ic; ic=''; }   // если разделителя нет — весь head в заголовок
-    // ИИ изредка роняет саму строку-заголовок после [[S]] → карточка выходила безымянной и пустой
-    // (живой VIO 14.07: блок про мышцы начинался сразу с «Почему я так думаю»). Такой блок не рисуем:
-    // его текст доклеиваем к предыдущей теме, а если он первый — во вступление. Воркер чинит это же на входе.
-    if(!ti){
-      var tail=[sum,det].filter(Boolean).join('\n\n'); if(!tail) continue;
-      if(secs.length) secs[secs.length-1].det=(secs[secs.length-1].det?secs[secs.length-1].det+'\n\n':'')+tail;
-      else intro=(intro?intro+'\n\n':'')+tail;
-      continue;
-    }
-    secs.push({ic:ic,ti:ti,fl:fl,sum:sum,det:det});
-  }
+  var parts=text.split(/\n?\[\[S\]\]\s*/), intro=parts.shift(), html='';
   if(intro&&intro.trim()) html+='<div class="ai-intro">'+_mdOnly(intro.trim())+'</div>';
-  for(var k=0;k<secs.length;k++){
-    var s=secs[k], detail=s.det, title=s.ti, icon=s.ic;
-    var pill=(s.fl.indexOf('prior')>=0)?('<span class="ai-sec-pill">'+_moreLbl_pri()+'</span>'):'';
+  for(var i=0;i<parts.length;i++){
+    var ds=parts[i].split(/\n?\[\[D\]\]\s*\n?/), headsum=ds[0]||'', detail=(ds[1]||'').trim();
+    var nl=headsum.indexOf('\n'), head=(nl<0?headsum:headsum.slice(0,nl)).trim(), summary=(nl<0?'':headsum.slice(nl+1)).trim();
+    var hp=head.split('|'), icon=(hp[0]||'').trim(), title=(hp[1]||'').trim(), flag=(hp[2]||'').trim().toLowerCase();
+    if(!title){ title=icon; icon=''; }   // если разделителя нет — весь head в заголовок
+    var pill=(flag.indexOf('prior')>=0)?('<span class="ai-sec-pill">'+_moreLbl_pri()+'</span>'):'';
     var _ti=_themeIcon(title), iconHtml=_ti?('<img class="ai-sec-img" src="icons/'+_ti+'.webp" alt="" onerror="this.style.display=\'none\'">'):(icon?('<span class="ai-sec-ic">'+_esc(icon)+'</span>'):'');
     html+='<div class="ai-sec'+(detail?' has-det':'')+(_ti?(' ai-th-'+_ti):'')+'" onclick="_secTap(this,event)"><div class="ai-sec-h" onclick="_secHeadTap(this,event)">'+iconHtml+'<span style="flex:1;">'+_esc(title)+'</span>'+pill+(detail?'<i class="ph ph-caret-down ai-sec-chev" aria-hidden="true"></i>':'')+'</div>'
-      +'<div class="ai-sec-sum">'+_mdOnly(s.sum)+'</div>';
+      +'<div class="ai-sec-sum">'+_mdOnly(summary)+'</div>';
     if(detail) html+='<button type="button" class="ai-sec-more" onclick="_toggleDetail(this,event)">'+_esc(_moreLblTxt())+' <i class="ph ph-caret-down" aria-hidden="true"></i></button>'
       +'<div class="ai-sec-det-wrap"><div class="ai-sec-det">'+_mdOnly(detail)
       +'<button type="button" class="ai-sec-coll" onclick="_secCollapse(this,event)">'+_esc(_collLbl())+' <i class="ph ph-caret-up" aria-hidden="true"></i></button></div></div>';
@@ -5703,17 +5692,6 @@ var _WLBAL='баланс\\p{L}*|рівноваг\\p{L}+|равновес\\p{L}+|
 function _wesc(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
 var _WLR={ru:'ресурс восстановления',uk:'ресурс відновлення',en:'recovery',es:'recuperación',de:'Erholung',pt:'recuperação',fr:'récupération',pl:'zasób regeneracji',it:'recupero',he:'התאוששות',ja:'回復力',ko:'회복력'};
 var _WLM={ru:'энергообмен',uk:'енергообмін',en:'energy metabolism',es:'metabolismo energético',de:'Energiestoffwechsel',pt:'metabolismo energético',fr:'métabolisme énergétique',pl:'metabolizm energii',it:'metabolismo energetico',he:'חילוף אנרגיה',ja:'エネルギー代謝',ko:'에너지 대사'};
-// Санитайзер рек-строк legacy-движка (паритет с PRO): убирает дозы добавок (мг/мкг/МЕ/IU/г/сут) и выбрасывает
-// пункты про травы/адаптогены/фосфатидилсерин/куркумин — чтобы они не утекали в экспорт «Скачать памятку»
-// (on-screen recSections в VIO уже убран, но PDF рендерит recs). Порции еды и белок в г/кг целы.
-// \b с кириллицей не работает → границу единицы держим через lookahead (?![\p{L}]).
-function _scrubProto(s){
-  if(!s||typeof s!=='string')return s;
-  if(/(ашваганд|ashwagandh|KSM-?66|родиол|rhodiola|родіол|витекс|\bvitex\b|клопогон|цимицифуг|шатавари|shatavari|\bмака\b|\bmaca\b|фитоэстроген|phytoestrogen|адаптоген|adaptogen|фосфатидилсерин|phosphatidylserine|куркумин|curcumin)/i.test(s)) return '';
-  s=s.replace(/\s*\d[\d.,+]*\s*(?:[–—-]\s*\d[\d.,+]*\s*)?(?:мг|mg|мкг|mcg|µg|МЕ|МО|IU|г\s*\/\s*(?:сут|день|day)|g\s*\/\s*day)(?:\s*\/\s*[а-яёa-z]+)?(?![\p{L}])/giu,'');
-  s=s.replace(/\s{2,}/g,' ').replace(/\s+([·,;:.])/g,'$1').replace(/·\s*·/g,'·').replace(/^[\s·:;,—–-]+|[\s·:;,—–-]+$/g,'').trim();
-  return /[\p{L}]{3,}/u.test(s)?s:'';
-}
 function _wl(s){ if(!s||typeof s!=='string')return s; var L=(typeof lang!=='undefined'?lang:'ru');
   var rc=_WLR[L]||_WLR.ru, mt=_WLM[L]||_WLM.ru, hn=_WLHn[L]||_WLHn.ru, hg=_WLHg[L]||hn;
   try{
