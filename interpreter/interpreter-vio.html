@@ -5620,8 +5620,9 @@ async function fetchAIAnalysis(data, lang){
   var loading=document.getElementById('aiLoading'), result=document.getElementById('aiResult'), err=document.getElementById('aiError'), disc=document.getElementById('aiDisc');
   var tt=document.getElementById('aiTitle'); if(tt) tt.textContent=ui.t;
   var lt=document.getElementById('aiLoadingTxt'); if(lt) lt.textContent=ui.load;
-  // card.style.display НЕ ставим: карточка анализа скрыта навсегда (владелец 2026-07-13) — разбор
-  // живёт главой «✦ Разбор дня» в памятке; сюда пишем для кэша vial_ai_daily и контекста советника
+  // Карточка ВОЗВРАЩЕНА (владелец 2026-07-14): анализ ИИ = первый блок результата, свёрнут по
+  // умолчанию (решение 13.07 13:24); глава «✦ Разбор дня» в памятке остаётся как дубль-доступ
+  card.style.display='block';
   loading.style.display='flex'; result.style.display='none'; err.style.display='none'; if(disc)disc.style.display='none';
   // Кэш дня: тот же день + язык + неизменные данные → читаем сохранённый текст, БЕЗ вызова API (экономия токенов + один и тот же совет весь день)
   var sig=_sigOf(data), cached=_aiDailyToday(L,sig);
