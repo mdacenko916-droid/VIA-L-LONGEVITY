@@ -1368,6 +1368,12 @@ body.consent-open #langDropdown,body.consent-open #langDropdown *{pointer-events
 body.consent-open .lang-logo{opacity:.25;filter:blur(2px);}
 body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important;}
 #consent-gate.show{display:flex;}
+/* Аудит результата (владелец 2026-07-14): скрыты нечестные/дублирующие блоки — bio-load («Восстановление» был Math.random + ломался при гаджет-вводе),
+   инсайты с дозировками добавок (конфликт с ИИ-памяткой и риск модерации), циркадный/протокол-24ч (повтор «Памятки дня»),
+   нутри-корреляции (адаптогены против нашего же гардрейла трав), лаб-подсказки (лабы = зона EXPERT/ELITE), «полнота данных» (повтор гаджет-панели).
+   Код блоков не удалён — вернуть можно, сняв селектор. Остались честные: готовность, трекер фазы (из профиля, с подписью «оценка»), QoL (детерминированная формула), ИИ-разбор, памятка. */
+#insightsList,#mod-bio-load,#mod-circadian,#mod-nutri,#mod-protocol,#labCard,#dataCompleteness{display:none!important;}
+#dayBlueprint{background:linear-gradient(150deg,#161A22,#10141C);border:1px solid rgba(226,185,90,.22);border-radius:16px;padding:16px 18px;margin-top:14px;}
 /* Стеклянные модалы (Профиль/Подход/Сегодня) и чат наставника: полосу прокрутки скрыть, скролл оставить */
 #cardPanel,#approachPanel,#dayplanPanel,#vlAdvMsgs{scrollbar-width:none;}
 #cardPanel::-webkit-scrollbar,#approachPanel::-webkit-scrollbar,#dayplanPanel::-webkit-scrollbar,#vlAdvMsgs::-webkit-scrollbar{display:none;width:0;}
@@ -2839,17 +2845,6 @@ body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important
           </div>
         </div>
         <div class="score-badge ok" id="scoreBadge">Добре</div>
-        <div class="result-steps-row">
-          <div class="result-step-dot done"></div><div class="result-step-dot done"></div>
-          <div class="result-step-dot done"></div><div class="result-step-dot done"></div>
-          <div class="result-step-dot done"></div><div class="result-step-dot done"></div>
-          <div class="result-step-dot done"></div><div class="result-step-dot done"></div>
-          <div class="result-step-dot done"></div><div class="result-step-dot done"></div>
-          <div class="result-step-dot done"></div><div class="result-step-dot done"></div>
-          <div class="result-step-dot done"></div><div class="result-step-dot done"></div>
-          <div class="result-step-dot done"></div>
-          <span class="result-steps-label" data-t="steps_total">Pro · 15 шагов</span>
-        </div>
       </div>
     </div>
 
@@ -4146,6 +4141,17 @@ function renderCard(){
     +'<div class="vh-cell"><div class="vh-l">'+t('s_prof_height')+'</div><div class="vh-v">'+(P.height?_esc(P.height):'—')+'</div></div>'
     +'<div class="vh-cell"><div class="vh-l">'+t('s_prof_weight')+'</div><div class="vh-v">'+(P.weight?_esc(P.weight):'—')+'</div></div>'
     +'<div class="vh-cell"><div class="vh-l">'+t('s_prof_waist')+'</div><div class="vh-v">'+(P.waist?_esc(P.waist):'—')+'</div></div>'
+    +(function(){ // BMI/WHtR — те же пороги, что на экране результата; фиксируются в карточке
+      var w=parseFloat(P.weight),h=parseFloat(P.height),wst=parseFloat(P.waist),out='';
+      var C={low:L({ru:'ниже нормы',uk:'нижче норми',en:'below range',es:'bajo',de:'unter Norm',pt:'abaixo',fr:'sous la norme',pl:'poniżej normy',it:'sotto norma',he:'מתחת לנורמה',ja:'基準未満',ko:'기준 미만'}),ok:L({ru:'норма',uk:'норма',en:'in range',es:'normal',de:'im Normbereich',pt:'normal',fr:'dans la norme',pl:'w normie',it:'nella norma',he:'בנורמה',ja:'基準内',ko:'정상'}),over:L({ru:'выше нормы',uk:'вище норми',en:'above range',es:'elevado',de:'über Norm',pt:'acima',fr:'au-dessus',pl:'powyżej normy',it:'sopra norma',he:'מעל הנורמה',ja:'基準超',ko:'기준 초과'}),obese:L({ru:'значительно выше нормы',uk:'значно вище норми',en:'well above range',es:'muy elevado',de:'deutlich über Norm',pt:'bem acima',fr:'bien au-dessus',pl:'znacznie powyżej',it:'molto sopra norma',he:'הרבה מעל הנורמה',ja:'大幅に基準超',ko:'기준 크게 초과'})};
+      var cell=function(lbl,val,cat,col){return '<div class="vh-cell"><div class="vh-l">'+lbl+'</div><div class="vh-v" style="color:'+col+';">'+val+'</div><div style="font-size:9.5px;color:'+col+';margin-top:1px;">'+cat+'</div></div>';};
+      if(w>0&&h>0){var bmi=w/Math.pow(h/100,2),c,cl;
+        if(bmi<18.5){c=C.low;cl='#60a5fa';}else if(bmi<25){c=C.ok;cl='var(--ok)';}else if(bmi<30){c=C.over;cl='#f59e0b';}else{c=C.obese;cl='var(--alert)';}
+        out+=cell('BMI',bmi.toFixed(1),c,cl);}
+      if(wst>0&&h>0){var r=wst/h,thr=(P.gender==='male')?[0.43,0.53,0.63]:[0.42,0.49,0.58],c2,cl2;
+        if(r<thr[0]){c2=C.low;cl2='#60a5fa';}else if(r<thr[1]){c2=C.ok;cl2='var(--ok)';}else if(r<thr[2]){c2=C.over;cl2='#f59e0b';}else{c2=C.obese;cl2='var(--alert)';}
+        out+=cell('WHtR',r.toFixed(2),c2,cl2);}
+      return out;})()
     +'</div>';
   // ── Энергетический ориентир (канон VIO d224d32): калории живут ТОЛЬКО здесь — не на «Сегодня»,
   // не в меню, не в советах. BMR Mifflin-St Jeor × активность, диапазон ±5%; честный образовательный
@@ -4902,24 +4908,28 @@ function calcProfMetrics(){
   const g=getRadio('gender')||'female';
   const box=document.getElementById('prof-metrics');
   if(!box)return;
+  const _bc={low:L({ru:'ниже нормы',uk:'нижче норми',en:'below range',es:'bajo',de:'unter Norm',pt:'abaixo',fr:'sous la norme',pl:'poniżej normy',it:'sotto norma',he:'מתחת לנורמה',ja:'基準未満',ko:'기준 미만'}),
+    ok:L({ru:'норма',uk:'норма',en:'in range',es:'normal',de:'im Normbereich',pt:'normal',fr:'dans la norme',pl:'w normie',it:'nella norma',he:'בנורמה',ja:'基準内',ko:'정상'}),
+    over:L({ru:'выше нормы',uk:'вище норми',en:'above range',es:'elevado',de:'über Norm',pt:'acima',fr:'au-dessus',pl:'powyżej normy',it:'sopra norma',he:'מעל הנורמה',ja:'基準超',ko:'기준 초과'}),
+    obese:L({ru:'значительно выше нормы',uk:'значно вище норми',en:'well above range',es:'muy elevado',de:'deutlich über Norm',pt:'bem acima',fr:'bien au-dessus',pl:'znacznie powyżej',it:'molto sopra norma',he:'הרבה מעל הנורמה',ja:'大幅に基準超',ko:'기준 크게 초과'})};
   let parts=[];
   if(w>0&&h>0){
     const bmi=w/Math.pow(h/100,2),br=bmi.toFixed(1);
     let cat,col;
-    if(bmi<18.5){cat=t('bmi_low');col='#60a5fa';}
-    else if(bmi<25){cat=t('bmi_ok');col='var(--ok)';}
-    else if(bmi<30){cat=t('bmi_over');col='#f59e0b';}
-    else{cat=t('bmi_obese');col='var(--alert)';}
-    parts.push(`<span style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.55);text-transform:uppercase;">ІМТ</span><span style="font-size:20px;font-weight:300;color:${col};margin:0 5px;">${br}</span><span style="font-size:10px;color:${col};">${cat}</span>`);
+    if(bmi<18.5){cat=_bc.low;col='#60a5fa';}
+    else if(bmi<25){cat=_bc.ok;col='var(--ok)';}
+    else if(bmi<30){cat=_bc.over;col='#f59e0b';}
+    else{cat=_bc.obese;col='var(--alert)';}
+    parts.push(`<span style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.55);text-transform:uppercase;">BMI</span><span style="font-size:20px;font-weight:300;color:${col};margin:0 5px;">${br}</span><span style="font-size:10px;color:${col};">${cat}</span>`);
   }
   if(wst>0&&h>0){
     const r=wst/h,rv=r.toFixed(2);
     const thr=g==='male'?[0.43,0.53,0.63]:[0.42,0.49,0.58];
     let cat,col;
-    if(r<thr[0]){cat=t('bmi_low');col='#60a5fa';}
-    else if(r<thr[1]){cat=t('bmi_ok');col='var(--ok)';}
-    else if(r<thr[2]){cat=t('bmi_over');col='#f59e0b';}
-    else{cat=t('bmi_obese');col='var(--alert)';}
+    if(r<thr[0]){cat=_bc.low;col='#60a5fa';}
+    else if(r<thr[1]){cat=_bc.ok;col='var(--ok)';}
+    else if(r<thr[2]){cat=_bc.over;col='#f59e0b';}
+    else{cat=_bc.obese;col='var(--alert)';}
     parts.push(`<span style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.55);text-transform:uppercase;margin-left:4px;">WHtR</span><span style="font-size:20px;font-weight:300;color:${col};margin:0 5px;">${rv}</span><span style="font-size:10px;color:${col};">${cat}</span>`);
   }
   if(parts.length){box.innerHTML=parts.join('<span style="width:1px;height:22px;background:var(--b1);margin:0 4px;align-self:center;"></span>');box.style.display='flex';}
