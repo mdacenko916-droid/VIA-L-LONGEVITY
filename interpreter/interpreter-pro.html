@@ -1360,7 +1360,13 @@ body:not(.flow-mode) .flow-intro{display:none;}
 #importPanel.mode-full .source-card.m-full{display:block;}
 
 /* App Store: consent gate + result disclaimer */
-#consent-gate{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(10,7,18,.82);backdrop-filter:blur(6px);padding:24px;box-sizing:border-box;}
+#consent-gate{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(10,7,18,.45);backdrop-filter:blur(22px) saturate(1.1);-webkit-backdrop-filter:blur(22px) saturate(1.1);padding:24px;box-sizing:border-box;}
+/* Первый вход: весь экран под стеклом «Важно» — доступен ТОЛЬКО выбор языка; лого притушено, советник скрыт */
+body.consent-open #topbar{z-index:10000;}
+body.consent-open #topbar *{pointer-events:none;}
+body.consent-open #langDropdown,body.consent-open #langDropdown *{pointer-events:auto;}
+body.consent-open .lang-logo{opacity:.25;filter:blur(2px);}
+body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important;}
 #consent-gate.show{display:flex;}
 .consent-card{max-width:440px;width:100%;background:#1a1330;border:1px solid rgba(180,138,240,.35);border-radius:18px;padding:26px 24px;box-shadow:0 20px 60px rgba(0,0,0,.5);box-sizing:border-box;max-height:calc(100dvh - 48px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none;}
 .consent-card::-webkit-scrollbar{display:none;width:0;}
@@ -5490,8 +5496,8 @@ function startFunnel(){
 
 /* App Store: consent gate logic */
 function _consentToggle(){var cb=document.getElementById('consent-cb'),b=document.getElementById('consent-btn');if(b)b.classList.toggle('on',!!(cb&&cb.checked));}
-function _consentAccept(){var cb=document.getElementById('consent-cb');if(!cb||!cb.checked)return;try{localStorage.setItem('vialp_consent','1');}catch(e){}var g=document.getElementById('consent-gate');if(g)g.classList.remove('show');}
-(function(){var ok;try{ok=localStorage.getItem('vialp_consent');}catch(e){}if(!ok){if(document.readyState!=='loading'){var g=document.getElementById('consent-gate');if(g)g.classList.add('show');}else document.addEventListener('DOMContentLoaded',function(){var g=document.getElementById('consent-gate');if(g)g.classList.add('show');});}})();
+function _consentAccept(){var cb=document.getElementById('consent-cb');if(!cb||!cb.checked)return;try{localStorage.setItem('vialp_consent','1');}catch(e){}var g=document.getElementById('consent-gate');if(g)g.classList.remove('show');document.body.classList.remove('consent-open');}
+(function(){var ok;try{ok=localStorage.getItem('vialp_consent');}catch(e){}if(!ok){if(document.readyState!=='loading'){var g=document.getElementById('consent-gate');if(g){g.classList.add('show');document.body.classList.add('consent-open');}}else document.addEventListener('DOMContentLoaded',function(){var g=document.getElementById('consent-gate');if(g){g.classList.add('show');document.body.classList.add('consent-open');}});}})();
 (function(){ function _start(){ try{startFunnel();}catch(e){} } if(document.readyState!=='loading')_start(); else document.addEventListener('DOMContentLoaded',_start); })();   // пароль убран — старт безусловный
 // Числовые подсказки-референсы в плейсхолдеры биоимпеданса (по полу/возрасту) — без слов, работают во всех языках.
 function setBioHints(){
