@@ -2209,44 +2209,51 @@ async function handleFitbitMetrics(request, env, corsHeaders){
   };
 
   const ex = {};
-  // HRV (rmssd, ms) — sample type
+  // Дневной проход = «за ВЧЕРА» (модель VIO/PRO): метрики трекера берём ЗА ПОСЛЕДНЮЮ НОЧЬ, а НЕ среднее за 7 дней.
+  // Усреднение — работа НЕДЕЛЬНОГО/месячного анализа (он агрегирует историю vial_daily сам). Раньше здесь было avg()
+  // за 7 дней → импорт не сходился с тем, что клиент видит в Fitbit за сегодня (напр. HRV 17 среднее vs 23 ночь).
+  // _dord: сортировочный ключ дня (date-объект year/month/day ИЛИ *_time-строка); latest: значение самого свежего валидного дня.
+  const _dord = (o, depth) => { depth = depth||0; if (o==null || typeof o!=='object' || depth>5) return 0;
+    if (o.year && o.month && o.day) return o.year*10000 + o.month*100 + o.day;
+    for (const k of Object.keys(o)) { if (/time$/i.test(k) && typeof o[k]==='string') { const t = Date.parse(o[k]); if (t) return Math.floor(t/86400000); } }
+    for (const k of Object.keys(o)) { const r = _dord(o[k], depth+1); if (r) return r; } return 0; };
+  const latest = (points, valFn) => { const arr = points.map(d => ({ ord:_dord(d), val:valFn(d) })).filter(x => x.val != null); if (!arr.length) return null; arr.sort((a,b)=>a.ord-b.ord); return arr[arr.length-1].val; };
+  // HRV (rmssd, ms) — последняя ночь
   const hrvD = await gh('daily-heart-rate-variability', `daily_heart_rate_variability.date>="${sd}" AND daily_heart_rate_variability.date<"${ed}"`);
-  { const v = avg(hrvD.map(d => pickNum(d, /rootMeanSquare|rmssd/i)).filter(n=>n!=null&&n>0)); if (v!=null) ex.hrv = Math.round(v); }
+  { const v = latest(hrvD, d => { const n = pickNum(d, /rootMeanSquare|rmssd/i); return (n!=null && n>0) ? n : null; }); if (v!=null) ex.hrv = Math.round(v); }
   if (ex.hrv == null) {
     const hrv = await gh('heart-rate-variability', `heart_rate_variability.sample_time.physical_time>="${startISO}" AND heart_rate_variability.sample_time.physical_time<"${endISO}"`);
-    const v = avg(hrv.map(d => { const t = d.heartRateVariability || {}; return num(t.rootMeanSquareOfSuccessiveDifferencesMilliseconds ?? t.rmssdMillis) ?? pickNum(d, /rootMeanSquare|rmssd/i); }).filter(n=>n!=null));
+    const v = latest(hrv, d => { const t = d.heartRateVariability || {}; return num(t.rootMeanSquareOfSuccessiveDifferencesMilliseconds ?? t.rmssdMillis) ?? pickNum(d, /rootMeanSquare|rmssd/i); });
     if (v!=null) ex.hrv = Math.round(v);
   }
-  // Daily resting heart rate
+  // Daily resting heart rate — последняя ночь
   const rhr = await gh('daily-resting-heart-rate', `daily_resting_heart_rate.date>="${sd}" AND daily_resting_heart_rate.date<"${ed}"`);
-  { const v = avg(rhr.map(d => num(d.dailyRestingHeartRate && d.dailyRestingHeartRate.beatsPerMinute)).filter(n=>n!=null)); if (v!=null) ex.rhr = Math.round(v); }
-  // SpO2 — sample type
+  { const v = latest(rhr, d => num(d.dailyRestingHeartRate && d.dailyRestingHeartRate.beatsPerMinute)); if (v!=null) ex.rhr = Math.round(v); }
+  // SpO2 — последняя ночь (валидный диапазон 70–100)
   const spo2 = await gh('oxygen-saturation', `oxygen_saturation.sample_time.physical_time>="${startISO}" AND oxygen_saturation.sample_time.physical_time<"${endISO}"`);
-  { const v = avg(spo2.map(d => { const o = d.oxygenSaturation || {}; return num(o.percentage ?? o.percentSaturation) ?? pickNum(d, /percent/i); }).filter(n=>n!=null&&n>=70&&n<=100)); if (v!=null) ex.spo2 = +v.toFixed(1); }
-  // Температура сна: ночная девиация кожи, °C — тип daily-sleep-temperature-derivations (подтверждён доками Google Health API)
+  { const v = latest(spo2, d => { const o = d.oxygenSaturation || {}; const n = num(o.percentage ?? o.percentSaturation) ?? pickNum(d, /percent/i); return (n!=null && n>=70 && n<=100) ? n : null; }); if (v!=null) ex.spo2 = +v.toFixed(1); }
+  // Температура сна: ночная девиация кожи, °C — ПОСЛЕДНЯЯ ночь (уже было так, семантика tempDev)
   const temp = await gh('daily-sleep-temperature-derivations', `daily_sleep_temperature_derivations.date>="${sd}" AND daily_sleep_temperature_derivations.date<"${ed}"`);
-  { // девиация = ночная − базовая (поля из FITBIT-DEBUG); берём ПОСЛЕДНЮЮ ночь (семантика tempDev), не среднее
-    const pts = temp.map(d => { const t = d.dailySleepTemperatureDerivations || {};
+  { const pts = temp.map(d => { const t = d.dailySleepTemperatureDerivations || {};
       const dt = t.date ? (t.date.year*10000 + t.date.month*100 + t.date.day) : 0;
       const n = num(t.nightlyTemperatureCelsius), b = num(t.baselineTemperatureCelsius);
       const dev = (n!=null && b!=null) ? n-b : pickNum(d, /deviation|delta/i);
       return dev!=null && Math.abs(dev)<=5 ? {dt, dev} : null; }).filter(Boolean).sort((a,b)=>a.dt-b.dt);
     if (pts.length) ex.tempDev = +pts[pts.length-1].dev.toFixed(2); }
-  // VO2max: тип daily-vo2-max (подтверждён доками Google Health API); плаузибельный диапазон 15–90
+  // VO2max — последнее доступное значение (медленно меняется)
   const cardio = await gh('daily-vo2-max', `daily_vo2_max.date>="${sd}" AND daily_vo2_max.date<"${ed}"`);
-  { const v = avg(cardio.map(d => pickNum(d, /vo2/i)).filter(n=>n!=null&&n>=15&&n<=90)); if (v!=null) ex.vo2 = Math.round(v); }
-  // Sleep — session type (minutesAsleep + DEEP-stage minutes from the summary)
+  { const v = latest(cardio, d => { const n = pickNum(d, /vo2/i); return (n!=null && n>=15 && n<=90) ? n : null; }); if (v!=null) ex.vo2 = Math.round(v); }
+  // Sleep — ПОСЛЕДНЯЯ ночь: часы сна + минуты глубокого из ТОЙ ЖЕ сессии
   const sleep = await gh('sleep', `sleep.interval.end_time>="${startISO}" AND sleep.interval.end_time<"${endISO}"`);
-  {
-    const mins = avg(sleep.map(d => num(d.sleep && d.sleep.summary && d.sleep.summary.minutesAsleep)).filter(n=>n!=null));
-    if (mins!=null) ex.sleepHours = +(mins/60).toFixed(1);
-    const deep = avg(sleep.map(d => {
-      const ss = d.sleep && d.sleep.summary && d.sleep.summary.stagesSummary;
+  { const sorted = sleep.map(d => ({ ord:_dord(d), d })).filter(x => num(x.d.sleep && x.d.sleep.summary && x.d.sleep.summary.minutesAsleep) != null).sort((a,b)=>a.ord-b.ord);
+    const last = sorted.length ? sorted[sorted.length-1].d : null;
+    if (last) {
+      const mins = num(last.sleep.summary.minutesAsleep);
+      if (mins!=null) ex.sleepHours = +(mins/60).toFixed(1);
+      const ss = last.sleep.summary.stagesSummary;
       const ds = Array.isArray(ss) ? ss.find(s => s.type === 'DEEP') : null;
-      return ds ? num(ds.minutes) : null;
-    }).filter(n=>n!=null));
-    if (deep!=null) ex.deepMin = Math.round(deep);
-  }
+      if (ds && num(ds.minutes)!=null) ex.deepMin = Math.round(num(ds.minutes));
+    } }
 
   return jsonResponse({ ok:true, ex }, corsHeaders);
 }
