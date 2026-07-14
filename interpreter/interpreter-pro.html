@@ -1362,7 +1362,8 @@ body:not(.flow-mode) .flow-intro{display:none;}
 /* App Store: consent gate + result disclaimer */
 #consent-gate{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(10,7,18,.82);backdrop-filter:blur(6px);padding:24px;box-sizing:border-box;}
 #consent-gate.show{display:flex;}
-.consent-card{max-width:440px;width:100%;background:#1a1330;border:1px solid rgba(180,138,240,.35);border-radius:18px;padding:26px 24px;box-shadow:0 20px 60px rgba(0,0,0,.5);box-sizing:border-box;max-height:calc(100dvh - 48px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
+.consent-card{max-width:440px;width:100%;background:#1a1330;border:1px solid rgba(180,138,240,.35);border-radius:18px;padding:26px 24px;box-shadow:0 20px 60px rgba(0,0,0,.5);box-sizing:border-box;max-height:calc(100dvh - 48px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none;}
+.consent-card::-webkit-scrollbar{display:none;width:0;}
 .consent-card h3{font-size:18px;color:#e8def8;margin:0 0 12px;}
 .consent-card p{font-size:13.5px;line-height:1.55;color:#c9bce0;margin:0 0 18px;}
 .consent-check{display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;color:#d8cef0;margin-bottom:18px;}
@@ -2807,15 +2808,6 @@ body:not(.flow-mode) .flow-intro{display:none;}
     </div>
   </div>
 
-  <!-- App Store: consent gate (disclaimer) -->
-  <div id="consent-gate">
-    <div class="consent-card">
-      <h3 data-t="consent_title">Важно</h3>
-      <p data-t="consent_body">Рекомендации, аналитические материалы и сведения, представленные в этом приложении, носят исключительно информационный и ознакомительный характер.<br><br>Приложение предназначено для поддержки здоровых привычек, анализа образа жизни и персонализированных рекомендаций на основе данных, введённых пользователем, и — при наличии — данных совместимых устройств.<br><br>Приложение не является медицинским изделием, не предназначено для диагностики, лечения, профилактики или мониторинга заболеваний, не заменяет консультацию врача и не должно использоваться для принятия медицинских решений.<br><br>Перед существенными изменениями питания, физической активности, приёма лекарств или добавок проконсультируйтесь с квалифицированным медицинским специалистом. Не игнорируйте профессиональные медицинские рекомендации и не откладывайте обращение за медицинской помощью из-за информации, полученной в приложении.</p>
-      <label class="consent-check"><input type="checkbox" id="consent-cb" onchange="_consentToggle()"><span data-t="consent_check">Я ознакомился(ась) с информацией и принимаю условия использования</span></label>
-      <button id="consent-btn" onclick="_consentAccept()" data-t="consent_btn">Продолжить</button>
-    </div>
-  </div>
 
   <!-- RESULTS -->
   <div class="step" id="stepResult">
@@ -3041,6 +3033,16 @@ body:not(.flow-mode) .flow-intro{display:none;}
 </div>
 
 </div><!-- /scroll-area -->
+
+<!-- App Store: consent gate — direct child of #app, ВНЕ scroll-area (iOS: fixed внутри overflow-скролла ломается, футер перекрывал модал) -->
+  <div id="consent-gate">
+    <div class="consent-card">
+      <h3 data-t="consent_title">Важно</h3>
+      <p data-t="consent_body">Рекомендации, аналитические материалы и сведения, представленные в этом приложении, носят исключительно информационный и ознакомительный характер.<br><br>Приложение предназначено для поддержки здоровых привычек, анализа образа жизни и персонализированных рекомендаций на основе данных, введённых пользователем, и — при наличии — данных совместимых устройств.<br><br>Приложение не является медицинским изделием, не предназначено для диагностики, лечения, профилактики или мониторинга заболеваний, не заменяет консультацию врача и не должно использоваться для принятия медицинских решений.<br><br>Перед существенными изменениями питания, физической активности, приёма лекарств или добавок проконсультируйтесь с квалифицированным медицинским специалистом. Не игнорируйте профессиональные медицинские рекомендации и не откладывайте обращение за медицинской помощью из-за информации, полученной в приложении.</p>
+      <label class="consent-check"><input type="checkbox" id="consent-cb" onchange="_consentToggle()"><span data-t="consent_check">Я ознакомился(ась) с информацией и принимаю условия использования</span></label>
+      <button id="consent-btn" onclick="_consentAccept()" data-t="consent_btn">Продолжить</button>
+    </div>
+  </div>
 
 <!-- GATE — direct child of #app, outside scroll-area -->
 <div id="gate" style="display:none">
