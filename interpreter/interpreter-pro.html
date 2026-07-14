@@ -82,6 +82,8 @@ i.bottom-nav-icon{width:auto;height:auto;font-size:24px;line-height:1;color:var(
 #circModal.open{opacity:1;}
 #circModal .cm-sheet{position:fixed;left:0;right:0;bottom:0;width:100%;max-height:85vh;overflow-y:auto;background:linear-gradient(160deg,#1a1610,#12100b);border-top:1px solid rgba(226,185,90,.3);border-radius:24px 24px 0 0;padding:0 20px calc(28px + env(safe-area-inset-bottom));box-shadow:0 -10px 44px rgba(0,0,0,.55);transform:translateY(100%);transition:transform .34s cubic-bezier(.32,.72,0,1);}
 #circModal.open .cm-sheet{transform:translateY(0);}
+#circModal .cm-sheet{scrollbar-width:none;}
+#circModal .cm-sheet::-webkit-scrollbar{display:none;width:0;}
 #circModal .cm-handle{width:44px;height:4px;background:#4a4232;border-radius:99px;margin:12px auto 10px;}
 #circModal .cm-head{display:flex;align-items:center;gap:10px;}
 #circModal .cm-tabs{display:flex;gap:6px;margin:14px 0 16px;flex-wrap:wrap;}
@@ -107,8 +109,8 @@ i.bottom-nav-icon{width:auto;height:auto;font-size:24px;line-height:1;color:var(
 
   /* Text */
   --t1: rgba(255,255,255,.96);
-  --t2: rgba(255,255,255,.82);
-  --t3: rgba(255,255,255,.55);
+  --t2: rgba(255,255,255,.90);
+  --t3: rgba(255,255,255,.86);
 
   /* Status — Oura palette */
   --ok:        #4ECCA3;
@@ -634,7 +636,7 @@ main{
 /* ══ INPUTS ══════════════════════════════════════════════ */
 .input-group{margin-bottom:22px;}
 .input-group:last-of-type{margin-bottom:0;}
-.input-group label{display:block;font-size:11px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.72);margin-bottom:12px;}
+.input-group label{display:block;font-size:11px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);margin-bottom:12px;}
 .input-hint{font-size:11px;color:var(--gold);margin-top:16px;font-style:italic;opacity:.8;}
 .divider{height:1px;background:var(--b1);margin:18px 0;}
 
@@ -1109,7 +1111,7 @@ footer{
 /* Manual fields */
 .manual-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
 .manual-field{}
-.manual-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.72);margin-bottom:6px;display:block;}
+.manual-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);margin-bottom:6px;display:block;}
 .manual-input.field-error{border-color:var(--alert);animation:shake .3s ease;}
 .manual-input{
   width:100%;background:rgba(0,0,0,.25);border:1px solid rgba(196,150,60,.28);
@@ -1204,7 +1206,7 @@ footer{
 
 /* Hormone Phase */
 .phase-track{display:flex;border-radius:10px;overflow:hidden;height:34px;margin-bottom:20px;}
-.phase-seg{display:flex;align-items:center;justify-content:center;font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.5);font-weight:500;position:relative;}
+.phase-seg{display:flex;align-items:center;justify-content:center;font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:var(--t3);font-weight:500;position:relative;}
 .phase-seg.current{color:#fff;font-weight:600;}
 .phase-seg.current::after{content:'▼';position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--gold);}
 .hormone-table{display:flex;flex-direction:column;gap:7px;}
@@ -1265,7 +1267,7 @@ footer{
 .gp-abbr{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gold-lt,#e2b96a);margin-top:2px;}
 .gp-num{font-size:17px;font-weight:500;color:var(--t1);line-height:1;margin-left:6px;white-space:nowrap;}
 .gp-num.miss{color:#FBBF24;}
-.gp-u{font-size:9px;color:rgba(255,255,255,.7);}
+.gp-u{font-size:9px;color:var(--t3);}
 .gp-head{font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold-lt);margin:0 0 7px;display:flex;align-items:center;gap:7px;}
 .gp-note{font-size:11.5px;line-height:1.45;color:var(--t2);margin:0 0 11px;}
 /* Приливы и жар — два блока (интенсивность/частота) с круглыми вариантами по шаблону */
@@ -1374,15 +1376,15 @@ body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important
    Код блоков не удалён — вернуть можно, сняв селектор. Остались честные: готовность, трекер фазы (из профиля, с подписью «оценка»), QoL (детерминированная формула), ИИ-разбор, памятка. */
 #insightsList,#mod-bio-load,#mod-circadian,#mod-nutri,#mod-protocol,#labCard,#dataCompleteness{display:none!important;}
 #dayBlueprint{background:linear-gradient(150deg,#161A22,#10141C);border:1px solid rgba(226,185,90,.22);border-radius:16px;padding:16px 18px;margin-top:14px;}
-/* Структурный ИИ-разбор (порт VIO, золото) */
+/* Структурный ИИ-разбор — 1:1 CSS VIO (владелец 2026-07-14: блоки/шрифт/контраст/цвета как в VIO) */
 .ai-intro{font-size:14px;color:var(--t2);line-height:1.85;margin-bottom:10px;}
-.ai-sec{border:1px solid rgba(226,185,90,.16);border-radius:18px;padding:16px 18px 14px;margin:12px 0 0;background:linear-gradient(160deg,rgba(226,185,90,.05),rgba(20,24,36,.30));transition:border-color .28s ease;}
+.ai-sec{border:1px solid rgba(180,138,240,.16);border-radius:18px;padding:16px 18px 14px;margin:12px 0 0;background:linear-gradient(160deg,rgba(180,138,240,.05),rgba(20,24,36,.30));transition:border-color .28s ease;}
 .ai-sec:first-of-type{margin-top:4px;}
 .ai-sec.has-det:not(.open){cursor:pointer;}
-.ai-sec.has-det:not(.open):hover{border-color:rgba(226,185,90,.32);}
+.ai-sec.has-det:not(.open):hover{border-color:rgba(180,138,240,.32);}
 .ai-sec.open{border-color:rgba(226,185,90,.32);}
-.ai-th-sleep{border-color:rgba(226,185,90,.26);background:linear-gradient(160deg,rgba(226,185,90,.11),rgba(20,24,36,.32));}
-.ai-th-sleep.open,.ai-th-sleep.has-det:not(.open):hover{border-color:rgba(226,185,90,.5);}
+.ai-th-sleep{border-color:rgba(180,138,240,.26);background:linear-gradient(160deg,rgba(180,138,240,.11),rgba(20,24,36,.32));}
+.ai-th-sleep.open,.ai-th-sleep.has-det:not(.open):hover{border-color:rgba(180,138,240,.5);}
 .ai-th-energy{border-color:rgba(127,209,150,.24);background:linear-gradient(160deg,rgba(127,209,150,.09),rgba(20,24,36,.32));}
 .ai-th-energy.open,.ai-th-energy.has-det:not(.open):hover{border-color:rgba(127,209,150,.45);}
 .ai-th-nutrition{border-color:rgba(226,185,90,.26);background:linear-gradient(160deg,rgba(226,185,90,.09),rgba(20,24,36,.32));}
@@ -1414,7 +1416,7 @@ body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important
 .ai-sec-det-wrap{display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s cubic-bezier(.4,0,.2,1);}
 .ai-sec.open .ai-sec-det-wrap{grid-template-rows:1fr;}
 .ai-sec-det-wrap>.ai-sec-det{overflow:hidden;min-height:0;}
-.ai-sec-det{font-size:13.5px;color:var(--t2);line-height:1.8;margin-top:0;padding:14px 0 4px 18px;border-left:2px solid rgba(226,185,90,.28);background:linear-gradient(90deg,rgba(226,185,90,.035),transparent 60%);}
+.ai-sec-det{font-size:13.5px;color:var(--t2);line-height:1.8;margin-top:0;padding:14px 0 4px 18px;border-left:2px solid rgba(180,138,240,.28);background:linear-gradient(90deg,rgba(180,138,240,.035),transparent 60%);}
 .ai-subh{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#c9a8f5;margin:14px 0 5px;}
 .ai-sec-det .ai-subh:first-child{margin-top:2px;}
 /* Стеклянные модалы (Профиль/Подход/Сегодня) и чат наставника: полосу прокрутки скрыть, скролл оставить */
@@ -4365,7 +4367,7 @@ function renderCard(){
     var _hInner=_aid.slice(0,31).map(function(e){
       var dt=e.day; try{dt=new Date(e.day).toLocaleDateString(_loc[lang]||'en-GB',{day:'numeric',month:'short',year:'numeric'});}catch(x){}
       var body=(typeof _renderAnalysis==='function')?_renderAnalysis(e.analysis||''):(typeof _aiMd==='function'?_aiMd(e.analysis||''):_esc(e.analysis||''));
-      return '<details class="vc-day"><summary style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid rgba(226,185,90,.12);font-size:13px;color:var(--t1);"><span style="color:var(--gold-lt);">›</span>'+_esc(dt)+'</summary><div style="font-size:12.5px;color:var(--t2);line-height:1.55;padding:8px 0 12px;">'+body+'</div></details>';
+      return '<details class="vc-day"><summary style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid rgba(180,138,240,.1);font-size:13px;color:var(--t1);"><span style="color:#b48af0;">›</span>'+_esc(dt)+'</summary><div style="font-size:12.5px;color:var(--t2);line-height:1.55;padding:8px 0 12px;">'+body+'</div></details>';
     }).join('');
     _secHist=_vcSec('history',L({ru:'История разборов',uk:'Історія розборів',en:'Analysis history',es:'Historial de análisis',de:'Analyse-Verlauf',pt:'Histórico de análises',fr:'Historique des analyses',pl:'Historia analiz',it:'Cronologia analisi',he:'היסטוריית ניתוחים',ja:'分析履歴',ko:'분석 기록'}),_hInner,false,true);
   }
@@ -4970,7 +4972,7 @@ function calcProfMetrics(){
     else if(bmi<25){cat=_bc.ok;col='var(--ok)';}
     else if(bmi<30){cat=_bc.over;col='#f59e0b';}
     else{cat=_bc.obese;col='var(--alert)';}
-    parts.push(`<span style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.55);text-transform:uppercase;">BMI</span><span style="font-size:20px;font-weight:300;color:${col};margin:0 5px;">${br}</span><span style="font-size:10px;color:${col};">${cat}</span>`);
+    parts.push(`<span style="font-size:10px;letter-spacing:1px;color:var(--t3);text-transform:uppercase;">BMI</span><span style="font-size:20px;font-weight:300;color:${col};margin:0 5px;">${br}</span><span style="font-size:10px;color:${col};">${cat}</span>`);
   }
   if(wst>0&&h>0){
     const r=wst/h,rv=r.toFixed(2);
@@ -4980,7 +4982,7 @@ function calcProfMetrics(){
     else if(r<thr[1]){cat=_bc.ok;col='var(--ok)';}
     else if(r<thr[2]){cat=_bc.over;col='#f59e0b';}
     else{cat=_bc.obese;col='var(--alert)';}
-    parts.push(`<span style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.55);text-transform:uppercase;margin-left:4px;">WHtR</span><span style="font-size:20px;font-weight:300;color:${col};margin:0 5px;">${rv}</span><span style="font-size:10px;color:${col};">${cat}</span>`);
+    parts.push(`<span style="font-size:10px;letter-spacing:1px;color:var(--t3);text-transform:uppercase;margin-left:4px;">WHtR</span><span style="font-size:20px;font-weight:300;color:${col};margin:0 5px;">${rv}</span><span style="font-size:10px;color:${col};">${cat}</span>`);
   }
   if(parts.length){box.innerHTML=parts.join('<span style="width:1px;height:22px;background:var(--b1);margin:0 4px;align-self:center;"></span>');box.style.display='flex';}
   else{box.style.display='none';}
@@ -5074,7 +5076,7 @@ function renderCycleDay(){
   if(!ci){box.style.display='none';return;}
   const ph={menstrual:t('ph_menstrual'),follicular:t('ph_follicular'),ovulation:t('ph_ovulation'),luteal:t('ph_luteal')}[ci.phase];
   box.style.display='flex';
-  box.innerHTML='<span style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.6);">'+t('cyc_day')+'</span>'
+  box.innerHTML='<span style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--t3);">'+t('cyc_day')+'</span>'
     +'<span style="font-size:24px;font-weight:300;color:#F472B6;">'+ci.day+'</span>'
     +'<span style="font-size:13px;color:#F9A8D4;">· '+ph+'</span>';
 }
@@ -5164,7 +5166,7 @@ function renderDataCompleteness(){
   const chips=cats.map(c=>'<span style="font-size:11px;padding:3px 8px;border-radius:8px;border:1px solid '+(c.ok?'rgba(74,222,128,.4)':'rgba(255,255,255,.14)')+';color:'+(c.ok?'#4ADE80':'rgba(255,255,255,.4)')+';">'+(c.ok?'✓ ':'')+c.n+'</span>').join('');
   box.style.display='block';
   box.innerHTML='<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:9px;">'
-    +'<span style="font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,.6);">📊 '+t('dc_title')+'</span>'
+    +'<span style="font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--t3);">📊 '+t('dc_title')+'</span>'
     +'<span style="font-size:15px;font-weight:600;color:'+clr+';">'+filled+'/'+total+'</span>'
     +(src?'<span style="font-size:11px;padding:3px 9px;border-radius:8px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#4ADE80;">📲 '+src+'</span>':'')
     +'</div><div style="display:flex;gap:6px;flex-wrap:wrap;">'+chips+'</div>';
@@ -5928,7 +5930,7 @@ function renderHormonePhase(data){
     <div class="phase-track">
       ${phases.map(p=>`<div class="phase-seg ${p.id===phase?'current':''}" style="flex:${p.flex};background:${p.color}${p.id===phase?'':'33'};">${p.label}</div>`).join('')}
     </div>
-    <div style="font-size:10px;color:rgba(255,255,255,.45);text-align:center;margin-top:6px;">ⓘ ${t('phase_estimate')}</div>`;
+    <div style="font-size:10px;color:var(--t3);text-align:center;margin-top:6px;">ⓘ ${t('phase_estimate')}</div>`;
 
   // Hormone levels per phase
   const tLabel=L({ru:'Жизненный тонус',uk:'Життєвий тонус',en:'Vitality',es:'Vitalidad',de:'Vitalität',pt:'Vitalidade',fr:'Vitalité',pl:'Witalność',it:'Vitalità',he:'חיוניות',ja:'活力',ko:'활력'});
