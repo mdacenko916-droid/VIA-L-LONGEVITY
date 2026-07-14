@@ -1474,6 +1474,19 @@ const _STRUCTURED_FMT =
 // (живой VIO 14.07: тема про мышцы вышла без заголовка и без «Сути»). Безголовый блок не выбрасываем —
 // его текст доклеиваем к предыдущей теме (а если он первый — во вступление), чтобы контент не терялся.
 // Парсинг ОДИН-В-ОДИН как в клиенте (_renderAnalysis), иначе починим не то, что он рисует.
+// Заголовок темы иногда приходит слипшимся с кратким выводом (модель не поставила перенос после [[S]]) →
+// выходит «простыня» вместо короткой темы (живой VIO 14.07: «Мягче реагируйте на стресс высокий, и это часто
+// видно…»). Режем заголовок по первому знаку клаузы или по длине, остаток уводим в начало краткого вывода.
+function _shortTitle(t) {
+  t = String(t || '').trim();
+  const m = t.match(/^(.{4,}?)\s*(?:[,.;:]\s+|\s[—–]\s)(.+)$/u);   // «короткая клауза + остаток»
+  if (m && m[1].length <= 56) return { title: m[1].trim().replace(/[\s,.;:—–]+$/u, ''), rest: m[2].trim() };
+  if (t.length > 56) {                                            // знака клаузы нет, но длинно → режем по пробелу до ~52
+    const cut = t.slice(0, 52).lastIndexOf(' ');
+    if (cut > 20) return { title: t.slice(0, cut).trim(), rest: t.slice(cut).trim() };
+  }
+  return { title: t, rest: '' };
+}
 function _structRepair(text) {
   if (!text || text.indexOf('[[S]]') < 0) return text;
   const parts = text.split(/\n?\[\[S\]\]\s*/);
@@ -1484,22 +1497,27 @@ function _structRepair(text) {
     const headsum = ds[0] || '', detail = (ds[1] || '').trim();
     const nl = headsum.indexOf('\n');
     const head = (nl < 0 ? headsum : headsum.slice(0, nl)).trim();
-    const summary = (nl < 0 ? '' : headsum.slice(nl + 1)).trim();
+    let summary = (nl < 0 ? '' : headsum.slice(nl + 1)).trim();
     const hp = head.split('|');
-    const title = (hp[1] || '').trim() || (hp[0] || '').trim();   // «эмодзи | Заголовок», без разделителя — весь head
-    if (!title) {
+    let emoji = '', title = '', flag = '';
+    if (hp.length >= 2) { emoji = hp[0].trim(); title = (hp[1] || '').trim(); flag = (hp[2] || '').trim(); }
+    else { title = (hp[0] || '').trim(); }
+    if (!title) {   // модель уронила саму строку-заголовок → текст блока не терять, доклеить к соседу/вступлению
       const tail = [summary, detail].filter(Boolean).join('\n\n');
       if (!tail) continue;
       if (secs.length) secs[secs.length - 1].detail = (secs[secs.length - 1].detail ? secs[secs.length - 1].detail + '\n\n' : '') + tail;
       else intro = (intro ? intro.replace(/\s+$/, '') + '\n\n' : '') + tail;
       continue;
     }
-    secs.push({ head, summary, detail });
+    const st = _shortTitle(title);   // заголовок слипся с выводом → укоротить, остаток в начало summary
+    if (st.rest) { title = st.title; summary = summary ? st.rest + ' ' + summary : st.rest; }
+    secs.push({ emoji, title, flag, summary, detail });
   }
   if (!secs.length) return text;   // структуры нет вовсе → не трогаем (пусть клиент рендерит как есть)
-  return secs.reduce((acc, s) =>
-    acc + '\n\n[[S]] ' + s.head + (s.summary ? '\n' + s.summary : '') + (s.detail ? '\n[[D]]\n' + s.detail : ''),
-    intro.replace(/\s+$/, ''));
+  return secs.reduce((acc, s) => {
+    const head = (s.emoji ? s.emoji + ' | ' : '') + s.title + (s.flag ? ' | ' + s.flag : '');
+    return acc + '\n\n[[S]] ' + head + (s.summary ? '\n' + s.summary : '') + (s.detail ? '\n[[D]]\n' + s.detail : '');
+  }, intro.replace(/\s+$/, ''));
 }
 
 async function handleAnalyze(request, env, corsHeaders, ctx) {
