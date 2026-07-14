@@ -5724,7 +5724,7 @@ function _downloadPDFInner(){
   </div>
   <h3>${L({ru:'Анализ показателей',uk:'Аналіз показників',en:'Metrics Analysis',es:'Análisis de indicadores',de:'Kennzahlenanalyse',pt:'Análise de métricas',fr:'Analyse des indicateurs',pl:'Analiza wskaźników',it:'Analisi degli indicatori',he:'ניתוח מדדים',ja:'指標分析',ko:'지표 분석'})}</h3>
   ${insights.map(o=>`<div class="insight"><div class="insight-title">${o.i} ${(typeof _wl==='function'?_wl(o.h):o.h)}</div><div class="insight-text">${(typeof _wl==='function'?_wl(o.b):o.b)}</div></div>`).join('')}
-  ${Object.values(recs).map(r=>`<h3>${r.h}</h3>${r.l.map(i=>`<div class="rec-item">${i}</div>`).join('')}`).join('')}
+  ${Object.values(recs).map(r=>{var items=r.l.map(i=>_scrubProto(_wl(i))).filter(Boolean);return items.length?`<h3>${_wl(r.h)}</h3>${items.map(i=>`<div class="rec-item">${i}</div>`).join('')}`:'';}).join('')}
   ${labs.length?`<h3>${t('lab_title')}</h3>${labs.map(l=>`<div class="lab-item">· ${l}</div>`).join('')}`:''}
   <div class="footer">VIA-L Longevity · via-l.com · ${date}<br>${t('disclaimer')}</div>
   <\/body><\/html>`;
@@ -6280,6 +6280,17 @@ function _wl(s){ if(!s||typeof s!=='string')return s; var L=(typeof lang!=='unde
   }catch(e){}
   return s;
 }
+// Санитайзер рек-строк legacy-движка инсайтов (велнес PRO): убирает дозы добавок (мг/мкг/МЕ/IU/г/сут) и
+// выбрасывает пункты про травы/адаптогены/фосфатидилсерин/куркумин — они не должны попадать НИ на экран,
+// НИ в экспорт «Скачать памятку» (рендер прогоняет recs в обход display:none). Порции еды и белок в г/кг целы.
+// \b с кириллицей не работает → границу единицы держим через lookahead (?![\p{L}]).
+function _scrubProto(s){
+  if(!s||typeof s!=='string')return s;
+  if(/(ашваганд|ashwagandh|KSM-?66|родиол|rhodiola|родіол|витекс|\bvitex\b|клопогон|цимицифуг|шатавари|shatavari|\bмака\b|\bmaca\b|фитоэстроген|phytoestrogen|адаптоген|adaptogen|фосфатидилсерин|phosphatidylserine|куркумин|curcumin)/i.test(s)) return '';
+  s=s.replace(/\s*\d[\d.,+]*\s*(?:[–—-]\s*\d[\d.,+]*\s*)?(?:мг|mg|мкг|mcg|µg|МЕ|МО|IU|г\s*\/\s*(?:сут|день|day)|g\s*\/\s*day)(?:\s*\/\s*[а-яёa-z]+)?(?![\p{L}])/giu,'');
+  s=s.replace(/\s{2,}/g,' ').replace(/\s+([·,;:.])/g,'$1').replace(/·\s*·/g,'·').replace(/^[\s·:;,—–-]+|[\s·:;,—–-]+$/g,'').trim();
+  return /[\p{L}]{3,}/u.test(s)?s:'';
+}
 function _showResultsInner(){
   const data={
     gender:getRadio('gender')||'female',
@@ -6625,7 +6636,9 @@ function _showResultsInner(){
   if(doc){
     const da=document.getElementById('doctorAlert');
     da.classList.add('visible');
-    document.getElementById('doctorText').textContent=' '+t('doc_prefix')+docR.join('; ')+'.';
+    // Велнес: НЕ вешаем клиенту диагноз-ярлык («выраженные когнитивные нарушения»). Совет обратиться к
+    // специалисту сохраняем (безопасно), но без перечня медицинских причин из docR — нейтральной фразой.
+    document.getElementById('doctorText').textContent=' '+L({ru:'Некоторые сигналы стоит спокойно обсудить со специалистом.',uk:'Деякі сигнали варто спокійно обговорити з фахівцем.',en:'A few signals are worth calmly discussing with a specialist.',es:'Conviene comentar algunas señales con un especialista, sin alarma.',de:'Einige Signale besprichst du in Ruhe am besten mit einer Fachperson.',pt:'Vale a pena conversar com calma sobre alguns sinais com um especialista.',fr:'Quelques signaux méritent d’être évoqués sereinement avec un spécialiste.',pl:'Kilka sygnałów warto spokojnie omówić ze specjalistą.',it:'Alcuni segnali vale la pena discuterli con calma con uno specialista.',he:'כדאי לשוחח בנחת על כמה סימנים עם איש מקצוע.',ja:'いくつかのサインは専門家に落ち着いて相談すると安心です。',ko:'몇 가지 신호는 전문가와 차분히 상의해 보면 좋습니다.'});
   }
 
   // Lab tests
@@ -6660,8 +6673,10 @@ function _showResultsInner(){
   const rs=document.getElementById('recSections');
   rs.innerHTML='';
   Object.values(recs).forEach(r=>{
+    const items=r.l.map(i=>_scrubProto(_wl(i))).filter(Boolean);   // дозы/травы/адаптогены вон (и с экрана, и из экспорта)
+    if(!items.length)return;
     const d=document.createElement('div');d.className='rec-section';
-    d.innerHTML=`<div class="rec-title">${_wl(r.h)}</div><ul class="rec-list">${r.l.map(i=>`<li>${_wl(i)}</li>`).join('')}</ul>`;
+    d.innerHTML=`<div class="rec-title">${_wl(r.h)}</div><ul class="rec-list">${items.map(i=>`<li>${i}</li>`).join('')}</ul>`;
     rs.appendChild(d);
   });
 
