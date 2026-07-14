@@ -5774,6 +5774,9 @@ function _showResultsInner(){
     sleep_qual:+document.getElementById('sleep_qual').value,
     sleep_hours:parseFloat(document.getElementById('sleep_hours')?.value)||null,
     deep:getRadio('deep'),wake:getRadio('wake'),
+    // Числовые метрики трекера в воркер (паритет с PRO): даёт точные «глубокий сон 67 мин» / «сон 8.1 ч»
+    // вместо огрублённой категории. Только при реальном импорте (source). Воркер печатает их из data.device.
+    device:(typeof importedData!=='undefined'&&importedData&&importedData.source)?{vo2:importedData.vo2,sleepHours:importedData.sleepHours,deepMin:importedData.deepMin,tempDev:importedData.tempDev}:null,
     rhr:+document.getElementById('rhr').value,rhr_comp:(typeof _rhrZone==='function'?_rhrZone(+document.getElementById('rhr').value):'normal'),
     symptoms:getChecked(['sym1','sym2','sym3','sym4','sym5','sym6','sym7','sym8','sym9']),
     energy:+document.getElementById('energy').value,
@@ -6011,7 +6014,7 @@ function applyImportedToSliders(){
   if(importedData.hrv!=null){const el=document.getElementById('hrv');if(el){el.value=Math.min(120,Math.max(10,Math.round(importedData.hrv)));ouraSlider('hrv',+el.value);}}
   if(importedData.rhr!=null){const el=document.getElementById('rhr');el.value=Math.min(110,Math.max(40,Math.round(importedData.rhr)));ouraSlider('rhr',+el.value);}
   if(importedData.energy!=null){const el=document.getElementById('energy');el.value=Math.min(10,Math.max(1,Math.round(importedData.energy)));ouraSlider('en',+el.value);}
-  if(importedData.sleepHours!=null){const h=importedData.sleepHours,sq=h>=7.5?8:h>=6?6:h>=5?4:2,el=document.getElementById('sleep_qual');el.value=sq;ouraSlider('sq',sq);if(importedData.deepMin!=null){const d=importedData.deepMin;if(d>=90)document.getElementById('dp1').checked=true;else if(d>=30)document.getElementById('dp2').checked=true;else document.getElementById('dp3').checked=true;}}
+  if(importedData.sleepHours!=null){const h=importedData.sleepHours,sq=h>=7.5?8:h>=6?6:h>=5?4:2,el=document.getElementById('sleep_qual');el.value=sq;ouraSlider('sq',sq);const sh=document.getElementById('sleep_hours');if(sh)sh.value=Math.round(h*10)/10;if(importedData.deepMin!=null){const d=importedData.deepMin;if(d>=90)document.getElementById('dp1').checked=true;else if(d>=30)document.getElementById('dp2').checked=true;else document.getElementById('dp3').checked=true;}}
   if(importedData.tempDev!=null){const d=importedData.tempDev;if(Math.abs(d)<=0.1)document.getElementById('tp1').checked=true;else if(d>0.1&&d<0.5)document.getElementById('tp2').checked=true;else if(d>=0.5)document.getElementById('tp3').checked=true;else document.getElementById('tp4').checked=true;}
   showImportBanner();
 }
