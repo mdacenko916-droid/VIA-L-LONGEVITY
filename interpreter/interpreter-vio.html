@@ -1550,6 +1550,10 @@ body.consent-open #langDropdown,body.consent-open #langDropdown *{pointer-events
 body.consent-open .lang-logo{opacity:.25;filter:blur(2px);}
 body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important;}
 #consent-gate.show{display:flex;}
+/* Зеркало PRO-аудита результата (владелец 2026-07-14): скрыты нечестные/дублирующие блоки —
+   bio-load (Math.random), инсайты с дозировками, циркадный/протокол-24ч (повтор памятки),
+   нутри-корреляции (адаптогены против гардрейла трав), лаб-подсказки. Код цел — вернуть = снять селектор. */
+#insightsList,#mod-bio-load,#mod-circadian,#mod-nutri,#mod-protocol,#labCard{display:none!important;}
 /* Стеклянные модалы (Профиль/Подход/Сегодня) и чат наставника: полосу прокрутки скрыть, скролл оставить */
 #historyPanel,#approachPanel,#dayplanPanel,#vlAdvMsgs{scrollbar-width:none;}
 #historyPanel::-webkit-scrollbar,#approachPanel::-webkit-scrollbar,#dayplanPanel::-webkit-scrollbar,#vlAdvMsgs::-webkit-scrollbar{display:none;width:0;}
@@ -3405,6 +3409,17 @@ function renderCard(){
     +'<div class="vh-cell"><div class="vh-l">'+t('s_prof_height')+'</div><div class="vh-v">'+(P.height?_esc(P.height):'—')+'</div></div>'
     +'<div class="vh-cell"><div class="vh-l">'+t('s_prof_weight')+'</div><div class="vh-v">'+(P.weight?_esc(P.weight):'—')+'</div></div>'
     +'<div class="vh-cell"><div class="vh-l">'+t('s_prof_waist')+'</div><div class="vh-v">'+(P.waist?_esc(P.waist):'—')+'</div></div>'
+    +(function(){ // BMI/WHtR — те же пороги, что на экране результата; фиксируются в карточке (зеркало PRO)
+      var w=parseFloat(P.weight),h=parseFloat(P.height),wst=parseFloat(P.waist),out='';
+      var C={low:t('bmi_low'),ok:t('bmi_ok'),over:t('bmi_over'),obese:t('bmi_obese')};
+      var cell=function(lbl,val,cat,col){return '<div class="vh-cell"><div class="vh-l">'+lbl+'</div><div class="vh-v" style="color:'+col+';">'+val+'</div><div style="font-size:9.5px;color:'+col+';margin-top:1px;">'+cat+'</div></div>';};
+      if(w>0&&h>0){var bmi=w/Math.pow(h/100,2),c,cl;
+        if(bmi<18.5){c=C.low;cl='#60a5fa';}else if(bmi<25){c=C.ok;cl='var(--ok)';}else if(bmi<30){c=C.over;cl='#f59e0b';}else{c=C.obese;cl='var(--alert)';}
+        out+=cell('BMI',bmi.toFixed(1),c,cl);}
+      if(wst>0&&h>0){var r=wst/h,thr=(P.gender==='male')?[0.43,0.53,0.63]:[0.42,0.49,0.58],c2,cl2;
+        if(r<thr[0]){c2=C.low;cl2='#60a5fa';}else if(r<thr[1]){c2=C.ok;cl2='var(--ok)';}else if(r<thr[2]){c2=C.over;cl2='#f59e0b';}else{c2=C.obese;cl2='var(--alert)';}
+        out+=cell('WHtR',r.toFixed(2),c2,cl2);}
+      return out;})()
     +'</div>';
   // ── Энергетический ориентир (владелец 2026-07-13): калории живут ТОЛЬКО здесь — не на «Сегодня»,
   // не в меню, не в советах. BMR Mifflin-St Jeor × активность, диапазон ±5%; честный образовательный
@@ -3937,7 +3952,7 @@ function calcProfMetrics(){
     else if(bmi<25){cat=t('bmi_ok');col='var(--ok)';}
     else if(bmi<30){cat=t('bmi_over');col='#f59e0b';}
     else{cat=t('bmi_obese');col='var(--alert)';}
-    parts.push(`<span style="font-size:10px;letter-spacing:1px;color:var(--t2);text-transform:uppercase;">ІМТ</span><span style="font-size:20px;font-weight:300;color:${col};margin:0 5px;">${br}</span><span style="font-size:10px;color:${col};">${cat}</span>`);
+    parts.push(`<span style="font-size:10px;letter-spacing:1px;color:var(--t2);text-transform:uppercase;">BMI</span><span style="font-size:20px;font-weight:300;color:${col};margin:0 5px;">${br}</span><span style="font-size:10px;color:${col};">${cat}</span>`);
   }
   if(wst>0 && h>0){
     const r=wst/h, rv=r.toFixed(2);
