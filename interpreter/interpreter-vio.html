@@ -5633,6 +5633,9 @@ async function fetchAIAnalysis(data, lang){
       _aiDailySave(json.analysis,L,sig);        // фиксируем разбор дня (перезапись 1×/день) → история + повторные заходы без API
       result.innerHTML=_renderAnalysis(json.analysis);
       loading.style.display='none'; result.style.display='block'; if(disc)disc.style.display='block';
+      // Глава «✦ Разбор дня» строится из кэша vial_ai_daily: памятка отрисовалась ДО прихода разбора —
+      // без перерисовки глава появлялась только со второго захода. Перерисовываем список глав сейчас.
+      try{ if(window._bpData && typeof renderDayBlueprint==='function') renderDayBlueprint(window._bpData); }catch(e){}
     } else { throw new Error(json.error||'No response'); }
   }catch(e){ loading.style.display='none'; err.textContent='⚠ '+ui.err; err.style.display='block'; }
 }

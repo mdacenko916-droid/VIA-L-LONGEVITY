@@ -2165,12 +2165,12 @@ body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important
           <input class="manual-input" id="prof-age" type="number" min="18" max="99" placeholder="—">
         </div>
         <div class="manual-field">
-          <label class="manual-label" data-t="s_prof_height">Рост (см)</label>
-          <input class="manual-input" id="prof-height" type="number" min="100" max="230" placeholder="—">
-        </div>
-        <div class="manual-field">
           <label class="manual-label" data-t="s_prof_weight">Вес (кг)</label>
           <input class="manual-input" id="prof-weight" type="number" min="30" max="250" placeholder="—" oninput="calcProfMetrics()">
+        </div>
+        <div class="manual-field">
+          <label class="manual-label" data-t="s_prof_height">Рост (см)</label>
+          <input class="manual-input" id="prof-height" type="number" min="100" max="230" placeholder="—">
         </div>
         <div class="manual-field">
           <label class="manual-label" data-t="s_prof_waist">Талия (см)</label>
@@ -7366,6 +7366,9 @@ async function fetchAIAnalysis(data, lang) {
       loading.style.display = 'none';
       result.style.display = 'block';
       if (disc) disc.style.display = 'block';
+      // Глава «✦ Разбор дня» строится из кэша дня: памятка отрисовалась ДО прихода разбора —
+      // без перерисовки глава появлялась только со второго захода. Перерисовываем список глав сейчас.
+      try{ if(window._bpData && typeof renderDayBlueprint==='function') renderDayBlueprint(window._bpData); }catch(e){}
     } else {
       throw new Error(json.error || 'No response');
     }
