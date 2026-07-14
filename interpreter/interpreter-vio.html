@@ -3411,7 +3411,7 @@ function renderCard(){
     +'<div class="vh-cell"><div class="vh-l">'+t('s_prof_waist')+'</div><div class="vh-v">'+(P.waist?_esc(P.waist):'—')+'</div></div>'
     +(function(){ // BMI/WHtR — те же пороги, что на экране результата; фиксируются в карточке (зеркало PRO)
       var w=parseFloat(P.weight),h=parseFloat(P.height),wst=parseFloat(P.waist),out='';
-      var C={low:t('bmi_low'),ok:t('bmi_ok'),over:t('bmi_over'),obese:t('bmi_obese')};
+      var C=_bmiCat();
       var cell=function(lbl,val,cat,col){return '<div class="vh-cell"><div class="vh-l">'+lbl+'</div><div class="vh-v" style="color:'+col+';">'+val+'</div><div style="font-size:9.5px;color:'+col+';margin-top:1px;">'+cat+'</div></div>';};
       if(w>0&&h>0){var bmi=w/Math.pow(h/100,2),c,cl;
         if(bmi<18.5){c=C.low;cl='#60a5fa';}else if(bmi<25){c=C.ok;cl='var(--ok)';}else if(bmi<30){c=C.over;cl='#f59e0b';}else{c=C.obese;cl='var(--alert)';}
@@ -3937,6 +3937,14 @@ setLang(_initLang());   // язык устройства при первом в�
 // startFunnel() вызывается ниже, после объявления FLOW_ALL/STEP_CADENCE (const не хойстится).
 
 // ══ NAVIGATION ════════════════════════════════════════════
+// Ярлыки BMI/WHtR — велнес-формулировки (владелец 2026-07-14): описание положения относительно диапазона,
+// НЕ медицинские категории веса. «Overweight/Обезит» = CLAIM → убрано; берём мягкие «выше/ниже нормы» как в PRO.
+function _bmiCat(){ return {
+  low:L({ru:'ниже нормы',uk:'нижче норми',en:'below range',es:'bajo',de:'unter Norm',pt:'abaixo',fr:'sous la norme',pl:'poniżej normy',it:'sotto norma',he:'מתחת לנורמה',ja:'基準未満',ko:'기준 미만'}),
+  ok:L({ru:'норма',uk:'норма',en:'in range',es:'normal',de:'im Normbereich',pt:'normal',fr:'dans la norme',pl:'w normie',it:'nella norma',he:'בנורמה',ja:'基準内',ko:'정상'}),
+  over:L({ru:'выше нормы',uk:'вище норми',en:'above range',es:'elevado',de:'über Norm',pt:'acima',fr:'au-dessus',pl:'powyżej normy',it:'sopra norma',he:'מעל הנורמה',ja:'基準超',ko:'기준 초과'}),
+  obese:L({ru:'значительно выше нормы',uk:'значно вище норми',en:'well above range',es:'muy elevado',de:'deutlich über Norm',pt:'bem acima',fr:'bien au-dessus',pl:'znacznie powyżej',it:'molto sopra norma',he:'הרבה מעל הנורמה',ja:'大幅に基準超',ko:'기준 크게 초과'})
+}; }
 function calcProfMetrics(){
   const w   = parseFloat(document.getElementById('prof-weight')?.value);
   const h   = parseFloat(document.getElementById('prof-height')?.value);
@@ -3946,22 +3954,22 @@ function calcProfMetrics(){
   if(!box) return;
   let parts=[];
   if(w>0 && h>0){
-    const bmi=w/Math.pow(h/100,2), br=bmi.toFixed(1);
+    const bmi=w/Math.pow(h/100,2), br=bmi.toFixed(1), _bc=_bmiCat();
     let cat,col;
-    if(bmi<18.5){cat=t('bmi_low');col='#60a5fa';}
-    else if(bmi<25){cat=t('bmi_ok');col='var(--ok)';}
-    else if(bmi<30){cat=t('bmi_over');col='#f59e0b';}
-    else{cat=t('bmi_obese');col='var(--alert)';}
+    if(bmi<18.5){cat=_bc.low;col='#60a5fa';}
+    else if(bmi<25){cat=_bc.ok;col='var(--ok)';}
+    else if(bmi<30){cat=_bc.over;col='#f59e0b';}
+    else{cat=_bc.obese;col='var(--alert)';}
     parts.push(`<span style="font-size:10px;letter-spacing:1px;color:var(--t2);text-transform:uppercase;">BMI</span><span style="font-size:20px;font-weight:300;color:${col};margin:0 5px;">${br}</span><span style="font-size:10px;color:${col};">${cat}</span>`);
   }
   if(wst>0 && h>0){
     const r=wst/h, rv=r.toFixed(2);
     const thr=g==='male'?[0.43,0.53,0.63]:[0.42,0.49,0.58];
-    let cat,col;
-    if(r<thr[0]){cat=t('bmi_low');col='#60a5fa';}
-    else if(r<thr[1]){cat=t('bmi_ok');col='var(--ok)';}
-    else if(r<thr[2]){cat=t('bmi_over');col='#f59e0b';}
-    else{cat=t('bmi_obese');col='var(--alert)';}
+    let cat,col; const _bc=_bmiCat();
+    if(r<thr[0]){cat=_bc.low;col='#60a5fa';}
+    else if(r<thr[1]){cat=_bc.ok;col='var(--ok)';}
+    else if(r<thr[2]){cat=_bc.over;col='#f59e0b';}
+    else{cat=_bc.obese;col='var(--alert)';}
     parts.push(`<span style="font-size:10px;letter-spacing:1px;color:var(--t2);text-transform:uppercase;margin-left:4px;">WHtR</span><span style="font-size:20px;font-weight:300;color:${col};margin:0 5px;">${rv}</span><span style="font-size:10px;color:${col};">${cat}</span>`);
   }
   if(parts.length){
