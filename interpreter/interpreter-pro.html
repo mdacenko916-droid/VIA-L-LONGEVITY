@@ -1427,6 +1427,11 @@ body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important
 /* Стеклянные модалы (Профиль/Подход/Сегодня) и чат наставника: полосу прокрутки скрыть, скролл оставить */
 #cardPanel,#approachPanel,#dayplanPanel,#vlAdvMsgs{scrollbar-width:none;}
 #cardPanel::-webkit-scrollbar,#approachPanel::-webkit-scrollbar,#dayplanPanel::-webkit-scrollbar,#vlAdvMsgs::-webkit-scrollbar{display:none;width:0;}
+/* Единая кнопка закрытия модалов/панелей/шторок (владелец 2026-07-14): кружок + подсветка тарифа (PRO — золото).
+   Заменяет разнобой: голый × в разборе/чате и инлайн-кружки панелей. */
+.x-close{width:34px;height:34px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);border:1px solid rgba(226,185,90,.45);color:var(--t1);border-radius:50%;font-size:15px;line-height:1;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0;box-shadow:0 0 12px rgba(226,185,90,.22);transition:box-shadow .2s ease,border-color .2s ease,transform .12s ease;-webkit-tap-highlight-color:transparent;}
+.x-close:hover{border-color:rgba(226,185,90,.8);box-shadow:0 0 16px rgba(226,185,90,.42);}
+.x-close:active{transform:scale(.88);}
 .consent-card{max-width:440px;width:100%;background:var(--bg-2);border:1px solid var(--gold-dim);border-radius:18px;padding:26px 24px;box-shadow:0 20px 60px rgba(0,0,0,.5);box-sizing:border-box;max-height:calc(100dvh - 48px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none;}
 .consent-card::-webkit-scrollbar{display:none;width:0;}
 .consent-card h3{font-size:18px;color:var(--gold-lt);margin:0 0 12px;}
@@ -1484,7 +1489,7 @@ body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important
   <div style="max-width:600px;margin:0 auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
       <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--t1);" data-t="card_title">Мой профиль</div>
-      <button onclick="navTo('home')" aria-label="Close" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);border:1px solid rgba(226,185,90,.3);color:var(--t2);border-radius:50%;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;line-height:1;flex-shrink:0;">✕</button>
+      <button onclick="navTo('home')" aria-label="Close" class="x-close">✕</button>
     </div>
     <div id="weeklyReport" style="margin-bottom:18px;"></div>
     <div id="monthlyReport" style="margin-bottom:18px;"></div>
@@ -3124,7 +3129,7 @@ body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important
   <div style="max-width:760px;margin:0 auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;">
       <div style="font-family:'Playfair Display',serif;font-size:23px;color:var(--t1);" data-t="approach_row">Our approach &amp; the science</div>
-      <button onclick="closeApproach()" aria-label="Close" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);border:1px solid rgba(226,185,90,.3);color:var(--t2);border-radius:50%;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;line-height:1;flex-shrink:0;">✕</button>
+      <button onclick="closeApproach()" aria-label="Close" class="x-close">✕</button>
     </div>
     <div id="approachBody" style="font-size:14px;line-height:1.75;color:var(--t2);white-space:pre-line;"></div>
   </div>
@@ -3133,7 +3138,7 @@ body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important
   <div style="max-width:760px;margin:0 auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
       <div id="dayplanTitle" style="font-family:'Playfair Display',serif;font-size:23px;color:var(--t1);">🧭 Day plan</div>
-      <button type="button" onclick="closeDayPlanPanel()" aria-label="Close" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);border:1px solid rgba(226,185,90,.3);color:var(--t2);border-radius:50%;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;line-height:1;flex-shrink:0;">✕</button>
+      <button type="button" onclick="closeDayPlanPanel()" aria-label="Close" class="x-close">✕</button>
     </div>
     <div id="dayplanBody"></div>
   </div>
@@ -3144,7 +3149,7 @@ body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important
     <div class="cm-head">
       <span id="cm-time" style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:.05em;color:var(--gold-lt);background:rgba(226,185,90,.14);padding:3px 10px;border-radius:20px;"></span>
       <div id="cm-name" style="font-family:'Playfair Display',serif;font-size:19px;color:var(--t1);flex:1;"></div>
-      <button onclick="closeCircModal()" style="background:none;border:none;color:var(--t3);font-size:26px;line-height:1;cursor:pointer;">×</button>
+      <button onclick="closeCircModal()" aria-label="Close" class="x-close">✕</button>
     </div>
     <div id="cm-tabs" class="cm-tabs"></div>
     <div id="cm-body" class="cm-bodytext"></div>
@@ -8056,7 +8061,7 @@ document.addEventListener('visibilitychange',function(){
 #vlAdvHead{background:#111;color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
 #vlAdvHead .t{font-weight:600;font-size:15px;}#vlAdvHead .t span{color:#c4963c;}
 #vlAdvHead .s{font-size:11px;color:#bbb;margin-top:2px;}
-#vlAdvClose{background:none;border:0;color:#fff;font-size:22px;cursor:pointer;line-height:1;}
+/* #vlAdvClose теперь = .x-close (единый стиль); правило оставлено пустым, чтобы не переопределять */
 #vlAdvMsgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:#faf8f4;}
 .vlAdvMsg{max-width:85%;padding:10px 13px;border-radius:12px;font-size:16px;line-height:1.5;font-weight:400;white-space:pre-wrap;word-wrap:break-word;}
 .vlAdvMsg.u{align-self:flex-end;background:#c4963c;color:#fff;border-bottom-right-radius:3px;}
@@ -8073,7 +8078,7 @@ document.addEventListener('visibilitychange',function(){
 <div id="vlAdvPanel" role="dialog" aria-label="VIA·L advisor">
   <div id="vlAdvHead">
     <div><div class="t">VÍA<span>·</span>L</div><div class="s" id="vlAdvSub"></div></div>
-    <button id="vlAdvClose" onclick="vlAdvClose()" aria-label="Close">×</button>
+    <button id="vlAdvClose" class="x-close" onclick="vlAdvClose()" aria-label="Close">✕</button>
   </div>
   <div id="vlAdvMsgs"></div>
   <div id="vlAdvFoot">
