@@ -2529,12 +2529,12 @@ body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important
     <!-- AI ANALYSIS CARD (VIO → /analyze, как PRO) -->
     <div id="aiCard" style="display:none;margin-bottom:12px;" class="card">
       <div class="card-accent" style="background:linear-gradient(90deg,transparent,rgba(120,152,255,.5),transparent);"></div>
-      <!-- Раскрыт по умолчанию (владелец 2026-07-14): анализ оживает сам при заходе, как в PRO — не надо кликать стрелку. Свернуть по-прежнему можно. -->
+      <!-- Свёрнут по умолчанию (владелец 2026-07-13): «Сегодня» компактный, клиент раскрывает по желанию -->
       <div onclick="var b=document.getElementById('aiBody'),c=document.getElementById('aiChev');var open=b.style.display==='none';b.style.display=open?'block':'none';c.style.transform=open?'rotate(90deg)':'';" style="display:flex;align-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent;">
         <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--t1);flex:1;">✦ <span id="aiTitle">Персональный анализ ИИ</span></div>
-        <div id="aiChev" style="color:#b48af0;font-size:20px;opacity:.6;transition:transform .25s ease;flex-shrink:0;transform:rotate(90deg);">›</div>
+        <div id="aiChev" style="color:#b48af0;font-size:20px;opacity:.6;transition:transform .25s ease;flex-shrink:0;">›</div>
       </div>
-      <div id="aiBody" style="display:block;padding-top:14px;">
+      <div id="aiBody" style="display:none;padding-top:14px;">
       <div id="aiLoading" style="display:flex;align-items:center;gap:10px;color:var(--t2);font-size:13px;">
         <div style="width:18px;height:18px;border:2px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;"></div>
         <span id="aiLoadingTxt">Анализирую ваши данные…</span>
@@ -4463,7 +4463,7 @@ function downloadPDF(){
   </div>
   <h3>${L({ru:'Анализ показателей',uk:'Аналіз показників',en:'Metrics Analysis',es:'Análisis',de:'Kennzahlenanalyse',pt:'Análise de Métricas',fr:'Analyse des Métriques',pl:'Analiza Wskaźników',it:'Analisi delle Metriche',he:'ניתוח מדדים',ja:'指標分析',ko:'지표 분석'})}</h3>
   ${insights.map(o=>`<div class="insight"><div class="insight-title">${o.i} ${(typeof _wl==='function'?_wl(o.h):o.h)}</div><div class="insight-text">${(typeof _wl==='function'?_wl(o.b):o.b)}</div></div>`).join('')}
-  ${Object.values(recs).map(r=>{var items=r.l.map(i=>_scrubProto(_wl(i))).filter(Boolean);return items.length?`<h3>${_wl(r.h)}</h3>${items.map(i=>`<div class="rec-item">${i}</div>`).join('')}`:'';}).join('')}
+  ${Object.values(recs).map(r=>`<h3>${r.h}</h3>${r.l.map(i=>`<div class="rec-item">${i}</div>`).join('')}`).join('')}
   ${labs.length?`<h3>${t('lab_title')}</h3>${labs.map(l=>`<div class="lab-item">· ${l}</div>`).join('')}`:''}
   <div class="footer">VIA-L Longevity · via-l.com · ${date}<br>${t('disclaimer')}</div>
   <\/body><\/html>`;
@@ -5706,17 +5706,6 @@ var _WLBAL='баланс\\p{L}*|рівноваг\\p{L}+|равновес\\p{L}+|
 function _wesc(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
 var _WLR={ru:'ресурс восстановления',uk:'ресурс відновлення',en:'recovery',es:'recuperación',de:'Erholung',pt:'recuperação',fr:'récupération',pl:'zasób regeneracji',it:'recupero',he:'התאוששות',ja:'回復力',ko:'회복력'};
 var _WLM={ru:'энергообмен',uk:'енергообмін',en:'energy metabolism',es:'metabolismo energético',de:'Energiestoffwechsel',pt:'metabolismo energético',fr:'métabolisme énergétique',pl:'metabolizm energii',it:'metabolismo energetico',he:'חילוף אנרגיה',ja:'エネルギー代謝',ko:'에너지 대사'};
-// Санитайзер рек-строк legacy-движка (паритет с PRO): убирает дозы добавок (мг/мкг/МЕ/IU/г/сут) и выбрасывает
-// пункты про травы/адаптогены/фосфатидилсерин/куркумин — чтобы они не утекали в экспорт «Скачать памятку»
-// (on-screen recSections в VIO уже убран, но PDF рендерит recs). Порции еды и белок в г/кг целы.
-// \b с кириллицей не работает → границу единицы держим через lookahead (?![\p{L}]).
-function _scrubProto(s){
-  if(!s||typeof s!=='string')return s;
-  if(/(ашваганд|ashwagandh|KSM-?66|родиол|rhodiola|родіол|витекс|\bvitex\b|клопогон|цимицифуг|шатавари|shatavari|\bмака\b|\bmaca\b|фитоэстроген|phytoestrogen|адаптоген|adaptogen|фосфатидилсерин|phosphatidylserine|куркумин|curcumin)/i.test(s)) return '';
-  s=s.replace(/\s*\d[\d.,+]*\s*(?:[–—-]\s*\d[\d.,+]*\s*)?(?:мг|mg|мкг|mcg|µg|МЕ|МО|IU|г\s*\/\s*(?:сут|день|day)|g\s*\/\s*day)(?:\s*\/\s*[а-яёa-z]+)?(?![\p{L}])/giu,'');
-  s=s.replace(/\s{2,}/g,' ').replace(/\s+([·,;:.])/g,'$1').replace(/·\s*·/g,'·').replace(/^[\s·:;,—–-]+|[\s·:;,—–-]+$/g,'').trim();
-  return /[\p{L}]{3,}/u.test(s)?s:'';
-}
 function _wl(s){ if(!s||typeof s!=='string')return s; var L=(typeof lang!=='undefined'?lang:'ru');
   var rc=_WLR[L]||_WLR.ru, mt=_WLM[L]||_WLM.ru, hn=_WLHn[L]||_WLHn.ru, hg=_WLHg[L]||hn;
   try{
