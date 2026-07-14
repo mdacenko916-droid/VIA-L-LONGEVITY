@@ -1374,7 +1374,12 @@ body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important
    инсайты с дозировками добавок (конфликт с ИИ-памяткой и риск модерации), циркадный/протокол-24ч (повтор «Памятки дня»),
    нутри-корреляции (адаптогены против нашего же гардрейла трав), лаб-подсказки (лабы = зона EXPERT/ELITE), «полнота данных» (повтор гаджет-панели).
    Код блоков не удалён — вернуть можно, сняв селектор. Остались честные: готовность, трекер фазы (из профиля, с подписью «оценка»), QoL (детерминированная формула), ИИ-разбор, памятка. */
-#insightsList,#mod-bio-load,#mod-circadian,#mod-nutri,#mod-protocol,#labCard,#dataCompleteness{display:none!important;}
+/* Аудит результата (владелец 2026-07-14): страница = 3 блока — Анализ VIA-L(+кольцо) · Анализ ИИ · Памятка дня.
+   Скрыты: recSections «Питание» (клинические дозы: цинк 25–30 мг, омега-3 2 г, «проверьте уровень» = лаб-claim),
+   mod-hormone «Трекер фазы» (полоски — статическая таблица по фазе, НЕ данные клиента → нечестно + гормон-claim),
+   qolCard (дублирует кольцо «Готовность» — тот же композит), res-title/res-subtitle (вердикт снят ещё в VIO 13.07).
+   Код цел — вернуть = убрать id из селектора. */
+#insightsList,#recSections,#mod-bio-load,#mod-circadian,#mod-nutri,#mod-protocol,#mod-hormone,#qolCard,#labCard,#dataCompleteness,#res-title,#res-subtitle{display:none!important;}
 #dayBlueprint{background:linear-gradient(150deg,#161A22,#10141C);border:1px solid rgba(226,185,90,.22);border-radius:16px;padding:16px 18px;margin-top:14px;}
 /* Структурный ИИ-разбор — 1:1 CSS VIO (владелец 2026-07-14: блоки/шрифт/контраст/цвета как в VIO) */
 .ai-intro{font-size:14px;color:var(--t2);line-height:1.85;margin-bottom:10px;}
@@ -3019,8 +3024,7 @@ body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important
       <div id="qolDesc" style="font-size:13px;color:var(--t2);line-height:1.7;"></div>
     </div>
 
-    <!-- AI ANALYSIS CARD -->
-    <div id="dayBlueprint"></div>
+    <!-- AI ANALYSIS CARD — порядок владельца 2026-07-14: анализ ИИ ПЕРЕД памяткой дня (как VIO) -->
     <div id="aiCard" style="display:none;" class="card" style="margin-bottom:12px;">
       <div class="card-accent" style="background:linear-gradient(90deg,transparent,rgba(120,152,255,.5),transparent);"></div>
       <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--t1);margin-bottom:14px;">✦ <span data-t="ai_title">Персональный анализ ИИ</span></div>
@@ -3032,6 +3036,9 @@ body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important
       <div id="aiError" style="display:none;font-size:12px;color:var(--alert);margin-top:8px;"></div>
       <div id="aiDisc" data-t="result_disclaimer" style="display:none;font-size:11px;color:var(--t3);line-height:1.6;margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08);">ℹ️ Информационно, не медицинский диагноз. Не заменяет консультацию врача.</div>
     </div>
+
+    <!-- ПАМЯТКА ДНЯ — блок 3, ПОСЛЕ анализа ИИ (порядок владельца 2026-07-14) -->
+    <div id="dayBlueprint"></div>
 
     <!-- LAB TESTS CARD -->
     <div id="labCard" style="display:none;" class="card" style="margin-bottom:12px;">
@@ -7907,17 +7914,30 @@ function _themeIcon(t){ t=(t||'').toLowerCase();
 function _renderAnalysis(raw){
   var text=(typeof _wl==='function')?_wl(String(raw==null?'':raw)):String(raw==null?'':raw);
   if(text.indexOf('[[S]]')<0) return _mdOnly(text);   // старый/неструктурный → обычный рендер (обратная совместимость)
-  var parts=text.split(/\n?\[\[S\]\]\s*/), intro=parts.shift(), html='';
-  if(intro&&intro.trim()) html+='<div class="ai-intro">'+_mdOnly(intro.trim())+'</div>';
+  var parts=text.split(/\n?\[\[S\]\]\s*/), intro=parts.shift(), secs=[], html='';
   for(var i=0;i<parts.length;i++){
-    var ds=parts[i].split(/\n?\[\[D\]\]\s*\n?/), headsum=ds[0]||'', detail=(ds[1]||'').trim();
-    var nl=headsum.indexOf('\n'), head=(nl<0?headsum:headsum.slice(0,nl)).trim(), summary=(nl<0?'':headsum.slice(nl+1)).trim();
-    var hp=head.split('|'), icon=(hp[0]||'').trim(), title=(hp[1]||'').trim(), flag=(hp[2]||'').trim().toLowerCase();
-    if(!title){ title=icon; icon=''; }   // если разделителя нет — весь head в заголовок
-    var pill=(flag.indexOf('prior')>=0)?('<span class="ai-sec-pill">'+_moreLbl_pri()+'</span>'):'';
+    var ds=parts[i].split(/\n?\[\[D\]\]\s*\n?/), headsum=ds[0]||'', det=(ds[1]||'').trim();
+    var nl=headsum.indexOf('\n'), head=(nl<0?headsum:headsum.slice(0,nl)).trim(), sum=(nl<0?'':headsum.slice(nl+1)).trim();
+    var hp=head.split('|'), ic=(hp[0]||'').trim(), ti=(hp[1]||'').trim(), fl=(hp[2]||'').trim().toLowerCase();
+    if(!ti){ ti=ic; ic=''; }   // если разделителя нет — весь head в заголовок
+    // ИИ изредка роняет саму строку-заголовок после [[S]] → карточка выходила безымянной и пустой
+    // (живой VIO 14.07: блок про мышцы начинался сразу с «Почему я так думаю»). Такой блок не рисуем:
+    // его текст доклеиваем к предыдущей теме, а если он первый — во вступление. Воркер чинит это же на входе.
+    if(!ti){
+      var tail=[sum,det].filter(Boolean).join('\n\n'); if(!tail) continue;
+      if(secs.length) secs[secs.length-1].det=(secs[secs.length-1].det?secs[secs.length-1].det+'\n\n':'')+tail;
+      else intro=(intro?intro+'\n\n':'')+tail;
+      continue;
+    }
+    secs.push({ic:ic,ti:ti,fl:fl,sum:sum,det:det});
+  }
+  if(intro&&intro.trim()) html+='<div class="ai-intro">'+_mdOnly(intro.trim())+'</div>';
+  for(var k=0;k<secs.length;k++){
+    var s=secs[k], detail=s.det, title=s.ti, icon=s.ic;
+    var pill=(s.fl.indexOf('prior')>=0)?('<span class="ai-sec-pill">'+_moreLbl_pri()+'</span>'):'';
     var _ti=_themeIcon(title), iconHtml=_ti?('<img class="ai-sec-img" src="icons/'+_ti+'.webp" alt="" onerror="this.style.display=\'none\'">'):(icon?('<span class="ai-sec-ic">'+_esc(icon)+'</span>'):'');
     html+='<div class="ai-sec'+(detail?' has-det':'')+(_ti?(' ai-th-'+_ti):'')+'" onclick="_secTap(this,event)"><div class="ai-sec-h" onclick="_secHeadTap(this,event)">'+iconHtml+'<span style="flex:1;">'+_esc(title)+'</span>'+pill+(detail?'<i class="ph ph-caret-down ai-sec-chev" aria-hidden="true"></i>':'')+'</div>'
-      +'<div class="ai-sec-sum">'+_mdOnly(summary)+'</div>';
+      +'<div class="ai-sec-sum">'+_mdOnly(s.sum)+'</div>';
     if(detail) html+='<button type="button" class="ai-sec-more" onclick="_toggleDetail(this,event)">'+_esc(_moreLblTxt())+' <i class="ph ph-caret-down" aria-hidden="true"></i></button>'
       +'<div class="ai-sec-det-wrap"><div class="ai-sec-det">'+_mdOnly(detail)
       +'<button type="button" class="ai-sec-coll" onclick="_secCollapse(this,event)">'+_esc(_collLbl())+' <i class="ph ph-caret-up" aria-hidden="true"></i></button></div></div>';

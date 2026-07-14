@@ -2502,9 +2502,9 @@ body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important
            Элементы в DOM (display:none) — их textContent читает PDF-шаблон. -->
       <h2 class="result-title" id="res-title" style="display:none;"></h2>
       <p class="result-sub" id="res-subtitle" style="display:none;"></p>
-      <!-- Кольцо «Готовность» скрыто (владелец 2026-07-13, «Сегодня» = только памятка);
-           score считается по-прежнему (история/PDF), setScore крутит скрытые элементы -->
-      <div class="score-wrap" style="display:none;">
+      <!-- Кольцо «Готовность» ВОЗВРАЩЕНО (владелец 2026-07-14): блок 1 = Анализ VIA-L + дисклеймер + кольцо.
+           Вердикт (res-title/res-subtitle) остаётся скрытым — решение владельца 13.07. Паритет с PRO. -->
+      <div class="score-wrap">
         <div class="score-ring-outer">
           <svg class="score-svg" viewBox="0 0 160 160">
             <circle class="score-track" cx="80" cy="80" r="67"/>
@@ -5571,17 +5571,30 @@ function _themeIcon(t){ t=(t||'').toLowerCase();
 function _renderAnalysis(raw){
   var text=(typeof _wl==='function')?_wl(String(raw==null?'':raw)):String(raw==null?'':raw);
   if(text.indexOf('[[S]]')<0) return _mdOnly(text);   // старый/неструктурный → обычный рендер (обратная совместимость)
-  var parts=text.split(/\n?\[\[S\]\]\s*/), intro=parts.shift(), html='';
-  if(intro&&intro.trim()) html+='<div class="ai-intro">'+_mdOnly(intro.trim())+'</div>';
+  var parts=text.split(/\n?\[\[S\]\]\s*/), intro=parts.shift(), secs=[], html='';
   for(var i=0;i<parts.length;i++){
-    var ds=parts[i].split(/\n?\[\[D\]\]\s*\n?/), headsum=ds[0]||'', detail=(ds[1]||'').trim();
-    var nl=headsum.indexOf('\n'), head=(nl<0?headsum:headsum.slice(0,nl)).trim(), summary=(nl<0?'':headsum.slice(nl+1)).trim();
-    var hp=head.split('|'), icon=(hp[0]||'').trim(), title=(hp[1]||'').trim(), flag=(hp[2]||'').trim().toLowerCase();
-    if(!title){ title=icon; icon=''; }   // если разделителя нет — весь head в заголовок
-    var pill=(flag.indexOf('prior')>=0)?('<span class="ai-sec-pill">'+_moreLbl_pri()+'</span>'):'';
+    var ds=parts[i].split(/\n?\[\[D\]\]\s*\n?/), headsum=ds[0]||'', det=(ds[1]||'').trim();
+    var nl=headsum.indexOf('\n'), head=(nl<0?headsum:headsum.slice(0,nl)).trim(), sum=(nl<0?'':headsum.slice(nl+1)).trim();
+    var hp=head.split('|'), ic=(hp[0]||'').trim(), ti=(hp[1]||'').trim(), fl=(hp[2]||'').trim().toLowerCase();
+    if(!ti){ ti=ic; ic=''; }   // если разделителя нет — весь head в заголовок
+    // ИИ изредка роняет саму строку-заголовок после [[S]] → карточка выходила безымянной и пустой
+    // (живой VIO 14.07: блок про мышцы начинался сразу с «Почему я так думаю»). Такой блок не рисуем:
+    // его текст доклеиваем к предыдущей теме, а если он первый — во вступление. Воркер чинит это же на входе.
+    if(!ti){
+      var tail=[sum,det].filter(Boolean).join('\n\n'); if(!tail) continue;
+      if(secs.length) secs[secs.length-1].det=(secs[secs.length-1].det?secs[secs.length-1].det+'\n\n':'')+tail;
+      else intro=(intro?intro+'\n\n':'')+tail;
+      continue;
+    }
+    secs.push({ic:ic,ti:ti,fl:fl,sum:sum,det:det});
+  }
+  if(intro&&intro.trim()) html+='<div class="ai-intro">'+_mdOnly(intro.trim())+'</div>';
+  for(var k=0;k<secs.length;k++){
+    var s=secs[k], detail=s.det, title=s.ti, icon=s.ic;
+    var pill=(s.fl.indexOf('prior')>=0)?('<span class="ai-sec-pill">'+_moreLbl_pri()+'</span>'):'';
     var _ti=_themeIcon(title), iconHtml=_ti?('<img class="ai-sec-img" src="icons/'+_ti+'.webp" alt="" onerror="this.style.display=\'none\'">'):(icon?('<span class="ai-sec-ic">'+_esc(icon)+'</span>'):'');
     html+='<div class="ai-sec'+(detail?' has-det':'')+(_ti?(' ai-th-'+_ti):'')+'" onclick="_secTap(this,event)"><div class="ai-sec-h" onclick="_secHeadTap(this,event)">'+iconHtml+'<span style="flex:1;">'+_esc(title)+'</span>'+pill+(detail?'<i class="ph ph-caret-down ai-sec-chev" aria-hidden="true"></i>':'')+'</div>'
-      +'<div class="ai-sec-sum">'+_mdOnly(summary)+'</div>';
+      +'<div class="ai-sec-sum">'+_mdOnly(s.sum)+'</div>';
     if(detail) html+='<button type="button" class="ai-sec-more" onclick="_toggleDetail(this,event)">'+_esc(_moreLblTxt())+' <i class="ph ph-caret-down" aria-hidden="true"></i></button>'
       +'<div class="ai-sec-det-wrap"><div class="ai-sec-det">'+_mdOnly(detail)
       +'<button type="button" class="ai-sec-coll" onclick="_secCollapse(this,event)">'+_esc(_collLbl())+' <i class="ph ph-caret-up" aria-hidden="true"></i></button></div></div>';
