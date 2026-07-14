@@ -2510,7 +2510,7 @@ body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important
       <p class="result-sub" id="res-subtitle" style="display:none;"></p>
       <!-- Кольцо «Готовность» скрыто (владелец 2026-07-13, «Сегодня» = только памятка);
            score считается по-прежнему (история/PDF), setScore крутит скрытые элементы -->
-      <div class="score-wrap" style="display:none;">
+      <div class="score-wrap">
         <div class="score-ring-outer">
           <svg class="score-svg" viewBox="0 0 160 160">
             <circle class="score-track" cx="80" cy="80" r="67"/>
@@ -5921,8 +5921,9 @@ function _showResultsInner(){
   document.getElementById('scoreNum').textContent=score;
   setTimeout(()=>setScore(score,type),100);
 
-  // doctorAlert скрыт в 4-блочной раскладке результата (docR ещё собирается — идёт в PDF и getLabTests).
-  if(false&&doc){
+  // Красный сигнал «Консультация с врачом» — ВОЗВРАЩЁН (владелец 2026-07-14): VIO сам считает; если docR
+  // не пуст (расчёт флагнул) — вешаем плашку. Пусто → плашка скрыта (setResults/reset снимает .visible).
+  if(doc){
     const da=document.getElementById('doctorAlert');
     da.classList.add('visible');
     document.getElementById('doctorText').textContent=' '+t('doc_prefix')+docR.join('; ')+'.';
