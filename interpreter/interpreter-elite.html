@@ -1478,7 +1478,7 @@ footer{
       <div class="source-icon apple">🍎</div>
       <div class="source-info">
         <div class="source-name">Apple Health</div>
-        <div class="source-desc" data-t="desc_apple">HRV · Пульс · Сон · Шаги · VO2 max</div>
+        <div class="source-desc" data-t="desc_apple">HRV · Пульс · Сон · SpO₂ · Температура · VO2 max</div>
       </div>
       <span class="source-badge badge-best" data-t="badge_best">Лучший</span>
       <span class="source-chevron">›</span>
@@ -1533,7 +1533,7 @@ footer{
       <div class="source-icon garmin">⌚</div>
       <div class="source-info">
         <div class="source-name">Garmin Connect</div>
-        <div class="source-desc" data-t="desc_garmin">HRV · Пульс · Сон · Стресс</div>
+        <div class="source-desc" data-t="desc_garmin">HRV · Пульс · Сон · Температура · Body Battery</div>
       </div>
       <span class="source-badge badge-good" data-t="badge_good">Хороший</span>
       <span class="source-chevron">›</span>
@@ -1608,7 +1608,7 @@ footer{
       <div class="source-icon samsung">🔵</div>
       <div class="source-info">
         <div class="source-name">Samsung Galaxy Watch · Health</div>
-        <div class="source-desc" data-t="desc_samsung">ЧСС · Сон · Стресс · ЭКГ · Шаги · SpO₂</div>
+        <div class="source-desc" data-t="desc_samsung">ЧСС · Сон · Стресс · Шаги · SpO₂</div>
       </div>
       <span class="source-badge badge-good" data-t="badge_good">Хороший</span>
       <span class="source-chevron">›</span>
@@ -1657,7 +1657,7 @@ footer{
       <div class="source-icon fitbit">📡</div>
       <div class="source-info">
         <div class="source-name">Fitbit Air · Google Health <span class="tst" data-t="badge_test">РЕЖИМ ТЕСТ</span></div>
-        <div class="source-desc" data-t="desc_fitbit">HRV · Пульс · Сон · Шаги · Энергия</div>
+        <div class="source-desc" data-t="desc_fitbit">HRV · Пульс · Сон · SpO₂ · Температура · VO2 max</div>
       </div>
       <span class="source-badge badge-good" data-t="badge_new">Новый</span>
       <span class="source-chevron">›</span>
@@ -1724,7 +1724,7 @@ footer{
       <div class="source-icon whoop">⚡</div>
       <div class="source-info">
         <div class="source-name">WHOOP 5.0</div>
-        <div class="source-desc" data-t="desc_whoop">HRV · Восстановление · Нагрузка · Сон · Strain</div>
+        <div class="source-desc" data-t="desc_whoop">HRV · Восстановление · Сон · SpO₂ · Температура · Strain</div>
       </div>
       <span class="source-badge badge-best" data-t="badge_best">Лучший</span>
       <span class="source-chevron">›</span>
@@ -1834,7 +1834,7 @@ footer{
       <div class="source-icon withings">🔵</div>
       <div class="source-info">
         <div class="source-name">Withings · Health Mate <span class="tst" data-t="badge_test">РЕЖИМ ТЕСТ</span></div>
-        <div class="source-desc" data-t="desc_withings">ЧСС · Сон · SpO₂ · ВСР · Шаги · Вес</div>
+        <div class="source-desc" data-t="desc_withings">ЧСС · Сон · SpO₂ · ВСР · Шаги</div>
       </div>
       <span class="source-badge badge-good" data-t="badge_good">Хороший</span>
       <span class="source-chevron">›</span>
@@ -3310,8 +3310,8 @@ function gateUnlock(plan, code){
   const sa=document.getElementById('scroll-area');
   g.style.transition='opacity .5s';g.style.opacity='0';
   setTimeout(()=>{g.style.display='none';if(sa)sa.style.visibility='visible';},500);
-  sessionStorage.setItem('vial_access', plan);
-  if(code) sessionStorage.setItem('vial_code', code);
+  sessionStorage.setItem('viale_access', plan);
+  if(code) sessionStorage.setItem('viale_code', code);
   if(typeof startFunnel==='function') setTimeout(startFunnel,60);   // после входа — сразу одностраничная лента
 }
 
@@ -3319,13 +3319,13 @@ function gateUnlock(plan, code){
 // Заполняется из ответа Apps Script: { used, max, next_at }.
 // max=8 для ELITE-8W, 12 для ELITE-12W (приходит от сервера через validateCode).
 let expertState = (function(){
-  try { return JSON.parse(sessionStorage.getItem('vial_expert_state') || 'null') || { used:0, max:8, next_at:null }; }
+  try { return JSON.parse(sessionStorage.getItem('viale_expert_state') || 'null') || { used:0, max:8, next_at:null }; }
   catch(e){ return { used:0, max:8, next_at:null }; }
 })();
 
 function saveExpertState(state){
   expertState = state;
-  sessionStorage.setItem('vial_expert_state', JSON.stringify(state));
+  sessionStorage.setItem('viale_expert_state', JSON.stringify(state));
 }
 
 function renderExpertCounter(){
@@ -3431,8 +3431,8 @@ function submitOnboarding() {
   window._onboardingName  = name;
   window._onboardingEmail = email;
 
-  if (name)  sessionStorage.setItem('vial_name', name);
-  if (email) sessionStorage.setItem('vial_email', email);
+  if (name)  sessionStorage.setItem('viale_name', name);
+  if (email) sessionStorage.setItem('viale_email', email);
 
   // Переход к stepResult. Предзаполняем имя/email на форме недельного отчёта
   // и скроллим к ней — пользователь видит готовую кнопку «Отправить», нажимает
@@ -3530,7 +3530,7 @@ function toggleGateVis(){
   inp.type=inp.type==='password'?'text':'password';
   eye.textContent=inp.type==='password'?'👁':'🙈';
 }
-if(sessionStorage.getItem('vial_access')){
+if(sessionStorage.getItem('viale_access')){
   document.getElementById('gate').style.display='none';
 }else{
   const sa=document.getElementById('scroll-area');
@@ -3547,6 +3547,16 @@ document.addEventListener('click',e=>{
 });
 
 // ══ TRANSLATIONS ══════════════════════════════════════════
+// ── Разделение хранилищ тарифов (2026-07-14): все продукты на одном домене делили ключи vial_* —
+// проход одного тарифа появлялся в карточке другого. Этот тариф теперь на viale_*.
+// Одноразовая миграция копирует старые vial_* → viale_* (данные и код доступа клиентов целы).
+(function(){try{
+  if(localStorage.getItem('viale_migrated'))return;
+  var skip={vial_lang:1,vial_lang_manual:1,vial_sec:1};
+  var ks=[]; for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('vial_')===0&&!skip[k])ks.push(k);}
+  ks.forEach(function(k){var nk='viale_'+k.slice(5);if(localStorage.getItem(nk)==null){var v=localStorage.getItem(k);if(v!=null)localStorage.setItem(nk,v);}});
+  localStorage.setItem('viale_migrated','1');
+}catch(e){}})();
 const T={
   ru:{s_prof_waist:'Талия (см)',bone_l:'Здоровье костей',bone_fracture:'Был перелом (от лёгкой травмы)',bone_height:'Снижение роста (>2 см)',bone_family:'Остеопороз в семье',bone_earlymeno:'Ранняя менопауза (<45)',bone_none:'Нет',breast_l:'Здоровье груди',breast_pain:'Боль/чувствительность груди',breast_lump:'Уплотнение/узел в груди',breast_family:'Рак груди в семье',breast_none:'Нет / не актуально',sym_cold:'Зябкость/непереносимость холода',sym_numb:'Онемение/покалывание',gi_l:'Пищеварение',gi_bloat:'Вздутие/газы',gi_constip:'Запоры',gi_diarr:'Диарея/жидкий стул',gi_reflux:'Изжога/рефлюкс',gi_none:'Нет проблем',lab_glucose:'Глюкоза натощак (ммоль/л)',lab_hba1c:'HbA1c (%)',lab_ldl:'ЛПНП (ммоль/л)',lab_apob:'ApoB (г/л)',lab_tg:'Триглицериды (ммоль/л)',lab_crp:'вч-СРБ (мг/л)',gsm_l:'Интимное и мочеполовое здоровье',gsm_dry:'Сухость влагалища',gsm_pain:'Боль/дискомфорт при близости',gsm_urg:'Частое/ургентное мочеиспускание',gsm_uti:'Рецидивные ИМП/циститы',gsm_none:'Нет / не актуально',uro_l:'Мочеиспускание и простата',uro_noct:'Ночные позывы (1+ за ночь)',uro_stream:'Слабая струя',uro_empty:'Чувство неполного опорожнения',uro_freq:'Частое мочеиспускание днём',uro_none:'Нет / не актуально',procto_l:'Аноректальное здоровье (проктология)',gi_blood:'Кровь при дефекации',gi_hemor:'Геморрой/узлы',gi_fi:'Недержание газов/кала',gi_strain:'Сильное натуживание',gsm_si:'Подтекание мочи при кашле/нагрузке',gsm_ui:'Подтекание при резком позыве',gsm_prolapse:'Ощущение выпячивания/опущения',hm_ed:'Проблемы с эрекцией',
     topbar_home:'← На главную',topbar_specialist:'🩺 Мой специалист',gate_sub:'ELITE · от €390 / 8 нед · €590 / 12 нед',gate_title:'Введите код доступа',gate_desc:'Код отправляется на email после оплаты. Ещё нет ELITE? <a href="https://pay.hotmart.com/W106049757Q" target="_blank" style="color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(196,154,60,.4);">Перейти к планам →</a>',gate_error:'Неверный код.',gate_btn:'Войти →',gate_checking:'Проверка…',gate_err_invalid:'Код не найден. Проверьте письмо.',gate_err_used:'Этот код уже использован.',gate_err_expired:'Срок подписки истёк. Оформите новую.',gate_err_network:'Ошибка соединения. Попробуйте ещё раз.',preview_label:'Введите код для доступа',
@@ -3593,7 +3603,7 @@ const T={
     qol_title:'Индекс качества жизни (QoL)',qol_good:'Качество жизни удовлетворительное',qol_mod:'Умеренное снижение качества жизни',qol_high:'Значительное снижение качества жизни',
     s14_badge:'13 / 14 · Биоимпеданс',result_steps_label:'Pro · 15 шагов',s14_title:'Состав тела',s14_desc:'Показания биоимпеданса позволят сделать рекомендации более персонализированными и точными. Если нет умных весов — пропустите шаг.',bio_fat:'% жира',bio_muscle:'% мышц',bio_visceral:'Висцеральный жир (1–30)',bio_bioage:'Биологический возраст',
     ai_title:'Персональный анализ ИИ',ai_loading:'Анализирую ваши данные...',
-    import_btn:'📡 Импорт из устройства',import_header:'VIA‑L · Импорт данных',import_title:'Подключите ваше устройство',import_sub:'Загрузите данные автоматически — или введите вручную.',badge_best:'Лучший',btn_load:'Загрузить',import_loaded:'✓ Данные загружены',import_go:'Перейти к анализу →',import_skip:'Закрыть',badge_good:'Хороший',badge_new:'Новый',badge_always:'Всегда',desc_oura:'HRV · Сон · Темп · ЧСС · Готовность',instr_oura_connect:'В приложении кольцо читается через Apple Health (кнопка ниже). Прямое онлайн-подключение Oura — скоро. Пока — файл экспорта Oura или ручной ввод.',desc_apple:'HRV · ЧСС · Сон · Шаги · VO2 max',desc_garmin:'HRV · ЧСС · Сон · Стресс',desc_polar:'HRV · ЧСС · Сон · Nightly Recharge',desc_samsung:'ЧСС · Сон · Стресс · ЭКГ · Шаги · SpO₂',desc_fitbit:'HRV · ЧСС · Сон · Шаги · Энергия',desc_samsung2:'HRV · ЧСС · ЭКГ · Сон · Стресс · Шаги',desc_whoop:'HRV · Восстановление · Нагрузка · Сон · Strain',desc_xiaomi:'ЧСС · Сон · Шаги · SpO₂ · Стресс',desc_withings:'ЧСС · Сон · SpO₂ · HRV · Шаги · Вес',desc_amazfit:'ЧСС · Сон · SpO₂ · Стресс · PAI · HRV',desc_ultrahuman:'HRV · Сон · Темп · ЧСС · Восстановление',desc_manual:'Любое устройство · Вручную · Дополнить данные',instr_oura_token:'Откройте <b style="color:var(--t1);">cloud.ouraring.com</b> → Personal Access Tokens → Create token → вставьте сюда:',
+    import_btn:'📡 Импорт из устройства',import_header:'VIA‑L · Импорт данных',import_title:'Подключите ваше устройство',import_sub:'Загрузите данные автоматически — или введите вручную.',badge_best:'Лучший',btn_load:'Загрузить',import_loaded:'✓ Данные загружены',import_go:'Перейти к анализу →',import_skip:'Закрыть',badge_good:'Хороший',badge_new:'Новый',badge_always:'Всегда',desc_oura:'HRV · Сон · Темп · ЧСС · Готовность',instr_oura_connect:'В приложении кольцо читается через Apple Health (кнопка ниже). Прямое онлайн-подключение Oura — скоро. Пока — файл экспорта Oura или ручной ввод.',desc_apple:'HRV · ЧСС · Сон · SpO₂ · Температура · VO2 max',desc_garmin:'HRV · ЧСС · Сон · Температура · Body Battery',desc_polar:'HRV · ЧСС · Сон · Nightly Recharge',desc_samsung:'ЧСС · Сон · Стресс · Шаги · SpO₂',desc_fitbit:'HRV · ЧСС · Сон · SpO₂ · Температура · VO2 max',desc_samsung2:'HRV · ЧСС · ЭКГ · Сон · Стресс · Шаги',desc_whoop:'HRV · Восстановление · Сон · SpO₂ · Температура · Strain',desc_xiaomi:'ЧСС · Сон · Шаги · SpO₂ · Стресс',desc_withings:'ЧСС · Сон · SpO₂ · HRV · Шаги',desc_amazfit:'ЧСС · Сон · SpO₂ · Стресс · PAI · HRV',desc_ultrahuman:'HRV · Сон · Темп · ЧСС · Восстановление',desc_manual:'Любое устройство · Вручную · Дополнить данные',instr_oura_token:'Откройте <b style="color:var(--t1);">cloud.ouraring.com</b> → Personal Access Tokens → Create token → вставьте сюда:',
     instr_oura_file:'Oura App → Профиль → Экспорт данных → выберите JSON или CSV',
     hint_oura:'Поддерживается: JSON, CSV из Oura',
     instr_apple_file:'iPhone: <b style="color:var(--t1);">Здоровье</b> → профиль → Экспортировать данные здоровья → export.xml',
@@ -3709,7 +3719,7 @@ const T={
     qol_title:'Індекс якості життя (QoL)',qol_good:'Якість життя задовільна',qol_mod:'Помірне зниження якості життя',qol_high:'Значне зниження якості життя',
     s14_badge:'13 / 14 · Біоімпеданс',result_steps_label:'Pro · 15 кроків',s14_title:'Склад тіла',s14_desc:'Показання біоімпедансу дозволять зробити рекомендації більш персоналізованими та точними. Якщо немає розумних терезів — пропустіть крок.',bio_fat:'% жиру',bio_muscle:'% м\'язів',bio_visceral:'Вісцеральний жир (1–30)',bio_bioage:'Біологічний вік',
     ai_title:'Персональний аналіз ШІ',ai_loading:'Аналізую ваші дані...',
-    import_btn:'📡 Імпорт з пристрою',import_header:'VIA‑L · Імпорт даних',import_title:'Підключіть ваш пристрій',import_sub:'Завантажте дані автоматично — або введіть вручну.',badge_best:'Найкращий',btn_load:'Завантажити',import_loaded:'✓ Дані завантажено',import_go:'Перейти до аналізу →',import_skip:'Закрити',badge_good:'Хороший',badge_new:'Новий',badge_always:'Завжди',desc_oura:'HRV · Сон · Темп · ЧСС · Готовність',instr_oura_connect:'У застосунку каблучка зчитується через Apple Health (кнопка нижче). Пряме онлайн-підключення Oura — скоро. Поки — файл експорту Oura або ручне введення.',desc_apple:'HRV · ЧСС · Сон · Кроки · VO2 max',desc_garmin:'HRV · ЧСС · Сон · Стрес',desc_polar:'HRV · ЧСС · Сон · Nightly Recharge',desc_samsung:'ЧСС · Сон · Стрес · ЕКГ · Кроки · SpO₂',desc_fitbit:'HRV · ЧСС · Сон · Кроки · Енергія',desc_samsung2:'HRV · ЧСС · ЕКГ · Сон · Стрес · Кроки',desc_whoop:'HRV · Відновлення · Навантаження · Сон · Strain',desc_xiaomi:'ЧСС · Сон · Кроки · SpO₂ · Стрес',desc_withings:'ЧСС · Сон · SpO₂ · HRV · Кроки · Вага',desc_amazfit:'ЧСС · Сон · SpO₂ · Стрес · PAI · HRV',desc_ultrahuman:'HRV · Сон · Темп · ЧСС · Відновлення',desc_manual:'Будь-який пристрій · Вручну · Доповнити дані',instr_oura_token:'Відкрийте <b style="color:var(--t1);">cloud.ouraring.com</b> → Personal Access Tokens → Create token → вставте тут:',
+    import_btn:'📡 Імпорт з пристрою',import_header:'VIA‑L · Імпорт даних',import_title:'Підключіть ваш пристрій',import_sub:'Завантажте дані автоматично — або введіть вручну.',badge_best:'Найкращий',btn_load:'Завантажити',import_loaded:'✓ Дані завантажено',import_go:'Перейти до аналізу →',import_skip:'Закрити',badge_good:'Хороший',badge_new:'Новий',badge_always:'Завжди',desc_oura:'HRV · Сон · Темп · ЧСС · Готовність',instr_oura_connect:'У застосунку каблучка зчитується через Apple Health (кнопка нижче). Пряме онлайн-підключення Oura — скоро. Поки — файл експорту Oura або ручне введення.',desc_apple:'HRV · ЧСС · Сон · SpO₂ · Температура · VO2 max',desc_garmin:'HRV · ЧСС · Сон · Температура · Body Battery',desc_polar:'HRV · ЧСС · Сон · Nightly Recharge',desc_samsung:'ЧСС · Сон · Стрес · Кроки · SpO₂',desc_fitbit:'HRV · ЧСС · Сон · SpO₂ · Температура · VO2 max',desc_samsung2:'HRV · ЧСС · ЕКГ · Сон · Стрес · Кроки',desc_whoop:'HRV · Відновлення · Сон · SpO₂ · Температура · Strain',desc_xiaomi:'ЧСС · Сон · Кроки · SpO₂ · Стрес',desc_withings:'ЧСС · Сон · SpO₂ · HRV · Кроки',desc_amazfit:'ЧСС · Сон · SpO₂ · Стрес · PAI · HRV',desc_ultrahuman:'HRV · Сон · Темп · ЧСС · Відновлення',desc_manual:'Будь-який пристрій · Вручну · Доповнити дані',instr_oura_token:'Відкрийте <b style="color:var(--t1);">cloud.ouraring.com</b> → Personal Access Tokens → Create token → вставте тут:',
     instr_oura_file:'Oura App → Профіль → Експорт даних → оберіть JSON або CSV',
     hint_oura:'Підтримується: JSON, CSV з Oura',
     instr_apple_file:'iPhone: <b style="color:var(--t1);">Здоров\'я</b> → профіль → Експортувати дані здоров\'я → export.xml',
@@ -3824,7 +3834,7 @@ const T={
     s3_mood:'Mood today',mood_stable:'Stable',mood_swings:'Swings',mood_low:'Low',s3_anx:'Anxiety (1–10)',s3_irr:'Irritability',irr_none:'None',irr_mild:'Mild',irr_high:'High',
     qol_title:'Quality of Life Index (QoL)',qol_good:'Quality of life satisfactory',qol_mod:'Moderate QoL reduction',qol_high:'Significant QoL reduction',
     s14_badge:'13 / 14 · Bioimpedance',result_steps_label:'Pro · 15 steps',s14_title:'Body Composition',s14_desc:'Bioimpedance readings will make recommendations more personalised and precise. Skip if you don\'t have smart scales.',bio_fat:'Body fat %',bio_muscle:'Muscle %',bio_visceral:'Visceral fat (1–30)',bio_bioage:'Biological age',
-    import_btn:'📡 Import from device',import_header:'VIA‑L · Data Import',import_title:'Connect your device',import_sub:'Load data automatically — or enter manually.',badge_best:'Best',btn_load:'Load',import_loaded:'✓ Data loaded',import_go:'Go to analysis →',import_skip:'Close',badge_good:'Good',badge_new:'New',badge_always:'Always',desc_oura:'HRV · Sleep · Temp · HR · Readiness',instr_oura_connect:'In the app the ring is read via Apple Health (button below). Direct Oura connection coming soon. For now — an Oura export file or manual entry.',desc_apple:'HRV · HR · Sleep · Steps · VO2 max',desc_garmin:'HRV · HR · Sleep · Stress',desc_polar:'HRV · HR · Sleep · Nightly Recharge',desc_samsung:'HR · Sleep · Stress · ECG · Steps · SpO₂',desc_fitbit:'HRV · HR · Sleep · Steps · Energy',desc_samsung2:'HRV · HR · ECG · Sleep · Stress · Steps',desc_whoop:'HRV · Recovery · Load · Sleep · Strain',desc_xiaomi:'HR · Sleep · Steps · SpO₂ · Stress',desc_withings:'HR · Sleep · SpO₂ · HRV · Steps · Weight',desc_amazfit:'HR · Sleep · SpO₂ · Stress · PAI · HRV',desc_ultrahuman:'HRV · Sleep · Temp · HR · Recovery',desc_manual:'Any device · Manually · Add data',instr_oura_token:'Open <b style="color:var(--t1);">cloud.ouraring.com</b> → Personal Access Tokens → Create token → paste here:',
+    import_btn:'📡 Import from device',import_header:'VIA‑L · Data Import',import_title:'Connect your device',import_sub:'Load data automatically — or enter manually.',badge_best:'Best',btn_load:'Load',import_loaded:'✓ Data loaded',import_go:'Go to analysis →',import_skip:'Close',badge_good:'Good',badge_new:'New',badge_always:'Always',desc_oura:'HRV · Sleep · Temp · HR · Readiness',instr_oura_connect:'In the app the ring is read via Apple Health (button below). Direct Oura connection coming soon. For now — an Oura export file or manual entry.',desc_apple:'HRV · HR · Sleep · SpO₂ · Temp · VO2 max',desc_garmin:'HRV · HR · Sleep · Temp · Body Battery',desc_polar:'HRV · HR · Sleep · Nightly Recharge',desc_samsung:'HR · Sleep · Stress · Steps · SpO₂',desc_fitbit:'HRV · HR · Sleep · SpO₂ · Temp · VO2 max',desc_samsung2:'HRV · HR · ECG · Sleep · Stress · Steps',desc_whoop:'HRV · Recovery · Sleep · SpO₂ · Temp · Strain',desc_xiaomi:'HR · Sleep · Steps · SpO₂ · Stress',desc_withings:'HR · Sleep · SpO₂ · HRV · Steps',desc_amazfit:'HR · Sleep · SpO₂ · Stress · PAI · HRV',desc_ultrahuman:'HRV · Sleep · Temp · HR · Recovery',desc_manual:'Any device · Manually · Add data',instr_oura_token:'Open <b style="color:var(--t1);">cloud.ouraring.com</b> → Personal Access Tokens → Create token → paste here:',
     instr_oura_file:'Oura App → Profile → Export data → choose JSON or CSV',
     hint_oura:'Supported: JSON, CSV from Oura',
     instr_apple_file:'iPhone: <b style="color:var(--t1);">Health</b> → profile → Export all health data → export.xml',
@@ -3938,7 +3948,7 @@ const T={
     s3_mood:'Humor hoy',mood_stable:'Estable',mood_swings:'Variable',mood_low:'Bajo',s3_anx:'Ansiedad (1–10)',s3_irr:'Irritabilidad',irr_none:'Ninguna',irr_mild:'Moderada',irr_high:'Alta',
     qol_title:'Índice de Calidad de Vida (QoL)',qol_good:'Calidad de vida satisfactoria',qol_mod:'Reducción moderada de calidad de vida',qol_high:'Reducción significativa de calidad de vida',
     s14_badge:'13 / 14 · Bioimpedancia',result_steps_label:'Pro · 15 pasos',s14_title:'Composición corporal',s14_desc:'Los datos de bioimpedancia harán las recomendaciones más personalizadas y precisas. Omite este paso si no tienes báscula inteligente.',bio_fat:'% grasa',bio_muscle:'% músculo',bio_visceral:'Grasa visceral (1–30)',bio_bioage:'Edad biológica',
-    import_btn:'📡 Importar del dispositivo',import_header:'VIA‑L · Importar datos',import_title:'Conecta tu dispositivo',import_sub:'Carga los datos automáticamente o ingrésalos manualmente.',badge_best:'Mejor',btn_load:'Cargar',import_loaded:'✓ Datos cargados',import_go:'Ir al análisis →',import_skip:'Cerrar',badge_good:'Bueno',badge_new:'Nuevo',badge_always:'Siempre',desc_oura:'HRV · Sueño · Temp · FC · Preparación',instr_oura_connect:'En la app el anillo se lee vía Apple Health (botón abajo). La conexión directa de Oura llegará pronto. Por ahora — archivo de exportación de Oura o entrada manual.',desc_apple:'HRV · FC · Sueño · Pasos · VO2 max',desc_garmin:'HRV · FC · Sueño · Estrés',desc_polar:'HRV · FC · Sueño · Nightly Recharge',desc_samsung:'FC · Sueño · Estrés · ECG · Pasos · SpO₂',desc_fitbit:'HRV · FC · Sueño · Pasos · Energía',desc_samsung2:'HRV · FC · ECG · Sueño · Estrés · Pasos',desc_whoop:'HRV · Recuperación · Carga · Sueño · Strain',desc_xiaomi:'FC · Sueño · Pasos · SpO₂ · Estrés',desc_withings:'FC · Sueño · SpO₂ · HRV · Pasos · Peso',desc_amazfit:'FC · Sueño · SpO₂ · Estrés · PAI · HRV',desc_ultrahuman:'HRV · Sueño · Temp · FC · Recuperación',desc_manual:'Cualquier dispositivo · Manual · Añadir datos',instr_oura_token:'Abra <b style="color:var(--t1);">cloud.ouraring.com</b> → Personal Access Tokens → Create token → péguelo aquí:',
+    import_btn:'📡 Importar del dispositivo',import_header:'VIA‑L · Importar datos',import_title:'Conecta tu dispositivo',import_sub:'Carga los datos automáticamente o ingrésalos manualmente.',badge_best:'Mejor',btn_load:'Cargar',import_loaded:'✓ Datos cargados',import_go:'Ir al análisis →',import_skip:'Cerrar',badge_good:'Bueno',badge_new:'Nuevo',badge_always:'Siempre',desc_oura:'HRV · Sueño · Temp · FC · Preparación',instr_oura_connect:'En la app el anillo se lee vía Apple Health (botón abajo). La conexión directa de Oura llegará pronto. Por ahora — archivo de exportación de Oura o entrada manual.',desc_apple:'HRV · FC · Sueño · SpO₂ · Temp · VO2 max',desc_garmin:'HRV · FC · Sueño · Temp · Body Battery',desc_polar:'HRV · FC · Sueño · Nightly Recharge',desc_samsung:'FC · Sueño · Estrés · Pasos · SpO₂',desc_fitbit:'HRV · FC · Sueño · SpO₂ · Temp · VO2 max',desc_samsung2:'HRV · FC · ECG · Sueño · Estrés · Pasos',desc_whoop:'HRV · Recuperación · Sueño · SpO₂ · Temp · Strain',desc_xiaomi:'FC · Sueño · Pasos · SpO₂ · Estrés',desc_withings:'FC · Sueño · SpO₂ · HRV · Pasos',desc_amazfit:'FC · Sueño · SpO₂ · Estrés · PAI · HRV',desc_ultrahuman:'HRV · Sueño · Temp · FC · Recuperación',desc_manual:'Cualquier dispositivo · Manual · Añadir datos',instr_oura_token:'Abra <b style="color:var(--t1);">cloud.ouraring.com</b> → Personal Access Tokens → Create token → péguelo aquí:',
     instr_oura_file:'Oura App → Perfil → Exportar datos → elija JSON o CSV',
     hint_oura:'Compatible: JSON, CSV de Oura',
     instr_apple_file:'iPhone: <b style="color:var(--t1);">Salud</b> → perfil → Exportar datos de salud → export.xml',
@@ -4054,7 +4064,7 @@ const T={
     s3_mood:'Stimmung heute',mood_stable:'Stabil',mood_swings:'Schwankend',mood_low:'Gedrückt',s3_anx:'Angst (1–10)',s3_irr:'Reizbarkeit',irr_none:'Keine',irr_mild:'Mäßig',irr_high:'Hoch',
     qol_title:'Lebensqualitätsindex (QoL)',qol_good:'Lebensqualität zufriedenstellend',qol_mod:'Mäßige Einschränkung der Lebensqualität',qol_high:'Erhebliche Einschränkung der Lebensqualität',
     s14_badge:'13 / 14 · Bioimpedanz',result_steps_label:'Pro · 15 Schritte',s14_title:'Körperzusammensetzung',s14_desc:'Bioimpedanzwerte machen die Empfehlungen persönlicher und präziser. Überspringen Sie diesen Schritt ohne Körperwaage.',bio_fat:'Körperfett %',bio_muscle:'Muskeln %',bio_visceral:'Viszeralfett (1–30)',bio_bioage:'Biologisches Alter',
-    import_btn:'📡 Vom Gerät importieren',import_header:'VIA‑L · Daten importieren',import_title:'Gerät verbinden',import_sub:'Daten automatisch laden oder manuell eingeben.',badge_best:'Bester',btn_load:'Laden',import_loaded:'✓ Daten geladen',import_go:'Zur Analyse →',import_skip:'Schließen',badge_good:'Gut',badge_new:'Neu',badge_always:'Immer',desc_oura:'HRV · Schlaf · Temp · Puls · Bereitschaft',instr_oura_connect:'In der App wird der Ring über Apple Health gelesen (Button unten). Direkte Oura-Verbindung folgt bald. Vorerst — Oura-Exportdatei oder manuelle Eingabe.',desc_apple:'HRV · Puls · Schlaf · Schritte · VO2 max',desc_garmin:'HRV · Puls · Schlaf · Stress',desc_polar:'HRV · Puls · Schlaf · Nightly Recharge',desc_samsung:'Puls · Schlaf · Stress · EKG · Schritte · SpO₂',desc_fitbit:'HRV · Puls · Schlaf · Schritte · Energie',desc_samsung2:'HRV · Puls · EKG · Schlaf · Stress · Schritte',desc_whoop:'HRV · Erholung · Belastung · Schlaf · Strain',desc_xiaomi:'Puls · Schlaf · Schritte · SpO₂ · Stress',desc_withings:'Puls · Schlaf · SpO₂ · HRV · Schritte · Gewicht',desc_amazfit:'Puls · Schlaf · SpO₂ · Stress · PAI · HRV',desc_ultrahuman:'HRV · Schlaf · Temp · Puls · Erholung',desc_manual:'Jedes Gerät · Manuell · Daten ergänzen',instr_oura_token:'Öffnen Sie <b style="color:var(--t1);">cloud.ouraring.com</b> → Personal Access Tokens → Create token → hier einfügen:',
+    import_btn:'📡 Vom Gerät importieren',import_header:'VIA‑L · Daten importieren',import_title:'Gerät verbinden',import_sub:'Daten automatisch laden oder manuell eingeben.',badge_best:'Bester',btn_load:'Laden',import_loaded:'✓ Daten geladen',import_go:'Zur Analyse →',import_skip:'Schließen',badge_good:'Gut',badge_new:'Neu',badge_always:'Immer',desc_oura:'HRV · Schlaf · Temp · Puls · Bereitschaft',instr_oura_connect:'In der App wird der Ring über Apple Health gelesen (Button unten). Direkte Oura-Verbindung folgt bald. Vorerst — Oura-Exportdatei oder manuelle Eingabe.',desc_apple:'HRV · Puls · Schlaf · SpO₂ · Temp · VO2 max',desc_garmin:'HRV · Puls · Schlaf · Temp · Body Battery',desc_polar:'HRV · Puls · Schlaf · Nightly Recharge',desc_samsung:'Puls · Schlaf · Stress · Schritte · SpO₂',desc_fitbit:'HRV · Puls · Schlaf · SpO₂ · Temp · VO2 max',desc_samsung2:'HRV · Puls · EKG · Schlaf · Stress · Schritte',desc_whoop:'HRV · Erholung · Schlaf · SpO₂ · Temp · Strain',desc_xiaomi:'Puls · Schlaf · Schritte · SpO₂ · Stress',desc_withings:'Puls · Schlaf · SpO₂ · HRV · Schritte',desc_amazfit:'Puls · Schlaf · SpO₂ · Stress · PAI · HRV',desc_ultrahuman:'HRV · Schlaf · Temp · Puls · Erholung',desc_manual:'Jedes Gerät · Manuell · Daten ergänzen',instr_oura_token:'Öffnen Sie <b style="color:var(--t1);">cloud.ouraring.com</b> → Personal Access Tokens → Create token → hier einfügen:',
     instr_oura_file:'Oura App → Profil → Daten exportieren → JSON oder CSV wählen',
     hint_oura:'Unterstützt: JSON, CSV aus Oura',
     instr_apple_file:'iPhone: <b style="color:var(--t1);">Gesundheit</b> → Profil → Gesundheitsdaten exportieren → export.xml',
@@ -4170,7 +4180,7 @@ const T={
     s3_mood:'Humor hoje',mood_stable:'Estável',mood_swings:'Oscilações',mood_low:'Baixo',s3_anx:'Ansiedade (1–10)',s3_irr:'Irritabilidade',irr_none:'Nenhuma',irr_mild:'Moderada',irr_high:'Alta',
     qol_title:'Índice de Qualidade de Vida (QoL)',qol_good:'Qualidade de vida satisfatória',qol_mod:'Redução moderada da qualidade de vida',qol_high:'Redução significativa da qualidade de vida',
     s14_badge:'13 / 14 · Bioimpedância',result_steps_label:'Pro · 15 etapas',s14_title:'Composição corporal',s14_desc:'Os dados de bioimpedância tornarão as recomendações mais personalizadas e precisas. Pule esta etapa se não tiver balança inteligente.',bio_fat:'% gordura',bio_muscle:'% músculo',bio_visceral:'Gordura visceral (1–30)',bio_bioage:'Idade biológica',
-    import_btn:'📡 Importar do dispositivo',import_header:'VIA‑L · Importar dados',import_title:'Conecte seu dispositivo',import_sub:'Carregue os dados automaticamente ou insira manualmente.',badge_best:'Melhor',btn_load:'Carregar',import_loaded:'✓ Dados carregados',import_go:'Ir para análise →',import_skip:'Fechar',badge_good:'Bom',badge_new:'Novo',badge_always:'Sempre',desc_oura:'HRV · Sono · Temp · FC · Prontidão',instr_oura_connect:'No app o anel é lido via Apple Health (botão abaixo). Conexão direta da Oura em breve. Por enquanto — arquivo de exportação da Oura ou entrada manual.',desc_apple:'HRV · FC · Sono · Passos · VO2 max',desc_garmin:'HRV · FC · Sono · Estresse',desc_polar:'HRV · FC · Sono · Nightly Recharge',desc_samsung:'FC · Sono · Estresse · ECG · Passos · SpO₂',desc_fitbit:'HRV · FC · Sono · Passos · Energia',desc_samsung2:'HRV · FC · ECG · Sono · Estresse · Passos',desc_whoop:'HRV · Recuperação · Carga · Sono · Strain',desc_xiaomi:'FC · Sono · Passos · SpO₂ · Estresse',desc_withings:'FC · Sono · SpO₂ · HRV · Passos · Peso',desc_amazfit:'FC · Sono · SpO₂ · Estresse · PAI · HRV',desc_ultrahuman:'HRV · Sono · Temp · FC · Recuperação',desc_manual:'Qualquer dispositivo · Manual · Adicionar dados',instr_oura_token:'Abra <b style="color:var(--t1);">cloud.ouraring.com</b> → Personal Access Tokens → Create token → cole aqui:',
+    import_btn:'📡 Importar do dispositivo',import_header:'VIA‑L · Importar dados',import_title:'Conecte seu dispositivo',import_sub:'Carregue os dados automaticamente ou insira manualmente.',badge_best:'Melhor',btn_load:'Carregar',import_loaded:'✓ Dados carregados',import_go:'Ir para análise →',import_skip:'Fechar',badge_good:'Bom',badge_new:'Novo',badge_always:'Sempre',desc_oura:'HRV · Sono · Temp · FC · Prontidão',instr_oura_connect:'No app o anel é lido via Apple Health (botão abaixo). Conexão direta da Oura em breve. Por enquanto — arquivo de exportação da Oura ou entrada manual.',desc_apple:'HRV · FC · Sono · SpO₂ · Temp · VO2 max',desc_garmin:'HRV · FC · Sono · Temp · Body Battery',desc_polar:'HRV · FC · Sono · Nightly Recharge',desc_samsung:'FC · Sono · Estresse · Passos · SpO₂',desc_fitbit:'HRV · FC · Sono · SpO₂ · Temp · VO2 max',desc_samsung2:'HRV · FC · ECG · Sono · Estresse · Passos',desc_whoop:'HRV · Recuperação · Sono · SpO₂ · Temp · Strain',desc_xiaomi:'FC · Sono · Passos · SpO₂ · Estresse',desc_withings:'FC · Sono · SpO₂ · HRV · Passos',desc_amazfit:'FC · Sono · SpO₂ · Estresse · PAI · HRV',desc_ultrahuman:'HRV · Sono · Temp · FC · Recuperação',desc_manual:'Qualquer dispositivo · Manual · Adicionar dados',instr_oura_token:'Abra <b style="color:var(--t1);">cloud.ouraring.com</b> → Personal Access Tokens → Create token → cole aqui:',
     instr_oura_file:'Oura App → Perfil → Exportar dados → escolha JSON ou CSV',
     hint_oura:'Suportado: JSON, CSV do Oura',
     instr_apple_file:'iPhone: <b style="color:var(--t1);">Saúde</b> → perfil → Exportar dados de saúde → export.xml',
@@ -4286,7 +4296,7 @@ const T={
     s3_mood:'Humeur aujourd\'hui',mood_stable:'Stable',mood_swings:'Variable',mood_low:'Basse',s3_anx:'Anxiété (1–10)',s3_irr:'Irritabilité',irr_none:'Aucune',irr_mild:'Modérée',irr_high:'Élevée',
     qol_title:'Indice de Qualité de Vie (QoL)',qol_good:'Qualité de vie satisfaisante',qol_mod:'Réduction modérée de la qualité de vie',qol_high:'Réduction significative de la qualité de vie',
     s14_badge:'13 / 14 · Bio-impédance',result_steps_label:'Pro · 15 étapes',s14_title:'Composition corporelle',s14_desc:'Les données de bioimpédance rendront les recommandations plus personnalisées et précises. Ignorez cette étape sans balance intelligente.',bio_fat:'% graisse',bio_muscle:'% muscle',bio_visceral:'Graisse viscérale (1–30)',bio_bioage:'Âge biologique',
-    import_btn:'📡 Importer depuis l\'appareil',import_header:'VIA‑L · Importer les données',import_title:'Connectez votre appareil',import_sub:'Chargez les données automatiquement ou saisissez-les manuellement.',badge_best:'Meilleur',btn_load:'Charger',import_loaded:'✓ Données chargées',import_go:'Aller à l\'analyse →',import_skip:'Fermer',badge_good:'Bon',badge_new:'Nouveau',badge_always:'Toujours',desc_oura:'HRV · Sommeil · Temp · FC · Préparation',instr_oura_connect:'Dans l’app, la bague est lue via Apple Health (bouton ci-dessous). Connexion directe Oura bientôt. Pour l’instant — fichier d’export Oura ou saisie manuelle.',desc_apple:'HRV · FC · Sommeil · Pas · VO2 max',desc_garmin:'HRV · FC · Sommeil · Stress',desc_polar:'HRV · FC · Sommeil · Nightly Recharge',desc_samsung:'FC · Sommeil · Stress · ECG · Pas · SpO₂',desc_fitbit:'HRV · FC · Sommeil · Pas · Énergie',desc_samsung2:'HRV · FC · ECG · Sommeil · Stress · Pas',desc_whoop:'HRV · Récupération · Charge · Sommeil · Strain',desc_xiaomi:'FC · Sommeil · Pas · SpO₂ · Stress',desc_withings:'FC · Sommeil · SpO₂ · HRV · Pas · Poids',desc_amazfit:'FC · Sommeil · SpO₂ · Stress · PAI · HRV',desc_ultrahuman:'HRV · Sommeil · Temp · FC · Récupération',desc_manual:"N'importe quel appareil · Manuel · Ajouter données",instr_oura_token:'Ouvrez <b style="color:var(--t1);">cloud.ouraring.com</b> → Personal Access Tokens → Create token → collez ici :',
+    import_btn:'📡 Importer depuis l\'appareil',import_header:'VIA‑L · Importer les données',import_title:'Connectez votre appareil',import_sub:'Chargez les données automatiquement ou saisissez-les manuellement.',badge_best:'Meilleur',btn_load:'Charger',import_loaded:'✓ Données chargées',import_go:'Aller à l\'analyse →',import_skip:'Fermer',badge_good:'Bon',badge_new:'Nouveau',badge_always:'Toujours',desc_oura:'HRV · Sommeil · Temp · FC · Préparation',instr_oura_connect:'Dans l’app, la bague est lue via Apple Health (bouton ci-dessous). Connexion directe Oura bientôt. Pour l’instant — fichier d’export Oura ou saisie manuelle.',desc_apple:'HRV · FC · Sommeil · SpO₂ · Temp · VO2 max',desc_garmin:'HRV · FC · Sommeil · Temp · Body Battery',desc_polar:'HRV · FC · Sommeil · Nightly Recharge',desc_samsung:'FC · Sommeil · Stress · Pas · SpO₂',desc_fitbit:'HRV · FC · Sommeil · SpO₂ · Temp · VO2 max',desc_samsung2:'HRV · FC · ECG · Sommeil · Stress · Pas',desc_whoop:'HRV · Récupération · Sommeil · SpO₂ · Temp · Strain',desc_xiaomi:'FC · Sommeil · Pas · SpO₂ · Stress',desc_withings:'FC · Sommeil · SpO₂ · HRV · Pas',desc_amazfit:'FC · Sommeil · SpO₂ · Stress · PAI · HRV',desc_ultrahuman:'HRV · Sommeil · Temp · FC · Récupération',desc_manual:"N'importe quel appareil · Manuel · Ajouter données",instr_oura_token:'Ouvrez <b style="color:var(--t1);">cloud.ouraring.com</b> → Personal Access Tokens → Create token → collez ici :',
     instr_oura_file:'Oura App → Profil → Exporter les données → choisissez JSON ou CSV',
     hint_oura:'Pris en charge : JSON, CSV depuis Oura',
     instr_apple_file:'iPhone : <b style="color:var(--t1);">Santé</b> → profil → Exporter les données de santé → export.xml',
@@ -4402,7 +4412,7 @@ const T={
     s3_mood:'Nastrój dziś',mood_stable:'Stabilny',mood_swings:'Wahania',mood_low:'Obniżony',s3_anx:'Lęk (1–10)',s3_irr:'Drażliwość',irr_none:'Brak',irr_mild:'Umiarkowana',irr_high:'Wysoka',
     qol_title:'Indeks jakości życia (QoL)',qol_good:'Jakość życia zadowalająca',qol_mod:'Umiarkowane obniżenie jakości życia',qol_high:'Znaczne obniżenie jakości życia',
     s14_badge:'13 / 14 · Bioimpedancja',result_steps_label:'Pro · 15 kroków',s14_title:'Skład ciała',s14_desc:'Dane z bioimpedancji sprawią, że zalecenia będą bardziej spersonalizowane i dokładne. Pomiń ten krok bez inteligentnej wagi.',bio_fat:'% tłuszczu',bio_muscle:'% mięśni',bio_visceral:'Tłuszcz trzewny (1–30)',bio_bioage:'Wiek biologiczny',
-    import_btn:'📡 Importuj z urządzenia',import_header:'VIA‑L · Import danych',import_title:'Podłącz urządzenie',import_sub:'Załaduj dane automatycznie lub wprowadź ręcznie.',badge_best:'Najlepszy',btn_load:'Załaduj',import_loaded:'✓ Dane załadowane',import_go:'Przejdź do analizy →',import_skip:'Zamknij',badge_good:'Dobry',badge_new:'Nowy',badge_always:'Zawsze',desc_oura:'HRV · Sen · Temp · Tętno · Gotowość',instr_oura_connect:'W aplikacji pierścień jest odczytywany przez Apple Health (przycisk poniżej). Bezpośrednie połączenie Oura wkrótce. Na razie — plik eksportu Oura lub ręczne wprowadzenie.',desc_apple:'HRV · Tętno · Sen · Kroki · VO2 max',desc_garmin:'HRV · Tętno · Sen · Stres',desc_polar:'HRV · Tętno · Sen · Nightly Recharge',desc_samsung:'HR · Sen · Stres · EKG · Kroki · SpO₂',desc_fitbit:'HRV · Tętno · Sen · Kroki · Energia',desc_samsung2:'HRV · Tętno · EKG · Sen · Stres · Kroki',desc_whoop:'HRV · Regeneracja · Obciążenie · Sen · Strain',desc_xiaomi:'HR · Sen · Kroki · SpO₂ · Stres',desc_withings:'HR · Sen · SpO₂ · HRV · Kroki · Waga',desc_amazfit:'HR · Sen · SpO₂ · Stres · PAI · HRV',desc_ultrahuman:'HRV · Sen · Temp · Tętno · Regeneracja',desc_manual:'Dowolne urządzenie · Ręcznie · Dodaj dane',instr_oura_token:'Otwórz <b style="color:var(--t1);">cloud.ouraring.com</b> → Personal Access Tokens → Create token → wklej tutaj:',
+    import_btn:'📡 Importuj z urządzenia',import_header:'VIA‑L · Import danych',import_title:'Podłącz urządzenie',import_sub:'Załaduj dane automatycznie lub wprowadź ręcznie.',badge_best:'Najlepszy',btn_load:'Załaduj',import_loaded:'✓ Dane załadowane',import_go:'Przejdź do analizy →',import_skip:'Zamknij',badge_good:'Dobry',badge_new:'Nowy',badge_always:'Zawsze',desc_oura:'HRV · Sen · Temp · Tętno · Gotowość',instr_oura_connect:'W aplikacji pierścień jest odczytywany przez Apple Health (przycisk poniżej). Bezpośrednie połączenie Oura wkrótce. Na razie — plik eksportu Oura lub ręczne wprowadzenie.',desc_apple:'HRV · Tętno · Sen · SpO₂ · Temp · VO2 max',desc_garmin:'HRV · Tętno · Sen · Temp · Body Battery',desc_polar:'HRV · Tętno · Sen · Nightly Recharge',desc_samsung:'HR · Sen · Stres · Kroki · SpO₂',desc_fitbit:'HRV · Tętno · Sen · SpO₂ · Temp · VO2 max',desc_samsung2:'HRV · Tętno · EKG · Sen · Stres · Kroki',desc_whoop:'HRV · Regeneracja · Sen · SpO₂ · Temp · Strain',desc_xiaomi:'HR · Sen · Kroki · SpO₂ · Stres',desc_withings:'HR · Sen · SpO₂ · HRV · Kroki',desc_amazfit:'HR · Sen · SpO₂ · Stres · PAI · HRV',desc_ultrahuman:'HRV · Sen · Temp · Tętno · Regeneracja',desc_manual:'Dowolne urządzenie · Ręcznie · Dodaj dane',instr_oura_token:'Otwórz <b style="color:var(--t1);">cloud.ouraring.com</b> → Personal Access Tokens → Create token → wklej tutaj:',
     instr_oura_file:'Oura App → Profil → Eksportuj dane → wybierz JSON lub CSV',
     hint_oura:'Obsługiwane: JSON, CSV z Oura',
     instr_apple_file:'iPhone: <b style="color:var(--t1);">Zdrowie</b> → profil → Eksportuj dane zdrowotne → export.xml',
@@ -4518,7 +4528,7 @@ const T={
     s3_mood:'Umore oggi',mood_stable:'Stabile',mood_swings:'Altalenante',mood_low:'Basso',s3_anx:'Ansia (1–10)',s3_irr:'Irritabilità',irr_none:'Nessuna',irr_mild:'Moderata',irr_high:'Alta',
     qol_title:'Indice di Qualità della Vita (QoL)',qol_good:'Qualità della vita soddisfacente',qol_mod:'Riduzione moderata della qualità della vita',qol_high:'Riduzione significativa della qualità della vita',
     s14_badge:'13 / 14 · Bioimpedenza',result_steps_label:'Pro · 15 passi',s14_title:'Composizione corporea',s14_desc:'I dati di bioimpedenza renderanno le raccomandazioni più personalizzate e precise. Salta questo passaggio senza bilancia smart.',bio_fat:'% grasso',bio_muscle:'% muscolo',bio_visceral:'Grasso viscerale (1–30)',bio_bioage:'Età biologica',
-    import_btn:'📡 Importa dal dispositivo',import_header:'VIA‑L · Importa dati',import_title:'Collega il tuo dispositivo',import_sub:'Carica i dati automaticamente o inseriscili manualmente.',badge_best:'Migliore',btn_load:'Carica',import_loaded:'✓ Dati caricati',import_go:'Vai all\'analisi →',import_skip:'Chiudi',badge_good:'Buono',badge_new:'Nuovo',badge_always:'Sempre',desc_oura:'HRV · Sonno · Temp · FC · Prontezza',instr_oura_connect:'Nell’app l’anello è letto tramite Apple Health (pulsante sotto). Connessione diretta Oura presto. Per ora — file di esportazione Oura o inserimento manuale.',desc_apple:'HRV · FC · Sonno · Passi · VO2 max',desc_garmin:'HRV · FC · Sonno · Stress',desc_polar:'HRV · FC · Sonno · Nightly Recharge',desc_samsung:'FC · Sonno · Stress · ECG · Passi · SpO₂',desc_fitbit:'HRV · FC · Sonno · Passi · Energia',desc_samsung2:'HRV · FC · ECG · Sonno · Stress · Passi',desc_whoop:'HRV · Recupero · Carico · Sonno · Strain',desc_xiaomi:'FC · Sonno · Passi · SpO₂ · Stress',desc_withings:'FC · Sonno · SpO₂ · HRV · Passi · Peso',desc_amazfit:'FC · Sonno · SpO₂ · Stress · PAI · HRV',desc_ultrahuman:'HRV · Sonno · Temp · FC · Recupero',desc_manual:'Qualsiasi dispositivo · Manuale · Aggiungi dati',instr_oura_token:'Apri <b style="color:var(--t1);">cloud.ouraring.com</b> → Personal Access Tokens → Create token → incolla qui:',
+    import_btn:'📡 Importa dal dispositivo',import_header:'VIA‑L · Importa dati',import_title:'Collega il tuo dispositivo',import_sub:'Carica i dati automaticamente o inseriscili manualmente.',badge_best:'Migliore',btn_load:'Carica',import_loaded:'✓ Dati caricati',import_go:'Vai all\'analisi →',import_skip:'Chiudi',badge_good:'Buono',badge_new:'Nuovo',badge_always:'Sempre',desc_oura:'HRV · Sonno · Temp · FC · Prontezza',instr_oura_connect:'Nell’app l’anello è letto tramite Apple Health (pulsante sotto). Connessione diretta Oura presto. Per ora — file di esportazione Oura o inserimento manuale.',desc_apple:'HRV · FC · Sonno · SpO₂ · Temp · VO2 max',desc_garmin:'HRV · FC · Sonno · Temp · Body Battery',desc_polar:'HRV · FC · Sonno · Nightly Recharge',desc_samsung:'FC · Sonno · Stress · Passi · SpO₂',desc_fitbit:'HRV · FC · Sonno · SpO₂ · Temp · VO2 max',desc_samsung2:'HRV · FC · ECG · Sonno · Stress · Passi',desc_whoop:'HRV · Recupero · Sonno · SpO₂ · Temp · Strain',desc_xiaomi:'FC · Sonno · Passi · SpO₂ · Stress',desc_withings:'FC · Sonno · SpO₂ · HRV · Passi',desc_amazfit:'FC · Sonno · SpO₂ · Stress · PAI · HRV',desc_ultrahuman:'HRV · Sonno · Temp · FC · Recupero',desc_manual:'Qualsiasi dispositivo · Manuale · Aggiungi dati',instr_oura_token:'Apri <b style="color:var(--t1);">cloud.ouraring.com</b> → Personal Access Tokens → Create token → incolla qui:',
     instr_oura_file:'Oura App → Profilo → Esporta dati → scegli JSON o CSV',
     hint_oura:'Supportato: JSON, CSV da Oura',
     instr_apple_file:'iPhone: <b style="color:var(--t1);">Salute</b> → profilo → Esporta dati sanitari → export.xml',
@@ -4634,7 +4644,7 @@ const T={
     s3_mood:'מצב רוח היום',mood_stable:'יציב',mood_swings:'תנודות',mood_low:'ירוד',s3_anx:'חרדה (1–10)',s3_irr:'עצבנות',irr_none:'אין',irr_mild:'בינונית',irr_high:'גבוהה',
     qol_title:'מדד איכות החיים (QoL)',qol_good:'איכות חיים מספקת',qol_mod:'ירידה מתונה באיכות החיים',qol_high:'ירידה משמעותית באיכות החיים',
     s14_badge:'13 / 14 · ביואימפדנס',result_steps_label:'Pro · 15 שלבים',s14_title:'הרכב הגוף',s14_desc:'נתוני ביו-אימפדנס יאפשרו להתאים המלצות אישיות ומדויקות יותר. דלג על שלב זה אם אין לך משקל חכם.',bio_fat:'% שומן',bio_muscle:'% שריר',bio_visceral:'שומן קרביים (1–30)',bio_bioage:'גיל ביולוגי',
-    import_btn:'📡 ייבוא מהמכשיר',import_header:'VIA‑L · ייבוא נתונים',import_title:'חבר את המכשיר שלך',import_sub:'טען נתונים אוטומטית — או הזן ידנית.',badge_best:'הטוב ביותר',btn_load:'טעינה',import_loaded:'✓ נתונים נטענו',import_go:'עבור לניתוח →',import_skip:'סגור',badge_good:'טוב',badge_new:'חדש',badge_always:'תמיד',desc_oura:'HRV · שינה · טמפ · דופק · מוכנות',instr_oura_connect:'באפליקציה הטבעת נקראת דרך Apple Health (הכפתור למטה). חיבור ישיר ל-Oura בקרוב. בינתיים — קובץ ייצוא של Oura או הזנה ידנית.',desc_apple:'HRV · דופק · שינה · צעדים · VO2 max',desc_garmin:'HRV · דופק · שינה · לחץ',desc_polar:'HRV · דופק · שינה · Nightly Recharge',desc_samsung:'דופק · שינה · לחץ · ECG · צעדים · SpO₂',desc_fitbit:'HRV · דופק · שינה · צעדים · אנרגיה',desc_samsung2:'HRV · דופק · ECG · שינה · לחץ · צעדים',desc_whoop:'HRV · התאוששות · עומס · שינה · Strain',desc_xiaomi:'דופק · שינה · צעדים · SpO₂ · לחץ',desc_withings:'דופק · שינה · SpO₂ · HRV · צעדים · משקל',desc_amazfit:'דופק · שינה · SpO₂ · לחץ · PAI · HRV',desc_ultrahuman:'HRV · שינה · טמפ · דופק · התאוששות',desc_manual:'כל מכשיר · ידנית · הוסף נתונים',instr_oura_token:'פתח את <b style="color:var(--t1);">cloud.ouraring.com</b> → Personal Access Tokens → Create token → הדבק כאן:',
+    import_btn:'📡 ייבוא מהמכשיר',import_header:'VIA‑L · ייבוא נתונים',import_title:'חבר את המכשיר שלך',import_sub:'טען נתונים אוטומטית — או הזן ידנית.',badge_best:'הטוב ביותר',btn_load:'טעינה',import_loaded:'✓ נתונים נטענו',import_go:'עבור לניתוח →',import_skip:'סגור',badge_good:'טוב',badge_new:'חדש',badge_always:'תמיד',desc_oura:'HRV · שינה · טמפ · דופק · מוכנות',instr_oura_connect:'באפליקציה הטבעת נקראת דרך Apple Health (הכפתור למטה). חיבור ישיר ל-Oura בקרוב. בינתיים — קובץ ייצוא של Oura או הזנה ידנית.',desc_apple:'HRV · דופק · שינה · SpO₂ · טמפ׳ · VO2 max',desc_garmin:'HRV · דופק · שינה · טמפ׳ · Body Battery',desc_polar:'HRV · דופק · שינה · Nightly Recharge',desc_samsung:'דופק · שינה · לחץ · צעדים · SpO₂',desc_fitbit:'HRV · דופק · שינה · SpO₂ · טמפ׳ · VO2 max',desc_samsung2:'HRV · דופק · ECG · שינה · לחץ · צעדים',desc_whoop:'HRV · התאוששות · שינה · SpO₂ · טמפ׳ · Strain',desc_xiaomi:'דופק · שינה · צעדים · SpO₂ · לחץ',desc_withings:'דופק · שינה · SpO₂ · HRV · צעדים',desc_amazfit:'דופק · שינה · SpO₂ · לחץ · PAI · HRV',desc_ultrahuman:'HRV · שינה · טמפ · דופק · התאוששות',desc_manual:'כל מכשיר · ידנית · הוסף נתונים',instr_oura_token:'פתח את <b style="color:var(--t1);">cloud.ouraring.com</b> → Personal Access Tokens → Create token → הדבק כאן:',
     instr_oura_file:'Oura App → פרופיל → ייצוא נתונים → בחר JSON או CSV',
     hint_oura:'נתמך: JSON, CSV מ-Oura',
     instr_apple_file:'iPhone: <b style="color:var(--t1);">בריאות</b> → פרופיל → ייצוא נתוני בריאות → export.xml',
@@ -4750,7 +4760,7 @@ const T={
     s3_mood:'今日の気分',mood_stable:'安定',mood_swings:'変動',mood_low:'落ち込み',s3_anx:'不安感 (1–10)',s3_irr:'イライラ',irr_none:'なし',irr_mild:'中程度',irr_high:'強い',
     qol_title:'生活の質指数 (QoL)',qol_good:'生活の質は満足のいく状態',qol_mod:'生活の質が中程度低下',qol_high:'生活の質が大幅に低下',
     s14_badge:'13 / 14 · 生体電気インピーダンス',result_steps_label:'Pro · 15ステップ',s14_title:'体組成',s14_desc:'生体インピーダンスのデータで推奨事項をより個別化・精密化できます。スマート体重計がない場合はスキップしてください。',bio_fat:'体脂肪%',bio_muscle:'筋肉%',bio_visceral:'内臓脂肪レベル (1–30)',bio_bioage:'生物学的年齢',
-    import_btn:'📡 デバイスからインポート',import_header:'VIA‑L · データインポート',import_title:'デバイスを接続',import_sub:'データを自動読み込み — または手動入力。',badge_best:'最良',btn_load:'読み込む',import_loaded:'✓ データ読み込み完了',import_go:'分析へ進む →',import_skip:'閉じる',badge_good:'良好',badge_new:'新規',badge_always:'常に',desc_oura:'HRV · 睡眠 · 体温 · 心拍 · 準備度',instr_oura_connect:'アプリではリングはApple Health経由で読み込まれます（下のボタン）。Oura直接接続は近日対応。今は — Ouraのエクスポートファイルまたは手動入力。',desc_apple:'HRV · 心拍 · 睡眠 · 歩数 · VO2 max',desc_garmin:'HRV · 心拍 · 睡眠 · ストレス',desc_polar:'HRV · 心拍 · 睡眠 · Nightly Recharge',desc_samsung:'心拍 · 睡眠 · ストレス · ECG · 歩数 · SpO₂',desc_fitbit:'HRV · 心拍 · 睡眠 · 歩数 · エネルギー',desc_samsung2:'HRV · 心拍 · ECG · 睡眠 · ストレス · 歩数',desc_whoop:'HRV · 回復 · 負荷 · 睡眠 · Strain',desc_xiaomi:'心拍 · 睡眠 · 歩数 · SpO₂ · ストレス',desc_withings:'心拍 · 睡眠 · SpO₂ · HRV · 歩数 · 体重',desc_amazfit:'心拍 · 睡眠 · SpO₂ · ストレス · PAI · HRV',desc_ultrahuman:'HRV · 睡眠 · 体温 · 心拍 · 回復',desc_manual:'任意のデバイス · 手動入力 · データ追加',instr_oura_token:'<b style="color:var(--t1);">cloud.ouraring.com</b> を開く → Personal Access Tokens → Create token → ここに貼り付け：',
+    import_btn:'📡 デバイスからインポート',import_header:'VIA‑L · データインポート',import_title:'デバイスを接続',import_sub:'データを自動読み込み — または手動入力。',badge_best:'最良',btn_load:'読み込む',import_loaded:'✓ データ読み込み完了',import_go:'分析へ進む →',import_skip:'閉じる',badge_good:'良好',badge_new:'新規',badge_always:'常に',desc_oura:'HRV · 睡眠 · 体温 · 心拍 · 準備度',instr_oura_connect:'アプリではリングはApple Health経由で読み込まれます（下のボタン）。Oura直接接続は近日対応。今は — Ouraのエクスポートファイルまたは手動入力。',desc_apple:'HRV · 心拍 · 睡眠 · SpO₂ · 体温 · VO2 max',desc_garmin:'HRV · 心拍 · 睡眠 · 体温 · Body Battery',desc_polar:'HRV · 心拍 · 睡眠 · Nightly Recharge',desc_samsung:'心拍 · 睡眠 · ストレス · 歩数 · SpO₂',desc_fitbit:'HRV · 心拍 · 睡眠 · SpO₂ · 体温 · VO2 max',desc_samsung2:'HRV · 心拍 · ECG · 睡眠 · ストレス · 歩数',desc_whoop:'HRV · 回復 · 睡眠 · SpO₂ · 体温 · Strain',desc_xiaomi:'心拍 · 睡眠 · 歩数 · SpO₂ · ストレス',desc_withings:'心拍 · 睡眠 · SpO₂ · HRV · 歩数',desc_amazfit:'心拍 · 睡眠 · SpO₂ · ストレス · PAI · HRV',desc_ultrahuman:'HRV · 睡眠 · 体温 · 心拍 · 回復',desc_manual:'任意のデバイス · 手動入力 · データ追加',instr_oura_token:'<b style="color:var(--t1);">cloud.ouraring.com</b> を開く → Personal Access Tokens → Create token → ここに貼り付け：',
     instr_oura_file:'Oura App → プロフィール → データエクスポート → JSON または CSV を選択',
     hint_oura:'対応形式：Oura からの JSON、CSV',
     instr_apple_file:'iPhone：<b style="color:var(--t1);">ヘルスケア</b> → プロフィール → ヘルスデータを書き出す → export.xml',
@@ -4866,7 +4876,7 @@ const T={
     s3_mood:'오늘 기분',mood_stable:'안정적',mood_swings:'기복',mood_low:'우울함',s3_anx:'불안감 (1–10)',s3_irr:'과민성',irr_none:'없음',irr_mild:'보통',irr_high:'높음',
     qol_title:'삶의 질 지수 (QoL)',qol_good:'삶의 질 만족스러움',qol_mod:'삶의 질 중간 수준 저하',qol_high:'삶의 질 상당히 저하',
     s14_badge:'13 / 14 · 생체전기저항',result_steps_label:'Pro · 15단계',s14_title:'체성분',s14_desc:'생체임피던스 데이터로 추천사항을 더욱 개인화하고 정밀하게 만들 수 있습니다. 스마트 체중계가 없으면 건너뛰세요.',bio_fat:'체지방%',bio_muscle:'근육%',bio_visceral:'내장지방 (1–30)',bio_bioage:'생물학적 나이',
-    import_btn:'📡 기기에서 가져오기',import_header:'VIA‑L · 데이터 가져오기',import_title:'기기를 연결하세요',import_sub:'자동으로 데이터 로드 — 또는 수동으로 입력하세요.',badge_best:'최적',btn_load:'로드',import_loaded:'✓ 데이터 로드됨',import_go:'분석으로 이동 →',import_skip:'닫기',badge_good:'좋음',badge_new:'신규',badge_always:'항상',desc_oura:'HRV · 수면 · 체온 · 심박 · 준비도',instr_oura_connect:'앱에서는 링이 Apple Health를 통해 읽힙니다(아래 버튼). Oura 직접 연결은 곧 제공됩니다. 지금은 — Oura 내보내기 파일 또는 수동 입력.',desc_apple:'HRV · 심박 · 수면 · 걸음 · VO2 max',desc_garmin:'HRV · 심박 · 수면 · 스트레스',desc_polar:'HRV · 심박 · 수면 · Nightly Recharge',desc_samsung:'심박 · 수면 · 스트레스 · ECG · 걸음 · SpO₂',desc_fitbit:'HRV · 심박 · 수면 · 걸음 · 에너지',desc_samsung2:'HRV · 심박 · ECG · 수면 · 스트레스 · 걸음',desc_whoop:'HRV · 회복 · 부하 · 수면 · Strain',desc_xiaomi:'심박 · 수면 · 걸음 · SpO₂ · 스트레스',desc_withings:'심박 · 수면 · SpO₂ · HRV · 걸음 · 체중',desc_amazfit:'심박 · 수면 · SpO₂ · 스트레스 · PAI · HRV',desc_ultrahuman:'HRV · 수면 · 체온 · 심박 · 회복',desc_manual:'모든 기기 · 수동 입력 · 데이터 추가',instr_oura_token:'<b style="color:var(--t1);">cloud.ouraring.com</b> 열기 → Personal Access Tokens → Create token → 여기에 붙여넣기:',
+    import_btn:'📡 기기에서 가져오기',import_header:'VIA‑L · 데이터 가져오기',import_title:'기기를 연결하세요',import_sub:'자동으로 데이터 로드 — 또는 수동으로 입력하세요.',badge_best:'최적',btn_load:'로드',import_loaded:'✓ 데이터 로드됨',import_go:'분석으로 이동 →',import_skip:'닫기',badge_good:'좋음',badge_new:'신규',badge_always:'항상',desc_oura:'HRV · 수면 · 체온 · 심박 · 준비도',instr_oura_connect:'앱에서는 링이 Apple Health를 통해 읽힙니다(아래 버튼). Oura 직접 연결은 곧 제공됩니다. 지금은 — Oura 내보내기 파일 또는 수동 입력.',desc_apple:'HRV · 심박 · 수면 · SpO₂ · 체온 · VO2 max',desc_garmin:'HRV · 심박 · 수면 · 체온 · Body Battery',desc_polar:'HRV · 심박 · 수면 · Nightly Recharge',desc_samsung:'심박 · 수면 · 스트레스 · 걸음 · SpO₂',desc_fitbit:'HRV · 심박 · 수면 · SpO₂ · 체온 · VO2 max',desc_samsung2:'HRV · 심박 · ECG · 수면 · 스트레스 · 걸음',desc_whoop:'HRV · 회복 · 수면 · SpO₂ · 체온 · Strain',desc_xiaomi:'심박 · 수면 · 걸음 · SpO₂ · 스트레스',desc_withings:'심박 · 수면 · SpO₂ · HRV · 걸음',desc_amazfit:'심박 · 수면 · SpO₂ · 스트레스 · PAI · HRV',desc_ultrahuman:'HRV · 수면 · 체온 · 심박 · 회복',desc_manual:'모든 기기 · 수동 입력 · 데이터 추가',instr_oura_token:'<b style="color:var(--t1);">cloud.ouraring.com</b> 열기 → Personal Access Tokens → Create token → 여기에 붙여넣기:',
     instr_oura_file:'Oura App → 프로필 → 데이터 내보내기 → JSON 또는 CSV 선택',
     hint_oura:'지원 형식: Oura의 JSON, CSV',
     instr_apple_file:'iPhone: <b style="color:var(--t1);">건강</b> → 프로필 → 건강 데이터 내보내기 → export.xml',
@@ -5089,7 +5099,7 @@ const STEP_CADENCE={0:'base',2:'daily',5:'daily',6:'daily',8:'base',9:'weekly',1
 const FLOW_ALL=[0,2,5,6,8,9,14,10,11];   // step0 профиль (+цикл вшит внутрь, как в pro); недельная «Динамика» удалена; step12 (цикл) вшит в step0
 function _flowHidden(n){var male=(typeof getRadio==='function'&&getRadio('gender')==='male');return male&&(n===2);}
 // Каденс (как в pro): weekly/biweekly блоки показываем не каждый раз, а раз в 7/14 дней (state в vial_steplast).
-function _stepLastMap(){try{return JSON.parse(localStorage.getItem('vial_steplast')||'{}')||{};}catch(e){return {};}}
+function _stepLastMap(){try{return JSON.parse(localStorage.getItem('viale_steplast')||'{}')||{};}catch(e){return {};}}
 function _stepDue(n){
   var c=STEP_CADENCE[n];
   if(c==='weekly'||c==='biweekly'){
@@ -5102,7 +5112,7 @@ function _markPeriodicDone(){
   try{var map=_stepLastMap(),ch=false;
     Object.keys(STEP_CADENCE).forEach(function(n){var c=STEP_CADENCE[n];
       if((c==='weekly'||c==='biweekly')&&_stepDue(+n)){map[n]=Date.now();ch=true;}});
-    if(ch)localStorage.setItem('vial_steplast',JSON.stringify(map));
+    if(ch)localStorage.setItem('viale_steplast',JSON.stringify(map));
   }catch(e){}
 }
 function _flowList(){return FLOW_ALL.filter(function(n){return !_flowHidden(n)&&_stepDue(n);});}
@@ -5219,7 +5229,7 @@ function initCollapsibles(){
 }
 function startFunnel(){ if(typeof _renderImpBtns==='function')_renderImpBtns(); if(typeof _renderDietLabels==='function')_renderDietLabels(); if(typeof _renderHotflash==='function')_renderHotflash(); if(typeof initCollapsibles==='function')initCollapsibles(); if(typeof showAll==='function') showAll(); }
 // Рендерим одностраничную ленту только ПОСЛЕ входа (как в pro): без кода gate закрывает страницу.
-(function(){ function _s(){ if(sessionStorage.getItem('vial_access')){ try{startFunnel();}catch(e){console.error('startFunnel',e);} } } if(document.readyState!=='loading')_s(); else document.addEventListener('DOMContentLoaded',_s); })();
+(function(){ function _s(){ if(sessionStorage.getItem('viale_access')){ try{startFunnel();}catch(e){console.error('startFunnel',e);} } } if(document.readyState!=='loading')_s(); else document.addEventListener('DOMContentLoaded',_s); })();
 /* cyc_lastdate/cyc_len — поле даты/длины цикла, перенесено из pro (12 языков) */
 (function(){var _C={"ru":["Дата последней менструации","Длина цикла (дней)"],"uk":["Дата останньої менструації","Довжина циклу (днів)"],"en":["Date of last period","Cycle length (days)"],"es":["Fecha de la última menstruación","Duración del ciclo (días)"],"de":["Datum der letzten Menstruation","Zykluslänge (Tage)"],"pt":["Data da última menstruação","Duração do ciclo (dias)"],"fr":["Date des dernières règles","Durée du cycle (jours)"],"pl":["Data ostatniej miesiączki","Długość cyklu (dni)"],"it":["Data dell\\'ultima mestruazione","Durata del ciclo (giorni)"],"he":["תאריך הווסת האחרונה","אורך המחזור (ימים)"],"ja":["最終月経の日付","周期の長さ(日)"],"ko":["마지막 생리 날짜","주기 길이(일)"]};Object.keys(_C).forEach(function(l){if(typeof T!=='undefined'&&T[l]){T[l].cyc_lastdate=_C[l][0];T[l].cyc_len=_C[l][1];}});})();
 /* meds_other_ph — плейсхолдер поля «другие лекарства», перенесён из pro (12 языков) */
@@ -5234,7 +5244,7 @@ function setLang(l){
   document.getElementById('langLabel').textContent=LANG_FLAGS[l]||l.toUpperCase();
   // Кнопка чата заботы → бот. Несём КОД доступа (?start=<код>) — он связывает анкету и
   // переписку в один топик. Если кода ещё нет (до активации) — fallback на язык.
-  var _care=document.getElementById('careChatBtn'); if(_care){ var _cc=(sessionStorage.getItem('vial_code')||'').toUpperCase(); _care.href='https://t.me/viael_care_bot?start='+(_cc||l); }
+  var _care=document.getElementById('careChatBtn'); if(_care){ var _cc=(sessionStorage.getItem('viale_code')||'').toUpperCase(); _care.href='https://t.me/viael_care_bot?start='+(_cc||l); }
   document.querySelectorAll('.lang-option').forEach(o=>{
     o.classList.toggle('active',o.textContent.includes(l.toUpperCase())||
       (l==='ru'&&o.textContent.includes('Русский'))||
@@ -5331,7 +5341,7 @@ document.querySelectorAll('input[name=gender]').forEach(el=>{
 
 // ══ MAX BLOCK ═════════════════════════════════════════════
 (function(){
-  if(sessionStorage.getItem('vial_access')==='MAX'){
+  if(sessionStorage.getItem('viale_access')==='MAX'){
     const b=document.getElementById('maxBlock');
     if(b)b.style.display='block';
   }
@@ -5341,7 +5351,7 @@ async function sendMaxRequest(){
   const name  = (document.getElementById('maxName')?.value  || '').trim();
   const email = (document.getElementById('maxEmail')?.value || '').trim();
   const q     = (document.getElementById('maxQuestion')?.value || '').trim();
-  const code  = sessionStorage.getItem('vial_code') || '';
+  const code  = sessionStorage.getItem('viale_code') || '';
   const limitMsg = document.getElementById('maxLimitMsg');
   const btn   = document.getElementById('maxSendBtn');
   const btnLabel = T[lang]?.max_btn || 'Надіслати запит нутриціологу →';
@@ -5391,7 +5401,7 @@ async function sendMaxRequest(){
       if (window._onboardingAnswers) {
         window._onboardingAnswers = null;
         window._onboardingPending = false;
-        sessionStorage.setItem('vial_onboarding_done', '1');
+        sessionStorage.setItem('viale_onboarding_done', '1');
       }
       return;
     }
@@ -5436,7 +5446,7 @@ function navTo(tab){
 
 // ══ HISTORY ═══════════════════════════════════════════════
 function saveSession(score,type,data){
-  const key='vial_history';
+  const key='viale_history';
   const history=JSON.parse(localStorage.getItem(key)||'[]');
   const D=(typeof importedData!=='undefined'&&importedData)?importedData:{};
   const session={
@@ -5462,7 +5472,7 @@ function _checkedLabels(ids){return ids.map(function(id){var el=document.getElem
 function _radioLabel(name){var el=document.querySelector('input[name="'+name+'"]:checked');if(!el)return '';return el.id?_lblOf(el.id):el.value;}
 function saveProfile(){
   try{
-    localStorage.setItem('vial_profile',JSON.stringify({
+    localStorage.setItem('viale_profile',JSON.stringify({
       name:(document.getElementById('prof-name')||{}).value||'',
       gender:getRadio('gender'), genderLabel:_radioLabel('gender'),
       age:(document.getElementById('prof-age')||{}).value||'',
@@ -5480,12 +5490,12 @@ function saveProfile(){
   }catch(e){}
 }
 // Инлайн-правка веса/талии прямо в карточке (меняются со временем) → vial_profile + синхрон с профилем.
-function _cardSaveNum(field,val){var P={};try{P=JSON.parse(localStorage.getItem('vial_profile')||'{}')||{};}catch(e){}P[field]=(val||'').trim();try{localStorage.setItem('vial_profile',JSON.stringify(P));}catch(e){}var inp=document.getElementById('prof-'+field);if(inp)inp.value=P[field];}
+function _cardSaveNum(field,val){var P={};try{P=JSON.parse(localStorage.getItem('viale_profile')||'{}')||{};}catch(e){}P[field]=(val||'').trim();try{localStorage.setItem('viale_profile',JSON.stringify(P));}catch(e){}var inp=document.getElementById('prof-'+field);if(inp)inp.value=P[field];}
 function _cEditNum(field,label,val){return '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:7px 2px;border-bottom:1px solid var(--b1);font-size:13px;"><span style="color:var(--t2);">'+label+'</span><input type="number" value="'+(val==null||val===''?'':val)+'" placeholder="—" oninput="_cardSaveNum(\''+field+'\',this.value)" style="width:74px;background:rgba(255,255,255,.05);border:1px solid var(--b1);border-radius:8px;color:var(--t1);font-weight:600;text-align:center;padding:5px 6px;font-family:inherit;font-size:14px;"></div>';}
 function renderCard(){
   var box=document.getElementById('cardBody'); if(!box)return;
   try{saveProfile();}catch(e){}
-  var P={}; try{P=JSON.parse(localStorage.getItem('vial_profile')||'{}')||{};}catch(e){}
+  var P={}; try{P=JSON.parse(localStorage.getItem('viale_profile')||'{}')||{};}catch(e){}
   var html='';
   html+=_cSec(t('card_profile'));
   if(P.name)html+=_cRow(t('s_prof_name'),P.name);
@@ -5511,7 +5521,7 @@ function renderCard(){
   if(typeof _renderDaily==='function')_renderDaily();
 }
 function renderHistory(){
-  const key='vial_history';
+  const key='viale_history';
   const history=JSON.parse(localStorage.getItem(key)||'[]');
   const el=document.getElementById('historyList');
   const _ui=_histUI();
@@ -5573,7 +5583,7 @@ function _weekUI(){
   return M[lang]||M.en;
 }
 function weeklyTrend(){
-  const h=JSON.parse(localStorage.getItem('vial_history')||'[]');
+  const h=JSON.parse(localStorage.getItem('viale_history')||'[]');
   const now=Date.now(),DAY=86400000;
   const wk=h.filter(s=>s.ts&&now-s.ts<7*DAY);
   const pr=h.filter(s=>s.ts&&now-s.ts>=7*DAY&&now-s.ts<14*DAY);
@@ -5658,10 +5668,10 @@ function _wrWaitNote(ui,need,have){
 }
 function _wrGate(){
   const DAY=86400000, now=Date.now();
-  const last=parseInt(localStorage.getItem('vial_weekly_last')||'0',10);
+  const last=parseInt(localStorage.getItem('viale_weekly_last')||'0',10);
   const left=last?Math.ceil((7*DAY-(now-last))/DAY):0;
   return { canGen: !last || (now-last)>=7*DAY, daysLeft: left>0?left:0,
-           cached: localStorage.getItem('vial_weekly_text')||'', cachedDate: localStorage.getItem('vial_weekly_date')||'' };
+           cached: localStorage.getItem('viale_weekly_text')||'', cachedDate: localStorage.getItem('viale_weekly_date')||'' };
 }
 function _wrMd(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
   .replace(/^#{1,3}\s*(.+)$/gm,'<strong style="display:block;margin:10px 0 4px;">$1</strong>')
@@ -5672,7 +5682,7 @@ function renderWeeklyReportUI(){
   const ui=_wrUI(); let g=_wrGate();
   const have=_histDays(w.wk);
   // миграция: разбор, сгенерированный ДО гейта по данным (из <5 дней), снять и вернуть таймер
-  if(g.cached && have<_WR_MIN_DAYS){ try{ localStorage.removeItem('vial_weekly_text'); localStorage.removeItem('vial_weekly_last'); localStorage.removeItem('vial_weekly_date'); }catch(e){} g=_wrGate(); }
+  if(g.cached && have<_WR_MIN_DAYS){ try{ localStorage.removeItem('viale_weekly_text'); localStorage.removeItem('viale_weekly_last'); localStorage.removeItem('viale_weekly_date'); }catch(e){} g=_wrGate(); }
   let inner='';
   if(g.cached){
     inner += `<div style="font-size:13px;line-height:1.7;color:var(--t2);">${_wrMd(g.cached)}</div>`;
@@ -5699,16 +5709,16 @@ async function genWeeklyReport(){
   const btn=document.getElementById('wrBtn'); if(btn){ btn.disabled=true; btn.textContent=ui.load; }
   const summary={ n:w.wk.length, metrics:w.metrics.map(m=>({ key:m.k, avg:+m.a.toFixed(m.dec),
     prev:m.p!=null?+m.p.toFixed(m.dec):null, delta:m.delta!=null?+m.delta.toFixed(m.dec):null })) };
-  const code=(window.sessionStorage&&sessionStorage.getItem('vial_code'))||'';
+  const code=(window.sessionStorage&&sessionStorage.getItem('viale_code'))||'';
   try{
     const res=await fetch('https://interpreter.viaelcom.workers.dev/weekly-report',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({summary,daily:(typeof _weeklyDaily==='function'?_weeklyDaily():null),lang,code})});
     const json=await res.json();
     if(!json.report) throw new Error('no report');
-    localStorage.setItem('vial_weekly_text',json.report);
-    localStorage.setItem('vial_weekly_last',String(Date.now()));
-    localStorage.setItem('vial_weekly_date',new Date().toISOString().slice(0,10));
+    localStorage.setItem('viale_weekly_text',json.report);
+    localStorage.setItem('viale_weekly_last',String(Date.now()));
+    localStorage.setItem('viale_weekly_date',new Date().toISOString().slice(0,10));
     renderWeeklyReportUI();
   }catch(e){
     if(btn){ btn.disabled=false; btn.textContent=ui.get; }
@@ -5721,8 +5731,8 @@ async function genWeeklyReport(){
 
 // Скачать недельный разбор файлом (.txt) — клиент сохраняет себе. Markdown чистим в простой текст.
 function dlWeeklyReport(){
-  const txt=localStorage.getItem('vial_weekly_text')||''; if(!txt) return;
-  const ui=_wrUI(), date=localStorage.getItem('vial_weekly_date')||new Date().toISOString().slice(0,10);
+  const txt=localStorage.getItem('viale_weekly_text')||''; if(!txt) return;
+  const ui=_wrUI(), date=localStorage.getItem('viale_weekly_date')||new Date().toISOString().slice(0,10);
   const plain=String(txt).replace(/^#{1,3}\s*/gm,'').replace(/\*\*([^*]+?)\*\*/g,'$1');
   const body=ui.title+' — '+date+'\n\n'+plain+'\n';
   const blob=new Blob([body],{type:'text/plain;charset=utf-8'});
@@ -5752,7 +5762,7 @@ function _histUI(){
   return M[lang]||M.en;
 }
 function exportHistory(){
-  const history=JSON.parse(localStorage.getItem('vial_history')||'[]');
+  const history=JSON.parse(localStorage.getItem('viale_history')||'[]');
   if(!history.length)return;
   const payload={app:'vial-interpreter',v:1,exported:new Date().toISOString(),history};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
@@ -5772,11 +5782,11 @@ function importHistory(input){
       const parsed=JSON.parse(reader.result);
       const incoming=Array.isArray(parsed)?parsed:(parsed&&Array.isArray(parsed.history)?parsed.history:null);
       if(!incoming)throw 0;
-      const cur=JSON.parse(localStorage.getItem('vial_history')||'[]');
+      const cur=JSON.parse(localStorage.getItem('viale_history')||'[]');
       const byTs={};
       cur.concat(incoming).forEach(function(s){if(s&&typeof s==='object'&&s.ts!=null)byTs[s.ts]=s;});
       const merged=Object.keys(byTs).map(function(k){return byTs[k];}).sort(function(a,b){return (b.ts||0)-(a.ts||0);}).slice(0,60);
-      localStorage.setItem('vial_history',JSON.stringify(merged));
+      localStorage.setItem('viale_history',JSON.stringify(merged));
       renderHistory();
     }catch(e){alert(_histUI().bad);}
   };
@@ -7206,7 +7216,7 @@ function renderGadgetPanel(){
   wrap.style.display='block';
 }
 // Инлайн-правка плитки: клик → числовое поле; правка пишет в importedData, тянет в шаги анкеты и копит.
-function _saveImported(){try{localStorage.setItem('vial_imported',JSON.stringify(importedData));}catch(e){}}
+function _saveImported(){try{localStorage.setItem('viale_imported',JSON.stringify(importedData));}catch(e){}}
 function _gEdit(k,box){
   if(!box||!_GMETA[k])return;
   var m=_GMETA[k], cur=(importedData&&importedData[k]!=null)?importedData[k]:'';
@@ -7231,11 +7241,11 @@ function _gSave(k,inp){
 }
 function _gRefresh(){ if(typeof renderGadgetPanel==='function'){try{renderGadgetPanel();}catch(e){}} }
 // Восстановление подтянутых/правленых показателей с прошлого раза (как в pro).
-try{var _imp=JSON.parse(localStorage.getItem('vial_imported')||'null');if(_imp&&typeof _imp==='object')Object.keys(_imp).forEach(function(k){if(_imp[k]!=null)importedData[k]=_imp[k];});}catch(e){}
+try{var _imp=JSON.parse(localStorage.getItem('viale_imported')||'null');if(_imp&&typeof _imp==='object')Object.keys(_imp).forEach(function(k){if(_imp[k]!=null)importedData[k]=_imp[k];});}catch(e){}
 // «По дням» — ежедневный архив (порт из pro/expert, словесный премиальный вид).
 function _renderDaily(){
   var box=document.getElementById('dailyList'); if(!box)return;
-  var arr=[]; try{arr=JSON.parse(localStorage.getItem('vial_daily')||'[]')||[];}catch(e){}
+  var arr=[]; try{arr=JSON.parse(localStorage.getItem('viale_daily')||'[]')||[];}catch(e){}
   if(!arr.length){box.innerHTML='';return;}
   var hf={none:'0',low:'1–2',mid:'3–5',high:'6–10',veryhigh:'10+'};
   // Словесные подписи (без иконок — премиальный вид). Приборные тянут из _GLAB; субъективные — здесь.
@@ -7284,16 +7294,16 @@ function _saveDaily(){
       memory:getRadio('memory'), fog:getRadio('fog'),
       stress:(document.getElementById('stress')?+document.getElementById('stress').value:null), alc:getRadio('alc'), phase:determinePhase()
     };
-    var arr=[]; try{arr=JSON.parse(localStorage.getItem('vial_daily')||'[]')||[];}catch(e){}
+    var arr=[]; try{arr=JSON.parse(localStorage.getItem('viale_daily')||'[]')||[];}catch(e){}
     arr=arr.filter(function(r){return r.day!==rec.day;});
     arr.unshift(rec);
     while(arr.length>90)arr.pop();
-    localStorage.setItem('vial_daily',JSON.stringify(arr));
+    localStorage.setItem('viale_daily',JSON.stringify(arr));
   }catch(e){}
 }
 // Недельный агрегатор по дням (идентичен pro — поля совпали): приливы/темп/SpO₂/память/туман/стресс/алкоголь.
 function _weeklyDaily(){
-  var arr=[]; try{arr=JSON.parse(localStorage.getItem('vial_daily')||'[]')||[];}catch(e){}
+  var arr=[]; try{arr=JSON.parse(localStorage.getItem('viale_daily')||'[]')||[];}catch(e){}
   var now=Date.now(),DAY=86400000;
   var wk=arr.filter(function(r){return r.ts&&now-r.ts<7*DAY;});
   if(!wk.length)return null;
@@ -7385,6 +7395,8 @@ function parseOuraJSON(text){
   if(sl){out.sleepHours=(sl.duration||sl.total_sleep_duration||0)/3600;out.deepMin=(sl.deep_sleep_duration||0)/60;out.tempDev=sl.temperature_delta||null;}
   const rd=last(d.daily_readiness||d.readiness);
   if(rd){out.rhr=rd.resting_heart_rate||rd.contributors?.resting_heart_rate||null;out.readiness=rd.score||null;}
+  const sp=last(d.daily_spo2||d.spo2);
+  if(sp){const v=sp.spo2_percentage?.average??sp.average??sp.spo2;if(v!=null&&isFinite(+v))out.spo2=+(+v).toFixed(1);}
   return out;
 }
 function parseAppleXML(text){
@@ -7396,6 +7408,16 @@ function parseAppleXML(text){
   out.hrv=latest('HKQuantityTypeIdentifierHeartRateVariabilitySDNN');
   out.rhr=latest('HKQuantityTypeIdentifierRestingHeartRate');
   out.vo2=latest('HKQuantityTypeIdentifierVO2Max');
+  const spo=latest('HKQuantityTypeIdentifierOxygenSaturation');
+  if(spo!=null)out.spo2=+((spo<=1?spo*100:spo).toFixed(1));   // Apple хранит долю (0–1)
+  // Температура запястья во сне: Apple пишет абсолютные °C → отклонение последней ночи от медианы выгрузки (семантика tempDev как у Oura)
+  const wtArr=(byType['HKQuantityTypeIdentifierAppleSleepingWristTemperature']||[]).map(r=>({v:parseFloat(r.val),date:r.date})).filter(x=>!isNaN(x.v));
+  if(wtArr.length>=3){
+    const sorted=wtArr.map(x=>x.v).sort((a,b)=>a-b);
+    const med=sorted.length%2?sorted[(sorted.length-1)/2]:(sorted[sorted.length/2-1]+sorted[sorted.length/2])/2;
+    const lastT=wtArr.slice().sort((a,b)=>new Date(b.date)-new Date(a.date))[0].v;
+    out.tempDev=+((lastT-med).toFixed(2));
+  }
   const sleepR=(byType['HKCategoryTypeIdentifierSleepAnalysis']||[]);
   const yest=new Date();yest.setDate(yest.getDate()-1);
   const ds=[new Date().toISOString().slice(0,10),yest.toISOString().slice(0,10)];
@@ -7529,6 +7551,12 @@ function parseFitbitJSON(text){
     if(slArr.length){const last=slArr[slArr.length-1];out.sleepHours=(last?.minutesAsleep||0)/60||null;out.deepMin=last?.levels?.summary?.deep?.minutes||null;if(out.sleepHours===0)out.sleepHours=null;}
     const stArr=d['activities-steps']||d['steps']||[];
     if(stArr.length){const last=stArr[stArr.length-1];const s=parseInt(last?.value||last?.steps||0);if(s>0)out.energy=Math.min(10,Math.round(s/1000));}
+    const spArr=d['spo2']||[];
+    if(spArr.length){const last=spArr[spArr.length-1];const v=last?.value?.avg??last?.value?.averageValue??last?.avg;if(v!=null&&isFinite(+v))out.spo2=+(+v).toFixed(1);}
+    const tsArr=d['tempSkin']||d['temp-skin']||[];
+    if(tsArr.length){const last=tsArr[tsArr.length-1];const v=last?.value?.nightlyRelative;if(v!=null&&isFinite(+v))out.tempDev=+(+v).toFixed(2);}
+    const csArr=d['cardioScore']||[];
+    if(csArr.length){const last=csArr[csArr.length-1];const s=last?.value?.vo2Max;if(s!=null){const m=String(s).match(/([\d.]+)\s*-\s*([\d.]+)/);const v=m?(parseFloat(m[1])+parseFloat(m[2]))/2:parseFloat(s);if(isFinite(v))out.vo2=Math.round(v);}}
   }catch(e){console.error('parseFitbitJSON error',e);}
   return out;
 }
@@ -7554,6 +7582,14 @@ async function fetchFitbit(){
     else if(hrvVal?.deepRmssd)ex.hrv=Math.round(hrvVal.deepRmssd);
     const mainSleep=sleepData?.sleep?.find(s=>s.isMainSleep)||sleepData?.sleep?.[0];
     if(mainSleep){ex.sleepHours=(mainSleep.minutesAsleep||0)/60;ex.deepMin=mainSleep.levels?.summary?.deep?.minutes||null;}
+    // Полнота гаджета: SpO₂ / температура кожи / VO₂max — каждый запрос терпим к отказу
+    // (нужны scopes oxygen_saturation / temperature / cardio_fitness у Personal App)
+    const weekAgo=new Date(Date.now()-7*86400000).toISOString().slice(0,10);
+    const rng=(p)=>fetch(`https://api.fitbit.com/1/user/-/${p}/date/${weekAgo}/${today}.json`,{headers:h}).then(r=>r.ok?r.json():null).catch(()=>null);
+    const [spo2D,tempD,cardioD]=await Promise.all([rng('spo2'),rng('temp/skin'),rng('cardioscore')]);
+    if(spo2D){const arr=Array.isArray(spo2D)?spo2D:(spo2D.spo2||[]);const l=arr[arr.length-1];const v=l?.value?.avg??l?.value?.averageValue??l?.avg;if(v!=null&&isFinite(+v))ex.spo2=+(+v).toFixed(1);}
+    if(tempD&&Array.isArray(tempD.tempSkin)&&tempD.tempSkin.length){const l=tempD.tempSkin[tempD.tempSkin.length-1];const v=l?.value?.nightlyRelative;if(v!=null&&isFinite(+v))ex.tempDev=+(+v).toFixed(2);}
+    if(cardioD&&Array.isArray(cardioD.cardioScore)&&cardioD.cardioScore.length){const l=cardioD.cardioScore[cardioD.cardioScore.length-1];const s=l?.value?.vo2Max;if(s!=null){const m=String(s).match(/([\d.]+)\s*-\s*([\d.]+)/);const v=m?(parseFloat(m[1])+parseFloat(m[2]))/2:parseFloat(s);if(isFinite(v))ex.vo2=Math.round(v);}}
     applyExtracted(ex,'fitbit');
     renderPreview('fitbit-preview-grid',ex);
     document.getElementById('fitbit-preview').classList.add('show');
@@ -7569,18 +7605,28 @@ function parseWhoopCSV(text,filename){
     const header=lines[0].split(',').map(h=>h.trim().replace(/^"+|"+$/g,'').toLowerCase());
     const rows=lines.slice(1).map(l=>l.split(',').map(v=>v.trim().replace(/^"+|"+$/g,'')));
     const col=k=>header.findIndex(h=>h.includes(k));
-    if(fn.includes('recover')||col('heart.rate.variability')>=0||col('hrv')>=0){
-      const hrvIdx=col('heart.rate.variability')>=0?col('heart.rate.variability'):col('hrv');
-      const rhrIdx=col('resting.heart.rate')>=0?col('resting.heart.rate'):col('rhr');
-      const recIdx=col('recovery.score')>=0?col('recovery.score'):col('recovery');
+    if(fn.includes('recover')||fn.includes('physiological')||col('heart rate variability')>=0||col('heart.rate.variability')>=0||col('hrv')>=0){
+      // реальные заголовки Whoop-экспорта — с пробелами («Heart rate variability (ms)»); точечные варианты оставлены для старых выгрузок
+      const pick=(...ks)=>{for(const k of ks){const i=col(k);if(i>=0)return i;}return -1;};
+      const hrvIdx=pick('heart rate variability','heart.rate.variability','hrv');
+      const rhrIdx=pick('resting heart rate','resting.heart.rate','rhr');
+      const recIdx=pick('recovery score','recovery.score','recovery');
       const last=rows[rows.length-1];
       if(hrvIdx>=0){const v=parseFloat(last[hrvIdx]);if(!isNaN(v)&&v>0)out.hrv=Math.round(v);}
       if(rhrIdx>=0){const v=parseFloat(last[rhrIdx]);if(!isNaN(v)&&v>0)out.rhr=Math.round(v);}
       if(recIdx>=0){const v=parseFloat(last[recIdx]);if(!isNaN(v)&&v>=0)out.readiness=Math.round(v);}
+      const oxIdx=pick('blood oxygen','spo2');
+      if(oxIdx>=0){const v=parseFloat(last[oxIdx]);if(!isNaN(v)&&v>70&&v<=100)out.spo2=+v.toFixed(1);}
+      const tIdx=pick('skin temp','skin.temp');
+      if(tIdx>=0){
+        const tv=rows.map(r=>parseFloat(r[tIdx])).filter(v=>!isNaN(v));
+        if(tv.length>=3){const s=tv.slice().sort((a,b)=>a-b);const med=s.length%2?s[(s.length-1)/2]:(s[s.length/2-1]+s[s.length/2])/2;out.tempDev=+((tv[tv.length-1]-med).toFixed(2));}   // абсолютные °C → отклонение от медианы
+      }
     }
-    if(fn.includes('sleep')||col('total.in.bed.time')>=0||col('slow.wave.sleep.duration')>=0){
-      const totalIdx=col('total.in.bed.time')>=0?col('total.in.bed.time'):col('sleep.performance');
-      const deepIdx=col('slow.wave.sleep.duration')>=0?col('slow.wave.sleep.duration'):col('deep');
+    if(fn.includes('sleep')||col('total in bed time')>=0||col('total.in.bed.time')>=0||col('slow wave sleep')>=0||col('slow.wave.sleep.duration')>=0){
+      const pickS=(...ks)=>{for(const k of ks){const i=col(k);if(i>=0)return i;}return -1;};
+      const totalIdx=pickS('total in bed time','total.in.bed.time','sleep performance','sleep.performance');
+      const deepIdx=pickS('slow wave sleep','slow.wave.sleep.duration','deep');
       const last=rows[rows.length-1];
       if(totalIdx>=0){const v=parseFloat(last[totalIdx]);if(!isNaN(v)&&v>0)out.sleepHours=parseFloat((v/60).toFixed(1));}
       if(deepIdx>=0){const v=parseFloat(last[deepIdx]);if(!isNaN(v)&&v>0)out.deepMin=Math.round(v);}
@@ -7656,6 +7702,11 @@ function parseXiaomiJSON(text){
       if(!isNaN(v)&&v>0)out.sleepHours=v>1000?parseFloat((v/3600000).toFixed(1)):parseFloat((v/60).toFixed(1));
       const dv=parseFloat(last.deepSleep||last.deepSleepDuration||NaN);
       if(!isNaN(dv))out.deepMin=dv>10000?Math.round(dv/60000):Math.round(dv);
+    }
+    if(sample.spo2!=null||sample.blood_oxygen!=null||sample.oxygenSaturation!=null){
+      const key=sample.spo2!=null?'spo2':sample.blood_oxygen!=null?'blood_oxygen':'oxygenSaturation';
+      const vals=items.map(i=>parseFloat(i[key])).filter(v=>!isNaN(v)&&v>70&&v<=100);
+      if(vals.length)out.spo2=Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
     }
   }catch(e){console.error('parseXiaomiJSON error',e);}
   return out;
@@ -7781,8 +7832,8 @@ const AI_WORKER = 'https://interpreter.viaelcom.workers.dev';
 
 // ══ Generic wearable OAuth connect (WHOOP/Polar/Withings; Fitbit has its own) ══
 function connectWearable(vendor){
-  let sid = localStorage.getItem('vial_' + vendor + '_sid');
-  if(!sid){ sid = Date.now().toString(36) + Math.random().toString(36).slice(2,10); localStorage.setItem('vial_' + vendor + '_sid', sid); }
+  let sid = localStorage.getItem('viale_' + vendor + '_sid');
+  if(!sid){ sid = Date.now().toString(36) + Math.random().toString(36).slice(2,10); localStorage.setItem('viale_' + vendor + '_sid', sid); }
   setStatus(vendor + '-connect-status','loading',t('status_' + vendor + '_connecting'));
   location.href = AI_WORKER + '/' + vendor + '/start?sid=' + encodeURIComponent(sid) + '&ret=' + encodeURIComponent(location.origin + location.pathname);
 }
@@ -7810,7 +7861,7 @@ async function fetchWearableLive(vendor, sid){
   ['whoop','polar','withings'].forEach(function(v){
     const flag = p.get(v);
     if(!flag) return;
-    const sid = p.get('sid') || localStorage.getItem('vial_' + v + '_sid');
+    const sid = p.get('sid') || localStorage.getItem('viale_' + v + '_sid');
     history.replaceState(null, '', location.origin + location.pathname);
     setTimeout(function(){
       try{ if(typeof openImport === 'function') openImport(); }catch(e){}
@@ -7848,12 +7899,12 @@ function ouraSyncLang(){
   const ord=document.getElementById('oura-or-div'); if(ord) ord.textContent='— '+ui.or+' —';
 }
 function connectOura(){
-  let sid=localStorage.getItem('vial_oura_sid');
-  if(!sid){ sid=Date.now().toString(36)+Math.random().toString(36).slice(2,10); localStorage.setItem('vial_oura_sid',sid); }
+  let sid=localStorage.getItem('viale_oura_sid');
+  if(!sid){ sid=Date.now().toString(36)+Math.random().toString(36).slice(2,10); localStorage.setItem('viale_oura_sid',sid); }
   // Помечаем «ждём возврата из OAuth». В нативном app вход открывается в системном браузере и
   // обратно НЕ редиректит → ловим возврат через visibilitychange и до-тягиваем по sid (токен уже
   // в KV воркера). В обычном браузере срабатывает редирект-IIFE ниже.
-  localStorage.setItem('vial_oura_pending', String(Date.now()));
+  localStorage.setItem('viale_oura_pending', String(Date.now()));
   setStatus('oura-connect-status','loading',_ouraUI().connecting);
   location.href=AI_WORKER+'/oura/start?sid='+encodeURIComponent(sid)+'&ret='+encodeURIComponent(location.origin+location.pathname);
 }
@@ -7864,7 +7915,7 @@ async function fetchOuraLive(sid){
     const r=await fetch(AI_WORKER+'/oura/metrics?sid='+encodeURIComponent(sid));
     const j=await r.json();
     if(j.ok&&j.ex&&Object.keys(j.ex).length){
-      localStorage.removeItem('vial_oura_pending');
+      localStorage.removeItem('viale_oura_pending');
       applyExtracted(j.ex,'oura');
       renderPreview('oura-connect-grid',j.ex);
       document.getElementById('oura-connect-preview').classList.add('show');
@@ -7877,7 +7928,7 @@ async function fetchOuraLive(sid){
 (function(){
   const p=new URLSearchParams(location.search);
   const flag=p.get('oura'); if(!flag) return;
-  const sid=p.get('sid')||localStorage.getItem('vial_oura_sid');
+  const sid=p.get('sid')||localStorage.getItem('viale_oura_sid');
   history.replaceState(null,'',location.origin+location.pathname);
   setTimeout(function(){
     try{ if(typeof openImport==='function') openImport(); }catch(e){}
@@ -7890,8 +7941,8 @@ async function fetchOuraLive(sid){
 // если есть «ожидание» (≤10 мин) и sid — до-тягиваем метрики (токен уже сохранён воркером по sid).
 document.addEventListener('visibilitychange',function(){
   if(document.visibilityState!=='visible') return;
-  var pend=parseInt(localStorage.getItem('vial_oura_pending')||'0',10);
-  var sid=localStorage.getItem('vial_oura_sid');
+  var pend=parseInt(localStorage.getItem('viale_oura_pending')||'0',10);
+  var sid=localStorage.getItem('viale_oura_sid');
   if(pend && sid && (Date.now()-pend)<600000){ try{ if(typeof openImport==='function') openImport(); }catch(e){} try{ toggleCard('oura'); }catch(e){} fetchOuraLive(sid); }
 });
 try{ ouraSyncLang(); }catch(e){}
@@ -7899,11 +7950,11 @@ try{ ouraSyncLang(); }catch(e){}
 // ══ FITBIT (Google Health) OAuth CONNECT ══════════════════════════════════
 const FITBIT_CONNECT_BASE = AI_WORKER + '/fitbit';
 function connectFitbit(){
-  let sid = localStorage.getItem('vial_fitbit_sid');
-  if(!sid){ sid = Date.now().toString(36) + Math.random().toString(36).slice(2,10); localStorage.setItem('vial_fitbit_sid', sid); }
+  let sid = localStorage.getItem('viale_fitbit_sid');
+  if(!sid){ sid = Date.now().toString(36) + Math.random().toString(36).slice(2,10); localStorage.setItem('viale_fitbit_sid', sid); }
   // В нативном app вход уходит в системный браузер и обратно не редиректит → помечаем «ждём»
   // и ловим возврат через visibilitychange (до-тягиваем по sid, токен уже в KV воркера).
-  localStorage.setItem('vial_fitbit_pending', String(Date.now()));
+  localStorage.setItem('viale_fitbit_pending', String(Date.now()));
   setStatus('fitbit-connect-status','loading',t('status_fitbit_connecting'));
   const ret = location.origin + location.pathname;
   location.href = FITBIT_CONNECT_BASE + '/start?sid=' + encodeURIComponent(sid) + '&ret=' + encodeURIComponent(ret);
@@ -7914,7 +7965,7 @@ async function fetchFitbitLive(sid){
     const r = await fetch(FITBIT_CONNECT_BASE + '/metrics?sid=' + encodeURIComponent(sid));
     const j = await r.json();
     if(j && j.ok && j.ex && Object.keys(j.ex).length){
-      localStorage.removeItem('vial_fitbit_pending');
+      localStorage.removeItem('viale_fitbit_pending');
       applyExtracted(j.ex,'fitbit');
       applyImportedToSliders();
       renderPreview('fitbit-connect-grid', j.ex);
@@ -7932,7 +7983,7 @@ async function fetchFitbitLive(sid){
   const p = new URLSearchParams(location.search);
   const fb = p.get('fitbit');
   if(!fb) return;
-  const sid = p.get('sid') || localStorage.getItem('vial_fitbit_sid');
+  const sid = p.get('sid') || localStorage.getItem('viale_fitbit_sid');
   history.replaceState(null, '', location.origin + location.pathname);
   setTimeout(function(){
     try{ if(typeof openImport === 'function') openImport(); }catch(e){}
@@ -7946,8 +7997,8 @@ async function fetchFitbitLive(sid){
 // если есть «ожидание» (≤10 мин) и sid — до-тягиваем метрики (токен уже в KV воркера).
 document.addEventListener('visibilitychange',function(){
   if(document.visibilityState!=='visible') return;
-  var pend=parseInt(localStorage.getItem('vial_fitbit_pending')||'0',10);
-  var sid=localStorage.getItem('vial_fitbit_sid');
+  var pend=parseInt(localStorage.getItem('viale_fitbit_pending')||'0',10);
+  var sid=localStorage.getItem('viale_fitbit_sid');
   if(pend && sid && (Date.now()-pend)<600000){ try{ if(typeof openImport==='function') openImport(); }catch(e){} try{ toggleCard('fitbit'); }catch(e){} try{ setMethod('fitbit','connect'); }catch(e){} fetchFitbitLive(sid); }
 });
 
@@ -7967,7 +8018,7 @@ async function fetchAIAnalysis(data, lang) {
     const res = await fetch(AI_WORKER, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data, lang, code: sessionStorage.getItem('vial_code') || '' }),
+      body: JSON.stringify({ data, lang, code: sessionStorage.getItem('viale_code') || '' }),
     });
     const json = await res.json();
     if (json.analysis) {
@@ -8130,7 +8181,7 @@ async function fetchAIAnalysis(data, lang) {
   function lng(){ var l; try{ l=localStorage.getItem('vial_lang'); }catch(e){} return I18N[l]?l:'en'; }
   function tr(){ return I18N[lng()]; }
   // ELITE — всегда human-led (ведёт основатель/специалист). Если пациент привязан (my-specialist.html) — подставляем его имя.
-  function specLink(){ try{ return JSON.parse(localStorage.getItem('vial_spec_link')||'null'); }catch(e){ return null; } }
+  function specLink(){ try{ return JSON.parse(localStorage.getItem('viale_spec_link')||'null'); }catch(e){ return null; } }
   function greetFor(t){ var s=specLink(); var nm=(s&&s.name)?(' '+s.name):''; return (t.greetLed||t.greet).split('{nm}').join(nm); }
   var history=[], started=false, busy=false;
   function el(id){ return document.getElementById(id); }

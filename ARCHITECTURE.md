@@ -525,6 +525,51 @@ html[data-current-lang="en"] #heroBtnSlots, html[data-current-lang="es"] #heroBt
 
 ### Журнал выполненного (что уже в проде + `main`)
 
+- **2026-07-14 (c)** — **Разделение localStorage тарифов (баг владельца: проход в PRO появился в карточке
+  VIO).** Все четыре продукта живут на одном origin (via-l.com) и делили ключи `vial_*` — данные текли между
+  тарифами. Теперь: **VIO остаётся на `vial_*`** (вся накопленная история у него), **PRO → `vialp_*`**
+  (чистый старт, без миграции — смесь VIO/PRO в старых ключах не тащим; старые .vlbackup с ключами `vial_*`
+  импорт принимает через legacy-маппинг), **EXPERT → `vialx_*`**, **ELITE → `viale_*`** (+ одноразовая
+  миграция-IIFE перед `const T={`: копирует старые `vial_*` → новые, клиентские данные/история целы; гейт
+  кода — sessionStorage, вводится за сессию как раньше). Общими намеренно остались только `vial_lang` /
+  `vial_lang_manual` (их читает shared `app-mode.js`) и имя файла экспорта `vial_history_*.json`.
+  ⚠️ Канон на будущее: **новые ключи хранения в PRO/EXPERT/ELITE — только с префиксом тарифа**
+  (vialp_/vialx_/viale_); `vial_*` = зона VIO.
+
+- **2026-07-14 (b)** — **PRO: полнота импорта гаджетов — «каждый гаджет отдаёт ВСЁ, что умеет» (принцип
+  владельца).** Дотянуты наши разрывы: **Fitbit OAuth** (воркер `handleFitbitMetrics`: + skin-temperature
+  → tempDev, cardio-fitness-score → vo2; типы терпимы к отказу — gh() при 4xx отдаёт []; ⚠️ воркер требует
+  отдельного `wrangler deploy`); **Fitbit токен-путь** (+ SpO₂/temp-skin/cardioscore за 7 дней, каждый fetch
+  терпим — нужны scopes у Personal App); **Fitbit Takeout-JSON** (+ spo2/tempSkin/cardioScore);
+  **Apple XML** (+ SpO₂ HKQuantityTypeIdentifierOxygenSaturation ×100; + температура запястья
+  AppleSleepingWristTemperature — абсолютные °C → tempDev = последняя ночь минус медиана выгрузки);
+  **Whoop CSV** (+ Blood oxygen % → spo2, Skin temp → tempDev-девиация; ⚡фикс реального бага: селекторы
+  колонок были с точками `heart.rate.variability`, а заголовки Whoop с пробелами — HRV/пульс/готовность
+  вообще не матчились; smoke node: парсится); **Xiaomi JSON** (+ spo2 — доровнён до CSV-пути);
+  **Oura файл** (+ daily_spo2). Превью импорта: добавлен слот SpO₂ (не показывался). Подписи всех карточек
+  источников приведены к тому, что реально импортируется (fitbit/apple/whoop/samsung −ЭКГ/withings −Вес/
+  garmin, 12 языков + инлайн-дефолты). Труба до ИИ проверена: все 8 метрик в `device{}` анализа + `_saveDaily`.
+  Вендорские пределы (не наши): Samsung не экспортирует HRV; Fitbit Daily Readiness — только их премиум-API.
+  **Зеркало EXPERT/ELITE СДЕЛАНО в тот же день** (interpreter-pro-expert.html + interpreter-elite.html:
+  код-якоря совпали 1:1, подписи адаптированы под их формулировки (ЧСС/ВСР); node-чек + smoke парсеров ок;
+  SpO₂-слот в превью там уже был). **Воркер задеплоен** (`wrangler deploy`, версия f5928b6d, /fitbit/metrics
+  отвечает). Остаток: живой прогон OAuth-путей владельцем (поля Google Health API по temp/vo2 подобраны
+  терпимо, точную форму покажет FITBIT-DEBUG в логах воркера).
+
+- **2026-07-14** — **PRO: карточка «Мой профиль» = внутренности VIO (interpreter-pro.html).** Порт
+  `renderCard` VIO 1:1 (золото вместо фиолета, localStorage вместо `_SEC`): hero (имя Oswald 600/24 +
+  пол·возраст + прогресс-бар заполнения + «В программе с») + энергетический ориентир ккал; 13 раскрывающихся
+  секций `_vcSec`/`_CAT` (Phosphor-иконки, все закрыты, порядок профиль→инструменты); Baseline и мини-тренды
+  Динамики на гаджет-метриках (`hrv`/`sleepHours`/`rhr`/`energy` + вес/талия — добавлены в `_saveDaily`);
+  «Памятка дня» в карточке (те же `_bpChapters`); «История разборов» из `vial_ai_daily` (рендер `_aiMd`,
+  структурный `_renderAnalysis` — остаток); месячный AI-разбор + AI-память «Что ИИ запомнил»/«Зоны внимания»
+  (`weeklyTrend(win)`, `/weekly-report period:'month'`, `/ai-memory tier:'pro'`); «Изменить профиль» →
+  полная лента в `__editMode` (обход гейта 1/день, футер «Сохранить и вернуться»); `saveProfile` переведён
+  на VIO-стиль keep-prev (пустой DOM на перезагрузке больше не перетирает профиль) + дособраны act/стресс/
+  gsm/cort/lifestyle_notes/goal/priorities/created. Панель карточки = порядок VIO (weekly/monthly/aiMemory
+  над cardBody), PRO-специфика «По дням» (`_renderDaily`) сохранена, экспорт/импорт JSON заменён vlBackup.
+  `node --check` всех блоков ок, дублей функций нет.
+
 - **2026-07-13** — **PRO = строение VIO (interpreter-pro.html, сессия «задача PRO»).** (1) Единая лента
   с зонами каденса VIO (`FLOW_ALL=[0,7,9,2,3,5,6,1,8,14,10]`, `_NOW=[1]`, двухстрочные `_flowHead` 12 яз,
   flow-intro); мёртвый 2-стадийный `showDaily/showWeekly` удалён. (2) Гаджет-приоритет: `_AUTO_STEP_METRIC=

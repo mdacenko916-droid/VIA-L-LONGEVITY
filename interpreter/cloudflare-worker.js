@@ -2092,6 +2092,12 @@ async function handleFitbitMetrics(request, env, corsHeaders){
   // SpO2 — sample type
   const spo2 = await gh('oxygen-saturation', `oxygen_saturation.sample_time.physical_time>="${startISO}" AND oxygen_saturation.sample_time.physical_time<"${endISO}"`);
   { const v = avg(spo2.map(d => num(d.oxygenSaturation && d.oxygenSaturation.percentSaturation)).filter(n=>n!=null)); if (v!=null) ex.spo2 = +v.toFixed(1); }
+  // Skin temperature — nightly relative deviation, °C (field names tolerant: API shape logged via FITBIT-DEBUG)
+  const temp = await gh('skin-temperature', `skin_temperature.sample_time.physical_time>="${startISO}" AND skin_temperature.sample_time.physical_time<"${endISO}"`);
+  { const v = avg(temp.map(d => { const t = d.skinTemperature || {}; return num(t.relativeCelsius ?? t.nightlyRelativeCelsius ?? t.deviationCelsius ?? (t.temperature && t.temperature.celsius)); }).filter(n=>n!=null)); if (v!=null) ex.tempDev = +v.toFixed(2); }
+  // Cardio fitness (VO2max estimate; Fitbit may return a range → midpoint)
+  const cardio = await gh('cardio-fitness-score', `cardio_fitness_score.date>="${sd}" AND cardio_fitness_score.date<"${ed}"`);
+  { const v = avg(cardio.map(d => { const c = d.cardioFitnessScore || {}; const r = c.vo2Max || c.vo2max || {}; const lo = num(r.rangeLow ?? r.low), hi = num(r.rangeHigh ?? r.high); if (lo!=null && hi!=null) return (lo+hi)/2; return num(r.value ?? c.value ?? r); }).filter(n=>n!=null)); if (v!=null) ex.vo2 = Math.round(v); }
   // Sleep — session type (minutesAsleep + DEEP-stage minutes from the summary)
   const sleep = await gh('sleep', `sleep.interval.end_time>="${startISO}" AND sleep.interval.end_time<"${endISO}"`);
   {
