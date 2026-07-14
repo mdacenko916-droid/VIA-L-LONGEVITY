@@ -1945,7 +1945,7 @@ const GH_AUTH_URL  = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GH_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const GH_API       = 'https://health.googleapis.com/v4/users/me/dataTypes';
 // sleep scope + health-metrics scope (covers HR, resting HR, HRV, SpO2, temp).
-const GH_SCOPES    = 'https://www.googleapis.com/auth/googlehealth.sleep.readonly https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly';
+const GH_SCOPES    = 'https://www.googleapis.com/auth/googlehealth.sleep.readonly https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly';   // activity_and_fitness → daily-vo2-max (иначе 403)
 const FITBIT_RETURN_ALLOW = ['https://via-l.com/', 'http://localhost', 'http://127.0.0.1'];
 const FITBIT_DEFAULT_RET  = 'https://via-l.com/interpreter/interpreter-pro.html';
 
@@ -2069,6 +2069,15 @@ async function handleFitbitMetrics(request, env, corsHeaders){
   // Daily-kind filters accept only >= and < (not <=) → exclusive upper bound = tomorrow.
   const ed = new Date(Date.now() + 86400000).toISOString().slice(0,10);
   const num = v => { const n = Number(v); return Number.isFinite(n) ? n : null; };
+  // Терпимый поиск числового поля по имени (регексп) — форма полей Google Health API различается между типами
+  const pickNum = (o, re, depth) => {
+    depth = depth || 0; if (o == null || typeof o !== 'object' || depth > 4) return null;
+    for (const k of Object.keys(o)) {
+      if (re.test(k)) { const n = Number(o[k]); if (Number.isFinite(n)) return n; }
+      const r = pickNum(o[k], re, depth + 1); if (r != null) return r;
+    }
+    return null;
+  };
   const avg = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : null;
   // GET dataPoints of a type filtered by a time range (filter is URL-encoded).
   const gh = async (type, filter) => {
@@ -2084,20 +2093,31 @@ async function handleFitbitMetrics(request, env, corsHeaders){
 
   const ex = {};
   // HRV (rmssd, ms) — sample type
-  const hrv = await gh('heart-rate-variability', `heart_rate_variability.sample_time.physical_time>="${startISO}" AND heart_rate_variability.sample_time.physical_time<"${endISO}"`);
-  { const v = avg(hrv.map(d => num(d.heartRateVariability && d.heartRateVariability.rmssdMillis)).filter(n=>n!=null)); if (v!=null) ex.hrv = Math.round(v); }
+  const hrvD = await gh('daily-heart-rate-variability', `daily_heart_rate_variability.date>="${sd}" AND daily_heart_rate_variability.date<"${ed}"`);
+  { const v = avg(hrvD.map(d => pickNum(d, /rootMeanSquare|rmssd/i)).filter(n=>n!=null&&n>0)); if (v!=null) ex.hrv = Math.round(v); }
+  if (ex.hrv == null) {
+    const hrv = await gh('heart-rate-variability', `heart_rate_variability.sample_time.physical_time>="${startISO}" AND heart_rate_variability.sample_time.physical_time<"${endISO}"`);
+    const v = avg(hrv.map(d => { const t = d.heartRateVariability || {}; return num(t.rootMeanSquareOfSuccessiveDifferencesMilliseconds ?? t.rmssdMillis) ?? pickNum(d, /rootMeanSquare|rmssd/i); }).filter(n=>n!=null));
+    if (v!=null) ex.hrv = Math.round(v);
+  }
   // Daily resting heart rate
   const rhr = await gh('daily-resting-heart-rate', `daily_resting_heart_rate.date>="${sd}" AND daily_resting_heart_rate.date<"${ed}"`);
   { const v = avg(rhr.map(d => num(d.dailyRestingHeartRate && d.dailyRestingHeartRate.beatsPerMinute)).filter(n=>n!=null)); if (v!=null) ex.rhr = Math.round(v); }
   // SpO2 — sample type
   const spo2 = await gh('oxygen-saturation', `oxygen_saturation.sample_time.physical_time>="${startISO}" AND oxygen_saturation.sample_time.physical_time<"${endISO}"`);
-  { const v = avg(spo2.map(d => num(d.oxygenSaturation && d.oxygenSaturation.percentSaturation)).filter(n=>n!=null)); if (v!=null) ex.spo2 = +v.toFixed(1); }
-  // Skin temperature — nightly relative deviation, °C (field names tolerant: API shape logged via FITBIT-DEBUG)
-  const temp = await gh('skin-temperature', `skin_temperature.sample_time.physical_time>="${startISO}" AND skin_temperature.sample_time.physical_time<"${endISO}"`);
-  { const v = avg(temp.map(d => { const t = d.skinTemperature || {}; return num(t.relativeCelsius ?? t.nightlyRelativeCelsius ?? t.deviationCelsius ?? (t.temperature && t.temperature.celsius)); }).filter(n=>n!=null)); if (v!=null) ex.tempDev = +v.toFixed(2); }
-  // Cardio fitness (VO2max estimate; Fitbit may return a range → midpoint)
-  const cardio = await gh('cardio-fitness-score', `cardio_fitness_score.date>="${sd}" AND cardio_fitness_score.date<"${ed}"`);
-  { const v = avg(cardio.map(d => { const c = d.cardioFitnessScore || {}; const r = c.vo2Max || c.vo2max || {}; const lo = num(r.rangeLow ?? r.low), hi = num(r.rangeHigh ?? r.high); if (lo!=null && hi!=null) return (lo+hi)/2; return num(r.value ?? c.value ?? r); }).filter(n=>n!=null)); if (v!=null) ex.vo2 = Math.round(v); }
+  { const v = avg(spo2.map(d => { const o = d.oxygenSaturation || {}; return num(o.percentage ?? o.percentSaturation) ?? pickNum(d, /percent/i); }).filter(n=>n!=null&&n>=70&&n<=100)); if (v!=null) ex.spo2 = +v.toFixed(1); }
+  // Температура сна: ночная девиация кожи, °C — тип daily-sleep-temperature-derivations (подтверждён доками Google Health API)
+  const temp = await gh('daily-sleep-temperature-derivations', `daily_sleep_temperature_derivations.date>="${sd}" AND daily_sleep_temperature_derivations.date<"${ed}"`);
+  { // девиация = ночная − базовая (поля из FITBIT-DEBUG); берём ПОСЛЕДНЮЮ ночь (семантика tempDev), не среднее
+    const pts = temp.map(d => { const t = d.dailySleepTemperatureDerivations || {};
+      const dt = t.date ? (t.date.year*10000 + t.date.month*100 + t.date.day) : 0;
+      const n = num(t.nightlyTemperatureCelsius), b = num(t.baselineTemperatureCelsius);
+      const dev = (n!=null && b!=null) ? n-b : pickNum(d, /deviation|delta/i);
+      return dev!=null && Math.abs(dev)<=5 ? {dt, dev} : null; }).filter(Boolean).sort((a,b)=>a.dt-b.dt);
+    if (pts.length) ex.tempDev = +pts[pts.length-1].dev.toFixed(2); }
+  // VO2max: тип daily-vo2-max (подтверждён доками Google Health API); плаузибельный диапазон 15–90
+  const cardio = await gh('daily-vo2-max', `daily_vo2_max.date>="${sd}" AND daily_vo2_max.date<"${ed}"`);
+  { const v = avg(cardio.map(d => pickNum(d, /vo2/i)).filter(n=>n!=null&&n>=15&&n<=90)); if (v!=null) ex.vo2 = Math.round(v); }
   // Sleep — session type (minutesAsleep + DEEP-stage minutes from the summary)
   const sleep = await gh('sleep', `sleep.interval.end_time>="${startISO}" AND sleep.interval.end_time<"${endISO}"`);
   {
