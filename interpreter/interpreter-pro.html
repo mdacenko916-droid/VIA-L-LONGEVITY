@@ -5203,11 +5203,26 @@ function renderDataCompleteness(){
     +'</div><div style="display:flex;gap:6px;flex-wrap:wrap;">'+chips+'</div>';
 }
 // ── «Как вчера»: переносим ответы прошлой сессии — клиент подтверждает/правит, а не вводит заново ──
+// Владелец 15.07: перенос был СЛИШКОМ широкий — тянул и БАЗУ (добавки/лекарства — правильно, меняется редко),
+// и ЕЖЕДНЕВНОЕ СОСТОЯНИЕ (энергия/стресс/тяга к сладкому/сон/туман/пищеварение — смысл дневного прохода
+// именно в них). Молчаливый перенос вчерашнего состояния как сегодняшнего искажает и честность ответа
+// клиента, и вход в ИИ-разбор — та же логика, по которой день не должен получать усреднённые/чужие данные.
+// Переносим ТОЛЬКО базу; дневное состояние всегда начинается пустым — отвечать заново, без якоря на вчера.
+var _DAILY_RADIO=['temp','hotflash','hotfreq','deep','wake','hf_count','hf_intensity','appetite','move_today','eating_pattern','protein_intake','memory','fog','alc','chronic_stress'];
+var _DAILY_VAL=['energy','stress','resp_rate','hrv','rhr','sleep_hours'];
+function _isDailyField(el){
+  if(el.name&&_DAILY_RADIO.indexOf(el.name)>=0)return true;
+  if(el.id&&_DAILY_VAL.indexOf(el.id)>=0)return true;
+  if(el.id&&/^(sym|gi|cort)\d/.test(el.id))return true;   // симптомы/пищеварение/кортизол-паттерн «сегодня» (sym1-9, gi1-5, cort2-7)
+  if(el.id==='crav1')return true;                          // тяга к сладкому «сегодня»
+  return false;
+}
 function _carryFields(){
   var out=[];
   for(var i=1;i<=11;i++){var s=document.getElementById('step'+i);if(!s)continue;
     s.querySelectorAll('input,select,textarea').forEach(function(el){
       if(el.id&&el.id.indexOf('lab-')===0)return;  // анализы спят — не переносим
+      if(_isDailyField(el))return;                  // дневное состояние — НЕ переносим
       out.push(el);
     });}
   return out;
@@ -6776,9 +6791,12 @@ function _showResultsInner(){
 
 // ══ IMPORT DATA STORE ════════════════════════════════════
 const importedData={hrv:null,rhr:null,sleepHours:null,deepMin:null,tempDev:null,energy:null,vo2:null,source:null};
-// Данные с трекера переживают перезагрузку вкладки — чтобы карточка клиента показывала их всегда.
-try{var _imp=JSON.parse(localStorage.getItem('vialp_imported')||'null');if(_imp&&typeof _imp==='object')Object.keys(_imp).forEach(function(k){if(_imp[k]!=null)importedData[k]=_imp[k];});}catch(e){}
-function _saveImported(){try{localStorage.setItem('vialp_imported',JSON.stringify(importedData));}catch(e){}}
+// Данные с трекера переживают перезагрузку вкладки В ПРЕДЕЛАХ ОДНОГО ДНЯ — чтобы карточка клиента показывала
+// их всегда. Владелец 15.07: на НОВЫЙ дневной проход прошлые показатели трекера молча не переиспользуем —
+// это уже НЕ «данные за вчера», а «данные за позавчера, выданные как вчерашние». Штамп дня в vialp_imported;
+// день сменился → показатели считаются устаревшими и не восстанавливаются (клиент синхронизирует заново).
+try{var _imp=JSON.parse(localStorage.getItem('vialp_imported')||'null');if(_imp&&typeof _imp==='object'&&_imp.day===_dayKey())Object.keys(_imp).forEach(function(k){if(k!=='day'&&_imp[k]!=null)importedData[k]=_imp[k];});}catch(e){}
+function _saveImported(){try{localStorage.setItem('vialp_imported',JSON.stringify(Object.assign({},importedData,{day:_dayKey()})));}catch(e){}}
 function openImport(mode){const p=document.getElementById('importPanel');p.classList.remove('mode-all','mode-full');if(mode==='all')p.classList.add('mode-all');else if(mode==='full')p.classList.add('mode-full');const sa=document.getElementById('scroll-area');if(sa){sa.scrollTo({top:0,behavior:'instant'});sa.style.overflowY='hidden';}const tb=document.getElementById('topbar');if(tb)tb.style.background='#10131A';p.classList.add('open');}
 function closeImport(skip){document.getElementById('importPanel').classList.remove('open');const sa=document.getElementById('scroll-area');if(sa)sa.style.overflowY='auto';const tb=document.getElementById('topbar');if(tb)tb.style.background='';if(!skip&&importedData.source)applyImportedToSliders();if(typeof updateDeviceBanners==='function')updateDeviceBanners();if(typeof renderGadgetPanel==='function')renderGadgetPanel();if(typeof _reflowSteps==='function')_reflowSteps();}
 function applyImportedToSliders(){
