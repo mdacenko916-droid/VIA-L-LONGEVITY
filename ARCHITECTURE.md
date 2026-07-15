@@ -72,7 +72,7 @@ Sugar_40, Inflammation, Beauty). Протокол `postMessage` (`openBook` /
 |---|---|---|---|---|---|---|
 | `index.html` | Лендинг ИП: галерея устройств (3D) + тарифы | — | — | — | — | 12 яз. |
 | `methodology.html` | «Научная база» (`noindex`) | — | — | — | — | 12 яз. |
-| `interpreter-vio.html` | VIO — бесплатный | 7 | — | — | — | 12 яз. |
+| `interpreter-vio.html` | VIO — платный, €9.90 | 7 | ✓ | — | — | 12 яз. |
 | `interpreter-pro.html` | PRO | 16 | ✓ | — | — | 12 яз. |
 | `interpreter-pro-expert.html` | PRO + EXPERT | 17 (16 + Анкета) | ✓ | 2 в 30 дней | — | 12 яз. |
 | `interpreter-elite.html` | ELITE (8w / 12w) | 17 (16 + Анкета) | ✓ | 8 за 8 нед / 12 за 12 нед (еженедельный) | опц. для uk/ru, 1:1 ≈ раз в 1–3 нед | 12 яз. |

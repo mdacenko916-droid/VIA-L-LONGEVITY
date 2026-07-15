@@ -28,7 +28,7 @@ interpreter/
 ├── index.html                  # Лендинг: галерея устройств + планы
 ├── methodology.html            # «Научная база» (noindex) — публичная страница
 │
-├── interpreter-vio.html        # Интерпретатор VIO  — базовый (free/paywall)
+├── interpreter-vio.html        # Интерпретатор VIO  — базовый, платный €9.90 (гейт по коду доступа)
 ├── interpreter-pro.html        # Интерпретатор PRO  — 16 шагов + AI
 ├── interpreter-pro-expert.html # Интерпретатор PRO-EXPERT — 17 шагов (16 + Анкета) + AI + Expert
 ├── interpreter-elite.html      # Интерпретатор ELITE — 17 шагов (16 + Анкета) + AI + Elite консультация
@@ -81,8 +81,8 @@ interpreter/
 
 | Тариф        | Файл                        | Шагов          | AI-анализ | Expert-PDF                         | Zoom 1:1               | Цена       |
 |--------------|-----------------------------|----------------|-----------|------------------------------------|------------------------|------------|
-| VIO (Basic)  | interpreter-vio.html        | 7              | —         | —                                  | —                      | Бесплатно  |
-| PRO          | interpreter-pro.html        | 16             | ✓ Claude  | —                                  | —                      | €29/мес    |
+| VIO (Basic)  | interpreter-vio.html        | 7              | ✓ Claude  | —                                  | —                      | €9.90 (платный, подписка) |
+| PRO          | interpreter-pro.html        | 16             | ✓ Claude  | —                                  | —                      | €29.90/мес |
 | PRO+EXPERT   | interpreter-pro-expert.html | 17 (16+Анкета) | ✓ Claude  | 2 PDF в 30 дней (cooldown 7 дней) | —                      | €79/мес    |
 | ELITE-8W     | interpreter-elite.html      | 17 (16+Анкета) | ✓ Claude  | до 8 PDF за 8 недель (еженедельно) | опц. для uk/ru, ≈1/3 нед | €390       |
 | ELITE-12W    | interpreter-elite.html      | 17 (16+Анкета) | ✓ Claude  | до 12 PDF за 12 недель (еженедельно) | опц. для uk/ru, ≈1/3 нед | €590       |
@@ -500,7 +500,7 @@ Oura Ring, Apple Watch, Garmin Fenix 8, Samsung Galaxy Watch, Fitbit Charge 6, P
 ### 7.3 Раздел планов (`#plans`)
 
 3-колоночная grid-сетка с карточками:
-- **VIO** (бесплатно) — базовый, 6 шагов
+- **VIO** (€9.90, платный) — базовый, 6 шагов
 - **PRO** — 14 шагов, AI-анализ, история
 - **EXPERT** — всё PRO + нутрициолог 2×/мес (письменный разбор за 48 ч) + лаборатория
 - **ELITE** — всё EXPERT + ежедневный Telegram-чат + Zoom 1×/нед + еженедельный PDF
@@ -661,7 +661,7 @@ wrangler deploy
 - **До получения credentials:** на проде работает только VIO в режиме Sandbox-демо. Production-механизм спроектирован (§15.3–15.8), но не построен.
 
 ### 15.2 Разделение по тарифам (продуктовое решение)
-- **VIO (free)** — Sandbox-демо: вкладка «✨ Demo» на карточке Oura → `fetchOuraSandbox()` тянет `api.ouraring.com/v2/sandbox/...` (auth — любая строка, шлём `Bearer demo`), усредняет 7 дней, при недоступности эндпоинта подставляет реалистичный fallback (`OURA_DEMO_FALLBACK`). VIO сам по сути демо — этого достаточно. `OURA_MODE='sandbox'`.
+- **VIO (базовый тариф, €9.90 — не бесплатный)** — Sandbox-демо: вкладка «✨ Demo» на карточке Oura → `fetchOuraSandbox()` тянет `api.ouraring.com/v2/sandbox/...` (auth — любая строка, шлём `Bearer demo`), усредняет 7 дней, при недоступности эндпоинта подставляет реалистичный fallback (`OURA_DEMO_FALLBACK`). Demo-режим Oura выбран не из-за цены тарифа, а как временное решение до получения production-credentials. `OURA_MODE='sandbox'`.
 - **PRO / PRO-EXPERT / ELITE** — настоящий **OAuth2 Authorization Code flow** (production API, реальное кольцо пользователя). Token-paste («Токен API») остаётся как fallback для продвинутых.
 
 ### 15.3 Почему серверная часть обязательна
