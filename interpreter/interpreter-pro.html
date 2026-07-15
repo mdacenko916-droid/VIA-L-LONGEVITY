@@ -3821,13 +3821,6 @@ function setLang(l){
 }
 function t(k){return T[lang][k]||T.ru[k]||k;}
 
-// ══ DEVICE TOGGLE ════════════════════════════════════════
-document.querySelectorAll('input[name=device]').forEach(el=>{
-  el.addEventListener('change',()=>{
-    const note=document.getElementById('oura-device-note');
-    if(note)note.style.display=(el.value==='oura4'||el.value==='oura3')?'block':'none';
-  });
-});
 // ══ GENDER TOGGLE ════════════════════════════════════════
 window.__touched=window.__touched||new Set();
 window.__SOFTSKIP=['hrv','hrv_trend','sleep_qual','deep','wake','rhr','resp_rate','energy','anxiety','mood','irritability','stress','temp','hf_count'];
@@ -3849,14 +3842,9 @@ document.querySelectorAll('input[name=gender]').forEach(el=>{
     const ct=document.getElementById('step11-title'); if(ct)ct.style.display=male?'none':'';
     const chb=document.getElementById('cycle-help-btn'); if(chb)chb.style.display=male?'none':'';
     const cd=document.getElementById('step11-desc'); if(cd)cd.style.display=male?'none':'';
-    // PRO: update step 12 cycle/vitality
+    // PRO: update step 12 cycle/vitality (cycle-male убран — «Жизненная сила» переехала в horm-male-vit выше)
     const cf=document.getElementById('cycle-female');
-    const cm=document.getElementById('cycle-male');
     if(cf)cf.style.display=male?'none':'block';
-    if(cm)cm.style.display=male?'block':'none';
-    // Недельный шаг: «последняя менструация» + ПМС — только для женщин
-    const wf=document.getElementById('weekly-female');
-    if(wf)wf.style.display=male?'none':'block';
     // пере-рендер ленты по полу с сохранением позиции скролла (как VIO) — не улетать вверх
     setTimeout(function(){ if(document.body.classList.contains('flow-mode')&&typeof showAll==='function'){ var _sa=document.getElementById('scroll-area'); var _y=_sa?_sa.scrollTop:0; showAll(); if(_sa)_sa.scrollTop=_y; else window.scrollTo(0,_y); } },0);
   });
@@ -3907,7 +3895,7 @@ function _cSec(s){return '<div style="font-family:\'Oswald\',sans-serif;font-siz
 function _fixMetric(n){
   var cp=document.getElementById('cardPanel');if(cp)cp.style.display='none';
   document.querySelectorAll('.bottom-nav-item').forEach(function(b){b.classList.remove('active');});
-  var nh=document.getElementById('nav-home');if(nh)nh.classList.add('active');
+  var nh=document.getElementById('nav-today');if(nh)nh.classList.add('active');   // 'nav-home' устарел (4-табовая навигация: today/approach/guide/card)
   goTo(n);
 }
 // Ручной ввод показателя прямо в окошке (инлайн) — работает и в панели под кнопками, и в карточке.
@@ -4165,7 +4153,7 @@ function _editProfile(){
   var _m=document.querySelector('main'); if(_m)_m.style.display='';   // вернуть ленту (была скрыта под модалом карточки)
   var _nv=document.querySelector('.bottom-nav'); if(_nv)_nv.classList.remove('nav-hidden');
   document.querySelectorAll('.bottom-nav-item').forEach(function(b){b.classList.remove('active');});
-  var nh=document.getElementById('nav-home'); if(nh)nh.classList.add('active');
+  var nh=document.getElementById('nav-today'); if(nh)nh.classList.add('active');   // 'nav-home' устарел
   showAll();
   var sa=document.getElementById('scroll-area'); if(sa)sa.scrollTop=0; else window.scrollTo(0,0);
 }
@@ -4556,7 +4544,10 @@ function _saveDaily(){
       hf_count:getRadio('hf_count'), hf_intensity:getRadio('hf_intensity'),
       // ежедневные субъективные блоки — копим по дням для недельного разбора из карточки
       memory:getRadio('memory'), fog:getRadio('fog'),
-      stress:(document.getElementById('stress')?+document.getElementById('stress').value:null), alc:getRadio('alc'),
+      // Числового слайдера «стресс X/10» в UI нет — есть только категория (name="stress": no/mild/high).
+      // Раньше тут стоял getElementById('stress') на несуществующий id → всегда null, недельный/месячный
+      // тренд стресса молча не считался. Мапим категорию на число (0–10), чтобы тренд снова работал.
+      stress:(function(){var v=getRadio('stress');return v==='high'?9:v==='mild'?5:v==='no'?2:null;})(), alc:getRadio('alc'),
       // тело для мини-трендов карточки (как VIO): вес/талия из профиля на момент прохода
       weight:(function(){var el=document.getElementById('prof-weight');return el?(parseFloat(el.value)||null):null;})(),
       waist:(function(){var el=document.getElementById('prof-waist');return el?(parseFloat(el.value)||null):null;})()
@@ -4628,9 +4619,7 @@ function renderHistory(){
   const key='vialp_history';
   const history=JSON.parse(localStorage.getItem(key)||'[]');
   const el=document.getElementById('historyList');
-  const _ui=_histUI();
-  const _be=document.getElementById('histExportBtn');if(_be)_be.textContent='↓ '+_ui.exp;
-  const _bi=document.getElementById('histImportBtn');if(_bi)_bi.textContent='↑ '+_ui.imp;
+  const _ui=_histUI();   // экспорт/импорт истории теперь через vlBackupExport() (общий бэкап), старые кнопки histExportBtn/histImportBtn убраны
   if(!history.length){
     el.innerHTML=`<div style="text-align:center;color:var(--t3);padding:40px 20px;font-size:14px;">${t('history_empty')}</div>`;
     return;
@@ -5606,24 +5595,12 @@ function _consentToggle(){var cb=document.getElementById('consent-cb'),b=documen
 function _consentAccept(){var cb=document.getElementById('consent-cb');if(!cb||!cb.checked)return;try{localStorage.setItem('vialp_consent','1');}catch(e){}var g=document.getElementById('consent-gate');if(g)g.classList.remove('show');document.body.classList.remove('consent-open');}
 (function(){var ok;try{ok=localStorage.getItem('vialp_consent');}catch(e){}if(!ok){if(document.readyState!=='loading'){var g=document.getElementById('consent-gate');if(g){g.classList.add('show');document.body.classList.add('consent-open');}}else document.addEventListener('DOMContentLoaded',function(){var g=document.getElementById('consent-gate');if(g){g.classList.add('show');document.body.classList.add('consent-open');}});}})();
 (function(){ function _start(){ try{startFunnel();}catch(e){} } if(document.readyState!=='loading')_start(); else document.addEventListener('DOMContentLoaded',_start); })();   // пароль убран — старт безусловный
-// Числовые подсказки-референсы в плейсхолдеры биоимпеданса (по полу/возрасту) — без слов, работают во всех языках.
-function setBioHints(){
-  var male=(typeof getRadio==='function'&&getRadio('gender')==='male');
-  var age=parseInt(document.getElementById('prof-age')?.value);
-  var set=function(id,ph){var el=document.getElementById(id);if(el&&!el.value)el.placeholder=ph;};
-  set('bio-fat',male?'10–25':'18–32');     // % жира, типичный диапазон
-  set('bio-muscle',male?'33–45':'28–40');  // % мышц
-  set('bio-visceral','1–12');              // норма висцерального
-  set('bio-bmi','18.5–25');                // норма ИМТ
-  set('bio-bioage',age?String(age):'—');   // ориентир = паспортный возраст
-}
 function goTo(n){
   window._curStep = n;   // запоминаем шаг — чтобы лейбл прогресса перевести при смене языка
   document.body.classList.remove('flow-mode'); if(typeof _hideFlowFooter==='function')_hideFlowFooter();
   document.querySelectorAll('.step').forEach(s=>s.classList.remove('active','flow-show'));
   const target = document.getElementById(n==='result'?'stepResult':'step'+n);
   if(target) target.classList.add('active');
-  if(target&&target.querySelector&&target.querySelector('#bio-fat'))setBioHints();
   updateProgress(n);
   // В приложении hero (большой логотип/заголовок/кнопка импорта) — только на входе (step0);
   // на остальных шагах прячем, чтобы вверху не было лишнего текста при скролле. На вебе не трогаем.
@@ -5657,7 +5634,6 @@ function restart(){
   document.getElementById('rhr').value=68;ouraSlider('rhr',68);
   document.getElementById('energy').value=6;if(typeof renderEnergyScale==='function')renderEnergyScale();
   document.getElementById('resp_rate').value=15;ouraSlider('resp',15);
-  const hfd=document.getElementById('hf-detail');if(hfd)hfd.style.display='none';
   ['gf','tp1','hf1','hfq1','dp1','wk1','rc1','alc0','str1','hfc1','mo7','ir1','mem8','mdd0','fog0'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.checked=true;
   });
@@ -5756,10 +5732,6 @@ function _downloadPDFInner(){
     <div class="metric"><div class="metric-label">${L({ru:'Приливы',uk:'Припливи',en:'Hot Flashes',es:'Sofocos',de:'Hitzewallungen',pt:'Ondas calor',fr:'Bouffées',pl:'Uderzenia',it:'Vampate',he:'גלי חום',ja:'ほてり',ko:'안면홍조'})}</div><div class="metric-val">${data.hf_count==='none'?'0':data.hf_count==='low'?'1–2':data.hf_count==='mid'?'3–5':data.hf_count==='high'?'6+':'–'}</div><div class="metric-unit"></div></div>
     <div class="metric"><div class="metric-label">${L({ru:'Тревога',uk:'Тривога',en:'Anxiety',es:'Ansiedad',de:'Angst',pt:'Ansiedade',fr:'Anxiété',pl:'Lęk',it:'Ansia',he:'חרדה',ja:'不安',ko:'불안'})}</div><div class="metric-val">${data.anxiety||'–'}</div><div class="metric-unit">/10</div></div>
     <div class="metric"><div class="metric-label">${L({ru:'Настроение',uk:'Настрій',en:'Mood',es:'Estado ánimo',de:'Stimmung',pt:'Humor',fr:'Humeur',pl:'Nastrój',it:'Umore',he:'מצב רוח',ja:'気分',ko:'기분'})}</div><div class="metric-val">${data.mood==='stable'?'✓':data.mood==='swings'?'~':data.mood==='low'?'↓':'–'}</div><div class="metric-unit"></div></div>
-    ${data.bio&&data.bio.muscle?`<div class="metric"><div class="metric-label">${L({ru:'Мышцы',uk:'М\'язи',en:'Muscle',es:'Músculo',de:'Muskel',pt:'Músculo',fr:'Muscle',pl:'Mięśnie',it:'Muscolo',he:'שריר',ja:'筋肉',ko:'근육'})}</div><div class="metric-val">${data.bio.muscle}</div><div class="metric-unit">%</div></div>`:''}
-    ${data.bio&&data.bio.fat?`<div class="metric"><div class="metric-label">${L({ru:'Жир',uk:'Жир',en:'Fat',es:'Grasa',de:'Fett',pt:'Gordura',fr:'Graisse',pl:'Tłuszcz',it:'Grasso',he:'שומן',ja:'体脂肪',ko:'지방'})}</div><div class="metric-val">${data.bio.fat}</div><div class="metric-unit">%</div></div>`:''}
-    ${data.bio&&data.bio.visceral?`<div class="metric"><div class="metric-label">${L({ru:'Висцер.жир',uk:'Вісц.жир',en:'Visceral',es:'Visceral',de:'Viszeral',pt:'Visceral',fr:'Viscéral',pl:'Trzewny',it:'Viscerale',he:'קרבי',ja:'内臓脂肪',ko:'내장지방'})}</div><div class="metric-val">${data.bio.visceral}</div><div class="metric-unit">/30</div></div>`:''}
-    ${data.bio&&data.bio.bioage?`<div class="metric"><div class="metric-label">${L({ru:'Биовозраст',uk:'Біовік',en:'Bio Age',es:'Edad bio.',de:'Bioalter',pt:'Idade bio.',fr:'Âge bio.',pl:'Wiek bio.',it:'Età bio.',he:'גיל ביולוגי',ja:'生物学的年齢',ko:'생물학적 나이'})}</div><div class="metric-val">${data.bio.bioage}</div><div class="metric-unit">${L({ru:'лет',uk:'років',en:'yrs',es:'años',de:'J.',pt:'anos',fr:'ans',pl:'lat',it:'anni',he:'שנים',ja:'歳',ko:'세'})}</div></div>`:''}
   </div>
   ${Object.values(recs).map(r=>{var items=r.l.map(i=>_scrubProto(_wl(i))).filter(Boolean);return items.length?`<h3>${_wl(r.h)}</h3>${items.map(i=>`<div class="rec-item">${i}</div>`).join('')}`:'';}).join('')}
   <div class="footer">VIA-L Longevity · via-l.com · ${date}<br>${t('disclaimer')}</div>
@@ -6248,8 +6220,6 @@ function showResults(){
 }
 function seenF(){var t=(typeof window!=='undefined'&&window.__touched&&window.__touched.size)?window.__touched:null;if(!t)return true;for(var i=0;i<arguments.length;i++){if(t.has(arguments[i]))return true;}return false;}
 // Клэмп биоимпеданса: number-инпуты пропускают любое введённое с клавиатуры значение (min/max ограничивают только стрелки).
-// Нереальные значения (висцеральный 500, биовозраст 300, мышцы 10%) → null, чтобы их не увидели ни карточки, ни ИИ, ни QoL, ни doc-referral.
-function bioClamp(id,lo,hi){var v=parseFloat(document.getElementById(id)?.value);return(isFinite(v)&&v>=lo&&v<=hi)?v:null;}
 // Взаимоисключение «ничего из перечисленного / не тренируюсь» с остальными чекбоксами внутри группы .chips.
 // Раньше можно было отметить и «ничего», и конкретные симптомы одновременно — логическое противоречие.
 document.addEventListener('change',function(e){
@@ -6366,13 +6336,8 @@ function _showResultsInner(){
     meds:getChecked(['med2','med3','med4','med5']),
     chronic_stress:getRadio('chronic_stress'),
     cortisol_symp:getChecked(['cort2','cort3','cort4','cort5','cort6','cort7']),
-    bio:{
-      fat:bioClamp('bio-fat',3,60),
-      muscle:bioClamp('bio-muscle',20,70),
-      visceral:bioClamp('bio-visceral',1,40),
-      bmi:bioClamp('bio-bmi',10,70),
-      bioage:bioClamp('bio-bioage',15,120),
-    },
+    // bio:{} (биоимпеданс — жир/мышцы/висцеральный/ИМТ/биовозраст) убран 2026-07-15: полей ввода нет,
+    // объект всегда был {fat:null,muscle:null,...} — владелец решил не восстанавливать (нечестный ручной ввод).
     // 5-й уровень нормализуем к существующим кодам движка: veryhigh→high, severe→intense (логика оценки не меняется)
     hf_count:(function(v){return v==='veryhigh'?'high':v;})(getRadio('hf_count')),
     hf_intensity:(function(v){return v==='severe'?'intense':v;})(getRadio('hf_intensity')),
@@ -6546,66 +6511,9 @@ function _showResultsInner(){
     score-=4;
   }
 
-  // Bioimpedance analysis
-  const bio=data.bio;
-  if(bio&&(bio.muscle||bio.fat||bio.visceral)){
-    const isFem=!isMale;
-    // Muscle mass
-    if(bio.muscle!==null){
-      const muscLow=isFem?bio.muscle<30:bio.muscle<35;
-      const muscOk=isFem?(bio.muscle>=33&&bio.muscle<=40):(bio.muscle>=38&&bio.muscle<=46);
-      if(muscLow){
-        ins.push({t:'alert',i:'💪',
-          h:L({ru:isFem?'Низкая мышечная масса — риск для эстрогена':'Низкая мышечная масса — риск для тестостерона',uk:isFem?'Низька м\'язова маса — ризик для естрогену':'Низька м\'язова маса — ризик для тестостерону',en:isFem?'Low Muscle Mass — Estrogen Risk':'Low Muscle Mass — Testosterone Risk',es:isFem?'Masa muscular baja — riesgo para estrógeno':'Masa muscular baja — riesgo para testosterona',de:isFem?'Niedrige Muskelmasse — Östrogenrisiko':'Niedrige Muskelmasse — Testosteronrisiko',pt:isFem?'Massa muscular baixa — risco para estrogênio':'Massa muscular baixa — risco para testosterona',fr:isFem?'Masse musculaire faible — risque pour œstrogène':'Masse musculaire faible — risque pour testostérone',pl:isFem?'Niska masa mięśniowa — ryzyko dla estrogenu':'Niska masa mięśniowa — ryzyko dla testosteronu',it:isFem?'Massa muscolare bassa — rischio estrogeno':'Massa muscolare bassa — rischio testosterone',he:isFem?'מסת שריר נמוכה — סיכון לאסטרוגן':'מסת שריר נמוכה — סיכון לטסטוסטרון',ja:isFem?'低筋肉量 — エストロゲンリスク':'低筋肉量 — テストステロンリスク',ko:isFem?'낮은 근육량 — 에스트로겐 위험':'낮은 근육량 — 테스토스테론 위험'}),
-          b:L({ru:isFem?`${bio.muscle}% мышц. Мышечная ткань — источник ароматазы, необходимой для синтеза эстрогена. При дефиците мышц снижается выработка и баланс гормонов. Приоритет: силовые тренировки и достаточный белок.`:`${bio.muscle}% мышц. Мышечная ткань участвует в синтезе тестостерона. Дефицит мышц → меньше гормонов → хуже восстановление. Приоритет: силовые тренировки 3×/нед.`,uk:isFem?`${bio.muscle}% м\'язів. М\'язова тканина — джерело ароматази для синтезу естрогену.`:`${bio.muscle}% м\'язів. Дефіцит м\'язів → менше гормонів → гірше відновлення.`,en:isFem?`${bio.muscle}% muscle. Muscle tissue is the source of aromatase needed for estrogen synthesis. Low muscle = lower hormone output.`:`${bio.muscle}% muscle. Muscle participates in testosterone synthesis. Less muscle → less hormone → slower recovery.`,es:isFem?`${bio.muscle}% músculo. El tejido muscular es fuente de aromatasa para la síntesis de estrógeno.`:`${bio.muscle}% músculo. El déficit muscular reduce la producción de testosterona.`,de:isFem?`${bio.muscle}% Muskeln. Muskelgewebe ist Quelle von Aromatase für die Östrogensynthese.`:`${bio.muscle}% Muskeln. Muskelmangel → weniger Hormone → langsamere Erholung.`,pt:isFem?`${bio.muscle}% músculo. Tecido muscular é fonte de aromatase para síntese de estrogênio.`:`${bio.muscle}% músculo. Déficit muscular → menos hormônios → recuperação mais lenta.`,fr:isFem?`${bio.muscle}% muscle. Le tissu musculaire est source d\'aromatase pour la synthèse d\'œstrogène.`:`${bio.muscle}% muscle. Déficit musculaire → moins d\'hormones → récupération plus lente.`,pl:isFem?`${bio.muscle}% mięśni. Tkanka mięśniowa jest źródłem aromatazy do syntezy estrogenu.`:`${bio.muscle}% mięśni. Deficyt mięśniowy → mniej hormonów → wolniejsza regeneracja.`,it:isFem?`${bio.muscle}% muscolo. Il tessuto muscolare è fonte di aromatasi per la sintesi di estrogeno.`:`${bio.muscle}% muscolo. Deficit muscolare → meno ormoni → recupero più lento.`,he:isFem?`${bio.muscle}% שריר. רקמת שריר היא מקור לארומטאז לסינתזת אסטרוגן.`:`${bio.muscle}% שריר. מחסור בשריר → פחות הורמונים → התאוששות איטית יותר.`,ja:isFem?`${bio.muscle}%筋肉。筋肉組織はエストロゲン合成に必要なアロマターゼの供給源です。`:`${bio.muscle}%筋肉。筋肉不足→少ないホルモン→遅い回復。`,ko:isFem?`${bio.muscle}% 근육. 근육 조직은 에스트로겐 합성에 필요한 아로마타제의 공급원입니다.`:`${bio.muscle}% 근육. 근육 부족 → 적은 호르몬 → 느린 회복.`})
-        });
-        score-=12;
-        recs['muscle']={
-          h:L({ru:'💪 Наращивание мышечной массы',uk:'💪 Нарощення м\'язової маси',en:'💪 Building Muscle Mass',es:'💪 Construir masa muscular',de:'💪 Muskelaufbau',pt:'💪 Construir massa muscular',fr:'💪 Développer la masse musculaire',pl:'💪 Budowanie masy mięśniowej',it:'💪 Costruire massa muscolare',he:'💪 בניית מסת שריר',ja:'💪 筋肉量の増加',ko:'💪 근육량 증가'}),
-          l:L({ru:['Силовые тренировки 3× в неделю (присед, жим, тяга)','Белок 1.6–2.0 г/кг массы тела в день','Коллаген + витамин C для суставов','Магний 300–400 мг перед сном'],uk:['Силові тренування 3× на тиждень','Білок 1.6–2.0 г/кг маси тіла','Колаген + вітамін C для суглобів','Магній 300–400 мг перед сном'],en:['Strength training 3×/week (squat, press, deadlift)','Protein 1.6–2.0 g/kg body weight/day','Collagen + vitamin C for joints','Magnesium 300–400 mg before sleep'],es:['Entrenamiento de fuerza 3×/semana','Proteína 1.6–2.0 g/kg peso corporal/día','Magnesio 300–400 mg antes de dormir'],de:['Krafttraining 3×/Woche (Kniebeuge, Drücken, Zug)','Protein 1,6–2,0 g/kg Körpergewicht/Tag','Kollagen + Vitamin C für Gelenke','Magnesium 300–400 mg vor dem Schlaf'],pt:['Treinamento de força 3×/semana','Proteína 1,6–2,0 g/kg peso corporal/dia','Colágeno + vitamina C para articulações','Magnésio 300–400 mg antes de dormir'],fr:['Musculation 3×/semaine','Protéines 1,6–2,0 g/kg poids corporel/jour','Collagène + vitamine C pour les articulations','Magnésium 300–400 mg avant le sommeil'],pl:['Trening siłowy 3×/tydzień','Białko 1,6–2,0 g/kg masy ciała/dzień','Kolagen + witamina C dla stawów','Magnez 300–400 mg przed snem'],it:['Allenamento della forza 3×/settimana','Proteine 1,6–2,0 g/kg peso corporeo/giorno','Collagene + vitamina C per le articolazioni','Magnesio 300–400 mg prima di dormire'],he:['אימוני כוח 3×/שבוע','חלבון 1.6–2.0 גרם/ק"ג משקל גוף/יום','קולגן + ויטמין C למפרקים','מגנזיום 300–400 מ"ג לפני השינה'],ja:['週3回の筋力トレーニング（スクワット、プレス、デッドリフト）','体重1kgあたり1.6〜2.0gのタンパク質/日','関節のためにコラーゲン + ビタミンC','就寝前にマグネシウム300〜400mg'],ko:['근력 훈련 주3회','단백질 1.6–2.0g/체중kg/일','관절을 위해 콜라겐 + 비타민 C','취침 전 마그네슘 300–400mg']})
-        };
-      } else if(muscOk){
-        ins.push({t:'ok',i:'💪',
-          h:L({ru:'Мышечная масса в норме',uk:'М\'язова маса в нормі',en:'Muscle Mass Normal',es:'Masa muscular normal',de:'Muskelmasse normal',pt:'Massa muscular normal',fr:'Masse musculaire normale',pl:'Masa mięśniowa normalna',it:'Massa muscolare normale',he:'מסת שריר תקינה',ja:'筋肉量正常',ko:'근육량 정상'}),
-          b:L({ru:`${bio.muscle}% — хороший показатель. Мышцы поддерживают гормональный синтез и метаболизм.`,uk:`${bio.muscle}% — добрий показник.`,en:`${bio.muscle}% — good indicator. Muscles support hormonal synthesis and metabolism.`,es:`${bio.muscle}% — buen indicador.`,de:`${bio.muscle}% — guter Indikator. Muskeln unterstützen Hormonsynthese und Metabolismus.`,pt:`${bio.muscle}% — bom indicador. Os músculos suportam síntese hormonal e metabolismo.`,fr:`${bio.muscle}% — bon indicateur. Les muscles soutiennent la synthèse hormonale et le métabolisme.`,pl:`${bio.muscle}% — dobry wskaźnik. Mięśnie wspierają syntezę hormonalną i metabolizm.`,it:`${bio.muscle}% — buon indicatore. I muscoli supportano la sintesi ormonale e il metabolismo.`,he:`${bio.muscle}% — מדד טוב. השרירים תומכים בסינתזה הורמונלית ובמטבוליזם.`,ja:`${bio.muscle}% — 良好な指標。筋肉はホルモン合成と代謝をサポートします。`,ko:`${bio.muscle}% — 좋은 지표. 근육은 호르몬 합성과 대사를 지원합니다.`})
-        });
-        score+=5;
-      }
-    }
-    // Visceral fat
-    if(bio.visceral!==null){
-      if(bio.visceral>12){
-        ins.push({t:'alert',i:'🔴',
-          h:L({ru:`Висцеральный жир повышен (уровень ${bio.visceral})`,uk:`Вісцеральний жир підвищений (рівень ${bio.visceral})`,en:`Elevated Visceral Fat (level ${bio.visceral})`,es:`Grasa visceral elevada (nivel ${bio.visceral})`,de:`Viszeralfett erhöht (Stufe ${bio.visceral})`,pt:`Gordura visceral elevada (nível ${bio.visceral})`,fr:`Graisse viscérale élevée (niveau ${bio.visceral})`,pl:`Tłuszcz trzewny podwyższony (poziom ${bio.visceral})`,it:`Grasso viscerale elevato (livello ${bio.visceral})`,he:`שומן קרביים מוגבר (רמה ${bio.visceral})`,ja:`内臓脂肪上昇 (レベル${bio.visceral})`,ko:`내장 지방 상승 (수준 ${bio.visceral})`}),
-          b:L({ru:'Уровень >12 — метаболический риск. Висцеральный жир активно нарушает гормональный баланс: повышает эстроген у мужчин, снижает чувствительность к инсулину, усиливает воспаление.',uk:'Рівень >12 — метаболічний ризик. Вісцеральний жир порушує гормональний баланс.',en:'Level >12 is a metabolic risk. Visceral fat disrupts hormonal balance: raises estrogen in men, reduces insulin sensitivity, increases inflammation.',es:'Nivel >12 es riesgo metabólico. La grasa visceral altera el equilibrio hormonal.',de:'Stufe >12 ist ein metabolisches Risiko. Viszeralfett stört das Hormongleichgewicht.',pt:'Nível >12 é risco metabólico. A gordura visceral perturba o equilíbrio hormonal.',fr:'Niveau >12 est un risque métabolique. La graisse viscérale perturbe l\'équilibre hormonal.',pl:'Poziom >12 to ryzyko metaboliczne. Tłuszcz trzewny zaburza równowagę hormonalną.',it:'Livello >12 è un rischio metabolico. Il grasso viscerale disturba l\'equilibrio ormonale.',he:'רמה >12 היא סיכון מטבולי. שומן קרביים מפריע לאיזון ההורמונלי.',ja:'レベル>12は代謝リスクです。内臓脂肪はホルモンバランスを乱します。',ko:'수준 >12은 대사 위험입니다. 내장 지방은 호르몬 균형을 방해합니다.'})
-        });
-        score-=15;doc=true;docR.push(L({ru:'повышенный висцеральный жир',uk:'підвищений вісцеральний жир',en:'elevated visceral fat',es:'grasa visceral elevada',de:'erhöhtes Viszeralfett',pt:'gordura visceral elevada',fr:'graisse viscérale élevée',pl:'podwyższony tłuszcz trzewny',it:'grasso viscerale elevato',he:'שומן קרביים מוגבר',ja:'内臓脂肪上昇',ko:'내장 지방 상승'}));
-      } else if(bio.visceral<=5){
-        ins.push({t:'ok',i:'🟢',
-          h:L({ru:`Висцеральный жир в норме (уровень ${bio.visceral})`,uk:`Вісцеральний жир в нормі (рівень ${bio.visceral})`,en:`Visceral Fat Normal (level ${bio.visceral})`,es:`Grasa visceral normal (nivel ${bio.visceral})`,de:`Viszeralfett normal (Stufe ${bio.visceral})`,pt:`Gordura visceral normal (nível ${bio.visceral})`,fr:`Graisse viscérale normale (niveau ${bio.visceral})`,pl:`Tłuszcz trzewny normalny (poziom ${bio.visceral})`,it:`Grasso viscerale normale (livello ${bio.visceral})`,he:`שומן קרביים תקין (רמה ${bio.visceral})`,ja:`内臓脂肪正常 (レベル${bio.visceral})`,ko:`내장 지방 정상 (수준 ${bio.visceral})`}),
-          b:L({ru:'Отличный показатель. Низкий висцеральный жир снижает системное воспаление и поддерживает гормональный баланс.',uk:'Відмінний показник.',en:'Excellent. Low visceral fat reduces systemic inflammation and supports hormonal balance.',es:'Excelente. La grasa visceral baja reduce la inflamación sistémica.',de:'Ausgezeichnet. Niedriges Viszeralfett reduziert systemische Entzündung und unterstützt Hormonbalance.',pt:'Excelente. Gordura visceral baixa reduz inflamação sistêmica e suporta equilíbrio hormonal.',fr:'Excellent. La graisse viscérale basse réduit l\'inflammation systémique et soutient l\'équilibre hormonal.',pl:'Doskonale. Niski tłuszcz trzewny zmniejsza stan zapalny i wspiera równowagę hormonalną.',it:'Eccellente. Basso grasso viscerale riduce infiammazione sistemica e supporta equilibrio ormonale.',he:'מצוין. שומן קרביים נמוך מפחית דלקת מערכתית ותומך באיזון הורמונלי.',ja:'優秀。低い内臓脂肪は全身性炎症を軽減しホルモンバランスをサポートします。',ko:'훌륭합니다. 낮은 내장 지방은 전신 염증을 줄이고 호르몬 균형을 지원합니다.'})
-        });
-        score+=5;
-      }
-    }
-    // Biological age vs chronological
-    if(bio.bioage!==null){
-      const chronoAge=new Date().getFullYear()-1980; // placeholder — we don't collect birth year yet
-      if(bio.bioage<35){
-        ins.push({t:'ok',i:'🧬',
-          h:L({ru:`Биологический возраст: ${bio.bioage} лет`,uk:`Біологічний вік: ${bio.bioage} років`,en:`Biological Age: ${bio.bioage} years`,es:`Edad biológica: ${bio.bioage} años`,de:`Biologisches Alter: ${bio.bioage} Jahre`,pt:`Idade biológica: ${bio.bioage} anos`,fr:`Âge biologique: ${bio.bioage} ans`,pl:`Wiek biologiczny: ${bio.bioage} lat`,it:`Età biologica: ${bio.bioage} anni`,he:`גיל ביולוגי: ${bio.bioage} שנים`,ja:`生物学的年齢: ${bio.bioage}歳`,ko:`생물학적 나이: ${bio.bioage}세`}),
-          b:L({ru:'Биологический возраст ниже среднего — признак хорошего метаболизма и восстановления.',uk:'Біологічний вік нижче середнього.',en:'Biological age is below average — sign of good metabolism and recovery.',es:'La edad biológica está por debajo del promedio.',de:'Biologisches Alter unter dem Durchschnitt — Zeichen für guten Stoffwechsel und Erholung.',pt:'Idade biológica abaixo da média — sinal de bom metabolismo e recuperação.',fr:'Âge biologique sous la moyenne — signe d\'un bon métabolisme et récupération.',pl:'Wiek biologiczny poniżej średniej — oznaka dobrego metabolizmu i regeneracji.',it:'Età biologica sotto la media — segno di buon metabolismo e recupero.',he:'גיל ביולוגי מתחת לממוצע — סימן למטבוליזם טוב והתאוששות.',ja:'生物学的年齢が平均以下 — 良好な代謝と回復のサイン。',ko:'생물학적 나이가 평균 이하 — 좋은 신진대사와 회복의 신호.'})
-        });
-        score+=5;
-      } else if(bio.bioage>50){
-        ins.push({t:'warn',i:'🧬',
-          h:L({ru:`Биологический возраст: ${bio.bioage} лет — выше нормы`,uk:`Біологічний вік: ${bio.bioage} — вище норми`,en:`Biological Age: ${bio.bioage} — Above Average`,es:`Edad biológica: ${bio.bioage} — Por encima del promedio`,de:`Biologisches Alter: ${bio.bioage} — Über Durchschnitt`,pt:`Idade biológica: ${bio.bioage} — Acima da média`,fr:`Âge biologique: ${bio.bioage} — Au-dessus de la moyenne`,pl:`Wiek biologiczny: ${bio.bioage} — Powyżej średniej`,it:`Età biologica: ${bio.bioage} — Sopra la media`,he:`גיל ביולוגי: ${bio.bioage} — מעל הממוצע`,ja:`生物学的年齢: ${bio.bioage} — 平均以上`,ko:`생물학적 나이: ${bio.bioage} — 평균 이상`}),
-          b:L({ru:'Биологический возраст указывает на повышенную метаболическую нагрузку. Фокус на питании, сне и физической активности.',uk:'Підвищена метаболічна навантаженість. Фокус на харчуванні та сні.',en:'Indicates elevated metabolic load. Focus on nutrition, sleep and physical activity.',es:'Indica carga metabólica elevada. Enfócate en nutrición, sueño y actividad física.',de:'Deutet auf erhöhte Stoffwechselbelastung hin. Fokus auf Ernährung, Schlaf und körperliche Aktivität.',pt:'Indica carga metabólica elevada. Foco em nutrição, sono e atividade física.',fr:'Indique une charge métabolique élevée. Focus sur la nutrition, le sommeil et l\'activité physique.',pl:'Wskazuje na podwyższone obciążenie metaboliczne. Skup się na żywieniu, śnie i aktywności fizycznej.',it:'Indica un carico metabolico elevato. Focus su nutrizione, sonno e attività fisica.',he:'מצביע על עומס מטבולי מוגבר. התמקדו בתזונה, שינה ופעילות גופנית.',ja:'代謝負荷の上昇を示します。栄養、睡眠、身体活動に集中してください。',ko:'대사 부하 상승을 나타냅니다. 영양, 수면, 신체 활동에 집중하세요.'})
-        });
-        score-=8;
-      }
-    }
-  }
+  // Bioimpedance-инсайты (мышцы/жир/висцеральный) убраны 2026-07-15: полей ввода bio-fat/bio-muscle/bio-visceral в UI
+  // больше нет (владелец: биоимпеданс недоступен большинству, нечестный ручной ввод не нужен) — блок был мёртв целиком.
+
 
   // Hot Flash analysis
   if(data.hf_count==='high'){
@@ -7753,7 +7661,6 @@ function openDayPlanPanel(){
     body+='<div style="font-size:13px;color:var(--t2);line-height:1.6;padding:6px 2px 10px;">'+L({ru:'Пройдите первый дневной проход — и здесь появится ваша персональная памятка на день.',en:'Complete your first daily check-in — and your personal day plan will appear here.'})+'</div>';
   }
   var bx=document.getElementById('dayplanBody'); if(bx) bx.innerHTML=body;
-  var hp=document.getElementById('historyPanel'); if(hp)hp.style.display='none';
   var m=document.querySelector('main'); if(m)m.style.display='none';
   var h=document.querySelector('.hero'); if(h)h.style.display='none';
   var n=document.querySelector('.bottom-nav'); if(n)n.classList.add('nav-hidden');
