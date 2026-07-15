@@ -1586,6 +1586,25 @@ body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important
 .dm-opt-btn{width:100%;padding:11px;border:none;border-radius:10px;font-size:13.5px;font-weight:600;color:#150f22;background:linear-gradient(135deg,#c9a8f5,#9b6ff0);cursor:pointer;}
 .dm-note{display:flex;gap:8px;font-size:11.5px;line-height:1.5;color:#c9bce0;border-top:1px solid rgba(180,138,240,.2);padding-top:12px;}
 .dm-note i{flex:0 0 auto;font-size:15px;margin-top:1px;color:#c9a8f5;}
+/* Фаза B слияния (владелец 2026-07-15): тайлы «Данные с трекера сегодня» — перенесено из PRO 1:1
+   (тот же класс gp-tile), показывается только при body.has-device. --gold/--gold-lt уже используется
+   в VIO как вторичный акцент — конфликта с фиолетовой темой нет. */
+.gadget-panel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:0;}
+@media(max-width:480px){.gadget-panel{gap:7px;}.gp-tile{gap:8px;padding:9px;}.gp-ic{width:30px;height:30px;flex:0 0 30px;}.gp-name{font-size:11.5px;}.gp-num{font-size:15px;}}
+.gp-tile{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:13px;background:rgba(255,255,255,.045);border:1px solid var(--b1);cursor:pointer;text-align:left;transition:border-color .15s,background .15s;}
+.gp-tile:hover{border-color:rgba(255,255,255,.28);}
+.gp-tile.got{border-color:rgba(34,197,94,.32);background:rgba(34,197,94,.07);}
+.gp-tile.miss{border-color:rgba(251,191,36,.26);}
+.gp-ic{width:36px;height:36px;object-fit:contain;flex:0 0 36px;filter:drop-shadow(0 0 5px rgba(0,0,0,.55));}
+.gp-txt{flex:1;min-width:0;}
+.gp-name{font-size:13px;font-weight:600;color:var(--t1);line-height:1.15;}
+.gp-abbr{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gold-lt,#e2b96a);margin-top:2px;}
+.gp-num{font-size:17px;font-weight:500;color:var(--t1);line-height:1;margin-left:6px;white-space:nowrap;}
+.gp-num.miss{color:#FBBF24;}
+.gp-u{font-size:9px;color:var(--t3);}
+.gp-head{font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold-lt);margin:0 0 7px;display:flex;align-items:center;gap:7px;}
+.gp-note{font-size:11.5px;line-height:1.45;color:var(--t2);margin:0 0 11px;}
+body:not(.has-device) #gadget-panel-wrap{display:none!important;}
 .result-disc{font-size:11px;line-height:1.45;color:var(--t3);background:rgba(180,138,240,.07);border:1px solid rgba(180,138,240,.18);border-radius:10px;padding:8px 11px;margin-bottom:14px;}
 /* Путь Б — структурный разбор: вступление + карточки-темы «превью + раскрытие» */
 #aiCard{padding:26px 22px;overflow:clip;}   /* больше воздуха — «дорогое» ощущение (Oura/Levels); clip вместо hidden — иначе липкая шапка .ai-sec-h не работает */
@@ -1885,6 +1904,16 @@ body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important
       </div>
       <div id="prof-metrics" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--b1);"></div>
       <div id="prof-err" style="font-size:12px;color:var(--alert);margin-top:8px;display:none;" data-t="prof_err">Укажите возраст, вес и рост</div>
+    </div>
+  </div>
+  <!-- ПОКАЗАТЕЛИ С ГАДЖЕТА (Фаза B слияния, владелец 2026-07-15): после профиля, перед блоками ленты;
+       видно только при body.has-device (CSS-гейт + JS-проверка в renderGadgetPanel). READ-ONLY пока
+       (клик-правка — отдельный шаг, см. комментарий у renderGadgetPanel). -->
+  <div id="gadget-panel-wrap" style="display:none;">
+    <div class="card">
+      <div class="gp-head">📲 <span>Данные с трекера сегодня</span></div>
+      <div class="gp-note">🔁 Разбор — раз в день. Показатели с трекера за прошедшую ночь.</div>
+      <div class="gadget-panel" id="gadget-panel"></div>
     </div>
   </div>
   <!-- STEP 1: TEMPERATURE -->
@@ -4130,6 +4159,7 @@ function _hideFlowFooter(){var f=document.getElementById('flow-footer');if(f)f.s
 function showAll(){
   if(!window.__editMode && typeof _passedToday==='function'&&_passedToday()){ _showDailyDoneGate(); return; }   // сегодня пройдено → гейт (кроме режима правки профиля)
   _showFlow(_flowList());
+  if(typeof renderGadgetPanel==='function'){try{renderGadgetPanel();}catch(e){}}
   initCollapsibles();
   if(window.__editMode){ _flowFooter(L({ru:'Сохранить и вернуться',uk:'Зберегти й повернутися',en:'Save & return',es:'Guardar y volver',de:'Speichern & zurück',pt:'Salvar e voltar',fr:'Enregistrer et revenir',pl:'Zapisz i wróć',it:'Salva e torna',he:'שמור וחזור',ja:'保存して戻る',ko:'저장하고 돌아가기'}),_saveProfileDone); }
   else { _flowFooter(t('show_result'),showResults); }
@@ -6177,6 +6207,52 @@ function parseCSV(text,source){
   return out;
 }
 function applyExtracted(ex,source){Object.keys(ex).forEach(k=>{if(ex[k]!=null)importedData[k]=ex[k];});importedData.source=source;}
+// ── Фаза B слияния (владелец 2026-07-15): тайлы «Данные с трекера сегодня», перенесено из PRO 1:1 ──
+// (_GMETA/_GLAB/_SRC_NAMES/srcName/_autoSource) + renderGadgetPanel() пока READ-ONLY (без клика-правки —
+// цепочка _gEdit→_gSave→_gRefresh с зависимостями renderCard/_reflowSteps/_markManual переносится отдельным
+// шагом, чтобы не тащить наполовину рабочую цепочку).
+const _GMETA={
+  hrv:{min:10,max:200,step:1,u:'ms',f:function(v){return Math.round(v);}},
+  rhr:{min:30,max:120,step:1,u:'bpm',f:function(v){return Math.round(v);}},
+  sleepHours:{min:0,max:14,step:0.1,u:'h',f:function(v){return (+v).toFixed(1);}},
+  deepMin:{min:0,max:240,step:1,u:'min',f:function(v){return Math.round(v);}},
+  tempDev:{min:-2,max:2,step:0.01,u:'°C',f:function(v){return (v>0?'+':'')+(+v).toFixed(2);}},
+  spo2:{min:80,max:100,step:1,u:'%',f:function(v){return Math.round(v);}},
+  vo2:{min:15,max:80,step:1,u:'',f:function(v){return Math.round(v);}},
+  energy:{min:1,max:10,step:1,u:'/10',f:function(v){return Math.round(v);}},
+  readiness:{min:0,max:100,step:1,u:'%',f:function(v){return Math.round(v);}}
+};
+const _GLAB={
+  hrv:{ru:'Частота сердца',uk:'Частота серця',en:'Heart rate',es:'Frecuencia cardíaca',de:'Herzfrequenz',pt:'Frequência cardíaca',fr:'Fréquence cardiaque',pl:'Tętno',it:'Frequenza cardiaca',he:'דופק',ja:'心拍数',ko:'심박수'},
+  rhr:{ru:'Пульс покоя',uk:'Пульс спокою',en:'Resting pulse',es:'Pulso en reposo',de:'Ruhepuls',pt:'Pulso em repouso',fr:'Pouls au repos',pl:'Tętno spoczynkowe',it:'Polso a riposo',he:'דופק במנוחה',ja:'安静時心拍',ko:'안정시 맥박'},
+  sleepHours:{ru:'Сон',uk:'Сон',en:'Sleep',es:'Sueño',de:'Schlaf',pt:'Sono',fr:'Sommeil',pl:'Sen',it:'Sonno',he:'שינה',ja:'睡眠',ko:'수면'},
+  deepMin:{ru:'Глубокий сон',uk:'Глибокий сон',en:'Deep sleep',es:'Sueño profundo',de:'Tiefschlaf',pt:'Sono profundo',fr:'Sommeil profond',pl:'Sen głęboki',it:'Sonno profondo',he:'שינה עמוקה',ja:'深い睡眠',ko:'깊은 수면'},
+  tempDev:{ru:'Температура',uk:'Температура',en:'Temperature',es:'Temperatura',de:'Temperatur',pt:'Temperatura',fr:'Température',pl:'Temperatura',it:'Temperatura',he:'טמפרטורה',ja:'体温',ko:'체온'},
+  spo2:{ru:'Кислород в крови',uk:'Кисень у крові',en:'Blood oxygen',es:'Oxígeno en sangre',de:'Blutsauerstoff',pt:'Oxigênio no sangue',fr:'Oxygène sanguin',pl:'Tlen we krwi',it:'Ossigeno nel sangue',he:'חמצן בדם',ja:'血中酸素',ko:'혈중 산소'},
+  vo2:{ru:'Аэробная форма',uk:'Аеробна форма',en:'Aerobic fitness',es:'Forma aeróbica',de:'Aerobe Fitness',pt:'Forma aeróbica',fr:'Forme aérobie',pl:'Forma aerobowa',it:'Forma aerobica',he:'כושר אירובי',ja:'有酸素フィットネス',ko:'유산소 능력'},
+  readiness:{ru:'Готовность',uk:'Готовність',en:'Readiness',es:'Preparación',de:'Bereitschaft',pt:'Prontidão',fr:'Disponibilité',pl:'Gotowość',it:'Prontezza',he:'מוכנות',ja:'準備度',ko:'준비도'}
+};
+const _SRC_NAMES={fitbit:'Fitbit',oura:'Oura',samsung:'Samsung Health',whoop:'WHOOP',xiaomi:'Xiaomi',garmin:'Garmin',polar:'Polar',withings:'Withings',apple:'Apple Health','apple-manual':'Apple Health'};
+function srcName(s){return _SRC_NAMES[s]||(s?s.charAt(0).toUpperCase()+s.slice(1):'');}
+function _autoSource(){var d=(typeof importedData!=='undefined')?importedData:null;return (d&&d.source&&d.source!=='manual'&&d.source!=='apple-manual')?d.source:null;}
+function renderGadgetPanel(){
+  const wrap=document.getElementById('gadget-panel-wrap'),box=document.getElementById('gadget-panel');
+  if(!wrap||!box)return;
+  const D=(typeof importedData!=='undefined')?importedData:{};
+  const src=_autoSource()?srcName(_autoSource()):null;
+  const keys=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','vo2','readiness'];
+  var ICONF={hrv:'hrv',rhr:'rhr',sleepHours:'sleep',deepMin:'deep',tempDev:'temp',spo2:'spo2',vo2:'vo2',readiness:'readiness'};
+  var ABBR={hrv:'HRV',rhr:'RHR',sleepHours:'SLEEP',deepMin:'DEEP SLEEP',tempDev:'°C',spo2:'SpO₂',vo2:'VO₂max',readiness:'READINESS'};
+  box.innerHTML=keys.map(function(k){
+    var m=_GMETA[k], got=D[k]!=null&&!isNaN(D[k])&&!(k==='tempDev'&&Math.abs(D[k])<0.005), v=got?m.f(D[k]):'—', nm=(_GLAB[k]&&(_GLAB[k][lang]||_GLAB[k].en))||k;
+    return '<div class="gp-tile '+(got?'got':'miss')+'" title="'+nm+'">'
+      +'<img class="gp-ic" src="Logo/metrics/'+ICONF[k]+'.png" alt="" loading="lazy">'
+      +'<div class="gp-txt"><div class="gp-name">'+nm+'</div><div class="gp-abbr">'+(ABBR[k]||'')+(got&&src?' · '+src:'')+'</div></div>'
+      +'<div class="gp-num'+(got?'':' miss')+'">'+v+(got&&m.u?'<span class="gp-u"> '+m.u+'</span>':'')+'</div>'
+      +'</div>';
+  }).join('');
+  wrap.style.display=(typeof document!=='undefined'&&document.body.classList.contains('has-device'))?'block':'none';
+}
 function renderPreview(gridId,data){
   const labels={hrv:'HRV',rhr:'Пульс',sleepHours:'Сон',deepMin:'Deep',tempDev:'Темп.',energy:'Энергия',readiness:'Готов.',vo2:'VO2'};
   const units={hrv:'мс',rhr:'уд/м',sleepHours:'ч',deepMin:'мин',tempDev:'°C',energy:'/10',readiness:'%',vo2:''};
