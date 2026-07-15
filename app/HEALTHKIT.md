@@ -9,7 +9,8 @@ Health и авто-заполняет ими карточку «Apple Health» �
 
 ## Как это работает
 
-1. Приложение грузит живой ИП (`server.url`). Capacitor инжектит в webview
+1. Приложение грузит изолированный локальный бандл `app/www` (собран `sync-web.sh`, без `server.url` —
+   см. «Архитектура» в `README.md`). Capacitor инжектит в webview
    `window.Capacitor.Plugins.CapacitorHealthkit`.
 2. В карточке Apple Health появляется кнопка **«📲 Apple Health»** (только внутри приложения —
    на обычном вебе скрыта, т.к. `window.Capacitor` отсутствует).

@@ -38,8 +38,9 @@ cp -R "$IP/images-in"  "$WWW/images-in"
 # без мед-бизнеса/медсайта/«Interpreter») → в бандл как www/legal. Старые legal/ — для сайта.
 cp -R "$ROOT/legal-app" "$WWW/legal"
 
-# Переписать пути ../legal/ → legal/ (в бандле нет родительской папки)
-sed -i '' 's#\.\./legal/#legal/#g' "$WWW/index.html"
+# Переписать пути ../legal/ и ../legal-app/ → legal/ (в бандле нет родительской папки;
+# папка скопирована выше как legal-app→legal, поэтому оба варианта ссылок нужно унифицировать)
+sed -i '' -e 's#\.\./legal/#legal/#g' -e 's#\.\./legal-app/#legal/#g' "$WWW/index.html"
 
 echo "✓ Готово. Размер www: $(du -sh "$WWW" | cut -f1)"
 echo "  Дальше: cd app && npx cap sync && открыть в Xcode / Android Studio."
