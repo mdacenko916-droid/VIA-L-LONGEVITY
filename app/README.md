@@ -70,7 +70,8 @@ npx cap open android     # открыть в Android Studio → Run
 - [ ] **Health Connect (Android)** — Samsung/Xiaomi и пр.
 - [ ] **Push-уведомления** (напоминалка в телефоне).
 - [ ] **Вход по коду доступа** — уже есть в вебе (экран «Мой специалист»); проверить в обёртке.
-- [ ] **IAP для PRO** (открытый вопрос §6: IAP vs только код с сайта).
+- [~] **IAP для VIA·L** (€15/мес, RevenueCat, см. `IAP.md`) — код готов, ждёт настройки владельцем
+  (RevenueCat-проект + App Store Connect продукт + реальный API key) и сборки/теста на устройстве.
 - [ ] **Публикация** — аккаунты Apple ($99/год) / Google ($25), листинги, политика, ревью.
 
 ## Открытые решения (см. MOBILE-APP-MODEL.md §6)
@@ -80,5 +81,5 @@ npx cap open android     # открыть в Android Studio → Run
 - **HealthKit ↔ веб-ИП:** данные из натива надо прокинуть в веб-слой (Capacitor-плагин + вызов из
   JS ИП). Это основная интеграционная работа следующего этапа.
 - **PRO в приложении:** РЕШЕНО (2026-07-15) — только Apple IAP (auto-renewable subscription,
-  €15/мес), НЕ код с сайта/Hotmart (Hotmart как канал продаж отвязан). См. план слияния VIO+PRO
-  → VIA·L, план-файл сессии `~/.claude/plans/sleepy-dancing-sunrise.md` (Фаза 0).
+  €15/мес), НЕ код с сайта/Hotmart (Hotmart как канал продаж отвязан). Код готов — см. `IAP.md`
+  для настройки RevenueCat/App Store Connect и остатка.

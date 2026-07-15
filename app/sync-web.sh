@@ -28,6 +28,7 @@ cp "$IP/interpreter-pro.html" "$WWW/index.html"
 cp "$IP/app-mode.js"              "$WWW/"
 cp "$IP/healthkit-bridge.js"      "$WWW/"
 cp "$IP/healthconnect-bridge.js"  "$WWW/"
+cp "$IP/iap-bridge.js"            "$WWW/"
 cp "$IP/my-specialist.html"       "$WWW/"
 
 # Ассеты (Logo/ включает Logo/metrics/*.png, images-in/ — картинки устройств)
