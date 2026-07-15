@@ -2223,12 +2223,26 @@ async function handleFitbitMetrics(request, env, corsHeaders){
     for (const k of Object.keys(o)) { if (/time$/i.test(k) && typeof o[k]==='string') { const t = Date.parse(o[k]); if (t) return Math.floor(t/86400000); } }
     for (const k of Object.keys(o)) { const r = _dord(o[k], depth+1); if (r) return r; } return 0; };
   const latest = (points, valFn) => { const arr = points.map(d => ({ ord:_dord(d), val:valFn(d) })).filter(x => x.val != null); if (!arr.length) return null; arr.sort((a,b)=>a.ord-b.ord); return arr[arr.length-1].val; };
-  // HRV (rmssd, ms) — последняя ночь
+  // HRV (rmssd, ms) — последняя ночь. БАГ (найден 15.07 живым логом): дневная запись Fitbit несёт ДВА
+  // похожих поля — averageHeartRateVariabilityMilliseconds (настоящий ночной HRV, то же число, что в Fitbit
+  // app) И deepSleepRootMeanSquareOfSuccessiveDifferencesMilliseconds (HRV только по фазе глубокого сна —
+  // другая метрика). Общий regex /rootMeanSquare|rmssd/i совпадал с ОБОИМИ и брал «deepSleep»-поле по
+  // порядку ключей объекта → систематически завышал/путал число (27 вместо 24.5 в живом логе). Теперь берём
+  // ИМЕННО averageHeartRateVariabilityMilliseconds; фолбэк ищет rmssd/rootMeanSquare, но явно ИСКЛЮЧАЕТ
+  // deepSleep-варианты, чтобы не наступить на то же снова.
+  const pickAvgHrv = (d) => {
+    const t = (d && d.dailyHeartRateVariability) || {};
+    const direct = num(t.averageHeartRateVariabilityMilliseconds);
+    if (direct != null) return direct;
+    for (const k of Object.keys(t)) { if (/deepsleep/i.test(k)) continue; if (/rootMeanSquare|rmssd/i.test(k)) { const n = Number(t[k]); if (Number.isFinite(n)) return n; } }
+    return null;
+  };
   const hrvD = await gh('daily-heart-rate-variability', `daily_heart_rate_variability.date>="${sd}" AND daily_heart_rate_variability.date<"${ed}"`);
-  { const v = latest(hrvD, d => { const n = pickNum(d, /rootMeanSquare|rmssd/i); return (n!=null && n>0) ? n : null; }); if (v!=null) ex.hrv = Math.round(v); }
+  { const v = latest(hrvD, d => { const n = pickAvgHrv(d); return (n!=null && n>0) ? n : null; }); if (v!=null) ex.hrv = Math.round(v); }
   if (ex.hrv == null) {
     const hrv = await gh('heart-rate-variability', `heart_rate_variability.sample_time.physical_time>="${startISO}" AND heart_rate_variability.sample_time.physical_time<"${endISO}"`);
-    const v = latest(hrv, d => { const t = d.heartRateVariability || {}; return num(t.rootMeanSquareOfSuccessiveDifferencesMilliseconds ?? t.rmssdMillis) ?? pickNum(d, /rootMeanSquare|rmssd/i); });
+    const v = latest(hrv, d => { const t = d.heartRateVariability || {}; const direct = num(t.rootMeanSquareOfSuccessiveDifferencesMilliseconds ?? t.rmssdMillis); if (direct != null) return direct;
+      for (const k of Object.keys(t)) { if (/deepsleep/i.test(k)) continue; if (/rootMeanSquare|rmssd/i.test(k)) { const n = Number(t[k]); if (Number.isFinite(n)) return n; } } return null; });
     if (v!=null) ex.hrv = Math.round(v);
   }
   // Daily resting heart rate — последняя ночь
