@@ -1268,6 +1268,15 @@ footer{
 .gp-num{font-size:17px;font-weight:500;color:var(--t1);line-height:1;margin-left:6px;white-space:nowrap;}
 .gp-num.miss{color:#FBBF24;}
 .gp-u{font-size:9px;color:var(--t3);}
+/* «По дням» (карточка/История): тайлы приборных метрик — тот же язык, что «Данные с трекера сегодня», но read-only и компактнее */
+.daily-day-card{background:#1C2030;border-radius:16px;border:1px solid var(--b1);padding:14px 14px 12px;margin-bottom:10px;}
+.daily-day-date{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gold-lt,#e2b96a);margin-bottom:9px;}
+.daily-tiles{margin-bottom:8px;}
+.gp-tile.sm{padding:8px 9px;gap:8px;cursor:default;}
+.gp-tile.sm .gp-ic{width:26px;height:26px;flex:0 0 26px;}
+.gp-tile.sm .gp-name{font-size:11.5px;}
+.gp-tile.sm .gp-num{font-size:14px;}
+.daily-subj{font-size:12px;color:var(--t2);line-height:1.6;}
 .gp-head{font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold-lt);margin:0 0 7px;display:flex;align-items:center;gap:7px;}
 .gp-note{font-size:11.5px;line-height:1.45;color:var(--t2);margin:0 0 11px;}
 /* Приливы и жар — два блока (интенсивность/частота) с круглыми вариантами по шаблону */
@@ -4564,35 +4573,52 @@ function _renderDaily(){
   var arr=[]; try{arr=JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[];}catch(e){}
   if(!arr.length){box.innerHTML='';return;}
   var hf={none:'0',low:'1–2',mid:'3–5',high:'6–10',veryhigh:'10+'};
-  // Словесные подписи (без иконок — премиальный вид). Приборные тянут из _GLAB; субъективные — здесь.
+  // Словесные подписи (субъективные поля; приборные тянут из _GLAB/_GMETA — те же, что «Данные с трекера сегодня»).
   var LBL={
     energy:{ru:'Энергия',uk:'Енергія',en:'Energy',es:'Energía',de:'Energie',pt:'Energia',fr:'Énergie',pl:'Energia',it:'Energia',he:'אנרגיה',ja:'エネルギー',ko:'에너지'},
     memory:{ru:'Память',uk:'Памʼять',en:'Memory',es:'Memoria',de:'Gedächtnis',pt:'Memória',fr:'Mémoire',pl:'Pamięć',it:'Memoria',he:'זיכרון',ja:'記憶',ko:'기억'},
-    fog:{ru:'Туман в голове',uk:'Туман у голові',en:'Brain fog',es:'Niebla mental',de:'Gehirnnebel',pt:'Névoa mental',fr:'Brouillard mental',pl:'Mgła mózgowa',it:'Nebbia mentale',he:'ערפל מוחי',ja:'ブレインフォグ',ko:'브레인 포그'},
+    fog:{ru:'Туман',uk:'Туман',en:'Brain fog',es:'Niebla mental',de:'Nebel',pt:'Névoa mental',fr:'Brouillard',pl:'Mgła',it:'Nebbia',he:'ערפל',ja:'霧',ko:'안개'},
     stress:{ru:'Стресс',uk:'Стрес',en:'Stress',es:'Estrés',de:'Stress',pt:'Estresse',fr:'Stress',pl:'Stres',it:'Stress',he:'מתח',ja:'ストレス',ko:'스트레스'},
     alc:{ru:'Алкоголь',uk:'Алкоголь',en:'Alcohol',es:'Alcohol',de:'Alkohol',pt:'Álcool',fr:'Alcool',pl:'Alkohol',it:'Alcol',he:'אלכוהול',ja:'アルコール',ko:'알코올'},
     hf:{ru:'Приливы',uk:'Припливи',en:'Hot flashes',es:'Sofocos',de:'Hitzewallungen',pt:'Ondas de calor',fr:'Bouffées de chaleur',pl:'Uderzenia gorąca',it:'Vampate',he:'גלי חום',ja:'ホットフラッシュ',ko:'안면홍조'}
   };
-  var uH={ru:'ч',uk:'год',en:'h',es:'h',de:'Std',pt:'h',fr:'h',pl:'godz',it:'h',he:'ש׳',ja:'時間',ko:'시간'};
-  var uMin={ru:'мин',uk:'хв',en:'min',es:'min',de:'Min',pt:'min',fr:'min',pl:'min',it:'min',he:'דק׳',ja:'分',ko:'분'};
+  // Значения памяти/тумана — раньше уходил СЫРОЙ код поля («Память support») вместо перевода. Короткие
+  // прилагательные под префикс LBL.memory/LBL.fog. fog хранит 'none'/'morning'/'daily'/'allday' (не 0/1) —
+  // старая проверка «!=0» пропускала 'none' и ложно показывала «Туман в голове» даже при его отсутствии.
+  var MEMV={
+    good:{ru:'ясная',uk:'ясна',en:'clear',es:'clara',de:'klar',pt:'clara',fr:'claire',pl:'jasna',it:'chiara',he:'צלולה',ja:'明晰',ko:'명료'},
+    slight:{ru:'лёгкая рассеянность',uk:'легка розсіяність',en:'slightly distracted',es:'algo distraída',de:'leicht abgelenkt',pt:'levemente distraída',fr:'légèrement distraite',pl:'lekko rozproszona',it:'leggermente distratta',he:'הסחת דעת קלה',ja:'やや散漫',ko:'약간 산만'},
+    slower:{ru:'медленнее обычного',uk:'повільніше, ніж зазвичай',en:'slower than usual',es:'más lenta de lo usual',de:'langsamer als sonst',pt:'mais lenta que o normal',fr:'plus lente que d’habitude',pl:'wolniejsza niż zwykle',it:'più lenta del solito',he:'איטית מהרגיל',ja:'いつもより遅い',ko:'평소보다 느림'},
+    support:{ru:'трудно собраться',uk:'важко зібратися з думками',en:'hard to focus',es:'cuesta concentrarse',de:'schwer zu fokussieren',pt:'difícil focar',fr:'difficile de se concentrer',pl:'trudno się skupić',it:'difficile concentrarsi',he:'קשה להתרכז',ja:'集中しづらい',ko:'집중하기 어려움'}
+  };
+  var FOGV={
+    morning:{ru:'по утрам',uk:'зранку',en:'in the morning',es:'por la mañana',de:'morgens',pt:'de manhã',fr:'le matin',pl:'rano',it:'al mattino',he:'בבוקר',ja:'朝',ko:'아침에'},
+    daily:{ru:'днём',uk:'удень',en:'during the day',es:'durante el día',de:'tagsüber',pt:'durante o dia',fr:'en journée',pl:'w ciągu dnia',it:'durante il giorno',he:'ביום',ja:'日中',ko:'낮에'},
+    allday:{ru:'весь день',uk:'увесь день',en:'all day',es:'todo el día',de:'den ganzen Tag',pt:'o dia todo',fr:'toute la journée',pl:'cały dzień',it:'tutto il giorno',he:'כל היום',ja:'一日中',ko:'하루 종일'}
+  };
+  var ICONF={hrv:'hrv',rhr:'rhr',sleepHours:'sleep',deepMin:'deep',tempDev:'temp',spo2:'spo2',vo2:'vo2',readiness:'readiness'};
+  var mKeys=['hrv','rhr','sleepHours','deepMin','spo2','tempDev','vo2','readiness'];
   box.innerHTML='<div style="font-family:\'Oswald\',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-lt);margin:6px 0 8px;">'+t('daily_title')+'</div>'
     +arr.slice(0,14).map(function(r){
+      var tiles=mKeys.map(function(k){
+        var got=r[k]!=null&&!isNaN(r[k])&&!(k==='tempDev'&&Math.abs(r[k])<0.005);
+        if(!got)return '';
+        var m=_GMETA[k], v=m.f(r[k]), nm=(_GLAB[k]&&(_GLAB[k][lang]||_GLAB[k].en))||k;
+        return '<div class="gp-tile got sm"><img class="gp-ic" src="Logo/metrics/'+ICONF[k]+'.png" alt="" loading="lazy">'
+          +'<div class="gp-txt"><div class="gp-name">'+nm+'</div></div>'
+          +'<div class="gp-num">'+v+(m.u?'<span class="gp-u"> '+m.u+'</span>':'')+'</div></div>';
+      }).join('');
       var p=[];
-      if(r.hrv!=null)p.push(L(_GLAB.hrv)+' '+Math.round(r.hrv));
-      if(r.rhr!=null)p.push(L(_GLAB.rhr)+' '+Math.round(r.rhr));
-      if(r.sleepHours!=null)p.push(L(_GLAB.sleepHours)+' '+(+r.sleepHours).toFixed(1)+' '+L(uH));
-      if(r.deepMin!=null)p.push(L(_GLAB.deepMin)+' '+Math.round(r.deepMin)+' '+L(uMin));
-      if(r.spo2!=null)p.push(L(_GLAB.spo2)+' '+Math.round(r.spo2)+'%');
-      if(r.tempDev!=null&&Math.abs(r.tempDev)>=0.005)p.push(L(_GLAB.tempDev)+' '+(r.tempDev>0?'+':'')+(+r.tempDev).toFixed(2)+'°C');
-      if(r.vo2!=null)p.push(L(_GLAB.vo2)+' '+Math.round(r.vo2));
-      if(r.readiness!=null)p.push(L(_GLAB.readiness)+' '+Math.round(r.readiness)+'%');
       if(r.energy!=null)p.push(L(LBL.energy)+' '+Math.round(r.energy)+'/10');
-      if(r.hf_count&&r.hf_count!=='none')p.push(L(LBL.hf)+' '+(hf[r.hf_count]||r.hf_count));
-      if(r.memory!=null)p.push(L(LBL.memory)+' '+r.memory);
-      if(r.fog!=null&&r.fog!='0'&&r.fog!=0)p.push(L(LBL.fog));
       if(r.stress!=null)p.push(L(LBL.stress)+' '+r.stress+'/10');
+      if(r.memory&&MEMV[r.memory])p.push(L(LBL.memory)+': '+L(MEMV[r.memory]));
+      if(r.fog&&r.fog!=='none'&&FOGV[r.fog])p.push(L(LBL.fog)+' '+L(FOGV[r.fog]));
+      if(r.hf_count&&r.hf_count!=='none')p.push(L(LBL.hf)+' '+(hf[r.hf_count]||r.hf_count));
       if(r.alc!=null&&r.alc!='0'&&r.alc!=0&&r.alc!=='no')p.push(L(LBL.alc));
-      return '<div style="padding:9px 2px;border-bottom:1px solid var(--b1);"><div style="color:var(--gold-lt);font-size:11px;letter-spacing:.5px;margin-bottom:3px;">'+r.date+'</div><div style="color:var(--t1);font-size:12px;line-height:1.6;">'+(p.join(' · ')||'—')+'</div></div>';
+      return '<div class="daily-day-card"><div class="daily-day-date">'+r.date+'</div>'
+        +(tiles?'<div class="gadget-panel daily-tiles">'+tiles+'</div>':'')
+        +(p.length?'<div class="daily-subj">'+p.join(' · ')+'</div>':(tiles?'':'<div class="daily-subj">—</div>'))
+        +'</div>';
     }).join('');
 }
 function renderHistory(){
