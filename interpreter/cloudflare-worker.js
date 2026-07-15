@@ -2278,7 +2278,7 @@ async function handleFitbitMetrics(request, env, corsHeaders){
       if (ds && num(ds.minutes)!=null) ex.deepMin = Math.round(num(ds.minutes));
     } }
 
-  return jsonResponse({ ok:true, ex }, corsHeaders);
+  return jsonResponse({ ok:true, ex: _sanitizeEx(ex) }, corsHeaders);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -2361,6 +2361,23 @@ function _latestByDate(records, dateFn, valFn) {
   return arr[arr.length - 1].v;
 }
 
+// Аудит 15.07 (владелец: «сколько там ещё такого хлама»): физиологические границы были заданы РАЗНОБОЙ —
+// у Fitbit SpO₂ 70–100, у остальных четырёх трекеров (Whoop/Polar/Withings/Oura) только «>0» или вообще без
+// проверки (RHR/sleepHours/deepMin/tempDev — без границ НИГДЕ). Мусорный замер прибора (как живой SpO₂=50%,
+// пойманный в Fitbit-логе 15.07) у остальных трекеров доходил бы прямо до ИИ-промпта. Единый санитайзер по
+// эталонным границам _GMETA (клиент, интерпретатор PRO) — вызывается в КОНЦЕ каждого из 5 хендлеров, поверх
+// их inline-проверок (defensive: не убирает частные фильтры, а гарантирует одинаковый финальный порог всем).
+const _EX_BOUNDS = { hrv:[10,200], rhr:[30,120], sleepHours:[0,14], deepMin:[0,240], tempDev:[-2,2], spo2:[80,100], vo2:[15,80], readiness:[0,100], energy:[1,10] };
+function _sanitizeEx(ex) {
+  for (const k of Object.keys(_EX_BOUNDS)) {
+    if (ex[k] == null) continue;
+    const n = Number(ex[k]);
+    const [lo, hi] = _EX_BOUNDS[k];
+    if (!Number.isFinite(n) || n < lo || n > hi) delete ex[k];
+  }
+  return ex;
+}
+
 async function handleWhoopMetrics(request, env, corsHeaders){
   const url = new URL(request.url);
   const sid = url.searchParams.get('sid');
@@ -2400,7 +2417,7 @@ async function handleWhoopMetrics(request, env, corsHeaders){
     const deep = _latestByDate(sRecs, x => x.start, x => { const d = Number(ss(x).total_slow_wave_sleep_time_milli); return isFinite(d)&&d>0 ? d : null; });
     if (deep!=null) ex.deepMin = Math.round(deep/60000);
   }
-  return jsonResponse({ ok:true, ex }, corsHeaders);
+  return jsonResponse({ ok:true, ex: _sanitizeEx(ex) }, corsHeaders);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -2486,7 +2503,7 @@ async function handlePolarMetrics(request, env, corsHeaders) {
 
   // Physical info → rhr
   const phys = await get(`/users/${userId}/physical-information`);
-  if (phys && phys.resting_heart_rate) ex.rhr = phys.resting_heart_rate;
+  { const n = Number(phys && phys.resting_heart_rate); if (Number.isFinite(n) && n > 0) ex.rhr = Math.round(n); }
 
   // Nightly Recharge → hrv (sdnn_avg / ans_charge proxy), energy — за ПОСЛЕДНЮЮ ночь (x.date)
   const nr = await get(`/users/${userId}/nightly-recharge?from=${from}&to=${to}`);
@@ -2508,7 +2525,7 @@ async function handlePolarMetrics(request, env, corsHeaders) {
     if (dp!=null) ex.deepMin = Math.round(dp / 60);
   }
 
-  return jsonResponse({ ok:true, ex }, corsHeaders);
+  return jsonResponse({ ok:true, ex: _sanitizeEx(ex) }, corsHeaders);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -2630,7 +2647,7 @@ async function handleWithingsMetrics(request, env, corsHeaders) {
     }
   }
 
-  return jsonResponse({ ok:true, ex }, corsHeaders);
+  return jsonResponse({ ok:true, ex: _sanitizeEx(ex) }, corsHeaders);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -2758,7 +2775,7 @@ async function handleOuraMetrics(request, env, corsHeaders){
     if (last.day)       ex.trainDay = String(last.day);
     if (last.activity)  ex.trainActivity = String(last.activity);
   }
-  return jsonResponse({ ok:true, ex }, corsHeaders);
+  return jsonResponse({ ok:true, ex: _sanitizeEx(ex) }, corsHeaders);
 }
 
 // POST /tg-test  → отправляет нутрициологу контрольное сообщение.
