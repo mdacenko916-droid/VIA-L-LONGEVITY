@@ -2329,6 +2329,18 @@ async function whoopRefresh(env, rec){
 }
 
 // GET /whoop/metrics?sid=… → 7-day-averaged ex {hrv,rhr,spo2,sleepHours,deepMin,energy}
+// Дневной проход = «за ВЧЕРА» (см. Fitbit-фикс выше): метрики трекера берём ЗА ПОСЛЕДНИЙ ДЕНЬ/НОЧЬ, а НЕ
+// среднее за 7 дней — усреднение делает недельный/месячный анализ сам, из истории vial_daily. Универсальный
+// helper для Whoop/Polar/Withings/Oura: сортирует записи по дате (dateFn), берёт valFn ПОСЛЕДНЕЙ записи с
+// непустым значением — то есть по каждому полю ищет свой самый свежий валидный день (фолбэк, если у поля
+// пропуск именно за вчера).
+function _latestByDate(records, dateFn, valFn) {
+  const arr = (records || []).map(r => { const d = dateFn(r); const tm = d ? new Date(d).getTime() : NaN; const v = valFn(r); return { t: isFinite(tm) ? tm : 0, v }; }).filter(x => x.v != null);
+  if (!arr.length) return null;
+  arr.sort((a, b) => a.t - b.t);
+  return arr[arr.length - 1].v;
+}
+
 async function handleWhoopMetrics(request, env, corsHeaders){
   const url = new URL(request.url);
   const sid = url.searchParams.get('sid');
@@ -2346,7 +2358,6 @@ async function handleWhoopMetrics(request, env, corsHeaders){
   const h = { 'Authorization': 'Bearer ' + rec.access_token };
   const startISO = new Date(Date.now() - 7 * 86400000).toISOString();
   const endISO   = new Date().toISOString();
-  const avg = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : null;
   const hrvMs = v => { let n = Number(v); if (!isFinite(n) || n <= 0) return null; if (n < 1) n = n * 1000; return n; }; // hrv_rmssd_milli is sometimes seconds
   const get = async (p) => { try { const r = await fetch(WHOOP_API + p, { headers: h }); if (!r.ok) return null; return await r.json(); } catch(e){ return null; } };
 
@@ -2355,18 +2366,18 @@ async function handleWhoopMetrics(request, env, corsHeaders){
   const rRecs = (rcv && rcv.records) || [];
   if (rRecs.length) {
     let v;
-    v = avg(rRecs.map(x => hrvMs(x.score && x.score.hrv_rmssd_milli)).filter(n=>n!=null)); if (v!=null) ex.hrv = Math.round(v);
-    v = avg(rRecs.map(x => Number(x.score && x.score.resting_heart_rate)).filter(n=>isFinite(n)&&n>0)); if (v!=null) ex.rhr = Math.round(v);
-    v = avg(rRecs.map(x => Number(x.score && x.score.spo2_percentage)).filter(n=>isFinite(n)&&n>0)); if (v!=null) ex.spo2 = +v.toFixed(1);
-    v = avg(rRecs.map(x => Number(x.score && x.score.recovery_score)).filter(n=>isFinite(n)&&n>=0)); if (v!=null) ex.energy = Math.min(10, Math.max(1, Math.round(v/10)));
+    v = _latestByDate(rRecs, x => x.created_at, x => hrvMs(x.score && x.score.hrv_rmssd_milli)); if (v!=null) ex.hrv = Math.round(v);
+    v = _latestByDate(rRecs, x => x.created_at, x => { const n = Number(x.score && x.score.resting_heart_rate); return isFinite(n)&&n>0 ? n : null; }); if (v!=null) ex.rhr = Math.round(v);
+    v = _latestByDate(rRecs, x => x.created_at, x => { const n = Number(x.score && x.score.spo2_percentage); return isFinite(n)&&n>0 ? n : null; }); if (v!=null) ex.spo2 = +v.toFixed(1);
+    v = _latestByDate(rRecs, x => x.created_at, x => { const n = Number(x.score && x.score.recovery_score); return isFinite(n)&&n>=0 ? n : null; }); if (v!=null) ex.energy = Math.min(10, Math.max(1, Math.round(v/10)));
   }
   const slp = await get(`/v2/activity/sleep?start=${encodeURIComponent(startISO)}&end=${encodeURIComponent(endISO)}&limit=25`);
   const sRecs = (slp && slp.records) || [];
   if (sRecs.length) {
     const ss = x => (x.score && x.score.stage_summary) || {};
-    const asleep = avg(sRecs.map(x => { const s = ss(x); const tot = Number(s.total_slow_wave_sleep_time_milli||0) + Number(s.total_light_sleep_time_milli||0) + Number(s.total_rem_sleep_time_milli||0); return tot > 0 ? tot : null; }).filter(n=>n!=null));
+    const asleep = _latestByDate(sRecs, x => x.start, x => { const s = ss(x); const tot = Number(s.total_slow_wave_sleep_time_milli||0) + Number(s.total_light_sleep_time_milli||0) + Number(s.total_rem_sleep_time_milli||0); return tot > 0 ? tot : null; });
     if (asleep!=null) ex.sleepHours = +(asleep/3600000).toFixed(1);
-    const deep = avg(sRecs.map(x => { const d = Number(ss(x).total_slow_wave_sleep_time_milli); return isFinite(d)&&d>0 ? d : null; }).filter(n=>n!=null));
+    const deep = _latestByDate(sRecs, x => x.start, x => { const d = Number(ss(x).total_slow_wave_sleep_time_milli); return isFinite(d)&&d>0 ? d : null; });
     if (deep!=null) ex.deepMin = Math.round(deep/60000);
   }
   return jsonResponse({ ok:true, ex }, corsHeaders);
@@ -2449,7 +2460,6 @@ async function handlePolarMetrics(request, env, corsHeaders) {
   const userId = rec.user_id;
   const to   = new Date().toISOString().slice(0, 10);
   const from = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
-  const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
   const get = async (p) => { try { const r = await fetch(POLAR_API + p, { headers: h }); if (!r.ok) return null; return await r.json(); } catch(e){ return null; } };
 
   const ex = {};
@@ -2458,27 +2468,24 @@ async function handlePolarMetrics(request, env, corsHeaders) {
   const phys = await get(`/users/${userId}/physical-information`);
   if (phys && phys.resting_heart_rate) ex.rhr = phys.resting_heart_rate;
 
-  // Nightly Recharge → hrv (sdnn_avg / ans_charge proxy), energy
+  // Nightly Recharge → hrv (sdnn_avg / ans_charge proxy), energy — за ПОСЛЕДНЮЮ ночь (x.date)
   const nr = await get(`/users/${userId}/nightly-recharge?from=${from}&to=${to}`);
   const nrList = Array.isArray(nr) ? nr : (nr && nr.recharges ? nr.recharges : []);
   if (nrList.length) {
-    const sdnnVals = nrList.map(x => Number(x.sdnn_avg || x.hrv_avg || 0)).filter(n => isFinite(n) && n > 0);
-    if (sdnnVals.length) ex.hrv = Math.round(avg(sdnnVals));
-    const statusVals = nrList.map(x => Number(x.nightly_recharge_status)).filter(n => isFinite(n) && n > 0);
-    if (statusVals.length) ex.energy = Math.min(10, Math.max(1, Math.round(avg(statusVals) / 3 * 10)));
+    const v = _latestByDate(nrList, x => x.date, x => { const n = Number(x.sdnn_avg || x.hrv_avg || 0); return isFinite(n) && n > 0 ? n : null; });
+    if (v!=null) ex.hrv = Math.round(v);
+    const st = _latestByDate(nrList, x => x.date, x => { const n = Number(x.nightly_recharge_status); return isFinite(n) && n > 0 ? n : null; });
+    if (st!=null) ex.energy = Math.min(10, Math.max(1, Math.round(st / 3 * 10)));
   }
 
-  // Sleep → sleepHours, deepMin
+  // Sleep → sleepHours, deepMin — за ПОСЛЕДНЮЮ ночь (x.date)
   const slp = await get(`/users/${userId}/sleep?from=${from}&to=${to}`);
   const slpList = Array.isArray(slp) ? slp : (slp && slp.nights ? slp.nights : slp && slp.night ? slp.night : []);
   if (slpList.length) {
-    const totalVals = slpList.map(x => {
-      const t = Number(x.total_sleep_time || 0) || (Number(x.light_sleep||0) + Number(x.deep_sleep||0) + Number(x.rem_sleep||0));
-      return t > 0 ? t : null;
-    }).filter(n => n != null);
-    if (totalVals.length) ex.sleepHours = +(avg(totalVals) / 3600).toFixed(1);
-    const deepVals = slpList.map(x => Number(x.deep_sleep)).filter(n => isFinite(n) && n > 0);
-    if (deepVals.length) ex.deepMin = Math.round(avg(deepVals) / 60);
+    const tot = _latestByDate(slpList, x => x.date, x => { const t = Number(x.total_sleep_time || 0) || (Number(x.light_sleep||0) + Number(x.deep_sleep||0) + Number(x.rem_sleep||0)); return t > 0 ? t : null; });
+    if (tot!=null) ex.sleepHours = +(tot / 3600).toFixed(1);
+    const dp = _latestByDate(slpList, x => x.date, x => { const n = Number(x.deep_sleep); return isFinite(n) && n > 0 ? n : null; });
+    if (dp!=null) ex.deepMin = Math.round(dp / 60);
   }
 
   return jsonResponse({ ok:true, ex }, corsHeaders);
@@ -2576,28 +2583,31 @@ async function handleWithingsMetrics(request, env, corsHeaders) {
   const fromDate = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
   const toTs     = Math.floor(Date.now() / 1000);
   const fromTs   = toTs - 7 * 86400;
-  const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
   const get = async (p) => { try { const r = await fetch(WITHINGS_API + p, { headers:h }); if (!r.ok) return null; const j = await r.json(); return j.status === 0 ? j.body : null; } catch(e){ return null; } };
 
   const ex = {};
 
-  // Sleep summary → hrv (sdnn_1), rhr (hr_min), sleepHours, deepMin
+  // Sleep summary → hrv (sdnn_1), rhr (hr_min), sleepHours, deepMin — за ПОСЛЕДНЮЮ ночь (x.date)
   const slp = await get(`/v2/sleep?action=getsummary&startdateymd=${fromDate}&enddateymd=${toDate}&data_fields=total_sleep_time,deep_sleep_duration,rem_sleep_duration,sleep_score,hr_average,hr_min,sdnn_1`);
   const slpList = (slp && slp.series) || [];
   if (slpList.length) {
-    const d = k => slpList.map(x => Number((x.data||{})[k])).filter(n=>isFinite(n)&&n>0);
-    const v = avg(d('sdnn_1')); if (v!=null) ex.hrv = Math.round(v);
-    const r = avg(d('hr_min'));  if (r!=null) ex.rhr = Math.round(r);
-    const t = avg(d('total_sleep_time')); if (t!=null) ex.sleepHours = +(t/3600).toFixed(1);
-    const dp = avg(d('deep_sleep_duration')); if (dp!=null) ex.deepMin = Math.round(dp/60);
+    const dget = (x, k) => { const n = Number((x.data||{})[k]); return isFinite(n) && n > 0 ? n : null; };
+    const v = _latestByDate(slpList, x => x.date, x => dget(x, 'sdnn_1')); if (v!=null) ex.hrv = Math.round(v);
+    const r = _latestByDate(slpList, x => x.date, x => dget(x, 'hr_min')); if (r!=null) ex.rhr = Math.round(r);
+    const t = _latestByDate(slpList, x => x.date, x => dget(x, 'total_sleep_time')); if (t!=null) ex.sleepHours = +(t/3600).toFixed(1);
+    const dp = _latestByDate(slpList, x => x.date, x => dget(x, 'deep_sleep_duration')); if (dp!=null) ex.deepMin = Math.round(dp/60);
   }
 
-  // SpO2 (meastype 54)
+  // SpO2 (meastype 54) — берём ПОСЛЕДНЮЮ группу замеров по дате, усредняя только замеры ВНУТРИ неё
+  // (несколько показаний за одну ночь — норм; несколько НОЧЕЙ усреднять больше не хотим)
   const spo2m = await get(`/measure?action=getmeas&meastypes=54&category=1&startdate=${fromTs}&enddate=${toTs}`);
   const spo2Grps = (spo2m && spo2m.measuregrps) || [];
   if (spo2Grps.length) {
-    const vals = spo2Grps.flatMap(g => (g.measures||[]).filter(m=>m.type===54).map(m=>m.value * Math.pow(10, m.unit))).filter(n=>isFinite(n)&&n>0);
-    const v = avg(vals); if (v!=null) ex.spo2 = +v.toFixed(1);
+    const sorted = spo2Grps.map(g => ({ t: (g.date||0) * 1000, g })).sort((a, b) => a.t - b.t);
+    for (let i = sorted.length - 1; i >= 0; i--) {
+      const vals = (sorted[i].g.measures||[]).filter(m=>m.type===54).map(m=>m.value * Math.pow(10, m.unit)).filter(n=>isFinite(n)&&n>0);
+      if (vals.length) { ex.spo2 = +(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1); break; }
+    }
   }
 
   return jsonResponse({ ok:true, ex }, corsHeaders);
@@ -2694,32 +2704,31 @@ async function handleOuraMetrics(request, env, corsHeaders){
   const h = { 'Authorization': 'Bearer ' + rec.access_token };
   const end   = new Date().toISOString().slice(0,10);
   const start = new Date(Date.now() - 7 * 86400000).toISOString().slice(0,10);
-  const avg = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : null;
   const get = async (path) => { try { const r = await fetch(`${OURA_API}${path}?start_date=${start}&end_date=${end}`, { headers:h }); if (!r.ok) return null; const j = await r.json(); return (j && j.data) || []; } catch(e){ return null; } };
 
   const ex = {};
-  // Sleep → hrv (average_hrv), rhr (lowest_heart_rate), sleepHours, deepMin. Берём ночной сон.
+  // Sleep → hrv (average_hrv), rhr (lowest_heart_rate), sleepHours, deepMin — за ПОСЛЕДНЮЮ ночь (s.day), не среднее за 7д.
   const sleep = await get('/v2/usercollection/sleep') || [];
   const night = sleep.filter(s => s && (s.type === 'long_sleep' || s.type === 'sleep'));
   const useSleep = night.length ? night : sleep;
   if (useSleep.length) {
     let v;
-    v = avg(useSleep.map(s => Number(s.average_hrv)).filter(n=>isFinite(n)&&n>0));        if (v!=null) ex.hrv = Math.round(v);
-    v = avg(useSleep.map(s => Number(s.lowest_heart_rate)).filter(n=>isFinite(n)&&n>0));  if (v!=null) ex.rhr = Math.round(v);
-    v = avg(useSleep.map(s => Number(s.total_sleep_duration)).filter(n=>isFinite(n)&&n>0)); if (v!=null) ex.sleepHours = +(v/3600).toFixed(1);
-    v = avg(useSleep.map(s => Number(s.deep_sleep_duration)).filter(n=>isFinite(n)&&n>0));  if (v!=null) ex.deepMin = Math.round(v/60);
+    v = _latestByDate(useSleep, s => s.day || s.bedtime_end, s => { const n = Number(s.average_hrv); return isFinite(n)&&n>0 ? n : null; });        if (v!=null) ex.hrv = Math.round(v);
+    v = _latestByDate(useSleep, s => s.day || s.bedtime_end, s => { const n = Number(s.lowest_heart_rate); return isFinite(n)&&n>0 ? n : null; });  if (v!=null) ex.rhr = Math.round(v);
+    v = _latestByDate(useSleep, s => s.day || s.bedtime_end, s => { const n = Number(s.total_sleep_duration); return isFinite(n)&&n>0 ? n : null; }); if (v!=null) ex.sleepHours = +(v/3600).toFixed(1);
+    v = _latestByDate(useSleep, s => s.day || s.bedtime_end, s => { const n = Number(s.deep_sleep_duration); return isFinite(n)&&n>0 ? n : null; });  if (v!=null) ex.deepMin = Math.round(v/60);
   }
-  // Readiness → readiness (score 0–100) + tempDev (ночное отклонение температуры).
+  // Readiness → readiness (score 0–100) + tempDev (ночное отклонение температуры) — за ПОСЛЕДНИЙ день (x.day).
   // Совпадает с импортом Oura-файла (parseOuraJSON): готовность отдаём как есть, энергию НЕ подменяем.
   const rdy = await get('/v2/usercollection/daily_readiness') || [];
   if (rdy.length) {
     let v;
-    v = avg(rdy.map(x => Number(x && x.score)).filter(n=>isFinite(n)&&n>0));           if (v!=null) ex.readiness = Math.round(v);
-    v = avg(rdy.map(x => Number(x && x.temperature_deviation)).filter(n=>isFinite(n))); if (v!=null) ex.tempDev = +v.toFixed(2);   // 2 знака — мелкие отклонения (0.02) не теряем
+    v = _latestByDate(rdy, x => x.day, x => { const n = Number(x && x.score); return isFinite(n)&&n>0 ? n : null; });           if (v!=null) ex.readiness = Math.round(v);
+    v = _latestByDate(rdy, x => x.day, x => { const n = Number(x && x.temperature_deviation); return isFinite(n) ? n : null; }); if (v!=null) ex.tempDev = +v.toFixed(2);   // 2 знака — мелкие отклонения (0.02) не теряем
   }
-  // SpO2 → spo2_percentage.average
+  // SpO2 → spo2_percentage.average — за ПОСЛЕДНИЙ день (x.day)
   const spo2 = await get('/v2/usercollection/daily_spo2') || [];
-  if (spo2.length) { const v = avg(spo2.map(x => Number(x && x.spo2_percentage && x.spo2_percentage.average)).filter(n=>isFinite(n)&&n>0)); if (v!=null) ex.spo2 = +v.toFixed(1); }
+  if (spo2.length) { const v = _latestByDate(spo2, x => x.day, x => { const n = Number(x && x.spo2_percentage && x.spo2_percentage.average); return isFinite(n)&&n>0 ? n : null; }); if (v!=null) ex.spo2 = +v.toFixed(1); }
   // Workout → сводка нагрузки за неделю (для модуля ДВИЖЕНИЕ + HRV-направленной нагрузки)
   const wk = await get('/v2/usercollection/workout') || [];
   if (wk.length) {
