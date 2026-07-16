@@ -9,7 +9,8 @@
 # КОГДА запускать: перед КАЖДОЙ сборкой приложения, ПОСЛЕ того как веб-правки готовы
 # и запушены. Затем: `npx cap sync` → сборка в Xcode / Android Studio.
 #
-# Точка входа приложения = interpreter-pro.html (у неё нативные health-бриджи).
+# Точка входа приложения = interpreter-via-l.html (renamed 2026-07-16; у неё нативные
+# health-бриджи). interpreter-pro.html теперь лишь redirect-заглушка — в бандл НЕ кладём.
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
@@ -21,8 +22,8 @@ echo "→ Пересобираю $WWW из веб-ИП…"
 rm -rf "$WWW"
 mkdir -p "$WWW"
 
-# Точка входа: PRO-страница → index.html (Capacitor грузит webDir/index.html)
-cp "$IP/interpreter-pro.html" "$WWW/index.html"
+# Точка входа: VIA·L-страница → index.html (Capacitor грузит webDir/index.html)
+cp "$IP/interpreter-via-l.html" "$WWW/index.html"
 
 # Скрипты и вспомогательные страницы
 cp "$IP/app-mode.js"              "$WWW/"
@@ -31,9 +32,14 @@ cp "$IP/healthconnect-bridge.js"  "$WWW/"
 cp "$IP/iap-bridge.js"            "$WWW/"
 cp "$IP/my-specialist.html"       "$WWW/"
 
-# Ассеты (Logo/ включает Logo/metrics/*.png, images-in/ — картинки устройств)
+# Ассеты (Logo/ включает Logo/metrics/*.png, images-in/ — картинки устройств,
+# phosphor/ — иконочный шрифт + vio-phosphor.js (иконки ВЕЗДЕ), icons/ — прочие иконки,
+# food/ — webp-фото тарелок для памятки дня)
 cp -R "$IP/Logo"       "$WWW/Logo"
 cp -R "$IP/images-in"  "$WWW/images-in"
+cp -R "$IP/phosphor"   "$WWW/phosphor"
+cp -R "$IP/icons"      "$WWW/icons"
+cp -R "$IP/food"       "$WWW/food"
 
 # Юр-страницы приложения: чистый app-only комплект legal-app/ (Privacy+Terms, 12 языков,
 # без мед-бизнеса/медсайта/«Interpreter») → в бандл как www/legal. Старые legal/ — для сайта.

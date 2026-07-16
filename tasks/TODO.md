@@ -10,6 +10,29 @@
 
 ---
 
+## ★ App Store — сдача на модерацию (VIA·L, нативка) 🔴 в работе (2026-07-16)
+
+Контекст/детали — memory [[project-appstore-native-build-pipeline]], [[feedback-appstore-hotmart-disconnected-iap-only]].
+
+**✅ Сделано в коде (сессия 2026-07-16):**
+- IAP-paywall (#iap-gate) под Guideline 3.1.2: добавлено раскрытие авто-продления (`iap_renew_note`) +
+  ссылки Условия/Политика прямо на экране подписки, 12 языков.
+- `Info.plist`: HealthKit purpose-строка → EN (dev region=en); убран `NSHealthUpdateUsageDescription`
+  (приложение только читает, `write:[]`); добавлен `ITSAppUsesNonExemptEncryption=false`.
+- **Починен `app/sync-web.sh`**: точка входа = `interpreter-via-l.html` (был редирект-заглушка pro) +
+  копирует `phosphor/`,`icons/`,`food/`; `app/www` пересобран.
+- Перевод выровнен: 703 ключа × 12 языков, пробелов/утечек кириллицы нет; `<html lang>`→en.
+
+**⏳ Осталось — вне кода (владелец):**
+- [ ] `cd app && npx cap sync` → сборка в Xcode, залить билд.
+- [ ] App Store Connect: auto-renewable подписка €15/мес → привязать к RevenueCat
+      (entitlement `via_l_pro`, bundle `com.viael.interpreter`).
+- [ ] App Privacy nutrition labels: задекларировать HealthKit-данные (не для рекламы/трекинга).
+- [ ] Метаданные/скриншоты без мед-обещаний + демо-доступ ревьюеру (обход IAP-гейта, sandbox-аккаунт).
+- [ ] Подтвердить корректность `ITSAppUsesNonExemptEncryption=false` (только стандартное шифрование).
+
+---
+
 ## ★ VIO — статус на 2026-07-08 (главный фокус; PRO — после 100% VIO)
 
 Детали и file:line — memory [[project-vio-card-redesign]], [[project-vio-pro-app-landing]].
