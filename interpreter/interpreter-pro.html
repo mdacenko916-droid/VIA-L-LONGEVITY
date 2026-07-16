@@ -1273,7 +1273,7 @@ footer{
 body.flow-mode .progress-wrap{display:none;}
 body.flow-mode .step .btn-row{display:none;}
 body.flow-mode .step{margin-bottom:14px;}
-body.flow-mode #scroll-area{padding-bottom:calc(120px + env(safe-area-inset-bottom,0px));}   /* клиренс под фикс-футер + safe-area: последний блок (напр. BMI/WHtR) не прячется под навигацией */
+body.flow-mode #scroll-area{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));}   /* небольшой клиренс + safe-area (нижняя навигация — отдельный сиблинг, контент под неё не заходит) */
 /* Завершение этапа «Ваш профиль»: зелёная галочка + золотое свечение заголовка (Вариант 1) */
 .prof-check{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#22c55e;color:#fff;font-size:13px;font-weight:700;margin-left:10px;vertical-align:middle;opacity:0;transform:scale(.4);transition:opacity .45s ease,transform .45s cubic-bezier(.34,1.56,.64,1);}
 .prof-done .prof-check{opacity:1;transform:scale(1);}
@@ -5592,6 +5592,7 @@ function _showMorningCard(src){
 }
 // Первый запуск: показываем ТОЛЬКО hero (дисклеймер + 3 карточки выбора), анкету прячем.
 function _showSourceChoice(){
+  document.body.classList.remove('flow-mode');   // экран выбора — не лента, лишний нижний отступ ленты не нужен
   var h=document.querySelector('.hero'); if(h)h.style.display='';
   var m=document.querySelector('main'); if(m)m.style.display='none';
   var g=document.getElementById('morning-gate'); if(g)g.remove();
