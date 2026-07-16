@@ -2073,7 +2073,7 @@ const GH_API       = 'https://health.googleapis.com/v4/users/me/dataTypes';
 // sleep scope + health-metrics scope (covers HR, resting HR, HRV, SpO2, temp).
 const GH_SCOPES    = 'https://www.googleapis.com/auth/googlehealth.sleep.readonly https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly';   // activity_and_fitness → daily-vo2-max (иначе 403)
 const FITBIT_RETURN_ALLOW = ['https://via-l.com/', 'http://localhost', 'http://127.0.0.1'];
-const FITBIT_DEFAULT_RET  = 'https://via-l.com/interpreter/interpreter-pro.html';
+const FITBIT_DEFAULT_RET  = 'https://via-l.com/interpreter/interpreter-via-l.html';
 
 // sid + return URL are ASCII (base36 id / https URL) → plain btoa is safe.
 function b64urlEncode(str){ return btoa(str).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
