@@ -3715,7 +3715,10 @@ function t(k){return T[lang][k]||T.ru[k]||k;}
 
 // ══ GENDER TOGGLE ════════════════════════════════════════
 window.__touched=window.__touched||new Set();
-window.__SOFTSKIP=['hrv','hrv_trend','sleep_qual','deep','wake','rhr','resp_rate','energy','anxiety','mood','irritability','stress','temp','hf_count'];
+// hrv_trend убран 2026-07-16: инпута для тренда HRV в VIA-L нет вовсе, поле всегда оставалось «пропущенным»
+// → воркер честно писал «не указано», но затем просил клиента уточнить «тренд восстановления (трекер)» —
+// поле, которое ввести физически негде. В __SOFTSKIP только то, что клиент реально МОЖЕТ заполнить.
+window.__SOFTSKIP=['hrv','sleep_qual','deep','wake','rhr','resp_rate','energy','anxiety','mood','irritability','stress','temp','hf_count'];
 document.addEventListener('input',function(e){var t=e.target;if(t&&(t.name||t.id))window.__touched.add(t.name||t.id);},true);
 document.addEventListener('change',function(e){var t=e.target;if(t&&(t.name||t.id))window.__touched.add(t.name||t.id);},true);
 document.querySelectorAll('input[name=gender]').forEach(el=>{
@@ -5178,7 +5181,7 @@ function renderDataCompleteness(){
 // именно в них). Молчаливый перенос вчерашнего состояния как сегодняшнего искажает и честность ответа
 // клиента, и вход в ИИ-разбор — та же логика, по которой день не должен получать усреднённые/чужие данные.
 // Переносим ТОЛЬКО базу; дневное состояние всегда начинается пустым — отвечать заново, без якоря на вчера.
-var _DAILY_RADIO=['temp','hotflash','hotfreq','deep','wake','hf_count','hf_intensity','appetite','move_today','eating_pattern','protein_intake','memory','fog','alc','chronic_stress'];
+var _DAILY_RADIO=['temp','deep','wake','hf_count','hf_intensity','appetite','move_today','eating_pattern','protein_intake','memory','fog','alc','chronic_stress'];
 var _DAILY_VAL=['energy','stress','resp_rate','hrv','rhr','sleep_hours'];
 function _isDailyField(el){
   if(el.name&&_DAILY_RADIO.indexOf(el.name)>=0)return true;
@@ -6227,7 +6230,7 @@ function renderNutriCorr(data){
     });
   }
 
-  if(data.temp==='spike' || data.hf_count==='high' || data.hotfreq==='daily'){
+  if(data.temp==='spike' || data.hf_count==='high'){
     corrs.push({
       icon:'🌡️',
       signal: L({ru:'Скачки температуры + приливы',uk:'Стрибки температури',en:'Temp spikes + hot flashes',es:'Picos de temperatura + sofocos',de:'Temperaturspitzen + Hitzewallungen',pt:'Picos de temperatura + fogachos',fr:'Pics de température + bouffées de chaleur',pl:'Skoki temperatury + uderzenia gorąca',it:'Picchi di temperatura + vampate',he:'עליות טמפרטורה + גלי חום',ja:'体温スパイク + ほてり',ko:'체온 스파이크 + 열감'}),
@@ -6515,7 +6518,9 @@ function _showResultsInner(){
     waist:parseFloat(document.getElementById('prof-waist')?.value)||null,
     hrv:+document.getElementById('hrv').value,
     device:(typeof importedData!=='undefined'&&importedData)?{vo2:importedData.vo2,spo2:importedData.spo2,readiness:importedData.readiness,sleepHours:importedData.sleepHours,deepMin:importedData.deepMin,tempDev:importedData.tempDev}:null,
-    temp:getRadio('temp'),hotflash:getRadio('hotflash'),hotfreq:getRadio('hotfreq'),
+    // hotflash/hotfreq убраны 2026-07-16 (аудит метрики→воркер): воркер их НЕ читал ни разу — приливы
+    // доходят до ИИ через hf_count/hf_intensity ниже. Данные не терялись, поля были мёртвым грузом.
+    temp:getRadio('temp'),
     sleep_qual:+document.getElementById('sleep_qual').value,
     sleep_hours:parseFloat(document.getElementById('sleep_hours')?.value)||null,
     deep:getRadio('deep'),wake:getRadio('wake'),
@@ -6578,10 +6583,13 @@ function _showResultsInner(){
   else{ins.push({t:'ok',i:'💓',h:L({ru:'HRV в норме',uk:'HRV в нормі',en:'HRV Normal',es:'VFC normal',de:'HRV normal',pt:'VFC normal',fr:'VFC normale',pl:'HRV normalne',it:'HRV normale',he:'HRV תקין',ja:'HRV 正常',ko:'HRV 정상'}),b:L({ru:'Вариабельность сердечного ритма в пределах нормы.',uk:'В межах норми.',en:'Within your normal range.',es:'Dentro de tu rango normal.',de:'Im normalen Bereich.',pt:'Dentro do intervalo normal.',fr:'Dans votre plage normale.',pl:'W granicach normy.',it:'Nel tuo intervallo normale.',he:'בטווח הנורמלי שלך.',ja:'正常範囲内。',ko:'정상 범위 내.'})});}
 
   // Temp
-  if(data.temp==='spike'||data.hotfreq==='daily'){
+  if(data.temp==='spike'){
     ins.push({t:'warn',i:'🌡️',h:L({ru:'Признаки нестабильных гормонов',uk:'Ознаки нестабільних гормонів',en:'Unstable Hormone Signs',es:'Signos hormonales inestables',de:'Anzeichen instabiler Hormone',pt:'Sinais de hormônios instáveis',fr:'Signes d\'hormones instables',pl:'Oznaki niestabilnych hormonów',it:'Segni di ormoni instabili',he:'סימנים לאי-יציבות הורמונלית',ja:'ホルモン不安定のサイン',ko:'호르몬 불안정 징후'}),
     b:L({ru:isMale?'Ночные перепады температуры у мужчин могут отражать уровень тестостерона.':'Скачки температуры и приливы — тепловые волны. При необходимости обсудите с врачом.',uk:isMale?'Нічні перепади можуть відображати рівень тестостерону.':'Скачки температури — теплові хвилі.',en:isMale?'Night temperature fluctuations in men can reflect testosterone levels.':'Night spikes and hot flashes are heat waves. Discuss with your doctor if needed.',es:isMale?'Las fluctuaciones de temperatura pueden reflejar los niveles de testosterona.':'Los sofocos son oleadas de calor.',de:isMale?'Nächtliche Temperaturschwankungen können den Testosteronspiegel widerspiegeln.':'Hitzewallungen sind vasomotorische Symptome. Mit dem Gynäkologen besprechen.',pt:isMale?'Flutuações de temperatura noturna podem refletir os níveis de testosterona.':'Ondas de calor são sintomas vasomotores. Discuta com seu ginecologista.',fr:isMale?'Les fluctuations de température nocturne peuvent indiquer un déficit en testostérone.':'Les bouffées de chaleur sont des ondes de chaleur. Discutez avec votre gynécologue.',pl:isMale?'Nocne wahania temperatury mogą odzwierciedlać poziom testosteronu.':'Uderzenia gorąca są objawami wazomotorycznymi. Omów z ginekologiem.',it:isMale?'Le fluttuazioni di temperatura notturna negli uomini possono indicare carenza di testosterone.':'Le vampate di calore sono sintomi vasomotori. Discutere con il ginecologo.',he:isMale?'תנודות טמפרטורה לילית אצל גברים עשויות להצביע על מחסור בטסטוסטרון.':'גלי חום הם תסמינים וזומוטוריים. לדון עם הגינקולוג.',ja:isMale?'男性の夜間体温変動はテストステロン不足を示す可能性があります。':'ほてりは血管運動症状です。婦人科医に相談してください。',ko:isMale?'남성의 야간 체온 변동은 테스토스테론 결핍을 나타낼 수 있습니다.':'홍조는 혈관운동 증상입니다. 산부인과 의사와 상담하세요.'})});
-    score-=12;if(data.hotfreq==='daily'){doc=true;docR.push(t('doc_reason_temp'));}
+    // Здесь был триггер «обсудить со специалистом» по data.hotfreq==='daily' — поле мёртвое (инпута нет),
+    // условие никогда не срабатывало. Удалено вместе с hotflash/hotfreq; ветку по hf_count НЕ добавляю
+    // самовольно — это продуктовое решение (см. аудит метрики→воркер).
+    score-=12;
     recs['temp']={h:L({ru:'🌡️ Снижение приливов через питание',uk:'🌡️ Зниження припливів',en:'🌡️ Reducing Hot Flashes',es:'🌡️ Reducir sofocos',de:'🌡️ Hitzewallungen durch Ernährung reduzieren',pt:'🌡️ Reduzir ondas de calor',fr:'🌡️ Réduire les bouffées de chaleur',pl:'🌡️ Redukcja uderzeń gorąca',it:'🌡️ Ridurre le vampate di calore',he:'🌡️ הפחתת גלי חום',ja:'🌡️ 食事でほてりを軽減',ko:'🌡️ 식이요법으로 홍조 감소'}),l:L({ru:['Семена льна 1–2 ст.л./день','Соя, темпе, нут — регулярно','Исключить: острое, алкоголь, кофеин после 14:00','Витамин Е 400 МЕ'],uk:['Насіння льону 1–2 ст.л./день','Соя, темпе, нут','Виключити: гостре, алкоголь, кофеїн після 14:00'],en:['Flaxseeds 1–2 tbsp/day','Soy, tempeh, chickpeas regularly','Avoid: spicy, alcohol, caffeine after 2pm','Vitamin E 400 IU'],es:['Semillas de lino 1–2 cucharadas/día','Soja, tempeh, garbanzos','Evitar: picante, alcohol, cafeína'],de:['Leinsamen 1–2 EL/Tag','Soja, Tempeh, Kichererbsen regelmäßig','Meiden: Scharf, Alkohol, Koffein nach 14 Uhr','Vitamin E 400 IE'],pt:['Sementes de linhaça 1–2 colheres/dia','Soja, tempeh, grão-de-bico regularmente','Evitar: picante, álcool, cafeína após 14h','Vitamina E 400 UI'],fr:['Graines de lin 1–2 cs/jour','Soja, tempeh, pois chiches régulièrement','Éviter: épicé, alcool, caféine après 14h','Vitamine E 400 UI'],pl:['Siemię lniane 1–2 łyżki/dzień','Soja, tempeh, ciecierzyca regularnie','Unikać: pikantne, alkohol, kofeina po 14:00','Witamina E 400 IU'],it:['Semi di lino 1–2 cucchiai/giorno','Soia, tempeh, ceci regolarmente','Evitare: piccante, alcol, caffeina dopo le 14','Vitamina E 400 UI'],he:['זרעי פשתן 1–2 כפות/יום','סויה, טמפה, חומוס באופן קבוע','להימנע: חריף, אלכוהול, קפאין אחרי 14:00','ויטמין E 400 יח'],ja:['亜麻仁1〜2大さじ/日','大豆、テンペ、ひよこ豆を定期的に','避ける: 辛い食べ物、アルコール、14時以降のカフェイン','ビタミンE 400IU'],ko:['아마씨 1–2큰술/일','두부, 템페, 병아리콩 정기적으로','피하기: 매운 음식, 알코올, 14시 이후 카페인','비타민 E 400IU']})};
   } else if(data.temp==='down'&&data.symptoms.includes('fatigue')){
     ins.push({t:'warn',i:'🌡️',h:L({ru:'Низкая температура + усталость',uk:'Низька температура + втома',en:'Low Temp + Fatigue',es:'Temperatura baja + fatiga',de:'Niedrige Temperatur + Müdigkeit',pt:'Temperatura baixa + fadiga',fr:'Température basse + fatigue',pl:'Niska temperatura + zmęczenie',it:'Temperatura bassa + affaticamento',he:'טמפרטורה נמוכה + עייפות',ja:'低体温 + 疲労',ko:'저체온 + 피로'}),b:L({ru:'Возможен замедленный энергообмен. Стоит обсудить со специалистом.',uk:'Можливий уповільнений енергообмін. Варто обговорити з фахівцем.',en:'May reflect a slower energy metabolism. Worth discussing with a specialist.',es:'Puede reflejar un metabolismo energético más lento. Conviene consultarlo.',de:'Kann auf einen langsameren Energiestoffwechsel hindeuten. Am besten besprechen.',pt:'Pode refletir um metabolismo energético mais lento. Vale conversar com um especialista.',fr:'Peut refléter un métabolisme énergétique plus lent. À discuter avec un spécialiste.',pl:'Może odzwierciedlać wolniejszy metabolizm energii. Warto omówić ze specjalistą.',it:'Può riflettere un metabolismo energetico più lento. Meglio parlarne con uno specialista.',he:'עשוי לשקף חילוף חומרים איטי יותר. כדאי לשוחח עם מומחה.',ja:'エネルギー代謝の低下を反映する場合があります。専門家に相談を。',ko:'느린 에너지 대사를 반영할 수 있습니다. 전문가와 상담하세요.'})});

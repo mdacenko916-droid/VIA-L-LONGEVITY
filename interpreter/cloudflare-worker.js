@@ -3745,7 +3745,16 @@ function buildUserMessage(data, lang, tier) {
   const wakeVal     = data.wake || '';
   const multiWake   = /multiple|несколько|mehrmals|plusieurs|kilka|più volte|veces|כמה|数回|여러 번/i.test(wakeVal);
   const earlyWake   = /early|ранн|früh|madrugada|早|새벽|tôt/i.test(wakeVal);
-  const symptoms    = data.symptoms || [];
+  // Пустышки-чекбоксы («нет добавок»=none_sup, «ничего не беспокоит»=nothing, none_act, none_cort) — это
+  // ОТСУТСТВИЕ пункта, а не пункт. Без отсева ИИ видел «Добавки (принимает): none_sup» / «Симптомы: nothing»
+  // и по инструкции «отрази КАЖДЫЙ ненулевой пункт» строил рекомендацию на пустоте. Приравниваем к «—».
+  const _NONE       = v => !v || /^none(_|$)/i.test(String(v)) || String(v).toLowerCase() === 'nothing';
+  // «нет» ≠ «—». Клиент, отметивший «нет добавок», ОТВЕТИЛ — для ИИ это факт (добавок не принимает).
+  // А «—» промпт ниже трактует как «не указано — не интерпретируй», т.е. ответ клиента потерялся бы.
+  // Исключения (НЕ через _V): deep и hf_count — у них своя смысловая обработка, где 'none' значит
+  // «очень мало глубокого сна» / «приливов нет», а не пустышку.
+  const _V          = v => (v == null || v === '') ? '—' : (_NONE(v) ? 'нет' : v);
+  const symptoms    = (data.symptoms || []).filter(s => !_NONE(s));
   const stressHigh  = /high|выс|hoch|élevé|alto|hoog|高|높음/i.test(data.stress || '');
   const alcYes      = /yes|да|ja|oui|sí|sim|はい|네/i.test(data.alc || '');
   const tempDown    = /down|ниже|unter|bajo|abaixo|en dessous|poniżej|sotto|מתחת|低下|낮음/i.test(data.temp || '');
@@ -3927,7 +3936,7 @@ function buildUserMessage(data, lang, tier) {
     const hfSev = data.hf_count === 'high' ? 'выраженные (6+/ночь)'
                 : data.hf_count === 'mid'  ? 'умеренные (3–5/ночь)'
                 : 'лёгкие (1–2/ночь)';
-    hfContext = '\n- Приливы: ' + hfSev + (data.hf_intensity ? ' | интенсивность: ' + data.hf_intensity : '');
+    hfContext = '\n- Приливы: ' + hfSev + (data.hf_intensity && !_NONE(data.hf_intensity) ? ' | интенсивность: ' + data.hf_intensity : '');
   }
 
   // ── SLEEP / LABS / BIO CONTEXT ────────────────────────────────
@@ -4129,7 +4138,11 @@ function buildUserMessage(data, lang, tier) {
   const symptomBlock   = symRules.length  ? '══ СИМПТОМ → НУТРИТИВНАЯ ПОДДЕРЖКА ══\n' + symRules.join('\n') + '\n\n' : '';
 
   // ── ПОЛНЫЕ ДАННЫЕ АНКЕТЫ — чтобы НИ ОДНО введённое клиентом поле не потерялось в анализе ──
-  const _J = a => (Array.isArray(a) && a.length) ? a.join(', ') : '—';
+  const _J = a => {
+    const src = Array.isArray(a) ? a.filter(Boolean) : [];
+    const v = src.filter(x => !_NONE(x));
+    return v.length ? v.join(', ') : (src.length ? 'нет' : '—');   // отметил «нет добавок» → «нет», не «—»
+  };
   // meds приходит массивом токенов-чекбоксов (VIO) — переводим в читаемые велнес-ярлыки,
   // иначе к ИИ уходят сырые коды («energy_factor,cycle_factor»). App Store 1.4.1 — без мед-названий.
   const _MEDS_LBL = { energy_factor:'фактор энергии/обмена', emotion_factor:'фактор настроения', cycle_factor:'фактор цикла', other_factor:'другой фактор',
@@ -4142,17 +4155,17 @@ function buildUserMessage(data, lang, tier) {
     + ((data.goal || (Array.isArray(data.priorities) && data.priorities.length)) ? '🎯 ЦЕЛЬ КЛИЕНТА: ' + (data.goal ? String(data.goal).trim().slice(0, 300) : '—') + ((Array.isArray(data.priorities) && data.priorities.length) ? ' | приоритеты/фокус: ' + data.priorities.join(', ') : '') + ' — ПОДСТРОЙ разбор, акценты и рекомендации под эту цель клиента.\n' : '')
     + 'Питание · ограничения/диета: ' + _J(data.diet_restrict) + ' | режим питания: ' + (data.eating_pattern || '—') + '\n'
     + ((data.protein_intake || data.appetite || data.cravings || data.allergy) ? 'Питание (доп.): ' + [(data.protein_intake ? 'потребление белка: ' + data.protein_intake : ''), (data.appetite ? 'аппетит: ' + data.appetite : ''), (data.cravings ? 'тяга к сладкому/еде: да' : ''), (data.allergy ? 'аллергии: ' + data.allergy : '')].filter(Boolean).join(' | ') + '\n' : '')
-    + ((data.memory || data.fog) ? 'Ясность ума · память: ' + (data.memory || '—') + ' | туман в голове: ' + (data.fog || '—') + '\n' : '')
+    + ((data.memory || data.fog) ? 'Ясность ума · память: ' + _V(data.memory) + ' | туман в голове: ' + _V(data.fog) + '\n' : '')
     + (data.new_symptoms ? 'Новые симптомы за неделю (со слов клиента, сигнал — обрати внимание на тренд): ' + data.new_symptoms + '\n' : '')
     + (data.lifestyle_notes ? 'События/контекст недели (со слов клиента — учитывай как бытовое объяснение сдвигов метрик, не как ухудшение): ' + data.lifestyle_notes + '\n' : '')
-    + 'Физическая активность · виды: ' + _J(data.act_types) + ' | частота: ' + (data.act_freq || '—') + ' | восстановление после нагрузки: ' + (data.act_recovery || '—') + (data.move_today ? ' | движение за прошедшие сутки: ' + ({sedentary:'сидячий день',light:'немного двигался',walk:'много ходил',cardio:'кардио/бег',strength:'силовая тренировка',active:'активный день'}[data.move_today] || data.move_today) : '') + '\n'
+    + 'Физическая активность · виды: ' + _J(data.act_types) + ' | частота: ' + _V(data.act_freq) + ' | восстановление после нагрузки: ' + _V(data.act_recovery) + (data.move_today ? ' | движение за прошедшие сутки: ' + ({sedentary:'сидячий день',light:'немного двигался',walk:'много ходил',cardio:'кардио/бег',strength:'силовая тренировка',active:'активный день'}[data.move_today] || data.move_today) : '') + '\n'
     + 'Добавки (принимает): ' + _J(data.supplements) + '\n'
     + 'Лекарства: ' + _medsStr + (data.meds_other ? ' | другие: ' + data.meds_other : '') + '\n'
     + 'Хронический стресс: ' + (data.chronic_stress || '—') + ' | симптомы кортизола: ' + _J(data.cortisol_symp) + '\n'
     + 'Гормональные симптомы: ' + ((Array.isArray(data.horm_symptoms) && data.horm_symptoms.length) ? _J(data.horm_symptoms) : ((data.horm_female || data.horm_male) ? (Object.entries(Object.assign({}, data.horm_female || {}, data.horm_male || {})).map(function(e){ return e[0] + ' (' + e[1] + ')'; }).join(', ') || '—') : '—')) + (data.horm_intensity ? ' | интенсивность: ' + data.horm_intensity : '') + '\n'
     + (isFem
         ? 'Цикл · статус: ' + (data.cycle_status || '—') + (data.heavy_period ? ' | обильные менструации: ' + (data.heavy_period === 'yes' ? 'да' : 'нет') : '') + ' | давность последней менструации: ' + (data.last_period || '—') + (data.cycle_len ? ' | длина цикла: ' + data.cycle_len + ' дн' : '') + (data.cycle_day ? ' | день цикла: ' + data.cycle_day : '') + (data.cycle_phase ? ' | фаза цикла: ' + data.cycle_phase : '') + '\n'
-          + 'ПМС · тяжесть: ' + (data.pms || '—') + ' | симптомы: ' + _J(data.pms_symptoms) + '\n'
+          + 'ПМС · тяжесть: ' + _V(data.pms) + ' | симптомы: ' + _J(data.pms_symptoms) + '\n'
         : 'Мужское здоровье · витальность: ' + (data.vitality || '—') + ' | настроение/мотивация: ' + (data.male_mood || '—') + '\n')
     + 'Риск по костям: ' + _J(data.bone_risk) + '\n'
     + (function(d){ if(!d) return '';
@@ -4233,13 +4246,21 @@ function buildUserMessage(data, lang, tier) {
     + (bmrCalc ? (isWell
         ? 'Энергобаланс (расчёт, не биоимпеданс): ориентир поддержания веса ~' + maintLow + '–' + maintHigh + ' ккал/день. Акцент — качественный белок и цельная еда, а не подсчёт калорий.\n'
         : 'Энергобаланс (расчёт, не биоимпеданс): BMR ~' + bmrCalc + ' ккал/день (Mifflin-St Jeor); ориентир поддержания веса ~' + maintLow + '–' + maintHigh + ' ккал/день (малоподвижный→лёгкая активность). Для снижения веса — дефицит ~15–20% от поддержания, не ниже BMR; приоритет белку ' + (isFem ? '1.6–2.2' : '1.6–2.0') + ' г/кг.\n') : '')
-    + 'HRV: ' + SK('hrv', data.hrv + ' мс (' + hrvStatus + ')') + ' | Тренд: ' + SK('hrv_trend', (data.hrv_trend === 'below' ? 'падает' : data.hrv_trend === 'above' ? 'растёт' : 'стабилен')) + '\n'
-    + 'Сон: ' + SK('sleep_qual', sleepQual + '/10') + (data.sleep_hours ? ' | Часов сна: ' + data.sleep_hours + ' ч' : '') + ' | Глубокий: ' + SK('deep', deepContext) + ' | Пробуждения: ' + SK('wake', wakeVal) + '\n'
+    // Тренд HRV есть только у EXPERT/ELITE (в VIA-L инпута нет вовсе). Раньше при отсутствующем значении
+    // ветка молча падала в 'стабилен' — т.е. промпт ВЫДУМЫВАЛ клиенту стабильный тренд. Печатаем тренд,
+    // только если клиент его реально дал или явно пометил как пропущенный.
+    + 'HRV: ' + SK('hrv', data.hrv + ' мс (' + hrvStatus + ')')
+    + ((data.hrv_trend || sk.has('hrv_trend')) ? ' | Тренд: ' + SK('hrv_trend', (data.hrv_trend === 'below' ? 'падает' : data.hrv_trend === 'above' ? 'растёт' : 'стабилен')) : '') + '\n'
+    + 'Сон: ' + SK('sleep_qual', sleepQual + '/10') + (data.sleep_hours ? ' | Часов сна: ' + data.sleep_hours + ' ч' : '') + ' | Глубокий: ' + SK('deep', deepContext) + ' | Пробуждения: ' + SK('wake', _V(wakeVal)) + '\n'
     + (sk.has('hf_count') ? 'Приливы: не указано (клиент не вводил)' : hfContext) + '\n'
-    + 'Дыхание: ' + SK('resp_rate', respRate + ' вд/мин') + ' | Пульс покоя: ' + SK('rhr', rhrVal + ' уд/мин') + '\n'
-    + 'Энергия: ' + SK('energy', energyVal + '/10') + ' | Тревога: ' + SK('anxiety', anxietyVal + '/10') + ' | Настроение: ' + SK('mood', data.mood) + ' | Раздражительность: ' + SK('irritability', data.irritability) + '\n'
+    // rhr_comp раньше жил ТОЛЬКО в selectKBPatterns — ИИ видел имя паттерна, но не само наблюдение клиента
+    // («пульс выше обычного»). Отдаём велнес-словами, а не кодом (high/slightly_high).
+    + 'Дыхание: ' + SK('resp_rate', respRate + ' вд/мин') + ' | Пульс покоя: ' + SK('rhr', rhrVal + ' уд/мин')
+    + (data.rhr_comp ? ' (по ощущению клиента — ' + ({ normal:'как обычно', slightly_high:'немного выше обычного', high:'заметно выше обычного', low:'ниже обычного' }[data.rhr_comp] || data.rhr_comp) + ')' : '') + '\n'
+    + 'Энергия: ' + SK('energy', energyVal + '/10') + ' | Тревога: ' + SK('anxiety', anxietyVal + '/10') + ' | Настроение: ' + SK('mood', _V(data.mood)) + ' | Раздражительность: ' + SK('irritability', _V(data.irritability)) + '\n'
     + 'Температура ночью: ' + SK('temp', data.temp) + ' | Стресс: ' + SK('stress', data.stress) + ' | Алкоголь вчера: ' + data.alc + '\n'
-    + 'Симптомы: ' + (symptoms.length ? symptoms.join(', ') : 'не указаны') + '\n'
+    // «ничего не беспокоит» — это ОТВЕТ клиента, а не молчание: иначе ИИ читал «не указаны» и мог просить уточнить уже отвеченное.
+    + 'Симптомы: ' + (symptoms.length ? symptoms.join(', ') : ((data.symptoms || []).length ? 'нет — клиент отметил, что ничего не беспокоит' : 'не указаны')) + '\n'
     + complaintsContext
     + bioContext + '\n'
     + (data.training && data.training.count ? 'Тренировки (с кольца, 7 дн): ' + data.training.count + ' сессий' + (data.training.intensity ? ', последняя интенсивность ' + data.training.intensity : '') + (data.training.activity ? ' (' + data.training.activity + ')' : '') + '. Применяй HRV-направленную нагрузку: тяжёлые/интенсивные сессии — только в дни восстановленного ночного HRV; падающий HRV неделю → снизить объём, добавить сон/восстановление.\n' : '')
