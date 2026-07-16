@@ -8060,13 +8060,15 @@ function closeCircModal(){
 function openApproach(){
   var p=document.getElementById('approachPanel'); if(!p)return;
   var b=document.getElementById('approachBody'); if(b)b.textContent=t('approach_body');
-  var m=document.querySelector('main'); if(m)m.style.display='none';
+  var m=document.querySelector('main'); if(m){window._apprMain=m.style.display; m.style.display='none';}
+  var h=document.querySelector('.hero'); if(h){window._apprHero=h.style.display; h.style.display='none';}   // hero тоже прячем — иначе маркетинг-текст просвечивает под панелью
   var n=document.querySelector('.bottom-nav'); if(n)n.classList.add('nav-hidden');
   p.style.display='block'; p.scrollTop=0;
 }
 function closeApproach(){
   var p=document.getElementById('approachPanel'); if(p)p.style.display='none';
-  var m=document.querySelector('main'); if(m)m.style.display='';
+  var m=document.querySelector('main'); if(m)m.style.display=(window._apprMain!=null?window._apprMain:'');
+  var h=document.querySelector('.hero'); if(h)h.style.display=(window._apprHero!=null?window._apprHero:'');   // вернуть прежнее состояние (не показывать hero, если пришли из анкеты)
   var n=document.querySelector('.bottom-nav'); if(n)n.classList.remove('nav-hidden');
 }
 
