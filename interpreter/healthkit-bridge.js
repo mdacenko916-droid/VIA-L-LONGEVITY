@@ -83,7 +83,7 @@
           if(!nightEnd   || en > nightEnd)   nightEnd   = en;
         }
       });
-      if(asleepMin > 0) out.sleep = Math.round(asleepMin / 6) / 10; // часы, 1 знак
+      if(asleepMin > 0) out.sleep = Math.round(asleepMin / 60 * 100) / 100; // часы, 2 знака (точность до минуты, дисплей Ч:ММ)
       if(deepMin > 0)   out.deep  = Math.round(deepMin);
     } catch(e){}
     // HRV (SDNN): среднее по сэмплам внутри окна сна, сопоставимо с ночной HRV кольца.

@@ -2272,7 +2272,7 @@ async function handleFitbitMetrics(request, env, corsHeaders){
     const last = sorted.length ? sorted[sorted.length-1].d : null;
     if (last) {
       const mins = num(last.sleep.summary.minutesAsleep);
-      if (mins!=null) ex.sleepHours = +(mins/60).toFixed(1);
+      if (mins!=null) ex.sleepHours = +(mins/60).toFixed(2);
       const ss = last.sleep.summary.stagesSummary;
       const ds = Array.isArray(ss) ? ss.find(s => s.type === 'DEEP') : null;
       if (ds && num(ds.minutes)!=null) ex.deepMin = Math.round(num(ds.minutes));
@@ -2413,7 +2413,7 @@ async function handleWhoopMetrics(request, env, corsHeaders){
   if (sRecs.length) {
     const ss = x => (x.score && x.score.stage_summary) || {};
     const asleep = _latestByDate(sRecs, x => x.start, x => { const s = ss(x); const tot = Number(s.total_slow_wave_sleep_time_milli||0) + Number(s.total_light_sleep_time_milli||0) + Number(s.total_rem_sleep_time_milli||0); return tot > 0 ? tot : null; });
-    if (asleep!=null) ex.sleepHours = +(asleep/3600000).toFixed(1);
+    if (asleep!=null) ex.sleepHours = +(asleep/3600000).toFixed(2);
     const deep = _latestByDate(sRecs, x => x.start, x => { const d = Number(ss(x).total_slow_wave_sleep_time_milli); return isFinite(d)&&d>0 ? d : null; });
     if (deep!=null) ex.deepMin = Math.round(deep/60000);
   }
@@ -2520,7 +2520,7 @@ async function handlePolarMetrics(request, env, corsHeaders) {
   const slpList = Array.isArray(slp) ? slp : (slp && slp.nights ? slp.nights : slp && slp.night ? slp.night : []);
   if (slpList.length) {
     const tot = _latestByDate(slpList, x => x.date, x => { const t = Number(x.total_sleep_time || 0) || (Number(x.light_sleep||0) + Number(x.deep_sleep||0) + Number(x.rem_sleep||0)); return t > 0 ? t : null; });
-    if (tot!=null) ex.sleepHours = +(tot / 3600).toFixed(1);
+    if (tot!=null) ex.sleepHours = +(tot / 3600).toFixed(2);
     const dp = _latestByDate(slpList, x => x.date, x => { const n = Number(x.deep_sleep); return isFinite(n) && n > 0 ? n : null; });
     if (dp!=null) ex.deepMin = Math.round(dp / 60);
   }
@@ -2631,7 +2631,7 @@ async function handleWithingsMetrics(request, env, corsHeaders) {
     const dget = (x, k) => { const n = Number((x.data||{})[k]); return isFinite(n) && n > 0 ? n : null; };
     const v = _latestByDate(slpList, x => x.date, x => dget(x, 'sdnn_1')); if (v!=null) ex.hrv = Math.round(v);
     const r = _latestByDate(slpList, x => x.date, x => dget(x, 'hr_min')); if (r!=null) ex.rhr = Math.round(r);
-    const t = _latestByDate(slpList, x => x.date, x => dget(x, 'total_sleep_time')); if (t!=null) ex.sleepHours = +(t/3600).toFixed(1);
+    const t = _latestByDate(slpList, x => x.date, x => dget(x, 'total_sleep_time')); if (t!=null) ex.sleepHours = +(t/3600).toFixed(2);
     const dp = _latestByDate(slpList, x => x.date, x => dget(x, 'deep_sleep_duration')); if (dp!=null) ex.deepMin = Math.round(dp/60);
   }
 
@@ -2752,7 +2752,7 @@ async function handleOuraMetrics(request, env, corsHeaders){
     let v;
     v = _latestByDate(useSleep, s => s.day || s.bedtime_end, s => { const n = Number(s.average_hrv); return isFinite(n)&&n>0 ? n : null; });        if (v!=null) ex.hrv = Math.round(v);
     v = _latestByDate(useSleep, s => s.day || s.bedtime_end, s => { const n = Number(s.lowest_heart_rate); return isFinite(n)&&n>0 ? n : null; });  if (v!=null) ex.rhr = Math.round(v);
-    v = _latestByDate(useSleep, s => s.day || s.bedtime_end, s => { const n = Number(s.total_sleep_duration); return isFinite(n)&&n>0 ? n : null; }); if (v!=null) ex.sleepHours = +(v/3600).toFixed(1);
+    v = _latestByDate(useSleep, s => s.day || s.bedtime_end, s => { const n = Number(s.total_sleep_duration); return isFinite(n)&&n>0 ? n : null; }); if (v!=null) ex.sleepHours = +(v/3600).toFixed(2);
     v = _latestByDate(useSleep, s => s.day || s.bedtime_end, s => { const n = Number(s.deep_sleep_duration); return isFinite(n)&&n>0 ? n : null; });  if (v!=null) ex.deepMin = Math.round(v/60);
   }
   // Readiness → readiness (score 0–100) + tempDev (ночное отклонение температуры) — за ПОСЛЕДНИЙ день (x.day).
