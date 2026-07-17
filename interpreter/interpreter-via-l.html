@@ -432,7 +432,7 @@ main{
   position:relative;z-index:1;
   max-width:600px;width:100%;
   margin:0 auto;
-  padding:24px 14px 40px;
+  padding:24px 14px 20px;   /* было 40px — см. мобильное правило: футер не должен «уплывать» от блока */
 }
 
 /* ══ PROGRESS ════════════════════════════════════════════ */
@@ -885,7 +885,7 @@ input.oura-input::-webkit-slider-thumb{
 footer{
   position:relative;z-index:1;
   background:transparent;
-  border-top:1px solid var(--b1);
+  /* border-top убран: полоса резала фон-картинку прямо над логотипом VIA—L */
   padding:12px 20px 6px;
   text-align:center;
 }
@@ -1131,8 +1131,58 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;}
   .bottom-nav{padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));}
   .bottom-nav-item{padding:4px 6px;font-size:8px;}
   .bottom-nav-icon{width:24px;height:24px;}
-  main{padding:24px 12px 70px;}
+  main{padding:24px 12px 20px;}   /* было 70px: футер (VIA—L · «Живи…» · Условия) отрывался от контента */
 }
+/* ══ ИЗМЕРЕНИЕ ПУЛЬСА ЗА 15 СЕК ══════════════════════════
+   Карточка внутри шага «Пульс покоя»: одно касание — отсчёт — 15 сек — ввод ударов.
+   Живёт в высоту одной строки и не превращается в отдельный экран/инструкцию. */
+.pm{margin-bottom:14px;}
+.pm-face{
+  display:flex;align-items:center;gap:12px;
+  width:100%;box-sizing:border-box;padding:11px 12px;
+  border-radius:14px;text-align:left;cursor:pointer;
+  border:1px solid var(--gold-dim);
+  background:linear-gradient(145deg,rgba(226,185,90,.10) 0%,rgba(226,185,90,.03) 100%);
+  transition:border-color .25s,transform .12s;
+}
+.pm-face:hover{border-color:rgba(226,185,90,.55);}
+.pm-face:active{transform:scale(.99);}
+.pm-ic{font-size:29px;line-height:1;color:var(--gold-lt);flex:0 0 auto;}
+.pm-txt{flex:1 1 auto;min-width:0;}
+.pm-title{display:block;font-size:14px;font-weight:600;color:var(--t1);line-height:1.25;}
+.pm-sub{display:block;font-size:11.5px;color:var(--t3);margin-top:3px;letter-spacing:.4px;}
+.pm-ring{
+  position:relative;flex:0 0 auto;width:44px;height:44px;border-radius:50%;
+  display:grid;place-items:center;
+  /* --p: 1 → полное кольцо; во время таймера уводим к 0 */
+  background:conic-gradient(var(--gold-lt) calc(var(--p,1) * 360deg), rgba(255,255,255,.08) 0);
+}
+.pm-ring::before{content:'';position:absolute;inset:3px;border-radius:50%;background:#1e2530;}
+.pm-ring-num{position:relative;z-index:1;font-family:'DM Mono',monospace;font-size:15px;color:var(--gold-lt);}
+.pm-caret{font-size:17px;color:var(--t3);flex:0 0 auto;}
+/* Раскрытая часть — те же 3 состояния: отсчёт → таймер → ввод */
+.pm-body{padding:18px 10px 6px;text-align:center;}
+.pm-big{font-family:'DM Mono',monospace;font-size:46px;font-weight:300;line-height:1;color:var(--gold-lt);}
+.pm-hint{font-size:13px;color:var(--t2);margin-top:10px;line-height:1.5;}
+.pm-note{font-size:12.5px;color:var(--warn);margin-top:8px;line-height:1.45;}
+.pm-in{
+  width:110px;margin:12px auto 0;display:block;text-align:center;
+  font-family:'DM Mono',monospace;font-size:26px;color:var(--t1);
+  background:rgba(255,255,255,.06);border:1px solid var(--gold-dim);
+  border-radius:12px;padding:10px 8px;
+}
+.pm-in:focus{outline:none;border-color:var(--gold-lt);}
+/* спиннеры number выбиваются из минимализма карточки */
+.pm-in::-webkit-outer-spin-button,.pm-in::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.pm-in{-moz-appearance:textfield;appearance:textfield;}
+.pm-btn{
+  display:block;width:100%;max-width:260px;margin:14px auto 0;padding:12px;
+  border-radius:12px;cursor:pointer;font-size:14px;font-weight:600;color:var(--t1);
+  border:1px solid rgba(226,185,90,.5);background:rgba(226,185,90,.12);
+}
+.pm-btn:active{transform:scale(.99);}
+.pm-ok{font-size:13.5px;color:var(--ok);margin-top:10px;}
+
 /* ══ PRO MODULES ═════════════════════════════════════════ */
 .pro-module{margin-bottom:12px;}
 .mod-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:20px;}
@@ -2386,6 +2436,20 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
       <div class="card-accent"></div>
       <button type="button" class="help-btn" onclick="openHelp('pulse')" aria-label="info">ℹ</button>
       <div class="step-badge" data-t="s3_l1">Пульс покоя (RHR)</div>
+      <!-- Измерение пульса за 15 сек: одно касание прямо в проходе, без отдельного экрана.
+           Результат кладётся в слайдер #rhr ниже — т.е. доходит до ИИ как обычный пульс покоя. -->
+      <div class="pm" id="pm">
+        <button type="button" class="pm-face" id="pmFace" onclick="_pmStart()">
+          <i class="ph ph-heartbeat pm-ic" aria-hidden="true"></i>
+          <span class="pm-txt">
+            <span class="pm-title" data-t="pm_title">Измерить пульс за 15 секунд</span>
+            <span class="pm-sub" data-t="pm_sub">Без устройства • 15 секунд</span>
+          </span>
+          <span class="pm-ring"><span class="pm-ring-num">15</span></span>
+          <i class="ph ph-caret-right pm-caret" aria-hidden="true"></i>
+        </button>
+        <div class="pm-body" id="pmBody" hidden></div>
+      </div>
       <div class="input-group" id="rhr-group">
         <div class="oura-slider-wrap">
           <div class="hrv-vital">
@@ -3642,6 +3706,11 @@ function L(t){return t[lang]||t.en||t.ru||Object.values(t)[0];}
 "disclaimer":{ru:"Информационно, не медицинский диагноз. Не заменяет консультацию врача.",uk:"Інформаційно, не медичний діагноз. Не замінює консультацію лікаря.",en:"For information only, not a medical diagnosis. Does not replace a doctor."},
 "iap_renew_note":{ru:"Оплата спишется с вашего Apple ID при подтверждении покупки. Подписка продлевается автоматически по €15/мес, если автопродление не отключить не позднее чем за 24 часа до конца текущего периода. Управлять подпиской и отменить её можно в настройках Apple ID.",uk:"Оплата спишеться з вашого Apple ID під час підтвердження покупки. Підписка подовжується автоматично за €15/міс, якщо автоподовження не вимкнути не пізніше ніж за 24 години до кінця поточного періоду. Керувати підпискою та скасувати її можна в налаштуваннях Apple ID.",en:"Payment will be charged to your Apple ID at confirmation of purchase. The subscription renews automatically at €15/month unless auto-renew is turned off at least 24 hours before the end of the current period. You can manage or cancel your subscription in your Apple ID settings.",es:"El pago se cargará a tu Apple ID al confirmar la compra. La suscripción se renueva automáticamente por €15/mes salvo que desactives la renovación automática al menos 24 horas antes del final del período actual. Puedes gestionar o cancelar la suscripción en los ajustes de tu Apple ID.",de:"Die Zahlung wird bei Kaufbestätigung deinem Apple-ID-Konto belastet. Das Abo verlängert sich automatisch für €15/Monat, sofern die automatische Verlängerung nicht mindestens 24 Stunden vor Ablauf des aktuellen Zeitraums deaktiviert wird. Du kannst das Abo in den Einstellungen deiner Apple ID verwalten oder kündigen.",pt:"O pagamento será cobrado no seu Apple ID ao confirmar a compra. A assinatura é renovada automaticamente por €15/mês, a menos que a renovação automática seja desativada pelo menos 24 horas antes do fim do período atual. Você pode gerenciar ou cancelar a assinatura nas configurações do seu Apple ID.",fr:"Le paiement sera débité de votre compte Apple ID au moment de la confirmation de l'achat. L'abonnement se renouvelle automatiquement à 15 €/mois, sauf si le renouvellement automatique est désactivé au moins 24 heures avant la fin de la période en cours. Vous pouvez gérer ou résilier l'abonnement dans les réglages de votre Apple ID.",pl:"Płatność zostanie pobrana z Twojego Apple ID w momencie potwierdzenia zakupu. Subskrypcja odnawia się automatycznie za €15/mies., o ile automatyczne odnawianie nie zostanie wyłączone co najmniej 24 godziny przed końcem bieżącego okresu. Subskrypcją możesz zarządzać i anulować ją w ustawieniach Apple ID.",it:"Il pagamento verrà addebitato sul tuo Apple ID al momento della conferma dell'acquisto. L'abbonamento si rinnova automaticamente a €15/mese, salvo disattivazione del rinnovo automatico almeno 24 ore prima della fine del periodo in corso. Puoi gestire o annullare l'abbonamento nelle impostazioni del tuo Apple ID.",he:"התשלום יחויב בחשבון ה-Apple ID שלך עם אישור הרכישה. המנוי מתחדש אוטומטית ב-€15 לחודש, אלא אם החידוש האוטומטי יבוטל לפחות 24 שעות לפני סוף התקופה הנוכחית. ניתן לנהל או לבטל את המנוי בהגדרות ה-Apple ID.",ja:"購入確定時にお客様のApple IDに料金が請求されます。現在の期間終了の少なくとも24時間前に自動更新をオフにしない限り、サブスクリプションは月額€15で自動更新されます。サブスクリプションの管理・解約はApple IDの設定から行えます。",ko:"구매 확정 시 요금이 Apple ID로 청구됩니다. 현재 기간 종료 최소 24시간 전에 자동 갱신을 끄지 않으면 구독은 월 €15로 자동 갱신됩니다. 구독 관리 및 취소는 Apple ID 설정에서 할 수 있습니다."}
 };Object.keys(G).forEach(function(k){Object.keys(G[k]).forEach(function(l){if(typeof T!=='undefined'&&T[l])T[l][k]=G[k][l];});});})();
+/* Карточка «Измерить пульс за 15 секунд» — 12 языков (применятель data-t БЕЗ en-фолбэка: пропуск = русский текст на экране) */
+;(function(){var G={
+"pm_title":{ru:"Измерить пульс за 15 секунд",uk:"Виміряти пульс за 15 секунд",en:"Measure your pulse in 15 seconds",es:"Mide tu pulso en 15 segundos",de:"Puls in 15 Sekunden messen",pt:"Meça seu pulso em 15 segundos",fr:"Mesurez votre pouls en 15 secondes",pl:"Zmierz tętno w 15 sekund",it:"Misura il polso in 15 secondi",he:"מדדו את הדופק ב-15 שניות",ja:"15秒で脈拍を測る",ko:"15초 만에 맥박 측정"},
+"pm_sub":{ru:"Без устройства • 15 секунд",uk:"Без пристрою • 15 секунд",en:"No device • 15 seconds",es:"Sin dispositivo • 15 segundos",de:"Ohne Gerät • 15 Sekunden",pt:"Sem dispositivo • 15 segundos",fr:"Sans appareil • 15 secondes",pl:"Bez urządzenia • 15 sekund",it:"Senza dispositivo • 15 secondi",he:"ללא מכשיר • 15 שניות",ja:"デバイス不要 • 15秒",ko:"기기 없이 • 15초"}
+};Object.keys(G).forEach(function(k){Object.keys(G[k]).forEach(function(l){if(typeof T!=='undefined'&&T[l])T[l][k]=G[k][l];});});})();
 // ═══ ЯЗЫК ПО УСТРОЙСТВУ (как Google Health): при первом входе берём язык iPhone/iPad ═══
 // navigator.language в WKWebView (Capacitor) следует системному языку устройства.
 var _SUPP_LANGS=['ru','uk','en','es','de','pt','fr','pl','it','he','ja','ko'];
@@ -4878,6 +4947,69 @@ const SLIDER_CFG={
   resp:{min:8,max:28,normLow:12,normHigh:20,unit:'br/min',labels:{low:'Низкое',ok:'Normal',high:'Высокое'},color:{low:'#F5A623',ok:'#4ECCA3',high:'#FF6B8A'}},
   anx:{min:1,max:10,normLow:1,normHigh:4,unit:'/10',labels:{low:'Low',ok:'Low',high:'Высокая'},color:{low:'#4ECCA3',ok:'#4ECCA3',high:'#FF6B8A'}},
 };
+// ══ ИЗМЕРЕНИЕ ПУЛЬСА ЗА 15 СЕК ═══════════════════════════════════════
+// Один тап → 3·2·1 → таймер 15 сек → «сколько ударов насчитали?» → уд/мин.
+// Результат пишем В СЛАЙДЕР #rhr, а не в отдельное поле: так измеренный пульс
+// доходит до ИИ обычным путём (data.rhr), без новой ветки в воркере.
+var _pmT=null;
+function _pmSay(html){var b=document.getElementById('pmBody');if(b)b.innerHTML=html;}
+function _pmStop(){if(_pmT){clearTimeout(_pmT);clearInterval(_pmT);_pmT=null;}}
+function _pmBtn(fn,label){return '<button type="button" class="pm-btn" onclick="'+fn+'">'+label+'</button>';}
+function _pmAgain(){return L({ru:'Измерить заново',uk:'Виміряти заново',en:'Measure again',es:'Medir de nuevo',de:'Erneut messen',pt:'Medir novamente',fr:'Mesurer à nouveau',pl:'Zmierz ponownie',it:'Misura di nuovo',he:'למדוד שוב',ja:'もう一度測る',ko:'다시 측정'});}
+function _pmStart(){
+  var f=document.getElementById('pmFace'),b=document.getElementById('pmBody');
+  if(!f||!b)return;
+  _pmStop(); f.style.display='none'; b.hidden=false;
+  _pmCountdown(3);
+}
+function _pmCountdown(n){
+  if(n<=0){ _pmTimer(15); return; }
+  _pmSay('<div class="pm-big">'+n+'</div><div class="pm-hint">'+L({ru:'Приготовьтесь — найдите пульс на запястье',uk:'Приготуйтеся — знайдіть пульс на зап’ясті',en:'Get ready — find your pulse on your wrist',es:'Prepárate — encuentra tu pulso en la muñeca',de:'Bereit machen — Puls am Handgelenk finden',pt:'Prepare-se — encontre o pulso no punho',fr:'Préparez-vous — trouvez votre pouls au poignet',pl:'Przygotuj się — znajdź puls na nadgarstku',it:'Preparati — trova le pulsazioni sul polso',he:'התכוננו — אתרו את הדופק בשורש כף היד',ja:'準備してください — 手首で脈を探します',ko:'준비하세요 — 손목에서 맥박을 찾으세요'})+'</div>');
+  _pmT=setTimeout(function(){_pmCountdown(n-1);},1000);
+}
+function _pmTimer(sec){
+  var left=sec;
+  var hint=L({ru:'Считайте удары',uk:'Рахуйте удари',en:'Count the beats',es:'Cuenta los latidos',de:'Zähle die Schläge',pt:'Conte as batidas',fr:'Comptez les battements',pl:'Licz uderzenia',it:'Conta i battiti',he:'ספרו את הפעימות',ja:'拍動を数えてください',ko:'박동을 세세요'});
+  _pmSay('<div class="pm-big" id="pmNum">'+left+'</div><div class="pm-hint">'+hint+'</div>');
+  _pmT=setInterval(function(){
+    left--;
+    var el=document.getElementById('pmNum');
+    if(left>0){ if(el)el.textContent=left; return; }
+    _pmStop(); _pmAsk();
+  },1000);
+}
+function _pmAsk(){
+  _pmSay('<div class="pm-hint">'+L({ru:'Сколько ударов вы насчитали?',uk:'Скільки ударів ви нарахували?',en:'How many beats did you count?',es:'¿Cuántos latidos contaste?',de:'Wie viele Schläge hast du gezählt?',pt:'Quantas batidas você contou?',fr:'Combien de battements avez-vous comptés ?',pl:'Ile uderzeń naliczyłeś?',it:'Quanti battiti hai contato?',he:'כמה פעימות ספרתם?',ja:'何回拍動を数えましたか？',ko:'몇 번의 박동을 세었나요?'})+'</div>'
+    +'<input class="pm-in" id="pmBeats" type="number" inputmode="numeric" min="4" max="60" placeholder="—">'
+    +_pmBtn('_pmDone()',L({ru:'Готово',uk:'Готово',en:'Done',es:'Listo',de:'Fertig',pt:'Pronto',fr:'Terminé',pl:'Gotowe',it:'Fatto',he:'סיום',ja:'完了',ko:'완료'})));
+  var i=document.getElementById('pmBeats'); if(i)setTimeout(function(){try{i.focus();}catch(e){}},60);
+}
+function _pmDone(){
+  var i=document.getElementById('pmBeats'); if(!i)return;
+  var beats=parseInt(i.value,10);
+  if(!beats||beats<1){
+    var w=document.getElementById('pmWarn');
+    if(!w){ i.insertAdjacentHTML('afterend','<div class="pm-note" id="pmWarn">'+L({ru:'Введите число ударов',uk:'Введіть число ударів',en:'Enter the number of beats',es:'Introduce el número de latidos',de:'Anzahl der Schläge eingeben',pt:'Digite o número de batidas',fr:'Saisissez le nombre de battements',pl:'Wpisz liczbę uderzeń',it:'Inserisci il numero di battiti',he:'הזינו את מספר הפעימות',ja:'拍動の回数を入力してください',ko:'박동 수를 입력하세요'})+'</div>'); }
+    try{i.focus();}catch(e){} return;
+  }
+  var bpm=Math.round(beats*4);   // 15 сек → минута
+  var sl=document.getElementById('rhr');
+  var lo=sl?(+sl.min||40):40, hi=sl?(+sl.max||110):110;
+  // Вне шкалы пульса покоя — НЕ записываем: подставлять зажатое значение = врать в анализ.
+  if(!sl||bpm<lo||bpm>hi){
+    _pmSay('<div class="pm-big">'+bpm+'</div><div class="pm-note">'+L({ru:'Похоже, это не пульс покоя. Посидите спокойно пару минут и измерьте ещё раз.',uk:'Схоже, це не пульс спокою. Посидьте спокійно кілька хвилин і виміряйте ще раз.',en:'That looks outside a resting pulse. Sit calmly for a couple of minutes and measure again.',es:'Parece fuera de un pulso en reposo. Siéntate tranquilo un par de minutos y mide de nuevo.',de:'Das liegt außerhalb eines Ruhepulses. Sitze ein paar Minuten ruhig und miss erneut.',pt:'Isso parece fora de um pulso em repouso. Sente-se calmamente por alguns minutos e meça novamente.',fr:'Cela semble hors d’un pouls au repos. Asseyez-vous calmement quelques minutes et mesurez à nouveau.',pl:'To wygląda poza tętnem spoczynkowym. Usiądź spokojnie na kilka minut i zmierz ponownie.',it:'Sembra fuori da un polso a riposo. Siediti con calma un paio di minuti e misura di nuovo.',he:'זה נראה מחוץ לדופק מנוחה. שבו בשקט כמה דקות ומדדו שוב.',ja:'安静時脈拍の範囲外のようです。数分静かに座ってから、もう一度測ってください。',ko:'안정 시 맥박 범위를 벗어난 것 같습니다. 몇 분간 편히 앉은 뒤 다시 측정하세요.'})+'</div>'+_pmBtn('_pmStart()',_pmAgain()));
+    return;
+  }
+  sl.value=bpm;
+  if(typeof ouraSlider==='function')ouraSlider('rhr',bpm);
+  try{window.__touched&&window.__touched.add('rhr');}catch(e){}   // слайдер выставлен кодом — событие input не стреляет
+  _pmSay('<div class="pm-big">'+bpm+'</div><div class="pm-ok">'+L({ru:'Записано в пульс покоя',uk:'Записано в пульс спокою',en:'Saved to resting pulse',es:'Guardado en pulso en reposo',de:'Im Ruhepuls gespeichert',pt:'Salvo no pulso em repouso',fr:'Enregistré dans le pouls au repos',pl:'Zapisano w tętnie spoczynkowym',it:'Salvato nel polso a riposo',he:'נשמר בדופק המנוחה',ja:'安静時脈拍に記録しました',ko:'안정 시 맥박에 저장됨'})+'</div>'+_pmBtn('_pmReset()',_pmAgain()));
+}
+function _pmReset(){
+  _pmStop();
+  var f=document.getElementById('pmFace'),b=document.getElementById('pmBody');
+  if(f)f.style.display=''; if(b){b.hidden=true;b.innerHTML='';}
+}
 function ouraSlider(id,val){
   const cfg=SLIDER_CFG[id];if(!cfg)return;
   const{min,max,normLow,normHigh,labels,color}=cfg;
@@ -5647,7 +5779,17 @@ function _showMorningCard(src){
   document.querySelectorAll('.flow-group-head,.flow-intro').forEach(function(h){h.remove();});
   var old=document.getElementById('morning-gate'); if(old)old.remove();
   var c=_srcMorningCopy(src);
-  var greet=L({ru:'Доброе утро',uk:'Доброго ранку',en:'Good morning',es:'Buenos días',de:'Guten Morgen',pt:'Bom dia',fr:'Bonjour',pl:'Dzień dobry',it:'Buongiorno'});
+  // Приветствие по ЛОКАЛЬНОМУ времени: проход можно открыть и в обед, и вечером — «Доброе утро» в 15:00
+  // читается как поломка. Границы: 5–11 утро, 12–17 день, 18–4 вечер («доброй ночи» — это прощание, не берём).
+  var _hh=new Date().getHours();
+  var greet=(_hh>=5&&_hh<12)
+    ? L({ru:'Доброе утро',uk:'Доброго ранку',en:'Good morning',es:'Buenos días',de:'Guten Morgen',pt:'Bom dia',fr:'Bonjour',pl:'Dzień dobry',it:'Buongiorno',he:'בוקר טוב',ja:'おはようございます',ko:'좋은 아침이에요'})
+    : (_hh>=12&&_hh<18)
+    ? L({ru:'Добрый день',uk:'Доброго дня',en:'Good afternoon',es:'Buenas tardes',de:'Guten Tag',pt:'Boa tarde',fr:'Bon après-midi',pl:'Dzień dobry',it:'Buon pomeriggio',he:'צהריים טובים',ja:'こんにちは',ko:'안녕하세요'})
+    : L({ru:'Добрый вечер',uk:'Доброго вечора',en:'Good evening',es:'Buenas noches',de:'Guten Abend',pt:'Boa noite',fr:'Bonsoir',pl:'Dobry wieczór',it:'Buonasera',he:'ערב טוב',ja:'こんばんは',ko:'안녕하세요'});
+  // Имя из карточки клиента: карточка уже заполнена — обращаться безлично незачем. Если имени нет — просто приветствие.
+  var _pn=''; try{ var _PG=JSON.parse(localStorage.getItem('vialp_profile')||'{}')||{}; _pn=String(_PG.name||'').trim().slice(0,40); }catch(e){}
+  if(_pn) greet+=', '+(typeof _esc==='function'?_esc(_pn):_pn);   // имя уходит в innerHTML — экранируем
   var ready=L({ru:'Новый день готов к анализу',uk:'Новий день готовий до аналізу',en:'A new day is ready for analysis',es:'Un nuevo día listo para el análisis',de:'Ein neuer Tag ist bereit für die Analyse',pt:'Um novo dia pronto para a análise',fr:'Un nouveau jour prêt à être analysé',pl:'Nowy dzień gotowy do analizy',it:'Un nuovo giorno pronto per l’analisi'});
   var syncLine='';
   if(src!=='manual'){ var f=_syncStampFmt(); if(f) syncLine='<div style="font-size:12px;color:var(--t3);margin:8px 0 2px;">'+L({ru:'Последняя синхронизация',uk:'Остання синхронізація',en:'Last sync',es:'Última sincronización',de:'Letzte Synchronisation',pt:'Última sincronização',fr:'Dernière synchronisation',pl:'Ostatnia synchronizacja',it:'Ultima sincronizzazione'})+': '+f+'</div>'; }
