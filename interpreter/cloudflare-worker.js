@@ -3568,7 +3568,9 @@ function selectKBPatterns(data) {
     add('P-F17', sleep <= 4 || data.deep === 'none' || data.deep === 'low' || /multiple|many/i.test(wake) || (data.sleep_hours && data.sleep_hours < 6));
     // P-F18 B12/фолат
     add('P-F18', (num(labs.b12) != null && num(labs.b12) < 300) || has(sym,'numbness','sensory_shift')
-      || (has(sym,'fatigue') && has(sym,'foggy')));
+      // has(sym,'foggy') оставлен для EXPERT/ELITE (у них чекбокс есть); в VIA-L «туман» убран из
+      // «Сигналов тела» как дубль — там он приходит выделенным полем fog/memory (fogHi/memHi).
+      || (has(sym,'fatigue') && (has(sym,'foggy') || fogHi || memHi)));
     // P-F19 аноректальное/проктология (прокси: запор/проктологические токены; вход неполный)
     add('P-F19', has(gi,'constipation','gi_slow','hemorrhoids','lower_sens','rectal_bleeding','lower_flag','fecal_incontinence','core_tone','straining','fiber_absorp','fiber_response'));
     // P-F20 тазовое дно: пролапс + недержание мочи (прокси: урология/GSM; вход неполный)
@@ -4162,11 +4164,13 @@ function buildUserMessage(data, lang, tier) {
     + 'Добавки (принимает): ' + _J(data.supplements) + '\n'
     + 'Лекарства: ' + _medsStr + (data.meds_other ? ' | другие: ' + data.meds_other : '') + '\n'
     + 'Хронический стресс: ' + (data.chronic_stress || '—') + ' | симптомы кортизола: ' + _J(data.cortisol_symp) + '\n'
-    + 'Гормональные симптомы: ' + ((Array.isArray(data.horm_symptoms) && data.horm_symptoms.length) ? _J(data.horm_symptoms) : ((data.horm_female || data.horm_male) ? (Object.entries(Object.assign({}, data.horm_female || {}, data.horm_male || {})).map(function(e){ return e[0] + ' (' + e[1] + ')'; }).join(', ') || '—') : '—')) + (data.horm_intensity ? ' | интенсивность: ' + data.horm_intensity : '') + '\n'
+    + 'Гормональные симптомы: ' + ((Array.isArray(data.horm_symptoms) && data.horm_symptoms.length) ? _J(data.horm_symptoms) : ((data.horm_female || data.horm_male) ? (Object.entries(Object.assign({}, data.horm_female || {}, data.horm_male || {})).map(function(e){ return e[0] + ' (' + e[1] + ')'; }).join(', ') || '—') : '—'))  + (data.horm_intensity ? ' | интенсивность: ' + data.horm_intensity : '') + '\n'
     + (isFem
         ? 'Цикл · статус: ' + (data.cycle_status || '—') + (data.heavy_period ? ' | обильные менструации: ' + (data.heavy_period === 'yes' ? 'да' : 'нет') : '') + ' | давность последней менструации: ' + (data.last_period || '—') + (data.cycle_len ? ' | длина цикла: ' + data.cycle_len + ' дн' : '') + (data.cycle_day ? ' | день цикла: ' + data.cycle_day : '') + (data.cycle_phase ? ' | фаза цикла: ' + data.cycle_phase : '') + '\n'
           + 'ПМС · тяжесть: ' + _V(data.pms) + ' | симптомы: ' + _J(data.pms_symptoms) + '\n'
-        : 'Мужское здоровье · витальность: ' + (data.vitality || '—') + ' | настроение/мотивация: ' + (data.male_mood || '—') + '\n')
+        // male_mood/horm_intensity шлют EXPERT/ELITE (у них есть инпуты) — для VIA-L их нет,
+        // поэтому у него строка просто схлопывается в «—». Трогать нельзя: это не сироты.
+        : 'Мужское здоровье · витальность: ' + _V(data.vitality) + ' | настроение/мотивация: ' + _V(data.male_mood) + '\n')
     + 'Риск по костям: ' + _J(data.bone_risk) + '\n'
     + (function(d){ if(!d) return '';
         var p=[
