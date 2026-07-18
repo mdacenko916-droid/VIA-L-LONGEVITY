@@ -5555,11 +5555,38 @@ function _setNormal(fieldId, renderFnName){
 // Ярлык «в вашей норме» для бейджа оценочной шкалы (после «Всё как обычно»)
 function _normalLabel(){ return '✓ '+L({ru:'В вашей норме',uk:'У вашій нормі',en:'Your usual',es:'Tu normal',de:'Ihr Normalwert',pt:'Seu normal',fr:'Votre normale',pl:'Twoja norma',it:'La tua norma',he:'הנורמה שלך',ja:'いつも通り',ko:'평소 수준'}); }
 // Умный авто-переход: к следующему НЕотвеченному блоку. Гаснет, если клиент сам листает.
+// Блок ЗАВЕРШЁН (для авто-перехода) = все его radio-группы имеют выбор + оценочные поля (energy/sleep_qual/
+// sleep_hours/rhr) тронуты, если присутствуют. Чекбоксы (симптомы) необязательны. Иначе авто-скролл прыгал
+// на следующий блок после ПЕРВОГО ответа в многопунктовом блоке (напр. «Мужской организм»: витальность +
+// энергия/тонус) — пользователь не успевал допройти. 2026-07-18.
+function _blockComplete(step){
+  if(!step) return false;
+  if(step.classList.contains('blk-normal')) return true;
+  if(step.id==='step0') return _blockAnswered(step);
+  var TS=window.__touched||new Set();
+  var igs=step.querySelectorAll('.input-group');
+  for(var g=0;g<igs.length;g++){
+    var ig=igs[g];
+    if(ig.offsetParent===null) continue;   // скрытая подгруппа (напр. «восстановление» до выбора частоты) — не требуем
+    // radio-группы внутри группы: каждая должна иметь выбор
+    var rnames={}, rs=ig.querySelectorAll('input[type=radio]');
+    for(var i=0;i<rs.length;i++){ if(rs[i].name) rnames[rs[i].name]=true; }
+    for(var n in rnames){ if(!ig.querySelector('input[name="'+n+'"]:checked')) return false; }
+    // чекбокс-группа (напр. «что замечаете в тонусе»): хотя бы один отмечен
+    var cbs=ig.querySelectorAll('input[type=checkbox]'), anyCb=false;
+    for(var c=0;c<cbs.length;c++){ if(cbs[c].checked){ anyCb=true; break; } }
+    if(cbs.length && !anyCb) return false;
+    // оценочные поля (energy/sleep_qual/sleep_hours/rhr) — должны быть тронуты
+    var ff=['energy','sleep_qual','sleep_hours','rhr'];
+    for(var f=0;f<ff.length;f++){ if(ig.querySelector('#'+ff[f]) && !TS.has(ff[f])) return false; }
+  }
+  return true;
+}
 function _autoAdvance(fromStep){
   if(_userScrolling) return;
   var steps=_gatedSteps(), i=steps.indexOf(fromStep);
   if(i<0) return;
-  for(var j=i+1;j<steps.length;j++){ if(!_blockAnswered(steps[j])){
+  for(var j=i+1;j<steps.length;j++){ if(!_blockComplete(steps[j])){
     var el=steps[j], r=el.getBoundingClientRect();
     if(r.top<0 || r.top>window.innerHeight*0.6){   // не дёргать, если блок уже удобно в экране
       try{ el.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
@@ -5573,9 +5600,11 @@ function _autoAdvance(fromStep){
     if(!document.body.classList.contains('flow-mode')) return;
     var t=e.target; if(!t||!t.closest) return;
     var step=t.closest('.step.flow-show'); if(!step) return;
-    var wasDone=step.classList.contains('answered');
+    var wasCompl=step.__cmpl;
     _refreshGate();
-    if(!wasDone && step.classList.contains('answered')) _autoAdvance(step);
+    var nowCompl=_blockComplete(step); step.__cmpl=nowCompl;
+    // авто-переход ТОЛЬКО когда блок стал полностью завершён (не после первого поля многопунктового блока)
+    if(nowCompl && !wasCompl) _autoAdvance(step);
   }
   document.addEventListener('change', onAns, true);
   document.addEventListener('input', onAns, true);
