@@ -3741,6 +3741,14 @@ function buildUserMessage(data, lang, tier) {
   const anxietyVal  = parseInt(data.anxiety) || 0;
   const energyVal   = parseInt(data.energy) || 5;
   const sleepQual   = parseInt(data.sleep_qual) || 5;
+  // «Всё как обычно» (B+C): клиент подтвердил норму, значение = его личная база. ИИ должен писать
+  // «в вашей обычной норме», а НЕ трактовать конкретную цифру как сегодняшнюю оценку.
+  const _normPhrase = (src) =>
+      src === 'explicit_normal' ? 'в пределах обычной для клиента нормы (отметил «как обычно», без изменений)'
+    : src === 'fallback_normal' ? 'клиент отметил «как обычно» (личной истории пока мало — ориентир нейтральный)'
+    : null;
+  const sqNorm = _normPhrase(data.sleep_qual_source);
+  const enNorm = _normPhrase(data.energy_source);
   const respRate    = parseInt(data.resp_rate) || 15;
   const deepSleep   = data.deep || '';
   const deepLow     = deepSleep === 'low' || deepSleep === 'none';
@@ -4219,7 +4227,7 @@ function buildUserMessage(data, lang, tier) {
     + 'ЧСС покоя: норма ' + (isFem ? '60–75' : '55–70') + ' уд/мин | клиент: ' + SK('rhr', rhrVal + ' уд/мин → ' + rhrStatus) + '\n'
     + 'Глубокий сон: норма 90–110 мин | клиент: ' + SK('deep', deepContext) + '\n'
     + 'Частота дыхания: норма покоя 12–20 вд/мин | клиент: ' + SK('resp_rate', respRate + ' вд/мин' + (respRate > 20 ? ' [выше нормы]' : '')) + '\n'
-    + 'Качество сна: ' + SK('sleep_qual', sleepQual + '/10 → ' + sleepStatus) + '\n\n'
+    + 'Качество сна: ' + SK('sleep_qual', sqNorm || (sleepQual + '/10 → ' + sleepStatus)) + '\n\n'
 
     + baselineBlock
     + patternBlock
@@ -4255,13 +4263,13 @@ function buildUserMessage(data, lang, tier) {
     // только если клиент его реально дал или явно пометил как пропущенный.
     + 'HRV: ' + SK('hrv', data.hrv + ' мс (' + hrvStatus + ')')
     + ((data.hrv_trend || sk.has('hrv_trend')) ? ' | Тренд: ' + SK('hrv_trend', (data.hrv_trend === 'below' ? 'падает' : data.hrv_trend === 'above' ? 'растёт' : 'стабилен')) : '') + '\n'
-    + 'Сон: ' + SK('sleep_qual', sleepQual + '/10') + (data.sleep_hours ? ' | Часов сна: ' + data.sleep_hours + ' ч' : '') + ' | Глубокий: ' + SK('deep', deepContext) + ' | Пробуждения: ' + SK('wake', _V(wakeVal)) + '\n'
+    + 'Сон: ' + SK('sleep_qual', sqNorm || (sleepQual + '/10')) + (data.sleep_hours ? ' | Часов сна: ' + data.sleep_hours + ' ч' : '') + ' | Глубокий: ' + SK('deep', deepContext) + ' | Пробуждения: ' + SK('wake', _V(wakeVal)) + '\n'
     + (sk.has('hf_count') ? 'Приливы: не указано (клиент не вводил)' : hfContext) + '\n'
     // rhr_comp раньше жил ТОЛЬКО в selectKBPatterns — ИИ видел имя паттерна, но не само наблюдение клиента
     // («пульс выше обычного»). Отдаём велнес-словами, а не кодом (high/slightly_high).
     + 'Дыхание: ' + SK('resp_rate', respRate + ' вд/мин') + ' | Пульс покоя: ' + SK('rhr', rhrVal + ' уд/мин')
     + (data.rhr_comp ? ' (по ощущению клиента — ' + ({ normal:'как обычно', slightly_high:'немного выше обычного', high:'заметно выше обычного', low:'ниже обычного' }[data.rhr_comp] || data.rhr_comp) + ')' : '') + '\n'
-    + 'Энергия: ' + SK('energy', energyVal + '/10') + ' | Тревога: ' + SK('anxiety', anxietyVal + '/10') + ' | Настроение: ' + SK('mood', _V(data.mood)) + ' | Раздражительность: ' + SK('irritability', _V(data.irritability)) + '\n'
+    + 'Энергия: ' + SK('energy', enNorm || (energyVal + '/10')) + ' | Тревога: ' + SK('anxiety', anxietyVal + '/10') + ' | Настроение: ' + SK('mood', _V(data.mood)) + ' | Раздражительность: ' + SK('irritability', _V(data.irritability)) + '\n'
     + 'Температура ночью: ' + SK('temp', data.temp) + ' | Стресс: ' + SK('stress', data.stress) + ' | Алкоголь вчера: ' + data.alc + '\n'
     // «ничего не беспокоит» — это ОТВЕТ клиента, а не молчание: иначе ИИ читал «не указаны» и мог просить уточнить уже отвеченное.
     + 'Симптомы: ' + (symptoms.length ? symptoms.join(', ') : ((data.symptoms || []).length ? 'нет — клиент отметил, что ничего не беспокоит' : 'не указаны')) + '\n'

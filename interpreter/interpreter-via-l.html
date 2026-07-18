@@ -2413,7 +2413,7 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
         <div class="sq-scale" id="sq-scale"></div>
         <div class="sq-ends"><span style="color:#e06b6b;" data-t="sleep_bad2">Совсем нет сил</span><span style="color:#5ec27a;" data-t="sleep_good2">Полно сил</span></div>
         <div class="sq-emoji-wrap"><div class="sq-emoji" id="sq-emoji">😌</div><div class="sq-word" id="sq-word"></div></div>
-        <button type="button" class="as-usual" onclick="_asUsual('sleep_qual',6,'renderSleepScale')" data-t="as_usual">Всё как обычно</button>
+        <button type="button" class="as-usual" onclick="_setNormal('sleep_qual','renderSleepScale')" data-t="as_usual">Всё как обычно</button>
       </div>
       <div class="divider"></div>
       <div class="input-group" id="sq-wake">
@@ -2473,7 +2473,7 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
         <input type="hidden" id="energy" value="6">
         <div class="sq-scale" id="en-scale"></div>
         <div class="sq-ends"><span style="color:#e06b6b;" data-t="energy_low">🪫 Низкий физический ресурс</span><span class="en-badge" id="en-badge"></span></div>
-        <button type="button" class="as-usual" onclick="_asUsual('energy',6,'renderEnergyScale')" data-t="as_usual">Всё как обычно</button>
+        <button type="button" class="as-usual" onclick="_setNormal('energy','renderEnergyScale')" data-t="as_usual">Всё как обычно</button>
       </div>
       <div class="divider"></div>
       <div class="input-group">
@@ -3892,7 +3892,7 @@ function _baselineFromDaily(){
   var recent=hist.slice(0,30); // до 30 прошлых дней, newest-first
   var col=function(k){return recent.map(function(r){return r[k];});};
   var mets={},any=false;
-  ['hrv','sleepHours','energy','rhr','weight','waist'].forEach(function(k){
+  ['hrv','sleepHours','energy','rhr','weight','waist','sleep_qual'].forEach(function(k){
     var med=_med(col(k)); if(med==null)return;
     var prev=recent[0]?recent[0][k]:null;
     mets[k]={usual:+(+med).toFixed(1), prev:(prev!=null&&prev!==''&&!isNaN(prev))?+prev:null};
@@ -4436,6 +4436,7 @@ function _saveDaily(){
       deepMin:importedData.deepMin, spo2:importedData.spo2, tempDev:importedData.tempDev,
       vo2:importedData.vo2, readiness:importedData.readiness,
       energy:(document.getElementById('energy')?+document.getElementById('energy').value:null),   // субъективная бодрость за вчера, не прибор
+      sleep_qual:(function(){var e=document.getElementById('sleep_qual');var v=e?parseFloat(e.value):NaN;return isNaN(v)?null:v;})(),   // ощущение сна → для личной нормы «как обычно»
       hf_count:getRadio('hf_count'), hf_intensity:getRadio('hf_intensity'),
       // ежедневные субъективные блоки — копим по дням для недельного разбора из карточки
       memory:getRadio('memory'), fog:getRadio('fog'),
@@ -5241,6 +5242,8 @@ function _sqWords(){ return L({
 }); }
 function _sqEmoji(n){
   var e=document.getElementById('sq-emoji'),w=document.getElementById('sq-word');
+  if(window.__normalFlag && window.__normalFlag['sleep_qual']){ if(e)e.textContent='✓'; if(w){ w.textContent=L({ru:'В вашей норме',uk:'У вашій нормі',en:'Your usual',es:'Tu normal',de:'Ihr Normalwert',pt:'Seu normal',fr:'Votre normale',pl:'Twoja norma',it:'La tua norma',he:'הנורמה שלך',ja:'いつも通り',ko:'평소 수준'}); w.style.opacity='1'; w.style.color='var(--ok)'; } return; }
+  if(w)w.style.color='';
   if(!_isSet('sleep_qual')){ if(e)e.textContent='—'; if(w){ w.textContent=L({ru:'Коснитесь, чтобы отметить',uk:'Торкніться, щоб відзначити',en:'Tap to set',es:'Toca para elegir',de:'Zum Auswählen tippen',pt:'Toque para escolher',fr:'Appuyez pour choisir',pl:'Dotknij, aby wybrać',it:'Tocca per scegliere',he:'הקישו כדי לבחור',ja:'タップして選択',ko:'탭하여 선택'}); w.style.opacity='.7'; } return; }
   var E=['😣','😞','😟','😕','😐','😌','🙂','😊','😄','🤩'];
   if(e)e.textContent=E[n-1]||'😌';
@@ -5251,13 +5254,14 @@ function _sqEmoji(n){
 function _isSet(id){ try{ return !!(window.__touched && window.__touched.has(id)); }catch(e){ return false; } }
 function renderSleepScale(){
   var box=document.getElementById('sq-scale'); if(!box)return;
-  var el=document.getElementById('sleep_qual'); var cur=+((el&&el.value)||6); var set=_isSet('sleep_qual');
+  var el=document.getElementById('sleep_qual'); var cur=+((el&&el.value)||6); var set=_isSet('sleep_qual') && !(window.__normalFlag&&window.__normalFlag['sleep_qual']);
   var html='';
   for(var i=1;i<=10;i++) html+='<button type="button" class="sq-btn'+((set&&i===cur)?' active':'')+'" style="--c:'+_sqColor(i)+'" onclick="setSleepQual('+i+')">'+i+'</button>';
   box.innerHTML=html; _sqEmoji(cur);
 }
 function setSleepQual(n){
   var inp=document.getElementById('sleep_qual'); if(inp)inp.value=n;
+  try{if(window.__normalFlag)delete window.__normalFlag['sleep_qual'];}catch(e){}   // ручной выбор — не «как обычно»
   try{window.__touched&&window.__touched.add('sleep_qual');}catch(e){}
   document.querySelectorAll('#sq-scale .sq-btn').forEach(function(b,i){ b.classList.toggle('active',(i+1)===n); });
   _sqEmoji(n);
@@ -5288,17 +5292,19 @@ function _enWord(n){ var w=L({
   ko:['기력 없음','매우 낮음','낮음','평균 이하','보통','좋음','활기참','매우 활기참','훌륭함','활력 충만']
 }); return (w&&w[n-1])||''; }
 function _enBadge(n){ var b=document.getElementById('en-badge'); if(!b)return;
+  if(window.__normalFlag && window.__normalFlag['energy']){ b.innerHTML='<span style="color:var(--ok);font-weight:600;">'+_normalLabel()+'</span>'; return; }
   if(!_isSet('energy')){ b.innerHTML='<span style="color:var(--t3);font-weight:500;">— '+L({ru:'не выбрано',uk:'не вибрано',en:'not set',es:'sin elegir',de:'nicht gewählt',pt:'não escolhido',fr:'non défini',pl:'nie wybrano',it:'non scelto',he:'לא נבחר',ja:'未選択',ko:'미선택'})+'</span>'; return; }
   b.innerHTML=n+'/10 · <b>'+_enWord(n)+'</b>'; b.style.color=_sqColor(n); }
 function renderEnergyScale(){
   var box=document.getElementById('en-scale'); if(!box)return;
-  var el=document.getElementById('energy'); var cur=+((el&&el.value)||6); var set=_isSet('energy');
+  var el=document.getElementById('energy'); var cur=+((el&&el.value)||6); var set=_isSet('energy') && !(window.__normalFlag&&window.__normalFlag['energy']);
   var html='';
   for(var i=1;i<=10;i++) html+='<button type="button" class="sq-btn'+((set&&i===cur)?' active':'')+'" style="--c:'+_sqColor(i)+'" onclick="setEnergy('+i+')">'+i+'</button>';
   box.innerHTML=html; _enBadge(cur);
 }
 function setEnergy(n){
   var inp=document.getElementById('energy'); if(inp)inp.value=n;
+  try{if(window.__normalFlag)delete window.__normalFlag['energy'];}catch(e){}   // ручной выбор — не «как обычно»
   try{window.__touched&&window.__touched.add('energy');}catch(e){}   // кастом-виджет ставит value без input-события → сам помечаем «тронуто» (см. setSleepQual)
 
   document.querySelectorAll('#en-scale .sq-btn').forEach(function(b,i){ b.classList.toggle('active',(i+1)===n); });
@@ -5433,6 +5439,31 @@ function _asUsual(fieldId, val, renderFnName){
   var step=el.closest ? el.closest('.step.flow-show') : null;
   if(step && typeof _autoAdvance==='function') _autoAdvance(step);
 }
+// Личная норма поля из истории (медиана). null, если истории мало.
+function _fieldBaseline(field){
+  try{ var b=(typeof _baselineFromDaily==='function')?_baselineFromDaily():null;
+    if(!b||!b.metrics) return null; var m=b.metrics[field]; return (m&&m.usual!=null)?m.usual:null;
+  }catch(e){ return null; }
+}
+// «Всё как обычно» для ОЦЕНОЧНОЙ шкалы (энергия/ощущение сна) — B+C:
+// значение = личная норма (baseline-медиана) если есть, иначе 6; + флаг источника для ИИ;
+// в интерфейсе показываем «✓ В вашей норме», а не число (число — внутренние данные).
+window.__normalFlag=window.__normalFlag||{};
+function _setNormal(fieldId, renderFnName){
+  var el=document.getElementById(fieldId); if(!el) return;
+  var base=_fieldBaseline(fieldId);
+  var val=(base!=null)?Math.max(1,Math.min(10,Math.round(base))):6;
+  el.value=val;
+  window.__normalFlag[fieldId]=(base!=null)?'explicit_normal':'fallback_normal';   // explicit=есть личная норма
+  try{ window.__touched=window.__touched||new Set(); window.__touched.add(fieldId); if(el.name)window.__touched.add(el.name); }catch(e){}
+  if(renderFnName && typeof window[renderFnName]==='function'){ try{ window[renderFnName](); }catch(e){} }
+  try{ var chip=el.closest('.input-group'); if(chip){ var b=chip.querySelector('.as-usual'); if(b)b.classList.add('picked'); } }catch(e){}
+  if(typeof _refreshGate==='function') _refreshGate();
+  var step=el.closest?el.closest('.step.flow-show'):null;
+  if(step && typeof _autoAdvance==='function') _autoAdvance(step);
+}
+// Ярлык «в вашей норме» для бейджа оценочной шкалы (после «Всё как обычно»)
+function _normalLabel(){ return '✓ '+L({ru:'В вашей норме',uk:'У вашій нормі',en:'Your usual',es:'Tu normal',de:'Ihr Normalwert',pt:'Seu normal',fr:'Votre normale',pl:'Twoja norma',it:'La tua norma',he:'הנורמה שלך',ja:'いつも通り',ko:'평소 수준'}); }
 // Умный авто-переход: к следующему НЕотвеченному блоку. Гаснет, если клиент сам листает.
 function _autoAdvance(fromStep){
   if(_userScrolling) return;
@@ -6225,11 +6256,14 @@ function _showResultsInner(){
     // доходят до ИИ через hf_count/hf_intensity ниже. Данные не терялись, поля были мёртвым грузом.
     temp:getRadio('temp'),
     sleep_qual:+document.getElementById('sleep_qual').value,
+    sleep_qual_source:(window.__normalFlag&&window.__normalFlag['sleep_qual'])||null,   // «как обычно»: explicit_normal (по личной норме) / fallback_normal
+    baseline_exists:(function(){try{return !!(typeof _baselineFromDaily==='function'&&_baselineFromDaily());}catch(e){return false;}})(),
     sleep_hours:parseFloat(document.getElementById('sleep_hours')?.value)||null,
     deep:getRadio('deep'),wake:getRadio('wake'),
     rhr:+document.getElementById('rhr').value,   // rhr_comp удалён 2026-07-17 вместе со шкалой (15-сек модель)
     symptoms:getChecked(['sym1','sym2','sym3','sym4','sym5','sym6','sym7','sym8','sym9']),
     energy:+document.getElementById('energy').value,
+    energy_source:(window.__normalFlag&&window.__normalFlag['energy'])||null,
     training:(typeof importedData!=='undefined'&&importedData.source&&importedData.workouts7d!=null)?{count:importedData.workouts7d,intensity:importedData.trainIntensity||'',activity:importedData.trainActivity||'',day:importedData.trainDay||''}:null,
     alc:getRadio('alc'),stress:getRadio('stress'),move_today:getRadio('move_today'),
     // PRO fields
