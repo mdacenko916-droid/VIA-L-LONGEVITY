@@ -2397,7 +2397,7 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
         <div class="q-prompt" data-t="s2_qh">Сколько часов вы спали этой ночью?</div>
         <div class="sleep-hours">
           <button type="button" class="shr-btn" onclick="_sleepHrStep(-0.5)" aria-label="minus">−</button>
-          <input class="manual-input" type="number" id="sleep_hours" inputmode="decimal" min="0" max="16" step="0.5" value="7.5" style="text-align:center;font-size:22px;font-weight:700;max-width:110px;">
+          <input class="manual-input" type="number" id="sleep_hours" inputmode="decimal" min="0" max="16" step="0.5" value="" placeholder="—" style="text-align:center;font-size:22px;font-weight:700;max-width:110px;">
           <button type="button" class="shr-btn" onclick="_sleepHrStep(0.5)" aria-label="plus">+</button>
           <span class="shr-unit" data-t="hours_unit">ч</span>
         </div>
@@ -3683,7 +3683,7 @@ window.__touched=window.__touched||new Set();
 // hrv_trend убран 2026-07-16: инпута для тренда HRV в VIA-L нет вовсе, поле всегда оставалось «пропущенным»
 // → воркер честно писал «не указано», но затем просил клиента уточнить «тренд восстановления (трекер)» —
 // поле, которое ввести физически негде. В __SOFTSKIP только то, что клиент реально МОЖЕТ заполнить.
-window.__SOFTSKIP=['hrv','sleep_qual','deep','wake','rhr','resp_rate','energy','anxiety','mood','irritability','stress','temp','hf_count'];
+window.__SOFTSKIP=['hrv','sleep_qual','deep','wake','rhr','resp_rate','energy','anxiety','mood','irritability','stress','temp','hf_count','sleep_hours'];
 document.addEventListener('input',function(e){var t=e.target;if(t&&(t.name||t.id))window.__touched.add(t.name||t.id);},true);
 document.addEventListener('change',function(e){var t=e.target;if(t&&(t.name||t.id))window.__touched.add(t.name||t.id);},true);
 document.querySelectorAll('input[name=gender]').forEach(el=>{
@@ -5239,16 +5239,20 @@ function _sqWords(){ return L({
   ko:['전혀 못 쉼','매우 나쁨','나쁨','그저 그럼','평균 이하','나쁘지 않음','좋음','매우 좋음','훌륭함','활력 충만']
 }); }
 function _sqEmoji(n){
-  var E=['😣','😞','😟','😕','😐','😌','🙂','😊','😄','🤩'];
   var e=document.getElementById('sq-emoji'),w=document.getElementById('sq-word');
+  if(!_isSet('sleep_qual')){ if(e)e.textContent='—'; if(w){ w.textContent=L({ru:'Коснитесь, чтобы отметить',uk:'Торкніться, щоб відзначити',en:'Tap to set',es:'Toca para elegir',de:'Zum Auswählen tippen',pt:'Toque para escolher',fr:'Appuyez pour choisir',pl:'Dotknij, aby wybrać',it:'Tocca per scegliere',he:'הקישו כדי לבחור',ja:'タップして選択',ko:'탭하여 선택'}); w.style.opacity='.7'; } return; }
+  var E=['😣','😞','😟','😕','😐','😌','🙂','😊','😄','🤩'];
   if(e)e.textContent=E[n-1]||'😌';
-  if(w){var ws=_sqWords();w.textContent=(ws&&ws[n-1])||'';}
+  if(w){var ws=_sqWords();w.textContent=(ws&&ws[n-1])||''; w.style.opacity='1';}
 }
+// Поле «задано» = клиент реально тронул его (в __touched). До этого оценочные шкалы (энергия/сон)
+// показывают «не выбрано», а не дефолт — визуальное состояние совпадает с логическим (2026-07-18).
+function _isSet(id){ try{ return !!(window.__touched && window.__touched.has(id)); }catch(e){ return false; } }
 function renderSleepScale(){
   var box=document.getElementById('sq-scale'); if(!box)return;
-  var el=document.getElementById('sleep_qual'); var cur=+((el&&el.value)||6);
+  var el=document.getElementById('sleep_qual'); var cur=+((el&&el.value)||6); var set=_isSet('sleep_qual');
   var html='';
-  for(var i=1;i<=10;i++) html+='<button type="button" class="sq-btn'+(i===cur?' active':'')+'" style="--c:'+_sqColor(i)+'" onclick="setSleepQual('+i+')">'+i+'</button>';
+  for(var i=1;i<=10;i++) html+='<button type="button" class="sq-btn'+((set&&i===cur)?' active':'')+'" style="--c:'+_sqColor(i)+'" onclick="setSleepQual('+i+')">'+i+'</button>';
   box.innerHTML=html; _sqEmoji(cur);
 }
 function setSleepQual(n){
@@ -5260,9 +5264,12 @@ function setSleepQual(n){
 }
 function _sleepHrStep(delta){
   var inp=document.getElementById('sleep_hours'); if(!inp)return;
-  var v=parseFloat(inp.value); if(isNaN(v))v=7.5;
+  var v=parseFloat(inp.value); if(isNaN(v))v=7.5;   // старт от 7.5, но только по нажатию (поле пустое до касания)
   v=Math.min(16,Math.max(0,Math.round((v+delta)*2)/2));
   inp.value=v;
+  // +/- ставят значение программно (без input-события) — помечаем touched вручную и пересчитываем гейт.
+  try{ window.__touched=window.__touched||new Set(); window.__touched.add('sleep_hours'); }catch(e){}
+  if(typeof _refreshGate==='function') _refreshGate();
 }
 // Шкала энергии 1–10 (единый паттерн со сном) + бейдж уровня — дизайн VIO
 function _enWord(n){ var w=L({
@@ -5279,12 +5286,14 @@ function _enWord(n){ var w=L({
   ja:['元気なし','とても低い','低い','平均以下','普通','良い','元気','とても元気','絶好調','元気満点'],
   ko:['기력 없음','매우 낮음','낮음','평균 이하','보통','좋음','활기참','매우 활기참','훌륭함','활력 충만']
 }); return (w&&w[n-1])||''; }
-function _enBadge(n){ var b=document.getElementById('en-badge'); if(!b)return; b.innerHTML=n+'/10 · <b>'+_enWord(n)+'</b>'; b.style.color=_sqColor(n); }
+function _enBadge(n){ var b=document.getElementById('en-badge'); if(!b)return;
+  if(!_isSet('energy')){ b.innerHTML='<span style="color:var(--t3);font-weight:500;">— '+L({ru:'не выбрано',uk:'не вибрано',en:'not set',es:'sin elegir',de:'nicht gewählt',pt:'não escolhido',fr:'non défini',pl:'nie wybrano',it:'non scelto',he:'לא נבחר',ja:'未選択',ko:'미선택'})+'</span>'; return; }
+  b.innerHTML=n+'/10 · <b>'+_enWord(n)+'</b>'; b.style.color=_sqColor(n); }
 function renderEnergyScale(){
   var box=document.getElementById('en-scale'); if(!box)return;
-  var el=document.getElementById('energy'); var cur=+((el&&el.value)||6);
+  var el=document.getElementById('energy'); var cur=+((el&&el.value)||6); var set=_isSet('energy');
   var html='';
-  for(var i=1;i<=10;i++) html+='<button type="button" class="sq-btn'+(i===cur?' active':'')+'" style="--c:'+_sqColor(i)+'" onclick="setEnergy('+i+')">'+i+'</button>';
+  for(var i=1;i<=10;i++) html+='<button type="button" class="sq-btn'+((set&&i===cur)?' active':'')+'" style="--c:'+_sqColor(i)+'" onclick="setEnergy('+i+')">'+i+'</button>';
   box.innerHTML=html; _enBadge(cur);
 }
 function setEnergy(n){
