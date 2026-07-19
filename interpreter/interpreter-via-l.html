@@ -536,7 +536,7 @@ main{
 #stepResult .card{background:linear-gradient(145deg,#2a323f 0%,#1e2530 60%,#181e28 100%);}
 #stepResult .card::before{background:radial-gradient(circle,#8B6B22,transparent 70%);}
 #stepResult .card-accent{background:linear-gradient(90deg,transparent,rgba(196,154,60,.5),transparent);}
-#stepResult .cta-card{background:linear-gradient(145deg,#221C0E,#1A1608);}
+#stepResult .cta-card{background:linear-gradient(160deg,#222a37,#161c26);}
 
 /* ── Per-step outer glow ── */
 #step1 .card{box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 -1px 0 rgba(0,0,0,.5) inset,0 16px 48px rgba(0,0,0,.6),0 0 60px rgba(46,111,191,.08);}
@@ -824,20 +824,24 @@ input.oura-input::-webkit-slider-thumb{
 .rd-head{text-align:center;margin:2px 0 0;}
 .rd-head-t{font-family:'Playfair Display',serif;font-size:25px;color:var(--t1);letter-spacing:.5px;}
 .rd-head-date{font-size:12px;color:var(--t3);margin-top:3px;letter-spacing:.6px;}
+/* Плашка дня и футер «завершил анализ / использовано данных» убраны из разбора (2026-07-19):
+   дата теперь в топбаре, а источники дублировали «Ваши показатели». Элементы оставлены для JS. */
+.rd-daybanner,.rd-sources{display:none!important;}
 .rd-daybanner{text-align:center;font-size:13px;color:var(--t2);background:linear-gradient(180deg,rgba(226,185,90,.10),rgba(226,185,90,.04));border:1px solid rgba(226,185,90,.24);border-radius:14px;padding:10px 16px;line-height:1.5;}
 .rd-daybanner b{color:var(--gold-lt);font-weight:600;}
 .rd-daybanner-past{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);}
 /* лента недели (Oura) */
 .rd-week{display:flex;gap:5px;justify-content:space-between;overflow:hidden;padding:2px 0;}
-.rd-wd{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:1px solid transparent;border-radius:13px;padding:8px 2px 7px;cursor:pointer;font-family:inherit;transition:background .2s,border-color .2s;}
+/* Лента дней — компактная строка (как навигатор дат у Oura): день+число+точка в ряд, а не колонкой */
+.rd-wd{flex:1 1 0;min-width:0;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:5px;background:none;border:1px solid transparent;border-radius:11px;padding:5px 2px;cursor:pointer;font-family:inherit;transition:background .2s,border-color .2s;}
 .rd-wd:not(.empty):hover{background:rgba(255,255,255,.04);}
 .rd-wd.active{background:rgba(226,185,90,.12);border-color:rgba(226,185,90,.4);}
 .rd-wd.empty{cursor:default;opacity:.45;}
 .rd-wd-wd{font-size:10.5px;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;}
 .rd-wd.active .rd-wd-wd{color:var(--gold-lt);}
-.rd-wd-n{font-size:15px;color:var(--t2);font-weight:600;line-height:1;}
+.rd-wd-n{font-size:13px;color:var(--t2);font-weight:600;line-height:1;}
 .rd-wd.active .rd-wd-n{color:var(--t1);}
-.rd-wd-dot{width:7px;height:7px;border-radius:50%;}
+.rd-wd-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
 .rd-row{display:grid;gap:15px;}
 .rd-row-2{grid-template-columns:1fr 1fr;}
 @media(max-width:820px){.rd-row-2{grid-template-columns:1fr;}}
@@ -876,8 +880,8 @@ input.oura-input::-webkit-slider-thumb{
 @media(max-width:820px){.ai-intro-head{padding-right:160px;}}
 /* фигура справа, БЕЗ фона (картинка с прозрачным фоном) — не съезжает при раскрытии (фикс-высота сверху) */
 .rd-analysis{min-height:210px;}
-.rd-analysis-fig{position:absolute;top:14px;right:14px;height:250px;width:250px;max-width:40%;background:url('images-in/ai-figure-gold.png') no-repeat right top;background-size:contain;pointer-events:none;-webkit-mask-image:radial-gradient(ellipse 82% 92% at 62% 46%,#000 52%,transparent 88%);mask-image:radial-gradient(ellipse 82% 92% at 62% 46%,#000 52%,transparent 88%);}
-@media(max-width:820px){.rd-analysis-body{max-width:100%;}.rd-analysis-fig{height:180px;width:150px;top:10px;right:8px;}}
+.rd-analysis-fig{position:absolute;top:0;right:0;height:100%;width:44%;max-width:360px;background:url('images-in/ai-figure-gold2.png') no-repeat right center;background-size:cover;pointer-events:none;border-radius:0 20px 20px 0;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 42%);mask-image:linear-gradient(to right,transparent 0%,#000 42%);}
+@media(max-width:820px){.rd-analysis-body{max-width:100%;}.rd-analysis-fig{width:38%;max-width:180px;}}
 /* принцип */
 .rd-principle-body{font-size:13.5px;color:var(--t2);line-height:1.8;}
 .rd-why{margin-top:12px;background:none;border:none;color:var(--gold-lt);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;padding:0;letter-spacing:.2px;}
@@ -1661,6 +1665,11 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
     <a href="#" class="lang-logo" onclick="navTo('home');return false;">
       <img src="Logo/Logo_IP.png" alt="VIA-L" class="lang-logo-img">
     </a>
+  </div>
+  <!-- Шапка разбора (как у Oura): заголовок + дата между логотипом и переключателем языка. Виден только на экране результата. -->
+  <div id="tb-analysis" style="display:none;flex:1 1 auto;min-width:0;text-align:center;padding:0 8px;">
+    <div class="rd-head-t" data-t="result_eyebrow" style="font-size:19px;line-height:1.15;">Анализ VIA‑L</div>
+    <div class="rd-head-date" id="rd-date" style="margin-top:1px;"></div>
   </div>
   <div class="lang-dropdown" id="langDropdown">
     <button class="lang-toggle" onclick="toggleLangMenu()">
@@ -2910,13 +2919,9 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
   <!-- RESULTS -->
   <div class="step" id="stepResult">
    <div class="rd">
-    <!-- плашка «сегодняшний разбор · ждём завтра» (или дата прошлого дня) — показывается на домашнем экране -->
+    <!-- Плашка дня и заголовок «Анализ VIA-L» + дата переехали в топбар (шапка как у Oura, 2026-07-19).
+         Элемент баннера оставлен для JS, но скрыт через CSS. -->
     <div class="rd-daybanner" id="rd-daybanner" style="display:none;"></div>
-    <!-- ── HEADER ── -->
-    <div class="rd-head">
-      <div class="rd-head-t" data-t="result_eyebrow">Анализ VIA‑L</div>
-      <div class="rd-head-date" id="rd-date"></div>
-    </div>
     <!-- лента недели (Oura): дни + тап → тот день из истории -->
     <div class="rd-week" id="rd-week"></div>
 
@@ -2997,7 +3002,6 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
       <div class="rd-sources-l"><i class="ph ph-check-circle rd-check"></i><div><div class="rd-done-t" data-t="rd_done_title">VIA‑L завершил анализ</div><div class="rd-done-s" data-t="rd_done_sub">Использовано данных:</div></div></div>
       <div class="rd-sources-icons" id="rd-sources-icons"></div>
     </div>
-    <div class="rd-disc" data-t="result_disclaimer">ℹ️ Информационно, не медицинский диагноз. Не заменяет консультацию врача.</div>
    </div>
 
     <!-- LAB TESTS CARD -->
@@ -3013,14 +3017,15 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
       <div class="max-sent" id="maxSent" data-t="max_sent">✓ Запрос отправлен! Ответ в течение 48 часов.</div>
     </div>
 
-    <!-- CTA: апсейл на PRO+EXPERT и ELITE -->
+    <!-- Финал разбора: «Ваш анализ завершён» + одна кнопка PDF + один дисклеймер (2026-07-19).
+         Маркетинговый апсейл убран — разбор не место для продажи. -->
     <div class="cta-card" id="cta-marina">
-      <div class="cta-title" data-t="cta_title">Ваши данные расскажут больше, чем вы думаете</div>
-      <div class="cta-desc" data-t="cta_desc">Персональные велнес-ориентиры по питанию и поддержке — под ваше самочувствие. Для взрослых 35+.</div>
+      <div class="cta-title" data-t="rd_fin_title">Ваш анализ завершён</div>
+      <div class="cta-desc" data-t="rd_fin_sub">Сегодня VIA·L обработал ваши данные и подготовил рекомендации.</div>
       <!-- «Пройти заново» удалена 2026-07-17: не полигон — человек вносит показания и получает разбор, точка.
            Повторный проход бывает раз в день (утренняя карточка следующего дня), пере-проходить незачем. -->
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
-        <button onclick="downloadPDF()" style="flex:1;padding:13px;border-radius:14px;border:1px solid var(--b2);background:var(--gold-dim);color:var(--gold);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s;" data-t="pdf_btn">📄 Скачать PDF-отчёт</button>
+        <button type="button" class="btn btn-primary" onclick="downloadPDF()" style="flex:1;" data-t="pdf_btn">📄 Скачать PDF-отчёт</button>
       </div>
       <div class="disclaimer" data-t="disclaimer">Информационно, не медицинский диагноз. Не заменяет консультацию врача.</div>
     </div>
@@ -3267,6 +3272,8 @@ Object.keys(_GLAB).forEach(function(k){Object.keys(_GLAB[k]).forEach(function(l)
 const _MFTXT={
   imp_mf_intro:{ru:'Введите любые доступные показатели. Незаполненные поля будут введены на шагах анализа.',uk:'Введіть будь-які доступні показники. Незаповнені поля ви введете на кроках аналізу.',en:'Enter any values you have. Empty fields will be filled in during the analysis steps.',es:'Introduce los valores que tengas. Los campos vacíos se completarán en los pasos del análisis.',de:'Gib beliebige verfügbare Werte ein. Leere Felder werden in den Analyseschritten ausgefüllt.',pt:'Insira quaisquer valores disponíveis. Os campos vazios serão preenchidos nas etapas da análise.',fr:'Saisissez les valeurs dont vous disposez. Les champs vides seront remplis lors des étapes de l’analyse.',pl:'Wpisz dowolne dostępne wartości. Puste pola uzupełnisz na etapach analizy.',it:'Inserisci i valori che hai. I campi vuoti verranno compilati durante i passaggi dell’analisi.',he:'הזינו כל נתון שיש לכם. שדות ריקים יושלמו בשלבי הניתוח.',ja:'入力できる値を入れてください。空欄は分析のステップで入力します。',ko:'가능한 값을 입력하세요. 빈 항목은 분석 단계에서 입력합니다.'},
   imp_apply:{ru:'Применить',uk:'Застосувати',en:'Apply',es:'Aplicar',de:'Übernehmen',pt:'Aplicar',fr:'Appliquer',pl:'Zastosuj',it:'Applica',he:'החל',ja:'適用',ko:'적용'},
+  rd_fin_title:{ru:'Ваш анализ завершён',uk:'Ваш аналіз завершено',en:'Your analysis is complete',es:'Tu análisis está completo',de:'Deine Analyse ist fertig',pt:'Sua análise está concluída',fr:'Votre analyse est terminée',pl:'Twoja analiza jest gotowa',it:'La tua analisi è completata',he:'הניתוח שלכם הושלם',ja:'分析が完了しました',ko:'분석이 완료되었습니다'},
+  rd_fin_sub:{ru:'Сегодня VIA·L обработал ваши данные и подготовил рекомендации.',uk:'Сьогодні VIA·L опрацював ваші дані та підготував рекомендації.',en:'Today VIA·L processed your data and prepared recommendations.',es:'Hoy VIA·L procesó tus datos y preparó recomendaciones.',de:'Heute hat VIA·L deine Daten ausgewertet und Empfehlungen erstellt.',pt:'Hoje o VIA·L processou seus dados e preparou recomendações.',fr:'Aujourd’hui VIA·L a traité vos données et préparé des recommandations.',pl:'Dziś VIA·L przetworzył Twoje dane i przygotował zalecenia.',it:'Oggi VIA·L ha elaborato i tuoi dati e preparato dei consigli.',he:'היום VIA·L עיבד את הנתונים שלכם והכין המלצות.',ja:'本日 VIA·L があなたのデータを解析し、提案をまとめました。',ko:'오늘 VIA·L가 데이터를 분석하고 추천을 준비했습니다.'},
   status_loaded:{ru:'✓ Данные загружены',uk:'✓ Дані завантажено',en:'✓ Data loaded',es:'✓ Datos cargados',de:'✓ Daten geladen',pt:'✓ Dados carregados',fr:'✓ Données chargées',pl:'✓ Dane wczytane',it:'✓ Dati caricati',he:'✓ הנתונים נטענו',ja:'✓ データを読み込みました',ko:'✓ 데이터 불러옴'}
 };
 Object.keys(_MFTXT).forEach(function(k){Object.keys(_MFTXT[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_MFTXT[k][l];});});
@@ -6198,6 +6205,7 @@ function goTo(n){
   // на остальных шагах прячем, чтобы вверху не было лишнего текста при скролле. На вебе не трогаем.
   if (window.Capacitor) { var _hero=document.querySelector('.hero'); if(_hero) _hero.style.display = (n===0) ? '' : 'none'; }
   else if (n==='result') { var _heroW=document.querySelector('.hero'); if(_heroW) _heroW.style.display='none'; }   // на вебе на экране разбора hero главной (3 кнопки источника) не нужен
+  var _tba=document.getElementById('tb-analysis'); if(_tba) _tba.style.display=(n==='result')?'block':'none';   // «Анализ VIA-L + дата» в топбаре — только на разборе
   // В приложении — мгновенная привязка шага к верхнему краю (строго, без доскролла); на вебе — плавно.
   setTimeout(()=>{
     if(target) target.scrollIntoView({behavior: window.Capacitor ? 'auto' : 'smooth', block:'start'});
@@ -8016,7 +8024,7 @@ function openDayPlanPanel(){
         +'<div style="flex:1;min-width:0;"><div style="font-family:\'DM Sans\',sans-serif;font-size:13px;font-weight:600;color:var(--t1);text-transform:uppercase;letter-spacing:.03em;">'+r.title+'</div><div style="font-size:11px;color:var(--t3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+r.teaser+'</div></div>'
         +'<div style="color:var(--gold-lt);font-size:18px;opacity:.6;flex-shrink:0;">›</div></div>';
     }).join('');
-    body+='<button type="button" onclick="downloadDayPlan()" style="width:100%;margin-top:6px;padding:13px;border-radius:14px;border:1px solid rgba(226,185,90,.4);background:rgba(226,185,90,.12);color:#f2ddb0;font-family:\'DM Sans\',sans-serif;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">📥 '+L({ru:'Скачать памятку дня',en:'Download day plan',uk:'Завантажити памʼятку дня',es:'Descargar el plan del día',de:'Tagesplan herunterladen',pt:'Baixar o plano do dia',fr:'Télécharger le plan du jour',pl:'Pobierz plan dnia',it:'Scarica il piano del giorno',he:'הורדת תוכנית היום',ja:'今日のプランをダウンロード',ko:'오늘의 플랜 다운로드'})+'</button>';
+    body+='<button type="button" class="btn btn-primary" onclick="downloadDayPlan()" style="width:100%;margin-top:6px;">📥 '+L({ru:'Скачать памятку дня',en:'Download day plan',uk:'Завантажити памʼятку дня',es:'Descargar el plan del día',de:'Tagesplan herunterladen',pt:'Baixar o plano do dia',fr:'Télécharger le plan du jour',pl:'Pobierz plan dnia',it:'Scarica il piano del giorno',he:'הורדת תוכנית היום',ja:'今日のプランをダウンロード',ko:'오늘의 플랜 다운로드'})+'</button>';
   } else {
     body+='<div style="font-size:13px;color:var(--t2);line-height:1.6;padding:6px 2px 10px;">'+L({ru:'Пройдите первый дневной проход — и здесь появится ваша персональная памятка на день.',en:'Complete your first daily check-in — and your personal day plan will appear here.',uk:'Пройдіть перший денний прохід — і тут з’явиться ваша персональна памʼятка на день.',es:'Completa tu primer registro diario — y aquí aparecerá tu plan del día personal.',de:'Absolviere deinen ersten täglichen Check-in — und hier erscheint dein persönlicher Tagesplan.',pt:'Faça seu primeiro check-in diário — e aqui aparecerá seu plano do dia personalizado.',fr:'Faites votre premier bilan quotidien — et votre plan du jour personnel apparaîtra ici.',pl:'Wykonaj pierwszy dzienny check-in — a tutaj pojawi się Twój osobisty plan dnia.',it:'Completa il tuo primo check-in giornaliero — e qui apparirà il tuo piano del giorno personale.',he:'בצעו את הצ׳ק-אין היומי הראשון — וכאן תופיע תוכנית היום האישית שלכם.',ja:'最初の毎日のチェックインを済ませると — ここにあなた専用の今日のプランが表示されます。',ko:'첫 일일 체크인을 완료하면 — 여기에 맞춤 오늘의 플랜이 나타납니다.'})+'</div>';
   }
@@ -8065,7 +8073,7 @@ function renderDayBlueprint(data){
       +'<div style="flex:1;min-width:0;"><div style="font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:600;color:var(--t1);letter-spacing:.03em;text-transform:uppercase;">'+r.title+'</div><div style="font-size:11px;color:var(--t3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+r.teaser+'</div></div>'
       +'<div style="color:var(--gold-lt);font-size:20px;opacity:.6;flex-shrink:0;">›</div></div>';
   }).join('');
-  var dl='<button onclick="downloadDayPlan()" style="width:100%;margin-top:4px;padding:13px;border-radius:14px;border:1px solid rgba(226,185,90,.4);background:rgba(226,185,90,.12);color:#f2ddb0;font-family:\'DM Sans\',sans-serif;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">📥 '+L({ru:'Скачать памятку дня',en:'Download day plan',uk:'Завантажити памʼятку дня',es:'Descargar el plan del día',de:'Tagesplan herunterladen',pt:'Baixar o plano do dia',fr:'Télécharger le plan du jour',pl:'Pobierz plan dnia',it:'Scarica il piano del giorno',he:'הורדת תוכנית היום',ja:'今日のプランをダウンロード',ko:'오늘의 플랜 다운로드'})+'</button>';
+  var dl='<button class="btn btn-primary" onclick="downloadDayPlan()" style="width:100%;margin-top:4px;">📥 '+L({ru:'Скачать памятку дня',en:'Download day plan',uk:'Завантажити памʼятку дня',es:'Descargar el plan del día',de:'Tagesplan herunterladen',pt:'Baixar o plano do dia',fr:'Télécharger le plan du jour',pl:'Pobierz plan dnia',it:'Scarica il piano del giorno',he:'הורדת תוכנית היום',ja:'今日のプランをダウンロード',ko:'오늘의 플랜 다운로드'})+'</button>';
   box.innerHTML=head+rows+dl;
   if(!window._bpAI && !window._bpAILoading && typeof fetchDayPlan==='function') fetchDayPlan(data);
 }
