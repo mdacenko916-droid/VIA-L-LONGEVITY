@@ -3860,8 +3860,15 @@ function setLang(l){
   initSliders();
   // Заголовки-зоны ленты (flow-group-head) и интро строятся через textContent без data-t —
   // при смене языка их надо пересобрать, иначе переводятся только карточки-блоки, а подписи между ними нет.
-  try{ if(document.body.classList.contains('flow-mode') && typeof _reflowSteps==='function') _reflowSteps(); }catch(e){}
-  if(_lastResult){_rerendering=true;try{_showResultsInner();}finally{_rerendering=false;}if(document.getElementById('aiCard'))fetchAIAnalysis(_lastResult.data,l);}
+  // Смена языка: если открыт ГЕЙТ (утренняя карточка / «возвращайтесь завтра») — пересобрать сам гейт в новом языке,
+  // а НЕ ленту опросника (иначе _reflowSteps выбрасывал в полный check-in с заполненными данными трекера).
+  try{
+    if(document.getElementById('morning-gate') && typeof _showMorningCard==='function'){ _showMorningCard((typeof _srcGet==='function')?_srcGet():''); }
+    else if(document.getElementById('daily-done-gate') && typeof _showDailyDoneGate==='function'){ _showDailyDoneGate(); }
+    else if(document.body.classList.contains('flow-mode') && typeof _reflowSteps==='function'){ _reflowSteps(); }
+  }catch(e){}
+  var _srEl=document.getElementById('stepResult');
+  if(_lastResult && _srEl && (_srEl.classList.contains('active')||_srEl.classList.contains('flow-show'))){_rerendering=true;try{_showResultsInner();}finally{_rerendering=false;}if(document.getElementById('aiCard'))fetchAIAnalysis(_lastResult.data,l);}   // перерисовывать результаты при смене языка ТОЛЬКО если экран результатов открыт (иначе смена языка на утренней карточке/выборе источника выбрасывала в старый разбор из памяти)
 }
 function t(k){return T[lang][k]||T.ru[k]||k;}
 
@@ -4503,11 +4510,11 @@ function renderCard(){
   // ── Источник данных (разовый выбор; можно сменить) ──
   var _srcNow=(function(){ try{return localStorage.getItem('vialp_source')||'';}catch(e){return '';} })();
   var _srcLbl={ apple:L({ru:'Apple Health / Health Connect',en:'Apple Health / Health Connect'}),
-                device:L({ru:'Совместимое устройство',uk:'Сумісний пристрій',en:'Compatible device',es:'Dispositivo compatible',de:'Kompatibles Gerät',pt:'Dispositivo compatível',fr:'Appareil compatible',pl:'Zgodne urządzenie',it:'Dispositivo compatibile'}),
-                manual:L({ru:'Ручной ввод',uk:'Ручне введення',en:'Manual entry',es:'Entrada manual',de:'Manuelle Eingabe',pt:'Entrada manual',fr:'Saisie manuelle',pl:'Wprowadzanie ręczne',it:'Inserimento manuale'}) }[_srcNow]||'—';
-  var _srcInner='<div class="vc-row"><span class="vc-l">'+L({ru:'Текущий источник',uk:'Поточне джерело',en:'Current source',es:'Fuente actual',de:'Aktuelle Quelle',pt:'Fonte atual',fr:'Source actuelle',pl:'Bieżące źródło',it:'Fonte attuale'})+'</span><span class="vc-v">'+_srcLbl+'</span></div>'
-    +'<button onclick="_changeSource()" style="display:block;width:100%;box-sizing:border-box;margin-top:8px;padding:11px;border-radius:10px;border:1px solid rgba(196,150,60,.32);background:rgba(196,150,60,.1);color:var(--gold-lt);font-size:13px;font-weight:500;cursor:pointer;">🔄 '+L({ru:'Изменить источник данных',uk:'Змінити джерело даних',en:'Change data source',es:'Cambiar fuente de datos',de:'Datenquelle ändern',pt:'Alterar fonte de dados',fr:'Changer la source de données',pl:'Zmień źródło danych',it:'Cambia fonte dati'})+'</button>';
-  _secSource=_vcSec('source',L({ru:'Источник данных',uk:'Джерело даних',en:'Data source',es:'Fuente de datos',de:'Datenquelle',pt:'Fonte de dados',fr:'Source des données',pl:'Źródło danych',it:'Fonte dati'}),_srcInner,false,true);
+                device:L({ru:'Совместимое устройство',uk:'Сумісний пристрій',en:'Compatible device',es:'Dispositivo compatible',de:'Kompatibles Gerät',pt:'Dispositivo compatível',fr:'Appareil compatible',pl:'Zgodne urządzenie',it:'Dispositivo compatibile',he:'מכשיר תואם',ja:'対応デバイス',ko:'호환 기기'}),
+                manual:L({ru:'Ручной ввод',uk:'Ручне введення',en:'Manual entry',es:'Entrada manual',de:'Manuelle Eingabe',pt:'Entrada manual',fr:'Saisie manuelle',pl:'Wprowadzanie ręczne',it:'Inserimento manuale',he:'הזנה ידנית',ja:'手動入力',ko:'수동 입력'}) }[_srcNow]||'—';
+  var _srcInner='<div class="vc-row"><span class="vc-l">'+L({ru:'Текущий источник',uk:'Поточне джерело',en:'Current source',es:'Fuente actual',de:'Aktuelle Quelle',pt:'Fonte atual',fr:'Source actuelle',pl:'Bieżące źródło',it:'Fonte attuale',he:'מקור נוכחי',ja:'現在のソース',ko:'현재 소스'})+'</span><span class="vc-v">'+_srcLbl+'</span></div>'
+    +'<button onclick="_changeSource()" style="display:block;width:100%;box-sizing:border-box;margin-top:8px;padding:11px;border-radius:10px;border:1px solid rgba(196,150,60,.32);background:rgba(196,150,60,.1);color:var(--gold-lt);font-size:13px;font-weight:500;cursor:pointer;">🔄 '+L({ru:'Изменить источник данных',uk:'Змінити джерело даних',en:'Change data source',es:'Cambiar fuente de datos',de:'Datenquelle ändern',pt:'Alterar fonte de dados',fr:'Changer la source de données',pl:'Zmień źródło danych',it:'Cambia fonte dati',he:'שינוי מקור הנתונים',ja:'データソースを変更',ko:'데이터 소스 변경'})+'</button>';
+  _secSource=_vcSec('source',L({ru:'Источник данных',uk:'Джерело даних',en:'Data source',es:'Fuente de datos',de:'Datenquelle',pt:'Fonte de dados',fr:'Source des données',pl:'Źródło danych',it:'Fonte dati',he:'מקור נתונים',ja:'データソース',ko:'데이터 소스'}),_srcInner,false,true);
 
   _secLegal=_vcSec('legal',t('card_legal'),'<div style="font-size:12px;color:var(--t2);line-height:1.6;">'+t('consent_body')+'</div>',false,true);
   // ── VAI: калькулятор скрытого (висцерального) жира. Доп-инструмент, БЕЗ ИИ/сети. Велнес-рамка + дисклеймер. ──
@@ -5959,7 +5966,7 @@ function startFunnel(){
    какой сценарий запускать (нужна ли синхронизация). Показ/скрытие блоков анкеты
    НЕ трогаем — он по факту данных (_AUTO_STEP_METRIC + _allFlow). */
 function _srcGet(){ try{ return localStorage.getItem('vialp_source')||''; }catch(e){ return ''; } }
-function _srcSet(v){ try{ localStorage.setItem('vialp_source',v); }catch(e){} }
+function _srcSet(v){ try{ var old=localStorage.getItem('vialp_source')||''; if(old&&v&&old!==v) localStorage.setItem('vialp_source_changed','1'); else localStorage.removeItem('vialp_source_changed'); localStorage.setItem('vialp_source',v); }catch(e){} }   // + флаг смены источника (для ИИ-разбора)
 // Штамп последней синхронизации гаджета (для строки «Последняя синхронизация …»).
 function _syncStampFmt(){
   var iso=''; try{ iso=localStorage.getItem('vialp_lastsync')||''; }catch(e){}
@@ -5968,8 +5975,8 @@ function _syncStampFmt(){
   var time=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
   var that=_dayKey(d), today=_dayKey(), y=new Date(Date.now()-86400000);
   var when;
-  if(that===today) when=L({ru:'сегодня',uk:'сьогодні',en:'today',es:'hoy',de:'heute',pt:'hoje',fr:'aujourd’hui',pl:'dziś',it:'oggi'});
-  else if(that===_dayKey(y)) when=L({ru:'вчера',uk:'учора',en:'yesterday',es:'ayer',de:'gestern',pt:'ontem',fr:'hier',pl:'wczoraj',it:'ieri'});
+  if(that===today) when=L({ru:'сегодня',uk:'сьогодні',en:'today',es:'hoy',de:'heute',pt:'hoje',fr:'aujourd’hui',pl:'dziś',it:'oggi',he:'היום',ja:'今日',ko:'오늘'});
+  else if(that===_dayKey(y)) when=L({ru:'вчера',uk:'учора',en:'yesterday',es:'ayer',de:'gestern',pt:'ontem',fr:'hier',pl:'wczoraj',it:'ieri',he:'אתמול',ja:'昨日',ko:'어제'});
   else { try{ when=d.toLocaleDateString(); }catch(e){ when=that; } }
   return when+' '+time;
 }
@@ -5977,17 +5984,17 @@ function _syncStampFmt(){
 function _srcMorningCopy(src){
   var M={
     apple:{ ic:'🍎',
-      t:L({ru:'Получить новые данные',uk:'Отримати нові дані',en:'Get new data',es:'Obtener nuevos datos',de:'Neue Daten holen',pt:'Obter novos dados',fr:'Récupérer les données',pl:'Pobierz nowe dane',it:'Ottieni nuovi dati'}),
-      s:L({ru:'После получения данных автоматически начнётся ежедневный проход.',uk:'Після отримання даних автоматично почнеться щоденний прохід.',en:'After the data is fetched, the daily check-in starts automatically.',es:'Tras obtener los datos, el análisis diario comienza automáticamente.',de:'Nach dem Abruf startet der tägliche Check-in automatisch.',pt:'Após obter os dados, a análise diária começa automaticamente.',fr:'Une fois les données récupérées, le bilan quotidien démarre automatiquement.',pl:'Po pobraniu danych codzienny przegląd rozpocznie się automatycznie.',it:'Dopo aver recuperato i dati, il check-in giornaliero parte in automatico.'}),
-      btn:L({ru:'Обновить',uk:'Оновити',en:'Update',es:'Actualizar',de:'Aktualisieren',pt:'Atualizar',fr:'Actualiser',pl:'Odśwież',it:'Aggiorna'}) },
+      t:L({ru:'Получить новые данные',uk:'Отримати нові дані',en:'Get new data',es:'Obtener nuevos datos',de:'Neue Daten holen',pt:'Obter novos dados',fr:'Récupérer les données',pl:'Pobierz nowe dane',it:'Ottieni nuovi dati',he:'קבלת נתונים חדשים',ja:'新しいデータを取得',ko:'새 데이터 가져오기'}),
+      s:L({ru:'После получения данных автоматически начнётся ежедневный проход.',uk:'Після отримання даних автоматично почнеться щоденний прохід.',en:'After the data is fetched, the daily check-in starts automatically.',es:'Tras obtener los datos, el análisis diario comienza automáticamente.',de:'Nach dem Abruf startet der tägliche Check-in automatisch.',pt:'Após obter os dados, a análise diária começa automaticamente.',fr:'Une fois les données récupérées, le bilan quotidien démarre automatiquement.',pl:'Po pobraniu danych codzienny przegląd rozpocznie się automatycznie.',it:'Dopo aver recuperato i dati, il check-in giornaliero parte in automatico.',he:'לאחר קבלת הנתונים, הצ׳ק-אין היומי יתחיל אוטומטית.',ja:'データ取得後、毎日のチェックインが自動的に始まります。',ko:'데이터를 가져오면 매일 체크인이 자동으로 시작됩니다.'}),
+      btn:L({ru:'Обновить',uk:'Оновити',en:'Update',es:'Actualizar',de:'Aktualisieren',pt:'Atualizar',fr:'Actualiser',pl:'Odśwież',it:'Aggiorna',he:'עדכון',ja:'更新',ko:'업데이트'}) },
     device:{ ic:'⌚',
-      t:L({ru:'Синхронизировать устройство',uk:'Синхронізувати пристрій',en:'Sync your device',es:'Sincronizar dispositivo',de:'Gerät synchronisieren',pt:'Sincronizar dispositivo',fr:'Synchroniser l’appareil',pl:'Zsynchronizuj urządzenie',it:'Sincronizza il dispositivo'}),
-      s:L({ru:'После синхронизации автоматически начнётся ежедневный проход.',uk:'Після синхронізації автоматично почнеться щоденний прохід.',en:'After syncing, the daily check-in starts automatically.',es:'Tras sincronizar, el análisis diario comienza automáticamente.',de:'Nach der Synchronisation startet der tägliche Check-in automatisch.',pt:'Após sincronizar, a análise diária começa automaticamente.',fr:'Après la synchronisation, le bilan quotidien démarre automatiquement.',pl:'Po synchronizacji codzienny przegląd rozpocznie się automatycznie.',it:'Dopo la sincronizzazione, il check-in giornaliero parte in automatico.'}),
-      btn:L({ru:'Синхронизировать',uk:'Синхронізувати',en:'Sync',es:'Sincronizar',de:'Synchronisieren',pt:'Sincronizar',fr:'Synchroniser',pl:'Synchronizuj',it:'Sincronizza'}) },
+      t:L({ru:'Синхронизировать устройство',uk:'Синхронізувати пристрій',en:'Sync your device',es:'Sincronizar dispositivo',de:'Gerät synchronisieren',pt:'Sincronizar dispositivo',fr:'Synchroniser l’appareil',pl:'Zsynchronizuj urządzenie',it:'Sincronizza il dispositivo',he:'סנכרון המכשיר',ja:'デバイスを同期',ko:'기기 동기화'}),
+      s:L({ru:'После синхронизации автоматически начнётся ежедневный проход.',uk:'Після синхронізації автоматично почнеться щоденний прохід.',en:'After syncing, the daily check-in starts automatically.',es:'Tras sincronizar, el análisis diario comienza automáticamente.',de:'Nach der Synchronisation startet der tägliche Check-in automatisch.',pt:'Após sincronizar, a análise diária começa automaticamente.',fr:'Après la synchronisation, le bilan quotidien démarre automatiquement.',pl:'Po synchronizacji codzienny przegląd rozpocznie się automatycznie.',it:'Dopo la sincronizzazione, il check-in giornaliero parte in automatico.',he:'לאחר הסנכרון, הצ׳ק-אין היומי יתחיל אוטומטית.',ja:'同期後、毎日のチェックインが自動的に始まります。',ko:'동기화 후 매일 체크인이 자동으로 시작됩니다.'}),
+      btn:L({ru:'Синхронизировать',uk:'Синхронізувати',en:'Sync',es:'Sincronizar',de:'Synchronisieren',pt:'Sincronizar',fr:'Synchroniser',pl:'Synchronizuj',it:'Sincronizza',he:'סנכרון',ja:'同期',ko:'동기화'}) },
     manual:{ ic:'✍️',
-      t:L({ru:'Начать ежедневный проход',uk:'Почати щоденний прохід',en:'Start the daily check-in',es:'Empezar el análisis diario',de:'Täglichen Check-in starten',pt:'Iniciar a análise diária',fr:'Commencer le bilan quotidien',pl:'Rozpocznij codzienny przegląd',it:'Inizia il check-in giornaliero'}),
-      s:L({ru:'Ответьте на несколько вопросов, чтобы сформировать сегодняшний анализ.',uk:'Дайте відповідь на кілька запитань, щоб сформувати сьогоднішній аналіз.',en:'Answer a few questions to build today’s analysis.',es:'Responde unas preguntas para formar el análisis de hoy.',de:'Beantworte ein paar Fragen, um die heutige Analyse zu erstellen.',pt:'Responda a algumas perguntas para montar a análise de hoje.',fr:'Répondez à quelques questions pour établir l’analyse du jour.',pl:'Odpowiedz na kilka pytań, aby zbudować dzisiejszą analizę.',it:'Rispondi a qualche domanda per costruire l’analisi di oggi.'}),
-      btn:L({ru:'Начать',uk:'Почати',en:'Start',es:'Empezar',de:'Starten',pt:'Iniciar',fr:'Commencer',pl:'Rozpocznij',it:'Inizia'}) }
+      t:L({ru:'Начать ежедневный проход',uk:'Почати щоденний прохід',en:'Start the daily check-in',es:'Empezar el análisis diario',de:'Täglichen Check-in starten',pt:'Iniciar a análise diária',fr:'Commencer le bilan quotidien',pl:'Rozpocznij codzienny przegląd',it:'Inizia il check-in giornaliero',he:'התחלת הצ׳ק-אין היומי',ja:'毎日のチェックインを始める',ko:'매일 체크인 시작'}),
+      s:L({ru:'Ответьте на несколько вопросов, чтобы сформировать сегодняшний анализ.',uk:'Дайте відповідь на кілька запитань, щоб сформувати сьогоднішній аналіз.',en:'Answer a few questions to build today’s analysis.',es:'Responde unas preguntas para formar el análisis de hoy.',de:'Beantworte ein paar Fragen, um die heutige Analyse zu erstellen.',pt:'Responda a algumas perguntas para montar a análise de hoje.',fr:'Répondez à quelques questions pour établir l’analyse du jour.',pl:'Odpowiedz na kilka pytań, aby zbudować dzisiejszą analizę.',it:'Rispondi a qualche domanda per costruire l’analisi di oggi.',he:'ענו על כמה שאלות כדי לבנות את הניתוח של היום.',ja:'いくつかの質問に答えて今日の分析を作成します。',ko:'몇 가지 질문에 답하여 오늘의 분석을 만드세요.'}),
+      btn:L({ru:'Начать',uk:'Почати',en:'Start',es:'Empezar',de:'Starten',pt:'Iniciar',fr:'Commencer',pl:'Rozpocznij',it:'Inizia',he:'התחלה',ja:'開始',ko:'시작'}) }
   };
   return M[src]||M.manual;
 }
@@ -6012,20 +6019,30 @@ function _showMorningCard(src){
   // Имя из карточки клиента: карточка уже заполнена — обращаться безлично незачем. Если имени нет — просто приветствие.
   var _pn=''; try{ var _PG=JSON.parse(localStorage.getItem('vialp_profile')||'{}')||{}; _pn=String(_PG.name||'').trim().slice(0,40); }catch(e){}
   if(_pn) greet+=', '+(typeof _esc==='function'?_esc(_pn):_pn);   // имя уходит в innerHTML — экранируем
-  var ready=L({ru:'Новый день готов к анализу',uk:'Новий день готовий до аналізу',en:'A new day is ready for analysis',es:'Un nuevo día listo para el análisis',de:'Ein neuer Tag ist bereit für die Analyse',pt:'Um novo dia pronto para a análise',fr:'Un nouveau jour prêt à être analysé',pl:'Nowy dzień gotowy do analizy',it:'Un nuovo giorno pronto per l’analisi'});
+  var ready=L({ru:'Новый день готов к анализу',uk:'Новий день готовий до аналізу',en:'A new day is ready for analysis',es:'Un nuevo día listo para el análisis',de:'Ein neuer Tag ist bereit für die Analyse',pt:'Um novo dia pronto para a análise',fr:'Un nouveau jour prêt à être analysé',pl:'Nowy dzień gotowy do analizy',it:'Un nuovo giorno pronto per l’analisi',he:'יום חדש מוכן לניתוח',ja:'新しい一日の分析の準備ができました',ko:'새로운 하루의 분석 준비가 되었습니다'});
   var syncLine='';
-  if(src!=='manual'){ var f=_syncStampFmt(); if(f) syncLine='<div style="font-size:12px;color:var(--t3);margin:8px 0 2px;">'+L({ru:'Последняя синхронизация',uk:'Остання синхронізація',en:'Last sync',es:'Última sincronización',de:'Letzte Synchronisation',pt:'Última sincronização',fr:'Dernière synchronisation',pl:'Ostatnia synchronizacja',it:'Ultima sincronizzazione'})+': '+f+'</div>'; }
+  if(src!=='manual'){ var f=_syncStampFmt(); if(f) syncLine='<div style="font-size:12px;color:var(--t3);margin:8px 0 2px;">'+L({ru:'Последняя синхронизация',uk:'Остання синхронізація',en:'Last sync',es:'Última sincronización',de:'Letzte Synchronisation',pt:'Última sincronização',fr:'Dernière synchronisation',pl:'Ostatnia synchronizacja',it:'Ultima sincronizzazione',he:'סנכרון אחרון',ja:'最終同期',ko:'마지막 동기화'})+': '+f+'</div>'; }
   var btnCss='display:block;width:100%;box-sizing:border-box;margin-top:16px;padding:14px;border-radius:12px;border:1px solid rgba(226,185,90,.5);background:rgba(226,185,90,.12);color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;';
   var d=document.createElement('div'); d.id='morning-gate'; d.className='step flow-show';
-  d.style.cssText='max-width:560px;margin:28px auto;padding:26px 24px;text-align:center;background:rgba(30,26,18,.6);border:1px solid rgba(226,185,90,.28);border-radius:18px;';
+  d.style.cssText='max-width:560px;margin:28px auto;padding:26px 24px;text-align:center;background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.28);border-radius:18px;';
+  // Выбор источника КАЖДЫЙ день — человек волен взять данные откуда удобно.
+  var _pick=L({ru:'Откуда взять данные сегодня?',uk:'Звідки взяти дані сьогодні?',en:'Where should today’s data come from?',es:'¿De dónde tomar los datos de hoy?',de:'Woher sollen die heutigen Daten kommen?',pt:'De onde vêm os dados de hoje?',fr:'D’où proviennent les données du jour ?',pl:'Skąd wziąć dzisiejsze dane?',it:'Da dove prendere i dati di oggi?',he:'מהיכן לקחת את נתוני היום?',ja:'今日のデータはどこから取得しますか？',ko:'오늘 데이터는 어디에서 가져올까요?'});
   d.innerHTML='<div style="font-family:\'Playfair Display\',serif;font-size:23px;color:#fff;margin-bottom:6px;">'+greet+'</div>'
-    +'<div style="font-size:14px;color:var(--t2);margin-bottom:22px;">'+ready+'</div>'
-    +'<div style="font-size:30px;line-height:1;margin-bottom:12px;">'+c.ic+'</div>'
-    +'<div style="font-family:\'Playfair Display\',serif;font-size:18px;color:#fff;">'+c.t+'</div>'
+    +'<div style="font-size:14px;color:var(--t2);margin-bottom:6px;">'+ready+'</div>'
     +syncLine
-    +'<div style="font-size:13px;color:var(--t3);line-height:1.6;margin-top:10px;">'+c.s+'</div>'
-    +'<button onclick="_startDailyRun(\''+src+'\')" style="'+btnCss+'">'+c.btn+'</button>';
+    +'<div style="font-size:13px;color:var(--t3);margin:20px 0 12px;">'+_pick+'</div>'
+    +'<div id="morning-src" style="text-align:left;"></div>';
   main.appendChild(d);
+  // Полноценные карточки источника (те же, что в hero) — внутрь рамки; сам hero прячем, чтобы не дублировать.
+  try{
+    var _box=d.querySelector('#morning-src');
+    document.querySelectorAll('.hero .imp-btn').forEach(function(btn){
+      var cl=btn.cloneNode(true);
+      cl.querySelectorAll('[id]').forEach(function(e){e.removeAttribute('id');});   // не плодим дубли id (imp-cnt-*)
+      _box.appendChild(cl);
+    });
+    var _hero=document.querySelector('.hero'); if(_hero)_hero.style.display='none';
+  }catch(e){}
   var sa=document.getElementById('scroll-area'); if(sa)sa.scrollTop=0; else window.scrollTo(0,0);
 }
 // Первый запуск: показываем ТОЛЬКО hero (дисклеймер + 3 карточки выбора), анкету прячем.
@@ -6057,6 +6074,7 @@ function _chooseSource(src){
 }
 // Единый сценарий утренней карточки (2-й+ день): (синхронизация, если нужна) → анкета.
 function _startDailyRun(src){
+  if(src){ try{ _srcSet(src); }catch(e){} }   // выбор источника в утренней карточке = запомнить (и отметить смену для ИИ)
   var g=document.getElementById('morning-gate'); if(g)g.remove();
   if(src==='apple'){ try{ _heroHealthStart(); }catch(e){} }
   else if(src==='device'){ try{ openImport('full'); }catch(e){} }
@@ -6342,21 +6360,21 @@ function renderBioLoad(data, score, type){
   // Плитки (макет 2026-07-18): иконка + значение + статус-слово + полоска. Пульс — сырое значение уд/мин.
   var _tIcons=['ph-pulse','ph-bed','ph-wave-sine','ph-thermometer-simple','ph-heart'];
   function _band(v){
-    if(v==null) return {w:L({ru:'нет данных',uk:'немає даних',en:'no data'}),c:'var(--t3)'};
-    if(v>=80) return {w:L({ru:'Отлично',uk:'Відмінно',en:'Excellent'}),c:'#4ECCA3'};
-    if(v>=60) return {w:L({ru:'Хорошо',uk:'Добре',en:'Good'}),c:'#5b8def'};
-    if(v>=45) return {w:L({ru:'Умеренно',uk:'Помірно',en:'Moderate'}),c:'#E2B95A'};
-    return {w:L({ru:'Низкое',uk:'Низько',en:'Low'}),c:'#FF6B8A'};
+    if(v==null) return {w:L({ru:'нет данных',uk:'немає даних',en:'no data',es:'sin datos',de:'keine Daten',pt:'sem dados',fr:'aucune donnée',pl:'brak danych',it:'nessun dato',he:'אין נתונים',ja:'データなし',ko:'데이터 없음'}),c:'var(--t3)'};
+    if(v>=80) return {w:L({ru:'Отлично',uk:'Відмінно',en:'Excellent',es:'Excelente',de:'Ausgezeichnet',pt:'Excelente',fr:'Excellent',pl:'Doskonale',it:'Eccellente',he:'מצוין',ja:'優秀',ko:'훌륭함'}),c:'#4ECCA3'};
+    if(v>=60) return {w:L({ru:'Хорошо',uk:'Добре',en:'Good',es:'Bien',de:'Gut',pt:'Bom',fr:'Bien',pl:'Dobrze',it:'Buono',he:'טוב',ja:'良好',ko:'좋음'}),c:'#5b8def'};
+    if(v>=45) return {w:L({ru:'Умеренно',uk:'Помірно',en:'Moderate',es:'Moderado',de:'Mäßig',pt:'Moderado',fr:'Modéré',pl:'Umiarkowanie',it:'Moderato',he:'בינוני',ja:'中程度',ko:'보통'}),c:'#E2B95A'};
+    return {w:L({ru:'Низкое',uk:'Низько',en:'Low',es:'Bajo',de:'Niedrig',pt:'Baixo',fr:'Faible',pl:'Niski',it:'Basso',he:'נמוך',ja:'低い',ko:'낮음'}),c:'#FF6B8A'};
   }
   document.getElementById('bioBars').innerHTML = components.map(function(c,i){
     var isPulse=(i===4), st=_band(c.val), barW=(c.val==null?0:c.val), valHtml;
     if(isPulse){
       var r=parseInt(data.rhr);
-      if(r){ valHtml='<span class="rd-tile-val">'+r+'</span><span class="rd-tile-unit">'+L({ru:'уд/мин',uk:'уд/хв',en:'bpm'})+'</span>';
+      if(r){ valHtml='<span class="rd-tile-val">'+r+'</span><span class="rd-tile-unit">'+L({ru:'уд/мин',uk:'уд/хв',en:'bpm',es:'lpm',de:'S/min',pt:'bpm',fr:'bpm',pl:'ud/min',it:'bpm',he:'פעימות/דקה',ja:'拍/分',ko:'회/분'})+'</span>';
         var isMale=data.gender==='male',lo=isMale?50:55,hi=isMale?70:75;
-        st = (r>hi)?{w:L({ru:'Повышен',uk:'Підвищений',en:'Elevated'}),c:'#FF6B8A'}
-           : (r<lo-5)?{w:L({ru:'Ниже нормы',uk:'Нижче норми',en:'Below range'}),c:'#5b8def'}
-           : {w:L({ru:'В пределах нормы',uk:'У межах норми',en:'In range'}),c:'#4ECCA3'};
+        st = (r>hi)?{w:L({ru:'Повышен',uk:'Підвищений',en:'Elevated',es:'Elevado',de:'Erhöht',pt:'Elevado',fr:'Élevé',pl:'Podwyższony',it:'Elevato',he:'גבוה',ja:'高め',ko:'높음'}),c:'#FF6B8A'}
+           : (r<lo-5)?{w:L({ru:'Ниже нормы',uk:'Нижче норми',en:'Below range',es:'Por debajo del rango',de:'Unter dem Bereich',pt:'Abaixo da faixa',fr:'Sous la plage',pl:'Poniżej normy',it:'Sotto la norma',he:'מתחת לטווח',ja:'基準値未満',ko:'정상 범위 미만'}),c:'#5b8def'}
+           : {w:L({ru:'В пределах нормы',uk:'У межах норми',en:'In range',es:'Dentro del rango',de:'Im Normbereich',pt:'Dentro da faixa',fr:'Dans la plage',pl:'W normie',it:'Nella norma',he:'בטווח התקין',ja:'基準値内',ko:'정상 범위'}),c:'#4ECCA3'};
       } else { valHtml='<span class="rd-tile-val">—</span>'; barW=0; }
     } else {
       valHtml=(c.val==null)?'<span class="rd-tile-val">—</span>':'<span class="rd-tile-val">'+c.val+'<span class="rd-tile-unit">%</span></span>';
@@ -6517,7 +6535,7 @@ function _showDailyDoneGate(){
       +'</div>';
   }
   var d=document.createElement('div'); d.id='daily-done-gate'; d.className='step flow-show';
-  d.style.cssText='max-width:560px;margin:40px auto;padding:28px 24px;text-align:center;background:rgba(30,26,18,.6);border:1px solid rgba(226,185,90,.28);border-radius:18px;';
+  d.style.cssText='max-width:560px;margin:40px auto;padding:28px 24px;text-align:center;background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.28);border-radius:18px;';
   d.innerHTML='<div style="font-size:44px;line-height:1;margin-bottom:12px;">🌙</div>'
     +'<div style="font-family:\'Playfair Display\',serif;font-size:20px;color:#fff;margin-bottom:10px;">'+title+'</div>'
     +'<div style="font-size:14px;color:var(--t2);line-height:1.65;margin-bottom:6px;">'+sub+'</div>'
@@ -6681,6 +6699,8 @@ function _showResultsInner(){
     energy:+document.getElementById('energy').value,
     energy_source:(window.__normalFlag&&window.__normalFlag['energy'])||null,
     training:(typeof importedData!=='undefined'&&importedData.source&&importedData.workouts7d!=null)?{count:importedData.workouts7d,intensity:importedData.trainIntensity||'',activity:importedData.trainActivity||'',day:importedData.trainDay||''}:null,
+    source:(typeof importedData!=='undefined'&&importedData&&importedData.source)?importedData.source:null,   // откуда данные: oura/fitbit/…/apple-manual/manual — чтобы ИИ различал измерено vs со слов
+    source_changed:(function(){try{return localStorage.getItem('vialp_source_changed')==='1';}catch(e){return false;}})(),   // сменил источник относительно прошлого прохода
     alc:getRadio('alc'),stress:getRadio('stress'),move_today:getRadio('move_today'),
     // PRO fields
     memory:getRadio('memory'),
