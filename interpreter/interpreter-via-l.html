@@ -3854,6 +3854,8 @@ function setLang(l){
   try{ if(typeof _pmIdle==='function' && !_pmBusy) _pmIdle(); }catch(e){}   // циферблат/кнопка пульса — на текущем языке (кроме идущего замера)
   try{ if(typeof renderSleepScale==='function')renderSleepScale(); }catch(e){}
   try{ if(typeof renderEnergyScale==='function')renderEnergyScale(); }catch(e){}
+  try{ if(typeof renderGadgetPanel==='function')renderGadgetPanel(); }catch(e){}   // подписи метрик «Данные с трекера» (glab_*) — на текущий язык, иначе остаются на прежнем
+  try{ var _cp=document.getElementById('cardPanel'); if(_cp&&_cp.style.display!=='none'&&typeof renderCard==='function')renderCard(); }catch(e){}   // открытая карточка (в т.ч. «По дням») — переверстать на новый язык
   const ctaMarina=document.getElementById('cta-marina');
   if(ctaMarina)ctaMarina.style.display='block';
   document.getElementById('langDropdown').classList.remove('open');
@@ -3862,10 +3864,11 @@ function setLang(l){
   // при смене языка их надо пересобрать, иначе переводятся только карточки-блоки, а подписи между ними нет.
   // Смена языка: если открыт ГЕЙТ (утренняя карточка / «возвращайтесь завтра») — пересобрать сам гейт в новом языке,
   // а НЕ ленту опросника (иначе _reflowSteps выбрасывал в полный check-in с заполненными данными трекера).
+  var _impOpen=!!(document.getElementById('importPanel')&&document.getElementById('importPanel').classList.contains('open'));
   try{
-    if(document.getElementById('morning-gate') && typeof _showMorningCard==='function'){ _showMorningCard((typeof _srcGet==='function')?_srcGet():''); }
-    else if(document.getElementById('daily-done-gate') && typeof _showDailyDoneGate==='function'){ _showDailyDoneGate(); }
-    else if(document.body.classList.contains('flow-mode') && typeof _reflowSteps==='function'){ _reflowSteps(); }
+    if(!_impOpen && document.getElementById('morning-gate') && typeof _showMorningCard==='function'){ _showMorningCard((typeof _srcGet==='function')?_srcGet():''); }
+    else if(!_impOpen && document.getElementById('daily-done-gate') && typeof _showDailyDoneGate==='function'){ _showDailyDoneGate(); }
+    else if(!_impOpen && document.body.classList.contains('flow-mode') && typeof _reflowSteps==='function'){ _reflowSteps(); }
   }catch(e){}
   var _srEl=document.getElementById('stepResult');
   if(_lastResult && _srEl && (_srEl.classList.contains('active')||_srEl.classList.contains('flow-show'))){_rerendering=true;try{_showResultsInner();}finally{_rerendering=false;}if(document.getElementById('aiCard'))fetchAIAnalysis(_lastResult.data,l);}   // перерисовывать результаты при смене языка ТОЛЬКО если экран результатов открыт (иначе смена языка на утренней карточке/выборе источника выбрасывала в старый разбор из памяти)
@@ -6068,6 +6071,7 @@ function _openFunnel(){
 // открыть анкету. Показ нужных/ненужных блоков решает сама анкета по факту данных (_allFlow).
 function _chooseSource(src){
   _srcSet(src);
+  var _g=document.getElementById('morning-gate'); if(_g)_g.remove();   // ушли из утренней карточки в импорт/анкету — гейт убираем, иначе смена языка его воскрешает поверх импорта
   if(src==='apple'){ try{ _heroHealthStart(); }catch(e){} }
   else if(src==='device'){ try{ openImport('full'); }catch(e){} }
   _openFunnel();
@@ -7124,7 +7128,7 @@ function showImportBanner(){
   // и баннер молча пропадал. Шкала стояла первой в <main>, поэтому кладём на то же место.
   const m=document.querySelector('main');if(m)m.insertBefore(b,m.firstChild);
 }
-function toggleCard(id){const card=document.getElementById('card-'+id),isOpen=card.classList.contains('active');document.querySelectorAll('.source-card').forEach(c=>c.classList.remove('active'));if(!isOpen)card.classList.add('active');}
+function toggleCard(id){const card=document.getElementById('card-'+id),isOpen=card.classList.contains('active');document.querySelectorAll('.source-card').forEach(c=>c.classList.remove('active'));if(!isOpen){card.classList.add('active');/* раскрытая карточка сама встаёт по центру видимой области — кнопка «Подключить» видна без ручного скролла */setTimeout(function(){try{card.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){try{card.scrollIntoView(true);}catch(_){}}},70);}}
 function setMethod(source,method){
   const card=document.getElementById('card-'+source);
   const tabs=card.querySelectorAll('.method-tab');
