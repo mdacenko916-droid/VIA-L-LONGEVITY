@@ -6344,16 +6344,25 @@ function renderBioLoad(data, score, type){
        var lo=a<45?40:a<55?30:25, hi=a<45?80:a<55?65:55;
        return Math.max(5,Math.min(100,Math.round((h-lo)/(hi-lo)*55+35)));   // ниже нормы→<35, в норме→35–90
      })():null,
+     note:'hrv',   // честная подпись: от чего считается
      color:'#4ECCA3'},
     {label: L({ru:'Качество сна',uk:'Якість сну',en:'Sleep Quality',es:'Calidad sueño',de:'Schlafqualität',pt:'Qualidade do sono',fr:'Qualité du sommeil',pl:'Jakość snu',it:'Qualità del sonno',he:'איכות שינה',ja:'睡眠の質',ko:'수면 질'}),
      // самооценка × объективные маркёры: бар не может быть 100% при провале глубокого сна/частых пробуждениях
      val: _seen('sleep_qual')?(function(){var v=data.sleep_qual*10;if(data.deep==='none')v-=35;else if(data.deep==='low')v-=20;if(data.wake==='multiple')v-=15;else if(data.wake==='early')v-=8;return Math.max(10,Math.min(100,Math.round(v)));})():null,
+     note:'self',   // основа — самооценка 1–10 с поправками, не замер прибора
      color:'#3B5BDB'},
     {label: L({ru:'Стресс-баланс',uk:'Стрес-баланс',en:'Stress Balance',es:'Balance estrés',de:'Stressbalance',pt:'Balanço de estresse',fr:'Équilibre stress',pl:'Balans stresu',it:'Bilancio stress',he:'איזון לחץ',ja:'ストレスバランス',ko:'스트레스 균형'}),
      val: _seen('stress')?(data.stress==='high'?30:data.stress==='mild'?55:75):null,
+     word:true, note:'self',   // это выбранная категория, а не замер → показываем словом, без процента
      color:'#C49A3C'},
     {label: L({ru:'Температурная стабильность',uk:'Температурна стабільність',en:'Temperature stability',es:'Estabilidad de temperatura',de:'Temperaturstabilität',pt:'Estabilidade da temperatura',fr:'Stabilité de la température',pl:'Stabilność temperatury',it:'Stabilità della temperatura',he:'יציבות טמפרטורה',ja:'体温の安定',ko:'체온 안정성'}),
-     val: _seen('temp')?(data.temp==='normal'?85:data.temp==='spike'?35:55):null,
+     // Честно: есть реальное отклонение температуры с трекера — считаем от него (это замер, можно в %).
+     // Нет — остаётся ответ из опросника, тогда показываем словом и подписываем «по вашей оценке».
+     val:(function(){ var _d=(data.device&&data.device.tempDev!=null)?Math.abs(parseFloat(data.device.tempDev)):null;
+       if(_d!=null&&!isNaN(_d)) return _d<=0.3?90:_d<=0.6?65:_d<=1.0?45:30;
+       return _seen('temp')?(data.temp==='normal'?85:data.temp==='spike'?35:55):null; })(),
+     word:!(data.device&&data.device.tempDev!=null&&!isNaN(parseFloat(data.device.tempDev))),
+     note:(data.device&&data.device.tempDev!=null&&!isNaN(parseFloat(data.device.tempDev)))?'device':'self',
      color:'#F5A623'},
     {label: L({ru:'Пульс покоя',uk:'Пульс спокою',en:'Resting pulse',es:'Pulso en reposo',de:'Ruhepuls',pt:'Pulso em repouso',fr:'Pouls au repos',pl:'Tętno spoczynkowe',it:'Polso a riposo',he:'דופק מנוחה',ja:'安静時脈拍',ko:'안정 시 맥박'}),
      // от возрастной/половой нормы покоя: ниже нормы — лучше. Нет данных → «—», ничего не выдумываем.
@@ -6372,6 +6381,13 @@ function renderBioLoad(data, score, type){
   // композита. Остались сами составляющие: каждая считается из своих данных, без данных → «—».
   // Плитки (макет 2026-07-18): иконка + значение + статус-слово + полоска. Пульс — сырое значение уд/мин.
   var _tIcons=['ph-pulse','ph-bed','ph-wave-sine','ph-thermometer-simple','ph-heart'];
+  // Честная подпись источника под плиткой: замер с прибора / ваша оценка / от чего считается
+  function _srcNote(k){
+    if(k==='self') return L({ru:'по вашей оценке',uk:'за вашою оцінкою',en:'your own rating',es:'según tu valoración',de:'nach deiner Einschätzung',pt:'pela sua avaliação',fr:'selon votre évaluation',pl:'wg Twojej oceny',it:'secondo la tua valutazione',he:'לפי הדירוג שלכם',ja:'あなたの自己評価',ko:'본인 평가 기준'});
+    if(k==='device') return L({ru:'с трекера',uk:'з трекера',en:'from your tracker',es:'desde tu tracker',de:'vom Tracker',pt:'do seu tracker',fr:'depuis votre tracker',pl:'z trackera',it:'dal tuo tracker',he:'מהטרקר',ja:'トラッカーから',ko:'트래커에서'});
+    if(k==='hrv') return L({ru:'HRV к норме возраста',uk:'HRV до норми віку',en:'HRV vs age norm',es:'HRV frente a la norma por edad',de:'HRV zur Altersnorm',pt:'HRV vs norma da idade',fr:'HRV vs norme d’âge',pl:'HRV wzgl. normy wieku',it:'HRV rispetto alla norma per età',he:'HRV מול נורמת הגיל',ja:'年齢基準に対するHRV',ko:'연령 기준 대비 HRV'});
+    return '';
+  }
   function _band(v){
     if(v==null) return {w:L({ru:'нет данных',uk:'немає даних',en:'no data',es:'sin datos',de:'keine Daten',pt:'sem dados',fr:'aucune donnée',pl:'brak danych',it:'nessun dato',he:'אין נתונים',ja:'データなし',ko:'데이터 없음'}),c:'var(--t3)'};
     if(v>=80) return {w:L({ru:'Отлично',uk:'Відмінно',en:'Excellent',es:'Excelente',de:'Ausgezeichnet',pt:'Excelente',fr:'Excellent',pl:'Doskonale',it:'Eccellente',he:'מצוין',ja:'優秀',ko:'훌륭함'}),c:'#4ECCA3'};
@@ -6389,12 +6405,18 @@ function renderBioLoad(data, score, type){
            : (r<lo-5)?{w:L({ru:'Ниже нормы',uk:'Нижче норми',en:'Below range',es:'Por debajo del rango',de:'Unter dem Bereich',pt:'Abaixo da faixa',fr:'Sous la plage',pl:'Poniżej normy',it:'Sotto la norma',he:'מתחת לטווח',ja:'基準値未満',ko:'정상 범위 미만'}),c:'#5b8def'}
            : {w:L({ru:'В пределах нормы',uk:'У межах норми',en:'In range',es:'Dentro del rango',de:'Im Normbereich',pt:'Dentro da faixa',fr:'Dans la plage',pl:'W normie',it:'Nella norma',he:'בטווח התקין',ja:'基準値内',ko:'정상 범위'}),c:'#4ECCA3'};
       } else { valHtml='<span class="rd-tile-val">—</span>'; barW=0; }
+    } else if(c.word){
+      // не замер, а выбранная категория → слово вместо процента (процент врал бы точностью)
+      valHtml=(c.val==null)?'<span class="rd-tile-val">—</span>':'<span class="rd-tile-val" style="font-size:18px;line-height:1.25;color:'+st.c+'">'+st.w+'</span>';
     } else {
       valHtml=(c.val==null)?'<span class="rd-tile-val">—</span>':'<span class="rd-tile-val">'+c.val+'<span class="rd-tile-unit">%</span></span>';
     }
+    var _note=(c.val==null)?'':_srcNote(c.note);
+    var _noteHtml=_note?'<div style="font-size:10px;color:var(--t3);line-height:1.35;margin-bottom:6px;">'+_note+'</div>':'';
+    var _statusHtml=c.word?'' : '<div class="rd-tile-status" style="color:'+st.c+'">'+st.w+'</div>';
     return '<div class="rd-tile"><div class="rd-tile-h"><i class="ph '+_tIcons[i]+'"></i>'+c.label+'</div>'
       +'<div>'+valHtml+'</div>'
-      +'<div class="rd-tile-status" style="color:'+st.c+'">'+st.w+'</div>'
+      +_statusHtml+_noteHtml
       +'<div class="rd-tile-bar"><span data-w="'+barW+'" style="background:'+c.color+';box-shadow:0 0 6px '+c.color+'66;"></span></div></div>';
   }).join('');
   setTimeout(function(){ document.querySelectorAll('#bioBars .rd-tile-bar>span').forEach(function(el){ el.style.width=el.getAttribute('data-w')+'%'; }); },60);
