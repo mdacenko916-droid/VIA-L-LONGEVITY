@@ -2937,6 +2937,8 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
             <div class="rd-index-desc" id="rd-index-desc"></div>
             <!-- честно: индекс — композит по введённым данным, а не физиологический замер -->
             <div style="font-size:10px;color:var(--t3);line-height:1.35;margin-top:6px;" data-t="rd_index_note">Композит по вашим данным, не измерение</div>
+            <!-- какие сигналы учтены в балле — чтобы число не было «чёрным ящиком» -->
+            <div id="rd-index-factors" style="margin-top:10px;"></div>
           </div>
           <div class="rd-ring" id="rd-ring"><i class="ph ph-heart"></i></div>
         </div>
@@ -7030,6 +7032,18 @@ function _showResultsInner(){
   // Лаб-подсказки удалены 2026-07-17: лабораторные показатели — зона EXPERT/ELITE, не VIA-L.
 
   const il=document.getElementById('insightsList');
+  // Прозрачность индекса: показываем, какие сигналы анализ пометил (они же двигали балл).
+  // Не выдаём за точную арифметику — честная формулировка «учтено в индексе».
+  try{
+    var _fx=document.getElementById('rd-index-factors');
+    if(_fx){
+      var _flag=ins.filter(function(o){return o.t==='warn'||o.t==='alert';}).slice(0,5);
+      _fx.innerHTML = _flag.length
+        ? '<div style="font-size:10.5px;color:var(--t3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:5px;">'+L({ru:'Учтено в индексе',uk:'Враховано в індексі',en:'Counted in the index',es:'Contabilizado en el índice',de:'Im Index berücksichtigt',pt:'Contabilizado no índice',fr:'Pris en compte dans l’indice',pl:'Uwzględnione w indeksie',it:'Considerato nell’indice',he:'נלקח בחשבון במדד',ja:'指数に反映',ko:'지수에 반영됨'})+'</div>'
+          + _flag.map(function(o){return '<div style="font-size:11.5px;color:var(--t2);line-height:1.5;">'+(o.i||'•')+' '+o.h+'</div>';}).join('')
+        : '';
+    }
+  }catch(e){}
   il.innerHTML='';
     var _keep=ins.filter(function(o){
     if(o.t!=='ok')return true;
