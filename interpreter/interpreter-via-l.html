@@ -3871,7 +3871,11 @@ function setLang(l){
   try{ if(typeof _pmIdle==='function' && !_pmBusy) _pmIdle(); }catch(e){}   // циферблат/кнопка пульса — на текущем языке (кроме идущего замера)
   try{ if(typeof renderSleepScale==='function')renderSleepScale(); }catch(e){}
   try{ if(typeof renderEnergyScale==='function')renderEnergyScale(); }catch(e){}
-  try{ if(typeof renderGadgetPanel==='function')renderGadgetPanel(); }catch(e){}   // подписи метрик «Данные с трекера» (glab_*) — на текущий язык, иначе остаются на прежнем
+  // Подписи метрик «Данные с трекера» (glab_*) — на текущий язык. НО не на экране разбора:
+  // панель относится к домашнему экрану, и на результате она всплывала поверх (баг смены языка).
+  try{ var _srA=document.getElementById('stepResult');
+       var _onRes=!!(_srA&&(_srA.classList.contains('active')||_srA.classList.contains('flow-show')));
+       if(!_onRes && typeof renderGadgetPanel==='function')renderGadgetPanel(); }catch(e){}
   try{ var _cp=document.getElementById('cardPanel'); if(_cp&&_cp.style.display!=='none'&&typeof renderCard==='function')renderCard(); }catch(e){}   // открытая карточка (в т.ч. «По дням») — переверстать на новый язык
   const ctaMarina=document.getElementById('cta-marina');
   if(ctaMarina)ctaMarina.style.display='block';
