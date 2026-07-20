@@ -891,6 +891,11 @@ input.oura-input::-webkit-slider-thumb{
 .rd-tile{background:rgba(10,14,20,.5);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px 13px;position:relative;}
 .rd-tile-i{position:absolute;top:8px;inset-inline-end:8px;width:18px;height:18px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:transparent;color:var(--t3);font-size:11px;font-style:italic;font-family:Georgia,'Times New Roman',serif;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;z-index:3;}
 .rd-tile-i:active{transform:scale(.9);}
+.rd-index{position:relative;}
+.rd-index .rd-tile-i{width:24px;height:24px;font-size:13px;top:14px;inset-inline-end:14px;}
+.help-card{cursor:pointer;}
+.help-x{position:absolute;top:14px;inset-inline-end:14px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(226,185,90,.4);background:transparent;color:var(--gold-lt);font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;z-index:4;}
+.help-x:active{transform:scale(.94);}
 .rd-tile-h{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--t2);margin-bottom:9px;line-height:1.25;min-height:30px;padding-inline-end:22px;}
 .rd-tile-h .ph{font-size:16px;color:var(--gold-lt);flex-shrink:0;}
 .rd-tile-val{font-family:'Playfair Display',serif;font-size:25px;color:var(--t1);line-height:1;}
@@ -2973,6 +2978,7 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
     <div class="rd-row rd-row-2">
       <!-- ОБЩИЙ ИНДЕКС ДНЯ -->
       <div class="rd-card rd-index">
+        <button type="button" class="rd-tile-i" aria-label="?" onclick="openIndexHelp()">i</button>
         <div class="rd-card-t" data-t="rd_index_title">Общий индекс дня</div>
         <div class="rd-index-top">
           <div class="rd-index-left">
@@ -3182,11 +3188,11 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
 
 <div id="help-sheet" class="help-sheet">
   <div class="help-backdrop" onclick="closeHelp()"></div>
-  <div class="help-card">
+  <div class="help-card" onclick="closeHelp()">
+    <button type="button" class="help-x" aria-label="close" onclick="closeHelp()">✕</button>
     <div class="help-handle"></div>
     <div class="help-title" id="help-title"></div>
     <div class="help-body" id="help-body"></div>
-    <button type="button" class="help-close" onclick="closeHelp()" data-t="help_close">Понятно</button>
   </div>
 </div>
 
@@ -5721,6 +5727,12 @@ function _metricHelp(){ return [
  {t:L({ru:'Пульс покоя',uk:'Пульс спокою',en:'Resting pulse',es:'Pulso en reposo',de:'Ruhepuls',pt:'Pulso em repouso',fr:'Pouls au repos',pl:'Tętno spoczynkowe',it:'Battito a riposo',he:'דופק מנוחה',ja:'安静時心拍',ko:'안정 시 심박수'}),
   b:L({ru:'Ваш пульс в покое (ночью) с трекера, ударов в минуту. Обычно чем ниже — тем лучше восстановление. Реагирует на алкоголь, недосып, нагрузку и начинающуюся простуду, поэтому один высокий день сам по себе не повод для тревоги.',uk:'Ваш пульс у спокої (вночі) з трекера. Зазвичай що нижче — то краще відновлення. Реагує на алкоголь, недосип, навантаження.',en:'Your resting (overnight) pulse from the tracker, beats per minute. Usually the lower, the better the recovery. It responds to alcohol, short sleep, load and a cold coming on, so one high day alone is not a worry.',es:'Tu pulso en reposo (nocturno) del tracker. Normalmente cuanto más bajo, mejor la recuperación. Responde al alcohol, falta de sueño y carga.',de:'Ihr Ruhepuls (nachts) vom Tracker. Meist gilt: je niedriger, desto besser die Erholung. Reagiert auf Alkohol, wenig Schlaf und Belastung.',pt:'Seu pulso em repouso (noturno) do tracker. Geralmente quanto menor, melhor a recuperação. Responde a álcool, sono curto e carga.',fr:'Votre pouls au repos (la nuit) du tracker. En général, plus il est bas, meilleure est la récupération. Il réagit à l’alcool, au manque de sommeil et à la charge.',pl:'Twoje tętno spoczynkowe (nocne) z trackera. Zwykle im niższe, tym lepsza regeneracja. Reaguje na alkohol, niedobór snu i obciążenie.',it:'Il tuo battito a riposo (notturno) dal tracker. Di solito più è basso, meglio è il recupero. Risponde ad alcol, poco sonno e carico.',he:'דופק המנוחה (לילה) מהטרקר. בדרך כלל ככל שנמוך יותר, ההתאוששות טובה יותר. מגיב לאלכוהול, מיעוט שינה ועומס.',ja:'トラッカーによる安静時（夜間）心拍。ふつう低いほど回復が良好です。アルコール・睡眠不足・負荷に反応します。',ko:'트래커의 안정 시(야간) 심박수. 보통 낮을수록 회복이 좋습니다. 음주·수면 부족·부하에 반응합니다.'})}
 ]; }
+function openIndexHelp(){
+  var ti=document.getElementById('help-title'),bo=document.getElementById('help-body');
+  if(ti)ti.textContent=L({ru:'Общий индекс дня',uk:'Загальний індекс дня',en:'Overall day index',es:'Índice general del día',de:'Gesamter Tagesindex',pt:'Índice geral do dia',fr:'Indice global du jour',pl:'Ogólny indeks dnia',it:'Indice generale del giorno',he:'מדד היום הכללי',ja:'一日の総合指標',ko:'하루 종합 지표'});
+  if(bo)bo.textContent=L({ru:'Одно число от 0 до 100 — насколько сегодняшний день в целом складывается для вашего тела. Это не измерение и не диагноз, а сводка ваших же данных: сон, приливы, стресс, показатели с трекера. День стартует с 70, и каждый ответ немного двигает балл вверх или вниз. Смысл — не в точной цифре, а в динамике: если из недели в неделю растёт, то, что вы меняете в режиме и питании, работает.',uk:'Одне число від 0 до 100 — наскільки сьогоднішній день у цілому складається для вашого тіла. Це не вимірювання й не діагноз, а зведення ваших же даних: сон, приливи, стрес, показники з трекера. День стартує з 70, кожна відповідь трохи рухає бал. Сенс — у динаміці: якщо з тижня в тиждень зростає, те, що ви змінюєте, працює.',en:'A single number from 0 to 100 — how today is shaping up for your body overall. Not a measurement or a diagnosis, but a summary of your own data: sleep, hot flashes, stress, tracker metrics. The day starts at 70 and each answer nudges the score up or down. What matters is not the exact figure but the trend: if it rises week to week, what you are changing is working.',es:'Un número de 0 a 100: cómo va hoy para tu cuerpo en general. No es una medición ni un diagnóstico, sino un resumen de tus propios datos: sueño, sofocos, estrés, métricas del tracker. El día empieza en 70 y cada respuesta mueve un poco la puntuación. Lo que importa es la evolución, no la cifra exacta.',de:'Eine Zahl von 0 bis 100 — wie der heutige Tag für Ihren Körper insgesamt läuft. Keine Messung und keine Diagnose, sondern eine Zusammenfassung Ihrer eigenen Daten: Schlaf, Hitzewallungen, Stress, Tracker-Werte. Der Tag startet bei 70, jede Antwort verschiebt den Wert etwas. Wichtig ist der Verlauf, nicht die genaue Zahl.',pt:'Um número de 0 a 100 — como o dia de hoje está para o seu corpo no geral. Não é uma medição nem um diagnóstico, mas um resumo dos seus próprios dados: sono, ondas de calor, estresse, métricas do tracker. O dia começa em 70 e cada resposta move um pouco a pontuação. O que importa é a evolução, não o número exato.',fr:'Un nombre de 0 à 100 — comment la journée se présente globalement pour votre corps. Pas une mesure ni un diagnostic, mais un résumé de vos propres données : sommeil, bouffées de chaleur, stress, mesures du tracker. La journée démarre à 70 et chaque réponse déplace un peu le score. Ce qui compte, c’est l’évolution, pas le chiffre exact.',pl:'Jedna liczba od 0 do 100 — jak dzisiejszy dzień układa się dla Twojego ciała ogólnie. To nie pomiar ani diagnoza, lecz podsumowanie Twoich danych: sen, uderzenia gorąca, stres, dane z trackera. Dzień startuje od 70, każda odpowiedź nieco przesuwa wynik. Liczy się trend, nie dokładna liczba.',it:'Un numero da 0 a 100 — come sta andando oggi per il tuo corpo nel complesso. Non è una misura né una diagnosi, ma un riassunto dei tuoi dati: sonno, vampate, stress, metriche del tracker. La giornata parte da 70 e ogni risposta sposta un po’ il punteggio. Conta l’andamento, non la cifra esatta.',he:'מספר אחד מ-0 עד 100 — כיצד היום מסתדר לגוף שלך בסך הכול. לא מדידה ולא אבחון, אלא סיכום הנתונים שלך: שינה, גלי חום, לחץ, נתוני הטרקר. היום מתחיל ב-70 וכל תשובה מזיזה מעט את הציון. מה שחשוב הוא המגמה, לא המספר המדויק.',ja:'0〜100の一つの数値で、今日が体にとって全体としてどうかを表します。測定でも診断でもなく、あなた自身のデータ（睡眠・ほてり・ストレス・トラッカー値）の要約です。1日は70から始まり、各回答で少し上下します。大切なのは正確な数字ではなく推移です。',ko:'0에서 100까지의 한 숫자로, 오늘이 몸 전체에 어떤지 나타냅니다. 측정이나 진단이 아니라 본인 데이터(수면·홍조·스트레스·트래커 지표)의 요약입니다. 하루는 70에서 시작하며 각 답변이 점수를 조금씩 움직입니다. 중요한 건 정확한 숫자가 아니라 추이입니다.'});
+  var sh=document.getElementById('help-sheet'); if(sh)sh.classList.add('open');
+}
 function openMetricHelp(i){
   var m=_metricHelp()[i]; if(!m)return;   // L() внутри резолвит на текущий язык при каждом клике
   var ti=document.getElementById('help-title'),bo=document.getElementById('help-body');
