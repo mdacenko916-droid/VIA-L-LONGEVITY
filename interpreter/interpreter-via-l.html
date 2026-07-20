@@ -8713,6 +8713,26 @@ async function fetchFitbitLive(sid){
     }
   }catch(e){ setStatus('fitbit-connect-status','error',t('status_fitbit_err')); }
 }
+// ТИХИЙ рефреш: перезапрашиваем метрики по сохранённому sid БЕЗ OAuth и БЕЗ popup импорта
+// (токен живёт в KV воркера, обновляется там же). Нужен, чтобы каждый проход работал на свежих
+// данных за последнюю ночь, а не на кэше vialp_imported. Ничего не ломает при офлайне/протухшем
+// токене — просто не обновляет (j.ok=false → тихо выходим).
+async function _refreshFitbitSilent(){
+  var sid=localStorage.getItem('vialp_fitbit_sid'); if(!sid) return false;
+  try{
+    var r=await fetch(FITBIT_CONNECT_BASE+'/metrics?sid='+encodeURIComponent(sid));
+    var j=await r.json();
+    if(j&&j.ok&&j.ex&&Object.keys(j.ex).length){
+      applyExtracted(j.ex,'fitbit');
+      if(typeof applyImportedToSliders==='function')applyImportedToSliders();
+      if(typeof updateImportSummary==='function')updateImportSummary();
+      if(typeof renderGadgetPanel==='function')renderGadgetPanel();
+      if(typeof updateDeviceBanners==='function')updateDeviceBanners();
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
 // Return leg of the OAuth redirect: interpreter-via-l.html?fitbit=connected&sid=…
 (function(){
   const p = new URLSearchParams(location.search);
@@ -8736,6 +8756,15 @@ document.addEventListener('visibilitychange',function(){
   var sid=localStorage.getItem('vialp_fitbit_sid');
   if(pend && sid && (Date.now()-pend)<600000){ try{ if(typeof openImport==='function') openImport(); }catch(e){} try{ toggleCard('fitbit'); }catch(e){} try{ setMethod('fitbit','connect'); }catch(e){} fetchFitbitLive(sid); }
 });
+// Свежесть каждого прохода: при загрузке, если Fitbit уже подключён, тихо до-тягиваем свежие метрики
+// (кроме возврата из OAuth — там свой fetch). Так проход не сидит на вчерашнем кэше vialp_imported.
+(function(){
+  try{
+    if(new URLSearchParams(location.search).get('fitbit')) return;
+    if(!localStorage.getItem('vialp_fitbit_sid')) return;
+    setTimeout(function(){ _refreshFitbitSilent(); }, 300);
+  }catch(e){}
+})();
 </script>
 
 <!-- ════ ИИ-СОВЕТНИК VIA·L (PRO, tier=pro, 12 языков) — спека docs/ADVISOR-MODEL.md ════ -->
