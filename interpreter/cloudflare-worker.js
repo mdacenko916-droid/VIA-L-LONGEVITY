@@ -2254,9 +2254,15 @@ async function handleFitbitMetrics(request, env, corsHeaders){
   // Daily resting heart rate — последняя ночь
   const rhr = await gh('daily-resting-heart-rate', `daily_resting_heart_rate.date>="${sd}" AND daily_resting_heart_rate.date<"${ed}"`);
   { const v = latest(rhr, d => num(d.dailyRestingHeartRate && d.dailyRestingHeartRate.beatsPerMinute)); if (v!=null) ex.rhr = Math.round(v); }
-  // SpO2 — последняя ночь (валидный диапазон 70–100)
+  // SpO2 — СРЕДНЕЕ за последнюю ночь, не один замер. Fitbit меряет кислород точечно много
+  // раз за ночь; latest() брал ОДИН самый свежий сэмпл — случайный провал (напр. 89 при
+  // насморке/повороте) уезжал клиенту как весь показатель, тогда как телефон показывает
+  // среднее за ночь (напр. 96). Отсюда расхождение приложение↔телефон. Усредняем сэмплы
+  // самой поздней ночи. 2026-07-20. ⚠️ Проверить живьём по FITBIT-DEBUG-логу формы сэмпла.
   const spo2 = await gh('oxygen-saturation', `oxygen_saturation.sample_time.physical_time>="${startISO}" AND oxygen_saturation.sample_time.physical_time<"${endISO}"`);
-  { const v = latest(spo2, d => { const o = d.oxygenSaturation || {}; const n = num(o.percentage ?? o.percentSaturation) ?? pickNum(d, /percent/i); return (n!=null && n>=70 && n<=100) ? n : null; }); if (v!=null) ex.spo2 = +v.toFixed(1); }
+  { const _val = d => { const o = d.oxygenSaturation || {}; const n = num(o.percentage ?? o.percentSaturation) ?? pickNum(d, /percent/i); return (n!=null && n>=70 && n<=100) ? n : null; };
+    const arr = spo2.map(d => ({ ord:_dord(d), val:_val(d) })).filter(x => x.val != null);
+    if (arr.length) { const maxOrd = Math.max(...arr.map(x => x.ord)); const night = arr.filter(x => x.ord === maxOrd).map(x => x.val); const m = avg(night); if (m != null) ex.spo2 = +m.toFixed(1); } }
   // Температура сна: ночная девиация кожи, °C — ПОСЛЕДНЯЯ ночь (уже было так, семантика tempDev)
   const temp = await gh('daily-sleep-temperature-derivations', `daily_sleep_temperature_derivations.date>="${sd}" AND daily_sleep_temperature_derivations.date<"${ed}"`);
   { const pts = temp.map(d => { const t = d.dailySleepTemperatureDerivations || {};
