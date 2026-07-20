@@ -5705,6 +5705,27 @@ function openHelp(k){
   var sh=document.getElementById('help-sheet'); if(sh)sh.classList.add('open');
 }
 function closeHelp(){ var sh=document.getElementById('help-sheet'); if(sh)sh.classList.remove('open'); }
+// Объяснение плиток разбора по клику. Индексы совпадают с components в renderBioLoad:
+// 0 Восстановление, 1 Качество сна, 2 Стресс-баланс, 3 Ночная температура, 4 Пульс покоя.
+function _metricHelp(){ return [
+ {t:L({ru:'Восстановление',uk:'Відновлення',en:'Recovery',es:'Recuperación',de:'Erholung',pt:'Recuperação',fr:'Récupération',pl:'Regeneracja',it:'Recupero',he:'התאוששות',ja:'回復',ko:'회복'}),
+  b:L({ru:'Насколько ваша вариабельность пульса (HRV) сегодня близка к вашему обычному уровню. Мы не сравниваем вас со средними по возрасту — HRV у всех разный и сильно скачет день ото дня. Первые пару недель просто копим вашу личную норму и показываем значение в мс. Ниже обычного — частый спутник недосыпа, нагрузки или напряжения.',uk:'Наскільки ваша варіабельність пульсу (HRV) сьогодні близька до вашого звичайного рівня. Ми не порівнюємо вас із середніми за віком. Перші два тижні накопичуємо вашу норму й показуємо значення в мс.',en:'How close your heart-rate variability (HRV) today is to your own usual level. We do not compare you with age averages — HRV differs a lot between people and swings day to day. For the first two weeks we just build your baseline and show the value in ms. Below usual often comes with short sleep, load or tension.',es:'Qué tan cerca está hoy tu variabilidad del pulso (VFC) de tu nivel habitual. No te comparamos con promedios por edad. Las primeras dos semanas creamos tu base y mostramos el valor en ms.',de:'Wie nahe Ihre Herzratenvariabilität (HRV) heute an Ihrem üblichen Niveau liegt. Kein Vergleich mit Altersdurchschnitten. Die ersten zwei Wochen bilden wir Ihre Basis und zeigen den Wert in ms.',pt:'O quão perto sua variabilidade do pulso (VFC) hoje está do seu nível habitual. Não comparamos com médias por idade. Nas primeiras duas semanas formamos sua base e mostramos o valor em ms.',fr:'À quel point votre variabilité du pouls (VFC) est proche aujourd’hui de votre niveau habituel. Pas de comparaison avec des moyennes d’âge. Les deux premières semaines, on construit votre base et on affiche la valeur en ms.',pl:'Jak blisko Twoja zmienność tętna (HRV) jest dziś Twojego zwykłego poziomu. Nie porównujemy ze średnimi wiekowymi. Przez pierwsze dwa tygodnie budujemy Twoją bazę i pokazujemy wartość w ms.',it:'Quanto la tua variabilità del battito (HRV) oggi è vicina al tuo livello abituale. Nessun confronto con medie per età. Le prime due settimane creiamo la tua base e mostriamo il valore in ms.',he:'עד כמה שונות הדופק (HRV) שלך היום קרובה לרמה הרגילה שלך. איננו משווים לממוצעי גיל. בשבועיים הראשונים בונים בסיס ומציגים ערך במ״ש.',ja:'今日の心拍変動（HRV）が、あなたのいつもの水準にどれだけ近いか。年齢平均とは比べません。最初の2週間は基準を作り、値をmsで表示します。',ko:'오늘의 심박 변이(HRV)가 본인의 평소 수준에 얼마나 가까운지. 연령 평균과 비교하지 않습니다. 처음 2주는 기준을 만들고 값을 ms로 표시합니다.'})},
+ {t:L({ru:'Качество сна',uk:'Якість сну',en:'Sleep Quality',es:'Calidad del sueño',de:'Schlafqualität',pt:'Qualidade do sono',fr:'Qualité du sommeil',pl:'Jakość snu',it:'Qualità del sonno',he:'איכות שינה',ja:'睡眠の質',ko:'수면의 질'}),
+  b:L({ru:'Ваша оценка сна (1–10), скорректированная по объективным маркёрам с трекера: глубокий сон и ночные пробуждения. Поэтому оценка «8», но с провалом глубокого сна, даст балл ниже. Это ваше ощущение плюс то, что видел прибор.',uk:'Ваша оцінка сну (1–10), скоригована за об’єктивними маркерами з трекера: глибокий сон і нічні прокидання.',en:'Your own sleep rating (1–10), adjusted by objective markers from the tracker: deep sleep and night awakenings. So an “8” with poor deep sleep scores lower. It is your feeling plus what the device saw.',es:'Tu valoración del sueño (1–10), ajustada por marcadores objetivos del tracker: sueño profundo y despertares.',de:'Ihre Schlafbewertung (1–10), angepasst an objektive Marker vom Tracker: Tiefschlaf und nächtliches Aufwachen.',pt:'Sua avaliação do sono (1–10), ajustada por marcadores objetivos do tracker: sono profundo e despertares.',fr:'Votre note de sommeil (1–10), ajustée par des marqueurs objectifs du tracker : sommeil profond et réveils.',pl:'Twoja ocena snu (1–10), skorygowana o obiektywne markery z trackera: sen głęboki i wybudzenia.',it:'La tua valutazione del sonno (1–10), corretta con marcatori oggettivi dal tracker: sonno profondo e risvegli.',he:'הדירוג שלך לשינה (1–10), מתוקן לפי מדדים אובייקטיביים מהטרקר: שינה עמוקה ויקיצות.',ja:'あなたの睡眠評価（1〜10）を、トラッカーの客観指標（深い睡眠・夜間覚醒）で補正した値です。',ko:'본인의 수면 평가(1–10)를 트래커의 객관 지표(깊은 수면·야간 각성)로 보정한 값입니다.'})},
+ {t:L({ru:'Стресс-баланс',uk:'Стрес-баланс',en:'Stress Balance',es:'Balance de estrés',de:'Stressbalance',pt:'Balanço de estresse',fr:'Équilibre du stress',pl:'Balans stresu',it:'Bilancio dello stress',he:'איזון לחץ',ja:'ストレスバランス',ko:'스트레스 균형'}),
+  b:L({ru:'Ваш ответ о том, каким был день по напряжению: спокойным, средним или высоким. Это ваша оценка, а не замер прибора — поэтому показываем словом, а не процентом.',uk:'Ваша відповідь про те, яким був день за напруженням. Це ваша оцінка, а не замір приладу.',en:'Your answer about how tense the day felt: calm, moderate or high. This is your own rating, not a device measurement — so we show a word, not a percent.',es:'Tu respuesta sobre cuán tenso fue el día. Es tu valoración, no una medición del dispositivo.',de:'Ihre Angabe, wie angespannt der Tag war. Das ist Ihre Einschätzung, keine Gerätemessung.',pt:'Sua resposta sobre o quão tenso foi o dia. É sua avaliação, não uma medição do dispositivo.',fr:'Votre réponse sur la tension de la journée. C’est votre évaluation, pas une mesure de l’appareil.',pl:'Twoja odpowiedź o napięciu w ciągu dnia. To Twoja ocena, nie pomiar urządzenia.',it:'La tua risposta su quanto è stata tesa la giornata. È la tua valutazione, non una misura del dispositivo.',he:'התשובה שלך על מידת המתח ביום. זו הערכה שלך, לא מדידת מכשיר.',ja:'その日の緊張度についてのあなたの回答です。機器の測定ではなく自己評価なので、言葉で表示します。',ko:'그날의 긴장도에 대한 본인의 답변입니다. 기기 측정이 아니라 자기 평가라 단어로 표시합니다.'})},
+ {t:L({ru:'Ночная температура',uk:'Нічна температура',en:'Overnight temperature',es:'Temperatura nocturna',de:'Nachttemperatur',pt:'Temperatura noturna',fr:'Température nocturne',pl:'Temperatura nocna',it:'Temperatura notturna',he:'טמפרטורה לילית',ja:'夜間の体温',ko:'야간 체온'}),
+  b:L({ru:'Насколько ровной была ваша температура кожи ночью по трекеру. Ровная — телу комфортно; заметные скачки бывают при простуде, тёплой спальне, алкоголе или гормональных колебаниях. Это не температура тела как при болезни, а именно ночные колебания.',uk:'Наскільки рівною була температура шкіри вночі за трекером. Помітні скачки бувають при застуді, теплій спальні, алкоголі або гормональних коливаннях.',en:'How steady your skin temperature was overnight, from the tracker. Steady means the body was comfortable; visible swings happen with a cold, a warm bedroom, alcohol or hormonal shifts. This is not a fever reading, but overnight variation.',es:'Qué tan estable fue tu temperatura de la piel durante la noche. Los cambios ocurren con un resfriado, dormitorio cálido, alcohol o cambios hormonales.',de:'Wie gleichmäßig Ihre Hauttemperatur nachts war. Schwankungen treten bei Erkältung, warmem Schlafzimmer, Alkohol oder hormonellen Veränderungen auf.',pt:'Quão estável foi sua temperatura da pele durante a noite. Oscilações ocorrem com resfriado, quarto quente, álcool ou mudanças hormonais.',fr:'La stabilité de votre température cutanée la nuit. Les variations surviennent avec un rhume, une chambre chaude, l’alcool ou des changements hormonaux.',pl:'Jak stabilna była temperatura skóry w nocy. Wahania pojawiają się przy przeziębieniu, ciepłej sypialni, alkoholu lub zmianach hormonalnych.',it:'Quanto è stata stabile la temperatura della pelle di notte. Le oscillazioni compaiono con un raffreddore, camera calda, alcol o cambiamenti ormonali.',he:'עד כמה טמפרטורת העור שלך הייתה יציבה בלילה. תנודות מופיעות בהצטננות, חדר חם, אלכוהול או שינויים הורמונליים.',ja:'夜間の皮膚温がどれだけ一定だったか。風邪・暖かい寝室・アルコール・ホルモン変化で揺れます。発熱の体温ではなく夜間の変動です。',ko:'밤사이 피부 온도가 얼마나 일정했는지. 감기·따뜻한 침실·음주·호르몬 변화로 흔들립니다. 발열 체온이 아니라 야간 변동입니다.'})},
+ {t:L({ru:'Пульс покоя',uk:'Пульс спокою',en:'Resting pulse',es:'Pulso en reposo',de:'Ruhepuls',pt:'Pulso em repouso',fr:'Pouls au repos',pl:'Tętno spoczynkowe',it:'Battito a riposo',he:'דופק מנוחה',ja:'安静時心拍',ko:'안정 시 심박수'}),
+  b:L({ru:'Ваш пульс в покое (ночью) с трекера, ударов в минуту. Обычно чем ниже — тем лучше восстановление. Реагирует на алкоголь, недосып, нагрузку и начинающуюся простуду, поэтому один высокий день сам по себе не повод для тревоги.',uk:'Ваш пульс у спокої (вночі) з трекера. Зазвичай що нижче — то краще відновлення. Реагує на алкоголь, недосип, навантаження.',en:'Your resting (overnight) pulse from the tracker, beats per minute. Usually the lower, the better the recovery. It responds to alcohol, short sleep, load and a cold coming on, so one high day alone is not a worry.',es:'Tu pulso en reposo (nocturno) del tracker. Normalmente cuanto más bajo, mejor la recuperación. Responde al alcohol, falta de sueño y carga.',de:'Ihr Ruhepuls (nachts) vom Tracker. Meist gilt: je niedriger, desto besser die Erholung. Reagiert auf Alkohol, wenig Schlaf und Belastung.',pt:'Seu pulso em repouso (noturno) do tracker. Geralmente quanto menor, melhor a recuperação. Responde a álcool, sono curto e carga.',fr:'Votre pouls au repos (la nuit) du tracker. En général, plus il est bas, meilleure est la récupération. Il réagit à l’alcool, au manque de sommeil et à la charge.',pl:'Twoje tętno spoczynkowe (nocne) z trackera. Zwykle im niższe, tym lepsza regeneracja. Reaguje na alkohol, niedobór snu i obciążenie.',it:'Il tuo battito a riposo (notturno) dal tracker. Di solito più è basso, meglio è il recupero. Risponde ad alcol, poco sonno e carico.',he:'דופק המנוחה (לילה) מהטרקר. בדרך כלל ככל שנמוך יותר, ההתאוששות טובה יותר. מגיב לאלכוהול, מיעוט שינה ועומס.',ja:'トラッカーによる安静時（夜間）心拍。ふつう低いほど回復が良好です。アルコール・睡眠不足・負荷に反応します。',ko:'트래커의 안정 시(야간) 심박수. 보통 낮을수록 회복이 좋습니다. 음주·수면 부족·부하에 반응합니다.'})}
+]; }
+function openMetricHelp(i){
+  var m=_metricHelp()[i]; if(!m)return;   // L() внутри резолвит на текущий язык при каждом клике
+  var ti=document.getElementById('help-title'),bo=document.getElementById('help-body');
+  if(ti)ti.textContent=m.t||'';
+  if(bo)bo.textContent=m.b||'';
+  var sh=document.getElementById('help-sheet'); if(sh)sh.classList.add('open');
+}
 function _giNone(inp,listId){
   var box=document.getElementById(listId); if(!box)return;
   if(/^none/.test(inp.value)){ if(inp.checked){ box.querySelectorAll('input[type=checkbox]').forEach(function(c){ if(c!==inp)c.checked=false; }); } }
@@ -6420,21 +6441,32 @@ function renderProModules(data, score, type){
 }
 
 // ── MODULE 1: БИОЛОГИЧЕСКАЯ НАГРУЗКА ─────────────────────
+// Личная база HRV для плитки «Восстановление»: медиана дней 4–33 из vialp_daily, минимум 14.
+// Та же логика, что у индекса (docs/PERSONAL-BASELINE-RECON.md §3): на 7 днях база врёт на 9%.
+function _hrvTileBase(){
+  var a=[]; try{a=JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[];}catch(e){}
+  var v=a.map(function(r){return parseFloat(r&&r.hrv);}).filter(function(x){return !isNaN(x)&&x>0;});
+  var base=v.slice(3,33); if(base.length<14) return null;
+  base.sort(function(x,y){return x-y;}); return base[Math.floor(base.length/2)];
+}
 function renderBioLoad(data, score, type){
   const load = 100 - score; // нагрузка = обратное от готовности
   const _tch = (typeof window!=="undefined" && window.__touched && window.__touched.size) ? window.__touched : null;
   const _seen = (...ks) => window.__snapRender || !_tch || ks.some(k=>_tch.has(k));   // из снимка дня (__snapRender) — берём данные напрямую, __touched не при чём
   const components = [
     {label: L({ru:'Восстановление',uk:'Відновлення',en:'Recovery',es:'Recuperación',de:'Erholung',pt:'Recuperação',fr:'Récupération',pl:'Regeneracja',it:'Recupero',he:'התאוששות',ja:'回復',ko:'회복'}),
-     // Было Math.random() — поле hrv_trend не существует, поэтому клиенту показывалось случайное 65–85.
-     // Считаем от реального HRV против возрастной нормы (те же полосы, что в воркере).
+     // Было Math.random(), потом возрастные пороги — но плитка спорила с индексом (индекс уже
+     // на личной норме, плитка кричала «19% Низкое» на том же HRV). Теперь тоже личная норма:
+     // «как обычно» ≈ 70%. База <14 дней → показываем сырое HRV в мс без вердикта (см. render). 2026-07-20.
      val: _seen('hrv')?(function(){
        var h=parseInt(data.hrv); if(!h) return null;
-       var a=parseInt(data.age)||50;
-       var lo=a<45?40:a<55?30:25, hi=a<45?80:a<55?65:55;
-       return Math.max(5,Math.min(100,Math.round((h-lo)/(hi-lo)*55+35)));   // ниже нормы→<35, в норме→35–90
+       var base=_hrvTileBase();
+       if(base) return Math.max(5,Math.min(100,Math.round(h/base*70)));   // на своей норме→70, −30%→~49
+       return null;   // базы нет → val null, но HRV есть → плитка покажет мс (noBase ниже)
      })():null,
-     note:'hrv',   // честная подпись: от чего считается
+     hrvRaw: _seen('hrv')?(parseInt(data.hrv)||null):null,
+     hrvNoBase: _seen('hrv')?(parseInt(data.hrv)&&!_hrvTileBase()):false,
+     note:'self',
      color:'#4ECCA3'},
     {label: L({ru:'Качество сна',uk:'Якість сну',en:'Sleep Quality',es:'Calidad sueño',de:'Schlafqualität',pt:'Qualidade do sono',fr:'Qualité du sommeil',pl:'Jakość snu',it:'Qualità del sonno',he:'איכות שינה',ja:'睡眠の質',ko:'수면 질'}),
      // самооценка × объективные маркёры: бар не может быть 100% при провале глубокого сна/частых пробуждениях
@@ -6445,7 +6477,7 @@ function renderBioLoad(data, score, type){
      val: _seen('stress')?(data.stress==='high'?30:data.stress==='mild'?55:75):null,
      word:true, note:'self',   // это выбранная категория, а не замер → показываем словом, без процента
      color:'#C49A3C'},
-    {label: L({ru:'Температурная стабильность',uk:'Температурна стабільність',en:'Temperature stability',es:'Estabilidad de temperatura',de:'Temperaturstabilität',pt:'Estabilidade da temperatura',fr:'Stabilité de la température',pl:'Stabilność temperatury',it:'Stabilità della temperatura',he:'יציבות טמפרטורה',ja:'体温の安定',ko:'체온 안정성'}),
+    {label: L({ru:'Ночная температура',uk:'Нічна температура',en:'Overnight temperature',es:'Temperatura nocturna',de:'Nachttemperatur',pt:'Temperatura noturna',fr:'Température nocturne',pl:'Temperatura nocna',it:'Temperatura notturna',he:'טמפרטורה לילית',ja:'夜間の体温',ko:'야간 체온'}),
      // Честно: есть реальное отклонение температуры с трекера — считаем от него (это замер, можно в %).
      // Нет — остаётся ответ из опросника, тогда показываем словом и подписываем «по вашей оценке».
      val:(function(){ var _d=(data.device&&data.device.tempDev!=null)?Math.abs(parseFloat(data.device.tempDev)):null;
@@ -6487,6 +6519,17 @@ function renderBioLoad(data, score, type){
   }
   document.getElementById('bioBars').innerHTML = components.map(function(c,i){
     var isPulse=(i===4), st=_band(c.val), barW=(c.val==null?0:c.val), valHtml;
+    if(i===0 && c.hrvNoBase){
+      // База HRV ещё не набрана (<14 дней) — показываем сырое значение в мс без вердикта,
+      // как плитка пульса. Никакого «Низкое» и красной полосы: оснований пока нет.
+      valHtml='<span class="rd-tile-val">'+c.hrvRaw+'</span><span class="rd-tile-unit"> '+L({ru:'мс',uk:'мс',en:'ms',es:'ms',de:'ms',pt:'ms',fr:'ms',pl:'ms',it:'ms',he:'מ"ש',ja:'ms',ko:'ms'})+'</span>';
+      st={w:L({ru:'копим норму',uk:'накопичуємо норму',en:'building baseline',es:'creando base',de:'Basis wird gebildet',pt:'formando base',fr:'base en cours',pl:'budujemy bazę',it:'creo base',he:'בונים בסיס',ja:'基準作成中',ko:'기준 형성 중'}),c:'var(--t2)'};
+      barW=0; c.word=false;
+      return '<div class="rd-tile" role="button" tabindex="0" onclick="openMetricHelp(0)"><div class="rd-tile-h"><i class="ph '+_tIcons[i]+'"></i>'+c.label+'</div>'
+        +'<div>'+valHtml+'</div>'
+        +'<div class="rd-tile-status" style="color:'+st.c+'">'+st.w+'</div>'
+        +'<div class="rd-tile-bar"><span data-w="0" style="background:'+c.color+';"></span></div></div>';
+    }
     if(isPulse){
       var r=parseInt(data.rhr);
       if(r){ valHtml='<span class="rd-tile-val">'+r+'</span><span class="rd-tile-unit">'+L({ru:'уд/мин',uk:'уд/хв',en:'bpm',es:'lpm',de:'S/min',pt:'bpm',fr:'bpm',pl:'ud/min',it:'bpm',he:'פעימות/דקה',ja:'拍/分',ko:'회/분'})+'</span>';
@@ -6504,7 +6547,7 @@ function renderBioLoad(data, score, type){
     var _note=(c.val==null)?'':_srcNote(c.note);
     var _noteHtml=_note?'<div style="font-size:10px;color:var(--t3);line-height:1.35;margin-bottom:6px;">'+_note+'</div>':'';
     var _statusHtml=c.word?'' : '<div class="rd-tile-status" style="color:'+st.c+'">'+st.w+'</div>';
-    return '<div class="rd-tile"><div class="rd-tile-h"><i class="ph '+_tIcons[i]+'"></i>'+c.label+'</div>'
+    return '<div class="rd-tile" role="button" tabindex="0" onclick="openMetricHelp('+i+')"><div class="rd-tile-h"><i class="ph '+_tIcons[i]+'"></i>'+c.label+'</div>'
       +'<div>'+valHtml+'</div>'
       +_statusHtml+_noteHtml
       +'<div class="rd-tile-bar"><span data-w="'+barW+'" style="background:'+c.color+';box-shadow:0 0 6px '+c.color+'66;"></span></div></div>';
