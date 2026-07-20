@@ -848,6 +848,30 @@ input.oura-input::-webkit-slider-thumb{
 .rd-card{position:relative;background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.20);border-radius:20px;padding:19px 21px;overflow:hidden;}
 .rd-card-t{font-family:'Playfair Display',serif;font-size:13.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold-lt);margin-bottom:15px;display:flex;align-items:center;gap:8px;}
 .rd-ct-ic{font-size:17px;color:var(--gold-lt);}
+/* ── ТРЕНДЫ ЗА 30 ДНЕЙ ──────────────────────────────────
+   Строка = метрика: иконка · название+значение+дельта словами · спарклайн · % справа.
+   Линии единым приглушённым золотом (идентичность даёт иконка+подпись); ЦВЕТОМ говорит
+   только дельта — зелёный/янтарный/красный, и всегда рядом со знаком (+10%), не цветом одним. */
+.rd-tr-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:2px;}
+.rd-tr-sub{font-size:12px;color:var(--t3);margin-bottom:14px;}
+.rd-tr-all{background:none;border:0;padding:0;font-family:inherit;font-size:12px;color:var(--gold-lt);cursor:pointer;flex-shrink:0;}
+.rd-tr-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid rgba(255,255,255,.06);cursor:pointer;}
+.rd-tr-row:first-of-type{border-top:0;}
+.rd-tr-ic{width:34px;height:34px;flex-shrink:0;opacity:.9;}
+.rd-tr-main{flex:1 1 auto;min-width:0;}
+.rd-tr-name{font-size:12px;color:var(--t3);margin-bottom:2px;}
+.rd-tr-val{font-family:'Playfair Display',serif;font-size:21px;color:#fff;line-height:1.1;}
+.rd-tr-u{font-size:12px;color:var(--t3);margin-left:3px;}
+.rd-tr-avg{font-size:11.5px;color:var(--t3);margin-left:7px;white-space:nowrap;}   /* переносим целиком, а не рвём «к / среднему» пополам (видно на температуре: значение длинное) */
+.rd-tr-spark{width:104px;height:34px;flex-shrink:0;}
+.rd-tr-pct{font-size:13px;font-weight:600;width:46px;text-align:right;flex-shrink:0;}
+.rd-tr-big{padding:4px 0 14px;}
+.rd-tr-big svg{width:100%;height:120px;}
+.rd-tr-ax{display:flex;justify-content:space-between;font-size:10.5px;color:var(--t3);margin-top:4px;}
+@media(max-width:420px){
+  .rd-tr-spark{width:72px;}
+  .rd-tr-avg{display:block;margin:2px 0 0;}
+}
 /* индекс дня */
 .rd-index-top{display:flex;align-items:center;justify-content:space-between;gap:14px;}
 .rd-index-num{font-family:'Playfair Display',serif;font-size:52px;font-weight:600;color:var(--gold-lt);line-height:.95;}
@@ -990,6 +1014,15 @@ footer{
 .footer-tagline{font-size:12px;color:var(--t3);font-style:italic;margin-bottom:6px;letter-spacing:.5px;}
 .footer-back{display:inline-block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--t3);text-decoration:none;border:1px solid var(--b1);padding:8px 20px;border-radius:50px;transition:all .3s;}
 .footer-back:hover{border-color:var(--b2);color:var(--gold);}
+
+/* Утренняя карточка — статичный экран: карточка по центру, футер (VIA—L · «Живи…» · Конфиденциальность ·
+   Условия) прижат к низу и не уезжает при скролле. Ловим по наличию самого гейта (:has), чтобы не
+   заводить класс и не снимать его в трёх местах удаления. Если карточка выше экрана — скролл вернётся сам. */
+body:has(#morning-gate) #scroll-area{display:flex;flex-direction:column;}
+body:has(#morning-gate) #scroll-area main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;justify-content:center;}
+body:has(#morning-gate) #scroll-area footer,
+body:has(#morning-gate) #scroll-area .legal-links{flex:0 0 auto;}
+body:has(#morning-gate) #morning-gate{margin:0 auto;}
 
 /* ══ IMPORT PANEL ════════════════════════════════════════ */
 #importPanel{
@@ -1421,11 +1454,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;}
 /* «По дням» (карточка/История): тайлы приборных метрик — тот же язык, что «Данные с трекера сегодня», но read-only и компактнее */
 .daily-day-card{background:#1C2030;border-radius:16px;border:1px solid var(--b1);padding:14px 14px 12px;margin-bottom:10px;}
 .daily-day-date{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gold-lt,#e2b96a);margin-bottom:9px;}
-.daily-tiles{margin-bottom:8px;}
-.gp-tile.sm{padding:8px 9px;gap:8px;cursor:default;}
-.gp-tile.sm .gp-ic{width:26px;height:26px;flex:0 0 26px;}
-.gp-tile.sm .gp-name{font-size:11.5px;}
-.gp-tile.sm .gp-num{font-size:14px;}
+/* .daily-tiles / .gp-tile.sm удалены вместе с приборными плитками в «По дням» — их место заняла карточка «Тренды за 30 дней» */
 .daily-subj{font-size:12px;color:var(--t2);line-height:1.6;}
 .gp-head{font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold-lt);margin:0 0 7px;display:flex;align-items:center;gap:7px;}
 .gp-note{font-size:11.5px;line-height:1.45;color:var(--t2);margin:0 0 11px;}
@@ -1704,13 +1733,15 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
   <div style="max-width:600px;margin:0 auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
       <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--t1);" data-t="card_title">Мой профиль</div>
-      <button onclick="navTo('home')" aria-label="Close" class="x-close">✕</button>
+      <!-- Закрытие профиля = возврат на «Сегодня» (дашборд дня или утренняя карточка).
+           Было navTo('home') — а 'home' у навигации значит startFunnel(), т.е. ✕ ЗАПУСКАЛ проход
+           и выбрасывал на первый недопройденный шаг («Энергия и образ жизни»). -->
+      <button onclick="navTo('today')" aria-label="Close" class="x-close">✕</button>
     </div>
     <div id="weeklyReport" style="margin-bottom:18px;"></div>
     <div id="monthlyReport" style="margin-bottom:18px;"></div>
     <div id="aiMemoryBox" style="margin-bottom:18px;display:flex;flex-direction:column;gap:10px;"></div>
     <div id="cardBody"></div>
-    <div id="dailyList" style="margin:18px 0;"></div>
     <div id="historyList"></div>
   </div>
 </div>
@@ -2927,6 +2958,10 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
     <!-- лента недели (Oura): дни + тап → тот день из истории -->
     <div class="rd-week" id="rd-week"></div>
 
+    <!-- ТРЕНДЫ ЗА 30 ДНЕЙ: динамика приборных показателей из vialp_daily.
+         Раньше это лежало хвостом в «Мой профиль» списком чисел по дням — форму кривой там было не видно. -->
+    <div class="rd-card" id="rd-trends" style="display:none;margin-bottom:15px;"></div>
+
     <!-- ── РЯД 1: индекс дня + показатели ── -->
     <div class="rd-row rd-row-2">
       <!-- ОБЩИЙ ИНДЕКС ДНЯ -->
@@ -3871,11 +3906,12 @@ function setLang(l){
   try{ if(typeof _pmIdle==='function' && !_pmBusy) _pmIdle(); }catch(e){}   // циферблат/кнопка пульса — на текущем языке (кроме идущего замера)
   try{ if(typeof renderSleepScale==='function')renderSleepScale(); }catch(e){}
   try{ if(typeof renderEnergyScale==='function')renderEnergyScale(); }catch(e){}
-  // Подписи метрик «Данные с трекера» (glab_*) — на текущий язык. НО не на экране разбора:
-  // панель относится к домашнему экрану, и на результате она всплывала поверх (баг смены языка).
-  try{ var _srA=document.getElementById('stepResult');
-       var _onRes=!!(_srA&&(_srA.classList.contains('active')||_srA.classList.contains('flow-show')));
-       if(!_onRes && typeof renderGadgetPanel==='function')renderGadgetPanel(); }catch(e){}
+  // Подписи метрик «Данные с трекера» (glab_*) — на текущий язык. ТОЛЬКО если панель уже на экране:
+  // renderGadgetPanel() в конце сам ставит display:block, поэтому на любом экране, где панели быть не
+  // должно (разбор, утренняя карточка, гейт «завтра»), смена языка её выносила поверх. Показывать/прятать
+  // панель — дело того, кто рисует экран; здесь мы только переводим уже видимое.
+  try{ var _gpw=document.getElementById('gadget-panel-wrap');
+       if(_gpw && _gpw.style.display!=='none' && typeof renderGadgetPanel==='function')renderGadgetPanel(); }catch(e){}
   try{ var _cp=document.getElementById('cardPanel'); if(_cp&&_cp.style.display!=='none'&&typeof renderCard==='function')renderCard(); }catch(e){}   // открытая карточка (в т.ч. «По дням») — переверстать на новый язык
   const ctaMarina=document.getElementById('cta-marina');
   if(ctaMarina)ctaMarina.style.display='block';
@@ -3892,6 +3928,16 @@ function setLang(l){
     else if(!_impOpen && document.body.classList.contains('flow-mode') && typeof _reflowSteps==='function'){ _reflowSteps(); }
   }catch(e){}
   var _srEl=document.getElementById('stepResult');
+  // Экран показывает СОХРАНЁННЫЙ день (сегодняшний дашборд или тап по ленте недели) — перерисовываем
+  // его из снимка vialp_days. Пересчёт из полей формы давал чужой день: поля к этому моменту уже
+  // очищены/перезаполнены, и разбор «переезжал» на вчера.
+  var _sd=window.__snapDay;
+  if(_sd && _srEl && (_srEl.classList.contains('active')||_srEl.classList.contains('flow-show'))){
+    try{ var _sn=_daySnapGet().filter(function(x){return x.day===_sd;})[0];
+      if(_sn){ _renderDayFromSnap(_sn, _sd===_dayKey());
+        if(_sd===_dayKey() && document.getElementById('aiCard') && _lastResult) fetchAIAnalysis(_lastResult.data,l);   // сегодняшний разбор — на новом языке; прошлые дни берём из кэша как есть
+        return; } }catch(e){}
+  }
   if(_lastResult && _srEl && (_srEl.classList.contains('active')||_srEl.classList.contains('flow-show'))){_rerendering=true;try{_showResultsInner();}finally{_rerendering=false;}if(document.getElementById('aiCard'))fetchAIAnalysis(_lastResult.data,l);}   // перерисовывать результаты при смене языка ТОЛЬКО если экран результатов открыт (иначе смена языка на утренней карточке/выборе источника выбрасывала в старый разбор из памяти)
 }
 function t(k){return T[lang][k]||T.ru[k]||k;}
@@ -4244,6 +4290,7 @@ var _CAT={
   legal:     {ic:'scales',                acc:'158,172,190', sub:{ru:'Согласия и условия',uk:'Згоди та умови',en:'Consents & terms',es:'Consentimientos y términos',de:'Einwilligungen & Bedingungen',pt:'Consentimentos e termos',fr:'Consentements et conditions',pl:'Zgody i warunki',it:'Consensi e termini',he:'הסכמות ותנאים',ja:'同意事項と規約',ko:'동의 및 약관'}}, // холодный стальной
   memory:    {ic:'brain',                 acc:'150,150,220', sub:{ru:'Заметки о вас',uk:'Нотатки про вас',en:'Notes about you',es:'Notas sobre ti',de:'Notizen über dich',pt:'Notas sobre você',fr:'Notes vous concernant',pl:'Notatki o Tobie',it:'Note su di te',he:'הערות עליך',ja:'あなたに関するメモ',ko:'당신에 대한 메모'}}, // сиренево-синий
   vai:       {ic:'gauge',                 acc:'214,150,90',  sub:{ru:'Косвенный показатель · не диагноз',uk:'Непрямий показник · не діагноз',en:'Indirect indicator · not a diagnosis',es:'Indicador indirecto · no diagnóstico',de:'Indirekter Indikator · keine Diagnose',pt:'Indicador indireto · não diagnóstico',fr:'Indicateur indirect · pas un diagnostic',pl:'Wskaźnik pośredni · nie diagnoza',it:'Indicatore indiretto · non diagnosi',he:'מדד עקיף · לא אבחון',ja:'間接指標・診断ではありません',ko:'간접 지표 · 진단 아님'}},
+  daily:     {ic:'calendar-check',        acc:'186,168,132', sub:{ru:'Самочувствие по дням',uk:'Самопочуття по днях',en:'Day-by-day wellbeing',es:'Bienestar día a día',de:'Befinden Tag für Tag',pt:'Bem-estar dia a dia',fr:'Bien-être jour après jour',pl:'Samopoczucie dzień po dniu',it:'Benessere giorno per giorno',he:'תחושה יום אחר יום',ja:'日ごとの体調',ko:'일별 컨디션'}}, // тёплый песочно-серый
   focus:     {ic:'target',                acc:'168,138,224', sub:{ru:'Над чем работаем',uk:'Над чим працюємо',en:'What we focus on',es:'En qué trabajamos',de:'Woran wir arbeiten',pt:'No que focamos',fr:'Ce sur quoi on travaille',pl:'Nad czym pracujemy',it:'Su cosa lavoriamo',he:'על מה אנחנו עובדים',ja:'取り組んでいること',ko:'무엇에 집중하는지'}}  // фиолетовый
 };
 function _vcSec(icon,title,inner,open,span){
@@ -4560,9 +4607,14 @@ function renderCard(){
     +'<div class="vai-disc">'+L({ru:'VAI — не диагноз, а расчётный косвенный показатель. Для оценки здоровья обратитесь к специалисту.',uk:'VAI — не діагноз, а розрахунковий непрямий показник. Для оцінки здоров’я зверніться до фахівця.',en:'VAI is not a diagnosis — it is a calculated indirect indicator. For a health assessment, consult a specialist.',es:'VAI no es un diagnóstico, es un indicador indirecto calculado. Para evaluar tu salud, consulta a un especialista.',de:'VAI ist keine Diagnose, sondern ein berechneter indirekter Indikator. Für eine Gesundheitsbewertung wende dich an eine Fachkraft.',pt:'VAI não é um diagnóstico — é um indicador indireto calculado. Para avaliar a saúde, consulte um especialista.',fr:'Le VAI n’est pas un diagnostic — c’est un indicateur indirect calculé. Pour évaluer votre santé, consultez un spécialiste.',pl:'VAI to nie diagnoza — to obliczany wskaźnik pośredni. W celu oceny zdrowia skonsultuj się ze specjalistą.',it:'Il VAI non è una diagnosi — è un indicatore indiretto calcolato. Per valutare la salute, consulta uno specialista.',he:'VAI אינו אבחון — זהו מדד עקיף מחושב. להערכת בריאות פנו למומחה.',ja:'VAIは診断ではなく、算出された間接指標です。健康評価は専門家にご相談ください。',ko:'VAI는 진단이 아니라 계산된 간접 지표입니다. 건강 평가는 전문가와 상담하세요.'})+'</div>'
     +'</div>';
   var _secVai=_vcSec('vai',L({ru:'Индекс скрытого жира (VAI)',uk:'Індекс прихованого жиру (VAI)',en:'Hidden fat index (VAI)',es:'Índice de grasa oculta (VAI)',de:'Index für verborgenes Fett (VAI)',pt:'Índice de gordura oculta (VAI)',fr:'Indice de graisse cachée (VAI)',pl:'Wskaźnik ukrytego tłuszczu (VAI)',it:'Indice del grasso nascosto (VAI)',he:'מדד שומן נסתר (VAI)',ja:'隠れ脂肪指数 (VAI)',ko:'숨은 지방 지수 (VAI)'}),_vaiInner,false,true);
-  // Порядок по логике/важности: сперва профиль (грид), затем результаты/инструменты (полноширинные)
+  // «По дням» — дневник самочувствия; такая же сворачиваемая секция, как остальные.
+  var _dInner=(typeof _dailyInner==='function')?_dailyInner():'';
+  var _secDaily=_dInner?_vcSec('daily',t('daily_title'),_dInner,false,true):'';
+
+  // Порядок по логике/важности: сперва профиль (грид), затем результаты/инструменты (полноширинные).
+  // «Правовая информация» — всегда последняя.
   html+=[_secGoal,_secAct,_secNut,_secSup,_secStress,_secBal,_secRhythm,_secLife,_secBaseline,   // «что я о себе указал»
-         _secDyn,_secDay,_secVai,_secHist,_secSource,_secBackup,_secLegal].join('');               // «что показывает система / инструменты» + VAI-калькулятор
+         _secDyn,_secDay,_secVai,_secDaily,_secHist,_secSource,_secBackup,_secLegal].join('');     // «что показывает система / инструменты» + VAI-калькулятор
   html+='</div>'; // .vcard-grid
   html+='</div>'; // .vcard-wrap
 
@@ -4571,7 +4623,6 @@ function renderCard(){
   if(typeof renderWeeklyReportUI==='function')renderWeeklyReportUI();
   if(typeof renderMonthlyReportUI==='function')renderMonthlyReportUI();
   if(typeof renderAiMemoryUI==='function')renderAiMemoryUI();
-  if(typeof _renderDaily==='function')_renderDaily();   // PRO-специфика: архив «По дням» с прибора — у VIO её нет
 }
 
 // ══ МЕСЯЧНЫЙ AI-РАЗБОР (порт VIO: то же окно weeklyTrend, 30 дней) ═══════════
@@ -4735,10 +4786,12 @@ function _saveDaily(){
     localStorage.setItem('vialp_daily',JSON.stringify(arr));
   }catch(e){}
 }
-function _renderDaily(){
-  var box=document.getElementById('dailyList'); if(!box)return;
+// Возвращает СОДЕРЖИМОЕ секции «По дням» (без заголовка — его даёт _vcSec).
+// Раньше писала в отдельный #dailyList под карточкой, из-за чего блок висел ниже
+// «Правовой информации» и выпадал из общего вида сворачиваемых секций.
+function _dailyInner(){
   var arr=[]; try{arr=JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[];}catch(e){}
-  if(!arr.length){box.innerHTML='';return;}
+  if(!arr.length)return '';
   var hf={none:'0',low:'1–2',mid:'3–5',high:'6–10',veryhigh:'10+'};
   // Словесные подписи (субъективные поля; приборные тянут из _GLAB/_GMETA — те же, что «Данные с трекера сегодня»).
   var LBL={
@@ -4763,18 +4816,7 @@ function _renderDaily(){
     daily:{ru:'днём',uk:'удень',en:'during the day',es:'durante el día',de:'tagsüber',pt:'durante o dia',fr:'en journée',pl:'w ciągu dnia',it:'durante il giorno',he:'ביום',ja:'日中',ko:'낮에'},
     allday:{ru:'весь день',uk:'увесь день',en:'all day',es:'todo el día',de:'den ganzen Tag',pt:'o dia todo',fr:'toute la journée',pl:'cały dzień',it:'tutto il giorno',he:'כל היום',ja:'一日中',ko:'하루 종일'}
   };
-  var ICONF={hrv:'hrv',rhr:'rhr',sleepHours:'sleep',deepMin:'deep',tempDev:'temp',spo2:'spo2',vo2:'vo2',readiness:'readiness'};
-  var mKeys=['hrv','rhr','sleepHours','deepMin','spo2','tempDev','vo2','readiness'];
-  box.innerHTML='<div style="font-family:\'Oswald\',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-lt);margin:6px 0 8px;">'+t('daily_title')+'</div>'
-    +arr.slice(0,14).map(function(r){
-      var tiles=mKeys.map(function(k){
-        var got=r[k]!=null&&!isNaN(r[k])&&!(k==='tempDev'&&Math.abs(r[k])<0.005);
-        if(!got)return '';
-        var m=_GMETA[k], v=m.f(r[k]), nm=(_GLAB[k]&&(_GLAB[k][lang]||_GLAB[k].en))||k;
-        return '<div class="gp-tile got sm"><img class="gp-ic" src="Logo/metrics/'+ICONF[k]+'.png" alt="" loading="lazy">'
-          +'<div class="gp-txt"><div class="gp-name">'+nm+'</div></div>'
-          +'<div class="gp-num">'+v+(m.u?'<span class="gp-u"> '+m.u+'</span>':'')+'</div></div>';
-      }).join('');
+  return arr.slice(0,14).map(function(r){
       var p=[];
       if(r.energy!=null)p.push(L(LBL.energy)+' '+Math.round(r.energy)+'/10');
       if(r.stress!=null)p.push(L(LBL.stress)+' '+r.stress+'/10');
@@ -4782,9 +4824,11 @@ function _renderDaily(){
       if(r.fog&&r.fog!=='none'&&FOGV[r.fog])p.push(L(LBL.fog)+' '+L(FOGV[r.fog]));
       if(r.hf_count&&r.hf_count!=='none')p.push(L(LBL.hf)+' '+(hf[r.hf_count]||r.hf_count));
       if(r.alc!=null&&r.alc!='0'&&r.alc!=0&&r.alc!=='no')p.push(L(LBL.alc));
+      // Приборные плитки отсюда убраны: динамику HRV/пульса/сна показывает карточка «Тренды за 30 дней»
+      // на экране разбора — там видна форма кривой, а не 14 отдельных наборов чисел. Здесь остаётся
+      // то, чего в трендах нет и нигде больше не видно: субъективные ответы дня.
       return '<div class="daily-day-card"><div class="daily-day-date">'+r.date+'</div>'
-        +(tiles?'<div class="gadget-panel daily-tiles">'+tiles+'</div>':'')
-        +(p.length?'<div class="daily-subj">'+p.join(' · ')+'</div>':(tiles?'':'<div class="daily-subj">—</div>'))
+        +'<div class="daily-subj">'+(p.length?p.join(' · '):'—')+'</div>'
         +'</div>';
     }).join('');
 }
@@ -6506,6 +6550,7 @@ function _renderDayFromSnap(snap, todayFlag){
   if(!snap||!snap.data) return false;
   var data=snap.data, score=snap.score, type=snap.type;
   try{ _lastResult={score:score,type:type,data:data,insights:[],recs:[],docR:[]}; }catch(e){}
+  window.__snapDay=snap.day;   // какой день сейчас на экране — чтобы смена языка перерисовала ЕГО из снимка, а не пересчитала из полей формы
   window.__snapRender=true;   // показываем метрики прямо из снимка (без опоры на __touched)
   try{ renderDayIndex(score,type,data); }catch(e){}
   try{ renderProModules(data,score,type); }catch(e){}   // плитки показателей
@@ -6551,6 +6596,112 @@ function _renderWeekStrip(activeKey){
       +'><span class="rd-wd-wd">'+_esc(wd)+'</span><span class="rd-wd-n">'+dnum+'</span><span class="rd-wd-dot" style="background:'+col+'"></span></button>';
   }
   el.innerHTML=html;
+  // Тренды живут рядом с лентой и на том же дне — вешаем сюда: через эту точку проходит
+  // и живой проход, и открытие дня из истории, и перерисовка при смене языка.
+  try{ if(typeof renderTrends==='function') renderTrends(activeKey); }catch(e){}
+}
+// ══ ТРЕНДЫ ЗА 30 ДНЕЙ (карточка на экране «Сегодня») ══════════════════════
+// Источник — vialp_daily (там и приборные, и субъективные поля, глубина до ~4 лет).
+// Полярность: для пульса покоя рост = ухудшение, для остальных рост = улучшение;
+// у температуры «лучше/хуже» не определено — она нейтральна и без процентов
+// (процент от отклонения около нуля даёт бессмысленные скачки: +0.1 → +∞%).
+var _TR_POL={hrv:1,sleepHours:1,deepMin:1,readiness:1,vo2:1,spo2:1,rhr:-1,tempDev:0};
+var _TR_KEYS=['hrv','sleepHours','rhr','spo2','tempDev','readiness','vo2','deepMin'];
+var _TR_ICO={hrv:'hrv',rhr:'rhr',sleepHours:'sleep',deepMin:'deep',tempDev:'temp',spo2:'spo2',vo2:'vo2',readiness:'readiness'};
+var _TR_DAYS=30, _TR_TOP=4;
+window.__trAll=false; window.__trOpen='';
+
+// Дельта словами: «+5 ms», для сна — в минутах (0.5 ч читается как «30 min», не «+0.5»)
+function _trDelta(k,d){
+  var m=_GMETA[k], a=Math.abs(d), r;
+  if(k==='sleepHours') r=String(Math.round(a*60));
+  else if(k==='tempDev') r=a.toFixed(2);
+  else r=(a<10&&m.step<1)?a.toFixed(1):String(Math.round(a));
+  // Знак — по ОКРУГЛЁННОМУ числу: сырая дельта −0.4 % округлялась до 0 и печаталась как «−0 %».
+  var s=(parseFloat(r)===0)?'±':(d>0?'+':'−');
+  var u=(k==='sleepHours')?' min':(k==='tempDev')?' °C':(m.u?' '+m.u:'');
+  return s+r+u;
+}
+// SVG-кривая по точкам: line + мягкая заливка под ней + точка на текущем дне
+function _trPath(vals,w,h){
+  var pad=3, lo=Math.min.apply(null,vals), hi=Math.max.apply(null,vals), rng=(hi-lo)||1;
+  var n=vals.length, dx=(n>1)?(w-pad*2)/(n-1):0, pts=[];
+  for(var i=0;i<n;i++){ pts.push([pad+dx*i, pad+(h-pad*2)*(1-(vals[i]-lo)/rng)]); }
+  var d=pts.map(function(p,i){return (i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1);}).join(' ');
+  return {d:d, area:d+' L'+pts[n-1][0].toFixed(1)+' '+h+' L'+pts[0][0].toFixed(1)+' '+h+' Z', last:pts[n-1], lo:lo, hi:hi};
+}
+function _trSpark(vals,id){
+  var w=104,h=34,p=_trPath(vals,w,h);
+  return '<svg class="rd-tr-spark" viewBox="0 0 '+w+' '+h+'" aria-hidden="true">'   /* без preserveAspectRatio=none: на узком экране линия сжималась бы по горизонтали вместе с толщиной штриха */
+    +'<defs><linearGradient id="'+id+'" x1="0" y1="0" x2="0" y2="1">'
+    +'<stop offset="0%" stop-color="#E2B95A" stop-opacity=".28"/><stop offset="100%" stop-color="#E2B95A" stop-opacity="0"/>'
+    +'</linearGradient></defs>'
+    +'<path d="'+p.area+'" fill="url(#'+id+')"/>'
+    +'<path d="'+p.d+'" fill="none" stroke="#E2B95A" stroke-opacity=".75" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'
+    +'<circle cx="'+p.last[0].toFixed(1)+'" cy="'+p.last[1].toFixed(1)+'" r="2.6" fill="#F0D290"/></svg>';
+}
+// Крупный график по тапу: та же кривая + ось (минимум/максимум и края периода)
+function _trBig(k,series){
+  var vals=series.map(function(s){return s.v;}), w=300,h=120,p=_trPath(vals,w,h), m=_GMETA[k];
+  var f=function(d){ try{return new Date(d).toLocaleDateString(_locale(),{day:'numeric',month:'short'});}catch(e){return d;} };
+  return '<div class="rd-tr-big">'
+    +'<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none">'
+    +'<path d="'+p.area+'" fill="url(#trg-'+k+')"/>'
+    +'<defs><linearGradient id="trg-'+k+'" x1="0" y1="0" x2="0" y2="1">'
+    +'<stop offset="0%" stop-color="#E2B95A" stop-opacity=".22"/><stop offset="100%" stop-color="#E2B95A" stop-opacity="0"/></linearGradient></defs>'
+    +'<path d="'+p.d+'" fill="none" stroke="#E2B95A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'
+    +'<circle cx="'+p.last[0].toFixed(1)+'" cy="'+p.last[1].toFixed(1)+'" r="3.4" fill="#F0D290"/></svg>'
+    +'<div class="rd-tr-ax"><span>'+_esc(f(series[0].day))+'</span>'
+    +'<span>'+_esc(L({ru:'мин',uk:'мін',en:'min',es:'mín',de:'Min',pt:'mín',fr:'min',pl:'min',it:'min',he:'מין',ja:'最小',ko:'최소'}))+' '+_esc(m.f(p.lo))
+    +' · '+_esc(L({ru:'макс',uk:'макс',en:'max',es:'máx',de:'Max',pt:'máx',fr:'max',pl:'maks',it:'max',he:'מקס',ja:'最大',ko:'최대'}))+' '+_esc(m.f(p.hi))+'</span>'
+    +'<span>'+_esc(f(series[series.length-1].day))+'</span></div></div>';
+}
+function _trToggleAll(){ window.__trAll=!window.__trAll; renderTrends(window.__trDay); }
+function _trToggle(k){ window.__trOpen=(window.__trOpen===k)?'':k; renderTrends(window.__trDay); }
+function renderTrends(activeKey){
+  var box=document.getElementById('rd-trends'); if(!box)return;
+  window.__trDay=activeKey;
+  var arr=[]; try{arr=JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[];}catch(e){}
+  // окно: _TR_DAYS суток, заканчивая показанным днём (при просмотре прошлого дня тренд — на ту дату)
+  var end=activeKey||_dayKey(), from=(function(){ var d=new Date(end); d.setDate(d.getDate()-(_TR_DAYS-1));
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
+  var win=arr.filter(function(r){return r.day&&r.day<=end&&r.day>=from;})
+             .sort(function(a,b){return a.day<b.day?-1:1;});
+  var rows=[];
+  _TR_KEYS.forEach(function(k){
+    var ser=win.filter(function(r){return r[k]!=null&&!isNaN(r[k])&&!(k==='tempDev'&&Math.abs(r[k])<0.005);})
+               .map(function(r){return {day:r.day,v:+r[k]};});
+    if(ser.length<3)return;   // по двум точкам тренда нет — метрику просто не показываем
+    var vals=ser.map(function(s){return s.v;}), cur=vals[vals.length-1];
+    var avg=vals.reduce(function(a,b){return a+b;},0)/vals.length, d=cur-avg;
+    var pol=_TR_POL[k], pct=(pol===0||!avg)?null:Math.round(d/Math.abs(avg)*100);
+    // цвет: улучшение — зелёный; ухудшение до 5% — янтарный («внимание»), глубже — красный
+    var col='var(--t3)', txt='—';
+    if(pct!==null&&pct!==0){ var good=(d*pol)>0; col=good?'#4ECCA3':(Math.abs(pct)<=5?'#E2B95A':'#FF6B8A'); txt=(pct>0?'+':'')+pct+'%'; }
+    rows.push({k:k,ser:ser,vals:vals,cur:cur,d:d,col:col,txt:txt});
+  });
+  if(!rows.length){ box.style.display='none'; return; }
+  var shown=window.__trAll?rows:rows.slice(0,_TR_TOP);
+  var avgWord=L({ru:'к среднему',uk:'до середнього',en:'vs average',es:'vs. media',de:'zum Durchschnitt',pt:'vs. média',fr:'vs moyenne',pl:'do średniej',it:'vs media',he:'מול הממוצע',ja:'平均比',ko:'평균 대비'});
+  var html='<div class="rd-tr-head"><div class="rd-card-t" style="margin:0;">'
+    +_esc(L({ru:'Тренды за 30 дней',uk:'Тренди за 30 днів',en:'30-day trends',es:'Tendencias de 30 días',de:'Trends über 30 Tage',pt:'Tendências de 30 dias',fr:'Tendances sur 30 jours',pl:'Trendy z 30 dni',it:'Tendenze a 30 giorni',he:'מגמות ב-30 יום',ja:'30日間の傾向',ko:'30일 추이'}))+'</div>';
+  if(rows.length>_TR_TOP) html+='<button class="rd-tr-all" onclick="_trToggleAll()">'+_esc(window.__trAll
+    ?L({ru:'Свернуть',uk:'Згорнути',en:'Show less',es:'Ver menos',de:'Weniger',pt:'Ver menos',fr:'Réduire',pl:'Zwiń',it:'Riduci',he:'הצג פחות',ja:'閉じる',ko:'접기'})
+    :L({ru:'Показать все',uk:'Показати всі',en:'Show all',es:'Ver todo',de:'Alle anzeigen',pt:'Ver tudo',fr:'Tout voir',pl:'Pokaż wszystkie',it:'Mostra tutto',he:'הצג הכול',ja:'すべて表示',ko:'전체 보기'}))+'</button>';
+  html+='</div><div class="rd-tr-sub">'+_esc(L({ru:'Что улучшилось, а что требует внимания',uk:'Що покращилося, а що потребує уваги',en:'What improved and what needs attention',es:'Qué mejoró y qué requiere atención',de:'Was sich verbessert hat und was Aufmerksamkeit braucht',pt:'O que melhorou e o que precisa de atenção',fr:'Ce qui s’est amélioré et ce qui demande attention',pl:'Co się poprawiło, a co wymaga uwagi',it:'Cosa è migliorato e cosa richiede attenzione',he:'מה השתפר ומה דורש תשומת לב',ja:'改善した点と注意が必要な点',ko:'좋아진 것과 주의가 필요한 것'}))+'</div>';
+  shown.forEach(function(r){
+    var m=_GMETA[r.k], nm=(_GLAB[r.k]&&(_GLAB[r.k][lang]||_GLAB[r.k].en))||r.k;
+    html+='<div class="rd-tr-row" onclick="_trToggle(\''+r.k+'\')">'
+      +'<img class="rd-tr-ic" src="Logo/metrics/'+_TR_ICO[r.k]+'.png" alt="" loading="lazy">'
+      +'<div class="rd-tr-main"><div class="rd-tr-name">'+_esc(nm)+'</div>'
+      +'<div><span class="rd-tr-val">'+_esc(m.f(r.cur))+'</span>'
+      +(m.u?'<span class="rd-tr-u">'+_esc(m.u)+'</span>':'')
+      +'<span class="rd-tr-avg">'+_esc(_trDelta(r.k,r.d))+' '+_esc(avgWord)+'</span></div></div>'
+      +_trSpark(r.vals,'trs-'+r.k)
+      +'<div class="rd-tr-pct" style="color:'+r.col+'">'+_esc(r.txt)+'</div></div>';
+    if(window.__trOpen===r.k) html+=_trBig(r.k,r.ser);
+  });
+  box.innerHTML=html; box.style.display='block';
 }
 function _openDay(key){
   try{ var snap=_daySnapGet().filter(function(x){return x.day===key;})[0]; if(!snap)return;
@@ -7124,6 +7275,7 @@ function _showResultsInner(){
 
   // Store for PDF
   _lastResult={score,type,insights:ins,recs,docR,data};
+  if(!_rerendering)window.__snapDay=null;   // живой проход: экран больше не «день из снимка»
 
   // AI personalized analysis (skip on language re-render)
   if(!_rerendering)fetchAIAnalysis(data,lang);
