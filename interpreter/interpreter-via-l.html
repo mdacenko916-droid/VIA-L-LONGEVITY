@@ -4698,14 +4698,7 @@ async function genMonthlyReport(){
   }
 }
 function dlMonthlyReport(){
-  var txt=localStorage.getItem('vialp_monthly_text')||''; if(!txt) return;
-  var ui=_mrLabels(), date=localStorage.getItem('vialp_monthly_date')||_dayKey();
-  var plain=String(txt).replace(/^#{1,3}\s*/gm,'').replace(/\*\*([^*]+?)\*\*/g,'$1');
-  var body=ui.title+' — '+date+'\n\n'+plain+'\n';
-  var blob=new Blob([body],{type:'text/plain;charset=utf-8'});
-  var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download='VIA-L-monthly-'+date+'.txt'; document.body.appendChild(a); a.click();
-  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },0);
+  _dlReport(localStorage.getItem('vialp_monthly_text')||'',_mrLabels(),localStorage.getItem('vialp_monthly_date')||_dayKey(),'monthly');
 }
 
 // ══ AI-ПАМЯТЬ О КЛИЕНТЕ (накапливаемая) + ЗОНЫ ВНИМАНИЯ — обновляется с месячным разбором ══
@@ -4983,15 +4976,30 @@ async function genWeeklyReport(){
 }
 
 // Скачать недельный разбор файлом (.txt) — клиент сохраняет себе. Markdown чистим в простой текст.
-function dlWeeklyReport(){
-  const txt=localStorage.getItem('vialp_weekly_text')||''; if(!txt) return;
-  const ui=_wrUI(), date=localStorage.getItem('vialp_weekly_date')||_dayKey();
-  const plain=String(txt).replace(/^#{1,3}\s*/gm,'').replace(/\*\*([^*]+?)\*\*/g,'$1');
-  const body=ui.title+' — '+date+'\n\n'+plain+'\n';
-  const blob=new Blob([body],{type:'text/plain;charset=utf-8'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download='VIA-L-weekly-'+date+'.txt'; document.body.appendChild(a); a.click();
+// Имя клиента для выгрузок: специалист получает файл и должен видеть, чей он.
+// Внутрь файла — как есть; в имя файла — очищенное от того, что ломает файловые системы
+// (/ \ : * ? " < > | и точки по краям), пробелы → «-», длина ограничена.
+function _dlWho(){
+  var n=''; try{ n=String((JSON.parse(localStorage.getItem('vialp_profile')||'{}')||{}).name||'').trim(); }catch(e){}
+  return n.slice(0,40);
+}
+function _dlSlug(n){
+  return n.replace(/[\x00-\x1f\/\\:*?"<>|]/g,'').replace(/\s+/g,'-').replace(/^[.\-]+|[.\-]+$/g,'').slice(0,40);
+}
+// Общая сборка выгрузки разбора: одна механика для недельного и месячного, чтобы они не разъезжались.
+function _dlReport(txt,ui,date,kind){
+  if(!txt) return;
+  var who=_dlWho(), slug=_dlSlug(who);
+  var plain=String(txt).replace(/^#{1,3}\s*/gm,'').replace(/\*\*([^*]+?)\*\*/g,'$1');
+  var head=ui.title+(who?(' — '+who):'')+' — '+date;
+  var blob=new Blob([head+'\n\n'+plain+'\n'],{type:'text/plain;charset=utf-8'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='VIA-L-'+kind+(slug?('-'+slug):'')+'-'+date+'.txt';
+  document.body.appendChild(a); a.click();
   setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },0);
+}
+function dlWeeklyReport(){
+  _dlReport(localStorage.getItem('vialp_weekly_text')||'',_wrUI(),localStorage.getItem('vialp_weekly_date')||_dayKey(),'weekly');
 }
 
 // ══ HISTORY EXPORT / IMPORT ═══════════════════════════════
@@ -8224,7 +8232,8 @@ function openDayPlanPanel(){
         +'<div style="flex:1;min-width:0;"><div style="font-family:\'DM Sans\',sans-serif;font-size:13px;font-weight:600;color:var(--t1);text-transform:uppercase;letter-spacing:.03em;">'+r.title+'</div><div style="font-size:11px;color:var(--t3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+r.teaser+'</div></div>'
         +'<div style="color:var(--gold-lt);font-size:18px;opacity:.6;flex-shrink:0;">›</div></div>';
     }).join('');
-    body+='<button type="button" class="btn btn-primary" onclick="downloadDayPlan()" style="width:100%;margin-top:6px;">📥 '+L({ru:'Скачать памятку дня',en:'Download day plan',uk:'Завантажити памʼятку дня',es:'Descargar el plan del día',de:'Tagesplan herunterladen',pt:'Baixar o plano do dia',fr:'Télécharger le plan du jour',pl:'Pobierz plan dnia',it:'Scarica il piano del giorno',he:'הורדת תוכנית היום',ja:'今日のプランをダウンロード',ko:'오늘의 플랜 다운로드'})+'</button>';
+    // Кнопка «Скачать памятку дня» убрана: она не скачивала, а открывала окно на печать,
+    // дублировала то, что и так на экране, и была однодневной. Экспорт наружу остаётся у разбора.
   } else {
     body+='<div style="font-size:13px;color:var(--t2);line-height:1.6;padding:6px 2px 10px;">'+L({ru:'Пройдите первый дневной проход — и здесь появится ваша персональная памятка на день.',en:'Complete your first daily check-in — and your personal day plan will appear here.',uk:'Пройдіть перший денний прохід — і тут з’явиться ваша персональна памʼятка на день.',es:'Completa tu primer registro diario — y aquí aparecerá tu plan del día personal.',de:'Absolviere deinen ersten täglichen Check-in — und hier erscheint dein persönlicher Tagesplan.',pt:'Faça seu primeiro check-in diário — e aqui aparecerá seu plano do dia personalizado.',fr:'Faites votre premier bilan quotidien — et votre plan du jour personnel apparaîtra ici.',pl:'Wykonaj pierwszy dzienny check-in — a tutaj pojawi się Twój osobisty plan dnia.',it:'Completa il tuo primo check-in giornaliero — e qui apparirà il tuo piano del giorno personale.',he:'בצעו את הצ׳ק-אין היומי הראשון — וכאן תופיע תוכנית היום האישית שלכם.',ja:'最初の毎日のチェックインを済ませると — ここにあなた専用の今日のプランが表示されます。',ko:'첫 일일 체크인을 완료하면 — 여기에 맞춤 오늘의 플랜이 나타납니다.'})+'</div>';
   }
@@ -8273,8 +8282,7 @@ function renderDayBlueprint(data){
       +'<div style="flex:1;min-width:0;"><div style="font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:600;color:var(--t1);letter-spacing:.03em;text-transform:uppercase;">'+r.title+'</div><div style="font-size:11px;color:var(--t3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+r.teaser+'</div></div>'
       +'<div style="color:var(--gold-lt);font-size:20px;opacity:.6;flex-shrink:0;">›</div></div>';
   }).join('');
-  var dl='<button class="btn btn-primary" onclick="downloadDayPlan()" style="width:100%;margin-top:4px;">📥 '+L({ru:'Скачать памятку дня',en:'Download day plan',uk:'Завантажити памʼятку дня',es:'Descargar el plan del día',de:'Tagesplan herunterladen',pt:'Baixar o plano do dia',fr:'Télécharger le plan du jour',pl:'Pobierz plan dnia',it:'Scarica il piano del giorno',he:'הורדת תוכנית היום',ja:'今日のプランをダウンロード',ko:'오늘의 플랜 다운로드'})+'</button>';
-  box.innerHTML=head+rows+dl;
+  box.innerHTML=head+rows;   // кнопка «Скачать памятку дня» убрана (см. выше)
   if(!window._bpAI && !window._bpAILoading && typeof fetchDayPlan==='function') fetchDayPlan(data);
 }
 function _cleanPlan(p){
@@ -8338,60 +8346,7 @@ function openSheet(icon, title, bodyHtml){
   m.style.display='block'; document.body.style.overflow='hidden';
   requestAnimationFrame(function(){requestAnimationFrame(function(){m.classList.add('open');});});
 }
-function downloadDayPlan(){
-  var data=window._bpData||{}, chs=_bpChapters();
-  var foodBase='';
-  try{ foodBase=new URL('food/',location.href).href; }catch(e){ foodBase='food/'; }   // абсолютный URL: документ открыт в window.open('') (about:blank), относительный путь там не разрешится
-  var body=chs.map(function(r){
-    var W=function(t){return (typeof _wl==='function')?_wl(String(t==null?'':t)):String(t==null?'':t);};
-    if(r.id==='analysis'){   // глава «Разбор дня» — не secs-структура: полный текст из кэша
-      try{
-        var _ae=_aiDailyGet().filter(function(x){return x.day===_dayKey();})[0];
-        if(_ae&&_ae.analysis) return '<section><h2>'+(r.pr||r.icon)+' '+r.title+'</h2><div style="font-size:13px;line-height:1.7;white-space:pre-wrap;">'+W(_ae.analysis).replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</div></section>';
-      }catch(e){}
-      return '';
-    }
-    var secs=(window._bpAI && Array.isArray(window._bpAI[r.id])) ? window._bpAI[r.id] : _bpChapterData(r.id,data);
-    return '<section><h2>'+(r.pr||r.icon)+' '+r.title+'</h2>'+secs.map(function(s){   // pr = эмодзи-фолбэк печати (phosphor-шрифта в print-документе нет)
-      var h='<h3>'+W(s.title)+'</h3>';
-      if(s.variants){
-        return h+s.items.map(function(x,i){
-          var dp=_dishOf(x), d=dp.key?_DISH[dp.key]:null;
-          var img=dp.key?'<img src="'+foodBase+dp.key+'.webp" alt="" onerror="this.remove()">':'';
-          var mac=d?'<div class="mac">≈'+d.p+' '+L({ru:'г белка',en:'g protein',uk:'г білка',es:'g proteína',de:'g Protein',pt:'g proteína',fr:'g protéines',pl:'g białka',it:'g proteine',he:'גרם חלבון',ja:'gタンパク質',ko:'g 단백질'})+' · ≈'+d.f+' '+L({ru:'г жиров',en:'g fat',uk:'г жирів',es:'g grasa',de:'g Fett',pt:'g gordura',fr:'g lipides',pl:'g tłuszczu',it:'g grassi',he:'גרם שומן',ja:'g脂質',ko:'g 지방'})+' · ≈'+d.c+' '+L({ru:'г углеводов',en:'g carbs',uk:'г вуглеводів',es:'g carbohidratos',de:'g Kohlenhydrate',pt:'g carboidratos',fr:'g glucides',pl:'g węglowodanów',it:'g carboidrati',he:'גרם פחמימות',ja:'g炭水化物',ko:'g 탄수화물'})+'</div>':'';
-          return '<div class="opt"><span class="n">'+(i+1)+'</span>'+img+'<div class="tx">'+W(dp.text)+mac+'</div></div>';
-        }).join('');
-      }
-      return h+'<ul>'+s.items.map(function(x){return '<li>'+W(_dishOf(x).text)+'</li>';}).join('')+'</ul>';
-    }).join('')+'</section>';
-  }).join('');
-  var nm=(data.name?(', '+data.name):'');
-  var html='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+L({ru:'Памятка дня',en:'Day plan',uk:'Памʼятка дня',es:'Plan del día',de:'Tagesplan',pt:'Plano do dia',fr:'Plan du jour',pl:'Plan dnia',it:'Piano del giorno',he:'תוכנית היום',ja:'今日のプラン',ko:'오늘의 플랜'})+'</title>'
-    +'<style>body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:640px;margin:0 auto;padding:28px 22px;color:#1c1a22;line-height:1.5;}'
-    +'h1{font-size:22px;margin:0 0 4px;}p.d{font-size:11px;color:#666;margin:0 0 18px;}'
-    +'section{margin:0 0 16px;padding:14px 16px;border:1px solid #eee6d2;border-radius:12px;}'
-    +'h2{font-size:17px;margin:0 0 8px;color:#8a6516;}h3{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#b08a2e;margin:12px 0 4px;}'
-    +'ul{margin:0;padding-left:18px;}li{margin:4px 0;font-size:14px;}'
-    +'.opt{display:flex;gap:10px;align-items:flex-start;border:1px solid #efe8d8;border-radius:10px;padding:8px 10px;margin:6px 0;break-inside:avoid;}'
-    +'.opt .n{font-size:12px;font-weight:700;color:#8a6516;min-width:16px;line-height:1.5;flex-shrink:0;}'
-    +'.opt img{width:64px;height:64px;object-fit:contain;flex-shrink:0;}'
-    +'.opt .tx{font-size:13.5px;line-height:1.45;}.opt .mac{font-size:11px;color:#666;margin-top:3px;}'
-    +'@media print{section,.opt{break-inside:avoid;}}</style></head><body>'
-    +'<h1>🧭 '+L({ru:'Моя памятка дня',en:'My day plan',uk:'Моя памʼятка дня',es:'Mi plan del día',de:'Mein Tagesplan',pt:'Meu plano do dia',fr:'Mon plan du jour',pl:'Mój plan dnia',it:'Il mio piano del giorno',he:'תוכנית היום שלי',ja:'私の今日のプラン',ko:'내 오늘의 플랜'})+nm+'</h1><p class="d">'+L({ru:'Общие велнес-ориентиры под ваши данные. Информация носит образовательный велнес-характер, не является персональной диетой, медицинским назначением или диагнозом и не заменяет консультацию врача.',en:'General wellness orientations for your data. This is educational wellness information — not a personal diet, medical prescription, or diagnosis, and not a substitute for a doctor.',uk:'Загальні велнес-орієнтири під ваші дані. Інформація має освітній велнес-характер, не є персональною дієтою, медичним призначенням чи діагнозом і не замінює консультацію лікаря.',es:'Orientaciones generales de bienestar para tus datos. Información de carácter educativo de bienestar; no es una dieta personal, prescripción o diagnóstico médico, ni sustituye al médico.',de:'Allgemeine Wellness-Orientierung für deine Daten. Die Information dient der Wellness-Aufklärung, ist keine persönliche Diät, ärztliche Verordnung oder Diagnose und ersetzt keinen Arzt.',pt:'Orientações gerais de bem-estar para seus dados. Informação de caráter educativo de bem-estar; não é dieta pessoal, prescrição ou diagnóstico médico, nem substitui o médico.',fr:'Repères de bien-être généraux selon vos données. Information à visée éducative de bien-être ; ni régime personnel, ni prescription ou diagnostic médical, ni substitut au médecin.',pl:'Ogólne wskazówki wellness pod Twoje dane. Informacja ma charakter edukacyjny (wellness), nie jest osobistą dietą, zaleceniem ani diagnozą medyczną i nie zastępuje lekarza.',it:'Orientamenti generali di benessere per i tuoi dati. Informazione a scopo educativo di benessere; non è una dieta personale, prescrizione o diagnosi medica, né sostituisce il medico.',he:'הכוונת וולנס כללית לפי הנתונים שלכם. המידע בעל אופי חינוכי-וולנס, אינו דיאטה אישית, מרשם או אבחנה רפואית ואינו מחליף רופא.',ja:'あなたのデータに基づく一般的なウェルネスの目安。本情報は教育的なウェルネス目的であり、個別の食事療法・医療処方・診断ではなく、医師の代わりにもなりません。',ko:'당신의 데이터에 맞춘 일반 웰니스 가이드. 본 정보는 교육적 웰니스 목적이며, 개인 식이요법·의료 처방·진단이 아니고 의사를 대체하지 않습니다.'})+'</p>'
-    +_platePhiloHTML(true)
-    +body+'</body></html>';
-  var wnd=window.open('','_blank');
-  if(!wnd){ alert(L({ru:'Разрешите всплывающие окна, чтобы сохранить памятку в PDF.',en:'Allow pop-ups to save the day plan as PDF.',uk:'Дозвольте спливаючі вікна, щоб зберегти памʼятку в PDF.',es:'Permite las ventanas emergentes para guardar el plan en PDF.',de:'Erlaube Pop-ups, um den Plan als PDF zu speichern.',pt:'Permita pop-ups para salvar o plano em PDF.',fr:'Autorisez les pop-ups pour enregistrer le plan en PDF.',pl:'Zezwól na wyskakujące okienka, aby zapisać plan w PDF.',it:'Consenti i pop-up per salvare il piano in PDF.',he:'אפשרו חלונות קופצים כדי לשמור את התוכנית כ-PDF.',ja:'ポップアップを許可してプランをPDFで保存してください。',ko:'팝업을 허용하여 플랜을 PDF로 저장하세요.'})); return; }
-  wnd.document.write(html); wnd.document.close();
-  // печатать только когда фото блюд догрузились (иначе в PDF пустые места); потолок ожидания ~3 с
-  var t0=Date.now();
-  (function waitImgs(){
-    var ok=true;
-    try{ var im=wnd.document.images; for(var i=0;i<im.length;i++) if(!im[i].complete) ok=false; }catch(e){}
-    if(ok||Date.now()-t0>3000){ setTimeout(function(){ try{wnd.focus();wnd.print();}catch(e){} },150); }
-    else setTimeout(waitImgs,200);
-  })();
-}
+// downloadDayPlan() удалена вместе с кнопкой «Скачать памятку дня» (печать через window.open).
 
 
 // ── зависимости памятки (порт из VIO, адаптация PRO: без шифрослоя) ──
