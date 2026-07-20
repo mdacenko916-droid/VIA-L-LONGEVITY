@@ -2729,6 +2729,11 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
           <div class="chip"><input type="radio" name="fog" id="fog4" value="allday"><label for="fog4" data-t="fog_constant">🔴 Постоянно, весь день</label></div>
         </div>
       </div>
+      <div class="divider"></div>
+      <div class="input-group">
+        <label data-t="s_today_ctx">Что-то новое сегодня? Необязательно</label>
+        <textarea id="today_context" data-t-placeholder="s_ns_ph" placeholder="Например: простуда, поездка или перелёт, новая диета или добавка, аврал на работе, пара плохих ночей…" rows="2"></textarea>
+      </div>
       <div class="btn-row">
         <button class="btn btn-back" onclick="goTo(5)">←</button>
         <button class="btn btn-primary" onclick="goTo(7)"><span class="btn-label" data-t="next">Далее →</span></button>
@@ -3764,6 +3769,17 @@ const _withingsT = {
   ko:{tab_withings_connect:'🔗 연결',instr_withings_connect:'Withings 계정에 로그인하세요 — 최근 7일 HRV·심박수·수면·SpO₂를 안전하게 가져옵니다.',btn_withings_connect:'🔗 Withings 연결',status_withings_connecting:'⏳ Withings에 연결 중…',status_withings_ok:'✓ Withings 데이터 로드 완료',status_withings_err:'⚠ Withings 데이터를 가져오지 못했습니다',status_withings_nodata:'ℹ️ 계정에 최근 Withings 데이터가 없습니다'}
 };
 Object.keys(_withingsT).forEach(l=>{if(T[l])Object.assign(T[l],_withingsT[l]);});
+// Дневная заметка контекста (простуда/перелёт/аврал) — отдельный ключ, чтобы не путать
+// с недельным s_ns_q («события недели»). Плейсхолдер переиспользуем s_ns_ph (12 языков). 2026-07-20.
+const _todayCtxT={
+  ru:'Что-то новое сегодня? Необязательно', uk:'Щось нове сьогодні? Необовʼязково',
+  en:'Anything new today? Optional', es:'¿Algo nuevo hoy? Opcional',
+  de:'Etwas Neues heute? Optional', pt:'Algo novo hoje? Opcional',
+  fr:'Quelque chose de nouveau aujourd’hui ? Facultatif', pl:'Coś nowego dziś? Opcjonalnie',
+  it:'Qualcosa di nuovo oggi? Facoltativo', he:'משהו חדש היום? לא חובה',
+  ja:'今日、何か新しいことは？（任意）', ko:'오늘 새로운 점이 있나요? 선택'
+};
+Object.keys(_todayCtxT).forEach(l=>{if(T[l])T[l].s_today_ctx=_todayCtxT[l];});
 /* === App Store wellness override (VIO) === */
 ;(function(){var W={
   rd_index_title:{ru:'Общий индекс дня',uk:'Загальний індекс дня',en:'Overall day index',es:'Índice general del día',de:'Gesamtindex des Tages',pt:'Índice geral do dia',fr:'Indice global du jour',pl:'Ogólny indeks dnia',it:'Indice generale del giorno',he:'מדד יומי כללי',ja:'今日の総合指数',ko:'오늘의 종합 지수'},
@@ -6927,6 +6943,7 @@ function _showResultsInner(){
     protein_intake:getRadio('protein_intake'),
     allergy:(typeof getRadio==='function'&&getRadio('allergy_has')==='yes'&&document.getElementById('allergy')?document.getElementById('allergy').value:'').trim(),
     new_symptoms:(document.getElementById('new_symptoms')?document.getElementById('new_symptoms').value:'').trim(),
+    today_context:(document.getElementById('today_context')?document.getElementById('today_context').value:'').trim(),   // дневной контекст (простуда и т.п.) → воркер §Batch B
     lifestyle_notes:(document.getElementById('lifestyle_notes')?document.getElementById('lifestyle_notes').value:'').trim(),
     eating_pattern:getRadio('eating_pattern'),
     gi:getChecked(['gi1','gi2','gi3','gi4','gi5']),
@@ -7386,7 +7403,10 @@ function applyImportedToSliders(){
   if(importedData.hrv!=null){const el=document.getElementById('hrv');el.value=Math.min(120,Math.max(10,Math.round(importedData.hrv)));ouraSlider('hrv',+el.value);_tch('hrv');}
   if(importedData.rhr!=null){const el=document.getElementById('rhr');el.value=Math.min(110,Math.max(40,Math.round(importedData.rhr)));if(typeof _pmShowVal==='function')_pmShowVal(+el.value);_tch('rhr');}
   // energy НЕ подтягиваем с прибора — это субъективный шаг «Образ жизни» (часто device-energy = просто шаги)
-  if(importedData.sleepHours!=null){const h=importedData.sleepHours,sq=h>=7.5?8:h>=6?6:h>=5?4:2,el=document.getElementById('sleep_qual');el.value=sq;const sh=document.getElementById('sleep_hours');if(sh)sh.value=Math.round(h*2)/2;if(typeof renderSleepScale==='function')renderSleepScale();if(importedData.deepMin!=null){const d=importedData.deepMin;if(d>=90)document.getElementById('dp1').checked=true;else if(d>=30)document.getElementById('dp2').checked=true;else document.getElementById('dp3').checked=true;}_tch('sleep_qual');_tch('sleep_hours');}
+  // Часы сна с гаджета — объективны, их подтягиваем. Но НЕ выводим из них «ощущение сна»:
+  // раньше sleep_qual вычислялся из часов (7.5ч→8) и затирал оценку — гаджет-юзеру приложение
+  // никогда не давало сказать, КАК он выспался. Оставляем субъективную шкалу пользователю. 2026-07-20.
+  if(importedData.sleepHours!=null){const h=importedData.sleepHours;const sh=document.getElementById('sleep_hours');if(sh)sh.value=Math.round(h*2)/2;if(typeof renderSleepScale==='function')renderSleepScale();if(importedData.deepMin!=null){const d=importedData.deepMin;if(d>=90)document.getElementById('dp1').checked=true;else if(d>=30)document.getElementById('dp2').checked=true;else document.getElementById('dp3').checked=true;}_tch('sleep_qual');_tch('sleep_hours');}
   if(importedData.tempDev!=null){const d=importedData.tempDev;if(Math.abs(d)<=0.1)document.getElementById('tp1').checked=true;else if(d>0.1&&d<0.5)document.getElementById('tp2').checked=true;else if(d>=0.5)document.getElementById('tp3').checked=true;else document.getElementById('tp4').checked=true;_tch('temp');}
   showImportBanner();
 }
