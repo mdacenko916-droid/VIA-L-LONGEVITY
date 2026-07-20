@@ -850,11 +850,11 @@ input.oura-input::-webkit-slider-thumb{
 .rd-ct-ic{font-size:17px;color:var(--gold-lt);}
 /* ── ТРЕНДЫ ЗА 30 ДНЕЙ ──────────────────────────────────
    Строка = метрика: иконка · название+значение+дельта словами · спарклайн · % справа.
-   Линии единым приглушённым золотом (идентичность даёт иконка+подпись); ЦВЕТОМ говорит
-   только дельта — зелёный/янтарный/красный, и всегда рядом со знаком (+10%), не цветом одним. */
+   Спарклайн — в цвет иконки метрики (_TR_COL): визуальная привязка линии к её показателю.
+   Направление (улучшение/ухудшение) читается ОТДЕЛЬНО — цветом % справа (зелёный/янтарный/
+   красный) и знаком (+10%), не цветом линии. Блок сворачивается: свёрнут — сводка _trSummary. */
 .rd-tr-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:2px;}
 .rd-tr-sub{font-size:12px;color:var(--t3);margin-bottom:14px;}
-.rd-tr-all{background:none;border:0;padding:0;font-family:inherit;font-size:12px;color:var(--gold-lt);cursor:pointer;flex-shrink:0;}
 .rd-tr-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid rgba(255,255,255,.06);cursor:pointer;}
 .rd-tr-row:first-of-type{border-top:0;}
 .rd-tr-ic{width:34px;height:34px;flex-shrink:0;opacity:.9;}
@@ -872,6 +872,18 @@ input.oura-input::-webkit-slider-thumb{
   .rd-tr-spark{width:72px;}
   .rd-tr-avg{display:block;margin:2px 0 0;}
 }
+/* сворачивание блока трендов */
+.rd-tr-head{cursor:pointer;user-select:none;}
+.rd-tr-chev{color:var(--gold-lt);font-size:20px;line-height:1;flex-shrink:0;transition:transform .25s ease;transform:rotate(0deg);}
+.rd-tr-chev.up{transform:rotate(180deg);}
+/* свёрнутая сводка: улучшилось / без изменений / ухудшилось + названия (макет скрин/1.png) */
+.rd-tr-sum{display:flex;gap:14px;flex-wrap:wrap;background:rgba(10,14,20,.4);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:15px 17px;}
+.rd-tr-sum-cell{flex:1 1 150px;min-width:130px;}
+.rd-tr-sum-top{display:flex;align-items:baseline;gap:6px;margin-bottom:4px;}
+.rd-tr-sum-ar{font-size:16px;font-weight:700;line-height:1;}
+.rd-tr-sum-n{font-family:'Playfair Display',serif;font-size:21px;color:#fff;font-weight:600;line-height:1;}
+.rd-tr-sum-lbl{font-size:13px;color:var(--t2);}
+.rd-tr-sum-names{font-size:12.5px;color:var(--t3);line-height:1.5;}
 /* индекс дня */
 .rd-index-top{display:flex;align-items:center;justify-content:space-between;gap:14px;}
 .rd-index-num{font-family:'Playfair Display',serif;font-size:52px;font-weight:600;color:var(--gold-lt);line-height:.95;}
@@ -2965,10 +2977,6 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
     <!-- лента недели (Oura): дни + тап → тот день из истории -->
     <div class="rd-week" id="rd-week"></div>
 
-    <!-- ТРЕНДЫ ЗА 30 ДНЕЙ: динамика приборных показателей из vialp_daily.
-         Раньше это лежало хвостом в «Мой профиль» списком чисел по дням — форму кривой там было не видно. -->
-    <div class="rd-card" id="rd-trends" style="display:none;"></div>
-
     <!-- ── РЯД 1: индекс дня + показатели ── -->
     <div class="rd-row rd-row-2">
       <!-- ОБЩИЙ ИНДЕКС ДНЯ -->
@@ -3045,6 +3053,11 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
       <!-- полный план дня (главы Утро/День/Вода/Активность/Вечер/Сон) — как в «Сегодня»; внутри блока «Памятка дня», под тарелкой и принципом (2026-07-19) -->
       <div id="dayBlueprint"></div>
     </div>
+
+    <!-- ТРЕНДЫ ЗА 30 ДНЕЙ: ретроспектива-«отдалённый взгляд» → опущена под Памятку дня (2026-07-20):
+         сегодня (индекс→показатели→разбор→план), и только потом «как в динамике за месяц».
+         Свёрнута по умолчанию; форму кривой видно только здесь (раньше лежало числами в «Мой профиль»). -->
+    <div class="rd-card" id="rd-trends" style="display:none;"></div>
 
     <!-- ── ФУТЕР: анализ завершён + источники ── -->
     <div class="rd-sources">
@@ -6690,8 +6703,12 @@ function _renderWeekStrip(activeKey){
 var _TR_POL={hrv:1,sleepHours:1,deepMin:1,readiness:1,vo2:1,spo2:1,rhr:-1,tempDev:0};
 var _TR_KEYS=['hrv','sleepHours','rhr','spo2','tempDev','readiness','vo2','deepMin'];
 var _TR_ICO={hrv:'hrv',rhr:'rhr',sleepHours:'sleep',deepMin:'deep',tempDev:'temp',spo2:'spo2',vo2:'vo2',readiness:'readiness'};
-var _TR_DAYS=30, _TR_TOP=4;
-window.__trAll=false; window.__trOpen='';
+var _TR_DAYS=30;
+// Цвет спарклайна = доминирующий цвет иконки метрики (Logo/metrics/*.png):
+// hrv=красное сердце, rhr=малиновое сердце, сон=синий месяц, deep=фиолетовый мозг,
+// temp=красно-жёлтый градусник, spo2=голубая капля, vo2=тёмно-синие лёгкие, readiness=зелёный бегун.
+var _TR_COL={hrv:'#F0413A',rhr:'#C42A8E',sleepHours:'#2F6BE0',deepMin:'#9B2FB0',tempDev:'#F2922E',spo2:'#2FA8E0',vo2:'#3E63B0',readiness:'#3F9A3F'};
+window.__trOpen=''; window.__trCollapsed=true;
 
 // Дельта словами: «+5 ms», для сна — в минутах (0.5 ч читается как «30 min», не «+0.5»)
 function _trDelta(k,d){
@@ -6712,34 +6729,60 @@ function _trPath(vals,w,h){
   var d=pts.map(function(p,i){return (i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1);}).join(' ');
   return {d:d, area:d+' L'+pts[n-1][0].toFixed(1)+' '+h+' L'+pts[0][0].toFixed(1)+' '+h+' Z', last:pts[n-1], lo:lo, hi:hi};
 }
-function _trSpark(vals,id){
+function _trSpark(vals,id,col){
+  col=col||'#E2B95A';
   var w=104,h=34,p=_trPath(vals,w,h);
   return '<svg class="rd-tr-spark" viewBox="0 0 '+w+' '+h+'" aria-hidden="true">'   /* без preserveAspectRatio=none: на узком экране линия сжималась бы по горизонтали вместе с толщиной штриха */
     +'<defs><linearGradient id="'+id+'" x1="0" y1="0" x2="0" y2="1">'
-    +'<stop offset="0%" stop-color="#E2B95A" stop-opacity=".28"/><stop offset="100%" stop-color="#E2B95A" stop-opacity="0"/>'
+    +'<stop offset="0%" stop-color="'+col+'" stop-opacity=".26"/><stop offset="100%" stop-color="'+col+'" stop-opacity="0"/>'
     +'</linearGradient></defs>'
     +'<path d="'+p.area+'" fill="url(#'+id+')"/>'
-    +'<path d="'+p.d+'" fill="none" stroke="#E2B95A" stroke-opacity=".75" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'
-    +'<circle cx="'+p.last[0].toFixed(1)+'" cy="'+p.last[1].toFixed(1)+'" r="2.6" fill="#F0D290"/></svg>';
+    +'<path d="'+p.d+'" fill="none" stroke="'+col+'" stroke-opacity=".9" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'
+    +'<circle cx="'+p.last[0].toFixed(1)+'" cy="'+p.last[1].toFixed(1)+'" r="2.6" fill="'+col+'"/></svg>';
 }
 // Крупный график по тапу: та же кривая + ось (минимум/максимум и края периода)
 function _trBig(k,series){
   var vals=series.map(function(s){return s.v;}), w=300,h=120,p=_trPath(vals,w,h), m=_GMETA[k];
+  var col=_TR_COL[k]||'#E2B95A';
   var f=function(d){ try{return new Date(d).toLocaleDateString(_locale(),{day:'numeric',month:'short'});}catch(e){return d;} };
   return '<div class="rd-tr-big">'
     +'<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none">'
     +'<path d="'+p.area+'" fill="url(#trg-'+k+')"/>'
     +'<defs><linearGradient id="trg-'+k+'" x1="0" y1="0" x2="0" y2="1">'
-    +'<stop offset="0%" stop-color="#E2B95A" stop-opacity=".22"/><stop offset="100%" stop-color="#E2B95A" stop-opacity="0"/></linearGradient></defs>'
-    +'<path d="'+p.d+'" fill="none" stroke="#E2B95A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'
-    +'<circle cx="'+p.last[0].toFixed(1)+'" cy="'+p.last[1].toFixed(1)+'" r="3.4" fill="#F0D290"/></svg>'
+    +'<stop offset="0%" stop-color="'+col+'" stop-opacity=".20"/><stop offset="100%" stop-color="'+col+'" stop-opacity="0"/></linearGradient></defs>'
+    +'<path d="'+p.d+'" fill="none" stroke="'+col+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'
+    +'<circle cx="'+p.last[0].toFixed(1)+'" cy="'+p.last[1].toFixed(1)+'" r="3.4" fill="'+col+'"/></svg>'
     +'<div class="rd-tr-ax"><span>'+_esc(f(series[0].day))+'</span>'
     +'<span>'+_esc(L({ru:'мин',uk:'мін',en:'min',es:'mín',de:'Min',pt:'mín',fr:'min',pl:'min',it:'min',he:'מין',ja:'最小',ko:'최소'}))+' '+_esc(m.f(p.lo))
     +' · '+_esc(L({ru:'макс',uk:'макс',en:'max',es:'máx',de:'Max',pt:'máx',fr:'max',pl:'maks',it:'max',he:'מקס',ja:'最大',ko:'최대'}))+' '+_esc(m.f(p.hi))+'</span>'
     +'<span>'+_esc(f(series[series.length-1].day))+'</span></div></div>';
 }
-function _trToggleAll(){ window.__trAll=!window.__trAll; renderTrends(window.__trDay); }
 function _trToggle(k){ window.__trOpen=(window.__trOpen===k)?'':k; renderTrends(window.__trDay); }
+// Свёрнутый блок: одной строкой — сколько показателей улучшилось / без изменений / ухудшилось,
+// с названиями (макет — скрин/1.png). Развёрнутый — полные строки со спарклайнами.
+function _trToggleCollapse(){ window.__trCollapsed=!(window.__trCollapsed!==false); renderTrends(window.__trDay); }
+function _trSummary(rows){
+  var nm=function(r){return (_GLAB[r.k]&&(_GLAB[r.k][lang]||_GLAB[r.k].en))||r.k;};
+  var names=function(list){return list.map(nm).join(', ');};
+  var imp=rows.filter(function(r){return r.dir>0;}),
+      same=rows.filter(function(r){return r.dir===0;}),
+      wor=rows.filter(function(r){return r.dir<0;});
+  var LB={
+    imp:L({ru:'улучшилось',uk:'покращилося',en:'improved',es:'mejoró',de:'verbessert',pt:'melhorou',fr:'amélioré',pl:'poprawiło się',it:'migliorato',he:'השתפרו',ja:'改善',ko:'개선'}),
+    same:L({ru:'без изменений',uk:'без змін',en:'unchanged',es:'sin cambios',de:'unverändert',pt:'sem mudança',fr:'inchangé',pl:'bez zmian',it:'invariato',he:'ללא שינוי',ja:'変化なし',ko:'변화 없음'}),
+    wor:L({ru:'ухудшилось',uk:'погіршилося',en:'worsened',es:'empeoró',de:'verschlechtert',pt:'piorou',fr:'aggravé',pl:'pogorszyło się',it:'peggiorato',he:'הידרדרו',ja:'悪化',ko:'악화'})
+  };
+  var cell=function(arrow,color,list,label){
+    if(!list.length)return '';
+    return '<div class="rd-tr-sum-cell"><div class="rd-tr-sum-top"><span class="rd-tr-sum-ar" style="color:'+color+'">'+arrow+'</span>'
+      +'<b class="rd-tr-sum-n">'+list.length+'</b><span class="rd-tr-sum-lbl">'+_esc(label)+'</span></div>'
+      +'<div class="rd-tr-sum-names">'+_esc(names(list))+'</div></div>';
+  };
+  return '<div class="rd-tr-sum">'
+    +cell('↑','#4ECCA3',imp,LB.imp)
+    +cell('—','#E2B95A',same,LB.same)
+    +cell('↓','#FF6B8A',wor,LB.wor)+'</div>';
+}
 function renderTrends(activeKey){
   var box=document.getElementById('rd-trends'); if(!box)return;
   window.__trDay=activeKey;
@@ -6758,31 +6801,33 @@ function renderTrends(activeKey){
     var avg=vals.reduce(function(a,b){return a+b;},0)/vals.length, d=cur-avg;
     var pol=_TR_POL[k], pct=(pol===0||!avg)?null:Math.round(d/Math.abs(avg)*100);
     // цвет: улучшение — зелёный; ухудшение до 5% — янтарный («внимание»), глубже — красный
-    var col='var(--t3)', txt='—';
-    if(pct!==null&&pct!==0){ var good=(d*pol)>0; col=good?'#4ECCA3':(Math.abs(pct)<=5?'#E2B95A':'#FF6B8A'); txt=(pct>0?'+':'')+pct+'%'; }
-    rows.push({k:k,ser:ser,vals:vals,cur:cur,d:d,col:col,txt:txt});
+    var col='var(--t3)', txt='—', dir=0;
+    if(pct!==null&&pct!==0){ var good=(d*pol)>0; col=good?'#4ECCA3':(Math.abs(pct)<=5?'#E2B95A':'#FF6B8A'); txt=(pct>0?'+':'')+pct+'%'; dir=good?1:-1; }
+    rows.push({k:k,ser:ser,vals:vals,cur:cur,d:d,col:col,txt:txt,dir:dir});
   });
   if(!rows.length){ box.style.display='none'; return; }
-  var shown=window.__trAll?rows:rows.slice(0,_TR_TOP);
+  var collapsed=window.__trCollapsed!==false;
   var avgWord=L({ru:'к среднему',uk:'до середнього',en:'vs average',es:'vs. media',de:'zum Durchschnitt',pt:'vs. média',fr:'vs moyenne',pl:'do średniej',it:'vs media',he:'מול הממוצע',ja:'平均比',ko:'평균 대비'});
-  var html='<div class="rd-tr-head"><div class="rd-card-t" style="margin:0;">'
-    +_esc(L({ru:'Тренды за 30 дней',uk:'Тренди за 30 днів',en:'30-day trends',es:'Tendencias de 30 días',de:'Trends über 30 Tage',pt:'Tendências de 30 dias',fr:'Tendances sur 30 jours',pl:'Trendy z 30 dni',it:'Tendenze a 30 giorni',he:'מגמות ב-30 יום',ja:'30日間の傾向',ko:'30일 추이'}))+'</div>';
-  if(rows.length>_TR_TOP) html+='<button class="rd-tr-all" onclick="_trToggleAll()">'+_esc(window.__trAll
-    ?L({ru:'Свернуть',uk:'Згорнути',en:'Show less',es:'Ver menos',de:'Weniger',pt:'Ver menos',fr:'Réduire',pl:'Zwiń',it:'Riduci',he:'הצג פחות',ja:'閉じる',ko:'접기'})
-    :L({ru:'Показать все',uk:'Показати всі',en:'Show all',es:'Ver todo',de:'Alle anzeigen',pt:'Ver tudo',fr:'Tout voir',pl:'Pokaż wszystkie',it:'Mostra tutto',he:'הצג הכול',ja:'すべて表示',ko:'전체 보기'}))+'</button>';
+  var html='<div class="rd-tr-head" onclick="_trToggleCollapse()"><div class="rd-card-t" style="margin:0;">'
+    +_esc(L({ru:'Тренды за 30 дней',uk:'Тренди за 30 днів',en:'30-day trends',es:'Tendencias de 30 días',de:'Trends über 30 Tage',pt:'Tendências de 30 dias',fr:'Tendances sur 30 jours',pl:'Trendy z 30 dni',it:'Tendenze a 30 giorni',he:'מגמות ב-30 יום',ja:'30日間の傾向',ko:'30일 추이'}))+'</div>'
+    +'<span class="rd-tr-chev'+(collapsed?'':' up')+'" aria-hidden="true">⌄</span>';
   html+='</div><div class="rd-tr-sub">'+_esc(L({ru:'Что улучшилось, а что требует внимания',uk:'Що покращилося, а що потребує уваги',en:'What improved and what needs attention',es:'Qué mejoró y qué requiere atención',de:'Was sich verbessert hat und was Aufmerksamkeit braucht',pt:'O que melhorou e o que precisa de atenção',fr:'Ce qui s’est amélioré et ce qui demande attention',pl:'Co się poprawiło, a co wymaga uwagi',it:'Cosa è migliorato e cosa richiede attenzione',he:'מה השתפר ומה דורש תשומת לב',ja:'改善した点と注意が必要な点',ko:'좋아진 것과 주의가 필요한 것'}))+'</div>';
-  shown.forEach(function(r){
-    var m=_GMETA[r.k], nm=(_GLAB[r.k]&&(_GLAB[r.k][lang]||_GLAB[r.k].en))||r.k;
-    html+='<div class="rd-tr-row" onclick="_trToggle(\''+r.k+'\')">'
-      +'<img class="rd-tr-ic" src="Logo/metrics/'+_TR_ICO[r.k]+'.png" alt="" loading="lazy">'
-      +'<div class="rd-tr-main"><div class="rd-tr-name">'+_esc(nm)+'</div>'
-      +'<div><span class="rd-tr-val">'+_esc(m.f(r.cur))+'</span>'
-      +(m.u?'<span class="rd-tr-u">'+_esc(m.u)+'</span>':'')
-      +'<span class="rd-tr-avg">'+_esc(_trDelta(r.k,r.d))+' '+_esc(avgWord)+'</span></div></div>'
-      +_trSpark(r.vals,'trs-'+r.k)
-      +'<div class="rd-tr-pct" style="color:'+r.col+'">'+_esc(r.txt)+'</div></div>';
-    if(window.__trOpen===r.k) html+=_trBig(r.k,r.ser);
-  });
+  if(collapsed){
+    html+=_trSummary(rows);
+  } else {
+    rows.forEach(function(r){
+      var m=_GMETA[r.k], nm=(_GLAB[r.k]&&(_GLAB[r.k][lang]||_GLAB[r.k].en))||r.k;
+      html+='<div class="rd-tr-row" onclick="_trToggle(\''+r.k+'\')">'
+        +'<img class="rd-tr-ic" src="Logo/metrics/'+_TR_ICO[r.k]+'.png" alt="" loading="lazy">'
+        +'<div class="rd-tr-main"><div class="rd-tr-name">'+_esc(nm)+'</div>'
+        +'<div><span class="rd-tr-val">'+_esc(m.f(r.cur))+'</span>'
+        +(m.u?'<span class="rd-tr-u">'+_esc(m.u)+'</span>':'')
+        +'<span class="rd-tr-avg">'+_esc(_trDelta(r.k,r.d))+' '+_esc(avgWord)+'</span></div></div>'
+        +_trSpark(r.vals,'trs-'+r.k,_TR_COL[r.k])
+        +'<div class="rd-tr-pct" style="color:'+r.col+'">'+_esc(r.txt)+'</div></div>';
+      if(window.__trOpen===r.k) html+=_trBig(r.k,r.ser);
+    });
+  }
   box.innerHTML=html; box.style.display='block';
 }
 function _openDay(key){
@@ -7176,11 +7221,10 @@ function _showResultsInner(){
   // Блок «Самочувствие за неделю» (weekly_trend) удалён из PRO коммитом 730556e — поля нет ни в анкете,
   // ни в data. Инсайты «Ухудшение/Положительная динамика» висели на нём и не срабатывали ни разу. Удалены 2026-07-17.
 
-  // Travel/illness events
-  if((data.events||[]).includes('travel')){
-    ins.push({t:'warn',i:'✈️',h:L({ru:'Перелёт нарушает циркадный ритм',uk:'Переліт порушує циркадний ритм',en:'Travel Disrupts Circadian Rhythm',es:'El viaje altera el ritmo circadiano',de:'Reisen stört den zirkadianen Rhythmus',pt:'Viagem perturba o ritmo circadiano',fr:'Le voyage perturbe le rythme circadien',pl:'Podróż zaburza rytm dobowy',it:'Il viaggio disturba il ritmo circadiano',he:'נסיעה מפריעה לקצב הצירקדי',ja:'旅行がサーカディアンリズムを乱す',ko:'여행이 일주기 리듬을 방해함'}),b:L({ru:'Смена часовых поясов — сильный стрессор для гормональной системы. HRV и сон снижаются на 3–7 дней после перелёта.',uk:'Зміна часових поясів — потужний стресор для гормональної системи. HRV та сон знижуються на 3–7 днів після перельоту.',en:'Timezone changes are powerful hormonal stressors. HRV and sleep decrease for 3–7 days after travel.',es:'Los cambios de zona horaria son fuertes estresores hormonales. VFC y sueño disminuyen 3–7 días después del viaje.',de:'Zeitzonenwechsel sind starke hormonelle Stressoren. HRV und Schlaf sinken 3–7 Tage nach der Reise.',pt:'Mudanças de fuso horário são poderosos estressores hormonais. VFC e sono diminuem por 3–7 dias após a viagem.',fr:'Les changements de fuseau horaire sont de puissants facteurs de stress hormonaux. VFC et sommeil diminuent 3–7 jours après le voyage.',pl:'Zmiany stref czasowych są silnymi stresorami hormonalnymi. HRV i sen obniżają się przez 3–7 dni po podróży.',it:'I cambiamenti di fuso orario sono potenti stressori ormonali. HRV e sonno diminuiscono per 3–7 giorni dopo il viaggio.',he:'שינויי אזורי זמן הם גורמי לחץ הורמונליים חזקים. HRV ושינה יורדים 3–7 ימים לאחר הנסיעה.',ja:'タイムゾーンの変化は強力なホルモンストレス要因です。旅行後3〜7日間HRVと睡眠が低下します。',ko:'시간대 변경은 강력한 호르몬 스트레스 요인입니다. 여행 후 3–7일 동안 HRV와 수면이 감소합니다.'})});
-    score-=8;
-  }
+  // Travel/illness events — правило удалено 2026-07-20: читало data.events.includes('travel'),
+  // но такого поля нет ни в объекте data, ни в анкете (галочки перелёта нет) → ветка не срабатывала
+  // ни разу. Перелёт доходит до ИИ через свободную заметку lifestyle_notes; фиксированный −8 за
+  // самоотмеченное событие — как раз невалидированный вес, который срезали при пересборке индекса.
   // PRO: Hormone symptoms (step 7)
   // Гормональные симптомы. Читаем РЕАЛЬНУЮ карту по полу (horm_male/horm_female).
   // БАГ (до 2026-07-20): код читал data.horm_symptoms — поле, которое НИКОГДА не
@@ -7276,7 +7320,20 @@ function _showResultsInner(){
   }
 
   // Respiratory rate analysis
-  if(data.resp_rate>20){
+  // Частота дыхания. Как и HRV/пульс — судим от личной базы: острый рост ≥3 вдоха/мин
+  // над своей нормой (медиана 3 дней vs медиана 30) может означать начинающуюся инфекцию.
+  // Дыхание стабильно (CV 2.5–10%), поэтому базы хватает за ~неделю → minBase 7.
+  // Абсолютный порог 20 (95-й перцентиль, KORA-FF4) остаётся запасным путём, пока базы нет.
+  // Обоснование — docs/INDEX-SCORING-SOURCES.md §10, docs/PERSONAL-BASELINE-RECON.md §3–4.
+  var _respP=_pBase('resp_rate',7);
+  if(_respP && _respP.recent>=_respP.base+3){
+    ins.push({t:'warn',i:'🫁',h:L({ru:'Дыхание чаще вашего обычного',uk:'Дихання частіше за ваше звичайне',en:'Breathing faster than your usual',es:'Respiración más rápida de tu habitual',de:'Atmung schneller als üblich',pt:'Respiração mais rápida que o habitual',fr:'Respiration plus rapide que d’habitude',pl:'Oddech szybszy niż zwykle',it:'Respiro più veloce del solito',he:'נשימה מהירה מהרגיל שלך',ja:'呼吸がいつもより速い',ko:'호흡이 평소보다 빠름'}),
+    b:L({ru:'Последние дни частота дыхания выше вашей личной нормы. Так тело часто отзывается на начинающуюся простуду, нагрузку или напряжение. Если добавились другие признаки недомогания — дайте себе отдых.',uk:'Останні дні частота дихання вища за вашу особисту норму. Так тіло часто відгукується на застуду, що починається, навантаження або напруження. Якщо додалися інші ознаки нездужання — дайте собі відпочинок.',en:'Your breathing rate has been above your own baseline these past days. Bodies often respond this way to a cold coming on, load or tension. If other signs of feeling unwell appear, give yourself rest.',es:'Tu frecuencia respiratoria ha estado por encima de tu base estos días. El cuerpo suele responder así a un resfriado que empieza, la carga o la tensión. Si aparecen otros signos de malestar, descansa.',de:'Ihre Atemfrequenz lag in den letzten Tagen über Ihrer eigenen Basislinie. Der Körper reagiert oft so auf eine beginnende Erkältung, Belastung oder Anspannung. Kommen weitere Anzeichen von Unwohlsein hinzu, gönnen Sie sich Ruhe.',pt:'Sua frequência respiratória esteve acima da sua base nestes dias. O corpo costuma responder assim a um resfriado começando, carga ou tensão. Se surgirem outros sinais de mal-estar, descanse.',fr:'Votre fréquence respiratoire est supérieure à votre propre base ces derniers jours. Le corps réagit souvent ainsi à un rhume qui commence, à la charge ou à la tension. Si d’autres signes de malaise apparaissent, reposez-vous.',pl:'Twoja częstość oddechów była w ostatnich dniach powyżej Twojej normy. Ciało często tak reaguje na zaczynające się przeziębienie, obciążenie lub napięcie. Jeśli pojawią się inne oznaki gorszego samopoczucia — odpocznij.',it:'La tua frequenza respiratoria è stata sopra la tua base in questi giorni. Il corpo risponde spesso così a un raffreddore in arrivo, carico o tensione. Se compaiono altri segni di malessere, concediti riposo.',he:'קצב הנשימה שלך גבוה מהנורמה האישית שלך בימים האחרונים. הגוף מגיב כך לעיתים קרובות להצטננות מתחילה, עומס או מתח. אם מופיעים סימני מחלה נוספים — תנו לעצמכם מנוחה.',ja:'ここ数日、呼吸数があなた自身の基準より高めです。体は風邪の初期・負荷・緊張にこう反応します。ほかに不調の兆しがあれば休息をとってください。',ko:'최근 며칠 호흡수가 본인 기준보다 높습니다. 몸은 감기 초기·부하·긴장에 이렇게 반응합니다. 다른 몸살 징후가 함께 있으면 휴식을 취하세요.'})});
+    score-=5;
+  } else if(_respP){
+    ins.push({t:'ok',i:'🫁',h:L({ru:'Дыхание в вашей норме',uk:'Дихання у вашій нормі',en:'Breathing at your usual rate',es:'Respiración en tu ritmo habitual',de:'Atmung auf Ihrem üblichen Niveau',pt:'Respiração no seu ritmo habitual',fr:'Respiration à votre rythme habituel',pl:'Oddech na Twoim zwykłym poziomie',it:'Respiro al tuo ritmo abituale',he:'נשימה בקצב הרגיל שלך',ja:'呼吸はいつもの水準',ko:'호흡이 평소 수준'}),
+    b:L({ru:'Близко к вашему обычному ритму дыхания за последние недели.',uk:'Близько до вашого звичайного ритму дихання за останні тижні.',en:'Close to your own breathing rate over recent weeks.',es:'Cerca de tu ritmo respiratorio de las últimas semanas.',de:'Nahe Ihrem Atemrhythmus der letzten Wochen.',pt:'Próximo do seu ritmo respiratório das últimas semanas.',fr:'Proche de votre rythme respiratoire des dernières semaines.',pl:'Blisko Twojego rytmu oddechu z ostatnich tygodni.',it:'Vicino al tuo ritmo respiratorio delle ultime settimane.',he:'קרוב לקצב הנשימה שלך בשבועות האחרונים.',ja:'ここ数週間のあなたの呼吸の水準に近いです。',ko:'최근 몇 주간 본인 호흡 수준과 비슷합니다.'})});
+  } else if(data.resp_rate>20){
     ins.push({t:'warn',i:'🫁',h:L({ru:'Частота дыхания повышена ('+data.resp_rate+' вд/мин)',uk:'Частота дихання підвищена',en:'Elevated Respiratory Rate ('+data.resp_rate+' br/min)',es:'Frecuencia respiratoria elevada',de:'Atemfrequenz erhöht ('+data.resp_rate+' A/min)',pt:'Frequência respiratória elevada',fr:'Fréquence respiratoire élevée',pl:'Częstość oddechów podwyższona',it:'Frequenza respiratoria elevata',he:'קצב נשימה מוגבר',ja:'呼吸数上昇 ('+data.resp_rate+' 回/分)',ko:'호흡수 상승 ('+data.resp_rate+' 회/분)'}),
     b:L({ru:'Выше 20 вд/мин в покое — признак напряжения нервной системы или нарушения дыхания во сне. Возможна связь с апноэ сна.',uk:'Вище 20 вд/хв у спокої — ознака напруги нервової системи або порушення дихання уві сні.',en:'Above 20 br/min at rest indicates nervous system stress or possible sleep-disordered breathing.',es:'Encima de 20 resp/min puede indicar estrés del sistema nervioso o apnea del sueño.',de:'Über 20 A/min in Ruhe weist auf Nervensystemstress oder mögliche Schlafatemstörungen hin.',pt:'Acima de 20 resp/min em repouso indica estresse do sistema nervoso ou possível distúrbio respiratório do sono.',fr:'Au-dessus de 20 resp/min au repos indique un stress du système nerveux ou une respiration perturbée pendant le sommeil.',pl:'Powyżej 20 oddechów/min w spoczynku wskazuje na stres układu nerwowego lub zaburzenia oddychania podczas snu.',it:'Sopra 20 resp/min a riposo indica stress del sistema nervoso o possibile disturbo respiratorio del sonno.',he:'מעל 20 נשימות/דקה במנוחה מצביע על מתח מערכת עצבים או הפרעת נשימה בשינה.',ja:'安静時20回/分以上は神経系ストレスまたは睡眠時呼吸障害の可能性を示します。',ko:'안정시 20회/분 이상은 신경계 스트레스 또는 수면 호흡 장애 가능성을 나타냅니다.'})});
     score-=5;if(data.resp_rate>22){doc=true;docR.push(L({ru:'повышенная частота дыхания',uk:'підвищена частота дихання',en:'elevated respiratory rate',es:'frecuencia respiratoria elevada',de:'erhöhte Atemfrequenz',pt:'frequência respiratória elevada',fr:'fréquence respiratoire élevée',pl:'podwyższona częstość oddechów',it:'frequenza respiratoria elevata',he:'קצב נשימה מוגבר',ja:'呼吸数上昇',ko:'호흡수 상승'}));}

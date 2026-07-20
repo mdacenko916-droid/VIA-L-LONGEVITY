@@ -2259,10 +2259,12 @@ async function handleFitbitMetrics(request, env, corsHeaders){
   // насморке/повороте) уезжал клиенту как весь показатель, тогда как телефон показывает
   // среднее за ночь (напр. 96). Отсюда расхождение приложение↔телефон. Усредняем сэмплы
   // самой поздней ночи. 2026-07-20. ⚠️ Проверить живьём по FITBIT-DEBUG-логу формы сэмпла.
-  const spo2 = await gh('oxygen-saturation', `oxygen_saturation.sample_time.physical_time>="${startISO}" AND oxygen_saturation.sample_time.physical_time<"${endISO}"`);
-  { const _val = d => { const o = d.oxygenSaturation || {}; const n = num(o.percentage ?? o.percentSaturation) ?? pickNum(d, /percent/i); return (n!=null && n>=70 && n<=100) ? n : null; };
-    const arr = spo2.map(d => ({ ord:_dord(d), val:_val(d) })).filter(x => x.val != null);
-    if (arr.length) { const maxOrd = Math.max(...arr.map(x => x.ord)); const night = arr.filter(x => x.ord === maxOrd).map(x => x.val); const m = avg(night); if (m != null) ex.spo2 = +m.toFixed(1); } }
+  // SpO₂ — усредняем НИЖЕ, после вычисления окна сна (нужен sleep-интервал). Запрос сужен до ~44 ч:
+  // живой лог 2026-07-20 показал `oxygen-saturation points: 1000` — ровно потолок пейджинга. За 8 дней
+  // per-sample-кислорода >1000, ночь конкурировала за слоты и могла обрезаться. 44 ч = последняя ночь
+  // целиком, сильно ниже 1000. Форма сэмпла: {oxygenSaturation:{sampleTime:{physicalTime},percentage}}.
+  const spo2Start = new Date(Date.now() - 44*3600000).toISOString();
+  const spo2 = await gh('oxygen-saturation', `oxygen_saturation.sample_time.physical_time>="${spo2Start}" AND oxygen_saturation.sample_time.physical_time<"${endISO}"`);
   // Температура сна: ночная девиация кожи, °C — ПОСЛЕДНЯЯ ночь (уже было так, семантика tempDev)
   const temp = await gh('daily-sleep-temperature-derivations', `daily_sleep_temperature_derivations.date>="${sd}" AND daily_sleep_temperature_derivations.date<"${ed}"`);
   { const pts = temp.map(d => { const t = d.dailySleepTemperatureDerivations || {};
@@ -2275,6 +2277,7 @@ async function handleFitbitMetrics(request, env, corsHeaders){
   const cardio = await gh('daily-vo2-max', `daily_vo2_max.date>="${sd}" AND daily_vo2_max.date<"${ed}"`);
   { const v = latest(cardio, d => { const n = pickNum(d, /vo2/i); return (n!=null && n>=15 && n<=90) ? n : null; }); if (v!=null) ex.vo2 = Math.round(v); }
   // Sleep — ПОСЛЕДНЯЯ ночь: часы сна + минуты глубокого из ТОЙ ЖЕ сессии
+  let sleepStartMs = null, sleepEndMs = null;   // окно сна для усреднения SpO₂ (ниже)
   const sleep = await gh('sleep', `sleep.interval.end_time>="${startISO}" AND sleep.interval.end_time<"${endISO}"`);
   { const sorted = sleep.map(d => ({ ord:_dord(d), mins:num(d.sleep && d.sleep.summary && d.sleep.summary.minutesAsleep), d }))
                         .filter(x => x.mins != null).sort((a,b)=>a.ord-b.ord);
@@ -2291,6 +2294,31 @@ async function handleFitbitMetrics(request, env, corsHeaders){
       const ss = last.sleep.summary.stagesSummary;
       const ds = Array.isArray(ss) ? ss.find(s => s.type === 'DEEP') : null;
       if (ds && num(ds.minutes)!=null) ex.deepMin = Math.round(num(ds.minutes));
+      const iv = last.sleep.interval || {};
+      const _ss = Date.parse(iv.startTime), _se = Date.parse(iv.endTime);
+      if (isFinite(_ss)) sleepStartMs = _ss;
+      if (isFinite(_se)) sleepEndMs = _se;
+    } }
+  // SpO₂ = среднее за ПОСЛЕДНЮЮ НОЧЬ по окну сна (не по календарному дню: бакет «по дню» разрывал ночь
+  // 22:03→06:23 и подмешивал пассивные замеры ПОСЛЕ пробуждения → ≈88 вместо 96). Фильтруем сэмплы
+  // кислорода интервалом сна ±30 мин. Фолбэк (нет окна сна): последние 10 ч, отбросив свежие 30 мин.
+  { const _v = d => { const o = d.oxygenSaturation || {}; const n = num(o.percentage); return (n!=null && n>=70 && n<=100) ? n : null; };
+    const _tm = d => { const s = d.oxygenSaturation && d.oxygenSaturation.sampleTime && d.oxygenSaturation.sampleTime.physicalTime; const t = s ? Date.parse(s) : NaN; return isFinite(t) ? t : null; };
+    const pts = spo2.map(d => ({ t:_tm(d), v:_v(d) })).filter(x => x.v != null && x.t != null);
+    let night = [];
+    if (sleepStartMs && sleepEndMs) night = pts.filter(x => x.t >= sleepStartMs - 1800000 && x.t <= sleepEndMs + 1800000).map(x => x.v);
+    if (!night.length && pts.length) { const tMax = Math.max(...pts.map(x => x.t)); night = pts.filter(x => x.t >= tMax - 10*3600000 && x.t <= tMax - 1800000).map(x => x.v); }
+    // ⚠️ Google Health отдаёт СЫРОЙ поток SpO₂: артефакты контакта/движения тянут mean вниз (живой лог
+    // 2026-07-20: 487 ночных сэмплов, 58% < 90%, mean 88 vs телефон 96). Fitbit-app показывает «типичный»
+    // ночной SpO₂ по КАЧЕСТВЕННЫМ замерам. Повторяем это: среднее по сэмплам ≥90% (нормальный диапазон сна,
+    // артефактный хвост отбрасываем) → ~95, сходится с телефоном. Но если ночь РЕАЛЬНО низкая (десатурация:
+    // <20% замеров ≥90) — не прячем, отдаём медиану как честный сигнал.
+    if (night.length) {
+      const good = night.filter(x => x >= 90);
+      let val;
+      if (good.length >= night.length * 0.2) { val = good.reduce((a,b)=>a+b,0) / good.length; }
+      else { const s = night.slice().sort((a,b)=>a-b); val = s[Math.floor(s.length/2)]; }
+      if (val != null) ex.spo2 = +val.toFixed(1);
     } }
 
   return jsonResponse({ ok:true, ex: _sanitizeEx(ex) }, corsHeaders);
