@@ -5886,6 +5886,12 @@ function _showFlow(list){
   document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active','flow-show');});
   document.querySelectorAll('.flow-group-head').forEach(function(h){h.remove();});
   document.querySelectorAll('.flow-intro').forEach(function(h){h.remove();});
+  // Утренняя карточка/гейт «пройдено сегодня» — удалить из DOM, а не просто снять flow-show:
+  // пока элемент жив, правило body:has(#morning-gate) держит scroll-area флексом (main зажат,
+  // футер прижат к низу) — лента переполняла main, футер ложился поверх блоков и съедал клики
+  // («Энергия и образ жизни» не докликивалась, гейт вечно «Отвечено 2 из 3»). 2026-07-20.
+  var _mg=document.getElementById('morning-gate'); if(_mg)_mg.remove();
+  var _dg=document.getElementById('daily-done-gate'); if(_dg)_dg.remove();
   var r=document.getElementById('stepResult');if(r)r.classList.remove('active');
   var main=document.querySelector('main');if(!main)return;
   // Тёплый заход перед первым блоком — «начало пути», перевод из чтения в участие.
@@ -6265,6 +6271,8 @@ function goTo(n){
   window._curStep = n;   // запоминаем шаг — чтобы лейбл прогресса перевести при смене языка
   document.body.classList.remove('flow-mode'); if(typeof _hideFlowFooter==='function')_hideFlowFooter();
   document.querySelectorAll('.step').forEach(s=>s.classList.remove('active','flow-show'));
+  var _mg2=document.getElementById('morning-gate'); if(_mg2)_mg2.remove();   // см. _showFlow: живой гейт ломает раскладку (:has) и перекрывает шаг футером
+  var _dg2=document.getElementById('daily-done-gate'); if(_dg2)_dg2.remove();
   const target = document.getElementById(n==='result'?'stepResult':'step'+n);
   if(target) target.classList.add('active');
   // В приложении hero (большой логотип/заголовок/кнопка импорта) — только на входе (step0);
@@ -6962,8 +6970,10 @@ function _showResultsInner(){
   // финальный else, т.е. приложение ВСЕГДА писало «HRV в норме», а HRV не влиял на балл. 2026-07-17
   // судим по реальному значению против возрастной нормы — те же полосы, что в воркере (hrvNormLow/High).
   // HRV. Возрастные пороги 40/30/25 мс убраны: JACC 2023 (State-of-the-Art Review)
-  // прямо НЕ рекомендует интерпретацию HRV по абсолютным значениям — разброс день ко дню
-  // CV≈30%, т.е. истинные 40 мс в одинаковых условиях читаются как 28–52. Сравниваем
+  // прямо НЕ рекомендует интерпретацию HRV по абсолютным значениям — дословно
+  // «interpretation of HRV data using absolute values is discouraged» (проверено 2026-07-20).
+  // Разброс день ко дню CV≈30% — это уже Uhlig 2020 / Schumann 2025, не JACC:
+  // истинные 40 мс в одинаковых условиях читаются как 28–52. Сравниваем
   // человека с самим собой: медиана его же дней, нужно минимум 7 записей.
   // Обоснование и ссылки — docs/INDEX-SCORING-SOURCES.md §5.2
   var _hrvV=parseInt(data.hrv)||0;
