@@ -2605,7 +2605,7 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
       <div class="card-accent"></div>
       <button type="button" class="help-btn" onclick="openHelp('sleep')" aria-label="info">ℹ</button>
       <div class="step-badge" data-t="s2_badge">Сон</div>
-      <div class="input-group">
+      <div class="input-group" id="s16-hours">
         <div class="q-prompt" data-t="s2_qh">Сколько часов вы спали этой ночью?</div>
         <div class="sleep-hours">
           <button type="button" class="shr-btn" onclick="_sleepHrStep(-0.5)" aria-label="minus">−</button>
@@ -2616,7 +2616,7 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
       </div>
       <!-- Ощущение сна + пробуждения перенесены из step3 (2026-07-17): человек может честно отметить их
            сам, без прибора. Глубокий сон/дыхание НЕ переносим — они только с трекера. Воркер читает оба. -->
-      <div class="divider"></div>
+      <div class="divider" id="s16-hdiv"></div>
       <div class="input-group">
         <label><span data-t="s2_l1">Ощущение сна (1–10)</span></label>
         <div class="q-prompt" data-t="s2_q1">Как вы себя чувствуете после сна?</div>
@@ -5449,7 +5449,7 @@ function renderGadgetPanel(){
 window._manualMetrics={};
 function _markManual(metric){window._manualMetrics[metric]=true;if(typeof updateDeviceBanners==='function')updateDeviceBanners();if(typeof renderGadgetPanel==='function')renderGadgetPanel();}
 (function(){
-  const map={hrv:'hrv',sleep_qual:'sleepHours',rhr:'rhr'};
+  const map={hrv:'hrv',sleep_hours:'sleepHours',rhr:'rhr'};   // приборный показатель = поле часов сна (#sleep_hours), НЕ субъективное #sleep_qual
   Object.keys(map).forEach(function(id){const el=document.getElementById(id);if(el)el.addEventListener('change',function(){_markManual(map[id]);});});
   document.querySelectorAll('input[name=temp]').forEach(function(el){el.addEventListener('change',function(){_markManual('tempDev');});});
 })();
@@ -5563,7 +5563,7 @@ function goFromNutrition(){ saveProfile(); showAll(); }
 // Приборные шаги (HRV=step1, Сон=step3) показываем ТОЛЬКО когда гаджет не дал метрику:
 // importedData[m]!=null → шаг скрыт из ленты, значение втекает из панели через applyImportedToSliders.
 // Без гаджета клиент отвечает вручную — данные о сне/пульсе не теряются.
-const _AUTO_STEP_METRIC={15:'rhr',16:'sleepHours'};   // пульс(15) и часы сна(16) — приборные: при синке метрики блок скрывается из ленты (значение из панели), остаётся только в ручном проходе
+const _AUTO_STEP_METRIC={15:'rhr'};   // пульс(15) — приборный: при синке блок скрывается из ленты (значение из панели), остаётся только в ручном проходе. Часы сна(16) НЕ скрываем целиком — в шаге живут субъективные под-блоки (ощущение сна/пробуждения), прибор их не мерит; прячем только под-группу «часы» при синке (см. _toggleSleepHours)
 // Приливы (step2) показываем только женщинам
 // «Нет / не актуально» взаимоисключим с остальными пунктами списка (дизайн VIO)
 // Карта {сигнал:'yes'} из чеклиста по id контейнера (контракт воркера как в VIO)
@@ -5999,6 +5999,9 @@ function _showFlow(list){
     }
     else { var _fi=main.querySelector('.flow-intro'); if(_fi){ _fi.parentNode.insertBefore(_gw,_fi.nextSibling); } else { main.appendChild(_gw); } }
   }
+  // Часы сна пришли с трекера → прячем только под-группу «часы» внутри step16 (не весь шаг —
+  // субъективные ощущение сна/пробуждения прибор не мерит и должны остаться). 2026-07-21.
+  if(typeof _toggleSleepHours==='function')_toggleSleepHours();
   // Кнопку результата прицепляем в самый конец ленты — её видно, только пройдя все блоки
   var ff=document.getElementById('flow-footer'); if(ff&&main)main.appendChild(ff);
   var sa=document.getElementById('scroll-area');if(sa)sa.scrollTop=0;else window.scrollTo(0,0);
@@ -6006,7 +6009,7 @@ function _showFlow(list){
 // Единая лента (строение VIO). Порядок = важность: base (профиль 0 → питание 7 → добавки 9),
 // сутки за вчера (приливы 2 → энергия/образ жизни 5 → когниция 6), «Прямо сейчас» (сигналы тела 4 —
 // пульс + самочувствие в моменте), weekly (активность 8 → новые симптомы 14), biweekly (стресс 10).
-const FLOW_ALL=[0,12,7,9,2,4,16,5,6,15,8,14,10];   // daily-зона: приливы2·сигналы тела4·часы сна16·энергия5·ясность6; «Прямо сейчас»: пульс15. 16(сон) и 15(пульс) — приборные (авто-скрытие при синке, см. _AUTO_STEP_METRIC → только ручной проход). HRV/темп/VO2/SpO2/дыхание НЕ в ленте: функция гаджета, значения из панели трекера, поля живут в DOM (step1/step3)
+const FLOW_ALL=[0,12,7,9,2,4,16,5,6,15,8,14,10];   // daily-зона: приливы2·сигналы тела4·сон16·энергия5·ясность6; «Прямо сейчас»: пульс15. 15(пульс) — приборный (авто-скрытие всего шага при синке, см. _AUTO_STEP_METRIC). 16(сон) остаётся всегда: несёт субъективные ощущение сна/пробуждения; при синке прячется только под-группа «часы» (_toggleSleepHours). HRV/темп/VO2/SpO2/дыхание НЕ в ленте: функция гаджета, значения из панели трекера, поля живут в DOM (step1/step3)
 // Профиль (возраст/рост/вес) — разовый онбординг: заполнен → убираем из стопки навсегда,
 // данные живут в «Мой профиль», правка оттуда (кнопка «Изменить» → _fixMetric(0)).
 function _profileDone(){ try{var p=JSON.parse(localStorage.getItem('vialp_profile')||'{}')||{}; return !!(p.age&&p.height&&p.weight);}catch(e){return false;} }
@@ -6050,6 +6053,14 @@ function showAll(){
   else { setTimeout(function(){ if(typeof _refreshGate==='function')_refreshGate(); }, 60); }
 }
 // Данные гаджета изменились при открытой ленте → пересобрать стопку (шаги, закрытые метрикой, прячутся сразу), прокрутку сохранить.
+// Часы сна с трекера → скрыть под-группу «часы» (и её разделитель) внутри step16, оставив
+// субъективные под-блоки. Скрытая под-группа не требуется гейтом (_blockComplete пропускает offsetParent===null).
+function _toggleSleepHours(){
+  var synced = (typeof importedData!=='undefined' && importedData.sleepHours!=null);
+  var g=document.getElementById('s16-hours'), d=document.getElementById('s16-hdiv');
+  if(g)g.style.display=synced?'none':'';
+  if(d)d.style.display=synced?'none':'';
+}
 function _reflowSteps(){
   if(!document.body.classList.contains('flow-mode'))return;
   if(typeof showAll!=='function')return;
@@ -7397,6 +7408,10 @@ function _showResultsInner(){
   // scoreNum/setScore убраны с экрана вместе с кольцом «Готовность» (2026-07-17).
   // score и type ПОКА считаются: пишутся в историю (saveSession) — рефакторинг движка отдельным этапом.
 
+  // Сброс перед каждым разбором: без него #doctorAlert (статический DOM) и его #docDetails, раз
+  // показавшись в день сигнала, «прилипали» ко всем последующим дням без сигнала. Предупреждение
+  // закреплено ТОЛЬКО за днём, где сигнал реально определён. 2026-07-21.
+  (function(){var _da=document.getElementById('doctorAlert'); if(_da)_da.classList.remove('visible'); var _od=document.getElementById('docDetails'); if(_od)_od.remove();})();
   if(doc){
     const da=document.getElementById('doctorAlert');
     da.classList.add('visible');
@@ -7414,7 +7429,7 @@ function _showResultsInner(){
       var _btn=L({ru:'Подробнее',uk:'Докладніше',en:'Details',es:'Detalles',de:'Details',pt:'Detalhes',fr:'Détails',pl:'Szczegóły',it:'Dettagli',he:'פרטים',ja:'詳細',ko:'자세히'});
       var _dd=document.createElement('div'); _dd.id='docDetails';
       _dd.innerHTML='<button type="button" class="doc-more" onclick="var p=this.parentNode;p.classList.toggle(\'open\');">'+_esc(_btn)+' <i class="ph ph-caret-down" aria-hidden="true"></i></button>'
-        +'<div class="doc-body">'+_body+'<div class="doc-lead">'+_esc(_lead)+'</div></div>';
+        +'<div class="doc-body"><div>'+_body+'<div class="doc-lead">'+_esc(_lead)+'</div></div></div>';
       da.appendChild(_dd);
     }catch(e){}
   }
@@ -7546,7 +7561,9 @@ function applyImportedToSliders(){
   // Часы сна с гаджета — объективны, их подтягиваем. Но НЕ выводим из них «ощущение сна»:
   // раньше sleep_qual вычислялся из часов (7.5ч→8) и затирал оценку — гаджет-юзеру приложение
   // никогда не давало сказать, КАК он выспался. Оставляем субъективную шкалу пользователю. 2026-07-20.
-  if(importedData.sleepHours!=null){const h=importedData.sleepHours;const sh=document.getElementById('sleep_hours');if(sh)sh.value=Math.round(h*2)/2;if(typeof renderSleepScale==='function')renderSleepScale();if(importedData.deepMin!=null){const d=importedData.deepMin;if(d>=90)document.getElementById('dp1').checked=true;else if(d>=30)document.getElementById('dp2').checked=true;else document.getElementById('dp3').checked=true;}_tch('sleep_qual');_tch('sleep_hours');}
+  if(importedData.sleepHours!=null){const h=importedData.sleepHours;const sh=document.getElementById('sleep_hours');if(sh)sh.value=Math.round(h*2)/2;if(typeof renderSleepScale==='function')renderSleepScale();if(importedData.deepMin!=null){const d=importedData.deepMin;if(d>=90)document.getElementById('dp1').checked=true;else if(d>=30)document.getElementById('dp2').checked=true;else document.getElementById('dp3').checked=true;}_tch('sleep_hours');}
+  // sleep_qual НЕ помечаем touched при синке: субъективное «ощущение сна» пользователь ставит сам
+  // (иначе гейт считает его отвеченным на дефолте 6, и вопрос — хоть и виден — не требуется). 2026-07-21.
   if(importedData.tempDev!=null){const d=importedData.tempDev;if(Math.abs(d)<=0.1)document.getElementById('tp1').checked=true;else if(d>0.1&&d<0.5)document.getElementById('tp2').checked=true;else if(d>=0.5)document.getElementById('tp3').checked=true;else document.getElementById('tp4').checked=true;_tch('temp');}
   showImportBanner();
 }
