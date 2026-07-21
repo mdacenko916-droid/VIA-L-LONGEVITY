@@ -6338,6 +6338,10 @@ async function _iapRestoreClick(){
 function goTo(n){
   window._curStep = n;   // запоминаем шаг — чтобы лейбл прогресса перевести при смене языка
   document.body.classList.remove('flow-mode'); if(typeof _hideFlowFooter==='function')_hideFlowFooter();
+  // Панель «Данные с трекера» — поверхность ленты-анкеты (её показывает _showFlow). Любой уход из
+  // ленты на отдельный шаг/разбор должен её прятать: renderGadgetPanel ставит display:block, и без
+  // этого при заходе на «Сегодня» (снимок дня) она всплывала над разбором. 2026-07-21.
+  var _gpw=document.getElementById('gadget-panel-wrap'); if(_gpw)_gpw.style.display='none';
   document.querySelectorAll('.step').forEach(s=>s.classList.remove('active','flow-show'));
   var _mg2=document.getElementById('morning-gate'); if(_mg2)_mg2.remove();   // см. _showFlow: живой гейт ломает раскладку (:has) и перекрывает шаг футером
   var _dg2=document.getElementById('daily-done-gate'); if(_dg2)_dg2.remove();
@@ -6649,13 +6653,15 @@ var _DAY_START_H=4;   // «новый день» начинается в 4:00 Л
 function _dayKey(d){ d=new Date((d||new Date()).getTime()-_DAY_START_H*3600000); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }   // ЛОКАЛЬНАЯ дата со сдвигом на 4ч: 00:00–03:59 относятся к прошедшему дню
 // снимок дня для истории (Oura-лента): весь дашборд = score/type/data + разбор (в vialp_ai_daily). Хранение ~400 дней.
 function _daySnapGet(){ try{return JSON.parse(localStorage.getItem('vialp_days')||'[]')||[];}catch(e){return [];} }
-function _daySnapSave(score,type,data){ try{var arr=_daySnapGet(),day=_dayKey();arr=arr.filter(function(e){return e.day!==day;});arr.unshift({day:day,score:score,type:type,data:data,ts:Date.now()});while(arr.length>400)arr.pop();localStorage.setItem('vialp_days',JSON.stringify(arr));}catch(e){} }
+function _daySnapSave(score,type,data,doc){ try{var arr=_daySnapGet(),day=_dayKey();arr=arr.filter(function(e){return e.day!==day;});arr.unshift({day:day,score:score,type:type,data:data,doc:!!doc,ts:Date.now()});while(arr.length>400)arr.pop();localStorage.setItem('vialp_days',JSON.stringify(arr));}catch(e){} }
 function _passedToday(){ try{ return localStorage.getItem('vialp_lastpass')===_dayKey(); }catch(e){ return false; } }
 // ── Рендер ВСЕГО дашборда из снимка дня (без живых полей и без нового запроса к ИИ) ──
 function _renderDayFromSnap(snap, todayFlag){
   if(!snap||!snap.data) return false;
   var data=snap.data, score=snap.score, type=snap.type;
-  try{ _lastResult={score:score,type:type,data:data,insights:[],recs:[],docR:[]}; }catch(e){}
+  try{ _lastResult={score:score,type:type,data:data,insights:[],recs:[],docR:snap.doc?[1]:[]}; }catch(e){}
+  // Предупреждение «На что обратить внимание» — из флага снимка (доступно и без пересчёта движка).
+  try{ if(typeof _renderDoctorAlert==='function')_renderDoctorAlert(data,!!snap.doc); }catch(e){}
   window.__snapDay=snap.day;   // какой день сейчас на экране — чтобы смена языка перерисовала ЕГО из снимка, а не пересчитала из полей формы
   window.__snapRender=true;   // показываем метрики прямо из снимка (без опоры на __touched)
   try{ renderDayIndex(score,type,data); }catch(e){}
@@ -6900,6 +6906,33 @@ function _docSignals(data){
   if(rr!=null && rr>20) out.push(L({ru:'Частота дыхания',uk:'Частота дихання',en:'Respiratory rate',es:'Frecuencia respiratoria',de:'Atemfrequenz',pt:'Frequência respiratória',fr:'Fréquence respiratoire',pl:'Częstość oddechów',it:'Frequenza respiratoria',he:'קצב נשימה',ja:'呼吸数',ko:'호흡수'})+' '+rr+'/'+L({ru:'мин',uk:'хв',en:'min',es:'min',de:'Min',pt:'min',fr:'min',pl:'min',it:'min',he:'דק',ja:'分',ko:'분'})+' ('+ref+' ≤ 20)');
   return out;
 }
+// Единая отрисовка блока «На что обратить внимание». Зовётся и живым разбором, и снимком дня
+// (клик «Сегодня») — без общей функции снимок-путь не восстанавливал предупреждение. Всегда
+// сбрасывает прошлое состояние: предупреждение закреплено ТОЛЬКО за днём сигнала. 2026-07-21.
+function _renderDoctorAlert(data, docFlag){
+  var _da0=document.getElementById('doctorAlert'); if(_da0)_da0.classList.remove('visible');
+  var _od0=document.getElementById('docDetails'); if(_od0)_od0.remove();
+  if(!docFlag)return;
+    const da=document.getElementById('doctorAlert');
+    da.classList.add('visible');
+    // Велнес: НЕ вешаем клиенту диагноз-ярлык. Нейтральная фраза + раскрывашка (выбор владельца, safe-режим):
+    // показываем ТОЛЬКО собственные измерения клиента вне ориентира — факт + референс, без медицинских выводов.
+    document.getElementById('doctorText').textContent=' '+L({ru:'Некоторые сигналы стоит спокойно обсудить со специалистом.',uk:'Деякі сигнали варто спокійно обговорити з фахівцем.',en:'A few signals are worth calmly discussing with a specialist.',es:'Conviene comentar algunas señales con un especialista, sin alarma.',de:'Einige Signale besprichst du in Ruhe am besten mit einer Fachperson.',pt:'Vale a pena conversar com calma sobre alguns sinais com um especialista.',fr:'Quelques signaux méritent d’être évoqués sereinement avec un spécialiste.',pl:'Kilka sygnałów warto spokojnie omówić ze specjalistą.',it:'Alcuni segnali vale la pena discuterli con calma con uno specialista.',he:'כדאי לשוחח בנחת על כמה סימנים עם איש מקצוע.',ja:'いくつかのサインは専門家に落ち着いて相談すると安心です。',ko:'몇 가지 신호는 전문가와 차분히 상의해 보면 좋습니다.'});
+    try{
+      var _oldDD=document.getElementById('docDetails'); if(_oldDD)_oldDD.remove();
+      var _sigs=(typeof _docSignals==='function')?_docSignals(data):[];
+      var _capt=L({ru:'На основании ваших данных:',uk:'На підставі ваших даних:',en:'Based on your data:',es:'Según tus datos:',de:'Basierend auf deinen Daten:',pt:'Com base nos seus dados:',fr:'D’après vos données :',pl:'Na podstawie Twoich danych:',it:'In base ai tuoi dati:',he:'על סמך הנתונים שלך:',ja:'あなたのデータに基づくと:',ko:'당신의 데이터를 기준으로:'});
+      var _lead=L({ru:'Это не диагноз, а повод спокойно задать вопрос специалисту.',uk:'Це не діагноз, а привід спокійно поставити запитання фахівцю.',en:'This is not a diagnosis — just a reason to calmly ask a specialist.',es:'No es un diagnóstico, solo un motivo para preguntar con calma a un especialista.',de:'Das ist keine Diagnose — nur ein Anlass, in Ruhe eine Fachperson zu fragen.',pt:'Isto não é um diagnóstico — apenas um motivo para perguntar com calma a um especialista.',fr:'Ce n’est pas un diagnostic — juste une raison d’en parler calmement à un spécialiste.',pl:'To nie diagnoza — po prostu powód, by spokojnie zapytać specjalistę.',it:'Non è una diagnosi — solo un motivo per chiedere con calma a uno specialista.',he:'זה לא אבחון — רק סיבה לשאול מומחה בנחת.',ja:'これは診断ではなく、専門家に落ち着いて相談するきっかけです。',ko:'이것은 진단이 아니라 전문가에게 차분히 물어볼 이유일 뿐입니다.'});
+      var _body = _sigs.length
+        ? '<div class="doc-capt">'+_esc(_capt)+'</div><ul class="doc-list">'+_sigs.map(function(s){return '<li>'+_esc(s)+'</li>';}).join('')+'</ul>'
+        : '<div class="doc-capt">'+_esc(L({ru:'Конкретных показателей вне ориентира нет — речь о совокупности отмеченных вами ощущений.',uk:'Конкретних показників поза орієнтиром немає — ідеться про сукупність відмічених вами відчуттів.',en:'No specific readings are out of range — it’s about the combination of feelings you noted.',es:'No hay lecturas fuera de rango — se trata del conjunto de sensaciones que anotaste.',de:'Keine einzelnen Werte außerhalb des Bereichs — es geht um die Kombination der von dir genannten Empfindungen.',pt:'Nenhuma leitura fora do intervalo — trata-se do conjunto de sensações que você anotou.',fr:'Aucune valeur hors norme — il s’agit de l’ensemble des ressentis que vous avez notés.',pl:'Żaden pojedynczy wynik nie jest poza normą — chodzi o połączenie odczuć, które zaznaczyłeś.',it:'Nessun valore fuori range — si tratta dell’insieme delle sensazioni che hai indicato.',he:'אין קריאות חריגות — מדובר בשילוב התחושות שציינת.',ja:'範囲外の数値はありません — あなたが記録した感覚の組み合わせについてです。',ko:'범위를 벗어난 수치는 없습니다 — 당신이 표시한 느낌의 조합에 관한 것입니다.'}))+'</div>';
+      var _btn=L({ru:'Подробнее',uk:'Докладніше',en:'Details',es:'Detalles',de:'Details',pt:'Detalhes',fr:'Détails',pl:'Szczegóły',it:'Dettagli',he:'פרטים',ja:'詳細',ko:'자세히'});
+      var _dd=document.createElement('div'); _dd.id='docDetails';
+      _dd.innerHTML='<button type="button" class="doc-more" onclick="var p=this.parentNode;p.classList.toggle(\'open\');">'+_esc(_btn)+' <i class="ph ph-caret-down" aria-hidden="true"></i></button>'
+        +'<div class="doc-body"><div>'+_body+'<div class="doc-lead">'+_esc(_lead)+'</div></div></div>';
+      da.appendChild(_dd);
+    }catch(e){}
+}
 function showResults(){
   var _fhr=document.getElementById('funnelHome');if(_fhr)_fhr.style.display='none';   // на результате возврата «на главную» не нужно
   // Профиль обязателен (Карточка = источник настроечных данных): без возраста/веса/роста
@@ -6921,7 +6954,7 @@ function showResults(){
     try{localStorage.setItem('vialp_lastpass',_dayKey());}catch(e){}   // отметить: проход за сегодня сделан (гейт «сегодня уже пройдено»)
     try{ if(importedData&&importedData.source&&importedData.source!=='manual'&&importedData.source!=='apple-manual') localStorage.setItem('vialp_lastsync',new Date().toISOString()); }catch(e){}   // штамп синхронизации гаджета
     try{localStorage.setItem('vialp_lastdata',JSON.stringify((_lastResult&&_lastResult.data)||{}));}catch(e){}   // данные прохода — для «Памятки дня» после перезагрузки
-    try{ if(_lastResult&&typeof _daySnapSave==='function') _daySnapSave(_lastResult.score,_lastResult.type,_lastResult.data); }catch(e){}   // снимок дня для Oura-ленты истории
+    try{ if(_lastResult&&typeof _daySnapSave==='function') _daySnapSave(_lastResult.score,_lastResult.type,_lastResult.data,(_lastResult.docR&&_lastResult.docR.length)>0); }catch(e){}   // снимок дня для Oura-ленты истории (+флаг предупреждения)
     try{ if(typeof _renderWeekStrip==='function') _renderWeekStrip(_dayKey()); }catch(e){}   // лента недели на экране результата
     try{ if(typeof renderDayBlueprint==='function'&&_lastResult&&_lastResult.data) renderDayBlueprint(_lastResult.data); }catch(e){}
     // Авто: на 7-й день (гейт открыт) + есть ≥2 анализа → недельный разбор генерится сам (1/нед). В EXPERT/ELITE уходит в кабинет специалиста.
@@ -7408,31 +7441,9 @@ function _showResultsInner(){
   // scoreNum/setScore убраны с экрана вместе с кольцом «Готовность» (2026-07-17).
   // score и type ПОКА считаются: пишутся в историю (saveSession) — рефакторинг движка отдельным этапом.
 
-  // Сброс перед каждым разбором: без него #doctorAlert (статический DOM) и его #docDetails, раз
-  // показавшись в день сигнала, «прилипали» ко всем последующим дням без сигнала. Предупреждение
-  // закреплено ТОЛЬКО за днём, где сигнал реально определён. 2026-07-21.
-  (function(){var _da=document.getElementById('doctorAlert'); if(_da)_da.classList.remove('visible'); var _od=document.getElementById('docDetails'); if(_od)_od.remove();})();
-  if(doc){
-    const da=document.getElementById('doctorAlert');
-    da.classList.add('visible');
-    // Велнес: НЕ вешаем клиенту диагноз-ярлык. Нейтральная фраза + раскрывашка (выбор владельца, safe-режим):
-    // показываем ТОЛЬКО собственные измерения клиента вне ориентира — факт + референс, без медицинских выводов.
-    document.getElementById('doctorText').textContent=' '+L({ru:'Некоторые сигналы стоит спокойно обсудить со специалистом.',uk:'Деякі сигнали варто спокійно обговорити з фахівцем.',en:'A few signals are worth calmly discussing with a specialist.',es:'Conviene comentar algunas señales con un especialista, sin alarma.',de:'Einige Signale besprichst du in Ruhe am besten mit einer Fachperson.',pt:'Vale a pena conversar com calma sobre alguns sinais com um especialista.',fr:'Quelques signaux méritent d’être évoqués sereinement avec un spécialiste.',pl:'Kilka sygnałów warto spokojnie omówić ze specjalistą.',it:'Alcuni segnali vale la pena discuterli con calma con uno specialista.',he:'כדאי לשוחח בנחת על כמה סימנים עם איש מקצוע.',ja:'いくつかのサインは専門家に落ち着いて相談すると安心です。',ko:'몇 가지 신호는 전문가와 차분히 상의해 보면 좋습니다.'});
-    try{
-      var _oldDD=document.getElementById('docDetails'); if(_oldDD)_oldDD.remove();
-      var _sigs=(typeof _docSignals==='function')?_docSignals(data):[];
-      var _capt=L({ru:'На основании ваших данных:',uk:'На підставі ваших даних:',en:'Based on your data:',es:'Según tus datos:',de:'Basierend auf deinen Daten:',pt:'Com base nos seus dados:',fr:'D’après vos données :',pl:'Na podstawie Twoich danych:',it:'In base ai tuoi dati:',he:'על סמך הנתונים שלך:',ja:'あなたのデータに基づくと:',ko:'당신의 데이터를 기준으로:'});
-      var _lead=L({ru:'Это не диагноз, а повод спокойно задать вопрос специалисту.',uk:'Це не діагноз, а привід спокійно поставити запитання фахівцю.',en:'This is not a diagnosis — just a reason to calmly ask a specialist.',es:'No es un diagnóstico, solo un motivo para preguntar con calma a un especialista.',de:'Das ist keine Diagnose — nur ein Anlass, in Ruhe eine Fachperson zu fragen.',pt:'Isto não é um diagnóstico — apenas um motivo para perguntar com calma a um especialista.',fr:'Ce n’est pas un diagnostic — juste une raison d’en parler calmement à un spécialiste.',pl:'To nie diagnoza — po prostu powód, by spokojnie zapytać specjalistę.',it:'Non è una diagnosi — solo un motivo per chiedere con calma a uno specialista.',he:'זה לא אבחון — רק סיבה לשאול מומחה בנחת.',ja:'これは診断ではなく、専門家に落ち着いて相談するきっかけです。',ko:'이것은 진단이 아니라 전문가에게 차분히 물어볼 이유일 뿐입니다.'});
-      var _body = _sigs.length
-        ? '<div class="doc-capt">'+_esc(_capt)+'</div><ul class="doc-list">'+_sigs.map(function(s){return '<li>'+_esc(s)+'</li>';}).join('')+'</ul>'
-        : '<div class="doc-capt">'+_esc(L({ru:'Конкретных показателей вне ориентира нет — речь о совокупности отмеченных вами ощущений.',uk:'Конкретних показників поза орієнтиром немає — ідеться про сукупність відмічених вами відчуттів.',en:'No specific readings are out of range — it’s about the combination of feelings you noted.',es:'No hay lecturas fuera de rango — se trata del conjunto de sensaciones que anotaste.',de:'Keine einzelnen Werte außerhalb des Bereichs — es geht um die Kombination der von dir genannten Empfindungen.',pt:'Nenhuma leitura fora do intervalo — trata-se do conjunto de sensações que você anotou.',fr:'Aucune valeur hors norme — il s’agit de l’ensemble des ressentis que vous avez notés.',pl:'Żaden pojedynczy wynik nie jest poza normą — chodzi o połączenie odczuć, które zaznaczyłeś.',it:'Nessun valore fuori range — si tratta dell’insieme delle sensazioni che hai indicato.',he:'אין קריאות חריגות — מדובר בשילוב התחושות שציינת.',ja:'範囲外の数値はありません — あなたが記録した感覚の組み合わせについてです。',ko:'범위를 벗어난 수치는 없습니다 — 당신이 표시한 느낌의 조합에 관한 것입니다.'}))+'</div>';
-      var _btn=L({ru:'Подробнее',uk:'Докладніше',en:'Details',es:'Detalles',de:'Details',pt:'Detalhes',fr:'Détails',pl:'Szczegóły',it:'Dettagli',he:'פרטים',ja:'詳細',ko:'자세히'});
-      var _dd=document.createElement('div'); _dd.id='docDetails';
-      _dd.innerHTML='<button type="button" class="doc-more" onclick="var p=this.parentNode;p.classList.toggle(\'open\');">'+_esc(_btn)+' <i class="ph ph-caret-down" aria-hidden="true"></i></button>'
-        +'<div class="doc-body"><div>'+_body+'<div class="doc-lead">'+_esc(_lead)+'</div></div></div>';
-      da.appendChild(_dd);
-    }catch(e){}
-  }
+  // Предупреждение «На что обратить внимание» рисуем единой функцией — она чинит сброс между днями
+  // и снимок-путь (клик «Сегодня»). doc посчитан движком выше. 2026-07-21.
+  if(typeof _renderDoctorAlert==='function')_renderDoctorAlert(data, doc);
 
   // Лаб-подсказки удалены 2026-07-17: лабораторные показатели — зона EXPERT/ELITE, не VIA-L.
 
