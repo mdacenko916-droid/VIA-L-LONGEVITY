@@ -108,7 +108,9 @@ html[data-lang="he"]{direction:rtl}
 <body>
 <div class="wrap">
   <div class="topline">
-    <a class="back" href="./index.html" onclick="if(history.length>1){history.back();return false;}" aria-label="Back">✕</a>
+    <!-- Закрытие: пробуем плавный history.back(); если через 250мс страница не сменилась (в webview Capacitor
+         back молча не срабатывал — кнопка «зависала»), жёстко уходим в приложение. href — запасной путь. 2026-07-21. -->
+    <a class="back" href="./interpreter-via-l.html" onclick="if(history.length>1){history.back();var _t=setTimeout(function(){location.href='./interpreter-via-l.html';},250);addEventListener('pagehide',function(){clearTimeout(_t);},{once:true});return false;}" aria-label="Back">✕</a>
     <div class="lang-dropdown" id="langDropdown">
       <button type="button" class="lang-toggle" onclick="toggleLangMenu()"><span id="langLabel">EN</span><svg viewBox="0 0 10 6"><path d="M1 1l4 4 4-4"/></svg></button>
       <div class="lang-menu" id="langMenu"></div>
