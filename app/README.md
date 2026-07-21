@@ -14,7 +14,7 @@
 «завёрнутый сайт».
 
 **Важно:** `app/www` СОБИРАЕТСЯ скриптом [`./sync-web.sh`](./sync-web.sh) из веб-ИП и в git НЕ
-коммитится (генерится локально, как node_modules/ios/android). Точка входа = `interpreter-pro.html`
+коммитится (генерится локально, как node_modules/ios/android). Точка входа = `interpreter-via-l.html`
 → копируется в `www/index.html`.
 
 **ИИ-анализ по-прежнему живой:** приложение дергает воркер по сети
@@ -65,7 +65,7 @@ npx cap open android     # открыть в Android Studio → Run
   На вебе — no-op. ⏳ дальше: ввод кода доступа (EXPERT/ELITE с сайта) + IAP для PRO.
 - [~] **HealthKit (iOS)** — код готов, ждёт сборки+теста на устройстве (см. `HEALTHKIT.md`):
   плагин `@perfood/capacitor-healthkit` + мост `../interpreter/healthkit-bridge.js` (читает HRV/пульс/
-  сон/VO2 → поля карточки Apple) + кнопка «📲 Apple Health» на `interpreter-pro.html` (видна только
+  сон/VO2 → поля карточки Apple) + кнопка «📲 Apple Health» на `interpreter-via-l.html` (видна только
   в приложении). Осталось: Xcode-capability + Info.plist, проверка на iPhone, перенос на pro-expert/elite.
 - [ ] **Health Connect (Android)** — Samsung/Xiaomi и пр.
 - [ ] **Push-уведомления** (напоминалка в телефоне).

@@ -29,7 +29,7 @@ interpreter/
 ├── methodology.html            # «Научная база» (noindex) — публичная страница
 │
 ├── interpreter-vio.html        # Интерпретатор VIO  — базовый, платный €9.90 (гейт по коду доступа)
-├── interpreter-pro.html        # Интерпретатор PRO  — 16 шагов + AI
+├── interpreter-via-l.html        # Интерпретатор PRO  — 16 шагов + AI
 ├── interpreter-pro-expert.html # Интерпретатор PRO-EXPERT — 17 шагов (16 + Анкета) + AI + Expert
 ├── interpreter-elite.html      # Интерпретатор ELITE — 17 шагов (16 + Анкета) + AI + Elite консультация
 │
@@ -82,7 +82,7 @@ interpreter/
 | Тариф        | Файл                        | Шагов          | AI-анализ | Expert-PDF                         | Zoom 1:1               | Цена       |
 |--------------|-----------------------------|----------------|-----------|------------------------------------|------------------------|------------|
 | VIO (Basic)  | interpreter-vio.html        | 7              | ✓ Claude  | —                                  | —                      | €9.90 (платный, подписка) |
-| PRO          | interpreter-pro.html        | 16             | ✓ Claude  | —                                  | —                      | €29.90/мес |
+| PRO          | interpreter-via-l.html        | 16             | ✓ Claude  | —                                  | —                      | €29.90/мес |
 | PRO+EXPERT   | interpreter-pro-expert.html | 17 (16+Анкета) | ✓ Claude  | 2 PDF в 30 дней (cooldown 7 дней) | —                      | €79/мес    |
 | ELITE-8W     | interpreter-elite.html      | 17 (16+Анкета) | ✓ Claude  | до 8 PDF за 8 недель (еженедельно) | опц. для uk/ru, ≈1/3 нед | €390       |
 | ELITE-12W    | interpreter-elite.html      | 17 (16+Анкета) | ✓ Claude  | до 12 PDF за 12 недель (еженедельно) | опц. для uk/ru, ≈1/3 нед | €590       |
@@ -173,7 +173,7 @@ FREE → (первый вход) → ACTIVE (30 дней) → EXPIRED
 
 stepProf (профиль) → step0 HRV → step1 Температура → step2 Сон → step3 Пульс/симптомы → step4 Когнитивные функции → step5 Питание → step6 Энергия/образ жизни → step7 Гормональный профиль → step8 Стресс/кортизол → step9 Физическая активность → step10 Лабораторные показатели → step11 Цикл (женщины) / Стресс → step12 Биоимпеданс / Цикл → step13 Тренд недели → step14 Углублённые показатели → step15 Динамика недели → stepResult AI-анализ.
 
-Конкретные подписи шагов (badge / data-t-ключ) могут различаться между файлами `interpreter-pro.html` / `-pro-expert.html` / `-elite.html` — структура общая, наполнение конкретного шага зависит от тарифа. ELITE дополнительно показывает `stepOnboarding` (Анкета-анамнез) при первой активации кода — это отдельный экран до основной воронки. **PRO+EXPERT** по тому же паттерну тоже показывает `stepOnboarding` (Анкету) — даёт нутрициологу контекст для 2 PDF в окне 30 дней. **Фронт реализован** (закоммичен 2026-05-30, `5124cca`; CSS/шаги `#stepOnboarding` на месте). Бэкенд-хвост: Apps Script нужно довести под `product_id 7838826` (см. memory `project_pro_expert_anketa_todo`).
+Конкретные подписи шагов (badge / data-t-ключ) могут различаться между файлами `interpreter-via-l.html` / `-pro-expert.html` / `-elite.html` — структура общая, наполнение конкретного шага зависит от тарифа. ELITE дополнительно показывает `stepOnboarding` (Анкета-анамнез) при первой активации кода — это отдельный экран до основной воронки. **PRO+EXPERT** по тому же паттерну тоже показывает `stepOnboarding` (Анкету) — даёт нутрициологу контекст для 2 PDF в окне 30 дней. **Фронт реализован** (закоммичен 2026-05-30, `5124cca`; CSS/шаги `#stepOnboarding` на месте). Бэкенд-хвост: Apps Script нужно довести под `product_id 7838826` (см. memory `project_pro_expert_anketa_todo`).
 
 ### 4.3 Система i18n (переводы)
 
@@ -304,7 +304,7 @@ KV-биндинги: `EXPERT_DRAFTS` (TTL 7д), `PROGRAM_INTAKES` (TTL 180д).
 https://interpreter.viaelcom.workers.dev
 ```
 
-Все fetch'и из `interpreter-pro.html`, `interpreter-pro-expert.html`, `interpreter-elite.html`, `program-intake.html` (`AI_WORKER` / `WORKER` константа) и Apps Script (`BACKSTAGE_DRAFT_URL`) указывают на этот хостнейм. Любая другая форма (`viaelcom-gmail-s-a`, `vial-claude-proxy`) — устарела или ошибочна.
+Все fetch'и из `interpreter-via-l.html`, `interpreter-pro-expert.html`, `interpreter-elite.html`, `program-intake.html` (`AI_WORKER` / `WORKER` константа) и Apps Script (`BACKSTAGE_DRAFT_URL`) указывают на этот хостнейм. Любая другая форма (`viaelcom-gmail-s-a`, `vial-claude-proxy`) — устарела или ошибочна.
 
 ### 5.3 Модель
 
@@ -675,7 +675,7 @@ wrangler deploy
 
 ### 15.5 Три роута Worker
 - `GET /oura/start?sid=…` — собирает authorize-URL, `state` = HMAC(sid) (приём из `/cal-webhook`), 302 → `cloud.ouraring.com/oauth/authorize`.
-- `GET /oura/callback?code=&state=` — проверяет state, POST `api.ouraring.com/oauth/token` (grant_type=authorization_code + секрет) → токены в KV под `sid`, 302 обратно на `interpreter-pro.html?oura=connected`.
+- `GET /oura/callback?code=&state=` — проверяет state, POST `api.ouraring.com/oauth/token` (grant_type=authorization_code + секрет) → токены в KV под `sid`, 302 обратно на `interpreter-via-l.html?oura=connected`.
 - `GET /oura/metrics?sid=…` — берёт токен из KV (если `Date.now()>expires_at` → refresh через grant_type=refresh_token, обновляет KV), тянет v2-эндпоинты за 7 дней с **production** API, считает нормализованный `ex` (hrv, rhr, sleepHours, deepMin, tempDev, spo2, energy, readiness), отдаёт JSON. Access-token в браузер не попадает — Worker проксирует.
 
 ### 15.6 Фронт (pro / pro-expert / elite)
@@ -710,7 +710,7 @@ wrangler deploy
 - ⚠️ Fitbit закрыл регистрацию новых приложений на старом Web API → данные Fitbit теперь только через **Google Health API** (облачный REST v4, host `health.googleapis.com`, OAuth 2.0 Google). Интеграция переписана под него. Карточка/роуты в UI остаются «Fitbit».
 - **Worker** (`cloudflare-worker.js`): GET-роуты `/fitbit/start`, `/fitbit/callback`, `/fitbit/metrics` + `ghealthRefresh`. OAuth2 Google Authorization Code (auth `accounts.google.com/o/oauth2/v2/auth`, token `oauth2.googleapis.com/token`, `access_type=offline&prompt=consent` → refresh; client creds в теле). Scopes: `googlehealth.sleep.readonly` + `googlehealth.health_metrics_and_measurements.readonly`. `state` подписан HMAC(GHEALTH_CLIENT_SECRET) (приём из `/cal-webhook`). Токены в KV `WEARABLE_TOKENS` (`fitbit:<sid>`, TTL 2ч), Google refresh НЕ возвращает новый refresh_token → храним старый.
 - `/metrics` тянет за 7 дней `GET /v4/users/me/dataTypes/{type}/dataPoints?filter=…` и усредняет: `heart-rate-variability`→`rmssdMillis` (мс), `daily-resting-heart-rate`→`beatsPerMinute`, `oxygen-saturation`→`percentSaturation`, `sleep`→`summary.minutesAsleep` + `stagesSummary[type=DEEP].minutes`. Отдаёт `{ok,ex}`. **tempDev опущен** — у Google только абсолютная `core-body-temperature`, а шаг tempDev ждёт ночную девиацию (~0±0.5); совать абсолют нельзя.
-- **Фронт** — во всех трёх платных тарифах (`interpreter-pro.html`, `interpreter-pro-expert.html`, `interpreter-elite.html`): вкладка «🔗 Подключить» → `connectFitbit()` (генерит `sid`, редирект на `/fitbit/start?sid&ret`). Возврат `?fitbit=connected&sid` → `fetchFitbitLive()` → `/fitbit/metrics` → существующий `applyExtracted`+`applyImportedToSliders` (§4.4). Строки на 12 языков. Token/File-вкладки сохранены как fallback. `fetchFitbitLive` различает три исхода: данные есть → заполняет; `ok:true`+пустой `ex` → «нет данных Fitbit в аккаунте Google» (`status_fitbit_nodata`); иначе → общая ошибка.
+- **Фронт** — во всех трёх платных тарифах (`interpreter-via-l.html`, `interpreter-pro-expert.html`, `interpreter-elite.html`): вкладка «🔗 Подключить» → `connectFitbit()` (генерит `sid`, редирект на `/fitbit/start?sid&ret`). Возврат `?fitbit=connected&sid` → `fetchFitbitLive()` → `/fitbit/metrics` → существующий `applyExtracted`+`applyImportedToSliders` (§4.4). Строки на 12 языков. Token/File-вкладки сохранены как fallback. `fetchFitbitLive` различает три исхода: данные есть → заполняет; `ok:true`+пустой `ex` → «нет данных Fitbit в аккаунте Google» (`status_fitbit_nodata`); иначе → общая ошибка.
 - **Чтобы заработало (делает владелец):** (1) **Google Cloud Console** → создать проект, включить Google Health API, создать OAuth 2.0 Client ID типа **«Web application»**, authorized redirect URI `https://interpreter.viaelcom.workers.dev/fitbit/callback`, настроить OAuth consent screen + запросить нужные scopes (sleep + health_metrics_and_measurements, потребует verification для продакшна); (2) `wrangler secret put GHEALTH_CLIENT_ID` + `GHEALTH_CLIENT_SECRET`; (3) KV `WEARABLE_TOKENS` уже создан (id в `wrangler.jsonc`); (4) `wrangler deploy`.
 - ⚠️ Точный синтаксис `filter=` и форма value сверены по докам/примерам (developers.google.com/health), но финально проверить на живом токене.
 - **Тираж выполнен:** вкладка «Подключить» есть во всех трёх платных тарифах (pro/expert/elite). VIO остаётся на Sandbox-демо.

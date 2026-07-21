@@ -73,7 +73,7 @@ Sugar_40, Inflammation, Beauty). Протокол `postMessage` (`openBook` /
 | `index.html` | Лендинг ИП: галерея устройств (3D) + тарифы | — | — | — | — | 12 яз. |
 | `methodology.html` | «Научная база» (`noindex`) | — | — | — | — | 12 яз. |
 | `interpreter-vio.html` | VIO — платный, €9.90 | 7 | ✓ | — | — | 12 яз. |
-| `interpreter-pro.html` | PRO | 16 | ✓ | — | — | 12 яз. |
+| `interpreter-via-l.html` | PRO | 16 | ✓ | — | — | 12 яз. |
 | `interpreter-pro-expert.html` | PRO + EXPERT | 17 (16 + Анкета) | ✓ | 2 в 30 дней | — | 12 яз. |
 | `interpreter-elite.html` | ELITE (8w / 12w) | 17 (16 + Анкета) | ✓ | 8 за 8 нед / 12 за 12 нед (еженедельный) | опц. для uk/ru, 1:1 ≈ раз в 1–3 нед | 12 яз. |
 | `code-generator.html` | **Внутренний** генератор кодов доступа | — | — | — | — | — |
@@ -501,7 +501,7 @@ html[data-current-lang="en"] #heroBtnSlots, html[data-current-lang="es"] #heroBt
 
 | Файл | Константа | URL |
 |---|---|---|
-| `interpreter/interpreter-pro.html` | `AI_WORKER` | `https://interpreter.viaelcom.workers.dev` |
+| `interpreter/interpreter-via-l.html` | `AI_WORKER` | `https://interpreter.viaelcom.workers.dev` |
 | `interpreter/interpreter-pro-expert.html` | `AI_WORKER` | `https://interpreter.viaelcom.workers.dev` |
 | `interpreter/interpreter-elite.html` | `AI_WORKER` | `https://interpreter.viaelcom.workers.dev` |
 | `program-intake.html` | `WORKER` | `https://interpreter.viaelcom.workers.dev` |
@@ -599,7 +599,7 @@ html[data-current-lang="en"] #heroBtnSlots, html[data-current-lang="es"] #heroBt
   отвечает). Остаток: живой прогон OAuth-путей владельцем (поля Google Health API по temp/vo2 подобраны
   терпимо, точную форму покажет FITBIT-DEBUG в логах воркера).
 
-- **2026-07-14** — **PRO: карточка «Мой профиль» = внутренности VIO (interpreter-pro.html).** Порт
+- **2026-07-14** — **PRO: карточка «Мой профиль» = внутренности VIO (interpreter-via-l.html).** Порт
   `renderCard` VIO 1:1 (золото вместо фиолета, localStorage вместо `_SEC`): hero (имя Oswald 600/24 +
   пол·возраст + прогресс-бар заполнения + «В программе с») + энергетический ориентир ккал; 13 раскрывающихся
   секций `_vcSec`/`_CAT` (Phosphor-иконки, все закрыты, порядок профиль→инструменты); Baseline и мини-тренды
@@ -613,7 +613,7 @@ html[data-current-lang="en"] #heroBtnSlots, html[data-current-lang="es"] #heroBt
   над cardBody), PRO-специфика «По дням» (`_renderDaily`) сохранена, экспорт/импорт JSON заменён vlBackup.
   `node --check` всех блоков ок, дублей функций нет.
 
-- **2026-07-13** — **PRO = строение VIO (interpreter-pro.html, сессия «задача PRO»).** (1) Единая лента
+- **2026-07-13** — **PRO = строение VIO (interpreter-via-l.html, сессия «задача PRO»).** (1) Единая лента
   с зонами каденса VIO (`FLOW_ALL=[0,7,9,2,3,5,6,1,8,14,10]`, `_NOW=[1]`, двухстрочные `_flowHead` 12 яз,
   flow-intro); мёртвый 2-стадийный `showDaily/showWeekly` удалён. (2) Гаджет-приоритет: `_AUTO_STEP_METRIC=
   {1:'hrv',3:'sleepHours'}` — приборные шаги HRV/Сон вернулись в ленту и авто-скрываются при импорте
@@ -649,7 +649,7 @@ html[data-current-lang="en"] #heroBtnSlots, html[data-current-lang="es"] #heroBt
   юнит: бэкап + `node`-чек + тест владельцем на живом → пуш. Родословная: expert = старый pro (один
   коммит 17.05), pro ушёл вперёд в июне. План — `tasks/TODO.md` §0 Этап A (A5 каденс — опц.). Дальше: ELITE.
 - **2026-06-19 (b)** — **EXPERT, юнит 1 порта из PRO: read-only гаджет-панель.** Установлена
-  родословная: `interpreter-pro.html` и `interpreter-pro-expert.html` родились одним коммитом
+  родословная: `interpreter-via-l.html` и `interpreter-pro-expert.html` родились одним коммитом
   (`f9ed143`, 17.05), различались 57 строк; pro пересобран в июне (гаджет-панель/каденс/`vial_daily`),
   expert застрял на старой базе + получил онбординг/счётчик. Метод — **forward-port интейка pro в
   expert, результат-экран/кнопки (заявка `sendMaxRequest`, гейт, CTA, Cal.com у elite) не трогаем.**
@@ -659,7 +659,7 @@ html[data-current-lang="en"] #heroBtnSlots, html[data-current-lang="es"] #heroBt
   тронут. `node`-чек ок, в проде. План — `tasks/TODO.md` §0 Этап A.
 - **2026-06-19** — **Недельный AI-разбор расширен на `vial_daily` + профиль (PRO).** Раньше разбор
   опирался только на 7 числовых полей `vial_history` (`weeklyTrend`), не видя половины внесённого за
-  неделю. Добавлен клиентский агрегатор `_weeklyDaily()` (`interpreter-pro.html`): за 7 дней из
+  неделю. Добавлен клиентский агрегатор `_weeklyDaily()` (`interpreter-via-l.html`): за 7 дней из
   `vial_daily` — приливы (дней + модальная частота/интенсивность), `tempDev`/`spo2`/`stress`/`memory`
   средние, дни тумана/алкоголя; + контекст `vial_profile` (фаза/ПМС/диета/режим питания). Прокинут в
   `/weekly-report` как `daily` рядом с `summary`. Воркер `buildWeeklyUserMessage(summary, daily, lang)`
@@ -816,7 +816,7 @@ html[data-current-lang="en"] #heroBtnSlots, html[data-current-lang="es"] #heroBt
 | Тариф | Кнопки в `stepResult` | JS-обработчик | Что делает |
 |---|---|---|---|
 | **VIO** (`interpreter-vio.html`) | `restart` · `downloadPDF` · `navTo('history')` · `navTo('home')` | стандартные | пройти заново · скачать PDF · перейти в историю · перейти на главную |
-| **PRO** (`interpreter-pro.html`) | `restart` · `downloadPDF` · `navTo(history/home)` · `checkCode` (re-auth) · `toggleGateVis` · `sendMaxRequest` (показывается?) | те же + Expert-блок если код активен | то же + кнопка «Pro+Expert» — апсейл-форма (запрос разбора нутрициолога), отправляет на Apps Script `?action=expert` |
+| **PRO** (`interpreter-via-l.html`) | `restart` · `downloadPDF` · `navTo(history/home)` · `checkCode` (re-auth) · `toggleGateVis` · `sendMaxRequest` (показывается?) | те же + Expert-блок если код активен | то же + кнопка «Pro+Expert» — апсейл-форма (запрос разбора нутрициолога), отправляет на Apps Script `?action=expert` |
 | **PRO+EXPERT** (`interpreter-pro-expert.html`) | `restart` · `downloadPDF` · `navTo(history/home)` · `sendMaxRequest` | те же | то же + основная функция: `sendMaxRequest()` шлёт письменный запрос разбора (до 2 в окне 30 дней, cooldown 7 дней) |
 | **ELITE** (`interpreter-elite.html`) | `restart` · `downloadPDF` · `navTo(history/home)` · `sendMaxRequest` · **`requestZoom`** · `window.location='index.html'` | те же + Zoom-блок | + еженедельный PDF (до 8 для 8w / 12 для 12w) + Zoom-запрос (только uk/ru — см. §10.6) |
 

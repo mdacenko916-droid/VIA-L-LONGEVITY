@@ -116,8 +116,6 @@ AMS/MRS, возрастные пороги HRV убраны из индекса+
   Проверено: 12 языков целы, живые ключи тарифов на месте, синтаксис OK.
 
 **⏳ Осталось:**
-- [ ] Заглушку `interpreter-pro.html` удалить позже — когда убедимся, что старых входов/OAuth-возвратов
-      по прежнему пути нет. [[project-vial-only-appstore-vio-pro-dropped]]
 - Прим.: в Elite оставлено «Все з тарифу **Pro + Expert**» — корректно, ссылается на карточку Expert
   (её название = «Pro + Expert»), которая на странице есть.
 
@@ -144,7 +142,7 @@ AMS/MRS, возрастные пороги HRV убраны из индекса+
 > Ветка VIO/PRO закрыта ([[project-vial-only-appstore-vio-pro-dropped]]). Всё ниже — сделано-и-в-проде
 > историческое, из чего вырос VIA-L; активных задач нет. Механика — в git history + `ARCHITECTURE.md` §9 +
 > memory (раздел «🗄 АРХИВ VIO/PRO» в MEMORY.md). Оставлено одной строкой, чтобы не засорять живой список:
-> перестройка тарифов под PRO (эталон interpreter-pro.html), редизайны карточки/результата VIO,
+> перестройка тарифов под PRO (эталон interpreter-via-l.html), редизайны карточки/результата VIO,
 > Oura-стиль ИИ + форк KB по тарифу, «Памятка дня», UI-доводки, паритет PRO=VIO, разделение хранилищ
 > (VIO=vial_*, PRO→vialp_*=VIA-L). EXPERT/ELITE-канон (=тот же приём+анализ + слой специалиста) —
 > в разделах ниже (кабинет/платформа/Hotmart) и в [[project-tariffs-aligned-2026-06-29]].
@@ -332,11 +330,11 @@ POST/cross-origin не трогает) + meta в head. Адрес для уст�
   - ✅ **Бэкенд `/advisor-chat`** (2026-06-07): Claude + грунтовка `faqMatch`, he/ar/ja/ko→Sonnet,
     гайдрейлы без диагнозов/обещаний/цен; tier-aware (self-serve отвечает, human-led → к специалисту).
   - ✅ **Советник в ИП** (2026-06-07): чат-виджет на 12 языков (читает `vial_lang`, RTL для he) на
-    `interpreter/index.html` (лендинг), `interpreter-vio.html` (`tier=vio`), `interpreter-pro.html`
+    `interpreter/index.html` (лендинг), `interpreter-vio.html` (`tier=vio`), `interpreter-via-l.html`
     (`tier=pro`). На **сайте (`index.html`) советник УБРАН** — решение владельца 2026-06-07 (только
     в ИП). EXPERT/ELITE-страницы — **БЕЗ советника намеренно** (там ведёт человек). Значок —
     `interpreter/Logo/logo-ai-v2.png` (прозрачный, 256²; имя с `-v2` для сброса мобильного кэша).
-  - ✅ **Слой 3 — human-led для привязанных** (2026-06-08, коммит `c9874ad`): `interpreter-pro.html`
+  - ✅ **Слой 3 — human-led для привязанных** (2026-06-08, коммит `c9874ad`): `interpreter-via-l.html`
     читает `localStorage.vial_spec_link` (ставит `my-specialist.html` при подключении) → если пациент
     привязан к специалисту, виджет шлёт `tier:'specialist'` → бэкенд уходит в human-led; приветствие
     `greetLed` с именем специалиста (12 яз). Обычный PRO не тронут. EXPERT/ELITE-страницы по-прежнему

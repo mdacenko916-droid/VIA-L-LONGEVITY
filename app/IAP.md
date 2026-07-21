@@ -22,7 +22,7 @@ Capacitor 6.x в `app/package.json`; версии 10.x+ требуют Capacitor
    покупки» → `restorePurchases()` (обязательна для Apple review любой не-consumable/подписки).
 4. Проверка повторяется на КАЖДЫЙ запуск приложения (не только при первом согласии) — подписка
    могла закончиться/быть отменена между сессиями (см. `_afterConsent`/init-IIFE в
-   `interpreter-pro.html`).
+   `interpreter-via-l.html`).
 5. **Fail-closed по дизайну:** пока API-ключ не вставлен (placeholder `YOUR_REVENUECAT_IOS_API_KEY`),
    `ensureConfigured()` возвращает `false`, и пейволл показывается всегда — это правильно: лучше
    заблокировать доступ, чем случайно открыть платный контент бесплатно из-за незаконченной настройки.

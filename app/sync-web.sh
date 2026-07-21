@@ -9,8 +9,8 @@
 # КОГДА запускать: перед КАЖДОЙ сборкой приложения, ПОСЛЕ того как веб-правки готовы
 # и запушены. Затем: `npx cap sync` → сборка в Xcode / Android Studio.
 #
-# Точка входа приложения = interpreter-via-l.html (renamed 2026-07-16; у неё нативные
-# health-бриджи). interpreter-pro.html теперь лишь redirect-заглушка — в бандл НЕ кладём.
+# Точка входа приложения = interpreter-via-l.html (renamed 2026-07-16 из interpreter-pro.html;
+# у неё нативные health-бриджи). Старая redirect-заглушка interpreter-pro.html удалена 2026-07-21.
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
