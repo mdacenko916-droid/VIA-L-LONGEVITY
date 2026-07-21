@@ -83,6 +83,13 @@ CASA включается **только** от Google-OAuth-скоупов кл
 3. **11 фото-гаджетов** (`interpreter/images-in/*.PNG`: Oura/Fitbit/Garmin/WHOOP/Polar/Withings/
    Samsung/Xiaomi/Amazfit/Ultrahuman + Apple Watch) → **витрина совместимости** «работает с этими
    через приложение здоровья на телефоне». Не OAuth-кнопки.
-4. **Fitbit на iOS** не пишет в Apple Health → опционально **прямой Fitbit Web API** (своя OAuth, без
-   CASA) ради iOS-Fitbit; на Android Fitbit сам идёт в Health Connect. Приоритет — по желанию владельца.
-5. Облачный Google-Health-путь (`/fitbit/*`, `GH_*` в воркере) — оставить спящим за флагом, не удалять.
+4. **Прямой Fitbit Web API — НЕ делаем (закрыто 2026-07-21).** На `dev.fitbit.com` объявлено:
+   legacy Fitbit Web API **депрекейтится в сентябре 2026** и мигрирует в **Google Health API** — т.е.
+   в тот самый облачный CASA-путь. Строить на умирающем API, ведущем в CASA, бессмысленно.
+   - **Fitbit на Android** → через Health Connect (Fitbit-приложение туда пишет). Устойчиво, без CASA.
+   - **Fitbit на iOS** → ручной ввод (Fitbit не пишет в Apple Health) или сторонний мост Fitbit→Apple Health.
+     Узкая дырка «Fitbit + iPhone»; прочие трекеры в Apple Health пишут штатно.
+5. Облачный Google-Health-путь (`/fitbit/*`, `GH_*` в воркере) — оставить спящим за флагом, не удалять
+   (для личного теста владельца, 1 юзер в Testing).
+6. **Итог:** on-device Apple Health / Health Connect — единственный устойчивый путь без CASA.
+   Любой облачный путь к носимым = стена вендора или Google Health/CASA.
