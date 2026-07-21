@@ -63,7 +63,26 @@ CASA включается **только** от Google-OAuth-скоупов кл
   соответствие Guideline 5.1.3 (нельзя использовать HealthKit-данные для рекламы/продажи).
 - Политика конфиденциальности уже живёт: `https://via-l.com/legal/privacy.html`.
 
-## Решения для владельца (нужны ответы)
-1. Fitbit оставляем? Если да — делаем **прямой Fitbit Web API** (кроссплатформенно, без CASA)?
-2. Облачный Google-Health-путь: полностью удалить из репо или оставить за флагом на будущее?
-3. Приоритет платформ первого релиза: iOS (HealthKit) или Android (Health Connect)?
+## ⚠️ Ловушка названий (критично)
+- **Health Connect** (Android, на устройстве) = аналог Apple Health, **без CASA**. ✅ Это наш путь.
+- **«Google Health» / Google Health API** (`health.googleapis.com`, `googlehealth.*`) = ОБЛАКО,
+  Restricted-скоуп, **CASA**. ❌ Кнопку «Google Health» НЕ делаем. Android-кнопка = **Health Connect**.
+
+## Affiliate / referral ≠ API-коды
+Владелец хочет affiliate-соглашение с Oura/Ultrahuman. Это **маркетинг**, не техника:
+регистрируешься в их партнёрской программе → трекинг-ссылка → на сайт → комиссия с покупок.
+**Доступа к данным нет, CASA нет, лимитов нет, коды импорта НЕ нужны.** Affiliate-ссылку можно
+вписать прямо в витрину устройств («Нет трекера? Oura → [реф-ссылка]»). За API-кодами Oura/Ultrahuman
+гоняться НЕ нужно: и для данных (их отдают Apple Health/Health Connect), и для affiliate — не требуются.
+
+## Решения (приняты 2026-07-21)
+1. **Публичный путь = Apple Health (iOS) · Health Connect (Android) · Ручной ввод.** Три «кнопки».
+2. **4 вендор-OAuth-карточки (Oura/Polar/Fitbit/Withings) прячем из публичной панели**, код спящий
+   (для личного теста владельца). Точка входа `_chooseSource('device')` → сейчас `openImport('full')`,
+   переводим на on-device+ручной.
+3. **11 фото-гаджетов** (`interpreter/images-in/*.PNG`: Oura/Fitbit/Garmin/WHOOP/Polar/Withings/
+   Samsung/Xiaomi/Amazfit/Ultrahuman + Apple Watch) → **витрина совместимости** «работает с этими
+   через приложение здоровья на телефоне». Не OAuth-кнопки.
+4. **Fitbit на iOS** не пишет в Apple Health → опционально **прямой Fitbit Web API** (своя OAuth, без
+   CASA) ради iOS-Fitbit; на Android Fitbit сам идёт в Health Connect. Приоритет — по желанию владельца.
+5. Облачный Google-Health-путь (`/fitbit/*`, `GH_*` в воркере) — оставить спящим за флагом, не удалять.

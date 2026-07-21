@@ -2209,12 +2209,10 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
       <span class="imp-cnt" id="imp-cnt-all"></span>
       <span class="imp-go">→</span>
     </button>
-    <button onclick="_chooseSource('device')" class="imp-btn">
-      <span class="imp-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="6.5" width="10" height="11" rx="3"/><path d="M9.2 6.5 9.7 3.6h4.6l.5 2.9M9.2 17.5l.5 2.9h4.6l.5-2.9"/><circle cx="12" cy="12" r="1.7"/></svg></span>
-      <span class="imp-txt"><b data-t="imp_direct_t">Прямая интеграция устройства</b><small data-t="imp_direct_s">Oura · Fitbit · Polar · Withings</small></span>
-      <span class="imp-cnt" id="imp-cnt-full"></span>
-      <span class="imp-go">→</span>
-    </button>
+    <!-- «Прямая интеграция устройства» (вендор-OAuth Oura/Fitbit/Polar/Withings) убрана из публичного
+         выбора 2026-07-21: у каждого вендора стена масштаба (Oura лимит 10, Fitbit→Google=CASA и т.д.).
+         Данные этих трекеров приходят через Apple Health / Health Connect (кнопка выше). Код панели
+         mode-full остаётся спящим для личного теста владельца. См. docs/HEALTH-DATA-SOURCING-PLAN.md -->
     <button onclick="_chooseSource('manual')" class="imp-btn">
       <span class="imp-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 6.5 17.5 10.5M4 20l1-4L15.5 5.5a1.8 1.8 0 0 1 2.5 0l.5.5a1.8 1.8 0 0 1 0 2.5L8 19l-4 1Z"/></svg></span>
       <span class="imp-txt"><b data-t="imp_manual_t">Ручной ввод</b><small data-t="imp_manual_s">Ввод показателей самостоятельно</small></span>
@@ -6221,7 +6219,7 @@ function _chooseSource(src){
   _srcSet(src);
   var _g=document.getElementById('morning-gate'); if(_g)_g.remove();   // ушли из утренней карточки в импорт/анкету — гейт убираем, иначе смена языка его воскрешает поверх импорта
   if(src==='apple'){ try{ _heroHealthStart(); }catch(e){} }
-  else if(src==='device'){ try{ openImport('full'); }catch(e){} }
+  else if(src==='device'){ try{ openImport('all'); }catch(e){} }   // 'device' (вендор-OAuth) ретайрнут → ведём на on-device Apple Health/Health Connect + ручной
   _openFunnel();
 }
 // Единый сценарий утренней карточки (2-й+ день): (синхронизация, если нужна) → анкета.
@@ -6229,7 +6227,7 @@ function _startDailyRun(src){
   if(src){ try{ _srcSet(src); }catch(e){} }   // выбор источника в утренней карточке = запомнить (и отметить смену для ИИ)
   var g=document.getElementById('morning-gate'); if(g)g.remove();
   if(src==='apple'){ try{ _heroHealthStart(); }catch(e){} }
-  else if(src==='device'){ try{ openImport('full'); }catch(e){} }
+  else if(src==='device'){ try{ openImport('all'); }catch(e){} }   // 'device' (вендор-OAuth) ретайрнут → ведём на on-device Apple Health/Health Connect + ручной
   _openFunnel();
 }
 // Маршрутизатор запуска: второй заход в тот же день → сразу «Сегодня»; следующий день с
