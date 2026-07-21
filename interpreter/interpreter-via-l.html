@@ -1114,6 +1114,11 @@ body:has(#morning-gate) #morning-gate{margin:0 auto;}
 
 .source-info{flex:1;}
 .source-name{font-size:14px;font-weight:500;color:var(--t1);margin-bottom:2px;}
+/* Лента совместимости устройств (информационная, некликабельная) под карточкой Apple Health/Health Connect */
+.compat-wrap{margin-top:14px;padding-top:13px;border-top:1px solid rgba(226,185,90,.16);}
+.compat-strip{display:flex;flex-wrap:wrap;gap:9px;align-items:center;justify-content:center;}
+.compat-ic{width:42px;height:42px;object-fit:contain;opacity:.92;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));}
+.compat-cap{font-size:11.5px;color:var(--t3);line-height:1.5;text-align:center;margin-top:11px;}
 .source-desc{font-size:11px;color:var(--t3);letter-spacing:.3px;}
 .source-badge{
   font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
@@ -1817,6 +1822,22 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
       <button id="hc-btn" class="token-btn" style="width:100%;margin-bottom:12px;display:none;" onclick="healthConnectImport(this)">⌚ Health Connect</button>
 
       <div data-t="apple_native_note" style="font-size:12px;color:var(--t2);line-height:1.6;">Подключается в мобильном приложении одним нажатием (Apple Health на iPhone, Health Connect на Android).</div>
+
+      <!-- Лента совместимости (информационная, некликабельная): показывает, что популярные трекеры
+           подключаются через приложение здоровья телефона. 8 устройств, фото из images-in/. 2026-07-21. -->
+      <div class="compat-wrap">
+        <div class="compat-strip">
+          <img class="compat-ic" src="images-in/apple-watch.png" alt="Apple Watch" loading="lazy">
+          <img class="compat-ic" src="images-in/oura.png" alt="Oura" loading="lazy">
+          <img class="compat-ic" src="images-in/withings.png" alt="Withings" loading="lazy">
+          <img class="compat-ic" src="images-in/garmin.png" alt="Garmin" loading="lazy">
+          <img class="compat-ic" src="images-in/samsung.png" alt="Samsung" loading="lazy">
+          <img class="compat-ic" src="images-in/fitbit.png" alt="Fitbit" loading="lazy">
+          <img class="compat-ic" src="images-in/ultrahuman.png" alt="Ultrahuman" loading="lazy">
+          <img class="compat-ic" src="images-in/xiaomi.png" alt="Xiaomi" loading="lazy">
+        </div>
+        <div class="compat-cap" data-t="compat_note">В приложении данные этих трекеров подключаются автоматически через Apple Health / Health Connect.</div>
+      </div>
 
       <!-- apple-manual остаётся скрытым: поля m-* заполняет нативный Health Connect (healthconnect-bridge.js) -->
       <div id="apple-manual" style="display:none;">
@@ -3904,6 +3925,8 @@ function _initLang(){
 // Ручной выбор из пикера → фиксируем как явный (перестаём авто-следовать устройству).
 function pickLang(l){ try{localStorage.setItem('vial_lang_manual','1');}catch(e){} setLang(l); }
 function setLang(l){
+  // Подпись ленты совместимости — доинжект в T один раз (без правки гигантского литерала). 2026-07-21.
+  try{ if(T&&T.en&&T.en.compat_note===undefined){ var _CMP={ru:'В приложении данные этих трекеров подключаются автоматически через Apple Health / Health Connect.',uk:'У застосунку дані цих трекерів підключаються автоматично через Apple Health / Health Connect.',en:'In the app, these trackers connect automatically via Apple Health / Health Connect.',es:'En la app, estos rastreadores se conectan automáticamente mediante Apple Health / Health Connect.',de:'In der App verbinden sich diese Tracker automatisch über Apple Health / Health Connect.',pt:'No app, esses rastreadores conectam automaticamente via Apple Health / Health Connect.',fr:'Dans l’app, ces trackers se connectent automatiquement via Apple Health / Health Connect.',pl:'W aplikacji te trackery łączą się automatycznie przez Apple Health / Health Connect.',it:'Nell’app, questi tracker si collegano automaticamente tramite Apple Health / Health Connect.',he:'באפליקציה, הטרקרים האלה מתחברים אוטומטית דרך Apple Health / Health Connect.',ja:'アプリでは、これらのトラッカーは Apple Health / Health Connect 経由で自動連携します。',ko:'앱에서는 이 트래커들이 Apple Health / Health Connect를 통해 자동으로 연결됩니다.'}; Object.keys(_CMP).forEach(function(k){ if(T[k])T[k].compat_note=_CMP[k]; }); } }catch(e){}
   lang=l;
   localStorage.setItem('vial_lang', l);
   document.getElementById('langLabel').textContent=LANG_FLAGS[l]||l.toUpperCase();
