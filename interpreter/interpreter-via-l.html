@@ -1826,17 +1826,20 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
       <!-- Лента совместимости (информационная, некликабельная): показывает, что популярные трекеры
            подключаются через приложение здоровья телефона. 8 устройств, фото из images-in/. 2026-07-21. -->
       <div class="compat-wrap">
+        <!-- Порядок: Apple-якорь → часы группой (Garmin/Samsung/Withings) → Oura в центр (не выпирает) →
+             Fitbit → кольца/Ultrahuman → Xiaomi. Oura чуть уменьшена и приглушена, чтобы кольцо не читалось
+             как «главный/рекомендуемый» бренд на фоне часов. -->
         <div class="compat-strip">
           <img class="compat-ic" src="images-in/apple-watch.png" alt="Apple Watch" loading="lazy">
-          <img class="compat-ic" src="images-in/oura.png" alt="Oura" loading="lazy">
-          <img class="compat-ic" src="images-in/withings.png" alt="Withings" loading="lazy">
           <img class="compat-ic" src="images-in/garmin.png" alt="Garmin" loading="lazy">
           <img class="compat-ic" src="images-in/samsung.png" alt="Samsung" loading="lazy">
+          <img class="compat-ic" src="images-in/withings.png" alt="Withings" loading="lazy">
+          <img class="compat-ic" src="images-in/oura.png" alt="Oura" style="width:37px;height:37px;opacity:.82;" loading="lazy">
           <img class="compat-ic" src="images-in/fitbit.png" alt="Fitbit" loading="lazy">
           <img class="compat-ic" src="images-in/ultrahuman.png" alt="Ultrahuman" loading="lazy">
           <img class="compat-ic" src="images-in/xiaomi.png" alt="Xiaomi" loading="lazy">
         </div>
-        <div class="compat-cap" data-t="compat_note">В приложении данные этих трекеров подключаются автоматически через Apple Health / Health Connect.</div>
+        <div class="compat-cap" data-t="compat_note">В мобильном приложении данные этих трекеров могут подключаться через Apple Health или Health Connect, если устройство синхронизируется с приложением здоровья на телефоне.</div>
       </div>
 
       <!-- apple-manual остаётся скрытым: поля m-* заполняет нативный Health Connect (healthconnect-bridge.js) -->
@@ -3926,7 +3929,7 @@ function _initLang(){
 function pickLang(l){ try{localStorage.setItem('vial_lang_manual','1');}catch(e){} setLang(l); }
 function setLang(l){
   // Подпись ленты совместимости — доинжект в T один раз (без правки гигантского литерала). 2026-07-21.
-  try{ if(T&&T.en&&T.en.compat_note===undefined){ var _CMP={ru:'В приложении данные этих трекеров подключаются автоматически через Apple Health / Health Connect.',uk:'У застосунку дані цих трекерів підключаються автоматично через Apple Health / Health Connect.',en:'In the app, these trackers connect automatically via Apple Health / Health Connect.',es:'En la app, estos rastreadores se conectan automáticamente mediante Apple Health / Health Connect.',de:'In der App verbinden sich diese Tracker automatisch über Apple Health / Health Connect.',pt:'No app, esses rastreadores conectam automaticamente via Apple Health / Health Connect.',fr:'Dans l’app, ces trackers se connectent automatiquement via Apple Health / Health Connect.',pl:'W aplikacji te trackery łączą się automatycznie przez Apple Health / Health Connect.',it:'Nell’app, questi tracker si collegano automaticamente tramite Apple Health / Health Connect.',he:'באפליקציה, הטרקרים האלה מתחברים אוטומטית דרך Apple Health / Health Connect.',ja:'アプリでは、これらのトラッカーは Apple Health / Health Connect 経由で自動連携します。',ko:'앱에서는 이 트래커들이 Apple Health / Health Connect를 통해 자동으로 연결됩니다.'}; Object.keys(_CMP).forEach(function(k){ if(T[k])T[k].compat_note=_CMP[k]; }); } }catch(e){}
+  try{ if(T&&T.en&&T.en.compat_note===undefined){ var _CMP={ru:'В мобильном приложении данные этих трекеров могут подключаться через Apple Health или Health Connect, если устройство синхронизируется с приложением здоровья на телефоне.',uk:'У мобільному застосунку дані цих трекерів можуть підключатися через Apple Health або Health Connect, якщо пристрій синхронізується з застосунком здоров’я на телефоні.',en:'In the mobile app, these trackers can connect via Apple Health or Health Connect if your device syncs with your phone’s health app.',es:'En la app móvil, estos rastreadores pueden conectarse mediante Apple Health o Health Connect si tu dispositivo se sincroniza con la app de salud de tu teléfono.',de:'In der mobilen App können sich diese Tracker über Apple Health oder Health Connect verbinden, wenn dein Gerät mit der Gesundheits-App deines Telefons synchronisiert.',pt:'No app móvel, esses rastreadores podem conectar via Apple Health ou Health Connect se o seu dispositivo sincronizar com o app de saúde do seu telefone.',fr:'Dans l’app mobile, ces trackers peuvent se connecter via Apple Health ou Health Connect si votre appareil se synchronise avec l’app santé de votre téléphone.',pl:'W aplikacji mobilnej te trackery mogą łączyć się przez Apple Health lub Health Connect, jeśli urządzenie synchronizuje się z aplikacją zdrowia w telefonie.',it:'Nell’app mobile, questi tracker possono collegarsi tramite Apple Health o Health Connect se il dispositivo si sincronizza con l’app salute del telefono.',he:'באפליקציה לנייד, הטרקרים האלה יכולים להתחבר דרך Apple Health או Health Connect אם המכשיר מסתנכרן עם אפליקציית הבריאות בטלפון.',ja:'モバイルアプリでは、デバイスがスマホの健康アプリと同期していれば、これらのトラッカーは Apple Health または Health Connect 経由で連携できます。',ko:'모바일 앱에서는 기기가 휴대폰의 건강 앱과 동기화되면 이 트래커들을 Apple Health 또는 Health Connect를 통해 연결할 수 있습니다.'}; Object.keys(_CMP).forEach(function(k){ if(T[k])T[k].compat_note=_CMP[k]; }); } }catch(e){}
   lang=l;
   localStorage.setItem('vial_lang', l);
   document.getElementById('langLabel').textContent=LANG_FLAGS[l]||l.toUpperCase();
