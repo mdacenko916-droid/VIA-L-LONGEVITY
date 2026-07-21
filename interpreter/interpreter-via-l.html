@@ -2218,8 +2218,17 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
       <span class="imp-txt"><b data-t="imp_manual_t">Ручной ввод</b><small data-t="imp_manual_s">Ввод показателей самостоятельно</small></span>
       <span class="imp-go">→</span>
     </button>
+    <!-- ДЕВ-ВХОД к спящей вендор-панели (Oura/Fitbit/Polar/Withings) для личного теста владельца.
+         Виден ТОЛЬКО при ?vendors=1. УДАЛИТЬ, когда появится живой телефон через TestFlight. 2026-07-21. -->
+    <button id="dev-vendors-btn" onclick="_chooseSource('device')" class="imp-btn" style="display:none;border-color:rgba(226,185,90,.55);">
+      <span class="imp-ic">🔧</span>
+      <span class="imp-txt"><b>Тест: прямые гаджеты</b><small>Oura · Fitbit · Polar · Withings — только для теста</small></span>
+      <span class="imp-go">→</span>
+    </button>
   </div>
 </div>
+<script>/* дев-вход к вендор-панели: показать кнопку только по ?vendors=1 (удалить после TestFlight) */
+try{ if(new URLSearchParams(location.search).get('vendors')==='1'){ var _dvb=document.getElementById('dev-vendors-btn'); if(_dvb)_dvb.style.display=''; } }catch(e){}</script>
 
 <main>
 
@@ -6219,7 +6228,7 @@ function _chooseSource(src){
   _srcSet(src);
   var _g=document.getElementById('morning-gate'); if(_g)_g.remove();   // ушли из утренней карточки в импорт/анкету — гейт убираем, иначе смена языка его воскрешает поверх импорта
   if(src==='apple'){ try{ _heroHealthStart(); }catch(e){} }
-  else if(src==='device'){ try{ openImport('all'); }catch(e){} }   // 'device' (вендор-OAuth) ретайрнут → ведём на on-device Apple Health/Health Connect + ручной
+  else if(src==='device'){ try{ var _dv=new URLSearchParams(location.search).get('vendors')==='1'; openImport(_dv?'full':'all'); }catch(e){ try{openImport('all');}catch(_){} } }   // 'device' ретайрнут публично → on-device; ?vendors=1 = дев-вход к вендор-панели (удалить после TestFlight)
   _openFunnel();
 }
 // Единый сценарий утренней карточки (2-й+ день): (синхронизация, если нужна) → анкета.
@@ -6227,7 +6236,7 @@ function _startDailyRun(src){
   if(src){ try{ _srcSet(src); }catch(e){} }   // выбор источника в утренней карточке = запомнить (и отметить смену для ИИ)
   var g=document.getElementById('morning-gate'); if(g)g.remove();
   if(src==='apple'){ try{ _heroHealthStart(); }catch(e){} }
-  else if(src==='device'){ try{ openImport('all'); }catch(e){} }   // 'device' (вендор-OAuth) ретайрнут → ведём на on-device Apple Health/Health Connect + ручной
+  else if(src==='device'){ try{ var _dv=new URLSearchParams(location.search).get('vendors')==='1'; openImport(_dv?'full':'all'); }catch(e){ try{openImport('all');}catch(_){} } }   // 'device' ретайрнут публично → on-device; ?vendors=1 = дев-вход к вендор-панели (удалить после TestFlight)
   _openFunnel();
 }
 // Маршрутизатор запуска: второй заход в тот же день → сразу «Сегодня»; следующий день с
