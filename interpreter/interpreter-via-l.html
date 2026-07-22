@@ -1058,6 +1058,8 @@ body:has(#morning-gate) #morning-gate{margin:0 auto;}
 body:has(#importPanel.open) .lang-logo{visibility:hidden;}
 /* Экран выбора источника (hero): монограмма + «VIA·L» уже в центре → квадратный лого топбара дублирует. Прячем, footprint держим. */
 body.src-choice .lang-logo{visibility:hidden;}
+/* Разбор / «Сегодня»: в центре топбара «Анализ VIA-L» + дата → квадратный лого слева дублирует. Прячем, footprint держим. */
+body.view-result .lang-logo{visibility:hidden;}
 
 .import-wrap{
   max-width:560px;margin:0 auto;
@@ -4072,6 +4074,7 @@ function navTo(tab){
   var __nv=document.querySelector('.bottom-nav');if(__nv)__nv.classList.remove('nav-hidden');
   var __mn=document.querySelector('main');if(__mn)__mn.style.display='';
   document.body.classList.remove('src-choice');   // покидаем экран выбора (today→_showSourceChoice вернёт флаг сам, если нужно)
+  document.body.classList.remove('view-result');  // покидаем разбор (today→goTo('result') вернёт сам, если день пройден)
   document.querySelectorAll('.bottom-nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+tab)?.classList.add('active');
   const cp=document.getElementById('cardPanel');
@@ -6390,6 +6393,7 @@ function goTo(n){
   if (window.Capacitor) { var _hero=document.querySelector('.hero'); if(_hero) _hero.style.display = (n===0) ? '' : 'none'; }
   else if (n==='result') { var _heroW=document.querySelector('.hero'); if(_heroW) _heroW.style.display='none'; }   // на вебе на экране разбора hero главной (3 кнопки источника) не нужен
   var _tba=document.getElementById('tb-analysis'); if(_tba) _tba.style.display=(n==='result')?'block':'none';   // «Анализ VIA-L + дата» в топбаре — только на разборе
+  document.body.classList.toggle('view-result', n==='result');   // на разборе/«Сегодня» центр несёт «Анализ VIA-L» → квадратный лого топбара прячем
   // В приложении — мгновенная привязка шага к верхнему краю (строго, без доскролла); на вебе — плавно.
   setTimeout(()=>{
     if(target) target.scrollIntoView({behavior: window.Capacitor ? 'auto' : 'smooth', block:'start'});
