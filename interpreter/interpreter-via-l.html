@@ -1056,6 +1056,8 @@ body:has(#morning-gate) #morning-gate{margin:0 auto;}
 #importPanel.open{display:block;}
 /* На импорт-панели квадратный лого-thumbnail лишний (бренд уже в eyebrow «VIA-L · Импорт»): прячем, но держим footprint, чтобы язык не прыгал. Углы отдаём под функции — ✕ слева, язык справа. */
 body:has(#importPanel.open) .lang-logo{visibility:hidden;}
+/* Экран выбора источника (hero): монограмма + «VIA·L» уже в центре → квадратный лого топбара дублирует. Прячем, footprint держим. */
+body.src-choice .lang-logo{visibility:hidden;}
 
 .import-wrap{
   max-width:560px;margin:0 auto;
@@ -4069,6 +4071,7 @@ function navTo(tab){
   var __dp=document.getElementById('dayplanPanel');if(__dp)__dp.style.display='none';   // модал «Памятка дня» — тоже (для tab==='today' откроется заново ниже)
   var __nv=document.querySelector('.bottom-nav');if(__nv)__nv.classList.remove('nav-hidden');
   var __mn=document.querySelector('main');if(__mn)__mn.style.display='';
+  document.body.classList.remove('src-choice');   // покидаем экран выбора (today→_showSourceChoice вернёт флаг сам, если нужно)
   document.querySelectorAll('.bottom-nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+tab)?.classList.add('active');
   const cp=document.getElementById('cardPanel');
@@ -6231,6 +6234,7 @@ function _showMorningCard(src){
 // Первый запуск: показываем ТОЛЬКО hero (дисклеймер + 3 карточки выбора), анкету прячем.
 function _showSourceChoice(){
   document.body.classList.remove('flow-mode');   // экран выбора — не лента, лишний нижний отступ ленты не нужен
+  document.body.classList.add('src-choice');     // прячем квадратный лого топбара (дублирует монограмму hero)
   var h=document.querySelector('.hero'); if(h)h.style.display='';
   var m=document.querySelector('main'); if(m)m.style.display='none';
   var g=document.getElementById('morning-gate'); if(g)g.remove();
@@ -6240,6 +6244,7 @@ function _showSourceChoice(){
 // Открыть анкету. После выбора источника hero больше не нужен — прячем его (нет скролла
 // вверх к карточкам выбора), страница открывается на тексте «Добро пожаловать».
 function _openFunnel(){
+  document.body.classList.remove('src-choice');   // ушли с экрана выбора — вернуть лого топбара
   var m=document.querySelector('main'); if(m)m.style.display='';
   var h=document.querySelector('.hero'); if(h)h.style.display='none';
   var _op=document.getElementById('importPanel'), _pl=_op&&_op.classList.contains('open');
