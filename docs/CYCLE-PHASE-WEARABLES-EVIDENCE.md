@@ -142,3 +142,65 @@ additions that close app-specific gaps. Each carries a short note on the app lev
   personal baseline only) and the Q15 hedge (calendar estimate → soft wording).
 - Keep every output descriptive per the term≠claim rule; magnitudes stay internal
   reference bands, never quoted at the user as numbers/claims.
+
+---
+
+## 6. SYNTHESIS — answers distilled (2026-07-22)
+
+Raw OpenEvidence answers with citations live in `Infa Cloude/N-7/` (folders A–F,
+files 1–18). Below is the distilled, app-ready synthesis. **Every number is an internal
+reference band — never quoted to the user.**
+
+### 6.1 Expected luteal shift vs follicular (individual baseline) — this is NORMAL, not decline
+
+| Metric | Normal luteal shift | "Gray zone" — weigh context | Likely non-cycle — flag gently |
+|---|---|---|---|
+| Skin/wrist temp | **+0.2–0.6 °C** nightly avg; nocturnal dip blunted ~40% | +0.6–1.0 °C above follicular | **>1.0 °C** above follicular, or **>0.5 °C above the established luteal peak** |
+| Resting HR | **+1–4 bpm** (peaks ~cycle day 26) | +4–6 bpm above follicular | **>6 bpm** above follicular, or elevation off expected timing |
+| HRV (RMSSD) | **−3–9%** (~1–5 ms), nadir late-luteal (~day 27) | −10–15% below follicular | **>15%** below follicular, esp. sustained >3 days |
+| Respiratory rate | **+0.5–1.0 br/min** (driven by tidal volume, not rate) | +1–2 br/min | **>2 br/min** above baseline |
+| SpO₂ | **No cycle change** | — | any real sustained drop <94% → not cycle |
+| Sleep | REM −2–5 pp; SOL +~9 min; efficiency −3–6 pp; more light sleep; **deep sleep unchanged in young, ↓ in midlife** | efficiency −7–10 pp | efficiency >10 pp below follicular |
+
+Pattern rule (Q3, Q13): the cycle shift is **gradual (1–3 d post-ovulation), sustained
+(~12–14 d), on predictable timing, single-metric**. Pathology is **abrupt (hours),
+off-timing, multi-metric concordant** (temp↑ + HR↑ + HRV↓ + RR↑ together). Fever = rapid
+rise, unstable, exaggerated day-night swing, responds to antipyretics; luteal = smooth,
+stable, blunted night dip, +0.3–0.5 °C ceiling, antipyretic-independent.
+
+### 6.2 The gates — when to switch phase logic OFF (critical for 35+/40+)
+
+1. **Anovulatory / no biphasic temp shift** → there is **no true luteal phase**
+   (progesterone flat); calendar "luteal/follicular" labels are meaningless. **>60% of
+   late-perimenopausal cycles are anovulatory.** → use the woman's own **phase-agnostic
+   rolling baseline only**; do NOT apply luteal expectations.
+2. **Perimenopause** blunts then abolishes the cyclic pattern; the **HRV cycle disappears
+   before the HR cycle**. Absence of a clear pattern in a peri woman is expected
+   (anovulation), not pathology. Baseline RHR/HRV also tonically worsen with the transition.
+3. **Hormonal contraception**: COC / implant / DMPA / systemic POP **abolish** the
+   biphasic pattern (pill-pack, not cycle) → phase logic OFF. LNG-IUD **largely preserves**
+   it (most users still ovulate) → phase logic may stay, but absent pattern ≠ pathology.
+4. **Calendar error**: "ovulation ≈ length − 14" is right only **~9–21%** of the time,
+   mean error **~3.4 days**, ≥7-day error in >50% of women across a year; luteal phase
+   actually averages 11–13 d, not 14. Our `cycle_phase` is calendar-derived → treat as
+   **approximate**; hedge wording, never assert ovulation/phase as fact.
+5. **Day-to-day wellbeing (sleep, stress, fatigue) is a STRONGER HRV modulator than cycle
+   phase.** Check those confounders before attributing anything to the cycle.
+
+### 6.3 Wording (Q18, aligns with our term≠claim rule)
+
+- Anchor to the woman's **own** trend: "your HRV is a bit below your recent average — a
+  pattern many notice in the second half of the cycle."
+- **Never** "your progesterone/hormones…" (not measured), **never** "you are in the luteal
+  phase / you ovulated" (calendar can't confirm), **never** pathologize normal variation
+  (documented "overmedicalisation" harm).
+- Two layers: (1) observation from her data; (2) optional population context ("many people
+  see…"). Keep magnitudes internal.
+
+### 6.4 What this changes in the app
+
+- Worker KB «ФАЗЫ ЦИКЛА» block → replaced with §6.1 bands + §6.2 gates + §6.3 wording.
+- Personal-baseline block: a metric that moved only within its §6.1 luteal band should be
+  read as **expected/phase**, not "worse than usual"; only §6.1 gray/flag columns escalate.
+- Gates keyed to data we already send: `cycle_status` (absent/irregular → gate 1–2),
+  `phase` peri/meno (gate 2), `meds` contraceptive (gate 3). Calendar hedge always on.
