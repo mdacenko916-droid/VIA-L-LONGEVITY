@@ -177,12 +177,14 @@ body::before{
   position:absolute;
   top:0;left:0;right:0;
   z-index:600;
+  transition:transform .3s ease, opacity .3s ease;   /* шапка «Анализ VIA-L» уезжает при скролле разбора вниз */
   background:transparent;
   -webkit-backdrop-filter:none;
   backdrop-filter:none;
   border-bottom:none;
   box-shadow:none;
 }
+#topbar.tb-hidden{transform:translateY(-100%);opacity:0;pointer-events:none;}
 
 /* ── Scroll area — fills remaining space ── */
 #scroll-area{
@@ -4075,6 +4077,7 @@ function navTo(tab){
   var __mn=document.querySelector('main');if(__mn)__mn.style.display='';
   document.body.classList.remove('src-choice');   // покидаем экран выбора (today→_showSourceChoice вернёт флаг сам, если нужно)
   document.body.classList.remove('view-result');  // покидаем разбор (today→goTo('result') вернёт сам, если день пройден)
+  var __tb=document.getElementById('topbar'); if(__tb)__tb.classList.remove('tb-hidden');   // шапка не должна остаться уехавшей на другом табе
   document.querySelectorAll('.bottom-nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+tab)?.classList.add('active');
   const cp=document.getElementById('cardPanel');
@@ -6394,6 +6397,7 @@ function goTo(n){
   else if (n==='result') { var _heroW=document.querySelector('.hero'); if(_heroW) _heroW.style.display='none'; }   // на вебе на экране разбора hero главной (3 кнопки источника) не нужен
   var _tba=document.getElementById('tb-analysis'); if(_tba) _tba.style.display=(n==='result')?'block':'none';   // «Анализ VIA-L + дата» в топбаре — только на разборе
   document.body.classList.toggle('view-result', n==='result');   // на разборе/«Сегодня» центр несёт «Анализ VIA-L» → квадратный лого топбара прячем
+  var _top=document.getElementById('topbar'); if(_top)_top.classList.remove('tb-hidden');   // входим на экран — шапка видна (спрячется при скролле вниз)
   // В приложении — мгновенная привязка шага к верхнему краю (строго, без доскролла); на вебе — плавно.
   setTimeout(()=>{
     if(target) target.scrollIntoView({behavior: window.Capacitor ? 'auto' : 'smooth', block:'start'});
@@ -6402,6 +6406,24 @@ function goTo(n){
     if(window.Capacitor){var sa=document.getElementById('scroll-area');if(sa)sa.style.overflowY=(sa.scrollHeight<=sa.clientHeight+1)?'hidden':'auto';}
   }, window.Capacitor ? 0 : 80);
 }
+// Уезжающая шапка топбара на разборе: скролл вниз → «Анализ VIA-L»+дата уезжают вверх (не
+// перекрывают текст); скролл вверх / у самого верха → возвращаются. Только на view-result.
+(function(){
+  var sa=document.getElementById('scroll-area'), tb=document.getElementById('topbar');
+  if(!sa||!tb) return;
+  var lastY=0, ticking=false;
+  sa.addEventListener('scroll', function(){
+    if(ticking) return; ticking=true;
+    requestAnimationFrame(function(){
+      var y=sa.scrollTop;
+      if(document.body.classList.contains('view-result')){
+        if(y>lastY+4 && y>70) tb.classList.add('tb-hidden');        // вниз → прячем
+        else if(y<lastY-4 || y<=8) tb.classList.remove('tb-hidden'); // вверх / у верха → показываем
+      } else if(tb.classList.contains('tb-hidden')) tb.classList.remove('tb-hidden');
+      lastY=y; ticking=false;
+    });
+  }, {passive:true});
+})();
 // updateProgress УДАЛЕНА 2026-07-17 вместе со шкалой шагов: строила «Pro · Шаг N из 15» и
 // «Pro · Ваш результат» — пошаговая модель и старое имя тарифа, которых в VIA-L нет.
 // restart() удалена 2026-07-17 вместе с кнопкой «Пройти заново» (по решению владельца — не полигон).
