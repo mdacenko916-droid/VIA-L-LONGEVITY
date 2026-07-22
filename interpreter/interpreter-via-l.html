@@ -3312,15 +3312,6 @@ async function checkCode(){
   btn.querySelector('span').textContent = (T[lang]?.gate_checking) || (T.en?.gate_checking) || 'Checking…';
   document.getElementById('gateError').classList.remove('show');
 
-  // Тестовые коды разработчика
-  const DEV_CODES={'VIAL-PRO-2024':'PRO'};
-  if(DEV_CODES[v]){gateUnlock(DEV_CODES[v]);return;}
-
-  if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL==='YOUR_APPS_SCRIPT_URL_HERE'){
-    if(v.startsWith('VL-')){ gateUnlock('PRO'); } else { gateError('invalid'); }
-    return;
-  }
-
   try {
     const url=APPS_SCRIPT_URL+'?code='+encodeURIComponent(v);
     const res=await fetch(url,{redirect:'follow'});
