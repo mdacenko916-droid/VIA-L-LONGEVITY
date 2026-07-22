@@ -217,10 +217,7 @@ body::before{
   border-bottom:none;
   position:relative;z-index:1;
 }
-.lang-logo{text-decoration:none;display:flex;align-items:center;gap:14px;}
-.lang-logo-dot{display:none;}
-.lang-logo svg{height:54px;width:auto;filter:drop-shadow(0 0 6px rgba(196,154,60,0.35));}
-.lang-logo-img{height:50px;width:auto;border-radius:11px;display:block;filter:drop-shadow(0 0 6px rgba(196,154,60,0.35));}
+/* .lang-logo* удалены 2026-07-22 вместе с квадратным лого топбара (Logo_IP.png). */
 .topbar-home{
   font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:1.5px;
   color:var(--gold-lt);text-decoration:none;
@@ -232,7 +229,7 @@ body::before{
 .topbar-home:hover{color:#fff;border-color:rgba(226,185,90,0.85);box-shadow:0 0 14px rgba(226,185,90,.2);}
 
 /* ── Language dropdown ── */
-.lang-dropdown{position:relative;}
+.lang-dropdown{position:relative;margin-inline-start:auto;}   /* всегда прижат вправо (лого слева больше нет) */
 .lang-toggle{
   display:flex;align-items:center;gap:6px;
   font-size:11px;letter-spacing:2px;text-transform:uppercase;
@@ -1056,12 +1053,6 @@ body:has(#morning-gate) #morning-gate{margin:0 auto;}
 }
 #importPanel::-webkit-scrollbar{display:none;width:0;}
 #importPanel.open{display:block;}
-/* На импорт-панели квадратный лого-thumbnail лишний (бренд уже в eyebrow «VIA-L · Импорт»): прячем, но держим footprint, чтобы язык не прыгал. Углы отдаём под функции — ✕ слева, язык справа. */
-body:has(#importPanel.open) .lang-logo{visibility:hidden;}
-/* Экран выбора источника (hero): монограмма + «VIA·L» уже в центре → квадратный лого топбара дублирует. Прячем, footprint держим. */
-body.src-choice .lang-logo{visibility:hidden;}
-/* Разбор / «Сегодня»: в центре топбара «Анализ VIA-L» + дата → квадратный лого слева дублирует. Прячем, footprint держим. */
-body.view-result .lang-logo{visibility:hidden;}
 
 .import-wrap{
   max-width:560px;margin:0 auto;
@@ -1627,7 +1618,6 @@ body:not(.flow-mode) .flow-intro{display:none;}
 body.consent-open #topbar{z-index:10000;}
 body.consent-open #topbar *{pointer-events:none;}
 body.consent-open #langDropdown,body.consent-open #langDropdown *{pointer-events:auto;}
-body.consent-open .lang-logo{opacity:.25;filter:blur(2px);}
 body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important;}
 #consent-gate.show{display:flex;}
 /* IAP-пейволл — та же механика показа/позиционирования, что consent-gate */
@@ -1731,12 +1721,8 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
 <!-- TOPBAR -->
 <div id="topbar">
 <div class="lang-bar">
-  <div style="display:flex;align-items:center;gap:12px;">
-    <a href="#" class="lang-logo" onclick="navTo('home');return false;">
-      <img src="Logo/Logo_IP.png" alt="VIA-L" class="lang-logo-img">
-    </a>
-  </div>
-  <!-- Шапка разбора (как у Oura): заголовок + дата между логотипом и переключателем языка. Виден только на экране результата. -->
+  <!-- Квадратный лого топбара (Logo_IP.png) удалён по решению владельца 2026-07-22 — дублировал бренд, мешал на всех экранах. -->
+  <!-- Шапка разбора (как у Oura): заголовок + дата, слева от переключателя языка. Виден только на экране результата. -->
   <div id="tb-analysis" style="display:none;flex:1 1 auto;min-width:0;text-align:center;padding:0 8px;">
     <div class="rd-head-t" data-t="result_eyebrow" style="font-size:19px;line-height:1.15;">Анализ VIA‑L</div>
     <div class="rd-head-date" id="rd-date" style="margin-top:1px;"></div>
@@ -4075,7 +4061,6 @@ function navTo(tab){
   var __dp=document.getElementById('dayplanPanel');if(__dp)__dp.style.display='none';   // модал «Памятка дня» — тоже (для tab==='today' откроется заново ниже)
   var __nv=document.querySelector('.bottom-nav');if(__nv)__nv.classList.remove('nav-hidden');
   var __mn=document.querySelector('main');if(__mn)__mn.style.display='';
-  document.body.classList.remove('src-choice');   // покидаем экран выбора (today→_showSourceChoice вернёт флаг сам, если нужно)
   document.body.classList.remove('view-result');  // покидаем разбор (today→goTo('result') вернёт сам, если день пройден)
   var __tb=document.getElementById('topbar'); if(__tb)__tb.classList.remove('tb-hidden');   // шапка не должна остаться уехавшей на другом табе
   document.querySelectorAll('.bottom-nav-item').forEach(b=>b.classList.remove('active'));
@@ -6240,7 +6225,6 @@ function _showMorningCard(src){
 // Первый запуск: показываем ТОЛЬКО hero (дисклеймер + 3 карточки выбора), анкету прячем.
 function _showSourceChoice(){
   document.body.classList.remove('flow-mode');   // экран выбора — не лента, лишний нижний отступ ленты не нужен
-  document.body.classList.add('src-choice');     // прячем квадратный лого топбара (дублирует монограмму hero)
   var h=document.querySelector('.hero'); if(h)h.style.display='';
   var m=document.querySelector('main'); if(m)m.style.display='none';
   var g=document.getElementById('morning-gate'); if(g)g.remove();
@@ -6250,7 +6234,6 @@ function _showSourceChoice(){
 // Открыть анкету. После выбора источника hero больше не нужен — прячем его (нет скролла
 // вверх к карточкам выбора), страница открывается на тексте «Добро пожаловать».
 function _openFunnel(){
-  document.body.classList.remove('src-choice');   // ушли с экрана выбора — вернуть лого топбара
   var m=document.querySelector('main'); if(m)m.style.display='';
   var h=document.querySelector('.hero'); if(h)h.style.display='none';
   var _op=document.getElementById('importPanel'), _pl=_op&&_op.classList.contains('open');
