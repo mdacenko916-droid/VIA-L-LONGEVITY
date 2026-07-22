@@ -3378,7 +3378,8 @@ const _GLAB={
   spo2:{ru:'Кислород в крови',uk:'Кисень у крові',en:'Blood oxygen',es:'Oxígeno en sangre',de:'Blutsauerstoff',pt:'Oxigênio no sangue',fr:'Oxygène sanguin',pl:'Tlen we krwi',it:'Ossigeno nel sangue',he:'חמצן בדם',ja:'血中酸素',ko:'혈중 산소'},
   vo2:{ru:'Аэробная форма',uk:'Аеробна форма',en:'Aerobic fitness',es:'Forma aeróbica',de:'Aerobe Fitness',pt:'Forma aeróbica',fr:'Forme aérobie',pl:'Forma aerobowa',it:'Forma aerobica',he:'כושר אירובי',ja:'有酸素フィットネス',ko:'유산소 능력'},
   readiness:{ru:'Готовность',uk:'Готовність',en:'Readiness',es:'Preparación',de:'Bereitschaft',pt:'Prontidão',fr:'Disponibilité',pl:'Gotowość',it:'Prontezza',he:'מוכנות',ja:'準備度',ko:'준비도'},
-  energy:{ru:'Энергия',uk:'Енергія',en:'Energy',es:'Energía',de:'Energie',pt:'Energia',fr:'Énergie',pl:'Energia',it:'Energia',he:'אנרגיה',ja:'エネルギー',ko:'에너지'}
+  energy:{ru:'Энергия',uk:'Енергія',en:'Energy',es:'Energía',de:'Energie',pt:'Energia',fr:'Énergie',pl:'Energia',it:'Energia',he:'אנרגיה',ja:'エネルギー',ko:'에너지'},
+  bp_sys:{ru:'Верхнее давление',uk:'Верхній тиск',en:'Systolic BP',es:'Presión sistólica',de:'Oberer Blutdruck',pt:'Pressão sistólica',fr:'Tension systolique',pl:'Ciśnienie górne',it:'Pressione sistolica',he:'לחץ סיסטולי',ja:'収縮期血圧',ko:'수축기 혈압'}
 };
 Object.keys(_GLAB).forEach(function(k){Object.keys(_GLAB[k]).forEach(function(l){if(!T[l])T[l]={};T[l]['glab_'+k]=_GLAB[k][l];});});
 // Карточка «Ручной ввод» + статус загрузки трекера (видимые): 12 языков
@@ -3770,7 +3771,8 @@ const _GMETA={
   spo2:{min:80,max:100,step:1,u:'%',f:function(v){return Math.round(v);}},
   vo2:{min:15,max:80,step:1,u:'',f:function(v){return Math.round(v);}},
   energy:{min:1,max:10,step:1,u:'/10',f:function(v){return Math.round(v);}},
-  readiness:{min:0,max:100,step:1,u:'%',f:function(v){return Math.round(v);}}
+  readiness:{min:0,max:100,step:1,u:'%',f:function(v){return Math.round(v);}},
+  bp_sys:{min:70,max:260,step:1,u:'',f:function(v){return Math.round(v);}}   // систолическое (верхнее) — для тренда 30 дней
 };
 // ── Fitbit OAuth connect strings (uk first, all 12 languages) ──
 const _fitbitT={
@@ -4863,6 +4865,8 @@ function _saveDaily(){
       // Раньше тут стоял getElementById('stress') на несуществующий id → всегда null, недельный/месячный
       // тренд стресса молча не считался. Мапим категорию на число (0–10), чтобы тренд снова работал.
       stress:(function(){var v=getRadio('stress');return v==='high'?9:v==='mild'?5:v==='no'?2:null;})(), alc:getRadio('alc'),
+      bp_sys:(function(){var e=document.getElementById('bp-sys');var v=e?parseInt(e.value):NaN;return (v>=70&&v<=260)?v:null;})(),   // давление (ручной ввод) — для тренда/плитки
+      bp_dia:(function(){var e=document.getElementById('bp-dia');var v=e?parseInt(e.value):NaN;return (v>=40&&v<=160)?v:null;})(),
       // тело для мини-трендов карточки (как VIO): вес/талия из профиля на момент прохода
       weight:(function(){var el=document.getElementById('prof-weight');return el?(parseFloat(el.value)||null):null;})(),
       waist:(function(){var el=document.getElementById('prof-waist');return el?(parseFloat(el.value)||null):null;})()
@@ -6569,6 +6573,15 @@ function _hrvTileBase(){
   var base=v.slice(3,33); if(base.length<14) return null;
   base.sort(function(x,y){return x-y;}); return base[Math.floor(base.length/2)];
 }
+// Тир домашнего АД → слово + цвет + ширина полоски (внутренние пороги, docs/BLOOD-PRESSURE-EVIDENCE.md §5.1).
+function _bpTier(sys,dia){
+  sys=+sys; dia=+dia;
+  if(sys>=180||dia>=110) return {c:'#E0331F',bar:20,w:L({ru:'Очень высокое',uk:'Дуже високий',en:'Very high',es:'Muy alta',de:'Sehr hoch',pt:'Muito alta',fr:'Très élevée',pl:'Bardzo wysokie',it:'Molto alta',he:'גבוה מאוד',ja:'非常に高い',ko:'매우 높음'})};
+  if(sys>=140||dia>=90)  return {c:'#FF6B8A',bar:32,w:L({ru:'Высокое',uk:'Високий',en:'High',es:'Alta',de:'Hoch',pt:'Alta',fr:'Élevée',pl:'Wysokie',it:'Alta',he:'גבוה',ja:'高い',ko:'높음'})};
+  if(sys>=130||dia>=80)  return {c:'#F5A623',bar:52,w:L({ru:'Выше нормы',uk:'Вище норми',en:'Above range',es:'Por encima',de:'Über dem Bereich',pt:'Acima da faixa',fr:'Au-dessus',pl:'Powyżej normy',it:'Sopra la norma',he:'מעל הטווח',ja:'基準より高い',ko:'정상 초과'})};
+  if(sys>=120)           return {c:'#E2B95A',bar:70,w:L({ru:'Слегка выше',uk:'Трохи вище',en:'Slightly up',es:'Ligeramente alta',de:'Leicht erhöht',pt:'Levemente alta',fr:'Légèrement élevée',pl:'Lekko podwyższone',it:'Leggermente alta',he:'מעט גבוה',ja:'やや高い',ko:'약간 높음'})};
+  return {c:'#4ECCA3',bar:88,w:L({ru:'Оптимально',uk:'Оптимально',en:'Optimal',es:'Óptima',de:'Optimal',pt:'Ótima',fr:'Optimale',pl:'Optymalne',it:'Ottima',he:'אופטימלי',ja:'最適',ko:'최적'})};
+}
 function renderBioLoad(data, score, type){
   const load = 100 - score; // нагрузка = обратное от готовности
   const _tch = (typeof window!=="undefined" && window.__touched && window.__touched.size) ? window.__touched : null;
@@ -6617,6 +6630,10 @@ function renderBioLoad(data, score, type){
      })():null,
      color:'#FF6B8A'},
   ];
+  // 6-я плитка — Давление (только если клиент ввёл; сетка .rd-tiles уже на 6 колонок)
+  if(data.bp_sys && data.bp_dia){
+    components.push({label:L({ru:'Давление',uk:'Тиск',en:'Blood pressure',es:'Presión',de:'Blutdruck',pt:'Pressão',fr:'Tension',pl:'Ciśnienie',it:'Pressione',he:'לחץ דם',ja:'血圧',ko:'혈압'}), isBp:true, bpSys:data.bp_sys, bpDia:data.bp_dia, color:'#E0576A'});
+  }
 
   // Кольцо «биологической нагрузки» удалено 2026-07-17: это была инверсия готовности (load = 100 - score),
   // новой информации не несло. Пояснение из score («можно работать на полную мощность») — тоже: это трактовка
@@ -6627,6 +6644,7 @@ function renderBioLoad(data, score, type){
   function _srcNote(k){
     if(k==='self') return L({ru:'по вашей оценке',uk:'за вашою оцінкою',en:'your own rating',es:'según tu valoración',de:'nach deiner Einschätzung',pt:'pela sua avaliação',fr:'selon votre évaluation',pl:'wg Twojej oceny',it:'secondo la tua valutazione',he:'לפי הדירוג שלכם',ja:'あなたの自己評価',ko:'본인 평가 기준'});
     if(k==='device') return L({ru:'с трекера',uk:'з трекера',en:'from your tracker',es:'desde tu tracker',de:'vom Tracker',pt:'do seu tracker',fr:'depuis votre tracker',pl:'z trackera',it:'dal tuo tracker',he:'מהטרקר',ja:'トラッカーから',ko:'트래커에서'});
+    if(k==='bp') return L({ru:'ваш замер тонометром',uk:'ваш замір тонометром',en:'your cuff reading',es:'tu medición',de:'deine Messung',pt:'sua medição',fr:'votre mesure',pl:'twój pomiar',it:'la tua misurazione',he:'המדידה שלך',ja:'あなたの測定',ko:'본인 측정값'});
     if(k==='hrv') return L({ru:'HRV к норме возраста',uk:'HRV до норми віку',en:'HRV vs age norm',es:'HRV frente a la norma por edad',de:'HRV zur Altersnorm',pt:'HRV vs norma da idade',fr:'HRV vs norme d’âge',pl:'HRV wzgl. normy wieku',it:'HRV rispetto alla norma per età',he:'HRV מול נורמת הגיל',ja:'年齢基準に対するHRV',ko:'연령 기준 대비 HRV'});
     return '';
   }
@@ -6639,6 +6657,14 @@ function renderBioLoad(data, score, type){
   }
   document.getElementById('bioBars').innerHTML = components.map(function(c,i){
     var isPulse=(i===4), st=_band(c.val), barW=(c.val==null?0:c.val), valHtml;
+    if(c.isBp){
+      var bt=_bpTier(c.bpSys,c.bpDia);
+      return '<div class="rd-tile"><div class="rd-tile-h"><i class="ph ph-heartbeat"></i>'+c.label+'</div>'
+        +'<div><span class="rd-tile-val">'+c.bpSys+'/'+c.bpDia+'</span><span class="rd-tile-unit"> '+L({ru:'мм рт.ст.',uk:'мм рт.ст.',en:'mmHg',es:'mmHg',de:'mmHg',pt:'mmHg',fr:'mmHg',pl:'mmHg',it:'mmHg',he:'ממ״כ',ja:'mmHg',ko:'mmHg'})+'</span></div>'
+        +'<div class="rd-tile-status" style="color:'+bt.c+'">'+bt.w+'</div>'
+        +'<div style="font-size:10px;color:var(--t3);line-height:1.35;margin-bottom:6px;">'+_srcNote('bp')+'</div>'
+        +'<div class="rd-tile-bar"><span data-w="'+bt.bar+'" style="background:'+c.color+';box-shadow:0 0 6px '+c.color+'66;"></span></div></div>';
+    }
     if(i===0 && c.hrvNoBase){
       // База HRV ещё не набрана (<14 дней) — показываем сырое значение в мс без вердикта,
       // как плитка пульса. Никакого «Низкое» и красной полосы: оснований пока нет.
@@ -6832,14 +6858,14 @@ function _renderWeekStrip(activeKey){
 // Полярность: для пульса покоя рост = ухудшение, для остальных рост = улучшение;
 // у температуры «лучше/хуже» не определено — она нейтральна и без процентов
 // (процент от отклонения около нуля даёт бессмысленные скачки: +0.1 → +∞%).
-var _TR_POL={hrv:1,sleepHours:1,deepMin:1,readiness:1,vo2:1,spo2:1,rhr:-1,tempDev:0};
-var _TR_KEYS=['hrv','sleepHours','rhr','spo2','tempDev','readiness','vo2','deepMin'];
-var _TR_ICO={hrv:'hrv',rhr:'rhr',sleepHours:'sleep',deepMin:'deep',tempDev:'temp',spo2:'spo2',vo2:'vo2',readiness:'readiness'};
+var _TR_POL={hrv:1,sleepHours:1,deepMin:1,readiness:1,vo2:1,spo2:1,rhr:-1,tempDev:0,bp_sys:-1};   // давление: рост = ухудшение
+var _TR_KEYS=['hrv','sleepHours','rhr','bp_sys','spo2','tempDev','readiness','vo2','deepMin'];
+var _TR_ICO={hrv:'hrv',rhr:'rhr',sleepHours:'sleep',deepMin:'deep',tempDev:'temp',spo2:'spo2',vo2:'vo2',readiness:'readiness',bp_sys:'rhr'};   // BP переиспользует иконку сердца
 var _TR_DAYS=30;
 // Цвет спарклайна = доминирующий цвет иконки метрики (Logo/metrics/*.png):
 // hrv=красное сердце, rhr=малиновое сердце, сон=синий месяц, deep=фиолетовый мозг,
 // temp=красно-жёлтый градусник, spo2=голубая капля, vo2=тёмно-синие лёгкие, readiness=зелёный бегун.
-var _TR_COL={hrv:'#F0413A',rhr:'#C42A8E',sleepHours:'#2F6BE0',deepMin:'#9B2FB0',tempDev:'#F2922E',spo2:'#2FA8E0',vo2:'#3E63B0',readiness:'#3F9A3F'};
+var _TR_COL={hrv:'#F0413A',rhr:'#C42A8E',sleepHours:'#2F6BE0',deepMin:'#9B2FB0',tempDev:'#F2922E',spo2:'#2FA8E0',vo2:'#3E63B0',readiness:'#3F9A3F',bp_sys:'#E0576A'};
 window.__trOpen=''; window.__trCollapsed=true;
 
 // Дельта словами: «+5 ms», для сна — в минутах (0.5 ч читается как «30 min», не «+0.5»)
