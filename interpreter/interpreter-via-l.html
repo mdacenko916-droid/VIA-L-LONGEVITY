@@ -1687,6 +1687,11 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
 .ai-themes{display:grid;grid-template-rows:0fr;transition:grid-template-rows .32s cubic-bezier(.4,0,.2,1);}
 .ai-themes-box.open .ai-themes{grid-template-rows:1fr;}
 .ai-themes>.ai-themes-in{overflow:hidden;min-height:0;}
+.ai-coll-all-wrap{text-align:center;margin-top:18px;}
+.ai-coll-all{display:inline-flex;align-items:center;gap:8px;background:rgba(226,185,90,.10);border:1px solid rgba(226,185,90,.32);border-radius:12px;padding:10px 16px;color:var(--gold-lt);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:.2px;}
+.ai-coll-all:hover{background:rgba(226,185,90,.16);}
+.ai-coll-all .ph{font-size:14px;}
+.ai-themes-box{scroll-margin-top:80px;}
 .ai-sec-coll .ph{font-size:13px;}
 .ai-sec-det-wrap{display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s cubic-bezier(.4,0,.2,1);}
 .ai-sec.open .ai-sec-det-wrap{grid-template-rows:1fr;}
@@ -8688,6 +8693,8 @@ function _secTap(sec,ev){ if(!sec.classList.contains('has-det')||sec.classList.c
 function _secHeadTap(head,ev){ var sec=head.parentNode; if(sec&&sec.classList.contains('open')){ if(ev)ev.stopPropagation(); _secSet(sec,false); } }
 function _toggleDetail(btn,ev){ if(ev)ev.stopPropagation(); var sec=btn.closest('.ai-sec'); if(sec)_secSet(sec,!sec.classList.contains('open')); }
 function _secCollapse(btn,ev){ if(ev)ev.stopPropagation(); var sec=btn.closest('.ai-sec'); if(sec)_secSet(sec,false); }
+// «Свернуть» в самом низу раскрытого разбора: закрыть весь блок тем и вернуться к его началу (без скролла вручную).
+function _collapseThemes(btn,ev){ if(ev)ev.stopPropagation(); var box=btn.closest('.ai-themes-box'); if(!box)return; box.classList.remove('open'); try{ box.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){ box.scrollIntoView(); } }
 // Тема разбора → золотая иконка (RU/EN и ключевые формы; фолбэк — эмодзи от ИИ)
 function _themeIcon(t){ t=(t||'').toLowerCase();
   var M=[['sleep',['сон','сну','сна','sleep','sueñ','schlaf','sono','sommeil','sonno','睡眠','수면','שינה']],
@@ -8745,7 +8752,7 @@ function _renderAnalysis(raw){
   var _collapsed=(_introRest?'<div class="ai-intro">'+_mdOnly(_introRest)+'</div>':'')+_themesHtml;
   if(_collapsed){
     var _moreAll=L({ru:'Подробнее о разборе',uk:'Докладніше про розбір',en:'More on the analysis',es:'Más sobre el análisis',de:'Mehr zur Analyse',pt:'Mais sobre a análise',fr:'Plus sur l’analyse',pl:'Więcej o analizie',it:'Altro sull’analisi',he:'עוד על הניתוח',ja:'分析の詳細',ko:'분석 자세히'});
-    html+='<div class="ai-themes-box"><button type="button" class="ai-more-all" onclick="this.parentNode.classList.toggle(\'open\')">'+_esc(_moreAll)+' <i class="ph ph-caret-down" aria-hidden="true"></i></button><div class="ai-themes"><div class="ai-themes-in">'+_collapsed+'</div></div></div>';
+    html+='<div class="ai-themes-box"><button type="button" class="ai-more-all" onclick="this.parentNode.classList.toggle(\'open\')">'+_esc(_moreAll)+' <i class="ph ph-caret-down" aria-hidden="true"></i></button><div class="ai-themes"><div class="ai-themes-in">'+_collapsed+'<div class="ai-coll-all-wrap"><button type="button" class="ai-coll-all" onclick="_collapseThemes(this,event)">'+_esc(_collLbl())+' <i class="ph ph-caret-up" aria-hidden="true"></i></button></div></div></div></div>';
   }
   return html;
 }
