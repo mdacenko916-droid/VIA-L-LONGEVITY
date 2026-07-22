@@ -831,6 +831,10 @@ input.oura-input::-webkit-slider-thumb{
 .rd-daybanner{text-align:center;font-size:13px;color:var(--t2);background:linear-gradient(180deg,rgba(226,185,90,.10),rgba(226,185,90,.04));border:1px solid rgba(226,185,90,.24);border-radius:14px;padding:10px 16px;line-height:1.5;}
 .rd-daybanner b{color:var(--gold-lt);font-weight:600;}
 .rd-daybanner-past{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);}
+/* Фазовый контекст дня — мягкая карточка (розовый акцент цикла, как в блоке цикла) */
+.rd-phasenote{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;color:var(--t2);line-height:1.5;background:linear-gradient(180deg,rgba(244,114,182,.09),rgba(244,114,182,.03));border:1px solid rgba(244,114,182,.22);border-radius:14px;padding:11px 14px;}
+.rd-phasenote .rd-phasenote-ic{font-size:16px;line-height:1.3;flex:0 0 auto;}
+.rd-phasenote b{color:#F9A8D4;font-weight:600;}
 /* лента недели (Oura) */
 .rd-week{display:flex;gap:5px;justify-content:space-between;overflow:hidden;padding:2px 0;}
 /* Лента дней — компактная строка (как навигатор дат у Oura): день+число+точка в ряд, а не колонкой */
@@ -3013,6 +3017,9 @@ try{ if(new URLSearchParams(location.search).get('vendors')==='1'){ var _dvb=doc
     <!-- Плашка дня и заголовок «Анализ VIA-L» + дата переехали в топбар (шапка как у Oura, 2026-07-19).
          Элемент баннера оставлен для JS, но скрыт через CSS. -->
     <div class="rd-daybanner" id="rd-daybanner" style="display:none;"></div>
+    <!-- Фазовый контекст дня (только у женщин с регулярным циклом): чтобы нормальный сдвиг по фазе
+         читался как ожидаемый, а не как «ухудшение». Дескриптивно, без причин/диагнозов. 2026-07-22. -->
+    <div class="rd-phasenote" id="rd-phasenote" style="display:none;"></div>
     <!-- лента недели (Oura): дни + тап → тот день из истории -->
     <div class="rd-week" id="rd-week"></div>
 
@@ -6660,6 +6667,36 @@ function renderDayIndex(score, type, data){
   if((el=document.getElementById('rd-index-desc')))el.textContent=desc;
   if((el=document.getElementById('rd-ring'))){el.style.setProperty('--p',n);el.style.setProperty('--rc',band.c);}
   if((el=document.getElementById('rd-date'))){ try{el.textContent=new Date().toLocaleDateString(_locale(),{day:'numeric',month:'long',year:'numeric'});}catch(e){} }
+  try{ _renderPhaseNote(data); }catch(e){}
+}
+
+// ── Фазовый контекст дня (женщины, регулярный цикл) ──────────────────────────
+// Чтобы нормальный сдвиг по фазе (лёгкий сон/ниже ВСР в лютеиновой) читался как ОЖИДАЕМЫЙ,
+// а не «ухудшение». Дескриптивно, без причин/диагнозов (docs/CYCLE-PHASE-WEARABLES-EVIDENCE.md).
+// ВОРОТА: только регулярный ритм (cycle_status='regular') без гормональной контрацепции/МГТ и без
+// продвинутых этапов (мено/пост) — при пери-VMS/нерегулярном/ановуляторном паттерна часто нет.
+function _renderPhaseNote(data){
+  var box=document.getElementById('rd-phasenote'); if(!box) return;
+  box.style.display='none';
+  try{
+    if(!data || data.gender!=='female') return;
+    var ph=data.cycle_phase; if(!ph) return;                        // нет фазы (в т.ч. cycle_status='absent')
+    if(data.cycle_status!=='regular') return;                       // только регулярный ритм (21–35 дн) → овуляторный цикл
+    // determinePhase() у регулярного цикла = 'peri' (дефолт), поэтому 'peri' пропускаем; блокируем продвинутые
+    // этапы (мено/пост) и VMS-heavy позднюю пери — там бифазного паттерна часто нет / есть вазомоторный конфаундер.
+    if(['meno','post','andro','pre_andro'].indexOf(data.phase)>=0) return;
+    var meds=Array.isArray(data.meds)?data.meds:(data.meds?[data.meds]:[]);
+    if(meds.indexOf('cycle_factor')>=0) return;                     // med4 = гормональная контрацепция/МГТ → естественного паттерна нет
+    var T={
+      menstrual:{ic:'🌙',t:L({ru:'Начало цикла. В эти дни телу нужнее покой и восстановление — бережный ритм и еда с железом сейчас в самый раз.',uk:'Початок циклу. Цими днями тілу потрібніші спокій і відновлення — дбайливий ритм і їжа із залізом зараз саме те.',en:'Early in your cycle. These days your body leans on rest and recovery — a gentle pace and iron-rich food fit well now.',es:'Inicio del ciclo. Estos días tu cuerpo necesita descanso y recuperación: un ritmo suave y comida rica en hierro van bien.',de:'Zyklusbeginn. In diesen Tagen braucht dein Körper Ruhe und Erholung — ein sanftes Tempo und eisenreiche Kost passen jetzt gut.',pt:'Início do ciclo. Nestes dias seu corpo precisa de descanso e recuperação — um ritmo suave e comida rica em ferro caem bem.',fr:'Début de cycle. Ces jours-ci votre corps a besoin de repos et de récupération — un rythme doux et des aliments riches en fer conviennent.',pl:'Początek cyklu. W te dni ciało potrzebuje odpoczynku i regeneracji — łagodne tempo i jedzenie bogate w żelazo są teraz na miejscu.',it:'Inizio del ciclo. In questi giorni il corpo ha bisogno di riposo e recupero — un ritmo dolce e cibo ricco di ferro vanno bene.',he:'תחילת המחזור. בימים אלה הגוף זקוק למנוחה והתאוששות — קצב עדין ומזון עשיר בברזל מתאימים עכשיו.',ja:'周期の始まりです。この時期は休息と回復が大切 — ゆるやかなペースと鉄分の多い食事が今は合います。',ko:'주기 초반입니다. 이 시기엔 휴식과 회복이 필요해요 — 부드러운 리듬과 철분이 풍부한 음식이 잘 맞습니다.'})},
+      follicular:{ic:'🌱',t:L({ru:'Первая половина цикла — у многих сейчас больше энергии и сил. Удобное окно для активности и силовой.',uk:'Перша половина циклу — у багатьох зараз більше енергії та сил. Зручне вікно для активності й силового.',en:'First half of your cycle — many feel more energy now. A good window for activity and strength work.',es:'Primera mitad del ciclo: muchas sienten más energía ahora. Buena ventana para actividad y fuerza.',de:'Erste Zyklushälfte — viele haben jetzt mehr Energie. Ein gutes Fenster für Aktivität und Krafttraining.',pt:'Primeira metade do ciclo — muitas sentem mais energia agora. Boa janela para atividade e força.',fr:'Première moitié du cycle — beaucoup ont plus d’énergie. Une bonne fenêtre pour l’activité et le renforcement.',pl:'Pierwsza połowa cyklu — wiele osób ma teraz więcej energii. Dobre okno na aktywność i trening siłowy.',it:'Prima metà del ciclo — molte hanno più energia ora. Una buona finestra per attività e forza.',he:'המחצית הראשונה של המחזור — רבות חשות יותר אנרגיה עכשיו. חלון טוב לפעילות ולחיזוק.',ja:'周期の前半 — 多くの人がエネルギーを感じます。運動や筋トレに向く時期です。',ko:'주기 전반부 — 이 시기엔 에너지가 더 느껴지는 분이 많아요. 활동과 근력 운동에 좋은 시기입니다.'})},
+      ovulation:{ic:'✨',t:L({ru:'Середина цикла — у многих пик энергии и настроения. Поддержите гидратацию и белок.',uk:'Середина циклу — у багатьох пік енергії та настрою. Підтримайте гідратацію та білок.',en:'Mid-cycle — many feel a peak in energy and mood. Support hydration and protein.',es:'Mitad del ciclo: muchas sienten un pico de energía y ánimo. Cuida la hidratación y la proteína.',de:'Zyklusmitte — viele erleben ein Hoch bei Energie und Stimmung. Achte auf Flüssigkeit und Eiweiß.',pt:'Meio do ciclo — muitas sentem pico de energia e humor. Mantenha hidratação e proteína.',fr:'Milieu de cycle — beaucoup ressentent un pic d’énergie et d’humeur. Pensez à l’hydratation et aux protéines.',pl:'Środek cyklu — wiele osób czuje szczyt energii i nastroju. Zadbaj o nawodnienie i białko.',it:'Metà ciclo — molte sentono un picco di energia e umore. Cura idratazione e proteine.',he:'אמצע המחזור — רבות חשות שיא של אנרגיה ומצב רוח. שמרו על שתייה וחלבון.',ja:'周期の中頃 — エネルギーと気分がピークの人が多い時期。水分とタンパク質を意識して。',ko:'주기 중반 — 에너지와 기분이 정점인 분이 많아요. 수분과 단백질을 챙기세요.'})},
+      luteal:{ic:'🌗',t:L({ru:'Вы во второй половине цикла. Небольшие сдвиги — сон чуть легче, энергия и ВСР чуть ниже обычного — в эти дни у многих обычное дело, не повод для тревоги. Помогают магний, сложные углеводы вечером и ровный сон.',uk:'Ви в другій половині циклу. Невеликі зсуви — сон трохи легший, енергія та ВСР трохи нижчі за звичні — цими днями у багатьох звична річ, не привід для тривоги. Допомагають магній, складні вуглеводи ввечері та рівний сон.',en:'You’re in the second half of your cycle. Small shifts — lighter sleep, energy and HRV a bit below your usual — are common these days and not a cause for worry. Magnesium, evening complex carbs and steady sleep help.',es:'Estás en la segunda mitad del ciclo. Pequeños cambios —sueño más ligero, energía y VFC algo por debajo de lo habitual— son comunes estos días y no motivo de preocupación. Ayudan el magnesio, los carbohidratos complejos por la noche y un sueño estable.',de:'Du bist in der zweiten Zyklushälfte. Kleine Verschiebungen — leichterer Schlaf, Energie und HRV etwas unter dem Üblichen — sind in diesen Tagen normal und kein Grund zur Sorge. Magnesium, komplexe Kohlenhydrate am Abend und ruhiger Schlaf helfen.',pt:'Você está na segunda metade do ciclo. Pequenas mudanças — sono mais leve, energia e VFC um pouco abaixo do habitual — são comuns nestes dias e não motivo de preocupação. Ajudam magnésio, carboidratos complexos à noite e sono estável.',fr:'Vous êtes dans la seconde moitié du cycle. De petits changements — sommeil plus léger, énergie et VFC un peu sous votre habitude — sont fréquents ces jours-ci et sans raison de s’inquiéter. Le magnésium, les glucides complexes le soir et un sommeil régulier aident.',pl:'Jesteś w drugiej połowie cyklu. Drobne zmiany — lżejszy sen, energia i HRV nieco poniżej normy — są w te dni częste i nie są powodem do niepokoju. Pomagają magnez, złożone węglowodany wieczorem i równy sen.',it:'Sei nella seconda metà del ciclo. Piccoli cambiamenti — sonno più leggero, energia e HRV un po’ sotto il solito — sono comuni in questi giorni e non un motivo di preoccupazione. Aiutano magnesio, carboidrati complessi la sera e un sonno regolare.',he:'את במחצית השנייה של המחזור. שינויים קטנים — שינה קלה יותר, אנרגיה ו-HRV מעט מתחת לרגיל — שכיחים בימים אלה ואינם סיבה לדאגה. מגנזיום, פחמימות מורכבות בערב ושינה יציבה מסייעים.',ja:'周期の後半です。眠りが浅め、エネルギーやHRVがいつもより少し低め — こうした小さな変化はこの時期によくあることで、心配は要りません。マグネシウム、夜の複合炭水化物、規則的な睡眠が助けになります。',ko:'주기 후반부입니다. 수면이 조금 얕아지고 에너지와 HRV가 평소보다 약간 낮아지는 작은 변화는 이 시기에 흔하며 걱정할 일이 아닙니다. 마그네슘, 저녁의 복합 탄수화물, 규칙적인 수면이 도움이 됩니다.'})}
+    };
+    var m=T[ph]; if(!m) return;
+    box.innerHTML='<span class="rd-phasenote-ic">'+m.ic+'</span><span>'+m.t+'</span>';
+    box.style.display='flex';
+  }catch(e){}
 }
 
 // ── ФУТЕР «Использовано данных» — иконки реально пришедших источников ──
