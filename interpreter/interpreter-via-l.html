@@ -2758,6 +2758,20 @@ try{ if(new URLSearchParams(location.search).get('vendors')==='1'){ var _dvb=doc
           <div class="chip"><input type="radio" name="move_today" id="mv5" value="strength"><label for="mv5" data-t="move_strength">🏋 Силовая</label></div>
         </div>
       </div>
+      <!-- Артериальное давление (по желанию; и в гаджетном, и в ручном проходе — у гипертоников есть тонометр).
+           i18n подписей — через _bpI18n() (applyLang не фолбэчит на ru); значения полей сохраняются при смене языка. -->
+      <div class="divider"></div>
+      <div class="input-group" id="bp-block">
+        <label><span id="bp-lbl">Артериальное давление</span> <span id="bp-opt" style="font-weight:400;color:var(--t3);font-size:12px;">(по желанию)</span></label>
+        <div class="q-prompt" id="bp-q">Если измеряли давление тонометром в покое — впишите.</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <input class="manual-input" id="bp-sys" type="number" inputmode="numeric" min="70" max="260" placeholder="120" style="max-width:100px;text-align:center;">
+          <span style="font-size:20px;color:var(--t2);">/</span>
+          <input class="manual-input" id="bp-dia" type="number" inputmode="numeric" min="40" max="160" placeholder="80" style="max-width:100px;text-align:center;">
+          <span id="bp-unit" style="font-size:13px;color:var(--t3);">мм рт.ст.</span>
+        </div>
+        <div id="bp-hint" style="font-size:11px;color:var(--t3);line-height:1.45;margin-top:8px;">Сидя, спина опёрта, ноги на полу, после 5 минут покоя — среднее из 2 замеров.</div>
+      </div>
       <div class="btn-row">
         <button class="btn btn-back" onclick="goTo(4)">←</button>
         <button class="btn btn-primary" onclick="goTo(6)"><span class="btn-label" data-t="next">Далее →</span></button>
@@ -3972,6 +3986,7 @@ function setLang(l){
     if(T[l][k]!==undefined)el.placeholder=T[l][k];
   });
   try{ ouraSyncLang(); }catch(e){}
+  try{ _bpI18n(); }catch(e){}   // подписи блока «Давление» на текущем языке (значения полей сохраняются)
   try{ if(typeof _pmIdle==='function' && !_pmBusy) _pmIdle(); }catch(e){}   // циферблат/кнопка пульса — на текущем языке (кроме идущего замера)
   try{ if(typeof renderSleepScale==='function')renderSleepScale(); }catch(e){}
   try{ if(typeof renderEnergyScale==='function')renderEnergyScale(); }catch(e){}
@@ -4010,6 +4025,15 @@ function setLang(l){
   if(_lastResult && _srEl && (_srEl.classList.contains('active')||_srEl.classList.contains('flow-show'))){_rerendering=true;try{_showResultsInner();}finally{_rerendering=false;}if(document.getElementById('aiCard'))fetchAIAnalysis(_lastResult.data,l);}   // перерисовывать результаты при смене языка ТОЛЬКО если экран результатов открыт (иначе смена языка на утренней карточке/выборе источника выбрасывала в старый разбор из памяти)
 }
 function t(k){return T[lang][k]||T.ru[k]||k;}
+// Подписи блока «Давление» — через L() (applyLang не фолбэчит на ru), значения inputs не трогаем.
+function _bpI18n(){
+  var s=function(id,txt){var e=document.getElementById(id);if(e)e.textContent=txt;};
+  s('bp-lbl',L({ru:'Артериальное давление',uk:'Артеріальний тиск',en:'Blood pressure',es:'Presión arterial',de:'Blutdruck',pt:'Pressão arterial',fr:'Tension artérielle',pl:'Ciśnienie krwi',it:'Pressione arteriosa',he:'לחץ דם',ja:'血圧',ko:'혈압'}));
+  s('bp-opt',L({ru:'(по желанию)',uk:'(за бажанням)',en:'(optional)',es:'(opcional)',de:'(optional)',pt:'(opcional)',fr:'(facultatif)',pl:'(opcjonalnie)',it:'(facoltativo)',he:'(רשות)',ja:'（任意）',ko:'(선택)'}));
+  s('bp-q',L({ru:'Если измеряли давление тонометром в покое — впишите.',uk:'Якщо вимірювали тиск тонометром у спокої — впишіть.',en:'If you measured your blood pressure at rest with a cuff, enter it.',es:'Si mediste tu presión en reposo con un tensiómetro, introdúcela.',de:'Wenn du deinen Blutdruck in Ruhe mit einem Messgerät gemessen hast, trage ihn ein.',pt:'Se mediu a pressão em repouso com um aparelho, informe.',fr:'Si vous avez mesuré votre tension au repos avec un tensiomètre, indiquez-la.',pl:'Jeśli zmierzyłaś ciśnienie ciśnieniomierzem w spoczynku — wpisz.',it:'Se hai misurato la pressione a riposo con un misuratore, inseriscila.',he:'אם מדדת לחץ דם במנוחה עם מד לחץ — הזן.',ja:'安静時に血圧計で測った場合は入力してください。',ko:'안정 시 혈압계로 측정했다면 입력하세요.'}));
+  s('bp-hint',L({ru:'Сидя, спина опёрта, ноги на полу, после 5 минут покоя — среднее из 2 замеров.',uk:'Сидячи, спина оперта, ноги на підлозі, після 5 хвилин спокою — середнє з 2 замірів.',en:'Seated, back supported, feet on the floor, after 5 min of rest — average of 2 readings.',es:'Sentada, con la espalda apoyada, pies en el suelo, tras 5 min de reposo — promedio de 2 lecturas.',de:'Sitzend, Rücken gestützt, Füße am Boden, nach 5 Min Ruhe — Mittel aus 2 Messungen.',pt:'Sentada, costas apoiadas, pés no chão, após 5 min de repouso — média de 2 medições.',fr:'Assise, dos soutenu, pieds au sol, après 5 min de repos — moyenne de 2 mesures.',pl:'Siedząc, plecy podparte, stopy na podłodze, po 5 min odpoczynku — średnia z 2 pomiarów.',it:'Seduta, schiena appoggiata, piedi a terra, dopo 5 min di riposo — media di 2 misurazioni.',he:'בישיבה, גב נשען, רגליים על הרצפה, אחרי 5 דק׳ מנוחה — ממוצע של 2 מדידות.',ja:'座って背もたれに寄り、足を床につけ、5分安静後 — 2回の平均。',ko:'앉아서 등을 기대고 발을 바닥에 두고 5분 안정 후 — 2회 측정 평균.'}));
+  s('bp-unit',L({ru:'мм рт.ст.',uk:'мм рт.ст.',en:'mmHg',es:'mmHg',de:'mmHg',pt:'mmHg',fr:'mmHg',pl:'mmHg',it:'mmHg',he:'ממ״כ',ja:'mmHg',ko:'mmHg'}));
+}
 
 // ══ GENDER TOGGLE ════════════════════════════════════════
 window.__touched=window.__touched||new Set();
@@ -7148,6 +7172,9 @@ function _showResultsInner(){
     height:parseFloat(document.getElementById('prof-height')?.value)||null,
     waist:parseFloat(document.getElementById('prof-waist')?.value)||null,
     hrv:+document.getElementById('hrv').value,
+    // Артериальное давление (домашний ручной ввод, по желанию) — разбирает воркер по блоку «ДАВЛЕНИЕ»
+    bp_sys:(function(){var e=document.getElementById('bp-sys');var v=e?parseInt(e.value):NaN;return (v>=70&&v<=260)?v:null;})(),
+    bp_dia:(function(){var e=document.getElementById('bp-dia');var v=e?parseInt(e.value):NaN;return (v>=40&&v<=160)?v:null;})(),
     device:(typeof importedData!=='undefined'&&importedData)?{vo2:importedData.vo2,spo2:importedData.spo2,readiness:importedData.readiness,sleepHours:importedData.sleepHours,deepMin:importedData.deepMin,tempDev:importedData.tempDev}:null,
     // hotflash/hotfreq убраны 2026-07-16 (аудит метрики→воркер): воркер их НЕ читал ни разу — приливы
     // доходят до ИИ через hf_count/hf_intensity ниже. Данные не терялись, поля были мёртвым грузом.
