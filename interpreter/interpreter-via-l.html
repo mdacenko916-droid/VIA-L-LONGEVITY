@@ -863,6 +863,7 @@ input.oura-input::-webkit-slider-thumb{
 .rd-tr-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid rgba(255,255,255,.06);cursor:pointer;}
 .rd-tr-row:first-of-type{border-top:0;}
 .rd-tr-ic{width:34px;height:34px;flex-shrink:0;opacity:.9;}
+i.rd-tr-ic{display:inline-flex;align-items:center;justify-content:center;font-size:24px;color:var(--gold,#E2B95A);}
 .rd-tr-main{flex:1 1 auto;min-width:0;}
 .rd-tr-name{font-size:12px;color:var(--t3);margin-bottom:2px;}
 .rd-tr-val{font-family:'Playfair Display',serif;font-size:21px;color:#fff;line-height:1.1;}
@@ -6878,14 +6879,15 @@ function _renderWeekStrip(activeKey){
 // Полярность: для пульса покоя рост = ухудшение, для остальных рост = улучшение;
 // у температуры «лучше/хуже» не определено — она нейтральна и без процентов
 // (процент от отклонения около нуля даёт бессмысленные скачки: +0.1 → +∞%).
-var _TR_POL={hrv:1,sleepHours:1,deepMin:1,readiness:1,vo2:1,spo2:1,rhr:-1,tempDev:0,bp_sys:-1};   // давление: рост = ухудшение
-var _TR_KEYS=['hrv','sleepHours','rhr','bp_sys','spo2','tempDev','readiness','vo2','deepMin'];
-var _TR_ICO={hrv:'hrv',rhr:'rhr',sleepHours:'sleep',deepMin:'deep',tempDev:'temp',spo2:'spo2',vo2:'vo2',readiness:'readiness',bp_sys:'rhr'};   // BP переиспользует иконку сердца
+var _TR_POL={hrv:1,sleepHours:1,deepMin:1,readiness:1,vo2:1,spo2:1,rhr:-1,tempDev:0,bp_sys:-1,energy:1,stress:-1};   // давление/стресс: рост = ухудшение; энергия: рост = улучшение
+var _TR_KEYS=['hrv','sleepHours','rhr','bp_sys','spo2','tempDev','readiness','vo2','deepMin','energy','stress'];   // + субъективные домены (P3-B): у кого нет гаджета, они и будут трендами
+var _TR_ICO={hrv:'hrv',rhr:'rhr',sleepHours:'sleep',deepMin:'deep',tempDev:'temp',spo2:'spo2',vo2:'vo2',readiness:'readiness',bp_sys:'rhr'};   // BP переиспользует иконку сердца; energy/stress без PNG → phosphor (_TR_PH)
+var _TR_PH={energy:'ph-sun',stress:'ph-heartbeat'};   // субъективные домены рисуем phosphor-иконкой (PNG в Logo/metrics нет)
 var _TR_DAYS=30;
 // Цвет спарклайна = доминирующий цвет иконки метрики (Logo/metrics/*.png):
 // hrv=красное сердце, rhr=малиновое сердце, сон=синий месяц, deep=фиолетовый мозг,
 // temp=красно-жёлтый градусник, spo2=голубая капля, vo2=тёмно-синие лёгкие, readiness=зелёный бегун.
-var _TR_COL={hrv:'#F0413A',rhr:'#C42A8E',sleepHours:'#2F6BE0',deepMin:'#9B2FB0',tempDev:'#F2922E',spo2:'#2FA8E0',vo2:'#3E63B0',readiness:'#3F9A3F',bp_sys:'#E0576A'};
+var _TR_COL={hrv:'#F0413A',rhr:'#C42A8E',sleepHours:'#2F6BE0',deepMin:'#9B2FB0',tempDev:'#F2922E',spo2:'#2FA8E0',vo2:'#3E63B0',readiness:'#3F9A3F',bp_sys:'#E0576A',energy:'#E2B95A',stress:'#B06BD0'};
 window.__trOpen=''; window.__trCollapsed=true;
 
 // Дельта словами: «+5 ms», для сна — в минутах (0.5 ч читается как «30 min», не «+0.5»)
@@ -6996,7 +6998,7 @@ function renderTrends(activeKey){
     rows.forEach(function(r){
       var m=_GMETA[r.k], nm=(_GLAB[r.k]&&(_GLAB[r.k][lang]||_GLAB[r.k].en))||r.k;
       html+='<div class="rd-tr-row" onclick="_trToggle(\''+r.k+'\')">'
-        +'<img class="rd-tr-ic" src="Logo/metrics/'+_TR_ICO[r.k]+'.png" alt="" loading="lazy">'
+        +(_TR_ICO[r.k]?'<img class="rd-tr-ic" src="Logo/metrics/'+_TR_ICO[r.k]+'.png" alt="" loading="lazy">':'<i class="ph '+(_TR_PH[r.k]||'ph-circle')+' rd-tr-ic" aria-hidden="true"></i>')
         +'<div class="rd-tr-main"><div class="rd-tr-name">'+_esc(nm)+'</div>'
         +'<div><span class="rd-tr-val">'+_esc(m.f(r.cur))+'</span>'
         +(m.u?'<span class="rd-tr-u">'+_esc(m.u)+'</span>':'')
