@@ -1595,6 +1595,10 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
   // в велнес-формулировках — без диагнозов и без названий состояний как диагноза.
   // EXPERT/ELITE (Hotmart) сохраняют клинический язык.
   const isWellness = ['vio', 'pro'].includes(String(tier || '').toLowerCase());
+  // РАСЩЕПЛЕНИЕ (VIA-L EXPERT, канон слияния): «какой KB» ОТДЕЛЬНО от «включены ли App-Store-гардрейлы».
+  // VIA-L EXPERT (tier elite/expert) = наша УГЛУБЛЁННАЯ велнес-KB (P-F1…P-F23/P-M…) + СНЯТЫЕ мед-ограничения
+  // (клин. язык разрешён — по ветке isWellness=false ниже). Клинический SYSTEM_PROMPT для /analyze больше не нужен.
+  const useWellnessKB = ['vio', 'pro', 'elite', 'expert'].includes(String(tier || '').toLowerCase());
   const wellnessGuard = isWellness ? (
     '\n\n════════════════════════════════════════\n' +
     'РЕЖИМ WELLNESS (App Store) — ОБЯЗАТЕЛЬНО, ПЕРЕКРЫВАЕТ ГЛОССАРИЙ ВЫШЕ\n' +
@@ -1616,6 +1620,7 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
     'РЕЖИМ EXPERT/ELITE (Hotmart) — ЮРИДИЧЕСКАЯ РАМКА (EU MDR / FTC / FDA)\n' +
     '════════════════════════════════════════\n' +
     'Клинический и образовательный язык РАЗРЕШЁН (экспертный тариф — можно называть показатели и механизмы прямо), НО:\n' +
+    '• ⚠️ ОТМЕНА App-Store-ограничений из базы знаний ВЫШЕ: правила «App Store 1.4.1 / термин ≠ claim» в KB-преамбуле (запрет доз у гормонально-активных трав, «носимое ≠ замер», обязательное смягчение) в ЭТОМ тарифе НЕ действуют (платный тариф вне App Store). Разрешены прямые клинические термины и механизмы, конкретные нутриенты и дозы (в т.ч. травы/адаптогены с дозой и режимом), интерпретация показателей. Действуют ТОЛЬКО ограничения ниже.\n' +
     '• Это ОБРАЗОВАТЕЛЬНАЯ велнес-поддержка образа жизни, НЕ медицинская услуга. НЕ ставь диагноз. НЕ заявляй, что программа, питание или добавка «лечит», «излечивает», «предотвращает», «устраняет» или «исправляет» конкретную болезнь — формулируй как поддержку образа жизни, питания, восстановления, формы и управления своим состоянием («помогает поддержать», «связано с», «многим помогает чувствовать себя лучше»).\n' +
     '• НИКАКОЙ ОЦЕНКИ МЕДИЦИНСКОГО РИСКА. Мы не оцениваем и не количественно определяем риск заболеваний. ЗАПРЕЩЕНО: «низкий/умеренный/высокий риск», «риск ССЗ / сердца / диабета / инсульта», «кардиометаболический риск», «фактор риска», «в зоне риска», «это снижает риск X» (EN: low/high risk, cardiovascular risk, risk factor). Это относится и к ИМТ/WHtR/талии: их называем ПАТТЕРНОМ композиции тела («талия относительно роста выше типичного диапазона»), а не риском. Оценка риска — компетенция врача, а не велнес-разбора.\n' +
     '• При стойком/тревожном — спокойно направляй к врачу («это стоит обсудить с врачом»), без обещаний результата и без гарантий.\n' +
@@ -1639,7 +1644,7 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
         {
           type: 'text',
           text:
-            (isWellness ? (WELLNESS_SYSTEM_PROMPT + WELLNESS_KB) : SYSTEM_PROMPT) +
+            (useWellnessKB ? (WELLNESS_SYSTEM_PROMPT + WELLNESS_KB) : SYSTEM_PROMPT) +
             '\n\n════════════════════════════════════════\n' +
             'ЯЗЫК ОТВЕТА — КРИТИЧНО\n' +
             '════════════════════════════════════════\n' +
@@ -1710,7 +1715,8 @@ async function handleDayPlan(request, env, corsHeaders, ctx) {
   };
   const langName = langMap[lang] || 'English';
   const isWellness = ['vio', 'pro'].includes(String(tier || '').toLowerCase());
-  const base = isWellness ? (WELLNESS_SYSTEM_PROMPT + WELLNESS_KB) : SYSTEM_PROMPT;
+  const useWellnessKB = ['vio', 'pro', 'elite', 'expert'].includes(String(tier || '').toLowerCase());   // VIA-L EXPERT → углублённая велнес-KB
+  const base = useWellnessKB ? (WELLNESS_SYSTEM_PROMPT + WELLNESS_KB) : SYSTEM_PROMPT;
 
   const schema =
     '\n\n════════════════════════════════════════\n' +
@@ -1842,7 +1848,8 @@ async function handleAiMemory(request, env, corsHeaders, ctx) {
   };
   const langName = langMap[lang] || 'English';
   const isWellness = ['vio', 'pro'].includes(String(tier || '').toLowerCase());
-  const base = isWellness ? (WELLNESS_SYSTEM_PROMPT + WELLNESS_KB) : SYSTEM_PROMPT;
+  const useWellnessKB = ['vio', 'pro', 'elite', 'expert'].includes(String(tier || '').toLowerCase());   // VIA-L EXPERT → углублённая велнес-KB
+  const base = useWellnessKB ? (WELLNESS_SYSTEM_PROMPT + WELLNESS_KB) : SYSTEM_PROMPT;
 
   const schema =
     '\n\n════════════════════════════════════════\n' +
