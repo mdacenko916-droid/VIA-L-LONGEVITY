@@ -864,6 +864,11 @@ export default {
       if (path === '/advisor-chat')     return handleAdvisorChat(request, env, corsHeaders);
       if (path === '/weekly-report')    return handleWeeklyReport(request, env, corsHeaders, ctx);
 
+      // VIA-L EXPERT — внутренний канал связи клиент↔нутрициолог (НЕ Telegram для клиента).
+      // Авторизация = код доступа (как /weekly-report). Сторона нутрициолога — в кабинете (вкладка «Переписка»).
+      if (path === '/expert/thread')    return handleExpertThread(request, env, corsHeaders);
+      if (path === '/expert/message')   return handleExpertMessage(request, env, corsHeaders, ctx);
+
       // Кабинет нутрициолога (CRM на D1) — см. docs/CABINET-MODEL.md
       if (path === '/cabinet-auth')        return handleCabinetAuth(request, env, corsHeaders);
       if (path === '/cabinet/clients')     return handleCabinetClients(request, env, corsHeaders);
@@ -2036,6 +2041,51 @@ async function cabinetIngestWeekly(env, code, text, lang) {
   if (d.breakdowns.length > 50) d.breakdowns = d.breakdowns.slice(-50);
   await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?')
     .bind(JSON.stringify(d), Date.now(), code).run();
+}
+
+// ─────────────────────────────────────────────────────────────
+// VIA-L EXPERT — внутренний канал связи (клиент ↔ карточка кабинета).
+// Модель сообщения (как в кабинете): {dir:'in'(от клиента)|'out'(от нутрициолога), date, text, source}.
+// Нутрициолог читает/отвечает во вкладке «Переписка» кабинета (его 'out'-сообщения клиент видит здесь).
+// Авторизация = код доступа (тот же секрет, что и для маршрута отчёта в карточку).
+// ─────────────────────────────────────────────────────────────
+async function handleExpertThread(request, env, corsHeaders){
+  const code = String(new URL(request.url).searchParams.get('code') || '').trim().toUpperCase();
+  if(!code) return jsonResponse({ ok:false, error:'no_code' }, corsHeaders, 400);
+  if(!env.DB) return jsonResponse({ ok:true, messages:[] }, corsHeaders);
+  const row = await env.DB.prepare('SELECT data FROM clients WHERE code=?').bind(code).first();
+  if(!row) return jsonResponse({ ok:false, error:'not_found' }, corsHeaders, 404);
+  let d = {}; try{ d = JSON.parse(row.data || '{}'); }catch(_){}
+  const msgs = Array.isArray(d.messages) ? d.messages : [];
+  // Клиенту отдаём только необходимое (без внутренних полей карточки).
+  const out = msgs.map(m => ({ dir: m.dir === 'out' ? 'out' : 'in', date: m.date || '', text: String(m.text || '') }));
+  return jsonResponse({ ok:true, messages: out }, corsHeaders);
+}
+
+async function handleExpertMessage(request, env, corsHeaders, ctx){
+  let body = {}; try{ body = await request.json(); }catch(_){}
+  const code = String(body.code || '').trim().toUpperCase();
+  const text = String(body.text || '').trim().slice(0, 4000);
+  if(!code || !text) return jsonResponse({ ok:false, error:'missing_fields' }, corsHeaders, 400);
+  if(!env.DB) return jsonResponse({ ok:false, error:'d1_missing' }, corsHeaders, 500);
+  const row = await env.DB.prepare('SELECT data FROM clients WHERE code=?').bind(code).first();
+  if(!row) return jsonResponse({ ok:false, error:'not_found' }, corsHeaders, 404);   // карточка есть только у оплаченного VIA-L EXPERT
+  let d = {}; try{ d = JSON.parse(row.data || '{}'); }catch(_){}
+  if(!Array.isArray(d.messages)) d.messages = [];
+  d.messages.push({ dir:'in', date: new Date().toISOString().slice(0,10), text, source:'app' });
+  if(d.messages.length > 300) d.messages = d.messages.slice(-300);
+  await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?')
+    .bind(JSON.stringify(d), Date.now(), code).run();
+  // Пинг нутрициологу в его топик (он остаётся в Telegram как оператор) — если топик известен.
+  if(ctx && env.EXPERT_DRAFTS){
+    ctx.waitUntil((async()=>{
+      try{
+        const topicId = await env.EXPERT_DRAFTS.get('code_topic:'+code);
+        if(topicId) await careSend(env, env.NUTRITIONIST_GROUP_ID, '💬 Новое сообщение от клиента в приложении:\n' + text, { message_thread_id: Number(topicId) });
+      }catch(_){}
+    })());
+  }
+  return jsonResponse({ ok:true }, corsHeaders);
 }
 
 // ─────────────────────────────────────────────────────────────
