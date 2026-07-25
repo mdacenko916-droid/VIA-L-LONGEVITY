@@ -866,7 +866,7 @@ export default {
 
       // VIA-L EXPERT — внутренний канал связи клиент↔нутрициолог (НЕ Telegram для клиента).
       // Авторизация = код доступа (как /weekly-report). Сторона нутрициолога — в кабинете (вкладка «Переписка»).
-      if (path === '/expert/thread')    return handleExpertThread(request, env, corsHeaders);
+      if (path === '/expert/thread')    return handleExpertThread(request, env, corsHeaders, ctx);
       if (path === '/expert/message')   return handleExpertMessage(request, env, corsHeaders, ctx);
 
       // Кабинет нутрициолога (CRM на D1) — см. docs/CABINET-MODEL.md
@@ -2049,16 +2049,40 @@ async function cabinetIngestWeekly(env, code, text, lang) {
 // Нутрициолог читает/отвечает во вкладке «Переписка» кабинета (его 'out'-сообщения клиент видит здесь).
 // Авторизация = код доступа (тот же секрет, что и для маршрута отчёта в карточку).
 // ─────────────────────────────────────────────────────────────
-async function handleExpertThread(request, env, corsHeaders){
+async function handleExpertThread(request, env, corsHeaders, ctx){
   const code = String(new URL(request.url).searchParams.get('code') || '').trim().toUpperCase();
   if(!code) return jsonResponse({ ok:false, error:'no_code' }, corsHeaders, 400);
   if(!env.DB) return jsonResponse({ ok:true, messages:[] }, corsHeaders);
-  const row = await env.DB.prepare('SELECT data FROM clients WHERE code=?').bind(code).first();
+  const row = await env.DB.prepare('SELECT data, specialist_id FROM clients WHERE code=?').bind(code).first();
   if(!row) return jsonResponse({ ok:false, error:'not_found' }, corsHeaders, 404);
   let d = {}; try{ d = JSON.parse(row.data || '{}'); }catch(_){}
   const msgs = Array.isArray(d.messages) ? d.messages : [];
-  // Клиенту отдаём только необходимое (без внутренних полей карточки).
-  const out = msgs.map(m => ({ dir: m.dir === 'out' ? 'out' : 'in', date: m.date || '', text: String(m.text || '') }));
+  const clientLang = String(d.lang || '').toLowerCase();
+  // Язык нутрициолога карточки — чтобы перевести его out-ответы на язык клиента.
+  let spLang = 'ru';
+  if(row.specialist_id != null){
+    try{ const sp = await env.DB.prepare('SELECT lang FROM specialists WHERE id=?').bind(row.specialist_id).first(); if(sp && sp.lang) spLang = String(sp.lang).toLowerCase(); }catch(_){}
+  }
+  let dirty = false;
+  const out = [];
+  for(const m of msgs){
+    const dir = m.dir === 'out' ? 'out' : 'in';
+    let text = String(m.text || '');
+    // Переводим ТОЛЬКО ответы нутрициолога (out) и ТОЛЬКО при разных языках. Кэш в m.tr[<lang>].
+    if(dir === 'out' && clientLang && spLang && clientLang !== spLang && text){
+      if(m.tr && m.tr[clientLang]){ text = m.tr[clientLang]; }
+      else {
+        const tr = await careTranslate(env, text, spLang, clientLang);
+        if(tr && tr !== text){ text = tr; m.tr = Object.assign({}, m.tr, { [clientLang]: tr }); dirty = true; }
+      }
+    }
+    out.push({ dir, date: m.date || '', text });
+  }
+  if(dirty){
+    // Кэш перевода: пишем data БЕЗ updated_at, чтобы не помечать карточку «свежеобновлённой».
+    const save = env.DB.prepare('UPDATE clients SET data=? WHERE code=?').bind(JSON.stringify(d), code).run();
+    if(ctx) ctx.waitUntil(save.catch(()=>{})); else await save.catch(()=>{});
+  }
   return jsonResponse({ ok:true, messages: out }, corsHeaders);
 }
 
