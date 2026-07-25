@@ -3259,6 +3259,21 @@ async function handleTgCallback(cq, env, corsHeaders) {
       draft.status      = 'approved';
       draft.approved_at = new Date().toISOString();
       draft.send_result = sendResult;
+      // VIA-L EXPERT внутренний канал: ответ нутрициолога → в тред карточки (клиент увидит в чате приложения;
+      // PDF по-прежнему уходит на email). Храним оригинал (ru/uk) — перевод на язык клиента делает /expert/thread.
+      if (env.DB && draft.code) {
+        try {
+          const _cc = String(draft.code).toUpperCase();
+          const cr = await env.DB.prepare('SELECT data FROM clients WHERE code=?').bind(_cc).first();
+          if (cr) {
+            let cd = {}; try { cd = JSON.parse(cr.data || '{}'); } catch(_){}
+            if (!Array.isArray(cd.messages)) cd.messages = [];
+            cd.messages.push({ dir:'out', date: new Date().toISOString().slice(0,10), text: String(draft.nutritionist_reply||''), source:'pdf' });
+            if (cd.messages.length > 300) cd.messages = cd.messages.slice(-300);
+            await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?').bind(JSON.stringify(cd), Date.now(), _cc).run();
+          }
+        } catch(_){}
+      }
       await tgEditMessage(env, chatId, messageId,
         '✅ <b>Отправлено клиенту</b>' +
         '\n\nКлиент: <code>' + esc(draft.client_email) + '</code>' +
