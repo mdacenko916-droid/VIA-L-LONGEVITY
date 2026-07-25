@@ -5417,7 +5417,7 @@ const REMIND_NO_DATA_DAYS = 5;
 function ipLinkFor(product, tier){
   if(product !== 'interpreter') return '';
   const t = String(tier || '').toUpperCase();
-  if(t.includes('ELITE'))  return 'https://via-l.com/interpreter/interpreter-elite.html';
+  if(t.includes('ELITE'))  return 'https://via-l.com/interpreter/interpreter-via-l-expert.html';   // VIA-L EXPERT (клон via-l-прохода)
   return 'https://via-l.com/interpreter';
 }
 
