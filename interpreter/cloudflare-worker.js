@@ -785,7 +785,6 @@ const HOTMART_PRODUCTS = {
   7706370: { program: 'Estrogen',   plan: 'Повна 12 тиж',  price: '€590' },
   // Interpreter tariffs
   7838739: { type: 'interpreter', tier: 'PRO',       price: '$29/мес' },
-  7838826: { type: 'interpreter', tier: 'EXPERT',    price: '€79/мес' },
   7838876: { type: 'interpreter', tier: 'ELITE-8W',  price: '€390' },
   7838925: { type: 'interpreter', tier: 'ELITE-12W', price: '€590' },
 };
@@ -1059,7 +1058,7 @@ async function handleHotmartWebhook(request, env, corsHeaders) {
 
 // ── Interpreter purchase: assign code + email buyer ───────────
 async function handleInterpreterPurchase(product, buyerName, buyerEmail, lang, env, corsHeaders) {
-  const TIER_NAMES = { PRO: 'PRO', EXPERT: 'PRO+EXPERT', 'ELITE-8W': 'ELITE 8w', 'ELITE-12W': 'ELITE 12w' };
+  const TIER_NAMES = { PRO: 'PRO', 'ELITE-8W': 'VIA-L EXPERT · 8 нед', 'ELITE-12W': 'VIA-L EXPERT · 12 нед' };
   const tierName = TIER_NAMES[product.tier] || product.tier;
   const langFlag = { uk: '🇺🇦', ru: '🇷🇺', es: '🇪🇸', en: '🇬🇧', de: '🇩🇪', pt: '🇧🇷', fr: '🇫🇷', pl: '🇵🇱', it: '🇮🇹', he: '🇮🇱', ja: '🇯🇵', ko: '🇰🇷' }[lang] || '🌐';
 
@@ -5330,7 +5329,6 @@ function ipLinkFor(product, tier){
   if(product !== 'interpreter') return '';
   const t = String(tier || '').toUpperCase();
   if(t.includes('ELITE'))  return 'https://via-l.com/interpreter/interpreter-elite.html';
-  if(t.includes('EXPERT')) return 'https://via-l.com/interpreter/interpreter-pro-expert.html';
   return 'https://via-l.com/interpreter';
 }
 
