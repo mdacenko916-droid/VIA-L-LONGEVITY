@@ -2374,6 +2374,7 @@ try{ if(new URLSearchParams(location.search).get('vendors')==='1'){ var _dvb=doc
             <div class="chip"><input type="checkbox" id="pmss4" value="sweet_craving" onchange="_giNone(this,'pms-list')"><label for="pmss4" data-t="pmsy_crav">🍫 Тяга к сладкому или усиление аппетита</label></div>
             <div class="chip"><input type="checkbox" id="pmss1" value="irritability" onchange="_giNone(this,'pms-list')"><label for="pmss1" data-t="pmsy_irrit">😣 Раздражительность</label></div>
             <div class="chip"><input type="checkbox" id="pmss9" value="gi_heaviness" onchange="_giNone(this,'pms-list')"><label for="pmss9" data-t="pmsy_bloat">🫧 Ощущение наполненности</label></div>
+            <div class="chip"><input type="checkbox" id="pmss6" value="headache" onchange="_giNone(this,'pms-list')"><label for="pmss6" data-t="pmsy_migraine">🤕 Головная боль / мигрень</label></div>
           </div>
         </div>
         <div class="input-group">
@@ -3479,6 +3480,7 @@ const _PMSK={
   pmsy_fatigue:{en:"Low energy",ru:"Снижение энергии",uk:"Зниження енергії",es:"Baja energía",de:"Wenig Energie",pt:"Baixa energia",fr:"Basse énergie",pl:"Niska energia",it:"Poca energia",he:"אנרגיה נמוכה",ja:"エネルギー低下",ko:"낮은 에너지"},
   pmsy_head:{en:"Head tension / heaviness",ru:"Тяжесть или напряжение в голове",uk:"Тяжкість або напруження в голові",es:"Tensión o pesadez en la cabeza",de:"Kopfspannung / Schweregefühl",pt:"Tensão ou peso na cabeça",fr:"Tension ou lourdeur à la tête",pl:"Napięcie lub ciężkość głowy",it:"Tensione o pesantezza alla testa",he:"מתח או כובד בראש",ja:"頭の張り・重さ",ko:"머리 긴장 / 무거움"},
   pmsy_bloat:{en:"🫧 Feeling of fullness",ru:"🫧 Ощущение наполненности",uk:"🫧 Відчуття наповненості",es:"🫧 Sensación de saciedad",de:"🫧 Völlegefühl",pt:"🫧 Sensação de saciedade",fr:"🫧 Sensation de satiété",pl:"🫧 Uczucie pełności",it:"🫧 Sensazione di pienezza",he:"🫧 תחושת מלאות",ja:"🫧 満腹感",ko:"🫧 포만감"},
+  pmsy_migraine:{en:"🤕 Headache / migraine",ru:"🤕 Головная боль / мигрень",uk:"🤕 Головний біль / мігрень",es:"🤕 Dolor de cabeza / migraña",de:"🤕 Kopfschmerzen / Migräne",pt:"🤕 Dor de cabeça / enxaqueca",fr:"🤕 Mal de tête / migraine",pl:"🤕 Ból głowy / migrena",it:"🤕 Mal di testa / emicrania",he:"🤕 כאב ראש / מיגרנה",ja:"🤕 頭痛・片頭痛",ko:"🤕 두통 / 편두통"},
   pmsy_sleep:{en:"Sleep shifts",ru:"Изменения сна",uk:"Зміни сну",es:"Cambios en el sueño",de:"Schlafveränderungen",pt:"Mudanças no sono",fr:"Changements du sommeil",pl:"Zmiany snu",it:"Cambiamenti del sonno",he:"שינויים בשינה",ja:"睡眠の変化",ko:"수면 변화"},
   pmsy_none:{en:"✨ None of the above",ru:"✨ Ничего из перечисленного",uk:"✨ Нічого з переліченого",es:"✨ Ninguno de los anteriores",de:"✨ Nichts davon",pt:"✨ Nenhum dos acima",fr:"✨ Aucun de ces symptômes",pl:"✨ Żaden z powyższych",it:"✨ Nessuno dei precedenti",he:"✨ אף אחד מהנ״ל",ja:"✨ いずれもない",ko:"✨ 해당 없음"},
 };
@@ -4490,7 +4492,7 @@ function renderCard(){
   var SUP=['sup1','sup2','sup3','sup4','sup5','sup6','sup7','sup8','sup9','sup10','sup11'],MED=['med2','med3','med4','med5'],
       GI=['gi1','gi2','gi3','gi4','gi5'],ACT=['act1','act2','act3','act4','act5','act6'],
       GSM=['gsm1','gsm2','gsm3','gsm4','gsm5','gsm6','gsm7'],BONE=['bone1','bone2','bone3','bone5'],
-      BREAST=['breast1','breast2','breast3','breast4'],PMS=['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9'],CORT=['cort2','cort3','cort4','cort5','cort6','cort7'];
+      BREAST=['breast1','breast2','breast3','breast4'],PMS=['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9','pmss6'],CORT=['cort2','cort3','cort4','cort5','cort6','cort7'];
 
   // ── HERO (профиль) ──
   var g=isMale?t('gender_m'):P.gender==='female'?t('gender_f'):'';
@@ -5444,7 +5446,7 @@ function saveProfile(){
       chronic_stress:getRadio('chronic_stress')||P.chronic_stress||'',
       cortisol_symp:keepArr(gc(['cort2','cort3','cort4','cort5','cort6','cort7']),P.cortisol_symp),
       // 6. ПМС-профиль
-      pms_symptoms:keepArr(gc(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9']),P.pms_symptoms),
+      pms_symptoms:keepArr(gc(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9','pmss6']),P.pms_symptoms),
       // 7. Питание
       eating_pattern:getRadio('eating_pattern')||P.eating_pattern||'',
       protein_intake:getRadio('protein_intake')||P.protein_intake||'',
@@ -7287,8 +7289,8 @@ function _showResultsInner(){
     last_period:(function(){var ci=cycleInfo();if(ci)return ci.daysSince>365?'year':ci.daysSince>90?'months':'recent';var ph=getRadio('phase');return ph==='post'?'year':ph==='meno'?'months':'recent';})(),
     cycle_day:(getRadio('cycle_status')==='absent'?null:(cycleInfo()||{}).day||null),
     cycle_phase:(getRadio('cycle_status')==='absent'?null:(cycleInfo()||{}).phase||null),
-    pms:(function(){var s=getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9']).filter(function(v){return v!=='none_pms';});return s.length>=5?'severe':s.length>=3?'moderate':s.length>=1?'mild':'none';})(),
-    pms_symptoms:getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9']),
+    pms:(function(){var s=getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9','pmss6']).filter(function(v){return v!=='none_pms';});return s.length>=5?'severe':s.length>=3?'moderate':s.length>=1?'mild':'none';})(),
+    pms_symptoms:getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9','pmss6']),
     vitality:getRadio('vitality'),
     gsm:getChecked(['gsm1','gsm2','gsm3','gsm4','gsm5','gsm6','gsm7']),
     horm_female:(typeof _hormMap==='function'?_hormMap('horm-acc'):{}),
