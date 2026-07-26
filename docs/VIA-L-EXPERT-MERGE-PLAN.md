@@ -74,12 +74,14 @@ Hotmart product-ID (7838876/7838925) **оставляем** — не трога�
 - [ ] ⏳ ХВОСТ (позже, по владельцу): текст описания лендинга — подзаголовок «Два рівні живого супроводу»
       + описания карточки; осиротевшие i18n-ключи `plan_exp_*` (×12) вычистить в том же проходе.
 
-**`interpreter/apps-script.js` (Google Apps Script, генерация/валидация кодов):**
-- [ ] EXPERT-подписка: `SUBSCRIPTION_DAYS`/`EXPERT_MAX`/`EXPERT_WIN_MS`/`EXPERT_COOL_MS` (L27-30) —
-      оценить: ELITE использует свой счётчик (8/12 разборов), EXPERT (2/окно) уходит. Убрать EXPERT-ветку.
-- [ ] `DEV_CODES` (L46): убрать `VIAL-EXPERT-2024`, `VIAL-EXPERT-ONB-2024`.
-- [ ] Ветки онбординга/активации «PRO+EXPERT» (L180, L253 и др.) — оставить только ELITE.
-      ⚠️ Это серверный код (деплоится отдельно в Apps Script, не через git push) — синхронизировать вручную.
+**`interpreter/apps-script.js` (Google Apps Script) — ✅ КОД ГОТОВ 2026-07-26, ⚠️ ЖДЁТ РУЧНОГО ДЕПЛОЯ:**
+- [x] `DEV_CODES`: убраны `VIAL-EXPERT-2024`, `VIAL-EXPERT-ONB-2024`.
+- [x] `EXPERT_MAX` удалён (использовался только веткой EXPERT). Общие `EXPERT_WIN_MS`/`EXPERT_COOL_MS`/
+      `SUBSCRIPTION_DAYS` оставлены (их юзают PRO/ELITE).
+- [x] `getPlanLimits`: fallback-план EXPERT/легаси-MAX → **ELITE-8W** (преемник VIA-L EXPERT), не сломает
+      легаси-клиентов. Письма нутрициологу → «VIA-L EXPERT-разбор». Комментарии-тарифы обновлены.
+- ⚠️ **`apps-script.js` НЕ деплоится через git push** — код в репо обновлён, но владельцу нужно скопировать
+      его в редактор Google Apps Script и нажать Deploy (иначе изменения не применятся на сервере кодов).
 
 **Прочее:**
 - [ ] `sitemap.xml` / любые ссылки на pro-expert — проверить.
