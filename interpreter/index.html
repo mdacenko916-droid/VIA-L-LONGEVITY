@@ -957,7 +957,7 @@ const observer = new IntersectionObserver((entries) => {
     }
   });
 }, { threshold: 0.1 });
-observer.observe(grid);
+if (grid) observer.observe(grid);   // #devicesGrid может отсутствовать → без guard observe(null) рушил весь скрипт (и ломал переключатель языков через TDZ 'lang')
 
 // Oura integration mode — switch to 'production' once OAuth/real token is wired.
 const OURA_MODE = 'sandbox';
