@@ -98,12 +98,12 @@
         <div class="hint-row">€79 / мес · 2 разбора нутрициолога / 30 дней</div>
       </div>
       <div class="field">
-        <label for="count8w">ELITE 8 недель <span class="badge badge-8w">VL-8-</span></label>
+        <label for="count8w">VIA-L EXPERT · 8W <span class="badge badge-8w">VL-8-</span></label>
         <input type="number" id="count8w" value="30" min="0" max="500" placeholder="0">
         <div class="hint-row">€390 · 8 PDF-отчётов · 56 дней</div>
       </div>
       <div class="field">
-        <label for="count12w">ELITE 12 недель <span class="badge badge-12w">VL-12-</span></label>
+        <label for="count12w">VIA-L EXPERT · 12W <span class="badge badge-12w">VL-12-</span></label>
         <input type="number" id="count12w" value="30" min="0" max="500" placeholder="0">
         <div class="hint-row">€590 · 12 PDF-отчётов · 84 дня</div>
       </div>
@@ -111,7 +111,7 @@
     <button type="button" class="btn btn-gold" onclick="generate()">Сгенерировать →</button>
     <div class="hint">
       <strong>Формат:</strong> 4 префикса + 8 случайных символов (A–Z, 2–9 — без O/0/I/1/L).<br>
-      Тарифы в Google Sheet (колонка B): <code>PRO</code> · <code>EXPERT</code> · <code>ELITE-8W</code> · <code>ELITE-12W</code>.
+      Тарифы в Google Sheet (колонка B): <code>PRO</code> · <code>VIAL-EXPERT-8W</code> · <code>VIAL-EXPERT-12W</code>.
     </div>
   </div>
 
@@ -120,8 +120,8 @@
     <div class="stats">
       <div class="stat"><div class="stat-val pro"    id="statPro">0</div><div class="stat-lbl">PRO</div></div>
       <div class="stat"><div class="stat-val expert" id="statExpert">0</div><div class="stat-lbl">PRO+EXPERT</div></div>
-      <div class="stat"><div class="stat-val w8"     id="stat8w">0</div><div class="stat-lbl">ELITE-8W</div></div>
-      <div class="stat"><div class="stat-val w12"    id="stat12w">0</div><div class="stat-lbl">ELITE-12W</div></div>
+      <div class="stat"><div class="stat-val w8"     id="stat8w">0</div><div class="stat-lbl">VIAL-EXPERT-8W</div></div>
+      <div class="stat"><div class="stat-val w12"    id="stat12w">0</div><div class="stat-lbl">VIAL-EXPERT-12W</div></div>
       <div class="stat"><div class="stat-val total"  id="statTotal">0</div><div class="stat-lbl">Всего</div></div>
     </div>
 
@@ -129,8 +129,8 @@
       <button type="button" class="tab active" data-tab="csv"    onclick="showTab(this)">CSV для Google Sheets</button>
       <button type="button" class="tab"        data-tab="pro"    onclick="showTab(this)">TXT · Hotmart PRO</button>
       <button type="button" class="tab"        data-tab="expert" onclick="showTab(this)">TXT · Hotmart PRO+EXPERT</button>
-      <button type="button" class="tab"        data-tab="w8"     onclick="showTab(this)">TXT · Hotmart ELITE-8W</button>
-      <button type="button" class="tab"        data-tab="w12"    onclick="showTab(this)">TXT · Hotmart ELITE-12W</button>
+      <button type="button" class="tab"        data-tab="w8"     onclick="showTab(this)">TXT · Hotmart VIAL-EXPERT-8W</button>
+      <button type="button" class="tab"        data-tab="w12"    onclick="showTab(this)">TXT · Hotmart VIAL-EXPERT-12W</button>
     </div>
 
     <textarea id="output" readonly></textarea>
@@ -142,8 +142,8 @@
 
     <div class="hint" style="margin-top:22px;">
       <strong>Шаг 1 — Google Sheets:</strong> Загрузи CSV. Колонки: <code>Код | Тариф | Статус | Дата активации | Дата истечения | Запросы | Reports sent</code>.<br>
-      <strong>Шаг 2 — Hotmart:</strong> для каждого продукта (PRO / PRO+EXPERT / ELITE-8W / ELITE-12W) → Conteúdo → Senhas de Acesso → вставь соответствующий TXT.<br>
-      <strong>Срок действия:</strong> PRO/EXPERT = 30 дней с активации · ELITE-8W = 56 дней · ELITE-12W = 84 дня (ставится автоматически Apps Script-ом при первом входе).
+      <strong>Шаг 2 — Hotmart:</strong> для каждого продукта (PRO / VIA-L EXPERT · 8W / VIA-L EXPERT · 12W) → Conteúdo → Senhas de Acesso → вставь соответствующий TXT.<br>
+      <strong>Срок действия:</strong> PRO = 30 дней с активации · VIAL-EXPERT-8W = 56 дней · VIAL-EXPERT-12W = 84 дня (ставится автоматически Apps Script-ом при первом входе).
     </div>
   </div>
 </div>
@@ -156,8 +156,8 @@ const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const TARIFFS = {
   pro:    { prefix: 'VL-P',  planName: 'PRO',       inputId: 'countPro',    statId: 'statPro'    },
   expert: { prefix: 'VL-X',  planName: 'EXPERT',    inputId: 'countExpert', statId: 'statExpert' },
-  w8:     { prefix: 'VL-8',  planName: 'ELITE-8W',  inputId: 'count8w',     statId: 'stat8w'     },
-  w12:    { prefix: 'VL-12', planName: 'ELITE-12W', inputId: 'count12w',    statId: 'stat12w'    }
+  w8:     { prefix: 'VL-8',  planName: 'VIAL-EXPERT-8W',  inputId: 'count8w',     statId: 'stat8w'     },
+  w12:    { prefix: 'VL-12', planName: 'VIAL-EXPERT-12W', inputId: 'count12w',    statId: 'stat12w'    }
 };
 
 let generated = { pro: [], expert: [], w8: [], w12: [] };

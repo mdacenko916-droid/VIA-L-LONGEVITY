@@ -18,22 +18,20 @@
 // Статусы: FREE → ACTIVE → EXPIRED
 //
 // ТАРИФЫ (значения колонки B; регистр не важен, проверяется по подстроке):
-//   PRO       — Pro, без Expert-запросов; срок 30 дней.
-//   ELITE-8W  — VIA-L EXPERT 8 недель (€390): 56 дней, до 8 отчётов всего, cooldown 7 дней.
-//   ELITE-12W — VIA-L EXPERT 12 недель (€590): 84 дня, до 12 отчётов всего, cooldown 7 дней.
-//   (Тариф EXPERT €79 «Pro+Expert» РЕТАЙРНУТ при слиянии 2026-07-25 → преемник ELITE-8W; см.
-//    docs/VIA-L-EXPERT-MERGE-PLAN.md. Внутр. код тарифа остаётся ELITE-8W/12W.)
+//   PRO             — Pro, без Expert-запросов; срок 30 дней.
+//   VIAL-EXPERT-8W  — VIA-L EXPERT · 8W (€390): 56 дней, до 8 отчётов всего, cooldown 7 дней.
+//   VIAL-EXPERT-12W — VIA-L EXPERT · 12W (€590): 84 дня, до 12 отчётов всего, cooldown 7 дней.
 // ══════════════════════════════════════════════════════════════
 
 var SUBSCRIPTION_DAYS = 30;                         // дефолт срока подписки PRO
 var EXPERT_WIN_MS     = 30 * 24 * 60 * 60 * 1000;   // окно PRO (30 дней; исторически для расчёта)
 var EXPERT_COOL_MS    = 7  * 24 * 60 * 60 * 1000;   // cooldown между разборами (7 дней; ELITE)
 
-// ELITE — две вариации программы
-var ELITE_8W_DAYS  = 56;   // 8 недель
-var ELITE_12W_DAYS = 84;   // 12 недель
-var ELITE_8W_MAX   = 8;    // 8 отчётов за программу
-var ELITE_12W_MAX  = 12;   // 12 отчётов за программу
+// VIA-L EXPERT — две вариации программы
+var EXPERT_8W_DAYS  = 56;   // 8 недель
+var EXPERT_12W_DAYS = 84;   // 12 недель
+var EXPERT_8W_MAX   = 8;    // 8 отчётов за программу
+var EXPERT_12W_MAX  = 12;   // 12 отчётов за программу
 
 var MARINA_EMAIL = 'viaelcom@gmail.com';
 
@@ -44,7 +42,7 @@ var BACKSTAGE_DRAFT_URL = 'https://interpreter.viaelcom.workers.dev/draft';
 // Dev-коды — обходят проверку по таблице, не ограничены лимитом.
 // Используем только для разработки/тестирования бота.
 var DEV_CODES = ['VIAL-PRO-2024',
-                 'VIAL-ELITE-2024', 'VIAL-ELITE-8W', 'VIAL-ELITE-12W'];
+                 'VIAL-EXPERT-8W', 'VIAL-EXPERT-12W'];
 
 // ── GET: валидация кода ИЛИ приём Expert-запроса ─────────────
 function doGet(e) {
@@ -130,10 +128,9 @@ function handleExpertRequest(p) {
     if (rowStatus === 'EXPIRED') return respond({ ok: false, reason: 'expired' });
 
     // Лимиты по тарифу (см. getPlanLimits):
-    //   PRO        — Expert-запросы НЕДОСТУПНЫ (отказ no_expert_access).
-    //   EXPERT     — 2 разбора в окне 30 дней + cooldown 7 дней.
-    //   ELITE-8W   — 8 отчётов на программу (56 дней)  + cooldown 7 дней.
-    //   ELITE-12W  — 12 отчётов на программу (84 дня) + cooldown 7 дней.
+    //   PRO             — Expert-запросы НЕДОСТУПНЫ (отказ no_expert_access).
+    //   VIAL-EXPERT-8W  — 8 отчётов на программу (56 дней)  + cooldown 7 дней.
+    //   VIAL-EXPERT-12W — 12 отчётов на программу (84 дня) + cooldown 7 дней.
     var limits = getPlanLimits(rowPlan);
     if (!limits.hasExpert) {
       return respond({ ok: false, reason: 'no_expert_access', plan: limits.plan });
@@ -291,7 +288,6 @@ function validateCode(code) {
 // один раз с первым отчётом ELITE-клиента.
 function sendExpertEmail(name, email, question, d, lang, code, onboarding) {
   var date = new Date().toLocaleString('ru-RU');
-  var isElite = code.indexOf('ELITE') !== -1;
   var subject = 'VIA-L EXPERT-разбор · ' + (name || 'Клиент') + ' · ' + new Date().toLocaleDateString('ru-RU');
 
   var b = '═══════════════════════════════════════\n';
@@ -426,7 +422,7 @@ function sendExpertEmail(name, email, question, d, lang, code, onboarding) {
   // ELITE onboarding — анкета приходит ОДИН РАЗ с первым отчётом ELITE-клиента.
   if (onboarding) {
     b += '\n═══════════════════════════════════════\n';
-    b += '  ELITE ONBOARDING · НАЧАЛЬНАЯ АНКЕТА\n';
+    b += '  VIA-L EXPERT ONBOARDING · НАЧАЛЬНАЯ АНКЕТА\n';
     b += '═══════════════════════════════════════\n';
     var addOnb = function (label, val) {
       if (val === null || val === undefined || val === '') return;
@@ -515,14 +511,14 @@ var ANKETA_INVITE = {
 // PRO не имеет доступа к Expert-запросам (hasExpert=false).
 function getPlanLimits(plan) {
   var p = (plan || '').toString().toUpperCase().trim();
-  if (p.indexOf('ELITE-12') !== -1 || p === 'ELITE12W' || p === 'ELITE-12W') {
-    return { plan: 'ELITE-12W', subscriptionDays: ELITE_12W_DAYS,
-             max: ELITE_12W_MAX, windowMs: Infinity, cooldownMs: EXPERT_COOL_MS,
+  if (p.indexOf('EXPERT-12') !== -1 || p === 'VIAL-EXPERT-12W') {
+    return { plan: 'VIAL-EXPERT-12W', subscriptionDays: EXPERT_12W_DAYS,
+             max: EXPERT_12W_MAX, windowMs: Infinity, cooldownMs: EXPERT_COOL_MS,
              isElite: true, hasExpert: true };
   }
-  if (p.indexOf('ELITE') !== -1) {  // ELITE / ELITE-8W / ELITE8W → 8W
-    return { plan: 'ELITE-8W', subscriptionDays: ELITE_8W_DAYS,
-             max: ELITE_8W_MAX, windowMs: Infinity, cooldownMs: EXPERT_COOL_MS,
+  if (p.indexOf('EXPERT') !== -1) {  // VIAL-EXPERT / VIAL-EXPERT-8W → 8W
+    return { plan: 'VIAL-EXPERT-8W', subscriptionDays: EXPERT_8W_DAYS,
+             max: EXPERT_8W_MAX, windowMs: Infinity, cooldownMs: EXPERT_COOL_MS,
              isElite: true, hasExpert: true };
   }
   if (p === 'PRO') {
@@ -530,10 +526,9 @@ function getPlanLimits(plan) {
              max: 0, windowMs: EXPERT_WIN_MS, cooldownMs: EXPERT_COOL_MS,
              isElite: false, hasExpert: false };
   }
-  // По умолчанию (легаси EXPERT / старые MAX в существующих записях) → VIA-L EXPERT (ELITE-8W).
-  // Тариф EXPERT €79 ретайрнут при слиянии → его преемник = ELITE-8W (см. docs/VIA-L-EXPERT-MERGE-PLAN.md).
-  return { plan: 'ELITE-8W', subscriptionDays: ELITE_8W_DAYS,
-           max: ELITE_8W_MAX, windowMs: Infinity, cooldownMs: EXPERT_COOL_MS,
+  // По умолчанию (старые MAX-записи без явного тега) → VIA-L EXPERT · 8W.
+  return { plan: 'VIAL-EXPERT-8W', subscriptionDays: EXPERT_8W_DAYS,
+           max: EXPERT_8W_MAX, windowMs: Infinity, cooldownMs: EXPERT_COOL_MS,
            isElite: true, hasExpert: true };
 }
 

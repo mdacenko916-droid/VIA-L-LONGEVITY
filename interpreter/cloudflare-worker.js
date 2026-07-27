@@ -785,8 +785,10 @@ const HOTMART_PRODUCTS = {
   7706370: { program: 'Estrogen',   plan: 'Повна 12 тиж',  price: '€590' },
   // Interpreter tariffs
   7838739: { type: 'interpreter', tier: 'PRO',       price: '$29/мес' },
-  7838876: { type: 'interpreter', tier: 'ELITE-8W',  price: '€390' },
-  7838925: { type: 'interpreter', tier: 'ELITE-12W', price: '€590' },
+  // VIA-L EXPERT — Hotmart-продукты (2026-07-27). Внутр. тег tier = VIAL-EXPERT-8W/12W;
+  // ДОЛЖЕН совпадать с колонкой B в базе кодов (Google Sheet) и с apps-script.
+  8199953: { type: 'interpreter', tier: 'VIAL-EXPERT-8W',  price: '€390' },   // VIA-L EXPERT · 8W
+  8200155: { type: 'interpreter', tier: 'VIAL-EXPERT-12W', price: '€590' },   // VIA-L EXPERT · 12W
 };
 
 const PROGRAM_NAMES = {
@@ -1063,7 +1065,7 @@ async function handleHotmartWebhook(request, env, corsHeaders) {
 
 // ── Interpreter purchase: assign code + email buyer ───────────
 async function handleInterpreterPurchase(product, buyerName, buyerEmail, lang, env, corsHeaders) {
-  const TIER_NAMES = { PRO: 'PRO', 'ELITE-8W': 'VIA-L EXPERT · 8 нед', 'ELITE-12W': 'VIA-L EXPERT · 12 нед' };
+  const TIER_NAMES = { PRO: 'PRO', 'VIAL-EXPERT-8W': 'VIA-L EXPERT · 8W', 'VIAL-EXPERT-12W': 'VIA-L EXPERT · 12W' };
   const tierName = TIER_NAMES[product.tier] || product.tier;
   const langFlag = { uk: '🇺🇦', ru: '🇷🇺', es: '🇪🇸', en: '🇬🇧', de: '🇩🇪', pt: '🇧🇷', fr: '🇫🇷', pl: '🇵🇱', it: '🇮🇹', he: '🇮🇱', ja: '🇯🇵', ko: '🇰🇷' }[lang] || '🌐';
 
@@ -3578,7 +3580,7 @@ async function tgAnswerCallback(env, callbackQueryId, text, showAlert = false) {
 // анкета (поле onboarding в payload).
 function renderOnboardingBlock(onb) {
   if (!onb || typeof onb !== 'object') return [];
-  const out = ['', '🧬 <b>ELITE Onboarding — анамнез:</b>'];
+  const out = ['', '🧬 <b>VIA-L EXPERT Onboarding — анамнез:</b>'];
   const add = (label, val) => {
     if (!val) return;
     const text = Array.isArray(val) ? val.join(', ') : val.toString();
@@ -5259,9 +5261,8 @@ async function deliverAnketaProgram(env, intake, token, answers, lang, name, ema
 function cabinetTariffMeta(product, lang){
   const ukRu = (lang === 'uk' || lang === 'ru');
   if (product.type === 'interpreter') {
-    if (product.tier === 'EXPERT')    return { duration: 4,  format: 'pdf'  };           // 2 PDF / 30 дн
-    if (product.tier === 'ELITE-8W')  return { duration: 8,  format: ukRu ? 'zoom' : 'pdf' };
-    if (product.tier === 'ELITE-12W') return { duration: 12, format: ukRu ? 'zoom' : 'pdf' };
+    if (product.tier === 'VIAL-EXPERT-8W')  return { duration: 8,  format: ukRu ? 'zoom' : 'pdf' };
+    if (product.tier === 'VIAL-EXPERT-12W') return { duration: 12, format: ukRu ? 'zoom' : 'pdf' };
     return { duration: null, format: 'pdf' };                                            // PRO в кабинет не пишем
   }
   const plan = product.plan || '';
@@ -5424,7 +5425,7 @@ const REMIND_NO_DATA_DAYS = 5;
 function ipLinkFor(product, tier){
   if(product !== 'interpreter') return '';
   const t = String(tier || '').toUpperCase();
-  if(t.includes('ELITE'))  return 'https://via-l.com/interpreter/interpreter-via-l-expert.html';   // VIA-L EXPERT (клон via-l-прохода)
+  if(t.includes('EXPERT')) return 'https://via-l.com/interpreter/interpreter-via-l-expert.html';   // VIA-L EXPERT (клон via-l-прохода)
   return 'https://via-l.com/interpreter';
 }
 
