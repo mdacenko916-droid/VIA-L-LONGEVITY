@@ -1166,7 +1166,7 @@ function buildInterpreterEmailBody(name, tier, code, lang) {
     + `<div style="background:#F8F4EC;border:2px solid #C49A3C;border-radius:12px;padding:20px 32px;text-align:center;margin:24px 0">`
     + `<span style="font-family:monospace;font-size:26px;font-weight:700;letter-spacing:4px;color:#1A1008">${code}</span></div>`
     + `<p style="color:#666;font-size:14px">${t.save}</p>`
-    + `<a href="https://via-l.com/interpreter" style="display:inline-block;background:#C49A3C;color:#0a0800;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600">${t.cta} →</a>`;
+    + `<a href="${ipLinkFor('interpreter', tier)}" style="display:inline-block;background:#C49A3C;color:#0a0800;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600">${t.cta} →</a>`;
   return { subject: t.subj, html };
 }
 
