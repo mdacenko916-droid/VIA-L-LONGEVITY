@@ -3351,7 +3351,9 @@ function gateUnlock(access, code, plan){
   // что включает клин.режим + маршрут недельного отчёта в карточку кабинета нутрициолога.
   if(code) sessionStorage.setItem('viae_code', code);
   if(plan) sessionStorage.setItem('viae_plan', plan);   // 'VIAL-EXPERT-8W'/'VIAL-EXPERT-12W' — для счётчика разборов (шаг 3)
-  try{startFunnel();}catch(e){}   // показать всю стопку (профиль + блоки) сразу после входа
+  // Персист доступа между сессиями (веб-EXPERT: клиент вводит код один раз, не каждый заход).
+  try{ localStorage.setItem('viae_access', access); if(code)localStorage.setItem('viae_code', code); if(plan)localStorage.setItem('viae_plan', plan); }catch(e){}
+  try{ if(typeof _bootRoute==='function')_bootRoute(); else startFunnel(); }catch(e){ try{startFunnel();}catch(_){} }   // маршрут запуска после входа
 }
 
 function gateError(reason){
@@ -6560,7 +6562,25 @@ async function _iapRestoreClick(){
   if(!ok){ if(document.readyState!=='loading')showConsent(); else document.addEventListener('DOMContentLoaded',showConsent); }
   else { if(document.readyState!=='loading')_gateNext(); else document.addEventListener('DOMContentLoaded',_gateNext); }
 })();
-(function(){ function _start(){ try{_bootRoute();}catch(e){ try{startFunnel();}catch(_){} } } if(document.readyState!=='loading')_start(); else document.addEventListener('DOMContentLoaded',_start); })();   // пароль убран; маршрут запуска: сегодня уже пройдено→«Сегодня», иначе утренняя карточка / hero+анкета
+(function(){
+  // Гидратация доступа: sessionStorage либо перенос из localStorage (персист между сессиями).
+  function _hydrate(){ try{
+    if(sessionStorage.getItem('viae_access')==='MAX') return true;
+    if(localStorage.getItem('viae_access')==='MAX'){
+      sessionStorage.setItem('viae_access','MAX');
+      var c=localStorage.getItem('viae_code'); if(c)sessionStorage.setItem('viae_code',c);
+      var p=localStorage.getItem('viae_plan'); if(p)sessionStorage.setItem('viae_plan',p);
+      return true;
+    }
+  }catch(e){} return false; }
+  function _showGate(){ try{ var g=document.getElementById('gate'); if(g){g.style.opacity='';g.style.display='flex';} var sa=document.getElementById('scroll-area'); if(sa)sa.style.visibility='hidden'; }catch(e){} }
+  function _start(){ try{
+    // Веб-EXPERT (Hotmart): доступ по коду → гейт. Нативный app (Capacitor): доступ через IAP/consent — код не спрашиваем.
+    if(!window.Capacitor && !_hydrate()){ _showGate(); return; }
+    _bootRoute();
+  }catch(e){ try{startFunnel();}catch(_){} } }
+  if(document.readyState!=='loading')_start(); else document.addEventListener('DOMContentLoaded',_start);
+})();   // маршрут запуска: нет доступа (веб)→гейт кода; иначе сегодня/утренняя карточка/hero+анкета
 function goTo(n){
   window._curStep = n;   // запоминаем шаг — чтобы лейбл прогресса перевести при смене языка
   document.body.classList.remove('flow-mode'); if(typeof _hideFlowFooter==='function')_hideFlowFooter();
