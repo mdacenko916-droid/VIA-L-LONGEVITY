@@ -136,8 +136,8 @@ i.bottom-nav-icon{width:auto;height:auto;font-size:24px;line-height:1;color:var(
 
 html{
   height:100%;
-  height: -webkit-fill-available;   /* эталон VIA-L: заполняет весь экран standalone-PWA, включая зону home-индикатора (100dvh был короче → чёрная полоса снизу) */
-  overflow:hidden;   /* НЕ ставить background-color на html: непрозрачный корень на iOS перекрывает body::before (z-index:-1) → фон-ночь исчезает. Тёмный backstop держит body. */
+  height: -webkit-fill-available;   /* эталон VIA-L: браузерный вид */
+  overflow:hidden;   /* ⚠️ background-color на html НЕ ставить: дважды проверено скринами (21:57 и после 78f6e82) — на iOS-PWA он прячет фото body::before */
 }
 html,body{
   max-width:100%;
@@ -161,7 +161,7 @@ body::before{
   background-color:#10131A;   /* тёмная подложка слоя неба: до загрузки jpg — тёмный, не белый */
   background-image:url('./images-bg/night-pro.jpg');
   background-size:cover;background-position:center;
-  transform:translateZ(0);-webkit-transform:translateZ(0);will-change:transform;
+  transform:translateZ(0);-webkit-transform:translateZ(0);will-change:transform;   /* как на рабочих скринах 22:11/22:37 — фон стабилен */
 }
 @media (max-width:768px){
   body::before{
@@ -215,6 +215,17 @@ body::before{
 #bottombar{
   flex:0 0 auto;
   z-index:200;
+}
+
+/* ── Standalone-PWA (установленное приложение): «вьюпорт» короче физического экрана,
+   всё привязанное к нему (#app, фото body::before) не достаёт до низа → чёрная полоса
+   под футером. 100vh = полная высота экрана, но ТОЛЬКО в standalone — в браузере 100vh
+   наоборот выше видимой зоны и роняет футер под панель Safari (проверено 2026-07-28).
+   Блок стоит ПОСЛЕ базовых правил, чтобы перебить их bottom:0/height. ── */
+@media (display-mode: standalone){
+  html,body{height:100vh;}
+  #app{top:0;bottom:auto;height:100vh;}
+  body::before{top:0;bottom:auto;height:100vh;}
 }
 
 .bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
