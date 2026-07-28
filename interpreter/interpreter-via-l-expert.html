@@ -137,6 +137,7 @@ i.bottom-nav-icon{width:auto;height:auto;font-size:24px;line-height:1;color:var(
 html{
   height:100%;
   height: -webkit-fill-available;   /* эталон VIA-L: заполняет весь экран standalone-PWA, включая зону home-индикатора (100dvh был короче → чёрная полоса снизу) */
+  background-color:#10131A;          /* тёмный корень: если что-то и проглянет за пределами #app — тёмное, не чёрное */
   overflow:hidden;
 }
 html,body{
@@ -186,6 +187,7 @@ body::before{
   position:absolute;
   top:0;left:0;right:0;
   z-index:600;
+  padding-top:env(safe-area-inset-top,0px);   /* standalone-PWA: переключатель языка не заезжает под статус-бар (батарея/антенна) */
   transition:transform .3s ease, opacity .3s ease;   /* шапка «Анализ VIA-L» уезжает при скролле разбора вниз */
   background:transparent;
   -webkit-backdrop-filter:none;
@@ -199,7 +201,7 @@ body::before{
 
 /* ── Scroll area — fills remaining space ── */
 #scroll-area{
-  padding-top:72px;          /* как VIO: лого поднят (96→72) — сбалансированный воздух от шапки */
+  padding-top:calc(72px + env(safe-area-inset-top,0px));   /* +safe-area сверху (standalone-PWA: контент ниже статус-бара) */
   flex:1 1 auto;
   overflow-y:auto;
   overflow-x:clip;
@@ -277,7 +279,7 @@ body::before{
 /* ── Bottom Navigation ── */
 .bottom-nav{
   display:flex;align-items:center;justify-content:space-around;
-  padding:8px 16px 10px;   /* ДИАГНОСТИКА: фикс. маленький отступ без safe-area — проверяем, зазор снизу от padding или структурный */
+  padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));   /* safe-area — padding самой навигации: её тёмный фон заполняет зону home-индикатора → нет чёрной полосы снизу (стандартный iOS tab-bar) */
   background:rgba(18,22,30,0.92);
   -webkit-backdrop-filter:blur(18px);
   backdrop-filter:blur(18px);
@@ -1328,7 +1330,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;}
   .chip label{padding:7px 12px;font-size:11px;}
   .step-title{font-size:19px;}
   .lang-bar{padding:12px 20px;}
-  .bottom-nav{padding:6px 4px 10px;}   /* ДИАГНОСТИКА: см. выше */
+  .bottom-nav{padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));}
   .bottom-nav-item{padding:4px 6px;font-size:8px;}
   .bottom-nav-icon{width:24px;height:24px;}
   main{padding:12px 12px 20px;}   /* было 70px: футер (VIA—L · «Живи…» · Условия) отрывался от контента */
