@@ -33,7 +33,10 @@ self.addEventListener('fetch', e => {
   if (req.mode === 'navigate') {
     if (!isExpert) return;                           // чужие страницы (базовый VIA-L) — не перехватываем
     e.respondWith(                                   // EXPERT: свежий из сети, офлайн → кеш
-      fetch(req).then(r => { const cc = r.clone(); caches.open(CACHE).then(c => c.put(req, cc)); return r; })
+      // cache:'no-cache' — в обход HTTP-кэша (GitHub Pages: max-age=600 → перезапуск в
+      // течение 10 мин отдавал старьё, «правки не доезжают»). При неизменном файле это 304.
+      fetch(req, { cache: 'no-cache' })
+        .then(r => { const cc = r.clone(); caches.open(CACHE).then(c => c.put(req, cc)); return r; })
         .catch(() => caches.match('./' + EXPERT))
     );
     return;
