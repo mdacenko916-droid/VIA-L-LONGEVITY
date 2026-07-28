@@ -3341,7 +3341,7 @@ try{ if(new URLSearchParams(location.search).get('vendors')==='1'){ var _dvb=doc
 // Вставь сюда URL после деплоя Google Apps Script:
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxaATfqaJoGYbLJcKnMX_450Sojm_tlfTIzY5mtUsshbPNnIZui00J-QRz0AZl50dkj/exec';
 
-function gateUnlock(access, code, plan){
+function gateUnlock(access, code, plan, expiry){
   const g=document.getElementById('gate');
   const sa=document.getElementById('scroll-area');
   g.style.transition='opacity .5s';g.style.opacity='0';
@@ -3351,8 +3351,9 @@ function gateUnlock(access, code, plan){
   // что включает клин.режим + маршрут недельного отчёта в карточку кабинета нутрициолога.
   if(code) sessionStorage.setItem('viae_code', code);
   if(plan) sessionStorage.setItem('viae_plan', plan);   // 'VIAL-EXPERT-8W'/'VIAL-EXPERT-12W' — для счётчика разборов (шаг 3)
+  if(expiry){ try{ sessionStorage.setItem('viae_expiry', expiry); }catch(e){} }   // ISO-срок программы (56/84 дня); DEV-коды — без срока
   // Персист доступа между сессиями (веб-EXPERT: клиент вводит код один раз, не каждый заход).
-  try{ localStorage.setItem('viae_access', access); if(code)localStorage.setItem('viae_code', code); if(plan)localStorage.setItem('viae_plan', plan); }catch(e){}
+  try{ localStorage.setItem('viae_access', access); if(code)localStorage.setItem('viae_code', code); if(plan)localStorage.setItem('viae_plan', plan); if(expiry)localStorage.setItem('viae_expiry', expiry); else localStorage.removeItem('viae_expiry'); }catch(e){}
   try{ if(typeof _bootRoute==='function')_bootRoute(); else startFunnel(); }catch(e){ try{startFunnel();}catch(_){} }   // маршрут запуска после входа
 }
 
@@ -3399,7 +3400,7 @@ async function checkCode(){
     // Валидный код VIA-L EXPERT → полный доступ (MAX) + сохранить код и план (VIAL-EXPERT-8W/12W).
     if(data.ok){
       saveExpertState({ used: (typeof data.expert_used==='number'?data.expert_used:0), max: (data.expert_max || _planMax(data.plan)) });
-      gateUnlock('MAX', v, data.plan || 'VIAL-EXPERT-8W');
+      gateUnlock('MAX', v, data.plan || 'VIAL-EXPERT-8W', data.expiry);
     }
     else { gateError(data.reason||'invalid'); }
   } catch(e){
@@ -6563,6 +6564,9 @@ async function _iapRestoreClick(){
   else { if(document.readyState!=='loading')_gateNext(); else document.addEventListener('DOMContentLoaded',_gateNext); }
 })();
 (function(){
+  // Истёк ли срок программы (по сохранённому ISO-expiry). Нет expiry (DEV/безсрочный) → не истёк.
+  function _expired(){ try{ var e=localStorage.getItem('viae_expiry')||sessionStorage.getItem('viae_expiry'); return !!(e && Date.now() > Date.parse(e)); }catch(e){ return false; } }
+  function _clearAccess(){ try{ ['viae_access','viae_code','viae_plan','viae_expiry'].forEach(function(k){localStorage.removeItem(k);sessionStorage.removeItem(k);}); }catch(e){} }
   // Гидратация доступа: sessionStorage либо перенос из localStorage (персист между сессиями).
   function _hydrate(){ try{
     if(sessionStorage.getItem('viae_access')==='MAX') return true;
@@ -6570,17 +6574,21 @@ async function _iapRestoreClick(){
       sessionStorage.setItem('viae_access','MAX');
       var c=localStorage.getItem('viae_code'); if(c)sessionStorage.setItem('viae_code',c);
       var p=localStorage.getItem('viae_plan'); if(p)sessionStorage.setItem('viae_plan',p);
+      var x=localStorage.getItem('viae_expiry'); if(x)sessionStorage.setItem('viae_expiry',x);
       return true;
     }
   }catch(e){} return false; }
-  function _showGate(){ try{ var g=document.getElementById('gate'); if(g){g.style.opacity='';g.style.display='flex';} var sa=document.getElementById('scroll-area'); if(sa)sa.style.visibility='hidden'; }catch(e){} }
+  function _showGate(reason){ try{ var g=document.getElementById('gate'); if(g){g.style.opacity='';g.style.display='flex';} var sa=document.getElementById('scroll-area'); if(sa)sa.style.visibility='hidden'; if(reason&&typeof gateError==='function'){try{gateError(reason);}catch(e){}} }catch(e){} }
   function _start(){ try{
-    // Веб-EXPERT (Hotmart): доступ по коду → гейт. Нативный app (Capacitor): доступ через IAP/consent — код не спрашиваем.
-    if(!window.Capacitor && !_hydrate()){ _showGate(); return; }
+    // Нативный app (Capacitor): доступ через IAP/consent — код не спрашиваем.
+    if(window.Capacitor){ _bootRoute(); return; }
+    // Веб-EXPERT (Hotmart): доступ по коду.
+    if(!_hydrate()){ _showGate(); return; }
+    if(_expired()){ _clearAccess(); _showGate('expired'); return; }   // срок программы (56/84 дня) истёк → закрыть вход
     _bootRoute();
   }catch(e){ try{startFunnel();}catch(_){} } }
   if(document.readyState!=='loading')_start(); else document.addEventListener('DOMContentLoaded',_start);
-})();   // маршрут запуска: нет доступа (веб)→гейт кода; иначе сегодня/утренняя карточка/hero+анкета
+})();   // маршрут запуска: нет доступа/истёк срок (веб)→гейт кода; иначе сегодня/утренняя карточка/hero+анкета
 function goTo(n){
   window._curStep = n;   // запоминаем шаг — чтобы лейбл прогресса перевести при смене языка
   document.body.classList.remove('flow-mode'); if(typeof _hideFlowFooter==='function')_hideFlowFooter();
