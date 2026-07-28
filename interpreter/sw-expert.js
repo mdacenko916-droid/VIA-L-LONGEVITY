@@ -1,7 +1,7 @@
 // VIA-L EXPERT — service worker (PWA: устанавливаемость + офлайн-оболочка).
 // БЕЗОПАСНО для соседей в /interpreter/: трогаем ТОЛЬКО навигацию на саму EXPERT-страницу
 // (базовый interpreter-via-l.html и пр. — не перехватываем). POST/cross-origin не трогаем.
-const CACHE = 'vial-expert-v1';
+const CACHE = 'vial-expert-v2';   // bump при смене иконок/оболочки → сбрасывает старый кэш
 const EXPERT = 'interpreter-via-l-expert.html';
 const SHELL = [
   './' + EXPERT,
