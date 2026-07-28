@@ -3434,6 +3434,10 @@ function openExpertChat(){
 function closeExpertChat(){
   const p=document.getElementById('expertChat'); if(p)p.style.display='none';
   clearInterval(_chatPoll); _chatPoll=null;
+  // iOS-PWA: снять фокус с поля (иначе клавиатура оставляет вьюпорт смещённым →
+  // нижняя навигация приподнимается, под ней чёрная пустота) и вернуть скролл в 0.
+  if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  try{ window.scrollTo(0,0); }catch(e){}
   if(typeof navTo==='function') navTo('today');
 }
 async function loadExpertThread(){
