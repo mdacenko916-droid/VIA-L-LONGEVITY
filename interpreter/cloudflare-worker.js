@@ -784,7 +784,7 @@ const HOTMART_PRODUCTS = {
   7706337: { program: 'Estrogen',   plan: 'Базова 8 тиж',  price: '€390' },
   7706370: { program: 'Estrogen',   plan: 'Повна 12 тиж',  price: '€590' },
   // Interpreter tariffs
-  7838739: { type: 'interpreter', tier: 'PRO',       price: '$29/мес' },
+  // (старый продукт PRO 7838739 $29/мес удалён 2026-07-28 по решению владельца — мёртв)
   // VIA-L EXPERT — Hotmart-продукты (2026-07-27). Внутр. тег tier = VIAL-EXPERT-8W/12W;
   // ДОЛЖЕН совпадать с колонкой B в базе кодов (Google Sheet) и с apps-script.
   8199953: { type: 'interpreter', tier: 'VIAL-EXPERT-8W',  price: '€390' },   // VIA-L EXPERT · 8W
@@ -1065,7 +1065,7 @@ async function handleHotmartWebhook(request, env, corsHeaders) {
 
 // ── Interpreter purchase: assign code + email buyer ───────────
 async function handleInterpreterPurchase(product, buyerName, buyerEmail, lang, env, corsHeaders) {
-  const TIER_NAMES = { PRO: 'PRO', 'VIAL-EXPERT-8W': 'VIA-L EXPERT · 8W', 'VIAL-EXPERT-12W': 'VIA-L EXPERT · 12W' };
+  const TIER_NAMES = { 'VIAL-EXPERT-8W': 'VIA-L EXPERT · 8W', 'VIAL-EXPERT-12W': 'VIA-L EXPERT · 12W' };
   const tierName = TIER_NAMES[product.tier] || product.tier;
   const langFlag = { uk: '🇺🇦', ru: '🇷🇺', es: '🇪🇸', en: '🇬🇧', de: '🇩🇪', pt: '🇧🇷', fr: '🇫🇷', pl: '🇵🇱', it: '🇮🇹', he: '🇮🇱', ja: '🇯🇵', ko: '🇰🇷' }[lang] || '🌐';
 
@@ -1126,13 +1126,11 @@ async function handleInterpreterPurchase(product, buyerName, buyerEmail, lang, e
       { expirationTtl: 200 * 24 * 60 * 60 });
 
     // Карточка в кабинете — при оплате (ключ = код доступа, тот же у care-анкеты).
-    // PRO в кабинет НЕ пишем (спека §2: только EXPERT/ELITE).
-    if (product.tier !== 'PRO') {
-      await cabinetUpsertFromPayment(env, {
-        code: String(code).toUpperCase(), name: buyerName, email: buyerEmail, lang,
-        product, program: 'Интерпретатор (ИП)', tier: tierName, price: product.price, paidAmount: product.price,
-      });
-    }
+    // Все ИП-продукты Hotmart теперь VIA-L EXPERT (гейт по PRO снят вместе с продуктом 7838739).
+    await cabinetUpsertFromPayment(env, {
+      code: String(code).toUpperCase(), name: buyerName, email: buyerEmail, lang,
+      product, program: 'Интерпретатор (ИП)', tier: tierName, price: product.price, paidAmount: product.price,
+    });
   }
 
   // Ссылку на анкету в письме НЕ дублируем: её даёт локализованное письмо-подтверждение
