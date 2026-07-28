@@ -1,10 +1,11 @@
 // VIA-L EXPERT — service worker (PWA: устанавливаемость + офлайн-оболочка).
 // БЕЗОПАСНО для соседей в /interpreter/: трогаем ТОЛЬКО навигацию на саму EXPERT-страницу
 // (базовый interpreter-via-l.html и пр. — не перехватываем). POST/cross-origin не трогаем.
-const CACHE = 'vial-expert-v2';   // bump при смене иконок/оболочки → сбрасывает старый кэш
+const CACHE = 'vial-expert-v3';   // bump при смене иконок/оболочки → сбрасывает старый кэш
 const EXPERT = 'interpreter-via-l-expert.html';
+// HTML НЕ предкэшируем: iOS-PWA любит отдавать закэшированную страницу при запуске
+// и не обновляться. Кэшируем только статику (иконки/манифест); HTML — всегда network-first.
 const SHELL = [
-  './' + EXPERT,
   './via-l-expert.webmanifest',
   './pwa/icon-192.png',
   './pwa/icon-512.png',
