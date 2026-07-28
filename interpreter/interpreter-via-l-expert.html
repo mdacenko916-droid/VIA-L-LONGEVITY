@@ -215,6 +215,9 @@ body::before{
 #bottombar{
   flex:0 0 auto;
   z-index:200;
+  background:rgba(18,22,30,0.92);
+  /* заполнить зону home-индикатора тем же тёмным фоном → под иконками нет оголённой чёрной пустоты */
+  padding-bottom:env(safe-area-inset-bottom,0px);
 }
 
 .bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
@@ -278,7 +281,7 @@ body::before{
 /* ── Bottom Navigation ── */
 .bottom-nav{
   display:flex;align-items:center;justify-content:space-around;
-  padding:8px 16px 10px;
+  padding:8px 16px 8px;
   background:rgba(18,22,30,0.92);
   -webkit-backdrop-filter:blur(18px);
   backdrop-filter:blur(18px);
@@ -3328,7 +3331,7 @@ try{ if(new URLSearchParams(location.search).get('vendors')==='1'){ var _dvb=doc
 </div><!-- /bottombar -->
 
 <!-- ══ VIA-L EXPERT — внутренний чат с нутрициологом (не Telegram) ══ -->
-<div id="expertChat" style="display:none;position:fixed;inset:0;z-index:500;background:linear-gradient(160deg,#141a24,#0e131c);flex-direction:column;">
+<div id="expertChat" style="display:none;position:fixed;inset:0;z-index:600;background:linear-gradient(160deg,#141a24,#0e131c);flex-direction:column;">
   <div style="flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid rgba(226,185,90,.18);">
     <button onclick="closeExpertChat()" aria-label="Close" class="x-close" style="position:static;">✕</button>
     <div style="flex:1;">
@@ -9181,10 +9184,12 @@ document.addEventListener('visibilitychange',function(){
   font-family:-apple-system,'Segoe UI',Roboto,sans-serif;}
 #vlAdvPanel.open{display:flex;}
 /* Мобильный: чат на весь экран (плавающая карточка ломалась под клавиатурой iOS — уезжала вправо и прятала приветствие). Высоту к visualViewport привязывает JS (vpSync). */
-@media (max-width:600px){
+/* max-height ловит телефон в ландшафте (высота < 600) → тоже полный экран, а не плавающая карточка сбоку */
+@media (max-width:600px), (max-height:600px){
   #vlAdvPanel{left:0;right:0;top:0;bottom:0;width:100%;height:100dvh;max-height:none;border-radius:0;}
 }
-#vlAdvHead{background:#111;color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
+/* safe-area сверху: шапка (и крестик) ниже статус-бара — иначе X под иконкой батареи и не нажимается */
+#vlAdvHead{background:#111;color:#fff;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 14px;display:flex;align-items:center;justify-content:space-between;}
 #vlAdvHead .t{font-weight:600;font-size:15px;}#vlAdvHead .t span{color:#c4963c;}
 #vlAdvHead .s{font-size:11px;color:#bbb;margin-top:2px;}
 /* #vlAdvClose теперь = .x-close (единый стиль); правило оставлено пустым, чтобы не переопределять */
@@ -9198,7 +9203,7 @@ document.addEventListener('visibilitychange',function(){
 #vlAdvInput:focus{border-color:#c4963c;}
 #vlAdvSend{background:#111;color:#c4963c;border:0;border-radius:10px;padding:0 16px;font-size:14px;font-weight:600;cursor:pointer;}
 #vlAdvSend:disabled{opacity:.5;cursor:default;}
-#vlAdvDisc{font-size:10px;color:#aaa;text-align:center;padding:0 10px 8px;background:#fff;}
+#vlAdvDisc{font-size:10px;color:#aaa;text-align:center;padding:0 10px calc(8px + env(safe-area-inset-bottom,0px));background:#fff;}
 </style>
 <button id="vlAdvBtn" aria-label="VIA·L advisor"><img src="Logo/logo-ai-v2.png" alt="VIA·L AI" draggable="false"></button>
 <div id="vlAdvPanel" role="dialog" aria-label="VIA·L advisor">
