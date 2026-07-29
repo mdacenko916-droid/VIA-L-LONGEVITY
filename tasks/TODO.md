@@ -47,13 +47,20 @@ redeploy) — в [[project_tariff_naming_canon]].
 - **Тайминг-ловушка снята:** запись на зум и получение доступа не заперты триалом → клиент
   бронирует зум хоть на неделю вперёд, триал может истечь, доступ приходит в EXPERT PWA отдельно.
 
-- [ ] **Выдача кода EXPERT из Кабинета.** Кнопка «Выдать доступ к EXPERT» в карточке клиента →
-      `/cabinet/expert-grant` (авторизация = токен спеца, пишет только своему клиенту): кладёт
-      `clients.data.expert_access = {plan, expiry, granted_by, revoked:false}` + зеркало в KV
-      `expert:<CODE>`; отдаёт код + готовую ссылку на PWA. Кнопки «Продлить»/«Закрыть доступ».
-- [ ] **Двойной гейт EXPERT.** Новый `/expert/verify?code=` (ветка витрины) отдаёт ту же форму,
-      что Apps Script (`{ok,plan,expiry}` / `{ok:false,reason}`). В `checkCode()` EXPERT-гейта:
-      сначала `/expert/verify`, не нашёл → Apps Script (ветка собственника). Низ гейта не менять.
+- [x] **Выдача кода EXPERT из Кабинета — ✅ В ПРОДЕ 2026-07-29.** Кнопка «Выдать доступ к VIA-L EXPERT»
+      в обзоре карточки → `/cabinet/expert-grant {code,days}` (авторизация `cabinetSession`, не-владелец
+      только своему клиенту): генерит код `EX…`, KV `expert_access:<EX>` = `{card_code, plan, expiry,
+      quota=days, used, revoked, specialist_id, days, owed=days/30×€20}`, TTL=срок+60д; отдаёт код +
+      ссылку на PWA + expiry + owed. Кнопки «Копировать» и «Закрыть доступ» (`/cabinet/expert-revoke`).
+      i18n `ex_*` ×12. **⏳ хвост:** «Продлить»; персист выданного кода в карточку (сейчас виден только
+      сразу после выдачи, после релоада — нет; сам код в KV живёт); per-разбор списание quota в KV
+      (сейчас quota хранится, но не декрементируется — живой контроль = expiry+revoke); i18n для reason
+      `revoked` в `gateError` EXPERT (показывает общий «код не найден»).
+- [x] **Двойной гейт EXPERT — ✅ В ПРОДЕ 2026-07-29.** GET `/expert/verify?code=` отдаёт форму как
+      Apps Script (`{ok,plan,expiry,expert_used,expert_max}` + `code=card_code` для роутинга разборов) /
+      `{ok:false,reason:not_found|expired|revoked}`. `checkCode()` дёргает verify ПЕРВЫМ → ok вход /
+      expired|revoke ошибка / not_found фолбэк на Apps Script (ветка собственника цела). Вход по EX-коду
+      ставит `viae_code=card_code` → разборы текут нужному специалисту. Смоук-тест живой прошёл.
 - [ ] **Витрина специалистов.** `/specialists/public` → активные с флагом публичности (имя,
       специальность, фото, био, языки, Cal-ссылка) → карточки в `my-specialist.html` как ветка
       «нет кода?» (заменить одиночную хардкод-кнопку Cal основателя). Миграция `specialists`:
