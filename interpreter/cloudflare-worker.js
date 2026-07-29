@@ -887,6 +887,14 @@ export default {
       if (path === '/specialist/connect')  return handleSpecialistConnect(request, env, corsHeaders);
       if (path === '/specialist/unlink')   return handleSpecialistUnlink(request, env, corsHeaders);
 
+      // Воронка витрина → EXPERT PWA: специалист выдаёт клиенту СРОЧНЫЙ код доступа к
+      // VIA-L EXPERT (отдельный от ref_code/кода карточки), сам управляет сроком/отзывом.
+      // Гейт EXPERT проверяет код здесь ПЕРВЫМ, потом фолбэк на Apps Script (ветка Hotmart).
+      // См. tasks/TODO.md §«Воронка VIA-L → витрина → EXPERT PWA».
+      if (path === '/expert/verify')        return handleExpertVerify(request, env, corsHeaders);        // публичный (гейт)
+      if (path === '/cabinet/expert-grant') return handleCabinetExpertGrant(request, env, corsHeaders);   // авторизован (специалист)
+      if (path === '/cabinet/expert-revoke')return handleCabinetExpertRevoke(request, env, corsHeaders);  // авторизован (специалист)
+
       // Платформа, Шаг 6: панель владельца — управление специалистами (только role=owner).
       if (path === '/cabinet/specialists')       return handleCabinetSpecialists(request, env, corsHeaders);
       if (path === '/cabinet/specialist-save')   return handleCabinetSpecialistSave(request, env, corsHeaders);
@@ -5915,6 +5923,94 @@ function genPatientCode(){
   let s = '';
   for(let i=0;i<6;i++) s += al[Math.floor(Math.random()*al.length)];
   return 'P' + s;
+}
+
+// Срочный код доступа к VIA-L EXPERT (префикс EX — визуально отличим от кода карточки P…).
+function genExpertCode(){
+  const al = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for(let i=0;i<7;i++) s += al[Math.floor(Math.random()*al.length)];
+  return 'EX' + s;
+}
+
+// ── Воронка витрина → EXPERT PWA: выдача/проверка/отзыв срочного кода доступа ──
+// Хранилище — KV EXPERT_DRAFTS, ключ `expert_access:<GRANTCODE>`:
+//   { card_code, plan, expiry(YYYY-MM-DD), quota, used, revoked, specialist_id, days, owed, issued }
+// card_code = код карточки клиента (из /specialist/connect) → разборы текут по нему в кабинет.
+// GRANTCODE отдельный: истёк/отозван → вход закрыт, но карточка и привязка живы.
+
+// GET /expert/verify?code= — гейт EXPERT дёргает первым. Отдаёт ту же форму, что Apps Script
+// (ok, plan, expiry, expert_used, expert_max), + code=card_code (по нему гейт роутит разборы).
+async function handleExpertVerify(request, env, corsHeaders){
+  const code = String(new URL(request.url).searchParams.get('code')||'').trim().toUpperCase();
+  if(!code) return jsonResponse({ ok:false, reason:'invalid' }, corsHeaders, 400);
+  if(!env.EXPERT_DRAFTS) return jsonResponse({ ok:false, reason:'not_found' }, corsHeaders);
+  let rec=null;
+  try{ rec = JSON.parse(await env.EXPERT_DRAFTS.get('expert_access:'+code) || 'null'); }catch(_){}
+  if(!rec) return jsonResponse({ ok:false, reason:'not_found' }, corsHeaders);   // не наш → гейт уйдёт в Apps Script
+  if(rec.revoked) return jsonResponse({ ok:false, reason:'revoked' }, corsHeaders);
+  const today = new Date().toISOString().slice(0,10);
+  if(rec.expiry && today > rec.expiry) return jsonResponse({ ok:false, reason:'expired' }, corsHeaders);
+  return jsonResponse({
+    ok:true, code: rec.card_code || code, plan: rec.plan || 'VIAL-EXPERT-8W',
+    expiry: rec.expiry || '', expert_used: rec.used || 0, expert_max: rec.quota || 0
+  }, corsHeaders);
+}
+
+// POST /cabinet/expert-grant  {code, days, plan?} — специалист выдаёт клиенту доступ к EXPERT.
+// code = код карточки клиента; days = срок ведения (1 разбор/день → quota=days); owed = days/30×€20.
+async function handleCabinetExpertGrant(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ ok:false, error:'unauthorized' }, corsHeaders, 401);
+  if(!env.DB || !env.EXPERT_DRAFTS) return jsonResponse({ ok:false, error:'backend_missing' }, corsHeaders, 500);
+  let b={}; try{ b = await request.json(); }catch(_){}
+  const cardCode = String(b.code||'').trim().toUpperCase();
+  const days = Math.max(1, Math.min(400, parseInt(b.days,10)||0));
+  if(!cardCode) return jsonResponse({ ok:false, error:'no_code' }, corsHeaders, 400);
+  if(!days)     return jsonResponse({ ok:false, error:'no_days' }, corsHeaders, 400);
+
+  // карточка должна существовать и (для не-владельца) принадлежать вошедшему специалисту
+  const row = await env.DB.prepare('SELECT specialist_id FROM clients WHERE code=?').bind(cardCode).first();
+  if(!row) return jsonResponse({ ok:false, error:'client_not_found' }, corsHeaders, 404);
+  if(sess.role !== 'owner' && String(row.specialist_id) !== String(sess.id))
+    return jsonResponse({ ok:false, error:'forbidden' }, corsHeaders, 403);
+
+  const today = new Date();
+  const exp = new Date(today.getTime()); exp.setUTCDate(exp.getUTCDate() + days);
+  const expiry = exp.toISOString().slice(0,10);
+  const owed = Math.round(days / 30 * 20);   // €20/мес софт (закладка в цену специалиста)
+
+  // уникальный код (пара попыток на случай коллизии)
+  let grantCode = genExpertCode();
+  for(let i=0;i<3;i++){ if(!(await env.EXPERT_DRAFTS.get('expert_access:'+grantCode))) break; grantCode = genExpertCode(); }
+
+  const rec = {
+    card_code: cardCode, plan: String(b.plan||('CUSTOM-'+days+'D')).toUpperCase(),
+    expiry, quota: days, used: 0, revoked: false,
+    specialist_id: sess.id, days, owed, issued: today.toISOString().slice(0,10)
+  };
+  await env.EXPERT_DRAFTS.put('expert_access:'+grantCode, JSON.stringify(rec),
+    { expirationTtl: (days + 60) * 24 * 60 * 60 });   // авто-очистка через срок + 60 дней
+
+  const link = 'https://via-l.com/interpreter/interpreter-via-l-expert.html';
+  return jsonResponse({ ok:true, code: grantCode, expiry, days, owed, link }, corsHeaders);
+}
+
+// POST /cabinet/expert-revoke  {code} — специалист закрывает выданный доступ (code = GRANTCODE).
+async function handleCabinetExpertRevoke(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ ok:false, error:'unauthorized' }, corsHeaders, 401);
+  if(!env.EXPERT_DRAFTS) return jsonResponse({ ok:false, error:'backend_missing' }, corsHeaders, 500);
+  let b={}; try{ b = await request.json(); }catch(_){}
+  const grantCode = String(b.code||'').trim().toUpperCase();
+  if(!grantCode) return jsonResponse({ ok:false, error:'no_code' }, corsHeaders, 400);
+  let rec=null; try{ rec = JSON.parse(await env.EXPERT_DRAFTS.get('expert_access:'+grantCode) || 'null'); }catch(_){}
+  if(!rec) return jsonResponse({ ok:false, error:'not_found' }, corsHeaders, 404);
+  if(sess.role !== 'owner' && String(rec.specialist_id) !== String(sess.id))
+    return jsonResponse({ ok:false, error:'forbidden' }, corsHeaders, 403);
+  rec.revoked = true;
+  await env.EXPERT_DRAFTS.put('expert_access:'+grantCode, JSON.stringify(rec), { expirationTtl: 60*24*60*60 });
+  return jsonResponse({ ok:true, code:grantCode, revoked:true }, corsHeaders);
 }
 
 // Анкета по реф-ссылке (канал 1): привязать пациента к специалисту + записать анкету/согласие

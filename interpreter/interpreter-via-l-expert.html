@@ -3447,6 +3447,20 @@ async function checkCode(){
   };
   if (DEV_CODES[v]) { saveExpertState({used:0, max:_planMax(DEV_CODES[v])}); gateUnlock('MAX', v, DEV_CODES[v]); return; }
 
+  // Ветка витрины: срочный код EXPERT (EX…), выданный специалистом → проверяем в воркере ПЕРВЫМ.
+  // ok → вход; expired/revoked → ошибка; not_found → это код собственника (Hotmart), падаем в Apps Script ниже.
+  try {
+    const rv = await fetch(_CHAT_API + '/expert/verify?code=' + encodeURIComponent(v));
+    const rd = await rv.json();
+    if (rd && rd.ok) {
+      saveExpertState({ used: (typeof rd.expert_used==='number'?rd.expert_used:0), max: (rd.expert_max || _planMax(rd.plan)) });
+      gateUnlock('MAX', rd.code || v, rd.plan || 'VIAL-EXPERT-8W', rd.expiry);   // rd.code = код карточки → разборы текут в кабинет
+      return;
+    }
+    if (rd && rd.reason && rd.reason !== 'not_found') { gateError(rd.reason); return; }   // expired / revoked
+    // not_found → продолжаем в Apps Script (ветка собственника)
+  } catch(e){ /* воркер недоступен → пробуем Apps Script */ }
+
   try {
     const url=APPS_SCRIPT_URL+'?code='+encodeURIComponent(v);
     const res=await fetch(url,{redirect:'follow'});
