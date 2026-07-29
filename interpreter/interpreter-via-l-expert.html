@@ -3315,6 +3315,8 @@ try{ if(new URLSearchParams(location.search).get('vendors')==='1'){ var _dvb=doc
     </div>
     <div class="gate-error" id="gateError" data-t="gate_error">Неверный код.</div>
     <button type="button" id="gateBtn" class="gate-btn" onclick="checkCode()"><span data-t="gate_btn">Войти →</span></button>
+    <!-- Ведение завершено (expired/revoked) → продолжай в VIA-L самостоятельно -->
+    <a id="gateSolo" href="./interpreter-via-l.html" style="display:none;margin-top:14px;text-align:center;font-size:13px;color:var(--gold-lt);text-decoration:underline;"></a>
   </div>
 </div>
 
@@ -3438,6 +3440,15 @@ function gateError(reason){
   };
   err.textContent = msgs[reason] || msgs.invalid;
   err.classList.add('show');
+  // Ведение завершено (срок истёк / доступ отозван) → мягкий CTA продолжить в VIA-L самому
+  const solo = document.getElementById('gateSolo');
+  if(solo){
+    if(reason==='expired' || reason==='revoked'){
+      const SOLO = {ru:'Продолжить в VIA-L самостоятельно →',uk:'Продовжити у VIA-L самостійно →',en:'Continue in VIA-L on your own →',es:'Continúa en VIA-L por tu cuenta →',de:'In VIA-L eigenständig fortfahren →',pt:'Continue no VIA-L por conta própria →',fr:'Continuer dans VIA-L par vous-même →',pl:'Kontynuuj w VIA-L samodzielnie →',it:'Continua in VIA-L da solo →',he:'המשיכו ב-VIA-L באופן עצמאי →',ja:'VIA-Lで自分で続ける →',ko:'VIA-L에서 직접 계속하기 →'};
+      solo.textContent = SOLO[lang] || SOLO.en;
+      solo.style.display = 'block';
+    } else { solo.style.display = 'none'; }
+  }
   input.classList.add('error');
   btn.disabled=false;
   btn.querySelector('span').textContent = L.gate_btn || FB.gate_btn || 'Enter →';
