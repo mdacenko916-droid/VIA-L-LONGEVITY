@@ -4290,13 +4290,15 @@ function navTo(tab){
   var __dp=document.getElementById('dayplanPanel');if(__dp)__dp.style.display='none';   // модал «Памятка дня» — тоже (для tab==='today' откроется заново ниже)
   var __nv=document.querySelector('.bottom-nav');if(__nv)__nv.classList.remove('nav-hidden');
   var __mn=document.querySelector('main');if(__mn)__mn.style.display='';
+  var __fo=document.querySelector('footer');if(__fo)__fo.style.display='';   // футер/юр-ссылки восстанавливаем по умолчанию (для card прячем ниже)
+  var __lg=document.querySelector('.legal-links');if(__lg)__lg.style.display='';
   document.body.classList.remove('view-result');  // покидаем разбор (today→goTo('result') вернёт сам, если день пройден)
   var __tb=document.getElementById('topbar'); if(__tb)__tb.classList.remove('tb-hidden');   // шапка не должна остаться уехавшей на другом табе
   document.querySelectorAll('.bottom-nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+tab)?.classList.add('active');
   const cp=document.getElementById('cardPanel');
   if(cp){cp.style.display=(tab==='card')?'block':'none';
-    if(tab==='card'){renderCard();const _m=document.querySelector('main');if(_m)_m.style.display='none';const _n=document.querySelector('.bottom-nav');if(_n)_n.classList.add('nav-hidden');cp.scrollTop=0;}}
+    if(tab==='card'){renderCard();const _m=document.querySelector('main');if(_m)_m.style.display='none';const _h=document.querySelector('.hero');if(_h)_h.style.display='none';const _fo2=document.querySelector('footer');if(_fo2)_fo2.style.display='none';const _lg2=document.querySelector('.legal-links');if(_lg2)_lg2.style.display='none';const _n=document.querySelector('.bottom-nav');if(_n)_n.classList.add('nav-hidden');cp.scrollTop=0;}}
   if(tab==='today'){
     // «Сегодня» = домашний дашборд дня. Прошёл сегодня → весь дашборд из снимка; не прошёл → на проход.
     if(typeof _passedToday==='function'&&_passedToday()&&typeof _showTodayDashboard==='function'&&_showTodayDashboard()){ /* полный дашборд дня показан */ }
@@ -8883,6 +8885,8 @@ function openDayPlanPanel(){
   var bx=document.getElementById('dayplanBody'); if(bx) bx.innerHTML=body;
   var m=document.querySelector('main'); if(m)m.style.display='none';
   var h=document.querySelector('.hero'); if(h)h.style.display='none';
+  var _fo=document.querySelector('footer'); if(_fo)_fo.style.display='none';   // футер VIA—L не выглядывает над панелью
+  var _lg=document.querySelector('.legal-links'); if(_lg)_lg.style.display='none';
   var n=document.querySelector('.bottom-nav'); if(n)n.classList.add('nav-hidden');
   p.style.display='block'; p.scrollTop=0;
 }
@@ -8890,6 +8894,8 @@ function closeDayPlanPanel(){
   var p=document.getElementById('dayplanPanel'); if(p)p.style.display='none';
   var m=document.querySelector('main'); if(m)m.style.display='';
   var h=document.querySelector('.hero'); if(h)h.style.display='';
+  var _fo=document.querySelector('footer'); if(_fo)_fo.style.display='';
+  var _lg=document.querySelector('.legal-links'); if(_lg)_lg.style.display='';
   var n=document.querySelector('.bottom-nav'); if(n)n.classList.remove('nav-hidden');
 }
 function _bpRenderSecs(secs){
@@ -9110,6 +9116,8 @@ function openApproach(){
   }
   var m=document.querySelector('main'); if(m){window._apprMain=m.style.display; m.style.display='none';}
   var h=document.querySelector('.hero'); if(h){window._apprHero=h.style.display; h.style.display='none';}   // hero тоже прячем — иначе маркетинг-текст просвечивает под панелью
+  var _fo=document.querySelector('footer'); if(_fo){window._apprFooter=_fo.style.display; _fo.style.display='none';}   // футер VIA—L/слоган — иначе выглядывает над панелью (лендинг приподнят)
+  var _lg=document.querySelector('.legal-links'); if(_lg){window._apprLegal=_lg.style.display; _lg.style.display='none';}
   var _fh=document.getElementById('funnelHome'); if(_fh)_fh.style.display='none';   // спрятать возврат-✕ анкеты, чтобы не было двух ✕
   var n=document.querySelector('.bottom-nav'); if(n)n.classList.add('nav-hidden');
   p.style.display='block'; p.scrollTop=0;
@@ -9118,6 +9126,8 @@ function closeApproach(){
   var p=document.getElementById('approachPanel'); if(p)p.style.display='none';
   var m=document.querySelector('main'); if(m)m.style.display=(window._apprMain!=null?window._apprMain:'');
   var h=document.querySelector('.hero'); if(h)h.style.display=(window._apprHero!=null?window._apprHero:'');   // вернуть прежнее состояние (не показывать hero, если пришли из анкеты)
+  var _fo=document.querySelector('footer'); if(_fo)_fo.style.display=(window._apprFooter!=null?window._apprFooter:'');
+  var _lg=document.querySelector('.legal-links'); if(_lg)_lg.style.display=(window._apprLegal!=null?window._apprLegal:'');
   var _fh=document.getElementById('funnelHome'); if(_fh)_fh.style.display=(typeof _profileDone==='function'&&!_profileDone()&&window._apprHero==='none')?'':'none';   // вернуть возврат-✕ только если вернулись в анкету онбординга
   var n=document.querySelector('.bottom-nav'); if(n)n.classList.remove('nav-hidden');
 }
