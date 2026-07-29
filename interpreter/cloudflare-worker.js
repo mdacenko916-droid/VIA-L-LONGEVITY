@@ -818,6 +818,8 @@ export default {
       if (path === '/intake-validate') return handleIntakeValidate(request, env, corsHeaders);
       // Имя/профиль специалиста по реф-коду — анкета `book/anketa?ref=` де-брендит шапку (§10).
       if (path === '/specialist-by-ref') return handleSpecialistByRef(request, env, corsHeaders);
+      // Витрина «Мой наставник»: публичный список наставников (public=1) для выбора + записи на зум.
+      if (path === '/specialists/public') return handleSpecialistsPublic(request, env, corsHeaders);
       // Fitbit OAuth2 (self-serve) — connect ring/device, pull 7-day metrics
       if (path === '/fitbit/start')    return handleFitbitStart(request, env, corsHeaders);
       if (path === '/fitbit/callback') return handleFitbitCallback(request, env, corsHeaders);
@@ -6046,6 +6048,23 @@ async function deliverAnketaRef(env, sp, refCode, answers, lang, name, email){
 }
 
 // Публичный GET: имя/профиль активного специалиста по его реф-коду (для де-брендинга анкеты).
+// GET /specialists/public — витрина: активные наставники с флагом public=1.
+// НЕ отдаёт ref_code (код специалист даёт клиенту после зума → сохраняем воронку витрина→знакомство).
+async function handleSpecialistsPublic(request, env, corsHeaders){
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  let rows=[];
+  try{
+    const r = await env.DB.prepare(
+      "SELECT name,specialty,photo,bio,cal_url,langs FROM specialists WHERE public=1 AND status='active' ORDER BY name"
+    ).all();
+    rows = r.results || [];
+  }catch(_){}
+  return jsonResponse({ ok:true, specialists: rows.map(s=>({
+    name:s.name||'', specialty:s.specialty||'', photo:s.photo||'',
+    bio:s.bio||'', cal_url:s.cal_url||'', langs:s.langs||''
+  })) }, corsHeaders);
+}
+
 async function handleSpecialistByRef(request, env, corsHeaders){
   if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
   const ref = String(new URL(request.url).searchParams.get('ref')||'').trim().toUpperCase();
