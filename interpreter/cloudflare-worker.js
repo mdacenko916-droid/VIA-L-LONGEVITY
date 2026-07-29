@@ -838,6 +838,8 @@ export default {
       if (path === '/oura/start')        return handleOuraStart(request, env, corsHeaders);
       if (path === '/oura/callback')     return handleOuraCallback(request, env, corsHeaders);
       if (path === '/oura/metrics')      return handleOuraMetrics(request, env, corsHeaders);
+      // Гейт EXPERT (витрина): проверка срочного кода доступа — GET, публично. См. §894.
+      if (path === '/expert/verify')     return handleExpertVerify(request, env, corsHeaders);
       return new Response('Not found', { status: 404 });
     }
 
@@ -891,7 +893,7 @@ export default {
       // VIA-L EXPERT (отдельный от ref_code/кода карточки), сам управляет сроком/отзывом.
       // Гейт EXPERT проверяет код здесь ПЕРВЫМ, потом фолбэк на Apps Script (ветка Hotmart).
       // См. tasks/TODO.md §«Воронка VIA-L → витрина → EXPERT PWA».
-      if (path === '/expert/verify')        return handleExpertVerify(request, env, corsHeaders);        // публичный (гейт)
+      // (/expert/verify — GET, зарегистрирован в GET-блоке выше)
       if (path === '/cabinet/expert-grant') return handleCabinetExpertGrant(request, env, corsHeaders);   // авторизован (специалист)
       if (path === '/cabinet/expert-revoke')return handleCabinetExpertRevoke(request, env, corsHeaders);  // авторизован (специалист)
 
