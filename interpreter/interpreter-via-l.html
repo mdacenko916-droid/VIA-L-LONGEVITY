@@ -149,14 +149,13 @@ body{
 }
 body::before{
   content:'';position:fixed;inset:0;z-index:-1;
-  background-color:#10131A;   /* тёмная подложка слоя неба: до загрузки jpg — тёмный, не белый */
-  background-image:url('./images-bg/night-pro.jpg');
+  background-color:#EAE1C9;   /* СВЕТЛЫЙ ФОН ПОД САЙТ — единый беж бренда (как VIA-L EXPERT); фото убрано */
   background-size:cover;background-position:center;
   transform:translateZ(0);-webkit-transform:translateZ(0);will-change:transform;
 }
 @media (max-width:768px){
   body::before{
-    background-image:url('./images-bg/night-pro-mobile.jpg');
+    background-image:none;   /* мобильное фото тоже убрано */
     background-position:center top;
   }
 }
@@ -1052,6 +1051,7 @@ body:has(#morning-gate) #morning-gate{margin:0 auto;}
 /* ══ IMPORT PANEL ════════════════════════════════════════ */
 #importPanel{
   position:absolute;inset:0;z-index:300;
+  padding-top:calc(env(safe-area-inset-top,0px) + 30px);   /* шапка «ИМПОРТ ДАННЫХ» не под статус-баром/языком */
   background:#10131A;
   overflow-y:auto;
   -webkit-overflow-scrolling:touch;
@@ -1721,6 +1721,25 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
 #consent-btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:600;color:#1a1206;background:linear-gradient(135deg,#e7c77a,#c9962f);cursor:pointer;opacity:.45;pointer-events:none;transition:opacity .2s;}
 #consent-btn.on{opacity:1;pointer-events:auto;}
 .result-disc{font-size:11px;line-height:1.45;color:var(--t3);background:rgba(226,185,90,.07);border:1px solid rgba(226,185,90,.18);border-radius:10px;padding:8px 11px;margin-bottom:14px;}
+
+/* ══ СВЕТЛЫЙ ФОН ПОД САЙТ (единый беж бренда) — перекраска ТОЛЬКО текста/контролов НА ФОНЕ.
+   Графитовые карточки (.rd-card/.imp-btn/панели) и нижняя навигация НЕ трогаются. ══ */
+.hero-title{color:#8B6030;text-shadow:none;}   /* золотой акцент на главном заголовке */
+.hero-title em{color:#A0742E;text-shadow:none;}
+.hero-desc{color:#2E2010 !important;text-shadow:none !important;}
+.hero-eyebrow{color:#8B6030;}
+.fgh-t{color:#8B6030;}   /* золотой акцент на заголовках-зонах */
+.fgh-s{color:#4A3A28;}
+.flow-intro{color:#2E2010;}
+.footer-logo{color:#8B6030;}   /* золотой VIA—L */
+.footer-tagline{color:#5A4A35;}
+.footer-line{background:rgba(107,79,42,.35);}
+.legal-links a{color:#5A4A35 !important;border-bottom-color:rgba(107,79,42,.3) !important;}
+.legal-links span{color:#5A4A35 !important;}
+/* Переключатель языка плавает над РАЗНЫМ фоном (беж-лендинг и тёмные панели) → сплошная тёмная
+   пилюля с золотом: контраст текста не зависит от фона, читается везде. */
+.lang-toggle{background:#20242E;border-color:rgba(226,185,90,.5);color:#EEAF54;box-shadow:0 2px 10px rgba(0,0,0,.15);}
+.lang-toggle:hover{border-color:rgba(226,185,90,.8);color:#F0D590;}
 </style>
 </head>
 <body>
@@ -1785,7 +1804,7 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
 
 <!-- IMPORT PANEL -->
 <div id="importPanel">
-<button onclick="_importHome()" aria-label="Close" class="x-close" style="position:fixed;top:26px;left:32px;z-index:620;">✕</button>
+<button onclick="_importHome()" aria-label="Close" class="x-close" style="position:fixed;top:calc(env(safe-area-inset-top,0px) + 18px);left:32px;z-index:620;background:#151a24;">✕</button>
 <div class="import-wrap">
 
   <div class="import-hero">
@@ -2216,7 +2235,7 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
 
 </div><!-- /import-wrap -->
 </div><!-- /importPanel -->
-<button id="funnelHome" onclick="_showSourceChoice()" aria-label="Back" class="x-close" style="position:fixed;top:26px;left:32px;z-index:620;display:none;">✕</button>
+<button id="funnelHome" onclick="_showSourceChoice()" aria-label="Back" class="x-close" style="position:fixed;top:calc(env(safe-area-inset-top,0px) + 18px);left:32px;z-index:620;background:rgba(107,79,42,.08);border:1px solid rgba(107,79,42,.55);color:#3A2C1A;box-shadow:none;display:none;">✕</button>
 
 <!-- CARRY-OVER BANNER («как вчера») -->
 <div id="carryBanner" style="display:none;padding:14px 16px 0;"></div>
@@ -6067,8 +6086,8 @@ function _showFlow(list){
       : L({ru:'Расскажите немного о себе — это нужно один раз, чтобы разбор был персональным.',uk:'Розкажіть трохи про себе — це потрібно один раз, щоб розбір був персональним.',en:'Tell us a little about yourself — just once, so your overview is truly personal.',es:'Cuéntanos un poco sobre ti — solo una vez, para que tu resumen sea personal.',de:'Erzähl uns etwas über dich — nur einmal, damit deine Übersicht persönlich ist.',pt:'Conte-nos um pouco sobre você — apenas uma vez, para que seu resumo seja pessoal.',fr:'Parlez-nous un peu de vous — une seule fois, pour un bilan vraiment personnel.',pl:'Opowiedz nam trochę o sobie — tylko raz, aby przegląd był osobisty.',it:'Raccontaci un po’ di te — una sola volta, per un riepilogo davvero personale.',he:'ספרו לנו קצת על עצמכם — פעם אחת, כדי שהסקירה תהיה אישית.',ja:'あなたについて少し教えてください（初回のみ）。まとめがあなた仕様になります。',ko:'자신에 대해 조금 알려주세요 — 처음 한 번만, 요약이 맞춤형이 됩니다.'});
     var d=document.createElement('div'); d.className='flow-intro';
     d.style.cssText='max-width:600px;margin:6px auto 2px;padding:0 26px;text-align:center;';
-    d.innerHTML='<div style="font-family:\'Playfair Display\',serif;font-size:19px;color:#fff;margin-bottom:8px;">'+ttl+'</div>'
-      +'<div style="font-size:13.5px;color:var(--t2);line-height:1.6;">'+sub+'</div>';
+    d.innerHTML='<div style="font-family:\'Playfair Display\',serif;font-size:27px;font-weight:600;letter-spacing:.3px;color:#8B6030;margin-bottom:9px;">'+ttl+'</div>'
+      +'<div style="font-size:15px;color:#3A2C1A;line-height:1.65;font-weight:500;">'+sub+'</div>';
     main.appendChild(d);
   })();
   // Дневную группу делим на две зоны: «За прошедшие сутки» (ретроспектива) и «Прямо сейчас»
