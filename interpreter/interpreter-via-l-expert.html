@@ -1777,6 +1777,19 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
    пилюля с золотом: контраст текста не зависит от фона, читается везде. */
 .lang-toggle{background:#20242E;border-color:rgba(226,185,90,.5);color:#EEAF54;box-shadow:0 2px 10px rgba(0,0,0,.15);}
 .lang-toggle:hover{border-color:rgba(226,185,90,.8);color:#F0D590;}
+/* Дашборд «Сегодня» — шапка «Анализ VIA-L» + дата + лента недели лежат на беже (не в карточке) → тёмный текст.
+   Класс .rd-head-t есть и внутри тёмных карточек — потому скоуп только #tb-analysis/#rd-week. */
+#tb-analysis .rd-head-t{color:#2E2010;}
+#tb-analysis .rd-head-date{color:#5A4A35;}
+#tb-analysis .hl-vial{color:#8B6030;}   /* VIA-L золотом на беже */
+#rd-week .rd-wd-wd{color:#5A4A35;}
+#rd-week .rd-wd-n{color:#2E2010;}
+#rd-week .rd-wd.active .rd-wd-wd{color:#8B6030;}
+#rd-week .rd-wd.active .rd-wd-n{color:#1A1008;}
+#rd-week .rd-wd.active{background:rgba(139,111,71,.14);border-color:rgba(139,111,71,.45);}
+#rd-week .rd-wd:not(.empty):hover{background:rgba(139,111,71,.08);}
+/* VIA-L золотом в заголовке «Анализ VIA-L» (по умолчанию — на тёмной карточке ярче) */
+.hl-vial{color:var(--gold-lt);font-weight:600;}
 </style>
 </head>
 <body>
@@ -4190,6 +4203,8 @@ function setLang(l){
   });
   // Бейджи шагов: срезаем устаревшую нумерацию «NN / NN ·» — остаётся только иконка + название
   document.querySelectorAll('.step-badge').forEach(b=>{ b.innerHTML=b.innerHTML.replace(/^\s*\d+\s*\/\s*\d+\s*[·•∙]\s*/,''); });
+  // «VIA‑L» в заголовке «Анализ VIA-L» — золотом (обёртка после i18n, все языки; текст свежий из T → без двойной обёртки)
+  try{ document.querySelectorAll('.rd-head-t').forEach(function(e){ e.innerHTML=e.innerHTML.replace(/VIA[‑\-]L/g,'<span class="hl-vial">VIA‑L</span>'); }); }catch(_e){}
   document.querySelectorAll('[data-t-placeholder]').forEach(el=>{
     const k=el.getAttribute('data-t-placeholder');
     if(T[l][k]!==undefined)el.placeholder=T[l][k];
