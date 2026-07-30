@@ -1757,10 +1757,9 @@ async function sendChatFromCompose(){
   try{
     const j=await api('/cabinet/chat-send',{code,text});
     if(j&&j.ok){
-      if(!c.messages)c.messages=[];
-      c.messages.push({dir:'out',date:j.date||new Date().toISOString().slice(0,10),text,source:'cabinet'});
       if(el)el.value='';
-      renderTabContent();
+      if(st)st.textContent='';
+      await refreshChatThread();   // тянем полное состояние с сервера (свой out + входящие клиента)
     } else if(st){ st.textContent=t('err_prefix')+((j&&j.error)||t('err_unknown')); }
   }catch(e){ if(st) st.textContent=t('err_net'); }
 }
@@ -1816,10 +1815,8 @@ async function sendChatMsg(){
     const j=await api('/cabinet/chat-send',{code,text});
     if(j&&j.ok){
       if(st) st.textContent=t('msg_sent_chat');
-      if(!c.messages)c.messages=[];
-      c.messages.push({dir:'out',date:j.date||new Date().toISOString().slice(0,10),text,source:'cabinet'});
       document.getElementById('draftText').value='';
-      renderTabContent();
+      await refreshChatThread();   // тянем полное состояние с сервера
     } else if(st){ st.textContent=t('err_prefix')+((j&&j.error)||t('err_unknown')); }
   }catch(e){ if(st) st.textContent=t('err_net'); }
 }
