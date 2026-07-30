@@ -3316,6 +3316,9 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
     <button type="button" id="gateBtn" class="gate-btn" onclick="checkCode()"><span data-t="gate_btn">Войти →</span></button>
     <!-- Ведение завершено (expired/revoked) → продолжай в VIA-L самостоятельно -->
     <a id="gateSolo" href="./interpreter-via-l.html" style="display:none;margin-top:14px;text-align:center;font-size:13px;color:var(--gold-lt);text-decoration:underline;"></a>
+    <!-- Установить как приложение (PWA). Android/Chrome — программно; iOS — инструкция. -->
+    <button type="button" id="installBtn" onclick="doInstall()" style="display:none;margin-top:16px;background:rgba(226,185,90,.12);border:1px solid rgba(226,185,90,.32);color:var(--gold-lt);font-family:inherit;font-size:13px;padding:10px 16px;border-radius:11px;cursor:pointer;">📲 <span data-t="install_app">Установить приложение</span></button>
+    <div id="installHint" style="display:none;margin-top:10px;font-size:12px;color:var(--t3);line-height:1.55;text-align:center;"></div>
   </div>
 </div>
 
@@ -3504,6 +3507,20 @@ async function checkCode(){
 
 document.getElementById('gateInput').addEventListener('keydown',e=>{if(e.key==='Enter')checkCode();});
 
+// ── Установить приложение (PWA) ──
+let _deferredPrompt=null;
+const _isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const _isStandalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone===true;
+function _showInstallBtn(){ if(_isStandalone) return; const b=document.getElementById('installBtn'); if(b)b.style.display='inline-block'; }
+window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); _deferredPrompt=e; _showInstallBtn(); });
+window.addEventListener('appinstalled', function(){ const b=document.getElementById('installBtn'); if(b)b.style.display='none'; const h=document.getElementById('installHint'); if(h)h.style.display='none'; });
+function doInstall(){
+  if(_deferredPrompt){ _deferredPrompt.prompt(); _deferredPrompt.userChoice.then(function(){ _deferredPrompt=null; const b=document.getElementById('installBtn'); if(b)b.style.display='none'; }); return; }
+  if(_isIOS){ const h=document.getElementById('installHint'); if(h){ h.textContent=(T[lang]&&T[lang].install_ios)||(T.en&&T.en.install_ios)||''; h.style.display='block'; } }
+}
+// iOS Safari: события beforeinstallprompt нет → показать кнопку сразу (ведёт на инструкцию)
+if(_isIOS && !_isStandalone) _showInstallBtn();
+
 // ══ VIA-L EXPERT — внутренний чат со специалистом (не Telegram) ══
 const _CHAT_API = 'https://interpreter.viaelcom.workers.dev';
 let _chatPoll = null;
@@ -3635,6 +3652,11 @@ const LANG_FLAGS={'uk':'🇺🇦 UK','ru':'🇷🇺 RU','en':'🇬🇧 EN','es':
 ;(function(){var c={
   imp_device_t:{ru:'Синхронизация устройства',uk:'Синхронізація пристрою',en:'Sync your device',es:'Sincronizar dispositivo',de:'Gerät synchronisieren',pt:'Sincronizar dispositivo',fr:"Synchroniser l'appareil",pl:'Synchronizuj urządzenie',it:'Sincronizza dispositivo',he:'סנכרון המכשיר',ja:'デバイスを同期',ko:'기기 동기화'},
   imp_device_s:{ru:'Oura · Polar · Withings',uk:'Oura · Polar · Withings',en:'Oura · Polar · Withings',es:'Oura · Polar · Withings',de:'Oura · Polar · Withings',pt:'Oura · Polar · Withings',fr:'Oura · Polar · Withings',pl:'Oura · Polar · Withings',it:'Oura · Polar · Withings',he:'Oura · Polar · Withings',ja:'Oura · Polar · Withings',ko:'Oura · Polar · Withings'}
+};Object.keys(c).forEach(function(k){Object.keys(c[k]).forEach(function(l){if(T[l])T[l][k]=c[k][l];});});})();
+// Кнопка «Установить приложение» (PWA) + iOS-инструкция — 12 языков
+;(function(){var c={
+  install_app:{ru:"Установить приложение",uk:"Встановити застосунок",en:"Install app",es:"Instalar la app",de:"App installieren",pt:"Instalar o app",fr:"Installer l'app",pl:"Zainstaluj aplikację",it:"Installa l'app",he:"התקן אפליקציה",ja:"アプリをインストール",ko:"앱 설치"},
+  install_ios:{ru:"Нажмите «Поделиться» ⎋ внизу браузера → «На экран „Домой“».",uk:"Натисніть «Поділитися» ⎋ внизу браузера → «На екран „Додому“».",en:"Tap Share ⎋ at the bottom → \"Add to Home Screen\".",es:"Toca Compartir ⎋ abajo → «Añadir a inicio».",de:"Tippe unten auf Teilen ⎋ → „Zum Home-Bildschirm“.",pt:"Toque em Compartilhar ⎋ abaixo → \"Adicionar à Tela de Início\".",fr:"Appuyez sur Partager ⎋ en bas → « Sur l'écran d'accueil ».",pl:"Dotknij Udostępnij ⎋ na dole → „Do ekranu głównego“.",it:"Tocca Condividi ⎋ in basso → \"Aggiungi a Home\".",he:"הקישו שיתוף ⎋ למטה → \"הוסף למסך הבית\".",ja:"下部の共有 ⎋ →「ホーム画面に追加」。",ko:"하단 공유 ⎋ → \"홈 화면에 추가\"."}
 };Object.keys(c).forEach(function(k){Object.keys(c[k]).forEach(function(l){if(T[l])T[l][k]=c[k][l];});});})();
 // Подписи 9 показателей трекера в карточке — человеческим языком, на 12 языках
 const _GLAB={
