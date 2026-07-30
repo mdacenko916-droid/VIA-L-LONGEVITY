@@ -23,6 +23,10 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; }
 html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0; height: 0; display: none; }
+.stars { display: none; }   /* VIA-L: без звёздного фона — чистый графит */
+/* Заход из приложения (?app=1): скрыть навигацию в лендинг/сайт (анти-стиринг App Store) */
+html.app-embed .back-btn, html.app-embed .foot-nav { display: none !important; }
+html.app-embed .logo-block { pointer-events: none; cursor: default; }
 body {
   background: var(--dark);
   color: var(--t1);
@@ -309,6 +313,7 @@ footer a:hover { color: var(--gold); }
   margin: 0 auto 40px;
 }
 </style>
+<script>try{if(new URLSearchParams(location.search).get('app')==='1')document.documentElement.classList.add('app-embed');}catch(e){}</script>
 </head>
 <body>
 <div class="stars"></div>
@@ -794,7 +799,7 @@ footer a:hover { color: var(--gold); }
 </main>
 
 <footer>
-  <span>© 2025 VIA·L Longevity · <a href="./index.html" data-t="footer_back">← Інтерпретатор</a> · <a href="../index.html" data-t="footer_site">Сайт</a></span>
+  <span>© 2025 VIA·L Longevity<span class="foot-nav"> · <a href="./index.html" data-t="footer_back">← Інтерпретатор</a> · <a href="../index.html" data-t="footer_site">Сайт</a></span></span>
 </footer>
 
 <script>
