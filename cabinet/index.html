@@ -984,6 +984,8 @@ const T = {
   msg_gen_btn:{ru:"⚡ Сгенерировать черновик",uk:"⚡ Згенерувати чернетку",en:"⚡ Generate draft",es:"⚡ Generar borrador",de:"⚡ Entwurf erstellen",pt:"⚡ Gerar rascunho",fr:"⚡ Générer un brouillon",pl:"⚡ Wygeneruj szkic",it:"⚡ Genera bozza",he:"⚡ צור טיוטה",ja:"⚡ 下書きを生成",ko:"⚡ 초안 생성"},
   msg_draft_ph:{ru:"Черновик появится здесь...",uk:"Чернетка з'явиться тут...",en:"The draft will appear here...",es:"El borrador aparecerá aquí...",de:"Der Entwurf erscheint hier...",pt:"O rascunho aparecerá aqui...",fr:"Le brouillon apparaîtra ici...",pl:"Szkic pojawi się tutaj...",it:"La bozza apparirà qui...",he:"הטיוטה תופיע כאן...",ja:"下書きはここに表示されます…",ko:"초안이 여기에 표시됩니다..."},
   msg_send_tg:{ru:"Отправить в ТГ-топик",uk:"Надіслати в ТГ-топік",en:"Send to TG topic",es:"Enviar al tema de TG",de:"An TG-Thema senden",pt:"Enviar ao tópico do TG",fr:"Envoyer au sujet TG",pl:"Wyślij do tematu TG",it:"Invia al topic TG",he:"שלח לנושא TG",ja:"TGトピックに送信",ko:"TG 토픽으로 전송"},
+  msg_send_chat:{ru:"В чат клиента",uk:"У чат клієнта",en:"To client chat",es:"Al chat del cliente",de:"In Klienten-Chat",pt:"Para o chat do cliente",fr:"Vers le chat du client",pl:"Do czatu klienta",it:"Alla chat del cliente",he:"לצ'אט הלקוח",ja:"クライアントのチャットへ",ko:"고객 채팅으로"},
+  msg_sent_chat:{ru:"Отправлено в чат ✓",uk:"Надіслано в чат ✓",en:"Sent to chat ✓",es:"Enviado al chat ✓",de:"In Chat gesendet ✓",pt:"Enviado ao chat ✓",fr:"Envoyé au chat ✓",pl:"Wysłano do czatu ✓",it:"Inviato alla chat ✓",he:"נשלח לצ'אט ✓",ja:"チャットに送信 ✓",ko:"채팅으로 전송 ✓"},
   msg_copy:{ru:"Скопировать",uk:"Скопіювати",en:"Copy",es:"Copiar",de:"Kopieren",pt:"Copiar",fr:"Copier",pl:"Kopiuj",it:"Copia",he:"העתק",ja:"コピー",ko:"복사"},
   msg_history:{ru:"История",uk:"Історія",en:"History",es:"Historial",de:"Verlauf",pt:"Histórico",fr:"Historique",pl:"Historia",it:"Cronologia",he:"היסטוריה",ja:"履歴",ko:"기록"},
   msg_translate_in:{ru:"🌐 Перевести входящие",uk:"🌐 Перекласти вхідні",en:"🌐 Translate incoming",es:"🌐 Traducir entrantes",de:"🌐 Eingehende übersetzen",pt:"🌐 Traduzir recebidas",fr:"🌐 Traduire les entrants",pl:"🌐 Przetłumacz przychodzące",it:"🌐 Traduci in entrata",he:"🌐 תרגם נכנסות",ja:"🌐 受信を翻訳",ko:"🌐 수신 번역"},
@@ -1707,7 +1709,8 @@ function renderMessages(c){
       <textarea id="draftText" rows="5" maxlength="4000"
         style="width:100%;border:1px solid #ccc;padding:8px 10px;font-size:13px;font-family:inherit;resize:vertical;margin-bottom:8px;"
         placeholder="${t('msg_draft_ph')}"></textarea>
-      <div style="display:flex;gap:8px;align-items:center;">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button type="button" onclick="sendChatMsg()" style="background:#2e7d32;color:#fff;border:none;padding:8px 18px;cursor:pointer;font-size:12px;">${t('msg_send_chat')}</button>
         <button type="button" onclick="sendTgDraft()" style="background:#1a1a1a;color:#fff;border:none;padding:8px 18px;cursor:pointer;font-size:12px;">${t('msg_send_tg')}</button>
         <button type="button" onclick="copyDraft()" style="background:#e6e6e6;border:1px solid #9a9a9a;padding:8px 16px;cursor:pointer;font-size:12px;font-family:inherit;">${t('msg_copy')}</button>
         <span id="tgStatus" style="font-size:12px;color:#888;"></span>
@@ -1760,6 +1763,25 @@ async function sendTgDraft(){
       saveData();
     } else { document.getElementById('tgStatus').textContent=t('err_prefix')+(j&&j.error||t('err_unknown')); }
   }catch(e){ document.getElementById('tgStatus').textContent=t('err_net'); }
+}
+// Ответ специалиста ПРЯМО в чат клиента (VIA-L EXPERT app), а не в Telegram.
+// Воркер делает read-merge-write (не затирает входящие клиента) + опц. зеркалит в TG.
+// Локально дописываем для показа БЕЗ saveData (сообщение уже записано воркером).
+async function sendChatMsg(){
+  const c=clients.find(x=>x.id===selectedId); if(!c)return;
+  const code=c.code||c.id; const text=(document.getElementById('draftText').value||'').trim();
+  if(!text){alert(t('msg_draft_empty'));return;}
+  const st=document.getElementById('tgStatus'); if(st) st.textContent=t('msg_sending');
+  try{
+    const j=await api('/cabinet/chat-send',{code,text});
+    if(j&&j.ok){
+      if(st) st.textContent=t('msg_sent_chat');
+      if(!c.messages)c.messages=[];
+      c.messages.push({dir:'out',date:j.date||new Date().toISOString().slice(0,10),text,source:'cabinet'});
+      document.getElementById('draftText').value='';
+      renderTabContent();
+    } else if(st){ st.textContent=t('err_prefix')+((j&&j.error)||t('err_unknown')); }
+  }catch(e){ if(st) st.textContent=t('err_net'); }
 }
 function copyDraft(){
   const t=document.getElementById('draftText').value;

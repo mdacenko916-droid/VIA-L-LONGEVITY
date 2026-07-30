@@ -883,6 +883,7 @@ export default {
       if (path === '/cabinet/delete')      return handleCabinetDelete(request, env, corsHeaders);
       if (path === '/cabinet/ai-draft')    return handleCabinetAiDraft(request, env, corsHeaders);
       if (path === '/cabinet/tg-send')     return handleCabinetTgSend(request, env, corsHeaders);
+      if (path === '/cabinet/chat-send')   return handleCabinetChatSend(request, env, corsHeaders, ctx);   // ответ спеца в чат клиента (app)
       if (path === '/cabinet/translate')   return handleCabinetTranslate(request, env, corsHeaders);
       if (path === '/cabinet/leads')       return handleCabinetLeads(request, env, corsHeaders);
       if (path === '/cabinet/showcase-save') return handleCabinetShowcaseSave(request, env, corsHeaders);   // профиль витрины специалиста
@@ -5871,6 +5872,36 @@ async function handleCabinetAiDraft(request, env, corsHeaders){
 
 // Этап 4: отправка сообщения в ТГ-топик клиента (care-группа, через CLIENT_BOT_TOKEN).
 // Ищет topicId по code_topic:<code> в EXPERT_DRAFTS.
+// POST /cabinet/chat-send {code, text} — ответ специалиста ИЗ КАБИНЕТА прямо в чат клиента
+// (VIA-L EXPERT app), а не только в Telegram. Пишет {dir:'out',source:'cabinet'} в data.messages
+// (оригинал на языке спеца — /expert/thread переведёт клиенту на чтение). Опц. зеркало в TG-топик.
+// См. tasks/TODO.md «Свой чат — ответ специалиста из кабинета», [[project_own_chat_reply_gap]].
+async function handleCabinetChatSend(request, env, corsHeaders, ctx){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  let body={}; try{ body=await request.json(); }catch(_){}
+  const code = String(body.code||'').trim();
+  const text = String(body.text||'').trim().slice(0,4000);
+  if(!code || !text) return jsonResponse({ok:false,error:'missing_fields'}, corsHeaders, 400);
+  if(!await cabinetOwns(env, sess, code)) return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
+  const row = await env.DB.prepare('SELECT data FROM clients WHERE code=?').bind(code).first();
+  if(!row) return jsonResponse({ok:false,error:'not_found'}, corsHeaders, 404);
+  let d={}; try{ d=JSON.parse(row.data||'{}'); }catch(_){}
+  if(!Array.isArray(d.messages)) d.messages=[];
+  const date = new Date().toISOString().slice(0,10);
+  d.messages.push({ dir:'out', date, text, source:'cabinet' });
+  if(d.messages.length>300) d.messages=d.messages.slice(-300);
+  await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?').bind(JSON.stringify(d), Date.now(), code).run();
+  // Опц. зеркало в Telegram-топик (специалист-оператор в TG видит continuity) — не блокируем ответ.
+  if(ctx && env.CLIENT_BOT_TOKEN && env.NUTRITIONIST_GROUP_ID && env.EXPERT_DRAFTS){
+    ctx.waitUntil((async()=>{
+      try{ const topicId = await env.EXPERT_DRAFTS.get('code_topic:'+code); if(topicId) await careSend(env, env.NUTRITIONIST_GROUP_ID, text, {message_thread_id:Number(topicId)}); }catch(_){}
+    })());
+  }
+  return jsonResponse({ ok:true, date }, corsHeaders);
+}
+
 async function handleCabinetTgSend(request, env, corsHeaders){
   const sess = await cabinetSession(request, env);
   if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
