@@ -3535,11 +3535,16 @@ function renderExpertThread(msgs){
   if(!msgs.length){ if(empty)empty.style.display='block'; return; }
   if(empty)empty.style.display='none';
   const esc=s=>String(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  // Подписи отправителя (кто пишет) — для ясности «как в телеге».
+  const L_YOU={ru:'Вы',uk:'Ви',en:'You',es:'Tú',de:'Du',pt:'Você',fr:'Vous',pl:'Ty',it:'Tu',he:'את/ה',ja:'あなた',ko:'나'};
+  const L_SPEC={ru:'Нутрициолог',uk:'Нутриціолог',en:'Nutritionist',es:'Nutricionista',de:'Ernährungsberater',pt:'Nutricionista',fr:'Nutritionniste',pl:'Dietetyk',it:'Nutrizionista',he:'תזונאי',ja:'栄養士',ko:'영양사'};
+  const youL=L_YOU[lang]||L_YOU.en, specL=L_SPEC[lang]||L_SPEC.en;
   th.innerHTML = msgs.map(function(m){
     const out = m.dir==='out';
     return '<div style="align-self:'+(out?'flex-start':'flex-end')+';max-width:82%;padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.45;color:var(--t1);'
       + (out?'background:rgba(226,185,90,.14);border:1px solid rgba(226,185,90,.28);border-bottom-left-radius:4px;'
             :'background:rgba(255,255,255,.06);border-bottom-right-radius:4px;')+'">'
+      + '<div style="font-size:10px;font-weight:600;margin-bottom:3px;color:'+(out?'var(--gold-lt)':'var(--t3)')+';">'+(out?esc(specL):esc(youL))+'</div>'
       + esc(m.text).replace(/\n/g,'<br>')
       + (m.date?'<div style="font-size:10px;color:var(--t3);margin-top:4px;">'+esc(m.date)+'</div>':'')
       + '</div>';

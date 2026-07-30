@@ -986,6 +986,8 @@ const T = {
   msg_send_tg:{ru:"Отправить в ТГ-топик",uk:"Надіслати в ТГ-топік",en:"Send to TG topic",es:"Enviar al tema de TG",de:"An TG-Thema senden",pt:"Enviar ao tópico do TG",fr:"Envoyer au sujet TG",pl:"Wyślij do tematu TG",it:"Invia al topic TG",he:"שלח לנושא TG",ja:"TGトピックに送信",ko:"TG 토픽으로 전송"},
   msg_send_chat:{ru:"В чат клиента",uk:"У чат клієнта",en:"To client chat",es:"Al chat del cliente",de:"In Klienten-Chat",pt:"Para o chat do cliente",fr:"Vers le chat du client",pl:"Do czatu klienta",it:"Alla chat del cliente",he:"לצ'אט הלקוח",ja:"クライアントのチャットへ",ko:"고객 채팅으로"},
   msg_sent_chat:{ru:"Отправлено в чат ✓",uk:"Надіслано в чат ✓",en:"Sent to chat ✓",es:"Enviado al chat ✓",de:"In Chat gesendet ✓",pt:"Enviado ao chat ✓",fr:"Envoyé au chat ✓",pl:"Wysłano do czatu ✓",it:"Inviato alla chat ✓",he:"נשלח לצ'אט ✓",ja:"チャットに送信 ✓",ko:"채팅으로 전송 ✓"},
+  msg_compose_ph:{ru:"Написать клиенту…",uk:"Написати клієнту…",en:"Message the client…",es:"Escribir al cliente…",de:"Nachricht an den Klienten…",pt:"Mensagem ao cliente…",fr:"Écrire au client…",pl:"Napisz do klienta…",it:"Scrivi al cliente…",he:"כתוב ללקוח…",ja:"クライアントへメッセージ…",ko:"고객에게 메시지…"},
+  msg_tools:{ru:"ИИ-черновик и Telegram",uk:"ШІ-чернетка та Telegram",en:"AI draft & Telegram",es:"Borrador IA y Telegram",de:"KI-Entwurf & Telegram",pt:"Rascunho IA e Telegram",fr:"Brouillon IA et Telegram",pl:"Szkic AI i Telegram",it:"Bozza IA e Telegram",he:"טיוטת AI ו-Telegram",ja:"AI下書きとTelegram",ko:"AI 초안 및 Telegram"},
   msg_copy:{ru:"Скопировать",uk:"Скопіювати",en:"Copy",es:"Copiar",de:"Kopieren",pt:"Copiar",fr:"Copier",pl:"Kopiuj",it:"Copia",he:"העתק",ja:"コピー",ko:"복사"},
   msg_history:{ru:"История",uk:"Історія",en:"History",es:"Historial",de:"Verlauf",pt:"Histórico",fr:"Historique",pl:"Historia",it:"Cronologia",he:"היסטוריה",ja:"履歴",ko:"기록"},
   msg_translate_in:{ru:"🌐 Перевести входящие",uk:"🌐 Перекласти вхідні",en:"🌐 Translate incoming",es:"🌐 Traducir entrantes",de:"🌐 Eingehende übersetzen",pt:"🌐 Traduzir recebidas",fr:"🌐 Traduire les entrants",pl:"🌐 Przetłumacz przychodzące",it:"🌐 Traduci in entrata",he:"🌐 תרגם נכנסות",ja:"🌐 受信を翻訳",ko:"🌐 수신 번역"},
@@ -1637,6 +1639,7 @@ function renderTabContent(){
   else if(currentTab==='schedule') el.innerHTML = renderSchedule(c);
   else if(currentTab==='breakdowns') el.innerHTML = renderBreakdowns(c);
   else if(currentTab==='messages') el.innerHTML = renderMessages(c);
+  if(currentTab==='messages'){ requestAnimationFrame(()=>{ const b=document.getElementById('chatThreadBox'); if(b) b.scrollTop=b.scrollHeight; }); }
 }
 
 // ── ANKETA TAB ──────────────────────────────────────────
@@ -1664,65 +1667,80 @@ function renderAnketa(c){
   return html;
 }
 
-// ── MESSAGES TAB ──────────────────────────────────────────
+// ── MESSAGES TAB (чат-вид: тред сверху, поле ввода снизу — как в мессенджере) ──
 function renderMessages(c){
   const msgs = c.messages || [];
-  const msgHtml = msgs.slice().reverse().map((m,ri)=>{
-    const i = msgs.length-1-ri;
+  // Пузыри: старые сверху → новые снизу. in=клиент слева синий, out=специалист справа зелёный.
+  const bubbles = msgs.map((m,i)=>{
     const isIn = m.dir==='in';
-    const bg = isIn ? '#f0f4ff' : '#f0fff4';
-    const label = isIn ? t('msg_in_label') : t('msg_out_label');
-    const labelClr = isIn ? '#1565c0' : '#2e7d32';
-    return `<div style="padding:10px 14px;border:1px solid #e0e0e0;margin-bottom:8px;background:${bg};">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <span style="font-size:11px;font-weight:600;color:${labelClr};">${label}</span>
-        <span style="font-size:11px;color:#999;">${esc(m.date||'')}</span>
-        <button style="background:none;border:none;cursor:pointer;color:#ccc;font-size:13px;" onclick="deleteMsg(${i})">×</button>
+    const align = isIn ? 'flex-start' : 'flex-end';
+    const bg = isIn ? '#eef2ff' : '#e8f7ec';
+    const bd = isIn ? '#cfd8f5' : '#bfe6cb';
+    const who = isIn ? t('msg_in_label') : t('msg_out_label');
+    const whoClr = isIn ? '#1565c0' : '#2e7d32';
+    return `<div style="align-self:${align};max-width:80%;background:${bg};border:1px solid ${bd};border-radius:12px;padding:7px 11px;">
+      <div style="display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:2px;">
+        <span style="font-size:10px;font-weight:600;color:${whoClr};">${who}</span>
+        <span style="display:flex;gap:6px;align-items:center;"><span style="font-size:10px;color:#999;">${esc(m.date||'')}</span><button onclick="deleteMsg(${i})" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:12px;line-height:1;padding:0;">×</button></span>
       </div>
-      <div style="font-size:13px;white-space:pre-wrap;">${esc(m.text||'')}</div>
+      <div style="font-size:13px;white-space:pre-wrap;line-height:1.45;">${esc(m.text||'')}</div>
     </div>`;
-  }).join('') || `<p style="color:#999;font-size:13px;">${t('msg_none')}</p>`;
+  }).join('') || `<div style="margin:auto;color:#999;font-size:13px;">${t('msg_none')}</div>`;
 
   return `
-    <div class="section-title">${t('tab_messages')}</div>
-
-    <div style="border:1px solid #ddd;padding:16px;margin-bottom:20px;background:#fafafa;">
-      <div style="font-size:11px;font-weight:600;color:#666;margin-bottom:8px;text-transform:uppercase;">${t('msg_add_title')}</div>
-      <div style="display:flex;gap:8px;margin-bottom:8px;">
-        <select id="msgDir" style="border:1px solid #ccc;padding:6px 10px;font-size:12px;font-family:inherit;background:#fff;">
-          <option value="in">${t('msg_opt_in')}</option>
-          <option value="out">${t('msg_opt_out')}</option>
-        </select>
-        <input id="msgDate" type="date" value="${new Date().toISOString().slice(0,10)}"
-          style="border:1px solid #ccc;padding:6px 10px;font-size:12px;font-family:inherit;background:#fff;">
-      </div>
-      <textarea id="msgText" rows="3" maxlength="4000"
-        style="width:100%;border:1px solid #ccc;padding:8px 10px;font-size:13px;font-family:inherit;resize:vertical;margin-bottom:8px;"
-        placeholder="${t('msg_text_ph')}"></textarea>
-      <button type="button" onclick="addMsg()" style="background:#1a1a1a;color:#fff;border:none;padding:8px 18px;cursor:pointer;font-size:12px;">${t('msg_add_btn')}</button>
-    </div>
-
-    <div style="border:1px solid #ddd;padding:16px;margin-bottom:20px;">
-      <div style="font-size:11px;font-weight:600;color:#666;margin-bottom:10px;text-transform:uppercase;">${t('msg_ai_title')}</div>
-      <button type="button" onclick="genAiDraft()" style="background:#e6e6e6;border:1px solid #9a9a9a;padding:8px 16px;cursor:pointer;font-size:12px;font-family:inherit;margin-bottom:10px;">${t('msg_gen_btn')}</button>
-      <div id="draftStatus" style="font-size:12px;color:#888;margin-bottom:8px;"></div>
-      <textarea id="draftText" rows="5" maxlength="4000"
-        style="width:100%;border:1px solid #ccc;padding:8px 10px;font-size:13px;font-family:inherit;resize:vertical;margin-bottom:8px;"
-        placeholder="${t('msg_draft_ph')}"></textarea>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <button type="button" onclick="sendChatMsg()" style="background:#2e7d32;color:#fff;border:none;padding:8px 18px;cursor:pointer;font-size:12px;">${t('msg_send_chat')}</button>
-        <button type="button" onclick="sendTgDraft()" style="background:#1a1a1a;color:#fff;border:none;padding:8px 18px;cursor:pointer;font-size:12px;">${t('msg_send_tg')}</button>
-        <button type="button" onclick="copyDraft()" style="background:#e6e6e6;border:1px solid #9a9a9a;padding:8px 16px;cursor:pointer;font-size:12px;font-family:inherit;">${t('msg_copy')}</button>
-        <span id="tgStatus" style="font-size:12px;color:#888;"></span>
-      </div>
-    </div>
-
-    <div style="display:flex;align-items:center;gap:10px;margin-top:8px;margin-bottom:8px;">
-      <div class="section-title" style="margin:0;">${t('msg_history')}</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <div class="section-title" style="margin:0;">${t('tab_messages')}</div>
       <button class="topbtn" onclick="translateIncoming()" style="font-size:11px;">${t('msg_translate_in')}</button>
     </div>
     <div id="msgTrans" style="display:none;white-space:pre-wrap;font-size:13px;line-height:1.6;background:#eef5ff;border:1px solid #cfe0f5;padding:12px 16px;margin-bottom:12px;"></div>
-    ${msgHtml}`;
+
+    <!-- Тред: прокрутка, автоскролл вниз -->
+    <div id="chatThreadBox" style="border:1px solid #ddd;height:min(50vh,460px);overflow-y:auto;padding:14px;background:#fafafa;display:flex;flex-direction:column;gap:8px;">
+      ${bubbles}
+    </div>
+
+    <!-- Поле ввода СНИЗУ -->
+    <div style="display:flex;gap:8px;margin-top:10px;align-items:flex-end;">
+      <textarea id="chatCompose" rows="2" maxlength="4000" placeholder="${t('msg_compose_ph')}"
+        style="flex:1;border:1px solid #ccc;padding:9px 12px;font-size:13px;font-family:inherit;resize:vertical;"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatFromCompose();}"></textarea>
+      <button type="button" onclick="sendChatFromCompose()" style="background:#2e7d32;color:#fff;border:none;padding:10px 20px;cursor:pointer;font-size:13px;white-space:nowrap;">${t('msg_send_chat')}</button>
+    </div>
+    <div id="chatComposeStatus" style="font-size:12px;color:#888;margin-top:4px;margin-bottom:16px;"></div>
+
+    <!-- ИИ-черновик и Telegram — в раскрывашке -->
+    <details style="margin-bottom:16px;">
+      <summary style="cursor:pointer;font-size:12px;font-weight:600;color:#666;text-transform:uppercase;">${t('msg_tools')}</summary>
+      <div style="border:1px solid #ddd;padding:16px;margin-top:10px;">
+        <div style="font-size:11px;font-weight:600;color:#666;margin-bottom:10px;text-transform:uppercase;">${t('msg_ai_title')}</div>
+        <button type="button" onclick="genAiDraft()" style="background:#e6e6e6;border:1px solid #9a9a9a;padding:8px 16px;cursor:pointer;font-size:12px;font-family:inherit;margin-bottom:10px;">${t('msg_gen_btn')}</button>
+        <div id="draftStatus" style="font-size:12px;color:#888;margin-bottom:8px;"></div>
+        <textarea id="draftText" rows="5" maxlength="4000"
+          style="width:100%;border:1px solid #ccc;padding:8px 10px;font-size:13px;font-family:inherit;resize:vertical;margin-bottom:8px;"
+          placeholder="${t('msg_draft_ph')}"></textarea>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <button type="button" onclick="sendChatMsg()" style="background:#2e7d32;color:#fff;border:none;padding:8px 18px;cursor:pointer;font-size:12px;">${t('msg_send_chat')}</button>
+          <button type="button" onclick="sendTgDraft()" style="background:#1a1a1a;color:#fff;border:none;padding:8px 18px;cursor:pointer;font-size:12px;">${t('msg_send_tg')}</button>
+          <button type="button" onclick="copyDraft()" style="background:#e6e6e6;border:1px solid #9a9a9a;padding:8px 16px;cursor:pointer;font-size:12px;font-family:inherit;">${t('msg_copy')}</button>
+          <span id="tgStatus" style="font-size:12px;color:#888;"></span>
+        </div>
+      </div>
+    </details>`;
+}
+async function sendChatFromCompose(){
+  const el=document.getElementById('chatCompose'); const text=(el&&el.value||'').trim(); if(!text)return;
+  const st=document.getElementById('chatComposeStatus'); if(st)st.textContent=t('msg_sending');
+  const c=clients.find(x=>x.id===selectedId); if(!c)return;
+  const code=c.code||c.id;
+  try{
+    const j=await api('/cabinet/chat-send',{code,text});
+    if(j&&j.ok){
+      if(!c.messages)c.messages=[];
+      c.messages.push({dir:'out',date:j.date||new Date().toISOString().slice(0,10),text,source:'cabinet'});
+      if(el)el.value='';
+      renderTabContent();
+    } else if(st){ st.textContent=t('err_prefix')+((j&&j.error)||t('err_unknown')); }
+  }catch(e){ if(st) st.textContent=t('err_net'); }
 }
 function addMsg(){
   const c=clients.find(x=>x.id===selectedId); if(!c)return;
