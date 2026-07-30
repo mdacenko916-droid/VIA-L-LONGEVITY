@@ -146,9 +146,12 @@ redeploy) — в [[project_tariff_naming_canon]].
       `code-generator.html`). «Обрезать Hotmart» потом = удалить `/hotmart-webhook`,
       `handleHotmartWebhook`, `detectLangFromHotmart`; ядро не трогаем. Объём после
       получения ключей — ~полдня. См. memory [[project_tariff_merge_via_l_base]].
-- [ ] **VIA-L EXPERT — нативная обёртка.** Сейчас `interpreter-via-l-expert.html` —
-      только веб (открывается в браузере). Завернуть в Capacitor (как `app/`) для
-      простой установки на телефон, как у VIA-L. Отдельная задача.
+- [x] **VIA-L EXPERT — нативная обёртка (✅ СКАФФОЛД 2026-07-30).** `app-expert/` (bundle
+      `com.viael.expert`): тонкая Capacitor-обёртка, грузит живой PWA по `server.url` (всегда
+      актуален, без пересборки); www-фолбэк офлайн, README со сборкой. HealthKit/IAP осознанно НЕ
+      подключены (авто-синхро уже через вендор-OAuth в PWA; оплата через специалиста). **⏳ владелец:**
+      собрать на Mac (`cd app-expert && npm install && npx cap add ios && npx cap open ios`), дистрибуция
+      вне App Store (TestFlight/ссылка). Опц. позже: нативный HealthKit для Apple Watch (плагин как в `app/`).
 - [ ] **Экран «Мой наставник» без кода = тупик (VIA-L).** → покрыто пунктом «Витрина
       специалистов» выше (§ Воронка VIA-L → витрина → EXPERT PWA). Трёхслойность: 1) `?ref`
       → код подставлен; 2) ручной ввод; 3) кода нет → витрина. См. PLATFORM-MODEL §10 №3.
