@@ -112,11 +112,13 @@ redeploy) — в [[project_tariff_naming_canon]].
       клиент/спец, ввод снизу, Enter=отправить, автоскролл; ИИ-черновик/TG в раскрывашку); клиент EXPERT
       PWA → подписи «Вы»/«Нутрициолог» над пузырями ×12. Перевод out→язык клиента платный (Claude),
       но кэш `m.tr` (1 раз/сообщение) → копейки.
-- [ ] **Чат: голос + фото — 🔴 БЛОКЕР: R2 не включён.** Проверено 2026-07-30: `wrangler r2 bucket list`
-      → «Please enable R2 through the Cloudflare Dashboard» (code 10042). **Действие владельца:** включить R2
-      в дашборде Cloudflare (free-tier ~10 ГБ, может попросить карту). Потом: bucket, роуты `/chat/upload`+
-      `/chat/file`, сообщение `{type:'audio'|'image', url}`, рендер плеера/превью в EXPERT PWA и Кабинете.
-      Голос — MediaRecorder. Агрегаторы/D1-блобы отклонены.
+- [x] **Чат: голос + фото — ✅ В ПРОДЕ 2026-07-30.** R2 включён владельцем (bucket `vial-assets`, публичный
+      `pub-2f2f1a44…r2.dev`); binding `ASSETS` в wrangler.jsonc. Воркер `/chat/upload?code=&kind=image|audio`
+      (авторизация = код карточки, лимит 12МБ) → R2 → публичный URL; сообщение расширено `{type,url}`
+      (/expert/message, /cabinet/chat-send принимают, /expert/thread отдаёт). Клиент EXPERT PWA: кнопки
+      📷/🎤 (MediaRecorder) → рендер `<img>`/`<audio>` в пузыре; Кабинет: те же + рендер; SW v3.
+      Проверено вживую: upload→R2→публичный URL 200. **⏳ опц.:** превью/лайтбокс фото по клику, длительность
+      голосового, авто-удаление старых файлов R2 (сейчас копятся).
 - [ ] **Оплата EXPERT: Hotmart → LiqPay (ПриватБанк).** Зафиксировано 2026-07-28.
       Разделение продуктов: **VIA-L** (глобал, App Store) остаётся на Apple IAP;
       **VIA-L EXPERT** продаётся с сайта нутрициолога (UA/RU + ЕС, разовый платёж
