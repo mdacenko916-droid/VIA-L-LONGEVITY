@@ -715,8 +715,8 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
       <input class="form-input" id="sc-photo" type="text" placeholder="https://…/photo.jpg" style="font-size:13px;">
     </div>
     <div class="form-row">
-      <label data-i18n="sc_langs">Языки (через запятую)</label>
-      <input class="form-input" id="sc-langs" type="text" placeholder="uk, ru, en, es" style="font-size:13px;">
+      <label data-i18n="sc_langs">Языки специалиста</label>
+      <div id="sc-langs-grid" style="display:flex;flex-wrap:wrap;gap:6px 14px;padding-top:4px;"></div>
     </div>
     <div class="form-row">
       <label data-i18n="sc_bio">О себе (коротко)</label>
@@ -803,7 +803,7 @@ const T = {
   cat_medical:{ru:"Медицина",uk:"Медицина",en:"Medical",es:"Medicina",de:"Medizin",pt:"Medicina",fr:"Médecine",pl:"Medycyna",it:"Medicina",he:"רפואה",ja:"医療",ko:"의료"},
   sc_cal:{ru:"Ссылка на знакомство (Cal.com, 15 мин)",uk:"Посилання на знайомство (Cal.com, 15 хв)",en:"Intro call link (Cal.com, 15 min)",es:"Enlace de presentación (Cal.com, 15 min)",de:"Kennenlern-Link (Cal.com, 15 Min.)",pt:"Link de apresentação (Cal.com, 15 min)",fr:"Lien de rencontre (Cal.com, 15 min)",pl:"Link na poznanie się (Cal.com, 15 min)",it:"Link conoscitivo (Cal.com, 15 min)",he:"קישור להיכרות (Cal.com, 15 דק')",ja:"顔合わせリンク（Cal.com、15分）",ko:"소개 통화 링크(Cal.com, 15분)"},
   sc_photo:{ru:"Фото (URL)",uk:"Фото (URL)",en:"Photo (URL)",es:"Foto (URL)",de:"Foto (URL)",pt:"Foto (URL)",fr:"Photo (URL)",pl:"Zdjęcie (URL)",it:"Foto (URL)",he:"תמונה (URL)",ja:"写真（URL）",ko:"사진(URL)"},
-  sc_langs:{ru:"Языки (через запятую)",uk:"Мови (через кому)",en:"Languages (comma-separated)",es:"Idiomas (separados por comas)",de:"Sprachen (kommagetrennt)",pt:"Idiomas (separados por vírgula)",fr:"Langues (séparées par des virgules)",pl:"Języki (oddzielone przecinkami)",it:"Lingue (separate da virgola)",he:"שפות (מופרדות בפסיק)",ja:"言語（カンマ区切り）",ko:"언어(쉼표로 구분)"},
+  sc_langs:{ru:"Языки специалиста",uk:"Мови спеціаліста",en:"Specialist's languages",es:"Idiomas del especialista",de:"Sprachen des Spezialisten",pt:"Idiomas do especialista",fr:"Langues du spécialiste",pl:"Języki specjalisty",it:"Lingue dello specialista",he:"שפות המומחה",ja:"専門家の言語",ko:"전문가의 언어"},
   sc_bio:{ru:"О себе (коротко)",uk:"Про себе (коротко)",en:"About you (short)",es:"Sobre ti (breve)",de:"Über Sie (kurz)",pt:"Sobre você (breve)",fr:"À propos de vous (bref)",pl:"O sobie (krótko)",it:"Su di te (breve)",he:"עליך (בקצרה)",ja:"自己紹介（簡潔に）",ko:"소개(간단히)"},
   sc_err_cal:{ru:"Укажите ссылку на знакомство, чтобы показываться в витрине.",uk:"Вкажіть посилання на знайомство, щоб показуватися у вітрині.",en:"Add an intro-call link to appear in the showcase.",es:"Añade un enlace de presentación para aparecer en el escaparate.",de:"Fügen Sie einen Kennenlern-Link hinzu, um im Schaufenster zu erscheinen.",pt:"Adicione um link de apresentação para aparecer na vitrine.",fr:"Ajoutez un lien de rencontre pour apparaître dans la vitrine.",pl:"Dodaj link na poznanie się, aby pojawić się w witrynie.",it:"Aggiungi un link conoscitivo per apparire nella vetrina.",he:"הוסף קישור להיכרות כדי להופיע בחלון הראווה.",ja:"掲載に表示するには顔合わせリンクを追加してください。",ko:"프로필에 표시하려면 소개 통화 링크를 추가하세요."},
   sc_err_save:{ru:"Не удалось сохранить. Попробуйте ещё раз.",uk:"Не вдалося зберегти. Спробуйте ще раз.",en:"Couldn't save. Please try again.",es:"No se pudo guardar. Inténtalo de nuevo.",de:"Speichern fehlgeschlagen. Bitte erneut versuchen.",pt:"Não foi possível salvar. Tente novamente.",fr:"Échec de l'enregistrement. Veuillez réessayer.",pl:"Nie udało się zapisać. Spróbuj ponownie.",it:"Salvataggio non riuscito. Riprova.",he:"השמירה נכשלה. נסה שוב.",ja:"保存できませんでした。もう一度お試しください。",ko:"저장하지 못했습니다. 다시 시도하세요."},
@@ -1226,13 +1226,23 @@ function openMyLink(){
 function closeMyLink(){ document.getElementById('myLinkModal').classList.remove('open'); }
 
 // ── «Моя витрина» (профиль наставника для экрана «Мой наставник») ──
+// Языки специалиста — чекбоксы всех 12 (продукт мировой; у каждого спеца могут быть свои).
+const SC_LANGS=[['uk','🇺🇦'],['ru','🇷🇺'],['en','🇬🇧'],['es','🇪🇸'],['de','🇩🇪'],['pt','🇧🇷'],['fr','🇫🇷'],['pl','🇵🇱'],['it','🇮🇹'],['he','🇮🇱'],['ja','🇯🇵'],['ko','🇰🇷']];
+function buildShowcaseLangs(csv){
+  const sel=new Set(String(csv||'').toLowerCase().split(',').map(x=>x.trim()).filter(Boolean));
+  const grid=document.getElementById('sc-langs-grid'); if(!grid)return;
+  grid.innerHTML=SC_LANGS.map(([code,flag])=>`<label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;white-space:nowrap;"><input type="checkbox" value="${code}"${sel.has(code)?' checked':''}> ${flag} ${code.toUpperCase()}</label>`).join('');
+}
+function getShowcaseLangs(){
+  return [...document.querySelectorAll('#sc-langs-grid input:checked')].map(i=>i.value).join(',');
+}
 function openShowcase(){
   const s = myShowcase || {};
   document.getElementById('sc-public').checked = !!s.public;
   document.getElementById('sc-category').value = s.category || '';
   document.getElementById('sc-cal').value   = s.cal_url || '';
   document.getElementById('sc-photo').value = s.photo || '';
-  document.getElementById('sc-langs').value = s.langs || '';
+  buildShowcaseLangs(s.langs || '');
   document.getElementById('sc-bio').value   = s.bio || '';
   const err=document.getElementById('sc-err'); if(err){ err.style.display='none'; }
   document.getElementById('showcaseModal').classList.add('open');
@@ -1249,7 +1259,7 @@ async function saveShowcase(){
     public: pub, cal_url: cal,
     category: document.getElementById('sc-category').value,
     photo: document.getElementById('sc-photo').value.trim(),
-    langs: document.getElementById('sc-langs').value.trim(),
+    langs: getShowcaseLangs(),
     bio:   document.getElementById('sc-bio').value.trim(),
   };
   if(btn) btn.disabled=true;

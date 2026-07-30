@@ -1,6 +1,6 @@
 // VIA·L Cabinet — service worker (PWA: устанавливаемость + офлайн-оболочка).
 // Безопасно: POST (API) и cross-origin (воркер-API, шрифты) НЕ трогаем.
-const CACHE = 'vial-cabinet-v4';
+const CACHE = 'vial-cabinet-v5';
 const SHELL = ['./', './index.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
