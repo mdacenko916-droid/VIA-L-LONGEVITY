@@ -2081,7 +2081,10 @@ async function handleExpertThread(request, env, corsHeaders, ctx){
   if(!row) return jsonResponse({ ok:false, error:'not_found' }, corsHeaders, 404);
   let d = {}; try{ d = JSON.parse(row.data || '{}'); }catch(_){}
   const msgs = Array.isArray(d.messages) ? d.messages : [];
-  const clientLang = String(d.lang || '').toLowerCase();
+  // Язык, на котором клиент РЕАЛЬНО читает приложение (передаёт фронт) → на него и переводим ответы
+  // специалиста. Фолбэк на язык карточки (может быть устаревшим, напр. EN у русскоязычного клиента).
+  const qLang = String(new URL(request.url).searchParams.get('lang') || '').toLowerCase();
+  const clientLang = qLang || String(d.lang || '').toLowerCase();
   // Язык нутрициолога карточки — чтобы перевести его out-ответы на язык клиента.
   let spLang = 'ru';
   if(row.specialist_id != null){
