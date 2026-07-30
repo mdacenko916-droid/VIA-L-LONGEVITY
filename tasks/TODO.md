@@ -86,16 +86,15 @@ redeploy) — в [[project_tariff_naming_canon]].
       (срок×€20); Кабинет ведёт счёт специалиста «к оплате: €30 платформа + €N за выданные доступы» → платит
       на карту. Предоплаченный баланс — на потом, при росте. Никакой платёжной интеграции для клиентов
       (ни Apple IAP, ни веб-подписки) — специалист собирает всё сам.
-- [ ] **EXPERT PWA — авто-синхро с гаджета (снять инверсию UX «платит больше — вводит руками»).**
-      Apple Health/Health Connect в PWA недоступны (нативные API). НО данные тянутся из **облака вендора
-      по веб-OAuth** — коннекторы `connectWearable('polar'/'withings'/…)`/`fetchWearableLive()` уже есть
-      в `interpreter-via-l-expert.html`, скрыты за `?vendors=1` (ретайр 2026-07-21 из-за масштабных стен
-      массового App-Store-продукта). Для МАЛОЙ дорогой EXPERT-когорты стены почти не жмут. Раскрыть
-      **чистые вендоры Oura/Polar/Withings** (своя OAuth, БЕЗ Google → CASA не включается) как авто-путь,
-      ручной ввод = fallback. Oura — потолок 10 юзеров (пилот). **Fitbit — опционально, с оговоркой:**
-      текущий коннектор идёт через Google Health (`GH_SCOPES`) → тянет CASA (unverified-warning + лимит 100);
-      прямой Fitbit Web API закрывается ~09.2026. CASA нам НЕ важна, пока не берём Fitbit-через-Google.
-      Агрегаторы (Terra/Vital/Rook) отклонены — дорого (плата за юзера ест €20-маржу). См. docs/HEALTH-DATA-SOURCING-PLAN.md.
+- [x] **EXPERT PWA — вендор-OAuth раскрыт (✅ КОД в проде 2026-07-30).** Кнопка «Синхронизация устройства»
+      (i18n `imp_device_*` ×12) → mode-full с Oura/Polar/Withings + manual; Fitbit убран (Google→CASA),
+      WHOOP уже скрыт; `_chooseSource('device')→openImport('full')`, `?vendors=1`-гейт удалён.
+      **🔴 CONFIG-блокер (действие владельца) — секреты воркера:** проверено `wrangler secret list`:
+      **Oura ✅ работает** (OURA_CLIENT_ID/SECRET есть). **Polar ❌** — секретов нет: завести Polar AccessLink
+      app (admin.polaraccesslink.com, redirect `…workers.dev/polar/callback`) → `wrangler secret put POLAR_CLIENT_ID`
+      + `POLAR_CLIENT_SECRET`. **Withings ❌** — секрет сохранён с битым ИМЕНЕМ `WITHINGS_CLIENT_SECRET8d82902…`
+      (склеилось со значением); фикс: `wrangler secret delete WITHINGS_CLIENT_SECRET8d82902efb9c82e83b4a9e3d27f1b8c57e3131228f8236eac503335edad93583`
+      затем `wrangler secret put WITHINGS_CLIENT_SECRET` (вставить ТОЛЬКО значение). После секретов — код менять не надо.
 - [ ] **Нативка VIA-L → синхро данных в Кабинет (будущая развилка, НЕ сейчас).** Compliance = функция кода,
       что шлётся в `/analyze`: нативка шлёт обычный код → велнес-разбор без мед-терминов (прошла модерацию).
       Можно добавить отправку СЫРЫХ данных в Кабинет (Apple не ревьюит серверную синхро к провайдеру), НО
