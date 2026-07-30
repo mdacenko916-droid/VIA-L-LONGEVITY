@@ -899,6 +899,7 @@ export default {
       // (/expert/verify — GET, зарегистрирован в GET-блоке выше)
       if (path === '/cabinet/expert-grant') return handleCabinetExpertGrant(request, env, corsHeaders);   // авторизован (специалист)
       if (path === '/cabinet/expert-revoke')return handleCabinetExpertRevoke(request, env, corsHeaders);  // авторизован (специалист)
+      if (path === '/cabinet/expert-extend')return handleCabinetExpertExtend(request, env, corsHeaders);  // авторизован (специалист)
 
       // Платформа, Шаг 6: панель владельца — управление специалистами (только role=owner).
       if (path === '/cabinet/specialists')       return handleCabinetSpecialists(request, env, corsHeaders);
@@ -5956,6 +5957,20 @@ function genExpertCode(){
   return 'EX' + s;
 }
 
+// Persist статуса выданного доступа в карточку клиента (data.expert_grant) — чтобы Кабинет
+// показывал активный доступ после релоада (KV сам по себе фронту не виден). Read-merge-write.
+async function _setCardExpertGrant(env, cardCode, patch){
+  if(!env.DB || !cardCode) return;
+  try{
+    const row = await env.DB.prepare('SELECT data FROM clients WHERE code=?').bind(cardCode).first();
+    if(!row) return;
+    let d={}; try{ d = JSON.parse(row.data || '{}'); }catch(_){}
+    d.expert_grant = Object.assign({}, d.expert_grant || {}, patch);
+    await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?')
+      .bind(JSON.stringify(d), Date.now(), cardCode).run();
+  }catch(_){}
+}
+
 // ── Воронка витрина → EXPERT PWA: выдача/проверка/отзыв срочного кода доступа ──
 // Хранилище — KV EXPERT_DRAFTS, ключ `expert_access:<GRANTCODE>`:
 //   { card_code, plan, expiry(YYYY-MM-DD), quota, used, revoked, specialist_id, days, owed, issued }
@@ -6014,9 +6029,37 @@ async function handleCabinetExpertGrant(request, env, corsHeaders){
   };
   await env.EXPERT_DRAFTS.put('expert_access:'+grantCode, JSON.stringify(rec),
     { expirationTtl: (days + 60) * 24 * 60 * 60 });   // авто-очистка через срок + 60 дней
+  await _setCardExpertGrant(env, cardCode, { code:grantCode, expiry, days, owed, revoked:false, issued:rec.issued });
 
   const link = 'https://via-l.com/interpreter/interpreter-via-l-expert.html';
   return jsonResponse({ ok:true, code: grantCode, expiry, days, owed, link }, corsHeaders);
+}
+
+// POST /cabinet/expert-extend {code} (code = GRANTCODE) {days} — продлить срок доступа.
+async function handleCabinetExpertExtend(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ ok:false, error:'unauthorized' }, corsHeaders, 401);
+  if(!env.EXPERT_DRAFTS) return jsonResponse({ ok:false, error:'backend_missing' }, corsHeaders, 500);
+  let b={}; try{ b = await request.json(); }catch(_){}
+  const grantCode = String(b.code||'').trim().toUpperCase();
+  const add = Math.max(1, Math.min(400, parseInt(b.days,10)||0));
+  if(!grantCode || !add) return jsonResponse({ ok:false, error:'bad_input' }, corsHeaders, 400);
+  let rec=null; try{ rec = JSON.parse(await env.EXPERT_DRAFTS.get('expert_access:'+grantCode) || 'null'); }catch(_){}
+  if(!rec) return jsonResponse({ ok:false, error:'not_found' }, corsHeaders, 404);
+  if(sess.role !== 'owner' && String(rec.specialist_id) !== String(sess.id))
+    return jsonResponse({ ok:false, error:'forbidden' }, corsHeaders, 403);
+  // продлеваем от max(сегодня, текущий expiry)
+  const today = new Date().toISOString().slice(0,10);
+  const base = (rec.expiry && rec.expiry > today) ? new Date(rec.expiry+'T00:00:00Z') : new Date();
+  base.setUTCDate(base.getUTCDate() + add);
+  rec.expiry = base.toISOString().slice(0,10);
+  rec.quota = (rec.quota||0) + add;
+  rec.days  = (rec.days||0) + add;
+  rec.owed  = Math.round(rec.days / 30 * 20);
+  rec.revoked = false;
+  await env.EXPERT_DRAFTS.put('expert_access:'+grantCode, JSON.stringify(rec), { expirationTtl: (rec.days + 60) * 24 * 60 * 60 });
+  await _setCardExpertGrant(env, rec.card_code, { code:grantCode, expiry:rec.expiry, days:rec.days, owed:rec.owed, revoked:false });
+  return jsonResponse({ ok:true, code:grantCode, expiry:rec.expiry, days:rec.days, owed:rec.owed }, corsHeaders);
 }
 
 // POST /cabinet/expert-revoke  {code} — специалист закрывает выданный доступ (code = GRANTCODE).
@@ -6033,6 +6076,7 @@ async function handleCabinetExpertRevoke(request, env, corsHeaders){
     return jsonResponse({ ok:false, error:'forbidden' }, corsHeaders, 403);
   rec.revoked = true;
   await env.EXPERT_DRAFTS.put('expert_access:'+grantCode, JSON.stringify(rec), { expirationTtl: 60*24*60*60 });
+  await _setCardExpertGrant(env, rec.card_code, { revoked:true });
   return jsonResponse({ ok:true, code:grantCode, revoked:true }, corsHeaders);
 }
 

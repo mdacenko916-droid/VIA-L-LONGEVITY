@@ -904,6 +904,8 @@ const T = {
   ex_copy:{ru:"Копировать",uk:"Копіювати",en:"Copy",es:"Copiar",de:"Kopieren",pt:"Copiar",fr:"Copier",pl:"Kopiuj",it:"Copia",he:"העתק",ja:"コピー",ko:"복사"},
   ex_copied:{ru:"Скопировано",uk:"Скопійовано",en:"Copied",es:"Copiado",de:"Kopiert",pt:"Copiado",fr:"Copié",pl:"Skopiowano",it:"Copiato",he:"הועתק",ja:"コピーしました",ko:"복사됨"},
   ex_err:{ru:"Ошибка. Попробуйте ещё раз.",uk:"Помилка. Спробуйте ще раз.",en:"Error. Please try again.",es:"Error. Inténtalo de nuevo.",de:"Fehler. Bitte erneut versuchen.",pt:"Erro. Tente novamente.",fr:"Erreur. Veuillez réessayer.",pl:"Błąd. Spróbuj ponownie.",it:"Errore. Riprova.",he:"שגיאה. נסה שוב.",ja:"エラー。もう一度お試しください。",ko:"오류. 다시 시도하세요."},
+  ex_extend:{ru:"Продлить",uk:"Продовжити",en:"Extend",es:"Ampliar",de:"Verlängern",pt:"Prorrogar",fr:"Prolonger",pl:"Przedłuż",it:"Estendi",he:"הארך",ja:"延長",ko:"연장"},
+  ex_ended:{ru:"Доступ завершён",uk:"Доступ завершено",en:"Access ended",es:"Acceso finalizado",de:"Zugang beendet",pt:"Acesso encerrado",fr:"Accès terminé",pl:"Dostęp zakończony",it:"Accesso terminato",he:"הגישה הסתיימה",ja:"アクセス終了",ko:"접근 종료"},
   ov_program:{ru:"Программа",uk:"Програма",en:"Program",es:"Programa",de:"Programm",pt:"Programa",fr:"Programme",pl:"Program",it:"Programma",he:"תוכנית",ja:"プログラム",ko:"프로그램"},
   ov_start:{ru:"Старт",uk:"Старт",en:"Start",es:"Inicio",de:"Start",pt:"Início",fr:"Début",pl:"Start",it:"Inizio",he:"התחלה",ja:"開始",ko:"시작"},
   ov_duration:{ru:"Длительность",uk:"Тривалість",en:"Duration",es:"Duración",de:"Dauer",pt:"Duração",fr:"Durée",pl:"Czas trwania",it:"Durata",he:"משך",ja:"期間",ko:"기간"},
@@ -2060,10 +2062,29 @@ function renderOverview(c){
     <div class="section-title">${t('ov_anketa_summary')}</div>
     <div style="background:#f8f8f8;border:1px solid #ddd;padding:12px 16px;white-space:pre-wrap;font-size:13px;line-height:1.6;">${esc(c.anketa.summary)}</div>` : '';
 
-  // Выдача доступа к VIA-L EXPERT (срочный код от специалиста → воронка витрины)
-  const expertBlock = c.code ? `
-    <div class="section-title">${t('ex_title')}</div>
-    <div style="border:1px solid #ddd;padding:12px 16px;margin-bottom:20px;font-size:13px;">
+  // Доступ к VIA-L EXPERT: активный (persist в data.expert_grant) → статус + Продлить/Закрыть; иначе форма выдачи
+  const EXPERT_PWA_URL = 'https://via-l.com/interpreter/interpreter-via-l-expert.html';
+  const g = c.expert_grant;
+  const todayStr = new Date().toISOString().slice(0,10);
+  const gActive = !!(g && g.code && !g.revoked && (!g.expiry || g.expiry >= todayStr));
+  let expertInner;
+  if(gActive){
+    const msg = `${g.code}\n${EXPERT_PWA_URL}`;
+    expertInner = `
+      <div style="line-height:1.8;">
+        <div><b>${t('ex_code')}:</b> <span style="font-family:monospace;font-size:15px;">${esc(g.code)}</span></div>
+        <div style="color:#888;">${t('ex_until')} ${esc(g.expiry||'—')} · ${t('ex_owed')}: €${esc(String(g.owed||0))}</div>
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <button class="topbtn" onclick="copyExpert(this, ${JSON.stringify(msg).replace(/"/g,'&quot;')})">${t('ex_copy')}</button>
+          <input id="exExtDays" type="number" min="1" max="400" value="30" style="width:70px;border:1px solid #ccc;padding:5px 8px;font-family:inherit;font-size:13px;">
+          <button class="topbtn" onclick="extendExpert('${esc(g.code)}')">${t('ex_extend')}</button>
+          <button class="topbtn" style="color:var(--alert);" onclick="revokeExpert('${esc(g.code)}',this)">${t('ex_revoke')}</button>
+        </div>
+      </div>`;
+  } else {
+    const endedNote = (g && (g.revoked || (g.expiry && g.expiry < todayStr))) ? `<div style="color:#888;margin-bottom:8px;">${t('ex_ended')}</div>` : '';
+    expertInner = `
+      ${endedNote}
       <div style="color:#888;margin-bottom:10px;">${t('ex_desc')}</div>
       <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;">
         <label style="font-size:12px;color:#888;">${t('ex_days')}<br>
@@ -2071,14 +2092,25 @@ function renderOverview(c){
         </label>
         <button class="topbtn primary" onclick="grantExpert('${esc(c.code)}')">${t('ex_grant')}</button>
       </div>
-      <div id="exResult" style="margin-top:12px;"></div>
-    </div>` : '';
+      <div id="exResult" style="margin-top:12px;"></div>`;
+  }
+  const expertBlock = c.code ? `
+    <div class="section-title">${t('ex_title')}</div>
+    <div style="border:1px solid #ddd;padding:12px 16px;margin-bottom:20px;font-size:13px;">${expertInner}</div>` : '';
 
   const dynBlock = renderDynamics(c);
   return cards + dynBlock + profile + expertBlock + nextBlock + bioBlock + ankBlock;
 }
 
-// ── VIA-L EXPERT: выдача/отзыв срочного кода доступа ─────────────
+// ── VIA-L EXPERT: выдача / продление / отзыв срочного кода доступа ──
+// Статус доступа persist-ится в data.expert_grant (виден после релоада); после каждой
+// операции обновляем локальный c.expert_grant и перерисовываем обзор.
+function _setGrant(patch){
+  const c = clients.find(x=>x.id===selectedId);
+  if(!c) return;
+  c.expert_grant = Object.assign({}, c.expert_grant || {}, patch);
+  renderTabContent();
+}
 async function grantExpert(code){
   const daysEl = document.getElementById('exDays');
   const days = Math.max(1, Math.min(400, parseInt(daysEl && daysEl.value,10) || 56));
@@ -2086,30 +2118,28 @@ async function grantExpert(code){
   if(res) res.innerHTML = '…';
   try{
     const j = await api('/cabinet/expert-grant', { code, days });
-    if(!j || !j.ok){ if(res) res.innerHTML = `<span style="color:var(--alert);">${t('ex_err')}</span>`; return; }
-    const msg = `${j.code}\n${j.link}`;
-    res.innerHTML = `
-      <div style="background:#f8f8f8;border:1px solid #ddd;padding:12px 16px;font-size:13px;line-height:1.7;">
-        <div><b>${t('ex_code')}:</b> <span style="font-family:monospace;font-size:15px;">${esc(j.code)}</span></div>
-        <div><b>${t('ex_link')}:</b> <span style="font-family:monospace;font-size:12px;">${esc(j.link)}</span></div>
-        <div style="color:#888;">${t('ex_until')} ${esc(j.expiry)} · ${t('ex_owed')}: €${esc(String(j.owed))}</div>
-        <div style="margin-top:8px;display:flex;gap:8px;">
-          <button class="topbtn" onclick="copyExpert(this, ${JSON.stringify(msg).replace(/"/g,'&quot;')})">${t('ex_copy')}</button>
-          <button class="topbtn" style="color:var(--alert);" onclick="revokeExpert('${esc(j.code)}',this)">${t('ex_revoke')}</button>
-        </div>
-      </div>`;
+    if(j && j.ok){ _setGrant({ code:j.code, expiry:j.expiry, days:j.days, owed:j.owed, revoked:false }); }
+    else if(res){ res.innerHTML = `<span style="color:var(--alert);">${t('ex_err')}</span>`; }
   }catch(e){ if(res) res.innerHTML = `<span style="color:var(--alert);">${t('ex_err')}</span>`; }
 }
-function copyExpert(btn, text){
-  try{ navigator.clipboard.writeText(text); const o=btn.textContent; btn.textContent=t('ex_copied'); setTimeout(()=>btn.textContent=o,1500); }catch(e){}
+async function extendExpert(code){
+  const el = document.getElementById('exExtDays');
+  const days = Math.max(1, Math.min(400, parseInt(el && el.value,10) || 30));
+  try{
+    const j = await api('/cabinet/expert-extend', { code, days });
+    if(j && j.ok){ _setGrant({ expiry:j.expiry, days:j.days, owed:j.owed, revoked:false }); }
+  }catch(e){}
 }
 async function revokeExpert(code, btn){
   if(btn) btn.disabled = true;
   try{
     const j = await api('/cabinet/expert-revoke', { code });
-    if(j && j.ok && btn){ btn.textContent = '✓'; }
+    if(j && j.ok){ _setGrant({ revoked:true }); }
     else if(btn){ btn.disabled=false; }
   }catch(e){ if(btn) btn.disabled=false; }
+}
+function copyExpert(btn, text){
+  try{ navigator.clipboard.writeText(text); const o=btn.textContent; btn.textContent=t('ex_copied'); setTimeout(()=>btn.textContent=o,1500); }catch(e){}
 }
 
 // ── PROTOCOL TAB ──────────────────────────────────────────
