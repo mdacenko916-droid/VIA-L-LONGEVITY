@@ -374,7 +374,7 @@ const CAT_LBL={
   medical:{ru:"Медицина",uk:"Медицина",en:"Medical",es:"Medicina",de:"Medizin",pt:"Medicina",fr:"Médecine",pl:"Medycyna",it:"Medicina",he:"רפואה",ja:"医療",ko:"의료"}
 };
 const CAT_UI={
-  title:{ru:"Специалисты VIA·L",uk:"Спеціалісти VIA·L",en:"VIA·L Specialists",es:"Especialistas VIA·L",de:"VIA·L Spezialisten",pt:"Especialistas VIA·L",fr:"Spécialistes VIA·L",pl:"Specjaliści VIA·L",it:"Specialisti VIA·L",he:"מומחי VIA·L",ja:"VIA·L スペシャリスト",ko:"VIA·L 전문가"},
+  title:{ru:"Найти специалиста",uk:"Знайти спеціаліста",en:"Find a specialist",es:"Encontrar un especialista",de:"Spezialisten finden",pt:"Encontrar um especialista",fr:"Trouver un spécialiste",pl:"Znajdź specjalistę",it:"Trova uno specialista",he:"מצאו מומחה",ja:"専門家を探す",ko:"전문가 찾기"},
   sub:{ru:"Выберите специалиста, который подходит именно вам",uk:"Оберіть спеціаліста, який підходить саме вам",en:"Choose the specialist who's right for you",es:"Elige el especialista ideal para ti",de:"Wähle den passenden Spezialisten",pt:"Escolha o especialista ideal para você",fr:"Choisissez le spécialiste qui vous convient",pl:"Wybierz specjalistę dla siebie",it:"Scegli lo specialista giusto per te",he:"בחרו את המומחה המתאים לכם",ja:"あなたに合う専門家を選んでください",ko:"당신에게 맞는 전문가를 선택하세요"},
   seeall:{ru:"Смотреть всех",uk:"Дивитися всіх",en:"See all",es:"Ver todos",de:"Alle ansehen",pt:"Ver todos",fr:"Voir tout",pl:"Zobacz wszystkich",it:"Vedi tutti",he:"לראות הכל",ja:"すべて見る",ko:"전체 보기"},
   back:{ru:"← Назад",uk:"← Назад",en:"← Back",es:"← Atrás",de:"← Zurück",pt:"← Voltar",fr:"← Retour",pl:"← Wstecz",it:"← Indietro",he:"→ חזרה",ja:"← 戻る",ko:"← 뒤로"},
@@ -387,7 +387,7 @@ function catLabel(c){ const m=CAT_LBL[c]; return m?(m[lang]||m.en):(c||''); }
 
 let _showcaseEmpty = true;
 let _showcaseList = null;   // кэш списка → перерисовка при смене языка без повторного запроса
-let _catFilter='all', _catLang='all';
+let _catFilter='all', _catLang='all', _chosenIdx=null;   // выбранный из каталога → показ в нижнем блоке
 function updateShowcaseFallback(){
   const fb = document.getElementById('bookIntro');
   if(fb) fb.style.display = (_showcaseEmpty && (lang==='ru'||lang==='uk')) ? 'flex' : 'none';
@@ -400,14 +400,15 @@ async function loadShowcase(){
   }catch(e){ _showcaseList = []; }
   renderShowcase();
 }
-// Общая карточка специалиста (teaser + каталог)
-function specCard(s){
+// Общая карточка специалиста (teaser + каталог). В каталоге карточка кликабельна → выбор в нижний блок.
+function specCard(s, idx, inCatalog){
   const langs=(s.langs||'').split(',').map(x=>x.trim().toUpperCase()).filter(Boolean).join(' · ');
   const photo = s.photo ? `<img class="sc-photo" src="${esc(s.photo)}" alt="" loading="lazy">`
     : `<div class="sc-photo-ph">${esc((s.name||'?').trim().charAt(0).toUpperCase())}</div>`;
   const cal = s.cal_url?esc(s.cal_url):'';
-  const btn = cal ? `<a class="btn" href="${cal}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-top:12px;font-size:14px;padding:10px 12px;"><span>${esc(tr('nocode_book'))}</span></a>` : '';
-  return `<div class="speccard">
+  const btn = cal ? `<a class="btn" href="${cal}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-top:12px;font-size:14px;padding:10px 12px;"><span>${esc(tr('nocode_book'))}</span></a>` : '';
+  const clickAttr = inCatalog ? ` onclick="_pickSpecialist(${idx})" style="cursor:pointer;"` : '';
+  return `<div class="speccard"${clickAttr}>
     <div style="display:flex;gap:12px;align-items:center;">
       ${photo}
       <div style="flex:1;min-width:0;">
@@ -420,16 +421,21 @@ function specCard(s){
     ${btn}
   </div>`;
 }
+function _pickSpecialist(i){
+  _chosenIdx=i; closeCatalog(); renderShowcase();
+  try{ document.getElementById('showcase').scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){}
+}
 // Teaser на экране входа: заголовок + «Смотреть всех» + 1 карточка
 function renderShowcase(){
   const box = document.getElementById('showcase'); if(!box) return;
   const list = _showcaseList || [];
   _showcaseEmpty = list.length === 0;
   if(_showcaseEmpty){ box.innerHTML=''; updateShowcaseFallback(); return; }
+  const idx = (_chosenIdx!=null && list[_chosenIdx]) ? _chosenIdx : 0;
   box.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px;">
       <div style="font-weight:600;color:var(--t1);">${esc(catL('title'))}</div>
       <button type="button" class="seeall" onclick="openCatalog()">${esc(catL('seeall'))} (${list.length}) →</button>
-    </div>` + list.slice(0,1).map(specCard).join('');
+    </div>` + specCard(list[idx]);
   updateShowcaseFallback();
 }
 // ── Каталог ──
@@ -449,12 +455,12 @@ function buildCatLangSel(){
 function renderCatalog(){
   const listEl=document.getElementById('catList'); if(!listEl)return;
   const sel=document.getElementById('catLangSel'); if(sel)_catLang=sel.value;
-  const list=(_showcaseList||[]).filter(s=>{
+  const items=(_showcaseList||[]).map((s,i)=>({s,i})).filter(({s})=>{
     if(_catFilter!=='all' && s.category!==_catFilter) return false;
     if(_catLang!=='all'){ const ls=(s.langs||'').toLowerCase().split(',').map(x=>x.trim()); if(!ls.includes(_catLang)) return false; }
     return true;
   });
-  listEl.innerHTML = list.length ? list.map(specCard).join('') : `<div style="text-align:center;color:var(--t3);font-size:13px;padding:20px 0;">${esc(catL('empty'))}</div>`;
+  listEl.innerHTML = items.length ? items.map(({s,i})=>specCard(s,i,true)).join('') : `<div style="text-align:center;color:var(--t3);font-size:13px;padding:20px 0;">${esc(catL('empty'))}</div>`;
 }
 function refreshCatalogTexts(){
   document.getElementById('catTitle').textContent=catL('title');
