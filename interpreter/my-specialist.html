@@ -184,8 +184,31 @@ html[data-lang="he"]{direction:rtl}
       <p id="catIndep" style="font-size:11px;color:var(--t3);line-height:1.5;">Независимые специалисты, использующие платформу VIA·L</p>
     </div>
     <div id="catChips" style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;"></div>
-    <div style="margin-bottom:14px;"><select id="catLangSel" class="catlang" onchange="renderCatalog()"></select></div>
+    <div style="margin-bottom:14px;"><select id="catLangSel" class="catlang" onchange="_catLangChanged()"></select></div>
+    <div id="catMatchNote" style="display:none;font-size:12px;color:var(--gold-txt);font-weight:600;margin-bottom:10px;"></div>
     <div id="catList"></div>
+    <!-- Приглашение пройти опрос-подбор -->
+    <div id="quizPrompt" class="speccard" style="margin-top:6px;text-align:center;background:#fbf7ee;">
+      <div id="quizPromptT" style="font-weight:600;color:var(--t1);margin-bottom:4px;">Не знаете, кого выбрать?</div>
+      <div id="quizPromptS" style="font-size:12.5px;color:var(--t2);line-height:1.5;margin-bottom:12px;">Пройдите короткий опрос, и мы подберём специалиста под ваш запрос.</div>
+      <button type="button" class="btn" onclick="openQuiz()" id="quizBtn" style="max-width:260px;margin:0 auto;">Пройти опрос</button>
+    </div>
+  </div>
+
+  <!-- ── ОПРОС-ПОДБОР (фаза 2) ── -->
+  <div id="quizView" style="display:none;">
+    <button type="button" class="catback" onclick="closeQuiz()" id="quizBackBtn">← Назад</button>
+    <div style="text-align:center;margin:2px 0 16px;">
+      <div class="eyebrow">VIA·L</div>
+      <h1 id="quizTitle" style="margin-bottom:4px;">Подбор специалиста</h1>
+    </div>
+    <div class="card" style="padding:18px;">
+      <div class="lbl" id="quizQ1" style="display:block;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold-txt);font-weight:600;margin-bottom:10px;">С чем вам нужна помощь?</div>
+      <div id="quizNeeds" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <div class="lbl" id="quizQ2" style="display:block;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold-txt);font-weight:600;margin:18px 0 8px;">Язык общения</div>
+      <select id="quizLang" class="catlang" style="width:100%;"></select>
+      <button type="button" class="btn" onclick="submitQuiz()" id="quizSubmit" style="margin-top:18px;">Подобрать специалиста</button>
+    </div>
   </div>
 </div>
 
@@ -230,7 +253,7 @@ function setLang(l){
   document.querySelectorAll('[data-t]').forEach(el=>{const k=el.getAttribute('data-t');if(T[l][k]!==undefined)el.textContent=T[l][k];});
   // блок «нет кода → витрина» виден всем языкам; фолбэк-ссылка основателя — только ru/uk и только если витрина пуста
   var nc=document.getElementById('noCode');if(nc)nc.style.display='block';
-  if(typeof _showcaseList!=='undefined' && _showcaseList){ renderShowcase(); if(typeof _catalogOpen==='function' && _catalogOpen()) refreshCatalogTexts(); } else updateShowcaseFallback();
+  if(typeof _showcaseList!=='undefined' && _showcaseList){ renderShowcase(); if(typeof _catalogOpen==='function' && _catalogOpen()) refreshCatalogTexts(); else if(typeof _quizOpen==='function' && _quizOpen()) refreshQuizTexts(); } else updateShowcaseFallback();
   renderConsent();
   // если экран «подключено» уже виден — обновим тексты с подстановкой имени
   if(document.getElementById('done').style.display==='block') refreshDone();
@@ -382,8 +405,24 @@ const CAT_UI={
   all:{ru:"Все направления",uk:"Всі напрямки",en:"All fields",es:"Todas las áreas",de:"Alle Fachgebiete",pt:"Todas as áreas",fr:"Tous les domaines",pl:"Wszystkie dziedziny",it:"Tutti gli ambiti",he:"כל התחומים",ja:"すべての分野",ko:"모든 분야"},
   langAll:{ru:"Все языки",uk:"Всі мови",en:"All languages",es:"Todos los idiomas",de:"Alle Sprachen",pt:"Todos os idiomas",fr:"Toutes les langues",pl:"Wszystkie języki",it:"Tutte le lingue",he:"כל השפות",ja:"すべての言語",ko:"모든 언어"},
   empty:{ru:"Пока никого нет",uk:"Поки нікого немає",en:"No specialists yet",es:"Aún no hay especialistas",de:"Noch keine Spezialisten",pt:"Ainda não há especialistas",fr:"Aucun spécialiste pour l'instant",pl:"Brak specjalistów",it:"Ancora nessuno specialista",he:"אין עדיין מומחים",ja:"まだ専門家がいません",ko:"아직 전문가가 없습니다"},
-  indep:{ru:"Независимые специалисты, использующие платформу VIA·L",uk:"Незалежні спеціалісти, які використовують платформу VIA·L",en:"Independent specialists using the VIA·L platform",es:"Especialistas independientes que usan la plataforma VIA·L",de:"Unabhängige Spezialisten, die die VIA·L-Plattform nutzen",pt:"Especialistas independentes que usam a plataforma VIA·L",fr:"Spécialistes indépendants utilisant la plateforme VIA·L",pl:"Niezależni specjaliści korzystający z platformy VIA·L",it:"Specialisti indipendenti che usano la piattaforma VIA·L",he:"מומחים עצמאיים המשתמשים בפלטפורמת VIA·L",ja:"VIA·Lプラットフォームを利用する独立した専門家",ko:"VIA·L 플랫폼을 이용하는 독립 전문가"}
+  indep:{ru:"Независимые специалисты, использующие платформу VIA·L",uk:"Незалежні спеціалісти, які використовують платформу VIA·L",en:"Independent specialists using the VIA·L platform",es:"Especialistas independientes que usan la plataforma VIA·L",de:"Unabhängige Spezialisten, die die VIA·L-Plattform nutzen",pt:"Especialistas independentes que usam a plataforma VIA·L",fr:"Spécialistes indépendants utilisant la plateforme VIA·L",pl:"Niezależni specjaliści korzystający z platformy VIA·L",it:"Specialisti indipendenti che usano la piattaforma VIA·L",he:"מומחים עצמאיים המשתמשים בפלטפורמת VIA·L",ja:"VIA·Lプラットフォームを利用する独立した専門家",ko:"VIA·L 플랫폼을 이용하는 독립 전문가"},
+  quizPromptT:{ru:"Не знаете, кого выбрать?",uk:"Не знаєте, кого обрати?",en:"Not sure who to choose?",es:"¿No sabes a quién elegir?",de:"Unsicher, wen wählen?",pt:"Não sabe quem escolher?",fr:"Vous ne savez pas qui choisir ?",pl:"Nie wiesz, kogo wybrać?",it:"Non sai chi scegliere?",he:"לא בטוחים את מי לבחור?",ja:"誰を選べばいいか迷っていますか？",ko:"누구를 선택할지 모르겠나요?"},
+  quizPromptS:{ru:"Пройдите короткий опрос, и мы подберём специалиста под ваш запрос.",uk:"Пройдіть коротке опитування, і ми підберемо спеціаліста під ваш запит.",en:"Take a short quiz and we'll match a specialist to your needs.",es:"Haz un breve cuestionario y te recomendaremos un especialista.",de:"Mach ein kurzes Quiz und wir finden den passenden Spezialisten.",pt:"Faça um breve questionário e indicaremos um especialista.",fr:"Répondez à un court questionnaire et nous vous proposerons un spécialiste.",pl:"Wypełnij krótką ankietę, a dobierzemy specjalistę.",it:"Fai un breve quiz e ti proporremo uno specialista.",he:"ענו על שאלון קצר ונתאים לכם מומחה.",ja:"簡単なアンケートに答えると、専門家をご提案します。",ko:"간단한 설문에 답하면 전문가를 추천해 드립니다."},
+  quizBtn:{ru:"Пройти опрос",uk:"Пройти опитування",en:"Take the quiz",es:"Hacer el cuestionario",de:"Quiz starten",pt:"Fazer o questionário",fr:"Répondre au questionnaire",pl:"Wypełnij ankietę",it:"Fai il quiz",he:"למילוי השאלון",ja:"アンケートに答える",ko:"설문 시작"},
+  quizTitle:{ru:"Подбор специалиста",uk:"Підбір спеціаліста",en:"Find your match",es:"Encuentra tu especialista",de:"Passenden Spezialisten finden",pt:"Encontre seu especialista",fr:"Trouvez votre spécialiste",pl:"Dobór specjalisty",it:"Trova il tuo specialista",he:"מציאת ההתאמה",ja:"専門家マッチング",ko:"전문가 매칭"},
+  quizQ1:{ru:"С чем вам нужна помощь?",uk:"З чим вам потрібна допомога?",en:"What do you need help with?",es:"¿En qué necesitas ayuda?",de:"Wobei brauchst du Hilfe?",pt:"Com o que precisa de ajuda?",fr:"En quoi avez-vous besoin d'aide ?",pl:"W czym potrzebujesz pomocy?",it:"In cosa hai bisogno di aiuto?",he:"במה תרצו עזרה?",ja:"何についてサポートが必要ですか？",ko:"어떤 도움이 필요하신가요?"},
+  quizQ2:{ru:"Язык общения",uk:"Мова спілкування",en:"Preferred language",es:"Idioma preferido",de:"Bevorzugte Sprache",pt:"Idioma preferido",fr:"Langue préférée",pl:"Preferowany język",it:"Lingua preferita",he:"שפת התקשורת",ja:"希望する言語",ko:"선호 언어"},
+  quizSubmit:{ru:"Подобрать специалиста",uk:"Підібрати спеціаліста",en:"Find specialists",es:"Buscar especialistas",de:"Spezialisten finden",pt:"Buscar especialistas",fr:"Trouver des spécialistes",pl:"Znajdź specjalistów",it:"Trova specialisti",he:"מצאו מומחים",ja:"専門家を探す",ko:"전문가 찾기"},
+  matched:{ru:"✨ Подобрано под ваш запрос",uk:"✨ Підібрано під ваш запит",en:"✨ Matched to your needs",es:"✨ Según tu perfil",de:"✨ Passend zu dir",pt:"✨ De acordo com você",fr:"✨ Selon votre profil",pl:"✨ Dopasowane do Ciebie",it:"✨ In base alle tue esigenze",he:"✨ מותאם לצרכים שלכם",ja:"✨ あなたに合わせて",ko:"✨ 당신에게 맞춤"},
+  langAny:{ru:"Любой язык",uk:"Будь-яка мова",en:"Any language",es:"Cualquier idioma",de:"Beliebige Sprache",pt:"Qualquer idioma",fr:"Toutes les langues",pl:"Dowolny język",it:"Qualsiasi lingua",he:"כל שפה",ja:"指定なし",ko:"모든 언어"}
 };
+const QUIZ_NEEDS=[
+  {cat:'nutrition',lbl:{ru:"Питание, вес и метаболизм",uk:"Харчування, вага та метаболізм",en:"Nutrition, weight & metabolism",es:"Nutrición, peso y metabolismo",de:"Ernährung, Gewicht & Stoffwechsel",pt:"Nutrição, peso e metabolismo",fr:"Nutrition, poids et métabolisme",pl:"Odżywianie, waga i metabolizm",it:"Nutrizione, peso e metabolismo",he:"תזונה, משקל ומטבוליזם",ja:"栄養・体重・代謝",ko:"영양, 체중, 대사"}},
+  {cat:'psychology',lbl:{ru:"Эмоции, стресс и тревога",uk:"Емоції, стрес і тривога",en:"Emotions, stress & anxiety",es:"Emociones, estrés y ansiedad",de:"Emotionen, Stress & Angst",pt:"Emoções, estresse e ansiedade",fr:"Émotions, stress et anxiété",pl:"Emocje, stres i lęk",it:"Emozioni, stress e ansia",he:"רגשות, לחץ וחרדה",ja:"感情・ストレス・不安",ko:"감정, 스트레스, 불안"}},
+  {cat:'fitness',lbl:{ru:"Форма и тренировки",uk:"Форма і тренування",en:"Fitness & training",es:"Forma física y entrenamiento",de:"Fitness & Training",pt:"Forma física e treino",fr:"Forme et entraînement",pl:"Forma i treningi",it:"Forma e allenamento",he:"כושר ואימונים",ja:"体づくり・トレーニング",ko:"체형과 운동"}},
+  {cat:'medical',lbl:{ru:"Гормоны и здоровье",uk:"Гормони і здоров'я",en:"Hormones & health",es:"Hormonas y salud",de:"Hormone & Gesundheit",pt:"Hormônios e saúde",fr:"Hormones et santé",pl:"Hormony i zdrowie",it:"Ormoni e salute",he:"הורמונים ובריאות",ja:"ホルモン・健康",ko:"호르몬과 건강"}},
+  {cat:'all',lbl:{ru:"Пока не знаю",uk:"Поки не знаю",en:"Not sure yet",es:"Aún no lo sé",de:"Noch unsicher",pt:"Ainda não sei",fr:"Je ne sais pas encore",pl:"Jeszcze nie wiem",it:"Non lo so ancora",he:"עוד לא יודע/ת",ja:"まだわからない",ko:"아직 모르겠어요"}}
+];
 function catL(k){ const m=CAT_UI[k]; return m?(m[lang]||m.en):k; }
 function catLabel(c){ const m=CAT_LBL[c]; return m?(m[lang]||m.en):(c||''); }
 
@@ -448,7 +487,7 @@ function buildCatChips(){
   const cats=['all'].concat(_catCats());
   el.innerHTML=cats.map(c=>`<button type="button" class="cchip${_catFilter===c?' active':''}" onclick="setCatFilter('${c}')">${esc(c==='all'?catL('all'):catLabel(c))}</button>`).join('');
 }
-function setCatFilter(c){ _catFilter=c; buildCatChips(); renderCatalog(); }
+function setCatFilter(c){ _catFilter=c; _hideMatchNote(); buildCatChips(); renderCatalog(); }
 function buildCatLangSel(){
   const sel=document.getElementById('catLangSel'); if(!sel)return;
   sel.innerHTML=`<option value="all">${esc(catL('langAll'))}</option>`+_catLangs().map(l=>`<option value="${l}">${l.toUpperCase()}</option>`).join('');
@@ -469,11 +508,13 @@ function refreshCatalogTexts(){
   document.getElementById('catSub').textContent=catL('sub');
   var _ci=document.getElementById('catIndep'); if(_ci)_ci.textContent=catL('indep');
   document.getElementById('catBackBtn').textContent=catL('back');
+  refreshQuizTexts();
   buildCatChips(); buildCatLangSel(); renderCatalog();
 }
 function openCatalog(){
   const card=document.querySelector('.card'); if(card)card.style.display='none';
   document.getElementById('catalogView').style.display='block';
+  _hideMatchNote();
   refreshCatalogTexts();
   try{ window.scrollTo(0,0); }catch(e){}
 }
@@ -482,6 +523,53 @@ function closeCatalog(){
   const card=document.querySelector('.card'); if(card)card.style.display='';
 }
 function _catalogOpen(){ const cv=document.getElementById('catalogView'); return cv && cv.style.display==='block'; }
+function _quizOpen(){ const q=document.getElementById('quizView'); return q && q.style.display==='block'; }
+// ── Опрос-подбор (фаза 2) ──
+let _quizNeed='all';
+function renderQuizNeeds(){
+  const el=document.getElementById('quizNeeds'); if(!el)return;
+  el.innerHTML=QUIZ_NEEDS.map(n=>`<button type="button" class="cchip${_quizNeed===n.cat?' active':''}" style="text-align:left;padding:11px 14px;font-size:13.5px;" onclick="_setQuizNeed('${n.cat}')">${esc(n.lbl[lang]||n.lbl.en)}</button>`).join('');
+}
+function _setQuizNeed(c){ _quizNeed=c; renderQuizNeeds(); }
+function refreshQuizTexts(){
+  const q=id=>document.getElementById(id);
+  if(q('quizPromptT'))q('quizPromptT').textContent=catL('quizPromptT');
+  if(q('quizPromptS'))q('quizPromptS').textContent=catL('quizPromptS');
+  if(q('quizBtn'))q('quizBtn').textContent=catL('quizBtn');
+  if(q('quizTitle'))q('quizTitle').textContent=catL('quizTitle');
+  if(q('quizQ1'))q('quizQ1').textContent=catL('quizQ1');
+  if(q('quizQ2'))q('quizQ2').textContent=catL('quizQ2');
+  if(q('quizSubmit'))q('quizSubmit').textContent=catL('quizSubmit');
+  if(q('quizBackBtn'))q('quizBackBtn').textContent=catL('back');
+  renderQuizNeeds();
+  const sel=q('quizLang');
+  if(sel){ const cur=sel.value||''; const avail=_catLangs(); sel.innerHTML=`<option value="all">${esc(catL('langAny'))}</option>`+avail.map(l=>`<option value="${l}">${l.toUpperCase()}</option>`).join(''); sel.value = cur || (avail.includes(lang)?lang:'all'); }
+}
+function openQuiz(){
+  document.getElementById('catalogView').style.display='none';
+  document.getElementById('quizView').style.display='block';
+  _quizNeed='all';
+  refreshQuizTexts();
+  const sel=document.getElementById('quizLang'); if(sel){ const avail=_catLangs(); sel.value=avail.includes(lang)?lang:'all'; }
+  try{ window.scrollTo(0,0); }catch(e){}
+}
+function closeQuiz(){
+  document.getElementById('quizView').style.display='none';
+  document.getElementById('catalogView').style.display='block';
+  try{ window.scrollTo(0,0); }catch(e){}
+}
+function submitQuiz(){
+  _catFilter=_quizNeed;
+  const sel=document.getElementById('quizLang'); _catLang = sel?sel.value:'all';
+  document.getElementById('quizView').style.display='none';
+  document.getElementById('catalogView').style.display='block';
+  buildCatChips(); buildCatLangSel();
+  const note=document.getElementById('catMatchNote'); if(note){ note.textContent=catL('matched'); note.style.display='block'; }
+  renderCatalog();
+  try{ window.scrollTo(0,0); }catch(e){}
+}
+function _hideMatchNote(){ const n=document.getElementById('catMatchNote'); if(n)n.style.display='none'; }
+function _catLangChanged(){ _hideMatchNote(); renderCatalog(); }
 
 // ── init ──
 codeEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('email').focus();}});
