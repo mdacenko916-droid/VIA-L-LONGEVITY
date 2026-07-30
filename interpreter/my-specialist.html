@@ -180,7 +180,8 @@ html[data-lang="he"]{direction:rtl}
     <div style="text-align:center;margin:2px 0 14px;">
       <div class="eyebrow">VIA·L</div>
       <h1 id="catTitle" style="margin-bottom:4px;">Специалисты VIA·L</h1>
-      <p class="intro" id="catSub" style="margin-bottom:0;">Выберите специалиста, который подходит именно вам</p>
+      <p class="intro" id="catSub" style="margin-bottom:4px;">Выберите специалиста, который подходит именно вам</p>
+      <p id="catIndep" style="font-size:11px;color:var(--t3);line-height:1.5;">Независимые специалисты, использующие платформу VIA·L</p>
     </div>
     <div id="catChips" style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;"></div>
     <div style="margin-bottom:14px;"><select id="catLangSel" class="catlang" onchange="renderCatalog()"></select></div>
@@ -380,7 +381,8 @@ const CAT_UI={
   back:{ru:"← Назад",uk:"← Назад",en:"← Back",es:"← Atrás",de:"← Zurück",pt:"← Voltar",fr:"← Retour",pl:"← Wstecz",it:"← Indietro",he:"→ חזרה",ja:"← 戻る",ko:"← 뒤로"},
   all:{ru:"Все направления",uk:"Всі напрямки",en:"All fields",es:"Todas las áreas",de:"Alle Fachgebiete",pt:"Todas as áreas",fr:"Tous les domaines",pl:"Wszystkie dziedziny",it:"Tutti gli ambiti",he:"כל התחומים",ja:"すべての分野",ko:"모든 분야"},
   langAll:{ru:"Все языки",uk:"Всі мови",en:"All languages",es:"Todos los idiomas",de:"Alle Sprachen",pt:"Todos os idiomas",fr:"Toutes les langues",pl:"Wszystkie języki",it:"Tutte le lingue",he:"כל השפות",ja:"すべての言語",ko:"모든 언어"},
-  empty:{ru:"Пока никого нет",uk:"Поки нікого немає",en:"No specialists yet",es:"Aún no hay especialistas",de:"Noch keine Spezialisten",pt:"Ainda não há especialistas",fr:"Aucun spécialiste pour l'instant",pl:"Brak specjalistów",it:"Ancora nessuno specialista",he:"אין עדיין מומחים",ja:"まだ専門家がいません",ko:"아직 전문가가 없습니다"}
+  empty:{ru:"Пока никого нет",uk:"Поки нікого немає",en:"No specialists yet",es:"Aún no hay especialistas",de:"Noch keine Spezialisten",pt:"Ainda não há especialistas",fr:"Aucun spécialiste pour l'instant",pl:"Brak specjalistów",it:"Ancora nessuno specialista",he:"אין עדיין מומחים",ja:"まだ専門家がいません",ko:"아직 전문가가 없습니다"},
+  indep:{ru:"Независимые специалисты, использующие платформу VIA·L",uk:"Незалежні спеціалісти, які використовують платформу VIA·L",en:"Independent specialists using the VIA·L platform",es:"Especialistas independientes que usan la plataforma VIA·L",de:"Unabhängige Spezialisten, die die VIA·L-Plattform nutzen",pt:"Especialistas independentes que usam a plataforma VIA·L",fr:"Spécialistes indépendants utilisant la plateforme VIA·L",pl:"Niezależni specjaliści korzystający z platformy VIA·L",it:"Specialisti indipendenti che usano la piattaforma VIA·L",he:"מומחים עצמאיים המשתמשים בפלטפורמת VIA·L",ja:"VIA·Lプラットフォームを利用する独立した専門家",ko:"VIA·L 플랫폼을 이용하는 독립 전문가"}
 };
 function catL(k){ const m=CAT_UI[k]; return m?(m[lang]||m.en):k; }
 function catLabel(c){ const m=CAT_LBL[c]; return m?(m[lang]||m.en):(c||''); }
@@ -465,6 +467,7 @@ function renderCatalog(){
 function refreshCatalogTexts(){
   document.getElementById('catTitle').textContent=catL('title');
   document.getElementById('catSub').textContent=catL('sub');
+  var _ci=document.getElementById('catIndep'); if(_ci)_ci.textContent=catL('indep');
   document.getElementById('catBackBtn').textContent=catL('back');
   buildCatChips(); buildCatLangSel(); renderCatalog();
 }
