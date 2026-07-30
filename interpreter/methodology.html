@@ -24,8 +24,9 @@
 html { scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; }
 html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0; height: 0; display: none; }
 .stars { display: none; }   /* VIA-L: без звёздного фона — чистый графит */
-/* Заход из приложения (?app=1): скрыть навигацию в лендинг/сайт (анти-стиринг App Store) */
-html.app-embed .back-btn, html.app-embed .foot-nav { display: none !important; }
+/* Заход из приложения (?app=1): скрыть навигацию в ЛЕНДИНГ/САЙТ (не связываем app с сайтом),
+   но back-btn НЕ прячем — он репрограммируется на возврат В ПРИЛОЖЕНИЕ (history.back). */
+html.app-embed .foot-nav { display: none !important; }
 html.app-embed .logo-block { pointer-events: none; cursor: default; }
 body {
   background: var(--dark);
@@ -321,7 +322,7 @@ body{ background:linear-gradient(165deg,#F5F3EF 0%,#EFE8D8 55%,#EAE1C9 100%) !im
 /* Блоки/карточки → сплошной графит на беже (текст внутри уже светлый) */
 .hero-disclaimer,.legal-card,.proto-card,.lab-card,.source-card,.disclaimer-banner{ background:linear-gradient(160deg,#2a323f 0%,#1a2028 100%) !important; }
 </style>
-<script>try{if(new URLSearchParams(location.search).get('app')==='1')document.documentElement.classList.add('app-embed');}catch(e){}</script>
+<script>try{if(new URLSearchParams(location.search).get('app')==='1'){document.documentElement.classList.add('app-embed');window.addEventListener('DOMContentLoaded',function(){var b=document.querySelector('.back-btn');if(b){b.removeAttribute('href');b.removeAttribute('data-t');b.style.cursor='pointer';var _l=(navigator.language||'en').slice(0,2);var _bk={ru:'← Назад',uk:'← Назад',en:'← Back',es:'← Atrás',de:'← Zurück',pt:'← Voltar',fr:'← Retour',pl:'← Wstecz',it:'← Indietro',he:'→ חזרה',ja:'← 戻る',ko:'← 뒤로'};b.textContent=_bk[_l]||_bk.en;b.onclick=function(e){e.preventDefault();if(history.length>1){history.back();}else{try{window.close();}catch(_){}}};}});}}catch(e){}</script>
 </head>
 <body>
 <div class="stars"></div>
