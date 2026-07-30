@@ -8935,7 +8935,10 @@ function closeCircModal(){
 // «Наш подход» — стеклянный модал (compliant-страница credibility)
 function openApproach(){
   var p=document.getElementById('approachPanel'); if(!p)return;
-  var b=document.getElementById('approachBody'); if(b)b.textContent=t('approach_body');
+  var b=document.getElementById('approachBody'); if(b){
+    var _esc=function(s){return String(s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});};
+    b.innerHTML=_esc(t('approach_body')).replace(/VIA[·\-]L/g,function(m){return '<span style="color:var(--gold-lt);font-weight:600;">'+m+'</span>';});
+  }
   var m=document.querySelector('main'); if(m){window._apprMain=m.style.display; m.style.display='none';}
   var h=document.querySelector('.hero'); if(h){window._apprHero=h.style.display; h.style.display='none';}   // hero тоже прячем — иначе маркетинг-текст просвечивает под панелью
   var _fh=document.getElementById('funnelHome'); if(_fh)_fh.style.display='none';   // спрятать возврат-✕ анкеты, чтобы не было двух ✕
