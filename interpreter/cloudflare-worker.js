@@ -842,6 +842,8 @@ export default {
       if (path === '/oura/metrics')      return handleOuraMetrics(request, env, corsHeaders);
       // Гейт EXPERT (витрина): проверка срочного кода доступа — GET, публично. См. §894.
       if (path === '/expert/verify')     return handleExpertVerify(request, env, corsHeaders);
+      // Чат клиент↔нутрициолог: чтение треда — GET (?code=). Ответ спеца переводится на язык клиента.
+      if (path === '/expert/thread')     return handleExpertThread(request, env, corsHeaders, ctx);
       return new Response('Not found', { status: 404 });
     }
 
@@ -872,7 +874,7 @@ export default {
 
       // VIA-L EXPERT — внутренний канал связи клиент↔нутрициолог (НЕ Telegram для клиента).
       // Авторизация = код доступа (как /weekly-report). Сторона нутрициолога — в кабинете (вкладка «Переписка»).
-      if (path === '/expert/thread')    return handleExpertThread(request, env, corsHeaders, ctx);
+      // (/expert/thread — GET, зарегистрирован в GET-блоке выше)
       if (path === '/expert/message')   return handleExpertMessage(request, env, corsHeaders, ctx);
 
       // Кабинет нутрициолога (CRM на D1) — см. docs/CABINET-MODEL.md
