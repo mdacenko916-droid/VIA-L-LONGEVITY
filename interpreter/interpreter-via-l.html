@@ -6378,7 +6378,8 @@ function _bootRoute(){
     if(typeof _passedToday==='function'&&_passedToday()){ if(typeof _showTodayDashboard==='function'&&_showTodayDashboard()) return; if(typeof navTo==='function'){ navTo('today'); return; } }
     var src=_srcGet();
     if(src && typeof _profileDone==='function'&&_profileDone()){ _showMorningCard(src); return; }
-    if(src){ _openFunnel(); return; }
+    // Онбординг не завершён → ВСЕГДА экран ввода данных (гаджет/вручную), не сразу анкета.
+    // Консистентный «дом» входа + «← Назад»/выход из меню возвращает сюда, а не в середину прохода.
     _showSourceChoice(); return;
   }catch(e){ if(typeof startFunnel==='function') startFunnel(); }
 }
