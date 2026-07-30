@@ -341,6 +341,13 @@ async function unlink(){
 }
 
 // ── витрина наставников (public=1) ──
+// Локализация специальности (как в кабинете); фолбэк — сырое значение.
+const SPEC_LBL={
+  nutritionist:{ru:"Нутрициолог",uk:"Нутриціолог",en:"Nutritionist",es:"Nutricionista",de:"Ernährungsberater",pt:"Nutricionista",fr:"Nutritionniste",pl:"Dietetyk",it:"Nutrizionista",he:"תזונאי",ja:"栄養士",ko:"영양사"},
+  gynecologist:{ru:"Гинеколог",uk:"Гінеколог",en:"Gynecologist",es:"Ginecólogo",de:"Gynäkologe",pt:"Ginecologista",fr:"Gynécologue",pl:"Ginekolog",it:"Ginecologo",he:"גינקולוג",ja:"婦人科医",ko:"산부인과 의사"},
+  endocrinologist:{ru:"Эндокринолог",uk:"Ендокринолог",en:"Endocrinologist",es:"Endocrinólogo",de:"Endokrinologe",pt:"Endocrinologista",fr:"Endocrinologue",pl:"Endokrynolog",it:"Endocrinologo",he:"אנדוקרינולוג",ja:"内分泌科医",ko:"내분비내과 의사"}
+};
+function specLabel(sp){ const m=SPEC_LBL[sp]; return m ? (m[lang]||m.en) : (sp||''); }
 let _showcaseEmpty = true;
 let _showcaseList = null;   // кэш списка → перерисовка при смене языка без повторного запроса
 function updateShowcaseFallback(){
@@ -375,7 +382,7 @@ function renderShowcase(){
           ${photo}
           <div style="flex:1;min-width:0;">
             <div style="font-weight:500;color:var(--t1);">${esc(s.name||'')}</div>
-            ${s.specialty?`<div style="font-size:13px;color:var(--gold-lt);">${esc(s.specialty)}</div>`:''}
+            ${s.specialty?`<div style="font-size:13px;color:var(--gold-lt);">${esc(specLabel(s.specialty))}</div>`:''}
             ${langs?`<div style="font-size:11px;color:var(--t3);margin-top:2px;">${langs}</div>`:''}
           </div>
         </div>
