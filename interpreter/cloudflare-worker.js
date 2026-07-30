@@ -5653,8 +5653,8 @@ async function handleCabinetAuth(request, env, corsHeaders){
   // язык интерфейса + профиль вошедшего (локализация + вид под профиль) + реф-код/имя
   // (реф-код нужен фронту для блока «Моя ссылка для приглашения» — канал 1, спека §10).
   let lang = 'ru', specialty = 'nutritionist', refCode = '', name = '';
-  let showcase = { public:0, photo:'', bio:'', cal_url:'', langs:'' };   // профиль витрины «Мой наставник»
-  if(env.DB){ try{ const r = await env.DB.prepare('SELECT lang,specialty,ref_code,name,public,photo,bio,cal_url,langs FROM specialists WHERE id=?').bind(session.id).first(); if(r){ if(r.lang) lang = r.lang; if(r.specialty) specialty = r.specialty; if(r.ref_code) refCode = r.ref_code; if(r.name) name = r.name; showcase = { public: r.public?1:0, photo: r.photo||'', bio: r.bio||'', cal_url: r.cal_url||'', langs: r.langs||'' }; } }catch(_){} }
+  let showcase = { public:0, photo:'', bio:'', cal_url:'', langs:'', category:'' };   // профиль витрины «Мой наставник»
+  if(env.DB){ try{ const r = await env.DB.prepare('SELECT lang,specialty,ref_code,name,public,photo,bio,cal_url,langs,category FROM specialists WHERE id=?').bind(session.id).first(); if(r){ if(r.lang) lang = r.lang; if(r.specialty) specialty = r.specialty; if(r.ref_code) refCode = r.ref_code; if(r.name) name = r.name; showcase = { public: r.public?1:0, photo: r.photo||'', bio: r.bio||'', cal_url: r.cal_url||'', langs: r.langs||'', category: r.category||'' }; } }catch(_){} }
   return jsonResponse({ ok:true, token, role: session.role, lang, specialty, ref_code: refCode, name, showcase }, corsHeaders);
 }
 
@@ -5669,9 +5669,11 @@ async function handleCabinetShowcaseSave(request, env, corsHeaders){
   const bio   = String(b.bio||'').trim().slice(0,600);
   const cal   = String(b.cal_url||'').trim().slice(0,500);
   const langs = String(b.langs||'').trim().slice(0,120);
-  await env.DB.prepare('UPDATE specialists SET public=?, photo=?, bio=?, cal_url=?, langs=? WHERE id=?')
-    .bind(pub, photo, bio, cal, langs, sess.id).run();
-  return jsonResponse({ ok:true, showcase:{ public:pub, photo, bio, cal_url:cal, langs } }, corsHeaders);
+  const CATS = ['nutrition','psychology','fitness','medical'];
+  const category = CATS.includes(b.category) ? b.category : '';
+  await env.DB.prepare('UPDATE specialists SET public=?, photo=?, bio=?, cal_url=?, langs=?, category=? WHERE id=?')
+    .bind(pub, photo, bio, cal, langs, category, sess.id).run();
+  return jsonResponse({ ok:true, showcase:{ public:pub, photo, bio, cal_url:cal, langs, category } }, corsHeaders);
 }
 
 // Лёгкий список: колонки-шапка + только нужные списку/календарю куски data через
@@ -5735,8 +5737,8 @@ async function handleCabinetClients(request, env, corsHeaders){
     ? await env.DB.prepare('SELECT ' + CABINET_LIST_COLS + ' FROM clients ORDER BY updated_at DESC').all()
     : await env.DB.prepare('SELECT ' + CABINET_LIST_COLS + ' FROM clients WHERE specialist_id=? ORDER BY updated_at DESC').bind(sess.id).all();
   let specialty = 'nutritionist', refCode = '', name = '';
-  let showcase = { public:0, photo:'', bio:'', cal_url:'', langs:'' };
-  try{ const sp = await env.DB.prepare('SELECT specialty,ref_code,name,public,photo,bio,cal_url,langs FROM specialists WHERE id=?').bind(sess.id).first(); if(sp){ if(sp.specialty) specialty = sp.specialty; if(sp.ref_code) refCode = sp.ref_code; if(sp.name) name = sp.name; showcase = { public: sp.public?1:0, photo: sp.photo||'', bio: sp.bio||'', cal_url: sp.cal_url||'', langs: sp.langs||'' }; } }catch(_){}
+  let showcase = { public:0, photo:'', bio:'', cal_url:'', langs:'', category:'' };
+  try{ const sp = await env.DB.prepare('SELECT specialty,ref_code,name,public,photo,bio,cal_url,langs,category FROM specialists WHERE id=?').bind(sess.id).first(); if(sp){ if(sp.specialty) specialty = sp.specialty; if(sp.ref_code) refCode = sp.ref_code; if(sp.name) name = sp.name; showcase = { public: sp.public?1:0, photo: sp.photo||'', bio: sp.bio||'', cal_url: sp.cal_url||'', langs: sp.langs||'', category: sp.category||'' }; } }catch(_){}
   return jsonResponse({ ok:true, clients:(results || []).map(cabinetRowToLight), role:sess.role, specialty, ref_code: refCode, name, showcase }, corsHeaders);
 }
 
@@ -6188,12 +6190,12 @@ async function handleSpecialistsPublic(request, env, corsHeaders){
   let rows=[];
   try{
     const r = await env.DB.prepare(
-      "SELECT name,specialty,photo,bio,cal_url,langs FROM specialists WHERE public=1 AND status='active' ORDER BY name"
+      "SELECT name,specialty,category,photo,bio,cal_url,langs FROM specialists WHERE public=1 AND status='active' ORDER BY name"
     ).all();
     rows = r.results || [];
   }catch(_){}
   return jsonResponse({ ok:true, specialists: rows.map(s=>({
-    name:s.name||'', specialty:s.specialty||'', photo:s.photo||'',
+    name:s.name||'', specialty:s.specialty||'', category:s.category||'', photo:s.photo||'',
     bio:s.bio||'', cal_url:s.cal_url||'', langs:s.langs||''
   })) }, corsHeaders);
 }
