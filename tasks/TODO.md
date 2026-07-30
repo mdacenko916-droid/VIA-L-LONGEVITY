@@ -52,10 +52,12 @@ redeploy) — в [[project_tariff_naming_canon]].
       только своему клиенту): генерит код `EX…`, KV `expert_access:<EX>` = `{card_code, plan, expiry,
       quota=days, used, revoked, specialist_id, days, owed=days/30×€20}`, TTL=срок+60д; отдаёт код +
       ссылку на PWA + expiry + owed. Кнопки «Копировать» и «Закрыть доступ» (`/cabinet/expert-revoke`).
-      i18n `ex_*` ×12. **⏳ хвост:** «Продлить»; персист выданного кода в карточку (сейчас виден только
-      сразу после выдачи, после релоада — нет; сам код в KV живёт); per-разбор списание quota в KV
-      (сейчас quota хранится, но не декрементируется — живой контроль = expiry+revoke); i18n для reason
-      `revoked` в `gateError` EXPERT (показывает общий «код не найден»).
+      i18n `ex_*` ×12. ✅ **Хвосты сделаны 2026-07-29:** persist статуса в `data.expert_grant` карточки
+      (helper `_setCardExpertGrant`) → активный доступ виден после релоада (код/срок/к оплате +
+      Копировать/Продлить/Закрыть); **«Продлить»** (`/cabinet/expert-extend`, пересчёт quota/owed);
+      i18n `ex_extend`/`ex_ended` ×12. **⏳ остаток:** per-разбор списание quota в KV (сейчас quota
+      хранится, но не декрементируется — живой контроль = expiry+revoke); i18n для reason `revoked`
+      в `gateError` EXPERT (показывает общий «код не найден»).
 - [x] **Двойной гейт EXPERT — ✅ В ПРОДЕ 2026-07-29.** GET `/expert/verify?code=` отдаёт форму как
       Apps Script (`{ok,plan,expiry,expert_used,expert_max}` + `code=card_code` для роутинга разборов) /
       `{ok:false,reason:not_found|expired|revoked}`. `checkCode()` дёргает verify ПЕРВЫМ → ok вход /
