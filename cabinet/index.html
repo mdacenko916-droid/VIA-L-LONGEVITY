@@ -1679,12 +1679,15 @@ function chatBubblesHtml(msgs){
     const bd = isIn ? '#cfd8f5' : '#bfe6cb';
     const who = isIn ? t('msg_in_label') : t('msg_out_label');
     const whoClr = isIn ? '#1565c0' : '#2e7d32';
+    const body = (m.type==='image'&&m.url) ? `<img src="${esc(m.url)}" style="max-width:220px;border-radius:8px;display:block;" loading="lazy">`
+               : (m.type==='audio'&&m.url) ? `<audio controls preload="none" src="${esc(m.url)}" style="width:220px;max-width:100%;"></audio>`
+               : `<div style="font-size:13px;white-space:pre-wrap;line-height:1.45;">${esc(m.text||'')}</div>`;
     return `<div style="align-self:${align};max-width:80%;background:${bg};border:1px solid ${bd};border-radius:12px;padding:7px 11px;">
       <div style="display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:2px;">
         <span style="font-size:10px;font-weight:600;color:${whoClr};">${who}</span>
         <span style="display:flex;gap:6px;align-items:center;"><span style="font-size:10px;color:#999;">${esc(m.date||'')}</span><button onclick="deleteMsg(${i})" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:12px;line-height:1;padding:0;">×</button></span>
       </div>
-      <div style="font-size:13px;white-space:pre-wrap;line-height:1.45;">${esc(m.text||'')}</div>
+      ${body}
     </div>`;
   }).join('') || `<div style="margin:auto;color:#999;font-size:13px;">${t('msg_none')}</div>`;
 }
@@ -1723,6 +1726,8 @@ function renderMessages(c){
 
     <!-- Поле ввода СНИЗУ -->
     <div style="display:flex;gap:8px;margin-top:10px;align-items:flex-end;">
+      <label title="Фото" style="flex:0 0 auto;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid #ccc;background:#fff;cursor:pointer;font-size:18px;">📷<input type="file" accept="image/*" onchange="cabPickPhoto(this)" style="display:none;"></label>
+      <button type="button" onclick="cabToggleVoice(this)" id="cabMicBtn" title="Голос" style="flex:0 0 auto;width:40px;height:40px;border:1px solid #ccc;background:#fff;cursor:pointer;font-size:18px;">🎤</button>
       <textarea id="chatCompose" rows="2" maxlength="4000" placeholder="${t('msg_compose_ph')}"
         style="flex:1;border:1px solid #ccc;padding:9px 12px;font-size:13px;font-family:inherit;resize:vertical;"
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatFromCompose();}"></textarea>
@@ -1748,6 +1753,30 @@ function renderMessages(c){
         </div>
       </div>
     </details>`;
+}
+// Фото/голос из Кабинета: загрузка в R2 (/chat/upload, авторизация = код карточки) → /cabinet/chat-send.
+async function _cabUploadSend(file, kind){
+  const c=clients.find(x=>x.id===selectedId); if(!c||!file) return;
+  const code=c.code||c.id;
+  const st=document.getElementById('chatComposeStatus'); if(st)st.textContent=t('msg_sending');
+  try{
+    const up=await fetch(API+'/chat/upload?code='+encodeURIComponent(code)+'&kind='+kind,{method:'POST',headers:file.type?{'Content-Type':file.type}:{},body:file});
+    const d=await up.json();
+    if(d&&d.ok&&d.url){ const j=await api('/cabinet/chat-send',{code,type:d.type,url:d.url}); if(j&&j.ok){ if(st)st.textContent=''; await refreshChatThread(); } else if(st){ st.textContent=t('err_prefix')+((j&&j.error)||t('err_unknown')); } }
+    else if(st){ st.textContent=t('err_prefix')+((d&&d.error)||t('err_unknown')); }
+  }catch(e){ if(st) st.textContent=t('err_net'); }
+}
+function cabPickPhoto(inp){ const f=inp.files&&inp.files[0]; inp.value=''; if(f) _cabUploadSend(f,'image'); }
+let _cabRec=null,_cabChunks=[];
+async function cabToggleVoice(btn){
+  if(_cabRec && _cabRec.state==='recording'){ _cabRec.stop(); return; }
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    _cabChunks=[]; _cabRec=new MediaRecorder(stream);
+    _cabRec.ondataavailable=function(e){ if(e.data&&e.data.size)_cabChunks.push(e.data); };
+    _cabRec.onstop=function(){ const blob=new Blob(_cabChunks,{type:(_cabRec&&_cabRec.mimeType)||'audio/webm'}); try{stream.getTracks().forEach(function(t){t.stop();});}catch(_){} btn.style.background='#fff'; btn.textContent='🎤'; if(blob.size) _cabUploadSend(blob,'audio'); };
+    _cabRec.start(); btn.style.background='#f8caca'; btn.textContent='⏹';
+  }catch(e){ try{ btn.style.background='#fff'; btn.textContent='🎤'; }catch(_){} }
 }
 async function sendChatFromCompose(){
   const el=document.getElementById('chatCompose'); const text=(el&&el.value||'').trim(); if(!text)return;

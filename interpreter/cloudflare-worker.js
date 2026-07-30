@@ -876,6 +876,7 @@ export default {
       // Авторизация = код доступа (как /weekly-report). Сторона нутрициолога — в кабинете (вкладка «Переписка»).
       // (/expert/thread — GET, зарегистрирован в GET-блоке выше)
       if (path === '/expert/message')   return handleExpertMessage(request, env, corsHeaders, ctx);
+      if (path === '/chat/upload')      return handleChatUpload(request, env, corsHeaders);   // фото/голос в чат → R2
 
       // Кабинет нутрициолога (CRM на D1) — см. docs/CABINET-MODEL.md
       if (path === '/cabinet-auth')        return handleCabinetAuth(request, env, corsHeaders);
@@ -2073,6 +2074,31 @@ async function cabinetIngestWeekly(env, code, text, lang) {
 // Нутрициолог читает/отвечает во вкладке «Переписка» кабинета (его 'out'-сообщения клиент видит здесь).
 // Авторизация = код доступа (тот же секрет, что и для маршрута отчёта в карточку).
 // ─────────────────────────────────────────────────────────────
+// Файлы чата (фото/голос) в R2. Публичный bucket vial-assets.
+const CHAT_PUBLIC_BASE = 'https://pub-2f2f1a44a98c46beabafa751ba849852.r2.dev';
+// POST /chat/upload?code=<cardcode>&kind=image|audio  (тело = сырой файл) → {ok,url,type}.
+// Лёгкая авторизация: нужен реальный код карточки (его знают и клиент, и специалист).
+async function handleChatUpload(request, env, corsHeaders){
+  if(!env.ASSETS) return jsonResponse({ok:false,error:'r2_missing'}, corsHeaders, 500);
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  const url = new URL(request.url);
+  const code = String(url.searchParams.get('code')||'').trim().toUpperCase();
+  const kind = url.searchParams.get('kind')==='audio' ? 'audio' : 'image';
+  if(!code) return jsonResponse({ok:false,error:'no_code'}, corsHeaders, 400);
+  const row = await env.DB.prepare('SELECT code FROM clients WHERE upper(code)=?').bind(code).first();
+  if(!row) return jsonResponse({ok:false,error:'not_found'}, corsHeaders, 404);
+  const ct = request.headers.get('Content-Type') || (kind==='audio'?'audio/webm':'image/jpeg');
+  const buf = await request.arrayBuffer();
+  if(!buf || buf.byteLength===0) return jsonResponse({ok:false,error:'empty'}, corsHeaders, 400);
+  if(buf.byteLength > 12*1024*1024) return jsonResponse({ok:false,error:'too_large'}, corsHeaders, 413);
+  const ext = ct.includes('png')?'png':ct.includes('webp')?'webp':ct.includes('gif')?'gif'
+            : (ct.includes('mp4')||ct.includes('m4a'))?'m4a':(ct.includes('mpeg')||ct.includes('mp3'))?'mp3'
+            : (ct.includes('ogg'))?'ogg':(ct.includes('webm'))?'webm':(kind==='audio'?'webm':'jpg');
+  const key = 'chat/'+row.code+'/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;
+  await env.ASSETS.put(key, buf, { httpMetadata:{ contentType: ct } });
+  return jsonResponse({ ok:true, url: CHAT_PUBLIC_BASE + '/' + key, type: kind }, corsHeaders);
+}
+
 async function handleExpertThread(request, env, corsHeaders, ctx){
   const code = String(new URL(request.url).searchParams.get('code') || '').trim().toUpperCase();
   if(!code) return jsonResponse({ ok:false, error:'no_code' }, corsHeaders, 400);
@@ -2103,7 +2129,7 @@ async function handleExpertThread(request, env, corsHeaders, ctx){
         if(tr && tr !== text){ text = tr; m.tr = Object.assign({}, m.tr, { [clientLang]: tr }); dirty = true; }
       }
     }
-    out.push({ dir, date: m.date || '', text });
+    out.push({ dir, date: m.date || '', text, type: m.type || '', url: m.url || '' });
   }
   if(dirty){
     // Кэш перевода: пишем data БЕЗ updated_at, чтобы не помечать карточку «свежеобновлённой».
@@ -2117,13 +2143,17 @@ async function handleExpertMessage(request, env, corsHeaders, ctx){
   let body = {}; try{ body = await request.json(); }catch(_){}
   const code = String(body.code || '').trim().toUpperCase();
   const text = String(body.text || '').trim().slice(0, 4000);
-  if(!code || !text) return jsonResponse({ ok:false, error:'missing_fields' }, corsHeaders, 400);
+  const mtype = (body.type==='image'||body.type==='audio') ? body.type : '';
+  const murl  = String(body.url || '').slice(0, 500);
+  if(!code || (!text && !(mtype && murl))) return jsonResponse({ ok:false, error:'missing_fields' }, corsHeaders, 400);
   if(!env.DB) return jsonResponse({ ok:false, error:'d1_missing' }, corsHeaders, 500);
   const row = await env.DB.prepare('SELECT data FROM clients WHERE code=?').bind(code).first();
   if(!row) return jsonResponse({ ok:false, error:'not_found' }, corsHeaders, 404);   // карточка есть только у оплаченного VIA-L EXPERT
   let d = {}; try{ d = JSON.parse(row.data || '{}'); }catch(_){}
   if(!Array.isArray(d.messages)) d.messages = [];
-  d.messages.push({ dir:'in', date: new Date().toISOString().slice(0,10), text, source:'app' });
+  const inMsg = { dir:'in', date: new Date().toISOString().slice(0,10), text, source:'app' };
+  if(mtype && murl){ inMsg.type = mtype; inMsg.url = murl; }
+  d.messages.push(inMsg);
   if(d.messages.length > 300) d.messages = d.messages.slice(-300);
   await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?')
     .bind(JSON.stringify(d), Date.now(), code).run();
@@ -5888,20 +5918,24 @@ async function handleCabinetChatSend(request, env, corsHeaders, ctx){
   let body={}; try{ body=await request.json(); }catch(_){}
   const code = String(body.code||'').trim();
   const text = String(body.text||'').trim().slice(0,4000);
-  if(!code || !text) return jsonResponse({ok:false,error:'missing_fields'}, corsHeaders, 400);
+  const mtype = (body.type==='image'||body.type==='audio') ? body.type : '';
+  const murl  = String(body.url||'').slice(0,500);
+  if(!code || (!text && !(mtype && murl))) return jsonResponse({ok:false,error:'missing_fields'}, corsHeaders, 400);
   if(!await cabinetOwns(env, sess, code)) return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
   const row = await env.DB.prepare('SELECT data FROM clients WHERE code=?').bind(code).first();
   if(!row) return jsonResponse({ok:false,error:'not_found'}, corsHeaders, 404);
   let d={}; try{ d=JSON.parse(row.data||'{}'); }catch(_){}
   if(!Array.isArray(d.messages)) d.messages=[];
   const date = new Date().toISOString().slice(0,10);
-  d.messages.push({ dir:'out', date, text, source:'cabinet' });
+  const outMsg = { dir:'out', date, text, source:'cabinet' };
+  if(mtype && murl){ outMsg.type = mtype; outMsg.url = murl; }
+  d.messages.push(outMsg);
   if(d.messages.length>300) d.messages=d.messages.slice(-300);
   await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?').bind(JSON.stringify(d), Date.now(), code).run();
   // Опц. зеркало в Telegram-топик (специалист-оператор в TG видит continuity) — не блокируем ответ.
   if(ctx && env.CLIENT_BOT_TOKEN && env.NUTRITIONIST_GROUP_ID && env.EXPERT_DRAFTS){
     ctx.waitUntil((async()=>{
-      try{ const topicId = await env.EXPERT_DRAFTS.get('code_topic:'+code); if(topicId) await careSend(env, env.NUTRITIONIST_GROUP_ID, text, {message_thread_id:Number(topicId)}); }catch(_){}
+      try{ const topicId = await env.EXPERT_DRAFTS.get('code_topic:'+code); const tgText = text || (mtype==='image'?'📷 '+murl:mtype==='audio'?'🎤 '+murl:''); if(topicId && tgText) await careSend(env, env.NUTRITIONIST_GROUP_ID, tgText, {message_thread_id:Number(topicId)}); }catch(_){}
     })());
   }
   return jsonResponse({ ok:true, date }, corsHeaders);
