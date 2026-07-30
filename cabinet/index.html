@@ -1552,6 +1552,7 @@ async function openFromCalendar(id){
 
 // ── SELECT CLIENT ─────────────────────────────────────────
 async function selectClient(id){
+  stopChatPoll();               // сняли поллинг чата с прошлой карточки
   selectedId = id;
   currentTab = 'overview';
   refreshList();
@@ -1624,6 +1625,7 @@ function switchTab(tab){
     t.classList.toggle('active', names[i]===tab);
   });
   renderTabContent();
+  if(tab==='messages') startChatPoll(); else stopChatPoll();   // живое подтягивание входящих только на вкладке чата
 }
 
 function renderTabContent(){
@@ -1668,10 +1670,9 @@ function renderAnketa(c){
 }
 
 // ── MESSAGES TAB (чат-вид: тред сверху, поле ввода снизу — как в мессенджере) ──
-function renderMessages(c){
-  const msgs = c.messages || [];
-  // Пузыри: старые сверху → новые снизу. in=клиент слева синий, out=специалист справа зелёный.
-  const bubbles = msgs.map((m,i)=>{
+// Пузыри: старые сверху → новые снизу. in=клиент слева синий, out=специалист справа зелёный.
+function chatBubblesHtml(msgs){
+  return (msgs||[]).map((m,i)=>{
     const isIn = m.dir==='in';
     const align = isIn ? 'flex-start' : 'flex-end';
     const bg = isIn ? '#eef2ff' : '#e8f7ec';
@@ -1686,6 +1687,27 @@ function renderMessages(c){
       <div style="font-size:13px;white-space:pre-wrap;line-height:1.45;">${esc(m.text||'')}</div>
     </div>`;
   }).join('') || `<div style="margin:auto;color:#999;font-size:13px;">${t('msg_none')}</div>`;
+}
+// Живое подтягивание входящих: тянем свежую карточку и обновляем ТОЛЬКО тред (поле ввода не трогаем).
+let _chatPoll = null;
+async function refreshChatThread(){
+  const c = clients.find(x=>x.id===selectedId); if(!c || !c.code) return;
+  try{
+    const j = await api('/cabinet/client', { code: c.code });
+    if(j && j.ok && j.client){
+      c.messages = j.client.messages || [];
+      if(currentTab==='messages'){
+        const box = document.getElementById('chatThreadBox');
+        if(box){ const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 60; box.innerHTML = chatBubblesHtml(c.messages); if(atBottom) box.scrollTop = box.scrollHeight; }
+      }
+    }
+  }catch(e){}
+}
+function startChatPoll(){ stopChatPoll(); refreshChatThread(); _chatPoll = setInterval(refreshChatThread, 15000); }
+function stopChatPoll(){ if(_chatPoll){ clearInterval(_chatPoll); _chatPoll = null; } }
+function renderMessages(c){
+  const msgs = c.messages || [];
+  const bubbles = chatBubblesHtml(msgs);
 
   return `
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
