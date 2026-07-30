@@ -104,7 +104,7 @@ html[data-lang="he"]{direction:rtl}
 .catback{background:none;border:none;color:var(--gold-txt);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:6px 0;}
 .cchip{font-size:12px;padding:7px 14px;border-radius:50px;border:1px solid var(--b1);background:#fff;color:var(--t2);cursor:pointer;white-space:nowrap;}
 .cchip.active{background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#1a1408;border-color:transparent;font-weight:500;}
-.catlang{border:1px solid var(--b1);background:#fff;color:var(--t1);border-radius:10px;padding:8px 12px;font-family:inherit;font-size:13px;max-width:100%;}
+.catlang{appearance:none;-webkit-appearance:none;border:1px solid var(--b1);background-color:#fff;color:var(--t1);border-radius:10px;padding:9px 38px 9px 14px;font-family:inherit;font-size:13px;min-width:180px;max-width:100%;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%238a6a1c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px;}
 .speccard{background:#fff;border:1px solid rgba(160,120,32,.22);border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 4px 16px rgba(120,90,30,.07);}
 .speccard .sc-photo{width:52px;height:52px;border-radius:50%;object-fit:cover;flex:none;}
 .speccard .sc-photo-ph{width:52px;height:52px;border-radius:50%;flex:none;background:#f2ead9;display:flex;align-items:center;justify-content:center;color:var(--gold-txt);font-size:20px;font-weight:600;}
@@ -503,9 +503,11 @@ function buildCatChips(){
   el.innerHTML=cats.map(c=>`<button type="button" class="cchip${_catFilter===c?' active':''}" onclick="setCatFilter('${c}')">${esc(c==='all'?catL('all'):catLabel(c))}</button>`).join('');
 }
 function setCatFilter(c){ _catFilter=c; _hideMatchNote(); buildCatChips(); renderCatalog(); }
+const ALL12=['uk','ru','en','es','de','pt','fr','pl','it','he','ja','ko'];   // все 12 языков платформы
+function _langOptions(sel){ return `<option value="all">${esc(catL(sel==='quiz'?'langAny':'langAll'))}</option>`+ALL12.map(l=>`<option value="${l}">${esc(LANG_NAMES[l]||l.toUpperCase())}</option>`).join(''); }
 function buildCatLangSel(){
   const sel=document.getElementById('catLangSel'); if(!sel)return;
-  sel.innerHTML=`<option value="all">${esc(catL('langAll'))}</option>`+_catLangs().map(l=>`<option value="${l}">${l.toUpperCase()}</option>`).join('');
+  sel.innerHTML=_langOptions('cat');
   sel.value=_catLang;
 }
 function renderCatalog(){
@@ -558,14 +560,14 @@ function refreshQuizTexts(){
   if(q('quizBackBtn'))q('quizBackBtn').textContent=catL('back');
   renderQuizNeeds();
   const sel=q('quizLang');
-  if(sel){ const cur=sel.value||''; const avail=_catLangs(); sel.innerHTML=`<option value="all">${esc(catL('langAny'))}</option>`+avail.map(l=>`<option value="${l}">${l.toUpperCase()}</option>`).join(''); sel.value = cur || (avail.includes(lang)?lang:'all'); }
+  if(sel){ const cur=sel.value||''; sel.innerHTML=_langOptions('quiz'); sel.value = cur || lang; }
 }
 function openQuiz(){
   document.getElementById('catalogView').style.display='none';
   document.getElementById('quizView').style.display='block';
   _quizNeed='all';
   refreshQuizTexts();
-  const sel=document.getElementById('quizLang'); if(sel){ const avail=_catLangs(); sel.value=avail.includes(lang)?lang:'all'; }
+  const sel=document.getElementById('quizLang'); if(sel){ sel.value=lang; }
   try{ window.scrollTo(0,0); }catch(e){}
 }
 function closeQuiz(){
