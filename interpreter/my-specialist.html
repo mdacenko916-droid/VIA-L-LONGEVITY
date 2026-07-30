@@ -108,6 +108,14 @@ html[data-lang="he"]{direction:rtl}
 .speccard .sc-photo{width:52px;height:52px;border-radius:50%;object-fit:cover;flex:none;}
 .speccard .sc-photo-ph{width:52px;height:52px;border-radius:50%;flex:none;background:#f2ead9;display:flex;align-items:center;justify-content:center;color:var(--gold-txt);font-size:20px;font-weight:600;}
 .seeall{display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--gold-txt);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:4px 0;}
+/* Карусель специалистов на экране входа */
+.car-wrap{position:relative;}
+.car-track{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.car-track::-webkit-scrollbar{display:none;}
+.car-slide{flex:0 0 88%;scroll-snap-align:center;}
+.car-slide .speccard{margin-bottom:0;}
+.car-arrow{position:absolute;top:42px;width:30px;height:30px;border-radius:50%;border:1px solid var(--b1);background:rgba(255,255,255,.92);color:var(--gold-txt);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(120,90,30,.15);z-index:2;}
+.car-prev{left:-6px;} .car-next{right:-6px;}
 </style>
 </head>
 <body>
@@ -466,18 +474,24 @@ function _pickSpecialist(i){
   _chosenIdx=i; closeCatalog(); renderShowcase();
   try{ document.getElementById('showcase').scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){}
 }
+function _carScroll(dir){ const tr=document.getElementById('carTrack'); if(!tr)return; tr.scrollBy({left:dir*tr.clientWidth*0.85, behavior:'smooth'}); }
 // Teaser на экране входа: заголовок + «Смотреть всех» + 1 карточка
 function renderShowcase(){
   const box = document.getElementById('showcase'); if(!box) return;
   const list = _showcaseList || [];
   _showcaseEmpty = list.length === 0;
   if(_showcaseEmpty){ box.innerHTML=''; updateShowcaseFallback(); return; }
-  const idx = (_chosenIdx!=null && list[_chosenIdx]) ? _chosenIdx : 0;
-  box.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px;">
+  const header = `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px;">
       <div style="font-weight:600;color:var(--t1);">${esc(catL('title'))}</div>
       <button type="button" class="seeall" onclick="openCatalog()">${esc(catL('seeall'))} (${list.length}) →</button>
-    </div>` + specCard(list[idx]);
+    </div>`;
+  const slides = list.map(s=>`<div class="car-slide">${specCard(s)}</div>`).join('');
+  const arrows = list.length>1
+    ? `<button type="button" class="car-arrow car-prev" onclick="_carScroll(-1)" aria-label="prev">‹</button><button type="button" class="car-arrow car-next" onclick="_carScroll(1)" aria-label="next">›</button>` : '';
+  box.innerHTML = header + `<div class="car-wrap"><div class="car-track" id="carTrack">${slides}</div>${arrows}</div>`;
   updateShowcaseFallback();
+  // подскролл к выбранному из каталога
+  if(_chosenIdx!=null){ const tr=document.getElementById('carTrack'); const sl=tr&&tr.children[_chosenIdx]; if(sl){ try{ sl.scrollIntoView({inline:'center',block:'nearest'}); }catch(e){} } }
 }
 // ── Каталог ──
 function _catCats(){ const set=new Set(); (_showcaseList||[]).forEach(s=>{ if(s.category)set.add(s.category); }); return [...set]; }
