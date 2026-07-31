@@ -102,6 +102,10 @@ i.bottom-nav-icon{width:auto;height:auto;font-size:24px;line-height:1;color:var(
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
 :root{
+  /* Шрифт интерфейса одной переменной: в мобильном PWA подменяется на системный SF Pro
+     (шире и с большим x-height, чем DM Sans → текст разбора читается на телефоне). */
+  --font-ui: 'DM Sans',sans-serif;
+
   /* Deep graphite-navy — Oura style */
   --bg:        #10131A;
   --bg-2:      #141820;
@@ -146,7 +150,7 @@ html,body{
 html[data-lang="ja"] body{font-family:'Noto Sans JP',sans-serif;}
 html[data-lang="ko"] body{font-family:'Noto Sans KR',sans-serif;}
 body{
-  font-family:'DM Sans',sans-serif;
+  font-family:var(--font-ui);
   font-weight:300;
   color:var(--t1);
   background-color:#10131A;
@@ -228,10 +232,34 @@ body::before{
   /* Футер приложения. Нижний инсет урезан втрое (клиренс под home-индикатор остаётся), но
      ПЛЮС фиксированные 12px: на десктопном PWA (Mac) safe-area = 0, и без них подписи
      упирались в самый край окна. Селектор с #bottombar — чтобы перебить позднее мобильное правило. */
-  #bottombar .bottom-nav{padding:16px 16px calc(12px + env(safe-area-inset-bottom,0px)/3);}
-  #bottombar .bottom-nav-item{font-size:10px;gap:6px;}      /* подписи крупнее — на Mac футер читался мелко */
-  #bottombar i.bottom-nav-icon{font-size:27px;}             /* Phosphor-иконки задаются шрифтом, не width/height */
-  #bottombar img.bottom-nav-icon{width:30px;height:30px;}
+  #bottombar .bottom-nav{padding:9px 10px calc(7px + env(safe-area-inset-bottom,0px)/3);}
+  #bottombar .bottom-nav-item{font-size:8.5px;letter-spacing:.5px;gap:4px;padding:2px 6px;white-space:nowrap;}
+  #bottombar i.bottom-nav-icon{font-size:23px;}             /* Phosphor-иконки задаются шрифтом, не width/height */
+  #bottombar img.bottom-nav-icon{width:24px;height:24px;}
+  /* Десктопный PWA (Mac): места вдоволь, футер крупнее и с большим нижним отступом —
+     там safe-area = 0, и без фиксированных пикселей подписи упирались в край окна.
+     На телефоне значения выше держат бар низким: подписи в одну строку, как в системных
+     приложениях (иначе «НАШ ПОДХОД» переносился и футер съедал экран). */
+  @media (min-width:600px){
+    #bottombar .bottom-nav{padding:16px 16px calc(12px + env(safe-area-inset-bottom,0px)/3);}
+    #bottombar .bottom-nav-item{font-size:10px;letter-spacing:1.5px;gap:6px;padding:4px 12px;}
+    #bottombar i.bottom-nav-icon{font-size:27px;}
+    #bottombar img.bottom-nav-icon{width:30px;height:30px;}
+  }
+
+  /* ── Читаемость на телефоне (по сравнению с Telegram/Google Health текст выглядел тонким) ──
+     Три причины были: DM Sans узкий, body шёл весом 300 (Light), и antialiased дополнительно
+     утончает штрихи на Retina. Меняем все три ТОЛЬКО в мобильном PWA: системный SF Pro
+     (шире, больше x-height, роднее iOS), обычный вес, subpixel-сглаживание. Playfair в
+     заголовках не трогаем — фирменная типографика остаётся. */
+  @media (max-width:599px){
+    :root{ --font-ui: -apple-system,'SF Pro Text',BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
+    body{ font-weight:400; -webkit-font-smoothing:auto; }
+    /* Тело разбора крупнее: 13–14px на телефоне читались мелко при длинном тексте. */
+    .ai-intro,.ai-sec-sum{ font-size:15px;line-height:1.75; }
+    #aiResult{ font-size:15px!important;line-height:1.75!important; }   /* !important — размер задан инлайном в разметке */
+    .ai-sec-h{ font-size:17.5px; }
+  }
 }
 
 .bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
@@ -248,7 +276,7 @@ body::before{
 }
 /* .lang-logo* удалены 2026-07-22 вместе с квадратным лого топбара (Logo_IP.png). */
 .topbar-home{
-  font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:1.5px;
+  font-family:var(--font-ui);font-size:11px;letter-spacing:1.5px;
   color:var(--gold-lt);text-decoration:none;
   display:flex;align-items:center;gap:5px;
   padding:5px 10px;border-radius:20px;
@@ -265,7 +293,7 @@ body::before{
   padding:6px 14px;border-radius:50px;
   border:1px solid var(--b1);
   background:rgba(255,255,255,.04);color:var(--t2);cursor:pointer;
-  transition:all .2s;font-family:'DM Sans',sans-serif;
+  transition:all .2s;font-family:var(--font-ui);
 }
 .lang-toggle:hover{border-color:var(--b2);color:var(--gold);}
 .lang-toggle svg{width:10px;height:10px;transition:transform .2s;fill:currentColor;}
@@ -286,7 +314,7 @@ body::before{
   padding:10px 16px;font-size:12px;letter-spacing:1.5px;
   text-transform:uppercase;color:var(--t2);cursor:pointer;
   transition:all .15s;border-bottom:1px solid var(--b1);
-  font-family:'DM Sans',sans-serif;
+  font-family:var(--font-ui);
 }
 .lang-option:last-child{border-bottom:none;}
 .lang-option:hover,.lang-option.active{background:var(--gold-dim);color:var(--gold);}
@@ -306,7 +334,7 @@ body::before{
   display:flex;flex-direction:column;align-items:center;gap:4px;
   font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
   color:var(--gold-lt);cursor:pointer;transition:color .2s;
-  background:none;border:none;font-family:'DM Sans',sans-serif;
+  background:none;border:none;font-family:var(--font-ui);
   padding:4px 12px;border-radius:12px;
 }
 .bottom-nav-item.active{color:var(--gold-lt);}
@@ -368,7 +396,7 @@ body::before{
 .gate-btn{
   width:100%;margin-top:16px;
   padding:16px;border-radius:12px;border:none;
-  font-family:'DM Sans',sans-serif;font-size:11px;
+  font-family:var(--font-ui);font-size:11px;
   font-weight:500;letter-spacing:.16em;text-transform:uppercase;
   cursor:pointer;position:relative;overflow:hidden;
   background:linear-gradient(135deg,#a87a2c,#e2b96a);
@@ -645,11 +673,11 @@ main{
   transition:color .3s;
 }
 .oura-unit{
-  font-size:13px;font-family:'DM Sans',sans-serif;
+  font-size:13px;font-family:var(--font-ui);
   color:var(--t2);letter-spacing:1px;font-weight:400;
 }
 .oura-status{
-  font-size:13px;font-family:'DM Sans',sans-serif;
+  font-size:13px;font-family:var(--font-ui);
   color:var(--ok);font-weight:500;letter-spacing:.5px;
   margin-left:2px;
   transition:color .3s;
@@ -753,7 +781,7 @@ input.oura-input::-webkit-slider-thumb{
 .btn-row{display:flex;gap:10px;margin-top:24px;}
 .btn{
   flex:1;padding:15px 20px;border-radius:14px;
-  font-family:'DM Sans',sans-serif;font-size:11px;
+  font-family:var(--font-ui);font-size:11px;
   font-weight:500;cursor:pointer;border:none;
   transition:all .25s;letter-spacing:.12em;text-transform:uppercase;
 }
@@ -1049,7 +1077,7 @@ i.rd-tr-ic{display:inline-flex;align-items:center;justify-content:center;font-si
   display:flex;align-items:center;justify-content:center;
   padding:16px 24px;border-radius:14px;
   background:linear-gradient(135deg,#C49A3C,#8B6B22);
-  color:#000;font-family:'DM Sans',sans-serif;font-size:11px;
+  color:#000;font-family:var(--font-ui);font-size:11px;
   font-weight:500;letter-spacing:.12em;text-transform:uppercase;
   text-decoration:none;cursor:pointer;border:none;
   box-shadow:0 4px 24px rgba(196,154,60,.35),0 0 0 1px rgba(196,154,60,.3);
@@ -1203,7 +1231,7 @@ body:has(#morning-gate) #morning-gate{margin:0 auto;}
   text-transform:uppercase;text-align:center;
   cursor:pointer;border:1px solid var(--b1);
   color:var(--t3);background:transparent;
-  font-family:'DM Sans',sans-serif;
+  font-family:var(--font-ui);
   transition:all .2s;
 }
 .method-tab.active{
@@ -1246,7 +1274,7 @@ body:has(#morning-gate) #morning-gate{margin:0 auto;}
   background:var(--gold-dim);border:1px solid var(--b2);
   color:var(--gold);font-size:11px;font-weight:500;
   letter-spacing:.5px;text-transform:uppercase;
-  cursor:pointer;font-family:'DM Sans',sans-serif;
+  cursor:pointer;font-family:var(--font-ui);
   white-space:nowrap;transition:all .2s;
 }
 .token-btn:hover{background:rgba(196,154,60,.25);}
@@ -1311,7 +1339,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;}
 .vai-lbl{display:block;font-size:11.5px;font-weight:600;letter-spacing:.4px;color:var(--gold-lt);text-transform:uppercase;margin:8px 0 2px;}
 .vai-units{display:flex;align-items:center;gap:8px;margin:10px 0 2px;flex-wrap:wrap;}
 .vai-units-l{font-size:11.5px;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;}
-.vai-u{padding:5px 12px;border-radius:20px;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--t2);background:rgba(255,255,255,.04);border:1px solid var(--gold-dim);transition:all .2s;}
+.vai-u{padding:5px 12px;border-radius:20px;cursor:pointer;font-size:12px;font-family:var(--font-ui);color:var(--t2);background:rgba(255,255,255,.04);border:1px solid var(--gold-dim);transition:all .2s;}
 .vai-u.active{background:rgba(238,175,84,.16);border-color:rgba(238,175,84,.6);color:#F3C066;font-weight:600;}
 .vai-unit{font-weight:500;color:var(--t2);}
 .vai-in{text-align:left;}
@@ -1333,7 +1361,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;}
 .btn-import-go{
   width:100%;padding:16px;border-radius:14px;
   background:linear-gradient(135deg,#C49A3C,#8B6B22);
-  color:#000;font-family:'DM Sans',sans-serif;font-size:12px;
+  color:#000;font-family:var(--font-ui);font-size:12px;
   font-weight:600;letter-spacing:.1em;text-transform:uppercase;
   cursor:pointer;border:none;
   box-shadow:0 4px 24px rgba(196,154,60,.35);
@@ -1345,7 +1373,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;}
   background:transparent;border:none;
   font-size:14px;color:var(--gold-lt);letter-spacing:.5px;font-weight:500;
   text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px;text-decoration-color:rgba(226,185,90,.5);
-  cursor:pointer;font-family:'DM Sans',sans-serif;
+  cursor:pointer;font-family:var(--font-ui);
 }
 .btn-import-skip:hover{color:#F0D590;}
 
@@ -1506,10 +1534,10 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;}
 .max-badge{display:inline-flex;align-items:center;gap:6px;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#7898ff;border:1px solid rgba(120,152,255,.35);border-radius:50px;padding:4px 12px;margin-bottom:14px;}
 .max-title{font-family:'Playfair Display',serif;font-size:19px;font-weight:400;color:var(--t1);margin-bottom:8px;}
 .max-desc{font-size:13px;color:var(--t2);line-height:1.65;margin-bottom:18px;}
-.max-textarea{width:100%;background:rgba(0,0,0,.25);border:1px solid rgba(120,152,255,.2);border-radius:12px;color:var(--t1);font-family:'DM Sans',sans-serif;font-size:13px;padding:12px 14px;resize:none;outline:none;line-height:1.6;min-height:80px;transition:border-color .2s;}
+.max-textarea{width:100%;background:rgba(0,0,0,.25);border:1px solid rgba(120,152,255,.2);border-radius:12px;color:var(--t1);font-family:var(--font-ui);font-size:13px;padding:12px 14px;resize:none;outline:none;line-height:1.6;min-height:80px;transition:border-color .2s;}
 .max-textarea::placeholder{color:var(--t3);}
 .max-textarea:focus{border-color:rgba(120,152,255,.5);}
-.max-btn{margin-top:12px;width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#5c7aff,#7898ff);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;letter-spacing:.5px;cursor:pointer;transition:opacity .2s;}
+.max-btn{margin-top:12px;width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#5c7aff,#7898ff);color:#fff;font-family:var(--font-ui);font-size:13px;font-weight:500;letter-spacing:.5px;cursor:pointer;transition:opacity .2s;}
 .max-btn:hover{opacity:.88;}
 .max-sent{display:none;text-align:center;padding:16px;font-size:13px;color:#7898ff;}
 /* Панель «Данные с трекера» — read-only сводка подтянутых показателей */
@@ -1569,7 +1597,7 @@ body.flow-mode .step.flow-show.answered .step-badge{border-color:rgba(78,204,163
 body.flow-mode .step.flow-show.answered .step-badge::after{content:' ✓';font-weight:700;color:var(--ok);}
 /* Чип «Всё как обычно» — быстрый явный ответ «в норме» для оценочных полей (энергия/сон/симптомы) */
 .as-usual{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:8px 14px;cursor:pointer;
-  font-size:12.5px;font-family:'DM Sans',sans-serif;color:var(--t2);
+  font-size:12.5px;font-family:var(--font-ui);color:var(--t2);
   background:rgba(255,255,255,.04);border:1px solid var(--gold-dim);border-radius:20px;transition:all .2s;}
 .as-usual:hover{border-color:rgba(226,185,90,.5);color:var(--t1);}
 .as-usual.picked{background:rgba(78,204,163,.12);border-color:rgba(78,204,163,.5);color:var(--ok);}
@@ -1646,7 +1674,7 @@ body:not(.flow-mode) .flow-intro{display:none;}
 .ds-anchors-stress .a1::before{color:#4ADE80;}
 /* Две кнопки импорта в hero: «Все гаджеты» (Health) + «Прямая интеграция» (вендоры) */
 /* Кнопки импорта — две одинаковые карточки-действия (тёмная + золотой кант, иконка→текст→стрелка) */
-.imp-btn{display:flex;align-items:center;gap:13px;width:100%;max-width:460px;box-sizing:border-box;margin:8px auto 0;padding:11px 15px;border-radius:16px;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif;position:relative;color:var(--t1);background:linear-gradient(145deg,#2a323f 0%,#1e2530 60%,#181e28 100%);border:1px solid rgba(226,185,90,.5);box-shadow:0 6px 22px rgba(0,0,0,.4);transition:transform .15s ease,border-color .2s,box-shadow .2s;}
+.imp-btn{display:flex;align-items:center;gap:13px;width:100%;max-width:460px;box-sizing:border-box;margin:8px auto 0;padding:11px 15px;border-radius:16px;cursor:pointer;text-align:left;font-family:var(--font-ui);position:relative;color:var(--t1);background:linear-gradient(145deg,#2a323f 0%,#1e2530 60%,#181e28 100%);border:1px solid rgba(226,185,90,.5);box-shadow:0 6px 22px rgba(0,0,0,.4);transition:transform .15s ease,border-color .2s,box-shadow .2s;}
 .imp-btn:hover{transform:translateY(-1px);border-color:rgba(226,185,90,.85);box-shadow:0 8px 28px rgba(196,150,60,.2);}
 .imp-btn .imp-ic{flex-shrink:0;width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(196,150,60,.12);border:1px solid rgba(196,150,60,.32);color:var(--gold-lt);}
 .imp-btn .imp-ic svg{width:24px;height:24px;}
@@ -1727,7 +1755,7 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
 .ai-sec.open .ai-sec-chev{transform:rotate(180deg);}
 .ai-sec-ic{font-size:20px;line-height:1;}
 .ai-sec-img{width:34px;height:34px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 0 5px rgba(226,185,90,.25));}
-.ai-sec-pill{font-family:'DM Sans',sans-serif;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#1a1206;background:linear-gradient(135deg,#e7c77a,#c9962f);padding:3px 9px;border-radius:20px;white-space:nowrap;}
+.ai-sec-pill{font-family:var(--font-ui);font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#1a1206;background:linear-gradient(135deg,#e7c77a,#c9962f);padding:3px 9px;border-radius:20px;white-space:nowrap;}
 .ai-sec-sum{font-size:14px;color:#fff;line-height:1.8;}
 .ai-sec-more,.ai-sec-coll{display:flex;align-items:center;gap:6px;margin-top:12px;background:none;border:none;color:var(--gold-lt);font-size:12px;font-weight:500;cursor:pointer;padding:2px 0;font-family:inherit;letter-spacing:.2px;opacity:.9;}
 .ai-sec-more:hover,.ai-sec-coll:hover{opacity:1;color:var(--gold-lt);}
@@ -1752,14 +1780,14 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
 .ai-sec.open .ai-sec-det-wrap{grid-template-rows:1fr;}
 .ai-sec-det-wrap>.ai-sec-det{overflow:hidden;min-height:0;}
 .ai-sec-det{font-size:13.5px;color:rgba(255,255,255,.94);line-height:1.8;margin-top:0;padding:14px 0 4px 18px;border-left:2px solid rgba(226,185,90,.28);background:linear-gradient(90deg,rgba(226,185,90,.035),transparent 60%);}
-.ai-subh{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--gold-lt);margin:14px 0 5px;}
+.ai-subh{font-family:var(--font-ui);font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--gold-lt);margin:14px 0 5px;}
 .ai-sec-det .ai-subh:first-child{margin-top:2px;}
 /* Стеклянные модалы (Профиль/Подход/Сегодня) и чат наставника: полосу прокрутки скрыть, скролл оставить */
 #cardPanel,#approachPanel,#dayplanPanel,#vlAdvMsgs{scrollbar-width:none;}
 #cardPanel::-webkit-scrollbar,#approachPanel::-webkit-scrollbar,#dayplanPanel::-webkit-scrollbar,#vlAdvMsgs::-webkit-scrollbar{display:none;width:0;}
 /* Единая кнопка закрытия модалов/панелей/шторок (владелец 2026-07-14): кружок + подсветка тарифа (PRO — золото).
    Заменяет разнобой: голый × в разборе/чате и инлайн-кружки панелей. */
-.x-close{width:34px;height:34px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);border:1px solid rgba(226,185,90,.45);color:var(--t1);border-radius:50%;font-size:15px;line-height:1;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0;box-shadow:0 0 12px rgba(226,185,90,.22);transition:box-shadow .2s ease,border-color .2s ease,transform .12s ease;-webkit-tap-highlight-color:transparent;}
+.x-close{width:34px;height:34px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);border:1px solid rgba(226,185,90,.45);color:var(--t1);border-radius:50%;font-size:15px;line-height:1;cursor:pointer;font-family:var(--font-ui);padding:0;box-shadow:0 0 12px rgba(226,185,90,.22);transition:box-shadow .2s ease,border-color .2s ease,transform .12s ease;-webkit-tap-highlight-color:transparent;}
 .x-close:hover{border-color:rgba(226,185,90,.8);box-shadow:0 0 16px rgba(226,185,90,.42);}
 .x-close:active{transform:scale(.88);}
 .consent-card{max-width:440px;width:100%;background:var(--bg-2);border:1px solid var(--gold-dim);border-radius:18px;padding:26px 24px;box-shadow:0 20px 60px rgba(0,0,0,.5);box-sizing:border-box;max-height:calc(100dvh - 48px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none;}
@@ -3361,7 +3389,7 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
   <div class="cm-sheet">
     <div class="cm-handle"></div>
     <div class="cm-head">
-      <span id="cm-time" style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:.05em;color:var(--gold-lt);background:rgba(226,185,90,.14);padding:3px 10px;border-radius:20px;"></span>
+      <span id="cm-time" style="font-family:var(--font-ui);font-size:13px;font-weight:600;letter-spacing:.05em;color:var(--gold-lt);background:rgba(226,185,90,.14);padding:3px 10px;border-radius:20px;"></span>
       <div id="cm-name" style="font-family:'Playfair Display',serif;font-size:19px;color:var(--t1);flex:1;"></div>
       <button onclick="closeCircModal()" aria-label="Close" class="x-close">✕</button>
     </div>
@@ -4632,7 +4660,7 @@ function _vcCSS(){ if(document.getElementById('vcard-css'))return; var s=documen
   +".vh-top{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;}"
   +".vh-name{font-family:'Oswald',sans-serif;font-size:24px;font-weight:600;color:var(--t1);line-height:1.1;letter-spacing:.2px;}"
   +".vh-sub{color:var(--t3);font-size:12.5px;margin-top:8px;opacity:.92;}"
-  +".vh-edit-btn{margin-left:auto;background:rgba(226,185,90,.12);border:1px solid rgba(226,185,90,.35);color:var(--gold-lt);padding:8px 14px;border-radius:50px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s ease;}"
+  +".vh-edit-btn{margin-left:auto;background:rgba(226,185,90,.12);border:1px solid rgba(226,185,90,.35);color:var(--gold-lt);padding:8px 14px;border-radius:50px;font-size:12px;cursor:pointer;font-family:var(--font-ui);transition:all .2s ease;}"
   +".vh-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px;}"
   +"@media(max-width:520px){.vh-grid{grid-template-columns:repeat(2,1fr);}}"
   +".vh-cell .vh-l{color:var(--t3);font-size:11px;}.vh-cell .vh-v{color:var(--t1);font-weight:600;font-size:15px;margin-top:3px;}"
@@ -4652,7 +4680,7 @@ function _vcCSS(){ if(document.getElementById('vcard-css'))return; var s=documen
   +".vc-ic .ph,.vc-ic .vio-ic{font-size:22px;line-height:1;}.vc-ic img{width:22px;height:22px;object-fit:contain;}"
   +".vc-txt{display:flex;flex-direction:column;gap:2px;min-width:0;}"
   +".vc-tt{font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:#fff;font-weight:500;}"
-  +".vc-sub2{font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:.2px;text-transform:none;color:var(--t2);font-weight:400;line-height:1.3;}"
+  +".vc-sub2{font-family:var(--font-ui);font-size:11px;letter-spacing:.2px;text-transform:none;color:var(--t2);font-weight:400;line-height:1.3;}"
   +"details.vcard-sec>summary .vc-chev{margin-left:auto;color:var(--gold-lt);font-size:20px;line-height:1;transition:transform .2s;}"
   +"details.vcard-sec[open]>summary .vc-chev{transform:rotate(90deg);}"
   +".vcard-sec-body{padding:0 16px 14px;}"
@@ -4728,7 +4756,7 @@ function _renderDayPlanCard(){
   return _bpChapters().map(function(r){
     return '<div onclick="openBpChapter(\''+r.id+'\')" style="display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:7px;background:linear-gradient(150deg,#161A22,#10141C);border:1px solid rgba(226,185,90,.2);border-radius:12px;cursor:pointer;">'
       +'<div style="font-size:20px;width:28px;text-align:center;flex-shrink:0;">'+r.icon+'</div>'
-      +'<div style="flex:1;min-width:0;"><div style="font-family:\'DM Sans\',sans-serif;font-size:13px;font-weight:600;color:var(--t1);text-transform:uppercase;letter-spacing:.03em;">'+r.title+'</div><div style="font-size:11px;color:var(--t3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+r.teaser+'</div></div>'
+      +'<div style="flex:1;min-width:0;"><div style="font-family:var(--font-ui);font-size:13px;font-weight:600;color:var(--t1);text-transform:uppercase;letter-spacing:.03em;">'+r.title+'</div><div style="font-size:11px;color:var(--t3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+r.teaser+'</div></div>'
       +'<div style="color:var(--gold-lt);font-size:18px;opacity:.6;flex-shrink:0;">›</div></div>';
   }).join('');
 }
@@ -9189,7 +9217,7 @@ function openDayPlanPanel(){
     body+=_bpChapters().map(function(r){
       return '<div onclick="openBpChapter(\''+r.id+'\')" style="display:flex;align-items:center;gap:12px;padding:13px;margin-bottom:8px;background:linear-gradient(150deg,#1b1712,#13100b);border:1px solid rgba(226,185,90,.2);border-radius:13px;cursor:pointer;">'
         +'<div style="font-size:20px;width:28px;text-align:center;flex-shrink:0;">'+r.icon+'</div>'
-        +'<div style="flex:1;min-width:0;"><div style="font-family:\'DM Sans\',sans-serif;font-size:13px;font-weight:600;color:var(--t1);text-transform:uppercase;letter-spacing:.03em;">'+r.title+'</div><div style="font-size:11px;color:var(--t3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+r.teaser+'</div></div>'
+        +'<div style="flex:1;min-width:0;"><div style="font-family:var(--font-ui);font-size:13px;font-weight:600;color:var(--t1);text-transform:uppercase;letter-spacing:.03em;">'+r.title+'</div><div style="font-size:11px;color:var(--t3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+r.teaser+'</div></div>'
         +'<div style="color:var(--gold-lt);font-size:18px;opacity:.6;flex-shrink:0;">›</div></div>';
     }).join('');
     // Кнопка «Скачать памятку дня» убрана: она не скачивала, а открывала окно на печать,
@@ -9216,7 +9244,7 @@ function closeDayPlanPanel(){
 function _bpRenderSecs(secs){
   var W=function(t){return (typeof _wl==='function')?_wl(String(t==null?'':t)):String(t==null?'':t);};   // велнес-пояс: приливы→тепловые волны, гормональный фон→гормональный баланс, дозы трав и т.д.
   return secs.map(function(s){
-    var head='<div style="margin:16px 0 4px;font-family:\'DM Sans\',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-lt);">• '+W(s.title)+' •</div>';
+    var head='<div style="margin:16px 0 4px;font-family:var(--font-ui);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-lt);">• '+W(s.title)+' •</div>';
     if(s.variants){
       var note='<div style="font-size:11px;color:var(--t3);margin:0 0 9px;">'+L({ru:'Выберите любой один вариант',en:'Pick any one option',uk:'Оберіть будь-який один варіант',es:'Elige una opción cualquiera',de:'Wähle eine beliebige Option',pt:'Escolha uma opção qualquer',fr:'Choisissez une option au choix',pl:'Wybierz dowolną jedną opcję',it:'Scegli una qualsiasi opzione',he:'בחרו אפשרות אחת כלשהי',ja:'いずれか1つを選んでください',ko:'아무거나 하나 선택하세요'})+'</div>';
       var opts=s.items.map(function(x,i){
@@ -9243,7 +9271,7 @@ function renderDayBlueprint(data){
   var rows=_bpChapters().map(function(r){
     return '<div onclick="openBpChapter(\''+r.id+'\')" style="display:flex;align-items:center;gap:13px;padding:14px;margin-bottom:8px;background:linear-gradient(150deg,#1b1712,#13100b);border:1px solid rgba(226,185,90,.22);border-radius:14px;cursor:pointer;">'
       +'<div style="font-size:22px;width:30px;text-align:center;flex-shrink:0;">'+r.icon+'</div>'
-      +'<div style="flex:1;min-width:0;"><div style="font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:600;color:var(--t1);letter-spacing:.03em;text-transform:uppercase;">'+r.title+'</div><div style="font-size:11px;color:var(--t3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+r.teaser+'</div></div>'
+      +'<div style="flex:1;min-width:0;"><div style="font-family:var(--font-ui);font-size:14px;font-weight:600;color:var(--t1);letter-spacing:.03em;text-transform:uppercase;">'+r.title+'</div><div style="font-size:11px;color:var(--t3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+r.teaser+'</div></div>'
       +'<div style="color:var(--gold-lt);font-size:20px;opacity:.6;flex-shrink:0;">›</div></div>';
   }).join('');
   box.innerHTML=head+rows;   // кнопка «Скачать памятку дня» убрана (см. выше)
@@ -9541,12 +9569,6 @@ document.addEventListener('visibilitychange',function(){
   padding:0;background:none;border:none;cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none;
   display:flex;align-items:center;justify-content:center;transition:transform .15s;}
 #vlAdvBtn:hover{transform:scale(1.08);}
-/* Кнопка советника — в дизайн-системе тарифа: тёмный круг + золотая обводка + Phosphor-иконка,
-   как иконки нижней навигации. Прежняя растровая картинка (Logo/logo-ai-v2.png) была из другой
-   стилистики и на 55px её надпись не читалась. */
-#vlAdvBtn{background:rgba(18,22,30,.92);border:1px solid rgba(226,185,90,.45);border-radius:50%;
-  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);box-shadow:0 4px 14px rgba(0,0,0,.45);}
-#vlAdvBtn i{font-size:26px;line-height:1;color:var(--gold-lt);filter:drop-shadow(0 0 4px rgba(226,185,90,.55));}
 #vlAdvBtn img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 2px 7px rgba(0,0,0,.6));}
 #vlAdvPanel{position:fixed;right:20px;bottom:20px;z-index:9999;width:min(380px,calc(100vw - 32px));height:min(560px,calc(100vh - 40px));
   background:#fff;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.35);display:none;flex-direction:column;overflow:hidden;
@@ -9574,7 +9596,7 @@ document.addEventListener('visibilitychange',function(){
 #vlAdvSend:disabled{opacity:.5;cursor:default;}
 #vlAdvDisc{font-size:10px;color:#aaa;text-align:center;padding:0 10px calc(8px + env(safe-area-inset-bottom,0px));background:#fff;}
 </style>
-<button id="vlAdvBtn" aria-label="VIA·L advisor"><i class="ph ph-sparkle" aria-hidden="true"></i></button>
+<button id="vlAdvBtn" aria-label="VIA·L advisor"><img src="Logo/logo-ai-v2.png" alt="VIA·L AI" draggable="false"></button>
 <div id="vlAdvPanel" role="dialog" aria-label="VIA·L advisor">
   <div id="vlAdvHead">
     <div><div class="t">VÍA<span>·</span>L</div><div class="s" id="vlAdvSub"></div></div>
