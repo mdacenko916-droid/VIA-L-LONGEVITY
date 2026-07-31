@@ -6016,22 +6016,28 @@ async function handleCabinetLeads(request, env, corsHeaders){
 // ингесту (cabinetIngestIpAnalysis по коду). См. docs/PLATFORM-MODEL.md §3.
 // ─────────────────────────────────────────────────────────────
 
-// Код пациента: P + 6 знаков (без похожих 0/O/1/I). Под ним пациент проходит ИП,
-// по нему же разборы попадают в его карточку.
-function genPatientCode(){
-  const al = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+// Алфавит кодов доступа: без похожих на глаз 0/O и 1/I — коды диктуют голосом и
+// переписывают из письма. Ровно 32 символа, а 256 кратно 32 → `byte % 32` даёт
+// равномерное распределение без смещения, отбраковка байтов не нужна.
+const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+// Случайная часть кода — из crypto.getRandomValues, НЕ из Math.random: код доступа
+// открывает личный дневник клиента и его карточку, а Math.random не криптостойкий
+// (его поток в принципе предсказуем по нескольким выданным значениям).
+function _randCode(len){
+  const buf = new Uint8Array(len);
+  crypto.getRandomValues(buf);
   let s = '';
-  for(let i=0;i<6;i++) s += al[Math.floor(Math.random()*al.length)];
-  return 'P' + s;
+  for(let i=0;i<len;i++) s += CODE_ALPHABET[buf[i] % 32];
+  return s;
 }
 
+// Код пациента: P + 6 знаков. Под ним пациент проходит ИП,
+// по нему же разборы попадают в его карточку.
+function genPatientCode(){ return 'P' + _randCode(6); }
+
 // Срочный код доступа к VIA-L EXPERT (префикс EX — визуально отличим от кода карточки P…).
-function genExpertCode(){
-  const al = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let s = '';
-  for(let i=0;i<7;i++) s += al[Math.floor(Math.random()*al.length)];
-  return 'EX' + s;
-}
+function genExpertCode(){ return 'EX' + _randCode(7); }
 
 // Persist статуса выданного доступа в карточку клиента (data.expert_grant) — чтобы Кабинет
 // показывал активный доступ после релоада (KV сам по себе фронту не виден). Read-merge-write.

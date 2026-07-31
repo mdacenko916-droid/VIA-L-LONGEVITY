@@ -225,9 +225,13 @@ body::before{
   html,body{height:100vh;}
   #app{top:0;bottom:auto;height:100vh;}
   body::before{top:0;bottom:auto;height:100vh;}
-  /* компактный футер: меньше воздуха сверху, нижний инсет урезан вдвое (клиренс под home-индикатор остаётся).
-     Селектор с #bottombar — чтобы перебить позднее мобильное правило .bottom-nav */
-  #bottombar .bottom-nav{padding:13px 16px calc(env(safe-area-inset-bottom,0px)/3);}   /* больше воздуха сверху: иконки не прижаты к верхнему краю футера */
+  /* Футер приложения. Нижний инсет урезан втрое (клиренс под home-индикатор остаётся), но
+     ПЛЮС фиксированные 12px: на десктопном PWA (Mac) safe-area = 0, и без них подписи
+     упирались в самый край окна. Селектор с #bottombar — чтобы перебить позднее мобильное правило. */
+  #bottombar .bottom-nav{padding:16px 16px calc(12px + env(safe-area-inset-bottom,0px)/3);}
+  #bottombar .bottom-nav-item{font-size:10px;gap:6px;}      /* подписи крупнее — на Mac футер читался мелко */
+  #bottombar i.bottom-nav-icon{font-size:27px;}             /* Phosphor-иконки задаются шрифтом, не width/height */
+  #bottombar img.bottom-nav-icon{width:30px;height:30px;}
 }
 
 .bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
@@ -3498,6 +3502,9 @@ async function checkCode(){
     const rd = await rv.json();
     if (rd && rd.ok) {
       saveExpertState({ used: (typeof rd.expert_used==='number'?rd.expert_used:0), max: (rd.expert_max || _planMax(rd.plan)) });
+      // Запоминаем сам EX-код (в viae_code ляжет код КАРТОЧКИ) — по нему при каждом запуске
+      // тихо перепроверяем срок: специалист продлил доступ в кабинете → клиент этого не заметит.
+      try{ localStorage.setItem('viae_gcode', v); }catch(e){}
       gateUnlock('MAX', rd.code || v, rd.plan || 'VIAL-EXPERT-8W', rd.expiry);   // rd.code = код карточки → разборы текут в кабинет
       return;
     }
@@ -6906,12 +6913,42 @@ async function _iapRestoreClick(){
     }
   }catch(e){} return false; }
   function _showGate(reason){ try{ var g=document.getElementById('gate'); if(g){g.style.opacity='';g.style.display='flex';} var sa=document.getElementById('scroll-area'); if(sa)sa.style.visibility='hidden'; if(reason&&typeof gateError==='function'){try{gateError(reason);}catch(e){}} }catch(e){} }
-  function _start(){ try{
+  // Тихая сверка доступа с кабинетом по сохранённому EX-коду (viae_gcode).
+  // Зачем: срок хранится на устройстве, и продление в кабинете само по себе до клиента не
+  // доходило — он видел «доступ закончился» и вводил тот же код заново. Теперь при каждом
+  // запуске срок и счётчик разборов подтягиваются молча.
+  // true = доступ жив (expiry обновлён), false = закрыт специалистом/истёк, null = нет кода или нет сети.
+  async function _reverify(){
+    var g=''; try{ g=(localStorage.getItem('viae_gcode')||'').trim().toUpperCase(); }catch(e){}
+    if(!g) return null;
+    try{
+      var r=await fetch(_CHAT_API+'/expert/verify?code='+encodeURIComponent(g));
+      var d=await r.json();
+      if(d && d.ok){
+        try{
+          if(d.expiry){ localStorage.setItem('viae_expiry',d.expiry); sessionStorage.setItem('viae_expiry',d.expiry); }
+          else { localStorage.removeItem('viae_expiry'); sessionStorage.removeItem('viae_expiry'); }
+        }catch(e){}
+        try{ if(typeof saveExpertState==='function') saveExpertState({ used:(typeof d.expert_used==='number'?d.expert_used:0), max:(d.expert_max || _planMax(d.plan)) }); }catch(e){}
+        return true;
+      }
+      if(d && (d.reason==='expired' || d.reason==='revoked')) return false;
+    }catch(e){}
+    return null;   // сеть недоступна → доверяем локальному сроку, как раньше
+  }
+  async function _start(){ try{
     // Нативный app (Capacitor): доступ через IAP/consent — код не спрашиваем.
     if(window.Capacitor){ _bootRoute(); return; }
     // Веб-EXPERT (Hotmart): доступ по коду.
     if(!_hydrate()){ _showGate(); return; }
-    if(_expired()){ _clearAccess(); _showGate('expired'); return; }   // срок программы (56/84 дня) истёк → закрыть вход
+    if(_expired()){
+      // Локально срок вышел — но специалист мог продлить: спрашиваем сервер, прежде чем закрывать вход.
+      var alive = await _reverify();
+      if(alive !== true){ _clearAccess(); _showGate('expired'); return; }
+    } else {
+      // Срок ещё идёт — сверяемся в фоне: продление подтянется заранее, отзыв доступа закроет вход.
+      _reverify().then(function(a){ if(a===false){ _clearAccess(); _showGate('expired'); } });
+    }
     // Повторный заход по сохранённому коду — тоже через загрузку аккаунта: то, что клиент
     // ввёл на другом устройстве, должно быть здесь ДО того, как он начнёт заполнять день.
     if(typeof _syncBoot==='function') _syncBoot(_bootRoute); else _bootRoute();
@@ -9504,6 +9541,12 @@ document.addEventListener('visibilitychange',function(){
   padding:0;background:none;border:none;cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none;
   display:flex;align-items:center;justify-content:center;transition:transform .15s;}
 #vlAdvBtn:hover{transform:scale(1.08);}
+/* Кнопка советника — в дизайн-системе тарифа: тёмный круг + золотая обводка + Phosphor-иконка,
+   как иконки нижней навигации. Прежняя растровая картинка (Logo/logo-ai-v2.png) была из другой
+   стилистики и на 55px её надпись не читалась. */
+#vlAdvBtn{background:rgba(18,22,30,.92);border:1px solid rgba(226,185,90,.45);border-radius:50%;
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);box-shadow:0 4px 14px rgba(0,0,0,.45);}
+#vlAdvBtn i{font-size:26px;line-height:1;color:var(--gold-lt);filter:drop-shadow(0 0 4px rgba(226,185,90,.55));}
 #vlAdvBtn img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 2px 7px rgba(0,0,0,.6));}
 #vlAdvPanel{position:fixed;right:20px;bottom:20px;z-index:9999;width:min(380px,calc(100vw - 32px));height:min(560px,calc(100vh - 40px));
   background:#fff;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.35);display:none;flex-direction:column;overflow:hidden;
@@ -9531,7 +9574,7 @@ document.addEventListener('visibilitychange',function(){
 #vlAdvSend:disabled{opacity:.5;cursor:default;}
 #vlAdvDisc{font-size:10px;color:#aaa;text-align:center;padding:0 10px calc(8px + env(safe-area-inset-bottom,0px));background:#fff;}
 </style>
-<button id="vlAdvBtn" aria-label="VIA·L advisor"><img src="Logo/logo-ai-v2.png" alt="VIA·L AI" draggable="false"></button>
+<button id="vlAdvBtn" aria-label="VIA·L advisor"><i class="ph ph-sparkle" aria-hidden="true"></i></button>
 <div id="vlAdvPanel" role="dialog" aria-label="VIA·L advisor">
   <div id="vlAdvHead">
     <div><div class="t">VÍA<span>·</span>L</div><div class="s" id="vlAdvSub"></div></div>
