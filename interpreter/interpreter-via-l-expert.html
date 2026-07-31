@@ -247,21 +247,6 @@ body::before{
     #bottombar img.bottom-nav-icon{width:30px;height:30px;}
   }
 
-  /* ── Читаемость на телефоне (по сравнению с Telegram/Google Health текст выглядел тонким) ──
-     Три причины были: DM Sans узкий, body шёл весом 300 (Light), и antialiased дополнительно
-     утончает штрихи на Retina. Меняем все три ТОЛЬКО в мобильном PWA: системный SF Pro
-     (шире, больше x-height, роднее iOS), обычный вес, subpixel-сглаживание. Playfair в
-     заголовках не трогаем — фирменная типографика остаётся. */
-  @media (max-width:599px){
-    :root{ --font-ui: -apple-system,'SF Pro Text',BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
-    body{ font-weight:400; -webkit-font-smoothing:auto; }
-    /* Тело разбора — 17px, системный размер body в iOS. Аудитория 45+, пресбиопия:
-       длинный текст мелким кеглем на тёмном фоне утомляет глаза быстрее всего.
-       Цена — примерно +13% высоты текста, один лишний пролист на разборе. */
-    .ai-intro,.ai-sec-sum{ font-size:17px;line-height:1.7; }
-    #aiResult{ font-size:17px!important;line-height:1.7!important; }   /* !important — размер задан инлайном в разметке */
-    .ai-sec-h{ font-size:18.5px; }
-  }
 }
 
 /* ── Крупный текст (переключатель в «Моём профиле») ──────────────────────────
@@ -270,6 +255,22 @@ body::before{
    значило бы развалить вёрстку карточек. zoom увеличивает текст вместе с блоками,
    поэтому ничего не наезжает. Топбар и футер вне #scroll-area — они не меняются. */
 html.big-text #scroll-area{zoom:1.12;}
+
+/* ── Читаемость на телефоне (по сравнению с Telegram/Google Health текст выглядел тонким) ──
+   Три причины были: DM Sans узкий, body шёл весом 300 (Light), и antialiased дополнительно
+   утончает штрихи на Retina. Меняем все три на мобильных экранах — и в PWA, и в браузере: системный SF Pro
+   (шире, больше x-height, роднее iOS), обычный вес, subpixel-сглаживание. Playfair в
+   заголовках не трогаем — фирменная типографика остаётся. */
+@media (max-width:599px){
+  :root{ --font-ui: -apple-system,'SF Pro Text',BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
+  body{ font-weight:400; -webkit-font-smoothing:auto; }
+  /* Тело разбора — 17px, системный размер body в iOS. Аудитория 45+, пресбиопия:
+     длинный текст мелким кеглем на тёмном фоне утомляет глаза быстрее всего.
+     Цена — примерно +13% высоты текста, один лишний пролист на разборе. */
+  .ai-intro,.ai-sec-sum{ font-size:17px;line-height:1.7; }
+  #aiResult{ font-size:17px!important;line-height:1.7!important; }   /* !important — размер задан инлайном в разметке */
+  .ai-sec-h{ font-size:18.5px; }
+}
 
 .bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
 
@@ -1839,6 +1840,18 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
 #tb-analysis .rd-head-t{color:#2E2010;}
 #tb-analysis .rd-head-date{color:#5A4A35;}
 #tb-analysis .hl-vial{color:#8B6030;}   /* VIA-L золотом на беже */
+/* ── Навигатор одного дня (вместо ленты из 7 дат) ──────────────────────────────
+   Клиент смотрит РАЗБОР — ему важен день, который открыт, а не вся неделя мелкими
+   цифрами. Соседние дни листаются свайпом по разбору (как в Oura) или стрелками. */
+.rd-dn{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 0;}
+.rd-dn-arw{flex:0 0 auto;width:34px;height:34px;border-radius:50%;border:1px solid rgba(139,111,71,.35);background:none;color:#8B6030;font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s,opacity .2s;}
+.rd-dn-arw:disabled{opacity:.25;cursor:default;}
+.rd-dn-arw:not(:disabled):hover{background:rgba(139,111,71,.10);}
+.rd-dn-mid{flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:center;gap:8px;}
+.rd-dn-dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;}
+.rd-dn-lbl{font-size:14.5px;font-weight:600;letter-spacing:.2px;color:#2E2010;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rd-dn-sub{font-size:10.5px;color:#5A4A35;letter-spacing:.3px;}
+
 #rd-week .rd-wd-wd{color:#5A4A35;}
 #rd-week .rd-wd-n{color:#2E2010;}
 #rd-week .rd-wd.active .rd-wd-wd{color:#8B6030;}
@@ -7508,22 +7521,65 @@ function _scoreCol(s){ s=+s||0; return s>=80?'#4ECCA3':s>=65?'#8BD450':s>=50?'#E
 function _renderWeekStrip(activeKey){
   var el=document.getElementById('rd-week'); if(!el)return;
   var byDay={}; try{ _daySnapGet().forEach(function(s){byDay[s.day]=s;}); }catch(e){}
-  var loc=_locale(), now=Date.now(), html='';
-  for(var i=6;i>=0;i--){
-    var sd=new Date(now-i*86400000-_DAY_START_H*3600000);
-    var key=sd.getFullYear()+'-'+String(sd.getMonth()+1).padStart(2,'0')+'-'+String(sd.getDate()).padStart(2,'0');
-    var snap=byDay[key], wd, dnum=sd.getDate();
-    try{ wd=sd.toLocaleDateString(loc,{weekday:'short'}).replace('.',''); }catch(e){ wd=''; }
-    var col=snap?_scoreCol(snap.score):'rgba(255,255,255,.14)';
-    var cls='rd-wd'+(key===activeKey?' active':'')+(snap?'':' empty');
-    html+='<button class="'+cls+'"'+(snap?(' onclick="_openDay(\''+key+'\')"'):' disabled')
-      +'><span class="rd-wd-wd">'+_esc(wd)+'</span><span class="rd-wd-n">'+dnum+'</span><span class="rd-wd-dot" style="background:'+col+'"></span></button>';
-  }
-  el.innerHTML=html;
-  // Тренды живут рядом с лентой и на том же дне — вешаем сюда: через эту точку проходит
+  var keys=_dayKeysWithSnaps(), idx=keys.indexOf(activeKey);
+  var prev = idx>0 ? keys[idx-1] : '', next = (idx>=0 && idx<keys.length-1) ? keys[idx+1] : '';
+  var snap=byDay[activeKey], isToday=(activeKey===_dayKey());
+  var lbl=activeKey, sub='';
+  try{ lbl=new Date(activeKey).toLocaleDateString(_locale(),{weekday:'long',day:'numeric',month:'long'}); }catch(e){}
+  lbl=String(lbl).charAt(0).toUpperCase()+String(lbl).slice(1);
+  if(isToday) sub=L({ru:'сегодня',uk:'сьогодні',en:'today',es:'hoy',de:'heute',pt:'hoje',fr:'aujourd’hui',pl:'dziś',it:'oggi',he:'היום',ja:'今日',ko:'오늘'});
+  var col=snap?_scoreCol(snap.score):'rgba(255,255,255,.14)';
+  var A=function(k,ch,lab){ return '<button class="rd-dn-arw" aria-label="'+lab+'"'+(k?(' onclick="_openDay(\''+k+'\')"'):' disabled')+'>'+ch+'</button>'; };
+  el.className='rd-dn';
+  el.innerHTML = A(prev,'\u2039','prev')
+    + '<div class="rd-dn-mid"><span class="rd-dn-dot" style="background:'+col+'"></span>'
+    + '<span class="rd-dn-lbl">'+_esc(lbl)+'</span>'
+    + (sub?'<span class="rd-dn-sub">'+_esc(sub)+'</span>':'')
+    + '</div>'
+    + A(next,'\u203A','next');
+  window.__rdDay=activeKey;   // текущий день — его читает свайп
+  // Тренды живут рядом и на том же дне — вешаем сюда: через эту точку проходит
   // и живой проход, и открытие дня из истории, и перерисовка при смене языка.
   try{ if(typeof renderTrends==='function') renderTrends(activeKey); }catch(e){}
 }
+
+// Дни, за которые есть снимок, по возрастанию — порядок листания разбора.
+function _dayKeysWithSnaps(){
+  var a=[]; try{ a=_daySnapGet().map(function(s){return s.day;}); }catch(e){}
+  return a.filter(Boolean).sort();
+}
+// Перелистывание разбора свайпом (как в Oura): влево — следующий день, вправо — предыдущий.
+// Работает только на экране разбора и не перехватывает жест внутри горизонтальных лент.
+(function(){
+  var x0=null,y0=null;
+  function _inScroller(t){
+    while(t && t!==document.body){
+      try{ var st=getComputedStyle(t);
+        if(/(auto|scroll)/.test(st.overflowX) && t.scrollWidth>t.clientWidth+4) return true;
+      }catch(e){}
+      t=t.parentElement;
+    }
+    return false;
+  }
+  document.addEventListener('touchstart',function(e){
+    x0=null;
+    if(!document.body.classList.contains('view-result')) return;
+    if(!e.touches || e.touches.length!==1) return;
+    if(_inScroller(e.target)) return;
+    x0=e.touches[0].clientX; y0=e.touches[0].clientY;
+  },{passive:true});
+  document.addEventListener('touchend',function(e){
+    if(x0==null) return;
+    var t=e.changedTouches&&e.changedTouches[0]; var _x=x0; x0=null;
+    if(!t) return;
+    var dx=t.clientX-_x, dy=t.clientY-y0;
+    if(Math.abs(dx)<60 || Math.abs(dx)<Math.abs(dy)*1.6) return;   // вертикальная прокрутка — не наше
+    var keys=_dayKeysWithSnaps(), i=keys.indexOf(window.__rdDay||'');
+    if(i<0) return;
+    var to = dx<0 ? keys[i+1] : keys[i-1];
+    if(to && typeof _openDay==='function') _openDay(to);
+  },{passive:true});
+})();
 // ══ ТРЕНДЫ ЗА 30 ДНЕЙ (карточка на экране «Сегодня») ══════════════════════
 // Источник — viae_daily (там и приборные, и субъективные поля, глубина до ~4 лет).
 // Полярность: для пульса покоя рост = ухудшение, для остальных рост = улучшение;
