@@ -3440,7 +3440,10 @@ function gateUnlock(access, code, plan, expiry){
   if(expiry){ try{ sessionStorage.setItem('viae_expiry', expiry); }catch(e){} }   // ISO-срок программы (56/84 дня); DEV-коды — без срока
   // Персист доступа между сессиями (веб-EXPERT: клиент вводит код один раз, не каждый заход).
   try{ localStorage.setItem('viae_access', access); if(code)localStorage.setItem('viae_code', code); if(plan)localStorage.setItem('viae_plan', plan); if(expiry)localStorage.setItem('viae_expiry', expiry); else localStorage.removeItem('viae_expiry'); }catch(e){}
-  try{ if(typeof _bootRoute==='function')_bootRoute(); else startFunnel(); }catch(e){ try{startFunnel();}catch(_){} }   // маршрут запуска после входа
+  // Код введён → сначала подтягиваем аккаунт (дневник/профиль/разборы с сервера), потом маршрут.
+  // Иначе новое устройство стартовало бы с пустой историей и залило бы ею общий аккаунт.
+  var _go=function(){ try{ if(typeof _bootRoute==='function')_bootRoute(); else startFunnel(); }catch(e){ try{startFunnel();}catch(_){} } };
+  if(typeof _syncBoot==='function') _syncBoot(_go); else _go();   // маршрут запуска после входа
 }
 
 function gateError(reason){
@@ -5172,6 +5175,154 @@ function _researchConsent(){ try{ return localStorage.getItem('viae_research_con
 // Сервер-эндпоинт добавляется на этапе 3: анонимно, health-данные отдельно от аккаунта,
 // с удалением по запросу (GDPR/законы штатов). Сейчас — инертный шов, чтобы включить без переделки.
 function _syncPushDaily(rec){ if(!_researchConsent())return; /* TODO этап 3: POST анонимной записи в D1 */ }
+
+// ══ АККАУНТ КЛИЕНТА: синхронизация состояния между устройствами по коду ═══════
+// Проблема, которую закрывает: дневник/профиль/разборы жили только в localStorage,
+// а PWA на телефоне и обычный браузер — РАЗНЫЕ хранилища (у standalone-PWA свой
+// контейнер). Один человек с одним кодом выглядел как несколько разных, и что
+// доедет нутрициологу в кабинет — было лотереей. Теперь код = аккаунт: ввёл его
+// один раз на любом устройстве → подтянулось всё своё.
+//
+// Хранилище — воркер, KV `ipstate:<код>`: {rev, keys:{ключ:{t,v}}} (см. handleExpertStateGet).
+// Сервер тупой (CAS по rev), СЛИЯНИЕ ЗДЕСЬ:
+//   • обычные ключи — last-write-wins по метке t (метку ставит патч setItem ниже);
+//   • viae_daily — по дням: объединяем, при конфликте дня берём запись с большим ts.
+//     Так вечерний проход с телефона не стирает утренний с ноутбука.
+// Пуш — с задержкой 2.5с после последней записи + при уходе со страницы.
+var _SYNC_KEYS=['viae_profile','viae_daily','viae_history','viae_steplast','viae_ai_memory',
+  'viae_ai_daily','viae_day_plan','viae_days','viae_lastdata','viae_lastanswers','viae_imported',
+  'viae_source','viae_spec_link','viae_research_consent',
+  'viae_weekly_text','viae_weekly_last','viae_weekly_date',
+  'viae_monthly_text','viae_monthly_last','viae_monthly_date'];
+var _SYNC_API='https://interpreter.viaelcom.workers.dev/expert/state';
+var _lsSet=localStorage.setItem.bind(localStorage);   // «сырая» запись — без меток и без пуша (применение серверного снимка)
+var _syncRev=0, _syncTimer=null, _syncBusy=false, _syncReady=false;
+
+function _syncCode(){ try{ return (sessionStorage.getItem('viae_code')||localStorage.getItem('viae_code')||'').trim().toUpperCase(); }catch(e){ return ''; } }
+function _syncTmap(){ try{ return JSON.parse(localStorage.getItem('viae_synct')||'{}')||{}; }catch(e){ return {}; } }
+function _syncTouch(k,t){ var m=_syncTmap(); m[k]=t||Date.now(); try{ _lsSet('viae_synct',JSON.stringify(m)); }catch(e){} }
+
+// Метки изменений: перехватываем запись синхронизируемых ключей в одном месте,
+// чтобы не размечать вручную полсотни мест сохранения по файлу.
+localStorage.setItem=function(k,v){
+  _lsSet(k,v);
+  if(_SYNC_KEYS.indexOf(k)>=0){ _syncTouch(k); _syncSchedule(); }
+};
+
+// Локальный снимок в серверном формате. Данные, накопленные ДО появления синхронизации,
+// метки не имеют — проставляем их лениво здесь, иначе такой ключ ушёл бы с t=0 и на втором
+// устройстве проиграл бы сравнение «свежее/старее» и не применился вовсе.
+function _syncLocalKeys(){
+  var m=_syncTmap(), out={}, seed=false;
+  _SYNC_KEYS.forEach(function(k){
+    var v=null; try{ v=localStorage.getItem(k); }catch(e){}
+    if(v==null) return;
+    if(!m[k]){ m[k]=Date.now(); seed=true; }
+    out[k]={ t:m[k], v:v };
+  });
+  if(seed){ try{ _lsSet('viae_synct',JSON.stringify(m)); }catch(e){} }
+  return out;
+}
+
+// Слияние дневников по дням: побеждает запись дня с большим ts (правка позже = вернее).
+function _syncMergeDaily(av,bv){
+  var a=[],b=[]; try{a=JSON.parse(av||'[]')||[];}catch(e){} try{b=JSON.parse(bv||'[]')||[];}catch(e){}
+  var by={};
+  a.concat(b).forEach(function(r){
+    if(!r||!r.day) return;
+    var p=by[r.day];
+    if(!p || (+r.ts||0) >= (+p.ts||0)) by[r.day]=r;
+  });
+  var arr=Object.keys(by).map(function(d){return by[d];}).sort(function(x,y){ return (x.day<y.day)?1:(x.day>y.day)?-1:0; });
+  while(arr.length>1500)arr.pop();
+  return JSON.stringify(arr);
+}
+
+// Применяет серверный снимок поверх локального. Возвращает true, если что-то поменялось локально.
+function _syncMerge(remote){
+  var changed=false, m=_syncTmap();
+  Object.keys(remote||{}).forEach(function(k){
+    if(_SYNC_KEYS.indexOf(k)<0) return;
+    var r=remote[k]; if(!r||typeof r.v!=='string') return;
+    var localV=null; try{ localV=localStorage.getItem(k); }catch(e){}
+    var localT=m[k]||0;
+    if(k==='viae_daily'){
+      var merged=_syncMergeDaily(localV,r.v);
+      if(merged!==localV){ _lsSet(k,merged); _syncTouch(k,Math.max(localT,+r.t||0)); changed=true; }
+      return;
+    }
+    // Ключа тут нет вовсе (чистое устройство) → берём серверный без сравнения меток.
+    if(localV==null || ((+r.t||0) > localT && r.v!==localV)){ _lsSet(k,r.v); _syncTouch(k,Math.max(localT,+r.t||0)); changed=true; }
+  });
+  return changed;
+}
+
+async function _syncPull(){
+  var code=_syncCode(); if(!code) return null;
+  var res=await fetch(_SYNC_API+'?code='+encodeURIComponent(code));
+  var j=await res.json();
+  if(!j||!j.ok) return null;
+  _syncRev=j.rev||0;
+  return j.keys||{};
+}
+
+function _syncSchedule(){
+  if(!_syncReady) return;                        // до первой удачной загрузки не пушим — иначе пустое устройство затрёт аккаунт
+  if(_syncTimer) clearTimeout(_syncTimer);
+  _syncTimer=setTimeout(function(){ _syncPush(); },2500);
+}
+
+// Пуш с CAS: сервер отверг (кто-то записал раньше) → подтягиваем, сливаем, пробуем ещё раз.
+async function _syncPush(retry){
+  var code=_syncCode(); if(!code||!_syncReady||_syncBusy) return;
+  _syncBusy=true;
+  try{
+    var res=await fetch(_SYNC_API,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({code:code,baseRev:_syncRev,keys:_syncLocalKeys()})});
+    if(res.status===409){
+      var j=await res.json(); _syncRev=j.rev||0;
+      var ch=_syncMerge(j.keys||{});
+      _syncBusy=false;
+      if(ch) _syncRepaint();
+      if(!retry) return _syncPush(true);
+      _syncSchedule();   // второй конфликт подряд (редко) → не давим сервер, дошлём отложенно
+      return;
+    }
+    var ok=await res.json();
+    if(ok&&ok.ok) _syncRev=ok.rev||_syncRev;
+    try{ _lsSet('viae_lastsync',String(Date.now())); }catch(e){}
+  }catch(e){ /* офлайн — состояние остаётся локальным, уйдёт при следующей записи */ }
+  _syncBusy=false;
+}
+
+// Перерисовка после прилёта чужих данных (карточка/шаги строятся из localStorage).
+function _syncRepaint(){
+  try{ if(typeof renderCard==='function') renderCard(); }catch(e){}
+  try{ if(typeof renderWeeklyReportUI==='function') renderWeeklyReportUI(); }catch(e){}
+  try{ if(typeof renderMonthlyReportUI==='function') renderMonthlyReportUI(); }catch(e){}
+}
+
+// Загрузка аккаунта на старте: тянем серверное состояние, сливаем с локальным,
+// отдаём управление приложению и доливаем своё обратно. Сеть недоступна — работаем
+// локально как раньше (пуш уйдёт при следующем изменении).
+async function _syncBoot(next){
+  var done=false, go=function(){ if(done)return; done=true; try{ next(); }catch(e){} };
+  var code=_syncCode();
+  if(!code){ _syncReady=false; go(); return; }
+  var guard=setTimeout(go,4000);              // сеть тупит → не держим клиента перед пустым экраном
+  try{
+    var remote=await _syncPull();
+    if(remote){ if(_syncMerge(remote)) _syncRepaint(); _syncReady=true; }
+  }catch(e){}
+  clearTimeout(guard); go();
+  if(_syncReady){ _syncPush(); return; }
+  // Сеть не дала снимок: пушить нельзя (затрём аккаунт локальным «ничем») — пробуем ещё раз позже.
+  // До этого момента приложение работает как раньше, целиком локально.
+  setTimeout(function(){ if(!_syncReady) _syncBoot(function(){}); },30000);
+}
+// Уход со страницы/сворачивание PWA — досылаем несохранённое немедленно.
+document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='hidden'&&_syncReady){ if(_syncTimer)clearTimeout(_syncTimer); _syncPush(); } });
+
 function _saveDaily(){
   try{
     var rec={
@@ -6761,7 +6912,9 @@ async function _iapRestoreClick(){
     // Веб-EXPERT (Hotmart): доступ по коду.
     if(!_hydrate()){ _showGate(); return; }
     if(_expired()){ _clearAccess(); _showGate('expired'); return; }   // срок программы (56/84 дня) истёк → закрыть вход
-    _bootRoute();
+    // Повторный заход по сохранённому коду — тоже через загрузку аккаунта: то, что клиент
+    // ввёл на другом устройстве, должно быть здесь ДО того, как он начнёт заполнять день.
+    if(typeof _syncBoot==='function') _syncBoot(_bootRoute); else _bootRoute();
   }catch(e){ try{startFunnel();}catch(_){} } }
   if(document.readyState!=='loading')_start(); else document.addEventListener('DOMContentLoaded',_start);
 })();   // маршрут запуска: нет доступа/истёк срок (веб)→гейт кода; иначе сегодня/утренняя карточка/hero+анкета
@@ -8669,7 +8822,10 @@ async function fetchAIAnalysis(data, lang) {
     const res = await fetch(AI_WORKER, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data, lang, tier: 'elite', structured: true }),
+      // code → воркер кладёт дневной разбор и срез метрик в карточку кабинета
+      // (cabinetIngestIpAnalysis). Без него специалист видел только недельные отчёты
+      // и не имел дневной динамики — ради которой ведение и существует.
+      body: JSON.stringify({ data, lang, code: _syncCode(), tier: 'elite', structured: true }),
     });
     const json = await res.json();
     if (json.analysis) {

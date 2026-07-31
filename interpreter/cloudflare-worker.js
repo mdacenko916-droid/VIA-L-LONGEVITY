@@ -842,6 +842,8 @@ export default {
       if (path === '/oura/metrics')      return handleOuraMetrics(request, env, corsHeaders);
       // Гейт EXPERT (витрина): проверка срочного кода доступа — GET, публично. См. §894.
       if (path === '/expert/verify')     return handleExpertVerify(request, env, corsHeaders);
+      // Аккаунт клиента по коду: снимок состояния ИП (дневник/профиль/разборы) для любого устройства.
+      if (path === '/expert/state')      return handleExpertStateGet(request, env, corsHeaders);
       // Чат клиент↔нутрициолог: чтение треда — GET (?code=). Ответ спеца переводится на язык клиента.
       if (path === '/expert/thread')     return handleExpertThread(request, env, corsHeaders, ctx);
       return new Response('Not found', { status: 404 });
@@ -876,6 +878,8 @@ export default {
       // Авторизация = код доступа (как /weekly-report). Сторона нутрициолога — в кабинете (вкладка «Переписка»).
       // (/expert/thread — GET, зарегистрирован в GET-блоке выше)
       if (path === '/expert/message')   return handleExpertMessage(request, env, corsHeaders, ctx);
+      // (/expert/state — GET читает снимок, POST пишет с CAS по rev)
+      if (path === '/expert/state')     return handleExpertStatePut(request, env, corsHeaders);
       if (path === '/chat/upload')      return handleChatUpload(request, env, corsHeaders);   // фото/голос в чат → R2
 
       // Кабинет нутрициолога (CRM на D1) — см. docs/CABINET-MODEL.md
@@ -6048,6 +6052,52 @@ async function _setCardExpertGrant(env, cardCode, patch){
 //   { card_code, plan, expiry(YYYY-MM-DD), quota, used, revoked, specialist_id, days, owed, issued }
 // card_code = код карточки клиента (из /specialist/connect) → разборы текут по нему в кабинет.
 // GRANTCODE отдельный: истёк/отозван → вход закрыт, но карточка и привязка живы.
+
+// ══ АККАУНТ КЛИЕНТА ПО КОДУ: серверное состояние ИП (`/expert/state`) ══════════
+// Задача: один код = один аккаунт. Раньше дневник/профиль/разборы жили только в
+// localStorage устройства, а PWA на телефоне и браузер — это РАЗНЫЕ хранилища
+// (у standalone-PWA свой контейнер), поэтому один клиент выглядел как несколько
+// разных, и что именно доедет в кабинет было лотереей. Теперь состояние хранится
+// в KV `ipstate:<КОД>` и подтягивается на любом устройстве после ввода кода.
+//
+// Сервер здесь — ТУПОЕ хранилище с CAS, вся логика слияния на клиенте:
+//   { rev, updated, keys: { <ключ localStorage>: { t:<метка изменения>, v:<строка> } } }
+// Запись принимается только если baseRev совпал с текущим rev; иначе 409 + актуальный
+// снимок → клиент сливает у себя и повторяет. Так два устройства не затирают друг друга.
+// Авторизация — код доступа (та же модель, что у /expert/message и /weekly-report).
+const IPSTATE_MAX = 3 * 1024 * 1024;                    // потолок снимка (KV держит до 25МБ; 3МБ ≈ годы дневника)
+const IPSTATE_TTL = 400 * 24 * 60 * 60;                 // самоочистка через ~13 мес после последней записи
+
+// GET /expert/state?code= → {ok, rev, keys}. Нет записи → rev:0, keys:{} (новый аккаунт).
+async function handleExpertStateGet(request, env, corsHeaders){
+  const code = String(new URL(request.url).searchParams.get('code')||'').trim().toUpperCase();
+  if(!code) return jsonResponse({ ok:false, error:'no_code' }, corsHeaders, 400);
+  if(!env.EXPERT_DRAFTS) return jsonResponse({ ok:false, error:'backend_missing' }, corsHeaders, 500);
+  let rec=null;
+  try{ rec = JSON.parse(await env.EXPERT_DRAFTS.get('ipstate:'+code) || 'null'); }catch(_){}
+  return jsonResponse({ ok:true, rev:(rec&&rec.rev)||0, updated:(rec&&rec.updated)||'', keys:(rec&&rec.keys)||{} }, corsHeaders);
+}
+
+// POST /expert/state {code, baseRev, keys} → {ok, rev} | 409 {ok:false, conflict:true, rev, keys}
+async function handleExpertStatePut(request, env, corsHeaders){
+  if(!env.EXPERT_DRAFTS) return jsonResponse({ ok:false, error:'backend_missing' }, corsHeaders, 500);
+  let b={}; try{ b = await request.json(); }catch(_){}
+  const code = String(b.code||'').trim().toUpperCase();
+  const keys = (b.keys && typeof b.keys==='object') ? b.keys : null;
+  if(!code || !keys) return jsonResponse({ ok:false, error:'bad_request' }, corsHeaders, 400);
+
+  let rec=null;
+  try{ rec = JSON.parse(await env.EXPERT_DRAFTS.get('ipstate:'+code) || 'null'); }catch(_){}
+  const curRev = (rec && rec.rev) || 0;
+  if(Number(b.baseRev||0) !== curRev)
+    return jsonResponse({ ok:false, conflict:true, rev:curRev, keys:(rec&&rec.keys)||{} }, corsHeaders, 409);
+
+  const next = { rev: curRev + 1, updated: new Date().toISOString(), keys };
+  const body = JSON.stringify(next);
+  if(body.length > IPSTATE_MAX) return jsonResponse({ ok:false, error:'too_large' }, corsHeaders, 413);
+  await env.EXPERT_DRAFTS.put('ipstate:'+code, body, { expirationTtl: IPSTATE_TTL });
+  return jsonResponse({ ok:true, rev: next.rev }, corsHeaders);
+}
 
 // GET /expert/verify?code= — гейт EXPERT дёргает первым. Отдаёт ту же форму, что Apps Script
 // (ok, plan, expiry, expert_used, expert_max), + code=card_code (по нему гейт роутит разборы).
