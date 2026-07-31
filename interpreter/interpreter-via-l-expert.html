@@ -7983,32 +7983,17 @@ function determinePhase(){
   if(cs==='irregular'||lp==='months'||(hf&&age>=48))return 'meno';
   return 'peri';
 }
-var _WLHn={ru:'гормональный баланс',uk:'гормональний баланс',en:'hormonal balance',es:'equilibrio hormonal',de:'Hormonhaushalt',pt:'equilíbrio hormonal',fr:'équilibre hormonal',pl:'równowaga hormonalna',it:'equilibrio ormonale',he:'איזון הורמונלי',ja:'ホルモンバランス',ko:'호르몬 균형'};
-var _WLHg={ru:'гормонального баланса',uk:'гормонального балансу',pl:'równowagi hormonalnej'};
-var _WLG='level|levels|balance|activity|synthesis|fluctuations|decline|niveles|actividad|Aktivität|Synthese|Schwankungen|níveis|atividade|niveau|taux|activité|synthèse|livelli|attività|sintesi';
-var _WLBAL='баланс\\p{L}*|рівноваг\\p{L}+|равновес\\p{L}+|balance|equilibri\\p{L}*|équilibre|Gleichgewicht|Haushalt|równowag\\p{L}+';
-function _wesc(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
-var _WLR={ru:'ресурс восстановления',uk:'ресурс відновлення',en:'recovery',es:'recuperación',de:'Erholung',pt:'recuperação',fr:'récupération',pl:'zasób regeneracji',it:'recupero',he:'התאוששות',ja:'回復力',ko:'회복력'};
-var _WLM={ru:'энергообмен',uk:'енергообмін',en:'energy metabolism',es:'metabolismo energético',de:'Energiestoffwechsel',pt:'metabolismo energético',fr:'métabolisme énergétique',pl:'metabolizm energii',it:'metabolismo energetico',he:'חילוף אנרגיה',ja:'エネルギー代謝',ko:'에너지 대사'};
-function _wl(s){ if(!s||typeof s!=='string')return s; var L=(typeof lang!=='undefined'?lang:'ru');
-  var rc=_WLR[L]||_WLR.ru, mt=_WLM[L]||_WLM.ru, hn=_WLHn[L]||_WLHn.ru, hg=_WLHg[L]||hn;
-  try{
-    s=s.replace(/(?:эстрог|эстрад|прогестер|тестостер|кортизол|estrog|estró|estrad|oestrog|œstrog|östrog|progest|testost|cortis|kortyz|kortis)\p{L}*/giu, hg);
-    s=s.replace(/エストロゲン|プロゲステロン|テストステロン|コルチゾール|에스트로겐|프로게스테론|테스토스테론|코르티솔|אסטרוגן|פרוגסטרון|טסטוסטרון|קורטיזול/gu, hg);
-    s=s.replace(new RegExp('(?:'+_WLBAL+')\\s+(?:de\\s+|di\\s+|of\\s+|von\\s+|del\\s+|des\\s+|dos\\s+|degli\\s+)?'+_wesc(hg),'giu'), hn);
-    s=s.replace(/щитовидн\p{L}*\s+желез\p{L}*|thyroid\s+gland|glande\s+thyroïde|glándula\s+tiroides|Schilddrüse\p{L}*/giu, mt);
-    s=s.replace(/(?:щитовид|тиреотроп|thyroid|tiroid|thyroïd|tarczyc|tiroide|гипотиреоз|гипертиреоз|гіпотиреоз|гіпертиреоз|hypothyr|hyperthyr|hipotiroid|hipertiroid|hipotireoid|hipertireoid|ipotiroid|ipertiroid)\p{L}*|ТТГ|\bTSH\b|ФСГ|\bFSH\b|甲状腺|갑상선|בלוטת התריס/giu, mt);
-    s=s.replace(new RegExp('работ\\p{L}+\\s+'+_wesc(mt),'giu'), mt);
-    s=s.replace(/\bHRV\b|ВСР/gi, rc);
-    // приливы (мн.) / hot flashes → тепловые волны; ед.ч. «прилив» НЕ трогаем (прилив сил/энергии)
-    var _hw=({ru:'тепловые волны',uk:'теплові хвилі',en:'heat waves',es:'oleadas de calor',de:'Hitzewellen',pt:'ondas de calor',fr:'ondes de chaleur',pl:'fale gorąca',it:'ondate di calore',he:'גלי חום',ja:'熱の波',ko:'열의 파동'})[L]||'heat waves';
-    s=s.replace(/приливы|приливов|приливах|приливам|приливами|hot\s*flash\p{L}*|hot\s*flush\p{L}*|sofocos?|Hitzewallung\p{L}*|fogachos?|bouffées?\s+de\s+chaleur|uderzeni\p{L}*\s+gorąc\p{L}*|vampat[ae]|ほてり|のぼせ|ホットフラッシュ|안면\s*홍조/giu, _hw);
-    s=s.replace(/гормональн\p{L}*\s+фон\p{L}*/giu, hn);
-    [hn,hg,mt,rc].forEach(function(w){ if(!w)return; s=s.replace(new RegExp(_wesc(w)+'\\s+(?:'+_WLG+')','giu'), w); });
-    s=s.replace(/(\p{L}{3,})(?:\s+\1)+/giu, '$1');
-    [hn,hg,mt,rc].forEach(function(w){ if(!w)return; var e=_wesc(w); s=s.replace(new RegExp(e+'(?:\\s+(?:и|та|and|y|und|e|et|i|oraz)\\s+|\\s+)'+e,'giu'), w); });
-  }catch(e){}
-  return s;
+function _wl(s){
+  // VIA-L EXPERT: подмены терминов СНЯТЫ 2026-07-31 (решение владельца).
+  // Здесь заменялись «эстроген/прогестерон/тестостерон/кортизол» → «гормональный баланс»,
+  // «HRV» → «ресурс восстановления», «приливы» → «тепловые волны», «щитовидная железа» → «энергообмен».
+  // Это велнес-лексика под App Store — она нужна в VIA-L, но не здесь: EXPERT работает в связке
+  // со специалистом, и размытые слова съедали смысл (в т.ч. подменялась ЖАЛОБА клиента: он отметил
+  // приливы, а читал «тепловые волны»). Юридически защищает не словарь, а форма утверждений:
+  // назначение продукта + запрет на диагноз-как-факт, на уровни немеренных биомаркеров, на цифры
+  // риска болезни и на дозы/отмену назначений. Эти запреты держат промпт воркера и _scrubProto,
+  // который остаётся включённым (дозы и гормонально-активные травы по-прежнему вырезаются).
+  return (typeof s === 'string') ? s : s;
 }
 // Санитайзер рек-строк legacy-движка инсайтов (велнес PRO): убирает дозы добавок (мг/мкг/МЕ/IU/г/сут) и
 // выбрасывает пункты про травы/адаптогены/фосфатидилсерин/куркумин — они не должны попадать НИ на экран,
