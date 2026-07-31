@@ -5583,8 +5583,15 @@ function _weeklyDaily(win){
   var modal=function(k){var c={},best=null,bn=0;wk.forEach(function(r){var x=r[k];if(x==null||x==='')return;c[x]=(c[x]||0)+1;if(c[x]>bn){bn=c[x];best=x;}});return best;};
   var cnt=function(k,pred){return wk.filter(function(r){return pred(r[k]);}).length;};
   var P={}; try{P=JSON.parse(localStorage.getItem('viae_profile')||'{}')||{};}catch(e){}
+  // Давление: среднее по замерам окна + такое же за предыдущее окно — недельный разбор должен видеть
+  // ДИНАМИКУ (работают ли рычаги питания), а не разовую цифру дня. Мерят не каждый день → считаем по факту.
+  var pv=arr.filter(function(r){return r.ts&&now-r.ts>=win*DAY&&now-r.ts<2*win*DAY;});
+  var avgOf=function(list,k){var v=list.map(function(r){return r[k];}).filter(function(x){return x!=null&&x!==''&&!isNaN(x);});return v.length?Math.round(v.reduce(function(a,b){return a+(+b);},0)/v.length):null;};
+  var bpN=wk.filter(function(r){return r.bp_sys!=null&&r.bp_dia!=null;}).length;
   return {
     days:wk.length,
+    bpSys:avgOf(wk,'bp_sys'), bpDia:avgOf(wk,'bp_dia'), bpDays:bpN,
+    bpPrevSys:avgOf(pv,'bp_sys'), bpPrevDia:avgOf(pv,'bp_dia'),
     hfDays:cnt('hf_count',function(x){return x&&x!=='none';}),
     hfCount:modal('hf_count'), hfIntensity:modal('hf_intensity'),
     tempDev:avg('tempDev'), spo2:avg('spo2'), stress:avg('stress'),
