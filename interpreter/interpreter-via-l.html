@@ -2867,7 +2867,39 @@ try{ if(new URLSearchParams(location.search).get('vendors')==='1'){ var _dvb=doc
           <div class="chip"><input type="radio" name="alc" id="al2" value="yes"><label for="al2" data-t="yes">Да</label></div>
         </div>
       </div>
-      <div class="input-group">
+              <!-- ЕДА ВЧЕРА ВЕЧЕРОМ (суточный блок): без этих полей модель не могла связать поздний ужин
+             и кофеин с фрагментацией сна и утренними HRV/пульсом — данных на входе просто не было. 2026-07-31 -->
+        <div class="input-group">
+          <label data-t="s4_l5">Ужин вчера</label>
+          <div class="q-prompt" data-t="s4_q5">Во сколько вы поели в последний раз?</div>
+          <div class="chips cog-grid">
+            <div class="chip"><input type="radio" name="last_meal" id="lm1" value="early"><label for="lm1" data-t="lm_e">🌤 До 18:00</label></div>
+            <div class="chip"><input type="radio" name="last_meal" id="lm2" value="normal"><label for="lm2" data-t="lm_n">🍽 18:00–20:00</label></div>
+            <div class="chip"><input type="radio" name="last_meal" id="lm3" value="late"><label for="lm3" data-t="lm_l">🌙 20:00–22:00</label></div>
+            <div class="chip"><input type="radio" name="last_meal" id="lm4" value="verylate"><label for="lm4" data-t="lm_vl">🌚 После 22:00</label></div>
+          </div>
+        </div>
+        <div class="input-group">
+          <label data-t="s4_l6">Что было вечером</label>
+          <div class="q-prompt" data-t="s4_q6">Отметьте, что подходит к вашему вчерашнему вечеру.</div>
+          <div class="chips sup-grid" id="evfood-acc">
+            <div class="chip"><input type="checkbox" id="ev_sweet" value="sweet" onchange="_giNone(this,'evfood-acc')"><label for="ev_sweet" data-t="ev_sweet">🍰 Сладкое или выпечка</label></div>
+            <div class="chip"><input type="checkbox" id="ev_carb" value="carb_heavy" onchange="_giNone(this,'evfood-acc')"><label for="ev_carb" data-t="ev_carb">🍝 Много углеводов (паста, рис, хлеб)</label></div>
+            <div class="chip"><input type="checkbox" id="ev_fat" value="fatty" onchange="_giNone(this,'evfood-acc')"><label for="ev_fat" data-t="ev_fat">🍟 Жирное или жареное</label></div>
+            <div class="chip"><input type="checkbox" id="ev_big" value="large_meal" onchange="_giNone(this,'evfood-acc')"><label for="ev_big" data-t="ev_big">🍛 Плотный, большой ужин</label></div>
+            <div class="chip sup-full"><input type="checkbox" id="ev_none" value="none_ev" onchange="_giNone(this,'evfood-acc')"><label for="ev_none" data-t="ev_none">✨ Ничего из перечисленного</label></div>
+          </div>
+        </div>
+        <div class="input-group">
+          <label data-t="s4_l7">Кофеин после обеда</label>
+          <div class="q-prompt" data-t="s4_q7">Кофе или крепкий чай после 14:00 — было?</div>
+          <div class="chips cog-grid">
+            <div class="chip"><input type="radio" name="caffeine_late" id="caf1" value="none"><label for="caf1" data-t="caf_no">🚫 Не было</label></div>
+            <div class="chip"><input type="radio" name="caffeine_late" id="caf2" value="one"><label for="caf2" data-t="caf_one">☕ Одна чашка</label></div>
+            <div class="chip"><input type="radio" name="caffeine_late" id="caf3" value="many"><label for="caf3" data-t="caf_many">☕☕ Две и больше</label></div>
+          </div>
+        </div>
+<div class="input-group">
         <label data-t="s4_l3">Стресс вчера</label>
         <div class="q-prompt" data-t="s4_q3">Каким был вчерашний день по напряжению?</div>
         <div class="chips stress-grid">
@@ -3979,6 +4011,10 @@ const _dailyNotesT={
   ctx_l:{ru:'События за сутки',uk:'Події за добу',en:'Today’s events',es:'Eventos de hoy',de:'Ereignisse heute',pt:'Eventos de hoje',fr:'Événements du jour',pl:'Wydarzenia dnia',it:'Eventi di oggi',he:'אירועי היום',ja:'今日の出来事',ko:'오늘의 일'}
 };
 Object.keys(_dailyNotesT).forEach(function(k){var m=_dailyNotesT[k];Object.keys(m).forEach(function(l){if(T[l])T[l][k]=m[l];});});
+// Блок «Еда вчера вечером» (суточный, в step5): ключи финальным оверрайдом, как _dailyNotesT —
+// чтобы не воевать со слоями merge выше. 2026-07-31.
+const _eveFoodT={"s4_l5":{"ru":"Ужин вчера","uk":"Вечеря вчора","en":"Last meal yesterday","es":"Última comida de ayer","de":"Letzte Mahlzeit gestern","pt":"Última refeição de ontem","fr":"Dernier repas hier","pl":"Ostatni posiłek wczoraj","it":"Ultimo pasto di ieri","he":"הארוחה האחרונה אתמול","ja":"昨日の最後の食事","ko":"어제 마지막 식사"},"s4_q5":{"ru":"Во сколько вы поели в последний раз?","uk":"О котрій ви їли востаннє?","en":"When did you last eat?","es":"¿A qué hora comiste por última vez?","de":"Wann haben Sie zuletzt gegessen?","pt":"A que horas você comeu pela última vez?","fr":"À quelle heure avez-vous mangé la dernière fois ?","pl":"O której jadłeś ostatni raz?","it":"A che ora hai mangiato l’ultima volta?","he":"באיזו שעה אכלת בפעם האחרונה?","ja":"最後に食べたのは何時頃ですか？","ko":"마지막으로 먹은 시간은 언제인가요?"},"lm_e":{"ru":"🌤 До 18:00","uk":"🌤 До 18:00","en":"🌤 Before 6 pm","es":"🌤 Antes de las 18:00","de":"🌤 Vor 18 Uhr","pt":"🌤 Antes das 18h","fr":"🌤 Avant 18 h","pl":"🌤 Przed 18:00","it":"🌤 Prima delle 18","he":"🌤 לפני 18:00","ja":"🌤 18時より前","ko":"🌤 오후 6시 이전"},"lm_n":{"ru":"🍽 18:00–20:00","uk":"🍽 18:00–20:00","en":"🍽 6–8 pm","es":"🍽 18:00–20:00","de":"🍽 18–20 Uhr","pt":"🍽 18h–20h","fr":"🍽 18 h–20 h","pl":"🍽 18:00–20:00","it":"🍽 18–20","he":"🍽 18:00–20:00","ja":"🍽 18〜20時","ko":"🍽 오후 6~8시"},"lm_l":{"ru":"🌙 20:00–22:00","uk":"🌙 20:00–22:00","en":"🌙 8–10 pm","es":"🌙 20:00–22:00","de":"🌙 20–22 Uhr","pt":"🌙 20h–22h","fr":"🌙 20 h–22 h","pl":"🌙 20:00–22:00","it":"🌙 20–22","he":"🌙 20:00–22:00","ja":"🌙 20〜22時","ko":"🌙 오후 8~10시"},"lm_vl":{"ru":"🌚 После 22:00","uk":"🌚 Після 22:00","en":"🌚 After 10 pm","es":"🌚 Después de las 22:00","de":"🌚 Nach 22 Uhr","pt":"🌚 Depois das 22h","fr":"🌚 Après 22 h","pl":"🌚 Po 22:00","it":"🌚 Dopo le 22","he":"🌚 אחרי 22:00","ja":"🌚 22時以降","ko":"🌚 오후 10시 이후"},"s4_l6":{"ru":"Что было вечером","uk":"Що було ввечері","en":"What the evening meal was like","es":"Cómo fue la cena","de":"Wie das Abendessen war","pt":"Como foi o jantar","fr":"Comment était le repas du soir","pl":"Jaka była kolacja","it":"Com’era la cena","he":"איך הייתה ארוחת הערב","ja":"夕食の内容","ko":"저녁 식사는 어땠나요"},"s4_q6":{"ru":"Отметьте, что подходит к вашему вчерашнему вечеру.","uk":"Відмітьте, що підходить до вашого вчорашнього вечора.","en":"Tick whatever fits your evening yesterday.","es":"Marca lo que encaje con tu noche de ayer.","de":"Markieren Sie, was zu Ihrem gestrigen Abend passt.","pt":"Marque o que combina com a sua noite de ontem.","fr":"Cochez ce qui correspond à votre soirée d’hier.","pl":"Zaznacz, co pasuje do wczorajszego wieczoru.","it":"Segna ciò che corrisponde alla tua serata di ieri.","he":"סמנו מה מתאים לערב שלכם אתמול.","ja":"昨夜に当てはまるものを選んでください。","ko":"어제 저녁에 해당하는 것을 선택하세요."},"ev_sweet":{"ru":"🍰 Сладкое или выпечка","uk":"🍰 Солодке або випічка","en":"🍰 Sweets or baked goods","es":"🍰 Dulces o bollería","de":"🍰 Süßes oder Gebäck","pt":"🍰 Doces ou massas","fr":"🍰 Sucré ou pâtisserie","pl":"🍰 Słodycze lub wypieki","it":"🍰 Dolci o prodotti da forno","he":"🍰 מתוק או מאפה","ja":"🍰 甘いもの・パン類","ko":"🍰 단 음식이나 빵"},"ev_carb":{"ru":"🍝 Много углеводов (паста, рис, хлеб)","uk":"🍝 Багато вуглеводів (паста, рис, хліб)","en":"🍝 Lots of carbs (pasta, rice, bread)","es":"🍝 Muchos carbohidratos (pasta, arroz, pan)","de":"🍝 Viele Kohlenhydrate (Pasta, Reis, Brot)","pt":"🍝 Muitos carboidratos (massa, arroz, pão)","fr":"🍝 Beaucoup de glucides (pâtes, riz, pain)","pl":"🍝 Dużo węglowodanów (makaron, ryż, chleb)","it":"🍝 Molti carboidrati (pasta, riso, pane)","he":"🍝 הרבה פחמימות (פסטה, אורז, לחם)","ja":"🍝 炭水化物が多め（パスタ・米・パン）","ko":"🍝 탄수화물 위주 (파스타·밥·빵)"},"ev_fat":{"ru":"🍟 Жирное или жареное","uk":"🍟 Жирне або смажене","en":"🍟 Fatty or fried","es":"🍟 Graso o frito","de":"🍟 Fettig oder frittiert","pt":"🍟 Gorduroso ou frito","fr":"🍟 Gras ou frit","pl":"🍟 Tłuste lub smażone","it":"🍟 Grasso o fritto","he":"🍟 שמן או מטוגן","ja":"🍟 脂っこい・揚げ物","ko":"🍟 기름지거나 튀긴 음식"},"ev_big":{"ru":"🍛 Плотный, большой ужин","uk":"🍛 Щільна, велика вечеря","en":"🍛 A big, heavy dinner","es":"🍛 Cena copiosa y pesada","de":"🍛 Großes, schweres Abendessen","pt":"🍛 Jantar grande e pesado","fr":"🍛 Dîner copieux et lourd","pl":"🍛 Obfita, ciężka kolacja","it":"🍛 Cena abbondante e pesante","he":"🍛 ארוחה גדולה וכבדה","ja":"🍛 量が多く重い夕食","ko":"🍛 양이 많고 무거운 저녁"},"ev_none":{"ru":"✨ Ничего из перечисленного","uk":"✨ Нічого з переліченого","en":"✨ None of the above","es":"✨ Nada de lo anterior","de":"✨ Nichts davon","pt":"✨ Nada disso","fr":"✨ Rien de tout cela","pl":"✨ Nic z powyższych","it":"✨ Niente di tutto ciò","he":"✨ אף אחד מאלה","ja":"✨ 当てはまるものはない","ko":"✨ 해당 없음"},"s4_l7":{"ru":"Кофеин после обеда","uk":"Кофеїн після обіду","en":"Caffeine after midday","es":"Cafeína después del mediodía","de":"Koffein nach Mittag","pt":"Cafeína depois do meio-dia","fr":"Caféine après midi","pl":"Kofeina po południu","it":"Caffeina dopo mezzogiorno","he":"קפאין אחרי הצהריים","ja":"午後のカフェイン","ko":"오후 카페인"},"s4_q7":{"ru":"Кофе или крепкий чай после 14:00 — было?","uk":"Кава або міцний чай після 14:00 — було?","en":"Coffee or strong tea after 2 pm?","es":"¿Café o té fuerte después de las 14:00?","de":"Kaffee oder starker Tee nach 14 Uhr?","pt":"Café ou chá forte depois das 14h?","fr":"Café ou thé fort après 14 h ?","pl":"Kawa lub mocna herbata po 14:00?","it":"Caffè o tè forte dopo le 14?","he":"קפה או תה חזק אחרי 14:00?","ja":"14時以降にコーヒーや濃いお茶を飲みましたか？","ko":"오후 2시 이후 커피나 진한 차를 마셨나요?"},"caf_no":{"ru":"🚫 Не было","uk":"🚫 Не було","en":"🚫 None","es":"🚫 No","de":"🚫 Nein","pt":"🚫 Não","fr":"🚫 Non","pl":"🚫 Nie","it":"🚫 No","he":"🚫 לא","ja":"🚫 なし","ko":"🚫 없음"},"caf_one":{"ru":"☕ Одна чашка","uk":"☕ Одна чашка","en":"☕ One cup","es":"☕ Una taza","de":"☕ Eine Tasse","pt":"☕ Uma xícara","fr":"☕ Une tasse","pl":"☕ Jedna filiżanka","it":"☕ Una tazza","he":"☕ כוס אחת","ja":"☕ 1杯","ko":"☕ 한 잔"},"caf_many":{"ru":"☕☕ Две и больше","uk":"☕☕ Дві і більше","en":"☕☕ Two or more","es":"☕☕ Dos o más","de":"☕☕ Zwei oder mehr","pt":"☕☕ Duas ou mais","fr":"☕☕ Deux ou plus","pl":"☕☕ Dwie lub więcej","it":"☕☕ Due o più","he":"☕☕ שתיים או יותר","ja":"☕☕ 2杯以上","ko":"☕☕ 두 잔 이상"}};
+Object.keys(_eveFoodT).forEach(function(k){['ru','uk','en','es','de','pt','fr','pl','it','he','ja','ko'].forEach(function(l){if(T[l])T[l][k]=_eveFoodT[k][l]||_eveFoodT[k].en;});});
 /* === App Store wellness override (VIO) === */
 ;(function(){var W={
   rd_index_title:{ru:'Общий индекс дня',uk:'Загальний індекс дня',en:'Overall day index',es:'Índice general del día',de:'Gesamtindex des Tages',pt:'Índice geral do dia',fr:'Indice global du jour',pl:'Ogólny indeks dnia',it:'Indice generale del giorno',he:'מדד יומי כללי',ja:'今日の総合指数',ko:'오늘의 종합 지수'},
@@ -5055,6 +5091,7 @@ function _saveDaily(){
       // Раньше тут стоял getElementById('stress') на несуществующий id → всегда null, недельный/месячный
       // тренд стресса молча не считался. Мапим категорию на число (0–10), чтобы тренд снова работал.
       stress:(function(){var v=getRadio('stress');return v==='high'?9:v==='mild'?5:v==='no'?2:null;})(), alc:getRadio('alc'),
+      last_meal:getRadio('last_meal'), caffeine_late:getRadio('caffeine_late'),   // еда вчера вечером — копим по дням для недельного разбора
       bp_sys:(function(){var e=document.getElementById('bp-sys');var v=e?parseInt(e.value):NaN;return (v>=70&&v<=260)?v:null;})(),   // давление (ручной ввод) — для тренда/плитки
       bp_dia:(function(){var e=document.getElementById('bp-dia');var v=e?parseInt(e.value):NaN;return (v>=40&&v<=160)?v:null;})(),
       // тело для мини-трендов карточки (как VIO): вес/талия из профиля на момент прохода
@@ -5752,13 +5789,14 @@ function _completeness(){
 // именно в них). Молчаливый перенос вчерашнего состояния как сегодняшнего искажает и честность ответа
 // клиента, и вход в ИИ-разбор — та же логика, по которой день не должен получать усреднённые/чужие данные.
 // Переносим ТОЛЬКО базу; дневное состояние всегда начинается пустым — отвечать заново, без якоря на вчера.
-var _DAILY_RADIO=['temp','deep','wake','hf_count','hf_intensity','appetite','move_today','eating_pattern','protein_intake','memory','fog','alc','chronic_stress'];
+var _DAILY_RADIO=['temp','deep','wake','hf_count','hf_intensity','appetite','move_today','eating_pattern','protein_intake','memory','fog','alc','chronic_stress','last_meal','caffeine_late'];
 var _DAILY_VAL=['energy','stress','resp_rate','hrv','rhr','sleep_hours'];
 function _isDailyField(el){
   if(el.name&&_DAILY_RADIO.indexOf(el.name)>=0)return true;
   if(el.id&&_DAILY_VAL.indexOf(el.id)>=0)return true;
   if(el.id&&/^(sym|gi|cort)\d/.test(el.id))return true;   // симптомы/пищеварение/кортизол-паттерн «сегодня» (sym1-9, gi1-5, cort2-7)
   if(el.id==='crav1')return true;                          // тяга к сладкому «сегодня»
+  if(el.id&&el.id.indexOf('ev_')===0)return true;             // «что было вечером» — состояние конкретного вечера
   return false;
 }
 function _carryFields(){
@@ -7503,6 +7541,10 @@ function _showResultsInner(){
     source:(typeof importedData!=='undefined'&&importedData&&importedData.source)?importedData.source:null,   // откуда данные: oura/fitbit/…/apple-manual/manual — чтобы ИИ различал измерено vs со слов
     source_changed:(function(){try{return localStorage.getItem('vialp_source_changed')==='1';}catch(e){return false;}})(),   // сменил источник относительно прошлого прохода
     alc:getRadio('alc'),stress:getRadio('stress'),move_today:getRadio('move_today'),
+    // Еда вчера вечером (суточное): время последнего приёма, характер ужина, поздний кофеин —
+    // вход для связи «поздний/тяжёлый ужин и кофеин → фрагментация сна, утренние HRV/пульс».
+    last_meal:getRadio('last_meal'), caffeine_late:getRadio('caffeine_late'),
+    evening_food:(function(){var out=[];['ev_sweet','ev_carb','ev_fat','ev_big','ev_none'].forEach(function(id){var e=document.getElementById(id);if(e&&e.checked)out.push(e.value);});return out;})(),
     // PRO fields
     memory:getRadio('memory'),
     fog:getRadio('fog'),

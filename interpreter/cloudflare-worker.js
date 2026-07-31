@@ -4432,6 +4432,27 @@ function buildUserMessage(data, lang, tier) {
     + ((data.goal || (Array.isArray(data.priorities) && data.priorities.length)) ? '🎯 ЦЕЛЬ КЛИЕНТА: ' + (data.goal ? String(data.goal).trim().slice(0, 300) : '—') + ((Array.isArray(data.priorities) && data.priorities.length) ? ' | приоритеты/фокус: ' + data.priorities.join(', ') : '') + ' — ПОДСТРОЙ разбор, акценты и рекомендации под эту цель клиента.\n' : '')
     + 'Питание · ограничения/диета: ' + _J(data.diet_restrict) + ' | режим питания: ' + (data.eating_pattern || '—') + '\n'
     + ((data.protein_intake || data.appetite || data.cravings || data.allergy) ? 'Питание (доп.): ' + [(data.protein_intake ? 'потребление белка: ' + data.protein_intake : ''), (data.appetite ? 'аппетит: ' + data.appetite : ''), (data.cravings ? 'тяга к сладкому/еде: да' : ''), (data.allergy ? 'аллергии: ' + data.allergy : '')].filter(Boolean).join(' | ') + '\n' : '')
+    // ЕДА ВЧЕРА ВЕЧЕРОМ — новый вход (2026-07-31). Раньше о питании были только привычки
+    // («режим», «белок»), поэтому связать поздний ужин с ночным сном модель не могла физически.
+    + (function(d){
+        var LM={early:'до 18:00',normal:'18:00–20:00',late:'20:00–22:00',verylate:'после 22:00'};
+        var EV={sweet:'сладкое/выпечка',carb_heavy:'много углеводов',fatty:'жирное/жареное',large_meal:'плотный большой ужин',none_ev:'ничего особенного'};
+        var CAF={none:'не было',one:'одна чашка',many:'две и больше'};
+        var ev=Array.isArray(d.evening_food)?d.evening_food.filter(function(x){return x&&x!=='none_ev';}):[];
+        var evNone=Array.isArray(d.evening_food)&&d.evening_food.indexOf('none_ev')>=0;
+        if(!d.last_meal && !ev.length && !evNone && !d.caffeine_late) return '';
+        var parts=[];
+        if(d.last_meal) parts.push('последний приём пищи ' + (LM[d.last_meal]||d.last_meal));
+        if(ev.length) parts.push('характер ужина: ' + ev.map(function(x){return EV[x]||x;}).join(', '));
+        else if(evNone) parts.push('ничего особенного за ужином');
+        if(d.caffeine_late) parts.push('кофеин после 14:00: ' + (CAF[d.caffeine_late]||d.caffeine_late));
+        return 'Еда вчера вечером: ' + parts.join(' | ')
+          + ' → ОБЯЗАТЕЛЬНО сопоставь это с сегодняшними сном, ВСР, пульсом покоя и ночной температурой ПРЕЖДЕ чем '
+          + 'давать общий вывод: поздний или тяжёлый ужин чаще идёт с фрагментацией сна, более высоким ночным пульсом '
+          + 'и меньшей ВСР; сладкое/много углеводов на ночь — с ночными пробуждениями; кофеин после обеда — с более '
+          + 'долгим засыпанием и меньшим глубоким сном. Если связь видна в ЕГО цифрах — назови её прямо и дай рычаг на '
+          + 'вечер; если метрики хорошие несмотря на поздний ужин — так и скажи, не выдумывай проблему.\n';
+      })(data)
     + ((data.memory || data.fog) ? 'Ясность ума · память: ' + _V(data.memory) + ' | туман в голове: ' + _V(data.fog) + '\n' : '')
     + (data.new_symptoms ? 'Что нового за сутки (со слов клиента — ОБЯЗАТЕЛЬНО учти при интерпретации: может объяснять «отклонения» в биометрии, напр. простуда → низкий SpO₂; не тревожь, если сигнал объясняется этим): ' + data.new_symptoms + '\n' : '')
     + (data.lifestyle_notes ? 'События/контекст недели (со слов клиента — учитывай как бытовое объяснение сдвигов метрик, не как ухудшение): ' + data.lifestyle_notes + '\n' : '')
