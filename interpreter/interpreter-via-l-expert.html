@@ -8041,6 +8041,11 @@ function _showResultsInner(){
     // Еда вчера вечером (суточное): время последнего приёма, характер ужина, поздний кофеин —
     // вход для связи «поздний/тяжёлый ужин и кофеин → фрагментация сна, утренние HRV/пульс».
     last_meal:getRadio('last_meal'), caffeine_late:getRadio('caffeine_late'),
+    // Накопленная AI-память (что уже закреплено + текущий фокус) → разбор ведёт ЦЕПОЧКУ,
+    // а не пишет каждый день с нуля. Ключевое для тарифа с ведением. 2026-07-31.
+    ai_memory:(function(){try{var m=JSON.parse(localStorage.getItem('viae_ai_memory')||'null');
+      if(!m)return null;
+      return {memory:(m.memory||[]).slice(0,6),focus:(m.focus||[]).slice(0,3)};}catch(e){return null;}})(),
     evening_food:(function(){var out=[];['ev_sweet','ev_carb','ev_fat','ev_big','ev_none'].forEach(function(id){var e=document.getElementById(id);if(e&&e.checked)out.push(e.value);});return out;})(),
     // PRO fields
     memory:getRadio('memory'),

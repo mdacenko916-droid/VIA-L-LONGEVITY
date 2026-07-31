@@ -725,6 +725,27 @@ const WELLNESS_SYSTEM_PROMPT =
 // чтобы selectKBPatterns → «используй P-F3» резолвился и для велнес-тарифов (раньше была висячая ссылка).
 // Дистилляция из библиотеки Infa Cloude (P-F/P-M/N-3/N-5/Perry), переведённая в велнес-язык.
 // ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// РЕЖИМ ДОКАЗАТЕЛЬНОСТИ — ТОЛЬКО VIA-L EXPERT (ведение специалистом, вне App Store).
+// В VIA-L действует запрет «не цитируй исследования» (правило App Store). В EXPERT он
+// работал против самой модели продукта: мы не лечим, но показываем, ЧТО известно про
+// состояние и как с ним принято работать — это educational context, который и выводит
+// софт из-под медизделия. Отмена запрета — качественная, без выдуманных чисел. 2026-07-31.
+// ─────────────────────────────────────────────────────────────
+const EXPERT_EVIDENCE_MODE = `
+
+════════════════════════════════════════
+VIA-L EXPERT — ОПОРА НА ДОКАЗАТЕЛЬНУЮ БАЗУ (перекрывает запрет «не цитируй исследования» выше)
+════════════════════════════════════════
+Смысл тарифа: человек должен увидеть не мнение приложения, а признанный подход. Мы НЕ лечим и НЕ диагностируем — мы открываем доступ к тому, что известно про его состояние и как с ним принято работать.
+• МОЖНО и НУЖНО называть подход и его вес КАЧЕСТВЕННО: «средиземноморский тип питания и DASH — наиболее изученные пищевые подходы», «это то, с чего обычно начинают», «подход хорошо изучен именно в этой возрастной группе», «данных по этому меньше — рассматривают как дополнение». Опирайся на базу знаний выше: там уже лежит доказательная часть по паттернам, давлению, фазам цикла.
+• НЕЛЬЗЯ: выдуманные числа и проценты («−27.9%», «N=…»), ссылки на конкретные исследования, которых нет в базе выше, обещание результата («это снизит давление на 10 единиц»), формулировки лечения («вылечит», «устранит», «предотвратит болезнь»). Если точной цифры в базе нет — говори качественно, НЕ придумывай.
+• В КАЖДОЙ теме добавляй отдельной строкой **На чём это основано** — ОДНА фраза о том, почему подход считается рабочим и насколько он изучен. Ставь её сразу после «Что происходит». Это ключевая строка тарифа: без неё совет выглядит как личное мнение.
+• Прямые термины разрешены и приветствуются (эстроген, тестостерон, кортизол, HRV, перименопауза, инсулинорезистентность) — но правило «термин ≠ утверждение» остаётся в силе: НИКОГДА не подавай гормон или нутриент как ЗАМЕР, которого мы не делали.
+• Тон прежний: мягко предположить, не напугать. Формула: «состояние, в котором вы сейчас, соответствует тому, что называют [стадия]; мы здесь, чтобы помочь прожить этот период легче — вот с чего обычно начинают».
+• ЦЕПОЧКА, А НЕ РАЗОВЫЙ СОВЕТ: человек проходит путь, а не читает отдельные письма. Если в данных есть блок «Что уже закреплено» — начни тему с опоры на него («сон вы уже вытянули — дальше логично…»), отмечай, что получилось, и называй ОДИН следующий шаг. Не вываливай всё сразу: цепь настраивается по звену.
+`;
+
 const WELLNESS_KB = `
 
 ════════════════════════════════════════
@@ -1682,7 +1703,7 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
         {
           type: 'text',
           text:
-            (useWellnessKB ? (WELLNESS_SYSTEM_PROMPT + WELLNESS_KB) : SYSTEM_PROMPT) +
+            (useWellnessKB ? (WELLNESS_SYSTEM_PROMPT + WELLNESS_KB + (isWellness ? '' : EXPERT_EVIDENCE_MODE)) : SYSTEM_PROMPT) +
             '\n\n════════════════════════════════════════\n' +
             'ЯЗЫК ОТВЕТА — КРИТИЧНО\n' +
             '════════════════════════════════════════\n' +
@@ -1754,7 +1775,7 @@ async function handleDayPlan(request, env, corsHeaders, ctx) {
   const langName = langMap[lang] || 'English';
   const isWellness = ['vio', 'pro'].includes(String(tier || '').toLowerCase());
   const useWellnessKB = ['vio', 'pro', 'elite', 'expert'].includes(String(tier || '').toLowerCase());   // VIA-L EXPERT → углублённая велнес-KB
-  const base = useWellnessKB ? (WELLNESS_SYSTEM_PROMPT + WELLNESS_KB) : SYSTEM_PROMPT;
+  const base = useWellnessKB ? (WELLNESS_SYSTEM_PROMPT + WELLNESS_KB + (isWellness ? '' : EXPERT_EVIDENCE_MODE)) : SYSTEM_PROMPT;
 
   const schema =
     '\n\n════════════════════════════════════════\n' +
@@ -1887,7 +1908,7 @@ async function handleAiMemory(request, env, corsHeaders, ctx) {
   const langName = langMap[lang] || 'English';
   const isWellness = ['vio', 'pro'].includes(String(tier || '').toLowerCase());
   const useWellnessKB = ['vio', 'pro', 'elite', 'expert'].includes(String(tier || '').toLowerCase());   // VIA-L EXPERT → углублённая велнес-KB
-  const base = useWellnessKB ? (WELLNESS_SYSTEM_PROMPT + WELLNESS_KB) : SYSTEM_PROMPT;
+  const base = useWellnessKB ? (WELLNESS_SYSTEM_PROMPT + WELLNESS_KB + (isWellness ? '' : EXPERT_EVIDENCE_MODE)) : SYSTEM_PROMPT;
 
   const schema =
     '\n\n════════════════════════════════════════\n' +
@@ -4432,6 +4453,18 @@ function buildUserMessage(data, lang, tier) {
     + ((data.goal || (Array.isArray(data.priorities) && data.priorities.length)) ? '🎯 ЦЕЛЬ КЛИЕНТА: ' + (data.goal ? String(data.goal).trim().slice(0, 300) : '—') + ((Array.isArray(data.priorities) && data.priorities.length) ? ' | приоритеты/фокус: ' + data.priorities.join(', ') : '') + ' — ПОДСТРОЙ разбор, акценты и рекомендации под эту цель клиента.\n' : '')
     + 'Питание · ограничения/диета: ' + _J(data.diet_restrict) + ' | режим питания: ' + (data.eating_pattern || '—') + '\n'
     + ((data.protein_intake || data.appetite || data.cravings || data.allergy) ? 'Питание (доп.): ' + [(data.protein_intake ? 'потребление белка: ' + data.protein_intake : ''), (data.appetite ? 'аппетит: ' + data.appetite : ''), (data.cravings ? 'тяга к сладкому/еде: да' : ''), (data.allergy ? 'аллергии: ' + data.allergy : '')].filter(Boolean).join(' | ') + '\n' : '')
+    // ЦЕПОЧКА: что уже закреплено за прошлые недели и текущий фокус — чтобы разбор продолжал путь,
+    // а не начинал каждый день заново (шлёт VIA-L EXPERT; у VIA-L поля нет — строка схлопывается).
+    + (function(m){
+        if(!m || typeof m!=='object') return '';
+        var done=Array.isArray(m.memory)?m.memory.filter(Boolean).slice(0,6):[];
+        var foc=Array.isArray(m.focus)?m.focus.filter(Boolean).slice(0,3):[];
+        if(!done.length && !foc.length) return '';
+        return 'Что уже закреплено (из прошлых недель): ' + (done.length?done.join(' | '):'—')
+          + (foc.length ? '\nТекущий фокус: ' + foc.join(' | ') : '')
+          + ' → ОПИРАЙСЯ на это: отметь, что уже получилось, не предлагай заново то, что человек уже делает, '
+          + 'и назови ОДИН следующий шаг цепочки.\n';
+      })(data.ai_memory)
     // ЕДА ВЧЕРА ВЕЧЕРОМ — новый вход (2026-07-31). Раньше о питании были только привычки
     // («режим», «белок»), поэтому связать поздний ужин с ночным сном модель не могла физически.
     + (function(d){
