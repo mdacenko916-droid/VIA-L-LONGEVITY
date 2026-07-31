@@ -5,12 +5,54 @@
 <!-- maximum-scale/user-scalable: iOS иначе зумит всю страницу при фокусе в поле <16px и не возвращает масштаб обратно -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>VIA·L · Longevity & Wellness</title>
+<!-- PWA (устанавливаемость на телефон до нативной сборки; service worker ОБЩИЙ с EXPERT —
+     scope /interpreter/ один на двоих, второй воркер вытеснил бы первый) -->
+<link rel="manifest" href="via-l.webmanifest">
+<meta name="theme-color" content="#0e131c">
+<link rel="apple-touch-icon" href="pwa/vial-apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VIA-L">
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw-expert.js').catch(function(){});});}</script>
 <meta name="robots" content="noindex,nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
 <link href="phosphor/style.css" rel="stylesheet">
 <style>
+/* ══ PWA standalone (установлено на телефон): те же правила, что в EXPERT — статус-бар не
+   перекрывает контент, футер держит подписи в одну строку. В браузере не применяются. ══ */
+@media (display-mode: standalone){
+  html,body{height:100vh;}
+  #app{top:0;bottom:auto;height:100vh;}
+  body::before{top:0;bottom:auto;height:100vh;}
+  /* Футер приложения. Нижний инсет урезан втрое (клиренс под home-индикатор остаётся), но
+     ПЛЮС фиксированные 12px: на десктопном PWA (Mac) safe-area = 0, и без них подписи
+     упирались в самый край окна. Селектор с #bottombar — чтобы перебить позднее мобильное правило. */
+  #bottombar .bottom-nav{padding:9px 10px calc(7px + env(safe-area-inset-bottom,0px)/3);}
+  #bottombar .bottom-nav-item{font-size:8.5px;letter-spacing:.5px;gap:4px;padding:2px 6px;white-space:nowrap;}
+  #bottombar i.bottom-nav-icon{font-size:23px;}             /* Phosphor-иконки задаются шрифтом, не width/height */
+  #bottombar img.bottom-nav-icon{width:24px;height:24px;}
+  /* Десктопный PWA (Mac): места вдоволь, футер крупнее и с большим нижним отступом —
+     там safe-area = 0, и без фиксированных пикселей подписи упирались в край окна.
+     На телефоне значения выше держат бар низким: подписи в одну строку, как в системных
+     приложениях (иначе «НАШ ПОДХОД» переносился и футер съедал экран). */
+  @media (min-width:600px){
+    #bottombar .bottom-nav{padding:16px 16px calc(12px + env(safe-area-inset-bottom,0px)/3);}
+    #bottombar .bottom-nav-item{font-size:10px;letter-spacing:1.5px;gap:6px;padding:4px 12px;}
+    #bottombar i.bottom-nav-icon{font-size:27px;}
+    #bottombar img.bottom-nav-icon{width:30px;height:30px;}
+  }
+
+}
+@media (display-mode: standalone){
+  body:not(.flow-mode):not(.view-result) #scroll-area{overflow-y:hidden;padding-top:calc(20px + env(safe-area-inset-top,0px));}
+  body:not(.flow-mode):not(.view-result) .hero-monogram{width:108px;height:108px;}
+  body:not(.flow-mode):not(.view-result) .imp-btn{margin-top:5px;padding-top:10px;padding-bottom:10px;}
+  body:not(.flow-mode):not(.view-result) footer{padding:4px 20px 3px;}
+}
+
 /* нав-паритет VIO: пружинка нажатия, phosphor-иконки, уезжающий футер, шторка глав памятки */
 .bottom-nav{transition:transform .3s ease,opacity .3s ease;}
 .bottom-nav.nav-hidden{transform:translateY(110%);opacity:0;pointer-events:none;}
