@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<!-- maximum-scale/user-scalable: iOS иначе зумит всю страницу при фокусе в поле <16px и не возвращает масштаб обратно -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>VIA·L · Longevity & Wellness</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1532,6 +1533,10 @@ body.flow-mode .step.flow-show.answered > .card{border-color:rgba(78,204,163,.34
 /* Зелёная ✓ на бейдже отвеченного блока + золотой→зелёный акцент */
 body.flow-mode .step.flow-show.answered .step-badge{border-color:rgba(78,204,163,.5)!important;color:var(--ok)!important;}
 body.flow-mode .step.flow-show.answered .step-badge::after{content:' ✓';font-weight:700;color:var(--ok);}
+/* Панель «Данные с трекера» — не .step (данные пришли с гаджета), но сигнал «готово» такой же */
+#gadget-panel-wrap.answered > .card{border-color:rgba(78,204,163,.34)!important;box-shadow:0 0 0 1px rgba(78,204,163,.12), 0 8px 48px rgba(196,150,60,.14), 0 14px 40px rgba(0,0,0,.5)!important;}
+#gadget-panel-wrap.answered .step-badge{border-color:rgba(78,204,163,.5)!important;color:var(--ok)!important;}
+#gadget-panel-wrap.answered .step-badge::after{content:' ✓';font-weight:700;color:var(--ok);}
 /* Чип «Всё как обычно» — быстрый явный ответ «в норме» для оценочных полей (энергия/сон/симптомы) */
 .as-usual{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:8px 14px;cursor:pointer;
   font-size:12.5px;font-family:var(--font-ui);color:var(--t2);
@@ -4244,23 +4249,49 @@ function _gEdit(k,box){
   box.style.borderColor='var(--gold-lt)';
   if(k==='sleepHours'){   // ручной ввод сна в Ч:ММ (два поля), а не в долях часа
     var _v=(cur===''?null:+cur), _h='', _mv='';
-    if(_v!=null){ var _hf=Math.floor(_v), _mm=Math.round((_v-_hf)*60); if(_mm===60){_hf++;_mm=0;} _h=_hf; _mv=String(_mm).padStart(2,'0'); }
+    if(_v!=null){ var _hf=Math.floor(_v), _mm=Math.round((_v-_hf)*60); if(_mm===60){_hf++;_mm=0;} _h=String(_hf).padStart(2,'0'); _mv=String(_mm).padStart(2,'0'); }
     var _hm=L({ru:'ч:мин',uk:'год:хв',en:'h:mm',es:'h:mm',de:'Std:Min',pt:'h:mm',fr:'h:mm',pl:'godz:min',it:'h:mm',he:'ש:ד',ja:'時:分',ko:'시:分'});
     box.innerHTML='<div onclick="event.stopPropagation();" style="display:flex;align-items:center;justify-content:center;gap:3px;">'
-      +'<input class="ginp gsl-h" type="number" inputmode="numeric" min="0" max="14" placeholder="0" value="'+_h+'" onclick="event.stopPropagation();" onkeydown="if(event.key===\'Enter\'){this.blur();}else if(event.key===\'Escape\'){_gRefresh();}" onblur="_gSaveSleep(this)" style="width:40px;background:transparent;border:none;outline:none;text-align:right;font-family:inherit;font-size:18px;font-weight:600;color:var(--t1);">'
+      +'<input class="ginp gsl-h" type="text" inputmode="numeric" maxlength="2" placeholder="00" value="'+_h+'" onclick="event.stopPropagation();" oninput="_gSlIn(this)" onkeydown="if(event.key===\'Enter\'){this.blur();}else if(event.key===\'Escape\'){_gRefresh();}" onblur="_gSaveSleep(this)" style="width:40px;background:transparent;border:none;outline:none;text-align:right;font-family:inherit;font-size:18px;font-weight:600;color:var(--t1);">'
       +'<span style="font-size:18px;font-weight:600;color:var(--t1);">:</span>'
-      +'<input class="ginp gsl-m" type="number" inputmode="numeric" min="0" max="59" placeholder="00" value="'+_mv+'" onclick="event.stopPropagation();" onkeydown="if(event.key===\'Enter\'){this.blur();}else if(event.key===\'Escape\'){_gRefresh();}" onblur="_gSaveSleep(this)" style="width:40px;background:transparent;border:none;outline:none;text-align:left;font-family:inherit;font-size:18px;font-weight:600;color:var(--t1);">'
+      +'<input class="ginp gsl-m" type="text" inputmode="numeric" maxlength="2" placeholder="00" value="'+_mv+'" onclick="event.stopPropagation();" oninput="_gSlIn(this)" onkeydown="if(event.key===\'Enter\'){this.blur();}else if(event.key===\'Escape\'){_gRefresh();}" onblur="_gSaveSleep(this)" style="width:40px;background:transparent;border:none;outline:none;text-align:left;font-family:inherit;font-size:18px;font-weight:600;color:var(--t1);">'
       +'</div>'
       +'<div style="font-size:10px;color:var(--gold-lt);margin-top:5px;letter-spacing:.2px;">'+t('glab_sleepHours')+' · '+_hm+'</div>';
     var _hi=box.querySelector('.gsl-h'); if(_hi){_hi.focus();_hi.select();}
     return;
   }
-  box.innerHTML='<input class="ginp" type="number" inputmode="decimal" step="'+m.step+'" min="'+m.min+'" max="'+m.max+'" value="'+cur+'" '
+  // Показатели, которые бывают отрицательными (отклонение температуры): цифровая клавиатура iOS
+  // не даёт минуса — рядом с полем кнопка «±», а само поле текстовое (type=number не хранит «-»).
+  var neg=(m.min<0);
+  var inpHtml='<input class="ginp" '+(neg?'type="text" inputmode="text"':'type="number" inputmode="decimal" step="'+m.step+'" min="'+m.min+'" max="'+m.max+'"')+' value="'+cur+'" '
     +'onclick="event.stopPropagation();" '
     +'onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur();}else if(event.key===\'Escape\'){_gRefresh();}" onblur="_gSave(\''+k+'\',this)" '
-    +'style="width:100%;background:transparent;border:none;outline:none;text-align:center;font-family:inherit;font-size:18px;font-weight:600;color:var(--t1);">'
+    +'style="width:100%;background:transparent;border:none;outline:none;text-align:center;font-family:inherit;font-size:18px;font-weight:600;color:var(--t1);">';
+  box.innerHTML=(neg
+      ? '<div onclick="event.stopPropagation();" style="display:flex;align-items:center;gap:6px;">'
+        +'<button type="button" onclick="event.stopPropagation();_gSign(this);" style="flex:0 0 auto;width:28px;height:28px;border-radius:8px;cursor:pointer;background:rgba(196,150,60,.12);border:1px solid rgba(196,150,60,.4);color:var(--gold-lt);font-size:15px;font-weight:700;line-height:1;">±</button>'
+        +inpHtml+'</div>'
+      : inpHtml)
     +'<div style="font-size:10px;color:var(--gold-lt);margin-top:5px;letter-spacing:.2px;">'+t('glab_'+k)+(m.u?' · '+m.u:'')+'</div>';
   var inp=box.querySelector('.ginp'); if(inp){inp.focus();inp.select();}
+}
+// Кнопка «±»: переключает знак значения, не теряя фокус в поле.
+function _gSign(btn){
+  var inp=btn.parentNode.querySelector('.ginp'); if(!inp)return;
+  var v=(inp.value||'').trim();
+  inp.value=(v.charAt(0)==='-')?v.slice(1):('-'+v);
+  inp.focus();
+  try{var n=inp.value.length;inp.setSelectionRange(n,n);}catch(e){}
+}
+// Часы/минуты сна: только цифры, две позиции; заполнил часы — фокус сам прыгает на минуты.
+function _gSlIn(el){
+  var v=(el.value||'').replace(/\D/g,'').slice(0,2);
+  if(v!==el.value)el.value=v;
+  if(v.length<2)return;
+  if(el.classList.contains('gsl-h')){
+    var mEl=el.parentNode.querySelector('.gsl-m');
+    if(mEl){mEl.focus();try{mEl.select();}catch(e){}}
+  }else el.blur();
 }
 function _gSave(k,inp){
   var m=_GMETA[k];
@@ -5626,14 +5657,17 @@ function renderGadgetPanel(){
   const keys=['hrv','rhr','sleepHours','deepMin','tempDev','spo2','vo2','readiness'];   // energy убрана — субъективна (см. шаг «Образ жизни»); прибор её даёт по-разному/не у всех
   var ICONF={hrv:'hrv',rhr:'rhr',sleepHours:'sleep',deepMin:'deep',tempDev:'temp',spo2:'spo2',vo2:'vo2',readiness:'readiness'};
   var ABBR={hrv:'HRV',rhr:'RHR',sleepHours:'SLEEP',deepMin:'DEEP SLEEP',tempDev:'°C',spo2:'SpO₂',vo2:'VO₂max',readiness:'READINESS'};
+  var _gotAny=false;
   box.innerHTML=keys.map(function(k){
     var m=_GMETA[k], got=D[k]!=null&&!isNaN(D[k])&&!(k==='tempDev'&&Math.abs(D[k])<0.005), v=got?m.f(D[k]):'—', nm=(_GLAB[k]&&(_GLAB[k][lang]||_GLAB[k].en))||k;
+    if(got)_gotAny=true;
     return '<div class="gp-tile '+(got?'got':'miss')+'" onclick="_gEdit(\''+k+'\',this)" title="'+nm+'">'
       +'<img class="gp-ic" src="Logo/metrics/'+ICONF[k]+'.png" alt="" loading="lazy">'
       +'<div class="gp-txt"><div class="gp-name">'+nm+'</div><div class="gp-abbr">'+(ABBR[k]||'')+(got&&src?' · '+src:'')+'</div></div>'
       +'<div class="gp-num'+(got?'':' miss')+'">'+v+(got&&m.u?'<span class="gp-u"> '+m.u+'</span>':'')+'</div>'
       +'</div>';
   }).join('');
+  wrap.classList.toggle('answered', _gotAny);   // показатели есть → блок «готов», как отвеченный шаг
   wrap.style.display='block';
 }
 // Ручной ввод приборного показателя помечает его «внесён вручную» (событие change — только
