@@ -3026,7 +3026,51 @@ try{ if(new URLSearchParams(location.search).get('vendors')==='1'){ var _dvb=doc
           <div class="chip"><input type="checkbox" id="gi4" value="gi_inner" onchange="_giNone(this,'gi-list')"><label for="gi4" data-t="gi_reflux">🌡️ Изжога, кислотность</label></div>
         </div>
       </div>
+            <!-- ОПЫТ СНИЖЕНИЯ ВЕСА + ДАВЛЕНИЕ (базовые: спрашиваем один раз, дальше живёт в карточке).
+           Опыт «что уже работало» — чтобы не предлагать заново то, что человек уже проходил;
+           давление и семейная история — контекст для питания, а последний вопрос ещё и согласие
+           клиента на эту тему: без «да» разбор её не навязывает. 2026-07-31 -->
       <div class="input-group">
+        <label data-t="s7_l4">Опыт снижения веса</label>
+        <div class="q-prompt" data-t="s7_q4">Вы уже снижали вес раньше?</div>
+        <div class="chips cog-grid">
+          <div class="chip"><input type="radio" name="wl_exp" id="wlx1" value="yes" onchange="_wlExpChange()"><label for="wlx1" data-t="yes">Да</label></div>
+          <div class="chip"><input type="radio" name="wl_exp" id="wlx2" value="no" onchange="_wlExpChange()"><label for="wlx2" data-t="no">Нет</label></div>
+        </div>
+      </div>
+      <div class="input-group" id="wl-how-block" style="display:none;">
+        <label data-t="s7_l5">Каким способом</label>
+        <div class="q-prompt" data-t="s7_q5">Что тогда сработало?</div>
+        <div class="chips sup-grid">
+          <div class="chip"><input type="radio" name="wl_how" id="wlh1" value="diet"><label for="wlh1" data-t="wl_diet">🥗 Только питание</label></div>
+          <div class="chip"><input type="radio" name="wl_how" id="wlh2" value="diet_sport"><label for="wlh2" data-t="wl_both">🥗🏃 Питание и движение вместе</label></div>
+        </div>
+      </div>
+      <div class="input-group">
+        <label data-t="s7_l6">Давление</label>
+        <div class="q-prompt" data-t="s7_q6">Вам говорили, что у вас бывает высокое давление?</div>
+        <div class="chips cog-grid">
+          <div class="chip"><input type="radio" name="bp_high" id="bph1" value="yes"><label for="bph1" data-t="yes">Да</label></div>
+          <div class="chip"><input type="radio" name="bp_high" id="bph2" value="no"><label for="bph2" data-t="no">Нет</label></div>
+        </div>
+      </div>
+      <div class="input-group">
+        <label data-t="s7_l7">Давление в семье</label>
+        <div class="q-prompt" data-t="s7_q7">Есть ли повышенное давление у близких родственников?</div>
+        <div class="chips cog-grid">
+          <div class="chip"><input type="radio" name="bp_family" id="bpf1" value="yes"><label for="bpf1" data-t="yes">Да</label></div>
+          <div class="chip"><input type="radio" name="bp_family" id="bpf2" value="no"><label for="bpf2" data-t="no">Нет</label></div>
+        </div>
+      </div>
+      <div class="input-group">
+        <label data-t="s7_l8">Питание и давление</label>
+        <div class="q-prompt" data-t="s7_q8">Хотите узнать, как питанием мягко поддержать давление?</div>
+        <div class="chips cog-grid">
+          <div class="chip"><input type="radio" name="bp_want" id="bpw1" value="yes"><label for="bpw1" data-t="yes">Да</label></div>
+          <div class="chip"><input type="radio" name="bp_want" id="bpw2" value="no"><label for="bpw2" data-t="no">Нет</label></div>
+        </div>
+      </div>
+<div class="input-group">
         <label data-t="allergy_l">Пищевые исключения</label>
         <div class="chips cog-grid">
           <div class="chip"><input type="radio" name="allergy_has" id="alg_no" value="no" checked onchange="_allergyToggle()"><label for="alg_no" data-t="alg_no">🟢 Без ограничений</label></div>
@@ -4015,6 +4059,9 @@ Object.keys(_dailyNotesT).forEach(function(k){var m=_dailyNotesT[k];Object.keys(
 // чтобы не воевать со слоями merge выше. 2026-07-31.
 const _eveFoodT={"s4_l5":{"ru":"Ужин вчера","uk":"Вечеря вчора","en":"Last meal yesterday","es":"Última comida de ayer","de":"Letzte Mahlzeit gestern","pt":"Última refeição de ontem","fr":"Dernier repas hier","pl":"Ostatni posiłek wczoraj","it":"Ultimo pasto di ieri","he":"הארוחה האחרונה אתמול","ja":"昨日の最後の食事","ko":"어제 마지막 식사"},"s4_q5":{"ru":"Во сколько вы поели в последний раз?","uk":"О котрій ви їли востаннє?","en":"When did you last eat?","es":"¿A qué hora comiste por última vez?","de":"Wann haben Sie zuletzt gegessen?","pt":"A que horas você comeu pela última vez?","fr":"À quelle heure avez-vous mangé la dernière fois ?","pl":"O której jadłeś ostatni raz?","it":"A che ora hai mangiato l’ultima volta?","he":"באיזו שעה אכלת בפעם האחרונה?","ja":"最後に食べたのは何時頃ですか？","ko":"마지막으로 먹은 시간은 언제인가요?"},"lm_e":{"ru":"🌤 До 18:00","uk":"🌤 До 18:00","en":"🌤 Before 6 pm","es":"🌤 Antes de las 18:00","de":"🌤 Vor 18 Uhr","pt":"🌤 Antes das 18h","fr":"🌤 Avant 18 h","pl":"🌤 Przed 18:00","it":"🌤 Prima delle 18","he":"🌤 לפני 18:00","ja":"🌤 18時より前","ko":"🌤 오후 6시 이전"},"lm_n":{"ru":"🍽 18:00–20:00","uk":"🍽 18:00–20:00","en":"🍽 6–8 pm","es":"🍽 18:00–20:00","de":"🍽 18–20 Uhr","pt":"🍽 18h–20h","fr":"🍽 18 h–20 h","pl":"🍽 18:00–20:00","it":"🍽 18–20","he":"🍽 18:00–20:00","ja":"🍽 18〜20時","ko":"🍽 오후 6~8시"},"lm_l":{"ru":"🌙 20:00–22:00","uk":"🌙 20:00–22:00","en":"🌙 8–10 pm","es":"🌙 20:00–22:00","de":"🌙 20–22 Uhr","pt":"🌙 20h–22h","fr":"🌙 20 h–22 h","pl":"🌙 20:00–22:00","it":"🌙 20–22","he":"🌙 20:00–22:00","ja":"🌙 20〜22時","ko":"🌙 오후 8~10시"},"lm_vl":{"ru":"🌚 После 22:00","uk":"🌚 Після 22:00","en":"🌚 After 10 pm","es":"🌚 Después de las 22:00","de":"🌚 Nach 22 Uhr","pt":"🌚 Depois das 22h","fr":"🌚 Après 22 h","pl":"🌚 Po 22:00","it":"🌚 Dopo le 22","he":"🌚 אחרי 22:00","ja":"🌚 22時以降","ko":"🌚 오후 10시 이후"},"s4_l6":{"ru":"Что было вечером","uk":"Що було ввечері","en":"What the evening meal was like","es":"Cómo fue la cena","de":"Wie das Abendessen war","pt":"Como foi o jantar","fr":"Comment était le repas du soir","pl":"Jaka była kolacja","it":"Com’era la cena","he":"איך הייתה ארוחת הערב","ja":"夕食の内容","ko":"저녁 식사는 어땠나요"},"s4_q6":{"ru":"Отметьте, что подходит к вашему вчерашнему вечеру.","uk":"Відмітьте, що підходить до вашого вчорашнього вечора.","en":"Tick whatever fits your evening yesterday.","es":"Marca lo que encaje con tu noche de ayer.","de":"Markieren Sie, was zu Ihrem gestrigen Abend passt.","pt":"Marque o que combina com a sua noite de ontem.","fr":"Cochez ce qui correspond à votre soirée d’hier.","pl":"Zaznacz, co pasuje do wczorajszego wieczoru.","it":"Segna ciò che corrisponde alla tua serata di ieri.","he":"סמנו מה מתאים לערב שלכם אתמול.","ja":"昨夜に当てはまるものを選んでください。","ko":"어제 저녁에 해당하는 것을 선택하세요."},"ev_sweet":{"ru":"🍰 Сладкое или выпечка","uk":"🍰 Солодке або випічка","en":"🍰 Sweets or baked goods","es":"🍰 Dulces o bollería","de":"🍰 Süßes oder Gebäck","pt":"🍰 Doces ou massas","fr":"🍰 Sucré ou pâtisserie","pl":"🍰 Słodycze lub wypieki","it":"🍰 Dolci o prodotti da forno","he":"🍰 מתוק או מאפה","ja":"🍰 甘いもの・パン類","ko":"🍰 단 음식이나 빵"},"ev_carb":{"ru":"🍝 Много углеводов (паста, рис, хлеб)","uk":"🍝 Багато вуглеводів (паста, рис, хліб)","en":"🍝 Lots of carbs (pasta, rice, bread)","es":"🍝 Muchos carbohidratos (pasta, arroz, pan)","de":"🍝 Viele Kohlenhydrate (Pasta, Reis, Brot)","pt":"🍝 Muitos carboidratos (massa, arroz, pão)","fr":"🍝 Beaucoup de glucides (pâtes, riz, pain)","pl":"🍝 Dużo węglowodanów (makaron, ryż, chleb)","it":"🍝 Molti carboidrati (pasta, riso, pane)","he":"🍝 הרבה פחמימות (פסטה, אורז, לחם)","ja":"🍝 炭水化物が多め（パスタ・米・パン）","ko":"🍝 탄수화물 위주 (파스타·밥·빵)"},"ev_fat":{"ru":"🍟 Жирное или жареное","uk":"🍟 Жирне або смажене","en":"🍟 Fatty or fried","es":"🍟 Graso o frito","de":"🍟 Fettig oder frittiert","pt":"🍟 Gorduroso ou frito","fr":"🍟 Gras ou frit","pl":"🍟 Tłuste lub smażone","it":"🍟 Grasso o fritto","he":"🍟 שמן או מטוגן","ja":"🍟 脂っこい・揚げ物","ko":"🍟 기름지거나 튀긴 음식"},"ev_big":{"ru":"🍛 Плотный, большой ужин","uk":"🍛 Щільна, велика вечеря","en":"🍛 A big, heavy dinner","es":"🍛 Cena copiosa y pesada","de":"🍛 Großes, schweres Abendessen","pt":"🍛 Jantar grande e pesado","fr":"🍛 Dîner copieux et lourd","pl":"🍛 Obfita, ciężka kolacja","it":"🍛 Cena abbondante e pesante","he":"🍛 ארוחה גדולה וכבדה","ja":"🍛 量が多く重い夕食","ko":"🍛 양이 많고 무거운 저녁"},"ev_none":{"ru":"✨ Ничего из перечисленного","uk":"✨ Нічого з переліченого","en":"✨ None of the above","es":"✨ Nada de lo anterior","de":"✨ Nichts davon","pt":"✨ Nada disso","fr":"✨ Rien de tout cela","pl":"✨ Nic z powyższych","it":"✨ Niente di tutto ciò","he":"✨ אף אחד מאלה","ja":"✨ 当てはまるものはない","ko":"✨ 해당 없음"},"s4_l7":{"ru":"Кофеин после обеда","uk":"Кофеїн після обіду","en":"Caffeine after midday","es":"Cafeína después del mediodía","de":"Koffein nach Mittag","pt":"Cafeína depois do meio-dia","fr":"Caféine après midi","pl":"Kofeina po południu","it":"Caffeina dopo mezzogiorno","he":"קפאין אחרי הצהריים","ja":"午後のカフェイン","ko":"오후 카페인"},"s4_q7":{"ru":"Кофе или крепкий чай после 14:00 — было?","uk":"Кава або міцний чай після 14:00 — було?","en":"Coffee or strong tea after 2 pm?","es":"¿Café o té fuerte después de las 14:00?","de":"Kaffee oder starker Tee nach 14 Uhr?","pt":"Café ou chá forte depois das 14h?","fr":"Café ou thé fort après 14 h ?","pl":"Kawa lub mocna herbata po 14:00?","it":"Caffè o tè forte dopo le 14?","he":"קפה או תה חזק אחרי 14:00?","ja":"14時以降にコーヒーや濃いお茶を飲みましたか？","ko":"오후 2시 이후 커피나 진한 차를 마셨나요?"},"caf_no":{"ru":"🚫 Не было","uk":"🚫 Не було","en":"🚫 None","es":"🚫 No","de":"🚫 Nein","pt":"🚫 Não","fr":"🚫 Non","pl":"🚫 Nie","it":"🚫 No","he":"🚫 לא","ja":"🚫 なし","ko":"🚫 없음"},"caf_one":{"ru":"☕ Одна чашка","uk":"☕ Одна чашка","en":"☕ One cup","es":"☕ Una taza","de":"☕ Eine Tasse","pt":"☕ Uma xícara","fr":"☕ Une tasse","pl":"☕ Jedna filiżanka","it":"☕ Una tazza","he":"☕ כוס אחת","ja":"☕ 1杯","ko":"☕ 한 잔"},"caf_many":{"ru":"☕☕ Две и больше","uk":"☕☕ Дві і більше","en":"☕☕ Two or more","es":"☕☕ Dos o más","de":"☕☕ Zwei oder mehr","pt":"☕☕ Duas ou mais","fr":"☕☕ Deux ou plus","pl":"☕☕ Dwie lub więcej","it":"☕☕ Due o più","he":"☕☕ שתיים או יותר","ja":"☕☕ 2杯以上","ko":"☕☕ 두 잔 이상"}};
 Object.keys(_eveFoodT).forEach(function(k){['ru','uk','en','es','de','pt','fr','pl','it','he','ja','ko'].forEach(function(l){if(T[l])T[l][k]=_eveFoodT[k][l]||_eveFoodT[k].en;});});
+// Опыт снижения веса + давление (базовые вопросы step7): финальный оверрайд ключей. 2026-07-31.
+const _wlBpT={"s7_l4":{"ru":"Опыт снижения веса","uk":"Досвід зниження ваги","en":"Past weight loss","es":"Experiencia bajando de peso","de":"Erfahrung mit Gewichtsabnahme","pt":"Experiência de perda de peso","fr":"Expérience de perte de poids","pl":"Doświadczenie w odchudzaniu","it":"Esperienza di perdita di peso","he":"ניסיון בירידה במשקל","ja":"減量の経験","ko":"체중 감량 경험"},"s7_q4":{"ru":"Вы уже снижали вес раньше?","uk":"Ви вже знижували вагу раніше?","en":"Have you lost weight before?","es":"¿Has bajado de peso antes?","de":"Haben Sie schon einmal abgenommen?","pt":"Você já perdeu peso antes?","fr":"Avez-vous déjà perdu du poids ?","pl":"Czy schudłeś już wcześniej?","it":"Hai già perso peso in passato?","he":"האם ירדת במשקל בעבר?","ja":"これまでに減量したことがありますか？","ko":"이전에 체중을 감량한 적이 있나요?"},"s7_l5":{"ru":"Каким способом","uk":"Яким способом","en":"How you did it","es":"De qué manera","de":"Auf welche Weise","pt":"De que forma","fr":"De quelle façon","pl":"W jaki sposób","it":"In che modo","he":"באיזו דרך","ja":"その方法","ko":"어떤 방법으로"},"s7_q5":{"ru":"Что тогда сработало?","uk":"Що тоді спрацювало?","en":"What worked back then?","es":"¿Qué funcionó entonces?","de":"Was hat damals funktioniert?","pt":"O que funcionou naquela época?","fr":"Qu’est-ce qui avait marché ?","pl":"Co wtedy zadziałało?","it":"Cosa aveva funzionato?","he":"מה עבד אז?","ja":"その時に効果があったのは？","ko":"그때 효과가 있었던 것은?"},"wl_diet":{"ru":"🥗 Только питание","uk":"🥗 Тільки харчування","en":"🥗 Diet only","es":"🥗 Solo la alimentación","de":"🥗 Nur Ernährung","pt":"🥗 Só alimentação","fr":"🥗 Alimentation seule","pl":"🥗 Tylko dieta","it":"🥗 Solo alimentazione","he":"🥗 תזונה בלבד","ja":"🥗 食事だけ","ko":"🥗 식단만"},"wl_both":{"ru":"🥗🏃 Питание и движение вместе","uk":"🥗🏃 Харчування і рух разом","en":"🥗🏃 Diet and exercise together","es":"🥗🏃 Alimentación y ejercicio juntos","de":"🥗🏃 Ernährung und Bewegung zusammen","pt":"🥗🏃 Alimentação e exercício juntos","fr":"🥗🏃 Alimentation et activité ensemble","pl":"🥗🏃 Dieta i ruch razem","it":"🥗🏃 Alimentazione e movimento insieme","he":"🥗🏃 תזונה ופעילות יחד","ja":"🥗🏃 食事と運動の両方","ko":"🥗🏃 식단과 운동 함께"},"s7_l6":{"ru":"Давление","uk":"Тиск","en":"Blood pressure","es":"Presión arterial","de":"Blutdruck","pt":"Pressão arterial","fr":"Tension artérielle","pl":"Ciśnienie","it":"Pressione","he":"לחץ דם","ja":"血圧","ko":"혈압"},"s7_q6":{"ru":"Вам говорили, что у вас бывает высокое давление?","uk":"Вам казали, що у вас буває високий тиск?","en":"Have you been told your blood pressure runs high?","es":"¿Te han dicho que tu presión suele estar alta?","de":"Wurde Ihnen gesagt, dass Ihr Blutdruck erhöht ist?","pt":"Já lhe disseram que sua pressão costuma ser alta?","fr":"Vous a-t-on dit que votre tension est élevée ?","pl":"Czy mówiono Ci, że masz podwyższone ciśnienie?","it":"Ti hanno detto che la pressione tende a essere alta?","he":"נאמר לכם שלחץ הדם שלכם נוטה להיות גבוה?","ja":"血圧が高めだと言われたことはありますか？","ko":"혈압이 높다는 말을 들은 적이 있나요?"},"s7_l7":{"ru":"Давление в семье","uk":"Тиск у родині","en":"Family history","es":"Antecedentes familiares","de":"In der Familie","pt":"Histórico familiar","fr":"Antécédents familiaux","pl":"W rodzinie","it":"In famiglia","he":"במשפחה","ja":"家族の既往","ko":"가족력"},"s7_q7":{"ru":"Есть ли повышенное давление у близких родственников?","uk":"Чи є підвищений тиск у близьких родичів?","en":"Do close relatives have high blood pressure?","es":"¿Hay presión alta en familiares cercanos?","de":"Haben nahe Verwandte hohen Blutdruck?","pt":"Parentes próximos têm pressão alta?","fr":"Des proches ont-ils de l’hypertension ?","pl":"Czy bliscy krewni mają nadciśnienie?","it":"Ci sono parenti stretti con pressione alta?","he":"האם לקרובי משפחה יש לחץ דם גבוה?","ja":"近親者に高血圧の方はいますか？","ko":"가까운 가족 중 고혈압이 있나요?"},"s7_l8":{"ru":"Питание и давление","uk":"Харчування і тиск","en":"Food and blood pressure","es":"Alimentación y presión","de":"Ernährung und Blutdruck","pt":"Alimentação e pressão","fr":"Alimentation et tension","pl":"Odżywianie a ciśnienie","it":"Alimentazione e pressione","he":"תזונה ולחץ דם","ja":"食事と血圧","ko":"식단과 혈압"},"s7_q8":{"ru":"Хотите узнать, как питанием мягко поддержать давление?","uk":"Хочете дізнатися, як харчуванням м’яко підтримати тиск?","en":"Would you like to know how food can gently support your blood pressure?","es":"¿Quieres saber cómo la alimentación puede apoyar tu presión?","de":"Möchten Sie wissen, wie Ernährung den Blutdruck sanft unterstützt?","pt":"Quer saber como a alimentação pode apoiar sua pressão?","fr":"Voulez-vous savoir comment l’alimentation peut soutenir votre tension ?","pl":"Chcesz wiedzieć, jak odżywianie może wspierać ciśnienie?","it":"Vuoi sapere come l’alimentazione può sostenere la pressione?","he":"רוצים לדעת איך תזונה יכולה לתמוך בלחץ הדם?","ja":"食事で血圧をやさしく支える方法を知りたいですか？","ko":"식단으로 혈압을 부드럽게 관리하는 방법을 알고 싶나요?"}};
+Object.keys(_wlBpT).forEach(function(k){['ru','uk','en','es','de','pt','fr','pl','it','he','ja','ko'].forEach(function(l){if(T[l])T[l][k]=_wlBpT[k][l]||_wlBpT[k].en;});});
 /* === App Store wellness override (VIO) === */
 ;(function(){var W={
   rd_index_title:{ru:'Общий индекс дня',uk:'Загальний індекс дня',en:'Overall day index',es:'Índice general del día',de:'Gesamtindex des Tages',pt:'Índice geral do dia',fr:'Indice global du jour',pl:'Ogólny indeks dnia',it:'Indice generale del giorno',he:'מדד יומי כללי',ja:'今日の総合指数',ko:'오늘의 종합 지수'},
@@ -5653,6 +5700,10 @@ function saveProfile(){
       pms_symptoms:keepArr(gc(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9','pmss6']),P.pms_symptoms),
       // 7. Питание
       eating_pattern:getRadio('eating_pattern')||P.eating_pattern||'',
+      // Базовые: опыт снижения веса и контекст давления — спрашиваем один раз, храним в карточке
+      wl_exp:getRadio('wl_exp')||P.wl_exp||'', wl_how:getRadio('wl_how')||P.wl_how||'',
+      bp_high:getRadio('bp_high')||P.bp_high||'', bp_family:getRadio('bp_family')||P.bp_family||'',
+      bp_want:getRadio('bp_want')||P.bp_want||'',
       protein_intake:getRadio('protein_intake')||P.protein_intake||'',
       appetite:getRadio('appetite')||P.appetite||'',
       cravings:(document.getElementById('crav1')?(document.getElementById('crav1').checked?'yes':'no'):(P.cravings||'no')),
@@ -5849,6 +5900,7 @@ function loadProfile(){
     if(p.phase){const ph=document.querySelector('input[name=phase][value="'+p.phase+'"]');if(ph)ph.checked=true;}
     ['cycle_status','heavy_period','early_meno','vitality'].forEach(n=>{const v=p[n];if(v){const el=document.querySelector('input[name='+n+'][value="'+v+'"]');if(el)el.checked=true;}});
     if(typeof _cycleChange==='function')_cycleChange();
+    if(typeof _wlExpChange==='function')_wlExpChange();   // восстановили «опыт снижения веса» → вернуть видимость «каким способом»
     const sH=(accId,map)=>{const acc=document.getElementById(accId);if(acc&&map&&typeof map==='object')acc.querySelectorAll('input[type=checkbox]').forEach(c=>{if(map[c.value]==='yes')c.checked=true;});};
     sH('horm-acc',p.horm_female); sH('horm-male-acc',p.horm_male);
     // База, меняется редко: добавки/лекарства/статус цикла — предзаполняем из прошлого раза.
@@ -5856,7 +5908,7 @@ function loadProfile(){
     // Питание-база (первичный проход): восстановить выбор, чтобы разбор учитывал даже при скрытом шаге
     const _checkByVal=(ids,arr)=>{if(!Array.isArray(arr))return;ids.forEach(id=>{const el=document.getElementById(id);if(el)el.checked=arr.includes(el.value);});};
     _checkByVal(['gi1','gi2','gi3','gi4','gi5'],p.gi);
-    ['appetite','eating_pattern','protein_intake'].forEach(n=>{const v=p[n];if(v){const el=document.querySelector('input[name='+n+'][value="'+v+'"]');if(el)el.checked=true;}});
+    ['appetite','eating_pattern','protein_intake','wl_exp','wl_how','bp_high','bp_family','bp_want'].forEach(n=>{const v=p[n];if(v){const el=document.querySelector('input[name='+n+'][value="'+v+'"]');if(el)el.checked=true;}});
     const cr=document.getElementById('crav1'); if(cr&&p.cravings==='yes')cr.checked=true;
     _checkByVal(['med2','med3','med4','med5'],p.meds);
     const mo=document.getElementById('meds_other'); if(mo&&p.meds_other){mo.value=p.meds_other;} if(typeof _medsChange==='function')_medsChange();
@@ -6063,6 +6115,10 @@ function _giNone(inp,listId){
   var box=document.getElementById(listId); if(!box)return;
   if(/^none/.test(inp.value)){ if(inp.checked){ box.querySelectorAll('input[type=checkbox]').forEach(function(c){ if(c!==inp)c.checked=false; }); } }
   else if(inp.checked){ box.querySelectorAll('input[type=checkbox]').forEach(function(c){ if(/^none/.test(c.value))c.checked=false; }); }
+}
+function _wlExpChange(){
+  var b=document.getElementById('wl-how-block'); if(!b)return;
+  b.style.display=(getRadio('wl_exp')==='yes')?'block':'none';   // «каким способом» — только если опыт был
 }
 // Смена статуса цикла: «менструаций больше нет» → скрыть ПМС и выраженность фазы, показать вопрос ранней менопаузы
 function _cycleChange(){
@@ -7551,6 +7607,8 @@ function _showResultsInner(){
     appetite:getRadio('appetite'),
     cravings:(document.getElementById('crav1')&&document.getElementById('crav1').checked)?'yes':null,
     protein_intake:getRadio('protein_intake'),
+    wl_exp:getRadio('wl_exp'), wl_how:getRadio('wl_how'),
+    bp_high:getRadio('bp_high'), bp_family:getRadio('bp_family'), bp_want:getRadio('bp_want'),
     allergy:(typeof getRadio==='function'&&getRadio('allergy_has')==='yes'&&document.getElementById('allergy')?document.getElementById('allergy').value:'').trim(),
     new_symptoms:(document.getElementById('new_symptoms')?document.getElementById('new_symptoms').value:'').trim(),
     lifestyle_notes:(document.getElementById('lifestyle_notes')?document.getElementById('lifestyle_notes').value:'').trim(),
