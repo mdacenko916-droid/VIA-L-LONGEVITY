@@ -716,6 +716,11 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
       <input class="form-input" id="sc-cal" type="text" placeholder="https://cal.com/…" style="font-size:13px;">
     </div>
     <div class="form-row">
+      <label data-i18n="sc_pay">Ссылка на оплату ведения</label>
+      <input class="form-input" id="sc-pay" type="text" placeholder="https://pay.hotmart.com/…" style="font-size:13px;">
+      <div style="font-size:11px;color:#888;margin-top:4px;" data-i18n="sc_pay_hint">Ваш чекаут (Hotmart, Stripe и т.п.). Клиент увидит кнопку «Начать ведение» — сама ссылка в витрине текстом не показывается. Платёжные реквизиты мы не запрашиваем и не храним: деньги идут напрямую вам.</div>
+    </div>
+    <div class="form-row">
       <label data-i18n="sc_photo">Фото (URL)</label>
       <input class="form-input" id="sc-photo" type="text" placeholder="https://…/photo.jpg" style="font-size:13px;">
     </div>
@@ -751,7 +756,7 @@ let listPage = 1;
 let myRole = 'specialist';        // роль вошедшего (owner видит всех + панель «Специалисты»)
 let mySpecialty = 'nutritionist'; // профиль вошедшего → какие вкладки показывать
 let myRefCode = '';               // реф-код вошедшего (блок «Моя ссылка»)
-let myShowcase = { public:0, photo:'', bio:'', cal_url:'', langs:'' };  // профиль витрины «Мой наставник»
+let myShowcase = { public:0, photo:'', bio:'', cal_url:'', pay_url:'', langs:'' };  // профиль витрины «Мой наставник»
 let myName    = '';               // имя вошедшего специалиста
 let specialistsCache = [];        // последний список специалистов (для openEditSpecialist)
 let editingSpecId = null;
@@ -806,6 +811,8 @@ const T = {
   cat_psychology:{ru:"Психология",uk:"Психологія",en:"Psychology",es:"Psicología",de:"Psychologie",pt:"Psicologia",fr:"Psychologie",pl:"Psychologia",it:"Psicologia",he:"פסיכולוגיה",ja:"心理学",ko:"심리학"},
   cat_fitness:{ru:"Фитнес",uk:"Фітнес",en:"Fitness",es:"Fitness",de:"Fitness",pt:"Fitness",fr:"Fitness",pl:"Fitness",it:"Fitness",he:"כושר",ja:"フィットネス",ko:"피트니스"},
   cat_medical:{ru:"Медицина",uk:"Медицина",en:"Medical",es:"Medicina",de:"Medizin",pt:"Medicina",fr:"Médecine",pl:"Medycyna",it:"Medicina",he:"רפואה",ja:"医療",ko:"의료"},
+  sc_pay:{ru:"Ссылка на оплату ведения",uk:"Посилання на оплату ведення",en:"Payment link for guidance",es:"Enlace de pago del acompañamiento",de:"Zahlungslink für die Begleitung",pt:"Link de pagamento do acompanhamento",fr:"Lien de paiement du suivi",pl:"Link do płatności za prowadzenie",it:"Link di pagamento del percorso",he:"קישור לתשלום עבור הליווי",ja:"サポートの支払いリンク",ko:"관리 결제 링크"},
+  sc_pay_hint:{ru:"Ваш чекаут (Hotmart, Stripe и т.п.). Клиент увидит кнопку «Начать ведение» — сама ссылка в витрине текстом не показывается. Платёжные реквизиты мы не запрашиваем и не храним: деньги идут напрямую вам.",uk:"Ваш чекаут (Hotmart, Stripe тощо). Клієнт побачить кнопку «Почати ведення» — саме посилання у вітрині текстом не показується. Платіжні реквізити ми не запитуємо і не зберігаємо: гроші йдуть напряму вам.",en:"Your checkout (Hotmart, Stripe, etc.). Clients see a “Start guidance” button — the link itself is never shown as text. We never ask for or store payment details: the money goes straight to you.",es:"Tu checkout (Hotmart, Stripe, etc.). El cliente verá el botón «Empezar acompañamiento»; el enlace nunca se muestra como texto. No pedimos ni guardamos datos de pago: el dinero va directamente a ti.",de:"Ihr Checkout (Hotmart, Stripe usw.). Kundinnen sehen die Schaltfläche „Begleitung starten“ — der Link selbst wird nie als Text angezeigt. Zahlungsdaten fragen wir nicht ab und speichern sie nicht: Das Geld geht direkt an Sie.",pt:"Seu checkout (Hotmart, Stripe etc.). O cliente verá o botão «Começar acompanhamento» — o link nunca aparece como texto. Não pedimos nem guardamos dados de pagamento: o dinheiro vai direto para você.",fr:"Votre checkout (Hotmart, Stripe, etc.). Le client verra le bouton « Commencer le suivi » — le lien n’est jamais affiché en texte. Nous ne demandons ni ne conservons de données bancaires : l’argent vous revient directement.",pl:"Twój checkout (Hotmart, Stripe itp.). Klient zobaczy przycisk „Rozpocznij prowadzenie” — sam link nigdy nie jest pokazywany jako tekst. Nie prosimy o dane płatnicze ani ich nie przechowujemy: pieniądze trafiają bezpośrednio do Ciebie.",it:"Il tuo checkout (Hotmart, Stripe ecc.). Il cliente vedrà il pulsante «Inizia il percorso» — il link non viene mai mostrato come testo. Non chiediamo né conserviamo dati di pagamento: il denaro arriva direttamente a te.",he:"הצ'קאאוט שלך (Hotmart, Stripe וכו'). הלקוח יראה כפתור «להתחיל ליווי» — הקישור עצמו לעולם לא מוצג כטקסט. איננו מבקשים ואיננו שומרים פרטי תשלום: הכסף מגיע ישירות אליך.",ja:"あなたの決済ページ（Hotmart、Stripe など）。クライアントには「サポートを始める」ボタンが表示され、リンク自体がテキストで表示されることはありません。支払い情報は取得も保存もしません。お金は直接あなたに入ります。",ko:"내 결제 페이지(Hotmart, Stripe 등). 고객에게는 «관리 시작하기» 버튼만 보이며 링크 자체는 텍스트로 표시되지 않습니다. 결제 정보는 요청하거나 저장하지 않으며, 대금은 곧바로 전문가에게 전달됩니다."},
   sc_cal:{ru:"Ссылка на знакомство (Cal.com, 15 мин)",uk:"Посилання на знайомство (Cal.com, 15 хв)",en:"Intro call link (Cal.com, 15 min)",es:"Enlace de presentación (Cal.com, 15 min)",de:"Kennenlern-Link (Cal.com, 15 Min.)",pt:"Link de apresentação (Cal.com, 15 min)",fr:"Lien de rencontre (Cal.com, 15 min)",pl:"Link na poznanie się (Cal.com, 15 min)",it:"Link conoscitivo (Cal.com, 15 min)",he:"קישור להיכרות (Cal.com, 15 דק')",ja:"顔合わせリンク（Cal.com、15分）",ko:"소개 통화 링크(Cal.com, 15분)"},
   sc_photo:{ru:"Фото (URL)",uk:"Фото (URL)",en:"Photo (URL)",es:"Foto (URL)",de:"Foto (URL)",pt:"Foto (URL)",fr:"Photo (URL)",pl:"Zdjęcie (URL)",it:"Foto (URL)",he:"תמונה (URL)",ja:"写真（URL）",ko:"사진(URL)"},
   sc_langs:{ru:"Языки специалиста",uk:"Мови спеціаліста",en:"Specialist's languages",es:"Idiomas del especialista",de:"Sprachen des Spezialisten",pt:"Idiomas do especialista",fr:"Langues du spécialiste",pl:"Języki specjalisty",it:"Lingue dello specialista",he:"שפות המומחה",ja:"専門家の言語",ko:"전문가의 언어"},
@@ -1246,6 +1253,7 @@ function openShowcase(){
   document.getElementById('sc-public').checked = !!s.public;
   document.getElementById('sc-category').value = s.category || '';
   document.getElementById('sc-cal').value   = s.cal_url || '';
+  document.getElementById('sc-pay').value   = s.pay_url || '';
   document.getElementById('sc-photo').value = s.photo || '';
   buildShowcaseLangs(s.langs || '');
   document.getElementById('sc-bio').value   = s.bio || '';
@@ -1262,6 +1270,7 @@ async function saveShowcase(){
   if(pub && !cal){ if(err){ err.textContent=t('sc_err_cal'); err.style.display='block'; } return; }
   const payload = {
     public: pub, cal_url: cal,
+    pay_url: document.getElementById('sc-pay').value.trim(),
     category: document.getElementById('sc-category').value,
     photo: document.getElementById('sc-photo').value.trim(),
     langs: getShowcaseLangs(),

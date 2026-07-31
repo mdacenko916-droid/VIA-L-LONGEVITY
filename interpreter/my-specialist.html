@@ -245,6 +245,25 @@ const T={"ru":{"back":"← Назад","title":"Мой наставник","intr
   };
   Object.keys(SUP).forEach(l=>{ if(T[l]){ T[l].nocode_q=SUP[l].nocode_q; T[l].nocode_book=SUP[l].nocode_book; } });
 })();
+// Вторая дверь к специалисту: клиенту, который уже решил, 15-минутное знакомство не нужно.
+// Ключи заводим отдельным блоком — не трогаем гигантский литерал T выше.
+(function(){
+  const B={
+    ru:{start_now:'Начать ведение →',        start_after_intro:'Ведение начинается после знакомства'},
+    uk:{start_now:'Почати ведення →',        start_after_intro:'Ведення починається після знайомства'},
+    en:{start_now:'Start guidance →',        start_after_intro:'Guidance starts after the intro call'},
+    es:{start_now:'Empezar acompañamiento →',start_after_intro:'El acompañamiento empieza tras la presentación'},
+    de:{start_now:'Begleitung starten →',    start_after_intro:'Die Begleitung beginnt nach dem Kennenlernen'},
+    pt:{start_now:'Começar acompanhamento →',start_after_intro:'O acompanhamento começa após a apresentação'},
+    fr:{start_now:'Commencer le suivi →',    start_after_intro:'Le suivi commence après la rencontre'},
+    pl:{start_now:'Rozpocznij prowadzenie →',start_after_intro:'Prowadzenie zaczyna się po poznaniu się'},
+    it:{start_now:'Inizia il percorso →',    start_after_intro:'Il percorso inizia dopo l’incontro'},
+    he:{start_now:'להתחיל ליווי →',           start_after_intro:'הליווי מתחיל אחרי שיחת ההיכרות'},
+    ja:{start_now:'サポートを始める →',        start_after_intro:'サポートは顔合わせの後に始まります'},
+    ko:{start_now:'관리 시작하기 →',           start_after_intro:'관리는 소개 통화 후에 시작됩니다'}
+  };
+  Object.keys(B).forEach(l=>{ if(T[l]) Object.assign(T[l], B[l]); });
+})();
 
 let lang='en';
 let specName='';   // подтверждённое имя специалиста по коду (для consent + успеха)
@@ -456,7 +475,16 @@ function specCard(s, idx, inCatalog){
   const photo = s.photo ? `<img class="sc-photo" src="${esc(s.photo)}" alt="" loading="lazy">`
     : `<div class="sc-photo-ph">${esc((s.name||'?').trim().charAt(0).toUpperCase())}</div>`;
   const cal = s.cal_url?esc(s.cal_url):'';
-  const btn = cal ? `<a class="btn" href="${cal}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-top:12px;font-size:14px;padding:10px 12px;"><span>${esc(tr('nocode_book'))}</span></a>` : '';
+  const pay = (s.pay_url && /^https?:\/\//i.test(s.pay_url)) ? esc(s.pay_url) : '';
+  const _bs='display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-top:12px;font-size:14px;padding:10px 12px;';
+  // Две двери к специалисту: знакомство (15 мин) и сразу ведение — не всем нужен созвон.
+  // Оплата уходит на чекаут САМОГО специалиста: платёжных данных мы не собираем и не храним,
+  // ссылка в карточке нигде не показана текстом — только как адрес кнопки.
+  const btnBook = cal ? `<a class="btn" href="${cal}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="${_bs}"><span>${esc(tr('nocode_book'))}</span></a>` : '';
+  const btnBuy = pay
+    ? `<a class="btn" href="${pay}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="${_bs}background:var(--gold-txt);color:#fff;border-color:transparent;"><span>${esc(tr('start_now'))}</span></a>`
+    : (cal ? `<div style="font-size:11px;color:var(--t3);margin-top:8px;text-align:center;">${esc(tr('start_after_intro'))}</div>` : '');
+  const btn = btnBuy + btnBook;   // «Начать ведение» выше: клиенту, который уже решил, не нужно искать
   const clickAttr = inCatalog ? ` onclick="_pickSpecialist(${idx})" style="cursor:pointer;"` : '';
   return `<div class="speccard"${clickAttr}>
     <div style="display:flex;gap:12px;align-items:center;">
