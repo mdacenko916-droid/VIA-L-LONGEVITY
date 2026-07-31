@@ -4448,8 +4448,26 @@ function sendMaxRequest(){
 }
 
 // ══ BOTTOM NAV ════════════════════════════════════════════
+// Поверхности ленты-анкеты, которые живут ВНЕ <main> и потому не исчезают сами при
+// переходе на другой экран: панель «Данные с трекера», живые гейты, активные шаги.
+// Раньше их гасил только goTo() — переход по нижней навигации посреди незаконченного
+// прохода оставлял панель гаджета висеть НАД экраном выбора источника: два экрана
+// склеивались, верх уезжал под статус-бар, и выйти можно было только перезапуском.
+function _hideFlowSurfaces(){
+  try{
+    var gp=document.getElementById('gadget-panel-wrap'); if(gp)gp.style.display='none';
+    var mg=document.getElementById('morning-gate'); if(mg)mg.remove();
+    var dg=document.getElementById('daily-done-gate'); if(dg)dg.remove();
+    document.querySelectorAll('.step').forEach(function(s){ s.classList.remove('active','flow-show'); });
+    document.querySelectorAll('.flow-group-head,.flow-intro').forEach(function(h){ h.remove(); });
+    document.body.classList.remove('flow-mode');
+    if(typeof _hideFlowFooter==='function')_hideFlowFooter();
+  }catch(e){}
+}
 function navTo(tab){
   window.__editMode=false;   // любой переход по нижней навигации выходит из режима правки профиля (как VIO)
+  _hideFlowSurfaces();       // уходим с ленты начисто — ниже нужный экран построится с нуля
+  var __sa=document.getElementById('scroll-area'); if(__sa)__sa.scrollTop=0;   // новый экран открывается сверху, а не в середине прошлого
   var __fh=document.getElementById('funnelHome');if(__fh)__fh.style.display='none';   // возврат «на главную» — только на экране анкеты
   var __ip=document.getElementById('importPanel');if(__ip&&__ip.classList.contains('open')&&typeof closeImport==='function')closeImport(true);
   var __ap=document.getElementById('approachPanel');if(__ap)__ap.style.display='none';
@@ -6822,6 +6840,7 @@ function _showMorningCard(src){
 // Первый запуск: показываем ТОЛЬКО hero (дисклеймер + 3 карточки выбора), анкету прячем.
 function _showSourceChoice(){
   document.body.classList.remove('flow-mode');   // экран выбора — не лента, лишний нижний отступ ленты не нужен
+  if(typeof _hideFlowSurfaces==='function')_hideFlowSurfaces();   // панель гаджета/гейты ленты не должны висеть над экраном выбора
   var h=document.querySelector('.hero'); if(h)h.style.display='';
   var m=document.querySelector('main'); if(m)m.style.display='none';
   var g=document.getElementById('morning-gate'); if(g)g.remove();
@@ -6859,6 +6878,12 @@ function _startDailyRun(src){
 // выбранным источником и готовым профилем → утренняя карточка; источник выбран, но профиль
 // не закончен → продолжить анкету; первый запуск (источник не выбран) → экран выбора.
 function _bootRoute(){
+  // Любой стартовый экран — это вкладка «Сегодня». Раньше запуск шёл мимо navTo(),
+  // и в футере не подсвечивался ни один пункт: приложение выглядело «нигде».
+  try{
+    document.querySelectorAll('.bottom-nav-item').forEach(function(b){ b.classList.remove('active'); });
+    var _nt=document.getElementById('nav-today'); if(_nt)_nt.classList.add('active');
+  }catch(e){}
   try{
     if(typeof _passedToday==='function'&&_passedToday()){ if(typeof _showTodayDashboard==='function'&&_showTodayDashboard()) return; if(typeof navTo==='function'){ navTo('today'); return; } }
     var src=_srcGet();
