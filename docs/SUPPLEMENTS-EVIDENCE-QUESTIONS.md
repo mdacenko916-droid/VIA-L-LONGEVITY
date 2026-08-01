@@ -194,3 +194,72 @@ product: how often, when, with what, for how long. Please answer with that const
    duration, and the buying arithmetic (servings per day × 30).
 5. Cross-link with the day plan: the Morning / Day / Evening reminder lines carry the "with
    food / after food" instruction, and the supplements theme points there instead of repeating it.
+
+---
+
+# ROUND 2 — что осталось (после разбора ответов 2026-08-01)
+
+Ответы лежат в `interpreter/Infa Cloude/E/` (33 файла, 423k знаков). Разобраны, качество высокое.
+
+## Что изменилось в конструкции блока (ответ 30 — решающий)
+
+Идея «пиши не дозу, а сколько раз в день по порции с упаковки» **не проходит**: порция на
+этикетке — маркетинговое решение производителя, а не терапевтическая доза; по данным DSID
+фактическое содержание почти всех ингредиентов в мультивитаминах **превышает** заявленное
+(селен и йод ~на 25%, кальций на 7–29%), а превышение верхнего допустимого уровня даёт
+именно приём добавок, не еда. Инструкция «по порции с упаковки» отдаёт решение о дозе
+производителю.
+
+Безопасная конструкция, из тех же ответов:
+- **Частота, время, что с чем разносить, длительность** — это НЕ доза, это можно и нужно
+  (ответы 27/28/29/32 дают готовую раскладку по 10 добавкам).
+- **Количество на приём** — учим читать строку «amount per serving» и считать, а не
+  «сколько капсул».
+- **Потолок вместо дозы** — назвать верхний допустимый уровень безопаснее и долговечнее,
+  чем целевую дозу.
+- **Разделение по риску:** «по упаковке» допустимо для B12, C, B1, B2, биотина,
+  пантотената (нет UL) и объёмных агентов (псиллиум, креатин, коллаген, белок); **не
+  допустимо** для ретинола, цинка, железа, йода, меди, кальция, селена, ниацина, фолиевой.
+- Отдельно предупреждать про **суммирование**: мультивитамин + «для волос» + отдельный
+  минерал незаметно дублируют один и тот же нутриент.
+
+## Дырка в ответах
+
+**Вопрос 11 (тревога и раздражительность: магний, омега-3, витамины B, адаптогены) не
+отвечен** — файл `B/11.txt` побайтно совпадает с `B/10.txt` (волосы/кожа/ногти),
+ответ продублировался. Тревога у нас — недельный блок опросника, без неё в теме дыра.
+(`F/26:1.txt` = `G/27.txt` — тоже дубль, но безобидный: это ответ про частоту, лежит дважды.)
+
+## Вопросы второго круга
+
+34. *(повтор 11)* **Anxiety and irritability** in women 40–55 in the transition: magnesium,
+    omega-3, B vitamins, adaptogens — which have real support and which do not? Where is this
+    a nutrient question at all versus sleep, vasomotor symptoms and mood? (adaptogens — no
+    doses, no course lengths: only whether there is a point, interactions, who must avoid)
+
+35. **The ceiling reference OpenEvidence itself offered.** Give a concise, patient-facing
+    tolerable upper intake level reference for the nutrients most often over-consumed at 35–55,
+    phrased as ceilings rather than doses. For each: the ceiling, what it counts (supplements
+    and fortified foods, or food too), what exceeding it looks like in practice, and how quickly
+    harm accumulates. This is what we will print instead of doses.
+
+36. **No labs — the real situation of our users.** Almost every answer says "only if the
+    deficiency is documented", but most people using a consumer app have no ferritin, no
+    25-OH D, no B12. Which of these can be responsibly suggested without testing, and which
+    must never be suggested before a test? What can be said to someone who will not get
+    tested — and at what point does "get tested" become the only honest recommendation?
+
+37. **Invisible stacking.** Which real-world product combinations most often duplicate the
+    same nutrient without the person noticing (multivitamin + hair/skin/nails formula +
+    separate mineral + fortified foods)? Which nutrients is this most dangerous for, and what
+    is the simplest self-check a person can run over their own shelf?
+
+38. **Predictable gaps from diet patterns we already collect** (vegetarian, vegan,
+    lactose-free, gluten-free, low-carb, intermittent fasting): which deficiencies become
+    predictable enough to act on without testing, and which are assumed but not actually
+    supported by evidence?
+
+39. **Perimenopause versus supplement timing across the cycle.** Is there any evidence that
+    the timing of any supplement across the menstrual cycle matters (given that our app knows
+    the cycle phase), or is cycle-linked dosing entirely a marketing construct like seed
+    cycling?
