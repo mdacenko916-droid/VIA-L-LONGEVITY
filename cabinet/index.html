@@ -1495,10 +1495,20 @@ function switchView(view){
 // а не в KV — KV-запись доступа истекает вместе с суммой начисления.
 let billingPeriod = 'all';
 let billingCache  = [];
+let billingFirstMonth = null;   // самый ранний месяц, о котором есть что показывать (даёт сервер)
 function blMonths(){
-  // Последние 12 месяцев + «за всё время». Больше не нужно: дальше смотрят выгрузкой.
+  // От текущего месяца НАЗАД до первого месяца платформы. Раньше строились «последние 12
+  // месяцев от сегодня» — и в списке висели месяцы, когда платформы ещё не существовало.
+  // Нет ни выдач, ни подключённых специалистов → показываем только текущий месяц.
   const out=[], d=new Date();
-  for(let i=0;i<12;i++){ out.push(d.toISOString().slice(0,7)); d.setUTCMonth(d.getUTCMonth()-1); }
+  const cur = d.toISOString().slice(0,7);
+  const first = (billingFirstMonth && billingFirstMonth <= cur) ? billingFirstMonth : cur;
+  for(let i=0;i<36;i++){
+    const m = d.toISOString().slice(0,7);
+    out.push(m);
+    if(m <= first) break;
+    d.setUTCMonth(d.getUTCMonth()-1);
+  }
   return out;
 }
 function blMoney(v){ return (Math.round((v||0)*100)/100).toLocaleString(PDF_LOCALE[uiLang]||'en-US'); }
@@ -1511,6 +1521,7 @@ async function renderBilling(){
     el.innerHTML = `<div class="section-title">${t('bl_title')}</div><p style="color:var(--alert);font-size:13px;">${t('sp_only_owner')}</p>`; return;
   }
   billingCache = j.rows || [];
+  billingFirstMonth = j.first_month || null;
   const opts = ['all'].concat(blMonths()).map(m =>
     `<option value="${m}"${m===billingPeriod?' selected':''}>${m==='all'?t('bl_period_all'):m}</option>`).join('');
 

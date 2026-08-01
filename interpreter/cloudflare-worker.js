@@ -6753,8 +6753,22 @@ async function handleCabinetBilling(request, env, corsHeaders){
     };
   });
 
+  // С какого месяца вообще есть о чём отчитываться: раньше самой ранней выдачи и самого
+  // раннего подключения специалиста месяцев в списке быть не должно — иначе селектор
+  // предлагает выбрать месяцы, когда платформы ещё не существовало.
+  let firstMonth = null;
+  try{
+    const f = await env.DB.prepare(
+      `SELECT MIN(m) AS m FROM (
+         SELECT MIN(substr(issued,1,7)) AS m FROM grants WHERE issued IS NOT NULL
+         UNION ALL
+         SELECT MIN(substr(platform_since,1,7)) FROM specialists WHERE platform_since IS NOT NULL)`).first();
+    firstMonth = (f && f.m) ? String(f.m) : null;
+  }catch(e){}
+
   const sum = (k) => Math.round(rows.reduce((a,r)=>a+(r[k]||0),0) * 100) / 100;
   return jsonResponse({ ok:true, period: isAll ? 'all' : period, fee: PLATFORM_FEE_EUR, rows,
+    first_month: firstMonth,
     totals: { clients: rows.reduce((a,r)=>a+r.clients,0), grants: rows.reduce((a,r)=>a+r.grants,0),
               owed_software: sum('owed_software'), owed_platform: sum('owed_platform'),
               paid_software: sum('paid_software'), paid_platform: sum('paid_platform'),
