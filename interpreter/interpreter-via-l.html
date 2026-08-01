@@ -3319,6 +3319,11 @@ try{ if(new URLSearchParams(location.search).get('vendors')==='1'){ var _dvb=doc
       <div id="dayBlueprint"></div>
     </div>
 
+    <!-- ПЕТЛЯ ЭКСПЕРИМЕНТА: то, что недельный разбор предложил попробовать, и его итог через 7 дней
+         по собственным дневным записям («до → после»). Стоит перед трендами: сначала последствия
+         СВОИХ действий, потом общая ретроспектива месяца. -->
+    <div class="rd-card" id="rd-exp" style="display:none;"></div>
+
     <!-- ТРЕНДЫ ЗА 30 ДНЕЙ: ретроспектива-«отдалённый взгляд» → опущена под Памятку дня (2026-07-20):
          сегодня (индекс→показатели→разбор→план), и только потом «как в динамике за месяц».
          Свёрнута по умолчанию; форму кривой видно только здесь (раньше лежало числами в «Мой профиль»). -->
@@ -4460,7 +4465,7 @@ function _cardSaveNum(field,val){var P={};try{P=JSON.parse(localStorage.getItem(
 // Данные НЕ уходят на сервер: пользователь сам сохраняет файл и импортирует на новом устройстве.
 // Пароль знает только он: PBKDF2→AES-GCM. Единый модуль с VIO (источник по _SEC; в PRO — localStorage).
 var _BK_KEYS = (typeof _SEC!=='undefined' && _SEC.keys) ? _SEC.keys.slice()
-  : ['vialp_profile','vialp_history','vialp_daily','vialp_weekly_text','vialp_monthly_text','vialp_ai_memory','vialp_ai_daily','vialp_day_plan','vialp_lastanswers','vialp_imported','vialp_days','vialp_pid','vialp_research_consent'];   // pid+согласие в копию: перенос на новое устройство не создаёт «нового участника» (P2/P6)
+  : ['vialp_profile','vialp_history','vialp_daily','vialp_weekly_text','vialp_monthly_text','vialp_ai_memory','vialp_ai_daily','vialp_day_plan','vialp_lastanswers','vialp_imported','vialp_days','vialp_pid','vialp_research_consent','vialp_experiment','vialp_exp_log'];   // активный эксперимент и журнал закрытых — иначе на новом устройстве петля обрывается; pid+согласие в копию: перенос на новое устройство не создаёт «нового участника» (P2/P6)
 function _bkGet(k){ return (typeof secGet==='function')?secGet(k):localStorage.getItem(k); }
 function _bkSet(k,v){ if(typeof secSet==='function'){ secSet(k,v); } else { localStorage.setItem(k,v); } }
 function _bkB64(u8){ var s=''; for(var i=0;i<u8.length;i++)s+=String.fromCharCode(u8[i]); return btoa(s); }
@@ -5265,6 +5270,152 @@ function _weeklyDaily(win){
 }
 
 
+// ══ ПЕТЛЯ ЭКСПЕРИМЕНТА ════════════════════════════════════
+// Недельный разбор всегда заканчивался ОДНИМ экспериментом («уберите кофе после 14:00»),
+// но никто к нему не возвращался: каждый день начинался с нуля, человек не видел последствий
+// собственных действий. Здесь эксперимент фиксируется (что + какие метрики смотреть),
+// запоминается ЛИЧНАЯ база за 7 дней ДО него, и через 7 дней приложение показывает
+// «до → после» по его же дневным записям. Это чистое описание собственных чисел клиента:
+// ни диагноза, ни утверждения о здоровье, ни замера того, чего мы не мерили.
+var _EXP_KEYS=['sleepHours','deepMin','rhr','hrv','spo2','energy','stress','hf'];
+var _EXP_WIN=7;          // длина окна эксперимента, дней
+var _EXP_MIN_DAYS=3;     // меньше 3 записей в окне — среднее не считаем (шум)
+// Названия метрик, которых нет в _GLAB (приборные берём оттуда — один словарь на приложение).
+var _EXP_LBL={
+  stress:{ru:'Стресс',uk:'Стрес',en:'Stress',es:'Estrés',de:'Stress',pt:'Estresse',fr:'Stress',pl:'Stres',it:'Stress',he:'מתח',ja:'ストレス',ko:'스트레스'},
+  hf:{ru:'Приливы',uk:'Припливи',en:'Hot flashes',es:'Sofocos',de:'Hitzewallungen',pt:'Ondas de calor',fr:'Bouffées de chaleur',pl:'Uderzenia gorąca',it:'Vampate',he:'גלי חום',ja:'ホットフラッシュ',ko:'안면홍조'}
+};
+var _EXP_U={
+  min:{ru:'мин',uk:'хв',en:'min',es:'min',de:'Min',pt:'min',fr:'min',pl:'min',it:'min',he:'דק׳',ja:'分',ko:'분'},
+  dpw:{ru:'дн/нед',uk:'дн/тиж',en:'d/wk',es:'d/sem',de:'T/Wo',pt:'d/sem',fr:'j/sem',pl:'dn/tyg',it:'g/sett',he:'ימ׳/שב׳',ja:'日/週',ko:'일/주'}
+};
+function _expGet(){ try{ return JSON.parse(localStorage.getItem('vialp_experiment')||'null'); }catch(e){ return null; } }
+function _expSet(o){ try{ if(o)localStorage.setItem('vialp_experiment',JSON.stringify(o)); else localStorage.removeItem('vialp_experiment'); }catch(e){} }
+// Дневные записи в интервале [from, to) — источник и базы, и результата.
+function _expRows(from,to){
+  var arr=[]; try{arr=JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[];}catch(e){}
+  return arr.filter(function(r){ return r.ts&&r.ts>=from&&r.ts<to; });
+}
+// Среднее по метрике. hf — не среднее, а сколько дней из 7 были приливы (частота, а не «уровень»).
+function _expAvg(rows,k){
+  if(!rows||rows.length<_EXP_MIN_DAYS) return null;
+  if(k==='hf'){ var n=rows.filter(function(r){return r.hf_count&&r.hf_count!=='none';}).length;
+                return +(n/rows.length*7).toFixed(1); }
+  var v=rows.map(function(r){return r[k];}).filter(function(x){return x!=null&&x!==''&&!isNaN(x);});
+  if(v.length<_EXP_MIN_DAYS) return null;
+  return +(v.reduce(function(a,b){return a+(+b);},0)/v.length).toFixed(2);
+}
+function _expName(k){ return (k==='hf'||k==='stress')?L(_EXP_LBL[k]):((_GLAB[k]&&(_GLAB[k][lang]||_GLAB[k].en))||k); }
+function _expVal(k,v){
+  if(k==='hf') return (Math.round(v*10)/10)+' '+L(_EXP_U.dpw);
+  if(k==='stress') return (Math.round(v*10)/10)+'/10';
+  var m=_GMETA[k]; return m?(m.f(v)+(m.u?' '+m.u:'')):String(Math.round(v*10)/10);
+}
+// Дельта человеческим языком: сон — в минутах (0.7 ч читается как «+40 мин», не «+0.7»).
+function _expDelta(k,d){
+  var a=Math.abs(d), r, u='';
+  if(k==='sleepHours'){ r=String(Math.round(a*60)); u=' '+L(_EXP_U.min); }
+  else if(k==='hf'){ r=(Math.round(a*10)/10).toFixed(1); u=' '+L(_EXP_U.dpw); }
+  else if(k==='stress'||k==='energy'){ r=(Math.round(a*10)/10).toFixed(1); }
+  else { var m=_GMETA[k]; r=String(Math.round(a)); u=(m&&m.u)?' '+m.u:''; }
+  var s=(parseFloat(r)===0)?'±':(d>0?'+':'−');
+  return s+r+u;
+}
+// Вырезает служебный хвост [[EXP]] из текста разбора и заводит новый эксперимент.
+// Возвращает текст БЕЗ хвоста — его и показываем/сохраняем.
+function _expCapture(text){
+  var raw=String(text||'');
+  var clean=raw.replace(/\n*\[\[EXP\]\][\s\S]*$/,'').trim();
+  var m=raw.match(/\[\[EXP\]\]\s*(\{[\s\S]*?\})/);
+  if(!m) return clean;
+  var o=null; try{ o=JSON.parse(m[1]); }catch(e){}
+  if(!o||!o.what) return clean;
+  var keys=(Array.isArray(o.metrics)?o.metrics:[]).filter(function(k){return _EXP_KEYS.indexOf(k)>=0;}).slice(0,3);
+  if(!keys.length) keys=['sleepHours','rhr'];
+  var now=Date.now(), DAY=86400000;
+  var base=_expRows(now-_EXP_WIN*DAY,now), b={};
+  keys.forEach(function(k){ var v=_expAvg(base,k); if(v!=null)b[k]=v; });
+  var prev=_expGet(); if(prev)_expArchive(prev);   // старый эксперимент уходит в журнал вместе с его итогом
+  _expSet({ what:String(o.what).replace(/\s+/g,' ').trim().slice(0,160), metrics:keys,
+            startTs:now, startDay:_dayKey(), baseline:b, baseDays:base.length });
+  return clean;
+}
+// Итог эксперимента: до → после по его же записям. null — эксперимента нет.
+function _expMeasure(e){
+  e=e||_expGet(); if(!e||!e.startTs) return null;
+  var DAY=86400000, now=Date.now();
+  var rows=_expRows(e.startTs,now);
+  var out={ what:e.what, days:Math.floor((now-e.startTs)/DAY), logged:rows.length, rows:[] };
+  out.ready=out.days>=_EXP_WIN;
+  (e.metrics||[]).forEach(function(k){
+    var b=(e.baseline||{})[k], a=_expAvg(rows,k);
+    if(b==null||a==null) return;
+    out.rows.push({ k:k, before:b, after:a, d:+(a-b).toFixed(2) });
+  });
+  return out;
+}
+function _expArchive(e){
+  try{
+    var res=_expMeasure(e); if(!res) return;
+    var log=[]; try{log=JSON.parse(localStorage.getItem('vialp_exp_log')||'[]')||[];}catch(x){}
+    log.unshift({ what:e.what, startDay:e.startDay, days:res.days, rows:res.rows, ts:Date.now() });
+    while(log.length>12)log.pop();
+    localStorage.setItem('vialp_exp_log',JSON.stringify(log));
+  }catch(e2){}
+}
+function _expUI(){
+  const M={
+    ru:{title:'Ваш эксперимент',run:'Идёт · день {d} из {n}',watch:'Смотрим',res:'Что показали ваши цифры',head:'Вы делали:',thin:'Записей за неделю пока мало — продолжаем наблюдение',note:'Это ваши собственные цифры до и после — не вывод о здоровье.',ok:'Понятно'},
+    uk:{title:'Ваш експеримент',run:'Триває · день {d} з {n}',watch:'Дивимось',res:'Що показали ваші цифри',head:'Ви робили:',thin:'Записів за тиждень поки мало — продовжуємо спостереження',note:'Це ваші власні цифри до і після — не висновок про здоровʼя.',ok:'Зрозуміло'},
+    en:{title:'Your experiment',run:'Running · day {d} of {n}',watch:'Watching',res:'What your numbers showed',head:'You were doing:',thin:'Not enough logged days yet — still watching',note:'These are your own numbers before and after — not a conclusion about your health.',ok:'Got it'},
+    es:{title:'Tu experimento',run:'En curso · día {d} de {n}',watch:'Observamos',res:'Lo que mostraron tus cifras',head:'Estuviste haciendo:',thin:'Aún hay pocos registros — seguimos observando',note:'Son tus propias cifras antes y después, no una conclusión sobre tu salud.',ok:'Entendido'},
+    de:{title:'Dein Experiment',run:'Läuft · Tag {d} von {n}',watch:'Wir beobachten',res:'Was deine Zahlen zeigten',head:'Du hast gemacht:',thin:'Noch zu wenige Einträge — wir beobachten weiter',note:'Das sind deine eigenen Zahlen vorher und nachher — keine Aussage über deine Gesundheit.',ok:'Verstanden'},
+    pt:{title:'Seu experimento',run:'Em curso · dia {d} de {n}',watch:'Observando',res:'O que seus números mostraram',head:'Você estava fazendo:',thin:'Ainda há poucos registros — seguimos observando',note:'São os seus próprios números antes e depois — não uma conclusão sobre sua saúde.',ok:'Entendi'},
+    fr:{title:'Votre expérience',run:'En cours · jour {d} sur {n}',watch:'Nous observons',res:'Ce que vos chiffres ont montré',head:'Vous faisiez :',thin:'Encore peu d’enregistrements — on continue d’observer',note:'Ce sont vos propres chiffres avant et après — pas une conclusion sur votre santé.',ok:'Compris'},
+    pl:{title:'Twój eksperyment',run:'Trwa · dzień {d} z {n}',watch:'Obserwujemy',res:'Co pokazały Twoje liczby',head:'Robiłeś/aś:',thin:'Za mało zapisów — obserwujemy dalej',note:'To Twoje własne liczby przed i po — nie wniosek o zdrowiu.',ok:'Rozumiem'},
+    it:{title:'Il tuo esperimento',run:'In corso · giorno {d} di {n}',watch:'Osserviamo',res:'Cosa hanno mostrato i tuoi numeri',head:'Stavi facendo:',thin:'Ancora pochi registrazioni — continuiamo a osservare',note:'Sono i tuoi numeri prima e dopo — non una conclusione sulla tua salute.',ok:'Ho capito'},
+    he:{title:'הניסוי שלך',run:'מתבצע · יום {d} מתוך {n}',watch:'עוקבים אחרי',res:'מה הראו המספרים שלך',head:'מה עשית:',thin:'עדיין מעט רישומים — ממשיכים לעקוב',note:'אלה המספרים שלך לפני ואחרי — לא מסקנה על הבריאות שלך.',ok:'הבנתי'},
+    ja:{title:'あなたの実験',run:'実施中 · {n}日中{d}日目',watch:'見ている項目',res:'あなたの数値の変化',head:'取り組んだこと：',thin:'記録がまだ少ないため観察を続けます',note:'これは前後のあなた自身の数値であり、健康に関する結論ではありません。',ok:'わかりました'},
+    ko:{title:'나의 실험',run:'진행 중 · {n}일 중 {d}일째',watch:'보는 항목',res:'내 수치가 보여준 것',head:'해온 것:',thin:'기록이 아직 적어 계속 지켜봅니다',note:'이것은 전후의 내 수치일 뿐, 건강에 대한 결론이 아닙니다.',ok:'알겠습니다'}
+  };
+  return M[lang]||M.en;
+}
+function _expDismiss(){
+  var e=_expGet(); if(e)_expArchive(e);
+  _expSet(null);
+  try{ renderExperimentUI(window.__rdDay||_dayKey()); }catch(x){}
+}
+// Карточка на экране дня. Пока идёт — одна строка (не занимает экран), через 7 дней — итог.
+function renderExperimentUI(activeKey){
+  var box=document.getElementById('rd-exp'); if(!box) return;
+  var e=_expGet();
+  if(!e||(activeKey&&activeKey!==_dayKey())){ box.style.display='none'; box.innerHTML=''; return; }
+  var r=_expMeasure(e); if(!r){ box.style.display='none'; return; }
+  var ui=_expUI();
+  var html='<div class="rd-card-t" style="margin:0 0 2px;">✦ '+_esc(ui.title)+'</div>';
+  html+='<div style="font-size:13.5px;line-height:1.55;color:var(--t1);margin-bottom:8px;">'+_esc(r.what)+'</div>';
+  if(!r.ready){
+    var d=Math.min(r.days+1,_EXP_WIN);
+    html+='<div style="font-size:11.5px;color:var(--t3);">⏳ '+_esc(String(ui.run).replace('{d}',d).replace('{n}',_EXP_WIN))+'</div>';
+    var names=(e.metrics||[]).map(_expName).filter(Boolean);
+    if(names.length) html+='<div style="font-size:11.5px;color:var(--t3);margin-top:3px;">'+_esc(ui.watch)+': '+_esc(names.join(' · '))+'</div>';
+  } else if(r.rows.length){
+    html+='<div style="font-size:11.5px;color:var(--gold);letter-spacing:.4px;margin-bottom:6px;">'+_esc(ui.res)+'</div>';
+    r.rows.forEach(function(x){
+      html+='<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-top:1px solid rgba(255,255,255,.06);">'
+        +'<span style="flex:1;font-size:12.5px;color:var(--t2);">'+_esc(_expName(x.k))+'</span>'
+        +'<span style="font-size:12.5px;color:var(--t3);">'+_esc(_expVal(x.k,x.before))+' → '+_esc(_expVal(x.k,x.after))+'</span>'
+        +'<span style="font-size:12.5px;color:var(--t1);min-width:62px;text-align:right;">'+_esc(_expDelta(x.k,x.d))+'</span></div>';
+    });
+    html+='<div style="font-size:10.5px;color:var(--t3);line-height:1.5;margin-top:8px;">'+_esc(ui.note)+'</div>';
+    html+='<button onclick="_expDismiss()" style="margin-top:10px;background:transparent;color:var(--gold);border:1px solid var(--gold-dim);border-radius:9px;padding:7px 13px;font-size:12px;cursor:pointer;">'+_esc(ui.ok)+'</button>';
+  } else {
+    html+='<div style="font-size:11.5px;color:var(--t3);">'+_esc(ui.thin)+'</div>';
+  }
+  box.innerHTML=html; box.style.display='block';
+}
+
+
 // ══ WEEKLY AI REPORT ══════════════════════════════════════
 // Связный AI-разбор недельной динамики. Частота — 1 раз в 7 дней (гейт ниже на
 // localStorage): только так видна реальная картина изменений, а не дневной шум.
@@ -5342,16 +5493,22 @@ async function genWeeklyReport(){
     prev:m.p!=null?+m.p.toFixed(m.dec):null, delta:m.delta!=null?+m.delta.toFixed(m.dec):null })) };
   const daily=(typeof _weeklyDaily==='function')?_weeklyDaily():null;  // дневные агрегаты + контекст профиля
   const code=(window.sessionStorage&&sessionStorage.getItem('vialp_code'))||'';
+  // Итог прошлого эксперимента уходит в разбор: новый разбор начинается не с нуля, а с того,
+  // что человек уже делал, и что при этом сделали его собственные цифры.
+  const exp=(typeof _expMeasure==='function')?_expMeasure():null;
   try{
     const res=await fetch('https://interpreter.viaelcom.workers.dev/weekly-report',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({summary,daily,lang,code})});
+      body:JSON.stringify({summary,daily,lang,code,exp})});
     const json=await res.json();
     if(!json.report) throw new Error('no report');
+    // Служебный хвост [[EXP]] режем и заводим новый эксперимент (со снимком личной базы за 7 дней до).
+    if(typeof _expCapture==='function') json.report=_expCapture(json.report);
     localStorage.setItem('vialp_weekly_text',json.report);
     localStorage.setItem('vialp_weekly_last',String(Date.now()));
     localStorage.setItem('vialp_weekly_date',_dayKey());
     renderWeeklyReportUI();
+    try{ if(typeof renderExperimentUI==='function') renderExperimentUI(_dayKey()); }catch(x){}   // новый эксперимент виден сразу
   }catch(e){
     if(btn){ btn.disabled=false; btn.textContent=ui.get; }
     const box=document.getElementById('weeklyReport');
@@ -7165,6 +7322,8 @@ function _renderWeekStrip(activeKey){
   // Тренды живут рядом и на том же дне — вешаем сюда: через эту точку проходит
   // и живой проход, и открытие дня из истории, и перерисовка при смене языка.
   try{ if(typeof renderTrends==='function') renderTrends(activeKey); }catch(e){}
+  // Петля эксперимента живёт на том же дне и той же точке входа (живой проход, история, смена языка).
+  try{ if(typeof renderExperimentUI==='function') renderExperimentUI(activeKey); }catch(e){}
 }
 
 // Дни, за которые есть снимок, по возрастанию — порядок листания разбора.

@@ -1965,7 +1965,7 @@ async function handleAiMemory(request, env, corsHeaders, ctx) {
 // Для VIA-L EXPERT (есть code) тот же разбор кладётся в карточку кабинета →
 // специалист видит его во вкладке «Разборы» (type:'weekly').
 // ─────────────────────────────────────────────────────────────
-function buildWeeklyUserMessage(summary, daily, lang, period) {
+function buildWeeklyUserMessage(summary, daily, lang, period, exp) {
   summary = summary || {};
   const isM = period === 'month';
   const spanN = isM ? 30 : 7;
@@ -2022,11 +2022,25 @@ function buildWeeklyUserMessage(summary, daily, lang, period) {
     if (ctx.length) out += '\n\nClient context: ' + ctx.join('; ') + '.';
     if (p.goal) out += '\nFrame what improved and the next-' + (isM ? 'month' : 'week') + ' focus around this stated goal.';
   }
+
+  // ЗАМКНУТАЯ ПЕТЛЯ ЭКСПЕРИМЕНТА: прошлый разбор дал ОДИН эксперимент, клиент измерил его
+  // собственными числами (до/после) и присылает результат сюда. Без этого каждый разбор
+  // начинается с нуля и предлагает то, что человек уже делает. Числа — фактические, не выдумывать.
+  if (exp && exp.what) {
+    out += '\n\nPREVIOUS EXPERIMENT (given ' + (exp.days != null ? exp.days + ' days ago' : 'last time') + '): "' + String(exp.what).slice(0, 200) + '"';
+    if (Array.isArray(exp.rows) && exp.rows.length) {
+      out += '\nThe client\'s own numbers, average before it vs average since (do NOT recompute or invent):\n' +
+        exp.rows.map(r => `- ${r.k}: ${r.before} → ${r.after}`).join('\n');
+    } else {
+      out += '\n(not enough logged days to measure the change)';
+    }
+  }
+
   return out + '\n\nWrite the short ' + (isM ? 'monthly' : 'weekly') + ' review now.';
 }
 
 async function handleWeeklyReport(request, env, corsHeaders, ctx) {
-  const { summary, daily, lang, code, tier, period } = await request.json();
+  const { summary, daily, lang, code, tier, period, exp } = await request.json();
   const langMap = {
     ru: 'русском', uk: 'украинском', en: 'English', es: 'español',
     de: 'Deutsch', pt: 'português', fr: 'français', pl: 'polski',
@@ -2046,6 +2060,12 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
     'COVER, based ONLY on the numbers given (never invent metrics or values):\n' +
     '1) what improved ' + perThis + ', 2) what worsened or needs attention, 3) the single most likely ' +
     'behavioural driver, 4) ONE small, doable focus for the ' + perNext + ' (an "experiment", not a list).\n' +
+    // Петля: разбор не начинается с нуля. Если прошлый эксперимент измерен — сначала закрыть его.
+    'If a "PREVIOUS EXPERIMENT" block is given, OPEN the review by closing that loop in one sentence: name what ' +
+    'the person actually did and what their own numbers did (use the given before → after values verbatim, never ' +
+    'recompute or invent them). If it stuck and the numbers moved — say so and BUILD THE NEXT LINK on top of it; ' +
+    'do NOT propose the same thing again. If the numbers did not move, say that plainly and without blame, and pick ' +
+    'a different lever. Describe the numbers as the person\'s own data, never as a health outcome or measurement of anything.\n' +
     'If a "Daily detail" block and/or "Client context" are provided, USE them — ' +
     'they reflect what the person actually logged each day (hot flashes, temperature, SpO₂, memory, ' +
     'brain fog, stress, alcohol) and their profile (cycle phase, comfort markers, diet); ground the review in them.\n' +
@@ -2068,7 +2088,23 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
       '\nВ данных есть давление за период — ОБЯЗАТЕЛЬНО разбери его по этому блоку: что изменилось к прошлому периоду, ' +
       'с чем это совпало (сон/стресс/пульс покоя/вес/алкоголь) и какие 1–2 рычага питания и образа жизни уместны дальше. ' +
       'Дескриптивно, без диагноза; при цифрах ≥140/90 мягко предложи показать замеры врачу.'
-      : '')
+      : '') +
+    // ── ТЕХНИЧЕСКИЙ ХВОСТ: эксперимент в машинном виде ──
+    // Клиент вырезает эту строку из текста, запоминает эксперимент и через 7 дней сам считает
+    // «до → после» по собственным дневным записям. Без неё петля не замыкается: приложение не знает,
+    // ЧТО именно было предложено и КАКИЕ метрики за этим смотреть.
+    (isMonth ? '' :
+      '\n\n════════════════════════════════════════\n' +
+      'ПОСЛЕДНЯЯ СТРОКА ОТВЕТА — ТЕХНИЧЕСКАЯ (обязательно)\n' +
+      '════════════════════════════════════════\n' +
+      'После текста разбора, с новой строки, выведи РОВНО одну строку в формате:\n' +
+      '[[EXP]]{"what":"...","metrics":["...","..."]}\n' +
+      '• what — тот самый ОДИН эксперимент из пункта 4, коротко (до 90 знаков), на языке ответа, ' +
+      'как действие человека («убрать кофе после 14:00»), без объяснений и без обещаний результата.\n' +
+      '• metrics — 1–3 ключа из списка, по которым через неделю будет видно изменение: ' +
+      'sleepHours, deepMin, rhr, hrv, spo2, energy, stress, hf (частота приливов). ' +
+      'Бери только те, что реально связаны с этим экспериментом и есть в данных.\n' +
+      'Это служебная строка, не пиши к ней пояснений и не упоминай её в тексте.')
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -2081,7 +2117,7 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
       model: ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
       max_tokens: 900,
       system: weeklySystem,
-      messages: [{ role: 'user', content: buildWeeklyUserMessage(summary, daily, lang, period) }],
+      messages: [{ role: 'user', content: buildWeeklyUserMessage(summary, daily, lang, period, exp) }],
     }),
   });
 
@@ -2089,8 +2125,10 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
   const text = result.content?.[0]?.text || result.error?.message || 'Ошибка генерации';
 
   // VIA-L EXPERT (есть код доступа) → тот же разбор в карточку кабинета, в фоне.
+  // Служебный хвост [[EXP]] специалисту не нужен — режем (клиент режет у себя сам).
   if (code && env.DB && text && ctx) {
-    ctx.waitUntil(cabinetIngestWeekly(env, code, text, lang).catch(() => {}));
+    const clean = text.replace(/\n*\[\[EXP\]\][\s\S]*$/, '').trim();
+    ctx.waitUntil(cabinetIngestWeekly(env, code, clean, lang).catch(() => {}));
   }
 
   return new Response(JSON.stringify({ report: text }), {
