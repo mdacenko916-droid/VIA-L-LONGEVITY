@@ -5509,6 +5509,9 @@ async function genWeeklyReport(){
     localStorage.setItem('vialp_weekly_date',_dayKey());
     renderWeeklyReportUI();
     try{ if(typeof renderExperimentUI==='function') renderExperimentUI(_dayKey()); }catch(x){}   // новый эксперимент виден сразу
+    // Память обновляем на НЕДЕЛЬНОМ каденсе, а не только на месячном: цепочка «что закрепилось →
+    // следующее звено» на месячном шаге просыпается слишком редко, чтобы дневной разбор её видел.
+    if(typeof genAiMemory==='function')genAiMemory(summary,daily);
   }catch(e){
     if(btn){ btn.disabled=false; btn.textContent=ui.get; }
     const box=document.getElementById('weeklyReport');
@@ -7803,6 +7806,15 @@ function _showResultsInner(){
     // Еда вчера вечером (суточное): время последнего приёма, характер ужина, поздний кофеин —
     // вход для связи «поздний/тяжёлый ужин и кофеин → фрагментация сна, утренние HRV/пульс».
     last_meal:getRadio('last_meal'), caffeine_late:getRadio('caffeine_late'),
+    // Накопленная AI-память (что уже закрепилось + текущие зоны внимания) → разбор ведёт ЦЕПОЧКУ,
+    // а не пишет каждый день с нуля. Тот же вход, что в EXPERT; рамка остаётся велнес-паттерновой.
+    ai_memory:(function(){try{var m=JSON.parse(localStorage.getItem('vialp_ai_memory')||'null');
+      if(!m)return null;
+      return {memory:(m.memory||[]).slice(0,6),focus:(m.focus||[]).slice(0,3)};}catch(e){return null;}})(),
+    // Активный эксперимент недели: разбор дня должен знать, что человек сейчас пробует.
+    experiment:(function(){try{var e=(typeof _expGet==='function')?_expGet():null;
+      if(!e||!e.what)return null;
+      return {what:e.what,day:Math.floor((Date.now()-e.startTs)/86400000)+1};}catch(x){return null;}})(),
     evening_food:(function(){var out=[];['ev_sweet','ev_carb','ev_fat','ev_big','ev_none'].forEach(function(id){var e=document.getElementById(id);if(e&&e.checked)out.push(e.value);});return out;})(),
     // PRO fields
     memory:getRadio('memory'),
