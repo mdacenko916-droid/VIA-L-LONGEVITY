@@ -1028,6 +1028,9 @@ export default {
 
       // Платформа, Шаг 6: панель владельца — управление специалистами (только role=owner).
       if (path === '/cabinet/specialists')       return handleCabinetSpecialists(request, env, corsHeaders);
+      if (path === '/cabinet/billing')          return handleCabinetBilling(request, env, corsHeaders);            // владелец: сводка по деньгам
+      if (path === '/cabinet/billing/payment')  return handleCabinetBillingPayment(request, env, corsHeaders);     // владелец: отметить/удалить оплату
+      if (path === '/cabinet/billing/detail')   return handleCabinetBillingDetail(request, env, corsHeaders);      // владелец: расшифровка по специалисту
       if (path === '/cabinet/specialist-save')   return handleCabinetSpecialistSave(request, env, corsHeaders);
       if (path === '/cabinet/specialist-delete') return handleCabinetSpecialistDelete(request, env, corsHeaders);
 
@@ -6337,6 +6340,28 @@ async function _setCardExpertGrant(env, cardCode, patch){
   }catch(_){}
 }
 
+// ── ЖУРНАЛ ВЫДАЧ В D1 (бухгалтерская правда) ──────────────────
+// KV-запись доступа живёт «срок + 60 дней» и потом исчезает вместе с суммой начисления,
+// а перебрать KV по специалисту нельзя. Поэтому каждая выдача/продление/отзыв дублируется
+// строкой в D1 `grants` (миграция cabinet-step9-billing.sql): по ней и считается, кто сколько
+// должен за софт. Пишем НЕ в фоне: расхождение журнала с доступом дороже пары миллисекунд.
+async function _grantLog(env, rec, grantCode){
+  if(!env.DB || !grantCode) return;
+  try{
+    const now = Date.now();
+    await env.DB.prepare(
+      `INSERT INTO grants (code, card_code, specialist_id, plan, days, owed_eur, issued, expiry, revoked, revoked_at, created_at, updated_at)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+       ON CONFLICT(code) DO UPDATE SET
+         days=excluded.days, owed_eur=excluded.owed_eur, expiry=excluded.expiry,
+         revoked=excluded.revoked, revoked_at=excluded.revoked_at, updated_at=excluded.updated_at`
+    ).bind(grantCode, rec.card_code || null, rec.specialist_id || null, rec.plan || null,
+           rec.days || 0, rec.owed || 0, rec.issued || new Date().toISOString().slice(0,10),
+           rec.expiry || null, rec.revoked ? 1 : 0, rec.revoked ? new Date().toISOString().slice(0,10) : null,
+           now, now).run();
+  }catch(e){ /* журнал не должен ломать выдачу доступа */ }
+}
+
 // ── Воронка витрина → EXPERT PWA: выдача/проверка/отзыв срочного кода доступа ──
 // Хранилище — KV EXPERT_DRAFTS, ключ `expert_access:<GRANTCODE>`:
 //   { card_code, plan, expiry(YYYY-MM-DD), quota, used, revoked, specialist_id, days, owed, issued }
@@ -6442,6 +6467,7 @@ async function handleCabinetExpertGrant(request, env, corsHeaders){
   await env.EXPERT_DRAFTS.put('expert_access:'+grantCode, JSON.stringify(rec),
     { expirationTtl: (days + 60) * 24 * 60 * 60 });   // авто-очистка через срок + 60 дней
   await _setCardExpertGrant(env, cardCode, { code:grantCode, expiry, days, owed, revoked:false, issued:rec.issued });
+  await _grantLog(env, rec, grantCode);   // начисление за софт → в журнал бухгалтерии
 
   const link = 'https://via-l.com/interpreter/interpreter-via-l-expert.html';
   return jsonResponse({ ok:true, code: grantCode, expiry, days, owed, link }, corsHeaders);
@@ -6471,6 +6497,7 @@ async function handleCabinetExpertExtend(request, env, corsHeaders){
   rec.revoked = false;
   await env.EXPERT_DRAFTS.put('expert_access:'+grantCode, JSON.stringify(rec), { expirationTtl: (rec.days + 60) * 24 * 60 * 60 });
   await _setCardExpertGrant(env, rec.card_code, { code:grantCode, expiry:rec.expiry, days:rec.days, owed:rec.owed, revoked:false });
+  await _grantLog(env, rec, grantCode);   // пересчитанное начисление → в журнал
   return jsonResponse({ ok:true, code:grantCode, expiry:rec.expiry, days:rec.days, owed:rec.owed }, corsHeaders);
 }
 
@@ -6489,6 +6516,7 @@ async function handleCabinetExpertRevoke(request, env, corsHeaders){
   rec.revoked = true;
   await env.EXPERT_DRAFTS.put('expert_access:'+grantCode, JSON.stringify(rec), { expirationTtl: 60*24*60*60 });
   await _setCardExpertGrant(env, rec.card_code, { revoked:true });
+  await _grantLog(env, rec, grantCode);   // строка остаётся: за отработанное начислено
   return jsonResponse({ ok:true, code:grantCode, revoked:true }, corsHeaders);
 }
 
@@ -6637,6 +6665,153 @@ async function handleCabinetSpecialists(request, env, corsHeaders){
      FROM specialists s ORDER BY s.id`
   ).all();
   return jsonResponse({ok:true, specialists: results || []}, corsHeaders);
+}
+
+// ─────────────────────────────────────────────────────────────
+// БУХГАЛТЕРИЯ ВЛАДЕЛЬЦА (Шаг 9). Только role=owner.
+// Считает по D1: начислено за софт (журнал `grants`, €20/мес на клиента),
+// абонплата платформы (€30/мес с даты `specialists.platform_since`), оплачено
+// (журнал `payments`) и долг. Платёжной интеграции нет — оплату отмечает владелец руками.
+// Пустой `platform_since` = абонплату не начисляем (свой специалист/льгота).
+// ─────────────────────────────────────────────────────────────
+const PLATFORM_FEE_EUR = 30;   // абонплата за Кабинет, €/мес
+
+// Сколько месяцев прошло от даты (включительно) до конца отчётного периода.
+function _monthsBetween(fromISO, toISO){
+  if(!fromISO) return 0;
+  const f = new Date(String(fromISO).slice(0,10) + 'T00:00:00Z');
+  const t = new Date(String(toISO).slice(0,10) + 'T00:00:00Z');
+  if(isNaN(f) || isNaN(t) || f > t) return 0;
+  return (t.getUTCFullYear()-f.getUTCFullYear())*12 + (t.getUTCMonth()-f.getUTCMonth()) + 1;
+}
+
+// GET/POST /cabinet/billing {period?: 'YYYY-MM' | 'all'} — сводка по специалистам.
+async function handleCabinetBilling(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  if(sess.role !== 'owner') return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+
+  let b={}; try{ b = await request.json(); }catch(_){}
+  const period = String(b.period||'all');                       // 'all' | 'YYYY-MM'
+  const isAll  = !/^\d{4}-\d{2}$/.test(period);
+  const today  = new Date().toISOString().slice(0,10);
+  // Окно отчёта: по дате ВЫДАЧИ (issued) — начисление привязано к моменту, когда доступ выдан.
+  const from = isAll ? '0000-00' : period + '-01';
+  const to   = isAll ? '9999-99' : period + '-31';
+
+  const specs = (await env.DB.prepare(
+    `SELECT s.id,s.name,s.login,s.role,s.access_status,s.platform_since,s.access_paid_until,
+            (SELECT count(*) FROM clients c WHERE c.specialist_id=s.id) AS clients
+       FROM specialists s ORDER BY s.id`).all()).results || [];
+
+  // Начисления за софт: по журналу выдач. Отозванные СЧИТАЮТСЯ (за отработанное начислено),
+  // помечаем отдельно, чтобы владелец видел, из чего сложилась сумма.
+  const gr = (await env.DB.prepare(
+    `SELECT specialist_id,
+            COUNT(*) AS grants_n,
+            SUM(CASE WHEN revoked=1 THEN 1 ELSE 0 END) AS revoked_n,
+            SUM(CASE WHEN COALESCE(revoked,0)=0 AND expiry >= ? THEN 1 ELSE 0 END) AS active_n,
+            COALESCE(SUM(days),0)     AS days,
+            COALESCE(SUM(owed_eur),0) AS owed
+       FROM grants WHERE COALESCE(issued,'0000-00-00') BETWEEN ? AND ?
+      GROUP BY specialist_id`).bind(today, from, to).all()).results || [];
+
+  const pay = (await env.DB.prepare(
+    `SELECT specialist_id,
+            COALESCE(SUM(CASE WHEN kind='platform' THEN amount_eur ELSE 0 END),0) AS paid_platform,
+            COALESCE(SUM(CASE WHEN kind<>'platform' THEN amount_eur ELSE 0 END),0) AS paid_software
+       FROM payments WHERE COALESCE(period,'0000-00') BETWEEN ? AND ?
+      GROUP BY specialist_id`).bind(isAll?'0000-00':period, isAll?'9999-99':period).all()).results || [];
+
+  const byId = (arr) => { const m={}; arr.forEach(r=>{ m[String(r.specialist_id)] = r; }); return m; };
+  const G = byId(gr), P = byId(pay);
+
+  const rows = specs.map(s => {
+    const g = G[String(s.id)] || {}, p = P[String(s.id)] || {};
+    // Абонплата: за отчётный месяц — один месяц (если специалист уже был на платформе),
+    // за «всё время» — число месяцев с platform_since. Пусто → не начисляем.
+    let months = 0;
+    if(s.platform_since){
+      months = isAll ? _monthsBetween(s.platform_since, today)
+                     : (String(s.platform_since).slice(0,7) <= period ? 1 : 0);
+    }
+    const owedSoftware = Math.round((g.owed || 0) * 100) / 100;
+    const owedPlatform = months * PLATFORM_FEE_EUR;
+    const paidSoftware = Math.round((p.paid_software || 0) * 100) / 100;
+    const paidPlatform = Math.round((p.paid_platform || 0) * 100) / 100;
+    return {
+      id: s.id, name: s.name, login: s.login, role: s.role,
+      access_status: s.access_status, platform_since: s.platform_since || null,
+      clients: s.clients || 0,
+      grants: g.grants_n || 0, active: g.active_n || 0, revoked: g.revoked_n || 0,
+      days: g.days || 0,
+      owed_software: owedSoftware, owed_platform: owedPlatform,
+      paid_software: paidSoftware, paid_platform: paidPlatform,
+      platform_months: months,
+      balance: Math.round((owedSoftware + owedPlatform - paidSoftware - paidPlatform) * 100) / 100,
+    };
+  });
+
+  const sum = (k) => Math.round(rows.reduce((a,r)=>a+(r[k]||0),0) * 100) / 100;
+  return jsonResponse({ ok:true, period: isAll ? 'all' : period, fee: PLATFORM_FEE_EUR, rows,
+    totals: { clients: rows.reduce((a,r)=>a+r.clients,0), grants: rows.reduce((a,r)=>a+r.grants,0),
+              owed_software: sum('owed_software'), owed_platform: sum('owed_platform'),
+              paid_software: sum('paid_software'), paid_platform: sum('paid_platform'),
+              balance: sum('balance') } }, corsHeaders);
+}
+
+// POST /cabinet/billing/payment {specialist_id, amount, kind, period, paid_at?, note?} — отметить оплату.
+// id<0 → удалить платёж (опечатался — исправляем, а не живём с кривым балансом).
+async function handleCabinetBillingPayment(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  if(sess.role !== 'owner') return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  let b={}; try{ b = await request.json(); }catch(_){}
+
+  if(b.delete_id){
+    await env.DB.prepare('DELETE FROM payments WHERE id=?').bind(parseInt(b.delete_id,10)).run();
+    return jsonResponse({ok:true, deleted:true}, corsHeaders);
+  }
+
+  const specId = parseInt(b.specialist_id, 10);
+  const amount = Math.round(parseFloat(b.amount) * 100) / 100;
+  const kind   = (String(b.kind||'software').toLowerCase() === 'platform') ? 'platform' : 'software';
+  const period = /^\d{4}-\d{2}$/.test(String(b.period||'')) ? String(b.period) : new Date().toISOString().slice(0,7);
+  const paidAt = /^\d{4}-\d{2}-\d{2}$/.test(String(b.paid_at||'')) ? String(b.paid_at) : new Date().toISOString().slice(0,10);
+  if(!specId || !amount || isNaN(amount)) return jsonResponse({ok:false,error:'bad_input'}, corsHeaders, 400);
+
+  await env.DB.prepare(
+    'INSERT INTO payments (specialist_id, amount_eur, kind, period, paid_at, note, created_at) VALUES (?,?,?,?,?,?,?)'
+  ).bind(specId, amount, kind, period, paidAt, String(b.note||'').slice(0,200), Date.now()).run();
+  return jsonResponse({ok:true}, corsHeaders);
+}
+
+// POST /cabinet/billing/detail {specialist_id, period?} — расшифровка: выдачи и платежи строками.
+// Без неё сводка — «поверь на слово»: непонятно, из чего сложилась сумма и что уже оплачено.
+async function handleCabinetBillingDetail(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  if(sess.role !== 'owner') return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  let b={}; try{ b = await request.json(); }catch(_){}
+  const specId = parseInt(b.specialist_id, 10);
+  if(!specId) return jsonResponse({ok:false,error:'bad_input'}, corsHeaders, 400);
+  const period = String(b.period||'all');
+  const isAll  = !/^\d{4}-\d{2}$/.test(period);
+  const from = isAll ? '0000-00' : period + '-01', to = isAll ? '9999-99' : period + '-31';
+
+  const grants = (await env.DB.prepare(
+    `SELECT g.code, g.card_code, c.name AS client_name, g.days, g.owed_eur, g.issued, g.expiry, g.revoked
+       FROM grants g LEFT JOIN clients c ON c.code = g.card_code
+      WHERE g.specialist_id=? AND COALESCE(g.issued,'0000-00-00') BETWEEN ? AND ?
+      ORDER BY g.issued DESC LIMIT 200`).bind(specId, from, to).all()).results || [];
+  const payments = (await env.DB.prepare(
+    `SELECT id, amount_eur, kind, period, paid_at, note FROM payments
+      WHERE specialist_id=? AND COALESCE(period,'0000-00') BETWEEN ? AND ?
+      ORDER BY paid_at DESC LIMIT 200`).bind(specId, isAll?'0000-00':period, isAll?'9999-99':period).all()).results || [];
+  return jsonResponse({ok:true, grants, payments}, corsHeaders);
 }
 
 async function handleCabinetSpecialistSave(request, env, corsHeaders){

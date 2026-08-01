@@ -399,6 +399,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
       <button class="topbtn" id="viewClientsBtn" onclick="switchView('clients')" style="font-weight:600;border-bottom:2px solid #000;" data-i18n="nav_clients">👥 Клиенты</button>
       <button class="topbtn" id="viewCalendarBtn" onclick="switchView('calendar')" data-i18n="nav_calendar">📅 Календарь</button>
       <button class="topbtn" id="viewSpecialistsBtn" onclick="switchView('specialists')" style="display:none;" data-i18n="nav_specialists">🩺 Специалисты</button>
+      <button class="topbtn" id="viewBillingBtn" onclick="switchView('billing')" style="display:none;" data-i18n="nav_billing">€ Бухгалтерия</button>
       <button class="topbtn" id="myLinkBtn" onclick="openMyLink()" data-i18n="nav_mylink">🔗 Моя ссылка</button>
       <button class="topbtn" id="showcaseBtn" onclick="openShowcase()" data-i18n="nav_showcase">🪟 Моя витрина</button>
       <button class="topbtn primary" onclick="openAddClient()" data-i18n="btn_new_client">+ Новый клиент</button>
@@ -484,6 +485,9 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 
   <!-- SPECIALISTS VIEW (только владелец) -->
   <div id="specialistsView" style="display:none;flex:1;overflow-y:auto;padding:24px;background:#fff;"></div>
+
+  <!-- BILLING VIEW (только владелец): учёт по специалистам — начислено/оплачено/долг -->
+  <div id="billingView" style="display:none;flex:1;overflow-y:auto;padding:24px;background:#fff;"></div>
 </div>
 
 <!-- ADD/EDIT CLIENT MODAL -->
@@ -694,6 +698,38 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 </div>
 
 <!-- Моя витрина: профиль наставника для экрана «Мой наставник» в VIA-L app -->
+<!-- BILLING PAYMENT MODAL (владелец отмечает поступившую оплату) -->
+<div class="modal-overlay" id="billingPayModal">
+  <div class="modal">
+    <div class="modal-title" id="bp-title">Отметить оплату</div>
+    <input type="hidden" id="bp-spec">
+    <div class="form-row">
+      <label data-i18n="bl_amount">Сумма, €</label>
+      <input class="form-input" id="bp-amount" type="number" step="0.01" min="0" style="font-size:13px;">
+    </div>
+    <div class="form-row">
+      <label data-i18n="bl_kind">За что</label>
+      <select class="form-input" id="bp-kind" style="font-size:13px;">
+        <option value="software" data-i18n="bl_kind_soft">Софт (€20/мес)</option>
+        <option value="platform" data-i18n="bl_kind_platform">Платформа (€30/мес)</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label data-i18n="bl_period_of">За месяц</label>
+      <select class="form-input" id="bp-period" style="font-size:13px;"></select>
+    </div>
+    <div class="form-row">
+      <label data-i18n="bl_note">Заметка</label>
+      <input class="form-input" id="bp-note" type="text" maxlength="200" style="font-size:13px;">
+    </div>
+    <div class="formerr" id="bp-err" style="color:var(--alert);font-size:12px;margin-top:4px;"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeBillingPayment()" data-i18n="bl_cancel">Отмена</button>
+      <button class="btn-save" onclick="saveBillingPayment()" data-i18n="bl_save">Сохранить</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="showcaseModal">
   <div class="modal">
     <div class="modal-title" data-i18n="sc_title">Моя витрина</div>
@@ -954,6 +990,37 @@ const T = {
   u_years:{ru:"л.",uk:"р.",en:"y.o.",es:"años",de:"J.",pt:"anos",fr:"ans",pl:"lat",it:"anni",he:"שנים",ja:"歳",ko:"세"},
   hdr_edit:{ru:"✎ Редактировать",uk:"✎ Редагувати",en:"✎ Edit",es:"✎ Editar",de:"✎ Bearbeiten",pt:"✎ Editar",fr:"✎ Modifier",pl:"✎ Edytuj",it:"✎ Modifica",he:"✎ עריכה",ja:"✎ 編集",ko:"✎ 편집"},
   hdr_delete:{ru:"✕ Удалить",uk:"✕ Видалити",en:"✕ Delete",es:"✕ Eliminar",de:"✕ Löschen",pt:"✕ Excluir",fr:"✕ Supprimer",pl:"✕ Usuń",it:"✕ Elimina",he:"✕ מחיקה",ja:"✕ 削除",ko:"✕ 삭제"},
+  // — панель «Бухгалтерия» (партия 9, владелец) —
+  nav_billing:{ru:"€ Бухгалтерия",uk:"€ Бухгалтерія",en:"€ Billing",es:"€ Contabilidad",de:"€ Buchhaltung",pt:"€ Contabilidade",fr:"€ Comptabilité",pl:"€ Księgowość",it:"€ Contabilità",he:"€ הנהלת חשבונות",ja:"€ 会計",ko:"€ 정산"},
+  bl_title:{ru:"Бухгалтерия по специалистам",uk:"Бухгалтерія за спеціалістами",en:"Specialist billing",es:"Contabilidad por especialista",de:"Abrechnung nach Spezialisten",pt:"Contabilidade por especialista",fr:"Comptabilité par spécialiste",pl:"Rozliczenia specjalistów",it:"Contabilità per specialista",he:"הנהלת חשבונות לפי מומחה",ja:"専門家ごとの会計",ko:"전문가별 정산"},
+  bl_hint:{ru:"Начислено за софт — €20/мес на клиента по выданным доступам. Абонплата — €30/мес с даты подключения специалиста. Оплату отмечаете вы вручную: платёжной интеграции нет, деньги приходят на карту.",uk:"Нараховано за софт — €20/міс на клієнта за виданими доступами. Абонплата — €30/міс від дати підключення спеціаліста. Оплату відмічаєте ви вручну: платіжної інтеграції немає, гроші приходять на картку.",en:"Software charge — €20/mo per client from issued accesses. Platform fee — €30/mo from the specialist's join date. You mark payments manually: there is no payment integration, money arrives to your card.",es:"Cargo por software: €20/mes por cliente según los accesos emitidos. Cuota de plataforma: €30/mes desde el alta del especialista. Los pagos los marcas tú a mano: no hay integración de pagos.",de:"Software: €20/Monat pro Klient aus erteilten Zugängen. Plattformgebühr: €30/Monat ab Beitrittsdatum. Zahlungen trägst du manuell ein — es gibt keine Zahlungsintegration.",pt:"Software: €20/mês por cliente conforme acessos emitidos. Taxa da plataforma: €30/mês desde a entrada do especialista. Os pagamentos você marca manualmente.",fr:"Logiciel : 20 €/mois par client selon les accès délivrés. Abonnement plateforme : 30 €/mois depuis l'arrivée du spécialiste. Vous notez les paiements à la main.",pl:"Oprogramowanie — €20/mies. za klienta wg wydanych dostępów. Abonament platformy — €30/mies. od daty dołączenia. Płatności oznaczasz ręcznie.",it:"Software: €20/mese per cliente dagli accessi emessi. Canone piattaforma: €30/mese dalla data di ingresso. I pagamenti li segni a mano.",he:"תוכנה — €20 לחודש per לקוח לפי גישות שהונפקו. דמי פלטפורמה — €30 לחודש ממועד ההצטרפות. תשלומים מסמנים ידנית.",ja:"ソフト利用料は発行済みアクセスに応じてクライアント1人あたり月€20、プラットフォーム料は参加日から月€30。支払いは手動で記録します。",ko:"소프트웨어 요금은 발급된 액세스 기준 클라이언트당 월 €20, 플랫폼 요금은 합류일부터 월 €30입니다. 결제는 직접 표시합니다."},
+  bl_period_all:{ru:"За всё время",uk:"За весь час",en:"All time",es:"Todo el tiempo",de:"Gesamt",pt:"Todo o período",fr:"Depuis le début",pl:"Cały okres",it:"Sempre",he:"כל הזמן",ja:"全期間",ko:"전체 기간"},
+  bl_col_spec:{ru:"Специалист",uk:"Спеціаліст",en:"Specialist",es:"Especialista",de:"Spezialist",pt:"Especialista",fr:"Spécialiste",pl:"Specjalista",it:"Specialista",he:"מומחה",ja:"専門家",ko:"전문가"},
+  bl_col_clients:{ru:"Клиентов",uk:"Клієнтів",en:"Clients",es:"Clientes",de:"Klienten",pt:"Clientes",fr:"Clients",pl:"Klientów",it:"Clienti",he:"לקוחות",ja:"クライアント",ko:"클라이언트"},
+  bl_col_grants:{ru:"Ведений",uk:"Ведень",en:"Accesses",es:"Accesos",de:"Zugänge",pt:"Acessos",fr:"Accès",pl:"Dostępów",it:"Accessi",he:"גישות",ja:"アクセス",ko:"액세스"},
+  bl_col_days:{ru:"Дней",uk:"Днів",en:"Days",es:"Días",de:"Tage",pt:"Dias",fr:"Jours",pl:"Dni",it:"Giorni",he:"ימים",ja:"日数",ko:"일수"},
+  bl_col_soft:{ru:"Софт, €",uk:"Софт, €",en:"Software, €",es:"Software, €",de:"Software, €",pt:"Software, €",fr:"Logiciel, €",pl:"Software, €",it:"Software, €",he:"תוכנה, €",ja:"ソフト €",ko:"소프트웨어 €"},
+  bl_col_platform:{ru:"Платформа, €",uk:"Платформа, €",en:"Platform, €",es:"Plataforma, €",de:"Plattform, €",pt:"Plataforma, €",fr:"Plateforme, €",pl:"Platforma, €",it:"Piattaforma, €",he:"פלטפורמה, €",ja:"プラットフォーム €",ko:"플랫폼 €"},
+  bl_col_paid:{ru:"Оплачено, €",uk:"Сплачено, €",en:"Paid, €",es:"Pagado, €",de:"Bezahlt, €",pt:"Pago, €",fr:"Payé, €",pl:"Zapłacono, €",it:"Pagato, €",he:"שולם, €",ja:"支払済 €",ko:"결제됨 €"},
+  bl_col_balance:{ru:"Долг, €",uk:"Борг, €",en:"Balance, €",es:"Saldo, €",de:"Offen, €",pt:"Saldo, €",fr:"Solde, €",pl:"Saldo, €",it:"Saldo, €",he:"יתרה, €",ja:"残高 €",ko:"잔액 €"},
+  bl_total:{ru:"Итого",uk:"Разом",en:"Total",es:"Total",de:"Gesamt",pt:"Total",fr:"Total",pl:"Razem",it:"Totale",he:"סה״כ",ja:"合計",ko:"합계"},
+  bl_pay:{ru:"Оплата",uk:"Оплата",en:"Payment",es:"Pago",de:"Zahlung",pt:"Pagamento",fr:"Paiement",pl:"Płatność",it:"Pagamento",he:"תשלום",ja:"入金",ko:"입금"},
+  bl_detail:{ru:"Расшифровка",uk:"Розшифровка",en:"Details",es:"Detalle",de:"Details",pt:"Detalhes",fr:"Détail",pl:"Szczegóły",it:"Dettaglio",he:"פירוט",ja:"内訳",ko:"내역"},
+  bl_pay_title:{ru:"Отметить оплату",uk:"Відмітити оплату",en:"Record a payment",es:"Registrar pago",de:"Zahlung eintragen",pt:"Registrar pagamento",fr:"Enregistrer un paiement",pl:"Zapisz płatność",it:"Registra pagamento",he:"רישום תשלום",ja:"入金を記録",ko:"입금 기록"},
+  bl_amount:{ru:"Сумма, €",uk:"Сума, €",en:"Amount, €",es:"Importe, €",de:"Betrag, €",pt:"Valor, €",fr:"Montant, €",pl:"Kwota, €",it:"Importo, €",he:"סכום, €",ja:"金額 €",ko:"금액 €"},
+  bl_kind:{ru:"За что",uk:"За що",en:"For what",es:"Concepto",de:"Wofür",pt:"Referente a",fr:"Objet",pl:"Za co",it:"Causale",he:"עבור",ja:"内容",ko:"항목"},
+  bl_kind_soft:{ru:"Софт (€20/мес)",uk:"Софт (€20/міс)",en:"Software (€20/mo)",es:"Software (€20/mes)",de:"Software (€20/Mon.)",pt:"Software (€20/mês)",fr:"Logiciel (20 €/mois)",pl:"Software (€20/mies.)",it:"Software (€20/mese)",he:"תוכנה (€20 לחודש)",ja:"ソフト（月€20）",ko:"소프트웨어 (월 €20)"},
+  bl_kind_platform:{ru:"Платформа (€30/мес)",uk:"Платформа (€30/міс)",en:"Platform (€30/mo)",es:"Plataforma (€30/mes)",de:"Plattform (€30/Mon.)",pt:"Plataforma (€30/mês)",fr:"Plateforme (30 €/mois)",pl:"Platforma (€30/mies.)",it:"Piattaforma (€30/mese)",he:"פלטפורמה (€30 לחודש)",ja:"プラットフォーム（月€30）",ko:"플랫폼 (월 €30)"},
+  bl_period_of:{ru:"За месяц",uk:"За місяць",en:"For month",es:"Del mes",de:"Für Monat",pt:"Do mês",fr:"Pour le mois",pl:"Za miesiąc",it:"Per il mese",he:"עבור חודש",ja:"対象月",ko:"대상 월"},
+  bl_note:{ru:"Заметка",uk:"Нотатка",en:"Note",es:"Nota",de:"Notiz",pt:"Nota",fr:"Note",pl:"Notatka",it:"Nota",he:"הערה",ja:"メモ",ko:"메모"},
+  bl_save:{ru:"Сохранить",uk:"Зберегти",en:"Save",es:"Guardar",de:"Speichern",pt:"Salvar",fr:"Enregistrer",pl:"Zapisz",it:"Salva",he:"שמירה",ja:"保存",ko:"저장"},
+  bl_cancel:{ru:"Отмена",uk:"Скасувати",en:"Cancel",es:"Cancelar",de:"Abbrechen",pt:"Cancelar",fr:"Annuler",pl:"Anuluj",it:"Annulla",he:"ביטול",ja:"キャンセル",ko:"취소"},
+  bl_grants_h:{ru:"Выданные ведения",uk:"Видані ведення",en:"Issued accesses",es:"Accesos emitidos",de:"Erteilte Zugänge",pt:"Acessos emitidos",fr:"Accès délivrés",pl:"Wydane dostępy",it:"Accessi emessi",he:"גישות שהונפקו",ja:"発行済みアクセス",ko:"발급된 액세스"},
+  bl_pays_h:{ru:"Оплаты",uk:"Оплати",en:"Payments",es:"Pagos",de:"Zahlungen",pt:"Pagamentos",fr:"Paiements",pl:"Płatności",it:"Pagamenti",he:"תשלומים",ja:"入金",ko:"입금"},
+  bl_revoked:{ru:"закрыт",uk:"закритий",en:"revoked",es:"revocado",de:"widerrufen",pt:"revogado",fr:"révoqué",pl:"cofnięty",it:"revocato",he:"בוטל",ja:"取消済",ko:"해지됨"},
+  bl_empty:{ru:"Пока пусто.",uk:"Поки порожньо.",en:"Nothing yet.",es:"Aún vacío.",de:"Noch leer.",pt:"Ainda vazio.",fr:"Rien pour l'instant.",pl:"Na razie pusto.",it:"Ancora vuoto.",he:"עדיין ריק.",ja:"まだありません。",ko:"아직 없습니다."},
+  bl_no_fee:{ru:"без абонплаты",uk:"без абонплати",en:"no platform fee",es:"sin cuota",de:"ohne Gebühr",pt:"sem taxa",fr:"sans abonnement",pl:"bez abonamentu",it:"senza canone",he:"ללא דמי פלטפורמה",ja:"プラットフォーム料なし",ko:"플랫폼 요금 없음"},
+  bl_csv:{ru:"⬇ CSV",uk:"⬇ CSV",en:"⬇ CSV",es:"⬇ CSV",de:"⬇ CSV",pt:"⬇ CSV",fr:"⬇ CSV",pl:"⬇ CSV",it:"⬇ CSV",he:"⬇ CSV",ja:"⬇ CSV",ko:"⬇ CSV"},
   // — панель «Специалисты» (партия 3a) —
   sp_panel_title:{ru:"Специалисты",uk:"Спеціалісти",en:"Specialists",es:"Especialistas",de:"Spezialisten",pt:"Especialistas",fr:"Spécialistes",pl:"Specjaliści",it:"Specialisti",he:"מומחים",ja:"専門家",ko:"전문가"},
   sp_loading:{ru:"Загрузка…",uk:"Завантаження…",en:"Loading…",es:"Cargando…",de:"Lädt…",pt:"Carregando…",fr:"Chargement…",pl:"Ładowanie…",it:"Caricamento…",he:"טוען…",ja:"読み込み中…",ko:"불러오는 중…"},
@@ -1210,6 +1277,8 @@ async function enterApp(){
   // Панель «Специалисты» — только владельцу.
   const spBtn = document.getElementById('viewSpecialistsBtn');
   if(spBtn) spBtn.style.display = (myRole==='owner') ? '' : 'none';
+  const blBtn = document.getElementById('viewBillingBtn');
+  if(blBtn) blBtn.style.display = (myRole==='owner') ? '' : 'none';
   // show mobile menu btn on small screens
   if(window.innerWidth<768) document.getElementById('mobileMenuBtn').style.display='';
 }
@@ -1408,12 +1477,147 @@ function switchView(view){
   mainEl.style.display = view==='clients'     ? '' : 'none';
   calEl.style.display  = view==='calendar'    ? 'block' : 'none';
   if(spEl) spEl.style.display = view==='specialists' ? 'block' : 'none';
+  const blEl = document.getElementById('billingView');
+  if(blEl) blEl.style.display = view==='billing' ? 'block' : 'none';
   const setBtn=(b,on)=>{ if(!b)return; b.style.borderBottom = on?'2px solid #000':'2px solid transparent'; b.style.fontWeight = on?'600':'400'; };
   setBtn(document.getElementById('viewClientsBtn'),     view==='clients');
   setBtn(document.getElementById('viewCalendarBtn'),    view==='calendar');
   setBtn(document.getElementById('viewSpecialistsBtn'), view==='specialists');
+  setBtn(document.getElementById('viewBillingBtn'),      view==='billing');
   if(view==='calendar')    renderCalendar();
   if(view==='specialists') renderSpecialists();
+  if(view==='billing')     renderBilling();
+}
+
+// ── BILLING VIEW (панель владельца) ───────────────────────
+// Учёт по специалистам: начислено за софт (журнал выдач в D1), абонплата платформы
+// (€30/мес с даты подключения), оплачено (журнал оплат) и долг. Правда живёт в D1,
+// а не в KV — KV-запись доступа истекает вместе с суммой начисления.
+let billingPeriod = 'all';
+let billingCache  = [];
+function blMonths(){
+  // Последние 12 месяцев + «за всё время». Больше не нужно: дальше смотрят выгрузкой.
+  const out=[], d=new Date();
+  for(let i=0;i<12;i++){ out.push(d.toISOString().slice(0,7)); d.setUTCMonth(d.getUTCMonth()-1); }
+  return out;
+}
+function blMoney(v){ return (Math.round((v||0)*100)/100).toLocaleString(PDF_LOCALE[uiLang]||'en-US'); }
+async function renderBilling(){
+  const el = document.getElementById('billingView'); if(!el) return;
+  el.innerHTML = `<div class="section-title">${t('bl_title')}</div><p style="color:#888;font-size:13px;">${t('sp_loading')}</p>`;
+  let j=null;
+  try{ j = await api('/cabinet/billing', {period: billingPeriod}); }catch(_){}
+  if(!j || !j.ok){
+    el.innerHTML = `<div class="section-title">${t('bl_title')}</div><p style="color:var(--alert);font-size:13px;">${t('sp_only_owner')}</p>`; return;
+  }
+  billingCache = j.rows || [];
+  const opts = ['all'].concat(blMonths()).map(m =>
+    `<option value="${m}"${m===billingPeriod?' selected':''}>${m==='all'?t('bl_period_all'):m}</option>`).join('');
+
+  const rows = billingCache.map(r => `
+    <tr>
+      <td>${esc(r.name||('#'+r.id))}${r.platform_since?'':` <span style="color:#888;font-size:11px;">(${t('bl_no_fee')})</span>`}</td>
+      <td style="text-align:center;">${r.clients}</td>
+      <td style="text-align:center;">${r.grants}${r.revoked?` <span style="color:#888;font-size:11px;">−${r.revoked}</span>`:''}</td>
+      <td style="text-align:center;">${r.days}</td>
+      <td style="text-align:right;">${blMoney(r.owed_software)}</td>
+      <td style="text-align:right;">${blMoney(r.owed_platform)}</td>
+      <td style="text-align:right;">${blMoney(r.paid_software + r.paid_platform)}</td>
+      <td style="text-align:right;font-weight:600;color:${r.balance>0?'var(--alert)':'#2a8a4a'};">${blMoney(r.balance)}</td>
+      <td style="white-space:nowrap;">
+        <button class="topbtn" onclick="openBillingPayment(${r.id})">${t('bl_pay')}</button>
+        <button class="topbtn" onclick="toggleBillingDetail(${r.id})">${t('bl_detail')}</button>
+      </td>
+    </tr>
+    <tr id="bl-det-${r.id}" style="display:none;"><td colspan="9" style="background:#fafafa;padding:12px 14px;"></td></tr>`).join('');
+
+  const T0 = j.totals || {};
+  el.innerHTML = `
+    <div class="section-title">${t('bl_title')}</div>
+    <p style="font-size:12px;color:#888;margin-bottom:12px;max-width:760px;line-height:1.5;">${t('bl_hint')}</p>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+      <select class="form-input" style="width:auto;" onchange="billingPeriod=this.value;renderBilling();">${opts}</select>
+      <button class="topbtn" onclick="exportBillingCsv()">${t('bl_csv')}</button>
+    </div>
+    <table class="protocol-table">
+      <thead><tr>
+        <th>${t('bl_col_spec')}</th><th>${t('bl_col_clients')}</th><th>${t('bl_col_grants')}</th><th>${t('bl_col_days')}</th>
+        <th style="text-align:right;">${t('bl_col_soft')}</th><th style="text-align:right;">${t('bl_col_platform')}</th>
+        <th style="text-align:right;">${t('bl_col_paid')}</th><th style="text-align:right;">${t('bl_col_balance')}</th><th></th>
+      </tr></thead>
+      <tbody>${rows || `<tr><td colspan="9" style="color:#888;">${t('bl_empty')}</td></tr>`}</tbody>
+      <tfoot><tr style="font-weight:600;border-top:2px solid #000;">
+        <td>${t('bl_total')}</td><td style="text-align:center;">${T0.clients||0}</td><td style="text-align:center;">${T0.grants||0}</td><td></td>
+        <td style="text-align:right;">${blMoney(T0.owed_software)}</td><td style="text-align:right;">${blMoney(T0.owed_platform)}</td>
+        <td style="text-align:right;">${blMoney((T0.paid_software||0)+(T0.paid_platform||0))}</td>
+        <td style="text-align:right;color:${(T0.balance||0)>0?'var(--alert)':'#2a8a4a'};">${blMoney(T0.balance)}</td><td></td>
+      </tr></tfoot>
+    </table>`;
+}
+async function toggleBillingDetail(id){
+  const tr = document.getElementById('bl-det-'+id); if(!tr) return;
+  if(tr.style.display !== 'none'){ tr.style.display='none'; return; }
+  const cell = tr.firstElementChild;
+  cell.innerHTML = `<span style="color:#888;font-size:12px;">${t('sp_loading')}</span>`;
+  tr.style.display = '';
+  let j=null; try{ j = await api('/cabinet/billing/detail', {specialist_id:id, period:billingPeriod}); }catch(_){}
+  if(!j || !j.ok){ cell.innerHTML = `<span style="color:var(--alert);font-size:12px;">${t('sp_load_err')}</span>`; return; }
+  const g = (j.grants||[]).map(x=>`<div style="font-size:12px;padding:3px 0;">
+      ${esc(x.issued||'')} · ${esc(x.client_name||x.card_code||'')} · ${x.days} ${t('bl_col_days').toLowerCase()} · <b>€${blMoney(x.owed_eur)}</b>
+      ${x.revoked?` <span style="color:#888;">(${t('bl_revoked')})</span>`:''}</div>`).join('') || `<span style="color:#888;font-size:12px;">${t('bl_empty')}</span>`;
+  const pl = (j.payments||[]).map(x=>`<div style="font-size:12px;padding:3px 0;">
+      ${esc(x.paid_at||'')} · <b>€${blMoney(x.amount_eur)}</b> · ${x.kind==='platform'?t('bl_kind_platform'):t('bl_kind_soft')} · ${esc(x.period||'')}
+      ${x.note?' · '+esc(x.note):''}
+      <button class="topbtn" style="color:var(--alert);padding:0 6px;" onclick="deleteBillingPayment(${x.id})">✕</button></div>`).join('') || `<span style="color:#888;font-size:12px;">${t('bl_empty')}</span>`;
+  cell.innerHTML = `<div style="display:flex;gap:32px;flex-wrap:wrap;">
+      <div style="min-width:280px;"><div style="font-weight:600;font-size:12px;margin-bottom:4px;">${t('bl_grants_h')}</div>${g}</div>
+      <div style="min-width:280px;"><div style="font-weight:600;font-size:12px;margin-bottom:4px;">${t('bl_pays_h')}</div>${pl}</div>
+    </div>`;
+}
+function openBillingPayment(id){
+  const r = billingCache.filter(x=>x.id===id)[0] || {};
+  const months = ['all'].concat(blMonths()).filter(m=>m!=='all');
+  const wrap = document.getElementById('billingPayModal');
+  document.getElementById('bp-spec').value = id;
+  document.getElementById('bp-title').textContent = t('bl_pay_title') + ' — ' + (r.name || ('#'+id));
+  // Подставляем остаток долга: чаще всего платят именно его.
+  document.getElementById('bp-amount').value = (r.balance > 0) ? r.balance : '';
+  document.getElementById('bp-period').innerHTML = months.map(m=>`<option value="${m}">${m}</option>`).join('');
+  document.getElementById('bp-note').value = '';
+  document.getElementById('bp-err').textContent = '';
+  wrap.classList.add('open');   // класс модалок кабинета — 'open', не 'visible'
+}
+function closeBillingPayment(){ document.getElementById('billingPayModal').classList.remove('open'); }
+async function saveBillingPayment(){
+  const body = {
+    specialist_id: parseInt(document.getElementById('bp-spec').value,10),
+    amount: parseFloat(document.getElementById('bp-amount').value),
+    kind:   document.getElementById('bp-kind').value,
+    period: document.getElementById('bp-period').value,
+    note:   document.getElementById('bp-note').value,
+  };
+  if(!body.amount || isNaN(body.amount)){ document.getElementById('bp-err').textContent = t('bl_amount'); return; }
+  let j=null; try{ j = await api('/cabinet/billing/payment', body); }catch(_){}
+  if(!j || !j.ok){ document.getElementById('bp-err').textContent = t('sp_load_err'); return; }
+  closeBillingPayment(); renderBilling();
+}
+async function deleteBillingPayment(pid){
+  if(!confirm(t('hdr_delete')+'?')) return;
+  try{ await api('/cabinet/billing/payment', {delete_id: pid}); }catch(_){}
+  renderBilling();
+}
+function exportBillingCsv(){
+  const head = [t('bl_col_spec'),t('bl_col_clients'),t('bl_col_grants'),t('bl_col_days'),t('bl_col_soft'),t('bl_col_platform'),t('bl_col_paid'),t('bl_col_balance')];
+  const q = v => '"' + String(v==null?'':v).replace(/"/g,'""') + '"';
+  const lines = [head.map(q).join(',')].concat(billingCache.map(r =>
+    [r.name||('#'+r.id), r.clients, r.grants, r.days, r.owed_software, r.owed_platform,
+     (r.paid_software||0)+(r.paid_platform||0), r.balance].map(q).join(',')));
+  const blob = new Blob(['\ufeff' + lines.join('\n')], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'via-l-billing-' + billingPeriod + '.csv';
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0);
 }
 
 // ── SPECIALISTS VIEW (панель владельца) ───────────────────
