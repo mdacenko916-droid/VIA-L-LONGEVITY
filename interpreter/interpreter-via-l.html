@@ -7038,6 +7038,38 @@ function _hrvTileBase(){
   var base=v.slice(3,33); if(base.length<14) return null;
   base.sort(function(x,y){return x-y;}); return base[Math.floor(base.length/2)];
 }
+// ── ЛИЧНАЯ БАЗА НА ПЛИТКАХ: «вы против вас», а не против таблиц ────────────
+// Механика сравнения с собственной историей в приложении давно есть (_pBase/_pNorm ниже,
+// docs/PERSONAL-BASELINE-RECON.md), но клиенту она почти не показывалась: плитки говорили
+// языком возрастных норм. Здесь — то же самое, но словами человека: его обычный уровень
+// за 30 дней и насколько сегодня от него отличается.
+// База = медиана последних 30 записей БЕЗ сегодняшней, минимум 14 значений (на 7 днях база врёт на 9%).
+function _pbTile(field){
+  var a=[]; try{a=JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[];}catch(e){}
+  var today=_dayKey();
+  var v=a.filter(function(r){return r&&r.day!==today;})
+         .map(function(r){return parseFloat(r[field]);})
+         .filter(function(x){return !isNaN(x)&&x>0;}).slice(0,30);
+  if(v.length<14) return null;
+  var s=v.slice().sort(function(x,y){return x-y;});
+  return s[Math.floor(s.length/2)];
+}
+var _PB_T={
+  usual:{ru:'обычно у вас',uk:'зазвичай у вас',en:'your usual',es:'tu habitual',de:'normalerweise bei dir',pt:'o seu habitual',fr:'votre habituel',pl:'zwykle u Ciebie',it:'di solito',he:'הרגיל שלך',ja:'あなたの平常値',ko:'평소 수치'},
+  today:{ru:'сегодня',uk:'сьогодні',en:'today',es:'hoy',de:'heute',pt:'hoje',fr:'aujourd’hui',pl:'dziś',it:'oggi',he:'היום',ja:'今日',ko:'오늘'},
+  same:{ru:'Как обычно у вас',uk:'Як зазвичай у вас',en:'Your usual level',es:'Tu nivel habitual',de:'Dein übliches Niveau',pt:'Seu nível habitual',fr:'Votre niveau habituel',pl:'Twój zwykły poziom',it:'Il tuo livello abituale',he:'הרמה הרגילה שלך',ja:'いつものあなたの水準',ko:'평소 본인 수준'},
+  above:{ru:'Выше вашего обычного',uk:'Вище вашого звичайного',en:'Above your usual',es:'Por encima de tu habitual',de:'Über deinem Üblichen',pt:'Acima do seu habitual',fr:'Au-dessus de votre habituel',pl:'Powyżej Twojego zwykłego',it:'Sopra il tuo abituale',he:'מעל הרגיל שלך',ja:'いつもより高め',ko:'평소보다 높음'},
+  below:{ru:'Ниже вашего обычного',uk:'Нижче вашого звичайного',en:'Below your usual',es:'Por debajo de tu habitual',de:'Unter deinem Üblichen',pt:'Abaixo do seu habitual',fr:'En dessous de votre habituel',pl:'Poniżej Twojego zwykłego',it:'Sotto il tuo abituale',he:'מתחת לרגיל שלך',ja:'いつもより低め',ko:'평소보다 낮음'}
+};
+// Строка под плиткой: «обычно у вас 58 · сегодня −3». Единицы не дублируем — они уже в плитке.
+function _pbLine(field,cur,dec){
+  var b=_pbTile(field); cur=parseFloat(cur);
+  if(b==null||isNaN(cur)) return '';
+  var d=cur-b, r=dec?(Math.round(d*10)/10):Math.round(d), bs=dec?(Math.round(b*10)/10):Math.round(b);
+  var sign=(r===0)?'±':(r>0?'+':'−');
+  return '<div style="font-size:10px;color:var(--t3);line-height:1.35;margin-bottom:6px;">'
+    +_esc(L(_PB_T.usual))+' '+bs+' · '+_esc(L(_PB_T.today))+' '+sign+Math.abs(r)+'</div>';
+}
 // Тир домашнего АД → слово + цвет + ширина полоски (внутренние пороги, docs/BLOOD-PRESSURE-EVIDENCE.md §5.1).
 function _bpTier(sys,dia){
   sys=+sys; dia=+dia;
@@ -7148,6 +7180,13 @@ function renderBioLoad(data, score, type){
         st = (r>hi)?{w:L({ru:'Повышен',uk:'Підвищений',en:'Elevated',es:'Elevado',de:'Erhöht',pt:'Elevado',fr:'Élevé',pl:'Podwyższony',it:'Elevato',he:'גבוה',ja:'高め',ko:'높음'}),c:'#FF6B8A'}
            : (r<lo-5)?{w:L({ru:'Ниже нормы',uk:'Нижче норми',en:'Below range',es:'Por debajo del rango',de:'Unter dem Bereich',pt:'Abaixo da faixa',fr:'Sous la plage',pl:'Poniżej normy',it:'Sotto la norma',he:'מתחת לטווח',ja:'基準値未満',ko:'정상 범위 미만'}),c:'#5b8def'}
            : {w:L({ru:'В пределах нормы',uk:'У межах норми',en:'In range',es:'Dentro del rango',de:'Im Normbereich',pt:'Dentro da faixa',fr:'Dans la plage',pl:'W normie',it:'Nella norma',he:'בטווח התקין',ja:'基準値内',ko:'정상 범위'}),c:'#4ECCA3'};
+        // Набралась своя база (≥14 дней) — таблица возрастных диапазонов уступает место личной норме:
+        // «в пределах нормы» ничего не говорит человеку, у которого пульс покоя всегда 48 или всегда 72.
+        var _pbR=_pbTile('rhr');
+        if(_pbR){
+          var _dR=r-_pbR, _thr=Math.max(3,_pbR*0.05);
+          st = (_dR>_thr)?{w:L(_PB_T.above),c:'#E2B95A'} : (_dR<-_thr)?{w:L(_PB_T.below),c:'#5b8def'} : {w:L(_PB_T.same),c:'#4ECCA3'};
+        }
       } else { valHtml='<span class="rd-tile-val">—</span>'; barW=0; }
     } else if(c.word){
       // не замер, а выбранная категория → слово вместо процента (процент врал бы точностью)
@@ -7157,6 +7196,11 @@ function renderBioLoad(data, score, type){
     }
     var _note=(c.val==null)?'':_srcNote(c.note);
     var _noteHtml=_note?'<div style="font-size:10px;color:var(--t3);line-height:1.35;margin-bottom:6px;">'+_note+'</div>':'';
+    // Личная база вместо таблиц: под плиткой — свой обычный уровень и отклонение сегодняшнего дня.
+    // Только там, где сравнение осмысленно и есть числовая история: HRV, самооценка сна, пульс покоя.
+    if(i===0)      _noteHtml+=_pbLine('hrv',data.hrv,false);
+    else if(i===1) _noteHtml+=_pbLine('sleep_qual',data.sleep_qual,true);
+    else if(isPulse) _noteHtml+=_pbLine('rhr',data.rhr,false);
     var _statusHtml=c.word?'' : '<div class="rd-tile-status" style="color:'+st.c+'">'+st.w+'</div>';
     return '<div class="rd-tile"><button type="button" class="rd-tile-i" aria-label="?" onclick="openMetricHelp('+i+')">i</button><div class="rd-tile-h"><i class="ph '+_tIcons[i]+'"></i>'+c.label+'</div>'
       +'<div>'+valHtml+'</div>'
