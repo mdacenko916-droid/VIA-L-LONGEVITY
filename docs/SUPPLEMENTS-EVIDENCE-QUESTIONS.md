@@ -1,157 +1,196 @@
-# Добавки и витамины — вопросы для OpenEvidence (серия N-11)
+# Supplements & vitamins — OpenEvidence question set (series N-11)
 
-**Дата:** 2026-08-01. **Кому:** владелец (прогон в OpenEvidence) → ответы вернуть сюда,
-дальше вложу в `WELLNESS_KB` воркера и подниму блок «Добавки» в разборе.
+**Date:** 2026-08-01. **For:** owner (runs the queries in OpenEvidence) → answers come back
+here → I fold them into the worker's `WELLNESS_KB` and build the "Supplements" theme in the
+daily overview.
+
+Questions are in English (OpenEvidence works best in English). The audit and the
+implementation notes are the Russian part of the repo's context, kept short here.
 
 ---
 
-## 1. Зачем это (что показал аудит базы)
+## 1. Why (what the KB audit showed)
 
-Прогнал все 34 паттерна `WELLNESS_KB` на упоминания добавок. Итог: **добавки есть, но
-врассыпную** — они растворены в общих рекомендациях по образу жизни, отдельного слоя
-«что принимать, зачем, чего не хватит из еды, кому нельзя» нет ни в одном блоке.
+I ran all 34 patterns of `WELLNESS_KB` through a supplement-coverage check. Supplements
+**are** mentioned, but scattered inside general lifestyle advice — no block has a dedicated
+layer of "what to take, why, what food already covers, who must not".
 
-Три блока — заглушки в одну строку (~300 знаков против 3–8 тысяч у остальных):
+Three patterns are one-line stubs (~300 chars vs 3–8k for the rest):
 
-| Паттерн | Тема | Размер | Что есть по добавкам |
+| Pattern | Topic | Size | Supplement content |
 |---|---|---|---|
-| P-F19 | Пищеварение, тазовая зона | 297 зн. | «клетчатка 20–30 г + вода + псиллиум как опция» |
-| P-F20 | Тазовое дно, удержание | 275 зн. | только клетчатка вскользь |
-| P-F21 | Здоровье груди | 383 зн. | омега-3 одним словом |
+| P-F19 | Digestive comfort, pelvic zone | 297 ch. | "fibre 20–30 g + water + psyllium as an option" |
+| P-F20 | Pelvic floor, continence | 275 ch. | fibre in passing |
+| P-F21 | Breast health | 383 ch. | omega-3, one word |
 
-Ещё шесть блоков с 1–3 упоминаниями на весь текст: **P-F13** (сердце/сосуды),
-**P-F15** (урогенитальный комфорт), **P-F23** (гормональная мигрень), **P-F11**
-(кишечник, женщины — про/пребиотики почти не раскрыты), **P-M3** (метаболический),
-**P-M11** (ЭД как сосудистый сигнал).
+Six more have only 1–3 mentions in the whole block: **P-F13** (cardiovascular), **P-F15**
+(genitourinary comfort), **P-F23** (hormonal migraine), **P-F11** (gut, women — pro/prebiotics
+barely covered), **P-M3** (metabolic), **P-M11** (ED as a vascular signal).
 
-Хорошо укомплектованы: P-F22 (железо), P-F18 (B12/фолат), P-F14 (кожа/волосы/коллаген),
-P-M6 (кишечник, мужчины), P-F12 (кости/мышцы), P-F3 (прогестерон — там же единственный
-в базе раздел «анти-вуду», разбор бесполезных добавок).
+Well covered: P-F22 (iron), P-F18 (B12/folate), P-F14 (skin/hair/collagen), P-M6 (gut, men),
+P-F12 (bone/muscle), P-F3 (progesterone — home of the only "anti-voodoo" section in the base).
 
-**Чего нет как темы вообще, ни в одном блоке:**
-- **взаимодействия** — с гормональной контрацепцией, антидепрессантами, тиреоидными
-  препаратами, антикоагулянтами, метформином (а в опроснике мы уже спрашиваем про
-  щитовидные и антидепрессанты — данные есть, использовать их нечем);
-- **формы и качество** — хелат против оксида, триглицеридная форма против этиловых
-  эфиров, метилированные B-витамины: где разница реальна, а где маркетинг;
-- **тайминг** — что с едой, что натощак, что разносить между собой (железо и кальций,
-  цинк и медь, магний и щитовидные);
-- **чего НЕ хватает из еды** — по каким нутриентам питание реально не закрывает
-  потребность в 35–50+, а по каким «добавка вместо еды» бессмысленна;
-- **что явно не работает** — сейчас такой разбор есть только у прогестерона (P-F3).
+**Missing as topics entirely, in every block:** drug interactions (we already ask about thyroid
+meds and antidepressants in the questionnaire and can say nothing about them), forms and
+quality, timing and separation, practical logistics (frequency, how long a pack lasts), and
+a debunking layer beyond the one under progesterone.
 
 ---
 
-## 2. Рамка, которая формирует вопросы (важно для формата ответов)
+## 2. The frame that shapes the answers
 
-- **VIA-L (App Store)** — доз не пишем вообще, только «часто используют», food-first,
-  язык structure/function. Поэтому в ответах критичны **механизм и приоритет
-  (еда → форма → добавка)**, а не миллиграммы.
-- **VIA-L EXPERT** — дозы и качественная оценка изученности разрешены, поэтому просите
-  их **отдельной строкой**, чтобы я мог вложить их только в EXPERT-ветку.
-- **Гормонально-активные травы** (витекс, клопогон, дон-квай, красный клевер, ашваганда,
-  родиола, солодка, шалфей) — доза, форма, курс и срок эффекта **не пишутся никогда**,
-  их вырезает детерминированный фильтр. По ним спрашивайте только: есть ли смысл вообще,
-  с чем взаимодействуют, кому противопоказано.
-- Никаких обещаний результата и сроков («через 2–4 недели станет легче») — это claim.
+- **VIA-L (App Store)** — no milligrams at all; food-first, structure/function wording.
+  What matters in the answers: **mechanism and priority order (food → form → supplement)**,
+  plus practical usage that is not a dose.
+- **VIA-L EXPERT** — doses and a qualitative read of the evidence are allowed, so please keep
+  **doses on a separate line** so I can route them to the EXPERT branch only.
+- **Hormone-active herbs** (vitex, black cohosh, dong quai, red clover, ashwagandha, rhodiola,
+  liquorice, sage) — dose, form, course length and time-to-effect are never printed; a
+  deterministic filter strips them. Ask only: is there any point, what does it interact with,
+  who must avoid it.
+- No promises of outcome or timelines ("in 2–4 weeks you will feel better") — that is a claim.
 
----
+### The dose question, resolved (read before answering block G)
 
-## 3. Как просить отвечать (вставьте это в начало запроса)
-
-> Ответь по каждому пункту в одном формате:
-> **(1)** механизм одной фразой бытовым языком — почему это обычно работает;
-> **(2)** насколько изучено — качественно (хорошо изучено / данных мало / противоречиво),
-> без выдуманных процентов;
-> **(3)** что даёт еда и хватает ли её — конкретные продукты;
-> **(4)** доза и форма, если они доказательно важны — отдельной строкой;
-> **(5)** кому не подходит, взаимодействия с лекарствами;
-> **(6)** что по этой теме продаётся, но не работает.
-> Если по пункту данных нет — так и напиши, не достраивай.
+The amount per serving is **deferred to the person's own package**: strengths differ up to
+tenfold (vitamin D at 500 vs 5000 IU per drop, magnesium at 100 vs 400 mg per capsule), so
+"take two a day" without the label is not safer than a milligram figure — it is less safe.
+What we *can* give, and what is not a dose: **how many times a day, when, with or without
+food, what to keep apart from what, how many days it is taken**, and the arithmetic for
+buying (servings per day × 30 = servings per month).
 
 ---
 
-## 4. Вопросы
+## 3. Answer format (paste this at the top of your query)
 
-### A. Скелет по стадиям жизни
-
-1. Женщина 40–50 в перименопаузе без диагнозов: какие нутриенты в этот период
-   объективно чаще всего в дефиците и почему именно в переходе? Что из этого
-   закрывается едой, а что реально требует добавки?
-2. Тот же вопрос для постменопаузы — что меняется в приоритетах против перименопаузы?
-3. Мужчина 40–55 со снижением витальности: какие нутриенты имеют смысл как база и
-   почему? Что из «мужских формул» в аптеке — маркетинг?
-4. Существует ли доказательный «базовый минимум» для 35+ (то, что имеет смысл почти
-   всем), или подход строго по дефицитам? Если минимум есть — что в него входит?
-
-### B. По конкретной жалобе (то, что человек отмечает у нас в опроснике)
-
-5. **Запоры и тяжесть в животе** у женщин в переходе: псиллиум, магний, пробиотики,
-   пре­биотики — что работает, в каком порядке пробовать, что бесполезно?
-6. **Сон: трудное засыпание** против **ночных пробуждений** — разные ли это цели для
-   добавок? Что имеет смысл при каждом варианте, чего избегать?
-7. **Туман в голове и память** в 40–55: есть ли нутриенты с реальной поддержкой, или
-   это целиком про сон, движение и сахар?
-8. **Приливы и ночная потливость**: что из безрецептурного имеет хоть какую-то
-   доказательную опору, а что — пустое? (по травам — без доз, только смысл и риски)
-9. **Суставы, кости, потеря мышц** в менопаузе: кальций, D3, K2, коллаген, креатин,
-   белок — что доказано, что спорно, в каком порядке.
-10. **Волосы, ногти, кожа**: где это дефицит (железо, B12, цинк, белок), а где ложное
-    обещание? Работает ли коллаген перорально и в чём именно?
-11. **Тревога и раздражительность**: магний, омега-3, витамины группы B, адаптогены —
-    что из этого имеет опору, а что нет? (адаптогены — без доз и курсов)
-12. **Низкая энергия и усталость** при нормальных базовых анализах: что смотреть и что
-    имеет смысл, а что — «витаминный плацебо-набор»?
-13. **Давление на верхней границе**: калий, магний, омега-3, свёкла/нитраты — что реально
-    двигает цифры, что нет? (у нас уже есть блок про АД — нужен именно нутриентный слой)
-
-### C. Безопасность и взаимодействия (этого в базе нет вообще)
-
-14. Женщина принимает **гормональную контрацепцию или МГТ**: какие добавки и травы
-    снижают эффект или конфликтуют? Что она чаще всего покупает зря или во вред?
-15. Человек на **антидепрессантах** (СИОЗС/СИОЗСН): что нельзя сочетать и почему?
-16. **Тиреоидные препараты** (левотироксин): что и на сколько разносить по времени?
-17. **Антикоагулянты и антиагреганты**: где риск от «безобидных» добавок (омега-3,
-    куркумин, витамин E, чеснок)?
-18. **Метформин**, ИПП (омепразол и др.), статины: какие дефициты они создают со временем
-    и что при этом обычно добавляют?
-19. Какие безрецептурные добавки чаще всего дают **передозировку или вред** при
-    самоназначении в 35–55 (железо без дефицита, витамин D в мегадозах, селен, цинк,
-    витамин A)? Как это выглядит?
-
-### D. Формы, качество, тайминг
-
-20. Где форма имеет **доказанное** значение, а где это маркетинг: магний (глицинат/цитрат/
-    оксид/малат), железо (бисглицинат/сульфат), омега-3 (триглицериды/этиловые эфиры),
-    B12 (метил-/циано-), фолат (метилфолат/фолиевая), D3 против D2?
-21. Что принимать **с едой**, что **натощак**, что **разносить между собой**?
-22. Как отличить добросовестную добавку от пустой: на что смотреть на этикетке,
-    что означает сторонняя сертификация, почему «1000 мг рыбьего жира» ≠ 1000 мг EPA+DHA?
-
-### E. Что не работает (продолжение «анти-вуду»)
-
-23. Какие добавки и практики для женщин в переходе продаются активнее всего и при этом
-    не имеют доказательной опоры? (сид-циклинг, «прогестероновые кремы», дикий ямс,
-    детокс-протоколы, DIM, «adrenal support» — и что ещё)
-24. То же для мужчин 40+: бустеры тестостерона, ZMA, трибулус, «мужские комплексы» —
-    что из этого пустое и почему это продолжает продаваться?
-25. Существуют ли добавки, которые в этом возрасте **приносят вред при регулярном приёме
-    без показаний**, хотя считаются безобидными?
-
-### F. Как это подавать человеку
-
-26. Как честно объяснить, что добавка — не замена еде, сну и движению, но при этом не
-    обесценить её там, где она реально нужна? Есть ли исследования про то, что работает
-    лучше: «сначала базовые привычки» или «привычки + точечная добавка сразу»?
+> For each item answer in the same structure:
+> **(1)** mechanism in one plain-language sentence — why this usually works;
+> **(2)** how well studied — qualitatively (well established / limited data / conflicting),
+> with no invented percentages;
+> **(3)** what food already provides and whether food alone is enough — name the foods;
+> **(4)** dose and form, if they are evidence-relevant — on a separate line;
+> **(5)** who should avoid it, and interactions with medications;
+> **(6)** what is sold for this purpose but does not work.
+> If there is no evidence for an item, say so — do not fill the gap.
 
 ---
 
-## 5. Что я сделаю с ответами
+## 4. Questions
 
-1. Дополню тонкие паттерны (в первую очередь P-F19/20/21, затем P-F13/15/23/11, P-M3/M11).
-2. Заведу в KB **сквозной блок «ДОБАВКИ»** — взаимодействия, формы, тайминг, анти-вуду:
-   он общий для всех паттернов, дублировать его в каждом бессмысленно.
-3. Подниму в разборе отдельную тему «Добавки и витамины»: в VIA-L — без доз, food-first,
-   со строкой «почему это обычно работает»; в EXPERT — с дозами и строкой «на чём это
-   основано». Опираться будет на то, что человек **уже принимает** (в опроснике есть 11
-   позиций и лекарства) — чтобы не советовать заново то, что он пьёт, и ловить конфликты.
+### A. Baseline by life stage
+
+1. A woman aged 40–50 in perimenopause with no diagnoses: which nutrients are most often
+   insufficient in this stage, and why specifically during the transition? Which of them can
+   be covered by food, and which realistically need a supplement?
+2. Same question for postmenopause — how do the priorities change compared with perimenopause?
+3. A man aged 40–55 with declining vitality: which nutrients make sense as a base, and why?
+   What in typical "men's formulas" is marketing?
+4. Is there an evidence-based "basic minimum" for people over 35 (something that makes sense
+   for almost everyone), or should it strictly follow measured deficiencies? If a minimum
+   exists, what is in it?
+
+### B. By presenting complaint (these are what our questionnaire actually collects)
+
+5. **Constipation and abdominal heaviness** in women in the transition: psyllium, magnesium,
+   probiotics, prebiotics — what works, in what order should they be tried, what is useless?
+6. **Sleep: difficulty falling asleep** versus **night awakenings** — are these different
+   targets for supplementation? What makes sense for each, and what should be avoided?
+7. **Brain fog and memory** at 40–55: are there nutrients with real support, or is this
+   entirely about sleep, movement and blood sugar?
+8. **Hot flashes and night sweats**: what over-the-counter options have any evidential support
+   and what is empty? (for herbs — no doses, only whether there is a point, and the risks)
+9. **Joints, bone and muscle loss** in menopause: calcium, D3, K2, collagen, creatine, protein
+   — what is established, what is disputed, and in what order of priority?
+10. **Hair, nails, skin**: where is this a genuine deficiency (iron, B12, zinc, protein) and
+    where is it a false promise? Does oral collagen work, and for what exactly?
+11. **Anxiety and irritability**: magnesium, omega-3, B vitamins, adaptogens — which have
+    support and which do not? (adaptogens — no doses or course lengths)
+12. **Low energy and fatigue** with normal basic bloodwork: what should be looked at, what
+    makes sense, and what is just a "vitamin placebo set"?
+13. **Blood pressure at the upper end of normal**: potassium, magnesium, omega-3,
+    beetroot/nitrates — what actually moves the numbers and what does not? (we already have a
+    blood-pressure block; this is specifically the nutrient layer)
+
+### C. Safety and interactions (absent from our base entirely)
+
+14. A woman on **hormonal contraception or MHT**: which supplements and herbs reduce the
+    effect or conflict with it? What does she most often buy in vain, or to her harm?
+15. A person on **antidepressants** (SSRI/SNRI): what must not be combined, and why?
+16. **Thyroid medication** (levothyroxine): what needs to be separated in time, and by how much?
+17. **Anticoagulants and antiplatelets**: where is the risk from "harmless" supplements
+    (omega-3, curcumin, vitamin E, garlic)?
+18. **Metformin**, PPIs (omeprazole and similar), statins: which deficiencies do they create
+    over time, and what is usually added because of that?
+19. Which over-the-counter supplements most often cause **overdose or harm** when self-prescribed
+    at 35–55 (iron without deficiency, mega-dose vitamin D, selenium, zinc, vitamin A)? How does
+    that present?
+
+### D. Forms, quality, timing
+
+20. Where does form have **proven** significance and where is it marketing: magnesium
+    (glycinate/citrate/oxide/malate), iron (bisglycinate/sulfate), omega-3 (triglyceride vs
+    ethyl ester), B12 (methyl- vs cyano-), folate (methylfolate vs folic acid), D3 vs D2?
+21. What should be taken **with food**, what **on an empty stomach**, and what must be **kept
+    apart from what** (iron and calcium, zinc and copper, magnesium and thyroid medication,
+    iron and coffee/tea)?
+22. How can a person tell a decent supplement from an empty one: what to look for on the label,
+    what third-party certification actually means, and why "1000 mg fish oil" ≠ 1000 mg EPA+DHA?
+
+### E. What does not work (extending the anti-voodoo layer)
+
+23. Which supplements and practices for women in the transition are marketed hardest while
+    having no evidential support? (seed cycling, "progesterone creams", wild yam, detox
+    protocols, DIM, "adrenal support" — and what else)
+24. The same for men over 40: testosterone boosters, ZMA, tribulus, "men's complexes" — what is
+    empty, and why does it keep selling?
+25. Are there supplements that at this age **cause harm when taken regularly without indication**,
+    despite being considered harmless?
+
+### F. How to present it to a person
+
+26. How does one honestly convey that a supplement is not a substitute for food, sleep and
+    movement, without devaluing it where it genuinely is needed? Is there research on whether
+    "basic habits first" works better than "habits plus a targeted supplement from the start"?
+
+### G. Practical usage without prescribing a dose (this is the new block — most important for the product)
+
+We do not print milligrams. We want to give the person what does not depend on their specific
+product: how often, when, with what, for how long. Please answer with that constraint in mind.
+
+27. For the commonly used supplements at this age (magnesium, vitamin D, omega-3, iron, B12,
+    zinc, psyllium, probiotics, collagen, creatine): **how many times a day is each normally
+    taken, and at what time of day**, and does splitting the intake actually matter or is
+    once daily equivalent?
+28. For each of them: **with food, after food, or on an empty stomach** — and where does this
+    genuinely change absorption or tolerance rather than being folklore?
+29. Which of them are taken **continuously** and which **in cycles or seasonally** (for example
+    vitamin D in winter, iron only until stores are replenished)? Where is continuous use
+    without monitoring a bad idea?
+30. Is it safe and reasonable to tell a person "take the serving stated on your package, this
+    many times a day", given that product strengths vary widely? What is the safest way to
+    phrase practical guidance when we deliberately do not name a dose?
+31. When a product's stated serving differs markedly from the usual reference amount, what
+    should a person notice on the label — and at what point does this become a question for
+    a specialist rather than a shopping decision?
+32. Which combinations are commonly taken together at the **same** intake (for example D3 with
+    omega-3 or with a fatty meal), and which must be split across the day? A practical
+    "morning / lunch / evening" layout for a typical set would be ideal.
+33. How long does it usually take before a person could reasonably notice anything from each of
+    these — described without promising a result (we are not allowed to promise outcomes, but
+    we want to prevent someone from stopping after three days)?
+
+---
+
+## 5. What I do with the answers
+
+1. Fill the thin patterns — P-F19/20/21 first, then P-F13/15/23/11 and P-M3/M11.
+2. Add a **cross-cutting "SUPPLEMENTS" block** to the KB — interactions, forms, timing, practical
+   usage, anti-voodoo. It is shared by all patterns; duplicating it in each is pointless.
+3. Raise a dedicated "Supplements & vitamins" theme in the overview: VIA-L without doses,
+   food-first, with the "why this usually works" line; EXPERT with doses and the "what this is
+   based on" line. It builds on what the person **already takes** (the questionnaire holds 11
+   items plus medications) — so it never re-suggests what they are on, and can flag conflicts.
+4. Amount per intake stays with the package; from us — frequency, timing, what to separate,
+   duration, and the buying arithmetic (servings per day × 30).
+5. Cross-link with the day plan: the Morning / Day / Evening reminder lines carry the "with
+   food / after food" instruction, and the supplements theme points there instead of repeating it.
