@@ -3993,6 +3993,9 @@ function selectKBPatterns(data) {
     // детектор/промпт) + анемический кластер (усталость+сердцебиение) у ещё менструирующих. Пост-меноп.
     // новый дефицит — красный флаг (искать причину), KB это разбирает; здесь не форсим.
     add('P-F22', data.heavy_period === 'yes' || has(horm,'heavy_period')
+      // Ферритин: железо падает РАНЬШЕ анемии, и дефицит без анемии уже сажает энергию —
+      // поэтому порог по запасам, а не по гемоглобину. Порога не было вовсе (поле не читалось).
+      || (num(labs.ferritin) != null && num(labs.ferritin) < 30)
       || has(sym,'ice_craving')                                  // пикацизм — специфичный признак железодефицита
       || (has(sym,'restless_legs') && has(sym,'fatigue'))        // беспокойные ноги + усталость
       || (data.cycle_status !== 'absent' && phase !== 'post'
@@ -4012,6 +4015,9 @@ function selectKBPatterns(data) {
       || num(labs.glucose) > 5.6 || num(labs.hba1c) > 5.7 || num(labs.homa) > 2.5);
     // P-M4 воспаление
     add('P-M4', has(sym,'joint','movement_stiff') || (visceral != null && visceral > 12) || num(labs.crp) > 3);
+    // Скрытый железодефицит у мужчин — в списке того, что исключают ДО любых добавок при «нет сил»
+    // (Infa Cloude/E, A/3). Тянем на P-M1: там разбирается витальность.
+    if (num(labs.ferritin) != null && num(labs.ferritin) < 30) add('P-M1', true);
     // P-M5 щитовидка
     add('P-M5', (tempDown && lowEnergy) || has(sym,'cold','cool_sensitivity') || has(meds,'thyroid','energy_factor') || (num(labs.tsh) != null && num(labs.tsh) > 2.5));
     // P-M6 кишечник
@@ -4672,6 +4678,30 @@ function buildUserMessage(data, lang, tier) {
     + (data.lifestyle_notes ? 'События/контекст недели (со слов клиента — учитывай как бытовое объяснение сдвигов метрик, не как ухудшение): ' + data.lifestyle_notes + '\n' : '')
     + 'Физическая активность · виды: ' + _J(data.act_types) + ' | частота: ' + _V(data.act_freq) + ' | восстановление после нагрузки: ' + _V(data.act_recovery) + (data.move_today ? ' | движение за прошедшие сутки: ' + ({sedentary:'сидячий день',light:'немного двигался',walk:'много ходил',cardio:'кардио/бег',strength:'силовая тренировка',active:'активный день'}[data.move_today] || data.move_today) : '') + '\n'
     + 'Добавки (принимает): ' + _J(data.supplements) + '\n'
+    // АНАЛИЗЫ — контекст, НЕ вердикт. Значения приходят в канонических единицах (пересчёт на
+    // клиенте), давность в месяцах: результат двухлетней давности не читается как сегодняшний.
+    // Главная польза не в том, чтобы что-то назвать, а в том, чтобы ГАСИТЬ лишние советы —
+    // не предлагать железо тому, у кого запасы в порядке.
+    + (function(l){
+        if(!l || typeof l!=='object') return '';
+        const U={ferritin:'нг/мл',crp:'мг/л',tsh:'мЕд/л',vitd:'нмоль/л',b12:'пг/мл',glucose:'ммоль/л',
+                 hba1c:'%',ldl:'ммоль/л',tg:'ммоль/л',apob:'г/л',cort:'нмоль/л'};
+        const N={ferritin:'ферритин',crp:'CRP',tsh:'ТТГ',vitd:'витамин D (25-OH)',b12:'B12',
+                 glucose:'глюкоза натощак',hba1c:'HbA1c',ldl:'ЛПНП',tg:'триглицериды',apob:'ApoB',cort:'кортизол утро'};
+        const age=l._age||{};
+        const parts=Object.keys(l).filter(k=>k!=='_age'&&N[k]).map(k=>
+          N[k]+' ' + l[k] + ' ' + (U[k]||'') + (age[k]!=null ? (age[k]<=1?' (свежий)':' (' + age[k] + ' мес назад)') : ''));
+        if(!parts.length) return '';
+        return 'АНАЛИЗЫ (ввёл клиент сам, единицы уже приведены): ' + parts.join(' | ') + '\n'
+          + '→ Это КОНТЕКСТ, не вердикт. Можно: сопоставить с обычным референсом дескриптивно, '
+          + 'учесть при выборе тем и УБРАТЬ то, что человеку не нужно (не предлагать железо при нормальных запасах, '
+          + 'витамин D при достаточном уровне). НЕЛЬЗЯ: называть болезнь или ставить диагноз по числу, '
+          + 'писать «у вас <болезнь>», трактовать одно значение изолированно, пугать. Результат старше года — '
+          + 'называй его старым и не строй на нём выводов. Разбор анализов и назначения — работа врача, '
+          + 'скажи это прямо, если число заметно вне обычного диапазона. '
+          + 'ЦИФРА В АНАЛИЗЕ НЕ ОТКРЫВАЕТ ПРАВО НА ДОЗУ: даже при явно низком значении НЕ пиши мг/мкг/МЕ '
+          + 'и не назначай схему приёма — восполнение подбирает врач, наше дело назвать направление и еду.\n';
+      })(data.labs)
     + 'Лекарства: ' + _medsStr + (data.meds_other ? ' | другие: ' + data.meds_other : '') + '\n'
     + 'Хронический стресс: ' + (data.chronic_stress || '—') + ' | симптомы кортизола: ' + _J(data.cortisol_symp) + '\n'
     + 'Гормональные симптомы: ' + ((Array.isArray(data.horm_symptoms) && data.horm_symptoms.length) ? _J(data.horm_symptoms) : ((data.horm_female || data.horm_male) ? (Object.entries(Object.assign({}, data.horm_female || {}, data.horm_male || {})).map(function(e){ return e[0] + ' (' + e[1] + ')'; }).join(', ') || '—') : '—'))  + (data.horm_intensity ? ' | интенсивность: ' + data.horm_intensity : '') + '\n'
