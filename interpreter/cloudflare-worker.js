@@ -514,7 +514,25 @@ async function wellnessGuardrail(text, env, langName, lang, ctx) {
   // что в wellnessHardScrub: предложение с юр-маркером — это дисклеймер, а не риск.
   const _DISC_RE = /[^.!?\n]*(?:информацион|не заменя|не явля|не є медичн|консультац[а-яё]*\s+врач|проконсультируйтесь|проконсультуйтеся|обратитесь к врач|not a medical|consult your doctor|informational purposes|does not replace|не медицинск|дозиров|дозуванн)[^.!?\n]*[.!?]?/gi;
   const scanText = (text || '').replace(_DISC_RE, ' ');
-  const _hit = text ? scanText.match(AI_RISK_RE) : null;
+  // ОТРИЦАНИЯ НЕ СЧИТАЮТСЯ РИСКОМ. Модель специально пишет «это НЕ болезнь, а естественный
+  // процесс», «это говорит НЕ о болезни» — то есть делает ровно то, чего мы хотим, — а сторож
+  // ловил слово и гнал текст в дорогую перегенерацию. Смотрим начало предложения до совпадения:
+  // есть отрицание — совпадение не в счёт.
+  // ⚠️ \b в JS считает словом только латиницу — «\bне\b» в кириллическом тексте НЕ срабатывает.
+  // Границы задаём юникодно, иначе всё правило про отрицания молча мёртвое.
+  const _NEG_RE = /(?:^|[^\p{L}])(?:не|нет|ні|not|no|never|kein|nicht|sin|sem|non|nie)(?:[^\p{L}]|$)/iu;
+  function _realHit(t) {
+    if (!t) return null;
+    const re = new RegExp(AI_RISK_RE.source, 'gi');
+    let m;
+    while ((m = re.exec(t))) {
+      const from = Math.max(0, t.lastIndexOf('.', m.index), t.lastIndexOf('!', m.index),
+                            t.lastIndexOf('?', m.index), t.lastIndexOf('\n', m.index));
+      if (!_NEG_RE.test(t.slice(from, m.index))) return m;   // отрицания перед ним нет → настоящий риск
+    }
+    return null;
+  }
+  const _hit = text ? _realHit(scanText) : null;
   if (!text || !_hit) { log('clean'); return text; }   // Filter 1: нет risk-паттерна → без LLM-вызовов
   // Что именно сработало + короткий контекст → в учёт (ai_usage.note). Без этого причина
   // перегенерации невидима: 9 разборов из 10 переписывались, и понять почему было нельзя.
