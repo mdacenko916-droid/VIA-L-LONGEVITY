@@ -512,7 +512,7 @@ async function wellnessGuardrail(text, env, langName, lang, ctx) {
   // слово-триггер «диагноз» оставалось в каждом ответе. Из-за этого Filter 1 срабатывал ВСЕГДА:
   // мы платили за self-check на каждом разборе и переписывали 9 текстов из 10. Тот же приём,
   // что в wellnessHardScrub: предложение с юр-маркером — это дисклеймер, а не риск.
-  const _DISC_RE = /[^.!?\n]*(?:информацион|не заменя|не явля|не является|консультац[а-яё]*\s+врач|обратитесь к врач|not a medical|informational purposes|does not replace|не медицинск)[^.!?\n]*[.!?]?/gi;
+  const _DISC_RE = /[^.!?\n]*(?:информацион|не заменя|не явля|не є медичн|консультац[а-яё]*\s+врач|проконсультируйтесь|проконсультуйтеся|обратитесь к врач|not a medical|consult your doctor|informational purposes|does not replace|не медицинск|дозиров|дозуванн)[^.!?\n]*[.!?]?/gi;
   const scanText = (text || '').replace(_DISC_RE, ' ');
   const _hit = text ? scanText.match(AI_RISK_RE) : null;
   if (!text || !_hit) { log('clean'); return text; }   // Filter 1: нет risk-паттерна → без LLM-вызовов
@@ -1863,6 +1863,29 @@ function _structRepair(text) {
   }, intro.replace(/\s+$/, ''));
 }
 
+// Требование App Review: там, где разбор касается лекарств, добавок или анализов, обязана
+// стоять плашка «не диагноз + не меняйте дозировку без врача». Делаем КОДОМ: инструкция в
+// промпте теряется (проверено на строке «На чём это основано»), а тут цена ошибки — модерация.
+const _MED_DISCLAIMER = {
+  ru:'⚕️ Не является медицинским диагнозом. Проконсультируйтесь с врачом перед изменением дозировки лекарств или добавок.',
+  uk:'⚕️ Не є медичним діагнозом. Проконсультуйтеся з лікарем перед зміною дозування ліків або добавок.',
+  en:'⚕️ Not a medical diagnosis. Consult your doctor before changing the dosage of any medication or supplement.',
+  es:'⚕️ No es un diagnóstico médico. Consulta a tu médico antes de cambiar la dosis de medicamentos o suplementos.',
+  de:'⚕️ Keine medizinische Diagnose. Sprich mit deiner Ärztin oder deinem Arzt, bevor du die Dosierung von Medikamenten oder Nahrungsergänzungen änderst.',
+  pt:'⚕️ Não é um diagnóstico médico. Consulte o seu médico antes de alterar a dosagem de medicamentos ou suplementos.',
+  fr:'⚕️ Ceci n’est pas un diagnostic médical. Consultez votre médecin avant de modifier la posologie d’un médicament ou d’un complément.',
+  pl:'⚕️ To nie jest diagnoza medyczna. Skonsultuj się z lekarzem przed zmianą dawkowania leków lub suplementów.',
+  it:'⚕️ Non è una diagnosi medica. Consulta il medico prima di modificare il dosaggio di farmaci o integratori.',
+  he:'⚕️ אינו אבחנה רפואית. התייעצו עם רופא לפני שינוי מינון של תרופות או תוספים.',
+  ja:'⚕️ これは医学的診断ではありません。薬やサプリメントの用量を変更する前に医師にご相談ください。',
+  ko:'⚕️ 의학적 진단이 아닙니다. 약이나 보충제의 용량을 바꾸기 전에 의사와 상의하세요.',
+};
+function _needsMedDisclaimer(data) {
+  const supp = Array.isArray(data.supplements) ? data.supplements.filter(x => x && String(x).indexOf('none') < 0) : [];
+  const meds = Array.isArray(data.meds) ? data.meds.filter(Boolean) : (data.meds ? [data.meds] : []);
+  return !!(supp.length || meds.length || (data.labs && Object.keys(data.labs).length));
+}
+
 async function handleAnalyze(request, env, corsHeaders, ctx) {
   const { data, lang, code, tier, structured } = await request.json();
   const langMap = {
@@ -2006,6 +2029,16 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
     } catch (e) { /* скраб не должен ронять ответ */ }
     // Скраб мог вырезать строки внутри блока → структуру чиним ПОСЛЕ него, последним шагом.
     if (structured) { try { text = _structRepair(text); } catch (e) { /* ремонт не должен ронять ответ */ } }
+  }
+
+  // Плашка App Review: разбор задел лекарства/добавки/анализы → строка про дозировку обязана
+  // быть. Ставим сами и только если её ещё нет (модель часто пишет свой вариант дисклеймера).
+  if (text && !result.error && _needsMedDisclaimer(data || {})) {
+    const _d = _MED_DISCLAIMER[lang] || _MED_DISCLAIMER.en;
+    // Проверяем НАШУ плашку по её маркеру, а не по слову «дозировка»: модель употребляет это
+    // слово в обычном тексте («важно убедиться, что дозировка подходит»), и сторож глушил
+    // обязательную строку. Для App Review плашка должна стоять всегда.
+    if (text.indexOf('⚕️') < 0) text = text.replace(/\s*$/, '') + '\n\n' + _d;
   }
 
   // Ингест в карточку кабинета: срез биометрики + ИИ-разбор. Привязка по коду доступа.
@@ -4347,7 +4380,10 @@ function _suppCrossChecks(data) {
 
   if (!out.length) return '';
   return '\n⚠️ СВЕРКИ ПО ДОБАВКАМ, СРАБОТАВШИЕ У ЭТОГО КЛИЕНТА — КАЖДУЮ СКАЗАТЬ ОБЯЗАТЕЛЬНО (это безопасность, а не украшение; '
-    + 'если тема дня о другом — всё равно скажи, темой «Добавки» или строкой внутри ближайшей подходящей):\n'
+    + 'если тема дня о другом — всё равно скажи, темой «Добавки» или строкой внутри ближайшей подходящей). '
+    + 'ПРОЗРАЧНОСТЬ ИСТОЧНИКА — обязательна: в каждой такой строке назови, ОТКУДА она взялась, словами клиента '
+    + '(«вы указали, что принимаете …», «по введённому вами анализу ТТГ», «вы отметили веганское питание»). '
+    + 'Человек должен понимать, почему приложение вообще заговорило об этом, а не получать совет ниоткуда:\n'
     + out.map(x => '• ' + x).join('\n') + '\n';
 }
 
@@ -6919,7 +6955,7 @@ async function handleCabinetSpecialists(request, env, corsHeaders){
   if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
   // pass_hash НЕ отдаём наружу.
   const { results } = await env.DB.prepare(
-    `SELECT s.id,s.name,s.login,s.email,s.lang,s.specialty,s.role,s.ref_code,s.access_status,s.access_paid_until,s.status,s.created_at,
+    `SELECT s.id,s.name,s.login,s.email,s.lang,s.specialty,s.role,s.ref_code,s.access_status,s.access_paid_until,s.platform_since,s.status,s.created_at,
             (SELECT count(*) FROM clients c WHERE c.specialist_id=s.id) AS clients
      FROM specialists s ORDER BY s.id`
   ).all();
@@ -7105,6 +7141,8 @@ async function handleCabinetSpecialistSave(request, env, corsHeaders){
   const refCode   = String(s.ref_code || '').trim().toUpperCase();
   const accessSt  = (s.access_status === 'lapsed') ? 'lapsed' : 'active';
   const paidUntil = String(s.access_paid_until || '').trim() || null;
+  // Пустая строка = ОЧИСТИТЬ (не начислять абонплату). Именно поэтому пишем null, а не пропускаем поле.
+  const platformSince = String(s.platform_since || '').trim() || null;
   const status    = (s.status === 'disabled') ? 'disabled' : 'active';
   const password  = String(s.password || '');
 
@@ -7121,12 +7159,12 @@ async function handleCabinetSpecialistSave(request, env, corsHeaders){
     if(password){
       const ph = await cabinetHashPassword(password);
       await env.DB.prepare(
-        'UPDATE specialists SET name=?,login=?,email=?,pass_hash=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,status=? WHERE id=?'
-      ).bind(name, login, email, ph, lang, specialty, role, refCode, accessSt, paidUntil, status, id).run();
+        'UPDATE specialists SET name=?,login=?,email=?,pass_hash=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,platform_since=?,status=? WHERE id=?'
+      ).bind(name, login, email, ph, lang, specialty, role, refCode, accessSt, paidUntil, platformSince, status, id).run();
     } else {
       await env.DB.prepare(
-        'UPDATE specialists SET name=?,login=?,email=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,status=? WHERE id=?'
-      ).bind(name, login, email, lang, specialty, role, refCode, accessSt, paidUntil, status, id).run();
+        'UPDATE specialists SET name=?,login=?,email=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,platform_since=?,status=? WHERE id=?'
+      ).bind(name, login, email, lang, specialty, role, refCode, accessSt, paidUntil, platformSince, status, id).run();
     }
     return jsonResponse({ok:true, id}, corsHeaders);
   }

@@ -656,6 +656,11 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
         <input class="form-input" id="s-paid-until" type="date">
       </div>
       <div class="form-row" style="margin:0">
+        <label data-i18n="sp_platform_since">На платформе с (абонплата)</label>
+        <input class="form-input" id="s-platform-since" type="date">
+        <div style="font-size:11px;color:#888;margin-top:4px;" data-i18n="sp_platform_since_hint">С этой даты начисляется €30/мес. Пусто — абонплату не начисляем (свой специалист).</div>
+      </div>
+      <div class="form-row" style="margin:0">
         <label data-i18n="f_status">Статус</label>
         <select class="form-select" id="s-status">
           <option value="active" data-i18n="st_active">Активен</option>
@@ -990,6 +995,8 @@ const T = {
   u_years:{ru:"л.",uk:"р.",en:"y.o.",es:"años",de:"J.",pt:"anos",fr:"ans",pl:"lat",it:"anni",he:"שנים",ja:"歳",ko:"세"},
   hdr_edit:{ru:"✎ Редактировать",uk:"✎ Редагувати",en:"✎ Edit",es:"✎ Editar",de:"✎ Bearbeiten",pt:"✎ Editar",fr:"✎ Modifier",pl:"✎ Edytuj",it:"✎ Modifica",he:"✎ עריכה",ja:"✎ 編集",ko:"✎ 편집"},
   hdr_delete:{ru:"✕ Удалить",uk:"✕ Видалити",en:"✕ Delete",es:"✕ Eliminar",de:"✕ Löschen",pt:"✕ Excluir",fr:"✕ Supprimer",pl:"✕ Usuń",it:"✕ Elimina",he:"✕ מחיקה",ja:"✕ 削除",ko:"✕ 삭제"},
+  sp_platform_since:{ru:"На платформе с (абонплата)",uk:"На платформі з (абонплата)",en:"On the platform since (fee)",es:"En la plataforma desde (cuota)",de:"Auf der Plattform seit (Gebühr)",pt:"Na plataforma desde (taxa)",fr:"Sur la plateforme depuis (abonnement)",pl:"Na platformie od (abonament)",it:"Sulla piattaforma da (canone)",he:"בפלטפורמה מאז (דמי מנוי)",ja:"プラットフォーム参加日（料金）",ko:"플랫폼 합류일 (요금)"},
+  sp_platform_since_hint:{ru:"С этой даты начисляется €30/мес. Пусто — абонплату не начисляем (свой специалист).",uk:"З цієї дати нараховується €30/міс. Порожньо — абонплату не нараховуємо (свій спеціаліст).",en:"The €30/mo fee accrues from this date. Empty — no platform fee (in-house specialist).",es:"La cuota de €30/mes se acumula desde esta fecha. Vacío: sin cuota (especialista propio).",de:"Ab diesem Datum fallen €30/Monat an. Leer — keine Gebühr (eigener Spezialist).",pt:"A taxa de €30/mês começa nesta data. Vazio — sem taxa (especialista próprio).",fr:"L'abonnement de 30 €/mois court à partir de cette date. Vide — pas d'abonnement (spécialiste interne).",pl:"Od tej daty naliczamy €30/mies. Puste — bez abonamentu (własny specjalista).",it:"Il canone di €30/mese decorre da questa data. Vuoto — nessun canone (specialista interno).",he:"דמי מנוי של €30 לחודש נצברים מתאריך זה. ריק — ללא דמי מנוי (מומחה פנימי).",ja:"この日付から月€30が発生します。空欄ならプラットフォーム料なし（自社の専門家）。",ko:"이 날짜부터 월 €30이 부과됩니다. 비워두면 요금 없음(내부 전문가)."},
   // — панель «Бухгалтерия» (партия 9, владелец) —
   nav_billing:{ru:"€ Бухгалтерия",uk:"€ Бухгалтерія",en:"€ Billing",es:"€ Contabilidad",de:"€ Buchhaltung",pt:"€ Contabilidade",fr:"€ Comptabilité",pl:"€ Księgowość",it:"€ Contabilità",he:"€ הנהלת חשבונות",ja:"€ 会計",ko:"€ 정산"},
   bl_title:{ru:"Бухгалтерия по специалистам",uk:"Бухгалтерія за спеціалістами",en:"Specialist billing",es:"Contabilidad por especialista",de:"Abrechnung nach Spezialisten",pt:"Contabilidade por especialista",fr:"Comptabilité par spécialiste",pl:"Rozliczenia specjalistów",it:"Contabilità per specialista",he:"הנהלת חשבונות לפי מומחה",ja:"専門家ごとの会計",ko:"전문가별 정산"},
@@ -1676,6 +1683,7 @@ function fillSpecModal(s){
   document.getElementById('s-refcode').value  = s.ref_code || '';
   document.getElementById('s-access').value   = s.access_status || 'active';
   document.getElementById('s-paid-until').value = s.access_paid_until || '';
+  document.getElementById('s-platform-since').value = s.platform_since || '';
   document.getElementById('s-status').value   = s.status || 'active';
   document.getElementById('specModalError').style.display = 'none';
 }
@@ -1710,6 +1718,7 @@ async function saveSpecialist(){
     ref_code:       document.getElementById('s-refcode').value.trim().toUpperCase(),
     access_status:  document.getElementById('s-access').value,
     access_paid_until: document.getElementById('s-paid-until').value || '',
+    platform_since:    document.getElementById('s-platform-since').value || '',   // пусто = не начислять абонплату
     status:         document.getElementById('s-status').value,
   };
   if(editingSpecId) spec.id = editingSpecId;
