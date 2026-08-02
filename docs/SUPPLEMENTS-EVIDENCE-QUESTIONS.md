@@ -263,3 +263,82 @@ product: how often, when, with what, for how long. Please answer with that const
     the timing of any supplement across the menstrual cycle matters (given that our app knows
     the cycle phase), or is cycle-linked dosing entirely a marketing construct like seed
     cycling?
+
+---
+
+# ROUND 3 — тонкие паттерны базы знаний (заведено 2026-08-02)
+
+**Зачем.** Сквозной блок про добавки вложен, P-F19 (пищеварение) и P-F13 (давление) наполнены
+из первого круга. Остальные тонкие блоки наполнять **нечем** — материала под них в N-11 нет,
+а сочинять в базу знаний нельзя. Это вопросы ровно под них.
+
+| Паттерн | Тема | Сейчас |
+|---|---|---|
+| P-F20 | Тазовое дно, недержание | 275 знаков |
+| P-F21 | Здоровье груди | 383 знака |
+| P-F15 | Урогенитальный комфорт (GSM), интимное здоровье | 1–3 упоминания |
+| P-F23 | Гормональная (менструальная) мигрень | 1–3 упоминания |
+| P-F11 | Кишечник и микробиом у женщин | про/пребиотики не раскрыты |
+| P-M3 | Метаболический синдром у мужчин | 1–3 упоминания |
+| P-M11 | ЭД как сосудистый сигнал | 1 упоминание |
+
+**Формат ответа — тот же** (вставить в начало запроса): механизм одной фразой; насколько изучено
+качественно, без выдуманных процентов; что даёт еда и хватает ли её; доза и форма отдельной
+строкой (уйдёт только в EXPERT); кому не подходит и взаимодействия; что продаётся и не работает.
+Гормонально-активные травы — без дозы, формы и курса, только смысл и риски.
+
+**Дополнительно к каждому блоку:** что из этого может увидеть носимый трекер (ВСР, сон, пульс
+покоя, температура кожи, дыхание) — и, что важнее, чего он увидеть НЕ может, чтобы мы не строили
+выводы на несуществующем якоре.
+
+## Вопросы
+
+40. **Pelvic floor and continence in women 40–60.** What actually works, in what order: pelvic floor
+    muscle training (supervised versus app/home), weight loss, bladder training, treatment of
+    constipation and chronic cough, vaginal oestrogen (as a category, not a prescription)? How large
+    is the effect of each, how long before a fair trial has been given, and what should never be
+    self-managed? What is sold for this (devices, "bladder support" supplements, cranberry, collagen)
+    and has no support?
+41. **Nutrition and the pelvic floor:** is there any evidence-based dietary contribution at all
+    (fibre and constipation as a load factor, caffeine and alcohol as bladder irritants, hydration
+    myths), or is this entirely a training question?
+42. **Breast health and nutrition in midlife.** Which dietary factors have real evidence for breast
+    health and for benign symptoms (mastalgia, cyclical tenderness): alcohol, body weight and fat
+    distribution, fibre, soy foods versus soy extracts, dairy, Mediterranean pattern? Where does the
+    evidence stop and marketing begin (evening primrose oil, iodine, vitamin E, DIM, "estrogen
+    detox")? What are the red flags that must go to a doctor without delay?
+43. **Genitourinary syndrome of menopause (GSM).** Non-prescription options first: moisturisers
+    versus lubricants (what is the difference and what does each actually do), pelvic floor work,
+    sexual activity itself, what to avoid (soaps, douching, glycerin/perfumed products). Which
+    over-the-counter products marketed for vaginal health are useless or harmful? How should we
+    talk about this warmly and without shame in a wellness app, and where is the honest boundary
+    at which we must say "this is a doctor's conversation"?
+44. **Hormonal (menstrual) migraine in the transition.** How is it recognised (timing relative to the
+    cycle, what distinguishes it from other headaches), what non-pharmacological levers have real
+    support (sleep regularity, meal timing and skipped meals, hydration, caffeine withdrawal,
+    aerobic exercise, magnesium, riboflavin, CoQ10 — which of these hold up)? What worsens it in
+    perimenopause specifically? Red flags that mean urgent assessment rather than self-management.
+45. **Gut and microbiome in women 40–60.** Beyond constipation (already covered): what does the
+    evidence support for bloating, altered bowel habit and general gut comfort in this age group —
+    fibre types and how to increase them without worsening bloating, fermented foods versus
+    probiotic capsules, low-FODMAP as a temporary tool, the role of stress and sleep on gut symptoms?
+    Does menopause itself change the microbiome in a way that matters practically, or is that
+    overstated? Which tests ("gut microbiome analysis", food-sensitivity IgG panels) are not worth
+    the money?
+46. **Metabolic syndrome in men over 40.** What is the realistic order of levers (weight, sleep,
+    alcohol, resistance training, dietary pattern), and how much does each move the actual markers?
+    Where do supplements fit at all — is there anything beyond food and movement with a real signal?
+    What is the honest relationship between visceral fat, testosterone and metabolic markers — which
+    causes which, and what does correcting the metabolic side actually do to symptoms?
+47. **Erectile dysfunction as a vascular signal in men over 40.** How strong and how early is the
+    association with cardiovascular disease — is ED genuinely a "canary" and over what time horizon?
+    What lifestyle interventions have real evidence (exercise type and dose, weight, smoking,
+    alcohol, sleep apnoea treatment)? What is sold over the counter and does not work or is
+    dangerous (yohimbe, "male enhancement" blends, adulterated products)? How should a wellness app
+    raise this topic without shaming and without diagnosing — and what makes it a doctor's
+    conversation rather than a lifestyle one?
+48. **Wearable anchors, honestly.** For each of the topics above (pelvic floor, breast, GSM,
+    migraine, gut, metabolic, ED): is there any validated signal in consumer wearable data (HRV,
+    sleep stages, resting heart rate, skin temperature, respiratory rate) that legitimately relates
+    to it? Where the answer is "none", say so plainly — we need to know where we must not build an
+    inference on a non-existent anchor.
