@@ -453,7 +453,7 @@ const GUARDRAIL_FALLBACK = {
 // exclusion-claim: «это НЕ X, а Y» / «приборы показывают, что не X» — модель уверенно ИСКЛЮЧАЕТ причину, которую
 // не измеряла, ровно так же недопустимо, как уверенно её УТВЕРЖДАТЬ (см. AI_SAFETY_RULES). Промпт-запрет один
 // вероятностный не удержал (живой smoke 2026-07-11: «это не возрастное, а усталость» проехало) → добавлено в Filter 1.
-const AI_RISK_RE = /(diagnos|\bdisease\b|\bdisorder\b|\bsyndrome\b|patholog|\btreatment\b|\btherap|\bmeans that\b|\bindicates\b|\bproves\b|\bdirect(?:ly)?\s+(?:result|consequence|effect)|directly\s+affect|this\s+is\s+not\b.{0,40}\bbut\b|device[s]?\s+show|диагноз|болезн|заболеван|синдром|патолог|означает|свидетельств|подтвержда|является причиной|вызвал|привод(?:ит|ят) к|привёл к|прям[а-яё]*\s+следстви|прям[а-яё]*\s+результат|напрямую\s+влия|это\s+не\s+возрастн[а-яё]*|это\s+не\s+гормональн[а-яё]*|приборы?\s+показыва|прибор[а-яё]*\s+не\s+(?:измеря|показыва)|\+[^=+\n]{0,60}=\s*[а-яёa-z])/i;
+const AI_RISK_RE = /(diagnos|\bdisease\b|\bdisorder\b|\bsyndrome\b|patholog|\btreatment\b|\btherap|\bmeans that\b|\bindicates\b|\bproves\b|\bdirect(?:ly)?\s+(?:result|consequence|effect)|directly\s+affect|this\s+is\s+not\b.{0,40}\bbut\b|device[s]?\s+show|диагноз|болезн|заболеван|синдром|патолог|означа[а-яё]*[^.\n]{0,60}(?:у вас|наличи[ея]|болезн|заболеван|синдром|патолог|диагноз)|свидетельств|подтвержда|является причиной(?:[^.\n]{0,60}(?:у вас|наличи[ея]|болезн|заболеван|синдром|патолог|диагноз))|вызвал|привод(?:ит|ят) к(?:[^.\n]{0,60}(?:у вас|наличи[ея]|болезн|заболеван|синдром|патолог|диагноз))|привёл к|прям[а-яё]*\s+следстви(?:[^.\n]{0,60}(?:у вас|наличи[ея]|болезн|заболеван|синдром|патолог|диагноз))|прям[а-яё]*\s+результат(?:[^.\n]{0,60}(?:у вас|наличи[ея]|болезн|заболеван|синдром|патолог|диагноз))|напрямую\s+влия(?:[^.\n]{0,60}(?:у вас|наличи[ея]|болезн|заболеван|синдром|патолог|диагноз))|это\s+не\s+возрастн[а-яё]*|это\s+не\s+гормональн[а-яё]*|приборы?\s+показыва|прибор[а-яё]*\s+не\s+(?:измеря|показыва)|\+[^=+\n]{0,60}=\s*[а-яёa-z][^.\n]{0,40}(?:болезн|заболеван|синдром|патолог|диагноз|сбой|нарушени))/i;
 
 // ─────────────────────────────────────────────────────────────
 // УЧЁТ РАСХОДА ТОКЕНОВ (2026-08-01). API возвращает фактический расход в каждом ответе,
@@ -466,7 +466,7 @@ const AI_PRICE = {   // $ за миллион токенов: вход / вых�
   'claude-haiku-4-5-20251001': { in: 1,  out: 5,  cw: 1.25, cr: 0.10 },
   'claude-sonnet-4-6':         { in: 3,  out: 15, cw: 3.75, cr: 0.30 },
 };
-function logUsage(env, ctx, endpoint, model, tier, lang, result) {
+function logUsage(env, ctx, endpoint, model, tier, lang, result, note) {
   try {
     const u = result && result.usage;
     if (!u || !env || !env.DB) return;
@@ -477,15 +477,15 @@ function logUsage(env, ctx, endpoint, model, tier, lang, result) {
     // ctx есть не у всех маршрутов (чат/перевод): без него пишем без waitUntil — для счётчика
     // допустимо, что редкая запись потеряется при досрочном завершении воркера.
     const w = env.DB.prepare(
-      'INSERT INTO ai_usage (ts,endpoint,model,tier,lang,in_tok,out_tok,cache_w,cache_r,cost_usd) VALUES (?,?,?,?,?,?,?,?,?,?)'
+      'INSERT INTO ai_usage (ts,endpoint,model,tier,lang,in_tok,out_tok,cache_w,cache_r,cost_usd,note) VALUES (?,?,?,?,?,?,?,?,?,?,?)'
     ).bind(Date.now(), String(endpoint), String(model), String(tier || ''), String(lang || ''),
-           inT, outT, cw, cr, Math.round(cost * 1e6) / 1e6).run().catch(() => {});
+           inT, outT, cw, cr, Math.round(cost * 1e6) / 1e6, note ? String(note).slice(0, 200) : null).run().catch(() => {});
     if (ctx && ctx.waitUntil) ctx.waitUntil(w);
   } catch (e) { /* учёт не имеет права ломать основной поток */ }
 }
 
 // Дешёвый разовый вызов Haiku (self-check / смягчение). maxTokens мал для check, большой для rewrite.
-async function callClaudeSimple(prompt, env, maxTokens, ctx, endpoint) {
+async function callClaudeSimple(prompt, env, maxTokens, ctx, endpoint, note) {
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -493,7 +493,7 @@ async function callClaudeSimple(prompt, env, maxTokens, ctx, endpoint) {
       body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: maxTokens, temperature: 0.2, messages: [{ role: 'user', content: prompt }] }),
     });
     const j = await r.json();
-    logUsage(env, ctx, endpoint || 'simple', 'claude-haiku-4-5-20251001', '', '', j);
+    logUsage(env, ctx, endpoint || 'simple', 'claude-haiku-4-5-20251001', '', '', j, note);
     return j.content?.[0]?.text || '';
   } catch (e) { return ''; }
 }
@@ -507,15 +507,24 @@ async function wellnessGuardrail(text, env, langName, lang, ctx) {
 
   // Обязательный дисклеймер («не медицинский диагноз» / «not a medical diagnosis») содержит слово-триггер «диагноз».
   // Он есть в КАЖДОМ ответе → без этой очистки Filter 1 срабатывал бы всегда и self-check терял смысл «только при risk».
-  const scanText = (text || '')
-    .replace(/не\s+(?:является\s+)?медицинск[а-яё]*\s+диагноз[а-яё]*/gi, ' ')
-    .replace(/not a medical diagnos\w*/gi, ' ');
-  if (!text || !AI_RISK_RE.test(scanText)) { log('clean'); return text; }   // Filter 1: нет risk-паттерна → без LLM-вызовов
+  // Вырезаем ПРЕДЛОЖЕНИЯ дисклеймера целиком, а не одну формулу. Прежняя очистка знала только
+  // «не ЯВЛЯЕТСЯ медицинским диагнозом», а в дисклеймере стоит «не ЯВЛЯЮТСЯ» — одна буква, и
+  // слово-триггер «диагноз» оставалось в каждом ответе. Из-за этого Filter 1 срабатывал ВСЕГДА:
+  // мы платили за self-check на каждом разборе и переписывали 9 текстов из 10. Тот же приём,
+  // что в wellnessHardScrub: предложение с юр-маркером — это дисклеймер, а не риск.
+  const _DISC_RE = /[^.!?\n]*(?:информацион|не заменя|не явля|не является|консультац[а-яё]*\s+врач|обратитесь к врач|not a medical|informational purposes|does not replace|не медицинск)[^.!?\n]*[.!?]?/gi;
+  const scanText = (text || '').replace(_DISC_RE, ' ');
+  const _hit = text ? scanText.match(AI_RISK_RE) : null;
+  if (!text || !_hit) { log('clean'); return text; }   // Filter 1: нет risk-паттерна → без LLM-вызовов
+  // Что именно сработало + короткий контекст → в учёт (ai_usage.note). Без этого причина
+  // перегенерации невидима: 9 разборов из 10 переписывались, и понять почему было нельзя.
+  const _at = scanText.indexOf(_hit[0]);
+  const _why = _hit[0] + ' ‹ ' + scanText.slice(Math.max(0, _at - 45), _at + _hit[0].length + 45).replace(/\s+/g, ' ') + ' ›';
   const verdict = await callClaudeSimple(
     'You are a compliance checker for an Apple App Store wellness app (Guideline 1.4.1). '
   + 'Does the TEXT do ANY of: (1) diagnose or name/suggest a disease or disorder; (2) sound like medical advice or a clinical conclusion; '
   + '(3) claim certainty about a health state; (4) assert causation between metrics; (5) interpret a single metric in isolation? '
-  + 'Reply with exactly one word: PASS or FAIL.\n\nTEXT:\n' + text, env, 8, ctx, 'guardrail-check');
+  + 'Reply with exactly one word: PASS or FAIL.\n\nTEXT:\n' + text, env, 8, ctx, 'guardrail-check', _why);
   if (!/FAIL/i.test(verdict)) { log('pass', 'PASS'); return text; }     // self-check PASS → оставляем как есть
   const softened = await callClaudeSimple(            // одна перегенерация-смягчение
     'Rewrite the wellness text below in the softer, supportive voice of a personal wellbeing coach. '
@@ -523,7 +532,7 @@ async function wellnessGuardrail(text, env, langName, lang, ctx) {
   + 'Rules: observations, not diagnoses; no disease names; never rule a cause IN or OUT for the client; no causation about the client ("X causes Y" → "X often goes along with Y") and NO equation formulas ("A + B = C" → rephrase as a soft observation); never interpret a single metric in isolation; keep any final disclaimer. '
   + 'CALIBRATED confidence — soften ONLY claims about the CLIENT\'s data/state (his metrics → his condition: use "may suggest", "often goes along with", ONE softener per thought, varied wording); '
   + 'general knowledge and action advice stay CONFIDENT as-is ("fiber steadies blood sugar", "go to bed earlier") — do NOT insert "may/might" into every sentence; hedging everything sounds evasive, not safer. '
-  + 'Output ONLY the rewritten text, nothing else.\n\nTEXT:\n' + text, env, 8000, ctx, 'guardrail-rewrite');
+  + 'Output ONLY the rewritten text, nothing else.\n\nTEXT:\n' + text, env, 8000, ctx, 'guardrail-rewrite', _why);
   const ok = softened && softened.trim().length > 40;
   log(ok ? 'softened' : 'fallback', 'FAIL');
   // Двойной сбой (self-check=FAIL И смягчение не удалось) — текст заведомо рискованный → нейтральный фолбэк, НЕ исходный.
@@ -915,7 +924,7 @@ const KB_SUPPLEMENTS = `
 Самое частое в 35–55: нейропатия от витамина B6 в «формулах для нервов и волос»; повреждение печени от экстракта зелёного чая, куркумы, ашваганды и многокомпонентных смесей для похудения и спорта (на добавки приходится около пятой части случаев лекарственного поражения печени); дефицит меди от долгого цинка; накопление железа у мужчин и женщин в постменопаузе, у которых дефицита не было; селеноз; избыток кальция и ретинола. Превышение верхних безопасных уровней в популяции даёт именно приём добавок, а не еда.
 
 ── СУММИРОВАНИЕ (почти никто не замечает) ──
-Мультивитамин + формула «для волос» + отдельный минерал + обогащённые продукты незаметно дублируют один и тот же нутриент. Значение имеет СУММА за день, а не порция каждой банки. Если человек принимает больше одного продукта — предложи сложить одинаковые составляющие.
+Мультивитамин + формула «для волос» + отдельный минерал + обогащённые продукты незаметно дублируют один и тот же нутриент. Значение имеет СУММА за день, а не порция каждой банки. Если человек принимает больше одного продукта — предложи сложить одинаковые составляющие. Объясняй это СЛОВАМИ, без записи формулой через «+» и «=».
 
 ── ЭТИКЕТКА (полезный навык, не назначение) ──
 Смотреть надо не на число капсул, а на строку «в одной порции» и на то, из скольких капсул эта порция состоит — «1000 мг» часто означает 2–3 капсулы. Важна не масса соединения, а количество действующего: элементарного железа, EPA+DHA, стандартизированного экстракта. Знак независимой проверки (USP, NSF) имеет смысл: добавки не проходят предпродажной оценки регулятора, а фактическое содержание в мультивитаминах систематически превышает заявленное.
