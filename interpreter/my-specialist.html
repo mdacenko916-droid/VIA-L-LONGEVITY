@@ -245,6 +245,26 @@ const T={"ru":{"back":"← Назад","title":"Мой наставник","intr
   };
   Object.keys(SUP).forEach(l=>{ if(T[l]){ T[l].nocode_q=SUP[l].nocode_q; T[l].nocode_book=SUP[l].nocode_book; } });
 })();
+// A1 (2026-08-03): оговорка об ответственности. Клиент должен ДО оплаты понимать, с кем он в
+// договоре и куда идут деньги. Специалисты — не работники VIA-L, платёж идёт напрямую им,
+// платформа денег не держит и вернуть не может.
+(function(){
+  const D={
+    ru:{who:'Ведение оказывает {name} — он несёт ответственность за консультации. VIA-L предоставляет программу и стороной договора не является.',pay:'Оплата идёт напрямую специалисту: платформа деньги не принимает, не хранит и не возвращает.'},
+    uk:{who:'Ведення надає {name} — він несе відповідальність за консультації. VIA-L надає програму і стороною договору не є.',pay:'Оплата йде напряму спеціалісту: платформа гроші не приймає, не зберігає й не повертає.'},
+    en:{who:'Guidance is provided by {name}, who is responsible for the consultations. VIA-L provides the software and is not a party to your agreement.',pay:'Payment goes directly to the specialist: the platform does not receive, hold or refund it.'},
+    es:{who:'El acompañamiento lo presta {name}, responsable de las consultas. VIA-L proporciona el software y no es parte del contrato.',pay:'El pago va directamente al especialista: la plataforma no lo recibe, ni lo retiene, ni lo reembolsa.'},
+    de:{who:'Die Begleitung erbringt {name} und verantwortet die Beratungen. VIA-L stellt die Software bereit und ist nicht Vertragspartei.',pay:'Die Zahlung geht direkt an den Spezialisten: Die Plattform nimmt sie nicht entgegen, verwahrt sie nicht und erstattet sie nicht.'},
+    pt:{who:'O acompanhamento é prestado por {name}, responsável pelas consultas. A VIA-L fornece o software e não é parte do contrato.',pay:'O pagamento vai diretamente ao especialista: a plataforma não o recebe, não o retém nem o reembolsa.'},
+    fr:{who:'Le suivi est assuré par {name}, responsable des consultations. VIA-L fournit le logiciel et n’est pas partie au contrat.',pay:'Le paiement va directement au spécialiste : la plateforme ne le reçoit pas, ne le conserve pas et ne le rembourse pas.'},
+    pl:{who:'Prowadzenie zapewnia {name} i odpowiada za konsultacje. VIA-L dostarcza oprogramowanie i nie jest stroną umowy.',pay:'Płatność trafia bezpośrednio do specjalisty: platforma jej nie przyjmuje, nie przechowuje i nie zwraca.'},
+    it:{who:'Il percorso è erogato da {name}, responsabile delle consulenze. VIA-L fornisce il software e non è parte del contratto.',pay:'Il pagamento va direttamente allo specialista: la piattaforma non lo riceve, non lo trattiene e non lo rimborsa.'},
+    he:{who:'הליווי ניתן על ידי {name}, האחראי על הייעוץ. VIA-L מספקת את התוכנה ואינה צד להסכם.',pay:'התשלום עובר ישירות למומחה: הפלטפורמה אינה מקבלת, מחזיקה או מחזירה אותו.'},
+    ja:{who:'サポートは{name}が提供し、相談内容の責任も同氏が負います。VIA-Lはソフトウェアを提供するのみで、契約の当事者ではありません。',pay:'お支払いは専門家へ直接行われます。プラットフォームは受領・保管・返金を行いません。'},
+    ko:{who:'관리는 {name}이(가) 제공하며 상담에 대한 책임도 그에게 있습니다. VIA-L은 소프트웨어를 제공할 뿐 계약 당사자가 아닙니다.',pay:'결제는 전문가에게 직접 전달됩니다. 플랫폼은 이를 수령·보관·환불하지 않습니다.'}
+  };
+  Object.keys(D).forEach(l=>{ if(T[l]){ T[l].resp_who=D[l].who; T[l].resp_pay=D[l].pay; } });
+})();
 // Вторая дверь к специалисту: клиенту, который уже решил, 15-минутное знакомство не нужно.
 // Ключи заводим отдельным блоком — не трогаем гигантский литерал T выше.
 (function(){
@@ -485,6 +505,10 @@ function specCard(s, idx, inCatalog){
     ? `<a class="btn" href="${pay}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="${_bs}background:var(--gold-txt);color:#fff;border-color:transparent;"><span>${esc(tr('start_now'))}</span></a>`
     : (cal ? `<div style="font-size:11px;color:var(--t3);margin-top:8px;text-align:center;">${esc(tr('start_after_intro'))}</div>` : '');
   const btn = btnBuy + btnBook;   // «Начать ведение» выше: клиенту, который уже решил, не нужно искать
+  // Оговорка об ответственности — рядом с кнопкой оплаты, а не в подвале: человек должен
+  // прочитать это ДО того, как заплатит, иначе она не выполняет своей функции.
+  const resp = '<div style="font-size:10.5px;color:var(--t3);line-height:1.5;margin-top:10px;border-top:1px solid rgba(255,255,255,.07);padding-top:8px;">'
+    + esc(tr('resp_who').replace('{name}', s.name||'')) + ' ' + esc(tr('resp_pay')) + '</div>';
   const clickAttr = inCatalog ? ` onclick="_pickSpecialist(${idx})" style="cursor:pointer;"` : '';
   return `<div class="speccard"${clickAttr}>
     <div style="display:flex;gap:12px;align-items:center;">
@@ -497,6 +521,7 @@ function specCard(s, idx, inCatalog){
     </div>
     ${s.bio?`<div style="font-size:13px;color:var(--t2);margin-top:8px;line-height:1.5;">${esc(s.bio)}</div>`:''}
     ${btn}
+    ${resp}
   </div>`;
 }
 function _pickSpecialist(i){
