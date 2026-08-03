@@ -7287,7 +7287,48 @@ async function _iapRestoreClick(){
       return true;
     }
   }catch(e){} return false; }
-  function _showGate(reason){ try{ var g=document.getElementById('gate'); if(g){g.style.opacity='';g.style.display='flex';} var sa=document.getElementById('scroll-area'); if(sa)sa.style.visibility='hidden'; if(reason&&typeof gateError==='function'){try{gateError(reason);}catch(e){}} }catch(e){} }
+  function _showGate(reason){ try{ var g=document.getElementById('gate'); if(g){g.style.opacity='';g.style.display='flex';} var sa=document.getElementById('scroll-area'); if(sa)sa.style.visibility='hidden'; if(reason&&typeof gateError==='function'){try{gateError(reason);}catch(e){}} if(reason==='expired'||reason==='revoked'){ _showAfterEnd(); } }catch(e){} }
+  // B1/B2 (2026-08-03): срок кончился — данные НЕ пропадают и не запираются.
+  // Раньше гейт закрывал интерфейс целиком: записи, тренды и выгрузка копии оставались на
+  // устройстве, но человек до них не дотягивался. Он платил за ведение — история его, и право
+  // забрать свои данные не заканчивается вместе с подпиской.
+  function _showAfterEnd(){
+    if(document.getElementById('afterEndBox')) return;
+    var g=document.getElementById('gate'); if(!g) return;
+    var L=(typeof lang!=='undefined')?lang:'ru';
+    var T={
+      t:{ru:'Программа завершена',uk:'Програму завершено',en:'Your programme has ended',es:'Tu programa ha terminado',de:'Dein Programm ist beendet',pt:'Seu programa terminou',fr:'Votre programme est terminé',pl:'Twój program zakończony',it:'Il tuo percorso è terminato',he:'התוכנית הסתיימה',ja:'プログラムが終了しました',ko:'프로그램이 종료되었습니다'},
+      d:{ru:'Ваши записи остаются с вами. Их можно посмотреть и сохранить себе — новые разборы больше не создаются.',uk:'Ваші записи залишаються з вами. Їх можна переглянути та зберегти — нові розбори більше не створюються.',en:'Your records stay with you. You can view them and save a copy — new overviews are no longer generated.',es:'Tus registros siguen contigo. Puedes verlos y guardar una copia; ya no se generan nuevos análisis.',de:'Deine Aufzeichnungen bleiben bei dir. Du kannst sie ansehen und sichern — neue Auswertungen entstehen nicht mehr.',pt:'Seus registros continuam com você. Pode vê-los e guardar uma cópia — novas análises não são mais geradas.',fr:'Vos données restent avec vous. Vous pouvez les consulter et en garder une copie — plus de nouveaux bilans.',pl:'Twoje zapisy zostają z Tobą. Możesz je przejrzeć i zapisać — nowe analizy nie powstają.',it:'I tuoi dati restano con te. Puoi consultarli e salvarne una copia — non si generano nuove analisi.',he:'הרשומות שלכם נשארות אצלכם. אפשר לצפות ולשמור עותק — סקירות חדשות לא נוצרות.',ja:'記録はあなたのものです。閲覧と保存ができます（新しいまとめは作成されません）。',ko:'기록은 그대로 남습니다. 열람하고 사본을 저장할 수 있습니다 — 새 분석은 생성되지 않습니다.'},
+      b1:{ru:'Скачать мои данные',uk:'Завантажити мої дані',en:'Download my data',es:'Descargar mis datos',de:'Meine Daten herunterladen',pt:'Baixar meus dados',fr:'Télécharger mes données',pl:'Pobierz moje dane',it:'Scarica i miei dati',he:'הורדת הנתונים שלי',ja:'データをダウンロード',ko:'내 데이터 내려받기'},
+      b2:{ru:'Открыть историю (только чтение)',uk:'Відкрити історію (лише читання)',en:'Open history (read-only)',es:'Abrir historial (solo lectura)',de:'Verlauf öffnen (nur lesen)',pt:'Abrir histórico (somente leitura)',fr:'Ouvrir l’historique (lecture seule)',pl:'Otwórz historię (tylko odczyt)',it:'Apri lo storico (sola lettura)',he:'פתיחת היסטוריה (קריאה בלבד)',ja:'履歴を開く（閲覧のみ）',ko:'기록 열기 (읽기 전용)'}
+    };
+    var pick=function(o){ return o[L]||o.en; };
+    var d=document.createElement('div'); d.id='afterEndBox';
+    d.style.cssText='max-width:420px;margin:18px auto 0;padding:16px;border:1px solid rgba(226,185,90,.3);border-radius:14px;background:rgba(255,255,255,.03);text-align:center;';
+    d.innerHTML='<div style="font-size:15px;color:#F5F3EF;margin-bottom:6px;">'+pick(T.t)+'</div>'
+      +'<div style="font-size:12.5px;color:rgba(245,243,239,.65);line-height:1.55;margin-bottom:12px;">'+pick(T.d)+'</div>'
+      +'<button id="aeDl" style="width:100%;background:#E2B95A;color:#10141C;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px;">'+pick(T.b1)+'</button>'
+      +'<button id="aeRo" style="width:100%;background:transparent;color:rgba(245,243,239,.75);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:11px;font-size:13px;cursor:pointer;">'+pick(T.b2)+'</button>';
+    g.appendChild(d);
+    d.querySelector('#aeDl').onclick=function(){ try{ vlBackupExport(); }catch(e){} };
+    d.querySelector('#aeRo').onclick=function(){
+      try{ localStorage.setItem('viae_readonly','1'); }catch(e){}
+      g.style.display='none';
+      var sa=document.getElementById('scroll-area'); if(sa)sa.style.visibility='visible';
+      try{ if(typeof _showTodayDashboard==='function' && _showTodayDashboard()){} else if(typeof navTo==='function'){ navTo('card'); } }catch(e){}
+      _markReadonly();
+    };
+  }
+  // В режиме чтения новые разборы не создаются — прячем кнопки, которые их запускают.
+  function _markReadonly(){
+    try{
+      document.body.classList.add('vl-readonly');
+      var st=document.createElement('style');
+      st.textContent='.vl-readonly #flow-footer,.vl-readonly .imp-btn,.vl-readonly #wrBtn{display:none !important;}';
+      document.head.appendChild(st);
+    }catch(e){}
+  }
+  try{ if(localStorage.getItem('viae_readonly')==='1'){ setTimeout(_markReadonly, 400); } }catch(e){}
   // Тихая сверка доступа с кабинетом по сохранённому EX-коду (viae_gcode).
   // Зачем: срок хранится на устройстве, и продление в кабинете само по себе до клиента не
   // доходило — он видел «доступ закончился» и вводил тот же код заново. Теперь при каждом
