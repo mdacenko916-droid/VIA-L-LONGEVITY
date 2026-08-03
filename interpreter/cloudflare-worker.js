@@ -1240,6 +1240,7 @@ export default {
       // Платформа, Шаг 6: панель владельца — управление специалистами (только role=owner).
       if (path === '/cabinet/specialists')       return handleCabinetSpecialists(request, env, corsHeaders);
       if (path === '/cabinet/billing')          return handleCabinetBilling(request, env, corsHeaders);            // владелец: сводка по деньгам
+      if (path === '/cabinet/expert-users')    return handleCabinetExpertUsers(request, env, corsHeaders);        // счётчик и сверка пользователей EXPERT
       if (path === '/cabinet/billing/me')       return handleCabinetBillingMe(request, env, corsHeaders);          // специалист: та же сводка про себя
       if (path === '/cabinet/billing/payment')  return handleCabinetBillingPayment(request, env, corsHeaders);     // владелец: отметить/удалить оплату
       if (path === '/cabinet/billing/detail')   return handleCabinetBillingDetail(request, env, corsHeaders);      // владелец: расшифровка по специалисту
@@ -7341,6 +7342,61 @@ async function _billingResponse(env, corsHeaders, period, onlyId){
     totals: { clients: rows.reduce((a,r)=>a+r.clients,0),
               soft_due: sum('soft_due'), platform_due: sum('platform_due'),
               due_now: sum('due_now'), cash_period: sum('cash_period') } }, corsHeaders);
+}
+
+// POST /cabinet/expert-users — СЧЁТЧИК И СВЕРКА пользователей VIA-L EXPERT (владелец).
+// Считаем по КАРТОЧКАМ, а не по журналу выдач: журнал `grants` пишется только когда доступ
+// выдал специалист из кабинета, а легаси-путь (покупка → Apps Script → код VIAL-EXPERT-8W)
+// туда не попадает — счётчик по журналу молча недосчитал бы часть людей.
+// Сверка: для каждой карточки с доступом проверяем, жив ли код в KV (истёк TTL / отозван /
+// расходится срок) — расхождение между витриной и хранилищем видно сразу, а не при жалобе.
+async function handleCabinetExpertUsers(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  const owner = sess.role === 'owner';
+  const today = new Date().toISOString().slice(0,10);
+
+  const rows = (await env.DB.prepare(
+    `SELECT c.code, c.name, c.email, c.tier, c.specialist_id, s.name AS spec_name,
+            json_extract(c.data,'$.expert_grant.code')    AS grant_code,
+            json_extract(c.data,'$.expert_grant.expiry')  AS grant_expiry,
+            json_extract(c.data,'$.expert_grant.revoked') AS grant_revoked
+       FROM clients c LEFT JOIN specialists s ON s.id = c.specialist_id
+      WHERE (json_extract(c.data,'$.expert_grant.code') IS NOT NULL
+             OR upper(COALESCE(c.tier,'')) LIKE '%EXPERT%'
+             OR upper(COALESCE(c.tier,'')) LIKE '%ELITE%')
+        ${owner ? '' : 'AND c.specialist_id = ?'}
+      ORDER BY c.updated_at DESC`).bind(...(owner ? [] : [sess.id])).all()).results || [];
+
+  const out = [];
+  for(const r of rows){
+    let kv = null, kvState = 'none';
+    if(r.grant_code && env.EXPERT_DRAFTS){
+      try{ kv = JSON.parse(await env.EXPERT_DRAFTS.get('expert_access:' + r.grant_code) || 'null'); }catch(_){}
+      kvState = kv ? (kv.revoked ? 'revoked' : 'ok') : 'missing';   // missing = истёк TTL или удалён
+    }
+    const expiry = (kv && kv.expiry) || r.grant_expiry || '';
+    const revoked = !!(r.grant_revoked === 1 || r.grant_revoked === true || (kv && kv.revoked));
+    const active = !revoked && !!expiry && expiry >= today;
+    // расхождение витрины и хранилища: карточка говорит «активен», а кода в KV уже нет
+    const mismatch = (!!r.grant_code && kvState === 'missing' && active)
+                  || (!!kv && !!r.grant_expiry && kv.expiry !== r.grant_expiry);
+    out.push({ code: r.code, name: r.name, email: r.email, tier: r.tier,
+               specialist_id: r.specialist_id, spec_name: r.spec_name,
+               grant_code: r.grant_code || null, expiry, revoked, active,
+               used: (kv && kv.used) || 0, quota: (kv && kv.quota) || 0,
+               source: r.grant_code ? 'cabinet' : 'purchase', kv: kvState, mismatch });
+  }
+  const active = out.filter(x => x.active);
+  return jsonResponse({ ok:true, today,
+    counts: { total: out.length, active: active.length,
+              expired: out.filter(x => !x.active && !x.revoked).length,
+              revoked: out.filter(x => x.revoked).length,
+              mismatch: out.filter(x => x.mismatch).length,
+              by_source: { cabinet: active.filter(x=>x.source==='cabinet').length,
+                           purchase: active.filter(x=>x.source==='purchase').length } },
+    users: out }, corsHeaders);
 }
 
 // POST /cabinet/billing/payment {specialist_id, platform, software, paid_at?, note?}
