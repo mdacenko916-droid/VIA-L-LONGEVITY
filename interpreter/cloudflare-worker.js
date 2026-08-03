@@ -694,6 +694,9 @@ function wellnessHardScrub(text, lang, hasLabs) {
   text = _stripHerbLines(text);        // 1) убрать рекомендации гормональных трав (все языки)
   text = _stripSupplementDoses(text);  // 2) убрать дозировки добавок = назначение (все языки)
   text = _stripAnyDoses(text);         // 2б) любые мг/мкг/МЕ — в VIA-L доз нет нигде, даже без названия добавки
+  // 2в) склейки после подмен: «фоновое фоновая нагрузка» (было «фоновое воспаление»). Замена не
+  //     согласуется с прилагательным перед ней — убираем осиротевшее определение.
+
   text = _stripRiskClaims(text);       // 3) убрать оценку медицинского риска (все языки)
   text = _stripCodeTokens(text);       // 4) убрать утёкшие snake_case-коды полей (все языки)
   // 5) Разделители между темами — модель вставляет строки из повторяющихся символов (---, ***, ///, ===, «...»,
@@ -711,6 +714,19 @@ function wellnessHardScrub(text, lang, hasLabs) {
     // название собственного лабораторного результата нечестно и делает текст бессмысленным.
     t = _getRuScrub().filter(r => !(hasLabs && r[2] === 'lab'))
                      .reduce((s, [re, to]) => s.replace(re, to), t);
+    // Склейки, которые СОЗДАЁТ сама подмена: «фоновое воспаление» → «фоновое фоновая нагрузка».
+    // Чистить надо ПОСЛЕ замен (раньше стояло до — правило было мёртвым), и границы юникодные:
+    // \b в JS не видит кириллицу.
+    // Прилагательное ЛЮБОГО рода и падежа перед подменой ломает согласование
+    // («хроническое воспаление» → «хроническое фоновая нагрузка», «повышенного воспаления» →
+    // «повышенного фоновая нагрузка»). Перечислять корни бессмысленно — снимаем определение
+    // по окончанию. Фраза без него читается, с ним — нет.
+    const _ADJ = '(?:ый|ое|ая|ые|ого|ой|ому|ым|ом|ых|ыми|его|ему|им|ем|ий|яя|ее|ие)';
+    t = t.replace(new RegExp('(^|[^\\p{L}])[а-яё]{3,}' + _ADJ + '\\s+(фоновая нагрузка)', 'giu'), '$1$2')
+         .replace(new RegExp('(^|[^\\p{L}])[а-яё]{3,}' + _ADJ + '\\s+(нагрузка обмена веществ)', 'giu'), '$1$2')
+         // «на фоне фоновая нагрузка» — предлог требует падежа, которого у подмены нет: убираем оборот целиком
+         .replace(/\s*на фоне\s+(фоновая нагрузка)/giu, ', $1')
+         .replace(/\s{2,}/g, ' ').replace(/\s+([.,;:!?])/g, '$1');
     // (REFRAME: коллизия «волны тепловых волн» и капитализация тепловых волн УБРАНЫ — приливы больше не скрабятся.)
     return t.replace(/\[\[GRD(\d+)\]\]/g, (_, i) => held[+i]);
   }
@@ -2118,6 +2134,29 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
     } catch (e) { /* скраб не должен ронять ответ */ }
     // Скраб мог вырезать строки внутри блока → структуру чиним ПОСЛЕ него, последним шагом.
     if (structured) { try { text = _structRepair(text); } catch (e) { /* ремонт не должен ронять ответ */ } }
+  }
+
+  // Ферритин на фоне воспаления: модель эту связку теряла (3 прогона из 3 назвали CRP, но не
+  // сказали, что он ЗАВЫШАЕТ ферритин). Ошибка дорогая — маскированный дефицит железа, — поэтому
+  // строку ставим кодом, как плашку ниже.
+  if (text && !result.error && data && data.labs
+      && data.labs.ferritin != null && data.labs.crp != null && +data.labs.crp > 5
+      && !/маскир|завыш/i.test(text)) {
+    const _FER = {
+      ru:'ℹ️ Ферритин стоит читать вместе с CRP: воспаление поднимает ферритин, поэтому на его фоне даже обычная цифра может маскировать нехватку железа — это вопрос к врачу.',
+      uk:'ℹ️ Феритин варто читати разом із CRP: запалення підвищує феритин, тому навіть звичайна цифра може маскувати нестачу заліза — це питання до лікаря.',
+      en:'ℹ️ Ferritin should be read together with CRP: inflammation raises ferritin, so even a normal-looking value can mask iron deficiency — one for your doctor.',
+      es:'ℹ️ La ferritina debe leerse junto con la PCR: la inflamación la eleva, así que un valor aparentemente normal puede enmascarar una falta de hierro — consúltalo con tu médico.',
+      de:'ℹ️ Ferritin gehört zusammen mit CRP gelesen: Entzündung hebt den Ferritinwert, daher kann selbst ein normal wirkender Wert einen Eisenmangel verdecken — das gehört zur Ärztin oder zum Arzt.',
+      pt:'ℹ️ A ferritina deve ser lida junto com a PCR: a inflamação a eleva, então um valor aparentemente normal pode mascarar falta de ferro — leve isso ao seu médico.',
+      fr:'ℹ️ La ferritine se lit avec la CRP : l’inflammation l’élève, donc une valeur d’apparence normale peut masquer un manque de fer — à voir avec votre médecin.',
+      pl:'ℹ️ Ferrytynę czyta się razem z CRP: stan zapalny ją podnosi, więc nawet zwyczajna wartość może maskować niedobór żelaza — to pytanie do lekarza.',
+      it:'ℹ️ La ferritina va letta insieme alla PCR: l’infiammazione la alza, quindi un valore all’apparenza normale può mascherare una carenza di ferro — da valutare con il medico.',
+      he:'ℹ️ פריטין נקרא יחד עם CRP: דלקת מעלה אותו, ולכן גם ערך שנראה תקין עלול להסתיר מחסור בברזל — שאלה לרופא.',
+      ja:'ℹ️ フェリチンはCRPと一緒に読みます。炎症があるとフェリチンは上がるため、一見正常な値でも鉄不足を隠している場合があります。医師にご相談ください。',
+      ko:'ℹ️ 페리틴은 CRP와 함께 봐야 합니다. 염증이 있으면 페리틴이 올라가므로 정상처럼 보이는 값도 철분 부족을 가릴 수 있습니다 — 의사와 상의하세요.',
+    };
+    text = text.replace(/\s*$/, '') + '\n\n' + (_FER[lang] || _FER.en);
   }
 
   // Плашка App Review: разбор задел лекарства/добавки/анализы → строка про дозировку обязана
@@ -4539,6 +4578,40 @@ function _anchorNotes(data) {
     + '\nИ ещё: при странном или резко выпадающем значении первым в списке объяснений — СБОЙ ИЗМЕРЕНИЯ (сдвиг датчика, движение, зарядка ночью), а не гипотеза о теле.\n';
 }
 
+// Сверки по АНАЛИЗАМ — кодом, а не надеждой. Правило в промпте про время сдачи ферритина
+// срабатывало через раз; между тем ошибка здесь дорогая: женщина с обильными менструациями
+// получает заниженный ферритин и начинает пить железо (или наоборот, успокаивается зря).
+// Источник: OpenEvidence N-11, ответ 39 (время СДАЧИ важнее времени приёма) и ответ 12 (ферритин+CRP).
+function _labCrossChecks(data) {
+  const labs = data.labs || {};
+  const out = [];
+  const num = v => (v == null || v === '' || isNaN(v)) ? null : +v;
+  const fer = num(labs.ferritin), crp = num(labs.crp);
+  const cycles = String(data.gender || 'female') !== 'male'
+              && data.cycle_status !== 'absent' && data.phase !== 'post';
+
+  if (fer != null && (data.heavy_period === 'yes' || cycles))
+    out.push('Есть ФЕРРИТИН и человек ещё менструирует → скажи, что значение зависит от того, КОГДА сдавали: '
+      + 'сданный во время менструации или сразу после неё, он занижает реальные запасы. Спроси, когда была сдача, '
+      + 'и предложи пересдать вне кровотечения. Для железа время сдачи важнее времени приёма.');
+  if (fer != null && crp != null && crp > 5)
+    out.push('ФЕРРИТИН вместе с повышенным CRP → назови это ПРЯМО, отдельной фразой: ферритин растёт при любом '
+      + 'воспалении, поэтому на фоне высокого CRP даже нормальная цифра может МАСКИРОВАТЬ нехватку железа. '
+      + 'Не называй такое значение «нормальным» без оговорки и не делай из него вывода — это вопрос к врачу, '
+      + 'который читает ферритин вместе с CRP.');
+  // ⚠️ Осторожно с «запасы достаточные»: при воспалении ферритин ЗАВЫШЕН, а при обильных менструациях
+  // потеря продолжается — в этих двух случаях цифра не доказывает достаточности. Правило срабатывает
+  // только когда картина чистая, иначе оно противоречит проверке выше и вводит в заблуждение.
+  if (fer != null && fer >= 50 && !(crp != null && crp > 5) && data.heavy_period !== 'yes'
+      && (Array.isArray(data.supplements) ? data.supplements : []).some(x => /iron/i.test(String(x))))
+    out.push('Принимает ЖЕЛЕЗО, при этом запасы по анализу не низкие, воспаления нет и обильных менструаций нет → '
+      + 'мягко скажи, что смысл продолжения стоит обсудить со специалистом: железо без дефицита накапливается, а не помогает.');
+
+  if (!out.length) return '';
+  return '\n⚠️ СВЕРКИ ПО АНАЛИЗАМ, СРАБОТАВШИЕ У ЭТОГО КЛИЕНТА — сказать обязательно:\n'
+    + out.map(x => '• ' + x).join('\n') + '\n';
+}
+
 function buildUserMessage(data, lang, tier) {
   const isFem = data.gender !== 'male';
   // Велнес (VIA-L) НЕ оценивает медицинский риск. Раньше сюда уходил готовый вердикт
@@ -5085,6 +5158,7 @@ function buildUserMessage(data, lang, tier) {
     + 'Физическая активность · виды: ' + _J(data.act_types) + ' | частота: ' + _V(data.act_freq) + ' | восстановление после нагрузки: ' + _V(data.act_recovery) + (data.move_today ? ' | движение за прошедшие сутки: ' + ({sedentary:'сидячий день',light:'немного двигался',walk:'много ходил',cardio:'кардио/бег',strength:'силовая тренировка',active:'активный день'}[data.move_today] || data.move_today) : '') + '\n'
     + 'Добавки (принимает): ' + _J(data.supplements) + '\n'
     + _suppCrossChecks(data)
+    + _labCrossChecks(data)
     + _anchorNotes(data)
     // АНАЛИЗЫ — контекст, НЕ вердикт. Значения приходят в канонических единицах (пересчёт на
     // клиенте), давность в месяцах: результат двухлетней давности не читается как сегодняшний.
