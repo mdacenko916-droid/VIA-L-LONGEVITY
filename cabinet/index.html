@@ -400,6 +400,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
       <button class="topbtn" id="viewCalendarBtn" onclick="switchView('calendar')" data-i18n="nav_calendar">📅 Календарь</button>
       <button class="topbtn" id="viewSpecialistsBtn" onclick="switchView('specialists')" style="display:none;" data-i18n="nav_specialists">🩺 Специалисты</button>
       <button class="topbtn" id="viewBillingBtn" onclick="switchView('billing')" style="display:none;" data-i18n="nav_billing">€ Бухгалтерия</button>
+      <button class="topbtn" id="viewMyBillBtn" onclick="switchView('mybill')" style="display:none;" data-i18n="nav_mybill">€ Мои расчёты</button>
       <button class="topbtn" id="myLinkBtn" onclick="openMyLink()" data-i18n="nav_mylink">🔗 Моя ссылка</button>
       <button class="topbtn" id="showcaseBtn" onclick="openShowcase()" data-i18n="nav_showcase">🪟 Моя витрина</button>
       <button class="topbtn primary" onclick="openAddClient()" data-i18n="btn_new_client">+ Новый клиент</button>
@@ -491,6 +492,9 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 
   <!-- BILLING VIEW (только владелец): учёт по специалистам — начислено/оплачено/долг -->
   <div id="billingView" style="display:none;flex:1;overflow-y:auto;padding:24px;background:#fff;"></div>
+
+  <!-- MY BILLING (специалисту про себя: те же цифры, что у владельца) -->
+  <div id="myBillView" style="display:none;flex:1;overflow-y:auto;padding:24px;background:#fff;"></div>
 </div>
 
 <!-- ADD/EDIT CLIENT MODAL -->
@@ -1009,6 +1013,15 @@ const T = {
   sp_platform_since:{ru:"На платформе с (абонплата)",uk:"На платформі з (абонплата)",en:"On the platform since (fee)",es:"En la plataforma desde (cuota)",de:"Auf der Plattform seit (Gebühr)",pt:"Na plataforma desde (taxa)",fr:"Sur la plateforme depuis (abonnement)",pl:"Na platformie od (abonament)",it:"Sulla piattaforma da (canone)",he:"בפלטפורמה מאז (דמי מנוי)",ja:"プラットフォーム参加日（料金）",ko:"플랫폼 합류일 (요금)"},
   sp_platform_since_hint:{ru:"С этой даты начисляется €30/мес. Пусто — абонплату не начисляем (свой специалист).",uk:"З цієї дати нараховується €30/міс. Порожньо — абонплату не нараховуємо (свій спеціаліст).",en:"The €30/mo fee accrues from this date. Empty — no platform fee (in-house specialist).",es:"La cuota de €30/mes se acumula desde esta fecha. Vacío: sin cuota (especialista propio).",de:"Ab diesem Datum fallen €30/Monat an. Leer — keine Gebühr (eigener Spezialist).",pt:"A taxa de €30/mês começa nesta data. Vazio — sem taxa (especialista próprio).",fr:"L'abonnement de 30 €/mois court à partir de cette date. Vide — pas d'abonnement (spécialiste interne).",pl:"Od tej daty naliczamy €30/mies. Puste — bez abonamentu (własny specjalista).",it:"Il canone di €30/mese decorre da questa data. Vuoto — nessun canone (specialista interno).",he:"דמי מנוי של €30 לחודש נצברים מתאריך זה. ריק — ללא דמי מנוי (מומחה פנימי).",ja:"この日付から月€30が発生します。空欄ならプラットフォーム料なし（自社の専門家）。",ko:"이 날짜부터 월 €30이 부과됩니다. 비워두면 요금 없음(내부 전문가)."},
   // — панель «Бухгалтерия» (партия 9, владелец) —
+  nav_mybill:{ru:"€ Мои расчёты",uk:"€ Мої розрахунки",en:"€ My billing",es:"€ Mis cuentas",de:"€ Meine Abrechnung",pt:"€ Minhas contas",fr:"€ Mes comptes",pl:"€ Moje rozliczenia",it:"€ I miei conti",he:"€ החשבונות שלי",ja:"€ 自分の精算",ko:"€ 내 정산"},
+  mb_title:{ru:"Мои расчёты с платформой",uk:"Мої розрахунки з платформою",en:"My billing with the platform",es:"Mis cuentas con la plataforma",de:"Meine Abrechnung mit der Plattform",pt:"Minhas contas com a plataforma",fr:"Mes comptes avec la plateforme",pl:"Moje rozliczenia z platformą",it:"I miei conti con la piattaforma",he:"ההתחשבנות שלי עם הפלטפורמה",ja:"プラットフォームとの精算",ko:"플랫폼과의 정산"},
+  mb_hint:{ru:"Те же цифры, что видит владелец платформы — ничего скрытого. Обновляются сразу, как только вы выдаёте доступ клиенту.",uk:"Ті самі цифри, що бачить власник платформи — нічого прихованого. Оновлюються одразу, щойно ви видаєте доступ клієнту.",en:"The same figures the platform owner sees — nothing hidden. They update the moment you grant a client access.",es:"Las mismas cifras que ve el propietario de la plataforma: nada oculto. Se actualizan en cuanto das acceso a un cliente.",de:"Dieselben Zahlen, die der Plattform-Inhaber sieht — nichts verborgen. Sie aktualisieren sich, sobald du einem Klienten Zugang gibst.",pt:"Os mesmos números que o proprietário da plataforma vê — nada oculto. Atualizam assim que você concede acesso a um cliente.",fr:"Les mêmes chiffres que voit le propriétaire de la plateforme — rien de caché. Ils se mettent à jour dès que vous donnez un accès.",pl:"Te same liczby, które widzi właściciel platformy — nic ukrytego. Aktualizują się, gdy tylko przyznasz klientowi dostęp.",it:"Gli stessi numeri che vede il proprietario della piattaforma — nulla di nascosto. Si aggiornano appena dai accesso a un cliente.",he:"אותם מספרים שרואה בעל הפלטפורמה — שום דבר מוסתר. מתעדכנים ברגע שאתם נותנים גישה ללקוח.",ja:"プラットフォーム運営者と同じ数字です。クライアントにアクセスを付与した時点で更新されます。",ko:"플랫폼 소유자가 보는 것과 동일한 수치입니다. 클라이언트에게 액세스를 부여하는 즉시 갱신됩니다."},
+  mb_platform:{ru:"Платформа",uk:"Платформа",en:"Platform",es:"Plataforma",de:"Plattform",pt:"Plataforma",fr:"Plateforme",pl:"Platforma",it:"Piattaforma",he:"פלטפורמה",ja:"プラットフォーム",ko:"플랫폼"},
+  mb_platform_due:{ru:"не оплачено месяцев: {n}",uk:"не сплачено місяців: {n}",en:"months unpaid: {n}",es:"meses sin pagar: {n}",de:"offene Monate: {n}",pt:"meses em aberto: {n}",fr:"mois impayés : {n}",pl:"nieopłacone miesiące: {n}",it:"mesi non pagati: {n}",he:"חודשים שלא שולמו: {n}",ja:"未払いの月: {n}",ko:"미납 개월: {n}"},
+  mb_platform_exempt:{ru:"абонплата не начисляется",uk:"абонплата не нараховується",en:"no platform fee for you",es:"sin cuota de plataforma",de:"keine Plattformgebühr",pt:"sem taxa de plataforma",fr:"pas d’abonnement plateforme",pl:"bez abonamentu platformy",it:"nessun canone piattaforma",he:"ללא דמי פלטפורמה",ja:"プラットフォーム料なし",ko:"플랫폼 요금 없음"},
+  mb_paid_until:{ru:"оплачено до",uk:"оплачено до",en:"paid until",es:"pagado hasta",de:"bezahlt bis",pt:"pago até",fr:"payé jusqu’au",pl:"opłacone do",it:"pagato fino al",he:"שולם עד",ja:"支払済み期限",ko:"결제 완료"},
+  mb_soft:{ru:"За ведение клиентов",uk:"За ведення клієнтів",en:"For client care",es:"Por seguimiento de clientes",de:"Für Klientenbetreuung",pt:"Pelo acompanhamento de clientes",fr:"Pour le suivi des clients",pl:"Za prowadzenie klientów",it:"Per il percorso dei clienti",he:"עבור ליווי לקוחות",ja:"クライアント対応分",ko:"클라이언트 관리분"},
+  mb_soft_sub:{ru:"активных ведений: {n}",uk:"активних ведень: {n}",en:"active clients: {n}",es:"clientes activos: {n}",de:"aktive Klienten: {n}",pt:"clientes ativos: {n}",fr:"clients actifs : {n}",pl:"aktywni klienci: {n}",it:"clienti attivi: {n}",he:"לקוחות פעילים: {n}",ja:"進行中: {n}",ko:"진행 중: {n}"},
   eu_title:{ru:"В ведении VIA-L EXPERT сейчас",uk:"У веденні VIA-L EXPERT зараз",en:"In VIA-L EXPERT care now",es:"En seguimiento VIA-L EXPERT ahora",de:"Aktuell in VIA-L EXPERT",pt:"Em acompanhamento VIA-L EXPERT",fr:"Suivis VIA-L EXPERT actuellement",pl:"W prowadzeniu VIA-L EXPERT",it:"In percorso VIA-L EXPERT ora",he:"בליווי VIA-L EXPERT כעת",ja:"現在 VIA-L EXPERT 利用中",ko:"현재 VIA-L EXPERT 이용 중"},
   eu_active:{ru:"активен",uk:"активний",en:"active",es:"activo",de:"aktiv",pt:"ativo",fr:"actif",pl:"aktywny",it:"attivo",he:"פעיל",ja:"有効",ko:"활성"},
   eu_expired:{ru:"истекло",uk:"вичерпано",en:"expired",es:"vencidos",de:"abgelaufen",pt:"expirados",fr:"expirés",pl:"wygasłe",it:"scaduti",he:"פג תוקף",ja:"期限切れ",ko:"만료"},
@@ -1322,6 +1335,8 @@ async function enterApp(){
   if(spBtn) spBtn.style.display = (myRole==='owner') ? '' : 'none';
   const blBtn = document.getElementById('viewBillingBtn');
   if(blBtn) blBtn.style.display = (myRole==='owner') ? '' : 'none';
+  const mbBtn = document.getElementById('viewMyBillBtn');
+  if(mbBtn) mbBtn.style.display = (myRole==='owner') ? 'none' : '';
   ensureSpecialists();   // подпись «чей клиент» + фильтр по специалисту (владельцу)
   // show mobile menu btn on small screens
   if(window.innerWidth<768) document.getElementById('mobileMenuBtn').style.display='';
@@ -1544,14 +1559,75 @@ function switchView(view){
   if(spEl) spEl.style.display = view==='specialists' ? 'block' : 'none';
   const blEl = document.getElementById('billingView');
   if(blEl) blEl.style.display = view==='billing' ? 'block' : 'none';
+  const mbEl = document.getElementById('myBillView');
+  if(mbEl) mbEl.style.display = view==='mybill' ? 'block' : 'none';
   const setBtn=(b,on)=>{ if(!b)return; b.style.borderBottom = on?'2px solid #000':'2px solid transparent'; b.style.fontWeight = on?'600':'400'; };
   setBtn(document.getElementById('viewClientsBtn'),     view==='clients');
   setBtn(document.getElementById('viewCalendarBtn'),    view==='calendar');
   setBtn(document.getElementById('viewSpecialistsBtn'), view==='specialists');
   setBtn(document.getElementById('viewBillingBtn'),      view==='billing');
+  setBtn(document.getElementById('viewMyBillBtn'),       view==='mybill');
   if(view==='calendar')    renderCalendar();
   if(view==='specialists') renderSpecialists();
   if(view==='billing')     renderBilling();
+  if(view==='mybill')      renderMyBilling();
+}
+
+// ── МОИ РАСЧЁТЫ (специалисту про себя) ────────────────────
+// Тот же расчёт и тот же источник данных, что у владельца, — иначе неизбежны разговоры
+// «откуда сумма, я же всё платила». Специалисту нельзя показывать сухую таблицу: ему нужен
+// статус и понимание, из чего складывается сумма, поэтому цифры — крупно и словами.
+async function renderMyBilling(){
+  const el = document.getElementById('myBillView'); if(!el) return;
+  el.innerHTML = `<div class="section-title">${t('mb_title')}</div><p style="color:#888;font-size:13px;">${t('sp_loading')}</p>`;
+  let j=null; try{ j = await api('/cabinet/billing/me', {period:'all'}); }catch(_){}
+  if(!j || !j.ok || !(j.rows||[]).length){
+    el.innerHTML = `<div class="section-title">${t('mb_title')}</div><p style="color:var(--alert);font-size:13px;">${t('sp_load_err')}</p>`; return;
+  }
+  const r = j.rows[0];
+  const card = (title, value, sub, color) => `
+    <div style="flex:1;min-width:220px;border:1px solid #e5e5e5;border-radius:10px;padding:14px 16px;background:#fafafa;">
+      <div style="font-size:12px;color:#888;">${title}</div>
+      <div style="font-size:22px;font-weight:600;margin:4px 0 2px;${color?('color:'+color+';'):''}">${value}</div>
+      <div style="font-size:11.5px;color:#888;line-height:1.45;">${sub||''}</div>
+    </div>`;
+
+  const platform = (r.status==='exempt')
+    ? card(t('mb_platform'), t('bl_exempt'), t('mb_platform_exempt'), '#2a8a4a')
+    : (r.platform_due > 0
+        ? card(t('mb_platform'), '€'+blMoney(r.platform_due), t('mb_platform_due').replace('{n}', r.platform_months_due), 'var(--alert)')
+        : card(t('mb_platform'), t('bl_active'), (r.paid_until? t('mb_paid_until')+' '+esc(r.paid_until):''), '#2a8a4a'));
+
+  const soft = card(t('mb_soft'), '€'+blMoney(r.soft_due),
+      t('mb_soft_sub').replace('{n}', r.grants_active), r.soft_due>0?'var(--alert)':'#2a8a4a');
+
+  const total = card(t('bl_col_due_now'), '€'+blMoney(r.due_now), '', r.due_now>0?'var(--alert)':'#2a8a4a');
+
+  el.innerHTML = `
+    <div class="section-title">${t('mb_title')}</div>
+    <p style="font-size:12px;color:#888;margin-bottom:14px;max-width:760px;line-height:1.5;">${t('mb_hint')}</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">${platform}${soft}${total}</div>
+    <button class="topbtn" onclick="toggleMyBillDetail()">${t('bl_detail')}</button>
+    <div id="myBillDetail" style="margin-top:12px;"></div>`;
+}
+let myBillOpen = false;
+async function toggleMyBillDetail(){
+  const box = document.getElementById('myBillDetail'); if(!box) return;
+  myBillOpen = !myBillOpen;
+  if(!myBillOpen){ box.innerHTML=''; return; }
+  box.innerHTML = `<span style="color:#888;font-size:12px;">${t('sp_loading')}</span>`;
+  let j=null; try{ j = await api('/cabinet/billing/detail', {}); }catch(_){}
+  if(!j || !j.ok){ box.innerHTML = `<span style="color:var(--alert);font-size:12px;">${t('sp_load_err')}</span>`; return; }
+  const today = (new Date()).toISOString().slice(0,10);
+  const act = (j.grants||[]).filter(x=>!x.revoked && x.expiry && x.expiry>=today);
+  const g = act.map(x=>`<div style="font-size:12px;padding:3px 0;">${esc(x.client_name||x.card_code||'')} · ${esc(x.issued||'')} → ${esc(x.expiry||'')} · <b>€${blMoney(x.owed_eur)}</b></div>`).join('')
+    || `<span style="color:#888;font-size:12px;">${t('bl_empty')}</span>`;
+  const pl = (j.payments||[]).map(x=>`<div style="font-size:12px;padding:3px 0;">${esc(x.paid_at||'')} · <b>€${blMoney(x.amount_eur)}</b> · ${x.kind==='platform'?t('bl_kind_platform'):t('bl_kind_soft')}${x.note?' · '+esc(x.note):''}</div>`).join('')
+    || `<span style="color:#888;font-size:12px;">${t('bl_empty')}</span>`;
+  box.innerHTML = `<div style="display:flex;gap:32px;flex-wrap:wrap;">
+      <div style="min-width:300px;"><div style="font-weight:600;font-size:12px;margin-bottom:4px;">${t('bl_active_h')} · ${act.length}</div>${g}</div>
+      <div style="min-width:280px;"><div style="font-weight:600;font-size:12px;margin-bottom:4px;">${t('bl_pays_h')}</div>${pl}</div>
+    </div>`;
 }
 
 // ── BILLING VIEW (панель владельца) ───────────────────────
