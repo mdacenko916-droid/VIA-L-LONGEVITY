@@ -3544,6 +3544,7 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
 <div id="expertChat" style="display:none;position:fixed;inset:0;z-index:700;background:linear-gradient(165deg,#F5F3EF,#EAE1C9);flex-direction:column;color:#2a2620;">
   <div style="flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:calc(16px + env(safe-area-inset-top,0px)) 18px 16px;border-bottom:1px solid rgba(150,120,50,.22);">
     <button onclick="closeExpertChat()" aria-label="Close" class="x-close" style="position:static;color:#5a5348;border-color:rgba(90,83,72,.35);">✕</button>
+    <button onclick="openComplaint()" style="position:static;background:none;border:1px solid rgba(90,83,72,.3);border-radius:8px;color:#7a7263;font-size:11px;padding:5px 9px;cursor:pointer;margin-right:8px;" data-t="cmp_btn">Сообщить о проблеме</button>
     <div style="flex:1;">
       <div style="font-family:'Playfair Display',serif;font-size:19px;color:#2a2620;" data-t="chat_title">Ваш специалист</div>
       <div style="font-size:12px;color:#7a7263;" data-t="chat_sub">Личная связь — ответ в течение 48 часов</div>
@@ -3575,6 +3576,51 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxaATfqaJoGYbLJ
 // восстановление доступа и ловит случай «код ушёл не тому». Несовпадение НЕ блокирует
 // вход: человек заплатил, а в карточке может быть опечатка — оно помечается специалисту.
 function _emailAsked(){ try{ return localStorage.getItem('viae_email_ok')==='1'; }catch(e){ return true; } }
+// A5: жалоба в один клик. Рядом с чатом — там, где проблема и возникает («не отвечает»
+// видно именно здесь). Уходит владельцу в Telegram сразу, а не ждёт его входа в кабинет.
+function openComplaint(){
+  var L=(typeof lang!=='undefined')?lang:'ru';
+  var T={
+    t:{ru:'Сообщить о проблеме',uk:'Повідомити про проблему',en:'Report a problem',es:'Informar de un problema',de:'Problem melden',pt:'Relatar um problema',fr:'Signaler un problème',pl:'Zgłoś problem',it:'Segnala un problema',he:'דיווח על בעיה',ja:'問題を報告',ko:'문제 신고'},
+    d:{ru:'Сообщение уйдёт владельцу платформы, а не вашему специалисту.',uk:'Повідомлення піде власнику платформи, а не вашому спеціалісту.',en:'Your message goes to the platform owner, not to your specialist.',es:'Tu mensaje va al propietario de la plataforma, no a tu especialista.',de:'Deine Nachricht geht an den Plattform-Inhaber, nicht an deinen Spezialisten.',pt:'Sua mensagem vai para o proprietário da plataforma, não para o seu especialista.',fr:'Votre message est envoyé au propriétaire de la plateforme, pas à votre spécialiste.',pl:'Wiadomość trafi do właściciela platformy, nie do specjalisty.',it:'Il messaggio va al proprietario della piattaforma, non al tuo specialista.',he:'ההודעה נשלחת לבעלי הפלטפורמה, לא למומחה שלכם.',ja:'メッセージは担当者ではなく、プラットフォーム運営者に届きます。',ko:'메시지는 담당 전문가가 아니라 플랫폼 소유자에게 전달됩니다.'},
+    o1:{ru:'Специалист не отвечает',uk:'Спеціаліст не відповідає',en:'Specialist does not reply',es:'El especialista no responde',de:'Spezialist antwortet nicht',pt:'O especialista não responde',fr:'Le spécialiste ne répond pas',pl:'Specjalista nie odpowiada',it:'Lo specialista non risponde',he:'המומחה לא עונה',ja:'専門家から返信がない',ko:'전문가가 응답하지 않음'},
+    o2:{ru:'Качество ведения',uk:'Якість ведення',en:'Quality of guidance',es:'Calidad del acompañamiento',de:'Qualität der Begleitung',pt:'Qualidade do acompanhamento',fr:'Qualité du suivi',pl:'Jakość prowadzenia',it:'Qualità del percorso',he:'איכות הליווי',ja:'サポートの質',ko:'관리 품질'},
+    o3:{ru:'Вопрос по оплате',uk:'Питання щодо оплати',en:'Payment issue',es:'Problema de pago',de:'Zahlungsfrage',pt:'Questão de pagamento',fr:'Question de paiement',pl:'Sprawa płatności',it:'Questione di pagamento',he:'שאלת תשלום',ja:'支払いに関する問題',ko:'결제 문제'},
+    o4:{ru:'Другое',uk:'Інше',en:'Other',es:'Otro',de:'Sonstiges',pt:'Outro',fr:'Autre',pl:'Inne',it:'Altro',he:'אחר',ja:'その他',ko:'기타'},
+    b:{ru:'Отправить',uk:'Надіслати',en:'Send',es:'Enviar',de:'Senden',pt:'Enviar',fr:'Envoyer',pl:'Wyślij',it:'Invia',he:'שליחה',ja:'送信',ko:'보내기'},
+    c:{ru:'Отмена',uk:'Скасувати',en:'Cancel',es:'Cancelar',de:'Abbrechen',pt:'Cancelar',fr:'Annuler',pl:'Anuluj',it:'Annulla',he:'ביטול',ja:'キャンセル',ko:'취소'},
+    ok:{ru:'Спасибо, сообщение получено. Мы разберёмся.',uk:'Дякуємо, повідомлення отримано. Ми розберемося.',en:'Thank you, your message has been received. We will look into it.',es:'Gracias, hemos recibido tu mensaje. Lo revisaremos.',de:'Danke, deine Nachricht ist angekommen. Wir kümmern uns darum.',pt:'Obrigado, sua mensagem foi recebida. Vamos verificar.',fr:'Merci, votre message a bien été reçu. Nous allons vérifier.',pl:'Dziękujemy, wiadomość otrzymana. Sprawdzimy to.',it:'Grazie, messaggio ricevuto. Ce ne occupiamo.',he:'תודה, ההודעה התקבלה. נטפל בזה.',ja:'ありがとうございます。メッセージを受け取りました。確認します。',ko:'감사합니다. 메시지를 받았습니다. 확인하겠습니다.'}
+  };
+  var pick=function(o){ return o[L]||o.en; };
+  var code=(function(){ try{ return (sessionStorage.getItem('viae_code')||localStorage.getItem('viae_code')||'').toUpperCase(); }catch(e){ return ''; } })();
+  var w=document.createElement('div');
+  w.style.cssText='position:fixed;inset:0;z-index:9500;background:rgba(16,20,28,.92);display:flex;align-items:center;justify-content:center;padding:22px;';
+  w.innerHTML='<div style="max-width:440px;width:100%;background:#F5F1E8;border-radius:18px;padding:20px;">'
+    +'<div style="font-family:\'Playfair Display\',serif;font-size:19px;color:#2a2620;margin-bottom:4px;">'+pick(T.t)+'</div>'
+    +'<div style="font-size:12px;color:#7a7263;line-height:1.5;margin-bottom:12px;">'+pick(T.d)+'</div>'
+    +'<select id="cmpTopic" style="width:100%;border:1px solid rgba(90,83,72,.28);border-radius:9px;padding:9px;font-size:14px;background:#fff;color:#2a2620;margin-bottom:8px;">'
+    +'<option value="no_reply">'+pick(T.o1)+'</option><option value="quality">'+pick(T.o2)+'</option>'
+    +'<option value="money">'+pick(T.o3)+'</option><option value="other">'+pick(T.o4)+'</option></select>'
+    +'<textarea id="cmpText" rows="4" style="width:100%;border:1px solid rgba(90,83,72,.28);border-radius:9px;padding:9px;font-size:14px;background:#fff;color:#2a2620;resize:vertical;"></textarea>'
+    +'<div id="cmpMsg" style="font-size:12px;color:#2a7a55;margin-top:8px;"></div>'
+    +'<div style="display:flex;gap:10px;margin-top:12px;">'
+    +'<button id="cmpSend" style="flex:1;background:#2a2620;color:#F5F1E8;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;">'+pick(T.b)+'</button>'
+    +'<button id="cmpCancel" style="background:none;border:1px solid rgba(90,83,72,.3);border-radius:10px;padding:11px 14px;font-size:13px;color:#5a5348;cursor:pointer;">'+pick(T.c)+'</button>'
+    +'</div></div>';
+  document.body.appendChild(w);
+  w.querySelector('#cmpCancel').onclick=function(){ w.remove(); };
+  w.querySelector('#cmpSend').onclick=async function(){
+    var txt=(w.querySelector('#cmpText').value||'').trim();
+    if(txt.length<3) return;
+    try{
+      await fetch(_CHAT_API+'/complaint',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({code:code,topic:w.querySelector('#cmpTopic').value,text:txt,lang:L})});
+    }catch(e){}
+    w.querySelector('#cmpMsg').textContent=pick(T.ok);
+    setTimeout(function(){ w.remove(); }, 2200);
+  };
+}
+
 function _askEmail(cardCode){
   if(_emailAsked() || !cardCode) return;
   var L=(typeof lang!=='undefined')?lang:'ru';
@@ -3944,6 +3990,7 @@ Object.keys(_COG).forEach(function(k){Object.keys(_COG[k]).forEach(function(l){i
 const _NAVK={
   nav_approach:{en:"Our approach",ru:"Наш подход",uk:"Наш підхід",es:"Enfoque",de:"Ansatz",pt:"Abordagem",fr:"Approche",pl:"Podejście",it:"Approccio",he:"הגישה שלנו",ja:"アプローチ",ko:"접근 방식"},
   nav_today:{en:"Today",ru:"Сегодня",uk:"Сьогодні",es:"Hoy",de:"Heute",pt:"Hoje",fr:"Aujourd'hui",pl:"Dziś",it:"Oggi",he:"היום",ja:"今日",ko:"오늘"},
+  cmp_btn:{ru:"Сообщить о проблеме",uk:"Повідомити про проблему",en:"Report a problem",es:"Informar de un problema",de:"Problem melden",pt:"Relatar um problema",fr:"Signaler un problème",pl:"Zgłoś problem",it:"Segnala un problema",he:"דיווח על בעיה",ja:"問題を報告",ko:"문제 신고"},
   chat_resp:{ru:"Консультации оказывает ваш специалист — он несёт за них ответственность. VIA-L предоставляет программу и стороной договора между вами и специалистом не является.",uk:"Консультації надає ваш спеціаліст — він несе за них відповідальність. VIA-L надає програму і стороною договору між вами та спеціалістом не є.",en:"Consultations are provided by your specialist, who is responsible for them. VIA-L provides the software and is not a party to the agreement between you and the specialist.",es:"Las consultas las presta tu especialista, que es responsable de ellas. VIA-L proporciona el software y no es parte del contrato entre tú y el especialista.",de:"Die Beratung erbringt dein Spezialist und verantwortet sie. VIA-L stellt die Software bereit und ist nicht Vertragspartei zwischen dir und dem Spezialisten.",pt:"As consultas são prestadas pelo seu especialista, que é responsável por elas. A VIA-L fornece o software e não é parte do contrato entre você e o especialista.",fr:"Les consultations sont assurées par votre spécialiste, qui en est responsable. VIA-L fournit le logiciel et n’est pas partie au contrat entre vous et le spécialiste.",pl:"Konsultacje zapewnia Twój specjalista i to on za nie odpowiada. VIA-L dostarcza oprogramowanie i nie jest stroną umowy między Tobą a specjalistą.",it:"Le consulenze sono erogate dal tuo specialista, che ne è responsabile. VIA-L fornisce il software e non è parte del contratto tra te e lo specialista.",he:"הייעוץ ניתן על ידי המומחה שלכם והאחריות עליו היא שלו. VIA-L מספקת את התוכנה ואינה צד להסכם ביניכם לבין המומחה.",ja:"相談は担当の専門家が提供し、その責任も同氏が負います。VIA-Lはソフトウェアを提供するのみで、あなたと専門家の契約の当事者ではありません。",ko:"상담은 담당 전문가가 제공하며 그에 대한 책임도 전문가에게 있습니다. VIA-L은 소프트웨어를 제공할 뿐 계약 당사자가 아닙니다."},
   nav_guide:{en:"My guide",ru:"Мой наставник",uk:"Мій наставник",es:"Mi guía",de:"Mein Begleiter",pt:"Meu guia",fr:"Mon guide",pl:"Mój przewodnik",it:"La mia guida",he:"המלווה שלי",ja:"マイガイド",ko:"나의 가이드"},
   approach_row:{en:"Our approach & the science",ru:"Наш подход и научная основа",uk:"Наш підхід і наукова основа",es:"Nuestro enfoque y la ciencia",de:"Unser Ansatz & die Wissenschaft",pt:"Nossa abordagem e a ciência",fr:"Notre approche et la science",pl:"Nasze podejście i nauka",it:"Il nostro approccio e la scienza",he:"הגישה שלנו והמדע",ja:"私たちのアプローチと科学的根拠",ko:"우리의 접근 방식과 과학적 근거"},

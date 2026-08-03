@@ -1240,6 +1240,8 @@ export default {
       // Платформа, Шаг 6: панель владельца — управление специалистами (только role=owner).
       if (path === '/cabinet/specialists')       return handleCabinetSpecialists(request, env, corsHeaders);
       if (path === '/cabinet/billing')          return handleCabinetBilling(request, env, corsHeaders);            // владелец: сводка по деньгам
+      if (path === '/complaint')               return handleComplaint(request, env, corsHeaders);                  // жалоба клиента (A5)
+      if (path === '/cabinet/complaints')      return handleCabinetComplaints(request, env, corsHeaders);          // владелец: разбор жалоб
       if (path === '/offer/accept')            return handleOfferAccept(request, env, corsHeaders);               // акцепт оферты до оплаты (A2)
       if (path === '/expert/confirm-email') return handleExpertConfirmEmail(request, env, corsHeaders);   // подтверждение почты при первом входе (POST)
       if (path === '/cabinet/expert-users')    return handleCabinetExpertUsers(request, env, corsHeaders);        // счётчик и сверка пользователей EXPERT
@@ -7376,6 +7378,71 @@ async function _billingResponse(env, corsHeaders, period, onlyId){
     totals: { clients: rows.reduce((a,r)=>a+r.clients,0),
               soft_due: sum('soft_due'), platform_due: sum('platform_due'),
               due_now: sum('due_now'), cash_period: sum('cash_period') } }, corsHeaders);
+}
+
+// ── ЖАЛОБА КЛИЕНТА (A5, 2026-08-03) ─────────────────────────────────────────
+// Проверка при подключении отсекает случайных людей, но не тех, кто прошёл проверку и повёл
+// себя плохо. Один клик из приложения → сигнал владельцу за минуты, а не через отзывы в сети.
+// Отдельно уходит в Telegram: жалоба, которую увидят через неделю, бесполезна.
+async function handleComplaint(request, env, corsHeaders){
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  let b={}; try{ b = await request.json(); }catch(_){}
+  const card  = String(b.code||'').trim().toUpperCase();
+  const topic = ['no_reply','quality','money','other'].includes(String(b.topic||'')) ? String(b.topic) : 'other';
+  const text  = String(b.text||'').trim().slice(0, 2000);
+  const lang  = String(b.lang||'').slice(0,5);
+  if(!card || !text) return jsonResponse({ok:false,error:'bad_input'}, corsHeaders, 400);
+
+  let specId = null, clientName = '', specName = '';
+  try{
+    const row = await env.DB.prepare(
+      'SELECT c.specialist_id, c.name, s.name AS sname FROM clients c LEFT JOIN specialists s ON s.id=c.specialist_id WHERE upper(c.code)=?'
+    ).bind(card).first();
+    if(row){ specId = row.specialist_id; clientName = row.name || ''; specName = row.sname || ''; }
+  }catch(_){}
+
+  try{
+    await env.DB.prepare(
+      'INSERT INTO complaints (card_code,specialist_id,topic,text,lang,status,created_at) VALUES (?,?,?,?,?,?,?)'
+    ).bind(card, specId, topic, text, lang, 'new', Date.now()).run();
+  }catch(e){ return jsonResponse({ok:false,error:'insert_failed'}, corsHeaders, 500); }
+
+  // Мгновенное уведомление владельцу — иначе жалоба лежит до следующего входа в кабинет.
+  if(env.TELEGRAM_BOT_TOKEN && env.NUTRITIONIST_CHAT_ID){
+    const TOPIC = { no_reply:'не отвечает', quality:'качество ведения', money:'деньги', other:'другое' };
+    const msg = '🚩 ЖАЛОБА КЛИЕНТА\n\nКлиент: ' + (clientName || card) + ' (' + card + ')'
+      + '\nСпециалист: ' + (specName || ('#' + (specId||'—')))
+      + '\nТема: ' + (TOPIC[topic] || topic) + '\n\n' + text;
+    try{
+      await fetch('https://api.telegram.org/bot' + env.TELEGRAM_BOT_TOKEN + '/sendMessage', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ chat_id: env.NUTRITIONIST_CHAT_ID, text: msg })
+      });
+    }catch(_){}
+  }
+  return jsonResponse({ok:true}, corsHeaders);
+}
+
+// POST /cabinet/complaints {status?} — владелец видит жалобы; {id,status,note} — меняет статус.
+async function handleCabinetComplaints(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  if(sess.role !== 'owner') return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  let b={}; try{ b = await request.json(); }catch(_){}
+  if(b.id){
+    const st = ['new','seen','closed'].includes(String(b.status||'')) ? String(b.status) : 'seen';
+    await env.DB.prepare('UPDATE complaints SET status=?, owner_note=?, closed_at=? WHERE id=?')
+      .bind(st, String(b.note||'').slice(0,500), st==='closed'?Date.now():null, parseInt(b.id,10)).run();
+    return jsonResponse({ok:true}, corsHeaders);
+  }
+  const rows = (await env.DB.prepare(
+    `SELECT k.id,k.card_code,k.specialist_id,k.topic,k.text,k.status,k.created_at,k.owner_note,
+            c.name AS client_name, s.name AS spec_name
+       FROM complaints k LEFT JOIN clients c ON upper(c.code)=k.card_code
+                         LEFT JOIN specialists s ON s.id=k.specialist_id
+      ORDER BY (k.status='new') DESC, k.created_at DESC LIMIT 200`).all()).results || [];
+  return jsonResponse({ok:true, complaints: rows, new_count: rows.filter(x=>x.status==='new').length}, corsHeaders);
 }
 
 // ── АКЦЕПТ ОФЕРТЫ (A2, 2026-08-03) ──────────────────────────────────────────
