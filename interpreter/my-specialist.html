@@ -245,6 +245,46 @@ const T={"ru":{"back":"← Назад","title":"Мой наставник","intr
   };
   Object.keys(SUP).forEach(l=>{ if(T[l]){ T[l].nocode_q=SUP[l].nocode_q; T[l].nocode_book=SUP[l].nocode_book; } });
 })();
+// A2 (2026-08-03): акцепт оферты ДО оплаты. Договор — то, за что человек платит; платить
+// раньше значит платить за неопределённое. Полноценная ЭЦП для €390–500 избыточна и режет
+// конверсию — юридически достаточно зафиксировать МОМЕНТ принятия (см. /offer/accept).
+(function(){
+  const O={
+    ru:{ok:'Я ознакомлен(а) с условиями и принимаю их',link:'условия ведения',need:'Отметьте согласие с условиями — иначе оплата не имеет предмета'},
+    uk:{ok:'Я ознайомлений(а) з умовами і приймаю їх',link:'умови ведення',need:'Позначте згоду з умовами — інакше оплата не має предмета'},
+    en:{ok:'I have read and accept the terms',link:'terms of guidance',need:'Please accept the terms — otherwise the payment has no defined subject'},
+    es:{ok:'He leído y acepto las condiciones',link:'condiciones del acompañamiento',need:'Acepta las condiciones: de lo contrario el pago no tiene objeto definido'},
+    de:{ok:'Ich habe die Bedingungen gelesen und akzeptiere sie',link:'Bedingungen der Begleitung',need:'Bitte akzeptiere die Bedingungen — sonst hat die Zahlung keinen definierten Gegenstand'},
+    pt:{ok:'Li e aceito as condições',link:'condições do acompanhamento',need:'Aceite as condições — caso contrário o pagamento não tem objeto definido'},
+    fr:{ok:'J’ai lu et j’accepte les conditions',link:'conditions du suivi',need:'Acceptez les conditions — sinon le paiement n’a pas d’objet défini'},
+    pl:{ok:'Zapoznałem(am) się z warunkami i je akceptuję',link:'warunki prowadzenia',need:'Zaakceptuj warunki — inaczej płatność nie ma określonego przedmiotu'},
+    it:{ok:'Ho letto e accetto le condizioni',link:'condizioni del percorso',need:'Accetta le condizioni — altrimenti il pagamento non ha oggetto definito'},
+    he:{ok:'קראתי ואני מסכים/ה לתנאים',link:'תנאי הליווי',need:'יש לאשר את התנאים — אחרת לתשלום אין נושא מוגדר'},
+    ja:{ok:'条件を読み、同意します',link:'サポートの条件',need:'条件に同意してください。そうでないと支払いの対象が定まりません'},
+    ko:{ok:'약관을 읽고 동의합니다',link:'관리 약관',need:'약관에 동의해 주세요 — 그렇지 않으면 결제 대상이 정해지지 않습니다'}
+  };
+  Object.keys(O).forEach(l=>{ if(T[l]){ T[l].offer_ok=O[l].ok; T[l].offer_link=O[l].link; T[l].offer_need=O[l].need; } });
+})();
+
+// Фиксация акцепта: токен кладём в localStorage — приложение живёт на том же домене и позже,
+// при подтверждении почты, привяжет его к карточке клиента. До оплаты клиента в системе нет.
+async function _acceptOffer(specId, payUrl){
+  const box = document.getElementById('offerChk_' + specId);
+  if(box && !box.checked){
+    const msg = document.getElementById('offerMsg_' + specId);
+    if(msg){ msg.textContent = tr('offer_need'); msg.style.display='block'; }
+    return false;
+  }
+  try{
+    const r = await fetch(WORKER + '/offer/accept', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ specialist_id: specId, lang: (typeof LANG!=='undefined'?LANG:'') }) });
+    const d = await r.json();
+    if(d && d.ok && d.token){ try{ localStorage.setItem('vial_offer_token', d.token); }catch(e){} }
+  }catch(e){ /* сеть отвалилась — оплату не блокируем, но и акцепт не подделываем */ }
+  if(payUrl) window.open(payUrl, '_blank', 'noopener');
+  return true;
+}
+
 // A1 (2026-08-03): оговорка об ответственности. Клиент должен ДО оплаты понимать, с кем он в
 // договоре и куда идут деньги. Специалисты — не работники VIA-L, платёж идёт напрямую им,
 // платформа денег не держит и вернуть не может.
@@ -502,11 +542,16 @@ function specCard(s, idx, inCatalog){
   // ссылка в карточке нигде не показана текстом — только как адрес кнопки.
   const btnBook = cal ? `<a class="btn" href="${cal}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="${_bs}"><span>${esc(tr('nocode_book'))}</span></a>` : '';
   const btnBuy = pay
-    ? `<a class="btn" href="${pay}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="${_bs}background:var(--gold-txt);color:#fff;border-color:transparent;"><span>${esc(tr('start_now'))}</span></a>`
+    ? `<a class="btn" href="javascript:void(0)" onclick="event.stopPropagation();_acceptOffer(${s.id||0}, '${pay}')" style="${_bs}background:var(--gold-txt);color:#fff;border-color:transparent;"><span>${esc(tr('start_now'))}</span></a>`
     : (cal ? `<div style="font-size:11px;color:var(--t3);margin-top:8px;text-align:center;">${esc(tr('start_after_intro'))}</div>` : '');
   const btn = btnBuy + btnBook;   // «Начать ведение» выше: клиенту, который уже решил, не нужно искать
   // Оговорка об ответственности — рядом с кнопкой оплаты, а не в подвале: человек должен
   // прочитать это ДО того, как заплатит, иначе она не выполняет своей функции.
+  // Галочка акцепта — НАД кнопкой оплаты: условия принимаются до платежа, а не после.
+  const offer = pay ? ('<label onclick="event.stopPropagation()" style="display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:11.5px;color:var(--t2);line-height:1.45;cursor:pointer;">'
+    + '<input type="checkbox" id="offerChk_' + (s.id||0) + '" style="margin-top:2px;flex:0 0 auto;">'
+    + '<span>' + esc(tr('offer_ok')) + ' — <a href="legal/legal.html" target="_blank" rel="noopener" style="color:var(--gold-txt);">' + esc(tr('offer_link')) + '</a></span></label>'
+    + '<div id="offerMsg_' + (s.id||0) + '" style="display:none;font-size:11px;color:#E0576A;margin-top:6px;"></div>') : '';
   const resp = '<div style="font-size:10.5px;color:var(--t3);line-height:1.5;margin-top:10px;border-top:1px solid rgba(255,255,255,.07);padding-top:8px;">'
     + esc(tr('resp_who').replace('{name}', s.name||'')) + ' ' + esc(tr('resp_pay')) + '</div>';
   const clickAttr = inCatalog ? ` onclick="_pickSpecialist(${idx})" style="cursor:pointer;"` : '';
@@ -520,6 +565,7 @@ function specCard(s, idx, inCatalog){
       </div>
     </div>
     ${s.bio?`<div style="font-size:13px;color:var(--t2);margin-top:8px;line-height:1.5;">${esc(s.bio)}</div>`:''}
+    ${offer}
     ${btn}
     ${resp}
   </div>`;

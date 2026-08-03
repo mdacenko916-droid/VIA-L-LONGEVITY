@@ -1240,6 +1240,7 @@ export default {
       // Платформа, Шаг 6: панель владельца — управление специалистами (только role=owner).
       if (path === '/cabinet/specialists')       return handleCabinetSpecialists(request, env, corsHeaders);
       if (path === '/cabinet/billing')          return handleCabinetBilling(request, env, corsHeaders);            // владелец: сводка по деньгам
+      if (path === '/offer/accept')            return handleOfferAccept(request, env, corsHeaders);               // акцепт оферты до оплаты (A2)
       if (path === '/expert/confirm-email') return handleExpertConfirmEmail(request, env, corsHeaders);   // подтверждение почты при первом входе (POST)
       if (path === '/cabinet/expert-users')    return handleCabinetExpertUsers(request, env, corsHeaders);        // счётчик и сверка пользователей EXPERT
       if (path === '/cabinet/billing/me')       return handleCabinetBillingMe(request, env, corsHeaders);          // специалист: та же сводка про себя
@@ -7100,7 +7101,7 @@ async function handleSpecialistsPublic(request, env, corsHeaders){
   let rows=[];
   try{
     const r = await env.DB.prepare(
-      "SELECT name,specialty,category,photo,bio,cal_url,langs,pay_url FROM specialists WHERE public=1 AND status='active' ORDER BY name"
+      "SELECT id,name,specialty,category,photo,bio,cal_url,langs,pay_url FROM specialists WHERE public=1 AND status='active' ORDER BY name"
     ).all();
     rows = r.results || [];
   }catch(_){}
@@ -7365,6 +7366,29 @@ async function _billingResponse(env, corsHeaders, period, onlyId){
               due_now: sum('due_now'), cash_period: sum('cash_period') } }, corsHeaders);
 }
 
+// ── АКЦЕПТ ОФЕРТЫ (A2, 2026-08-03) ──────────────────────────────────────────
+// Договор клиента со специалистом заключается ДО оплаты, форма — публичная оферта с акцептом
+// действием. Доказательством служит не подпись, а зафиксированный МОМЕНТ: время, версия текста,
+// специалист, язык, страна, усечённый user-agent. Сырой IP не пишем — для доказательства
+// события он не нужен, а обязательств добавляет.
+const OFFER_VERSION = 'offer-v1';   // ⚠️ менять при КАЖДОЙ правке текста оферты: старые акцепты
+                                    // должны оставаться привязанными к той редакции, которую человек читал
+async function handleOfferAccept(request, env, corsHeaders){
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  let b={}; try{ b = await request.json(); }catch(_){}
+  const specId = parseInt(b.specialist_id, 10) || null;
+  const lang   = String(b.lang||'').slice(0,5);
+  const token  = 'oa-' + (crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36)+Math.random().toString(36).slice(2,10)));
+  const ua      = String(request.headers.get('User-Agent')||'').slice(0,180);
+  const country = (request.cf && request.cf.country) || '';
+  try{
+    await env.DB.prepare(
+      'INSERT INTO offer_acceptances (token,specialist_id,offer_version,lang,country,ua,created_at) VALUES (?,?,?,?,?,?,?)'
+    ).bind(token, specId, OFFER_VERSION, lang, country, ua, Date.now()).run();
+  }catch(e){ return jsonResponse({ok:false,error:'insert_failed'}, corsHeaders, 500); }
+  return jsonResponse({ok:true, token, version: OFFER_VERSION}, corsHeaders);
+}
+
 // POST /expert/confirm-email {code, email} — подтверждение почты при ПЕРВОМ входе в EXPERT.
 // Зачем одно поле, а не анкета: имя и почта уже есть в карточке (её создаёт специалист при
 // выдаче доступа или покупка). Спрашивать их заново — значит получить второй, расходящийся
@@ -7395,6 +7419,13 @@ async function handleExpertConfirmEmail(request, env, corsHeaders){
   } else {
     await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?')
       .bind(JSON.stringify(d), now, row.code).run();
+  }
+  // Привязываем акцепт оферты к карточке: до оплаты клиента в системе не было, и это
+  // единственный момент, когда мы одновременно знаем токен из браузера и код карточки.
+  const oToken = String(b.offer_token||'').trim();
+  if(oToken){
+    try{ await env.DB.prepare('UPDATE offer_acceptances SET card_code=?, linked_at=? WHERE token=? AND card_code IS NULL')
+      .bind(row.code, Date.now(), oToken).run(); }catch(_){}
   }
   return jsonResponse({ok:true, match, filled: !known}, corsHeaders);
 }

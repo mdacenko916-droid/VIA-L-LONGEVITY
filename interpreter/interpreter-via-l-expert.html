@@ -3606,7 +3606,7 @@ function _askEmail(cardCode){
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){ w.querySelector('#viaeEmailMsg').textContent='—'; return; }
     try{
       var r=await fetch(_CHAT_API+'/expert/confirm-email',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({code:cardCode,email:v})});
+        body:JSON.stringify({code:cardCode,email:v,offer_token:(function(){try{return localStorage.getItem('vial_offer_token')||'';}catch(e){return '';}})()})});
       var j=await r.json();
       if(j && j.ok && j.match===false){ w.querySelector('#viaeEmailMsg').textContent=pick(T.m); setTimeout(close,3200); return; }
     }catch(e){}
