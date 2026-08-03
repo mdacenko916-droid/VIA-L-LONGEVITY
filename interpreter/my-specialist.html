@@ -245,6 +245,34 @@ const T={"ru":{"back":"← Назад","title":"Мой наставник","intr
   };
   Object.keys(SUP).forEach(l=>{ if(T[l]){ T[l].nocode_q=SUP[l].nocode_q; T[l].nocode_book=SUP[l].nocode_book; } });
 })();
+// A4/A6 (2026-08-03): бейдж «проверено» и раскрытие подробностей специалиста.
+// Клиент должен иметь возможность убедиться сам, а не верить площадке на слово: номер
+// регистрации публичен и проверяется в открытом реестре за минуту.
+(function(){
+  const V={
+    ru:{badge:'Данные проверены платформой',since:'проверено',more:'Подробнее о специалисте',less:'Свернуть',edu:'Образование и квалификация',reg:'Регистрация',site:'Сайт',city:'Город',check:'Номер регистрации можно проверить в открытом реестре'},
+    uk:{badge:'Дані перевірені платформою',since:'перевірено',more:'Докладніше про спеціаліста',less:'Згорнути',edu:'Освіта та кваліфікація',reg:'Реєстрація',site:'Сайт',city:'Місто',check:'Номер реєстрації можна перевірити у відкритому реєстрі'},
+    en:{badge:'Details verified by the platform',since:'verified',more:'More about the specialist',less:'Hide',edu:'Education and qualification',reg:'Registration',site:'Website',city:'City',check:'The registration number can be checked in the public register'},
+    es:{badge:'Datos verificados por la plataforma',since:'verificado',more:'Más sobre el especialista',less:'Ocultar',edu:'Formación y cualificación',reg:'Registro',site:'Web',city:'Ciudad',check:'El número de registro se puede comprobar en el registro público'},
+    de:{badge:'Angaben von der Plattform geprüft',since:'geprüft',more:'Mehr über den Spezialisten',less:'Ausblenden',edu:'Ausbildung und Qualifikation',reg:'Registrierung',site:'Website',city:'Stadt',check:'Die Registriernummer ist im öffentlichen Register prüfbar'},
+    pt:{badge:'Dados verificados pela plataforma',since:'verificado',more:'Mais sobre o especialista',less:'Ocultar',edu:'Formação e qualificação',reg:'Registro',site:'Site',city:'Cidade',check:'O número de registro pode ser verificado no registro público'},
+    fr:{badge:'Informations vérifiées par la plateforme',since:'vérifié',more:'En savoir plus sur le spécialiste',less:'Masquer',edu:'Formation et qualification',reg:'Enregistrement',site:'Site',city:'Ville',check:'Le numéro d’enregistrement est vérifiable au registre public'},
+    pl:{badge:'Dane zweryfikowane przez platformę',since:'zweryfikowano',more:'Więcej o specjaliście',less:'Zwiń',edu:'Wykształcenie i kwalifikacje',reg:'Rejestracja',site:'Strona',city:'Miasto',check:'Numer rejestracji można sprawdzić w rejestrze publicznym'},
+    it:{badge:'Dati verificati dalla piattaforma',since:'verificato',more:'Altro sullo specialista',less:'Chiudi',edu:'Formazione e qualifica',reg:'Registrazione',site:'Sito',city:'Città',check:'Il numero di registrazione è verificabile nel registro pubblico'},
+    he:{badge:'הפרטים אומתו על ידי הפלטפורמה',since:'אומת',more:'עוד על המומחה',less:'סגור',edu:'השכלה והסמכה',reg:'רישום',site:'אתר',city:'עיר',check:'ניתן לבדוק את מספר הרישום במרשם הציבורי'},
+    ja:{badge:'情報はプラットフォームが確認済み',since:'確認日',more:'専門家の詳細',less:'閉じる',edu:'学歴・資格',reg:'登録',site:'ウェブサイト',city:'都市',check:'登録番号は公開登録簿で確認できます'},
+    ko:{badge:'플랫폼이 확인한 정보',since:'확인일',more:'전문가 상세 정보',less:'접기',edu:'학력 및 자격',reg:'등록',site:'웹사이트',city:'도시',check:'등록번호는 공개 등록부에서 확인할 수 있습니다'}
+  };
+  Object.keys(V).forEach(l=>{ if(T[l]){ Object.keys(V[l]).forEach(k=>{ T[l]['ver_'+k]=V[l][k]; }); } });
+})();
+function _toggleSpecMore(id){
+  const box=document.getElementById('specMore_'+id), btn=document.getElementById('specMoreBtn_'+id);
+  if(!box) return;
+  const open = box.style.display==='none';
+  box.style.display = open ? 'block' : 'none';
+  if(btn) btn.textContent = (open?tr('ver_less'):tr('ver_more')) + (open?' ▴':' ▾');
+}
+
 // A2 (2026-08-03): акцепт оферты ДО оплаты. Договор — то, за что человек платит; платить
 // раньше значит платить за неопределённое. Полноценная ЭЦП для €390–500 избыточна и режет
 // конверсию — юридически достаточно зафиксировать МОМЕНТ принятия (см. /offer/accept).
@@ -548,6 +576,23 @@ function specCard(s, idx, inCatalog){
   // Оговорка об ответственности — рядом с кнопкой оплаты, а не в подвале: человек должен
   // прочитать это ДО того, как заплатит, иначе она не выполняет своей функции.
   // Галочка акцепта — НАД кнопкой оплаты: условия принимаются до платежа, а не после.
+  // A4: бейдж проверки — рядом с именем, чтобы читался сразу, а не после прокрутки.
+  const badge = s.verified_at
+    ? `<div style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;color:#4ECCA3;border:1px solid rgba(78,204,163,.35);border-radius:999px;padding:2px 8px;margin-top:4px;">✓ ${esc(tr('ver_badge'))} · ${esc(s.verified_at)}</div>`
+    : '';
+  // A6: подробности по второму клику — карточка остаётся компактной, но данные доступны.
+  const rows = [
+    s.education  ? [tr('ver_edu'),  esc(s.education)] : null,
+    s.reg_number ? [tr('ver_reg'),  esc(s.reg_number) + ' <span style="color:var(--t3);">— ' + esc(tr('ver_check')) + '</span>'] : null,
+    s.city       ? [tr('ver_city'), esc(s.city)] : null,
+    s.website    ? [tr('ver_site'), '<a href="' + esc(s.website) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--gold-txt);">' + esc(s.website.replace(/^https?:\/\//,'')) + '</a>'] : null,
+  ].filter(Boolean);
+  const more = rows.length ? (
+      '<button id="specMoreBtn_' + (s.id||0) + '" onclick="event.stopPropagation();_toggleSpecMore(' + (s.id||0) + ')" '
+    + 'style="background:none;border:none;color:var(--gold-txt);font-size:12px;padding:6px 0 0;cursor:pointer;">' + esc(tr('ver_more')) + ' ▾</button>'
+    + '<div id="specMore_' + (s.id||0) + '" style="display:none;margin-top:6px;border-top:1px solid rgba(255,255,255,.07);padding-top:8px;">'
+    + rows.map(r=>'<div style="font-size:11.5px;color:var(--t2);line-height:1.5;margin-bottom:4px;"><span style="color:var(--t3);">' + esc(r[0]) + ':</span> ' + r[1] + '</div>').join('')
+    + '</div>') : '';
   const offer = pay ? ('<label onclick="event.stopPropagation()" style="display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:11.5px;color:var(--t2);line-height:1.45;cursor:pointer;">'
     + '<input type="checkbox" id="offerChk_' + (s.id||0) + '" style="margin-top:2px;flex:0 0 auto;">'
     + '<span>' + esc(tr('offer_ok')) + ' — <a href="legal/legal.html" target="_blank" rel="noopener" style="color:var(--gold-txt);">' + esc(tr('offer_link')) + '</a></span></label>'
@@ -562,9 +607,11 @@ function specCard(s, idx, inCatalog){
         <div style="font-weight:600;color:var(--t1);font-size:15px;">${esc(s.name||'')}</div>
         ${s.specialty?`<div style="font-size:13px;color:var(--gold-txt);">${esc(specLabel(s.specialty))}</div>`:''}
         ${langs?`<div style="font-size:11px;color:var(--t3);margin-top:2px;">${langs}</div>`:''}
+        ${badge}
       </div>
     </div>
     ${s.bio?`<div style="font-size:13px;color:var(--t2);margin-top:8px;line-height:1.5;">${esc(s.bio)}</div>`:''}
+    ${more}
     ${offer}
     ${btn}
     ${resp}
