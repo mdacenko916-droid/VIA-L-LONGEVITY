@@ -5117,7 +5117,7 @@ function saveSession(score,type,data){
 // Версии для будущей перекалибровки (EFA): схема записи + набор весов индекса (дата — из
 // docs/INDEX-SCORING-SOURCES.md). Пишем в КАЖДУЮ запись, чтобы после смены весов/схемы
 // историческая динамика осталась сопоставимой. Канон: docs/COMPLIANCE-PROM-MASTER-PLAN.md P2.
-var VIALP_SCHEMA_VER=1, VIALP_WEIGHTS_VER='2026-07-20';
+var VIALP_SCHEMA_VER=1, VIALP_WEIGHTS_VER='2026-08-03';   // 2026-08-03: смягчён штраф за глубокий сон (35/20 -> 18/10) и снят вопрос о фазе при синке -- приборные стадии сна ненадёжны
 // Задел под будущий AI/исследования (стратегия: device-only по умолчанию → добровольный
 // opt-in синк). Сейчас данные НЕ уходят на сервер. Здесь только то, что нельзя ретрофитить
 // позже: стабильные идентификаторы. Канон: docs/COMPLIANCE-PROM-MASTER-PLAN.md P2/P6.
@@ -6593,6 +6593,16 @@ function _toggleSleepHours(){
   var g=document.getElementById('s16-hours'), d=document.getElementById('s16-hdiv');
   if(g)g.style.display=synced?'none':'';
   if(d)d.style.display=synced?'none':'';
+  // Глубокий сон: при синхронизации вопрос НЕ задаём. Часы сна прибор меряет лучше человека,
+  // а фазы -- ХУЖЕ (ошибка по глубокому сну достигает 43 минут, OpenEvidence N-11 отв.48).
+  // Человек списывал цифру с экрана часов, и погрешность датчика затекала в индекс через его
+  // руки -- при том, что рядом в разборе мы честно пишем, что эту фазу приборы оценивают
+  // приблизительно. Минуты с прибора остаются в трендах и в разборе, но не как ответ клиента.
+  var dp=document.getElementById('sq-deep'), synD=(typeof importedData!=='undefined' && importedData.deepMin!=null);
+  if(dp){
+    dp.style.display=synD?'none':'';
+    if(synD) document.querySelectorAll('input[name="deep"]').forEach(function(r){ r.checked=false; });
+  }
 }
 function _reflowSteps(){
   if(!document.body.classList.contains('flow-mode'))return;
@@ -7223,7 +7233,7 @@ function renderBioLoad(data, score, type){
      color:'#4ECCA3'},
     {label: L({ru:'Качество сна',uk:'Якість сну',en:'Sleep Quality',es:'Calidad sueño',de:'Schlafqualität',pt:'Qualidade do sono',fr:'Qualité du sommeil',pl:'Jakość snu',it:'Qualità del sonno',he:'איכות שינה',ja:'睡眠の質',ko:'수면 질'}),
      // самооценка × объективные маркёры: бар не может быть 100% при провале глубокого сна/частых пробуждениях
-     val: _seen('sleep_qual')?(function(){var v=data.sleep_qual*10;if(data.deep==='none')v-=35;else if(data.deep==='low')v-=20;if(data.wake==='multiple')v-=15;else if(data.wake==='early')v-=8;return Math.max(10,Math.min(100,Math.round(v)));})():null,
+     val: _seen('sleep_qual')?(function(){var v=data.sleep_qual*10;if(data.deep==='none')v-=18;else if(data.deep==='low')v-=10;if(data.wake==='multiple')v-=15;else if(data.wake==='early')v-=8;return Math.max(10,Math.min(100,Math.round(v)));})():null,
      note:'self',   // основа — самооценка 1–10 с поправками, не замер прибора
      color:'#3B5BDB'},
     {label: L({ru:'Стресс-баланс',uk:'Стрес-баланс',en:'Stress Balance',es:'Balance estrés',de:'Stressbalance',pt:'Balanço de estresse',fr:'Équilibre stress',pl:'Balans stresu',it:'Bilancio stress',he:'איזון לחץ',ja:'ストレスバランス',ko:'스트레스 균형'}),
