@@ -1245,6 +1245,7 @@ export default {
       if (path === '/offer/accept')            return handleOfferAccept(request, env, corsHeaders);               // акцепт оферты до оплаты (A2)
       if (path === '/expert/confirm-email') return handleExpertConfirmEmail(request, env, corsHeaders);   // подтверждение почты при первом входе (POST)
       if (path === '/cabinet/my-password')     return handleCabinetMyPassword(request, env, corsHeaders);           // специалист меняет свой пароль (D2)
+      if (path === '/service-act')             return handleServiceAct(request, env, corsHeaders);                 // акт по клиенту (D3)
       if (path === '/cabinet/reassign')        return handleCabinetReassign(request, env, corsHeaders);             // передать клиента другому специалисту (B3)
       if (path === '/cabinet/expert-users')    return handleCabinetExpertUsers(request, env, corsHeaders);        // счётчик и сверка пользователей EXPERT
       if (path === '/cabinet/billing/me')       return handleCabinetBillingMe(request, env, corsHeaders);          // специалист: та же сводка про себя
@@ -7583,6 +7584,57 @@ async function handleExpertConfirmEmail(request, env, corsHeaders){
       .bind(row.code, Date.now(), oToken).run(); }catch(_){}
   }
   return jsonResponse({ok:true, match, filled: !known}, corsHeaders);
+}
+
+// POST /cabinet/service-act {code} — акт по клиенту (D3, 2026-08-03).
+// Зачем: в споре нужен не рассказ, а документ — что именно платформа предоставила, когда и
+// сколько этим пользовались. Данные и так логируются (grants, expert_access, разборы,
+// переписка), не хватало только собрать их в одну выгрузку.
+// Клиент видит СВОЙ акт по коду; специалист — по своим клиентам; владелец — по любым.
+async function handleServiceAct(request, env, corsHeaders){
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  let b={}; try{ b = await request.json(); }catch(_){}
+  const code = String(b.code||'').trim().toUpperCase();
+  if(!code) return jsonResponse({ok:false,error:'bad_input'}, corsHeaders, 400);
+
+  const row = await env.DB.prepare(
+    `SELECT c.code,c.name,c.email,c.tier,c.start_date,c.specialist_id,c.created_at,c.data,
+            s.name AS spec_name, s.reg_number, s.city
+       FROM clients c LEFT JOIN specialists s ON s.id=c.specialist_id WHERE upper(c.code)=?`).bind(code).first();
+  if(!row) return jsonResponse({ok:false,error:'not_found'}, corsHeaders, 404);
+
+  // Доступ по коду карточки открыт самому клиенту; кабинетная сессия — специалисту/владельцу.
+  const sess = await cabinetSession(request, env);
+  if(sess && sess.role !== 'owner' && String(row.specialist_id) !== String(sess.id))
+    return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
+
+  let d={}; try{ d = JSON.parse(row.data||'{}'); }catch(_){}
+  const grants = (await env.DB.prepare(
+    'SELECT code,days,owed_eur,issued,expiry,revoked FROM grants WHERE card_code=? ORDER BY issued').bind(row.code).all()).results || [];
+  let used = 0, quota = 0;
+  const gc = (d.expert_grant && d.expert_grant.code) || (grants.length ? grants[grants.length-1].code : '');
+  if(gc && env.EXPERT_DRAFTS){
+    try{ const kv = JSON.parse(await env.EXPERT_DRAFTS.get('expert_access:'+gc) || 'null');
+         if(kv){ used = kv.used||0; quota = kv.quota||0; } }catch(_){}
+  }
+  const msgs = Array.isArray(d.messages) ? d.messages : [];
+  const bds  = Array.isArray(d.breakdowns) ? d.breakdowns : [];
+  const bios = Array.isArray(d.biometrics) ? d.biometrics : [];
+
+  return jsonResponse({ ok:true, act:{
+    generated_at: new Date().toISOString().slice(0,19).replace('T',' '),
+    client:  { code: row.code, name: row.name||'', email: row.email||'', tier: row.tier||'' },
+    // Кто оказывал услугу — с публично проверяемой регистрацией: в споре это первое, что спросят.
+    specialist: { name: row.spec_name||'', reg_number: row.reg_number||'', city: row.city||'' },
+    access:  grants.map(g=>({ issued:g.issued, expiry:g.expiry, days:g.days, revoked:!!g.revoked })),
+    usage:   { analyses_used: used, analyses_quota: quota,
+               breakdowns_saved: bds.length, biometrics_records: bios.length,
+               messages_total: msgs.length,
+               messages_from_specialist: msgs.filter(m=>m && (m.dir==='out'||m.from==='specialist')).length,
+               last_message_at: msgs.length ? (msgs[msgs.length-1].at || msgs[msgs.length-1].date || '') : '' },
+    transfers: Array.isArray(d.transfers) ? d.transfers : [],
+    note: 'Платформа предоставляет программу. Консультации оказывает специалист и несёт за них ответственность.'
+  }}, corsHeaders);
 }
 
 // POST /cabinet/reassign {code, specialist_id} — передать клиента другому специалисту (B3).
