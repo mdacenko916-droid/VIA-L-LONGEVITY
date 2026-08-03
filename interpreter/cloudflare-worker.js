@@ -1499,6 +1499,23 @@ async function handleInterpreterPurchase(product, buyerName, buyerEmail, lang, e
   return jsonResponse({ ok: true, tier: product.tier, code: code || null, code_error: codeError }, corsHeaders);
 }
 
+// Оговорка об ответственности для писем (A1, 2026-08-03). Специалисты не работники VIA-L:
+// консультации оказывает специалист, платформа даёт программу и стороной договора не является.
+const _RESP_NOTE = {
+  ru:'Консультации и ведение оказывает ваш специалист — он несёт за них ответственность. VIA-L предоставляет программу и стороной договора между вами и специалистом не является. Оплата идёт напрямую специалисту: платформа деньги не принимает, не хранит и не возвращает.',
+  uk:'Консультації та ведення надає ваш спеціаліст — він несе за них відповідальність. VIA-L надає програму і стороною договору між вами та спеціалістом не є. Оплата йде напряму спеціалісту: платформа гроші не приймає, не зберігає й не повертає.',
+  en:'Consultations and guidance are provided by your specialist, who is responsible for them. VIA-L provides the software and is not a party to the agreement between you and the specialist. Payment goes directly to the specialist: the platform does not receive, hold or refund it.',
+  es:'Las consultas y el acompañamiento los presta tu especialista, que es responsable de ellos. VIA-L proporciona el software y no es parte del contrato entre tú y el especialista. El pago va directamente al especialista: la plataforma no lo recibe, ni lo retiene, ni lo reembolsa.',
+  de:'Beratung und Begleitung erbringt dein Spezialist und verantwortet sie. VIA-L stellt die Software bereit und ist nicht Vertragspartei zwischen dir und dem Spezialisten. Die Zahlung geht direkt an den Spezialisten: Die Plattform nimmt sie nicht entgegen, verwahrt sie nicht und erstattet sie nicht.',
+  pt:'As consultas e o acompanhamento são prestados pelo seu especialista, que é responsável por eles. A VIA-L fornece o software e não é parte do contrato entre você e o especialista. O pagamento vai diretamente ao especialista: a plataforma não o recebe, não o retém nem o reembolsa.',
+  fr:'Les consultations et le suivi sont assurés par votre spécialiste, qui en est responsable. VIA-L fournit le logiciel et n’est pas partie au contrat entre vous et le spécialiste. Le paiement va directement au spécialiste : la plateforme ne le reçoit pas, ne le conserve pas et ne le rembourse pas.',
+  pl:'Konsultacje i prowadzenie zapewnia Twój specjalista i to on za nie odpowiada. VIA-L dostarcza oprogramowanie i nie jest stroną umowy między Tobą a specjalistą. Płatność trafia bezpośrednio do specjalisty: platforma jej nie przyjmuje, nie przechowuje i nie zwraca.',
+  it:'Le consulenze e il percorso sono erogati dal tuo specialista, che ne è responsabile. VIA-L fornisce il software e non è parte del contratto tra te e lo specialista. Il pagamento va direttamente allo specialista: la piattaforma non lo riceve, non lo trattiene e non lo rimborsa.',
+  he:'הייעוץ והליווי ניתנים על ידי המומחה שלכם, והאחריות עליהם היא שלו. VIA-L מספקת את התוכנה ואינה צד להסכם ביניכם לבין המומחה. התשלום עובר ישירות למומחה: הפלטפורמה אינה מקבלת, מחזיקה או מחזירה אותו.',
+  ja:'相談およびサポートは担当の専門家が提供し、その責任も同氏が負います。VIA-Lはソフトウェアを提供するのみで、あなたと専門家の契約の当事者ではありません。お支払いは専門家へ直接行われ、プラットフォームは受領・保管・返金を行いません。',
+  ko:'상담과 관리는 담당 전문가가 제공하며 그에 대한 책임도 전문가에게 있습니다. VIA-L은 소프트웨어를 제공할 뿐, 귀하와 전문가 간 계약의 당사자가 아닙니다. 결제는 전문가에게 직접 전달되며 플랫폼은 이를 수령·보관·환불하지 않습니다.',
+};
+
 function buildInterpreterEmailBody(name, tier, code, lang) {
   const t = {
     uk: { subj: `${tier} — ваш код доступу`,        h: `Вітаємо, ${name}!`,            msg: `Дякуємо за придбання ${tier}. Ваш код доступу:`,                  save: 'Збережіть код — він знадобиться для входу.',                  cta: 'Відкрити інтерпретатор' },
@@ -1520,6 +1537,9 @@ function buildInterpreterEmailBody(name, tier, code, lang) {
     + `<div style="background:#F8F4EC;border:2px solid #C49A3C;border-radius:12px;padding:20px 32px;text-align:center;margin:24px 0">`
     + `<span style="font-family:monospace;font-size:26px;font-weight:700;letter-spacing:4px;color:#1A1008">${code}</span></div>`
     + `<p style="color:#666;font-size:14px">${t.save}</p>`
+    // A1: оговорка об ответственности — в письме, а не только в витрине. Письмо человек
+    // сохраняет и перечитывает; именно оно чаще всего оказывается «документом» в споре.
+    + `<p style="color:#8a8a8a;font-size:12px;line-height:1.6;border-top:1px solid #eee;padding-top:12px;margin-top:22px">${_RESP_NOTE[lang] || _RESP_NOTE.en}</p>`
     + `<a href="${ipLinkFor('interpreter', tier)}" style="display:inline-block;background:#C49A3C;color:#0a0800;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600">${t.cta} →</a>`;
   return { subject: t.subj, html };
 }
