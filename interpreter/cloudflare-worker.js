@@ -1240,6 +1240,7 @@ export default {
       // Платформа, Шаг 6: панель владельца — управление специалистами (только role=owner).
       if (path === '/cabinet/specialists')       return handleCabinetSpecialists(request, env, corsHeaders);
       if (path === '/cabinet/billing')          return handleCabinetBilling(request, env, corsHeaders);            // владелец: сводка по деньгам
+      if (path === '/cabinet/billing/me')       return handleCabinetBillingMe(request, env, corsHeaders);          // специалист: та же сводка про себя
       if (path === '/cabinet/billing/payment')  return handleCabinetBillingPayment(request, env, corsHeaders);     // владелец: отметить/удалить оплату
       if (path === '/cabinet/billing/detail')   return handleCabinetBillingDetail(request, env, corsHeaders);      // владелец: расшифровка по специалисту
       if (path === '/cabinet/specialist-save')   return handleCabinetSpecialistSave(request, env, corsHeaders);
@@ -7195,7 +7196,17 @@ async function handleCabinetSpecialists(request, env, corsHeaders){
 // ─────────────────────────────────────────────────────────────
 const PLATFORM_FEE_EUR = 30;   // абонплата за Кабинет, €/мес
 
-// Сколько месяцев прошло от даты (включительно) до конца отчётного периода.
+// ── БУХГАЛТЕРИЯ = КАССА, А НЕ КАЛЬКУЛЯТОР (переписано 2026-08-03) ────────────────
+// Было: «долг» считался как начислено-минус-оплачено, причём начисления разнесены по видам
+// (софт/платформа), а оплата — одной кучей. Ярлык платежа врал («€183 · Платформа»), в
+// помесячном фильтре начисление июля спорило с платежом августа, а поле «оплачено до»
+// (`specialists.access_paid_until`) бухгалтерия не смотрела вовсе — два источника правды.
+//
+// Стало: платёж — это ТРАНЗАКЦИЯ с видом. Платёж вида `platform` двигает «оплачено до»
+// на floor(сумма / €30) месяцев вперёд, остаток остаётся кредитом на балансе. Платёж вида
+// `software` гасит начисления за выданные ведения. Помесячный фильтр применяется к
+// ПЛАТЕЖАМ (касса: когда деньги реально пришли), начисления всегда нарастающим итогом —
+// иначе «оплатил в августе за июль» ломает обе колонки сразу.
 function _monthsBetween(fromISO, toISO){
   if(!fromISO) return 0;
   const f = new Date(String(fromISO).slice(0,10) + 'T00:00:00Z');
@@ -7203,99 +7214,130 @@ function _monthsBetween(fromISO, toISO){
   if(isNaN(f) || isNaN(t) || f > t) return 0;
   return (t.getUTCFullYear()-f.getUTCFullYear())*12 + (t.getUTCMonth()-f.getUTCMonth()) + 1;
 }
+function _addMonths(iso, n){
+  const d = new Date(String(iso).slice(0,10) + 'T00:00:00Z');
+  if(isNaN(d)) return null;
+  d.setUTCMonth(d.getUTCMonth() + n);
+  return d.toISOString().slice(0,10);
+}
 
-// GET/POST /cabinet/billing {period?: 'YYYY-MM' | 'all'} — сводка по специалистам.
+// Сводка по одному специалисту. Возвращает одинаковую форму и владельцу (по всем),
+// и самому специалисту (только по себе) — единый источник правды, разные срезы.
+function _billingRow(sp, grants, pays, today){
+  const g = grants[String(sp.id)] || {};
+  const p = pays[String(sp.id)]   || {};
+  // СОФТ: начислено за всё время по журналу выдач, погашено платежами вида software
+  const softAccrued = Math.round((g.owed || 0) * 100) / 100;
+  const softPaid    = Math.round((p.software || 0) * 100) / 100;
+  const softDue     = Math.round((softAccrued - softPaid) * 100) / 100;
+  // ПЛАТФОРМА: не «месяцы × 30 минус оплата», а срок. Оплачено до — единственная правда.
+  // Нет даты подключения → специалиста платформой не облагаем (свой, льгота).
+  const since   = sp.platform_since || null;
+  const paidTo  = sp.access_paid_until || null;
+  const monthsDue = since ? Math.max(0, _monthsBetween(paidTo && paidTo > since ? _addMonths(paidTo,1) : since, today)) : 0;
+  const platformDue = monthsDue * PLATFORM_FEE_EUR;
+  const active = !since || (paidTo && paidTo >= today);
+  return {
+    id: sp.id, name: sp.name, login: sp.login, role: sp.role,
+    platform_since: since, paid_until: paidTo,
+    status: !since ? 'exempt' : (active ? 'active' : 'lapsed'),
+    clients: sp.clients || 0,
+    grants_active: g.active_n || 0,
+    soft_accrued: softAccrued, soft_paid: softPaid, soft_due: softDue,
+    platform_due: platformDue, platform_months_due: monthsDue,
+    platform_paid: Math.round((p.platform || 0) * 100) / 100,
+    due_now: Math.round((softDue + platformDue) * 100) / 100,
+    credit: Math.round((p.credit || 0) * 100) / 100,
+  };
+}
+
+// GET/POST /cabinet/billing {period?} — владелец видит всех.
 async function handleCabinetBilling(request, env, corsHeaders){
   const sess = await cabinetSession(request, env);
   if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
   if(sess.role !== 'owner') return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
   if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
-
   let b={}; try{ b = await request.json(); }catch(_){}
-  const period = String(b.period||'all');                       // 'all' | 'YYYY-MM'
-  const isAll  = !/^\d{4}-\d{2}$/.test(period);
-  const today  = new Date().toISOString().slice(0,10);
-  // Окно отчёта: по дате ВЫДАЧИ (issued) — начисление привязано к моменту, когда доступ выдан.
-  const from = isAll ? '0000-00' : period + '-01';
-  const to   = isAll ? '9999-99' : period + '-31';
+  return _billingResponse(env, corsHeaders, String(b.period||'all'), null);
+}
+
+// POST /cabinet/billing/me — тот же расчёт, но специалисту про себя.
+// Прозрачность: специалист видит РОВНО те же цифры, что владелец, иначе разговоры
+// «откуда сумма, я же платила» неизбежны.
+async function handleCabinetBillingMe(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  let b={}; try{ b = await request.json(); }catch(_){}
+  return _billingResponse(env, corsHeaders, String(b.period||'all'), sess.id);
+}
+
+async function _billingResponse(env, corsHeaders, period, onlyId){
+  const isAll = !/^\d{4}-\d{2}$/.test(period);
+  const today = new Date().toISOString().slice(0,10);
 
   const specs = (await env.DB.prepare(
-    `SELECT s.id,s.name,s.login,s.role,s.access_status,s.platform_since,s.access_paid_until,
+    `SELECT s.id,s.name,s.login,s.role,s.platform_since,s.access_paid_until,
             (SELECT count(*) FROM clients c WHERE c.specialist_id=s.id) AS clients
-       FROM specialists s ORDER BY s.id`).all()).results || [];
+       FROM specialists s ${onlyId ? 'WHERE s.id=?' : ''} ORDER BY s.id`
+  ).bind(...(onlyId ? [onlyId] : [])).all()).results || [];
 
-  // Начисления за софт: по журналу выдач. Отозванные СЧИТАЮТСЯ (за отработанное начислено),
-  // помечаем отдельно, чтобы владелец видел, из чего сложилась сумма.
+  // Начисления за софт — ВСЕГДА нарастающим итогом (услуга оказана, деньги ждут).
   const gr = (await env.DB.prepare(
-    `SELECT specialist_id,
-            COUNT(*) AS grants_n,
-            SUM(CASE WHEN revoked=1 THEN 1 ELSE 0 END) AS revoked_n,
+    `SELECT specialist_id, COUNT(*) AS grants_n,
             SUM(CASE WHEN COALESCE(revoked,0)=0 AND expiry >= ? THEN 1 ELSE 0 END) AS active_n,
-            COALESCE(SUM(days),0)     AS days,
             COALESCE(SUM(owed_eur),0) AS owed
-       FROM grants WHERE COALESCE(issued,'0000-00-00') BETWEEN ? AND ?
-      GROUP BY specialist_id`).bind(today, from, to).all()).results || [];
+       FROM grants GROUP BY specialist_id`).bind(today).all()).results || [];
 
+  // Платежи — КАССА: помесячный фильтр по дате поступления денег (paid_at), не по периоду услуги.
+  const payWhere = isAll ? '' : "WHERE substr(COALESCE(paid_at,''),1,7)=?";
   const pay = (await env.DB.prepare(
     `SELECT specialist_id,
-            COALESCE(SUM(CASE WHEN kind='platform' THEN amount_eur ELSE 0 END),0) AS paid_platform,
-            COALESCE(SUM(CASE WHEN kind<>'platform' THEN amount_eur ELSE 0 END),0) AS paid_software
-       FROM payments WHERE COALESCE(period,'0000-00') BETWEEN ? AND ?
-      GROUP BY specialist_id`).bind(isAll?'0000-00':period, isAll?'9999-99':period).all()).results || [];
+            COALESCE(SUM(CASE WHEN kind='platform' THEN amount_eur ELSE 0 END),0) AS platform,
+            COALESCE(SUM(CASE WHEN kind='software' THEN amount_eur ELSE 0 END),0) AS software
+       FROM payments ${payWhere} GROUP BY specialist_id`
+  ).bind(...(isAll ? [] : [period])).all()).results || [];
+  // Гашение софта считаем по ВСЕМ платежам, независимо от фильтра (иначе долг «оживает»).
+  const payAll = isAll ? pay : ((await env.DB.prepare(
+    `SELECT specialist_id,
+            COALESCE(SUM(CASE WHEN kind='platform' THEN amount_eur ELSE 0 END),0) AS platform,
+            COALESCE(SUM(CASE WHEN kind='software' THEN amount_eur ELSE 0 END),0) AS software
+       FROM payments GROUP BY specialist_id`).all()).results || []);
 
-  const byId = (arr) => { const m={}; arr.forEach(r=>{ m[String(r.specialist_id)] = r; }); return m; };
-  const G = byId(gr), P = byId(pay);
+  const byId = arr => { const m={}; (arr||[]).forEach(r=>{ m[String(r.specialist_id)]=r; }); return m; };
+  const G = byId(gr), P = byId(payAll), PF = byId(pay);
 
-  const rows = specs.map(s => {
-    const g = G[String(s.id)] || {}, p = P[String(s.id)] || {};
-    // Абонплата: за отчётный месяц — один месяц (если специалист уже был на платформе),
-    // за «всё время» — число месяцев с platform_since. Пусто → не начисляем.
-    let months = 0;
-    if(s.platform_since){
-      months = isAll ? _monthsBetween(s.platform_since, today)
-                     : (String(s.platform_since).slice(0,7) <= period ? 1 : 0);
-    }
-    const owedSoftware = Math.round((g.owed || 0) * 100) / 100;
-    const owedPlatform = months * PLATFORM_FEE_EUR;
-    const paidSoftware = Math.round((p.paid_software || 0) * 100) / 100;
-    const paidPlatform = Math.round((p.paid_platform || 0) * 100) / 100;
-    return {
-      id: s.id, name: s.name, login: s.login, role: s.role,
-      access_status: s.access_status, platform_since: s.platform_since || null,
-      clients: s.clients || 0,
-      grants: g.grants_n || 0, active: g.active_n || 0, revoked: g.revoked_n || 0,
-      days: g.days || 0,
-      owed_software: owedSoftware, owed_platform: owedPlatform,
-      paid_software: paidSoftware, paid_platform: paidPlatform,
-      platform_months: months,
-      balance: Math.round((owedSoftware + owedPlatform - paidSoftware - paidPlatform) * 100) / 100,
-    };
+  const rows = specs.map(sp => {
+    const row = _billingRow(sp, G, P, today);
+    const f = PF[String(sp.id)] || {};
+    row.cash_period = Math.round(((f.platform||0) + (f.software||0)) * 100) / 100;   // приток за выбранный месяц
+    return row;
   });
+  const sum = k => Math.round(rows.reduce((a,r)=>a+(r[k]||0),0) * 100) / 100;
 
-  // С какого месяца вообще есть о чём отчитываться: раньше самой ранней выдачи и самого
-  // раннего подключения специалиста месяцев в списке быть не должно — иначе селектор
-  // предлагает выбрать месяцы, когда платформы ещё не существовало.
+  // Первый месяц, о котором есть что показывать (по кассе и по выдачам)
   let firstMonth = null;
   try{
     const f = await env.DB.prepare(
       `SELECT MIN(m) AS m FROM (
-         SELECT MIN(substr(issued,1,7)) AS m FROM grants WHERE issued IS NOT NULL
-         UNION ALL
-         SELECT MIN(substr(platform_since,1,7)) FROM specialists WHERE platform_since IS NOT NULL)`).first();
+         SELECT MIN(substr(paid_at,1,7)) AS m FROM payments WHERE paid_at IS NOT NULL
+         UNION ALL SELECT MIN(substr(issued,1,7)) FROM grants WHERE issued IS NOT NULL
+         UNION ALL SELECT MIN(substr(platform_since,1,7)) FROM specialists WHERE platform_since IS NOT NULL)`).first();
     firstMonth = (f && f.m) ? String(f.m) : null;
   }catch(e){}
 
-  const sum = (k) => Math.round(rows.reduce((a,r)=>a+(r[k]||0),0) * 100) / 100;
-  return jsonResponse({ ok:true, period: isAll ? 'all' : period, fee: PLATFORM_FEE_EUR, rows,
-    first_month: firstMonth,
-    totals: { clients: rows.reduce((a,r)=>a+r.clients,0), grants: rows.reduce((a,r)=>a+r.grants,0),
-              owed_software: sum('owed_software'), owed_platform: sum('owed_platform'),
-              paid_software: sum('paid_software'), paid_platform: sum('paid_platform'),
-              balance: sum('balance') } }, corsHeaders);
+  return jsonResponse({ ok:true, period: isAll ? 'all' : period, fee: PLATFORM_FEE_EUR,
+    today, first_month: firstMonth, rows,
+    totals: { clients: rows.reduce((a,r)=>a+r.clients,0),
+              soft_due: sum('soft_due'), platform_due: sum('platform_due'),
+              due_now: sum('due_now'), cash_period: sum('cash_period') } }, corsHeaders);
 }
 
-// POST /cabinet/billing/payment {specialist_id, amount, kind, period, paid_at?, note?} — отметить оплату.
-// id<0 → удалить платёж (опечатался — исправляем, а не живём с кривым балансом).
+// POST /cabinet/billing/payment {specialist_id, platform, software, paid_at?, note?}
+// Одна операция кассы = ДВЕ записи в журнале (платформа и софт) — раз уж начисления
+// разнесены по видам, оплата обязана быть разнесена так же, иначе ярлык врёт.
+// Платёж за платформу двигает `access_paid_until` на floor(сумма/€30) месяцев вперёд;
+// остаток (неполный месяц) остаётся в журнале и виден как переплата.
 async function handleCabinetBillingPayment(request, env, corsHeaders){
   const sess = await cabinetSession(request, env);
   if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
@@ -7304,46 +7346,73 @@ async function handleCabinetBillingPayment(request, env, corsHeaders){
   let b={}; try{ b = await request.json(); }catch(_){}
 
   if(b.delete_id){
+    // откат: если удаляем платёж за платформу — откатываем и срок
+    try{
+      const row = await env.DB.prepare('SELECT specialist_id, amount_eur, kind FROM payments WHERE id=?').bind(parseInt(b.delete_id,10)).first();
+      if(row && row.kind === 'platform'){
+        const months = Math.floor((+row.amount_eur || 0) / PLATFORM_FEE_EUR);
+        if(months > 0){
+          const sp = await env.DB.prepare('SELECT access_paid_until FROM specialists WHERE id=?').bind(row.specialist_id).first();
+          if(sp && sp.access_paid_until)
+            await env.DB.prepare('UPDATE specialists SET access_paid_until=? WHERE id=?')
+              .bind(_addMonths(sp.access_paid_until, -months), row.specialist_id).run();
+        }
+      }
+    }catch(_){}
     await env.DB.prepare('DELETE FROM payments WHERE id=?').bind(parseInt(b.delete_id,10)).run();
     return jsonResponse({ok:true, deleted:true}, corsHeaders);
   }
 
-  const specId = parseInt(b.specialist_id, 10);
-  const amount = Math.round(parseFloat(b.amount) * 100) / 100;
-  const kind   = (String(b.kind||'software').toLowerCase() === 'platform') ? 'platform' : 'software';
-  const period = /^\d{4}-\d{2}$/.test(String(b.period||'')) ? String(b.period) : new Date().toISOString().slice(0,7);
-  const paidAt = /^\d{4}-\d{2}-\d{2}$/.test(String(b.paid_at||'')) ? String(b.paid_at) : new Date().toISOString().slice(0,10);
-  if(!specId || !amount || isNaN(amount)) return jsonResponse({ok:false,error:'bad_input'}, corsHeaders, 400);
+  const specId   = parseInt(b.specialist_id, 10);
+  const platform = Math.max(0, Math.round((parseFloat(b.platform)||0) * 100) / 100);
+  const software = Math.max(0, Math.round((parseFloat(b.software)||0) * 100) / 100);
+  const paidAt   = /^\d{4}-\d{2}-\d{2}$/.test(String(b.paid_at||'')) ? String(b.paid_at) : new Date().toISOString().slice(0,10);
+  const note     = String(b.note||'').slice(0,200);
+  if(!specId || (!platform && !software)) return jsonResponse({ok:false,error:'bad_input'}, corsHeaders, 400);
 
-  await env.DB.prepare(
-    'INSERT INTO payments (specialist_id, amount_eur, kind, period, paid_at, note, created_at) VALUES (?,?,?,?,?,?,?)'
-  ).bind(specId, amount, kind, period, paidAt, String(b.note||'').slice(0,200), Date.now()).run();
-  return jsonResponse({ok:true}, corsHeaders);
+  const now = Date.now();
+  let paidUntil = null;
+  if(platform > 0){
+    const months = Math.floor(platform / PLATFORM_FEE_EUR);
+    const sp = await env.DB.prepare('SELECT platform_since, access_paid_until FROM specialists WHERE id=?').bind(specId).first();
+    const base = (sp && sp.access_paid_until && sp.access_paid_until >= new Date().toISOString().slice(0,10))
+               ? sp.access_paid_until
+               : (new Date().toISOString().slice(0,10));
+    if(months > 0){
+      paidUntil = _addMonths(base, months);
+      await env.DB.prepare('UPDATE specialists SET access_paid_until=?, access_status=? WHERE id=?')
+        .bind(paidUntil, 'active', specId).run();
+    }
+    await env.DB.prepare(
+      'INSERT INTO payments (specialist_id, amount_eur, kind, period, paid_at, note, created_at) VALUES (?,?,?,?,?,?,?)'
+    ).bind(specId, platform, 'platform', paidAt.slice(0,7), paidAt,
+           (note ? note + ' · ' : '') + (months > 0 ? ('доступ до ' + paidUntil) : 'частичная оплата платформы'), now).run();
+  }
+  if(software > 0){
+    await env.DB.prepare(
+      'INSERT INTO payments (specialist_id, amount_eur, kind, period, paid_at, note, created_at) VALUES (?,?,?,?,?,?,?)'
+    ).bind(specId, software, 'software', paidAt.slice(0,7), paidAt, note, now).run();
+  }
+  return jsonResponse({ok:true, paid_until: paidUntil}, corsHeaders);
 }
 
-// POST /cabinet/billing/detail {specialist_id, period?} — расшифровка: выдачи и платежи строками.
-// Без неё сводка — «поверь на слово»: непонятно, из чего сложилась сумма и что уже оплачено.
+// POST /cabinet/billing/detail {specialist_id?, period?} — расшифровка.
+// Специалисту отдаём ЕГО детализацию без спец-id: тот же лог, что видит владелец.
 async function handleCabinetBillingDetail(request, env, corsHeaders){
   const sess = await cabinetSession(request, env);
   if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
-  if(sess.role !== 'owner') return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
   if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
   let b={}; try{ b = await request.json(); }catch(_){}
-  const specId = parseInt(b.specialist_id, 10);
+  const specId = (sess.role === 'owner') ? parseInt(b.specialist_id, 10) : sess.id;
   if(!specId) return jsonResponse({ok:false,error:'bad_input'}, corsHeaders, 400);
-  const period = String(b.period||'all');
-  const isAll  = !/^\d{4}-\d{2}$/.test(period);
-  const from = isAll ? '0000-00' : period + '-01', to = isAll ? '9999-99' : period + '-31';
 
   const grants = (await env.DB.prepare(
     `SELECT g.code, g.card_code, c.name AS client_name, g.days, g.owed_eur, g.issued, g.expiry, g.revoked
        FROM grants g LEFT JOIN clients c ON c.code = g.card_code
-      WHERE g.specialist_id=? AND COALESCE(g.issued,'0000-00-00') BETWEEN ? AND ?
-      ORDER BY g.issued DESC LIMIT 200`).bind(specId, from, to).all()).results || [];
+      WHERE g.specialist_id=? ORDER BY g.issued DESC LIMIT 200`).bind(specId).all()).results || [];
   const payments = (await env.DB.prepare(
     `SELECT id, amount_eur, kind, period, paid_at, note FROM payments
-      WHERE specialist_id=? AND COALESCE(period,'0000-00') BETWEEN ? AND ?
-      ORDER BY paid_at DESC LIMIT 200`).bind(specId, isAll?'0000-00':period, isAll?'9999-99':period).all()).results || [];
+      WHERE specialist_id=? ORDER BY paid_at DESC, id DESC LIMIT 200`).bind(specId).all()).results || [];
   return jsonResponse({ok:true, grants, payments}, corsHeaders);
 }
 
@@ -7367,6 +7436,10 @@ async function handleCabinetSpecialistSave(request, env, corsHeaders){
   const paidUntil = String(s.access_paid_until || '').trim() || null;
   // Пустая строка = ОЧИСТИТЬ (не начислять абонплату). Именно поэтому пишем null, а не пропускаем поле.
   const platformSince = String(s.platform_since || '').trim() || null;
+  // Защита от опечатки в дате: «2076-10-12» вместо «2026-…» отключала абонплату навсегда
+  // и молча — потому что платформа считается по сроку, а не по счётчику месяцев.
+  const _maxPaid = (function(){ const d=new Date(); d.setUTCFullYear(d.getUTCFullYear()+5); return d.toISOString().slice(0,10); })();
+  const paidUntilSafe = (paidUntil && paidUntil > _maxPaid) ? null : paidUntil;
   const status    = (s.status === 'disabled') ? 'disabled' : 'active';
   const password  = String(s.password || '');
 
@@ -7384,11 +7457,11 @@ async function handleCabinetSpecialistSave(request, env, corsHeaders){
       const ph = await cabinetHashPassword(password);
       await env.DB.prepare(
         'UPDATE specialists SET name=?,login=?,email=?,pass_hash=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,platform_since=?,status=? WHERE id=?'
-      ).bind(name, login, email, ph, lang, specialty, role, refCode, accessSt, paidUntil, platformSince, status, id).run();
+      ).bind(name, login, email, ph, lang, specialty, role, refCode, accessSt, paidUntilSafe, platformSince, status, id).run();
     } else {
       await env.DB.prepare(
         'UPDATE specialists SET name=?,login=?,email=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,platform_since=?,status=? WHERE id=?'
-      ).bind(name, login, email, lang, specialty, role, refCode, accessSt, paidUntil, platformSince, status, id).run();
+      ).bind(name, login, email, lang, specialty, role, refCode, accessSt, paidUntilSafe, platformSince, status, id).run();
     }
     return jsonResponse({ok:true, id}, corsHeaders);
   }
