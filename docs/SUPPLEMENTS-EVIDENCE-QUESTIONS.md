@@ -342,3 +342,35 @@ product: how often, when, with what, for how long. Please answer with that const
     sleep stages, resting heart rate, skin temperature, respiratory rate) that legitimately relates
     to it? Where the answer is "none", say so plainly — we need to know where we must not build an
     inference on a non-existent anchor.
+
+---
+
+## Вопрос 39 — переспросить (первый заход вернул ответ не по теме)
+
+В прошлый раз в запрос ушёл шаблон формата без самой темы, и OpenEvidence честно ответил, что
+отвечать не на что, подставив вместо этого SAMe. Ниже — самодостаточная формулировка: тема
+названа прямо в первом предложении, без опоры на предыдущий контекст.
+
+**Зачем нам это.** Приложение знает фазу цикла и умеет её показывать. Значит, у нас есть соблазн
+привязать к фазам ещё и приём добавок — так делают многие приложения. Прежде чем строить такую
+функцию, нужно знать, есть ли под ней хоть что-то, или это второй «сид-циклинг», который мы уже
+пометили в базе как выдумку.
+
+> **39.** Does the timing of nutritional supplements across the menstrual cycle have any
+> evidence-based rationale? Specifically: for magnesium, vitamin B6, iron, calcium, vitamin D,
+> omega-3 and any commonly marketed "cycle support" product — is there any controlled evidence
+> that taking them in a particular cycle phase (follicular versus luteal, or around menstruation)
+> changes absorption, tolerability, symptom outcomes or nutrient status, compared with taking the
+> same amount continuously?
+>
+> Please separate three things: **(a)** where phase-linked timing is genuinely justified by
+> physiology or trial data — for example iron around heavy menstrual bleeding, or anything taken
+> specifically for premenstrual symptoms in the luteal phase; **(b)** where it is plausible but
+> untested; **(c)** where it is pure marketing, in the same category as seed cycling.
+>
+> Also: in perimenopause, where cycles become irregular and often anovulatory, does phase-linked
+> timing retain any meaning at all — or does cycle irregularity by itself make the whole idea
+> unusable in practice?
+>
+> If the honest answer for most items is "no evidence", say so plainly rather than constructing a
+> rationale.
