@@ -7180,7 +7180,7 @@ async function handleCabinetSpecialists(request, env, corsHeaders){
   if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
   // pass_hash НЕ отдаём наружу.
   const { results } = await env.DB.prepare(
-    `SELECT s.id,s.name,s.login,s.email,s.lang,s.specialty,s.role,s.ref_code,s.access_status,s.access_paid_until,s.platform_since,s.status,s.created_at,
+    `SELECT s.id,s.name,s.login,s.email,s.lang,s.specialty,s.role,s.ref_code,s.access_status,s.access_paid_until,s.platform_since,s.billing_exempt,s.status,s.created_at,
             (SELECT count(*) FROM clients c WHERE c.specialist_id=s.id) AS clients
      FROM specialists s ORDER BY s.id`
   ).all();
@@ -7226,6 +7226,16 @@ function _addMonths(iso, n){
 function _billingRow(sp, grants, pays, today){
   const g = grants[String(sp.id)] || {};
   const p = pays[String(sp.id)]   || {};
+  // Явный признак «свой» (основатель/собственная практика): ни софта, ни платформы.
+  // Именно флагом, а не фиктивной датой — обход датой невидим и его «чинят» как опечатку.
+  if(sp.billing_exempt){
+    return { id: sp.id, name: sp.name, login: sp.login, role: sp.role,
+             platform_since: null, paid_until: null, status: 'exempt',
+             clients: sp.clients || 0, grants_active: g.active_n || 0,
+             soft_accrued: 0, soft_paid: 0, soft_due: 0,
+             platform_due: 0, platform_months_due: 0, platform_paid: 0,
+             due_now: 0, credit: 0 };
+  }
   // СОФТ: начислено за всё время по журналу выдач, погашено платежами вида software
   const softAccrued = Math.round((g.owed || 0) * 100) / 100;
   const softPaid    = Math.round((p.software || 0) * 100) / 100;
@@ -7277,7 +7287,7 @@ async function _billingResponse(env, corsHeaders, period, onlyId){
   const today = new Date().toISOString().slice(0,10);
 
   const specs = (await env.DB.prepare(
-    `SELECT s.id,s.name,s.login,s.role,s.platform_since,s.access_paid_until,
+    `SELECT s.id,s.name,s.login,s.role,s.platform_since,s.access_paid_until,s.billing_exempt,
             (SELECT count(*) FROM clients c WHERE c.specialist_id=s.id) AS clients
        FROM specialists s ${onlyId ? 'WHERE s.id=?' : ''} ORDER BY s.id`
   ).bind(...(onlyId ? [onlyId] : [])).all()).results || [];
@@ -7375,9 +7385,12 @@ async function handleCabinetBillingPayment(request, env, corsHeaders){
   if(platform > 0){
     const months = Math.floor(platform / PLATFORM_FEE_EUR);
     const sp = await env.DB.prepare('SELECT platform_since, access_paid_until FROM specialists WHERE id=?').bind(specId).first();
-    const base = (sp && sp.access_paid_until && sp.access_paid_until >= new Date().toISOString().slice(0,10))
-               ? sp.access_paid_until
-               : (new Date().toISOString().slice(0,10));
+    // Тот же предохранитель, что при сохранении карточки: если в базе лежит абсурдная дата
+    // (живой случай — «2076-10-12» из опечатки), НЕ продлеваем её дальше, а считаем от сегодня.
+    const _today = new Date().toISOString().slice(0,10);
+    const _max = (function(){ const d=new Date(); d.setUTCFullYear(d.getUTCFullYear()+5); return d.toISOString().slice(0,10); })();
+    const _cur = (sp && sp.access_paid_until && sp.access_paid_until <= _max) ? sp.access_paid_until : null;
+    const base = (_cur && _cur >= _today) ? _cur : _today;
     if(months > 0){
       paidUntil = _addMonths(base, months);
       await env.DB.prepare('UPDATE specialists SET access_paid_until=?, access_status=? WHERE id=?')
@@ -7436,6 +7449,7 @@ async function handleCabinetSpecialistSave(request, env, corsHeaders){
   const paidUntil = String(s.access_paid_until || '').trim() || null;
   // Пустая строка = ОЧИСТИТЬ (не начислять абонплату). Именно поэтому пишем null, а не пропускаем поле.
   const platformSince = String(s.platform_since || '').trim() || null;
+  const billingExempt = (s.billing_exempt === 1 || s.billing_exempt === true || s.billing_exempt === '1') ? 1 : 0;
   // Защита от опечатки в дате: «2076-10-12» вместо «2026-…» отключала абонплату навсегда
   // и молча — потому что платформа считается по сроку, а не по счётчику месяцев.
   const _maxPaid = (function(){ const d=new Date(); d.setUTCFullYear(d.getUTCFullYear()+5); return d.toISOString().slice(0,10); })();
@@ -7456,12 +7470,12 @@ async function handleCabinetSpecialistSave(request, env, corsHeaders){
     if(password){
       const ph = await cabinetHashPassword(password);
       await env.DB.prepare(
-        'UPDATE specialists SET name=?,login=?,email=?,pass_hash=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,platform_since=?,status=? WHERE id=?'
-      ).bind(name, login, email, ph, lang, specialty, role, refCode, accessSt, paidUntilSafe, platformSince, status, id).run();
+        'UPDATE specialists SET name=?,login=?,email=?,pass_hash=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,platform_since=?,billing_exempt=?,status=? WHERE id=?'
+      ).bind(name, login, email, ph, lang, specialty, role, refCode, accessSt, paidUntilSafe, platformSince, billingExempt, status, id).run();
     } else {
       await env.DB.prepare(
-        'UPDATE specialists SET name=?,login=?,email=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,platform_since=?,status=? WHERE id=?'
-      ).bind(name, login, email, lang, specialty, role, refCode, accessSt, paidUntilSafe, platformSince, status, id).run();
+        'UPDATE specialists SET name=?,login=?,email=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,platform_since=?,billing_exempt=?,status=? WHERE id=?'
+      ).bind(name, login, email, lang, specialty, role, refCode, accessSt, paidUntilSafe, platformSince, billingExempt, status, id).run();
     }
     return jsonResponse({ok:true, id}, corsHeaders);
   }
