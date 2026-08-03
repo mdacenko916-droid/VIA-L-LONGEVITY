@@ -666,6 +666,58 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
         <label data-i18n="sp_platform_since">На платформе с (абонплата)</label>
         <input class="form-input" id="s-platform-since" type="date">
         <div style="font-size:11px;color:#888;margin-top:4px;" data-i18n="sp_platform_since_hint">С этой даты начисляется €30/мес. Пусто — абонплату не начисляем (свой специалист).</div>
+      </div>
+    </div>
+
+    <!-- A3: проверка специалиста. Публичное видит клиент, служебное — только владелец.
+         Паспортных данных здесь намеренно НЕТ: сверх ФОП они не дают ничего для
+         идентификации, но резко поднимают нашу ответственность за хранение. -->
+    <div style="margin-top:16px;padding-top:12px;border-top:2px solid #eee;">
+      <div style="font-weight:600;font-size:13px;margin-bottom:8px;" data-i18n="sp_public_h">Публичный профиль (видит клиент)</div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label data-i18n="sp_education">Образование / квалификация</label>
+          <input class="form-input" id="s-education" type="text" style="font-size:13px;"></div>
+        <div class="form-row" style="margin:0"><label data-i18n="sp_reg_number">Регистрация (ФОП / лицензия)</label>
+          <input class="form-input" id="s-reg-number" type="text" style="font-size:13px;"></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label data-i18n="sp_website">Сайт или соцсеть</label>
+          <input class="form-input" id="s-website" type="text" placeholder="https://" style="font-size:13px;"></div>
+        <div class="form-row" style="margin:0"><label data-i18n="sp_city">Город, страна</label>
+          <input class="form-input" id="s-city" type="text" style="font-size:13px;"></div>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-top:8px;cursor:pointer;">
+        <input type="checkbox" id="s-publish-consent">
+        <span data-i18n="sp_publish_consent">Специалист согласен показывать эти данные клиентам</span>
+      </label>
+    </div>
+
+    <div style="margin-top:16px;padding-top:12px;border-top:2px solid #eee;">
+      <div style="font-weight:600;font-size:13px;margin-bottom:4px;" data-i18n="sp_private_h">Для платформы (клиент не видит)</div>
+      <div style="font-size:11px;color:#888;margin-bottom:8px;" data-i18n="sp_private_hint">Нужно, чтобы при претензии дать полную информацию о специалисте. Паспортные данные не храним — достаточно регистрации и адреса.</div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label data-i18n="sp_legal_name">Полное юридическое имя</label>
+          <input class="form-input" id="s-legal-name" type="text" style="font-size:13px;"></div>
+        <div class="form-row" style="margin:0"><label data-i18n="sp_tax_id">Налоговый номер</label>
+          <input class="form-input" id="s-tax-id" type="text" style="font-size:13px;"></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label data-i18n="sp_address">Адрес для корреспонденции</label>
+          <input class="form-input" id="s-address" type="text" style="font-size:13px;"></div>
+        <div class="form-row" style="margin:0"><label data-i18n="sp_phone">Телефон</label>
+          <input class="form-input" id="s-phone" type="text" style="font-size:13px;"></div>
+      </div>
+      <div class="form-row"><label data-i18n="sp_contract_url">Ссылка на подписанный договор</label>
+        <input class="form-input" id="s-contract-url" type="text" style="font-size:13px;"></div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-top:8px;cursor:pointer;">
+        <input type="checkbox" id="s-verified">
+        <span data-i18n="sp_verified">Проверен — допущен в витрину и к выдаче доступов</span>
+      </label>
+      <div class="form-row" style="margin-top:8px;"><label data-i18n="sp_verify_note">Что проверено</label>
+        <input class="form-input" id="s-verify-note" type="text" placeholder="диплом, ФОП, договор" style="font-size:13px;"></div>
+    </div>
+    <div class="form-row-2" style="display:none;">
+      <div class="form-row" style="margin:0">
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-top:10px;cursor:pointer;">
           <input type="checkbox" id="s-billing-exempt">
           <span data-i18n="sp_billing_exempt">Свой специалист — не начислять ничего</span>
@@ -1008,6 +1060,21 @@ const T = {
   hdr_edit:{ru:"✎ Редактировать",uk:"✎ Редагувати",en:"✎ Edit",es:"✎ Editar",de:"✎ Bearbeiten",pt:"✎ Editar",fr:"✎ Modifier",pl:"✎ Edytuj",it:"✎ Modifica",he:"✎ עריכה",ja:"✎ 編集",ko:"✎ 편집"},
   hdr_delete:{ru:"✕ Удалить",uk:"✕ Видалити",en:"✕ Delete",es:"✕ Eliminar",de:"✕ Löschen",pt:"✕ Excluir",fr:"✕ Supprimer",pl:"✕ Usuń",it:"✕ Elimina",he:"✕ מחיקה",ja:"✕ 削除",ko:"✕ 삭제"},
   filter_all_spec:{ru:"Все специалисты",uk:"Усі спеціалісти",en:"All specialists",es:"Todos los especialistas",de:"Alle Spezialisten",pt:"Todos os especialistas",fr:"Tous les spécialistes",pl:"Wszyscy specjaliści",it:"Tutti gli specialisti",he:"כל המומחים",ja:"すべての専門家",ko:"모든 전문가"},
+  sp_public_h:{ru:"Публичный профиль (видит клиент)",uk:"Публічний профіль (бачить клієнт)",en:"Public profile (clients see this)",es:"Perfil público (lo ve el cliente)",de:"Öffentliches Profil (für Klienten sichtbar)",pt:"Perfil público (o cliente vê)",fr:"Profil public (visible par le client)",pl:"Profil publiczny (widzi klient)",it:"Profilo pubblico (visibile al cliente)",he:"פרופיל ציבורי (הלקוח רואה)",ja:"公開プロフィール（クライアントに表示）",ko:"공개 프로필 (고객에게 표시)"},
+  sp_private_h:{ru:"Для платформы (клиент не видит)",uk:"Для платформи (клієнт не бачить)",en:"For the platform (not shown to clients)",es:"Para la plataforma (no lo ve el cliente)",de:"Für die Plattform (für Klienten unsichtbar)",pt:"Para a plataforma (o cliente não vê)",fr:"Pour la plateforme (invisible au client)",pl:"Dla platformy (klient nie widzi)",it:"Per la piattaforma (non visibile al cliente)",he:"לפלטפורמה (הלקוח לא רואה)",ja:"プラットフォーム用（クライアントには非表示）",ko:"플랫폼용 (고객에게 비공개)"},
+  sp_private_hint:{ru:"Нужно, чтобы при претензии дать полную информацию о специалисте. Паспортные данные не храним — достаточно регистрации и адреса.",uk:"Потрібно, щоб при претензії надати повну інформацію про спеціаліста. Паспортні дані не зберігаємо — достатньо реєстрації та адреси.",en:"Needed so that, in case of a complaint, we can provide full information about the specialist. We do not store passport data — registration and address are enough.",es:"Necesario para poder dar información completa del especialista ante una reclamación. No guardamos datos del pasaporte: bastan el registro y la dirección.",de:"Nötig, um bei einer Beschwerde vollständige Angaben zum Spezialisten machen zu können. Passdaten speichern wir nicht — Registrierung und Adresse genügen.",pt:"Necessário para, em caso de reclamação, fornecer informações completas sobre o especialista. Não guardamos dados de passaporte — registro e endereço bastam.",fr:"Nécessaire pour fournir des informations complètes en cas de réclamation. Nous ne conservons pas les données de passeport — l’enregistrement et l’adresse suffisent.",pl:"Potrzebne, by w razie reklamacji podać pełne informacje o specjaliście. Nie przechowujemy danych paszportowych — wystarczą rejestracja i adres.",it:"Serve per fornire informazioni complete in caso di reclamo. Non conserviamo dati del passaporto: bastano registrazione e indirizzo.",he:"נחוץ כדי למסור מידע מלא על המומחה במקרה של תלונה. איננו שומרים פרטי דרכון — די ברישום ובכתובת.",ja:"苦情があった場合に専門家の情報を完全に提供するために必要です。パスポート情報は保存しません（登録番号と住所で十分）。",ko:"이의 제기 시 전문가 정보를 완전히 제공하기 위해 필요합니다. 여권 정보는 저장하지 않습니다 — 등록번호와 주소로 충분합니다."},
+  sp_education:{ru:"Образование / квалификация",uk:"Освіта / кваліфікація",en:"Education / qualification",es:"Formación / cualificación",de:"Ausbildung / Qualifikation",pt:"Formação / qualificação",fr:"Formation / qualification",pl:"Wykształcenie / kwalifikacje",it:"Formazione / qualifica",he:"השכלה / הסמכה",ja:"学歴・資格",ko:"학력 / 자격"},
+  sp_reg_number:{ru:"Регистрация (ФОП / лицензия)",uk:"Реєстрація (ФОП / ліцензія)",en:"Registration (sole trader / licence)",es:"Registro (autónomo / licencia)",de:"Registrierung (Gewerbe / Lizenz)",pt:"Registro (autônomo / licença)",fr:"Enregistrement (auto-entrepreneur / licence)",pl:"Rejestracja (działalność / licencja)",it:"Registrazione (partita IVA / licenza)",he:"רישום (עוסק / רישיון)",ja:"登録（個人事業／免許）",ko:"등록 (개인사업자 / 면허)"},
+  sp_website:{ru:"Сайт или соцсеть",uk:"Сайт або соцмережа",en:"Website or social profile",es:"Web o red social",de:"Website oder Social-Profil",pt:"Site ou rede social",fr:"Site ou réseau social",pl:"Strona lub profil społecznościowy",it:"Sito o social",he:"אתר או רשת חברתית",ja:"ウェブサイトまたはSNS",ko:"웹사이트 또는 SNS"},
+  sp_city:{ru:"Город, страна",uk:"Місто, країна",en:"City, country",es:"Ciudad, país",de:"Stadt, Land",pt:"Cidade, país",fr:"Ville, pays",pl:"Miasto, kraj",it:"Città, paese",he:"עיר, מדינה",ja:"都市・国",ko:"도시, 국가"},
+  sp_publish_consent:{ru:"Специалист согласен показывать эти данные клиентам",uk:"Спеціаліст згоден показувати ці дані клієнтам",en:"The specialist agrees to show this data to clients",es:"El especialista acepta mostrar estos datos a los clientes",de:"Der Spezialist stimmt zu, diese Daten Klienten zu zeigen",pt:"O especialista concorda em mostrar estes dados aos clientes",fr:"Le spécialiste accepte de montrer ces données aux clients",pl:"Specjalista zgadza się pokazywać te dane klientom",it:"Lo specialista acconsente a mostrare questi dati ai clienti",he:"המומחה מסכים להציג נתונים אלה ללקוחות",ja:"専門家はこの情報をクライアントに表示することに同意しています",ko:"전문가가 이 정보를 고객에게 표시하는 데 동의했습니다"},
+  sp_legal_name:{ru:"Полное юридическое имя",uk:"Повне юридичне ім'я",en:"Full legal name",es:"Nombre legal completo",de:"Vollständiger Name",pt:"Nome legal completo",fr:"Nom légal complet",pl:"Pełne imię i nazwisko",it:"Nome legale completo",he:"שם מלא רשמי",ja:"法的氏名",ko:"법적 성명"},
+  sp_tax_id:{ru:"Налоговый номер",uk:"Податковий номер",en:"Tax ID",es:"NIF",de:"Steuernummer",pt:"NIF/CPF",fr:"Numéro fiscal",pl:"NIP",it:"Codice fiscale",he:"מספר מס",ja:"納税者番号",ko:"납세자 번호"},
+  sp_address:{ru:"Адрес для корреспонденции",uk:"Адреса для кореспонденції",en:"Address for correspondence",es:"Dirección de contacto",de:"Zustellungsadresse",pt:"Endereço para correspondência",fr:"Adresse de correspondance",pl:"Adres do korespondencji",it:"Indirizzo per comunicazioni",he:"כתובת למשלוח דואר",ja:"連絡先住所",ko:"연락 주소"},
+  sp_phone:{ru:"Телефон",uk:"Телефон",en:"Phone",es:"Teléfono",de:"Telefon",pt:"Telefone",fr:"Téléphone",pl:"Telefon",it:"Telefono",he:"טלפון",ja:"電話",ko:"전화"},
+  sp_contract_url:{ru:"Ссылка на подписанный договор",uk:"Посилання на підписаний договір",en:"Link to the signed agreement",es:"Enlace al contrato firmado",de:"Link zum unterzeichneten Vertrag",pt:"Link para o contrato assinado",fr:"Lien vers le contrat signé",pl:"Link do podpisanej umowy",it:"Link al contratto firmato",he:"קישור להסכם החתום",ja:"署名済み契約書のリンク",ko:"서명된 계약서 링크"},
+  sp_verified:{ru:"Проверен — допущен в витрину и к выдаче доступов",uk:"Перевірений — допущений у вітрину та до видачі доступів",en:"Verified — listed in the showcase and allowed to grant access",es:"Verificado: aparece en el escaparate y puede otorgar accesos",de:"Geprüft — im Schaufenster gelistet und darf Zugänge vergeben",pt:"Verificado — aparece na vitrine e pode conceder acessos",fr:"Vérifié — visible dans la vitrine et autorisé à donner des accès",pl:"Zweryfikowany — widoczny w witrynie i może nadawać dostępy",it:"Verificato — presente in vetrina e abilitato a concedere accessi",he:"מאומת — מוצג בחלון הראווה ורשאי להעניק גישה",ja:"確認済み — ショーケースに掲載され、アクセス付与が可能",ko:"확인됨 — 쇼케이스에 노출되고 액세스 부여 가능"},
+  sp_verify_note:{ru:"Что проверено",uk:"Що перевірено",en:"What was verified",es:"Qué se verificó",de:"Was geprüft wurde",pt:"O que foi verificado",fr:"Ce qui a été vérifié",pl:"Co zweryfikowano",it:"Cosa è stato verificato",he:"מה נבדק",ja:"確認した内容",ko:"확인한 내용"},
   sp_billing_exempt:{ru:"Свой специалист — не начислять ничего",uk:"Свій спеціаліст — нічого не нараховувати",en:"In-house specialist — bill nothing",es:"Especialista propio: no facturar nada",de:"Eigener Spezialist — nichts berechnen",pt:"Especialista próprio — não cobrar nada",fr:"Spécialiste interne — ne rien facturer",pl:"Własny specjalista — nic nie naliczać",it:"Specialista interno — non addebitare nulla",he:"מומחה פנימי — לא לחייב",ja:"社内の専門家 — 請求なし",ko:"내부 전문가 — 청구 없음"},
   sp_billing_exempt_hint:{ru:"Основатель или собственная практика: ни софта, ни абонплаты. Ставьте галочку, а НЕ дату далеко в будущем — такую дату не отличить от опечатки.",uk:"Засновник або власна практика: ні софту, ні абонплати. Ставте галочку, а НЕ дату далеко в майбутньому — таку дату не відрізнити від помилки.",en:"Founder or in-house practice: no software fee, no platform fee. Use this checkbox, NOT a far-future date — such a date is indistinguishable from a typo.",es:"Fundador o práctica propia: ni software ni cuota. Usa esta casilla, NO una fecha lejana: no se distingue de una errata.",de:"Gründer oder eigene Praxis: weder Software- noch Plattformgebühr. Nutze dieses Häkchen, KEIN fernes Datum — das ist von einem Tippfehler nicht zu unterscheiden.",pt:"Fundador ou prática própria: sem taxa de software nem de plataforma. Use esta caixa, NÃO uma data distante — indistinguível de um erro de digitação.",fr:"Fondateur ou cabinet interne : ni logiciel ni abonnement. Utilisez cette case, PAS une date lointaine — impossible à distinguer d’une faute de frappe.",pl:"Założyciel lub własna praktyka: bez opłat za software i platformę. Użyj tego pola, NIE odległej daty — takiej daty nie odróżnisz od literówki.",it:"Fondatore o pratica interna: né software né canone. Usa questa casella, NON una data lontana — indistinguibile da un refuso.",he:"מייסד או פרקטיקה פנימית: ללא תשלום תוכנה ופלטפורמה. סמנו כאן, ולא תאריך רחוק — אי אפשר להבדיל בינו לבין טעות הקלדה.",ja:"創業者または自社の専門家：ソフト料もプラットフォーム料もなし。遠い将来の日付ではなく、このチェックを使ってください（入力ミスと区別できません）。",ko:"창립자 또는 내부 진료: 소프트웨어·플랫폼 요금 없음. 먼 미래 날짜 대신 이 체크박스를 사용하세요 — 오타와 구분할 수 없습니다."},
   sp_platform_since:{ru:"На платформе с (абонплата)",uk:"На платформі з (абонплата)",en:"On the platform since (fee)",es:"En la plataforma desde (cuota)",de:"Auf der Plattform seit (Gebühr)",pt:"Na plataforma desde (taxa)",fr:"Sur la plateforme depuis (abonnement)",pl:"Na platformie od (abonament)",it:"Sulla piattaforma da (canone)",he:"בפלטפורמה מאז (דמי מנוי)",ja:"プラットフォーム参加日（料金）",ko:"플랫폼 합류일 (요금)"},
@@ -1871,6 +1938,11 @@ function fillSpecModal(s){
   document.getElementById('s-paid-until').value = s.access_paid_until || '';
   document.getElementById('s-platform-since').value = s.platform_since || '';
   document.getElementById('s-billing-exempt').checked = !!s.billing_exempt;
+  ['education','reg-number','website','city','legal-name','tax-id','address','phone','contract-url','verify-note'].forEach(function(k){
+    var el=document.getElementById('s-'+k); if(el) el.value = s[k.replace(/-/g,'_')] || '';
+  });
+  document.getElementById('s-verified').checked = !!s.verified;
+  document.getElementById('s-publish-consent').checked = !!s.publish_consent_at;
   document.getElementById('s-status').value   = s.status || 'active';
   document.getElementById('specModalError').style.display = 'none';
 }
@@ -1907,6 +1979,18 @@ async function saveSpecialist(){
     access_paid_until: document.getElementById('s-paid-until').value || '',
     platform_since:    document.getElementById('s-platform-since').value || '',   // пусто = не начислять абонплату
     billing_exempt:    document.getElementById('s-billing-exempt').checked ? 1 : 0,
+    education:         document.getElementById('s-education').value.trim(),
+    reg_number:        document.getElementById('s-reg-number').value.trim(),
+    website:           document.getElementById('s-website').value.trim(),
+    city:              document.getElementById('s-city').value.trim(),
+    legal_name:        document.getElementById('s-legal-name').value.trim(),
+    tax_id:            document.getElementById('s-tax-id').value.trim(),
+    address:           document.getElementById('s-address').value.trim(),
+    phone:             document.getElementById('s-phone').value.trim(),
+    contract_url:      document.getElementById('s-contract-url').value.trim(),
+    verified:          document.getElementById('s-verified').checked ? 1 : 0,
+    verify_note:       document.getElementById('s-verify-note').value.trim(),
+    publish_consent:   document.getElementById('s-publish-consent').checked ? 1 : 0,
     status:         document.getElementById('s-status').value,
   };
   if(editingSpecId) spec.id = editingSpecId;

@@ -6988,6 +6988,12 @@ async function handleCabinetExpertGrant(request, env, corsHeaders){
   if(!days)     return jsonResponse({ ok:false, error:'no_days' }, corsHeaders, 400);
 
   // карточка должна существовать и (для не-владельца) принадлежать вошедшему специалисту
+  // A3: непроверенный специалист не может выдавать доступы — это отсекает случайных людей
+  // на входе, а не после жалоб. Владелец не гейтится (он и проверяет).
+  if(sess.role !== 'owner'){
+    const me = await env.DB.prepare('SELECT verified FROM specialists WHERE id=?').bind(sess.id).first();
+    if(!me || !me.verified) return jsonResponse({ ok:false, error:'not_verified' }, corsHeaders, 403);
+  }
   const row = await env.DB.prepare('SELECT specialist_id FROM clients WHERE code=?').bind(cardCode).first();
   if(!row) return jsonResponse({ ok:false, error:'client_not_found' }, corsHeaders, 404);
   if(sess.role !== 'owner' && String(row.specialist_id) !== String(sess.id))
@@ -7101,14 +7107,18 @@ async function handleSpecialistsPublic(request, env, corsHeaders){
   let rows=[];
   try{
     const r = await env.DB.prepare(
-      "SELECT id,name,specialty,category,photo,bio,cal_url,langs,pay_url FROM specialists WHERE public=1 AND status='active' ORDER BY name"
+      "SELECT id,name,specialty,category,photo,bio,cal_url,langs,pay_url,education,reg_number,website,city,verified_at FROM specialists WHERE public=1 AND COALESCE(verified,0)=1 AND status='active' ORDER BY name"
     ).all();
     rows = r.results || [];
   }catch(_){}
   // pay_url отдаём как ссылку для кнопки «Начать ведение» — текстом её витрина не показывает.
   return jsonResponse({ ok:true, specialists: rows.map(s=>({
-    name:s.name||'', specialty:s.specialty||'', category:s.category||'', photo:s.photo||'',
-    bio:s.bio||'', cal_url:s.cal_url||'', langs:s.langs||'', pay_url:s.pay_url||''
+    id:s.id, name:s.name||'', specialty:s.specialty||'', category:s.category||'', photo:s.photo||'',
+    bio:s.bio||'', cal_url:s.cal_url||'', langs:s.langs||'', pay_url:s.pay_url||'',
+    // A3: то, ради чего клиент открывает карточку — чем человек подтверждает, что он специалист.
+    // Служебное (юр. имя, налоговый номер, адрес, телефон, договор) сюда НЕ попадает никогда.
+    education:s.education||'', reg_number:s.reg_number||'', website:s.website||'',
+    city:s.city||'', verified_at:s.verified_at||''
   })) }, corsHeaders);
 }
 
@@ -7204,6 +7214,8 @@ async function handleCabinetSpecialists(request, env, corsHeaders){
   // pass_hash НЕ отдаём наружу.
   const { results } = await env.DB.prepare(
     `SELECT s.id,s.name,s.login,s.email,s.lang,s.specialty,s.role,s.ref_code,s.access_status,s.access_paid_until,s.platform_since,s.billing_exempt,s.status,s.created_at,
+            s.education,s.reg_number,s.website,s.city,s.legal_name,s.tax_id,s.address,s.phone,s.contract_url,
+            s.verified,s.verified_at,s.verify_note,s.publish_consent_at,
             (SELECT count(*) FROM clients c WHERE c.specialist_id=s.id) AS clients
      FROM specialists s ORDER BY s.id`
   ).all();
@@ -7592,6 +7604,10 @@ async function handleCabinetSpecialistSave(request, env, corsHeaders){
   // Пустая строка = ОЧИСТИТЬ (не начислять абонплату). Именно поэтому пишем null, а не пропускаем поле.
   const platformSince = String(s.platform_since || '').trim() || null;
   const billingExempt = (s.billing_exempt === 1 || s.billing_exempt === true || s.billing_exempt === '1') ? 1 : 0;
+  const V = k => { const v = s[k]; return (v == null) ? null : String(v).trim().slice(0, 300) || null; };
+  const verified = (s.verified === 1 || s.verified === true || s.verified === '1') ? 1 : 0;
+  const verifiedAt = verified ? (String(s.verified_at||'').trim() || new Date().toISOString().slice(0,10)) : null;
+  const consentAt  = (s.publish_consent) ? (String(s.publish_consent_at||'').trim() || new Date().toISOString().slice(0,10)) : null;
   // Защита от опечатки в дате: «2076-10-12» вместо «2026-…» отключала абонплату навсегда
   // и молча — потому что платформа считается по сроку, а не по счётчику месяцев.
   const _maxPaid = (function(){ const d=new Date(); d.setUTCFullYear(d.getUTCFullYear()+5); return d.toISOString().slice(0,10); })();
@@ -7612,12 +7628,12 @@ async function handleCabinetSpecialistSave(request, env, corsHeaders){
     if(password){
       const ph = await cabinetHashPassword(password);
       await env.DB.prepare(
-        'UPDATE specialists SET name=?,login=?,email=?,pass_hash=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,platform_since=?,billing_exempt=?,status=? WHERE id=?'
-      ).bind(name, login, email, ph, lang, specialty, role, refCode, accessSt, paidUntilSafe, platformSince, billingExempt, status, id).run();
+        'UPDATE specialists SET name=?,login=?,email=?,pass_hash=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,platform_since=?,billing_exempt=?,education=?,reg_number=?,website=?,city=?,legal_name=?,tax_id=?,address=?,phone=?,contract_url=?,verified=?,verified_at=?,verify_note=?,publish_consent_at=?,status=? WHERE id=?'
+      ).bind(name, login, email, ph, lang, specialty, role, refCode, accessSt, paidUntilSafe, platformSince, billingExempt, V('education'), V('reg_number'), V('website'), V('city'), V('legal_name'), V('tax_id'), V('address'), V('phone'), V('contract_url'), verified, verifiedAt, V('verify_note'), consentAt, status, id).run();
     } else {
       await env.DB.prepare(
-        'UPDATE specialists SET name=?,login=?,email=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,platform_since=?,billing_exempt=?,status=? WHERE id=?'
-      ).bind(name, login, email, lang, specialty, role, refCode, accessSt, paidUntilSafe, platformSince, billingExempt, status, id).run();
+        'UPDATE specialists SET name=?,login=?,email=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,platform_since=?,billing_exempt=?,education=?,reg_number=?,website=?,city=?,legal_name=?,tax_id=?,address=?,phone=?,contract_url=?,verified=?,verified_at=?,verify_note=?,publish_consent_at=?,status=? WHERE id=?'
+      ).bind(name, login, email, lang, specialty, role, refCode, accessSt, paidUntilSafe, platformSince, billingExempt, V('education'), V('reg_number'), V('website'), V('city'), V('legal_name'), V('tax_id'), V('address'), V('phone'), V('contract_url'), verified, verifiedAt, V('verify_note'), consentAt, status, id).run();
     }
     return jsonResponse({ok:true, id}, corsHeaders);
   }
