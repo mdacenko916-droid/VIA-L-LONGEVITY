@@ -6444,6 +6444,30 @@ async function cabinetVerifyPassword(password, stored){
   return calc === stored;
 }
 
+// ── СТУПЕНИ ДОСТУПА ПРИ НЕОПЛАТЕ (C1, 2026-08-03) ───────────────────────────
+// Было: cron ставил `lapsed` на следующий день после срока, и вход просто не работал —
+// специалист получал «неверный пароль» и не понимал, что дело в деньгах. Хуже: он терял
+// переписку с клиентами, которым обязан отвечать в 48 часов, — то есть били по клиенту,
+// а не по должнику.
+// Стало: сначала отключаем то, что ПОРОЖДАЕТ долг (выдачу новых доступов), и только потом
+// ограничиваем работу. Оплаченные клиенты доигрывают всегда.
+const GRACE_DAYS = 14;        // льготное окно после «оплачено до»
+const RESTRICT_DAYS = 45;     // дальше — только чтение
+function _accessStage(sp, today){
+  if(!sp) return 'ok';
+  if(String(sp.status||'') === 'disabled') return 'disabled';   // ручная блокировка владельцем
+  if(sp.billing_exempt) return 'ok';                            // свой специалист — не облагаем
+  if(!sp.platform_since) return 'ok';                           // абонплата не начисляется
+  const paid = String(sp.access_paid_until||'').trim();
+  if(!paid) return 'restricted';                                // ни разу не платил и уже подключён
+  if(paid >= today) return 'ok';
+  const d = (a,b) => Math.floor((new Date(b+'T00:00:00Z') - new Date(a+'T00:00:00Z')) / 86400000);
+  const over = d(paid, today);
+  if(over <= GRACE_DAYS) return 'grace';        // предупреждаем, ничего не отнимаем
+  if(over <= RESTRICT_DAYS) return 'restricted';// нельзя выдавать НОВЫЕ доступы
+  return 'readonly';                             // видит клиентов, не редактирует
+}
+
 async function handleCabinetAuth(request, env, corsHeaders){
   if(!env.EXPERT_DRAFTS){
     return jsonResponse({ ok:false, error:'cabinet_not_configured' }, corsHeaders, 500);
@@ -6464,11 +6488,19 @@ async function handleCabinetAuth(request, env, corsHeaders){
     // Вход специалиста по логину+паролю (только активный и с оплаченным доступом).
     if(env.DB){
       const sp = await env.DB.prepare(
-        "SELECT id,role,pass_hash,status,access_status FROM specialists WHERE lower(login)=lower(?)"
+        "SELECT id,role,pass_hash,status,access_status,access_paid_until,platform_since,billing_exempt FROM specialists WHERE lower(login)=lower(?)"
       ).bind(login).first();
-      if(sp && sp.status !== 'disabled' && sp.access_status !== 'lapsed'
-         && await cabinetVerifyPassword(pass, sp.pass_hash || '')){
-        session = { id: sp.id, role: sp.role || 'specialist' };
+      // Пароль проверяем ПЕРВЫМ: сообщать «просрочка» до проверки пароля значит подтверждать
+      // чужому, что такой логин существует. Причина возвращается только своему.
+      const passOk = sp && await cabinetVerifyPassword(pass, sp.pass_hash || '');
+      if(passOk){
+        const stage = _accessStage(sp, new Date().toISOString().slice(0,10));
+        if(stage === 'disabled'){
+          return jsonResponse({ ok:false, error:'disabled' }, corsHeaders, 403);
+        }
+        // На ступенях grace/restricted/readonly вход РАЗРЕШЁН: иначе страдают уже оплаченные
+        // клиенты, которым специалист обязан отвечать. Ограничения — точечные, ниже по коду.
+        session = { id: sp.id, role: sp.role || 'specialist', stage };
       }
     }
   } else if(env.CABINET_PASS && pass === env.CABINET_PASS){
@@ -6573,10 +6605,28 @@ async function handleCabinetClients(request, env, corsHeaders){
   const { results } = sess.role === 'owner'
     ? await env.DB.prepare('SELECT ' + CABINET_LIST_COLS + ' FROM clients ORDER BY updated_at DESC').all()
     : await env.DB.prepare('SELECT ' + CABINET_LIST_COLS + ' FROM clients WHERE specialist_id=? ORDER BY updated_at DESC').bind(sess.id).all();
+  // C2: кабинет должен показать баннер «просрочка, к оплате €N» — иначе специалист
+  // упирается в ограничения и не понимает причину.
+  let stage = 'ok', dueNow = 0;
+  try{
+    const me = await env.DB.prepare(
+      'SELECT status,access_paid_until,platform_since,billing_exempt FROM specialists WHERE id=?'
+    ).bind(sess.id).first();
+    stage = _accessStage(me, new Date().toISOString().slice(0,10));
+    if(stage !== 'ok' && me && me.platform_since && !me.billing_exempt){
+      const g = await env.DB.prepare('SELECT COALESCE(SUM(owed_eur),0) o FROM grants WHERE specialist_id=?').bind(sess.id).first();
+      const p = await env.DB.prepare("SELECT COALESCE(SUM(amount_eur),0) p FROM payments WHERE specialist_id=? AND kind='software'").bind(sess.id).first();
+      const soft = Math.max(0, ((g&&g.o)||0) - ((p&&p.p)||0));
+      const paid = String(me.access_paid_until||'').trim();
+      const today = new Date().toISOString().slice(0,10);
+      const months = paid ? Math.max(0, _monthsBetween(_addMonths(paid,1), today)) : _monthsBetween(me.platform_since, today);
+      dueNow = Math.round((soft + months * PLATFORM_FEE_EUR) * 100) / 100;
+    }
+  }catch(_){}
   let specialty = 'nutritionist', refCode = '', name = '';
   let showcase = { public:0, photo:'', bio:'', cal_url:'', langs:'', category:'', pay_url:'' };
   try{ const sp = await env.DB.prepare('SELECT specialty,ref_code,name,public,photo,bio,cal_url,langs,category,pay_url FROM specialists WHERE id=?').bind(sess.id).first(); if(sp){ if(sp.specialty) specialty = sp.specialty; if(sp.ref_code) refCode = sp.ref_code; if(sp.name) name = sp.name; showcase = { public: sp.public?1:0, photo: sp.photo||'', bio: sp.bio||'', cal_url: sp.cal_url||'', langs: sp.langs||'', category: sp.category||'', pay_url: sp.pay_url||'' }; } }catch(_){}
-  return jsonResponse({ ok:true, clients:(results || []).map(cabinetRowToLight), role:sess.role, specialty, ref_code: refCode, name, showcase }, corsHeaders);
+  return jsonResponse({ ok:true, access_stage: stage, due_now: dueNow, clients:(results || []).map(cabinetRowToLight), role:sess.role, specialty, ref_code: refCode, name, showcase }, corsHeaders);
 }
 
 // Полное досье одного клиента (карточка по требованию) — изоляция через cabinetOwns.
@@ -6994,8 +7044,15 @@ async function handleCabinetExpertGrant(request, env, corsHeaders){
   // A3: непроверенный специалист не может выдавать доступы — это отсекает случайных людей
   // на входе, а не после жалоб. Владелец не гейтится (он и проверяет).
   if(sess.role !== 'owner'){
-    const me = await env.DB.prepare('SELECT verified FROM specialists WHERE id=?').bind(sess.id).first();
+    const me = await env.DB.prepare(
+      'SELECT verified,status,access_paid_until,platform_since,billing_exempt FROM specialists WHERE id=?'
+    ).bind(sess.id).first();
     if(!me || !me.verified) return jsonResponse({ ok:false, error:'not_verified' }, corsHeaders, 403);
+    // C1: просрочка бьёт по тому, что порождает долг, — по выдаче НОВЫХ доступов.
+    // Текущие ведения и переписка продолжают работать: клиент уже заплатил.
+    const stage = _accessStage(me, new Date().toISOString().slice(0,10));
+    if(stage === 'restricted' || stage === 'readonly' || stage === 'disabled')
+      return jsonResponse({ ok:false, error:'payment_required', stage }, corsHeaders, 402);
   }
   const row = await env.DB.prepare('SELECT specialist_id FROM clients WHERE code=?').bind(cardCode).first();
   if(!row) return jsonResponse({ ok:false, error:'client_not_found' }, corsHeaders, 404);
