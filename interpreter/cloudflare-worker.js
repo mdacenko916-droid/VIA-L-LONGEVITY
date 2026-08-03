@@ -1244,6 +1244,7 @@ export default {
       if (path === '/cabinet/complaints')      return handleCabinetComplaints(request, env, corsHeaders);          // владелец: разбор жалоб
       if (path === '/offer/accept')            return handleOfferAccept(request, env, corsHeaders);               // акцепт оферты до оплаты (A2)
       if (path === '/expert/confirm-email') return handleExpertConfirmEmail(request, env, corsHeaders);   // подтверждение почты при первом входе (POST)
+      if (path === '/cabinet/reassign')        return handleCabinetReassign(request, env, corsHeaders);             // передать клиента другому специалисту (B3)
       if (path === '/cabinet/expert-users')    return handleCabinetExpertUsers(request, env, corsHeaders);        // счётчик и сверка пользователей EXPERT
       if (path === '/cabinet/billing/me')       return handleCabinetBillingMe(request, env, corsHeaders);          // специалист: та же сводка про себя
       if (path === '/cabinet/billing/payment')  return handleCabinetBillingPayment(request, env, corsHeaders);     // владелец: отметить/удалить оплату
@@ -7507,6 +7508,46 @@ async function handleExpertConfirmEmail(request, env, corsHeaders){
       .bind(row.code, Date.now(), oToken).run(); }catch(_){}
   }
   return jsonResponse({ok:true, match, filled: !known}, corsHeaders);
+}
+
+// POST /cabinet/reassign {code, specialist_id} — передать клиента другому специалисту (B3).
+// Сценарий «специалист пропал»: клиент заплатил ему, но вести его больше некому. Раньше
+// передать было нечем — только правкой в базе. Срок доступа СОХРАНЯЕТСЯ: клиент не должен
+// заметить смену, для него ничего не меняется, кроме имени в чате.
+async function handleCabinetReassign(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  if(sess.role !== 'owner') return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  let b={}; try{ b = await request.json(); }catch(_){}
+  const code   = String(b.code||'').trim().toUpperCase();
+  const specId = parseInt(b.specialist_id, 10);
+  if(!code || !specId) return jsonResponse({ok:false,error:'bad_input'}, corsHeaders, 400);
+
+  // Принимающий должен быть проверен — иначе передача обходит гейт A3.
+  const sp = await env.DB.prepare('SELECT id,name,verified FROM specialists WHERE id=?').bind(specId).first();
+  if(!sp) return jsonResponse({ok:false,error:'specialist_not_found'}, corsHeaders, 404);
+  if(!sp.verified) return jsonResponse({ok:false,error:'not_verified'}, corsHeaders, 403);
+
+  const row = await env.DB.prepare('SELECT code, specialist_id, data FROM clients WHERE upper(code)=?').bind(code).first();
+  if(!row) return jsonResponse({ok:false,error:'client_not_found'}, corsHeaders, 404);
+
+  const now = Date.now();
+  let d={}; try{ d = JSON.parse(row.data||'{}'); }catch(_){}
+  // След передачи в карточке: кто, кому, когда — чтобы через полгода было понятно,
+  // почему история клиента начинается у одного специалиста, а продолжается у другого.
+  d.transfers = Array.isArray(d.transfers) ? d.transfers : [];
+  d.transfers.push({ from: row.specialist_id || null, to: specId, at: new Date().toISOString().slice(0,10) });
+  if(d.transfers.length > 20) d.transfers = d.transfers.slice(-20);
+  await env.DB.prepare('UPDATE clients SET specialist_id=?, data=?, updated_at=? WHERE code=?')
+    .bind(specId, JSON.stringify(d), now, row.code).run();
+
+  // Журнал выдач следует за клиентом: иначе начисления останутся на пропавшем специалисте,
+  // а работать с клиентом будет другой — и бухгалтерия разойдётся с реальностью.
+  try{ await env.DB.prepare('UPDATE grants SET specialist_id=?, updated_at=? WHERE card_code=?')
+    .bind(specId, now, row.code).run(); }catch(_){}
+
+  return jsonResponse({ok:true, code: row.code, to: sp.name || ('#'+specId)}, corsHeaders);
 }
 
 // POST /cabinet/expert-users — СЧЁТЧИК И СВЕРКА пользователей VIA-L EXPERT (владелец).
