@@ -3567,6 +3567,51 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
 // Вставь сюда URL после деплоя Google Apps Script:
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxaATfqaJoGYbLJcKnMX_450Sojm_tlfTIzY5mtUsshbPNnIZui00J-QRz0AZl50dkj/exec';
 
+// ── ПОДТВЕРЖДЕНИЕ ПОЧТЫ ПРИ ПЕРВОМ ВХОДЕ (одно поле) ──────────────────────────
+// Имя и почта уже есть в карточке — спрашивать анкету заново значит получить второй,
+// расходящийся набор данных. Одно поле связывает устройство с карточкой, даёт
+// восстановление доступа и ловит случай «код ушёл не тому». Несовпадение НЕ блокирует
+// вход: человек заплатил, а в карточке может быть опечатка — оно помечается специалисту.
+function _emailAsked(){ try{ return localStorage.getItem('viae_email_ok')==='1'; }catch(e){ return true; } }
+function _askEmail(cardCode){
+  if(_emailAsked() || !cardCode) return;
+  var L=(typeof lang!=='undefined')?lang:'ru';
+  var T={
+    t:{ru:'Подтвердите почту',uk:'Підтвердьте пошту',en:'Confirm your email',es:'Confirma tu correo',de:'E-Mail bestätigen',pt:'Confirme seu e-mail',fr:'Confirmez votre e-mail',pl:'Potwierdź e-mail',it:'Conferma la tua email',he:'אישור דוא״ל',ja:'メールの確認',ko:'이메일 확인'},
+    d:{ru:'Это связывает приложение с вашей программой и поможет восстановить доступ, если смените устройство.',uk:'Це повʼязує застосунок із вашою програмою і допоможе відновити доступ, якщо зміните пристрій.',en:'This links the app to your programme and helps restore access if you change device.',es:'Esto vincula la app con tu programa y ayuda a recuperar el acceso si cambias de dispositivo.',de:'Das verknüpft die App mit deinem Programm und hilft beim Zugang nach einem Gerätewechsel.',pt:'Isso vincula o app ao seu programa e ajuda a recuperar o acesso se trocar de aparelho.',fr:'Cela relie l’application à votre programme et aide à récupérer l’accès en cas de changement d’appareil.',pl:'To łączy aplikację z Twoim programem i pomoże odzyskać dostęp po zmianie urządzenia.',it:'Collega l’app al tuo percorso e aiuta a recuperare l’accesso se cambi dispositivo.',he:'זה מקשר את האפליקציה לתוכנית שלכם ומסייע לשחזר גישה בהחלפת מכשיר.',ja:'アプリとあなたのプログラムを結び付け、機種変更時のアクセス復元に役立ちます。',ko:'앱과 프로그램을 연결하고 기기를 바꿔도 접근을 복구할 수 있게 합니다.'},
+    b:{ru:'Готово',uk:'Готово',en:'Done',es:'Listo',de:'Fertig',pt:'Pronto',fr:'Terminé',pl:'Gotowe',it:'Fatto',he:'סיום',ja:'完了',ko:'완료'},
+    s:{ru:'Позже',uk:'Пізніше',en:'Later',es:'Más tarde',de:'Später',pt:'Depois',fr:'Plus tard',pl:'Później',it:'Più tardi',he:'אחר כך',ja:'後で',ko:'나중에'},
+    m:{ru:'Эта почта не совпадает с той, что у вашего специалиста. Мы отметили это — он свяжется, если нужно.',uk:'Ця пошта не збігається з тією, що у вашого спеціаліста. Ми це позначили — він звʼяжеться, якщо потрібно.',en:'This email does not match the one your specialist has. We have flagged it — they will get in touch if needed.',es:'Este correo no coincide con el que tiene tu especialista. Lo hemos marcado; se pondrá en contacto si hace falta.',de:'Diese E-Mail stimmt nicht mit der deines Spezialisten überein. Wir haben es vermerkt — er meldet sich bei Bedarf.',pt:'Este e-mail não corresponde ao que seu especialista tem. Sinalizamos — ele entrará em contato se necessário.',fr:'Cet e-mail ne correspond pas à celui de votre spécialiste. Nous l’avons signalé — il vous contactera si besoin.',pl:'Ten e-mail nie zgadza się z tym, który ma Twój specjalista. Odnotowaliśmy to — skontaktuje się w razie potrzeby.',it:'Questa email non coincide con quella del tuo specialista. L’abbiamo segnalato — ti contatterà se serve.',he:'הדוא״ל אינו תואם לזה שיש למומחה שלכם. סימנו זאת — הוא ייצור קשר במידת הצורך.',ja:'このメールは担当者が把握しているものと一致しません。記録しました。必要に応じて連絡があります。',ko:'담당 전문가가 가진 이메일과 일치하지 않습니다. 표시해 두었으며 필요 시 연락드립니다.'}
+  };
+  var pick=function(o){ return o[L]||o.en; };
+  var w=document.createElement('div');
+  w.style.cssText='position:fixed;inset:0;z-index:9000;background:rgba(16,20,28,.92);display:flex;align-items:center;justify-content:center;padding:22px;';
+  w.innerHTML='<div style="max-width:420px;width:100%;background:linear-gradient(145deg,#161A22,#10141C);border:1px solid rgba(226,185,90,.28);border-radius:18px;padding:22px;">'
+    +'<div style="font-family:\'Playfair Display\',serif;font-size:20px;color:#F5F3EF;margin-bottom:8px;">'+pick(T.t)+'</div>'
+    +'<div style="font-size:13px;color:rgba(245,243,239,.65);line-height:1.55;margin-bottom:14px;">'+pick(T.d)+'</div>'
+    +'<input id="viaeEmailInp" type="email" inputmode="email" autocomplete="email" placeholder="name@example.com" '
+    +'style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#F5F3EF;font-size:15px;padding:11px 12px;">'
+    +'<div id="viaeEmailMsg" style="font-size:12px;color:#E2B95A;line-height:1.5;margin-top:8px;"></div>'
+    +'<div style="display:flex;gap:10px;margin-top:14px;">'
+    +'<button id="viaeEmailOk" style="flex:1;background:#E2B95A;color:#10141C;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;">'+pick(T.b)+'</button>'
+    +'<button id="viaeEmailSkip" style="background:transparent;color:rgba(245,243,239,.6);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:11px 14px;font-size:13px;cursor:pointer;">'+pick(T.s)+'</button>'
+    +'</div></div>';
+  document.body.appendChild(w);
+  var close=function(){ try{ localStorage.setItem('viae_email_ok','1'); }catch(e){} w.remove(); };
+  w.querySelector('#viaeEmailSkip').onclick=close;
+  w.querySelector('#viaeEmailOk').onclick=async function(){
+    var v=(w.querySelector('#viaeEmailInp').value||'').trim();
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){ w.querySelector('#viaeEmailMsg').textContent='—'; return; }
+    try{
+      var r=await fetch(_CHAT_API+'/expert/confirm-email',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({code:cardCode,email:v})});
+      var j=await r.json();
+      if(j && j.ok && j.match===false){ w.querySelector('#viaeEmailMsg').textContent=pick(T.m); setTimeout(close,3200); return; }
+    }catch(e){}
+    close();
+  };
+}
+
 function gateUnlock(access, code, plan, expiry){
   const g=document.getElementById('gate');
   const sa=document.getElementById('scroll-area');
@@ -3580,6 +3625,7 @@ function gateUnlock(access, code, plan, expiry){
   if(expiry){ try{ sessionStorage.setItem('viae_expiry', expiry); }catch(e){} }   // ISO-срок программы (56/84 дня); DEV-коды — без срока
   // Персист доступа между сессиями (веб-EXPERT: клиент вводит код один раз, не каждый заход).
   try{ localStorage.setItem('viae_access', access); if(code)localStorage.setItem('viae_code', code); if(plan)localStorage.setItem('viae_plan', plan); if(expiry)localStorage.setItem('viae_expiry', expiry); else localStorage.removeItem('viae_expiry'); }catch(e){}
+  setTimeout(function(){ try{ _askEmail(code); }catch(e){} }, 900);   // одно поле после входа, не на пороге
   // Код введён → сначала подтягиваем аккаунт (дневник/профиль/разборы с сервера), потом маршрут.
   // Иначе новое устройство стартовало бы с пустой историей и залило бы ею общий аккаунт.
   var _go=function(){ try{ if(typeof _bootRoute==='function')_bootRoute(); else startFunnel(); }catch(e){ try{startFunnel();}catch(_){} } };

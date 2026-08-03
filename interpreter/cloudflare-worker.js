@@ -1240,6 +1240,7 @@ export default {
       // Платформа, Шаг 6: панель владельца — управление специалистами (только role=owner).
       if (path === '/cabinet/specialists')       return handleCabinetSpecialists(request, env, corsHeaders);
       if (path === '/cabinet/billing')          return handleCabinetBilling(request, env, corsHeaders);            // владелец: сводка по деньгам
+      if (path === '/expert/confirm-email') return handleExpertConfirmEmail(request, env, corsHeaders);   // подтверждение почты при первом входе (POST)
       if (path === '/cabinet/expert-users')    return handleCabinetExpertUsers(request, env, corsHeaders);        // счётчик и сверка пользователей EXPERT
       if (path === '/cabinet/billing/me')       return handleCabinetBillingMe(request, env, corsHeaders);          // специалист: та же сводка про себя
       if (path === '/cabinet/billing/payment')  return handleCabinetBillingPayment(request, env, corsHeaders);     // владелец: отметить/удалить оплату
@@ -7342,6 +7343,40 @@ async function _billingResponse(env, corsHeaders, period, onlyId){
     totals: { clients: rows.reduce((a,r)=>a+r.clients,0),
               soft_due: sum('soft_due'), platform_due: sum('platform_due'),
               due_now: sum('due_now'), cash_period: sum('cash_period') } }, corsHeaders);
+}
+
+// POST /expert/confirm-email {code, email} — подтверждение почты при ПЕРВОМ входе в EXPERT.
+// Зачем одно поле, а не анкета: имя и почта уже есть в карточке (её создаёт специалист при
+// выдаче доступа или покупка). Спрашивать их заново — значит получить второй, расходящийся
+// набор данных. Одно поле решает три задачи: связывает устройство с карточкой, даёт
+// восстановление доступа и ловит случай «код ушёл не тому».
+// Мягкий гейт: несовпадение НЕ блокирует вход (человек заплатил, а в карточке может быть
+// опечатка) — оно помечается в карточке, и специалист видит это у себя.
+async function handleExpertConfirmEmail(request, env, corsHeaders){
+  if(request.method !== 'POST') return jsonResponse({ok:false,error:'method'}, corsHeaders, 405);
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  let b={}; try{ b = await request.json(); }catch(_){}
+  const code  = String(b.code||'').trim().toUpperCase();
+  const email = String(b.email||'').trim().toLowerCase();
+  if(!code || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
+    return jsonResponse({ok:false, reason:'bad_email'}, corsHeaders, 400);
+
+  const row = await env.DB.prepare('SELECT code, email, data FROM clients WHERE upper(code)=?').bind(code).first();
+  if(!row) return jsonResponse({ok:false, reason:'not_found'}, corsHeaders, 404);
+
+  const known = String(row.email||'').trim().toLowerCase();
+  const match = !known || known === email;      // пустое поле в карточке → принимаем и ЗАПОЛНЯЕМ
+  let d={}; try{ d = JSON.parse(row.data||'{}'); }catch(_){}
+  d.expert_email = { value: email, confirmed_at: new Date().toISOString().slice(0,10), match };
+  const now = Date.now();
+  if(!known){
+    await env.DB.prepare('UPDATE clients SET email=?, data=?, updated_at=? WHERE code=?')
+      .bind(email, JSON.stringify(d), now, row.code).run();
+  } else {
+    await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?')
+      .bind(JSON.stringify(d), now, row.code).run();
+  }
+  return jsonResponse({ok:true, match, filled: !known}, corsHeaders);
 }
 
 // POST /cabinet/expert-users — СЧЁТЧИК И СВЕРКА пользователей VIA-L EXPERT (владелец).
