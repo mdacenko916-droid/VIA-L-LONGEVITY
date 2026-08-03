@@ -1244,6 +1244,7 @@ export default {
       if (path === '/cabinet/complaints')      return handleCabinetComplaints(request, env, corsHeaders);          // владелец: разбор жалоб
       if (path === '/offer/accept')            return handleOfferAccept(request, env, corsHeaders);               // акцепт оферты до оплаты (A2)
       if (path === '/expert/confirm-email') return handleExpertConfirmEmail(request, env, corsHeaders);   // подтверждение почты при первом входе (POST)
+      if (path === '/cabinet/my-password')     return handleCabinetMyPassword(request, env, corsHeaders);           // специалист меняет свой пароль (D2)
       if (path === '/cabinet/reassign')        return handleCabinetReassign(request, env, corsHeaders);             // передать клиента другому специалисту (B3)
       if (path === '/cabinet/expert-users')    return handleCabinetExpertUsers(request, env, corsHeaders);        // счётчик и сверка пользователей EXPERT
       if (path === '/cabinet/billing/me')       return handleCabinetBillingMe(request, env, corsHeaders);          // специалист: та же сводка про себя
@@ -7763,6 +7764,28 @@ async function handleCabinetBillingDetail(request, env, corsHeaders){
     `SELECT id, amount_eur, kind, period, paid_at, note FROM payments
       WHERE specialist_id=? ORDER BY paid_at DESC, id DESC LIMIT 200`).bind(specId).all()).results || [];
   return jsonResponse({ok:true, grants, payments}, corsHeaders);
+}
+
+// POST /cabinet/my-password {old, new} — специалист меняет СВОЙ пароль (D2, 2026-08-03).
+// Пока пароль задаёт только владелец, он знает его бессрочно — и утверждать «в кабинете
+// работал именно специалист» нельзя. После первой самостоятельной смены это перестаёт быть
+// возможным, а вместе с этим появляется смысл у логов действий.
+async function handleCabinetMyPassword(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  let b={}; try{ b = await request.json(); }catch(_){}
+  const oldPass = String(b.old||''), newPass = String(b.new||'');
+  if(newPass.length < 10) return jsonResponse({ok:false,error:'too_short'}, corsHeaders, 400);
+
+  const sp = await env.DB.prepare('SELECT id,pass_hash FROM specialists WHERE id=?').bind(sess.id).first();
+  if(!sp) return jsonResponse({ok:false,error:'not_found'}, corsHeaders, 404);
+  const ok = await cabinetVerifyPassword(oldPass, sp.pass_hash || '');
+  if(!ok) return jsonResponse({ok:false,error:'wrong_password'}, corsHeaders, 403);
+
+  const hash = await cabinetHashPassword(newPass);
+  await env.DB.prepare('UPDATE specialists SET pass_hash=? WHERE id=?').bind(hash, sess.id).run();
+  return jsonResponse({ok:true}, corsHeaders);
 }
 
 async function handleCabinetSpecialistSave(request, env, corsHeaders){

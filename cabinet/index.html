@@ -401,6 +401,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
       <button class="topbtn" id="viewSpecialistsBtn" onclick="switchView('specialists')" style="display:none;" data-i18n="nav_specialists">🩺 Специалисты</button>
       <button class="topbtn" id="viewBillingBtn" onclick="switchView('billing')" style="display:none;" data-i18n="nav_billing">€ Бухгалтерия</button>
       <button class="topbtn" id="viewMyBillBtn" onclick="switchView('mybill')" style="display:none;" data-i18n="nav_mybill">€ Мои расчёты</button>
+      <button class="topbtn" id="myPassBtn" onclick="changeMyPassword()" style="display:none;" data-i18n="mp_btn">Сменить пароль</button>
       <button class="topbtn" id="myLinkBtn" onclick="openMyLink()" data-i18n="nav_mylink">🔗 Моя ссылка</button>
       <button class="topbtn" id="showcaseBtn" onclick="openShowcase()" data-i18n="nav_showcase">🪟 Моя витрина</button>
       <button class="topbtn primary" onclick="openAddClient()" data-i18n="btn_new_client">+ Новый клиент</button>
@@ -1085,6 +1086,14 @@ const T = {
   sp_phone:{ru:"Телефон",uk:"Телефон",en:"Phone",es:"Teléfono",de:"Telefon",pt:"Telefone",fr:"Téléphone",pl:"Telefon",it:"Telefono",he:"טלפון",ja:"電話",ko:"전화"},
   sp_contract_url:{ru:"Ссылка на подписанный договор",uk:"Посилання на підписаний договір",en:"Link to the signed agreement",es:"Enlace al contrato firmado",de:"Link zum unterzeichneten Vertrag",pt:"Link para o contrato assinado",fr:"Lien vers le contrat signé",pl:"Link do podpisanej umowy",it:"Link al contratto firmato",he:"קישור להסכם החתום",ja:"署名済み契約書のリンク",ko:"서명된 계약서 링크"},
   sp_verified:{ru:"Проверен — допущен в витрину и к выдаче доступов",uk:"Перевірений — допущений у вітрину та до видачі доступів",en:"Verified — listed in the showcase and allowed to grant access",es:"Verificado: aparece en el escaparate y puede otorgar accesos",de:"Geprüft — im Schaufenster gelistet und darf Zugänge vergeben",pt:"Verificado — aparece na vitrine e pode conceder acessos",fr:"Vérifié — visible dans la vitrine et autorisé à donner des accès",pl:"Zweryfikowany — widoczny w witrynie i może nadawać dostępy",it:"Verificato — presente in vetrina e abilitato a concedere accessi",he:"מאומת — מוצג בחלון הראווה ורשאי להעניק גישה",ja:"確認済み — ショーケースに掲載され、アクセス付与が可能",ko:"확인됨 — 쇼케이스에 노출되고 액세스 부여 가능"},
+  sp_gen_pass:{ru:"Сгенерировать",uk:"Згенерувати",en:"Generate",es:"Generar",de:"Generieren",pt:"Gerar",fr:"Générer",pl:"Wygeneruj",it:"Genera",he:"יצירה",ja:"生成",ko:"생성"},
+  sp_gen_note:{ru:"Показан один раз — скопируйте и передайте специалисту:",uk:"Показано один раз — скопіюйте та передайте спеціалісту:",en:"Shown once — copy it and pass it to the specialist:",es:"Se muestra una vez: cópialo y pásaselo al especialista:",de:"Wird einmal angezeigt — kopieren und dem Spezialisten geben:",pt:"Exibido uma vez — copie e passe ao especialista:",fr:"Affiché une seule fois — copiez-le et transmettez-le :",pl:"Pokazane raz — skopiuj i przekaż specjaliście:",it:"Mostrata una volta — copiala e passala allo specialista:",he:"מוצג פעם אחת — העתיקו ומסרו למומחה:",ja:"一度だけ表示されます。コピーして専門家に渡してください：",ko:"한 번만 표시됩니다 — 복사해 전문가에게 전달하세요:"},
+  sp_copy:{ru:"Копировать",uk:"Копіювати",en:"Copy",es:"Copiar",de:"Kopieren",pt:"Copiar",fr:"Copier",pl:"Kopiuj",it:"Copia",he:"העתק",ja:"コピー",ko:"복사"},
+  mp_btn:{ru:"Сменить пароль",uk:"Змінити пароль",en:"Change password",es:"Cambiar contraseña",de:"Passwort ändern",pt:"Alterar senha",fr:"Changer le mot de passe",pl:"Zmień hasło",it:"Cambia password",he:"שינוי סיסמה",ja:"パスワード変更",ko:"비밀번호 변경"},
+  mp_old:{ru:"Текущий пароль:",uk:"Поточний пароль:",en:"Current password:",es:"Contraseña actual:",de:"Aktuelles Passwort:",pt:"Senha atual:",fr:"Mot de passe actuel :",pl:"Obecne hasło:",it:"Password attuale:",he:"סיסמה נוכחית:",ja:"現在のパスワード：",ko:"현재 비밀번호:"},
+  mp_new:{ru:"Новый пароль (минимум 10 символов):",uk:"Новий пароль (мінімум 10 символів):",en:"New password (at least 10 characters):",es:"Nueva contraseña (mínimo 10 caracteres):",de:"Neues Passwort (mindestens 10 Zeichen):",pt:"Nova senha (mínimo 10 caracteres):",fr:"Nouveau mot de passe (10 caractères minimum) :",pl:"Nowe hasło (min. 10 znaków):",it:"Nuova password (almeno 10 caratteri):",he:"סיסמה חדשה (10 תווים לפחות):",ja:"新しいパスワード（10文字以上）：",ko:"새 비밀번호 (10자 이상):"},
+  mp_short:{ru:"Слишком короткий пароль — минимум 10 символов.",uk:"Занадто короткий пароль — мінімум 10 символів.",en:"Password too short — at least 10 characters.",es:"Contraseña demasiado corta: mínimo 10 caracteres.",de:"Passwort zu kurz — mindestens 10 Zeichen.",pt:"Senha muito curta — mínimo 10 caracteres.",fr:"Mot de passe trop court — 10 caractères minimum.",pl:"Hasło za krótkie — minimum 10 znaków.",it:"Password troppo corta — almeno 10 caratteri.",he:"הסיסמה קצרה מדי — לפחות 10 תווים.",ja:"パスワードが短すぎます（10文字以上）。",ko:"비밀번호가 너무 짧습니다 — 10자 이상이어야 합니다."},
+  mp_done:{ru:"Пароль изменён. Теперь его знаете только вы.",uk:"Пароль змінено. Тепер його знаєте лише ви.",en:"Password changed. Now only you know it.",es:"Contraseña cambiada. Ahora solo tú la conoces.",de:"Passwort geändert. Jetzt kennst nur du es.",pt:"Senha alterada. Agora só você a conhece.",fr:"Mot de passe modifié. Vous seul le connaissez désormais.",pl:"Hasło zmienione. Teraz znasz je tylko Ty.",it:"Password cambiata. Ora la conosci solo tu.",he:"הסיסמה שונתה. עכשיו רק אתם יודעים אותה.",ja:"パスワードを変更しました。これであなただけが知っています。",ko:"비밀번호를 변경했습니다. 이제 본인만 알고 있습니다."},
   sp_credit_limit:{ru:"Лимит неоплаченного софта, €",uk:"Ліміт несплаченого софту, €",en:"Unpaid software limit, €",es:"Límite de software impagado, €",de:"Limit unbezahlter Software, €",pt:"Limite de software não pago, €",fr:"Plafond de logiciel impayé, €",pl:"Limit nieopłaconego software’u, €",it:"Limite software non pagato, €",he:"תקרת תוכנה שלא שולמה, €",ja:"未払いソフト上限 €",ko:"미납 소프트웨어 한도 €"},
   sp_credit_limit_hint:{ru:"Больше этой суммы долга специалист не сможет выдавать новые доступы. Ограничивает максимальный убыток, если он исчезнет. 0 — без лимита.",uk:"Понад цю суму боргу спеціаліст не зможе видавати нові доступи. Обмежує максимальний збиток, якщо він зникне. 0 — без ліміту.",en:"Beyond this outstanding amount the specialist cannot grant new access. Caps the maximum loss if they disappear. 0 means no limit.",es:"Por encima de esta deuda el especialista no podrá otorgar nuevos accesos. Limita la pérdida máxima si desaparece. 0 = sin límite.",de:"Über diesen offenen Betrag hinaus kann der Spezialist keine neuen Zugänge vergeben. Begrenzt den maximalen Verlust, falls er verschwindet. 0 = kein Limit.",pt:"Acima desta dívida o especialista não poderá conceder novos acessos. Limita a perda máxima se ele desaparecer. 0 = sem limite.",fr:"Au-delà de ce montant dû, le spécialiste ne peut plus accorder de nouveaux accès. Plafonne la perte maximale s’il disparaît. 0 = pas de limite.",pl:"Powyżej tej kwoty zadłużenia specjalista nie może nadawać nowych dostępów. Ogranicza maksymalną stratę, jeśli zniknie. 0 = bez limitu.",it:"Oltre questo debito lo specialista non può concedere nuovi accessi. Limita la perdita massima se sparisce. 0 = nessun limite.",he:"מעבר לחוב זה המומחה לא יוכל להעניק גישות חדשות. מגביל את ההפסד המרבי אם ייעלם. 0 — ללא הגבלה.",ja:"この未払い額を超えると新規アクセスを付与できません。担当者が消えた場合の損失上限になります。0は無制限。",ko:"이 미납 금액을 넘으면 새 액세스를 부여할 수 없습니다. 전문가가 사라졌을 때 손실 상한을 정합니다. 0은 무제한."},
   sp_verify_note:{ru:"Что проверено",uk:"Що перевірено",en:"What was verified",es:"Qué se verificó",de:"Was geprüft wurde",pt:"O que foi verificado",fr:"Ce qui a été vérifié",pl:"Co zweryfikowano",it:"Cosa è stato verificato",he:"מה נבדק",ja:"確認した内容",ko:"확인한 내용"},
@@ -1417,6 +1426,8 @@ async function enterApp(){
   if(blBtn) blBtn.style.display = (myRole==='owner') ? '' : 'none';
   const mbBtn = document.getElementById('viewMyBillBtn');
   if(mbBtn) mbBtn.style.display = (myRole==='owner') ? 'none' : '';
+  const mpBtn = document.getElementById('myPassBtn');
+  if(mpBtn) mpBtn.style.display = (myRole==='owner') ? 'none' : '';
   ensureSpecialists();   // подпись «чей клиент» + фильтр по специалисту (владельцу)
   // show mobile menu btn on small screens
   if(window.innerWidth<768) document.getElementById('mobileMenuBtn').style.display='';
@@ -1996,6 +2007,30 @@ function openEditSpecialist(id){
 function closeSpecModal(){ document.getElementById('specModal').classList.remove('open'); }
 const SPEC_ERR_KEY = {login_required:'spec_err_login',ref_code_required:'spec_err_refcode',password_required:'spec_err_password',login_or_code_taken:'spec_err_taken',forbidden:'sp_only_owner'};
 function specErr(code){ const k=SPEC_ERR_KEY[code]; return k ? t(k) : ''; }
+// D1: генерация пароля. Придуманные на ходу пароли короткие и повторяются, а передавать их
+// в мессенджере — значит оставить в переписке навсегда. Показываем один раз, копируем.
+function genSpecPassword(){
+  const ABC='abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // без похожих символов
+  let out=''; const a=new Uint32Array(16); crypto.getRandomValues(a);
+  for(let i=0;i<16;i++) out += ABC[a[i] % ABC.length];
+  const inp=document.getElementById('s-password'); if(inp) inp.value=out;
+  const box=document.getElementById('s-pass-gen');
+  if(box){
+    box.style.display='block';
+    box.innerHTML = t('sp_gen_note') + ' <b style="font-family:monospace;">' + esc(out) + '</b> '
+      + '<button type="button" class="topbtn" style="padding:1px 8px;" onclick="navigator.clipboard.writeText(\'' + out + '\')">' + t('sp_copy') + '</button>';
+  }
+}
+// D2: специалист меняет свой пароль сам.
+async function changeMyPassword(){
+  const oldP = prompt(t('mp_old')); if(!oldP) return;
+  const newP = prompt(t('mp_new')); if(!newP) return;
+  if(newP.length < 10){ alert(t('mp_short')); return; }
+  let j=null; try{ j = await api('/cabinet/my-password', {old:oldP, new:newP}); }catch(_){}
+  if(j && j.ok) alert(t('mp_done'));
+  else alert(t('err_prefix') + ((j&&j.error)||t('err_unknown')));
+}
+
 async function saveSpecialist(){
   const spec = {
     name:           document.getElementById('s-name').value.trim(),
