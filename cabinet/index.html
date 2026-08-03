@@ -684,8 +684,32 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
       <div class="form-row-2">
         <div class="form-row" style="margin:0"><label data-i18n="sp_website">Сайт или соцсеть</label>
           <input class="form-input" id="s-website" type="text" placeholder="https://" style="font-size:13px;"></div>
-        <div class="form-row" style="margin:0"><label data-i18n="sp_city">Город, страна</label>
+        <div class="form-row" style="margin:0"><label data-i18n="sp_city">Город</label>
           <input class="form-input" id="s-city" type="text" style="font-size:13px;"></div>
+      </div>
+      <!-- E1: страна и юр. статус — не украшение карточки. От страны специалиста зависит
+           применимое право в его договоре с клиентом, поэтому поле машинно-читаемое (ISO-2)
+           и публичное: клиент должен видеть это до оплаты. -->
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label data-i18n="sp_country">Страна регистрации</label>
+          <select class="form-input" id="s-country" style="font-size:13px;">
+            <option value=""></option>
+            <option value="UA">Україна</option><option value="ES">España</option>
+            <option value="PL">Polska</option><option value="DE">Deutschland</option>
+            <option value="PT">Portugal</option><option value="IT">Italia</option>
+            <option value="FR">France</option><option value="NL">Nederland</option>
+            <option value="BE">België</option><option value="AT">Österreich</option>
+            <option value="IE">Ireland</option><option value="CZ">Česko</option>
+            <option value="RO">România</option><option value="BG">България</option>
+            <option value="GR">Ελλάδα</option><option value="LT">Lietuva</option>
+            <option value="LV">Latvija</option><option value="EE">Eesti</option>
+            <option value="GB">United Kingdom</option><option value="CH">Schweiz</option>
+            <option value="US">United States</option><option value="CA">Canada</option>
+            <option value="IL">ישראל</option><option value="AE">UAE</option>
+            <option value="OTHER">—</option>
+          </select></div>
+        <div class="form-row" style="margin:0"><label data-i18n="sp_legal_form">Юридический статус</label>
+          <input class="form-input" id="s-legal-form" type="text" placeholder="ФОП 3 гр. / Autónomo" style="font-size:13px;"></div>
       </div>
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-top:8px;cursor:pointer;">
         <input type="checkbox" id="s-publish-consent">
@@ -1094,6 +1118,8 @@ const T = {
   sp_website:{ru:"Сайт или соцсеть",uk:"Сайт або соцмережа",en:"Website or social profile",es:"Web o red social",de:"Website oder Social-Profil",pt:"Site ou rede social",fr:"Site ou réseau social",pl:"Strona lub profil społecznościowy",it:"Sito o social",he:"אתר או רשת חברתית",ja:"ウェブサイトまたはSNS",ko:"웹사이트 또는 SNS"},
   sp_city:{ru:"Город, страна",uk:"Місто, країна",en:"City, country",es:"Ciudad, país",de:"Stadt, Land",pt:"Cidade, país",fr:"Ville, pays",pl:"Miasto, kraj",it:"Città, paese",he:"עיר, מדינה",ja:"都市・国",ko:"도시, 국가"},
   sp_publish_consent:{ru:"Специалист согласен показывать эти данные клиентам",uk:"Спеціаліст згоден показувати ці дані клієнтам",en:"The specialist agrees to show this data to clients",es:"El especialista acepta mostrar estos datos a los clientes",de:"Der Spezialist stimmt zu, diese Daten Klienten zu zeigen",pt:"O especialista concorda em mostrar estes dados aos clientes",fr:"Le spécialiste accepte de montrer ces données aux clients",pl:"Specjalista zgadza się pokazywać te dane klientom",it:"Lo specialista acconsente a mostrare questi dati ai clienti",he:"המומחה מסכים להציג נתונים אלה ללקוחות",ja:"専門家はこの情報をクライアントに表示することに同意しています",ko:"전문가가 이 정보를 고객에게 표시하는 데 동의했습니다"},
+  sp_country:{ru:"Страна регистрации",uk:"Країна реєстрації",en:"Country of registration",es:"País de registro",de:"Land der Registrierung",pt:"País de registro",fr:"Pays d'enregistrement",pl:"Kraj rejestracji",it:"Paese di registrazione",he:"מדינת רישום",ja:"登録国",ko:"등록 국가"},
+  sp_legal_form:{ru:"Юридический статус",uk:"Юридичний статус",en:"Legal status",es:"Estatus legal",de:"Rechtsform",pt:"Estatuto jurídico",fr:"Statut juridique",pl:"Status prawny",it:"Stato giuridico",he:"מעמד משפטי",ja:"法的形態",ko:"법적 지위"},
   sp_legal_name:{ru:"Полное юридическое имя",uk:"Повне юридичне ім'я",en:"Full legal name",es:"Nombre legal completo",de:"Vollständiger Name",pt:"Nome legal completo",fr:"Nom légal complet",pl:"Pełne imię i nazwisko",it:"Nome legale completo",he:"שם מלא רשמי",ja:"法的氏名",ko:"법적 성명"},
   sp_tax_id:{ru:"Налоговый номер",uk:"Податковий номер",en:"Tax ID",es:"NIF",de:"Steuernummer",pt:"NIF/CPF",fr:"Numéro fiscal",pl:"NIP",it:"Codice fiscale",he:"מספר מס",ja:"納税者番号",ko:"납세자 번호"},
   sp_address:{ru:"Адрес для корреспонденции",uk:"Адреса для кореспонденції",en:"Address for correspondence",es:"Dirección de contacto",de:"Zustellungsadresse",pt:"Endereço para correspondência",fr:"Adresse de correspondance",pl:"Adres do korespondencji",it:"Indirizzo per comunicazioni",he:"כתובת למשלוח דואר",ja:"連絡先住所",ko:"연락 주소"},
@@ -1992,7 +2018,7 @@ function fillSpecModal(s){
   document.getElementById('s-paid-until').value = s.access_paid_until || '';
   document.getElementById('s-platform-since').value = s.platform_since || '';
   document.getElementById('s-billing-exempt').checked = !!s.billing_exempt;
-  ['education','reg-number','website','city','legal-name','tax-id','address','phone','contract-url','verify-note'].forEach(function(k){
+  ['education','reg-number','website','city','country','legal-form','legal-name','tax-id','address','phone','contract-url','verify-note'].forEach(function(k){
     var el=document.getElementById('s-'+k); if(el) el.value = s[k.replace(/-/g,'_')] || '';
   });
   document.getElementById('s-verified').checked = !!s.verified;
@@ -2062,6 +2088,8 @@ async function saveSpecialist(){
     reg_number:        document.getElementById('s-reg-number').value.trim(),
     website:           document.getElementById('s-website').value.trim(),
     city:              document.getElementById('s-city').value.trim(),
+    country:           document.getElementById('s-country').value,
+    legal_form:        document.getElementById('s-legal-form').value.trim(),
     legal_name:        document.getElementById('s-legal-name').value.trim(),
     tax_id:            document.getElementById('s-tax-id').value.trim(),
     address:           document.getElementById('s-address').value.trim(),

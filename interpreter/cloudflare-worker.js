@@ -7186,7 +7186,7 @@ async function handleSpecialistsPublic(request, env, corsHeaders){
   let rows=[];
   try{
     const r = await env.DB.prepare(
-      "SELECT id,name,specialty,category,photo,bio,cal_url,langs,pay_url,education,reg_number,website,city,verified_at FROM specialists WHERE public=1 AND COALESCE(verified,0)=1 AND status='active' ORDER BY name"
+      "SELECT id,name,specialty,category,photo,bio,cal_url,langs,pay_url,education,reg_number,website,city,country,legal_form,verified_at FROM specialists WHERE public=1 AND COALESCE(verified,0)=1 AND status='active' ORDER BY name"
     ).all();
     rows = r.results || [];
   }catch(_){}
@@ -7197,7 +7197,10 @@ async function handleSpecialistsPublic(request, env, corsHeaders){
     // A3: то, ради чего клиент открывает карточку — чем человек подтверждает, что он специалист.
     // Служебное (юр. имя, налоговый номер, адрес, телефон, договор) сюда НЕ попадает никогда.
     education:s.education||'', reg_number:s.reg_number||'', website:s.website||'',
-    city:s.city||'', verified_at:s.verified_at||''
+    city:s.city||'', verified_at:s.verified_at||'',
+    // Страна и юр. статус публичны намеренно: от страны специалиста зависит применимое право
+    // в договоре с клиентом, и клиент обязан видеть это ДО оплаты, а не в споре.
+    country:s.country||'', legal_form:s.legal_form||''
   })) }, corsHeaders);
 }
 
@@ -7293,7 +7296,7 @@ async function handleCabinetSpecialists(request, env, corsHeaders){
   // pass_hash НЕ отдаём наружу.
   const { results } = await env.DB.prepare(
     `SELECT s.id,s.name,s.login,s.email,s.lang,s.specialty,s.role,s.ref_code,s.access_status,s.access_paid_until,s.platform_since,s.billing_exempt,s.status,s.created_at,
-            s.education,s.reg_number,s.website,s.city,s.legal_name,s.tax_id,s.address,s.phone,s.contract_url,
+            s.education,s.reg_number,s.website,s.city,s.country,s.legal_form,s.legal_name,s.tax_id,s.address,s.phone,s.contract_url,
             s.verified,s.verified_at,s.verify_note,s.publish_consent_at,s.credit_limit,
             (SELECT count(*) FROM clients c WHERE c.specialist_id=s.id) AS clients
      FROM specialists s ORDER BY s.id`
@@ -7599,7 +7602,7 @@ async function handleServiceAct(request, env, corsHeaders){
 
   const row = await env.DB.prepare(
     `SELECT c.code,c.name,c.email,c.tier,c.start_date,c.specialist_id,c.created_at,c.data,
-            s.name AS spec_name, s.reg_number, s.city
+            s.name AS spec_name, s.reg_number, s.city, s.country, s.legal_form, s.legal_name
        FROM clients c LEFT JOIN specialists s ON s.id=c.specialist_id WHERE upper(c.code)=?`).bind(code).first();
   if(!row) return jsonResponse({ok:false,error:'not_found'}, corsHeaders, 404);
 
@@ -7625,7 +7628,8 @@ async function handleServiceAct(request, env, corsHeaders){
     generated_at: new Date().toISOString().slice(0,19).replace('T',' '),
     client:  { code: row.code, name: row.name||'', email: row.email||'', tier: row.tier||'' },
     // Кто оказывал услугу — с публично проверяемой регистрацией: в споре это первое, что спросят.
-    specialist: { name: row.spec_name||'', reg_number: row.reg_number||'', city: row.city||'' },
+    specialist: { name: row.spec_name||'', legal_name: row.legal_name||'', reg_number: row.reg_number||'',
+                  city: row.city||'', country: row.country||'', legal_form: row.legal_form||'' },
     access:  grants.map(g=>({ issued:g.issued, expiry:g.expiry, days:g.days, revoked:!!g.revoked })),
     usage:   { analyses_used: used, analyses_quota: quota,
                breakdowns_saved: bds.length, biometrics_records: bios.length,
@@ -7886,12 +7890,12 @@ async function handleCabinetSpecialistSave(request, env, corsHeaders){
     if(password){
       const ph = await cabinetHashPassword(password);
       await env.DB.prepare(
-        'UPDATE specialists SET name=?,login=?,email=?,pass_hash=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,platform_since=?,billing_exempt=?,education=?,reg_number=?,website=?,city=?,legal_name=?,tax_id=?,address=?,phone=?,contract_url=?,verified=?,verified_at=?,verify_note=?,publish_consent_at=?,credit_limit=?,status=? WHERE id=?'
-      ).bind(name, login, email, ph, lang, specialty, role, refCode, accessSt, paidUntilSafe, platformSince, billingExempt, V('education'), V('reg_number'), V('website'), V('city'), V('legal_name'), V('tax_id'), V('address'), V('phone'), V('contract_url'), verified, verifiedAt, V('verify_note'), consentAt, creditLimit, status, id).run();
+        'UPDATE specialists SET name=?,login=?,email=?,pass_hash=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,platform_since=?,billing_exempt=?,education=?,reg_number=?,website=?,city=?,country=?,legal_form=?,legal_name=?,tax_id=?,address=?,phone=?,contract_url=?,verified=?,verified_at=?,verify_note=?,publish_consent_at=?,credit_limit=?,status=? WHERE id=?'
+      ).bind(name, login, email, ph, lang, specialty, role, refCode, accessSt, paidUntilSafe, platformSince, billingExempt, V('education'), V('reg_number'), V('website'), V('city'), V('country'), V('legal_form'), V('legal_name'), V('tax_id'), V('address'), V('phone'), V('contract_url'), verified, verifiedAt, V('verify_note'), consentAt, creditLimit, status, id).run();
     } else {
       await env.DB.prepare(
-        'UPDATE specialists SET name=?,login=?,email=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,platform_since=?,billing_exempt=?,education=?,reg_number=?,website=?,city=?,legal_name=?,tax_id=?,address=?,phone=?,contract_url=?,verified=?,verified_at=?,verify_note=?,publish_consent_at=?,credit_limit=?,status=? WHERE id=?'
-      ).bind(name, login, email, lang, specialty, role, refCode, accessSt, paidUntilSafe, platformSince, billingExempt, V('education'), V('reg_number'), V('website'), V('city'), V('legal_name'), V('tax_id'), V('address'), V('phone'), V('contract_url'), verified, verifiedAt, V('verify_note'), consentAt, creditLimit, status, id).run();
+        'UPDATE specialists SET name=?,login=?,email=?,lang=?,specialty=?,role=?,ref_code=?,access_status=?,access_paid_until=?,platform_since=?,billing_exempt=?,education=?,reg_number=?,website=?,city=?,country=?,legal_form=?,legal_name=?,tax_id=?,address=?,phone=?,contract_url=?,verified=?,verified_at=?,verify_note=?,publish_consent_at=?,credit_limit=?,status=? WHERE id=?'
+      ).bind(name, login, email, lang, specialty, role, refCode, accessSt, paidUntilSafe, platformSince, billingExempt, V('education'), V('reg_number'), V('website'), V('city'), V('country'), V('legal_form'), V('legal_name'), V('tax_id'), V('address'), V('phone'), V('contract_url'), verified, verifiedAt, V('verify_note'), consentAt, creditLimit, status, id).run();
     }
     return jsonResponse({ok:true, id}, corsHeaders);
   }
