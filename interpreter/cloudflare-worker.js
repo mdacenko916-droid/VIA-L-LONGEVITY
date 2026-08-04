@@ -1275,6 +1275,7 @@ export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil(runDailyReminders(env));
     ctx.waitUntil(expireSpecialistAccess(env));   // Шаг 4: закрыть доступ при истёкшей абонплате
+    ctx.waitUntil(eraseExpiredHealthData(env));    // E3 §5: данные о здоровье — 90 дней после ведения
   },
 };
 
@@ -8033,6 +8034,51 @@ async function handleSpecialistAccessWebhook(request, env, corsHeaders){
 
 // Cron (ежедневно): специалистам с истёкшим сроком оплаты ставим lapsed → вход закрыт.
 // Владельца (role='owner') не трогаем — он не платит абонплату.
+// CRON: удаление данных о здоровье через 90 дней после окончания ведения (E3 §5).
+// Политика обещает срок — значит его должен исполнять код, иначе обещание хуже отсутствия.
+// Удаляем сырые данные, оставляя `erased`-снимок: факт услуги (даты, счётчики) хранится 3 года
+// как доказательство для клиента и специалиста. Механика та же, что у кнопки /client/erase.
+const HEALTH_RETENTION_DAYS = 90;
+async function eraseExpiredHealthData(env){
+  if(!env.DB) return;
+  const cutoff = (function(){ const d=new Date(); d.setUTCDate(d.getUTCDate()-HEALTH_RETENTION_DAYS);
+                              return d.toISOString().slice(0,10); })();
+  let rows = [];
+  try{
+    // Карточки, у которых ВСЕ выдачи доступа закончились раньше отсечки. Клиент без выдач
+    // (карточка заведена, доступ не выдавался) сюда не попадает — чистить там нечего.
+    rows = (await env.DB.prepare(
+      `SELECT c.code, c.data FROM clients c
+        WHERE EXISTS (SELECT 1 FROM grants g WHERE g.card_code=c.code)
+          AND NOT EXISTS (SELECT 1 FROM grants g WHERE g.card_code=c.code AND g.expiry > ?)`
+    ).bind(cutoff).all()).results || [];
+  }catch(e){ return; }
+
+  for(const row of rows){
+    let d={}; try{ d = JSON.parse(row.data||'{}'); }catch(_){ continue; }
+    if(d.erased) continue;                                  // уже удалено (кнопкой или прошлым прогоном)
+    const msgs = Array.isArray(d.messages) ? d.messages : [];
+    const has = ['breakdowns','biometrics','messages','anketa','profile','labs','notes','imported']
+                  .some(k => d[k] != null);
+    if(!has) continue;
+    d.erased = {
+      at: new Date().toISOString().slice(0,19).replace('T',' '),
+      auto: 1,                                              // отличать автоудаление от запроса клиента
+      breakdowns: Array.isArray(d.breakdowns) ? d.breakdowns.length : 0,
+      biometrics: Array.isArray(d.biometrics) ? d.biometrics.length : 0,
+      messages: msgs.length,
+      messages_from_specialist: msgs.filter(m=>m && (m.dir==='out'||m.from==='specialist')).length,
+      last_message_at: msgs.length ? (msgs[msgs.length-1].at || msgs[msgs.length-1].date || '') : ''
+    };
+    delete d.breakdowns; delete d.biometrics; delete d.messages; delete d.anketa;
+    delete d.profile;    delete d.labs;       delete d.notes;    delete d.imported;
+    try{
+      await env.DB.prepare("UPDATE clients SET data=?, updated_at=datetime('now') WHERE code=?")
+        .bind(JSON.stringify(d), row.code).run();
+    }catch(_){}
+  }
+}
+
 async function expireSpecialistAccess(env){
   if(!env.DB) return;
   const today = new Date().toISOString().slice(0,10);
