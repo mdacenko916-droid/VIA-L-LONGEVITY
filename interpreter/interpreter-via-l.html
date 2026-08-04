@@ -2118,7 +2118,7 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
   </div>
 
   <!-- FITBIT AIR / GOOGLE HEALTH -->
-  <div class="source-card m-full" id="card-fitbit">
+  <div class="source-card" id="card-fitbit">
     <div class="source-header" onclick="toggleCard('fitbit')">
       <div class="source-icon fitbit"><img src="images-in/Fitbit%20Charge%206%20gold.PNG" alt="Fitbit" loading="lazy"></div>
       <div class="source-info">
@@ -2397,17 +2397,19 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
       <span class="imp-txt"><b data-t="imp_manual_t">Ручной ввод</b><small data-t="imp_manual_s">Ввод показателей самостоятельно</small></span>
       <span class="imp-go">→</span>
     </button>
-    <!-- ДЕВ-ВХОД к спящей вендор-панели (Oura/Fitbit/Polar/Withings) для личного теста владельца.
-         Виден ТОЛЬКО при ?vendors=1. УДАЛИТЬ, когда появится живой телефон через TestFlight. 2026-07-21. -->
-    <button id="dev-vendors-btn" onclick="_chooseSource('device')" class="imp-btn" style="display:none;border-color:rgba(226,185,90,.55);">
-      <span class="imp-ic">🔧</span>
-      <span class="imp-txt"><b>Тест: прямые гаджеты</b><small>Oura · Fitbit · Polar · Withings — только для теста</small></span>
+    <!-- Прямая синхронизация облака вендора (веб-OAuth). Чистые вендоры без Google/CASA:
+         Oura (самообслуживание, пилот ≤10 пользователей), Polar, Withings. Fitbit сюда не входит —
+         он идёт через Google Health/CASA и его API закрывается 09.2026 (включается по ?vendors=1).
+         См. docs/HEALTH-DATA-SOURCING-PLAN.md -->
+    <button id="dev-vendors-btn" onclick="_chooseSource('device')" class="imp-btn">
+      <span class="imp-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8M20 12a8 8 0 0 1-13.7 5.6L4 16"/><path d="M20 4v4h-4M4 20v-4h4"/></svg></span>
+      <span class="imp-txt"><b data-t="imp_device_t">Синхронизация устройства</b><small data-t="imp_device_s">Oura · Polar · Withings</small></span>
       <span class="imp-go">→</span>
     </button>
   </div>
 </div>
-<script>/* дев-вход к вендор-панели: показать кнопку только по ?vendors=1 (удалить после TestFlight) */
-try{ if(new URLSearchParams(location.search).get('vendors')==='1'){ var _dvb=document.getElementById('dev-vendors-btn'); if(_dvb)_dvb.style.display=''; } }catch(e){}</script>
+<script>/* Fitbit в вендор-панели только по ?vendors=1: его API закрывается 09.2026 — публично не показываем. */
+try{ if(new URLSearchParams(location.search).get('vendors')==='1'){ var _fc=document.getElementById('card-fitbit'); if(_fc)_fc.classList.add('m-full'); } }catch(e){}</script>
 
 <main>
 
@@ -3608,6 +3610,11 @@ const T={"ru":{"s_prof_waist":"Талия (см)","bone_l":"Кости и оса
 
 const LANG_FLAGS={'uk':'🇺🇦 UK','ru':'🇷🇺 RU','en':'🇬🇧 EN','es':'🇪🇸 ES','de':'🇩🇪 DE','pt':'🇧🇷 PT','fr':'🇫🇷 FR','pl':'🇵🇱 PL','it':'🇮🇹 IT','he':'🇮🇱 HE','ja':'🇯🇵 JA','ko':'🇰🇷 KO'};
 ['ru','uk','es','de','pt','fr','pl','it','he','ja','ko'].forEach(l=>{T[l]=Object.assign({},T.en,T[l]);});
+// Кнопка «Синхронизация устройства» (вендор-OAuth Oura/Polar/Withings) — 12 языков
+;(function(){var c={
+  imp_device_t:{ru:'Синхронизация устройства',uk:'Синхронізація пристрою',en:'Sync your device',es:'Sincronizar dispositivo',de:'Gerät synchronisieren',pt:'Sincronizar dispositivo',fr:"Synchroniser l'appareil",pl:'Synchronizuj urządzenie',it:'Sincronizza dispositivo',he:'סנכרון המכשיר',ja:'デバイスを同期',ko:'기기 동기화'},
+  imp_device_s:{ru:'Oura · Polar · Withings',uk:'Oura · Polar · Withings',en:'Oura · Polar · Withings',es:'Oura · Polar · Withings',de:'Oura · Polar · Withings',pt:'Oura · Polar · Withings',fr:'Oura · Polar · Withings',pl:'Oura · Polar · Withings',it:'Oura · Polar · Withings',he:'Oura · Polar · Withings',ja:'Oura · Polar · Withings',ko:'Oura · Polar · Withings'}
+};Object.keys(c).forEach(function(k){Object.keys(c[k]).forEach(function(l){if(T[l])T[l][k]=c[k][l];});});})();
 ;(function(){var c={ allergy_ph:{ru:'На что? (орехи, лактоза, глютен…)',uk:'На що? (горіхи, лактоза, глютен…)',en:'To what? (nuts, lactose, gluten…)',es:'¿A qué? (frutos secos, lactosa, gluten…)',de:'Worauf? (Nüsse, Laktose, Gluten…)',pt:'A quê? (nozes, lactose, glúten…)',fr:'À quoi ? (noix, lactose, gluten…)',pl:'Na co? (orzechy, laktoza, gluten…)',it:'A cosa? (noci, lattosio, glutine…)',he:'למה? (אגוזים, לקטוז, גלוטן…)',ja:'何に？（ナッツ、乳糖、グルテン…）',ko:'무엇에? (견과류, 유당, 글루텐…)'} };Object.keys(c).forEach(function(k){Object.keys(c[k]).forEach(function(l){if(T[l])T[l][k]=c[k][l];});});})();
 // Подписи 9 показателей трекера в карточке — человеческим языком, на 12 языках
 const _GLAB={
@@ -6819,7 +6826,7 @@ function _chooseSource(src){
   _srcSet(src);
   var _g=document.getElementById('morning-gate'); if(_g)_g.remove();   // ушли из утренней карточки в импорт/анкету — гейт убираем, иначе смена языка его воскрешает поверх импорта
   if(src==='apple'){ try{ _heroHealthStart(); }catch(e){} }
-  else if(src==='device'){ try{ var _dv=new URLSearchParams(location.search).get('vendors')==='1'; openImport(_dv?'full':'all'); }catch(e){ try{openImport('all');}catch(_){} } }   // 'device' ретайрнут публично → on-device; ?vendors=1 = дев-вход к вендор-панели (удалить после TestFlight)
+  else if(src==='device'){ openImport('full'); }   // вендор-панель: Oura · Polar · Withings
   _openFunnel();
 }
 // Единый сценарий утренней карточки (2-й+ день): (синхронизация, если нужна) → анкета.
@@ -6827,7 +6834,7 @@ function _startDailyRun(src){
   if(src){ try{ _srcSet(src); }catch(e){} }   // выбор источника в утренней карточке = запомнить (и отметить смену для ИИ)
   var g=document.getElementById('morning-gate'); if(g)g.remove();
   if(src==='apple'){ try{ _heroHealthStart(); }catch(e){} }
-  else if(src==='device'){ try{ var _dv=new URLSearchParams(location.search).get('vendors')==='1'; openImport(_dv?'full':'all'); }catch(e){ try{openImport('all');}catch(_){} } }   // 'device' ретайрнут публично → on-device; ?vendors=1 = дев-вход к вендор-панели (удалить после TestFlight)
+  else if(src==='device'){ openImport('full'); }   // вендор-панель: Oura · Polar · Withings
   _openFunnel();
 }
 // Маршрутизатор запуска: второй заход в тот же день → сразу «Сегодня»; следующий день с
