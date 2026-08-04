@@ -7882,6 +7882,17 @@ async function handleCabinetSpecialistSave(request, env, corsHeaders){
   if(!login)   return jsonResponse({ok:false,error:'login_required'},    corsHeaders, 400);
   if(!refCode) return jsonResponse({ok:false,error:'ref_code_required'}, corsHeaders, 400);
 
+  // Решение владельца 2026-08-04: платформа — ФОП (Украина), специалисты работают только как
+  // зарегистрированные предприниматели. Значит «Проверен» нельзя ставить, пока не заполнены графы,
+  // из которых собираются реквизиты договора и подставляется применимое право. Проверка серверная:
+  // галочка в интерфейсе — не доказательство, а страна и регистрация нужны в оферте буквально.
+  if(verified){
+    const need = { legal_name:V('legal_name'), country:V('country'), legal_form:V('legal_form'),
+                   reg_number:V('reg_number'), tax_id:V('tax_id'), address:V('address'), phone:V('phone') };
+    const missing = Object.keys(need).filter(k => !need[k]);
+    if(missing.length) return jsonResponse({ok:false, error:'verify_fields_missing', missing}, corsHeaders, 400);
+  }
+
   // Уникальность login/ref_code (кроме самого себя)
   const dup = await env.DB.prepare(
     'SELECT id FROM specialists WHERE (lower(login)=lower(?) OR upper(ref_code)=?) AND id<>?'

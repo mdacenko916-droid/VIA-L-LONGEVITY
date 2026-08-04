@@ -1124,6 +1124,7 @@ const T = {
   sp_website:{ru:"Сайт или соцсеть",uk:"Сайт або соцмережа",en:"Website or social profile",es:"Web o red social",de:"Website oder Social-Profil",pt:"Site ou rede social",fr:"Site ou réseau social",pl:"Strona lub profil społecznościowy",it:"Sito o social",he:"אתר או רשת חברתית",ja:"ウェブサイトまたはSNS",ko:"웹사이트 또는 SNS"},
   sp_city:{ru:"Город, страна",uk:"Місто, країна",en:"City, country",es:"Ciudad, país",de:"Stadt, Land",pt:"Cidade, país",fr:"Ville, pays",pl:"Miasto, kraj",it:"Città, paese",he:"עיר, מדינה",ja:"都市・国",ko:"도시, 국가"},
   sp_publish_consent:{ru:"Специалист согласен показывать эти данные клиентам",uk:"Спеціаліст згоден показувати ці дані клієнтам",en:"The specialist agrees to show this data to clients",es:"El especialista acepta mostrar estos datos a los clientes",de:"Der Spezialist stimmt zu, diese Daten Klienten zu zeigen",pt:"O especialista concorda em mostrar estes dados aos clientes",fr:"Le spécialiste accepte de montrer ces données aux clients",pl:"Specjalista zgadza się pokazywać te dane klientom",it:"Lo specialista acconsente a mostrare questi dati ai clienti",he:"המומחה מסכים להציג נתונים אלה ללקוחות",ja:"専門家はこの情報をクライアントに表示することに同意しています",ko:"전문가가 이 정보를 고객에게 표시하는 데 동의했습니다"},
+  spec_err_verify:{ru:"Нельзя отметить «Проверен» — не заполнено:",uk:"Не можна позначити «Перевірений» — не заповнено:",en:"Cannot mark as verified — missing:",es:"No se puede marcar como verificado — falta:",de:"«Geprüft» nicht möglich — es fehlt:",pt:"Não é possível marcar como verificado — falta:",fr:"Impossible de marquer « vérifié » — il manque :",pl:"Nie można oznaczyć jako zweryfikowany — brakuje:",it:"Impossibile marcare come verificato — manca:",he:"לא ניתן לסמן כמאומת — חסר:",ja:"「確認済み」にできません — 未入力：",ko:"‘확인됨’으로 표시할 수 없습니다 — 누락:"},
   sp_insurance:{ru:"Есть профессиональная страховка ответственности",uk:"Є професійна страховка відповідальності",en:"Has professional indemnity insurance",es:"Tiene seguro de responsabilidad profesional",de:"Hat Berufshaftpflichtversicherung",pt:"Tem seguro de responsabilidade profissional",fr:"Dispose d'une assurance responsabilité professionnelle",pl:"Posiada ubezpieczenie odpowiedzialności zawodowej",it:"Ha assicurazione di responsabilità professionale",he:"קיים ביטוח אחריות מקצועית",ja:"職業賠償責任保険あり",ko:"전문가 배상책임보험 보유"},
   sp_country:{ru:"Страна регистрации",uk:"Країна реєстрації",en:"Country of registration",es:"País de registro",de:"Land der Registrierung",pt:"País de registro",fr:"Pays d'enregistrement",pl:"Kraj rejestracji",it:"Paese di registrazione",he:"מדינת רישום",ja:"登録国",ko:"등록 국가"},
   sp_legal_form:{ru:"Юридический статус",uk:"Юридичний статус",en:"Legal status",es:"Estatus legal",de:"Rechtsform",pt:"Estatuto jurídico",fr:"Statut juridique",pl:"Status prawny",it:"Stato giuridico",he:"מעמד משפטי",ja:"法的形態",ko:"법적 지위"},
@@ -2116,6 +2117,14 @@ async function saveSpecialist(){
   try{
     const j = await api('/cabinet/specialist-save', { specialist:spec });
     if(j && j.ok){ closeSpecModal(); renderSpecialists(); }
+    else if(j && j.error==='verify_fields_missing'){
+      // Не абстрактная ошибка, а список незаполненных граф: «Проверен» — это допуск на витрину
+      // и к выдаче доступов, и реквизиты из этих полей идут прямо в договор.
+      const NM = {legal_name:'sp_legal_name',country:'sp_country',legal_form:'sp_legal_form',
+                  reg_number:'sp_reg_number',tax_id:'sp_tax_id',address:'sp_address',phone:'sp_phone'};
+      errEl.textContent = t('spec_err_verify') + ' ' + (j.missing||[]).map(k=>t(NM[k]||k)).join(', ');
+      errEl.style.display='block';
+    }
     else { errEl.textContent = specErr(j&&j.error) || (t('err_prefix')+(j&&j.error||t('err_unknown'))); errEl.style.display='block'; }
   }catch(_){ errEl.textContent = 'Ошибка сети'; errEl.style.display='block'; }
 }
