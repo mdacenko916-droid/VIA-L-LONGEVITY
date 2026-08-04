@@ -2824,7 +2824,7 @@ async function hmacHex(secret, msg){
 const fitbitRedirectUri = (url) => url.origin + '/fitbit/callback';
 
 async function handleFitbitStart(request, env, corsHeaders){
-  if (!env.GHEALTH_CLIENT_ID || !env.GHEALTH_CLIENT_SECRET) {
+  if (!_sec(env.GHEALTH_CLIENT_ID) || !_sec(env.GHEALTH_CLIENT_SECRET)) {
     return jsonResponse({ ok:false, error:'ghealth_secrets_missing' }, corsHeaders, 500);
   }
   const url = new URL(request.url);
@@ -2834,11 +2834,11 @@ async function handleFitbitStart(request, env, corsHeaders){
   if (!FITBIT_RETURN_ALLOW.some(p => ret.startsWith(p))) ret = FITBIT_DEFAULT_RET;
 
   const payload = b64urlEncode(JSON.stringify({ sid, ret }));
-  const state = payload + '.' + await hmacHex(env.GHEALTH_CLIENT_SECRET, payload);
+  const state = payload + '.' + await hmacHex(_sec(env.GHEALTH_CLIENT_SECRET), payload);
 
   const auth = new URL(GH_AUTH_URL);
   auth.searchParams.set('response_type', 'code');
-  auth.searchParams.set('client_id', env.GHEALTH_CLIENT_ID);
+  auth.searchParams.set('client_id', _sec(env.GHEALTH_CLIENT_ID));
   auth.searchParams.set('redirect_uri', fitbitRedirectUri(url));
   auth.searchParams.set('scope', GH_SCOPES);
   auth.searchParams.set('access_type', 'offline');   // request a refresh token
@@ -2858,7 +2858,7 @@ async function handleFitbitCallback(request, env, corsHeaders){
   let sid = '', ret = FITBIT_DEFAULT_RET;
   if (dot > 0) {
     const payload = state.slice(0, dot), sig = state.slice(dot + 1);
-    const expect = await hmacHex(env.GHEALTH_CLIENT_SECRET || '', payload);
+    const expect = await hmacHex(_sec(env.GHEALTH_CLIENT_SECRET) || '', payload);
     if (sig === expect) { try { const o = JSON.parse(b64urlDecode(payload)); sid = o.sid || ''; if (o.ret) ret = o.ret; } catch(e){} }
   }
   const back = (status) => Response.redirect(ret + (ret.includes('?') ? '&' : '?') + 'fitbit=' + status + (sid ? '&sid=' + encodeURIComponent(sid) : ''), 302);
@@ -2873,8 +2873,8 @@ async function handleFitbitCallback(request, env, corsHeaders){
       grant_type: 'authorization_code',
       code,
       redirect_uri: fitbitRedirectUri(url),
-      client_id: env.GHEALTH_CLIENT_ID,
-      client_secret: env.GHEALTH_CLIENT_SECRET,
+      client_id: _sec(env.GHEALTH_CLIENT_ID),
+      client_secret: _sec(env.GHEALTH_CLIENT_SECRET),
     }).toString(),
   });
   if (!r.ok) { console.log('FITBIT-DEBUG token exchange failed', r.status, await r.text()); return back('error'); }
@@ -2896,8 +2896,8 @@ async function ghealthRefresh(env, rec){
     body: new URLSearchParams({
       grant_type: 'refresh_token',
       refresh_token: rec.refresh_token,
-      client_id: env.GHEALTH_CLIENT_ID,
-      client_secret: env.GHEALTH_CLIENT_SECRET,
+      client_id: _sec(env.GHEALTH_CLIENT_ID),
+      client_secret: _sec(env.GHEALTH_CLIENT_SECRET),
     }).toString(),
   });
   if (!r.ok) return null;
@@ -3209,16 +3209,16 @@ const POLAR_API       = 'https://www.polaraccesslink.com/v3';
 const POLAR_SCOPES    = 'accesslink.read_all';
 
 async function handlePolarStart(request, env, corsHeaders) {
-  if (!env.POLAR_CLIENT_ID || !env.POLAR_CLIENT_SECRET) return jsonResponse({ ok:false, error:'polar_secrets_missing' }, corsHeaders, 500);
+  if (!_sec(env.POLAR_CLIENT_ID) || !_sec(env.POLAR_CLIENT_SECRET)) return jsonResponse({ ok:false, error:'polar_secrets_missing' }, corsHeaders, 500);
   const url = new URL(request.url);
   const sid = url.searchParams.get('sid');
   let ret = url.searchParams.get('ret') || FITBIT_DEFAULT_RET;
   if (!sid) return jsonResponse({ ok:false, error:'sid_required' }, corsHeaders, 400);
   if (!FITBIT_RETURN_ALLOW.some(p => ret.startsWith(p))) ret = FITBIT_DEFAULT_RET;
   const payload = b64urlEncode(JSON.stringify({ sid, ret }));
-  const state = payload + '.' + await hmacHex(env.POLAR_CLIENT_SECRET, payload);
+  const state = payload + '.' + await hmacHex(_sec(env.POLAR_CLIENT_SECRET), payload);
   const auth = new URL(POLAR_AUTH_URL);
-  auth.searchParams.set('client_id', env.POLAR_CLIENT_ID);
+  auth.searchParams.set('client_id', _sec(env.POLAR_CLIENT_ID));
   auth.searchParams.set('response_type', 'code');
   auth.searchParams.set('scope', POLAR_SCOPES);
   auth.searchParams.set('state', state);
@@ -3234,11 +3234,11 @@ async function handlePolarCallback(request, env, corsHeaders) {
   let sid = '', ret = FITBIT_DEFAULT_RET;
   if (dot > 0) {
     const payload = state.slice(0, dot), sig = state.slice(dot + 1);
-    if (sig === await hmacHex(env.POLAR_CLIENT_SECRET || '', payload)) { try { const o = JSON.parse(b64urlDecode(payload)); sid = o.sid || ''; if (o.ret) ret = o.ret; } catch(e){} }
+    if (sig === await hmacHex(_sec(env.POLAR_CLIENT_SECRET) || '', payload)) { try { const o = JSON.parse(b64urlDecode(payload)); sid = o.sid || ''; if (o.ret) ret = o.ret; } catch(e){} }
   }
   const back = (status) => Response.redirect(ret + (ret.includes('?') ? '&' : '?') + 'polar=' + status + (sid ? '&sid=' + encodeURIComponent(sid) : ''), 302);
   if (errParam || !code || !sid) return back('error');
-  const creds = btoa(env.POLAR_CLIENT_ID + ':' + env.POLAR_CLIENT_SECRET);
+  const creds = btoa(_sec(env.POLAR_CLIENT_ID) + ':' + _sec(env.POLAR_CLIENT_SECRET));
   const r = await fetch(POLAR_TOKEN_URL, {
     method: 'POST',
     headers: { 'Authorization': 'Basic ' + creds, 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
@@ -3312,23 +3312,27 @@ async function handlePolarMetrics(request, env, corsHeaders) {
 // Redirect URI: https://interpreter.viaelcom.workers.dev/withings/callback
 // Scopes: user.sleepevents,user.metrics,user.activity
 // ─────────────────────────────────────────────────────────────
+// Секреты приходят из wrangler как есть: один случайный пробел или перевод строки в конце
+// молча ломает OAuth (client_id уезжал в URL как «+83fe…»). Тримим на входе — дешевле, чем ловить.
+function _sec(v){ return (v == null) ? v : String(v).trim(); }
+
 const WITHINGS_AUTH_URL  = 'https://account.withings.com/oauth2_user/authorize2';
 const WITHINGS_TOKEN_URL = 'https://wbsapi.withings.net/v2/oauth2';
 const WITHINGS_API       = 'https://wbsapi.withings.net';
 const WITHINGS_SCOPES    = 'user.sleepevents,user.metrics,user.activity';
 
 async function handleWithingsStart(request, env, corsHeaders) {
-  if (!env.WITHINGS_CLIENT_ID || !env.WITHINGS_CLIENT_SECRET) return jsonResponse({ ok:false, error:'withings_secrets_missing' }, corsHeaders, 500);
+  if (!_sec(env.WITHINGS_CLIENT_ID) || !_sec(env.WITHINGS_CLIENT_SECRET)) return jsonResponse({ ok:false, error:'withings_secrets_missing' }, corsHeaders, 500);
   const url = new URL(request.url);
   const sid = url.searchParams.get('sid');
   let ret = url.searchParams.get('ret') || FITBIT_DEFAULT_RET;
   if (!sid) return jsonResponse({ ok:false, error:'sid_required' }, corsHeaders, 400);
   if (!FITBIT_RETURN_ALLOW.some(p => ret.startsWith(p))) ret = FITBIT_DEFAULT_RET;
   const payload = b64urlEncode(JSON.stringify({ sid, ret }));
-  const state = payload + '.' + await hmacHex(env.WITHINGS_CLIENT_SECRET, payload);
+  const state = payload + '.' + await hmacHex(_sec(env.WITHINGS_CLIENT_SECRET), payload);
   const auth = new URL(WITHINGS_AUTH_URL);
   auth.searchParams.set('response_type', 'code');
-  auth.searchParams.set('client_id', env.WITHINGS_CLIENT_ID);
+  auth.searchParams.set('client_id', _sec(env.WITHINGS_CLIENT_ID));
   auth.searchParams.set('scope', WITHINGS_SCOPES);
   auth.searchParams.set('redirect_uri', url.origin + '/withings/callback');
   auth.searchParams.set('state', state);
@@ -3344,14 +3348,14 @@ async function handleWithingsCallback(request, env, corsHeaders) {
   let sid = '', ret = FITBIT_DEFAULT_RET;
   if (dot > 0) {
     const payload = state.slice(0, dot), sig = state.slice(dot + 1);
-    if (sig === await hmacHex(env.WITHINGS_CLIENT_SECRET || '', payload)) { try { const o = JSON.parse(b64urlDecode(payload)); sid = o.sid || ''; if (o.ret) ret = o.ret; } catch(e){} }
+    if (sig === await hmacHex(_sec(env.WITHINGS_CLIENT_SECRET) || '', payload)) { try { const o = JSON.parse(b64urlDecode(payload)); sid = o.sid || ''; if (o.ret) ret = o.ret; } catch(e){} }
   }
   const back = (status) => Response.redirect(ret + (ret.includes('?') ? '&' : '?') + 'withings=' + status + (sid ? '&sid=' + encodeURIComponent(sid) : ''), 302);
   if (errParam || !code || !sid) return back('error');
   const r = await fetch(WITHINGS_TOKEN_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ action:'requesttoken', grant_type:'authorization_code', client_id:env.WITHINGS_CLIENT_ID, client_secret:env.WITHINGS_CLIENT_SECRET, code, redirect_uri:url.origin+'/withings/callback' }).toString(),
+    body: new URLSearchParams({ action:'requesttoken', grant_type:'authorization_code', client_id:_sec(env.WITHINGS_CLIENT_ID), client_secret:_sec(env.WITHINGS_CLIENT_SECRET), code, redirect_uri:url.origin+'/withings/callback' }).toString(),
   });
   if (!r.ok) return back('error');
   const j = await r.json();
@@ -3369,7 +3373,7 @@ async function withingsRefresh(env, rec) {
   const r = await fetch(WITHINGS_TOKEN_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ action:'refreshtoken', grant_type:'refresh_token', client_id:env.WITHINGS_CLIENT_ID, client_secret:env.WITHINGS_CLIENT_SECRET, refresh_token:rec.refresh_token }).toString(),
+    body: new URLSearchParams({ action:'refreshtoken', grant_type:'refresh_token', client_id:_sec(env.WITHINGS_CLIENT_ID), client_secret:_sec(env.WITHINGS_CLIENT_SECRET), refresh_token:rec.refresh_token }).toString(),
   });
   if (!r.ok) return null;
   const j = await r.json();
@@ -3443,17 +3447,17 @@ const OURA_API       = 'https://api.ouraring.com';
 const OURA_SCOPES    = 'personal daily heartrate workout spo2';
 
 async function handleOuraStart(request, env, corsHeaders){
-  if (!env.OURA_CLIENT_ID || !env.OURA_CLIENT_SECRET) return jsonResponse({ ok:false, error:'oura_secrets_missing' }, corsHeaders, 500);
+  if (!_sec(env.OURA_CLIENT_ID) || !_sec(env.OURA_CLIENT_SECRET)) return jsonResponse({ ok:false, error:'oura_secrets_missing' }, corsHeaders, 500);
   const url = new URL(request.url);
   const sid = url.searchParams.get('sid');
   let ret = url.searchParams.get('ret') || FITBIT_DEFAULT_RET;
   if (!sid) return jsonResponse({ ok:false, error:'sid_required' }, corsHeaders, 400);
   if (!FITBIT_RETURN_ALLOW.some(p => ret.startsWith(p))) ret = FITBIT_DEFAULT_RET;
   const payload = b64urlEncode(JSON.stringify({ sid, ret }));
-  const state = payload + '.' + await hmacHex(env.OURA_CLIENT_SECRET, payload);
+  const state = payload + '.' + await hmacHex(_sec(env.OURA_CLIENT_SECRET), payload);
   const auth = new URL(OURA_AUTH_URL);
   auth.searchParams.set('response_type', 'code');
-  auth.searchParams.set('client_id', env.OURA_CLIENT_ID);
+  auth.searchParams.set('client_id', _sec(env.OURA_CLIENT_ID));
   auth.searchParams.set('redirect_uri', url.origin + '/oura/callback');
   auth.searchParams.set('scope', OURA_SCOPES);
   auth.searchParams.set('state', state);
@@ -3469,14 +3473,14 @@ async function handleOuraCallback(request, env, corsHeaders){
   let sid = '', ret = FITBIT_DEFAULT_RET;
   if (dot > 0) {
     const payload = state.slice(0, dot), sig = state.slice(dot + 1);
-    if (sig === await hmacHex(env.OURA_CLIENT_SECRET || '', payload)) { try { const o = JSON.parse(b64urlDecode(payload)); sid = o.sid || ''; if (o.ret) ret = o.ret; } catch(e){} }
+    if (sig === await hmacHex(_sec(env.OURA_CLIENT_SECRET) || '', payload)) { try { const o = JSON.parse(b64urlDecode(payload)); sid = o.sid || ''; if (o.ret) ret = o.ret; } catch(e){} }
   }
   const back = (status) => Response.redirect(ret + (ret.includes('?') ? '&' : '?') + 'oura=' + status + (sid ? '&sid=' + encodeURIComponent(sid) : ''), 302);
   if (errParam || !code || !sid) return back('error');
   const r = await fetch(OURA_TOKEN_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ grant_type:'authorization_code', code, redirect_uri: url.origin + '/oura/callback', client_id: env.OURA_CLIENT_ID, client_secret: env.OURA_CLIENT_SECRET }).toString(),
+    body: new URLSearchParams({ grant_type:'authorization_code', code, redirect_uri: url.origin + '/oura/callback', client_id: _sec(env.OURA_CLIENT_ID), client_secret: _sec(env.OURA_CLIENT_SECRET) }).toString(),
   });
   if (!r.ok) return back('error');
   const tok = await r.json();
@@ -3492,7 +3496,7 @@ async function ouraRefresh(env, rec){
   const r = await fetch(OURA_TOKEN_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ grant_type:'refresh_token', refresh_token: rec.refresh_token, client_id: env.OURA_CLIENT_ID, client_secret: env.OURA_CLIENT_SECRET }).toString(),
+    body: new URLSearchParams({ grant_type:'refresh_token', refresh_token: rec.refresh_token, client_id: _sec(env.OURA_CLIENT_ID), client_secret: _sec(env.OURA_CLIENT_SECRET) }).toString(),
   });
   if (!r.ok) return null;
   const tok = await r.json();
