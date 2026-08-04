@@ -8997,10 +8997,15 @@ const AI_WORKER = 'https://interpreter.viaelcom.workers.dev';
 function connectWearable(vendor){
   let sid = localStorage.getItem('vialp_' + vendor + '_sid');
   if(!sid){ sid = Date.now().toString(36) + Math.random().toString(36).slice(2,10); localStorage.setItem('vialp_' + vendor + '_sid', sid); }
+  // «Ждём возврата из OAuth» — то же, что у Oura. В нативной обёртке вход открывается в системном
+  // браузере и обратно НЕ редиректит: без этой метки Polar/Withings навсегда зависали на
+  // «Подключаем…». Возврат ловим по visibilitychange ниже и до-тягиваем метрики по sid.
+  try{ localStorage.setItem('vialp_' + vendor + '_pending', String(Date.now())); }catch(e){}
   setStatus(vendor + '-connect-status','loading',t('status_' + vendor + '_connecting'));
   location.href = AI_WORKER + '/' + vendor + '/start?sid=' + encodeURIComponent(sid) + '&ret=' + encodeURIComponent(location.origin + location.pathname);
 }
 async function fetchWearableLive(vendor, sid){
+  try{ localStorage.removeItem('vialp_' + vendor + '_pending'); }catch(e){}
   setStatus(vendor + '-connect-status','loading',t('status_' + vendor + '_connecting'));
   try{
     const r = await fetch(AI_WORKER + '/' + vendor + '/metrics?sid=' + encodeURIComponent(sid));
@@ -9035,6 +9040,21 @@ async function fetchWearableLive(vendor, sid){
     }, 400);
   });
 })();
+
+// Возврат в приложение после OAuth в системном браузере — для Polar/Withings/WHOOP.
+// (У Oura такой же обработчик ниже, отдельный: у неё своя функция дотягивания.)
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState !== 'visible') return;
+  ['polar','withings','whoop'].forEach(function(v){
+    var pend = parseInt(localStorage.getItem('vialp_' + v + '_pending') || '0', 10);
+    var sid  = localStorage.getItem('vialp_' + v + '_sid');
+    if(!pend || !sid || (Date.now() - pend) >= 600000) return;   // окно 10 минут
+    try{ if(typeof openImport === 'function') openImport('full'); }catch(e){}
+    try{ toggleCard(v); }catch(e){}
+    try{ setMethod(v,'connect'); }catch(e){}
+    fetchWearableLive(v, sid);
+  });
+});
 
 // ── Oura Ring — прямое OAuth-подключение (self-serve, ≤10 польз.; см. wearables/oura.md).
 // Строки локализованы в _ouraUI (12 языков) и синхронизируются в setLang → ouraSyncLang().
