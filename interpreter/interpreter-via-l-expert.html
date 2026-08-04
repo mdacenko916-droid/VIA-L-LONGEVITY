@@ -4601,8 +4601,10 @@ window.__touched=window.__touched||new Set();
 // → воркер честно писал «не указано», но затем просил клиента уточнить «тренд восстановления (трекер)» —
 // поле, которое ввести физически негде. В __SOFTSKIP только то, что клиент реально МОЖЕТ заполнить.
 window.__SOFTSKIP=['hrv','sleep_qual','deep','wake','rhr','resp_rate','energy','anxiety','mood','irritability','stress','temp','hf_count','sleep_hours'];
-document.addEventListener('input',function(e){var t=e.target;if(t&&(t.name||t.id))window.__touched.add(t.name||t.id);},true);
-document.addEventListener('change',function(e){var t=e.target;if(t&&(t.name||t.id))window.__touched.add(t.name||t.id);},true);
+// Настоящее касание снимает пометку «перенесено с прошлого раза» (см. _restoreAnswers).
+function _untouchCarried(k){ try{ if(k && window.__carried) window.__carried.delete(k); }catch(e){} }
+document.addEventListener('input',function(e){var t=e.target;if(t&&(t.name||t.id)){_untouchCarried(t.name||t.id);_untouchCarried(t.id);window.__touched.add(t.name||t.id);}},true);
+document.addEventListener('change',function(e){var t=e.target;if(t&&(t.name||t.id)){_untouchCarried(t.name||t.id);_untouchCarried(t.id);window.__touched.add(t.name||t.id);}},true);
 document.querySelectorAll('input[name=gender]').forEach(el=>{
   el.addEventListener('change',()=>{
     const male=el.value==='male';
@@ -6435,12 +6437,17 @@ function _restoreAnswers(){
   var raw=null; try{raw=JSON.parse(localStorage.getItem('viae_lastanswers')||'null');}catch(e){}
   if(!raw||!raw.snap)return;
   var s=raw.snap, TS=window.__touched=window.__touched||new Set();
+  // Перенесённые из прошлой сессии ответы помечаем ОТДЕЛЬНО. В __touched они по-прежнему попадают
+  // (иначе значения ушли бы в разбор как «не указано»), но зелёным блок красить по ним нельзя:
+  // человек сегодня ничего не вводил, а видел «пройдено» — на это владелец жаловался дважды.
+  var CR=window.__carried=window.__carried||new Set();
+  var _mark=function(k){ if(k && !TS.has(k)) CR.add(k); };
   Object.keys(s.radio||{}).forEach(function(name){
     var el=document.querySelector('input[name="'+name+'"][value="'+s.radio[name]+'"]');
-    if(el){el.checked=true;TS.add(name);}   // .checked достаточно визуально (CSS :checked); change не диспатчим — иначе сработают взаимоисключения/markManual
+    if(el){el.checked=true;_mark(name);TS.add(name);}   // .checked достаточно визуально (CSS :checked); change не диспатчим — иначе сработают взаимоисключения/markManual
   });
-  (s.checks||[]).forEach(function(id){var el=document.getElementById(id);if(el&&el.type==='checkbox'){el.checked=true;TS.add(el.name||id);TS.add(id);}});
-  Object.keys(s.vals||{}).forEach(function(id){var el=document.getElementById(id);if(el){el.value=s.vals[id];try{el.dispatchEvent(new Event('input',{bubbles:true}));}catch(e){}TS.add(id);}});
+  (s.checks||[]).forEach(function(id){var el=document.getElementById(id);if(el&&el.type==='checkbox'){el.checked=true;_mark(el.name||id);_mark(id);TS.add(el.name||id);TS.add(id);}});
+  Object.keys(s.vals||{}).forEach(function(id){var el=document.getElementById(id);if(el){_mark(id);el.value=s.vals[id];try{el.dispatchEvent(new Event('input',{bubbles:true}));}catch(e){}TS.add(id);}});
   try{if(typeof _hfChange==='function')_hfChange();}catch(e){}
   try{if(typeof _actTypeChange==='function')_actTypeChange();}catch(e){}   // перенесённая интенсивность ≠ «не было» → открыть частоту
   _showCarryBanner();
@@ -6728,9 +6735,12 @@ function _blockAnswered(step){
   var TS=window.__touched; if(!TS||!TS.size) return false;
   // Не пропускаем hidden: внутренних служебных в __touched нет, а несущие ответ кастом-виджеты
   // (sleep_qual/energy/rhr) сами делают __touched.add при взаимодействии.
+  var CR=window.__carried||new Set();
   var ins=step.querySelectorAll('input,select,textarea');
   for(var i=0;i<ins.length;i++){ var el=ins[i];
-    if((el.name&&TS.has(el.name))||(el.id&&TS.has(el.id))) return true;
+    // Перенесённое с прошлого раза не считается ответом: значение подставлено, но человек его не подтверждал.
+    if(el.name && TS.has(el.name) && !CR.has(el.name)) return true;
+    if(el.id   && TS.has(el.id)   && !CR.has(el.id))   return true;
   }
   return false;
 }
