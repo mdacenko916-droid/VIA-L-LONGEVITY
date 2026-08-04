@@ -55,12 +55,31 @@
 html.app-mode, html.app-mode body{height:100vh;height:100dvh;}
 html.app-mode #app{top:0;bottom:auto;height:100vh;height:100dvh;}
 html.app-mode body::before{top:0;bottom:auto;height:100vh;height:100dvh;}
+/* Нижняя навигация в нативной обёртке — те же значения, что в PWA-режиме: подписи в одну строку,
+   бар низкий. Без этого в app он выше и съедает первый экран (расхождение с EXPERT на скринах). */
+html.app-mode #bottombar .bottom-nav{padding:9px 10px calc(7px + env(safe-area-inset-bottom,0px)/3);}
+html.app-mode #bottombar .bottom-nav-item{font-size:8.5px;letter-spacing:.5px;gap:4px;padding:2px 6px;white-space:nowrap;}
+html.app-mode #bottombar i.bottom-nav-icon{font-size:23px;}
+html.app-mode #bottombar img.bottom-nav-icon{width:24px;height:24px;}
+@media (min-width:600px){
+  html.app-mode #bottombar .bottom-nav{padding:16px 16px calc(12px + env(safe-area-inset-bottom,0px)/3);}
+  html.app-mode #bottombar .bottom-nav-item{font-size:10px;letter-spacing:1.5px;gap:6px;padding:4px 12px;}
+  html.app-mode #bottombar i.bottom-nav-icon{font-size:27px;}
+  html.app-mode #bottombar img.bottom-nav-icon{width:30px;height:30px;}
+}
 @media (display-mode: standalone){
   body:not(.flow-mode):not(.view-result) #scroll-area{overflow-y:hidden;padding-top:calc(20px + env(safe-area-inset-top,0px));}
   body:not(.flow-mode):not(.view-result) .hero-monogram{width:108px;height:108px;}
   body:not(.flow-mode):not(.view-result) .imp-btn{margin-top:5px;padding-top:10px;padding-bottom:10px;}
   body:not(.flow-mode):not(.view-result) footer{padding:4px 20px 3px;}
 }
+/* Тот же уплотнённый первый экран в НАТИВНОЙ обёртке. В EXPERT (он PWA) правила выше работали,
+   а VIA-L в приложении Capacitor под `display-mode: standalone` не подпадает — оттого лого
+   оставалось крупным, отступы большими, и футер с ссылками уезжал под нижнюю навигацию. */
+html.app-mode body:not(.flow-mode):not(.view-result) #scroll-area{overflow-y:hidden;padding-top:calc(20px + env(safe-area-inset-top,0px));}
+html.app-mode body:not(.flow-mode):not(.view-result) .hero-monogram{width:108px;height:108px;}
+html.app-mode body:not(.flow-mode):not(.view-result) .imp-btn{margin-top:5px;padding-top:10px;padding-bottom:10px;}
+html.app-mode body:not(.flow-mode):not(.view-result) footer{padding:4px 20px 3px;}
 
 /* нав-паритет VIO: пружинка нажатия, phosphor-иконки, уезжающий футер, шторка глав памятки */
 .bottom-nav{transition:transform .3s ease,opacity .3s ease;}
