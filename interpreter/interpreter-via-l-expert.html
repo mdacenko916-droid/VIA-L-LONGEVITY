@@ -1798,6 +1798,12 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
 .ai-sec-coll .ph{font-size:13px;}
 /* «Что сделать» — всегда на виду под краткой мыслью: это то, ради чего открывают разбор.
    Под стрелкой остаётся «почему» и разбор данных. 2026-08-04. */
+.lab-grp{border-top:1px solid rgba(255,255,255,.07);margin-top:6px;}
+.lab-grp>summary{list-style:none;cursor:pointer;padding:9px 2px;font-size:12.5px;color:var(--gold-lt);font-weight:500;display:flex;align-items:center;gap:8px;}
+.lab-grp>summary::-webkit-details-marker{display:none;}
+.lab-grp>summary::after{content:'⌄';margin-left:auto;opacity:.6;transition:transform .2s;}
+.lab-grp[open]>summary::after{transform:rotate(180deg);}
+.lab-grp-n{font-size:10px;color:var(--t3);border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:1px 7px;}
 .ai-sec-act{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(226,185,90,.07);border:1px solid rgba(226,185,90,.18);}
 .ai-sec-act-h{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold-lt);font-weight:600;margin-bottom:6px;}
 .ai-sec-act{font-size:13.5px;color:#fff;line-height:1.75;}
@@ -7591,28 +7597,108 @@ function _downloadPDFInner(){
 // Набор полей — по ответу OpenEvidence про осмысленный минимум (Infa Cloude/E, G/26):
 // ферритин с CRP, ТТГ, глюкоза/HbA1c, B12, витамин D; липиды и кортизол — по желанию.
 var LAB_DEFS=[
-  {k:'ferritin',c:'ng/mL',u:[['ng/mL',1],['µg/L',1]],min:1,max:2000,
+  {g:'base',k:'ferritin',c:'ng/mL',u:[['ng/mL',1],['µg/L',1]],min:1,max:2000,
    n:{ru:'Ферритин',uk:'Феритин',en:'Ferritin',es:'Ferritina',de:'Ferritin',pt:'Ferritina',fr:'Ferritine',pl:'Ferrytyna',it:'Ferritina',he:'פריטין',ja:'フェリチン',ko:'페리틴'}},
-  {k:'crp',c:'mg/L',u:[['mg/L',1],['mg/dL',10]],min:0,max:300,
+  {g:'base',k:'crp',c:'mg/L',u:[['mg/L',1],['mg/dL',10]],min:0,max:300,
    n:{ru:'CRP (С-реактивный белок)',uk:'CRP (С-реактивний білок)',en:'CRP',es:'PCR',de:'CRP',pt:'PCR',fr:'CRP',pl:'CRP',it:'PCR',he:'CRP',ja:'CRP',ko:'CRP'}},
-  {k:'tsh',c:'mIU/L',u:[['mIU/L',1],['µIU/mL',1]],min:0,max:100,
+  {g:'base',k:'tsh',c:'mIU/L',u:[['mIU/L',1],['µIU/mL',1]],min:0,max:100,
    n:{ru:'ТТГ',uk:'ТТГ',en:'TSH',es:'TSH',de:'TSH',pt:'TSH',fr:'TSH',pl:'TSH',it:'TSH',he:'TSH',ja:'TSH',ko:'TSH'}},
-  {k:'vitd',c:'nmol/L',u:[['nmol/L',1],['ng/mL',2.496]],min:1,max:400,
+  {g:'base',k:'vitd',c:'nmol/L',u:[['nmol/L',1],['ng/mL',2.496]],min:1,max:400,
    n:{ru:'Витамин D (25-OH)',uk:'Вітамін D (25-OH)',en:'Vitamin D (25-OH)',es:'Vitamina D (25-OH)',de:'Vitamin D (25-OH)',pt:'Vitamina D (25-OH)',fr:'Vitamine D (25-OH)',pl:'Witamina D (25-OH)',it:'Vitamina D (25-OH)',he:'ויטמין D‏ (25-OH)',ja:'ビタミンD (25-OH)',ko:'비타민 D (25-OH)'}},
-  {k:'b12',c:'pg/mL',u:[['pg/mL',1],['pmol/L',1.355]],min:20,max:3000,
+  {g:'base',k:'b12',c:'pg/mL',u:[['pg/mL',1],['pmol/L',1.355]],min:20,max:3000,
    n:{ru:'Витамин B12',uk:'Вітамін B12',en:'Vitamin B12',es:'Vitamina B12',de:'Vitamin B12',pt:'Vitamina B12',fr:'Vitamine B12',pl:'Witamina B12',it:'Vitamina B12',he:'ויטמין B12',ja:'ビタミンB12',ko:'비타민 B12'}},
-  {k:'glucose',c:'mmol/L',u:[['mmol/L',1],['mg/dL',0.0555]],min:1,max:40,
+  {g:'base',k:'glucose',c:'mmol/L',u:[['mmol/L',1],['mg/dL',0.0555]],min:1,max:40,
    n:{ru:'Глюкоза натощак',uk:'Глюкоза натще',en:'Fasting glucose',es:'Glucosa en ayunas',de:'Nüchternglukose',pt:'Glicemia de jejum',fr:'Glycémie à jeun',pl:'Glukoza na czczo',it:'Glicemia a digiuno',he:'גלוקוז בצום',ja:'空腹時血糖',ko:'공복 혈당'}},
-  {k:'hba1c',c:'%',u:[['%',1]],min:3,max:20,
+  {g:'base',k:'hba1c',c:'%',u:[['%',1]],min:3,max:20,
    n:{ru:'HbA1c',uk:'HbA1c',en:'HbA1c',es:'HbA1c',de:'HbA1c',pt:'HbA1c',fr:'HbA1c',pl:'HbA1c',it:'HbA1c',he:'HbA1c',ja:'HbA1c',ko:'HbA1c'}},
-  {k:'ldl',c:'mmol/L',u:[['mmol/L',1],['mg/dL',0.02586]],min:0.2,max:20,
+  {g:'lipids',k:'ldl',c:'mmol/L',u:[['mmol/L',1],['mg/dL',0.02586]],min:0.2,max:20,
    n:{ru:'ЛПНП (LDL)',uk:'ЛПНЩ (LDL)',en:'LDL cholesterol',es:'Colesterol LDL',de:'LDL-Cholesterin',pt:'Colesterol LDL',fr:'Cholestérol LDL',pl:'Cholesterol LDL',it:'Colesterolo LDL',he:'כולסטרול LDL',ja:'LDLコレステロール',ko:'LDL 콜레스테롤'}},
-  {k:'tg',c:'mmol/L',u:[['mmol/L',1],['mg/dL',0.01129]],min:0.1,max:30,
+  {g:'lipids',k:'tg',c:'mmol/L',u:[['mmol/L',1],['mg/dL',0.01129]],min:0.1,max:30,
    n:{ru:'Триглицериды',uk:'Тригліцериди',en:'Triglycerides',es:'Triglicéridos',de:'Triglyzeride',pt:'Triglicerídeos',fr:'Triglycérides',pl:'Trójglicerydy',it:'Trigliceridi',he:'טריגליצרידים',ja:'中性脂肪',ko:'중성지방'}},
-  {k:'apob',c:'g/L',u:[['g/L',1],['mg/dL',0.01]],min:0.1,max:5,
+  {g:'lipids',k:'apob',c:'g/L',u:[['g/L',1],['mg/dL',0.01]],min:0.1,max:5,
    n:{ru:'ApoB',uk:'ApoB',en:'ApoB',es:'ApoB',de:'ApoB',pt:'ApoB',fr:'ApoB',pl:'ApoB',it:'ApoB',he:'ApoB',ja:'ApoB',ko:'ApoB'}},
-  {k:'cort',c:'nmol/L',u:[['nmol/L',1],['µg/dL',27.59]],min:10,max:2000,
-   n:{ru:'Кортизол (утро)',uk:'Кортизол (ранок)',en:'Cortisol (morning)',es:'Cortisol (mañana)',de:'Cortisol (morgens)',pt:'Cortisol (manhã)',fr:'Cortisol (matin)',pl:'Kortyzol (rano)',it:'Cortisolo (mattina)',he:'קורטיזול (בוקר)',ja:'コルチゾール（朝）',ko:'코르티솔 (아침)'}}
+  {g:'base',k:'cort',c:'nmol/L',u:[['nmol/L',1],['µg/dL',27.59]],min:10,max:2000,
+   n:{ru:'Кортизол (утро)',uk:'Кортизол (ранок)',en:'Cortisol (morning)',es:'Cortisol (mañana)',de:'Cortisol (morgens)',pt:'Cortisol (manhã)',fr:'Cortisol (matin)',pl:'Kortyzol (rano)',it:'Cortisolo (mattina)',he:'קורטיזול (בוקר)',ja:'コルチゾール（朝）',ko:'코르티솔 (아침)'}},
+  {g:'thyroid',k:'ft4',c:'pmol/L',u:[['pmol/L',1],['ng/dL',12.87]],min:1,max:100,
+   n:{ru:'Т4 свободный',uk:'Т4 вільний',en:'Free T4',es:'T4 libre',de:'Freies T4',pt:'T4 livre',fr:'T4 libre',pl:'FT4',it:'FT4',he:'T4 חופשי',ja:'遊離T4',ko:'유리 T4'}},
+  {g:'thyroid',k:'ft3',c:'pmol/L',u:[['pmol/L',1],['pg/mL',1.536]],min:0.5,max:50,
+   n:{ru:'Т3 свободный',uk:'Т3 вільний',en:'Free T3',es:'T3 libre',de:'Freies T3',pt:'T3 livre',fr:'T3 libre',pl:'FT3',it:'FT3',he:'T3 חופשי',ja:'遊離T3',ko:'유리 T3'}},
+  {g:'thyroid',k:'tpo',c:'IU/mL',u:[['IU/mL',1]],min:0,max:3000,
+   n:{ru:'АТ-ТПО',uk:'АТ-ТПО',en:'anti-TPO',es:'anti-TPO',de:'anti-TPO',pt:'anti-TPO',fr:'anti-TPO',pl:'anti-TPO',it:'anti-TPO',he:'anti-TPO',ja:'anti-TPO',ko:'anti-TPO'}},
+  {g:'thyroid',k:'tgab',c:'IU/mL',u:[['IU/mL',1]],min:0,max:3000,
+   n:{ru:'АТ-ТГ',uk:'АТ-ТГ',en:'anti-TG',es:'anti-TG',de:'anti-TG',pt:'anti-TG',fr:'anti-TG',pl:'anti-TG',it:'anti-TG',he:'anti-TG',ja:'anti-TG',ko:'anti-TG'}},
+  {g:'hormones',k:'e2',c:'pg/mL',u:[['pg/mL',1],['pmol/L',0.2724]],min:1,max:3000,
+   n:{ru:'Эстрадиол (E2)',uk:'Естрадіол (E2)',en:'Estradiol (E2)',es:'Estradiol (E2)',de:'Östradiol (E2)',pt:'Estradiol (E2)',fr:'Œstradiol (E2)',pl:'Estradiol (E2)',it:'Estradiolo (E2)',he:'אסטרדיול',ja:'エストラジオール',ko:'에스트라디올'}},
+  {g:'hormones',k:'fsh',c:'IU/L',u:[['IU/L',1],['mIU/mL',1]],min:0.1,max:200,
+   n:{ru:'ФСГ',uk:'ФСГ',en:'FSH',es:'FSH',de:'FSH',pt:'FSH',fr:'FSH',pl:'FSH',it:'FSH',he:'FSH',ja:'FSH',ko:'FSH'}},
+  {g:'hormones',k:'lh',c:'IU/L',u:[['IU/L',1],['mIU/mL',1]],min:0.1,max:200,
+   n:{ru:'ЛГ',uk:'ЛГ',en:'LH',es:'LH',de:'LH',pt:'LH',fr:'LH',pl:'LH',it:'LH',he:'LH',ja:'LH',ko:'LH'}},
+  {g:'hormones',k:'prog',c:'ng/mL',u:[['ng/mL',1],['nmol/L',0.3145]],min:0.05,max:100,
+   n:{ru:'Прогестерон',uk:'Прогестерон',en:'Progesterone',es:'Progesterona',de:'Progesteron',pt:'Progesterona',fr:'Progestérone',pl:'Progesteron',it:'Progesterone',he:'פרוגסטרון',ja:'プロゲステロン',ko:'프로게스테론'}},
+  {g:'hormones',k:'tst',c:'ng/dL',u:[['ng/dL',1],['nmol/L',28.84]],min:1,max:2000,
+   n:{ru:'Тестостерон общий',uk:'Тестостерон загальний',en:'Total testosterone',es:'Testosterona total',de:'Gesamttestosteron',pt:'Testosterona total',fr:'Testostérone totale',pl:'Testosteron całkowity',it:'Testosterone totale',he:'טסטוסטרון כללי',ja:'総テストステロン',ko:'총 테스토스테론'}},
+  {g:'hormones',k:'tstf',c:'pg/mL',u:[['pg/mL',1],['pmol/L',0.2884]],min:0.1,max:500,
+   n:{ru:'Тестостерон свободный',uk:'Тестостерон вільний',en:'Free testosterone',es:'Testosterona libre',de:'Freies Testosteron',pt:'Testosterona livre',fr:'Testostérone libre',pl:'Testosteron wolny',it:'Testosterone libero',he:'טסטוסטרון חופשי',ja:'遊離テストステロン',ko:'유리 테스토스테론'}},
+  {g:'hormones',k:'shbg',c:'nmol/L',u:[['nmol/L',1]],min:1,max:300,
+   n:{ru:'ГСПГ (SHBG)',uk:'ГЗСГ (SHBG)',en:'SHBG',es:'SHBG',de:'SHBG',pt:'SHBG',fr:'SHBG',pl:'SHBG',it:'SHBG',he:'SHBG',ja:'SHBG',ko:'SHBG'}},
+  {g:'hormones',k:'dheas',c:'µg/dL',u:[['µg/dL',1],['µmol/L',36.85]],min:1,max:2000,
+   n:{ru:'ДГЭА-С',uk:'ДГЕА-С',en:'DHEA-S',es:'DHEA-S',de:'DHEA-S',pt:'DHEA-S',fr:'DHEA-S',pl:'DHEA-S',it:'DHEA-S',he:'DHEA-S',ja:'DHEA-S',ko:'DHEA-S'}},
+  {g:'hormones',k:'prl',c:'ng/mL',u:[['ng/mL',1],['mIU/L',0.0472]],min:0.5,max:500,
+   n:{ru:'Пролактин',uk:'Пролактин',en:'Prolactin',es:'Prolactina',de:'Prolaktin',pt:'Prolactina',fr:'Prolactine',pl:'Prolaktyna',it:'Prolattina',he:'פרולקטין',ja:'プロラクチン',ko:'프로락틴'}},
+  {g:'hormones',k:'psa',c:'ng/mL',u:[['ng/mL',1]],min:0,max:200,
+   n:{ru:'ПСА',uk:'ПСА',en:'PSA',es:'PSA',de:'PSA',pt:'PSA',fr:'PSA',pl:'PSA',it:'PSA',he:'PSA',ja:'PSA',ko:'PSA'}},
+  {g:'iron',k:'iron',c:'µg/dL',u:[['µg/dL',1],['µmol/L',5.585]],min:5,max:500,
+   n:{ru:'Железо сыворотки',uk:'Залізо сироватки',en:'Serum iron',es:'Hierro sérico',de:'Serumeisen',pt:'Ferro sérico',fr:'Fer sérique',pl:'Żelazo w surowicy',it:'Sideremia',he:'ברזל בסרום',ja:'血清鉄',ko:'혈청 철'}},
+  {g:'iron',k:'tsat',c:'%',u:[['%',1]],min:0,max:100,
+   n:{ru:'Насыщение трансферрина',uk:'Насичення трансферину',en:'Transferrin saturation',es:'Saturación de transferrina',de:'Transferrinsättigung',pt:'Saturação de transferrina',fr:'Saturation de la transferrine',pl:'Wysycenie transferyny',it:'Saturazione della transferrina',he:'רוויון טרנספרין',ja:'トランスフェリン飽和度',ko:'트랜스페린 포화도'}},
+  {g:'iron',k:'hgb',c:'g/dL',u:[['g/dL',1],['g/L',0.1]],min:3,max:25,
+   n:{ru:'Гемоглобин',uk:'Гемоглобін',en:'Hemoglobin',es:'Hemoglobina',de:'Hämoglobin',pt:'Hemoglobina',fr:'Hémoglobine',pl:'Hemoglobina',it:'Emoglobina',he:'המוגלובין',ja:'ヘモグロビン',ko:'헤모글로빈'}},
+  {g:'lipids',k:'chol',c:'mmol/L',u:[['mmol/L',1],['mg/dL',0.02586]],min:1,max:20,
+   n:{ru:'Общий холестерин',uk:'Загальний холестерин',en:'Total cholesterol',es:'Colesterol total',de:'Gesamtcholesterin',pt:'Colesterol total',fr:'Cholestérol total',pl:'Cholesterol całkowity',it:'Colesterolo totale',he:'כולסטרול כללי',ja:'総コレステロール',ko:'총 콜레스테롤'}},
+  {g:'lipids',k:'hdl',c:'mmol/L',u:[['mmol/L',1],['mg/dL',0.02586]],min:0.2,max:5,
+   n:{ru:'ЛПВП (HDL)',uk:'ЛПВЩ (HDL)',en:'HDL cholesterol',es:'Colesterol HDL',de:'HDL-Cholesterin',pt:'Colesterol HDL',fr:'Cholestérol HDL',pl:'Cholesterol HDL',it:'Colesterolo HDL',he:'כולסטרול HDL',ja:'HDLコレステロール',ko:'HDL 콜레스테롤'}},
+  {g:'lipids',k:'lpa',c:'mg/dL',u:[['mg/dL',1],['nmol/L',0.4167]],min:0,max:500,
+   n:{ru:'Лп(а)',uk:'Ліп(а)',en:'Lp(a)',es:'Lp(a)',de:'Lp(a)',pt:'Lp(a)',fr:'Lp(a)',pl:'Lp(a)',it:'Lp(a)',he:'Lp(a)',ja:'Lp(a)',ko:'Lp(a)'}},
+  {g:'base',k:'insulin',c:'µIU/mL',u:[['µIU/mL',1],['pmol/L',0.1739]],min:0.1,max:500,
+   n:{ru:'Инсулин натощак',uk:'Інсулін натще',en:'Fasting insulin',es:'Insulina en ayunas',de:'Nüchterninsulin',pt:'Insulina em jejum',fr:'Insuline à jeun',pl:'Insulina na czczo',it:'Insulina a digiuno',he:'אינסולין בצום',ja:'空腹時インスリン',ko:'공복 인슐린'}},
+  {g:'liver',k:'alt',c:'U/L',u:[['U/L',1]],min:1,max:2000,
+   n:{ru:'АЛТ',uk:'АЛТ',en:'ALT',es:'ALT',de:'ALT',pt:'ALT',fr:'ALT',pl:'ALT',it:'ALT',he:'ALT',ja:'ALT',ko:'ALT'}},
+  {g:'liver',k:'ast',c:'U/L',u:[['U/L',1]],min:1,max:2000,
+   n:{ru:'АСТ',uk:'АСТ',en:'AST',es:'AST',de:'AST',pt:'AST',fr:'AST',pl:'AST',it:'AST',he:'AST',ja:'AST',ko:'AST'}},
+  {g:'liver',k:'ggt',c:'U/L',u:[['U/L',1]],min:1,max:2000,
+   n:{ru:'ГГТ',uk:'ГГТ',en:'GGT',es:'GGT',de:'GGT',pt:'GGT',fr:'GGT',pl:'GGT',it:'GGT',he:'GGT',ja:'GGT',ko:'GGT'}},
+  {g:'liver',k:'creat',c:'µmol/L',u:[['µmol/L',1],['mg/dL',88.4]],min:10,max:1500,
+   n:{ru:'Креатинин',uk:'Креатинін',en:'Creatinine',es:'Creatinina',de:'Kreatinin',pt:'Creatinina',fr:'Créatinine',pl:'Kreatynina',it:'Creatinina',he:'קריאטינין',ja:'クレアチニン',ko:'크레아티닌'}},
+  {g:'liver',k:'egfr',c:'mL/min',u:[['mL/min',1]],min:1,max:200,
+   n:{ru:'рСКФ (eGFR)',uk:'рШКФ (eGFR)',en:'eGFR',es:'eGFR',de:'eGFR',pt:'eGFR',fr:'eGFR',pl:'eGFR',it:'eGFR',he:'eGFR',ja:'eGFR',ko:'eGFR'}},
+  {g:'liver',k:'urate',c:'µmol/L',u:[['µmol/L',1],['mg/dL',59.48]],min:50,max:1200,
+   n:{ru:'Мочевая кислота',uk:'Сечова кислота',en:'Uric acid',es:'Ácido úrico',de:'Harnsäure',pt:'Ácido úrico',fr:'Acide urique',pl:'Kwas moczowy',it:'Acido urico',he:'חומצה אורית',ja:'尿酸',ko:'요산'}},
+  {g:'bone',k:'ca',c:'mmol/L',u:[['mmol/L',1],['mg/dL',0.2495]],min:1,max:5,
+   n:{ru:'Кальций',uk:'Кальцій',en:'Calcium',es:'Calcio',de:'Kalzium',pt:'Cálcio',fr:'Calcium',pl:'Wapń',it:'Calcio',he:'סידן',ja:'カルシウム',ko:'칼슘'}},
+  {g:'bone',k:'phos',c:'mmol/L',u:[['mmol/L',1],['mg/dL',0.3229]],min:0.2,max:5,
+   n:{ru:'Фосфор',uk:'Фосфор',en:'Phosphate',es:'Fósforo',de:'Phosphat',pt:'Fósforo',fr:'Phosphore',pl:'Fosfor',it:'Fosforo',he:'זרחן',ja:'リン',ko:'인'}},
+  {g:'bone',k:'pth',c:'pg/mL',u:[['pg/mL',1],['pmol/L',9.43]],min:1,max:2000,
+   n:{ru:'ПТГ (паратгормон)',uk:'ПТГ (паратгормон)',en:'PTH',es:'PTH',de:'PTH',pt:'PTH',fr:'PTH',pl:'PTH',it:'PTH',he:'PTH',ja:'PTH',ko:'PTH'}},
+  {g:'vitamins',k:'folate',c:'ng/mL',u:[['ng/mL',1],['nmol/L',0.4413]],min:0.5,max:100,
+   n:{ru:'Фолиевая кислота',uk:'Фолієва кислота',en:'Folate',es:'Folato',de:'Folsäure',pt:'Folato',fr:'Folates',pl:'Kwas foliowy',it:'Folati',he:'חומצה פולית',ja:'葉酸',ko:'엽산'}},
+  {g:'vitamins',k:'mg',c:'mmol/L',u:[['mmol/L',1],['mg/dL',0.4114]],min:0.2,max:3,
+   n:{ru:'Магний',uk:'Магній',en:'Magnesium',es:'Magnesio',de:'Magnesium',pt:'Magnésio',fr:'Magnésium',pl:'Magnez',it:'Magnesio',he:'מגנזיום',ja:'マグネシウム',ko:'마그네슘'}},
+  {g:'vitamins',k:'zinc',c:'µmol/L',u:[['µmol/L',1],['µg/dL',0.153]],min:2,max:60,
+   n:{ru:'Цинк',uk:'Цинк',en:'Zinc',es:'Zinc',de:'Zink',pt:'Zinco',fr:'Zinc',pl:'Cynk',it:'Zinco',he:'אבץ',ja:'亜鉛',ko:'아연'}},
+  {g:'vitamins',k:'hcy',c:'µmol/L',u:[['µmol/L',1]],min:1,max:200,
+   n:{ru:'Гомоцистеин',uk:'Гомоцистеїн',en:'Homocysteine',es:'Homocisteína',de:'Homocystein',pt:'Homocisteína',fr:'Homocystéine',pl:'Homocysteina',it:'Omocisteina',he:'הומוציסטאין',ja:'ホモシステイン',ko:'호모시스테인'}},
+];
+// Группы панели анализов: 45 полей одним списком — стена, в которую никто не полезет.
+// Базовое открыто, остальное сворачивается: разворачивает тот, кому есть что внести.
+var LAB_GROUPS=[
+  {g:'base',      open:true,  n:{ru:'Базовое',uk:'Базове',en:'Core panel',es:'Panel básico',de:'Basis',pt:'Painel básico',fr:'Panel de base',pl:'Podstawowe',it:'Base',he:'בסיסי',ja:'基本',ko:'기본'}},
+  {g:'lipids',    open:false, n:{ru:'Липиды',uk:'Ліпіди',en:'Lipids',es:'Lípidos',de:'Lipide',pt:'Lipídios',fr:'Lipides',pl:'Lipidy',it:'Lipidi',he:'שומנים בדם',ja:'脂質',ko:'지질'}},
+  {g:'thyroid',   open:false, n:{ru:'Щитовидная железа',uk:'Щитоподібна залоза',en:'Thyroid',es:'Tiroides',de:'Schilddrüse',pt:'Tireoide',fr:'Thyroïde',pl:'Tarczyca',it:'Tiroide',he:'בלוטת התריס',ja:'甲状腺',ko:'갑상선'}},
+  {g:'hormones',  open:false, n:{ru:'Половые гормоны',uk:'Статеві гормони',en:'Sex hormones',es:'Hormonas sexuales',de:'Sexualhormone',pt:'Hormônios sexuais',fr:'Hormones sexuelles',pl:'Hormony płciowe',it:'Ormoni sessuali',he:'הורמוני מין',ja:'性ホルモン',ko:'성호르몬'}},
+  {g:'iron',      open:false, n:{ru:'Железо и кровь',uk:'Залізо та кров',en:'Iron and blood count',es:'Hierro y hemograma',de:'Eisen und Blutbild',pt:'Ferro e hemograma',fr:'Fer et numération',pl:'Żelazo i morfologia',it:'Ferro ed emocromo',he:'ברזל וספירת דם',ja:'鉄と血算',ko:'철분과 혈액'}},
+  {g:'liver',     open:false, n:{ru:'Печень и почки',uk:'Печінка та нирки',en:'Liver and kidneys',es:'Hígado y riñones',de:'Leber und Nieren',pt:'Fígado e rins',fr:'Foie et reins',pl:'Wątroba i nerki',it:'Fegato e reni',he:'כבד וכליות',ja:'肝臓と腎臓',ko:'간과 신장'}},
+  {g:'bone',      open:false, n:{ru:'Кости',uk:'Кістки',en:'Bone markers',es:'Marcadores óseos',de:'Knochenmarker',pt:'Marcadores ósseos',fr:'Marqueurs osseux',pl:'Markery kostne',it:'Marcatori ossei',he:'סמני עצם',ja:'骨の指標',ko:'뼈 지표'}},
+  {g:'vitamins',  open:false, n:{ru:'Витамины и обмен',uk:'Вітаміни та обмін',en:'Vitamins and metabolism',es:'Vitaminas y metabolismo',de:'Vitamine und Stoffwechsel',pt:'Vitaminas e metabolismo',fr:'Vitamines et métabolisme',pl:'Witaminy i metabolizm',it:'Vitamine e metabolismo',he:'ויטמינים וחילוף חומרים',ja:'ビタミンと代謝',ko:'비타민과 대사'}}
 ];
 var _LAB_KEY='viae_labs';
 function _labsGet(){ try{ return JSON.parse(localStorage.getItem(_LAB_KEY)||'{}')||{}; }catch(e){ return {}; } }
@@ -7666,7 +7752,14 @@ function _labsInner(){
   var hint2=L({ru:'Мы не интерпретируем анализы и не ставим по ним диагноз: значения нужны, чтобы разбор не советовал того, что вам уже не нужно, и предупреждал о взаимодействиях с добавками. Изменение дозировки лекарств — только с врачом.',uk:'Ми не інтерпретуємо аналізи й не ставимо за ними діагноз: значення потрібні, щоб розбір не радив того, що вам уже не потрібно, і попереджав про взаємодії з добавками. Зміна дозування ліків — лише з лікарем.',en:'We do not interpret lab results or diagnose from them: the values are used so the overview stops suggesting what you no longer need, and can warn about interactions with supplements. Any change to medication dosage — with your doctor only.',es:'No interpretamos las analíticas ni diagnosticamos con ellas: los valores sirven para que el resumen deje de sugerir lo que ya no necesitas y avise de interacciones con suplementos. Cambiar la dosis de un medicamento — solo con tu médico.',de:'Wir interpretieren keine Laborwerte und stellen damit keine Diagnose: Die Werte sorgen dafür, dass die Auswertung nichts Unnötiges vorschlägt und vor Wechselwirkungen mit Nahrungsergänzungen warnt. Dosisänderungen von Medikamenten — nur mit der Ärztin oder dem Arzt.',pt:'Não interpretamos exames nem diagnosticamos a partir deles: os valores servem para a análise parar de sugerir o que você já não precisa e avisar sobre interações com suplementos. Mudança de dose de medicamentos — apenas com o seu médico.',fr:'Nous n’interprétons pas les analyses et n’en tirons aucun diagnostic : les valeurs servent à ce que le bilan cesse de suggérer ce dont vous n’avez plus besoin et signale les interactions avec les compléments. Toute modification de posologie — avec votre médecin uniquement.',pl:'Nie interpretujemy badań ani nie stawiamy na ich podstawie diagnozy: wartości służą temu, by analiza przestała proponować to, czego już nie potrzebujesz, i ostrzegała o interakcjach z suplementami. Zmiana dawki leków — tylko z lekarzem.',it:'Non interpretiamo le analisi né formuliamo diagnosi: i valori servono perché il riepilogo smetta di suggerire ciò che non ti serve e segnali le interazioni con gli integratori. Modifiche al dosaggio dei farmaci — solo con il medico.',he:'אנחנו לא מפרשים בדיקות מעבדה ולא קובעים מהן אבחנה: הערכים משמשים כדי שהסקירה תפסיק להציע את מה שכבר לא נחוץ ותתריע על אינטראקציות עם תוספים. שינוי מינון תרופות — רק עם רופא.',ja:'検査値の解釈や診断は行いません。値は、不要な提案をやめ、サプリメントとの相互作用を知らせるために使われます。薬の用量の変更は必ず医師と。',ko:'검사 수치를 해석하거나 진단하지 않습니다. 값은 필요 없는 제안을 멈추고 보충제와의 상호작용을 알리기 위해 사용됩니다. 약 용량 변경은 반드시 의사와 상의하세요.'});
   var h='<div style="font-size:11.5px;color:var(--t3);line-height:1.5;margin-bottom:8px;">'+_esc(hint)+'</div>'
         +'<div style="font-size:11px;color:var(--t3);line-height:1.5;margin-bottom:12px;opacity:.85;">⚕️ '+_esc(hint2)+'</div>';
-  LAB_DEFS.forEach(function(d){
+  h+=_homaLine();
+  LAB_GROUPS.forEach(function(G){
+  var _gd=LAB_DEFS.filter(function(x){return (x.g||'base')===G.g;});
+  if(!_gd.length) return;
+  var _filled=_gd.filter(function(x){return all[x.k] && all[x.k].raw!=null && all[x.k].raw!=='';}).length;
+  h+='<details class="lab-grp"'+((G.open||_filled)?' open':'')+'><summary>'+_esc(L(G.n))
+    +(_filled?'<span class="lab-grp-n">'+_filled+'</span>':'')+'</summary>';
+  _gd.forEach(function(d){
     var r=all[d.k]||{};
     var uSel=(d.u.length>1)
       ? '<select id="labu-'+d.k+'" onchange="_labSave(\''+d.k+'\')" style="background:rgba(255,255,255,.06);color:var(--t2);border:1px solid rgba(255,255,255,.12);border-radius:7px;font-size:11px;padding:5px 4px;">'
@@ -7685,7 +7778,20 @@ function _labsInner(){
       +'</div>'
       +'</div>';
   });
+  h+='</details>';
+  });
   return h;
+}
+// HOMA-IR не поле для ввода, а расчёт: глюкоза (ммоль/л) × инсулин (мкЕд/мл) / 22.5.
+// Считаем кодом — вводить руками то, что выводится из двух других значений, незачем.
+function _homaLine(){
+  var a=_labsGet(), g=a.glucose, i=a.insulin;
+  if(!g||!i||g.v==null||i.v==null) return '';
+  var v=(Number(g.v)*Number(i.v)/22.5);
+  if(!isFinite(v)||v<=0) return '';
+  return '<div style="font-size:11.5px;color:var(--t2);margin:-2px 0 10px;padding:7px 10px;border-radius:9px;background:rgba(226,185,90,.06);border:1px solid rgba(226,185,90,.16);">'
+    +'HOMA-IR: <b>'+v.toFixed(2)+'</b> <span style="color:var(--t3);">'
+    +_esc(L({ru:'— расчёт по глюкозе и инсулину',uk:'— розрахунок за глюкозою та інсуліном',en:'— calculated from glucose and insulin',es:'— calculado con glucosa e insulina',de:'— aus Glukose und Insulin berechnet',pt:'— calculado por glicose e insulina',fr:'— calculé à partir du glucose et de l’insuline',pl:'— wyliczone z glukozy i insuliny',it:'— calcolato da glucosio e insulina',he:'— חושב מגלוקוז ואינסולין',ja:'— 血糖とインスリンから算出',ko:'— 혈당과 인슐린으로 계산'}))+'</span></div>';
 }
 
 
