@@ -1249,6 +1249,7 @@ export default {
       if (path === '/offer/accept')            return handleOfferAccept(request, env, corsHeaders);               // акцепт оферты до оплаты (A2)
       if (path === '/expert/confirm-email') return handleExpertConfirmEmail(request, env, corsHeaders);   // подтверждение почты при первом входе (POST)
       if (path === '/cabinet/my-password')     return handleCabinetMyPassword(request, env, corsHeaders);           // специалист меняет свой пароль (D2)
+      if (path === '/labs/parse')             return handleLabsParse(request, env, corsHeaders);                   // распознавание бланка анализов (EXPERT)
       if (path === '/client/erase')            return handleClientErase(request, env, corsHeaders);                 // удаление данных о здоровье
       if (path === '/service-act')             return handleServiceAct(request, env, corsHeaders);                 // акт по клиенту (D3)
       if (path === '/cabinet/reassign')        return handleCabinetReassign(request, env, corsHeaders);             // передать клиента другому специалисту (B3)
@@ -7777,6 +7778,91 @@ async function handleClientErase(request, env, corsHeaders){
   await env.DB.prepare('UPDATE clients SET data=?, updated_at=datetime(\'now\') WHERE upper(code)=?')
     .bind(JSON.stringify(d), code).run();
   return jsonResponse({ok:true, erased:kept}, corsHeaders);
+}
+
+
+// ══ РАСПОЗНАВАНИЕ АНАЛИЗОВ С ФОТО (только VIA-L EXPERT) ══════════════════════════════════
+// Зачем не в VIA-L: там данные не покидают устройство, а фото бланка ушло бы на сервер —
+// это сломало бы и обещание, и privacy-манифест App Store (docs/LABS-PANEL-AUDIT.md §5).
+// Модель ТОЛЬКО извлекает числа, ничего не интерпретирует. Файл не сохраняем нигде: он живёт
+// в памяти запроса. Клиент обязан показать распознанное на подтверждение — автосохранения нет.
+const LAB_PARSE_KEYS = 'ferritin(нг/мл) crp(мг/л) tsh(мЕд/л) ft4(пмоль/л) ft3(пмоль/л) tpo(МЕ/мл) tgab(МЕ/мл) '
+  + 'vitd(нмоль/л) b12(пг/мл) folate(нг/мл) hcy(мкмоль/л) glucose(ммоль/л) hba1c(%) insulin(мкЕд/мл) '
+  + 'ldl(ммоль/л) hdl(ммоль/л) chol(ммоль/л) tg(ммоль/л) apob(г/л) lpa(мг/дл) '
+  + 'iron(мкг/дл) tsat(%) hgb(г/дл) cort(нмоль/л) e2(пг/мл) fsh(МЕ/л) lh(МЕ/л) prog(нг/мл) '
+  + 'tst(нг/дл) tstf(пг/мл) shbg(нмоль/л) dheas(мкг/дл) prl(нг/мл) psa(нг/мл) '
+  + 'alt(Ед/л) ast(Ед/л) ggt(Ед/л) creat(мкмоль/л) egfr(мл/мин) urate(мкмоль/л) ca(ммоль/л) phos(ммоль/л) '
+  + 'pth(пг/мл) mg(ммоль/л) zinc(мкмоль/л)';
+
+async function handleLabsParse(request, env, corsHeaders) {
+  if (!env.CLAUDE_API_KEY) return jsonResponse({ ok:false, error:'no_key' }, corsHeaders, 500);
+  let b = {};
+  try { b = await request.json(); } catch (_) {}
+  const data = String(b.image || '');
+  const mime = String(b.mime || 'image/jpeg');
+  if (!data || data.length < 100) return jsonResponse({ ok:false, error:'no_image' }, corsHeaders, 400);
+  if (data.length > 7000000) return jsonResponse({ ok:false, error:'too_large' }, corsHeaders, 413);
+  if (!/^image\/(jpeg|png|webp)$/.test(mime)) return jsonResponse({ ok:false, error:'bad_type' }, corsHeaders, 415);
+
+  const prompt = 'На изображении — бланк лабораторных анализов. Извлеки ТОЛЬКО те показатели из списка ниже, '
+    + 'которые реально видны, и верни СТРОГО JSON без пояснений и без markdown:\n'
+    + '{"labs":{"<ключ>":{"v":<число>,"u":"<единица как в бланке>"},...},"date":"YYYY-MM-DD"}\n\n'
+    + 'Допустимые ключи и КАНОНИЧЕСКИЕ единицы: ' + LAB_PARSE_KEYS + '\n\n'
+    + 'СООТВЕТСТВИЕ РУССКИХ/УКРАИНСКИХ НАЗВАНИЙ (частая путаница — сверяйся с этим списком):\n'
+    + 'ЛПНП / ЛПНЩ / LDL → ldl; ЛПВП / ЛПВЩ / HDL → hdl; холестерин общий → chol; триглицериды → tg; '
+    + 'ТТГ / TSH → tsh; Т4 свободный / FT4 → ft4; Т3 свободный / FT3 → ft3; АТ-ТПО → tpo; АТ-ТГ → tgab; '
+    + 'витамин D / 25(OH)D → vitd; B12 / кобаламин → b12; фолиевая кислота / фолат → folate; '
+    + 'гомоцистеин → hcy; глюкоза → glucose; гликированный гемоглобин / HbA1c → hba1c; инсулин → insulin; '
+    + 'ферритин → ferritin; железо сыворотки → iron; насыщение трансферрина → tsat; гемоглобин / Hb → hgb; '
+    + 'СРБ / С-реактивный белок / CRP → crp; эстрадиол / E2 → e2; ФСГ → fsh; ЛГ → lh; прогестерон → prog; '
+    + 'тестостерон общий → tst; тестостерон свободный → tstf; ГСПГ / SHBG → shbg; ДГЭА-С → dheas; '
+    + 'пролактин → prl; ПСА → psa; кортизол → cort; АЛТ → alt; АСТ → ast; ГГТ → ggt; креатинин → creat; '
+    + 'СКФ / рСКФ / eGFR → egfr; мочевая кислота → urate; кальций → ca; фосфор → phos; ПТГ / паратгормон → pth; '
+    + 'магний → mg; цинк → zinc.\n'
+    + '⚠️ ЛПВП и ЛПНП — РАЗНЫЕ показатели, не путай их местами: ЛПВП это hdl, ЛПНП это ldl.\n\n'
+    + 'Правила: (1) число бери РОВНО как в бланке, десятичный разделитель — точка; '
+    + '(2) единицу указывай ту, что напечатана в бланке, НЕ пересчитывай сам; '
+    + '(3) чего нет на изображении — не выдумывай и не добавляй ключ; '
+    + '(4) date — дата взятия материала, если видна; иначе не указывай поле; '
+    + '(5) никаких комментариев, оценок, «нормы» и диагнозов — только числа; '
+    + '(6) если изображение нечитаемо — верни {"labs":{}}.';
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'content-type':'application/json', 'x-api-key': env.CLAUDE_API_KEY, 'anthropic-version':'2023-06-01' },
+      body: JSON.stringify({
+        // Sonnet, а не Haiku: на тесте Haiku уверенно спутала ЛПВП с ЛПНП даже с явной подсказкой.
+        // Распознавание бывает несколько раз за программу — экономия здесь дешевле ошибки в цифре.
+        model: 'claude-sonnet-4-6', max_tokens: 900, temperature: 0,
+        messages: [{ role:'user', content: [
+          { type:'image', source:{ type:'base64', media_type: mime, data } },
+          { type:'text', text: prompt },
+        ]}],
+      }),
+    });
+    const j = await r.json();
+    logUsage(env, null, 'labs-parse', 'claude-sonnet-4-6', 'elite', '', j, 'photo');
+    const txt = j.content?.[0]?.text || '';
+    const m = txt.match(/\{[\s\S]*\}/);
+    if (!m) return jsonResponse({ ok:false, error:'unreadable' }, corsHeaders, 200);
+    let parsed = {};
+    try { parsed = JSON.parse(m[0]); } catch (_) { return jsonResponse({ ok:false, error:'unreadable' }, corsHeaders, 200); }
+    // Пропускаем только известные ключи с конечными числами — модель не должна уметь завести
+    // новое поле или вернуть строку туда, где ожидается значение.
+    const allow = new Set(LAB_PARSE_KEYS.split(/\s+/).map(x => x.replace(/\(.*/, '')));
+    const out = {};
+    Object.keys(parsed.labs || {}).forEach(k => {
+      if (!allow.has(k)) return;
+      const v = Number(String((parsed.labs[k] || {}).v).replace(',', '.'));
+      if (!isFinite(v)) return;
+      out[k] = { v, u: String((parsed.labs[k] || {}).u || '').slice(0, 12) };
+    });
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(String(parsed.date || '')) ? parsed.date : '';
+    return jsonResponse({ ok:true, labs: out, date }, corsHeaders);
+  } catch (e) {
+    return jsonResponse({ ok:false, error:'failed' }, corsHeaders, 500);
+  }
 }
 
 async function handleServiceAct(request, env, corsHeaders){
