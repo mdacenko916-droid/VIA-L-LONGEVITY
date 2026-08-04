@@ -24,9 +24,13 @@
 /* ══ PWA standalone (установлено на телефон): те же правила, что в EXPERT — статус-бар не
    перекрывает контент, футер держит подписи в одну строку. В браузере не применяются. ══ */
 @media (display-mode: standalone){
-  html,body{height:100vh;}
-  #app{top:0;bottom:auto;height:100vh;}
-  body::before{top:0;bottom:auto;height:100vh;}
+  /* 100dvh, а не 100vh: на iPhone с новой оболочкой 100vh оказывается КОРОЧЕ реального экрана —
+     светлый слой body::before обрывался и снизу проступала тёмная полоса body, а поверх тёмных
+     панелей (#importPanel: absolute inset:0 внутри #app) наоборот просвечивала светлая. 100vh
+     оставлен строкой выше как фолбэк для старых webview, где dvh не поддерживается. */
+  html,body{height:100vh;height:100dvh;}
+  #app{top:0;bottom:auto;height:100vh;height:100dvh;}
+  body::before{top:0;bottom:auto;height:100vh;height:100dvh;}
   /* Футер приложения. Нижний инсет урезан втрое (клиренс под home-индикатор остаётся), но
      ПЛЮС фиксированные 12px: на десктопном PWA (Mac) safe-area = 0, и без них подписи
      упирались в самый край окна. Селектор с #bottombar — чтобы перебить позднее мобильное правило. */
@@ -46,6 +50,11 @@
   }
 
 }
+/* То же самое для нативной обёртки (Capacitor): там `display-mode: standalone` не срабатывает,
+   класс html.app-mode ставит app-mode.js. Без этого полосы снизу оставались бы именно в app. */
+html.app-mode, html.app-mode body{height:100vh;height:100dvh;}
+html.app-mode #app{top:0;bottom:auto;height:100vh;height:100dvh;}
+html.app-mode body::before{top:0;bottom:auto;height:100vh;height:100dvh;}
 @media (display-mode: standalone){
   body:not(.flow-mode):not(.view-result) #scroll-area{overflow-y:hidden;padding-top:calc(20px + env(safe-area-inset-top,0px));}
   body:not(.flow-mode):not(.view-result) .hero-monogram{width:108px;height:108px;}
@@ -223,6 +232,7 @@ body::before{
   position:absolute;
   top:0;left:0;right:0;
   z-index:600;
+  padding-top:env(safe-area-inset-top,0px);   /* как в EXPERT: переключатель языка не заезжает под статус-бар */
   transition:transform .3s ease, opacity .3s ease;   /* шапка «Анализ VIA-L» уезжает при скролле разбора вниз */
   background:transparent;
   -webkit-backdrop-filter:none;
@@ -236,7 +246,7 @@ body::before{
 
 /* ── Scroll area — fills remaining space ── */
 #scroll-area{
-  padding-top:72px;          /* как VIO: лого поднят (96→72) — сбалансированный воздух от шапки */
+  padding-top:calc(72px + env(safe-area-inset-top,0px));   /* лого поднят (96→72) + safe-area сверху, как в EXPERT */
   flex:1 1 auto;
   overflow-y:auto;
   overflow-x:clip;
