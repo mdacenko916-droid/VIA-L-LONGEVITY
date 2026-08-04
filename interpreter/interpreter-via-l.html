@@ -3401,18 +3401,10 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
       <div class="max-sent" id="maxSent" data-t="max_sent">✓ Запрос отправлен! Ответ в течение 48 часов.</div>
     </div>
 
-    <!-- Финал разбора: «Ваш анализ завершён» + одна кнопка PDF + один дисклеймер (2026-07-19).
-         Маркетинговый апсейл убран — разбор не место для продажи. -->
-    <div class="cta-card" id="cta-marina">
-      <div class="cta-title" data-t="rd_fin_title">Ваш анализ завершён</div>
-      <div class="cta-desc" data-t="rd_fin_sub">Сегодня VIA·L обработал ваши данные и подготовил рекомендации.</div>
-      <!-- «Пройти заново» удалена 2026-07-17: не полигон — человек вносит показания и получает разбор, точка.
-           Повторный проход бывает раз в день (утренняя карточка следующего дня), пере-проходить незачем. -->
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
-        <button type="button" class="btn btn-primary" onclick="downloadPDF()" style="flex:1;" data-t="pdf_btn">📄 Скачать PDF-отчёт</button>
-      </div>
-      <div class="disclaimer" data-t="disclaimer">Информационно, не медицинский диагноз. Не заменяет консультацию врача.</div>
-    </div>
+    <!-- Финал разбора («Ваш анализ завершён» + «Скачать PDF-отчёт») УБРАН 2026-08-04 по вопросу
+         владельца «кому это нужно?». Разбор и так заканчивается дисклеймером и предложением
+         обсудить с человеком; отдельный «отчёт» дублировал экран и выглядел как медицинский
+         документ. Функция downloadPDF() оставлена в коде — вернуть блок можно из git. -->
   </div>
 
 </main>
@@ -8575,12 +8567,12 @@ function showImportBanner(){
   const existing=document.getElementById('import-banner');if(existing)existing.remove();
   const icons={oura:'💍',apple:'🍎','apple-manual':'🍎',garmin:'⌚',polar:'🔴',fitbit:'📡',samsung:'🔵',whoop:'⚡',xiaomi:'🟠',manual:'✏️'};
   const b=document.createElement('div');b.id='import-banner';
-  b.style.cssText='background:rgba(78,204,163,.08);border:1px solid rgba(78,204,163,.2);border-radius:14px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--ok);';
+  b.style.cssText='background:#16202a;border:1px solid rgba(78,204,163,.28);border-radius:14px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--ok);';   // сплошной тёмный фон: на полупрозрачном подпись «скорректируйте вручную» сливалась (2026-08-04)
   const src=importedData.source;
   var _impFrom=L({ru:'Данные импортированы из',uk:'Дані імпортовано з',en:'Data imported from',es:'Datos importados de',de:'Daten importiert aus',pt:'Dados importados de',fr:'Données importées depuis',pl:'Dane zaimportowano z',it:'Dati importati da',he:'הנתונים יובאו מ־',ja:'データの取り込み元:',ko:'데이터 가져온 곳:'});
   var _impApplied=L({ru:'и применены.',uk:'та застосовано.',en:'— applied.',es:'— aplicados.',de:'— übernommen.',pt:'— aplicados.',fr:'— appliquées.',pl:'— zastosowano.',it:'— applicati.',he:'— הוחלו.',ja:'— 適用済み。',ko:'— 적용됨.'});
   var _impAdjust=L({ru:'Скорректируйте вручную при необходимости.',uk:'За потреби скоригуйте вручну.',en:'Adjust manually if needed.',es:'Ajusta manualmente si es necesario.',de:'Bei Bedarf manuell anpassen.',pt:'Ajuste manualmente se necessário.',fr:'Ajustez manuellement si nécessaire.',pl:'W razie potrzeby popraw ręcznie.',it:'Regola manualmente se necessario.',he:'התאימו ידנית במידת הצורך.',ja:'必要に応じて手動で調整してください。',ko:'필요하면 수동으로 조정하세요.'});
-  b.innerHTML=`<span style="font-size:18px;">${icons[src]||'📊'}</span><div>${_impFrom} <b>${src.charAt(0).toUpperCase()+src.slice(1)}</b> ${_impApplied}<br><span style="color:var(--t3);font-size:11px;">${_impAdjust}</span></div><button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--t3);cursor:pointer;margin-left:auto;font-size:20px;line-height:1;">×</button>`;
+  b.innerHTML=`<span style="font-size:18px;">${icons[src]||'📊'}</span><div>${_impFrom} <b>${src.charAt(0).toUpperCase()+src.slice(1)}</b> ${_impApplied}<br><span style="color:var(--t2);font-size:11px;">${_impAdjust}</span></div><button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--t3);cursor:pointer;margin-left:auto;font-size:20px;line-height:1;">×</button>`;
   // Раньше баннер вставлялся перед .progress-wrap (шкала шагов удалена 2026-07-17) — якорь стал null
   // и баннер молча пропадал. Шкала стояла первой в <main>, поэтому кладём на то же место.
   const m=document.querySelector('main');if(m)m.insertBefore(b,m.firstChild);
