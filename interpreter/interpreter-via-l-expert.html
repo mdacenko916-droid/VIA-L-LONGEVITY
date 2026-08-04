@@ -6441,13 +6441,13 @@ function _restoreAnswers(){
   // (иначе значения ушли бы в разбор как «не указано»), но зелёным блок красить по ним нельзя:
   // человек сегодня ничего не вводил, а видел «пройдено» — на это владелец жаловался дважды.
   var CR=window.__carried=window.__carried||new Set();
-  var _mark=function(k){ if(k && !TS.has(k)) CR.add(k); };
+  var _mark=function(k){ if(k) CR.add(k); };   // ставится ПОСЛЕ dispatch: синтетический input уже мог занести ключ в TS
   Object.keys(s.radio||{}).forEach(function(name){
     var el=document.querySelector('input[name="'+name+'"][value="'+s.radio[name]+'"]');
     if(el){el.checked=true;_mark(name);TS.add(name);}   // .checked достаточно визуально (CSS :checked); change не диспатчим — иначе сработают взаимоисключения/markManual
   });
   (s.checks||[]).forEach(function(id){var el=document.getElementById(id);if(el&&el.type==='checkbox'){el.checked=true;_mark(el.name||id);_mark(id);TS.add(el.name||id);TS.add(id);}});
-  Object.keys(s.vals||{}).forEach(function(id){var el=document.getElementById(id);if(el){_mark(id);el.value=s.vals[id];try{el.dispatchEvent(new Event('input',{bubbles:true}));}catch(e){}TS.add(id);}});
+  Object.keys(s.vals||{}).forEach(function(id){var el=document.getElementById(id);if(el){el.value=s.vals[id];try{el.dispatchEvent(new Event('input',{bubbles:true}));}catch(e){}TS.add(id);_mark(id);}});
   try{if(typeof _hfChange==='function')_hfChange();}catch(e){}
   try{if(typeof _actTypeChange==='function')_actTypeChange();}catch(e){}   // перенесённая интенсивность ≠ «не было» → открыть частоту
   _showCarryBanner();
