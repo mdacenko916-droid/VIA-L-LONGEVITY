@@ -618,8 +618,10 @@ function _stripCodeTokens(text) {
 // магния и омега-3 клиенту, который принимает препарат для настроения). Промпт их запрещает, но вероятностно
 // протекают → детерминированный гарант. Режем ТОЛЬКО фрагмент с дозой и ТОЛЬКО в строке про добавку —
 // порции еды («150–200 г рыбы») и белок в г/кг не трогаем (это не добавки).
-const _SUPP_RE = /(B12|B-?комплекс|B-?complex|биотин|biotin|фолиев|folate|folic|псиллиум|psyllium|коллаген|collagen|пробиотик|probiotic|железо|iron|кальци|calcium|калий|potassium|йод|iodine|адаптоген|adaptogen|магни|magnes|magnez|омега|omega|ômega|цинк|zinc|zynk|селен|selen|витамин|vitamin|vitamina|витаміn|EPA|DHA|ЭПК|ДГК|глицинат|glycinat|glicinat|креатин|creatin|добавк|додатк|supplement|suplement|Ergänzung|complément|integrator)/i;
-const _DOSE_RE = /\d[\d.,]*\s*(?:[–—-]\s*\d[\d.,]*\s*)?(?:мг|mg|мкг|mcg|µg|МЕ\b|IU\b|j\.m\.|г|g)\s*(?:EPA|DHA|ЭПК|ДГК)?/i;
+const _SUPP_RE = /(D-?3|К-?2|K-?2|B-?6|B-?9|B-?1\\b|Q-?10|CoQ10|EPA|DHA|NAC|креатин|creatine|инозитол|inositol|глицин|glycine|таурин|taurine|B12|B-?комплекс|B-?complex|биотин|biotin|фолиев|folate|folic|псиллиум|psyllium|коллаген|collagen|пробиотик|probiotic|железо|iron|кальци|calcium|калий|potassium|йод|iodine|адаптоген|adaptogen|магни|magnes|magnez|омега|omega|ômega|цинк|zinc|zynk|селен|selen|витамин|vitamin|vitamina|витаміn|EPA|DHA|ЭПК|ДГК|глицинат|glycinat|glicinat|креатин|creatin|добавк|додатк|supplement|suplement|Ergänzung|complément|integrator)/i;
+// ⚠️ `\b` в JS не видит кириллицу: `МЕ\b` не срабатывал НИКОГДА, и «D3 2000–3000 МЕ» проходило
+// сквозь фильтр (поймано живым прогоном 2026-08-04). Границы — через lookahead по буквам.
+const _DOSE_RE = /\d[\d.,]*\s*(?:[–—-]\s*\d[\d.,]*\s*)?(?:мг|mg|мкг|mcg|µg|МЕ(?![\p{L}])|МО(?![\p{L}])|IU(?![\p{L}])|j\.m\.|г|g)\s*(?:EPA|DHA|ЭПК|ДГК)?/iu;
 // Второй проход для VIA-L: мг/мкг/МЕ вырезаем НЕЗАВИСИМО от того, названа ли добавка в этой
 // же строке. Живой прогон: «☐ Стандартный ориентир — около 300–400 мг вечером» проехал целиком,
 // потому что слово «магний» стояло в заголовке блока выше, а фильтр смотрит построчно.
@@ -2181,6 +2183,16 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
   const result = await response.json();
   logUsage(env, ctx, 'analyze', ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001', tier, lang, result);
   let text = result.content?.[0]?.text || result.error?.message || 'Ошибка генерации';
+
+  // VIA-L EXPERT: доза приходит от специалиста (протокол в кабинете), а не из авто-текста —
+  // за цифрой должен стоять человек, который видел лекарства и анкету. Решение владельца 2026-08-04.
+  // Снимаем ТОЛЬКО дозы добавок и рекомендации гормонально-активных трав; терминологию,
+  // клинические термины и предупреждения о травах (_HERB_WARN_RE) не трогаем — они защищают.
+  if (!isWellness && !result.error) {
+    try {
+      text = _stripHerbLines(_stripSupplementDoses(text));
+    } catch (e) { /* скраб не должен ронять ответ */ }
+  }
 
   // App Store 1.4.1 — выходной guardrail (только велнес VIA-L; при risk-паттерне: self-check → мягкая перегенерация)
   if (isWellness && !result.error) {
