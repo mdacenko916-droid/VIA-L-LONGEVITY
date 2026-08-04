@@ -1796,6 +1796,11 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
 .ai-coll-all .ph{font-size:14px;}
 .ai-themes-box{scroll-margin-top:80px;}
 .ai-sec-coll .ph{font-size:13px;}
+/* «Что сделать» — всегда на виду под краткой мыслью: это то, ради чего открывают разбор.
+   Под стрелкой остаётся «почему» и разбор данных. 2026-08-04. */
+.ai-sec-act{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(226,185,90,.07);border:1px solid rgba(226,185,90,.18);}
+.ai-sec-act-h{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold-lt);font-weight:600;margin-bottom:6px;}
+.ai-sec-act{font-size:13.5px;color:#fff;line-height:1.75;}
 .ai-sec-det-wrap{display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s cubic-bezier(.4,0,.2,1);}
 .ai-sec.open .ai-sec-det-wrap{grid-template-rows:1fr;}
 .ai-sec-det-wrap>.ai-sec-det{overflow:hidden;min-height:0;}
@@ -7958,7 +7963,7 @@ function _renderDayFromSnap(snap, todayFlag){
   var an=''; try{ var _e=_aiDailyGet().filter(function(x){return x.day===snap.day;})[0]; if(_e&&_e.analysis)an=_e.analysis; }catch(_x){}
   var card=document.getElementById('aiCard'), r=document.getElementById('aiResult'), load=document.getElementById('aiLoading'), err=document.getElementById('aiError'), disc=document.getElementById('aiDisc');
   if(card)card.style.display='block'; if(err)err.style.display='none';
-  if(an && r){ r.innerHTML=(typeof _renderAnalysis==='function')?_renderAnalysis(an):_esc(an); r.style.display='block'; if(load)load.style.display='none'; if(disc)disc.style.display='block'; }
+  if(an && r){ r.innerHTML=(typeof _renderAnalysis==='function')?_renderAnalysis(an):_esc(an); r.style.display='block'; if(load)load.style.display='none'; if(disc)disc.style.display='block'; try{ _renderHumanCta(); }catch(e){} }
   else { if(r){ r.style.display='block'; r.innerHTML='<div style="color:var(--t3);font-size:13px;">'+_esc(L({ru:'Разбор за этот день не сохранён.',uk:'Розбір за цей день не збережено.',en:'No analysis saved for this day.',es:'No hay análisis guardado para este día.',de:'Für diesen Tag ist keine Analyse gespeichert.',pt:'Sem análise salva para este dia.',fr:'Aucune analyse enregistrée pour ce jour.',pl:'Brak zapisanej analizy dla tego dnia.',it:'Nessuna analisi salvata per questo giorno.',he:'לא נשמר ניתוח ליום זה.',ja:'この日の分析は保存されていません。',ko:'이 날의 분석이 저장되지 않았습니다.'}))+'</div>'; } if(load)load.style.display='none'; }
   // баннер сверху
   var b=document.getElementById('rd-daybanner');
@@ -8204,6 +8209,7 @@ function _showDailyDoneGate(){
     _anBlock='<div style="text-align:left;margin-top:18px;padding:16px 15px;border-radius:14px;background:#181e28;border:1px solid var(--gold-dim);">'
       +'<div style="font-family:\'Playfair Display\',serif;letter-spacing:2px;font-size:12px;color:var(--gold-lt);text-align:center;margin-bottom:12px;">'+_anTitle+'</div>'
       +'<div style="font-size:13px;color:var(--t2);line-height:1.7;">'+_anBody+'</div>'
+      +(typeof _humanCtaHtml==='function'?_humanCtaHtml():'')
       +'</div>';
   }
   var d=document.createElement('div'); d.id='daily-done-gate'; d.className='step flow-show';
@@ -9529,18 +9535,20 @@ try{ ouraSyncLang(); }catch(e){}
 function _humanCtaDays(){
   try{ var a=JSON.parse(localStorage.getItem('viae_daily')||'[]')||[]; return a.length; }catch(e){ return 0; }
 }
+function _humanCtaHtml(){
+  if(_humanCtaDays() < 0) return '';   // ⚠️ ВРЕМЕННО 0 вместо 14 — владелец смотрит блок вживую. ВЕРНУТЬ 14.
+  var T1={ru:'Хотите обсудить это со своим специалистом?',uk:'Хочете обговорити це зі своїм спеціалістом?',en:'Want to discuss this with your specialist?',es:'¿Quiere comentarlo con su especialista?',de:'Möchten Sie das mit Ihrem Spezialisten besprechen?',pt:'Quer conversar sobre isso com seu especialista?',fr:'Envie d’en parler avec votre spécialiste ?',pl:'Chcesz omówić to ze swoim specjalistą?',it:'Vuoi parlarne con il tuo specialista?',he:'רוצים לדבר על זה עם המומחה שלכם?',ja:'担当の専門家と相談しますか？',ko:'담당 전문가와 상의할까요?'}, T2={ru:'Напишите — он видит эти же данные',uk:'Напишіть — він бачить ті самі дані',en:'Write to them — they see the same data',es:'Escríbale — ve los mismos datos',de:'Schreiben Sie ihm — er sieht dieselben Daten',pt:'Escreva — ele vê os mesmos dados',fr:'Écrivez-lui — il voit les mêmes données',pl:'Napisz — widzi te same dane',it:'Scrivigli — vede gli stessi dati',he:'כתבו לו — הוא רואה את אותם נתונים',ja:'メッセージを送る — 同じデータを見ています',ko:'메시지를 보내세요 — 같은 데이터를 보고 있습니다'};
+  return '<div id="humanCta" onclick="_humanCtaGo()" style="margin-top:14px;padding:12px 14px;border:1px solid rgba(226,185,90,.28);border-radius:14px;background:rgba(226,185,90,.06);cursor:pointer;">'
+       + '<div style="font-size:13px;color:#fff;font-weight:500;">'+(T1[lang]||T1.en)+'</div>'
+       + '<div style="font-size:11.5px;color:var(--t2);margin-top:3px;">'+(T2[lang]||T2.en)+' →</div></div>';
+}
+function _humanCtaGo(){ try{ openExpertChat(); }catch(e){} }
 function _renderHumanCta(){
   var host=document.getElementById('aiDisc'); if(!host) return;
   var old=document.getElementById('humanCta'); if(old) old.remove();
-  if(_humanCtaDays() < 0) return;   // ⚠️ ВРЕМЕННО 0 вместо 14 — владелец смотрит блок вживую (2026-08-04). ВЕРНУТЬ 14.
-  var T1={ru:'Хотите обсудить это со своим специалистом?',uk:'Хочете обговорити це зі своїм спеціалістом?',en:'Want to discuss this with your specialist?',es:'¿Quiere comentarlo con su especialista?',de:'Möchten Sie das mit Ihrem Spezialisten besprechen?',pt:'Quer conversar sobre isso com seu especialista?',fr:'Envie d’en parler avec votre spécialiste ?',pl:'Chcesz omówić to ze swoim specjalistą?',it:'Vuoi parlarne con il tuo specialista?',he:'רוצים לדבר על זה עם המומחה שלכם?',ja:'担当の専門家と相談しますか？',ko:'담당 전문가와 상의할까요?'}, T2={ru:'Напишите — он видит эти же данные',uk:'Напишіть — він бачить ті самі дані',en:'Write to them — they see the same data',es:'Escríbale — ve los mismos datos',de:'Schreiben Sie ihm — er sieht dieselben Daten',pt:'Escreva — ele vê os mesmos dados',fr:'Écrivez-lui — il voit les mêmes données',pl:'Napisz — widzi te same dane',it:'Scrivigli — vede gli stessi dati',he:'כתבו לו — הוא רואה את אותם נתונים',ja:'メッセージを送る — 同じデータを見ています',ko:'메시지를 보내세요 — 같은 데이터를 보고 있습니다'};
-  var d=document.createElement('div');
-  d.id='humanCta';
-  d.style.cssText='margin-top:14px;padding:12px 14px;border:1px solid rgba(226,185,90,.28);border-radius:14px;background:rgba(226,185,90,.06);cursor:pointer;';
-  d.onclick=function(){ try{ openExpertChat(); }catch(e){} };
-  d.innerHTML='<div style="font-size:13px;color:#fff;font-weight:500;">'+(T1[lang]||T1.en)+'</div>'
-            + '<div style="font-size:11.5px;color:var(--t2);margin-top:3px;">'+(T2[lang]||T2.en)+' →</div>';
-  host.parentNode.insertBefore(d, host.nextSibling);
+  var html=_humanCtaHtml(); if(!html) return;
+  var d=document.createElement('div'); d.innerHTML=html;
+  host.parentNode.insertBefore(d.firstChild, host.nextSibling);
 }
 
 async function fetchAIAnalysis(data, lang) {
@@ -10065,6 +10073,44 @@ function _themeIcon(t){ t=(t||'').toLowerCase();
   for(var i=0;i<M.length;i++)for(var j=0;j<M[i][1].length;j++)if(t.indexOf(M[i][1][j])>=0)return M[i][0];
   return '';
 }
+function _actLbl(){ return L({ru:'Что сделать',uk:'Що зробити',en:'What to do',es:'Qué hacer',de:'Was zu tun ist',pt:'O que fazer',fr:'Que faire',pl:'Co zrobić',it:'Cosa fare',he:'מה לעשות',ja:'やること',ko:'할 일'}); }
+
+// Разделяет [[D]] на «что сделать» (строки-действия ☐) и остальное. Язык не важен: ловим по
+// самому символу ☐, а не по переведённому заголовку — заголовок модель пишет на 12 языках.
+// Зачем: главная мысль без действия бесполезна, а прятать действие под стрелку — значит прятать
+// то, ради чего человек открыл разбор. Под стрелкой остаётся «почему» и данные.
+function _splitActions(det){
+  if(!det) return {act:'', rest:''};
+  var lines=String(det).split('\n'), act=[], rest=[], i=0;
+  for(i=0;i<lines.length;i++){
+    var ln=lines[i], isAct=/^\s*☐\s/.test(ln);
+    if(isAct){
+      // заголовок прямо над первой ☐ («**Что сделать**») уезжает вместе с действиями
+      if(!act.length && rest.length){
+        var prev=rest[rest.length-1];
+        if(/^\s*\*\*[^*]{2,40}\*\*\s*:?\s*$/.test(prev)) rest.pop();
+        while(rest.length && !rest[rest.length-1].trim()) rest.pop();
+      }
+      act.push(ln);
+    } else {
+      if(act.length && !ln.trim()) continue;      // пустые строки внутри списка действий пропускаем
+      rest.push(ln);
+    }
+  }
+  // Осиротевшие подзаголовки: «На этой неделе» стоит в остатке, а его единственная ☐ уехала
+  // к действиям — убираем такие пустые заголовки, иначе под стрелкой висит слово без текста.
+  var out=[];
+  for(i=0;i<rest.length;i++){
+    var cur=rest[i];
+    if(/^\s*\*\*[^*]{2,40}\*\*\s*:?\s*$/.test(cur)){
+      var j=i+1; while(j<rest.length && !rest[j].trim()) j++;
+      if(j>=rest.length || /^\s*\*\*[^*]{2,40}\*\*\s*:?\s*$/.test(rest[j])) continue;
+    }
+    out.push(cur);
+  }
+  return {act:act.join('\n').trim(), rest:out.join('\n').trim()};
+}
+
 function _renderAnalysis(raw){
   var text=(typeof _wl==='function')?_wl(String(raw==null?'':raw)):String(raw==null?'':raw);
   if(text.indexOf('[[S]]')<0) return _mdOnly(text);   // старый/неструктурный → обычный рендер (обратная совместимость)
@@ -10098,10 +10144,12 @@ function _renderAnalysis(raw){
     var s=secs[k], detail=s.det, title=s.ti, icon=s.ic;
     var pill=(s.fl.indexOf('prior')>=0)?('<span class="ai-sec-pill">'+_moreLbl_pri()+'</span>'):'';
     var _ti=_themeIcon(title), iconHtml=_ti?('<img class="ai-sec-img" src="icons/'+_ti+'.webp" alt="" onerror="this.style.display=\'none\'">'):(icon?('<span class="ai-sec-ic">'+_esc(icon)+'</span>'):'');
-    _themesHtml+='<div class="ai-sec'+(detail?' has-det':'')+(_ti?(' ai-th-'+_ti):'')+'" onclick="_secTap(this,event)"><div class="ai-sec-h" onclick="_secHeadTap(this,event)">'+iconHtml+'<span style="flex:1;min-width:0;">'+_esc(title)+'</span>'+pill+(detail?'<i class="ph ph-caret-down ai-sec-chev" aria-hidden="true"></i>':'')+'</div>'
+    var _sp2=_splitActions(detail), _act=_sp2.act, _rest=_sp2.rest;
+    _themesHtml+='<div class="ai-sec'+(_rest?' has-det':'')+(_ti?(' ai-th-'+_ti):'')+'" onclick="_secTap(this,event)"><div class="ai-sec-h" onclick="_secHeadTap(this,event)">'+iconHtml+'<span style="flex:1;min-width:0;">'+_esc(title)+'</span>'+pill+(_rest?'<i class="ph ph-caret-down ai-sec-chev" aria-hidden="true"></i>':'')+'</div>'
       +'<div class="ai-sec-sum">'+_mdOnly(s.sum)+'</div>';
-    if(detail) _themesHtml+='<button type="button" class="ai-sec-more" onclick="_toggleDetail(this,event)">'+_esc(_moreLblTxt())+' <i class="ph ph-caret-down" aria-hidden="true"></i></button>'
-      +'<div class="ai-sec-det-wrap"><div class="ai-sec-det">'+_mdOnly(detail)
+    if(_act) _themesHtml+='<div class="ai-sec-act"><div class="ai-sec-act-h">'+_esc(_actLbl())+'</div>'+_mdOnly(_act)+'</div>';
+    if(_rest) _themesHtml+='<button type="button" class="ai-sec-more" onclick="_toggleDetail(this,event)">'+_esc(_moreLblTxt())+' <i class="ph ph-caret-down" aria-hidden="true"></i></button>'
+      +'<div class="ai-sec-det-wrap"><div class="ai-sec-det">'+_mdOnly(_rest)
       +'<button type="button" class="ai-sec-coll" onclick="_secCollapse(this,event)">'+_esc(_collLbl())+' <i class="ph ph-caret-up" aria-hidden="true"></i></button></div></div>';
     _themesHtml+='</div>';
   }
