@@ -355,6 +355,25 @@ async function _acceptOffer(specId, payUrl){
   };
   Object.keys(P).forEach(l=>{ if(T[l]){ T[l].pay_spec=P[l].pay; T[l].ver_ins=P[l].ins; T[l].ver_ins_yes=P[l].ins_yes; } });
 })();
+// Языки, на которых оферта существует. Пока текста нет — кнопка оплаты закрыта (см. btnBuy).
+const OFFER_LANGS = ['uk','en','es','ru'];
+(function(){
+  const G={
+    ru:'Условия сопровождения пока переведены на украинский, английский, испанский и русский. Переключите язык вверху страницы, чтобы оформить, — или запишитесь на знакомство.',
+    uk:'Умови ведення поки перекладені українською, англійською, іспанською та російською. Перемкніть мову вгорі сторінки, щоб оформити, — або запишіться на знайомство.',
+    en:'The terms of guidance are currently available in Ukrainian, English, Spanish and Russian. Switch the language at the top of the page to proceed — or book an introduction call.',
+    es:'Las condiciones del acompañamiento están disponibles por ahora en ucraniano, inglés, español y ruso. Cambie el idioma arriba para continuar — o reserve una llamada de presentación.',
+    de:'Die Bedingungen der Begleitung liegen derzeit auf Ukrainisch, Englisch, Spanisch und Russisch vor. Wechseln Sie oben die Sprache, um fortzufahren — oder buchen Sie ein Kennenlerngespräch.',
+    pt:'As condições do acompanhamento estão disponíveis por enquanto em ucraniano, inglês, espanhol e russo. Mude o idioma no topo para continuar — ou agende uma conversa inicial.',
+    fr:'Les conditions du suivi sont pour l’instant disponibles en ukrainien, anglais, espagnol et russe. Changez de langue en haut de la page pour continuer — ou réservez un premier échange.',
+    pl:'Warunki prowadzenia są na razie dostępne po ukraińsku, angielsku, hiszpańsku i rosyjsku. Zmień język u góry strony, aby kontynuować — albo umów się na rozmowę zapoznawczą.',
+    it:'Le condizioni del percorso sono per ora disponibili in ucraino, inglese, spagnolo e russo. Cambia lingua in alto per procedere — oppure prenota una call conoscitiva.',
+    he:'תנאי הליווי זמינים כרגע באוקראינית, אנגלית, ספרדית ורוסית. החליפו שפה בראש העמוד כדי להמשיך — או קבעו שיחת היכרות.',
+    ja:'サポートの条件は現在ウクライナ語・英語・スペイン語・ロシア語でご用意しています。続けるにはページ上部で言語を切り替えるか、初回面談をご予約ください。',
+    ko:'관리 약관은 현재 우크라이나어, 영어, 스페인어, 러시아어로 제공됩니다. 계속하려면 상단에서 언어를 변경하거나 소개 상담을 예약해 주세요.',
+  };
+  Object.keys(G).forEach(l=>{ if(T[l]) T[l].offer_lang=G[l]; });
+})();
 // Вторая дверь к специалисту: клиенту, который уже решил, 15-минутное знакомство не нужно.
 // Ключи заводим отдельным блоком — не трогаем гигантский литерал T выше.
 (function(){
@@ -591,9 +610,13 @@ function specCard(s, idx, inCatalog){
   // Оплата уходит на чекаут САМОГО специалиста: платёжных данных мы не собираем и не храним,
   // ссылка в карточке нигде не показана текстом — только как адрес кнопки.
   const btnBook = cal ? `<a class="btn" href="${cal}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="${_bs}"><span>${esc(tr('nocode_book'))}</span></a>` : '';
-  const btnBuy = pay
+  // Условия сопровождения существуют пока не на всех 12 языках интерфейса. Потребитель вправе
+  // получить условия на языке, на котором ему сделали предложение, — поэтому кнопка оплаты
+  // закрыта там, где текста нет. Список расширяется по мере перевода оферты.
+  const btnBuy = (pay && OFFER_LANGS.indexOf(lang) >= 0)
     ? `<a class="btn" href="javascript:void(0)" onclick="event.stopPropagation();_acceptOffer(${s.id||0}, '${pay}')" style="${_bs}background:var(--gold-txt);color:#fff;border-color:transparent;"><span>${esc(tr('pay_spec').replace('{name}', s.name||''))}</span></a>`
-    : (cal ? `<div style="font-size:11px;color:var(--t3);margin-top:8px;text-align:center;">${esc(tr('start_after_intro'))}</div>` : '');
+    : (pay ? `<div style="font-size:11.5px;color:var(--t2);margin-top:10px;line-height:1.5;border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:9px 11px;">${esc(tr('offer_lang'))}</div>`
+    : (cal ? `<div style="font-size:11px;color:var(--t3);margin-top:8px;text-align:center;">${esc(tr('start_after_intro'))}</div>` : ''));
   const btn = btnBuy + btnBook;   // «Начать ведение» выше: клиенту, который уже решил, не нужно искать
   // Оговорка об ответственности — рядом с кнопкой оплаты, а не в подвале: человек должен
   // прочитать это ДО того, как заплатит, иначе она не выполняет своей функции.
