@@ -5451,6 +5451,7 @@ async function genMonthlyReport(){
       body:JSON.stringify({summary:summary,daily:daily,lang:lang,code:code,period:'month'})});
     var json=await res.json();
     if(!json.report) throw new Error('no report');
+    json.report=String(json.report).replace(/\n*\[\[EXP\]\][\s\S]*$/,'').trim();   // подстраховка: месячный хвоста не получает, но путь общий
     localStorage.setItem('viae_monthly_text',json.report);
     localStorage.setItem('viae_monthly_last',String(Date.now()));
     localStorage.setItem('viae_monthly_date',_dayKey());
@@ -5864,7 +5865,16 @@ function _wrGate(){
 }
 function _wrMd(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
   .replace(/^#{1,3}\s*(.+)$/gm,'<strong style="display:block;margin:10px 0 4px;">$1</strong>')
-  .replace(/\*\*([^*]+?)\*\*/g,'<strong>$1</strong>'); }
+  .replace(/\*\*([^*]+?)\*\*/g,'<strong>$1</strong>')
+  .replace(/(^|[\s(])\*([^*\n]{1,60}?)\*(?=[\s.,;:!?)]|$)/g,'$1<em>$2</em>')   // одиночные *HRV* модель ставит регулярно — иначе звёздочки видны как есть
+  .replace(/\n{2,}/g,'<br><br>').replace(/\n/g,'<br>'); }   // абзацы: текст шёл одной простынёй
+// Чистка старого кэша: тексты, сохранённые ДО правки 2026-08-04, содержат [[EXP]]-хвост.
+(function(){ try{
+  ['viae_weekly_text','viae_monthly_text'].forEach(function(k){
+    var v=localStorage.getItem(k); if(!v || v.indexOf('[[EXP]]')<0) return;
+    localStorage.setItem(k, v.replace(/\n*\[\[EXP\]\][\s\S]*$/,'').trim());
+  });
+}catch(e){} })();
 function renderWeeklyReportUI(){
   const box=document.getElementById('weeklyReport'); if(!box) return;
   const w=weeklyTrend(); if(!w){ box.innerHTML=''; return; } // <2 анализов — динамика уже показала подсказку
@@ -5907,6 +5917,10 @@ async function genWeeklyReport(){
       body:JSON.stringify({summary,daily,lang,code})});
     const json=await res.json();
     if(!json.report) throw new Error('no report');
+    // Служебный хвост [[EXP]] — машинная строка для петли эксперимента (её читает VIA-L).
+    // В EXPERT петли нет, но текст показывался клиенту КАК ЕСТЬ, вместе с JSON-хвостом.
+    // Режем на входе, до сохранения: иначе он оседает в кэше и всплывает при каждом показе.
+    json.report=String(json.report).replace(/\n*\[\[EXP\]\][\s\S]*$/,'').trim();
     localStorage.setItem('viae_weekly_text',json.report);
     localStorage.setItem('viae_weekly_last',String(Date.now()));
     localStorage.setItem('viae_weekly_date',_dayKey());
