@@ -118,6 +118,10 @@
 
 ## 📱 VIA-L — выпуск в App Store
 
+**Чек-лист готовности: `docs/APP-STORE-SUBMISSION-CHECKLIST.md`** (2026-08-04) — что готово,
+что осталось, риски ревью. Ближайшее: Apple Developer $99 → Paid Apps + W-8BEN;
+`legal-app/support.html` под обязательный Support URL; решение по витрине в App Store-сборке.
+
 Приложение собрано и запускалось на устройстве владельца; остаток — сборка, стор и
 данные клиента. Канон: [[project_app_iap_plan]], [[project_app_sim_build]],
 [[feedback_via_l_appstore_isolation]]. Обоснование именований для ревью —

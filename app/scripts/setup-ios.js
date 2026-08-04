@@ -46,6 +46,49 @@ function ensureKeys(xml, keys) {
   return [next, added];
 }
 
+// Privacy manifest (Apple требует с весны 2024). Два содержательных блока:
+// NSPrivacyAccessedAPITypes — «required reason API»: приложение читает и пишет UserDefaults
+// (Capacitor/WebView хранят там состояние), причина CA92.1 — доступ только к собственным данным;
+// NSPrivacyCollectedDataTypes — что мы собираем. У VIA-L данные о здоровье НЕ уходят с устройства,
+// поэтому здесь пусто: манифест описывает сбор разработчиком, а его нет. Если появится синк
+// («Помочь улучшить приложение») — сюда добавляется NSPrivacyCollectedDataTypeHealth.
+const PRIVACY_MANIFEST = path.join(APP_DIR, 'ios', 'App', 'App', 'PrivacyInfo.xcprivacy');
+const PRIVACY_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+\t<key>NSPrivacyTracking</key>
+\t<false/>
+\t<key>NSPrivacyTrackingDomains</key>
+\t<array/>
+\t<key>NSPrivacyCollectedDataTypes</key>
+\t<array/>
+\t<key>NSPrivacyAccessedAPITypes</key>
+\t<array>
+\t\t<dict>
+\t\t\t<key>NSPrivacyAccessedAPIType</key>
+\t\t\t<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+\t\t\t<key>NSPrivacyAccessedAPITypeReasons</key>
+\t\t\t<array>
+\t\t\t\t<string>CA92.1</string>
+\t\t\t</array>
+\t\t</dict>
+\t</array>
+</dict>
+</plist>
+`;
+
+function ensurePrivacyManifest() {
+  if (fs.existsSync(PRIVACY_MANIFEST)) { console.log('✓ PrivacyInfo.xcprivacy: на месте.'); return; }
+  if (!fs.existsSync(path.dirname(PRIVACY_MANIFEST))) {
+    console.warn('⚠️  Нет папки ios/App/App — сначала `npx cap add ios`.');
+    return;
+  }
+  fs.writeFileSync(PRIVACY_MANIFEST, PRIVACY_XML);
+  console.log('✚ PrivacyInfo.xcprivacy: создан. ВАЖНО: добавить файл в таргет App в Xcode ' +
+    '(перетащить в проект, галочка Target Membership) — сам по себе он в бандл не попадёт.');
+}
+
 function patchFile(file, keys, label) {
   if (!fs.existsSync(file)) {
     console.warn(`⚠️  ${label} не найден (${path.relative(APP_DIR, file)}). ` +
@@ -62,7 +105,8 @@ function patchFile(file, keys, label) {
   console.log(`✚ ${label}: добавлено ${added.length} — ${added.join(', ')}`);
 }
 
-console.log('— setup-ios: восстановление HealthKit-настроек —');
+console.log('— setup-ios: HealthKit + privacy manifest —');
 patchFile(INFO_PLIST, INFO_KEYS, 'Info.plist');
 patchFile(ENTITLEMENTS, ENTITLEMENT_KEYS, 'App.entitlements');
+ensurePrivacyManifest();
 console.log('Готово. Дальше: `LANG=en_US.UTF-8 npx cap sync ios`.');
