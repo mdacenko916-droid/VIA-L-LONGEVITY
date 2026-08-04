@@ -2620,7 +2620,21 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
   // Служебный хвост [[EXP]] специалисту не нужен — режем (клиент режет у себя сам).
   if (code && env.DB && text && ctx) {
     const clean = text.replace(/\n*\[\[EXP\]\][\s\S]*$/, '').trim();
-    ctx.waitUntil(cabinetIngestWeekly(env, code, clean, lang).catch(() => {}));
+    // Эксперимент недели специалисту НУЖЕН — просто не в машинном виде. В VIA-L петлю замыкает
+    // приложение, в EXPERT её замыкает человек: если специалист не видит, что клиенту предложено,
+    // предложение повисает без продолжения. Достаём what/metrics и дописываем строкой к тексту.
+    let expLine = '';
+    try {
+      const m = text.match(/\[\[EXP\]\]\s*(\{[\s\S]*?\})/);
+      if (m) {
+        const e = JSON.parse(m[1]);
+        if (e && e.what) {
+          expLine = '\n\n— Эксперимент, предложенный клиенту на неделю: ' + String(e.what).slice(0, 300)
+                  + (Array.isArray(e.metrics) && e.metrics.length ? ' (смотреть: ' + e.metrics.join(', ') + ')' : '');
+        }
+      }
+    } catch (_) {}
+    ctx.waitUntil(cabinetIngestWeekly(env, code, clean + expLine, lang).catch(() => {}));
   }
 
   return new Response(JSON.stringify({ report: text }), {
