@@ -2136,7 +2136,7 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
   </div>
 
   <!-- FITBIT AIR / GOOGLE HEALTH -->
-  <div class="source-card" id="card-fitbit">
+  <div class="source-card m-full" id="card-fitbit">
     <div class="source-header" onclick="toggleCard('fitbit')">
       <div class="source-icon fitbit"><img src="images-in/Fitbit%20Charge%206%20gold.PNG" alt="Fitbit" loading="lazy"></div>
       <div class="source-info">
@@ -2416,18 +2416,16 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
       <span class="imp-go">→</span>
     </button>
     <!-- Прямая синхронизация облака вендора (веб-OAuth). Чистые вендоры без Google/CASA:
-         Oura (самообслуживание, пилот ≤10 пользователей), Polar, Withings. Fitbit сюда не входит —
-         он идёт через Google Health/CASA и его API закрывается 09.2026 (включается по ?vendors=1).
+         Oura (самообслуживание, пилот ≤10 пользователей), Polar, Withings, Fitbit.
+         Fitbit временный: его API закрывается 09.2026 (Google Health/CASA) — убрать перед запуском.
          См. docs/HEALTH-DATA-SOURCING-PLAN.md -->
     <button id="dev-vendors-btn" onclick="_chooseSource('device')" class="imp-btn">
       <span class="imp-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8M20 12a8 8 0 0 1-13.7 5.6L4 16"/><path d="M20 4v4h-4M4 20v-4h4"/></svg></span>
-      <span class="imp-txt"><b data-t="imp_device_t">Синхронизация устройства</b><small data-t="imp_device_s">Oura · Polar · Withings</small></span>
+      <span class="imp-txt"><b data-t="imp_device_t">Синхронизация устройства</b><small data-t="imp_device_s">Oura · Fitbit · Polar · Withings</small></span>
       <span class="imp-go">→</span>
     </button>
   </div>
 </div>
-<script>/* Fitbit в вендор-панели только по ?vendors=1: его API закрывается 09.2026 — публично не показываем. */
-try{ if(new URLSearchParams(location.search).get('vendors')==='1'){ var _fc=document.getElementById('card-fitbit'); if(_fc)_fc.classList.add('m-full'); } }catch(e){}</script>
 
 <main>
 
@@ -3631,7 +3629,7 @@ const LANG_FLAGS={'uk':'🇺🇦 UK','ru':'🇷🇺 RU','en':'🇬🇧 EN','es':
 // Кнопка «Синхронизация устройства» (вендор-OAuth Oura/Polar/Withings) — 12 языков
 ;(function(){var c={
   imp_device_t:{ru:'Синхронизация устройства',uk:'Синхронізація пристрою',en:'Sync your device',es:'Sincronizar dispositivo',de:'Gerät synchronisieren',pt:'Sincronizar dispositivo',fr:"Synchroniser l'appareil",pl:'Synchronizuj urządzenie',it:'Sincronizza dispositivo',he:'סנכרון המכשיר',ja:'デバイスを同期',ko:'기기 동기화'},
-  imp_device_s:{ru:'Oura · Polar · Withings',uk:'Oura · Polar · Withings',en:'Oura · Polar · Withings',es:'Oura · Polar · Withings',de:'Oura · Polar · Withings',pt:'Oura · Polar · Withings',fr:'Oura · Polar · Withings',pl:'Oura · Polar · Withings',it:'Oura · Polar · Withings',he:'Oura · Polar · Withings',ja:'Oura · Polar · Withings',ko:'Oura · Polar · Withings'}
+  imp_device_s:{ru:'Oura · Fitbit · Polar · Withings',uk:'Oura · Fitbit · Polar · Withings',en:'Oura · Fitbit · Polar · Withings',es:'Oura · Fitbit · Polar · Withings',de:'Oura · Fitbit · Polar · Withings',pt:'Oura · Fitbit · Polar · Withings',fr:'Oura · Fitbit · Polar · Withings',pl:'Oura · Fitbit · Polar · Withings',it:'Oura · Fitbit · Polar · Withings',he:'Oura · Fitbit · Polar · Withings',ja:'Oura · Fitbit · Polar · Withings',ko:'Oura · Fitbit · Polar · Withings'}
 };Object.keys(c).forEach(function(k){Object.keys(c[k]).forEach(function(l){if(T[l])T[l][k]=c[k][l];});});})();
 ;(function(){var c={ allergy_ph:{ru:'На что? (орехи, лактоза, глютен…)',uk:'На що? (горіхи, лактоза, глютен…)',en:'To what? (nuts, lactose, gluten…)',es:'¿A qué? (frutos secos, lactosa, gluten…)',de:'Worauf? (Nüsse, Laktose, Gluten…)',pt:'A quê? (nozes, lactose, glúten…)',fr:'À quoi ? (noix, lactose, gluten…)',pl:'Na co? (orzechy, laktoza, gluten…)',it:'A cosa? (noci, lattosio, glutine…)',he:'למה? (אגוזים, לקטוז, גלוטן…)',ja:'何に？（ナッツ、乳糖、グルテン…）',ko:'무엇에? (견과류, 유당, 글루텐…)'} };Object.keys(c).forEach(function(k){Object.keys(c[k]).forEach(function(l){if(T[l])T[l][k]=c[k][l];});});})();
 // Подписи 9 показателей трекера в карточке — человеческим языком, на 12 языках
