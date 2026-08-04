@@ -84,8 +84,9 @@
 - [x] **E3. Политика данных** — черновик `docs/DATA-POLICY-CLIENT-DRAFT.md`: два режима хранения
       (VIA-L device-only vs EXPERT + карточка), роли включая joint controller по ИИ, сроки
       (здоровье 90 дней после ведения, факт услуги 3 года), права + кнопки в приложении, US-блок.
-- [ ] **E3-хвост (код):** ✅ автоудаление 90 дней сделано (`eraseExpiredHealthData`, cron);
-      осталось:       разделить `legal-app/privacy.html` (device-only) и `legal/privacy.html` (EXPERT);
+- [ ] **E3-хвост:** ✅ автоудаление 90 дней (`eraseExpiredHealthData`, cron), ✅ политики разведены
+      (VIA-L→legal-app, EXPERT→legal + раздел 7-бис ×12), ✅ ссылка под кнопкой удаления.
+      Осталось:       разделить `legal-app/privacy.html` (device-only) и `legal/privacy.html` (EXPERT);
       ссылка на политику из EXPERT и из кнопки удаления; перевод EN→UK/ES/RU.
 - [x] **E4. Вопросы юристу** — `docs/LEGAL-QUESTIONS.md`: 20 вопросов пятью блоками + готовый
       блок «Контекст» для консультации. Юриста у владельца пока нет — список рабочий, не закрытый.
