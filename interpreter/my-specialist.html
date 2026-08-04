@@ -355,6 +355,14 @@ async function _acceptOffer(specId, payUrl){
   };
   Object.keys(P).forEach(l=>{ if(T[l]){ T[l].pay_spec=P[l].pay; T[l].ver_ins=P[l].ins; T[l].ver_ins_yes=P[l].ins_yes; } });
 })();
+// США: сопровождение за деньги не предлагаем. Причина не в Apple, а в законах штатов —
+// консультирование по питанию без местной лицензии в ряде штатов правонарушение. Поэтому в США
+// скрыты кнопка оплаты, сайт и контакты специалиста; остаётся бесплатное 15-минутное знакомство.
+// Определяем по часовому поясу устройства: язык страну не показывает, а IP-геолокации у нас нет.
+const _US_TZ = /^(America\/(New_York|Chicago|Denver|Phoenix|Los_Angeles|Anchorage|Detroit|Indiana|Kentucky|Boise|Juneau|Menominee|Metlakatla|Nome|Sitka|Yakutat|North_Dakota)|Pacific\/Honolulu)/;
+function _isUS(){
+  try{ return _US_TZ.test(Intl.DateTimeFormat().resolvedOptions().timeZone || ''); }catch(e){ return false; }
+}
 // Языки, на которых оферта существует. Пока текста нет — кнопка оплаты закрыта (см. btnBuy).
 const OFFER_LANGS = ['uk','en','es','ru'];
 (function(){
@@ -373,6 +381,23 @@ const OFFER_LANGS = ['uk','en','es','ru'];
     ko:'관리 약관은 현재 우크라이나어, 영어, 스페인어, 러시아어로 제공됩니다. 계속하려면 상단에서 언어를 변경하거나 소개 상담을 예약해 주세요.',
   };
   Object.keys(G).forEach(l=>{ if(T[l]) T[l].offer_lang=G[l]; });
+})();
+(function(){
+  const U={
+    en:'In the United States we do not offer paid guidance: nutrition practice is licensed state by state and this specialist is not licensed in the US. A free 15-minute introduction call is available — it is a conversation, not nutrition counselling.',
+    ru:'В США платное сопровождение мы не предлагаем: практика в нутрициологии лицензируется на уровне штатов, и этот специалист не имеет лицензии США. Доступно бесплатное 15-минутное знакомство — это разговор, а не консультация по питанию.',
+    uk:'У США платне ведення ми не пропонуємо: практика в нутриціології ліцензується на рівні штатів, і цей спеціаліст не має ліцензії США. Доступне безкоштовне 15-хвилинне знайомство — це розмова, а не консультація з харчування.',
+    es:'En Estados Unidos no ofrecemos acompañamiento de pago: la práctica en nutrición se licencia por estados y este especialista no tiene licencia estadounidense. Hay una llamada de presentación gratuita de 15 minutos — es una conversación, no asesoramiento nutricional.',
+    de:'In den USA bieten wir keine kostenpflichtige Begleitung an: Ernährungsberatung ist dort einzelstaatlich lizenziert und dieser Spezialist hat keine US-Lizenz. Ein kostenloses 15-minütiges Kennenlerngespräch ist möglich — ein Gespräch, keine Ernährungsberatung.',
+    pt:'Nos EUA não oferecemos acompanhamento pago: a prática em nutrição é licenciada por estado e este especialista não tem licença norte-americana. Há uma conversa inicial gratuita de 15 minutos — é uma conversa, não aconselhamento nutricional.',
+    fr:'Aux États-Unis, nous ne proposons pas de suivi payant : la pratique en nutrition y est encadrée État par État et ce spécialiste n’a pas de licence américaine. Un premier échange gratuit de 15 minutes reste possible — c’est une conversation, pas un conseil nutritionnel.',
+    pl:'W USA nie oferujemy płatnego prowadzenia: praktyka dietetyczna jest tam licencjonowana stanowo, a ten specjalista nie ma licencji amerykańskiej. Dostępna jest bezpłatna 15-minutowa rozmowa zapoznawcza — to rozmowa, nie poradnictwo żywieniowe.',
+    it:'Negli USA non offriamo percorsi a pagamento: la pratica nutrizionale è regolata stato per stato e questo specialista non ha licenza statunitense. È disponibile una call conoscitiva gratuita di 15 minuti — è una conversazione, non consulenza nutrizionale.',
+    he:'בארצות הברית איננו מציעים ליווי בתשלום: העיסוק בתזונה מוסדר ברישוי מדינתי והמומחה אינו בעל רישיון אמריקאי. זמינה שיחת היכרות חינם של 15 דקות — שיחה, לא ייעוץ תזונתי.',
+    ja:'米国では有料のサポートは提供していません。栄養実務は州ごとの免許制で、この専門家は米国の免許を持っていません。15分の無料面談は可能です（会話であり、栄養指導ではありません）。',
+    ko:'미국에서는 유료 관리를 제공하지 않습니다. 영양 실무는 주별 면허제이며 이 전문가는 미국 면허가 없습니다. 15분 무료 소개 상담은 가능합니다 — 상담 대화이며 영양 지도는 아닙니다.',
+  };
+  Object.keys(U).forEach(l=>{ if(T[l]) T[l].us_note=U[l]; });
 })();
 // Вторая дверь к специалисту: клиенту, который уже решил, 15-минутное знакомство не нужно.
 // Ключи заводим отдельным блоком — не трогаем гигантский литерал T выше.
@@ -613,9 +638,9 @@ function specCard(s, idx, inCatalog){
   // Условия сопровождения существуют пока не на всех 12 языках интерфейса. Потребитель вправе
   // получить условия на языке, на котором ему сделали предложение, — поэтому кнопка оплаты
   // закрыта там, где текста нет. Список расширяется по мере перевода оферты.
-  const btnBuy = (pay && OFFER_LANGS.indexOf(lang) >= 0)
+  const btnBuy = (pay && !_isUS() && OFFER_LANGS.indexOf(lang) >= 0)
     ? `<a class="btn" href="javascript:void(0)" onclick="event.stopPropagation();_acceptOffer(${s.id||0}, '${pay}')" style="${_bs}background:var(--gold-txt);color:#fff;border-color:transparent;"><span>${esc(tr('pay_spec').replace('{name}', s.name||''))}</span></a>`
-    : (pay ? `<div style="font-size:11.5px;color:var(--t2);margin-top:10px;line-height:1.5;border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:9px 11px;">${esc(tr('offer_lang'))}</div>`
+    : (pay ? `<div style="font-size:11.5px;color:var(--t2);margin-top:10px;line-height:1.5;border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:9px 11px;">${esc(_isUS() ? tr('us_note') : tr('offer_lang'))}</div>`
     : (cal ? `<div style="font-size:11px;color:var(--t3);margin-top:8px;text-align:center;">${esc(tr('start_after_intro'))}</div>` : ''));
   const btn = btnBuy + btnBook;   // «Начать ведение» выше: клиенту, который уже решил, не нужно искать
   // Оговорка об ответственности — рядом с кнопкой оплаты, а не в подвале: человек должен
@@ -635,7 +660,7 @@ function specCard(s, idx, inCatalog){
     s.insurance  ? [tr('ver_ins'), esc(tr('ver_ins_yes'))] : null,
     s.country    ? [tr('ver_juris'), esc(_countryName(s.country)) + (s.legal_form ? ' · ' + esc(s.legal_form) : '')
                     + '<div style="color:var(--t3);font-size:10.5px;line-height:1.45;margin-top:2px;">' + esc(tr('ver_law')) + '</div>'] : null,
-    s.website    ? [tr('ver_site'), '<a href="' + esc(s.website) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--gold-txt);">' + esc(s.website.replace(/^https?:\/\//,'')) + '</a>'] : null,
+    (s.website && !_isUS()) ? [tr('ver_site'), '<a href="' + esc(s.website) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--gold-txt);">' + esc(s.website.replace(/^https?:\/\//,'')) + '</a>'] : null,
   ].filter(Boolean);
   const more = rows.length ? (
       '<button id="specMoreBtn_' + (s.id||0) + '" onclick="event.stopPropagation();_toggleSpecMore(' + (s.id||0) + ')" '

@@ -525,6 +525,18 @@ html[data-current-lang="en"] #heroBtnSlots, html[data-current-lang="es"] #heroBt
 
 ### Журнал выполненного (что уже в проде + `main`)
 
+- **2026-08-04** — **Подготовка к App Store: support-страница, privacy manifest, США на витрине.**
+  (1) `legal-app/support.html` под обязательный Support URL — 4 языка, `support@via-l.com`, FAQ,
+  ссылка на политику; ни одной ссылки на сайт нутрициолога и на витрину (изоляция VIA-L).
+  (2) `PrivacyInfo.xcprivacy` теперь создаётся `app/scripts/setup-ios.js` (папка `app/ios` в
+  .gitignore, иначе теряется): tracking=false, собираемых типов нет, `UserDefaults`/CA92.1;
+  файл надо один раз добавить в таргет App в Xcode. (3) Из `legal-app/privacy.html` вычищены
+  несуществующие тарифы VIO/PRO во всех 12 языках. (4) **США на витрине:** `_isUS()` по часовому
+  поясу — скрыты кнопка оплаты, сайт и контакты специалиста, остаётся бесплатное 15-минутное
+  знакомство + строка `us_note` (12 языков) про лицензирование нутрициологов по штатам. Причина
+  не в Apple, а в законах штатов; побочно снимает вопрос «продажа услуг мимо IAP».
+  Чек-лист подачи — `docs/APP-STORE-SUBMISSION-CHECKLIST.md`.
+
 - **2026-08-04** — **Политики разведены по продуктам (E3-хвост).** Раньше и VIA-L, и EXPERT вели на
   `legal-app/privacy.html` с обещанием «device-only, велнес-историю на серверах не храним» — для
   EXPERT это неправда, там данные лежат в карточке. Теперь: **VIA-L → `legal-app/privacy.html`**
