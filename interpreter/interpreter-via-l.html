@@ -20,17 +20,23 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
 <link href="phosphor/style.css" rel="stylesheet">
+<script>
+/* Полноэкранный контекст (установленное приложение или нативная обёртка) — ставим класс ДО отрисовки:
+   от него зависит высота 100vh вместо 100%, иначе снизу остаётся чёрная полоса. Проверяем три
+   признака: PWA-standalone, iOS-навигатор и Capacitor (в вебе ни один не сработает). */
+try{
+  var _fs = (window.matchMedia && matchMedia('(display-mode: standalone)').matches)
+         || navigator.standalone === true || !!window.Capacitor;
+  if(_fs) document.documentElement.classList.add('app-shell');
+}catch(e){}
+</script>
 <style>
 /* ══ PWA standalone (установлено на телефон): те же правила, что в EXPERT — статус-бар не
    перекрывает контент, футер держит подписи в одну строку. В браузере не применяются. ══ */
 @media (display-mode: standalone){
-  /* 100dvh, а не 100vh: на iPhone с новой оболочкой 100vh оказывается КОРОЧЕ реального экрана —
-     светлый слой body::before обрывался и снизу проступала тёмная полоса body, а поверх тёмных
-     панелей (#importPanel: absolute inset:0 внутри #app) наоборот просвечивала светлая. 100vh
-     оставлен строкой выше как фолбэк для старых webview, где dvh не поддерживается. */
-  html,body{height:100vh;height:100dvh;}
-  #app{top:0;bottom:auto;height:100vh;height:100dvh;}
-  body::before{top:0;bottom:auto;height:100vh;height:100dvh;}
+  html,body{height:100vh;}
+  #app{top:0;bottom:auto;height:100vh;}
+  body::before{top:0;bottom:auto;height:100vh;}
   /* Футер приложения. Нижний инсет урезан втрое (клиренс под home-индикатор остаётся), но
      ПЛЮС фиксированные 12px: на десктопном PWA (Mac) safe-area = 0, и без них подписи
      упирались в самый край окна. Селектор с #bottombar — чтобы перебить позднее мобильное правило. */
@@ -52,15 +58,23 @@
 }
 /* То же самое для нативной обёртки (Capacitor): там `display-mode: standalone` не срабатывает,
    класс html.app-mode ставит app-mode.js. Без этого полосы снизу оставались бы именно в app. */
-html.app-mode, html.app-mode body{height:100vh;height:100dvh;}
-html.app-mode #app{top:0;bottom:auto;height:100vh;height:100dvh;}
-html.app-mode body::before{top:0;bottom:auto;height:100vh;height:100dvh;}
+/* Именно 100vh, НЕ 100dvh: в приложении визуальный вьюпорт (dvh) короче физического экрана,
+   и всё привязанное к нему не достаёт до низа — снизу остаётся чёрная полоса. 100vh = полный
+   экран. Та же логика, что в standalone-блоке выше (проверено на EXPERT 2026-07-28). */
+html.app-mode, html.app-mode body,
+html.app-shell, html.app-shell body{height:100vh;}
+html.app-mode #app, html.app-shell #app{top:0;bottom:auto;height:100vh;}
+html.app-mode body::before, html.app-shell body::before{top:0;bottom:auto;height:100vh;}
 /* Нижняя навигация в нативной обёртке — те же значения, что в PWA-режиме: подписи в одну строку,
    бар низкий. Без этого в app он выше и съедает первый экран (расхождение с EXPERT на скринах). */
 html.app-mode #bottombar .bottom-nav{padding:9px 10px calc(7px + env(safe-area-inset-bottom,0px)/3);}
+html.app-shell #bottombar .bottom-nav{padding:9px 10px calc(7px + env(safe-area-inset-bottom,0px)/3);}
 html.app-mode #bottombar .bottom-nav-item{font-size:8.5px;letter-spacing:.5px;gap:4px;padding:2px 6px;white-space:nowrap;}
+html.app-shell #bottombar .bottom-nav-item{font-size:8.5px;letter-spacing:.5px;gap:4px;padding:2px 6px;white-space:nowrap;}
 html.app-mode #bottombar i.bottom-nav-icon{font-size:23px;}
+html.app-shell #bottombar i.bottom-nav-icon{font-size:23px;}
 html.app-mode #bottombar img.bottom-nav-icon{width:24px;height:24px;}
+html.app-shell #bottombar img.bottom-nav-icon{width:24px;height:24px;}
 @media (min-width:600px){
   html.app-mode #bottombar .bottom-nav{padding:16px 16px calc(12px + env(safe-area-inset-bottom,0px)/3);}
   html.app-mode #bottombar .bottom-nav-item{font-size:10px;letter-spacing:1.5px;gap:6px;padding:4px 12px;}
@@ -77,9 +91,13 @@ html.app-mode #bottombar img.bottom-nav-icon{width:24px;height:24px;}
    а VIA-L в приложении Capacitor под `display-mode: standalone` не подпадает — оттого лого
    оставалось крупным, отступы большими, и футер с ссылками уезжал под нижнюю навигацию. */
 html.app-mode body:not(.flow-mode):not(.view-result) #scroll-area{overflow-y:hidden;padding-top:calc(20px + env(safe-area-inset-top,0px));}
+html.app-shell body:not(.flow-mode):not(.view-result) #scroll-area{overflow-y:hidden;padding-top:calc(20px + env(safe-area-inset-top,0px));}
 html.app-mode body:not(.flow-mode):not(.view-result) .hero-monogram{width:108px;height:108px;}
+html.app-shell body:not(.flow-mode):not(.view-result) .hero-monogram{width:108px;height:108px;}
 html.app-mode body:not(.flow-mode):not(.view-result) .imp-btn{margin-top:5px;padding-top:10px;padding-bottom:10px;}
+html.app-shell body:not(.flow-mode):not(.view-result) .imp-btn{margin-top:5px;padding-top:10px;padding-bottom:10px;}
 html.app-mode body:not(.flow-mode):not(.view-result) footer{padding:4px 20px 3px;}
+html.app-shell body:not(.flow-mode):not(.view-result) footer{padding:4px 20px 3px;}
 
 /* нав-паритет VIO: пружинка нажатия, phosphor-иконки, уезжающий футер, шторка глав памятки */
 .bottom-nav{transition:transform .3s ease,opacity .3s ease;}
