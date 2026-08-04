@@ -2119,7 +2119,10 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
   </div>
 
   <!-- FITBIT AIR / GOOGLE HEALTH -->
-  <!-- Fitbit скрыт из вендор-панели EXPERT: идёт через Google Health → CASA (лимит 100 + unverified). См. docs/HEALTH-DATA-SOURCING-PLAN.md -->
+  <!-- Fitbit скрыт из ПУБЛИЧНОЙ вендор-панели: идёт через Google Health → CASA (лимит 100 + unverified),
+       а сам Fitbit Web API закрывается в сентябре 2026 — показывать клиентам кнопку, которая умрёт,
+       нельзя. Код рабочий (`/fitbit/start` в воркере), поэтому карточка включается по `?vendors=1`
+       для личного подключения владельца. См. docs/HEALTH-DATA-SOURCING-PLAN.md -->
   <div class="source-card" id="card-fitbit">
     <div class="source-header" onclick="toggleCard('fitbit')">
       <div class="source-icon fitbit"><img src="images-in/Fitbit%20Charge%206%20gold.PNG" alt="Fitbit" loading="lazy"></div>
@@ -10181,6 +10184,9 @@ document.addEventListener('visibilitychange',function(){
   }catch(e){}
 })();
 </script>
+
+<script>/* Fitbit в вендор-панели только по ?vendors=1 — публично кнопки нет (API закрывается 09.2026). */
+try{ if(new URLSearchParams(location.search).get('vendors')==='1'){ var _fc=document.getElementById('card-fitbit'); if(_fc)_fc.classList.add('m-full'); } }catch(e){}</script>
 
 <!-- ════ ИИ-СОВЕТНИК VIA·L (PRO, tier=pro, 12 языков) — спека docs/ADVISOR-MODEL.md ════ -->
 <style>
