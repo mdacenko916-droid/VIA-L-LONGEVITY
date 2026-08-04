@@ -1245,6 +1245,7 @@ export default {
       if (path === '/offer/accept')            return handleOfferAccept(request, env, corsHeaders);               // акцепт оферты до оплаты (A2)
       if (path === '/expert/confirm-email') return handleExpertConfirmEmail(request, env, corsHeaders);   // подтверждение почты при первом входе (POST)
       if (path === '/cabinet/my-password')     return handleCabinetMyPassword(request, env, corsHeaders);           // специалист меняет свой пароль (D2)
+      if (path === '/client/erase')            return handleClientErase(request, env, corsHeaders);                 // удаление данных о здоровье
       if (path === '/service-act')             return handleServiceAct(request, env, corsHeaders);                 // акт по клиенту (D3)
       if (path === '/cabinet/reassign')        return handleCabinetReassign(request, env, corsHeaders);             // передать клиента другому специалисту (B3)
       if (path === '/cabinet/expert-users')    return handleCabinetExpertUsers(request, env, corsHeaders);        // счётчик и сверка пользователей EXPERT
@@ -7595,6 +7596,40 @@ async function handleExpertConfirmEmail(request, env, corsHeaders){
 // сколько этим пользовались. Данные и так логируются (grants, expert_access, разборы,
 // переписка), не хватало только собрать их в одну выгрузку.
 // Клиент видит СВОЙ акт по коду; специалист — по своим клиентам; владелец — по любым.
+// POST /client/erase {code} — удаление данных о здоровье по требованию клиента.
+// Требуется GDPR ст. 17, CCPA/CPRA и MHMDA (штат Вашингтон требует именно удаления данных о
+// здоровье, а не «удаления аккаунта»). Ключевое решение: удаляем СЫРЫЕ данные о здоровье, но
+// сохраняем ФАКТ оказания услуги (даты доступа, счётчики) — иначе специалист остаётся без
+// доказательств в споре, а храним мы при этом не данные о здоровье, а строку акта.
+// Хранение «пяти лет на всякий случай» прямо противоречит этому праву — так не делаем.
+async function handleClientErase(request, env, corsHeaders){
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  let b={}; try{ b = await request.json(); }catch(_){}
+  const code = String(b.code||'').trim().toUpperCase();
+  if(!code) return jsonResponse({ok:false,error:'bad_input'}, corsHeaders, 400);
+  const row = await env.DB.prepare('SELECT code,data FROM clients WHERE upper(code)=?').bind(code).first();
+  if(!row) return jsonResponse({ok:false,error:'not_found'}, corsHeaders, 404);
+
+  let d={}; try{ d = JSON.parse(row.data||'{}'); }catch(_){}
+  const msgs = Array.isArray(d.messages) ? d.messages : [];
+  // Снимок для акта: сколько чего было. Цифры — не данные о здоровье.
+  const kept = {
+    at: new Date().toISOString().slice(0,19).replace('T',' '),
+    breakdowns: Array.isArray(d.breakdowns) ? d.breakdowns.length : 0,
+    biometrics: Array.isArray(d.biometrics) ? d.biometrics.length : 0,
+    messages: msgs.length,
+    messages_from_specialist: msgs.filter(m=>m && (m.dir==='out'||m.from==='specialist')).length,
+    last_message_at: msgs.length ? (msgs[msgs.length-1].at || msgs[msgs.length-1].date || '') : ''
+  };
+  delete d.breakdowns; delete d.biometrics; delete d.messages; delete d.anketa;
+  delete d.profile;    delete d.labs;       delete d.notes;    delete d.imported;
+  d.erased = kept;
+
+  await env.DB.prepare('UPDATE clients SET data=?, updated_at=datetime(\'now\') WHERE upper(code)=?')
+    .bind(JSON.stringify(d), code).run();
+  return jsonResponse({ok:true, erased:kept}, corsHeaders);
+}
+
 async function handleServiceAct(request, env, corsHeaders){
   if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
   let b={}; try{ b = await request.json(); }catch(_){}
@@ -7632,12 +7667,19 @@ async function handleServiceAct(request, env, corsHeaders){
     specialist: { name: row.spec_name||'', legal_name: row.legal_name||'', reg_number: row.reg_number||'',
                   city: row.city||'', country: row.country||'', legal_form: row.legal_form||'' },
     access:  grants.map(g=>({ issued:g.issued, expiry:g.expiry, days:g.days, revoked:!!g.revoked })),
+    // Если клиент удалил данные о здоровье, счётчики берём из снимка: акт обязан остаться
+    // достоверным, иначе удаление данных стирало бы и доказательство оказанной услуги.
     usage:   { analyses_used: used, analyses_quota: quota,
-               breakdowns_saved: bds.length, biometrics_records: bios.length,
-               messages_total: msgs.length,
-               messages_from_specialist: msgs.filter(m=>m && (m.dir==='out'||m.from==='specialist')).length,
-               last_message_at: msgs.length ? (msgs[msgs.length-1].at || msgs[msgs.length-1].date || '') : '' },
+               breakdowns_saved: bds.length || (d.erased ? d.erased.breakdowns : 0),
+               biometrics_records: bios.length || (d.erased ? d.erased.biometrics : 0),
+               messages_total: msgs.length || (d.erased ? d.erased.messages : 0),
+               messages_from_specialist: msgs.length
+                 ? msgs.filter(m=>m && (m.dir==='out'||m.from==='specialist')).length
+                 : (d.erased ? d.erased.messages_from_specialist : 0),
+               last_message_at: msgs.length ? (msgs[msgs.length-1].at || msgs[msgs.length-1].date || '')
+                 : (d.erased ? d.erased.last_message_at : '') },
     transfers: Array.isArray(d.transfers) ? d.transfers : [],
+    erased: d.erased || null,
     note: 'Платформа предоставляет программу. Консультации оказывает специалист и несёт за них ответственность.'
   }}, corsHeaders);
 }
