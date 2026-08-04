@@ -237,8 +237,19 @@
 
 Каркас единый (Worker `/<vendor>/start|callback|metrics`, KV `WEARABLE_TOKENS`,
 фронт `connectWearable`/`fetchWearableLive`); детали — `interpreter/ARCHITECTURE.md` §15–16.
-В проде: Oura, Fitbit, Polar, Withings. Статус и заблокированные вендоры —
+**Фактический прод (проверено живыми запросами 2026-08-04):** ✅ Oura, ✅ Withings (починен в тот
+же день: секрет лежал со значением в ИМЕНИ, у ID был ведущий пробел), 🔴 **Polar — не работает**,
+Fitbit — только по `?vendors=1` (API закрывается 09.2026). Статус и заблокированные вендоры —
 [[project_wearable_integrations_status]], стратегия сбора — [[project_import_panel_modes]].
+
+- [ ] **🔴 Polar: завести секреты в воркере (действие владельца).** Известно с 2026-07-30, не сделано.
+      `/polar/start` отвечает `polar_secrets_missing`; в `wrangler secret list` нет ни `POLAR_CLIENT_ID`,
+      ни `POLAR_CLIENT_SECRET` — запись в `wearables/polar.md` «заведены 2026-06-04» была неверной.
+      Взять client_id/secret в admin.polaraccesslink.com, redirect URI там —
+      `https://interpreter.viaelcom.workers.dev/polar/callback`, затем `wrangler secret put POLAR_CLIENT_ID`
+      и `POLAR_CLIENT_SECRET`. Код менять не надо. Кнопка «Синхронизация устройства» уже обещает Polar.
+- [ ] **⚠️ Withings: перевыпустить client_secret.** Старое значение светилось в имени секрета
+      (видно всем с доступом к аккаунту Cloudflare и в логах). Новый — `wrangler secret put WITHINGS_CLIENT_SECRET`.
 
 - [ ] **📨 Запросы на affiliate-скидку для клиентов — Oura + Ultrahuman (✅ ОТПРАВЛЕНЫ 2026-07-29, ждём ответа).**
       Слал с `integration@via-l.com`. **Oura** → форма «Oura for Organizations» (объём «5-19», Health & Wellness,
