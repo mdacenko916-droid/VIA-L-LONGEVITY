@@ -9520,6 +9520,29 @@ document.addEventListener('visibilitychange',function(){
 });
 try{ ouraSyncLang(); }catch(e){}
 
+
+// ── «Обсудить с человеком» под дневным результатом ─────────────────────────────
+// Один сдержанный блок ВНИЗУ результата, а не кнопка в каждой шторке: показатели не должны
+// превращаться в витрину, иначе медицински выглядящий вывод заканчивается продажей услуги —
+// первое, к чему цепляется ревью. Появляется только когда набрана личная база (14 дней):
+// раньше обсуждать нечего, приложение ещё калибруется.
+function _humanCtaDays(){
+  try{ var a=JSON.parse(localStorage.getItem('viae_daily')||'[]')||[]; return a.length; }catch(e){ return 0; }
+}
+function _renderHumanCta(){
+  var host=document.getElementById('aiDisc'); if(!host) return;
+  var old=document.getElementById('humanCta'); if(old) old.remove();
+  if(_humanCtaDays() < 14) return;
+  var T1={ru:'Хотите обсудить это со своим специалистом?',uk:'Хочете обговорити це зі своїм спеціалістом?',en:'Want to discuss this with your specialist?',es:'¿Quiere comentarlo con su especialista?',de:'Möchten Sie das mit Ihrem Spezialisten besprechen?',pt:'Quer conversar sobre isso com seu especialista?',fr:'Envie d’en parler avec votre spécialiste ?',pl:'Chcesz omówić to ze swoim specjalistą?',it:'Vuoi parlarne con il tuo specialista?',he:'רוצים לדבר על זה עם המומחה שלכם?',ja:'担当の専門家と相談しますか？',ko:'담당 전문가와 상의할까요?'}, T2={ru:'Напишите — он видит эти же данные',uk:'Напишіть — він бачить ті самі дані',en:'Write to them — they see the same data',es:'Escríbale — ve los mismos datos',de:'Schreiben Sie ihm — er sieht dieselben Daten',pt:'Escreva — ele vê os mesmos dados',fr:'Écrivez-lui — il voit les mêmes données',pl:'Napisz — widzi te same dane',it:'Scrivigli — vede gli stessi dati',he:'כתבו לו — הוא רואה את אותם נתונים',ja:'メッセージを送る — 同じデータを見ています',ko:'메시지를 보내세요 — 같은 데이터를 보고 있습니다'};
+  var d=document.createElement('div');
+  d.id='humanCta';
+  d.style.cssText='margin-top:14px;padding:12px 14px;border:1px solid rgba(226,185,90,.28);border-radius:14px;background:rgba(226,185,90,.06);cursor:pointer;';
+  d.onclick=function(){ try{ openExpertChat(); }catch(e){} };
+  d.innerHTML='<div style="font-size:13px;color:#fff;font-weight:500;">'+(T1[lang]||T1.en)+'</div>'
+            + '<div style="font-size:11.5px;color:var(--t2);margin-top:3px;">'+(T2[lang]||T2.en)+' →</div>';
+  host.parentNode.insertBefore(d, host.nextSibling);
+}
+
 async function fetchAIAnalysis(data, lang) {
   const card = document.getElementById('aiCard');
   const loading = document.getElementById('aiLoading');
@@ -9551,6 +9574,7 @@ async function fetchAIAnalysis(data, lang) {
       loading.style.display = 'none';
       result.style.display = 'block';
       if (disc) disc.style.display = 'block';
+      try{ _renderHumanCta(); }catch(e){}
       // Глава «✦ Разбор дня» строится из кэша дня: памятка отрисовалась ДО прихода разбора —
       // без перерисовки глава появлялась только со второго захода. Перерисовываем список глав сейчас.
       try{ if(window._bpData && typeof renderDayBlueprint==='function') renderDayBlueprint(window._bpData); }catch(e){}
