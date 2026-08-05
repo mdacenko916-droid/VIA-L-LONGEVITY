@@ -3377,15 +3377,11 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
     <!-- LAB TESTS CARD -->
 
 
-    <!-- MAX EXCLUSIVE: Expert-розбір -->
-    <div id="maxBlock" style="display:none;" class="max-card">
-      <div class="max-badge">★ <span data-t="max_plan">VIA-L EXPERT</span></div>
-      <div class="max-title" data-t="max_title">Ваш Expert-разбор</div>
-      <div class="max-desc" data-t="max_desc">Отправьте запрос — нутрициолог подготовит персональный письменный разбор вашего профиля в течение 48 часов.</div>
-      <textarea id="maxQuestion" class="max-textarea" rows="3" data-t-placeholder="max_placeholder" placeholder="Ваше запитання або що хочете уточнити..."></textarea>
-      <button type="button" class="max-btn" id="maxSendBtn" onclick="sendMaxRequest()" data-t="max_btn">Отправить запрос нутрициологу →</button>
-      <div class="max-sent" id="maxSent" data-t="max_sent">✓ Запрос отправлен! Ответ в течение 48 часов.</div>
-    </div>
+    <!-- Блок «Ваш Expert-разбор» (mailto на общий ящик) УБРАН 2026-08-05: он появился до
+         внутреннего чата и теперь дублировал его хуже — письмо уходило мимо карточки клиента
+         и мимо переписки в кабинете. Связь со специалистом = свой чат: CTA в конце разбора
+         (_humanCtaGo → openExpertChat) и вкладка «Специалист» в нижней навигации.
+         Ключи max_* остались в T (не используются) — вернуть блок можно из git. -->
 
     <!-- VIA-L EXPERT: Zoom-консультация (только ru/uk; видимость — в setLang + MAX-гейте) -->
     <div id="zoomBlock" style="display:none;" class="max-card">
@@ -4649,25 +4645,12 @@ document.querySelectorAll('input[name=gender]').forEach(el=>{
 function _renderMaxBlocks(){
   var isMax = sessionStorage.getItem('viae_access')==='MAX';
   var lg = (typeof lang!=='undefined'?lang:'');
-  var b=document.getElementById('maxBlock'); if(b) b.style.display = isMax ? 'block' : 'none';
   // Zoom-консультация — только ru/uk (нутрициолог ведёт видео на этих языках).
   var z=document.getElementById('zoomBlock'); if(z) z.style.display = (isMax && (lg==='ru'||lg==='uk')) ? 'block' : 'none';
 }
 _renderMaxBlocks();
 
-function sendMaxRequest(){
-  const q=(document.getElementById('maxQuestion').value||'').trim();
-  const email='viaelcom@gmail.com';
-  const subject=encodeURIComponent('Expert-розбір VIA-L MAX');
-  const body=encodeURIComponent(
-    'Запит на Expert-розбір від клієнта тарифу Максимум.\n\n'+
-    (q?'Запитання / уточнення:\n'+q+'\n\n':'')+
-    'Дата: '+new Date().toLocaleString()
-  );
-  document.getElementById('maxSendBtn').style.display='none';
-  document.getElementById('maxSent').style.display='block';
-  setTimeout(()=>{ window.location.href='mailto:'+email+'?subject='+subject+'&body='+body; },300);
-}
+// sendMaxRequest() удалена вместе с блоком mailto-запроса (2026-08-05) — см. комментарий в разметке.
 
 // ══ BOTTOM NAV ════════════════════════════════════════════
 // Поверхности ленты-анкеты, которые живут ВНЕ <main> и потому не исчезают сами при
