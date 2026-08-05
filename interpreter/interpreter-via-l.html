@@ -5107,8 +5107,10 @@ function renderMonthlyReportUI(){
   // миграция: «месячный из 2 дней» снять и вернуть таймер (см. недельный)
   if(g.cached && have<_MR_MIN_DAYS){ try{ localStorage.removeItem('vialp_monthly_text'); localStorage.removeItem('vialp_monthly_last'); localStorage.removeItem('vialp_monthly_date'); }catch(e){} g=_mrGate(); }
   if(g.cached){
-    inner += '<div style="font-size:13px;line-height:1.7;color:var(--t2);">'+_wrMd(g.cached)+'</div>';
-    inner += '<div style="margin-top:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;"><button onclick="dlMonthlyReport()" style="background:transparent;color:var(--gold);border:1px solid var(--gold-dim);border-radius:9px;padding:7px 13px;font-size:12px;cursor:pointer;">⬇ '+ui.dl+'</button>'+(g.cachedDate?'<span style="font-size:10px;color:var(--t3);">'+ui.from+' '+g.cachedDate+'</span>':'')+'</div>';
+    inner += _wrCollapsible('mr',g.cached,ui,g.cachedDate);
+    inner += '<div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
+      + '<button id="mrToggle" onclick="toggleReportBody(\'mr\')" style="background:var(--gold);color:#10141C;border:none;border-radius:9px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;">▾ '+ui.open+'</button>'
+      + '<button onclick="dlMonthlyReport()" style="background:transparent;color:var(--gold);border:1px solid var(--gold-dim);border-radius:9px;padding:7px 13px;font-size:12px;cursor:pointer;">⬇ '+ui.dl+'</button></div>';
   }
   if(g.canGen && have<_MR_MIN_DAYS){
     inner += '<div style="margin-top:'+(g.cached?'12px':'0')+';">'+_wrWaitNote(ui,_MR_MIN_DAYS,have)+'</div>';
@@ -5508,18 +5510,18 @@ function renderExperimentUI(activeKey){
 // В EXPERT/ELITE тот же разбор уходит специалисту в кабинет (воркер, по коду доступа).
 function _wrUI(){
   const M={
-    ru:{title:'Недельный разбор VIA-L',sub:'связный разбор динамики · раз в неделю',get:'Получить разбор',load:'Готовлю разбор…',lock:'Следующий разбор — через',days:'дн.',err:'Не удалось получить разбор. Попробуйте позже.',from:'от',dl:'Скачать разбор',wait:"Откроется после {n} дней записей — уже {m}"},
-    uk:{title:'Тижневий розбір VIA-L',sub:'звʼязний розбір динаміки · раз на тиждень',get:'Отримати розбір',load:'Готую розбір…',lock:'Наступний розбір — через',days:'дн.',err:'Не вдалося отримати розбір. Спробуйте пізніше.',from:'від',dl:'Завантажити розбір',wait:"Відкриється після {n} днів записів — вже {m}"},
-    en:{title:'Weekly VIA-L review',sub:'coherent dynamics review · once a week',get:'Get review',load:'Preparing…',lock:'Next review in',days:'d',err:'Could not get the review. Try again later.',from:'from',dl:'Download review',wait:"Unlocks after {n} days of logs — {m} so far"},
-    es:{title:'Análisis semanal VIA-L',sub:'análisis coherente de la dinámica · una vez por semana',get:'Obtener análisis',load:'Preparando…',lock:'Próximo análisis en',days:'d',err:'No se pudo obtener el análisis. Inténtalo más tarde.',from:'del',dl:'Descargar análisis',wait:"Se desbloquea tras {n} días de registros — ya {m}"},
-    de:{title:'Wöchentliche VIA-L-Auswertung',sub:'zusammenhängende Dynamik-Auswertung · einmal pro Woche',get:'Auswertung abrufen',load:'Wird erstellt…',lock:'Nächste Auswertung in',days:'T',err:'Auswertung konnte nicht geladen werden. Später erneut versuchen.',from:'vom',dl:'Auswertung herunterladen',wait:"Öffnet nach {n} Tagen mit Einträgen — bisher {m}"},
-    pt:{title:'Análise semanal VIA-L',sub:'análise coerente da dinâmica · uma vez por semana',get:'Obter análise',load:'Preparando…',lock:'Próxima análise em',days:'d',err:'Não foi possível obter a análise. Tente mais tarde.',from:'de',dl:'Baixar análise',wait:"Abre após {n} dias de registros — já {m}"},
-    fr:{title:'Analyse hebdo VIA-L',sub:'analyse cohérente de la dynamique · une fois par semaine',get:'Obtenir l’analyse',load:'Préparation…',lock:'Prochaine analyse dans',days:'j',err:'Impossible d’obtenir l’analyse. Réessayez plus tard.',from:'du',dl:'Télécharger l’analyse',wait:"Se débloque après {n} jours de suivi — déjà {m}"},
-    pl:{title:'Tygodniowa analiza VIA-L',sub:'spójna analiza dynamiki · raz w tygodniu',get:'Pobierz analizę',load:'Przygotowuję…',lock:'Następna analiza za',days:'dn.',err:'Nie udało się pobrać analizy. Spróbuj później.',from:'z',dl:'Pobierz analizę',wait:"Odblokuje się po {n} dniach zapisów — już {m}"},
-    it:{title:'Analisi settimanale VIA-L',sub:'analisi coerente della dinamica · una volta a settimana',get:'Ottieni analisi',load:'Preparazione…',lock:'Prossima analisi tra',days:'g',err:'Impossibile ottenere l’analisi. Riprova più tardi.',from:'del',dl:'Scarica analisi',wait:"Si sblocca dopo {n} giorni di registrazioni — già {m}"},
-    he:{title:'סקירה שבועית VIA-L',sub:'סקירה רציפה של הדינמיקה · פעם בשבוע',get:'קבל סקירה',load:'מכין…',lock:'הסקירה הבאה בעוד',days:'ימ׳',err:'לא ניתן היה לקבל את הסקירה. נסה מאוחר יותר.',from:'מ־',dl:'הורד סקירה',wait:"ייפתח אחרי {n} ימי רישום — עד כה {m}"},
-    ja:{title:'週間VIA-Lレビュー',sub:'動向の総合レビュー · 週1回',get:'レビューを取得',load:'作成中…',lock:'次のレビューまで',days:'日',err:'レビューを取得できませんでした。後でお試しください。',from:'',dl:'レビューをダウンロード',wait:"記録{n}日で利用可能 — 現在{m}日"},
-    ko:{title:'주간 VIA-L 리뷰',sub:'변화 종합 리뷰 · 주 1회',get:'리뷰 받기',load:'준비 중…',lock:'다음 리뷰까지',days:'일',err:'리뷰를 가져오지 못했습니다. 나중에 다시 시도하세요.',from:'',dl:'리뷰 다운로드',wait:"기록 {n}일 후 열림 — 현재 {m}일"}
+    ru:{title:'Недельный разбор VIA-L',sub:'связный разбор динамики · раз в неделю',get:'Получить разбор',load:'Готовлю разбор…',lock:'Следующий разбор — через',days:'дн.',err:'Не удалось получить разбор. Попробуйте позже.',from:'от',dl:'Скачать разбор',wait:"Откроется после {n} дней записей — уже {m}",ready:'Разбор готов',open:'Читать разбор',close:'Свернуть'},
+    uk:{title:'Тижневий розбір VIA-L',sub:'звʼязний розбір динаміки · раз на тиждень',get:'Отримати розбір',load:'Готую розбір…',lock:'Наступний розбір — через',days:'дн.',err:'Не вдалося отримати розбір. Спробуйте пізніше.',from:'від',dl:'Завантажити розбір',wait:"Відкриється після {n} днів записів — вже {m}",ready:'Розбір готовий',open:'Читати розбір',close:'Згорнути'},
+    en:{title:'Weekly VIA-L review',sub:'coherent dynamics review · once a week',get:'Get review',load:'Preparing…',lock:'Next review in',days:'d',err:'Could not get the review. Try again later.',from:'from',dl:'Download review',wait:"Unlocks after {n} days of logs — {m} so far",ready:'Review is ready',open:'Read review',close:'Collapse'},
+    es:{title:'Análisis semanal VIA-L',sub:'análisis coherente de la dinámica · una vez por semana',get:'Obtener análisis',load:'Preparando…',lock:'Próximo análisis en',days:'d',err:'No se pudo obtener el análisis. Inténtalo más tarde.',from:'del',dl:'Descargar análisis',wait:"Se desbloquea tras {n} días de registros — ya {m}",ready:'El análisis está listo',open:'Leer análisis',close:'Contraer'},
+    de:{title:'Wöchentliche VIA-L-Auswertung',sub:'zusammenhängende Dynamik-Auswertung · einmal pro Woche',get:'Auswertung abrufen',load:'Wird erstellt…',lock:'Nächste Auswertung in',days:'T',err:'Auswertung konnte nicht geladen werden. Später erneut versuchen.',from:'vom',dl:'Auswertung herunterladen',wait:"Öffnet nach {n} Tagen mit Einträgen — bisher {m}",ready:'Auswertung ist fertig',open:'Auswertung lesen',close:'Einklappen'},
+    pt:{title:'Análise semanal VIA-L',sub:'análise coerente da dinâmica · uma vez por semana',get:'Obter análise',load:'Preparando…',lock:'Próxima análise em',days:'d',err:'Não foi possível obter a análise. Tente mais tarde.',from:'de',dl:'Baixar análise',wait:"Abre após {n} dias de registros — já {m}",ready:'Análise pronta',open:'Ler análise',close:'Recolher'},
+    fr:{title:'Analyse hebdo VIA-L',sub:'analyse cohérente de la dynamique · une fois par semaine',get:'Obtenir l’analyse',load:'Préparation…',lock:'Prochaine analyse dans',days:'j',err:'Impossible d’obtenir l’analyse. Réessayez plus tard.',from:'du',dl:'Télécharger l’analyse',wait:"Se débloque après {n} jours de suivi — déjà {m}",ready:'Analyse prête',open:'Lire l’analyse',close:'Réduire'},
+    pl:{title:'Tygodniowa analiza VIA-L',sub:'spójna analiza dynamiki · raz w tygodniu',get:'Pobierz analizę',load:'Przygotowuję…',lock:'Następna analiza za',days:'dn.',err:'Nie udało się pobrać analizy. Spróbuj później.',from:'z',dl:'Pobierz analizę',wait:"Odblokuje się po {n} dniach zapisów — już {m}",ready:'Analiza gotowa',open:'Czytaj analizę',close:'Zwiń'},
+    it:{title:'Analisi settimanale VIA-L',sub:'analisi coerente della dinamica · una volta a settimana',get:'Ottieni analisi',load:'Preparazione…',lock:'Prossima analisi tra',days:'g',err:'Impossibile ottenere l’analisi. Riprova più tardi.',from:'del',dl:'Scarica analisi',wait:"Si sblocca dopo {n} giorni di registrazioni — già {m}",ready:'Analisi pronta',open:'Leggi analisi',close:'Comprimi'},
+    he:{title:'סקירה שבועית VIA-L',sub:'סקירה רציפה של הדינמיקה · פעם בשבוע',get:'קבל סקירה',load:'מכין…',lock:'הסקירה הבאה בעוד',days:'ימ׳',err:'לא ניתן היה לקבל את הסקירה. נסה מאוחר יותר.',from:'מ־',dl:'הורד סקירה',wait:"ייפתח אחרי {n} ימי רישום — עד כה {m}",ready:'הסקירה מוכנה',open:'קרא את הסקירה',close:'כווץ'},
+    ja:{title:'週間VIA-Lレビュー',sub:'動向の総合レビュー · 週1回',get:'レビューを取得',load:'作成中…',lock:'次のレビューまで',days:'日',err:'レビューを取得できませんでした。後でお試しください。',from:'',dl:'レビューをダウンロード',wait:"記録{n}日で利用可能 — 現在{m}日",ready:'レビューの準備ができました',open:'レビューを読む',close:'折りたたむ'},
+    ko:{title:'주간 VIA-L 리뷰',sub:'변화 종합 리뷰 · 주 1회',get:'리뷰 받기',load:'준비 중…',lock:'다음 리뷰까지',days:'일',err:'리뷰를 가져오지 못했습니다. 나중에 다시 시도하세요.',from:'',dl:'리뷰 다운로드',wait:"기록 {n}일 후 열림 — 현재 {m}일",ready:'리뷰가 준비되었습니다',open:'리뷰 읽기',close:'접기'}
   };
   return M[lang]||M.en;
 }
@@ -5546,6 +5548,29 @@ function _wrMd(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').r
   .replace(/\*\*([^*]+?)\*\*/g,'<strong>$1</strong>')
   .replace(/(^|[\s(])\*([^*\n]{1,60}?)\*(?=[\s.,;:!?)]|$)/g,'$1<em>$2</em>')   // одиночные *HRV* модель ставит регулярно — иначе звёздочки видны как есть
   .replace(/\n{2,}/g,'<br><br>').replace(/\n/g,'<br>'); }   // абзацы: текст шёл одной простынёй
+// Готовый разбор — простыня на 2–3 экрана: показываем СТАТУС «готов», текст держим свёрнутым
+// (превью + затухание), раскрытие по кнопке. Механика общая для недельного и месячного.
+function _wrCollapsible(p,txt,ui,date){
+  return '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:10px;">'
+    + '<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(198,163,90,.13);border:1px solid var(--gold-dim);color:var(--gold);border-radius:999px;padding:5px 12px;font-size:11.5px;font-weight:600;">✓ '+ui.ready+'</span>'
+    + (date?'<span style="font-size:10px;color:var(--t3);">'+ui.from+' '+date+'</span>':'')
+    + '</div>'
+    + '<div id="'+p+'Body" style="position:relative;max-height:88px;overflow:hidden;font-size:13px;line-height:1.7;color:var(--t2);">'+_wrMd(txt)
+    + '<div id="'+p+'Fade" style="position:absolute;left:0;right:0;bottom:0;height:56px;background:linear-gradient(to top,#12161E 12%,rgba(18,22,30,0));pointer-events:none;"></div></div>';
+}
+function toggleReportBody(p){
+  var b=document.getElementById(p+'Body'), f=document.getElementById(p+'Fade'), t=document.getElementById(p+'Toggle');
+  if(!b||!t) return;
+  var ui=(p==='mr'&&typeof _mrLabels==='function')?_mrLabels():_wrUI();
+  if(b.style.maxHeight==='none'){                       // свернуть
+    b.style.maxHeight='88px'; if(f) f.style.display='';
+    t.textContent='▾ '+ui.open;
+    try{ b.scrollIntoView({block:'nearest'}); }catch(e){}
+  }else{                                                // раскрыть
+    b.style.maxHeight='none'; if(f) f.style.display='none';
+    t.textContent='▴ '+ui.close;
+  }
+}
 function renderWeeklyReportUI(){
   const box=document.getElementById('weeklyReport'); if(!box) return;
   const w=weeklyTrend(); if(!w){ box.innerHTML=''; return; } // <2 анализов — динамика уже показала подсказку
@@ -5555,10 +5580,10 @@ function renderWeeklyReportUI(){
   if(g.cached && have<_WR_MIN_DAYS){ try{ localStorage.removeItem('vialp_weekly_text'); localStorage.removeItem('vialp_weekly_last'); localStorage.removeItem('vialp_weekly_date'); }catch(e){} g=_wrGate(); }
   let inner='';
   if(g.cached){
-    inner += `<div style="font-size:13px;line-height:1.7;color:var(--t2);">${_wrMd(g.cached)}</div>`;
-    inner += `<div style="margin-top:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    inner += _wrCollapsible('wr',g.cached,ui,g.cachedDate);
+    inner += `<div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <button id="wrToggle" onclick="toggleReportBody('wr')" style="background:var(--gold);color:#10141C;border:none;border-radius:9px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;">▾ ${ui.open}</button>
       <button onclick="dlWeeklyReport()" style="background:transparent;color:var(--gold);border:1px solid var(--gold-dim);border-radius:9px;padding:7px 13px;font-size:12px;cursor:pointer;">⬇ ${ui.dl}</button>
-      ${g.cachedDate?`<span style="font-size:10px;color:var(--t3);">${ui.from} ${g.cachedDate}</span>`:''}
     </div>`;
   }
   if(g.canGen && have<_WR_MIN_DAYS){

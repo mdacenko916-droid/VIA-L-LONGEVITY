@@ -2247,6 +2247,7 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
   // VIA-L/анонимные прогоны без карточки игнорируются. В фоне — не задерживает ответ клиенту.
   if (code && env.DB && text && ctx) {
     ctx.waitUntil(cabinetIngestIpAnalysis(env, code, data, text, lang).catch(() => {}));
+    ctx.waitUntil(_bumpGrantUsed(env, code).catch(() => {}));   // день доступа израсходован
   }
 
   return new Response(JSON.stringify({ analysis: text }), {
@@ -2687,6 +2688,7 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
       }
     } catch (_) {}
     ctx.waitUntil(cabinetIngestWeekly(env, code, clean + expLine, lang).catch(() => {}));
+    ctx.waitUntil(_bumpGrantUsed(env, code).catch(() => {}));   // день доступа израсходован
   }
 
   return new Response(JSON.stringify({ report: text }), {
@@ -7086,6 +7088,35 @@ async function _setCardExpertGrant(env, cardCode, patch){
     d.expert_grant = Object.assign({}, d.expert_grant || {}, patch);
     await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?')
       .bind(JSON.stringify(d), Date.now(), cardCode).run();
+  }catch(_){}
+}
+
+// Счётчик израсходованного доступа. quota выдаётся В ДНЯХ по модели «1 разбор в день»,
+// поэтому считаем УНИКАЛЬНЫЕ ДНИ с разбором, а не вызовы: три прогона за сутки — это один день.
+// Инкремента не было нигде: used заводился нулём и только читался, счётчик стоял на «0 из N»
+// при любом числе разборов. Вход — код КАРТОЧКИ (его шлют /analyze и /weekly-report);
+// код гранта достаём из карточки (data.expert_grant.code), запись живёт в KV.
+async function _bumpGrantUsed(env, cardCode){
+  if(!env.DB || !env.EXPERT_DRAFTS || !cardCode) return;
+  try{
+    const row = await env.DB.prepare('SELECT data FROM clients WHERE upper(code)=?')
+      .bind(String(cardCode).toUpperCase()).first();
+    if(!row) return;
+    let d={}; try{ d = JSON.parse(row.data || '{}'); }catch(_){ return; }
+    const gc = d.expert_grant && d.expert_grant.code;
+    if(!gc) return;                                   // доступ не из кабинета (Hotmart) — квоты нет
+    const key = 'expert_access:'+String(gc).toUpperCase();
+    const raw = await env.EXPERT_DRAFTS.get(key); if(!raw) return;
+    let rec=null; try{ rec = JSON.parse(raw); }catch(_){ return; }
+    if(!rec || rec.revoked) return;
+    const today = new Date().toISOString().slice(0,10);
+    if(rec.last_day === today) return;                // день уже засчитан
+    rec.last_day = today;
+    rec.used = (rec.used||0) + 1;
+    // TTL пересчитываем от срока доступа (+60 дней), чтобы запись не «омолаживалась» бесконечно
+    const leftDays = rec.expiry ? Math.ceil((new Date(rec.expiry+'T00:00:00Z') - Date.now())/86400000) : (rec.days||30);
+    await env.EXPERT_DRAFTS.put(key, JSON.stringify(rec),
+      { expirationTtl: Math.max(1, leftDays + 60) * 24 * 60 * 60 });
   }catch(_){}
 }
 
