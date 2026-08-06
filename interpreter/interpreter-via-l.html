@@ -7497,6 +7497,15 @@ function renderBioLoad(data, score, type){
     {label: L({ru:'Стресс-баланс',uk:'Стрес-баланс',en:'Stress Balance',es:'Balance estrés',de:'Stressbalance',pt:'Balanço de estresse',fr:'Équilibre stress',pl:'Balans stresu',it:'Bilancio stress',he:'איזון לחץ',ja:'ストレスバランス',ko:'스트레스 균형'}),
      val: _seen('stress')?(data.stress==='high'?30:data.stress==='mild'?55:75):null,
      word:true, note:'self',   // это выбранная категория, а не замер → показываем словом, без процента
+     // ⚠️ СВОИ слова, а не общая шкала: балл здесь — уровень БАЛАНСА, и общее «Низкое» при высоком
+     // стрессе читалось ровно наоборот — «стресс низкий» (живой экран 2026-08-06). Инверсия смысла
+     // на самом видном месте: называем сам стресс, а не оценку баланса.
+     band:function(v){
+       if(v==null) return null;
+       if(v<=40) return {w:L({ru:'Высокий стресс',uk:'Високий стрес',en:'High stress',es:'Estrés alto',de:'Hoher Stress',pt:'Estresse alto',fr:'Stress élevé',pl:'Wysoki stres',it:'Stress alto',he:'לחץ גבוה',ja:'ストレス高め',ko:'스트레스 높음'}),c:'#FF6B8A'};
+       if(v<=60) return {w:L({ru:'Умеренный стресс',uk:'Помірний стрес',en:'Moderate stress',es:'Estrés moderado',de:'Mäßiger Stress',pt:'Estresse moderado',fr:'Stress modéré',pl:'Umiarkowany stres',it:'Stress moderato',he:'לחץ בינוני',ja:'ストレス中程度',ko:'스트레스 보통'}),c:'#E2B95A'};
+       return {w:L({ru:'Спокойно',uk:'Спокійно',en:'Calm',es:'Tranquilo',de:'Ruhig',pt:'Tranquilo',fr:'Calme',pl:'Spokojnie',it:'Tranquillo',he:'רגוע',ja:'落ち着いている',ko:'안정적'}),c:'#4ECCA3'};
+     },
      color:'#C49A3C'},
     {label: L({ru:'Ночная температура',uk:'Нічна температура',en:'Overnight temperature',es:'Temperatura nocturna',de:'Nachttemperatur',pt:'Temperatura noturna',fr:'Température nocturne',pl:'Temperatura nocna',it:'Temperatura notturna',he:'טמפרטורה לילית',ja:'夜間の体温',ko:'야간 체온'}),
      // Честно: есть реальное отклонение температуры с трекера — считаем от него (это замер, можно в %).
@@ -7505,6 +7514,12 @@ function renderBioLoad(data, score, type){
        if(_d!=null&&!isNaN(_d)) return _d<=0.3?90:_d<=0.6?65:_d<=1.0?45:30;
        return _seen('temp')?(data.temp==='normal'?85:data.temp==='spike'?35:55):null; })(),
      word:!(data.device&&data.device.tempDev!=null&&!isNaN(parseFloat(data.device.tempDev))),
+     // Показываем САМО отклонение в градусах. Раньше в плитке «Ночная температура» стояло «90 %» —
+     // это балл близости к базовой линии, а не температура; в процентах она не измеряется вовсе.
+     // Балл остался полоской и статусом, число — градусы (живой экран 2026-08-06).
+     rawVal:(function(){ var d=(data.device&&data.device.tempDev!=null)?parseFloat(data.device.tempDev):null;
+       return (d!=null&&!isNaN(d))?((d>0?'+':'')+d.toFixed(2)):null; })(),
+     rawUnit:'°C',
      note:(data.device&&data.device.tempDev!=null&&!isNaN(parseFloat(data.device.tempDev)))?'device':'self',
      color:'#F5A623'},
     {label: L({ru:'Пульс покоя',uk:'Пульс спокою',en:'Resting pulse',es:'Pulso en reposo',de:'Ruhepuls',pt:'Pulso em repouso',fr:'Pouls au repos',pl:'Tętno spoczynkowe',it:'Polso a riposo',he:'דופק מנוחה',ja:'安静時脈拍',ko:'안정 시 맥박'}),
@@ -7544,7 +7559,7 @@ function renderBioLoad(data, score, type){
     return {w:L({ru:'Низкое',uk:'Низько',en:'Low',es:'Bajo',de:'Niedrig',pt:'Baixo',fr:'Faible',pl:'Niski',it:'Basso',he:'נמוך',ja:'低い',ko:'낮음'}),c:'#FF6B8A'};
   }
   document.getElementById('bioBars').innerHTML = components.map(function(c,i){
-    var isPulse=(i===4), st=_band(c.val), barW=(c.val==null?0:c.val), valHtml;
+    var isPulse=(i===4), st=(c.band&&c.band(c.val))||_band(c.val), barW=(c.val==null?0:c.val), valHtml;
     if(c.isBp){
       var bt=_bpTier(c.bpSys,c.bpDia);
       return '<div class="rd-tile"><button type="button" class="rd-tile-i" aria-label="?" onclick="openMetricHelp(5)">i</button><div class="rd-tile-h"><i class="ph ph-heartbeat"></i>'+c.label+'</div>'
@@ -7588,7 +7603,9 @@ function renderBioLoad(data, score, type){
       // не замер, а выбранная категория → слово вместо процента (процент врал бы точностью)
       valHtml=(c.val==null)?'<span class="rd-tile-val">—</span>':'<span class="rd-tile-val" style="font-size:18px;line-height:1.25;color:'+st.c+'">'+st.w+'</span>';
     } else {
-      valHtml=(c.val==null)?'<span class="rd-tile-val">—</span>':'<span class="rd-tile-val">'+c.val+'<span class="rd-tile-unit">%</span></span>';
+      valHtml=(c.val==null)?'<span class="rd-tile-val">—</span>'
+        :(c.rawVal!=null?'<span class="rd-tile-val">'+c.rawVal+'<span class="rd-tile-unit"> '+(c.rawUnit||'')+'</span></span>'
+                        :'<span class="rd-tile-val">'+c.val+'<span class="rd-tile-unit">%</span></span>');
     }
     var _note=(c.val==null)?'':_srcNote(c.note);
     var _noteHtml=_note?'<div style="font-size:10px;color:var(--t3);line-height:1.35;margin-bottom:6px;">'+_note+'</div>':'';
