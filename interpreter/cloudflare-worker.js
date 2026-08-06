@@ -2693,6 +2693,29 @@ function buildWeeklyUserMessage(summary, daily, lang, period, exp) {
     }
     if (d.length) out += '\n\nDaily detail logged ' + thisP + ':\n' + d.join('\n');
 
+    // Жалоба, с которой человек пришёл: недельный разбор обязан начать с неё — это его вопрос,
+    // а не наш. Дневные «лучше/так же/хуже» дают траекторию, недельная цифра — движение.
+    const cmp = daily.complaint;
+    if (cmp && ((cmp.items && cmp.items.length) || cmp.text)) {
+      const LB = { energy:'энергия и силы', sleep:'сон и пробуждения', mood:'настроение и тревожность',
+                   fog:'туман в голове, память', weight:'вес и живот', libido:'либидо и близость',
+                   pain:'боли и скованность', hf:'приливы и ночная потливость', cycle:'цикл и его изменения',
+                   drive:'мотивация и драйв', muscle:'сила и мышцы' };
+      let c = '\n\nЖАЛОБА, С КОТОРОЙ КЛИЕНТ ПРИШЁЛ' + (cmp.since ? ' (с ' + cmp.since + ')' : '') + ': '
+            + (cmp.items || []).map(k => LB[k] || k).join('; ')
+            + (cmp.text ? ' — своими словами: «' + String(cmp.text).slice(0,300) + '»' : '') + '.';
+      const d = cmp.deltas || {};
+      if ((d.better || d.same || d.worse))
+        c += '\nЕго отметки по дням: лучше — ' + (d.better||0) + ', так же — ' + (d.same||0) + ', хуже — ' + (d.worse||0) + '.';
+      if (cmp.score != null)
+        c += '\nЕго оценка «насколько беспокоит сейчас» (0 — не беспокоит, 10 — сильно): ' + cmp.score
+           + (cmp.scorePrev != null ? ' против ' + cmp.scorePrev + ' в прошлый раз' : ' (первая оценка, сравнивать пока не с чем)') + '.';
+      c += '\nОТКРОЙ РАЗБОР ИМЕННО ЭТИМ: что стало с тем, с чем человек пришёл — его словами и его же числами '
+         + '(не пересчитывай их). Стало легче — скажи, ЧТО ИМЕННО этому предшествовало в его данных, и закрепи. '
+         + 'Не сдвинулось — так и скажи, без вины, и поменяй рычаг. Одной оценки мало для вывода о тренде — скажи это прямо.';
+      out += c;
+    }
+
     const p = daily.profile || {};
     const ctx = [];
     if (p.sex)                   ctx.push('sex: ' + p.sex);
@@ -6570,6 +6593,19 @@ async function cabinetIngestIpAnalysis(env, code, data, analysisText, lang){
   // У платных VIA-L EXPERT поля sharing нет (undefined) → ингест работает как прежде.
   if(d.sharing === false) return;
   const today = new Date().toISOString().slice(0,10);
+
+  // (0) ЖАЛОБА, С КОТОРОЙ КЛИЕНТ ПРИШЁЛ — первое, что специалист должен увидеть, открыв карточку.
+  // Раньше он видел цифры и разборы, но не то, ради чего человек вообще пришёл. Храним последнюю
+  // версию (жалоба может смениться) + дату — так видно, с чем начинал и с чем живёт сейчас.
+  if (data.complaint && typeof data.complaint === 'object' &&
+      ((Array.isArray(data.complaint.items) && data.complaint.items.length) || data.complaint.text)) {
+    d.complaint = {
+      items: (data.complaint.items || []).slice(0, 2),
+      text: String(data.complaint.text || '').slice(0, 300),
+      since: data.complaint.since || '',
+      updated_at: today,
+    };
+  }
 
   // (1) Недельный срез биометрики — только чистый маппинг (hrv/rhr/weight). Один срез в день.
   if(!Array.isArray(d.biometrics)) d.biometrics = [];
