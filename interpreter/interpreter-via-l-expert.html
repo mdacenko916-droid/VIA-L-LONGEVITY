@@ -1796,8 +1796,11 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
 .ai-coll-all .ph{font-size:14px;}
 .ai-themes-box{scroll-margin-top:80px;}
 .ai-sec-coll .ph{font-size:13px;}
-/* «Что сделать» — всегда на виду под краткой мыслью: это то, ради чего открывают разбор.
-   Под стрелкой остаётся «почему» и разбор данных. 2026-08-04. */
+/* 2026-08-06: «Что сделать» уехало ПОД раскрытие вместе с «почему» — свёрнутая карточка это
+   заголовок + описание, чтобы при листании они были короткими. Строка-раскрытие называется
+   «Что сделать», внутри порядок: действия → почему так считает VIA·L. */
+.ai-sec-why-h{font-family:var(--font-ui);font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--gold-lt);margin:16px 0 6px;}
+.ai-sec-det>.ai-sec-act:first-child{margin-top:0;}
 .lab-grp{border-top:1px solid rgba(255,255,255,.07);margin-top:6px;}
 .lab-grp>summary{list-style:none;cursor:pointer;padding:9px 2px;font-size:12.5px;color:var(--gold-lt);font-weight:500;display:flex;align-items:center;gap:8px;}
 .lab-grp>summary::-webkit-details-marker{display:none;}
@@ -5857,13 +5860,17 @@ function _weeklyDaily(win){
     days:wk.length,
     bpSys:avgOf(wk,'bp_sys'), bpDia:avgOf(wk,'bp_dia'), bpDays:bpN,
     bpPrevSys:avgOf(pv,'bp_sys'), bpPrevDia:avgOf(pv,'bp_dia'),
-    hfDays:cnt('hf_count',function(x){return x&&x!=='none';}),
-    hfCount:modal('hf_count'), hfIntensity:modal('hf_intensity'),
+    // Приливы — женский блок анкеты (_hfHidden прячет шаг 2 мужчинам), поэтому у мужчины
+    // это всегда 0/N. Воркер печатал строку «Hot flashes: 0/7 days» и модель радовалась,
+    // что «приливов не было» — мужчине. Не шлём поле вовсе.
+    hfDays:(P.gender==='male')?null:cnt('hf_count',function(x){return x&&x!=='none';}),
+    hfCount:(P.gender==='male')?null:modal('hf_count'),
+    hfIntensity:(P.gender==='male')?null:modal('hf_intensity'),
     tempDev:avg('tempDev'), spo2:avg('spo2'), stress:avg('stress'),
     memory:avg('memory'), fogDays:cnt('fog',function(x){return x!=null&&+x>0;}),
     alcDays:cnt('alc',function(x){return x!=null&&+x>0;}),
-    profile:{ phase:P.phase||null,
-              pms:(P.pms_symptoms||[]).filter(function(s){return s&&s!=='none_pms';}),
+    profile:{ sex:P.gender||null, phase:(P.gender==='male')?null:(P.phase||null),
+              pms:(P.gender==='male')?[]:(P.pms_symptoms||[]).filter(function(s){return s&&s!=='none_pms';}),
               diet:(P.diet_restrict||[]), eating:P.eating_pattern||null }
   };
 }
@@ -10364,7 +10371,10 @@ function _actLbl(){ return L({ru:'Что сделать',uk:'Що зробити
 // то, ради чего человек открыл разбор. Под стрелкой остаётся «почему» и данные.
 function _splitActions(det){
   if(!det) return {act:'', rest:''};
-  var lines=String(det).split('\n'), act=[], rest=[], i=0;
+  // Строки-разделители («---», «***») модель ставит вместо пропущенного содержимого: в карточке
+  // про гормональный период под «ЧТО СДЕЛАТЬ» стоял один прочерк. Убираем их до разбора —
+  // тогда заголовок остаётся сиротой и его снимает чистка ниже.
+  var lines=String(det).split('\n').filter(function(l){ return !/^\s*(?:[-–—*_]\s*){3,}$/.test(l); }), act=[], rest=[], i=0;
   for(i=0;i<lines.length;i++){
     var ln=lines[i], isAct=/^\s*☐\s/.test(ln);
     if(isAct){
@@ -10428,11 +10438,17 @@ function _renderAnalysis(raw){
     var pill=(s.fl.indexOf('prior')>=0)?('<span class="ai-sec-pill">'+_moreLbl_pri()+'</span>'):'';
     var _ti=_themeIcon(title), iconHtml=_ti?('<img class="ai-sec-img" src="icons/'+_ti+'.webp" alt="" onerror="this.style.display=\'none\'">'):(icon?('<span class="ai-sec-ic">'+_esc(icon)+'</span>'):'');
     var _sp2=_splitActions(detail), _act=_sp2.act, _rest=_sp2.rest;
-    _themesHtml+='<div class="ai-sec'+(_rest?' has-det':'')+(_ti?(' ai-th-'+_ti):'')+'" onclick="_secTap(this,event)"><div class="ai-sec-h" onclick="_secHeadTap(this,event)">'+iconHtml+'<span style="flex:1;min-width:0;">'+_esc(title)+'</span>'+pill+(_rest?'<i class="ph ph-caret-down ai-sec-chev" aria-hidden="true"></i>':'')+'</div>'
+    // Свёрнутая карточка = иконка + заголовок + описание проблемы. ВСЁ остальное (действия и
+    // «почему так считает VIA·L») уезжает под одну строку-раскрытие «Что сделать»: при листании
+    // видно короткие карточки, а не полотно. Раньше блок действий висел раскрытым всегда и
+    // карточка занимала два экрана. Порядок внутри раскрытия сохранён: сначала действия, потом «почему».
+    var _hasDet=!!(_act||_rest);
+    _themesHtml+='<div class="ai-sec'+(_hasDet?' has-det':'')+(_ti?(' ai-th-'+_ti):'')+'" onclick="_secTap(this,event)"><div class="ai-sec-h" onclick="_secHeadTap(this,event)">'+iconHtml+'<span style="flex:1;min-width:0;">'+_esc(title)+'</span>'+pill+(_hasDet?'<i class="ph ph-caret-down ai-sec-chev" aria-hidden="true"></i>':'')+'</div>'
       +'<div class="ai-sec-sum">'+_mdOnly(s.sum)+'</div>';
-    if(_act) _themesHtml+='<div class="ai-sec-act"><div class="ai-sec-act-h">'+_esc(_actLbl())+'</div>'+_mdOnly(_act)+'</div>';
-    if(_rest) _themesHtml+='<button type="button" class="ai-sec-more" onclick="_toggleDetail(this,event)">'+_esc(_moreLblTxt())+' <i class="ph ph-caret-down" aria-hidden="true"></i></button>'
-      +'<div class="ai-sec-det-wrap"><div class="ai-sec-det">'+_mdOnly(_rest)
+    if(_hasDet) _themesHtml+='<button type="button" class="ai-sec-more" onclick="_toggleDetail(this,event)">'+_esc(_act?_actLbl():_moreLblTxt())+' <i class="ph ph-caret-down" aria-hidden="true"></i></button>'
+      +'<div class="ai-sec-det-wrap"><div class="ai-sec-det">'
+      +(_act?('<div class="ai-sec-act"><div class="ai-sec-act-h">'+_esc(_actLbl())+'</div>'+_mdOnly(_act)+'</div>'):'')
+      +(_rest?('<div class="ai-sec-why-h">'+_esc(_moreLblTxt())+'</div>'+_mdOnly(_rest)):'')
       +'<button type="button" class="ai-sec-coll" onclick="_secCollapse(this,event)">'+_esc(_collLbl())+' <i class="ph ph-caret-up" aria-hidden="true"></i></button></div></div>';
     _themesHtml+='</div>';
   }

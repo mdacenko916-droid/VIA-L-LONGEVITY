@@ -2541,7 +2541,11 @@ function buildWeeklyUserMessage(summary, daily, lang, period, exp) {
     const hfC = { none:'none', low:'1–2/day', mid:'3–5/day', high:'6–10/day', veryhigh:'10+/day' };
     const hfI = { none:'none', mild:'mild', moderate:'moderate', intense:'strong', high:'strong', severe:'very strong', veryhigh:'very strong' };
     const d = [];
-    if (daily.hfDays != null)  d.push(`- Hot flashes: ${daily.hfDays}/${daily.days} days; typical ${hfC[daily.hfCount]||daily.hfCount||'—'}, intensity ${hfI[daily.hfIntensity]||daily.hfIntensity||'—'}`);
+    // Приливы у мужчины — не «их не было», а НЕ СПРАШИВАЛИ (шаг анкеты женский). Строка
+    // «Hot flashes: 0/7 days» читалась моделью как факт, и она поздравляла мужчину с их
+    // отсутствием. Клиент поле больше не шлёт; здесь страховка для старых сборок.
+    const _male = String((daily.profile && daily.profile.sex) || '').toLowerCase() === 'male';
+    if (daily.hfDays != null && !_male)  d.push(`- Hot flashes: ${daily.hfDays}/${daily.days} days; typical ${hfC[daily.hfCount]||daily.hfCount||'—'}, intensity ${hfI[daily.hfIntensity]||daily.hfIntensity||'—'}`);
     if (daily.tempDev != null) d.push(`- Body-temp deviation: ${daily.tempDev} avg`);
     if (daily.spo2 != null)    d.push(`- SpO₂: ${daily.spo2}% avg`);
     if (daily.memory != null)  d.push(`- Memory: ${typeof daily.memory === 'number' ? daily.memory + '/10 avg' : 'mostly ' + daily.memory}`);
@@ -2558,8 +2562,11 @@ function buildWeeklyUserMessage(summary, daily, lang, period, exp) {
 
     const p = daily.profile || {};
     const ctx = [];
-    if (p.phase)                 ctx.push('cycle phase: ' + p.phase);
-    if (p.pms && p.pms.length)   ctx.push('Comfort markers before a new rhythm: ' + p.pms.join(', '));
+    if (p.sex)                   ctx.push('sex: ' + p.sex);
+    if (p.phase && !_male)       ctx.push('cycle phase: ' + p.phase);
+    if (p.pms && p.pms.length && !_male) ctx.push('Comfort markers before a new rhythm: ' + p.pms.join(', '));
+    // Женские темы мужчине — самая заметная фальшь разбора: их не спрашивали, значит и говорить не о чем.
+    if (_male) out += '\n\nThe client is MALE: never mention hot flashes, menstrual cycle, cycle phase, PMS or menopause — those questions are not asked of him. Do not state that such symptoms were absent.';
     if (p.diet && p.diet.length) ctx.push('dietary restrictions: ' + p.diet.join(', '));
     if (p.eating)                ctx.push('eating pattern: ' + p.eating);
     if (p.goal) ctx.unshift('client goal: ' + String(p.goal).slice(0, 200) + ((p.priorities && p.priorities.length) ? ' (focus: ' + p.priorities.join(', ') + ')' : ''));
