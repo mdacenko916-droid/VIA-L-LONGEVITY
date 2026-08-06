@@ -3187,8 +3187,15 @@ async function handleFitbitMetrics(request, env, corsHeaders){
   // Sleep — ПОСЛЕДНЯЯ ночь: часы сна + минуты глубокого из ТОЙ ЖЕ сессии
   let sleepStartMs = null, sleepEndMs = null;   // окно сна для усреднения SpO₂ (ниже)
   const sleep = await gh('sleep', `sleep.interval.end_time>="${startISO}" AND sleep.interval.end_time<"${endISO}"`);
-  { const sorted = sleep.map(d => ({ ord:_dord(d), mins:num(d.sleep && d.sleep.summary && d.sleep.summary.minutesAsleep), d }))
-                        .filter(x => x.mins != null).sort((a,b)=>a.ord-b.ord);
+  // День ночи = день ПРОБУЖДЕНИЯ, берём его ЯВНО из interval.endTime.
+  // ⚠️ Общий _dord здесь врал (найдено живым логом 2026-08-06): он ищет первое поле, оканчивающееся
+  // на «time», и в записи сна натыкается на createTime/updateTime — время, когда Fitbit СОЗДАЛ или
+  // ПЕРЕСЧИТАЛ запись. Стоит ему пересчитать старую ночь позже свежей — и она обгоняет её в сортировке:
+  // в проде импорт брал ночь 04→05 вместо 05→06, то есть ровно те «вчерашние показатели», на которые
+  // жаловался владелец. Метрики HRV/пульса/температуры это не затрагивает — там ord из объекта date.
+  const _sleepOrd = d => { const t = Date.parse((d.sleep && d.sleep.interval && d.sleep.interval.endTime) || ''); return isFinite(t) ? Math.floor(t/86400000) : 0; };
+  { const sorted = sleep.map(d => ({ ord:_sleepOrd(d), mins:num(d.sleep && d.sleep.summary && d.sleep.summary.minutesAsleep), d }))
+                        .filter(x => x.mins != null && x.ord > 0).sort((a,b)=>a.ord-b.ord);
     // _dord у сна = ДЕНЬ (по end_time), поэтому главная ночь и короткий дневной сон того же дня имеют один ord.
     // Раньше брали sorted[last] — последний В МАССИВЕ, мог оказаться 30-мин дневной сон (без фаз глубокого).
     // Берём ГЛАВНУЮ сессию последней ночи = самую ДЛИННУЮ среди сессий последнего дня.
