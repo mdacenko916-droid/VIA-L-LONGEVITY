@@ -1823,6 +1823,8 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
 .lab-grp>summary::after{content:'⌄';margin-left:auto;opacity:.6;transition:transform .2s;}
 .lab-grp[open]>summary::after{transform:rotate(180deg);}
 .lab-grp-n{font-size:10px;color:var(--t3);border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:1px 7px;}
+.ai-sec-why-h{font-family:var(--font-ui);font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--gold-lt);margin:16px 0 6px;}
+.ai-sec-det>.ai-sec-act:first-child{margin-top:0;}
 .ai-sec-act{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(226,185,90,.07);border:1px solid rgba(226,185,90,.18);}
 .ai-sec-act-h{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold-lt);font-weight:600;margin-bottom:6px;}
 .ai-sec-act{font-size:13.5px;color:#fff;line-height:1.75;}
@@ -9871,7 +9873,9 @@ function _actLbl(){ return L({ru:'Что сделать',uk:'Що зробити
 // то, ради чего человек открыл разбор. Под стрелкой остаётся «почему» и данные.
 function _splitActions(det){
   if(!det) return {act:'', rest:''};
-  var lines=String(det).split('\n'), act=[], rest=[], i=0;
+  // Строки-разделители («---», «***») модель ставит вместо пропущенного содержимого: под «ЧТО СДЕЛАТЬ»
+  // оставался один прочерк. Убираем их до разбора — тогда заголовок остаётся сиротой и его снимает чистка ниже.
+  var lines=String(det).split('\n').filter(function(l){ return !/^\s*(?:[-\u2013\u2014*_]\s*){3,}$/.test(l); }), act=[], rest=[], i=0;
   for(i=0;i<lines.length;i++){
     var ln=lines[i], isAct=/^\s*☐\s/.test(ln);
     if(isAct){
@@ -9935,11 +9939,16 @@ function _renderAnalysis(raw){
     var pill=(s.fl.indexOf('prior')>=0)?('<span class="ai-sec-pill">'+_moreLbl_pri()+'</span>'):'';
     var _ti=_themeIcon(title), iconHtml=_ti?('<img class="ai-sec-img" src="icons/'+_ti+'.webp" alt="" onerror="this.style.display=\'none\'">'):(icon?('<span class="ai-sec-ic">'+_esc(icon)+'</span>'):'');
     var _sp2=_splitActions(detail), _act=_sp2.act, _rest=_sp2.rest;
-    _themesHtml+='<div class="ai-sec'+(_rest?' has-det':'')+(_ti?(' ai-th-'+_ti):'')+'" onclick="_secTap(this,event)"><div class="ai-sec-h" onclick="_secHeadTap(this,event)">'+iconHtml+'<span style="flex:1;min-width:0;">'+_esc(title)+'</span>'+pill+(_rest?'<i class="ph ph-caret-down ai-sec-chev" aria-hidden="true"></i>':'')+'</div>'
+    // Свёрнутая карточка = иконка + заголовок + описание. ВСЁ остальное (действия и «почему так считает
+    // VIA·L») уезжает под одну строку-раскрытие «Что сделать»: при листании видно короткие карточки,
+    // а не полотно. Раньше блок действий висел раскрытым всегда и карточка занимала два экрана.
+    var _hasDet=!!(_act||_rest);
+    _themesHtml+='<div class="ai-sec'+(_hasDet?' has-det':'')+(_ti?(' ai-th-'+_ti):'')+'" onclick="_secTap(this,event)"><div class="ai-sec-h" onclick="_secHeadTap(this,event)">'+iconHtml+'<span style="flex:1;min-width:0;">'+_esc(title)+'</span>'+pill+(_hasDet?'<i class="ph ph-caret-down ai-sec-chev" aria-hidden="true"></i>':'')+'</div>'
       +'<div class="ai-sec-sum">'+_mdOnly(s.sum)+'</div>';
-    if(_act) _themesHtml+='<div class="ai-sec-act"><div class="ai-sec-act-h">'+_esc(_actLbl())+'</div>'+_mdOnly(_act)+'</div>';
-    if(_rest) _themesHtml+='<button type="button" class="ai-sec-more" onclick="_toggleDetail(this,event)">'+_esc(_moreLblTxt())+' <i class="ph ph-caret-down" aria-hidden="true"></i></button>'
-      +'<div class="ai-sec-det-wrap"><div class="ai-sec-det">'+_mdOnly(_rest)
+    if(_hasDet) _themesHtml+='<button type="button" class="ai-sec-more" onclick="_toggleDetail(this,event)">'+_esc(_act?_actLbl():_moreLblTxt())+' <i class="ph ph-caret-down" aria-hidden="true"></i></button>'
+      +'<div class="ai-sec-det-wrap"><div class="ai-sec-det">'
+      +(_act?('<div class="ai-sec-act">'+_mdOnly(_act)+'</div>'):'')
+      +(_rest?('<div class="ai-sec-why-h">'+_esc(_moreLblTxt())+'</div>'+_mdOnly(_rest)):'')
       +'<button type="button" class="ai-sec-coll" onclick="_secCollapse(this,event)">'+_esc(_collLbl())+' <i class="ph ph-caret-up" aria-hidden="true"></i></button></div></div>';
     _themesHtml+='</div>';
   }
