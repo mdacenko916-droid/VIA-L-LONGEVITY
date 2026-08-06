@@ -3189,6 +3189,10 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
       <button type="button" class="help-btn" onclick="openHelp('lifestyle')" aria-label="info">ℹ</button>
       <div class="step-badge" data-t="s_ns_title">Что нового за неделю</div>
       <p class="step-desc" style="border-color:rgba(226,185,90,.3);" data-t="s_ns_desc">Две короткие заметки: что нового в самочувствии и какие события были за неделю — так ИИ отличит настоящие изменения от бытовых причин.</p>
+      <!-- ЖАЛОБА, С КОТОРОЙ ЧЕЛОВЕК ПРИШЁЛ. Первый проход — спрашиваем «с чем пришли», дальше в этом же
+           месте — динамика по ней. У врача первая фраза пациента задаёт консультацию; у нас этого не было
+           вовсе: цель в профиле отвечает на «чего хочу», а не на «что беспокоит». Рисует renderComplaint(). -->
+      <div id="cmpBlock" class="input-group"></div>
       <div class="input-group">
         <label data-t="s_ns_l1">Новые симптомы</label>
         <div class="q-prompt" data-t="s_ns_q">Появилось ли что-то новое в самочувствии?</div>
@@ -4565,7 +4569,8 @@ function setLang(l){
   try{ _bpI18n(); }catch(e){}   // подписи блока «Давление» на текущем языке (значения полей сохраняются)
   try{ if(typeof _pmIdle==='function' && !_pmBusy) _pmIdle(); }catch(e){}   // циферблат/кнопка пульса — на текущем языке (кроме идущего замера)
   try{ if(typeof renderSleepScale==='function')renderSleepScale(); }catch(e){}
-  try{ if(typeof _applySleepEnds==='function')_applySleepEnds(); }catch(e){}   // края шкалы сна — по полу из анкеты (applyI18n их только что перетёр)
+  try{ if(typeof _applySleepEnds==='function')_applySleepEnds(); }catch(e){}   // края шкалы сна
+  try{ if(typeof renderComplaint==='function')renderComplaint(); }catch(e){}   // блок жалобы — на текущем языке — по полу из анкеты (applyI18n их только что перетёр)
   try{ if(typeof renderEnergyScale==='function')renderEnergyScale(); }catch(e){}
   // Подписи метрик «Данные с трекера» (glab_*) — на текущий язык. ТОЛЬКО если панель уже на экране:
   // renderGadgetPanel() в конце сам ставит display:block, поэтому на любом экране, где панели быть не
@@ -4655,6 +4660,112 @@ function _renderMaxBlocks(){
   // Zoom-консультация — только ru/uk (нутрициолог ведёт видео на этих языках).
   var z=document.getElementById('zoomBlock'); if(z) z.style.display = (isMax && (lg==='ru'||lg==='uk')) ? 'block' : 'none';
   _renderZoomBlock();
+}
+
+
+// ══ ЖАЛОБА, С КОТОРОЙ ЧЕЛОВЕК ПРИШЁЛ ═════════════════════════
+// Зачем: разбор строился от данных, но не от того, ради чего человек вообще открыл приложение.
+// Цель в профиле («хочу больше энергии») — это про желание; жалоба — про то, что беспокоит сейчас.
+// Живёт в шаге «Что нового»: первый проход задаёт её, последующие спрашивают динамику.
+// Хранение — в профиле (разовая, не дневная): {items:[…], text, since:'YYYY-MM-DD'}.
+var CMP_ITEMS = {
+  // общие для обоих полов
+  energy:{f:1,t:{ru:'Энергия и силы',uk:'Енергія і сили',en:'Energy and stamina',es:'Energía y fuerzas',de:'Energie und Kraft',pt:'Energia e disposição',fr:'Énergie et forces',pl:'Energia i siły',it:'Energia e forze',he:'אנרגיה וכוחות',ja:'エネルギーと体力',ko:'에너지와 기력'}},
+  sleep:{f:1,t:{ru:'Сон и пробуждения',uk:'Сон і пробудження',en:'Sleep and waking up',es:'Sueño y despertares',de:'Schlaf und Aufwachen',pt:'Sono e despertares',fr:'Sommeil et réveils',pl:'Sen i wybudzenia',it:'Sonno e risvegli',he:'שינה ויקיצות',ja:'睡眠と目覚め',ko:'수면과 각성'}},
+  mood:{f:1,t:{ru:'Настроение и тревожность',uk:'Настрій і тривожність',en:'Mood and anxiety',es:'Ánimo y ansiedad',de:'Stimmung und Angst',pt:'Humor e ansiedade',fr:'Humeur et anxiété',pl:'Nastrój i lęk',it:'Umore e ansia',he:'מצב רוח וחרדה',ja:'気分と不安',ko:'기분과 불안'}},
+  fog:{f:1,t:{ru:'Туман в голове, память',uk:'Туман у голові, памʼять',en:'Brain fog and memory',es:'Niebla mental y memoria',de:'Gehirnnebel und Gedächtnis',pt:'Névoa mental e memória',fr:'Brouillard mental et mémoire',pl:'Mgła mózgowa i pamięć',it:'Nebbia mentale e memoria',he:'ערפל מוחי וזיכרון',ja:'頭のもやと記憶',ko:'브레인 포그와 기억력'}},
+  weight:{f:0,t:{ru:'Вес и живот',uk:'Вага і живіт',en:'Weight and belly',es:'Peso y abdomen',de:'Gewicht und Bauch',pt:'Peso e barriga',fr:'Poids et ventre',pl:'Waga i brzuch',it:'Peso e pancia',he:'משקל ובטן',ja:'体重とお腹',ko:'체중과 복부'}},
+  libido:{f:0,t:{ru:'Либидо и близость',uk:'Лібідо і близькість',en:'Libido and intimacy',es:'Libido e intimidad',de:'Libido und Intimität',pt:'Libido e intimidade',fr:'Libido et intimité',pl:'Libido i bliskość',it:'Libido e intimità',he:'חשק ואינטימיות',ja:'性欲と親密さ',ko:'성욕과 친밀감'}},
+  pain:{f:1,t:{ru:'Боли и скованность',uk:'Болі та скутість',en:'Aches and stiffness',es:'Dolores y rigidez',de:'Schmerzen und Steifheit',pt:'Dores e rigidez',fr:'Douleurs et raideurs',pl:'Bóle i sztywność',it:'Dolori e rigidità',he:'כאבים ונוקשות',ja:'痛みとこわばり',ko:'통증과 뻣뻣함'}},
+  // женские
+  hf:{f:1,w:1,t:{ru:'Приливы и ночная потливость',uk:'Припливи і нічна пітливість',en:'Hot flashes and night sweats',es:'Sofocos y sudores nocturnos',de:'Hitzewallungen und Nachtschweiß',pt:'Fogachos e suores noturnos',fr:'Bouffées de chaleur et sueurs nocturnes',pl:'Uderzenia gorąca i nocne poty',it:'Vampate e sudorazioni notturne',he:'גלי חום והזעות לילה',ja:'ほてりと寝汗',ko:'안면홍조와 야간 발한'}},
+  cycle:{f:0,w:1,t:{ru:'Цикл и его изменения',uk:'Цикл і його зміни',en:'Cycle and its changes',es:'Ciclo y sus cambios',de:'Zyklus und seine Veränderungen',pt:'Ciclo e suas mudanças',fr:'Cycle et ses changements',pl:'Cykl i jego zmiany',it:'Ciclo e i suoi cambiamenti',he:'המחזור והשינויים בו',ja:'月経周期の変化',ko:'생리 주기 변화'}},
+  // мужские
+  drive:{f:1,m:1,t:{ru:'Мотивация и драйв',uk:'Мотивація і драйв',en:'Motivation and drive',es:'Motivación y empuje',de:'Motivation und Antrieb',pt:'Motivação e ímpeto',fr:'Motivation et allant',pl:'Motywacja i napęd',it:'Motivazione e slancio',he:'מוטיבציה ודחף',ja:'意欲とやる気',ko:'동기와 활력'}},
+  muscle:{f:0,m:1,t:{ru:'Сила и мышцы',uk:'Сила і мʼязи',en:'Strength and muscle',es:'Fuerza y músculo',de:'Kraft und Muskeln',pt:'Força e músculos',fr:'Force et muscles',pl:'Siła i mięśnie',it:'Forza e muscoli',he:'כוח ושרירים',ja:'筋力と筋肉',ko:'근력과 근육'}}
+};
+// f:1 — жалоба «быстрая», меняется в масштабе суток → спрашиваем ежедневно.
+// f:0 — медленная (вес, либидо, мышцы, цикл): дневной вопрос о ней бессмыслен, она идёт в недельный разбор.
+function _cmpGet(){ try{ var P=JSON.parse(localStorage.getItem('viae_profile')||'{}')||{}; return P.complaint||null; }catch(e){ return null; } }
+function _cmpSave(c){ try{ var P=JSON.parse(localStorage.getItem('viae_profile')||'{}')||{}; P.complaint=c; localStorage.setItem('viae_profile',JSON.stringify(P)); }catch(e){} }
+function _cmpLbl(k){ var it=CMP_ITEMS[k]; if(!it) return k; return it.t[(typeof lang!=='undefined'?lang:'en')]||it.t.en; }
+function _cmpList(){
+  var male=(typeof getRadio==='function' && getRadio('gender')==='male');
+  try{ if(!male){ var P=JSON.parse(localStorage.getItem('viae_profile')||'{}')||{}; if(P.gender==='male') male=true; } }catch(e){}
+  return Object.keys(CMP_ITEMS).filter(function(k){ var it=CMP_ITEMS[k]; return male ? !it.w : !it.m; });
+}
+function _cmpI18n(k){
+  var M={
+    ask:{ru:'С чем вы пришли?',uk:'З чим ви прийшли?',en:'What brought you here?',es:'¿Qué te trae aquí?',de:'Was führt dich her?',pt:'O que trouxe você aqui?',fr:'Qu’est-ce qui vous amène ?',pl:'Z czym przychodzisz?',it:'Cosa ti porta qui?',he:'עם מה הגעתם?',ja:'何が気になって来ましたか？',ko:'무엇 때문에 오셨나요?'},
+    askSub:{ru:'Отметьте одно-два главных — с этого начнётся ваш разбор. Можно дописать своими словами.',uk:'Позначте одне-два головних — з цього почнеться ваш розбір. Можна дописати своїми словами.',en:'Pick one or two main ones — your analysis will start there. You can add your own words.',es:'Elige una o dos principales: por ahí empezará tu análisis. Puedes añadir tus palabras.',de:'Wähle ein bis zwei Hauptpunkte — damit beginnt deine Auswertung. Eigene Worte kannst du ergänzen.',pt:'Escolha um ou dois principais — sua análise começará por aí. Pode escrever com suas palavras.',fr:'Choisissez un ou deux points principaux — votre analyse commencera par là. Vous pouvez préciser.',pl:'Wybierz jedną–dwie główne — od tego zacznie się analiza. Możesz dopisać własnymi słowami.',it:'Scegli uno o due punti principali — la tua analisi partirà da lì. Puoi aggiungere con parole tue.',he:'בחרו אחד או שניים עיקריים — מכאן יתחיל הניתוח. אפשר להוסיף במילים שלכם.',ja:'主なものを1〜2つ選んでください。分析はそこから始まります。自由記述も可能です。',ko:'주된 것 1~2개를 선택하세요. 분석이 여기서 시작됩니다. 직접 쓸 수도 있습니다.'},
+    ph:{ru:'Своими словами: что беспокоит больше всего…',uk:'Своїми словами: що турбує найбільше…',en:'In your own words: what bothers you most…',es:'Con tus palabras: qué te molesta más…',de:'In deinen Worten: was stört am meisten…',pt:'Com suas palavras: o que mais incomoda…',fr:'Avec vos mots : ce qui vous gêne le plus…',pl:'Własnymi słowami: co przeszkadza najbardziej…',it:'Con parole tue: cosa ti disturba di più…',he:'במילים שלכם: מה הכי מפריע…',ja:'ご自身の言葉で：いちばん気になることを…',ko:'본인의 말로: 가장 불편한 점을…'},
+    save:{ru:'Сохранить',uk:'Зберегти',en:'Save',es:'Guardar',de:'Speichern',pt:'Salvar',fr:'Enregistrer',pl:'Zapisz',it:'Salva',he:'שמירה',ja:'保存',ko:'저장'},
+    with:{ru:'Вы пришли с этим',uk:'Ви прийшли з цим',en:'What brought you here',es:'Con esto viniste',de:'Damit bist du gekommen',pt:'Foi com isso que veio',fr:'Ce qui vous a amené',pl:'Z tym przyszedłeś',it:'Con questo sei arrivato',he:'עם זה הגעתם',ja:'あなたが来た理由',ko:'오신 이유'},
+    since:{ru:'с',uk:'з',en:'since',es:'desde',de:'seit',pt:'desde',fr:'depuis',pl:'od',it:'dal',he:'מאז',ja:'開始',ko:'시작'},
+    today:{ru:'Как с этим сегодня?',uk:'Як із цим сьогодні?',en:'How is it today?',es:'¿Cómo va hoy?',de:'Wie ist es heute?',pt:'Como está hoje?',fr:'Comment est-ce aujourd’hui ?',pl:'Jak jest dziś?',it:'Com’è oggi?',he:'איך זה היום?',ja:'今日はどうですか？',ko:'오늘은 어떤가요?'},
+    better:{ru:'Лучше',uk:'Краще',en:'Better',es:'Mejor',de:'Besser',pt:'Melhor',fr:'Mieux',pl:'Lepiej',it:'Meglio',he:'טוב יותר',ja:'良い',ko:'좋아짐'},
+    same:{ru:'Так же',uk:'Так само',en:'Same',es:'Igual',de:'Gleich',pt:'Igual',fr:'Pareil',pl:'Tak samo',it:'Uguale',he:'אותו דבר',ja:'同じ',ko:'그대로'},
+    worse:{ru:'Хуже',uk:'Гірше',en:'Worse',es:'Peor',de:'Schlechter',pt:'Pior',fr:'Moins bien',pl:'Gorzej',it:'Peggio',he:'פחות טוב',ja:'悪い',ko:'나빠짐'},
+    slow:{ru:'Это меняется не по дням — спросим в недельном разборе.',uk:'Це змінюється не по днях — запитаємо в тижневому розборі.',en:'This changes slowly — we’ll ask in the weekly review.',es:'Esto cambia despacio: lo preguntaremos en el análisis semanal.',de:'Das ändert sich langsam — wir fragen in der Wochenauswertung.',pt:'Isso muda devagar — perguntaremos na análise semanal.',fr:'Cela évolue lentement — nous demanderons dans l’analyse hebdomadaire.',pl:'To zmienia się powoli — zapytamy w analizie tygodniowej.',it:'Cambia lentamente — lo chiederemo nell’analisi settimanale.',he:'זה משתנה לאט — נשאל בסקירה השבועית.',ja:'これは日単位では変わりません。週間レビューでお聞きします。',ko:'이건 하루 단위로 변하지 않아요. 주간 리뷰에서 여쭐게요.'},
+    edit:{ru:'изменить',uk:'змінити',en:'change',es:'cambiar',de:'ändern',pt:'alterar',fr:'modifier',pl:'zmień',it:'modifica',he:'שינוי',ja:'変更',ko:'변경'}
+  };
+  var lg=(typeof lang!=='undefined'?lang:'en');
+  return (M[k]&&(M[k][lg]||M[k].en))||'';
+}
+var _cmpEditing=false;
+function _cmpToggle(k,el){
+  var c=_cmpGet()||{items:[],text:'',since:''};
+  var a=Array.isArray(c.items)?c.items.slice():[];
+  var i=a.indexOf(k);
+  if(i>=0)a.splice(i,1); else if(a.length<2)a.push(k);   // не больше двух: жалоба должна быть главной, а не списком
+  window._cmpDraft=Object.assign({},c,{items:a});
+  renderComplaint();
+}
+function _cmpSubmit(){
+  var d=window._cmpDraft||{items:[],text:''};
+  var t=document.getElementById('cmpText');
+  var c={ items:(d.items||[]).slice(0,2), text:(t?t.value:'').trim().slice(0,300), since:_dayKey() };
+  if(!c.items.length && !c.text) return;   // пустое не сохраняем
+  _cmpSave(c); _cmpEditing=false; window._cmpDraft=null; renderComplaint();
+}
+function _cmpEdit(){ _cmpEditing=true; window._cmpDraft=Object.assign({},_cmpGet()||{items:[],text:''}); renderComplaint(); }
+function _cmpDelta(v,el){
+  window._cmpDeltaToday=v;
+  var box=document.getElementById('cmpDelta'); if(box) box.querySelectorAll('button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-v')===v); });
+  try{ window.__touched && window.__touched.add('complaint_delta'); }catch(e){}
+}
+function renderComplaint(){
+  var box=document.getElementById('cmpBlock'); if(!box) return;
+  var c=_cmpGet();
+  var CH='padding:9px 12px;border-radius:11px;font-size:12.5px;font-family:inherit;cursor:pointer;border:1px solid rgba(226,185,90,.32);background:rgba(226,185,90,.06);color:var(--t1);';
+  var CH_ON='padding:9px 12px;border-radius:11px;font-size:12.5px;font-family:inherit;cursor:pointer;border:1px solid var(--gold);background:rgba(226,185,90,.2);color:#fff;font-weight:600;';
+  if(!c || _cmpEditing){
+    var d=window._cmpDraft||{items:[],text:(c&&c.text)||''};
+    var chips=_cmpList().map(function(k){
+      var on=(d.items||[]).indexOf(k)>=0;
+      return '<button type="button" onclick="_cmpToggle(\''+k+'\',this)" style="'+(on?CH_ON:CH)+'">'+_cmpLbl(k)+'</button>';
+    }).join('');
+    box.innerHTML='<label>'+_cmpI18n('ask')+'</label>'
+      +'<div class="q-prompt">'+_cmpI18n('askSub')+'</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 10px;">'+chips+'</div>'
+      +'<textarea id="cmpText" rows="2" maxlength="300" placeholder="'+_cmpI18n('ph')+'" style="width:100%;background:rgba(226,185,90,.06);border:1px solid rgba(226,185,90,.3);border-radius:10px;color:var(--t1);padding:10px 12px;font-family:inherit;font-size:13px;box-sizing:border-box;resize:vertical;">'+((d.text||'').replace(/</g,'&lt;'))+'</textarea>'
+      +'<button type="button" onclick="_cmpSubmit()" style="margin-top:8px;background:var(--gold);color:#10141C;border:none;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">'+_cmpI18n('save')+'</button>';
+    return;
+  }
+  var names=(c.items||[]).map(_cmpLbl).join(' · ');
+  var head='<label>'+_cmpI18n('with')+'</label>'
+    +'<div style="font-size:13.5px;color:#fff;line-height:1.6;margin:2px 0 4px;">'+(names||'')+(c.text?((names?' — ':'')+String(c.text).replace(/</g,'&lt;')):'')+'</div>'
+    +'<div style="font-size:10.5px;color:var(--t3);margin-bottom:8px;">'+_cmpI18n('since')+' '+(c.since||'')
+    +' · <a href="#" onclick="_cmpEdit();return false;" style="color:var(--gold-lt);">'+_cmpI18n('edit')+'</a></div>';
+  // Быстрая жалоба (сон, энергия, приливы, туман, настроение, боли) меняется в масштабе суток —
+  // её и спрашиваем ежедневно, тремя вариантами. Медленную (вес, либидо, мышцы, цикл) дневным
+  // вопросом мерить нечестно: человек не отличит вчера от сегодня, а ответы выродятся в привычку.
+  var fast=(c.items||[]).some(function(k){ return CMP_ITEMS[k] && CMP_ITEMS[k].f; });
+  if(!fast && (c.items||[]).length){ box.innerHTML=head+'<div style="font-size:11.5px;color:var(--t3);">'+_cmpI18n('slow')+'</div>'; return; }
+  var cur=window._cmpDeltaToday||'';
+  var B=function(v,txt){ return '<button type="button" data-v="'+v+'" onclick="_cmpDelta(\''+v+'\',this)" style="'+(cur===v?CH_ON:CH)+'">'+txt+'</button>'; };
+  box.innerHTML=head+'<div class="q-prompt">'+_cmpI18n('today')+'</div>'
+    +'<div id="cmpDelta" style="display:flex;gap:7px;margin-top:8px;">'+B('better',_cmpI18n('better'))+B('same',_cmpI18n('same'))+B('worse',_cmpI18n('worse'))+'</div>';
 }
 
 // ══ ZOOM-СОЗВОН — привязан к свежему недельному разбору ══════
@@ -4852,6 +4963,7 @@ function _gRefresh(){
   var cp=document.getElementById('cardPanel');
   if(cp&&cp.style.display!=='none'&&typeof renderCard==='function'){try{renderCard();}catch(e){}}
   if(typeof renderGadgetPanel==='function'){try{renderGadgetPanel();}catch(e){}}
+  if(typeof renderComplaint==='function'){try{renderComplaint();}catch(e){}}   // блок жалобы в шаге «Что нового»
   if(typeof _reflowSteps==='function'){try{_reflowSteps();}catch(e){}}
 }
 // Инлайн-правка веса/талии прямо в карточке (меняются со временем) → vial_profile + синхрон с профилем.
@@ -8797,6 +8909,9 @@ function _showResultsInner(){
     wl_exp:getRadio('wl_exp'), wl_how:getRadio('wl_how'),
     bp_high:getRadio('bp_high'), bp_family:getRadio('bp_family'), bp_want:getRadio('bp_want'),
     allergy:(typeof getRadio==='function'&&getRadio('allergy_has')==='yes'&&document.getElementById('allergy')?document.getElementById('allergy').value:'').trim(),
+    // Жалоба, с которой человек пришёл + сегодняшняя динамика по ней (см. renderComplaint).
+    complaint:(typeof _cmpGet==='function'?_cmpGet():null),
+    complaint_delta:window._cmpDeltaToday||'',
     new_symptoms:(document.getElementById('new_symptoms')?document.getElementById('new_symptoms').value:'').trim(),
     lifestyle_notes:(document.getElementById('lifestyle_notes')?document.getElementById('lifestyle_notes').value:'').trim(),
     eating_pattern:getRadio('eating_pattern'),
