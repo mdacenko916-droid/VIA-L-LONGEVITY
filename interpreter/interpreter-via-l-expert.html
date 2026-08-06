@@ -4708,6 +4708,8 @@ function _cmpI18n(k){
     worse:{ru:'Хуже',uk:'Гірше',en:'Worse',es:'Peor',de:'Schlechter',pt:'Pior',fr:'Moins bien',pl:'Gorzej',it:'Peggio',he:'פחות טוב',ja:'悪い',ko:'나빠짐'},
     slow:{ru:'Это меняется не по дням — спросим в недельном разборе.',uk:'Це змінюється не по днях — запитаємо в тижневому розборі.',en:'This changes slowly — we’ll ask in the weekly review.',es:'Esto cambia despacio: lo preguntaremos en el análisis semanal.',de:'Das ändert sich langsam — wir fragen in der Wochenauswertung.',pt:'Isso muda devagar — perguntaremos na análise semanal.',fr:'Cela évolue lentement — nous demanderons dans l’analyse hebdomadaire.',pl:'To zmienia się powoli — zapytamy w analizie tygodniowej.',it:'Cambia lentamente — lo chiederemo nell’analisi settimanale.',he:'זה משתנה לאט — נשאל בסקירה השבועית.',ja:'これは日単位では変わりません。週間レビューでお聞きします。',ko:'이건 하루 단위로 변하지 않아요. 주간 리뷰에서 여쭐게요.'},
     week:{ru:'Насколько это беспокоит сейчас? 0 — не беспокоит, 10 — сильно',uk:'Наскільки це турбує зараз? 0 — не турбує, 10 — сильно',en:'How much does it bother you now? 0 — not at all, 10 — a lot',es:'¿Cuánto te molesta ahora? 0 — nada, 10 — mucho',de:'Wie sehr stört es dich jetzt? 0 — gar nicht, 10 — sehr',pt:'O quanto incomoda agora? 0 — nada, 10 — muito',fr:'À quel point cela vous gêne-t-il ? 0 — pas du tout, 10 — beaucoup',pl:'Jak bardzo to teraz przeszkadza? 0 — wcale, 10 — bardzo',it:'Quanto ti disturba ora? 0 — per nulla, 10 — molto',he:'כמה זה מפריע עכשיו? 0 — בכלל לא, 10 — מאוד',ja:'今どのくらい気になりますか？ 0＝全くない、10＝とても',ko:'지금 얼마나 불편한가요? 0 — 전혀, 10 — 매우'},
+    wkNote:{ru:'Что изменилось за неделю — своими словами',uk:'Що змінилося за тиждень — своїми словами',en:'What changed this week — in your own words',es:'Qué cambió esta semana, con tus palabras',de:'Was sich diese Woche geändert hat — in deinen Worten',pt:'O que mudou nesta semana — com suas palavras',fr:'Ce qui a changé cette semaine — avec vos mots',pl:'Co zmieniło się w tym tygodniu — własnymi słowami',it:'Cosa è cambiato questa settimana — con parole tue',he:'מה השתנה השבוע — במילים שלכם',ja:'この1週間で変わったこと（ご自身の言葉で）',ko:'이번 주에 달라진 점 — 본인의 말로'},
+    wkNotePh:{ru:'Что вы меняли, что мешало, что заметили…',uk:'Що ви змінювали, що заважало, що помітили…',en:'What you changed, what got in the way, what you noticed…',es:'Qué cambiaste, qué te estorbó, qué notaste…',de:'Was du geändert hast, was gestört hat, was dir aufgefallen ist…',pt:'O que mudou, o que atrapalhou, o que notou…',fr:'Ce que vous avez changé, ce qui a gêné, ce que vous avez remarqué…',pl:'Co zmieniałeś, co przeszkadzało, co zauważyłeś…',it:'Cosa hai cambiato, cosa ha ostacolato, cosa hai notato…',he:'מה שיניתם, מה הפריע, מה שמתם לב…',ja:'変えたこと、妨げになったこと、気づいたこと…',ko:'무엇을 바꿨고, 무엇이 방해했고, 무엇을 느꼈는지…'},
     prev:{ru:'В прошлый раз:',uk:'Минулого разу:',en:'Last time:',es:'La vez anterior:',de:'Letztes Mal:',pt:'Da última vez:',fr:'La dernière fois :',pl:'Poprzednio:',it:'L’ultima volta:',he:'בפעם הקודמת:',ja:'前回：',ko:'지난번:'},
     scaleHint:{ru:'Спрашиваем раз в неделю — так видно движение, а не колебания дня.',uk:'Питаємо раз на тиждень — так видно рух, а не коливання дня.',en:'We ask once a week — that shows movement, not daily noise.',es:'Preguntamos una vez por semana: así se ve el movimiento, no el ruido diario.',de:'Wir fragen einmal pro Woche — so sieht man die Bewegung, nicht das Tagesrauschen.',pt:'Perguntamos uma vez por semana — assim vê-se o movimento, não o ruído diário.',fr:'Nous demandons une fois par semaine — on voit ainsi le mouvement, pas le bruit quotidien.',pl:'Pytamy raz w tygodniu — widać ruch, a nie dzienny szum.',it:'Chiediamo una volta a settimana — così si vede il movimento, non il rumore quotidiano.',he:'שואלים פעם בשבוע — כך רואים תנועה ולא רעש יומי.',ja:'週に1回お聞きします。日々のブレではなく変化が見えます。',ko:'주 1회 여쭙니다. 하루하루의 변동이 아니라 흐름이 보입니다.'},
     edit:{ru:'изменить',uk:'змінити',en:'change',es:'cambiar',de:'ändern',pt:'alterar',fr:'modifier',pl:'zmień',it:'modifica',he:'שינוי',ja:'変更',ko:'변경'}
@@ -4744,9 +4746,18 @@ function _cmpWeeklyDue(){
   var last=0; try{ last=parseInt(localStorage.getItem('viae_cmp_last')||'0',10); }catch(e){}
   return !last || (Date.now()-last) >= 7*86400000;
 }
+// Заметка своими словами идёт ВМЕСТЕ с оценкой: цифра показывает движение, но не объясняет его —
+// что человек менял, что мешало, что заметил. Пишется и после выбора цифры (oninput дописывает в
+// сегодняшнюю запись), иначе текст, набранный вторым, потерялся бы.
+function _cmpNote(v){
+  var arr=_cmpScores(); if(!arr.length || arr[0].day!==_dayKey()) return;
+  arr[0].note=String(v||'').slice(0,300);
+  try{ localStorage.setItem('viae_cmp_scores',JSON.stringify(arr)); }catch(e){}
+}
 function _cmpScore(v){
+  var t=document.getElementById('cmpWkNote');
   var arr=_cmpScores().filter(function(x){ return x.day!==_dayKey(); });
-  arr.unshift({ day:_dayKey(), val:+v, ts:Date.now() });
+  arr.unshift({ day:_dayKey(), val:+v, ts:Date.now(), note:(t?t.value.trim().slice(0,300):'') });
   while(arr.length>60) arr.pop();
   try{ localStorage.setItem('viae_cmp_scores',JSON.stringify(arr)); localStorage.setItem('viae_cmp_last',String(Date.now())); }catch(e){}
   renderComplaint();
@@ -4793,6 +4804,8 @@ function renderComplaint(){
       +'<div class="q-prompt">'+_cmpI18n('week')+'</div>'
       +(prev?('<div style="font-size:10.5px;color:var(--t3);margin-top:2px;">'+_cmpI18n('prev')+' '+prev.val+'/10 · '+prev.day+'</div>'):'')
       +'<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;">'+btns+'</div>'
+      +'<div class="q-prompt" style="margin-top:12px;">'+_cmpI18n('wkNote')+'</div>'
+      +'<textarea id="cmpWkNote" rows="2" maxlength="300" oninput="_cmpNote(this.value)" placeholder="'+_cmpI18n('wkNotePh')+'" style="margin-top:6px;width:100%;background:rgba(226,185,90,.06);border:1px solid rgba(226,185,90,.3);border-radius:10px;color:var(--t1);padding:10px 12px;font-family:inherit;font-size:13px;box-sizing:border-box;resize:vertical;">'+(((sc[0]&&sc[0].day===_dayKey()&&sc[0].note)||'').replace(/</g,'&lt;'))+'</textarea>'
       +'<div style="font-size:10.5px;color:var(--t3);margin-top:6px;">'+_cmpI18n('scaleHint')+'</div></div>';
   }
   box.innerHTML=head+daily+wk;
@@ -6029,7 +6042,7 @@ function _weeklyDaily(win){
       var d={better:0,same:0,worse:0};
       wk.forEach(function(r){ if(r.cmp_delta && d[r.cmp_delta]!=null) d[r.cmp_delta]++; });
       return { items:c.items||[], text:c.text||'', since:c.since||'',
-               score:sc[0]?sc[0].val:null, scorePrev:sc[1]?sc[1].val:null,
+               score:sc[0]?sc[0].val:null, scorePrev:sc[1]?sc[1].val:null, note:(sc[0]&&sc[0].note)||'',
                scoreDay:sc[0]?sc[0].day:'', deltas:d };
     })(),
     profile:{ sex:P.gender||null, phase:(P.gender==='male')?null:(P.phase||null),
