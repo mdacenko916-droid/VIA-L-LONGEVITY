@@ -4818,6 +4818,46 @@ function _vaiCalc(){
   else { color='var(--warn)'; zone=L({ru:'Выше ориентира — стоит внимательнее отнестись к обмену веществ и спокойно обсудить это со специалистом.',uk:'Вище орієнтира — варто уважніше поставитися до обміну речовин і спокійно обговорити це з фахівцем.',en:'Above the reference — worth paying more attention to metabolism and calmly discussing it with a specialist.',es:'Por encima de la referencia — conviene prestar más atención al metabolismo y comentarlo con calma con un especialista.',de:'Über dem Richtwert — dem Stoffwechsel mehr Aufmerksamkeit schenken und ruhig mit einer Fachkraft besprechen.',pt:'Acima da referência — vale prestar mais atenção ao metabolismo e conversar com calma com um especialista.',fr:'Au-dessus de la référence — il vaut mieux prêter plus d’attention au métabolisme et en parler calmement avec un spécialiste.',pl:'Powyżej odniesienia — warto zwrócić większą uwagę na metabolizm i spokojnie omówić to ze specjalistą.',it:'Sopra il riferimento — meglio prestare più attenzione al metabolismo e parlarne con calma con uno specialista.',he:'מעל ערך הייחוס — כדאי לשים לב יותר לחילוף החומרים ולשוחח על כך ברוגע עם מומחה.',ja:'目安より高め — 代謝により注意を向け、専門家に落ち着いて相談するとよいでしょう。',ko:'기준치보다 높음 — 대사에 더 주의를 기울이고 전문가와 차분히 상담하는 것이 좋습니다.'}); }
   out.innerHTML='<div class="vai-num" style="color:'+color+'">VAI ≈ '+vai.toFixed(2)+'</div><div class="vai-zone">'+zone+'</div>';
 }
+var _CMP_SCORES_KEY='vialp_cmp_scores';
+// Траектория по жалобе — то, ради чего человек ведёт дневник. Он ставит оценки, но нигде не видит
+// движения: цифры уходили только в разбор. Показываем прямо в карточке: последняя оценка, дельта к
+// первой и точки по неделям. Без интерпретации — это его собственные числа, а не наш вердикт.
+function _cmpTrajHTML(){
+  var c=(typeof _cmpGet==='function')?_cmpGet():null; if(!c) return '';
+  var sc=[]; try{ sc=JSON.parse(localStorage.getItem(_CMP_SCORES_KEY)||'[]')||[]; }catch(e){}
+  var names=(c.items||[]).map(function(k){ return (typeof _cmpLbl==='function')?_cmpLbl(k):k; }).join(' · ');
+  var title=(typeof _cmpI18n==='function')?_cmpI18n('with'):'';
+  if(!sc.length){
+    var wait=L({ru:'Первая оценка появится, когда вы ответите на недельный вопрос.',uk:'Перша оцінка зʼявиться, коли ви відповісте на тижневе питання.',en:'Your first score will appear once you answer the weekly question.',es:'Tu primera valoración aparecerá cuando respondas la pregunta semanal.',de:'Deine erste Bewertung erscheint, sobald du die Wochenfrage beantwortest.',pt:'Sua primeira nota aparecerá quando você responder à pergunta semanal.',fr:'Votre première note apparaîtra après la question hebdomadaire.',pl:'Pierwsza ocena pojawi się po odpowiedzi na pytanie tygodniowe.',it:'Il primo punteggio apparirà dopo la domanda settimanale.',he:'הציון הראשון יופיע לאחר השאלה השבועית.',ja:'週の質問に答えると最初のスコアが表示されます。',ko:'주간 질문에 답하면 첫 점수가 표시됩니다.'});
+    return '<div class="vc-card"><div class="vc-h">'+_esc(title)+'</div><div class="vc-row"><span class="vc-l">'+_esc(names)+'</span></div>'
+      +'<div style="font-size:11px;color:var(--t3);padding:2px 0 2px;">'+wait+'</div></div>';
+  }
+  var asc=sc.slice().reverse();                       // от старых к новым
+  var first=asc[0], last=asc[asc.length-1];
+  var delta=(asc.length>1)?(last.val-first.val):null;  // минус = беспокоит меньше
+  var dTxt='';
+  if(delta!=null){
+    var better=L({ru:'беспокоит меньше',uk:'турбує менше',en:'bothers you less',es:'molesta menos',de:'stört weniger',pt:'incomoda menos',fr:'vous gêne moins',pl:'przeszkadza mniej',it:'disturba meno',he:'מפריע פחות',ja:'気になりにくく',ko:'덜 불편해짐'});
+    var worse=L({ru:'беспокоит сильнее',uk:'турбує сильніше',en:'bothers you more',es:'molesta más',de:'stört mehr',pt:'incomoda mais',fr:'vous gêne plus',pl:'przeszkadza bardziej',it:'disturba di più',he:'מפריע יותר',ja:'気になりやすく',ko:'더 불편해짐'});
+    var same=L({ru:'без изменений',uk:'без змін',en:'no change',es:'sin cambios',de:'unverändert',pt:'sem mudança',fr:'sans changement',pl:'bez zmian',it:'nessun cambiamento',he:'ללא שינוי',ja:'変化なし',ko:'변화 없음'});
+    dTxt=(delta<0?('−'+Math.abs(delta)+' · '+better):delta>0?('+'+delta+' · '+worse):same);
+  }
+  var col=(delta==null)?'var(--t2)':(delta<0?'#4ECCA3':delta>0?'#FF6B8A':'var(--t2)');
+  // Точки по неделям: показываем последние 8, чтобы строка не расползалась.
+  var dots=asc.slice(-8).map(function(x){
+    var h=Math.max(4,Math.round(x.val*3.4));   // 0–10 → 4–38px
+    return '<div title="'+x.day+': '+x.val+'/10" style="display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;">'
+      +'<div style="width:9px;height:'+h+'px;border-radius:3px;background:linear-gradient(180deg,rgba(226,185,90,.85),rgba(226,185,90,.35));"></div>'
+      +'<div style="font-size:9px;color:var(--t3);">'+x.val+'</div></div>';
+  }).join('');
+  return '<div class="vc-card"><div class="vc-h">'+_esc(title)+'</div>'
+    +'<div class="vc-row"><span class="vc-l">'+_esc(names)+'</span><span class="vc-v" style="color:'+col+';">'+last.val+'/10</span></div>'
+    +(dTxt?('<div style="font-size:11px;color:'+col+';margin:-2px 0 6px;">'+dTxt+' '+L({ru:'с начала',uk:'від початку',en:'since the start',es:'desde el inicio',de:'seit Beginn',pt:'desde o início',fr:'depuis le début',pl:'od początku',it:'dall’inizio',he:'מההתחלה',ja:'開始から',ko:'시작 이후'})+'</div>'):'')
+    +'<div style="display:flex;align-items:flex-end;gap:8px;height:52px;padding:4px 0 2px;">'+dots+'</div>'
+    +(last.note?('<div style="font-size:11.5px;color:var(--t2);line-height:1.55;border-top:1px solid rgba(226,185,90,.15);padding-top:7px;">«'+_esc(last.note)+'»</div>'):'')
+    +'</div>';
+}
+
 function renderCard(){
   if(typeof saveProfile==='function'){try{saveProfile();}catch(e){}}  // синхрон: карточка = что сейчас в профиле
   var box=document.getElementById('cardBody'); if(!box)return;
@@ -5074,7 +5114,9 @@ function renderCard(){
 
   // Порядок по логике/важности: сперва профиль (грид), затем результаты/инструменты (полноширинные).
   // «Правовая информация» — всегда последняя.
-  html+=[_secGoal,_secAct,_secNut,_secSup,_secStress,_secBal,_secRhythm,_secLife,_secBaseline,   // «что я о себе указал»
+  // Траектория по жалобе — первой: это ответ на «стало ли легче», ради которого человек и ведёт дневник.
+  var _secCmp=(typeof _cmpTrajHTML==='function')?_cmpTrajHTML():'';
+  html+=[_secCmp,_secGoal,_secAct,_secNut,_secSup,_secStress,_secBal,_secRhythm,_secLife,_secBaseline,   // «что я о себе указал»
          _secDyn,_secDay,_secVai,_secLabs,_secDaily,_secHist,_secSource,_secBackup,_secLegal].join('');     // «что показывает система / инструменты» + VAI-калькулятор
   html+='</div>'; // .vcard-grid
   html+='</div>'; // .vcard-wrap
