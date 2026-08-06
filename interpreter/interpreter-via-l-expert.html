@@ -2157,6 +2157,8 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
         <div class="import-status" id="fitbit-connect-status"></div>
         <div class="imported-preview" id="fitbit-connect-preview">
           <div style="font-size:11px;color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;" data-t="status_loaded">✓ Данные загружены</div>
+          <!-- дата данных: без неё «сегодня» и «позавчера» в панели выглядят одинаково -->
+          <div id="fitbit-connect-day" style="font-size:11px;color:var(--t3);margin-bottom:6px;"></div>
           <div class="preview-grid" id="fitbit-connect-grid"></div>
         </div>
       </div>
@@ -6455,6 +6457,11 @@ function renderGadgetPanel(){
       +'<div class="gp-num'+(got?'':' miss')+'">'+v+(got&&m.u?'<span class="gp-u"> '+m.u+'</span>':'')+'</div>'
       +'</div>';
   }).join('');
+  // Дата данных трекера: числа без даты неотличимы (сегодняшняя ночь или позавчерашняя) — и это
+  // уже приводило к выводу «импорт тянет вчерашнее», хотя данные были свежие.
+  var _dl=(typeof _importedDayLabel==='function')?_importedDayLabel():'';
+  if(_gotAny && _dl) box.insertAdjacentHTML('beforeend',
+    '<div style="grid-column:1/-1;font-size:11px;color:var(--t3);text-align:center;padding-top:4px;">'+_dl+'</div>');
   wrap.classList.toggle('answered', _gotAny);   // показатели есть → блок «готов», как отвеченный шаг
   wrap.style.display='block';
 }
@@ -10510,16 +10517,42 @@ function connectFitbit(){
   const ret = location.origin + location.pathname;
   location.href = FITBIT_CONNECT_BASE + '/start?sid=' + encodeURIComponent(sid) + '&ret=' + encodeURIComponent(ret);
 }
+// Один поход в API на возврат из OAuth. Живой лог 2026-08-06: /fitbit/metrics уходил ДВАЖДЫ в одну
+// секунду — возврат по редиректу и visibilitychange срабатывают вместе, плюс тихий рефреш прохода.
+// Держим общий in-flight promise и короткое окно, чтобы параллельные вызовы делили один ответ.
+var _fbReq=null, _fbReqAt=0;
+function _fbMetrics(sid){
+  if(_fbReq && (Date.now()-_fbReqAt)<15000) return _fbReq;
+  _fbReqAt=Date.now();
+  _fbReq=fetch(FITBIT_CONNECT_BASE+'/metrics?sid='+encodeURIComponent(sid))
+    .then(function(r){ return r.json(); })
+    .catch(function(e){ _fbReq=null; throw e; });
+  return _fbReq;
+}
+// Дата данных с трекера («за 6 августа»): без неё числа в панели неотличимы — сегодняшние они
+// или позавчерашние. Воркер отдаёт день пробуждения последней ночи в поле `day`.
+function _fbSaveDay(j){ try{ if(j&&j.day) localStorage.setItem('viae_imported_day', j.day); }catch(e){} }
+function _importedDayLabel(){
+  var d=''; try{ d=localStorage.getItem('viae_imported_day')||''; }catch(e){}
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d)) return '';
+  var L={ru:'данные за',uk:'дані за',en:'data for',es:'datos del',de:'Daten vom',pt:'dados de',fr:'données du',pl:'dane z',it:'dati del',he:'נתונים מ־',ja:'データ:',ko:'데이터:'};
+  var lg=(typeof lang!=='undefined'?lang:'en'), pre=L[lg]||L.en;
+  var dt=new Date(d+'T12:00:00');
+  var txt;
+  try{ txt=dt.toLocaleDateString(lg,{day:'numeric',month:'long'}); }catch(e){ txt=d; }
+  return pre+' '+txt;
+}
 async function fetchFitbitLive(sid){
   setStatus('fitbit-connect-status','loading',t('status_fitbit_connecting'));
   try{
-    const r = await fetch(FITBIT_CONNECT_BASE + '/metrics?sid=' + encodeURIComponent(sid));
-    const j = await r.json();
+    const j = await _fbMetrics(sid);
+    _fbSaveDay(j);
     if(j && j.ok && j.ex && Object.keys(j.ex).length){
       localStorage.removeItem('viae_fitbit_pending');
       applyExtracted(j.ex,'fitbit');
       applyImportedToSliders();
       renderPreview('fitbit-connect-grid', j.ex);
+      var _fd=document.getElementById('fitbit-connect-day'); if(_fd) _fd.textContent=_importedDayLabel();
       document.getElementById('fitbit-connect-preview').classList.add('show');
       setStatus('fitbit-connect-status','success',t('status_fitbit_ok'));
       updateImportSummary();
@@ -10538,8 +10571,8 @@ async function fetchFitbitLive(sid){
 async function _refreshFitbitSilent(){
   var sid=localStorage.getItem('viae_fitbit_sid'); if(!sid) return false;
   try{
-    var r=await fetch(FITBIT_CONNECT_BASE+'/metrics?sid='+encodeURIComponent(sid));
-    var j=await r.json();
+    var j=await _fbMetrics(sid);
+    _fbSaveDay(j);
     if(j&&j.ok&&j.ex&&Object.keys(j.ex).length){
       applyExtracted(j.ex,'fitbit');
       if(typeof applyImportedToSliders==='function')applyImportedToSliders();

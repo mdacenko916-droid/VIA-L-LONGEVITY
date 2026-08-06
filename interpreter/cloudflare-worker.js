@@ -3132,7 +3132,11 @@ async function handleFitbitMetrics(request, env, corsHeaders){
     if (o.year && o.month && o.day) return o.year*10000 + o.month*100 + o.day;
     for (const k of Object.keys(o)) { if (/time$/i.test(k) && typeof o[k]==='string') { const t = Date.parse(o[k]); if (t) return Math.floor(t/86400000); } }
     for (const k of Object.keys(o)) { const r = _dord(o[k], depth+1); if (r) return r; } return 0; };
-  const latest = (points, valFn) => { const arr = points.map(d => ({ ord:_dord(d), val:valFn(d) })).filter(x => x.val != null); if (!arr.length) return null; arr.sort((a,b)=>a.ord-b.ord); return arr[arr.length-1].val; };
+  // День, за который реально пришли метрики. Панель показывала числа БЕЗ даты, поэтому «сегодня»
+  // и «позавчера» выглядели одинаково: владелец решил, что импорт тянет вчерашнее, хотя данные были
+  // сегодняшние. Копим ord выбранных точек (yyyymmdd у дневных типов) и отдаём максимум как `day`.
+  const _pickedOrds = [];
+  const latest = (points, valFn) => { const arr = points.map(d => ({ ord:_dord(d), val:valFn(d) })).filter(x => x.val != null); if (!arr.length) return null; arr.sort((a,b)=>a.ord-b.ord); const top = arr[arr.length-1]; if (top.ord >= 20000101) _pickedOrds.push(top.ord); return top.val; };
   // HRV (rmssd, ms) — последняя ночь. БАГ (найден 15.07 живым логом): дневная запись Fitbit несёт ДВА
   // похожих поля — averageHeartRateVariabilityMilliseconds (настоящий ночной HRV, то же число, что в Fitbit
   // app) И deepSleepRootMeanSquareOfSuccessiveDifferencesMilliseconds (HRV только по фазе глубокого сна —
@@ -3193,11 +3197,36 @@ async function handleFitbitMetrics(request, env, corsHeaders){
     const main = lastNight.length ? lastNight.reduce((a,b) => (b.mins > a.mins ? b : a), lastNight[0]) : null;
     const last = main ? main.d : null;
     if (last) {
-      const mins = num(last.sleep.summary.minutesAsleep);
-      if (mins!=null) ex.sleepHours = +(mins/60).toFixed(2);
-      const ss = last.sleep.summary.stagesSummary;
-      const ds = Array.isArray(ss) ? ss.find(s => s.type === 'DEEP') : null;
-      if (ds && num(ds.minutes)!=null) ex.deepMin = Math.round(num(ds.minutes));
+      // СЧИТАЕМ ПО ФАЗАМ САМИ (2026-08-06, живая сверка с приложением трекера).
+      // Готовые поля Google Health расходятся с тем, что человек видит у себя в приложении:
+      // за ночь 05→06.08 summary.minutesAsleep дал 555 мин (9:15) при 487 (8:07) в приложении —
+      // он не вычитает 1 ч 29 мин бодрствования, то есть это «время в постели минус беспокойство»,
+      // а не сон. stagesSummary.DEEP дал 79 мин против 41 мин в приложении. Клиент сверяет цифры
+      // с трекером глазами, и такое расхождение читается как «приложение врёт».
+      // Сумма длительностей фаз (глубокий + быстрый + поверхностный) сходится с приложением точно.
+      const _stMins = (s) => { const a=Date.parse(s.startTime), b=Date.parse(s.endTime); return (isFinite(a)&&isFinite(b)&&b>a) ? (b-a)/60000 : 0; };
+      const _stType = (s) => { for (const k of Object.keys(s)) { const v=s[k]; if (typeof v==='string' && /DEEP|LIGHT|REM|AWAKE|WAKE|RESTLESS/i.test(v)) return v.toUpperCase(); } return ''; };
+      const stages = Array.isArray(last.sleep.stages) ? last.sleep.stages : [];
+      let mDeep=0, mRem=0, mLight=0;
+      for (const s of stages) {
+        const t=_stType(s), m=_stMins(s);
+        if (!t || !m) continue;
+        if (/AWAKE|WAKE|RESTLESS/.test(t)) continue;        // бодрствование и беспокойство — не сон
+        if (/DEEP/.test(t)) mDeep += m; else if (/REM/.test(t)) mRem += m; else if (/LIGHT/.test(t)) mLight += m;
+      }
+      const mAsleep = mDeep + mRem + mLight;
+      console.log('FITBIT-DEBUG sleep stages min: deep', Math.round(mDeep), 'rem', Math.round(mRem), 'light', Math.round(mLight),
+                  '| asleep', Math.round(mAsleep), 'vs summary.minutesAsleep', num(last.sleep.summary && last.sleep.summary.minutesAsleep));
+      if (mAsleep > 0) {
+        ex.sleepHours = +(mAsleep/60).toFixed(2);
+        if (mDeep > 0) ex.deepMin = Math.round(mDeep);
+      } else {   // фаз нет (запись без стадий) — старый путь как фолбэк
+        const mins = num(last.sleep.summary && last.sleep.summary.minutesAsleep);
+        if (mins!=null) ex.sleepHours = +(mins/60).toFixed(2);
+        const ss = last.sleep.summary && last.sleep.summary.stagesSummary;
+        const ds = Array.isArray(ss) ? ss.find(s => s.type === 'DEEP') : null;
+        if (ds && num(ds.minutes)!=null) ex.deepMin = Math.round(num(ds.minutes));
+      }
       const iv = last.sleep.interval || {};
       const _ss = Date.parse(iv.startTime), _se = Date.parse(iv.endTime);
       if (isFinite(_ss)) sleepStartMs = _ss;
@@ -3225,7 +3254,15 @@ async function handleFitbitMetrics(request, env, corsHeaders){
       if (val != null) ex.spo2 = +val.toFixed(1);
     } }
 
-  return jsonResponse({ ok:true, ex: _sanitizeEx(ex) }, corsHeaders);
+  // Дата данных: у сна берём день ПРОБУЖДЕНИЯ (ночь 05→06 показываем как 6-е — так же её видит клиент
+  // в приложении трекера), у остальных — день записи. Отдаём максимум: это и есть «за какое утро» импорт.
+  let day = null;
+  if (sleepEndMs) { const d = new Date(sleepEndMs); _pickedOrds.push(d.getUTCFullYear()*10000 + (d.getUTCMonth()+1)*100 + d.getUTCDate()); }
+  if (_pickedOrds.length) {
+    const o = Math.max(..._pickedOrds);
+    day = String(Math.floor(o/10000)) + '-' + String(Math.floor(o/100)%100).padStart(2,'0') + '-' + String(o%100).padStart(2,'0');
+  }
+  return jsonResponse({ ok:true, ex: _sanitizeEx(ex), day }, corsHeaders);
 }
 
 // ─────────────────────────────────────────────────────────────
