@@ -536,7 +536,11 @@ async function wellnessGuardrail(text, env, langName, lang, ctx) {
   if (!text || !_hit) { log('clean'); return text; }   // Filter 1: нет risk-паттерна → без LLM-вызовов
   // Что именно сработало + короткий контекст → в учёт (ai_usage.note). Без этого причина
   // перегенерации невидима: 9 разборов из 10 переписывались, и понять почему было нельзя.
-  const _at = scanText.indexOf(_hit[0]);
+  // ⚠️ Индекс берём У САМОГО СОВПАДЕНИЯ, а не первое вхождение слова: _realHit пропускает
+  // отрицания и возвращает ПОЗЖЕ стоящий, настоящий триггер, а indexOf показывал первый —
+  // в заметке оседал безобидный кусок («это говорит не о болезни»), и по логам выходило,
+  // будто сторож ловит отрицания, хотя ловил он совсем другое место. Диагностика врала.
+  const _at = _hit.index;
   const _why = _hit[0] + ' ‹ ' + scanText.slice(Math.max(0, _at - 45), _at + _hit[0].length + 45).replace(/\s+/g, ' ') + ' ›';
   const verdict = await callClaudeSimple(
     'You are a compliance checker for an Apple App Store wellness app (Guideline 1.4.1). '
