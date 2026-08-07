@@ -620,7 +620,12 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
       </div>
       <div class="form-row" style="margin:0">
         <label data-i18n="sp_password">Пароль</label>
-        <input class="form-input" id="s-password" type="text" data-i18n-ph="sp_pass_ph" placeholder="новый пароль" autocomplete="new-password">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input class="form-input" id="s-password" type="text" data-i18n-ph="sp_pass_ph" placeholder="новый пароль" autocomplete="new-password" style="flex:1;">
+          <!-- D1: пароль придумывает не человек. Слабый или повторно использованный пароль
+               специалиста — это доступ к чужим досье; генератор снимает этот выбор с него. -->
+          <button type="button" class="topbtn" onclick="genSpecPassword()" data-i18n="sp_pass_gen">Сгенерировать</button>
+        </div>
       </div>
     </div>
     <div id="s-pass-hint" data-i18n="sp_pass_hint" style="font-size:11px;color:#888;margin-top:4px;display:none;">При редактировании оставьте пустым, чтобы не менять пароль.</div>
@@ -1039,6 +1044,8 @@ const T = {
   sp_login:{ru:"Логин",uk:"Логін",en:"Login",es:"Usuario",de:"Login",pt:"Login",fr:"Identifiant",pl:"Login",it:"Login",he:"שם משתמש",ja:"ログイン",ko:"로그인"},
   sp_password:{ru:"Пароль",uk:"Пароль",en:"Password",es:"Contraseña",de:"Passwort",pt:"Senha",fr:"Mot de passe",pl:"Hasło",it:"Password",he:"סיסמה",ja:"パスワード",ko:"비밀번호"},
   sp_pass_ph:{ru:"новый пароль",uk:"новий пароль",en:"new password",es:"nueva contraseña",de:"neues Passwort",pt:"nova senha",fr:"nouveau mot de passe",pl:"nowe hasło",it:"nuova password",he:"סיסמה חדשה",ja:"新しいパスワード",ko:"새 비밀번호"},
+  sp_pass_gen:{ru:"Сгенерировать",uk:"Згенерувати",en:"Generate",es:"Generar",de:"Generieren",pt:"Gerar",fr:"Générer",pl:"Wygeneruj",it:"Genera",he:"יצירה",ja:"生成",ko:"생성"},
+  sp_pass_once:{ru:"Пароль скопирован. Передайте его специалисту сейчас — сохраняется только хэш, показать снова будет нельзя.",uk:"Пароль скопійовано. Передайте його спеціалісту зараз — зберігається лише хеш, показати знову не вийде.",en:"Password copied. Give it to the specialist now — only a hash is stored, it cannot be shown again.",es:"Contraseña copiada. Entrégasela ahora al especialista: solo se guarda un hash y no podrá mostrarse de nuevo.",de:"Passwort kopiert. Gib es jetzt an die Fachkraft weiter — gespeichert wird nur ein Hash, erneut anzeigen ist nicht möglich.",pt:"Senha copiada. Entregue ao especialista agora — só o hash é salvo e não poderá ser exibida novamente.",fr:"Mot de passe copié. Transmettez-le maintenant au spécialiste — seul un hachage est conservé, il ne pourra plus être affiché.",pl:"Hasło skopiowane. Przekaż je specjaliście teraz — zapisywany jest tylko hash, nie da się go pokazać ponownie.",it:"Password copiata. Consegnala ora allo specialista — viene salvato solo l’hash e non potrà essere mostrata di nuovo.",he:"הסיסמה הועתקה. מסרו אותה למומחה עכשיו — נשמר רק גיבוב ולא ניתן להציגה שוב.",ja:"パスワードをコピーしました。今すぐ専門家に渡してください。保存されるのはハッシュのみで、再表示はできません。",ko:"비밀번호가 복사되었습니다. 지금 전문가에게 전달하세요. 해시만 저장되며 다시 표시할 수 없습니다."},
   sp_pass_hint:{ru:"При редактировании оставьте пустым, чтобы не менять пароль.",uk:"Під час редагування залиште порожнім, щоб не змінювати пароль.",en:"When editing, leave empty to keep the current password.",es:"Al editar, déjelo vacío para no cambiar la contraseña.",de:"Beim Bearbeiten leer lassen, um das Passwort nicht zu ändern.",pt:"Ao editar, deixe vazio para manter a senha.",fr:"En modification, laissez vide pour conserver le mot de passe.",pl:"Podczas edycji zostaw puste, aby nie zmieniać hasła.",it:"In modifica, lascia vuoto per non cambiare la password.",he:"בעריכה, השאר ריק כדי לא לשנות את הסיסמה.",ja:"編集時は空欄でパスワードを変更しません。",ko:"편집 시 비워 두면 비밀번호가 변경되지 않습니다."},
   sp_specialty:{ru:"Профиль",uk:"Профіль",en:"Specialty",es:"Especialidad",de:"Fachgebiet",pt:"Especialidade",fr:"Spécialité",pl:"Specjalność",it:"Specialità",he:"התמחות",ja:"専門分野",ko:"전문 분야"},
   spec_nutritionist:{ru:"Нутрициолог",uk:"Нутриціолог",en:"Nutritionist",es:"Nutricionista",de:"Ernährungsberater",pt:"Nutricionista",fr:"Nutritionniste",pl:"Dietetyk",it:"Nutrizionista",he:"תזונאי",ja:"栄養士",ko:"영양사"},
@@ -2083,6 +2090,18 @@ function genSpecPassword(){
     box.innerHTML = t('sp_gen_note') + ' <b style="font-family:monospace;">' + esc(out) + '</b> '
       + '<button type="button" class="topbtn" style="padding:1px 8px;" onclick="navigator.clipboard.writeText(\'' + out + '\')">' + t('sp_copy') + '</button>';
   }
+}
+// D1: сильный пароль из crypto (16 знаков, без похожих символов — их путают при диктовке).
+// Показывается ОДИН раз в поле: сохранится хэш, а не текст, и восстановить его будет нельзя.
+function genSpecPassword(){
+  const A='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';   // без I,l,O,0,1
+  const b=new Uint32Array(16); crypto.getRandomValues(b);
+  const pw=Array.from(b,x=>A[x%A.length]).join('');
+  const el=document.getElementById('s-password'); if(!el) return;
+  el.value=pw; el.type='text'; el.focus(); el.select();
+  try{ navigator.clipboard && navigator.clipboard.writeText(pw); }catch(_){}
+  const h=document.getElementById('s-pass-hint');
+  if(h){ h.style.display='block'; h.textContent=t('sp_pass_once'); h.style.color='#8a6a1c'; }
 }
 // D2: специалист меняет свой пароль сам.
 async function changeMyPassword(){
