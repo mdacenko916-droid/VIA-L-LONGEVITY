@@ -3887,8 +3887,23 @@ function bumpExpertUsedLocal(){
 }
 function renderExpertCounter(){
   const el=document.getElementById('expertCounter'); if(!el) return;
+  // Доступ из кабинета выдаётся В ДНЯХ (quota=days, «1 разбор в день»), а шаблон «Разбор N из M»
+  // пришёл из программ на 8/12 недель, где M был ЦЕЛЬЮ. Подставленный туда срок читался как
+  // «вам предстоит 139 разборов» — обещание, которого никто не давал. Человеку важна дата
+  // окончания доступа, а не счёт своих разборов: показываем её, когда срок известен.
+  let expiry=''; try{ expiry=sessionStorage.getItem('viae_expiry')||localStorage.getItem('viae_expiry')||''; }catch(e){}
+  if(/^\d{4}-\d{2}-\d{2}$/.test(expiry)){
+    const _loc={ru:'ru-RU',uk:'uk-UA',en:'en-GB',es:'es-ES',de:'de-DE',pt:'pt-BR',fr:'fr-FR',pl:'pl-PL',it:'it-IT',he:'he-IL',ja:'ja-JP',ko:'ko-KR'};
+    let d=expiry; try{ d=new Date(expiry+'T12:00:00').toLocaleDateString(_loc[lang]||'en-GB',{day:'numeric',month:'long',year:'numeric'}); }catch(e){}
+    const L1=L({ru:'Доступ до',uk:'Доступ до',en:'Access until',es:'Acceso hasta',de:'Zugang bis',pt:'Acesso até',fr:'Accès jusqu’au',pl:'Dostęp do',it:'Accesso fino al',he:'גישה עד',ja:'利用期限',ko:'이용 기한'});
+    const left=Math.ceil((new Date(expiry+'T12:00:00')-Date.now())/86400000);
+    const D=L({ru:'дн.',uk:'дн.',en:'d',es:'d',de:'T',pt:'d',fr:'j',pl:'dn.',it:'g',he:'ימ׳',ja:'日',ko:'일'});
+    el.textContent=L1+' '+d+(left>0&&left<=14?(' · '+left+' '+D):'');
+    el.style.display='block'; return;
+  }
+  // Срока нет (старые коды Hotmart на 8/12 недель) — прежний счётчик программы.
   let max=expertState.max; if(!max){ try{ max=_planMax(sessionStorage.getItem('viae_plan')); }catch(e){ max=0; } }
-  if(!max){ el.style.display='none'; return; }
+  if(!max || max>20){ el.style.display='none'; return; }   // max>20 = это дни, а не программа: молчим, а не врём
   const used=Math.min(expertState.used||0, max);
   const tpl=(T[lang]&&T[lang].counter_used)||(T.ru&&T.ru.counter_used)||'Разбор {used} из {max}';
   el.textContent=tpl.replace('{used}',used).replace('{max}',max);
