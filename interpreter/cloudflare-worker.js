@@ -3581,7 +3581,10 @@ async function handlePolarMetrics(request, env, corsHeaders) {
   const slp = await get(`/users/${userId}/sleep?from=${from}&to=${to}`);
   const slpList = Array.isArray(slp) ? slp : (slp && slp.nights ? slp.nights : slp && slp.night ? slp.night : []);
   if (slpList.length) {
-    const tot = _latestByDate(slpList, x => x.date, x => { const t = Number(x.total_sleep_time || 0) || (Number(x.light_sleep||0) + Number(x.deep_sleep||0) + Number(x.rem_sleep||0)); return t > 0 ? t : null; });
+    // Сумма фаз ПЕРВЫМ приоритетом, готовое поле — только фолбэк. Урок Fitbit 2026-08-06: там
+    // готовое «время сна» включало бодрствование и расходилось с приложением трекера на час.
+    // Устройства Polar для проверки нет, поэтому берём заведомо безопасный порядок.
+    const tot = _latestByDate(slpList, x => x.date, x => { const st = Number(x.light_sleep||0) + Number(x.deep_sleep||0) + Number(x.rem_sleep||0); const t = st > 0 ? st : Number(x.total_sleep_time || 0); return isFinite(t) && t > 0 ? t : null; });
     if (tot!=null) ex.sleepHours = +(tot / 3600).toFixed(2);
     const dp = _latestByDate(slpList, x => x.date, x => { const n = Number(x.deep_sleep); return isFinite(n) && n > 0 ? n : null; });
     if (dp!=null) ex.deepMin = Math.round(dp / 60);
