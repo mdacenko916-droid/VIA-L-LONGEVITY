@@ -11,6 +11,14 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
+  /* Типографический канон — общий с приложением (docs/TYPOGRAPHY-CANON.md, 2026-08-24).
+     Аудитория 40+: ниже --fs-cap не опускаться. На телефоне вся шкала на ступень выше,
+     --fs-body = 17px (системный размер body в iOS). */
+  --fs-cap:   13px;
+  --fs-body:  15px;
+  --fs-title: 18px;
+  --fs-hero:  24px;
+
   /* Светлая тема витрины (бренд-крем) */
   --bg:#F5F3EF; --surface:rgba(0,0,0,.035); --surface-2:#ffffff;
   --gold:#C49A3C; --gold-lt:#E2B95A; --gold-dim:rgba(196,154,60,.22); --gold-txt:#8a6a1c;
@@ -38,33 +46,33 @@ body::before{
 .back{
   width:34px;height:34px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;
   background:#151a24;border:1px solid rgba(226,185,90,.55);color:#EEC77A;
-  border-radius:50%;font-size:15px;line-height:1;cursor:pointer;text-decoration:none;
+  border-radius:50%;font-size:var(--fs-title);line-height:1;cursor:pointer;text-decoration:none;
   box-shadow:0 2px 10px rgba(0,0,0,.28);transition:box-shadow .2s,border-color .2s,transform .12s;
 }
 .back:hover{border-color:rgba(226,185,90,.85);box-shadow:0 0 16px rgba(226,185,90,.35)}
 .back:active{transform:scale(.9)}
 .lang-dropdown{position:relative}
-.lang-toggle{display:flex;align-items:center;gap:6px;font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:6px 14px;border-radius:50px;border:1px solid var(--b1);background:#fff;color:var(--t2);cursor:pointer;font-family:'DM Sans',sans-serif}
+.lang-toggle{display:flex;align-items:center;gap:6px;font-size:var(--fs-cap);letter-spacing:2px;text-transform:uppercase;padding:6px 14px;border-radius:50px;border:1px solid var(--b1);background:#fff;color:var(--t2);cursor:pointer;font-family:'DM Sans',sans-serif}
 .lang-toggle:hover{border-color:var(--b2);color:var(--gold)}
 .lang-toggle svg{width:10px;height:10px;fill:currentColor}
 .lang-menu{position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1px solid var(--gold-dim);border-radius:14px;padding:6px;display:none;flex-direction:column;gap:2px;min-width:150px;z-index:50;box-shadow:0 16px 40px rgba(120,90,30,.18);max-height:60vh;overflow-y:auto}
 .lang-menu.open{display:flex}
-.lang-option{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:9px;font-size:13px;color:var(--t2);cursor:pointer;white-space:nowrap}
+.lang-option{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:9px;font-size:var(--fs-body);color:var(--t2);cursor:pointer;white-space:nowrap}
 .lang-option:hover,.lang-option.active{background:rgba(226,185,90,.12);color:var(--t1)}
 .lang-flag{font-size:16px}
 .card{
   background:linear-gradient(160deg,#ffffff 0%,#fdfbf6 60%,#faf6ec 100%);border:1px solid rgba(160,120,32,.28);border-radius:20px;
   padding:20px 20px;box-shadow:0 8px 30px rgba(120,90,30,.10);
 }
-.eyebrow{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--gold-txt);margin-bottom:5px;text-align:center}
+.eyebrow{font-size:var(--fs-cap);letter-spacing:4px;text-transform:uppercase;color:var(--gold-txt);margin-bottom:5px;text-align:center}
 h1{font-family:'Playfair Display',serif;font-weight:400;font-size:23px;text-align:center;margin-bottom:6px}
-.intro{font-size:13px;color:var(--t2);line-height:1.5;text-align:center;margin-bottom:12px}
+.intro{font-size:var(--fs-body);color:var(--t2);line-height:1.5;text-align:center;margin-bottom:12px}
 label.fld{display:block;margin-bottom:9px}
-label.fld .lbl{display:block;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold-txt);font-weight:600;margin-bottom:6px}
+label.fld .lbl{display:block;font-size:var(--fs-cap);letter-spacing:1.5px;text-transform:uppercase;color:var(--gold-txt);font-weight:600;margin-bottom:6px}
 label.fld .opt{text-transform:none;letter-spacing:0;color:var(--t3)}
 input.in{
   width:100%;background:var(--surface-2);border:1px solid var(--b1);border-radius:12px;
-  color:var(--t1);font-family:inherit;font-size:15px;font-weight:300;padding:10px 14px;
+  color:var(--t1);font-family:inherit;font-size:var(--fs-title);font-weight:300;padding:10px 14px;
 }
 input.in::placeholder{color:var(--t3)}
 input.in:focus{outline:none;border-color:var(--b2);box-shadow:0 0 0 3px var(--gold-dim)}
@@ -72,22 +80,22 @@ input.in.err{border-color:var(--alert)}
 #code{text-transform:uppercase;letter-spacing:2px}
 .specfound{
   display:none;margin:-8px 0 18px;padding:11px 14px;border-radius:12px;
-  background:var(--ok-dim);border:1px solid rgba(78,204,163,.3);font-size:13.5px;color:var(--t1);
+  background:var(--ok-dim);border:1px solid rgba(78,204,163,.3);font-size:var(--fs-body);color:var(--t1);
 }
 .specfound b{color:var(--ok);font-weight:500}
 .consent{display:flex;gap:11px;align-items:flex-start;margin-bottom:12px;cursor:pointer}
 .consent input{margin-top:3px;width:17px;height:17px;flex-shrink:0;accent-color:var(--gold)}
-.consent span{font-size:12.5px;color:var(--t2);line-height:1.65}
+.consent span{font-size:var(--fs-cap);color:var(--t2);line-height:1.65}
 .btn{
   width:100%;background:linear-gradient(135deg,var(--gold),var(--gold-lt));
-  color:#1a1408;border:none;border-radius:12px;font-family:inherit;font-size:15px;
+  color:#1a1408;border:none;border-radius:12px;font-family:inherit;font-size:var(--fs-title);
   font-weight:500;letter-spacing:.5px;padding:13px;cursor:pointer;transition:transform .15s,opacity .15s;
 }
 .btn:hover{transform:translateY(-1px)}
 .btn:active{transform:scale(.98)}
 .btn:disabled{opacity:.55;cursor:default;transform:none}
 .btn.ghost{background:none;border:1px solid var(--b1);color:var(--t2);margin-top:12px}
-.formerr{display:none;font-size:12.5px;color:var(--alert);text-align:center;margin-top:14px}
+.formerr{display:none;font-size:var(--fs-cap);color:var(--alert);text-align:center;margin-top:14px}
 .formerr.show{display:block}
 /* success / connected */
 #done{display:none;text-align:center}
@@ -97,20 +105,20 @@ input.in.err{border-color:var(--alert)}
   margin:22px 0 6px;padding:16px;border-radius:14px;background:#fbf7ee;border:1px solid var(--b2);
   font-family:'Playfair Display',serif;font-size:26px;letter-spacing:4px;color:var(--gold-txt);
 }
-.codehint{font-size:11.5px;color:var(--t3);line-height:1.6;margin-bottom:26px}
-.unlink{background:none;border:none;color:var(--t3);font-family:inherit;font-size:12.5px;
+.codehint{font-size:var(--fs-cap);color:var(--t3);line-height:1.6;margin-bottom:26px}
+.unlink{background:none;border:none;color:var(--t3);font-family:inherit;font-size:var(--fs-cap);
   text-decoration:underline;cursor:pointer;margin-top:18px}
 .unlink:hover{color:var(--alert)}
 html[data-lang="he"]{direction:rtl}
 /* Каталог специалистов */
-.catback{background:none;border:none;color:var(--gold-txt);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:6px 0;}
-.cchip{font-size:12px;padding:7px 14px;border-radius:50px;border:1px solid var(--b1);background:#fff;color:var(--t2);cursor:pointer;white-space:nowrap;}
+.catback{background:none;border:none;color:var(--gold-txt);font-family:inherit;font-size:var(--fs-body);font-weight:600;cursor:pointer;padding:6px 0;}
+.cchip{font-size:var(--fs-cap);padding:7px 14px;border-radius:50px;border:1px solid var(--b1);background:#fff;color:var(--t2);cursor:pointer;white-space:nowrap;}
 .cchip.active{background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#1a1408;border-color:transparent;font-weight:500;}
-.catlang{appearance:none;-webkit-appearance:none;border:1px solid var(--b1);background-color:#fff;color:var(--t1);border-radius:10px;padding:9px 38px 9px 14px;font-family:inherit;font-size:13px;min-width:180px;max-width:100%;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%238a6a1c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px;}
+.catlang{appearance:none;-webkit-appearance:none;border:1px solid var(--b1);background-color:#fff;color:var(--t1);border-radius:10px;padding:9px 38px 9px 14px;font-family:inherit;font-size:var(--fs-body);min-width:180px;max-width:100%;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%238a6a1c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px;}
 .speccard{background:#fff;border:1px solid rgba(160,120,32,.22);border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 4px 16px rgba(120,90,30,.07);}
 .speccard .sc-photo{width:52px;height:52px;border-radius:50%;object-fit:cover;flex:none;}
 .speccard .sc-photo-ph{width:52px;height:52px;border-radius:50%;flex:none;background:#f2ead9;display:flex;align-items:center;justify-content:center;color:var(--gold-txt);font-size:20px;font-weight:600;}
-.seeall{display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--gold-txt);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:4px 0;}
+.seeall{display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--gold-txt);font-family:inherit;font-size:var(--fs-body);font-weight:600;cursor:pointer;padding:4px 0;}
 /* Карусель специалистов на экране входа */
 .car-wrap{position:relative;}
 .car-track{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
@@ -119,6 +127,9 @@ html[data-lang="he"]{direction:rtl}
 .car-slide .speccard{margin-bottom:0;}
 .car-arrow{position:absolute;top:42px;width:30px;height:30px;border-radius:50%;border:1px solid var(--b1);background:rgba(255,255,255,.92);color:var(--gold-txt);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(120,90,30,.15);z-index:2;}
 .car-prev{left:-6px;} .car-next{right:-6px;}
+@media (max-width:599px){
+  :root{ --fs-cap:14px; --fs-body:17px; --fs-title:20px; --fs-hero:26px; }
+}
 </style>
 </head>
 <body>
@@ -192,16 +203,16 @@ html[data-lang="he"]{direction:rtl}
       <div class="eyebrow">VIA·L</div>
       <h1 id="catTitle" style="margin-bottom:4px;">Специалисты VIA·L</h1>
       <p class="intro" id="catSub" style="margin-bottom:4px;">Выберите специалиста, который подходит именно вам</p>
-      <p id="catIndep" style="font-size:11px;color:var(--t2);line-height:1.5;text-align:left;border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:9px 11px;margin-top:10px;">Независимые специалисты, использующие платформу VIA·L</p>
+      <p id="catIndep" style="font-size:var(--fs-cap);color:var(--t2);line-height:1.5;text-align:left;border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:9px 11px;margin-top:10px;">Независимые специалисты, использующие платформу VIA·L</p>
     </div>
     <div id="catChips" style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;"></div>
     <div style="margin-bottom:14px;"><select id="catLangSel" class="catlang" onchange="_catLangChanged()"></select></div>
-    <div id="catMatchNote" style="display:none;font-size:12px;color:var(--gold-txt);font-weight:600;margin-bottom:10px;"></div>
+    <div id="catMatchNote" style="display:none;font-size:var(--fs-cap);color:var(--gold-txt);font-weight:600;margin-bottom:10px;"></div>
     <div id="catList"></div>
     <!-- Приглашение пройти опрос-подбор -->
     <div id="quizPrompt" class="speccard" style="margin-top:6px;text-align:center;background:#fbf7ee;">
       <div id="quizPromptT" style="font-weight:600;color:var(--t1);margin-bottom:4px;">Не знаете, кого выбрать?</div>
-      <div id="quizPromptS" style="font-size:12.5px;color:var(--t2);line-height:1.5;margin-bottom:12px;">Пройдите короткий опрос, и мы подберём специалиста под ваш запрос.</div>
+      <div id="quizPromptS" style="font-size:var(--fs-cap);color:var(--t2);line-height:1.5;margin-bottom:12px;">Пройдите короткий опрос, и мы подберём специалиста под ваш запрос.</div>
       <button type="button" class="btn" onclick="openQuiz()" id="quizBtn" style="max-width:260px;margin:0 auto;">Пройти опрос</button>
     </div>
   </div>
@@ -214,9 +225,9 @@ html[data-lang="he"]{direction:rtl}
       <h1 id="quizTitle" style="margin-bottom:4px;">Подбор специалиста</h1>
     </div>
     <div class="card" style="padding:18px;">
-      <div class="lbl" id="quizQ1" style="display:block;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold-txt);font-weight:600;margin-bottom:10px;">С чем вам нужна помощь?</div>
+      <div class="lbl" id="quizQ1" style="display:block;font-size:var(--fs-cap);letter-spacing:1.5px;text-transform:uppercase;color:var(--gold-txt);font-weight:600;margin-bottom:10px;">С чем вам нужна помощь?</div>
       <div id="quizNeeds" style="display:flex;flex-direction:column;gap:8px;"></div>
-      <div class="lbl" id="quizQ2" style="display:block;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold-txt);font-weight:600;margin:18px 0 8px;">Язык общения</div>
+      <div class="lbl" id="quizQ2" style="display:block;font-size:var(--fs-cap);letter-spacing:1.5px;text-transform:uppercase;color:var(--gold-txt);font-weight:600;margin:18px 0 8px;">Язык общения</div>
       <select id="quizLang" class="catlang" style="width:100%;"></select>
       <button type="button" class="btn" onclick="submitQuiz()" id="quizSubmit" style="margin-top:18px;">Подобрать специалиста</button>
     </div>
@@ -632,7 +643,7 @@ function specCard(s, idx, inCatalog){
     : `<div class="sc-photo-ph">${esc((s.name||'?').trim().charAt(0).toUpperCase())}</div>`;
   const cal = s.cal_url?esc(s.cal_url):'';
   const pay = (s.pay_url && /^https?:\/\//i.test(s.pay_url)) ? esc(s.pay_url) : '';
-  const _bs='display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-top:12px;font-size:14px;padding:10px 12px;';
+  const _bs='display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-top:12px;font-size:var(--fs-body);padding:10px 12px;';
   // Две двери к специалисту: знакомство (15 мин) и сразу ведение — не всем нужен созвон.
   // Оплата уходит на чекаут САМОГО специалиста: платёжных данных мы не собираем и не храним,
   // ссылка в карточке нигде не показана текстом — только как адрес кнопки.
@@ -642,15 +653,15 @@ function specCard(s, idx, inCatalog){
   // закрыта там, где текста нет. Список расширяется по мере перевода оферты.
   const btnBuy = (pay && !_isUS() && OFFER_LANGS.indexOf(lang) >= 0)
     ? `<a class="btn" href="javascript:void(0)" onclick="event.stopPropagation();_acceptOffer(${s.id||0}, '${pay}')" style="${_bs}background:var(--gold-txt);color:#fff;border-color:transparent;"><span>${esc(tr('pay_spec').replace('{name}', s.name||''))}</span></a>`
-    : (pay ? `<div style="font-size:11.5px;color:var(--t2);margin-top:10px;line-height:1.5;border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:9px 11px;">${esc(_isUS() ? tr('us_note') : tr('offer_lang'))}</div>`
-    : (cal ? `<div style="font-size:11px;color:var(--t3);margin-top:8px;text-align:center;">${esc(tr('start_after_intro'))}</div>` : ''));
+    : (pay ? `<div style="font-size:var(--fs-cap);color:var(--t2);margin-top:10px;line-height:1.5;border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:9px 11px;">${esc(_isUS() ? tr('us_note') : tr('offer_lang'))}</div>`
+    : (cal ? `<div style="font-size:var(--fs-cap);color:var(--t3);margin-top:8px;text-align:center;">${esc(tr('start_after_intro'))}</div>` : ''));
   const btn = btnBuy + btnBook;   // «Начать ведение» выше: клиенту, который уже решил, не нужно искать
   // Оговорка об ответственности — рядом с кнопкой оплаты, а не в подвале: человек должен
   // прочитать это ДО того, как заплатит, иначе она не выполняет своей функции.
   // Галочка акцепта — НАД кнопкой оплаты: условия принимаются до платежа, а не после.
   // A4: бейдж проверки — рядом с именем, чтобы читался сразу, а не после прокрутки.
   const badge = s.verified_at
-    ? `<div style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;color:#4ECCA3;border:1px solid rgba(78,204,163,.35);border-radius:999px;padding:2px 8px;margin-top:4px;">✓ ${esc(tr('ver_badge'))} · ${esc(s.verified_at)}</div>`
+    ? `<div style="display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-cap);color:#4ECCA3;border:1px solid rgba(78,204,163,.35);border-radius:999px;padding:2px 8px;margin-top:4px;">✓ ${esc(tr('ver_badge'))} · ${esc(s.verified_at)}</div>`
     : '';
   // E1: страна специалиста определяет применимое право в его договоре с клиентом,
   // поэтому она стоит в карточке рядом с проверкой, а не прячется в тексте оферты.
@@ -661,33 +672,33 @@ function specCard(s, idx, inCatalog){
     s.city       ? [tr('ver_city'), esc(s.city)] : null,
     s.insurance  ? [tr('ver_ins'), esc(tr('ver_ins_yes'))] : null,
     s.country    ? [tr('ver_juris'), esc(_countryName(s.country)) + (s.legal_form ? ' · ' + esc(s.legal_form) : '')
-                    + '<div style="color:var(--t3);font-size:10.5px;line-height:1.45;margin-top:2px;">' + esc(tr('ver_law')) + '</div>'] : null,
+                    + '<div style="color:var(--t3);font-size:var(--fs-cap);line-height:1.45;margin-top:2px;">' + esc(tr('ver_law')) + '</div>'] : null,
     (s.website && !_isUS()) ? [tr('ver_site'), '<a href="' + esc(s.website) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--gold-txt);">' + esc(s.website.replace(/^https?:\/\//,'')) + '</a>'] : null,
   ].filter(Boolean);
   const more = rows.length ? (
       '<button id="specMoreBtn_' + (s.id||0) + '" onclick="event.stopPropagation();_toggleSpecMore(' + (s.id||0) + ')" '
-    + 'style="background:none;border:none;color:var(--gold-txt);font-size:12px;padding:6px 0 0;cursor:pointer;">' + esc(tr('ver_more')) + ' ▾</button>'
+    + 'style="background:none;border:none;color:var(--gold-txt);font-size:var(--fs-cap);padding:6px 0 0;cursor:pointer;">' + esc(tr('ver_more')) + ' ▾</button>'
     + '<div id="specMore_' + (s.id||0) + '" style="display:none;margin-top:6px;border-top:1px solid rgba(255,255,255,.07);padding-top:8px;">'
-    + rows.map(r=>'<div style="font-size:11.5px;color:var(--t2);line-height:1.5;margin-bottom:4px;"><span style="color:var(--t3);">' + esc(r[0]) + ':</span> ' + r[1] + '</div>').join('')
+    + rows.map(r=>'<div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.5;margin-bottom:4px;"><span style="color:var(--t3);">' + esc(r[0]) + ':</span> ' + r[1] + '</div>').join('')
     + '</div>') : '';
-  const offer = pay ? ('<label onclick="event.stopPropagation()" style="display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:11.5px;color:var(--t2);line-height:1.45;cursor:pointer;">'
+  const offer = pay ? ('<label onclick="event.stopPropagation()" style="display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:var(--fs-cap);color:var(--t2);line-height:1.45;cursor:pointer;">'
     + '<input type="checkbox" id="offerChk_' + (s.id||0) + '" style="margin-top:2px;flex:0 0 auto;">'
     + '<span>' + esc(tr('offer_ok')) + ' — <a href="legal/legal.html" target="_blank" rel="noopener" style="color:var(--gold-txt);">' + esc(tr('offer_link')) + '</a></span></label>'
-    + '<div id="offerMsg_' + (s.id||0) + '" style="display:none;font-size:11px;color:#E0576A;margin-top:6px;"></div>') : '';
-  const resp = '<div style="font-size:10.5px;color:var(--t3);line-height:1.5;margin-top:10px;border-top:1px solid rgba(255,255,255,.07);padding-top:8px;">'
+    + '<div id="offerMsg_' + (s.id||0) + '" style="display:none;font-size:var(--fs-cap);color:#E0576A;margin-top:6px;"></div>') : '';
+  const resp = '<div style="font-size:var(--fs-cap);color:var(--t3);line-height:1.5;margin-top:10px;border-top:1px solid rgba(255,255,255,.07);padding-top:8px;">'
     + esc(tr('resp_who').replace('{name}', s.name||'')) + ' ' + esc(tr('resp_pay')) + '</div>';
   const clickAttr = inCatalog ? ` onclick="_pickSpecialist(${idx})" style="cursor:pointer;"` : '';
   return `<div class="speccard"${clickAttr}>
     <div style="display:flex;gap:12px;align-items:center;">
       ${photo}
       <div style="flex:1;min-width:0;">
-        <div style="font-weight:600;color:var(--t1);font-size:15px;">${esc(s.name||'')}</div>
-        ${s.specialty?`<div style="font-size:13px;color:var(--gold-txt);">${esc(specLabel(s.specialty))}</div>`:''}
-        ${langs?`<div style="font-size:11px;color:var(--t3);margin-top:2px;">${langs}</div>`:''}
+        <div style="font-weight:600;color:var(--t1);font-size:var(--fs-title);">${esc(s.name||'')}</div>
+        ${s.specialty?`<div style="font-size:var(--fs-body);color:var(--gold-txt);">${esc(specLabel(s.specialty))}</div>`:''}
+        ${langs?`<div style="font-size:var(--fs-cap);color:var(--t3);margin-top:2px;">${langs}</div>`:''}
         ${badge}
       </div>
     </div>
-    ${s.bio?`<div style="font-size:13px;color:var(--t2);margin-top:8px;line-height:1.5;">${esc(s.bio)}</div>`:''}
+    ${s.bio?`<div style="font-size:var(--fs-body);color:var(--t2);margin-top:8px;line-height:1.5;">${esc(s.bio)}</div>`:''}
     ${more}
     ${offer}
     ${btn}
@@ -741,7 +752,7 @@ function renderCatalog(){
     if(_catLang!=='all'){ const ls=(s.langs||'').toLowerCase().split(',').map(x=>x.trim()); if(!ls.includes(_catLang)) return false; }
     return true;
   });
-  listEl.innerHTML = items.length ? items.map(({s,i})=>specCard(s,i,true)).join('') : `<div style="text-align:center;color:var(--t3);font-size:13px;padding:20px 0;">${esc(catL('empty'))}</div>`;
+  listEl.innerHTML = items.length ? items.map(({s,i})=>specCard(s,i,true)).join('') : `<div style="text-align:center;color:var(--t3);font-size:var(--fs-body);padding:20px 0;">${esc(catL('empty'))}</div>`;
 }
 function refreshCatalogTexts(){
   document.getElementById('catTitle').textContent=catL('title');
@@ -768,7 +779,7 @@ function _quizOpen(){ const q=document.getElementById('quizView'); return q && q
 let _quizNeed='all';
 function renderQuizNeeds(){
   const el=document.getElementById('quizNeeds'); if(!el)return;
-  el.innerHTML=QUIZ_NEEDS.map(n=>`<button type="button" class="cchip${_quizNeed===n.cat?' active':''}" style="text-align:left;padding:11px 14px;font-size:13.5px;" onclick="_setQuizNeed('${n.cat}')">${esc(n.lbl[lang]||n.lbl.en)}</button>`).join('');
+  el.innerHTML=QUIZ_NEEDS.map(n=>`<button type="button" class="cchip${_quizNeed===n.cat?' active':''}" style="text-align:left;padding:11px 14px;font-size:var(--fs-body);" onclick="_setQuizNeed('${n.cat}')">${esc(n.lbl[lang]||n.lbl.en)}</button>`).join('');
 }
 function _setQuizNeed(c){ _quizNeed=c; renderQuizNeeds(); }
 function refreshQuizTexts(){

@@ -15,6 +15,14 @@
 <meta name="apple-mobile-web-app-title" content="VIA·L Cabinet">
 <style>
 :root{
+  /* Типографический канон — общий с приложением (docs/TYPOGRAPHY-CANON.md, 2026-08-24).
+     Аудитория 40+: ниже --fs-cap не опускаться. На телефоне вся шкала на ступень выше,
+     --fs-body = 17px (системный размер body в iOS). */
+  --fs-cap:   13px;
+  --fs-body:  15px;
+  --fs-title: 18px;
+  --fs-hero:  24px;
+
   /* 1С-стиль: белый фон, чёрный контрастный текст, серые линии, без золота.
      Имена переменных сохранены — меняются ТОЛЬКО значения. */
   --gold:#1a1a1a;--gold-lt:#000000;--gold-dim:#ececec;--gold-glow:#f4f4f4;
@@ -41,24 +49,24 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
   box-shadow:0 16px 48px rgba(0,0,0,.10),0 0 80px rgba(196,154,60,.06);
   text-align:center;
 }
-.gate-logo{font-family:'Oswald',sans-serif;font-size:11px;font-weight:300;letter-spacing:.45em;text-transform:uppercase;color:var(--gold);margin-bottom:24px;}
+.gate-logo{font-family:'Oswald',sans-serif;font-size:var(--fs-cap);font-weight:300;letter-spacing:.45em;text-transform:uppercase;color:var(--gold);margin-bottom:24px;}
 .gate-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:var(--t1);margin-bottom:8px;}
-.gate-sub{font-size:13px;color:var(--t2);margin-bottom:28px;line-height:1.6;}
+.gate-sub{font-size:var(--fs-body);color:var(--t2);margin-bottom:28px;line-height:1.6;}
 .gate-input{
   width:100%;padding:14px 18px;border-radius:14px;
   background:var(--dark);border:1px solid var(--b1);
-  color:var(--t1);font-family:'DM Mono',monospace;font-size:16px;letter-spacing:4px;
+  color:var(--t1);font-family:'DM Mono',monospace;font-size:var(--fs-title);letter-spacing:4px;
   text-align:center;outline:none;margin-bottom:8px;
   transition:border-color .2s;
 }
 .gate-input:focus{border-color:var(--b2);}
 .gate-input.error{border-color:var(--alert);animation:shake .3s ease;}
-.gate-error{font-size:12px;color:var(--alert);margin-bottom:12px;display:none;}
+.gate-error{font-size:var(--fs-cap);color:var(--alert);margin-bottom:12px;display:none;}
 .gate-error.show{display:block;}
 .gate-btn{
   width:100%;padding:15px;border-radius:14px;border:none;cursor:pointer;
   background:linear-gradient(135deg,#C49A3C,#8B6B22);
-  color:#000;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;
+  color:#000;font-family:'DM Sans',sans-serif;font-size:var(--fs-cap);font-weight:500;letter-spacing:.15em;text-transform:uppercase;
   box-shadow:0 4px 20px rgba(196,154,60,.3);transition:transform .2s,box-shadow .2s;
 }
 .gate-btn:hover{transform:translateY(-1px);box-shadow:0 8px 32px rgba(196,154,60,.4);}
@@ -75,11 +83,11 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
   padding:0 20px;border-bottom:1px solid var(--b1);
   background:var(--dark2);
 }
-.topbar-logo{font-family:'Oswald',sans-serif;font-size:10px;font-weight:300;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);}
+.topbar-logo{font-family:'Oswald',sans-serif;font-size:var(--fs-cap);font-weight:300;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);}
 .topbar-actions{display:flex;gap:8px;}
 .topbtn{
   padding:7px 14px;border-radius:10px;border:1px solid var(--b1);
-  background:var(--surface-3);color:var(--t2);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;
+  background:var(--surface-3);color:var(--t2);font-family:'DM Sans',sans-serif;font-size:var(--fs-cap);font-weight:500;
   cursor:pointer;transition:all .2s;letter-spacing:.3px;
 }
 .topbtn:hover{border-color:var(--b2);color:var(--t1);}
@@ -102,7 +110,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 .sidebar-search input{
   width:100%;padding:9px 14px;border-radius:10px;
   background:var(--surface-3);border:1px solid var(--b1);
-  color:var(--t1);font-size:12px;font-family:'DM Sans',sans-serif;outline:none;
+  color:var(--t1);font-size:var(--fs-cap);font-family:'DM Sans',sans-serif;outline:none;
 }
 .sidebar-search input::placeholder{color:var(--t3);}
 .client-list{flex:1;overflow-y:auto;}
@@ -112,16 +120,16 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 }
 .client-item:hover{background:var(--surface-3);}
 .client-item.active{background:var(--gold-glow);border-left:2px solid var(--gold);}
-.client-name{font-size:14px;font-weight:500;color:var(--t1);margin-bottom:3px;}
-.client-meta{font-size:11px;color:var(--t3);}
+.client-name{font-size:var(--fs-body);font-weight:500;color:var(--t1);margin-bottom:3px;}
+.client-meta{font-size:var(--fs-cap);color:var(--t3);}
 .client-score{
   position:absolute;right:14px;top:50%;transform:translateY(-50%);
-  font-family:'DM Mono',monospace;font-size:18px;font-weight:300;
+  font-family:'DM Mono',monospace;font-size:var(--fs-title);font-weight:300;
 }
 .score-ok{color:var(--ok);}
 .score-warn{color:var(--warn);}
 .score-alert{color:var(--alert);}
-.empty-list{padding:40px 16px;text-align:center;color:var(--t3);font-size:13px;line-height:1.7;}
+.empty-list{padding:40px 16px;text-align:center;color:var(--t3);font-size:var(--fs-body);line-height:1.7;}
 
 /* ── CONTENT PANEL ────────────────────────────── */
 .content{flex:1;display:flex;flex-direction:column;overflow:hidden;}
@@ -130,7 +138,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
   color:var(--t3);text-align:center;gap:12px;
 }
 .content-placeholder svg{opacity:.2;}
-.content-placeholder p{font-size:14px;max-width:240px;line-height:1.65;}
+.content-placeholder p{font-size:var(--fs-body);max-width:240px;line-height:1.65;}
 
 /* client header */
 .client-header{
@@ -138,16 +146,16 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 }
 .client-header-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;}
 .client-header-name{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:var(--t1);}
-.client-header-meta{font-size:12px;color:var(--t3);margin-top:3px;}
+.client-header-meta{font-size:var(--fs-cap);color:var(--t3);margin-top:3px;}
 .client-header-score{text-align:right;}
 .score-big{font-family:'DM Mono',monospace;font-size:40px;font-weight:300;line-height:1;}
-.score-big-lbl{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--t3);}
+.score-big-lbl{font-size:var(--fs-cap);letter-spacing:2px;text-transform:uppercase;color:var(--t3);}
 .header-actions{display:flex;gap:8px;margin-bottom:12px;}
 
 /* tabs */
 .tabs{display:flex;gap:0;border-bottom:1px solid var(--b1);padding:0 24px;background:var(--dark2);}
 .tab{
-  padding:12px 18px;font-size:12px;font-weight:500;letter-spacing:.5px;
+  padding:12px 18px;font-size:var(--fs-cap);font-weight:500;letter-spacing:.5px;
   color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;
   transition:all .2s;white-space:nowrap;
 }
@@ -163,45 +171,45 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
   background:var(--surface);border:1px solid var(--b1);border-radius:14px;
   padding:14px 16px;
 }
-.metric-lbl{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-bottom:6px;}
+.metric-lbl{font-size:var(--fs-cap);letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-bottom:6px;}
 .metric-val{font-family:'DM Mono',monospace;font-size:26px;font-weight:300;line-height:1;}
-.metric-sub{font-size:11px;color:var(--t3);margin-top:4px;}
+.metric-sub{font-size:var(--fs-cap);color:var(--t3);margin-top:4px;}
 .sessions-list{display:flex;flex-direction:column;gap:6px;}
 .session-row{
   display:flex;align-items:center;gap:14px;padding:12px 16px;
   background:var(--surface);border:1px solid var(--b1);border-radius:12px;
 }
-.session-date{font-size:12px;color:var(--t3);width:90px;flex-shrink:0;}
+.session-date{font-size:var(--fs-cap);color:var(--t3);width:90px;flex-shrink:0;}
 .session-score{font-family:'DM Mono',monospace;font-size:20px;font-weight:300;width:42px;}
 .session-metrics{flex:1;display:flex;gap:12px;flex-wrap:wrap;}
-.session-metric{font-size:11px;color:var(--t2);}
-.section-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:400;color:var(--t1);margin-bottom:14px;}
+.session-metric{font-size:var(--fs-cap);color:var(--t2);}
+.section-title{font-family:'Playfair Display',serif;font-size:var(--fs-title);font-weight:400;color:var(--t1);margin-bottom:14px;}
 
 /* ── PROTOCOL ─────────────────────────────────── */
 .protocol-table{width:100%;border-collapse:collapse;margin-bottom:16px;}
 .protocol-table th{
-  font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--t3);
+  font-size:var(--fs-cap);letter-spacing:2px;text-transform:uppercase;color:var(--t3);
   padding:8px 12px;text-align:left;border-bottom:1px solid var(--b1);
 }
 .protocol-table td{padding:8px 12px;border-bottom:1px solid var(--b1);}
 .protocol-table tr:last-child td{border-bottom:none;}
-.proto-name{font-size:13px;color:var(--t1);}
+.proto-name{font-size:var(--fs-body);color:var(--t1);}
 .proto-input{
   background:transparent;border:none;outline:none;
-  font-family:'DM Sans',sans-serif;font-size:12px;color:var(--t2);
+  font-family:'DM Sans',sans-serif;font-size:var(--fs-cap);color:var(--t2);
   width:100%;padding:2px 0;
 }
 .proto-input:focus{color:var(--t1);}
 .proto-del{
   background:none;border:none;cursor:pointer;
-  color:var(--t3);font-size:16px;padding:4px;border-radius:6px;
+  color:var(--t3);font-size:var(--fs-title);padding:4px;border-radius:6px;
   transition:color .15s;line-height:1;
 }
 .proto-del:hover{color:var(--alert);}
 .add-row-btn{
   display:flex;align-items:center;gap:8px;padding:10px 14px;
   border:1px dashed var(--b2);border-radius:12px;
-  background:none;cursor:pointer;color:var(--t3);font-size:12px;font-family:'DM Sans',sans-serif;
+  background:none;cursor:pointer;color:var(--t3);font-size:var(--fs-cap);font-family:'DM Sans',sans-serif;
   transition:all .2s;width:100%;
 }
 .add-row-btn:hover{border-color:var(--gold);color:var(--gold);}
@@ -212,20 +220,20 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
   background:var(--surface);border:1px solid var(--b1);border-radius:14px;padding:16px;
   display:flex;flex-direction:column;gap:6px;
 }
-.lab-name{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--t3);}
+.lab-name{font-size:var(--fs-cap);letter-spacing:2px;text-transform:uppercase;color:var(--t3);}
 .lab-input{
   background:none;border:none;border-bottom:1px solid var(--b1);outline:none;
   font-family:'DM Mono',monospace;font-size:22px;font-weight:300;color:var(--t1);
   width:100%;padding:4px 0;transition:border-color .2s;
 }
 .lab-input:focus{border-bottom-color:var(--gold);}
-.lab-ref{font-size:11px;color:var(--t3);}
-.lab-status{font-size:11px;font-weight:500;}
+.lab-ref{font-size:var(--fs-cap);color:var(--t3);}
+.lab-status{font-size:var(--fs-cap);font-weight:500;}
 .lab-date-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
-.lab-date-row label{font-size:11px;color:var(--t3);}
+.lab-date-row label{font-size:var(--fs-cap);color:var(--t3);}
 .lab-date-row input{
   background:none;border-bottom:1px solid var(--b1);border-top:none;border-left:none;border-right:none;
-  outline:none;color:var(--t1);font-family:'DM Sans',sans-serif;font-size:12px;padding:2px 0;
+  outline:none;color:var(--t1);font-family:'DM Sans',sans-serif;font-size:var(--fs-cap);padding:2px 0;
 }
 
 /* ── NOTES ────────────────────────────────────── */
@@ -233,7 +241,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 .note-textarea{
   width:100%;padding:14px 16px;border-radius:14px;
   background:var(--surface);border:1px solid var(--b1);
-  color:var(--t1);font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.7;
+  color:var(--t1);font-family:'DM Sans',sans-serif;font-size:var(--fs-body);line-height:1.7;
   resize:vertical;min-height:100px;outline:none;margin-bottom:10px;
   transition:border-color .2s;
 }
@@ -241,16 +249,16 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 .note-save-btn{
   padding:10px 20px;border-radius:10px;border:1px solid rgba(196,150,60,.3);
   background:var(--gold-dim);color:var(--gold);font-family:'DM Sans',sans-serif;
-  font-size:11px;font-weight:500;letter-spacing:.5px;cursor:pointer;transition:all .2s;
+  font-size:var(--fs-cap);font-weight:500;letter-spacing:.5px;cursor:pointer;transition:all .2s;
 }
 .note-save-btn:hover{background:rgba(196,150,60,.22);}
 .note-item{
   background:var(--surface);border:1px solid var(--b1);border-radius:14px;
   padding:16px;margin-bottom:8px;
 }
-.note-meta{font-size:11px;color:var(--t3);margin-bottom:8px;display:flex;justify-content:space-between;}
-.note-text{font-size:13px;color:var(--t2);line-height:1.65;white-space:pre-wrap;}
-.note-del{background:none;border:none;cursor:pointer;color:var(--t3);font-size:13px;transition:color .15s;}
+.note-meta{font-size:var(--fs-cap);color:var(--t3);margin-bottom:8px;display:flex;justify-content:space-between;}
+.note-text{font-size:var(--fs-body);color:var(--t2);line-height:1.65;white-space:pre-wrap;}
+.note-del{background:none;border:none;cursor:pointer;color:var(--t3);font-size:var(--fs-body);transition:color .15s;}
 .note-del:hover{color:var(--alert);}
 
 /* ── MODAL ────────────────────────────────────── */
@@ -266,11 +274,11 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 }
 .modal-title{font-family:'Playfair Display',serif;font-size:20px;color:var(--t1);margin-bottom:20px;}
 .form-row{margin-bottom:14px;}
-.form-row label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-bottom:6px;}
+.form-row label{display:block;font-size:var(--fs-cap);letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-bottom:6px;}
 .form-input,.form-select{
   width:100%;padding:11px 14px;border-radius:12px;
   background:var(--dark);border:1px solid var(--b1);
-  color:var(--t1);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;
+  color:var(--t1);font-family:'DM Sans',sans-serif;font-size:var(--fs-body);outline:none;
   transition:border-color .2s;
 }
 .form-input:focus,.form-select:focus{border-color:var(--b2);}
@@ -278,12 +286,12 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 .modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
 .btn-cancel{
   padding:11px 20px;border-radius:12px;border:1px solid var(--b1);
-  background:none;color:var(--t2);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;
+  background:none;color:var(--t2);font-family:'DM Sans',sans-serif;font-size:var(--fs-cap);cursor:pointer;
 }
 .btn-save{
   padding:11px 24px;border-radius:12px;border:none;cursor:pointer;
   background:linear-gradient(135deg,#C49A3C,#8B6B22);
-  color:#000;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;letter-spacing:.1em;
+  color:#000;font-family:'DM Sans',sans-serif;font-size:var(--fs-cap);font-weight:500;letter-spacing:.1em;
 }
 
 /* ── RESPONSIVE ───────────────────────────────── */
@@ -296,7 +304,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
   .sidebar.open{transform:translateX(0);}
   .metrics-row{grid-template-columns:repeat(2,1fr);}
   .labs-grid{grid-template-columns:1fr;}
-  .tab{padding:10px 12px;font-size:11px;}
+  .tab{padding:10px 12px;font-size:var(--fs-cap);}
 }
 
 /* ═══════════ 1С-FLAT SKIN — белый фон, чёрный контрастный текст ═══════════
@@ -331,9 +339,9 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 .mkr-bar{display:flex;align-items:center;gap:3px;border-left:1px solid var(--b1);margin-left:4px;padding-left:8px;}
 .mkr-swatch{width:16px;height:16px;border:2px solid transparent;cursor:pointer;padding:0;flex-shrink:0;display:inline-block;}
 .mkr-swatch.active{border-color:#000 !important;}
-.mkr-erase{width:16px;height:16px;border:2px solid transparent;cursor:pointer;padding:0;flex-shrink:0;background:var(--surface-3);font-size:10px;line-height:12px;}
+.mkr-erase{width:16px;height:16px;border:2px solid transparent;cursor:pointer;padding:0;flex-shrink:0;background:var(--surface-3);font-size:var(--fs-cap);line-height:12px;}
 .mkr-erase.active{border-color:#000 !important;}
-.mkr-mode{background:none;border:1px solid var(--b1);cursor:pointer;font-size:11px;padding:1px 5px;color:var(--t3);line-height:1.4;font-weight:400;}
+.mkr-mode{background:none;border:1px solid var(--b1);cursor:pointer;font-size:var(--fs-cap);padding:1px 5px;color:var(--t3);line-height:1.4;font-weight:400;}
 .mkr-mode.active{border-color:#000;color:#000;font-weight:700;}
 .mkr-div{width:1px;height:14px;background:var(--b1);margin:0 2px;flex-shrink:0;}
 /* заливка — синий */
@@ -356,7 +364,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 .sched-done td{color:#999 !important;text-decoration:line-through;}
 .sched-check{width:16px;height:16px;cursor:pointer;accent-color:#000;margin:0;}
 /* Статус-бейджи */
-.badge{display:inline-block;padding:1px 7px;font-size:10px;font-weight:700;border:1px solid transparent;vertical-align:middle;}
+.badge{display:inline-block;padding:1px 7px;font-size:var(--fs-cap);font-weight:700;border:1px solid transparent;vertical-align:middle;}
 .badge-active{background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7;}
 .badge-new{background:#e3f2fd;color:#1565c0;border-color:#90caf9;}
 .badge-pause{background:#fff3e0;color:#e65100;border-color:#ffcc80;}
@@ -370,7 +378,10 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 .client-list::-webkit-scrollbar,.tab-content::-webkit-scrollbar,#calendarView::-webkit-scrollbar,
 #specialistsView::-webkit-scrollbar,.modal::-webkit-scrollbar,#chatThreadBox::-webkit-scrollbar{display:none;}
 /* Заголовок группы статуса в списке клиентов */
-.group-head{padding:6px 16px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;background:#f5f5f5;border-bottom:1px solid #e0e0e0;position:sticky;top:0;}
+.group-head{padding:6px 16px;font-size:var(--fs-cap);font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;background:#f5f5f5;border-bottom:1px solid #e0e0e0;position:sticky;top:0;}
+@media (max-width:599px){
+  :root{ --fs-cap:14px; --fs-body:17px; --fs-title:20px; --fs-hero:26px; }
+}
 </style>
 </head>
 <body>
@@ -418,7 +429,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
         <button type="button" id="mkr-b" class="mkr-swatch" onclick="setMarker('b')" title="Синий" style="background:#42a5f5;"></button>
         <button type="button" id="mkr-e" class="mkr-erase" onclick="setMarker('e')" title="Ластик — снять всё выделение с элемента">✕</button>
       </div>
-      <select id="langSel" onchange="setUiLang(this.value)" title="Язык интерфейса" style="padding:6px 8px;border:1px solid #cfcfcf;background:#fff;font-size:11px;font-family:inherit;outline:none;cursor:pointer;">
+      <select id="langSel" onchange="setUiLang(this.value)" title="Язык интерфейса" style="padding:6px 8px;border:1px solid #cfcfcf;background:#fff;font-size:var(--fs-cap);font-family:inherit;outline:none;cursor:pointer;">
         <option value="uk">UK</option><option value="ru">RU</option><option value="en">EN</option>
         <option value="es">ES</option><option value="de">DE</option><option value="pt">PT</option>
         <option value="fr">FR</option><option value="pl">PL</option><option value="it">IT</option>
@@ -435,24 +446,24 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
       <div class="sidebar-search">
         <input type="text" data-i18n-ph="search_ph" placeholder="Поиск — имя, email, код, программа..." id="searchInput" oninput="filterClients()">
         <div style="display:flex;gap:6px;margin-top:6px;">
-          <select id="statusFilter" onchange="filterClients()" style="flex:1;padding:6px 8px;border:1px solid #ccc;font-size:11px;font-family:inherit;background:#fff;outline:none;">
+          <select id="statusFilter" onchange="filterClients()" style="flex:1;padding:6px 8px;border:1px solid #ccc;font-size:var(--fs-cap);font-family:inherit;background:#fff;outline:none;">
             <option value="" data-i18n="filter_all">Все статусы</option>
             <option value="active" data-i18n="filter_active">Активные</option>
             <option value="new" data-i18n="filter_new">Новые</option>
             <option value="pause" data-i18n="st_pause">Пауза</option>
             <option value="done" data-i18n="filter_done">Завершённые</option>
           </select>
-          <select id="specFilter" onchange="filterClients()" style="flex:1;padding:6px 8px;border:1px solid #ccc;font-size:11px;font-family:inherit;display:none;">
+          <select id="specFilter" onchange="filterClients()" style="flex:1;padding:6px 8px;border:1px solid #ccc;font-size:var(--fs-cap);font-family:inherit;display:none;">
             <option value="" data-i18n="filter_all_spec">Все специалисты</option>
           </select>
-          <select id="sortBy" onchange="filterClients()" style="flex:1;padding:6px 8px;border:1px solid #ccc;font-size:11px;font-family:inherit;background:#fff;outline:none;">
+          <select id="sortBy" onchange="filterClients()" style="flex:1;padding:6px 8px;border:1px solid #ccc;font-size:var(--fs-cap);font-family:inherit;background:#fff;outline:none;">
             <option value="updated" data-i18n="sort_updated">↻ По активности</option>
             <option value="name" data-i18n="sort_name">А-Я по имени</option>
             <option value="start" data-i18n="sort_start">По дате старта</option>
           </select>
         </div>
       </div>
-      <div id="listCount" style="padding:6px 12px;font-size:11px;color:#888;border-bottom:1px solid #e0e0e0;"></div>
+      <div id="listCount" style="padding:6px 12px;font-size:var(--fs-cap);color:#888;border-bottom:1px solid #e0e0e0;"></div>
       <div class="client-list" id="clientList"></div>
     </div>
 
@@ -628,7 +639,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
         </div>
       </div>
     </div>
-    <div id="s-pass-hint" data-i18n="sp_pass_hint" style="font-size:11px;color:#888;margin-top:4px;display:none;">При редактировании оставьте пустым, чтобы не менять пароль.</div>
+    <div id="s-pass-hint" data-i18n="sp_pass_hint" style="font-size:var(--fs-cap);color:#888;margin-top:4px;display:none;">При редактировании оставьте пустым, чтобы не менять пароль.</div>
     <div class="form-row-2" style="margin-top:14px;">
       <div class="form-row" style="margin:0">
         <label data-i18n="sp_specialty">Профиль</label>
@@ -671,7 +682,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
       <div class="form-row" style="margin:0">
         <label data-i18n="sp_platform_since">На платформе с (абонплата)</label>
         <input class="form-input" id="s-platform-since" type="date">
-        <div style="font-size:11px;color:#888;margin-top:4px;" data-i18n="sp_platform_since_hint">С этой даты начисляется €30/мес. Пусто — абонплату не начисляем (свой специалист).</div>
+        <div style="font-size:var(--fs-cap);color:#888;margin-top:4px;" data-i18n="sp_platform_since_hint">С этой даты начисляется €30/мес. Пусто — абонплату не начисляем (свой специалист).</div>
       </div>
     </div>
 
@@ -679,25 +690,25 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
          Паспортных данных здесь намеренно НЕТ: сверх ФОП они не дают ничего для
          идентификации, но резко поднимают нашу ответственность за хранение. -->
     <div style="margin-top:16px;padding-top:12px;border-top:2px solid #eee;">
-      <div style="font-weight:600;font-size:13px;margin-bottom:8px;" data-i18n="sp_public_h">Публичный профиль (видит клиент)</div>
+      <div style="font-weight:600;font-size:var(--fs-body);margin-bottom:8px;" data-i18n="sp_public_h">Публичный профиль (видит клиент)</div>
       <div class="form-row-2">
         <div class="form-row" style="margin:0"><label data-i18n="sp_education">Образование / квалификация</label>
-          <input class="form-input" id="s-education" type="text" style="font-size:13px;"></div>
+          <input class="form-input" id="s-education" type="text" style="font-size:var(--fs-body);"></div>
         <div class="form-row" style="margin:0"><label data-i18n="sp_reg_number">Регистрация (ФОП / лицензия)</label>
-          <input class="form-input" id="s-reg-number" type="text" style="font-size:13px;"></div>
+          <input class="form-input" id="s-reg-number" type="text" style="font-size:var(--fs-body);"></div>
       </div>
       <div class="form-row-2">
         <div class="form-row" style="margin:0"><label data-i18n="sp_website">Сайт или соцсеть</label>
-          <input class="form-input" id="s-website" type="text" placeholder="https://" style="font-size:13px;"></div>
+          <input class="form-input" id="s-website" type="text" placeholder="https://" style="font-size:var(--fs-body);"></div>
         <div class="form-row" style="margin:0"><label data-i18n="sp_city">Город</label>
-          <input class="form-input" id="s-city" type="text" style="font-size:13px;"></div>
+          <input class="form-input" id="s-city" type="text" style="font-size:var(--fs-body);"></div>
       </div>
       <!-- E1: страна и юр. статус — не украшение карточки. От страны специалиста зависит
            применимое право в его договоре с клиентом, поэтому поле машинно-читаемое (ISO-2)
            и публичное: клиент должен видеть это до оплаты. -->
       <div class="form-row-2">
         <div class="form-row" style="margin:0"><label data-i18n="sp_country">Страна регистрации</label>
-          <select class="form-input" id="s-country" style="font-size:13px;">
+          <select class="form-input" id="s-country" style="font-size:var(--fs-body);">
             <option value=""></option>
             <option value="UA">Україна</option><option value="ES">España</option>
             <option value="PL">Polska</option><option value="DE">Deutschland</option>
@@ -714,54 +725,54 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
             <option value="OTHER">—</option>
           </select></div>
         <div class="form-row" style="margin:0"><label data-i18n="sp_legal_form">Юридический статус</label>
-          <input class="form-input" id="s-legal-form" type="text" placeholder="ФОП 3 гр. / Autónomo" style="font-size:13px;"></div>
+          <input class="form-input" id="s-legal-form" type="text" placeholder="ФОП 3 гр. / Autónomo" style="font-size:var(--fs-body);"></div>
       </div>
       <!-- Вопрос 7: для украинского ФОП страховка недоступна, для специалиста из ЕС это ~€100–150/год.
            Поэтому не условие допуска, а преимущество в карточке. Самодекларация — мы её не проверяем. -->
-      <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-top:8px;cursor:pointer;">
+      <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-body);margin-top:8px;cursor:pointer;">
         <input type="checkbox" id="s-insurance">
         <span data-i18n="sp_insurance">Есть профессиональная страховка ответственности</span>
       </label>
-      <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-top:8px;cursor:pointer;">
+      <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-body);margin-top:8px;cursor:pointer;">
         <input type="checkbox" id="s-publish-consent">
         <span data-i18n="sp_publish_consent">Специалист согласен показывать эти данные клиентам</span>
       </label>
     </div>
 
     <div style="margin-top:16px;padding-top:12px;border-top:2px solid #eee;">
-      <div style="font-weight:600;font-size:13px;margin-bottom:4px;" data-i18n="sp_private_h">Для платформы (клиент не видит)</div>
-      <div style="font-size:11px;color:#888;margin-bottom:8px;" data-i18n="sp_private_hint">Нужно, чтобы при претензии дать полную информацию о специалисте. Паспортные данные не храним — достаточно регистрации и адреса.</div>
+      <div style="font-weight:600;font-size:var(--fs-body);margin-bottom:4px;" data-i18n="sp_private_h">Для платформы (клиент не видит)</div>
+      <div style="font-size:var(--fs-cap);color:#888;margin-bottom:8px;" data-i18n="sp_private_hint">Нужно, чтобы при претензии дать полную информацию о специалисте. Паспортные данные не храним — достаточно регистрации и адреса.</div>
       <div class="form-row-2">
         <div class="form-row" style="margin:0"><label data-i18n="sp_legal_name">Полное юридическое имя</label>
-          <input class="form-input" id="s-legal-name" type="text" style="font-size:13px;"></div>
+          <input class="form-input" id="s-legal-name" type="text" style="font-size:var(--fs-body);"></div>
         <div class="form-row" style="margin:0"><label data-i18n="sp_tax_id">Налоговый номер</label>
-          <input class="form-input" id="s-tax-id" type="text" style="font-size:13px;"></div>
+          <input class="form-input" id="s-tax-id" type="text" style="font-size:var(--fs-body);"></div>
       </div>
       <div class="form-row-2">
         <div class="form-row" style="margin:0"><label data-i18n="sp_address">Адрес для корреспонденции</label>
-          <input class="form-input" id="s-address" type="text" style="font-size:13px;"></div>
+          <input class="form-input" id="s-address" type="text" style="font-size:var(--fs-body);"></div>
         <div class="form-row" style="margin:0"><label data-i18n="sp_phone">Телефон</label>
-          <input class="form-input" id="s-phone" type="text" style="font-size:13px;"></div>
+          <input class="form-input" id="s-phone" type="text" style="font-size:var(--fs-body);"></div>
       </div>
       <div class="form-row"><label data-i18n="sp_contract_url">Ссылка на подписанный договор</label>
-        <input class="form-input" id="s-contract-url" type="text" style="font-size:13px;"></div>
-      <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-top:8px;cursor:pointer;">
+        <input class="form-input" id="s-contract-url" type="text" style="font-size:var(--fs-body);"></div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-body);margin-top:8px;cursor:pointer;">
         <input type="checkbox" id="s-verified">
         <span data-i18n="sp_verified">Проверен — допущен в витрину и к выдаче доступов</span>
       </label>
       <div class="form-row" style="margin-top:8px;"><label data-i18n="sp_verify_note">Что проверено</label>
-        <input class="form-input" id="s-verify-note" type="text" placeholder="диплом, ФОП, договор" style="font-size:13px;"></div>
+        <input class="form-input" id="s-verify-note" type="text" placeholder="диплом, ФОП, договор" style="font-size:var(--fs-body);"></div>
       <div class="form-row" style="margin-top:8px;"><label data-i18n="sp_credit_limit">Лимит неоплаченного софта, €</label>
-        <input class="form-input" id="s-credit-limit" type="number" min="0" step="10" style="font-size:13px;">
-        <div style="font-size:11px;color:#888;margin-top:4px;" data-i18n="sp_credit_limit_hint">Больше этой суммы долга специалист не сможет выдавать новые доступы. Ограничивает максимальный убыток, если он исчезнет. 0 — без лимита.</div></div>
+        <input class="form-input" id="s-credit-limit" type="number" min="0" step="10" style="font-size:var(--fs-body);">
+        <div style="font-size:var(--fs-cap);color:#888;margin-top:4px;" data-i18n="sp_credit_limit_hint">Больше этой суммы долга специалист не сможет выдавать новые доступы. Ограничивает максимальный убыток, если он исчезнет. 0 — без лимита.</div></div>
     </div>
     <div class="form-row-2" style="display:none;">
       <div class="form-row" style="margin:0">
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-top:10px;cursor:pointer;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-body);margin-top:10px;cursor:pointer;">
           <input type="checkbox" id="s-billing-exempt">
           <span data-i18n="sp_billing_exempt">Свой специалист — не начислять ничего</span>
         </label>
-        <div style="font-size:11px;color:#888;margin-top:4px;" data-i18n="sp_billing_exempt_hint">Основатель или собственная практика: ни софта, ни абонплаты. Ставьте галочку, а НЕ дату далеко в будущем — такую дату не отличить от опечатки.</div>
+        <div style="font-size:var(--fs-cap);color:#888;margin-top:4px;" data-i18n="sp_billing_exempt_hint">Основатель или собственная практика: ни софта, ни абонплаты. Ставьте галочку, а НЕ дату далеко в будущем — такую дату не отличить от опечатки.</div>
       </div>
       <div class="form-row" style="margin:0">
         <label data-i18n="f_status">Статус</label>
@@ -771,7 +782,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
         </select>
       </div>
     </div>
-    <div id="specModalError" style="font-size:12px;color:var(--alert);margin-top:12px;display:none;"></div>
+    <div id="specModalError" style="font-size:var(--fs-cap);color:var(--alert);margin-top:12px;display:none;"></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeSpecModal()" data-i18n="btn_cancel">Отменить</button>
       <button class="btn-save" onclick="saveSpecialist()" data-i18n="btn_save">Сохранить →</button>
@@ -783,10 +794,10 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 <div class="modal-overlay" id="myLinkModal">
   <div class="modal">
     <div class="modal-title" data-i18n="ml_title">Моя ссылка для приглашения</div>
-    <p style="font-size:12px;color:#888;margin:-6px 0 14px;" data-i18n="ml_hint">Размещайте её в рекламе, соцсетях, на визитке. Пациент перейдёт, заполнит анкету и подключится к вам.</p>
+    <p style="font-size:var(--fs-cap);color:#888;margin:-6px 0 14px;" data-i18n="ml_hint">Размещайте её в рекламе, соцсетях, на визитке. Пациент перейдёт, заполнит анкету и подключится к вам.</p>
     <div class="form-row">
       <label data-i18n="ml_link_label">Ссылка</label>
-      <input class="form-input" id="ml-link" type="text" readonly onclick="this.select()" style="font-family:monospace;font-size:13px;">
+      <input class="form-input" id="ml-link" type="text" readonly onclick="this.select()" style="font-family:monospace;font-size:var(--fs-body);">
     </div>
     <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
       <button class="topbtn primary" onclick="copyMyLink()" id="ml-copy-btn" data-i18n="ml_copy">Копировать ссылку</button>
@@ -794,7 +805,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
     </div>
     <div class="form-row" style="margin-top:14px;">
       <label data-i18n="ml_msg_label">Готовое сообщение пациенту</label>
-      <textarea class="form-input" id="ml-msg" rows="4" readonly onclick="this.select()" style="font-size:13px;resize:vertical;"></textarea>
+      <textarea class="form-input" id="ml-msg" rows="4" readonly onclick="this.select()" style="font-size:var(--fs-body);resize:vertical;"></textarea>
     </div>
     <div style="text-align:center;margin-top:14px;">
       <img id="ml-qr" alt="QR" width="180" height="180" style="border-radius:10px;background:#fff;padding:8px;display:none;">
@@ -810,27 +821,27 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 <div class="modal-overlay" id="billingPayModal">
   <div class="modal">
     <div class="modal-title" id="bp-title">Отметить оплату</div>
-    <p style="font-size:12px;color:#888;margin:-6px 0 14px;" id="bp-hint"></p>
+    <p style="font-size:var(--fs-cap);color:#888;margin:-6px 0 14px;" id="bp-hint"></p>
     <input type="hidden" id="bp-spec">
     <div class="form-row-2">
       <div class="form-row" style="margin:0">
         <label data-i18n="bl_kind_platform">Платформа (€30/мес)</label>
-        <input class="form-input" id="bp-platform" type="number" step="0.01" min="0" style="font-size:13px;">
+        <input class="form-input" id="bp-platform" type="number" step="0.01" min="0" style="font-size:var(--fs-body);">
       </div>
       <div class="form-row" style="margin:0">
         <label data-i18n="bl_kind_soft">Софт (€20/мес)</label>
-        <input class="form-input" id="bp-software" type="number" step="0.01" min="0" style="font-size:13px;">
+        <input class="form-input" id="bp-software" type="number" step="0.01" min="0" style="font-size:var(--fs-body);">
       </div>
     </div>
     <div class="form-row">
       <label data-i18n="bl_paid_at">Дата поступления</label>
-      <input class="form-input" id="bp-date" type="date" style="font-size:13px;">
+      <input class="form-input" id="bp-date" type="date" style="font-size:var(--fs-body);">
     </div>
     <div class="form-row">
       <label data-i18n="bl_note">Заметка</label>
-      <input class="form-input" id="bp-note" type="text" maxlength="200" style="font-size:13px;">
+      <input class="form-input" id="bp-note" type="text" maxlength="200" style="font-size:var(--fs-body);">
     </div>
-    <div class="formerr" id="bp-err" style="color:var(--alert);font-size:12px;margin-top:4px;"></div>
+    <div class="formerr" id="bp-err" style="color:var(--alert);font-size:var(--fs-cap);margin-top:4px;"></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeBillingPayment()" data-i18n="bl_cancel">Отмена</button>
       <button class="btn-save" onclick="saveBillingPayment()" data-i18n="bl_save">Сохранить</button>
@@ -841,13 +852,13 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 <div class="modal-overlay" id="showcaseModal">
   <div class="modal">
     <div class="modal-title" data-i18n="sc_title">Моя витрина</div>
-    <p style="font-size:12px;color:#888;margin:-6px 0 14px;" data-i18n="sc_hint">Как вас увидят клиенты в приложении на экране «Мой наставник». Включите показ и заполните карточку.</p>
-    <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:14px;cursor:pointer;">
+    <p style="font-size:var(--fs-cap);color:#888;margin:-6px 0 14px;" data-i18n="sc_hint">Как вас увидят клиенты в приложении на экране «Мой наставник». Включите показ и заполните карточку.</p>
+    <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-body);margin-bottom:14px;cursor:pointer;">
       <input type="checkbox" id="sc-public"> <span data-i18n="sc_public">Показывать меня в витрине</span>
     </label>
     <div class="form-row">
       <label data-i18n="sc_category">Направление</label>
-      <select class="form-input" id="sc-category" style="font-size:13px;">
+      <select class="form-input" id="sc-category" style="font-size:var(--fs-body);">
         <option value="" data-i18n="sc_cat_none">— не выбрано —</option>
         <option value="nutrition" data-i18n="cat_nutrition">Нутрициология</option>
         <option value="psychology" data-i18n="cat_psychology">Психология</option>
@@ -857,16 +868,16 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
     </div>
     <div class="form-row">
       <label data-i18n="sc_cal">Ссылка на знакомство (Cal.com, 15 мин)</label>
-      <input class="form-input" id="sc-cal" type="text" placeholder="https://cal.com/…" style="font-size:13px;">
+      <input class="form-input" id="sc-cal" type="text" placeholder="https://cal.com/…" style="font-size:var(--fs-body);">
     </div>
     <div class="form-row">
       <label data-i18n="sc_pay">Ссылка на оплату ведения</label>
-      <input class="form-input" id="sc-pay" type="text" placeholder="https://pay.hotmart.com/…" style="font-size:13px;">
-      <div style="font-size:11px;color:#888;margin-top:4px;" data-i18n="sc_pay_hint">Ваш чекаут (Hotmart, Stripe и т.п.). Клиент увидит кнопку «Начать ведение» — сама ссылка в витрине текстом не показывается. Платёжные реквизиты мы не запрашиваем и не храним: деньги идут напрямую вам.</div>
+      <input class="form-input" id="sc-pay" type="text" placeholder="https://pay.hotmart.com/…" style="font-size:var(--fs-body);">
+      <div style="font-size:var(--fs-cap);color:#888;margin-top:4px;" data-i18n="sc_pay_hint">Ваш чекаут (Hotmart, Stripe и т.п.). Клиент увидит кнопку «Начать ведение» — сама ссылка в витрине текстом не показывается. Платёжные реквизиты мы не запрашиваем и не храним: деньги идут напрямую вам.</div>
     </div>
     <div class="form-row">
       <label data-i18n="sc_photo">Фото (URL)</label>
-      <input class="form-input" id="sc-photo" type="text" placeholder="https://…/photo.jpg" style="font-size:13px;">
+      <input class="form-input" id="sc-photo" type="text" placeholder="https://…/photo.jpg" style="font-size:var(--fs-body);">
     </div>
     <div class="form-row">
       <label data-i18n="sc_langs">Языки специалиста</label>
@@ -874,9 +885,9 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
     </div>
     <div class="form-row">
       <label data-i18n="sc_bio">О себе (коротко)</label>
-      <textarea class="form-input" id="sc-bio" rows="3" maxlength="600" style="font-size:13px;resize:vertical;"></textarea>
+      <textarea class="form-input" id="sc-bio" rows="3" maxlength="600" style="font-size:var(--fs-body);resize:vertical;"></textarea>
     </div>
-    <div class="formerr" id="sc-err" style="display:none;color:var(--alert);font-size:12px;margin-top:4px;"></div>
+    <div class="formerr" id="sc-err" style="display:none;color:var(--alert);font-size:var(--fs-cap);margin-top:4px;"></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeShowcase()" data-i18n="btn_cancel">Отмена</button>
       <button class="topbtn primary" id="sc-save-btn" onclick="saveShowcase()" data-i18n="btn_save">Сохранить</button>
@@ -1531,7 +1542,7 @@ const SC_LANGS=[['uk','🇺🇦'],['ru','🇷🇺'],['en','🇬🇧'],['es','�
 function buildShowcaseLangs(csv){
   const sel=new Set(String(csv||'').toLowerCase().split(',').map(x=>x.trim()).filter(Boolean));
   const grid=document.getElementById('sc-langs-grid'); if(!grid)return;
-  grid.innerHTML=SC_LANGS.map(([code,flag])=>`<label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;white-space:nowrap;"><input type="checkbox" value="${code}"${sel.has(code)?' checked':''}> ${flag} ${code.toUpperCase()}</label>`).join('');
+  grid.innerHTML=SC_LANGS.map(([code,flag])=>`<label style="display:flex;align-items:center;gap:5px;font-size:var(--fs-cap);cursor:pointer;white-space:nowrap;"><input type="checkbox" value="${code}"${sel.has(code)?' checked':''}> ${flag} ${code.toUpperCase()}</label>`).join('');
 }
 function getShowcaseLangs(){
   return [...document.querySelectorAll('#sc-langs-grid input:checked')].map(i=>i.value).join(',');
@@ -1592,7 +1603,7 @@ function renderAccessBanner(stage, due){
   var color = stage==='grace' ? '#8a6d1f' : '#a11';
   var bg    = stage==='grace' ? '#fff8e5' : '#fdecec';
   var d=document.createElement('div'); d.id='accessBanner';
-  d.style.cssText='padding:10px 16px;background:'+bg+';border-bottom:1px solid rgba(0,0,0,.08);font-size:13px;color:'+color+';line-height:1.5;';
+  d.style.cssText='padding:10px 16px;background:'+bg+';border-bottom:1px solid rgba(0,0,0,.08);font-size:var(--fs-body);color:'+color+';line-height:1.5;';
   d.innerHTML = txt.replace('{due}', '<b>€'+(due||0)+'</b>');
   app.insertBefore(d, app.firstChild);
 }
@@ -1692,7 +1703,7 @@ function renderClientList(filter='', statusFilter='', sortBy='updated'){
     </div>`;
   }
   if(more){
-    html += `<div style="padding:10px 16px;"><button style="width:100%;padding:8px;border:1px dashed #aaa;background:none;cursor:pointer;font-size:12px;font-family:inherit;" onclick="listPage++;refreshList()">${t('list_more')} (${filtered.length - page.length})</button></div>`;
+    html += `<div style="padding:10px 16px;"><button style="width:100%;padding:8px;border:1px dashed #aaa;background:none;cursor:pointer;font-size:var(--fs-cap);font-family:inherit;" onclick="listPage++;refreshList()">${t('list_more')} (${filtered.length - page.length})</button></div>`;
   }
   list.innerHTML = html;
 }
@@ -1755,17 +1766,17 @@ function switchView(view){
 // статус и понимание, из чего складывается сумма, поэтому цифры — крупно и словами.
 async function renderMyBilling(){
   const el = document.getElementById('myBillView'); if(!el) return;
-  el.innerHTML = `<div class="section-title">${t('mb_title')}</div><p style="color:#888;font-size:13px;">${t('sp_loading')}</p>`;
+  el.innerHTML = `<div class="section-title">${t('mb_title')}</div><p style="color:#888;font-size:var(--fs-body);">${t('sp_loading')}</p>`;
   let j=null; try{ j = await api('/cabinet/billing/me', {period:'all'}); }catch(_){}
   if(!j || !j.ok || !(j.rows||[]).length){
-    el.innerHTML = `<div class="section-title">${t('mb_title')}</div><p style="color:var(--alert);font-size:13px;">${t('sp_load_err')}</p>`; return;
+    el.innerHTML = `<div class="section-title">${t('mb_title')}</div><p style="color:var(--alert);font-size:var(--fs-body);">${t('sp_load_err')}</p>`; return;
   }
   const r = j.rows[0];
   const card = (title, value, sub, color) => `
     <div style="flex:1;min-width:220px;border:1px solid #e5e5e5;border-radius:10px;padding:14px 16px;background:#fafafa;">
-      <div style="font-size:12px;color:#888;">${title}</div>
+      <div style="font-size:var(--fs-cap);color:#888;">${title}</div>
       <div style="font-size:22px;font-weight:600;margin:4px 0 2px;${color?('color:'+color+';'):''}">${value}</div>
-      <div style="font-size:11.5px;color:#888;line-height:1.45;">${sub||''}</div>
+      <div style="font-size:var(--fs-cap);color:#888;line-height:1.45;">${sub||''}</div>
     </div>`;
 
   const platform = (r.status==='exempt')
@@ -1781,7 +1792,7 @@ async function renderMyBilling(){
 
   el.innerHTML = `
     <div class="section-title">${t('mb_title')}</div>
-    <p style="font-size:12px;color:#888;margin-bottom:14px;max-width:760px;line-height:1.5;">${t('mb_hint')}</p>
+    <p style="font-size:var(--fs-cap);color:#888;margin-bottom:14px;max-width:760px;line-height:1.5;">${t('mb_hint')}</p>
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">${platform}${soft}${total}</div>
     <button class="topbtn" onclick="toggleMyBillDetail()">${t('bl_detail')}</button>
     <div id="myBillDetail" style="margin-top:12px;"></div>`;
@@ -1791,18 +1802,18 @@ async function toggleMyBillDetail(){
   const box = document.getElementById('myBillDetail'); if(!box) return;
   myBillOpen = !myBillOpen;
   if(!myBillOpen){ box.innerHTML=''; return; }
-  box.innerHTML = `<span style="color:#888;font-size:12px;">${t('sp_loading')}</span>`;
+  box.innerHTML = `<span style="color:#888;font-size:var(--fs-cap);">${t('sp_loading')}</span>`;
   let j=null; try{ j = await api('/cabinet/billing/detail', {}); }catch(_){}
-  if(!j || !j.ok){ box.innerHTML = `<span style="color:var(--alert);font-size:12px;">${t('sp_load_err')}</span>`; return; }
+  if(!j || !j.ok){ box.innerHTML = `<span style="color:var(--alert);font-size:var(--fs-cap);">${t('sp_load_err')}</span>`; return; }
   const today = (new Date()).toISOString().slice(0,10);
   const act = (j.grants||[]).filter(x=>!x.revoked && x.expiry && x.expiry>=today);
-  const g = act.map(x=>`<div style="font-size:12px;padding:3px 0;">${esc(x.client_name||x.card_code||'')} · ${esc(x.issued||'')} → ${esc(x.expiry||'')} · <b>€${blMoney(x.owed_eur)}</b></div>`).join('')
-    || `<span style="color:#888;font-size:12px;">${t('bl_empty')}</span>`;
-  const pl = (j.payments||[]).map(x=>`<div style="font-size:12px;padding:3px 0;">${esc(x.paid_at||'')} · <b>€${blMoney(x.amount_eur)}</b> · ${x.kind==='platform'?t('bl_kind_platform'):t('bl_kind_soft')}${x.note?' · '+esc(x.note):''}</div>`).join('')
-    || `<span style="color:#888;font-size:12px;">${t('bl_empty')}</span>`;
+  const g = act.map(x=>`<div style="font-size:var(--fs-cap);padding:3px 0;">${esc(x.client_name||x.card_code||'')} · ${esc(x.issued||'')} → ${esc(x.expiry||'')} · <b>€${blMoney(x.owed_eur)}</b></div>`).join('')
+    || `<span style="color:#888;font-size:var(--fs-cap);">${t('bl_empty')}</span>`;
+  const pl = (j.payments||[]).map(x=>`<div style="font-size:var(--fs-cap);padding:3px 0;">${esc(x.paid_at||'')} · <b>€${blMoney(x.amount_eur)}</b> · ${x.kind==='platform'?t('bl_kind_platform'):t('bl_kind_soft')}${x.note?' · '+esc(x.note):''}</div>`).join('')
+    || `<span style="color:#888;font-size:var(--fs-cap);">${t('bl_empty')}</span>`;
   box.innerHTML = `<div style="display:flex;gap:32px;flex-wrap:wrap;">
-      <div style="min-width:300px;"><div style="font-weight:600;font-size:12px;margin-bottom:4px;">${t('bl_active_h')} · ${act.length}</div>${g}</div>
-      <div style="min-width:280px;"><div style="font-weight:600;font-size:12px;margin-bottom:4px;">${t('bl_pays_h')}</div>${pl}</div>
+      <div style="min-width:300px;"><div style="font-weight:600;font-size:var(--fs-cap);margin-bottom:4px;">${t('bl_active_h')} · ${act.length}</div>${g}</div>
+      <div style="min-width:280px;"><div style="font-weight:600;font-size:var(--fs-cap);margin-bottom:4px;">${t('bl_pays_h')}</div>${pl}</div>
     </div>`;
 }
 
@@ -1831,11 +1842,11 @@ function blMonths(){
 function blMoney(v){ return (Math.round((v||0)*100)/100).toLocaleString(PDF_LOCALE[uiLang]||'en-US'); }
 async function renderBilling(){
   const el = document.getElementById('billingView'); if(!el) return;
-  el.innerHTML = `<div class="section-title">${t('bl_title')}</div><p style="color:#888;font-size:13px;">${t('sp_loading')}</p>`;
+  el.innerHTML = `<div class="section-title">${t('bl_title')}</div><p style="color:#888;font-size:var(--fs-body);">${t('sp_loading')}</p>`;
   let j=null;
   try{ j = await api('/cabinet/billing', {period: billingPeriod}); }catch(_){}
   if(!j || !j.ok){
-    el.innerHTML = `<div class="section-title">${t('bl_title')}</div><p style="color:var(--alert);font-size:13px;">${t('sp_only_owner')}</p>`; return;
+    el.innerHTML = `<div class="section-title">${t('bl_title')}</div><p style="color:var(--alert);font-size:var(--fs-body);">${t('sp_only_owner')}</p>`; return;
   }
   billingCache = j.rows || [];
   billingFirstMonth = j.first_month || null;
@@ -1853,8 +1864,8 @@ async function renderBilling(){
     <tr>
       <td>${esc(r.name||('#'+r.id))}<div style="margin-top:3px;">${badge(r)}</div></td>
       <td style="text-align:center;">${r.grants_active}</td>
-      <td style="text-align:right;">${blMoney(r.soft_due)}<div style="font-size:11px;color:#888;">${t('bl_of')} ${blMoney(r.soft_accrued)}</div></td>
-      <td style="text-align:right;">${blMoney(r.platform_due)}${r.platform_months_due?`<div style="font-size:11px;color:#888;">${r.platform_months_due} ${t('bl_months')}</div>`:''}</td>
+      <td style="text-align:right;">${blMoney(r.soft_due)}<div style="font-size:var(--fs-cap);color:#888;">${t('bl_of')} ${blMoney(r.soft_accrued)}</div></td>
+      <td style="text-align:right;">${blMoney(r.platform_due)}${r.platform_months_due?`<div style="font-size:var(--fs-cap);color:#888;">${r.platform_months_due} ${t('bl_months')}</div>`:''}</td>
       <td style="text-align:right;font-weight:600;color:${r.due_now>0?'var(--alert)':'#2a8a4a'};">${blMoney(r.due_now)}</td>
       <td style="text-align:right;color:#666;">${blMoney(r.cash_period)}</td>
       <td style="white-space:nowrap;">
@@ -1867,13 +1878,13 @@ async function renderBilling(){
   const T0 = j.totals || {};
   el.innerHTML = `
     <div class="section-title">${t('bl_title')}</div>
-    <p style="font-size:12px;color:#888;margin-bottom:12px;max-width:820px;line-height:1.5;">${t('bl_hint')}</p>
+    <p style="font-size:var(--fs-cap);color:#888;margin-bottom:12px;max-width:820px;line-height:1.5;">${t('bl_hint')}</p>
     <div id="expertUsersBox" style="margin-bottom:14px;"></div>
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:6px;flex-wrap:wrap;">
       <select class="form-input" style="width:auto;" onchange="billingPeriod=this.value;renderBilling();">${opts}</select>
       <button class="topbtn" onclick="exportBillingCsv()">${t('bl_csv')}</button>
     </div>
-    <p style="font-size:11px;color:#999;margin:0 0 12px;">${t('bl_cash_note')}</p>
+    <p style="font-size:var(--fs-cap);color:#999;margin:0 0 12px;">${t('bl_cash_note')}</p>
     <table class="protocol-table">
       <thead><tr>
         <th>${t('bl_col_spec')}</th><th>${t('bl_col_active')}</th>
@@ -1905,7 +1916,7 @@ async function renderExpertUsers(){
   let list = '';
   if(expertUsersOpen){
     list = '<div style="margin-top:10px;">' + (j.users||[]).map(u=>`
-      <div style="display:flex;gap:10px;align-items:baseline;font-size:12px;padding:4px 0;border-top:1px solid #eee;">
+      <div style="display:flex;gap:10px;align-items:baseline;font-size:var(--fs-cap);padding:4px 0;border-top:1px solid #eee;">
         <span style="min-width:170px;">${esc(u.name||u.code)}</span>
         <span style="color:#888;min-width:150px;">${esc(u.spec_name||'—')}</span>
         <span style="color:#888;min-width:110px;">${esc(u.expiry||'—')}</span>
@@ -1927,30 +1938,30 @@ async function toggleBillingDetail(id){
   const tr = document.getElementById('bl-det-'+id); if(!tr) return;
   if(tr.style.display !== 'none'){ tr.style.display='none'; return; }
   const cell = tr.firstElementChild;
-  cell.innerHTML = `<span style="color:#888;font-size:12px;">${t('sp_loading')}</span>`;
+  cell.innerHTML = `<span style="color:#888;font-size:var(--fs-cap);">${t('sp_loading')}</span>`;
   tr.style.display = '';
   let j=null; try{ j = await api('/cabinet/billing/detail', {specialist_id:id}); }catch(_){}
-  if(!j || !j.ok){ cell.innerHTML = `<span style="color:var(--alert);font-size:12px;">${t('sp_load_err')}</span>`; return; }
+  if(!j || !j.ok){ cell.innerHTML = `<span style="color:var(--alert);font-size:var(--fs-cap);">${t('sp_load_err')}</span>`; return; }
   const today = (new Date()).toISOString().slice(0,10);
   const all = j.grants||[];
   // Разделяем: активные ведения (это и есть «клиенты в ведении сейчас») и завершённые.
   const act = all.filter(x=>!x.revoked && x.expiry && x.expiry >= today);
   const fin = all.filter(x=>!(!x.revoked && x.expiry && x.expiry >= today));
-  const gline = x => `<div style="font-size:12px;padding:3px 0;">
+  const gline = x => `<div style="font-size:var(--fs-cap);padding:3px 0;">
       ${esc(x.client_name||x.card_code||'')} · ${esc(x.issued||'')} → ${esc(x.expiry||'')} · <b>€${blMoney(x.owed_eur)}</b>
       ${x.revoked?` <span style="color:#888;">(${t('bl_revoked')})</span>`:''}</div>`;
-  const pl = (j.payments||[]).map(x=>`<div style="font-size:12px;padding:3px 0;">
+  const pl = (j.payments||[]).map(x=>`<div style="font-size:var(--fs-cap);padding:3px 0;">
       ${esc(x.paid_at||'')} · <b>€${blMoney(x.amount_eur)}</b> · ${x.kind==='platform'?t('bl_kind_platform'):t('bl_kind_soft')}
       ${x.note?' · '+esc(x.note):''}
       <button class="topbtn" style="color:var(--alert);padding:0 6px;" onclick="deleteBillingPayment(${x.id})">✕</button></div>`).join('')
-      || `<span style="color:#888;font-size:12px;">${t('bl_empty')}</span>`;
+      || `<span style="color:#888;font-size:var(--fs-cap);">${t('bl_empty')}</span>`;
   cell.innerHTML = `<div style="display:flex;gap:32px;flex-wrap:wrap;">
       <div style="min-width:300px;">
-        <div style="font-weight:600;font-size:12px;margin-bottom:4px;">${t('bl_active_h')} · ${act.length}</div>
-        ${act.map(gline).join('') || `<span style="color:#888;font-size:12px;">${t('bl_empty')}</span>`}
-        ${fin.length?`<div style="font-weight:600;font-size:12px;margin:10px 0 4px;color:#888;">${t('bl_finished_h')} · ${fin.length}</div>`+fin.map(gline).join(''):''}
+        <div style="font-weight:600;font-size:var(--fs-cap);margin-bottom:4px;">${t('bl_active_h')} · ${act.length}</div>
+        ${act.map(gline).join('') || `<span style="color:#888;font-size:var(--fs-cap);">${t('bl_empty')}</span>`}
+        ${fin.length?`<div style="font-weight:600;font-size:var(--fs-cap);margin:10px 0 4px;color:#888;">${t('bl_finished_h')} · ${fin.length}</div>`+fin.map(gline).join(''):''}
       </div>
-      <div style="min-width:280px;"><div style="font-weight:600;font-size:12px;margin-bottom:4px;">${t('bl_pays_h')}</div>${pl}</div>
+      <div style="min-width:280px;"><div style="font-weight:600;font-size:var(--fs-cap);margin-bottom:4px;">${t('bl_pays_h')}</div>${pl}</div>
     </div>`;
 }
 function openBillingPayment(id){
@@ -2004,13 +2015,13 @@ function exportBillingCsv(){
 function specialtyLabel(sp){ if(!sp) return ''; const v=t('spec_'+sp); return v==='spec_'+sp ? sp : v; }
 async function renderSpecialists(){
   const el = document.getElementById('specialistsView');
-  el.innerHTML = `<div class="section-title">${t('sp_panel_title')}</div><p style="color:#888;font-size:13px;">${t('sp_loading')}</p>`;
+  el.innerHTML = `<div class="section-title">${t('sp_panel_title')}</div><p style="color:#888;font-size:var(--fs-body);">${t('sp_loading')}</p>`;
   let list = [];
   try{
     const j = await api('/cabinet/specialists');
-    if(!j || !j.ok){ el.innerHTML = `<div class="section-title">${t('sp_panel_title')}</div><p style="color:var(--alert);font-size:13px;">${t('sp_only_owner')}</p>`; return; }
+    if(!j || !j.ok){ el.innerHTML = `<div class="section-title">${t('sp_panel_title')}</div><p style="color:var(--alert);font-size:var(--fs-body);">${t('sp_only_owner')}</p>`; return; }
     list = j.specialists || [];
-  }catch(_){ el.innerHTML = `<div class="section-title">${t('sp_panel_title')}</div><p style="color:var(--alert);font-size:13px;">${t('sp_load_err')}</p>`; return; }
+  }catch(_){ el.innerHTML = `<div class="section-title">${t('sp_panel_title')}</div><p style="color:var(--alert);font-size:var(--fs-body);">${t('sp_load_err')}</p>`; return; }
   specialistsCache = list;
   const rows = list.map(s=>`
     <tr>
@@ -2028,7 +2039,7 @@ async function renderSpecialists(){
     </tr>`).join('');
   el.innerHTML = `
     <div class="section-title">${t('sp_panel_title')}</div>
-    <p style="font-size:12px;color:#888;margin-bottom:12px;">${t('sp_panel_hint')}</p>
+    <p style="font-size:var(--fs-cap);color:#888;margin-bottom:12px;">${t('sp_panel_hint')}</p>
     <button class="topbtn primary" onclick="openAddSpecialist()" style="margin-bottom:14px;">${t('sp_add')}</button>
     <table class="protocol-table">
       <thead><tr><th>${t('sp_name')}</th><th>${t('sp_login')}</th><th>${t('sp_specialty')}</th><th>${t('col_refcode')}</th><th>${t('ov_lang')}</th><th>${t('col_access')}</th><th>${t('col_patients')}</th><th></th></tr></thead>
@@ -2205,11 +2216,11 @@ async function renderCalendar(){
   const typeLabel = tp => tp==='pdf'?'📄 PDF':tp==='once'?'🎥 '+t('format_once'):'🎥 Zoom';
   const itemRow = i => `
     <div onclick="openFromCalendar('${i.clientId}')" style="display:flex;align-items:center;gap:14px;padding:10px 14px;border:1px solid #e0e0e0;margin-bottom:6px;cursor:pointer;background:#fff;">
-      <div style="font-family:monospace;font-size:13px;color:#555;width:90px;flex-shrink:0;">${i.date}</div>
-      <div style="font-size:12px;width:90px;flex-shrink:0;">${typeLabel(i.type)}${i.source==='cal'?' <span style="font-size:9px;background:#e8f5e9;color:#2e7d32;padding:0 4px;border:1px solid #a5d6a7;">Cal</span>':''}</div>
-      <div style="flex:1;font-size:13px;font-weight:600;">${esc(i.clientName)}${i.program?`<span style="font-weight:400;color:#888;"> · ${esc(i.program)}</span>`:''}</div>
-      ${i.hrv?`<div style="font-size:11px;color:#888;">HRV ${esc(String(i.hrv))}</div>`:''}
-      ${i.notes?`<div style="font-size:11px;color:#888;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(i.notes)}</div>`:''}
+      <div style="font-family:monospace;font-size:var(--fs-body);color:#555;width:90px;flex-shrink:0;">${i.date}</div>
+      <div style="font-size:var(--fs-cap);width:90px;flex-shrink:0;">${typeLabel(i.type)}${i.source==='cal'?' <span style="font-size:var(--fs-cap);background:#e8f5e9;color:#2e7d32;padding:0 4px;border:1px solid #a5d6a7;">Cal</span>':''}</div>
+      <div style="flex:1;font-size:var(--fs-body);font-weight:600;">${esc(i.clientName)}${i.program?`<span style="font-weight:400;color:#888;"> · ${esc(i.program)}</span>`:''}</div>
+      ${i.hrv?`<div style="font-size:var(--fs-cap);color:#888;">HRV ${esc(String(i.hrv))}</div>`:''}
+      ${i.notes?`<div style="font-size:var(--fs-cap);color:#888;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(i.notes)}</div>`:''}
     </div>`;
   const section = (title, arr) => arr.length ? `<div class="section-title" style="margin-top:18px;">${title} · ${arr.length}</div>${arr.map(itemRow).join('')}` : '';
 
@@ -2221,20 +2232,20 @@ async function renderCalendar(){
   try{ const j = await api('/cabinet/leads'); if(j && j.ok) leads = j.leads||[]; }catch(_){}
   const leadRow = l => `
     <div style="display:flex;align-items:center;gap:14px;padding:10px 14px;border:1px solid #cfe8d0;margin-bottom:6px;background:#fafff8;">
-      <div style="font-family:monospace;font-size:13px;color:#555;width:90px;flex-shrink:0;">${esc(l.date||'')}</div>
-      <div style="font-size:12px;width:90px;flex-shrink:0;">🤝 ${esc(l.time||'')}</div>
-      <div style="flex:1;font-size:13px;font-weight:600;">${esc(l.name||'—')}${l.email?`<span style="font-weight:400;color:#888;"> · ${esc(l.email)}</span>`:''}</div>
-      ${l.url?`<a href="${esc(l.url)}" target="_blank" style="font-size:11px;color:#1565c0;">${t('sch_link_ph')}</a>`:''}
+      <div style="font-family:monospace;font-size:var(--fs-body);color:#555;width:90px;flex-shrink:0;">${esc(l.date||'')}</div>
+      <div style="font-size:var(--fs-cap);width:90px;flex-shrink:0;">🤝 ${esc(l.time||'')}</div>
+      <div style="flex:1;font-size:var(--fs-body);font-weight:600;">${esc(l.name||'—')}${l.email?`<span style="font-weight:400;color:#888;"> · ${esc(l.email)}</span>`:''}</div>
+      ${l.url?`<a href="${esc(l.url)}" target="_blank" style="font-size:var(--fs-cap);color:#1565c0;">${t('sch_link_ph')}</a>`:''}
     </div>`;
   const leadsSection = leads.length ? `
     <div class="section-title" style="margin-top:24px;">${t('cal_leads_title')} · ${leads.length}</div>
-    <p style="font-size:12px;color:#888;margin-bottom:8px;">${t('cal_leads_hint')}</p>
+    <p style="font-size:var(--fs-cap);color:#888;margin-bottom:8px;">${t('cal_leads_hint')}</p>
     ${leads.map(leadRow).join('')}` : '';
 
   el.innerHTML = `
     <div class="section-title">${t('cal_title')}</div>
-    <p style="font-size:12px;color:#888;margin-bottom:8px;">${t('cal_hint').replace('%n', total)}</p>
-    ${total ? '' : `<p style="color:#999;font-size:13px;">${t('cal_none')}</p>`}
+    <p style="font-size:var(--fs-cap);color:#888;margin-bottom:8px;">${t('cal_hint').replace('%n', total)}</p>
+    ${total ? '' : `<p style="color:#999;font-size:var(--fs-body);">${t('cal_none')}</p>`}
     ${section(t('cal_today'), groups.today)}
     ${section(t('cal_tomorrow'), groups.tomorrow)}
     ${section(t('cal_week'), groups.week)}
@@ -2288,10 +2299,10 @@ function renderClientDetail(){
       <div style="flex:1;">
         <div class="client-header-name">${esc(c.name)} ${stBadge}${dataBadge(c)}</div>
         <div class="client-header-meta">${esc(metaParts.join(' · '))}</div>
-        ${c.start_date?`<div style="font-size:11px;color:#888;margin-top:2px;">${t('ov_start')}: ${c.start_date}${c.duration_weeks?' · '+c.duration_weeks+' '+t('u_wk'):''} · ${c.format||'zoom'}</div>`:''}
+        ${c.start_date?`<div style="font-size:var(--fs-cap);color:#888;margin-top:2px;">${t('ov_start')}: ${c.start_date}${c.duration_weeks?' · '+c.duration_weeks+' '+t('u_wk'):''} · ${c.format||'zoom'}</div>`:''}
       </div>
       <div>
-        <select onchange="quickStatus('${c.id}',this.value)" style="border:1px solid #ccc;padding:4px 8px;font-size:11px;font-family:inherit;background:#fff;outline:none;cursor:pointer;">
+        <select onchange="quickStatus('${c.id}',this.value)" style="border:1px solid #ccc;padding:4px 8px;font-size:var(--fs-cap);font-family:inherit;background:#fff;outline:none;cursor:pointer;">
           <option value="active" ${st==='active'?'selected':''}>${statusLabel('active')}</option>
           <option value="new" ${st==='new'?'selected':''}>${statusLabel('new')}</option>
           <option value="pause" ${st==='pause'?'selected':''}>${statusLabel('pause')}</option>
@@ -2351,18 +2362,18 @@ function renderAnketa(c){
   const flags = {uk:'🇺🇦',ru:'🇷🇺',en:'🇬🇧',es:'🇪🇸',de:'🇩🇪',pt:'🇧🇷',fr:'🇫🇷',pl:'🇵🇱',it:'🇮🇹',he:'🇮🇱',ja:'🇯🇵',ko:'🇰🇷'};
   const flag = flags[a.lang]||'🌐';
   let html = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-      <div style="font-size:13px;color:#666;">${flag} ${(a.lang||'').toUpperCase()} · ${dt}</div>
-      <button class="topbtn" onclick="translateAnketa()" style="font-size:11px;">${t('ank_translate_btn')}</button>
+      <div style="font-size:var(--fs-body);color:#666;">${flag} ${(a.lang||'').toUpperCase()} · ${dt}</div>
+      <button class="topbtn" onclick="translateAnketa()" style="font-size:var(--fs-cap);">${t('ank_translate_btn')}</button>
     </div>
-    <div id="anketaTrans" style="display:none;white-space:pre-wrap;font-size:13px;line-height:1.6;background:#eef5ff;border:1px solid #cfe0f5;padding:12px 16px;margin-bottom:16px;"></div>`;
+    <div id="anketaTrans" style="display:none;white-space:pre-wrap;font-size:var(--fs-body);line-height:1.6;background:#eef5ff;border:1px solid #cfe0f5;padding:12px 16px;margin-bottom:16px;"></div>`;
   if(a.summary){
-    html += `<div style="background:#f8f8f8;border:1px solid #ddd;padding:12px 16px;margin-bottom:20px;white-space:pre-wrap;font-size:13px;line-height:1.6;">${esc(a.summary)}</div>`;
+    html += `<div style="background:#f8f8f8;border:1px solid #ddd;padding:12px 16px;margin-bottom:20px;white-space:pre-wrap;font-size:var(--fs-body);line-height:1.6;">${esc(a.summary)}</div>`;
   }
   html += Object.values(a.answers).filter(x=>x&&x.v!=null&&x.v!=='').map(item=>{
     const v = Array.isArray(item.v) ? item.v.join(', ') : String(item.v);
     return `<div style="padding:8px 0;border-bottom:1px solid #eee;">
-      <div style="font-size:11px;color:#999;margin-bottom:2px;">${esc(item.q||'')}</div>
-      <div style="font-size:13px;color:#000;">${esc(v)}</div>
+      <div style="font-size:var(--fs-cap);color:#999;margin-bottom:2px;">${esc(item.q||'')}</div>
+      <div style="font-size:var(--fs-body);color:#000;">${esc(v)}</div>
     </div>`;
   }).join('');
   return html;
@@ -2380,15 +2391,15 @@ function chatBubblesHtml(msgs){
     const whoClr = isIn ? '#1565c0' : '#2e7d32';
     const body = (m.type==='image'&&m.url) ? `<img src="${esc(m.url)}" style="max-width:220px;border-radius:8px;display:block;" loading="lazy">`
                : (m.type==='audio'&&m.url) ? `<audio controls preload="none" src="${esc(m.url)}" style="width:220px;max-width:100%;"></audio>`
-               : `<div style="font-size:13px;white-space:pre-wrap;line-height:1.45;">${esc(m.text||'')}</div>`;
+               : `<div style="font-size:var(--fs-body);white-space:pre-wrap;line-height:1.45;">${esc(m.text||'')}</div>`;
     return `<div style="align-self:${align};max-width:80%;background:${bg};border:1px solid ${bd};border-radius:12px;padding:7px 11px;">
       <div style="display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:2px;">
-        <span style="font-size:10px;font-weight:600;color:${whoClr};">${who}</span>
-        <span style="display:flex;gap:6px;align-items:center;"><span style="font-size:10px;color:#999;">${esc(m.date||'')}</span><button onclick="deleteMsg(${i})" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:12px;line-height:1;padding:0;">×</button></span>
+        <span style="font-size:var(--fs-cap);font-weight:600;color:${whoClr};">${who}</span>
+        <span style="display:flex;gap:6px;align-items:center;"><span style="font-size:var(--fs-cap);color:#999;">${esc(m.date||'')}</span><button onclick="deleteMsg(${i})" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:var(--fs-cap);line-height:1;padding:0;">×</button></span>
       </div>
       ${body}
     </div>`;
-  }).join('') || `<div style="margin:auto;color:#999;font-size:13px;">${t('msg_none')}</div>`;
+  }).join('') || `<div style="margin:auto;color:#999;font-size:var(--fs-body);">${t('msg_none')}</div>`;
 }
 // Живое подтягивание входящих: тянем свежую карточку и обновляем ТОЛЬКО тред (поле ввода не трогаем).
 let _chatPoll = null;
@@ -2414,9 +2425,9 @@ function renderMessages(c){
   return `
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
       <div class="section-title" style="margin:0;">${t('tab_messages')}</div>
-      <button class="topbtn" onclick="translateIncoming()" style="font-size:11px;">${t('msg_translate_in')}</button>
+      <button class="topbtn" onclick="translateIncoming()" style="font-size:var(--fs-cap);">${t('msg_translate_in')}</button>
     </div>
-    <div id="msgTrans" style="display:none;white-space:pre-wrap;font-size:13px;line-height:1.6;background:#eef5ff;border:1px solid #cfe0f5;padding:12px 16px;margin-bottom:12px;"></div>
+    <div id="msgTrans" style="display:none;white-space:pre-wrap;font-size:var(--fs-body);line-height:1.6;background:#eef5ff;border:1px solid #cfe0f5;padding:12px 16px;margin-bottom:12px;"></div>
 
     <!-- Тред: прокрутка, автоскролл вниз -->
     <div id="chatThreadBox" style="border:1px solid #ddd;height:min(50vh,460px);overflow-y:auto;padding:14px;background:#fafafa;display:flex;flex-direction:column;gap:8px;">
@@ -2425,30 +2436,30 @@ function renderMessages(c){
 
     <!-- Поле ввода СНИЗУ -->
     <div style="display:flex;gap:8px;margin-top:10px;align-items:flex-end;">
-      <label title="Фото" style="flex:0 0 auto;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid #ccc;background:#fff;cursor:pointer;font-size:18px;">📷<input type="file" accept="image/*" onchange="cabPickPhoto(this)" style="display:none;"></label>
-      <button type="button" onclick="cabToggleVoice(this)" id="cabMicBtn" title="Голос" style="flex:0 0 auto;width:40px;height:40px;border:1px solid #ccc;background:#fff;cursor:pointer;font-size:18px;">🎤</button>
+      <label title="Фото" style="flex:0 0 auto;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid #ccc;background:#fff;cursor:pointer;font-size:var(--fs-title);">📷<input type="file" accept="image/*" onchange="cabPickPhoto(this)" style="display:none;"></label>
+      <button type="button" onclick="cabToggleVoice(this)" id="cabMicBtn" title="Голос" style="flex:0 0 auto;width:40px;height:40px;border:1px solid #ccc;background:#fff;cursor:pointer;font-size:var(--fs-title);">🎤</button>
       <textarea id="chatCompose" rows="2" maxlength="4000" placeholder="${t('msg_compose_ph')}"
-        style="flex:1;border:1px solid #ccc;padding:9px 12px;font-size:13px;font-family:inherit;resize:vertical;"
+        style="flex:1;border:1px solid #ccc;padding:9px 12px;font-size:var(--fs-body);font-family:inherit;resize:vertical;"
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatFromCompose();}"></textarea>
-      <button type="button" onclick="sendChatFromCompose()" style="background:#2e7d32;color:#fff;border:none;padding:10px 20px;cursor:pointer;font-size:13px;white-space:nowrap;">${t('msg_send_chat')}</button>
+      <button type="button" onclick="sendChatFromCompose()" style="background:#2e7d32;color:#fff;border:none;padding:10px 20px;cursor:pointer;font-size:var(--fs-body);white-space:nowrap;">${t('msg_send_chat')}</button>
     </div>
-    <div id="chatComposeStatus" style="font-size:12px;color:#888;margin-top:4px;margin-bottom:16px;"></div>
+    <div id="chatComposeStatus" style="font-size:var(--fs-cap);color:#888;margin-top:4px;margin-bottom:16px;"></div>
 
     <!-- ИИ-черновик и Telegram — в раскрывашке -->
     <details style="margin-bottom:16px;">
-      <summary style="cursor:pointer;font-size:12px;font-weight:600;color:#666;text-transform:uppercase;">${t('msg_tools')}</summary>
+      <summary style="cursor:pointer;font-size:var(--fs-cap);font-weight:600;color:#666;text-transform:uppercase;">${t('msg_tools')}</summary>
       <div style="border:1px solid #ddd;padding:16px;margin-top:10px;">
-        <div style="font-size:11px;font-weight:600;color:#666;margin-bottom:10px;text-transform:uppercase;">${t('msg_ai_title')}</div>
-        <button type="button" onclick="genAiDraft()" style="background:#e6e6e6;border:1px solid #9a9a9a;padding:8px 16px;cursor:pointer;font-size:12px;font-family:inherit;margin-bottom:10px;">${t('msg_gen_btn')}</button>
-        <div id="draftStatus" style="font-size:12px;color:#888;margin-bottom:8px;"></div>
+        <div style="font-size:var(--fs-cap);font-weight:600;color:#666;margin-bottom:10px;text-transform:uppercase;">${t('msg_ai_title')}</div>
+        <button type="button" onclick="genAiDraft()" style="background:#e6e6e6;border:1px solid #9a9a9a;padding:8px 16px;cursor:pointer;font-size:var(--fs-cap);font-family:inherit;margin-bottom:10px;">${t('msg_gen_btn')}</button>
+        <div id="draftStatus" style="font-size:var(--fs-cap);color:#888;margin-bottom:8px;"></div>
         <textarea id="draftText" rows="5" maxlength="4000"
-          style="width:100%;border:1px solid #ccc;padding:8px 10px;font-size:13px;font-family:inherit;resize:vertical;margin-bottom:8px;"
+          style="width:100%;border:1px solid #ccc;padding:8px 10px;font-size:var(--fs-body);font-family:inherit;resize:vertical;margin-bottom:8px;"
           placeholder="${t('msg_draft_ph')}"></textarea>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <button type="button" onclick="sendChatMsg()" style="background:#2e7d32;color:#fff;border:none;padding:8px 18px;cursor:pointer;font-size:12px;">${t('msg_send_chat')}</button>
-          <button type="button" onclick="sendTgDraft()" style="background:#1a1a1a;color:#fff;border:none;padding:8px 18px;cursor:pointer;font-size:12px;">${t('msg_send_tg')}</button>
-          <button type="button" onclick="copyDraft()" style="background:#e6e6e6;border:1px solid #9a9a9a;padding:8px 16px;cursor:pointer;font-size:12px;font-family:inherit;">${t('msg_copy')}</button>
-          <span id="tgStatus" style="font-size:12px;color:#888;"></span>
+          <button type="button" onclick="sendChatMsg()" style="background:#2e7d32;color:#fff;border:none;padding:8px 18px;cursor:pointer;font-size:var(--fs-cap);">${t('msg_send_chat')}</button>
+          <button type="button" onclick="sendTgDraft()" style="background:#1a1a1a;color:#fff;border:none;padding:8px 18px;cursor:pointer;font-size:var(--fs-cap);">${t('msg_send_tg')}</button>
+          <button type="button" onclick="copyDraft()" style="background:#e6e6e6;border:1px solid #9a9a9a;padding:8px 16px;cursor:pointer;font-size:var(--fs-cap);font-family:inherit;">${t('msg_copy')}</button>
+          <span id="tgStatus" style="font-size:var(--fs-cap);color:#888;"></span>
         </div>
       </div>
     </details>`;
@@ -2603,7 +2614,7 @@ function renderBiometrics(c){
   }).join('');
   return `
     <div class="section-title">${t('bio_title')}</div>
-    <p style="font-size:12px;color:#888;margin-bottom:12px;">${t('bio_hint')}</p>
+    <p style="font-size:var(--fs-cap);color:#888;margin-bottom:12px;">${t('bio_hint')}</p>
     <table class="protocol-table">
       <thead><tr><th>${t('col_wk')}</th><th>${t('bio_date')}</th><th>${t('bio_sleep')} (${t('u_h')})</th><th>${t('bio_rhr_full')}</th><th>HRV (${t('u_ms')})</th><th>${t('bio_steps')}</th><th>${t('bio_weight')} (${t('u_kg')})</th><th></th></tr></thead>
       <tbody>${rows}</tbody>
@@ -2619,12 +2630,12 @@ function renderSchedule(c){
   const sched = c.schedule || [];
   const rows = sched.map((s,i)=>{
     const doneCls = (s.done || s.cancelled) ? ' class="sched-done"' : '';
-    const calBadge = s.source==='cal' ? '<span style="font-size:9px;background:#e8f5e9;color:#2e7d32;padding:0 4px;border:1px solid #a5d6a7;white-space:nowrap;">📅 Cal</span> ' : '';
+    const calBadge = s.source==='cal' ? '<span style="font-size:var(--fs-cap);background:#e8f5e9;color:#2e7d32;padding:0 4px;border:1px solid #a5d6a7;white-space:nowrap;">📅 Cal</span> ' : '';
     return `<tr${doneCls}>
       <td style="text-align:center;"><input type="checkbox" class="sched-check" ${s.done?'checked':''} onchange="updateSched(${i},'done',this.checked);renderTabContent()"></td>
       <td style="color:#888;">${calBadge}${i+1}</td>
       <td><input class="proto-input" type="date" value="${esc(s.date||'')}" oninput="updateSched(${i},'date',this.value)"></td>
-      <td><select style="background:transparent;border:none;outline:none;font-size:12px;font-family:inherit;" onchange="updateSched(${i},'type',this.value)">
+      <td><select style="background:transparent;border:none;outline:none;font-size:var(--fs-cap);font-family:inherit;" onchange="updateSched(${i},'type',this.value)">
         <option value="zoom" ${s.type==='zoom'?'selected':''}>Zoom</option>
         <option value="pdf" ${s.type==='pdf'?'selected':''}>PDF</option>
         <option value="once" ${s.type==='once'?'selected':''}>${t('format_once')}</option>
@@ -2634,7 +2645,7 @@ function renderSchedule(c){
       <td><button class="proto-del" onclick="deleteSched(${i})">×</button></td>
     </tr>`;
   }).join('');
-  const autoBtn = c.start_date ? `<button class="topbtn primary" onclick="autoGenSchedule()" style="font-size:11px;margin-right:8px;">${t('sch_auto')}</button>` : '';
+  const autoBtn = c.start_date ? `<button class="topbtn primary" onclick="autoGenSchedule()" style="font-size:var(--fs-cap);margin-right:8px;">${t('sch_auto')}</button>` : '';
   return `
     <div class="section-title">${t('sch_title')}</div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
@@ -2666,17 +2677,17 @@ function renderBreakdowns(c){
   const bd = c.breakdowns || [];
   const rows = bd.map((b,i)=>{
     const isIp = b.source==='ip';
-    const srcBadge = isIp ? '<span style="font-size:10px;background:#e3f2fd;color:#1565c0;padding:1px 6px;border:1px solid #90caf9;white-space:nowrap;">📲 ИП</span> ' : '';
+    const srcBadge = isIp ? '<span style="font-size:var(--fs-cap);background:#e3f2fd;color:#1565c0;padding:1px 6px;border:1px solid #90caf9;white-space:nowrap;">📲 ИП</span> ' : '';
     const main = `<tr>
       <td style="color:#888;">${i+1}</td>
       <td><input class="proto-input" type="date" value="${esc(b.date||'')}" oninput="updateBd(${i},'date',this.value)"></td>
-      <td>${srcBadge}<select style="background:transparent;border:none;outline:none;font-size:12px;font-family:inherit;" onchange="updateBd(${i},'type',this.value)">
+      <td>${srcBadge}<select style="background:transparent;border:none;outline:none;font-size:var(--fs-cap);font-family:inherit;" onchange="updateBd(${i},'type',this.value)">
         <option value="ai" ${b.type==='ai'?'selected':''}>${t('bd_ai')}</option>
         <option value="weekly" ${b.type==='weekly'?'selected':''}>${t('bd_weekly')}</option>
         <option value="pdf" ${b.type==='pdf'?'selected':''}>${t('bd_pdf')}</option>
         <option value="zoom" ${b.type==='zoom'?'selected':''}>${t('bd_zoom')}</option>
       </select></td>
-      <td><select style="background:transparent;border:none;outline:none;font-size:12px;font-family:inherit;" onchange="updateBd(${i},'status',this.value)">
+      <td><select style="background:transparent;border:none;outline:none;font-size:var(--fs-cap);font-family:inherit;" onchange="updateBd(${i},'status',this.value)">
         <option value="received" ${b.status==='received'?'selected':''}>${t('bd_received')}</option>
         <option value="draft" ${b.status==='draft'?'selected':''}>${t('bd_draft')}</option>
         <option value="sent" ${b.status==='sent'?'selected':''}>${t('bd_sent')}</option>
@@ -2689,14 +2700,14 @@ function renderBreakdowns(c){
     const mLine = [m.hrv?'HRV '+m.hrv:'', m.rhr?t('bio_rhr')+' '+m.rhr:'', m.energy?t('bd_energy')+' '+m.energy:'', m.device?'· '+m.device:''].filter(Boolean).join(' · ');
     const textRow = (isIp && b.text) ? `<tr><td colspan="6" style="padding:0 12px 12px;border-bottom:1px solid var(--b1);">
       <details>
-        <summary style="cursor:pointer;font-size:12px;color:#1565c0;">${t('bd_show')}${mLine?' · '+esc(mLine):''}</summary>
-        <div style="white-space:pre-wrap;font-size:12px;line-height:1.6;background:#f8f8f8;border:1px solid #ddd;padding:10px 12px;margin-top:6px;">${esc(b.text)}</div>
+        <summary style="cursor:pointer;font-size:var(--fs-cap);color:#1565c0;">${t('bd_show')}${mLine?' · '+esc(mLine):''}</summary>
+        <div style="white-space:pre-wrap;font-size:var(--fs-cap);line-height:1.6;background:#f8f8f8;border:1px solid #ddd;padding:10px 12px;margin-top:6px;">${esc(b.text)}</div>
       </details></td></tr>` : '';
     return main + textRow;
   }).join('');
   return `
     <div class="section-title">${t('bd_title')}</div>
-    <p style="font-size:12px;color:#888;margin-bottom:12px;">${t('bd_hint')}</p>
+    <p style="font-size:var(--fs-cap);color:#888;margin-bottom:12px;">${t('bd_hint')}</p>
     <table class="protocol-table">
       <thead><tr><th>#</th><th>${t('bio_date')}</th><th>${t('sch_type')}</th><th>${t('f_status')}</th><th>${t('sch_notes')}</th><th></th></tr></thead>
       <tbody>${rows}</tbody>
@@ -2756,23 +2767,23 @@ function renderDynamics(c){
   };
   const rows=w.metrics.map(m=>{
     const good=m.trend===0?0:(m.trend===m.dir?1:-1);
-    let badge='<span style="color:#999;font-size:12px;">—</span>';
+    let badge='<span style="color:#999;font-size:var(--fs-cap);">—</span>';
     if(m.delta!=null){
       const arr=m.trend>0?'↑':m.trend<0?'↓':'→';
       const col=good>0?'#1a7f37':good<0?'#c0392b':'#999';
-      badge=`<span style="color:${col};font-size:12px;font-weight:600;">${arr} ${(m.delta>0?'+':'')+m.delta.toFixed(m.dec)}</span>`;
+      badge=`<span style="color:${col};font-size:var(--fs-cap);font-weight:600;">${arr} ${(m.delta>0?'+':'')+m.delta.toFixed(m.dec)}</span>`;
     }
     return `<tr>
-      <td style="padding:6px 12px 6px 0;font-size:13px;color:#444;">${ui[m.k]}</td>
+      <td style="padding:6px 12px 6px 0;font-size:var(--fs-body);color:#444;">${ui[m.k]}</td>
       <td style="padding:6px 8px;line-height:0;">${spark(m.series,good)}</td>
-      <td style="padding:6px 12px;text-align:right;font-size:14px;font-weight:600;">${m.a.toFixed(m.dec)}</td>
+      <td style="padding:6px 12px;text-align:right;font-size:var(--fs-body);font-weight:600;">${m.a.toFixed(m.dec)}</td>
       <td style="padding:6px 0;text-align:right;">${badge}</td>
     </tr>`;
   }).join('');
   return `
     <div class="section-title">📈 ${ui.title}</div>
     <div style="border:1px solid #ddd;padding:8px 16px;margin-bottom:20px;">
-      <div style="font-size:11px;color:#999;margin:4px 0 6px;">${ui.sub}</div>
+      <div style="font-size:var(--fs-cap);color:#999;margin:4px 0 6px;">${ui.sub}</div>
       <table style="border-collapse:collapse;width:100%;">${rows}</table>
     </div>`;
 }
@@ -2808,7 +2819,7 @@ function renderOverview(c){
     <div class="metrics-row">
       <div class="metric-card"><div class="metric-lbl">${t('ov_progress')}</div><div class="metric-val">${totalN?doneN+'/'+totalN:'—'}</div><div class="metric-sub">${totalN?t('ov_sessions_done'):t('ov_no_sched')}</div></div>
       <div class="metric-card"><div class="metric-lbl">${t('tab_biometrics')}</div><div class="metric-val">${bio.length||'—'}</div><div class="metric-sub">${bio.length?t('ov_weeks_added'):t('ov_no_data')}</div></div>
-      <div class="metric-card"><div class="metric-lbl">${t('tab_anketa')}</div><div class="metric-val" style="font-size:18px;">${hasAnketa?'✓':'—'}</div><div class="metric-sub">${hasAnketa?t('ov_received'):t('ov_not_received')}</div></div>
+      <div class="metric-card"><div class="metric-lbl">${t('tab_anketa')}</div><div class="metric-val" style="font-size:var(--fs-title);">${hasAnketa?'✓':'—'}</div><div class="metric-sub">${hasAnketa?t('ov_received'):t('ov_not_received')}</div></div>
       <div class="metric-card"><div class="metric-lbl">${t('tab_messages')}</div><div class="metric-val">${msgs.length||'—'}</div><div class="metric-sub">${needsReply?t('ov_needs_reply'):t('ov_in_chat')}</div></div>
     </div>`;
 
@@ -2823,14 +2834,14 @@ function renderOverview(c){
   const cmp = c.complaint;
   const complaintBlock = (cmp && ((Array.isArray(cmp.items)&&cmp.items.length) || cmp.text)) ? `
     <div style="margin-bottom:20px;padding:14px 16px;border-radius:12px;background:#fff8e6;border:1px solid #e8d9a8;">
-      <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a1c;font-weight:700;margin-bottom:6px;">${t('ov_complaint')}</div>
-      <div style="font-size:15px;color:#1a1a1a;line-height:1.5;">${esc((cmp.items||[]).map(k=>CMP_LB[k]||k).join(' · '))}</div>
-      ${cmp.text?`<div style="font-size:13.5px;color:#444;line-height:1.6;margin-top:6px;">«${esc(cmp.text)}»</div>`:''}
-      <div style="font-size:11px;color:#8a8a8a;margin-top:8px;">${cmp.since?t('ov_complaint_since')+' '+esc(cmp.since):''}${cmp.updated_at&&cmp.updated_at!==cmp.since?' · '+t('ov_complaint_upd')+' '+esc(cmp.updated_at):''}</div>
+      <div style="font-size:var(--fs-cap);letter-spacing:.08em;text-transform:uppercase;color:#8a6a1c;font-weight:700;margin-bottom:6px;">${t('ov_complaint')}</div>
+      <div style="font-size:var(--fs-title);color:#1a1a1a;line-height:1.5;">${esc((cmp.items||[]).map(k=>CMP_LB[k]||k).join(' · '))}</div>
+      ${cmp.text?`<div style="font-size:var(--fs-body);color:#444;line-height:1.6;margin-top:6px;">«${esc(cmp.text)}»</div>`:''}
+      <div style="font-size:var(--fs-cap);color:#8a8a8a;margin-top:8px;">${cmp.since?t('ov_complaint_since')+' '+esc(cmp.since):''}${cmp.updated_at&&cmp.updated_at!==cmp.since?' · '+t('ov_complaint_upd')+' '+esc(cmp.updated_at):''}</div>
     </div>` : '';
 
   // Профиль
-  const row=(k,v)=>v?`<tr><td style="padding:4px 12px 4px 0;color:#888;font-size:12px;white-space:nowrap;">${k}</td><td style="padding:4px 0;font-size:13px;">${esc(String(v))}</td></tr>`:'';
+  const row=(k,v)=>v?`<tr><td style="padding:4px 12px 4px 0;color:#888;font-size:var(--fs-cap);white-space:nowrap;">${k}</td><td style="padding:4px 0;font-size:var(--fs-body);">${esc(String(v))}</td></tr>`:'';
   const profile = `
     <div class="section-title">${t('ov_profile')}</div>
     <table style="border-collapse:collapse;margin-bottom:20px;">
@@ -2851,20 +2862,20 @@ function renderOverview(c){
     <div style="border:1px solid #ddd;padding:12px 16px;margin-bottom:20px;">
       <span style="font-weight:600;">${esc(next.date||t('ov_date_unset'))}</span>
       <span style="color:#888;"> · ${next.type==='pdf'?'PDF':next.type==='once'?t('format_once'):'Zoom'}</span>
-      ${next.notes?`<div style="font-size:12px;color:#666;margin-top:4px;">${esc(next.notes)}</div>`:''}
+      ${next.notes?`<div style="font-size:var(--fs-cap);color:#666;margin-top:4px;">${esc(next.notes)}</div>`:''}
     </div>` : '';
 
   // Последняя биометрика
   const bioBlock = lastBio ? `
     <div class="section-title">${t('ov_last_bio')} (${t('u_wk')} ${esc(String(lastBio.week||'?'))})</div>
-    <div style="border:1px solid #ddd;padding:12px 16px;margin-bottom:20px;font-size:13px;">
+    <div style="border:1px solid #ddd;padding:12px 16px;margin-bottom:20px;font-size:var(--fs-body);">
       ${[lastBio.date?t('bio_date')+': '+lastBio.date:'', lastBio.sleep?t('bio_sleep')+' '+lastBio.sleep+t('u_h'):'', lastBio.rhr?t('bio_rhr')+' '+lastBio.rhr:'', lastBio.hrv?'HRV '+lastBio.hrv:'', lastBio.steps?t('bio_steps')+' '+lastBio.steps:'', lastBio.weight?t('bio_weight')+' '+lastBio.weight+t('u_kg'):''].filter(Boolean).join(' · ')||'—'}
     </div>` : '';
 
   // Анкета-сводка (краткая)
   const ankBlock = hasAnketa && c.anketa.summary ? `
     <div class="section-title">${t('ov_anketa_summary')}</div>
-    <div style="background:#f8f8f8;border:1px solid #ddd;padding:12px 16px;white-space:pre-wrap;font-size:13px;line-height:1.6;">${esc(c.anketa.summary)}</div>` : '';
+    <div style="background:#f8f8f8;border:1px solid #ddd;padding:12px 16px;white-space:pre-wrap;font-size:var(--fs-body);line-height:1.6;">${esc(c.anketa.summary)}</div>` : '';
 
   // Доступ к VIA-L EXPERT: активный (persist в data.expert_grant) → статус + Продлить/Закрыть; иначе форма выдачи
   const EXPERT_PWA_URL = 'https://via-l.com/interpreter/interpreter-via-l-expert.html';
@@ -2876,11 +2887,11 @@ function renderOverview(c){
     const msg = `${g.code}\n${EXPERT_PWA_URL}`;
     expertInner = `
       <div style="line-height:1.8;">
-        <div><b>${t('ex_code')}:</b> <span style="font-family:monospace;font-size:15px;">${esc(g.code)}</span></div>
+        <div><b>${t('ex_code')}:</b> <span style="font-family:monospace;font-size:var(--fs-title);">${esc(g.code)}</span></div>
         <div style="color:#888;">${t('ex_until')} ${esc(g.expiry||'—')} · ${t('ex_owed')}: €${esc(String(g.owed||0))}</div>
         <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <button class="topbtn" onclick="copyExpert(this, ${JSON.stringify(msg).replace(/"/g,'&quot;')})">${t('ex_copy')}</button>
-          <input id="exExtDays" type="number" min="1" max="400" value="30" style="width:70px;border:1px solid #ccc;padding:5px 8px;font-family:inherit;font-size:13px;">
+          <input id="exExtDays" type="number" min="1" max="400" value="30" style="width:70px;border:1px solid #ccc;padding:5px 8px;font-family:inherit;font-size:var(--fs-body);">
           <button class="topbtn" onclick="extendExpert('${esc(g.code)}')">${t('ex_extend')}</button>
           <button class="topbtn" style="color:var(--alert);" onclick="revokeExpert('${esc(g.code)}',this)">${t('ex_revoke')}</button>
         </div>
@@ -2891,8 +2902,8 @@ function renderOverview(c){
       ${endedNote}
       <div style="color:#888;margin-bottom:10px;">${t('ex_desc')}</div>
       <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;">
-        <label style="font-size:12px;color:#888;">${t('ex_days')}<br>
-          <input id="exDays" type="number" min="1" max="400" value="56" style="width:90px;border:1px solid #ccc;padding:5px 8px;font-family:inherit;font-size:13px;margin-top:3px;">
+        <label style="font-size:var(--fs-cap);color:#888;">${t('ex_days')}<br>
+          <input id="exDays" type="number" min="1" max="400" value="56" style="width:90px;border:1px solid #ccc;padding:5px 8px;font-family:inherit;font-size:var(--fs-body);margin-top:3px;">
         </label>
         <button class="topbtn primary" onclick="grantExpert('${esc(c.code)}')">${t('ex_grant')}</button>
       </div>
@@ -2900,7 +2911,7 @@ function renderOverview(c){
   }
   const expertBlock = c.code ? `
     <div class="section-title">${t('ex_title')}</div>
-    <div style="border:1px solid #ddd;padding:12px 16px;margin-bottom:20px;font-size:13px;">${expertInner}</div>` : '';
+    <div style="border:1px solid #ddd;padding:12px 16px;margin-bottom:20px;font-size:var(--fs-body);">${expertInner}</div>` : '';
 
   const dynBlock = renderDynamics(c);
   return cards + complaintBlock + dynBlock + profile + expertBlock + nextBlock + bioBlock + ankBlock;
@@ -2950,7 +2961,7 @@ function copyExpert(btn, text){
 function renderProtocol(c){
   const rows = (c.protocol||[]).map((p,i)=>`
     <tr class="${mkCls(c.marks,'proto_'+i).trim()}" onclick="markEl(event,'proto',${i})">
-      <td><input class="proto-input" style="font-size:13px;color:var(--t1);font-weight:500;" value="${esc(p.name)}" oninput="updateProto(${i},'name',this.value)" placeholder="${t('proto_name_ph')}"></td>
+      <td><input class="proto-input" style="font-size:var(--fs-body);color:var(--t1);font-weight:500;" value="${esc(p.name)}" oninput="updateProto(${i},'name',this.value)" placeholder="${t('proto_name_ph')}"></td>
       <td><input class="proto-input" value="${esc(p.dose)}" oninput="updateProto(${i},'dose',this.value)" placeholder="300 mg"></td>
       <td><input class="proto-input" value="${esc(p.timing)}" oninput="updateProto(${i},'timing',this.value)" placeholder="${t('proto_timing_ph')}"></td>
       <td><input class="proto-input" value="${esc(p.notes||'')}" oninput="updateProto(${i},'notes',this.value)" placeholder="..."></td>
@@ -2967,7 +2978,7 @@ function renderProtocol(c){
     </table>
     <button class="add-row-btn" onclick="addProtoRow()">${t('proto_add')}</button>
     <div style="margin-top:12px;">
-      <button class="topbtn primary" onclick="addDefaultProtocol()" style="font-size:11px;">${t('proto_default')}</button>
+      <button class="topbtn primary" onclick="addDefaultProtocol()" style="font-size:var(--fs-cap);">${t('proto_default')}</button>
     </div>`;
 }
 function updateProto(idx,field,val){
@@ -3098,7 +3109,7 @@ function labCard(f, labs, marks){
     <div style="display:flex;align-items:baseline;gap:6px;">
       <input class="lab-input" type="number" value="${labs[f.id]||''}" placeholder="—"
         onchange="updateLab('${f.id}',this.value)" style="width:80px;">
-      <span style="font-size:11px;color:var(--t3);">${f.unit}</span>
+      <span style="font-size:var(--fs-cap);color:var(--t3);">${f.unit}</span>
     </div>
     <div class="lab-ref">${t('labs_norm')} ${f.ref}</div>
     ${labStatus(labs[f.id],f)}
@@ -3108,7 +3119,7 @@ function renderLabs(c){
   const labs = c.labs||{};
   const groups = [...new Set(LAB_FIELDS.map(f=>f.g))];
   const sections = groups.map(g=>`
-    <div style="font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.08em;margin:20px 0 8px;">${labGroup(g)}</div>
+    <div style="font-size:var(--fs-cap);font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.08em;margin:20px 0 8px;">${labGroup(g)}</div>
     <div class="labs-grid">${LAB_FIELDS.filter(f=>f.g===g).map(f=>labCard(f,labs,c.marks)).join('')}</div>
   `).join('');
   return `
@@ -3143,7 +3154,7 @@ function renderNotes(c){
         </div>
         <div class="note-text">${esc(n.text)}</div>
       </div>`;
-    }).join('') : `<p style="color:var(--t3);font-size:13px;">${t('notes_none')}</p>`}</div>`;
+    }).join('') : `<p style="color:var(--t3);font-size:var(--fs-body);">${t('notes_none')}</p>`}</div>`;
 }
 function addNote(){
   const c=clients.find(x=>x.id===selectedId); if(!c) return;
@@ -3327,7 +3338,7 @@ function generatePDF(id){
   // Динамика недели (если ≥2 дня данных) — сводка в начало отчёта, на языке пациента
   const _w=weeklyTrendC(c.dyn), _wui=_weekUIc(pdfLang);
   const _dynRow=m=>{const good=m.trend===0?0:(m.trend===m.dir?1:-1);const arr=m.trend>0?'↑':m.trend<0?'↓':'→';const col=good>0?'#1a7f37':good<0?'#c0392b':'#999';const d=m.delta==null?'—':(m.delta>0?'+':'')+m.delta.toFixed(m.dec);return `<tr><td>${esc(_wui[m.k])}</td><td style="text-align:right;font-weight:600;">${m.a.toFixed(m.dec)}</td><td style="text-align:right;color:${col};">${arr} ${d}</td></tr>`;};
-  const dynHtml=_w?`<h2>${esc(_wui.title)}</h2><div style="font-size:12px;color:#888;margin-bottom:8px;">${esc(_wui.sub)}</div><table><tbody>${_w.metrics.map(_dynRow).join('')}</tbody></table>`:'';
+  const dynHtml=_w?`<h2>${esc(_wui.title)}</h2><div style="font-size:var(--fs-cap);color:#888;margin-bottom:8px;">${esc(_wui.sub)}</div><table><tbody>${_w.metrics.map(_dynRow).join('')}</tbody></table>`:'';
 
   // Расчётное окончание ведения
   let endDate=c.end_date||'';
@@ -3340,23 +3351,23 @@ function generatePDF(id){
 
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
   <style>
-    body{font-family:'Georgia',serif;color:#1a1a1a;max-width:700px;margin:0 auto;padding:40px 32px;font-size:14px;}
+    body{font-family:'Georgia',serif;color:#1a1a1a;max-width:700px;margin:0 auto;padding:40px 32px;font-size:var(--fs-body);}
     h1{font-size:28px;font-weight:400;margin-bottom:4px;color:#1a1a1a;}
-    .sub{color:#666;font-size:13px;margin-bottom:32px;}
-    h2{font-size:16px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:#c4963c;margin:28px 0 12px;padding-bottom:6px;border-bottom:1px solid #e8e4de;}
+    .sub{color:#666;font-size:var(--fs-body);margin-bottom:32px;}
+    h2{font-size:var(--fs-title);font-weight:500;letter-spacing:1px;text-transform:uppercase;color:#c4963c;margin:28px 0 12px;padding-bottom:6px;border-bottom:1px solid #e8e4de;}
     .prog-box{background:#f8f6f2;border-radius:12px;padding:16px 20px;margin-bottom:24px;}
-    .prog-box .pl{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#999;margin-bottom:4px;}
-    .prog-box .pv{font-size:15px;}
+    .prog-box .pl{font-size:var(--fs-cap);letter-spacing:2px;text-transform:uppercase;color:#999;margin-bottom:4px;}
+    .prog-box .pv{font-size:var(--fs-title);}
     table{width:100%;border-collapse:collapse;}
-    td,th{padding:8px 10px;text-align:left;border-bottom:1px solid #e8e4de;font-size:13px;}
-    th{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#999;font-weight:400;}
-    .note{background:#f8f6f2;border-radius:8px;padding:12px 14px;margin-bottom:8px;font-size:13px;color:#444;line-height:1.65;}
-    .note-date{font-size:11px;color:#999;margin-bottom:4px;}
-    .footer{margin-top:40px;padding-top:16px;border-top:1px solid #e8e4de;font-size:11px;color:#999;text-align:center;}
+    td,th{padding:8px 10px;text-align:left;border-bottom:1px solid #e8e4de;font-size:var(--fs-body);}
+    th{font-size:var(--fs-cap);letter-spacing:2px;text-transform:uppercase;color:#999;font-weight:400;}
+    .note{background:#f8f6f2;border-radius:8px;padding:12px 14px;margin-bottom:8px;font-size:var(--fs-body);color:#444;line-height:1.65;}
+    .note-date{font-size:var(--fs-cap);color:#999;margin-bottom:4px;}
+    .footer{margin-top:40px;padding-top:16px;border-top:1px solid #e8e4de;font-size:var(--fs-cap);color:#999;text-align:center;}
   </style></head><body>
   <h1>${esc(c.name)}</h1>
   <div class="sub">${[c.phase?tl('phase_'+c.phase,pdfLang):'', c.age?c.age+' '+L('u_years'):''].filter(Boolean).join(' · ')}${(c.phase||c.age)?' · ':''}${date}</div>
-  ${progParts?`<div class="prog-box"><div class="pl">${L('pdf_program')}</div><div class="pv">${esc(progParts)}</div>${dateParts?`<div style="font-size:12px;color:#666;margin-top:6px;">${esc(dateParts)}</div>`:''}</div>`:''}
+  ${progParts?`<div class="prog-box"><div class="pl">${L('pdf_program')}</div><div class="pv">${esc(progParts)}</div>${dateParts?`<div style="font-size:var(--fs-cap);color:#666;margin-top:6px;">${esc(dateParts)}</div>`:''}</div>`:''}
   ${dynHtml}
   ${bio.length?`<h2>${L('pdf_bio_title')}</h2>
   <table><thead><tr><th>${L('col_wk')}</th><th>${L('bio_date')}</th><th>${L('bio_sleep')}</th><th>${L('bio_rhr')}</th><th>HRV</th><th>${L('bio_steps')}</th><th>${L('bio_weight')}</th></tr></thead>
@@ -3387,7 +3398,7 @@ function showInstallUI(kind){
   const el = document.getElementById('pwaInstall'); if(!el || pwaStandalone()) return;
   el.innerHTML = (kind === 'android')
     ? `<button class="gate-btn" style="background:#e6e6e6 !important;color:#000 !important;box-shadow:none !important;" onclick="doInstall()">📲 ${t('pwa_install')}</button>`
-    : `<div style="font-size:12px;color:#666;line-height:1.5;">📲 ${t('pwa_ios_hint')}</div>`;
+    : `<div style="font-size:var(--fs-cap);color:#666;line-height:1.5;">📲 ${t('pwa_ios_hint')}</div>`;
   el.style.display = '';
 }
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; showInstallUI('android'); });
