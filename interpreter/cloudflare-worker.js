@@ -6227,10 +6227,32 @@ async function handleAdvisorChat(request, env, corsHeaders){
       (Array.isArray(c.priorities) && c.priorities.length) ? ('приоритеты: ' + c.priorities.slice(0,3).join(', ')) : '',
     ].filter(Boolean).join(' | ');
     const analysis = (typeof c.analysis === 'string' && c.analysis.trim()) ? c.analysis.trim().slice(0,3000) : '';
-    if(prof || analysis){
+    // Анализы клиента: без них советник на прямой вопрос «что значит мой ферритин 30» отвечал общими
+    // словами, хотя значение лежит в панели рядом. Формат тот же, что в разборе: канонические единицы
+    // + давность в месяцах. Красные флаги считаем ЗДЕСЬ ЖЕ тем же кодом, что в разборе: в чате человек
+    // как раз и спрашивает про пугающую цифру, и ответ «покажите семейному врачу» не должен зависеть
+    // от того, вспомнит ли модель порог.
+    let labsLine = '', redLine = '';
+    if (c.labs && typeof c.labs === 'object') {
+      const U = { ferritin:'нг/мл', crp:'мг/л', tsh:'мЕд/л', vitd:'нмоль/л', b12:'пг/мл', glucose:'ммоль/л',
+        hba1c:'%', ldl:'ммоль/л', tg:'ммоль/л', insulin:'мкЕд/мл', hgb:'г/дл', egfr:'мл/мин', alt:'Ед/л',
+        ast:'Ед/л', ca:'ммоль/л', prl:'нг/мл', tst:'нг/дл', dheas:'мкг/дл' };
+      const lage = c.labs._age || {};
+      const parts = Object.keys(c.labs).filter(k => k !== '_age' && c.labs[k] != null).slice(0, 45)
+        .map(k => k + ' ' + c.labs[k] + (U[k] ? (' ' + U[k]) : '')
+                    + (lage[k] != null ? (lage[k] <= 1 ? ' (свежий)' : ' (' + lage[k] + ' мес назад)') : ''));
+      if (parts.length) labsLine = 'Его анализы (ввёл сам): ' + parts.join(' | ') + '\n';
+      try { redLine = _labRedFlags({ labs: c.labs, gender: c.gender }); } catch (e) {}
+    }
+    if(prof || analysis || labsLine){
       clientCtx = '\n\n[КОНТЕКСТ КЛИЕНТА — отвечай по ЕГО данным, а не общими словами; НЕ выдумывай числа/показатели, которых тут нет; всё в велнес-рамке]\n'
         + (prof ? ('Профиль: ' + prof + '\n') : '')
-        + (analysis ? ('Его последний велнес-разбор (опирайся на него):\n' + analysis + '\n') : '');
+        + labsLine
+        + (redLine ? (redLine + '\n') : '')
+        + (analysis ? ('Его последний велнес-разбор (опирайся на него):\n' + analysis + '\n') : '')
+        + (labsLine ? 'ПРО АНАЛИЗЫ В ЧАТЕ: называть значение и общий смысл показателя можно; ставить диагноз, '
+                    + 'обещать причину и назначать дозы — нельзя. На вопрос «это нормально?» говори про обычный '
+                    + 'диапазон и про то, что вывод делает врач, а не приложение.\n' : '');
     }
   }
 

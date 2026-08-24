@@ -11057,7 +11057,11 @@ document.addEventListener('visibilitychange',function(){
     try{ if(typeof _aiDailyGet==='function'){ var _e=_aiDailyGet().filter(function(x){return x.day===_dayKey();})[0]; if(_e&&_e.analysis) an=String(_e.analysis); } }catch(_x){}
     if(!an){ var r=document.getElementById('aiResult'); if(r&&r.style.display!=='none') an=(r.textContent||'').trim(); }
     an=an.replace(/\[\[S\]\]/g,'').replace(/\[\[D\]\]/g,'').replace(/\s*\|\s*/g,' — ').replace(/\n{3,}/g,'\n\n').trim();
-    return {gender:P.gender||'',age:P.age||null,goal:P.goal||'',priorities:Array.isArray(P.priorities)?P.priorities:[],analysis:an.slice(0,3000)};
+    // Анализы клиента — советник должен уметь ответить «что значит мой ферритин 30», а не отделываться
+    // общими словами: значения лежат в панели рядом, а в контекст не попадали. Шлём канонические
+    // числа с давностью (тот же payload, что уходит в разбор), не больше.
+    var _lb=null; try{ if(typeof _labsPayload==='function') _lb=_labsPayload(); }catch(_l){}
+    return {gender:P.gender||'',age:P.age||null,goal:P.goal||'',priorities:Array.isArray(P.priorities)?P.priorities:[],analysis:an.slice(0,3000),labs:_lb};
   }catch(e){ return null; } }
   window.vlAdvSendMsg=function(){
     if(busy) return; var inp=el('vlAdvInput'); var q=(inp.value||'').trim(); if(!q) return;
