@@ -1155,7 +1155,7 @@ footer{
   position:relative;z-index:1;
   background:transparent;
   /* border-top убран: полоса резала фон-картинку прямо над логотипом VIA—L */
-  padding:12px 20px 6px;
+  padding:8px 20px 4px;
   text-align:center;
 }
 .footer-logo{font-family:'Playfair Display',serif;font-size:20px;letter-spacing:8px;color:var(--t1);margin-bottom:2px;}
@@ -1176,7 +1176,8 @@ footer{
    Рабочий вариант — вообще без флекса: обычный документ, карточка и футер идут потоком друг за
    другом, прокручивается страница целиком. Футер больше не претендует на низ экрана — он просто
    следует за карточкой, а на коротких экранах уезжает вниз вместе с ней. */
-body:has(#morning-gate) #scroll-area{display:flex;flex-direction:column;overflow:hidden;}   /* Экран статичный: всё помещается, прокрутку (и резиновую отдачу iOS) выключаем совсем */
+body:has(#morning-gate) #scroll-area{display:flex;flex-direction:column;overflow-y:auto;}   /* auto, а не hidden: при обычном шрифте всё помещается и прокрутки нет, но если у клиента
+      крупный системный шрифт — содержимое не обрежется, а прокрутится. hidden срезал третью кнопку. */
 /* Карточка занимает свободную высоту и стоит в ней по центру, подпись бренда со ссылками — внизу
    экрана. Центрируем автополями (margin:auto), а НЕ justify-content:center: при неожиданном
    переполнении (крупный системный шрифт) auto прижимает к началу, а center срезал бы верх. */
@@ -7191,13 +7192,13 @@ function _showMorningCard(src){
   if(src!=='manual'){ var f=_syncStampFmt(); if(f) syncLine='<div style="font-size:var(--fs-cap);color:var(--t3);margin:8px 0 2px;">'+L({ru:'Последняя синхронизация',uk:'Остання синхронізація',en:'Last sync',es:'Última sincronización',de:'Letzte Synchronisation',pt:'Última sincronização',fr:'Dernière synchronisation',pl:'Ostatnia synchronizacja',it:'Ultima sincronizzazione',he:'סנכרון אחרון',ja:'最終同期',ko:'마지막 동기화'})+': '+f+'</div>'; }
   var btnCss='display:block;width:100%;box-sizing:border-box;margin-top:16px;padding:14px;border-radius:12px;border:1px solid rgba(226,185,90,.5);background:rgba(226,185,90,.12);color:#fff;font-size:var(--fs-title);font-weight:600;cursor:pointer;font-family:inherit;';
   var d=document.createElement('div'); d.id='morning-gate'; d.className='step flow-show';
-  d.style.cssText='max-width:560px;margin:14px auto;padding:20px 18px;text-align:center;background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.28);border-radius:18px;';
+  d.style.cssText='max-width:560px;margin:10px auto;padding:16px 16px;text-align:center;background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.28);border-radius:18px;';
   // Выбор источника КАЖДЫЙ день — человек волен взять данные откуда удобно.
   var _pick=L({ru:'Откуда взять данные сегодня?',uk:'Звідки взяти дані сьогодні?',en:'Where should today’s data come from?',es:'¿De dónde tomar los datos de hoy?',de:'Woher sollen die heutigen Daten kommen?',pt:'De onde vêm os dados de hoje?',fr:'D’où proviennent les données du jour ?',pl:'Skąd wziąć dzisiejsze dane?',it:'Da dove prendere i dati di oggi?',he:'מהיכן לקחת את נתוני היום?',ja:'今日のデータはどこから取得しますか？',ko:'오늘 데이터는 어디에서 가져올까요?'});
-  d.innerHTML='<div style="font-family:\'Playfair Display\',serif;font-size:23px;color:#fff;margin-bottom:6px;">'+greet+'</div>'
+  d.innerHTML='<div style="font-family:\'Playfair Display\',serif;font-size:21px;color:#fff;margin-bottom:4px;">'+greet+'</div>'
     +'<div style="font-size:var(--fs-body);color:var(--t2);margin-bottom:6px;">'+ready+'</div>'
     +syncLine
-    +'<div style="font-size:var(--fs-body);color:var(--t3);margin:20px 0 12px;">'+_pick+'</div>'
+    +'<div style="font-size:var(--fs-body);color:var(--t3);margin:14px 0 10px;">'+_pick+'</div>'
     +'<div id="morning-src" style="text-align:left;"></div>';
   main.appendChild(d);
   // Полноценные карточки источника (те же, что в hero) — внутрь рамки; сам hero прячем, чтобы не дублировать.
