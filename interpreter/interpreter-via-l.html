@@ -1809,11 +1809,16 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
    Playfair в заголовках не трогаем — фирменная типографика остаётся. */
 @media (max-width:599px){
   :root{ --font-ui: -apple-system,'SF Pro Text',BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
+  /* Мобильная ступень канона: на телефоне вся шкала поднимается. Опорная точка — 17px, системный
+     размер body в iOS; именно он с 2026-07 стоит у текста разбора (.ai-intro / #aiResult) как
+     решение по читаемости для 45+. Канон обязан совпадать с ним, а не спорить: --fs-body на
+     мобильном = те же 17px, остальные ступени подтянуты пропорционально. */
+  :root{ --fs-cap:14px; --fs-body:17px; --fs-title:20px; --fs-hero:26px; }
   body{ font-weight:400; -webkit-font-smoothing:auto; }
-  /* Тело разбора — 17px, системный размер body в iOS. */
-  .ai-intro,.ai-sec-sum{ font-size:17px;line-height:1.7; }
-  #aiResult{ font-size:17px!important;line-height:1.7!important; }   /* !important — размер задан инлайном в разметке */
-  .ai-sec-h{ font-size:18.5px; }
+  /* Тело разбора — та же ступень канона (на мобильном --fs-body = 17px, системный размер iOS). */
+  .ai-intro,.ai-sec-sum{ font-size:var(--fs-body);line-height:1.7; }
+  #aiResult{ font-size:var(--fs-body)!important;line-height:1.7!important; }   /* !important — размер задан инлайном в разметке */
+  .ai-sec-h{ font-size:var(--fs-title); }
 }
 .ai-sec-more,.ai-sec-coll{display:flex;align-items:center;gap:6px;margin-top:12px;background:none;border:none;color:var(--gold-lt);font-size:12px;font-weight:500;cursor:pointer;padding:2px 0;font-family:inherit;letter-spacing:.2px;opacity:.9;}
 .ai-sec-more:hover,.ai-sec-coll:hover{opacity:1;color:var(--gold-lt);}
