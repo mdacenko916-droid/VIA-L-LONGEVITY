@@ -453,7 +453,7 @@ const GUARDRAIL_FALLBACK = {
 // exclusion-claim: «это НЕ X, а Y» / «приборы показывают, что не X» — модель уверенно ИСКЛЮЧАЕТ причину, которую
 // не измеряла, ровно так же недопустимо, как уверенно её УТВЕРЖДАТЬ (см. AI_SAFETY_RULES). Промпт-запрет один
 // вероятностный не удержал (живой smoke 2026-07-11: «это не возрастное, а усталость» проехало) → добавлено в Filter 1.
-const AI_RISK_RE = /(diagnos|\bdisease\b|\bdisorder\b|\bsyndrome\b|patholog|\btreatment\b|\btherap|\bmeans that\b|\bindicates\b|\bproves\b|\bdirect(?:ly)?\s+(?:result|consequence|effect)|directly\s+affect|this\s+is\s+not\b.{0,40}\bbut\b|device[s]?\s+show|диагноз|болезн|заболеван|синдром|патолог|означа[а-яё]*[^.\n]{0,60}(?:у вас|наличи[ея]|болезн|заболеван|синдром|патолог|диагноз)|свидетельств|подтвержда|является причиной(?:[^.\n]{0,60}(?:у вас|наличи[ея]|болезн|заболеван|синдром|патолог|диагноз))|вызвал|привод(?:ит|ят) к(?:[^.\n]{0,60}(?:у вас|наличи[ея]|болезн|заболеван|синдром|патолог|диагноз))|привёл к|прям[а-яё]*\s+следстви(?:[^.\n]{0,60}(?:у вас|наличи[ея]|болезн|заболеван|синдром|патолог|диагноз))|прям[а-яё]*\s+результат(?:[^.\n]{0,60}(?:у вас|наличи[ея]|болезн|заболеван|синдром|патолог|диагноз))|напрямую\s+влия(?:[^.\n]{0,60}(?:у вас|наличи[ея]|болезн|заболеван|синдром|патолог|диагноз))|это\s+не\s+возрастн[а-яё]*|это\s+не\s+гормональн[а-яё]*|апноэ|соас|анемия|анеми[а-яё]*|гипотиреоз|диабет|преддиабет|инсулинорезистентн|гипертиреоз|гипогонадизм|хашимото|тиреоидит|остеопороз|остеопени|ожирени|инсомни|приборы?\s+показыва|прибор[а-яё]*\s+не\s+(?:измеря|показыва)|\+[^=+\n]{0,60}=\s*[^.\n]{0,45}(?:болезн|заболеван|синдром|патолог|диагноз|сбой|нарушени|дисбаланс))/i;
+const AI_RISK_RE = /(diagnos|\bdisease\b|\bdisorder\b|\bsyndrome\b|patholog|\btreatment\b|\btherap|\bmeans that\b|\bindicates\b|\bproves\b|\bdirect(?:ly)?\s+(?:result|consequence|effect)|directly\s+affect|this\s+is\s+not\b.{0,40}\bbut\b|device[s]?\s+show|диагноз|болезн|заболеван|синдром|патолог|означа[а-яё]*[^.\n]{0,60}(?:у вас|наличи[ея]|болезн|заболеван|синдром|патолог|диагноз)|(?:свидетельств|подтвержда)[а-яё]*[^.\n]{0,60}(?:у вас|наличи[ея]|болезн|заболеван|синдром|патолог|диагноз)|является причиной(?:[^.\n]{0,60}(?:у вас|наличи[ея]|болезн|заболеван|синдром|патолог|диагноз))|вызвал|привод(?:ит|ят) к(?:[^.\n]{0,60}(?:у вас|наличи[ея]|болезн|заболеван|синдром|патолог|диагноз))|привёл к|прям[а-яё]*\s+следстви(?:[^.\n]{0,60}(?:у вас|наличи[ея]|болезн|заболеван|синдром|патолог|диагноз))|прям[а-яё]*\s+результат(?:[^.\n]{0,60}(?:у вас|наличи[ея]|болезн|заболеван|синдром|патолог|диагноз))|напрямую\s+влия(?:[^.\n]{0,60}(?:у вас|наличи[ея]|болезн|заболеван|синдром|патолог|диагноз))|это\s+не\s+возрастн[а-яё]*|это\s+не\s+гормональн[а-яё]*|апноэ|соас|анемия|анеми[а-яё]*|гипотиреоз|диабет|преддиабет|инсулинорезистентн|гипертиреоз|гипогонадизм|хашимото|тиреоидит|остеопороз|остеопени|ожирени|инсомни|приборы?\s+показыва|прибор[а-яё]*\s+не\s+(?:измеря|показыва)|\+[^=+\n]{0,60}=\s*[^.\n]{0,45}(?:болезн|заболеван|синдром|патолог|диагноз|сбой|нарушени|дисбаланс))/i;
 
 // ─────────────────────────────────────────────────────────────
 // УЧЁТ РАСХОДА ТОКЕНОВ (2026-08-01). API возвращает фактический расход в каждом ответе,
@@ -484,6 +484,21 @@ function logUsage(env, ctx, endpoint, model, tier, lang, result, note) {
   } catch (e) { /* учёт не имеет права ломать основной поток */ }
 }
 
+// Проба без вызова модели: детерминированный детект риска пишем в тот же ai_usage с нулевой
+// стоимостью (endpoint 'dayplan-risk'). Нужен, чтобы решить вопрос «вешать ли guardrail на
+// /day-plan» по фактам, а не на глаз: сначала неделя-две данных о том, срабатывает ли там
+// что-то вообще, и только потом — платный self-check.
+function logRiskProbe(env, ctx, endpoint, tier, lang, note) {
+  try {
+    if (!env || !env.DB) return;
+    const w = env.DB.prepare(
+      'INSERT INTO ai_usage (ts,endpoint,model,tier,lang,in_tok,out_tok,cache_w,cache_r,cost_usd,note) VALUES (?,?,?,?,?,?,?,?,?,?,?)'
+    ).bind(Date.now(), String(endpoint), 'none', String(tier || ''), String(lang || ''), 0, 0, 0, 0, 0,
+           note ? String(note).slice(0, 200) : null).run().catch(() => {});
+    if (ctx && ctx.waitUntil) ctx.waitUntil(w);
+  } catch (e) { /* проба не имеет права ломать основной поток */ }
+}
+
 // Дешёвый разовый вызов Haiku (self-check / смягчение). maxTokens мал для check, большой для rewrite.
 async function callClaudeSimple(prompt, env, maxTokens, ctx, endpoint, note) {
   try {
@@ -499,6 +514,33 @@ async function callClaudeSimple(prompt, env, maxTokens, ctx, endpoint, note) {
 }
 
 // Возвращает исходный текст (если чисто) или смягчённый (если self-check дал FAIL).
+const _DISC_RE = /[^.!?\n]*(?:информацион|не заменя|не явля|не є медичн|консультац[а-яё]*\s+врач|проконсультируйтесь|проконсультуйтеся|обратитесь к врач|not a medical|consult your doctor|informational purposes|does not replace|не медицинск|дозиров|дозуванн)[^.!?\n]*[.!?]?/gi;
+  // ОТРИЦАНИЯ НЕ СЧИТАЮТСЯ РИСКОМ. Модель специально пишет «это НЕ болезнь, а естественный
+// процесс», «это говорит НЕ о болезни» — то есть делает ровно то, чего мы хотим, — а сторож
+// ловил слово и гнал текст в дорогую перегенерацию. Смотрим начало предложения до совпадения:
+// есть отрицание — совпадение не в счёт.
+// ⚠️ \b в JS считает словом только латиницу — «\bне\b» в кириллическом тексте НЕ срабатывает.
+// Границы задаём юникодно, иначе всё правило про отрицания молча мёртвое.
+const _NEG_RE = /(?:^|[^\p{L}])(?:не|нет|ні|not|no|never|kein|nicht|sin|sem|non|nie)(?:[^\p{L}]|$)/iu;
+// Детект риск-паттерна: вырезаем дисклеймер, пропускаем совпадения в отрицаниях и возвращаем
+// САМО совпадение + очищенный текст. Общая для guardrail (/analyze) и для пробы на /day-plan.
+function _riskScan(text) {
+  const scan = String(text || '').replace(_DISC_RE, ' ');
+  const re = new RegExp(AI_RISK_RE.source, 'gi');
+  let m;
+  while ((m = re.exec(scan))) {
+    const from = Math.max(0, scan.lastIndexOf('.', m.index), scan.lastIndexOf('!', m.index),
+                          scan.lastIndexOf('?', m.index), scan.lastIndexOf('\n', m.index));
+    if (!_NEG_RE.test(scan.slice(from, m.index))) return { m, scan };   // отрицания перед ним нет → настоящий риск
+  }
+  return null;
+}
+// Контекст срабатывания для ai_usage.note: само совпадение + 45 символов вокруг него.
+function _riskNote(hit) {
+  const at = hit.m.index;
+  return hit.m[0] + ' ‹ ' + hit.scan.slice(Math.max(0, at - 45), at + hit.m[0].length + 45).replace(/\s+/g, ' ') + ' ›';
+}
+
 async function wellnessGuardrail(text, env, langName, lang, ctx) {
   const t0 = Date.now();
   // Лог для smoke-теста (виден в `wrangler tail`): action = clean | pass | softened | fallback
@@ -512,36 +554,15 @@ async function wellnessGuardrail(text, env, langName, lang, ctx) {
   // слово-триггер «диагноз» оставалось в каждом ответе. Из-за этого Filter 1 срабатывал ВСЕГДА:
   // мы платили за self-check на каждом разборе и переписывали 9 текстов из 10. Тот же приём,
   // что в wellnessHardScrub: предложение с юр-маркером — это дисклеймер, а не риск.
-  const _DISC_RE = /[^.!?\n]*(?:информацион|не заменя|не явля|не є медичн|консультац[а-яё]*\s+врач|проконсультируйтесь|проконсультуйтеся|обратитесь к врач|not a medical|consult your doctor|informational purposes|does not replace|не медицинск|дозиров|дозуванн)[^.!?\n]*[.!?]?/gi;
-  const scanText = (text || '').replace(_DISC_RE, ' ');
-  // ОТРИЦАНИЯ НЕ СЧИТАЮТСЯ РИСКОМ. Модель специально пишет «это НЕ болезнь, а естественный
-  // процесс», «это говорит НЕ о болезни» — то есть делает ровно то, чего мы хотим, — а сторож
-  // ловил слово и гнал текст в дорогую перегенерацию. Смотрим начало предложения до совпадения:
-  // есть отрицание — совпадение не в счёт.
-  // ⚠️ \b в JS считает словом только латиницу — «\bне\b» в кириллическом тексте НЕ срабатывает.
-  // Границы задаём юникодно, иначе всё правило про отрицания молча мёртвое.
-  const _NEG_RE = /(?:^|[^\p{L}])(?:не|нет|ні|not|no|never|kein|nicht|sin|sem|non|nie)(?:[^\p{L}]|$)/iu;
-  function _realHit(t) {
-    if (!t) return null;
-    const re = new RegExp(AI_RISK_RE.source, 'gi');
-    let m;
-    while ((m = re.exec(t))) {
-      const from = Math.max(0, t.lastIndexOf('.', m.index), t.lastIndexOf('!', m.index),
-                            t.lastIndexOf('?', m.index), t.lastIndexOf('\n', m.index));
-      if (!_NEG_RE.test(t.slice(from, m.index))) return m;   // отрицания перед ним нет → настоящий риск
-    }
-    return null;
-  }
-  const _hit = text ? _realHit(scanText) : null;
-  if (!text || !_hit) { log('clean'); return text; }   // Filter 1: нет risk-паттерна → без LLM-вызовов
+  const _scan = text ? _riskScan(text) : null;
+  if (!text || !_scan) { log('clean'); return text; }   // Filter 1: нет risk-паттерна → без LLM-вызовов
   // Что именно сработало + короткий контекст → в учёт (ai_usage.note). Без этого причина
   // перегенерации невидима: 9 разборов из 10 переписывались, и понять почему было нельзя.
   // ⚠️ Индекс берём У САМОГО СОВПАДЕНИЯ, а не первое вхождение слова: _realHit пропускает
   // отрицания и возвращает ПОЗЖЕ стоящий, настоящий триггер, а indexOf показывал первый —
   // в заметке оседал безобидный кусок («это говорит не о болезни»), и по логам выходило,
   // будто сторож ловит отрицания, хотя ловил он совсем другое место. Диагностика врала.
-  const _at = _hit.index;
-  const _why = _hit[0] + ' ‹ ' + scanText.slice(Math.max(0, _at - 45), _at + _hit[0].length + 45).replace(/\s+/g, ' ') + ' ›';
+  const _why = _riskNote(_scan);
   const verdict = await callClaudeSimple(
     'You are a compliance checker for an Apple App Store wellness app (Guideline 1.4.1). '
   + 'Does the TEXT do ANY of: (1) diagnose or name/suggest a disease or disorder; (2) sound like medical advice or a clinical conclusion; '
@@ -2541,6 +2562,20 @@ async function handleDayPlan(request, env, corsHeaders, ctx) {
             .filter(function (x) { return String(x).trim().length > 0; });   // пункт, схлопнувшийся после вырезания дозы
         });
       });
+    } catch (e) {}
+    // Guardrail (self-check + перегенерация) здесь НЕ вешаем: он переписывает СВОБОДНЫЙ текст, а
+    // памятка — строгий JSON по схеме, и перегенерация ломала бы структуру. Вместо этого ставим
+    // бесплатную пробу тем же детектором: если в плане что-то реально срабатывает — увидим в
+    // ai_usage (endpoint 'dayplan-risk') и решим по данным. Замер 2026-08-24: на /analyze
+    // guardrail сработал на 21% разборов, и все свежие срабатывания оказались ложными.
+    try {
+      const _txt = Object.keys(plan).map(function (k) {
+        return Array.isArray(plan[k]) ? plan[k].map(function (sec) {
+          return (sec && sec.title ? sec.title + '. ' : '') + (sec && Array.isArray(sec.items) ? sec.items.join('. ') : '');
+        }).join('\n') : '';
+      }).join('\n');
+      const _h = _riskScan(_txt);
+      if (_h) logRiskProbe(env, ctx, 'dayplan-risk', tier, lang, _riskNote(_h));
     } catch (e) {}
   }
 
