@@ -1164,7 +1164,10 @@ body.morning-mode #scroll-area{display:flex;flex-direction:column;overflow-y:aut
 /* Карточка занимает свободную высоту и стоит в ней по центру, подпись бренда со ссылками — внизу
    экрана. Центрируем автополями (margin:auto), а НЕ justify-content:center: при неожиданном
    переполнении (крупный системный шрифт) auto прижимает к началу, а center срезал бы верх. */
-body.morning-mode #scroll-area main{flex:1 1 auto;min-height:0;display:flex;align-items:center;padding:0;}   /* align-items:center — иначе флекс РАСТЯГИВАЕТ карточку на всю высоту (stretch по умолчанию),
+body.morning-mode #scroll-area main{flex:1 1 0;min-height:0;display:flex;align-items:flex-start;padding:0;}
+/* flex-basis 0 (а не auto): иначе контейнер брал за основу высоту карточки И ещё рос — суммарно
+   выходило больше экрана, сверху появлялся зазор, а строка ссылок выдавливалась под навигацию.
+   С basis 0 он равен ровно свободному месту. align-items:flex-start — карточка сразу под шапкой. */   /* align-items:center — иначе флекс РАСТЯГИВАЕТ карточку на всю высоту (stretch по умолчанию),
       и её нижний край уезжал под подпись бренда */
 body.morning-mode #scroll-area footer,
 body.morning-mode #scroll-area .legal-links{flex:0 0 auto;}
