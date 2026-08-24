@@ -5,6 +5,11 @@
 <!-- maximum-scale/user-scalable: iOS иначе зумит всю страницу при фокусе в поле <16px и не возвращает масштаб обратно -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>VIA·L · Longevity & Wellness</title>
+<!-- Стартовое мелькание: разметка (hero + лента анкеты) рисуется браузером ДО того, как
+     _bootRoute решит, какой экран показать, — на холодном запуске успевали «проскочить» один-два
+     блока, и только потом появлялась утренняя карточка. Прячем эти две поверхности до маршрутизации;
+     класс снимается в _start (и по страховочному таймеру, если скрипт упал — иначе экран пустой). -->
+<style>body.booting main,body.booting .hero{visibility:hidden !important;}</style>
 <!-- PWA (устанавливаемость на телефон до нативной сборки; service worker ОБЩИЙ с EXPERT —
      scope /interpreter/ один на двоих, второй воркер вытеснил бы первый) -->
 <link rel="manifest" href="via-l.webmanifest">
@@ -1897,7 +1902,7 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
 .hl-vial{color:var(--gold-lt);font-weight:600;}
 </style>
 </head>
-<body>
+<body class="booting">
 <div class="bg-canvas">
   <div class="bg-tint" id="bgTint"></div>
 </div>
@@ -7256,7 +7261,16 @@ async function _iapRestoreClick(){
   if(!ok){ if(document.readyState!=='loading')showConsent(); else document.addEventListener('DOMContentLoaded',showConsent); }
   else { if(document.readyState!=='loading')_gateNext(); else document.addEventListener('DOMContentLoaded',_gateNext); }
 })();
-(function(){ function _start(){ try{_bootRoute();}catch(e){ try{startFunnel();}catch(_){} } } if(document.readyState!=='loading')_start(); else document.addEventListener('DOMContentLoaded',_start); })();   // пароль убран; маршрут запуска: сегодня уже пройдено→«Сегодня», иначе утренняя карточка / hero+анкета
+(function(){
+  function _unboot(){ try{ document.body.classList.remove('booting'); }catch(e){} }
+  function _start(){
+    try{_bootRoute();}catch(e){ try{startFunnel();}catch(_){} }
+    // Снимаем ПОСЛЕ кадра, в котором маршрут уже применён, — иначе видна та же перерисовка.
+    try{ requestAnimationFrame(_unboot); }catch(e){ _unboot(); }
+  }
+  setTimeout(_unboot, 3000);   // страховка: что бы ни случилось, экран не остаётся невидимым
+  if(document.readyState!=='loading')_start(); else document.addEventListener('DOMContentLoaded',_start);
+})();   // пароль убран; маршрут запуска: сегодня уже пройдено→«Сегодня», иначе утренняя карточка / hero+анкета
 function goTo(n){
   window._curStep = n;   // запоминаем шаг — чтобы лейбл прогресса перевести при смене языка
   document.body.classList.remove('flow-mode'); if(typeof _hideFlowFooter==='function')_hideFlowFooter();
@@ -9491,12 +9505,16 @@ function connectOura(){
 }
 async function fetchOuraLive(sid){
   const ui=_ouraUI();
+  // Метку «ждём возврата из OAuth» снимаем СРАЗУ, до запроса (как в generic fetchWearableLive).
+  // Раньше она снималась только при успешном ответе С ДАННЫМИ: при пустом ответе или сбое сети
+  // метка жила 10 минут, и каждое сворачивание-разворачивание приложения в этом окне снова
+  // открывало панель «Данные с трекера» поверх текущего экрана.
+  try{ localStorage.removeItem('vialp_oura_pending'); }catch(e){}
   setStatus('oura-connect-status','loading',ui.connecting);
   try{
     const r=await fetch(AI_WORKER+'/oura/metrics?sid='+encodeURIComponent(sid));
     const j=await r.json();
     if(j.ok&&j.ex&&Object.keys(j.ex).length){
-      localStorage.removeItem('vialp_oura_pending');
       applyExtracted(j.ex,'oura');
       renderPreview('oura-connect-grid',j.ex);
       document.getElementById('oura-connect-preview').classList.add('show');
@@ -10216,12 +10234,12 @@ function connectFitbit(){
   location.href = FITBIT_CONNECT_BASE + '/start?sid=' + encodeURIComponent(sid) + '&ret=' + encodeURIComponent(ret);
 }
 async function fetchFitbitLive(sid){
+  try{ localStorage.removeItem('vialp_fitbit_pending'); }catch(e){}   // см. fetchOuraLive: иначе панель всплывает при каждом возврате в приложение
   setStatus('fitbit-connect-status','loading',t('status_fitbit_connecting'));
   try{
     const r = await fetch(FITBIT_CONNECT_BASE + '/metrics?sid=' + encodeURIComponent(sid));
     const j = await r.json();
     if(j && j.ok && j.ex && Object.keys(j.ex).length){
-      localStorage.removeItem('vialp_fitbit_pending');
       applyExtracted(j.ex,'fitbit');
       applyImportedToSliders();
       renderPreview('fitbit-connect-grid', j.ex);
