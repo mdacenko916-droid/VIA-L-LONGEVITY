@@ -1822,11 +1822,19 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
 .ai-sec-why-h{font-family:var(--font-ui);font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--gold-lt);margin:16px 0 6px;}
 .ai-sec-det>.ai-sec-act:first-child{margin-top:0;}
 .lab-grp{border-top:1px solid rgba(255,255,255,.07);margin-top:6px;}
-.lab-grp>summary{list-style:none;cursor:pointer;padding:9px 2px;font-size:12.5px;color:var(--gold-lt);font-weight:500;display:flex;align-items:center;gap:8px;}
+.lab-grp>summary{list-style:none;cursor:pointer;padding:9px 2px;font-size:var(--fs-title);color:var(--gold-lt);font-weight:500;display:flex;align-items:center;gap:8px;}
 .lab-grp>summary::-webkit-details-marker{display:none;}
 .lab-grp>summary::after{content:'⌄';margin-left:auto;opacity:.6;transition:transform .2s;}
 .lab-grp[open]>summary::after{transform:rotate(180deg);}
-.lab-grp-n{font-size:10px;color:var(--t3);border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:1px 7px;}
+.lab-grp-n{font-size:var(--fs-cap);color:var(--t3);border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:1px 7px;}
+/* Строка маркера. На десктопе всё в одну линию; на телефоне название занимает свою строку целиком:
+   при --fs-body 17px «CRP (С-реактивный белок)» в узкой колонке ломался на четыре строки. */
+.lab-row{display:grid;grid-template-columns:1fr 84px 104px 14px;gap:6px;align-items:center;margin-bottom:7px;}
+.lab-n{font-size:var(--fs-body);color:var(--t2);line-height:1.3;}
+@media (max-width:599px){
+  .lab-row{grid-template-columns:1fr 116px 14px;row-gap:5px;margin-bottom:14px;}
+  .lab-n{grid-column:1 / -1;}
+}
 .ai-sec-act{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(226,185,90,.07);border:1px solid rgba(226,185,90,.18);}
 .ai-sec-act-h{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold-lt);font-weight:600;margin-bottom:6px;}
 .ai-sec-act{font-size:13.5px;color:#fff;line-height:1.75;}
@@ -8248,15 +8256,15 @@ function _labsInner(){
   // Намерение должно читаться в самом интерфейсе, а не только в промпте (канон и текст для
   // App Review — docs/APP-REVIEW-LAB-NAMING-RATIONALE.md).
   var hint2=L({ru:'Мы не интерпретируем анализы и не ставим по ним диагноз: значения нужны, чтобы разбор не советовал того, что вам уже не нужно, и предупреждал о взаимодействиях с добавками. Изменение дозировки лекарств — только с врачом.',uk:'Ми не інтерпретуємо аналізи й не ставимо за ними діагноз: значення потрібні, щоб розбір не радив того, що вам уже не потрібно, і попереджав про взаємодії з добавками. Зміна дозування ліків — лише з лікарем.',en:'We do not interpret lab results or diagnose from them: the values are used so the overview stops suggesting what you no longer need, and can warn about interactions with supplements. Any change to medication dosage — with your doctor only.',es:'No interpretamos las analíticas ni diagnosticamos con ellas: los valores sirven para que el resumen deje de sugerir lo que ya no necesitas y avise de interacciones con suplementos. Cambiar la dosis de un medicamento — solo con tu médico.',de:'Wir interpretieren keine Laborwerte und stellen damit keine Diagnose: Die Werte sorgen dafür, dass die Auswertung nichts Unnötiges vorschlägt und vor Wechselwirkungen mit Nahrungsergänzungen warnt. Dosisänderungen von Medikamenten — nur mit der Ärztin oder dem Arzt.',pt:'Não interpretamos exames nem diagnosticamos a partir deles: os valores servem para a análise parar de sugerir o que você já não precisa e avisar sobre interações com suplementos. Mudança de dose de medicamentos — apenas com o seu médico.',fr:'Nous n’interprétons pas les analyses et n’en tirons aucun diagnostic : les valeurs servent à ce que le bilan cesse de suggérer ce dont vous n’avez plus besoin et signale les interactions avec les compléments. Toute modification de posologie — avec votre médecin uniquement.',pl:'Nie interpretujemy badań ani nie stawiamy na ich podstawie diagnozy: wartości służą temu, by analiza przestała proponować to, czego już nie potrzebujesz, i ostrzegała o interakcjach z suplementami. Zmiana dawki leków — tylko z lekarzem.',it:'Non interpretiamo le analisi né formuliamo diagnosi: i valori servono perché il riepilogo smetta di suggerire ciò che non ti serve e segnali le interazioni con gli integratori. Modifiche al dosaggio dei farmaci — solo con il medico.',he:'אנחנו לא מפרשים בדיקות מעבדה ולא קובעים מהן אבחנה: הערכים משמשים כדי שהסקירה תפסיק להציע את מה שכבר לא נחוץ ותתריע על אינטראקציות עם תוספים. שינוי מינון תרופות — רק עם רופא.',ja:'検査値の解釈や診断は行いません。値は、不要な提案をやめ、サプリメントとの相互作用を知らせるために使われます。薬の用量の変更は必ず医師と。',ko:'검사 수치를 해석하거나 진단하지 않습니다. 값은 필요 없는 제안을 멈추고 보충제와의 상호작용을 알리기 위해 사용됩니다. 약 용량 변경은 반드시 의사와 상의하세요.'});
-  var h='<div style="font-size:11.5px;color:var(--t3);line-height:1.5;margin-bottom:8px;">'+_esc(hint)+'</div>'
-        +'<div style="font-size:11px;color:var(--t3);line-height:1.5;margin-bottom:12px;opacity:.85;">⚕️ '+_esc(hint2)+'</div>';
+  var h='<div style="font-size:var(--fs-cap);color:var(--t3);line-height:1.5;margin-bottom:8px;">'+_esc(hint)+'</div>'
+        +'<div style="font-size:var(--fs-cap);color:var(--t3);line-height:1.5;margin-bottom:12px;opacity:.85;">⚕️ '+_esc(hint2)+'</div>';
   h+=_homaLine();
   // Распознавание с фото — рядом с подсказкой, до полей: сначала предложить быстрый путь.
   h+='<div style="margin-bottom:12px;">'
-    +'<button type="button" onclick="document.getElementById(\'labPhotoFile\').click()" style="display:inline-flex;align-items:center;gap:7px;background:rgba(226,185,90,.10);border:1px solid rgba(226,185,90,.32);border-radius:11px;padding:9px 14px;color:var(--gold-lt);font-size:12.5px;font-weight:500;cursor:pointer;font-family:inherit;">'
+    +'<button type="button" onclick="document.getElementById(\'labPhotoFile\').click()" style="display:inline-flex;align-items:center;gap:7px;background:rgba(226,185,90,.10);border:1px solid rgba(226,185,90,.32);border-radius:11px;padding:9px 14px;color:var(--gold-lt);font-size:var(--fs-body);font-weight:500;cursor:pointer;font-family:inherit;">'
     +_esc(_labPhotoUI().btn)+'</button>'
     +'<input type="file" id="labPhotoFile" accept="image/*" capture="environment" style="display:none" onchange="if(this.files&&this.files[0])labPhotoPick(this.files[0]);this.value=\'\';">'
-    +'<div id="labPhotoSt" style="font-size:11.5px;margin-top:6px;"></div>'
+    +'<div id="labPhotoSt" style="font-size:var(--fs-cap);margin-top:6px;"></div>'
     +'</div>';
   LAB_GROUPS.forEach(function(G){
   var _gd=LAB_DEFS.filter(function(x){return (x.g||'base')===G.g;});
@@ -8267,24 +8275,24 @@ function _labsInner(){
   _gd.forEach(function(d){
     var r=all[d.k]||{};
     var uSel=(d.u.length>1)
-      ? '<select id="labu-'+d.k+'" onchange="_labSave(\''+d.k+'\')" style="background:rgba(255,255,255,.06);color:var(--t2);border:1px solid rgba(255,255,255,.12);border-radius:7px;font-size:11px;padding:5px 4px;">'
+      ? '<select id="labu-'+d.k+'" onchange="_labSave(\''+d.k+'\')" style="background:rgba(255,255,255,.06);color:var(--t2);border:1px solid rgba(255,255,255,.12);border-radius:7px;font-size:var(--fs-cap);padding:6px 6px;width:100%;">'
         + d.u.map(function(u){ return '<option value="'+u[0]+'"'+((r.u||d.c)===u[0]?' selected':'')+'>'+u[0]+'</option>'; }).join('') + '</select>'
-      : '<span style="font-size:11px;color:var(--t3);align-self:center;">'+_esc(d.c)+'</span>';
-    h+='<div style="display:grid;grid-template-columns:1fr 78px 96px 14px;gap:6px;align-items:center;margin-bottom:7px;">'
-      +'<div style="font-size:12.5px;color:var(--t2);line-height:1.3;">'+_esc(L(d.n))+'</div>'
+      : '<span style="font-size:var(--fs-cap);color:var(--t3);align-self:center;">'+_esc(d.c)+'</span>';
+    h+='<div class="lab-row">'
+      +'<div class="lab-n">'+_esc(L(d.n))+'</div>'
       +'<input id="lab-'+d.k+'" type="text" inputmode="decimal" value="'+(r.raw!=null?r.raw:'')+'" onchange="_labSave(\''+d.k+'\')" '
-        +'style="background:rgba(255,255,255,.06);color:var(--t1);border:1px solid rgba(255,255,255,.12);border-radius:7px;font-size:13px;padding:6px 8px;width:100%;">'
+        +'style="background:rgba(255,255,255,.06);color:var(--t1);border:1px solid rgba(255,255,255,.12);border-radius:7px;font-size:var(--fs-body);padding:6px 8px;width:100%;">'
       + uSel
-      +'<span id="labh-'+d.k+'" style="font-size:11px;"></span>'
+      +'<span id="labh-'+d.k+'" style="font-size:var(--fs-cap);"></span>'
       // Дата была прозрачной, без рамки и 10px цветом --t3 — на тёмном фоне поле выглядело как
       // подпись «дата» и ничего больше (живой экран 2026-08-24). Делаем его таким же полем, как
       // значение: рамка, фон, читаемый размер. Иначе давность анализа никто не заполнит, а без неё
       // результат двухлетней давности читается разбором как сегодняшний.
       +'<div style="grid-column:1 / -1;display:flex;align-items:center;gap:8px;margin:-2px 0 6px;">'
-        +'<span style="font-size:11px;color:var(--t3);flex:0 0 auto;">'+_esc(dateL)+'</span>'
+        +'<span style="font-size:var(--fs-cap);color:var(--t3);flex:0 0 auto;">'+_esc(dateL)+'</span>'
         +'<input id="labd-'+d.k+'" type="date" value="'+(r.d||'')+'" onchange="_labSave(\''+d.k+'\')" '
           +'style="background:rgba(255,255,255,.06);color:var(--t2);border:1px solid rgba(255,255,255,.12);'
-          +'border-radius:7px;font-size:12px;padding:5px 8px;font-family:inherit;min-width:0;flex:1 1 auto;max-width:180px;">'
+          +'border-radius:7px;font-size:var(--fs-body);padding:5px 8px;font-family:inherit;min-width:0;flex:1 1 auto;max-width:180px;">'
       +'</div>'
       +'</div>';
   });
