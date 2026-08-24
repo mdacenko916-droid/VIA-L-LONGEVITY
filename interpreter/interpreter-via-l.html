@@ -1176,9 +1176,14 @@ footer{
    Рабочий вариант — вообще без флекса: обычный документ, карточка и футер идут потоком друг за
    другом, прокручивается страница целиком. Футер больше не претендует на низ экрана — он просто
    следует за карточкой, а на коротких экранах уезжает вниз вместе с ней. */
-body:has(#morning-gate) #scroll-area{display:block;overflow:hidden;}   /* Экран статичный: всё помещается, поэтому прокрутку (и резиновую отдачу iOS) выключаем совсем */
-body:has(#morning-gate) #scroll-area main{display:block;padding:0;min-height:0;}
-body:has(#morning-gate) #morning-gate{margin:16px auto 18px;}
+body:has(#morning-gate) #scroll-area{display:flex;flex-direction:column;overflow:hidden;}   /* Экран статичный: всё помещается, прокрутку (и резиновую отдачу iOS) выключаем совсем */
+/* Карточка занимает свободную высоту и стоит в ней по центру, подпись бренда со ссылками — внизу
+   экрана. Центрируем автополями (margin:auto), а НЕ justify-content:center: при неожиданном
+   переполнении (крупный системный шрифт) auto прижимает к началу, а center срезал бы верх. */
+body:has(#morning-gate) #scroll-area main{flex:1 1 auto;min-height:0;display:flex;padding:0;}
+body:has(#morning-gate) #scroll-area footer,
+body:has(#morning-gate) #scroll-area .legal-links{flex:0 0 auto;}
+body:has(#morning-gate) #morning-gate{margin:auto;width:100%;}
 /* 4) sticky для подписи бренда и ссылок — тоже РЕТИРОВАН: прилипая к низу, строка ссылок наезжала
    на слоган «Живи. Не просто существуй.». После того как карточка перестала требовать прокрутки
    (убран капс в кнопках, поджаты отступы), закреплять внизу нечего — всё умещается потоком. */
