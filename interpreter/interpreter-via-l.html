@@ -8360,31 +8360,19 @@ function determinePhase(){
   if(cs==='irregular'||lp==='months'||(hf&&age>=48))return 'meno';
   return 'peri';
 }
-var _WLHn={ru:'гормональный баланс',uk:'гормональний баланс',en:'hormonal balance',es:'equilibrio hormonal',de:'Hormonhaushalt',pt:'equilíbrio hormonal',fr:'équilibre hormonal',pl:'równowaga hormonalna',it:'equilibrio ormonale',he:'איזון הורמונלי',ja:'ホルモンバランス',ko:'호르몬 균형'};
-var _WLG='level|levels|balance|activity|synthesis|fluctuations|decline|niveles|actividad|Aktivität|Synthese|Schwankungen|níveis|atividade|niveau|taux|activité|synthèse|livelli|attività|sintesi';
-function _wesc(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
-var _WLM={ru:'энергообмен',uk:'енергообмін',en:'energy metabolism',es:'metabolismo energético',de:'Energiestoffwechsel',pt:'metabolismo energético',fr:'métabolisme énergétique',pl:'metabolizm energii',it:'metabolismo energetico',he:'חילוף אנרגיה',ja:'エネルギー代謝',ko:'에너지 대사'};
-function _wl(s){ if(!s||typeof s!=='string')return s; var L=(typeof lang!=='undefined'?lang:'ru');
-  var mt=_WLM[L]||_WLM.ru, hn=_WLHn[L]||_WLHn.ru;
-  try{
-    // Подмена названий гормонов («эстроген/прогестерон/тестостерон/кортизол» → «гормонального баланса»)
-    // СНЯТА 2026-08-24. Она вставляла родительный падеж в любую позицию и ломала согласование:
-    // «когда гормонального баланса становятся менее стабильными». Согласовать по падежам пословной
-    // заменой нельзя → ретируем (тот же случай, что «воспаление» → «фоновая нагрузка»).
-    // Лексика гормонов в VIA-L разрешена решением владельца 2026-07-31; защищает форма утверждения
-    // (запрет на диагноз, на уровни немеренных биомаркеров, на дозы), а не словарь.
-    // 2026-08-24 сняты ещё три подмены — по тому же канону «прячем диагноз, а не орган, анализ и данные»:
-    //   • HRV/ВСР — не медицинский термин, его показывает сам трекер клиента; «ресурс восстановления»
-    //     расходился с тем, что человек видит в часах;
-    //   • приливы → «тепловые волны» — подменяли собственную жалобу клиента, отмеченную им в опроснике;
-    //   • щитовидная железа, ТТГ, ФСГ — орган и названия анализов называем прямо.
-    // Остаётся только ДИАГНОЗ: гипо-/гипертиреоз → «энергообмен». Его же ловит guardrail воркера.
-    s=s.replace(/(?:гипотиреоз|гипертиреоз|гіпотиреоз|гіпертиреоз|hypothyroid|hyperthyroid|hipotiroid|hipertiroid|hipotireoid|hipertireoid|ipotiroid|ipertiroid|niedoczynnoś\p{L}*\s+tarczyc\p{L}*|nadczynnoś\p{L}*\s+tarczyc\p{L}*)\p{L}*/giu, mt);
-    s=s.replace(/гормональн\p{L}*\s+фон\p{L}*/giu, hn);
-    [hn,mt].forEach(function(w){ if(!w)return; s=s.replace(new RegExp(_wesc(w)+'\\s+(?:'+_WLG+')','giu'), w); });
-    s=s.replace(/(\p{L}{3,})(?:\s+\1)+/giu, '$1');
-    [hn,mt].forEach(function(w){ if(!w)return; var e=_wesc(w); s=s.replace(new RegExp(e+'(?:\\s+(?:и|та|and|y|und|e|et|i|oraz)\\s+|\\s+)'+e,'giu'), w); });
-  }catch(e){}
+// Велнес-пояс подмен ретирован полностью (VIA-L, 2026-08-24; в VIA-L EXPERT — 2026-07-31).
+// Здесь по очереди заменялись: названия гормонов → «гормонального баланса», HRV → «ресурс
+// восстановления», приливы → «тепловые волны», щитовидная железа/ТТГ/ФСГ → «энергообмен»,
+// гипо-/гипертиреоз → «энергообмен», «гормональный фон» → «гормональный баланс».
+// Две причины снятия: (1) канон — прячем ДИАГНОЗ, а не орган, анализ, данные трекера и слово
+// из нашего же опросника («приливы» отмечает сам клиент); (2) пословная подстановка не знает
+// падежа и ломала фразы: «когда гормонального баланса становятся менее стабильными», «при
+// энергообмен». Тот же случай, что ретированное «воспаление» → «фоновая нагрузка».
+// Безопасность держит форма утверждения, а не словарь: промпт и guardrail воркера (AI_RISK_RE,
+// _FEED_DEMED, self-check) + _scrubProto ниже (дозы и гормонально-активные травы).
+// Функция оставлена точкой входа — её вызовы разбросаны по рендеру.
+function _wl(s){ if(!s||typeof s!=='string')return s;
+  try{ s=s.replace(/(\p{L}{3,})(?:\s+\1)+/giu, '$1'); }catch(e){}   // схлопнуть случайный дубль слова
   return s;
 }
 // Санитайзер рек-строк legacy-движка инсайтов (велнес PRO): убирает дозы добавок (мг/мкг/МЕ/IU/г/сут) и
