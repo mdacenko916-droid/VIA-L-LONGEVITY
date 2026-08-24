@@ -5190,9 +5190,9 @@ function _vcHorm(map,accId){
   return chips?'<div class="vc-chips">'+chips+'</div>':'';
 }
 // «Цель и фокус» (велнес, не мед) — живёт в vial_profile, редактируется в карточке
-var _VC_PRI=[{v:'energy',l:{ru:'Энергия',uk:'Енергія',en:'Energy',es:'Energía',de:'Energie',pt:'Energia',fr:'Énergie',pl:'Energia',it:'Energia',he:'אנרגיה',ja:'エネルギー',ko:'에너지'}},{v:'sleep',l:{ru:'Сон',uk:'Сон',en:'Sleep',es:'Sueño',de:'Schlaf',pt:'Sono',fr:'Sommeil',pl:'Sen',it:'Sonno',he:'שינה',ja:'睡眠',ko:'수면'}},{v:'body',l:{ru:'Тело и форма',uk:'Тіло і форма',en:'Body & shape',es:'Cuerpo y forma',de:'Körper & Form',pt:'Corpo e forma',fr:'Corps et forme',pl:'Ciało i forma',it:'Corpo e forma',he:'גוף וכושר',ja:'体と体型',ko:'몸과 체형'}},{v:'calm',l:{ru:'Спокойствие',uk:'Спокій',en:'Calm',es:'Calma',de:'Ruhe',pt:'Calma',fr:'Sérénité',pl:'Spokój',it:'Calma',he:'רוגע',ja:'落ち着き',ko:'평온'}},{v:'balance',l:{ru:'Баланс',uk:'Баланс',en:'Balance',es:'Equilibrio',de:'Balance',pt:'Equilíbrio',fr:'Équilibre',pl:'Równowaga',it:'Equilibrio',he:'איזון',ja:'バランス',ko:'균형'}},{v:'mood',l:{ru:'Настроение',uk:'Настрій',en:'Mood',es:'Ánimo',de:'Stimmung',pt:'Humor',fr:'Humeur',pl:'Nastrój',it:'Umore',he:'מצב רוח',ja:'気分',ko:'기분'}}];
+// _VC_PRI и _cardTogglePri удалены 2026-08-24 вместе с чипами «Фокус» (их роль забрала жалоба).
+// Поле profile.priorities НЕ трогаем: у кого оно уже заполнено — значение остаётся и уходит в разбор.
 function _cardSaveGoal(v){var P={};try{P=JSON.parse(localStorage.getItem('viae_profile')||'{}')||{};}catch(e){}P.goal=(v||'').slice(0,300);try{localStorage.setItem('viae_profile',JSON.stringify(P));}catch(e){}}
-function _cardTogglePri(v,el){var P={};try{P=JSON.parse(localStorage.getItem('viae_profile')||'{}')||{};}catch(e){}var a=Array.isArray(P.priorities)?P.priorities:[];var i=a.indexOf(v);if(i>=0)a.splice(i,1);else if(a.length<3)a.push(v);P.priorities=a;try{localStorage.setItem('viae_profile',JSON.stringify(P));}catch(e){}if(el)el.classList.toggle('on',a.indexOf(v)>=0);}
 function _vcCSS(){ if(document.getElementById('vcard-css'))return; var s=document.createElement('style'); s.id='vcard-css';
   s.textContent=".vcard-wrap{max-width:920px;margin:0 auto;}"
   +".vcard-hero{background:linear-gradient(135deg,rgba(42,50,63,.60),rgba(24,30,40,.50)),linear-gradient(135deg,rgba(226,185,90,.07),rgba(226,185,90,.02));border:1px solid rgba(226,185,90,.30);border-radius:20px;padding:18px;margin-bottom:14px;}"
@@ -5541,12 +5541,21 @@ function renderCard(){
     _secLife=_vcSec('lifestyle',L({ru:'Что нового за неделю',uk:'Що нового за тиждень',en:"What's new this week",es:'Qué hay de nuevo esta semana',de:'Was diese Woche neu ist',pt:'O que há de novo esta semana',fr:'Quoi de neuf cette semaine',pl:'Co nowego w tym tygodniu',it:'Cosa c’è di nuovo questa settimana',he:'מה חדש השבוע',ja:'今週の新しいこと',ko:'이번 주 새로운 것'}),'<div style="font-size:13px;color:var(--t2);line-height:1.55;white-space:pre-wrap;">'+_esc(P.lifestyle_notes)+'</div>',false);
   }
 
-  // ── Цель и приоритеты (новый ввод) ──
-  var pris=Array.isArray(P.priorities)?P.priorities:[];
-  var goalInner='<textarea class="vc-goal" rows="2" placeholder="'+_esc(L({ru:'Опишите вашу главную цель…',uk:'Опишіть вашу головну мету…',en:'Describe your main goal…',es:'Describe tu objetivo principal…',de:'Beschreibe dein Hauptziel…',pt:'Descreva seu objetivo principal…',fr:'Décrivez votre objectif principal…',pl:'Opisz swój główny cel…',it:'Descrivi il tuo obiettivo principale…',he:'תארו את המטרה העיקרית…',ja:'主な目標を記入…',ko:'주요 목표를 적어주세요…'}))+'" oninput="_cardSaveGoal(this.value)">'+_esc(P.goal||'')+'</textarea>'
-    +'<div class="vc-sub">'+L({ru:'Фокус (до 3)',uk:'Фокус (до 3)',en:'Focus (up to 3)',es:'Enfoque (hasta 3)',de:'Fokus (bis 3)',pt:'Foco (até 3)',fr:'Focus (jusqu’à 3)',pl:'Fokus (do 3)',it:'Focus (fino a 3)',he:'פוקוס (עד 3)',ja:'重点（最大3）',ko:'집중 (최대 3)'})+'</div>'
-    +'<div class="vc-chips">'+_VC_PRI.map(function(p){return '<button type="button" class="vc-pri'+(pris.indexOf(p.v)>=0?' on':'')+'" onclick="_cardTogglePri(\''+p.v+'\',this)">'+_esc(L(p.l))+'</button>';}).join('')+'</div>';
-  _secGoal=_vcSec('goal',L({ru:'Цель и приоритеты',uk:'Мета і пріоритети',en:'Goal & priorities',es:'Objetivo y prioridades',de:'Ziel & Prioritäten',pt:'Objetivo e prioridades',fr:'Objectif et priorités',pl:'Cel i priorytety',it:'Obiettivo e priorità',he:'מטרה ועדיפויות',ja:'目標と優先事項',ko:'목표와 우선순위'}),goalInner,false);
+  // ── Цель (стратегия) + жалоба (что сейчас) ────────────────────────────────────────────────
+  // Чипы «Фокус (до 3)» убраны 2026-08-24: после появления блока «С чем вы пришли» они дублировали
+  // его выбор (энергия/сон/настроение/тело есть в обоих списках), но, в отличие от жалобы, ничем не
+  // измерялись и влияли только на одну строку промпта. Роли разведены: ЦЕЛЬ — куда человек идёт,
+  // ЖАЛОБА — с чем он сейчас; вторая живёт в опроснике, здесь показывается только для чтения.
+  var _cmpNow=(typeof _cmpGet==='function')?_cmpGet():null;
+  var _cmpLine='';
+  if(_cmpNow && ((Array.isArray(_cmpNow.items)&&_cmpNow.items.length) || _cmpNow.text)){
+    var _nm=(_cmpNow.items||[]).map(function(k){ return (typeof _cmpLbl==='function')?_cmpLbl(k):k; }).join(' · ');
+    _cmpLine='<div class="vc-sub" style="margin-top:12px;">'+_esc(L({ru:'С чем вы пришли',uk:'З чим ви прийшли',en:'What brought you here',es:'Con qué viniste',de:'Womit du gekommen bist',pt:'Com o que você veio',fr:'Ce qui vous a amené',pl:'Z czym przyszedłeś',it:'Con cosa sei arrivato',he:'עם מה הגעתם',ja:'来た理由',ko:'오신 이유'}))+'</div>'
+      +'<div style="font-size:13px;color:var(--t1);line-height:1.5;margin-top:4px;">'+_esc(_nm)+(_cmpNow.text?((_nm?' — ':'')+_esc(String(_cmpNow.text))):'')+'</div>'
+      +'<div style="font-size:10.5px;color:var(--t3);margin-top:4px;">'+_esc(L({ru:'Меняется в опроснике, в шаге «Что нового»',uk:'Змінюється в опитуванні, у кроці «Що нового»',en:'You change it in the questionnaire, in the “What’s new” step',es:'Se cambia en el cuestionario, en el paso «Qué hay de nuevo»',de:'Änderbar im Fragebogen, im Schritt „Was ist neu“',pt:'Altera-se no questionário, no passo «O que há de novo»',fr:'Modifiable dans le questionnaire, à l’étape « Quoi de neuf »',pl:'Zmieniasz to w kwestionariuszu, w kroku „Co nowego”',it:'Si cambia nel questionario, nel passo «Cosa c’è di nuovo»',he:'משנים בשאלון, בשלב «מה חדש»',ja:'アンケートの「今日の変化」で変更できます',ko:'설문의 「무엇이 새로운가」 단계에서 변경합니다'}))+'</div>';
+  }
+  var goalInner='<textarea class="vc-goal" rows="2" placeholder="'+_esc(L({ru:'Опишите вашу главную цель…',uk:'Опишіть вашу головну мету…',en:'Describe your main goal…',es:'Describe tu objetivo principal…',de:'Beschreibe dein Hauptziel…',pt:'Descreva seu objetivo principal…',fr:'Décrivez votre objectif principal…',pl:'Opisz swój główny cel…',it:'Descrivi il tuo obiettivo principale…',he:'תארו את המטרה העיקרית…',ja:'主な目標を記入…',ko:'주요 목표를 적어주세요…'}))+'" oninput="_cardSaveGoal(this.value)">'+_esc(P.goal||'')+'</textarea>' + _cmpLine;
+
 
   // ── Ваш ориентир (Baseline) — PRO: приборные HRV/пульс/часы сна + энергия ──
   var bl=(typeof _baselineFromDaily==='function')?_baselineFromDaily():null, blInner='';
