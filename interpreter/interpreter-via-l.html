@@ -5418,6 +5418,16 @@ var CMP_ITEMS = {
 // Гейт подсказки по анализам: список «что обычно смотрят» полезен раз в неделю, а в ежедневном
 // разборе превращается в фон, который перестают читать. Отметку ставим только когда подсказка
 // реально ушла в запрос.
+// Скрин дыхания во сне: разговор про исследование сна не нужен ежедневно — он либо услышан,
+// либо человек к нему не готов. Каденс реже недельного, чтобы не превращаться в упрёк.
+function _osaHintDue(){
+  try{
+    var last=parseInt(localStorage.getItem('vialp_osahint')||'0',10);
+    if(last && (Date.now()-last) < 14*86400000) return false;
+    localStorage.setItem('vialp_osahint', String(Date.now()));
+    return true;
+  }catch(e){ return false; }
+}
 function _labHintDue(){
   try{
     var last=parseInt(localStorage.getItem('vialp_labhint')||'0',10);
@@ -8470,6 +8480,7 @@ function _showResultsInner(){
     bp_high:getRadio('bp_high'), bp_family:getRadio('bp_family'), bp_want:getRadio('bp_want'),
     allergy:(typeof getRadio==='function'&&getRadio('allergy_has')==='yes'&&document.getElementById('allergy')?document.getElementById('allergy').value:'').trim(),
     complaint:(typeof _cmpGet==='function'?_cmpGet():null),
+    osa_hint:_osaHintDue(),      // скрин дыхания во сне — раз в 14 дней
     labs_hint:_labHintDue(),   // блок «что обычно смотрят» — не чаще раза в 7 дней (иначе он повторялся бы в КАЖДОМ дневном разборе)
     complaint_delta:window._cmpDeltaToday||'',
     new_symptoms:(document.getElementById('new_symptoms')?document.getElementById('new_symptoms').value:'').trim(),
