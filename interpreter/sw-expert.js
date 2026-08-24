@@ -4,7 +4,7 @@
 // уже установленный EXPERT. Имя файла не меняем по той же причине (сохранённые PWA его помнят).
 // БЕЗОПАСНО для остальных соседей в /interpreter/: перехватываем навигацию ТОЛЬКО на эти две
 // страницы (index.html, methodology.html и пр. — мимо). POST/cross-origin не трогаем.
-const CACHE = 'vial-expert-v4';   // bump при смене иконок/оболочки → сбрасывает старый кэш
+const CACHE = 'vial-expert-v5';   // bump при смене иконок/оболочки → сбрасывает старый кэш
 const EXPERT = 'interpreter-via-l-expert.html';
 const BASE = 'interpreter-via-l.html';   // базовый тариф VIA-L — своя иконка/манифест, тот же механизм
 // HTML НЕ предкэшируем: iOS-PWA любит отдавать закэшированную страницу при запуске
