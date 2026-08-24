@@ -5038,6 +5038,134 @@ function _labCrossChecks(data) {
     + out.map(x => '• ' + x).join('\n') + '\n';
 }
 
+// ── «ЧТО ОБЫЧНО СМОТРЯТ» — образовательный список, НЕ назначение ────────────────────────────
+// Постановка задачи выбрана по разбору рынка (2026-08-24): Oura умеет ЗАКАЗАТЬ панель прямо из
+// приложения только потому, что за заказом стоит врач-партнёр (SteadyMD) и лаборатория (Quest),
+// и работает это лишь в США. То, что Oura делает БЕЗ врача и во всех странах, — принимает уже
+// готовые результаты и объясняет их как educational insight. Мы идём тем же путём:
+//   • VIA-L — только образовательно: «при такой картине обычно смотрят …», без «сдайте»;
+//   • VIA-L EXPERT — список как ПРЕДЛОЖЕНИЕ К РАЗГОВОРУ со специалистом: решает он, не приложение.
+// Маркеры выбираются под ЖАЛОБУ клиента (та самая ось петли жалобы) и стадию; уже введённые
+// свежие значения исключаются — незачем предлагать то, что человек сдал месяц назад.
+const _LAB_BY_COMPLAINT = {
+  energy: ['ferritin', 'tsh', 'b12', 'vitd', 'hgb'],
+  sleep:  ['ferritin', 'tsh', 'vitd'],
+  fog:    ['b12', 'folate', 'tsh', 'ferritin', 'hcy'],
+  mood:   ['vitd', 'b12', 'tsh', 'ferritin'],
+  weight: ['glucose', 'insulin', 'hba1c', 'tsh', 'tg'],
+  libido: ['tst', 'shbg', 'prl', 'tsh'],
+  pain:   ['vitd', 'ca', 'crp', 'ferritin'],
+  hf:     ['tsh', 'ferritin', 'vitd'],
+  cycle:  ['tsh', 'ferritin', 'prl'],
+  drive:  ['tst', 'shbg', 'tsh', 'vitd'],
+  muscle: ['tst', 'vitd', 'ca'],
+};
+const _LAB_NAME_RU = {
+  ferritin: 'ферритин', crp: 'CRP', tsh: 'ТТГ', vitd: 'витамин D (25-OH)', b12: 'B12',
+  glucose: 'глюкоза натощак', hba1c: 'HbA1c', insulin: 'инсулин натощак', tg: 'триглицериды',
+  hgb: 'гемоглобин', folate: 'фолиевая кислота', hcy: 'гомоцистеин', tst: 'тестостерон общий',
+  shbg: 'ГСПГ (SHBG)', prl: 'пролактин', ca: 'кальций', fsh: 'ФСГ', e2: 'эстрадиол', prog: 'прогестерон',
+};
+// Подготовка и тайминг — половина ценности анализа (LAB MODULE 1–4). Без этих оговорок человек
+// сдаёт ферритин на второй день менструации и получает цифру, по которой нельзя ничего сказать.
+const _LAB_TIMING = {
+  ferritin: 'сдавать вне менструации и не на фоне простуды',
+  tst: 'утром, примерно с 8 до 10, натощак',
+  shbg: 'вместе с общим тестостероном, в то же утро',
+  glucose: 'строго натощак',
+  insulin: 'строго натощак, вместе с глюкозой',
+  prog: 'в середине лютеиновой фазы (при цикле 28 дней — примерно 21–23-й день)',
+  fsh: 'на 2–5-й день цикла, если цикл ещё есть',
+  tsh: 'если принимаете биотин — отменить за 2–3 суток, он искажает сам тест',
+};
+function _labSuggest(data, isWellness) {
+  if (data.labs_hint !== true) return '';   // гейт частоты живёт на клиенте (раз в 7 дней), см. _labHintDue
+  const labs = data.labs || {};
+  const age = (labs && labs._age) || {};
+  const have = k => labs[k] != null && labs[k] !== '' && (age[k] == null || age[k] <= 12);   // свежее года не предлагаем
+  const items = (data.complaint && Array.isArray(data.complaint.items)) ? data.complaint.items : [];
+  const male = String(data.gender || data.sex || '') === 'male';
+  const want = [];
+  items.forEach(it => (_LAB_BY_COMPLAINT[it] || []).forEach(k => { if (want.indexOf(k) < 0) want.push(k); }));
+  if (!want.length) return '';                       // жалоба не выбрана — ничего не навязываем
+  const pick = want.filter(k => !have(k))
+                   .filter(k => !(male && (k === 'fsh' || k === 'e2' || k === 'prog')))
+                   .slice(0, 5);
+  if (!pick.length) return '';                       // всё нужное уже сдано — предлагать нечего
+  const list = pick.map(k => _LAB_NAME_RU[k] + (_LAB_TIMING[k] ? ' (' + _LAB_TIMING[k] + ')' : '')).join('; ');
+  const head = '\n🧪 АНАЛИЗЫ ПО ТЕМЕ КЛИЕНТА — упомянуть ОДИН раз, коротким блоком в конце:\n'
+    + '• Под его жалобу обычно смотрят: ' + list + '.\n';
+  const tail = isWellness
+    ? '• ФОРМУЛИРОВКА (VIA-L): только образовательно — «при такой картине обычно смотрят вот это», '
+      + '«если будете обсуждать с врачом, это те показатели, о которых чаще всего идёт речь». '
+      + 'НЕЛЬЗЯ: «сдайте», «вам нужно сдать», «рекомендую сделать анализ» — это назначение, а мы его не даём. '
+      + 'Решение о том, нужны ли анализы, принимает врач.\n'
+    : '• ФОРМУЛИРОВКА (VIA-L EXPERT): подай как предложение К РАЗГОВОРУ СО СПЕЦИАЛИСТОМ — «это стоит обсудить '
+      + 'с вашим специалистом: он решит, нужны ли они именно вам». Список исходит от специалиста, не от приложения.\n';
+  return head + tail
+    + '• Ни в каком тарифе НЕ обещай, что анализ «покажет причину», и не интерпретируй заранее значения, '
+    + 'которых ещё нет.\n';
+}
+
+// ── КРАСНЫЕ ФЛАГИ ПО АНАЛИЗАМ → СЕМЕЙНЫЙ ВРАЧ ──────────────────────────────────────────────
+// Источник порогов: Infa Cloude/LAB MODULE 1–4, разделы «RED FLAGS REQUIRING IMMEDIATE PHYSICIAN
+// REFERRAL» (там они прямо помечены «outside nutritional territory»). Это НЕ наша территория:
+// питанием и образом жизни такие значения не решаются, и молчать о них нельзя.
+// Почему кодом, а не правилом в промпте: чек-лист из десятка условий модель исполняет через раз
+// (см. память project_prompt_rules_placement) — а здесь цена пропуска высокая.
+// Что можно и чего нельзя: называем ЗНАЧЕНИЕ и адресата («покажите семейному врачу»), НЕ называем
+// болезнь, НЕ объясняем причину, НЕ пугаем и НЕ успокаиваем. Тот же принцип, что у ПСА >4.
+// Пороги в КАНОНИЧЕСКИХ единицах панели (glucose mmol/L, tg mmol/L, tst ng/dL, hgb g/dL, …) —
+// пересчёт из введённых единиц делает клиент до отправки.
+function _labRedFlags(data) {
+  const labs = data.labs || {};
+  const n = v => (v == null || v === '' || isNaN(v)) ? null : +v;
+  const male = String(data.gender || data.sex || '') === 'male';
+  const out = [];
+  const flag = (what, urgent) => out.push({ what, urgent: !!urgent });
+
+  const glu = n(labs.glucose), a1c = n(labs.hba1c), tg = n(labs.tg), ldl = n(labs.ldl);
+  const ins = n(labs.insulin), tsh = n(labs.tsh), prl = n(labs.prl), tst = n(labs.tst);
+  const dheas = n(labs.dheas), hgb = n(labs.hgb), egfr = n(labs.egfr), alt = n(labs.alt);
+  const ast = n(labs.ast), ca = n(labs.ca), crp = n(labs.crp), fer = n(labs.ferritin);
+
+  // Обмен
+  if (glu != null && glu >= 13.9) flag('глюкоза натощак ' + glu + ' ммоль/л', true);
+  else if (glu != null && glu >= 7.0) flag('глюкоза натощак ' + glu + ' ммоль/л');
+  if (a1c != null && a1c >= 6.5) flag('HbA1c ' + a1c + '%');
+  if (ins != null && ins > 25) flag('инсулин натощак ' + ins + ' мкЕд/мл');
+  // Липиды
+  if (tg != null && tg >= 5.6) flag('триглицериды ' + tg + ' ммоль/л', true);
+  if (ldl != null && ldl >= 4.9) flag('ЛПНП ' + ldl + ' ммоль/л');
+  // Щитовидная железа
+  if (tsh != null && tsh > 10) flag('ТТГ ' + tsh + ' мЕд/л');
+  if (tsh != null && tsh < 0.1) flag('ТТГ ' + tsh + ' мЕд/л (подавлен)');
+  // Гипофиз и андрогены
+  if (prl != null && prl > 100) flag('пролактин ' + prl + ' нг/мл', true);
+  if (!male && tst != null && tst > 150) flag('общий тестостерон ' + tst + ' нг/дл для женщины', true);
+  if (dheas != null && dheas > 700) flag('ДГЭА-С ' + dheas + ' мкг/дл');
+  // Кровь, почки, печень, кальций
+  if (hgb != null && hgb < (male ? 13.0 : 12.0)) flag('гемоглобин ' + hgb + ' г/дл');
+  if (hgb != null && hgb > (male ? 17.5 : 16.5)) flag('гемоглобин ' + hgb + ' г/дл');
+  if (egfr != null && egfr < 60) flag('рСКФ ' + egfr + ' мл/мин');
+  if (alt != null && alt >= 120 || ast != null && ast >= 120)
+    flag('печёночные ферменты (АЛТ ' + (alt != null ? alt : '—') + ' / АСТ ' + (ast != null ? ast : '—') + ' Ед/л)');
+  if (ca != null && ca > 2.75) flag('кальций ' + ca + ' ммоль/л');
+  if (crp != null && crp > 10) flag('CRP ' + crp + ' мг/л');
+  if (fer != null && fer > 500) flag('ферритин ' + fer + ' нг/мл');
+
+  if (!out.length) return '';
+  const urgent = out.some(x => x.urgent);
+  return '\n🚩 КРАСНЫЕ ФЛАГИ ПО АНАЛИЗАМ — СКАЗАТЬ ОБЯЗАТЕЛЬНО, ОТДЕЛЬНЫМ АБЗАЦЕМ В НАЧАЛЕ:\n'
+    + '• Сработало: ' + out.map(x => x.what).join('; ') + '.\n'
+    + '• Скажи спокойно и коротко: такие значения выходят за рамки того, что решается питанием, '
+    + 'сном и движением, поэтому результат стоит показать СЕМЕЙНОМУ ВРАЧУ (терапевту)'
+    + (urgent ? ' — и лучше не откладывать' : '') + '.\n'
+    + '• НЕ называй болезнь, НЕ объясняй причину, НЕ давай прогнозов, НЕ успокаивай («скорее всего ничего '
+    + 'страшного») и НЕ нагнетай. Только значение + адресат.\n'
+    + '• Дальше веди разбор как обычно по своей теме — эта строка не отменяет остальной работы.\n';
+}
+
 function buildUserMessage(data, lang, tier) {
   const isFem = data.gender !== 'male';
   // Велнес (VIA-L) НЕ оценивает медицинский риск. Раньше сюда уходил готовый вердикт
@@ -5600,6 +5728,8 @@ function buildUserMessage(data, lang, tier) {
     + 'Физическая активность · виды: ' + _J(data.act_types) + ' | частота: ' + _V(data.act_freq) + ' | восстановление после нагрузки: ' + _V(data.act_recovery) + (data.move_today ? ' | движение за прошедшие сутки: ' + ({sedentary:'сидячий день',light:'немного двигался',walk:'много ходил',cardio:'кардио/бег',strength:'силовая тренировка',active:'активный день'}[data.move_today] || data.move_today) : '') + '\n'
     + 'Добавки (принимает): ' + _J(data.supplements) + '\n'
     + _suppCrossChecks(data)
+    + _labRedFlags(data)
+    + _labSuggest(data, isWell)
     + _labCrossChecks(data)
     + _anchorNotes(data)
     // АНАЛИЗЫ — контекст, НЕ вердикт. Значения приходят в канонических единицах (пересчёт на

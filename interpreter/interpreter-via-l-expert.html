@@ -4706,6 +4706,17 @@ var CMP_ITEMS = {
 };
 // f:1 — жалоба «быстрая», меняется в масштабе суток → спрашиваем ежедневно.
 // f:0 — медленная (вес, либидо, мышцы, цикл): дневной вопрос о ней бессмыслен, она идёт в недельный разбор.
+// Гейт подсказки по анализам: список «что обычно смотрят» полезен раз в неделю, а в ежедневном
+// разборе превращается в фон, который перестают читать. Отметку ставим только когда подсказка
+// реально ушла в запрос.
+function _labHintDue(){
+  try{
+    var last=parseInt(localStorage.getItem('viae_labhint')||'0',10);
+    if(last && (Date.now()-last) < 7*86400000) return false;
+    localStorage.setItem('viae_labhint', String(Date.now()));
+    return true;
+  }catch(e){ return false; }
+}
 function _cmpGet(){ try{ var P=JSON.parse(localStorage.getItem('viae_profile')||'{}')||{}; return P.complaint||null; }catch(e){ return null; } }
 function _cmpSave(c){ try{ var P=JSON.parse(localStorage.getItem('viae_profile')||'{}')||{}; P.complaint=c; localStorage.setItem('viae_profile',JSON.stringify(P)); }catch(e){} }
 function _cmpLbl(k){ var it=CMP_ITEMS[k]; if(!it) return k; return it.t[(typeof lang!=='undefined'?lang:'en')]||it.t.en; }
@@ -9031,6 +9042,7 @@ function _showResultsInner(){
     allergy:(typeof getRadio==='function'&&getRadio('allergy_has')==='yes'&&document.getElementById('allergy')?document.getElementById('allergy').value:'').trim(),
     // Жалоба, с которой человек пришёл + сегодняшняя динамика по ней (см. renderComplaint).
     complaint:(typeof _cmpGet==='function'?_cmpGet():null),
+    labs_hint:_labHintDue(),   // блок «что обычно смотрят» — не чаще раза в 7 дней (иначе он повторялся бы в КАЖДОМ дневном разборе)
     complaint_delta:window._cmpDeltaToday||'',
     new_symptoms:(document.getElementById('new_symptoms')?document.getElementById('new_symptoms').value:'').trim(),
     lifestyle_notes:(document.getElementById('lifestyle_notes')?document.getElementById('lifestyle_notes').value:'').trim(),
