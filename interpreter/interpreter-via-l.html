@@ -988,9 +988,19 @@ i.rd-tr-ic{display:inline-flex;align-items:center;justify-content:center;font-si
 .rd-tr-big{padding:4px 0 14px;}
 .rd-tr-big svg{width:100%;height:120px;}
 .rd-tr-ax{display:flex;justify-content:space-between;font-size:var(--fs-cap);color:var(--t3);margin-top:4px;}
-@media(max-width:420px){
-  .rd-tr-spark{width:72px;}
+/* Телефон: после перехода на канон (название 17px, «обычно ~X» 14px) четыре колонки в одну линию
+   перестали помещаться — название упиралось в спарклайн, а значение налезало на линию графика
+   (живой экран 2026-08-24). Раскладываем в две строки: сверху иконка + название со значением,
+   снизу график и процент. Ширины графика хватает, потому что он больше ни с чем не делит место. */
+@media(max-width:599px){
+  .rd-tr-row{flex-wrap:wrap;row-gap:8px;padding:13px 0;}
+  .rd-tr-main{flex:1 1 calc(100% - 46px);}
   .rd-tr-avg{display:block;margin:2px 0 0;}
+  .rd-tr-spark{margin-left:46px;width:120px;}
+  .rd-tr-pct{margin-left:auto;}
+}
+@media(max-width:420px){
+  .rd-tr-spark{width:104px;}
 }
 /* сворачивание блока трендов */
 .rd-tr-head{cursor:pointer;user-select:none;}
