@@ -1151,10 +1151,16 @@ footer{
    Условия) прижат к низу и не уезжает при скролле. Ловим по наличию самого гейта (:has), чтобы не
    заводить класс и не снимать его в трёх местах удаления. Если карточка выше экрана — скролл вернётся сам. */
 body:has(#morning-gate) #scroll-area{display:flex;flex-direction:column;}
-body:has(#morning-gate) #scroll-area main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;justify-content:center;}
+/* justify-content:center ЗАПРЕЩЁН: если карточка выше свободного места, он выталкивает её за края
+   симметрично — верх уезжает под кнопку языка, низ наезжает на логотип VIA—L (живой экран
+   2026-08-24, после подъёма шрифтов карточка стала выше). Центрируем автополями: они центрируют
+   так же, но при нехватке места прижимают к началу и не режут верх. */
+body:has(#morning-gate) #scroll-area main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;justify-content:flex-start;overflow-y:auto;}
 body:has(#morning-gate) #scroll-area footer,
 body:has(#morning-gate) #scroll-area .legal-links{flex:0 0 auto;}
-body:has(#morning-gate) #morning-gate{margin:0 auto;}
+body:has(#morning-gate) #morning-gate{margin:auto;}
+/* Даже по центру карточка не должна касаться шапки и футера */
+body:has(#morning-gate) #scroll-area main{padding:14px 0 18px;}
 
 /* ══ IMPORT PANEL ════════════════════════════════════════ */
 #importPanel{
@@ -7599,7 +7605,7 @@ function _showMorningCard(src){
   if(src!=='manual'){ var f=_syncStampFmt(); if(f) syncLine='<div style="font-size:var(--fs-cap);color:var(--t3);margin:8px 0 2px;">'+L({ru:'Последняя синхронизация',uk:'Остання синхронізація',en:'Last sync',es:'Última sincronización',de:'Letzte Synchronisation',pt:'Última sincronização',fr:'Dernière synchronisation',pl:'Ostatnia synchronizacja',it:'Ultima sincronizzazione',he:'סנכרון אחרון',ja:'最終同期',ko:'마지막 동기화'})+': '+f+'</div>'; }
   var btnCss='display:block;width:100%;box-sizing:border-box;margin-top:16px;padding:14px;border-radius:12px;border:1px solid rgba(226,185,90,.5);background:rgba(226,185,90,.12);color:#fff;font-size:var(--fs-title);font-weight:600;cursor:pointer;font-family:inherit;';
   var d=document.createElement('div'); d.id='morning-gate'; d.className='step flow-show';
-  d.style.cssText='max-width:560px;margin:28px auto;padding:26px 24px;text-align:center;background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.28);border-radius:18px;';
+  d.style.cssText='max-width:560px;margin:14px auto;padding:26px 24px;text-align:center;background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.28);border-radius:18px;';
   // Выбор источника КАЖДЫЙ день — человек волен взять данные откуда удобно.
   var _pick=L({ru:'Откуда взять данные сегодня?',uk:'Звідки взяти дані сьогодні?',en:'Where should today’s data come from?',es:'¿De dónde tomar los datos de hoy?',de:'Woher sollen die heutigen Daten kommen?',pt:'De onde vêm os dados de hoje?',fr:'D’où proviennent les données du jour ?',pl:'Skąd wziąć dzisiejsze dane?',it:'Da dove prendere i dati di oggi?',he:'מהיכן לקחת את נתוני היום?',ja:'今日のデータはどこから取得しますか？',ko:'오늘 데이터는 어디에서 가져올까요?'});
   d.innerHTML='<div style="font-family:\'Playfair Display\',serif;font-size:23px;color:#fff;margin-bottom:6px;">'+greet+'</div>'
