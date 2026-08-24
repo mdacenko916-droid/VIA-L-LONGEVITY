@@ -1602,6 +1602,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;}
 .max-sent{display:none;text-align:center;padding:16px;font-size:var(--fs-body);color:#7898ff;}
 /* Панель «Данные с трекера» — read-only сводка подтянутых показателей */
 .gadget-panel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:0;}
+@media(max-width:599px){.gadget-panel{grid-template-columns:1fr;}}   /* одна колонка: в двух «Частота сердца» и «Кислород в крови» на 17px не помещались */
 @media(max-width:480px){.gadget-panel{gap:7px;}.gp-tile{gap:8px;padding:9px;}.gp-ic{width:30px;height:30px;flex:0 0 30px;}.gp-name{font-size:var(--fs-cap);}.gp-num{font-size:var(--fs-title);}}
 .gp-tile{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:13px;background:rgba(0,0,0,.25);border:1px solid rgba(196,150,60,.28);cursor:pointer;text-align:left;transition:border-color .15s,background .15s;}
 .gp-tile:hover{border-color:rgba(255,255,255,.28);}
@@ -1609,7 +1610,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;}
 .gp-tile.miss{border-color:rgba(251,191,36,.26);}
 .gp-ic{width:36px;height:36px;object-fit:contain;flex:0 0 36px;filter:drop-shadow(0 0 5px rgba(0,0,0,.55));}
 .gp-txt{flex:1;min-width:0;}
-.gp-name{font-size:var(--fs-body);font-weight:600;color:var(--t1);line-height:1.15;overflow-wrap:anywhere;}
+.gp-name{font-size:var(--fs-body);font-weight:600;color:var(--t1);line-height:1.2;overflow-wrap:break-word;hyphens:none;}
 .gp-abbr{font-size:var(--fs-cap);letter-spacing:1.2px;text-transform:uppercase;color:var(--gold-lt,#e2b96a);margin-top:2px;}
 .gp-num{font-size:var(--fs-title);font-weight:500;color:var(--t1);line-height:1;margin-left:6px;white-space:nowrap;flex-shrink:0;}
 .gp-num.miss{color:#FBBF24;}
@@ -4726,7 +4727,7 @@ document.querySelectorAll('input[name=gender]').forEach(el=>{
     const cycCard=document.getElementById('cycle-card'); if(cycCard)cycCard.style.display=male?'none':'';   // вся карточка «Организм» — только для женщин (у мужчин была бы пустой)
     try{ if(typeof _applySleepEnds==='function')_applySleepEnds(); if(typeof renderSleepScale==='function')renderSleepScale(); }catch(e){}   // «выспался/выспалась» — форма по полу
     // пере-рендер ленты по полу с сохранением позиции скролла (как VIO) — не улетать вверх
-    setTimeout(function(){ if(document.body.classList.contains('flow-mode')&&typeof showAll==='function'){ var _sa=document.getElementById('scroll-area'); var _y=_sa?_sa.scrollTop:0; showAll(); if(_sa)_sa.scrollTop=_y; else window.scrollTo(0,_y); } },0);
+    setTimeout(function(){ if(document.body.classList.contains('flow-mode')&&!document.getElementById('morning-gate')&&typeof showAll==='function'){ var _sa=document.getElementById('scroll-area'); var _y=_sa?_sa.scrollTop:0; showAll(); if(_sa)_sa.scrollTop=_y; else window.scrollTo(0,_y); } },0);
   });
 });
 
@@ -7507,6 +7508,10 @@ function _toggleSleepHours(){
 }
 function _reflowSteps(){
   if(!document.body.classList.contains('flow-mode'))return;
+  // Утренняя карточка тоже живёт под flow-mode, но лентой НЕ является: перестройка затирала её
+  // и открывала «Сегодняшний check-in» вместо экрана выбора источника. Ловилось при старте —
+  // тихая дотяжка трекера через 300 мс звала _gRefresh → сюда (живой экран 2026-08-24).
+  if(document.getElementById('morning-gate'))return;
   if(typeof showAll!=='function')return;
   var sa=document.getElementById('scroll-area'); var y=sa?sa.scrollTop:window.scrollY;
   try{showAll();}catch(e){}
