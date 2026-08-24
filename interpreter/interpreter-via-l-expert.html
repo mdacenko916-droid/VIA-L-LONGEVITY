@@ -1154,12 +1154,13 @@ footer{
    1) justify-content:center — при карточке выше экрана выталкивает её за края СИММЕТРИЧНО:
       верх уезжает под кнопку языка, низ наезжает на логотип VIA—L;
    2) overflow-y:auto у main — делает его отдельным скроллом, и футер садится посреди экрана.
-   Рабочий вариант — обычный поток: main растёт, но не сжимается, скролл общий у #scroll-area.
-   Карточка помещается → футер внизу; не помещается → страница просто прокручивается целиком. */
-body:has(#morning-gate) #scroll-area{display:flex;flex-direction:column;}
-body:has(#morning-gate) #scroll-area main{flex:1 0 auto;display:block;padding:0;}
-body:has(#morning-gate) #scroll-area footer,
-body:has(#morning-gate) #scroll-area .legal-links{flex:0 0 auto;}
+   3) flex-колонка с main{flex:1 0 auto} — контейнер всё равно держал свою высоту: карточка
+      обрезалась на середине, а футер с логотипом оказывался ВЫШЕ её обрезанного края.
+   Рабочий вариант — вообще без флекса: обычный документ, карточка и футер идут потоком друг за
+   другом, прокручивается страница целиком. Футер больше не претендует на низ экрана — он просто
+   следует за карточкой, а на коротких экранах уезжает вниз вместе с ней. */
+body:has(#morning-gate) #scroll-area{display:block;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+body:has(#morning-gate) #scroll-area main{display:block;padding:0;min-height:0;}
 body:has(#morning-gate) #morning-gate{margin:24px auto 26px;}
 
 /* ══ IMPORT PANEL ════════════════════════════════════════ */
