@@ -1150,17 +1150,17 @@ footer{
 /* Утренняя карточка — статичный экран: карточка по центру, футер (VIA—L · «Живи…» · Конфиденциальность ·
    Условия) прижат к низу и не уезжает при скролле. Ловим по наличию самого гейта (:has), чтобы не
    заводить класс и не снимать его в трёх местах удаления. Если карточка выше экрана — скролл вернётся сам. */
+/* Утренняя карточка. История граблей (2026-08-24):
+   1) justify-content:center — при карточке выше экрана выталкивает её за края СИММЕТРИЧНО:
+      верх уезжает под кнопку языка, низ наезжает на логотип VIA—L;
+   2) overflow-y:auto у main — делает его отдельным скроллом, и футер садится посреди экрана.
+   Рабочий вариант — обычный поток: main растёт, но не сжимается, скролл общий у #scroll-area.
+   Карточка помещается → футер внизу; не помещается → страница просто прокручивается целиком. */
 body:has(#morning-gate) #scroll-area{display:flex;flex-direction:column;}
-/* justify-content:center ЗАПРЕЩЁН: если карточка выше свободного места, он выталкивает её за края
-   симметрично — верх уезжает под кнопку языка, низ наезжает на логотип VIA—L (живой экран
-   2026-08-24, после подъёма шрифтов карточка стала выше). Центрируем автополями: они центрируют
-   так же, но при нехватке места прижимают к началу и не режут верх. */
-body:has(#morning-gate) #scroll-area main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;justify-content:flex-start;overflow-y:auto;}
+body:has(#morning-gate) #scroll-area main{flex:1 0 auto;display:block;padding:0;}
 body:has(#morning-gate) #scroll-area footer,
 body:has(#morning-gate) #scroll-area .legal-links{flex:0 0 auto;}
-body:has(#morning-gate) #morning-gate{margin:auto;}
-/* Даже по центру карточка не должна касаться шапки и футера */
-body:has(#morning-gate) #scroll-area main{padding:14px 0 18px;}
+body:has(#morning-gate) #morning-gate{margin:24px auto 26px;}
 
 /* ══ IMPORT PANEL ════════════════════════════════════════ */
 #importPanel{
