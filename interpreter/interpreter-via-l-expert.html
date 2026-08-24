@@ -5263,6 +5263,17 @@ function _vcCSS(){ if(document.getElementById('vcard-css'))return; var s=documen
   +".vcard-sec-body{padding:0 16px 14px;}"
   +".vc-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(226,185,90,.1);font-size:var(--fs-body);}"
   +".vc-row:last-child{border-bottom:none;}.vc-l{color:var(--t2);}.vc-v{color:var(--t1);font-weight:500;text-align:right;}"
+  /* Строка тренда в «Динамике разборов»: название · «обычно ~X» · спарклайн · значение со стрелкой.
+     После перехода на канон (название 17px) четыре части перестали помещаться в одну линию —
+     график сжимался до нескольких пикселей, а значение налезало на линию (живой экран 2026-08-24).
+     На телефоне раскладываем в две строки: сверху название и значение, снизу «обычно» и график. */
+  +"@media(max-width:599px){"
+  +".vc-trend{flex-wrap:wrap;row-gap:6px;}"
+  +".vc-trend>span:nth-child(1){order:1;flex:0 1 auto;}"
+  +".vc-trend>span:nth-child(4){order:2;margin-left:auto;}"
+  +".vc-trend>span:nth-child(2){order:3;flex:0 0 auto;}"
+  +".vc-trend>span:nth-child(3){order:4;flex:1 1 auto;justify-content:flex-end;}"
+  +"}"
   +".vc-chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 0;}"
   +".vc-chip{background:rgba(226,185,90,.12);border:1px solid rgba(226,185,90,.3);color:#EFDFB2;border-radius:50px;padding:4px 11px;font-size:var(--fs-cap);}"
   +".vc-sub{color:var(--t3);font-size:var(--fs-cap);text-transform:uppercase;letter-spacing:1px;margin:10px 0 2px;}"
@@ -5632,7 +5643,7 @@ function renderCard(){
       if(base!=null){var raw=last-base,thr=m.thr||Math.max(Math.abs(base)*0.05,0.3);
         if(m.neutral){ if(raw>thr)arrow='<span style="color:var(--t3);">↑</span>'; else if(raw<-thr)arrow='<span style="color:var(--t3);">↓</span>'; }
         else { var delta=raw*m.dir; if(delta>thr)arrow='<span style="color:var(--ok);">↑</span>'; else if(delta<-thr)arrow='<span style="color:var(--alert);">↓</span>'; } }
-      dynInner+='<div class="vc-row"><span class="vc-l" style="min-width:64px;">'+m.lbl+'</span><span style="color:var(--t3);font-size:var(--fs-cap);white-space:nowrap;">'+_usu(_fmt(base)+m.unit)+'</span><span style="flex:1;display:flex;justify-content:center;min-width:0;">'+_spark(vals,m.col)+'</span><span style="display:flex;align-items:center;gap:6px;"><span style="color:'+m.col+';font-weight:600;">'+_fmt(last)+'</span>'+arrow+'</span></div>';
+      dynInner+='<div class="vc-row vc-trend"><span class="vc-l" style="min-width:64px;">'+m.lbl+'</span><span style="color:var(--t3);font-size:var(--fs-cap);white-space:nowrap;">'+_usu(_fmt(base)+m.unit)+'</span><span style="flex:1;display:flex;justify-content:center;min-width:0;">'+_spark(vals,m.col)+'</span><span style="display:flex;align-items:center;gap:6px;"><span style="color:'+m.col+';font-weight:600;">'+_fmt(last)+'</span>'+arrow+'</span></div>';
     });
   }
   // Подсказка «идёт накопление»: готовность есть, но мини-графиков пока нет (мало точек)
