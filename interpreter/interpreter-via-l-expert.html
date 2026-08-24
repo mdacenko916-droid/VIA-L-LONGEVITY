@@ -4735,7 +4735,10 @@ function _cmpI18n(k){
 }
 var _cmpEditing=false;
 function _cmpToggle(k,el){
-  var c=_cmpGet()||{items:[],text:'',since:''};
+  // База — черновик, а не сохранённое: до первого «Сохранить» _cmpGet() пуст, и второй клик
+  // затирал первый выбор (выбиралось всегда одно). Текст забираем из поля — перерисовка его теряет.
+  var c=window._cmpDraft||_cmpGet()||{items:[],text:'',since:''};
+  var ta=document.getElementById('cmpText'); if(ta) c=Object.assign({},c,{text:ta.value});
   var a=Array.isArray(c.items)?c.items.slice():[];
   var i=a.indexOf(k);
   if(i>=0)a.splice(i,1); else if(a.length<2)a.push(k);   // не больше двух: жалоба должна быть главной, а не списком
@@ -6603,6 +6606,7 @@ function saveProfile(){
       // Цель и приоритеты (вводятся в карточке) + метки времени — перенос из хранилища
       goal:(P.goal||''),
       priorities:(Array.isArray(P.priorities)?P.priorities:[]),
+      complaint:(P.complaint||null),   // жалоба живёт в карточке: без переноса пересборка профиля стирала её, и опросник «С чем вы пришли» вылезал каждый проход
       created:(P.created||_dayKey()),
       updated:_dayKey()
     };
