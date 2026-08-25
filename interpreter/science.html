@@ -110,9 +110,11 @@ function applyLang(l){
   try{ localStorage.setItem('selectedLang', lang); }catch(e){}
 }
 function toggleLang(){ document.getElementById('langMenu').classList.toggle('open'); }
+// Порядок языков — как в основном меню приложения (английский первым), а не как ключи объекта.
+const LANG_ORDER = ['en','es','uk','ru','de','pt','fr','pl','it','he','ja','ko'];
 (function(){
   const m = document.getElementById('langMenu');
-  Object.keys(T).forEach(function(l){
+  LANG_ORDER.filter(function(l){ return T[l]; }).forEach(function(l){
     const d = document.createElement('div');
     d.className='lang-opt'; d.textContent = LANG_NAMES[l] || l;
     d.onclick = function(){ applyLang(l); m.classList.remove('open'); };
