@@ -27,18 +27,18 @@
   --ok:#2e7d54; --ok-dim:rgba(46,125,84,.10); --alert:#c0392b;
   --b1:rgba(0,0,0,.10); --b2:rgba(160,120,32,.42);
 }
-html{height:100%;height:-webkit-fill-available;scrollbar-width:none;-ms-overflow-style:none;background:#EFE8D8}
+html{height:100%;height:-webkit-fill-available;scrollbar-width:none;-ms-overflow-style:none;background:#EAE1C9}
 html::-webkit-scrollbar,body::-webkit-scrollbar{width:0;height:0;display:none}
 html[data-lang="ja"] body{font-family:'Noto Sans JP',sans-serif}
 html[data-lang="ko"] body{font-family:'Noto Sans KR',sans-serif}
 body{
   font-family:'DM Sans',sans-serif;font-weight:300;color:var(--t1);
-  background-color:#EFE8D8;min-height:100%;min-height:-webkit-fill-available;
+  background-color:#EAE1C9;min-height:100%;min-height:-webkit-fill-available;
   -webkit-font-smoothing:antialiased;position:relative;padding:calc(14px + env(safe-area-inset-top,0px)) 18px calc(16px + env(safe-area-inset-bottom,0px));   /* вырез/индикатор дома: без этого шапка с ✕ уезжала под статус-бар */
 }
 body::before{
   content:'';position:fixed;inset:0;z-index:-1;
-  background:#EFE8D8;   /* бренд-беж, сплошная заливка одним тоном */
+  background:#EAE1C9;   /* бренд-беж, сплошная заливка одним тоном */
 }
 .wrap{max-width:480px;margin:0 auto}
 .topline{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
@@ -405,7 +405,7 @@ function setLang(l){
   try{localStorage.setItem('vial_lang',l);}catch(e){}
   document.documentElement.setAttribute('data-lang',l);
   document.documentElement.lang=l;
-  var _ll=document.getElementById('langLabel');if(_ll)_ll.textContent=l.toUpperCase();
+  var _ll=document.getElementById('langLabel');if(_ll)_ll.textContent=(LANG_FLAGS[l]?LANG_FLAGS[l]+' ':'')+l.toUpperCase();   /* флаг + код, как в приложении */
   document.querySelectorAll('#langMenu .lang-option').forEach(o=>o.classList.toggle('active',o.dataset.lang===l));
   document.querySelectorAll('[data-t]').forEach(el=>{const k=el.getAttribute('data-t');if(T[l][k]!==undefined)el.textContent=T[l][k];});
   // блок «нет кода → витрина» виден всем языкам; фолбэк-ссылка основателя — только ru/uk и только если витрина пуста
