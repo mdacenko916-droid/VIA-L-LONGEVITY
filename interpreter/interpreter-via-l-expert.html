@@ -1625,6 +1625,10 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;}
 .max-desc{font-size:var(--fs-body);color:var(--t2);line-height:1.65;margin-bottom:18px;}
 .max-textarea{width:100%;background:rgba(0,0,0,.25);border:1px solid rgba(120,152,255,.2);border-radius:12px;color:var(--t1);font-family:var(--font-ui);font-size:var(--fs-body);padding:12px 14px;resize:none;outline:none;line-height:1.6;min-height:80px;transition:border-color .2s;}
 .max-textarea::placeholder{color:var(--t3);}
+/* Подсказки-примеры в полях ленты: текст примера длиннее самого ответа, при каноне 17px он не
+   помещался в поле и обрезался на полуслове («…новое ощу»). Подсказку — на ступень ниже канона,
+   сам ВВОД остаётся 17px (читаемость 45+ трогать нельзя). 2026-08-25. */
+.step textarea::placeholder{font-size:var(--fs-cap);line-height:1.35;}
 .max-textarea:focus{border-color:rgba(120,152,255,.5);}
 .max-btn{margin-top:12px;width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#5c7aff,#7898ff);color:#fff;font-family:var(--font-ui);font-size:var(--fs-body);font-weight:500;letter-spacing:.5px;cursor:pointer;transition:opacity .2s;}
 .max-btn:hover{opacity:.88;}
@@ -2468,7 +2472,7 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
   </div>
 
   <div class="import-actions">
-    <button class="btn-import-go" onclick="closeImport()" data-t="import_go">Перейти к анализу →</button>
+    <button class="btn-import-go" onclick="_importGo()" data-t="import_go">Перейти к анализу →</button>
   </div>
 
 </div><!-- /import-wrap -->
@@ -3301,12 +3305,12 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
       <div class="input-group">
         <label data-t="s_ns_l1">Новые симптомы</label>
         <div class="q-prompt" data-t="s_ns_q">Появилось ли что-то новое в самочувствии?</div>
-        <textarea id="new_symptoms" data-t-placeholder="s_ns_ph" placeholder="Например: головные боли, шум в ушах, изменения кожи, новое ощущение…" rows="2" maxlength="300" style="margin-top:2px;width:100%;background:rgba(226,185,90,.06);border:1px solid rgba(226,185,90,.3);border-radius:10px;color:var(--t1);padding:10px 12px;font-family:inherit;font-size:var(--fs-body);box-sizing:border-box;resize:vertical;"></textarea>
+        <textarea id="new_symptoms" data-t-placeholder="s_ns_ph" placeholder="Например: головные боли, шум в ушах, изменения кожи, новое ощущение…" rows="3" maxlength="300" style="margin-top:2px;width:100%;background:rgba(226,185,90,.06);border:1px solid rgba(226,185,90,.3);border-radius:10px;color:var(--t1);padding:10px 12px;font-family:inherit;font-size:var(--fs-body);box-sizing:border-box;resize:vertical;"></textarea>
         <button type="button" class="as-usual" onclick="_asUsual('new_symptoms',null)" data-t="as_nothing_new">Ничего нового</button>
       </div>
       <div class="input-group">
         <label data-t="ctx_l">События недели</label>
-        <textarea id="lifestyle_notes" data-t-placeholder="ctx_ph" placeholder="Например: поездка или перелёт, новый рацион или добавка, аврал на работе, несколько плохих ночей…" rows="2" maxlength="300" style="margin-top:6px;width:100%;background:rgba(226,185,90,.06);border:1px solid rgba(226,185,90,.3);border-radius:10px;color:var(--t1);padding:10px 12px;font-family:inherit;font-size:var(--fs-body);box-sizing:border-box;resize:vertical;"></textarea>
+        <textarea id="lifestyle_notes" data-t-placeholder="ctx_ph" placeholder="Например: поездка или перелёт, новый рацион или добавка, аврал на работе, несколько плохих ночей…" rows="3" maxlength="300" style="margin-top:6px;width:100%;background:rgba(226,185,90,.06);border:1px solid rgba(226,185,90,.3);border-radius:10px;color:var(--t1);padding:10px 12px;font-family:inherit;font-size:var(--fs-body);box-sizing:border-box;resize:vertical;"></textarea>
       </div>
     </div>
   </div>
@@ -9774,6 +9778,22 @@ const importedData={hrv:null,rhr:null,sleepHours:null,deepMin:null,tempDev:null,
 try{var _imp=JSON.parse(localStorage.getItem('viae_imported')||'null');if(_imp&&typeof _imp==='object'&&_imp.day===_dayKey())Object.keys(_imp).forEach(function(k){if(k!=='day'&&_imp[k]!=null)importedData[k]=_imp[k];});}catch(e){}
 function _saveImported(){try{localStorage.setItem('viae_imported',JSON.stringify(Object.assign({},importedData,{day:_dayKey()})));}catch(e){}}
 function openImport(mode){const p=document.getElementById('importPanel');try{if(mode===undefined)mode=sessionStorage.getItem('viae_impmode')||mode;else sessionStorage.setItem('viae_impmode',mode);}catch(e){}/* режим переживает перезагрузку при OAuth-редиректе: возврат без аргумента восстанавливает full=4 устройства / all, а не показывает все 11 */p.classList.remove('mode-all','mode-full');if(mode==='all')p.classList.add('mode-all');else if(mode==='full')p.classList.add('mode-full');const sa=document.getElementById('scroll-area');if(sa){sa.scrollTo({top:0,behavior:'instant'});sa.style.overflowY='hidden';}var _fh=document.getElementById('funnelHome');if(_fh)_fh.style.display='none';/* топбар оставляем прозрачным — тёмный фон перекрывал круг ✕ (панель ниже топбара по z) */document.body.classList.add('imp-open');/* снимает бежевый фейд шапки: под ним тёмная панель импорта */p.classList.add('open');}
+// «Перейти к анализу» из панели импорта → ЛЕНТА, а не то, что было под панелью.
+// Возврат из OAuth перезагружает страницу на экране выбора источника (main скрыт, flow-mode снят),
+// панель импорта открывается поверх него. Голый closeImport() просто убирал панель — и человек
+// оказывался снова на выборе источника («вернуло в начало»); со второго раза, когда в ленту он
+// попадал через _chooseSource, всё работало. Живой проход 2026-08-25.
+function _importGo(){
+  try{ closeImport(); }catch(e){}
+  // Ярлык источника мог не проставиться (в панель зашли не через выбор источника) — ставим по факту
+  // того, что реально импортировано: Apple Health → apple, всё остальное с прибора → device.
+  try{
+    if(typeof _srcGet==='function' && !_srcGet() && typeof importedData!=='undefined' && importedData && importedData.source){
+      _srcSet(String(importedData.source).indexOf('apple')===0 ? 'apple' : 'device');
+    }
+  }catch(e){}
+  if(typeof _openFunnel==='function') _openFunnel();
+}
 // ✕ панели импорта → на главную (экран выбора источника), а не в блоки прохода.
 function _importHome(){ try{closeImport(true);}catch(e){} if(typeof _showSourceChoice==='function')_showSourceChoice(); }
 function closeImport(skip){document.getElementById('importPanel').classList.remove('open');document.body.classList.remove('imp-open');var _fhc=document.getElementById('funnelHome');if(_fhc)_fhc.style.display=(typeof _profileDone==='function'&&!_profileDone())?'':'none';const sa=document.getElementById('scroll-area');if(sa)sa.style.overflowY='auto';const tb=document.getElementById('topbar');if(tb)tb.style.background='';if(!skip&&importedData.source)applyImportedToSliders();if(typeof updateDeviceBanners==='function')updateDeviceBanners();if(typeof renderGadgetPanel==='function')renderGadgetPanel();if(typeof _reflowSteps==='function')_reflowSteps();}
