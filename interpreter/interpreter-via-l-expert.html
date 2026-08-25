@@ -9086,6 +9086,21 @@ function _docSignals(data){
   if(tp!=null && Math.abs(tp)>=0.5) out.push(L({ru:'Температура ночью',uk:'Температура вночі',en:'Night temperature',es:'Temperatura nocturna',de:'Nachttemperatur',pt:'Temperatura noturna',fr:'Température nocturne',pl:'Temperatura nocna',it:'Temperatura notturna',he:'טמפרטורה לילית',ja:'夜間体温',ko:'야간 체온'})+' '+(tp>0?'+':'')+tp+'°C ('+ref+' ±0.5°C)');
   var rr=(data.resp_rate!=null&&!isNaN(data.resp_rate))?+data.resp_rate:null;
   if(rr!=null && rr>20) out.push(L({ru:'Частота дыхания',uk:'Частота дихання',en:'Respiratory rate',es:'Frecuencia respiratoria',de:'Atemfrequenz',pt:'Frequência respiratória',fr:'Fréquence respiratoire',pl:'Częstość oddechów',it:'Frequenza respiratoria',he:'קצב נשימה',ja:'呼吸数',ko:'호흡수'})+' '+rr+'/'+L({ru:'мин',uk:'хв',en:'min',es:'min',de:'Min',pt:'min',fr:'min',pl:'min',it:'min',he:'דק',ja:'分',ko:'분'})+' ('+ref+' ≤ 20)');
+  // ДАВЛЕНИЕ: самый частый вход в триаж и самая заметная дыра — до 2026-08-25 АД сюда не попадало
+  // вовсе, и замер 165/66 не порождал ни одного сигнала. Пороги домашнего АД — из KB воркера
+  // (docs/BLOOD-PRESSURE-EVIDENCE.md §5): ориентир < 140/90; ≥180/110 — отдельная строка.
+  var _bs=(data.bp_sys!=null&&!isNaN(data.bp_sys))?+data.bp_sys:null;
+  var _bd=(data.bp_dia!=null&&!isNaN(data.bp_dia))?+data.bp_dia:null;
+  if(_bs!=null&&_bd!=null&&_bs>=70&&_bs<=260){
+    var _bpL=L({ru:'Давление',uk:'Тиск',en:'Blood pressure',es:'Presión',de:'Blutdruck',pt:'Pressão',fr:'Tension',pl:'Ciśnienie',it:'Pressione',he:'לחץ דם',ja:'血圧',ko:'혈압'});
+    if(_bs>=180||_bd>=110){
+      // Безопасность важнее велнес-рамки: при таких цифрах человеку нужно перемерить в покое и,
+      // если держится, обратиться к врачу. Это не диагноз и не назначение.
+      out.push(_bpL+' '+_bs+'/'+_bd+' — '+L({ru:'перемерьте в покое через 5 минут; если держится — обратитесь к врачу',uk:'переміряйте у спокої через 5 хвилин; якщо тримається — зверніться до лікаря',en:'re-measure at rest after 5 minutes; if it holds, see a doctor',es:'vuelve a medir en reposo tras 5 minutos; si se mantiene, acude al médico',de:'nach 5 Minuten Ruhe erneut messen; bleibt der Wert, zur Ärztin oder zum Arzt',pt:'meça de novo em repouso após 5 minutos; se mantiver, procure um médico',fr:'remesurez au repos après 5 minutes ; si cela persiste, consultez un médecin',pl:'zmierz ponownie w spoczynku po 5 minutach; jeśli się utrzymuje — zgłoś się do lekarza',it:'rimisura a riposo dopo 5 minuti; se resta, rivolgiti a un medico',he:'מדדו שוב במנוחה אחרי 5 דקות; אם נשמר — פנו לרופא',ja:'5分安静にして測り直してください。続くようなら医師に相談を',ko:'5분 안정 후 다시 재보세요. 계속되면 의사와 상의하세요'}));
+    } else if(_bs>=140||_bd>=90){
+      out.push(_bpL+' '+_bs+'/'+_bd+' ('+ref+' < 140/90)');
+    }
+  }
   return out;
 }
 // Единая отрисовка блока «На что обратить внимание». Зовётся и живым разбором, и снимком дня
@@ -9094,6 +9109,11 @@ function _docSignals(data){
 function _renderDoctorAlert(data, docFlag, reasons){
   var _da0=document.getElementById('doctorAlert'); if(_da0)_da0.classList.remove('visible');
   var _od0=document.getElementById('docDetails'); if(_od0)_od0.remove();
+  // Флаг движка поднимают ОЩУЩЕНИЯ (симптомы из опросника), а измерения вне ориентира жили только
+  // внутри раскрывашки — и если симптомов не было, блок не показывался вовсе: SpO₂ 94% и давление
+  // 165/66 в живом разборе 2026-08-25 не дали ни строки. Собственный замер вне ориентира — сам по
+  // себе достаточный повод показать блок.
+  if(!docFlag){ try{ if(typeof _docSignals==='function' && _docSignals(data).length) docFlag=true; }catch(e){} }
   if(!docFlag)return;
     const da=document.getElementById('doctorAlert');
     da.classList.add('visible');
