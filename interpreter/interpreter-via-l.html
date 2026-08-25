@@ -1976,11 +1976,11 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
 .lang-toggle:hover{border-color:rgba(226,185,90,.8);color:#F0D590;}
 /* Дашборд «Сегодня» — шапка «Анализ VIA-L» + дата + лента недели лежат на беже (не в карточке) → тёмный текст.
    Класс .rd-head-t есть и внутри тёмных карточек — потому скоуп только #tb-analysis/#rd-week. */
-/* Шапка «Анализ VIA-L» лежит в прозрачном топбаре, а под ней прокручивается разбор — когда снизу
-   подходила подпись бренда («VIA — L · Живи. Не просто существуй.»), два текста налезали друг на
-   друга. Полосу-фейд на всю ширину владелец отверг (съедала верх экрана), поэтому подложку несёт
-   сам блок шапки: та же бежевая «таблетка», что и у кнопки языка рядом. 2026-08-25. */
-#tb-analysis{background:rgba(234,225,201,.94);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-radius:16px;padding:5px 12px !important;box-shadow:0 2px 10px rgba(0,0,0,.10);}
+/* Подпись бренда со слоганом — это футер ГЛАВНОЙ страницы. На разборе и в карточке сверху висит
+   шапка «Анализ VIA-L + дата», и футер просвечивал из-под панели прямо под ней: два текста
+   смешивались. Подложку под шапку (плашка) владелец отверг — она читалась как кнопка. Прячем сам
+   футер там, где он не нужен: на этих экранах он не несёт ни смысла, ни навигации. 2026-08-25. */
+body.view-result footer, body.card-open footer{display:none;}
 #tb-analysis .rd-head-t{color:#2E2010;}
 #tb-analysis .rd-head-date{color:#5A4A35;}
 #tb-analysis .hl-vial{color:#8B6030;}   /* VIA-L золотом на беже */
@@ -4532,12 +4532,14 @@ function navTo(tab){
   var __dp=document.getElementById('dayplanPanel');if(__dp)__dp.style.display='none';   // модал «Памятка дня» — тоже (для tab==='today' откроется заново ниже)
   var __nv=document.querySelector('.bottom-nav');if(__nv)__nv.classList.remove('nav-hidden');
   var __mn=document.querySelector('main');if(__mn)__mn.style.display='';
+  var __tba=document.getElementById('tb-analysis'); if(__tba)__tba.style.display='none';   // «Анализ VIA-L + дата» — заголовок ЭКРАНА РАЗБОРА; на «Профиле»/«Сегодня» он висел от прошлого goTo('result')
   document.body.classList.remove('view-result');  // покидаем разбор (today→goTo('result') вернёт сам, если день пройден)
   var __tb=document.getElementById('topbar'); if(__tb)__tb.classList.remove('tb-hidden');   // шапка не должна остаться уехавшей на другом табе
   document.querySelectorAll('.bottom-nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+tab)?.classList.add('active');
   const cp=document.getElementById('cardPanel');
   if(cp){cp.style.display=(tab==='card')?'block':'none';
+    document.body.classList.toggle('card-open', tab==='card');   // прячет футер главной: он просвечивал из-под панели карточки
     if(tab==='card'){renderCard();const _m=document.querySelector('main');if(_m)_m.style.display='none';const _n=document.querySelector('.bottom-nav');if(_n)_n.classList.add('nav-hidden');cp.scrollTop=0;}}
   if(tab==='today'){
     // «Сегодня» = домашний дашборд дня. Прошёл сегодня → весь дашборд из снимка; не прошёл → на проход.
