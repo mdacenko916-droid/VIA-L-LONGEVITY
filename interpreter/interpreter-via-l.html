@@ -2001,6 +2001,18 @@ body.card-open #cardPanel, body.approach-open #approachPanel{
 /* Бежевый фейд под статус-баром на графитовом экране был бы чужой полосой. */
 body.card-open #topbar::before, body.approach-open #topbar::before{display:none!important;}
 body.card-open #panelClose, body.approach-open #panelClose{display:none!important;}
+/* Название приложения в шапке. На беже — тёмное золото (как заголовок разбора), на графитовых
+   экранах «Профиль»/«Наш подход» — светлое. Прячется там, где шапку занимает заголовок разбора. */
+/* Стартовое мелькание: разметка (hero + лента) видна СРАЗУ, а нужный экран строит _bootRoute уже
+   после DOMContentLoaded — до этого секунду мелькал маркетинговый блок и чужие шаги. Прячем их до
+   готовности; класс booted ставится по DOMContentLoaded + страховочный таймер, чтобы при любой
+   ошибке экран не остался пустым. Топбар и нижняя навигация не прячутся — они одинаковы везде.
+   2026-08-25. */
+body:not(.booted) .hero, body:not(.booted) main{visibility:hidden;}
+#tb-brand{font-family:'Playfair Display',serif;font-size:var(--fs-title);letter-spacing:2.5px;color:#8B6030;white-space:nowrap;flex:0 0 auto;line-height:1.1;pointer-events:none;}
+#tb-brand .tb-brand-sub{font-size:var(--fs-cap);letter-spacing:2px;opacity:.85;}
+body.card-open #tb-brand, body.approach-open #tb-brand{color:#EEC77A;}
+body.view-result #tb-brand{display:none;}
 #tb-analysis .rd-head-t{color:#2E2010;}
 #tb-analysis .rd-head-date{color:#5A4A35;}
 #tb-analysis .hl-vial{color:#8B6030;}   /* VIA-L золотом на беже */
@@ -2036,6 +2048,9 @@ body.card-open #panelClose, body.approach-open #panelClose{display:none!importan
 <!-- TOPBAR -->
 <div id="topbar">
 <div class="lang-bar">
+  <!-- Название приложения слева в шапке: на утреннем экране верх был пустой (квадратный лого убран
+       2026-07-22, а бренд-подпись живёт внизу страницы). На разборе его место занимает «Анализ VIA-L». -->
+  <div id="tb-brand">VIA·L</div>
   <!-- Квадратный лого топбара (Logo_IP.png) удалён по решению владельца 2026-07-22 — дублировал бренд, мешал на всех экранах. -->
   <!-- Шапка разбора (как у Oura): заголовок + дата, слева от переключателя языка. Виден только на экране результата. -->
   <div id="tb-analysis" style="display:none;flex:1 1 auto;min-width:0;text-align:center;padding:0 8px;">
@@ -10954,3 +10969,13 @@ function appleHKImport(btn){
 </script>
 <script src="app-mode.js"></script>
 <script src="phosphor/vio-phosphor.js"></script>
+
+<script>
+// Снятие стартовой заслонки (см. body:not(.booted) в CSS): интерфейс показываем, когда разметка
+// разобрана и boot успел построить нужный экран. Таймер — страховка на случай ошибки в boot.
+(function(){
+  var show=function(){ try{ document.body.classList.add('booted'); }catch(e){} };
+  if(document.readyState!=='loading') setTimeout(show,240); else document.addEventListener('DOMContentLoaded',function(){ setTimeout(show,240); });
+  setTimeout(show,1500);
+})();
+</script>
