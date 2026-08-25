@@ -302,8 +302,10 @@ body::before{
    ложились на строку интро. Плашки по-прежнему нет: только мягкий уход в цвет фона бренда,
    на нём контент растворяется, не обрезаясь. z-index:-1 — под лого и переключатель, но внутри
    стекового контекста топбара, т.е. поверх страницы. При открытой панели импорта фейд снят:
-   там своя тёмная поверхность, бежевая полоса на ней читалась бы грязью. 2026-08-25. */
-#topbar::before{content:'';position:absolute;left:0;right:0;top:0;height:calc(env(safe-area-inset-top,0px) + 64px);background:linear-gradient(to bottom,#EAE1C9 0%,rgba(234,225,201,.92) 48%,rgba(234,225,201,0) 100%);pointer-events:none;z-index:-1;}
+   там своя тёмная поверхность, бежевая полоса на ней читалась бы грязью.
+   Высота — РОВНО статус-бар (safe-area) плотным цветом + 12px растушёвки, не больше: широкая
+   полоса до кнопки языка съедала верх экрана и читалась как пустой отступ. 2026-08-25. */
+#topbar::before{content:'';position:absolute;left:0;right:0;top:0;height:calc(env(safe-area-inset-top,0px) + 12px);background:linear-gradient(to bottom,#EAE1C9 0%,#EAE1C9 calc(env(safe-area-inset-top,0px) - 2px),rgba(234,225,201,0) 100%);pointer-events:none;z-index:-1;}
 body.imp-open #topbar::before{display:none;}
 #topbar .lang-dropdown{pointer-events:auto;}   /* кликабелен только переключатель языка */
 #topbar.tb-hidden{transform:translateY(-100%);opacity:0;pointer-events:none;}
