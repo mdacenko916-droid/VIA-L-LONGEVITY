@@ -8079,6 +8079,7 @@ function goTo(n){
   // ленты на отдельный шаг/разбор должен её прятать: renderGadgetPanel ставит display:block, и без
   // этого при заходе на «Сегодня» (снимок дня) она всплывала над разбором. 2026-07-21.
   var _gpw=document.getElementById('gadget-panel-wrap'); if(_gpw)_gpw.style.display='none';
+  var _ib=document.getElementById('import-banner'); if(_ib)_ib.remove();   // баннер импорта — принадлежность ЛЕНТЫ; на разборе/шаге он не нужен (2026-08-25)
   document.querySelectorAll('.step').forEach(s=>s.classList.remove('active','flow-show'));
   var _mg2=document.getElementById('morning-gate'); if(_mg2)_mg2.remove(); document.body.classList.remove('morning-mode');   // см. _showFlow: живой гейт ломает раскладку (:has) и перекрывает шаг футером
   var _dg2=document.getElementById('daily-done-gate'); if(_dg2)_dg2.remove();
@@ -9910,7 +9911,14 @@ function showImportBanner(){
   // Баннер живёт в ленте опросника. На утренней карточке / гейте «возвращайтесь завтра» ленты нет —
   // там он вставал третьим блоком в main и ломал экран (см. flex-direction у body.morning-mode).
   // Экран рисует тот, кто его открыл; тихий рефреш трекера в это не вмешивается. 2026-08-25.
-  if(document.getElementById('morning-gate')||document.getElementById('daily-done-gate'))return;
+  // На РАЗБОРЕ он бессмыслен вдвойне: данные уже применены и разбор на них построен, а «скорректируйте
+  // вручную» здесь некуда — ленты нет. Плюс тихий рефреш приходит через секунду после открытия экрана,
+  // и баннер всплывал под самой шапкой, слипаясь с ней и сдвигая вёрстку. Показатели человек видит в
+  // плитках «Данные с трекера» во время прохода. Владелец, 2026-08-25.
+  if(document.getElementById('morning-gate')||document.getElementById('daily-done-gate')
+     ||document.body.classList.contains('view-result')
+     ||document.body.classList.contains('card-open')
+     ||document.body.classList.contains('approach-open'))return;
   const existing=document.getElementById('import-banner');if(existing)existing.remove();
   const icons={oura:'💍',apple:'🍎','apple-manual':'🍎',garmin:'⌚',polar:'🔴',fitbit:'📡',samsung:'🔵',whoop:'⚡',xiaomi:'🟠',manual:'✏️'};
   const b=document.createElement('div');b.id='import-banner';
