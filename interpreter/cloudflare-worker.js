@@ -1246,6 +1246,8 @@ export default {
     // GET routes
     if (request.method === 'GET') {
       if (path === '/intake-validate') return handleIntakeValidate(request, env, corsHeaders);
+      // Страховочный кэш разбора: клиент забирает свой же текст, если ответ не доехал (72 ч, без модели).
+      if (path === '/analysis-cache') return handleAnalysisCache(request, env, corsHeaders);
       // Имя/профиль специалиста по реф-коду — анкета `book/anketa?ref=` де-брендит шапку (§10).
       if (path === '/specialist-by-ref') return handleSpecialistByRef(request, env, corsHeaders);
       // Витрина «Мой наставник»: публичный список наставников (public=1) для выбора + записи на зум.
@@ -2261,7 +2263,7 @@ function _needsMedDisclaimer(data) {
 }
 
 async function handleAnalyze(request, env, corsHeaders, ctx) {
-  const { data, lang, code, tier, structured } = await request.json();
+  const { data, lang, code, tier, structured, cid, day } = await request.json();
   const langMap = {
     ru: 'русском', uk: 'украинском', en: 'English', es: 'español',
     de: 'Deutsch', pt: 'português', fr: 'français', pl: 'polski',
@@ -2475,7 +2477,34 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
     ctx.waitUntil(_bumpGrantUsed(env, code).catch(() => {}));   // день доступа израсходован
   }
 
+  // Страховка от потери разбора: кладём готовый текст в KV на 72 часа. Ответ большой (минута
+  // генерации), и если приложение свернули или сеть моргнула — до телефона он не доезжал, а деньги
+  // уже списаны: клиент видел «Разбор за этот день не сохранён» (живой случай 2026-08-25, второй
+  // телефон). Теперь приложение забирает его оттуда бесплатно. Ключ анонимный: cid — случайная
+  // строка из localStorage устройства, ни имени, ни кода доступа в ключе нет.
+  if (cid && day && env.ANALYSIS_CACHE && ctx) {
+    ctx.waitUntil(env.ANALYSIS_CACHE.put('an:' + String(cid).slice(0, 64) + ':' + String(day).slice(0, 10),
+      text, { expirationTtl: 72 * 3600 }).catch(() => {}));
+  }
+
   return new Response(JSON.stringify({ analysis: text }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// GET /analysis-cache?cid=…&day=YYYY-MM-DD — забрать разбор, который не доехал.
+// Бесплатно и без модели: отдаём то, что уже сгенерировано и лежит в KV (72 ч).
+// ─────────────────────────────────────────────────────────────
+async function handleAnalysisCache(request, env, corsHeaders) {
+  const u = new URL(request.url);
+  const cid = (u.searchParams.get('cid') || '').slice(0, 64);
+  const day = (u.searchParams.get('day') || '').slice(0, 10);
+  if (!cid || !day || !env.ANALYSIS_CACHE) {
+    return new Response(JSON.stringify({ ok: false }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+  const text = await env.ANALYSIS_CACHE.get('an:' + cid + ':' + day);
+  return new Response(JSON.stringify(text ? { ok: true, analysis: text } : { ok: false }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 }

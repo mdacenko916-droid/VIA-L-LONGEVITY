@@ -8813,7 +8813,29 @@ function _renderDayFromSnap(snap, todayFlag){
   var card=document.getElementById('aiCard'), r=document.getElementById('aiResult'), load=document.getElementById('aiLoading'), err=document.getElementById('aiError'), disc=document.getElementById('aiDisc');
   if(card)card.style.display='block'; if(err)err.style.display='none';
   if(an && r){ r.innerHTML=(typeof _renderAnalysis==='function')?_renderAnalysis(an):_esc(an); r.style.display='block'; if(load)load.style.display='none'; if(disc)disc.style.display='block'; try{ _renderHumanCta(); }catch(e){} }
-  else { if(r){ r.style.display='block'; r.innerHTML='<div style="color:var(--t3);font-size:var(--fs-body);">'+_esc(L({ru:'Разбор за этот день не сохранён.',uk:'Розбір за цей день не збережено.',en:'No analysis saved for this day.',es:'No hay análisis guardado para este día.',de:'Für diesen Tag ist keine Analyse gespeichert.',pt:'Sem análise salva para este dia.',fr:'Aucune analyse enregistrée pour ce jour.',pl:'Brak zapisanej analizy dla tego dnia.',it:'Nessuna analisi salvata per questo giorno.',he:'לא נשמר ניתוח ליום זה.',ja:'この日の分析は保存されていません。',ko:'이 날의 분석이 저장되지 않았습니다.'}))+'</div>'; } if(load)load.style.display='none'; }
+  else {
+    // Локального разбора нет. Это не всегда «его не было»: ответ большой, и если приложение
+    // свернули или моргнула сеть — текст терялся, хотя вызов был оплачен. Сначала молча тянем
+    // готовый разбор с сервера (72 ч, бесплатно, без модели), и только если и там пусто —
+    // показываем сообщение с кнопкой повтора. 2026-08-25.
+    if(r){
+      r.style.display='block';
+      r.innerHTML='<div style="color:var(--t3);font-size:var(--fs-body);">'+_esc(L({ru:'Ищем ваш разбор…',uk:'Шукаємо ваш розбір…',en:'Looking for your analysis…',es:'Buscando tu análisis…',de:'Wir suchen deine Auswertung…',pt:'Procurando sua análise…',fr:'Recherche de votre bilan…',pl:'Szukamy Twojej analizy…',it:'Cerchiamo la tua analisi…',he:'מחפשים את הניתוח שלכם…',ja:'分析を探しています…',ko:'분석을 찾는 중…'}))+'</div>';
+      (function(_day,_r,_disc,_isToday){
+        (typeof _aiFromServer==='function'?_aiFromServer(_day):Promise.resolve('')).then(function(txt){
+          if(txt){
+            _r.innerHTML=(typeof _renderAnalysis==='function')?_renderAnalysis(txt):_esc(txt);
+            if(_disc)_disc.style.display='block';
+            return;
+          }
+          var _msg=_esc(L({ru:'Разбор за этот день не сохранён.',uk:'Розбір за цей день не збережено.',en:'No analysis saved for this day.',es:'No hay análisis guardado para este día.',de:'Für diesen Tag ist keine Analyse gespeichert.',pt:'Sem análise salva para este dia.',fr:'Aucune analyse enregistrée pour ce jour.',pl:'Brak zapisanej analizy dla tego dnia.',it:'Nessuna analisi salvata per questo giorno.',he:'לא נשמר ניתוח ליום זה.',ja:'この日の分析は保存されていません。',ko:'이 날의 분석이 저장되지 않았습니다.'}));
+          // Повторить можно только СЕГОДНЯШНИЙ день: для прошлых дней живых полей уже нет.
+          var _btn=_isToday?('<button type="button" onclick="_aiRetryToday(this)" style="margin-top:12px;background:var(--gold);color:#10141C;border:none;border-radius:10px;padding:10px 18px;font-size:var(--fs-body);font-weight:600;cursor:pointer;font-family:inherit;">'+_esc(L({ru:'Получить разбор заново',uk:'Отримати розбір заново',en:'Get the analysis again',es:'Obtener el análisis de nuevo',de:'Auswertung erneut anfordern',pt:'Obter a análise novamente',fr:'Relancer le bilan',pl:'Pobierz analizę ponownie',it:'Rigenera l’analisi',he:'לקבל את הניתוח מחדש',ja:'分析をもう一度取得',ko:'분석 다시 받기'}))+'</button>'):'';
+          _r.innerHTML='<div style="color:var(--t3);font-size:var(--fs-body);">'+_msg+'</div>'+_btn;
+        });
+      })(snap.day, r, disc, snap.day===_dayKey());
+    }
+    if(load)load.style.display='none'; }
   // баннер сверху
   var b=document.getElementById('rd-daybanner');
   if(b){ b.style.display='block';
@@ -10466,7 +10488,7 @@ async function fetchAIAnalysis(data, lang) {
       // code → воркер кладёт дневной разбор и срез метрик в карточку кабинета
       // (cabinetIngestIpAnalysis). Без него специалист видел только недельные отчёты
       // и не имел дневной динамики — ради которой ведение и существует.
-      body: JSON.stringify({ data, lang, code: _syncCode(), tier: 'elite', structured: true }),
+      body: JSON.stringify({ data, lang, code: _syncCode(), tier: 'elite', structured: true, cid: _cid(), day: _dayKey() }),   // cid+day — чтобы разбор можно было забрать с сервера, если ответ не доедет
     });
     const json = await res.json();
     if (json.analysis) {
@@ -11078,6 +11100,40 @@ function _aiDailyGet(){ try{return JSON.parse(localStorage.getItem('viae_ai_dail
 // Миграция 2026-07-14: разборы, закэшированные ДО включения структурного формата ([[S]]-секции как в VIO),
 // плоские — вычищаем сегодняшний плоский, чтобы следующий разбор гарантированно пришёл в новом дизайне.
 (function(){try{var a=_aiDailyGet();var b=a.filter(function(e){return !(e.day===_dayKey()&&e.analysis&&String(e.analysis).indexOf('[[S]]')<0);});if(b.length!==a.length)localStorage.setItem('viae_ai_daily',JSON.stringify(b));}catch(e){}})();
+// Анонимный идентификатор устройства — ТОЛЬКО чтобы забрать с сервера свой же разбор, если он
+// не доехал (ответ большой, минута генерации: свернули приложение или моргнула сеть — текст
+// потерян, а вызов оплачен; живой случай 2026-08-25). Случайная строка, никак не связана с
+// человеком: ни имени, ни почты, ни кода доступа. Живёт в localStorage этого устройства.
+function _cid(){
+  try{ var v=localStorage.getItem('vialp_cid');
+    if(!v){ v=Date.now().toString(36)+Math.random().toString(36).slice(2,10); localStorage.setItem('vialp_cid',v); }
+    return v;
+  }catch(e){ return ''; }
+}
+// Разбор не доехал → пробуем забрать готовый с сервера (бесплатно, без модели, живёт 72 ч).
+async function _aiFromServer(day){
+  try{
+    var cid=_cid(); if(!cid) return '';
+    var r=await fetch(AI_WORKER+'/analysis-cache?cid='+encodeURIComponent(cid)+'&day='+encodeURIComponent(day));
+    var j=await r.json();
+    if(j&&j.ok&&j.analysis){ try{ if(typeof _aiDailySaveDay==='function')_aiDailySaveDay(day,j.analysis); }catch(e){} return j.analysis; }
+  }catch(e){}
+  return '';
+}
+// Сохранение в кэш дня ПО ЯВНОМУ ДНЮ (у _aiDailySave день всегда сегодняшний).
+// Кнопка «Получить разбор заново» — когда разбор не доехал и на сервере его тоже нет.
+// Живых полей формы для прошлых дней нет, поэтому кнопка живёт только на сегодняшнем дне и
+// строит запрос из СНИМКА дня (те же данные, по которым разбор уже считался). 2026-08-25.
+function _aiRetryToday(btn){
+  try{ if(btn){ btn.disabled=true; btn.style.opacity='.6'; } }catch(e){}
+  var snap=null; try{ snap=_daySnapGet().filter(function(x){return x.day===_dayKey();})[0]||null; }catch(e){}
+  var d=(snap&&snap.data)?snap.data:((window._lastResult&&_lastResult.data)?_lastResult.data:null);
+  if(!d){ try{ if(btn){ btn.disabled=false; btn.style.opacity=''; } }catch(e){} return; }
+  if(typeof fetchAIAnalysis==='function') fetchAIAnalysis(d, lang);
+}
+function _aiDailySaveDay(day,analysis){
+  try{var arr=_aiDailyGet();arr=arr.filter(function(e){return e.day!==day;});arr.unshift({day:day,analysis:analysis,ts:Date.now()});while(arr.length>730)arr.pop();localStorage.setItem('vialp_ai_daily',JSON.stringify(arr));}catch(e){}
+}
 function _aiDailySave(analysis){ try{var arr=_aiDailyGet(),day=_dayKey();arr=arr.filter(function(e){return e.day!==day;});arr.unshift({day:day,analysis:analysis,ts:Date.now()});while(arr.length>730)arr.pop();localStorage.setItem('viae_ai_daily',JSON.stringify(arr));}catch(e){} }   /* хранение на годы: ~2 г дневных разборов (паритет с VIO vial_ai_daily); старше покрывает бэкап */
 
 function closeCircModal(){
