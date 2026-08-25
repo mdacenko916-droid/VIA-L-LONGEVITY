@@ -1960,7 +1960,27 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
    шапка «Анализ VIA-L + дата», и футер просвечивал из-под панели прямо под ней: два текста
    смешивались. Подложку под шапку (плашка) владелец отверг — она читалась как кнопка. Прячем сам
    футер там, где он не нужен: на этих экранах он не несёт ни смысла, ни навигации. 2026-08-25. */
-body.view-result footer, body.card-open footer{display:none;}
+body.view-result footer, body.card-open footer, body.approach-open footer,
+body.view-result .legal-links, body.card-open .legal-links, body.approach-open .legal-links{display:none;}
+/* Панели «Мой профиль» и «Наш подход» — полноценные ЭКРАНЫ приложения, а не модалки: нижняя
+   навигация остаётся на месте, ✕ не нужен (переключаемся вкладками). Высоту панели ужимаем на
+   высоту навбара, иначе её низ уезжает под него. 2026-08-25. */
+/* Раздел на ВЕСЬ экран, а не «страница внутри страницы»: раньше панель висела карточкой с
+   бежевыми полями сверху и снизу, и контент резался её краем на полуслове. Скролл внутри панели
+   остаётся, но её край больше не виден: фон графитовый от статус-бара до навигации. Вариант с
+   бежевым фоном и карточками поверх него отклонён — тексты панели белые, на беже их пришлось бы
+   перекрашивать поштучно. Владелец, 2026-08-25. */
+body.card-open #cardPanel, body.approach-open #approachPanel{
+  top:0!important; left:0!important; right:0!important;
+  bottom:calc(64px + env(safe-area-inset-bottom,0px)/3)!important;
+  transform:none!important; width:100%!important; max-width:none!important;
+  max-height:none!important; border-radius:0!important; border:none!important; box-shadow:none!important;
+  background:linear-gradient(180deg,#242c39 0%,#1b2029 60%,#181e28 100%)!important;
+  padding:calc(env(safe-area-inset-top,0px) + 64px) 16px 24px!important;
+}
+/* Бежевый фейд под статус-баром на графитовом экране был бы чужой полосой. */
+body.card-open #topbar::before, body.approach-open #topbar::before{display:none!important;}
+body.card-open #panelClose, body.approach-open #panelClose{display:none!important;}
 #tb-analysis .rd-head-t{color:#2E2010;}
 #tb-analysis .rd-head-date{color:#5A4A35;}
 #tb-analysis .hl-vial{color:#8B6030;}   /* VIA-L золотом на беже */
