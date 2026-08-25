@@ -1644,10 +1644,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;}
 .max-sent{display:none;text-align:center;padding:16px;font-size:var(--fs-body);color:#7898ff;}
 /* Панель «Данные с трекера» — read-only сводка подтянутых показателей */
 .gadget-panel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:0;}
-/* Телефон: колонок ОСТАЁТСЯ две (одна растягивала панель на весь экран — на первом экране ленты
-   кроме неё ничего не помещалось). Вместо смены сетки ужимаем саму плитку: имя на ступень ниже
-   канона (мобильный --fs-body=17px в 176px не влезал), значение и иконка компактнее. 2026-08-25. */
-@media(max-width:599px){.gadget-panel{gap:8px;}.gp-tile{gap:7px;padding:8px 9px;}.gp-ic{width:26px;height:26px;flex:0 0 26px;}.gp-name{font-size:var(--fs-cap);line-height:1.15;}.gp-abbr{font-size:11px;letter-spacing:.8px;margin-top:1px;}.gp-num{font-size:16px;margin-left:4px;}.gp-u{font-size:11px;}}
 .gp-tile{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:13px;background:rgba(0,0,0,.25);border:1px solid rgba(196,150,60,.28);cursor:pointer;text-align:left;transition:border-color .15s,background .15s;}
 .gp-tile:hover{border-color:rgba(255,255,255,.28);}
 .gp-tile.got{border-color:rgba(34,197,94,.32);background:rgba(34,197,94,.07);}
@@ -1659,6 +1655,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;}
 .gp-num{font-size:var(--fs-title);font-weight:500;color:var(--t1);line-height:1;margin-left:6px;white-space:nowrap;flex-shrink:0;}
 .gp-num.miss{color:#FBBF24;}
 .gp-u{font-size:var(--fs-cap);color:var(--t3);}
+/* Телефон: колонок ОСТАЁТСЯ две (одна растягивала панель на весь экран — на первом экране ленты
+   кроме неё ничего не помещалось). Вместо смены сетки ужимаем саму плитку: имя на ступень ниже
+   канона (мобильный --fs-body=17px в 176px не влезал), значение и иконка компактнее.
+   ⚠️ Блок обязан стоять ПОСЛЕ базовых .gp-* : медиа-запрос не добавляет специфичности, и пока он
+   стоял выше, базовые размеры перебивали мобильные — плитка оставалась крупной, тексту в двух
+   колонках доставалось ~30px и break-word рвал слова по буквам («П у л ь с»). 2026-08-25. */
+@media(max-width:599px){.gadget-panel{gap:8px;}.gp-tile{gap:7px;padding:8px 9px;}.gp-ic{width:26px;height:26px;flex:0 0 26px;}.gp-name{font-size:var(--fs-cap);line-height:1.15;}.gp-abbr{font-size:11px;letter-spacing:.8px;margin-top:1px;}.gp-num{font-size:16px;margin-left:4px;}.gp-u{font-size:11px;}}
 /* «По дням» (карточка/История): тайлы приборных метрик — тот же язык, что «Данные с трекера сегодня», но read-only и компактнее */
 .daily-day-card{background:#1C2030;border-radius:16px;border:1px solid var(--b1);padding:14px 14px 12px;margin-bottom:10px;}
 .daily-day-date{font-family:'Oswald',sans-serif;font-size:var(--fs-cap);letter-spacing:1.2px;text-transform:uppercase;color:var(--gold-lt,#e2b96a);margin-bottom:9px;}
