@@ -1711,9 +1711,13 @@ body.flow-mode .step.flow-show.answered .step-badge::after{content:' ✓';font-w
 .as-usual:hover{border-color:rgba(226,185,90,.5);color:var(--t1);}
 .as-usual.picked{background:rgba(78,204,163,.12);border-color:rgba(78,204,163,.5);color:var(--ok);}
 .as-usual.picked::before{content:'✓ ';}
+/* Строка «перенесено с прошлого раза» + кнопка подтверждения (вид чипа «Всё как обычно») */
+.carry-note{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:14px;padding-top:11px;border-top:1px solid var(--gold-dim);font-size:var(--fs-cap);color:var(--t3);line-height:1.4;}
+.carry-note .as-usual{margin-top:0;flex:0 0 auto;}
 /* Счётчик заполнения над кнопкой */
 #flow-progress{text-align:center;font-size:var(--fs-cap);font-weight:600;letter-spacing:.5px;color:#F3C066;margin:0 auto 10px;min-height:0;text-shadow:0 1px 4px rgba(0,0,0,.85);}
 #flow-progress:not(:empty){display:table;padding:5px 14px;border-radius:20px;background:rgba(9,12,18,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
+#flow-progress.gate-done{color:var(--ok);}   /* всё отвечено — та же строка, но зелёная (сигнал «готово», как у бейджей блоков) */
 /* Кнопка «Показать результат» в заблокированном виде (не все блоки отвечены) */
 /* Главная кнопка прохода — крупнее и ярче (тёплое золото), это финальный CTA */
 #flow-btn{font-size:var(--fs-body);font-weight:700;color:#F3C066;letter-spacing:.14em;padding:17px 20px;}
@@ -6902,7 +6906,10 @@ function _refreshGate(){
   var complete=(total>0 && done>=total);
   var b=document.getElementById('flow-btn'); if(b) b.classList.toggle('gate-locked', !complete);
   var p=document.getElementById('flow-progress');
-  if(p) p.textContent = complete ? '' : L({ru:'Отвечено '+done+' из '+total,uk:'Відповіли '+done+' з '+total,en:done+' of '+total+' answered',es:done+' de '+total+' respondidas',de:done+' von '+total+' beantwortet',pt:done+' de '+total+' respondidas',fr:done+' sur '+total+' répondues',pl:'Odpowiedziano '+done+' z '+total,it:done+' di '+total+' risposte',he:done+' מתוך '+total+' נענו',ja:total+'問中'+done+'問',ko:total+'개 중 '+done+'개 응답'});
+  // Счётчик виден ВСЕГДА, в том числе когда всё отвечено: раньше при complete он очищался, и
+  // владелец видел просто пропавшую строку — непонятно, гейт досчитал или сломался. 2026-08-25.
+  if(p) p.classList.toggle('gate-done', complete);
+  if(p) p.textContent = complete ? L({ru:'Все блоки отвечены · '+total+' из '+total,uk:'Усі блоки відповідені · '+total+' з '+total,en:'All blocks answered · '+total+' of '+total,es:'Todos los bloques respondidos · '+total+' de '+total,de:'Alle Blöcke beantwortet · '+total+' von '+total,pt:'Todos os blocos respondidos · '+total+' de '+total,fr:'Tous les blocs répondus · '+total+' sur '+total,pl:'Wszystkie bloki wypełnione · '+total+' z '+total,it:'Tutti i blocchi completati · '+total+' di '+total,he:'כל הבלוקים נענו · '+total+' מתוך '+total,ja:'全ブロック回答済み · '+total+'問中'+total+'問',ko:'모든 블록 응답 완료 · '+total+'개 중 '+total+'개'}) : L({ru:'Отвечено '+done+' из '+total,uk:'Відповіли '+done+' з '+total,en:done+' of '+total+' answered',es:done+' de '+total+' respondidas',de:done+' von '+total+' beantwortet',pt:done+' de '+total+' respondidas',fr:done+' sur '+total+' répondues',pl:'Odpowiedziano '+done+' z '+total,it:done+' di '+total+' risposte',he:done+' מתוך '+total+' נענו',ja:total+'問中'+done+'問',ko:total+'개 중 '+done+'개 응답'});
   return {done:done,total:total,first:firstUn,complete:complete};
 }
 // «Всё как обычно» для ОДНОГО оценочного поля (энергия/ощущение сна/новые симптомы).
@@ -6981,6 +6988,43 @@ function _blockComplete(step){
     // «События недели» намеренно НЕ требуем: заметка о контексте опциональна.
   }
   return true;
+}
+// ── Перенесённые ответы: видимая пометка + подтверждение одним касанием ────────────────
+// Ответы прошлого прохода подставляются молча (баннер «проверьте» снят 2026-07-14), и по замыслу
+// перенесённое НЕ считается ответом (window.__carried). Но подтвердить их было нечем: класс
+// blk-normal гейт проверял, а никто его не ставил — человек видел уже отмеченный пункт и не
+// понимал, надо ли подтверждать. Теперь блок сам говорит, откуда взялся ответ. 2026-08-25.
+function _carryNote(){ return L({ru:'Перенесено с прошлого раза — подтвердите или измените',uk:'Перенесено з минулого разу — підтвердіть або змініть',en:'Carried over from last time — confirm or change',es:'Traído de la vez anterior: confirma o cambia',de:'Vom letzten Mal übernommen — bestätigen oder ändern',pt:'Trazido da vez anterior — confirme ou altere',fr:'Repris de la dernière fois — confirmez ou modifiez',pl:'Przeniesione z poprzedniego razu — potwierdź lub zmień',it:'Riportato dalla volta scorsa — conferma o modifica',he:'הועבר מהפעם הקודמת — אשרו או שנו',ja:'前回から引き継ぎ — 確認または変更してください',ko:'지난번 답변을 가져왔습니다 — 확인하거나 변경하세요'}); }
+function _carryBtnLbl(){ return L({ru:'Всё так же',uk:'Все так само',en:'Still the same',es:'Sigue igual',de:'Unverändert',pt:'Continua igual',fr:'Toujours pareil',pl:'Bez zmian',it:'Tutto uguale',he:'הכול אותו דבר',ja:'変わりません',ko:'그대로예요'}); }
+function _stepHasCarried(step){
+  var CR=window.__carried; if(!CR||!CR.size||!step) return false;
+  var ins=step.querySelectorAll('input,select,textarea');
+  for(var i=0;i<ins.length;i++){ var el=ins[i];
+    if(el.type==='radio'||el.type==='checkbox'){ if(!el.checked) continue; }
+    else if(!el.value) continue;
+    if((el.name&&CR.has(el.name))||(el.id&&CR.has(el.id))) return true;
+  }
+  return false;
+}
+function _carryConfirm(btn){
+  var step=btn.closest?btn.closest('.step'):null; if(!step) return;
+  step.classList.add('blk-normal'); btn.classList.add('picked');
+  // Подтверждённое перестаёт быть «перенесённым»: снимаем метку, иначе гейт продолжал бы
+  // считать эти поля неотвеченными.
+  try{ step.querySelectorAll('input,select,textarea').forEach(function(el){ _untouchCarried(el.name); _untouchCarried(el.id); }); }catch(e){}
+  try{ if(typeof _refreshGate==='function') _refreshGate(); }catch(e){}
+  try{ if(typeof _autoAdvance==='function') _autoAdvance(step); }catch(e){}
+}
+function _markCarriedBlocks(){
+  document.querySelectorAll('.step.flow-show').forEach(function(step){
+    var old=step.querySelector('.carry-note'); if(old)old.remove();
+    if(step.classList.contains('blk-normal')||!_stepHasCarried(step)) return;
+    var card=step.querySelector(':scope > .card'); if(!card) return;
+    var d=document.createElement('div'); d.className='carry-note';
+    d.innerHTML='<span>'+_carryNote()+'</span><button type="button" class="as-usual" onclick="_carryConfirm(this)">'+_carryBtnLbl()+'</button>';
+    var br=card.querySelector('.btn-row');
+    if(br) card.insertBefore(d,br); else card.appendChild(d);
+  });
 }
 function _autoAdvance(fromStep){
   if(_userScrolling) return;
@@ -7106,6 +7150,7 @@ function _showFlow(list){
   // Блок жалобы рисуем ПОСЛЕ расстановки flow-show: renderComplaint выбирает контейнер по тому,
   // есть ли разовый шаг «С чем вы пришли» в этой ленте. 2026-08-25.
   if(typeof renderComplaint==='function'){ try{ renderComplaint(); }catch(e){} }
+  if(typeof _markCarriedBlocks==='function'){ try{ _markCarriedBlocks(); }catch(e){} }   // блоки с ответами прошлого раза — с подписью и кнопкой «Всё так же»
   // Кнопку результата прицепляем в самый конец ленты — её видно, только пройдя все блоки
   var ff=document.getElementById('flow-footer'); if(ff&&main)main.appendChild(ff);
   var sa=document.getElementById('scroll-area');if(sa)sa.scrollTop=0;else window.scrollTo(0,0);
