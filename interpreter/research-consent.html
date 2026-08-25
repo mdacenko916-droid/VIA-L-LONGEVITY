@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>VIA·L — Help improve the app</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="phosphor/style.css" rel="stylesheet">
+<style>
+/* Информированное согласие на исследовательский синк (opt-in, путь B — см.
+   docs/COMPLIANCE-PROM-MASTER-PLAN.md). Страница НЕ маркетинговая: её задача — дать человеку
+   принять решение с открытыми глазами, поэтому риск назван прямо, а польза честно названа
+   отложенной и общей. Ни одной ссылки наружу. 2026-08-25. */
+/* Научная база VIA-L. СОБСТВЕННАЯ страница базового тарифа — НЕ копия methodology.html:
+   та описывает клинические протоколы специалиста (названия состояний, добавки, дозы) и связывает
+   приложение с сайтом нутрициолога, что несовместимо с App Store для VIA-L (см. память
+   feedback_via_l_appstore_isolation). Здесь — только принципы работы приложения и границы выводов.
+   Ни одной ссылки наружу: ни на лендинг, ни на сайт, ни на специалиста. 2026-08-25. */
+:root{
+  --dark:#10131A; --card:#1b2029; --t1:#F5F3EF; --t2:rgba(245,243,239,.78); --t3:rgba(245,243,239,.5);
+  --gold:#C4963C; --gold-lt:#EEC77A; --beige:#EAE1C9;
+  --fs-cap:13px; --fs-body:15px; --fs-title:18px; --fs-hero:24px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--beige);}
+body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;color:var(--t1);min-height:100vh;-webkit-font-smoothing:antialiased;}
+.topline{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:calc(env(safe-area-inset-top,0px) + 14px) 20px 12px;background:var(--beige);}
+.brand{font-family:'Playfair Display',serif;font-size:var(--fs-title);letter-spacing:2.5px;color:#8B6030;white-space:nowrap;}
+.lang-wrap{position:relative;}
+.lang-btn{display:flex;align-items:center;gap:6px;font-size:var(--fs-cap);letter-spacing:2px;text-transform:uppercase;
+  padding:6px 14px;border-radius:50px;border:1px solid rgba(226,185,90,.5);background:#20242E;color:#EEAF54;cursor:pointer;font-family:inherit;}
+.lang-menu{display:none;position:absolute;right:0;top:calc(100% + 6px);background:#181e28;border:1px solid rgba(226,185,90,.3);
+  border-radius:14px;padding:6px;min-width:150px;box-shadow:0 12px 40px rgba(0,0,0,.5);max-height:60vh;overflow-y:auto;}
+.lang-menu.open{display:block;}
+.lang-opt{padding:9px 12px;border-radius:9px;color:var(--t2);font-size:var(--fs-body);cursor:pointer;}
+.lang-opt:hover{background:rgba(226,185,90,.12);color:var(--t1);}
+.wrap{max-width:760px;margin:0 auto;padding:4px 16px calc(96px + env(safe-area-inset-bottom,0px));}
+h1{font-family:'Playfair Display',serif;font-size:var(--fs-hero);font-weight:500;color:#2E2010;margin:6px 0 8px;line-height:1.2;}
+.sub{font-size:var(--fs-body);color:#5A4A35;line-height:1.6;margin:0 0 18px;}
+.sec{background:linear-gradient(160deg,#242c39,#1b2029 60%,#181e28);border:1px solid rgba(226,185,90,.28);
+  border-radius:18px;padding:18px 17px;margin-bottom:12px;box-shadow:0 8px 30px rgba(0,0,0,.18);}
+.sec h2{font-family:'Playfair Display',serif;font-size:var(--fs-title);font-weight:500;color:var(--gold-lt);margin:0 0 8px;line-height:1.25;}
+.sec p{font-size:var(--fs-body);line-height:1.72;color:var(--t2);margin:0;}
+.disc{font-size:var(--fs-cap);line-height:1.6;color:#5A4A35;margin:16px 2px 0;}
+#bottombar{position:fixed;left:0;right:0;bottom:0;z-index:200;}
+.bottom-nav{display:flex;align-items:center;justify-content:space-around;
+  padding:9px 10px calc(7px + env(safe-area-inset-bottom,0px)/3);
+  background:linear-gradient(180deg,#242c39,#171d27);border-top:1.5px solid rgba(238,199,122,.62);}
+.bottom-nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;letter-spacing:0;
+  text-transform:uppercase;white-space:nowrap;color:var(--gold-lt);text-decoration:none;background:none;border:none;
+  padding:2px 4px;border-radius:12px;cursor:pointer;
+  font-family:-apple-system,'SF Pro Text',BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}   /* как в приложении — иначе бар выше, чем на вкладках */
+.bottom-nav-item i{font-size:23px;}
+.bottom-nav-item:not(.active){opacity:.72;}
+.bottom-nav-item.active i{filter:drop-shadow(0 0 9px rgba(226,185,90,.85));}
+@media (min-width:600px){
+  :root{ --fs-cap:14px; --fs-body:17px; --fs-title:20px; --fs-hero:28px; }
+  .bottom-nav{padding:16px 16px calc(12px + env(safe-area-inset-bottom,0px)/3);}
+  .bottom-nav-item{font-size:12px;letter-spacing:.5px;gap:6px;padding:4px 12px;}
+}
+/* Блок управления согласием */
+.rc-panel{background:linear-gradient(160deg,#2a3340,#1e2530 60%,#181e28);border:1px solid rgba(226,185,90,.4);
+  border-radius:18px;padding:18px 17px;margin:16px 0 12px;}
+.rc-row{display:flex;align-items:flex-start;gap:12px;cursor:pointer;}
+.rc-row input{width:22px;height:22px;flex:0 0 22px;margin-top:2px;accent-color:#C4963C;}
+.rc-row span{font-size:var(--fs-body);line-height:1.6;color:var(--t1);}
+.rc-state{margin-top:12px;font-size:var(--fs-cap);letter-spacing:.5px;text-transform:uppercase;color:var(--t3);}
+.rc-state.on{color:#4ECCA3;}
+.rc-del{margin-top:14px;background:none;border:1px solid rgba(255,255,255,.22);color:var(--t2);
+  border-radius:10px;padding:10px 16px;font-size:var(--fs-cap);font-family:inherit;cursor:pointer;}
+.rc-del:hover{border-color:rgba(255,120,140,.5);color:#FF98A8;}
+.rc-msg{margin-top:10px;font-size:var(--fs-cap);color:var(--t3);line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="topline">
+  <div class="brand">VIA·L</div>
+  <div class="lang-wrap">
+    <button class="lang-btn" id="langBtn" type="button" onclick="toggleLang()">EN</button>
+    <div class="lang-menu" id="langMenu"></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <h1 data-t="title">Help improve VIA·L</h1>
+  <p class="sub" data-t="sub"></p>
+
+  <div class="rc-panel">
+    <label class="rc-row"><input type="checkbox" id="rcAgree" onchange="rcToggle(this.checked)"><span data-t="agree"></span></label>
+    <div class="rc-state" id="rcState"></div>
+    <button type="button" class="rc-del" id="rcDel" data-t="del" onclick="rcForget()"></button>
+    <div class="rc-msg" id="rcMsg"></div>
+  </div>
+
+  <div class="sec"><h2 data-t="s1_t"></h2><p data-t="s1_b"></p></div>
+  <div class="sec"><h2 data-t="s2_t"></h2><p data-t="s2_b"></p></div>
+  <div class="sec"><h2 data-t="s3_t"></h2><p data-t="s3_b"></p></div>
+  <div class="sec"><h2 data-t="s4_t"></h2><p data-t="s4_b"></p></div>
+  <div class="sec"><h2 data-t="s5_t"></h2><p data-t="s5_b"></p></div>
+  <div class="sec"><h2 data-t="s6_t"></h2><p data-t="s6_b"></p></div>
+  <div class="sec"><h2 data-t="s7_t"></h2><p data-t="s7_b"></p></div>
+  <div class="sec"><h2 data-t="s8_t"></h2><p data-t="s8_b"></p></div>
+  <div class="sec"><h2 data-t="s9_t"></h2><p data-t="s9_b"></p></div>
+  <p class="disc" data-t="s9_b"></p>
+</div>
+
+<div id="bottombar">
+<nav class="bottom-nav">
+  <a class="bottom-nav-item" href="./interpreter-via-l.html?tab=today"><i class="ph ph-sun"></i><span data-t="nav_today">Today</span></a>
+  <a class="bottom-nav-item" href="./interpreter-via-l.html?tab=approach"><i class="ph ph-stack"></i><span data-t="nav_approach">Our approach</span></a>
+  <a class="bottom-nav-item" href="./my-specialist.html"><i class="ph ph-signpost"></i><span data-t="nav_guide">My guide</span></a>
+  <a class="bottom-nav-item active" href="./interpreter-via-l.html?tab=card"><i class="ph ph-user"></i><span data-t="nav_card">My profile</span></a>
+</nav>
+</div>
+
+<script>
+const T = {"en": {"title": "Help improve VIA·L", "sub": "An optional way to contribute your anonymised daily numbers so the app can learn on real data. Off by default. Read this page before deciding.", "s1_t": "Why we ask", "s1_b": "VIA·L reads your daily numbers against your own baseline. The more real days the app has seen — across ages, cycles, sleep patterns and trackers — the better it can tell an ordinary fluctuation from a change worth noticing, and the more honestly it can be calibrated. Today that calibration rests on published research alone; your data would let us check it against real life and publish what we learn.", "s2_t": "What is sent", "s2_b": "Only the numbers and choices of your day: heart-rate variability, resting pulse, sleep duration and deep sleep, blood oxygen, temperature deviation, VO₂max and readiness if your tracker provides them; your ratings of energy and sleep; hot-flush frequency and intensity; memory and mental clarity; stress and alcohol; timing of your last meal and late caffeine; home blood-pressure readings you entered; weight and waist; whether the day came from a tracker or manual entry; and the version numbers of our schema and weights.", "s3_t": "What is never sent", "s3_b": "Anything you wrote in your own words stays on your device: what brought you here, notes about events of the day, new symptoms, your questions to the assistant and the text of your overviews. Free text is what most often makes a record recognisable, so the server refuses it — the filter sits on our side and does not depend on the app being up to date. There is no account in VIA·L, so there is no name, no email and no phone number to send.", "s4_t": "How it stays anonymous", "s4_b": "Each installation generates a random identifier when the app first runs. It is not derived from your device, your phone number or anything about you, and it is stored only on your device. Records arrive under that identifier and nothing else. We cannot look at a row and say whose it is — and neither can we link two people, or link you to a purchase.", "s5_t": "It is voluntary", "s5_b": "The switch is off until you turn it on, and you can turn it off again at any moment — the app works exactly the same either way. Nothing is unlocked by agreeing and nothing is taken away by refusing: your overviews, your history and your subscription do not depend on this choice.", "s6_t": "You can delete your contribution", "s6_b": "«Delete my contribution» removes every record sent from this installation. Because the identifier lives only on your device, deletion can be requested only from it — so do it before you delete the app or move to a new phone, otherwise the link is gone and the anonymous rows can no longer be found. Records already included in a published aggregate result cannot be pulled back out of that result.", "s7_t": "Where it is stored and for how long", "s7_b": "Records go over an encrypted connection to our processing service on Cloudflare and are stored in a database there. They are kept for as long as the research they serve — that is, without a fixed end date — because a calibration set loses its meaning if it is erased on a schedule. They are never sold, never used for advertising, and never handed to insurers or employers. If a specialist guides you in VIA·L EXPERT, that is a separate story with its own consent: this switch does not send anything to any specialist.", "s8_t": "Benefits and risks, honestly", "s8_b": "You get no personal benefit from agreeing: your own overviews do not become better or faster. The benefit is shared and comes later — a better calibrated app for people in the same period of life. The risk is small but not zero: no set of health measurements is absolutely impossible to re-identify, especially if someone already holds a matching dataset. We reduce that risk by refusing free text, by using a random identifier and by keeping the record to a fixed list of values. If that residual risk is not acceptable to you, do not turn the switch on — that is a perfectly reasonable choice.", "s9_t": "Legal basis and contact", "s9_b": "Health data is a special category, so we process it only on your explicit consent — GDPR Article 6(1)(a) together with Article 9(2)(a). Consent given here can be withdrawn at any time by turning the switch off; withdrawal does not affect processing that already happened. Questions and requests: privacy@via-l.com. This page is part of our privacy policy and is updated together with it.", "agree": "I have read this page and agree to share my anonymised daily numbers", "on": "Sharing is on", "off": "Sharing is off", "del": "Delete my contribution", "del_ok": "Deleted. Nothing from this installation is left on the server.", "del_err": "Could not reach the server. Try again later.", "del_confirm": "Delete every record sent from this device? This cannot be undone.", "nav_today": "Today", "nav_approach": "Our approach", "nav_guide": "My guide", "nav_card": "My Profile"}, "ru": {"title": "Помочь улучшить VIA·L", "sub": "Необязательная возможность передавать обезличенные показатели ваших дней, чтобы приложение училось на реальных данных. По умолчанию выключено. Прочитайте эту страницу, прежде чем решать.", "s1_t": "Зачем мы просим", "s1_b": "VIA·L читает ваши показатели относительно вашей же личной базы. Чем больше реальных дней приложение видело — в разных возрастах, циклах, режимах сна и с разными трекерами, — тем точнее оно отличает обычное колебание от изменения, на которое стоит обратить внимание, и тем честнее его можно откалибровать. Сейчас эта калибровка опирается только на опубликованные исследования; ваши данные позволили бы сверить её с реальной жизнью и опубликовать результат.", "s2_t": "Что передаётся", "s2_b": "Только числа и выборы вашего дня: вариабельность сердечного ритма, пульс покоя, длительность сна и глубокий сон, кислород крови, отклонение температуры, VO₂max и готовность, если их даёт ваш трекер; ваши оценки энергии и сна; частота и интенсивность приливов; память и ясность мышления; стресс и алкоголь; время последнего приёма пищи и поздний кофеин; домашние замеры давления, которые вы внесли; вес и талия; пришёл день с трекера или введён вручную; и номера версий нашей схемы и весов.", "s3_t": "Что не передаётся никогда", "s3_b": "Всё, что вы писали своими словами, остаётся на устройстве: с чем вы пришли, заметки о событиях дня, новые симптомы, ваши вопросы советнику и тексты ваших разборов. Именно свободный текст чаще всего делает запись узнаваемой, поэтому сервер его не принимает — фильтр стоит на нашей стороне и не зависит от того, обновлено ли приложение. Аккаунта в VIA·L нет вовсе, поэтому нет ни имени, ни почты, ни телефона, которые можно было бы передать.", "s4_t": "Как это остаётся обезличенным", "s4_b": "При первом запуске приложение создаёт случайный идентификатор установки. Он не выводится ни из вашего устройства, ни из номера телефона, ни из чего-либо о вас и хранится только на вашем устройстве. Записи приходят под этим идентификатором и больше ни под каким. Мы не можем, глядя на строку, сказать, чья она, — как не можем и связать двух людей между собой или связать вас с покупкой.", "s5_t": "Это добровольно", "s5_b": "Переключатель выключен, пока вы его не включите, и выключить обратно можно в любой момент — приложение работает одинаково в обоих случаях. Согласие ничего не открывает, а отказ ничего не отнимает: ваши разборы, ваша история и ваша подписка от этого выбора не зависят.", "s6_t": "Вы можете удалить свой вклад", "s6_b": "Кнопка «Удалить мой вклад» стирает все записи, отправленные с этой установки. Идентификатор живёт только на вашем устройстве, поэтому удаление можно запросить только с него — сделайте это до удаления приложения или перехода на новый телефон, иначе связь потеряна и обезличенные строки уже не найти. Записи, попавшие в опубликованный сводный результат, из этого результата не изымаются.", "s7_t": "Где хранится и сколько", "s7_b": "Записи уходят по шифрованному соединению в наш сервис обработки на Cloudflare и хранятся в базе там. Мы держим их столько, сколько живёт исследование, ради которого они собраны, — то есть без заранее назначенной даты удаления: калибровочная выборка теряет смысл, если стирать её по расписанию. Их никогда не продают, не используют для рекламы и не передают страховым компаниям или работодателям. Если вас ведёт специалист в VIA·L EXPERT — это отдельная история со своим согласием: этот переключатель специалисту не отправляет ничего.", "s8_t": "Польза и риски, честно", "s8_b": "Лично вам согласие не даёт ничего: ваши разборы не станут лучше или быстрее. Польза общая и отложенная — точнее откалиброванное приложение для людей в том же периоде жизни. Риск невелик, но не нулевой: ни один набор измерений о здоровье нельзя считать абсолютно неопознаваемым, особенно если у кого-то уже есть сопоставимый массив данных. Мы снижаем этот риск тем, что не принимаем свободный текст, используем случайный идентификатор и держим запись в пределах фиксированного списка значений. Если остаточный риск для вас неприемлем — не включайте переключатель, это совершенно разумный выбор.", "s9_t": "Правовое основание и контакт", "s9_b": "Данные о здоровье — особая категория, поэтому мы обрабатываем их только с вашего явного согласия: GDPR Статья 6(1)(a) вместе со Статьёй 9(2)(a). Согласие, данное здесь, можно отозвать в любой момент, выключив переключатель; отзыв не затрагивает обработку, которая уже произошла. Вопросы и запросы: privacy@via-l.com. Эта страница — часть нашей политики конфиденциальности и обновляется вместе с ней.", "agree": "Я прочитал(а) эту страницу и согласен(на) передавать обезличенные показатели моих дней", "on": "Передача включена", "off": "Передача выключена", "del": "Удалить мой вклад", "del_ok": "Удалено. С этой установки на сервере ничего не осталось.", "del_err": "Не удалось связаться с сервером. Попробуйте позже.", "del_confirm": "Удалить все записи, отправленные с этого устройства? Отменить это будет нельзя.", "nav_today": "Сегодня", "nav_approach": "Наш подход", "nav_guide": "Мой наставник", "nav_card": "Мой профиль"}, "uk": {"title": "Допомогти покращити VIA·L", "sub": "Необов’язкова можливість передавати знеособлені показники ваших днів, щоб застосунок навчався на реальних даних. За замовчуванням вимкнено. Прочитайте цю сторінку, перш ніж вирішувати.", "s1_t": "Навіщо ми просимо", "s1_b": "VIA·L читає ваші показники відносно вашої ж особистої бази. Що більше реальних днів застосунок бачив — у різному віці, циклах, режимах сну й з різними трекерами, — то точніше він відрізняє звичайне коливання від зміни, на яку варто звернути увагу, і то чесніше його можна відкалібрувати. Зараз ця калібровка спирається лише на опубліковані дослідження; ваші дані дали б змогу звірити її з реальним життям і опублікувати результат.", "s2_t": "Що передається", "s2_b": "Лише числа й вибори вашого дня: варіабельність серцевого ритму, пульс спокою, тривалість сну та глибокий сон, кисень крові, відхилення температури, VO₂max і готовність, якщо їх дає ваш трекер; ваші оцінки енергії та сну; частота й інтенсивність припливів; пам’ять і ясність мислення; стрес та алкоголь; час останнього прийому їжі й пізній кофеїн; домашні заміри тиску, які ви внесли; вага й талія; прийшов день із трекера чи введений вручну; і номери версій нашої схеми та ваг.", "s3_t": "Що не передається ніколи", "s3_b": "Усе, що ви писали своїми словами, залишається на пристрої: з чим ви прийшли, нотатки про події дня, нові симптоми, ваші запитання раднику й тексти ваших розборів. Саме вільний текст найчастіше робить запис упізнаваним, тому сервер його не приймає — фільтр стоїть на нашому боці й не залежить від того, чи оновлено застосунок. Облікового запису у VIA·L немає взагалі, тож немає ні імені, ні пошти, ні телефону, які можна було б передати.", "s4_t": "Як це залишається знеособленим", "s4_b": "Під час першого запуску застосунок створює випадковий ідентифікатор встановлення. Він не виводиться ні з вашого пристрою, ні з номера телефону, ні з чогось про вас і зберігається лише на вашому пристрої. Записи надходять під цим ідентифікатором і жодним іншим. Ми не можемо, дивлячись на рядок, сказати, чий він, — як не можемо й пов’язати двох людей між собою чи пов’язати вас із покупкою.", "s5_t": "Це добровільно", "s5_b": "Перемикач вимкнено, доки ви його не увімкнете, і вимкнути назад можна будь-якої миті — застосунок працює однаково в обох випадках. Згода нічого не відкриває, а відмова нічого не забирає: ваші розбори, ваша історія і ваша підписка від цього вибору не залежать.", "s6_t": "Ви можете видалити свій внесок", "s6_b": "Кнопка «Видалити мій внесок» стирає всі записи, надіслані з цього встановлення. Ідентифікатор живе лише на вашому пристрої, тому видалення можна запросити тільки з нього — зробіть це до видалення застосунку чи переходу на новий телефон, інакше зв’язок втрачено й знеособлені рядки вже не знайти. Записи, що потрапили в опублікований зведений результат, із цього результату не вилучаються.", "s7_t": "Де зберігається і скільки", "s7_b": "Записи йдуть шифрованим з’єднанням у наш сервіс обробки на Cloudflare і зберігаються в базі там. Ми тримаємо їх стільки, скільки живе дослідження, заради якого вони зібрані, — тобто без наперед призначеної дати видалення: калібрувальна вибірка втрачає сенс, якщо стирати її за розкладом. Їх ніколи не продають, не використовують для реклами і не передають страховим компаніям чи роботодавцям. Якщо вас веде фахівець у VIA·L EXPERT — це окрема історія зі своєю згодою: цей перемикач фахівцю не надсилає нічого.", "s8_t": "Користь і ризики, чесно", "s8_b": "Особисто вам згода не дає нічого: ваші розбори не стануть кращими чи швидшими. Користь спільна й відкладена — точніше відкалібрований застосунок для людей у тому ж періоді життя. Ризик невеликий, але не нульовий: жоден набір вимірювань про здоров’я не можна вважати абсолютно невпізнаваним, особливо якщо в когось уже є зіставний масив даних. Ми знижуємо цей ризик тим, що не приймаємо вільний текст, використовуємо випадковий ідентифікатор і тримаємо запис у межах фіксованого списку значень. Якщо залишковий ризик для вас неприйнятний — не вмикайте перемикач, це цілком розумний вибір.", "s9_t": "Правова підстава і контакт", "s9_b": "Дані про здоров’я — особлива категорія, тому ми обробляємо їх лише за вашою явною згодою: GDPR Стаття 6(1)(a) разом зі Статтею 9(2)(a). Згоду, надану тут, можна відкликати будь-якої миті, вимкнувши перемикач; відкликання не стосується обробки, що вже відбулася. Питання та запити: privacy@via-l.com. Ця сторінка — частина нашої політики конфіденційності й оновлюється разом із нею.", "agree": "Я прочитав(ла) цю сторінку і згоден(на) передавати знеособлені показники моїх днів", "on": "Передавання увімкнено", "off": "Передавання вимкнено", "del": "Видалити мій внесок", "del_ok": "Видалено. З цього встановлення на сервері нічого не залишилось.", "del_err": "Не вдалося зв’язатися із сервером. Спробуйте пізніше.", "del_confirm": "Видалити всі записи, надіслані з цього пристрою? Скасувати це буде неможливо.", "nav_today": "Сьогодні", "nav_approach": "Наш підхід", "nav_guide": "Мій наставник", "nav_card": "Мій профіль"}};
+const LANG_NAMES = {en:'English',ru:'Русский',uk:'Українська'};
+const LANG_ORDER = ['en','ru','uk'];
+const API = 'https://interpreter.viaelcom.workers.dev';
+let lang = 'en';
+try{ const s=localStorage.getItem('selectedLang')||localStorage.getItem('vialp_lang'); if(s&&T[s]) lang=s; else { const n=(navigator.language||'en').slice(0,2); if(T[n]) lang=n; } }catch(e){}
+function tr(k){ return (T[lang]&&T[lang][k])||T.en[k]||''; }
+function applyLang(l){
+  lang = T[l] ? l : 'en';
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-t]').forEach(function(el){
+    const v = tr(el.getAttribute('data-t'));
+    if (v) el.textContent = v;
+  });
+  document.getElementById('langBtn').textContent = lang.toUpperCase();
+  rcRender();
+  try{ localStorage.setItem('selectedLang', lang); }catch(e){}
+}
+function toggleLang(){ document.getElementById('langMenu').classList.toggle('open'); }
+// Согласие живёт в том же ключе, что читает приложение (_researchConsent → vialp_research_consent).
+function rcOn(){ try{ return localStorage.getItem('vialp_research_consent')==='1'; }catch(e){ return false; } }
+function rcRender(){
+  const on = rcOn();
+  document.getElementById('rcAgree').checked = on;
+  const st = document.getElementById('rcState');
+  st.textContent = on ? tr('on') : tr('off');
+  st.classList.toggle('on', on);
+}
+function rcToggle(on){
+  try{ localStorage.setItem('vialp_research_consent', on ? '1' : '0'); }catch(e){}
+  document.getElementById('rcMsg').textContent = '';
+  rcRender();
+}
+// Удаление вклада: pid живёт только на устройстве, поэтому запросить удаление может лишь оно.
+async function rcForget(){
+  let pid=''; try{ pid=localStorage.getItem('vialp_pid')||''; }catch(e){}
+  const msg=document.getElementById('rcMsg');
+  if(!pid){ msg.textContent = tr('del_ok'); return; }
+  if(!confirm(tr('del_confirm'))) return;
+  try{
+    const r = await fetch(API+'/research/forget', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pid:pid})});
+    const j = await r.json();
+    msg.textContent = (j&&j.ok) ? tr('del_ok') : tr('del_err');
+  }catch(e){ msg.textContent = tr('del_err'); }
+}
+(function(){
+  const m = document.getElementById('langMenu');
+  LANG_ORDER.filter(function(l){ return T[l]; }).forEach(function(l){
+    const d = document.createElement('div');
+    d.className='lang-opt'; d.textContent = LANG_NAMES[l] || l;
+    d.onclick = function(){ applyLang(l); m.classList.remove('open'); };
+    m.appendChild(d);
+  });
+  document.addEventListener('click', function(e){ if(!e.target.closest('.lang-wrap')) m.classList.remove('open'); });
+  applyLang(lang);
+})();
+</script>
+</body>
+</html>

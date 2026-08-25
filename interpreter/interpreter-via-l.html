@@ -5273,7 +5273,17 @@ function renderCard(){
     +'<button onclick="_changeSource()" style="display:block;width:100%;box-sizing:border-box;margin-top:8px;padding:11px;border-radius:10px;border:1px solid rgba(196,150,60,.32);background:rgba(196,150,60,.1);color:var(--gold-lt);font-size:var(--fs-body);font-weight:500;cursor:pointer;">🔄 '+L({ru:'Изменить источник данных',uk:'Змінити джерело даних',en:'Change data source',es:'Cambiar fuente de datos',de:'Datenquelle ändern',pt:'Alterar fonte de dados',fr:'Changer la source de données',pl:'Zmień źródło danych',it:'Cambia fonte dati',he:'שינוי מקור הנתונים',ja:'データソースを変更',ko:'데이터 소스 변경'})+'</button>';
   _secSource=_vcSec('source',L({ru:'Источник данных',uk:'Джерело даних',en:'Data source',es:'Fuente de datos',de:'Datenquelle',pt:'Fonte de dados',fr:'Source des données',pl:'Źródło danych',it:'Fonte dati',he:'מקור נתונים',ja:'データソース',ko:'데이터 소스'}),_srcInner,false,true);
 
-  _secLegal=_vcSec('legal',t('card_legal'),'<div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;">'+t('consent_body')+'</div>',false,true);
+  // «Помочь улучшить приложение» — вход на страницу информированного согласия. Живёт внутри
+  // правового блока: это про данные, а не про функции, и человек находит его там же, где дисклеймер.
+  // Сам переключатель НЕ здесь — он на странице, вместе с полным текстом: согласие без текста
+  // согласием не считается. 2026-08-25.
+  var _rcOn=(function(){ try{ return localStorage.getItem('vialp_research_consent')==='1'; }catch(e){ return false; } })();
+  var _rcLbl=L({ru:'Помочь улучшить приложение',uk:'Допомогти покращити застосунок',en:'Help improve the app',es:'Ayudar a mejorar la app',de:'Die App verbessern helfen',pt:'Ajudar a melhorar o app',fr:'Aider à améliorer l’application',pl:'Pomóż ulepszyć aplikację',it:'Aiuta a migliorare l’app',he:'לעזור לשפר את האפליקציה',ja:'アプリの改善に協力する',ko:'앱 개선에 도움 주기'});
+  var _rcState=_rcOn?L({ru:'включено',uk:'увімкнено',en:'on',es:'activado',de:'ein',pt:'ativado',fr:'activé',pl:'włączone',it:'attivo',he:'מופעל',ja:'オン',ko:'켜짐'})
+                   :L({ru:'выключено',uk:'вимкнено',en:'off',es:'desactivado',de:'aus',pt:'desativado',fr:'désactivé',pl:'wyłączone',it:'disattivo',he:'כבוי',ja:'オフ',ko:'꺼짐'});
+  var _rcHtml='<a href="./research-consent.html" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding:11px 12px;border-radius:10px;border:1px solid rgba(196,150,60,.32);background:rgba(196,150,60,.06);color:var(--gold-lt);font-size:var(--fs-cap);text-decoration:none;">'
+    +'<span>'+_rcLbl+'</span><span style="color:'+(_rcOn?'var(--ok)':'var(--t3)')+';">'+_rcState+' ›</span></a>';
+  _secLegal=_vcSec('legal',t('card_legal'),'<div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;">'+t('consent_body')+'</div>'+_rcHtml,false,true);
   // ── VAI: калькулятор скрытого (висцерального) жира. Доп-инструмент, БЕЗ ИИ/сети. Велнес-рамка + дисклеймер. ──
   var _vaiBMI=(P.weight&&P.height&&P.height>0)?(P.weight/Math.pow(P.height/100,2)):null;
   var _vaiInner='<div class="vai-calc">'
@@ -5456,7 +5466,18 @@ function _researchConsent(){ try{ return localStorage.getItem('vialp_research_co
 // Слой синхронизации — ОТКЛЮЧЁН. Пуш возможен только при явном согласии пользователя (opt-in).
 // Сервер-эндпоинт добавляется на этапе 3: анонимно, health-данные отдельно от аккаунта,
 // с удалением по запросу (GDPR/законы штатов). Сейчас — инертный шов, чтобы включить без переделки.
-function _syncPushDaily(rec){ if(!_researchConsent())return; /* TODO этап 3: POST анонимной записи в D1 */ }
+function _syncPushDaily(rec){
+  // Исследовательский синк (opt-in). Уходит ТОЛЬКО при явном согласии — переключатель и полный
+  // текст живут на research-consent.html, ключ тот же (vialp_research_consent, по умолчанию OFF).
+  // Что именно принимается — решает whitelist на сервере (handleResearchDay): свободные тексты
+  // не принимаются там, а не здесь, чтобы фильтр не зависел от версии приложения. 2026-08-25.
+  try{
+    if(!_researchConsent()) return;
+    var pid=_vialpPid(); if(!pid||!rec||!rec.day) return;
+    fetch(AI_WORKER+'/research/day',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({pid:pid,lang:lang,rec:rec})}).catch(function(){});   // тихо: сбой синка не должен мешать проходу
+  }catch(e){}
+}
 function _saveDaily(){
   try{
     var rec={

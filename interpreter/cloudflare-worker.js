@@ -1407,6 +1407,9 @@ export default {
       if (path === '/specialist-access-webhook') return handleSpecialistAccessWebhook(request, env, corsHeaders);
 
       // Default: AI-анализ для интерпретатора
+      // Исследовательский синк (opt-in): клиент шлёт сюда, только когда включено согласие.
+      if (path === '/research/day')    return handleResearchDay(request, env, corsHeaders);
+      if (path === '/research/forget') return handleResearchForget(request, env, corsHeaders);
       if (path === '/day-plan') return handleDayPlan(request, env, corsHeaders, ctx);
       if (path === '/ai-memory') return handleAiMemory(request, env, corsHeaders, ctx);
       return handleAnalyze(request, env, corsHeaders, ctx);
@@ -2191,6 +2194,72 @@ const _STRUCTURED_FMT =
   'ПРО ГОРМОНЫ — ПАТТЕРНОМ, БЕЗ МЕХАНИЗМА-КАК-ФАКТА: термин «кортизол» можно, но НЕ строй каузальную цепочку «X поднимает кортизол, который делает Y». Пиши мягко: «в напряжении кортизол часто выше», «это нередко идёт рука об руку с…». И НЕ заменяй слово «кортизол» на «гормональный баланс» посреди фразы — получается коряво («повышает гормонального баланса»); либо оставь «кортизол» как паттерн, либо переформулируй без него.\n' +
   'ДЫХАНИЕ 4-7-8 пиши ТОЧНО: «вдох на 4 счёта, задержка на 7, выдох на 8». НЕ пиши два «выдоха».\n' +
   'Прежде чем закончить: проверь, что КАЖДОЕ предложение (в т.ч. в интро) дописано до конца, без обрыва мысли, и что рядом не стоят два однокоренных слова подряд («фоновое фоновая», «риск риска») — если найдёшь, перефразируй.\n';
+
+// ─────────────────────────────────────────────────────────────
+// ИССЛЕДОВАТЕЛЬСКИЙ СИНК «Помочь улучшить приложение» (opt-in, путь B —
+// docs/COMPLIANCE-PROM-MASTER-PLAN.md, решение владельца 2026-07-24).
+// Здесь СЕРВЕРНАЯ часть; клиент её не зовёт, пока человек явно не включит согласие
+// (`vialp_research_consent`, по умолчанию OFF) — до тех пор эндпоинты просто не получают запросов.
+//
+// Что принимаем: псевдонимный id установки + обезличенные метрики дня. Ни почты, ни имени,
+// ни кода доступа у приложения нет вовсе. Свободные тексты (жалоба своими словами, события дня,
+// новые симптомы) НЕ принимаются — их отсекает whitelist ниже, а не доверие к клиенту:
+// именно свободный текст чаще всего и делает запись узнаваемой.
+// ─────────────────────────────────────────────────────────────
+const RESEARCH_FIELDS = [
+  'hrv','rhr','sleepHours','deepMin','spo2','tempDev','vo2','readiness',
+  'energy','sleep_qual','hf_count','hf_intensity','memory','fog','stress','alc',
+  'cmp_delta','last_meal','caffeine_late','bp_sys','bp_dia','weight','waist',
+];
+function _researchPick(rec) {
+  const out = {};
+  if (!rec || typeof rec !== 'object') return out;
+  for (const k of RESEARCH_FIELDS) {
+    const v = rec[k];
+    if (v == null || v === '') continue;
+    if (typeof v === 'number') { if (isFinite(v)) out[k] = v; continue; }
+    if (typeof v === 'string' && v.length <= 32) out[k] = v;   // категории вида 'high'/'mild' — длинных строк тут не бывает
+  }
+  return out;
+}
+async function handleResearchDay(request, env, corsHeaders) {
+  try {
+    if (!env.DB) return jsonResponse({ ok: false, error: 'no_db' }, corsHeaders);
+    const body = await request.json();
+    const pid = String(body.pid || '').slice(0, 64);
+    const rec = body.rec || {};
+    const day = String(rec.day || '').slice(0, 10);
+    // Формат pid и дня проверяем сами: мусорные ключи засоряют выборку и мешают удалению по запросу.
+    if (!/^[A-Za-z0-9_-]{8,64}$/.test(pid) || !/^\d{4}-\d{2}-\d{2}$/.test(day)) {
+      return jsonResponse({ ok: false, error: 'bad_request' }, corsHeaders);
+    }
+    const data = JSON.stringify(_researchPick(rec));
+    if (data.length > 4096) return jsonResponse({ ok: false, error: 'too_big' }, corsHeaders);
+    await env.DB.prepare(
+      'INSERT INTO research_days (pid,day,ts,received_ts,sv,wv,src,lang,data) VALUES (?,?,?,?,?,?,?,?,?) ' +
+      'ON CONFLICT(pid,day) DO UPDATE SET ts=excluded.ts, received_ts=excluded.received_ts, ' +
+      'sv=excluded.sv, wv=excluded.wv, src=excluded.src, lang=excluded.lang, data=excluded.data'
+    ).bind(pid, day, Number(rec.ts) || null, Date.now(), Number(rec.sv) || null, Number(rec.wv) || null,
+           String(rec.src || '').slice(0, 24), String(body.lang || '').slice(0, 5), data).run();
+    return jsonResponse({ ok: true }, corsHeaders);
+  } catch (e) {
+    return jsonResponse({ ok: false, error: 'server' }, corsHeaders);
+  }
+}
+// Удаление всего вклада установки (GDPR ст. 17, WA MHMDA). Связи pid↔человек у нас нет,
+// поэтому удалить может только само устройство — тем же pid, что и присылало.
+async function handleResearchForget(request, env, corsHeaders) {
+  try {
+    if (!env.DB) return jsonResponse({ ok: false, error: 'no_db' }, corsHeaders);
+    const body = await request.json();
+    const pid = String(body.pid || '').slice(0, 64);
+    if (!/^[A-Za-z0-9_-]{8,64}$/.test(pid)) return jsonResponse({ ok: false, error: 'bad_request' }, corsHeaders);
+    const r = await env.DB.prepare('DELETE FROM research_days WHERE pid = ?').bind(pid).run();
+    return jsonResponse({ ok: true, deleted: (r && r.meta && r.meta.changes) || 0 }, corsHeaders);
+  } catch (e) {
+    return jsonResponse({ ok: false, error: 'server' }, corsHeaders);
+  }
+}
 
 // ─────────────────────────────────────────────────────────────
 // ТРИАЖ «На что обратить внимание» — ДЕТЕРМИНИРОВАННО, кодом (2026-08-25).
