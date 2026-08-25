@@ -213,6 +213,14 @@ body::before{
   box-shadow:none;
   pointer-events:none;   /* пустая зона топбара пропускает клики сквозь (иначе перехватывала ✕ импорт-панели под собой) */
 }
+/* Фейд под шапкой. Топбар прозрачный (тёмная плашка перекрывала круг ✕ импорт-панели), из-за
+   этого прокручиваемый текст ленты проезжал под статус-баром и под кнопкой языка — часы iOS
+   ложились на строку интро. Плашки по-прежнему нет: только мягкий уход в цвет фона бренда,
+   на нём контент растворяется, не обрезаясь. z-index:-1 — под лого и переключатель, но внутри
+   стекового контекста топбара, т.е. поверх страницы. При открытой панели импорта фейд снят:
+   там своя тёмная поверхность, бежевая полоса на ней читалась бы грязью. 2026-08-25. */
+#topbar::before{content:'';position:absolute;left:0;right:0;top:0;height:calc(env(safe-area-inset-top,0px) + 64px);background:linear-gradient(to bottom,#EAE1C9 0%,rgba(234,225,201,.92) 48%,rgba(234,225,201,0) 100%);pointer-events:none;z-index:-1;}
+body.imp-open #topbar::before{display:none;}
 #topbar .lang-dropdown{pointer-events:auto;}   /* кликабелен только переключатель языка */
 #topbar.tb-hidden{transform:translateY(-100%);opacity:0;pointer-events:none;}
 
@@ -1164,7 +1172,10 @@ body.morning-mode #scroll-area{display:flex;flex-direction:column;overflow-y:aut
 /* Карточка занимает свободную высоту и стоит в ней по центру, подпись бренда со ссылками — внизу
    экрана. Центрируем автополями (margin:auto), а НЕ justify-content:center: при неожиданном
    переполнении (крупный системный шрифт) auto прижимает к началу, а center срезал бы верх. */
-body.morning-mode #scroll-area main{flex:1 1 0;min-height:0;display:flex;align-items:flex-start;padding:0;}
+body.morning-mode #scroll-area main{flex:1 1 0;min-height:0;display:flex;flex-direction:column;align-items:flex-start;padding:0;}
+/* flex-direction:column ОБЯЗАТЕЛЕН: по умолчанию флекс кладёт детей в ряд. Пока в main жила одна
+   утренняя карточка, это не проявлялось; как только туда попадал ещё блок (баннер импорта,
+   панель «Данные с трекера»), карточки вставали в строку и уезжали за правый край. 2026-08-25. */
 /* flex-basis 0 (а не auto): иначе контейнер брал за основу высоту карточки И ещё рос — суммарно
    выходило больше экрана, сверху появлялся зазор, а строка ссылок выдавливалась под навигацию.
    С basis 0 он равен ровно свободному месту. align-items:flex-start — карточка сразу под шапкой. */   /* align-items:center — иначе флекс РАСТЯГИВАЕТ карточку на всю высоту (stretch по умолчанию),
@@ -1618,8 +1629,10 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;}
 .max-sent{display:none;text-align:center;padding:16px;font-size:var(--fs-body);color:#7898ff;}
 /* Панель «Данные с трекера» — read-only сводка подтянутых показателей */
 .gadget-panel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:0;}
-@media(max-width:599px){.gadget-panel{grid-template-columns:1fr;}}   /* одна колонка: в двух «Частота сердца» и «Кислород в крови» на 17px не помещались */
-@media(max-width:480px){.gadget-panel{gap:7px;}.gp-tile{gap:8px;padding:9px;}.gp-ic{width:30px;height:30px;flex:0 0 30px;}.gp-name{font-size:var(--fs-cap);}.gp-num{font-size:var(--fs-title);}}
+/* Телефон: колонок ОСТАЁТСЯ две (одна растягивала панель на весь экран — на первом экране ленты
+   кроме неё ничего не помещалось). Вместо смены сетки ужимаем саму плитку: имя на ступень ниже
+   канона (мобильный --fs-body=17px в 176px не влезал), значение и иконка компактнее. 2026-08-25. */
+@media(max-width:599px){.gadget-panel{gap:8px;}.gp-tile{gap:7px;padding:8px 9px;}.gp-ic{width:26px;height:26px;flex:0 0 26px;}.gp-name{font-size:var(--fs-cap);line-height:1.15;}.gp-abbr{font-size:11px;letter-spacing:.8px;margin-top:1px;}.gp-num{font-size:16px;margin-left:4px;}.gp-u{font-size:11px;}}
 .gp-tile{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:13px;background:rgba(0,0,0,.25);border:1px solid rgba(196,150,60,.28);cursor:pointer;text-align:left;transition:border-color .15s,background .15s;}
 .gp-tile:hover{border-color:rgba(255,255,255,.28);}
 .gp-tile.got{border-color:rgba(34,197,94,.32);background:rgba(34,197,94,.07);}
@@ -6796,6 +6809,10 @@ function updateDeviceBanners(){
 function renderGadgetPanel(){
   const wrap=document.getElementById('gadget-panel-wrap'),box=document.getElementById('gadget-panel');
   if(!wrap||!box)return;
+  // Панель — часть ленты прохода. Пока на экране утренняя карточка или гейт «завтра», ленты нет:
+  // тихий рефреш трекера (fitbit/oura/…) выносил панель поверх карточки, и в горизонтальном main
+  // экран разъезжался. Показ панели — дело того, кто рисует ленту. 2026-08-25.
+  if(document.getElementById('morning-gate')||document.getElementById('daily-done-gate')){ wrap.style.display='none'; return; }
   const D=(typeof importedData!=='undefined')?importedData:{};
   // «Данные с трекера» — это показатели гаджета. В ручном режиме их нет: панель не показываем
   // (кроме случая, если данные с устройства всё же есть в этой сессии).
@@ -9642,10 +9659,10 @@ const importedData={hrv:null,rhr:null,sleepHours:null,deepMin:null,tempDev:null,
 // день сменился → показатели считаются устаревшими и не восстанавливаются (клиент синхронизирует заново).
 try{var _imp=JSON.parse(localStorage.getItem('viae_imported')||'null');if(_imp&&typeof _imp==='object'&&_imp.day===_dayKey())Object.keys(_imp).forEach(function(k){if(k!=='day'&&_imp[k]!=null)importedData[k]=_imp[k];});}catch(e){}
 function _saveImported(){try{localStorage.setItem('viae_imported',JSON.stringify(Object.assign({},importedData,{day:_dayKey()})));}catch(e){}}
-function openImport(mode){const p=document.getElementById('importPanel');try{if(mode===undefined)mode=sessionStorage.getItem('viae_impmode')||mode;else sessionStorage.setItem('viae_impmode',mode);}catch(e){}/* режим переживает перезагрузку при OAuth-редиректе: возврат без аргумента восстанавливает full=4 устройства / all, а не показывает все 11 */p.classList.remove('mode-all','mode-full');if(mode==='all')p.classList.add('mode-all');else if(mode==='full')p.classList.add('mode-full');const sa=document.getElementById('scroll-area');if(sa){sa.scrollTo({top:0,behavior:'instant'});sa.style.overflowY='hidden';}var _fh=document.getElementById('funnelHome');if(_fh)_fh.style.display='none';/* топбар оставляем прозрачным — тёмный фон перекрывал круг ✕ (панель ниже топбара по z) */p.classList.add('open');}
+function openImport(mode){const p=document.getElementById('importPanel');try{if(mode===undefined)mode=sessionStorage.getItem('viae_impmode')||mode;else sessionStorage.setItem('viae_impmode',mode);}catch(e){}/* режим переживает перезагрузку при OAuth-редиректе: возврат без аргумента восстанавливает full=4 устройства / all, а не показывает все 11 */p.classList.remove('mode-all','mode-full');if(mode==='all')p.classList.add('mode-all');else if(mode==='full')p.classList.add('mode-full');const sa=document.getElementById('scroll-area');if(sa){sa.scrollTo({top:0,behavior:'instant'});sa.style.overflowY='hidden';}var _fh=document.getElementById('funnelHome');if(_fh)_fh.style.display='none';/* топбар оставляем прозрачным — тёмный фон перекрывал круг ✕ (панель ниже топбара по z) */document.body.classList.add('imp-open');/* снимает бежевый фейд шапки: под ним тёмная панель импорта */p.classList.add('open');}
 // ✕ панели импорта → на главную (экран выбора источника), а не в блоки прохода.
 function _importHome(){ try{closeImport(true);}catch(e){} if(typeof _showSourceChoice==='function')_showSourceChoice(); }
-function closeImport(skip){document.getElementById('importPanel').classList.remove('open');var _fhc=document.getElementById('funnelHome');if(_fhc)_fhc.style.display=(typeof _profileDone==='function'&&!_profileDone())?'':'none';const sa=document.getElementById('scroll-area');if(sa)sa.style.overflowY='auto';const tb=document.getElementById('topbar');if(tb)tb.style.background='';if(!skip&&importedData.source)applyImportedToSliders();if(typeof updateDeviceBanners==='function')updateDeviceBanners();if(typeof renderGadgetPanel==='function')renderGadgetPanel();if(typeof _reflowSteps==='function')_reflowSteps();}
+function closeImport(skip){document.getElementById('importPanel').classList.remove('open');document.body.classList.remove('imp-open');var _fhc=document.getElementById('funnelHome');if(_fhc)_fhc.style.display=(typeof _profileDone==='function'&&!_profileDone())?'':'none';const sa=document.getElementById('scroll-area');if(sa)sa.style.overflowY='auto';const tb=document.getElementById('topbar');if(tb)tb.style.background='';if(!skip&&importedData.source)applyImportedToSliders();if(typeof updateDeviceBanners==='function')updateDeviceBanners();if(typeof renderGadgetPanel==='function')renderGadgetPanel();if(typeof _reflowSteps==='function')_reflowSteps();}
 function applyImportedToSliders(){
   // ⚠️ Значения с трекера ставятся кодом (el.value=...), а __touched наполняется ТОЛЬКО событиями
   // input/change. Без явной пометки поля попадали в _skipped, и воркер затирал реальные показатели
@@ -9675,6 +9692,10 @@ function _impErrOneMetric(){return L({ru:'Введите хотя бы один 
 function _impDeviceApplied(nm){return L({ru:'✓ Данные '+nm+' применены',uk:'✓ Дані '+nm+' застосовано',en:'✓ '+nm+' data applied',es:'✓ Datos de '+nm+' aplicados',de:'✓ '+nm+'-Daten übernommen',pt:'✓ Dados do '+nm+' aplicados',fr:'✓ Données '+nm+' appliquées',pl:'✓ Dane '+nm+' zastosowane',it:'✓ Dati '+nm+' applicati',he:'✓ נתוני '+nm+' הוחלו',ja:'✓ '+nm+'のデータを適用',ko:'✓ '+nm+' 데이터 적용됨'});}
 function showImportBanner(){
   if(!importedData.source)return;
+  // Баннер живёт в ленте опросника. На утренней карточке / гейте «возвращайтесь завтра» ленты нет —
+  // там он вставал третьим блоком в main и ломал экран (см. flex-direction у body.morning-mode).
+  // Экран рисует тот, кто его открыл; тихий рефреш трекера в это не вмешивается. 2026-08-25.
+  if(document.getElementById('morning-gate')||document.getElementById('daily-done-gate'))return;
   const existing=document.getElementById('import-banner');if(existing)existing.remove();
   const icons={oura:'💍',apple:'🍎','apple-manual':'🍎',garmin:'⌚',polar:'🔴',fitbit:'📡',samsung:'🔵',whoop:'⚡',xiaomi:'🟠',manual:'✏️'};
   const b=document.createElement('div');b.id='import-banner';
