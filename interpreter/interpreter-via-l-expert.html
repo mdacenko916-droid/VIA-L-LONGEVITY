@@ -8337,13 +8337,21 @@ function _labSave(k){
   var unit=ui?ui.value:_labDef(k).c;
   var canon=_labCanon(k,raw,unit);
   if(canon==null){ _labHint(k,'bad'); return; }
-  all[k]={v:canon,u:unit,raw:parseFloat(String(raw).replace(',','.')),d:(di&&di.value)||''};
-  _labsSet(all); _labHint(k,'ok');
+  // ДАТА СДАЧИ: если человек её не указал, ставим день ввода и ПОКАЗЫВАЕМ его в поле — так дата
+  // всегда есть (без неё разбор считает результат сегодняшним), человек видит её и может поправить,
+  // а в разбор уходит честная пометка «дата не указана». День ввода — это НИЖНЯЯ граница давности:
+  // анализ точно не новее, но может быть сильно старше. 2026-08-25.
+  var _prev=all[k]||{}, _dv=(di&&di.value)||'', _auto=0;
+  if(!_dv){ _dv=_dayKey(); _auto=1; if(di) di.value=_dv; }
+  else if(_prev.da && _prev.d===_dv) _auto=1;   // подставленную дату не трогали — она всё ещё авто
+  all[k]={v:canon,u:unit,raw:parseFloat(String(raw).replace(',','.')),d:_dv,da:_auto};
+  _labsSet(all); _labHint(k,_auto?'auto':'ok');
 }
 function _labHint(k,state){
   var el=document.getElementById('labh-'+k); if(!el) return;
   if(state==='bad'){ el.textContent=L({ru:'проверьте число и единицы',uk:'перевірте число та одиниці',en:'check the number and units',es:'revisa el número y las unidades',de:'Zahl und Einheit prüfen',pt:'verifique o número e as unidades',fr:'vérifiez le nombre et les unités',pl:'sprawdź liczbę i jednostki',it:'controlla numero e unità',he:'בדקו את המספר והיחידות',ja:'数値と単位を確認してください',ko:'숫자와 단위를 확인하세요'}); el.style.color='#FF6B8A'; }
   else if(state==='ok'){ el.textContent='✓'; el.style.color='#4ECCA3'; }
+  else if(state==='auto'){ el.textContent='✓ '+L({ru:'дата не указана — поставили день ввода, поправьте, если сдавали раньше',uk:'дату не вказано — поставили день внесення, виправте, якщо здавали раніше',en:'no date given — we set today; change it if the test is older',es:'sin fecha — pusimos hoy; cámbiala si el análisis es anterior',de:'kein Datum angegeben — wir haben heute gesetzt; ändere es, wenn der Wert älter ist',pt:'sem data — colocamos hoje; altere se o exame for mais antigo',fr:'date non indiquée — nous avons mis aujourd’hui ; corrigez si l’analyse est plus ancienne',pl:'brak daty — ustawiliśmy dziś; popraw, jeśli badanie jest starsze',it:'data non indicata — abbiamo messo oggi; correggi se l’esame è più vecchio',he:'לא צוין תאריך — הזנו את היום; תקנו אם הבדיקה ישנה יותר',ja:'日付が未入力のため本日を設定しました。以前の検査なら修正してください',ko:'날짜가 없어 오늘로 넣었습니다. 이전 검사라면 수정하세요'}); el.style.color='var(--t3)'; }
   else { el.textContent=''; }
 }
 // Анализы для отправки в воркер: только канонические значения + давность в месяцах.
@@ -8355,6 +8363,9 @@ function _labsPayload(){
     out=out||{}; out[k]=r.v;
     if(r.d){ var age=Math.round((Date.now()-new Date(r.d+'T00:00:00Z').getTime())/2592000000);
              if(age>=0&&age<600) (out._age=out._age||{})[k]=age; }
+    // Дата подставлена нами → давность считать нельзя: помечаем, чтобы разбор не выдавал такой
+    // результат за свежий (см. _labSave).
+    if(r.da) (out._noDate=out._noDate||[]).push(k);
   });
   return out;
 }

@@ -5964,8 +5964,13 @@ function buildUserMessage(data, lang, tier) {
                  ca:'кальций',phos:'фосфор',pth:'ПТГ',
                  folate:'фолиевая кислота',mg:'магний',zinc:'цинк',hcy:'гомоцистеин'};
         const age=l._age||{};
-        const parts=Object.keys(l).filter(k=>k!=='_age'&&N[k]).map(k=>
-          N[k]+' ' + l[k] + ' ' + (U[k]||'') + (age[k]!=null ? (age[k]<=1?' (свежий)':' (' + age[k] + ' мес назад)') : ''));
+        // Клиент подставляет день ввода, когда дата сдачи не указана (иначе давности нет вовсе).
+        // Такой результат НЕ свежий — он просто «не новее сегодняшнего дня»: помечаем честно,
+        // чтобы разбор не строил на нём выводов как на сегодняшнем. 2026-08-25.
+        const nod=new Set(Array.isArray(l._noDate)?l._noDate:[]);
+        const parts=Object.keys(l).filter(k=>k!=='_age'&&k!=='_noDate'&&N[k]).map(k=>
+          N[k]+' ' + l[k] + ' ' + (U[k]||'') + (nod.has(k) ? ' (дата сдачи не указана — может быть старым)'
+            : age[k]!=null ? (age[k]<=1?' (свежий)':' (' + age[k] + ' мес назад)') : ''));
         if(!parts.length) return '';
         return 'АНАЛИЗЫ (ввёл клиент сам, единицы уже приведены): ' + parts.join(' | ') + '\n'
           + '⚠️ ФЕРРИТИН: если он сдан во время менструации или сразу после неё, значение может занижать реальные запасы — '
@@ -6440,7 +6445,7 @@ async function handleAdvisorChat(request, env, corsHeaders){
         hba1c:'%', ldl:'ммоль/л', tg:'ммоль/л', insulin:'мкЕд/мл', hgb:'г/дл', egfr:'мл/мин', alt:'Ед/л',
         ast:'Ед/л', ca:'ммоль/л', prl:'нг/мл', tst:'нг/дл', dheas:'мкг/дл' };
       const lage = c.labs._age || {};
-      const parts = Object.keys(c.labs).filter(k => k !== '_age' && c.labs[k] != null).slice(0, 45)
+      const parts = Object.keys(c.labs).filter(k => k !== '_age' && k !== '_noDate' && c.labs[k] != null).slice(0, 45)
         .map(k => k + ' ' + c.labs[k] + (U[k] ? (' ' + U[k]) : '')
                     + (lage[k] != null ? (lage[k] <= 1 ? ' (свежий)' : ' (' + lage[k] + ' мес назад)') : ''));
       if (parts.length) labsLine = 'Его анализы (ввёл сам): ' + parts.join(' | ') + '\n';
