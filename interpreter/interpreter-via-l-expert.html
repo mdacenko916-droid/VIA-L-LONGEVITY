@@ -2672,6 +2672,17 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
       </div>
     </div>
   </div>
+  <!-- С ЧЕМ ВЫ ПРИШЛИ — разовая установка (base): жалоба задаётся один раз, дальше в шаге
+       «Что нового за сутки» спрашивается только динамика по ней. Раньше форма жила внутри
+       дневного блока и читалась не в тему: там сводка суток, а тут хроническая жалоба. 2026-08-25.
+       Заголовок и содержимое рисует renderComplaint (текст берётся из _cmpI18n — 12 языков). -->
+  <div class="step" id="step17">
+    <div class="card">
+      <div class="card-accent"></div>
+      <div class="step-badge" id="cmpSetupTitle">С чем вы пришли?</div>
+      <div id="cmpSetup" class="input-group"></div>
+    </div>
+  </div>
   <!-- ПОКАЗАТЕЛИ С ГАДЖЕТА (после профиля, перед блоками; всегда видно при синхроне) -->
   <div id="gadget-panel-wrap" style="display:none;">
     <div class="card">
@@ -4863,12 +4874,26 @@ function _cmpSubmit(){
   var c={ items:(d.items||[]).slice(0,2), text:(t?t.value:'').trim().slice(0,300), since:_dayKey() };
   if(!c.items.length && !c.text) return;   // пустое не сохраняем
   _cmpSave(c); _cmpEditing=false; window._cmpDraft=null; renderComplaint();
+  // Блок «С чем вы пришли» отвечают кнопкой «Сохранить» — событий input/change она не шлёт,
+  // поэтому гейт и авто-переход зовём отсюда сами. 2026-08-25.
+  try{ if(typeof _refreshGate==='function') _refreshGate(); }catch(e){}
+  try{ var st=document.getElementById('step17');
+    if(st && st.classList.contains('flow-show') && typeof _autoAdvance==='function') _autoAdvance(st);
+  }catch(e){}
 }
 function _cmpEdit(){ _cmpEditing=true; window._cmpDraft=Object.assign({},_cmpGet()||{items:[],text:''}); renderComplaint(); }
 function _cmpDelta(v,el){
   window._cmpDeltaToday=v;
-  var box=document.getElementById('cmpDelta'); if(box) box.querySelectorAll('button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-v')===v); });
   try{ window.__touched && window.__touched.add('complaint_delta'); }catch(e){}
+  // Подсветку раньше ставил класс .on, но стилей у него нет (кнопки оформлены инлайном) — выбор
+  // никак не отображался. Перерисовываем блок: renderComplaint сам красит выбранный вариант.
+  try{ renderComplaint(); }catch(e){}
+  try{ if(typeof _refreshGate==='function') _refreshGate(); }catch(e){}
+  // Кнопки-чипы не шлют change/input, поэтому общий делегат ленты их не слышит — авто-переход
+  // к следующему блоку зовём здесь сами. 2026-08-25.
+  try{ var st=document.getElementById('step14');
+    if(st && st.classList.contains('flow-show') && typeof _blockComplete==='function' && _blockComplete(st) && typeof _autoAdvance==='function') _autoAdvance(st);
+  }catch(e){}
 }
 // Недельная оценка по жалобе: раз в 7 дней просим цифру 0–10. Дневное «лучше/хуже» ловит колебания,
 // но не отвечает на главный вопрос человека — «стало ли легче за это время». Траекторию строим по ней.
@@ -4893,24 +4918,43 @@ function _cmpScore(v){
   try{ localStorage.setItem('viae_cmp_scores',JSON.stringify(arr)); localStorage.setItem('viae_cmp_last',String(Date.now())); }catch(e){}
   renderComplaint();
 }
+// Два места, два горизонта: ФОРМА жалобы («с чем вы пришли») живёт в разовом блоке step17
+// рядом с профилем, а СВОДКА с динамикой — в дневном «Что нового за сутки» (#cmpBlock).
+// Раньше и то и другое рисовалось в дневном блоке: первый проход спрашивал про хроническую
+// жалобу под заголовком про сутки. 2026-08-25.
 function renderComplaint(){
-  var box=document.getElementById('cmpBlock'); if(!box) return;
+  var setup=document.getElementById('cmpSetup');
+  var box=document.getElementById('cmpBlock');
+  // Форму рисуем в разовый блок ТОЛЬКО когда он есть в ленте. Если жалоба уже задана, step17 из
+  // ленты уходит — и правка по ссылке «изменить» должна открываться на месте, в дневном блоке,
+  // иначе форма уехала бы в невидимый шаг и клиент не смог бы ничего поменять. 2026-08-25.
+  var _s17=document.getElementById('step17');
+  if(setup && !(_s17 && (_s17.classList.contains('flow-show')||_s17.classList.contains('active')))) setup=null;
+  if(!setup && !box) return;
   var c=_cmpGet();
   var CH='padding:9px 12px;border-radius:11px;font-size:var(--fs-cap);font-family:inherit;cursor:pointer;border:1px solid rgba(226,185,90,.32);background:rgba(226,185,90,.06);color:var(--t1);';
   var CH_ON='padding:9px 12px;border-radius:11px;font-size:var(--fs-cap);font-family:inherit;cursor:pointer;border:1px solid var(--gold);background:rgba(226,185,90,.2);color:#fff;font-weight:600;';
+  var _ttl=document.getElementById('cmpSetupTitle'); if(_ttl)_ttl.textContent=_cmpI18n('ask');   // заголовок карточки — на текущем языке
   if(!c || _cmpEditing){
     var d=window._cmpDraft||{items:[],text:(c&&c.text)||''};
     var chips=_cmpList().map(function(k){
       var on=(d.items||[]).indexOf(k)>=0;
       return '<button type="button" onclick="_cmpToggle(\''+k+'\',this)" style="'+(on?CH_ON:CH)+'">'+_cmpLbl(k)+'</button>';
     }).join('');
-    box.innerHTML='<label>'+_cmpI18n('ask')+'</label>'
+    var _tgt=setup||box;
+    if(setup && box) box.innerHTML='';   // жалоба ещё не задана → в дневном блоке показывать нечего
+    box=_tgt;
+    box.innerHTML=(setup?'':'<label>'+_cmpI18n('ask')+'</label>')
       +'<div class="q-prompt">'+_cmpI18n('askSub')+'</div>'
       +'<div style="display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 10px;">'+chips+'</div>'
       +'<textarea id="cmpText" rows="2" maxlength="300" placeholder="'+_cmpI18n('ph')+'" style="width:100%;background:rgba(226,185,90,.06);border:1px solid rgba(226,185,90,.3);border-radius:10px;color:var(--t1);padding:10px 12px;font-family:inherit;font-size:var(--fs-body);box-sizing:border-box;resize:vertical;">'+((d.text||'').replace(/</g,'&lt;'))+'</textarea>'
       +'<button type="button" onclick="_cmpSubmit()" style="margin-top:8px;background:var(--gold);color:#10141C;border:none;border-radius:10px;padding:9px 16px;font-size:var(--fs-body);font-weight:600;cursor:pointer;font-family:inherit;">'+_cmpI18n('save')+'</button>';
     return;
   }
+  // Жалоба задана: разовый блок пустеет (в ленте он больше не появится — см. _stepDue),
+  // а всё дальнейшее — сводка и динамика — живёт в дневном «Что нового за сутки».
+  if(setup) setup.innerHTML='';
+  if(!box) return;
   var names=(c.items||[]).map(_cmpLbl).join(' · ');
   var head='<label>'+_cmpI18n('with')+'</label>'
     +'<div style="font-size:var(--fs-body);color:#fff;line-height:1.6;margin:2px 0 4px;">'+(names||'')+(c.text?((names?' — ':'')+String(c.text).replace(/</g,'&lt;')):'')+'</div>'
@@ -7225,7 +7269,10 @@ function _markUserScrolling(){ _userScrolling=true; if(_userScrollTimer)clearTim
 function _gatedSteps(){ return [].slice.call(document.querySelectorAll('.step.flow-show')); }
 function _blockAnswered(step){
   if(!step) return false;
-  if(step.classList.contains('blk-normal')) return true;   // нажали «Всё как обычно»
+  if(step.classList.contains('blk-normal')) return true;
+  // «С чем вы пришли»: ответ = СОХРАНЁННАЯ жалоба, а не текст в поле. Набранное, но не сохранённое
+  // кнопкой не считается — иначе блок числился бы отвеченным с недописанным черновиком. 2026-08-25.
+  if(step.id==='step17') return !!(typeof _cmpGet==='function' && _cmpGet()) && !_cmpEditing;   // нажали «Всё как обычно»
   if(step.id==='step0'){
     // Профиль отвечен = 3 базовых поля заполнены валидными числами (по DOM, не по сохранённому localStorage —
     // во время прохода профиль ещё не сохранён). Совпадает с порогом _profileStageCheck.
@@ -7332,7 +7379,7 @@ function _normalLabel(){ return '✓ '+L({ru:'В вашей норме',uk:'У �
 function _blockComplete(step){
   if(!step) return false;
   if(step.classList.contains('blk-normal')) return true;
-  if(step.id==='step0') return _blockAnswered(step);
+  if(step.id==='step0'||step.id==='step17') return _blockAnswered(step);
   var TS=window.__touched||new Set();
   var igs=step.querySelectorAll('.input-group');
   for(var g=0;g<igs.length;g++){
@@ -7349,6 +7396,15 @@ function _blockComplete(step){
     // оценочные поля (energy/sleep_qual/sleep_hours/rhr) — должны быть тронуты
     var ff=['energy','sleep_qual','sleep_hours','rhr'];
     for(var f=0;f<ff.length;f++){ if(ig.querySelector('#'+ff[f]) && !TS.has(ff[f])) return false; }
+    // Шаг «Что нового за сутки» отвечают СВОБОДНЫМ ТЕКСТОМ и кнопками-чипами: ни radio, ни
+    // checkbox, ни оценочных полей в нём нет — все проверки выше молчали, и блок считался
+    // завершённым ещё до ответа. Из-за этого авто-переход после «Ясности ума» перепрыгивал его
+    // и уводил сразу на «Физическую активность» (живой проход 2026-08-24).
+    var _ns=ig.querySelector('#new_symptoms');
+    if(_ns && !TS.has('new_symptoms') && !(_ns.value||'').trim()) return false;   // выход есть всегда: кнопка «Ничего нового»
+    // Дневной блок жалобы: сама жалоба задаётся в step17, здесь ждём ответ «лучше / так же / хуже».
+    if(ig.id==='cmpBlock' && ig.querySelector('#cmpDelta') && !window._cmpDeltaToday) return false;
+    // «События недели» намеренно НЕ требуем: заметка о контексте опциональна.
   }
   return true;
 }
@@ -7473,6 +7529,9 @@ function _showFlow(list){
   // Часы сна пришли с трекера → прячем только под-группу «часы» внутри step16 (не весь шаг —
   // субъективные ощущение сна/пробуждения прибор не мерит и должны остаться). 2026-07-21.
   if(typeof _toggleSleepHours==='function')_toggleSleepHours();
+  // Блок жалобы рисуем ПОСЛЕ расстановки flow-show: renderComplaint выбирает контейнер по тому,
+  // есть ли разовый шаг «С чем вы пришли» в этой ленте. 2026-08-25.
+  if(typeof renderComplaint==='function'){ try{ renderComplaint(); }catch(e){} }
   // Кнопку результата прицепляем в самый конец ленты — её видно, только пройдя все блоки
   var ff=document.getElementById('flow-footer'); if(ff&&main)main.appendChild(ff);
   var sa=document.getElementById('scroll-area');if(sa)sa.scrollTop=0;else window.scrollTo(0,0);
@@ -7480,14 +7539,14 @@ function _showFlow(list){
 // Единая лента (строение VIO). Порядок = важность: base (профиль 0 → питание 7 → добавки 9),
 // сутки за вчера (приливы 2 → энергия/образ жизни 5 → когниция 6), «Прямо сейчас» (сигналы тела 4 —
 // пульс + самочувствие в моменте), weekly (активность 8 → новые симптомы 14), biweekly (стресс 10).
-const FLOW_ALL=[0,12,7,9,2,4,16,5,6,15,8,14,10];   // daily-зона: приливы2·сигналы тела4·сон16·энергия5·ясность6; «Прямо сейчас»: пульс15. 15(пульс) — приборный (авто-скрытие всего шага при синке, см. _AUTO_STEP_METRIC). 16(сон) остаётся всегда: несёт субъективные ощущение сна/пробуждения; при синке прячется только под-группа «часы» (_toggleSleepHours). HRV/темп/VO2/SpO2/дыхание НЕ в ленте: функция гаджета, значения из панели трекера, поля живут в DOM (step1/step3)
+const FLOW_ALL=[0,17,12,7,9,2,4,16,5,6,15,8,14,10];   // 17 «С чем вы пришли» — разовая установка сразу после профиля (динамика по ней живёт в дневном 14). daily-зона: приливы2·сигналы тела4·сон16·энергия5·ясность6; «Прямо сейчас»: пульс15. 15(пульс) — приборный (авто-скрытие всего шага при синке, см. _AUTO_STEP_METRIC). 16(сон) остаётся всегда: несёт субъективные ощущение сна/пробуждения; при синке прячется только под-группа «часы» (_toggleSleepHours). HRV/темп/VO2/SpO2/дыхание НЕ в ленте: функция гаджета, значения из панели трекера, поля живут в DOM (step1/step3)
 // Профиль (возраст/рост/вес) — разовый онбординг: заполнен → убираем из стопки навсегда,
 // данные живут в «Мой профиль», правка оттуда (кнопка «Изменить» → _fixMetric(0)).
 function _profileDone(){ try{var p=JSON.parse(localStorage.getItem('viae_profile')||'{}')||{}; return !!(p.age&&p.height&&p.weight);}catch(e){return false;} }
 // ── КАДЕНС блоков (что когда показывать) ──────────────────────────────────────
 // base = только первичный проход (потом живёт в карточке); daily = каждый день;
 // weekly = раз в неделю; biweekly = раз в 2 недели. Первый проход = всё «due», показываем сразу.
-const STEP_CADENCE={0:'base',12:'base',7:'base',9:'base',
+const STEP_CADENCE={0:'base',17:'base',12:'base',7:'base',9:'base',
                     2:'daily',4:'daily',16:'daily',5:'daily',6:'daily',15:'daily',
                     8:'weekly',14:'daily',10:'biweekly'};   // 14 «Что нового за сутки» — переназначен с weekly на daily (2026-07-20)
 function _stepLastMap(){try{return JSON.parse(localStorage.getItem('viae_steplast')||'{}')||{};}catch(e){return {};}}
@@ -7497,6 +7556,9 @@ function _stepDue(n){
   // Без этого _stepDue(base)=!_profileDone() у вернувшегося клиента прятал профиль — пол/цикл/питание изменить
   // было нечем (A2, 2026-07-17). editMode обходил только гейт «пройдено сегодня», но не каденс base.
   if(window.__editMode) return true;
+  // «С чем вы пришли» — тоже разовый блок, но его «сделано» определяет не профиль, а сама
+  // сохранённая жалоба: клиент мог заполнить профиль раньше, чем появился этот шаг. 2026-08-25.
+  if(n===17) return !(typeof _cmpGet==='function' && _cmpGet());
   if(c==='base')return !_profileDone();
   if(c==='weekly'||c==='biweekly'){
     var last=_stepLastMap()[n]; if(!last)return true;
