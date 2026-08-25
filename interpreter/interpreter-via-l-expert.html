@@ -6860,7 +6860,9 @@ function renderGadgetPanel(){
   // Панель — часть ленты прохода. Пока на экране утренняя карточка или гейт «завтра», ленты нет:
   // тихий рефреш трекера (fitbit/oura/…) выносил панель поверх карточки, и в горизонтальном main
   // экран разъезжался. Показ панели — дело того, кто рисует ленту. 2026-08-25.
-  if(document.getElementById('morning-gate')||document.getElementById('daily-done-gate')){ wrap.style.display='none'; return; }
+  // То же и на РАЗБОРЕ (body.view-result): goTo('result') панель прячет, но тихий рефреш трекера
+  // приходит позже и включал её заново — она всплывала над «Общим индексом дня». 2026-08-25.
+  if(document.getElementById('morning-gate')||document.getElementById('daily-done-gate')||document.body.classList.contains('view-result')){ wrap.style.display='none'; return; }
   const D=(typeof importedData!=='undefined')?importedData:{};
   // «Данные с трекера» — это показатели гаджета. В ручном режиме их нет: панель не показываем
   // (кроме случая, если данные с устройства всё же есть в этой сессии).

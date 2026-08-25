@@ -2353,7 +2353,18 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
 
   const result = await response.json();
   logUsage(env, ctx, 'analyze', ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001', tier, lang, result);
-  let text = result.content?.[0]?.text || result.error?.message || 'Ошибка генерации';
+  // Сбой API (кончился баланс ключа, rate limit, 5xx) — НЕ выдаём клиенту как разбор. Раньше сюда
+  // подставлялось result.error.message, и человек читал в карточке «Разбор дня от VIA·L» английский
+  // текст биллинга Anthropic; тот же текст уходил в кэш дня и в карточку кабинета специалисту.
+  // Отдаём флаг ошибки — клиент показывает своё «не удалось получить анализ» и ничего не кэширует.
+  // Живой случай 2026-08-24 вечером: баланс ключа воркера исчерпан. 2026-08-25.
+  if (!result.content?.[0]?.text) {
+    console.error('analyze: API error', response.status, result?.error?.type, result?.error?.message);
+    return new Response(JSON.stringify({ error: 'ai_unavailable' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  let text = result.content[0].text;
 
   // VIA-L EXPERT: доза приходит от специалиста (протокол в кабинете), а не из авто-текста —
   // за цифрой должен стоять человек, который видел лекарства и анкету. Решение владельца 2026-08-04.
@@ -2890,7 +2901,15 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
 
   const result = await response.json();
   logUsage(env, ctx, isMonth ? 'monthly-report' : 'weekly-report', ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001', tier, lang, result);
-  const text = result.content?.[0]?.text || result.error?.message || 'Ошибка генерации';
+  // Недельный/месячный разбор — та же защита, что в /analyze: сбой API не превращается в текст
+  // отчёта (иначе он осел бы и у клиента, и в карточке специалиста). 2026-08-25.
+  if (!result.content?.[0]?.text) {
+    console.error('weekly-report: API error', response.status, result?.error?.type, result?.error?.message);
+    return new Response(JSON.stringify({ error: 'ai_unavailable' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const text = result.content[0].text;
 
   // VIA-L EXPERT (есть код доступа) → тот же разбор в карточку кабинета, в фоне.
   // Служебный хвост [[EXP]] специалисту не нужен — режем (клиент режет у себя сам).
