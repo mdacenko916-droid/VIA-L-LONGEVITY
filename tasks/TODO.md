@@ -149,7 +149,8 @@
 
 **Чек-лист готовности: `docs/APP-STORE-SUBMISSION-CHECKLIST.md`** (2026-08-04) — что готово,
 что осталось, риски ревью. Ближайшее: Apple Developer $99 → Paid Apps + W-8BEN;
-`legal-app/support.html` под обязательный Support URL; решение по витрине в App Store-сборке.
+`legal-app/support.html` под обязательный Support URL. Витрина в App Store-сборке — решено
+2026-08-25: платный блок закрыт `_isWebSite()`, в приложении остаётся только бесплатное знакомство.
 
 Приложение собрано и запускалось на устройстве владельца; остаток — сборка, стор и
 данные клиента. Канон: [[project_app_iap_plan]], [[project_app_sim_build]],

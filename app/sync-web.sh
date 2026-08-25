@@ -31,6 +31,7 @@ cp "$IP/healthkit-bridge.js"      "$WWW/"
 cp "$IP/healthconnect-bridge.js"  "$WWW/"
 cp "$IP/iap-bridge.js"            "$WWW/"
 cp "$IP/my-specialist.html"       "$WWW/"
+cp "$IP/research-consent.html"    "$WWW/"
 
 # Ассеты (Logo/ включает Logo/metrics/*.png, images-in/ — картинки устройств,
 # phosphor/ — иконочный шрифт + vio-phosphor.js (иконки ВЕЗДЕ), icons/ — прочие иконки,
@@ -48,6 +49,11 @@ cp -R "$ROOT/legal-app" "$WWW/legal"
 # Переписать пути ../legal/ и ../legal-app/ → legal/ (в бандле нет родительской папки;
 # папка скопирована выше как legal-app→legal, поэтому оба варианта ссылок нужно унифицировать)
 sed -i '' -e 's#\.\./legal/#legal/#g' -e 's#\.\./legal-app/#legal/#g' "$WWW/index.html"
+
+# Точка входа в бандле называется index.html, а подстраницы ссылаются на веб-имя
+# interpreter-via-l.html («назад» и «Открыть приложение →»). Такого файла в бандле нет —
+# без подмены обе ссылки ведут на пустой экран.
+sed -i '' -e 's#interpreter-via-l\.html#index.html#g' "$WWW/my-specialist.html" "$WWW/research-consent.html"
 
 echo "✓ Готово. Размер www: $(du -sh "$WWW" | cut -f1)"
 echo "  Дальше: cd app && npx cap sync && открыть в Xcode / Android Studio."
