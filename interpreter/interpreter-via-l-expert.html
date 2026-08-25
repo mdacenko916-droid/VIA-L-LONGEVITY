@@ -5077,6 +5077,7 @@ function navTo(tab){
   var __fh=document.getElementById('funnelHome');if(__fh)__fh.style.display='none';   // возврат «на главную» — только на экране анкеты
   var __ip=document.getElementById('importPanel');if(__ip&&__ip.classList.contains('open')&&typeof closeImport==='function')closeImport(true);
   var __ap=document.getElementById('approachPanel');if(__ap)__ap.style.display='none';
+  document.body.classList.remove('approach-open');
   var __dp=document.getElementById('dayplanPanel');if(__dp)__dp.style.display='none';   // модал «Памятка дня» — тоже (для tab==='today' откроется заново ниже)
   var __nv=document.querySelector('.bottom-nav');if(__nv)__nv.classList.remove('nav-hidden');
   var __mn=document.querySelector('main');if(__mn)__mn.style.display='';
@@ -5090,7 +5091,7 @@ function navTo(tab){
   const cp=document.getElementById('cardPanel');
   if(cp){cp.style.display=(tab==='card')?'block':'none';
     document.body.classList.toggle('card-open', tab==='card');   // прячет футер главной: он просвечивал из-под панели карточки
-    if(tab==='card'){renderCard();const _m=document.querySelector('main');if(_m)_m.style.display='none';const _h=document.querySelector('.hero');if(_h)_h.style.display='none';const _fo2=document.querySelector('footer');if(_fo2)_fo2.style.display='none';const _lg2=document.querySelector('.legal-links');if(_lg2)_lg2.style.display='none';const _n=document.querySelector('.bottom-nav');if(_n)_n.classList.add('nav-hidden');cp.scrollTop=0;}}
+    if(tab==='card'){renderCard();const _m=document.querySelector('main');if(_m)_m.style.display='none';const _h=document.querySelector('.hero');if(_h)_h.style.display='none';const _fo2=document.querySelector('footer');if(_fo2)_fo2.style.display='none';const _lg2=document.querySelector('.legal-links');if(_lg2)_lg2.style.display='none';cp.scrollTop=0;}}   // навигацию НЕ прячем: «Мой профиль» — вкладка, а не модалка
   if(tab==='today'){
     // «Сегодня» = домашний дашборд дня. Прошёл сегодня → весь дашборд из снимка; не прошёл → на проход.
     if(typeof _passedToday==='function'&&_passedToday()&&typeof _showTodayDashboard==='function'&&_showTodayDashboard()){ /* полный дашборд дня показан */ }
@@ -11155,6 +11156,20 @@ function closeCircModal(){
   document.body.style.overflow='';
   setTimeout(function(){ m.style.display='none'; }, 340);
 }
+// Возврат со страницы «Мой наставник» (отдельный файл) — по ?tab=… открываем нужную вкладку,
+// чтобы переход между разделами читался как переключение вкладок, а не как уход из приложения.
+(function(){
+  try{
+    var tab=new URLSearchParams(location.search).get('tab');
+    if(!tab) return;
+    history.replaceState(null,'',location.origin+location.pathname);   // чистим адрес
+    var go=function(){
+      if(tab==='approach'){ if(typeof openApproach==='function') openApproach(); }
+      else if(tab==='card'||tab==='today'){ if(typeof navTo==='function') navTo(tab); }
+    };
+    if(document.readyState!=='loading') setTimeout(go,60); else document.addEventListener('DOMContentLoaded',function(){setTimeout(go,60);});
+  }catch(e){}
+})();
 // ✕ панелей «Наш подход» / «Мой профиль» живёт вне них, поэтому его видимость приводим к
 // видимости панелей наблюдателем: скрывают их из доброго десятка мест (navTo, _fixMetric,
 // _changeSource, goTo…), и подписываться на каждое — гарантированный забытый случай.
@@ -11189,10 +11204,16 @@ function openApproach(){
   var _fo=document.querySelector('footer'); if(_fo){window._apprFooter=_fo.style.display; _fo.style.display='none';}   // футер VIA—L/слоган — иначе выглядывает над панелью (лендинг приподнят)
   var _lg=document.querySelector('.legal-links'); if(_lg){window._apprLegal=_lg.style.display; _lg.style.display='none';}
   var _fh=document.getElementById('funnelHome'); if(_fh)_fh.style.display='none';   // спрятать возврат-✕ анкеты, чтобы не было двух ✕
-  var n=document.querySelector('.bottom-nav'); if(n)n.classList.add('nav-hidden');
+  var n=document.querySelector('.bottom-nav'); if(n)n.classList.remove('nav-hidden');   // «Наш подход» — вкладка: навигация остаётся
+  document.body.classList.add('approach-open');
+  document.body.classList.remove('card-open');
+  var _cp=document.getElementById('cardPanel'); if(_cp)_cp.style.display='none';   // уходим с «Профиля», если были там
+  try{ document.querySelectorAll('.bottom-nav-item').forEach(function(b){b.classList.remove('active');}); var _na=document.getElementById('nav-approach'); if(_na)_na.classList.add('active'); }catch(e){}
+  var _tba=document.getElementById('tb-analysis'); if(_tba)_tba.style.display='none';   // заголовок разбора на этом экране не нужен
   p.style.display='block'; p.scrollTop=0;
 }
 function closeApproach(){
+  document.body.classList.remove('approach-open');
   var p=document.getElementById('approachPanel'); if(p)p.style.display='none';
   var m=document.querySelector('main'); if(m)m.style.display=(window._apprMain!=null?window._apprMain:'');
   var h=document.querySelector('.hero'); if(h)h.style.display=(window._apprHero!=null?window._apprHero:'');   // вернуть прежнее состояние (не показывать hero, если пришли из анкеты)
