@@ -125,3 +125,26 @@
 
 Пока вариантов меньше трёх, модели сказано предлагать растительное блюдо словами, без метки
 `[dish:]` и без фото. Нужнее всего веганские завтрак и ужин, затем лакто-вегетарианский ужин.
+
+---
+
+## 5. Третья партия — растительные блюда (заказ от 2026-08-26)
+
+Промпт тот же, дословно; меняется только `[СОСТАВ]`. Имя файла = ключ.
+
+| Ключ | `[СОСТАВ]` для промпта | Закрывает |
+|---|---|---|
+| `bf_vegan_tofu_scramble` | scrambled tofu with spinach and cherry tomatoes, slice of gluten-free toast | веган-завтрак, без глютена |
+| `bf_vegan_chia_berries` | chia pudding made with plant milk, blueberries, flaked almonds | веган-завтрак, без глютена, low-FODMAP |
+| `bf_ovo_eggs_potato` | scrambled eggs with boiled potatoes and spinach, no cheese, no milk | ово-вегетарианский завтрак (без молочного) |
+| `dn_vegan_lentil_stew` | lentil stew with carrots, zucchini and fresh herbs | веган-ужин |
+| `dn_vegan_tempeh_rice` | grilled tempeh with steamed green beans and white rice | веган-ужин, без глютена, low-FODMAP |
+| `dn_vegan_pumpkin_soup` | creamy pumpkin soup with pumpkin seeds and olive oil drizzle | веган-ужин, щадящий |
+| `dn_lacto_cheese_veg` | baked vegetables with soft white cheese and quinoa | лакто-вегетарианский ужин |
+| `dn_ovo_frittata_veg` | vegetable frittata with zucchini and herbs, no cheese, no milk | ово-вегетарианский ужин |
+
+⚠️ В двух блюдах в составе намеренно стоит «no cheese, no milk» — иначе генератор почти всегда
+добавляет сыр, и ово-вегетарианское блюдо перестаёт быть ово-вегетарианским.
+
+После них покрытие станет: веган 3/3/3, лакто 4/3/3, ово 5/3/4 — по три варианта на приём
+минимум, то есть фильтр перестанет упираться в порог.
