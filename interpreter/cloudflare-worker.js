@@ -5521,48 +5521,48 @@ function _condGateBlock(data) {
 // ══════════════════════════════════════════════════════════════════════
 const DISH_CATALOG = {
   bf: {
-    bf_eggs_veg:        ['яичница 2–3 яйца+черри+шпинат+цельнозерновой хлеб', ['veg']],
-    bf_omelet_cheese:   ['омлет+овощной салат (помидоры, огурец, зелень)+гречка', ['gf','lowfod','veg']],
-    bf_cottage_berries: ['творог+черника/малина+грецкие орехи+молотый лён и овсяные хлопья', ['veg']],
-    bf_yogurt_fruit:    ['греческий йогурт+банан+клубника+мюсли без сахара+семена льна', ['veg']],
-    bf_buckwheat_chicken:['отварная куриная грудка+гречка+свёкла+зелень', ['gf','soft']],
-    bf_salmon_plate:    ['лосось на пару+спаржа+запечённый батат', ['gf','soft']],
-    bf_gf_oat_berries:  ['безглютеновая овсянка на воде+черника+грецкие орехи', ['gf','lowfod','soft','veg']],
-    bf_eggs_gf_toast:   ['яичница+шпинат+черри+ломтик безглютенового хлеба', ['gf','lowfod','veg']],
-    bf_rice_porridge_egg:['рисовая каша+варёное яйцо+огурец', ['gf','lowfod','soft','veg']],
-    bf_sardines_toast:  ['сардины с костями+безглютеновый тост+зелень+лимон', ['gf','lowfod']],
+    bf_eggs_veg:        ['яичница 2–3 яйца+черри+шпинат+цельнозерновой хлеб', ['veg', 'egg']],
+    bf_omelet_cheese:   ['омлет+овощной салат (помидоры, огурец, зелень)+гречка', ['gf', 'lowfod', 'veg', 'egg', 'dairy']],
+    bf_cottage_berries: ['творог+черника/малина+грецкие орехи+молотый лён и овсяные хлопья', ['veg', 'dairy']],
+    bf_yogurt_fruit:    ['греческий йогурт+банан+клубника+мюсли без сахара+семена льна', ['veg', 'dairy']],
+    bf_buckwheat_chicken:['отварная куриная грудка+гречка+свёкла+зелень', ['gf', 'soft', 'meat']],
+    bf_salmon_plate:    ['лосось на пару+спаржа+запечённый батат', ['gf', 'soft', 'fish']],
+    bf_gf_oat_berries:  ['безглютеновая овсянка на воде+черника+грецкие орехи', ['gf', 'lowfod', 'soft', 'veg']],
+    bf_eggs_gf_toast:   ['яичница+шпинат+черри+ломтик безглютенового хлеба', ['gf', 'lowfod', 'veg', 'egg']],
+    bf_rice_porridge_egg:['рисовая каша+варёное яйцо+огурец', ['gf', 'lowfod', 'soft', 'veg', 'egg']],
+    bf_sardines_toast:  ['сардины с костями+безглютеновый тост+зелень+лимон', ['gf', 'lowfod', 'fish']],
   },
   ln: {
-    ln_salmon_quinoa:   ['лосось гриль+овощной микс (цукини, баклажан, помидоры)+киноа', ['gf','lowfod']],
-    ln_chicken_salad:   ['куриная грудка гриль+большой салат из зелени с оливковым маслом+батат', ['gf','lowfod','soft']],
-    ln_beef_rice:       ['постная говядина+брокколи+коричневый рис', ['gf','soft']],
-    ln_whitefish_veg:   ['треска+тёплые печёные овощи (свёкла, морковь, лук)+перловка', ['soft']],
+    ln_salmon_quinoa:   ['лосось гриль+овощной микс (цукини, баклажан, помидоры)+киноа', ['gf', 'lowfod', 'fish']],
+    ln_chicken_salad:   ['куриная грудка гриль+большой салат из зелени с оливковым маслом+батат', ['gf', 'lowfod', 'soft', 'meat']],
+    ln_beef_rice:       ['постная говядина+брокколи+коричневый рис', ['gf', 'soft', 'meat']],
+    ln_whitefish_veg:   ['треска+тёплые печёные овощи (свёкла, морковь, лук)+перловка', ['soft', 'fish']],
     ln_legumes:         ['нут/фасоль+брокколи и капуста+цельнозерновой хлеб (вег)', ['veg']],
-    ln_tofu_rice:       ['тофу с куркумой+овощной гарнир+коричневый рис (вег)', ['gf','lowfod','soft','veg']],
-    ln_liver_pepper:    ['куриная печень+болгарский перец+гречка (железо и витамин C в одном приёме)', ['gf']],
-    ln_lowfod_chicken_rice:['курица+цукини и морковь+белый рис', ['gf','lowfod','soft']],
-    ln_lentil_veg:      ['чечевица+морковь+шпинат+киноа (вег)', ['gf','veg']],
-    ln_sardine_potato:  ['сардины+молодой картофель+листовая зелень (кальций из еды)', ['gf','lowfod','soft']],
+    ln_tofu_rice:       ['тофу с куркумой+овощной гарнир+коричневый рис (вег)', ['gf', 'lowfod', 'soft', 'veg']],
+    ln_liver_pepper:    ['куриная печень+болгарский перец+гречка (железо и витамин C в одном приёме)', ['gf', 'meat']],
+    ln_lowfod_chicken_rice:['курица+цукини и морковь+белый рис', ['gf', 'lowfod', 'soft', 'meat']],
+    ln_lentil_veg:      ['чечевица+морковь+шпинат+киноа (вег)', ['gf', 'veg']],
+    ln_sardine_potato:  ['сардины+молодой картофель+листовая зелень (кальций из еды)', ['gf', 'lowfod', 'soft', 'fish']],
   },
   dn: {
-    dn_baked_fish:      ['запечённая форель+тушёная капуста+молотый лён', ['gf']],
-    dn_turkey_broccoli: ['отварная индейка+брокколи на пару+семена льна', ['gf','soft']],
-    dn_egg_avocado:     ['яйцо-пашот+½ авокадо+цельнозерновой хлеб+зелень', ['veg']],
-    dn_cottage_light:   ['мягкий творог+груша+тыквенные семечки', ['gf','soft','veg']],
-    dn_chicken_light:   ['курица+салат из помидоров и огурцов+гречка', ['gf','lowfod']],
-    dn_soup_fish:       ['светлый овощной суп с белой рыбой', ['gf','soft']],
-    dn_lowfod_fish_zucchini:['треска+цукини+белый рис', ['gf','lowfod','soft']],
-    dn_turkey_potato_carrot:['индейка+картофель+морковь', ['gf','lowfod','soft']],
-    dn_tofu_greens:     ['тофу+шпинат+киноа (вег)', ['gf','lowfod','soft','veg']],
-    dn_omelet_zucchini: ['омлет+тушёный кабачок+зелень', ['gf','lowfod','soft','veg']],
+    dn_baked_fish:      ['запечённая форель+тушёная капуста+молотый лён', ['gf', 'fish']],
+    dn_turkey_broccoli: ['отварная индейка+брокколи на пару+семена льна', ['gf', 'soft', 'meat']],
+    dn_egg_avocado:     ['яйцо-пашот+½ авокадо+цельнозерновой хлеб+зелень', ['veg', 'egg']],
+    dn_cottage_light:   ['мягкий творог+груша+тыквенные семечки', ['gf', 'soft', 'veg', 'dairy']],
+    dn_chicken_light:   ['курица+салат из помидоров и огурцов+гречка', ['gf', 'lowfod', 'meat']],
+    dn_soup_fish:       ['светлый овощной суп с белой рыбой', ['gf', 'soft', 'fish']],
+    dn_lowfod_fish_zucchini:['треска+цукини+белый рис', ['gf', 'lowfod', 'soft', 'fish']],
+    dn_turkey_potato_carrot:['индейка+картофель+морковь', ['gf', 'lowfod', 'soft', 'meat']],
+    dn_tofu_greens:     ['тофу+шпинат+киноа (вег)', ['gf', 'lowfod', 'soft', 'veg']],
+    dn_omelet_zucchini: ['омлет+тушёный кабачок+зелень', ['gf', 'lowfod', 'soft', 'veg', 'egg']],
   },
   sn: {
-    sn_nuts_fruit:      ['горсть орехов+яблоко/груша', ['gf','veg']],
-    sn_yogurt_berries:  ['йогурт/кефир+ягоды', ['gf','veg']],
-    sn_hummus_veg:      ['хумус+палочки моркови/огурца/сельдерея', ['gf','veg']],
-    sn_eggs_cucumber:   ['2 варёных яйца+огурец+зелень', ['gf','lowfod','soft','veg']],
-    sn_ricecake_cheese: ['рисовые хлебцы+ломтики твёрдого сыра', ['gf','lowfod','soft','veg']],
-    sn_kiwi_walnuts:    ['киви+грецкие орехи', ['gf','lowfod','soft','veg']],
+    sn_nuts_fruit:      ['горсть орехов+яблоко/груша', ['gf', 'veg']],
+    sn_yogurt_berries:  ['йогурт/кефир+ягоды', ['gf', 'veg', 'dairy']],
+    sn_hummus_veg:      ['хумус+палочки моркови/огурца/сельдерея', ['gf', 'veg']],
+    sn_eggs_cucumber:   ['2 варёных яйца+огурец+зелень', ['gf', 'lowfod', 'soft', 'veg', 'egg']],
+    sn_ricecake_cheese: ['рисовые хлебцы+ломтики твёрдого сыра', ['gf', 'lowfod', 'soft', 'veg', 'dairy']],
+    sn_kiwi_walnuts:    ['киви+грецкие орехи', ['gf', 'lowfod', 'soft', 'veg']],
   },
 };
 
@@ -5571,6 +5571,11 @@ const DISH_CATALOG = {
 // пограничных, чем меню из одного блюда), но говорим об этом прямо в блоке.
 function buildDishCatalog(data) {
   const sel = selectDietPattern(data);
+  // Тип питания режет каталог ПЕРВЫМ и не ослабляется никогда: рыба в меню
+  // у вегана — это не «мало вариантов», это потеря доверия ко всему приложению.
+  const EXCLUDE = { pescatarian:['meat'], vegetarian:['meat','fish'], lacto_veg:['meat','fish','egg'],
+                    ovo_veg:['meat','fish','dairy'], vegan:['meat','fish','egg','dairy'] };
+  const banned = EXCLUDE[String(data.diet_type || '')] || [];
   const need = [];
   if (sel.layers.some(l => l.id === 'DM-GLUTEN')) need.push('gf');
   if (sel.layers.some(l => l.id === 'DM-LOWFODMAP')) need.push('lowfod');
@@ -5578,7 +5583,7 @@ function buildDishCatalog(data) {
   const TITLE = { bf: 'Завтраки', ln: 'Обеды', dn: 'Ужины', sn: 'Перекусы (если советуешь перекус)' };
   let out = '', thin = false;
   ['bf', 'ln', 'dn', 'sn'].forEach(meal => {
-    const all = Object.entries(DISH_CATALOG[meal]);
+    const all = Object.entries(DISH_CATALOG[meal]).filter(([, v]) => !banned.some(b => v[1].includes(b)));
     let list = all.filter(([, v]) => need.every(t => v[1].includes(t)));
     if (prefer) {
       const soft = list.filter(([, v]) => v[1].includes('soft'));
@@ -5586,8 +5591,11 @@ function buildDishCatalog(data) {
     }
     if (list.length < 3) { thin = true; list = all.filter(([, v]) => need.slice(0, 1).every(t => v[1].includes(t))); }
     if (!list.length) list = all;
+    if (!list.length) { out += TITLE[meal] + ': подходящих блюд в каталоге нет — предложи своё растительное блюдо СЛОВАМИ, без метки [dish:] (фото ставить нечего).\n'; return; }
     out += TITLE[meal] + ': ' + list.map(([k, v]) => k + '=' + v[0]).join('; ') + '.\n';
   });
+  if (banned.length) out += '⚠️ ТИП ПИТАНИЯ: клиент не ест ' + banned.map(b => ({meat:'мясо',fish:'рыбу',egg:'яйца',dairy:'молочное'}[b])).join(', ')
+    + '. Ни в меню, ни в тексте не предлагай этого — ни как «вариант», ни как «источник белка».\n';
   if (need.length) out += '⚠️ Список УЖЕ отфильтрован под ограничения клиента: бери ключи только отсюда и не добавляй блюда по памяти.'
     + (thin ? ' Вариантов немного — это нормально, не выдумывай новые.' : '') + '\n';
   return out;
@@ -5604,6 +5612,9 @@ function selectDietPattern(data) {
   const waist = num(data.waist), height = num(data.height);
   const whtr = (waist > 0 && height > 0) ? waist / height : null;
   const bpS = num(data.bp_sys), bpD = num(data.bp_dia);
+  // Тип питания влияет на ИСТОЧНИКИ в акцентах (железо, B12, белок), а не только на каталог блюд.
+  const plant = ['vegetarian', 'lacto_veg', 'ovo_veg', 'vegan'].includes(String(data.diet_type || ''));
+  const vegan = String(data.diet_type || '') === 'vegan';
 
   // ── АКЦЕНТЫ: условие → {что добавить, что ограничить, класс данных} ──
   const acc = [];
@@ -5627,11 +5638,15 @@ function selectDietPattern(data) {
     ev: 'высокая' });
   add('AC-IRON', num(labs.ferritin) != null && num(labs.ferritin) < 30, {
     what: 'железо из еды вместе с витамином C',
-    food: 'печень изредка, красное мясо умеренно, птица, рыба; в тот же приём — перец или цитрус',
+    food: plant ? 'бобовые, тофу, тёмная зелень, тыквенные семечки — обязательно с витамином C в тот же приём (перец, цитрус, киви)'
+                : 'печень изредка, красное мясо умеренно, птица, рыба; в тот же приём — перец или цитрус',
     limit: 'чай, кофе и молочное — разносить с железом на час',
     ev: 'высокая', note: 'обязательно сказать честно: едой низкий ферритин не поднять — причину и препарат решает врач' });
   add('AC-B12', num(labs.b12) != null && num(labs.b12) < 200, {
-    what: 'источники B12', food: 'мясо, яйца, рыба, обогащённые продукты', limit: '', ev: 'высокая' });
+    what: 'источники B12',
+    food: vegan ? 'обогащённые продукты (растительное молоко, дрожжевые хлопья)' : 'мясо, яйца, рыба, обогащённые продукты',
+    limit: '', ev: 'высокая',
+    note: vegan ? 'честно: на веганском питании B12 из обычной еды не набрать — это тот случай, когда речь о добавке, и решает её специалист' : '' });
   add('AC-VITD', num(labs.vitd) != null && num(labs.vitd) < 50, {
     what: 'жирная рыба и дневной свет', food: 'лосось, скумбрия, сардины, желток', limit: '',
     ev: 'высокая', note: 'сказать честно: одним питанием витамин D не закрывается' });
@@ -5642,7 +5657,8 @@ function selectDietPattern(data) {
     ev: 'средняя', note: 'K2 без обещаний: маркеры двигает, плотность почти нет, переломы не доказаны' });
   add('AC-PROTEIN', age >= 50 || cmp.includes('muscle') || data.phase === 'post' || data.phase === 'meno', {
     what: 'достаточно белка за день плюс силовая нагрузка',
-    food: 'рыба, птица, яйца, творог, бобовые — равномерно по приёмам',
+    food: vegan ? 'бобовые, тофу и темпе, киноа, орехи — равномерно по приёмам'
+               : (plant ? 'яйца, творог, бобовые, тофу — равномерно по приёмам' : 'рыба, птица, яйца, творог, бобовые — равномерно по приёмам'),
     limit: '',
     ev: 'высокая', note: 'решают суточная норма и сама силовая; распределение по приёмам — лишь удобный способ добрать' });
   add('AC-OMEGA', num(labs.crp) > 3 || has(c, 'autoimmune_joint', 'osteoarthritis') || cmp.includes('pain'), {
