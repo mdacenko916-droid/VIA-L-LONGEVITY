@@ -3003,7 +3003,10 @@ function buildWeeklyUserMessage(summary, daily, lang, period, exp) {
 }
 
 async function handleWeeklyReport(request, env, corsHeaders, ctx) {
-  const { summary, daily, lang, code, tier, period, exp } = await request.json();
+  const { summary, daily, lang, code, tier, period, exp, ctx: profCtx } = await request.json();
+  // Недельный разбор раньше не видел ни состояний, ни типа питания: он мог посоветовать
+  // то, что дневной разбор уже запретил. Профиль приходит отдельным полем ctx.
+  const _wCtx = profCtx && typeof profCtx === 'object' ? profCtx : {};
   const langMap = {
     ru: 'русском', uk: 'украинском', en: 'English', es: 'español',
     de: 'Deutsch', pt: 'português', fr: 'français', pl: 'polski',
@@ -3071,7 +3074,12 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
       'ЕСЛИ ДАНА ЖАЛОБА: эксперимент выбирай ПОД НЕЁ — он должен быть рычагом именно к тому, с чем человек пришёл, ' +
       'и в metrics ставь то, по чему сдвиг этой жалобы будет виден. Рычаг не под жалобу бери только тогда, когда в ' +
       'данных есть что-то более срочное — и тогда скажи в тексте, почему на этой неделе важнее оно.\n' +
-      'Это служебная строка, не пиши к ней пояснений и не упоминай её в тексте.')
+      'Это служебная строка, не пиши к ней пояснений и не упоминай её в тексте.\n\n' +
+      // Смысл недельного разбора — замкнуть петлю: что предлагали, что человек делал, что сдвинулось.
+      'ПИЩЕВОЙ АКЦЕНТ И РАМКА ДВИЖЕНИЯ выше выбраны кодом под сигналы этого человека. '
+      + 'Если за неделю по жалобе ничего не сдвинулось — скажи об этом прямо и спокойно, '
+      + 'и предложи не новый совет поверх старого, а либо продолжить тот же акцент дольше, либо сменить его. '
+      + 'Не выдумывай, что человек делал: ты видишь только цифры и его отметки.')
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -3084,7 +3092,8 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
       model: ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
       max_tokens: 900,
       system: weeklySystem,
-      messages: [{ role: 'user', content: buildWeeklyUserMessage(summary, daily, lang, period, exp) }],
+      messages: [{ role: 'user', content: _condGateBlock(_wCtx) + buildDietBlock(_wCtx) + buildExerciseBlock(_wCtx)
+        + buildWeeklyUserMessage(summary, daily, lang, period, exp) }],
     }),
   });
 
@@ -5746,8 +5755,13 @@ function buildDietBlock(data) {
   const sel = selectDietPattern(data);
   if (!sel.accents.length && !sel.layers.length) return '';
   const EV = { 'высокая': 'это хорошо изученный подход', 'средняя': 'данных меньше, но направление устойчивое', 'предварительная': 'доказательства ранние — это эксперимент' };
-  let out = '══ ПИЩЕВОЙ АКЦЕНТ НА СЕГОДНЯ (выбран кодом по сигналам клиента — свой не придумывай) ══\n'
-    + 'ОСНОВА (она у всех и не обсуждается): овощи и фрукты, цельные злаки, бобовые, орехи, рыба, минимум ультра-обработанного, умеренный натрий.\n';
+  // Основа тоже зависит от типа питания: у вегана в ней не может быть рыбы.
+  const _dt = String(data.diet_type || '');
+  const _baseFood = _dt === 'vegan' ? 'овощи и фрукты, цельные злаки, бобовые, орехи и семена, тофу'
+    : (['vegetarian', 'lacto_veg', 'ovo_veg'].includes(_dt) ? 'овощи и фрукты, цельные злаки, бобовые, орехи, яйца или молочное по типу питания'
+    : 'овощи и фрукты, цельные злаки, бобовые, орехи, рыба');
+  let out = '══ ПИЩЕВОЙ АКЦЕНТ (выбран кодом по сигналам клиента — свой не придумывай) ══\n'
+    + 'ОСНОВА (она у всех и не обсуждается): ' + _baseFood + ', минимум ультра-обработанного, умеренный натрий.\n';
   sel.accents.forEach(a => {
     out += '• АКЦЕНТ: ' + a.what + '\n  — добавить: ' + a.food + '\n'
         + (a.limit ? '  — ограничить: ' + a.limit + '\n' : '')

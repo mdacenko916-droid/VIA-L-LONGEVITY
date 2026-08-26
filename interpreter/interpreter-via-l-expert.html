@@ -3231,6 +3231,8 @@ body.view-result #tb-brand{display:none;}
           <div class="chip"><input type="radio" name="eating_pattern" id="ep4" value="other"><label for="ep4" data-t="eat_other">Нет режима</label></div>
         </div>
       </div>
+      <!-- ТИП ПИТАНИЯ (docs/NUTRITION-MAPPING-SPEC.md §3) -->
+      <div class="input-group" id="diet-wrap"></div>
       <div class="input-group">
         <label data-t="s7_l3">Белок</label>
         <div class="q-prompt" data-t="s7_q3">Как вы оцениваете количество белка в рационе?</div>
@@ -3415,6 +3417,10 @@ body.view-result #tb-brand{display:none;}
         </div>
         <input type="text" id="meds_other" data-t-placeholder="meds_other_ph" placeholder="Какие именно? (названия)" style="display:none;margin-top:10px;width:100%;background:rgba(226,185,90,.06);border:1px solid rgba(226,185,90,.3);border-radius:10px;color:var(--t1);padding:10px 12px;font-family:inherit;font-size:var(--fs-body);box-sizing:border-box;">
       </div>
+
+      <div class="divider"></div>
+      <!-- СОСТОЯНИЯ ЗДОРОВЬЯ (docs/NUTRITION-MAPPING-SPEC.md §9) -->
+      <div class="input-group" id="cond-wrap"></div>
       <div class="btn-row">
         <button class="btn btn-back" onclick="goFromNutrition()">←</button>
         <button class="btn btn-primary" onclick="goFromNutrition()"><span class="btn-label" data-t="next">Далее →</span></button>
@@ -4767,7 +4773,9 @@ function setLang(l){
   try{ if(typeof _pmIdle==='function' && !_pmBusy) _pmIdle(); }catch(e){}   // циферблат/кнопка пульса — на текущем языке (кроме идущего замера)
   try{ if(typeof renderSleepScale==='function')renderSleepScale(); }catch(e){}
   try{ if(typeof _applySleepEnds==='function')_applySleepEnds(); }catch(e){}   // края шкалы сна
-  try{ if(typeof renderComplaint==='function')renderComplaint(); }catch(e){}   // блок жалобы — на текущем языке — по полу из анкеты (applyI18n их только что перетёр)
+  try{ if(typeof renderComplaint==='function')renderComplaint(); }catch(e){}
+  try{ if(typeof _condRender==='function')_condRender(); }catch(e){}   // блок состояний
+  try{ if(typeof _dietRender==='function')_dietRender(); }catch(e){}   // тип питания   // блок жалобы — на текущем языке — по полу из анкеты (applyI18n их только что перетёр)
   try{ if(typeof renderEnergyScale==='function')renderEnergyScale(); }catch(e){}
   // Подписи метрик «Данные с трекера» (glab_*) — на текущий язык. ТОЛЬКО если панель уже на экране:
   // renderGadgetPanel() в конце сам ставит display:block, поэтому на любом экране, где панели быть не
@@ -4904,6 +4912,135 @@ function _labHintDue(){
     return true;
   }catch(e){ return false; }
 }
+// ══ ТИП ПИТАНИЯ ══ Решает, какие блюда каталога вообще можно показать
+// (docs/NUTRITION-MAPPING-SPEC.md §3). Веган с рыбой в меню — это не мелочь,
+// а потеря доверия к приложению целиком. Хранится в карточке, как и состояния.
+const DIET_UI = {"l": {"ru": "Тип питания", "uk": "Тип харчування", "en": "Diet type", "es": "Tipo de alimentación", "de": "Ernährungsform", "pt": "Tipo de alimentação", "fr": "Type d’alimentation", "pl": "Rodzaj diety", "it": "Tipo di alimentazione", "he": "סוג התזונה", "ja": "食事のタイプ", "ko": "식단 유형"}, "q": {"ru": "Есть ли продукты, которых вы не едите принципиально?", "uk": "Чи є продукти, яких ви не їсте принципово?", "en": "Are there foods you do not eat on principle?", "es": "¿Hay alimentos que no come por principio?", "de": "Gibt es Lebensmittel, die Sie grundsätzlich nicht essen?", "pt": "Há alimentos que você não come por princípio?", "fr": "Y a-t-il des aliments que vous ne mangez pas par principe ?", "pl": "Czy są produkty, których zasadniczo nie jesz?", "it": "Ci sono alimenti che non mangi per principio?", "he": "יש מאכלים שאתם לא אוכלים מתוך עיקרון?", "ja": "主義として食べないものはありますか？", "ko": "원칙적으로 먹지 않는 음식이 있나요?"}, "omnivore": {"ru": "Ем всё", "uk": "Їм усе", "en": "I eat everything", "es": "Como de todo", "de": "Ich esse alles", "pt": "Como de tudo", "fr": "Je mange de tout", "pl": "Jem wszystko", "it": "Mangio tutto", "he": "אוכל/ת הכול", "ja": "なんでも食べる", "ko": "다 먹어요"}, "pescatarian": {"ru": "Без мяса, но с рыбой", "uk": "Без м’яса, але з рибою", "en": "No meat, but fish", "es": "Sin carne, pero con pescado", "de": "Kein Fleisch, aber Fisch", "pt": "Sem carne, mas com peixe", "fr": "Sans viande, mais avec poisson", "pl": "Bez mięsa, ale z rybą", "it": "Senza carne, ma con pesce", "he": "בלי בשר, אבל עם דגים", "ja": "肉なし・魚あり", "ko": "고기 없이 생선은"}, "vegetarian": {"ru": "Вегетарианское", "uk": "Вегетаріанське", "en": "Vegetarian", "es": "Vegetariana", "de": "Vegetarisch", "pt": "Vegetariana", "fr": "Végétarien", "pl": "Wegetariańska", "it": "Vegetariana", "he": "צמחוני", "ja": "ベジタリアン", "ko": "채식"}, "lacto_veg": {"ru": "Лакто-вегетарианское (с молочным, без яиц)", "uk": "Лакто-вегетаріанське (з молочним, без яєць)", "en": "Lacto-vegetarian (dairy, no eggs)", "es": "Lacto-vegetariana (lácteos, sin huevo)", "de": "Lakto-vegetarisch (Milch, keine Eier)", "pt": "Lacto-vegetariana (laticínios, sem ovos)", "fr": "Lacto-végétarien (laitages, sans œufs)", "pl": "Laktowegetariańska (nabiał, bez jaj)", "it": "Latto-vegetariana (latticini, senza uova)", "he": "לקטו־צמחוני (חלב, בלי ביצים)", "ja": "ラクト・ベジタリアン（乳製品あり・卵なし）", "ko": "락토 채식(유제품 O, 달걀 X)"}, "ovo_veg": {"ru": "Ово-вегетарианское (с яйцами, без молочного)", "uk": "Ово-вегетаріанське (з яйцями, без молочного)", "en": "Ovo-vegetarian (eggs, no dairy)", "es": "Ovo-vegetariana (huevo, sin lácteos)", "de": "Ovo-vegetarisch (Eier, keine Milch)", "pt": "Ovo-vegetariana (ovos, sem laticínios)", "fr": "Ovo-végétarien (œufs, sans laitages)", "pl": "Owowegetariańska (jaja, bez nabiału)", "it": "Ovo-vegetariana (uova, senza latticini)", "he": "אובו־צמחוני (ביצים, בלי חלב)", "ja": "オボ・ベジタリアン（卵あり・乳製品なし）", "ko": "오보 채식(달걀 O, 유제품 X)"}, "vegan": {"ru": "Веганское", "uk": "Веганське", "en": "Vegan", "es": "Vegana", "de": "Vegan", "pt": "Vegana", "fr": "Végétalien", "pl": "Wegańska", "it": "Vegana", "he": "טבעוני", "ja": "ヴィーガン", "ko": "비건"}, "hint": {"ru": "От этого зависит, какие блюда вы увидите в памятке дня — и какие источники белка, железа и B12 имеет смысл предлагать.", "uk": "Від цього залежить, які страви ви побачите в пам’ятці дня — і які джерела білка, заліза та B12 має сенс пропонувати.", "en": "This decides which meals you see in the day plan — and which sources of protein, iron and B12 make sense to suggest.", "es": "De esto depende qué platos verá en el plan del día y qué fuentes de proteína, hierro y B12 tiene sentido proponer.", "de": "Davon hängt ab, welche Gerichte im Tagesplan erscheinen und welche Quellen für Eiweiß, Eisen und B12 sinnvoll sind.", "pt": "Disso depende quais pratos você verá no plano do dia e quais fontes de proteína, ferro e B12 fazem sentido.", "fr": "Cela détermine les plats affichés dans la mémo du jour et les sources de protéines, de fer et de B12 à proposer.", "pl": "Od tego zależy, jakie dania zobaczysz w planie dnia i jakie źródła białka, żelaza i B12 mają sens.", "it": "Da questo dipendono i piatti che vedrai nel piano del giorno e quali fonti di proteine, ferro e B12 ha senso proporre.", "he": "זה קובע אילו מנות תראו בתוכנית היום ואילו מקורות לחלבון, ברזל ו‑B12 הגיוני להציע.", "ja": "これによって、その日のメニューに出る料理と、たんぱく質・鉄・B12の提案先が変わります。", "ko": "이에 따라 하루 메모에 보이는 식사와 단백질·철분·B12를 어디서 권할지가 달라집니다."}};
+const DIET_OPTS = ['omnivore','pescatarian','vegetarian','lacto_veg','ovo_veg','vegan'];
+function _dietRender(){
+  var box=document.getElementById('diet-wrap'); if(!box) return;
+  var P=_condProf(), cur=P.diet_type||'';
+  var esc=function(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); };
+  var h='<label>'+esc(_condT(DIET_UI.l))+'</label><div class="q-prompt">'+esc(_condT(DIET_UI.q))+'</div><div class="chips sup-grid">';
+  DIET_OPTS.forEach(function(v){
+    h+='<div class="chip"><input type="radio" name="diet_type" id="diet_'+v+'" value="'+v+'"'+(cur===v?' checked':'')
+      +' onchange="_dietSave()"><label for="diet_'+v+'">'+esc(_condT(DIET_UI[v]))+'</label></div>';
+  });
+  h+='</div><div style="font-size:var(--fs-cap);color:var(--t3);line-height:1.5;margin-top:8px;">'+esc(_condT(DIET_UI.hint))+'</div>';
+  box.innerHTML=h;
+}
+function _dietGet(){ var r=document.querySelector('input[name="diet_type"]:checked'); return r?r.value:''; }
+function _dietSave(){ try{ var P=_condProf(); P.diet_type=_dietGet(); localStorage.setItem('vialp_profile',JSON.stringify(P)); }catch(e){} }
+function _condProf(){ try{ return JSON.parse(localStorage.getItem('vialp_profile')||'{}')||{}; }catch(e){ return {}; } }
+function _condT(o){ return (o&&(o[(typeof lang!=='undefined'?lang:'en')]||o.en))||''; }
+function _condCollect(){
+  var box=document.getElementById('cond-wrap');
+  var pick=function(sel){ var a=[]; if(box) box.querySelectorAll(sel).forEach(function(c){ if(c.checked) a.push(c.value); }); return a; };
+  var rad=function(n){ var r=box?box.querySelector('input[name="'+n+'"]:checked'):null; return r?r.value:''; };
+  var oth=document.getElementById('cond_other');
+  return { conditions:pick('input.cond-c'), cond_meds:pick('input.cond-m'), cond_temp:pick('input.cond-t'),
+           cond_limit:rad('cond_limit'), cond_super:rad('cond_super'), cond_other:(oth?oth.value.trim().slice(0,200):'') };
+}
+function _condSave(){
+  try{
+    var P=_condProf(), c=_condCollect();
+    P.conditions=c.conditions; P.cond_meds=c.cond_meds; P.cond_temp=c.cond_temp;
+    P.cond_limit=c.cond_limit; P.cond_super=c.cond_super; P.cond_other=c.cond_other;
+    localStorage.setItem('vialp_profile',JSON.stringify(P));
+  }catch(e){}
+}
+// «Ничего из перечисленного» и «предпочитаю не указывать» исключают всё остальное.
+function _condChange(el){
+  var box=document.getElementById('cond-wrap'); if(!box) return;
+  if(el.classList.contains('cond-c')){
+    if(/^(none_cond|skip_cond)$/.test(el.value)){
+      if(el.checked) box.querySelectorAll('input.cond-c').forEach(function(c){ if(c!==el)c.checked=false; });
+    } else if(el.checked){
+      box.querySelectorAll('input.cond-c').forEach(function(c){ if(/^(none_cond|skip_cond)$/.test(c.value))c.checked=false; });
+    }
+  }
+  if(el.classList.contains('cond-t')){
+    if(el.value==='none_temp'){ if(el.checked) box.querySelectorAll('input.cond-t').forEach(function(c){ if(c!==el)c.checked=false; }); }
+    else if(el.checked){ box.querySelectorAll('input.cond-t').forEach(function(c){ if(c.value==='none_temp')c.checked=false; }); }
+  }
+  _condSave(); _condCounts();
+}
+function _condToggle(k){
+  var g=document.getElementById('condg_'+k), a=document.getElementById('conda_'+k); if(!g)return;
+  var open=g.style.display!=='none'; g.style.display=open?'none':'flex'; if(a)a.textContent=open?'▾':'▴';
+}
+// Счётчик у заголовка группы: свёрнутая группа не должна прятать факт, что в ней что-то отмечено.
+function _condCounts(){
+  var box=document.getElementById('cond-wrap'); if(!box)return;
+  COND_GROUPS.forEach(function(g){
+    var el=document.getElementById('condn_'+g.k), grp=document.getElementById('condg_'+g.k); if(!el||!grp)return;
+    var n=0; grp.querySelectorAll('input.cond-c').forEach(function(c){ if(c.checked)n++; });
+    el.textContent=n?(' · '+n):'';
+  });
+}
+function _condRender(){
+  var box=document.getElementById('cond-wrap'); if(!box) return;
+  var P=_condProf(), sel=(P.conditions||[]), selM=(P.cond_meds||[]), selT=(P.cond_temp||[]);
+  var isFem=((P.gender||'female')!=='male');
+  var esc=function(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); };
+  var chip=function(cls,id,val,label,on){
+    return '<div class="chip"><input type="checkbox" class="'+cls+'" id="'+id+'" value="'+val+'"'+(on?' checked':'')
+      +' onchange="_condChange(this)"><label for="'+id+'">'+esc(label)+'</label></div>';
+  };
+  var h='<label>'+esc(_condT(COND_UI.title))+'</label>'
+      + '<div class="q-prompt">'+esc(_condT(COND_UI.hint))+'</div>';
+  COND_GROUPS.forEach(function(g){
+    var items=g.items.filter(function(it){ return isFem || COND_FEM_ONLY.indexOf(it[0])<0; });
+    if(!items.length) return;
+    var anyOn=items.some(function(it){ return sel.indexOf(it[0])>=0; });
+    h+='<div style="margin-top:10px;">'
+      +'<button type="button" onclick="_condToggle(\''+g.k+'\')" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:none;border:none;border-bottom:1px solid var(--b1);padding:8px 2px;color:var(--t2);font-family:inherit;font-size:var(--fs-body);cursor:pointer;">'
+      +'<span>'+esc(_condT(g.t))+'<span id="condn_'+g.k+'" style="color:var(--gold-txt);"></span></span>'
+      +'<span id="conda_'+g.k+'" style="color:var(--t3);">'+(anyOn?'▴':'▾')+'</span></button>'
+      +'<div class="chips sup-grid" id="condg_'+g.k+'" style="display:'+(anyOn?'flex':'none')+';margin-top:8px;">';
+    items.forEach(function(it){ h+=chip('cond-c','cond_'+it[0],it[0],_condT(it[1]),sel.indexOf(it[0])>=0); });
+    h+='</div></div>';
+  });
+  h+='<div class="chips sup-grid" style="margin-top:12px;">'
+    + chip('cond-c','cond_none','none_cond',_condT(COND_UI.none),sel.indexOf('none_cond')>=0)
+    + chip('cond-c','cond_skip','skip_cond',_condT(COND_UI.skip),sel.indexOf('skip_cond')>=0)
+    + '</div>';
+  // Свободный ввод для того, чьего состояния нет в списке. ⚠️ Вето по нему НЕ строятся —
+  // код читает только чипы. Поэтому в промпте рядом с ним стоит правило: действовать
+  // консервативно и отправлять к специалисту, а не выдумывать ограничения.
+  h+='<div style="margin-top:12px;"><label>'+esc(_condT(COND_UI.other_l))+'</label>'
+    +'<div class="q-prompt">'+esc(_condT(COND_UI.other_q))+'</div>'
+    +'<input type="text" id="cond_other" maxlength="200" value="'+esc(P.cond_other||'')+'" placeholder="'+esc(_condT(COND_UI.other_ph))+'" '
+    +'oninput="_condSave()" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--b1);border-radius:10px;padding:11px 12px;color:var(--t1);font-family:inherit;font-size:var(--fs-body);box-sizing:border-box;"></div>';
+  // Лекарства: классы, от которых зависят вето (калий, витамин K, окно питания, нагрузка натощак).
+  h+='<div class="divider"></div><label>'+esc(_condT(COND_UI.meds_l))+'</label>'
+    +'<div class="q-prompt">'+esc(_condT(COND_UI.meds_q))+'</div><div class="chips sup-grid">';
+  COND_MEDS.forEach(function(m){ h+=chip('cond-m','condm_'+m.v,m.v,_condT(m.t),selM.indexOf(m.v)>=0); });
+  h+='</div><div style="font-size:var(--fs-cap);color:var(--t3);line-height:1.5;margin-top:8px;">'+esc(_condT(COND_UI.meds_hint))+'</div>';
+  // Три вопроса вне списка диагнозов — по пользе они стоят больше половины чипов.
+  var rad=function(name,val,label,on){
+    return '<div class="chip"><input type="radio" name="'+name+'" id="'+name+'_'+val+'" value="'+val+'"'+(on?' checked':'')
+      +' onchange="_condChange(this)"><label for="'+name+'_'+val+'">'+esc(label)+'</label></div>';
+  };
+  h+='<div class="divider"></div><label>'+esc(_condT(COND_UI.lim_l))+'</label>'
+    +'<div class="q-prompt">'+esc(_condT(COND_UI.lim_q))+'</div><div class="chips cog-grid">'
+    + rad('cond_limit','yes',_condT(COND_UI.yes),P.cond_limit==='yes')
+    + rad('cond_limit','no',_condT(COND_UI.no),P.cond_limit==='no')
+    +'</div>';
+  h+='<div class="divider"></div><label>'+esc(_condT(COND_UI.temp_l))+'</label>'
+    +'<div class="q-prompt">'+esc(_condT(COND_UI.temp_q))+'</div><div class="chips sup-grid">'
+    + chip('cond-t','condt_none','none_temp',_condT(COND_UI.no),selT.indexOf('none_temp')>=0);
+  COND_TEMP.forEach(function(t){ h+=chip('cond-t','condt_'+t.v,t.v,_condT(t.t),selT.indexOf(t.v)>=0); });
+  h+='</div>';
+  h+='<div class="divider"></div><label>'+esc(_condT(COND_UI.sup_l))+'</label>'
+    +'<div class="q-prompt">'+esc(_condT(COND_UI.sup_q))+'</div><div class="chips cog-grid">'
+    + rad('cond_super','yes',_condT(COND_UI.yes),P.cond_super==='yes')
+    + rad('cond_super','no',_condT(COND_UI.no),P.cond_super==='no')
+    + rad('cond_super','unknown',_condT(COND_UI.unknown),P.cond_super==='unknown')
+    +'</div>';
+  box.innerHTML=h; _condCounts();
+}
+
 function _cmpGet(){ try{ var P=JSON.parse(localStorage.getItem('viae_profile')||'{}')||{}; return P.complaint||null; }catch(e){ return null; } }
 function _cmpSave(c){ try{ var P=JSON.parse(localStorage.getItem('viae_profile')||'{}')||{}; P.complaint=c; localStorage.setItem('viae_profile',JSON.stringify(P)); }catch(e){} }
 function _cmpLbl(k){ var it=CMP_ITEMS[k]; if(!it) return k; return it.t[(typeof lang!=='undefined'?lang:'en')]||it.t.en; }
@@ -5263,7 +5400,9 @@ function _gRefresh(){
   var cp=document.getElementById('cardPanel');
   if(cp&&cp.style.display!=='none'&&typeof renderCard==='function'){try{renderCard();}catch(e){}}
   if(typeof renderGadgetPanel==='function'){try{renderGadgetPanel();}catch(e){}}
-  if(typeof renderComplaint==='function'){try{renderComplaint();}catch(e){}}   // блок жалобы в шаге «Что нового»
+  if(typeof renderComplaint==='function'){try{renderComplaint();}catch(e){}}
+  try{ if(typeof _condRender==='function')_condRender(); }catch(e){}
+  try{ if(typeof _dietRender==='function')_dietRender(); }catch(e){}   // блок жалобы в шаге «Что нового»
   if(typeof _reflowSteps==='function'){try{_reflowSteps();}catch(e){}}
 }
 // Инлайн-правка веса/талии прямо в карточке (меняются со временем) → vial_profile + синхрон с профилем.
@@ -5984,7 +6123,7 @@ async function genMonthlyReport(){
   try{
     var res=await fetch('https://interpreter.viaelcom.workers.dev/weekly-report',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({summary:summary,daily:daily,lang:lang,code:code,period:'month'})});
+      body:JSON.stringify({summary:summary,daily:daily,lang:lang,code:code,period:'month',ctx:_condProf()})});
     var json=await res.json();
     if(!json.report) throw new Error('no report');
     json.report=String(json.report).replace(/\n*\[\[EXP\]\][\s\S]*$/,'').trim();   // подстраховка: месячный хвоста не получает, но путь общий
@@ -6488,7 +6627,7 @@ async function genWeeklyReport(){
   try{
     const res=await fetch('https://interpreter.viaelcom.workers.dev/weekly-report',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({summary,daily,lang,code})});
+      body:JSON.stringify({summary,daily,lang,code,ctx:(typeof _condProf==='function'?_condProf():null)})});
     const json=await res.json();
     if(!json.report) throw new Error('no report');
     // Служебный хвост [[EXP]] — машинная строка для петли эксперимента (её читает VIA-L).
@@ -6862,6 +7001,14 @@ function saveProfile(){
       // 8. Добавки и препараты
       supplements:keepArr(gc(['sup1','sup2','sup3','sup4','sup5','sup6','sup7','sup8','sup9','sup10','sup11']),P.supplements),
       meds:keepArr(gc(['med2','med3','med4','med5']),P.meds),
+      // Состояния здоровья, классы лекарств и тип питания (§9): живут в карточке.
+      conditions:((typeof _condCollect==='function'?_condCollect().conditions:null)||P.conditions||[]),
+      cond_meds:((typeof _condCollect==='function'?_condCollect().cond_meds:null)||P.cond_meds||[]),
+      cond_temp:((typeof _condCollect==='function'?_condCollect().cond_temp:null)||P.cond_temp||[]),
+      cond_limit:((typeof _condCollect==='function'?_condCollect().cond_limit:'')||P.cond_limit||''),
+      cond_super:((typeof _condCollect==='function'?_condCollect().cond_super:'')||P.cond_super||''),
+      cond_other:((typeof _condCollect==='function'?_condCollect().cond_other:'')||P.cond_other||''),
+      diet_type:((typeof _dietGet==='function'?_dietGet():'')||P.diet_type||''),
       meds_other:gv('meds_other')||P.meds_other||'',
       // 9. Контекст образа жизни
       lifestyle_notes:gv('lifestyle_notes')||P.lifestyle_notes||'',
@@ -9430,6 +9577,13 @@ function _showResultsInner(){
     act_recovery:getRadio('act_recovery'),
     supplements:getChecked(['sup1','sup2','sup3','sup4','sup5','sup6','sup7','sup8','sup9','sup10','sup11']),
     meds:getChecked(['med2','med3','med4','med5']),
+    conditions:(function(){try{return _condProf().conditions||[];}catch(e){return [];}})(),
+    cond_meds:(function(){try{return _condProf().cond_meds||[];}catch(e){return [];}})(),
+    cond_temp:(function(){try{return _condProf().cond_temp||[];}catch(e){return [];}})(),
+    cond_limit:(function(){try{return _condProf().cond_limit||'';}catch(e){return '';}})(),
+    cond_super:(function(){try{return _condProf().cond_super||'';}catch(e){return '';}})(),
+    cond_other:(function(){try{return _condProf().cond_other||'';}catch(e){return '';}})(),
+    diet_type:(function(){try{return _condProf().diet_type||'';}catch(e){return '';}})(),
     chronic_stress:getRadio('chronic_stress'),
     cortisol_symp:getChecked(['cort2','cort3','cort4','cort5','cort6','cort7']),
     // bio:{} (биоимпеданс — жир/мышцы/висцеральный/ИМТ/биовозраст) убран 2026-07-15: полей ввода нет,

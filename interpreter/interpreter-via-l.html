@@ -5441,7 +5441,7 @@ async function genMonthlyReport(){
   try{
     var res=await fetch('https://interpreter.viaelcom.workers.dev/weekly-report',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({summary:summary,daily:daily,lang:lang,code:code,period:'month'})});
+      body:JSON.stringify({summary:summary,daily:daily,lang:lang,code:code,period:'month',ctx:_condProf()})});
     var json=await res.json();
     if(!json.report) throw new Error('no report');
     localStorage.setItem('vialp_monthly_text',json.report);
@@ -6297,7 +6297,7 @@ async function genWeeklyReport(){
   try{
     const res=await fetch('https://interpreter.viaelcom.workers.dev/weekly-report',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({summary,daily,lang,code,exp})});
+      body:JSON.stringify({summary,daily,lang,code,exp,ctx:(typeof _condProf==='function'?_condProf():null)})});
     const json=await res.json();
     if(!json.report) throw new Error('no report');
     // Служебный хвост [[EXP]] режем и заводим новый эксперимент (со снимком личной базы за 7 дней до).
