@@ -5545,6 +5545,12 @@ const DISH_CATALOG = {
     ln_liver_pepper:    ['куриная печень+болгарский перец+гречка (железо и витамин C в одном приёме)', ['gf', 'meat']],
     ln_lowfod_chicken_rice:['курица+цукини и морковь+белый рис', ['gf', 'lowfod', 'soft', 'meat']],
     ln_lentil_veg:      ['чечевица+морковь+шпинат+киноа (вег)', ['gf', 'veg']],
+    ln_vegan_falafel_quinoa:['фалафель запечённый+киноа+салат из огурца и помидора (веган)', ['gf','veg']],
+    ln_vegan_chickpea_roast:['печёные овощи+нут+гречка (веган)', ['gf','veg']],
+    ln_vegan_tofu_zucchini_rice:['тофу+цукини и морковь+белый рис (веган)', ['gf','lowfod','soft','veg']],
+    ln_vegan_pumpkin_curry:['карри из тыквы и нута+белый рис (веган)', ['gf','soft','veg']],
+    ln_lacto_salad_feta:['овощной салат по-гречески с фетой+киноа (лакто-вег)', ['gf','veg','dairy']],
+    ln_ovo_egg_rice_bowl:['рис+варёные яйца+шпинат, без молочного (ово-вег)', ['gf','lowfod','soft','veg','egg']],
     ln_sardine_potato:  ['сардины+молодой картофель+листовая зелень (кальций из еды)', ['gf', 'lowfod', 'soft', 'fish']],
   },
   dn: {
