@@ -158,3 +158,60 @@ Dante ответил в тот же день. Два трека разведен
 → Дыр по формальным требованиям не видно. Следующий шаг — **подать приложение на review**
 на портале `cloud.ouraring.com/oauth/applications`, предварительно проверив, что имя и
 описание приложения на портале выглядят продуктово, а не как тестовая запись.
+
+---
+
+## Письмо №3 — благодарность Dante (черновик 2026-08-26, ответом в тред #7814075)
+
+Короткое, тёплое, без новых просьб. Смысл: спасибо за конкретику, мы по ней уже сходили
+и подали заявку — то есть его ответ реально сработал.
+
+### EN
+
+Subject: Re: thank you — application submitted
+
+Hi Dante,
+
+Just a short note to say thank you. Your answer was the most concrete help we've had on
+this in months — you told us exactly where the bulk threshold sits, cleared up that rings
+in a bulk order can ship straight to individual members, and pointed us to the actual
+requirements for production API access.
+
+We acted on it the same day: the application is submitted and now shows *In Review*. All
+the boxes you listed were in place — name and description, homepage, Terms of Service and
+Privacy Policy, a working redirect URL, and a connected user (my own ring). I also
+extended our privacy policy so that it describes explicitly what we receive through the
+Oura API and how a member can revoke that access.
+
+No question attached this time — I just didn't want a helpful answer to go unthanked.
+We'll wait for the review team to come back.
+
+Thanks again, and all the best,
+Ihor Datsenko
+VIA-L
+integration@via-l.com
+
+### RU (для себя)
+
+Тема: Re: спасибо — заявка подана
+
+Здравствуйте, Dante,
+
+Короткое письмо, просто чтобы сказать спасибо. Ваш ответ — самая конкретная помощь,
+которую мы получили по этому вопросу за месяцы: вы назвали, где проходит оптовый порог,
+объяснили, что при оптовом заказе кольца можно слать сразу конечным людям, и указали на
+реальные требования к production-доступу к API.
+
+Мы сделали по нему всё в тот же день: заявка подана и уже в статусе *In Review*. Все
+пункты из вашего списка были на месте — имя и описание, сайт, Условия и Политика
+конфиденциальности, рабочий redirect URL и подключённый пользователь (моё собственное
+кольцо). Дополнительно расширил нашу политику конфиденциальности: теперь там прямо
+описано, что именно мы получаем через API Oura и как пользователь может отозвать доступ.
+
+В этот раз без вопросов — просто не хотелось оставить полезный ответ без благодарности.
+Ждём решения команды ревью.
+
+Ещё раз спасибо и всего доброго,
+Игорь Даценко
+VIA-L
+integration@via-l.com
