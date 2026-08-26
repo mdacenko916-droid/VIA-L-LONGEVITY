@@ -1201,7 +1201,10 @@ body.morning-mode #morning-gate{margin:auto;width:100%;}
 /* Утренний экран = тот же вход: лого → VIA—L EXPERT → описание на беже, ниже графитовый блок
    с приветствием и тремя источниками. Карточки источника склонированы в блок, поэтому кнопки
    самого hero прячем; «VIA—L» в футере снимаем — это третий логотип имени на одном экране. */
-body.morning-mode #scroll-area{padding-top:calc(20px + env(safe-area-inset-top,0px));}   /* как на экране входа: под hero нужен весь экран, 72px запаса под плавающий топбар лишние */
+body.morning-mode #scroll-area{padding-top:calc(34px + env(safe-area-inset-top,0px));}
+/* Свободную вертикаль делим, а не сваливаем под карточки: без justify-content весь запас
+   уходил вниз — сверху тесно, снизу пустое поле (правка по скрину владельца 2026-08-26). */
+body.morning-mode #scroll-area main{justify-content:center;}
 body.morning-mode .hero{display:flex !important;flex:0 0 auto;padding-bottom:6px;}
 body.morning-mode .hero-imports{display:none;}
 /* Ежедневный проход (переделка 2026-08-26 по макету владельца): длинный текст-объяснялка —
@@ -2011,6 +2014,11 @@ body:not(.booted) .hero, body:not(.booted) main{visibility:hidden;}
 #tb-brand .tb-brand-sub{font-size:var(--fs-cap);letter-spacing:2px;opacity:.85;}
 body.card-open #tb-brand, body.approach-open #tb-brand{color:#EEC77A;}
 body.view-result #tb-brand{display:none;}
+/* ✕ возврата (импорт-панель, анкета) стоит в левом верхнем углу и накрывал подпись «VIA·L EXPERT».
+   Там, где ✕ показан, подпись не нужна: у панели импорта свой заголовок, у анкеты — свой.
+   Утренний экран (morning-mode) — исключение: ✕ там нет, бренд остаётся. 2026-08-26. */
+body.imp-open #tb-brand,
+body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
 #tb-analysis .rd-head-t{color:#2E2010;}
 /* «Анализ VIA-L EXPERT» длиннее базового заголовка: на телефоне рядом с кнопкой языка ему остаётся
    ~215px, поэтому ступень ниже канона и запрет переноса — иначе строка ломалась пополам. 2026-08-25. */
@@ -2539,7 +2547,7 @@ body.view-result #tb-brand{display:none;}
 
 </div><!-- /import-wrap -->
 </div><!-- /importPanel -->
-<button id="funnelHome" onclick="_showSourceChoice()" aria-label="Back" class="x-close" style="position:fixed;top:calc(env(safe-area-inset-top,0px) + 18px);left:32px;z-index:620;background:rgba(16,20,28,.82);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border:1px solid rgba(226,185,90,.75);color:#EEC77A;box-shadow:0 2px 10px rgba(0,0,0,.45);display:none;">✕</button>
+<button id="funnelHome" onclick="_funnelHome()" aria-label="Back" class="x-close" style="position:fixed;top:calc(env(safe-area-inset-top,0px) + 18px);left:32px;z-index:620;background:rgba(16,20,28,.82);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border:1px solid rgba(226,185,90,.75);color:#EEC77A;box-shadow:0 2px 10px rgba(0,0,0,.45);display:none;">✕</button>
 <!-- ✕ анкеты: инлайн-цвета были тёмно-коричневыми (под светлый лендинг) и на тёмном фоне опросника
      крестик практически не читался. Тёмная подложка + золотая обводка читаются на обоих фонах. -->
 
@@ -8017,13 +8025,24 @@ function _showSourceChoice(){
   var _fh=document.getElementById('funnelHome'); if(_fh)_fh.style.display='none';
   var sa=document.getElementById('scroll-area'); if(sa)sa.scrollTop=0; else window.scrollTo(0,0);
 }
+// Дом для ✕ анкеты: у новичка это экран выбора источника, у постоянного — утренняя карточка
+// (возвращать его к онбординг-экрану было бы шагом назад по воронке).
+function _funnelHome(){
+  try{
+    if(typeof _profileDone==='function' && _profileDone()){
+      var s=(typeof _srcGet==='function'?_srcGet():'')||'';
+      if(s && typeof _showMorningCard==='function'){ _showMorningCard(s); return; }
+    }
+  }catch(e){}
+  _showSourceChoice();
+}
 // Открыть анкету. После выбора источника hero больше не нужен — прячем его (нет скролла
 // вверх к карточкам выбора), страница открывается на тексте «Добро пожаловать».
 function _openFunnel(){
   var m=document.querySelector('main'); if(m)m.style.display='';
   var h=document.querySelector('.hero'); if(h)h.style.display='none';
   var _op=document.getElementById('importPanel'), _pl=_op&&_op.classList.contains('open');
-  var _fh=document.getElementById('funnelHome'); if(_fh)_fh.style.display=(!_pl && typeof _profileDone==='function' && !_profileDone())?'':'none';   // возврат «на главную» для ручного прохода (онбординг, панель не открыта)
+  var _fh=document.getElementById('funnelHome'); if(_fh)_fh.style.display=_pl?'none':'';   // выход из анкеты нужен КАЖДЫЙ день, не только на онбординге: без ✕ проход закрывался лишь через «Сегодня» внизу
   if(typeof startFunnel==='function') startFunnel();
   setTimeout(function(){ var sa=document.getElementById('scroll-area'); if(sa)sa.scrollTop=0; else window.scrollTo(0,0); },70);
 }
@@ -11448,7 +11467,7 @@ function closeApproach(){
   var h=document.querySelector('.hero'); if(h)h.style.display=(window._apprHero!=null?window._apprHero:'');   // вернуть прежнее состояние (не показывать hero, если пришли из анкеты)
   var _fo=document.querySelector('footer'); if(_fo)_fo.style.display=(window._apprFooter!=null?window._apprFooter:'');
   var _lg=document.querySelector('.legal-links'); if(_lg)_lg.style.display=(window._apprLegal!=null?window._apprLegal:'');
-  var _fh=document.getElementById('funnelHome'); if(_fh)_fh.style.display=(typeof _profileDone==='function'&&!_profileDone()&&window._apprHero==='none')?'':'none';   // вернуть возврат-✕ только если вернулись в анкету онбординга
+  var _fh=document.getElementById('funnelHome'); if(_fh)_fh.style.display=(window._apprHero==='none')?'':'none';   // вернуть возврат-✕, если вернулись в анкету (hero скрыт)
   var n=document.querySelector('.bottom-nav'); if(n)n.classList.remove('nav-hidden');
 }
 
