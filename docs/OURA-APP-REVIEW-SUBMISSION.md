@@ -124,3 +124,35 @@ within the app.</li>
 3. Проверить, что redirect URL в портале совпадает с воркером **посимвольно**.
 4. Submit for review → ждать до 2 недель, ответ придёт на почту аккаунта.
 5. Результат записать сюда и в `interpreter/wearables/oura.md`.
+
+---
+
+## 5. ✅ ПОДАНО 2026-08-26 — статус «In Review» (скрины `скрин/2/IMG_4360…4365`)
+
+Оказалось, что приложение уже было заведено и **все поля заполнены заранее** — подача
+свелась к кнопке «Request more users» → «Submit».
+
+**Портал переехал:** новые приложения создаются на **`developer.ouraring.com`**, старый
+`cloud.ouraring.com/oauth/applications` с 15.10.2025 только редактирует существующие
+(в наших заметках раньше фигурировал именно старый адрес — поправлено).
+
+**Что стоит в карточке приложения (проверено по скринам):**
+- имя **VIA·L**, Client Id `65bcca60-12ef-467e-a52a-7cd600021344` (не секрет, светится
+  в authorize-URL; секрет — только в `wrangler secret`);
+- описание: wearable-biomarker interpreter + nutrition-support platform for healthy aging
+  (menopause, andropause, longevity), читает sleep/readiness/HRV/heart rate/SpO2 →
+  personalized **educational wellbeing review**;
+- Contact Email `integration@via-l.com`, Website `https://via-l.com`,
+  ToS `https://via-l.com/legal/terms.html`, Privacy `https://via-l.com/legal/privacy.html`;
+- Redirect URI `https://interpreter.viaelcom.workers.dev/oura/callback` — совпадает с воркером;
+- Scopes в портале: Personal, Heartrate, SpO2, Heart Health, Daily, Workout, Stress
+  (воркер запрашивает подмножество: `personal daily heartrate workout spo2` — это нормально).
+
+**Статус:** `Development` → **`In Review`**. Ответ Oura обещан в течение ~2 недель, придёт
+на почту аккаунта. Пункт «≥1 подключённый пользователь» закрыт кольцом владельца.
+
+⏱ Правка политики приватности (п. 3) задеплоена в тот же день — на момент, когда ревьюер
+откроет `legal/privacy.html`, там уже есть пункт про подключённые аккаунты и Oura API.
+
+**Дальше:** ждём письма. Одобрят — лимит 10 снимается, ничего в коде менять не нужно
+(Client ID/Secret те же). Вернут на доработку — повод в тексте письма.
