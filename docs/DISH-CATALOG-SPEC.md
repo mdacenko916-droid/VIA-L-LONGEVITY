@@ -26,10 +26,11 @@
 
 ## 2. Требования к фото (обязательно соблюсти — иначе каталог развалится по стилю)
 
-- **512 × 512, WebP**, вес ~20–30 КБ.
-- Одна **круглая чёрная матовая тарелка**, вид сверху под углом примерно 30–40°.
-- **Фон чисто белый**, мягкая тень под тарелкой, никаких столов, скатертей, приборов, рук, зелени
-  по краям, надписей и логотипов.
+- **512 × 512, WebP, с ПРОЗРАЧНЫМ фоном** (все блюда каталога — RGBA; на белом они будут белыми
+  квадратами на тёмных карточках приложения). Исходник — PNG 1024×1024 с прозрачностью.
+- Одна **круглая матовая тёмно-графитовая тарелка**, вид под углом 45°, тарелка занимает ~85 %
+  кадра, тёплый боковой свет слева сверху, мягкая полупрозрачная контактная тень под тарелкой.
+- Никаких столов, скатертей, приборов, салфеток, рук, надписей и логотипов.
 - Порция на одного, еда занимает большую часть тарелки, компоненты видны раздельно
   (белок · гарнир · овощи), без соусов-луж.
 - Свет мягкий рассеянный, тёплый, без резких бликов и без «глянцевого фуд-порно».
@@ -38,10 +39,13 @@
 
 Готовый промпт-шаблон для генерации (подставить состав):
 
-> Photorealistic food photography, single serving on one round matte black plate, three-quarter
-> top-down view, pure white seamless background, soft diffused warm light, gentle shadow under the
-> plate, no cutlery, no props, no text. The plate contains: **[состав]**. Components clearly
-> separated, appetising but natural home cooking, not glossy advertising style. Square 1:1.
+> Photorealistic food photography, single round matte dark-graphite ceramic plate centered,
+> filling ~85% of frame, 45-degree three-quarter view, warm golden side lighting from upper left,
+> soft translucent contact shadow under the plate, transparent background, no table, no cutlery,
+> no napkins, honest realistic home portion sizes: **[СОСТАВ]**. 1024x1024, PNG with transparency.
+
+Это рабочий промпт владельца — им сняты все 14 блюд второй партии. Приведение к формату каталога
+(масштаб до 472 px внутри прозрачного холста 512×512, WebP q62) делаю я, вручную ничего не готовить.
 
 ## 3. Что доснять — 14 блюд
 
