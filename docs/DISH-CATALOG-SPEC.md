@@ -157,3 +157,23 @@
 | `dn_vegan_pumpkin_soup` | creamy pumpkin soup with pumpkin seeds and olive oil drizzle |
 | `dn_lacto_cheese_veg` | baked vegetables with soft white cheese and quinoa |
 | `dn_ovo_frittata_veg` | vegetable frittata with zucchini and herbs, no cheese, no milk |
+
+---
+
+## 6. Четвёртая партия — растительные обеды (заказ от 2026-08-26)
+
+Промпт тот же, дословно; меняется только `[СОСТАВ]`. Закрывает последний непокрытый приём:
+сейчас растительных обедов три на все типы питания.
+
+| Ключ | `[СОСТАВ]` для промпта | Закрывает |
+|---|---|---|
+| `ln_vegan_falafel_quinoa` | baked falafel with quinoa, cucumber and tomato salad | веган-обед |
+| `ln_vegan_chickpea_roast` | roasted vegetables with chickpeas and buckwheat | веган-обед, без глютена |
+| `ln_vegan_tofu_zucchini_rice` | firm tofu with zucchini, carrots and white rice | веган-обед, без глютена, **low-FODMAP** |
+| `ln_vegan_pumpkin_curry` | pumpkin and chickpea curry with white rice | веган-обед, щадящий |
+| `ln_lacto_salad_feta` | greek-style vegetable salad with feta cheese and quinoa | лакто-вегетарианский обед |
+| `ln_ovo_egg_rice_bowl` | rice bowl with boiled eggs and spinach, no cheese, no milk | ово-вегетарианский обед (без молочного) |
+
+⚠️ Как и в прошлый раз: «no cheese, no milk» в ово-блюде обязательно, иначе генератор добавит сыр.
+
+После партии растительные обеды станут: веган 7, лакто 5, ово 5 — приём закрыт для всех типов.
