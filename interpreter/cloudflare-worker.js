@@ -5501,6 +5501,155 @@ function _condGateBlock(data) {
        + '\nЭто ВНУТРЕННИЕ ограничения: НЕ перечисляй клиенту его состояния, не пиши «учитывая ваш диагноз» и не объясняй, почему совет не дан. Просто дай безопасный совет.\n\n';
 }
 
+// ══════════════════════════════════════════════════════════════════════
+// МАТРИЦА «СИГНАЛ → ПИЩЕВОЙ АКЦЕНТ» — docs/NUTRITION-MAPPING-SPEC.md §3–§4,
+// доказательная база docs/NUTRITION-MAPPING-EVIDENCE.md.
+// Модель НЕ выбирает рацион сама: выбор детерминирован кодом, модель только
+// формулирует. Структура по ответу 18 выгрузки: 91 % гайдлайнов сходятся на
+// общем ядре, поэтому ОСНОВА одна для всех, а под сигнал идут АКЦЕНТЫ
+// (максимум два) и ВРЕМЕННЫЕ СЛОИ со сроком.
+// Конфликт продукта решается выбором источника и таймингом, а не отменой
+// акцента (железо × липиды — не спор рационов, а вопрос источника).
+// ══════════════════════════════════════════════════════════════════════
+function selectDietPattern(data) {
+  const A = v => (Array.isArray(v) ? v : (v ? [v] : [])).map(x => String(x));
+  const num = v => (v == null || v === '' ? null : parseFloat(v));
+  const c = A(data.conditions), meds = A(data.cond_meds), gi = A(data.gi), temp = A(data.cond_temp);
+  const cmp = (data.complaint && Array.isArray(data.complaint.items)) ? data.complaint.items.map(String) : [];
+  const labs = data.labs || {};
+  const has = (arr, ...v) => v.some(x => arr.includes(x));
+  const age = parseInt(data.age) || 50, isFem = data.gender !== 'male';
+  const waist = num(data.waist), height = num(data.height);
+  const whtr = (waist > 0 && height > 0) ? waist / height : null;
+  const bpS = num(data.bp_sys), bpD = num(data.bp_dia);
+
+  // ── АКЦЕНТЫ: условие → {что добавить, что ограничить, класс данных} ──
+  const acc = [];
+  const add = (id, cond, o) => { if (cond) acc.push(Object.assign({ id }, o)); };
+
+  add('AC-SODIUM', (bpS != null && bpS >= 135) || (bpD != null && bpD >= 85) || has(c, 'hypertension'), {
+    what: 'меньше натрия — это главный рычаг при давлении, сильнее «овощей вообще»',
+    food: 'овощи, фрукты, цельные злаки, нежирные молочные',
+    limit: 'соль, переработанное мясо, готовые соусы и полуфабрикаты',
+    ev: 'высокая', note: 'изменение обычно заметно уже через 1–3 недели — хороший срок для эксперимента' });
+  add('AC-LOWGI', (whtr != null && whtr >= 0.5) || num(labs.glucose) > 5.6 || num(labs.hba1c) > 5.7 || num(labs.homa) > 2.5
+      || has(c, 't2d', 'prediabetes', 'pcos', 'fatty_liver') || data.appetite === 'cravings' || cmp.includes('weight'), {
+    what: 'медленные углеводы и белок в каждый приём',
+    food: 'бобовые, овощи, цельные злаки, белок в каждый приём',
+    limit: 'рафинированные углеводы и сладкие напитки',
+    ev: 'средняя', note: 'честно: работает через регулярность и уменьшение живота, а не сам по себе ярлык диеты' });
+  add('AC-FIBER', num(labs.ldl) > 3.0 || num(labs.chol) > 5.2 || has(c, 'high_chol'), {
+    what: 'растворимая клетчатка',
+    food: 'овёс, бобовые, орехи, оливковое масло',
+    limit: 'трансжиры и избыток насыщенных жиров',
+    ev: 'высокая' });
+  add('AC-IRON', num(labs.ferritin) != null && num(labs.ferritin) < 30, {
+    what: 'железо из еды вместе с витамином C',
+    food: 'печень изредка, красное мясо умеренно, птица, рыба; в тот же приём — перец или цитрус',
+    limit: 'чай, кофе и молочное — разносить с железом на час',
+    ev: 'высокая', note: 'обязательно сказать честно: едой низкий ферритин не поднять — причину и препарат решает врач' });
+  add('AC-B12', num(labs.b12) != null && num(labs.b12) < 200, {
+    what: 'источники B12', food: 'мясо, яйца, рыба, обогащённые продукты', limit: '', ev: 'высокая' });
+  add('AC-VITD', num(labs.vitd) != null && num(labs.vitd) < 50, {
+    what: 'жирная рыба и дневной свет', food: 'лосось, скумбрия, сардины, желток', limit: '',
+    ev: 'высокая', note: 'сказать честно: одним питанием витамин D не закрывается' });
+  add('AC-CALCIUM', has(c, 'osteoporosis') || (data.phase === 'post' && age >= 55) || A(data.bone_risk).length > 0, {
+    what: 'кальций из еды и витамин D',
+    food: 'молочное или обогащённые альтернативы, сардины с костями, кунжут, зелень',
+    limit: 'избыток натрия',
+    ev: 'средняя', note: 'K2 без обещаний: маркеры двигает, плотность почти нет, переломы не доказаны' });
+  add('AC-PROTEIN', age >= 50 || cmp.includes('muscle') || data.phase === 'post' || data.phase === 'meno', {
+    what: 'достаточно белка за день плюс силовая нагрузка',
+    food: 'рыба, птица, яйца, творог, бобовые — равномерно по приёмам',
+    limit: '',
+    ev: 'высокая', note: 'решают суточная норма и сама силовая; распределение по приёмам — лишь удобный способ добрать' });
+  add('AC-OMEGA', num(labs.crp) > 3 || has(c, 'autoimmune_joint', 'osteoarthritis') || cmp.includes('pain'), {
+    what: 'омега-3 и меньше ультра-обработанного',
+    food: 'жирная рыба, ягоды, оливковое масло, куркума',
+    limit: 'ультра-обработанное, избыток омега-6',
+    ev: 'средняя', note: 'по боли главный эффект даёт снижение веса, а не «противовоспалительный состав»; СРБ улучшается охотнее, чем самочувствие' });
+  add('AC-EVENING', /multiple|early/i.test(String(data.wake || '')) || (parseInt(data.anxiety) || 0) >= 6 || cmp.includes('sleep'), {
+    what: 'спокойный вечер',
+    food: 'на ужин — медленные углеводы и белок, магний-плотные продукты (зелень, тыквенные семечки, бобовые)',
+    limit: 'алкоголь (самый надёжный сигнал по сну) и сладкое поздно вечером',
+    ev: 'средняя', note: 'магний из еды — без обещаний по сну; если ночь дробят приливы, цель именно они' });
+  add('AC-WEIGHT', !isFem && (cmp.includes('drive') || cmp.includes('weight') || (whtr != null && whtr >= 0.5)), {
+    what: 'вес и обмен',
+    food: 'белок в каждый приём, овощи, цельные злаки',
+    limit: 'алкоголь и ультра-обработанное',
+    ev: 'высокая', note: 'цинк и витамин D тестостерон у не-дефицитных не поднимают — эффект даёт вес и обмен' });
+
+  // ── ВЕТО: снимаем акценты, небезопасные при состоянии (§5) ──
+  const gates = [];
+  const drop = (id, why) => { const i = acc.findIndex(a => a.id === id); if (i >= 0) { acc.splice(i, 1); gates.push(why); } };
+  if (has(c, 'ckd')) drop('AC-PROTEIN', 'белковый акцент снят: болезнь почек');
+  if (has(c, 'ckd')) drop('AC-SODIUM', 'солевой акцент снят: лимиты при болезни почек ставит врач, не мы');
+  if (has(c, 'kidney_stones')) drop('AC-CALCIUM', 'кальциевый акцент переписан: при камнях кальций даём ТОЛЬКО с едой (он защищает), добавки — нет');
+
+  // ── ВРЕМЕННЫЕ СЛОИ (со сроком, всегда поверх основы) ──
+  const layers = [];
+  const lay = (id, cond, o) => { if (cond) layers.push(Object.assign({ id }, o)); };
+  lay('DM-GLUTEN', has(c, 'celiac'), { what: 'без глютена — жёстко, во всех приёмах', term: 'постоянно' });
+  lay('DM-LOWFODMAP', has(c, 'ibs') || has(gi, 'bloating', 'gi_heaviness'), {
+    what: 'на время убрать лук, чеснок, избыток фруктозы и часть бобовых',
+    term: 'курс 4–6 недель, потом обратный ввод по одному продукту примерно по три дня; если за 2–6 недель не полегчало — прекратить' });
+  lay('DM-REFLUX', has(c, 'gerd') || has(gi, 'reflux', 'gi_inner'), {
+    what: 'ужин за 2–3 часа до сна, приподнятое изголовье, сон на левом боку, меньше и менее жирно',
+    term: 'до стихания; кофе, цитрус и мяту скопом не убирать — искать свои триггеры' });
+  lay('DM-LATE', (data.last_meal === 'late' || data.last_meal === 'verylate') && (whtr != null && whtr >= 0.5), {
+    what: 'не есть поздно — окно еды примерно 10–12 часов',
+    term: '8–12 недель; без метаболических обещаний — эффект в основном через меньшее количество еды, поэтому белок и силовая обязательны' });
+  lay('DM-TEXTURE', has(c, 'ibd') && has(temp, 'flare'), {
+    what: 'мягкая текстура: готовить и измельчать вместо того, чтобы убирать овощи',
+    term: 'на время обострения' });
+
+  // Слои, небезопасные при состоянии
+  const dropLayer = (id, why) => { const i = layers.findIndex(l => l.id === id); if (i >= 0) { layers.splice(i, 1); gates.push(why); } };
+  if (has(c, 'ed_history')) { dropLayer('DM-LOWFODMAP', 'ограничительный протокол снят: РПП в анамнезе'); dropLayer('DM-LATE', 'окно питания снято: РПП в анамнезе'); }
+  if (has(c, 'pregnancy', 'breastfeeding')) { dropLayer('DM-LOWFODMAP', 'ограничительный протокол снят: беременность или ГВ'); dropLayer('DM-LATE', 'окно питания снято: беременность или ГВ'); }
+  if (has(meds, 'glucose_meds') || has(c, 't1d')) dropLayer('DM-LATE', 'окно питания снято: инсулин или сахароснижающие');
+  if (has(c, 'ulcer')) dropLayer('DM-LATE', 'окно питания снято: язвенная болезнь в анамнезе');
+
+  // ── АРБИТРАЖ: максимум два акцента, приоритет по тяжести сигнала ──
+  const PRIORITY = ['AC-SODIUM', 'AC-LOWGI', 'AC-IRON', 'AC-B12', 'AC-VITD', 'AC-FIBER', 'AC-CALCIUM', 'AC-OMEGA', 'AC-EVENING', 'AC-PROTEIN', 'AC-WEIGHT'];
+  acc.sort((a, b) => PRIORITY.indexOf(a.id) - PRIORITY.indexOf(b.id));
+  // Первый слот — по тяжести сигнала. Второй — тому акценту, который отвечает НА ЖАЛОБУ:
+  // ось разбора у нас жалоба, и если человек пришёл с мышцами, белок не должен вылетать
+  // из-за того, что рядом нашлись липиды. Если жалоба ни с чем не связана — обычный приоритет.
+  const BY_COMPLAINT = { energy:['AC-IRON','AC-LOWGI'], sleep:['AC-EVENING'], mood:['AC-EVENING'],
+    fog:['AC-IRON','AC-B12'], weight:['AC-LOWGI'], pain:['AC-OMEGA'], muscle:['AC-PROTEIN'],
+    drive:['AC-WEIGHT'], cycle:['AC-IRON'] };
+  const wanted = [];
+  cmp.forEach(k => (BY_COMPLAINT[k] || []).forEach(id => { if (wanted.indexOf(id) < 0) wanted.push(id); }));
+  const out = [];
+  if (acc.length) out.push(acc[0]);
+  const second = acc.slice(1).find(a => wanted.includes(a.id)) || acc[1];
+  if (second) out.push(second);
+  return { accents: out, layers, gates };
+}
+
+// Блок для промпта. Пустой, если сигналов нет: выдумывать акцент на пустом месте
+// хуже, чем честно работать по основе.
+function buildDietBlock(data) {
+  const sel = selectDietPattern(data);
+  if (!sel.accents.length && !sel.layers.length) return '';
+  const EV = { 'высокая': 'это хорошо изученный подход', 'средняя': 'данных меньше, но направление устойчивое', 'предварительная': 'доказательства ранние — это эксперимент' };
+  let out = '══ ПИЩЕВОЙ АКЦЕНТ НА СЕГОДНЯ (выбран кодом по сигналам клиента — свой не придумывай) ══\n'
+    + 'ОСНОВА (она у всех и не обсуждается): овощи и фрукты, цельные злаки, бобовые, орехи, рыба, минимум ультра-обработанного, умеренный натрий.\n';
+  sel.accents.forEach(a => {
+    out += '• АКЦЕНТ: ' + a.what + '\n  — добавить: ' + a.food + '\n'
+        + (a.limit ? '  — ограничить: ' + a.limit + '\n' : '')
+        + '  — как говорить о доказательности: ' + (EV[a.ev] || '') + '\n'
+        + (a.note ? '  — обязательная честность: ' + a.note + '\n' : '');
+  });
+  sel.layers.forEach(l => { out += '• ВРЕМЕННЫЙ СЛОЙ: ' + l.what + '\n  — срок и выход: ' + l.term + '\n'; });
+  if (sel.gates.length) out += 'СНЯТО ПО БЕЗОПАСНОСТИ (не упоминать клиенту): ' + sel.gates.join('; ') + '.\n';
+  out += 'ПРАВИЛА: назови акцент человеческим языком без аббревиатур протоколов; дай 3–5 конкретных продуктов и 2–3 ограничения с причиной; '
+      + 'привяжи «почему именно это» к тому, с чем человек пришёл; у временного слоя ОБЯЗАТЕЛЬНО назови срок и как из него выходят. '
+      + 'Если продукт из акцента попадает под временный слой — скажи прямо, что вернём его после срока, а не убирай молча.\n\n';
+  return out;
+}
+
 function buildUserMessage(data, lang, tier) {
   const isFem = data.gender !== 'male';
   // Велнес (VIA-L) НЕ оценивает медицинский риск. Раньше сюда уходил готовый вердикт
@@ -6288,7 +6437,7 @@ function buildUserMessage(data, lang, tier) {
   const _outFeed = ['vio', 'pro'].includes(String(tier || '').toLowerCase()) ? deMedicalizeFeed(_feed, _hasLabs) : _feed;
   // Вето ставим ПОСЛЕ фильтра: иначе велнес-подмены съедят названия состояний и правило
   // потеряет смысл. И в НАЧАЛО сообщения — хвост длинного промпта модель читает хуже.
-  return _condGateBlock(data) + _outFeed;
+  return _condGateBlock(data) + buildDietBlock(data) + _outFeed;
 }
 
 // ════════════════════════════════════════════════════════════════════════
