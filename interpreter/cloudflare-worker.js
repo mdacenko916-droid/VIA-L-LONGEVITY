@@ -2211,10 +2211,22 @@ const RESEARCH_FIELDS = [
   'energy','sleep_qual','hf_count','hf_intensity','memory','fog','stress','alc',
   'cmp_delta','last_meal','caffeine_late','bp_sys','bp_dia','weight','waist',
 ];
-function _researchPick(rec) {
+// Метрики, приходящие ИЗ трекера (в отличие от самооценок, которые вводит сам человек).
+// Разделение нужно из-за условий вендоров — см. WEARABLE_RESEARCH_BLOCK ниже.
+const RESEARCH_DEVICE_FIELDS = new Set(['hrv','rhr','sleepHours','deepMin','spo2','tempDev','vo2','readiness']);
+// Источники, чьи условия НЕ разрешают складывать их данные в исследовательскую базу.
+// Oura API Agreement §6(g): «YOU SHALL NOT USE OR ALLOW THE USE OF USER DATA TO TRAIN,
+// FINE-TUNE, DEVELOP, IMPROVE, OR ENHANCE ANY AI MODEL» — прямо оговорено, что запрет
+// действует независимо от техники И ОТ СОГЛАСИЯ пользователя, поэтому галочка не спасает.
+// Apple (App Review 5.1.3) и Health Connect устроены иначе: исследование с явного согласия
+// разрешено, поэтому их данные не режем. Разбор: docs/OURA-COMPLIANCE-REVIEW.md (2026-08-26).
+const WEARABLE_RESEARCH_BLOCK = new Set(['oura']);
+function _researchPick(rec, src) {
   const out = {};
   if (!rec || typeof rec !== 'object') return out;
+  const dropDevice = WEARABLE_RESEARCH_BLOCK.has(String(src || '').toLowerCase());
   for (const k of RESEARCH_FIELDS) {
+    if (dropDevice && RESEARCH_DEVICE_FIELDS.has(k)) continue;   // самооценки остаются: это наши данные, не вендорские
     const v = rec[k];
     if (v == null || v === '') continue;
     if (typeof v === 'number') { if (isFinite(v)) out[k] = v; continue; }
@@ -2233,14 +2245,15 @@ async function handleResearchDay(request, env, corsHeaders) {
     if (!/^[A-Za-z0-9_-]{8,64}$/.test(pid) || !/^\d{4}-\d{2}-\d{2}$/.test(day)) {
       return jsonResponse({ ok: false, error: 'bad_request' }, corsHeaders);
     }
-    const data = JSON.stringify(_researchPick(rec));
+    const _src = String(rec.src || body.src || '').slice(0, 24);
+    const data = JSON.stringify(_researchPick(rec, _src));
     if (data.length > 4096) return jsonResponse({ ok: false, error: 'too_big' }, corsHeaders);
     await env.DB.prepare(
       'INSERT INTO research_days (pid,day,ts,received_ts,sv,wv,src,lang,data) VALUES (?,?,?,?,?,?,?,?,?) ' +
       'ON CONFLICT(pid,day) DO UPDATE SET ts=excluded.ts, received_ts=excluded.received_ts, ' +
       'sv=excluded.sv, wv=excluded.wv, src=excluded.src, lang=excluded.lang, data=excluded.data'
     ).bind(pid, day, Number(rec.ts) || null, Date.now(), Number(rec.sv) || null, Number(rec.wv) || null,
-           String(rec.src || '').slice(0, 24), String(body.lang || '').slice(0, 5), data).run();
+           _src, String(body.lang || '').slice(0, 5), data).run();
     return jsonResponse({ ok: true }, corsHeaders);
   } catch (e) {
     return jsonResponse({ ok: false, error: 'server' }, corsHeaders);
