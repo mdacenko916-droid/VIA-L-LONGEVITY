@@ -30,6 +30,7 @@ cp "$IP/app-mode.js"              "$WWW/"
 cp "$IP/healthkit-bridge.js"      "$WWW/"
 cp "$IP/healthconnect-bridge.js"  "$WWW/"
 cp "$IP/iap-bridge.js"            "$WWW/"
+cp "$IP/notify-bridge.js"         "$WWW/"
 cp "$IP/my-specialist.html"       "$WWW/"
 cp "$IP/research-consent.html"    "$WWW/"
 

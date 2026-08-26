@@ -4953,6 +4953,7 @@ var _CAT={
   dynamics:  {ic:'chart-line-up',         acc:'122,150,216', sub:{ru:'История и изменения',uk:'Історія та зміни',en:'History & changes',es:'Historial y cambios',de:'Verlauf & Veränderungen',pt:'Histórico e mudanças',fr:'Historique et changements',pl:'Historia i zmiany',it:'Cronologia e cambiamenti',he:'היסטוריה ושינויים',ja:'履歴と変化',ko:'기록과 변화'}}, // синий, насыщеннее
   dayplan:   {ic:'sun-horizon',           acc:'210,178,120', sub:{ru:'Ориентиры на сегодня',uk:'Орієнтири на сьогодні',en:'Guidance for today',es:'Guía para hoy',de:'Orientierung für heute',pt:'Orientações para hoje',fr:'Repères pour aujourd’hui',pl:'Wskazówki na dziś',it:'Indicazioni per oggi',he:'הכוונה להיום',ja:'今日の目安',ko:'오늘의 가이드'}}, // тёплый песок
   history:   {ic:'clock-counter-clockwise',acc:'156,150,206', sub:{ru:'Прошлые разборы',uk:'Минулі розбори',en:'Past check-ins',es:'Análisis anteriores',de:'Frühere Auswertungen',pt:'Análises anteriores',fr:'Bilans précédents',pl:'Poprzednie analizy',it:'Analisi precedenti',he:'ניתוחים קודמים',ja:'過去の分析',ko:'지난 분석'}}, // спокойный сине-фиолетовый
+  notify:    {ic:'bell',                  acc:'226,185,90',  sub:{ru:'Утреннее напоминание',uk:'Ранкове нагадування',en:'Morning reminder',es:'Recordatorio matinal',de:'Morgen-Erinnerung',pt:'Lembrete matinal',fr:'Rappel du matin',pl:'Poranne przypomnienie',it:'Promemoria del mattino',he:'תזכורת בוקר',ja:'朝のリマインド',ko:'아침 알림'}},
   backup:    {ic:'floppy-disk',           acc:'146,158,176', sub:{ru:'Экспорт и восстановление',uk:'Експорт і відновлення',en:'Export & restore',es:'Exportar y restaurar',de:'Export & Wiederherstellung',pt:'Exportar e restaurar',fr:'Export et restauration',pl:'Eksport i przywracanie',it:'Esporta e ripristina',he:'ייצוא ושחזור',ja:'エクスポートと復元',ko:'내보내기와 복원'}}, // графит с лёгким голубым
   source:    {ic:'plugs-connected',       acc:'196,170,120', sub:{ru:'Apple Health, устройство или ручной ввод',uk:'Apple Health, пристрій або ручне введення',en:'Apple Health, device or manual entry',es:'Apple Health, dispositivo o entrada manual',de:'Apple Health, Gerät oder manuelle Eingabe',pt:'Apple Health, dispositivo ou entrada manual',fr:'Apple Health, appareil ou saisie manuelle',pl:'Apple Health, urządzenie lub ręczne wprowadzanie',it:'Apple Health, dispositivo o inserimento manuale',he:'Apple Health, מכשיר או הזנה ידנית',ja:'Apple Health・デバイス・手動入力',ko:'Apple Health, 기기 또는 수동 입력'}}, // мягкое золото — источник данных
   legal:     {ic:'scales',                acc:'158,172,190', sub:{ru:'Согласия и условия',uk:'Згоди та умови',en:'Consents & terms',es:'Consentimientos y términos',de:'Einwilligungen & Bedingungen',pt:'Consentimentos e termos',fr:'Consentements et conditions',pl:'Zgody i warunki',it:'Consensi e termini',he:'הסכמות ותנאים',ja:'同意事項と規約',ko:'동의 및 약관'}}, // холодный стальной
@@ -5320,6 +5321,33 @@ function renderCard(){
     +'<button onclick="vlEraseHealth()" style="'+_rmBtn+'">🗑 '+L({ru:'Удалить мои данные о здоровье',uk:'Видалити мої дані про здоров’я',en:'Delete my health data',es:'Eliminar mis datos de salud',de:'Meine Gesundheitsdaten löschen',pt:'Excluir meus dados de saúde',fr:'Supprimer mes données de santé',pl:'Usuń moje dane o zdrowiu',it:'Elimina i miei dati sulla salute',he:'מחיקת נתוני הבריאות שלי',ja:'健康データを削除',ko:'내 건강 데이터 삭제'})+'</button>';
   _bkInner += '<div style="font-size:var(--fs-cap);color:var(--t3);margin-top:8px;text-align:center;">'
     +'<a href="../legal-app/privacy.html" target="_blank" rel="noopener" style="color:var(--t3);">'+L({ru:'Как мы обращаемся с данными',uk:'Як ми поводимося з даними',en:'How we handle your data',es:'Cómo tratamos sus datos',de:'Wie wir mit Ihren Daten umgehen',pt:'Como tratamos seus dados',fr:'Comment nous traitons vos données',pl:'Jak postępujemy z danymi',it:'Come trattiamo i tuoi dati',he:'איך אנחנו מטפלים בנתונים',ja:'データの取り扱いについて',ko:'데이터 처리 방식'})+'</a></div>';
+  // Утреннее напоминание — только в приложении (на вебе локальных уведомлений нет).
+  var _secNotify='';
+  if(typeof notifyAvailable==='function' && notifyAvailable()){
+    var _nt=_ntGet(), _ntOn=!!_nt.on, _ntTm=_nt.time||'08:00';
+    _secNotify=_vcSec('notify',L({ru:'Утреннее напоминание',uk:'Ранкове нагадування',en:'Morning reminder',es:'Recordatorio matinal',de:'Morgen-Erinnerung',pt:'Lembrete matinal',fr:'Rappel du matin',pl:'Poranne przypomnienie',it:'Promemoria del mattino',he:'תזכורת בוקר',ja:'朝のリマインド',ko:'아침 알림'}),
+      '<div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;">'
+      + L({ru:'Одно короткое напоминание утром — что сделать первым делом. О здоровье в нём ничего не написано: текст виден на заблокированном экране, поэтому подробности открываются только в приложении.',
+           uk:'Одне коротке нагадування вранці — що зробити найпершим. Про здоровʼя в ньому нічого немає: текст видно на заблокованому екрані, тому подробиці відкриваються лише в застосунку.',
+           en:'One short reminder in the morning — the first thing to do. It says nothing about your health: the text is visible on the lock screen, so the details open only inside the app.',
+           es:'Un recordatorio corto por la mañana. No dice nada sobre tu salud: el texto se ve en la pantalla bloqueada, así que los detalles se abren solo en la app.',
+           de:'Eine kurze Erinnerung am Morgen. Sie sagt nichts über deine Gesundheit: Der Text ist auf dem Sperrbildschirm sichtbar, Details öffnen sich nur in der App.',
+           pt:'Um lembrete curto de manhã. Não diz nada sobre sua saúde: o texto aparece na tela bloqueada, então os detalhes abrem só no app.',
+           fr:'Un court rappel le matin. Il ne dit rien de votre santé : le texte est visible sur l’écran verrouillé, les détails s’ouvrent uniquement dans l’app.',
+           pl:'Jedno krótkie przypomnienie rano. Nie mówi nic o zdrowiu: tekst widać na ekranie blokady, szczegóły otwierają się tylko w aplikacji.',
+           it:'Un breve promemoria al mattino. Non dice nulla sulla tua salute: il testo si vede sulla schermata di blocco, i dettagli si aprono solo nell’app.',
+           he:'תזכורת קצרה בבוקר. אין בה דבר על הבריאות שלכם: הטקסט נראה במסך הנעול, והפרטים נפתחים רק באפליקציה.',
+           ja:'朝に短い通知をひとつ。健康のことは書きません。ロック画面に出る文面なので、詳細はアプリの中だけで開きます。',
+           ko:'아침에 짧은 알림 하나. 건강에 관한 내용은 담지 않습니다. 잠금 화면에 보이는 문구이므로 자세한 내용은 앱에서만 열립니다.'})
+      + '</div>'
+      + '<label style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;font-size:var(--fs-body);color:var(--t1);cursor:pointer;">'
+      + '<span>'+L({ru:'Присылать утром',uk:'Надсилати вранці',en:'Send in the morning',es:'Enviar por la mañana',de:'Morgens senden',pt:'Enviar de manhã',fr:'Envoyer le matin',pl:'Wysyłaj rano',it:'Invia al mattino',he:'לשלוח בבוקר',ja:'朝に送る',ko:'아침에 보내기'})+'</span>'
+      + '<input type="checkbox" '+(_ntOn?'checked':'')+' onchange="_ntToggle(this.checked)"></label>'
+      + '<label style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font-size:var(--fs-body);color:var(--t1);">'
+      + '<span>'+L({ru:'Время',uk:'Час',en:'Time',es:'Hora',de:'Uhrzeit',pt:'Horário',fr:'Heure',pl:'Godzina',it:'Ora',he:'שעה',ja:'時刻',ko:'시간'})+'</span>'
+      + '<input type="time" value="'+_ntTm+'" onchange="_ntTime(this.value)" style="background:rgba(255,255,255,.04);border:1px solid var(--b1);border-radius:8px;padding:6px 8px;color:var(--t1);font-family:inherit;"></label>',
+      false);
+  }
   _secBackup=_vcSec('backup',L({ru:'Резервная копия и удаление данных',uk:'Резервна копія та видалення даних',en:'Backup and data deletion',es:'Copia de seguridad',de:'Sicherung',pt:'Backup',fr:'Sauvegarde',pl:'Kopia zapasowa',it:'Backup',he:'גיבוי',ja:'バックアップ',ko:'백업'}),_bkInner,false,true);
 
   // ── Правовая информация / дисклеймер (App Store) ──
@@ -5373,7 +5401,7 @@ function renderCard(){
   // Траектория по жалобе — первой: это ответ на «стало ли легче», ради которого человек и ведёт дневник.
   var _secCmp=(typeof _cmpTrajHTML==='function')?_cmpTrajHTML():'';
   html+=[_secCmp,_secGoal,_secAct,_secNut,_secSup,_secStress,_secBal,_secRhythm,_secLife,_secBaseline,   // «что я о себе указал»
-         _secDyn,_secDay,_secVai,_secLabs,_secDaily,_secHist,_secSource,_secBackup,_secLegal].join('');     // «что показывает система / инструменты» + VAI-калькулятор
+         _secDyn,_secDay,_secVai,_secLabs,_secDaily,_secHist,_secSource,_secNotify,_secBackup,_secLegal].join('');     // «что показывает система / инструменты» + VAI-калькулятор
   html+='</div>'; // .vcard-grid
   html+='</div>'; // .vcard-wrap
 
@@ -6534,7 +6562,9 @@ let _lastResult=null;
 // НЕ наследуем selectedLang с 4-язычного сайта VIA-L.
 setLang(_initLang());   // язык устройства при первом входе; ручной выбор (pickLang) имеет приоритет
 loadProfile();
-try{_restoreAnswers();}catch(e){}  // «как вчера»: подтянуть ответы прошлой сессии
+try{_restoreAnswers();}catch(e){}
+try{ if(typeof _ntArm==='function')_ntArm(); }catch(e){}          // утреннее напоминание: текст мог устареть — переставить
+try{ if(typeof _ntOffer==='function')setTimeout(_ntOffer,1500); }catch(e){}   // предложить включить, если памятка уже была  // «как вчера»: подтянуть ответы прошлой сессии
 
 // Приливы: интенсивность и частота — два независимых блока, всегда видны (тоггл больше не нужен)
 
@@ -8906,7 +8936,8 @@ function showResults(){
   if(typeof _snapshotAnswers==='function')_snapshotAnswers();  // «как вчера»: сохранить ответы для следующего раза
   try {
     _showResultsInner();
-    try{localStorage.setItem('vialp_lastpass',_dayKey());}catch(e){}   // отметить: проход за сегодня сделан (гейт «сегодня уже пройдено»)
+    try{localStorage.setItem('vialp_lastpass',_dayKey());}catch(e){}   // отметить: проход за сегодня сделан
+    try{ if(typeof _ntArm==='function')_ntArm(); }catch(e){}   // текст напоминания собирается из свежей памятки (гейт «сегодня уже пройдено»)
     try{ if(importedData&&importedData.source&&importedData.source!=='manual'&&importedData.source!=='apple-manual') localStorage.setItem('vialp_lastsync',new Date().toISOString()); }catch(e){}   // штамп синхронизации гаджета
     try{localStorage.setItem('vialp_lastdata',JSON.stringify((_lastResult&&_lastResult.data)||{}));}catch(e){}   // данные прохода — для «Памятки дня» после перезагрузки
     try{ if(_lastResult&&typeof _daySnapSave==='function') _daySnapSave(_lastResult.score,_lastResult.type,_lastResult.data,(_lastResult.docR&&_lastResult.docR.length)>0,_lastResult.docR); }catch(e){}   // снимок дня для Oura-ленты истории (+флаг предупреждения)
@@ -10611,6 +10642,82 @@ function _cleanPlan(p){
   return p;
 }
 // Кэш «Памятки дня» 1×/день (как /analyze): повтор-заход того же дня с теми же данными → без вызова /day-plan
+// ══════════════════════════════════════════════════════════════════════
+// ЕЖЕДНЕВНОЕ УВЕДОМЛЕНИЕ — docs/DAILY-NOTIFICATION-SPEC.md.
+// Одно локальное уведомление в день. Несёт ОДНО действие из устойчивой части
+// «Памятки дня» (вода, разминка, завтрак) — не распорядок и не то, что
+// посчитано под вчерашнее восстановление («сегодня отложите тяжёлое» утром
+// уже неправда).
+// ⚠️ ГЛАВНОЕ: текст виден на ЗАБЛОКИРОВАННОМ экране посторонним. Приложение
+// про менопаузу и андропаузу — надпись может выдать человека помимо его воли.
+// Поэтому ни слова о здоровье, даже того, что внутри приложения разрешено.
+// ══════════════════════════════════════════════════════════════════════
+function _ntGet(){ try{ return JSON.parse(localStorage.getItem('vialp_notify')||'{}')||{}; }catch(e){ return {}; } }
+function _ntSave(o){ try{ localStorage.setItem('vialp_notify',JSON.stringify(o)); }catch(e){} }
+// Стоп-список экрана блокировки. Отдельный от велнес-фильтра воркера: тот РАЗРЕШАЕТ
+// VIA-L писать «приливы» и «менопауза» внутри приложения — и правильно делает.
+// Слово «сон» намеренно НЕ забанено: «выспитесь» ничего не выдаёт, а бан убил бы
+// половину утренних пунктов. Забанена «бессонница» как название состояния.
+var NT_BAN=/прилив|приплив|потлив|менопауз|андропауз|гормон|давлен|тиск|пульс|тревог|либидо|талия|анализ|дефицит|симптом|диагноз|бессонниц|hot ?flash|menopaus|andropaus|hormon|blood pressure|anxiety|libido|insomnia|deficien|symptom|diagnos/i;
+function _ntNeutral(hasPlan){
+  return { title:L({ru:'Доброе утро',uk:'Доброго ранку',en:'Good morning',es:'Buenos días',de:'Guten Morgen',pt:'Bom dia',fr:'Bonjour',pl:'Dzień dobry',it:'Buongiorno',he:'בוקר טוב',ja:'おはようございます',ko:'좋은 아침이에요'}),
+    body: hasPlan
+      ? L({ru:'Ваш план дня готов',uk:'Ваш план дня готовий',en:'Your day plan is ready',es:'Tu plan del día está listo',de:'Dein Tagesplan ist fertig',pt:'Seu plano do dia está pronto',fr:'Votre plan du jour est prêt',pl:'Twój plan dnia jest gotowy',it:'Il tuo piano del giorno è pronto',he:'תוכנית היום שלך מוכנה',ja:'今日のメモができています',ko:'오늘의 메모가 준비됐어요'})
+      : L({ru:'Отметьте, как прошла ночь',uk:'Відмітьте, як минула ніч',en:'Note how your night went',es:'Anota cómo fue tu noche',de:'Halte fest, wie die Nacht war',pt:'Anote como foi sua noite',fr:'Notez comment s’est passée la nuit',pl:'Zaznacz, jak minęła noc',it:'Segna com’è andata la notte',he:'סמנו איך עבר הלילה',ja:'夜の様子を記録しましょう',ko:'간밤이 어땠는지 기록해요'}) };
+}
+// Персональный текст берём ТОЛЬКО для ru/uk/en: проверить стоп-список на 12 языках
+// списком слов честно нельзя, а надеяться здесь нельзя тем более.
+function _ntText(){
+  var arr=(typeof _dpGet==='function')?_dpGet():[]; var e=arr&&arr[0];
+  var fresh=false;
+  try{
+    if(e&&e.day){ var d=new Date(e.day+'T00:00:00'), days=(Date.now()-d.getTime())/86400000; fresh=(days>=0&&days<3); }
+  }catch(_){}
+  var neutral=_ntNeutral(fresh);
+  if(!fresh||['ru','uk','en'].indexOf(lang)<0) return neutral;
+  try{
+    var secs=(e.plan&&e.plan.morning)||[]; var item='';
+    for(var i=0;i<secs.length&&!item;i++){
+      var its=(secs[i]&&secs[i].items)||[];
+      for(var j=0;j<its.length;j++){ var t=String(its[j]||'').trim(); if(t.length>=12){ item=t; break; } }
+    }
+    if(!item) return neutral;
+    item=item.replace(/\s*\[dish:[a-z0-9_]*\]\s*/gi,' ').replace(/\s+/g,' ').trim();
+    if(NT_BAN.test(item)) return neutral;              // нашлось «здоровое» слово — молча падаем на нейтральный
+    if(item.length>120) item=item.slice(0,117).replace(/[\s,;.]+\S*$/,'')+'…';
+    return { title:neutral.title, body:item };
+  }catch(_){ return neutral; }
+}
+// Перепланируем при каждом открытии приложения и после прохода: повтор ежедневный,
+// но текст должен быть свежим. Если человек уже прошёл сегодня — ближайшее срабатывание
+// всё равно завтрашнее, отдельного гашения не нужно.
+async function _ntArm(){
+  try{
+    if(typeof notifyAvailable!=='function'||!notifyAvailable()) return;
+    var st=_ntGet();
+    if(!st.on){ if(typeof notifyCancel==='function') await notifyCancel(); return; }
+    var hm=String(st.time||'08:00').split(':');
+    var t=_ntText();
+    await notifySchedule(parseInt(hm[0],10)||8, parseInt(hm[1],10)||0, t.title, t.body);
+  }catch(e){}
+}
+// Разрешение спрашиваем не при первом запуске, а когда просьба уже понятна —
+// после того, как человек увидел первую «Памятку дня».
+async function _ntOffer(){
+  try{
+    if(typeof notifyAvailable!=='function'||!notifyAvailable()) return;
+    var st=_ntGet(); if(st.asked) return;
+    var arr=(typeof _dpGet==='function')?_dpGet():[]; if(!arr.length) return;   // плана ещё не было
+    st.asked=true; _ntSave(st);
+    var ok=await notifyAsk();
+    if(ok){ st=_ntGet(); st.on=true; st.time=st.time||'08:00'; _ntSave(st); _ntArm(); }
+  }catch(e){}
+}
+function _ntToggle(on){ var st=_ntGet(); st.on=!!on; if(!st.time)st.time='08:00'; _ntSave(st);
+  if(on&&typeof notifyAsk==='function'){ notifyAsk().then(function(ok){ if(!ok){ var s2=_ntGet(); s2.on=false; _ntSave(s2); if(typeof renderCard==='function')renderCard(); } else _ntArm(); }); }
+  else _ntArm(); }
+function _ntTime(v){ var st=_ntGet(); st.time=String(v||'08:00'); _ntSave(st); _ntArm(); }
+
 function _dpGet(){ try{return JSON.parse(localStorage.getItem('vialp_day_plan')||'[]')||[];}catch(e){return [];} }
 function _dpSave(plan,lang,sig){ try{var arr=_dpGet(),day=_dayKey();arr=arr.filter(function(e){return e.day!==day;});arr.unshift({day:day,lang:lang,sig:sig,plan:plan,ts:Date.now()});while(arr.length>14)arr.pop();localStorage.setItem('vialp_day_plan',JSON.stringify(arr));}catch(e){} }
 function _dpToday(lang,sig){ var day=_dayKey(),e=_dpGet().filter(function(x){return x.day===day;})[0]; return (e&&e.lang===lang&&e.sig===sig&&e.plan)?e.plan:null; }
@@ -10870,12 +10977,15 @@ function closeCircModal(){
 // чтобы переход между разделами читался как переключение вкладок, а не как уход из приложения.
 (function(){
   try{
-    var tab=new URLSearchParams(location.search).get('tab');
+    var _q=new URLSearchParams(location.search);
+    var tab=_q.get('tab'), _plan=_q.get('plan');   // plan читаем ДО очистки адреса
     if(!tab) return;
     history.replaceState(null,'',location.origin+location.pathname);   // чистим адрес
     var go=function(){
       if(tab==='approach'){ if(typeof openApproach==='function') openApproach(); }
       else if(tab==='card'||tab==='today'){ if(typeof navTo==='function') navTo(tab); }
+      // Приход из уведомления: открыть «Памятку дня» сразу на утренней части.
+      try{ if(_plan==='morning' && typeof openDayPlanPanel==='function') setTimeout(openDayPlanPanel,400); }catch(e){}
     };
     if(document.readyState!=='loading') setTimeout(go,60); else document.addEventListener('DOMContentLoaded',function(){setTimeout(go,60);});
   }catch(e){}
@@ -11198,6 +11308,7 @@ document.addEventListener('visibilitychange',function(){
 <script src="healthconnect-bridge.js"></script>
 <!-- IAP-мост (Apple подписка €15/мес, RevenueCat). Активен только внутри приложения; на вебе no-op. app/README.md -->
 <script src="iap-bridge.js"></script>
+<script src="notify-bridge.js"></script>
 <script>
 function appleHKImport(btn){
   if(btn.disabled) return; var t=btn.textContent; btn.disabled=true; btn.textContent='…';
