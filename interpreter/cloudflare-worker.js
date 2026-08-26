@@ -5530,6 +5530,9 @@ const DISH_CATALOG = {
     bf_gf_oat_berries:  ['безглютеновая овсянка на воде+черника+грецкие орехи', ['gf', 'lowfod', 'soft', 'veg']],
     bf_eggs_gf_toast:   ['яичница+шпинат+черри+ломтик безглютенового хлеба', ['gf', 'lowfod', 'veg', 'egg']],
     bf_rice_porridge_egg:['рисовая каша+варёное яйцо+огурец', ['gf', 'lowfod', 'soft', 'veg', 'egg']],
+    bf_vegan_tofu_scramble:['скрэмбл из тофу+шпинат+черри+безглютеновый тост (веган)', ['gf','lowfod','veg']],
+    bf_vegan_chia_berries:['чиа-пудинг на растительном молоке+черника+миндальные лепестки (веган)', ['gf','lowfod','soft','veg']],
+    bf_ovo_eggs_potato: ['яичница+отварной картофель+шпинат, без молочного', ['gf','lowfod','soft','veg','egg']],
     bf_sardines_toast:  ['сардины с костями+безглютеновый тост+зелень+лимон', ['gf', 'lowfod', 'fish']],
   },
   ln: {
@@ -5554,6 +5557,11 @@ const DISH_CATALOG = {
     dn_lowfod_fish_zucchini:['треска+цукини+белый рис', ['gf', 'lowfod', 'soft', 'fish']],
     dn_turkey_potato_carrot:['индейка+картофель+морковь', ['gf', 'lowfod', 'soft', 'meat']],
     dn_tofu_greens:     ['тофу+шпинат+киноа (вег)', ['gf', 'lowfod', 'soft', 'veg']],
+    dn_vegan_lentil_stew:['рагу из чечевицы+морковь+цукини+зелень (веган)', ['gf','veg']],
+    dn_vegan_tempeh_rice:['темпе гриль+стручковая фасоль на пару+белый рис (веган)', ['gf','lowfod','soft','veg']],
+    dn_vegan_pumpkin_soup:['тыквенный суп-пюре+тыквенные семечки (веган)', ['gf','soft','veg']],
+    dn_lacto_cheese_veg:['запечённые овощи+мягкий белый сыр+киноа (лакто-вег)', ['gf','soft','veg','dairy']],
+    dn_ovo_frittata_veg:['фриттата с кабачком и зеленью, без сыра и молока (ово-вег)', ['gf','lowfod','soft','veg','egg']],
     dn_omelet_zucchini: ['омлет+тушёный кабачок+зелень', ['gf', 'lowfod', 'soft', 'veg', 'egg']],
   },
   sn: {

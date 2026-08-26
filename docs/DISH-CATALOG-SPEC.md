@@ -128,23 +128,32 @@
 
 ---
 
-## 5. Третья партия — растительные блюда (заказ от 2026-08-26)
+## 5. Третья партия — ✅ снята и вживлена 2026-08-26
 
-Промпт тот же, дословно; меняется только `[СОСТАВ]`. Имя файла = ключ.
+Восемь растительных блюд по тому же промпту. Каталог: **44 блюда**, папка 1,5 МБ.
+Покрытие после партии (было → стало):
 
-| Ключ | `[СОСТАВ]` для промпта | Закрывает |
-|---|---|---|
-| `bf_vegan_tofu_scramble` | scrambled tofu with spinach and cherry tomatoes, slice of gluten-free toast | веган-завтрак, без глютена |
-| `bf_vegan_chia_berries` | chia pudding made with plant milk, blueberries, flaked almonds | веган-завтрак, без глютена, low-FODMAP |
-| `bf_ovo_eggs_potato` | scrambled eggs with boiled potatoes and spinach, no cheese, no milk | ово-вегетарианский завтрак (без молочного) |
-| `dn_vegan_lentil_stew` | lentil stew with carrots, zucchini and fresh herbs | веган-ужин |
-| `dn_vegan_tempeh_rice` | grilled tempeh with steamed green beans and white rice | веган-ужин, без глютена, low-FODMAP |
-| `dn_vegan_pumpkin_soup` | creamy pumpkin soup with pumpkin seeds and olive oil drizzle | веган-ужин, щадящий |
-| `dn_lacto_cheese_veg` | baked vegetables with soft white cheese and quinoa | лакто-вегетарианский ужин |
-| `dn_ovo_frittata_veg` | vegetable frittata with zucchini and herbs, no cheese, no milk | ово-вегетарианский ужин |
+| Тип питания | Завтраки | Обеды | Ужины | Перекусы |
+|---|---|---|---|---|
+| вегетарианское | 7 → **10** | 3 | 4 → **9** | 6 |
+| лакто-вегетарианское | 3 → **5** | 3 | 2 → **6** | 5 |
+| ово-вегетарианское | 4 → **7** | 3 | 3 → **7** | 4 |
+| **веганское** | 1 → **3** | 3 | 1 → **4** | 3 |
+| веган + целиакия | — | 2 | 4 | 3 |
 
-⚠️ В двух блюдах в составе намеренно стоит «no cheese, no milk» — иначе генератор почти всегда
-добавляет сыр, и ово-вегетарианское блюдо перестаёт быть ово-вегетарианским.
+Порог в три варианта на приём взят везде, кроме веганского обеда при целиакии (два) — там фильтр
+ослабляется по общему правилу. **Следующая дыра — веганские и вегетарианские ОБЕДЫ: их всего три,
+и это единственный приём, который партия не расширила.**
 
-После них покрытие станет: веган 3/3/3, лакто 4/3/3, ово 5/3/4 — по три варианта на приём
-минимум, то есть фильтр перестанет упираться в порог.
+Составы третьей партии (для истории):
+
+| Ключ | `[СОСТАВ]` |
+|---|---|
+| `bf_vegan_tofu_scramble` | scrambled tofu with spinach and cherry tomatoes, slice of gluten-free toast |
+| `bf_vegan_chia_berries` | chia pudding made with plant milk, blueberries, flaked almonds |
+| `bf_ovo_eggs_potato` | scrambled eggs with boiled potatoes and spinach, no cheese, no milk |
+| `dn_vegan_lentil_stew` | lentil stew with carrots, zucchini and fresh herbs |
+| `dn_vegan_tempeh_rice` | grilled tempeh with steamed green beans and white rice |
+| `dn_vegan_pumpkin_soup` | creamy pumpkin soup with pumpkin seeds and olive oil drizzle |
+| `dn_lacto_cheese_veg` | baked vegetables with soft white cheese and quinoa |
+| `dn_ovo_frittata_veg` | vegetable frittata with zucchini and herbs, no cheese, no milk |
