@@ -22,9 +22,18 @@
     .nav-logo { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; letter-spacing: 8px; color: var(--text); text-decoration: none; }
     .nav-back { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); text-decoration: none; transition: opacity .2s; cursor: pointer; }
     .nav-back:hover { opacity: .7; }
-    .lang-bar { display: flex; gap: 5px; flex-wrap: wrap; }
-    .lang-bar button { background: none; border: 1px solid var(--line); border-radius: 50px; padding: 3px 10px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-lt); cursor: pointer; transition: border-color .2s, color .2s; font-family: 'DM Sans', sans-serif; }
-    .lang-bar button:hover, .lang-bar button.active { border-color: var(--gold-pale); color: var(--gold); }
+    /* Переключатель языка — как в приложении: пилюля «флаг + код + галочка» и выпадающий список.
+       Лента из чипов на телефоне занимала две строки и читалась как отдельный интерфейс. */
+    .lang-wrap { position: relative; }
+    .lang-btn { display: flex; align-items: center; gap: 7px; background: none; border: 1px solid var(--line); border-radius: 50px; padding: 5px 12px; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-lt); cursor: pointer; font-family: inherit; transition: border-color .2s, color .2s; }
+    .lang-btn:hover { border-color: var(--gold-pale); color: var(--gold); }
+    .lang-btn .caret { width: 9px; height: 6px; flex-shrink: 0; opacity: .6; }
+    .lang-menu { display: none; position: absolute; right: 0; top: calc(100% + 8px); min-width: 190px; max-height: 60vh; overflow-y: auto; background: var(--cream); border: 1px solid var(--line); border-radius: 14px; padding: 6px; box-shadow: 0 14px 40px rgba(60,44,20,.16); z-index: 240; }
+    .lang-menu.open { display: block; }
+    .lang-opt { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; font-size: 15px; color: var(--text-mid); cursor: pointer; white-space: nowrap; }
+    .lang-opt:hover { background: var(--cream-dk); }
+    .lang-opt.active { color: var(--gold); }
+    .lang-flag { font-size: 17px; line-height: 1; }
     .page-wrap { max-width: 820px; margin: 0 auto; padding: 140px 40px 80px; }
     .page-eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
     .page-eyebrow::before { content: ''; display: block; width: 22px; height: 1px; background: var(--gold-pale); flex-shrink: 0; }
@@ -51,7 +60,7 @@
     @media (max-width: 600px) {
       nav { padding: 12px 16px; }
       .page-wrap { padding: 130px 22px 60px; }
-      .lang-bar button { padding: 2px 7px; font-size: 11px; }
+      .lang-btn { padding: 4px 10px; font-size: 12px; }
       footer { padding: 24px 20px; }
       .footer-inner { flex-direction: column; text-align: center; }
     }
@@ -61,19 +70,12 @@
 
 <nav>
   <span class="nav-logo">VIA·L</span>
-  <div class="lang-bar">
-    <button onclick="setLang('en')" id="btn-en" class="active">EN</button>
-    <button onclick="setLang('es')" id="btn-es">ES</button>
-    <button onclick="setLang('uk')" id="btn-uk">UK</button>
-    <button onclick="setLang('ru')" id="btn-ru">RU</button>
-    <button onclick="setLang('de')" id="btn-de">DE</button>
-    <button onclick="setLang('pt')" id="btn-pt">PT</button>
-    <button onclick="setLang('fr')" id="btn-fr">FR</button>
-    <button onclick="setLang('pl')" id="btn-pl">PL</button>
-    <button onclick="setLang('it')" id="btn-it">IT</button>
-    <button onclick="setLang('he')" id="btn-he">HE</button>
-    <button onclick="setLang('ja')" id="btn-ja">JA</button>
-    <button onclick="setLang('ko')" id="btn-ko">KO</button>
+  <div class="lang-wrap">
+    <button class="lang-btn" id="langBtn" type="button" onclick="toggleLangMenu(event)" aria-haspopup="true">
+      <span class="lang-flag" id="langFlag">🇬🇧</span><span id="langLabel">EN</span>
+      <svg class="caret" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1 1l4 4 4-4"/></svg>
+    </button>
+    <div class="lang-menu" id="langMenu"></div>
   </div>
   <a href="../index.html" class="nav-back" id="back-link">← Back to app</a>
 </nav>
@@ -623,13 +625,33 @@
     de:'← Zurück zur App', pt:'← Voltar à app', fr:'← Retour à l\'app', pl:'← Powrót do aplikacji',
     it:'← Torna all\'app', he:'→ חזרה לאפליקציה', ja:'← アプリに戻る', ko:'← 앱으로 돌아가기'
   };
+  var LANG_FLAGS = { en:'🇬🇧', es:'🇪🇸', uk:'🇺🇦', ru:'🇷🇺', de:'🇩🇪', pt:'🇧🇷', fr:'🇫🇷', pl:'🇵🇱', it:'🇮🇹', he:'🇮🇱', ja:'🇯🇵', ko:'🇰🇷' };
+  var LANG_NAMES = { en:'English', es:'Español', uk:'Українська', ru:'Русский', de:'Deutsch', pt:'Português', fr:'Français', pl:'Polski', it:'Italiano', he:'עברית', ja:'日本語', ko:'한국어' };
+  var LANG_ORDER = ['en', 'es', 'uk', 'ru', 'de', 'pt', 'fr', 'pl', 'it', 'he', 'ja', 'ko'];
+  function toggleLangMenu(e) { if (e) e.stopPropagation(); document.getElementById('langMenu').classList.toggle('open'); }
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.lang-wrap')) { var m = document.getElementById('langMenu'); if (m) m.classList.remove('open'); }
+  });
+  (function buildLangMenu(){
+    var m = document.getElementById('langMenu');
+    LANG_ORDER.forEach(function(l) {
+      var d = document.createElement('div');
+      d.className = 'lang-opt'; d.setAttribute('data-l', l);
+      d.innerHTML = '<span class="lang-flag">' + LANG_FLAGS[l] + '</span>' + LANG_NAMES[l];
+      d.onclick = function(){ setLang(l); };
+      m.appendChild(d);
+    });
+  })();
   function setLang(l) {
     document.querySelectorAll('[data-lang]').forEach(function(el) {
       el.classList.toggle('active', el.getAttribute('data-lang') === l);
     });
-    document.querySelectorAll('.lang-bar button').forEach(function(b) {
-      b.classList.toggle('active', b.id === 'btn-' + l);
+    var lf = document.getElementById('langFlag'); if (lf) lf.textContent = LANG_FLAGS[l] || '🌐';
+    var ll = document.getElementById('langLabel'); if (ll) ll.textContent = l.toUpperCase();
+    document.querySelectorAll('.lang-opt').forEach(function(o) {
+      o.classList.toggle('active', o.getAttribute('data-l') === l);
     });
+    var lm = document.getElementById('langMenu'); if (lm) lm.classList.remove('open');
     var bl = document.getElementById('back-link'); if (bl) bl.textContent = backLabels[l] || '← Back to app';
     document.documentElement.lang = l;
     try { localStorage.setItem('selectedLang', l); } catch(e){}
