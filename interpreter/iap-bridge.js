@@ -16,7 +16,14 @@
   function rc(){
     return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Purchases) || null;
   }
-  window.iapAvailable = function(){ return !!rc(); };
+  /* ⚠️ ВРЕМЕННО — СНЯТЬ ПЕРЕД ПОДАЧЕЙ В APP STORE (docs/APP-STORE-LAUNCH-DAY.md §5.3).
+     Пока ключ RevenueCat не вставлен, проверка подписки честно отвечает «нет» и пейволл
+     наглухо закрывает приложение на живом iPhone. Этот флаг говорит UI «IAP тут нет» —
+     ровно как на вебе и в симуляторе, — чтобы можно было тестировать всё остальное.
+     Ставить false в тот же коммит, где появляется реальный RC_API_KEY_IOS. */
+  var TEST_BYPASS_PAYWALL = true;
+
+  window.iapAvailable = function(){ return !TEST_BYPASS_PAYWALL && !!rc(); };
 
   var _configured = false;
   async function ensureConfigured(){
