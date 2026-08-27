@@ -208,11 +208,20 @@ function setLang(l){
     });
     var lm = document.getElementById('langMenu'); if (lm) lm.classList.remove('open');
   document.documentElement.lang = l;
-  try{ localStorage.setItem('vial_legal_lang', l); }catch(e){}
+  // Ключ общий с приложением и остальными юр-страницами (`selectedLang`), чтобы язык
+  // переносился между ними. Старый `vial_legal_lang` пишем тоже — на случай, если где-то
+  // ещё читается прежний ключ. Страница переведена не на все 12 языков: выбор языка,
+  // которого здесь нет, не сохраняем, иначе он утащит за собой политику и условия.
+  try{ if (document.querySelector('[data-lang="'+l+'"]')) { localStorage.setItem('selectedLang', l); localStorage.setItem('vial_legal_lang', l); } }catch(e){}
 }
 (function(){
-  var saved=null; try{ saved=localStorage.getItem('vial_legal_lang'); }catch(e){}
+  var saved=null;
+  try{ saved=localStorage.getItem('selectedLang')||localStorage.getItem('vial_legal_lang'); }catch(e){}
   var l = saved || (navigator.language||'en').slice(0,2).toLowerCase();
+  if (l === 'ua') l = 'uk';
+  // Пришли с языком, которого на этой странице нет (например, ja) → показываем английскую
+  // версию, но выбор в localStorage НЕ переписываем: вернувшись в приложение, человек
+  // должен остаться на своём языке.
   if(!document.querySelector('[data-lang="'+l+'"]')) l='en';
   setLang(l);
 })();

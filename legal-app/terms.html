@@ -658,7 +658,10 @@
   }
   (function(){
     var saved = null;
-    try { saved = localStorage.getItem('selectedLang'); } catch(e){}
+    // Тот же ключ, что у приложения и остальных юр-страниц; `vial_legal_lang` — запасной,
+    // для тех, кто раньше выбирал язык только на странице поддержки.
+    try { saved = localStorage.getItem('selectedLang') || localStorage.getItem('vial_legal_lang'); } catch(e){}
+    if (saved === 'ua') saved = 'uk';
     if (saved && backLabels[saved]) { setLang(saved); return; }
     var hl = (navigator.language || '').toLowerCase().slice(0,2);
     if (hl === 'ua') hl = 'uk';
