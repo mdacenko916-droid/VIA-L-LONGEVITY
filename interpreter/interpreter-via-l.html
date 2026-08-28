@@ -1246,6 +1246,22 @@ body.morning-mode .hero{display:flex !important;flex:0 0 auto;padding-bottom:6px
 body.morning-mode .hero-imports{display:none;}
 body.morning-mode .hero-title,body.morning-mode .hero-desc{display:none;}
 body.morning-mode #morning-gate{padding:0 14px !important;background:none !important;border:none !important;box-shadow:none !important;}
+/* ══ Единая раскладка утреннего экрана — держать ОДИНАКОВОЙ в interpreter-via-l.html и
+   interpreter-via-l-expert.html (2026-08-28, по скринам владельца). До этого EXPERT ужимал
+   монограмму до 46px, а VIA-L оставлял полные 108px — экраны выглядели как два разных продукта:
+   в одном лого-крошка, в другом всё сплюснуто под огромной шапкой. Один средний размер + деление
+   свободной вертикали пополам (justify-content:center) + воздух между карточками источника. */
+body.morning-mode #scroll-area{padding-top:calc(40px + env(safe-area-inset-top,0px));}
+body.morning-mode #scroll-area main{justify-content:center;}
+body.morning-mode .hero{padding:0 18px 4px;}
+body.morning-mode .hero-monogram{width:76px !important;height:76px !important;margin:0 auto 6px !important;}
+body.morning-mode .hero-block-name{font-size:clamp(30px,7.2vw,42px) !important;letter-spacing:9px !important;margin-top:0 !important;margin-bottom:2px !important;}
+body.morning-mode .hero-block-tier{font-size:clamp(13px,3.4vw,18px) !important;letter-spacing:7px !important;margin-bottom:2px !important;}
+body.morning-mode .imp-btn{margin-top:14px;}   /* воздух между тремя источниками (было 8) */
+/* «Рекомендуем» — плашка НАД кантом карточки, а не строкой внутри неё: строкой она добавляла
+   карточке третью строку и та становилась заметно выше двух соседних (скрин EXPERT 2026-08-28). */
+body.morning-mode .imp-btn .imp-row .imp-badge,
+body.morning-mode .imp-btn .imp-badge{position:absolute;top:-9px;right:14px;}
 /* 4) sticky для подписи бренда и ссылок — тоже РЕТИРОВАН: прилипая к низу, строка ссылок наезжала
    на слоган «Живи. Не просто существуй.». После того как карточка перестала требовать прокрутки
    (убран капс в кнопках, поджаты отступы), закреплять внизу нечего — всё умещается потоком. */

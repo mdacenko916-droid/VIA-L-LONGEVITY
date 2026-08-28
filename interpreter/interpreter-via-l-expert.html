@@ -1174,7 +1174,7 @@ body.morning-mode #scroll-area{display:flex;flex-direction:column;overflow-y:aut
 /* Карточка занимает свободную высоту и стоит в ней по центру, подпись бренда со ссылками — внизу
    экрана. Центрируем автополями (margin:auto), а НЕ justify-content:center: при неожиданном
    переполнении (крупный системный шрифт) auto прижимает к началу, а center срезал бы верх. */
-body.morning-mode #scroll-area main{flex:1 1 0;min-height:0;display:flex;flex-direction:column;align-items:flex-start;padding:0;}
+body.morning-mode #scroll-area main{flex:1 1 auto;min-height:auto;display:flex;flex-direction:column;align-items:flex-start;padding:0;}
 /* flex-direction:column ОБЯЗАТЕЛЕН: по умолчанию флекс кладёт детей в ряд. Пока в main жила одна
    утренняя карточка, это не проявлялось; как только туда попадал ещё блок (баннер импорта,
    панель «Данные с трекера»), карточки вставали в строку и уезжали за правый край. 2026-08-25. */
@@ -1204,10 +1204,8 @@ body.morning-mode #funnelHome{display:none !important;}   /* ✕ на утрен
 /* Утренний экран = тот же вход: лого → VIA—L EXPERT → описание на беже, ниже графитовый блок
    с приветствием и тремя источниками. Карточки источника склонированы в блок, поэтому кнопки
    самого hero прячем; «VIA—L» в футере снимаем — это третий логотип имени на одном экране. */
-body.morning-mode #scroll-area{padding-top:calc(34px + env(safe-area-inset-top,0px));}
 /* Свободную вертикаль делим, а не сваливаем под карточки: без justify-content весь запас
    уходил вниз — сверху тесно, снизу пустое поле (правка по скрину владельца 2026-08-26). */
-body.morning-mode #scroll-area main{justify-content:center;}
 body.morning-mode .hero{display:flex !important;flex:0 0 auto;padding-bottom:6px;}
 body.morning-mode .hero-imports{display:none;}
 /* Ежедневный проход (переделка 2026-08-26 по макету владельца): длинный текст-объяснялка —
@@ -1219,9 +1217,22 @@ body.morning-mode .hero-imports{display:none;}
 body.morning-mode .hero-title,body.morning-mode .hero-desc{display:none;}
 /* Рамки-карточки у гейта больше нет: три источника стоят прямо на беже, как в hero. */
 body.morning-mode #morning-gate{padding:0 14px !important;background:none !important;border:none !important;box-shadow:none !important;}
-body.morning-mode .hero-monogram{width:46px;height:46px;}
-body.morning-mode .hero-block-name{font-size:clamp(28px,7vw,40px) !important;letter-spacing:8px !important;margin-top:0;}
+/* ══ Единая раскладка утреннего экрана — держать ОДИНАКОВОЙ в interpreter-via-l.html и
+   interpreter-via-l-expert.html (2026-08-28, по скринам владельца). До этого EXPERT ужимал
+   монограмму до 46px, а VIA-L оставлял полные 108px — экраны выглядели как два разных продукта:
+   в одном лого-крошка, в другом всё сплюснуто под огромной шапкой. Один средний размер + деление
+   свободной вертикали пополам (justify-content:center) + воздух между карточками источника. */
+body.morning-mode #scroll-area{padding-top:calc(40px + env(safe-area-inset-top,0px));}
+body.morning-mode #scroll-area main{justify-content:center;}
+body.morning-mode .hero{padding:0 18px 4px;}
+body.morning-mode .hero-monogram{width:76px !important;height:76px !important;margin:0 auto 6px !important;}
+body.morning-mode .hero-block-name{font-size:clamp(30px,7.2vw,42px) !important;letter-spacing:9px !important;margin-top:0 !important;margin-bottom:2px !important;}
 body.morning-mode .hero-block-tier{font-size:clamp(13px,3.4vw,18px) !important;letter-spacing:7px !important;margin-bottom:2px !important;}
+body.morning-mode .imp-btn{margin-top:14px;}   /* воздух между тремя источниками (было 8) */
+/* «Рекомендуем» — плашка НАД кантом карточки, а не строкой внутри неё: строкой она добавляла
+   карточке третью строку и та становилась заметно выше двух соседних (скрин EXPERT 2026-08-28). */
+body.morning-mode .imp-btn .imp-row .imp-badge,
+body.morning-mode .imp-btn .imp-badge{position:absolute;top:-9px;right:14px;}
 /* 4) sticky для подписи бренда и ссылок — тоже РЕТИРОВАН: прилипая к низу, строка ссылок наезжала
    на слоган «Живи. Не просто существуй.». После того как карточка перестала требовать прокрутки
    (убран капс в кнопках, поджаты отступы), закреплять внизу нечего — всё умещается потоком. */
@@ -1817,7 +1828,7 @@ body:not(.flow-mode) .flow-intro{display:none;}
 .imp-btn .imp-txt small{font-size:var(--fs-cap);color:var(--t2);font-weight:400;text-transform:none;letter-spacing:0;}
 .imp-badge{position:absolute;top:-8px;right:14px;font-size:var(--fs-cap);font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#160f02;background:linear-gradient(135deg,#e2b96a,#c4963c);padding:3px 9px;border-radius:50px;box-shadow:0 2px 8px rgba(196,150,60,.4);}
 .imp-btn .imp-txt .imp-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.imp-btn .imp-row .imp-badge{position:static;top:auto;right:auto;}
+.imp-btn .imp-row .imp-badge{position:static;top:auto;right:auto;}   /* внутри hero-входа плашка идёт строкой; на утреннем экране её поднимает body.morning-mode .imp-badge */
 .imp-go{flex-shrink:0;color:var(--gold-lt);font-size:var(--fs-title);line-height:1;opacity:.75;}
 .imp-cnt{flex-shrink:0;font-family:'Oswald',sans-serif;font-size:var(--fs-body);letter-spacing:1px;color:var(--gold-lt);white-space:nowrap;}
 .imp-cnt:empty{display:none;}
