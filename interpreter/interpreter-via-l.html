@@ -10281,6 +10281,7 @@ async function fetchAIAnalysis(data, lang) {
   err.style.display = 'none';
   if (disc) disc.style.display = 'none';
 
+  window._anLoading = true;   // пока разбор в пути, памятка дня не стартует (общий кэш промпта, см. renderDayBlueprint)
   try {
     const res = await fetch(AI_WORKER, {
       method: 'POST',
@@ -10298,11 +10299,16 @@ async function fetchAIAnalysis(data, lang) {
       try{ _renderHumanCta(); }catch(e){}
       // Глава «✦ Разбор дня» строится из кэша дня: памятка отрисовалась ДО прихода разбора —
       // без перерисовки глава появлялась только со второго захода. Перерисовываем список глав сейчас.
-      try{ if(window._bpData && typeof renderDayBlueprint==='function') renderDayBlueprint(window._bpData); }catch(e){}
+      // Эта же перерисовка запускает /day-plan: шапка промпта уже в кэше, вызов её прочитает.
+      window._anLoading = false;
+      try{ if(typeof renderDayBlueprint==='function') renderDayBlueprint(window._bpData || data); }catch(e){}
     } else {
       throw new Error(json.error || 'No response');
     }
   } catch (e) {
+    // Разбор не сложился — памятку всё равно нужно запросить, иначе человек остался бы и без неё.
+    window._anLoading = false;
+    try{ if(typeof renderDayBlueprint==='function') renderDayBlueprint(window._bpData || data); }catch(_e){}
     loading.style.display = 'none';
     err.textContent = '⚠ ' + (lang === 'ru' ? 'Не удалось получить анализ. Попробуйте позже.' :
       lang === 'uk' ? 'Не вдалося отримати аналіз.' :
@@ -10663,7 +10669,14 @@ function renderDayBlueprint(data){
       +'<div style="color:var(--gold-lt);font-size:20px;opacity:.6;flex-shrink:0;">›</div></div>';
   }).join('');
   box.innerHTML=head+rows;   // кнопка «Скачать памятку дня» убрана (см. выше)
-  if(!window._bpAI && !window._bpAILoading && typeof fetchDayPlan==='function') fetchDayPlan(data);
+  // Памятку НЕ запрашиваем, пока идёт разбор: оба вызова уходят в одну и ту же модель с одной
+  // и той же шапкой промпта, и параллельно они оба ПИШУТ её в кэш вместо того, чтобы второй
+  // прочитал (живой проход 2026-08-29: cw=21204, cr=0 в обеих строках ai_usage — разница
+  // 9 секунд, а разбор генерируется минуту, то есть памятка стартовала раньше, чем кэш возник).
+  // Разбор дождётся и сам дёрнет перерисовку — тогда памятка прочитает шапку вместо записи.
+  // Для человека ничего не меняется: базовая памятка на экране с самого начала, ИИ-версия
+  // подъезжает молча, пока он читает разбор.
+  if(!window._bpAI && !window._bpAILoading && !window._anLoading && typeof fetchDayPlan==='function') fetchDayPlan(data);
 }
 function _cleanPlan(p){
   // сетка безопасности: убрать редкие проскоки исследовательской лексики из ИИ-JSON.
