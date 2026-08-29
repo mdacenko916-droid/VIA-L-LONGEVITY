@@ -522,6 +522,21 @@ const _DISC_RE = /[^.!?\n]*(?:информацион|не заменя|не яв
 // ⚠️ \b в JS считает словом только латиницу — «\bне\b» в кириллическом тексте НЕ срабатывает.
 // Границы задаём юникодно, иначе всё правило про отрицания молча мёртвое.
 const _NEG_RE = /(?:^|[^\p{L}])(?:не|нет|ні|not|no|never|kein|nicht|sin|sem|non|nie)(?:[^\p{L}]|$)/iu;
+// ── ТЕРМИН ≠ УТВЕРЖДЕНИЕ: рамка направления не есть риск (2026-08-29) ──────────────────────
+// WELLNESS_SYSTEM_PROMPT прямо ТРЕБУЕТ от модели называть болезнь как ассоциацию + «стоит
+// обсудить со специалистом» («паттерн, который иногда встречается при…»), а сторож ловил само
+// слово и наказывал ровно за исполнение инструкции. Все живые срабатывания августа ложные и
+// все — в такой рамке: «обсудить со специалистом, если у вас есть болезни щитовидной»,
+// «☐ Проверьте апноэ: если вы храпите», «чтобы исключить апноэ сна», «часто идёт рука об руку
+// с центральным ожирением». Каждое стоило полной перегенерации текста (~$0.03).
+// Поэтому чисто ТЕРМИННОЕ совпадение (название болезни/диагноза, без конструкции-утверждения —
+// те уже загейтены объектом внутри AI_RISK_RE) гасим, если предложение стоит в рамке
+// направления/условия/общего знания И в нём НЕТ прямого «у вас X» вне условия.
+// ⚠️ Без \b у русских слов: в JS он не видит кириллицу (правило молча умерло бы).
+const _TERM_ONLY_RE = /^(?:diagnos|disease|disorder|syndrome|patholog|treatment|therap|диагноз|болезн|заболеван|синдром|патолог|апноэ|соас|анеми|гипотиреоз|гипертиреоз|диабет|преддиабет|инсулинорезистентн|гипогонадизм|хашимото|тиреоидит|остеопороз|остеопени|ожирени|инсомни)/i;
+const _FRAME_RE = /(обсуд|специалист|врач|лікар|фахівц|исключ|виключ|провер|перевір|скрининг|скринінг|если|якщо|часто\s+идёт|часто\s+встреч|иногда\s+встреч|обычно\s+идёт|discuss|doctor|clinician|rule\s+out|screen|\bif\b|often\s+goes|sometimes\s+seen)/i;
+const _ATTR_RE  = /(у\s+вас|у\s+тебя|you\s+have)/i;
+const _COND_RE  = /(если|якщо|\bif\b)/i;
 // Детект риск-паттерна: вырезаем дисклеймер, пропускаем совпадения в отрицаниях и возвращаем
 // САМО совпадение + очищенный текст. Общая для guardrail (/analyze) и для пробы на /day-plan.
 function _riskScan(text) {
@@ -531,7 +546,16 @@ function _riskScan(text) {
   while ((m = re.exec(scan))) {
     const from = Math.max(0, scan.lastIndexOf('.', m.index), scan.lastIndexOf('!', m.index),
                           scan.lastIndexOf('?', m.index), scan.lastIndexOf('\n', m.index));
-    if (!_NEG_RE.test(scan.slice(from, m.index))) return { m, scan };   // отрицания перед ним нет → настоящий риск
+    if (_NEG_RE.test(scan.slice(from, m.index))) continue;             // отрицание перед ним → не риск
+    if (_TERM_ONLY_RE.test(m[0])) {
+      const end = scan.slice(m.index + m[0].length).search(/[.!?\n]/);
+      const sent = scan.slice(from, end < 0 ? scan.length : m.index + m[0].length + end);
+      const at = sent.search(_ATTR_RE);
+      // Прямое «у вас X» — утверждение о человеке; но «ЕСЛИ у вас X» — условие, а не утверждение.
+      const hardClaim = at >= 0 && !_COND_RE.test(sent.slice(0, at));
+      if (!hardClaim && _FRAME_RE.test(sent)) continue;                // название болезни в рамке направления
+    }
+    return { m, scan };                                                // настоящий риск
   }
   return null;
 }
@@ -563,12 +587,11 @@ async function wellnessGuardrail(text, env, langName, lang, ctx) {
   // в заметке оседал безобидный кусок («это говорит не о болезни»), и по логам выходило,
   // будто сторож ловит отрицания, хотя ловил он совсем другое место. Диагностика врала.
   const _why = _riskNote(_scan);
-  const verdict = await callClaudeSimple(
-    'You are a compliance checker for an Apple App Store wellness app (Guideline 1.4.1). '
-  + 'Does the TEXT do ANY of: (1) diagnose or name/suggest a disease or disorder; (2) sound like medical advice or a clinical conclusion; '
-  + '(3) claim certainty about a health state; (4) assert causation between metrics; (5) interpret a single metric in isolation? '
-  + 'Reply with exactly one word: PASS or FAIL.\n\nTEXT:\n' + text, env, 8, ctx, 'guardrail-check', _why);
-  if (!/FAIL/i.test(verdict)) { log('pass', 'PASS'); return text; }     // self-check PASS → оставляем как есть
+  // Self-check СНЯТ 2026-08-29: за всё время он не отсёк НИ ОДНОГО текста — 8 вердиктов FAIL из 8
+  // (D1 ai_usage, endpoint 'guardrail-check'). То есть платный вызов ($0.006) исправно добавлялся
+  // к расходу и ничего не решал: после него всё равно шла перегенерация. Filter 1 (regex) теперь
+  // ловит по УТВЕРЖДЕНИЮ, а не по слову (см. _riskScan), поэтому срабатываний мало и они по делу —
+  // сомнительный текст сразу идём смягчать. Направление безопасное: переписываем чаще, не реже.
   const softened = await callClaudeSimple(            // одна перегенерация-смягчение
     'Rewrite the wellness text below in the softer, supportive voice of a personal wellbeing coach. '
   + 'Keep the SAME meaning, structure, markdown formatting and language (' + langName + '). '
@@ -577,8 +600,9 @@ async function wellnessGuardrail(text, env, langName, lang, ctx) {
   + 'general knowledge and action advice stay CONFIDENT as-is ("fiber steadies blood sugar", "go to bed earlier") — do NOT insert "may/might" into every sentence; hedging everything sounds evasive, not safer. '
   + 'Output ONLY the rewritten text, nothing else.\n\nTEXT:\n' + text, env, 8000, ctx, 'guardrail-rewrite', _why);
   const ok = softened && softened.trim().length > 40;
-  log(ok ? 'softened' : 'fallback', 'FAIL');
-  // Двойной сбой (self-check=FAIL И смягчение не удалось) — текст заведомо рискованный → нейтральный фолбэк, НЕ исходный.
+  log(ok ? 'softened' : 'fallback', 'off');
+  // Смягчение не удалось (сеть/лимит), а Filter 1 сработал → текст заведомо рискованный:
+  // отдаём нейтральный фолбэк, НЕ исходный.
   return ok ? softened : (GUARDRAIL_FALLBACK[lang] || GUARDRAIL_FALLBACK.en);
 }
 
