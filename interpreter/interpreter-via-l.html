@@ -4533,10 +4533,13 @@ function setLang(l){
   if(_sd && _srEl && (_srEl.classList.contains('active')||_srEl.classList.contains('flow-show'))){
     try{ var _sn=_daySnapGet().filter(function(x){return x.day===_sd;})[0];
       if(_sn){ _renderDayFromSnap(_sn, _sd===_dayKey());
-        if(_sd===_dayKey() && document.getElementById('aiCard') && _lastResult) fetchAIAnalysis(_lastResult.data,l);   // сегодняшний разбор — на новом языке; прошлые дни берём из кэша как есть
+        // ⚠️ Только если язык РЕАЛЬНО сменился: тап по уже активному языку в выпадашке — это тоже
+        // setLang(), и без сверки он запускал полный платный разбор заново (живой случай 2026-08-30:
+        // два одинаковых ru-разбора с разницей 36 сек, $0.065 впустую).
+        if(_sd===_dayKey() && document.getElementById('aiCard') && _lastResult && window._anLang!==l) fetchAIAnalysis(_lastResult.data,l,'lang');   // сегодняшний разбор — на новом языке; прошлые дни берём из кэша как есть
         return; } }catch(e){}
   }
-  if(_lastResult && _srEl && (_srEl.classList.contains('active')||_srEl.classList.contains('flow-show'))){_rerendering=true;try{_showResultsInner();}finally{_rerendering=false;}if(document.getElementById('aiCard'))fetchAIAnalysis(_lastResult.data,l);}   // перерисовывать результаты при смене языка ТОЛЬКО если экран результатов открыт (иначе смена языка на утренней карточке/выборе источника выбрасывала в старый разбор из памяти)
+  if(_lastResult && _srEl && (_srEl.classList.contains('active')||_srEl.classList.contains('flow-show'))){_rerendering=true;try{_showResultsInner();}finally{_rerendering=false;}if(document.getElementById('aiCard') && window._anLang!==l)fetchAIAnalysis(_lastResult.data,l,'lang');}   // перерисовывать результаты при смене языка ТОЛЬКО если экран результатов открыт (иначе смена языка на утренней карточке/выборе источника выбрасывала в старый разбор из памяти)
 }
 function t(k){return T[lang][k]||T.ru[k]||k;}
 // Подписи блока «Давление» — через L() (applyLang не фолбэчит на ru), значения inputs не трогаем.
@@ -8587,7 +8590,11 @@ function _renderDayFromSnap(snap, todayFlag){
   try{ renderProModules(data,score,type); }catch(e){}   // плитки показателей
   try{ renderSources(data); }catch(e){}
   window.__snapRender=false;
+  // Прошлый день — read-only архив: перерисовка не должна заказывать памятку заново (платный вызов
+  // за день, который уже прожит). Для сегодняшнего дня оставляем как было — памятка может ещё не приехать.
+  window._bpNoFetch = !todayFlag;
   try{ renderDayBlueprint(data); }catch(e){}             // памятка дня (главы)
+  window._bpNoFetch = false;
   // дата в шапке — день снимка (renderDayIndex ставит «сегодня», перекрываем для прошлых дней)
   try{ var dEl=document.getElementById('rd-date'); if(dEl){ var dd=new Date(snap.day); dEl.textContent=dd.toLocaleDateString(_locale(),{day:'numeric',month:'long',year:'numeric'}); } }catch(e){}
   // разбор из кэша дня (без вызова ИИ)
@@ -9609,7 +9616,7 @@ function _showResultsInner(){
   if(!_rerendering)window.__snapDay=null;   // живой проход: экран больше не «день из снимка»
 
   // AI personalized analysis (skip on language re-render)
-  if(!_rerendering)fetchAIAnalysis(data,lang);
+  if(!_rerendering)fetchAIAnalysis(data,lang,'pass');
 
   // Render PRO modules
   renderProModules(data, score, type);
@@ -10304,7 +10311,7 @@ function _renderHumanCta(){
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',_scanInit); else _scanInit();
 })();
 
-async function fetchAIAnalysis(data, lang) {
+async function fetchAIAnalysis(data, lang, src) {
   const card = document.getElementById('aiCard');
   const loading = document.getElementById('aiLoading');
   const result = document.getElementById('aiResult');
@@ -10323,10 +10330,11 @@ async function fetchAIAnalysis(data, lang) {
     const res = await fetch(AI_WORKER, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data, lang, tier: 'pro', structured: true, cid: _cid(), day: _dayKey() }),   // cid+day — чтобы разбор можно было забрать с сервера, если ответ не доедет
+      body: JSON.stringify({ data, lang, tier: 'pro', structured: true, cid: _cid(), day: _dayKey(), src: src||'pass' }),   // cid+day — чтобы разбор можно было забрать с сервера, если ответ не доедет
     });
     const json = await res.json();
     if (json.analysis) {
+      window._anLang = lang;   // язык показанного разбора: смена языка на ТОТ ЖЕ больше не платит
       try{if(typeof _aiDailySave==='function')_aiDailySave(json.analysis);}catch(e){}
       // Структурный рендер (порт VIO): превью-карточки [[S]] + раскрытие [[D]]; без маркеров — фолбэк в плоский markdown
       result.innerHTML = (typeof _renderAnalysis==='function')?_renderAnalysis(json.analysis):_aiMd(json.analysis);
@@ -10713,7 +10721,7 @@ function renderDayBlueprint(data){
   // Разбор дождётся и сам дёрнет перерисовку — тогда памятка прочитает шапку вместо записи.
   // Для человека ничего не меняется: базовая памятка на экране с самого начала, ИИ-версия
   // подъезжает молча, пока он читает разбор.
-  if(!window._bpAI && !window._bpAILoading && !window._anLoading && typeof fetchDayPlan==='function') fetchDayPlan(data);
+  if(!window._bpAI && !window._bpAILoading && !window._anLoading && !window._bpNoFetch && typeof fetchDayPlan==='function') fetchDayPlan(data);
 }
 function _cleanPlan(p){
   // сетка безопасности: убрать редкие проскоки исследовательской лексики из ИИ-JSON.
@@ -10817,7 +10825,7 @@ async function fetchDayPlan(data){
   var cached=_dpToday(_lg,sig);
   if(cached){ window._bpAILoading=false; window._bpAI=cached; renderDayBlueprint(data); return; }   // из кэша, без API
   try{
-    var res=await fetch(AI_WORKER+'/day-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:data,lang:_lg,tier:'pro'})});
+    var res=await fetch(AI_WORKER+'/day-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:data,lang:_lg,tier:'pro',src:((typeof _rerendering!=='undefined'&&_rerendering)?'lang':'pass')})});
     var json=await res.json();
     window._bpAILoading=false;
     if(json&&json.plan&&typeof json.plan==='object'&&json.plan.morning){ var cp=_cleanPlan(json.plan); _dpSave(cp,_lg,sig); window._bpAI=cp; renderDayBlueprint(data); }   // сохранить план дня → повторные заходы без API
@@ -11049,7 +11057,7 @@ function _aiRetryToday(btn){
   var snap=null; try{ snap=_daySnapGet().filter(function(x){return x.day===_dayKey();})[0]||null; }catch(e){}
   var d=(snap&&snap.data)?snap.data:((window._lastResult&&_lastResult.data)?_lastResult.data:null);
   if(!d){ try{ if(btn){ btn.disabled=false; btn.style.opacity=''; } }catch(e){} return; }
-  if(typeof fetchAIAnalysis==='function') fetchAIAnalysis(d, lang);
+  if(typeof fetchAIAnalysis==='function') fetchAIAnalysis(d, lang, 'retry');
 }
 function _aiDailySaveDay(day,analysis){
   try{var arr=_aiDailyGet();arr=arr.filter(function(e){return e.day!==day;});arr.unshift({day:day,analysis:analysis,ts:Date.now()});while(arr.length>730)arr.pop();localStorage.setItem('vialp_ai_daily',JSON.stringify(arr));}catch(e){}

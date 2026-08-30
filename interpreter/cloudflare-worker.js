@@ -2469,7 +2469,11 @@ function _needsMedDisclaimer(data) {
 }
 
 async function handleAnalyze(request, env, corsHeaders, ctx) {
-  const { data, lang, code, tier, structured, cid, day } = await request.json();
+  const { data, lang, code, tier, structured, cid, day, src } = await request.json();
+  // Метка «кто позвал» → в ai_usage.note. Разбор дважды за минуту с одинаковым входом мы уже ловили
+  // (2026-08-30, $0.065 впустую), но по логам нельзя было сказать, что именно его переспросило:
+  // проход, смена языка, кнопка «получить заново» или перерисовка сохранённого дня. Теперь можно.
+  const _src = 'src:' + String(src || 'pass').slice(0, 16);
   const langMap = {
     ru: 'русском', uk: 'украинском', en: 'English', es: 'español',
     de: 'Deutsch', pt: 'português', fr: 'français', pl: 'polski',
@@ -2605,7 +2609,7 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
   });
 
   const result = await response.json();
-  logUsage(env, ctx, 'analyze', ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001', tier, lang, result);
+  logUsage(env, ctx, 'analyze', ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001', tier, lang, result, _src);
   // Сбой API (кончился баланс ключа, rate limit, 5xx) — НЕ выдаём клиенту как разбор. Раньше сюда
   // подставлялось result.error.message, и человек читал в карточке «Разбор дня от VIA·L» английский
   // текст биллинга Anthropic; тот же текст уходил в кэш дня и в карточку кабинета специалисту.
@@ -2782,7 +2786,8 @@ function _enforceExerciseVetoes(plan, data) {
 }
 
 async function handleDayPlan(request, env, corsHeaders, ctx) {
-  const { data, lang, tier } = await request.json();
+  const { data, lang, tier, src } = await request.json();
+  const _src = 'src:' + String(src || 'pass').slice(0, 16);   // кто позвал памятку — см. /analyze
   const langMap = {
     ru: 'русском', uk: 'украинском', en: 'English', es: 'español',
     de: 'Deutsch', pt: 'português', fr: 'français', pl: 'polski',
@@ -2858,7 +2863,7 @@ async function handleDayPlan(request, env, corsHeaders, ctx) {
       }),
     });
     const result = await response.json();
-    logUsage(env, ctx, 'day-plan', ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001', tier, lang, result);
+    logUsage(env, ctx, 'day-plan', ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001', tier, lang, result, _src);
     raw = (result.content && result.content[0] && result.content[0].text) || '';
     let t = raw.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
     try { plan = JSON.parse(t); }
