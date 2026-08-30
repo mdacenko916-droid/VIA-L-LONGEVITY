@@ -466,8 +466,7 @@ html.big-text #scroll-area{zoom:1.12;}
 
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 @keyframes spin{to{transform:rotate(360deg)}}
-.ai-wait-note{font-size:var(--fs-cap);color:var(--gold);line-height:1.5;animation:ai-wait-blink 1.6s ease-in-out infinite;}
-@keyframes ai-wait-blink{0%,100%{opacity:.45;}50%{opacity:1;}}
+.ai-wait-note{font-size:var(--fs-cap);color:var(--ok);line-height:1.5;}
 
 /* ══ HERO ═════════════════════════════════════════════════ */
 .hero{
@@ -1050,6 +1049,10 @@ i.rd-tr-ic{display:inline-flex;align-items:center;justify-content:center;font-si
    по пропорции (background-size:auto 100%), поэтому при любом размере окна не обрезается и не плющится. */
 .rd-analysis-fig{position:absolute;top:0;right:0;bottom:0;width:50%;max-width:none;opacity:.34;z-index:1;background:url('images-in/ai-figure-gold2.png') no-repeat right center;background-size:auto 100%;pointer-events:none;border-radius:0 20px 20px 0;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 55%);mask-image:linear-gradient(to right,transparent 0%,#000 55%);}
 @media(max-width:820px){.rd-analysis-body{max-width:100%;}.rd-analysis-fig{width:46%;max-width:220px;opacity:.28;}}
+/* Пока разбор в пути — «сканирование»: очень мягко оживает сам силуэт (2,8 с), текст статичен. */
+.rd-analysis.ai-scanning .rd-analysis-fig{animation:vial-scan 2.8s ease-in-out infinite;}
+@keyframes vial-scan{0%,100%{filter:brightness(1) drop-shadow(0 0 0 rgba(226,185,90,0));}50%{filter:brightness(1.5) drop-shadow(0 0 16px rgba(226,185,90,.38));}}
+@media(prefers-reduced-motion:reduce){.rd-analysis.ai-scanning .rd-analysis-fig{animation:none;}}
 /* принцип */
 .rd-principle-body{font-size:var(--fs-body);color:var(--t2);line-height:1.8;}
 .rd-why{margin-top:12px;background:none;border:none;color:var(--gold-lt);font-size:var(--fs-body);font-weight:600;cursor:pointer;font-family:inherit;padding:0;letter-spacing:.2px;}
@@ -3532,11 +3535,8 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
       <div class="rd-analysis-fig" aria-hidden="true"></div>
       <div class="rd-analysis-body">
         <div class="rd-card-t"><i class="ph ph-brain rd-ct-ic"></i> <span data-t="rd_analysis_title">Разбор дня от VIA‑L</span></div>
-        <div id="aiLoading" style="display:flex;flex-direction:column;align-items:flex-start;gap:8px;color:var(--t2);font-size:var(--fs-body);">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:18px;height:18px;border:2px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;"></div>
-            <span data-t="ai_loading">Анализирую ваши данные...</span>
-          </div>
+        <div id="aiLoading" style="display:flex;flex-direction:column;align-items:flex-start;gap:6px;font-size:var(--fs-body);">
+          <div style="color:#fff;" data-t="ai_loading">Анализирую ваши данные...</div>
           <div class="ai-wait-note" data-t="ai_loading_wait">Не закрывайте приложение — разбор занимает до минуты</div>
         </div>
         <div id="aiResult" style="display:none;font-size:var(--fs-body);color:#fff;line-height:1.85;"></div>
@@ -8981,18 +8981,27 @@ function renderDayIndex(score, type, data){
 // а не «ухудшение». Дескриптивно, без причин/диагнозов (docs/CYCLE-PHASE-WEARABLES-EVIDENCE.md).
 // ВОРОТА: только регулярный ритм (cycle_status='regular') без гормональной контрацепции/МГТ и без
 // продвинутых этапов (мено/пост) — при пери-VMS/нерегулярном/ановуляторном паттерна часто нет.
+// ВОРОТА ДОВЕРИЯ К ФАЗЕ — одно определение на весь файл. Ими пользуются И подпись фазы дня, И
+// температурная ветка индекса: разъедься они, один блок считал бы фазу надёжной, а другой нет.
+// Регулярный ритм без гормональной контрацепции/МГТ и без продвинутых этапов (мено/пост):
+// при пери-VMS, нерегулярном и ановуляторном цикле бифазного паттерна часто нет вовсе.
+// determinePhase() у регулярного цикла = 'peri' (дефолт), поэтому 'peri' пропускаем.
+function _phaseTrusted(data){
+  try{
+    if(!data || data.gender!=='female') return null;
+    var ph=data.cycle_phase; if(!ph) return null;                   // нет фазы (в т.ч. cycle_status='absent')
+    if(data.cycle_status!=='regular') return null;                  // только регулярный ритм (21–35 дн) → овуляторный цикл
+    if(['meno','post','andro','pre_andro'].indexOf(data.phase)>=0) return null;
+    var meds=Array.isArray(data.meds)?data.meds:(data.meds?[data.meds]:[]);
+    if(meds.indexOf('cycle_factor')>=0) return null;                // med4 = гормональная контрацепция/МГТ → естественного паттерна нет
+    return ph;
+  }catch(e){ return null; }
+}
 function _renderPhaseNote(data){
   var box=document.getElementById('rd-phasenote'); if(!box) return;
   box.style.display='none';
   try{
-    if(!data || data.gender!=='female') return;
-    var ph=data.cycle_phase; if(!ph) return;                        // нет фазы (в т.ч. cycle_status='absent')
-    if(data.cycle_status!=='regular') return;                       // только регулярный ритм (21–35 дн) → овуляторный цикл
-    // determinePhase() у регулярного цикла = 'peri' (дефолт), поэтому 'peri' пропускаем; блокируем продвинутые
-    // этапы (мено/пост) и VMS-heavy позднюю пери — там бифазного паттерна часто нет / есть вазомоторный конфаундер.
-    if(['meno','post','andro','pre_andro'].indexOf(data.phase)>=0) return;
-    var meds=Array.isArray(data.meds)?data.meds:(data.meds?[data.meds]:[]);
-    if(meds.indexOf('cycle_factor')>=0) return;                     // med4 = гормональная контрацепция/МГТ → естественного паттерна нет
+    var ph=_phaseTrusted(data); if(!ph) return;
     var T={
       menstrual:{ic:'🌙',t:L({ru:'Начало цикла. В эти дни телу нужнее покой и восстановление — бережный ритм и еда с железом сейчас в самый раз.',uk:'Початок циклу. Цими днями тілу потрібніші спокій і відновлення — дбайливий ритм і їжа із залізом зараз саме те.',en:'Early in your cycle. These days your body leans on rest and recovery — a gentle pace and iron-rich food fit well now.',es:'Inicio del ciclo. Estos días tu cuerpo necesita descanso y recuperación: un ritmo suave y comida rica en hierro van bien.',de:'Zyklusbeginn. In diesen Tagen braucht dein Körper Ruhe und Erholung — ein sanftes Tempo und eisenreiche Kost passen jetzt gut.',pt:'Início do ciclo. Nestes dias seu corpo precisa de descanso e recuperação — um ritmo suave e comida rica em ferro caem bem.',fr:'Début de cycle. Ces jours-ci votre corps a besoin de repos et de récupération — un rythme doux et des aliments riches en fer conviennent.',pl:'Początek cyklu. W te dni ciało potrzebuje odpoczynku i regeneracji — łagodne tempo i jedzenie bogate w żelazo są teraz na miejscu.',it:'Inizio del ciclo. In questi giorni il corpo ha bisogno di riposo e recupero — un ritmo dolce e cibo ricco di ferro vanno bene.',he:'תחילת המחזור. בימים אלה הגוף זקוק למנוחה והתאוששות — קצב עדין ומזון עשיר בברזל מתאימים עכשיו.',ja:'周期の始まりです。この時期は休息と回復が大切 — ゆるやかなペースと鉄分の多い食事が今は合います。',ko:'주기 초반입니다. 이 시기엔 휴식과 회복이 필요해요 — 부드러운 리듬과 철분이 풍부한 음식이 잘 맞습니다.'})},
       follicular:{ic:'🌱',t:L({ru:'Первая половина цикла — у многих сейчас больше энергии и сил. Удобное окно для активности и силовой.',uk:'Перша половина циклу — у багатьох зараз більше енергії та сил. Зручне вікно для активності й силового.',en:'First half of your cycle — many feel more energy now. A good window for activity and strength work.',es:'Primera mitad del ciclo: muchas sienten más energía ahora. Buena ventana para actividad y fuerza.',de:'Erste Zyklushälfte — viele haben jetzt mehr Energie. Ein gutes Fenster für Aktivität und Krafttraining.',pt:'Primeira metade do ciclo — muitas sentem mais energia agora. Boa janela para atividade e força.',fr:'Première moitié du cycle — beaucoup ont plus d’énergie. Une bonne fenêtre pour l’activité et le renforcement.',pl:'Pierwsza połowa cyklu — wiele osób ma teraz więcej energii. Dobre okno na aktywność i trening siłowy.',it:'Prima metà del ciclo — molte hanno più energia ora. Una buona finestra per attività e forza.',he:'המחצית הראשונה של המחזור — רבות חשות יותר אנרגיה עכשיו. חלון טוב לפעילות ולחיזוק.',ja:'周期の前半 — 多くの人がエネルギーを感じます。運動や筋トレに向く時期です。',ko:'주기 전반부 — 이 시기엔 에너지가 더 느껴지는 분이 많아요. 활동과 근력 운동에 좋은 시기입니다.'})},
@@ -9717,8 +9726,20 @@ function _showResultsInner(){
     score-=4;
     recs['temp']={h:L({ru:'🌡️ Снижение приливов через питание',uk:'🌡️ Зниження припливів',en:'🌡️ Reducing Hot Flashes',es:'🌡️ Reducir sofocos',de:'🌡️ Hitzewallungen durch Ernährung reduzieren',pt:'🌡️ Reduzir ondas de calor',fr:'🌡️ Réduire les bouffées de chaleur',pl:'🌡️ Redukcja uderzeń gorąca',it:'🌡️ Ridurre le vampate di calore',he:'🌡️ הפחתת גלי חום',ja:'🌡️ 食事でほてりを軽減',ko:'🌡️ 식이요법으로 홍조 감소'}),l:L({ru:['Семена льна 1–2 ст.л./день','Соя, темпе, нут — регулярно','Исключить: острое, алкоголь, кофеин после 14:00','Витамин Е 400 МЕ'],uk:['Насіння льону 1–2 ст.л./день','Соя, темпе, нут','Виключити: гостре, алкоголь, кофеїн після 14:00'],en:['Flaxseeds 1–2 tbsp/day','Soy, tempeh, chickpeas regularly','Avoid: spicy, alcohol, caffeine after 2pm','Vitamin E 400 IU'],es:['Semillas de lino 1–2 cucharadas/día','Soja, tempeh, garbanzos','Evitar: picante, alcohol, cafeína'],de:['Leinsamen 1–2 EL/Tag','Soja, Tempeh, Kichererbsen regelmäßig','Meiden: Scharf, Alkohol, Koffein nach 14 Uhr','Vitamin E 400 IE'],pt:['Sementes de linhaça 1–2 colheres/dia','Soja, tempeh, grão-de-bico regularmente','Evitar: picante, álcool, cafeína após 14h','Vitamina E 400 UI'],fr:['Graines de lin 1–2 cs/jour','Soja, tempeh, pois chiches régulièrement','Éviter: épicé, alcool, caféine après 14h','Vitamine E 400 UI'],pl:['Siemię lniane 1–2 łyżki/dzień','Soja, tempeh, ciecierzyca regularnie','Unikać: pikantne, alkohol, kofeina po 14:00','Witamina E 400 IU'],it:['Semi di lino 1–2 cucchiai/giorno','Soia, tempeh, ceci regolarmente','Evitare: piccante, alcol, caffeina dopo le 14','Vitamina E 400 UI'],he:['זרעי פשתן 1–2 כפות/יום','סויה, טמפה, חומוס באופן קבוע','להימנע: חריף, אלכוהול, קפאין אחרי 14:00','ויטמין E 400 יח'],ja:['亜麻仁1〜2大さじ/日','大豆、テンペ、ひよこ豆を定期的に','避ける: 辛い食べ物、アルコール、14時以降のカフェイン','ビタミンE 400IU'],ko:['아마씨 1–2큰술/일','두부, 템페, 병아리콩 정기적으로','피하기: 매운 음식, 알코올, 14시 이후 카페인','비타민 E 400IU']})};
   } else if(data.temp==='down'&&data.symptoms.includes('fatigue')){
-    ins.push({t:'warn',i:'🌡️',h:L({ru:'Низкая температура + усталость',uk:'Низька температура + втома',en:'Low Temp + Fatigue',es:'Temperatura baja + fatiga',de:'Niedrige Temperatur + Müdigkeit',pt:'Temperatura baixa + fadiga',fr:'Température basse + fatigue',pl:'Niska temperatura + zmęczenie',it:'Temperatura bassa + affaticamento',he:'טמפרטורה נמוכה + עייפות',ja:'低体温 + 疲労',ko:'저체온 + 피로'}),b:L({ru:'Возможен замедленный энергообмен. Стоит обсудить со специалистом.',uk:'Можливий уповільнений енергообмін. Варто обговорити з фахівцем.',en:'May reflect a slower energy metabolism. Worth discussing with a specialist.',es:'Puede reflejar un metabolismo energético más lento. Conviene consultarlo.',de:'Kann auf einen langsameren Energiestoffwechsel hindeuten. Am besten besprechen.',pt:'Pode refletir um metabolismo energético mais lento. Vale conversar com um especialista.',fr:'Peut refléter un métabolisme énergétique plus lent. À discuter avec un spécialiste.',pl:'Może odzwierciedlać wolniejszy metabolizm energii. Warto omówić ze specjalistą.',it:'Può riflettere un metabolismo energetico più lento. Meglio parlarne con uno specialista.',he:'עשוי לשקף חילוף חומרים איטי יותר. כדאי לשוחח עם מומחה.',ja:'エネルギー代謝の低下を反映する場合があります。専門家に相談を。',ko:'느린 에너지 대사를 반영할 수 있습니다. 전문가와 상담하세요.'})});
-    score-=6;doc=true;docR.push(t('doc_reason_thyroid'));
+    // ФАЗА ЦИКЛА: первая половина (менструальная/фолликулярная) физиологически НИЗКОТЕМПЕРАТУРНАЯ.
+    // Трекер считает отклонение от личной базы, а в базу входят и лютеиновые дни (+0.2–0.6 °C), —
+    // значит «ниже нормы» в первой половине возникает ПО ПОСТРОЕНИЮ, а не от обмена веществ.
+    // Читать это как сигнал щитовидной — ложная тревога (docs/CYCLE-PHASE-WEARABLES-EVIDENCE.md §6.1).
+    // Стойкая гипофункция держит температуру низкой во ВСЕ фазы, поэтому во второй половине цикла
+    // предупреждение сработает как прежде — мы гасим не сигнал, а его календарный двойник.
+    // ⚠️ Фаза календарная, ±3–4 дня (§6.2 п.4) → формулируем как ожидание, а не как факт.
+    var _phLow=(typeof _phaseTrusted==='function')?_phaseTrusted(data):null;
+    if(_phLow==='menstrual'||_phLow==='follicular'){
+      ins.push({t:'ok',i:'🌡️',h:L({ru:'Температура — обычная для этой фазы',uk:'Температура — звична для цієї фази',en:'Temperature — usual for this phase',es:'Temperatura — habitual para esta fase',de:'Temperatur — üblich für diese Phase',pt:'Temperatura — normal para esta fase',fr:'Température — habituelle pour cette phase',pl:'Temperatura — typowa dla tej fazy',it:'Temperatura — normale per questa fase',he:'טמפרטורה — רגילה לשלב הזה',ja:'体温 — この時期として通常',ko:'체온 — 이 시기에는 보통'}),b:L({ru:'Первая половина цикла проходит на более низкой температуре, и по календарю сейчас она. Сравнение идёт с вашей средней за месяц, куда входит и тёплая вторая половина, поэтому отклонение вниз здесь ожидаемо. Усталость смотрим отдельно — по сну и нагрузке.',uk:'Перша половина циклу проходить на нижчій температурі, і за календарем зараз саме вона. Порівняння йде з вашою середньою за місяць, куди входить і тепла друга половина, тож відхилення вниз тут очікуване. Втому дивимось окремо — за сном і навантаженням.',en:'The first half of the cycle runs at a lower temperature, and by the calendar you are in it now. The comparison is with your monthly average, which includes the warmer second half, so a downward reading is expected here. Fatigue we look at separately — through sleep and load.',es:'La primera mitad del ciclo transcurre a menor temperatura, y por el calendario estás en ella. La comparación es con tu media mensual, que incluye la segunda mitad más cálida, así que una lectura baja aquí es esperable. La fatiga la miramos aparte — por sueño y carga.',de:'Die erste Zyklushälfte verläuft bei niedrigerer Temperatur, und laut Kalender bist du gerade darin. Verglichen wird mit deinem Monatsmittel, das die wärmere zweite Hälfte einschließt — ein Wert nach unten ist hier also zu erwarten. Müdigkeit betrachten wir getrennt — über Schlaf und Belastung.',pt:'A primeira metade do ciclo ocorre com temperatura mais baixa, e pelo calendário você está nela agora. A comparação é com a sua média mensal, que inclui a segunda metade mais quente, então um desvio para baixo aqui é esperado. A fadiga olhamos à parte — por sono e carga.',fr:'La première moitié du cycle se déroule à une température plus basse, et d’après le calendrier vous y êtes. La comparaison se fait avec votre moyenne mensuelle, qui inclut la seconde moitié plus chaude : un écart vers le bas est donc attendu ici. La fatigue, nous la regardons à part — via le sommeil et la charge.',pl:'Pierwsza połowa cyklu przebiega w niższej temperaturze, a według kalendarza właśnie w niej jesteś. Porównanie idzie z Twoją średnią miesięczną, w której jest też cieplejsza druga połowa, więc odchylenie w dół jest tu oczekiwane. Zmęczenie oglądamy osobno — przez sen i obciążenie.',it:'La prima metà del ciclo scorre a temperatura più bassa, e secondo il calendario ora sei in essa. Il confronto è con la tua media mensile, che include la seconda metà più calda, quindi uno scostamento verso il basso qui è atteso. La stanchezza la guardiamo a parte — tramite sonno e carico.',he:'המחצית הראשונה של המחזור מתנהלת בטמפרטורה נמוכה יותר, ולפי הלוח את נמצאת בה כעת. ההשוואה היא לממוצע החודשי שלך, שכולל גם את המחצית השנייה החמה יותר, ולכן סטייה כלפי מטה כאן צפויה. את העייפות בוחנים בנפרד — לפי שינה ועומס.',ja:'周期の前半は体温が低めに推移し、カレンダー上では今がその時期です。比較対象は月平均で、そこには温かい後半も含まれるため、ここで下振れが出るのは想定内です。疲労は睡眠と負荷から別途みます。',ko:'주기 전반부는 체온이 낮게 유지되며, 달력상 지금이 그 시기입니다. 비교 기준은 한 달 평균이고 여기에는 더 따뜻한 후반부도 포함되므로, 낮은 값이 나오는 것은 예상되는 일입니다. 피로는 수면과 부하로 따로 살펴봅니다.'})});
+    } else {
+      ins.push({t:'warn',i:'🌡️',h:L({ru:'Низкая температура + усталость',uk:'Низька температура + втома',en:'Low Temp + Fatigue',es:'Temperatura baja + fatiga',de:'Niedrige Temperatur + Müdigkeit',pt:'Temperatura baixa + fadiga',fr:'Température basse + fatigue',pl:'Niska temperatura + zmęczenie',it:'Temperatura bassa + affaticamento',he:'טמפרטורה נמוכה + עייפות',ja:'低体温 + 疲労',ko:'저체온 + 피로'}),b:L({ru:'Возможен замедленный энергообмен. Стоит обсудить со специалистом.',uk:'Можливий уповільнений енергообмін. Варто обговорити з фахівцем.',en:'May reflect a slower energy metabolism. Worth discussing with a specialist.',es:'Puede reflejar un metabolismo energético más lento. Conviene consultarlo.',de:'Kann auf einen langsameren Energiestoffwechsel hindeuten. Am besten besprechen.',pt:'Pode refletir um metabolismo energético mais lento. Vale conversar com um especialista.',fr:'Peut refléter un métabolisme énergétique plus lent. À discuter avec un spécialiste.',pl:'Może odzwierciedlać wolniejszy metabolizm energii. Warto omówić ze specjalistą.',it:'Può riflettere un metabolismo energetico più lento. Meglio parlarne con uno specialista.',he:'עשוי לשקף חילוף חומרים איטי יותר. כדאי לשוחח עם מומחה.',ja:'エネルギー代謝の低下を反映する場合があります。専門家に相談を。',ko:'느린 에너지 대사를 반영할 수 있습니다. 전문가와 상담하세요.'})});
+      score-=6;doc=true;docR.push(t('doc_reason_thyroid'));
+    }
   } else if(data.temp==='normal'){
     ins.push({t:'ok',i:'🌡️',h:L({ru:'Температура стабильная',uk:'Температура стабільна',en:'Temperature Stable',es:'Temperatura estable',de:'Temperatur stabil',pt:'Temperatura estável',fr:'Température stable',pl:'Temperatura stabilna',it:'Temperatura stabile',he:'טמפרטורה יציבה',ja:'体温安定',ko:'체온 안정'}),b:L({ru:'Ночная температура в норме.',uk:'Нічна температура в нормі.',en:'Overnight temperature is stable.',es:'La temperatura nocturna es estable.',de:'Nächtliche Temperatur ist stabil.',pt:'Temperatura noturna está estável.',fr:'La température nocturne est stable.',pl:'Temperatura nocna jest stabilna.',it:'La temperatura notturna è stabile.',he:'הטמפרטורה הלילית תקינה.',ja:'夜間体温は安定しています。',ko:'야간 체온이 안정적입니다.'})});
   }
@@ -10740,6 +10761,22 @@ function _renderHumanCta(){
   var d=document.createElement('div'); d.innerHTML=html;
   host.parentNode.insertBefore(d.firstChild, host.nextSibling);
 }
+
+// Пульс силуэта включаем/выключаем по видимости блока загрузки — независимо от того,
+// какой из путей (живой разбор, снимок дня, повтор) показал или спрятал #aiLoading.
+(function(){
+  function _scanSync(){
+    var l=document.getElementById('aiLoading'), c=document.getElementById('aiCard');
+    if(!l||!c) return;
+    c.classList.toggle('ai-scanning', getComputedStyle(l).display!=='none');
+  }
+  function _scanInit(){
+    var l=document.getElementById('aiLoading'); if(!l) return;
+    new MutationObserver(_scanSync).observe(l,{attributes:true,attributeFilter:['style']});
+    _scanSync();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',_scanInit); else _scanInit();
+})();
 
 async function fetchAIAnalysis(data, lang) {
   const card = document.getElementById('aiCard');
