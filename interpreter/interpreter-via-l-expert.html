@@ -5719,6 +5719,7 @@ var _CAT={
   backup:    {ic:'floppy-disk',           acc:'146,158,176', sub:{ru:'Экспорт и восстановление',uk:'Експорт і відновлення',en:'Export & restore',es:'Exportar y restaurar',de:'Export & Wiederherstellung',pt:'Exportar e restaurar',fr:'Export et restauration',pl:'Eksport i przywracanie',it:'Esporta e ripristina',he:'ייצוא ושחזור',ja:'エクスポートと復元',ko:'내보내기와 복원'}}, // графит с лёгким голубым
   source:    {ic:'plugs-connected',       acc:'196,170,120', sub:{ru:'Apple Health, устройство или ручной ввод',uk:'Apple Health, пристрій або ручне введення',en:'Apple Health, device or manual entry',es:'Apple Health, dispositivo o entrada manual',de:'Apple Health, Gerät oder manuelle Eingabe',pt:'Apple Health, dispositivo ou entrada manual',fr:'Apple Health, appareil ou saisie manuelle',pl:'Apple Health, urządzenie lub ręczne wprowadzanie',it:'Apple Health, dispositivo o inserimento manuale',he:'Apple Health, מכשיר או הזנה ידנית',ja:'Apple Health・デバイス・手動入力',ko:'Apple Health, 기기 또는 수동 입력'}}, // мягкое золото — источник данных
   health:    {ic:'first-aid-kit',        acc:'224,87,106',   sub:{ru:'Диагнозы, препараты, ограничения',uk:'Діагнози, препарати, обмеження',en:'Conditions, medications, limits',es:'Diagnósticos, medicamentos, límites',de:'Diagnosen, Medikamente, Einschränkungen',pt:'Diagnósticos, medicamentos, limites',fr:'Diagnostics, médicaments, limites',pl:'Diagnozy, leki, ograniczenia',it:'Diagnosi, farmaci, limiti',he:'אבחנות, תרופות, מגבלות',ja:'診断・薬・制限',ko:'진단·약물·제한'}},
+  notify:    {ic:'bell',                  acc:'226,185,90',  sub:{ru:'Утреннее напоминание',uk:'Ранкове нагадування',en:'Morning reminder',es:'Recordatorio matinal',de:'Morgen-Erinnerung',pt:'Lembrete matinal',fr:'Rappel du matin',pl:'Poranne przypomnienie',it:'Promemoria del mattino',he:'תזכורת בוקר',ja:'朝のリマインド',ko:'아침 알림'}},
   legal:     {ic:'scales',                acc:'158,172,190', sub:{ru:'Согласия и условия',uk:'Згоди та умови',en:'Consents & terms',es:'Consentimientos y términos',de:'Einwilligungen & Bedingungen',pt:'Consentimentos e termos',fr:'Consentements et conditions',pl:'Zgody i warunki',it:'Consensi e termini',he:'הסכמות ותנאים',ja:'同意事項と規約',ko:'동의 및 약관'}}, // холодный стальной
   memory:    {ic:'brain',                 acc:'150,150,220', sub:{ru:'Заметки о вас',uk:'Нотатки про вас',en:'Notes about you',es:'Notas sobre ti',de:'Notizen über dich',pt:'Notas sobre você',fr:'Notes vous concernant',pl:'Notatki o Tobie',it:'Note su di te',he:'הערות עליך',ja:'あなたに関するメモ',ko:'당신에 대한 메모'}}, // сиренево-синий
   vai:       {ic:'gauge',                 acc:'214,150,90',  sub:{ru:'Косвенный показатель · не диагноз',uk:'Непрямий показник · не діагноз',en:'Indirect indicator · not a diagnosis',es:'Indicador indirecto · no diagnóstico',de:'Indirekter Indikator · keine Diagnose',pt:'Indicador indireto · não diagnóstico',fr:'Indicateur indirect · pas un diagnostic',pl:'Wskaźnik pośredni · nie diagnoza',it:'Indicatore indiretto · non diagnosi',he:'מדד עקיף · לא אבחון',ja:'間接指標・診断ではありません',ko:'간접 지표 · 진단 아님'}},
@@ -6128,6 +6129,69 @@ function renderCard(){
                 manual:L({ru:'Ручной ввод',uk:'Ручне введення',en:'Manual entry',es:'Entrada manual',de:'Manuelle Eingabe',pt:'Entrada manual',fr:'Saisie manuelle',pl:'Wprowadzanie ręczne',it:'Inserimento manuale',he:'הזנה ידנית',ja:'手動入力',ko:'수동 입력'}) }[_srcNow]||'—';
   var _srcInner='<div class="vc-row"><span class="vc-l">'+L({ru:'Текущий источник',uk:'Поточне джерело',en:'Current source',es:'Fuente actual',de:'Aktuelle Quelle',pt:'Fonte atual',fr:'Source actuelle',pl:'Bieżące źródło',it:'Fonte attuale',he:'מקור נוכחי',ja:'現在のソース',ko:'현재 소스'})+'</span><span class="vc-v">'+_srcLbl+'</span></div>'
     +'<button onclick="_changeSource()" style="display:block;width:100%;box-sizing:border-box;margin-top:8px;padding:11px;border-radius:10px;border:1px solid rgba(196,150,60,.32);background:rgba(196,150,60,.1);color:var(--gold-lt);font-size:var(--fs-body);font-weight:500;cursor:pointer;">🔄 '+L({ru:'Изменить источник данных',uk:'Змінити джерело даних',en:'Change data source',es:'Cambiar fuente de datos',de:'Datenquelle ändern',pt:'Alterar fonte de dados',fr:'Changer la source de données',pl:'Zmień źródło danych',it:'Cambia fonte dati',he:'שינוי מקור הנתונים',ja:'データソースを変更',ko:'데이터 소스 변경'})+'</button>';
+  // ── Утреннее напоминание (Web Push) ──
+  // Показываем только там, где пуш реально работает. На iOS это ТОЛЬКО PWA с домашнего
+  // экрана: во вкладке Safari PushManager отсутствует, и включать было бы нечего —
+  // вместо переключателя объясняем, что делать.
+  var _secNotify='';
+  (function(){
+    var _hdr=L({ru:'Утреннее напоминание',uk:'Ранкове нагадування',en:'Morning reminder',es:'Recordatorio matinal',de:'Morgen-Erinnerung',pt:'Lembrete matinal',fr:'Rappel du matin',pl:'Poranne przypomnienie',it:'Promemoria del mattino',he:'תזכורת בוקר',ja:'朝のリマインド',ko:'아침 알림'});
+    var _why=L({ru:'Одно короткое напоминание утром. О здоровье в нём ничего не написано: текст виден на заблокированном экране, поэтому подробности открываются только внутри.',
+      uk:'Одне коротке нагадування вранці. Про здоровʼя в ньому нічого немає: текст видно на заблокованому екрані, тому подробиці відкриваються лише всередині.',
+      en:'One short reminder in the morning. It says nothing about your health: the text is visible on the lock screen, so the details open only inside.',
+      es:'Un recordatorio corto por la mañana. No dice nada sobre tu salud: el texto se ve en la pantalla bloqueada, así que los detalles se abren solo dentro.',
+      de:'Eine kurze Erinnerung am Morgen. Sie sagt nichts über deine Gesundheit: Der Text ist auf dem Sperrbildschirm sichtbar, Details öffnen sich nur drinnen.',
+      pt:'Um lembrete curto de manhã. Não diz nada sobre sua saúde: o texto aparece na tela bloqueada, então os detalhes abrem só dentro.',
+      fr:'Un court rappel le matin. Il ne dit rien de votre santé : le texte est visible sur l’écran verrouillé, les détails s’ouvrent seulement à l’intérieur.',
+      pl:'Jedno krótkie przypomnienie rano. Nie mówi nic o zdrowiu: tekst widać na ekranie blokady, szczegóły otwierają się tylko w środku.',
+      it:'Un breve promemoria al mattino. Non dice nulla sulla tua salute: il testo si vede sulla schermata di blocco, i dettagli si aprono solo dentro.',
+      he:'תזכורת קצרה בבוקר. אין בה דבר על הבריאות שלכם: הטקסט נראה במסך הנעול, והפרטים נפתחים רק בפנים.',
+      ja:'朝に短い通知をひとつ。健康のことは書きません。ロック画面に出る文面なので、詳細は中でだけ開きます。',
+      ko:'아침에 짧은 알림 하나. 건강에 관한 내용은 담지 않습니다. 잠금 화면에 보이는 문구이므로 자세한 내용은 안에서만 열립니다.'});
+    var inner='<div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;">'+_esc(_why)+'</div>';
+    if(typeof _ntSupported!=='function' || !_ntSupported()){
+      // Safari во вкладке (iOS) — пуша нет в принципе, пока не добавят на домашний экран.
+      if(typeof _ntIOS==='function' && _ntIOS() && typeof _ntStandalone==='function' && !_ntStandalone()){
+        inner+='<div style="font-size:var(--fs-cap);color:var(--t3);line-height:1.6;margin-top:10px;">↑ '
+          +_esc(L({ru:'Чтобы включить, добавьте VIA-L EXPERT на домашний экран: «Поделиться» → «На экран Домой».',
+            uk:'Щоб увімкнути, додайте VIA-L EXPERT на головний екран: «Поділитися» → «На екран Домівка».',
+            en:'To enable it, add VIA-L EXPERT to your Home Screen: Share → Add to Home Screen.',
+            es:'Para activarlo, añade VIA-L EXPERT a la pantalla de inicio: Compartir → Añadir a inicio.',
+            de:'Zum Aktivieren VIA-L EXPERT zum Home-Bildschirm hinzufügen: Teilen → Zum Home-Bildschirm.',
+            pt:'Para ativar, adicione o VIA-L EXPERT à Tela de Início: Compartilhar → Adicionar à Tela de Início.',
+            fr:'Pour l’activer, ajoutez VIA-L EXPERT à l’écran d’accueil : Partager → Sur l’écran d’accueil.',
+            pl:'Aby włączyć, dodaj VIA-L EXPERT do ekranu głównego: Udostępnij → Do ekranu początkowego.',
+            it:'Per attivarlo, aggiungi VIA-L EXPERT alla schermata Home: Condividi → Aggiungi a Home.',
+            he:'כדי להפעיל, הוסיפו את VIA-L EXPERT למסך הבית: שיתוף ← הוספה למסך הבית.',
+            ja:'有効にするには VIA-L EXPERT をホーム画面に追加してください：共有 → ホーム画面に追加。',
+            ko:'사용하려면 VIA-L EXPERT를 홈 화면에 추가하세요: 공유 → 홈 화면에 추가.'}))+'</div>';
+        _secNotify=_vcSec('notify',_hdr,inner,false);
+      }
+      return;   // десктоп без пуша / старый браузер — секции нет вовсе
+    }
+    var _nt=(typeof _ntGet==='function')?_ntGet():{}, _on=!!_nt.on, _tm=_nt.time||'08:00';
+    var _denied=(typeof Notification!=='undefined' && Notification.permission==='denied');
+    inner+='<label style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;font-size:var(--fs-body);color:var(--t1);cursor:pointer;">'
+      +'<span>'+_esc(L({ru:'Присылать утром',uk:'Надсилати вранці',en:'Send in the morning',es:'Enviar por la mañana',de:'Morgens senden',pt:'Enviar de manhã',fr:'Envoyer le matin',pl:'Wysyłaj rano',it:'Invia al mattino',he:'לשלוח בבוקר',ja:'朝に送る',ko:'아침에 보내기'}))+'</span>'
+      +'<input type="checkbox" '+(_on?'checked':'')+(_denied?' disabled':'')+' onchange="_ntToggle(this.checked)"></label>'
+      +'<label style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font-size:var(--fs-body);color:var(--t1);">'
+      +'<span>'+_esc(L({ru:'Время',uk:'Час',en:'Time',es:'Hora',de:'Uhrzeit',pt:'Horário',fr:'Heure',pl:'Godzina',it:'Ora',he:'שעה',ja:'時刻',ko:'시간'}))+'</span>'
+      +'<input type="time" value="'+_tm+'" onchange="_ntTime(this.value)" style="background:rgba(255,255,255,.04);border:1px solid var(--b1);border-radius:8px;padding:6px 8px;color:var(--t1);font-family:inherit;"></label>';
+    if(_denied) inner+='<div style="font-size:var(--fs-cap);color:var(--t3);line-height:1.6;margin-top:8px;">'
+      +_esc(L({ru:'Уведомления заблокированы в настройках браузера — включите их там, и переключатель заработает.',
+        uk:'Сповіщення заблоковані в налаштуваннях браузера — увімкніть їх там, і перемикач запрацює.',
+        en:'Notifications are blocked in your browser settings — allow them there and the switch will work.',
+        es:'Las notificaciones están bloqueadas en el navegador: permítelas allí y el interruptor funcionará.',
+        de:'Mitteilungen sind in den Browsereinstellungen blockiert — dort erlauben, dann funktioniert der Schalter.',
+        pt:'As notificações estão bloqueadas no navegador — permita-as lá e o botão funcionará.',
+        fr:'Les notifications sont bloquées dans le navigateur — autorisez-les et l’interrupteur fonctionnera.',
+        pl:'Powiadomienia są zablokowane w przeglądarce — zezwól na nie, a przełącznik zadziała.',
+        it:'Le notifiche sono bloccate nel browser — consentile e l’interruttore funzionerà.',
+        he:'ההתראות חסומות בהגדרות הדפדפן — אפשרו אותן ומתג ההפעלה יעבוד.',
+        ja:'ブラウザの設定で通知がブロックされています。許可するとスイッチが使えます。',
+        ko:'브라우저 설정에서 알림이 차단되어 있습니다. 허용하면 스위치가 작동합니다.'}))+'</div>';
+    _secNotify=_vcSec('notify',_hdr,inner,false);
+  })();
   _secSource=_vcSec('source',L({ru:'Источник данных',uk:'Джерело даних',en:'Data source',es:'Fuente de datos',de:'Datenquelle',pt:'Fonte de dados',fr:'Source des données',pl:'Źródło danych',it:'Fonte dati',he:'מקור נתונים',ja:'データソース',ko:'데이터 소스'}),_srcInner,false,true);
 
   _secLegal=_vcSec('legal',t('card_legal'),'<div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;">'+t('consent_body')+'</div>',false,true);
@@ -6168,7 +6232,7 @@ function renderCard(){
   // Траектория по жалобе — первой: это ответ на «стало ли легче», ради которого человек и ведёт дневник.
   var _secCmp=(typeof _cmpTrajHTML==='function')?_cmpTrajHTML():'';
   html+=[_secCmp,_secGoal,_secAct,_secNut,_secSup,_secHealth,_secStress,_secBal,_secRhythm,_secLife,   // «что я о себе указал»
-         _secDyn,_secVai,_secLabs,_secDaily,_secHist,_secSource,_secDisplay,_secBackup,_secLegal].join('');     // «что показывает система / инструменты» + VAI-калькулятор
+         _secDyn,_secVai,_secLabs,_secDaily,_secHist,_secSource,_secNotify,_secDisplay,_secBackup,_secLegal].join('');     // «что показывает система / инструменты» + VAI-калькулятор
   html+='</div>'; // .vcard-grid
   html+='</div>'; // .vcard-wrap
 
@@ -6471,6 +6535,83 @@ async function _syncBoot(next){
 }
 // Уход со страницы/сворачивание PWA — досылаем несохранённое немедленно.
 document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='hidden'&&_syncReady){ if(_syncTimer)clearTimeout(_syncTimer); _syncPush(); } });
+
+// Публичный ключ VAPID — он и должен быть публичным: им браузер шифрует подписку.
+// Приватная половина живёт только секретом воркера (VAPID_JWK).
+var _NT_VAPID='BFiZop7dAz1pRWZIelHGWM1Ypqri-EDP6x-GufGMzo8A9xumzHkX2HKGZ_A4Qd7VtTMOqB30Ni1MXxO5BVDmQCU';
+// ══════════════════════════════════════════════════════════════════════
+// УТРЕННЕЕ НАПОМИНАНИЕ (Web Push) — EXPERT живёт как PWA, вне магазинов.
+// Capacitor-плагина здесь нет, а браузерного «разбуди меня завтра в 8» не
+// существует (Notification Triggers не выпустили) — значит будильник снаружи:
+// подписываемся на пуш, время храним у себя, будит наш ежечасный cron.
+//
+// ⚠️ Сервер шлёт ПУСТОЙ пуш и не знает ни слова о человеке; надпись собирает
+// service worker на устройстве. Здесь мы кладём ему только код языка.
+//
+// На iOS подписка возможна ТОЛЬКО у PWA, добавленной на домашний экран (16.4+).
+// В обычной вкладке Safari PushManager отсутствует — секцию просто не показываем,
+// вместо неё строка «добавьте на домашний экран».
+// ══════════════════════════════════════════════════════════════════════
+var _NT_KEY='viae_notify';
+function _ntGet(){ try{ return JSON.parse(localStorage.getItem(_NT_KEY)||'{}')||{}; }catch(e){ return {}; } }
+function _ntSave(o){ try{ localStorage.setItem(_NT_KEY,JSON.stringify(o)); }catch(e){} }
+function _ntSupported(){ return ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window); }
+// Standalone = добавлено на домашний экран. На iOS без этого пуш не работает вовсе.
+function _ntStandalone(){
+  try{ return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone===true; }catch(e){ return false; }
+}
+function _ntIOS(){ try{ return /iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1); }catch(e){ return false; } }
+
+function _ntB64(s){
+  var pad='='.repeat((4-s.length%4)%4), b=atob((s+pad).replace(/-/g,'+').replace(/_/g,'/'));
+  var out=new Uint8Array(b.length); for(var i=0;i<b.length;i++)out[i]=b.charCodeAt(i);
+  return out;
+}
+// Язык — в Cache: у service worker нет localStorage, а надпись он собирает сам.
+async function _ntPutLang(){
+  // Имя кэша совпадает с CACHE в sw-expert.js; SW ищет ключ по всем кэшам, так что
+  // рассинхрон при следующем bump ничего не сломает.
+  try{ var c=await caches.open('vial-expert-v6'); await c.put('vial-nt-lang', new Response(lang||'en')); }catch(e){}
+}
+async function _ntSub(hhmm){
+  var reg=await navigator.serviceWorker.ready;
+  var sub=await reg.pushManager.getSubscription();
+  if(!sub) sub=await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:_ntB64(_NT_VAPID) });
+  var hm=String(hhmm||'08:00').split(':');
+  await _ntPutLang();
+  var code=''; try{ code=(sessionStorage.getItem('viae_code')||localStorage.getItem('viae_code')||'').trim().toUpperCase(); }catch(e){}
+  var r=await fetch('https://interpreter.viaelcom.workers.dev/push/subscribe',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ code:code, endpoint:sub.endpoint, hour:parseInt(hm[0],10)||8, min:parseInt(hm[1],10)||0,
+                          tzOffset:new Date().getTimezoneOffset(), lang:lang||'en' })});
+  if(!r.ok) throw new Error('subscribe failed');
+  return sub;
+}
+async function _ntUnsub(){
+  try{
+    var reg=await navigator.serviceWorker.ready, sub=await reg.pushManager.getSubscription();
+    if(sub){
+      await fetch('https://interpreter.viaelcom.workers.dev/push/unsubscribe',{
+        method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint:sub.endpoint})});
+      await sub.unsubscribe();
+    }
+  }catch(e){}
+}
+async function _ntToggle(on){
+  var st=_ntGet();
+  if(!on){ st.on=false; _ntSave(st); await _ntUnsub(); if(typeof renderCard==='function')renderCard(); return; }
+  // Разрешение спрашиваем только по нажатию — иначе браузеры молча отказывают.
+  var perm='denied'; try{ perm=await Notification.requestPermission(); }catch(e){}
+  if(perm!=='granted'){ st.on=false; _ntSave(st); if(typeof renderCard==='function')renderCard(); return; }
+  try{ await _ntSub(st.time||'08:00'); st.on=true; st.time=st.time||'08:00'; }
+  catch(e){ st.on=false; }
+  _ntSave(st);
+  if(typeof renderCard==='function')renderCard();
+}
+async function _ntTime(v){
+  var st=_ntGet(); st.time=String(v||'08:00'); _ntSave(st);
+  if(st.on){ try{ await _ntSub(st.time); }catch(e){} }
+}
 
 function _saveDaily(){
   try{

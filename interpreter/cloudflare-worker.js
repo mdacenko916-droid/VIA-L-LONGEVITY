@@ -1425,6 +1425,10 @@ export default {
       if (path === '/advisor-chat')     return handleAdvisorChat(request, env, corsHeaders);
       if (path === '/weekly-report')    return handleWeeklyReport(request, env, corsHeaders, ctx);
 
+      // Утреннее напоминание EXPERT (PWA): подписка на Web Push. Тело пуша пустое — см. runPushReminders.
+      if (path === '/push/subscribe')   return handlePushSubscribe(request, env, corsHeaders);
+      if (path === '/push/unsubscribe') return handlePushUnsubscribe(request, env, corsHeaders);
+
       // VIA-L EXPERT — внутренний канал связи клиент↔нутрициолог (НЕ Telegram для клиента).
       // Авторизация = код доступа (как /weekly-report). Сторона нутрициолога — в кабинете (вкладка «Переписка»).
       // (/expert/thread — GET, зарегистрирован в GET-блоке выше)
@@ -1500,9 +1504,16 @@ export default {
 
   // Cron Trigger (см. wrangler.jsonc "triggers.crons") — ежедневные напоминания клиентам.
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(runDailyReminders(env));
-    ctx.waitUntil(expireSpecialistAccess(env));   // Шаг 4: закрыть доступ при истёкшей абонплате
-    ctx.waitUntil(eraseExpiredHealthData(env));    // E3 §5: данные о здоровье — 90 дней после ведения
+    // Cron стал ЕЖЕЧАСНЫМ ради утреннего пуша: 8 утра у клиента в Мадриде и в Киеве — разные
+    // часы UTC, одним ночным запуском их не накрыть. Всё, что было суточным, заперто на 09:00 UTC —
+    // тот самый час, в который эти задачи ходили раньше; поведение не изменилось.
+    const _h = new Date().getUTCHours();
+    ctx.waitUntil(runPushReminders(env));          // ежечасно: разбудить тех, у кого local-час настал
+    if (_h === 9) {
+      ctx.waitUntil(runDailyReminders(env));
+      ctx.waitUntil(expireSpecialistAccess(env));   // Шаг 4: закрыть доступ при истёкшей абонплате
+      ctx.waitUntil(eraseExpiredHealthData(env));    // E3 §5: данные о здоровье — 90 дней после ведения
+    }
   },
 };
 
@@ -7834,6 +7845,124 @@ async function sendClientReminder(env, ctx, ruText){
   await careSend(env, ctx.clientId, out);
   if(ctx.topicId){
     await careSend(env, env.NUTRITIONIST_GROUP_ID, '🔔 Бот напомнил клиенту: ' + ruText, { message_thread_id: Number(ctx.topicId) });
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// WEB PUSH — утреннее напоминание для VIA-L EXPERT (PWA, вне магазинов).
+//
+// Почему не тот же код, что в приложении: Capacitor-плагин локальных уведомлений
+// в PWA недоступен, а браузерного «разбуди меня завтра в 8» не существует —
+// Notification Triggers так и не выпустили ни в одном движке. Значит будильник
+// снаружи: подписка в браузере + наш cron.
+//
+// ⚠️ ПУШ ИДЁТ БЕЗ ТЕЛА. Это не экономия, а требование приватности: текст виден
+// на ЗАБЛОКИРОВАННОМ экране, а продукт — про менопаузу и андропаузу. Сервер не
+// знает и не передаёт ни слова о человеке; надпись собирает service worker
+// на устройстве из нейтрального словаря. Заодно отпадает вся возня с aes128gcm:
+// без тела нужен только VAPID-заголовок.
+//
+// Хранилище — D1 push_subs (id, code, endpoint, hour_utc, min_local, lang, last_sent, fails).
+// Время хранится уже пересчитанным в UTC-час: cron ходит раз в час и берёт свой.
+// ══════════════════════════════════════════════════════════════════════
+
+const _b64u = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+async function _vapidKey(env) {
+  if (!env.VAPID_JWK) return null;
+  let jwk; try { jwk = JSON.parse(env.VAPID_JWK); } catch (_) { return null; }
+  return crypto.subtle.importKey('jwk', jwk, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
+}
+
+// VAPID-заголовок: JWT ES256 на origin push-сервиса. Живёт 12 часов — подписываем
+// на каждую рассылку заново, кэшировать нечего.
+async function _vapidAuth(env, endpoint) {
+  const key = await _vapidKey(env); if (!key) return null;
+  const aud = new URL(endpoint).origin;
+  const head = _b64u(new TextEncoder().encode(JSON.stringify({ typ: 'JWT', alg: 'ES256' })));
+  const body = _b64u(new TextEncoder().encode(JSON.stringify({
+    aud, exp: Math.floor(Date.now() / 1000) + 12 * 3600, sub: 'mailto:support@via-l.com',
+  })));
+  const data = new TextEncoder().encode(head + '.' + body);
+  const sig = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, data);
+  return 'vapid t=' + head + '.' + body + '.' + _b64u(sig) + ', k=' + (env.VAPID_PUBLIC || '');
+}
+
+// Один пуш без тела. Возвращает 'ok' | 'gone' (подписку удалить) | 'fail'.
+async function _pushOne(env, endpoint) {
+  const auth = await _vapidAuth(env, endpoint);
+  if (!auth) return 'fail';
+  let r;
+  try {
+    r = await fetch(endpoint, { method: 'POST', headers: {
+      Authorization: auth, TTL: '3600', Urgency: 'normal', 'Content-Length': '0',
+    } });
+  } catch (_) { return 'fail'; }
+  if (r.status === 404 || r.status === 410) return 'gone';   // подписка мертва: браузер снесён/переустановлен
+  return r.ok ? 'ok' : 'fail';
+}
+
+// POST /push/subscribe {code, endpoint, hour, min, tzOffset, lang}
+// tzOffset — как отдаёт getTimezoneOffset(): минуты, которые надо ПРИБАВИТЬ к местному, чтобы получить UTC.
+async function handlePushSubscribe(request, env, corsHeaders) {
+  if (!env.DB) return new Response('{"ok":false}', { status: 503, headers: corsHeaders });
+  let b; try { b = await request.json(); } catch (_) { return new Response('{"ok":false}', { status: 400, headers: corsHeaders }); }
+  const endpoint = String(b.endpoint || '');
+  if (!/^https:\/\//.test(endpoint) || endpoint.length > 1000) return new Response('{"ok":false}', { status: 400, headers: corsHeaders });
+  const code = String(b.code || '').trim().toUpperCase().slice(0, 40);
+  const hour = Math.min(23, Math.max(0, parseInt(b.hour, 10) || 8));
+  const min  = Math.min(59, Math.max(0, parseInt(b.min, 10) || 0));
+  const off  = Math.min(840, Math.max(-840, parseInt(b.tzOffset, 10) || 0));
+  const lang = /^[a-z]{2}$/.test(String(b.lang || '')) ? b.lang : 'en';
+  // Местный час → час UTC. Минуты сдвига часового пояса (Индия, Непал) в час не влезают:
+  // ставим на тот UTC-час, в котором местное время уже наступило — иначе придёт раньше просьбы.
+  const hourUtc = ((Math.ceil((hour * 60 + min + off) / 60)) % 24 + 24) % 24;
+  try {
+    await env.DB.prepare(
+      `INSERT INTO push_subs (id, code, endpoint, hour_utc, min_local, lang, created)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(endpoint) DO UPDATE SET code=excluded.code, hour_utc=excluded.hour_utc,
+         min_local=excluded.min_local, lang=excluded.lang, fails=0`
+    ).bind(crypto.randomUUID(), code, endpoint, hourUtc, min, lang, new Date().toISOString()).run();
+  } catch (_) { return new Response('{"ok":false}', { status: 500, headers: corsHeaders }); }
+  return new Response(JSON.stringify({ ok: true, hourUtc }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+}
+
+// POST /push/unsubscribe {endpoint}
+async function handlePushUnsubscribe(request, env, corsHeaders) {
+  if (!env.DB) return new Response('{"ok":true}', { headers: corsHeaders });
+  let b; try { b = await request.json(); } catch (_) { return new Response('{"ok":false}', { status: 400, headers: corsHeaders }); }
+  try { await env.DB.prepare('DELETE FROM push_subs WHERE endpoint = ?').bind(String(b.endpoint || '')).run(); } catch (_) {}
+  return new Response('{"ok":true}', { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+}
+
+// Часовой проход cron: разослать тем, чей местный час настал.
+// Защита от дубля — last_sent по дате UTC: повторный запуск того же часа не разбудит второй раз.
+async function runPushReminders(env) {
+  if (!env.DB || !env.VAPID_JWK) return;
+  const hourUtc = new Date().getUTCHours();
+  const today = new Date().toISOString().slice(0, 10);
+  let rows = [];
+  try {
+    const q = await env.DB.prepare(
+      'SELECT endpoint, fails FROM push_subs WHERE hour_utc = ? AND (last_sent IS NULL OR last_sent <> ?) LIMIT 500'
+    ).bind(hourUtc, today).all();
+    rows = q.results || [];
+  } catch (_) { return; }
+  for (const row of rows) {
+    const res = await _pushOne(env, row.endpoint);
+    try {
+      if (res === 'gone') {
+        await env.DB.prepare('DELETE FROM push_subs WHERE endpoint = ?').bind(row.endpoint).run();
+      } else if (res === 'ok') {
+        await env.DB.prepare('UPDATE push_subs SET last_sent = ?, fails = 0 WHERE endpoint = ?').bind(today, row.endpoint).run();
+      } else {
+        // Пять подряд неудач — подписка битая, перестаём долбиться.
+        const f = (row.fails || 0) + 1;
+        if (f >= 5) await env.DB.prepare('DELETE FROM push_subs WHERE endpoint = ?').bind(row.endpoint).run();
+        else await env.DB.prepare('UPDATE push_subs SET fails = ? WHERE endpoint = ?').bind(f, row.endpoint).run();
+      }
+    } catch (_) {}
   }
 }
 
