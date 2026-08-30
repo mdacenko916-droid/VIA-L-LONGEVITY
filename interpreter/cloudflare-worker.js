@@ -3126,6 +3126,15 @@ function buildWeeklyUserMessage(summary, daily, lang, period, exp) {
   // начинается с нуля и предлагает то, что человек уже делает. Числа — фактические, не выдумывать.
   if (exp && exp.what) {
     out += '\n\nPREVIOUS EXPERIMENT (given ' + (exp.days != null ? exp.days + ' days ago' : 'last time') + '): "' + String(exp.what).slice(0, 200) + '"';
+    // Сколько дней человек это реально делал (его собственная отметка). Без этого разбор судит
+    // о рычаге по цифрам недели, в которую рычаг могли и не включить.
+    if (exp.asked) {
+      out += '\nThe person marked they actually did it on ' + exp.kept + ' of ' + exp.asked + ' days they answered.';
+      if (exp.kept === 0) out += ' They did NOT do it: do not judge the lever by these numbers — ask what got in the way and either make it smaller or pick something easier to fit in.';
+      else if (exp.kept * 2 < exp.asked) out += ' That is less than half the week: treat the numbers as inconclusive about the lever, and talk about what made it hard before proposing anything new.';
+    } else {
+      out += '\n(the person did not mark whether they did it — do not assume they did)';
+    }
     if (Array.isArray(exp.rows) && exp.rows.length) {
       out += '\nThe client\'s own numbers, average before it vs average since (do NOT recompute or invent):\n' +
         exp.rows.map(r => `- ${r.k}: ${r.before} → ${r.after}`).join('\n');
@@ -3149,6 +3158,11 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
   };
   const langName = langMap[lang] || 'English';
   const isMonth = period === 'month';
+  // Велнес-рамка App Store (VIA-L) запрещает обещать результат и срок. VIA-L EXPERT живёт вне
+  // App Store (PWA, доступ по коду, разбор видит специалист) — там эксперимент можно ставить
+  // как проверяемую гипотезу: ожидаемое направление + горизонт. Без этого «верификации» нет:
+  // нечего сверять через неделю, кроме «стало иначе».
+  const _wellnessW = ['vio', 'pro'].includes(String(tier || '').toLowerCase());
   const perAdj  = isMonth ? 'monthly' : 'weekly';   // 3-й уровень: месячный разбор — то же ядро, другое окно/каденс
   const perThis = isMonth ? 'this month' : 'this week';
   const perNext = isMonth ? 'coming month' : 'coming week';
@@ -3161,10 +3175,19 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
     'COVER, based ONLY on the numbers given (never invent metrics or values):\n' +
     '1) what improved ' + perThis + ', 2) what worsened or needs attention, 3) the single most likely ' +
     'behavioural driver, 4) ONE small, doable focus for the ' + perNext + ' (an "experiment", not a list).\n' +
+    // Гипотеза с горизонтом — только вне велнес-рамки: иначе это обещание результата и срока.
+    (_wellnessW ? '' :
+      'STATE THE EXPERIMENT AS A TESTABLE HYPOTHESIS, not as a fact: name which 1–2 of THEIR OWN metrics you ' +
+      'expect to move, in which DIRECTION, and by when (the horizon is 7 days — the next review). Phrase it as ' +
+      'an expectation to be checked ("if this holds for a week, I\'d expect your resting pulse to drift down — ' +
+      'we\'ll look at your numbers in 7 days"), never as a promise or a health outcome. If a plausible direction ' +
+    'cannot be named from the data, say plainly that this one is exploratory and you are only watching.\n') +
     // Петля: разбор не начинается с нуля. Если прошлый эксперимент измерен — сначала закрыть его.
     'If a "PREVIOUS EXPERIMENT" block is given, OPEN the review by closing that loop in one sentence: name what ' +
     'the person actually did and what their own numbers did (use the given before → after values verbatim, never ' +
-    'recompute or invent them). If it stuck and the numbers moved — say so and BUILD THE NEXT LINK on top of it; ' +
+    'recompute or invent them). Take the adherence line as the truth about whether it happened — never write that ' +
+    'they did something the line says they did not, and never blame them for it. ' +
+    'If it stuck and the numbers moved — say so and BUILD THE NEXT LINK on top of it; ' +
     'do NOT propose the same thing again. If the numbers did not move, say that plainly and without blame, and pick ' +
     'a different lever. Describe the numbers as the person\'s own data, never as a health outcome or measurement of anything.\n' +
     'If a "Daily detail" block and/or "Client context" are provided, USE them — ' +
@@ -3178,7 +3201,7 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
     'ВЕСЬ ответ ДОЛЖЕН быть на: ' + langName + '. Эти инструкции по-русски — это твоя внутренняя ' +
     'база, а НЕ язык ответа. Не смешивай языки, не изобретай псевдо-локальные слова: если не уверен ' +
     'в термине — оставь универсальный английский курсивом (например *HRV*, *cortisol*).' +
-    (['vio', 'pro'].includes(String(tier || '').toLowerCase()) ?
+    (_wellnessW ?
       '\n\n[WELLNESS MODE — App Store] Это велнес-, НЕ медицинское приложение. НЕ ставь диагнозы и не называй болезни/состояния/органы как объект диагностики. НЕ ПРЕДПОЛАГАЙ конкретные состояния даже как гипотезу («возможно/похоже на X») и НЕ советуй «проверьте, нет ли у вас X» (апноэ/СОАС, диабет, тиреоидит и т.п.) — нейтрально «если сохраняется, обсудите со специалистом», без названия. ЗАПРЕЩЕНЫ слова: «диагноз», «маркер», «симптом», «синдром», «патология», «терапия», «лечение» → заменяй на «сигнал», «признак», «ориентир». НЕ называй гормоны/приборные метрики как замеры (тестостерон/эстроген/прогестерон/кортизол/ТТГ/HRV) — говори «баланс», «ритмы восстановления», «энергия», «нагрузка»; «гормональный/гормональный фон» РАЗРЕШЁН; расплывчатое «внутренний баланс» — не используй. Прямые термины «менопауза/перименопауза/андропауза» РАЗРЕШЕНЫ (Apple Health) — в pattern-рамке «паттерн, типичный для…»; расплывчатые «переходный этап»/«период естественных перемен» не используй. Бытовые проявления называй прямо: приливы, ночная потливость, симптом — разрешены (Apple Health logging), без диагноза-как-факта. Про алкоголь: НЕ поощряй и НЕ инструктируй его употребление — никаких «пейте/выпейте» и советов «когда/сколько пить»; говори ТОЛЬКО про снижение или отказ (меньше, реже, лучше исключить), влияние на восстановление отмечай нейтрально, без нормализации питья. Добавки и травы — только общий food-first ориентир в словах structure/function («может поддерживать расслабление/восстановление»); дозы базовых нутриентов (напр. магний ~300–400 мг) и «из еды» допустимы как ориентир. ЗАПРЕЩЕНО: обещания результата и сроки («через 2–4 недели», «станет легче»), формулировки «помогает справиться с [болезнью/состоянием]» (это claim о лечении). Гормонально-активные травы и адаптогены (витекс/vitex agnus-castus, шалфей, дон-квай, солодка, красный клевер, ашваганда/ashwagandha, родиола) — НИКОГДА не указывай мг-дозу, форму (КСМ-66/KSM-66/экстракт), время приёма, длительность курса и срок эффекта («через N недель/дней»); ТОЛЬКО мягко как опцию + «возможны взаимодействия (в т.ч. с гормональной контрацепцией, антидепрессантами) — обсудите со специалистом». Всё как оптимизация образа жизни и восстановления.'
       : '') +
     WELLNESS_STYLE_OURA +   // тот же велнес-стиль Oura, что и в /analyze — единый тон недельного разбора для всех тарифов
