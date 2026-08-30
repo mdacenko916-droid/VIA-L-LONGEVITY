@@ -8598,7 +8598,7 @@ function _renderDayFromSnap(snap, todayFlag){
   // дата в шапке — день снимка (renderDayIndex ставит «сегодня», перекрываем для прошлых дней)
   try{ var dEl=document.getElementById('rd-date'); if(dEl){ var dd=new Date(snap.day); dEl.textContent=dd.toLocaleDateString(_locale(),{day:'numeric',month:'long',year:'numeric'}); } }catch(e){}
   // разбор из кэша дня (без вызова ИИ)
-  var an=''; try{ var _e=_aiDailyGet().filter(function(x){return x.day===snap.day;})[0]; if(_e&&_e.analysis)an=_e.analysis; }catch(_x){}
+  var an=''; try{ var _e=_aiDayEntry(snap.day); if(_e&&_e.analysis)an=_e.analysis; }catch(_x){}
   var card=document.getElementById('aiCard'), r=document.getElementById('aiResult'), load=document.getElementById('aiLoading'), err=document.getElementById('aiError'), disc=document.getElementById('aiDisc');
   if(card)card.style.display='block'; if(err)err.style.display='none';
   if(an && r){ r.innerHTML=(typeof _renderAnalysis==='function')?_renderAnalysis(an):_esc(an); r.style.display='block'; if(load)load.style.display='none'; if(disc)disc.style.display='block'; }
@@ -8863,7 +8863,7 @@ function _showDailyDoneGate(){
   var btn='display:block;width:100%;box-sizing:border-box;margin-top:10px;padding:13px;border-radius:12px;border:1px solid rgba(226,185,90,.45);background:rgba(226,185,90,.10);color:#fff;font-size:var(--fs-body);font-weight:500;cursor:pointer;font-family:inherit;';
   // Разбор за сегодня — восстанавливаем ПРЯМО на этом экране из кэша (vialp_ai_daily), без нового запроса к ИИ.
   // Так после перезагрузки страницы (или возврата в приложение) большой блок «АНАЛИЗ VIA-L» не теряется.
-  var _todayAn=''; try{ if(typeof _aiDailyGet==='function'){ var _e=_aiDailyGet().filter(function(x){return x.day===_dayKey();})[0]; if(_e&&_e.analysis) _todayAn=_e.analysis; } }catch(e){}
+  var _todayAn=''; try{ if(typeof _aiDailyGet==='function'){ var _e=_aiDayEntry(_dayKey()); if(_e&&_e.analysis) _todayAn=_e.analysis; } }catch(e){}
   var _anBlock='';
   if(_todayAn){
     var _anTitle=L({ru:'АНАЛИЗ VIA‑L',uk:'АНАЛІЗ VIA‑L',en:'VIA‑L ANALYSIS',es:'ANÁLISIS VIA‑L',de:'VIA‑L‑ANALYSE',pt:'ANÁLISE VIA‑L',fr:'ANALYSE VIA‑L',pl:'ANALIZA VIA‑L',it:'ANALISI VIA‑L',he:'ניתוח VIA‑L',ja:'VIA‑L 分析',ko:'VIA‑L 분석'});
@@ -10325,6 +10325,24 @@ async function fetchAIAnalysis(data, lang, src) {
   err.style.display = 'none';
   if (disc) disc.style.display = 'none';
 
+  // Разбор на ЭТОМ языке за сегодня уже посчитан — показываем его и не платим второй раз.
+  // Сюда попадает возврат к языку, который человек сегодня уже видел (ru → en → ru). Кнопка
+  // «получить разбор заново» (src='retry') кэш намеренно обходит: там смысл именно в перезапросе.
+  if (src !== 'retry') {
+    try {
+      var _ce = (typeof _aiDayEntry==='function') ? _aiDayEntry(_dayKey(), true) : null;
+      if (_ce && _ce.analysis) {
+        window._anLang = lang;
+        result.innerHTML = (typeof _renderAnalysis==='function')?_renderAnalysis(_ce.analysis):_aiMd(_ce.analysis);
+        loading.style.display = 'none';
+        result.style.display = 'block';
+        if (disc) disc.style.display = 'block';
+        try{ _renderHumanCta(); }catch(e){}
+        try{ if(typeof renderDayBlueprint==='function') renderDayBlueprint(window._bpData || data); }catch(e){}
+        return;
+      }
+    } catch (e) {}
+  }
   window._anLoading = true;   // пока разбор в пути, памятка дня не стартует (общий кэш промпта, см. renderDayBlueprint)
   try {
     const res = await fetch(AI_WORKER, {
@@ -10838,7 +10856,7 @@ function _bpDisc(){
 function openBpChapter(id){
   if(id==='analysis'){   // полный текст сегодняшнего ИИ-разбора (кэш дня), не secs-структура
     try{
-      var _ae=_aiDailyGet().filter(function(x){return x.day===_dayKey();})[0];
+      var _ae=_aiDayEntry(_dayKey());
       if(_ae&&_ae.analysis) openSheet('<i class="ph ph-brain" style="color:var(--gold-lt);"></i>', L({ru:'Разбор дня',uk:'Розбір дня',en:'Today’s analysis',es:'Análisis del día',de:'Analyse des Tages',pt:'Análise do dia',fr:'Analyse du jour',pl:'Analiza dnia',it:'Analisi del giorno',he:'ניתוח היום',ja:'今日の分析',ko:'오늘의 분석'}),
         '<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.85;white-space:pre-wrap;padding-top:6px;">'+_renderAnalysis(_ae.analysis)+'</div>'+_bpDisc());
     }catch(e){}
@@ -11025,6 +11043,14 @@ function _renderAnalysis(raw){
   return html;
 }
 function _aiDailyGet(){ try{return JSON.parse(localStorage.getItem('vialp_ai_daily')||'[]')||[];}catch(e){return [];} }
+// Разбор дня из кэша: у одного дня может лежать несколько языковых версий. Берём версию на текущем
+// языке; нет её — отдаём любую имеющуюся (показать разбор на прежнем языке лучше, чем пустой экран).
+// strict=true — только точное совпадение языка: так решается «платить ли за новый перевод».
+function _aiDayEntry(day,strict){
+  try{ var a=_aiDailyGet().filter(function(x){return x.day===day;});
+       var m=a.filter(function(x){return x.lang===lang;})[0];
+       return m || (strict?null:(a[0]||null)); }catch(e){ return null; }
+}
 // Миграция 2026-07-14: разборы, закэшированные ДО включения структурного формата ([[S]]-секции как в VIO),
 // плоские — вычищаем сегодняшний плоский, чтобы следующий разбор гарантированно пришёл в новом дизайне.
 (function(){try{var a=_aiDailyGet();var b=a.filter(function(e){return !(e.day===_dayKey()&&e.analysis&&String(e.analysis).indexOf('[[S]]')<0);});if(b.length!==a.length)localStorage.setItem('vialp_ai_daily',JSON.stringify(b));}catch(e){}})();
@@ -11060,9 +11086,12 @@ function _aiRetryToday(btn){
   if(typeof fetchAIAnalysis==='function') fetchAIAnalysis(d, lang, 'retry');
 }
 function _aiDailySaveDay(day,analysis){
-  try{var arr=_aiDailyGet();arr=arr.filter(function(e){return e.day!==day;});arr.unshift({day:day,analysis:analysis,ts:Date.now()});while(arr.length>730)arr.pop();localStorage.setItem('vialp_ai_daily',JSON.stringify(arr));}catch(e){}
+  try{var arr=_aiDailyGet();arr=arr.filter(function(e){return e.day!==day||(e.lang&&e.lang!==lang);});arr.unshift({day:day,lang:lang,analysis:analysis,ts:Date.now()});while(arr.length>730)arr.pop();localStorage.setItem('vialp_ai_daily',JSON.stringify(arr));}catch(e){}
 }
-function _aiDailySave(analysis){ try{var arr=_aiDailyGet(),day=_dayKey();arr=arr.filter(function(e){return e.day!==day;});arr.unshift({day:day,analysis:analysis,ts:Date.now()});while(arr.length>730)arr.pop();localStorage.setItem('vialp_ai_daily',JSON.stringify(arr));}catch(e){} }   /* хранение на годы: ~2 г дневных разборов (паритет с VIO vial_ai_daily); старше покрывает бэкап */
+// Ключ кэша дня — ДЕНЬ + ЯЗЫК. Раньше на день лежала одна запись без языка, и цепочка
+// ru → en → ru платила за русский разбор дважды: возврат к уже виденному сегодня языку кэш не узнавал.
+// Записи другого ИЗВЕСТНОГО языка сохраняем, свой язык и старые безъязыкие — заменяем.
+function _aiDailySave(analysis){ try{var arr=_aiDailyGet(),day=_dayKey();arr=arr.filter(function(e){return e.day!==day||(e.lang&&e.lang!==lang);});arr.unshift({day:day,lang:lang,analysis:analysis,ts:Date.now()});while(arr.length>730)arr.pop();localStorage.setItem('vialp_ai_daily',JSON.stringify(arr));}catch(e){} }   /* хранение на годы: ~2 г дневных разборов (паритет с VIO vial_ai_daily); старше покрывает бэкап */
 
 function closeCircModal(){
   var m=document.getElementById('circModal'); if(!m)return;
@@ -11322,7 +11351,7 @@ document.addEventListener('visibilitychange',function(){
     // Разбор берём из КЭША дня (vialp_ai_daily): #aiResult скрыт вне экрана результата (вкладка «Наставник»/гейт) →
     // раньше советник оставался БЕЗ интерпретации ИИ. Fallback — видимый #aiResult. Маркеры [[S]]/[[D]] снимаем.
     var an='';
-    try{ if(typeof _aiDailyGet==='function'){ var _e=_aiDailyGet().filter(function(x){return x.day===_dayKey();})[0]; if(_e&&_e.analysis) an=String(_e.analysis); } }catch(_x){}
+    try{ if(typeof _aiDailyGet==='function'){ var _e=_aiDayEntry(_dayKey()); if(_e&&_e.analysis) an=String(_e.analysis); } }catch(_x){}
     if(!an){ var r=document.getElementById('aiResult'); if(r&&r.style.display!=='none') an=(r.textContent||'').trim(); }
     an=an.replace(/\[\[S\]\]/g,'').replace(/\[\[D\]\]/g,'').replace(/\s*\|\s*/g,' — ').replace(/\n{3,}/g,'\n\n').trim();
     // Анализы клиента — советник должен уметь ответить «что значит мой ферритин 30», а не отделываться
