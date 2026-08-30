@@ -5010,6 +5010,7 @@ var _CAT={
   notify:    {ic:'bell',                  acc:'226,185,90',  sub:{ru:'Утреннее напоминание',uk:'Ранкове нагадування',en:'Morning reminder',es:'Recordatorio matinal',de:'Morgen-Erinnerung',pt:'Lembrete matinal',fr:'Rappel du matin',pl:'Poranne przypomnienie',it:'Promemoria del mattino',he:'תזכורת בוקר',ja:'朝のリマインド',ko:'아침 알림'}},
   backup:    {ic:'floppy-disk',           acc:'146,158,176', sub:{ru:'Экспорт и восстановление',uk:'Експорт і відновлення',en:'Export & restore',es:'Exportar y restaurar',de:'Export & Wiederherstellung',pt:'Exportar e restaurar',fr:'Export et restauration',pl:'Eksport i przywracanie',it:'Esporta e ripristina',he:'ייצוא ושחזור',ja:'エクスポートと復元',ko:'내보내기와 복원'}}, // графит с лёгким голубым
   source:    {ic:'plugs-connected',       acc:'196,170,120', sub:{ru:'Apple Health, устройство или ручной ввод',uk:'Apple Health, пристрій або ручне введення',en:'Apple Health, device or manual entry',es:'Apple Health, dispositivo o entrada manual',de:'Apple Health, Gerät oder manuelle Eingabe',pt:'Apple Health, dispositivo ou entrada manual',fr:'Apple Health, appareil ou saisie manuelle',pl:'Apple Health, urządzenie lub ręczne wprowadzanie',it:'Apple Health, dispositivo o inserimento manuale',he:'Apple Health, מכשיר או הזנה ידנית',ja:'Apple Health・デバイス・手動入力',ko:'Apple Health, 기기 또는 수동 입력'}}, // мягкое золото — источник данных
+  health:    {ic:'first-aid-kit',        acc:'224,87,106',   sub:{ru:'Диагнозы, препараты, ограничения',uk:'Діагнози, препарати, обмеження',en:'Conditions, medications, limits',es:'Diagnósticos, medicamentos, límites',de:'Diagnosen, Medikamente, Einschränkungen',pt:'Diagnósticos, medicamentos, limites',fr:'Diagnostics, médicaments, limites',pl:'Diagnozy, leki, ograniczenia',it:'Diagnosi, farmaci, limiti',he:'אבחנות, תרופות, מגבלות',ja:'診断・薬・制限',ko:'진단·약물·제한'}},
   legal:     {ic:'scales',                acc:'158,172,190', sub:{ru:'Согласия и условия',uk:'Згоди та умови',en:'Consents & terms',es:'Consentimientos y términos',de:'Einwilligungen & Bedingungen',pt:'Consentimentos e termos',fr:'Consentements et conditions',pl:'Zgody i warunki',it:'Consensi e termini',he:'הסכמות ותנאים',ja:'同意事項と規約',ko:'동의 및 약관'}}, // холодный стальной
   memory:    {ic:'brain',                 acc:'150,150,220', sub:{ru:'Заметки о вас',uk:'Нотатки про вас',en:'Notes about you',es:'Notas sobre ti',de:'Notizen über dich',pt:'Notas sobre você',fr:'Notes vous concernant',pl:'Notatki o Tobie',it:'Note su di te',he:'הערות עליך',ja:'あなたに関するメモ',ko:'당신에 대한 메모'}}, // сиренево-синий
   vai:       {ic:'gauge',                 acc:'214,150,90',  sub:{ru:'Косвенный показатель · не диагноз',uk:'Непрямий показник · не діагноз',en:'Indirect indicator · not a diagnosis',es:'Indicador indirecto · no diagnóstico',de:'Indirekter Indikator · keine Diagnose',pt:'Indicador indireto · não diagnóstico',fr:'Indicateur indirect · pas un diagnostic',pl:'Wskaźnik pośredni · nie diagnoza',it:'Indicatore indiretto · non diagnosi',he:'מדד עקיף · לא אבחון',ja:'間接指標・診断ではありません',ko:'간접 지표 · 진단 아님'}},
@@ -5025,19 +5026,8 @@ function _vcSec(icon,title,inner,open,span){
 // Markdown-рендер разбора для «Истории разборов» (велнес-лексика через _wl, как у VIO)
 function _aiMd(txt){ return (typeof _wl==='function'?_wl(txt):txt).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/^#{1,3}\s*(.+)$/gm,'<strong style="display:block;margin:14px 0 4px;">$1</strong>').replace(/\*\*([^*]+?)\*\*/g,'<strong>$1</strong>'); }
 // Памятка дня в карточке — список глав из кэша дня (тот же _bpChapters, что и модал «Сегодня»)
-function _renderDayPlanCard(){
-  var d=null; try{ d=JSON.parse(localStorage.getItem('vialp_lastdata')||'null'); }catch(e){}
-  var arr=(typeof _dpGet==='function')?_dpGet():[]; var pe=arr.filter(function(x){return x.day===_dayKey();})[0];
-  var plan=(pe&&pe.plan&&typeof pe.plan==='object')?pe.plan:null;
-  if(!d&&!plan) return '';
-  window._bpData=d||{}; window._bpAI=plan;
-  return _bpChapters().map(function(r){
-    return '<div onclick="openBpChapter(\''+r.id+'\')" style="display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:7px;background:linear-gradient(150deg,#161A22,#10141C);border:1px solid rgba(226,185,90,.2);border-radius:12px;cursor:pointer;">'
-      +'<div style="font-size:20px;width:28px;text-align:center;flex-shrink:0;">'+r.icon+'</div>'
-      +'<div style="flex:1;min-width:0;"><div style="font-family:var(--font-ui);font-size:var(--fs-body);font-weight:600;color:var(--t1);text-transform:uppercase;letter-spacing:.03em;">'+r.title+'</div><div style="font-size:var(--fs-cap);color:var(--t3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+r.teaser+'</div></div>'
-      +'<div style="color:var(--gold-lt);font-size:var(--fs-title);opacity:.6;flex-shrink:0;">›</div></div>';
-  }).join('');
-}
+// «Памятка дня» в профиле удалена 2026-08-30: тот же план уже открыт на «Сегодня»
+// (renderDayBlueprint, #dayBlueprint) — карточка дублировала его один в один.
 // «Изменить профиль»: карточка → полная лента в режиме правки (гейт «уже пройдено» обходится по __editMode)
 function _editProfile(){
   window.__editMode=true;
@@ -5067,14 +5057,29 @@ function _vaiUnit(u){
   document.querySelectorAll('.vai-unit').forEach(function(s){ s.textContent=s.getAttribute(window.__vaiUnit==='mgdl'?'data-mgdl':'data-mmol')||s.textContent; });
   var r=document.getElementById('vai-result'); if(r)r.innerHTML='';   // единицы сменились — старый расчёт неактуален
 }
+// ТГ и ЛПВП уже могут быть введены в секции «Анализы» — там же с пересчётом единиц.
+// Просить их второй раз своими полями (и вторым переключателем ммоль/мг-дл) значит заставлять
+// человека вводить одно и то же дважды. Анализы приоритетнее: v в них уже канонический ммоль/л.
+function _vaiLabs(){
+  try{
+    var a=(typeof _labsGet==='function')?_labsGet():{};
+    var tg=a.tg&&a.tg.v, hdl=a.hdl&&a.hdl.v;
+    if(tg>0&&hdl>0) return {tg:tg,hdl:hdl,d:(a.tg.d||a.hdl.d||'')};
+  }catch(e){}
+  return null;
+}
 function _vaiCalc(){
   var P={}; try{P=JSON.parse(localStorage.getItem('vialp_profile')||'{}')||{};}catch(e){}
   var waist=parseFloat(P.waist), w=parseFloat(P.weight), h=parseFloat(P.height);
   var bmi=(w&&h&&h>0)?(w/Math.pow(h/100,2)):null;
-  var tg=parseFloat((document.getElementById('vai-tg')||{}).value);
-  var hdl=parseFloat((document.getElementById('vai-hdl')||{}).value);
-  // мг/дл → ммоль/л (формула требует ммоль/л): ТГ ÷88.57, ЛПВП ÷38.67
-  if(window.__vaiUnit==='mgdl'){ if(!isNaN(tg))tg=tg/88.57; if(!isNaN(hdl))hdl=hdl/38.67; }
+  var _lv=_vaiLabs(), tg, hdl;
+  if(_lv){ tg=_lv.tg; hdl=_lv.hdl; }               // из «Анализов», уже в ммоль/л
+  else{
+    tg=parseFloat((document.getElementById('vai-tg')||{}).value);
+    hdl=parseFloat((document.getElementById('vai-hdl')||{}).value);
+    // мг/дл → ммоль/л (формула требует ммоль/л): ТГ ÷88.57, ЛПВП ÷38.67
+    if(window.__vaiUnit==='mgdl'){ if(!isNaN(tg))tg=tg/88.57; if(!isNaN(hdl))hdl=hdl/38.67; }
+  }
   var out=document.getElementById('vai-result'); if(!out)return;
   var _msg=function(m){ out.innerHTML='<div class="vai-msg">'+m+'</div>'; };
   if(!waist||!bmi){ _msg(L({ru:'Нужны талия, вес и рост в профиле.',uk:'Потрібні талія, вага й зріст у профілі.',en:'Waist, weight and height are needed in the profile.',es:'Se necesitan cintura, peso y altura en el perfil.',de:'Taille, Gewicht und Größe im Profil erforderlich.',pt:'São necessários cintura, peso e altura no perfil.',fr:'Tour de taille, poids et taille requis dans le profil.',pl:'Wymagane talia, waga i wzrost w profilu.',it:'Servono girovita, peso e altezza nel profilo.',he:'נדרשים מותניים, משקל וגובה בפרופיל.',ja:'プロフィールにウエスト・体重・身長が必要です。',ko:'프로필에 허리둘레·체중·키가 필요합니다.'})); return; }
@@ -5205,7 +5210,7 @@ function renderCard(){
 
   html+='<div class="vcard-grid">';
   // Секции собираются в переменные, затем выводятся в порядке логики/важности (см. join ниже)
-  var _secAct='',_secNut='',_secSup='',_secBal='',_secRhythm='',_secStress='',_secLife='',_secGoal='',_secBaseline='',_secDyn='',_secDay='',_secHist='',_secBackup='',_secSource='',_secLegal='';
+  var _secAct='',_secNut='',_secSup='',_secBal='',_secRhythm='',_secStress='',_secLife='',_secGoal='',_secDyn='',_secHist='',_secBackup='',_secSource='',_secLegal='';
 
   // ── Активность (s8) ──
   var _afm={none:'act_freq_0',low:'act_freq_low',moderate:'act_freq_mod',high:'act_freq_high'},_arm={great:'rec_great',ok:'rec_ok',tired:'rec_tired',exhausted:'rec_exhausted'};
@@ -5230,7 +5235,10 @@ function renderCard(){
     +(medChips||P.meds_other?('<div class="vc-sub">'+L({ru:'Препараты',uk:'Препарати',en:'Medications',es:'Medicamentos',de:'Präparate',pt:'Medicamentos',fr:'Médicaments',pl:'Leki',it:'Farmaci',he:'תרופות',ja:'服用中',ko:'복용약'})+'</div>'+(medChips||'')+(P.meds_other?'<div class="vc-chips"><span class="vc-chip">'+_esc(P.meds_other)+'</span></div>':'')):'');
   // Состояния здоровья — показываем в карточке read-only: человек должен видеть, что о нём
   // записано (и это же ответ на вопрос «какие данные у вас есть»). Правится в шаге анкеты.
-  supInner += (function(){
+  // Состояния здоровья вынесены из «Нутритивной поддержки» в свою секцию 2026-08-30: заболевания,
+  // препараты и ограничения — не добавки, а самый весомый блок данных о человеке; под витаминами
+  // он не читался. Секция идёт сразу за добавками (препараты рядом).
+  var _condInner=(function(){
     try{
       var lbl=function(v){
         for(var i=0;i<COND_GROUPS.length;i++){ var it=COND_GROUPS[i].items;
@@ -5245,11 +5253,12 @@ function renderCard(){
       if(P.cond_limit==='yes') names.push(_condT(COND_UI.lim_l));
       if(P.cond_other) names.push(P.cond_other);
       if(!names.length) return '';
-      return '<div class="vc-sub">'+_condT(COND_UI.title)+'</div><div class="vc-chips">'
+      return '<div class="vc-chips">'
         + names.map(function(n){ return '<span class="vc-chip">'+((typeof _esc==='function')?_esc(n):n)+'</span>'; }).join('') + '</div>';
     }catch(e){ return ''; }
   })();
   _secSup=_vcSec('supplement',t('s9_title'),supInner,false);
+  var _secHealth=_condInner?_vcSec('health',_condT(COND_UI.title),_condInner,false):'';
 
   // ── Сигналы баланса и тонуса (s6) — гормональные симптомы + тяжесть (НЕ «гормональный профиль») ──
   var hormMap=isMale?P.horm_male:P.horm_female, hormAcc=isMale?'horm-male-acc':'horm-acc';
@@ -5262,7 +5271,16 @@ function renderCard(){
       +(P.cyclelen?_row(L({ru:'Длина ритма',uk:'Довжина ритму',en:'Rhythm length',es:'Duración del ritmo',de:'Rhythmuslänge',pt:'Duração do ritmo',fr:'Durée du rythme',pl:'Długość rytmu',it:'Durata del ritmo',he:'אורך המחזור',ja:'周期の長さ',ko:'리듬 길이'}),_esc(P.cyclelen)+' '+L({ru:'дн.',uk:'дн.',en:'days',es:'días',de:'Tage',pt:'dias',fr:'jours',pl:'dni',it:'giorni',he:'ימים',ja:'日',ko:'일'})):'')
       +(P.lastperiod?_row(t('cyc_lastdate')||L({ru:'Начало активной фазы',uk:'Початок активної фази',en:'Active phase start',es:'Inicio de fase activa',de:'Beginn aktive Phase',pt:'Início da fase ativa',fr:'Début de phase active',pl:'Początek fazy aktywnej',it:'Inizio fase attiva',he:'תחילת השלב הפעיל',ja:'活動期の開始',ko:'활성기 시작'}),fmtDate(P.lastperiod)):'')
       +(P.heavy_period==='yes'?_row(L({ru:'Обильная фаза',uk:'Рясна фаза',en:'Heavy phase',es:'Fase intensa',de:'Intensive Phase',pt:'Fase intensa',fr:'Phase intense',pl:'Intensywna faza',it:'Fase intensa',he:'שלב עוצמתי',ja:'多い時期',ko:'양 많은 시기'}),'✓'):'')
-      +(function(){var c=_vcChips(PMS,(P.pms_symptoms||[]).filter(function(v){return v!=='none_pms';}));return c?'<div class="vc-sub">'+(t('s11_l3')||L({ru:'Маркеры перед новым ритмом',uk:'Маркери перед новим ритмом',en:'Markers before a new rhythm',es:'Marcadores antes de un nuevo ritmo',de:'Marker vor neuem Rhythmus',pt:'Marcadores antes de novo ritmo',fr:'Marqueurs avant un nouveau rythme',pl:'Markery przed nowym rytmem',it:'Marcatori prima di un nuovo ritmo',he:'סמנים לפני קצב חדש',ja:'新しいリズム前のサイン',ko:'새 리듬 전 신호'}))+'</div>'+c:'';})()
+      +(function(){var _cs=P.cortisol_symp||[];
+        var c=_vcChips(PMS,(P.pms_symptoms||[]).filter(function(v){
+          if(v==='none_pms') return false;
+          // Один и тот же симптом в трёх секциях подряд читается как три разные жалобы.
+          // Владелец — та секция, что показана раньше: сладкое → «Питание», раздражительность → «Стресс».
+          // В опроснике поля остаются: они кормят РАЗНЫЕ паттерны KB на разном каденсе.
+          if(v==='sweet_craving' && (P.cravings==='yes'||_cs.indexOf('sugar_craving')>=0)) return false;
+          if(v==='irritability'  && _cs.indexOf('irritable')>=0) return false;
+          return true;
+        }));return c?'<div class="vc-sub">'+(t('s11_l3')||L({ru:'Маркеры перед новым ритмом',uk:'Маркери перед новим ритмом',en:'Markers before a new rhythm',es:'Marcadores antes de un nuevo ritmo',de:'Marker vor neuem Rhythmus',pt:'Marcadores antes de novo ritmo',fr:'Marqueurs avant un nouveau rythme',pl:'Markery przed nowym rytmem',it:'Marcatori prima di un nuovo ritmo',he:'סמנים לפני קצב חדש',ja:'新しいリズム前のサイン',ko:'새 리듬 전 신호'}))+'</div>'+c:'';})()
       +(function(){var c=_vcChips(GSM.concat(BONE).concat(BREAST),(P.gsm||[]).concat(P.bone||[]).concat(P.breast||[]).filter(function(v){return !/^none/.test(v);}));return c?'<div class="vc-sub">'+L({ru:'Комфорт и самочувствие',uk:'Комфорт і самопочуття',en:'Comfort & wellbeing',es:'Confort y bienestar',de:'Komfort & Wohlbefinden',pt:'Conforto e bem-estar',fr:'Confort et bien-être',pl:'Komfort i samopoczucie',it:'Comfort e benessere',he:'נוחות ורווחה',ja:'快適さと調子',ko:'편안함과 컨디션'})+'</div>'+c:'';})();
     _secRhythm=_vcSec('rhythm',t('s11_title'),cycInner,false);
   } else {
@@ -5276,7 +5294,7 @@ function renderCard(){
   // ── Стресс и восстановление (s10) ──
   var _cstm={low:'cst_low',moderate:'cst_mod',high:'cst_high',burnout:'cst_burn'};
   var strInner=_row(L({ru:'Фоновый стресс',uk:'Фоновий стрес',en:'Background stress',es:'Estrés de fondo',de:'Grundstress',pt:'Estresse de fundo',fr:'Stress de fond',pl:'Stres tła',it:'Stress di fondo',he:'לחץ רקע',ja:'ベースのストレス',ko:'평상시 스트레스'}),_vcRad('chronic_stress',P.chronic_stress)||'—')
-    +(function(){var c=_vcChips(CORT,(P.cortisol_symp||[]).filter(function(v){return !/^none/.test(v);}));return c?'<div class="vc-sub">'+L({ru:'Сигналы',uk:'Сигнали',en:'Signals',es:'Señales',de:'Signale',pt:'Sinais',fr:'Signaux',pl:'Sygnały',it:'Segnali',he:'אותות',ja:'サイン',ko:'신호'})+'</div>'+c:'';})();
+    +(function(){var c=_vcChips(CORT,(P.cortisol_symp||[]).filter(function(v){return !/^none/.test(v)&&!(v==='sugar_craving'&&P.cravings==='yes');}));return c?'<div class="vc-sub">'+L({ru:'Сигналы',uk:'Сигнали',en:'Signals',es:'Señales',de:'Signale',pt:'Sinais',fr:'Signaux',pl:'Sygnały',it:'Segnali',he:'אותות',ja:'サイン',ko:'신호'})+'</div>'+c:'';})();
   _secStress=_vcSec('stress',t('s10_title'),strInner,false);
 
   // ── Контекст образа жизни (lifestyle_notes) — показываем только если заполнено ──
@@ -5300,19 +5318,11 @@ function renderCard(){
   var goalInner='<textarea class="vc-goal" rows="2" placeholder="'+_esc(L({ru:'Опишите вашу главную цель…',uk:'Опишіть вашу головну мету…',en:'Describe your main goal…',es:'Describe tu objetivo principal…',de:'Beschreibe dein Hauptziel…',pt:'Descreva seu objetivo principal…',fr:'Décrivez votre objectif principal…',pl:'Opisz swój główny cel…',it:'Descrivi il tuo obiettivo principale…',he:'תארו את המטרה העיקרית…',ja:'主な目標を記入…',ko:'주요 목표를 적어주세요…'}))+'" oninput="_cardSaveGoal(this.value)">'+_esc(P.goal||'')+'</textarea>' + _cmpLine;
 
 
-  // ── Ваш ориентир (Baseline) — PRO: приборные HRV/пульс/часы сна + энергия ──
-  var bl=(typeof _baselineFromDaily==='function')?_baselineFromDaily():null, blInner='';
-  if(bl&&bl.metrics){
-    var _tile=function(ic,v,l){return '<div class="vc-tile"><div class="vt-ic">'+ic+'</div><div class="vt-v">'+v+'</div><div class="vt-l">'+l+'</div></div>';};
-    var mm=bl.metrics,ts=[];
-    if(mm.hrv)ts.push(_tile('💓',_fmt(mm.hrv.usual),(typeof _GLAB!=='undefined'&&_GLAB.hrv)?L(_GLAB.hrv):'HRV'));
-    if(mm.energy)ts.push(_tile('⚡',_fmt(mm.energy.usual)+'/10',L({ru:'Энергия',uk:'Енергія',en:'Energy',es:'Energía',de:'Energie',pt:'Energia',fr:'Énergie',pl:'Energia',it:'Energia',he:'אנרגיה',ja:'エネルギー',ko:'에너지'})));
-    if(mm.rhr)ts.push(_tile('❤️',_fmt(mm.rhr.usual),L({ru:'Пульс покоя',uk:'Пульс спокою',en:'Resting pulse',es:'Pulso reposo',de:'Ruhepuls',pt:'Pulso repouso',fr:'Pouls repos',pl:'Tętno spocz.',it:'Battito riposo',he:'דופק מנוחה',ja:'安静時脈',ko:'안정시 맥박'})));
-    if(mm.sleepHours)ts.push(_tile('🌙',_fmt(mm.sleepHours.usual)+L({ru:'ч',uk:'год',en:'h',es:'h',de:'Std',pt:'h',fr:'h',pl:'godz',it:'h',he:'ש',ja:'時間',ko:'시간'}),L({ru:'Часы сна',uk:'Години сну',en:'Sleep hours',es:'Horas de sueño',de:'Schlafstunden',pt:'Horas de sono',fr:'Heures de sommeil',pl:'Godziny snu',it:'Ore di sonno',he:'שעות שינה',ja:'睡眠時間',ko:'수면 시간'})));
-    blInner='<div class="vc-tiles">'+ts.join('')+'</div><div class="vc-empty">'+L({ru:'Ваш ориентир по '+bl.days+' дн.',uk:'Ваш орієнтир за '+bl.days+' дн.',en:'Your usual over '+bl.days+' days',es:'Tu referencia en '+bl.days+' días',de:'Dein Richtwert über '+bl.days+' Tage',pt:'Sua referência em '+bl.days+' dias',fr:'Votre repère sur '+bl.days+' jours',pl:'Twój punkt odniesienia z '+bl.days+' dni',it:'Il tuo riferimento su '+bl.days+' giorni',he:'הרגיל שלך ב-'+bl.days+' ימים',ja:bl.days+'日間の目安',ko:bl.days+'일 기준'})+'</div>';
-  }
-  _secBaseline=_vcSec('baseline',L({ru:'Ваш ориентир (Baseline)',uk:'Ваш орієнтир (Baseline)',en:'Your baseline',es:'Tu base',de:'Deine Basislinie',pt:'Sua base',fr:'Votre repère',pl:'Twoja baza',it:'La tua base',he:'קו הבסיס שלך',ja:'あなたの基準',ko:'나의 기준'}),blInner,false);
-
+  // Секция «Ваш ориентир (Baseline)» удалена 2026-08-30: её 4 плитки (HRV, энергия, пульс покоя,
+  // часы сна) были строгим подмножеством «Динамики» ниже — тот же vialp_daily, то же окно, то же
+  // слово «обычно». Две соседние секции отвечали на один вопрос. Окно наблюдения теперь подписано
+  // в самой «Динамике». Сама _baselineFromDaily жива — её читают гейт разбора и payload.
+  var bl=(typeof _baselineFromDaily==='function')?_baselineFromDaily():null;
   // Плитки «Готовность 0–100» (Сегодня/Неделя/Месяц) удалены 2026-07-17 вместе с самим понятием.
   // Историю НЕ трогаем: score продолжает писаться в vialp_history. Ниже остаются честные мини-тренды
   // по каждой метрике отдельно («обычно ~X») — они и есть понятная клиенту динамика.
@@ -5340,15 +5350,16 @@ function renderCard(){
       dynInner+='<div class="vc-row vc-trend"><span class="vc-l" style="min-width:64px;">'+m.lbl+'</span><span style="color:var(--t3);font-size:var(--fs-cap);white-space:nowrap;">'+_usu(_fmt(base)+m.unit)+'</span><span style="flex:1;display:flex;justify-content:center;min-width:0;">'+_spark(vals,m.col)+'</span><span style="display:flex;align-items:center;gap:6px;"><span style="color:'+m.col+';font-weight:600;">'+_fmt(last)+'</span>'+arrow+'</span></div>';
     });
   }
+  // Окно наблюдения — из удалённого Baseline: «обычно ~X» без срока непонятно, за что это «обычно».
+  if(_trendsShown && bl && bl.days) dynInner+='<div class="vc-empty" style="margin-top:8px;">'
+    +L({ru:'Ваш ориентир по '+bl.days+' дн.',uk:'Ваш орієнтир за '+bl.days+' дн.',en:'Your usual over '+bl.days+' days',es:'Tu referencia en '+bl.days+' días',de:'Dein Üblich über '+bl.days+' Tage',pt:'Sua referência em '+bl.days+' dias',fr:'Votre repère sur '+bl.days+' jours',pl:'Twój punkt odniesienia z '+bl.days+' dni',it:'Il tuo riferimento su '+bl.days+' giorni',he:'הרגיל שלך לאורך '+bl.days+' ימים',ja:bl.days+'日間のあなたの平常値',ko:bl.days+'일 기준 평소 값'})+'</div>';
   // Подсказка «идёт накопление»: готовность есть, но мини-графиков пока нет (мало точек)
   if(dynInner && !_trendsShown){ dynInner+='<div class="vc-empty" style="margin-top:8px;line-height:1.5;">'+L({ru:'Мини-графики (HRV, сон, энергия…) появятся после нескольких заходов — данные копятся.',uk:'Міні-графіки (HRV, сон, енергія…) зʼявляться після кількох заходів — дані накопичуються.',en:'Mini-charts (HRV, sleep, energy…) appear after a few check-ins — data is still accumulating.',es:'Los mini-gráficos (HRV, sueño, energía…) aparecen tras varios análisis — se están acumulando datos.',de:'Mini-Diagramme (HRV, Schlaf, Energie…) erscheinen nach einigen Check-ins — Daten sammeln sich noch.',pt:'Mini-gráficos (HRV, sono, energia…) aparecem após alguns registros — os dados estão se acumulando.',fr:'Les mini-graphiques (HRV, sommeil, énergie…) apparaissent après quelques bilans — les données sʼaccumulent.',pl:'Mini-wykresy (HRV, sen, energia…) pojawią się po kilku analizach — dane się gromadzą.',it:'I mini-grafici (HRV, sonno, energia…) compaiono dopo alcuni check-in — i dati si stanno accumulando.',he:'מיני-גרפים (HRV, שינה, אנרגיה…) יופיעו אחרי כמה בדיקות — הנתונים מצטברים.',ja:'ミニグラフ（HRV・睡眠・エネルギー…）は数回の記録後に表示されます——データを蓄積中です。',ko:'미니 차트(HRV, 수면, 에너지…)는 몇 번의 기록 후 표시됩니다 — 데이터가 쌓이는 중입니다.'})+'</div>'; }
   // Новичок (данных ещё нет): объясняем, что динамика набирается — а не «пусто/баг»
   if(!dynInner)dynInner='<div class="vc-empty" style="line-height:1.5;">'+L({ru:'Здесь появится ваша динамика — она набирается с каждым анализом. Загляните через пару заходов.',uk:'Тут зʼявиться ваша динаміка — вона накопичується з кожним аналізом. Завітайте за кілька заходів.',en:'Your dynamics will appear here — they build up with each check-in. Come back after a couple of check-ins.',es:'Aquí aparecerá tu evolución — se acumula con cada análisis. Vuelve tras un par de análisis.',de:'Hier erscheint deine Entwicklung — sie baut sich mit jedem Check-in auf. Schau nach ein paar Check-ins wieder vorbei.',pt:'Sua evolução aparecerá aqui — acumula-se a cada análise. Volte após alguns registros.',fr:'Votre évolution apparaîtra ici — elle se construit à chaque bilan. Revenez après quelques bilans.',pl:'Tu pojawi się Twoja dynamika — buduje się z każdą analizą. Wróć po kilku analizach.',it:'Qui apparirà la tua evoluzione — si accumula a ogni analisi. Torna dopo qualche check-in.',he:'כאן תופיע הדינמיקה שלך — היא נבנית עם כל בדיקה. חזרו אחרי כמה בדיקות.',ja:'ここに変化が表示されます——分析ごとに蓄積されます。数回後にまたご覧ください。',ko:'여기에 변화가 표시됩니다 — 분석할 때마다 쌓입니다. 몇 번 후에 다시 확인하세요.'})+'</div>';
-  _secDyn=_vcSec('dynamics',L({ru:'Динамика разборов',uk:'Динаміка розборів',en:'Analysis history',es:'Historial de análisis',de:'Analyse-Verlauf',pt:'Histórico de análises',fr:'Historique des analyses',pl:'Historia analiz',it:'Storico analisi',he:'היסטוריית ניתוחים',ja:'分析の履歴',ko:'분석 기록'}),dynInner,false,true);
+  _secDyn=_vcSec('dynamics',L({ru:'Динамика показателей',uk:'Динаміка показників',en:'Metric trends',es:'Tendencias de métricas',de:'Verlauf der Werte',pt:'Tendências das métricas',fr:'Tendances des mesures',pl:'Trendy wskaźników',it:'Andamento dei parametri',he:'מגמות המדדים',ja:'指標の推移',ko:'지표 추이'}),dynInner,false,true);
 
-  // ── Памятка дня (питание/движение/сон/вода/нутриенты) — сегодняшний план из кэша ──
-  var _dpInner=(typeof _renderDayPlanCard==='function')?_renderDayPlanCard():'';
-  if(_dpInner) _secDay=_vcSec('dayplan',L({ru:'Памятка дня',uk:'Пам’ятка дня',en:'Day plan',es:'Plan del día',de:'Tagesplan',pt:'Plano do dia',fr:'Plan du jour',pl:'Plan dnia',it:'Piano del giorno',he:'תוכנית היום',ja:'今日のプラン',ko:'오늘의 플랜'}),_dpInner,false,true);
+  // Секция «Памятка дня» убрана из профиля 2026-08-30 (владелец): тот же план открывается на «Сегодня».
 
   // ── История дневных разборов ИИ (сохранённый текст по дням) ──
   var _aid=(typeof _aiDailyGet==='function')?_aiDailyGet():[];
@@ -5427,18 +5438,25 @@ function renderCard(){
   _secLegal=_vcSec('legal',t('card_legal'),'<div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;">'+t('consent_body')+'</div>'+_rcHtml,false,true);
   // ── VAI: калькулятор скрытого (висцерального) жира. Доп-инструмент, БЕЗ ИИ/сети. Велнес-рамка + дисклеймер. ──
   var _vaiBMI=(P.weight&&P.height&&P.height>0)?(P.weight/Math.pow(P.height/100,2)):null;
+  var _vaiLab=(typeof _vaiLabs==='function')?_vaiLabs():null;
   var _vaiInner='<div class="vai-calc">'
     +'<div class="vai-intro">'+L({ru:'Косвенная оценка скрытого (висцерального) жира по формуле VAI. Одинаковые вес и талия — не всегда одинаковый обмен веществ.',uk:'Непряма оцінка прихованого (вісцерального) жиру за формулою VAI. Однакові вага й талія — не завжди однаковий обмін речовин.',en:'An indirect estimate of hidden (visceral) fat via the VAI formula. Same weight and waist do not always mean the same metabolism.',es:'Una estimación indirecta de la grasa oculta (visceral) con la fórmula VAI. El mismo peso y cintura no siempre significan el mismo metabolismo.',de:'Eine indirekte Schätzung des verborgenen (viszeralen) Fetts über die VAI-Formel. Gleiches Gewicht und gleiche Taille bedeuten nicht immer denselben Stoffwechsel.',pt:'Uma estimativa indireta da gordura oculta (visceral) pela fórmula VAI. Mesmo peso e cintura nem sempre significam o mesmo metabolismo.',fr:'Une estimation indirecte de la graisse cachée (viscérale) via la formule VAI. Même poids et même tour de taille ne signifient pas toujours le même métabolisme.',pl:'Pośrednia ocena ukrytego (trzewnego) tłuszczu wzorem VAI. Ta sama waga i talia nie zawsze oznaczają ten sam metabolizm.',it:'Una stima indiretta del grasso nascosto (viscerale) con la formula VAI. Stesso peso e girovita non sempre significano lo stesso metabolismo.',he:'הערכה עקיפה של שומן נסתר (ויסצרלי) לפי נוסחת VAI. אותו משקל והיקף מותניים לא תמיד מעידים על אותו חילוף חומרים.',ja:'VAI式による隠れた（内臓）脂肪の間接的な推定。同じ体重・ウエストでも代謝が同じとは限りません。',ko:'VAI 공식을 통한 숨은(내장) 지방의 간접 추정. 같은 체중·허리둘레라도 대사가 같지는 않습니다.'})+'</div>'
     +'<div class="vai-from"><b>'+L({ru:'Из профиля',uk:'З профілю',en:'From your profile',es:'De tu perfil',de:'Aus deinem Profil',pt:'Do seu perfil',fr:'De votre profil',pl:'Z Twojego profilu',it:'Dal tuo profilo',he:'מהפרופיל שלך',ja:'プロフィールから',ko:'프로필에서'})+':</b> '+L({ru:'талия',uk:'талія',en:'waist',es:'cintura',de:'Taille',pt:'cintura',fr:'tour de taille',pl:'talia',it:'girovita',he:'מותניים',ja:'ウエスト',ko:'허리둘레'})+' '+(P.waist?(P.waist+' '+L({ru:'см',uk:'см',en:'cm',es:'cm',de:'cm',pt:'cm',fr:'cm',pl:'cm',it:'cm',he:'ס״מ',ja:'cm',ko:'cm'})):'—')+' · '+L({ru:'ИМТ',uk:'ІМТ',en:'BMI',es:'IMC',de:'BMI',pt:'IMC',fr:'IMC',pl:'BMI',it:'IMC',he:'BMI',ja:'BMI',ko:'BMI'})+' '+(_vaiBMI?_vaiBMI.toFixed(1):'—')+'</div>'
     +((P.waist&&_vaiBMI)?'':'<div class="vai-warn">'+L({ru:'Сначала заполните талию, вес и рост в профиле выше.',uk:'Спершу заповніть талію, вагу й зріст у профілі вище.',en:'First fill in waist, weight and height in the profile above.',es:'Primero completa cintura, peso y altura en el perfil de arriba.',de:'Fülle zuerst Taille, Gewicht und Größe im Profil oben aus.',pt:'Primeiro preencha cintura, peso e altura no perfil acima.',fr:'Remplissez d’abord tour de taille, poids et taille dans le profil ci-dessus.',pl:'Najpierw uzupełnij talię, wagę i wzrost w profilu powyżej.',it:'Prima compila girovita, peso e altezza nel profilo qui sopra.',he:'תחילה מלאו מותניים, משקל וגובה בפרופיל למעלה.',ja:'まず上のプロフィールでウエスト・体重・身長を入力してください。',ko:'먼저 위 프로필에서 허리둘레·체중·키를 입력하세요.'})+'</div>')
-    +'<div class="vai-units"><span class="vai-units-l">'+L({ru:'Единицы',uk:'Одиниці',en:'Units',es:'Unidades',de:'Einheiten',pt:'Unidades',fr:'Unités',pl:'Jednostki',it:'Unità',he:'יחידות',ja:'単位',ko:'단위'})+':</span>'
-      +'<button type="button" class="vai-u active" data-u="mmol" onclick="_vaiUnit(\'mmol\')">'+L({ru:'ммоль/л',uk:'ммоль/л',en:'mmol/L',es:'mmol/L',de:'mmol/L',pt:'mmol/L',fr:'mmol/L',pl:'mmol/L',it:'mmol/L',he:'mmol/L',ja:'mmol/L',ko:'mmol/L'})+'</button>'
-      +'<button type="button" class="vai-u" data-u="mgdl" onclick="_vaiUnit(\'mgdl\')">'+L({ru:'мг/дл',uk:'мг/дл',en:'mg/dL',es:'mg/dL',de:'mg/dL',pt:'mg/dL',fr:'mg/dL',pl:'mg/dL',it:'mg/dL',he:'mg/dL',ja:'mg/dL',ko:'mg/dL'})+'</button></div>'
-    +'<label class="vai-lbl">'+L({ru:'Триглицериды (ТГ)',uk:'Тригліцериди (ТГ)',en:'Triglycerides (TG)',es:'Triglicéridos (TG)',de:'Triglyceride (TG)',pt:'Triglicerídeos (TG)',fr:'Triglycérides (TG)',pl:'Trójglicerydy (TG)',it:'Trigliceridi (TG)',he:'טריגליצרידים (TG)',ja:'中性脂肪 (TG)',ko:'중성지방 (TG)'})+' <span class="vai-unit" data-mmol="'+L({ru:'ммоль/л',en:'mmol/L',uk:'ммоль/л',es:'mmol/L',de:'mmol/L',pt:'mmol/L',fr:'mmol/L',pl:'mmol/L',it:'mmol/L',he:'mmol/L',ja:'mmol/L',ko:'mmol/L'})+'" data-mgdl="'+L({ru:'мг/дл',en:'mg/dL',uk:'мг/дл',es:'mg/dL',de:'mg/dL',pt:'mg/dL',fr:'mg/dL',pl:'mg/dL',it:'mg/dL',he:'mg/dL',ja:'mg/dL',ko:'mg/dL'})+'">'+L({ru:'ммоль/л',en:'mmol/L',uk:'ммоль/л',es:'mmol/L',de:'mmol/L',pt:'mmol/L',fr:'mmol/L',pl:'mmol/L',it:'mmol/L',he:'mmol/L',ja:'mmol/L',ko:'mmol/L'})+'</span></label>'
-    +'<input class="manual-input vai-in" id="vai-tg" type="number" step="0.01" inputmode="decimal" placeholder="—">'
-    +'<label class="vai-lbl">'+L({ru:'ЛПВП («хороший» холестерин)',uk:'ЛПВЩ («хороший» холестерин)',en:'HDL (“good” cholesterol)',es:'HDL (colesterol “bueno”)',de:'HDL („gutes“ Cholesterin)',pt:'HDL (colesterol “bom”)',fr:'HDL (“bon” cholestérol)',pl:'HDL („dobry” cholesterol)',it:'HDL (colesterolo “buono”)',he:'HDL (כולסטרול «טוב»)',ja:'HDL（善玉コレステロール）',ko:'HDL(“좋은” 콜레스테롤)'})+' <span class="vai-unit" data-mmol="'+L({ru:'ммоль/л',en:'mmol/L',uk:'ммоль/л',es:'mmol/L',de:'mmol/L',pt:'mmol/L',fr:'mmol/L',pl:'mmol/L',it:'mmol/L',he:'mmol/L',ja:'mmol/L',ko:'mmol/L'})+'" data-mgdl="'+L({ru:'мг/дл',en:'mg/dL',uk:'мг/дл',es:'mg/dL',de:'mg/dL',pt:'mg/dL',fr:'mg/dL',pl:'mg/dL',it:'mg/dL',he:'mg/dL',ja:'mg/dL',ko:'mg/dL'})+'">'+L({ru:'ммоль/л',en:'mmol/L',uk:'ммоль/л',es:'mmol/L',de:'mmol/L',pt:'mmol/L',fr:'mmol/L',pl:'mmol/L',it:'mmol/L',he:'mmol/L',ja:'mmol/L',ko:'mmol/L'})+'</span></label>'
-    +'<input class="manual-input vai-in" id="vai-hdl" type="number" step="0.01" inputmode="decimal" placeholder="—">'
-    +'<div class="vai-hint">'+L({ru:'Значения берутся из вашего анализа крови.',uk:'Значення беруться з вашого аналізу крові.',en:'Values come from your blood test.',es:'Los valores provienen de tu análisis de sangre.',de:'Die Werte stammen aus deinem Bluttest.',pt:'Os valores vêm do seu exame de sangue.',fr:'Les valeurs proviennent de votre analyse de sang.',pl:'Wartości pochodzą z Twojego badania krwi.',it:'I valori provengono dalle tue analisi del sangue.',he:'הערכים לקוחים מבדיקת הדם שלך.',ja:'値は血液検査から取得します。',ko:'값은 혈액 검사에서 가져옵니다.'})+'</div>'
+    // Если ТГ и ЛПВП уже есть в «Анализах» — показываем их, а не просим ввести заново.
+    +(_vaiLab
+      ? ('<div class="vai-from" style="margin-top:10px;"><b>'+L({ru:'Из анализов',uk:'З аналізів',en:'From your lab tests',es:'De tus analíticas',de:'Aus deinen Laborwerten',pt:'Dos seus exames',fr:'De vos analyses',pl:'Z Twoich badań',it:'Dalle tue analisi',he:'מבדיקות המעבדה שלך',ja:'血液検査から',ko:'혈액 검사에서'})+':</b> '
+         + 'ТГ '+_vaiLab.tg.toFixed(2)+' · '+L({ru:'ЛПВП',uk:'ЛПВЩ',en:'HDL',es:'HDL',de:'HDL',pt:'HDL',fr:'HDL',pl:'HDL',it:'HDL',he:'HDL',ja:'HDL',ko:'HDL'})+' '+_vaiLab.hdl.toFixed(2)+' '+L({ru:'ммоль/л',uk:'ммоль/л',en:'mmol/L',es:'mmol/L',de:'mmol/L',pt:'mmol/L',fr:'mmol/L',pl:'mmol/L',it:'mmol/L',he:'mmol/L',ja:'mmol/L',ko:'mmol/L'})
+         + '</div><div class="vai-hint">'+L({ru:'Меняются в разделе «Анализы».',uk:'Змінюються в розділі «Аналізи».',en:'Change them in the Lab tests section.',es:'Se cambian en la sección «Analíticas».',de:'Änderbar im Abschnitt „Laborwerte“.',pt:'Altere-os na seção «Exames».',fr:'Modifiables dans la section « Analyses ».',pl:'Zmienisz je w sekcji „Badania”.',it:'Si modificano nella sezione «Analisi».',he:'ניתן לשנות בקטע «בדיקות מעבדה».',ja:'「血液検査」セクションで変更できます。',ko:'‘혈액 검사’ 섹션에서 변경할 수 있습니다.'})+'</div>')
+      : ('<div class="vai-units"><span class="vai-units-l">'+L({ru:'Единицы',uk:'Одиниці',en:'Units',es:'Unidades',de:'Einheiten',pt:'Unidades',fr:'Unités',pl:'Jednostki',it:'Unità',he:'יחידות',ja:'単位',ko:'단위'})+':</span>'
+             +'<button type="button" class="vai-u active" data-u="mmol" onclick="_vaiUnit(\'mmol\')">'+L({ru:'ммоль/л',uk:'ммоль/л',en:'mmol/L',es:'mmol/L',de:'mmol/L',pt:'mmol/L',fr:'mmol/L',pl:'mmol/L',it:'mmol/L',he:'mmol/L',ja:'mmol/L',ko:'mmol/L'})+'</button>'
+             +'<button type="button" class="vai-u" data-u="mgdl" onclick="_vaiUnit(\'mgdl\')">'+L({ru:'мг/дл',uk:'мг/дл',en:'mg/dL',es:'mg/dL',de:'mg/dL',pt:'mg/dL',fr:'mg/dL',pl:'mg/dL',it:'mg/dL',he:'mg/dL',ja:'mg/dL',ko:'mg/dL'})+'</button></div>'
+           +'<label class="vai-lbl">'+L({ru:'Триглицериды (ТГ)',uk:'Тригліцериди (ТГ)',en:'Triglycerides (TG)',es:'Triglicéridos (TG)',de:'Triglyceride (TG)',pt:'Triglicerídeos (TG)',fr:'Triglycérides (TG)',pl:'Trójglicerydy (TG)',it:'Trigliceridi (TG)',he:'טריגליצרידים (TG)',ja:'中性脂肪 (TG)',ko:'중성지방 (TG)'})+' <span class="vai-unit" data-mmol="'+L({ru:'ммоль/л',en:'mmol/L',uk:'ммоль/л',es:'mmol/L',de:'mmol/L',pt:'mmol/L',fr:'mmol/L',pl:'mmol/L',it:'mmol/L',he:'mmol/L',ja:'mmol/L',ko:'mmol/L'})+'" data-mgdl="'+L({ru:'мг/дл',en:'mg/dL',uk:'мг/дл',es:'mg/dL',de:'mg/dL',pt:'mg/dL',fr:'mg/dL',pl:'mg/dL',it:'mg/dL',he:'mg/dL',ja:'mg/dL',ko:'mg/dL'})+'">'+L({ru:'ммоль/л',en:'mmol/L',uk:'ммоль/л',es:'mmol/L',de:'mmol/L',pt:'mmol/L',fr:'mmol/L',pl:'mmol/L',it:'mmol/L',he:'mmol/L',ja:'mmol/L',ko:'mmol/L'})+'</span></label>'
+           +'<input class="manual-input vai-in" id="vai-tg" type="number" step="0.01" inputmode="decimal" placeholder="—">'
+           +'<label class="vai-lbl">'+L({ru:'ЛПВП («хороший» холестерин)',uk:'ЛПВЩ («хороший» холестерин)',en:'HDL (“good” cholesterol)',es:'HDL (colesterol “bueno”)',de:'HDL („gutes“ Cholesterin)',pt:'HDL (colesterol “bom”)',fr:'HDL (“bon” cholestérol)',pl:'HDL („dobry” cholesterol)',it:'HDL (colesterolo “buono”)',he:'HDL (כולסטרול «טוב»)',ja:'HDL（善玉コレステロール）',ko:'HDL(“좋은” 콜레스테롤)'})+' <span class="vai-unit" data-mmol="'+L({ru:'ммоль/л',en:'mmol/L',uk:'ммоль/л',es:'mmol/L',de:'mmol/L',pt:'mmol/L',fr:'mmol/L',pl:'mmol/L',it:'mmol/L',he:'mmol/L',ja:'mmol/L',ko:'mmol/L'})+'" data-mgdl="'+L({ru:'мг/дл',en:'mg/dL',uk:'мг/дл',es:'mg/dL',de:'mg/dL',pt:'mg/dL',fr:'mg/dL',pl:'mg/dL',it:'mg/dL',he:'mg/dL',ja:'mg/dL',ko:'mg/dL'})+'">'+L({ru:'ммоль/л',en:'mmol/L',uk:'ммоль/л',es:'mmol/L',de:'mmol/L',pt:'mmol/L',fr:'mmol/L',pl:'mmol/L',it:'mmol/L',he:'mmol/L',ja:'mmol/L',ko:'mmol/L'})+'</span></label>'
+           +'<input class="manual-input vai-in" id="vai-hdl" type="number" step="0.01" inputmode="decimal" placeholder="—">'
+           +'<div class="vai-hint">'+L({ru:'Значения берутся из вашего анализа крови.',uk:'Значення беруться з вашого аналізу крові.',en:'Values come from your blood test.',es:'Los valores provienen de tu análisis de sangre.',de:'Die Werte stammen aus deinem Bluttest.',pt:'Os valores vêm do seu exame de sangue.',fr:'Les valeurs proviennent de votre analyse de sang.',pl:'Wartości pochodzą z Twojego badania krwi.',it:'I valori provengono dalle tue analisi del sangue.',he:'הערכים לקוחים מבדיקת הדם שלך.',ja:'値は血液検査から取得します。',ko:'값은 혈액 검사에서 가져옵니다.'})+'</div>')
+      )
     +'<button type="button" class="vai-btn" onclick="_vaiCalc()">'+L({ru:'Рассчитать',uk:'Розрахувати',en:'Calculate',es:'Calcular',de:'Berechnen',pt:'Calcular',fr:'Calculer',pl:'Oblicz',it:'Calcola',he:'חישוב',ja:'計算',ko:'계산'})+'</button>'
     +'<div id="vai-result"></div>'
     +'<div class="vai-disc">'+L({ru:'VAI — не диагноз, а расчётный косвенный показатель. Для оценки здоровья обратитесь к специалисту.',uk:'VAI — не діагноз, а розрахунковий непрямий показник. Для оцінки здоров’я зверніться до фахівця.',en:'VAI is not a diagnosis — it is a calculated indirect indicator. For a health assessment, consult a specialist.',es:'VAI no es un diagnóstico, es un indicador indirecto calculado. Para evaluar tu salud, consulta a un especialista.',de:'VAI ist keine Diagnose, sondern ein berechneter indirekter Indikator. Für eine Gesundheitsbewertung wende dich an eine Fachkraft.',pt:'VAI não é um diagnóstico — é um indicador indireto calculado. Para avaliar a saúde, consulte um especialista.',fr:'Le VAI n’est pas un diagnostic — c’est un indicateur indirect calculé. Pour évaluer votre santé, consultez un spécialiste.',pl:'VAI to nie diagnoza — to obliczany wskaźnik pośredni. W celu oceny zdrowia skonsultuj się ze specjalistą.',it:'Il VAI non è una diagnosi — è un indicatore indiretto calcolato. Per valutare la salute, consulta uno specialista.',he:'VAI אינו אבחון — זהו מדד עקיף מחושב. להערכת בריאות פנו למומחה.',ja:'VAIは診断ではなく、算出された間接指標です。健康評価は専門家にご相談ください。',ko:'VAI는 진단이 아니라 계산된 간접 지표입니다. 건강 평가는 전문가와 상담하세요.'})+'</div>'
@@ -5454,8 +5472,8 @@ function renderCard(){
   // «Правовая информация» — всегда последняя.
   // Траектория по жалобе — первой: это ответ на «стало ли легче», ради которого человек и ведёт дневник.
   var _secCmp=(typeof _cmpTrajHTML==='function')?_cmpTrajHTML():'';
-  html+=[_secCmp,_secGoal,_secAct,_secNut,_secSup,_secStress,_secBal,_secRhythm,_secLife,_secBaseline,   // «что я о себе указал»
-         _secDyn,_secDay,_secVai,_secLabs,_secDaily,_secHist,_secSource,_secNotify,_secBackup,_secLegal].join('');     // «что показывает система / инструменты» + VAI-калькулятор
+  html+=[_secCmp,_secGoal,_secAct,_secNut,_secSup,_secHealth,_secStress,_secBal,_secRhythm,_secLife,   // «что я о себе указал»
+         _secDyn,_secVai,_secLabs,_secDaily,_secHist,_secSource,_secNotify,_secBackup,_secLegal].join('');     // «что показывает система / инструменты» + VAI-калькулятор
   html+='</div>'; // .vcard-grid
   html+='</div>'; // .vcard-wrap
 
@@ -5649,6 +5667,7 @@ function _saveDaily(){
     var arr=[]; try{arr=JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[];}catch(e){}
     var _prev=arr.filter(function(r){return r.day===rec.day;})[0];   // тот же день → сохраняем стабильный id (переживает правку дня)
     rec.id=(_prev&&_prev.id)||_vialpUuid();   // стабильный идентификатор записи — для будущего синка/EFA
+    rec.exp_done=(_prev&&_prev.exp_done)||null;   // отметка «делал эксперимент» переживает повторный проход за тот же день
     rec.pid=_vialpPid();                        // псевдонимный id установки
     arr=arr.filter(function(r){return r.day!==rec.day;});
     arr.unshift(rec);
@@ -6154,6 +6173,27 @@ function _expRows(from,to){
   var arr=[]; try{arr=JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[];}catch(e){}
   return arr.filter(function(r){ return r.ts&&r.ts>=from&&r.ts<to; });
 }
+// «Делал сегодня?» — отметка пишется в СЕГОДНЯШНЮЮ дневную запись, тот же источник, что и метрики:
+// значит считается тем же окном, переживает перезагрузку и уезжает в архив вместе с днём.
+// Без неё верификация нечестна: цифры сравниваются так, будто человек всю неделю делал то,
+// что ему предложили, — а он мог не начать вовсе.
+function _expMark(v){
+  try{
+    var arr=JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[];
+    var k=_dayKey(), r=arr.filter(function(x){return x.day===k;})[0];
+    if(!r) return;                                   // прохода за сегодня ещё нет — отмечать не к чему
+    r.exp_done=(r.exp_done===v)?null:v;              // повторный тап по тому же — снять отметку
+    localStorage.setItem('vialp_daily',JSON.stringify(arr));
+  }catch(e){}
+  try{ renderExperimentUI(window.__rdDay||_dayKey()); }catch(e){}
+}
+function _expDoneToday(){
+  try{
+    var arr=JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[];
+    var k=_dayKey(), r=arr.filter(function(x){return x.day===k;})[0];
+    return (r&&r.exp_done)||'';
+  }catch(e){ return ''; }
+}
 // Среднее по метрике. hf — не среднее, а сколько дней из 7 были приливы (частота, а не «уровень»).
 function _expAvg(rows,k){
   if(!rows||rows.length<_EXP_MIN_DAYS) return null;
@@ -6205,6 +6245,10 @@ function _expMeasure(e){
   var rows=_expRows(e.startTs,now);
   var out={ what:e.what, days:Math.floor((now-e.startTs)/DAY), logged:rows.length, rows:[] };
   out.ready=out.days>=_EXP_WIN;
+  // Сколько дней человек реально держал эксперимент (из тех, где он вообще ответил).
+  var _ans=rows.filter(function(r){ return r.exp_done==='yes'||r.exp_done==='no'; });
+  out.asked=_ans.length;
+  out.kept=_ans.filter(function(r){ return r.exp_done==='yes'; }).length;
   (e.metrics||[]).forEach(function(k){
     var b=(e.baseline||{})[k], a=_expAvg(rows,k);
     if(b==null||a==null) return;
@@ -6223,18 +6267,18 @@ function _expArchive(e){
 }
 function _expUI(){
   const M={
-    ru:{title:'Ваш эксперимент',run:'Идёт · день {d} из {n}',watch:'Смотрим',res:'Что показали ваши цифры',head:'Вы делали:',thin:'Записей за неделю пока мало — продолжаем наблюдение',note:'Это ваши собственные цифры до и после — не вывод о здоровье.',ok:'Понятно'},
-    uk:{title:'Ваш експеримент',run:'Триває · день {d} з {n}',watch:'Дивимось',res:'Що показали ваші цифри',head:'Ви робили:',thin:'Записів за тиждень поки мало — продовжуємо спостереження',note:'Це ваші власні цифри до і після — не висновок про здоровʼя.',ok:'Зрозуміло'},
-    en:{title:'Your experiment',run:'Running · day {d} of {n}',watch:'Watching',res:'What your numbers showed',head:'You were doing:',thin:'Not enough logged days yet — still watching',note:'These are your own numbers before and after — not a conclusion about your health.',ok:'Got it'},
-    es:{title:'Tu experimento',run:'En curso · día {d} de {n}',watch:'Observamos',res:'Lo que mostraron tus cifras',head:'Estuviste haciendo:',thin:'Aún hay pocos registros — seguimos observando',note:'Son tus propias cifras antes y después, no una conclusión sobre tu salud.',ok:'Entendido'},
-    de:{title:'Dein Experiment',run:'Läuft · Tag {d} von {n}',watch:'Wir beobachten',res:'Was deine Zahlen zeigten',head:'Du hast gemacht:',thin:'Noch zu wenige Einträge — wir beobachten weiter',note:'Das sind deine eigenen Zahlen vorher und nachher — keine Aussage über deine Gesundheit.',ok:'Verstanden'},
-    pt:{title:'Seu experimento',run:'Em curso · dia {d} de {n}',watch:'Observando',res:'O que seus números mostraram',head:'Você estava fazendo:',thin:'Ainda há poucos registros — seguimos observando',note:'São os seus próprios números antes e depois — não uma conclusão sobre sua saúde.',ok:'Entendi'},
-    fr:{title:'Votre expérience',run:'En cours · jour {d} sur {n}',watch:'Nous observons',res:'Ce que vos chiffres ont montré',head:'Vous faisiez :',thin:'Encore peu d’enregistrements — on continue d’observer',note:'Ce sont vos propres chiffres avant et après — pas une conclusion sur votre santé.',ok:'Compris'},
-    pl:{title:'Twój eksperyment',run:'Trwa · dzień {d} z {n}',watch:'Obserwujemy',res:'Co pokazały Twoje liczby',head:'Robiłeś/aś:',thin:'Za mało zapisów — obserwujemy dalej',note:'To Twoje własne liczby przed i po — nie wniosek o zdrowiu.',ok:'Rozumiem'},
-    it:{title:'Il tuo esperimento',run:'In corso · giorno {d} di {n}',watch:'Osserviamo',res:'Cosa hanno mostrato i tuoi numeri',head:'Stavi facendo:',thin:'Ancora pochi registrazioni — continuiamo a osservare',note:'Sono i tuoi numeri prima e dopo — non una conclusione sulla tua salute.',ok:'Ho capito'},
-    he:{title:'הניסוי שלך',run:'מתבצע · יום {d} מתוך {n}',watch:'עוקבים אחרי',res:'מה הראו המספרים שלך',head:'מה עשית:',thin:'עדיין מעט רישומים — ממשיכים לעקוב',note:'אלה המספרים שלך לפני ואחרי — לא מסקנה על הבריאות שלך.',ok:'הבנתי'},
-    ja:{title:'あなたの実験',run:'実施中 · {n}日中{d}日目',watch:'見ている項目',res:'あなたの数値の変化',head:'取り組んだこと：',thin:'記録がまだ少ないため観察を続けます',note:'これは前後のあなた自身の数値であり、健康に関する結論ではありません。',ok:'わかりました'},
-    ko:{title:'나의 실험',run:'진행 중 · {n}일 중 {d}일째',watch:'보는 항목',res:'내 수치가 보여준 것',head:'해온 것:',thin:'기록이 아직 적어 계속 지켜봅니다',note:'이것은 전후의 내 수치일 뿐, 건강에 대한 결론이 아닙니다.',ok:'알겠습니다'}
+    ru:{title:'Ваш эксперимент',run:'Идёт · день {d} из {n}',watch:'Смотрим',res:'Что показали ваши цифры',head:'Вы делали:',thin:'Записей за неделю пока мало — продолжаем наблюдение',note:'Это ваши собственные цифры до и после — не вывод о здоровье.',ok:'Понятно',didq:'Делали это сегодня?',did:'Да',didnt:'Нет',kept:'Держались {k} из {n} дней'},
+    uk:{title:'Ваш експеримент',run:'Триває · день {d} з {n}',watch:'Дивимось',res:'Що показали ваші цифри',head:'Ви робили:',thin:'Записів за тиждень поки мало — продовжуємо спостереження',note:'Це ваші власні цифри до і після — не висновок про здоровʼя.',ok:'Зрозуміло',didq:'Робили це сьогодні?',did:'Так',didnt:'Ні',kept:'Трималися {k} з {n} днів'},
+    en:{title:'Your experiment',run:'Running · day {d} of {n}',watch:'Watching',res:'What your numbers showed',head:'You were doing:',thin:'Not enough logged days yet — still watching',note:'These are your own numbers before and after — not a conclusion about your health.',ok:'Got it',didq:'Did you do it today?',did:'Yes',didnt:'No',kept:'Kept it {k} of {n} days'},
+    es:{title:'Tu experimento',run:'En curso · día {d} de {n}',watch:'Observamos',res:'Lo que mostraron tus cifras',head:'Estuviste haciendo:',thin:'Aún hay pocos registros — seguimos observando',note:'Son tus propias cifras antes y después, no una conclusión sobre tu salud.',ok:'Entendido',didq:'¿Lo hiciste hoy?',did:'Sí',didnt:'No',kept:'Lo mantuviste {k} de {n} días'},
+    de:{title:'Dein Experiment',run:'Läuft · Tag {d} von {n}',watch:'Wir beobachten',res:'Was deine Zahlen zeigten',head:'Du hast gemacht:',thin:'Noch zu wenige Einträge — wir beobachten weiter',note:'Das sind deine eigenen Zahlen vorher und nachher — keine Aussage über deine Gesundheit.',ok:'Verstanden',didq:'Heute gemacht?',did:'Ja',didnt:'Nein',kept:'An {k} von {n} Tagen durchgehalten'},
+    pt:{title:'Seu experimento',run:'Em curso · dia {d} de {n}',watch:'Observando',res:'O que seus números mostraram',head:'Você estava fazendo:',thin:'Ainda há poucos registros — seguimos observando',note:'São os seus próprios números antes e depois — não uma conclusão sobre sua saúde.',ok:'Entendi',didq:'Você fez isso hoje?',did:'Sim',didnt:'Não',kept:'Manteve {k} de {n} dias'},
+    fr:{title:'Votre expérience',run:'En cours · jour {d} sur {n}',watch:'Nous observons',res:'Ce que vos chiffres ont montré',head:'Vous faisiez :',thin:'Encore peu d’enregistrements — on continue d’observer',note:'Ce sont vos propres chiffres avant et après — pas une conclusion sur votre santé.',ok:'Compris',didq:'Vous l’avez fait aujourd’hui ?',did:'Oui',didnt:'Non',kept:'Tenu {k} jours sur {n}'},
+    pl:{title:'Twój eksperyment',run:'Trwa · dzień {d} z {n}',watch:'Obserwujemy',res:'Co pokazały Twoje liczby',head:'Robiłeś/aś:',thin:'Za mało zapisów — obserwujemy dalej',note:'To Twoje własne liczby przed i po — nie wniosek o zdrowiu.',ok:'Rozumiem',didq:'Zrobiłeś/aś to dziś?',did:'Tak',didnt:'Nie',kept:'Utrzymane {k} z {n} dni'},
+    it:{title:'Il tuo esperimento',run:'In corso · giorno {d} di {n}',watch:'Osserviamo',res:'Cosa hanno mostrato i tuoi numeri',head:'Stavi facendo:',thin:'Ancora pochi registrazioni — continuiamo a osservare',note:'Sono i tuoi numeri prima e dopo — non una conclusione sulla tua salute.',ok:'Ho capito',didq:'L’hai fatto oggi?',did:'Sì',didnt:'No',kept:'Mantenuto {k} giorni su {n}'},
+    he:{title:'הניסוי שלך',run:'מתבצע · יום {d} מתוך {n}',watch:'עוקבים אחרי',res:'מה הראו המספרים שלך',head:'מה עשית:',thin:'עדיין מעט רישומים — ממשיכים לעקוב',note:'אלה המספרים שלך לפני ואחרי — לא מסקנה על הבריאות שלך.',ok:'הבנתי',didq:'עשית את זה היום?',did:'כן',didnt:'לא',kept:'התמדת {k} מתוך {n} ימים'},
+    ja:{title:'あなたの実験',run:'実施中 · {n}日中{d}日目',watch:'見ている項目',res:'あなたの数値の変化',head:'取り組んだこと：',thin:'記録がまだ少ないため観察を続けます',note:'これは前後のあなた自身の数値であり、健康に関する結論ではありません。',ok:'わかりました',didq:'今日は実行しましたか？',did:'はい',didnt:'いいえ',kept:'{n}日中{k}日続けました'},
+    ko:{title:'나의 실험',run:'진행 중 · {n}일 중 {d}일째',watch:'보는 항목',res:'내 수치가 보여준 것',head:'해온 것:',thin:'기록이 아직 적어 계속 지켜봅니다',note:'이것은 전후의 내 수치일 뿐, 건강에 대한 결론이 아닙니다.',ok:'알겠습니다',didq:'오늘 실천했나요?',did:'예',didnt:'아니요',kept:'{n}일 중 {k}일 실천'}
   };
   return M[lang]||M.en;
 }
@@ -6257,7 +6301,20 @@ function renderExperimentUI(activeKey){
     html+='<div style="font-size:var(--fs-cap);color:var(--t3);">⏳ '+_esc(String(ui.run).replace('{d}',d).replace('{n}',_EXP_WIN))+'</div>';
     var names=(e.metrics||[]).map(_expName).filter(Boolean);
     if(names.length) html+='<div style="font-size:var(--fs-cap);color:var(--t3);margin-top:3px;">'+_esc(ui.watch)+': '+_esc(names.join(' · '))+'</div>';
+    // Отметка за сегодня — один тап прямо под текстом эксперимента. Только за сегодняшний день:
+    // задним числом «делал ли я во вторник» человек не вспомнит, а честность петли на этом стоит.
+    if(!activeKey||activeKey===_dayKey()){
+      var cur=_expDoneToday();
+      var CH='padding:7px 14px;border-radius:10px;font-size:var(--fs-cap);font-family:inherit;cursor:pointer;border:1px solid rgba(226,185,90,.32);background:rgba(226,185,90,.06);color:var(--t1);';
+      var ON='padding:7px 14px;border-radius:10px;font-size:var(--fs-cap);font-family:inherit;cursor:pointer;border:1px solid var(--gold);background:rgba(226,185,90,.2);color:#fff;font-weight:600;';
+      html+='<div style="font-size:var(--fs-cap);color:var(--t2);margin-top:10px;">'+_esc(ui.didq)+'</div>'
+        +'<div style="display:flex;gap:7px;margin-top:6px;">'
+        +'<button type="button" onclick="_expMark(\'yes\')" style="'+(cur==='yes'?ON:CH)+'">'+_esc(ui.did)+'</button>'
+        +'<button type="button" onclick="_expMark(\'no\')" style="'+(cur==='no'?ON:CH)+'">'+_esc(ui.didnt)+'</button></div>';
+    }
   } else if(r.rows.length){
+    // Сначала — сколько дней человек это делал: без этого «до → после» читается как приговор методу.
+    if(r.asked) html+='<div style="font-size:var(--fs-cap);color:var(--t2);margin-bottom:8px;">'+_esc(String(ui.kept).replace('{k}',r.kept).replace('{n}',r.asked))+'</div>';
     html+='<div style="font-size:var(--fs-cap);color:var(--gold);letter-spacing:.4px;margin-bottom:6px;">'+_esc(ui.res)+'</div>';
     r.rows.forEach(function(x){
       html+='<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-top:1px solid rgba(255,255,255,.06);">'
