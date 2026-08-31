@@ -134,7 +134,12 @@
         // лендинг: шапка <header> ниже статус-бара/Dynamic Island
         'html.app-mode header{padding-top:calc(env(safe-area-inset-top,0px) + 12px) !important;}' +
         // инструменты (VIO/PRO): весь #app ниже системной зоны (низ уже учтён в .bottom-nav)
-        'html.app-mode #app{top:env(safe-area-inset-top,0px) !important;}';
+        'html.app-mode #app{top:env(safe-area-inset-top,0px) !important;}' +
+        // …а раз #app уже опущен, собственный отступ топбара под «чёлку» становится ВТОРЫМ:
+        // шапка «Анализ VIA-L» уезжала на две высоты чёлки вниз и налезала на карточку разбора,
+        // а сверху оставался пустой беж. На вебе задвоения нет — там #app стоит в нуле.
+        // 2026-08-31, поймано на TestFlight-сборке.
+        'html.app-mode #topbar{padding-top:0 !important;}';
       (document.head || html).appendChild(css);
     }
     // Платёж внутри приложения НЕ ведём на Hotmart (PRO-покупка появится через IAP магазина).
