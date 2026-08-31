@@ -1945,6 +1945,10 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
 .ai-sec.open .ai-sec-chev{transform:rotate(180deg);}
 .ai-sec-ic{font-size:20px;line-height:1;}
 .ai-sec-img{width:34px;height:34px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 0 5px rgba(226,185,90,.25));}
+/* Бейдж «Главный приоритет» — ОТДЕЛЬНОЙ строкой над заголовком. В одной строке с ним он,
+   будучи white-space:nowrap, выдавливал заголовок в узкую колонку: русское «ГЛАВНЫЙ ПРИОРИТЕТ»
+   длинное, и название темы ломалось на три строки вокруг бейджа. 2026-08-31. */
+.ai-sec-pill-row{margin:0 0 8px;}
 .ai-sec-pill{font-family:var(--font-ui);font-size:var(--fs-cap);font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#1a1206;background:linear-gradient(135deg,#e7c77a,#c9962f);padding:3px 9px;border-radius:20px;white-space:nowrap;}
 .ai-sec-sum{font-size:var(--fs-body);color:#fff;line-height:1.8;}
 
@@ -11116,7 +11120,7 @@ function _renderAnalysis(raw){
     // VIA·L») уезжает под одну строку-раскрытие «Что сделать»: при листании видно короткие карточки,
     // а не полотно. Раньше блок действий висел раскрытым всегда и карточка занимала два экрана.
     var _hasDet=!!(_act||_rest);
-    _themesHtml+='<div class="ai-sec'+(_hasDet?' has-det':'')+(_ti?(' ai-th-'+_ti):'')+'" onclick="_secTap(this,event)"><div class="ai-sec-h" onclick="_secHeadTap(this,event)">'+iconHtml+'<span style="flex:1;min-width:0;">'+_esc(title)+'</span>'+pill+(_hasDet?'<i class="ph ph-caret-down ai-sec-chev" aria-hidden="true"></i>':'')+'</div>'
+    _themesHtml+='<div class="ai-sec'+(_hasDet?' has-det':'')+(_ti?(' ai-th-'+_ti):'')+'" onclick="_secTap(this,event)">'+(pill?('<div class="ai-sec-pill-row">'+pill+'</div>'):'')+'<div class="ai-sec-h" onclick="_secHeadTap(this,event)">'+iconHtml+'<span style="flex:1;min-width:0;">'+_esc(title)+'</span>'+(_hasDet?'<i class="ph ph-caret-down ai-sec-chev" aria-hidden="true"></i>':'')+'</div>'
       +'<div class="ai-sec-sum">'+_mdOnly(s.sum)+'</div>';
     if(_hasDet) _themesHtml+='<button type="button" class="ai-sec-more" onclick="_toggleDetail(this,event)">'+_esc(_act?_actLbl():_moreLblTxt())+' <i class="ph ph-caret-down" aria-hidden="true"></i></button>'
       +'<div class="ai-sec-det-wrap"><div class="ai-sec-det">'

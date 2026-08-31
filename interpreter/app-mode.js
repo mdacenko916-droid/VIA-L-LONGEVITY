@@ -134,7 +134,10 @@
         // лендинг: шапка <header> ниже статус-бара/Dynamic Island
         'html.app-mode header{padding-top:calc(env(safe-area-inset-top,0px) + 12px) !important;}' +
         // инструменты (VIO/PRO): весь #app ниже системной зоны (низ уже учтён в .bottom-nav)
-        'html.app-mode #app{top:env(safe-area-inset-top,0px) !important;}' +
+        // height:100vh при сдвинутом top уводит НИЗ за экран ровно на высоту чёлки — вместе с ним
+        // пропадала нижняя навигация («Сегодня / Наш подход / Мой наставник / Мой профиль»).
+        // Вычитаем сдвиг из высоты. 2026-08-31.
+        'html.app-mode #app{top:env(safe-area-inset-top,0px) !important;height:calc(100vh - env(safe-area-inset-top,0px)) !important;}' +
         // …а раз #app уже опущен, собственный отступ топбара под «чёлку» становится ВТОРЫМ:
         // шапка «Анализ VIA-L» уезжала на две высоты чёлки вниз и налезала на карточку разбора,
         // а сверху оставался пустой беж. На вебе задвоения нет — там #app стоит в нуле.
