@@ -2,7 +2,7 @@
    Работает ТОЛЬКО внутри приложения (window.Capacitor.Plugins.Purchases). На обычном вебе —
    все функции no-op, страница остаётся открытой как сейчас (веб-версия не платная, это App Store продукт).
    Настройка перед первым релизом (владелец):
-     1) Создать проект в RevenueCat dashboard, добавить iOS-приложение (bundle id com.viael.interpreter).
+     1) Создать проект в RevenueCat dashboard, добавить iOS-приложение (bundle id com.viael.vial).
      2) В App Store Connect создать auto-renewable subscription €15/мес, привязать к RevenueCat.
      3) В RevenueCat создать Entitlement с идентификатором ENTITLEMENT_ID (см. константу ниже) и
         Offering "default" с этим продуктом как package (Monthly).

@@ -37,7 +37,7 @@ Program. Написан так, чтобы новый чат мог взять �
    Agreement**. Без него не работают ни IAP, ни sandbox-покупки.
 3. Там же **налоговые формы**: W-8BEN (физлицо-нерезидент США) + банковские реквизиты для выплат.
    Проверить, что счёт ФОП подходит для выбранного способа выплат.
-4. **App Store Connect → Apps → «+»**: создать запись приложения. Bundle ID `com.viael.interpreter`,
+4. **App Store Connect → Apps → «+»**: создать запись приложения. Bundle ID `com.viael.vial`,
    имя — из `APP-STORE-LISTING-DRAFT.md` §1.
 
 Шаги 2–4 можно делать, пока Claude параллельно готовит сборку.
@@ -79,7 +79,7 @@ Program. Написан так, чтобы новый чат мог взять �
 
 ## 5. Только после того, как всё работает
 
-1. **RevenueCat**: проект → iOS-приложение (bundle `com.viael.interpreter`) → entitlement
+1. **RevenueCat**: проект → iOS-приложение (bundle `com.viael.vial`) → entitlement
    `via_l_pro` → offering «default» с продуктом-подпиской.
 2. **App Store Connect**: auto-renewable подписка €15/мес, привязать к RevenueCat.
 3. Claude вставляет реальный ключ в `iap-bridge.js` и **снимает временный обход**.

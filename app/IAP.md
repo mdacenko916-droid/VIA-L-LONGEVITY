@@ -32,7 +32,7 @@ Capacitor 6.x в `app/package.json`; версии 10.x+ требуют Capacitor
 ## Что нужно сделать владельцу перед сборкой/подачей
 
 1. **RevenueCat.** Создать проект на [app.revenuecat.com](https://app.revenuecat.com) → добавить
-   iOS-приложение с bundle id `com.viael.interpreter` → получить **iOS API key** (публичный,
+   iOS-приложение с bundle id `com.viael.vial` → получить **iOS API key** (публичный,
    `appl_...`).
 2. **App Store Connect.** Создать auto-renewable subscription продукт (€15/мес), привязать к
    RevenueCat (RevenueCat даёт пошаговую интеграцию через App Store Connect API key/shared secret —

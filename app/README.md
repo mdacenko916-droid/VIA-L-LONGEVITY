@@ -22,7 +22,7 @@
 Пересборка нужна только для изменений UI/HTML-оболочки.
 
 - `package.json` — зависимости Capacitor (core/cli/ios/android).
-- `capacitor.config.json` — `appId=com.viael.interpreter`, `appName=VIA·L`, `webDir=www` (без server).
+- `capacitor.config.json` — `appId=com.viael.vial`, `appName=VIA·L`, `webDir=www` (без server).
 - `sync-web.sh` — собирает `www` из веб-ИП. **Запускать перед каждой сборкой**, после готовых веб-правок.
 
 ### Рабочий цикл (веб → приложение)

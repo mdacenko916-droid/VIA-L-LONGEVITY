@@ -197,7 +197,7 @@
       `Encoding::CompatibilityError`). Обход: `cd app/ios/App && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 pod install`
       (нужен только при смене нативных плагинов; веб-контент копируется и без него).
 - [ ] App Store Connect: auto-renewable подписка €15/мес → привязать к RevenueCat
-      (entitlement `via_l_pro`, bundle `com.viael.interpreter`).
+      (entitlement `via_l_pro`, bundle `com.viael.vial`).
 - [ ] App Privacy nutrition labels: задекларировать HealthKit-данные (не для рекламы/трекинга).
 - [ ] Метаданные/скриншоты без мед-обещаний + демо-доступ ревьюеру (обход IAP-гейта, sandbox-аккаунт).
 - [ ] Подтвердить корректность `ITSAppUsesNonExemptEncryption=false` (только стандартное шифрование).
