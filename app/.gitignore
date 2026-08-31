@@ -5,8 +5,15 @@ package-lock.json
 # Нативные платформы генерятся командой `npx cap add ios|android` на машине разработчика.
 # Якорь `/` — игнорим ТОЛЬКО сгенерённые платформы в корне app, но НЕ нативный код
 # локальных плагинов (app/plugins/*/android — это исходники, их коммитим).
-/ios/
 /android/
+
+# iOS-проект КОММИТИМ (с 2026-08-31): Xcode Cloud собирает из репозитория, а не с этой машины.
+# Заодно это чинит старую беду — правки Info.plist и Target Membership больше не теряются
+# при пересоздании платформы. Игнорим внутри только то, что CI генерит сам (ci_post_clone.sh):
+/ios/App/Pods/
+/ios/App/App/public/
+/ios/App/App/capacitor.config.json
+/ios/**/xcuserdata/
 
 # Gradle-вывод локальных плагинов (артефакты сборки, не исходники)
 plugins/*/android/build/
