@@ -1884,6 +1884,12 @@ body.consent-open #topbar{z-index:10000;}
 body.consent-open #topbar *{pointer-events:none;}
 body.consent-open #langDropdown,body.consent-open #langDropdown *{pointer-events:auto;}
 body.consent-open #vlAdvBtn,body.consent-open #vlAdvPanel{display:none!important;}
+/* Топбар поднят над стеклом ради переключателя языка — но вместе с ним всплывали кремовая
+   подложка статус-бара (#topbar::before) и бренд-подпись: полоса ложилась поперёк тёмной
+   карточки, «VIA·L» наезжал на текст согласия. На этих экранах нужен ровно переключатель.
+   Тот же приём, что у body.imp-open выше. 2026-08-31, замечено на TestFlight-сборке. */
+body.consent-open #topbar::before,body.iap-open #topbar::before{display:none;}
+body.consent-open #tb-brand,body.iap-open #tb-brand{display:none;}
 #consent-gate.show{display:flex;}
 /* IAP-пейволл — та же механика показа/позиционирования, что consent-gate */
 #iap-gate{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(8,11,16,.5);backdrop-filter:blur(22px) saturate(1.1);-webkit-backdrop-filter:blur(22px) saturate(1.1);padding:24px;box-sizing:border-box;}
