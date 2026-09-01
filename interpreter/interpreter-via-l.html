@@ -5489,7 +5489,13 @@ function renderCard(){
                    :L({ru:'выключено',uk:'вимкнено',en:'off',es:'desactivado',de:'aus',pt:'desativado',fr:'désactivé',pl:'wyłączone',it:'disattivo',he:'כבוי',ja:'オフ',ko:'꺼짐'});
   var _rcHtml='<a href="./research-consent.html" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding:11px 12px;border-radius:10px;border:1px solid rgba(196,150,60,.32);background:rgba(196,150,60,.06);color:var(--gold-lt);font-size:var(--fs-cap);text-decoration:none;">'
     +'<span>'+_rcLbl+'</span><span style="color:'+(_rcOn?'var(--ok)':'var(--t3)')+';">'+_rcState+' ›</span></a>';
-  _secLegal=_vcSec('legal',t('card_legal'),'<div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;">'+t('consent_body')+'</div>'+_rcHtml,false,true);
+  // Политика и условия — постоянная точка входа в профиле. Раньше они были ТОЛЬКО в подвале
+  // стартового экрана, а он исчезает, как только человек начал проход: после первого дня
+  // документы становились недоступны совсем (замечено владельцем на живом Android 2026-09-01).
+  // Профиль доступен всегда, поэтому им место здесь — рядом с текстом согласия.
+  var _lglRow=function(href,label){return '<a href="'+href+'" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;padding:11px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03);color:var(--t1);text-decoration:none;font-size:var(--fs-body);">'+'<span>'+label+'</span><span style="color:var(--t3);">\u203a</span></a>';};
+  var _lglLinks=_lglRow('../legal-app/privacy.html',t('priv_link'))+_lglRow('../legal-app/terms.html',t('terms_link'));
+  _secLegal=_vcSec('legal',t('card_legal'),'<div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;">'+t('consent_body')+'</div>'+_rcHtml+_lglLinks,false,true);
   // ── VAI: калькулятор скрытого (висцерального) жира. Доп-инструмент, БЕЗ ИИ/сети. Велнес-рамка + дисклеймер. ──
   var _vaiBMI=(P.weight&&P.height&&P.height>0)?(P.weight/Math.pow(P.height/100,2)):null;
   var _vaiLab=(typeof _vaiLabs==='function')?_vaiLabs():null;
