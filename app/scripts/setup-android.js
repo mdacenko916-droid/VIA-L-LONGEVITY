@@ -1,0 +1,126 @@
+#!/usr/bin/env node
+/**
+ * setup-android.js — восстанавливает настройки Health Connect и возврата из OAuth
+ * в нативном Android-проекте. Брат-близнец setup-ios.js.
+ *
+ * Зачем: папка `android/` в .gitignore и генерится локально (`cap add android`). При каждом
+ * пересоздании Capacitor пишет ЧИСТЫЕ AndroidManifest.xml / variables.gradle — без наших
+ * правок, и Health Connect перестаёт работать. Причём молча: приложение соберётся и
+ * запустится, просто разрешения не выдадут. Скрипт идемпотентно дописывает недостающее.
+ * Запускать после `cap add android` (подключён к npm-скрипту `add:android`)
+ * или вручную: `npm run setup:android`.
+ *
+ * Что именно правится и почему:
+ *
+ * 1. minSdkVersion 22 → 26. Capacitor ставит 22, а androidx.health.connect требует 26
+ *    (см. app/plugins/health-connect/android/build.gradle). Без этого Gradle не соберёт.
+ *
+ * 2. Экран обоснования доступа. Health Connect ОТКАЗЫВАЕТСЯ выдавать разрешения приложению,
+ *    которое не умеет показать свою политику приватности по системному запросу. Нужны два
+ *    объявления: `androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE` для Android 13 и ниже
+ *    и `VIEW_PERMISSION_USAGE` + категория HEALTH_PERMISSIONS для Android 14+, где Health
+ *    Connect встроен в систему. Без них весь остальной код бесполезен.
+ *
+ * 3. Схема `com.viael.vial://` — возврат в приложение после OAuth трекера. Та же беда, что
+ *    была на iOS (см. setup-ios.js и коммит fc30240): вход уходит во внешний браузер, и без
+ *    зарегистрированной схемы вернуться некуда. Схема заведена в белый список воркера.
+ *
+ * Сами разрешения Health Connect объявлять здесь НЕ нужно: они лежат в манифесте плагина
+ * (app/plugins/health-connect/android/src/main/AndroidManifest.xml) и подмешиваются Gradle.
+ *
+ * Чистый Node, без зависимостей.
+ */
+const fs = require('fs');
+const path = require('path');
+
+const APP_DIR   = path.resolve(__dirname, '..');
+const ANDROID   = path.join(APP_DIR, 'android');
+const GRADLE    = path.join(ANDROID, 'variables.gradle');
+const MANIFEST  = path.join(ANDROID, 'app', 'src', 'main', 'AndroidManifest.xml');
+
+const MIN_SDK = 26;
+
+// Блок для MainActivity: обоснование доступа (Android ≤13) + возврат из OAuth по схеме.
+const ACTIVITY_BLOCK = `
+            <!-- Health Connect (Android 13 и ниже): по этому запросу система открывает наше
+                 объяснение, зачем нужны данные. Без обработчика разрешения не выдаются. -->
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
+
+            <!-- Возврат в приложение после OAuth трекера (Fitbit/Oura/Polar/Withings).
+                 Схема заведена в белый список воркера, см. FITBIT_RETURN_ALLOW. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.viael.vial" />
+            </intent-filter>
+`;
+
+// Отдельный псевдоним активности для Android 14+, где Health Connect встроен в систему.
+const ALIAS_BLOCK = `
+        <!-- Health Connect (Android 14+): системный экран разрешений ведёт сюда.
+             Требуется именно activity-alias с этим разрешением — иначе система его игнорирует. -->
+        <activity-alias
+            android:name="ViewPermissionUsageActivity"
+            android:exported="true"
+            android:targetActivity=".MainActivity"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+            </intent-filter>
+        </activity-alias>
+`;
+
+function fail(msg) { console.error('✗ ' + msg); process.exitCode = 1; }
+
+function patchGradle() {
+  if (!fs.existsSync(GRADLE)) {
+    console.warn(`⚠️  variables.gradle не найден. Сначала выполни \`npx cap add android\`, затем \`npm run setup:android\`.`);
+    return;
+  }
+  const src = fs.readFileSync(GRADLE, 'utf8');
+  const m = src.match(/minSdkVersion\s*=\s*(\d+)/);
+  if (!m) return fail('в variables.gradle не найден minSdkVersion — неожиданный формат');
+  if (Number(m[1]) >= MIN_SDK) { console.log(`✓ variables.gradle: minSdkVersion ${m[1]} — уже ≥ ${MIN_SDK}.`); return; }
+  fs.writeFileSync(GRADLE, src.replace(/minSdkVersion\s*=\s*\d+/, `minSdkVersion = ${MIN_SDK}`));
+  console.log(`✚ variables.gradle: minSdkVersion ${m[1]} → ${MIN_SDK} (требование androidx.health.connect).`);
+}
+
+function patchManifest() {
+  if (!fs.existsSync(MANIFEST)) {
+    console.warn(`⚠️  AndroidManifest.xml не найден. Сначала выполни \`npx cap add android\`.`);
+    return;
+  }
+  let xml = fs.readFileSync(MANIFEST, 'utf8');
+  const added = [];
+
+  // 1. Блок внутри <activity …MainActivity …> — перед её закрывающим тегом.
+  if (!xml.includes('ACTION_SHOW_PERMISSIONS_RATIONALE')) {
+    const start = xml.indexOf('<activity');
+    const end = start === -1 ? -1 : xml.indexOf('</activity>', start);
+    if (end === -1) return fail('в манифесте не найдена <activity> — неожиданный формат');
+    xml = xml.slice(0, end) + ACTIVITY_BLOCK + '\n        ' + xml.slice(end);
+    added.push('rationale + схема com.viael.vial');
+  }
+
+  // 2. activity-alias — сразу после закрывающего тега MainActivity.
+  if (!xml.includes('VIEW_PERMISSION_USAGE')) {
+    const end = xml.indexOf('</activity>');
+    if (end === -1) return fail('в манифесте не найдена </activity>');
+    const after = end + '</activity>'.length;
+    xml = xml.slice(0, after) + '\n' + ALIAS_BLOCK + xml.slice(after);
+    added.push('activity-alias для Android 14+');
+  }
+
+  if (!added.length) { console.log('✓ AndroidManifest.xml: всё на месте.'); return; }
+  fs.writeFileSync(MANIFEST, xml);
+  console.log(`✚ AndroidManifest.xml: добавлено — ${added.join('; ')}`);
+}
+
+console.log('— setup-android: Health Connect + возврат из OAuth —');
+patchGradle();
+patchManifest();
+console.log('Готово. Дальше: `npx cap sync android`, затем открыть в Android Studio.');

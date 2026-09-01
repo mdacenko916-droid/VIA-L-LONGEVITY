@@ -43,13 +43,22 @@
 cd app
 npm install
 npx cap add ios          # создаст app/ios (нативный проект Xcode)
-npx cap add android      # создаст app/android (нативный проект Android Studio)
+npm run add:android      # создаст app/android И прогонит setup-android.js (НЕ `npx cap add android`)
 npx cap sync
 npx cap open ios         # открыть в Xcode → Run на симуляторе/устройстве
 npx cap open android     # открыть в Android Studio → Run
 ```
 
-`ios/` и `android/` сейчас в `.gitignore` (генерятся локально). Когда начнём править нативный код
+⚠️ **Пересоздавать платформы только через npm-скрипты.** `npx cap add ios` / `npx cap add android`
+пишут ЧИСТЫЕ Info.plist / AndroidManifest.xml — без наших ключей, и HealthKit с Health Connect
+перестают работать **молча**: приложение соберётся и запустится, просто разрешения не выдадут.
+Восстановить неоткуда — все нужные ключи записаны только в `scripts/setup-ios.js` и
+`scripts/setup-android.js`. Поэтому: `npm run add:ios` и `npm run add:android` (они зовут скрипты
+следом). Если уже пересоздал голой командой — лечится `npm run setup:ios` / `npm run setup:android`.
+Проверка «всё ли на месте» — те же команды: здоровый ответ состоит из одних «✓».
+
+`android/` в `.gitignore` (генерится локально). `ios/` из игнора выведен — его собирает Xcode Cloud,
+см. `ios/App/ci_scripts/`. Когда начнём править нативный код
 (мосты HealthKit и т.п.) — снимем из игнора и закоммитим осознанно.
 
 > ⚠️ **Известный блокер `pod install`** (`npx cap sync` падает): `Encoding::CompatibilityError` —
