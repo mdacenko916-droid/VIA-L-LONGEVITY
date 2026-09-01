@@ -166,27 +166,54 @@ function patchStyles() {
 // `cap add android` пишет пустой BridgeActivity, поэтому правку держим здесь.
 const MAIN_ACT_SRC = `package com.viael.vial;
 
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
+    // Цвет нижней панели приложения (низ градиента .bottom-nav). Под кнопками системы видно
+    // именно фон окна, поэтому он должен совпадать — иначе снизу чужая полоса.
+    private static final int BAR_COLOR = 0xFF171D27;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Рисуем под системными панелями — как на iOS. Панели прозрачные (styles.xml),
-        // отступ под них берёт на себя вёрстка через env(safe-area-inset-*).
+        // Окно рисует себя под системными панелями (как на iOS).
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        getWindow().setBackgroundDrawable(new ColorDrawable(BAR_COLOR));
+
+        // Панель системных кнопок не должна ложиться поверх нашей навигации. Через CSS это не
+        // решается: Android WebView не отдаёт env(safe-area-inset-*), там всегда 0 (в отличие от
+        // iOS). Прокидывать высоту в CSS-переменную тоже ненадёжно — значение теряется при
+        // загрузке страницы. Поэтому поджимаем сам WebView: под ним остаётся полоса фона окна
+        // ровно по высоте панели, и кнопки лежат на ней. Слушатель, а не разовое чтение: высота
+        // меняется при повороте и при переключении кнопочной/жестовой навигации. 2026-09-01.
+        // Слушатель вешаем на КОРНЕВОЙ контейнер, а не на WebView: до самого WebView отступы
+        // системы не доходят — родитель их не пробрасывает, и первая попытка (padding прямо на
+        // WebView) молча ничего не дала. requestApplyInsets нужен, чтобы отступы пришли сразу,
+        // а не только после первого поворота экрана.
+        final android.view.View root = findViewById(android.R.id.content);
+        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(0, 0, 0, bars.bottom);
+            return insets;
+        });
+        ViewCompat.requestApplyInsets(root);
     }
 }
 `;
 
 function patchMainActivity() {
-  if (!fs.existsSync(MAIN_ACT)) {
-    console.warn('⚠️  MainActivity.java не найден. Сначала выполни `npx cap add android`.');
+  // Файл пишем целиком, поэтому его отсутствие — не ошибка, а просто «создадим».
+  if (!fs.existsSync(path.dirname(MAIN_ACT))) {
+    console.warn('⚠️  Папка исходников Android не найдена. Сначала выполни `npx cap add android`.');
     return;
   }
-  const cur = fs.readFileSync(MAIN_ACT, 'utf8');
+  const cur = fs.existsSync(MAIN_ACT) ? fs.readFileSync(MAIN_ACT, 'utf8') : '';
   if (cur.includes('setDecorFitsSystemWindows')) { console.log('✓ MainActivity.java: edge-to-edge уже включён.'); return; }
   fs.writeFileSync(MAIN_ACT, MAIN_ACT_SRC);
   console.log('✚ MainActivity.java: включён edge-to-edge (рисуем под системными панелями).');
