@@ -37,6 +37,16 @@ const APP_DIR   = path.resolve(__dirname, '..');
 const ANDROID   = path.join(APP_DIR, 'android');
 const GRADLE    = path.join(ANDROID, 'variables.gradle');
 const MANIFEST  = path.join(ANDROID, 'app', 'src', 'main', 'AndroidManifest.xml');
+const STYLES    = path.join(ANDROID, 'app', 'src', 'main', 'res', 'values', 'styles.xml');
+
+// Цвет нижней панели навигации Android (кнопки «назад/домой/обзор»). Без него система красит
+// её по умолчанию — на EMUI получилась БЕЛАЯ полоса под нашей тёмной навигацией, будто
+// приложение открыто не на весь экран (фото владельца 2026-09-01). Берём нижний цвет градиента
+// .bottom-nav (#171d27), чтобы панель системы продолжала нашу.
+const NAV_BAR_COLOR = '#FF171D27';
+const NAV_ITEMS =
+  `        <item name="android:navigationBarColor">${NAV_BAR_COLOR}</item>\n` +
+  `        <item name="android:windowLightNavigationBar">false</item>\n`;
 
 const MIN_SDK = 26;
 
@@ -120,7 +130,24 @@ function patchManifest() {
   console.log(`✚ AndroidManifest.xml: добавлено — ${added.join('; ')}`);
 }
 
+// Красим системную панель навигации в цвет нашей нижней панели. Тем оба: NoActionBarLaunch —
+// стартовая (splash), NoActionBar — та, на которую приложение переключается после старта.
+function patchStyles() {
+  if (!fs.existsSync(STYLES)) {
+    console.warn('⚠️  styles.xml не найден. Сначала выполни `npx cap add android`.');
+    return;
+  }
+  let xml = fs.readFileSync(STYLES, 'utf8');
+  if (xml.includes('android:navigationBarColor')) { console.log('✓ styles.xml: цвет панели навигации уже задан.'); return; }
+  let touched = 0;
+  xml = xml.replace(/(<style name="AppTheme\.NoActionBar(?:Launch)?"[^>]*>\n)/g, (m) => { touched++; return m + NAV_ITEMS; });
+  if (!touched) { console.warn('⚠️  styles.xml: не найдены темы AppTheme.NoActionBar* — формат изменился, проверь вручную.'); return; }
+  fs.writeFileSync(STYLES, xml);
+  console.log(`✚ styles.xml: цвет системной панели навигации задан в ${touched} теме(ах) — ${NAV_BAR_COLOR}.`);
+}
+
 console.log('— setup-android: Health Connect + возврат из OAuth —');
 patchGradle();
 patchManifest();
+patchStyles();
 console.log('Готово. Дальше: `npx cap sync android`, затем открыть в Android Studio.');
