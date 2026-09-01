@@ -3486,8 +3486,67 @@ const GH_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const GH_API       = 'https://health.googleapis.com/v4/users/me/dataTypes';
 // sleep scope + health-metrics scope (covers HR, resting HR, HRV, SpO2, temp).
 const GH_SCOPES    = 'https://www.googleapis.com/auth/googlehealth.sleep.readonly https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly';   // activity_and_fitness → daily-vo2-max (иначе 403)
-const FITBIT_RETURN_ALLOW = ['https://via-l.com/', 'http://localhost', 'http://127.0.0.1'];
+// Белый список адресов возврата из OAuth (защита от открытого редиректа). Используется ВСЕМИ
+// вендорами, не только Fitbit — имя историческое.
+// `com.viael.vial://` добавлена 2026-09-01: нативное приложение подставляло свой webview-адрес
+// (`capacitor://localhost/…`), тот в список не входил, и воркер молча подменял его на
+// FITBIT_DEFAULT_RET — то есть после подтверждения аккаунта человек оказывался на ВЕБ-странице
+// via-l.com в браузере, а не в приложении (живой случай: Fitbit, 2026-09-01). Это ломало и
+// возврат, и правило изоляции приложения от сайта.
+const FITBIT_RETURN_ALLOW = ['https://via-l.com/', 'com.viael.vial://', 'http://localhost', 'http://127.0.0.1'];
 const FITBIT_DEFAULT_RET  = 'https://via-l.com/interpreter/interpreter-via-l.html';
+
+// Возврат из OAuth. Веб-адрес — обычный 302. Схема приложения (`com.viael.vial://`) системному
+// браузеру как 302 не годится: часть браузеров молча ничего не делает, и человек остаётся на
+// пустой странице. Поэтому отдаём маленькую страницу: она сама пробует открыть приложение, а если
+// схема не зарегистрирована (старая сборка) — показывает понятную надпись. Даже если открыть
+// приложение не удалось, метка ожидания внутри него дотянет метрики при первом же возврате.
+const _OAUTH_BACK_T = {
+  en:['All set','Return to the VIA-L app','Open VIA-L'],
+  ru:['Готово','Вернитесь в приложение VIA-L','Открыть VIA-L'],
+  uk:['Готово','Поверніться до застосунку VIA-L','Відкрити VIA-L'],
+  es:['Listo','Vuelve a la app VIA-L','Abrir VIA-L'],
+  de:['Fertig','Kehren Sie zur VIA-L App zurück','VIA-L öffnen'],
+  pt:['Pronto','Volte para o app VIA-L','Abrir VIA-L'],
+  fr:['C’est fait','Revenez à l’app VIA-L','Ouvrir VIA-L'],
+  pl:['Gotowe','Wróć do aplikacji VIA-L','Otwórz VIA-L'],
+  it:['Fatto','Torna all’app VIA-L','Apri VIA-L'],
+  he:['הכול מוכן','חזרו לאפליקציית VIA-L','פתחו את VIA-L'],
+  ja:['完了しました','VIA-L アプリに戻ってください','VIA-L を開く'],
+  ko:['완료되었습니다','VIA-L 앱으로 돌아가세요','VIA-L 열기'],
+};
+function _oauthBackLang(request){
+  const al = (request.headers.get('Accept-Language') || '').toLowerCase();
+  for (const part of al.split(',')) {
+    const code = part.trim().split(';')[0].split('-')[0];
+    if (_OAUTH_BACK_T[code]) return code;
+  }
+  return 'en';
+}
+function _oauthBack(request, ret, vendor, status, sid) {
+  const url = ret + (ret.includes('?') ? '&' : '?') + vendor + '=' + status + (sid ? '&sid=' + encodeURIComponent(sid) : '');
+  if (/^https?:\/\//i.test(ret)) return Response.redirect(url, 302);
+  const lang = _oauthBackLang(request);
+  const [title, line, btn] = _OAUTH_BACK_T[lang];
+  const esc = t => String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const href = esc(url);
+  const rtl = (lang === 'he') ? ' dir="rtl"' : '';
+  const html = `<!doctype html><html lang="${lang}"${rtl}><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>VIA-L</title><style>
+:root{color-scheme:light}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+background:#EAE1C9;color:#2E2010;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;text-align:center;padding:24px}
+h1{font-family:Georgia,"Times New Roman",serif;font-size:22px;font-weight:400;letter-spacing:2px;color:#8B6030;margin:0}
+p{margin:0;color:#5A4A35}
+a{display:inline-block;margin-top:10px;padding:13px 26px;border-radius:50px;text-decoration:none;
+background:linear-gradient(135deg,#e7c77a,#c9962f);color:#1a1206;font-weight:600;letter-spacing:.5px}
+</style></head><body>
+<h1>${esc(title)}</h1><p>${esc(line)}</p><a href="${href}">${esc(btn)}</a>
+<script>setTimeout(function(){try{location.href=${JSON.stringify(url)};}catch(e){}},300);<\/script>
+</body></html>`;
+  return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
+}
 
 // sid + return URL are ASCII (base36 id / https URL) → plain btoa is safe.
 function b64urlEncode(str){ return btoa(str).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
@@ -3538,7 +3597,7 @@ async function handleFitbitCallback(request, env, corsHeaders){
     const expect = await hmacHex(_sec(env.GHEALTH_CLIENT_SECRET) || '', payload);
     if (sig === expect) { try { const o = JSON.parse(b64urlDecode(payload)); sid = o.sid || ''; if (o.ret) ret = o.ret; } catch(e){} }
   }
-  const back = (status) => Response.redirect(ret + (ret.includes('?') ? '&' : '?') + 'fitbit=' + status + (sid ? '&sid=' + encodeURIComponent(sid) : ''), 302);
+  const back = (status) => _oauthBack(request, ret, 'fitbit', status, sid);
 
   if (errParam || !code || !sid) return back('error');
 
@@ -3819,7 +3878,7 @@ async function handleWhoopCallback(request, env, corsHeaders){
     const payload = state.slice(0, dot), sig = state.slice(dot + 1);
     if (sig === await hmacHex(env.WHOOP_CLIENT_SECRET || '', payload)) { try { const o = JSON.parse(b64urlDecode(payload)); sid = o.sid || ''; if (o.ret) ret = o.ret; } catch(e){} }
   }
-  const back = (status) => Response.redirect(ret + (ret.includes('?') ? '&' : '?') + 'whoop=' + status + (sid ? '&sid=' + encodeURIComponent(sid) : ''), 302);
+  const back = (status) => _oauthBack(request, ret, 'whoop', status, sid);
   if (errParam || !code || !sid) return back('error');
   const r = await fetch(WHOOP_TOKEN_URL, {
     method: 'POST',
@@ -3957,7 +4016,7 @@ async function handlePolarCallback(request, env, corsHeaders) {
     const payload = state.slice(0, dot), sig = state.slice(dot + 1);
     if (sig === await hmacHex(_sec(env.POLAR_CLIENT_SECRET) || '', payload)) { try { const o = JSON.parse(b64urlDecode(payload)); sid = o.sid || ''; if (o.ret) ret = o.ret; } catch(e){} }
   }
-  const back = (status) => Response.redirect(ret + (ret.includes('?') ? '&' : '?') + 'polar=' + status + (sid ? '&sid=' + encodeURIComponent(sid) : ''), 302);
+  const back = (status) => _oauthBack(request, ret, 'polar', status, sid);
   if (errParam || !code || !sid) return back('error');
   const creds = btoa(_sec(env.POLAR_CLIENT_ID) + ':' + _sec(env.POLAR_CLIENT_SECRET));
   const r = await fetch(POLAR_TOKEN_URL, {
@@ -4074,7 +4133,7 @@ async function handleWithingsCallback(request, env, corsHeaders) {
     const payload = state.slice(0, dot), sig = state.slice(dot + 1);
     if (sig === await hmacHex(_sec(env.WITHINGS_CLIENT_SECRET) || '', payload)) { try { const o = JSON.parse(b64urlDecode(payload)); sid = o.sid || ''; if (o.ret) ret = o.ret; } catch(e){} }
   }
-  const back = (status) => Response.redirect(ret + (ret.includes('?') ? '&' : '?') + 'withings=' + status + (sid ? '&sid=' + encodeURIComponent(sid) : ''), 302);
+  const back = (status) => _oauthBack(request, ret, 'withings', status, sid);
   if (errParam || !code || !sid) return back('error');
   const r = await fetch(WITHINGS_TOKEN_URL, {
     method: 'POST',
@@ -4199,7 +4258,7 @@ async function handleOuraCallback(request, env, corsHeaders){
     const payload = state.slice(0, dot), sig = state.slice(dot + 1);
     if (sig === await hmacHex(_sec(env.OURA_CLIENT_SECRET) || '', payload)) { try { const o = JSON.parse(b64urlDecode(payload)); sid = o.sid || ''; if (o.ret) ret = o.ret; } catch(e){} }
   }
-  const back = (status) => Response.redirect(ret + (ret.includes('?') ? '&' : '?') + 'oura=' + status + (sid ? '&sid=' + encodeURIComponent(sid) : ''), 302);
+  const back = (status) => _oauthBack(request, ret, 'oura', status, sid);
   if (errParam || !code || !sid) return back('error');
   const r = await fetch(OURA_TOKEN_URL, {
     method: 'POST',

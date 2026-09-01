@@ -35,6 +35,27 @@ const INFO_KEYS = {
 };
 // Ключи, которых быть НЕ должно: скрипт их вычищает, если остались от прошлых сборок.
 const INFO_KEYS_REMOVE = ['NSHealthUpdateUsageDescription'];
+
+// Собственная схема ссылок `com.viael.vial://` — возврат в приложение после OAuth трекера.
+// Вход в Fitbit/Oura/Polar/Withings открывается в СИСТЕМНОМ браузере (Capacitor не пускает
+// внешние https внутрь webview). Без схемы браузеру некуда возвращаться: воркер подменял адрес
+// возврата на веб-страницу via-l.com, и человек оставался в браузере на сайте вместо приложения
+// (живой случай 2026-09-01). Со схемой браузер поднимает приложение, а метка ожидания внутри него
+// дотягивает метрики. Схема заведена в белый список воркера (FITBIT_RETURN_ALLOW). 2026-09-01.
+INFO_KEYS.CFBundleURLTypes =
+  '\t<key>CFBundleURLTypes</key>\n' +
+  '\t<array>\n' +
+  '\t\t<dict>\n' +
+  '\t\t\t<key>CFBundleURLName</key>\n' +
+  '\t\t\t<string>com.viael.vial</string>\n' +
+  '\t\t\t<key>CFBundleTypeRole</key>\n' +
+  '\t\t\t<string>Editor</string>\n' +
+  '\t\t\t<key>CFBundleURLSchemes</key>\n' +
+  '\t\t\t<array>\n' +
+  '\t\t\t\t<string>com.viael.vial</string>\n' +
+  '\t\t\t</array>\n' +
+  '\t\t</dict>\n' +
+  '\t</array>';
 const ENTITLEMENT_KEYS = {
   'com.apple.developer.healthkit': `\t<key>com.apple.developer.healthkit</key>\n\t<true/>`,
 };

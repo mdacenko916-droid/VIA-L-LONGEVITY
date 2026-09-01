@@ -11056,6 +11056,16 @@ function applyUltrahumanManual(){
 // ══ AI ANALYSIS ═══════════════════════════════════════════
 const AI_WORKER = 'https://interpreter.viaelcom.workers.dev';
 
+// Адрес возврата из OAuth. В браузере — своя же страница. В нативном приложении — СХЕМА
+// приложения: его webview-адрес (`capacitor://localhost/…`) не проходит белый список воркера,
+// тот подменял его на веб-страницу via-l.com, и человек после подтверждения аккаунта оставался
+// в браузере на сайте вместо приложения (живой случай: Fitbit, 2026-09-01). Схема зарегистрирована
+// в Info.plist через app/scripts/setup-ios.js. Даже если открыть приложение не удалось (старая
+// сборка), метка `vialp_<vendor>_pending` + visibilitychange дотянут метрики при первом возврате.
+function _oauthRet(){
+  try{ if(window.Capacitor) return 'com.viael.vial://oauth'; }catch(e){}
+  return location.origin + location.pathname;
+}
 // ══ Generic wearable OAuth connect (WHOOP/Polar/Withings; Fitbit has its own) ══
 function connectWearable(vendor){
   let sid = localStorage.getItem('viae_' + vendor + '_sid');
@@ -11064,7 +11074,7 @@ function connectWearable(vendor){
   // браузер и обратно не редиректит: без метки Polar/Withings зависали на «Подключаем…».
   try{ localStorage.setItem('viae_' + vendor + '_pending', String(Date.now())); }catch(e){}
   setStatus(vendor + '-connect-status','loading',t('status_' + vendor + '_connecting'));
-  location.href = AI_WORKER + '/' + vendor + '/start?sid=' + encodeURIComponent(sid) + '&ret=' + encodeURIComponent(location.origin + location.pathname);
+  location.href = AI_WORKER + '/' + vendor + '/start?sid=' + encodeURIComponent(sid) + '&ret=' + encodeURIComponent(_oauthRet());
 }
 async function fetchWearableLive(vendor, sid){
   try{ localStorage.removeItem('viae_' + vendor + '_pending'); }catch(e){}
@@ -11151,7 +11161,7 @@ function connectOura(){
   // в KV воркера). В обычном браузере срабатывает редирект-IIFE ниже.
   localStorage.setItem('viae_oura_pending', String(Date.now()));
   setStatus('oura-connect-status','loading',_ouraUI().connecting);
-  location.href=AI_WORKER+'/oura/start?sid='+encodeURIComponent(sid)+'&ret='+encodeURIComponent(location.origin+location.pathname);
+  location.href=AI_WORKER+'/oura/start?sid='+encodeURIComponent(sid)+'&ret='+encodeURIComponent(_oauthRet());
 }
 async function fetchOuraLive(sid){
   const ui=_ouraUI();
@@ -12033,8 +12043,7 @@ function connectFitbit(){
   // и ловим возврат через visibilitychange (до-тягиваем по sid, токен уже в KV воркера).
   localStorage.setItem('viae_fitbit_pending', String(Date.now()));
   setStatus('fitbit-connect-status','loading',t('status_fitbit_connecting'));
-  const ret = location.origin + location.pathname;
-  location.href = FITBIT_CONNECT_BASE + '/start?sid=' + encodeURIComponent(sid) + '&ret=' + encodeURIComponent(ret);
+  location.href = FITBIT_CONNECT_BASE + '/start?sid=' + encodeURIComponent(sid) + '&ret=' + encodeURIComponent(_oauthRet());
 }
 // Один поход в API на возврат из OAuth. Живой лог 2026-08-06: /fitbit/metrics уходил ДВАЖДЫ в одну
 // секунду — возврат по редиректу и visibilitychange срабатывают вместе, плюс тихий рефреш прохода.
