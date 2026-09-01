@@ -9,7 +9,7 @@
     --bg: #0a0d14; --card: #111520; --b: #1e2535;
     --gold: #c4963c; --t1: #e8e0d0; --t2: #8a8fa8; --t3: #3a4060;
     --c-pro:    #c4963c;   /* PRO        — золотой    */
-    --c-expert: #7898ff;   /* PRO+EXPERT — синий      */
+    --c-expert: #7898ff;   /* снятое семейство VL-X — синий */
     --c-8w:     #9d6cff;   /* ELITE 8W   — фиолетовый */
     --c-12w:    #ff6b9d;   /* ELITE 12W  — розовый    */
     --ok: #3dba72;
@@ -93,11 +93,6 @@
         <div class="hint-row">€29 / мес · 16 шагов + AI</div>
       </div>
       <div class="field">
-        <label for="countExpert">PRO + EXPERT <span class="badge badge-expert">VL-X-</span></label>
-        <input type="number" id="countExpert" value="100" min="0" max="500" placeholder="0">
-        <div class="hint-row">€79 / мес · 2 разбора нутрициолога / 30 дней</div>
-      </div>
-      <div class="field">
         <label for="count8w">VIA-L EXPERT · 8W <span class="badge badge-8w">VL-8-</span></label>
         <input type="number" id="count8w" value="30" min="0" max="500" placeholder="0">
         <div class="hint-row">€390 · 8 PDF-отчётов · 56 дней</div>
@@ -119,7 +114,6 @@
     <div class="card-title">Результат</div>
     <div class="stats">
       <div class="stat"><div class="stat-val pro"    id="statPro">0</div><div class="stat-lbl">PRO</div></div>
-      <div class="stat"><div class="stat-val expert" id="statExpert">0</div><div class="stat-lbl">PRO+EXPERT</div></div>
       <div class="stat"><div class="stat-val w8"     id="stat8w">0</div><div class="stat-lbl">VIAL-EXPERT-8W</div></div>
       <div class="stat"><div class="stat-val w12"    id="stat12w">0</div><div class="stat-lbl">VIAL-EXPERT-12W</div></div>
       <div class="stat"><div class="stat-val total"  id="statTotal">0</div><div class="stat-lbl">Всего</div></div>
@@ -128,7 +122,6 @@
     <div class="tabs">
       <button type="button" class="tab active" data-tab="csv"    onclick="showTab(this)">CSV для Google Sheets</button>
       <button type="button" class="tab"        data-tab="pro"    onclick="showTab(this)">TXT · Hotmart PRO</button>
-      <button type="button" class="tab"        data-tab="expert" onclick="showTab(this)">TXT · Hotmart PRO+EXPERT</button>
       <button type="button" class="tab"        data-tab="w8"     onclick="showTab(this)">TXT · Hotmart VIAL-EXPERT-8W</button>
       <button type="button" class="tab"        data-tab="w12"    onclick="showTab(this)">TXT · Hotmart VIAL-EXPERT-12W</button>
     </div>
@@ -155,7 +148,10 @@ const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 // понимает apps-script.js → getPlanLimits().
 const TARIFFS = {
   pro:    { prefix: 'VL-P',  planName: 'PRO',       inputId: 'countPro',    statId: 'statPro'    },
-  expert: { prefix: 'VL-X',  planName: 'EXPERT',    inputId: 'countExpert', statId: 'statExpert' },
+  // Семейство VL-X (продукт «PRO+EXPERT €79/мес») снято 2026-07-25 вместе с продуктом.
+  // Генерацию убрали: getPlanLimits видит в строке «EXPERT» и выдаёт полный доступ VIA-L EXPERT · 8W,
+  // то есть новый код к несуществующему продукту открывал бы платную программу. Уже выданные
+  // коды продолжают работать — валидация идёт по таблице, а не по этому списку. 2026-09-01.
   w8:     { prefix: 'VL-8',  planName: 'VIAL-EXPERT-8W',  inputId: 'count8w',     statId: 'stat8w'     },
   w12:    { prefix: 'VL-12', planName: 'VIAL-EXPERT-12W', inputId: 'count12w',    statId: 'stat12w'    }
 };

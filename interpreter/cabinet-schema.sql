@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS clients (
   -- продукт / тариф (шапка карточки, §4)
   product        TEXT,               -- 'site' | 'interpreter'
   program        TEXT,               -- для сайта: Menopauza | Andropauza | Antivikove | Estrogen
-  tier           TEXT,               -- Разовая | Ведение-8W | Ведение-12W | EXPERT | ELITE-8W | ELITE-12W
+  tier           TEXT,               -- Разовая | Ведение-8W | Ведение-12W | VIAL-EXPERT-8W | VIAL-EXPERT-12W
   duration_weeks INTEGER,
   price          TEXT,
   format         TEXT,               -- 'zoom' | 'pdf' | 'expert' | 'once' (производное «формат сопровождения»)

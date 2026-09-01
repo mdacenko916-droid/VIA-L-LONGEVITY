@@ -11,7 +11,7 @@
 //                       (legacy: одна ISO-дата строкой — конвертируется автоматически)
 // G: JSON-массив дат отправленных клиенту PDF-отчётов (этап 7 backstage-бота)
 // H: ELITE Onboarding — JSON-объект ответов на onboarding-анкету,
-//    null/пусто = анкета ещё не пройдена. Используется для PRO+EXPERT и ELITE
+//    null/пусто = анкета ещё не пройдена. Используется для VIA-L EXPERT
 //    (любой тариф, у которого hasExpert=true в getPlanLimits — то есть с доступом
 //    к Expert-разборам нутрициолога). Анкета даёт нутрициологу контекст для PDF.
 //
@@ -174,7 +174,7 @@ function handleExpertRequest(p) {
     sheet.getRange(i + 1, 6).setValue(JSON.stringify(
       historyAll.map(function (d) { return d.toISOString(); })
     ));
-    // Onboarding (PRO+EXPERT и ELITE): если анкета пришла с этим отчётом —
+    // Onboarding (VIA-L EXPERT): если анкета пришла с этим отчётом —
     // сохраняем в колонку H один раз; повторные отчёты не перетирают первую анкету.
     if (onboarding && !(rows[i][7] && rows[i][7].toString().trim())) {
       sheet.getRange(i + 1, 8).setValue(JSON.stringify({
@@ -247,7 +247,7 @@ function validateCode(code) {
       return respond({
         ok: true, plan: rowPlan, expiry: expiry.toISOString(),
         expert_used: 0, expert_max: limitsFree.max, expert_next_at: null,
-        // При первой активации для тарифов с Expert-разборами (PRO+EXPERT, ELITE) —
+        // При первой активации для тарифов с Expert-разборами (VIA-L EXPERT) —
         // анкета обязательна, чтобы нутрициолог получил контекст до первого PDF.
         onboarding_required: limitsFree.hasExpert
       });
