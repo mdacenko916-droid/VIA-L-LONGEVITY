@@ -17,18 +17,40 @@ const APP_DIR = path.resolve(__dirname, '..');
 const INFO_PLIST = path.join(APP_DIR, 'ios', 'App', 'App', 'Info.plist');
 const ENTITLEMENTS = path.join(APP_DIR, 'ios', 'App', 'App', 'App.entitlements');
 
+// Строка показывается пользователю в СИСТЕМНОМ диалоге доступа к Здоровью, поэтому она
+// на английском: первичный язык приложения — EN, старт рынка США. Раньше здесь стоял русский
+// текст, и в одном диалоге соседствовали две разные строки на двух языках. 2026-09-01.
 const HEALTH_USAGE =
-  'VIA·L читает показатели здоровья (HRV, пульс покоя, сон, VO2 max), чтобы дать ' +
-  'нутрициологическую интерпретацию. Данные не покидают ваше устройство без вашего согласия.';
+  'VIA·L reads your health metrics (heart-rate variability, resting heart rate, sleep and ' +
+  'VO2 max) to provide a personalized nutrition and lifestyle interpretation. Your data stays ' +
+  'on your device and is never shared without your consent.';
 
 // Блоки, которые должны присутствовать в <dict>…</dict>. Ключ → готовый XML.
+// ⚠️ NSHealthUpdateUsageDescription (доступ на ЗАПИСЬ) здесь намеренно НЕТ: мы в Здоровье
+// ничего не пишем — healthkit-bridge.js запрашивает авторизацию с `write: []`. Ключ на запись
+// без единой записи — лишний повод для вопроса на ревью «зачем вам доступ на запись». Если
+// запись когда-нибудь появится, ключ вернуть вместе с ней, а не заранее. 2026-09-01.
 const INFO_KEYS = {
   NSHealthShareUsageDescription: `\t<key>NSHealthShareUsageDescription</key>\n\t<string>${HEALTH_USAGE}</string>`,
-  NSHealthUpdateUsageDescription: `\t<key>NSHealthUpdateUsageDescription</key>\n\t<string>${HEALTH_USAGE}</string>`,
 };
+// Ключи, которых быть НЕ должно: скрипт их вычищает, если остались от прошлых сборок.
+const INFO_KEYS_REMOVE = ['NSHealthUpdateUsageDescription'];
 const ENTITLEMENT_KEYS = {
   'com.apple.developer.healthkit': `\t<key>com.apple.developer.healthkit</key>\n\t<true/>`,
 };
+
+/** Убирает пару <key>…</key><string>…</string> целиком. Возвращает [новыйТекст, убранныеКлючи]. */
+function removeKeys(xml, keys) {
+  const removed = [];
+  for (const key of keys) {
+    // Пара «ключ + следующий за ним элемент значения» вместе с отступами и переводом строки.
+    const re = new RegExp(`[\\t ]*<key>${key}</key>\\s*\\n[\\t ]*<(string|true|false)(?:\\s*/>|>[\\s\\S]*?</\\1>)\\n?`, 'g');
+    if (!re.test(xml)) continue;
+    xml = xml.replace(re, '');
+    removed.push(key);
+  }
+  return [xml, removed];
+}
 
 /** Вставляет недостающие блоки перед последним </dict>. Возвращает [новыйТекст, добавленныеКлючи]. */
 function ensureKeys(xml, keys) {
@@ -89,24 +111,26 @@ function ensurePrivacyManifest() {
     '(перетащить в проект, галочка Target Membership) — сам по себе он в бандл не попадёт.');
 }
 
-function patchFile(file, keys, label) {
+function patchFile(file, keys, label, drop) {
   if (!fs.existsSync(file)) {
     console.warn(`⚠️  ${label} не найден (${path.relative(APP_DIR, file)}). ` +
       `Сначала выполни \`npx cap add ios\`, затем \`npm run setup:ios\`.`);
     return;
   }
   const xml = fs.readFileSync(file, 'utf8');
-  const [next, added] = ensureKeys(xml, keys);
-  if (added.length === 0) {
+  const [withAdded, added] = ensureKeys(xml, keys);
+  const [next, removed] = removeKeys(withAdded, drop || []);
+  if (added.length === 0 && removed.length === 0) {
     console.log(`✓ ${label}: всё на месте.`);
     return;
   }
   fs.writeFileSync(file, next);
-  console.log(`✚ ${label}: добавлено ${added.length} — ${added.join(', ')}`);
+  if (added.length)   console.log(`✚ ${label}: добавлено ${added.length} — ${added.join(', ')}`);
+  if (removed.length) console.log(`✖ ${label}: убрано ${removed.length} — ${removed.join(', ')}`);
 }
 
 console.log('— setup-ios: HealthKit + privacy manifest —');
-patchFile(INFO_PLIST, INFO_KEYS, 'Info.plist');
+patchFile(INFO_PLIST, INFO_KEYS, 'Info.plist', INFO_KEYS_REMOVE);
 patchFile(ENTITLEMENTS, ENTITLEMENT_KEYS, 'App.entitlements');
 ensurePrivacyManifest();
 console.log('Готово. Дальше: `LANG=en_US.UTF-8 npx cap sync ios`.');
