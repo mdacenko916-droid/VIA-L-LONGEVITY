@@ -38,12 +38,20 @@ const ANDROID   = path.join(APP_DIR, 'android');
 const GRADLE    = path.join(ANDROID, 'variables.gradle');
 const MANIFEST  = path.join(ANDROID, 'app', 'src', 'main', 'AndroidManifest.xml');
 const STYLES    = path.join(ANDROID, 'app', 'src', 'main', 'res', 'values', 'styles.xml');
+const MAIN_ACT  = path.join(ANDROID, 'app', 'src', 'main', 'java', 'com', 'viael', 'vial', 'MainActivity.java');
 
 // Цвет нижней панели навигации Android (кнопки «назад/домой/обзор»). Без него система красит
 // её по умолчанию — на EMUI получилась БЕЛАЯ полоса под нашей тёмной навигацией, будто
 // приложение открыто не на весь экран (фото владельца 2026-09-01). Берём нижний цвет градиента
 // .bottom-nav (#171d27), чтобы панель системы продолжала нашу.
-const NAV_BAR_COLOR = '#FF171D27';
+// Панель системы делаем ПРОЗРАЧНОЙ и рисуем приложение под ней (edge-to-edge, как на iOS).
+// Раньше здесь стоял непрозрачный #FF171D27 — он убирал белую полосу EMUI, но приложение всё
+// равно заканчивалось выше края экрана. Прозрачность + setDecorFitsSystemWindows(false)
+// в MainActivity дают то же, что на iPhone: наша нижняя навигация доходит до самого низа,
+// а системные кнопки лежат поверх неё. Отступ под них у .bottom-nav уже прописан
+// (env(safe-area-inset-bottom)) — на iOS он уводит панель из-под жеста «домой», на Android
+// заработает ровно так же. 2026-09-01.
+const NAV_BAR_COLOR = '#00000000';
 const NAV_ITEMS =
   `        <item name="android:navigationBarColor">${NAV_BAR_COLOR}</item>\n` +
   `        <item name="android:windowLightNavigationBar">false</item>\n`;
@@ -138,7 +146,14 @@ function patchStyles() {
     return;
   }
   let xml = fs.readFileSync(STYLES, 'utf8');
-  if (xml.includes('android:navigationBarColor')) { console.log('✓ styles.xml: цвет панели навигации уже задан.'); return; }
+  // Значение могло остаться от прошлой версии скрипта (был непрозрачный цвет) — приводим к текущему.
+  if (xml.includes('android:navigationBarColor')) {
+    const fixed = xml.replace(/(<item name="android:navigationBarColor">)[^<]*(<\/item>)/g, `$1${NAV_BAR_COLOR}$2`);
+    if (fixed === xml) { console.log('✓ styles.xml: панель навигации уже настроена.'); return; }
+    fs.writeFileSync(STYLES, fixed);
+    console.log(`✚ styles.xml: цвет панели навигации обновлён → ${NAV_BAR_COLOR} (прозрачная).`);
+    return;
+  }
   let touched = 0;
   xml = xml.replace(/(<style name="AppTheme\.NoActionBar(?:Launch)?"[^>]*>\n)/g, (m) => { touched++; return m + NAV_ITEMS; });
   if (!touched) { console.warn('⚠️  styles.xml: не найдены темы AppTheme.NoActionBar* — формат изменился, проверь вручную.'); return; }
@@ -146,8 +161,40 @@ function patchStyles() {
   console.log(`✚ styles.xml: цвет системной панели навигации задан в ${touched} теме(ах) — ${NAV_BAR_COLOR}.`);
 }
 
+// Edge-to-edge: приложение рисует себя ПОД системными панелями. Без этого WebView заканчивается
+// над панелью кнопок, и снизу остаётся чужая полоса (белая на EMUI). Файл генерируемый —
+// `cap add android` пишет пустой BridgeActivity, поэтому правку держим здесь.
+const MAIN_ACT_SRC = `package com.viael.vial;
+
+import android.os.Bundle;
+import androidx.core.view.WindowCompat;
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // Рисуем под системными панелями — как на iOS. Панели прозрачные (styles.xml),
+        // отступ под них берёт на себя вёрстка через env(safe-area-inset-*).
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+    }
+}
+`;
+
+function patchMainActivity() {
+  if (!fs.existsSync(MAIN_ACT)) {
+    console.warn('⚠️  MainActivity.java не найден. Сначала выполни `npx cap add android`.');
+    return;
+  }
+  const cur = fs.readFileSync(MAIN_ACT, 'utf8');
+  if (cur.includes('setDecorFitsSystemWindows')) { console.log('✓ MainActivity.java: edge-to-edge уже включён.'); return; }
+  fs.writeFileSync(MAIN_ACT, MAIN_ACT_SRC);
+  console.log('✚ MainActivity.java: включён edge-to-edge (рисуем под системными панелями).');
+}
+
 console.log('— setup-android: Health Connect + возврат из OAuth —');
 patchGradle();
 patchManifest();
 patchStyles();
+patchMainActivity();
 console.log('Готово. Дальше: `npx cap sync android`, затем открыть в Android Studio.');
