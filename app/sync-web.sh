@@ -33,6 +33,19 @@ cp "$IP/iap-bridge.js"            "$WWW/"
 cp "$IP/notify-bridge.js"         "$WWW/"
 cp "$IP/my-specialist.html"       "$WWW/"
 cp "$IP/research-consent.html"    "$WWW/"
+# «Научная база» — собственная страница базового тарифа (НЕ клиническая methodology.html,
+# см. комментарий в её шапке). Без неё ссылка из «Наш подход» открывала пустоту:
+# «веб-страница недоступна» на живом Android, 2026-09-01.
+cp "$IP/science.html"             "$WWW/"
+
+# Заглушка-перенаправление. Вспомогательные страницы ссылаются на инструмент по его настоящему
+# имени (./interpreter-via-l.html?tab=...), а в бандле он лежит как index.html — такие ссылки
+# упирались в «страница недоступна». Вместо того чтобы править ссылки в каждом файле (и ловить
+# это снова с каждым новым), кладём рядом крошечный перенаправитель, сохраняющий ?query и #hash.
+cat > "$WWW/interpreter-via-l.html" <<'REDIRECT'
+<!doctype html><meta charset="utf-8"><title>VIA·L</title>
+<script>location.replace('./index.html' + location.search + location.hash);</script>
+REDIRECT
 
 # Ассеты (Logo/ включает Logo/metrics/*.png, images-in/ — картинки устройств,
 # phosphor/ — иконочный шрифт + vio-phosphor.js (иконки ВЕЗДЕ), icons/ — прочие иконки,
