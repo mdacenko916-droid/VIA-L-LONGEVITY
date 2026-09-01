@@ -28,6 +28,19 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0; height: 0; display:
    но back-btn НЕ прячем — он репрограммируется на возврат В ПРИЛОЖЕНИЕ (history.back). */
 html.app-embed .foot-nav { display: none !important; }
 html.app-embed .logo-block { pointer-events: none; cursor: default; }
+/* Внутри приложения кнопка возврата — тот же ✕ на тёмном кружке, что на остальных
+   вспомогательных страницах (research-consent.html, science.html): единый знак «закрыть»
+   вместо текстовой ссылки, которая на вебе уместна, а в приложении читается как навигация
+   на сайт. Текст на ✕ подменяет тот же скрипт, что уже переписывает подпись. 2026-09-01. */
+html.app-embed .back-btn{
+  width:34px;height:34px;box-sizing:border-box;flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center;padding:0;
+  font-family:inherit;font-size:18px;letter-spacing:0;line-height:1;
+  background:rgba(16,20,28,.88);border:1px solid rgba(226,185,90,.75);color:#EEC77A;
+  border-radius:50%;box-shadow:0 2px 10px rgba(0,0,0,.35);
+  transition:border-color .2s ease,transform .12s ease;-webkit-tap-highlight-color:transparent;
+}
+html.app-embed .back-btn:active{transform:scale(.88);}
 body {
   background: var(--dark);
   color: var(--t1);
@@ -327,7 +340,7 @@ body{ background:#EFE8D8 !important; }
 /* Блоки/карточки → сплошной графит на беже (текст внутри уже светлый) */
 .hero-disclaimer,.legal-card,.proto-card,.lab-card,.source-card,.disclaimer-banner{ background:linear-gradient(160deg,#2a323f 0%,#1a2028 100%) !important; }
 </style>
-<script>try{if(new URLSearchParams(location.search).get('app')==='1'){document.documentElement.classList.add('app-embed');window.addEventListener('DOMContentLoaded',function(){var b=document.querySelector('.back-btn');if(b){b.removeAttribute('href');b.removeAttribute('data-t');b.style.cursor='pointer';var _l=(navigator.language||'en').slice(0,2);var _bk={ru:'← Назад',uk:'← Назад',en:'← Back',es:'← Atrás',de:'← Zurück',pt:'← Voltar',fr:'← Retour',pl:'← Wstecz',it:'← Indietro',he:'→ חזרה',ja:'← 戻る',ko:'← 뒤로'};b.textContent=_bk[_l]||_bk.en;b.onclick=function(e){e.preventDefault();if(history.length>1){history.back();}else{try{window.close();}catch(_){}}};}});}}catch(e){}</script>
+<script>try{if(new URLSearchParams(location.search).get('app')==='1'){document.documentElement.classList.add('app-embed');window.addEventListener('DOMContentLoaded',function(){var b=document.querySelector('.back-btn');if(b){b.removeAttribute('href');b.removeAttribute('data-t');b.style.cursor='pointer';var _l=(navigator.language||'en').slice(0,2);var _bk={ru:'← Назад',uk:'← Назад',en:'← Back',es:'← Atrás',de:'← Zurück',pt:'← Voltar',fr:'← Retour',pl:'← Wstecz',it:'← Indietro',he:'→ חזרה',ja:'← 戻る',ko:'← 뒤로'};b.textContent='\u2715';b.setAttribute('aria-label',_bk[_l]||_bk.en);b.setAttribute('title',_bk[_l]||_bk.en);b.onclick=function(e){e.preventDefault();var _b=location.href;if(history.length>1){history.back();}setTimeout(function(){if(location.href===_b)location.href='./interpreter-via-l-expert.html';},250);};}});}}catch(e){}</script>
 </head>
 <body>
 <div class="stars"></div>
