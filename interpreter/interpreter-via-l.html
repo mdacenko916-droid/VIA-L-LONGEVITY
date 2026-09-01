@@ -122,6 +122,28 @@ html.app-shell body:not(.flow-mode):not(.view-result) .hero{padding-bottom:8px;}
 html.app-mode body:not(.flow-mode):not(.view-result) .hero-block-name,
 html.app-shell body:not(.flow-mode):not(.view-result) .hero-block-name{margin-bottom:6px;}
 
+/* Короткий экран (Android ~760 CSS-px против 852 у iPhone; плюс украинский текст длиннее
+   русского и системный шрифт может быть крупнее). Три карточки источника переставали влезать,
+   и третья подрезалась нижней навигацией — прокрутка спасала, но экран входа должен помещаться
+   целиком. Поджимаем только декоративную часть: монограмму, воздух вокруг названия и межстрочье
+   двух абзацев. Порог 820px — ниже высоты любого актуального iPhone, так что там ничего не
+   меняется. 2026-09-01, замерено на живом Huawei. */
+@media (max-height: 820px){
+  body:not(.flow-mode):not(.view-result) .hero-monogram{width:62px !important;height:62px !important;margin-bottom:2px !important;}
+  body:not(.flow-mode):not(.view-result) .hero-block-name{font-size:clamp(30px,8vw,42px) !important;letter-spacing:8px !important;margin-bottom:2px !important;}
+  body:not(.flow-mode):not(.view-result) .hero{padding-bottom:2px !important;}
+  body:not(.flow-mode):not(.view-result) .hero-title{font-size:var(--fs-body) !important;margin-bottom:2px !important;line-height:1.25 !important;}
+  body:not(.flow-mode):not(.view-result) .hero-desc{font-size:var(--fs-cap) !important;line-height:1.28 !important;margin-top:2px !important;margin-bottom:2px !important;}
+  body:not(.flow-mode):not(.view-result) .hero-imports{margin-top:4px !important;}
+  body:not(.flow-mode):not(.view-result) .imp-btn{margin-top:3px !important;padding-top:6px !important;padding-bottom:6px !important;}
+  body:not(.flow-mode):not(.view-result) footer{padding:2px 20px 2px !important;}
+  /* подпись бренда: та же роль, вдвое меньше высоты — иначе слоган подрезался навигацией */
+  body:not(.flow-mode):not(.view-result) .footer-logo{font-size:15px !important;letter-spacing:5px !important;margin-bottom:0 !important;}
+  body:not(.flow-mode):not(.view-result) .footer-line{margin:3px auto !important;}
+  body:not(.flow-mode):not(.view-result) .footer-tagline{margin-bottom:2px !important;}
+  body:not(.flow-mode):not(.view-result) .legal-links{padding-top:2px !important;padding-bottom:calc(4px + env(safe-area-inset-bottom,0px)) !important;}
+}
+
 /* нав-паритет VIO: пружинка нажатия, phosphor-иконки, уезжающий футер, шторка глав памятки */
 .bottom-nav{transition:transform .3s ease,opacity .3s ease;}
 .bottom-nav.nav-hidden{transform:translateY(110%);opacity:0;pointer-events:none;}
