@@ -25,16 +25,26 @@ const HEALTH_USAGE =
   'VO2 max) to provide a personalized nutrition and lifestyle interpretation. Your data stays ' +
   'on your device and is never shared without your consent.';
 
+// ⚠️ NSHealthUpdateUsageDescription (доступ на ЗАПИСЬ) ОБЯЗАТЕЛЕН, хотя мы в Здоровье ничего
+// не пишем — healthkit-bridge.js запрашивает авторизацию с `write: []`. 2026-09-01 я его убрал
+// как «лишний повод для вопроса на ревью», и загрузка сборки 20 отлетела с ITMS-90683: Apple
+// проверяет не наши вызовы, а СИМВОЛЫ в бинарнике, а плагин @perfood/capacitor-healthkit
+// ссылается на API записи. Дословно из письма: «Хотя ваше приложение может не использовать эти
+// API, строка назначения все равно необходима». Ключ не удалять. Строка честно говорит, что
+// запись не ведётся — диалога записи человек всё равно никогда не увидит.
+const HEALTH_UPDATE_USAGE =
+  'VIA·L does not write anything to Apple Health — it only reads your metrics to explain them. ' +
+  'This entry is required because the health framework the app uses references Health write APIs.';
+
 // Блоки, которые должны присутствовать в <dict>…</dict>. Ключ → готовый XML.
-// ⚠️ NSHealthUpdateUsageDescription (доступ на ЗАПИСЬ) здесь намеренно НЕТ: мы в Здоровье
-// ничего не пишем — healthkit-bridge.js запрашивает авторизацию с `write: []`. Ключ на запись
-// без единой записи — лишний повод для вопроса на ревью «зачем вам доступ на запись». Если
-// запись когда-нибудь появится, ключ вернуть вместе с ней, а не заранее. 2026-09-01.
 const INFO_KEYS = {
   NSHealthShareUsageDescription: `\t<key>NSHealthShareUsageDescription</key>\n\t<string>${HEALTH_USAGE}</string>`,
+  NSHealthUpdateUsageDescription: `\t<key>NSHealthUpdateUsageDescription</key>\n\t<string>${HEALTH_UPDATE_USAGE}</string>`,
 };
 // Ключи, которых быть НЕ должно: скрипт их вычищает, если остались от прошлых сборок.
-const INFO_KEYS_REMOVE = ['NSHealthUpdateUsageDescription'];
+// Пусто — но removeKeys() оставлен: механизм пригодится, а его отсутствие раньше означало,
+// что скрипт умеет только добавлять и не может убрать once-added ключ.
+const INFO_KEYS_REMOVE = [];
 
 // Собственная схема ссылок `com.viael.vial://` — возврат в приложение после OAuth трекера.
 // Вход в Fitbit/Oura/Polar/Withings открывается в СИСТЕМНОМ браузере (Capacitor не пускает
