@@ -52,6 +52,14 @@ const MAIN_ACT  = path.join(ANDROID, 'app', 'src', 'main', 'java', 'com', 'viael
 // (env(safe-area-inset-bottom)) — на iOS он уводит панель из-под жеста «домой», на Android
 // заработает ровно так же. 2026-09-01.
 const NAV_BAR_COLOR = '#00000000';
+// Статус-бар: фон бренда (#EAE1C9) и ТЁМНЫЕ иконки на нём. Содержимое приложения под него не
+// заезжает — отступ сверху даёт тот же слушатель, что и снизу. Иначе логотип VIA·L и кнопка
+// языка оказывались под часами и обрезались (скриншот Huawei, 2026-09-01), причём на любой
+// модели: Android WebView не отдаёт env(safe-area-inset-top), там всегда 0.
+const STATUS_BAR_COLOR = '#FFEAE1C9';
+const STATUS_ITEMS =
+  `        <item name="android:statusBarColor">${STATUS_BAR_COLOR}</item>\n` +
+  `        <item name="android:windowLightStatusBar">true</item>\n`;
 const NAV_ITEMS =
   `        <item name="android:navigationBarColor">${NAV_BAR_COLOR}</item>\n` +
   `        <item name="android:windowLightNavigationBar">false</item>\n`;
@@ -155,7 +163,7 @@ function patchStyles() {
     return;
   }
   let touched = 0;
-  xml = xml.replace(/(<style name="AppTheme\.NoActionBar(?:Launch)?"[^>]*>\n)/g, (m) => { touched++; return m + NAV_ITEMS; });
+  xml = xml.replace(/(<style name="AppTheme\.NoActionBar(?:Launch)?"[^>]*>\n)/g, (m) => { touched++; return m + NAV_ITEMS + STATUS_ITEMS; });
   if (!touched) { console.warn('⚠️  styles.xml: не найдены темы AppTheme.NoActionBar* — формат изменился, проверь вручную.'); return; }
   fs.writeFileSync(STYLES, xml);
   console.log(`✚ styles.xml: цвет системной панели навигации задан в ${touched} теме(ах) — ${NAV_BAR_COLOR}.`);
@@ -186,7 +194,8 @@ public class MainActivity extends BridgeActivity {
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         getWindow().setBackgroundDrawable(new ColorDrawable(BAR_COLOR));
 
-        // Панель системных кнопок не должна ложиться поверх нашей навигации. Через CSS это не
+        // Системные панели не должны ложиться поверх интерфейса: снизу кнопки перекрывали
+        // подписи навигации, сверху статус-бар срезал логотип и кнопку языка. Через CSS это не
         // решается: Android WebView не отдаёт env(safe-area-inset-*), там всегда 0 (в отличие от
         // iOS). Прокидывать высоту в CSS-переменную тоже ненадёжно — значение теряется при
         // загрузке страницы. Поэтому поджимаем сам WebView: под ним остаётся полоса фона окна
@@ -199,7 +208,7 @@ public class MainActivity extends BridgeActivity {
         final android.view.View root = findViewById(android.R.id.content);
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(0, 0, 0, bars.bottom);
+            v.setPadding(0, bars.top, 0, bars.bottom);
             return insets;
         });
         ViewCompat.requestApplyInsets(root);
