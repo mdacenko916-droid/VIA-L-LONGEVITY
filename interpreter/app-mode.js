@@ -53,6 +53,9 @@
         // верхний отступ под компактный app-логотип (42px), а не под веб-логотип (50px) —
         // поднимает карточки к верху и убирает лишнюю высоту (почти-влезающие шаги фиксируются)
         'html.app-mode #scroll-area{padding-top:64px !important;}' +
+        // …кроме утреннего экрана: у него свой канон отступа (40px, safe-area даёт уже #app).
+        // Жёсткие 64px опускали монограмму на ~24px ниже, чем в EXPERT, и экраны расходились.
+        'html.app-mode body.morning-mode #scroll-area{padding-top:40px !important;}' +
         'html.app-mode .progress-wrap{margin-bottom:10px !important;}' +
         'html.app-mode .card{padding:16px 14px !important;margin-bottom:8px !important;}' +
         'html.app-mode .btn-row{margin-top:14px !important;}' +
@@ -108,7 +111,10 @@
         'html.app-mode .footer-back{display:none !important;}' +
         // футер прячем только внутри прохода/результата (прокрутка упирается в границу шага).
         // На стартовом экране подпись бренда со слоганом остаётся — как в PWA. 2026-09-01.
-        'html.app-mode body.flow-mode footer,html.app-mode body.view-result footer{display:none !important;}' +
+        // :not(.morning-mode) ОБЯЗАТЕЛЕН: утренняя карточка тоже несёт flow-mode, и без этого
+        // исключения бренд со слоганом пропадал именно на ней, а низ экрана оставался пустым
+        // (сравнение скринов EXPERT/VIA-L, 2026-09-01). Тот же приём, что у #tb-brand в разметке.
+        'html.app-mode body.flow-mode:not(.morning-mode) footer,html.app-mode body.view-result footer{display:none !important;}' +
         // лендинг: шапка <header> ниже статус-бара/Dynamic Island
         'html.app-mode header{padding-top:calc(env(safe-area-inset-top,0px) + 12px) !important;}' +
         // инструменты (VIO/PRO): весь #app ниже системной зоны (низ уже учтён в .bottom-nav)
