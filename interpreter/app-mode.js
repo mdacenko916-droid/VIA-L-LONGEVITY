@@ -3,8 +3,7 @@
    • прячем тарифы EXPERT/ELITE и любые ссылки на внешнюю оплату Hotmart (anti-steering),
      ссылку «← Сайт» и «Кабінет» (кабинет — для специалистов, не для пациента);
    • safe-area: контент ниже статус-бара/«чёлки»;
-   • компактный логотип VL вверху (он же = «домой»), а ссылка «🩺 Специалист» уезжает
-     в нижний таб-бар (стандартная app-навигация; решает тесноту и обрезанный пункт).
+   • компактный логотип VL вверху (он же = «домой»).
    На обычном вебе скрипт НИЧЕГО не меняет. Спека: docs/MOBILE-APP-MODEL.md §2. */
 (function(){
   var NOTE = {
@@ -21,38 +20,12 @@
     ja:'アプリ内のPRO購入は近日アプリストアより対応予定です。',
     ko:'앱 내 PRO 구매는 곧 앱스토어를 통해 제공됩니다.'
   };
-  var SPEC = {
-    uk:'Спеціаліст',ru:'Специалист',en:'Specialist',es:'Especialista',de:'Spezialist',
-    pt:'Especialista',fr:'Spécialiste',pl:'Specjalista',it:'Specialista',he:'מומחה',ja:'専門家',ko:'전문가'
-  };
   function curLang(){ try { return localStorage.getItem('vial_lang') || 'en'; } catch(e){ return 'en'; } }
   function noteLang(){ var l = curLang(); return NOTE[l] ? l : 'en'; }
 
-  // Перестройка под app (только страницы-инструменты, где есть нижний таб-бар). Идемпотентно.
-  // Логотип топ-бара = Logo_IP.png (уже в разметке, класс .lang-logo-img). В app только
-  // делаем его компактнее (CSS) и переносим «Специалист» в нижний таб-бар.
-  function appShell(){
-    var nav = document.querySelector('.bottom-nav');
-    if (!nav) return;
-    // «Специалист» в нижний таб-бар (верхние текстовые ссылки скрыты через CSS)
-    var b = nav.querySelector('[data-appnav="spec"]');
-    if (!b) {
-      b = document.createElement('button');
-      b.className = 'bottom-nav-item';
-      b.setAttribute('data-appnav', 'spec');
-      b.innerHTML = '<img class="bottom-nav-icon" src="Logo/tab-specialist.png" alt=""><span class="appnav-spec-label"></span>';
-      b.onclick = function(){ location.href = './my-specialist.html?lang=' + encodeURIComponent(curLang()); };
-      nav.appendChild(b);
-    }
-    // текст обновляем КАЖДЫЙ раз — иначе застревает на языке создания кнопки
-    var lbl = b.querySelector('.appnav-spec-label');
-    if (lbl) lbl.textContent = SPEC[curLang()] || SPEC.en;
-    // следим за сменой языка (setLang ставит <html data-lang>) → перерисовать подпись
-    if (!window._appSpecObs) {
-      window._appSpecObs = new MutationObserver(appShell);
-      window._appSpecObs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-lang'] });
-    }
-  }
+  // Пятый таб «Специалист» УДАЛЁН 2026-09-01: он дублировал штатный пункт «Мой наставник»
+  // (nav-guide → my-specialist.html) и не влезал в ряд — подпись обрезалась в «СПЕЦ».
+  // Таб-бар в приложении = ровно четыре пункта разметки.
 
   function apply(){
     if (!window.Capacitor) return false;                 // только внутри приложения
@@ -63,12 +36,16 @@
       if (vp && vp.content.indexOf('viewport-fit') < 0) vp.setAttribute('content', vp.content + ', viewport-fit=cover');
       var css = document.createElement('style');
       css.textContent =
-        'html.app-mode .plan-expert,html.app-mode .plan-elite{display:none !important;}' +
+        // тариф ELITE, ссылка «← Сайт» и «Кабинет» — только на лендинге interpreter/index.html
+        // (anti-steering Apple + кабинет для специалистов). Правила .plan-expert и .topbar-home
+        // сняты 2026-09-01: таких элементов нет ни на одной из страниц приложения.
+        'html.app-mode .plan-elite{display:none !important;}' +
         'html.app-mode .menu-item[data-t="nav_site"],html.app-mode .cabinet-btn{display:none !important;}' +
-        // верхние текстовые ссылки убираем — они уезжают в нижний таб-бар
-        'html.app-mode .topbar-home{display:none !important;}' +
-        // на входе app: рекламный подзаголовок-перечисление устройств лишний (есть на вебе)
-        'html.app-mode .hero-desc{display:none !important;}' +
+        // таб-бар: четыре равные колонки — иконки встают строго по центрам и не «плывут»
+        // вслед за разной длиной подписей (space-around делил остаток, а не ширину). 2026-09-01.
+        'html.app-mode .bottom-nav{justify-content:space-between !important;}' +
+        'html.app-mode .bottom-nav-item{flex:1 1 0 !important;min-width:0 !important;padding-left:2px !important;padding-right:2px !important;}' +
+        'html.app-mode .bottom-nav-item span{font-size:10px !important;letter-spacing:0 !important;white-space:nowrap !important;}' +
         // строгие переходы шагов в app: появление без «падения» сверху — только проявление
         'html.app-mode .step.active{animation:appStepIn .18s ease both !important;}' +
         '@keyframes appStepIn{from{opacity:0}to{opacity:1}}' +
@@ -129,8 +106,9 @@
         'html.app-mode .btn-back{flex:0 0 auto !important;}' +
         // футер-ссылка «← На главную» в приложении лишняя (логотип уже = домой)
         'html.app-mode .footer-back{display:none !important;}' +
-        // весь футер в app убираем: прокрутка упирается в границу шага, ниже ничего не появляется
-        'html.app-mode footer{display:none !important;}' +
+        // футер прячем только внутри прохода/результата (прокрутка упирается в границу шага).
+        // На стартовом экране подпись бренда со слоганом остаётся — как в PWA. 2026-09-01.
+        'html.app-mode body.flow-mode footer,html.app-mode body.view-result footer{display:none !important;}' +
         // лендинг: шапка <header> ниже статус-бара/Dynamic Island
         'html.app-mode header{padding-top:calc(env(safe-area-inset-top,0px) + 12px) !important;}' +
         // инструменты (VIO/PRO): весь #app ниже системной зоны (низ уже учтён в .bottom-nav)
@@ -142,12 +120,17 @@
         // шапка «Анализ VIA-L» уезжала на две высоты чёлки вниз и налезала на карточку разбора,
         // а сверху оставался пустой беж. На вебе задвоения нет — там #app стоит в нуле.
         // 2026-08-31, поймано на TestFlight-сборке.
-        'html.app-mode #topbar{padding-top:0 !important;}';
+        'html.app-mode #topbar{padding-top:0 !important;}' +
+        // …и по той же причине ВТОРАЯ safe-area сидела в фейде под шапкой: #topbar::before
+        // отмерял height = safe-area + 12px уже НИЖЕ опущенного #app, и сплошной беж тянулся
+        // на две высоты чёлки (скрин владельца: белая полоса до половины первой карточки).
+        // В приложении фейд = только растушёвка, статус-бар закрашивает сам сдвиг #app.
+        // 2026-09-01. В EXPERT-PWA (#app в нуле) правило не действует — там фейд прежний.
+        'html.app-mode #topbar::before{height:14px !important;background:linear-gradient(to bottom,#EAE1C9 0%,rgba(234,225,201,0) 100%) !important;}';
       (document.head || html).appendChild(css);
     }
     // Платёж внутри приложения НЕ ведём на Hotmart (PRO-покупка появится через IAP магазина).
     window._openHotmart = function(){ alert(NOTE[noteLang()]); };
-    appShell();
     // Логотип топ-бара в приложении = «домой» ВНУТРИ инструмента, а не выход на лендинг.
     // (href="./index.html" в webview выкидывал на страницу-лендинг — выглядело как «уход на сайт».)
     var logo = document.querySelector('.lang-logo');
