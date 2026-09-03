@@ -8928,7 +8928,7 @@ async function handleCabinetExpertGrant(request, env, corsHeaders){
         const g = await env.DB.prepare('SELECT COALESCE(SUM(owed_eur),0) o FROM grants WHERE specialist_id=?').bind(sess.id).first();
         const p = await env.DB.prepare("SELECT COALESCE(SUM(amount_eur),0) p FROM payments WHERE specialist_id=? AND kind='software'").bind(sess.id).first();
         const outstanding = Math.max(0, ((g&&g.o)||0) - ((p&&p.p)||0));
-        const willAdd = Math.round(days / 30 * 20);
+        const willAdd = Math.round(days / 30 * 30);
         if(outstanding + willAdd > limit)
           return jsonResponse({ ok:false, error:'credit_limit', limit, outstanding,
                                 need: Math.round((outstanding + willAdd - limit) * 100) / 100 }, corsHeaders, 402);
@@ -8983,7 +8983,7 @@ async function handleCabinetExpertExtend(request, env, corsHeaders){
   rec.expiry = base.toISOString().slice(0,10);
   rec.quota = (rec.quota||0) + add;
   rec.days  = (rec.days||0) + add;
-  rec.owed  = Math.round(rec.days / 30 * 20);
+  rec.owed  = Math.round(rec.days / 30 * 30);
   rec.revoked = false;
   await env.EXPERT_DRAFTS.put('expert_access:'+grantCode, JSON.stringify(rec), { expirationTtl: (rec.days + 60) * 24 * 60 * 60 });
   await _setCardExpertGrant(env, rec.card_code, { code:grantCode, expiry:rec.expiry, days:rec.days, owed:rec.owed, revoked:false });
