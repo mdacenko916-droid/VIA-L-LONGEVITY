@@ -7895,6 +7895,10 @@ function _actFreqChange(){
 function _actWorkoutsFromDevice(){
   var w=(typeof importedData!=='undefined'&&importedData&&importedData.workouts7d!=null)?importedData.workouts7d:null;
   if(w==null)return false;
+  // Ноль осознанных тренировок за неделю — это не ответ «не тренируюсь»: прибор мог просто
+  // ничего не записать (все записи ушли в автодетект прогулок). Молча отвечать за человека
+  // здесь нельзя — показываем ему вопрос о частоте, как в ручном проходе.
+  if(w===0)return false;
   var v=w>=5?'high':w>=3?'moderate':w>=1?'low':'none';
   var el=document.getElementById({none:'af1',low:'af2',moderate:'af3',high:'af4'}[v]); if(el)el.checked=true;
   return true;
@@ -10057,7 +10061,7 @@ function _showResultsInner(){
     sleep_breathing:getChecked(['slb1','slb2','slb3']),
     energy:+document.getElementById('energy').value,
     energy_source:(window.__normalFlag&&window.__normalFlag['energy'])||null,
-    training:(typeof importedData!=='undefined'&&importedData.source&&importedData.workouts7d!=null)?{count:importedData.workouts7d,intensity:importedData.trainIntensity||'',activity:importedData.trainActivity||'',day:importedData.trainDay||''}:null,
+    training:(typeof importedData!=='undefined'&&importedData.source&&importedData.workouts7d!=null)?{count:importedData.workouts7d,auto:(importedData.activityAuto7d||0),intensity:importedData.trainIntensity||'',activity:importedData.trainActivity||'',day:importedData.trainDay||''}:null,
     source:(typeof importedData!=='undefined'&&importedData&&importedData.source)?importedData.source:null,   // откуда данные: oura/fitbit/…/apple-manual/manual — чтобы ИИ различал измерено vs со слов
     source_changed:(function(){try{return localStorage.getItem('viae_source_changed')==='1';}catch(e){return false;}})(),   // сменил источник относительно прошлого прохода
     alc:getRadio('alc'),stress:getRadio('stress'),move_today:getRadio('move_today'),

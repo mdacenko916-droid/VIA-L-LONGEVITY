@@ -4331,11 +4331,19 @@ async function handleOuraMetrics(request, env, corsHeaders){
   // SpO2 → spo2_percentage.average — за ПОСЛЕДНИЙ день (x.day)
   const spo2 = await get('/v2/usercollection/daily_spo2') || [];
   if (spo2.length) { const v = _latestByDate(spo2, x => x.day, x => { const n = Number(x && x.spo2_percentage && x.spo2_percentage.average); return isFinite(n)&&n>0 ? n : null; }); if (v!=null) ex.spo2 = +v.toFixed(1); }
-  // Workout → сводка нагрузки за неделю (для модуля ДВИЖЕНИЕ + HRV-направленной нагрузки)
+  // Workout → сводка нагрузки за неделю (для модуля ДВИЖЕНИЕ + HRV-направленной нагрузки).
+  // ⚠️ Oura пишет в эту коллекцию НЕ только тренировки: она сама детектит активность и заводит
+  // запись на каждую прогулку и бытовое движение (source='autodetected'). Считать длину массива
+  // как «сессии» — врать разбору: 20 записей за неделю читались как 20 тренировок, модель делала
+  // вывод о перегрузке, а по факту это были прогулки. Осознанной тренировкой считаем только то,
+  // что человек завёл или подтвердил сам; автодетект отдаём отдельно как фоновую активность.
   const wk = await get('/v2/usercollection/workout') || [];
   if (wk.length) {
-    ex.workouts7d = wk.length;
-    const last = wk[wk.length - 1] || {};
+    const real = wk.filter(w => w && String(w.source || '') !== 'autodetected');
+    const auto = wk.length - real.length;
+    ex.workouts7d = real.length;
+    if (auto) ex.activityAuto7d = auto;
+    const last = real[real.length - 1] || {};
     if (last.intensity) ex.trainIntensity = String(last.intensity);
     if (last.day)       ex.trainDay = String(last.day);
     if (last.activity)  ex.trainActivity = String(last.activity);
@@ -6872,6 +6880,10 @@ function buildUserMessage(data, lang, tier) {
     + complaintsContext
     + bioContext + '\n'
     + (data.training && data.training.count ? 'Тренировки (с кольца, 7 дн): ' + data.training.count + ' сессий' + (data.training.intensity ? ', последняя интенсивность ' + data.training.intensity : '') + (data.training.activity ? ' (' + data.training.activity + ')' : '') + '. Применяй HRV-направленную нагрузку: тяжёлые/интенсивные сессии — только в дни восстановленного ночного HRV; падающий HRV неделю → снизить объём, добавить сон/восстановление.\n' : '')
+    // Фоновая активность (автодетект прибора: прогулки, бытовое движение). Отдаём отдельной
+    // строкой и прямо запрещаем считать её тренировками — иначе модель складывает одно с другим
+    // и объявляет перегрузку там, где человек просто много ходил.
+    + (data.training && data.training.auto ? 'Фоновая активность, зафиксированная прибором автоматически (прогулки, бытовое движение), 7 дн: ' + data.training.auto + ' эпизодов. Это НЕ тренировки: не считай их сессиями, не суммируй с тренировками и не делай из их количества вывод о перегрузке.\n' : '')
     + (data.source ? ('ИСТОЧНИК ДАННЫХ: ' + (data.source==='manual'||data.source==='apple-manual' ? 'введены ВРУЧНУЮ со слов клиента — это субъективные оценки, а НЕ измерения прибора: не подавай их как точные замеры, формулируй мягко («по вашим ощущениям»).' : 'получены с трекера/приложения здоровья ('+data.source+') — это приборные показатели.') + (data.source_changed ? ' ВНИМАНИЕ: источник данных сменился с прошлого прохода — НЕ сравнивай числа напрямую с предыдущими днями (разные методы измерения дают разброс), опиши как новую точку отсчёта.' : '') + '\n') : '')
     + labsContext
     + fullDataBlock;
