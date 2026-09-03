@@ -8893,7 +8893,7 @@ async function handleExpertVerify(request, env, corsHeaders){
 }
 
 // POST /cabinet/expert-grant  {code, days, plan?} — специалист выдаёт клиенту доступ к EXPERT.
-// code = код карточки клиента; days = срок ведения (1 разбор/день → quota=days); owed = days/30×€20.
+// code = код карточки клиента; days = срок ведения (1 разбор/день → quota=days); owed = days/30×€30.
 async function handleCabinetExpertGrant(request, env, corsHeaders){
   const sess = await cabinetSession(request, env);
   if(!sess) return jsonResponse({ ok:false, error:'unauthorized' }, corsHeaders, 401);
@@ -8943,7 +8943,7 @@ async function handleCabinetExpertGrant(request, env, corsHeaders){
   const today = new Date();
   const exp = new Date(today.getTime()); exp.setUTCDate(exp.getUTCDate() + days);
   const expiry = exp.toISOString().slice(0,10);
-  const owed = Math.round(days / 30 * 20);   // €20/мес софт (закладка в цену специалиста)
+  const owed = Math.round(days / 30 * 30);   // €30/мес софт (закладка в цену специалиста)
 
   // уникальный код (пара попыток на случай коллизии)
   let grantCode = genExpertCode();
@@ -9169,7 +9169,7 @@ async function handleCabinetSpecialists(request, env, corsHeaders){
 
 // ─────────────────────────────────────────────────────────────
 // БУХГАЛТЕРИЯ ВЛАДЕЛЬЦА (Шаг 9). Только role=owner.
-// Считает по D1: начислено за софт (журнал `grants`, €20/мес на клиента),
+// Считает по D1: начислено за софт (журнал `grants`, €30/мес на клиента),
 // абонплата платформы (€30/мес с даты `specialists.platform_since`), оплачено
 // (журнал `payments`) и долг. Платёжной интеграции нет — оплату отмечает владелец руками.
 // Пустой `platform_since` = абонплату не начисляем (свой специалист/льгота).
