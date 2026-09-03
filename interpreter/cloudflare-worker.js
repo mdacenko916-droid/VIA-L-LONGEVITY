@@ -1513,6 +1513,9 @@ export default {
       ctx.waitUntil(runDailyReminders(env));
       ctx.waitUntil(expireSpecialistAccess(env));   // Шаг 4: закрыть доступ при истёкшей абонплате
       ctx.waitUntil(eraseExpiredHealthData(env));    // E3 §5: данные о здоровье — 90 дней после ведения
+      ctx.waitUntil(purgeExpiredResearch(env));      // исследовательский синк: скользящее окно 730 дней
+      // Сводка за прошлый месяц — в первый день месяца, когда он уже закрыт целиком.
+      if (new Date().getUTCDate() === 1) ctx.waitUntil(buildResearchStats(env, _prevMonthKey()));
     }
   },
 };
@@ -2305,9 +2308,135 @@ const RESEARCH_DEVICE_FIELDS = new Set(['hrv','rhr','sleepHours','deepMin','spo2
 // Oura API Agreement §6(g): «YOU SHALL NOT USE OR ALLOW THE USE OF USER DATA TO TRAIN,
 // FINE-TUNE, DEVELOP, IMPROVE, OR ENHANCE ANY AI MODEL» — прямо оговорено, что запрет
 // действует независимо от техники И ОТ СОГЛАСИЯ пользователя, поэтому галочка не спасает.
-// Apple (App Review 5.1.3) и Health Connect устроены иначе: исследование с явного согласия
-// разрешено, поэтому их данные не режем. Разбор: docs/OURA-COMPLIANCE-REVIEW.md (2026-08-26).
+// Apple и Health Connect устроены иначе, но не по той причине, что здесь стояла раньше.
+// Прежняя запись объясняла это тем, что «исследование с явного согласия разрешено», — на деле
+// и Apple (5.1.3(iv)), и Google требуют для исследования на людях одобрения независимого
+// этического комитета. Данные Apple и Health Connect не режем потому, что наш сценарий —
+// не исследование, а улучшение управления здоровьем: Apple 5.1.3(i) прямо выводит
+// «improving health management» из-под запрета на use-based data mining, а у Google это
+// подпадает под разрешённый сценарий «fitness, wellness and coaching».
+// Сверка с текстом правил: docs/HEALTH-RESEARCH-POLICY-CHECK.md (2026-09-03).
+// Договорный запрет Oura к сторам отношения не имеет: docs/OURA-COMPLIANCE-REVIEW.md (2026-08-26).
 const WEARABLE_RESEARCH_BLOCK = new Set(['oura']);
+// ─────────────────────────────────────────────────────────────
+// СРОК ХРАНЕНИЯ И СВОДКИ (2026-09-03)
+//
+// Раньше текст согласия обещал хранить строки «столько, сколько живёт исследование, —
+// то есть без заранее назначенной даты удаления», и обещал публикации. Исследовательскую
+// рамку мы сняли (этического комитета и протокола у нас нет, а в Google Play такая
+// декларация тянет требования, которые нам не по силам), поэтому бессрочное хранение
+// сырых строк больше нечем оправдать. Отсюда два срока вместо одного:
+//
+//   • сырые строки research_days — скользящее окно 730 дней от received_ts. Два полных
+//     сезонных цикла: достаточно, чтобы набрать выборку, и это срок, который можно
+//     честно назвать пользователю. Удаление постепенное, по одной строке в свой день.
+//   • сводки research_stats — бессрочно. Персональных данных в них нет, а нужны для
+//     калибровки именно распределения, а не отдельные дни. Сводка за месяц считается
+//     ОДИН раз и переживает удаление строк, из которых получена.
+//
+// Малые ячейки не сохраняем: по сводке из пары человек можно узнать лишнее.
+const RESEARCH_RETENTION_DAYS = 730;
+const RESEARCH_STATS_MIN_N    = 5;
+
+// Чистка по сроку. Идёт раз в сутки из cron; порциями, чтобы не упереться в лимиты D1
+// на одном длинном DELETE, если однажды накопится много.
+async function purgeExpiredResearch(env) {
+  if (!env.DB) return;
+  const cutoff = Date.now() - RESEARCH_RETENTION_DAYS * 86400000;
+  let total = 0;
+  try {
+    for (let i = 0; i < 20; i++) {
+      const r = await env.DB.prepare(
+        'DELETE FROM research_days WHERE rowid IN (SELECT rowid FROM research_days WHERE received_ts < ? LIMIT 500)'
+      ).bind(cutoff).run();
+      const n = (r && r.meta && r.meta.changes) || 0;
+      total += n;
+      if (n < 500) break;
+    }
+  } catch (e) { /* чистка не имеет права ломать остальные задачи крона */ }
+  return total;
+}
+
+function _statsOf(values) {
+  const v = values.slice().sort((a, b) => a - b);
+  const n = v.length;
+  const q = (p) => {
+    if (!n) return null;
+    const i = (n - 1) * p, lo = Math.floor(i), hi = Math.ceil(i);
+    return lo === hi ? v[lo] : v[lo] + (v[hi] - v[lo]) * (i - lo);
+  };
+  const mean = v.reduce((a, b) => a + b, 0) / n;
+  const sd = n > 1 ? Math.sqrt(v.reduce((a, b) => a + (b - mean) * (b - mean), 0) / (n - 1)) : 0;
+  const r3 = (x) => (x == null ? null : Math.round(x * 1000) / 1000);
+  return { n, mean: r3(mean), sd: r3(sd), p25: r3(q(0.25)), p50: r3(q(0.5)), p75: r3(q(0.75)) };
+}
+
+// Сводка за ОДИН календарный месяц. Считается в JS, а не в SQL: метрики лежат внутри
+// JSON-поля data, и вытаскивать из него перцентили средствами D1 — больнее, чем прочитать
+// строки постранично. Объём заведомо небольшой: одна строка на установку в день.
+async function buildResearchStats(env, period) {
+  if (!env.DB) return;
+  if (!/^\d{4}-\d{2}$/.test(String(period || ''))) return;
+  // Уже считали этот месяц — второй раз не пересчитываем (сводка неизменна по построению).
+  try {
+    const done = await env.DB.prepare('SELECT 1 AS x FROM research_stats WHERE period = ? LIMIT 1').bind(period).first();
+    if (done) return;
+  } catch (e) { return; }
+
+  const buckets = new Map();   // 'src|lang|metric' → number[]
+  const push = (src, lang, metric, val) => {
+    const k = src + '|' + lang + '|' + metric;
+    if (!buckets.has(k)) buckets.set(k, []);
+    buckets.get(k).push(val);
+  };
+
+  try {
+    for (let off = 0; off < 200000; off += 1000) {
+      const rows = (await env.DB.prepare(
+        'SELECT src, lang, data FROM research_days WHERE day LIKE ? ORDER BY rowid LIMIT 1000 OFFSET ?'
+      ).bind(period + '-%', off).all()).results || [];
+      if (!rows.length) break;
+      for (const row of rows) {
+        let d = {};
+        try { d = JSON.parse(row.data || '{}'); } catch (_) { continue; }
+        const src = String(row.src || '?').slice(0, 24);
+        const lang = String(row.lang || '?').slice(0, 5);
+        for (const k of RESEARCH_FIELDS) {
+          const v = d[k];
+          if (typeof v !== 'number' || !isFinite(v)) continue;   // категории вида 'high' в сводку не идут
+          push(src, lang, k, v);
+          push('*', lang, k, v);
+          push(src, '*', k, v);
+          push('*', '*', k, v);
+        }
+      }
+      if (rows.length < 1000) break;
+    }
+  } catch (e) { return; }
+
+  const now = Date.now();
+  const writes = [];
+  for (const [k, vals] of buckets) {
+    if (vals.length < RESEARCH_STATS_MIN_N) continue;            // малые ячейки не сохраняем
+    const [src, lang, metric] = k.split('|');
+    const st = _statsOf(vals);
+    writes.push(env.DB.prepare(
+      'INSERT OR REPLACE INTO research_stats (period,src,lang,metric,n,mean,sd,p25,p50,p75,built_ts) ' +
+      'VALUES (?,?,?,?,?,?,?,?,?,?,?)'
+    ).bind(period, src, lang, metric, st.n, st.mean, st.sd, st.p25, st.p50, st.p75, now));
+  }
+  if (!writes.length) return;
+  try { await env.DB.batch(writes); } catch (e) { /* сводка не критична для работы приложения */ }
+}
+
+// Прошлый календарный месяц в виде 'YYYY-MM'.
+function _prevMonthKey(d) {
+  const t = new Date(d || Date.now());
+  t.setUTCDate(1);
+  t.setUTCMonth(t.getUTCMonth() - 1);
+  return t.toISOString().slice(0, 7);
+}
+
 function _researchPick(rec, src) {
   const out = {};
   if (!rec || typeof rec !== 'object') return out;

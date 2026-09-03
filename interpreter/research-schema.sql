@@ -31,3 +31,34 @@ CREATE TABLE IF NOT EXISTS research_days (
 -- Выборки для будущего анализа идут по дню и по версии схемы: индексы под них.
 CREATE INDEX IF NOT EXISTS idx_research_day ON research_days(day);
 CREATE INDEX IF NOT EXISTS idx_research_sv  ON research_days(sv, wv);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- СВОДКИ (2026-09-03). Зачем: сырые строки живут ограниченный срок
+-- (RESEARCH_RETENTION_DAYS = 730 дней в воркере), а калибровке нужны не отдельные
+-- дни, а распределения. Раз в месяц воркер считает сводку за прошедший календарный
+-- месяц и кладёт сюда. Персональных данных здесь нет вообще — ни pid, ни дней, —
+-- поэтому сводки хранятся бессрочно и переживают удаление сырых строк.
+--
+-- Когорты берём из того, что реально есть в таблице: источник данных (гаджет/ручной
+-- ввод) и язык интерфейса. Возраста и фазы цикла в исследовательской выборке НЕТ —
+-- их не пускает whitelist (RESEARCH_FIELDS), поэтому стратификации по ним быть не может.
+--
+-- Малые ячейки (n < RESEARCH_STATS_MIN_N) не сохраняются: по сводке из трёх человек
+-- при желании можно узнать больше, чем следует.
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS research_stats (
+  period    TEXT    NOT NULL,           -- 'YYYY-MM', календарный месяц наблюдений
+  src       TEXT    NOT NULL,           -- источник данных дня; '*' — все вместе
+  lang      TEXT    NOT NULL,           -- язык интерфейса; '*' — все вместе
+  metric    TEXT    NOT NULL,           -- имя метрики из RESEARCH_FIELDS
+  n         INTEGER NOT NULL,           -- сколько наблюдений вошло
+  mean      REAL,
+  sd        REAL,
+  p25       REAL,
+  p50       REAL,
+  p75       REAL,
+  built_ts  INTEGER NOT NULL,           -- когда сводка посчитана
+  PRIMARY KEY (period, src, lang, metric)
+);
+
+CREATE INDEX IF NOT EXISTS idx_research_stats_metric ON research_stats(metric, period);
