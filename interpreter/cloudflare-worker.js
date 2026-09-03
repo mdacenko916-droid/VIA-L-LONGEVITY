@@ -7724,10 +7724,14 @@ async function cabinetUpsertFromPayment(env, { code, name, email, lang, product,
   try { data = JSON.parse(existing?.data || '{}'); } catch(_){}
   data.payment = { tier: tier||'', price: price||'', paid_amount: paidAmount||'', paid_at: new Date().toISOString() };
   const productKind = product.type === 'interpreter' ? 'interpreter' : 'site';
+  // Все покупки через сайт/лендинг ИП ведёт основатель (специалист №1). Раньше это держалось
+  // на `DEFAULT 1` в схеме — привязка молча уехала бы, впиши кто-нибудь колонку в INSERT.
+  // Пишем явно; ON CONFLICT её не трогает, поэтому ручная передача клиента другому
+  // специалисту (/cabinet/reassign) переживает повторную оплату.
   try {
     await env.DB.prepare(
-      `INSERT INTO clients (code,name,email,lang,product,program,tier,price,format,duration_weeks,status,data,created_at,updated_at)
-       VALUES (?,?,?,?,?,?,?,?,?,?,'new',?,?,?)
+      `INSERT INTO clients (code,name,email,lang,product,program,tier,price,format,duration_weeks,status,specialist_id,data,created_at,updated_at)
+       VALUES (?,?,?,?,?,?,?,?,?,?,'new',1,?,?,?)
        ON CONFLICT(code) DO UPDATE SET
          name=CASE WHEN excluded.name!='' THEN excluded.name ELSE name END,
          email=CASE WHEN excluded.email!='' THEN excluded.email ELSE email END,
