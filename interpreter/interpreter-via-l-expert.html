@@ -4006,12 +4006,11 @@ async function checkCode(){
   btn.querySelector('span').textContent = (T[lang]?.gate_checking) || (T.en?.gate_checking) || 'Checking…';
   document.getElementById('gateError').classList.remove('show');
 
-  // VIA-L EXPERT — тестовые коды разработчика (обходят сервер, имитируют программу).
-  const DEV_CODES = {
-    'VIAL-EXPERT-8W':  'VIAL-EXPERT-8W',
-    'VIAL-EXPERT-12W': 'VIAL-EXPERT-12W'
-  };
-  if (DEV_CODES[v]) { saveExpertState({used:0, max:_planMax(DEV_CODES[v])}); gateUnlock('MAX', v, DEV_CODES[v]); return; }
+  // Тестовых кодов разработчика здесь БОЛЬШЕ НЕТ (сняты 2026-09-03). Они совпадали с
+  // названиями тарифов ('VIAL-EXPERT-8W'/'-12W') — строка не секретная, стоит в письмах о
+  // покупке и в архитектуре, а проверка была чисто клиентской: угадал → бессрочный полный
+  // доступ мимо сервера. Тестируем обычными EX-кодами, выданными из кабинета: тот же путь,
+  // что у клиента, срок и отзыв под контролем.
 
   // Ветка витрины: срочный код EXPERT (EX…), выданный специалистом → проверяем в воркере ПЕРВЫМ.
   // ok → вход; expired/revoked → ошибка; not_found → это код собственника (Hotmart), падаем в Apps Script ниже.
