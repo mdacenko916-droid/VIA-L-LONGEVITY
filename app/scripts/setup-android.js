@@ -39,6 +39,7 @@ const GRADLE    = path.join(ANDROID, 'variables.gradle');
 const MANIFEST  = path.join(ANDROID, 'app', 'src', 'main', 'AndroidManifest.xml');
 const STYLES    = path.join(ANDROID, 'app', 'src', 'main', 'res', 'values', 'styles.xml');
 const MAIN_ACT  = path.join(ANDROID, 'app', 'src', 'main', 'java', 'com', 'viael', 'vial', 'MainActivity.java');
+const APP_GRADLE = path.join(ANDROID, 'app', 'build.gradle');
 
 // Цвет нижней панели навигации Android (кнопки «назад/домой/обзор»). Без него система красит
 // её по умолчанию — на EMUI получилась БЕЛАЯ полоса под нашей тёмной навигацией, будто
@@ -228,9 +229,65 @@ function patchMainActivity() {
   console.log('✚ MainActivity.java: включён edge-to-edge (рисуем под системными панелями).');
 }
 
+// ─── Подпись релиза и номер сборки ───────────────────────────────────────────
+// Capacitor генерит app/build.gradle без signingConfig: `assembleRelease` выдаёт unsigned-файл,
+// который Play отклоняет. Ключ и пароли в репозиторий не кладём — Gradle читает их из
+// app/keystore.properties (в .gitignore). Файла нет → релизная конфигурация просто не
+// подставляется, отладочная сборка продолжает работать как раньше.
+//
+// versionCode: Play принимает каждый номер ровно один раз. Хардкод `1` = вторая загрузка
+// отклонена (ровно это поймали на iOS, Build 18). Берём из переменной окружения
+// VIAL_VERSION_CODE, если она задана.
+const SIGNING_BLOCK = `
+    // ✚ setup-android.js: подпись релиза из app/keystore.properties (файл вне репозитория)
+    signingConfigs {
+        release {
+            def propsFile = rootProject.file('../keystore.properties')
+            if (propsFile.exists()) {
+                def props = new Properties()
+                propsFile.withInputStream { props.load(it) }
+                storeFile file(props['storeFile'])
+                storePassword props['storePassword']
+                keyAlias props['keyAlias']
+                keyPassword props['keyPassword']
+            }
+        }
+    }
+`;
+
+function patchSigning() {
+  if (!fs.existsSync(APP_GRADLE)) {
+    console.warn('⚠️  app/build.gradle не найден. Сначала выполни `npx cap add android`.');
+    return;
+  }
+  let g = fs.readFileSync(APP_GRADLE, 'utf8');
+  let touched = 0;
+
+  if (!g.includes('signingConfigs')) {
+    // вставляем перед блоком buildTypes
+    g = g.replace(/(\n    buildTypes \{)/, SIGNING_BLOCK + '$1');
+    touched++;
+  }
+  if (!g.includes('signingConfig signingConfigs.release')) {
+    g = g.replace(/(release \{\n            minifyEnabled false)/,
+      "release {\n            // подпись подставляется только когда есть app/keystore.properties\n            if (rootProject.file('../keystore.properties').exists()) { signingConfig signingConfigs.release }\n            minifyEnabled false");
+    touched++;
+  }
+  if (/versionCode 1\b/.test(g)) {
+    g = g.replace(/versionCode 1\b/,
+      "versionCode (System.getenv('VIAL_VERSION_CODE') ?: '1') as Integer");
+    touched++;
+  }
+
+  if (!touched) { console.log('✓ app/build.gradle: подпись и versionCode уже настроены.'); return; }
+  fs.writeFileSync(APP_GRADLE, g);
+  console.log('✚ app/build.gradle: подпись релиза + versionCode из VIAL_VERSION_CODE.');
+}
+
 console.log('— setup-android: Health Connect + возврат из OAuth —');
 patchGradle();
 patchManifest();
 patchStyles();
 patchMainActivity();
+patchSigning();
 console.log('Готово. Дальше: `npx cap sync android`, затем открыть в Android Studio.');

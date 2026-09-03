@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIA·L — Delete your data</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cream: #F5F3EF; --cream-dk: #EDE9E2;
+      --gold: #6B4F2A; --gold-lt: #8B6030; --gold-pale: #A07840;
+      --text: #0D0A05; --text-mid: #1A1008; --text-lt: #2E2010;
+      --line: rgba(139,111,71,.15);
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--cream); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 17px; line-height: 1.75; font-weight: 400; -webkit-font-smoothing: antialiased; }
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 200; display: flex; align-items: center; justify-content: space-between; padding: 14px 40px; background: rgba(245,243,239,0.92); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); flex-wrap: wrap; gap: 10px; }
+    .nav-logo { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; letter-spacing: 8px; color: var(--text); text-decoration: none; }
+    .lang-wrap { position: relative; }
+    .lang-btn { display: flex; align-items: center; gap: 7px; background: none; border: 1px solid var(--line); border-radius: 50px; padding: 5px 12px; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-lt); cursor: pointer; font-family: inherit; transition: border-color .2s, color .2s; }
+    .lang-btn:hover { border-color: var(--gold-pale); color: var(--gold); }
+    .lang-btn .caret { width: 9px; height: 6px; flex-shrink: 0; opacity: .6; }
+    .lang-menu { display: none; position: absolute; right: 0; top: calc(100% + 8px); min-width: 190px; max-height: 60vh; overflow-y: auto; background: var(--cream); border: 1px solid var(--line); border-radius: 14px; padding: 6px; box-shadow: 0 14px 40px rgba(60,44,20,.16); z-index: 240; }
+    .lang-menu.open { display: block; }
+    .lang-opt { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; font-size: 15px; color: var(--text-mid); cursor: pointer; white-space: nowrap; }
+    .lang-opt:hover { background: var(--cream-dk); }
+    .lang-opt.active { color: var(--gold); }
+    .lang-flag { font-size: 17px; line-height: 1; }
+    .page-wrap { max-width: 820px; margin: 0 auto; padding: 140px 40px 80px; }
+    .page-eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .page-eyebrow::before { content: ''; display: block; width: 22px; height: 1px; background: var(--gold-pale); flex-shrink: 0; }
+    .page-eyebrow span { font-size: 13px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); font-weight: 500; }
+    h1 { font-family: 'Playfair Display', serif; font-size: clamp(32px, 6vw, 48px); font-weight: 500; letter-spacing: .03em; color: var(--text); margin-bottom: 8px; line-height: 1.15; }
+    .page-date { font-size: 13px; color: var(--gold-pale); letter-spacing: 1px; margin-bottom: 28px; }
+    .intro { font-size: 15px; color: var(--text-lt); background: rgba(160,120,64,.06); border-left: 2px solid var(--gold-pale); padding: 12px 18px; margin-bottom: 36px; }
+    h2 { font-family: 'DM Sans', sans-serif; font-size: 13px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); font-weight: 500; margin: 30px 0 14px; }
+    h3 { font-family: 'DM Sans', sans-serif; font-size: 17px; font-weight: 500; color: var(--text); margin: 20px 0 8px; }
+    p { color: var(--text-mid); margin-bottom: 14px; }
+    ul, ol { color: var(--text-mid); margin-bottom: 14px; padding-left: 22px; }
+    li { margin-bottom: 6px; }
+    a { color: var(--gold); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    strong { color: var(--text); font-weight: 500; }
+    .divider { height: 1px; background: var(--line); margin: 28px 0; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 15px; }
+    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); color: var(--text-mid); vertical-align: top; }
+    th { color: var(--gold); font-weight: 500; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
+    .tbl-wrap { overflow-x: auto; }
+    footer { background: var(--cream-dk); border-top: 1px solid var(--line); padding: 28px 40px; margin-top: 40px; }
+    .footer-inner { max-width: 820px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .footer-copy { font-size: 13px; color: var(--text-lt); opacity: .7; }
+    .footer-links a { font-size: 13px; color: var(--text-lt); opacity: .7; text-decoration: none; margin-left: 16px; }
+    .footer-links a:hover { opacity: 1; color: var(--gold); }
+    [data-lang] { display: none; }
+    [data-lang].active { display: block; }
+    @media (max-width: 600px) {
+      nav { padding: 12px 16px; }
+      .page-wrap { padding: 130px 22px 60px; }
+      .lang-btn { padding: 4px 10px; font-size: 12px; }
+      footer { padding: 24px 20px; }
+      .footer-inner { flex-direction: column; text-align: center; }
+      .footer-links a { margin: 0 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-logo">VIA·L</span>
+  <div class="lang-wrap">
+    <button class="lang-btn" id="langBtn" type="button" onclick="toggleLangMenu(event)" aria-haspopup="true">
+      <span class="lang-flag" id="langFlag">🇬🇧</span><span id="langLabel">EN</span>
+      <svg class="caret" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1 1l4 4 4-4"/></svg>
+    </button>
+    <div class="lang-menu" id="langMenu"></div>
+  </div>
+</nav>
+
+<main class="page-wrap">
+
+  <!-- ─────────────────────────── EN ─────────────────────────── -->
+  <div data-lang="en" class="active">
+    <div class="page-eyebrow"><span>Data deletion</span></div>
+    <h1>Delete your data</h1>
+    <p class="page-date">Last updated: 3 September 2026</p>
+    <p class="intro">This page explains how to delete the data of the <strong>VIA·L</strong> app (package <strong>com.viael.vial</strong>), published by <strong>Kyrylo Selivanov</strong>, private individual, Ukraine.</p>
+
+    <h2>There is no account to delete</h2>
+    <p>VIA·L has no sign-up, no login and no user account. Your health data is stored on your own device, so deleting it is done in the app itself — nobody has to approve the request.</p>
+
+    <div class="divider"></div>
+
+    <h2>1. Delete the data on your device</h2>
+    <ol>
+      <li>Open the VIA·L app.</li>
+      <li>Go to the <strong>My Profile</strong> tab (bottom bar, right).</li>
+      <li>Open the section <strong>“Backup and data deletion”</strong>.</li>
+      <li>Press <strong>“Delete my health data”</strong>.</li>
+      <li>Confirm twice — the app asks a second time because the action cannot be undone.</li>
+    </ol>
+    <p>Everything the app stores is erased immediately: your profile, tracker readings, questionnaire answers, analyses and reminders. If you want to keep a copy first, use “Save backup” in the same section — the file is encrypted with your own password and stays with you.</p>
+    <p>Uninstalling the app removes the same data as well.</p>
+
+    <h2>2. Delete your research contribution (only if you turned it on)</h2>
+    <p>If you switched on <strong>“Help improve the app”</strong>, anonymous daily records were sent to our server. They carry no name, email or device identifier that could point back to you — only a random installation number.</p>
+    <ol>
+      <li>Open <strong>My Profile</strong> → <strong>“Research participation”</strong>.</li>
+      <li>Press <strong>“Delete my contribution”</strong>.</li>
+      <li>You will see “Deleted. Nothing from this installation is left on the server.”</li>
+    </ol>
+    <p>Because the link between that random number and you exists only on your device, this deletion can be made from your device only. Do it before deleting the app data in step 1 or before uninstalling.</p>
+
+    <h2>3. Ask us by email</h2>
+    <p>If you cannot open the app, write to <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. We answer within 30 days. Please tell us the platform (Android or iOS) and the approximate dates of use — we have no other way of finding records, since we hold no names or addresses.</p>
+
+    <div class="divider"></div>
+
+    <h2>What we store, and for how long</h2>
+    <div class="tbl-wrap">
+    <table>
+      <tr><th>Data</th><th>Where</th><th>Retention</th></tr>
+      <tr><td>Profile, tracker readings (heart rate variability, resting heart rate, heart rate, sleep, blood oxygen, steps, VO₂ max), questionnaire answers, analyses</td><td>Your device only</td><td>Until you delete them or uninstall the app</td></tr>
+      <tr><td>The text of a generated analysis (temporary copy, so it is not lost if the app closes)</td><td>Our server</td><td>72 hours, then deleted automatically</td></tr>
+      <tr><td>Data sent for an analysis or a chat reply</td><td>Our server, in memory</td><td>Not stored — used to produce the answer and discarded</td></tr>
+      <tr><td>Anonymous research records (only with your consent, off by default)</td><td>Our server</td><td>Until you delete them on the “Research participation” screen</td></tr>
+      <tr><td>Subscription status</td><td>Google Play / RevenueCat</td><td>Per Google Play rules; we keep no payment details</td></tr>
+    </table>
+    </div>
+    <p>We do not collect your name, email address, phone number or location, and there is no advertising or analytics in the app. Full details: <a href="privacy.html">Privacy Policy</a>.</p>
+  </div>
+
+  <!-- ─────────────────────────── UK ─────────────────────────── -->
+  <div data-lang="uk">
+    <div class="page-eyebrow"><span>Видалення даних</span></div>
+    <h1>Видалення ваших даних</h1>
+    <p class="page-date">Оновлено: 3 вересня 2026</p>
+    <p class="intro">Ця сторінка пояснює, як видалити дані застосунку <strong>VIA·L</strong> (пакет <strong>com.viael.vial</strong>), який випускає <strong>Кирило Селіванов</strong>, фізична особа, Україна.</p>
+
+    <h2>Облікового запису, який треба видаляти, немає</h2>
+    <p>У VIA·L немає реєстрації, входу та облікового запису. Дані про здоров’я зберігаються на вашому пристрої, тому видалення робиться в самому застосунку — нічиє підтвердження не потрібне.</p>
+
+    <div class="divider"></div>
+
+    <h2>1. Видалити дані на пристрої</h2>
+    <ol>
+      <li>Відкрийте застосунок VIA·L.</li>
+      <li>Перейдіть на вкладку <strong>«Мій профіль»</strong> (нижня панель, праворуч).</li>
+      <li>Відкрийте розділ <strong>«Резервна копія та видалення даних»</strong>.</li>
+      <li>Натисніть <strong>«Видалити мої дані про здоров’я»</strong>.</li>
+      <li>Підтвердьте двічі — застосунок перепитує, бо дію не можна скасувати.</li>
+    </ol>
+    <p>Одразу стирається все, що зберігає застосунок: профіль, показники трекера, відповіді опитувальника, розбори та нагадування. Якщо хочете спершу зберегти копію, скористайтеся «Зберегти копію» в цьому ж розділі — файл зашифровано вашим паролем і залишається у вас.</p>
+    <p>Видалення застосунку прибирає ті самі дані.</p>
+
+    <h2>2. Видалити внесок у дослідження (лише якщо ви його вмикали)</h2>
+    <p>Якщо ви ввімкнули <strong>«Допомогти покращити застосунок»</strong>, на наш сервер надсилалися знеособлені денні записи. У них немає ні імені, ні пошти, ні ідентифікатора пристрою — тільки випадковий номер встановлення.</p>
+    <ol>
+      <li>Відкрийте <strong>«Мій профіль»</strong> → <strong>«Участь у дослідженні»</strong>.</li>
+      <li>Натисніть <strong>«Видалити мій внесок»</strong>.</li>
+      <li>З’явиться повідомлення, що на сервері нічого від цього встановлення не лишилося.</li>
+    </ol>
+    <p>Зв’язок між випадковим номером і вами існує лише на вашому пристрої, тому таке видалення можливе тільки з нього. Зробіть це до кроку 1 або до видалення застосунку.</p>
+
+    <h2>3. Написати нам</h2>
+    <p>Якщо застосунок не відкривається, напишіть на <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. Відповідаємо протягом 30 днів. Вкажіть платформу (Android чи iOS) і приблизні дати користування — інакше знайти записи неможливо, адже імен і адрес ми не зберігаємо.</p>
+
+    <div class="divider"></div>
+
+    <h2>Що зберігається і як довго</h2>
+    <div class="tbl-wrap">
+    <table>
+      <tr><th>Дані</th><th>Де</th><th>Строк</th></tr>
+      <tr><td>Профіль, показники трекера (ВСР, пульс спокою, пульс, сон, кисень у крові, кроки, VO₂ max), відповіді опитувальника, розбори</td><td>Тільки ваш пристрій</td><td>Доки ви їх не видалите або не видалите застосунок</td></tr>
+      <tr><td>Текст готового розбору (тимчасова копія, щоб він не загубився)</td><td>Наш сервер</td><td>72 години, далі видаляється автоматично</td></tr>
+      <tr><td>Дані, надіслані для розбору чи відповіді в чаті</td><td>Наш сервер, у пам’яті</td><td>Не зберігаються — використовуються для відповіді й відкидаються</td></tr>
+      <tr><td>Знеособлені записи дослідження (лише за згодою, типово вимкнено)</td><td>Наш сервер</td><td>Доки ви не видалите їх на екрані «Участь у дослідженні»</td></tr>
+      <tr><td>Стан підписки</td><td>Google Play / RevenueCat</td><td>За правилами Google Play; платіжних даних ми не зберігаємо</td></tr>
+    </table>
+    </div>
+    <p>Ми не збираємо ім’я, пошту, телефон і місцеперебування; реклами й аналітики в застосунку немає. Докладно: <a href="privacy.html">Політика конфіденційності</a>.</p>
+  </div>
+
+  <!-- ─────────────────────────── RU ─────────────────────────── -->
+  <div data-lang="ru">
+    <div class="page-eyebrow"><span>Удаление данных</span></div>
+    <h1>Удаление ваших данных</h1>
+    <p class="page-date">Обновлено: 3 сентября 2026</p>
+    <p class="intro">Эта страница объясняет, как удалить данные приложения <strong>VIA·L</strong> (пакет <strong>com.viael.vial</strong>), которое выпускает <strong>Кирилл Селиванов</strong>, физическое лицо, Украина.</p>
+
+    <h2>Учётной записи, которую надо удалять, нет</h2>
+    <p>В VIA·L нет регистрации, входа и учётной записи. Данные о здоровье хранятся на вашем устройстве, поэтому удаление делается в самом приложении — ничьё подтверждение не требуется.</p>
+
+    <div class="divider"></div>
+
+    <h2>1. Удалить данные на устройстве</h2>
+    <ol>
+      <li>Откройте приложение VIA·L.</li>
+      <li>Перейдите на вкладку <strong>«Мой профиль»</strong> (нижняя панель, справа).</li>
+      <li>Откройте раздел <strong>«Резервная копия и удаление данных»</strong>.</li>
+      <li>Нажмите <strong>«Удалить мои данные о здоровье»</strong>.</li>
+      <li>Подтвердите дважды — приложение переспрашивает, потому что действие необратимо.</li>
+    </ol>
+    <p>Сразу стирается всё, что хранит приложение: профиль, показатели трекера, ответы опросника, разборы и напоминания. Если хотите сначала сохранить копию, используйте «Сохранить копию» в этом же разделе — файл зашифрован вашим паролем и остаётся у вас.</p>
+    <p>Удаление приложения убирает те же данные.</p>
+
+    <h2>2. Удалить вклад в исследование (только если вы его включали)</h2>
+    <p>Если вы включили <strong>«Помочь улучшить приложение»</strong>, на наш сервер отправлялись обезличенные дневные записи. В них нет ни имени, ни почты, ни идентификатора устройства — только случайный номер установки.</p>
+    <ol>
+      <li>Откройте <strong>«Мой профиль»</strong> → <strong>«Участие в исследовании»</strong>.</li>
+      <li>Нажмите <strong>«Удалить мой вклад»</strong>.</li>
+      <li>Появится сообщение, что на сервере от этой установки ничего не осталось.</li>
+    </ol>
+    <p>Связь между случайным номером и вами существует только на вашем устройстве, поэтому такое удаление возможно лишь с него. Сделайте это до шага 1 или до удаления приложения.</p>
+
+    <h2>3. Написать нам</h2>
+    <p>Если приложение не открывается, напишите на <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. Отвечаем в течение 30 дней. Укажите платформу (Android или iOS) и примерные даты использования — иначе найти записи невозможно: имён и адресов мы не храним.</p>
+
+    <div class="divider"></div>
+
+    <h2>Что хранится и как долго</h2>
+    <div class="tbl-wrap">
+    <table>
+      <tr><th>Данные</th><th>Где</th><th>Срок</th></tr>
+      <tr><td>Профиль, показатели трекера (ВСР, пульс покоя, пульс, сон, кислород в крови, шаги, VO₂ max), ответы опросника, разборы</td><td>Только ваше устройство</td><td>Пока вы их не удалите или не удалите приложение</td></tr>
+      <tr><td>Текст готового разбора (временная копия, чтобы он не потерялся)</td><td>Наш сервер</td><td>72 часа, затем удаляется автоматически</td></tr>
+      <tr><td>Данные, отправленные для разбора или ответа в чате</td><td>Наш сервер, в памяти</td><td>Не хранятся — используются для ответа и отбрасываются</td></tr>
+      <tr><td>Обезличенные записи исследования (только с вашего согласия, по умолчанию выключено)</td><td>Наш сервер</td><td>Пока вы не удалите их на экране «Участие в исследовании»</td></tr>
+      <tr><td>Состояние подписки</td><td>Google Play / RevenueCat</td><td>По правилам Google Play; платёжных данных мы не храним</td></tr>
+    </table>
+    </div>
+    <p>Мы не собираем имя, почту, телефон и местоположение; рекламы и аналитики в приложении нет. Подробно: <a href="privacy.html">Политика конфиденциальности</a>.</p>
+  </div>
+
+  <!-- ─────────────────────────── ES ─────────────────────────── -->
+  <div data-lang="es">
+    <div class="page-eyebrow"><span>Eliminación de datos</span></div>
+    <h1>Eliminar sus datos</h1>
+    <p class="page-date">Actualizado: 3 de septiembre de 2026</p>
+    <p class="intro">Esta página explica cómo eliminar los datos de la app <strong>VIA·L</strong> (paquete <strong>com.viael.vial</strong>), publicada por <strong>Kyrylo Selivanov</strong>, particular residente en Ucrania.</p>
+
+    <h2>No hay cuenta que eliminar</h2>
+    <p>VIA·L no tiene registro, ni inicio de sesión, ni cuenta de usuario. Sus datos de salud se guardan en su propio dispositivo, así que la eliminación se hace en la propia app: no hace falta que nadie la apruebe.</p>
+
+    <div class="divider"></div>
+
+    <h2>1. Eliminar los datos del dispositivo</h2>
+    <ol>
+      <li>Abra la app VIA·L.</li>
+      <li>Vaya a la pestaña <strong>«Mi perfil»</strong> (barra inferior, a la derecha).</li>
+      <li>Abra la sección <strong>«Copia de seguridad y eliminación de datos»</strong>.</li>
+      <li>Pulse <strong>«Eliminar mis datos de salud»</strong>.</li>
+      <li>Confirme dos veces: la app vuelve a preguntar porque la acción es irreversible.</li>
+    </ol>
+    <p>Se borra de inmediato todo lo que guarda la app: perfil, lecturas del dispositivo, respuestas del cuestionario, análisis y recordatorios. Si prefiere guardar antes una copia, use «Guardar copia» en esa misma sección: el archivo está cifrado con su contraseña y se queda con usted.</p>
+    <p>Desinstalar la app elimina los mismos datos.</p>
+
+    <h2>2. Eliminar su aportación a la investigación (solo si la activó)</h2>
+    <p>Si activó <strong>«Ayudar a mejorar la app»</strong>, se enviaron a nuestro servidor registros diarios anónimos. No contienen nombre, correo ni identificador del dispositivo: solo un número de instalación aleatorio.</p>
+    <ol>
+      <li>Abra <strong>«Mi perfil»</strong> → <strong>«Participación en la investigación»</strong>.</li>
+      <li>Pulse <strong>«Eliminar mi aportación»</strong>.</li>
+      <li>Verá el mensaje de que no queda nada de esta instalación en el servidor.</li>
+    </ol>
+    <p>El vínculo entre ese número aleatorio y usted existe únicamente en su dispositivo, por eso esta eliminación solo puede hacerse desde él. Hágalo antes del paso 1 o antes de desinstalar.</p>
+
+    <h2>3. Escribirnos</h2>
+    <p>Si no puede abrir la app, escriba a <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. Respondemos en un plazo de 30 días. Indique la plataforma (Android o iOS) y las fechas aproximadas de uso: no hay otra forma de localizar registros, ya que no guardamos nombres ni direcciones.</p>
+
+    <div class="divider"></div>
+
+    <h2>Qué se guarda y durante cuánto tiempo</h2>
+    <div class="tbl-wrap">
+    <table>
+      <tr><th>Datos</th><th>Dónde</th><th>Plazo</th></tr>
+      <tr><td>Perfil, lecturas del dispositivo (variabilidad de la frecuencia cardíaca, frecuencia en reposo, frecuencia cardíaca, sueño, oxígeno en sangre, pasos, VO₂ max), respuestas del cuestionario, análisis</td><td>Solo su dispositivo</td><td>Hasta que los elimine o desinstale la app</td></tr>
+      <tr><td>El texto de un análisis generado (copia temporal para no perderlo)</td><td>Nuestro servidor</td><td>72 horas; después se elimina automáticamente</td></tr>
+      <tr><td>Datos enviados para un análisis o una respuesta del chat</td><td>Nuestro servidor, en memoria</td><td>No se almacenan: se usan para dar la respuesta y se descartan</td></tr>
+      <tr><td>Registros anónimos de investigación (solo con su consentimiento, desactivado por defecto)</td><td>Nuestro servidor</td><td>Hasta que los elimine en «Participación en la investigación»</td></tr>
+      <tr><td>Estado de la suscripción</td><td>Google Play / RevenueCat</td><td>Según las normas de Google Play; no guardamos datos de pago</td></tr>
+    </table>
+    </div>
+    <p>No recogemos nombre, correo, teléfono ni ubicación, y la app no tiene publicidad ni analítica. Detalles: <a href="privacy.html">Política de privacidad</a>.</p>
+  </div>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span class="footer-copy">© 2026 VIA·L</span>
+    <span class="footer-links">
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+      <a href="support.html">Support</a>
+    </span>
+  </div>
+</footer>
+
+<script>
+// Страница удаления данных для Google Play (Data safety → URL удаления данных).
+// Как и остальные страницы legal-app: НИ ОДНОЙ ссылки на сайт нутрициолога и на витрину
+// (см. docs/APP-STORE-SUBMISSION-CHECKLIST.md §3 и память feedback_via_l_appstore_isolation).
+// Шаги описывают реальный интерфейс: vlEraseHealth() в разделе «Резервная копия и удаление
+// данных» и rcForget() на research-consent.html. Меняется интерфейс — правится и эта страница,
+// иначе инструкция разъедется с приложением, а Google сверяет её именно с ним.
+  var LANG_FLAGS = { en:'🇬🇧', es:'🇪🇸', uk:'🇺🇦', ru:'🇷🇺', de:'🇩🇪', pt:'🇧🇷', fr:'🇫🇷', pl:'🇵🇱', it:'🇮🇹', he:'🇮🇱', ja:'🇯🇵', ko:'🇰🇷' };
+  var LANG_NAMES = { en:'English', es:'Español', uk:'Українська', ru:'Русский', de:'Deutsch', pt:'Português', fr:'Français', pl:'Polski', it:'Italiano', he:'עברית', ja:'日本語', ko:'한국어' };
+  var LANG_ORDER = ['en', 'uk', 'ru', 'es'];
+  function toggleLangMenu(e) { if (e) e.stopPropagation(); document.getElementById('langMenu').classList.toggle('open'); }
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.lang-wrap')) { var m = document.getElementById('langMenu'); if (m) m.classList.remove('open'); }
+  });
+  (function buildLangMenu(){
+    var m = document.getElementById('langMenu');
+    LANG_ORDER.forEach(function(l) {
+      var d = document.createElement('div');
+      d.className = 'lang-opt'; d.setAttribute('data-l', l);
+      d.innerHTML = '<span class="lang-flag">' + LANG_FLAGS[l] + '</span>' + LANG_NAMES[l];
+      d.onclick = function(){ setLang(l); };
+      m.appendChild(d);
+    });
+  })();
+  function setLang(l){
+    document.querySelectorAll('[data-lang]').forEach(function(d){ d.classList.toggle('active', d.getAttribute('data-lang')===l); });
+    var lf = document.getElementById('langFlag'); if (lf) lf.textContent = LANG_FLAGS[l] || '🌐';
+    var ll = document.getElementById('langLabel'); if (ll) ll.textContent = l.toUpperCase();
+    document.querySelectorAll('.lang-opt').forEach(function(o) {
+      o.classList.toggle('active', o.getAttribute('data-l') === l);
+    });
+    var lm = document.getElementById('langMenu'); if (lm) lm.classList.remove('open');
+    document.documentElement.lang = l;
+    // Ключ общий с приложением и остальными юр-страницами, чтобы язык переносился между ними.
+    try{ if (document.querySelector('[data-lang="'+l+'"]')) { localStorage.setItem('selectedLang', l); localStorage.setItem('vial_legal_lang', l); } }catch(e){}
+  }
+  (function(){
+    var saved=null;
+    try{ saved=localStorage.getItem('selectedLang')||localStorage.getItem('vial_legal_lang'); }catch(e){}
+    var l = saved || (navigator.language||'en').slice(0,2).toLowerCase();
+    if (l === 'ua') l = 'uk';
+    // Язык, которого на странице нет (например ja) → английская версия, но выбор НЕ переписываем.
+    if(!document.querySelector('[data-lang="'+l+'"]')) l='en';
+    setLang(l);
+  })();
+</script>
+
+</body>
+</html>
