@@ -1,4 +1,4 @@
-# Apple IAP — подписка VIA·L €15/мес (RevenueCat)
+# Apple IAP — подписка VIA·L €30/мес (RevenueCat)
 
 Требование Apple (Guideline 3.1.1): платный контент, потребляемый внутри приложения, обязан
 продаваться через Apple In-App Purchase — не через код доступа с сайта и не через Hotmart.
@@ -34,7 +34,7 @@ Capacitor 6.x в `app/package.json`; версии 10.x+ требуют Capacitor
 1. **RevenueCat.** Создать проект на [app.revenuecat.com](https://app.revenuecat.com) → добавить
    iOS-приложение с bundle id `com.viael.vial` → получить **iOS API key** (публичный,
    `appl_...`).
-2. **App Store Connect.** Создать auto-renewable subscription продукт (€15/мес), привязать к
+2. **App Store Connect.** Создать auto-renewable subscription продукт (€30/мес), привязать к
    RevenueCat (RevenueCat даёт пошаговую интеграцию через App Store Connect API key/shared secret —
    см. их онбординг).
 3. **RevenueCat dashboard:**

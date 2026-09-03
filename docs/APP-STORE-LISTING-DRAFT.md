@@ -8,7 +8,7 @@
 > Правила, по которым писался текст: не обещать лечения, диагноза и результата; глагол —
 > «explains / helps you read», а не «assesses your health»; ни одной ссылки на сайт нутрициолога
 > и на витрину специалистов ([[feedback_via_l_appstore_isolation]]); цена и условия подписки —
-> ровно как в IAP (€15/мес, авто-продление).
+> ровно как в IAP (€30/мес, авто-продление).
 
 ---
 
@@ -83,7 +83,7 @@ talk to a clinician.
 
 SUBSCRIPTION
 
-Full access is €15 per month, billed through your Apple ID and renewing automatically until you
+Full access is €30 per month, billed through your Apple ID and renewing automatically until you
 cancel. Manage or cancel any time in iPhone Settings. Terms: https://via-l.com/legal-app/terms.html
 Privacy Policy: https://via-l.com/legal-app/privacy.html
 ```
@@ -111,7 +111,7 @@ VIA-L is a wellness app: it interprets the user's own lifestyle and wearable met
 language. It does not diagnose, treat or prevent disease and is not a medical device; the
 disclaimer is shown before first use and repeated on every result.
 
-Content is behind an auto-renewable subscription (€15/month) purchased with In-App Purchase.
+Content is behind an auto-renewable subscription (€30/month) purchased with In-App Purchase.
 "Restore Purchases" is on the paywall. There is no login and no way to buy access to the app or
 its content outside the app.
 

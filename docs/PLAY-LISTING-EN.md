@@ -56,7 +56,7 @@ VIA-L is a wellness and lifestyle app. It does not diagnose, treat or prevent an
 
 SUBSCRIPTION
 
-Full access is €15 per month, billed through Google Play and renewing automatically until you cancel. Manage or cancel any time in the Play Store subscriptions screen.
+Full access is €30 per month, billed through Google Play and renewing automatically until you cancel. Manage or cancel any time in the Play Store subscriptions screen.
 Terms: https://via-l.com/legal-app/terms.html
 Privacy Policy: https://via-l.com/legal-app/privacy.html
 ```
