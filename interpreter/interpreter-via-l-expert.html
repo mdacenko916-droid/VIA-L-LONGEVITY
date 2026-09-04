@@ -8627,6 +8627,15 @@ function _manualStart(){
 // (системный диалог разрешений), без промежуточной панели с выбором способа. На вебе
 // такого прямого доступа нет — там открываем панель (файл export.xml или ручной ввод).
 function _hkNote(msg){ var el=document.getElementById('gp-note'); if(el&&msg) el.textContent=msg; }
+// Лента строится СРАЗУ (_chooseSource зовёт _openFunnel, не дожидаясь асинхронного чтения), а
+// данные приходят через секунду-две. Без пересборки в ленте остаются блоки, которые прибор уже
+// закрыл: живой проход спрашивал «измерьте пульс на запястье», когда пульс покоя уже лежал в
+// панели трекера (Android, 2026-09-04). _reflowSteps сохраняет прокрутку и сам пропускает
+// утренний экран.
+function _hkAfterFill(){
+  try{ if(typeof _toggleSleepHours==='function') _toggleSleepHours(); }catch(e){}
+  try{ if(typeof _reflowSteps==='function') _reflowSteps(); }catch(e){}
+}
 function _hkNoteReset(){
   _hkNote(L({ru:'Показатели можно поправить вручную — нажмите на любой.',uk:'Показники можна виправити вручну — торкніться будь-якого.',en:'You can edit any value manually — just tap it.',es:'Puedes editar cualquier valor manualmente — solo tócalo.',de:'Jeden Wert kannst du manuell anpassen — einfach antippen.',pt:'Você pode editar qualquer valor manualmente — basta tocar.',fr:'Vous pouvez modifier chaque valeur manuellement — touchez-la.',pl:'Każdą wartość możesz poprawić ręcznie — dotknij jej.',it:'Puoi modificare ogni valore manualmente — basta toccarlo.',he:'אפשר לערוך כל ערך ידנית — פשוט הקישו עליו.',ja:'各数値は手動で修正できます — タップしてください。',ko:'각 수치는 직접 수정할 수 있어요 — 탭하세요.'}));
 }
@@ -8645,7 +8654,7 @@ async function _heroHealthStart(){
     // Apple намеренно НЕ сообщает приложению об отказе в чтении: отказ и пустой Health выглядят
     // одинаково. Поэтому текст ниже покрывает оба случая, а не утверждает что-то одно.
     if(ok){ try{ filled = await window.healthkitFillApple(); }catch(e){} }
-    if(filled){ try{ localStorage.setItem('vialp_lastsync',new Date().toISOString()); }catch(e){} _hkNoteReset(); }
+    if(filled){ try{ localStorage.setItem('vialp_lastsync',new Date().toISOString()); }catch(e){} _hkNoteReset(); _hkAfterFill(); }
     else _hkNote(_hkEmpty('Apple Health'));
     return;
   }
@@ -8656,7 +8665,7 @@ async function _heroHealthStart(){
     var granted=false, hcFilled=false;
     try{ granted = await Promise.resolve(window.healthConnectRequest && window.healthConnectRequest()); }catch(e){}
     if(granted){ try{ hcFilled = await window.healthConnectFill(); }catch(e){} }
-    if(hcFilled){ try{ localStorage.setItem('vialp_lastsync',new Date().toISOString()); }catch(e){} _hkNoteReset(); }
+    if(hcFilled){ try{ localStorage.setItem('vialp_lastsync',new Date().toISOString()); }catch(e){} _hkNoteReset(); _hkAfterFill(); }
     else _hkNote(_hkEmpty('Health Connect'));
     return;
   }
