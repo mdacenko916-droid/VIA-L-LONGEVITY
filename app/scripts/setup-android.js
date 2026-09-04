@@ -274,8 +274,11 @@ function patchSigning() {
     touched++;
   }
   if (/versionCode 1\b/.test(g)) {
+    // Integer.parseInt, а НЕ `(...) as Integer`: во втором варианте Groovy разбирает строку как
+    // вызов versionCode(...) с последующим приведением, делегат получает null и сборка падает
+    // «Value is null» ещё на конфигурации (2026-09-04).
     g = g.replace(/versionCode 1\b/,
-      "versionCode (System.getenv('VIAL_VERSION_CODE') ?: '1') as Integer");
+      "versionCode Integer.parseInt(System.getenv('VIAL_VERSION_CODE') ?: '1')");
     touched++;
   }
 
