@@ -66,6 +66,9 @@ const NAV_ITEMS =
   `        <item name="android:windowLightNavigationBar">false</item>\n`;
 
 const MIN_SDK = 26;
+// Play принимает НОВЫЕ приложения только с targetSdk 35 (действует с 31.08.2026).
+// Capacitor 6 пишет 34 → без этого патча загрузка AAB отклоняется. 2026-09-04.
+const TARGET_SDK = 35;
 
 // Блок для MainActivity: обоснование доступа (Android ≤13) + возврат из OAuth по схеме.
 const ACTIVITY_BLOCK = `
@@ -108,12 +111,23 @@ function patchGradle() {
     console.warn(`⚠️  variables.gradle не найден. Сначала выполни \`npx cap add android\`, затем \`npm run setup:android\`.`);
     return;
   }
-  const src = fs.readFileSync(GRADLE, 'utf8');
+  let src = fs.readFileSync(GRADLE, 'utf8');
   const m = src.match(/minSdkVersion\s*=\s*(\d+)/);
   if (!m) return fail('в variables.gradle не найден minSdkVersion — неожиданный формат');
-  if (Number(m[1]) >= MIN_SDK) { console.log(`✓ variables.gradle: minSdkVersion ${m[1]} — уже ≥ ${MIN_SDK}.`); return; }
-  fs.writeFileSync(GRADLE, src.replace(/minSdkVersion\s*=\s*\d+/, `minSdkVersion = ${MIN_SDK}`));
-  console.log(`✚ variables.gradle: minSdkVersion ${m[1]} → ${MIN_SDK} (требование androidx.health.connect).`);
+  if (Number(m[1]) < MIN_SDK) {
+    src = src.replace(/minSdkVersion\s*=\s*\d+/, `minSdkVersion = ${MIN_SDK}`);
+    console.log(`✚ variables.gradle: minSdkVersion ${m[1]} → ${MIN_SDK} (требование androidx.health.connect).`);
+  } else console.log(`✓ variables.gradle: minSdkVersion ${m[1]} — уже ≥ ${MIN_SDK}.`);
+
+  for (const key of ['targetSdkVersion', 'compileSdkVersion']) {
+    const cur = src.match(new RegExp(key + '\\s*=\\s*(\\d+)'));
+    if (!cur) { fail(`в variables.gradle не найден ${key}`); continue; }
+    if (Number(cur[1]) < TARGET_SDK) {
+      src = src.replace(new RegExp(key + '\\s*=\\s*\\d+'), `${key} = ${TARGET_SDK}`);
+      console.log(`✚ variables.gradle: ${key} ${cur[1]} → ${TARGET_SDK} (требование Google Play).`);
+    } else console.log(`✓ variables.gradle: ${key} ${cur[1]} — уже ≥ ${TARGET_SDK}.`);
+  }
+  fs.writeFileSync(GRADLE, src);
 }
 
 function patchManifest() {
