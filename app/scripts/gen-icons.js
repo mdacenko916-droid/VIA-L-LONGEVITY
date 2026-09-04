@@ -36,13 +36,49 @@ async function main() {
         `Дай SVG (app/assets/icon-source.svg) или PNG 1024×1024+.`);
     }
   }
-  // density высокий — чтобы вектор растеризовался резко под 1024.
-  const buf = await sharp(SRC, isSvg ? { density: 512 } : undefined)
-    .trim()                                          // срезаем прозрачные поля → логотип на всю плитку
-    .resize(1024, 1024, { fit: 'cover', kernel: 'lanczos3' })
-    .flatten({ background: BG })
-    .png({ compressionLevel: 9, effort: 10 })
-    .toBuffer();
+  // ── Нормализация мастера ───────────────────────────────────────────────
+  // Знак в исходнике занимает ~80% плитки и сидит выше центра (поля 90 сверху / 165 снизу) —
+  // на домашнем экране это читается как «круг задран кверху и упирается в края».
+  // Поэтому знак вырезаем по яркости, находим его реальные границы и вписываем В ЦЕНТР
+  // квадрата с полями: SIGN_RATIO — доля стороны, которую занимает знак. 2026-09-04.
+  const SIGN_RATIO = 0.72;   // 72% — знак крупный, но с воздухом; iOS/Android скругляют углы
+  const LO = 45, HI = 90;    // порог яркости: фон тёмный, золото яркое
+
+  const srcMeta = await sharp(SRC, isSvg ? { density: 512 } : undefined).metadata();
+  const SQ = Math.min(srcMeta.width, srcMeta.height);
+  const flatRaw = await sharp(SRC, isSvg ? { density: 512 } : undefined)
+    .resize(SQ, SQ, { fit: 'cover', kernel: 'lanczos3' }).removeAlpha().raw().toBuffer();
+  const rgbaAll = Buffer.alloc(SQ * SQ * 4);
+  let minX = SQ, maxX = -1, minY = SQ, maxY = -1;
+  for (let i = 0, j = 0, px = 0; i < flatRaw.length; i += 3, j += 4, px++) {
+    const lum = 0.299 * flatRaw[i] + 0.587 * flatRaw[i + 1] + 0.114 * flatRaw[i + 2];
+    const a = Math.max(0, Math.min(255, Math.round((lum - LO) / (HI - LO) * 255)));
+    rgbaAll[j] = flatRaw[i]; rgbaAll[j + 1] = flatRaw[i + 1]; rgbaAll[j + 2] = flatRaw[i + 2]; rgbaAll[j + 3] = a;
+    if (lum > 70) { const x = px % SQ, y = (px / SQ) | 0;
+      if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y; }
+  }
+  const signW = maxX - minX + 1, signH = maxY - minY + 1;
+  console.log(`  · знак в исходнике: ${signW}×${signH} (${Math.round(signW / SQ * 100)}% ширины), центрирую`);
+
+  // знак без фона, обрезанный по своим границам
+  const markCrop = await sharp(rgbaAll, { raw: { width: SQ, height: SQ, channels: 4 } })
+    .extract({ left: minX, top: minY, width: signW, height: signH }).png().toBuffer();
+
+  // фон берём сырым пикселем из угла: sharp.stats() считает по всему кадру и .extract() игнорирует
+  const corner = await sharp(SRC, isSvg ? { density: 512 } : undefined)
+    .extract({ left: 4, top: 4, width: 2, height: 2 }).removeAlpha().raw().toBuffer();
+  const BG_SRC = { r: corner[0], g: corner[1], b: corner[2] };
+
+  const markAlpha = await sharp({ create: { width: 1024, height: 1024, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+    .composite([{ input: await sharp(markCrop).resize(Math.round(1024 * SIGN_RATIO), Math.round(1024 * SIGN_RATIO),
+      { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer(), gravity: 'centre' }])
+    .png().toBuffer();
+  fs.writeFileSync(path.join(APP, 'assets', 'icon-mark-alpha.png'), markAlpha);
+
+  // опаковый мастер: знак по центру на фирменном фоне
+  const buf = await sharp({ create: { width: 1024, height: 1024, channels: 3, background: BG_SRC } })
+    .composite([{ input: markAlpha, gravity: 'centre' }])
+    .png({ compressionLevel: 9, effort: 10 }).toBuffer();
 
   fs.writeFileSync(PREVIEW, buf);
   console.log('✓ app/assets/icon-1024.png (опаковый мастер 1024×1024)');
@@ -75,24 +111,10 @@ async function main() {
   // ужимаем до 66% канвы: система обрезает края маской (круг/сквиркл). 2026-09-04.
   const ANDROID_RES = path.join(APP, 'android/app/src/main/res');
   if (fs.existsSync(ANDROID_RES)) {
-    // Цвет берём из ИСХОДНИКА, а не из buf: buf уже прошёл .trim()+cover, и его угол — не фон.
-    // Читаем СЫРОЙ пиксель: sharp.stats() считает по всему кадру и вырез .extract() игнорирует.
-    const corner = await sharp(SRC, isSvg ? { density: 512 } : undefined)
-      .extract({ left: 4, top: 4, width: 2, height: 2 }).removeAlpha().raw().toBuffer();
-    const [r, g, b] = [corner[0], corner[1], corner[2]];
+    const { r, g, b } = BG_SRC;
     const hex = '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('').toUpperCase();
     const DPI = { mdpi: 48, hdpi: 72, xhdpi: 96, xxhdpi: 144, xxxhdpi: 192 };
-    // Вырезаем знак из мастера: фон тёмный, золото яркое → альфа по яркости с мягким краем.
-    const MASTER = 1024, LO = 45, HI = 90;
-    const flat = await sharp(buf).resize(MASTER, MASTER, { kernel: 'lanczos3' }).removeAlpha().raw().toBuffer();
-    const rgba = Buffer.alloc(MASTER * MASTER * 4);
-    for (let i = 0, j = 0; i < flat.length; i += 3, j += 4) {
-      const lum = 0.299 * flat[i] + 0.587 * flat[i + 1] + 0.114 * flat[i + 2];
-      rgba[j] = flat[i]; rgba[j + 1] = flat[i + 1]; rgba[j + 2] = flat[i + 2];
-      rgba[j + 3] = Math.max(0, Math.min(255, Math.round((lum - LO) / (HI - LO) * 255)));
-    }
-    const markAlpha = await sharp(rgba, { raw: { width: MASTER, height: MASTER, channels: 4 } }).png().toBuffer();
-    fs.writeFileSync(path.join(APP, 'assets', 'icon-mark-alpha.png'), markAlpha);
+    // markAlpha (знак без фона, по центру) готовится выше — один источник на все платформы.
     for (const [dpi, size] of Object.entries(DPI)) {
       const dir = path.join(ANDROID_RES, 'mipmap-' + dpi);
       if (!fs.existsSync(dir)) continue;
