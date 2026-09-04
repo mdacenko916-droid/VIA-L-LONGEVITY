@@ -58,6 +58,22 @@
     } catch(e){ return null; }
   }
 
+  // Минимум по типу за окно [startISO, endISO]. Нужен для запасного пульса покоя: Fitbit/Google
+  // Health отдают в Apple Health обычный пульс, но НЕ restingHeartRate — без фолбэка поле у таких
+  // пользователей остаётся пустым, хотя ночные замеры есть. Берём не абсолютный минимум, а 10-й
+  // перцентиль: одиночный артефакт замера не должен занижать показатель на весь день.
+  async function lowInWindow(sampleName, startISO, endISO){
+    var p = hk(); if(!p) return null;
+    try {
+      var r = await p.queryHKitSampleType({ sampleName: sampleName, startDate: startISO, endDate: endISO, limit: 0 });
+      var arr = ((r && r.resultData) || []).map(function(s){ return Number(s && s.value); })
+                 .filter(function(n){ return isFinite(n) && n > 25 && n < 200; });
+      if(arr.length < 3) return null;
+      arr.sort(function(a,b){ return a - b; });
+      return arr[Math.floor(arr.length * 0.1)];
+    } catch(e){ return null; }
+  }
+
   // Читает метрики и нормализует в форму полей карточки Apple ИП.
   window.healthkitRead = async function(){
     if(!hk()) return null;
@@ -93,6 +109,12 @@
     if(hrvVal == null){ var hrv = await lastSample('heartRateVariability'); if(hrv && hrv.value != null) hrvVal = Number(hrv.value); }
     if(hrvVal != null && !isNaN(hrvVal)) out.hrv = Math.round(hrvVal);
     var rhr = await lastSample('restingHeartRate');     if(rhr && rhr.value != null) out.rhr = Math.round(Number(rhr.value));
+    // Фолбэк пульса покоя: тип restingHeartRate пишут не все источники (Google Health/Fitbit —
+    // нет), поэтому при его отсутствии считаем сами по ночному пульсу внутри окна сна.
+    if(out.rhr == null && nightStart && nightEnd){
+      var lowHr = await lowInWindow('heartRate', nightStart.toISOString(), nightEnd.toISOString());
+      if(lowHr != null) out.rhr = Math.round(lowHr);
+    }
     var vo2 = await lastSample('vo2Max');               if(vo2 && vo2.value != null) out.vo2 = Math.round(Number(vo2.value));
     // SpO2: последний замер. Apple хранит долей 0–1 → переводим в проценты.
     var spo2 = await lastSample('oxygenSaturation');
