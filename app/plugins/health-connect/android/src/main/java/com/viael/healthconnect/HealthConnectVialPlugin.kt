@@ -4,6 +4,7 @@ import androidx.activity.result.ActivityResult
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
 import androidx.health.connect.client.records.OxygenSaturationRecord
 import androidx.health.connect.client.records.Record
@@ -38,6 +39,9 @@ class HealthConnectVialPlugin : Plugin() {
     private val perms: Set<String> = setOf(
         HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class),
         HealthPermission.getReadPermission(RestingHeartRateRecord::class),
+        // Обычный пульс: из него считаем пульс покоя, когда источник не пишет его отдельным
+        // типом (мосты Fitbit→Health Connect пишут только HeartRateRecord).
+        HealthPermission.getReadPermission(HeartRateRecord::class),
         HealthPermission.getReadPermission(Vo2MaxRecord::class),
         HealthPermission.getReadPermission(OxygenSaturationRecord::class),
         HealthPermission.getReadPermission(StepsRecord::class),
@@ -155,6 +159,20 @@ class HealthConnectVialPlugin : Plugin() {
                 // ── Пульс покоя: последний за 7 дней. ──
                 readRecords(c, RestingHeartRateRecord::class, from7, now)
                     .maxByOrNull { it.time }?.let { out.put("rhr", it.beatsPerMinute.toInt()) }
+
+                // Фолбэк: тип «пульс покоя» пишут не все источники (мосты из Fitbit кладут только
+                // обычный пульс) — тогда считаем сами по ночному пульсу внутри окна сна. Берём
+                // 10-й перцентиль, а не минимум: одиночный артефакт замера не должен занижать
+                // показатель на все сутки. То же правило, что в Apple-мосте.
+                if (!out.has("rhr") && nightStart != null && nightEnd != null) {
+                    val night = readRecords(c, HeartRateRecord::class, nightStart, nightEnd)
+                        .flatMap { it.samples }
+                        .filter { !it.time.isBefore(nightStart) && !it.time.isAfter(nightEnd) }
+                        .map { it.beatsPerMinute }
+                        .filter { it in 25..200 }
+                        .sorted()
+                    if (night.size >= 3) out.put("rhr", night[(night.size * 0.1).toInt()].toInt())
+                }
 
                 // ── VO2max: последний. ──
                 readRecords(c, Vo2MaxRecord::class, from7, now)
