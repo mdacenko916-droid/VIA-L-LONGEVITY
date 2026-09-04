@@ -39,6 +39,14 @@
     return Object.keys(data).length > 0;
   };
 
+  // Запрос разрешений отдельно от кнопки — нужен экрану выбора источника, который сам ведёт
+  // статус («читаем…» / «данных нет») и кнопкой не пользуется. Промис → true, если права даны.
+  window.healthConnectRequest = async function () {
+    var p = hc(); if (!p) return false;
+    try { var r = await p.requestPermissions(); return !!(r && r.granted); }
+    catch (e) { return false; }
+  };
+
   // Обработчик кнопки «Health Connect»: запрос прав → чтение → заполнение.
   window.healthConnectImport = function (btn) {
     var p = hc(); if (!p) return;

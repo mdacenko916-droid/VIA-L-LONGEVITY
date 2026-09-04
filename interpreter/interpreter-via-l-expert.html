@@ -2853,7 +2853,7 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
     <div class="card">
       <div class="card-accent"></div>
       <div class="step-badge" data-t="gp_title">Данные с трекера</div>
-      <div class="gp-note" data-t="gp_once">Показатели можно поправить вручную — нажмите на любой.</div>
+      <div class="gp-note" id="gp-note" data-t="gp_once">Показатели можно поправить вручную — нажмите на любой.</div>
       <div class="gadget-panel" id="gadget-panel"></div>
     </div>
   </div>
@@ -8611,18 +8611,38 @@ function _manualStart(){
 // Кнопка «Apple Health / Health Connect» в шапке — внутри приложения это ОДНО действие
 // (системный диалог разрешений), без промежуточной панели с выбором способа. На вебе
 // такого прямого доступа нет — там открываем панель (файл export.xml или ручной ввод).
+function _hkNote(msg){ var el=document.getElementById('gp-note'); if(el&&msg) el.textContent=msg; }
+function _hkNoteReset(){
+  _hkNote(L({ru:'Показатели можно поправить вручную — нажмите на любой.',uk:'Показники можна виправити вручну — торкніться будь-якого.',en:'You can edit any value manually — just tap it.',es:'Puedes editar cualquier valor manualmente — solo tócalo.',de:'Jeden Wert kannst du manuell anpassen — einfach antippen.',pt:'Você pode editar qualquer valor manualmente — basta tocar.',fr:'Vous pouvez modifier chaque valeur manuellement — touchez-la.',pl:'Każdą wartość możesz poprawić ręcznie — dotknij jej.',it:'Puoi modificare ogni valore manualmente — basta toccarlo.',he:'אפשר לערוך כל ערך ידנית — פשוט הקישו עליו.',ja:'各数値は手動で修正できます — タップしてください。',ko:'각 수치는 직접 수정할 수 있어요 — 탭하세요.'}));
+}
+function _hkReading(src){
+  return L({ru:'Читаем данные из '+src+'…',uk:'Читаємо дані з '+src+'…',en:'Reading data from '+src+'…',es:'Leyendo datos de '+src+'…',de:'Daten von '+src+' werden gelesen…',pt:'Lendo dados do '+src+'…',fr:'Lecture des données depuis '+src+'…',pl:'Odczytujemy dane z '+src+'…',it:'Lettura dei dati da '+src+'…',he:'קוראים נתונים מ-'+src+'…',ja:src+' からデータを読み込んでいます…',ko:src+'에서 데이터를 읽는 중…'});
+}
+function _hkEmpty(src){
+  return L({ru:src+' не отдал данных за последние сутки. Проверьте разрешения в настройках телефона, введите показатели вручную ниже или выберите «Синхронизация устройства».',uk:src+' не віддав даних за останню добу. Перевірте дозволи в налаштуваннях телефона, введіть показники вручну нижче або оберіть «Синхронізація пристрою».',en:src+' returned no data for the past day. Check permissions in your phone settings, enter the values manually below, or choose “Device sync”.',es:src+' no devolvió datos del último día. Revisa los permisos en los ajustes del teléfono, introduce los valores manualmente abajo o elige «Sincronización del dispositivo».',de:src+' hat für den letzten Tag keine Daten geliefert. Prüfe die Berechtigungen in den Telefoneinstellungen, gib die Werte unten manuell ein oder wähle „Gerätesynchronisierung“.',pt:src+' não retornou dados do último dia. Verifique as permissões nas configurações do telefone, insira os valores manualmente abaixo ou escolha “Sincronização do dispositivo”.',fr:src+' n’a renvoyé aucune donnée pour les dernières 24 heures. Vérifiez les autorisations dans les réglages du téléphone, saisissez les valeurs manuellement ci-dessous ou choisissez « Synchronisation de l’appareil ».',pl:src+' nie zwrócił danych z ostatniej doby. Sprawdź uprawnienia w ustawieniach telefonu, wpisz wartości ręcznie poniżej lub wybierz „Synchronizacja urządzenia”.',it:src+' non ha restituito dati dell’ultimo giorno. Controlla i permessi nelle impostazioni del telefono, inserisci i valori manualmente qui sotto oppure scegli «Sincronizzazione dispositivo».',he:src+' לא החזיר נתונים מהיממה האחרונה. בדקו הרשאות בהגדרות הטלפון, הזינו ערכים ידנית למטה או בחרו «סנכרון מכשיר».',ja:src+' から過去1日のデータを取得できませんでした。端末の設定で許可を確認するか、下で手入力するか、「デバイス同期」を選んでください。',ko:src+'에서 최근 하루 데이터를 가져오지 못했습니다. 휴대폰 설정에서 권한을 확인하거나, 아래에서 직접 입력하거나, ‘기기 동기화’를 선택하세요.'});
+}
 async function _heroHealthStart(){
   if(typeof window.healthkitAvailable==='function'&&window.healthkitAvailable()){
-    var b=document.getElementById('apple-hk-btn');
-    if(b){appleHKImport(b);}
     _manualStart();
+    _hkNote(_hkReading('Apple Health'));
+    var ok=false, filled=false;
+    try{ ok = await Promise.resolve(window.healthkitAuthorize && window.healthkitAuthorize()); }catch(e){}
+    // Apple намеренно НЕ сообщает приложению об отказе в чтении: отказ и пустой Health выглядят
+    // одинаково. Поэтому текст ниже покрывает оба случая, а не утверждает что-то одно.
+    if(ok){ try{ filled = await window.healthkitFillApple(); }catch(e){} }
+    if(filled){ try{ localStorage.setItem('vialp_lastsync',new Date().toISOString()); }catch(e){} _hkNoteReset(); }
+    else _hkNote(_hkEmpty('Apple Health'));
     return;
   }
   var hcState=(typeof window.healthConnectAvailable==='function')?await window.healthConnectAvailable():null;
   if(hcState&&hcState.available){
-    var hb=document.getElementById('hc-btn');
-    if(hb){healthConnectImport(hb);}
     _manualStart();
+    _hkNote(_hkReading('Health Connect'));
+    var granted=false, hcFilled=false;
+    try{ granted = await Promise.resolve(window.healthConnectRequest && window.healthConnectRequest()); }catch(e){}
+    if(granted){ try{ hcFilled = await window.healthConnectFill(); }catch(e){} }
+    if(hcFilled){ try{ localStorage.setItem('vialp_lastsync',new Date().toISOString()); }catch(e){} _hkNoteReset(); }
+    else _hkNote(_hkEmpty('Health Connect'));
     return;
   }
   // PWA/веб: прямого доступа к Apple Health/Health Connect нет → промежуточная панель импорта
