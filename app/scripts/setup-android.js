@@ -36,6 +36,8 @@ const path = require('path');
 const APP_DIR   = path.resolve(__dirname, '..');
 const ANDROID   = path.join(APP_DIR, 'android');
 const GRADLE    = path.join(ANDROID, 'variables.gradle');
+const WRAPPER   = path.join(ANDROID, 'gradle/wrapper/gradle-wrapper.properties');
+const BUILD_TOP = path.join(ANDROID, 'build.gradle');
 const MANIFEST  = path.join(ANDROID, 'app', 'src', 'main', 'AndroidManifest.xml');
 const STYLES    = path.join(ANDROID, 'app', 'src', 'main', 'res', 'values', 'styles.xml');
 const MAIN_ACT  = path.join(ANDROID, 'app', 'src', 'main', 'java', 'com', 'viael', 'vial', 'MainActivity.java');
@@ -66,9 +68,13 @@ const NAV_ITEMS =
   `        <item name="android:windowLightNavigationBar">false</item>\n`;
 
 const MIN_SDK = 26;
-// Play принимает НОВЫЕ приложения только с targetSdk 35 (действует с 31.08.2026).
+// Play принимает НОВЫЕ приложения только с targetSdk 36 (консоль отклоняет 35 как устаревший).
 // Capacitor 6 пишет 34 → без этого патча загрузка AAB отклоняется. 2026-09-04.
-const TARGET_SDK = 35;
+const TARGET_SDK = 36;
+// RevenueCat 11 тянет зависимость с байткодом Java 21 — Gradle 8.2.1 (по умолчанию у Capacitor 6)
+// падает на ней с «Failed to create Jar file». Нужны Gradle 8.13 + AGP 8.11.1. 2026-09-04.
+const GRADLE_VER = '8.13';
+const AGP_VER = '8.11.1';
 
 // Блок для MainActivity: обоснование доступа (Android ≤13) + возврат из OAuth по схеме.
 const ACTIVITY_BLOCK = `
@@ -128,6 +134,25 @@ function patchGradle() {
     } else console.log(`✓ variables.gradle: ${key} ${cur[1]} — уже ≥ ${TARGET_SDK}.`);
   }
   fs.writeFileSync(GRADLE, src);
+}
+
+function patchToolchain() {
+  if (fs.existsSync(WRAPPER)) {
+    const src = fs.readFileSync(WRAPPER, 'utf8');
+    const cur = src.match(/gradle-([\d.]+)-all\.zip/);
+    if (cur && cur[1] !== GRADLE_VER) {
+      fs.writeFileSync(WRAPPER, src.replace(/gradle-[\d.]+-all\.zip/, `gradle-${GRADLE_VER}-all.zip`));
+      console.log(`✚ gradle-wrapper: ${cur[1]} → ${GRADLE_VER} (нужен для зависимостей RevenueCat).`);
+    } else console.log(`✓ gradle-wrapper: ${GRADLE_VER}.`);
+  }
+  if (fs.existsSync(BUILD_TOP)) {
+    const src = fs.readFileSync(BUILD_TOP, 'utf8');
+    const cur = src.match(/com\.android\.tools\.build:gradle:([\d.]+)/);
+    if (cur && cur[1] !== AGP_VER) {
+      fs.writeFileSync(BUILD_TOP, src.replace(/com\.android\.tools\.build:gradle:[\d.]+/, `com.android.tools.build:gradle:${AGP_VER}`));
+      console.log(`✚ Android Gradle Plugin: ${cur[1]} → ${AGP_VER}.`);
+    } else console.log(`✓ Android Gradle Plugin: ${AGP_VER}.`);
+  }
 }
 
 function patchManifest() {
@@ -303,6 +328,7 @@ function patchSigning() {
 
 console.log('— setup-android: Health Connect + возврат из OAuth —');
 patchGradle();
+patchToolchain();
 patchManifest();
 patchStyles();
 patchMainActivity();
