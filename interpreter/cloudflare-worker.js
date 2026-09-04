@@ -4466,12 +4466,28 @@ async function handleOuraMetrics(request, env, corsHeaders){
   // как «сессии» — врать разбору: 20 записей за неделю читались как 20 тренировок, модель делала
   // вывод о перегрузке, а по факту это были прогулки. Осознанной тренировкой считаем только то,
   // что человек завёл или подтвердил сам; автодетект отдаём отдельно как фоновую активность.
+  // Фильтра по source оказалось МАЛО (живой разбор 2026-09-04: «24 сессии за неделю»): Oura
+  // помечает 'autodetected' только неподтверждённые записи, а подтверждённые в приложении
+  // прогулки приходят как обычные и снова читались как тренировки. Считаем тренировкой то, что
+  // ею является по существу: не автодетект, интенсивность выше 'easy' и длительность от 15 мин.
+  // Остальное — фоновая активность. Плюс отдаём МИНУТЫ: объём нагрузки измеряется временем, а не
+  // числом записей, и вывод о перегрузке из «24 сессий» брался ровно из этой подмены.
   const wk = await get('/v2/usercollection/workout') || [];
   if (wk.length) {
-    const real = wk.filter(w => w && String(w.source || '') !== 'autodetected');
+    const _wMin = (w) => {
+      const a = Date.parse(w && (w.start_datetime || w.start_time) || '');
+      const b = Date.parse(w && (w.end_datetime   || w.end_time)   || '');
+      return (isFinite(a) && isFinite(b) && b > a) ? (b - a) / 60000 : 0;
+    };
+    const real = wk.filter(w => w
+      && String(w.source || '') !== 'autodetected'
+      && String(w.intensity || '').toLowerCase() !== 'easy'
+      && _wMin(w) >= 15);
     const auto = wk.length - real.length;
     ex.workouts7d = real.length;
     if (auto) ex.activityAuto7d = auto;
+    const mins = Math.round(real.reduce((a, w) => a + _wMin(w), 0));
+    if (mins > 0) ex.trainMin7d = mins;
     const last = real[real.length - 1] || {};
     if (last.intensity) ex.trainIntensity = String(last.intensity);
     if (last.day)       ex.trainDay = String(last.day);
@@ -7008,7 +7024,7 @@ function buildUserMessage(data, lang, tier) {
     + 'Симптомы: ' + (symptoms.length ? symptoms.join(', ') : ((data.symptoms || []).length ? 'нет — клиент отметил, что ничего не беспокоит' : 'не указаны')) + '\n'
     + complaintsContext
     + bioContext + '\n'
-    + (data.training && data.training.count ? 'Тренировки (с кольца, 7 дн): ' + data.training.count + ' сессий' + (data.training.intensity ? ', последняя интенсивность ' + data.training.intensity : '') + (data.training.activity ? ' (' + data.training.activity + ')' : '') + '. Применяй HRV-направленную нагрузку: тяжёлые/интенсивные сессии — только в дни восстановленного ночного HRV; падающий HRV неделю → снизить объём, добавить сон/восстановление.\n' : '')
+    + (data.training && data.training.count ? 'Тренировки (с кольца, 7 дн): ' + data.training.count + ' сессий' + (data.training.minutes ? ', суммарно ' + data.training.minutes + ' мин' : '') + (data.training.intensity ? ', последняя интенсивность ' + data.training.intensity : '') + (data.training.activity ? ' (' + data.training.activity + ')' : '') + '. Объём нагрузки оценивай по МИНУТАМ и интенсивности, а не по числу записей: количество сессий само по себе не признак перегрузки. Применяй HRV-направленную нагрузку: тяжёлые/интенсивные сессии — только в дни восстановленного ночного HRV; падающий HRV неделю → снизить объём, добавить сон/восстановление.\n' : '')
     // Фоновая активность (автодетект прибора: прогулки, бытовое движение). Отдаём отдельной
     // строкой и прямо запрещаем считать её тренировками — иначе модель складывает одно с другим
     // и объявляет перегрузку там, где человек просто много ходил.
