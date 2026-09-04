@@ -69,6 +69,57 @@ async function main() {
       fs.writeFileSync(path.join(SPLASH_DIR, f), splash);
     console.log('✓ iOS Splash обновлён (3 файла)');
   }
+  // ── Android: mipmap + адаптивная иконка ──────────────────────────────────
+  // Capacitor кладёт СВОИ дефолтные ic_launcher_*; без этого шага в APK уезжала
+  // стандартная зелёная иконка. Фон адаптивной берём из угла мастера, а сам знак
+  // ужимаем до 66% канвы: система обрезает края маской (круг/сквиркл). 2026-09-04.
+  const ANDROID_RES = path.join(APP, 'android/app/src/main/res');
+  if (fs.existsSync(ANDROID_RES)) {
+    // Цвет берём из ИСХОДНИКА, а не из buf: buf уже прошёл .trim()+cover, и его угол — не фон.
+    // Читаем СЫРОЙ пиксель: sharp.stats() считает по всему кадру и вырез .extract() игнорирует.
+    const corner = await sharp(SRC, isSvg ? { density: 512 } : undefined)
+      .extract({ left: 4, top: 4, width: 2, height: 2 }).removeAlpha().raw().toBuffer();
+    const [r, g, b] = [corner[0], corner[1], corner[2]];
+    const hex = '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('').toUpperCase();
+    const DPI = { mdpi: 48, hdpi: 72, xhdpi: 96, xxhdpi: 144, xxxhdpi: 192 };
+    // Вырезаем знак из мастера: фон тёмный, золото яркое → альфа по яркости с мягким краем.
+    const MASTER = 1024, LO = 45, HI = 90;
+    const flat = await sharp(buf).resize(MASTER, MASTER, { kernel: 'lanczos3' }).removeAlpha().raw().toBuffer();
+    const rgba = Buffer.alloc(MASTER * MASTER * 4);
+    for (let i = 0, j = 0; i < flat.length; i += 3, j += 4) {
+      const lum = 0.299 * flat[i] + 0.587 * flat[i + 1] + 0.114 * flat[i + 2];
+      rgba[j] = flat[i]; rgba[j + 1] = flat[i + 1]; rgba[j + 2] = flat[i + 2];
+      rgba[j + 3] = Math.max(0, Math.min(255, Math.round((lum - LO) / (HI - LO) * 255)));
+    }
+    const markAlpha = await sharp(rgba, { raw: { width: MASTER, height: MASTER, channels: 4 } }).png().toBuffer();
+    fs.writeFileSync(path.join(APP, 'assets', 'icon-mark-alpha.png'), markAlpha);
+    for (const [dpi, size] of Object.entries(DPI)) {
+      const dir = path.join(ANDROID_RES, 'mipmap-' + dpi);
+      if (!fs.existsSync(dir)) continue;
+      const square = await sharp(buf).resize(size, size, { kernel: 'lanczos3' }).png().toBuffer();
+      fs.writeFileSync(path.join(dir, 'ic_launcher.png'), square);
+      fs.writeFileSync(path.join(dir, 'ic_launcher_round.png'), square);
+      // foreground для адаптивной: ЗНАК без фона, 66% канвы — фон даёт <background>.
+      // Класть сюда мастер целиком нельзя: его тёмный квадрат виден внутри круглой маски.
+      const fgSize = Math.round(size * 108 / 48);
+      const inner = Math.round(fgSize * 0.66);
+      const fg = await sharp({ create: { width: fgSize, height: fgSize, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+        .composite([{ input: await sharp(markAlpha).resize(inner, inner, { kernel: 'lanczos3' }).png().toBuffer(), gravity: 'centre' }])
+        .png().toBuffer();
+      fs.writeFileSync(path.join(dir, 'ic_launcher_foreground.png'), fg);
+    }
+    const bgXml = path.join(ANDROID_RES, 'values/ic_launcher_background.xml');
+    if (fs.existsSync(bgXml)) {
+      fs.writeFileSync(bgXml, '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">' + hex + '</color>\n</resources>\n');
+    }
+    // Capacitor может держать вектор-заглушку, которая перекрывает наш PNG
+    const stubFg = path.join(ANDROID_RES, 'drawable-v24/ic_launcher_foreground.xml');
+    if (fs.existsSync(stubFg)) { fs.unlinkSync(stubFg); console.log('  · удалена вектор-заглушка drawable-v24/ic_launcher_foreground.xml'); }
+    console.log('✓ Android-иконки обновлены (mipmap ×5, фон ' + hex + ')');
+  } else {
+    console.warn('Android не сгенерирован — нет android/. Сначала `npx cap add android`, потом `npm run icons`.');
+  }
+
   console.log('Готово.');
 }
 main().catch(e => { console.error('Ошибка:', e.message); process.exit(1); });
