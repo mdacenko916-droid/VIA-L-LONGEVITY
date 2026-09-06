@@ -19,28 +19,34 @@ VIA-L
 ## Краткое описание (80)
 
 ```
-Your tracker measures. VIA-L explains what your numbers mean — and what to try.
+Your body is changing after 35. Finally, an app that explains it clearly.
 ```
-(79 из 80.) Прежний вариант — «...what your sleep and recovery mean» — сужал продукт до сна и
-восстановления: в автопереводе на украинский это читалось как приложение про сон. Новый не
-перечисляет метрики, а называет обещание: объяснение + одно действие.
+(73 из 80.)
 
-Запасные: `Your tracker shows numbers. VIA-L explains what they mean for you personally.` (77),
-`Sleep, energy, recovery: what your tracker measures, explained in plain words.` (78)
+> **Почему так.** Прежние варианты («Your tracker measures. VIA-L explains…») описывали механику
+> прибора, а не причину скачать. Настоящая боль аудитории — не «непонятные цифры», а
+> обесценивание: «это просто возраст, потерпите». Позиция текста — союзник, который наконец
+> объясняет, а не спорит с обществом. Формулировка найдена владельцем и Мариной 2026-09-06.
+
+Запасные: `After 35, your body changes. VIA-L finally explains what is going on.` (69),
+`Your body changes after 35. VIA-L explains it — clearly, without dismissing you.` (80)
 
 ## Полное описание (4000)
 
 ```
-Your tracker measures. VIA-L explains.
+Your body is changing. That deserves an explanation.
 
-Sleep score, HRV, resting heart rate, steps — every wearable shows numbers, and almost none of them tell you what those numbers mean for you personally. VIA-L reads your day the way an attentive coach would: it looks at how you slept, how you recovered and how you felt, compares today with your own history rather than with a population average, and puts it into plain language.
+Perimenopause. Andropause. A stage few people talk about plainly. Sleep, energy, weight and mood shift — and the answer you usually get is "it's your age, give it time." VIA-L exists to give you clarity instead of waiting.
+
+It takes the data you already collect and puts it into the language of how you actually feel — specific, plain, no generic advice.
 
 WHAT YOU GET
 
-• A daily read of your own metrics, in plain words — not a score you cannot act on.
-• One focused suggestion at a time: a change in evening light, in the timing of your meals, in how you plan your training week. Small, testable, yours.
-• A weekly review that looks at the whole week and tells you what actually moved.
-• Your own baseline: after a couple of weeks VIA-L compares you with you, not with a norm.
+• Overall Day Index — one daily read of where your body is: recovering, or asking for attention.
+• Personal reference points — sleep, movement and evening habits framed for your age and stage, not for an average adult.
+• 30-day trends — what is actually changing: resting pulse, blood oxygen, energy, sleep, stress, and the blood pressure you log yourself.
+• Food and supplements — suggestions built around your own entries, not "eat more vegetables."
+• Your own baseline — after a couple of weeks VIA-L compares you with you, not with a norm.
 • Twelve interface languages, including English, Spanish, German, French, Portuguese, Italian, Polish, Ukrainian, Russian, Hebrew, Japanese and Korean.
 
 WHERE THE DATA COMES FROM
@@ -49,7 +55,7 @@ Connect Health Connect and your metrics arrive on their own. Prefer not to? Type
 
 WHO IT IS FOR
 
-Adults who track their sleep, recovery and activity and want to understand the numbers instead of collecting them — in particular women from 35 and men from 40, whose sleep, energy and recovery shift with age.
+Women from 35 and men from 40 — the years when sleep, energy and recovery start to shift, and explanations are hard to come by. On a short appointment there is rarely time for this conversation.
 
 YOUR DATA STAYS YOURS
 
@@ -57,7 +63,7 @@ Your entries live on this device. There is no account and no sign-up. When an an
 
 IMPORTANT
 
-VIA-L is a wellness and lifestyle app. It does not diagnose, treat or prevent any condition, does not replace your doctor, and is not a medical device. If something in your wellbeing worries you, talk to a clinician.
+VIA-L is a wellness and lifestyle app. It is not a diagnosis and not a replacement for your doctor: it does not diagnose, treat or prevent any condition and is not a medical device. It is support and clarity for a stage that deserves attention rather than silence. If something in your wellbeing worries you, talk to a clinician.
 
 SUBSCRIPTION
 
@@ -65,6 +71,16 @@ Full access is €30 per month, billed through Google Play and renewing automati
 Terms: https://via-l.com/legal-app/terms.html
 Privacy Policy: https://via-l.com/legal-app/privacy.html
 ```
+(2606 из 4000.)
+
+> ⚠️ Три вещи, которые НЕЛЬЗЯ вернуть в текст:
+> 1. **Названия трекеров** (Oura и др.) — условие Oura: имя и логотипы не используются в брендинге
+>    и маркетинге, только атрибуция источника внутри продукта. Описание в сторе = маркетинг.
+> 2. **Противопоставление врачу** («ни один врач не найдёт 40 минут») — читается ревью как
+>    «приложение вместо медицины». Ту же мысль несёт нейтральное «на коротком приёме редко хватает
+>    времени на этот разговор».
+> 3. **Давление как измеряемый показатель** — мы его не меряем, человек вводит сам. В тексте это
+>    сказано прямо («the blood pressure you log yourself»), иначе описание расходится с функциями.
 
 ## Визуальные ресурсы
 
