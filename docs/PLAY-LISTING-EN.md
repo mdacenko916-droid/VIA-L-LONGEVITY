@@ -19,9 +19,14 @@ VIA-L
 ## Краткое описание (80)
 
 ```
-Your tracker measures. VIA-L explains what your sleep and recovery mean.
+Your tracker measures. VIA-L explains what your numbers mean — and what to try.
 ```
-(71 знак.) Запасное: `Understand what your wearable data actually says about your day.` (64)
+(79 из 80.) Прежний вариант — «...what your sleep and recovery mean» — сужал продукт до сна и
+восстановления: в автопереводе на украинский это читалось как приложение про сон. Новый не
+перечисляет метрики, а называет обещание: объяснение + одно действие.
+
+Запасные: `Your tracker shows numbers. VIA-L explains what they mean for you personally.` (77),
+`Sleep, energy, recovery: what your tracker measures, explained in plain words.` (78)
 
 ## Полное описание (4000)
 
