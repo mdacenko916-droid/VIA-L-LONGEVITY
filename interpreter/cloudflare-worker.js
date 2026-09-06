@@ -3012,6 +3012,15 @@ async function handleDayPlan(request, env, corsHeaders, ctx) {
 
   // VIA-L: страховка выхода — прогнать все строки плана через велнес-фильтр (тот же, что
   // чистит вход), чтобы редкие «гормональный фон» и клин-термины из ИИ-ответа не долетали до экрана.
+  // Сверка меню с каталогом — ДО очистки текста: метка [dish:KEY] ещё на месте и не тронута
+  // скрабом. Пункты-самоделки выбрасываем здесь, иначе они доедут до клиента без фото и БЖУ.
+  if (plan) {
+    try {
+      const _ds = enforceDishCatalog(plan, data);
+      if (_ds.dropped || _ds.filled) console.log('[dayplan] меню вне каталога: отброшено ' + _ds.dropped + ', добрано ' + _ds.filled);
+    } catch (e) { console.warn('[dayplan] enforceDishCatalog failed', e && e.message); }
+  }
+
   if (plan && isWellness) {
     // Флаг «имена анализов/органа называть можно» нужен и здесь: без него памятка выдавала
     // «Препарат обмен веществ и энергия» вместо «препарат щитовидной железы». Постобработка
@@ -5973,6 +5982,62 @@ const DISH_CATALOG = {
 // Отдаём модели ТОЛЬКО те блюда, которые проходят активные слои. Если слой
 // оставил меньше трёх вариантов на приём — не занижаем ниже трёх (лучше пара
 // пограничных, чем меню из одного блюда), но говорим об этом прямо в блоке.
+// Сверка меню с каталогом ПОСЛЕ генерации. Инструкция «бери только из каталога» исполняется
+// моделью через раз (та же история, что с чек-листами в /analyze), а пункт-самоделка остаётся
+// без фото и БЖУ — клиент видит пустую карточку. Поэтому решаем кодом: пункт без валидного
+// [dish:KEY] выбрасываем, а если в секции стало меньше трёх — добираем из каталога. 2026-09-06.
+const _DP_MEAL = { morning: 'bf', lunch: 'ln', evening: 'dn' };
+// Допустимые блюда одного приёма пищи: тот же отбор, что уходит в промпт (тип питания режет
+// первым, затем безглютеновое/low-FODMAP, затем «щадящее» при рефлюксе). Вынесено 2026-09-06,
+// чтобы сверять готовый план кодом, а не надеяться на инструкцию в промпте.
+function allowedDishes(data, meal) {
+  const sel = selectDietPattern(data);
+  const EXCLUDE = { pescatarian:['meat'], vegetarian:['meat','fish'], lacto_veg:['meat','fish','egg'],
+                    ovo_veg:['meat','fish','dairy'], vegan:['meat','fish','egg','dairy'] };
+  const banned = EXCLUDE[String(data && data.diet_type || '')] || [];
+  const need = [];
+  if (sel.layers.some(l => l.id === 'DM-GLUTEN')) need.push('gf');
+  if (sel.layers.some(l => l.id === 'DM-LOWFODMAP')) need.push('lowfod');
+  const prefer = sel.layers.some(l => l.id === 'DM-REFLUX') ? 'soft' : '';
+  const all = Object.entries(DISH_CATALOG[meal] || {}).filter(([, v]) => !banned.some(b => v[1].includes(b)));
+  let list = all.filter(([, v]) => need.every(t => v[1].includes(t)));
+  if (prefer) { const soft = list.filter(([, v]) => v[1].includes('soft')); if (soft.length >= 3) list = soft; }
+  if (list.length < 3) list = all.filter(([, v]) => need.slice(0, 1).every(t => v[1].includes(t)));
+  if (!list.length) list = all;
+  return list;
+}
+
+function enforceDishCatalog(plan, data) {
+  const stat = { dropped: 0, filled: 0 };
+  if (!plan || typeof plan !== 'object') return stat;
+  Object.keys(_DP_MEAL).forEach(function (section) {
+    const meal = _DP_MEAL[section];
+    const arr = plan[section];
+    if (!Array.isArray(arr)) return;
+    const allowed = allowedDishes(data, meal);
+    const byKey = new Map(allowed);
+    arr.forEach(function (sec) {
+      if (!sec || sec.variants !== true || !Array.isArray(sec.items)) return;
+      const used = new Set();
+      const kept = sec.items.filter(function (x) {
+        const m = String(x).match(/\[dish:([a-z][a-z0-9_]*)\]/);
+        if (!m || !byKey.has(m[1]) || used.has(m[1])) { stat.dropped++; return false; }
+        used.add(m[1]);
+        return true;
+      });
+      // добираем до трёх, чтобы меню не схлопнулось в один вариант
+      for (const [k, v] of allowed) {
+        if (kept.length >= 3) break;
+        if (used.has(k)) continue;
+        kept.push(v[0] + ' [dish:' + k + ']');
+        used.add(k); stat.filled++;
+      }
+      sec.items = kept;
+    });
+  });
+  return stat;
+}
+
 function buildDishCatalog(data) {
   const sel = selectDietPattern(data);
   // Тип питания режет каталог ПЕРВЫМ и не ослабляется никогда: рыба в меню
@@ -6000,7 +6065,11 @@ function buildDishCatalog(data) {
   });
   if (banned.length) out += '⚠️ ТИП ПИТАНИЯ: клиент не ест ' + banned.map(b => ({meat:'мясо',fish:'рыбу',egg:'яйца',dairy:'молочное'}[b])).join(', ')
     + '. Ни в меню, ни в тексте не предлагай этого — ни как «вариант», ни как «источник белка».\n';
-  if (need.length) out += '⚠️ Список УЖЕ отфильтрован под ограничения клиента: бери ключи только отсюда и не добавляй блюда по памяти.'
+  // Раньше печаталось ТОЛЬКО при need.length (безглютеновая/low-FODMAP). Клиенту без ограничений
+  // список уходил вообще без запрета — и модель дописывала блюда от себя («скумбрия+тост+авокадо»),
+  // а такой пункт остаётся без фото и БЖУ. 2026-09-06.
+  out += '⚠️ Меню собирается ТОЛЬКО из ключей выше; пункт без ключа из списка будет отброшен и клиент его не увидит.'
+    + (need.length ? ' Список УЖЕ отфильтрован под ограничения клиента.' : '')
     + (thin ? ' Вариантов немного — это нормально, не выдумывай новые.' : '') + '\n';
   return out;
 }
