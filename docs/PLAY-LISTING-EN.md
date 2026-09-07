@@ -19,9 +19,10 @@ VIA-L
 ## Краткое описание (80)
 
 ```
-Perimenopause or andropause — finally, clear answers instead of "it's age".
+Perimenopause, andropause: finally someone explains what is changing.
 ```
-(75 из 80.)
+(69 из 80. Выбрано владельцем 2026-09-07: без кавычек и без спора с фразой «это возраст» —
+тон союзника, а не оппонента.)
 
 > **Почему так.** Прежние варианты («Your tracker measures. VIA-L explains…») описывали механику
 > прибора, а не причину скачать. Настоящая боль аудитории — не «непонятные цифры», а
@@ -34,7 +35,7 @@ Perimenopause or andropause — finally, clear answers instead of "it's age".
 > конкретном человеке, — это внутри правил. Убирать их из страха перед словом не нужно и вредно:
 > без них карточка не находит свою аудиторию. Канон — memory `project_via_l_wellness_lexicon`.
 
-Запасные: `Perimenopause, andropause: finally someone explains what is changing.` (69),
+Запасные: `Perimenopause or andropause — finally, clear answers instead of "it's age".` (75),
 `Perimenopause or andropause: finally, an explanation instead of "just wait".` (76)
 
 ## Полное описание (4000)
