@@ -2702,7 +2702,7 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
     },
     body: JSON.stringify({
       // Тяжёлые для маленькой модели языки (RTL/CJK) — на Sonnet: Haiku галлюцинирует иврит/арабский
-      model: ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
+      model: ['he', 'ar', 'ja', 'ko', 'uk'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
       temperature: 0.35, // App Store 1.4.1: понижена вариативность разбора → меньше риск неожиданных мед-интерпретаций
       max_tokens: 8000, // было 5000 — расширенный разбор (интро+3 слоя+сон+питание+движение+добавки) на русском обрывался на последней секции («…ашваганда обыч»). Haiku 4.5 держит до 64K; платится только за реально сгенерённое
       // Два общих блока под кэш + хвост маршрута и персональное без кэша — см. «КЭШ ПРОМПТА» у _kbBlock1.
@@ -2749,7 +2749,7 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
   });
 
   const result = await response.json();
-  logUsage(env, ctx, 'analyze', ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001', tier, lang, result, _src);
+  logUsage(env, ctx, 'analyze', ['he', 'ar', 'ja', 'ko', 'uk'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001', tier, lang, result, _src);
   // Сбой API (кончился баланс ключа, rate limit, 5xx) — НЕ выдаём клиенту как разбор. Раньше сюда
   // подставлялось result.error.message, и человек читал в карточке «Разбор дня от VIA·L» английский
   // текст биллинга Anthropic; тот же текст уходил в кэш дня и в карточку кабинета специалисту.
@@ -2978,6 +2978,8 @@ async function handleDayPlan(request, env, corsHeaders, ctx) {
     : '\n\n[VIA-L EXPERT] Клинический язык допустим, но без claims «лечит/предотвращает/устраняет болезнь».';
 
   let plan = null, raw = '';
+  // названия блюд на языке клиента (KV-кэш, один перевод на язык за всё время)
+  const _dishNames = await dishNames(env, ctx, lang);
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -2988,7 +2990,7 @@ async function handleDayPlan(request, env, corsHeaders, ctx) {
         'anthropic-beta': 'prompt-caching-2024-07-31',
       },
       body: JSON.stringify({
-        model: ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
+        model: ['he', 'ar', 'ja', 'ko', 'uk'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
         max_tokens: 8192,   // было 4096 — с углублением меню/нутрицевтиков (#2/#3) ответ упирался в лимит и обрывал фразу («убрать я…»); Haiku 4.5 держит до 64K, JSON-памятка ~1–2K
         // Два общих блока под кэш + хвост маршрута и персональное без кэша — см. «КЭШ ПРОМПТА» у _kbBlock1.
         system: [
@@ -2997,13 +2999,13 @@ async function handleDayPlan(request, env, corsHeaders, ctx) {
           { type: 'text', text: guard + schema },   // хвост маршрута — без кэша, см. /analyze
           // Персональное — последним и без кэша: каталог блюд под ограничения клиента и темы этого человека.
           { type: 'text', text: '\n\n\u2500\u2500 ФОТО-КАТАЛОГ БЛЮД (тот, на который ссылается инструкция выше) \u2500\u2500\n'
-              + buildDishCatalog(data) + (useWellnessKB ? _kbPersonal(_kbIds) : '') },
+              + buildDishCatalog(data, _dishNames) + (useWellnessKB ? _kbPersonal(_kbIds) : '') },
         ],
         messages: [{ role: 'user', content: buildUserMessage(data, lang, tier) + _dayPlanSupps(data) }],
       }),
     });
     const result = await response.json();
-    logUsage(env, ctx, 'day-plan', ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001', tier, lang, result, _src);
+    logUsage(env, ctx, 'day-plan', ['he', 'ar', 'ja', 'ko', 'uk'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001', tier, lang, result, _src);
     raw = (result.content && result.content[0] && result.content[0].text) || '';
     let t = raw.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
     try { plan = JSON.parse(t); }
@@ -3016,7 +3018,7 @@ async function handleDayPlan(request, env, corsHeaders, ctx) {
   // скрабом. Пункты-самоделки выбрасываем здесь, иначе они доедут до клиента без фото и БЖУ.
   if (plan) {
     try {
-      const _ds = enforceDishCatalog(plan, data);
+      const _ds = enforceDishCatalog(plan, data, _dishNames);
       if (_ds.dropped || _ds.filled) console.log('[dayplan] меню вне каталога: отброшено ' + _ds.dropped + ', добрано ' + _ds.filled);
     } catch (e) { console.warn('[dayplan] enforceDishCatalog failed', e && e.message); }
   }
@@ -3143,7 +3145,7 @@ async function handleAiMemory(request, env, corsHeaders, ctx) {
         'anthropic-beta': 'prompt-caching-2024-07-31',
       },
       body: JSON.stringify({
-        model: ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
+        model: ['he', 'ar', 'ja', 'ko', 'uk'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
         max_tokens: 1024,
         system: [
           { type: 'text', text: _kbBlock1(useWellnessKB), cache_control: { type: 'ephemeral' } },
@@ -3153,7 +3155,7 @@ async function handleAiMemory(request, env, corsHeaders, ctx) {
       }),
     });
     const result = await response.json();
-    logUsage(env, ctx, 'ai-memory', ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001', tier, lang, result);
+    logUsage(env, ctx, 'ai-memory', ['he', 'ar', 'ja', 'ko', 'uk'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001', tier, lang, result);
     raw = (result.content && result.content[0] && result.content[0].text) || '';
     let t = raw.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
     try { out = JSON.parse(t); }
@@ -3396,7 +3398,7 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
+      model: ['he', 'ar', 'ja', 'ko', 'uk'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
       max_tokens: 900,
       system: weeklySystem,
       messages: [{ role: 'user', content: _condGateBlock(_wCtx) + buildDietBlock(_wCtx) + buildExerciseBlock(_wCtx)
@@ -3405,7 +3407,7 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
   });
 
   const result = await response.json();
-  logUsage(env, ctx, isMonth ? 'monthly-report' : 'weekly-report', ['he', 'ar', 'ja', 'ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001', tier, lang, result);
+  logUsage(env, ctx, isMonth ? 'monthly-report' : 'weekly-report', ['he', 'ar', 'ja', 'ko', 'uk'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001', tier, lang, result);
   // Недельный/месячный разбор — та же защита, что в /analyze: сбой API не превращается в текст
   // отчёта (иначе он осел бы и у клиента, и в карточке специалиста). 2026-08-25.
   if (!result.content?.[0]?.text) {
@@ -5990,7 +5992,49 @@ const _DP_MEAL = { morning: 'bf', lunch: 'ln', evening: 'dn' };
 // Допустимые блюда одного приёма пищи: тот же отбор, что уходит в промпт (тип питания режет
 // первым, затем безглютеновое/low-FODMAP, затем «щадящее» при рефлюксе). Вынесено 2026-09-06,
 // чтобы сверять готовый план кодом, а не надеяться на инструкцию в промпте.
-function allowedDishes(data, meal) {
+// ── Локализация каталога блюд ────────────────────────────────────────────────────────────────
+// Каталог написан по-русски, и модель, которой велено «собирать СТРОГО из каталога», честно
+// копировала русские названия в украинский/английский ответ (скрины владельца 2026-09-07:
+// украинский интерфейс, меню целиком по-русски). Инструкция «все строки на langName» проигрывает
+// инструкции «бери из списка», а добор в enforceDishCatalog вставлял русский текст напрямую.
+// Поэтому переводим названия ОДИН раз на язык и держим в KV: дальше и промпт, и добор работают
+// с готовыми строками нужного языка. Перевод стоит один дешёвый вызов на язык за всё время.
+const DISH_L10N_TTL = 60 * 60 * 24 * 365;
+const _dishL10nMem = new Map();          // кэш в памяти изолята, чтобы не ходить в KV на каждый запрос
+
+async function dishNames(env, ctx, lang) {
+  const L = String(lang || 'en').toLowerCase();
+  if (L === 'ru') return null;                                   // исходный каталог уже русский
+  if (_dishL10nMem.has(L)) return _dishL10nMem.get(L);
+  const kvKey = 'dishcat:v1:' + L;
+  try {
+    if (env.EXPERT_DRAFTS) {
+      const hit = await env.EXPERT_DRAFTS.get(kvKey, 'json');
+      if (hit && typeof hit === 'object') { _dishL10nMem.set(L, hit); return hit; }
+    }
+  } catch (e) { /* KV недоступен — переведём заново */ }
+
+  const src = [];
+  ['bf', 'ln', 'dn', 'sn'].forEach(m => Object.entries(DISH_CATALOG[m]).forEach(([k, v]) => src.push(k + ' = ' + v[0])));
+  const langName = CAB_LANG_NAMES[L] || 'английском';
+  const prompt = 'Переведи названия блюд на ' + langName + ' языке. Это короткие составы блюд для меню.\n' +
+    'Правила: строго построчно, тот же порядок, формат «ключ = перевод»; ключ (латиница до знака =) НЕ переводить и НЕ менять; ' +
+    'сохраняй знаки «+» и «/», числа и пометки в скобках; никаких пояснений и заголовков, только строки.\n\n' + src.join('\n');
+  const raw = await callClaudeSimple(prompt, env, 3000, ctx, 'dish-l10n', L);
+  const map = {};
+  String(raw || '').split('\n').forEach(line => {
+    const m = line.match(/^\s*([a-z][a-z0-9_]*)\s*=\s*(.+?)\s*$/i);
+    if (m && m[2]) map[m[1]] = m[2];
+  });
+  // берём перевод только если он полон: половинчатый словарь дал бы меню из двух языков сразу
+  const total = src.length;
+  if (Object.keys(map).length < total) { _dishL10nMem.set(L, null); return null; }
+  _dishL10nMem.set(L, map);
+  try { if (env.EXPERT_DRAFTS) await env.EXPERT_DRAFTS.put(kvKey, JSON.stringify(map), { expirationTtl: DISH_L10N_TTL }); } catch (e) {}
+  return map;
+}
+
+function allowedDishes(data, meal, names) {
   const sel = selectDietPattern(data);
   const EXCLUDE = { pescatarian:['meat'], vegetarian:['meat','fish'], lacto_veg:['meat','fish','egg'],
                     ovo_veg:['meat','fish','dairy'], vegan:['meat','fish','egg','dairy'] };
@@ -6004,17 +6048,18 @@ function allowedDishes(data, meal) {
   if (prefer) { const soft = list.filter(([, v]) => v[1].includes('soft')); if (soft.length >= 3) list = soft; }
   if (list.length < 3) list = all.filter(([, v]) => need.slice(0, 1).every(t => v[1].includes(t)));
   if (!list.length) list = all;
-  return list;
+  // подменяем русское название переводом, если он есть: одна точка на весь каталог
+  return names ? list.map(([k, v]) => [k, [names[k] || v[0], v[1]]]) : list;
 }
 
-function enforceDishCatalog(plan, data) {
+function enforceDishCatalog(plan, data, names) {
   const stat = { dropped: 0, filled: 0 };
   if (!plan || typeof plan !== 'object') return stat;
   Object.keys(_DP_MEAL).forEach(function (section) {
     const meal = _DP_MEAL[section];
     const arr = plan[section];
     if (!Array.isArray(arr)) return;
-    const allowed = allowedDishes(data, meal);
+    const allowed = allowedDishes(data, meal, names);
     const byKey = new Map(allowed);
     arr.forEach(function (sec) {
       if (!sec || sec.variants !== true || !Array.isArray(sec.items)) return;
@@ -6038,7 +6083,7 @@ function enforceDishCatalog(plan, data) {
   return stat;
 }
 
-function buildDishCatalog(data) {
+function buildDishCatalog(data, names) {
   const sel = selectDietPattern(data);
   // Тип питания режет каталог ПЕРВЫМ и не ослабляется никогда: рыба в меню
   // у вегана — это не «мало вариантов», это потеря доверия ко всему приложению.
@@ -6061,7 +6106,7 @@ function buildDishCatalog(data) {
     if (list.length < 3) { thin = true; list = all.filter(([, v]) => need.slice(0, 1).every(t => v[1].includes(t))); }
     if (!list.length) list = all;
     if (!list.length) { out += TITLE[meal] + ': подходящих блюд в каталоге нет — предложи своё растительное блюдо СЛОВАМИ, без метки [dish:] (фото ставить нечего).\n'; return; }
-    out += TITLE[meal] + ': ' + list.map(([k, v]) => k + '=' + v[0]).join('; ') + '.\n';
+    out += TITLE[meal] + ': ' + list.map(([k, v]) => k + '=' + ((names && names[k]) || v[0])).join('; ') + '.\n';
   });
   if (banned.length) out += '⚠️ ТИП ПИТАНИЯ: клиент не ест ' + banned.map(b => ({meat:'мясо',fish:'рыбу',egg:'яйца',dairy:'молочное'}[b])).join(', ')
     + '. Ни в меню, ни в тексте не предлагай этого — ни как «вариант», ни как «источник белка».\n';
@@ -6069,6 +6114,7 @@ function buildDishCatalog(data) {
   // список уходил вообще без запрета — и модель дописывала блюда от себя («скумбрия+тост+авокадо»),
   // а такой пункт остаётся без фото и БЖУ. 2026-09-06.
   out += '⚠️ Меню собирается ТОЛЬКО из ключей выше; пункт без ключа из списка будет отброшен и клиент его не увидит.'
+    + (names ? ' Названия блюд в списке УЖЕ на языке ответа — бери их как есть, не переводи обратно и не переписывай на другой язык.' : '')
     + (need.length ? ' Список УЖЕ отфильтрован под ограничения клиента.' : '')
     + (thin ? ' Вариантов немного — это нормально, не выдумывай новые.' : '') + '\n';
   return out;
