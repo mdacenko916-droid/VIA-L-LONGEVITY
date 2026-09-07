@@ -19,17 +19,23 @@ VIA-L
 ## Краткое описание (80)
 
 ```
-Your body is changing after 35. Finally, an app that explains it clearly.
+Perimenopause or andropause — finally, clear answers instead of "it's age".
 ```
-(73 из 80.)
+(75 из 80.)
 
 > **Почему так.** Прежние варианты («Your tracker measures. VIA-L explains…») описывали механику
 > прибора, а не причину скачать. Настоящая боль аудитории — не «непонятные цифры», а
 > обесценивание: «это просто возраст, потерпите». Позиция текста — союзник, который наконец
-> объясняет, а не спорит с обществом. Формулировка найдена владельцем и Мариной 2026-09-06.
+> объясняет, а не спорит с обществом. Найдено владельцем и Мариной 2026-09-06.
+>
+> **Про термины.** «Перименопауза» и «андропауза» стоят в первом же поле намеренно: ограничение
+> магазинов — не лексика, а трактовка. Запрещён диагноз и вердикт («у вас менопауза», «это
+> норма»), а не слово. Здесь термин называет ЭТАП и тему объяснения, ничего не утверждая о
+> конкретном человеке, — это внутри правил. Убирать их из страха перед словом не нужно и вредно:
+> без них карточка не находит свою аудиторию. Канон — memory `project_via_l_wellness_lexicon`.
 
-Запасные: `After 35, your body changes. VIA-L finally explains what is going on.` (69),
-`Your body changes after 35. VIA-L explains it — clearly, without dismissing you.` (80)
+Запасные: `Perimenopause, andropause: finally someone explains what is changing.` (69),
+`Perimenopause or andropause: finally, an explanation instead of "just wait".` (76)
 
 ## Полное описание (4000)
 
