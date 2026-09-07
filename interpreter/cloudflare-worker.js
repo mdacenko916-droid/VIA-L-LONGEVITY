@@ -2826,6 +2826,10 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
     if (text.indexOf('⚕️') < 0) text = text.replace(/\s*$/, '') + '\n\n' + _d;
   }
 
+  // Проба правил (ничего не меняет, только пишет промахи в ai_usage) — на ГОТОВОМ тексте,
+  // после всех дописываний кодом: иначе засчитаем моделью то, что дописали сами.
+  _ruleProbe(env, ctx, 'analyze', text, _analyzeExpects(data || {}), tier, lang);
+
   // Ингест в карточку кабинета: срез биометрики + ИИ-разбор. Привязка по коду доступа.
   // UPDATE-only (карточка должна уже существовать = VIA-L EXPERT, созданная при оплате):
   // VIA-L/анонимные прогоны без карточки игнорируются. В фоне — не задерживает ответ клиенту.
@@ -2911,6 +2915,44 @@ function _dayPlanSupps(data) {
 // инструкции «отрази каждое» не хватило. Дальше — как с триажем давления: сверяем кодом
 // и дописываем недостающее сами. Тексты уже сформулированы как способ делать, без названия
 // состояния, поэтому их можно вставлять как есть.
+// ── ПРОБА ПРАВИЛ ─────────────────────────────────────────────────────────────────────────────
+// Правило, живущее только в промпте, исполняется через раз (docs/PROMPT-RULES-AUDIT.md).
+// Прежде чем чинить это кодом, надо знать, какие правила реально проваливаются: guardrail
+// научил, что сверка «на глазок» даёт 8 ложных срабатываний из 8. Поэтому здесь только
+// НАБЛЮДЕНИЕ: код считает, что правило должно было сработать, смотрит на готовый ответ и
+// пишет промах в ai_usage (endpoint 'rule-probe'). Ответ не меняется. 2026-09-07.
+//
+// expects: [{ id, need: RegExp }]  — правило сработало, если need найден в тексте
+//          [{ id, ban:  RegExp }]  — правило сработало, если ban НЕ найден
+function _ruleProbe(env, ctx, tag, text, expects, tier, lang) {
+  try {
+    if (!expects || !expects.length) return;
+    const t = String(text || '');
+    const missed = expects.filter(e => e.need ? !e.need.test(t) : e.ban.test(t)).map(e => e.id);
+    if (!missed.length) return;
+    logRiskProbe(env, ctx, 'rule-probe', tier, lang, String(tag) + ': ' + missed.join(','));
+  } catch (e) { /* наблюдение не имеет права ломать поток */ }
+}
+
+// Ожидания для свободного текста разбора: красные флаги названы (ищем по ЧИСЛУ — оно одинаково
+// на всех 12 языках, в отличие от названия маркера), женские темы мужчине не упомянуты.
+function _analyzeExpects(data) {
+  const ex = [];
+  try {
+    (_labRedFlags(data, true) || []).forEach((f, i) => {
+      const num = String(f.what).match(/-?\d+[.,]?\d*/);
+      if (num) ex.push({ id: 'lab' + i + (f.urgent ? '!' : ''), need: new RegExp(num[0].replace('.', '[.,]')) });
+    });
+    const male = String(data.gender || data.sex || '') === 'male';
+    if (male) ex.push({ id: 'male-topic', ban: /прилив|hot flash|менструа|menstrual|менопауз|menopaus|ПМС\b|\bPMS\b|фаза цикла|cycle phase/i });
+    const EXCL = { pescatarian:['мяс','meat'], vegetarian:['мяс','meat','рыб','fish'],
+                   lacto_veg:['мяс','meat','рыб','fish','яйц','egg'], ovo_veg:['мяс','meat','рыб','fish','молоч','dairy'],
+                   vegan:['мяс','meat','рыб','fish','яйц','egg','молоч','dairy'] }[String(data.diet_type || '')];
+    if (EXCL) ex.push({ id: 'diet-banned', ban: new RegExp(EXCL.join('|'), 'i') });
+  } catch (e) {}
+  return ex;
+}
+
 function _enforceExerciseVetoes(plan, data) {
   try {
     const p = selectExercisePlan(data);
@@ -3417,6 +3459,15 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
     });
   }
   const text = result.content[0].text;
+
+  // Проба правил недельного разбора: женские темы мужчине — самая заметная фальшь, и правило
+  // про это живёт только в промпте (docs/PROMPT-RULES-AUDIT.md, строка 5). Ничего не меняем,
+  // только считаем промахи.
+  try {
+    const _pf = (daily && daily.profile) || {};
+    _ruleProbe(env, ctx, isMonth ? 'monthly' : 'weekly', text,
+               _analyzeExpects({ gender: _pf.sex, diet_type: _pf.diet_type, labs: {} }), tier, lang);
+  } catch (e) {}
 
   // VIA-L EXPERT (есть код доступа) → тот же разбор в карточку кабинета, в фоне.
   // Служебный хвост [[EXP]] специалисту не нужен — режем (клиент режет у себя сам).
@@ -5786,7 +5837,7 @@ function _labSuggest(data, isWellness) {
 // болезнь, НЕ объясняем причину, НЕ пугаем и НЕ успокаиваем. Тот же принцип, что у ПСА >4.
 // Пороги в КАНОНИЧЕСКИХ единицах панели (glucose mmol/L, tg mmol/L, tst ng/dL, hgb g/dL, …) —
 // пересчёт из введённых единиц делает клиент до отправки.
-function _labRedFlags(data) {
+function _labRedFlags(data, asList) {
   const labs = data.labs || {};
   const n = v => (v == null || v === '' || isNaN(v)) ? null : +v;
   const male = String(data.gender || data.sex || '') === 'male';
@@ -5823,6 +5874,7 @@ function _labRedFlags(data) {
   if (crp != null && crp > 10) flag('CRP ' + crp + ' мг/л');
   if (fer != null && fer > 500) flag('ферритин ' + fer + ' нг/мл');
 
+  if (asList) return out;                       // для пробы правил: нужен список, а не текст
   if (!out.length) return '';
   const urgent = out.some(x => x.urgent);
   return '\n🚩 КРАСНЫЕ ФЛАГИ ПО АНАЛИЗАМ — СКАЗАТЬ ОБЯЗАТЕЛЬНО, ОТДЕЛЬНЫМ АБЗАЦЕМ В НАЧАЛЕ:\n'
