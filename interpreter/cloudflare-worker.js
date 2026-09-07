@@ -4541,10 +4541,25 @@ async function handleOuraMetrics(request, env, corsHeaders){
       const b = Date.parse(w && (w.end_datetime   || w.end_time)   || '');
       return (isFinite(a) && isFinite(b) && b > a) ? (b - a) / 60000 : 0;
     };
+    // Третья попытка (2026-09-07). Фильтра «не автодетект + интенсивность выше easy + от 15 мин»
+    // не хватило: Oura ставит прогулке intensity 'moderate', и она проходит все три условия —
+    // у владельца выходило 11–12 «тренировок» по ~27 мин. Значит разделять надо не по метаданным
+    // записи, а по ТИПУ активности: бытовое движение и ходьба — это фон, даже когда кольцо
+    // назвало их сессией. Ходьбу засчитываем только длинную и тяжёлую (быстрый час — это
+    // действительно нагрузка для 40+).
+    const BACKGROUND = /^(walking|housework|home_activity|gardening|shopping|cleaning|cooking|stairs|standing|moving|other)$/i;
+    const _isTraining = (w) => {
+      const act = String(w.activity || '').toLowerCase();
+      const hard = String(w.intensity || '').toLowerCase() === 'hard';
+      if (act === 'walking') return hard && _wMin(w) >= 45;
+      if (BACKGROUND.test(act)) return false;
+      return true;
+    };
     const real = wk.filter(w => w
       && String(w.source || '') !== 'autodetected'
       && String(w.intensity || '').toLowerCase() !== 'easy'
-      && _wMin(w) >= 15);
+      && _wMin(w) >= 15
+      && _isTraining(w));
     const auto = wk.length - real.length;
     ex.workouts7d = real.length;
     if (auto) ex.activityAuto7d = auto;
@@ -7193,7 +7208,11 @@ function buildUserMessage(data, lang, tier) {
     + 'Симптомы: ' + (symptoms.length ? symptoms.join(', ') : ((data.symptoms || []).length ? 'нет — клиент отметил, что ничего не беспокоит' : 'не указаны')) + '\n'
     + complaintsContext
     + bioContext + '\n'
-    + (data.training && data.training.count ? 'Тренировки (с кольца, 7 дн): ' + data.training.count + ' сессий' + (data.training.minutes ? ', суммарно ' + data.training.minutes + ' мин' : '') + (data.training.intensity ? ', последняя интенсивность ' + data.training.intensity : '') + (data.training.activity ? ' (' + data.training.activity + ')' : '') + '. Объём нагрузки оценивай по МИНУТАМ и интенсивности, а не по числу записей: количество сессий само по себе не признак перегрузки. Применяй HRV-направленную нагрузку: тяжёлые/интенсивные сессии — только в дни восстановленного ночного HRV; падающий HRV неделю → снизить объём, добавить сон/восстановление.\n' : '')
+    // Числа сессий здесь БОЛЬШЕ НЕТ намеренно. Пока оно было в промпте, модель писала «11
+    // тренировок за неделю» несмотря на прямую приписку «оценивай по минутам, а не по числу
+    // записей»: инструкция не переспорит цифру, стоящую рядом. Убрали цифру — убрали фразу.
+    // Само поле training.count живёт дальше: клиент выставляет по нему скрытую частоту. 2026-09-07.
+    + (data.training && (data.training.minutes || data.training.count) ? 'Нагрузка с кольца (7 дн): ' + (data.training.minutes ? 'суммарно ' + data.training.minutes + ' мин структурированных занятий' : 'занятия отмечены, длительность прибор не отдал') + (data.training.intensity ? ', последняя интенсивность ' + data.training.intensity : '') + (data.training.activity ? ' (' + data.training.activity + ')' : '') + '. Кольцо не отличает занятие от бытового движения, поэтому число записей мы не считаем и ты его не выдумывай: говори о нагрузке минутами и интенсивностью. Применяй HRV-направленную нагрузку: тяжёлые/интенсивные сессии — только в дни восстановленного ночного HRV; падающий HRV неделю → снизить объём, добавить сон/восстановление.\n' : '')
     // Фоновая активность (автодетект прибора: прогулки, бытовое движение). Отдаём отдельной
     // строкой и прямо запрещаем считать её тренировками — иначе модель складывает одно с другим
     // и объявляет перегрузку там, где человек просто много ходил.
