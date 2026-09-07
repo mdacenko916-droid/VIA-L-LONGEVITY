@@ -112,3 +112,59 @@ VIA-L — приложение о самочувствии и образе жи�
 Условия: https://via-l.com/legal-app/terms.html
 Политика конфиденциальности: https://via-l.com/legal-app/privacy.html
 ```
+
+---
+
+## Español (es)
+
+Заведена 2026-09-07 ради рынка США: испаноязычных там за сорок миллионов, и для многих Play
+открывается именно на испанском. Обращение на «tú» — в этой теме «usted» звучит как приём у врача,
+а нам нужен голос союзника.
+
+### Descripción breve (80)
+
+```
+Perimenopausia y andropausia: por fin alguien te explica qué cambia.
+```
+(68 de 80.)
+
+### Descripción completa (4000)
+
+```
+Tu cuerpo está cambiando. Y eso merece una explicación.
+
+Perimenopausia o andropausia: una etapa de la que pocos hablan con claridad. El sueño, la energía, el peso y el ánimo cambian, y la respuesta suele ser «es la edad, ten paciencia». En una consulta corta rara vez hay tiempo para esta conversación. VIA-L existe para darte claridad en lugar de espera.
+
+Toma los datos que ya recoges y los traduce al lenguaje de cómo te sientes de verdad: concreto, sencillo, sin frases genéricas.
+
+QUÉ OBTIENES
+
+• Overall Day Index — una lectura diaria de dónde está tu cuerpo: recuperándose o pidiendo atención.
+• Referencias personales — sueño, movimiento y hábitos de la tarde pensados para tu edad y tu etapa, no para un adulto promedio.
+• Tendencias de 30 días — lo que realmente está cambiando: pulso en reposo, oxígeno en sangre, energía, sueño, estrés y la presión arterial que tú misma registras.
+• Alimentación y suplementos — sugerencias construidas sobre tus propios registros, no «come más verdura».
+• Tu propia línea de base — en un par de semanas VIA-L te compara contigo, no con una norma.
+• Doce idiomas de interfaz, entre ellos español, inglés, alemán, francés, portugués, italiano, polaco, ucraniano, ruso, hebreo, japonés y coreano.
+
+DE DÓNDE VIENEN LOS DATOS
+
+Conecta Health Connect y tus métricas llegan solas. ¿Prefieres no hacerlo? Introdúcelas a mano: la aplicación funciona igual de bien así. También puedes conectar directamente la cuenta de un dispositivo compatible.
+
+PARA QUIÉN ES
+
+Mujeres desde los 35 y hombres desde los 40: los años en que el sueño, la energía y la recuperación empiezan a cambiar y las explicaciones escasean.
+
+TUS DATOS SIGUEN SIENDO TUYOS
+
+Tus registros viven en este dispositivo. No hace falta cuenta ni registro. Cuando se prepara un análisis, el texto se guarda hasta 72 horas bajo un identificador aleatorio del dispositivo para que no pierdas el resultado, y después se elimina. Puedes crear una copia de seguridad cifrada, restaurarla en un teléfono nuevo y borrarlo todo con un botón. Ayudar a mejorar la aplicación compartiendo días anonimizados es opcional y está desactivado por defecto.
+
+IMPORTANTE
+
+VIA-L es una aplicación de bienestar y estilo de vida. No es un diagnóstico ni sustituye a tu médico: no diagnostica, no trata ni previene ninguna enfermedad y no es un producto sanitario. Es apoyo y claridad para una etapa que merece atención, no silencio. Si algo en tu bienestar te preocupa, habla con un profesional sanitario.
+
+SUSCRIPCIÓN
+
+El acceso completo cuesta 30 € al mes, se cobra a través de Google Play y se renueva automáticamente hasta que la canceles. Puedes gestionarla o cancelarla cuando quieras en la sección de suscripciones de Google Play.
+Términos: https://via-l.com/legal-app/terms.html
+Política de privacidad: https://via-l.com/legal-app/privacy.html
+```
