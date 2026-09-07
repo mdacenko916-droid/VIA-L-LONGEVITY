@@ -1659,6 +1659,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;}
   background:none;border:none;font-size:var(--fs-cap);color:var(--t3);text-decoration:underline;
 }
 .pm-manual:hover{color:var(--gold-lt);}
+/* «Заново» на шаге подсчёта: тот же неброский вид, что и «или ввести вручную», но выше по
+   значимости — золотом, потому что это исправление ошибки, а не запасной путь. 2026-09-07. */
+.pm-redo{color:var(--gold-lt);margin-top:8px;}
 
 /* ══ PRO MODULES ═════════════════════════════════════════ */
 .pro-module{margin-bottom:12px;}
@@ -6638,9 +6641,12 @@ function _pmStartBtn(label){
 }
 function _pmCap(txt,warn){ return '<div class="pm-cap'+(warn?' pm-warn':'')+'">'+txt+'</div>'; }
 // Поле ввода + кнопка «Готово» в нижней области (та же карточка, ничего не открывается).
-function _pmInput(id,go,min,max){
+function _pmInput(id,go,min,max,again){
+  // «Заново» рядом с «Готово»: сбиться со счёта — обычное дело, и без этой кнопки человек
+  // вынужден вводить неверное число или уходить из карточки. Владелец, 2026-09-07.
   _pmActions('<div class="pm-ask"><input class="pm-ask-in" id="'+id+'" type="number" inputmode="numeric" min="'+min+'" max="'+max+'" placeholder="—">'
-    +'<button type="button" class="btn btn-primary" onclick="'+go+'()"><span class="btn-label">'+_pmDoneLbl()+'</span></button></div>');
+    +'<button type="button" class="btn btn-primary" onclick="'+go+'()"><span class="btn-label">'+_pmDoneLbl()+'</span></button></div>'
+    +(again===false?'':'<button type="button" class="pm-manual pm-redo" onclick="_pmStart()">'+_pmAgain()+'</button>'));
   var i=document.getElementById(id);
   if(i){
     i.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();try{window[go]();}catch(_){}}});
@@ -6719,7 +6725,7 @@ function _pmManual(){
   _pmStop(); _pmBusy=true;
   _pmTitle(L({ru:'Ваш пульс покоя, уд/мин',uk:'Ваш пульс спокою, уд/хв',en:'Your resting pulse, bpm',es:'Tu pulso en reposo, lpm',de:'Ihr Ruhepuls, S/min',pt:'Seu pulso em repouso, bpm',fr:'Votre pouls au repos, bpm',pl:'Twoje tętno spoczynkowe, ud/min',it:'Il tuo polso a riposo, bpm',he:'דופק המנוחה שלך',ja:'安静時脈拍（拍/分）',ko:'안정 시 맥박 (회/분)'}));
   _pmDialSet('—','',1);
-  _pmInput('pmBpm','_pmManualDone',40,110);
+  _pmInput('pmBpm','_pmManualDone',40,110,false);
 }
 function _pmManualDone(){
   var i=document.getElementById('pmBpm'); if(!i)return;
