@@ -81,7 +81,10 @@ Program. Написан так, чтобы новый чат мог взять �
 
 1. **RevenueCat**: проект → iOS-приложение (bundle `com.viael.vial`) → entitlement
    `via_l_pro` → offering «default» с продуктом-подпиской.
-2. **App Store Connect**: auto-renewable подписка €15/мес, привязать к RevenueCat.
+2. **App Store Connect**: auto-renewable подписка **€30/мес**, привязать к RevenueCat.
+   (Здесь стояло €15 — устаревшая цифра; владелец подтвердил €30 (2026-09-07). Цена должна
+   совпадать в трёх местах: продукт в сторе, комментарий в `iap-bridge.js` и раздел
+   «Подписка» в описаниях витрин — `docs/PLAY-LISTING-EN.md`, `docs/PLAY-LISTING-LOCALES.md`.)
 3. Claude вставляет реальный ключ в `iap-bridge.js` и **снимает временный обход**.
 4. Sandbox-аккаунт (App Store Connect → Users and Access → Sandbox) → проверить покупку и
    «Восстановить покупки».
