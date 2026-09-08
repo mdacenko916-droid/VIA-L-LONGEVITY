@@ -55,10 +55,20 @@ RevenueCat для Android нужен не ключ, а сервисный акк
 4. **Offering `default`** → package Monthly → продукт `via_l_pro_monthly:monthly`.
 5. Скопировать **Android public SDK key** (начинается на `goog_`).
 
-## Шаг 4. Код (делает Claude)
+## Шаг 4. Код — ✅ сделано 2026-09-08 (`6ff263c`, сборка v3)
 
-В `interpreter/iap-bridge.js`: добавить ключ Android рядом с iOS (выбор по платформе через
-`Capacitor.getPlatform()`), затем снять `TEST_BYPASS_PAYWALL` — в том же коммите, не раньше.
+Ключ Android в `interpreter/iap-bridge.js`, выбор по `Capacitor.getPlatform()`.
+
+**Ручной флаг `TEST_BYPASS_PAYWALL` удалён совсем**, а не переключён в `false`. Вместо него
+решает наличие ключа для текущей платформы: `iapAvailable() = !!rc() && !!rcKey()`. Android
+(ключ есть) → покупка работает; iOS (ключ-заглушка) → IAP считается отсутствующим и приложение
+открыто, как на вебе. Забытый флаг больше не может закрыть доступ там, где покупка не настроена —
+на iPhone это уже случалось.
+
+⚠️ **`app/www` собирается скриптом `app/sync-web.sh`, а не берётся из `interpreter/` напрямую.**
+Без него `npx cap sync` копирует в сборку СТАРЫЕ файлы, и правка веб-части просто не доедет.
+Порядок перед каждой сборкой: `bash app/sync-web.sh` → `cd app && npx cap sync android` →
+`cd android && VIAL_VERSION_CODE=N ./gradlew bundleRelease`.
 
 ## Шаг 5. Проверка покупки без списания денег
 
