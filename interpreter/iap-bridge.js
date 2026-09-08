@@ -31,14 +31,13 @@
   function rc(){
     return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Purchases) || null;
   }
-  /* ⚠️ ВРЕМЕННО — СНЯТЬ ПЕРЕД ПОДАЧЕЙ В APP STORE (docs/APP-STORE-LAUNCH-DAY.md §5.3).
-     Пока ключ RevenueCat не вставлен, проверка подписки честно отвечает «нет» и пейволл
-     наглухо закрывает приложение на живом iPhone. Этот флаг говорит UI «IAP тут нет» —
-     ровно как на вебе и в симуляторе, — чтобы можно было тестировать всё остальное.
-     Ставить false в тот же коммит, где появляется реальный RC_API_KEY_IOS. */
-  var TEST_BYPASS_PAYWALL = true;
-
-  window.iapAvailable = function(){ return !TEST_BYPASS_PAYWALL && !!rc(); };
+  /* Раньше здесь жил ручной флаг TEST_BYPASS_PAYWALL: без него живое устройство упиралось в
+     незакрываемый пейволл, потому что ключа RevenueCat ещё не было. Снят 2026-09-08 — вместе с
+     появлением ключа Google Play. Вместо флага решает НАЛИЧИЕ КЛЮЧА для текущей платформы:
+     Android (ключ есть) → пейволл работает; iOS (пока заглушка) → IAP считается отсутствующим,
+     как на вебе, и приложение остаётся открытым. Так забытый флаг больше не может закрыть
+     доступ на платформе, где покупка ещё не настроена. */
+  window.iapAvailable = function(){ return !!rc() && !!rcKey(); };
 
   var _configured = false;
   async function ensureConfigured(){
