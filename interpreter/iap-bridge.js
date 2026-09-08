@@ -1,6 +1,8 @@
-/* VIA·L — IAP bridge: подписка €30/мес через Apple IAP (RevenueCat, плагин @revenuecat/purchases-capacitor).
+/* VIA·L — IAP bridge: подписка €30/мес (RevenueCat, плагин @revenuecat/purchases-capacitor).
+   Google Play — настроен 2026-09-08 (продукт via_l_pro_monthly:monthly, entitlement via_l_pro).
+   App Store — ждёт оплаты Apple Developer; ключ-заглушка, платформа сама себя отключает.
    Работает ТОЛЬКО внутри приложения (window.Capacitor.Plugins.Purchases). На обычном вебе —
-   все функции no-op, страница остаётся открытой как сейчас (веб-версия не платная, это App Store продукт).
+   все функции no-op, страница остаётся открытой как сейчас (веб-версия не платная).
    Настройка перед первым релизом (владелец):
      1) Создать проект в RevenueCat dashboard, добавить iOS-приложение (bundle id com.viael.vial).
      2) В App Store Connect создать auto-renewable subscription €30/мес, привязать к RevenueCat.
@@ -10,8 +12,21 @@
    Пока ключ не вставлен — configure() будет падать в try/catch, paywall останется видимым
    (fail-closed: это правильно для непроверенной конфигурации, не должно молча открывать доступ). */
 (function(){
-  var RC_API_KEY_IOS = 'YOUR_REVENUECAT_IOS_API_KEY';   // TODO(владелец): вставить после шага 4 выше
+  /* Ключи RevenueCat разные на платформу, entitlement — ОДИН на обе: человек, купивший
+     подписку на телефоне, должен получить доступ и на планшете, и позже на iPhone.
+     Ключи публичные (public SDK key) — их и положено зашивать в приложение. 2026-09-08. */
+  var RC_API_KEYS = {
+    android: 'goog_BHsIdgHZJEhYqOpcDbQoVQFbFPC',
+    ios:     'YOUR_REVENUECAT_IOS_API_KEY',   // TODO: появится вместе с оплатой Apple Developer
+  };
   var ENTITLEMENT_ID = 'via_l_pro';                       // должен совпадать с Entitlement ID в RevenueCat
+
+  function rcKey(){
+    var pl = '';
+    try { pl = (window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform()) || ''; } catch(e){}
+    var k = RC_API_KEYS[pl];
+    return (k && k.indexOf('YOUR_') !== 0) ? k : '';     // заглушка = ключа нет
+  }
 
   function rc(){
     return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Purchases) || null;
@@ -29,8 +44,8 @@
   async function ensureConfigured(){
     var p = rc(); if(!p) return false;
     if(_configured) return true;
-    if(!RC_API_KEY_IOS || RC_API_KEY_IOS === 'YOUR_REVENUECAT_IOS_API_KEY') return false;
-    try { await p.configure({ apiKey: RC_API_KEY_IOS }); _configured = true; return true; }
+    var key = rcKey(); if(!key) return false;
+    try { await p.configure({ apiKey: key }); _configured = true; return true; }
     catch(e){ console.warn('[iap] configure failed', e); return false; }
   }
 
