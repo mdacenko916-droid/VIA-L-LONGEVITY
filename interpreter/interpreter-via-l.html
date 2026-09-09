@@ -2787,6 +2787,15 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
       </div>
       <div id="prof-err" style="font-size:var(--fs-cap);color:var(--alert);margin-top:8px;display:none;" data-t="prof_err">Укажите возраст, вес и рост</div>
       </div><!-- /карточка «Ваш профиль» -->
+
+  </div>
+
+  <!-- ЖЕНСКИЙ ОРГАНИЗМ — собственный шаг (2026-09-09). Раньше карточка лежала ВНУТРИ step0
+       (профиль), и правило `.step.answered .step-badge::after` красило её галочкой вместе с
+       профилем: профиль подставляется из сохранённого, блок цикла — нет, а «пройден» он
+       выглядел сразу. Мужской аналог (step12) всегда был отдельным шагом — это и есть
+       симметрия. Виден только женщинам: `_hfHidden(11)` при gender=male. -->
+  <div class="step" id="step11">
       <div class="card" id="cycle-card" style="margin-top:16px;">
       <div class="card-accent"></div>
       <button type="button" id="cycle-help-btn" class="help-btn" onclick="openHelp('cycle')" aria-label="info">ℹ</button>
@@ -2995,7 +3004,7 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
       <p class="step-desc" data-t="hf_desc">Отметьте приливы и ощущение жара за прошедшие сутки.</p>
       <div class="dev-banner" id="dev-banner-2" style="display:none;align-items:center;gap:8px;margin:0 0 14px;padding:9px 13px;border-radius:11px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);font-size:var(--fs-cap);color:#4ADE80;"></div>
       <!-- Температура ушла в панель «Данные с трекера» (приборная метрика). Поле скрыто, но в DOM — значение втекает из панели для разбора. -->
-      <div class="input-group" id="temp-group" style="display:none;">
+      <div class="input-group" id="temp-group" data-gate-ignore style="display:none;">
         <label data-t="s1_l1">Отклонение</label>
         <div class="chips">
           <div class="chip"><input type="radio" name="temp" id="tp1" value="normal"><label for="tp1" data-t="temp_norm">В норме</label></div>
@@ -7385,7 +7394,7 @@ function _cycleChange(){
   if(typeof renderCycleDay==='function')renderCycleDay();
 }
 function _allergyToggle(){var y=(typeof getRadio==='function'&&getRadio('allergy_has')==='yes');var a=document.getElementById('allergy');if(a)a.style.display=y?'block':'none';}
-function _hfHidden(n){var _m=(typeof getRadio==='function')&&getRadio('gender')==='male'; if(n===2&&_m)return true; if(n===12&&!_m)return true; return false;}   // приливы(2) — только женщинам; «Мужской организм»(12) — только мужчинам (женское ушло в «Женский организм»)
+function _hfHidden(n){var _m=(typeof getRadio==='function')&&getRadio('gender')==='male'; if(n===2&&_m)return true; if(n===11&&_m)return true; if(n===12&&!_m)return true; return false;}   // приливы(2) — только женщинам; «Мужской организм»(12) — только мужчинам (женское ушло в «Женский организм»)
 function _flowFooter(label,fn){var f=document.getElementById('flow-footer'),b=document.getElementById('flow-btn');if(!f||!b)return;b.textContent=label;b.onclick=fn;f.style.display='block';}
 function _hideFlowFooter(){var f=document.getElementById('flow-footer');if(f)f.style.display='none';}
 
@@ -7419,11 +7428,17 @@ function _blockAnswered(step){
     return (a>=18&&a<=99)&&(w>=30&&w<=250)&&(h>=100&&h<=230);
   }
   var TS=window.__touched; if(!TS||!TS.size) return false;
-  // Не пропускаем hidden: внутренних служебных в __touched нет, а несущие ответ кастом-виджеты
-  // (sleep_qual/energy/rhr) сами делают __touched.add при взаимодействии.
+  // Не пропускаем hidden вообще: несущие ответ кастом-виджеты (sleep_qual/energy/rhr) сами
+  // делают __touched.add при взаимодействии, и их поля скрыты.
+  // НО есть служебные скрытые поля, куда значение втекает С ПРИБОРА, а не от человека
+  // (`#temp-group`: температура переехала в панель трекера, поле осталось в DOM ради разбора,
+  // а applyImportedToSliders помечает 'temp' как touched). Из-за него блок «Приливы и ночная
+  // потливость» загорался зелёным сразу после синка с Apple Health, хотя человек не отвечал
+  // ни на один его вопрос. Такие группы помечаем data-gate-ignore и в гейте не считаем. 2026-09-09.
   var CR=window.__carried||new Set();
   var ins=step.querySelectorAll('input,select,textarea');
   for(var i=0;i<ins.length;i++){ var el=ins[i];
+    if(el.closest&&el.closest('[data-gate-ignore]')) continue;
     // Перенесённое с прошлого раза не считается ответом: значение подставлено, но не подтверждено.
     if(el.name && TS.has(el.name) && !CR.has(el.name)) return true;
     if(el.id   && TS.has(el.id)   && !CR.has(el.id))   return true;
@@ -7672,7 +7687,7 @@ function _showFlow(list){
     var _s0=document.getElementById('step0');
     if(_s0&&_s0.classList.contains('flow-show')){
       var _pc=_s0.querySelector(':scope > .card');   // профиль-карточка (первая в step0)
-      if(_pc){ _pc.parentNode.insertBefore(_gw,_pc.nextSibling); }   // «Данные с трекера» СРАЗУ после профиля, перед «Организмом» — одинаково для М и Ж
+      if(_pc){ _pc.parentNode.insertBefore(_gw,_pc.nextSibling); }   // «Данные с трекера» СРАЗУ после профиля (с 2026-09-09 «Организм» — отдельный step11, идёт следом) — одинаково для М и Ж
       else { _s0.parentNode.insertBefore(_gw,_s0.nextSibling); }
     }
     else { var _fi=main.querySelector('.flow-intro'); if(_fi){ _fi.parentNode.insertBefore(_gw,_fi.nextSibling); } else { main.appendChild(_gw); } }
@@ -7691,14 +7706,14 @@ function _showFlow(list){
 // Единая лента (строение VIO). Порядок = важность: base (профиль 0 → питание 7 → добавки 9),
 // сутки за вчера (приливы 2 → энергия/образ жизни 5 → когниция 6), «Прямо сейчас» (сигналы тела 4 —
 // пульс + самочувствие в моменте), weekly (активность 8 → новые симптомы 14), biweekly (стресс 10).
-const FLOW_ALL=[0,17,12,7,9,2,4,16,5,6,15,8,14,10];   // 17 «С чем вы пришли» — разовая установка сразу после профиля (динамика по ней живёт в дневном 14)   // daily-зона: приливы2·сигналы тела4·сон16·энергия5·ясность6; «Прямо сейчас»: пульс15. 15(пульс) — приборный (авто-скрытие всего шага при синке, см. _AUTO_STEP_METRIC). 16(сон) остаётся всегда: несёт субъективные ощущение сна/пробуждения; при синке прячется только под-группа «часы» (_toggleSleepHours). HRV/темп/VO2/SpO2/дыхание НЕ в ленте: функция гаджета, значения из панели трекера, поля живут в DOM (step1/step3)
+const FLOW_ALL=[0,11,17,12,7,9,2,4,16,5,6,15,8,14,10];   // 11 «Женский организм» — свой шаг с 2026-09-09 (был внутри step0), стоит сразу после профиля, чтобы порядок на экране не изменился   // 17 «С чем вы пришли» — разовая установка сразу после профиля (динамика по ней живёт в дневном 14)   // daily-зона: приливы2·сигналы тела4·сон16·энергия5·ясность6; «Прямо сейчас»: пульс15. 15(пульс) — приборный (авто-скрытие всего шага при синке, см. _AUTO_STEP_METRIC). 16(сон) остаётся всегда: несёт субъективные ощущение сна/пробуждения; при синке прячется только под-группа «часы» (_toggleSleepHours). HRV/темп/VO2/SpO2/дыхание НЕ в ленте: функция гаджета, значения из панели трекера, поля живут в DOM (step1/step3)
 // Профиль (возраст/рост/вес) — разовый онбординг: заполнен → убираем из стопки навсегда,
 // данные живут в «Мой профиль», правка оттуда (кнопка «Изменить» → _fixMetric(0)).
 function _profileDone(){ try{var p=JSON.parse(localStorage.getItem('vialp_profile')||'{}')||{}; return !!(p.age&&p.height&&p.weight);}catch(e){return false;} }
 // ── КАДЕНС блоков (что когда показывать) ──────────────────────────────────────
 // base = только первичный проход (потом живёт в карточке); daily = каждый день;
 // weekly = раз в неделю; biweekly = раз в 2 недели. Первый проход = всё «due», показываем сразу.
-const STEP_CADENCE={0:'base',17:'base',12:'base',7:'base',9:'base',
+const STEP_CADENCE={0:'base',11:'base',17:'base',12:'base',7:'base',9:'base',
                     2:'daily',4:'daily',16:'daily',5:'daily',6:'daily',15:'daily',
                     8:'weekly',14:'daily',10:'biweekly'};   // 14 «Что нового за сутки» — переназначен с weekly на daily (2026-07-20)
 function _stepLastMap(){try{return JSON.parse(localStorage.getItem('vialp_steplast')||'{}')||{};}catch(e){return {};}}
