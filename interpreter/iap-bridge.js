@@ -3,20 +3,13 @@
    пейволл берёт цену из стора (`priceString`, см. _iapPriceFill в interpreter-via-l.html).
    Зашитая цифра врала бы всем за пределами еврозоны и расходилась бы с фактическим списанием.
    Google Play — настроен 2026-09-08 (продукт via_l_pro_monthly:monthly, entitlement via_l_pro).
-   App Store — ключ-заглушка: членство Apple Developer оплачено и запись приложения в ASC есть
-   (сборка Xcode Cloud дошла до TestFlight 2026-09-03), но второе приложение в проекте RevenueCat
-   и сам продукт-подписка ещё не заведены. Пока ключа нет, платформа сама себя отключает.
+   App Store — настроен 2026-09-09 (продукт via_l_pro_monthly, entitlement via_l_pro, ключ на месте).
    Работает ТОЛЬКО внутри приложения (window.Capacitor.Plugins.Purchases). На обычном вебе —
    все функции no-op, страница остаётся открытой как сейчас (веб-версия не платная).
-   Что осталось сделать для iOS (владелец, порядок важен):
-     1) В существующий проект RevenueCat «VIA-L» добавить ВТОРОЕ приложение — App Store,
-        bundle id com.viael.vial (нужен ключ App Store Connect API для проверки чеков).
-     2) ✅ Продукт в App Store Connect создан 2026-09-09: `via_l_pro_monthly`, группа «VIA-L
-        Subscriptions». Осталось привязать его к RevenueCat.
-     3) Добавить продукт в тот же Entitlement ENTITLEMENT_ID и в Offering "default" (Monthly).
-     4) Вставить сюда реальный iOS API key (appl_…) вместо заглушки.
-   Пока ключ не вставлен — rcKey() отдаёт пустую строку, IAP считается отсутствующим (как на
-   вебе) и приложение на iOS остаётся открытым: см. комментарий у window.iapAvailable ниже. */
+   Настройка iOS завершена 2026-09-09: приложение App Store заведено вторым в проекте RevenueCat
+   «VIA-L», продукт `via_l_pro_monthly` (группа «VIA-L Subscriptions», база €29,99, США $34,99)
+   привязан к entitlement ENTITLEMENT_ID и к Offering "default". Ключ ниже — публичный SDK key,
+   его и положено зашивать в приложение. */
 (function(){
   /* Ключи RevenueCat разные на платформу, entitlement — ОДИН на обе, чтобы обе платформы
      проверяли доступ по одному имени и офферинг был общим.
@@ -29,7 +22,7 @@
      Ключи публичные (public SDK key) — их и положено зашивать в приложение. 2026-09-08. */
   var RC_API_KEYS = {
     android: 'goog_BHsIdgHZJEhYqOpcDbQoVQFbFPC',
-    ios:     'YOUR_REVENUECAT_IOS_API_KEY',   // TODO: appl_… — после заведения App Store-приложения в RevenueCat
+    ios:     'appl_otTgmSBqRgDJFfLFrcIaldOYqGd',
   };
   var ENTITLEMENT_ID = 'via_l_pro';                       // должен совпадать с Entitlement ID в RevenueCat
 
