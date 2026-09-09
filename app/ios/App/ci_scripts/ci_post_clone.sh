@@ -28,8 +28,16 @@ cd "$ROOT/app"
 
 # --legacy-peer-deps обязателен: @perfood/capacitor-healthkit объявляет peer на
 # Capacitor 5, а у нас 6 — без флага npm обрывается на конфликте зависимостей.
-echo "→ npm install…"
-npm install --legacy-peer-deps
+#
+# ⚠️ Именно `npm ci`, а НЕ `npm install`. С `npm install` и кареткой в package.json
+# облако ставило свежую версию плагина RevenueCat (11.3.2), а закоммиченный Podfile.lock
+# был собран под другую — и `pod install` падал на несовместимости PurchasesHybridCommon.
+# Каждая сборка Xcode Cloud валилась на ci_post_clone.sh, и это было незаметно: локально
+# всё собиралось, потому что в node_modules лежала правильная версия. `npm ci` ставит
+# РОВНО то, что записано в package-lock.json, поэтому облако и машина больше не расходятся.
+# 2026-09-09.
+echo "→ npm ci…"
+npm ci --legacy-peer-deps
 
 # Собирает app/www из веб-ИП (interpreter/interpreter-via-l.html + ассеты + legal-app).
 echo "→ sync-web.sh…"
