@@ -4928,7 +4928,12 @@ function setLang(l){
   }
   if(_lastResult && _srEl && (_srEl.classList.contains('active')||_srEl.classList.contains('flow-show'))){_rerendering=true;try{_showResultsInner();}finally{_rerendering=false;}if(document.getElementById('aiCard') && window._anLang!==l)fetchAIAnalysis(_lastResult.data,l,'lang');}   // перерисовывать результаты при смене языка ТОЛЬКО если экран результатов открыт (иначе смена языка на утренней карточке/выборе источника выбрасывала в старый разбор из памяти)
 }
-function t(k){return T[lang][k]||T.ru[k]||k;}
+/* Фолбэк недостающего ключа — АНГЛИЙСКИЙ, а не русский. Английский у нас основной язык
+   продукта, а раньше любой незаполненный ключ показывал иностранцу русский текст: владелец
+   ловил это раз за разом, последний — «Наш подход» в EXPERT (2026-09-10: заголовок
+   английский, тело русское). Русский остаётся последней ступенью — на случай ключей,
+   которых нет и в английском. */
+function t(k){return T[lang][k]||(T.en&&T.en[k])||T.ru[k]||k;}
 // Подписи блока «Давление» — через L() (applyLang не фолбэчит на ru), значения inputs не трогаем.
 function _bpI18n(){
   var s=function(id,txt){var e=document.getElementById(id);if(e)e.textContent=txt;};
