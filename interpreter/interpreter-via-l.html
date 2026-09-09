@@ -11000,7 +11000,18 @@ function _cleanPlan(p){
 // про менопаузу и андропаузу — надпись может выдать человека помимо его воли.
 // Поэтому ни слова о здоровье, даже того, что внутри приложения разрешено.
 // ══════════════════════════════════════════════════════════════════════
-function _ntGet(){ try{ return JSON.parse(localStorage.getItem('vialp_notify')||'{}')||{}; }catch(e){ return {}; } }
+// Напоминание включено ПО УМОЛЧАНИЮ (2026-09-09, решение владельца): человек, который его не
+// искал, всё равно получает утренний толчок — без него приложение легко забыть на второй день.
+// Выключение сохраняется явным false и больше не переспрашивается. Разрешение системы при этом
+// спрашивается не здесь, а в _ntOffer — после первой «Памятки дня», когда просьба уже понятна.
+function _ntGet(){
+  try{
+    var o=JSON.parse(localStorage.getItem('vialp_notify')||'{}')||{};
+    if(o.on===undefined) o.on=true;          // не трогали → считаем включённым
+    if(!o.time) o.time='08:00';
+    return o;
+  }catch(e){ return {on:true,time:'08:00'}; }
+}
 function _ntSave(o){ try{ localStorage.setItem('vialp_notify',JSON.stringify(o)); }catch(e){} }
 // Стоп-список экрана блокировки. Отдельный от велнес-фильтра воркера: тот РАЗРЕШАЕТ
 // VIA-L писать «приливы» и «менопауза» внутри приложения — и правильно делает.
@@ -11058,7 +11069,11 @@ async function _ntOffer(){
     var arr=(typeof _dpGet==='function')?_dpGet():[]; if(!arr.length) return;   // плана ещё не было
     st.asked=true; _ntSave(st);
     var ok=await notifyAsk();
-    if(ok){ st=_ntGet(); st.on=true; st.time=st.time||'08:00'; _ntSave(st); _ntArm(); }
+    st=_ntGet();
+    // Отказ в системном разрешении = выключить и в интерфейсе. С дефолтом «включено» галочка
+    // иначе осталась бы стоять, обещая уведомления, которых система не пропустит.
+    if(ok){ st.on=true; st.time=st.time||'08:00'; _ntSave(st); _ntArm(); }
+    else  { st.on=false; _ntSave(st); if(typeof renderCard==='function')renderCard(); }
   }catch(e){}
 }
 function _ntToggle(on){ var st=_ntGet(); st.on=!!on; if(!st.time)st.time='08:00'; _ntSave(st);
