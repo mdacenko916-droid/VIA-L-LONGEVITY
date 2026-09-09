@@ -8,7 +8,9 @@
 > Правила, по которым писался текст: не обещать лечения, диагноза и результата; глагол —
 > «explains / helps you read», а не «assesses your health»; ни одной ссылки на сайт нутрициолога
 > и на витрину специалистов ([[feedback_via_l_appstore_isolation]]); цена и условия подписки —
-> ровно как в IAP (€30/мес, авто-продление).
+> ровно как в IAP. ⚠️ **Цифру цены в тексты не ставим** — она живёт только в сторе:
+> база €29,99, США $34,99, дальше по странам своя. Стор сам показывает актуальную цену
+> на карточке приложения, а пейволл берёт её из `priceString` (правка 2026-09-09).
 
 ---
 
@@ -83,8 +85,9 @@ talk to a clinician.
 
 SUBSCRIPTION
 
-Full access is €30 per month, billed through your Apple ID and renewing automatically until you
-cancel. Manage or cancel any time in iPhone Settings. Terms: https://via-l.com/legal-app/terms.html
+Full access is an auto-renewable monthly subscription, billed through your Apple ID and renewing
+automatically until you cancel. The current price is shown on this page and in the app before you
+subscribe. Manage or cancel any time in iPhone Settings. Terms: https://via-l.com/legal-app/terms.html
 Privacy Policy: https://via-l.com/legal-app/privacy.html
 ```
 
@@ -111,7 +114,7 @@ VIA-L is a wellness app: it interprets the user's own lifestyle and wearable met
 language. It does not diagnose, treat or prevent disease and is not a medical device; the
 disclaimer is shown before first use and repeated on every result.
 
-Content is behind an auto-renewable subscription (€30/month) purchased with In-App Purchase.
+Content is behind an auto-renewable monthly subscription purchased with In-App Purchase.
 "Restore Purchases" is on the paywall. There is no login and no way to buy access to the app or
 its content outside the app.
 
@@ -130,8 +133,10 @@ Support: support@via-l.com
 ## 8. Возрастной рейтинг и категории
 
 - Category: **Health & Fitness** (secondary: Lifestyle).
-- Age rating: **17+**, «Medical/Treatment Information: **None**», «Unrestricted Web Access: No».
-- Copyright: `2026 <ФОП, имя как в Apple Developer>`.
+- Age rating: **18+** (шкала Apple с 2026: 4+/9+/13+/16+/18+, прежнего «17+» больше нет; 18+ совпадает
+  с декларацией в Google Play), «Medical/Treatment Information: **None**», «Unrestricted Web Access: No».
+- Copyright: `2026 Kyrylo Selivanov` — как в Apple Developer. Статус ФОП не указываем
+  (ответственное лицо — физлицо, см. канон в памяти).
 
 ## 9. Скриншоты — подписи (6 штук, iPhone 6.9" + 6.5")
 
@@ -147,6 +152,10 @@ Support: support@via-l.com
 
 ## 10. Что ещё нужно заполнить
 
-- [ ] Sandbox-аккаунт для ревью (появится после Paid Apps Agreement).
+- [ ] Sandbox-аккаунт для ревью (App Store Connect → Users and Access → Sandbox).
+- [x] Продукт подписки заведён: `via_l_pro_monthly`, группа «VIA-L Subscriptions», база €29,99,
+      США/Канада $34,99 (2026-09-09). ⚠️ Проверить локализованное **Display Name** продукта —
+      оно видно покупателю; «VIA-L Pro Monthly» нарушает канон имён (тарифа PRO не существует),
+      нужно «VIA-L Monthly». Идентификатор `via_l_pro_monthly` менять нельзя — он совпадает с Play.
 - [ ] Хостинг `legal-app/` по адресам из описания — проверить, что оба URL открываются.
 - [ ] Локализация листинга: после EN — ES, затем остальные (не блокер для подачи).

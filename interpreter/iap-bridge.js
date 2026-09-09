@@ -1,4 +1,7 @@
-/* VIA·L — IAP bridge: подписка €30/мес (RevenueCat, плагин @revenuecat/purchases-capacitor).
+/* VIA·L — IAP bridge: месячная подписка (RevenueCat, плагин @revenuecat/purchases-capacitor).
+   ⚠️ ЦЕНЫ ЗДЕСЬ НЕТ И НЕ ДОЛЖНО БЫТЬ. База €29,99, США/Канада $34,99, дальше по странам своя —
+   пейволл берёт цену из стора (`priceString`, см. _iapPriceFill в interpreter-via-l.html).
+   Зашитая цифра врала бы всем за пределами еврозоны и расходилась бы с фактическим списанием.
    Google Play — настроен 2026-09-08 (продукт via_l_pro_monthly:monthly, entitlement via_l_pro).
    App Store — ключ-заглушка: членство Apple Developer оплачено и запись приложения в ASC есть
    (сборка Xcode Cloud дошла до TestFlight 2026-09-03), но второе приложение в проекте RevenueCat
@@ -8,7 +11,8 @@
    Что осталось сделать для iOS (владелец, порядок важен):
      1) В существующий проект RevenueCat «VIA-L» добавить ВТОРОЕ приложение — App Store,
         bundle id com.viael.vial (нужен ключ App Store Connect API для проверки чеков).
-     2) В App Store Connect создать auto-renewable subscription €30/мес, привязать к RevenueCat.
+     2) ✅ Продукт в App Store Connect создан 2026-09-09: `via_l_pro_monthly`, группа «VIA-L
+        Subscriptions». Осталось привязать его к RevenueCat.
      3) Добавить продукт в тот же Entitlement ENTITLEMENT_ID и в Offering "default" (Monthly).
      4) Вставить сюда реальный iOS API key (appl_…) вместо заглушки.
    Пока ключ не вставлен — rcKey() отдаёт пустую строку, IAP считается отсутствующим (как на

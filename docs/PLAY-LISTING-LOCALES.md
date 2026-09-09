@@ -56,7 +56,7 @@ VIA-L — застосунок про самопочуття та спосіб �
 
 ПІДПИСКА
 
-Повний доступ — 30 € на місяць, оплата через Google Play, продовжується автоматично, доки ви не скасуєте. Керувати підпискою або скасувати її можна будь-коли в розділі підписок Google Play.
+Повний доступ — щомісячна підписка з автоматичним продовженням, оплата через Google Play, доки ви не скасуєте. Актуальну ціну показано на цій сторінці та в застосунку перед оформленням. Керувати підпискою або скасувати її можна будь-коли в розділі підписок Google Play.
 Умови: https://via-l.com/legal-app/terms.html
 Політика конфіденційності: https://via-l.com/legal-app/privacy.html
 ```
@@ -108,7 +108,7 @@ VIA-L — приложение о самочувствии и образе жи�
 
 ПОДПИСКА
 
-Полный доступ — 30 € в месяц, оплата через Google Play, продлевается автоматически, пока вы не отмените. Управлять подпиской или отменить её можно в любой момент в разделе подписок Google Play.
+Полный доступ — ежемесячная подписка с автопродлением, оплата через Google Play, пока вы не отмените. Актуальная цена показана на этой странице и в приложении перед оформлением. Управлять подпиской или отменить её можно в любой момент в разделе подписок Google Play.
 Условия: https://via-l.com/legal-app/terms.html
 Политика конфиденциальности: https://via-l.com/legal-app/privacy.html
 ```
@@ -164,7 +164,7 @@ VIA-L es una aplicación de bienestar y estilo de vida. No es un diagnóstico ni
 
 SUSCRIPCIÓN
 
-El acceso completo cuesta 30 € al mes, se cobra a través de Google Play y se renueva automáticamente hasta que la canceles. Puedes gestionarla o cancelarla cuando quieras en la sección de suscripciones de Google Play.
+El acceso completo es una suscripción mensual de renovación automática, se cobra a través de Google Play hasta que la canceles. El precio vigente se muestra en esta página y en la app antes de suscribirte. Puedes gestionarla o cancelarla cuando quieras en la sección de suscripciones de Google Play.
 Términos: https://via-l.com/legal-app/terms.html
 Política de privacidad: https://via-l.com/legal-app/privacy.html
 ```

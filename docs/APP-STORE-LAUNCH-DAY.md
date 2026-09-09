@@ -20,7 +20,7 @@ Apple Developer Program. Он устарел: членство оплачено,
 | Номер сборки | ✅ автоматом | `app/ios/App/ci_scripts/ci_pre_xcodebuild.sh` берёт `CI_BUILD_NUMBER` |
 | Юр-ссылки в приложении | ✅ проверены вживую | 2026-09-03, возврат в профиль работает |
 | iOS-приложение в RevenueCat | ❌ нет | в проекте «VIA-L» одно приложение — Android |
-| Подписка €30/мес в ASC | ❌ нет | — |
+| Подписка в ASC | ✅ создана 2026-09-09 | `via_l_pro_monthly`, группа «VIA-L Subscriptions», база €29,99, США/Канада $34,99; статус — ждёт «Add for Review» вместе с билдом |
 | iOS-ключ RevenueCat в коде | ❌ заглушка | `interpreter/iap-bridge.js`, `YOUR_REVENUECAT_IOS_API_KEY` |
 | Формы ASC (приватность, рейтинг, экспорт), тексты, скриншоты | ❌ | см. §3 |
 
@@ -37,9 +37,11 @@ Apple Developer Program. Он устарел: членство оплачено,
 1. **RevenueCat → существующий проект «VIA-L» → добавить ВТОРОЕ приложение**, платформа App Store,
    bundle id `com.viael.vial`. Понадобится ключ **App Store Connect API** (Users and Access → Keys),
    чтобы RevenueCat проверял чеки.
-2. **App Store Connect → Subscriptions:** auto-renewable подписка **€30/мес**. Цена должна совпадать
-   в четырёх местах: продукт в App Store, продукт в Play, комментарий в `iap-bridge.js`, раздел
-   «Подписка» в описаниях витрин (`docs/PLAY-LISTING-EN.md`, `docs/PLAY-LISTING-LOCALES.md`).
+2. **App Store Connect → Subscriptions:** ✅ сделано 2026-09-09 — `via_l_pro_monthly`, база €29,99,
+   США/Канада $34,99. ⚠️ Цену НЕ дублировать в текстах: с 2026-09-09 пейволл берёт её из стора
+   (`priceString`), а зашитая цифра врала бы везде, кроме еврозоны. Осталось сверить цену в Play
+   (там ставили «30 €») и проверить Display Name продукта — «VIA-L Pro Monthly» противоречит канону
+   имён, покупателю должно показываться «VIA-L Monthly».
 3. В RevenueCat привязать новый продукт к **тому же** entitlement `via_l_pro` и добавить в
    Offering `default` пакетом Monthly.
 4. Передать Claude публичный iOS SDK key (`appl_…`) — он идёт в `RC_API_KEYS.ios`.
