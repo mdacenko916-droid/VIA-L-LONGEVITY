@@ -3541,7 +3541,13 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-  const text = result.content[0].text;
+  let text = result.content[0].text;
+
+  // Язык — та же детерминированная проверка, что в /analyze (см. _enforceLang). Недельный
+  // разбор шёл мимо неё, и владелец поймал живьём: интерфейс на английском, а карточка
+  // недельного обзора с русским заголовком «Еженедельный обзор: Ваш старт…» (2026-09-10).
+  // Структурных маркеров [[S]]/[[D]] здесь нет, поэтому structured=false.
+  text = await _enforceLang(text, lang, env, ctx, false);
 
   // Проба правил недельного разбора: женские темы мужчине — самая заметная фальшь, и правило
   // про это живёт только в промпте (docs/PROMPT-RULES-AUDIT.md, строка 5). Ничего не меняем,
