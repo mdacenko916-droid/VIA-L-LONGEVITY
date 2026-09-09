@@ -4647,7 +4647,7 @@ function setLang(l){
         // ⚠️ Только если язык РЕАЛЬНО сменился: тап по уже активному языку в выпадашке — это тоже
         // setLang(), и без сверки он запускал полный платный разбор заново (живой случай 2026-08-30:
         // два одинаковых ru-разбора с разницей 36 сек, $0.065 впустую).
-        if(_sd===_dayKey() && document.getElementById('aiCard') && _lastResult && window._anLang!==l) fetchAIAnalysis(_lastResult.data,l,'lang');   // сегодняшний разбор — на новом языке; прошлые дни берём из кэша как есть
+        if(_sd===_dayKey() && document.getElementById('aiCard') && _lastResult && window._anLang!==l) _langSwitchAnalysis(_lastResult.data,l);   // сегодняшний разбор — на новом языке; прошлые дни берём из кэша как есть
         return; } }catch(e){}
   }
   if(_lastResult && _srEl && (_srEl.classList.contains('active')||_srEl.classList.contains('flow-show'))){_rerendering=true;try{_showResultsInner();}finally{_rerendering=false;}if(document.getElementById('aiCard') && window._anLang!==l)fetchAIAnalysis(_lastResult.data,l,'lang');}   // перерисовывать результаты при смене языка ТОЛЬКО если экран результатов открыт (иначе смена языка на утренней карточке/выборе источника выбрасывала в старый разбор из памяти)
@@ -10578,6 +10578,44 @@ function _renderHumanCta(){
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',_scanInit); else _scanInit();
 })();
+
+// Смена языка: ПЕРЕВОДИМ уже готовый разбор этого дня вместо того, чтобы заказывать новый.
+// Раньше здесь стоял fetchAIAnalysis(...,'lang') — полный проход по базе знаний заново
+// (замер в ai_usage, строка src:lang: 26 375 входных токенов, $0.055). Дело не только в
+// деньгах: модель рассуждала заново и могла расставить акценты иначе, и один и тот же день
+// на двух языках читался по-разному — против нашего же обещания «сравниваем вас с вами».
+// Перевод даёт ТОТ ЖЕ разбор на другом языке примерно за $0.032. Не вышло — падаем в
+// старое поведение, человек в любом случае получит разбор. 2026-09-09.
+async function _langSwitchAnalysis(data, l){
+  var card=document.getElementById('aiCard'), loading=document.getElementById('aiLoading'),
+      result=document.getElementById('aiResult'), err=document.getElementById('aiError'),
+      disc=document.getElementById('aiDisc');
+  try{
+    var e=(typeof _aiDayEntry==='function')?_aiDayEntry(_dayKey(),false):null;   // разбор дня на ЛЮБОМ языке
+    // На этом языке разбор уже есть → fetchAIAnalysis отдаст его из кэша, не платя.
+    if(!e || !e.analysis || e.lang===l){ fetchAIAnalysis(data,l,'lang'); return; }
+    if(card)card.style.display='block';
+    if(err)err.style.display='none';
+    if(result)result.style.display='none';
+    if(disc)disc.style.display='none';
+    if(loading)loading.style.display='flex';
+    var res=await fetch(AI_WORKER+'/translate-analysis',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ text:e.analysis, lang:l })
+    });
+    var json=await res.json();
+    if(!json || !json.analysis) throw new Error(json && json.error || 'no translation');
+    window._anLang=l;
+    try{ if(typeof _aiDailySave==='function')_aiDailySave(json.analysis); }catch(_e){}   // пишется под текущий lang (он уже равен l)
+    if(result){ result.innerHTML=(typeof _renderAnalysis==='function')?_renderAnalysis(json.analysis):_aiMd(json.analysis); result.style.display='block'; }
+    if(loading)loading.style.display='none';
+    if(disc)disc.style.display='block';
+    try{ _renderHumanCta(); }catch(_e){}
+    try{ if(typeof renderDayBlueprint==='function') renderDayBlueprint(window._bpData || data); }catch(_e){}
+  }catch(_e){
+    fetchAIAnalysis(data,l,'lang');   // перевод не удался — старый путь, полный разбор
+  }
+}
 
 async function fetchAIAnalysis(data, lang, src) {
   const card = document.getElementById('aiCard');

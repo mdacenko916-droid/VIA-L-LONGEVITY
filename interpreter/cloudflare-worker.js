@@ -1491,6 +1491,10 @@ export default {
       if (path === '/research/day')    return handleResearchDay(request, env, corsHeaders);
       if (path === '/research/forget') return handleResearchForget(request, env, corsHeaders);
       if (path === '/day-plan') return handleDayPlan(request, env, corsHeaders, ctx);
+      // Смена языка: переводим ГОТОВЫЙ разбор вместо повторного прохода. Дешевле
+      // (замер: повторный разбор $0.055 против ~$0.032 перевода) и, что важнее,
+      // клиент получает ТОТ ЖЕ разбор на другом языке, а не второй, другой. 2026-09-09.
+      if (path === '/translate-analysis') return handleTranslateAnalysis(request, env, corsHeaders, ctx);
       if (path === '/ai-memory') return handleAiMemory(request, env, corsHeaders, ctx);
       return handleAnalyze(request, env, corsHeaders, ctx);
 
@@ -2907,6 +2911,32 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// POST /translate-analysis {text, lang} → тот же разбор на другом языке.
+// Зачем отдельный маршрут: смена языка запускала ПОЛНЫЙ разбор заново (строка src:lang в
+// ai_usage: 26 375 входных токенов, $0.055). Модель при этом рассуждала заново и могла
+// расставить акценты иначе — один и тот же день читался по-разному на двух языках, что
+// прямо противоречит обещанию «сравниваем вас с вами». Теперь переводим готовый текст.
+async function handleTranslateAnalysis(request, env, corsHeaders, ctx) {
+  let body = {};
+  try { body = await request.json(); } catch (e) { /* пустое тело → ошибка ниже */ }
+  const text = String(body.text || '');
+  const lang = String(body.lang || '').slice(0, 5);
+  if (!text || !lang) return jsonResponse({ error: 'text and lang required' }, corsHeaders, 400);
+  if (text.length > 40000) return jsonResponse({ error: 'text too long' }, corsHeaders, 413);
+  // Русский и украинский — целевые языки самой базы знаний: туда переводить нечего и незачем,
+  // разбор на них модель пишет сама.
+  if (_CYR_OK.includes(lang)) return jsonResponse({ error: 'source language' }, corsHeaders, 400);
+  try {
+    let out = await translateReply(env, text, lang, 8000);
+    if (!out || out === text) return jsonResponse({ error: 'translate failed' }, corsHeaders, 502);
+    try { out = _structRepair(out); } catch (e) { /* ремонт не должен ронять ответ */ }
+    logRiskProbe(env, ctx, 'analysis-translate', '', lang, 'len:' + text.length);
+    return jsonResponse({ analysis: out }, corsHeaders);
+  } catch (e) {
+    return jsonResponse({ error: 'translate failed' }, corsHeaders, 502);
+  }
+}
+
 // GET /analysis-cache?cid=…&day=YYYY-MM-DD — забрать разбор, который не доехал.
 // Бесплатно и без модели: отдаём то, что уже сгенерировано и лежит в KV (72 ч).
 // ─────────────────────────────────────────────────────────────
