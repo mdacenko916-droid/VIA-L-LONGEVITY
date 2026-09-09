@@ -2143,6 +2143,10 @@ body.view-result #tb-brand{display:none;}
    списывало день доступа. Язык остаётся доступен на всех остальных экранах: утренняя карточка,
    выбор источника, опросник, профиль — то есть ДО прохода, когда выбор и имеет смысл. */
 body.view-result #langDropdown{display:none;}
+/* ...но НЕ когда поверх результата стоит пейволл: там переключатель — единственный способ
+   сменить язык, а правило выше его прятало (живой iPhone 2026-09-09: «языки исчезли»).
+   Правило про pointer-events для iap-open стоит ВЫШЕ и display:none не перебивало. */
+body.iap-open #langDropdown{display:block;}
 /* ✕ возврата (импорт-панель, анкета) стоит в левом верхнем углу и накрывал подпись «VIA·L».
    Там, где ✕ показан, подпись не нужна: у панели импорта свой заголовок, у анкеты — свой.
    Утренний экран (morning-mode) — исключение: ✕ там нет, бренд остаётся. 2026-08-27. */
@@ -8083,9 +8087,22 @@ function _iapI18n(){
 function _iapPriceFill(){
   var box=document.getElementById('iap-price'),lab=document.getElementById('iap-btn-label');
   if(!box||!window.iapGetPackage)return;
+  var btn=document.getElementById('iap-btn'), err=document.getElementById('iap-error');
   window.iapGetPackage().then(function(pkg){
     var ps=pkg&&pkg.product&&pkg.product.priceString;
-    if(!ps){ box.style.display='none'; return; }
+    if(!ps){
+      // Стор не отдал продукт (не заведён в Offering или висит в Missing Metadata). Раньше в
+      // этом случае оставалась живая кнопка «Оформить подписку» без цены: нажатие роняло
+      // ошибку, а рядом стояла фраза «продлевается по цене, указанной выше», где цены нет
+      // (живой iPhone 2026-09-09). Экран без цены Apple и так не пропустит — честнее сразу
+      // погасить кнопку и сказать, что покупка сейчас недоступна, оставив «Восстановить».
+      box.style.display='none';
+      if(btn)btn.disabled=true;
+      if(err){ err.style.display='block'; }
+      return;
+    }
+    if(btn)btn.disabled=false;
+    if(err)err.style.display='none';
     box.textContent=ps+' / '+t('iap_per_month');
     box.style.display='block';
     if(lab)lab.textContent=t('iap_subscribe')+' — '+ps;

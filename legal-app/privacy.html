@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>VIA·L AI assistant — Privacy Policy</title>
   <meta name="robots" content="noindex">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -63,6 +63,17 @@
       .lang-btn { padding: 4px 10px; font-size: 12px; }
       footer { padding: 24px 20px; }
       .footer-inner { flex-direction: column; text-align: center; }
+    }
+  
+    /* iOS-приложение: страница открывается во весь экран, и фиксированная шапка
+       уезжала ПОД часы и индикаторы — логотип «VIA·L» налезал на время (живой iPhone,
+       2026-09-09). env(safe-area-inset-top) работает только вместе с viewport-fit=cover
+       в мета-теге выше. Правило идёт последним, чтобы перекрыть мобильную медиа-вставку. */
+    nav { padding-top: calc(14px + env(safe-area-inset-top)); }
+    .page-wrap { padding-top: calc(140px + env(safe-area-inset-top)); }
+    @media (max-width: 600px) {
+      nav { padding-top: calc(12px + env(safe-area-inset-top)); }
+      .page-wrap { padding-top: calc(130px + env(safe-area-inset-top)); }
     }
   </style>
 </head>
@@ -756,7 +767,7 @@
     var saved = null;
     // Тот же ключ, что у приложения и остальных юр-страниц; `vial_legal_lang` — запасной,
     // для тех, кто раньше выбирал язык только на странице поддержки.
-    try { saved = localStorage.getItem('selectedLang') || localStorage.getItem('vial_legal_lang'); } catch(e){}
+    try { saved = localStorage.getItem('vial_lang')||localStorage.getItem('selectedLang')||localStorage.getItem('vial_legal_lang'); } catch(e){}
     if (saved === 'ua') saved = 'uk';
     if (saved && backLabels[saved]) { setLang(saved); return; }
     var hl = (navigator.language || '').toLowerCase().slice(0,2);
