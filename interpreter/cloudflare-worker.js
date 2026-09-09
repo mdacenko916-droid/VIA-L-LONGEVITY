@@ -2203,6 +2203,23 @@ function _withSuppTheme(fmt, data) {
   return fmt.indexOf(anchor) >= 0 ? fmt.replace(anchor, rule + anchor) : fmt + rule;
 }
 
+// Язык ответа — ВНУТРИ описания структуры, а не отдельной главой промпта.
+// 2026-09-09: проход с lang=en (подтверждено строкой в ai_usage) вернулся по-русски. Глава
+// «ЯЗЫК ОТВЕТА — КРИТИЧНО» в промпте есть, но перед ней ~44 тыс. знаков русской базы знаний,
+// и модель идёт за языком контекста. Здесь работает то же правило, что и со строкой «На чём
+// это основано» у EXPERT: дописанное в конец промпта игнорируется, вживлённое в описание
+// формата — исполняется.
+function _fmtLang(fmt, langName) {
+  if (!fmt) return fmt;
+  return fmt
+    .replace('Разметь ответ РОВНО так:\n',
+             'Разметь ответ РОВНО так:\n' +
+             'ЯЗЫК ВСЕГО ВЫВОДА — ' + langName + '. На ' + langName + ' пиши вступление, заголовки тем, ' +
+             'весь текст внутри [[D]] и дисклеймер. Эти инструкции и база знаний написаны по-русски — ' +
+             'это служебный слой, в ответ он не попадает НИ ОДНИМ словом.\n')
+    .replace('<Заголовок темы на языке ответа>', '<Заголовок темы на ' + langName + '>');
+}
+
 // EXPERT: строка «На чём это основано» вживляется ПРЯМО в описание разделов внутри [[D]].
 // Дописанная в конец промпта, она игнорировалась — модель следует описанию структуры.
 function _structuredFmtExpert() {
@@ -2602,6 +2619,38 @@ const _MED_DISCLAIMER = {
   ja:'⚕️ これは医学的診断ではありません。薬やサプリメントの用量を変更する前に医師にご相談ください。',
   ko:'⚕️ 의학적 진단이 아닙니다. 약이나 보충제의 용량을 바꾸기 전에 의사와 상의하세요.',
 };
+// ── ЯЗЫК ОТВЕТА: ДЕТЕРМИНИРОВАННАЯ ПРОВЕРКА ────────────────────────────────────
+// Инструкции модели — это просьба, а не гарантия. 2026-09-09 проход с lang=en вернулся
+// по-русски (строка в ai_usage подтверждает, что 'en' до воркера дошёл). Причина системная:
+// база знаний и все инструкции написаны по-русски (~44 тыс. знаков), и модель идёт за языком
+// контекста — сильнее всего Haiku, на который уходят европейские языки.
+// Поэтому язык проверяем кодом: доля кириллицы в готовом тексте — факт, а не догадка.
+// Правило владельца (2026-09-09): русского клиент не должен увидеть НИ ПРИ КАКОМ сбое —
+// если перевод на его язык не удался, отдаём английский.
+const _CYR_OK = ['ru', 'uk'];   // языки, для которых кириллица — норма
+function _cyrShare(t) {
+  const cyr = (String(t).match(/[а-яёА-ЯЁ]/g) || []).length;
+  const oth = (String(t).match(/[a-zA-Z\u0590-\u05FF\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]/g) || []).length;
+  const all = cyr + oth;
+  return all < 200 ? 0 : cyr / all;   // на коротком тексте не гадаем
+}
+async function _enforceLang(text, lang, env, ctx, structured) {
+  try {
+    if (!text || _CYR_OK.includes(lang)) return text;
+    if (_cyrShare(text) < 0.25) return text;                 // язык в порядке — ничего не делаем
+    logRiskProbe(env, ctx, 'lang-mismatch', '', lang, 'analyze: cyrillic in ' + lang);
+    // Чиним переводом, а не перегенерацией: тот же движок, что переводит ответы специалиста,
+    // дешевле полного прохода и сохраняет разметку [[S]]/[[D]].
+    let out = await translateReply(env, text, lang, 8000).catch(() => '');
+    if ((!out || _cyrShare(out) >= 0.25) && lang !== 'en') {
+      out = await translateReply(env, text, 'en', 8000).catch(() => '');   // запасной — английский, но не русский
+    }
+    if (!out || _cyrShare(out) >= 0.25) return text;          // оба перевода не удались — отдаём что есть
+    if (structured) { try { out = _structRepair(out); } catch (e) { /* ремонт не должен ронять ответ */ } }
+    return out;
+  } catch (e) { return text; }
+}
+
 function _needsMedDisclaimer(data) {
   const supp = Array.isArray(data.supplements) ? data.supplements.filter(x => x && String(x).indexOf('none') < 0) : [];
   const meds = Array.isArray(data.meds) ? data.meds.filter(Boolean) : (data.meds ? [data.meds] : []);
@@ -2744,7 +2793,7 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
       ],
       messages: [{ role: 'user', content: buildUserMessage(data, lang, tier)
         + (isWellness ? '' : LAB_TARGETS_EXPERT)   // ориентиры по анализам — только EXPERT
-        + (structured ? _withSuppTheme(isWellness ? _STRUCTURED_FMT : _structuredFmtExpert(), data) : '') }],
+        + (structured ? _fmtLang(_withSuppTheme(isWellness ? _STRUCTURED_FMT : _structuredFmtExpert(), data), langName) : '') }],
     }),
   });
 
@@ -2786,6 +2835,10 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
     // Скраб мог вырезать строки внутри блока → структуру чиним ПОСЛЕ него, последним шагом.
     if (structured) { try { text = _structRepair(text); } catch (e) { /* ремонт не должен ронять ответ */ } }
   }
+
+  // Язык проверяем ПОСЛЕ скрабов (они ищут русские слова в исходном тексте), но ДО строк,
+  // которые ниже дописывает код: те уже приходят на нужном языке, переводить их незачем.
+  if (!result.error) { text = await _enforceLang(text, lang, env, ctx, structured); }
 
   // Ферритин на фоне воспаления: модель эту связку теряла (3 прогона из 3 назвали CRP, но не
   // сказали, что он ЗАВЫШАЕТ ферритин). Ошибка дорогая — маскированный дефицит железа, — поэтому
@@ -5027,7 +5080,10 @@ async function handleTgMessage(msg, env, corsHeaders) {
 
 // Перевод ответа нутрициолога (ru) на язык клиента через Claude API.
 // Сохраняем структуру (абзацы, списки, переносы) и медицинскую точность.
-async function translateReply(env, text, targetLang) {
+// maxTokens: у ответа нутрициолога хватало 2000, но этим же движком чиним ЯЗЫК дневного
+// разбора (_enforceLang), а он генерится с лимитом 8000 — на 2000 перевод обрывался бы
+// на середине. Значение по умолчанию оставлено прежним, чтобы не менять поведение чата. 2026-09-09.
+async function translateReply(env, text, targetLang, maxTokens) {
   if (!env.CLAUDE_API_KEY) return text;
 
   const langName = {
@@ -5062,7 +5118,7 @@ async function translateReply(env, text, targetLang) {
     },
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2000,
+      max_tokens: maxTokens || 2000,
       system: system,
       messages: [{ role: 'user', content: text }],
     }),
