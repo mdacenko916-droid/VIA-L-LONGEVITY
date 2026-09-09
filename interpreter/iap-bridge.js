@@ -1,23 +1,31 @@
 /* VIA·L — IAP bridge: подписка €30/мес (RevenueCat, плагин @revenuecat/purchases-capacitor).
    Google Play — настроен 2026-09-08 (продукт via_l_pro_monthly:monthly, entitlement via_l_pro).
-   App Store — ждёт оплаты Apple Developer; ключ-заглушка, платформа сама себя отключает.
+   App Store — ключ-заглушка: членство Apple Developer оплачено и запись приложения в ASC есть
+   (сборка Xcode Cloud дошла до TestFlight 2026-09-03), но второе приложение в проекте RevenueCat
+   и сам продукт-подписка ещё не заведены. Пока ключа нет, платформа сама себя отключает.
    Работает ТОЛЬКО внутри приложения (window.Capacitor.Plugins.Purchases). На обычном вебе —
    все функции no-op, страница остаётся открытой как сейчас (веб-версия не платная).
-   Настройка перед первым релизом (владелец):
-     1) Создать проект в RevenueCat dashboard, добавить iOS-приложение (bundle id com.viael.vial).
+   Что осталось сделать для iOS (владелец, порядок важен):
+     1) В существующий проект RevenueCat «VIA-L» добавить ВТОРОЕ приложение — App Store,
+        bundle id com.viael.vial (нужен ключ App Store Connect API для проверки чеков).
      2) В App Store Connect создать auto-renewable subscription €30/мес, привязать к RevenueCat.
-     3) В RevenueCat создать Entitlement с идентификатором ENTITLEMENT_ID (см. константу ниже) и
-        Offering "default" с этим продуктом как package (Monthly).
-     4) Вставить сюда реальный iOS API key вместо RC_API_KEY_IOS.
-   Пока ключ не вставлен — configure() будет падать в try/catch, paywall останется видимым
-   (fail-closed: это правильно для непроверенной конфигурации, не должно молча открывать доступ). */
+     3) Добавить продукт в тот же Entitlement ENTITLEMENT_ID и в Offering "default" (Monthly).
+     4) Вставить сюда реальный iOS API key (appl_…) вместо заглушки.
+   Пока ключ не вставлен — rcKey() отдаёт пустую строку, IAP считается отсутствующим (как на
+   вебе) и приложение на iOS остаётся открытым: см. комментарий у window.iapAvailable ниже. */
 (function(){
-  /* Ключи RevenueCat разные на платформу, entitlement — ОДИН на обе: человек, купивший
-     подписку на телефоне, должен получить доступ и на планшете, и позже на iPhone.
+  /* Ключи RevenueCat разные на платформу, entitlement — ОДИН на обе, чтобы обе платформы
+     проверяли доступ по одному имени и офферинг был общим.
+     ⚠️ Общий entitlement НЕ означает переноса покупки между сторами. logIn() и своего
+     App User ID здесь нет — SDK работает в анонимном режиме, идентификатор свой на каждую
+     установку, связать покупателя Google Play с ним же на iPhone нечем. Что реально работает:
+     «Восстановить покупки» ВНУТРИ одного стора (второй Android под тем же Google-аккаунтом
+     подписку вернёт — об этом знает сам Play; так же и Apple ID в App Store). Кросс-стор
+     перенос потребовал бы общего идентификатора, то есть входа, которого у нас сознательно нет.
      Ключи публичные (public SDK key) — их и положено зашивать в приложение. 2026-09-08. */
   var RC_API_KEYS = {
     android: 'goog_BHsIdgHZJEhYqOpcDbQoVQFbFPC',
-    ios:     'YOUR_REVENUECAT_IOS_API_KEY',   // TODO: появится вместе с оплатой Apple Developer
+    ios:     'YOUR_REVENUECAT_IOS_API_KEY',   // TODO: appl_… — после заведения App Store-приложения в RevenueCat
   };
   var ENTITLEMENT_ID = 'via_l_pro';                       // должен совпадать с Entitlement ID в RevenueCat
 
