@@ -32,39 +32,42 @@ Apple Developer Program. Он устарел: членство оплачено,
 
 ---
 
-## 0-бис. Где мы застряли 2026-09-10 (вечер)
+## 0-бис. ✅ ПОДАНО В APP STORE — 2026-09-10, 23:28 CEST
 
-**Готово в App Store Connect, проверено глазами:** имя `VIA-L: Midlife, Explained`, подзаголовок
-`Sleep, energy, mood after 40`, описание, ключевые слова, категории (Health & Fitness + Lifestyle),
-Support URL и Privacy URL, User Privacy Choices URL (`legal-app/delete-data.html`), Content Rights,
-возрастной рейтинг 18+ (через Override, основание — пункт 4 «Eligibility» в наших Terms),
-**метки приватности опубликованы** (Health & Fitness → App Functionality → Not Linked to You),
-App Review Information, Pricing = **Free** + доступность, **семь скриншотов 1290×2796** загружены
-в слот 6.9″ (Apple сама использует их для 6.5″) и расставлены в нужном порядке.
-Подписка `via_l_pro_monthly` — Prepare for Submission, скриншот и заметка ревьюеру на месте.
+Отправлено одной подачей («3 Items Submitted»): **iOS App 1.0 (сборка 138)**, **группа подписок
+VIA-L Subscriptions** и **подписка VIA-L Monthly** (`via_l_pro_monthly`). Ревью до 48 часов, ответ
+придёт письмом. Выпуск стоит **вручную** (Manually release) — после одобрения нажать Release.
 
-**Единственный блокер:** к версии 1.0 не прикрепляется сборка. В окне «Add Build» перечислены
-билды 114–120 (все 1.0, все `Complete` в TestFlight, 120 живьём стоит на iPhone), но выбрать
-нельзя: радиокнопки не реагируют, `Done` серая. Одинаково в Safari, Chrome, Opera, в приватном
-окне и после полной перезагрузки. «Add for Review» при этом сообщает единственный недостающий
-пункт — «You must choose a build», то есть остальная карточка укомплектована.
+**Что в сборке 138:** всё по 2026-09-10 включительно, Ultrahuman спрятан в нативном приложении
+(`_nativeHideUltrahuman`, коммит `d27bf2a`) — у Ultrahuman OAuth работает, а метрики отдают 403.
+**Чего в ней нет** (едет следующей версией 1.0.1): повтор вызова модели при сбое API на сервере уже
+работает, но в приложении — кнопка «Спробувати ще раз» (`5568ff7`) и подтягивание готового разбора
+с сервера на экране результата (`7977f57`).
 
-**Что этому предшествовало:** за день прогнали больше десятка сборок (114–125) и упёрлись в
-`ITMS-90382 — Upload limit reached, wait 1 day`. Билды 114–120 загрузились ДО лимита и обработаны;
-121 и все следующие падали на шаге «Prepare Build for App Store Connect» — это не код,
-компиляция у них успешна (проверено: чистый клон HEAD проходит `npm ci` → `sync-web.sh` →
-`cap sync ios` без ошибок).
+### Три ловушки, на которых потеряли день — не наступать снова
 
-**Обращение в Apple Developer Support:** Distribution → Other Distribution Questions,
-**case ID 102958936297**, отправлено 2026-09-10 ~18:30 CEST, ответ придёт на `viaelcom@icloud.com`.
+1. **Xcode Cloud → Archive → Deployment Preparation = «TestFlight (Internal Testing Only)».** Такие
+   сборки загружаются, стоят в TestFlight со статусом Complete и ставятся на телефон, но в окне
+   «Add Build» у версии App Store они СЕРЫЕ и не выбираются ни в одном браузере. Нужно
+   **«TestFlight and App Store»**. Старые сборки не лечатся — годится только собранная после смены.
+   Подсказка была видна сразу: в Post-Actions сборки стояло «TestFlight Internal Testing».
+2. **ITMS-90382 — суточный лимит загрузок.** Xcode Cloud собирает на КАЖДЫЙ пуш в main, включая
+   коммиты с одними документами (письмо в `docs/` пересобирало то же приложение). За день набежало
+   больше десятка сборок. Выход: Start Conditions → ручной запуск или фильтр Files and Folders
+   (`interpreter/`, `app/`).
+3. **Первая подписка требует локализацию ГРУППЫ подписок** (Subscription Group Display Name) и
+   отправки группы вместе с версией. Без этого черновик подачи пишет «Your auto-renewable subscription
+   must be submitted with its subscription group». Группа добавляется кнопкой Add for Review на её
+   странице.
 
-**План на завтра:** лимит загрузок откроется — запустить **ОДНУ** сборку (не серию, серия и завела
-нас сюда), прикрепить её к версии, нажать `Add for Review` у подписки и отправить версию.
-Если свежая сборка выберется — обращение просто закрыть.
+Попутно: цена приложения (Pricing = Free) обязательна, без неё Add for Review требует «choose a price
+tier». Обращение в Apple Developer Support **case 102958936297** снято с повестки — причина была в
+пункте 1, не на стороне Apple.
 
-⚠️ В сборке 120 нет двух последних правок: различения украинского/русского и открытия перевода
-на украинский (коммиты `1191df0`, `3155905`). На американскую витрину это не влияет — серверная
-часть украинской правки работает и без сборки.
+**Метаданные, которые стоят в консоли:** имя `VIA-L: Midlife, Explained`, подзаголовок
+`Sleep, energy, mood after 40`, Health & Fitness + Lifestyle, рейтинг 18+ (Override по пункту 4 Terms),
+метки приватности Health & Fitness → App Functionality → Not Linked to You, User Privacy Choices URL
+`legal-app/delete-data.html`, 7 скриншотов 1290×2796 с подписями (`скрин/appstore-text/`).
 
 ---
 
