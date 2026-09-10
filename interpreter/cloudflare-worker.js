@@ -6290,7 +6290,13 @@ function enforceDishCatalog(plan, data, names) {
     const allowed = allowedDishes(data, meal, names);
     const byKey = new Map(allowed);
     arr.forEach(function (sec) {
-      if (!sec || sec.variants !== true || !Array.isArray(sec.items)) return;
+      // Флаг меню бывает не только true: модель возвращает и "true" строкой, и 1. Строгая
+      // проверка такую секцию ПРОПУСКАЛА, а приложение (проверка мягкая, if(s.variants)) всё равно
+      // рисовало её как меню — и до экрана доезжали выдуманные блюда без фото и макросов:
+      // «куриная печень + болгарский перец + гречка» рядом с треской из каталога (2026-09-10).
+      const _isVar = sec && (sec.variants === true || sec.variants === 'true' || sec.variants === 1 || sec.variants === '1');
+      if (!_isVar || !Array.isArray(sec.items)) return;
+      sec.variants = true;   // приводим к одному виду, чтобы клиент и сервер понимали флаг одинаково
       const used = new Set();
       const kept = sec.items.filter(function (x) {
         const m = String(x).match(/\[dish:([a-z][a-z0-9_]*)\]/);
