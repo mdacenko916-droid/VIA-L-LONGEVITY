@@ -11238,16 +11238,28 @@ function _ntText(){
   var _pl=''; try{ _pl=String((e&&e.lang)||''); }catch(_){}
   if(!fresh||_pl!==lang||['ru','uk','en'].indexOf(lang)<0) return neutral;
   try{
-    var secs=(e.plan&&e.plan.morning)||[]; var item='';
-    for(var i=0;i<secs.length&&!item;i++){
+    // Раньше брали ПЕРВЫЙ подходящий пункт утреннего раздела — и человек каждое утро видел одну
+    // и ту же фразу про стакан воды. Теперь собираем все годные пункты и чередуем их по дню
+    // (владелец, 2026-09-10). Устойчивость утреннего раздела — это и есть защита экрана
+    // блокировки: там вода, свет, разминка, завтрак, а не самочувствие. Стоп-список NT_BAN
+    // применяем к КАЖДОМУ кандидату, а не к одному, — иначе одно «здоровое» слово в первом
+    // пункте роняло бы всё на нейтральный текст, хотя рядом лежат безобидные.
+    var secs=(e.plan&&e.plan.morning)||[]; var pool=[];
+    for(var i=0;i<secs.length;i++){
       var its=(secs[i]&&secs[i].items)||[];
-      for(var j=0;j<its.length;j++){ var t=String(its[j]||'').trim(); if(t.length>=12){ item=t; break; } }
+      for(var j=0;j<its.length;j++){
+        var t=String(its[j]||'').replace(/\s*\[dish:[a-z0-9_]*\]\s*/gi,' ').replace(/\s+/g,' ').trim();
+        if(t.length<12) continue;
+        if(NT_BAN.test(t)) continue;
+        if(t.length>120) t=t.slice(0,117).replace(/[\s,;.]+\S*$/,'')+'…';
+        if(pool.indexOf(t)<0) pool.push(t);
+      }
     }
-    if(!item) return neutral;
-    item=item.replace(/\s*\[dish:[a-z0-9_]*\]\s*/gi,' ').replace(/\s+/g,' ').trim();
-    if(NT_BAN.test(item)) return neutral;              // нашлось «здоровое» слово — молча падаем на нейтральный
-    if(item.length>120) item=item.slice(0,117).replace(/[\s,;.]+\S*$/,'')+'…';
-    return { title:neutral.title, body:item };
+    if(!pool.length) return neutral;
+    // Номер дня от эпохи: меняется ровно раз в сутки и не зависит от часового пояса сильнее,
+    // чем сама дата. Так пункт сменяется каждое утро, а в течение дня остаётся тем же.
+    var _dn=Math.floor(Date.now()/86400000);
+    return { title:neutral.title, body:pool[_dn%pool.length] };
   }catch(_){ return neutral; }
 }
 // Перепланируем при каждом открытии приложения и после прохода: повтор ежедневный,
