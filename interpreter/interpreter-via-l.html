@@ -11221,7 +11221,12 @@ function _ntText(){
     if(e&&e.day){ var d=new Date(e.day+'T00:00:00'), days=(Date.now()-d.getTime())/86400000; fresh=(days>=0&&days<3); }
   }catch(_){}
   var neutral=_ntNeutral(fresh);
-  if(!fresh||['ru','uk','en'].indexOf(lang)<0) return neutral;
+  // ⚠️ Язык ПАМЯТКИ, а не приложения. Заголовок уведомления берётся из словаря и всегда верный,
+  // а тело — живая строка из плана дня, и её язык никто не сверял: украинский тестировщик получил
+  // украинское «Доброго ранку» с русским текстом под ним (2026-09-10). План сохраняется вместе с
+  // языком (_dpSave), поэтому просто требуем совпадения — иначе отдаём нейтральный текст.
+  var _pl=''; try{ _pl=String((e&&e.lang)||''); }catch(_){}
+  if(!fresh||_pl!==lang||['ru','uk','en'].indexOf(lang)<0) return neutral;
   try{
     var secs=(e.plan&&e.plan.morning)||[]; var item='';
     for(var i=0;i<secs.length&&!item;i++){

@@ -2632,16 +2632,32 @@ const _MED_DISCLAIMER = {
 // Правило владельца (2026-09-09): русского клиент не должен увидеть НИ ПРИ КАКОМ сбое —
 // если перевод на его язык не удался, отдаём английский.
 const _CYR_OK = ['ru', 'uk'];   // языки, для которых кириллица — норма
+// Русский и украинский различаем ДЕТЕРМИНИРОВАННО, по буквам-маркерам: ы/э/ъ есть только в
+// русском, і/ї/є/ґ — только в украинском. Без этого «кириллица есть — значит всё хорошо», и
+// украинец получал русский текст (жалоба тестировщика Android, 2026-09-10).
+function _cyrDialect(t) {
+  const ru = (String(t).match(/[ыэъЫЭЪ]/g) || []).length;
+  const uk = (String(t).match(/[іїєґІЇЄҐ]/g) || []).length;
+  if (ru + uk < 3) return '';            // слишком короткий текст — не гадаем
+  return ru > uk * 2 ? 'ru' : (uk > ru * 2 ? 'uk' : '');
+}
 function _cyrShare(t) {
   const cyr = (String(t).match(/[а-яёА-ЯЁ]/g) || []).length;
   const oth = (String(t).match(/[a-zA-Z\u0590-\u05FF\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]/g) || []).length;
   const all = cyr + oth;
   return all < 200 ? 0 : cyr / all;   // на коротком тексте не гадаем
 }
+function _wrongLang(text, lang) {
+  if (!text) return false;
+  if (_CYR_OK.includes(lang)) {                              // цель — русский или украинский
+    const d = _cyrDialect(text);
+    return !!d && d !== lang;                                // написано на «соседнем» языке
+  }
+  return _cyrShare(text) >= 0.25;                            // цель латиницей/иероглифами, а текст кириллицей
+}
 async function _enforceLang(text, lang, env, ctx, structured) {
   try {
-    if (!text || _CYR_OK.includes(lang)) return text;
-    if (_cyrShare(text) < 0.25) return text;                 // язык в порядке — ничего не делаем
+    if (!_wrongLang(text, lang)) return text;                // язык в порядке — ничего не делаем
     logRiskProbe(env, ctx, 'lang-mismatch', '', lang, 'analyze: cyrillic in ' + lang);
     // Чиним переводом, а не перегенерацией: тот же движок, что переводит ответы специалиста,
     // дешевле полного прохода и сохраняет разметку [[S]]/[[D]].
@@ -2664,7 +2680,7 @@ async function _enforceLang(text, lang, env, ctx, structured) {
 // а без метки пункт остаётся без фотографии.
 async function _enforceLangPlan(plan, lang, env, ctx) {
   try {
-    if (!plan || _CYR_OK.includes(lang)) return plan;
+    if (!plan) return plan;
     const slots = [];   // {set(v), get()} по каждой строке плана
     Object.keys(plan).forEach(k => {
       if (!Array.isArray(plan[k])) return;
@@ -2680,12 +2696,12 @@ async function _enforceLangPlan(plan, lang, env, ctx) {
     // Метку блюда прячем от переводчика
     const marks = slots.map(sl => { const m = String(sl.get()).match(/\s*\[dish:[a-z0-9_]+\]\s*$/i); return m ? m[0] : ''; });
     const bare = slots.map((sl, i) => String(sl.get()).slice(0, String(sl.get()).length - marks[i].length).trim());
-    if (_cyrShare(bare.join(' ')) < 0.25) return plan;   // язык в порядке
+    if (!_wrongLang(bare.join(' '), lang)) return plan;   // язык в порядке
     logRiskProbe(env, ctx, 'lang-mismatch', '', lang, 'day-plan: cyrillic in ' + lang);
     const numbered = bare.map((t, i) => (i + 1) + '. ' + t.replace(/\n+/g, ' ')).join('\n');
     let out = await translateReply(env, numbered, lang, 4000).catch(() => '');
-    if (!out || _cyrShare(out) >= 0.25) out = (lang !== 'en') ? await translateReply(env, numbered, 'en', 4000).catch(() => '') : '';
-    if (!out || _cyrShare(out) >= 0.25) return plan;     // перевод не удался — отдаём как есть
+    if ((!out || _wrongLang(out, lang)) && lang !== 'en' && !_CYR_OK.includes(lang)) out = await translateReply(env, numbered, 'en', 4000).catch(() => '');
+    if (!out || _wrongLang(out, lang)) return plan;      // перевод не удался — отдаём как есть
     const lines = out.split('\n').map(x => x.trim()).filter(Boolean)
       .map(x => { const m = x.match(/^\s*(\d+)\.\s*(.*)$/); return m ? { n: +m[1], t: m[2] } : null; })
       .filter(Boolean);
@@ -5168,7 +5184,10 @@ async function translateReply(env, text, targetLang, maxTokens) {
   const langName = {
     en: 'English', es: 'Spanish', de: 'German', pt: 'Portuguese',
     fr: 'French',  pl: 'Polish',  it: 'Italian', he: 'Hebrew',
-    ja: 'Japanese', ko: 'Korean'
+    ja: 'Japanese', ko: 'Korean',
+    // ru/uk добавлены 2026-09-10: до этого украинский вообще не проверялся — детектор считал
+    // «кириллица = свой язык», и украинец получал русский текст (жалоба тестировщика Android).
+    ru: 'Russian', uk: 'Ukrainian'
   }[targetLang] || targetLang;
 
   // ЖЁСТКИЙ system-промпт: модель — чистый движок перевода. Текст нутрициолога
