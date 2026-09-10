@@ -2628,7 +2628,7 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
 
   <!-- Summary of imported data -->
   <div id="import-summary" style="display:none;background:rgba(78,204,163,.06);border:1px solid rgba(78,204,163,.2);border-radius:16px;padding:16px 18px;margin-top:8px;">
-    <div style="font-size:var(--fs-cap);letter-spacing:2px;text-transform:uppercase;color:var(--ok);margin-bottom:10px;">📊 Импортировано</div>
+    <div data-t="imp_summary_t" style="font-size:var(--fs-cap);letter-spacing:2px;text-transform:uppercase;color:var(--ok);margin-bottom:10px;">📊 Импортировано</div>
     <div id="import-summary-grid" class="preview-grid"></div>
   </div>
 
@@ -10828,9 +10828,28 @@ function parseCSV(text,source){
   return out;
 }
 function applyExtracted(ex,source){Object.keys(ex).forEach(k=>{if(ex[k]!=null)importedData[k]=ex[k];});importedData.source=source;try{if(source&&source!=='manual'&&source!=='apple-manual')localStorage.setItem('viae_lastsync',new Date().toISOString());}catch(e){}_saveImported();}
+;(function(){var L2={"ru": "📊 Импортировано", "uk": "📊 Імпортовано", "en": "📊 Imported", "es": "📊 Importado", "de": "📊 Importiert", "pt": "📊 Importado", "fr": "📊 Importé", "pl": "📊 Zaimportowano", "it": "📊 Importato", "he": "📊 יובא", "ja": "📊 取り込み済み", "ko": "📊 가져옴"};Object.keys(L2).forEach(function(l){if(typeof T!=='undefined'&&T[l])T[l].imp_summary_t=L2[l];});try{var e=document.querySelector('[data-t="imp_summary_t"]');if(e&&typeof lang!=='undefined'&&L2[lang])e.textContent=L2[lang];}catch(e){}})();
 function renderPreview(gridId,data){
-  const labels={hrv:'HRV',rhr:'Пульс',sleepHours:'Сон',deepMin:'Deep',tempDev:'Темп.',spo2:'SpO₂',energy:'Энергия',readiness:'Готов.',vo2:'VO2'};
-  const units={hrv:'мс',rhr:'уд/м',sleepHours:'ч',deepMin:'мин',tempDev:'°C',spo2:'%',energy:'/10',readiness:'%',vo2:''};
+  // Подписи плиток «Импортировано» были захардкожены по-русски: на английском интерфейсе
+  // человек видел «ПУЛЬС УД/М», «СОН», «ТЕМП. °C», «DEEP МИН» (живой iPhone, 2026-09-10).
+  // L() берёт текущий язык и падает в английский, поэтому список безопасно неполный там,
+  // где обозначение международное (HRV, SpO₂, VO2, %, °C).
+  const labels={
+    hrv:'HRV', spo2:'SpO₂', vo2:'VO2',
+    rhr:L({ru:'Пульс',uk:'Пульс',en:'Pulse',es:'Pulso',de:'Puls',pt:'Pulso',fr:'Pouls',pl:'Tętno',it:'Battito',he:'דופק',ja:'脈拍',ko:'맥박'}),
+    sleepHours:L({ru:'Сон',uk:'Сон',en:'Sleep',es:'Sueño',de:'Schlaf',pt:'Sono',fr:'Sommeil',pl:'Sen',it:'Sonno',he:'שינה',ja:'睡眠',ko:'수면'}),
+    deepMin:L({ru:'Глубокий',uk:'Глибокий',en:'Deep',es:'Profundo',de:'Tief',pt:'Profundo',fr:'Profond',pl:'Głęboki',it:'Profondo',he:'עמוק',ja:'深い睡眠',ko:'깊은 잠'}),
+    tempDev:L({ru:'Темп.',uk:'Темп.',en:'Temp.',es:'Temp.',de:'Temp.',pt:'Temp.',fr:'Temp.',pl:'Temp.',it:'Temp.',he:'טמפ׳',ja:'体温',ko:'체온'}),
+    energy:L({ru:'Энергия',uk:'Енергія',en:'Energy',es:'Energía',de:'Energie',pt:'Energia',fr:'Énergie',pl:'Energia',it:'Energia',he:'אנרגיה',ja:'エネルギー',ko:'에너지'}),
+    readiness:L({ru:'Готов.',uk:'Готовн.',en:'Ready',es:'Listo',de:'Bereit',pt:'Pronto',fr:'Prêt',pl:'Gotow.',it:'Pronto',he:'מוכנות',ja:'準備度',ko:'준비도'})
+  };
+  const units={
+    hrv:L({ru:'мс',uk:'мс',en:'ms',es:'ms',de:'ms',pt:'ms',fr:'ms',pl:'ms',it:'ms',he:'מ״ש',ja:'ミリ秒',ko:'ms'}),
+    rhr:L({ru:'уд/м',uk:'уд/хв',en:'bpm',es:'lpm',de:'S/min',pt:'bpm',fr:'bpm',pl:'ud/min',it:'bpm',he:'פעימות',ja:'bpm',ko:'bpm'}),
+    sleepHours:L({ru:'ч',uk:'год',en:'h',es:'h',de:'Std',pt:'h',fr:'h',pl:'godz',it:'h',he:'ש׳',ja:'時間',ko:'시간'}),
+    deepMin:L({ru:'мин',uk:'хв',en:'min',es:'min',de:'Min',pt:'min',fr:'min',pl:'min',it:'min',he:'דק׳',ja:'分',ko:'분'}),
+    tempDev:'°C', spo2:'%', energy:'/10', readiness:'%', vo2:''
+  };
   const el=document.getElementById(gridId);if(!el)return;
   // Показываем ВСЕ базовые слоты (совпадают с шапкой устройства): недоступные — «—», а не прячем,
   // иначе «пропадает показатель» (напр. VO2max без пробежек). Доп-метрики (Deep/Готов./Энергия) — если есть.
