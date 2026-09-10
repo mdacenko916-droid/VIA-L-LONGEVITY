@@ -2326,16 +2326,16 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
 
       <!-- apple-manual остаётся скрытым: поля m-* заполняет нативный Health Connect (healthconnect-bridge.js) -->
       <div id="apple-manual" style="display:none;">
-        <div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;margin-bottom:4px;">Введите показатели из приложения Здоровье:</div>
+        <div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;margin-bottom:4px;" data-t="ml_health_hint">Введите показатели из приложения Здоровье:</div>
         <div class="manual-grid">
           <div class="manual-field"><label class="manual-label">HRV (мс)</label><input class="manual-input" id="m-hrv" type="number" min="1" max="200" placeholder="—"></div>
-          <div class="manual-field"><label class="manual-label">Пульс покоя</label><input class="manual-input" id="m-rhr" type="number" min="30" max="130" placeholder="—"></div>
-          <div class="manual-field"><label class="manual-label">Сон (часы)</label><input class="manual-input" id="m-sleep" type="number" min="0" max="14" step="0.1" placeholder="—"></div>
-          <div class="manual-field"><label class="manual-label">Deep Sleep (мин)</label><input class="manual-input" id="m-deep" type="number" min="0" max="300" placeholder="—"></div>
-          <div class="manual-field"><label class="manual-label">Темп. откл. (°C)</label><input class="manual-input" id="m-temp" type="number" min="-2" max="3" step="0.1" placeholder="0.0"></div>
+          <div class="manual-field"><label class="manual-label" data-t="ml_rhr">Пульс покоя</label><input class="manual-input" id="m-rhr" type="number" min="30" max="130" placeholder="—"></div>
+          <div class="manual-field"><label class="manual-label" data-t="ml_sleep_h">Сон (часы)</label><input class="manual-input" id="m-sleep" type="number" min="0" max="14" step="0.1" placeholder="—"></div>
+          <div class="manual-field"><label class="manual-label" data-t="ml_deep_min">Deep Sleep (мин)</label><input class="manual-input" id="m-deep" type="number" min="0" max="300" placeholder="—"></div>
+          <div class="manual-field"><label class="manual-label" data-t="ml_temp_dev">Темп. откл. (°C)</label><input class="manual-input" id="m-temp" type="number" min="-2" max="3" step="0.1" placeholder="0.0"></div>
           <div class="manual-field"><label class="manual-label">VO2 max</label><input class="manual-input" id="m-vo2" type="number" min="10" max="80" placeholder="—"></div>
         </div>
-        <button class="token-btn" style="width:100%;margin-top:12px;" onclick="applyManual()">Применить данные</button>
+        <button class="token-btn" style="width:100%;margin-top:12px;" onclick="applyManual()" data-t="ml_apply">Применить данные</button>
         <div class="import-status" id="manual-status"></div>
       </div>
     </div>
@@ -2360,12 +2360,12 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
       <div class="drop-zone" id="garmin-drop" ondragover="dragOver(event,'garmin-drop')" ondragleave="dragLeave('garmin-drop')" ondrop="dropFile(event,'garmin')">
         <input type="file" accept=".csv,.fit,.json" onchange="handleFile(this,'garmin')">
         <div class="drop-icon">📊</div>
-        <div class="drop-title">Загрузите CSV файл</div>
+        <div class="drop-title" data-t="ml_drop_csv">Загрузите CSV файл</div>
         <div data-t="hint_garmin" class="drop-hint">Поддерживается: CSV из Garmin Connect</div>
       </div>
       <div class="import-status" id="garmin-status"></div>
       <div class="imported-preview" id="garmin-preview">
-        <div style="font-size:var(--fs-cap);color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">✓ Данные загружены</div>
+        <div style="font-size:var(--fs-cap);color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;" data-t="ml_loaded">✓ Данные загружены</div>
         <div class="preview-grid" id="garmin-preview-grid"></div>
       </div>
     </div>
@@ -2408,8 +2408,8 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
     </div>
     <div class="source-body">
       <div class="method-tabs">
-        <button class="method-tab active" onclick="setMethod('samsung','file')">📁 Файл (CSV)</button>
-        <button class="method-tab" onclick="setMethod('samsung','manual')">✏️ Вручную</button>
+        <button class="method-tab active" onclick="setMethod('samsung','file')" data-t="ml_tab_file_csv">📁 Файл (CSV)</button>
+        <button class="method-tab" onclick="setMethod('samsung','manual')" data-t="ml_tab_manual">✏️ Вручную</button>
       </div>
       <div id="samsung-file">
         <div data-t="instr_samsung" style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;margin-bottom:12px;">
@@ -2419,26 +2419,26 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
         <div class="drop-zone" id="samsung-drop" ondragover="dragOver(event,'samsung-drop')" ondragleave="dragLeave('samsung-drop')" ondrop="dropFile(event,'samsung')">
           <input type="file" accept=".csv,.zip" onchange="handleFile(this,'samsung')">
           <div class="drop-icon">📂</div>
-          <div class="drop-title">Перетащите CSV файл или нажмите</div>
-          <div class="drop-hint">com.samsung.health.* или com.samsung.shealth.*</div>
+          <div class="drop-title" data-t="ml_drop_csv2">Перетащите CSV файл или нажмите</div>
+          <div class="drop-hint">com.samsung.health.* / com.samsung.shealth.*</div>
         </div>
         <div class="import-status" id="samsung-status"></div>
         <div class="imported-preview" id="samsung-preview">
-          <div style="font-size:var(--fs-cap);color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">✓ Файл обработан</div>
+          <div style="font-size:var(--fs-cap);color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;" data-t="ml_processed">✓ Файл обработан</div>
           <div class="preview-grid" id="samsung-preview-grid"></div>
         </div>
       </div>
       <div id="samsung-manual" style="display:none;">
-        <div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;margin-bottom:10px;">Введите показатели из приложения Samsung Health вручную:</div>
+        <div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;margin-bottom:10px;" data-t="ml_samsung_hint">Введите показатели из приложения Samsung Health вручную:</div>
         <div class="manual-grid">
-          <div class="manual-field"><label>ЧСС в покое (уд/мин)</label><input type="number" id="s-rhr" placeholder="62" min="30" max="120"></div>
+          <div class="manual-field"><label data-t="ml_rhr_bpm">ЧСС в покое (уд/мин)</label><input type="number" id="s-rhr" placeholder="62" min="30" max="120"></div>
           <div class="manual-field"><label>HRV (мс)</label><input type="number" id="s-hrv" placeholder="45" min="5" max="200"></div>
-          <div class="manual-field"><label>Сон (часы)</label><input type="number" id="s-sleep" placeholder="7.5" min="0" max="24" step="0.1"></div>
-          <div class="manual-field"><label>Глубокий сон (мин)</label><input type="number" id="s-deep" placeholder="85" min="0" max="300"></div>
+          <div class="manual-field"><label data-t="ml_sleep_h">Сон (часы)</label><input type="number" id="s-sleep" placeholder="7.5" min="0" max="24" step="0.1"></div>
+          <div class="manual-field"><label data-t="ml_deep_min">Глубокий сон (мин)</label><input type="number" id="s-deep" placeholder="85" min="0" max="300"></div>
           <div class="manual-field"><label>SpO₂ (%)</label><input type="number" id="s-spo2" placeholder="97" min="80" max="100"></div>
-          <div class="manual-field"><label>Стресс (0–100)</label><input type="number" id="s-stress" placeholder="35" min="0" max="100"></div>
+          <div class="manual-field"><label data-t="ml_stress100">Стресс (0–100)</label><input type="number" id="s-stress" placeholder="35" min="0" max="100"></div>
         </div>
-        <button class="apply-btn" onclick="applySamsungManual()">Применить данные</button>
+        <button class="apply-btn" onclick="applySamsungManual()" data-t="ml_apply">Применить данные</button>
         <div class="import-status" id="samsung-manual-status"></div>
       </div>
     </div>
@@ -2479,7 +2479,7 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
         <div class="source-name">WHOOP 5.0</div>
         <div class="source-desc" data-t="desc_whoop">HRV · Восстановление · Сон · SpO₂ · Температура · Strain</div>
       </div>
-      <span class="source-badge badge-best">Лучший</span>
+      <span class="source-badge badge-best" data-t="ml_best">Лучший</span>
       <span class="source-chevron">›</span>
     </div>
     <div class="source-body">
@@ -2510,8 +2510,8 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
     </div>
     <div class="source-body">
       <div class="method-tabs">
-        <button class="method-tab active" onclick="setMethod('xiaomi','file')">📁 Файл (CSV)</button>
-        <button class="method-tab" onclick="setMethod('xiaomi','manual')">✏️ Вручную</button>
+        <button class="method-tab active" onclick="setMethod('xiaomi','file')" data-t="ml_tab_file_csv">📁 Файл (CSV)</button>
+        <button class="method-tab" onclick="setMethod('xiaomi','manual')" data-t="ml_tab_manual">✏️ Вручную</button>
       </div>
       <div id="xiaomi-file">
         <div data-t="instr_xiaomi" style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;margin-bottom:12px;">
@@ -2521,26 +2521,26 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
         <div class="drop-zone" id="xiaomi-drop" ondragover="dragOver(event,'xiaomi-drop')" ondragleave="dragLeave('xiaomi-drop')" ondrop="dropFile(event,'xiaomi')">
           <input type="file" accept=".csv,.json" onchange="handleFile(this,'xiaomi')">
           <div class="drop-icon">📂</div>
-          <div class="drop-title">Перетащите файл или нажмите</div>
+          <div class="drop-title" data-t="ml_drop_any">Перетащите файл или нажмите</div>
           <div class="drop-hint">HEARTRATE_AUTO · SLEEP · STEP (CSV / JSON)</div>
         </div>
         <div class="import-status" id="xiaomi-status"></div>
         <div class="imported-preview" id="xiaomi-preview">
-          <div style="font-size:var(--fs-cap);color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">✓ Файл обработан</div>
+          <div style="font-size:var(--fs-cap);color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;" data-t="ml_processed">✓ Файл обработан</div>
           <div class="preview-grid" id="xiaomi-preview-grid"></div>
         </div>
       </div>
       <div id="xiaomi-manual" style="display:none;">
-        <div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;margin-bottom:10px;">Введите показатели из Mi Fitness вручную:</div>
+        <div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;margin-bottom:10px;" data-t="ml_mi_hint">Введите показатели из Mi Fitness вручную:</div>
         <div class="manual-grid">
-          <div class="manual-field"><label>ЧСС в покое (уд/мин)</label><input type="number" id="x-rhr" placeholder="65" min="30" max="120"></div>
-          <div class="manual-field"><label>Сон (часы)</label><input type="number" id="x-sleep" placeholder="7.0" min="0" max="24" step="0.1"></div>
-          <div class="manual-field"><label>Глубокий сон (мин)</label><input type="number" id="x-deep" placeholder="75" min="0" max="300"></div>
+          <div class="manual-field"><label data-t="ml_rhr_bpm">ЧСС в покое (уд/мин)</label><input type="number" id="x-rhr" placeholder="65" min="30" max="120"></div>
+          <div class="manual-field"><label data-t="ml_sleep_h">Сон (часы)</label><input type="number" id="x-sleep" placeholder="7.0" min="0" max="24" step="0.1"></div>
+          <div class="manual-field"><label data-t="ml_deep_min">Глубокий сон (мин)</label><input type="number" id="x-deep" placeholder="75" min="0" max="300"></div>
           <div class="manual-field"><label>SpO₂ (%)</label><input type="number" id="x-spo2" placeholder="97" min="80" max="100"></div>
-          <div class="manual-field"><label>Шаги (в день)</label><input type="number" id="x-steps" placeholder="8500" min="0" max="100000"></div>
-          <div class="manual-field"><label>Стресс (0–100)</label><input type="number" id="x-stress" placeholder="30" min="0" max="100"></div>
+          <div class="manual-field"><label data-t="ml_steps_day">Шаги (в день)</label><input type="number" id="x-steps" placeholder="8500" min="0" max="100000"></div>
+          <div class="manual-field"><label data-t="ml_stress100">Стресс (0–100)</label><input type="number" id="x-stress" placeholder="30" min="0" max="100"></div>
         </div>
-        <button class="apply-btn" onclick="applyXiaomiManual()">Применить данные</button>
+        <button class="apply-btn" onclick="applyXiaomiManual()" data-t="ml_apply">Применить данные</button>
         <div class="import-status" id="xiaomi-manual-status"></div>
       </div>
     </div>
@@ -2583,8 +2583,8 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
     </div>
     <div class="source-body">
       <div class="method-tabs">
-        <button class="method-tab active" onclick="setMethod('amazfit','file')">📁 Файл (CSV/JSON)</button>
-        <button class="method-tab" onclick="setMethod('amazfit','manual')">✏️ Вручную</button>
+        <button class="method-tab active" onclick="setMethod('amazfit','file')" data-t="ml_tab_file_csvjson">📁 Файл (CSV/JSON)</button>
+        <button class="method-tab" onclick="setMethod('amazfit','manual')" data-t="ml_tab_manual">✏️ Вручную</button>
       </div>
       <div id="amazfit-file">
         <div data-t="instr_amazfit" style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;margin-bottom:12px;">
@@ -2594,28 +2594,28 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
         <div class="drop-zone" id="amazfit-drop" ondragover="dragOver(event,'amazfit-drop')" ondragleave="dragLeave('amazfit-drop')" ondrop="dropFile(event,'amazfit')">
           <input type="file" accept=".csv,.json" onchange="handleFile(this,'amazfit')">
           <div class="drop-icon">📂</div>
-          <div class="drop-title">Перетащите файл или нажмите</div>
+          <div class="drop-title" data-t="ml_drop_any">Перетащите файл или нажмите</div>
           <div class="drop-hint">heart_rate · sleep · sport (CSV / JSON)</div>
         </div>
         <div class="import-status" id="amazfit-status"></div>
         <div class="imported-preview" id="amazfit-preview">
-          <div style="font-size:var(--fs-cap);color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">✓ Файл обработан</div>
+          <div style="font-size:var(--fs-cap);color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;" data-t="ml_processed">✓ Файл обработан</div>
           <div class="preview-grid" id="amazfit-preview-grid"></div>
         </div>
       </div>
       <div id="amazfit-manual" style="display:none;">
-        <div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;margin-bottom:10px;">Введите показатели из Zepp вручную:</div>
+        <div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;margin-bottom:10px;" data-t="ml_zepp_hint">Введите показатели из Zepp вручную:</div>
         <div class="manual-grid">
-          <div class="manual-field"><label>ЧСС в покое (уд/мин)</label><input type="number" id="am-rhr" placeholder="64" min="30" max="120"></div>
-          <div class="manual-field"><label>ВСР / HRV (мс)</label><input type="number" id="am-hrv" placeholder="48" min="0" max="300"></div>
-          <div class="manual-field"><label>Сон (часы)</label><input type="number" id="am-sleep" placeholder="7.0" min="0" max="24" step="0.1"></div>
-          <div class="manual-field"><label>Глубокий сон (мин)</label><input type="number" id="am-deep" placeholder="80" min="0" max="300"></div>
+          <div class="manual-field"><label data-t="ml_rhr_bpm">ЧСС в покое (уд/мин)</label><input type="number" id="am-rhr" placeholder="64" min="30" max="120"></div>
+          <div class="manual-field"><label data-t="ml_hrv_ms">ВСР / HRV (мс)</label><input type="number" id="am-hrv" placeholder="48" min="0" max="300"></div>
+          <div class="manual-field"><label data-t="ml_sleep_h">Сон (часы)</label><input type="number" id="am-sleep" placeholder="7.0" min="0" max="24" step="0.1"></div>
+          <div class="manual-field"><label data-t="ml_deep_min">Глубокий сон (мин)</label><input type="number" id="am-deep" placeholder="80" min="0" max="300"></div>
           <div class="manual-field"><label>SpO₂ (%)</label><input type="number" id="am-spo2" placeholder="97" min="80" max="100"></div>
-          <div class="manual-field"><label>Стресс (0–100)</label><input type="number" id="am-stress" placeholder="30" min="0" max="100"></div>
-          <div class="manual-field"><label>PAI (очки)</label><input type="number" id="am-pai" placeholder="50" min="0" max="200"></div>
-          <div class="manual-field"><label>Шаги (в день)</label><input type="number" id="am-steps" placeholder="8000" min="0" max="100000"></div>
+          <div class="manual-field"><label data-t="ml_stress100">Стресс (0–100)</label><input type="number" id="am-stress" placeholder="30" min="0" max="100"></div>
+          <div class="manual-field"><label data-t="ml_pai">PAI (очки)</label><input type="number" id="am-pai" placeholder="50" min="0" max="200"></div>
+          <div class="manual-field"><label data-t="ml_steps_day">Шаги (в день)</label><input type="number" id="am-steps" placeholder="8000" min="0" max="100000"></div>
         </div>
-        <button class="apply-btn" onclick="applyAmazfitManual()">Применить данные</button>
+        <button class="apply-btn" onclick="applyAmazfitManual()" data-t="ml_apply">Применить данные</button>
         <div class="import-status" id="amazfit-manual-status"></div>
       </div>
     </div>
@@ -2633,16 +2633,16 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
       <span class="source-chevron">›</span>
     </div>
     <div class="source-body">
-      <div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;margin-bottom:10px;">В приложении кольцо подтягивается автоматически через Apple Health / Health Connect. Прямое веб-подключение скоро — пока введите показатели вручную:</div>
+      <div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;margin-bottom:10px;" data-t="ml_oura_hint">В приложении кольцо подтягивается автоматически через Apple Health / Health Connect. Прямое веб-подключение скоро — пока введите показатели вручную:</div>
       <div class="manual-grid">
         <div class="manual-field"><label>HRV (мс)</label><input type="number" id="uh-hrv" placeholder="48" min="0" max="300"></div>
-        <div class="manual-field"><label>ЧСС в покое (уд/мин)</label><input type="number" id="uh-rhr" placeholder="58" min="30" max="120"></div>
-        <div class="manual-field"><label>Сон (часы)</label><input type="number" id="uh-sleep" placeholder="7.0" min="0" max="24" step="0.1"></div>
-        <div class="manual-field"><label>Глубокий сон (мин)</label><input type="number" id="uh-deep" placeholder="80" min="0" max="300"></div>
-        <div class="manual-field"><label>Темп. откл. (°C)</label><input type="number" id="uh-temp" placeholder="0.0" min="-2" max="3" step="0.1"></div>
-        <div class="manual-field"><label>Восстановление (0–100)</label><input type="number" id="uh-recovery" placeholder="70" min="0" max="100"></div>
+        <div class="manual-field"><label data-t="ml_rhr_bpm">ЧСС в покое (уд/мин)</label><input type="number" id="uh-rhr" placeholder="58" min="30" max="120"></div>
+        <div class="manual-field"><label data-t="ml_sleep_h">Сон (часы)</label><input type="number" id="uh-sleep" placeholder="7.0" min="0" max="24" step="0.1"></div>
+        <div class="manual-field"><label data-t="ml_deep_min">Глубокий сон (мин)</label><input type="number" id="uh-deep" placeholder="80" min="0" max="300"></div>
+        <div class="manual-field"><label data-t="ml_temp_dev">Темп. откл. (°C)</label><input type="number" id="uh-temp" placeholder="0.0" min="-2" max="3" step="0.1"></div>
+        <div class="manual-field"><label data-t="ml_recovery100">Восстановление (0–100)</label><input type="number" id="uh-recovery" placeholder="70" min="0" max="100"></div>
       </div>
-      <button class="apply-btn" onclick="applyUltrahumanManual()">Применить данные</button>
+      <button class="apply-btn" onclick="applyUltrahumanManual()" data-t="ml_apply">Применить данные</button>
       <div class="import-status" id="ultrahuman-manual-status"></div>
     </div>
   </div>
@@ -2981,7 +2981,7 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
           <div class="hrv-vital">
             <div class="oura-display">
               <div class="oura-number" id="hrv-num">55</div>
-              <div class="oura-unit">мс</div>
+              <div class="oura-unit" data-t="unit_ms">мс</div>
               <div class="oura-status" id="hrv-status">Норма</div>
             </div>
           </div>
@@ -10103,6 +10103,8 @@ function parseCSV(text,source){
 }
 function applyExtracted(ex,source){Object.keys(ex).forEach(k=>{if(ex[k]!=null)importedData[k]=ex[k];});importedData.source=source;try{if(source&&source!=='manual'&&source!=='apple-manual')localStorage.setItem('vialp_lastsync',new Date().toISOString());}catch(e){}_saveImported();}
 ;(function(){var L2={"ru": "📊 Импортировано", "uk": "📊 Імпортовано", "en": "📊 Imported", "es": "📊 Importado", "de": "📊 Importiert", "pt": "📊 Importado", "fr": "📊 Importé", "pl": "📊 Zaimportowano", "it": "📊 Importato", "he": "📊 יובא", "ja": "📊 取り込み済み", "ko": "📊 가져옴"};Object.keys(L2).forEach(function(l){if(typeof T!=='undefined'&&T[l])T[l].imp_summary_t=L2[l];});try{var e=document.querySelector('[data-t="imp_summary_t"]');if(e&&typeof lang!=='undefined'&&L2[lang])e.textContent=L2[lang];}catch(e){}})();
+;(function(){var _ML={"ml_health_hint": {"ru": "Введите показатели из приложения Здоровье:", "uk": "Введіть показники з застосунку Здоров’я:", "en": "Enter the values from the Health app:", "es": "Introduce los valores de la app Salud:", "de": "Werte aus der Health-App eintragen:", "pt": "Digite os valores do app Saúde:", "fr": "Saisissez les valeurs de l’app Santé :", "pl": "Wpisz wartości z aplikacji Zdrowie:", "it": "Inserisci i valori dall’app Salute:", "he": "הזינו את הערכים מאפליקציית הבריאות:", "ja": "ヘルスケアAppの数値を入力してください：", "ko": "건강 앱의 수치를 입력하세요:"}, "ml_rhr": {"ru": "Пульс покоя", "uk": "Пульс спокою", "en": "Resting pulse", "es": "Pulso en reposo", "de": "Ruhepuls", "pt": "Pulso em repouso", "fr": "Pouls au repos", "pl": "Tętno spoczynkowe", "it": "Battito a riposo", "he": "דופק במנוחה", "ja": "安静時の脈拍", "ko": "안정 시 맥박"}, "ml_sleep_h": {"ru": "Сон (часы)", "uk": "Сон (години)", "en": "Sleep (hours)", "es": "Sueño (horas)", "de": "Schlaf (Stunden)", "pt": "Sono (horas)", "fr": "Sommeil (heures)", "pl": "Sen (godziny)", "it": "Sonno (ore)", "he": "שינה (שעות)", "ja": "睡眠（時間）", "ko": "수면(시간)"}, "ml_deep_min": {"ru": "Глубокий сон (мин)", "uk": "Глибокий сон (хв)", "en": "Deep sleep (min)", "es": "Sueño profundo (min)", "de": "Tiefschlaf (Min.)", "pt": "Sono profundo (min)", "fr": "Sommeil profond (min)", "pl": "Sen głęboki (min)", "it": "Sonno profondo (min)", "he": "שינה עמוקה (דק׳)", "ja": "深い睡眠（分）", "ko": "깊은 수면(분)"}, "ml_temp_dev": {"ru": "Темп. откл. (°C)", "uk": "Темп. відхил. (°C)", "en": "Temp. deviation (°C)", "es": "Desviación de temp. (°C)", "de": "Temp.-Abweichung (°C)", "pt": "Desvio de temp. (°C)", "fr": "Écart de temp. (°C)", "pl": "Odchylenie temp. (°C)", "it": "Scostamento temp. (°C)", "he": "סטיית טמפ׳ (°C)", "ja": "体温の偏差（°C）", "ko": "체온 편차(°C)"}, "ml_apply": {"ru": "Применить данные", "uk": "Застосувати дані", "en": "Apply data", "es": "Aplicar datos", "de": "Daten übernehmen", "pt": "Aplicar dados", "fr": "Appliquer les données", "pl": "Zastosuj dane", "it": "Applica i dati", "he": "החלת הנתונים", "ja": "データを適用", "ko": "데이터 적용"}, "ml_drop_csv": {"ru": "Загрузите CSV файл", "uk": "Завантажте CSV файл", "en": "Upload a CSV file", "es": "Sube un archivo CSV", "de": "CSV-Datei hochladen", "pt": "Envie um arquivo CSV", "fr": "Chargez un fichier CSV", "pl": "Wgraj plik CSV", "it": "Carica un file CSV", "he": "העלו קובץ CSV", "ja": "CSVファイルをアップロード", "ko": "CSV 파일 업로드"}, "ml_loaded": {"ru": "✓ Данные загружены", "uk": "✓ Дані завантажено", "en": "✓ Data loaded", "es": "✓ Datos cargados", "de": "✓ Daten geladen", "pt": "✓ Dados carregados", "fr": "✓ Données chargées", "pl": "✓ Dane wczytane", "it": "✓ Dati caricati", "he": "✓ הנתונים נטענו", "ja": "✓ データを読み込みました", "ko": "✓ 데이터를 불러왔습니다"}, "ml_tab_file_csv": {"ru": "📁 Файл (CSV)", "uk": "📁 Файл (CSV)", "en": "📁 File (CSV)", "es": "📁 Archivo (CSV)", "de": "📁 Datei (CSV)", "pt": "📁 Arquivo (CSV)", "fr": "📁 Fichier (CSV)", "pl": "📁 Plik (CSV)", "it": "📁 File (CSV)", "he": "📁 קובץ (CSV)", "ja": "📁 ファイル（CSV）", "ko": "📁 파일(CSV)"}, "ml_tab_file_csvjson": {"ru": "📁 Файл (CSV/JSON)", "uk": "📁 Файл (CSV/JSON)", "en": "📁 File (CSV/JSON)", "es": "📁 Archivo (CSV/JSON)", "de": "📁 Datei (CSV/JSON)", "pt": "📁 Arquivo (CSV/JSON)", "fr": "📁 Fichier (CSV/JSON)", "pl": "📁 Plik (CSV/JSON)", "it": "📁 File (CSV/JSON)", "he": "📁 קובץ (CSV/JSON)", "ja": "📁 ファイル（CSV/JSON）", "ko": "📁 파일(CSV/JSON)"}, "ml_tab_manual": {"ru": "✏️ Вручную", "uk": "✏️ Вручну", "en": "✏️ By hand", "es": "✏️ A mano", "de": "✏️ Manuell", "pt": "✏️ Manual", "fr": "✏️ À la main", "pl": "✏️ Ręcznie", "it": "✏️ A mano", "he": "✏️ ידנית", "ja": "✏️ 手入力", "ko": "✏️ 직접 입력"}, "ml_drop_csv2": {"ru": "Перетащите CSV файл или нажмите", "uk": "Перетягніть CSV файл або натисніть", "en": "Drop a CSV file here or tap", "es": "Arrastra un archivo CSV o toca", "de": "CSV-Datei hierher ziehen oder tippen", "pt": "Arraste um arquivo CSV ou toque", "fr": "Déposez un fichier CSV ou touchez", "pl": "Przeciągnij plik CSV lub dotknij", "it": "Trascina un file CSV o tocca", "he": "גררו קובץ CSV או הקישו", "ja": "CSVファイルをドロップ、またはタップ", "ko": "CSV 파일을 끌어다 놓거나 탭하세요"}, "ml_drop_any": {"ru": "Перетащите файл или нажмите", "uk": "Перетягніть файл або натисніть", "en": "Drop a file here or tap", "es": "Arrastra un archivo o toca", "de": "Datei hierher ziehen oder tippen", "pt": "Arraste um arquivo ou toque", "fr": "Déposez un fichier ou touchez", "pl": "Przeciągnij plik lub dotknij", "it": "Trascina un file o tocca", "he": "גררו קובץ או הקישו", "ja": "ファイルをドロップ、またはタップ", "ko": "파일을 끌어다 놓거나 탭하세요"}, "ml_processed": {"ru": "✓ Файл обработан", "uk": "✓ Файл оброблено", "en": "✓ File processed", "es": "✓ Archivo procesado", "de": "✓ Datei verarbeitet", "pt": "✓ Arquivo processado", "fr": "✓ Fichier traité", "pl": "✓ Plik przetworzony", "it": "✓ File elaborato", "he": "✓ הקובץ עובד", "ja": "✓ ファイルを処理しました", "ko": "✓ 파일을 처리했습니다"}, "ml_samsung_hint": {"ru": "Введите показатели из приложения Samsung Health вручную:", "uk": "Введіть показники з застосунку Samsung Health вручну:", "en": "Enter the values from Samsung Health by hand:", "es": "Introduce a mano los valores de Samsung Health:", "de": "Werte aus Samsung Health manuell eintragen:", "pt": "Digite manualmente os valores do Samsung Health:", "fr": "Saisissez à la main les valeurs de Samsung Health :", "pl": "Wpisz ręcznie wartości z Samsung Health:", "it": "Inserisci a mano i valori da Samsung Health:", "he": "הזינו ידנית את הערכים מ-Samsung Health:", "ja": "Samsung Healthの数値を手入力してください：", "ko": "Samsung Health의 수치를 직접 입력하세요:"}, "ml_mi_hint": {"ru": "Введите показатели из Mi Fitness вручную:", "uk": "Введіть показники з Mi Fitness вручну:", "en": "Enter the values from Mi Fitness by hand:", "es": "Introduce a mano los valores de Mi Fitness:", "de": "Werte aus Mi Fitness manuell eintragen:", "pt": "Digite manualmente os valores do Mi Fitness:", "fr": "Saisissez à la main les valeurs de Mi Fitness :", "pl": "Wpisz ręcznie wartości z Mi Fitness:", "it": "Inserisci a mano i valori da Mi Fitness:", "he": "הזינו ידנית את הערכים מ-Mi Fitness:", "ja": "Mi Fitnessの数値を手入力してください：", "ko": "Mi Fitness의 수치를 직접 입력하세요:"}, "ml_zepp_hint": {"ru": "Введите показатели из Zepp вручную:", "uk": "Введіть показники з Zepp вручну:", "en": "Enter the values from Zepp by hand:", "es": "Introduce a mano los valores de Zepp:", "de": "Werte aus Zepp manuell eintragen:", "pt": "Digite manualmente os valores do Zepp:", "fr": "Saisissez à la main les valeurs de Zepp :", "pl": "Wpisz ręcznie wartości z Zepp:", "it": "Inserisci a mano i valori da Zepp:", "he": "הזינו ידנית את הערכים מ-Zepp:", "ja": "Zeppの数値を手入力してください：", "ko": "Zepp의 수치를 직접 입력하세요:"}, "ml_oura_hint": {"ru": "В приложении кольцо подтягивается автоматически через Apple Health / Health Connect. Прямое веб-подключение скоро — пока введите показатели вручную:", "uk": "У застосунку каблучка підтягується автоматично через Apple Health / Health Connect. Пряме веб-підключення скоро — поки введіть показники вручну:", "en": "In the app the ring syncs automatically through Apple Health / Health Connect. A direct web connection is coming — for now, enter the values by hand:", "es": "En la app el anillo se sincroniza automáticamente con Apple Health / Health Connect. La conexión web directa llegará pronto; por ahora introduce los valores a mano:", "de": "In der App synchronisiert sich der Ring automatisch über Apple Health / Health Connect. Eine direkte Web-Verbindung kommt bald — trage die Werte vorerst manuell ein:", "pt": "No app o anel sincroniza automaticamente pelo Apple Health / Health Connect. A conexão web direta vem em breve — por enquanto digite os valores:", "fr": "Dans l’app, la bague se synchronise automatiquement via Apple Santé / Health Connect. La connexion web directe arrive bientôt — saisissez les valeurs à la main pour l’instant :", "pl": "W aplikacji pierścień synchronizuje się automatycznie przez Apple Health / Health Connect. Bezpośrednie połączenie webowe wkrótce — na razie wpisz wartości ręcznie:", "it": "Nell’app l’anello si sincronizza automaticamente tramite Apple Salute / Health Connect. La connessione web diretta arriverà presto: per ora inserisci i valori a mano:", "he": "באפליקציה הטבעת מסתנכרנת אוטומטית דרך Apple Health / Health Connect. חיבור ווב ישיר בקרוב — בינתיים הזינו את הערכים ידנית:", "ja": "アプリではリングのデータはApple Health / Health Connect経由で自動的に取り込まれます。直接のWeb連携は近日対応予定です。それまでは手入力してください：", "ko": "앱에서는 링 데이터가 Apple 건강 / Health Connect를 통해 자동으로 들어옵니다. 웹 직접 연결은 곧 지원됩니다 — 그때까지는 직접 입력해 주세요:"}, "ml_rhr_bpm": {"ru": "ЧСС в покое (уд/мин)", "uk": "ЧСС у спокої (уд/хв)", "en": "Resting heart rate (bpm)", "es": "Frecuencia en reposo (lpm)", "de": "Ruheherzfrequenz (S/min)", "pt": "Frequência em repouso (bpm)", "fr": "Fréquence au repos (bpm)", "pl": "Tętno spoczynkowe (ud/min)", "it": "Frequenza a riposo (bpm)", "he": "דופק מנוחה (פעימות/דק׳)", "ja": "安静時心拍数（bpm）", "ko": "안정 시 심박수(bpm)"}, "ml_stress100": {"ru": "Стресс (0–100)", "uk": "Стрес (0–100)", "en": "Stress (0–100)", "es": "Estrés (0–100)", "de": "Stress (0–100)", "pt": "Estresse (0–100)", "fr": "Stress (0–100)", "pl": "Stres (0–100)", "it": "Stress (0–100)", "he": "מתח (0–100)", "ja": "ストレス（0〜100）", "ko": "스트레스(0–100)"}, "ml_recovery100": {"ru": "Восстановление (0–100)", "uk": "Відновлення (0–100)", "en": "Recovery (0–100)", "es": "Recuperación (0–100)", "de": "Erholung (0–100)", "pt": "Recuperação (0–100)", "fr": "Récupération (0–100)", "pl": "Regeneracja (0–100)", "it": "Recupero (0–100)", "he": "התאוששות (0–100)", "ja": "回復（0〜100）", "ko": "회복(0–100)"}, "ml_steps_day": {"ru": "Шаги (в день)", "uk": "Кроки (за день)", "en": "Steps (per day)", "es": "Pasos (al día)", "de": "Schritte (pro Tag)", "pt": "Passos (por dia)", "fr": "Pas (par jour)", "pl": "Kroki (dziennie)", "it": "Passi (al giorno)", "he": "צעדים (ליום)", "ja": "歩数（1日）", "ko": "걸음 수(하루)"}, "ml_hrv_ms": {"ru": "ВСР / HRV (мс)", "uk": "ВСР / HRV (мс)", "en": "HRV (ms)", "es": "VFC / HRV (ms)", "de": "HRV (ms)", "pt": "VFC / HRV (ms)", "fr": "VFC / HRV (ms)", "pl": "HRV (ms)", "it": "HRV (ms)", "he": "HRV (מ״ש)", "ja": "HRV（ミリ秒）", "ko": "HRV(ms)"}, "ml_pai": {"ru": "PAI (очки)", "uk": "PAI (бали)", "en": "PAI (points)", "es": "PAI (puntos)", "de": "PAI (Punkte)", "pt": "PAI (pontos)", "fr": "PAI (points)", "pl": "PAI (punkty)", "it": "PAI (punti)", "he": "PAI (נקודות)", "ja": "PAI（ポイント）", "ko": "PAI(점수)"}, "ml_best": {"ru": "Лучший", "uk": "Найкращий", "en": "Best", "es": "Mejor", "de": "Beste", "pt": "Melhor", "fr": "Meilleur", "pl": "Najlepszy", "it": "Migliore", "he": "הטוב ביותר", "ja": "おすすめ", "ko": "최적"}};Object.keys(_ML).forEach(function(k){Object.keys(_ML[k]).forEach(function(l){if(typeof T!=='undefined'&&T[l])T[l][k]=_ML[k][l];});});})();
+;(function(){var U={ru:'мс',uk:'мс',en:'ms',es:'ms',de:'ms',pt:'ms',fr:'ms',pl:'ms',it:'ms',he:'מ″ש',ja:'ミリ秒',ko:'ms'};Object.keys(U).forEach(function(l){if(typeof T!=='undefined'&&T[l])T[l].unit_ms=U[l];});})();
 function renderPreview(gridId,data){
   // Подписи плиток «Импортировано» были захардкожены по-русски: на английском интерфейсе
   // человек видел «ПУЛЬС УД/М», «СОН», «ТЕМП. °C», «DEEP МИН» (живой iPhone, 2026-09-10).
