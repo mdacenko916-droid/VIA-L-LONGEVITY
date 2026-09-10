@@ -7120,6 +7120,12 @@ function _cyrShareCli(t){
   var o=(String(t).match(/[a-zA-Z\u0590-\u05FF\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]/g)||[]).length;
   var a=c+o; return a<200?0:c/a;
 }
+/* Версия движка перевода. Пометку языка пишем как 'en@2': если движок чинили, старые
+   пометки перестают совпадать и текст переводится заново ОДИН раз. Нужно потому, что мы
+   записываем ЗАПРОШЕННЫЙ язык, а модель может вернуть другой — так и вышло 2026-09-10:
+   переводчику говорили «с русского», пришёл испанский, он выдал французский, а пометка
+   осталась 'en', и приложение считало, что чинить нечего. */
+var _TR_ENGINE_V='2';
 var _rpTrBusy={};
 async function _reportEnsureLang(kind){
   var K={weekly:{txt:'vialp_weekly_text',lng:'vialp_weekly_lang',render:'renderWeeklyReportUI'},
@@ -7130,14 +7136,14 @@ async function _reportEnsureLang(kind){
   try{ txt=localStorage.getItem(K.txt)||''; saved=localStorage.getItem(K.lng)||''; }catch(e){}
   if(!txt) return;
   // Пометки языка нет (текст сохранён до этой правки) — смотрим на сам текст.
-  if(saved ? saved===lang : _cyrShareCli(txt)<0.25) return;
+  if(saved ? saved===(lang+'@'+_TR_ENGINE_V) : _cyrShareCli(txt)<0.25) return;
   _rpTrBusy[kind]=true;
   try{
     var r=await fetch(AI_WORKER+'/translate-analysis',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({text:txt,lang:lang})});
     var j=await r.json();
     if(j&&j.analysis){
-      try{ localStorage.setItem(K.txt,j.analysis); localStorage.setItem(K.lng,lang); }catch(e){}
+      try{ localStorage.setItem(K.txt,j.analysis); localStorage.setItem(K.lng,lang+'@'+_TR_ENGINE_V); }catch(e){}
       if(typeof window[K.render]==='function') window[K.render]();
     }
   }catch(e){}
