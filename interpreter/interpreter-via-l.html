@@ -4635,6 +4635,7 @@ function setLang(l){
   });
   try{ ouraSyncLang(); }catch(e){}
   try{ _iapI18n(); }catch(e){}  // пейволл: {store} → Apple ID / Google Play + цена из стора
+  try{ _nativeHideUltrahuman(); }catch(e){}   // после перевода подписей: data-t вернул бы «· Ultrahuman» в строку
   // Сохранённые недельный/месячный разборы: карточка профиля уже нарисована и повторно
   // не строится, поэтому смену языка она пропускала. Живой случай 2026-09-10: разбор
   // перевёлся в испанский (язык на тот момент), а после переключения на английский
@@ -8160,6 +8161,18 @@ async function _heroHealthStart(){
    €29,99, но в США списывается $34,99 — любая зашитая в текст цифра врала бы почти везде и
    расходилась бы с фактическим списанием (App Store 3.1.2 / 2.3). Нет ответа стора — цены нет
    и покупка всё равно невозможна (iapGetPackage() вернёт null). */
+/* Ultrahuman в приложении из стора спрятан (владелец, 2026-09-10). Вход через OAuth у Ultrahuman
+   работает, но их API отдаёт 403 на метриках — письмо в поддержку отправлено, ждём. Ревьюер Apple
+   нажимает всё подряд: подключил кольцо, не получил ни одного показателя — это отказ по 2.1
+   «функция не работает». Прячем ТОЛЬКО внутри приложения (window.Capacitor): на вебе и в EXPERT
+   карточка остаётся. Лента совместимости не трогается — кольцо Ultrahuman пишет в Apple Health,
+   и через первую кнопку данные доходят. Когда Ultrahuman откроет метрики — удалить эту функцию. */
+function _nativeHideUltrahuman(){
+  if(!window.Capacitor) return;
+  var c=document.getElementById('card-ultrahuman'); if(c) c.style.display='none';
+  var sub=document.querySelector('[data-t="imp_device_s"]');
+  if(sub) sub.textContent=sub.textContent.replace(/\s*·\s*Ultrahuman/g,'');
+}
 function _iapStoreName(){
   var pl='';try{pl=(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform())||'';}catch(e){}
   return pl==='android'?'Google Play':'Apple ID';
