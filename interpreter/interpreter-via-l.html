@@ -5633,6 +5633,7 @@ function _mrGate(){
            cached: localStorage.getItem('vialp_monthly_text')||'', cachedDate: localStorage.getItem('vialp_monthly_date')||'' };
 }
 function renderMonthlyReportUI(){
+  try{ _reportEnsureLang('monthly'); }catch(e){}
   var box=document.getElementById('monthlyReport'); if(!box) return;
   var w=monthlyTrend(); if(!w){ box.innerHTML=''; return; }
   var ui=_mrLabels(), g=_mrGate(), inner='';
@@ -5670,6 +5671,7 @@ async function genMonthlyReport(){
     if(!json.report) throw new Error('no report');
     localStorage.setItem('vialp_monthly_text',json.report);
     localStorage.setItem('vialp_monthly_last',String(Date.now()));
+    localStorage.setItem('vialp_monthly_lang',lang);
     localStorage.setItem('vialp_monthly_date',_dayKey());
     renderMonthlyReportUI();
     if(typeof genAiMemory==='function')genAiMemory(summary,daily);   // AI-память обновляется на месячном каденсе
@@ -6519,10 +6521,45 @@ function toggleReportBody(p){
     t.textContent='▴ '+ui.close;
   }
 }
+/* Язык сохранённых разборов (недельный/месячный). Оба лежат в localStorage ОДНИМ текстом,
+   без пометки языка, и при смене языка интерфейса не перерисовываются: владелец видел
+   английское приложение с русским заголовком «Еженедельный обзор: Ваш старт…» (2026-09-10).
+   Гейт не даёт сгенерировать заново раньше срока, поэтому переводим уже готовый текст тем же
+   маршрутом воркера, что и дневной разбор. Русский и украинский как ЦЕЛЬ маршрут не принимает
+   (переводчик работает «с русского»), поэтому туда не ходим и оставляем как есть. 2026-09-10. */
+function _cyrShareCli(t){
+  var c=(String(t).match(/[а-яёА-ЯЁ]/g)||[]).length;
+  var o=(String(t).match(/[a-zA-Z\u0590-\u05FF\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]/g)||[]).length;
+  var a=c+o; return a<200?0:c/a;
+}
+var _rpTrBusy={};
+async function _reportEnsureLang(kind){
+  var K={weekly:{txt:'vialp_weekly_text',lng:'vialp_weekly_lang',render:'renderWeeklyReportUI'},
+         monthly:{txt:'vialp_monthly_text',lng:'vialp_monthly_lang',render:'renderMonthlyReportUI'}}[kind];
+  if(!K||_rpTrBusy[kind]) return;
+  if(lang==='ru'||lang==='uk') return;
+  var txt='',saved='';
+  try{ txt=localStorage.getItem(K.txt)||''; saved=localStorage.getItem(K.lng)||''; }catch(e){}
+  if(!txt) return;
+  // Пометки языка нет (текст сохранён до этой правки) — смотрим на сам текст.
+  if(saved ? saved===lang : _cyrShareCli(txt)<0.25) return;
+  _rpTrBusy[kind]=true;
+  try{
+    var r=await fetch(AI_WORKER+'/translate-analysis',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({text:txt,lang:lang})});
+    var j=await r.json();
+    if(j&&j.analysis){
+      try{ localStorage.setItem(K.txt,j.analysis); localStorage.setItem(K.lng,lang); }catch(e){}
+      if(typeof window[K.render]==='function') window[K.render]();
+    }
+  }catch(e){}
+  _rpTrBusy[kind]=false;
+}
 function renderWeeklyReportUI(){
   const box=document.getElementById('weeklyReport'); if(!box) return;
   const w=weeklyTrend(); if(!w){ box.innerHTML=''; return; } // <2 анализов — динамика уже показала подсказку
   const ui=_wrUI(); let g=_wrGate();
+  try{ _reportEnsureLang('weekly'); }catch(e){}
   const have=_histDays(w.wk);
   // миграция: разбор, сгенерированный ДО гейта по данным (из <5 дней), снять и вернуть таймер
   if(g.cached && have<_WR_MIN_DAYS){ try{ localStorage.removeItem('vialp_weekly_text'); localStorage.removeItem('vialp_weekly_last'); localStorage.removeItem('vialp_weekly_date'); }catch(e){} g=_wrGate(); }
@@ -6568,6 +6605,7 @@ async function genWeeklyReport(){
     localStorage.setItem('vialp_weekly_text',json.report);
     localStorage.setItem('vialp_weekly_last',String(Date.now()));
     localStorage.setItem('vialp_weekly_date',_dayKey());
+    localStorage.setItem('vialp_weekly_lang',lang);   // язык, на котором разбор пришёл
     renderWeeklyReportUI();
     try{ if(typeof renderExperimentUI==='function') renderExperimentUI(_dayKey()); }catch(x){}   // новый эксперимент виден сразу
     // Память обновляем на НЕДЕЛЬНОМ каденсе, а не только на месячном: цепочка «что закрепилось →
