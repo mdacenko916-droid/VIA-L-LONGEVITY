@@ -7115,6 +7115,11 @@ function toggleReportBody(p){
    Гейт не даёт сгенерировать заново раньше срока, поэтому переводим уже готовый текст тем же
    маршрутом воркера, что и дневной разбор. Русский и украинский как ЦЕЛЬ маршрут не принимает
    (переводчик работает «с русского»), поэтому туда не ходим и оставляем как есть. 2026-09-10. */
+function _cyrDialectCli(t){
+  var ru=(String(t).match(/[ыэъЫЭЪ]/g)||[]).length, uk=(String(t).match(/[іїєґІЇЄҐ]/g)||[]).length;
+  if(ru+uk<3) return '';
+  return ru>uk*2?'ru':(uk>ru*2?'uk':'');
+}
 function _cyrShareCli(t){
   var c=(String(t).match(/[а-яёА-ЯЁ]/g)||[]).length;
   var o=(String(t).match(/[a-zA-Z\u0590-\u05FF\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]/g)||[]).length;
@@ -7131,12 +7136,17 @@ async function _reportEnsureLang(kind){
   var K={weekly:{txt:'vialp_weekly_text',lng:'vialp_weekly_lang',render:'renderWeeklyReportUI'},
          monthly:{txt:'vialp_monthly_text',lng:'vialp_monthly_lang',render:'renderMonthlyReportUI'}}[kind];
   if(!K||_rpTrBusy[kind]) return;
-  if(lang==='ru'||lang==='uk') return;
+
   var txt='',saved='';
   try{ txt=localStorage.getItem(K.txt)||''; saved=localStorage.getItem(K.lng)||''; }catch(e){}
   if(!txt) return;
   // Пометки языка нет (текст сохранён до этой правки) — смотрим на сам текст.
-  if(saved ? saved===(lang+'@'+_TR_ENGINE_V) : _cyrShareCli(txt)<0.25) return;
+  // Свежая пометка — всё в порядке. Пометки нет (текст сохранён до этой правки) — смотрим на сам
+  // текст: для латиничных языков хватает доли кириллицы, а русский с украинским различаем по
+  // буквам-маркерам, иначе украинцу русский текст проходил бы как «свой» (2026-09-10).
+  if(saved){ if(saved===(lang+'@'+_TR_ENGINE_V)) return; }
+  else if(lang==='ru'||lang==='uk'){ var _d=_cyrDialectCli(txt); if(!_d||_d===lang) return; }
+  else if(_cyrShareCli(txt)<0.25) return;
   _rpTrBusy[kind]=true;
   try{
     var r=await fetch(AI_WORKER+'/translate-analysis',{method:'POST',headers:{'Content-Type':'application/json'},

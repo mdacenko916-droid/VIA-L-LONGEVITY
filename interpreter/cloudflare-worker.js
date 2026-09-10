@@ -2979,9 +2979,9 @@ async function handleTranslateAnalysis(request, env, corsHeaders, ctx) {
   const lang = String(body.lang || '').slice(0, 5);
   if (!text || !lang) return jsonResponse({ error: 'text and lang required' }, corsHeaders, 400);
   if (text.length > 40000) return jsonResponse({ error: 'text too long' }, corsHeaders, 413);
-  // Русский и украинский — целевые языки самой базы знаний: туда переводить нечего и незачем,
-  // разбор на них модель пишет сама.
-  if (_CYR_OK.includes(lang)) return jsonResponse({ error: 'source language' }, corsHeaders, 400);
+  // Раньше ru/uk как ЦЕЛЬ отвергались («база знаний и так русская»). Но украинцу это закрывало
+  // единственную дверь: русский текст ему переводить было нечем (жалоба тестировщика 2026-09-10).
+  // Теперь принимаем — а лишнюю работу отсекает вызывающая сторона, сверяя язык до запроса.
   try {
     let out = await translateReply(env, text, lang, 8000);
     if (!out || out === text) return jsonResponse({ error: 'translate failed' }, corsHeaders, 502);
