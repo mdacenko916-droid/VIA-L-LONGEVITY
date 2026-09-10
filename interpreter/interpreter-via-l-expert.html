@@ -11488,6 +11488,22 @@ async function fetchAIAnalysis(data, lang, src) {
     window._anLoading = false;
     try{ if(typeof renderDayBlueprint==='function') renderDayBlueprint(window._bpData || data); }catch(_e){}
     loading.style.display = 'none';
+    // Сначала — молча забрать ГОТОВЫЙ разбор с сервера (кэш 72 ч, ключ cid+день). Это второй вид
+    // сбоя: воркер разбор сгенерировал, а ответ не доехал до телефона (свернули приложение, моргнула
+    // сеть). Раньше такой разбор подтягивался только в карточке профиля, а на экране результата
+    // человек сразу видел ошибку (2026-09-10). Если на сервере пусто — значит модель вообще не
+    // ответила, и тогда ниже показываем ошибку с кнопкой повтора.
+    try{
+      var _srv = (typeof _aiFromServer==='function') ? await _aiFromServer(_dayKey()) : '';
+      if(_srv){
+        window._anLang = lang;
+        result.innerHTML = (typeof _renderAnalysis==='function')?_renderAnalysis(_srv):_aiMd(_srv);
+        result.style.display = 'block';
+        if (disc) disc.style.display = 'block';
+        try{ _renderHumanCta(); }catch(_e){}
+        return;
+      }
+    }catch(_e){}
     // Было три языка из двенадцати: немец, испанец и японец получали сухое английское
     // «Error loading analysis». Переведено полностью. 2026-09-10.
     err.textContent = '⚠ ' + L({ru:'Не удалось получить анализ. Попробуйте позже.',uk:'Не вдалося отримати аналіз. Спробуйте пізніше.',en:'Could not load analysis. Try again later.',es:'No se pudo cargar el análisis. Inténtalo más tarde.',de:'Die Auswertung konnte nicht geladen werden. Bitte später erneut versuchen.',pt:'Não foi possível carregar a análise. Tente mais tarde.',fr:'Impossible de charger l’analyse. Réessayez plus tard.',pl:'Nie udało się pobrać analizy. Spróbuj później.',it:'Impossibile caricare l’analisi. Riprova più tardi.',he:'לא ניתן היה לטעון את הניתוח. נסו שוב מאוחר יותר.',ja:'解析を読み込めませんでした。しばらくしてからお試しください。',ko:'분석을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'});
