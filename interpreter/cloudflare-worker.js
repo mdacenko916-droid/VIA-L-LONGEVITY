@@ -1391,6 +1391,10 @@ export default {
       if (path === '/oura/start')        return handleOuraStart(request, env, corsHeaders);
       if (path === '/oura/callback')     return handleOuraCallback(request, env, corsHeaders);
       if (path === '/oura/metrics')      return handleOuraMetrics(request, env, corsHeaders);
+      // Ultrahuman Partner API (OAuth2, self-serve кабинет vision.ultrahuman.com/developer)
+      if (path === '/ultrahuman/start')    return handleUltrahumanStart(request, env, corsHeaders);
+      if (path === '/ultrahuman/callback') return handleUltrahumanCallback(request, env, corsHeaders);
+      if (path === '/ultrahuman/metrics')  return handleUltrahumanMetrics(request, env, corsHeaders);
       // Гейт EXPERT (витрина): проверка срочного кода доступа — GET, публично. См. §894.
       if (path === '/expert/verify')     return handleExpertVerify(request, env, corsHeaders);
       // Аккаунт клиента по коду: снимок состояния ИП (дневник/профиль/разборы) для любого устройства.
@@ -2338,7 +2342,9 @@ const RESEARCH_DEVICE_FIELDS = new Set(['hrv','rhr','sleepHours','deepMin','spo2
 // подпадает под разрешённый сценарий «fitness, wellness and coaching».
 // Сверка с текстом правил: docs/HEALTH-RESEARCH-POLICY-CHECK.md (2026-09-03).
 // Договорный запрет Oura к сторам отношения не имеет: docs/OURA-COMPLIANCE-REVIEW.md (2026-08-26).
-const WEARABLE_RESEARCH_BLOCK = new Set(['oura']);
+// Ultrahuman добавлен 2026-09-10 из осторожности: их API Agreement (notion) не удалось прочитать при
+// подключении — пока текст не сверен, метрики кольца в синк не пускаем. Сверить и решить.
+const WEARABLE_RESEARCH_BLOCK = new Set(['oura', 'ultrahuman']);
 // ─────────────────────────────────────────────────────────────
 // СРОК ХРАНЕНИЯ И СВОДКИ (2026-09-03)
 //
@@ -4718,6 +4724,134 @@ async function handleOuraMetrics(request, env, corsHeaders){
     if (last.day)       ex.trainDay = String(last.day);
     if (last.activity)  ex.trainActivity = String(last.activity);
   }
+  return jsonResponse({ ok:true, ex: _sanitizeEx(ex) }, corsHeaders);
+}
+
+// ─────────────────────────────────────────────────────────────
+// Ultrahuman Ring — Partner API (OAuth2). Приложение заведено самостоятельно в кабинете
+// vision.ultrahuman.com/developer (2026-09-10) — три заявки в partnerships для этого не понадобились.
+// Secrets: ULTRAHUMAN_CLIENT_ID, ULTRAHUMAN_CLIENT_SECRET. KV: WEARABLE_TOKENS (ultrahuman:<sid>).
+// Redirect URI: https://interpreter.viaelcom.workers.dev/ultrahuman/callback · Scope: ring_data.
+// Метрики отдаются ПО ОДНОМУ ДНЮ (?date=YYYY-MM-DD) → 7 параллельных запросов. Форма ответа в доке
+// не описана; ключи взяты из открытого клиента (raycast/extensions ultrahuman-insights):
+// data.metrics[date] = [{type, object}] · sleep.{total_sleep,deep_sleep}.minutes ·
+// sleep.temperature_deviation.celsius · hrv.avg · night_rhr.avg · recovery_index.value ·
+// vo2_max.value · spo2.values[].value. ⚠️ Сверить на первом живом ответе — в лог пишутся только
+// имена типов, без значений.
+// ─────────────────────────────────────────────────────────────
+const UH_AUTH_URL  = 'https://auth.ultrahuman.com/authorise';
+const UH_TOKEN_URL = 'https://partner.ultrahuman.com/api/partners/oauth/token';
+const UH_API       = 'https://partner.ultrahuman.com/api/partners/v1/user_data/metrics';
+const UH_SCOPES    = 'ring_data';
+
+async function handleUltrahumanStart(request, env, corsHeaders){
+  if (!_sec(env.ULTRAHUMAN_CLIENT_ID) || !_sec(env.ULTRAHUMAN_CLIENT_SECRET)) return jsonResponse({ ok:false, error:'ultrahuman_secrets_missing' }, corsHeaders, 500);
+  const url = new URL(request.url);
+  const sid = url.searchParams.get('sid');
+  let ret = url.searchParams.get('ret') || FITBIT_DEFAULT_RET;
+  if (!sid) return jsonResponse({ ok:false, error:'sid_required' }, corsHeaders, 400);
+  if (!FITBIT_RETURN_ALLOW.some(p => ret.startsWith(p))) ret = FITBIT_DEFAULT_RET;
+  const payload = b64urlEncode(JSON.stringify({ sid, ret }));
+  const state = payload + '.' + await hmacHex(_sec(env.ULTRAHUMAN_CLIENT_SECRET), payload);
+  const auth = new URL(UH_AUTH_URL);
+  auth.searchParams.set('response_type', 'code');
+  auth.searchParams.set('client_id', _sec(env.ULTRAHUMAN_CLIENT_ID));
+  auth.searchParams.set('redirect_uri', url.origin + '/ultrahuman/callback');
+  auth.searchParams.set('scope', UH_SCOPES);
+  auth.searchParams.set('state', state);
+  return Response.redirect(auth.toString(), 302);
+}
+
+async function handleUltrahumanCallback(request, env, corsHeaders){
+  const url = new URL(request.url);
+  const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state') || '';
+  const errParam = url.searchParams.get('error');
+  const dot = state.lastIndexOf('.');
+  let sid = '', ret = FITBIT_DEFAULT_RET;
+  if (dot > 0) {
+    const payload = state.slice(0, dot), sig = state.slice(dot + 1);
+    if (sig === await hmacHex(_sec(env.ULTRAHUMAN_CLIENT_SECRET) || '', payload)) { try { const o = JSON.parse(b64urlDecode(payload)); sid = o.sid || ''; if (o.ret) ret = o.ret; } catch(e){} }
+  }
+  const back = (status) => _oauthBack(request, ret, 'ultrahuman', status, sid);
+  if (errParam || !code || !sid) return back('error');
+  const r = await fetch(UH_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type:'authorization_code', code, redirect_uri: url.origin + '/ultrahuman/callback', client_id: _sec(env.ULTRAHUMAN_CLIENT_ID), client_secret: _sec(env.ULTRAHUMAN_CLIENT_SECRET) }).toString(),
+  });
+  if (!r.ok) { console.log('ultrahuman token', r.status); return back('error'); }
+  const tok = await r.json();
+  if (!tok.access_token || !env.WEARABLE_TOKENS) return back('error');
+  await env.WEARABLE_TOKENS.put('ultrahuman:' + sid, JSON.stringify({
+    access_token: tok.access_token, refresh_token: tok.refresh_token || '', expires_at: Date.now() + (tok.expires_in || 86400) * 1000,
+  }), { expirationTtl: 30 * 24 * 3600 });
+  return back('connected');
+}
+
+async function ultrahumanRefresh(env, rec){
+  if (!rec.refresh_token) return null;
+  const r = await fetch(UH_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type:'refresh_token', refresh_token: rec.refresh_token, client_id: _sec(env.ULTRAHUMAN_CLIENT_ID), client_secret: _sec(env.ULTRAHUMAN_CLIENT_SECRET) }).toString(),
+  });
+  if (!r.ok) return null;
+  const tok = await r.json();
+  if (!tok.access_token) return null;
+  return { access_token: tok.access_token, refresh_token: tok.refresh_token || rec.refresh_token, expires_at: Date.now() + (tok.expires_in || 86400) * 1000 };
+}
+
+// GET /ultrahuman/metrics?sid=… → ex {hrv,rhr,sleepHours,deepMin,tempDev,readiness,spo2,vo2}, каждое поле —
+// за самый свежий день, где оно есть (как у Oura), а не среднее за неделю.
+async function handleUltrahumanMetrics(request, env, corsHeaders){
+  const url = new URL(request.url);
+  const sid = url.searchParams.get('sid');
+  if (!sid) return jsonResponse({ ok:false, error:'sid_required' }, corsHeaders, 400);
+  if (!env.WEARABLE_TOKENS) return jsonResponse({ ok:false, error:'kv_binding_missing' }, corsHeaders, 500);
+  const raw = await env.WEARABLE_TOKENS.get('ultrahuman:' + sid);
+  if (!raw) return jsonResponse({ ok:false, error:'not_connected' }, corsHeaders, 404);
+  let rec = JSON.parse(raw);
+  if (Date.now() > rec.expires_at - 60000) {
+    const refreshed = await ultrahumanRefresh(env, rec);
+    if (!refreshed) return jsonResponse({ ok:false, error:'refresh_failed' }, corsHeaders, 401);
+    rec = refreshed;
+    await env.WEARABLE_TOKENS.put('ultrahuman:' + sid, JSON.stringify(rec), { expirationTtl: 30 * 24 * 3600 });
+  }
+  const h = { 'Authorization': 'Bearer ' + rec.access_token };
+  const days = Array.from({ length: 7 }, (_, i) => new Date(Date.now() - i * 86400000).toISOString().slice(0,10));
+  let anyOk = false;
+  const rows = (await Promise.all(days.map(async (d) => {
+    try {
+      const r = await fetch(`${UH_API}?date=${d}`, { headers:h });
+      if (!r.ok) { console.log('ultrahuman metrics', d, r.status); return null; }
+      anyOk = true;
+      const j = await r.json();
+      const m = j && j.data && j.data.metrics;
+      const list = Array.isArray(m) ? m : (m && (m[d] || Object.values(m)[0])) || (j && j.data && j.data.metric_data) || [];
+      const t = {};
+      for (const x of (Array.isArray(list) ? list : [])) if (x && x.type) t[x.type] = x.object || {};
+      return { day: d, t };
+    } catch(e){ return null; }
+  }))).filter(Boolean);
+  if (!anyOk) return jsonResponse({ ok:false, error:'fetch_failed' }, corsHeaders, 502);
+  console.log('ultrahuman types', [...new Set(rows.flatMap(r => Object.keys(r.t)))].join(','));
+
+  const num = (v) => { const n = Number(v); return (v != null && v !== '' && isFinite(n)) ? n : null; };
+  const pos = (v) => { const n = num(v); return (n != null && n > 0) ? n : null; };
+  const pick = (fn) => _latestByDate(rows, r => r.day, r => { try { return fn(r.t); } catch(e){ return null; } });
+  const sl = (t) => t.sleep || {};
+  const ex = {};
+  let v;
+  v = pick(t => pos(t.avg_sleep_hrv && t.avg_sleep_hrv.value) ?? pos(t.hrv && t.hrv.avg));  if (v!=null) ex.hrv = Math.round(v);   // ночной HRV, фолбэк — средний за день
+  v = pick(t => pos(t.night_rhr && t.night_rhr.avg));                                        if (v!=null) ex.rhr = Math.round(v);
+  v = pick(t => pos(sl(t).total_sleep && sl(t).total_sleep.minutes));                        if (v!=null) ex.sleepHours = +(v/60).toFixed(2);
+  v = pick(t => pos(sl(t).deep_sleep && sl(t).deep_sleep.minutes));                          if (v!=null) ex.deepMin = Math.round(v);
+  v = pick(t => num(sl(t).temperature_deviation && sl(t).temperature_deviation.celsius));    if (v!=null) ex.tempDev = +v.toFixed(2);
+  v = pick(t => pos(t.recovery_index && t.recovery_index.value));                            if (v!=null) ex.readiness = Math.round(v);
+  v = pick(t => pos(t.vo2_max && t.vo2_max.value));                                          if (v!=null) ex.vo2 = Math.round(v);
+  v = pick(t => { const a = ((t.spo2 && t.spo2.values) || []).map(x => Number(x && x.value)).filter(n => isFinite(n) && n > 0); return a.length ? a.reduce((s,n)=>s+n,0)/a.length : null; });
+  if (v!=null) ex.spo2 = +v.toFixed(1);
   return jsonResponse({ ok:true, ex: _sanitizeEx(ex) }, corsHeaders);
 }
 

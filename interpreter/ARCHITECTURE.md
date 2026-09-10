@@ -762,6 +762,12 @@ wrangler deploy
 - **Чтобы заработало (владелец):** зарегать app на **developer.whoop.com**, redirect URI `https://interpreter.viaelcom.workers.dev/whoop/callback`, scopes `read:recovery read:sleep offline`; `wrangler secret put WHOOP_CLIENT_ID` + `WHOOP_CLIENT_SECRET`; `wrangler deploy`.
 - Остальные (Polar/Withings) — тем же обобщённым каркасом (нужны только worker-роуты + карточка + i18n; фронт-функции `connectWearable`/`fetchWearableLive` уже общие).
 
+**Ultrahuman — РЕАЛИЗОВАНО 2026-09-10 (self-serve, хотя числился в партнёрских):**
+- OAuth-приложение заводится само в `vision.ultrahuman.com/developer`; секреты `ULTRAHUMAN_CLIENT_ID|SECRET`.
+- **Worker**: `/ultrahuman/start|callback|metrics` + `ultrahumanRefresh`, по образцу Oura. Auth `auth.ultrahuman.com/authorise`, token `partner.ultrahuman.com/api/partners/oauth/token` (form, креды в теле, access 24ч), scope `ring_data`. KV `ultrahuman:<sid>` (TTL 30д). `/metrics` — 7 параллельных запросов `/api/partners/v1/user_data/metrics?date=` → `data.metrics[date][]{type,object}`: `avg_sleep_hrv.value`→фолбэк `hrv.avg`→hrv, `night_rhr.avg`→rhr, `sleep.total_sleep.minutes`→sleepHours, `sleep.deep_sleep.minutes`→deepMin, `sleep.temperature_deviation.celsius`→tempDev, `recovery_index.value`→readiness, `vo2_max.value`→vo2, среднее ненулевых `spo2.values[].value`→spo2; каждое поле за самый свежий день. Ключи — из открытого клиента, сверить на живом ответе (`wrangler tail`, лог `ultrahuman types`).
+- **Фронт** (оба тарифа): блок `#ultrahuman-connect` над ручным вводом, `connectWearable('ultrahuman')`, возврат и `visibilitychange` в общих списках вендоров, строки `_ultrahumanT` × 12.
+- В `WEARABLE_RESEARCH_BLOCK` из осторожности, пока не сверен их API Agreement.
+
 ### 16.3 Нет публичного веб-API → только файл/ручной ввод (как сейчас)
 - **Apple Watch / Health** — HealthKit на устройстве, облачного API нет. Веб-авто-сопряжение невозможно; только `export.xml` или отдельное iOS-приложение (большая отдельная задача).
 - **Samsung Health** — партнёрский доступ закрыт/ограничен, SDK только Android.

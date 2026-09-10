@@ -1,11 +1,21 @@
 # Ultrahuman (кольцо)
 
-**Краткий статус:** ждём вендора. Кода в воркере ещё нет. **✅ Третья заявка ПОДАНА 2026-08-27** через форму
-`partnerships.ultrahuman.com` (текст: `docs/ULTRAHUMAN-API-FORM-2026-08.md`) — ждём ответа.
-Новые аргументы: одобренный production-доступ Oura, приложение в App Store-процессе, политика с
-разделом про подключённые аккаунты; в этот раз соглашаемся на звонок — вероятно, июньский отказ
-от созвона и остановил разговор. Аффилиатный трек у них ОТДЕЛЬНЫЙ от partnerships, а реферальная
-ссылка выдаётся владельцу кольца прямо в приложении.
+**Краткий статус (2026-09-10):** ✅ **ключи получены самостоятельно, код написан** — ⏳ ждёт
+`wrangler deploy` и первой живой проверки на кольце.
+- Заявки в partnerships (три, последняя 27.08) оказались не нужны: OAuth-приложение заводится
+  само в кабинете **`vision.ultrahuman.com/developer`** → «Create OAuth application», Client ID и
+  Secret выдаются сразу. Название VIA-L, redirect `…/ultrahuman/callback`, сохранилось только право
+  `ring_data` (profile не записался — не нужен).
+- Секреты `ULTRAHUMAN_CLIENT_ID` / `ULTRAHUMAN_CLIENT_SECRET` в воркере, ключи у владельца в менеджере паролей.
+- Воркер: `/ultrahuman/start|callback|metrics`. Авторизация `auth.ultrahuman.com/authorise`, токен
+  `partner.ultrahuman.com/api/partners/oauth/token` (токен живёт сутки, refresh есть), метрики
+  `…/api/partners/v1/user_data/metrics?date=YYYY-MM-DD` — по дню, берём 7 дней параллельно.
+- ⚠️ Форма ответа в доке не описана — ключи взяты из открытого клиента (raycast ultrahuman-insights).
+  На первом живом ответе смотреть `wrangler tail`: строка `ultrahuman types …` (только имена типов).
+- Фронт (оба тарифа): в карточке блок «🔗 Подключить Ultrahuman» над ручным вводом, общий
+  `connectWearable('ultrahuman')`, строки `_ultrahumanT` × 12 языков.
+- ⚠️ `ultrahuman` в `WEARABLE_RESEARCH_BLOCK` из осторожности — API Agreement (notion) не прочитан, сверить.
+- Аффилиатный трек у них ОТДЕЛЬНЫЙ от partnerships, реферальная ссылка — владельцу кольца в приложении.
 
 ## Сейчас (как есть)
 - ✅ **Карточка Ultrahuman добавлена на экран импорта (2026-06-11)** во всех 4 инструментах

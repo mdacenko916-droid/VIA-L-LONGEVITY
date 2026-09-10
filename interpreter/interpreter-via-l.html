@@ -2633,7 +2633,16 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
       <span class="source-chevron">›</span>
     </div>
     <div class="source-body">
-      <div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;margin-bottom:10px;" data-t="ml_oura_hint">В приложении кольцо подтягивается автоматически через Apple Health / Health Connect. Прямое веб-подключение скоро — пока введите показатели вручную:</div>
+      <div id="ultrahuman-connect">
+        <div data-t="instr_ultrahuman_connect" style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;margin-bottom:12px;">Войдите в аккаунт Ultrahuman — подтянем HRV, пульс, сон, температуру и восстановление за 7 дней.</div>
+        <button class="token-btn" style="width:100%;" data-t="btn_ultrahuman_connect" onclick="connectWearable('ultrahuman')">🔗 Подключить Ultrahuman</button>
+        <div class="import-status" id="ultrahuman-connect-status"></div>
+        <div class="imported-preview" id="ultrahuman-connect-preview">
+          <div style="font-size:var(--fs-cap);color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;" data-t="status_loaded">✓ Данные загружены</div>
+          <div class="preview-grid" id="ultrahuman-connect-grid"></div>
+        </div>
+      </div>
+      <div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;margin:14px 0 10px;" data-t="uh_manual_hint">Или введите показатели вручную:</div>
       <div class="manual-grid">
         <div class="manual-field"><label>HRV (мс)</label><input type="number" id="uh-hrv" placeholder="48" min="0" max="300"></div>
         <div class="manual-field"><label data-t="ml_rhr_bpm">ЧСС в покое (уд/мин)</label><input type="number" id="uh-rhr" placeholder="58" min="30" max="120"></div>
@@ -4459,6 +4468,21 @@ const _withingsT = {
   ko:{tab_withings_connect:'🔗 연결',instr_withings_connect:'Withings 계정에 로그인하세요 — 최근 7일 HRV·심박수·수면·SpO₂를 안전하게 가져옵니다.',btn_withings_connect:'🔗 Withings 연결',status_withings_connecting:'⏳ Withings에 연결 중…',status_withings_ok:'✓ Withings 데이터 로드 완료',status_withings_err:'⚠ Withings 데이터를 가져오지 못했습니다',status_withings_nodata:'ℹ️ 계정에 최근 Withings 데이터가 없습니다'}
 };
 Object.keys(_withingsT).forEach(l=>{if(T[l])Object.assign(T[l],_withingsT[l]);});
+const _ultrahumanT = {
+  uk:{instr_ultrahuman_connect:'Увійдіть в акаунт Ultrahuman — підтягнемо HRV, пульс, сон, температуру й відновлення за 7 днів.',btn_ultrahuman_connect:'🔗 Підключити Ultrahuman',status_ultrahuman_connecting:'⏳ Підключаємось до Ultrahuman…',status_ultrahuman_ok:'✓ Дані Ultrahuman завантажено',status_ultrahuman_err:'⚠ Не вдалося отримати дані Ultrahuman',status_ultrahuman_nodata:'ℹ️ В акаунті Ultrahuman немає даних за останні дні',uh_manual_hint:'Або введіть показники вручну:'},
+  ru:{instr_ultrahuman_connect:'Войдите в аккаунт Ultrahuman — подтянем HRV, пульс, сон, температуру и восстановление за 7 дней.',btn_ultrahuman_connect:'🔗 Подключить Ultrahuman',status_ultrahuman_connecting:'⏳ Подключаемся к Ultrahuman…',status_ultrahuman_ok:'✓ Данные Ultrahuman загружены',status_ultrahuman_err:'⚠ Не удалось получить данные Ultrahuman',status_ultrahuman_nodata:'ℹ️ В аккаунте Ultrahuman нет данных за последние дни',uh_manual_hint:'Или введите показатели вручную:'},
+  en:{instr_ultrahuman_connect:'Sign in to your Ultrahuman account — we’ll pull 7 days of HRV, heart rate, sleep, temperature and recovery.',btn_ultrahuman_connect:'🔗 Connect Ultrahuman',status_ultrahuman_connecting:'⏳ Connecting to Ultrahuman…',status_ultrahuman_ok:'✓ Ultrahuman data loaded',status_ultrahuman_err:'⚠ Could not get Ultrahuman data',status_ultrahuman_nodata:'ℹ️ No Ultrahuman data for the last few days',uh_manual_hint:'Or enter the values by hand:'},
+  es:{instr_ultrahuman_connect:'Inicia sesión en tu cuenta Ultrahuman — traeremos 7 días de HRV, frecuencia cardíaca, sueño, temperatura y recuperación.',btn_ultrahuman_connect:'🔗 Conectar Ultrahuman',status_ultrahuman_connecting:'⏳ Conectando con Ultrahuman…',status_ultrahuman_ok:'✓ Datos de Ultrahuman cargados',status_ultrahuman_err:'⚠ No se pudieron obtener los datos de Ultrahuman',status_ultrahuman_nodata:'ℹ️ No hay datos de Ultrahuman de los últimos días',uh_manual_hint:'O introduce los valores a mano:'},
+  de:{instr_ultrahuman_connect:'Melde dich bei deinem Ultrahuman-Konto an — wir laden 7 Tage HRV, Puls, Schlaf, Temperatur und Erholung.',btn_ultrahuman_connect:'🔗 Ultrahuman verbinden',status_ultrahuman_connecting:'⏳ Verbindung zu Ultrahuman…',status_ultrahuman_ok:'✓ Ultrahuman-Daten geladen',status_ultrahuman_err:'⚠ Ultrahuman-Daten konnten nicht geladen werden',status_ultrahuman_nodata:'ℹ️ Keine Ultrahuman-Daten der letzten Tage',uh_manual_hint:'Oder trage die Werte manuell ein:'},
+  pt:{instr_ultrahuman_connect:'Entre na sua conta Ultrahuman — buscamos 7 dias de HRV, frequência cardíaca, sono, temperatura e recuperação.',btn_ultrahuman_connect:'🔗 Conectar Ultrahuman',status_ultrahuman_connecting:'⏳ Conectando ao Ultrahuman…',status_ultrahuman_ok:'✓ Dados do Ultrahuman carregados',status_ultrahuman_err:'⚠ Não foi possível obter os dados do Ultrahuman',status_ultrahuman_nodata:'ℹ️ Sem dados do Ultrahuman nos últimos dias',uh_manual_hint:'Ou digite os valores manualmente:'},
+  fr:{instr_ultrahuman_connect:'Connectez-vous à votre compte Ultrahuman — nous récupérons 7 jours de HRV, fréquence cardiaque, sommeil, température et récupération.',btn_ultrahuman_connect:'🔗 Connecter Ultrahuman',status_ultrahuman_connecting:'⏳ Connexion à Ultrahuman…',status_ultrahuman_ok:'✓ Données Ultrahuman chargées',status_ultrahuman_err:'⚠ Impossible de récupérer les données Ultrahuman',status_ultrahuman_nodata:'ℹ️ Aucune donnée Ultrahuman ces derniers jours',uh_manual_hint:'Ou saisissez les valeurs à la main :'},
+  pl:{instr_ultrahuman_connect:'Zaloguj się do konta Ultrahuman — pobierzemy HRV, tętno, sen, temperaturę i regenerację z 7 dni.',btn_ultrahuman_connect:'🔗 Połącz Ultrahuman',status_ultrahuman_connecting:'⏳ Łączenie z Ultrahuman…',status_ultrahuman_ok:'✓ Dane Ultrahuman wczytane',status_ultrahuman_err:'⚠ Nie udało się pobrać danych Ultrahuman',status_ultrahuman_nodata:'ℹ️ Brak danych Ultrahuman z ostatnich dni',uh_manual_hint:'Lub wpisz wartości ręcznie:'},
+  it:{instr_ultrahuman_connect:'Accedi al tuo account Ultrahuman — recuperiamo 7 giorni di HRV, frequenza cardiaca, sonno, temperatura e recupero.',btn_ultrahuman_connect:'🔗 Collega Ultrahuman',status_ultrahuman_connecting:'⏳ Connessione a Ultrahuman…',status_ultrahuman_ok:'✓ Dati Ultrahuman caricati',status_ultrahuman_err:'⚠ Impossibile ottenere i dati Ultrahuman',status_ultrahuman_nodata:'ℹ️ Nessun dato Ultrahuman negli ultimi giorni',uh_manual_hint:'Oppure inserisci i valori a mano:'},
+  he:{instr_ultrahuman_connect:'התחברו לחשבון Ultrahuman — נמשוך 7 ימים של HRV, דופק, שינה, טמפרטורה והתאוששות.',btn_ultrahuman_connect:'🔗 חיבור Ultrahuman',status_ultrahuman_connecting:'⏳ מתחברים ל-Ultrahuman…',status_ultrahuman_ok:'✓ נתוני Ultrahuman נטענו',status_ultrahuman_err:'⚠ לא הצלחנו לקבל נתונים מ-Ultrahuman',status_ultrahuman_nodata:'ℹ️ אין נתוני Ultrahuman מהימים האחרונים',uh_manual_hint:'או הזינו את הערכים ידנית:'},
+  ja:{instr_ultrahuman_connect:'Ultrahuman アカウントにサインイン — 直近7日間の HRV・心拍数・睡眠・体温・回復を取得します。',btn_ultrahuman_connect:'🔗 Ultrahuman を接続',status_ultrahuman_connecting:'⏳ Ultrahuman に接続中…',status_ultrahuman_ok:'✓ Ultrahuman のデータを読み込みました',status_ultrahuman_err:'⚠ Ultrahuman のデータを取得できませんでした',status_ultrahuman_nodata:'ℹ️ 直近数日の Ultrahuman データがありません',uh_manual_hint:'または手入力してください：'},
+  ko:{instr_ultrahuman_connect:'Ultrahuman 계정에 로그인하세요 — 최근 7일 HRV·심박수·수면·체온·회복을 가져옵니다.',btn_ultrahuman_connect:'🔗 Ultrahuman 연결',status_ultrahuman_connecting:'⏳ Ultrahuman에 연결 중…',status_ultrahuman_ok:'✓ Ultrahuman 데이터를 불러왔습니다',status_ultrahuman_err:'⚠ Ultrahuman 데이터를 가져오지 못했습니다',status_ultrahuman_nodata:'ℹ️ 최근 며칠간 Ultrahuman 데이터가 없습니다',uh_manual_hint:'또는 값을 직접 입력하세요:'},
+};
+Object.keys(_ultrahumanT).forEach(l=>{if(T[l])Object.assign(T[l],_ultrahumanT[l]);});
 // Блок «Новые симптомы» переназначен с недельного на СУТОЧНЫЙ (STEP_CADENCE[14]='daily').
 // Финальный оверрайд ключей (после всех merge) — чтобы не воевать с 3 слоями s_ns_* выше. 2026-07-20.
 const _dailyNotesT={
@@ -10543,7 +10567,7 @@ async function fetchWearableLive(vendor, sid){
 }
 (function(){
   const p = new URLSearchParams(location.search);
-  ['whoop','polar','withings'].forEach(function(v){
+  ['whoop','polar','withings','ultrahuman'].forEach(function(v){
     const flag = p.get(v);
     if(!flag) return;
     const sid = p.get('sid') || localStorage.getItem('vialp_' + v + '_sid');
@@ -10562,7 +10586,7 @@ async function fetchWearableLive(vendor, sid){
 // (У Oura такой же обработчик ниже, отдельный: у неё своя функция дотягивания.)
 document.addEventListener('visibilitychange', function(){
   if(document.visibilityState !== 'visible') return;
-  ['polar','withings','whoop'].forEach(function(v){
+  ['polar','withings','whoop','ultrahuman'].forEach(function(v){
     var pend = parseInt(localStorage.getItem('vialp_' + v + '_pending') || '0', 10);
     var sid  = localStorage.getItem('vialp_' + v + '_sid');
     if(!pend || !sid || (Date.now() - pend) >= 600000) return;   // окно 10 минут
