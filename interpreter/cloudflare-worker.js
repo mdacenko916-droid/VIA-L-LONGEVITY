@@ -2655,6 +2655,46 @@ async function _enforceLang(text, lang, env, ctx, structured) {
   } catch (e) { return text; }
 }
 
+// Язык «Памятки дня». /analyze и /weekly-report проверяются _enforceLang, но памятка приходит
+// не текстом, а JSON-структурой {блок: [{title, items[]}]}, и целиком в переводчик её отдавать
+// нельзя — вернётся сломанный JSON. Владелец поймал живьём (2026-09-10): интерфейс английский,
+// заголовок раздела «Movement» английский (он из словаря приложения), а содержимое — русское.
+// Поэтому собираем только строки, переводим их нумерованным списком и раскладываем обратно.
+// Метки [dish:key] к блюдам снимаем перед переводом и возвращаем на место: переводчик их терял,
+// а без метки пункт остаётся без фотографии.
+async function _enforceLangPlan(plan, lang, env, ctx) {
+  try {
+    if (!plan || _CYR_OK.includes(lang)) return plan;
+    const slots = [];   // {set(v), get()} по каждой строке плана
+    Object.keys(plan).forEach(k => {
+      if (!Array.isArray(plan[k])) return;
+      plan[k].forEach(sec => {
+        if (!sec) return;
+        if (typeof sec.title === 'string' && sec.title.trim()) slots.push({ get: () => sec.title, set: v => { sec.title = v; } });
+        if (Array.isArray(sec.items)) sec.items.forEach((_, i) => {
+          if (typeof sec.items[i] === 'string' && sec.items[i].trim()) slots.push({ get: () => sec.items[i], set: v => { sec.items[i] = v; } });
+        });
+      });
+    });
+    if (!slots.length) return plan;
+    // Метку блюда прячем от переводчика
+    const marks = slots.map(sl => { const m = String(sl.get()).match(/\s*\[dish:[a-z0-9_]+\]\s*$/i); return m ? m[0] : ''; });
+    const bare = slots.map((sl, i) => String(sl.get()).slice(0, String(sl.get()).length - marks[i].length).trim());
+    if (_cyrShare(bare.join(' ')) < 0.25) return plan;   // язык в порядке
+    logRiskProbe(env, ctx, 'lang-mismatch', '', lang, 'day-plan: cyrillic in ' + lang);
+    const numbered = bare.map((t, i) => (i + 1) + '. ' + t.replace(/\n+/g, ' ')).join('\n');
+    let out = await translateReply(env, numbered, lang, 4000).catch(() => '');
+    if (!out || _cyrShare(out) >= 0.25) out = (lang !== 'en') ? await translateReply(env, numbered, 'en', 4000).catch(() => '') : '';
+    if (!out || _cyrShare(out) >= 0.25) return plan;     // перевод не удался — отдаём как есть
+    const lines = out.split('\n').map(x => x.trim()).filter(Boolean)
+      .map(x => { const m = x.match(/^\s*(\d+)\.\s*(.*)$/); return m ? { n: +m[1], t: m[2] } : null; })
+      .filter(Boolean);
+    if (lines.length !== slots.length) return plan;      // строки не сошлись — не рискуем структурой
+    lines.forEach(l => { const i = l.n - 1; if (slots[i]) slots[i].set(l.t + marks[i]); });
+    return plan;
+  } catch (e) { return plan; }
+}
+
 function _needsMedDisclaimer(data) {
   const supp = Array.isArray(data.supplements) ? data.supplements.filter(x => x && String(x).indexOf('none') < 0) : [];
   const meds = Array.isArray(data.meds) ? data.meds.filter(Boolean) : (data.meds ? [data.meds] : []);
@@ -3190,6 +3230,9 @@ async function handleDayPlan(request, env, corsHeaders, ctx) {
     } catch (e) {}
     plan = _enforceExerciseVetoes(plan, data);   // чего модель не написала — дописываем кодом
   }
+
+  // Язык памятки — тем же принципом, что и разборы, но по строкам структуры (см. _enforceLangPlan).
+  if (plan) plan = await _enforceLangPlan(plan, lang, env, ctx);
 
   return new Response(JSON.stringify(plan ? { plan } : { error: 'parse', raw: raw.slice(0, 300) }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
