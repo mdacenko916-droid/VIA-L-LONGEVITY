@@ -10821,6 +10821,17 @@ async function fetchAIAnalysis(data, lang, src) {
     // Было три языка из двенадцати: немец, испанец и японец получали сухое английское
     // «Error loading analysis». Переведено полностью. 2026-09-10.
     err.textContent = '⚠ ' + L({ru:'Не удалось получить анализ. Попробуйте позже.',uk:'Не вдалося отримати аналіз. Спробуйте пізніше.',en:'Could not load analysis. Try again later.',es:'No se pudo cargar el análisis. Inténtalo más tarde.',de:'Die Auswertung konnte nicht geladen werden. Bitte später erneut versuchen.',pt:'Não foi possível carregar a análise. Tente mais tarde.',fr:'Impossible de charger l’analyse. Réessayez plus tard.',pl:'Nie udało się pobrać analizy. Spróbuj później.',it:'Impossibile caricare l’analisi. Riprova più tardi.',he:'לא ניתן היה לטעון את הניתוח. נסו שוב מאוחר יותר.',ja:'解析を読み込めませんでした。しばらくしてからお試しください。',ko:'분석을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'});
+    // Кнопка повтора прямо здесь. Раньше при сбое человек видел только текст ошибки: проход за день
+    // уже засчитан, и разбора было не получить до завтра (тестировщик Android, 2026-09-10). Функция
+    // _aiRetryToday уже была — её показывали только в карточке профиля. textContent выше при
+    // следующем сбое стирает старую кнопку, так что дублей не бывает.
+    try{
+      var _rb=document.createElement('button'); _rb.type='button';
+      _rb.textContent=L({ru:'Попробовать ещё раз',uk:'Спробувати ще раз',en:'Try again',es:'Intentar de nuevo',de:'Erneut versuchen',pt:'Tentar novamente',fr:'Réessayer',pl:'Spróbuj ponownie',it:'Riprova',he:'לנסות שוב',ja:'もう一度試す',ko:'다시 시도'});
+      _rb.style.cssText='display:block;margin-top:12px;background:var(--gold);color:#10141C;border:none;border-radius:10px;padding:10px 18px;font-size:var(--fs-cap);font-weight:600;cursor:pointer;';
+      _rb.onclick=function(){ if(typeof _aiRetryToday==='function') _aiRetryToday(_rb); };
+      err.appendChild(_rb);
+    }catch(_e){}
     err.style.display = 'block';
   }
 }

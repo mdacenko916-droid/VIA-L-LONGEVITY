@@ -2723,6 +2723,21 @@ function _needsMedDisclaimer(data) {
   return !!(supp.length || meds.length || (data.labs && Object.keys(data.labs).length));
 }
 
+// Один повтор вызова модели при ВРЕМЕННОЙ ошибке API: 429 (частота), 500/502/503/504, 529 (перегрузка).
+// Живой случай 2026-09-10 14:23 UTC: тестировщик на Android (uk) не получил разбор — вызов Sonnet
+// упал разово, а памятка дня минутой позже на той же модели прошла. Воркер делал ровно одну
+// попытку и сразу отдавал «ai_unavailable»; в приложении при этом не было даже кнопки повтора,
+// и человек оставался без разбора до следующего дня. Тело запроса — строка, его можно слать повторно.
+async function _fetchRetry(url, opts, onRetry) {
+  const TRANSIENT = [429, 500, 502, 503, 504, 529];
+  let res;
+  try { res = await fetch(url, opts); } catch (e) { res = null; }
+  if (res && !TRANSIENT.includes(res.status)) return res;
+  try { if (onRetry) onRetry(res ? res.status : 'network'); } catch (e) {}
+  await new Promise(r => setTimeout(r, 2000));
+  return fetch(url, opts);
+}
+
 async function handleAnalyze(request, env, corsHeaders, ctx) {
   const { data, lang, code, tier, structured, cid, day, src } = await request.json();
   // Метка «кто позвал» → в ai_usage.note. Разбор дважды за минуту с одинаковым входом мы уже ловили
@@ -2807,7 +2822,7 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
     '• В конце ОБЯЗАТЕЛЬНО добавить (на ' + langName + '): материал носит образовательный и велнес-характер, не является медицинской консультацией, диагнозом или лечением; перед изменениями в своём здоровье проконсультируйтесь с квалифицированным специалистом.\n'
   );
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+  const response = await _fetchRetry('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -2861,7 +2876,7 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
         + (isWellness ? '' : LAB_TARGETS_EXPERT)   // ориентиры по анализам — только EXPERT
         + (structured ? _fmtLang(_withSuppTheme(isWellness ? _STRUCTURED_FMT : _structuredFmtExpert(), data), langName) : '') }],
     }),
-  });
+  }, (st) => logRiskProbe(env, ctx, 'api-retry', tier, lang, 'analyze: status ' + st));
 
   const result = await response.json();
   logUsage(env, ctx, 'analyze', ['he', 'ar', 'ja', 'ko', 'uk'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001', tier, lang, result, _src);
