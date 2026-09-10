@@ -4884,6 +4884,9 @@ function setLang(l){
   });
   try{ ouraSyncLang(); }catch(e){}
   try{ _bpI18n(); }catch(e){}   // подписи блока «Давление» на текущем языке (значения полей сохраняются)
+  // Сохранённые недельный/месячный разборы: карточка профиля уже нарисована и повторно не
+  // строится, поэтому смену языка она пропускала (VIA-L, живой случай 2026-09-10).
+  setTimeout(function(){ try{ _reportEnsureLang('weekly'); _reportEnsureLang('monthly'); }catch(e){} },0);
   try{ if(typeof _pmIdle==='function' && !_pmBusy) _pmIdle(); }catch(e){}   // циферблат/кнопка пульса — на текущем языке (кроме идущего замера)
   try{ if(typeof renderSleepScale==='function')renderSleepScale(); }catch(e){}
   try{ if(typeof _applySleepEnds==='function')_applySleepEnds(); }catch(e){}   // края шкалы сна
@@ -6346,7 +6349,7 @@ function _mrGate(){
            cached: localStorage.getItem('viae_monthly_text')||'', cachedDate: localStorage.getItem('viae_monthly_date')||'' };
 }
 function renderMonthlyReportUI(){
-  try{ _reportEnsureLang('monthly'); }catch(e){}
+  setTimeout(function(){ try{ _reportEnsureLang('monthly'); }catch(e){} },0);
   var box=document.getElementById('monthlyReport'); if(!box) return;
   var w=monthlyTrend(); if(!w){ box.innerHTML=''; return; }
   var ui=_mrLabels(), g=_mrGate(), inner='';
@@ -7144,7 +7147,7 @@ function renderWeeklyReportUI(){
   const box=document.getElementById('weeklyReport'); if(!box) return;
   const w=weeklyTrend(); if(!w){ box.innerHTML=''; return; } // <2 анализов — динамика уже показала подсказку
   const ui=_wrUI(); let g=_wrGate();
-  try{ _reportEnsureLang('weekly'); }catch(e){}
+  setTimeout(function(){ try{ _reportEnsureLang('weekly'); }catch(e){} },0);   // отложенно: при первой отрисовке const AI_WORKER объявлен ниже по файлу
   const have=_histDays(w.wk);
   // миграция: разбор, сгенерированный ДО гейта по данным (из <5 дней), снять и вернуть таймер
   if(g.cached && have<_WR_MIN_DAYS){ try{ localStorage.removeItem('viae_weekly_text'); localStorage.removeItem('viae_weekly_last'); localStorage.removeItem('viae_weekly_date'); }catch(e){} g=_wrGate(); }
