@@ -5176,7 +5176,14 @@ async function translateReply(env, text, targetLang, maxTokens) {
   // комментировать, отказываться или задавать вопросы — иначе её мета-ответ
   // утечёт в PDF клиенту (так и случилось на коротком тест-вводе).
   const system =
-    'You are a pure translation engine. You translate text from Russian into ' + langName + '.\n' +
+    // ⚠️ Раньше здесь стояло «translate text FROM RUSSIAN into X». Пока движок переводил только
+    // ответы нутрициолога (всегда русские), это работало. Но им же переводятся сохранённые
+    // разборы, а они бывают уже НЕ русские: живой случай 2026-09-10 — испанский текст с
+    // заданием «с русского на английский» Haiku перевёл во ФРАНЦУЗСКИЙ. Источник больше не
+    // называем, цель называем дважды.
+    'You are a pure translation engine. Translate the user text into ' + langName + '.\n' +
+    'The source language may be ANY language — detect it yourself. The output MUST be written\n' +
+    'entirely in ' + langName + ' and in no other language.\n' +
     'Absolute rules:\n' +
     '- Output ONLY the translated text. Nothing else.\n' +
     '- NEVER add greetings, notes, explanations, comments, labels, or questions.\n' +
