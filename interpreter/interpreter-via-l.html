@@ -8279,7 +8279,7 @@ function _downloadPDFInner(){
   </div>
   <!-- score-box убран: «Готовность» больше не показываем -->
   <div class="metrics">
-    <div class="metric"><div class="metric-label">HRV</div><div class="metric-val">${data.hrv}</div><div class="metric-unit">мс</div></div>
+    <div class="metric"><div class="metric-label">HRV</div><div class="metric-val">${data.hrv}</div><div class="metric-unit">${L({ru:'мс',uk:'мс',en:'ms',es:'ms',de:'ms',pt:'ms',fr:'ms',pl:'ms',it:'ms',he:'מ״ש',ja:'ミリ秒',ko:'ms'})}</div></div>
     <div class="metric"><div class="metric-label">${L({ru:'Сон',uk:'Сон',en:'Sleep',es:'Sueño',de:'Schlaf',pt:'Sono',fr:'Sommeil',pl:'Sen',it:'Sonno',he:'שינה',ja:'睡眠',ko:'수면'})}</div><div class="metric-val">${data.sleep_qual}</div><div class="metric-unit">/10</div></div>
     <div class="metric"><div class="metric-label">RHR</div><div class="metric-val">${data.rhr}</div><div class="metric-unit">${t('bpm')}</div></div>
     <div class="metric"><div class="metric-label">${L({ru:'Энергия',uk:'Енергія',en:'Energy',es:'Energía',de:'Energie',pt:'Energia',fr:'Énergie',pl:'Energia',it:'Energia',he:'אנרגיה',ja:'エネルギー',ko:'에너지'})}</div><div class="metric-val">${data.energy}</div><div class="metric-unit">/10</div></div>
@@ -8300,11 +8300,11 @@ function _downloadPDFInner(){
   const bar = document.createElement('div');
   bar.style.cssText = 'flex:0 0 auto;display:flex;gap:8px;align-items:center;padding:calc(env(safe-area-inset-top, 0px) + 10px) 12px 10px;background:#2C1F10;';
   const closeBtn = document.createElement('button');
-  closeBtn.textContent = '✕ Закрыть';
+  closeBtn.textContent = L({ru:'✕ Закрыть',uk:'✕ Закрити',en:'✕ Close',es:'✕ Cerrar',de:'✕ Schließen',pt:'✕ Fechar',fr:'✕ Fermer',pl:'✕ Zamknij',it:'✕ Chiudi',he:'✕ סגירה',ja:'✕ 閉じる',ko:'✕ 닫기'});
   closeBtn.style.cssText = 'padding:8px 16px;background:#3a2a14;color:#fff;border:none;border-radius:8px;font-size:var(--fs-body);cursor:pointer;';
   closeBtn.onclick = () => overlay.remove();
   const printBtn = document.createElement('button');
-  printBtn.textContent = '🖨 Печать / Сохранить PDF';
+  printBtn.textContent = L({ru:'🖨 Печать / Сохранить PDF',uk:'🖨 Друк / Зберегти PDF',en:'🖨 Print / Save PDF',es:'🖨 Imprimir / Guardar PDF',de:'🖨 Drucken / Als PDF',pt:'🖨 Imprimir / Salvar PDF',fr:'🖨 Imprimer / Enregistrer en PDF',pl:'🖨 Drukuj / Zapisz PDF',it:'🖨 Stampa / Salva PDF',he:'🖨 הדפסה / שמירת PDF',ja:'🖨 印刷 / PDFで保存',ko:'🖨 인쇄 / PDF로 저장'});
   printBtn.style.cssText = 'padding:8px 16px;background:#8B6F47;color:#fff;border:none;border-radius:8px;font-size:var(--fs-body);cursor:pointer;';
   printBtn.onclick = () => window.print();
   const iframe = document.createElement('iframe');
@@ -10731,10 +10731,9 @@ async function fetchAIAnalysis(data, lang, src) {
     window._anLoading = false;
     try{ if(typeof renderDayBlueprint==='function') renderDayBlueprint(window._bpData || data); }catch(_e){}
     loading.style.display = 'none';
-    err.textContent = '⚠ ' + (lang === 'ru' ? 'Не удалось получить анализ. Попробуйте позже.' :
-      lang === 'uk' ? 'Не вдалося отримати аналіз.' :
-      lang === 'en' ? 'Could not load analysis. Try again later.' :
-      'Error loading analysis.');
+    // Было три языка из двенадцати: немец, испанец и японец получали сухое английское
+    // «Error loading analysis». Переведено полностью. 2026-09-10.
+    err.textContent = '⚠ ' + L({ru:'Не удалось получить анализ. Попробуйте позже.',uk:'Не вдалося отримати аналіз. Спробуйте пізніше.',en:'Could not load analysis. Try again later.',es:'No se pudo cargar el análisis. Inténtalo más tarde.',de:'Die Auswertung konnte nicht geladen werden. Bitte später erneut versuchen.',pt:'Não foi possível carregar a análise. Tente mais tarde.',fr:'Impossible de charger l’analyse. Réessayez plus tard.',pl:'Nie udało się pobrać analizy. Spróbuj później.',it:'Impossibile caricare l’analisi. Riprova più tardi.',he:'לא ניתן היה לטעון את הניתוח. נסו שוב מאוחר יותר.',ja:'解析を読み込めませんでした。しばらくしてからお試しください。',ko:'분석을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'});
     err.style.display = 'block';
   }
 }
