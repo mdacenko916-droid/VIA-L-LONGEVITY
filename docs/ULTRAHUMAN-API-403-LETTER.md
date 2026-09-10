@@ -41,15 +41,16 @@ Authorization: Bearer <access_token>
 We tried several dates and the start_epoch / end_epoch parameters — always 403.
 Without the "Bearer" prefix the API returns 401 invalid_token, so the token itself is accepted.
 
-The account we tested with does not have a ring paired yet. Could you tell us which of these it is:
-1. 403 is expected because the account has no ring data, or
+We ran this check with our developer account, which is used only for building the integration and
+has no ring paired — the rings belong to our members. Could you tell us which of these it is:
+1. 403 is expected for an account without ring data, or
 2. our application still needs data access to be enabled on your side — and if so,
    what we need to do?
 
 If there is a test account or sample data we could use to verify the integration before our
 first members connect their rings, that would help a lot.
 
-Test account email: [e-mail аккаунта Ultrahuman]
+Developer account email: [e-mail аккаунта Ultrahuman]
 Privacy Policy: https://via-l.com/legal/privacy.html
 Terms: https://via-l.com/legal/terms.html
 
@@ -77,12 +78,13 @@ Ultrahuman — данные кольца», соглашается, наш се�
 Пробовали разные даты и параметры start_epoch / end_epoch — всегда 403. Без слова «Bearer» API
 отвечает 401 «неверный токен», значит сам токен принимается.
 
-У тестового аккаунта кольца пока нет. Подскажите, что из двух:
-1. 403 — нормально, потому что у аккаунта нет данных кольца;
+Проверку делали служебным аккаунтом разработчика: он нужен только для сборки подключения, кольцо к нему
+не привязано — кольца у наших клиентов. Подскажите, что из двух:
+1. 403 — нормально для аккаунта без данных кольца;
 2. нашему приложению ещё нужно включить доступ к данным у вас — и что для этого сделать?
 
 Если есть тестовый аккаунт или пример данных, чтобы проверить подключение до того, как первые
 клиенты подключат кольца, это очень помогло бы.
 
-E-mail тестового аккаунта, ссылки на политику и условия.
+E-mail служебного аккаунта разработчика, ссылки на политику и условия.
 Спасибо, Ihor Datsenko, VIA-L — integration@via-l.com
