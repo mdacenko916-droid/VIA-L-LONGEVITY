@@ -420,8 +420,10 @@ Fitbit — только по `?vendors=1` (API закрывается 09.2026). 
       формулировки атрибуции у них нет вовсе.
       ⏳ **Ultrahuman API — ✅ ключи получены 2026-09-10 самостоятельно** в кабинете `vision.ultrahuman.com/developer`
       (заявки в partnerships не понадобились), роуты `/ultrahuman/*` + кнопка «Подключить» написаны.
-      Осталось: `wrangler deploy`, живая проверка на кольце (сверить ключи ответа по `wrangler tail`),
-      прочитать их API Agreement и решить про `WEARABLE_RESEARCH_BLOCK`. Детали — `interpreter/wearables/ultrahuman.md`.
+      Задеплоено; вход и токен проверены вживую, но метрики отдают **403** (аккаунт без кольца или доступ не включён).
+      📨 10.09 письмо в `support@ultrahuman.com` (`docs/ULTRAHUMAN-API-403-LETTER.md`) — ⏳ ждём ответа.
+      Осталось: сверить ключи ответа на первом кольце (`wrangler tail`), прочитать их API Agreement и решить
+      про `WEARABLE_RESEARCH_BLOCK`. Детали — `interpreter/wearables/ultrahuman.md`.
       Affiliate-письмо Vighnesh (25.08) — без ответа. Если ответят согласием — ссылка и код идут в онбординг-материалы
       и внутрь продукта; у Oura до порога — обычная ссылка на магазин, скидку пользователю не обещаем.
 
