@@ -54,5 +54,12 @@
 			"binding": "ASSETS",
 			"bucket_name": "vial-assets"
 		}
-	]
+	],
+	// Очередь фоновых разборов (2026-09-11): разбор идёт в обработчике очереди, а не внутри запроса
+	// телефона — Cloudflare режет работу через 30 с после обрыва клиента, свёрнутое приложение теряло
+	// разбор. Создана: `wrangler queues create vial-analysis`. max_retries 0 — повтор = второй платный вызов.
+	"queues": {
+		"producers": [{ "binding": "ANALYSIS_QUEUE", "queue": "vial-analysis" }],
+		"consumers": [{ "queue": "vial-analysis", "max_batch_size": 1, "max_batch_timeout": 1, "max_retries": 0 }]
+	}
 }

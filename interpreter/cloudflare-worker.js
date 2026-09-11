@@ -1526,6 +1526,29 @@ export default {
       if (new Date().getUTCDate() === 1) ctx.waitUntil(buildResearchStats(env, _prevMonthKey()));
     }
   },
+
+  // Очередь фоновых разборов (см. handleAnalyze). У обработчика очереди до 15 минут, и соединение с
+  // телефоном ему не нужно. max_retries=0: повтор после сбоя — это второй платный вызов модели, решать
+  // его должен человек кнопкой в приложении, а не очередь молча.
+  async queue(batch, env, ctx) {
+    for (const msg of batch.messages) {
+      const { job, body } = msg.body || {};
+      const jkey = _anJobKey(body && body.cid, body && body.day);
+      let out = null;
+      try { out = await _analyzeCore(body || {}, env, ctx); }
+      catch (e) { console.error('analyze queue: failed', e && e.message); }
+      try {
+        // Новое задание того же дня (кнопка повтора) могло заменить метку — старое её не перетирает.
+        const cur = JSON.parse(await env.ANALYSIS_CACHE.get(jkey) || 'null');
+        if (!cur || cur.job === job) {
+          await env.ANALYSIS_CACHE.put(jkey, JSON.stringify(out && out.analysis
+            ? { job, status: 'done', analysis: out.analysis, ts: Date.now() }
+            : { job, status: 'failed', ts: Date.now() }), { expirationTtl: 72 * 3600 });
+        }
+      } catch (e) { console.error('analyze queue: marker', e && e.message); }
+      msg.ack();
+    }
+  },
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -2738,8 +2761,36 @@ async function _fetchRetry(url, opts, onRetry) {
   return fetch(url, opts);
 }
 
+// Метка фонового разбора: номер задания, статус и (когда готов) сам текст. Отдельно от `an:`, потому что
+// за день бывает несколько проходов, и телефон должен получить разбор СВОЕГО задания, а не утренний.
+function _anJobKey(cid, day) {
+  return 'anj:' + String(cid || '').slice(0, 64) + ':' + String(day || '').slice(0, 10);
+}
+
 async function handleAnalyze(request, env, corsHeaders, ctx) {
-  const { data, lang, code, tier, structured, cid, day, src } = await request.json();
+  const body = await request.json();
+  // Фоновый режим (приложение VIA-L шлёт bg:true с 2026-09-11). Разбор идёт 1–3 минуты внутри запроса,
+  // а Cloudflare отменяет работу через 30 с после обрыва клиента: свёрнутое приложение теряло разбор, и
+  // экран просил «не закрывайте». Теперь ставим задание в очередь и сразу отвечаем его номером, телефон
+  // опрашивает /analysis-cache?job=. Старые сборки bg не шлют — у них прежний путь ниже.
+  if (body && body.bg && body.cid && body.day && env.ANALYSIS_QUEUE && env.ANALYSIS_CACHE) {
+    const job = crypto.randomUUID();
+    try {
+      await env.ANALYSIS_CACHE.put(_anJobKey(body.cid, body.day),
+        JSON.stringify({ job, status: 'pending', ts: Date.now() }), { expirationTtl: 72 * 3600 });
+      await env.ANALYSIS_QUEUE.send({ job, body });
+      return jsonResponse({ ok: true, job }, corsHeaders);
+    } catch (e) {
+      // Очередь не приняла (например, сообщение больше 128 КБ) — считаем по-старому, в самом запросе.
+      console.error('analyze: queue send failed', e && e.message);
+    }
+  }
+  return jsonResponse(await _analyzeCore(body, env, ctx), corsHeaders);
+}
+
+// Ядро разбора — общее для запроса и для очереди. Возвращает {analysis} или {error}.
+async function _analyzeCore(body, env, ctx) {
+  const { data, lang, code, tier, structured, cid, day, src } = body || {};
   // Метка «кто позвал» → в ai_usage.note. Разбор дважды за минуту с одинаковым входом мы уже ловили
   // (2026-08-30, $0.065 впустую), но по логам нельзя было сказать, что именно его переспросило:
   // проход, смена языка, кнопка «получить заново» или перерисовка сохранённого дня. Теперь можно.
@@ -2887,9 +2938,7 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
   // Живой случай 2026-08-24 вечером: баланс ключа воркера исчерпан. 2026-08-25.
   if (!result.content?.[0]?.text) {
     console.error('analyze: API error', response.status, result?.error?.type, result?.error?.message);
-    return new Response(JSON.stringify({ error: 'ai_unavailable' }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return { error: 'ai_unavailable' };
   }
   let text = result.content[0].text;
 
@@ -2982,9 +3031,7 @@ async function handleAnalyze(request, env, corsHeaders, ctx) {
       text, { expirationTtl: 72 * 3600 }).catch(() => {}));
   }
 
-  return new Response(JSON.stringify({ analysis: text }), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
+  return { analysis: text };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -3023,6 +3070,17 @@ async function handleAnalysisCache(request, env, corsHeaders) {
   const day = (u.searchParams.get('day') || '').slice(0, 10);
   if (!cid || !day || !env.ANALYSIS_CACHE) {
     return new Response(JSON.stringify({ ok: false }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+  // Фоновый разбор: отвечаем по номеру задания. Без него второй проход того же дня получил бы
+  // утренний разбор из `an:` вместо своего.
+  const job = (u.searchParams.get('job') || '').slice(0, 64);
+  if (job) {
+    let m = null; try { m = JSON.parse(await env.ANALYSIS_CACHE.get(_anJobKey(cid, day)) || 'null'); } catch (_) {}
+    const mine = m && m.job === job;
+    const res = (mine && m.status === 'done' && m.analysis) ? { ok: true, analysis: m.analysis }
+              : (mine && m.status === 'failed') ? { ok: false, failed: true }
+              : { ok: false, pending: true };
+    return new Response(JSON.stringify(res), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
   const text = await env.ANALYSIS_CACHE.get('an:' + cid + ':' + day);
   return new Response(JSON.stringify(text ? { ok: true, analysis: text } : { ok: false }), {
