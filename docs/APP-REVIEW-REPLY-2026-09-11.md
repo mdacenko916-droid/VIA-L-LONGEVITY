@@ -13,8 +13,8 @@
 Hello, and thank you for reviewing VIA-L.
 
 1. SCREEN RECORDING
-Attached. Recorded on a physical iPhone running iOS 26.5 with build 1.0 (144). It starts from app launch and shows: the wellness disclaimer and consent, the subscription screen opened from My profile → Subscription (subscription name, one-month period, price, Terms of Use and Privacy Policy links, Restore Purchases), and tapping Subscribe (the TestFlight Apple ID already holds an active test subscription, so the store shows "already subscribed" and the subscription management screen), a daily check-in entered by hand, the resulting analysis, the Apple Health permission, the AI advisor, the "My guide" screen, and deleting all health data.
-VIA-L has no account registration and no login. Entries are stored on the device. The user can delete them at any time: Profile → Backup and data deletion → Delete my health data. There is no user-generated content visible to other users.
+Attached. Recorded on a physical iPhone running iOS 26.5 with build 1.0 (147). It starts from app launch and shows: the wellness disclaimer and consent, the subscription screen opened from My profile → Subscription (subscription name, one-month period, price, Terms of Use and Privacy Policy links, Restore Purchases), and tapping Subscribe (the TestFlight Apple ID already holds an active test subscription, so the store shows "already subscribed" and the subscription management screen), a daily check-in entered by hand, the resulting analysis, the Apple Health permission, the AI advisor, the "My guide" screen, and deleting all health data.
+VIA-L has no account registration and no login. Entries are stored on the device. The user can delete them at any time: My profile → Backup and data deletion → Delete my health data. There is no user-generated content visible to other users.
 
 2. PURPOSE AND AUDIENCE
 VIA-L is a wellness app for adults in midlife hormonal change: women from 35 (perimenopause) and men from 40 (andropause). Sleep, energy and mood start changing, and people are usually told "it's just age". The user logs how they slept, their energy level and how they felt. The app explains in plain language what appears connected and suggests one small lifestyle step, such as sleep timing, meal timing or movement. Once a week it gives a longer review. A wearable is optional. VIA-L does not diagnose, treat or prevent any condition and is not a medical device.
@@ -26,7 +26,7 @@ b) The subscription screen opens. Subscribe with a sandbox Apple ID, or tap Rest
 c) Fill in today's check-in by hand. Apple Health is optional.
 d) Tap to get the analysis. It is prepared in the background in 1–3 minutes, and the app can be left meanwhile. The analysis and the day plan appear on the Today screen.
 e) The AI advisor opens from the round VIA-L button.
-f) Profile → Backup and data deletion: export, restore and delete data.
+f) My profile → Backup and data deletion: export, restore and delete data.
 
 4. EXTERNAL SERVICES
 - Anthropic (Claude API): generates the analysis and advisor text.
