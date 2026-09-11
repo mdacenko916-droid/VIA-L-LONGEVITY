@@ -13,7 +13,7 @@
 Hello, and thank you for reviewing VIA-L.
 
 1. SCREEN RECORDING
-Attached. Recorded on a physical iPhone running iOS 26.5 with build 1.0 ([BUILD]). It starts from app launch and shows: the wellness disclaimer and consent, the subscription screen (subscription name, one-month period, price, Terms of Use and Privacy Policy links, Restore Purchases), a sandbox purchase, a daily check-in entered by hand, the resulting analysis, the Apple Health permission, the AI advisor, the "My guide" screen, and deleting all health data.
+Attached. Recorded on a physical iPhone running iOS 26.5 with build 1.0 (144). It starts from app launch and shows: the wellness disclaimer and consent, the subscription screen opened from My profile → Subscription (subscription name, one-month period, price, Terms of Use and Privacy Policy links, Restore Purchases), and tapping Subscribe (the TestFlight Apple ID already holds an active test subscription, so the store shows "already subscribed" and the subscription management screen), a daily check-in entered by hand, the resulting analysis, the Apple Health permission, the AI advisor, the "My guide" screen, and deleting all health data.
 VIA-L has no account registration and no login. Entries are stored on the device. The user can delete them at any time: Profile → Backup and data deletion → Delete my health data. There is no user-generated content visible to other users.
 
 2. PURPOSE AND AUDIENCE
