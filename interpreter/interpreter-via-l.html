@@ -3782,7 +3782,9 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
 <!-- App Store: IAP paywall — показывается ТОЛЬКО внутри приложения (window.Capacitor), после согласия,
      если нет активной подписки. На вебе (via-l.com) остаётся display:none всегда — content открыт как сейчас. -->
   <div id="iap-gate">
-    <div class="consent-card">
+    <div class="consent-card" style="position:relative;">
+      <!-- ✕ виден только при открытии из профиля (_iapOpenFromProfile): на старте пейволл обязательный -->
+      <button type="button" id="iap-close" class="x-close" onclick="_iapHide()" aria-label="Close" style="display:none;position:absolute;top:14px;right:14px;">✕</button>
       <div class="vl-hero-mini">
         <div class="vl-word">VIA·L</div>
         <div class="vl-sub" data-t="iap_hero_sub">Продолжите с подпиской</div>
@@ -5541,6 +5543,20 @@ function renderCard(){
   }
   _secBackup=_vcSec('backup',L({ru:'Резервная копия и удаление данных',uk:'Резервна копія та видалення даних',en:'Backup and data deletion',es:'Copia de seguridad',de:'Sicherung',pt:'Backup',fr:'Sauvegarde',pl:'Kopia zapasowa',it:'Backup',he:'גיבוי',ja:'バックアップ',ko:'백업'}),_bkInner,false,true);
 
+  // ── Подписка (только внутри приложения, где покупка настроена) — открывает экран подписки ──
+  var _secSub='';
+  if(window.Capacitor && typeof window.iapAvailable==='function' && window.iapAvailable()){
+    var _subOn=false; try{ _subOn=localStorage.getItem('vialp_entitlement')==='1'; }catch(e){}
+    var _subStore=(typeof _iapStoreName==='function')?_iapStoreName():'';
+    _secSub=_vcSec('<i class="ph ph-credit-card"></i>',L({ru:'Подписка',uk:'Підписка',en:'Subscription',es:'Suscripción',de:'Abo',pt:'Assinatura',fr:'Abonnement',pl:'Subskrypcja',it:'Abbonamento',he:'מנוי',ja:'サブスクリプション',ko:'구독'}),
+      '<div style="font-size:var(--fs-body);color:var(--t1);line-height:1.6;">'+_esc(_subOn
+        ? L({ru:'Подписка VIA-L Monthly активна.',uk:'Підписка VIA-L Monthly активна.',en:'Your VIA-L Monthly subscription is active.',es:'Tu suscripción VIA-L Monthly está activa.',de:'Dein Abo VIA-L Monthly ist aktiv.',pt:'Sua assinatura VIA-L Monthly está ativa.',fr:'Votre abonnement VIA-L Monthly est actif.',pl:'Twoja subskrypcja VIA-L Monthly jest aktywna.',it:'Il tuo abbonamento VIA-L Monthly è attivo.',he:'המנוי VIA-L Monthly שלכם פעיל.',ja:'VIA-L Monthly のサブスクリプションは有効です。',ko:'VIA-L Monthly 구독이 활성화되어 있습니다.'})
+        : L({ru:'Подписка не оформлена.',uk:'Підписку не оформлено.',en:'No active subscription.',es:'No tienes una suscripción activa.',de:'Kein aktives Abo.',pt:'Nenhuma assinatura ativa.',fr:'Aucun abonnement actif.',pl:'Brak aktywnej subskrypcji.',it:'Nessun abbonamento attivo.',he:'אין מנוי פעיל.',ja:'有効なサブスクリプションはありません。',ko:'활성 구독이 없습니다.'}))+'</div>'
+      +'<div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;margin-top:6px;">'+_esc(L({ru:'Управлять подпиской и отменить её можно в настройках подписок {s}.',uk:'Керувати підпискою та скасувати її можна в налаштуваннях підписок {s}.',en:'You can manage or cancel it in your {s} subscription settings.',es:'Puedes gestionarla o cancelarla en los ajustes de suscripciones de {s}.',de:'Verwalten oder kündigen kannst du es in den Abo-Einstellungen von {s}.',pt:'Você pode gerenciá-la ou cancelá-la nas configurações de assinaturas do {s}.',fr:'Vous pouvez le gérer ou le résilier dans les réglages d’abonnement de {s}.',pl:'Możesz nią zarządzać i anulować ją w ustawieniach subskrypcji {s}.',it:'Puoi gestirlo o annullarlo nelle impostazioni degli abbonamenti di {s}.',he:'ניתן לנהל או לבטל אותו בהגדרות המנויים של {s}.',ja:'管理・解約は{s}のサブスクリプション設定から行えます。',ko:'{s} 구독 설정에서 관리하거나 해지할 수 있습니다.'}).split('{s}').join(_subStore))+'</div>'
+      +'<button type="button" onclick="_iapOpenFromProfile()" style="'+_bkBtn+'">'+_esc(L({ru:'Тариф, цена и условия',uk:'Тариф, ціна та умови',en:'Plan, price and terms',es:'Plan, precio y condiciones',de:'Tarif, Preis und Bedingungen',pt:'Plano, preço e termos',fr:'Offre, prix et conditions',pl:'Plan, cena i warunki',it:'Piano, prezzo e condizioni',he:'תוכנית, מחיר ותנאים',ja:'プラン・料金・規約',ko:'요금제, 가격 및 약관'}))+'</button>',
+      false,true);
+  }
+
   // ── Правовая информация / дисклеймер (App Store) ──
   // ── Источник данных (разовый выбор; можно сменить) ──
   var _srcNow=(function(){ try{return localStorage.getItem('vialp_source')||'';}catch(e){return '';} })();
@@ -5613,7 +5629,7 @@ function renderCard(){
   // Траектория по жалобе — первой: это ответ на «стало ли легче», ради которого человек и ведёт дневник.
   var _secCmp=(typeof _cmpTrajHTML==='function')?_cmpTrajHTML():'';
   html+=[_secCmp,_secGoal,_secAct,_secNut,_secSup,_secHealth,_secStress,_secBal,_secRhythm,_secLife,   // «что я о себе указал»
-         _secDyn,_secVai,_secLabs,_secDaily,_secHist,_secSource,_secNotify,_secBackup,_secLegal].join('');     // «что показывает система / инструменты» + VAI-калькулятор
+         _secDyn,_secVai,_secLabs,_secDaily,_secHist,_secSource,_secNotify,_secSub,_secBackup,_secLegal].join('');     // «что показывает система / инструменты» + VAI-калькулятор
   html+='</div>'; // .vcard-grid
   html+='</div>'; // .vcard-wrap
 
@@ -8219,6 +8235,14 @@ function _iapShow(){
 function _iapHide(){
   var g=document.getElementById('iap-gate');if(g)g.classList.remove('show');
   document.body.classList.remove('iap-open');
+  var c=document.getElementById('iap-close');if(c)c.style.display='none';
+}
+// Тот же экран подписки из «Мой профиль → Подписка» — и у подписчика, с ✕. Apple ждёт, что название,
+// срок, цена и условия подписки видны в приложении не только до покупки; и ревью-видео 2026-09-11
+// иначе было не записать: тестовая подписка TestFlight продлевается сама и в «Подписках» не видна.
+function _iapOpenFromProfile(){
+  var c=document.getElementById('iap-close');if(c)c.style.display='inline-flex';
+  _iapShow();
 }
 async function _iapBuy(){
   var btn=document.getElementById('iap-btn'),err=document.getElementById('iap-error');

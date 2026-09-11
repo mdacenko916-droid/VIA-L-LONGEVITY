@@ -13,7 +13,7 @@
 Hello, and thank you for reviewing VIA-L.
 
 1. SCREEN RECORDING
-Attached. Recorded on a physical iPhone running iOS 26.5 with build 1.0 (138). It starts from app launch and shows: the wellness disclaimer and consent, the subscription screen (subscription name, one-month period, price, Terms of Use and Privacy Policy links, Restore Purchases), a sandbox purchase, a daily check-in entered by hand, the resulting analysis, the Apple Health permission, the AI advisor, the "My guide" screen, and deleting all health data.
+Attached. Recorded on a physical iPhone running iOS 26.5 with build 1.0 ([BUILD]). It starts from app launch and shows: the wellness disclaimer and consent, the subscription screen (subscription name, one-month period, price, Terms of Use and Privacy Policy links, Restore Purchases), a sandbox purchase, a daily check-in entered by hand, the resulting analysis, the Apple Health permission, the AI advisor, the "My guide" screen, and deleting all health data.
 VIA-L has no account registration and no login. Entries are stored on the device. The user can delete them at any time: Profile → Backup and data deletion → Delete my health data. There is no user-generated content visible to other users.
 
 2. PURPOSE AND AUDIENCE
@@ -24,7 +24,7 @@ No login or demo account is needed.
 a) Launch the app and accept the disclaimer.
 b) The subscription screen opens. Subscribe with a sandbox Apple ID, or tap Restore Purchases.
 c) Fill in today's check-in by hand. Apple Health is optional.
-d) Tap to get the analysis. The day plan and weekly review are on the bottom tabs.
+d) Tap to get the analysis. It is prepared in the background in 1–3 minutes, and the app can be left meanwhile. The analysis and the day plan appear on the Today screen.
 e) The AI advisor opens from the round VIA-L button.
 f) Profile → Backup and data deletion: export, restore and delete data.
 
@@ -43,7 +43,7 @@ The app works the same in all regions. The interface is available in 12 language
 VIA-L is a general wellness app, not a medical service or medical device. It gives no diagnosis or treatment. The disclaimer appears before first use and on every result. The "My guide" screen lists independent specialists who use the VIA-L platform. Connecting to one is optional and needs the specialist's code and explicit consent. The user can withdraw consent on the same screen. Nothing is sold on that screen, and it has no prices and no external payment links. VIA-L does not use protected third-party material.
 
 7. IN-APP PURCHASE
-One auto-renewable subscription, "VIA-L Monthly" (via_l_pro_monthly). It lasts one month and costs EUR 29.99 (USD 34.99 in the US and Canada), and it unlocks all features. The subscription screen appears automatically after the disclaimer on first launch. Restore Purchases, Terms of Use (https://via-l.com/legal-app/terms.html) and Privacy Policy (https://via-l.com/legal-app/privacy.html) are on the same screen. Access cannot be bought outside the app.
+One auto-renewable subscription, "VIA-L Monthly" (via_l_pro_monthly). It lasts one month and costs EUR 29.99 (USD 34.99 in the US and Canada), and it unlocks all features. The subscription screen appears automatically after the disclaimer on first launch, and it can be opened at any time from My profile → Subscription → Plan, price and terms. Restore Purchases, Terms of Use (https://via-l.com/legal-app/terms.html) and Privacy Policy (https://via-l.com/legal-app/privacy.html) are on the same screen. Access cannot be bought outside the app.
 
 Support: support@via-l.com
 
