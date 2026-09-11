@@ -401,6 +401,7 @@ function tr(k){return (T[lang]&&T[lang][k]!==undefined)?T[lang][k]:(T.en[k]!==un
 
 function setLang(l){
   if(!T[l]) l='en';
+  var _was=lang;
   lang=l;
   try{localStorage.setItem('vial_lang',l);}catch(e){}
   document.documentElement.setAttribute('data-lang',l);
@@ -411,6 +412,8 @@ function setLang(l){
   // блок «нет кода → витрина» виден всем языкам; фолбэк-ссылка основателя — только ru/uk и только если витрина пуста
   var nc=document.getElementById('noCode');if(nc)nc.style.display='block';
   if(typeof _showcaseList!=='undefined' && _showcaseList){ renderShowcase(); if(typeof _catalogOpen==='function' && _catalogOpen()) refreshCatalogTexts(); else if(typeof _quizOpen==='function' && _quizOpen()) refreshQuizTexts(); } else updateShowcaseFallback();
+  // описание специалиста переводит сервер — под новый язык нужен новый запрос (при первом вызове списка ещё нет)
+  if(_was!==l && typeof _showcaseList!=='undefined' && _showcaseList) loadShowcase();
   renderConsent();
   // если экран «подключено» уже виден — обновим тексты с подстановкой имени
   if(document.getElementById('done').style.display==='block') refreshDone();
@@ -592,7 +595,7 @@ function updateShowcaseFallback(){
 }
 async function loadShowcase(){
   try{
-    const r = await fetch(WORKER+'/specialists/public');
+    const r = await fetch(WORKER+'/specialists/public?lang='+encodeURIComponent(lang));   // bio переводит сервер под этот язык
     const d = await r.json();
     _showcaseList = (d && d.ok && Array.isArray(d.specialists)) ? d.specialists : [];
   }catch(e){ _showcaseList = []; }

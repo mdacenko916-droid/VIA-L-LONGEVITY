@@ -9572,6 +9572,25 @@ async function handleSpecialistsPublic(request, env, corsHeaders){
     ).all();
     rows = r.results || [];
   }catch(_){}
+  // bio и образование специалист пишет в кабинете на одном языке, а витрину открывают на 12:
+  // живой случай 2026-09-11 — русское описание в английском интерфейсе приложения. Переводим на
+  // язык клиента один раз и держим в KV; хэш текста в ключе → правка в кабинете даёт новый перевод.
+  // Язык — из ?lang, иначе из Accept-Language: сборка 1.0 (138) на ревью Apple ещё без ?lang.
+  const qLang = String(new URL(request.url).searchParams.get('lang')||'').toLowerCase();
+  const lang = _OAUTH_BACK_T[qLang] ? qLang : _oauthBackLang(request);
+  const trField = async (text) => {
+    if(!text || !env.CLAUDE_API_KEY || !env.ANALYSIS_CACHE) return text;
+    const h = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))))
+      .slice(0,8).map(b=>b.toString(16).padStart(2,'0')).join('');
+    const key = 'spec_tr:'+lang+':'+h;
+    try{ const hit = await env.ANALYSIS_CACHE.get(key); if(hit) return hit; }catch(_){}
+    try{
+      const out = await translateReply(env, text, lang, 1000);
+      if(out) await env.ANALYSIS_CACHE.put(key, out, { expirationTtl: 365*24*60*60 });
+      return out || text;
+    }catch(_){ return text; }
+  };
+  await Promise.all(rows.map(async s=>{ s.bio = await trField(s.bio||''); s.education = await trField(s.education||''); }));
   // pay_url отдаём как ссылку для кнопки «Начать ведение» — текстом её витрина не показывает.
   return jsonResponse({ ok:true, specialists: rows.map(s=>({
     id:s.id, name:s.name||'', specialty:s.specialty||'', category:s.category||'', photo:s.photo||'',
