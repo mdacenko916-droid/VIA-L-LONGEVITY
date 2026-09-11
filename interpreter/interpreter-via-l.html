@@ -8204,7 +8204,9 @@ function _iapPriceFill(){
     }
     if(btn)btn.disabled=false;
     if(err)err.style.display='none';
-    box.textContent=ps+' / '+t('iap_per_month');
+    // Apple 3.1.2 требует на экране оплаты название, срок и цену подписки (запрос ревью 2026-09-11).
+    // Имя не из стора: там Display Name мог остаться «VIA-L Pro Monthly», а тарифа PRO нет.
+    box.textContent='VIA-L Monthly · '+ps+' / '+t('iap_per_month');
     box.style.display='block';
     if(lab)lab.textContent=t('iap_subscribe')+' — '+ps;
   }).catch(function(){});
