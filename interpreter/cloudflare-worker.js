@@ -1466,6 +1466,8 @@ export default {
       // (/expert/verify — GET, зарегистрирован в GET-блоке выше)
       if (path === '/cabinet/expert-grant') return handleCabinetExpertGrant(request, env, corsHeaders);   // авторизован (специалист)
       if (path === '/cabinet/expert-revoke')return handleCabinetExpertRevoke(request, env, corsHeaders);  // авторизован (специалист)
+      if (path === '/cabinet/client-payments') return handleCabinetClientPayments(request, env, corsHeaders); // оплата клиентом PWA: список
+      if (path === '/cabinet/client-payment')  return handleCabinetClientPayment(request, env, corsHeaders);  // оплата клиентом PWA: отметить/удалить
       if (path === '/cabinet/expert-extend')return handleCabinetExpertExtend(request, env, corsHeaders);  // авторизован (специалист)
 
       // Платформа, Шаг 6: панель владельца — управление специалистами (только role=owner).
@@ -9631,6 +9633,97 @@ async function handleCabinetExpertGrant(request, env, corsHeaders){
 
   const link = 'https://via-l.com/interpreter/interpreter-via-l-expert.html';
   return jsonResponse({ ok:true, code: grantCode, expiry, days, owed, link }, corsHeaders);
+}
+
+// ── ОПЛАТА КЛИЕНТОМ ПРИЛОЖЕНИЯ VIA-L EXPERT (€30/мес, решение владельца 2026-09-12) ──
+// Деньги идут мимо платформы: клиент платит специалисту (карта / Hotmart / наличные),
+// поэтому здесь только ЖУРНАЛ — фиксация факта, а не приём платежа. Журнал отдельный
+// от `payments` (там специалист → платформа, и те суммы гасят долг специалиста).
+const CLIENT_APP_FEE_EUR = 30;   // €/мес за пользование PWA, платит клиент
+
+// POST /cabinet/client-payments {code} — список платежей клиента + «оплачено до».
+async function handleCabinetClientPayments(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ ok:false, error:'unauthorized' }, corsHeaders, 401);
+  if(!env.DB) return jsonResponse({ ok:false, error:'d1_missing' }, corsHeaders, 500);
+  let b={}; try{ b = await request.json(); }catch(_){}
+  const card = String(b.code||'').trim().toUpperCase();
+  if(!card) return jsonResponse({ ok:false, error:'no_code' }, corsHeaders, 400);
+  if(!await cabinetOwns(env, sess, card)) return jsonResponse({ ok:false, error:'forbidden' }, corsHeaders, 403);
+  return _clientPaymentsResponse(env, corsHeaders, card);
+}
+
+// POST /cabinet/client-payment {code, amount?, months?, paid_at?, method?, period_from?, note?}
+//                              {code, id, delete:true} — удалить ошибочную запись.
+async function handleCabinetClientPayment(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ ok:false, error:'unauthorized' }, corsHeaders, 401);
+  if(!env.DB) return jsonResponse({ ok:false, error:'d1_missing' }, corsHeaders, 500);
+  let b={}; try{ b = await request.json(); }catch(_){}
+  const card = String(b.code||'').trim().toUpperCase();
+  if(!card) return jsonResponse({ ok:false, error:'no_code' }, corsHeaders, 400);
+  if(!await cabinetOwns(env, sess, card)) return jsonResponse({ ok:false, error:'forbidden' }, corsHeaders, 403);
+
+  if(b.delete){
+    const id = parseInt(b.id, 10);
+    if(!id) return jsonResponse({ ok:false, error:'no_id' }, corsHeaders, 400);
+    // card_code в условии: чужую строку не удалить, даже подставив её id
+    await env.DB.prepare('DELETE FROM client_payments WHERE id=? AND card_code=?').bind(id, card).run();
+    return _clientPaymentsResponse(env, corsHeaders, card);
+  }
+
+  const today  = new Date().toISOString().slice(0,10);
+  const months = Math.max(0.5, Math.min(24, parseFloat(b.months) || 1));
+  const amount = Math.round((b.amount != null ? parseFloat(b.amount) : months * CLIENT_APP_FEE_EUR) * 100) / 100;
+  if(!(amount > 0)) return jsonResponse({ ok:false, error:'bad_amount' }, corsHeaders, 400);
+  const method  = ['card','hotmart','cash','other'].includes(String(b.method||'')) ? String(b.method) : 'card';
+  const paidAt  = /^\d{4}-\d{2}-\d{2}$/.test(String(b.paid_at||'')) ? String(b.paid_at) : today;
+
+  // Период считаем встык к уже оплаченному: иначе второй платёж «съедал» бы первый,
+  // и клиент, заплативший вперёд за два месяца двумя переводами, терял бы месяц.
+  const prev = await env.DB.prepare(
+    'SELECT MAX(period_to) pt FROM client_payments WHERE card_code=?').bind(card).first();
+  const prevTo = (prev && prev.pt) ? String(prev.pt) : null;
+  let from = /^\d{4}-\d{2}-\d{2}$/.test(String(b.period_from||'')) ? String(b.period_from)
+           : (prevTo && prevTo >= paidAt ? _dayShift(prevTo, 1) : paidAt);
+  const to = _dayShift(from, Math.round(months * 30) - 1);
+
+  await env.DB.prepare(
+    'INSERT INTO client_payments (card_code,specialist_id,amount_eur,method,paid_at,period_from,period_to,note,created_at) VALUES (?,?,?,?,?,?,?,?,?)'
+  ).bind(card, sess.id, amount, method, paidAt, from, to, String(b.note||'').slice(0,300), Date.now()).run();
+
+  return _clientPaymentsResponse(env, corsHeaders, card);
+}
+
+function _dayShift(ymd, days){
+  const d = new Date(ymd + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0,10);
+}
+
+// Общий ответ обеих ручек: список + «оплачено до» + сверка со сроком выданного доступа.
+async function _clientPaymentsResponse(env, corsHeaders, card){
+  const rows = (await env.DB.prepare(
+    'SELECT id,amount_eur,method,paid_at,period_from,period_to,note FROM client_payments WHERE card_code=? ORDER BY period_to DESC, id DESC'
+  ).bind(card).all()).results || [];
+  const today = new Date().toISOString().slice(0,10);
+  const paidUntil = rows.reduce((a,r)=> (r.period_to && r.period_to > a) ? r.period_to : a, '');
+  const total = Math.round(rows.reduce((a,r)=>a+(+r.amount_eur||0),0) * 100) / 100;
+
+  // Срок доступа из карточки — чтобы кабинет мог показать «доступ выдан дальше, чем оплачено».
+  let grantExpiry = null;
+  try{
+    const c = await env.DB.prepare('SELECT data FROM clients WHERE code=?').bind(card).first();
+    const d = c && c.data ? JSON.parse(c.data) : null;
+    const g = d && d.expert_grant;
+    if(g && !g.revoked && g.expiry) grantExpiry = String(g.expiry);
+  }catch(_){}
+
+  return jsonResponse({ ok:true, fee: CLIENT_APP_FEE_EUR, today,
+    rows, total, paid_until: paidUntil || null,
+    overdue: !!(paidUntil && paidUntil < today),
+    uncovered: !!(grantExpiry && (!paidUntil || paidUntil < grantExpiry)),
+    grant_expiry: grantExpiry }, corsHeaders);
 }
 
 // POST /cabinet/expert-extend {code} (code = GRANTCODE) {days} — продлить срок доступа.
