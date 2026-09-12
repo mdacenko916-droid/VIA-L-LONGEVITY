@@ -647,6 +647,15 @@ html{ background-color:#EFE8D8 !important; }
 /* Блоки/карточки → сплошной графит на беже (текст внутри уже светлый) */
 .who-get,.who-disclaim,.q3-card,.qa-card,.qa-sell,.plan-card,.plans-legal-note{ background:linear-gradient(160deg,#2a323f 0%,#1a2028 100%) !important; }
 
+/* ══ Ведення живе у застосунку: плашка в hero + блок «як це проходить» ══ */
+.hero-app{ display:inline-flex; align-items:center; gap:9px; margin-top:18px;
+  padding:9px 18px; border-radius:50px; font-size:13px; line-height:1.4;
+  color:#4a4238; background:rgba(196,150,60,.10); border:1px solid rgba(196,150,60,.38); }
+.hero-app svg{ flex:0 0 auto; color:var(--gold); }
+.flow-section{ padding:44px 0 8px; }
+.flow-section .wrap{ text-align:center; }
+.flow-note{ max-width:700px; margin:26px auto 0; font-size:13.5px; line-height:1.6; color:#4a4238; }
+@media(max-width:820px){ .flow-section{ padding:32px 0 4px; } .hero-app{ font-size:12px; padding:8px 14px; } }
 
 </style>
 </head>
@@ -708,6 +717,14 @@ html{ background-color:#EFE8D8 !important; }
     <div class="hero-badge" data-t="hero_badge">Если данные есть — они должны приносить пользу</div>
     <h1 class="hero-h1" data-t="hero_h1">Мы не показываем данные — мы <em>объясняем</em>, что с вами происходит</h1>
     <p class="hero-sub" data-t="hero_sub">И как адаптироваться к следующему этапу жизни. Показатели трекера и симптомы → понятное объяснение перемен и конкретные шаги.</p>
+
+    <!-- Плашка: ведення живе у застосунку (PWA, не магазин) -->
+    <div class="hero-app">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+        <rect x="6" y="2" width="12" height="20" rx="2.5"></rect><line x1="10.5" y1="18.5" x2="13.5" y2="18.5"></line>
+      </svg>
+      <span data-t="hero_app">VIA·L EXPERT — застосунок на телефоні: iPhone та Android</span>
+    </div>
   </div>
 
 <!-- WHO IS IT FOR (header) -->
@@ -744,6 +761,29 @@ html{ background-color:#EFE8D8 !important; }
   </div>
 </section>
 
+
+<!-- ЯК ПРОХОДИТЬ ВЕДЕННЯ -->
+<section class="flow-section" id="how-it-works">
+  <div class="wrap">
+    <h2 class="plans-title" data-t="flow_h2">Ведення проходить у застосунку</h2>
+    <p class="plans-sub" data-t="flow_sub">VIA-L EXPERT — застосунок на вашому телефоні. Там щоденний check-in, розбір, чат з нутриціологом і щотижневий звіт.</p>
+    <div class="qa-grid">
+      <div class="qa-card">
+        <h3 class="qa-q" data-t="flow_1_t">1 · Оплата</h3>
+        <div class="qa-a" data-t="flow_1_b">Ви обираєте програму на 8 або 12 тижнів. На пошту приходить лист із персональним кодом доступу.</div>
+      </div>
+      <div class="qa-card">
+        <h3 class="qa-q" data-t="flow_2_t">2 · Встановлення</h3>
+        <div class="qa-a" data-t="flow_2_b">Відкриваєте посилання з листа і додаєте застосунок на екран телефона — з браузера, без магазину.<br><br>iPhone: «Поділитися» → «На екран Домівка».<br>Android: «Встановити застосунок».</div>
+      </div>
+      <div class="qa-card">
+        <h3 class="qa-q" data-t="flow_3_t">3 · Щодня разом</h3>
+        <div class="qa-a" data-t="flow_3_b">Короткий check-in уранці, розбір дня зрозумілою мовою, чат з нутриціологом і щотижневий PDF-звіт — усе в одному застосунку.</div>
+      </div>
+    </div>
+    <p class="flow-note" data-t="flow_note">Доступ до застосунку діє весь час програми — 8 або 12 тижнів.</p>
+  </div>
+</section>
 
 <!-- PLANS -->
 <section class="plans-section" id="plans">
@@ -1215,6 +1255,22 @@ const T = {
   }, nav[l]);
 });
 
+// ── Плашка в hero + блок «як проходить ведення» (усі 12 мов) ──
+const _flowT = {
+  uk: { hero_app: 'VIA·L EXPERT — застосунок на телефоні: iPhone та Android', flow_h2: 'Ведення проходить у застосунку', flow_sub: 'VIA-L EXPERT — застосунок на вашому телефоні. Там щоденний check-in, розбір, чат з нутриціологом і щотижневий звіт.', flow_1_t: '1 · Оплата', flow_1_b: 'Ви обираєте програму на 8 або 12 тижнів. На пошту приходить лист із персональним кодом доступу.', flow_2_t: '2 · Встановлення', flow_2_b: 'Відкриваєте посилання з листа і додаєте застосунок на екран телефона — з браузера, без магазину.<br><br>iPhone: «Поділитися» → «На екран Домівка».<br>Android: «Встановити застосунок».', flow_3_t: '3 · Щодня разом', flow_3_b: 'Короткий check-in уранці, розбір дня зрозумілою мовою, чат з нутриціологом і щотижневий PDF-звіт — усе в одному застосунку.', flow_note: 'Доступ до застосунку діє весь час програми — 8 або 12 тижнів.' },
+  ru: { hero_app: 'VIA·L EXPERT — приложение на телефоне: iPhone и Android', flow_h2: 'Ведение проходит в приложении', flow_sub: 'VIA-L EXPERT — приложение на вашем телефоне. Там ежедневный check-in, разбор, чат с нутрициологом и еженедельный отчёт.', flow_1_t: '1 · Оплата', flow_1_b: 'Вы выбираете программу на 8 или 12 недель. На почту приходит письмо с персональным кодом доступа.', flow_2_t: '2 · Установка', flow_2_b: 'Открываете ссылку из письма и добавляете приложение на экран телефона — из браузера, без магазина.<br><br>iPhone: «Поделиться» → «На экран Домой».<br>Android: «Установить приложение».', flow_3_t: '3 · Каждый день рядом', flow_3_b: 'Короткий check-in утром, разбор дня понятным языком, чат с нутрициологом и еженедельный PDF-отчёт — всё в одном приложении.', flow_note: 'Доступ к приложению действует всё время программы — 8 или 12 недель.' },
+  en: { hero_app: 'VIA·L EXPERT — an app on your phone: iPhone and Android', flow_h2: 'The programme runs inside the app', flow_sub: 'VIA-L EXPERT is an app on your phone: the daily check-in, your explanation, the chat with your specialist and the weekly report all live there.', flow_1_t: '1 · Payment', flow_1_b: 'You choose the 8- or 12-week programme. An email arrives with your personal access code.', flow_2_t: '2 · Install', flow_2_b: 'Open the link from the email and add the app to your home screen — straight from the browser, no app store.<br><br>iPhone: Share → Add to Home Screen.<br>Android: Install app.', flow_3_t: '3 · Every day together', flow_3_b: 'A short morning check-in, the day explained in plain words, chat with your specialist and a weekly PDF report — all in one app.', flow_note: 'Access to the app lasts for the whole programme — 8 or 12 weeks.' },
+  es: { hero_app: 'VIA·L EXPERT — una app en tu teléfono: iPhone y Android', flow_h2: 'El acompañamiento ocurre en la app', flow_sub: 'VIA-L EXPERT es una app en tu teléfono: allí están el check-in diario, tu explicación, el chat con la especialista y el informe semanal.', flow_1_t: '1 · Pago', flow_1_b: 'Eliges el programa de 8 o 12 semanas. Recibes un correo con tu código de acceso personal.', flow_2_t: '2 · Instalación', flow_2_b: 'Abres el enlace del correo y añades la app a la pantalla de inicio — desde el navegador, sin tienda.<br><br>iPhone: Compartir → Añadir a pantalla de inicio.<br>Android: Instalar aplicación.', flow_3_t: '3 · Cada día contigo', flow_3_b: 'Un check-in breve por la mañana, el día explicado con palabras claras, chat con la especialista e informe PDF semanal — todo en una app.', flow_note: 'El acceso a la app dura todo el programa — 8 o 12 semanas.' },
+  de: { hero_app: 'VIA·L EXPERT — eine App auf Ihrem Handy: iPhone und Android', flow_h2: 'Die Begleitung läuft in der App', flow_sub: 'VIA-L EXPERT ist eine App auf Ihrem Handy: täglicher Check-in, Ihre Erklärung, der Chat mit der Fachkraft und der Wochenbericht sind dort.', flow_1_t: '1 · Bezahlung', flow_1_b: 'Sie wählen das Programm über 8 oder 12 Wochen. Per E-Mail kommt Ihr persönlicher Zugangscode.', flow_2_t: '2 · Installation', flow_2_b: 'Sie öffnen den Link aus der E-Mail und legen die App auf den Startbildschirm — direkt aus dem Browser, ohne Store.<br><br>iPhone: Teilen → Zum Home-Bildschirm.<br>Android: App installieren.', flow_3_t: '3 · Jeden Tag dabei', flow_3_b: 'Ein kurzer Check-in am Morgen, der Tag in klaren Worten erklärt, Chat mit der Fachkraft und ein wöchentlicher PDF-Bericht — alles in einer App.', flow_note: 'Der Zugang zur App gilt für das ganze Programm — 8 oder 12 Wochen.' },
+  pt: { hero_app: 'VIA·L EXPERT — um app no seu celular: iPhone e Android', flow_h2: 'O acompanhamento acontece no app', flow_sub: 'O VIA-L EXPERT é um app no seu celular: o check-in diário, a sua explicação, o chat com a especialista e o relatório semanal ficam lá.', flow_1_t: '1 · Pagamento', flow_1_b: 'Você escolhe o programa de 8 ou 12 semanas. Chega um e-mail com o seu código de acesso pessoal.', flow_2_t: '2 · Instalação', flow_2_b: 'Você abre o link do e-mail e adiciona o app à tela inicial — direto do navegador, sem loja.<br><br>iPhone: Compartilhar → Adicionar à Tela de Início.<br>Android: Instalar aplicativo.', flow_3_t: '3 · Todos os dias junto', flow_3_b: 'Um check-in curto de manhã, o dia explicado em palavras simples, chat com a especialista e relatório PDF semanal — tudo em um app.', flow_note: 'O acesso ao app dura todo o programa — 8 ou 12 semanas.' },
+  fr: { hero_app: 'VIA·L EXPERT — une appli sur votre téléphone : iPhone et Android', flow_h2: 'L’accompagnement se passe dans l’application', flow_sub: 'VIA-L EXPERT est une application sur votre téléphone : le check-in quotidien, votre explication, le chat avec la spécialiste et le rapport hebdomadaire s’y trouvent.', flow_1_t: '1 · Paiement', flow_1_b: 'Vous choisissez le programme de 8 ou 12 semaines. Un e-mail arrive avec votre code d’accès personnel.', flow_2_t: '2 · Installation', flow_2_b: 'Vous ouvrez le lien de l’e-mail et ajoutez l’application à l’écran d’accueil — depuis le navigateur, sans boutique.<br><br>iPhone : Partager → Sur l’écran d’accueil.<br>Android : Installer l’application.', flow_3_t: '3 · Chaque jour avec vous', flow_3_b: 'Un court check-in le matin, la journée expliquée simplement, le chat avec la spécialiste et un rapport PDF hebdomadaire — le tout dans une seule application.', flow_note: 'L’accès à l’application dure tout le programme — 8 ou 12 semaines.' },
+  pl: { hero_app: 'VIA·L EXPERT — aplikacja w telefonie: iPhone i Android', flow_h2: 'Opieka odbywa się w aplikacji', flow_sub: 'VIA-L EXPERT to aplikacja w Twoim telefonie: codzienny check-in, wyjaśnienie, czat ze specjalistką i cotygodniowy raport są właśnie tam.', flow_1_t: '1 · Płatność', flow_1_b: 'Wybierasz program na 8 lub 12 tygodni. Na e-mail przychodzi osobisty kod dostępu.', flow_2_t: '2 · Instalacja', flow_2_b: 'Otwierasz link z e-maila i dodajesz aplikację do ekranu głównego — prosto z przeglądarki, bez sklepu.<br><br>iPhone: Udostępnij → Do ekranu początkowego.<br>Android: Zainstaluj aplikację.', flow_3_t: '3 · Codziennie razem', flow_3_b: 'Krótki poranny check-in, dzień wyjaśniony prostym językiem, czat ze specjalistką i cotygodniowy raport PDF — wszystko w jednej aplikacji.', flow_note: 'Dostęp do aplikacji obowiązuje przez cały program — 8 lub 12 tygodni.' },
+  it: { hero_app: 'VIA·L EXPERT — un’app sul tuo telefono: iPhone e Android', flow_h2: 'Il percorso si svolge nell’app', flow_sub: 'VIA-L EXPERT è un’app sul tuo telefono: il check-in quotidiano, la tua spiegazione, la chat con la specialista e il report settimanale sono lì.', flow_1_t: '1 · Pagamento', flow_1_b: 'Scegli il programma da 8 o 12 settimane. Ricevi un’email con il tuo codice di accesso personale.', flow_2_t: '2 · Installazione', flow_2_b: 'Apri il link dell’email e aggiungi l’app alla schermata Home — direttamente dal browser, senza store.<br><br>iPhone: Condividi → Aggiungi a Home.<br>Android: Installa app.', flow_3_t: '3 · Ogni giorno insieme', flow_3_b: 'Un breve check-in la mattina, la giornata spiegata con parole semplici, chat con la specialista e report PDF settimanale — tutto in un’app.', flow_note: 'L’accesso all’app dura per tutto il programma — 8 o 12 settimane.' },
+  he: { hero_app: 'VIA·L EXPERT — אפליקציה בטלפון: iPhone ו‑Android', flow_h2: 'הליווי מתנהל באפליקציה', flow_sub: 'VIA-L EXPERT היא אפליקציה בטלפון שלכם: הצ׳ק‑אין היומי, ההסבר, הצ׳אט עם המומחית והדוח השבועי — הכול שם.', flow_1_t: '1 · תשלום', flow_1_b: 'בוחרים תוכנית של 8 או 12 שבועות. מגיע מייל עם קוד גישה אישי.', flow_2_t: '2 · התקנה', flow_2_b: 'פותחים את הקישור מהמייל ומוסיפים את האפליקציה למסך הבית — ישירות מהדפדפן, בלי חנות.<br><br>iPhone: שיתוף → הוספה למסך הבית.<br>Android: התקנת אפליקציה.', flow_3_t: '3 · כל יום יחד', flow_3_b: 'צ׳ק‑אין קצר בבוקר, הסבר על היום בשפה פשוטה, צ׳אט עם המומחית ודוח PDF שבועי — הכול באפליקציה אחת.', flow_note: 'הגישה לאפליקציה תקפה לאורך כל התוכנית — 8 או 12 שבועות.' },
+  ja: { hero_app: 'VIA·L EXPERT — スマートフォンのアプリ：iPhone と Android', flow_h2: '伴走はアプリの中で進みます', flow_sub: 'VIA-L EXPERT はあなたのスマートフォンのアプリです。毎日のチェックイン、解説、専門家とのチャット、週次レポートはすべてここに。', flow_1_t: '1 · お支払い', flow_1_b: '8週間または12週間のプログラムを選びます。個人用のアクセスコードがメールで届きます。', flow_2_t: '2 · インストール', flow_2_b: 'メールのリンクを開き、アプリをホーム画面に追加します — ブラウザから直接、ストアは不要です。<br><br>iPhone：共有 → ホーム画面に追加。<br>Android：アプリをインストール。', flow_3_t: '3 · 毎日いっしょに', flow_3_b: '朝の短いチェックイン、その日のやさしい解説、専門家とのチャット、週次PDFレポート — すべてひとつのアプリで。', flow_note: 'アプリの利用はプログラム期間中ずっと有効です — 8週間または12週間。' },
+  ko: { hero_app: 'VIA·L EXPERT — 휴대폰 앱: iPhone과 Android', flow_h2: '관리는 앱 안에서 진행됩니다', flow_sub: 'VIA-L EXPERT는 휴대폰 속 앱입니다. 매일의 체크인, 해설, 전문가와의 채팅, 주간 리포트가 모두 여기에 있습니다.', flow_1_t: '1 · 결제', flow_1_b: '8주 또는 12주 프로그램을 선택합니다. 개인 접속 코드가 이메일로 도착합니다.', flow_2_t: '2 · 설치', flow_2_b: '메일의 링크를 열고 앱을 홈 화면에 추가합니다 — 브라우저에서 바로, 스토어 없이.<br><br>iPhone: 공유 → 홈 화면에 추가.<br>Android: 앱 설치.', flow_3_t: '3 · 매일 함께', flow_3_b: '아침의 짧은 체크인, 쉬운 말로 풀어낸 하루, 전문가와의 채팅, 주간 PDF 리포트 — 모두 하나의 앱에서.', flow_note: '앱 이용은 프로그램 기간 내내 유효합니다 — 8주 또는 12주.' }
+};
+Object.keys(_flowT).forEach(l => { if (T[l]) Object.assign(T[l], _flowT[l]); });
 
 function setLang(l) {
   lang = l;
