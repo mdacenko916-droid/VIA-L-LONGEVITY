@@ -1730,10 +1730,21 @@ document.addEventListener('click', e => {
   if (!e.target.closest('#menuWrap')) document.getElementById('menuWrap').classList.remove('open');
 });
 
-// Init language from localStorage or default uk
+// Мова: збережений вибір (ІП або сайт) → мова браузера → en
 (function() {
-  const saved = localStorage.getItem('vial_lang') || 'en';
-  setLang(saved);
+  const SUPPORTED = Object.keys(T);
+  let l = null;
+  try { l = localStorage.getItem('vial_lang') || localStorage.getItem('selectedLang'); } catch(e) {}
+  if (!l || !SUPPORTED.includes(l)) {
+    l = null;
+    const navs = navigator.languages || [navigator.language || ''];
+    for (const n of navs) {
+      let c = String(n).toLowerCase().split('-')[0];
+      if (c === 'ua') c = 'uk';
+      if (SUPPORTED.includes(c)) { l = c; break; }
+    }
+  }
+  setLang(l || 'en');
 })();
 </script>
 

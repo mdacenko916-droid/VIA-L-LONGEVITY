@@ -18,6 +18,10 @@
   <meta property="og:image:height" content="630">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://via-l.com/">
+  <!-- Мовні версії для пошуку: поки uk + ru (en/es доступні перемикачем, у видачу не подаються) -->
+  <link rel="alternate" hreflang="uk" href="https://via-l.com/">
+  <link rel="alternate" hreflang="ru" href="https://via-l.com/?lang=ru">
+  <link rel="alternate" hreflang="x-default" href="https://via-l.com/">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -3791,6 +3795,76 @@ b_interp_btn: "Start analysis", b_interp_plans: "View plans",
 }
 };
 
+// ── SEO: заголовок, опис і canonical на мову (у видачу подаються uk + ru) ──
+var SITE_LANGS = ['uk','ru','es','en'];
+var LANG_META = {
+  uk: {
+    title: 'VIA-L · Нутриціолог · Менопауза, Андропауза, Антивікове харчування',
+    desc: 'Персоналізована стратегія здоров\'я для жінок 40+ і чоловіків після 40. Менопауза, андропауза, антивікове харчування. Онлайн · UA/RU/ES/EN'
+  },
+  ru: {
+    title: 'VIA-L · Нутрициолог · Менопауза, Андропауза, Антивозрастное питание',
+    desc: 'Персонализированная стратегия здоровья для женщин 40+ и мужчин после 40. Менопауза, андропауза, антивозрастное питание. Онлайн · UA/RU/ES/EN'
+  },
+  es: {
+    title: 'VIA-L · Nutricionista · Menopausia, Andropausia, Nutrición antiedad',
+    desc: 'Estrategia de salud personalizada para mujeres 40+ y hombres a partir de 40. Menopausia, andropausia, nutrición antiedad. Online · UA/RU/ES/EN'
+  },
+  en: {
+    title: 'VIA-L · Nutritionist · Menopause, Andropause, Anti-ageing nutrition',
+    desc: 'A personalised health strategy for women 40+ and men over 40. Menopause, andropause, anti-ageing nutrition. Online · UA/RU/ES/EN'
+  }
+};
+
+function applyLangMeta(lang) {
+  var m = LANG_META[lang];
+  if (!m) return;
+  document.title = m.title;
+  var set = function(sel, attr, val) {
+    var el = document.querySelector(sel);
+    if (el) el.setAttribute(attr, val);
+  };
+  set('meta[name="description"]', 'content', m.desc);
+  set('meta[property="og:title"]', 'content', m.title);
+  set('meta[property="og:description"]', 'content', m.desc);
+  // canonical: у пошук ідуть тільки uk (корінь) і ru (?lang=ru); es/en вказують на корінь
+  var canon = (lang === 'ru') ? 'https://via-l.com/?lang=ru' : 'https://via-l.com/';
+  set('link[rel="canonical"]', 'href', canon);
+  set('meta[property="og:url"]', 'content', canon);
+  // адреса в рядку браузера має збігатися з мовою сторінки (щоб посиланням ділилися правильним);
+  // інші параметри (utm тощо) зберігаємо
+  try {
+    var p = new URLSearchParams(window.location.search);
+    if (lang === 'uk') p.delete('lang'); else p.set('lang', lang);
+    var qs = p.toString();
+    var want = window.location.pathname + (qs ? '?' + qs : '') + window.location.hash;
+    if (want !== window.location.pathname + window.location.search + window.location.hash) {
+      history.replaceState(null, '', want);
+    }
+  } catch(e) {}
+}
+
+// Мова першого візиту: ?lang= → збережений вибір (сайт або ІП) → мова браузера → uk
+function detectLang() {
+  try {
+    var q = new URLSearchParams(window.location.search).get('lang');
+    if (q && SITE_LANGS.indexOf(q) !== -1) return q;
+  } catch(e) {}
+  try {
+    var saved = localStorage.getItem('selectedLang') || localStorage.getItem('vial_lang');
+    if (saved && SITE_LANGS.indexOf(saved) !== -1) return saved;
+  } catch(e) {}
+  try {
+    var navs = navigator.languages || [navigator.language || ''];
+    for (var i = 0; i < navs.length; i++) {
+      var code = String(navs[i]).toLowerCase().split('-')[0];
+      if (code === 'ua') code = 'uk';
+      if (SITE_LANGS.indexOf(code) !== -1) return code;
+    }
+  } catch(e) {}
+  return 'uk';
+}
+
 function applyLang(lang) {
   var t = translations[lang];
   var fallback = translations.ru || {};
@@ -3811,7 +3885,12 @@ function applyLang(lang) {
   });
   document.documentElement.lang = lang;
   if (typeof populateAllBookDescs === 'function') populateAllBookDescs();
-  try { localStorage.setItem('via_lang_lon', lang); } catch(e) {}
+  applyLangMeta(lang);
+  // Единый ключ языка для сайта и интерпретатора (ИП читает vial_lang)
+  try {
+    localStorage.setItem('selectedLang', lang);
+    localStorage.setItem('vial_lang', lang);
+  } catch(e) {}
   var carouselFrame = document.querySelector('#guides iframe');
   if (carouselFrame) {
     try { carouselFrame.contentWindow.postMessage({ action: 'setLang', lang: lang }, '*'); } catch(e) {}
@@ -3875,29 +3954,25 @@ if (btn) btn.setAttribute('aria-expanded', 'false');
 
 // ────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
-  var saved = localStorage.getItem('selectedLang');
-  if (saved && translations[saved]) {
-    applyLang(saved);
-    document.querySelectorAll(".lang-option, .drawer-lang-opt").forEach(function(o){
-      o.classList.remove("active");
-    });
-    document.querySelectorAll("[data-lang='" + saved + "']").forEach(function(o){
-      o.classList.add("active");
-    });
-    var langMap = {
-      uk: { flag: '🇺🇦', code: 'UK' },
-      ru: { flag: '🇷🇺', code: 'RU' },
-      es: { flag: '🇪🇸', code: 'ES' },
-      en: { flag: '🇬🇧', code: 'EN' }
-    };
-    var current = langMap[saved];
-    var f = document.getElementById("currentFlag");
-    var c = document.getElementById("currentCode");
-    if (current && f) f.textContent = current.flag;
-    if (current && c) c.textContent = current.code;
-  } else {
-    applyLang('uk');
-  }
+  var startLang = detectLang();
+  applyLang(startLang);
+  document.querySelectorAll(".lang-option, .drawer-lang-opt").forEach(function(o){
+    o.classList.remove("active");
+  });
+  document.querySelectorAll("[data-lang='" + startLang + "']").forEach(function(o){
+    o.classList.add("active");
+  });
+  var langMap = {
+    uk: { flag: '🇺🇦', code: 'UK' },
+    ru: { flag: '🇷🇺', code: 'RU' },
+    es: { flag: '🇪🇸', code: 'ES' },
+    en: { flag: '🇬🇧', code: 'EN' }
+  };
+  var current = langMap[startLang];
+  var f = document.getElementById("currentFlag");
+  var c = document.getElementById("currentCode");
+  if (current && f) f.textContent = current.flag;
+  if (current && c) c.textContent = current.code;
   populateAllBookDescs();
 });
 
