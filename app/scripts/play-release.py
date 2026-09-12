@@ -229,6 +229,28 @@ def cmd_prices(args):
                 if abs(new_v - old_v) > 1e-9:
                     rc["price"] = {"currencyCode": cur, "units": str(u), "nanos": n}
                     changes.append((rc["regionCode"], cur, old_v, new_v))
+    # Точечные цены по странам: Google локализовал часть рынков заметно ниже евро (Канада, Швейцария),
+    # и пропорция это сохраняла. Здесь владелец задаёт цифру сам, валюта берётся из текущей цены.
+    for pair in (args.set or []):
+        reg, _, val = pair.partition("=")
+        reg, val = reg.strip().upper(), float(val)
+        found = False
+        for bp in sub.get("basePlans", []):
+            if args.base_plan and bp.get("basePlanId") != args.base_plan:
+                continue
+            for rc in bp.get("regionalConfigs", []):
+                if rc.get("regionCode") != reg:
+                    continue
+                p = rc.get("price") or {}
+                cur = p.get("currencyCode")
+                old_v = int(p.get("units") or 0) + (p.get("nanos") or 0) / 1e9
+                u, n = _money(cur, val)
+                rc["price"] = {"currencyCode": cur, "units": str(u), "nanos": n}
+                changes = [c for c in changes if c[0] != reg] + [(reg, cur, old_v, u + n / 1e9)]
+                found = True
+        if not found:
+            sys.exit("Страны %s нет в ценах продукта" % reg)
+
     print("Пропорция от евро: %.4f" % (ratio_src or 0))
     print("Меняется цен: %d" % len(changes))
     for r, cur, a, b in changes[:15]:
@@ -280,6 +302,8 @@ def main():
     pr.add_argument("--base-plan", default="monthly")
     pr.add_argument("--eur", type=float, default=29.99, help="цена в евро (как в App Store)")
     pr.add_argument("--usd", type=float, default=34.99, help="цена в долларах")
+    pr.add_argument("--set", action="append", metavar="СТРАНА=ЦЕНА",
+                    help="цена для отдельной страны в её валюте, например CA=34.99 (можно несколько)")
     pr.add_argument("--regions-version", help="версия справочника регионов Play, например 2025/03")
     pr.add_argument("--yes", action="store_true", help="действительно применить")
     a = ap.parse_args()
