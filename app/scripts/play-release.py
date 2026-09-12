@@ -175,6 +175,92 @@ def cmd_release(args):
     with_edit(tok, run)
 
 
+# Валюты без копеек: цену округляем к сотням, иначе Play её не примет.
+ZERO_DEC = {"JPY", "KRW", "VND", "CLP", "PYG", "ISK", "UGX", "TZS", "RWF", "XAF", "XOF", "KMF", "DJF", "GNF", "VUV"}
+
+
+def _money(cur, value):
+    """Красивая цена в валюте: 28,99 / 4900 — с учётом валют без копеек."""
+    if cur in ZERO_DEC:
+        n = max(100, int(round(value / 100.0)) * 100)
+        return n, 0
+    n = max(1, int(round(value)))
+    return (n - 1, 990000000) if n >= 2 else (0, 990000000)
+
+
+def cmd_prices(args):
+    """Выровнять цены подписки: евро и доллар — как в App Store, остальные — пропорционально."""
+    tok = token()
+    url = "%s/subscriptions/%s" % (API, args.product)
+    sub = call(tok, url)
+    changes, ratio_src = [], None
+    for bp in sub.get("basePlans", []):
+        if args.base_plan and bp.get("basePlanId") != args.base_plan:
+            continue
+        for rc in bp.get("regionalConfigs", []):
+            p = rc.get("price") or {}
+            cur = p.get("currencyCode")
+            old_v = int(p.get("units") or 0) + (p.get("nanos") or 0) / 1e9
+            if cur == "EUR":
+                new_v = args.eur
+                if ratio_src is None and old_v:
+                    ratio_src = args.eur / old_v   # пропорция берётся от евро: было 35,99 → стало 29,99
+            elif cur == "USD":
+                new_v = args.usd
+            else:
+                new_v = None
+            if new_v is not None:
+                u, n = _money(cur, new_v)
+                rc["price"] = {"currencyCode": cur, "units": str(u), "nanos": n}
+                changes.append((rc["regionCode"], cur, old_v, u + n / 1e9))
+    # остальные валюты — в той же пропорции, что и евро
+    if ratio_src:
+        for bp in sub.get("basePlans", []):
+            if args.base_plan and bp.get("basePlanId") != args.base_plan:
+                continue
+            for rc in bp.get("regionalConfigs", []):
+                p = rc.get("price") or {}
+                cur = p.get("currencyCode")
+                if cur in ("EUR", "USD"):
+                    continue
+                old_v = int(p.get("units") or 0) + (p.get("nanos") or 0) / 1e9
+                u, n = _money(cur, old_v * ratio_src)
+                new_v = u + n / 1e9
+                if abs(new_v - old_v) > 1e-9:
+                    rc["price"] = {"currencyCode": cur, "units": str(u), "nanos": n}
+                    changes.append((rc["regionCode"], cur, old_v, new_v))
+    print("Пропорция от евро: %.4f" % (ratio_src or 0))
+    print("Меняется цен: %d" % len(changes))
+    for r, cur, a, b in changes[:15]:
+        print("  %-3s %-4s %10.2f → %.2f" % (r, cur, a, b))
+    if len(changes) > 15:
+        print("  … и ещё %d стран" % (len(changes) - 15))
+    if not args.yes:
+        print("\nЧерновой прогон. Ничего не изменено. Добавьте --yes, чтобы применить.")
+        return
+    # Версия справочника регионов: в продукте её нет, а зашитая «2022/02» не знает, что Болгария
+    # перешла на евро («Expected BGN but got EUR», 2026-09-12). Перебираем известные версии и
+    # останавливаемся на первой, которую Google принимает.
+    # Актуальная версия на 2026-09-12 — 2025/03 (её называет сам Google в тексте ошибки, когда
+    # версия неверна: «latest value is ...»). Список — на случай, если Google выпустит новую.
+    tries = [args.regions_version, (sub.get("regionsVersion") or {}).get("version"),
+             "2025/03", "2025/02", "2025/01", "2022/02"]
+    last = None
+    for rv in [x for i, x in enumerate(tries) if x and x not in tries[:i]]:
+        r = urllib.request.Request(url + "?updateMask=basePlans&regionsVersion.version=" + urllib.parse.quote(rv),
+                                   method="PATCH", data=json.dumps(sub).encode(),
+                                   headers={"Authorization": "Bearer " + tok, "Content-Type": "application/json"})
+        try:
+            urllib.request.urlopen(r, timeout=60).read()
+            print("\nЦены обновлены (справочник регионов %s)." % rv)
+            return
+        except urllib.error.HTTPError as e:
+            last = "%s: %s" % (rv, e.read().decode()[:200])
+            print("  версия %s не подошла" % rv)
+    sys.exit("Не удалось обновить цены. Последняя ошибка — " + str(last))
+    print("\nЦены обновлены." if "_err" not in out else out)
+
+
 def main():
     ap = argparse.ArgumentParser(description="Треки Google Play и выкладка сборки в трек")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -189,8 +275,15 @@ def main():
     u.add_argument("--track", required=True, help='имя трека, например "1.0 (1) — закрытый тест"')
     u.add_argument("--notes", help="JSON с примечаниями (по умолчанию app/store/release-notes.json)")
     u.add_argument("--yes", action="store_true", help="действительно загрузить и выложить")
+    pr = sub.add_parser("prices", help="выровнять цены подписки по всем странам")
+    pr.add_argument("--product", default="via_l_pro_monthly")
+    pr.add_argument("--base-plan", default="monthly")
+    pr.add_argument("--eur", type=float, default=29.99, help="цена в евро (как в App Store)")
+    pr.add_argument("--usd", type=float, default=34.99, help="цена в долларах")
+    pr.add_argument("--regions-version", help="версия справочника регионов Play, например 2025/03")
+    pr.add_argument("--yes", action="store_true", help="действительно применить")
     a = ap.parse_args()
-    {"status": cmd_status, "release": cmd_release, "upload": cmd_upload}[a.cmd](a)
+    {"status": cmd_status, "release": cmd_release, "upload": cmd_upload, "prices": cmd_prices}[a.cmd](a)
 
 
 if __name__ == "__main__":
