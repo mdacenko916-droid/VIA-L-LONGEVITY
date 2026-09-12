@@ -1532,17 +1532,20 @@ export default {
   // его должен человек кнопкой в приложении, а не очередь молча.
   async queue(batch, env, ctx) {
     for (const msg of batch.messages) {
-      const { job, body } = msg.body || {};
-      const jkey = _anJobKey(body && body.cid, body && body.day);
+      const { kind, job, body } = msg.body || {};
+      const isPlan = kind === 'dayplan';
+      const jkey = (isPlan ? _dpJobKey : _anJobKey)(body && body.cid, body && body.day);
       let out = null;
-      try { out = await _analyzeCore(body || {}, env, ctx); }
-      catch (e) { console.error('analyze queue: failed', e && e.message); }
+      try { out = await (isPlan ? _dayPlanCore : _analyzeCore)(body || {}, env, ctx); }
+      catch (e) { console.error((isPlan ? 'day-plan' : 'analyze') + ' queue: failed', e && e.message); }
       try {
         // Новое задание того же дня (кнопка повтора) могло заменить метку — старое её не перетирает.
         const cur = JSON.parse(await env.ANALYSIS_CACHE.get(jkey) || 'null');
         if (!cur || cur.job === job) {
-          await env.ANALYSIS_CACHE.put(jkey, JSON.stringify(out && out.analysis
-            ? { job, status: 'done', analysis: out.analysis, ts: Date.now() }
+          const ok = out && (isPlan ? out.plan : out.analysis);
+          await env.ANALYSIS_CACHE.put(jkey, JSON.stringify(ok
+            ? (isPlan ? { job, status: 'done', plan: out.plan, ts: Date.now() }
+                      : { job, status: 'done', analysis: out.analysis, ts: Date.now() })
             : { job, status: 'failed', ts: Date.now() }), { expirationTtl: 72 * 3600 });
         }
       } catch (e) { console.error('analyze queue: marker', e && e.message); }
@@ -3075,9 +3078,12 @@ async function handleAnalysisCache(request, env, corsHeaders) {
   // утренний разбор из `an:` вместо своего.
   const job = (u.searchParams.get('job') || '').slice(0, 64);
   if (job) {
-    let m = null; try { m = JSON.parse(await env.ANALYSIS_CACHE.get(_anJobKey(cid, day)) || 'null'); } catch (_) {}
+    const wantPlan = u.searchParams.get('kind') === 'plan';   // та же ручка отдаёт и памятку дня
+    const key = wantPlan ? _dpJobKey(cid, day) : _anJobKey(cid, day);
+    let m = null; try { m = JSON.parse(await env.ANALYSIS_CACHE.get(key) || 'null'); } catch (_) {}
     const mine = m && m.job === job;
-    const res = (mine && m.status === 'done' && m.analysis) ? { ok: true, analysis: m.analysis }
+    const ready = mine && m.status === 'done' && (wantPlan ? m.plan : m.analysis);
+    const res = ready ? (wantPlan ? { ok: true, plan: m.plan } : { ok: true, analysis: m.analysis })
               : (mine && m.status === 'failed') ? { ok: false, failed: true }
               : { ok: false, pending: true };
     return new Response(JSON.stringify(res), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -3185,8 +3191,33 @@ function _enforceExerciseVetoes(plan, data) {
   return plan;
 }
 
+// Метка фоновой памятки дня — та же схема, что у разбора (см. _anJobKey).
+function _dpJobKey(cid, day) {
+  return 'dpj:' + String(cid || '').slice(0, 64) + ':' + String(day || '').slice(0, 10);
+}
+
 async function handleDayPlan(request, env, corsHeaders, ctx) {
-  const { data, lang, tier, src } = await request.json();
+  const body = await request.json();
+  // Фоновый режим (приложение шлёт bg:true с 2026-09-12). Памятка генерится до ~90 с, а Cloudflare
+  // обрывает работу через 30 с после ухода клиента: свёрнутое приложение теряло её, и клиент просил
+  // заново — 4 платных вызова подряд (живой случай 2026-09-11 23:17). Теперь через очередь, как разбор.
+  if (body && body.bg && body.cid && body.day && env.ANALYSIS_QUEUE && env.ANALYSIS_CACHE) {
+    const job = crypto.randomUUID();
+    try {
+      await env.ANALYSIS_CACHE.put(_dpJobKey(body.cid, body.day),
+        JSON.stringify({ job, status: 'pending', ts: Date.now() }), { expirationTtl: 72 * 3600 });
+      await env.ANALYSIS_QUEUE.send({ kind: 'dayplan', job, body });
+      return jsonResponse({ ok: true, job }, corsHeaders);
+    } catch (e) {
+      console.error('day-plan: queue send failed', e && e.message);   // очередь не приняла — считаем в запросе
+    }
+  }
+  return jsonResponse(await _dayPlanCore(body, env, ctx), corsHeaders);
+}
+
+// Ядро памятки — общее для запроса и для очереди. Возвращает {plan} или {error}.
+async function _dayPlanCore(body, env, ctx) {
+  const { data, lang, tier, src } = body || {};
   const _src = 'src:' + String(src || 'pass').slice(0, 16);   // кто позвал памятку — см. /analyze
   const langMap = {
     ru: 'русском', uk: 'украинском', en: 'English', es: 'español',
@@ -3329,9 +3360,7 @@ async function handleDayPlan(request, env, corsHeaders, ctx) {
   // Язык памятки — тем же принципом, что и разборы, но по строкам структуры (см. _enforceLangPlan).
   if (plan) plan = await _enforceLangPlan(plan, lang, env, ctx);
 
-  return new Response(JSON.stringify(plan ? { plan } : { error: 'parse', raw: raw.slice(0, 300) }), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
+  return plan ? { plan } : { error: 'parse', raw: raw.slice(0, 300) };
 }
 
 // ─────────────────────────────────────────────────────────────

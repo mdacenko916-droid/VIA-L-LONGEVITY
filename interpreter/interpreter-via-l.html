@@ -11406,11 +11406,49 @@ async function fetchDayPlan(data){
   var cached=_dpToday(_lg,sig);
   if(cached){ window._bpAILoading=false; window._bpAI=cached; renderDayBlueprint(data); return; }   // из кэша, без API
   try{
-    var res=await fetch(AI_WORKER+'/day-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:data,lang:_lg,tier:'pro',src:((typeof _rerendering!=='undefined'&&_rerendering)?'lang':'pass')})});
+    var _day=_dayKey();
+    // Памятка уже заказана (её считает очередь) — ждём ЕЁ, а не платим за новый вызов. Это же
+    // подхватывает задание после перезапуска приложения: номер лежит в localStorage.
+    var _pj=null; try{ _pj=JSON.parse(localStorage.getItem('vialp_dp_job')||'null'); }catch(e){}
+    if(_pj && _pj.job && _pj.day===_day && _pj.lang===_lg && Date.now()-_pj.ts < 10*60*1000){
+      var _j0=await _dpAwaitJob(_day,_lg,_pj.job,_pj.ts);
+      window._bpAILoading=false;
+      if(_j0&&_j0.plan&&_j0.plan.morning){ var cp0=_cleanPlan(_j0.plan); _dpSave(cp0,_lg,sig); window._bpAI=cp0; renderDayBlueprint(data); }
+      return;
+    }
+    var res=await fetch(AI_WORKER+'/day-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:data,lang:_lg,tier:'pro',src:((typeof _rerendering!=='undefined'&&_rerendering)?'lang':'pass'),cid:_cid(),day:_day,bg:true})});
     var json=await res.json();
+    // Фоновая памятка (2026-09-12): сервер сразу отвечает номером задания и считает в очереди.
+    // Свёрнутое приложение больше не обрывает её, и повторных платных вызовов нет.
+    if(json&&json.job) json=await _dpAwaitJob(_day,_lg,json.job);
     window._bpAILoading=false;
     if(json&&json.plan&&typeof json.plan==='object'&&json.plan.morning){ var cp=_cleanPlan(json.plan); _dpSave(cp,_lg,sig); window._bpAI=cp; renderDayBlueprint(data); }   // сохранить план дня → повторные заходы без API
   }catch(e){ window._bpAILoading=false; }
+}
+// Ожидание фоновой памятки по номеру задания: опрос раз в 5 с, срок 10 минут ПО ЧАСАМ (в свёрнутом
+// приложении таймеры стоят — после возврата цикл продолжается). Номер задания лежит в localStorage,
+// поэтому и после перезапуска приложение дождётся уже оплаченной памятки, а не закажет новую.
+function _dpAwaitJob(day, lg, job, ts){
+  if(window._dpJobP && window._dpJobP.job===job) return window._dpJobP.p;   // перерисовка не плодит опросы
+  var start=ts||Date.now();
+  try{ localStorage.setItem('vialp_dp_job', JSON.stringify({day:day, lang:lg, job:job, ts:start})); }catch(e){}
+  var p=(async function(){
+    var cid=_cid(), res={};
+    while(Date.now()-start < 10*60*1000){
+      await new Promise(function(r){ setTimeout(r, 5000); });
+      try{
+        var r=await fetch(AI_WORKER+'/analysis-cache?kind=plan&cid='+encodeURIComponent(cid)+'&day='+encodeURIComponent(day)+'&job='+encodeURIComponent(job));
+        var j=await r.json();
+        if(j&&j.ok&&j.plan){ res={plan:j.plan}; break; }
+        if(j&&j.failed) break;
+      }catch(e){}   // сеть моргнула — следующий круг
+    }
+    try{ localStorage.removeItem('vialp_dp_job'); }catch(e){}
+    window._dpJobP=null;
+    return res;
+  })();
+  window._dpJobP={job:job, p:p};
+  return p;
 }
 // Дисклеймер внутри модалки главы (RC2-бэклог: на экране-родителе был, в самой модалке — нет)
 function _bpDisc(){
@@ -11428,6 +11466,14 @@ function openBpChapter(id){
   var data=window._bpData||{}, chs=_bpChapters(), meta=null;
   for(var i=0;i<chs.length;i++) if(chs[i].id===id) meta=chs[i];
   if(!meta)return;
+  // Главы с едой без персонального плана — это запасное меню: общие блюда без фото и БЖУ. Пока план
+  // в пути (разбор ещё идёт или памятка считается), честнее сказать, что меню готовится: владелец
+  // принял запасной список за «модель выдумывает блюда» (2026-09-11).
+  if(!window._bpAI && (window._bpAILoading || window._anLoading) && ['morning','lunch','evening'].indexOf(id)>=0){
+    openSheet(meta.icon, meta.title,
+      '<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.7;padding:6px 0;">'+_esc(L({ru:'Персональное меню готовится — появится здесь через минуту-две. Приложение можно свернуть.',uk:'Персональне меню готується — з’явиться тут за хвилину-дві. Застосунок можна згорнути.',en:'Your personal menu is being prepared — it will appear here in a minute or two. You can leave the app.',es:'Tu menú personal se está preparando: aparecerá aquí en un minuto o dos. Puedes salir de la app.',de:'Dein persönliches Menü wird erstellt — es erscheint hier in ein bis zwei Minuten. Du kannst die App verlassen.',pt:'O seu menu pessoal está a ser preparado — aparecerá aqui dentro de um ou dois minutos. Pode sair da app.',fr:'Votre menu personnel est en préparation — il apparaîtra ici dans une à deux minutes. Vous pouvez quitter l’application.',pl:'Twoje osobiste menu jest przygotowywane — pojawi się tutaj za minutę lub dwie. Możesz wyjść z aplikacji.',it:'Il tuo menu personale è in preparazione — apparirà qui tra un minuto o due. Puoi uscire dall’app.',he:'התפריט האישי שלכם בהכנה — הוא יופיע כאן בעוד דקה-שתיים. אפשר לצאת מהאפליקציה.',ja:'あなた専用のメニューを準備中です。1〜2分でここに表示されます。アプリを閉じても大丈夫です。',ko:'개인 맞춤 메뉴를 준비하고 있어요. 1~2분 후 여기에 표시됩니다. 앱을 나가도 괜찮습니다.'}))+'</div>'+_bpDisc());
+    return;
+  }
   var secs=(window._bpAI && Array.isArray(window._bpAI[id])) ? window._bpAI[id] : _bpChapterData(id,data);
   openSheet(meta.icon, meta.title, _bpRenderSecs(secs)+_bpDisc());
 }
