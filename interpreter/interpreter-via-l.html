@@ -10921,10 +10921,18 @@ function _bpChapters(){
     {id:'evening', icon:'<i class="ph ph-moon" style="color:var(--gold-lt);"></i>', pr:'🌙', title:L({ru:'Вечер',uk:'Вечір',en:'Evening',es:'Noche',de:'Abend',pt:'Noite',fr:'Soir',pl:'Wieczór',it:'Sera',he:'ערב',ja:'夜',ko:'저녁'}), teaser:L({ru:'Ужин за 3 ч до сна • добавки',uk:'Вечеря за 3 год до сну • добавки',en:'Dinner ~3 h before sleep • supplements',es:'Cena ~3 h antes de dormir • suplementos',de:'Abendessen ~3 Std vor dem Schlafen • Präparate',pt:'Jantar ~3 h antes de dormir • suplementos',fr:'Dîner ~3 h avant le coucher • compléments',pl:'Kolacja ~3 h przed snem • suplementy',it:'Cena ~3 h prima di dormire • integratori',he:'ארוחת ערב ~3 שעות לפני השינה • תוספים',ja:'就寝3時間前の夕食 • サプリ',ko:'취침 3시간 전 저녁 • 보충제'})},
     {id:'sleep',   icon:'<i class="ph ph-bed" style="color:var(--gold-lt);"></i>', pr:'😴', title:L({ru:'Сон',uk:'Сон',en:'Sleep',es:'Sueño',de:'Schlaf',pt:'Sono',fr:'Sommeil',pl:'Sen',it:'Sonno',he:'שינה',ja:'睡眠',ko:'수면'}), teaser:L({ru:'Поведенческие ориентиры вечера',uk:'Поведінкові орієнтири вечора',en:'Evening behavior tips',es:'Pautas de conducta para la noche',de:'Verhaltenstipps für den Abend',pt:'Dicas de comportamento para a noite',fr:'Repères comportementaux du soir',pl:'Wskazówki wieczorne',it:'Consigli comportamentali serali',he:'הרגלי ערב מומלצים',ja:'夜の行動のヒント',ko:'저녁 행동 팁'})}
   ];
-  // Глава «Разбор дня · что важно именно сегодня» УБРАНА 2026-08-06: это был тот же текст, что и
-  // в карточке «Разбор дня от VIA·L» прямо над памяткой — человек видел один разбор дважды подряд.
-  // Памятка отвечает на «что делать по часам», разбор — на «что происходит»; смешивать их незачем.
-  // Ветка openSheet('analysis') оставлена (мертва, но безобидна) — вернуть главу можно из git.
+  // Глава «Разбор дня» убиралась 2026-08-06 как дубль карточки над памяткой. Возвращена 2026-09-12
+  // (просьба владельца): с фоновым разбором памятку открывают РАНЬШЕ, чем разбор готов, и человеку
+  // нужно видеть прямо здесь, что он ещё считается, а когда готов — открыть его отсюда же.
+  var _an=''; try{ var _ae=_aiDayEntry(_dayKey()); if(_ae&&_ae.analysis)_an=_ae.analysis; }catch(e){}
+  var _anWait=false;
+  if(!_an){ var _pj=null; try{ _pj=JSON.parse(localStorage.getItem('vialp_an_job')||'null'); }catch(e){}
+    _anWait=!!window._anLoading || !!(_pj && _pj.day===_dayKey() && Date.now()-_pj.ts < 10*60*1000); }
+  if(_an || _anWait) chs.unshift({id:'analysis', icon:'<i class="ph ph-brain" style="color:var(--gold-lt);"></i>', pr:'🧠',
+    title:L({ru:'Разбор дня',uk:'Розбір дня',en:'Today’s analysis',es:'Análisis del día',de:'Analyse des Tages',pt:'Análise do dia',fr:'Analyse du jour',pl:'Analiza dnia',it:'Analisi del giorno',he:'ניתוח היום',ja:'今日の分析',ko:'오늘의 분석'}),
+    teaser: _an
+      ? L({ru:'Что происходит именно сегодня',uk:'Що відбувається саме сьогодні',en:'What is going on today',es:'Qué pasa hoy',de:'Was heute los ist',pt:'O que acontece hoje',fr:'Ce qui se passe aujourd’hui',pl:'Co dzieje się dzisiaj',it:'Cosa succede oggi',he:'מה קורה היום',ja:'今日の状態',ko:'오늘의 상태'})
+      : L({ru:'Готовится…',uk:'Готується…',en:'Being prepared…',es:'Preparándose…',de:'Wird erstellt…',pt:'A preparar…',fr:'En préparation…',pl:'Przygotowywana…',it:'In preparazione…',he:'בהכנה…',ja:'準備中…',ko:'준비 중…'})});
   return chs;
 }
 function _bpChapterData(id, data){
@@ -11461,6 +11469,12 @@ function openBpChapter(id){
   if(id==='analysis'){   // полный текст сегодняшнего ИИ-разбора (кэш дня), не secs-структура
     try{
       var _ae=_aiDayEntry(_dayKey());
+      // Разбора ещё нет: раньше нажатие просто не открывало ничего. Теперь честное ожидание.
+      if(!(_ae&&_ae.analysis)){
+        openSheet('<i class="ph ph-brain" style="color:var(--gold-lt);"></i>', L({ru:'Разбор дня',uk:'Розбір дня',en:'Today’s analysis',es:'Análisis del día',de:'Analyse des Tages',pt:'Análise do dia',fr:'Analyse du jour',pl:'Analiza dnia',it:'Analisi del giorno',he:'ניתוח היום',ja:'今日の分析',ko:'오늘의 분석'}),
+          '<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.7;padding:6px 0;">'+_esc(L({ru:'Разбор готовится — он появится здесь сам. Приложение можно свернуть.',uk:'Розбір готується — він з’явиться тут сам. Застосунок можна згорнути.',en:'Your analysis is being prepared — it will appear here. You can leave the app.',es:'Tu análisis se está preparando — aparecerá aquí. Puedes salir de la app.',de:'Deine Auswertung wird erstellt — sie erscheint hier. Du kannst die App verlassen.',pt:'A sua análise está a ser preparada — aparecerá aqui. Pode sair da app.',fr:'Votre bilan est en préparation — il apparaîtra ici. Vous pouvez quitter l’application.',pl:'Analiza jest przygotowywana — pojawi się tutaj. Możesz wyjść z aplikacji.',it:'La tua analisi è in preparazione — apparirà qui. Puoi uscire dall’app.',he:'הניתוח שלכם בהכנה — הוא יופיע כאן. אפשר לצאת מהאפליקציה.',ja:'分析を準備中です。ここに表示されます。アプリを閉じても大丈夫です。',ko:'분석을 준비하고 있어요. 여기에 표시됩니다. 앱을 나가도 괜찮습니다.'}))+'</div>'+_bpDisc());
+        return;
+      }
       if(_ae&&_ae.analysis) openSheet('<i class="ph ph-brain" style="color:var(--gold-lt);"></i>', L({ru:'Разбор дня',uk:'Розбір дня',en:'Today’s analysis',es:'Análisis del día',de:'Analyse des Tages',pt:'Análise do dia',fr:'Analyse du jour',pl:'Analiza dnia',it:'Analisi del giorno',he:'ניתוח היום',ja:'今日の分析',ko:'오늘의 분석'}),
         '<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.85;white-space:pre-wrap;padding-top:6px;">'+_renderAnalysis(_ae.analysis)+'</div>'+_bpDisc());
     }catch(e){}
