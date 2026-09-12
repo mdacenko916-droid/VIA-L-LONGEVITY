@@ -9698,7 +9698,23 @@ function _renderDayFromSnap(snap, todayFlag){
       r.style.display='block';
       r.innerHTML='<div style="color:var(--t3);font-size:var(--fs-body);">'+_esc(L({ru:'Ищем ваш разбор…',uk:'Шукаємо ваш розбір…',en:'Looking for your analysis…',es:'Buscando tu análisis…',de:'Wir suchen deine Auswertung…',pt:'Procurando sua análise…',fr:'Recherche de votre bilan…',pl:'Szukamy Twojej analizy…',it:'Cerchiamo la tua analisi…',he:'מחפשים את הניתוח שלכם…',ja:'分析を探しています…',ko:'분석을 찾는 중…'}))+'</div>';
       (function(_day,_r,_disc,_isToday){
-        (typeof _aiFromServer==='function'?_aiFromServer(_day):Promise.resolve('')).then(function(txt){
+        // Разбор ещё в пути — ждём его, а не пишем «не сохранён» с платной кнопкой повтора.
+        var _pj=null; try{ _pj=JSON.parse(localStorage.getItem('viae_an_job')||'null'); }catch(e){}
+        var _jobLive=!!(_pj && _pj.job && _pj.day===_day && Date.now()-_pj.ts < 10*60*1000);
+        if(_isToday && (window._anLoading || _jobLive)){
+          _r.innerHTML='<div style="color:var(--t3);font-size:var(--fs-body);">'+_esc(L({ru:'Разбор готовится — он появится здесь сам. Приложение можно свернуть.',uk:'Розбір готується — він з’явиться тут сам. Застосунок можна згорнути.',en:'Your analysis is being prepared — it will appear here. You can leave the app.',es:'Tu análisis se está preparando — aparecerá aquí. Puedes salir de la app.',de:'Deine Auswertung wird erstellt — sie erscheint hier. Du kannst die App verlassen.',pt:'A sua análise está a ser preparada — aparecerá aqui. Pode sair da app.',fr:'Votre bilan est en préparation — il apparaîtra ici. Vous pouvez quitter l’application.',pl:'Analiza jest przygotowywana — pojawi się tutaj. Możesz wyjść z aplikacji.',it:'La tua analisi è in preparazione — apparirà qui. Puoi uscire dall’app.',he:'הניתוח שלכם בהכנה — הוא יופיע כאן. אפשר לצאת מהאפליקציה.',ja:'分析を準備中です。ここに表示されます。アプリを閉じても大丈夫です。',ko:'분석을 준비하고 있어요. 여기에 표시됩니다. 앱을 나가도 괜찮습니다.'}))+'</div>';
+          if(window._anLoading) return;
+          _aiAwaitJob(_day,_pj.job,_pj.ts).then(function(o){
+            if(o&&o.analysis){
+              try{ if(typeof _aiDailySaveDay==='function')_aiDailySaveDay(_day,o.analysis); }catch(e){}
+              _r.innerHTML=(typeof _renderAnalysis==='function')?_renderAnalysis(o.analysis):_esc(o.analysis);
+              if(_disc)_disc.style.display='block';
+            } else { _showMissing(''); }
+          });
+          return;
+        }
+        (typeof _aiFromServer==='function'?_aiFromServer(_day):Promise.resolve('')).then(_showMissing);
+        function _showMissing(txt){
           if(txt){
             _r.innerHTML=(typeof _renderAnalysis==='function')?_renderAnalysis(txt):_esc(txt);
             if(_disc)_disc.style.display='block';
@@ -9708,7 +9724,7 @@ function _renderDayFromSnap(snap, todayFlag){
           // Повторить можно только СЕГОДНЯШНИЙ день: для прошлых дней живых полей уже нет.
           var _btn=_isToday?('<button type="button" onclick="_aiRetryToday(this)" style="margin-top:12px;background:var(--gold);color:#10141C;border:none;border-radius:10px;padding:10px 18px;font-size:var(--fs-body);font-weight:600;cursor:pointer;font-family:inherit;">'+_esc(L({ru:'Получить разбор заново',uk:'Отримати розбір заново',en:'Get the analysis again',es:'Obtener el análisis de nuevo',de:'Auswertung erneut anfordern',pt:'Obter a análise novamente',fr:'Relancer le bilan',pl:'Pobierz analizę ponownie',it:'Rigenera l’analisi',he:'לקבל את הניתוח מחדש',ja:'分析をもう一度取得',ko:'분석 다시 받기'}))+'</button>'):'';
           _r.innerHTML='<div style="color:var(--t3);font-size:var(--fs-body);">'+_msg+'</div>'+_btn;
-        });
+        }
       })(snap.day, r, disc, snap.day===_dayKey());
     }
     if(load)load.style.display='none'; }
@@ -11456,15 +11472,19 @@ async function fetchAIAnalysis(data, lang, src) {
   }
   window._anLoading = true;   // пока разбор в пути, памятка дня не стартует (общий кэш промпта, см. renderDayBlueprint)
   try {
+    const _day = _dayKey();
     const res = await fetch(AI_WORKER, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       // code → воркер кладёт дневной разбор и срез метрик в карточку кабинета
       // (cabinetIngestIpAnalysis). Без него специалист видел только недельные отчёты
       // и не имел дневной динамики — ради которой ведение и существует.
-      body: JSON.stringify({ data, lang, code: _syncCode(), tier: 'elite', structured: true, cid: _cid(), day: _dayKey(), src: src||'pass' }),   // cid+day — чтобы разбор можно было забрать с сервера, если ответ не доедет
+      body: JSON.stringify({ data, lang, code: _syncCode(), tier: 'elite', structured: true, cid: _cid(), day: _day, src: src||'pass', bg: true }),   // cid+day — чтобы разбор можно было забрать с сервера, если ответ не доедет
     });
-    const json = await res.json();
+    let json = await res.json();
+    // Фоновый разбор (перенос из VIA-L, 2026-09-12): сервер сразу отвечает номером задания и
+    // считает в очереди, мы ждём опросом. Свёрнутое приложение больше не обрывает разбор.
+    if (json.job) json = await _aiAwaitJob(_day, json.job);
     if (json.analysis) {
       window._anLang = lang;   // язык показанного разбора: смена языка на ТОТ ЖЕ больше не платит
       try{if(typeof _aiDailySave==='function')_aiDailySave(json.analysis);}catch(e){}
@@ -11544,10 +11564,17 @@ function _bpChapters(){
     {id:'evening', icon:'<i class="ph ph-moon" style="color:var(--gold-lt);"></i>', pr:'🌙', title:L({ru:'Вечер',uk:'Вечір',en:'Evening',es:'Noche',de:'Abend',pt:'Noite',fr:'Soir',pl:'Wieczór',it:'Sera',he:'ערב',ja:'夜',ko:'저녁'}), teaser:L({ru:'Ужин за 3 ч до сна • добавки',uk:'Вечеря за 3 год до сну • добавки',en:'Dinner ~3 h before sleep • supplements',es:'Cena ~3 h antes de dormir • suplementos',de:'Abendessen ~3 Std vor dem Schlafen • Präparate',pt:'Jantar ~3 h antes de dormir • suplementos',fr:'Dîner ~3 h avant le coucher • compléments',pl:'Kolacja ~3 h przed snem • suplementy',it:'Cena ~3 h prima di dormire • integratori',he:'ארוחת ערב ~3 שעות לפני השינה • תוספים',ja:'就寝3時間前の夕食 • サプリ',ko:'취침 3시간 전 저녁 • 보충제'})},
     {id:'sleep',   icon:'<i class="ph ph-bed" style="color:var(--gold-lt);"></i>', pr:'😴', title:L({ru:'Сон',uk:'Сон',en:'Sleep',es:'Sueño',de:'Schlaf',pt:'Sono',fr:'Sommeil',pl:'Sen',it:'Sonno',he:'שינה',ja:'睡眠',ko:'수면'}), teaser:L({ru:'Поведенческие ориентиры вечера',uk:'Поведінкові орієнтири вечора',en:'Evening behavior tips',es:'Pautas de conducta para la noche',de:'Verhaltenstipps für den Abend',pt:'Dicas de comportamento para a noite',fr:'Repères comportementaux du soir',pl:'Wskazówki wieczorne',it:'Consigli comportamentali serali',he:'הרגלי ערב מומלצים',ja:'夜の行動のヒント',ko:'저녁 행동 팁'})}
   ];
-  // Глава «Разбор дня · что важно именно сегодня» УБРАНА 2026-08-06: это был тот же текст, что и
-  // в карточке «Разбор дня от VIA·L» прямо над памяткой — человек видел один разбор дважды подряд.
-  // Памятка отвечает на «что делать по часам», разбор — на «что происходит»; смешивать их незачем.
-  // Ветка openSheet('analysis') оставлена (мертва, но безобидна) — вернуть главу можно из git.
+  // Глава «Разбор дня» убиралась 2026-08-06 как дубль карточки над памяткой. Возвращена 2026-09-12
+  // (просьба владельца): с фоновым разбором памятку открывают РАНЬШЕ, чем разбор готов.
+  var _an=''; try{ var _ae2=_aiDayEntry(_dayKey()); if(_ae2&&_ae2.analysis)_an=_ae2.analysis; }catch(e){}
+  var _anWait=false;
+  if(!_an){ var _pj2=null; try{ _pj2=JSON.parse(localStorage.getItem('viae_an_job')||'null'); }catch(e){}
+    _anWait=!!window._anLoading || !!(_pj2 && _pj2.day===_dayKey() && Date.now()-_pj2.ts < 10*60*1000); }
+  if(_an || _anWait) chs.unshift({id:'analysis', icon:'<i class="ph ph-brain" style="color:var(--gold-lt);"></i>', pr:'🧠',
+    title:L({ru:'Разбор дня',uk:'Розбір дня',en:'Today’s analysis',es:'Análisis del día',de:'Analyse des Tages',pt:'Análise do dia',fr:'Analyse du jour',pl:'Analiza dnia',it:'Analisi del giorno',he:'ניתוח היום',ja:'今日の分析',ko:'오늘의 분석'}),
+    teaser: _an
+      ? L({ru:'Что происходит именно сегодня',uk:'Що відбувається саме сьогодні',en:'What is going on today',es:'Qué pasa hoy',de:'Was heute los ist',pt:'O que acontece hoje',fr:'Ce qui se passe aujourd’hui',pl:'Co dzieje się dzisiaj',it:'Cosa succede oggi',he:'מה קורה היום',ja:'今日の状態',ko:'오늘의 상태'})
+      : L({ru:'Готовится…',uk:'Готується…',en:'Being prepared…',es:'Preparándose…',de:'Wird erstellt…',pt:'A preparar…',fr:'En préparation…',pl:'Przygotowywana…',it:'In preparazione…',he:'בהכנה…',ja:'準備中…',ko:'준비 중…'})});
   return chs;
 }
 function _bpChapterData(id, data){
@@ -11897,7 +11924,10 @@ function renderDayBlueprint(data){
   // Разбор дождётся и сам дёрнет перерисовку — тогда памятка прочитает шапку вместо записи.
   // Для человека ничего не меняется: базовая памятка на экране с самого начала, ИИ-версия
   // подъезжает молча, пока он читает разбор.
-  if(!window._bpAI && !window._bpAILoading && !window._anLoading && !window._bpNoFetch && typeof fetchDayPlan==='function') fetchDayPlan(data);
+  // Памятка сегодня уже не сложилась (сервер не собрал JSON даже с повтором) — не заказываем её
+  // при каждой перерисовке: так набегали платные вызовы. Сбрасывается на следующий день.
+  var _dpFail=false; try{ _dpFail=localStorage.getItem('viae_dp_fail')===_dayKey(); }catch(e){}
+  if(!window._bpAI && !window._bpAILoading && !window._anLoading && !window._bpNoFetch && !_dpFail && typeof fetchDayPlan==='function') fetchDayPlan(data);
 }
 function _cleanPlan(p){
   // сетка безопасности: убрать редкие проскоки исследовательской лексики из ИИ-JSON.
@@ -11925,11 +11955,46 @@ async function fetchDayPlan(data){
   var cached=_dpToday(_lg,sig);
   if(cached){ window._bpAILoading=false; window._bpAI=cached; renderDayBlueprint(data); return; }   // из кэша, без API
   try{
-    var res=await fetch(AI_WORKER+'/day-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:data,lang:_lg,tier:'elite',src:((typeof _rerendering!=='undefined'&&_rerendering)?'lang':'pass')})});
+    var _day=_dayKey();
+    // Памятка уже заказана (её считает очередь) — ждём ЕЁ, а не платим за новый вызов; это же
+    // подхватывает задание после перезапуска: номер лежит в localStorage.
+    var _pj=null; try{ _pj=JSON.parse(localStorage.getItem('viae_dp_job')||'null'); }catch(e){}
+    if(_pj && _pj.job && _pj.day===_day && _pj.lang===_lg && Date.now()-_pj.ts < 10*60*1000){
+      var _j0=await _dpAwaitJob(_day,_lg,_pj.job,_pj.ts);
+      window._bpAILoading=false;
+      if(_j0&&_j0.plan&&_j0.plan.morning){ var cp0=_cleanPlan(_j0.plan); _dpSave(cp0,_lg,sig); window._bpAI=cp0; renderDayBlueprint(data); }
+      return;
+    }
+    var res=await fetch(AI_WORKER+'/day-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:data,lang:_lg,tier:'elite',src:((typeof _rerendering!=='undefined'&&_rerendering)?'lang':'pass'),cid:_cid(),day:_day,bg:true})});
     var json=await res.json();
+    // Фоновая памятка (перенос из VIA-L, 2026-09-12): номер задания → опрос, сворачивание не рвёт.
+    if(json&&json.job) json=await _dpAwaitJob(_day,_lg,json.job);
     window._bpAILoading=false;
     if(json&&json.plan&&typeof json.plan==='object'&&json.plan.morning){ var cp=_cleanPlan(json.plan); _dpSave(cp,_lg,sig); window._bpAI=cp; renderDayBlueprint(data); }   // сохранить план дня → повторные заходы без API
   }catch(e){ window._bpAILoading=false; }
+}
+// Ожидание фоновой памятки по номеру задания: опрос раз в 5 с, срок 10 минут ПО ЧАСАМ.
+function _dpAwaitJob(day, lg, job, ts){
+  if(window._dpJobP && window._dpJobP.job===job) return window._dpJobP.p;
+  var start=ts||Date.now();
+  try{ localStorage.setItem('viae_dp_job', JSON.stringify({day:day, lang:lg, job:job, ts:start})); }catch(e){}
+  var p=(async function(){
+    var cid=_cid(), res={};
+    while(Date.now()-start < 10*60*1000){
+      await new Promise(function(r){ setTimeout(r, 5000); });
+      try{
+        var r=await fetch(AI_WORKER+'/analysis-cache?kind=plan&cid='+encodeURIComponent(cid)+'&day='+encodeURIComponent(day)+'&job='+encodeURIComponent(job));
+        var j=await r.json();
+        if(j&&j.ok&&j.plan){ res={plan:j.plan}; break; }
+        if(j&&j.failed){ try{ localStorage.setItem('viae_dp_fail', day); }catch(e){} break; }
+      }catch(e){}
+    }
+    try{ localStorage.removeItem('viae_dp_job'); }catch(e){}
+    window._dpJobP=null;
+    return res;
+  })();
+  window._dpJobP={job:job, p:p};
+  return p;
 }
 // Дисклеймер внутри модалки главы (RC2-бэклог: на экране-родителе был, в самой модалке — нет)
 function _bpDisc(){
@@ -11939,6 +12004,12 @@ function openBpChapter(id){
   if(id==='analysis'){   // полный текст сегодняшнего ИИ-разбора (кэш дня), не secs-структура
     try{
       var _ae=_aiDayEntry(_dayKey());
+      // Разбора ещё нет: раньше нажатие не открывало ничего. Теперь честное ожидание.
+      if(!(_ae&&_ae.analysis)){
+        openSheet('<i class="ph ph-brain" style="color:var(--gold-lt);"></i>', L({ru:'Разбор дня',uk:'Розбір дня',en:'Today’s analysis',es:'Análisis del día',de:'Analyse des Tages',pt:'Análise do dia',fr:'Analyse du jour',pl:'Analiza dnia',it:'Analisi del giorno',he:'ניתוח היום',ja:'今日の分析',ko:'오늘의 분석'}),
+          '<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.7;padding:6px 0;">'+_esc(L({ru:'Разбор готовится — он появится здесь сам. Приложение можно свернуть.',uk:'Розбір готується — він з’явиться тут сам. Застосунок можна згорнути.',en:'Your analysis is being prepared — it will appear here. You can leave the app.',es:'Tu análisis se está preparando — aparecerá aquí. Puedes salir de la app.',de:'Deine Auswertung wird erstellt — sie erscheint hier. Du kannst die App verlassen.',pt:'A sua análise está a ser preparada — aparecerá aqui. Pode sair da app.',fr:'Votre bilan est en préparation — il apparaîtra ici. Vous pouvez quitter l’application.',pl:'Analiza jest przygotowywana — pojawi się tutaj. Możesz wyjść z aplikacji.',it:'La tua analisi è in preparazione — apparirà qui. Puoi uscire dall’app.',he:'הניתוח שלכם בהכנה — הוא יופיע כאן. אפשר לצאת מהאפליקציה.',ja:'分析を準備中です。ここに表示されます。アプリを閉じても大丈夫です。',ko:'분석을 준비하고 있어요. 여기에 표시됩니다. 앱을 나가도 괜찮습니다.'}))+'</div>'+_bpDisc());
+        return;
+      }
       if(_ae&&_ae.analysis) openSheet('<i class="ph ph-brain" style="color:var(--gold-lt);"></i>', L({ru:'Разбор дня',uk:'Розбір дня',en:'Today’s analysis',es:'Análisis del día',de:'Analyse des Tages',pt:'Análise do dia',fr:'Analyse du jour',pl:'Analiza dnia',it:'Analisi del giorno',he:'ניתוח היום',ja:'今日の分析',ko:'오늘의 분석'}),
         '<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.85;white-space:pre-wrap;padding-top:6px;">'+_renderAnalysis(_ae.analysis)+'</div>'+_bpDisc());
     }catch(e){}
@@ -11947,6 +12018,13 @@ function openBpChapter(id){
   var data=window._bpData||{}, chs=_bpChapters(), meta=null;
   for(var i=0;i<chs.length;i++) if(chs[i].id===id) meta=chs[i];
   if(!meta)return;
+  // Главы с едой без персонального плана — это запасное меню: общие блюда без фото и БЖУ.
+  // Пока план в пути, честнее сказать, что меню готовится (перенос из VIA-L, 2026-09-12).
+  if(!window._bpAI && (window._bpAILoading || window._anLoading) && ['morning','lunch','evening'].indexOf(id)>=0){
+    openSheet(meta.icon, meta.title,
+      '<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.7;padding:6px 0;">'+_esc(L({ru:'Персональное меню готовится — появится здесь через минуту-две. Приложение можно свернуть.',uk:'Персональне меню готується — з’явиться тут за хвилину-дві. Застосунок можна згорнути.',en:'Your personal menu is being prepared — it will appear here in a minute or two. You can leave the app.',es:'Tu menú personal se está preparando: aparecerá aquí en un minuto o dos. Puedes salir de la app.',de:'Dein persönliches Menü wird erstellt — es erscheint hier in ein bis zwei Minuten. Du kannst die App verlassen.',pt:'O seu menu pessoal está a ser preparado — aparecerá aqui dentro de um ou dois minutos. Pode sair da app.',fr:'Votre menu personnel est en préparation — il apparaîtra ici dans une à deux minutes. Vous pouvez quitter l’application.',pl:'Twoje osobiste menu jest przygotowywane — pojawi się tutaj za minutę lub dwie. Możesz wyjść z aplikacji.',it:'Il tuo menu personale è in preparazione — apparirà qui tra un minuto o due. Puoi uscire dall’app.',he:'התפריט האישי שלכם בהכנה — הוא יופיע כאן בעוד דקה-שתיים. אפשר לצאת מהאפליקציה.',ja:'あなた専用のメニューを準備中です。1〜2分でここに表示されます。アプリを閉じても大丈夫です。',ko:'개인 맞춤 메뉴를 준비하고 있어요. 1~2분 후 여기에 표시됩니다. 앱을 나가도 괜찮습니다.'}))+'</div>'+_bpDisc());
+    return;
+  }
   var secs=(window._bpAI && Array.isArray(window._bpAI[id])) ? window._bpAI[id] : _bpChapterData(id,data);
   openSheet(meta.icon, meta.title, _bpRenderSecs(secs)+_bpDisc());
 }
@@ -12170,6 +12248,30 @@ function _aiRetryToday(btn){
   var d=(snap&&snap.data)?snap.data:((window._lastResult&&_lastResult.data)?_lastResult.data:null);
   if(!d){ try{ if(btn){ btn.disabled=false; btn.style.opacity=''; } }catch(e){} return; }
   if(typeof fetchAIAnalysis==='function') fetchAIAnalysis(d, lang, 'retry');
+}
+// Ожидание фонового разбора по номеру задания: опрос раз в 5 с, срок 10 минут ПО ЧАСАМ.
+// Задание лежит в localStorage — приложение дождётся уже оплаченного разбора и после перезапуска.
+function _aiAwaitJob(day, job, ts){
+  if(window._anJobP && window._anJobP.job===job) return window._anJobP.p;
+  var start=ts||Date.now();
+  try{ localStorage.setItem('viae_an_job', JSON.stringify({day:day, job:job, ts:start})); }catch(e){}
+  var p=(async function(){
+    var cid=_cid(), res={error:'timeout'};
+    while(Date.now()-start < 10*60*1000){
+      await new Promise(function(r){ setTimeout(r, 5000); });
+      try{
+        var r=await fetch(AI_WORKER+'/analysis-cache?cid='+encodeURIComponent(cid)+'&day='+encodeURIComponent(day)+'&job='+encodeURIComponent(job));
+        var j=await r.json();
+        if(j&&j.ok&&j.analysis){ res={analysis:j.analysis}; break; }
+        if(j&&j.failed){ res={error:'ai_unavailable'}; break; }
+      }catch(e){}
+    }
+    try{ localStorage.removeItem('viae_an_job'); }catch(e){}
+    window._anJobP=null;
+    return res;
+  })();
+  window._anJobP={job:job, p:p};
+  return p;
 }
 function _aiDailySaveDay(day,analysis){
   try{var arr=_aiDailyGet();arr=arr.filter(function(e){return e.day!==day||(e.lang&&e.lang!==lang);});arr.unshift({day:day,lang:lang,analysis:analysis,ts:Date.now()});while(arr.length>730)arr.pop();localStorage.setItem('vialp_ai_daily',JSON.stringify(arr));}catch(e){}
