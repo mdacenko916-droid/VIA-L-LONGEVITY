@@ -2997,8 +2997,25 @@ async function loadClientPayments(){
   box.innerHTML = `<span style="color:var(--alert);">${t('cp_err')}</span>`;
 }
 
+// Сколько месяцев предложить по умолчанию: столько, сколько осталось НЕ оплачено
+// до конца выданного доступа. Иначе специалист считает это в уме на каждом платеже
+// (выдал 93 дня → клиенту платить три месяца, а форма предлагала один).
+function cpSuggestMonths(j){
+  if(!j || !j.grant_expiry) return 1;
+  const start = (j.paid_until && j.paid_until >= j.today) ? _cpShift(j.paid_until, 1) : j.today;
+  if(j.grant_expiry < start) return 1;
+  const days = Math.round((Date.parse(j.grant_expiry) - Date.parse(start)) / 86400000) + 1;
+  return Math.max(0.5, Math.round(days / 30 * 2) / 2);   // шаг полмесяца, как в поле ввода
+}
+function _cpShift(ymd, d){
+  const x = new Date(ymd + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() + d);
+  return x.toISOString().slice(0,10);
+}
+
 function renderClientPayments(j){
   const M = { card:t('cp_m_card'), hotmart:'Hotmart', cash:t('cp_m_cash'), other:t('cp_m_other') };
+  const sMonths = cpSuggestMonths(j);
+  const sAmount = Math.round(sMonths * (j.fee || 30));
   const list = (j.rows||[]).map(r => `
     <div style="display:flex;gap:10px;align-items:baseline;padding:4px 0;border-bottom:1px solid #f0f0f0;flex-wrap:wrap;">
       <span style="font-family:monospace;">€${esc(String(r.amount_eur))}</span>
@@ -3021,9 +3038,9 @@ function renderClientPayments(j){
       <div style="margin-top:6px;color:#888;">${t('cp_total')}: €${esc(String(j.total||0))}</div>` : ''}
     <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:12px;">
       <label style="font-size:var(--fs-cap);color:#888;">${t('cp_months')}<br>
-        <input id="cpMonths" type="number" min="0.5" max="24" step="0.5" value="1" oninput="cpSyncAmount()" style="width:70px;border:1px solid #ccc;padding:5px 8px;font-family:inherit;font-size:var(--fs-body);margin-top:3px;"></label>
+        <input id="cpMonths" type="number" min="0.5" max="24" step="0.5" value="${esc(String(sMonths))}" oninput="cpSyncAmount()" style="width:70px;border:1px solid #ccc;padding:5px 8px;font-family:inherit;font-size:var(--fs-body);margin-top:3px;"></label>
       <label style="font-size:var(--fs-cap);color:#888;">${t('cp_amount')}<br>
-        <input id="cpAmount" type="number" min="1" step="1" value="${esc(String(j.fee||30))}" style="width:90px;border:1px solid #ccc;padding:5px 8px;font-family:inherit;font-size:var(--fs-body);margin-top:3px;"></label>
+        <input id="cpAmount" type="number" min="1" step="1" value="${esc(String(sAmount))}" style="width:90px;border:1px solid #ccc;padding:5px 8px;font-family:inherit;font-size:var(--fs-body);margin-top:3px;"></label>
       <label style="font-size:var(--fs-cap);color:#888;">${t('cp_method')}<br>
         <select id="cpMethod" style="border:1px solid #ccc;padding:5px 8px;font-family:inherit;font-size:var(--fs-body);margin-top:3px;">
           <option value="card">${t('cp_m_card')}</option><option value="hotmart">Hotmart</option>
