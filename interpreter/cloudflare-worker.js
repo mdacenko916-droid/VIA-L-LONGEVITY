@@ -1538,15 +1538,28 @@ export default {
       let out = null;
       try { out = await (isPlan ? _dayPlanCore : _analyzeCore)(body || {}, env, ctx); }
       catch (e) { console.error((isPlan ? 'day-plan' : 'analyze') + ' queue: failed', e && e.message); }
+      // Памятка приходит строгим JSON, и модель изредка отдаёт его сломанным (error:'parse').
+      // Раньше это заканчивалось тем, что приложение просило памятку заново при каждой перерисовке —
+      // 4 платных вызова подряд (2026-09-11). Здесь один честный повтор, и на этом всё.
+      if (isPlan && !(out && out.plan)) {
+        console.warn('day-plan queue: повтор после', (out && out.error) || 'no_output');
+        try { out = await _dayPlanCore(body || {}, env, ctx); }
+        catch (e) { console.error('day-plan queue: повтор не удался', e && e.message); }
+      }
       try {
         // Новое задание того же дня (кнопка повтора) могло заменить метку — старое её не перетирает.
         const cur = JSON.parse(await env.ANALYSIS_CACHE.get(jkey) || 'null');
         if (!cur || cur.job === job) {
           const ok = out && (isPlan ? out.plan : out.analysis);
+          // При неудаче кладём в метку причину: без неё видно только «failed», и разбираться
+          // приходится вслепую (2026-09-12). raw — начало ответа модели, по нему видно, почему
+          // не разобрался JSON памятки.
           await env.ANALYSIS_CACHE.put(jkey, JSON.stringify(ok
             ? (isPlan ? { job, status: 'done', plan: out.plan, ts: Date.now() }
                       : { job, status: 'done', analysis: out.analysis, ts: Date.now() })
-            : { job, status: 'failed', ts: Date.now() }), { expirationTtl: 72 * 3600 });
+            : { job, status: 'failed', ts: Date.now(),
+                err: (out && out.error) || 'no_output', raw: String((out && out.raw) || '').slice(0, 300) }),
+            { expirationTtl: 72 * 3600 });
         }
       } catch (e) { console.error('analyze queue: marker', e && e.message); }
       msg.ack();

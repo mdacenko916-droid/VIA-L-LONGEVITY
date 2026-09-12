@@ -11270,7 +11270,10 @@ function renderDayBlueprint(data){
   // Разбор дождётся и сам дёрнет перерисовку — тогда памятка прочитает шапку вместо записи.
   // Для человека ничего не меняется: базовая памятка на экране с самого начала, ИИ-версия
   // подъезжает молча, пока он читает разбор.
-  if(!window._bpAI && !window._bpAILoading && !window._anLoading && !window._bpNoFetch && typeof fetchDayPlan==='function') fetchDayPlan(data);
+  // Памятка сегодня уже не сложилась (сервер не смог собрать JSON даже с повтором) — не заказываем
+  // её при каждой перерисовке: раньше так набегали платные вызовы. Сбрасывается на следующий день.
+  var _dpFail=false; try{ _dpFail=localStorage.getItem('vialp_dp_fail')===_dayKey(); }catch(e){}
+  if(!window._bpAI && !window._bpAILoading && !window._anLoading && !window._bpNoFetch && !_dpFail && typeof fetchDayPlan==='function') fetchDayPlan(data);
 }
 function _cleanPlan(p){
   // сетка безопасности: убрать редкие проскоки исследовательской лексики из ИИ-JSON.
@@ -11440,7 +11443,7 @@ function _dpAwaitJob(day, lg, job, ts){
         var r=await fetch(AI_WORKER+'/analysis-cache?kind=plan&cid='+encodeURIComponent(cid)+'&day='+encodeURIComponent(day)+'&job='+encodeURIComponent(job));
         var j=await r.json();
         if(j&&j.ok&&j.plan){ res={plan:j.plan}; break; }
-        if(j&&j.failed) break;
+        if(j&&j.failed){ try{ localStorage.setItem('vialp_dp_fail', day); }catch(e){} break; }
       }catch(e){}   // сеть моргнула — следующий круг
     }
     try{ localStorage.removeItem('vialp_dp_job'); }catch(e){}
