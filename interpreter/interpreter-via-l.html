@@ -5293,6 +5293,8 @@ function _cmpTrajHTML(){
 }
 
 function renderCard(){
+  try{ if(typeof _aiEnsureToday==='function') _aiEnsureToday(); }catch(e){}   // разбор мог остаться на сервере — подтянем
+
   if(typeof saveProfile==='function'){try{saveProfile();}catch(e){}}  // синхрон: карточка = что сейчас в профиле
   var box=document.getElementById('cardBody'); if(!box)return;
   _vcCSS();
@@ -11765,6 +11767,17 @@ function _aiRetryToday(btn){
   var d=(snap&&snap.data)?snap.data:((window._lastResult&&_lastResult.data)?_lastResult.data:null);
   if(!d){ try{ if(btn){ btn.disabled=false; btn.style.opacity=''; } }catch(e){} return; }
   if(typeof fetchAIAnalysis==='function') fetchAIAnalysis(d, lang, 'retry');
+}
+// Разбор за сегодня есть на сервере, но не доехал до телефона (страницу закрыли, пока он считался
+// в очереди) — тогда «История разборов» пустая, а повторить проход нельзя: день закрыт.
+// Подтягиваем готовый разбор с сервера при открытии профиля. Бесплатно, без модели. 2026-09-12.
+async function _aiEnsureToday(){
+  try{
+    var d=_dayKey();
+    if(_aiDailyGet().some(function(e){ return e.day===d && e.analysis; })) return;
+    var txt=(typeof _aiFromServer==='function') ? await _aiFromServer(d) : '';   // сам кладёт в кэш дня
+    if(txt && typeof renderCard==='function') renderCard();
+  }catch(e){}
 }
 function _aiDailySaveDay(day,analysis){
   try{var arr=_aiDailyGet();arr=arr.filter(function(e){return e.day!==day||(e.lang&&e.lang!==lang);});arr.unshift({day:day,lang:lang,analysis:analysis,ts:Date.now()});while(arr.length>730)arr.pop();localStorage.setItem('vialp_ai_daily',JSON.stringify(arr));}catch(e){}
