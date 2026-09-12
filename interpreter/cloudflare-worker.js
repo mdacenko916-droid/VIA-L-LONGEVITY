@@ -2768,7 +2768,10 @@ function _needsMedDisclaimer(data) {
 // попытку и сразу отдавал «ai_unavailable»; в приложении при этом не было даже кнопки повтора,
 // и человек оставался без разбора до следующего дня. Тело запроса — строка, его можно слать повторно.
 async function _fetchRetry(url, opts, onRetry) {
-  const TRANSIENT = [429, 500, 502, 503, 504, 529];
+  // 520–527 — «ошибки Cloudflare перед origin», из них 524 = ответ не пришёл за отведённое время.
+  // Живой случай 2026-09-12: украинский разбор EXPERT на Sonnet упирался в 524, тело ответа было
+  // текстом «error code: 524», JSON.parse падал, задание в очереди помечалось failed без повтора.
+  const TRANSIENT = [429, 500, 502, 503, 504, 520, 521, 522, 523, 524, 525, 526, 527, 529];
   let res;
   try { res = await fetch(url, opts); } catch (e) { res = null; }
   if (res && !TRANSIENT.includes(res.status)) return res;
@@ -2945,7 +2948,14 @@ async function _analyzeCore(body, env, ctx) {
     }),
   }, (st) => logRiskProbe(env, ctx, 'api-retry', tier, lang, 'analyze: status ' + st));
 
-  const result = await response.json();
+  // Тело не всегда JSON: при таймауте Cloudflare отдаёт текст «error code: 524», и голый .json()
+  // ронял весь обработчик очереди (2026-09-12). Разбираем мягко и отвечаем понятной ошибкой.
+  let result;
+  try { result = await response.json(); }
+  catch (e) {
+    console.error('analyze: ответ не JSON', response.status, (e && e.message || '').slice(0, 120));
+    return { error: 'ai_unavailable' };
+  }
   logUsage(env, ctx, 'analyze', ['he', 'ar', 'ja', 'ko', 'uk'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001', tier, lang, result, _src);
   // Сбой API (кончился баланс ключа, rate limit, 5xx) — НЕ выдаём клиенту как разбор. Раньше сюда
   // подставлялось result.error.message, и человек читал в карточке «Разбор дня от VIA·L» английский
@@ -3308,7 +3318,9 @@ async function _dayPlanCore(body, env, ctx) {
         messages: [{ role: 'user', content: buildUserMessage(data, lang, tier) + _dayPlanSupps(data) }],
       }),
     });
-    const result = await response.json();
+    let result;
+    try { result = await response.json(); }
+    catch (e) { console.error('day-plan: ответ не JSON', response.status, (e && e.message || '').slice(0, 120)); throw e; }
     logUsage(env, ctx, 'day-plan', ['he', 'ar', 'ja', 'ko', 'uk'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001', tier, lang, result, _src);
     raw = (result.content && result.content[0] && result.content[0].text) || '';
     let t = raw.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
