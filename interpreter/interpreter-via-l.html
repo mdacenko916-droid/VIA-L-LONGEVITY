@@ -3712,9 +3712,6 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
                переписывает innerHTML у data-t, и любая разметка внутри него была бы стёрта. -->
           <div style="color:#fff;display:flex;align-items:baseline;"><span data-t="ai_loading">Анализирую ваши данные</span><span class="ai-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span></div>
           <div class="ai-wait-note" data-t="ai_loading_wait">Можно свернуть приложение — разбор дождётся вас здесь</div>
-          <!-- Разбор считается на сервере (очередь), держать этот экран не нужно: кнопка уводит
-               на «Сегодня», а готовый разбор появится здесь сам. 2026-09-12. -->
-          <button type="button" onclick="_aiWaitClose()" style="margin-top:8px;background:none;border:1px solid rgba(226,185,90,.45);border-radius:10px;color:var(--gold-lt);font-family:inherit;font-size:var(--fs-cap);padding:7px 14px;cursor:pointer;" data-t="ai_loading_close">Закрыть</button>
         </div>
         <div id="aiResult" style="display:none;font-size:var(--fs-body);color:#fff;line-height:1.85;"></div>
         <div id="aiError" style="display:none;font-size:var(--fs-cap);color:var(--alert);margin-top:8px;"></div>
@@ -4810,13 +4807,6 @@ function _hideFlowSurfaces(){
     if(typeof _hideFlowFooter==='function')_hideFlowFooter();
   }catch(e){}
 }
-// «Закрыть» на экране ожидания разбора: уводим на «Сегодня». Разбор идёт в очереди воркера,
-// экран для этого не нужен — вернётся человек сам, и текст уже будет на месте.
-function _aiWaitClose(){
-  try{ if(typeof navTo==='function'){ navTo('today'); return; } }catch(e){}
-  try{ if(typeof _showTodayDashboard==='function') _showTodayDashboard(); }catch(e){}
-}
-;(function(){var D={"ai_loading_close":{"ru":"Закрыть","uk":"Закрити","en":"Close","es":"Cerrar","de":"Schließen","pt":"Fechar","fr":"Fermer","pl":"Zamknij","it":"Chiudi","he":"סגירה","ja":"閉じる","ko":"닫기"}};Object.keys(D).forEach(function(k){Object.keys(D[k]).forEach(function(l){if(T[l])T[l][k]=D[k][l];});});})();
 function navTo(tab){
   window.__editMode=false;   // любой переход по нижней навигации выходит из режима правки профиля (как VIO)
   _hideFlowSurfaces();       // уходим с ленты начисто — ниже нужный экран построится с нуля
@@ -11734,7 +11724,7 @@ function _cid(){
 async function _aiFromServer(day){
   try{
     var cid=_cid(); if(!cid) return '';
-    var r=await fetch(AI_WORKER+'/analysis-cache?cid='+encodeURIComponent(cid)+'&day='+encodeURIComponent(day));
+    var r=await fetch(AI_WORKER+'/analysis-cache?cid='+encodeURIComponent(cid)+'&day='+encodeURIComponent(day)+'&lang='+encodeURIComponent(lang||''));   // язык обязателен: иначе вернётся вчерашний/другой язык
     var j=await r.json();
     if(j&&j.ok&&j.analysis){ try{ if(typeof _aiDailySaveDay==='function')_aiDailySaveDay(day,j.analysis); }catch(e){} return j.analysis; }
   }catch(e){}

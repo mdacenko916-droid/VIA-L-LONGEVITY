@@ -2786,6 +2786,50 @@ function _anJobKey(cid, day) {
   return 'anj:' + String(cid || '').slice(0, 64) + ':' + String(day || '').slice(0, 10);
 }
 
+// Ответ модели ПОТОКОМ. Зачем: разбор EXPERT на украинском (вход ~90 тыс. токенов, Sonnet) не
+// укладывался в таймаут Cloudflare — вместо JSON приходил текст «error code: 524», и разбор
+// терялся даже с повтором (живой случай 2026-09-12, два прохода подряд). При потоке первые байты
+// идут сразу, таймауту неоткуда взяться. Возвращаем объект той же формы, что и обычный ответ
+// ({content:[{text}], usage}), чтобы logUsage и остальной код не менялись.
+async function _claudeStream(payload, env, onRetry) {
+  const res = await _fetchRetry('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': env.CLAUDE_API_KEY,
+      'anthropic-version': '2023-06-01',
+      'anthropic-beta': 'prompt-caching-2024-07-31',
+    },
+    body: JSON.stringify({ ...payload, stream: true }),
+  }, onRetry);
+  if (!res || !res.ok || !res.body) {
+    let body = ''; try { body = (await res.text()).slice(0, 200); } catch (e) {}
+    console.error('claude stream: http', res && res.status, body);
+    return { error: { type: 'http', message: 'status ' + (res && res.status) } };
+  }
+  const reader = res.body.getReader(), dec = new TextDecoder();
+  let buf = '', text = '', usage = {}, err = null;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let nl;
+    while ((nl = buf.indexOf('\n')) >= 0) {
+      const line = buf.slice(0, nl).trim(); buf = buf.slice(nl + 1);
+      if (!line.startsWith('data:')) continue;
+      const raw = line.slice(5).trim();
+      if (!raw || raw === '[DONE]') continue;
+      let ev; try { ev = JSON.parse(raw); } catch (e) { continue; }
+      if (ev.type === 'content_block_delta' && ev.delta && typeof ev.delta.text === 'string') text += ev.delta.text;
+      else if (ev.type === 'message_start' && ev.message && ev.message.usage) usage = { ...usage, ...ev.message.usage };
+      else if (ev.type === 'message_delta' && ev.usage) usage = { ...usage, ...ev.usage };
+      else if (ev.type === 'error') err = ev.error || { message: 'stream error' };
+    }
+  }
+  if (err) return { error: err };
+  return { content: [{ text }], usage };
+}
+
 async function handleAnalyze(request, env, corsHeaders, ctx) {
   const body = await request.json();
   // Фоновый режим (приложение VIA-L шлёт bg:true с 2026-09-11). Разбор идёт 1–3 минуты внутри запроса,
@@ -2892,15 +2936,7 @@ async function _analyzeCore(body, env, ctx) {
     '• В конце ОБЯЗАТЕЛЬНО добавить (на ' + langName + '): материал носит образовательный и велнес-характер, не является медицинской консультацией, диагнозом или лечением; перед изменениями в своём здоровье проконсультируйтесь с квалифицированным специалистом.\n'
   );
 
-  const response = await _fetchRetry('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': env.CLAUDE_API_KEY,
-      'anthropic-version': '2023-06-01',
-      'anthropic-beta': 'prompt-caching-2024-07-31',
-    },
-    body: JSON.stringify({
+  const _reqBody = {
       // Тяжёлые для маленькой модели языки (RTL/CJK) — на Sonnet: Haiku галлюцинирует иврит/арабский
       model: ['he', 'ar', 'ja', 'ko', 'uk'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
       temperature: 0.35, // App Store 1.4.1: понижена вариативность разбора → меньше риск неожиданных мед-интерпретаций
@@ -2945,17 +2981,9 @@ async function _analyzeCore(body, env, ctx) {
       messages: [{ role: 'user', content: buildUserMessage(data, lang, tier)
         + (isWellness ? '' : LAB_TARGETS_EXPERT)   // ориентиры по анализам — только EXPERT
         + (structured ? _fmtLang(_withSuppTheme(isWellness ? _STRUCTURED_FMT : _structuredFmtExpert(), data), langName) : '') }],
-    }),
-  }, (st) => logRiskProbe(env, ctx, 'api-retry', tier, lang, 'analyze: status ' + st));
-
-  // Тело не всегда JSON: при таймауте Cloudflare отдаёт текст «error code: 524», и голый .json()
-  // ронял весь обработчик очереди (2026-09-12). Разбираем мягко и отвечаем понятной ошибкой.
-  let result;
-  try { result = await response.json(); }
-  catch (e) {
-    console.error('analyze: ответ не JSON', response.status, (e && e.message || '').slice(0, 120));
-    return { error: 'ai_unavailable' };
-  }
+  };
+  const result = await _claudeStream(_reqBody, env,
+    (st) => logRiskProbe(env, ctx, 'api-retry', tier, lang, 'analyze: status ' + st));
   logUsage(env, ctx, 'analyze', ['he', 'ar', 'ja', 'ko', 'uk'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001', tier, lang, result, _src);
   // Сбой API (кончился баланс ключа, rate limit, 5xx) — НЕ выдаём клиенту как разбор. Раньше сюда
   // подставлялось result.error.message, и человек читал в карточке «Разбор дня от VIA·L» английский
@@ -2963,7 +2991,7 @@ async function _analyzeCore(body, env, ctx) {
   // Отдаём флаг ошибки — клиент показывает своё «не удалось получить анализ» и ничего не кэширует.
   // Живой случай 2026-08-24 вечером: баланс ключа воркера исчерпан. 2026-08-25.
   if (!result.content?.[0]?.text) {
-    console.error('analyze: API error', response.status, result?.error?.type, result?.error?.message);
+    console.error('analyze: API error', result?.error?.type, result?.error?.message);
     return { error: 'ai_unavailable' };
   }
   let text = result.content[0].text;
@@ -3053,8 +3081,10 @@ async function _analyzeCore(body, env, ctx) {
   // телефон). Теперь приложение забирает его оттуда бесплатно. Ключ анонимный: cid — случайная
   // строка из localStorage устройства, ни имени, ни кода доступа в ключе нет.
   if (cid && day && env.ANALYSIS_CACHE && ctx) {
+    // С языком: в кэше за день лежит ОДИН разбор, и без пометки языка украинский проход забирал
+    // утренний русский текст (живой случай 2026-09-12). Формат новый, старые записи читаются как есть.
     ctx.waitUntil(env.ANALYSIS_CACHE.put('an:' + String(cid).slice(0, 64) + ':' + String(day).slice(0, 10),
-      text, { expirationTtl: 72 * 3600 }).catch(() => {}));
+      JSON.stringify({ lang: lang || '', text }), { expirationTtl: 72 * 3600 }).catch(() => {}));
   }
 
   return { analysis: text };
@@ -3111,7 +3141,15 @@ async function handleAnalysisCache(request, env, corsHeaders) {
               : { ok: false, pending: true };
     return new Response(JSON.stringify(res), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
-  const text = await env.ANALYSIS_CACHE.get('an:' + cid + ':' + day);
+  const raw = await env.ANALYSIS_CACHE.get('an:' + cid + ':' + day);
+  // Новый формат — {lang,text}; старый (до 2026-09-12) — просто текст, у него языка нет.
+  let text = '', cLang = '';
+  if (raw) {
+    if (raw.charAt(0) === '{') { try { const o = JSON.parse(raw); text = o.text || ''; cLang = o.lang || ''; } catch (_) { text = raw; } }
+    else text = raw;
+  }
+  const want = (u.searchParams.get('lang') || '').slice(0, 5);
+  if (text && want && cLang && cLang !== want) text = '';   // чужой язык не отдаём: пусть лучше посчитает заново
   return new Response(JSON.stringify(text ? { ok: true, analysis: text } : { ok: false }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
