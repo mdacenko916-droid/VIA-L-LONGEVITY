@@ -110,6 +110,46 @@ def load_notes(path):
     return notes
 
 
+def upload_bundle(tok, eid, path):
+    """Загрузка .aab в черновик выпуска (media upload). Возвращает versionCode."""
+    data = open(path, "rb").read()
+    url = ("https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/%s"
+           "/edits/%s/bundles?uploadType=media" % (PKG, eid))
+    req = urllib.request.Request(url, method="POST", data=data,
+                                 headers={"Authorization": "Bearer " + tok,
+                                          "Content-Type": "application/octet-stream"})
+    try:
+        return json.loads(urllib.request.urlopen(req, timeout=600).read())["versionCode"]
+    except urllib.error.HTTPError as e:
+        sys.exit("Загрузка .aab не удалась (%s): %s" % (e.code, e.read().decode()[:500]))
+
+
+def cmd_upload(args):
+    """Загрузить .aab и сразу выложить его в трек (один edit — одна операция)."""
+    tok = token()
+    notes = load_notes(args.notes)
+    if not os.path.exists(args.aab):
+        sys.exit("Файл не найден: " + args.aab)
+    def run(eid):
+        tracks = [t["track"] for t in call(tok, "%s/edits/%s/tracks" % (API, eid)).get("tracks", [])]
+        if args.track not in tracks:
+            sys.exit("Трека «%s» нет. Есть: %s" % (args.track, " | ".join(tracks)))
+        print("Файл:  %s (%.1f МБ)\nТрек:  %s" % (args.aab, os.path.getsize(args.aab) / 1048576.0, args.track))
+        if not args.yes:
+            print("\nЧерновой прогон. Ничего не загружено. Добавьте --yes.")
+            return
+        vc = upload_bundle(tok, eid, args.aab)
+        print("Загружено, versionCode:", vc)
+        rel = {"name": "%s (1.0)" % vc, "versionCodes": [str(vc)], "status": "completed"}
+        if notes:
+            rel["releaseNotes"] = notes
+        call(tok, "%s/edits/%s/tracks/%s" % (API, eid, urllib.parse.quote(args.track)), "PUT",
+             {"track": args.track, "releases": [rel]})
+        call(tok, "%s/edits/%s:commit" % (API, eid), "POST", {})
+        print("Выложено в трек «%s»." % args.track)
+    with_edit(tok, run)
+
+
 def cmd_release(args):
     tok = token()
     notes = load_notes(args.notes)
@@ -144,8 +184,13 @@ def main():
     r.add_argument("--version", required=True, type=int, help="versionCode сборки, например 4")
     r.add_argument("--notes", help="JSON с примечаниями (по умолчанию app/store/release-notes.json)")
     r.add_argument("--yes", action="store_true", help="действительно опубликовать")
+    u = sub.add_parser("upload", help="загрузить .aab и выложить его в трек")
+    u.add_argument("--aab", required=True, help="путь к .aab, например app/store/build/vial-release-v5.aab")
+    u.add_argument("--track", required=True, help='имя трека, например "1.0 (1) — закрытый тест"')
+    u.add_argument("--notes", help="JSON с примечаниями (по умолчанию app/store/release-notes.json)")
+    u.add_argument("--yes", action="store_true", help="действительно загрузить и выложить")
     a = ap.parse_args()
-    (cmd_status if a.cmd == "status" else cmd_release)(a)
+    {"status": cmd_status, "release": cmd_release, "upload": cmd_upload}[a.cmd](a)
 
 
 if __name__ == "__main__":
