@@ -53,8 +53,28 @@ VIA-L Subscriptions** и **подписка VIA-L Monthly** (`via_l_pro_monthly`
    Подсказка была видна сразу: в Post-Actions сборки стояло «TestFlight Internal Testing».
 2. **ITMS-90382 — суточный лимит загрузок.** Xcode Cloud собирает на КАЖДЫЙ пуш в main, включая
    коммиты с одними документами (письмо в `docs/` пересобирало то же приложение). За день набежало
-   больше десятка сборок. Выход: Start Conditions → ручной запуск или фильтр Files and Folders
-   (`interpreter/`, `app/`).
+   больше десятка сборок. Закрыто 2026-09-12 фильтром Start Conditions → Files and Folders.
+   ⚠️ Фильтр работает ТОЛЬКО на включение — «всё, кроме `app/store/`» в нём не выразить,
+   поэтому пути перечислены поимённо; новая папка, нужная сборке, туда не попадёт сама.
+   Актуальный список (Any File):
+
+   ```
+   /app/package.json           /app/package-lock.json     /app/capacitor.config.json
+   /app/sync-web.sh            /app/ios/                  /app/plugins/
+   /app/patches/               /app/scripts/              /app/assets/
+   /legal-app/
+   /interpreter/interpreter-via-l.html   /interpreter/app-mode.js
+   /interpreter/iap-bridge.js            /interpreter/healthkit-bridge.js
+   /interpreter/healthconnect-bridge.js  /interpreter/notify-bridge.js
+   /interpreter/my-specialist.html       /interpreter/research-consent.html
+   /interpreter/science.html
+   /interpreter/Logo/   /interpreter/images-in/   /interpreter/phosphor/
+   /interpreter/icons/  /interpreter/food/
+   ```
+
+   Список = ровно то, что кладёт в бандл `app/sync-web.sh`, плюс то, что читает `ci_post_clone.sh`.
+   Вне фильтра намеренно: `app/store/` (картинки витрин), `app/*.md`, сайт, лендинг ведения,
+   `methodology.html`, EXPERT PWA, `cabinet/`, `book/`, `legal/`, `docs/`, `tasks/`.
 3. **Первая подписка требует локализацию ГРУППЫ подписок** (Subscription Group Display Name) и
    отправки группы вместе с версией. Без этого черновик подачи пишет «Your auto-renewable subscription
    must be submitted with its subscription group». Группа добавляется кнопкой Add for Review на её
