@@ -2952,6 +2952,10 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
 
   <!-- STEP 1: TEMPERATURE -->
   <div class="step" id="step2">
+    <!-- ЦИКЛ СЕГОДНЯ: одной кнопкой отметить начало месячных. День цикла считается от даты в профиле
+         и сам не узнаёт, что цикл пришёл раньше/позже; отметка в приложении трекера к нам не приходит
+         (живой случай Oura, 2026-09-13). Кнопка не обязательна — гейт её не требует. -->
+    <div class="card" id="cyc-today" data-gate-ignore style="display:none;margin-bottom:14px;"></div>
     <div class="card">
       <div class="card-accent"></div>
       <button type="button" class="help-btn" onclick="openHelp('hotflash')" aria-label="info">ℹ</button>
@@ -5567,6 +5571,7 @@ function _gRefresh(){
   if(typeof renderComplaint==='function'){try{renderComplaint();}catch(e){}}
   try{ if(typeof _condRender==='function')_condRender(); }catch(e){}
   try{ if(typeof _dietRender==='function')_dietRender(); }catch(e){}   // блок жалобы в шаге «Что нового»
+  try{ if(typeof _cycTodayRender==='function')_cycTodayRender(); }catch(e){}   // «Цикл сегодня» — тексты 12 языков в JS
   if(typeof _reflowSteps==='function'){try{_reflowSteps();}catch(e){}}
 }
 // Инлайн-правка веса/талии прямо в карточке (меняются со временем) → vial_profile + синхрон с профилем.
@@ -8065,7 +8070,56 @@ function _wlExpChange(){
   b.style.display=(getRadio('wl_exp')==='yes')?'block':'none';   // «каким способом» — только если опыт был
 }
 // Смена статуса цикла: «менструаций больше нет» → скрыть ПМС и выраженность фазы, показать вопрос ранней менопаузы
+// ── ЦИКЛ СЕГОДНЯ: «Сегодня начались месячные» ─────────────────────────────────
+var _CYC_T = {
+  title:{ru:'Цикл сегодня',uk:'Цикл сьогодні',en:'Your cycle today',es:'Tu ciclo hoy',de:'Dein Zyklus heute',pt:'Seu ciclo hoje',fr:'Votre cycle aujourd’hui',pl:'Twój cykl dziś',it:'Il tuo ciclo oggi',he:'המחזור שלך היום',ja:'今日の周期',ko:'오늘의 주기'},
+  day:{ru:'Сейчас {d}-й день цикла по вашим данным.',uk:'Зараз {d}-й день циклу за вашими даними.',en:'Day {d} of your cycle, based on your dates.',es:'Día {d} de tu ciclo, según tus fechas.',de:'Tag {d} deines Zyklus, laut deinen Angaben.',pt:'Dia {d} do seu ciclo, pelos seus dados.',fr:'Jour {d} de votre cycle, d’après vos dates.',pl:'Dzień {d} cyklu według Twoich danych.',it:'Giorno {d} del tuo ciclo, secondo i tuoi dati.',he:'יום {d} במחזור, לפי הנתונים שלך.',ja:'あなたのデータでは周期{d}日目です。',ko:'입력하신 날짜 기준 주기 {d}일째입니다.'},
+  btn:{ru:'Сегодня начались месячные',uk:'Сьогодні почалися місячні',en:'My period started today',es:'Hoy me ha venido la regla',de:'Meine Periode hat heute begonnen',pt:'Minha menstruação começou hoje',fr:'Mes règles ont commencé aujourd’hui',pl:'Dziś zaczęła się miesiączka',it:'Oggi è iniziato il ciclo',he:'הווסת התחילה היום',ja:'今日、生理が始まりました',ko:'오늘 생리가 시작됐어요'},
+  done:{ru:'✓ Отмечено: сегодня 1-й день цикла.',uk:'✓ Позначено: сьогодні 1-й день циклу.',en:'✓ Noted: today is day 1 of your cycle.',es:'✓ Anotado: hoy es el día 1 de tu ciclo.',de:'✓ Notiert: heute ist Tag 1 deines Zyklus.',pt:'✓ Anotado: hoje é o dia 1 do seu ciclo.',fr:'✓ Noté : aujourd’hui est le jour 1 de votre cycle.',pl:'✓ Zapisano: dziś 1. dzień cyklu.',it:'✓ Annotato: oggi è il giorno 1 del ciclo.',he:'✓ נרשם: היום הוא יום 1 במחזור.',ja:'✓ 記録しました：今日が周期1日目です。',ko:'✓ 기록됨: 오늘이 주기 1일째입니다.'},
+  undo:{ru:'Отменить',uk:'Скасувати',en:'Undo',es:'Deshacer',de:'Rückgängig',pt:'Desfazer',fr:'Annuler',pl:'Cofnij',it:'Annulla',he:'ביטול',ja:'取り消す',ko:'취소'},
+  hint:{ru:'Отмечаете цикл в приложении трекера? Нажмите и здесь — оттуда отметка к нам не приходит.',uk:'Позначаєте цикл у застосунку трекера? Натисніть і тут — звідти позначка до нас не надходить.',en:'Log your cycle in your tracker’s app? Tap here too — that log doesn’t reach us.',es:'¿Registras el ciclo en la app de tu dispositivo? Toca aquí también: ese registro no nos llega.',de:'Du trägst den Zyklus in der App deines Trackers ein? Tippe auch hier — dieser Eintrag kommt bei uns nicht an.',pt:'Registra o ciclo no app do seu dispositivo? Toque aqui também — esse registro não chega até nós.',fr:'Vous notez votre cycle dans l’app de votre objet connecté ? Touchez aussi ici — cette note ne nous parvient pas.',pl:'Zapisujesz cykl w aplikacji urządzenia? Kliknij też tutaj — ten wpis do nas nie trafia.',it:'Segni il ciclo nell’app del tuo dispositivo? Tocca anche qui: quella nota non ci arriva.',he:'מסמנת את המחזור באפליקציה של המכשיר? לחצי גם כאן — הסימון משם לא מגיע אלינו.',ja:'トラッカーのアプリで周期を記録していますか？こちらも押してください。そちらの記録はここには届きません。',ko:'트래커 앱에 주기를 기록하시나요? 여기서도 눌러 주세요 — 그 기록은 저희에게 전달되지 않습니다.'}
+};
+function _cycProfile(){ try{ return JSON.parse(localStorage.getItem('viae_profile')||'{}')||{}; }catch(e){ return {}; } }
+// Пишем в профиль ТОЛЬКО дату, напрямую: saveProfile не умеет очищать поле (пустой DOM сохраняет
+// прежнее значение), а «Отменить» должно вернуть и пустоту, если даты раньше не было.
+function _cycSetLast(v){
+  var P=_cycProfile(); if(v) P.lastperiod=v; else delete P.lastperiod;
+  try{ localStorage.setItem('viae_profile', JSON.stringify(P)); }catch(e){}
+  var inp=document.getElementById('prof-lastperiod'); if(inp) inp.value=v||'';
+  if(typeof renderCycleDay==='function'){ try{ renderCycleDay(); }catch(e){} }
+}
+function _cycTodayRender(){
+  var box=document.getElementById('cyc-today'); if(!box) return;
+  var P=_cycProfile();
+  var isM=(typeof getRadio==='function' && getRadio('gender')==='male') || P.gender==='male';
+  var cs=(typeof getRadio==='function' && getRadio('cycle_status')) || P.cycle_status || '';
+  if(isM || cs==='absent'){ box.style.display='none'; return; }   // нет цикла — нечего отмечать
+  box.style.display='';
+  var today=_dayKey();
+  var inp=document.getElementById('prof-lastperiod');
+  var marked=((inp&&inp.value)||P.lastperiod||'')===today;
+  var ci=(typeof cycleInfo==='function')?cycleInfo():null;
+  var h='<div class="card-accent"></div><div class="step-badge">'+L(_CYC_T.title)+'</div>';
+  if(marked){
+    h+='<p class="step-desc" style="margin:0 0 10px;">'+L(_CYC_T.done)+'</p>';
+    if(window._cycPrev!==undefined) h+='<button type="button" class="as-usual" onclick="_cycUndo()">'+L(_CYC_T.undo)+'</button>';
+  } else {
+    if(ci && ci.day) h+='<p class="step-desc" style="margin:0 0 10px;">'+L(_CYC_T.day).replace('{d}', ci.day)+'</p>';
+    h+='<button type="button" class="as-usual" onclick="_cycStartToday()">'+L(_CYC_T.btn)+'</button>'
+     + '<div style="margin-top:10px;font-size:var(--fs-cap);opacity:.72;line-height:1.5;">'+L(_CYC_T.hint)+'</div>';
+  }
+  box.innerHTML=h;
+}
+function _cycStartToday(){
+  var P=_cycProfile(); window._cycPrev=P.lastperiod||'';   // для «Отменить» в пределах сессии
+  _cycSetLast(_dayKey()); _cycTodayRender();
+}
+function _cycUndo(){
+  var prev=window._cycPrev; if(prev===undefined) return;
+  _cycSetLast(prev); delete window._cycPrev; _cycTodayRender();
+}
 function _cycleChange(){
+  try{ _cycTodayRender(); }catch(e){}
   var cs=getRadio('cycle_status');
   var ab=document.getElementById('cyc-absent-block'), pm=document.getElementById('cyc-pms-block');
   if(ab)ab.style.display=(cs==='absent')?'block':'none';
@@ -8446,6 +8500,7 @@ function _allFlow(){ return FLOW_ALL.filter(function(n){ if(!_stepDue(n))return 
 function showAll(){
   if(!window.__editMode && typeof _passedToday==='function'&&_passedToday()){ _showDailyDoneGate(); return; }   // сегодня пройдено → гейт «возвращайтесь завтра»
   _showFlow(_allFlow()); if(typeof renderGadgetPanel==='function')renderGadgetPanel();
+  try{ if(typeof _cycTodayRender==='function')_cycTodayRender(); }catch(e){}
   // Обычный проход: кнопка через строгий гейт — результат только когда все блоки отвечены.
   _flowFooter(t('show_result'), function(){ _gateGuardOrRun(function(){ if(typeof _saveDaily==='function')_saveDaily(); document.body.classList.remove('flow-mode'); _hideFlowFooter(); showResults(); }); });
   if(window.__editMode){ _flowFooter(L({ru:'Сохранить и вернуться',uk:'Зберегти й повернутися',en:'Save & return',es:'Guardar y volver',de:'Speichern & zurück',pt:'Salvar e voltar',fr:'Enregistrer et revenir',pl:'Zapisz i wróć',it:'Salva e torna',he:'שמור וחזור',ja:'保存して戻る',ko:'저장하고 돌아가기'}),_saveProfileDone); }   // режим «Изменить профиль»: футер = сохранить и вернуться (без гейта)
