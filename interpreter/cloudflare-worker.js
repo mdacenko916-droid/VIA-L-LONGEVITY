@@ -2467,15 +2467,19 @@ async function buildResearchStats(env, period) {
       for (const row of rows) {
         let d = {};
         try { d = JSON.parse(row.data || '{}'); } catch (_) { continue; }
-        const src = String(row.src || '?').slice(0, 24);
+        // EXPERT — своя совокупность с префиксом «expert:» и НЕ входит в общие «*»-ячейки VIA-L:
+        // иначе калибровка самостоятельного приложения поплыла бы от людей под ведением.
+        const pre = d.tier === 'expert' ? 'expert:' : '';
+        const src = pre + String(row.src || '?').slice(0, 16);
+        const all = pre + '*';
         const lang = String(row.lang || '?').slice(0, 5);
         for (const k of RESEARCH_FIELDS) {
           const v = d[k];
           if (typeof v !== 'number' || !isFinite(v)) continue;   // категории вида 'high' в сводку не идут
           push(src, lang, k, v);
-          push('*', lang, k, v);
+          push(all, lang, k, v);
           push(src, '*', k, v);
-          push('*', '*', k, v);
+          push(all, '*', k, v);
         }
       }
       if (rows.length < 1000) break;
@@ -2530,7 +2534,12 @@ async function handleResearchDay(request, env, corsHeaders) {
       return jsonResponse({ ok: false, error: 'bad_request' }, corsHeaders);
     }
     const _src = String(rec.src || body.src || '').slice(0, 24);
-    const data = JSON.stringify(_researchPick(rec, _src));
+    const _picked = _researchPick(rec, _src);
+    // Метка тарифа (2026-09-13): клиенты VIA-L EXPERT идут под ведением специалиста, их динамика
+    // несравнима с самостоятельными пользователями VIA-L. Храним признак внутри data (без миграции
+    // таблицы) и в сводках считаем такие записи отдельно — см. buildResearchStats.
+    if (String(body.tier || '') === 'expert') _picked.tier = 'expert';
+    const data = JSON.stringify(_picked);
     if (data.length > 4096) return jsonResponse({ ok: false, error: 'too_big' }, corsHeaders);
     await env.DB.prepare(
       'INSERT INTO research_days (pid,day,ts,received_ts,sv,wv,src,lang,data) VALUES (?,?,?,?,?,?,?,?,?) ' +
