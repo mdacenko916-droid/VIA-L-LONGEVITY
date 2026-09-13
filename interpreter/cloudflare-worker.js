@@ -2879,6 +2879,7 @@ async function _analyzeCore(body, env, ctx) {
   // Темы базы знаний для ЭТОГО человека (максимум 4) — по ним собирается KB промпта.
   // Тот же селектор, что зовёт buildUserMessage, поэтому «используй P-F3» и вложенный
   // блок P-F3 всегда совпадают. Селектор может бросить → тогда пустой список и полная база.
+  await _attachComplaintPatterns(data, env, ctx, tier, lang);   // жалоба и «что нового» → темы базы (дочитывает селектор)
   let _kbIds = []; try { _kbIds = selectKBPatterns(data) || []; } catch (e) { _kbIds = []; }
 
   // Локальный термин для Body Mass Index — KB пишет "ИМТ", в ответе нужен местный.
@@ -3300,6 +3301,7 @@ async function _dayPlanCore(body, env, ctx) {
   const isWellness = ['vio', 'pro'].includes(String(tier || '').toLowerCase());
   const useWellnessKB = ['vio', 'pro', 'elite', 'expert'].includes(String(tier || '').toLowerCase());   // VIA-L EXPERT → углублённая велнес-KB
   // Тот же принцип, что в /analyze: в памятку дня вкладываем только темы этого человека.
+  await _attachComplaintPatterns(data, env, ctx, tier, lang);
   let _kbIds = []; try { _kbIds = selectKBPatterns(data) || []; } catch (e) { _kbIds = []; }
   const schema =
     '\n\n════════════════════════════════════════\n' +
@@ -5737,6 +5739,102 @@ function esc(s) {
 
 // Selects up to 4 most relevant KB patterns (canonical P-F/P-M).
 // Читает реальные поля/токены анкеты (не локализованный текст) — см. PATTERN-REGISTRY.md.
+// ── ЖАЛОБА И НОВЫЕ СИМПТОМЫ → ТЕМЫ БАЗЫ (2026-09-13) ───────────────────────────────
+// Замер: гормональные симптомы, тазовое дно, грудь, ПМС/мигрень, кости (шаг 11), пищеварение (шаг 7),
+// мужские простата/эрекция/настроение (шаг 12) спрашиваются ОДИН раз, при знакомстве. Всё, что
+// появилось позже, живёт только в тексте «что нового» и в жалобе, а selectKBPatterns текст не
+// читает: 0 из 18 сценариев. Текст до модели доходил, но без проверенной темы базы — и без её
+// «когда показаться врачу».
+// Пункты жалобы — готовые метки → таблица. Свой текст жалобы и «что нового» → классификатор Haiku
+// со структурированным ответом (перечисление номеров тем — несуществующий номер вернуть нельзя).
+// Итог кладём в data._kbExtra: его дочитывает selectKBPatterns, поэтому вложенная база и строка
+// «Активные паттерны» в сообщении модели получают один и тот же список.
+// Режим классификатора текста. 'shadow' — вызывается и пишет выбранные номера тем в ai_usage.note
+// (endpoint 'kb-classify', без текста), но в разбор их НЕ добавляет. 'live' — добавляет.
+// Запущено в тени 2026-09-13: живой прогон качества до выпуска сделать было нечем (в wrangler dev
+// нет боевого ключа). Пункты жалобы (таблица ниже) работают в любом режиме — они проверены.
+const KB_TEXT_LAYER = 'shadow';
+const _KB_BY_COMPLAINT = {
+  energy: { f: ['P-F5'],  m: ['P-M1'] },
+  sleep:  { f: ['P-F17'], m: ['P-M9'] },
+  mood:   { f: ['P-F9'],  m: ['P-M2'] },
+  fog:    { f: ['P-F10'], m: ['P-M8'] },
+  weight: { f: ['P-F7'],  m: ['P-M3'] },
+  libido: { f: ['P-F15'], m: ['P-M11'] },
+  pain:   { f: ['P-F12'], m: ['P-M4'] },
+  hf:     { f: ['P-F1'],  m: [] },
+  cycle:  { f: ['P-F3'],  m: [] },
+  drive:  { f: ['P-F5'],  m: ['P-M1'] },
+  muscle: { f: ['P-F12'], m: ['P-M1'] },
+};
+// Заголовки тем для классификатора: номер + название до первого « — » (без инструкций внутри блока).
+function _kbTitles(isFem) {
+  return Object.keys(WELLNESS_KB_MAP)
+    .filter(id => (isFem ? /^P-F\d+$/ : /^P-M\d+$/).test(id))
+    .map(id => {
+      const head = String(WELLNESS_KB_MAP[id]).split('\n')[0].replace(/^\[P-[FM]\d+\]\s*/, '');
+      return { id, title: head.split(' — ')[0].trim().slice(0, 90) };
+    });
+}
+// Свободный текст → до 2 номеров тем. Любой сбой, таймаут или пустой текст → [] (разбор идёт как раньше).
+// Кэш промпта здесь не ставим: список ~900 токенов, а минимум кэша у Haiku 4.5 — 4096.
+async function _kbClassifyText(text, isFem, env, ctx, tier, lang) {
+  const t = String(text || '').trim();
+  if (t.length < 4 || !env || !env.CLAUDE_API_KEY) return [];
+  const topics = _kbTitles(isFem);
+  if (!topics.length) return [];
+  const MODEL = 'claude-haiku-4-5-20251001';
+  const system =
+    'Ты сопоставляешь слова человека о самочувствии с темами базы знаний. '
+    + 'Выбери не больше двух тем, которые ПРЯМО описывают названный симптом или жалобу. '
+    + 'Если текст не про самочувствие или ни одна тема не подходит прямо — верни пустой список. '
+    + 'Не выбирай тему по косвенным признакам. Текст может быть на любом языке.\n\nТемы:\n'
+    + topics.map(x => x.id + ' — ' + x.title).join('\n');
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), 6000);
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', signal: ac.signal,
+      headers: { 'content-type': 'application/json', 'x-api-key': env.CLAUDE_API_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: MODEL, max_tokens: 256, temperature: 0, system,
+        messages: [{ role: 'user', content: t.slice(0, 1200) }],
+        output_config: { format: { type: 'json_schema', schema: {
+          type: 'object', additionalProperties: false, required: ['ids'],
+          properties: { ids: { type: 'array', items: { type: 'string', enum: topics.map(x => x.id) } } },
+        } } },
+      }),
+    });
+    const j = await r.json();
+    const out = j && j.content && j.content[0] && j.content[0].text;
+    const allowed = new Set(topics.map(x => x.id));
+    let ids = [];
+    try { ids = out ? [...new Set((JSON.parse(out).ids || []).map(String).filter(id => allowed.has(id)))].slice(0, 2) : []; } catch (_) { ids = []; }
+    // В note — только режим и номера тем (не текст): по ним сверяем качество на реальных проходах.
+    const note = 'kb:' + KB_TEXT_LAYER + ';ids:' + (ids.join(',') || '-') + (j && j.error ? ';err:' + String(j.error.type || '').slice(0, 40) : '');
+    logUsage(env, ctx, 'kb-classify', MODEL, tier, lang, j, note);
+    return ids;
+  } catch (e) {
+    return [];
+  } finally {
+    clearTimeout(timer);
+  }
+}
+// Собирает data._kbExtra: сначала свой текст (новое самочувствие — самое свежее), затем пункты жалобы.
+async function _attachComplaintPatterns(data, env, ctx, tier, lang) {
+  try {
+    if (!data || typeof data !== 'object') return;
+    const isFem = data.gender !== 'male';
+    const cmp = (data.complaint && typeof data.complaint === 'object') ? data.complaint : {};
+    const items = Array.isArray(cmp.items) ? cmp.items.map(String) : [];
+    const fromItems = [];
+    items.forEach(k => ((_KB_BY_COMPLAINT[k] || {})[isFem ? 'f' : 'm'] || []).forEach(id => { if (fromItems.indexOf(id) < 0) fromItems.push(id); }));
+    const text = [cmp.text, data.new_symptoms].map(x => String(x || '').trim()).filter(Boolean).join('\n');
+    const fromText = text ? await _kbClassifyText(text, isFem, env, ctx, tier, lang) : [];
+    data._kbExtra = [...new Set([...(KB_TEXT_LAYER === 'live' ? fromText : []), ...fromItems])];
+  } catch (e) { /* слой вспомогательный: сбой не должен ронять разбор */ }
+}
+
 function selectKBPatterns(data) {
   const isFem  = data.gender !== 'male';
   let   phase  = data.phase || 'other';
@@ -5827,7 +5925,9 @@ function selectKBPatterns(data) {
     add('P-F8', has(sym,'joint','movement_stiff') || (visceral != null && visceral > 12) || num(labs.crp) > 3);
     // P-F9 нейромедиаторы (NEW)
     add('P-F9', anx >= 6 || data.mood === 'swings' || data.mood === 'low'
-      || data.irritability === 'high' || has(sym,'anxiety','mood','restless_mind') || has(cort,'irritable'));
+      || data.irritability === 'high' || has(sym,'anxiety','mood','restless_mind') || has(cort,'irritable')
+      // перепады настроения из блока ПМС тоже про настроение (замер 2026-09-13: раньше не вели сюда)
+      || has(Array.isArray(data.pms_symptoms) ? data.pms_symptoms : [], 'mood_swings', 'irritability', 'emotion_sensitive'));
     // P-F10 когнитивный туман
     add('P-F10', fogHi || memHi || has(sym,'foggy'));
     // P-F11 кишечник
@@ -5836,7 +5936,7 @@ function selectKBPatterns(data) {
     add('P-F12', (phase === 'post' && (age >= 55 || (num(labs.vitd) != null && num(labs.vitd) < 50)))
       || has(bone,'load_sensitivity','posture_shift','hereditary_tone','balance_trait','prior_fracture','height_loss','family_osteoporosis','early_menopause'));
     // P-F13 сердечно-сосудистый
-    add('P-F13', has(sym,'palpitations','pulse_awareness') || data.rhr_comp === 'high'
+    add('P-F13', has(sym,'palpitations','pulse_awareness')
       || num(labs.ldl) > 3.4 || num(labs.apob) > 1.0 || num(labs.tg) > 1.7);
     // P-F14 кожа/коллаген (NEW)
     add('P-F14', has(horm,'dry_skin','hair_loss')
@@ -5885,7 +5985,8 @@ function selectKBPatterns(data) {
       || (has(horm,'libido_male','muscle_loss','fatigue_chronic','intimacy_rhythm','muscle_tone','energy_baseline') && energy <= 5) || data.vitality === 'low');
     // P-M2 ГГН/кортизол (+ настроение/депрессия — рука мужской депрессии часто атипична)
     add('P-M2', stressHigh || cortLoad || (hrv < 35 && stressHigh && anx >= 5)
-      || data.mood === 'low' || data.mood === 'swings' || anx >= 6 || has(sym,'mood'));
+      || data.mood === 'low' || data.mood === 'swings' || anx >= 6 || has(sym,'mood')
+      || has(horm,'mood_male_irrit','mood_male_apath'));   // «раздражительность / апатия» из мужского блока (замер 2026-09-13)
     // P-M3 метаболический синдром
     add('P-M3', (visceral != null && visceral > 9) || has(horm,'belly_fat') || (data.appetite === 'cravings' || data.cravings === true)
       || num(labs.glucose) > 5.6 || num(labs.hba1c) > 5.7 || num(labs.homa) > 2.5);
@@ -5899,7 +6000,7 @@ function selectKBPatterns(data) {
     // P-M6 кишечник
     add('P-M6', has(gi,'bloating','gi_heaviness','constipation','gi_slow','diarrhea','gi_fast','reflux','gi_inner') || has(supp,'probiotics'));
     // P-M7 сердечно-сосудистый
-    add('P-M7', has(sym,'palpitations','pulse_awareness') || data.rhr_comp === 'high'
+    add('P-M7', has(sym,'palpitations','pulse_awareness')
       || num(labs.ldl) > 3.4 || num(labs.apob) > 1.0 || num(labs.tg) > 1.7);
     // P-M8 когнитивный туман
     add('P-M8', fogHi || memHi || has(sym,'foggy'));
@@ -5913,7 +6014,7 @@ function selectKBPatterns(data) {
     // P-M11 эректильная дисфункция как ССС-сигнал (прокси: ЭД-токен или низкое либидо + ССС-риск)
     add('P-M11', has(horm,'erectile','erectile_dysfunction','stamina_trend')
       || (has(horm,'libido_male','intimacy_rhythm') && ((visceral != null && visceral > 9)
-          || data.rhr_comp === 'high' || num(labs.ldl) > 3.4 || num(labs.glucose) > 5.6 || num(labs.hba1c) > 5.7)));
+          || num(labs.ldl) > 3.4 || num(labs.glucose) > 5.6 || num(labs.hba1c) > 5.7)));   // ветку rhr_comp убрали: поле удалено из приложения 2026-07-17
   }
 
   // приоритизация: клинически центральные раньше, затем cap до 4
@@ -5922,7 +6023,13 @@ function selectKBPatterns(data) {
     : ['P-M1','P-M2','P-M3','P-M5','P-M9','P-M8','P-M7','P-M11','P-M4','P-M6','P-M10'];
   const uniq = [...new Set(selected)];
   uniq.sort((a, b) => priority.indexOf(a) - priority.indexOf(b));
-  return uniq.slice(0, 4);
+  const base = uniq.slice(0, 4);
+  // Жалоба и «что нового» (см. _attachComplaintPatterns): до двух тем СВЕРХ четырёх по правилам.
+  // Сверху, а не вместо: новый симптом не должен вытеснять то, что правила нашли по данным.
+  const extra = (Array.isArray(data._kbExtra) ? data._kbExtra : [])
+    .filter(id => (isFem ? /^P-F\d+$/ : /^P-M\d+$/).test(id) && WELLNESS_KB_MAP[id] && base.indexOf(id) < 0)
+    .slice(0, 2);
+  return base.concat(extra);
 }
 
 // Велнес-фильтр «корма» модели: buildUserMessage строит клинический дайджест данных.
