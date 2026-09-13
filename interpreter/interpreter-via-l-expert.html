@@ -6292,7 +6292,15 @@ function renderCard(){
   // Профиль доступен всегда, поэтому им место здесь — рядом с текстом согласия.
   var _lglRow=function(href,label){return '<a href="'+href+'" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;padding:11px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03);color:var(--t1);text-decoration:none;font-size:var(--fs-body);">'+'<span>'+label+'</span><span style="color:var(--t3);">\u203a</span></a>';};
   var _lglLinks=_lglRow('../legal/privacy.html',t('priv_link'))+_lglRow('../legal/terms.html',t('terms_link'));
-  _secLegal=_vcSec('legal',t('card_legal'),'<div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;">'+t('consent_body')+'</div>'+_lglLinks,false,true);
+  // «Помочь улучшить VIA·L» — вход на страницу согласия (сам переключатель там, вместе с полным
+  // текстом: согласие без текста согласием не считается). Перенесено из VIA-L 2026-09-13.
+  var _rcOn=(function(){ try{ return localStorage.getItem('viae_research_consent')==='1'; }catch(e){ return false; } })();
+  var _rcLbl=L({ru:'Помочь улучшить VIA·L',uk:'Допомогти покращити VIA·L',en:'Help improve VIA·L',es:'Ayuda a mejorar VIA·L',de:'VIA·L verbessern helfen',pt:'Ajude a melhorar o VIA·L',fr:'Aider à améliorer VIA·L',pl:'Pomóż ulepszyć VIA·L',it:'Aiuta a migliorare VIA·L',he:'לעזור לשפר את VIA·L',ja:'VIA·L の改善に協力する',ko:'VIA·L 개선에 참여하기'});
+  var _rcState=_rcOn?L({ru:'включено',uk:'увімкнено',en:'on',es:'activado',de:'ein',pt:'ativado',fr:'activé',pl:'włączone',it:'attivo',he:'מופעל',ja:'オン',ko:'켜짐'})
+                   :L({ru:'выключено',uk:'вимкнено',en:'off',es:'desactivado',de:'aus',pt:'desativado',fr:'désactivé',pl:'wyłączone',it:'disattivo',he:'כבוי',ja:'オフ',ko:'꺼짐'});
+  var _rcHtml='<a href="./research-consent.html?app=expert" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding:11px 12px;border-radius:10px;border:1px solid rgba(196,150,60,.32);background:rgba(196,150,60,.06);color:var(--gold-lt);font-size:var(--fs-cap);text-decoration:none;">'
+    +'<span>'+_rcLbl+'</span><span style="color:'+(_rcOn?'var(--ok)':'var(--t3)')+';">'+_rcState+' ›</span></a>';
+  _secLegal=_vcSec('legal',t('card_legal'),'<div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;">'+t('consent_body')+'</div>'+_rcHtml+_lglLinks,false,true);
   // ── VAI: калькулятор скрытого (висцерального) жира. Доп-инструмент, БЕЗ ИИ/сети. Велнес-рамка + дисклеймер. ──
   var _vaiBMI=(P.weight&&P.height&&P.height>0)?(P.weight/Math.pow(P.height/100,2)):null;
   var _vaiLab=(typeof _vaiLabs==='function')?_vaiLabs():null;
@@ -6484,7 +6492,20 @@ function _researchConsent(){ try{ return localStorage.getItem('viae_research_con
 // Слой синхронизации — ОТКЛЮЧЁН. Пуш возможен только при явном согласии пользователя (opt-in).
 // Сервер-эндпоинт добавляется на этапе 3: анонимно, health-данные отдельно от аккаунта,
 // с удалением по запросу (GDPR/законы штатов). Сейчас — инертный шов, чтобы включить без переделки.
-function _syncPushDaily(rec){ if(!_researchConsent())return; /* TODO этап 3: POST анонимной записи в D1 */ }
+function _syncPushDaily(rec){
+  // «Помочь улучшить VIA·L» (opt-in, по умолчанию OFF): переключатель и полный текст — на
+  // research-consent.html?app=expert. Что принимается — решает whitelist на сервере (handleResearchDay).
+  // tier:'expert' — клиенты под ведением специалиста: их динамика несравнима с самостоятельными
+  // пользователями VIA-L, сервер держит эти записи отдельно и в общие сводки не смешивает.
+  // pid — случайный id установки (viae_pid), НЕ код доступа и НЕ связан с карточкой клиента.
+  // Перенесено из VIA-L 2026-09-13.
+  try{
+    if(!_researchConsent()) return;
+    var pid=_vialpPid(); if(!pid||!rec||!rec.day) return;
+    fetch(AI_WORKER+'/research/day',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({pid:pid,lang:lang,tier:'expert',rec:rec})}).catch(function(){});   // тихо: сбой не должен мешать проходу
+  }catch(e){}
+}
 
 // ══ АККАУНТ КЛИЕНТА: синхронизация состояния между устройствами по коду ═══════
 // Проблема, которую закрывает: дневник/профиль/разборы жили только в localStorage,
@@ -12370,6 +12391,7 @@ function closeCircModal(){
     var go=function(){
       if(tab==='approach'){ if(typeof openApproach==='function') openApproach(); }
       else if(tab==='card'||tab==='today'){ if(typeof navTo==='function') navTo(tab); }
+      else if(tab==='chat'){ if(typeof openExpertChat==='function') openExpertChat(); }
     };
     if(document.readyState!=='loading') setTimeout(go,60); else document.addEventListener('DOMContentLoaded',function(){setTimeout(go,60);});
   }catch(e){}
