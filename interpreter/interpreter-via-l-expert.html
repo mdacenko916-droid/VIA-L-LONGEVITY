@@ -11286,6 +11286,7 @@ async function fetchWearableLive(vendor, sid){
       document.getElementById(vendor + '-connect-preview').classList.add('show');
       setStatus(vendor + '-connect-status','success',t('status_' + vendor + '_ok'));
       updateImportSummary();
+      if(typeof _hkAfterFill==='function') _hkAfterFill();   // как у Health: пересобрать ленту под пришедшие данные
     } else if(j && j.ok){
       setStatus(vendor + '-connect-status','error',t('status_' + vendor + '_nodata'));
     } else {
@@ -11369,10 +11370,14 @@ async function fetchOuraLive(sid){
     if(j.ok&&j.ex&&Object.keys(j.ex).length){
       localStorage.removeItem('viae_oura_pending');
       applyExtracted(j.ex,'oura');
+      // Разбор читает пульс из поля ленты (#rhr), а не из importedData: без переноса в поля
+      // панель показывала пульс с Oura, а в разбор уходило прежнее значение (живой iPhone 2026-09-13).
+      applyImportedToSliders();
       renderPreview('oura-connect-grid',j.ex);
       document.getElementById('oura-connect-preview').classList.add('show');
       setStatus('oura-connect-status','success',ui.ok);
       if(typeof updateImportSummary==='function') updateImportSummary();
+      if(typeof _hkAfterFill==='function') _hkAfterFill();   // данные пришли при открытой ленте → спрятать блоки, закрытые прибором (живой замер пульса)
     } else if(j.ok){ setStatus('oura-connect-status','error',ui.nodata); }
     else { setStatus('oura-connect-status','error',ui.err); }
   }catch(e){ setStatus('oura-connect-status','error',ui.err); }
@@ -12417,6 +12422,7 @@ async function fetchFitbitLive(sid){
       document.getElementById('fitbit-connect-preview').classList.add('show');
       setStatus('fitbit-connect-status','success',t('status_fitbit_ok'));
       updateImportSummary();
+      if(typeof _hkAfterFill==='function') _hkAfterFill();
     } else if(j && j.ok){
       // OAuth succeeded but Google Health has no Fitbit data for this account
       setStatus('fitbit-connect-status','error',t('status_fitbit_nodata'));
@@ -12440,6 +12446,7 @@ async function _refreshFitbitSilent(){
       if(typeof updateImportSummary==='function')updateImportSummary();
       if(typeof renderGadgetPanel==='function')renderGadgetPanel();
       if(typeof updateDeviceBanners==='function')updateDeviceBanners();
+      if(typeof _hkAfterFill==='function')_hkAfterFill();
       return true;
     }
   }catch(e){}
