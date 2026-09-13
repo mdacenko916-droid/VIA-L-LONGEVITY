@@ -2040,6 +2040,13 @@ body.iap-open #langDropdown.open .lang-menu,body.iap-open #langDropdown.open .la
 .ai-sec-pill{font-family:var(--font-ui);font-size:var(--fs-cap);font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#1a1206;background:linear-gradient(135deg,#e7c77a,#c9962f);padding:3px 9px;border-radius:20px;white-space:nowrap;}
 .ai-sec-sum{font-size:var(--fs-body);color:#fff;line-height:1.8;}
 
+/* ── Крупный текст (переключатель в «Мой профиль» → «Размер текста») ──
+   Масштабируем всю область контента, а не отдельные font-size: размеров 10–14px
+   в интерфейсе под три сотни (подписи метрик, чипы, лейблы) — тянуть их поштучно
+   значило бы развалить вёрстку карточек. zoom увеличивает текст вместе с блоками,
+   поэтому ничего не наезжает. Топбар и футер вне #scroll-area — они не меняются. */
+html.big-text #scroll-area{zoom:1.12;}
+
 /* ── Читаемость на телефоне (аудитория 45+, пресбиопия) ─────────────────────────
    Текст выглядел тонким по трём причинам: DM Sans узкий, body шёл весом 300 (Light),
    а antialiased дополнительно утончает штрихи на Retina. Меняем все три на мобильных
@@ -3040,6 +3047,10 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
 
   <!-- STEP 1: TEMPERATURE -->
   <div class="step" id="step2">
+    <!-- ЦИКЛ СЕГОДНЯ: одной кнопкой отметить начало месячных. День цикла считается от даты в профиле
+         и сам не узнаёт, что цикл пришёл раньше/позже; отметка в приложении трекера к нам не приходит
+         (живой случай Oura, 2026-09-13). Кнопка не обязательна — гейт её не требует. -->
+    <div class="card" id="cyc-today" data-gate-ignore style="display:none;margin-bottom:14px;"></div>
     <div class="card">
       <div class="card-accent"></div>
       <button type="button" class="help-btn" onclick="openHelp('hotflash')" aria-label="info">ℹ</button>
@@ -4940,6 +4951,7 @@ function _gRefresh(){
   if(typeof renderComplaint==='function'){try{renderComplaint();}catch(e){}}
   try{ if(typeof _condRender==='function')_condRender(); }catch(e){}   // блок состояний — тексты 12 языков внутри, перерисовать вместе с языком
   try{ if(typeof _dietRender==='function')_dietRender(); }catch(e){}   // тип питания — там же   // блок жалобы в шаге «Что нового»
+  try{ if(typeof _cycTodayRender==='function')_cycTodayRender(); }catch(e){}   // «Цикл сегодня» — тексты 12 языков в JS
   if(typeof _reflowSteps==='function'){try{_reflowSteps();}catch(e){}}
 }
 // Инлайн-правка веса/талии прямо в карточке (меняются со временем) → vial_profile + синхрон с профилем.
@@ -4949,7 +4961,7 @@ function _cardSaveNum(field,val){var P={};try{P=JSON.parse(localStorage.getItem(
 // Данные НЕ уходят на сервер: пользователь сам сохраняет файл и импортирует на новом устройстве.
 // Пароль знает только он: PBKDF2→AES-GCM. Единый модуль с VIO (источник по _SEC; в PRO — localStorage).
 var _BK_KEYS = (typeof _SEC!=='undefined' && _SEC.keys) ? _SEC.keys.slice()
-  : ['vialp_profile','vialp_history','vialp_daily','vialp_weekly_text','vialp_monthly_text','vialp_ai_memory','vialp_ai_daily','vialp_day_plan','vialp_lastanswers','vialp_imported','vialp_days','vialp_pid','vialp_research_consent','vialp_experiment','vialp_exp_log','vialp_labs'];   // активный эксперимент и журнал закрытых — иначе на новом устройстве петля обрывается; pid+согласие в копию: перенос на новое устройство не создаёт «нового участника» (P2/P6)
+  : ['vialp_profile','vialp_history','vialp_daily','vialp_weekly_text','vialp_monthly_text','vialp_ai_memory','vialp_ai_daily','vialp_day_plan','vialp_lastanswers','vialp_imported','vialp_days','vialp_pid','vialp_research_consent','vialp_experiment','vialp_exp_log','vialp_labs','vialp_bigtext'];   // активный эксперимент и журнал закрытых — иначе на новом устройстве петля обрывается; pid+согласие в копию: перенос на новое устройство не создаёт «нового участника» (P2/P6)
 function _bkGet(k){ return (typeof secGet==='function')?secGet(k):localStorage.getItem(k); }
 function _bkSet(k,v){ if(typeof secSet==='function'){ secSet(k,v); } else { localStorage.setItem(k,v); } }
 function _bkB64(u8){ var s=''; for(var i=0;i<u8.length;i++)s+=String.fromCharCode(u8[i]); return btoa(s); }
@@ -5166,6 +5178,7 @@ var _CAT={
   dayplan:   {ic:'sun-horizon',           acc:'210,178,120', sub:{ru:'Ориентиры на сегодня',uk:'Орієнтири на сьогодні',en:'Guidance for today',es:'Guía para hoy',de:'Orientierung für heute',pt:'Orientações para hoje',fr:'Repères pour aujourd’hui',pl:'Wskazówki na dziś',it:'Indicazioni per oggi',he:'הכוונה להיום',ja:'今日の目安',ko:'오늘의 가이드'}}, // тёплый песок
   history:   {ic:'clock-counter-clockwise',acc:'156,150,206', sub:{ru:'Прошлые разборы',uk:'Минулі розбори',en:'Past check-ins',es:'Análisis anteriores',de:'Frühere Auswertungen',pt:'Análises anteriores',fr:'Bilans précédents',pl:'Poprzednie analizy',it:'Analisi precedenti',he:'ניתוחים קודמים',ja:'過去の分析',ko:'지난 분석'}}, // спокойный сине-фиолетовый
   notify:    {ic:'bell',                  acc:'226,185,90',  sub:{ru:'Утреннее напоминание',uk:'Ранкове нагадування',en:'Morning reminder',es:'Recordatorio matinal',de:'Morgen-Erinnerung',pt:'Lembrete matinal',fr:'Rappel du matin',pl:'Poranne przypomnienie',it:'Promemoria del mattino',he:'תזכורת בוקר',ja:'朝のリマインド',ko:'아침 알림'}},
+  display:   {ic:'text-aa',               acc:'196,170,120', sub:{ru:'Размер текста в приложении',uk:'Розмір тексту в застосунку',en:'Text size in the app',es:'Tamaño del texto en la app',de:'Textgröße in der App',pt:'Tamanho do texto no app',fr:'Taille du texte dans l’app',pl:'Rozmiar tekstu w aplikacji',it:'Dimensione del testo nell’app',he:'גודל הטקסט באפליקציה',ja:'アプリの文字サイズ',ko:'앱 글자 크기'}},
   backup:    {ic:'floppy-disk',           acc:'146,158,176', sub:{ru:'Экспорт и восстановление',uk:'Експорт і відновлення',en:'Export & restore',es:'Exportar y restaurar',de:'Export & Wiederherstellung',pt:'Exportar e restaurar',fr:'Export et restauration',pl:'Eksport i przywracanie',it:'Esporta e ripristina',he:'ייצוא ושחזור',ja:'エクスポートと復元',ko:'내보내기와 복원'}}, // графит с лёгким голубым
   source:    {ic:'plugs-connected',       acc:'196,170,120', sub:{ru:'Apple Health, устройство или ручной ввод',uk:'Apple Health, пристрій або ручне введення',en:'Apple Health, device or manual entry',es:'Apple Health, dispositivo o entrada manual',de:'Apple Health, Gerät oder manuelle Eingabe',pt:'Apple Health, dispositivo ou entrada manual',fr:'Apple Health, appareil ou saisie manuelle',pl:'Apple Health, urządzenie lub ręczne wprowadzanie',it:'Apple Health, dispositivo o inserimento manuale',he:'Apple Health, מכשיר או הזנה ידנית',ja:'Apple Health・デバイス・手動入力',ko:'Apple Health, 기기 또는 수동 입력'}}, // мягкое золото — источник данных
   health:    {ic:'first-aid-kit',        acc:'224,87,106',   sub:{ru:'Диагнозы, препараты, ограничения',uk:'Діагнози, препарати, обмеження',en:'Conditions, medications, limits',es:'Diagnósticos, medicamentos, límites',de:'Diagnosen, Medikamente, Einschränkungen',pt:'Diagnósticos, medicamentos, limites',fr:'Diagnostics, médicaments, limites',pl:'Diagnozy, leki, ograniczenia',it:'Diagnosi, farmaci, limiti',he:'אבחנות, תרופות, מגבלות',ja:'診断・薬・制限',ko:'진단·약물·제한'}},
@@ -5204,6 +5217,19 @@ function _saveProfileDone(){
 }
 
 // Тарелка из карточки: та же схема, что в «Сегодня» (_platePhiloHTML), шторкой поверх модала карточки (z 9998>400)
+// ── Размер текста (доступность: аудитория 45+, пресбиопия) ──
+// Системный Dynamic Type не берём: он сносит наши семейство/вес шрифта и не имеет верхнего
+// предела — на максимальном размере карточки разбора ломаются. Свой переключатель работает
+// одинаково на iOS, Android и в браузере. Перенесено из EXPERT 2026-09-13.
+function _bigTextOn(){ try{ return localStorage.getItem('vialp_bigtext')==='1'; }catch(e){ return false; } }
+function _bigTextApply(){ try{ document.documentElement.classList.toggle('big-text', _bigTextOn()); }catch(e){} }
+function _bigTextSet(on){
+  try{ localStorage.setItem('vialp_bigtext', on?'1':'0'); }catch(e){}
+  _bigTextApply();
+  document.querySelectorAll('.ts-u').forEach(function(b){ b.classList.toggle('active', (b.getAttribute('data-big')==='1')===!!on); });
+}
+_bigTextApply();   // до первой отрисовки — чтобы экран не «прыгал» после загрузки
+
 function _plateSheet(){ openSheet('🥗', L({ru:'Гарвардская тарелка',uk:'Гарвардська тарілка',en:'The Harvard plate',es:'El plato de Harvard',de:'Der Harvard-Teller',pt:'O prato de Harvard',fr:'L’assiette de Harvard',pl:'Talerz harwardzki',it:'Il piatto di Harvard',he:'צלחת הרווארד',ja:'ハーバード・プレート',ko:'하버드 플레이트'}), (typeof _platePhiloHTML==='function'?_platePhiloHTML(false):'')); }
 // VAI (Visceral Adiposity Index) — расчёт по гендерной формуле. Чистый клиент, без ИИ/сети.
 // Талия+ИМТ из профиля, ТГ+ЛПВП (ммоль/л) вводит клиент из анализа крови. Велнес-рамка, не диагноз.
@@ -5656,12 +5682,22 @@ function renderCard(){
   // Анализы — разовый ввод, живут в профиле (в дневной ленте их спрашивали бы каждый день).
   var _secLabs=_vcSec('labs',L({ru:'Анализы',uk:'Аналізи',en:'Lab tests',es:'Analíticas',de:'Laborwerte',pt:'Exames',fr:'Analyses',pl:'Badania',it:'Analisi',he:'בדיקות מעבדה',ja:'血液検査',ko:'검사 수치'}),_labsInner(),false,true);
 
+  // ── Размер текста (доступность: аудитория 45+, пресбиопия) ──
+  var _big=_bigTextOn();
+  var _tsInner='<div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;margin-bottom:10px;">'
+    +L({ru:'Если текст разбора мелковат — включите крупный. Настройка сохранится на этом устройстве.',uk:'Якщо текст розбору дрібнуватий — увімкніть великий. Налаштування збережеться на цьому пристрої.',en:'If the analysis text feels small, switch to large. The setting is saved on this device.',es:'Si el texto del análisis le parece pequeño, active el grande. El ajuste se guarda en este dispositivo.',de:'Wenn der Analysetext zu klein wirkt, wählen Sie groß. Die Einstellung wird auf diesem Gerät gespeichert.',pt:'Se o texto da análise parecer pequeno, ative o grande. A configuração fica salva neste dispositivo.',fr:'Si le texte du bilan vous semble petit, passez en grand. Le réglage est enregistré sur cet appareil.',pl:'Jeśli tekst analizy wydaje się mały — włącz duży. Ustawienie zapisze się na tym urządzeniu.',it:'Se il testo dell’analisi sembra piccolo, scegli grande. L’impostazione resta su questo dispositivo.',he:'אם טקסט הניתוח קטן מדי — עברו לגדול. ההגדרה נשמרת במכשיר הזה.',ja:'分析の文字が小さく感じたら「大きい」に切り替えてください。設定はこの端末に保存されます。',ko:'분석 글자가 작게 느껴지면 크게로 바꾸세요. 설정은 이 기기에 저장됩니다.'})+'</div>'
+    +'<div style="display:flex;gap:8px;">'
+    +'<button class="vai-u ts-u'+(_big?'':' active')+'" data-big="0" onclick="_bigTextSet(false)">'+L({ru:'Обычный',uk:'Звичайний',en:'Normal',es:'Normal',de:'Normal',pt:'Normal',fr:'Normal',pl:'Normalny',it:'Normale',he:'רגיל',ja:'標準',ko:'보통'})+'</button>'
+    +'<button class="vai-u ts-u'+(_big?' active':'')+'" data-big="1" onclick="_bigTextSet(true)" style="font-size:var(--fs-body);">'+L({ru:'Крупный',uk:'Великий',en:'Large',es:'Grande',de:'Groß',pt:'Grande',fr:'Grand',pl:'Duży',it:'Grande',he:'גדול',ja:'大きい',ko:'크게'})+'</button>'
+    +'</div>';
+  var _secDisplay=_vcSec('display',L({ru:'Размер текста',uk:'Розмір тексту',en:'Text size',es:'Tamaño del texto',de:'Textgröße',pt:'Tamanho do texto',fr:'Taille du texte',pl:'Rozmiar tekstu',it:'Dimensione del testo',he:'גודל טקסט',ja:'文字サイズ',ko:'글자 크기'}),_tsInner,false);
+
   // Порядок по логике/важности: сперва профиль (грид), затем результаты/инструменты (полноширинные).
   // «Правовая информация» — всегда последняя.
   // Траектория по жалобе — первой: это ответ на «стало ли легче», ради которого человек и ведёт дневник.
   var _secCmp=(typeof _cmpTrajHTML==='function')?_cmpTrajHTML():'';
   html+=[_secCmp,_secGoal,_secAct,_secNut,_secSup,_secHealth,_secStress,_secBal,_secRhythm,_secLife,   // «что я о себе указал»
-         _secDyn,_secVai,_secLabs,_secDaily,_secHist,_secSource,_secNotify,_secSub,_secBackup,_secLegal].join('');     // «что показывает система / инструменты» + VAI-калькулятор
+         _secDyn,_secVai,_secLabs,_secDaily,_secHist,_secSource,_secNotify,_secDisplay,_secSub,_secBackup,_secLegal].join('');     // «что показывает система / инструменты» + VAI-калькулятор
   html+='</div>'; // .vcard-grid
   html+='</div>'; // .vcard-wrap
 
@@ -7525,7 +7561,56 @@ function _wlExpChange(){
   b.style.display=(getRadio('wl_exp')==='yes')?'block':'none';   // «каким способом» — только если опыт был
 }
 // Смена статуса цикла: «менструаций больше нет» → скрыть ПМС и выраженность фазы, показать вопрос ранней менопаузы
+// ── ЦИКЛ СЕГОДНЯ: «Сегодня начались месячные» ─────────────────────────────────
+var _CYC_T = {
+  title:{ru:'Цикл сегодня',uk:'Цикл сьогодні',en:'Your cycle today',es:'Tu ciclo hoy',de:'Dein Zyklus heute',pt:'Seu ciclo hoje',fr:'Votre cycle aujourd’hui',pl:'Twój cykl dziś',it:'Il tuo ciclo oggi',he:'המחזור שלך היום',ja:'今日の周期',ko:'오늘의 주기'},
+  day:{ru:'Сейчас {d}-й день цикла по вашим данным.',uk:'Зараз {d}-й день циклу за вашими даними.',en:'Day {d} of your cycle, based on your dates.',es:'Día {d} de tu ciclo, según tus fechas.',de:'Tag {d} deines Zyklus, laut deinen Angaben.',pt:'Dia {d} do seu ciclo, pelos seus dados.',fr:'Jour {d} de votre cycle, d’après vos dates.',pl:'Dzień {d} cyklu według Twoich danych.',it:'Giorno {d} del tuo ciclo, secondo i tuoi dati.',he:'יום {d} במחזור, לפי הנתונים שלך.',ja:'あなたのデータでは周期{d}日目です。',ko:'입력하신 날짜 기준 주기 {d}일째입니다.'},
+  btn:{ru:'Сегодня начались месячные',uk:'Сьогодні почалися місячні',en:'My period started today',es:'Hoy me ha venido la regla',de:'Meine Periode hat heute begonnen',pt:'Minha menstruação começou hoje',fr:'Mes règles ont commencé aujourd’hui',pl:'Dziś zaczęła się miesiączka',it:'Oggi è iniziato il ciclo',he:'הווסת התחילה היום',ja:'今日、生理が始まりました',ko:'오늘 생리가 시작됐어요'},
+  done:{ru:'✓ Отмечено: сегодня 1-й день цикла.',uk:'✓ Позначено: сьогодні 1-й день циклу.',en:'✓ Noted: today is day 1 of your cycle.',es:'✓ Anotado: hoy es el día 1 de tu ciclo.',de:'✓ Notiert: heute ist Tag 1 deines Zyklus.',pt:'✓ Anotado: hoje é o dia 1 do seu ciclo.',fr:'✓ Noté : aujourd’hui est le jour 1 de votre cycle.',pl:'✓ Zapisano: dziś 1. dzień cyklu.',it:'✓ Annotato: oggi è il giorno 1 del ciclo.',he:'✓ נרשם: היום הוא יום 1 במחזור.',ja:'✓ 記録しました：今日が周期1日目です。',ko:'✓ 기록됨: 오늘이 주기 1일째입니다.'},
+  undo:{ru:'Отменить',uk:'Скасувати',en:'Undo',es:'Deshacer',de:'Rückgängig',pt:'Desfazer',fr:'Annuler',pl:'Cofnij',it:'Annulla',he:'ביטול',ja:'取り消す',ko:'취소'},
+  hint:{ru:'Отмечаете цикл в приложении трекера? Нажмите и здесь — оттуда отметка к нам не приходит.',uk:'Позначаєте цикл у застосунку трекера? Натисніть і тут — звідти позначка до нас не надходить.',en:'Log your cycle in your tracker’s app? Tap here too — that log doesn’t reach us.',es:'¿Registras el ciclo en la app de tu dispositivo? Toca aquí también: ese registro no nos llega.',de:'Du trägst den Zyklus in der App deines Trackers ein? Tippe auch hier — dieser Eintrag kommt bei uns nicht an.',pt:'Registra o ciclo no app do seu dispositivo? Toque aqui também — esse registro não chega até nós.',fr:'Vous notez votre cycle dans l’app de votre objet connecté ? Touchez aussi ici — cette note ne nous parvient pas.',pl:'Zapisujesz cykl w aplikacji urządzenia? Kliknij też tutaj — ten wpis do nas nie trafia.',it:'Segni il ciclo nell’app del tuo dispositivo? Tocca anche qui: quella nota non ci arriva.',he:'מסמנת את המחזור באפליקציה של המכשיר? לחצי גם כאן — הסימון משם לא מגיע אלינו.',ja:'トラッカーのアプリで周期を記録していますか？こちらも押してください。そちらの記録はここには届きません。',ko:'트래커 앱에 주기를 기록하시나요? 여기서도 눌러 주세요 — 그 기록은 저희에게 전달되지 않습니다.'}
+};
+function _cycProfile(){ try{ return JSON.parse(localStorage.getItem('vialp_profile')||'{}')||{}; }catch(e){ return {}; } }
+// Пишем в профиль ТОЛЬКО дату, напрямую: saveProfile не умеет очищать поле (пустой DOM сохраняет
+// прежнее значение), а «Отменить» должно вернуть и пустоту, если даты раньше не было.
+function _cycSetLast(v){
+  var P=_cycProfile(); if(v) P.lastperiod=v; else delete P.lastperiod;
+  try{ localStorage.setItem('vialp_profile', JSON.stringify(P)); }catch(e){}
+  var inp=document.getElementById('prof-lastperiod'); if(inp) inp.value=v||'';
+  if(typeof renderCycleDay==='function'){ try{ renderCycleDay(); }catch(e){} }
+}
+function _cycTodayRender(){
+  var box=document.getElementById('cyc-today'); if(!box) return;
+  var P=_cycProfile();
+  var isM=(typeof getRadio==='function' && getRadio('gender')==='male') || P.gender==='male';
+  var cs=(typeof getRadio==='function' && getRadio('cycle_status')) || P.cycle_status || '';
+  if(isM || cs==='absent'){ box.style.display='none'; return; }   // нет цикла — нечего отмечать
+  box.style.display='';
+  var today=_dayKey();
+  var inp=document.getElementById('prof-lastperiod');
+  var marked=((inp&&inp.value)||P.lastperiod||'')===today;
+  var ci=(typeof cycleInfo==='function')?cycleInfo():null;
+  var h='<div class="card-accent"></div><div class="step-badge">'+L(_CYC_T.title)+'</div>';
+  if(marked){
+    h+='<p class="step-desc" style="margin:0 0 10px;">'+L(_CYC_T.done)+'</p>';
+    if(window._cycPrev!==undefined) h+='<button type="button" class="as-usual" onclick="_cycUndo()">'+L(_CYC_T.undo)+'</button>';
+  } else {
+    if(ci && ci.day) h+='<p class="step-desc" style="margin:0 0 10px;">'+L(_CYC_T.day).replace('{d}', ci.day)+'</p>';
+    h+='<button type="button" class="as-usual" onclick="_cycStartToday()">'+L(_CYC_T.btn)+'</button>'
+     + '<div style="margin-top:10px;font-size:var(--fs-cap);opacity:.72;line-height:1.5;">'+L(_CYC_T.hint)+'</div>';
+  }
+  box.innerHTML=h;
+}
+function _cycStartToday(){
+  var P=_cycProfile(); window._cycPrev=P.lastperiod||'';   // для «Отменить» в пределах сессии
+  _cycSetLast(_dayKey()); _cycTodayRender();
+}
+function _cycUndo(){
+  var prev=window._cycPrev; if(prev===undefined) return;
+  _cycSetLast(prev); delete window._cycPrev; _cycTodayRender();
+}
 function _cycleChange(){
+  try{ _cycTodayRender(); }catch(e){}
   var cs=getRadio('cycle_status');
   var ab=document.getElementById('cyc-absent-block'), pm=document.getElementById('cyc-pms-block');
   if(ab)ab.style.display=(cs==='absent')?'block':'none';
@@ -7886,6 +7971,7 @@ function _allFlow(){ return FLOW_ALL.filter(function(n){ if(!_stepDue(n))return 
 function showAll(){
   if(!window.__editMode && typeof _passedToday==='function'&&_passedToday()){ _showDailyDoneGate(); return; }   // сегодня пройдено → гейт «возвращайтесь завтра»
   _showFlow(_allFlow()); if(typeof renderGadgetPanel==='function')renderGadgetPanel();
+  try{ if(typeof _cycTodayRender==='function')_cycTodayRender(); }catch(e){}
   // Обычный проход: кнопка через строгий гейт — результат только когда все блоки отвечены.
   _flowFooter(t('show_result'), function(){ _gateGuardOrRun(function(){ if(typeof _saveDaily==='function')_saveDaily(); document.body.classList.remove('flow-mode'); _hideFlowFooter(); showResults(); }); });
   if(window.__editMode){ _flowFooter(L({ru:'Сохранить и вернуться',uk:'Зберегти й повернутися',en:'Save & return',es:'Guardar y volver',de:'Speichern & zurück',pt:'Salvar e voltar',fr:'Enregistrer et revenir',pl:'Zapisz i wróć',it:'Salva e torna',he:'שמור וחזור',ja:'保存して戻る',ko:'저장하고 돌아가기'}),_saveProfileDone); }   // режим «Изменить профиль»: футер = сохранить и вернуться (без гейта)
