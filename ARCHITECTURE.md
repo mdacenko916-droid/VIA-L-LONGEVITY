@@ -68,6 +68,10 @@ Sugar_40, Inflammation, Beauty). Протокол `postMessage` (`openBook` /
 
 ### 1.3 Интерпретатор (`interpreter/`, отдаётся как `via-l.com/interpreter`)
 
+> ⚠️ **Таблица ниже устарела (сверено 2026-09-14).** Тарифов VIO/PRO/ELITE и их файлов больше нет.
+> Сейчас: `interpreter-via-l.html` — **VIA-L** (App Store / Google Play); `interpreter-via-l-expert.html` —
+> **VIA-L EXPERT** (PWA, ведение специалистом). Актуальная карта — `interpreter/ARCHITECTURE.md` §2 (баннер).
+
 | Файл | Назначение | Шагов | AI | Expert-PDF | Zoom | i18n |
 |---|---|---|---|---|---|---|
 | `index.html` | Лендинг ИП: галерея устройств (3D) + тарифы | — | — | — | — | 12 яз. |

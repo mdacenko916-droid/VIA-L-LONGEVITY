@@ -84,5 +84,5 @@ All `mailto:` links are wrapped by Cloudflare's email-protection (`/cdn-cgi/l/em
 ## Working with these files
 
 - **Edit, don't recreate**. Files are 1k–4k lines of inline HTML+CSS+JS; use targeted `Edit` rather than rewriting. Look at recent git history before large refactors — the book viewer in particular has been iterated heavily.
-- **iCloud working directory**: the project lives in `~/Library/Mobile Documents/com~apple~CloudDocs/VIA-L LONGEVITY` (note the space). Quote paths in shell commands.
+- **Working directory**: the repo lives in `~/Developer/VIA-L-LONGEVITY` (moved out of iCloud — iCloud sync broke git). Many asset/folder names contain spaces or Cyrillic — quote paths in shell commands.
 - **No linter, no formatter, no test runner.** Verify changes by opening the page in a browser and toggling each of the four languages; for book changes, test both desktop (turn.js, ≥768px) and mobile (custom reader, <768px) paths.

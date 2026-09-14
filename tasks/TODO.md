@@ -277,31 +277,16 @@ RevenueCat, формы ASC и список проверок на устройс�
 `legal-app/support.html` под Support URL готов. Витрина в App Store-сборке — решено 2026-08-25:
 платный блок закрыт `_isWebSite()`, остаётся только бесплатное знакомство.
 
-⚠️ **Пейволл на iOS сейчас выключен** — с `c000970` он зависит от наличия ключа RevenueCat для
-платформы, а iOS-ключ пока заглушка. Значит приложение открыто целиком: удобно для теста, но
-**подавать в ревью в таком виде нельзя** (подписка заявлена, купить нечем). Сначала пункт 1 ниже.
+✅ **Сверено по коду 2026-09-14:** RevenueCat iOS настроен 2026-09-09 — в `iap-bridge.js` настоящий
+ключ `appl_…`, пейволл на iOS включён; 1.0 подана и на ревью (см. блок «VIA-L 1.0.1» выше).
+Прежние пункты «RevenueCat второе приложение / sandbox / сборка / рейтинг / метаданные» закрыты
+подачей. ⚠️ Общий entitlement НЕ переносит покупку между сторами (SDK анонимный, `logIn()` нет) —
+«Восстановить покупки» работает только внутри одного стора. Сборка: `cd app && ./sync-web.sh` →
+Xcode Cloud; `pod install` — только при смене плагинов, с `LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8`.
 
 Канон: [[project_app_iap_plan]], [[project_app_sim_build]], [[feedback_via_l_appstore_isolation]].
 Обоснование именований для ревью — `docs/APP-REVIEW-LAB-NAMING-RATIONALE.md`.
 
-- [ ] 🔴 **1. RevenueCat: второе приложение (App Store).** В существующий проект «VIA-L» добавить
-      приложение App Store с bundle `com.viael.vial` (нужен ключ App Store Connect API для проверки
-      чеков) → в ASC создать auto-renewable подписку **€30/мес** → привязать к тому же entitlement
-      `via_l_pro` и Offering `default` → передать Claude ключ `appl_…` для `iap-bridge.js`.
-      ⚠️ **Общий entitlement НЕ переносит покупку между сторами.** `logIn()` и своего App User ID в
-      `iap-bridge.js` нет — SDK анонимный, идентификатор свой на каждую установку. Работает
-      «Восстановить покупки» внутри одного стора (второй Android под тем же Google-аккаунтом,
-      второй iPhone под тем же Apple ID). Кросс-стор потребовал бы входа, которого у нас нет.
-- [ ] 🔴 **2. Sandbox-проверка покупки и «Восстановить покупки»** (ASC → Users and Access → Sandbox).
-- [ ] **3. Сборка:** `cd app && ./sync-web.sh` → Xcode Cloud → TestFlight (по кабелю не собрать:
-      Mac 2018 → Sonoma → Xcode 16.2 против iOS 26.5 на телефоне).
-      ⚠️ `pod install` нужен только при смене нативных плагинов, и с обходом кодировки:
-      `cd app/ios/App && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 pod install`
-      (Ruby 4.0.5 + CocoaPods 1.16.2 иначе падают с `Encoding::CompatibilityError`).
-- [ ] **4. Возрастной рейтинг** 18+ и «Medical/Treatment Information: None».
-- [ ] **5. Метаданные/скриншоты 6.9″** без мед-обещаний + App Review Information: аккаунтов нет,
-      дать sandbox-аккаунт и пояснение, что контент открывается подпиской.
-- [ ] Подтвердить корректность `ITSAppUsesNonExemptEncryption=false` (только стандартное шифрование).
 - [ ] **Legal:** вычитка носителями 11 языков + хостинг `legal-app/` на чистом лендинге → URL в App Store Connect.
 - [ ] **Долговременное хранение данных клиента — Уровень 1–2.** Сейчас всё в localStorage WebView (хрупко).
       ✅ Есть: бэкап export/import (Ур.3), cap метрик `*_daily` 1500 (≈4 г) / `*_ai_daily` 730 (≈2 г).

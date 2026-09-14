@@ -22,6 +22,18 @@
 
 ## 2. КАРТА ФАЙЛОВ
 
+> ⚠️ **Устарело (сверено 2026-09-14).** Разделы §2–4 и §7 описывают майскую схему VIO/PRO/PRO-EXPERT/ELITE —
+> файлов `interpreter-vio.html`, `interpreter-pro-expert.html`, `interpreter-elite.html` больше нет.
+> Фактически в `interpreter/`: `interpreter-via-l.html` (VIA-L, App Store / Google Play, данные на устройстве,
+> RevenueCat), `interpreter-via-l-expert.html` (VIA-L EXPERT, PWA, вход по коду, синк `/expert/state`),
+> `index.html` (лендинг ведения EXPERT, не витрина устройств), `my-specialist.html` (витрина наставников),
+> `science.html` (научная база VIA-L), `methodology.html` (EXPERT), `research-consent.html`,
+> `code-generator.html`, мосты `app-mode.js`/`healthkit-bridge.js`/`healthconnect-bridge.js`/`iap-bridge.js`/
+> `notify-bridge.js`, `sw-expert.js`, SQL-миграции D1 (`cabinet-*.sql`, `ai-usage-`, `research-`, `complaints-`,
+> `offer-acceptance-schema.sql`). Воркер: KV `EXPERT_DRAFTS`/`PROGRAM_INTAKES`/`WEARABLE_TOKENS`/`ANALYSIS_CACHE`,
+> D1 `vial-cabinet`, R2 `vial-assets`, очередь `vial-analysis`, cron ежечасный. Канон имён — два тарифа
+> VIA-L и VIA-L EXPERT; `pro`/`elite` в коде — легаси.
+
 ```
 interpreter/
 │
@@ -796,8 +808,8 @@ WebSearch/WebFetch и правятся. За сессию: PRIDE −47% (не �
 ашваганда **+57.4 нг/дл ≈ +2.0 нмоль/л (НЕ путать единицы) / кортизол −27.9%**
 (пиновано в P-M1/P-M9). Принцип: ссылки в KB — из вторых рук, кроме провёренных.
 
-**Роутинг модели по языку** (вызов разбора ~стр. 905 воркера): **he/ar/ja/ko →
-`claude-sonnet-4-6`** (Haiku галлюцинирует иврит), остальные → Haiku. `max_tokens`
+**Роутинг модели по языку** (`/analyze`, `/day-plan`, `/ai-memory`, `/weekly-report`): **he/ar/ja/ko →
+`claude-sonnet-4-6`** (Haiku галлюцинирует иврит), с `70ffdf2` туда же **uk** (суржик у Haiku), остальные → Haiku. `max_tokens`
 разбора **2600** (he/ja/ko токеноёмки — иначе обрыв). См. memory `project_ip_model_routing`.
 
 **Тон-голос (SYSTEM_PROMPT).** Блок «ТОН — ЗАБОТА» (валидация/нормализация/без стыда/
