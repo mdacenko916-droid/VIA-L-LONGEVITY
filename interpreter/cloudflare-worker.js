@@ -6971,6 +6971,36 @@ function selectExercisePlan(data) {
   if (age >= 50) p.strength += ' После 50 это не опция, а основа: без неё мышцы и кость уходят.';
   if (data.gender !== 'male' && ['peri', 'meno', 'post'].includes(String(data.phase || '')))
     p.strength += ' Отдельно: у женщин в переходе силовая — самый сильный немедикаментозный рычаг по приливам и настроению, сильнее любой еды; ставить её первой, но БЕЗ обещаний и цифр эффекта.';
+  // Perry Academy (Sims, Wittstein): в переходе мышце нужен сигнал нагрузки, а не число повторов —
+  // прогрессия весом, базовые многосуставные движения. Решение Марины 2026-09-15.
+  // Не наращивать там, где вето велит ждать (давление вне ориентира, ограничение врача и т.п.) —
+  // иначе рамка сама себе противоречит. При остеопорозе — без максимальных весов (Wittstein).
+  const holdLoad = String(data.cond_limit) === 'yes' || bpHigh || has(c, 'arrhythmia', 'cvd_event', 'pregnancy', 'breastfeeding', 'onco_active')
+    || (temp.length && !has(temp, 'none_temp'));
+  if (!holdLoad) p.strength += ' Наращивать ВЕСОМ, а не только числом повторов: когда последние повторы стали лёгкими — чуть тяжелее снаряд'
+    + (has(c, 'osteoporosis') ? ', но без максимальных весов' : '') + '. '
+    + 'Основа — присед, тяга (наклон с прямой спиной), жим над головой, «прогулка фермера» с гантелями или сумками.';
+
+  // Дыхание на усилии — «канистра» (диафрагма, пресс, тазовое дно работают вместе; Harm-Ernandes, Terry).
+  p.breath = 'дыхание: на усилии — выдох и мягкое подтягивание мышц тазового дна, без задержки дыхания.';
+
+  // Удар для кости (Sims, Wittstein: 10–50 низких прыжков 3 раза в неделю). Только у женщин в переходе,
+  // и только когда нет повода подождать. Тазовое дно — ПЕРЕД прыжками, не вместо них.
+  const gsm = A(data.gsm), uro = A(data.urology), sym = A(data.symptoms);
+  const pelvicSym = has(gsm, 'support_shift', 'tone_shift', 'pelvic_tension')
+    || has(uro, 'incontinence', 'stress_incontinence', 'urge_incontinence', 'support_shift', 'tone_shift', 'prolapse');
+  const jointSym = has(sym, 'joint', 'movement_stiff') || has(c, 'osteoarthritis');
+  const _w = parseFloat(data.weight), _h = parseFloat(data.height);
+  const bmiHigh = _w > 0 && _h > 0 && _w / Math.pow(_h / 100, 2) >= 30;
+  if (data.gender !== 'male' && ['peri', 'meno', 'post'].includes(String(data.phase || '')) && !holdLoad) {
+    if (pelvicSym) p.impact = 'удар для кости: прыжки пока не добавлять — сначала дыхание и мышцы тазового дна на усилии; прыжки — когда при нагрузке и кашле нет подтекания и тяжести.';
+    else if (has(c, 'osteoporosis')) p.impact = 'удар для кости: только низкий — подъёмы на носки с мягким опусканием на пятки, шаги на ступеньку; без прыжков в высоту.';
+    else if (jointSym || bmiHigh) p.impact = 'удар для кости: пока без прыжков — опорную нагрузку даёт силовая; низкие прыжки позже, когда суставы спокойно переносят силовые.';
+    else p.impact = 'удар для кости: небольшие низкие прыжки 3 раза в неделю как часть силового дня — начать с 10 и постепенно до 30–50, приземляться мягко.';
+  }
+
+  // Скованные суставы лучше переносят ритмичное движение, чем растяжку через силу (Terry).
+  if (jointSym) p.mobility = 'суставы: перед силовой 5–10 минут плавных ритмичных движений (кошка-корова, круги тазом и плечами) — это лучше, чем растягиваться через силу.';
 
   // Баланс: доза важнее модальности.
   if (age >= 60 || has(c, 'osteoporosis'))
@@ -7012,6 +7042,9 @@ function buildExerciseBlock(data) {
   const p = selectExercisePlan(data);
   let out = '══ РАМКА ДВИЖЕНИЯ НА НЕДЕЛЮ (выбрана кодом — своих норм не изобретай) ══\n'
     + '• ' + p.aerobic + '\n• ' + p.strength + '\n'
+    + (p.impact ? '• ' + p.impact + '\n' : '')
+    + '• ' + p.breath + '\n'
+    + (p.mobility ? '• ' + p.mobility + '\n' : '')
     + (p.balance ? '• ' + p.balance + '\n' : '')
     + '• ' + p.intensity + '\n• ' + p.timing + '\n• ' + p.progression + '\n• ' + p.today + '\n';
   if (p.vetoes.length) out += 'ОБЯЗАТЕЛЬНЫЕ ОГРАНИЧЕНИЯ ПО ДВИЖЕНИЮ (каждое — отдельным пунктом в activity, как СПОСОБ ДЕЛАТЬ; '
