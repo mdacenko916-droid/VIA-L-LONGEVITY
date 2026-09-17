@@ -4910,12 +4910,11 @@ async function handleOuraMetrics(request, env, corsHeaders){
 // vision.ultrahuman.com/developer (2026-09-10) — три заявки в partnerships для этого не понадобились.
 // Secrets: ULTRAHUMAN_CLIENT_ID, ULTRAHUMAN_CLIENT_SECRET. KV: WEARABLE_TOKENS (ultrahuman:<sid>).
 // Redirect URI: https://interpreter.viaelcom.workers.dev/ultrahuman/callback · Scope: ring_data.
-// Метрики отдаются ПО ОДНОМУ ДНЮ (?date=YYYY-MM-DD) → 7 параллельных запросов. Форма ответа в доке
-// не описана; ключи взяты из открытого клиента (raycast/extensions ultrahuman-insights):
-// data.metrics[date] = [{type, object}] · sleep.{total_sleep,deep_sleep}.minutes ·
-// sleep.temperature_deviation.celsius · hrv.avg · night_rhr.avg · recovery_index.value ·
-// vo2_max.value · spo2.values[].value. ⚠️ Сверить на первом живом ответе — в лог пишутся только
-// имена типов, без значений.
+// Метрики отдаются ПО ОДНОМУ ДНЮ (?date=YYYY-MM-DD) → 7 параллельных запросов. Форма ответа сверена
+// 2026-09-17 по образцу от поддержки Ultrahuman (скрин/ultrah/response.jsonc):
+// data.metric_data = [{type, object}] · avg_sleep_hrv.value · night_rhr.avg · recovery_index.value ·
+// vo2_max.value · temperature_deviation.value (°C) · Sleep (с большой S): quick_metrics[type=total_sleep].value
+// и sleep_stages[type=deep_sleep].stage_time — в СЕКУНДАХ, spo2.value — одно число.
 // ─────────────────────────────────────────────────────────────
 const UH_AUTH_URL  = 'https://auth.ultrahuman.com/authorise';
 const UH_TOKEN_URL = 'https://partner.ultrahuman.com/api/partners/oauth/token';
@@ -5018,17 +5017,19 @@ async function handleUltrahumanMetrics(request, env, corsHeaders){
   const num = (v) => { const n = Number(v); return (v != null && v !== '' && isFinite(n)) ? n : null; };
   const pos = (v) => { const n = num(v); return (n != null && n > 0) ? n : null; };
   const pick = (fn) => _latestByDate(rows, r => r.day, r => { try { return fn(r.t); } catch(e){ return null; } });
-  const sl = (t) => t.sleep || {};
+  const sl = (t) => t.Sleep || t.sleep || {};
+  const qm = (t, k) => ((sl(t).quick_metrics || []).find(q => q && q.type === k) || {}).value;
+  const stage = (t, k) => ((sl(t).sleep_stages || []).find(q => q && q.type === k) || {}).stage_time;
   const ex = {};
   let v;
   v = pick(t => pos(t.avg_sleep_hrv && t.avg_sleep_hrv.value) ?? pos(t.hrv && t.hrv.avg));  if (v!=null) ex.hrv = Math.round(v);   // ночной HRV, фолбэк — средний за день
   v = pick(t => pos(t.night_rhr && t.night_rhr.avg));                                        if (v!=null) ex.rhr = Math.round(v);
-  v = pick(t => pos(sl(t).total_sleep && sl(t).total_sleep.minutes));                        if (v!=null) ex.sleepHours = +(v/60).toFixed(2);
-  v = pick(t => pos(sl(t).deep_sleep && sl(t).deep_sleep.minutes));                          if (v!=null) ex.deepMin = Math.round(v);
-  v = pick(t => num(sl(t).temperature_deviation && sl(t).temperature_deviation.celsius));    if (v!=null) ex.tempDev = +v.toFixed(2);
+  v = pick(t => pos(qm(t, 'total_sleep')));                                                   if (v!=null) ex.sleepHours = +(v/3600).toFixed(2);
+  v = pick(t => pos(stage(t, 'deep_sleep')));                                                if (v!=null) ex.deepMin = Math.round(v/60);
+  v = pick(t => num(t.temperature_deviation && t.temperature_deviation.value));              if (v!=null) ex.tempDev = +v.toFixed(2);
   v = pick(t => pos(t.recovery_index && t.recovery_index.value));                            if (v!=null) ex.readiness = Math.round(v);
   v = pick(t => pos(t.vo2_max && t.vo2_max.value));                                          if (v!=null) ex.vo2 = Math.round(v);
-  v = pick(t => { const a = ((t.spo2 && t.spo2.values) || []).map(x => Number(x && x.value)).filter(n => isFinite(n) && n > 0); return a.length ? a.reduce((s,n)=>s+n,0)/a.length : null; });
+  v = pick(t => pos(sl(t).spo2 && sl(t).spo2.value));
   if (v!=null) ex.spo2 = +v.toFixed(1);
   return jsonResponse({ ok:true, ex: _sanitizeEx(ex) }, corsHeaders);
 }
