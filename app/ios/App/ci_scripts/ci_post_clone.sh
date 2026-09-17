@@ -21,8 +21,26 @@ export LC_ALL=en_US.UTF-8
 ROOT="$CI_PRIMARY_REPOSITORY_PATH"
 echo "→ Репозиторий: $ROOT"
 
-command -v node >/dev/null 2>&1 || { echo "→ Ставлю node…"; brew install node; }
-command -v pod  >/dev/null 2>&1 || { echo "→ Ставлю cocoapods…"; brew install cocoapods; }
+# Node — готовым архивом с nodejs.org, НЕ через brew. 2026-09-17: образ Xcode 26.6 оказался на Intel,
+# а Homebrew с сентября 2026 не выпускает для Intel готовых пакетов и собирает node из исходников —
+# сборка падала в ci_post_clone на «C compiler cannot create executables».
+export HOMEBREW_NO_AUTO_UPDATE=1
+if ! command -v node >/dev/null 2>&1; then
+  NODE_V=v22.12.0
+  case "$(uname -m)" in arm64) NODE_ARCH=arm64 ;; *) NODE_ARCH=x64 ;; esac
+  echo "→ Ставлю node $NODE_V ($NODE_ARCH) с nodejs.org…"
+  curl -fsSL "https://nodejs.org/dist/$NODE_V/node-$NODE_V-darwin-$NODE_ARCH.tar.gz" | tar -xz -C "${TMPDIR:-/tmp}"
+  export PATH="${TMPDIR:-/tmp}/node-$NODE_V-darwin-$NODE_ARCH/bin:$PATH"
+fi
+node -v
+
+# CocoaPods — через системный Ruby (gem), а не brew, по той же причине.
+if ! command -v pod >/dev/null 2>&1; then
+  echo "→ Ставлю cocoapods через gem…"
+  gem install cocoapods -v 1.16.2 --user-install --no-document
+  export PATH="$(ruby -e 'print Gem.user_dir')/bin:$PATH"
+fi
+pod --version
 
 cd "$ROOT/app"
 
