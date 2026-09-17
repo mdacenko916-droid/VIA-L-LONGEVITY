@@ -76,7 +76,7 @@ RevenueCat для Android нужен не ключ, а сервисный акк
 ⚠️ **`app/www` собирается скриптом `app/sync-web.sh`, а не берётся из `interpreter/` напрямую.**
 Без него `npx cap sync` копирует в сборку СТАРЫЕ файлы, и правка веб-части просто не доедет.
 Порядок перед каждой сборкой: `bash app/sync-web.sh` → `cd app && npx cap sync android` →
-`cd android && VIAL_VERSION_CODE=N ./gradlew bundleRelease`.
+`cd android && VIAL_VERSION_CODE=N ./gradlew bundleRelease`. ⚠️ JDK 17: `JAVA_HOME=~/Library/Java/JavaVirtualMachines/jbr-17.0.14/Contents/Home` — JDK из Android Studio (25) роняет Gradle «Unsupported class file major version 69» (2026-09-17).
 
 ## Шаг 5. Проверка покупки без списания денег
 
