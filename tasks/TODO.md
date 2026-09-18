@@ -113,7 +113,9 @@
       разрешения в `Info.plist`. Android: `HealthConnectVialPlugin.kt` (новые типы через `safeRead` — отказ по
       одному типу больше не роняет весь импорт) + 4 разрешения в манифесте плагина. Шаги → разбор (`device.steps`).
       EXPERT PWA к Health доступа не имеет. % жира не берём — в разборе его некуда деть.
+- [x] **Android v7 собрана 2026-09-18** (`app/store/build/vial-release-v7.aab`, в манифесте все 11 типов Health Connect) — загрузить в закрытый тест.
 - [ ] **Владелец:** Play Console → «Разрешения Health Connect» — задекларировать READ_EXERCISE, READ_RESPIRATORY_RATE,
+      (поля для новых типов Play Console покажет только ПОСЛЕ загрузки v7)
       READ_WEIGHT, READ_BLOOD_PRESSURE с обоснованием; сверить политику конфиденциальности (перечень данных).
 - [ ] **Сборка и проверка:** push → `app/sync-web.sh` → iOS через Xcode Cloud/TestFlight, Android на JDK 17 в закрытый
       тест. На iPhone: окно Health спросит только новые типы. Проверить: тренировка вчера → «Движение вчера» отмечено;
