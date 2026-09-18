@@ -108,7 +108,7 @@ talk to a clinician.
 
 SUBSCRIPTION
 
-Full access is an auto-renewable monthly subscription, billed through your Apple ID and renewing
+The first three days you use VIA-L are free, with no payment details. After that, full access is an auto-renewable monthly subscription, billed through your Apple ID and renewing
 automatically until you cancel. The current price is shown on this page and in the app before you
 subscribe. Manage or cancel any time in iPhone Settings. Terms: https://via-l.com/legal-app/terms.html
 Privacy Policy: https://via-l.com/legal-app/privacy.html
@@ -132,6 +132,16 @@ perimenopause and andropause. It explains what is changing and gives you one thi
 day. Works by hand or with Apple Health, in twelve languages, with your data kept on your device.
 ```
 
+## 6-бис. What's New — 1.0.3 (2026-09-18)
+
+Тексты для ASC — в `app/store/release-notes.json` (EN/RU/UK).
+
+```
+Your first three days with VIA-L are free — no payment details needed. New: My intake — set times
+for supplements and medicines and get a reminder. Movement — a suggestion for today based on how you
+feel, with workouts and steps from Apple Health.
+```
+
 ## 7. App Review Information — заметка ревьюеру
 
 ```
@@ -145,19 +155,19 @@ It does not diagnose, treat or prevent disease and is not a medical device. It n
 implies that the user has a condition; the disclaimer is shown before first use and repeated on
 every result.
 
-Content is behind an auto-renewable monthly subscription purchased with In-App Purchase.
-"Restore Purchases" is on the paywall. There is no login and no way to buy access to the app or
+The first three days of use are a free in-app preview with a shorter overview; no payment details are
+collected and no App Store free-trial offer is used. From the fourth day the paywall appears. To reach
+the paywall immediately, tap the note "Trial overview — short version…" under the result, or open
+My profile → Subscription. Full access is an auto-renewable monthly subscription purchased with
+In-App Purchase. "Restore Purchases" is on the paywall. There is no login and no way to buy access to the app or
 its content outside the app.
 
 The "My mentor" screen lets a user connect, free of charge, to an independent nutrition
 specialist and book a free 15-minute introductory call. Nothing on that screen is sold: there is
 no price, no checkout and no purchase link of any kind.
 
-To review without a purchase, please use the sandbox account below, or contact us and we will
-provide a promo code.
-Sandbox Apple ID: <заполнить>
 Health data: HealthKit is requested only after the user is told what it is used for, and only for
-reading sleep, heart-rate and activity metrics. Data is stored on the device.
+reading sleep, heart-rate, activity, workouts, steps, breathing rate, weight and blood pressure. Data is stored on the device.
 Support: support@via-l.com
 ```
 

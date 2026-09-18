@@ -74,7 +74,7 @@ VIA-L is a wellness and lifestyle app. It is not a diagnosis and not a replaceme
 
 SUBSCRIPTION
 
-Full access is an auto-renewable monthly subscription, billed through Google Play and renewing automatically until you cancel. The current price is shown on this page and in the app before you subscribe. Manage or cancel any time in the Play Store subscriptions screen.
+The first three days you use VIA-L are free, with no payment details. After that, full access is an auto-renewable monthly subscription, billed through Google Play and renewing automatically until you cancel. The current price is shown on this page and in the app before you subscribe. Manage or cancel any time in the Play Store subscriptions screen.
 Terms: https://via-l.com/legal-app/terms.html
 Privacy Policy: https://via-l.com/legal-app/privacy.html
 ```
