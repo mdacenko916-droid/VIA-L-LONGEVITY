@@ -87,14 +87,38 @@ async function ntLang(){
   }catch(e){}
   return 'en';
 }
+// «Мои приёмы» (2026-09-18): тот же пустой пуш будит и в час приёма добавок/препаратов. Чей это час,
+// SW понимает сам: страница кладёт в Cache местные часы приёма (vial-ik-hours) и час утреннего
+// напоминания (vial-nt-hour). Названий препаратов SW не знает и не показывает — только время.
+const IK_TXT = {
+  ru:'Ваш список на {t} — откройте VIA·L', uk:'Ваш список на {t} — відкрийте VIA·L', en:'Your {t} list — open VIA·L',
+  es:'Tu lista de las {t} — abre VIA·L', de:'Deine Liste für {t} — öffne VIA·L', pt:'A sua lista das {t} — abra a VIA·L',
+  fr:'Votre liste de {t} — ouvrez VIA·L', pl:'Twoja lista na {t} — otwórz VIA·L', it:'La tua lista delle {t} — apri VIA·L',
+  he:'הרשימה שלכם ל־{t} — פתחו את VIA·L', ja:'{t} のリスト — VIA·L を開く', ko:'{t} 목록 — VIA·L 열기'
+};
+async function cacheText(key){
+  try{ const r = await caches.match(key); if(r) return (await r.text()).trim(); }catch(e){}
+  return '';
+}
 self.addEventListener('push', e => {
   e.waitUntil((async () => {
-    const t = NT_TXT[await ntLang()] || NT_TXT.en;
-    await self.registration.showNotification(t.t, {
-      body: t.b,
+    const lg = await ntLang();
+    const t = NT_TXT[lg] || NT_TXT.en;
+    const h = new Date().getHours();
+    const ikHours = (await cacheText('vial-ik-hours')).split(',').filter(Boolean).map(Number);
+    const ntHour = parseInt(await cacheText('vial-nt-hour'), 10);
+    const isIntake = ikHours.indexOf(h) >= 0;
+    const isMorning = !isIntake || ntHour === h;
+    const ikBody = (IK_TXT[lg] || IK_TXT.en).replace('{t}', String(h).padStart(2, '0') + ':00');
+    // Утро и приём в один час — два пуша подряд; общий тег сворачивает их в ОДНО уведомление.
+    await self.registration.showNotification(isMorning ? t.t : 'VIA·L', {
+      body: isIntake ? ikBody : t.b,
       icon: './pwa/icon-192.png',
       badge: './pwa/icon-192.png',
-      tag: 'vial-morning',        // один и тот же тег: вчерашнее не копится на экране
+      // Утро — один тег на всё: вчерашнее не копится. Приём — тег на час: иначе напоминание 13:00
+      // тихо (renotify:false) заменило бы висящее утреннее, и человек бы его не заметил. Два пуша
+      // одного часа (утро + приём) сворачиваются в одно под общим тегом этого часа.
+      tag: isIntake ? ('vial-intake-' + h) : 'vial-morning',
       renotify: false,
       data: { url: './' + EXPERT }
     });

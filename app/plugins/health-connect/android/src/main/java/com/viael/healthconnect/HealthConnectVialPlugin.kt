@@ -4,14 +4,18 @@ import androidx.activity.result.ActivityResult
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.BloodPressureRecord
+import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
 import androidx.health.connect.client.records.OxygenSaturationRecord
 import androidx.health.connect.client.records.Record
+import androidx.health.connect.client.records.RespiratoryRateRecord
 import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.Vo2MaxRecord
+import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import com.getcapacitor.JSObject
@@ -25,18 +29,23 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import com.getcapacitor.JSArray
 import kotlin.reflect.KClass
 
 /**
  * Локальный Health Connect плагин VIA·L (только Android).
- * Читает HRV(RMSSD) / пульс покоя / VO2max / SpO2 / шаги / сон(стадии) и
+ * Читает HRV(RMSSD) / пульс покоя / VO2max / SpO2 / шаги / сон(стадии) +
+ * тренировки / дыхание / вес / давление (2026-09-18) и
  * нормализует в те же поля, что и Apple-мост → healthconnect-bridge.js кормит их в шаги.
  */
 @CapacitorPlugin(name = "HealthConnectVial")
 class HealthConnectVialPlugin : Plugin() {
 
     // Разрешения на чтение наших типов (строки; getGrantedPermissions тоже отдаёт строки).
-    private val perms: Set<String> = setOf(
+    // corePerms — то, без чего разбор не работает; «подключено» считаем по ним.
+    private val corePerms: Set<String> = setOf(
         HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class),
         HealthPermission.getReadPermission(RestingHeartRateRecord::class),
         // Обычный пульс: из него считаем пульс покоя, когда источник не пишет его отдельным
@@ -46,6 +55,14 @@ class HealthConnectVialPlugin : Plugin() {
         HealthPermission.getReadPermission(OxygenSaturationRecord::class),
         HealthPermission.getReadPermission(StepsRecord::class),
         HealthPermission.getReadPermission(SleepSessionRecord::class)
+    )
+    // Полный приём (2026-09-18): тренировки, дыхание, вес, давление. Отказ по любому из них
+    // не ломает остальное — каждый тип читается отдельно (safeRead).
+    private val perms: Set<String> = corePerms + setOf(
+        HealthPermission.getReadPermission(ExerciseSessionRecord::class),
+        HealthPermission.getReadPermission(RespiratoryRateRecord::class),
+        HealthPermission.getReadPermission(WeightRecord::class),
+        HealthPermission.getReadPermission(BloodPressureRecord::class)
     )
 
     private fun client(): HealthConnectClient? = try {
@@ -98,7 +115,7 @@ class HealthConnectVialPlugin : Plugin() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val granted = c.permissionController.getGrantedPermissions()
-                val r = JSObject(); r.put("granted", granted.containsAll(perms)); call.resolve(r)
+                val r = JSObject(); r.put("granted", granted.containsAll(corePerms)); call.resolve(r)
             } catch (e: Exception) {
                 call.reject(e.message ?: "permission callback error")
             }
@@ -185,16 +202,80 @@ class HealthConnectVialPlugin : Plugin() {
                         if (v in 70.0..100.0) out.put("spo2", Math.round(v).toInt())
                     }
 
-                // ── Шаги: сумма за последние сутки. ──
-                val steps = readRecords(c, StepsRecord::class, now.minus(Duration.ofDays(1)), now)
-                    .sumOf { it.count }
+                // ── Шаги: сумма за ВЧЕРА (календарные сутки). Телефон и часы пишут шаги параллельно —
+                // простая сумма считала бы их дважды; суммируем по источнику и берём самый полный. ──
+                val zone = ZoneId.systemDefault()
+                val today0 = LocalDate.now(zone).atStartOfDay(zone).toInstant()
+                val yest0 = today0.minus(Duration.ofDays(1))
+                val steps = safeRead(c, StepsRecord::class, yest0, today0)
+                    .groupBy { it.metadata.dataOrigin.packageName }
+                    .values.maxOfOrNull { l -> l.sumOf { it.count } } ?: 0L
                 if (steps > 0) out.put("steps", steps.toInt())
+
+                // ── Тренировки за 7 дней: день, вид, минуты. Сводку считает JS-мост
+                // (_vialWorkoutSummary) по тем же правилам, что у вендоров. ──
+                val wl = JSArray()
+                safeRead(c, ExerciseSessionRecord::class, from7, now).forEach {
+                    val mins = Duration.between(it.startTime, it.endTime).seconds / 60.0
+                    if (mins > 0) {
+                        val w = JSObject()
+                        w.put("day", it.startTime.atZone(zone).toLocalDate().toString())
+                        w.put("activity", exerciseName(it.exerciseType))
+                        w.put("minutes", mins)
+                        wl.put(w)
+                    }
+                }
+                if (wl.length() > 0) out.put("workouts", wl)
+
+                // ── Частота дыхания: среднее за сон (днём её искажает движение). ──
+                if (nightStart != null && nightEnd != null) {
+                    val rr = safeRead(c, RespiratoryRateRecord::class, nightStart, nightEnd).map { it.rate }
+                    if (rr.isNotEmpty()) out.put("respRate", rr.average())
+                }
+
+                // ── Вес: последний за 7 дней (кг). Давление: последний замер за сутки (мм рт. ст.). ──
+                safeRead(c, WeightRecord::class, from7, now).maxByOrNull { it.time }
+                    ?.let { out.put("weight", it.weight.inKilograms) }
+                safeRead(c, BloodPressureRecord::class, now.minus(Duration.ofDays(1)), now).maxByOrNull { it.time }
+                    ?.let { out.put("bpSys", it.systolic.inMillimetersOfMercury); out.put("bpDia", it.diastolic.inMillimetersOfMercury) }
 
                 call.resolve(out)
             } catch (e: Exception) {
                 call.reject(e.message ?: "read error")
             }
         }
+    }
+
+    // Чтение типа, на который человек мог не дать разрешение: без разрешения Health Connect бросает
+    // исключение, и раньше оно роняло ВЕСЬ импорт. Для новых типов — пусто вместо падения.
+    private suspend fun <T : Record> safeRead(
+        c: HealthConnectClient,
+        type: KClass<T>,
+        start: Instant,
+        end: Instant
+    ): List<T> = try { readRecords(c, type, start, end) } catch (e: Exception) { emptyList() }
+
+    // Вид тренировки → те же слова, что у вендоров в воркере (strength / walking — фон и т.д.).
+    private fun exerciseName(t: Int): String = when (t) {
+        ExerciseSessionRecord.EXERCISE_TYPE_STRENGTH_TRAINING,
+        ExerciseSessionRecord.EXERCISE_TYPE_WEIGHTLIFTING,
+        ExerciseSessionRecord.EXERCISE_TYPE_CALISTHENICS -> "strength_training"
+        ExerciseSessionRecord.EXERCISE_TYPE_HIGH_INTENSITY_INTERVAL_TRAINING -> "hiit"
+        ExerciseSessionRecord.EXERCISE_TYPE_RUNNING,
+        ExerciseSessionRecord.EXERCISE_TYPE_RUNNING_TREADMILL -> "running"
+        ExerciseSessionRecord.EXERCISE_TYPE_WALKING -> "walking"
+        ExerciseSessionRecord.EXERCISE_TYPE_HIKING -> "hiking"
+        ExerciseSessionRecord.EXERCISE_TYPE_BIKING,
+        ExerciseSessionRecord.EXERCISE_TYPE_BIKING_STATIONARY -> "cycling"
+        ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_POOL,
+        ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_OPEN_WATER -> "swimming"
+        ExerciseSessionRecord.EXERCISE_TYPE_YOGA -> "yoga"
+        ExerciseSessionRecord.EXERCISE_TYPE_PILATES -> "pilates"
+        ExerciseSessionRecord.EXERCISE_TYPE_STRETCHING -> "stretching"
+        ExerciseSessionRecord.EXERCISE_TYPE_ELLIPTICAL -> "elliptical"
+        ExerciseSessionRecord.EXERCISE_TYPE_ROWING,
+        ExerciseSessionRecord.EXERCISE_TYPE_ROWING_MACHINE -> "rowing"
+        else -> "sport"
     }
 
     private suspend fun <T : Record> readRecords(

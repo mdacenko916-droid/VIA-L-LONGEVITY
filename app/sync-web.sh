@@ -31,6 +31,7 @@ cp "$IP/healthkit-bridge.js"      "$WWW/"
 cp "$IP/healthconnect-bridge.js"  "$WWW/"
 cp "$IP/iap-bridge.js"            "$WWW/"
 cp "$IP/notify-bridge.js"         "$WWW/"
+cp "$IP/intake.js"                "$WWW/"   # «Мои приёмы» — общий модуль VIA-L и EXPERT (2026-09-18)
 cp "$IP/my-specialist.html"       "$WWW/"
 cp "$IP/research-consent.html"    "$WWW/"
 # «Научная база» — собственная страница базового тарифа (НЕ клиническая methodology.html,

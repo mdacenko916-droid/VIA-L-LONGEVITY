@@ -3243,11 +3243,34 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
         <label data-t="s4_l4">Движение вчера</label>
         <div class="q-prompt" data-t="s4_q4">Сколько вы двигались за прошедшие сутки?</div>
         <div class="chips sup-grid">
-          <div class="chip"><input type="radio" name="move_today" id="mv1" value="sedentary"><label for="mv1" data-t="move_sedentary">🪑 Сидячий день</label></div>
-          <div class="chip"><input type="radio" name="move_today" id="mv2" value="light"><label for="mv2" data-t="move_light">🚶 Немного двигался</label></div>
-          <div class="chip"><input type="radio" name="move_today" id="mv3" value="walk"><label for="mv3" data-t="move_walk">🚶‍♂️ Много ходил</label></div>
-          <div class="chip"><input type="radio" name="move_today" id="mv4" value="cardio"><label for="mv4" data-t="move_cardio">🏃 Кардио / бег</label></div>
-          <div class="chip"><input type="radio" name="move_today" id="mv5" value="strength"><label for="mv5" data-t="move_strength">🏋 Силовая</label></div>
+          <div class="chip"><input type="radio" name="move_today" id="mv1" value="sedentary" onchange="_moveTodayChange()"><label for="mv1" data-t="move_sedentary">🪑 Сидячий день</label></div>
+          <div class="chip"><input type="radio" name="move_today" id="mv2" value="light" onchange="_moveTodayChange()"><label for="mv2" data-t="move_light">🚶 Немного двигался</label></div>
+          <div class="chip"><input type="radio" name="move_today" id="mv3" value="walk" onchange="_moveTodayChange()"><label for="mv3" data-t="move_walk">🚶‍♂️ Много ходил</label></div>
+          <div class="chip"><input type="radio" name="move_today" id="mv4" value="cardio" onchange="_moveTodayChange()"><label for="mv4" data-t="move_cardio">🏃 Кардио / бег</label></div>
+          <div class="chip"><input type="radio" name="move_today" id="mv5" value="strength" onchange="_moveTodayChange()"><label for="mv5" data-t="move_strength">🏋 Силовая</label></div>
+        </div>
+        <div id="move-trk-note" style="display:none;font-size:var(--fs-cap);color:var(--t3);line-height:1.45;margin-top:8px;"></div>
+      </div>
+      <!-- Силовая вчера → какие мышцы работали. Без этого правило «вчера → сегодня» не отличает ноги
+           от верха тела. Скрыта, пока не выбрана «Силовая»; гейт скрытую группу не требует. 2026-09-18 -->
+      <div class="input-group" id="train-zone-group" style="display:none;">
+        <label data-t="tz_l">Что нагружали</label>
+        <div class="q-prompt" data-t="tz_q">Какие мышцы работали на силовой? Можно несколько.</div>
+        <div class="chips sup-grid">
+          <div class="chip"><input type="checkbox" id="tz_legs" value="legs"><label for="tz_legs" data-t="tz_legs">🦵 Ноги и ягодицы</label></div>
+          <div class="chip"><input type="checkbox" id="tz_upper" value="upper"><label for="tz_upper" data-t="tz_upper">💪 Спина, плечи, руки</label></div>
+          <div class="chip"><input type="checkbox" id="tz_core" value="core"><label for="tz_core" data-t="tz_core">🧘 Пресс и корпус</label></div>
+          <div class="chip"><input type="checkbox" id="tz_full" value="full"><label for="tz_full" data-t="tz_full">🏋 Всё тело</label></div>
+        </div>
+      </div>
+      <!-- «Мышцы сегодня» — вход для выбора нагрузки на сегодня (воркер, _todayMovePlan). 2026-09-18 -->
+      <div class="input-group">
+        <label data-t="sore_l">Мышцы сегодня</label>
+        <div class="q-prompt" data-t="sore_q">Болят ли мышцы после прошлых нагрузок?</div>
+        <div class="chips cog-grid">
+          <div class="chip"><input type="radio" name="sore" id="so1" value="none"><label for="so1" data-t="sore_no">🙂 Не болят</label></div>
+          <div class="chip"><input type="radio" name="sore" id="so2" value="mild"><label for="so2" data-t="sore_mild">🤏 Слегка</label></div>
+          <div class="chip"><input type="radio" name="sore" id="so3" value="strong"><label for="so3" data-t="sore_strong">😣 Сильно</label></div>
         </div>
       </div>
       <!-- Артериальное давление (по желанию; и в гаджетном, и в ручном проходе — у гипертоников есть тонометр).
@@ -3511,6 +3534,8 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
           <div class="chip"><input type="checkbox" id="sup10" value="hrt" onchange="_supChange(this)"><label for="sup10" data-t="sup_hrt">🌸 Гормональная поддержка (МГТ)</label></div>
           <div class="chip sup-full"><input type="checkbox" id="sup11" value="none_sup" onchange="_supChange(this)"><label for="sup11" data-t="sup_none">❌ Ничего из перечисленного не принимаю</label></div>
         </div>
+        <!-- Свои добавки клиента (2026-09-18): уходят в «Мои приёмы» с временем и напоминанием. Подсказку ставит intake-инициализация внизу страницы. -->
+        <input type="text" id="supp_other" maxlength="300" oninput="if(typeof _ikStepRender==='function')_ikStepRender()" style="margin-top:10px;width:100%;background:rgba(226,185,90,.06);border:1px solid rgba(226,185,90,.3);border-radius:10px;color:var(--t1);padding:10px 12px;font-family:inherit;font-size:var(--fs-body);box-sizing:border-box;">
       </div>
       <div class="divider"></div>
       <div class="input-group">
@@ -3522,8 +3547,10 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
           <div class="chip"><input type="checkbox" name="meds" id="med4" value="cycle_factor" onchange="_medsChange()"><label for="med4" data-t="med_coc">🌸 Гормональная контрацепция / МГТ</label></div>
           <div class="chip"><input type="checkbox" name="meds" id="med5" value="other_factor" onchange="_medsChange()"><label for="med5" data-t="med_other">➕ Другие</label></div>
         </div>
-        <input type="text" id="meds_other" data-t-placeholder="meds_other_ph" placeholder="Какие именно? (названия)" style="display:none;margin-top:10px;width:100%;background:rgba(226,185,90,.06);border:1px solid rgba(226,185,90,.3);border-radius:10px;color:var(--t1);padding:10px 12px;font-family:inherit;font-size:var(--fs-body);box-sizing:border-box;">
+        <input type="text" id="meds_other" data-t-placeholder="meds_other_ph" placeholder="Какие именно? (названия)" style="display:none;margin-top:10px;width:100%;background:rgba(226,185,90,.06);border:1px solid rgba(226,185,90,.3);border-radius:10px;color:var(--t1);padding:10px 12px;font-family:inherit;font-size:var(--fs-body);box-sizing:border-box;" oninput="if(typeof _ikStepRender==='function')_ikStepRender()">
       </div>
+      <!-- «Когда вы их принимаете» — время каждого прямо здесь (intake.js _ikStepRender, 2026-09-18) -->
+      <div id="ik-step" style="display:none;"></div>
 
       <div class="divider"></div>
       <!-- СОСТОЯНИЯ ЗДОРОВЬЯ (docs/NUTRITION-MAPPING-SPEC.md §9) -->
@@ -4350,6 +4377,21 @@ const _PMSK={
 };
 Object.keys(_PMSK).forEach(function(k){Object.keys(_PMSK[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_PMSK[k][l];});});
 // Блок «Менструальный цикл и самочувствие» = дизайн VIO (выраженность фазы, ранняя менопауза, ПМС-сетка)
+// «Движение вчера» → какие мышцы работали + «Мышцы сегодня» (выбор нагрузки на сегодня), 12 яз. 2026-09-18
+const _MOVK={
+  tz_l:{ru:"Что нагружали",uk:"Що навантажували",en:"What you worked",es:"Qué se trabajó",de:"Was trainiert wurde",pt:"O que foi trabalhado",fr:"Ce qui a travaillé",pl:"Co było obciążone",it:"Cosa è stato allenato",he:"מה עבד",ja:"鍛えた部位",ko:"운동한 부위"},
+  tz_q:{ru:"Какие мышцы работали на силовой? Можно несколько.",uk:"Які м'язи працювали на силовому тренуванні? Можна кілька.",en:"Which muscles did the strength session work? You can pick several.",es:"¿Qué músculos trabajaron en la sesión de fuerza? Se pueden elegir varios.",de:"Welche Muskeln hat das Krafttraining beansprucht? Mehrfachauswahl möglich.",pt:"Quais músculos trabalharam no treino de força? Pode escolher vários.",fr:"Quels muscles la séance de renforcement a-t-elle sollicités ? Plusieurs choix possibles.",pl:"Które mięśnie pracowały na treningu siłowym? Można zaznaczyć kilka.",it:"Quali muscoli hanno lavorato nell'allenamento di forza? Si può sceglierne più di uno.",he:"אילו שרירים עבדו באימון הכוח? אפשר לבחור כמה.",ja:"筋トレで使った部位は？複数選べます。",ko:"근력 운동에서 어떤 근육을 썼나요? 여러 개 선택할 수 있어요."},
+  tz_legs:{ru:"🦵 Ноги и ягодицы",uk:"🦵 Ноги та сідниці",en:"🦵 Legs & glutes",es:"🦵 Piernas y glúteos",de:"🦵 Beine & Po",pt:"🦵 Pernas e glúteos",fr:"🦵 Jambes et fessiers",pl:"🦵 Nogi i pośladki",it:"🦵 Gambe e glutei",he:"🦵 רגליים וישבן",ja:"🦵 脚・お尻",ko:"🦵 다리·엉덩이"},
+  tz_upper:{ru:"💪 Спина, плечи, руки",uk:"💪 Спина, плечі, руки",en:"💪 Back, shoulders, arms",es:"💪 Espalda, hombros, brazos",de:"💪 Rücken, Schultern, Arme",pt:"💪 Costas, ombros, braços",fr:"💪 Dos, épaules, bras",pl:"💪 Plecy, barki, ręce",it:"💪 Schiena, spalle, braccia",he:"💪 גב, כתפיים, ידיים",ja:"💪 背中・肩・腕",ko:"💪 등·어깨·팔"},
+  tz_core:{ru:"🧘 Пресс и корпус",uk:"🧘 Прес і корпус",en:"🧘 Abs & core",es:"🧘 Abdomen y core",de:"🧘 Bauch & Rumpf",pt:"🧘 Abdômen e core",fr:"🧘 Abdos et gainage",pl:"🧘 Brzuch i core",it:"🧘 Addome e core",he:"🧘 בטן וליבה",ja:"🧘 腹筋・体幹",ko:"🧘 복근·코어"},
+  tz_full:{ru:"🏋 Всё тело",uk:"🏋 Усе тіло",en:"🏋 Full body",es:"🏋 Cuerpo completo",de:"🏋 Ganzkörper",pt:"🏋 Corpo inteiro",fr:"🏋 Corps entier",pl:"🏋 Całe ciało",it:"🏋 Tutto il corpo",he:"🏋 כל הגוף",ja:"🏋 全身",ko:"🏋 전신"},
+  sore_l:{ru:"Мышцы сегодня",uk:"М'язи сьогодні",en:"Muscles today",es:"Músculos hoy",de:"Muskeln heute",pt:"Músculos hoje",fr:"Muscles aujourd'hui",pl:"Mięśnie dziś",it:"Muscoli oggi",he:"השרירים היום",ja:"今日の筋肉",ko:"오늘의 근육"},
+  sore_q:{ru:"Болят ли мышцы после прошлых нагрузок?",uk:"Чи болять м'язи після попередніх навантажень?",en:"Are your muscles sore from recent exercise?",es:"¿Agujetas por el ejercicio reciente?",de:"Muskelkater von den letzten Belastungen?",pt:"Dor muscular por exercícios recentes?",fr:"Des courbatures après les derniers efforts ?",pl:"Czy mięśnie bolą po ostatnim wysiłku?",it:"Muscoli indolenziti dagli ultimi sforzi?",he:"האם השרירים כואבים אחרי המאמץ האחרון?",ja:"最近の運動で筋肉痛はありますか？",ko:"최근 운동 후 근육통이 있나요?"},
+  sore_no:{ru:"🙂 Не болят",uk:"🙂 Не болять",en:"🙂 Not sore",es:"🙂 Sin dolor",de:"🙂 Kein Muskelkater",pt:"🙂 Sem dor",fr:"🙂 Pas de courbatures",pl:"🙂 Nie bolą",it:"🙂 Nessun dolore",he:"🙂 לא כואבים",ja:"🙂 痛くない",ko:"🙂 아프지 않음"},
+  sore_mild:{ru:"🤏 Слегка",uk:"🤏 Трохи",en:"🤏 A little",es:"🤏 Un poco",de:"🤏 Leicht",pt:"🤏 Um pouco",fr:"🤏 Un peu",pl:"🤏 Trochę",it:"🤏 Un po'",he:"🤏 קצת",ja:"🤏 少し",ko:"🤏 조금"},
+  sore_strong:{ru:"😣 Сильно",uk:"😣 Сильно",en:"😣 A lot",es:"😣 Mucho",de:"😣 Stark",pt:"😣 Muito",fr:"😣 Beaucoup",pl:"😣 Mocno",it:"😣 Molto",he:"😣 מאוד",ja:"😣 かなり",ko:"😣 많이"}
+};
+Object.keys(_MOVK).forEach(function(k){Object.keys(_MOVK[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_MOVK[k][l];});});
 const _CYCK={
   s11_desc:{en:"Helps capture your personal rhythm to tailor wellness recommendations.",ru:"Помогает уловить ваш индивидуальный ритм и подобрать велнес-рекомендации точнее.",uk:"Допомагає вловити ваш індивідуальний ритм і підібрати велнес-рекомендації точніше.",es:"Ayuda a captar tu ritmo personal para ajustar las recomendaciones de bienestar.",de:"Hilft, deinen persönlichen Rhythmus zu erfassen und Wellness-Empfehlungen abzustimmen.",pt:"Ajuda a captar o seu ritmo pessoal para ajustar as recomendações de bem-estar.",fr:"Aide à saisir votre rythme personnel pour affiner les recommandations bien-être.",pl:"Pomaga uchwycić Twój rytm i lepiej dopasować rekomendacje wellness.",it:"Aiuta a cogliere il tuo ritmo personale per personalizzare i consigli di benessere.",he:"עוזר ללכוד את הקצב האישי שלך ולהתאים המלצות wellness.",ja:"あなた個人のリズムを捉えてウェルネス提案を最適化します。",ko:"당신만의 리듬을 파악해 웰니스 추천을 맞춰줍니다."},
   heavy_q:{en:"Heavy periods?",ru:"Обильные месячные?",uk:"Рясні місячні?",es:"¿Menstruación abundante?",de:"Starke Regelblutung?",pt:"Menstruação abundante?",fr:"Règles abondantes ?",pl:"Obfite miesiączki?",it:"Mestruazioni abbondanti?",he:"מחזור כבד?",ja:"月経量は多い？",ko:"월경량이 많나요?"},
@@ -4940,13 +4982,11 @@ function setLang(l){
   if(_sd && _srEl && (_srEl.classList.contains('active')||_srEl.classList.contains('flow-show'))){
     try{ var _sn=_daySnapGet().filter(function(x){return x.day===_sd;})[0];
       if(_sn){ _renderDayFromSnap(_sn, _sd===_dayKey());
-        // ⚠️ Только если язык РЕАЛЬНО сменился: тап по уже активному языку в выпадашке — это тоже
-        // setLang(), и без сверки он запускал полный платный разбор заново (живой случай 2026-08-30:
-        // два одинаковых ru-разбора с разницей 36 сек, $0.065 впустую).
-        if(_sd===_dayKey() && document.getElementById('aiCard') && _lastResult && window._anLang!==l) fetchAIAnalysis(_lastResult.data,l,'lang');   // сегодняшний разбор — на новом языке; прошлые дни берём из кэша как есть
+        // Разбор и план дня при смене языка НЕ пересчитываем (решение владельца 2026-09-17): человек
+        // проходит на своём языке — это и есть результат дня. Раньше отсюда уходил полный платный разбор.
         return; } }catch(e){}
   }
-  if(_lastResult && _srEl && (_srEl.classList.contains('active')||_srEl.classList.contains('flow-show'))){_rerendering=true;try{_showResultsInner();}finally{_rerendering=false;}if(document.getElementById('aiCard') && window._anLang!==l)fetchAIAnalysis(_lastResult.data,l,'lang');}   // перерисовывать результаты при смене языка ТОЛЬКО если экран результатов открыт (иначе смена языка на утренней карточке/выборе источника выбрасывала в старый разбор из памяти)
+  if(_lastResult && _srEl && (_srEl.classList.contains('active')||_srEl.classList.contains('flow-show'))){_rerendering=true;try{_showResultsInner();}finally{_rerendering=false;}}   // смена языка разбор не трогает (2026-09-17, см. выше). Перерисовывать результаты при смене языка ТОЛЬКО если экран результатов открыт (иначе смена языка на утренней карточке/выборе источника выбрасывала в старый разбор из памяти)
 }
 /* Фолбэк недостающего ключа — АНГЛИЙСКИЙ, а не русский. Английский у нас основной язык
    продукта, а раньше любой незаполненный ключ показывал иностранцу русский текст: владелец
@@ -6225,6 +6265,7 @@ function renderCard(){
   // Показываем только там, где пуш реально работает. На iOS это ТОЛЬКО PWA с домашнего
   // экрана: во вкладке Safari PushManager отсутствует, и включать было бы нечего —
   // вместо переключателя объясняем, что делать.
+  var _secIntake=(typeof _ikSection==='function')?_ikSection():'';   // «Мои приёмы» (intake.js)
   var _secNotify='';
   (function(){
     var _hdr=L({ru:'Утреннее напоминание',uk:'Ранкове нагадування',en:'Morning reminder',es:'Recordatorio matinal',de:'Morgen-Erinnerung',pt:'Lembrete matinal',fr:'Rappel du matin',pl:'Poranne przypomnienie',it:'Promemoria del mattino',he:'תזכורת בוקר',ja:'朝のリマインド',ko:'아침 알림'});
@@ -6338,7 +6379,7 @@ function renderCard(){
   // Траектория по жалобе — первой: это ответ на «стало ли легче», ради которого человек и ведёт дневник.
   var _secCmp=(typeof _cmpTrajHTML==='function')?_cmpTrajHTML():'';
   html+=[_secCmp,_secGoal,_secAct,_secNut,_secSup,_secHealth,_secStress,_secBal,_secRhythm,_secLife,   // «что я о себе указал»
-         _secDyn,_secVai,_secLabs,_secDaily,_secHist,_secSource,_secNotify,_secDisplay,_secBackup,_secLegal].join('');     // «что показывает система / инструменты» + VAI-калькулятор
+         _secDyn,_secVai,_secLabs,_secDaily,_secHist,_secSource,_secIntake,_secNotify,_secDisplay,_secBackup,_secLegal].join('');     // «что показывает система / инструменты» + VAI-калькулятор
   html+='</div>'; // .vcard-grid
   html+='</div>'; // .vcard-wrap
 
@@ -6751,6 +6792,7 @@ function _saveDaily(){
       // тренд стресса молча не считался. Мапим категорию на число (0–10), чтобы тренд снова работал.
       stress:(function(){var v=getRadio('stress');return v==='high'?9:v==='mild'?5:v==='no'?2:null;})(), alc:getRadio('alc'),
       cmp_delta:window._cmpDeltaToday||null,   // «лучше/так же/хуже» по жалобе — из этого недельный разбор считает траекторию
+      move_today:getRadio('move_today'), train_zone:_trainZones(), sore:getRadio('sore'),   // движение вчера — история для «что делать сегодня»
       last_meal:getRadio('last_meal'), caffeine_late:getRadio('caffeine_late'),   // еда вчера вечером — копим по дням для недельного разбора
       bp_sys:(function(){var e=document.getElementById('bp-sys');var v=e?parseInt(e.value):NaN;return (v>=70&&v<=260)?v:null;})(),   // давление (ручной ввод) — для тренда/плитки
       bp_dia:(function(){var e=document.getElementById('bp-dia');var v=e?parseInt(e.value):NaN;return (v>=40&&v<=160)?v:null;})(),
@@ -7628,6 +7670,7 @@ function saveProfile(){
       cond_other:((typeof _condCollect==='function'?_condCollect().cond_other:'')||P.cond_other||''),
       diet_type:((typeof _dietGet==='function'?_dietGet():'')||P.diet_type||''),
       meds_other:gv('meds_other')||P.meds_other||'',
+      supp_other:(document.getElementById('supp_other')?gv('supp_other'):(P.supp_other||'')),   // свои добавки → «Мои приёмы»
       // 9. Контекст образа жизни
       lifestyle_notes:gv('lifestyle_notes')||P.lifestyle_notes||'',
       // Цель и приоритеты (вводятся в карточке) + метки времени — перенос из хранилища
@@ -7638,6 +7681,7 @@ function saveProfile(){
       updated:_dayKey()
     };
     localStorage.setItem('viae_profile',JSON.stringify(prof));
+    try{ if(typeof _ikSync==='function'){ _ikSync(prof); _ikArm(); } }catch(e){}   // «Мои приёмы» следуют за галочками
   }catch(e){}
 }
 // Трекер цикла: дату последней менструации + длину цикла спрашиваем один раз (помнятся),
@@ -7767,14 +7811,15 @@ function _completeness(){
 // именно в них). Молчаливый перенос вчерашнего состояния как сегодняшнего искажает и честность ответа
 // клиента, и вход в ИИ-разбор — та же логика, по которой день не должен получать усреднённые/чужие данные.
 // Переносим ТОЛЬКО базу; дневное состояние всегда начинается пустым — отвечать заново, без якоря на вчера.
-var _DAILY_RADIO=['temp','deep','wake','hf_count','hf_intensity','appetite','move_today','eating_pattern','protein_intake','memory','fog','alc','stress','chronic_stress','last_meal','caffeine_late'];
+var _DAILY_RADIO=['temp','deep','wake','hf_count','hf_intensity','appetite','move_today','eating_pattern','protein_intake','memory','fog','alc','stress','chronic_stress','last_meal','caffeine_late','sore'];
 var _DAILY_VAL=['energy','stress','resp_rate','hrv','rhr','sleep_hours'];
 function _isDailyField(el){
   if(el.name&&_DAILY_RADIO.indexOf(el.name)>=0)return true;
   if(el.id&&_DAILY_VAL.indexOf(el.id)>=0)return true;
   if(el.id&&/^(sym|gi|cort)\d/.test(el.id))return true;   // симптомы/пищеварение/кортизол-паттерн «сегодня» (sym1-9, gi1-5, cort2-7)
   if(el.id==='crav1')return true;                          // тяга к сладкому «сегодня»
-  if(el.id&&el.id.indexOf('ev_')===0)return true;             // «что было вечером» — состояние конкретного вечера
+  if(el.id&&el.id.indexOf('ev_')===0)return true;
+  if(el.id&&el.id.indexOf('tz_')===0)return true;             // какие мышцы работали вчера — про конкретный день             // «что было вечером» — состояние конкретного вечера
   return false;
 }
 function _carryFields(){
@@ -7848,6 +7893,7 @@ function loadProfile(){
     const setRadio=(name,v)=>{if(!v)return;const el=document.querySelector('input[name='+name+'][value="'+v+'"]');if(el)el.checked=true;};
     setRadio('meds',p.meds);setRadio('cycle_status',p.cycle_status);setRadio('eating_pattern',p.eating_pattern);
     if(p.meds_other){const mo=document.getElementById('meds_other');if(mo)mo.value=p.meds_other;}
+    if(p.supp_other){const so=document.getElementById('supp_other');if(so)so.value=p.supp_other;}
     if(typeof calcProfMetrics==='function')calcProfMetrics();
     if(typeof renderCycleDay==='function')renderCycleDay();
     if(typeof updateDeviceBanners==='function')updateDeviceBanners();if(typeof renderGadgetPanel==='function')renderGadgetPanel();
@@ -7867,11 +7913,13 @@ const _AUTO_STEP_METRIC={15:'rhr'};   // пульс(15) — приборный: 
 function _hormMap(accId){ var o={},acc=document.getElementById(accId); if(acc)acc.querySelectorAll('input[type="checkbox"]:checked').forEach(function(c){o[c.value]='yes';}); return o; }
 // Добавки: «ничего не принимаю» взаимоисключимо; Препараты: поле «Другие» видно только при выборе (дизайн VIO)
 function _supChange(inp){
+  try{ if(typeof _ikStepRender==='function') setTimeout(_ikStepRender,0); }catch(e){}   // «Когда вы их принимаете»
   var box=document.getElementById('sup-list'); if(!box)return;
   if(inp.value==='none_sup'){ if(inp.checked){ box.querySelectorAll('input[type=checkbox]').forEach(function(c){ if(c!==inp)c.checked=false; }); } }
   else if(inp.checked){ var n=document.getElementById('sup11'); if(n)n.checked=false; }
 }
 function _medsChange(){
+  try{ if(typeof _ikStepRender==='function') setTimeout(_ikStepRender,0); }catch(e){}
   var oth=document.getElementById('med5'), mo=document.getElementById('meds_other');
   if(!mo)return;
   if(oth&&oth.checked){ mo.style.display='block'; } else { mo.style.display='none'; mo.value=''; }
@@ -8005,6 +8053,50 @@ function setEnergy(n){
 function _symChange(inp){
   if(inp.value==='nothing'){ if(inp.checked){ document.querySelectorAll('#s3-sym input[type=checkbox]').forEach(function(c){ if(c!==inp)c.checked=false; }); } }
   else if(inp.checked){ var nb=document.getElementById('sym7'); if(nb)nb.checked=false; }
+}
+// «Движение вчера» = силовая → спросить, какие мышцы работали (правило «вчера → сегодня нельзя»).
+// Не силовая — прячем подвопрос и снимаем отметки, чтобы в разбор не ушла зона без тренировки. 2026-09-18
+function _moveTodayChange(){
+  var g=document.getElementById('train-zone-group'); if(!g)return;
+  if(getRadio('move_today')==='strength'){ g.style.display='block'; }
+  else{ g.style.display='none'; g.querySelectorAll('input[type=checkbox]').forEach(function(c){c.checked=false;}); }
+}
+function _trainZones(){ var o=[]; ['tz_legs','tz_upper','tz_core','tz_full'].forEach(function(id){var e=document.getElementById(id); if(e&&e.checked)o.push(e.value);}); return o; }
+// Трекер (сейчас только Oura отдаёт день и тип тренировки) видел тренировку вчера → подставляем ответ,
+// человек подтверждает или меняет. Только пока вопрос пустой: ответ человека трекер не перетирает.
+function _movePrefill(){
+  try{
+    var d=(typeof importedData!=='undefined'&&importedData)?importedData:null;
+    if(!d||!d.trainDay||getRadio('move_today'))return;
+    if(String(d.trainDay).slice(0,10)!==_dayKey(new Date(Date.now()-86400000)))return;
+    var a=String(d.trainActivity||'');
+    var v=/strength|weight|resistance|functional|cross/i.test(a)?'strength':/yoga|stretch|pilates/i.test(a)?'light':'cardio';
+    var el=document.querySelector('input[name="move_today"][value="'+v+'"]'); if(!el)return;
+    el.checked=true; _moveTodayChange();
+    var n=document.getElementById('move-trk-note');
+    if(n){ n.textContent=L({ru:'Отмечено по данным трекера — поправьте, если было иначе.',uk:'Відмічено за даними трекера — виправте, якщо було інакше.',en:'Filled in from your tracker — change it if it was different.',es:'Marcado según el rastreador; se puede cambiar si fue distinto.',de:'Vom Tracker übernommen — bitte ändern, falls es anders war.',pt:'Marcado pelos dados do rastreador; pode alterar se foi diferente.',fr:'Rempli d\'après le tracker — à modifier si c\'était différent.',pl:'Zaznaczone na podstawie danych z trackera — popraw, jeśli było inaczej.',it:'Compilato dai dati del tracker; si può cambiare se è andata diversamente.',he:'סומן לפי נתוני השעון — שנו אם היה אחרת.',ja:'トラッカーのデータから入力しました。違う場合は変更してください。',ko:'트래커 데이터로 표시했어요. 다르면 바꿔 주세요.'}); n.style.display='block'; }
+  }catch(e){}
+}
+// Вход для «что делать сегодня» (решает воркер, _todayMovePlan): что было вчера и за неделю,
+// болят ли мышцы и какие сигналы сегодня хуже ЛИЧНОЙ нормы. Тренировка не каждый день — поэтому
+// история, а не календарь. Сравнение с нормой считаем здесь: сама норма в воркер не уходит.
+function _moveCtx(){
+  var arr=[]; try{arr=JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[];}catch(e){}
+  var today=_dayKey(), t0=Date.parse(today);
+  // Запись дня D отвечает про день D-1 → тренировка была (D-сегодня)+1 дней назад.
+  var hist=arr.filter(function(r){return r&&r.day&&r.day!==today&&r.move_today;}).map(function(r){
+    return {d:Math.round((t0-Date.parse(r.day))/86400000)+1, m:r.move_today, z:r.train_zone||[]};
+  }).filter(function(h){return h.d>1&&h.d<=7;});
+  var low=[], b=null; try{ b=_baselineFromDaily(); }catch(e){}
+  var m=(b&&b.metrics)||{}, d=(typeof importedData!=='undefined'&&importedData)||{}, nf=window.__normalFlag||{};
+  if(m.hrv&&m.hrv.usual&&d.hrv!=null&&+d.hrv<m.hrv.usual*0.85)low.push('hrv');
+  if(m.rhr&&m.rhr.usual&&d.rhr!=null&&+d.rhr>m.rhr.usual+5)low.push('rhr');
+  // Ощущения: «как обычно» — не сигнал; с личной нормой — на 2 балла хуже неё, без нормы — 3 и ниже.
+  [['sleep_qual','sleep'],['energy','energy']].forEach(function(p){
+    if(nf[p[0]])return; var e=document.getElementById(p[0]); var v=e?parseFloat(e.value):NaN; if(isNaN(v))return;
+    var u=m[p[0]]&&m[p[0]].usual; if(u!=null?(v<=u-2):(v<=3))low.push(p[1]);
+  });
+  return {hist:hist, zone:_trainZones(), sore:getRadio('sore'), low:low};
 }
 function _actFreqChange(){
   // «Самочувствие после тренировок» имеет смысл только при ≥1 тренировке.
@@ -8471,6 +8563,7 @@ function _showFlow(list){
   // Часы сна пришли с трекера → прячем только под-группу «часы» внутри step16 (не весь шаг —
   // субъективные ощущение сна/пробуждения прибор не мерит и должны остаться). 2026-07-21.
   if(typeof _toggleSleepHours==='function')_toggleSleepHours();
+  if(typeof _movePrefill==='function')_movePrefill();
   // Блок жалобы рисуем ПОСЛЕ расстановки flow-show: renderComplaint выбирает контейнер по тому,
   // есть ли разовый шаг «С чем вы пришли» в этой ленте. 2026-08-25.
   if(typeof renderComplaint==='function'){ try{ renderComplaint(); }catch(e){} }
@@ -8795,6 +8888,7 @@ function _hkNote(msg){ var el=document.getElementById('gp-note'); if(el&&msg) el
 // утренний экран.
 function _hkAfterFill(){
   try{ if(typeof _toggleSleepHours==='function') _toggleSleepHours(); }catch(e){}
+  try{ if(typeof _movePrefill==='function') _movePrefill(); }catch(e){}
   try{ if(typeof _reflowSteps==='function') _reflowSteps(); }catch(e){}
 }
 function _hkNoteReset(){
@@ -10174,7 +10268,8 @@ function showResults(){
   if(typeof _snapshotAnswers==='function')_snapshotAnswers();  // «как вчера»: сохранить ответы для следующего раза
   try {
     _showResultsInner();
-    try{localStorage.setItem('viae_lastpass',_dayKey());}catch(e){}   // отметить: проход за сегодня сделан (гейт «сегодня уже пройдено»)
+    try{localStorage.setItem('viae_lastpass',_dayKey());}catch(e){}
+    try{ if(typeof _ikArm==='function'){ _ikArm(); setTimeout(function(){ try{ _ikOffer(); }catch(e){} }, 2500); } }catch(e){}   // «Мои приёмы»: напоминания + один раз спросить   // отметить: проход за сегодня сделан (гейт «сегодня уже пройдено»)
     try{ if(importedData&&importedData.source&&importedData.source!=='manual'&&importedData.source!=='apple-manual') localStorage.setItem('viae_lastsync',new Date().toISOString()); }catch(e){}   // штамп синхронизации гаджета
     try{localStorage.setItem('viae_lastdata',JSON.stringify((_lastResult&&_lastResult.data)||{}));}catch(e){}   // данные прохода — для «Памятки дня» после перезагрузки
     try{ if(_lastResult&&typeof _daySnapSave==='function') _daySnapSave(_lastResult.score,_lastResult.type,_lastResult.data,(_lastResult.docR&&_lastResult.docR.length)>0,_lastResult.docR); }catch(e){}   // снимок дня для Oura-ленты истории (+флаг предупреждения)
@@ -10268,7 +10363,7 @@ function _showResultsInner(){
     // Артериальное давление (домашний ручной ввод, по желанию) — разбирает воркер по блоку «ДАВЛЕНИЕ»
     bp_sys:(function(){var e=document.getElementById('bp-sys');var v=e?parseInt(e.value):NaN;return (v>=70&&v<=260)?v:null;})(),
     bp_dia:(function(){var e=document.getElementById('bp-dia');var v=e?parseInt(e.value):NaN;return (v>=40&&v<=160)?v:null;})(),
-    device:(typeof importedData!=='undefined'&&importedData)?{vo2:importedData.vo2,spo2:importedData.spo2,readiness:importedData.readiness,sleepHours:importedData.sleepHours,deepMin:importedData.deepMin,tempDev:importedData.tempDev}:null,
+    device:(typeof importedData!=='undefined'&&importedData)?{vo2:importedData.vo2,spo2:importedData.spo2,readiness:importedData.readiness,sleepHours:importedData.sleepHours,deepMin:importedData.deepMin,tempDev:importedData.tempDev,steps:importedData.steps,respRate:importedData.respRate}:null,
     // hotflash/hotfreq убраны 2026-07-16 (аудит метрики→воркер): воркер их НЕ читал ни разу — приливы
     // доходят до ИИ через hf_count/hf_intensity ниже. Данные не терялись, поля были мёртвым грузом.
     temp:getRadio('temp'),
@@ -10286,6 +10381,7 @@ function _showResultsInner(){
     source:(typeof importedData!=='undefined'&&importedData&&importedData.source)?importedData.source:null,   // откуда данные: oura/fitbit/…/apple-manual/manual — чтобы ИИ различал измерено vs со слов
     source_changed:(function(){try{return localStorage.getItem('viae_source_changed')==='1';}catch(e){return false;}})(),   // сменил источник относительно прошлого прохода
     alc:getRadio('alc'),stress:getRadio('stress'),move_today:getRadio('move_today'),
+    move_ctx:(function(){try{return _moveCtx();}catch(e){return null;}})(),   // вчера/неделя/мышцы/сигналы хуже нормы → «что делать сегодня» (воркер)
     // Еда вчера вечером (суточное): время последнего приёма, характер ужина, поздний кофеин —
     // вход для связи «поздний/тяжёлый ужин и кофеин → фрагментация сна, утренние HRV/пульс».
     last_meal:getRadio('last_meal'), caffeine_late:getRadio('caffeine_late'),
@@ -10325,6 +10421,7 @@ function _showResultsInner(){
     act_recovery:getRadio('act_recovery'),
     supplements:getChecked(['sup1','sup2','sup3','sup4','sup5','sup6','sup7','sup8','sup9','sup10','sup11']),
     meds:getChecked(['med2','med3','med4','med5']),
+    intake:(typeof _ikForAI==='function'?_ikForAI():[]),   // «Мои приёмы» на сегодня: имя + время
     conditions:(function(){try{return _condProf().conditions||[];}catch(e){return [];}})(),
     cond_meds:(function(){try{return _condProf().cond_meds||[];}catch(e){return [];}})(),
     cond_temp:(function(){try{return _condProf().cond_temp||[];}catch(e){return [];}})(),
@@ -11653,6 +11750,8 @@ function _bpChapters(){
   var _anWait=false;
   if(!_an){ var _pj2=null; try{ _pj2=JSON.parse(localStorage.getItem('viae_an_job')||'null'); }catch(e){}
     _anWait=!!window._anLoading || !!(_pj2 && _pj2.day===_dayKey() && Date.now()-_pj2.ts < 10*60*1000); }
+  // «Приём сегодня» — первой после разбора: это действия с конкретным временем (intake.js, 2026-09-18).
+  try{ var _ikc=(typeof _ikChapter==='function')?_ikChapter():null; if(_ikc) chs.unshift(_ikc); }catch(e){}
   if(_an || _anWait) chs.unshift({id:'analysis', icon:'<i class="ph ph-brain" style="color:var(--gold-lt);"></i>', pr:'🧠',
     title:L({ru:'Разбор дня',uk:'Розбір дня',en:'Today’s analysis',es:'Análisis del día',de:'Analyse des Tages',pt:'Análise do dia',fr:'Analyse du jour',pl:'Analiza dnia',it:'Analisi del giorno',he:'ניתוח היום',ja:'今日の分析',ko:'오늘의 분석'}),
     teaser: _an
@@ -12030,7 +12129,9 @@ function _cleanPlan(p){
 // Кэш «Памятки дня» 1×/день (как /analyze): повтор-заход того же дня с теми же данными → без вызова /day-plan
 function _dpGet(){ try{return JSON.parse(localStorage.getItem('viae_day_plan')||'[]')||[];}catch(e){return [];} }
 function _dpSave(plan,lang,sig){ try{var arr=_dpGet(),day=_dayKey();arr=arr.filter(function(e){return e.day!==day;});arr.unshift({day:day,lang:lang,sig:sig,plan:plan,ts:Date.now()});while(arr.length>14)arr.pop();localStorage.setItem('viae_day_plan',JSON.stringify(arr));}catch(e){} }
-function _dpToday(lang,sig){ var day=_dayKey(),e=_dpGet().filter(function(x){return x.day===day;})[0]; return (e&&e.lang===lang&&e.sig===sig&&e.plan)?e.plan:null; }
+// План дня — один на день, на языке прохода: смена языка его не пересчитывает (2026-09-17). Правку данных
+// в тот же день сервер тоже не пересчитывает — отдаёт уже готовый план (лимит в воркере).
+function _dpToday(lang,sig){ var day=_dayKey(),e=_dpGet().filter(function(x){return x.day===day;})[0]; return (e&&e.sig===sig&&e.plan)?e.plan:null; }
 async function fetchDayPlan(data){
   window._bpAILoading=true;
   var _lg=(typeof lang!=='undefined'&&lang)||(typeof localStorage!=='undefined'&&localStorage.getItem('vial_lang'))||'en';
@@ -12042,7 +12143,7 @@ async function fetchDayPlan(data){
     // Памятка уже заказана (её считает очередь) — ждём ЕЁ, а не платим за новый вызов; это же
     // подхватывает задание после перезапуска: номер лежит в localStorage.
     var _pj=null; try{ _pj=JSON.parse(localStorage.getItem('viae_dp_job')||'null'); }catch(e){}
-    if(_pj && _pj.job && _pj.day===_day && _pj.lang===_lg && Date.now()-_pj.ts < 10*60*1000){
+    if(_pj && _pj.job && _pj.day===_day && Date.now()-_pj.ts < 10*60*1000){
       var _j0=await _dpAwaitJob(_day,_lg,_pj.job,_pj.ts);
       window._bpAILoading=false;
       if(_j0&&_j0.plan&&_j0.plan.morning){ var cp0=_cleanPlan(_j0.plan); _dpSave(cp0,_lg,sig); window._bpAI=cp0; renderDayBlueprint(data); }
@@ -12084,6 +12185,7 @@ function _bpDisc(){
   return '<div style="font-size:var(--fs-cap);color:var(--t3);line-height:1.5;margin-top:14px;padding-top:9px;border-top:1px solid rgba(255,255,255,.08);">ℹ️ '+L({ru:'Общие велнес-ориентиры под ваши данные — не медицинская рекомендация и не замена консультации врача.',en:'General wellness guidance for your data — not medical advice and not a substitute for a doctor.',uk:'Загальні велнес-орієнтири під ваші дані — не медична рекомендація і не заміна консультації лікаря.',es:'Orientaciones generales de bienestar para tus datos — no es consejo médico ni sustituto del médico.',de:'Allgemeine Wellness-Orientierung für deine Daten — kein medizinischer Rat und kein Ersatz für einen Arzt.',pt:'Orientações gerais de bem-estar para seus dados — não é conselho médico nem substitui o médico.',fr:'Repères de bien-être généraux selon vos données — ni avis médical ni substitut au médecin.',pl:'Ogólne wskazówki wellness pod Twoje dane — to nie porada medyczna i nie zastępuje lekarza.',it:'Orientamenti generali di benessere per i tuoi dati — non è un consiglio medico né sostituisce il medico.',he:'הכוונת וולנס כללית לפי הנתונים שלכם — לא ייעוץ רפואי ולא תחליף לרופא.',ja:'あなたのデータに基づく一般的なウェルネスの目安 — 医療アドバイスでも医師の代わりでもありません。',ko:'당신의 데이터에 맞춘 일반 웰니스 가이드 — 의학적 조언이 아니며 의사를 대체하지 않습니다.'})+'</div>';
 }
 function openBpChapter(id){
+  if(id==='intake'){ if(typeof _ikOpen==='function')_ikOpen(); return; }
   if(id==='analysis'){   // полный текст сегодняшнего ИИ-разбора (кэш дня), не secs-структура
     try{
       var _ae=_aiDayEntry(_dayKey());
@@ -12748,6 +12850,52 @@ document.addEventListener('visibilitychange',function(){
 <script src="healthconnect-bridge.js"></script>
 <!-- IAP-мост (Apple подписка €15/мес, RevenueCat). Активен только внутри приложения; на вебе no-op. app/README.md -->
 <script src="iap-bridge.js"></script>
+<script src="intake.js"></script>
+<script>
+/* «Мои приёмы» (intake.js, 2026-09-18). EXPERT — PWA: будить себя сама не умеет, поэтому расписание
+   уходит на сервер (/push/intake), а будит ежечасный cron пустым пушем. Названий сервер не получает —
+   только часы и дату конца курса. Часы приёма кладём в Cache: по ним service worker отличает
+   напоминание о приёме от утреннего. Точность — до часа (cron ежечасный): приём 7:30 → пуш в 7:00. */
+window.IK_CFG={prefix:'viae',
+  canRemind:function(){ try{ return _ntSupported() && (!_ntIOS() || _ntStandalone()); }catch(e){ return false; } },
+  ask:async function(){ try{ return (await Notification.requestPermission())==='granted'; }catch(e){ return false; } },
+  arm:async function(list){
+    try{
+      if(!_ntSupported()) return;
+      var off=new Date().getTimezoneOffset(), slots={}, hours={};
+      (list||[]).forEach(function(x){
+        var hh=parseInt(String(x.t).slice(0,2),10), mm=parseInt(String(x.t).slice(3,5),10);
+        // until — настоящий конец курса (x.end), а не край 14-дневного окна разовых уведомлений.
+        var k=x.t; if(!(k in slots)) slots[k]={hour:hh,min:mm,until:(x.at?(x.end||null):null)};
+        // Местный час, в который пуш реально придёт (сервер округляет UTC-час вниз), — для SW.
+        var hu=((Math.floor((hh*60+mm+off)/60))%24+24)%24, loc=(((hu*60-off)%1440)+1440)%1440;
+        hours[Math.floor(loc/60)]=1;
+      });
+      var c=await caches.open('vial-expert-v6');
+      await c.put('vial-ik-hours', new Response(Object.keys(hours).join(',')));
+      try{ var st=_ntGet(); await c.put('vial-nt-hour', new Response(st.on?String(parseInt(String(st.time||'08:00'),10)):'')); }catch(e){}
+      await _ntPutLang();
+      var reg=await navigator.serviceWorker.ready, sub=await reg.pushManager.getSubscription();
+      var arr=Object.keys(slots).map(function(k){ return slots[k]; });
+      if(!sub){ if(!arr.length) return; sub=await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:_ntB64(_NT_VAPID) }); }
+      await fetch('https://interpreter.viaelcom.workers.dev/push/intake',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ endpoint:sub.endpoint, tzOffset:off, slots:arr })});
+    }catch(e){}
+  }};
+(function(){
+  try{ var so=document.getElementById('supp_other'); if(so) so.placeholder=L({ru:'Другие добавки — впишите через запятую',uk:'Інші добавки — впишіть через кому',en:'Other supplements — separate with commas',es:'Otros suplementos — sepáralos con comas',de:'Weitere Präparate — mit Komma trennen',pt:'Outros suplementos — separe com vírgulas',fr:'Autres compléments — séparés par des virgules',pl:'Inne suplementy — oddziel przecinkami',it:'Altri integratori — separati da virgole',he:'תוספים אחרים — הפרידו בפסיקים',ja:'その他のサプリ（カンマ区切り）',ko:'기타 보충제 — 쉼표로 구분'}); }catch(e){}
+  try{ _ikSync(); _ikArm(); _ikStepRender(); }catch(e){}
+  // Протокол специалиста из кабинета → «Мои приёмы» с пометкой «от специалиста». Без кода/сети —
+  // остаётся то, что было сохранено с прошлого раза.
+  try{
+    var code=(typeof _syncCode==='function')?_syncCode():'';
+    if(code) fetch('https://interpreter.viaelcom.workers.dev/expert/intake?code='+encodeURIComponent(code))
+      .then(function(r){ return r.json(); })
+      .then(function(j){ if(j && j.ok && Array.isArray(j.items)){ _ikMergeSpec(j.items); _ikArm(); } })
+      .catch(function(){});
+  }catch(e){}
+})();
+</script>
 <script>
 function appleHKImport(btn){
   if(btn.disabled) return; var t=btn.textContent; btn.disabled=true; btn.textContent='…';

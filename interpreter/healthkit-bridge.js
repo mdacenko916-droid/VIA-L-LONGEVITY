@@ -15,8 +15,12 @@
   // темп. запястья только Series 8+/Ultra). Авторизацию опц. типов изолируем: если на них падает,
   // повторяем только по базовым, чтобы один неизвестный тип не сломал весь доступ к Health.
   var CORE_TYPES = ['heartRate','restingHeartRate','heartRateVariability','stepCount','sleepAnalysis','vo2Max','oxygenSaturation'];
+  // Полный приём (2026-09-18): тренировки, дыхание, вес, давление. Имена — ключи РАЗРЕШЕНИЙ плагина:
+  // тренировки разрешаются ключом 'activity' (он же сон), а читаются как 'workoutType'.
+  // iOS сам покажет окно только по новым типам — тем, кто уже подключился, повторять ничего не надо.
+  var EXTRA_TYPES = ['activity','respiratoryRate','weight','bloodPressureSystolic','bloodPressureDiastolic'];
   var OPT_TYPES  = ['appleSleepingWristTemperature'];
-  var READ_TYPES = CORE_TYPES.concat(OPT_TYPES);
+  var READ_TYPES = CORE_TYPES.concat(EXTRA_TYPES, OPT_TYPES);
 
   function daysAgoISO(n){ var d = new Date(); d.setDate(d.getDate() - n); return d.toISOString(); }
   function nowISO(){ return new Date().toISOString(); }
@@ -26,9 +30,12 @@
     var p = hk(); if(!p) return false;
     try { await p.requestAuthorization({ all: [], read: READ_TYPES, write: [] }); return true; }
     catch(e){
-      // Опциональный тип мог не поддерживаться версией плагина → пробуем только базовые.
-      try { await p.requestAuthorization({ all: [], read: CORE_TYPES, write: [] }); return true; }
-      catch(e2){ return false; }
+      // Опциональный тип мог не поддерживаться версией плагина → без него, потом только базовые.
+      try { await p.requestAuthorization({ all: [], read: CORE_TYPES.concat(EXTRA_TYPES), write: [] }); return true; }
+      catch(e1){
+        try { await p.requestAuthorization({ all: [], read: CORE_TYPES, write: [] }); return true; }
+        catch(e2){ return false; }
+      }
     }
   };
 
@@ -73,6 +80,64 @@
       return arr[Math.floor(arr.length * 0.1)];
     } catch(e){ return null; }
   }
+
+  // Все сэмплы типа за окно (пустой массив, если типа нет или доступ не дан — iOS не говорит, что отказано).
+  async function samples(sampleName, startISO, endISO){
+    var p = hk(); if(!p) return [];
+    try {
+      var r = await p.queryHKitSampleType({ sampleName: sampleName, startDate: startISO, endDate: endISO, limit: 0 });
+      return (r && r.resultData) || [];
+    } catch(e){ return []; }
+  }
+  function localDay(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+
+  // Тренировки за 7 дней → те же поля, что у вендоров в воркере (_workoutSummary): workouts7d /
+  // trainMin7d / trainDay / trainActivity. Правило то же: от 15 минут, ходьба и быт — фон, ходьба
+  // засчитывается от 45 минут. Общее для Apple- и Android-моста (второй вызывает это же). 2026-09-18
+  window._vialWorkoutSummary = function(list){
+    var BG = /^(walking|housework|home_activity|gardening|shopping|cleaning|cooking|stairs|standing|moving|other)$/i;
+    var all = (list || []).filter(function(w){ return w && w.day && w.minutes > 0; });
+    if(!all.length) return {};
+    var real = all.filter(function(w){
+      var a = String(w.activity || '').toLowerCase();
+      if(w.minutes < 15) return false;
+      if(a === 'walking') return w.minutes >= 45;
+      return !BG.test(a);
+    }).sort(function(a, b){ return a.day < b.day ? -1 : a.day > b.day ? 1 : 0; });
+    var ex = { workouts7d: real.length };
+    if(all.length > real.length) ex.activityAuto7d = all.length - real.length;
+    var mins = Math.round(real.reduce(function(s, w){ return s + w.minutes; }, 0));
+    if(mins > 0) ex.trainMin7d = mins;
+    var last = real[real.length - 1];
+    if(last){ ex.trainDay = last.day; if(last.activity) ex.trainActivity = String(last.activity).toLowerCase(); }
+    return ex;
+  };
+
+  // Кладёт «полный приём» в ИП (общее для обоих мостов): тренировки, шаги, дыхание → importedData;
+  // давление — в поля давления, только если человек их ещё не заполнил; вес — в профиль, если
+  // замер свежий (весы пишут в Health) и отличается от записанного. 2026-09-18
+  window._vialHealthExtras = function(data, source){
+    if(!data) return;
+    var extra = {};
+    if(data.workouts){ var ws = window._vialWorkoutSummary(data.workouts); Object.keys(ws).forEach(function(k){ extra[k] = ws[k]; }); }
+    if(data.steps > 0) extra.steps = Math.round(data.steps);
+    if(data.respRate >= 6 && data.respRate <= 40){
+      extra.respRate = Math.round(data.respRate * 10) / 10;
+      var rr = document.getElementById('resp_rate'); if(rr) rr.value = Math.round(data.respRate);
+    }
+    if(Object.keys(extra).length && typeof window.applyExtracted === 'function') window.applyExtracted(extra, source);
+    if(data.bpSys >= 70 && data.bpSys <= 260 && data.bpDia >= 40 && data.bpDia <= 160){
+      var s = document.getElementById('bp-sys'), d = document.getElementById('bp-dia');
+      if(s && d && !s.value && !d.value){ s.value = Math.round(data.bpSys); d.value = Math.round(data.bpDia); }
+    }
+    if(data.weight >= 30 && data.weight <= 300){
+      var w = document.getElementById('prof-weight'), kg = Math.round(data.weight * 10) / 10;
+      if(w && Math.abs((parseFloat(w.value) || 0) - kg) >= 0.1){
+        w.value = kg;
+        if(typeof window._cardSaveNum === 'function') window._cardSaveNum('weight', String(kg));
+      }
+    }
+  };
 
   // Читает метрики и нормализует в форму полей карточки Apple ИП.
   window.healthkitRead = async function(){
@@ -134,6 +199,32 @@
         if(isFinite(latest)) out.tempDev = Math.round((latest - base) * 10) / 10; // °C, 1 знак
       }
     } catch(e){}
+
+    // ── Полный приём (2026-09-18) ──
+    // Тренировки за 7 дней: вид по-английски из плагина («Traditional Strength Training») → snake_case.
+    var wk = await samples('workoutType', daysAgoISO(7), nowISO());
+    var wl = wk.map(function(w){
+      var st = new Date(w.startDate), mins = Number(w.duration) * 60;
+      if(isNaN(st) || !(mins > 0)) return null;
+      return { day: localDay(st), activity: String(w.workoutActivityName || '').trim().toLowerCase().replace(/\s+/g, '_'), minutes: mins };
+    }).filter(Boolean);
+    if(wl.length) out.workouts = wl;
+    // Шаги за вчера (календарные сутки). iPhone и часы пишут шаги ПАРАЛЛЕЛЬНО — простая сумма
+    // считала бы их дважды. Суммируем по каждому источнику и берём самый полный.
+    var y0 = new Date(); y0.setHours(0,0,0,0); var y1 = new Date(y0); y0.setDate(y0.getDate() - 1);
+    var bySrc = {};
+    (await samples('stepCount', y0.toISOString(), y1.toISOString())).forEach(function(s){
+      var v = Number(s.value); if(!(v > 0)) return;
+      var k = s.sourceBundleId || s.source || '?'; bySrc[k] = (bySrc[k] || 0) + v;
+    });
+    var stepMax = Math.max.apply(null, [0].concat(Object.keys(bySrc).map(function(k){ return bySrc[k]; })));
+    if(stepMax > 0) out.steps = Math.round(stepMax);
+    // Частота дыхания — среднее за сон (днём её искажает движение).
+    if(nightStart && nightEnd){ var rr = await avgInWindow('respiratoryRate', nightStart.toISOString(), nightEnd.toISOString()); if(rr != null) out.respRate = rr; }
+    // Вес — последний замер за 7 дней (кг). Давление — последняя пара за сутки (мм рт. ст.).
+    var wt = await lastSample('weight', 7); if(wt && wt.value != null) out.weight = Number(wt.value);
+    var bs = await lastSample('bloodPressureSystolic', 1), bd = await lastSample('bloodPressureDiastolic', 1);
+    if(bs && bd && bs.value != null && bd.value != null){ out.bpSys = Number(bs.value); out.bpDia = Number(bd.value); }
     return out;
   };
 
@@ -151,8 +242,9 @@
     if(data.tempDev != null) extra.tempDev = data.tempDev;
     if(Object.keys(extra).length && typeof window.applyExtracted === 'function'){
       window.applyExtracted(extra, 'apple');
-      if(typeof window.updateImportSummary === 'function') window.updateImportSummary();
     }
+    window._vialHealthExtras(data, 'apple');
+    if(typeof window.updateImportSummary === 'function') window.updateImportSummary();
     return Object.keys(data).length > 0;
   };
 })();
