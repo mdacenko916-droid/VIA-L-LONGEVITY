@@ -143,6 +143,14 @@ html.app-shell body:not(.flow-mode):not(.view-result) .hero-block-name{margin-bo
   body:not(.flow-mode):not(.view-result) .footer-tagline{margin-bottom:2px !important;}
   body:not(.flow-mode):not(.view-result) .legal-links{padding-top:2px !important;padding-bottom:calc(4px + env(safe-area-inset-bottom,0px)) !important;}
 }
+/* Ещё ниже — 360×760 CSS-px минус статус-бар (живой Huawei Y5 2019, 2026-09-18): даже после ступени выше
+   «Конфиденциальность · Условия» пряталась под навигацию на ~20px. Снимаем ещё ~28px с чисто
+   декоративного верха: отступ над монограммой и саму монограмму. */
+@media (max-height: 760px){
+  html.app-mode body:not(.flow-mode):not(.view-result) #scroll-area,
+  html.app-shell body:not(.flow-mode):not(.view-result) #scroll-area{padding-top:calc(6px + env(safe-area-inset-top,0px)) !important;}
+  body:not(.flow-mode):not(.view-result) .hero-monogram{width:48px !important;height:48px !important;}
+}
 
 /* Тот же уплотнённый экран входа — в НАТИВНОМ приложении при ЛЮБОЙ высоте окна. Порог 820px
    ловил Android, но не iPhone (852 CSS-px у 15/16, до 956 у Max): на айфоне строка
@@ -2226,6 +2234,41 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
 </style>
 </head>
 <body class="booting">
+<!-- Старый движок страницы (Chrome/WebView < 80, живой Huawei Y5 2019 на Android 9 с Chrome 79): он не понимает `?.`,
+     главный скрипт падает целиком, и человек видит пустой экран. Проверяем саму конструкцию (не версию из UA) и вместо
+     пустоты просим обновить. ES5 намеренно — этот блок должен выполниться именно там, где всё остальное падает. 2026-09-18 -->
+<script>
+(function(){
+  try{ new Function('var a={};return a?.b'); return; }catch(e){}
+  var L={ru:['Обновите Google Chrome','Приложению нужна более новая версия встроенного браузера телефона. Обновите её в Google Play и откройте VIA·L снова.','Открыть Google Play'],
+    uk:['Оновіть Google Chrome','Застосунку потрібна новіша версія вбудованого браузера телефона. Оновіть її в Google Play і відкрийте VIA·L знову.','Відкрити Google Play'],
+    en:['Please update Google Chrome','VIA·L needs a newer version of your phone’s built-in browser. Update it in Google Play, then open VIA·L again.','Open Google Play'],
+    es:['Actualiza Google Chrome','VIA·L necesita una versión más reciente del navegador integrado del teléfono. Actualízala en Google Play y vuelve a abrir VIA·L.','Abrir Google Play'],
+    de:['Bitte Google Chrome aktualisieren','VIA·L braucht eine neuere Version des eingebauten Browsers. Aktualisiere sie bei Google Play und öffne VIA·L erneut.','Google Play öffnen'],
+    pt:['Atualize o Google Chrome','O VIA·L precisa de uma versão mais recente do navegador integrado do telefone. Atualize-a no Google Play e abra o VIA·L de novo.','Abrir o Google Play'],
+    fr:['Mettez à jour Google Chrome','VIA·L a besoin d’une version plus récente du navigateur intégré du téléphone. Mettez-la à jour sur Google Play, puis rouvrez VIA·L.','Ouvrir Google Play'],
+    pl:['Zaktualizuj Google Chrome','VIA·L potrzebuje nowszej wersji wbudowanej przeglądarki telefonu. Zaktualizuj ją w Google Play i otwórz VIA·L ponownie.','Otwórz Google Play'],
+    it:['Aggiorna Google Chrome','VIA·L ha bisogno di una versione più recente del browser integrato del telefono. Aggiornala su Google Play e riapri VIA·L.','Apri Google Play'],
+    he:['עדכנו את Google Chrome','VIA·L צריכה גרסה חדשה יותר של הדפדפן המובנה בטלפון. עדכנו אותה ב-Google Play ופתחו את VIA·L שוב.','פתיחת Google Play'],
+    ja:['Google Chrome を更新してください','VIA·L には、スマートフォンの内蔵ブラウザの新しいバージョンが必要です。Google Play で更新してから、もう一度 VIA·L を開いてください。','Google Play を開く'],
+    ko:['Google Chrome을 업데이트하세요','VIA·L에는 휴대폰 내장 브라우저의 최신 버전이 필요해요. Google Play에서 업데이트한 뒤 VIA·L을 다시 열어 주세요.','Google Play 열기']};
+  var lg=''; try{ lg=localStorage.getItem('selectedLang')||''; }catch(e){}
+  if(!L[lg]){ lg=String(navigator.language||'en').slice(0,2).toLowerCase(); if(lg==='iw')lg='he'; }
+  var t=L[lg]||L.en;
+  // Android 7–9: движок страницы — сам Chrome; с Android 10 — отдельный «Android System WebView».
+  var m=/Android (\d+)/.exec(navigator.userAgent||''), pkg=(m&&+m[1]>=10)?'com.google.android.webview':'com.android.chrome';
+  function show(){
+    var d=document.createElement('div');
+    d.setAttribute('style','position:fixed;top:0;right:0;bottom:0;left:0;box-sizing:border-box;width:100%;z-index:2147483647;background:#10131A;color:#EDE6D8;display:flex;flex-direction:column;justify-content:center;padding:32px 28px;font-family:Georgia,serif;text-align:center;');
+    d.innerHTML='<div style="font-size:24px;color:#C68C34;margin-bottom:16px;"></div><div style="font-size:17px;line-height:1.5;margin-bottom:28px;font-family:sans-serif;"></div><a style="display:inline-block;padding:14px 22px;border:1px solid #C68C34;border-radius:10px;color:#C68C34;text-decoration:none;font-family:sans-serif;font-size:17px;"></a>';
+    d.childNodes[0].textContent=t[0]; d.childNodes[1].textContent=t[1];
+    d.childNodes[2].textContent=t[2]; d.childNodes[2].href='https://play.google.com/store/apps/details?id='+pkg;
+    if(lg==='he')d.dir='rtl';
+    document.body.appendChild(d);
+  }
+  if(document.body) show(); else document.addEventListener('DOMContentLoaded',show);
+})();
+</script>
 <div class="bg-canvas">
   <div class="bg-tint" id="bgTint"></div>
 </div>
