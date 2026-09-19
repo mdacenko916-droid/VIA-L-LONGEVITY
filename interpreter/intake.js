@@ -221,7 +221,8 @@
 
   // ── профиль: раздел «Мои приёмы» ──
   // Поля — общим классом приложения .manual-input (как дата цикла и анализов), не своим стилем.
-  window._ikSection = function () {
+  // _ikInner — только содержимое раздела: EXPERT вкладывает его внутрь «Добавок и препаратов» (одна вкладка).
+  window._ikInner = function () {
     var o = _ikGet(), rows = '';
     o.items.forEach(function (it) {
       var id = _esc(it.id), fixed = it.src === 'spec';
@@ -252,8 +253,12 @@
           + '<span>' + _esc(T('master')) + '</span><input type="checkbox" ' + (o.on ? 'checked' : '') + ' onchange="_ikToggle(this.checked)"></label>'
           + '<div style="font-size:var(--fs-cap);color:var(--t3);margin-top:4px;">' + _esc(T('lock')) + '</div>'
         : '');
-    return (typeof _vcSec === 'function') ? _vcSec('<i class="ph ph-pill"></i>', _esc(T('title')), inner, false) : '';
+    return inner;
   };
+  window._ikSection = function () {
+    return (typeof _vcSec === 'function') ? _vcSec('<i class="ph ph-pill"></i>', _esc(T('title')), _ikInner(), false) : '';
+  };
+  window._ikTitle = function () { return T('title'); };
 
   window._ikUpd = function (id, f, v) {
     var o = _ikGet(), it = o.items.filter(function (x) { return x.id === id; })[0]; if (!it) return;

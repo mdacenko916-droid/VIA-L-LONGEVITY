@@ -120,7 +120,8 @@ self.addEventListener('push', e => {
       // одного часа (утро + приём) сворачиваются в одно под общим тегом этого часа.
       tag: isIntake ? ('vial-intake-' + h) : 'vial-morning',
       renotify: false,
-      data: { url: './' + EXPERT }
+      // Приём — открыть сразу «Добавки и препараты» (что принимать), утро — просто приложение.
+      data: { url: './' + EXPERT + (isIntake ? '?tab=intake' : ''), intake: isIntake }
     });
   })());
 });
@@ -130,7 +131,13 @@ self.addEventListener('notificationclick', e => {
     const url = (e.notification.data && e.notification.data.url) || ('./' + EXPERT);
     const abs = new URL(url, self.location.href).href;
     const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    for (const w of wins) { if (w.url.indexOf(EXPERT) >= 0 || w.url.indexOf(BASE) >= 0) return w.focus(); }
+    const intake = !!(e.notification.data && e.notification.data.intake);
+    for (const w of wins) {
+      if (w.url.indexOf(EXPERT) >= 0 || w.url.indexOf(BASE) >= 0) {
+        if (intake) w.postMessage({ action: 'openIntake' });   // открытое окно не перезагружаем — просим показать вкладку
+        return w.focus();
+      }
+    }
     return self.clients.openWindow(abs);
   })());
 });
