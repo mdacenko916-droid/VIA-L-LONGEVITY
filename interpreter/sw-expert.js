@@ -91,10 +91,10 @@ async function ntLang(){
 // SW понимает сам: страница кладёт в Cache местные часы приёма (vial-ik-hours) и час утреннего
 // напоминания (vial-nt-hour). Названий препаратов SW не знает и не показывает — только время.
 const IK_TXT = {
-  ru:'Ваш список на {t} — откройте VIA·L', uk:'Ваш список на {t} — відкрийте VIA·L', en:'Your {t} list — open VIA·L',
-  es:'Tu lista de las {t} — abre VIA·L', de:'Deine Liste für {t} — öffne VIA·L', pt:'A sua lista das {t} — abra a VIA·L',
-  fr:'Votre liste de {t} — ouvrez VIA·L', pl:'Twoja lista na {t} — otwórz VIA·L', it:'La tua lista delle {t} — apri VIA·L',
-  he:'הרשימה שלכם ל־{t} — פתחו את VIA·L', ja:'{t} のリスト — VIA·L を開く', ko:'{t} 목록 — VIA·L 열기'
+  ru:'Ваш приём в {t} — откройте VIA·L', uk:'Ваш прийом о {t} — відкрийте VIA·L', en:'Your {t} intake — open VIA·L',
+  es:'Tu toma de las {t} — abre VIA·L', de:'Deine Einnahme um {t} — öffne VIA·L', pt:'A sua toma das {t} — abra a VIA·L',
+  fr:'Votre prise de {t} — ouvrez VIA·L', pl:'Twoje przyjęcie o {t} — otwórz VIA·L', it:'La tua assunzione delle {t} — apri VIA·L',
+  he:'הנטילה שלכם ב־{t} — פתחו את VIA·L', ja:'{t} の服用 — VIA·L を開く', ko:'{t} 복용 — VIA·L 열기'
 };
 async function cacheText(key){
   try{ const r = await caches.match(key); if(r) return (await r.text()).trim(); }catch(e){}
@@ -118,7 +118,10 @@ self.addEventListener('push', e => {
       // Утро — один тег на всё: вчерашнее не копится. Приём — тег на час: иначе напоминание 13:00
       // тихо (renotify:false) заменило бы висящее утреннее, и человек бы его не заметил. Два пуша
       // одного часа (утро + приём) сворачиваются в одно под общим тегом этого часа.
-      tag: isIntake ? ('vial-intake-' + h) : 'vial-morning',
+      // Дата в теге (2026-09-19): вчерашнее «13:00» с тем же тегом ещё висело в центре уведомлений,
+      // и iPhone молча ЗАМЕНЯЛ его новым — без звука. С датой каждое новое звенит; в пределах дня
+      // утро + приём одного часа по-прежнему сворачиваются в одно.
+      tag: (isIntake ? ('vial-intake-' + h) : 'vial-morning') + '-' + new Date().toDateString(),
       renotify: false,
       // Приём — открыть сразу «Добавки и препараты» (что принимать), утро — просто приложение.
       data: { url: './' + EXPERT + (isIntake ? '?tab=intake' : ''), intake: isIntake }
@@ -132,6 +135,10 @@ self.addEventListener('notificationclick', e => {
     const abs = new URL(url, self.location.href).href;
     const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     const intake = !!(e.notification.data && e.notification.data.intake);
+    // Отметка «открыть приёмы» в Cache: спящая в фоне страница iOS может не получить postMessage, а
+    // стартовый экран «Сегодня» — перерисоваться поверх ?tab=intake. Страница сама проверяет отметку
+    // при запуске и при возврате из фона (_ikCheckOpen). 2026-09-19
+    if (intake) { try { const c = await caches.open(CACHE); await c.put('vial-open-intake', new Response(String(Date.now()))); } catch (_) {} }
     for (const w of wins) {
       if (w.url.indexOf(EXPERT) >= 0 || w.url.indexOf(BASE) >= 0) {
         if (intake) w.postMessage({ action: 'openIntake' });   // открытое окно не перезагружаем — просим показать вкладку

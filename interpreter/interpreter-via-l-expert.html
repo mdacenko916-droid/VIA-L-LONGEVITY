@@ -12936,6 +12936,21 @@ function _ikOpen(){
 }
 // Приложение уже было открыто — SW не перезагружает страницу, а присылает сообщение.
 try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener('message',function(e){ if(e.data&&e.data.action==='openIntake') _ikOpen(); }); }catch(e){}
+// Надёжный путь (2026-09-19, живой iPhone: клик по пушу открыл «Сегодня»): SW по клику кладёт в Cache
+// отметку vial-open-intake. Проверяем её при запуске (после стартового экрана) и при возврате из фона;
+// свежая (<3 мин) — открываем вкладку и стираем отметку, чтобы не срабатывало повторно.
+function _ikCheckOpen(){
+  try{
+    if(!window.caches) return;
+    caches.match('vial-open-intake').then(function(r){ return r?r.text():''; }).then(function(t){
+      var ts=parseInt(t,10); if(!ts) return;
+      caches.keys().then(function(ks){ ks.forEach(function(k){ caches.open(k).then(function(c){ c.delete('vial-open-intake'); }); }); });
+      if(Date.now()-ts<3*60*1000) _ikOpen();
+    }).catch(function(){});
+  }catch(e){}
+}
+setTimeout(_ikCheckOpen,1200);
+document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') setTimeout(_ikCheckOpen,400); });
 (function(){
   try{ var so=document.getElementById('supp_other'); if(so) so.placeholder=L({ru:'Другие добавки — впишите через запятую',uk:'Інші добавки — впишіть через кому',en:'Other supplements — separate with commas',es:'Otros suplementos — sepáralos con comas',de:'Weitere Präparate — mit Komma trennen',pt:'Outros suplementos — separe com vírgulas',fr:'Autres compléments — séparés par des virgules',pl:'Inne suplementy — oddziel przecinkami',it:'Altri integratori — separati da virgole',he:'תוספים אחרים — הפרידו בפסיקים',ja:'その他のサプリ（カンマ区切り）',ko:'기타 보충제 — 쉼표로 구분'}); }catch(e){}
   try{ _ikSync(); _ikArm(); _ikStepRender(); }catch(e){}
