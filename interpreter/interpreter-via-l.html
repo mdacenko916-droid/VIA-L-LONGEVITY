@@ -5528,7 +5528,12 @@ function renderCard(){
         + names.map(function(n){ return '<span class="vc-chip">'+((typeof _esc==='function')?_esc(n):n)+'</span>'; }).join('') + '</div>';
     }catch(e){ return ''; }
   })();
-  _secSup=_vcSec('supplement',t('s9_title'),supInner,false);
+  // «Мои приёмы» живут внутри этой же вкладки (2026-09-19, владелец): что принимаю + во сколько — одно место.
+  var _ikIn=(typeof _ikInner==='function')?_ikInner():'';
+  if(_ikIn) supInner=(supInner||'')+'<div class="vc-sub" style="margin-top:14px;">'+_esc(_ikTitle())+'</div>'+_ikIn;
+  // Правка времени/галочки перерисовывает карточку — раскрытая вкладка должна остаться раскрытой.
+  var _ikWas=document.getElementById('vc-intake');
+  _secSup=_vcSec('supplement',t('s9_title'),supInner,!!(_ikWas&&_ikWas.open)).replace('<details ','<details id="vc-intake" ');
   var _secHealth=_condInner?_vcSec('health',_condT(COND_UI.title),_condInner,false):'';
 
   // ── Сигналы баланса и тонуса (s6) — гормональные симптомы + тяжесть (НЕ «гормональный профиль») ──
@@ -5658,7 +5663,7 @@ function renderCard(){
   _bkInner += '<div style="font-size:var(--fs-cap);color:var(--t3);margin-top:8px;text-align:center;">'
     +'<a href="../legal-app/privacy.html" target="_blank" rel="noopener" style="color:var(--t3);">'+L({ru:'Как мы обращаемся с данными',uk:'Як ми поводимося з даними',en:'How we handle your data',es:'Cómo tratamos sus datos',de:'Wie wir mit Ihren Daten umgehen',pt:'Como tratamos seus dados',fr:'Comment nous traitons vos données',pl:'Jak postępujemy z danymi',it:'Come trattiamo i tuoi dati',he:'איך אנחנו מטפלים בנתונים',ja:'データの取り扱いについて',ko:'데이터 처리 방식'})+'</a></div>';
   // Утреннее напоминание — только в приложении (на вебе локальных уведомлений нет).
-  var _secIntake=(typeof _ikSection==='function')?_ikSection():'';   // «Мои приёмы» (intake.js)
+  var _secIntake='';   // «Мои приёмы» — внутри «Добавок и препаратов» (_secSup), отдельной вкладки нет
   var _secNotify='';
   if(typeof notifyAvailable==='function' && notifyAvailable()){
     var _nt=_ntGet(), _ntOn=!!_nt.on, _ntTm=_nt.time||'08:00';
