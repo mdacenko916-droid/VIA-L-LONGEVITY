@@ -1511,6 +1511,21 @@ body.morning-mode .imp-btn .imp-badge{position:absolute;top:-9px;right:14px;}
   outline:none;transition:border-color .2s,box-shadow .2s;text-align:center;
 }
 .manual-input:focus{border-color:rgba(238,175,84,.75);box-shadow:0 0 0 3px rgba(238,175,84,.14),inset 0 1px 2px rgba(0,0,0,.4);}
+/* Поля, куда человек пишет СВОИМИ СЛОВАМИ, — светлые с тёмным текстом (владелец 2026-09-19): на графите
+   тёмные поля сливались с карточкой и у каждого был свой оттенок. Одно правило на все, !important —
+   потому что у многих полей цвет задан инлайном. Цифровые поля (.manual-input, анализы) не трогаем. */
+textarea,
+input[type="text"]:not([id^="lab-"]):not([id^="lpv-"]),
+input[type="email"]{
+  background:#F6F1E4 !important;color:#1A1A1F !important;-webkit-text-fill-color:#1A1A1F;
+  border:1px solid rgba(198,140,52,.55) !important;box-shadow:none !important;color-scheme:light;
+}
+textarea::placeholder,
+input[type="text"]:not([id^="lab-"]):not([id^="lpv-"])::placeholder,
+input[type="email"]::placeholder{color:#7A705E !important;-webkit-text-fill-color:#7A705E;opacity:1;}
+textarea:focus,
+input[type="text"]:not([id^="lab-"]):not([id^="lpv-"]):focus,
+input[type="email"]:focus{border-color:#C68C34 !important;box-shadow:0 0 0 3px rgba(198,140,52,.22) !important;outline:none;}
 /* дата: нативный контрол в тёмной теме → иконка календаря светлая (видна на графите), а не чёрная. БЕЗ invert (он гасил color-scheme) */
 input[type="date"]{color-scheme:dark;-webkit-appearance:none;appearance:none;}   /* iOS: без appearance:none date-контрол игнорит width:100% и вылезает за карточку */
 input[type="date"]::-webkit-date-and-time-value{text-align:center;margin:0;}
