@@ -6140,7 +6140,7 @@ function renderCard(){
   })();
   var _secHealth=_condInner?_vcSec('health',_condT(COND_UI.title),_condInner,false):'';
   // «Мои приёмы» живут внутри этой же вкладки (2026-09-19, владелец): что принимаю + во сколько — одно место.
-  // id — чтобы пуш о приёме открывал именно её (?tab=intake / сообщение от SW → _ikOpen).
+  // id — чтобы пуш о приёме открывал именно её (?tab=intake / сообщение от SW → _ikOpenTab).
   var _ikIn=(typeof _ikInner==='function')?_ikInner():'';
   if(_ikIn) supInner=(supInner||'')+'<div class="vc-sub" style="margin-top:14px;">'+_esc(_ikTitle())+'</div>'+_ikIn;
   // Правка времени/галочки перерисовывает карточку — раскрытая вкладка должна остаться раскрытой.
@@ -12535,7 +12535,7 @@ function closeCircModal(){
       if(tab==='approach'){ if(typeof openApproach==='function') openApproach(); }
       else if(tab==='card'||tab==='today'){ if(typeof navTo==='function') navTo(tab); }
       else if(tab==='chat'){ if(typeof openExpertChat==='function') openExpertChat(); }
-      else if(tab==='intake'){ if(typeof _ikOpen==='function') _ikOpen(); }   // клик по пушу о приёме, приложение было закрыто
+      else if(tab==='intake'){ if(typeof _ikOpenTab==='function') _ikOpenTab(); }   // клик по пушу о приёме, приложение было закрыто
     };
     if(document.readyState!=='loading') setTimeout(go,60); else document.addEventListener('DOMContentLoaded',function(){setTimeout(go,60);});
   }catch(e){}
@@ -12926,7 +12926,8 @@ window.IK_CFG={prefix:'viae',
     }catch(e){}
   }};
 // Клик по пушу о приёме — сразу «Мой профиль» → «Добавки и препараты» раскрытой: человек видит, что принимать.
-function _ikOpen(){
+// ⚠️ НЕ называть _ikOpen: так зовётся окно «Приём сегодня» из intake.js (глава памятки) — перекрыло бы его.
+function _ikOpenTab(){
   try{
     if(typeof navTo==='function') navTo('card');
     var d=document.getElementById('vc-intake'); if(!d) return;
@@ -12935,7 +12936,7 @@ function _ikOpen(){
   }catch(e){}
 }
 // Приложение уже было открыто — SW не перезагружает страницу, а присылает сообщение.
-try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener('message',function(e){ if(e.data&&e.data.action==='openIntake') _ikOpen(); }); }catch(e){}
+try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener('message',function(e){ if(e.data&&e.data.action==='openIntake') _ikOpenTab(); }); }catch(e){}
 // Надёжный путь (2026-09-19, живой iPhone: клик по пушу открыл «Сегодня»): SW по клику кладёт в Cache
 // отметку vial-open-intake. Проверяем её при запуске (после стартового экрана) и при возврате из фона;
 // свежая (<3 мин) — открываем вкладку и стираем отметку, чтобы не срабатывало повторно.
@@ -12945,7 +12946,7 @@ function _ikCheckOpen(){
     caches.match('vial-open-intake').then(function(r){ return r?r.text():''; }).then(function(t){
       var ts=parseInt(t,10); if(!ts) return;
       caches.keys().then(function(ks){ ks.forEach(function(k){ caches.open(k).then(function(c){ c.delete('vial-open-intake'); }); }); });
-      if(Date.now()-ts<3*60*1000) _ikOpen();
+      if(Date.now()-ts<3*60*1000) _ikOpenTab();
     }).catch(function(){});
   }catch(e){}
 }
