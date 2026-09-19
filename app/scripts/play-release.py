@@ -17,7 +17,7 @@
 Ключ в репозиторий не кладём.
 
 Примечания к выпуску — JSON-файл вида [{"language":"en-US","text":"…"}, …]; по умолчанию берётся
-app/store/release-notes.json, если он есть. Коды языков — как в Play: uk (не uk-UA), ru-RU, en-US.
+app/store/android/release-notes.json, если он есть. Коды языков — как в Play: uk (не uk-UA), ru-RU, en-US.
 """
 import argparse, base64, glob, json, os, sys, time, urllib.error, urllib.parse, urllib.request
 
@@ -100,7 +100,7 @@ def cmd_status(args):
 
 def load_notes(path):
     if not path:
-        d = "app/store/release-notes.json"
+        d = "app/store/android/release-notes.json"
         path = d if os.path.exists(d) else None
     if not path:
         return None
@@ -290,12 +290,12 @@ def main():
     r = sub.add_parser("release", help="выложить сборку из библиотеки в трек")
     r.add_argument("--track", required=True, help='имя трека, например "1.0 (1) — закрытый тест"')
     r.add_argument("--version", required=True, type=int, help="versionCode сборки, например 4")
-    r.add_argument("--notes", help="JSON с примечаниями (по умолчанию app/store/release-notes.json)")
+    r.add_argument("--notes", help="JSON с примечаниями (по умолчанию app/store/android/release-notes.json)")
     r.add_argument("--yes", action="store_true", help="действительно опубликовать")
     u = sub.add_parser("upload", help="загрузить .aab и выложить его в трек")
-    u.add_argument("--aab", required=True, help="путь к .aab, например app/store/build/vial-release-v5.aab")
+    u.add_argument("--aab", required=True, help="путь к .aab, например app/store/android/updates/vial-release-v5.aab")
     u.add_argument("--track", required=True, help='имя трека, например "1.0 (1) — закрытый тест"')
-    u.add_argument("--notes", help="JSON с примечаниями (по умолчанию app/store/release-notes.json)")
+    u.add_argument("--notes", help="JSON с примечаниями (по умолчанию app/store/android/release-notes.json)")
     u.add_argument("--yes", action="store_true", help="действительно загрузить и выложить")
     pr = sub.add_parser("prices", help="выровнять цены подписки по всем странам")
     pr.add_argument("--product", default="via_l_pro_monthly")

@@ -113,7 +113,7 @@
       разрешения в `Info.plist`. Android: `HealthConnectVialPlugin.kt` (новые типы через `safeRead` — отказ по
       одному типу больше не роняет весь импорт) + 4 разрешения в манифесте плагина. Шаги → разбор (`device.steps`).
       EXPERT PWA к Health доступа не имеет. % жира не берём — в разборе его некуда деть.
-- [x] **Android v7 собрана 2026-09-18** (`app/store/build/vial-release-v7.aab`, в манифесте все 11 типов Health Connect) — загрузить в закрытый тест.
+- [x] **Android v7 собрана 2026-09-18** (`app/store/android/updates/vial-release-v7.aab`, в манифесте все 11 типов Health Connect) — загрузить в закрытый тест.
       ⚠️ Основная дорожка — «v4 - 2026-09-11» (список «VIA-L testers», 18). В «1.0 (1) — закрытый тест» до 18.09 не был
       отмечен список — v5 и v6 не дошли ни до кого; 18.09 владелец отметил тот же список. Все сборки — только в «v4».
       18.09: v7 в «v4» на проверке; в «1.0 (1)» v7 — черновик (не публиковать, не приостанавливать дорожку).
@@ -167,7 +167,7 @@
 - [x] ✅ 2026-09-12 **«Назад» с Terms/Privacy** ведёт туда, откуда пришли: `sync-web.sh` жёстко ставит
   `../index.html?tab=card`, с пейволла человек попадает в профиль.
 - [x] ✅ 2026-09-12 **Android v5 в закрытом тесте** (трек «1.0 (1) — закрытый тест», versionCode 5,
-  выложен скриптом: `python3 app/scripts/play-release.py upload --aab app/store/build/vial-release-v5.aab
+  выложен скриптом: `python3 app/scripts/play-release.py upload --aab app/store/android/updates/vial-release-v5.aab
   --track "1.0 (1) — закрытый тест" --yes`). Урок: v4 ушла в НОВЫЙ трек «v4 - 2026-09-11» и до
   тестировщиков не дошла — перед выкладкой всегда сверять треки командой `status`.
 
@@ -220,9 +220,9 @@
       ✅ 2026-09-17 демо-данные пришли, разбор в воркере исправлен (терял сон/глубокий/температуру/SpO2) и
       задеплоен. ✅ `_nativeHideUltrahuman` снят (`060174a`): Android v6 в закрытом тесте, iOS 1.0.2 —
       ✅ 1.0.2 одобрена (Ready for Distribution). ⏳ 2026-09-18 1.0.3 In Review (сборка после 3016add — в ней
-      «Мои приёмы», движение, полный приём Apple Health; тексты — app/store/ASC-1.0.3-ВСТАВИТЬ.txt). Затем ответить
+      «Мои приёмы», движение, полный приём Apple Health; тексты — app/store/ios/ASC-1.0.3-ВСТАВИТЬ.txt). Затем ответить
       Sandeep (support@ultrahuman.com) с результатом.
-- [x] ✅ 2026-09-17 Android v6 в закрытом тесте (`app/store/build/vial-release-v6.aab`, коммит `060174a`, Ultrahuman открыт).
+- [x] ✅ 2026-09-17 Android v6 в закрытом тесте (`app/store/android/updates/vial-release-v6.aab`, коммит `060174a`, Ultrahuman открыт).
 
 ## 🤖 ANDROID → GOOGLE PLAY (старт 2026-09-01)
 
@@ -230,7 +230,7 @@
 
 **Закрыто:** ключ подписи и Play App Signing; targetSdk 36 + Play Billing 8 (`5b21978`);
 сборка `vial-release-v2.aab` опубликована в закрытом тесте (v3 = `c000970`, 09-08); **v4 собрана
-2026-09-11** (`app/store/build/vial-release-v4.aab`, versionCode 4, коммит `99bdd1c`: фоновый разбор
+2026-09-11** (`app/store/android/updates/vial-release-v4.aab`, versionCode 4, коммит `99bdd1c`: фоновый разбор
 через очередь, «не сохранён» не показывается пока разбор в пути, ложные галочки 09-09, пейволл
 «VIA-L Monthly», перевод описания специалиста, новая политика) — ⏳ загрузить в закрытый тест; витрина EN опубликована
 (`9a69938`), локали uk/ru/es поданы (`477e764`, тексты — `docs/PLAY-LISTING-LOCALES.md`);

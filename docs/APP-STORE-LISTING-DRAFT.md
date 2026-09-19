@@ -134,7 +134,7 @@ day. Works by hand or with Apple Health, in twelve languages, with your data kep
 
 ## 6-бис. What's New — 1.0.3 (2026-09-18)
 
-Тексты для ASC — в `app/store/release-notes.json` (EN/RU/UK).
+Тексты для ASC — в `app/store/android/release-notes.json` (EN/RU/UK).
 
 ```
 Your first three days with VIA-L are free — no payment details needed. New: My intake — set times

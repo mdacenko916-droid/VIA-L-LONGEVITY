@@ -87,7 +87,7 @@ tier». Обращение в Apple Developer Support **case 102958936297** сн
 **Метаданные, которые стоят в консоли:** имя `VIA-L: Midlife, Explained`, подзаголовок
 `Sleep, energy, mood after 40`, Health & Fitness + Lifestyle, рейтинг 18+ (Override по пункту 4 Terms),
 метки приватности Health & Fitness → App Functionality → Not Linked to You, User Privacy Choices URL
-`legal-app/delete-data.html`, 7 скриншотов 1290×2796 с подписями (`app/store/appstore-screenshots/`).
+`legal-app/delete-data.html`, 7 скриншотов 1290×2796 с подписями (`app/store/images/screenshots-appstore/`).
 
 ---
 
