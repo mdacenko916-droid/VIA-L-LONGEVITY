@@ -3401,6 +3401,9 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
           <div class="chip"><input type="radio" name="move_today" id="mv3" value="walk" onchange="_moveTodayChange()"><label for="mv3" data-t="move_walk">🚶‍♂️ Много ходил</label></div>
           <div class="chip"><input type="radio" name="move_today" id="mv4" value="cardio" onchange="_moveTodayChange()"><label for="mv4" data-t="move_cardio">🏃 Кардио / бег</label></div>
           <div class="chip"><input type="radio" name="move_today" id="mv5" value="strength" onchange="_moveTodayChange()"><label for="mv5" data-t="move_strength">🏋 Силовая</label></div>
+          <div class="chip"><input type="radio" name="move_today" id="mv6" value="yoga" onchange="_moveTodayChange()"><label for="mv6" data-t="move_yoga">🧘 Йога / растяжка</label></div>
+          <div class="chip"><input type="radio" name="move_today" id="mv7" value="pilates" onchange="_moveTodayChange()"><label for="mv7" data-t="move_pilates">🤸 Пилатес</label></div>
+          <div class="chip"><input type="radio" name="move_today" id="mv8" value="hiit" onchange="_moveTodayChange()"><label for="mv8" data-t="move_hiit">🔥 HIIT</label></div>
         </div>
         <div id="move-trk-note" style="display:none;font-size:var(--fs-cap);color:var(--t3);line-height:1.45;margin-top:8px;"></div>
       </div>
@@ -3421,9 +3424,13 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
         <label data-t="sore_l">Мышцы сегодня</label>
         <div class="q-prompt" data-t="sore_q">Болят ли мышцы после прошлых нагрузок?</div>
         <div class="chips cog-grid">
-          <div class="chip"><input type="radio" name="sore" id="so1" value="none"><label for="so1" data-t="sore_no">🙂 Не болят</label></div>
-          <div class="chip"><input type="radio" name="sore" id="so2" value="mild"><label for="so2" data-t="sore_mild">🤏 Слегка</label></div>
-          <div class="chip"><input type="radio" name="sore" id="so3" value="strong"><label for="so3" data-t="sore_strong">😣 Сильно</label></div>
+          <div class="chip"><input type="radio" name="sore" id="so1" value="none" onchange="_soreChange()"><label for="so1" data-t="sore_no">🙂 Не болят</label></div>
+          <div class="chip"><input type="radio" name="sore" id="so2" value="mild" onchange="_soreChange()"><label for="so2" data-t="sore_mild">🤏 Слегка</label></div>
+          <div class="chip"><input type="radio" name="sore" id="so3" value="strong" onchange="_soreChange()"><label for="so3" data-t="sore_strong">😣 Сильно</label></div>
+        </div>
+        <!-- Где и как болит (2026-09-19, владелец): «потянул лодыжку», «ноет плечо» — ИИ обходит эту зону в плане дня.
+             Показывается при «Слегка»/«Сильно»; необязательное. -->
+        <textarea id="sore_note" data-t-placeholder="sore_note_ph" placeholder="Где и как: например, потянул лодыжку, ноет правое плечо, тянет поясницу…" rows="2" maxlength="200" style="display:none;margin-top:10px;width:100%;border-radius:10px;padding:10px 12px;font-family:inherit;font-size:var(--fs-body);box-sizing:border-box;resize:vertical;"></textarea>
         </div>
       </div>
       <!-- Артериальное давление (по желанию; и в гаджетном, и в ручном проходе — у гипертоников есть тонометр).
@@ -4229,6 +4236,7 @@ const _MOVK={
   sore_q:{ru:"Болят ли мышцы после прошлых нагрузок?",uk:"Чи болять м'язи після попередніх навантажень?",en:"Are your muscles sore from recent exercise?",es:"¿Agujetas por el ejercicio reciente?",de:"Muskelkater von den letzten Belastungen?",pt:"Dor muscular por exercícios recentes?",fr:"Des courbatures après les derniers efforts ?",pl:"Czy mięśnie bolą po ostatnim wysiłku?",it:"Muscoli indolenziti dagli ultimi sforzi?",he:"האם השרירים כואבים אחרי המאמץ האחרון?",ja:"最近の運動で筋肉痛はありますか？",ko:"최근 운동 후 근육통이 있나요?"},
   sore_no:{ru:"🙂 Не болят",uk:"🙂 Не болять",en:"🙂 Not sore",es:"🙂 Sin dolor",de:"🙂 Kein Muskelkater",pt:"🙂 Sem dor",fr:"🙂 Pas de courbatures",pl:"🙂 Nie bolą",it:"🙂 Nessun dolore",he:"🙂 לא כואבים",ja:"🙂 痛くない",ko:"🙂 아프지 않음"},
   sore_mild:{ru:"🤏 Слегка",uk:"🤏 Трохи",en:"🤏 A little",es:"🤏 Un poco",de:"🤏 Leicht",pt:"🤏 Um pouco",fr:"🤏 Un peu",pl:"🤏 Trochę",it:"🤏 Un po'",he:"🤏 קצת",ja:"🤏 少し",ko:"🤏 조금"},
+  sore_note_ph:{ru:"Где и как: например, потянул лодыжку, ноет правое плечо, тянет поясницу…",uk:"Де і як: наприклад, потягнув щиколотку, ниє праве плече, тягне поперек…",en:"Where and how: e.g. twisted ankle, aching right shoulder, tight lower back…",es:"Dónde y cómo: p. ej., torcedura de tobillo, dolor en el hombro derecho, tirantez lumbar…",de:"Wo und wie: z. B. Knöchel verdreht, rechte Schulter schmerzt, unterer Rücken zieht…",pt:"Onde e como: ex. torci o tornozelo, dor no ombro direito, lombar tensa…",fr:"Où et comment : ex. cheville tordue, épaule droite douloureuse, bas du dos tendu…",pl:"Gdzie i jak: np. skręcona kostka, boli prawy bark, ciągnie w krzyżu…",it:"Dove e come: es. caviglia storta, spalla destra dolorante, lombare tesa…",he:"איפה ואיך: למשל נקע בקרסול, כאב בכתף ימין, מתיחות בגב התחתון…",ja:"どこがどう：例）足首をひねった、右肩が痛む、腰が張る…",ko:"어디가 어떻게: 예) 발목을 삐었음, 오른쪽 어깨 통증, 허리 당김…"},
   sore_strong:{ru:"😣 Сильно",uk:"😣 Сильно",en:"😣 A lot",es:"😣 Mucho",de:"😣 Stark",pt:"😣 Muito",fr:"😣 Beaucoup",pl:"😣 Mocno",it:"😣 Molto",he:"😣 מאוד",ja:"😣 かなり",ko:"😣 많이"}
 };
 Object.keys(_MOVK).forEach(function(k){Object.keys(_MOVK[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_MOVK[k][l];});});
@@ -4403,6 +4411,9 @@ const _ENK={
   move_light:{en:"🚶 A little",ru:"🚶 Немного",uk:"🚶 Трохи",es:"🚶 Un poco",de:"🚶 Etwas",pt:"🚶 Um pouco",fr:"🚶 Un peu",pl:"🚶 Trochę",it:"🚶 Un po’",he:"🚶 קצת",ja:"🚶 少し",ko:"🚶 조금"},
   move_walk:{en:"🚶‍♂️ Walked a lot",ru:"🚶‍♂️ Много ходил",uk:"🚶‍♂️ Багато ходив",es:"🚶‍♂️ Caminé mucho",de:"🚶‍♂️ Viel gelaufen",pt:"🚶‍♂️ Caminhei muito",fr:"🚶‍♂️ Beaucoup marché",pl:"🚶‍♂️ Dużo chodziłem",it:"🚶‍♂️ Camminato molto",he:"🚶‍♂️ הלכתי הרבה",ja:"🚶‍♂️ よく歩いた",ko:"🚶‍♂️ 많이 걸음"},
   move_cardio:{en:"🏃 Cardio / run",ru:"🏃 Кардио / бег",uk:"🏃 Кардіо / біг",es:"🏃 Cardio / correr",de:"🏃 Cardio / Laufen",pt:"🏃 Cardio / corrida",fr:"🏃 Cardio / course",pl:"🏃 Cardio / bieg",it:"🏃 Cardio / corsa",he:"🏃 קרדיו / ריצה",ja:"🏃 有酸素 / ランニング",ko:"🏃 유산소 / 달리기"},
+  move_yoga:{en:"🧘 Yoga / stretching",ru:"🧘 Йога / растяжка",uk:"🧘 Йога / розтяжка",es:"🧘 Yoga / estiramientos",de:"🧘 Yoga / Dehnen",pt:"🧘 Yoga / alongamento",fr:"🧘 Yoga / étirements",pl:"🧘 Joga / rozciąganie",it:"🧘 Yoga / stretching",he:"🧘 יוגה / מתיחות",ja:"🧘 ヨガ / ストレッチ",ko:"🧘 요가 / 스트레칭"},
+  move_pilates:{en:"🤸 Pilates",ru:"🤸 Пилатес",uk:"🤸 Пілатес",es:"🤸 Pilates",de:"🤸 Pilates",pt:"🤸 Pilates",fr:"🤸 Pilates",pl:"🤸 Pilates",it:"🤸 Pilates",he:"🤸 פילאטיס",ja:"🤸 ピラティス",ko:"🤸 필라테스"},
+  move_hiit:{en:"🔥 HIIT",ru:"🔥 HIIT",uk:"🔥 HIIT",es:"🔥 HIIT",de:"🔥 HIIT",pt:"🔥 HIIT",fr:"🔥 HIIT",pl:"🔥 HIIT",it:"🔥 HIIT",he:"🔥 HIIT",ja:"🔥 HIIT",ko:"🔥 HIIT"},
   move_strength:{en:"🏋 Strength",ru:"🏋 Силовая",uk:"🏋 Силове",es:"🏋 Fuerza",de:"🏋 Kraft",pt:"🏋 Força",fr:"🏋 Renforcement",pl:"🏋 Siłowy",it:"🏋 Forza",he:"🏋 כוח",ja:"🏋 筋トレ",ko:"🏋 근력 운동"},
 };
 Object.keys(_ENK).forEach(function(k){Object.keys(_ENK[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_ENK[k][l];});});
@@ -5987,7 +5998,7 @@ function _saveDaily(){
       // тренд стресса молча не считался. Мапим категорию на число (0–10), чтобы тренд снова работал.
       stress:(function(){var v=getRadio('stress');return v==='high'?9:v==='mild'?5:v==='no'?2:null;})(), alc:getRadio('alc'),
       cmp_delta:window._cmpDeltaToday||null,   // «лучше/так же/хуже» по жалобе — из этого недельный разбор считает траекторию
-      move_today:getRadio('move_today'), train_zone:_trainZones(), sore:getRadio('sore'),   // движение вчера — история для «что делать сегодня»
+      move_today:getRadio('move_today'), train_zone:_trainZones(), sore:getRadio('sore'), sore_note:(typeof _soreNote==='function'?_soreNote():''),   // движение вчера — история для «что делать сегодня»
       last_meal:getRadio('last_meal'), caffeine_late:getRadio('caffeine_late'),   // еда вчера вечером — копим по дням для недельного разбора
       bp_sys:(function(){var e=document.getElementById('bp-sys');var v=e?parseInt(e.value):NaN;return (v>=70&&v<=260)?v:null;})(),   // давление (ручной ввод) — для тренда/плитки
       bp_dia:(function(){var e=document.getElementById('bp-dia');var v=e?parseInt(e.value):NaN;return (v>=40&&v<=160)?v:null;})(),
@@ -7355,6 +7366,7 @@ function _isDailyField(el){
   if(el.id&&/^(sym|gi|cort)\d/.test(el.id))return true;   // симптомы/пищеварение/кортизол-паттерн «сегодня» (sym1-9, gi1-5, cort2-7)
   if(el.id==='crav1')return true;                          // тяга к сладкому «сегодня»
   if(el.id&&el.id.indexOf('ev_')===0)return true;
+  if(el.id==='sore_note')return true;                         // «где и как болит» — про сегодня
   if(el.id&&el.id.indexOf('tz_')===0)return true;             // какие мышцы работали вчера — про конкретный день             // «что было вечером» — состояние конкретного вечера
   return false;
 }
@@ -7596,6 +7608,14 @@ function _moveTodayChange(){
   if(getRadio('move_today')==='strength'){ g.style.display='block'; }
   else{ g.style.display='none'; g.querySelectorAll('input[type=checkbox]').forEach(function(c){c.checked=false;}); }
 }
+// «Мышцы сегодня» = слегка/сильно → поле «где и как болит». «Не болят» — прячем и чистим, чтобы старая
+// жалоба не ушла в разбор. 2026-09-19
+function _soreChange(){
+  var n=document.getElementById('sore_note'); if(!n)return;
+  var v=getRadio('sore');
+  if(v==='mild'||v==='strong'){ n.style.display='block'; } else { n.style.display='none'; n.value=''; }
+}
+function _soreNote(){ var n=document.getElementById('sore_note'); return n?String(n.value||'').trim().slice(0,200):''; }
 function _trainZones(){ var o=[]; ['tz_legs','tz_upper','tz_core','tz_full'].forEach(function(id){var e=document.getElementById(id); if(e&&e.checked)o.push(e.value);}); return o; }
 // Трекер (сейчас только Oura отдаёт день и тип тренировки) видел тренировку вчера → подставляем ответ,
 // человек подтверждает или меняет. Только пока вопрос пустой: ответ человека трекер не перетирает.
@@ -7605,7 +7625,7 @@ function _movePrefill(){
     if(!d||!d.trainDay||getRadio('move_today'))return;
     if(String(d.trainDay).slice(0,10)!==_dayKey(new Date(Date.now()-86400000)))return;
     var a=String(d.trainActivity||'');
-    var v=/strength|weight|resistance|functional|cross/i.test(a)?'strength':/yoga|stretch|pilates/i.test(a)?'light':'cardio';
+    var v=/strength|weight|resistance|functional|cross/i.test(a)?'strength':/pilates/i.test(a)?'pilates':/yoga|stretch/i.test(a)?'yoga':/hiit|interval/i.test(a)?'hiit':'cardio';
     var el=document.querySelector('input[name="move_today"][value="'+v+'"]'); if(!el)return;
     el.checked=true; _moveTodayChange();
     var n=document.getElementById('move-trk-note');
@@ -7631,7 +7651,7 @@ function _moveCtx(){
     if(nf[p[0]])return; var e=document.getElementById(p[0]); var v=e?parseFloat(e.value):NaN; if(isNaN(v))return;
     var u=m[p[0]]&&m[p[0]].usual; if(u!=null?(v<=u-2):(v<=3))low.push(p[1]);
   });
-  return {hist:hist, zone:_trainZones(), sore:getRadio('sore'), low:low};
+  return {hist:hist, zone:_trainZones(), sore:getRadio('sore'), sore_note:_soreNote(), low:low};
 }
 function _actFreqChange(){
   // «Самочувствие после тренировок» имеет смысл только при ≥1 тренировке.

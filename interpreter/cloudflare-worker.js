@@ -7328,7 +7328,17 @@ function selectExercisePlan(data) {
 // сначала состояние человека (сигналы хуже личной нормы, боль в мышцах), и только в хороший день —
 // что было вчера и за неделю. Вход — data.move_ctx с клиента (_moveCtx) + ответ «Движение вчера».
 // Правила — docs/FITNESS-SELECTION-RULES.md §4–5 (светофор, «вчера → сегодня нельзя»). 2026-09-18
+function _soreText(data) {
+  const mc = (data && data.move_ctx && typeof data.move_ctx === 'object') ? data.move_ctx : {};
+  return String(mc.sore_note || '').replace(/[\r\n«»]+/g, ' ').trim().slice(0, 200);
+}
+// Где болит — со слов клиента: эту зону обходим в ЛЮБОМ варианте плана, поэтому дописываем к итогу.
 function _todayMovePlan(data, holdLoad, lowRecovery) {
+  const r = _todayMovePlanBase(data, holdLoad, lowRecovery), sn = _soreText(data);
+  if (!r || !sn) return r;
+  return r + ' Клиент описал, где болит: «' + sn + '» — эту зону сегодня не нагружать ни в каком варианте.';
+}
+function _todayMovePlanBase(data, holdLoad, lowRecovery) {
   const mc = (data.move_ctx && typeof data.move_ctx === 'object') ? data.move_ctx : {};
   const arr = v => Array.isArray(v) ? v.map(String) : [];
   const low = arr(mc.low), sore = String(mc.sore || '');
@@ -7363,7 +7373,8 @@ function _todayMovePlan(data, holdLoad, lowRecovery) {
       + 'если хочется силовой — короткая, без наращивания веса' + avoid + '.' + WHY;
 
   // Хороший день: сколько дней подряд была нагрузка и сколько силовых уже за неделю.
-  const trained = x => x && (x.m === 'strength' || x.m === 'cardio');
+  // HIIT — нагрузка как кардио и выше; йога/растяжка/пилатес — лёгкий день, серию нагрузки не продолжают.
+  const trained = x => x && (x.m === 'strength' || x.m === 'cardio' || x.m === 'hiit');
   let streak = 0;
   for (let k = 1; k <= 7 && trained(days.find(x => x.d === k)); k++) streak++;
   const strength7 = days.filter(x => x.m === 'strength').length;
@@ -7380,7 +7391,7 @@ function _todayMovePlan(data, holdLoad, lowRecovery) {
   }
   if (weekDone)
     return 'сегодня: силовых на неделе уже ' + strength7 + ' — план выполнен; кардио в разговорном темпе, ходьба или отдых — по желанию.' + REST + WHY;
-  return 'сегодня: хороший день для силовой' + (y && y.m === 'cardio' ? ' (вчера было кардио)' : '')
+  return 'сегодня: хороший день для силовой' + (y && y.m === 'cardio' ? ' (вчера было кардио)' : y && y.m === 'hiit' ? ' (вчера был HIIT — без интервалов сегодня)' : '')
     + ' — на этой неделе силовых ' + strength7 + ' из ' + target + '.' + WHY;
 }
 
@@ -7966,6 +7977,10 @@ function buildUserMessage(data, lang, tier) {
         return out;
       })(data.complaint)
     + (data.new_symptoms ? 'Что нового за сутки (со слов клиента — ОБЯЗАТЕЛЬНО учти при интерпретации: может объяснять «отклонения» в биометрии, напр. простуда → низкий SpO₂; не тревожь, если сигнал объясняется этим): ' + data.new_symptoms + '\n' : '')
+    // «Движение вчера» и «Мышцы сегодня» словами — чтобы ИИ (и будущий тренер) видел полную картину
+    // состояния перед нагрузкой, а не только вывод _todayMovePlan. Где и как болит — со слов клиента. 2026-09-19
+    + (data.move_today ? 'Движение вчера (со слов клиента): ' + ({sedentary:'сидячий день',light:'немного двигался',walk:'много ходил',cardio:'кардио / бег',strength:'силовая',yoga:'йога / растяжка',pilates:'пилатес',hiit:'HIIT (интервальная высокой интенсивности)'}[String(data.move_today)] || String(data.move_today).slice(0, 30)) + '\n' : '')
+    + (_soreText(data) ? 'Мышцы/суставы сегодня — где и как болит (со слов клиента, ОБЯЗАТЕЛЬНО учти в плане движения): «' + _soreText(data) + '». Эту зону сегодня не нагружать, упражнения подобрать в обход неё; если похоже на травму (растяжение, резкая боль, отёк, боль в суставе) — никакой нагрузки на эту зону и мягко предложить показаться врачу, если за несколько дней не проходит. Диагноз не ставить.\n' : '')
     + (data.lifestyle_notes ? 'События/контекст недели (со слов клиента — учитывай как бытовое объяснение сдвигов метрик, не как ухудшение): ' + data.lifestyle_notes + '\n' : '')
     // Виды/частота/восстановление уходили СЫРЫМИ токенами анкеты (strength, moderate, tired…):
     // модель придумывала им русские слова сама и цитировала их как слова клиента — человек
