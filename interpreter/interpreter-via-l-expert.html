@@ -12824,10 +12824,11 @@ document.addEventListener('visibilitychange',function(){
     busy=true; el('vlAdvSend').disabled=true;
     var typing=add('assistant','…'); typing.classList.add('typing');
     fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({lang:lng(),tier:specLink()?'specialist':'elite',messages:history,ctx:_advCtx()})})
+      body:JSON.stringify({lang:lng(),tier:specLink()?'specialist':'elite',messages:history,ctx:_advCtx(),cid:(typeof _cid==='function'?_cid():''),day:(typeof _dayKey==='function'?_dayKey():'')})})
       .then(function(r){return r.json();}).then(function(j){
         typing.remove();
         if(j&&j.ok&&j.reply){ var _r=(typeof _wl==='function')?_wl(j.reply):j.reply; add('assistant',_r); history.push({role:'assistant',content:_r}); }
+        else if(j&&j.error==='limit'&&j.msg){ add('assistant',j.msg); history.pop(); }   // суточный лимит советника (воркер, ADV_LIMIT)
         else add('assistant',tr().err);
       }).catch(function(){ typing.remove(); add('assistant',tr().err); })
       .then(function(){ busy=false; el('vlAdvSend').disabled=false; el('vlAdvInput').focus(); });
