@@ -8473,24 +8473,25 @@ async function faqMatch(env, q){
 // Тёплый советник: self-serve (free/vio/pro) отвечает сам + грунтовка из FAQ-памяти;
 // human-led (expert/elite/specialist) отходит и направляет к живому специалисту (правило
 // «ИИ сам клиенту в платном ведении не пишет»). Гайдрейлы: без диагнозов/обещаний/цен.
-// ЛИМИТ СОВЕТНИКА (решение владельца 2026-09-19): сообщений в сутки на человека. Разбор и план уже
-// ограничены «1 в сутки», а советнику можно было писать без конца — каждое сообщение платное
-// (~$0.005–0.007 Haiku, ~×3 на Sonnet-языках). Считаем только УСПЕШНЫЕ ответы; ключ — cid устройства,
-// у старых сборок без cid — IP. Ведение специалистом (EXPERT) не ограничиваем: там ответ-переадресация.
-const ADV_LIMIT = { haiku: 20, sonnet: 10 };
+// ЛИМИТ СОВЕТНИКА (решение владельца 2026-09-19): БЮДЖЕТ $0.03 в сутки на человека (~$0.90/мес).
+// Деньгами, а не штуками: одинаково для всех языков — на Sonnet-языках (he/ar/ja/ko, ~×3 дороже)
+// бюджет просто кончается быстрее. Это ~5–7 сообщений на Haiku и ~2 на Sonnet. Считаем фактическую
+// стоимость УСПЕШНЫХ ответов (usage из ответа модели); ключ — cid устройства, у старых сборок — IP.
+// Ведение специалистом (EXPERT) не ограничиваем: там ответ-переадресация.
+const ADV_BUDGET_USD = 0.03;
 const ADV_LIMIT_TXT = {
-  ru:'На сегодня лимит вопросов советнику исчерпан ({n}). Завтра можно продолжить — разбор и план дня работают как обычно.',
-  uk:'На сьогодні ліміт запитань до порадника вичерпано ({n}). Завтра можна продовжити — розбір і план дня працюють як завжди.',
-  en:'You’ve reached today’s limit of questions to the advisor ({n}). You can continue tomorrow — your analysis and day plan work as usual.',
-  es:'Has alcanzado el límite de preguntas al asesor por hoy ({n}). Mañana puedes seguir; el análisis y el plan del día funcionan como siempre.',
-  de:'Das heutige Limit an Fragen an den Berater ist erreicht ({n}). Morgen geht es weiter — Analyse und Tagesplan funktionieren wie gewohnt.',
-  pt:'Você atingiu o limite de perguntas ao assistente por hoje ({n}). Amanhã pode continuar — a análise e o plano do dia funcionam normalmente.',
-  fr:'Vous avez atteint la limite de questions au conseiller pour aujourd’hui ({n}). Vous pourrez continuer demain — l’analyse et le plan du jour fonctionnent comme d’habitude.',
-  pl:'Dzisiejszy limit pytań do doradcy został wykorzystany ({n}). Jutro możesz kontynuować — analiza i plan dnia działają jak zwykle.',
-  it:'Hai raggiunto il limite di domande al consulente per oggi ({n}). Domani puoi continuare: analisi e piano del giorno funzionano come sempre.',
-  he:'הגעתם למגבלת השאלות ליועץ להיום ({n}). אפשר להמשיך מחר — הניתוח ותוכנית היום עובדים כרגיל.',
-  ja:'本日のアドバイザーへの質問の上限（{n}件）に達しました。明日また続けられます。分析と今日のプランは通常どおりご利用いただけます。',
-  ko:'오늘 조언자에게 할 수 있는 질문 한도({n}개)에 도달했어요. 내일 다시 이어갈 수 있어요 — 분석과 오늘의 계획은 평소처럼 이용할 수 있습니다.'
+  ru:'На сегодня лимит вопросов советнику исчерпан. Завтра можно продолжить — разбор и план дня работают как обычно.',
+  uk:'На сьогодні ліміт запитань до порадника вичерпано. Завтра можна продовжити — розбір і план дня працюють як завжди.',
+  en:'You’ve reached today’s limit of questions to the advisor. You can continue tomorrow — your analysis and day plan work as usual.',
+  es:'Has alcanzado el límite de preguntas al asesor por hoy. Mañana puedes seguir; el análisis y el plan del día funcionan como siempre.',
+  de:'Das heutige Limit an Fragen an den Berater ist erreicht. Morgen geht es weiter — Analyse und Tagesplan funktionieren wie gewohnt.',
+  pt:'Você atingiu o limite de perguntas ao assistente por hoje. Amanhã pode continuar — a análise e o plano do dia funcionam normalmente.',
+  fr:'Vous avez atteint la limite de questions au conseiller pour aujourd’hui. Vous pourrez continuer demain — l’analyse et le plan du jour fonctionnent comme d’habitude.',
+  pl:'Dzisiejszy limit pytań do doradcy został wykorzystany. Jutro możesz kontynuować — analiza i plan dnia działają jak zwykle.',
+  it:'Hai raggiunto il limite di domande al consulente per oggi. Domani puoi continuare: analisi e piano del giorno funzionano come sempre.',
+  he:'הגעתם למגבלת השאלות ליועץ להיום. אפשר להמשיך מחר — הניתוח ותוכנית היום עובדים כרגיל.',
+  ja:'本日のアドバイザーへの質問の上限に達しました。明日また続けられます。分析と今日のプランは通常どおりご利用いただけます。',
+  ko:'오늘 조언자에게 할 수 있는 질문 한도에 도달했어요. 내일 다시 이어갈 수 있어요 — 분석과 오늘의 계획은 평소처럼 이용할 수 있습니다.'
 };
 function _advKey(request, body) {
   const day = /^\d{4}-\d{2}-\d{2}$/.test(String(body.day || '')) ? body.day : new Date().toISOString().slice(0, 10);
@@ -8562,16 +8563,14 @@ async function handleAdvisorChat(request, env, corsHeaders, ctx){
   const model    = ['he','ar','ja','ko'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001';
   const langName = CAB_LANG_NAMES[lang] || 'английском';
 
-  // Суточный лимит (см. ADV_LIMIT) — до вызова модели, чтобы сверх лимита не платить.
-  const advMax = /sonnet/.test(model) ? ADV_LIMIT.sonnet : ADV_LIMIT.haiku;
+  // Суточный бюджет (см. ADV_BUDGET_USD) — до вызова модели, чтобы сверх него не платить.
   const advKey = (!humanLed && env.ANALYSIS_CACHE) ? _advKey(request, body) : null;
-  let advUsed = 0;
+  let advSpent = 0;
   if (advKey) {
-    try { advUsed = parseInt(await env.ANALYSIS_CACHE.get(advKey) || '0', 10) || 0; } catch (_) {}
-    if (advUsed >= advMax) {
+    try { advSpent = parseFloat(await env.ANALYSIS_CACHE.get(advKey) || '0') || 0; } catch (_) {}
+    if (advSpent >= ADV_BUDGET_USD) {
       const L2 = lang.slice(0, 2);
-      return jsonResponse({ ok:false, error:'limit', limit:advMax,
-        msg:(ADV_LIMIT_TXT[L2] || ADV_LIMIT_TXT.en).replace('{n}', advMax) }, corsHeaders);
+      return jsonResponse({ ok:false, error:'limit', msg:(ADV_LIMIT_TXT[L2] || ADV_LIMIT_TXT.en) }, corsHeaders);
     }
   }
 
@@ -8617,10 +8616,13 @@ async function handleAdvisorChat(request, env, corsHeaders, ctx){
     logUsage(env, ctx, 'advisor-chat', model, tier, lang, j);
     const reply = j.content?.[0]?.text || '';
     if (advKey && reply) {
-      const w = env.ANALYSIS_CACHE.put(advKey, String(advUsed + 1), { expirationTtl: 48 * 3600 }).catch(() => {});
+      const u = j.usage || {}, pr = AI_PRICE[model] || AI_PRICE['claude-haiku-4-5-20251001'];
+      const cost = ((u.input_tokens || 0) * pr.in + (u.output_tokens || 0) * pr.out
+                  + (u.cache_creation_input_tokens || 0) * pr.cw + (u.cache_read_input_tokens || 0) * pr.cr) / 1e6;
+      const w = env.ANALYSIS_CACHE.put(advKey, (advSpent + cost).toFixed(6), { expirationTtl: 48 * 3600 }).catch(() => {});
       if (ctx && ctx.waitUntil) ctx.waitUntil(w);
     }
-    return jsonResponse({ok:true, reply, left: advKey ? Math.max(0, advMax - advUsed - 1) : null}, corsHeaders);
+    return jsonResponse({ok:true, reply}, corsHeaders);
   }catch(_){ return jsonResponse({ok:false,error:'ai_error'}, corsHeaders, 502); }
 }
 
