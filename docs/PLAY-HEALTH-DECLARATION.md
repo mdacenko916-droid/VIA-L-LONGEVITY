@@ -89,3 +89,30 @@ Body fat percentage recorded by the user's own smart scale is shown on the daily
 ```
 The user's most recent blood glucose reading from their own meter or CGM is shown on the daily screen as context for the nutrition part of the explanation. The reading's relation to meals, when recorded, is shown with it. The app never diagnoses, never uses the words diabetes or prediabetes, and suggests discussing persistent readings with a qualified professional. Read-only.
 ```
+
+---
+
+## ⚠️ ЧТО РЕАЛЬНО СТОИТ В КОНСОЛИ (сверено по форме 2026-09-20)
+
+Владелец заполнял форму в два захода и местами писал свои, более короткие формулировки — они
+не хуже, просто другие. Ниже — то, что **фактически** лежит в Play Console, чтобы в следующий раз
+не гадать. Тексты выше по файлу — исходные заготовки; при расхождении верить этому разделу.
+
+Всего **13 разрешений**: сон 1 · активность 3 (тренировки, шаги, дыхание) · физические параметры 2
+(жир, вес) · жизненные показатели 7 (VO2 max, глюкоза, давление, пульс, ВСР, SpO₂, пульс покоя).
+
+```
+READ_EXERCISE   Reads the user's workouts from the last 7 days to see which muscles worked yesterday and suggest a suitable load or a rest day today.
+READ_STEPS      Reads the daily step count to relate movement to sleep, energy and recovery in the user's daily wellbeing review, and to suggest small, realistic changes to their routine.
+READ_RESPIRATORY_RATE   Reads average breathing rate during sleep as one of the recovery signals in the user's daily wellbeing review.
+READ_WEIGHT     Reads the latest weight from the user's smart scale to keep the profile up to date for nutrition and activity guidance.
+READ_BLOOD_PRESSURE     Reads the user's latest blood pressure reading so it does not have to be typed in manually; used to keep daily activity advice within safe limits.
+```
+
+Остальные восемь (сон, VO2 max, пульс, ВСР, SpO₂, пульс покоя, процент жира, глюкоза) стоят
+дословно как в этом файле выше.
+
+⚠️ **Грабля 2026-09-20:** в поле «Этапы» (READ_STEPS) сначала оказалось **общее описание
+приложения** — то, что положено в верхнее поле формы, про приложение целиком. Формально не ложь,
+но на вопрос «зачем вам шаги» оно не отвечает, а это как раз раздел, где придираются. Исправлено.
+Правило: в поле разрешения — только про ЭТО разрешение, общее описание живёт отдельно наверху.
