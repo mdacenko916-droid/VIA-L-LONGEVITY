@@ -4,7 +4,9 @@ import androidx.activity.result.ActivityResult
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.BloodGlucoseRecord
 import androidx.health.connect.client.records.BloodPressureRecord
+import androidx.health.connect.client.records.BodyFatRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
@@ -37,7 +39,7 @@ import kotlin.reflect.KClass
 /**
  * Локальный Health Connect плагин VIA·L (только Android).
  * Читает HRV(RMSSD) / пульс покоя / VO2max / SpO2 / шаги / сон(стадии) +
- * тренировки / дыхание / вес / давление (2026-09-18) и
+ * тренировки / дыхание / вес / давление (2026-09-18) + процент жира / глюкоза (2026-09-20) и
  * нормализует в те же поля, что и Apple-мост → healthconnect-bridge.js кормит их в шаги.
  */
 @CapacitorPlugin(name = "HealthConnectVial")
@@ -62,7 +64,10 @@ class HealthConnectVialPlugin : Plugin() {
         HealthPermission.getReadPermission(ExerciseSessionRecord::class),
         HealthPermission.getReadPermission(RespiratoryRateRecord::class),
         HealthPermission.getReadPermission(WeightRecord::class),
-        HealthPermission.getReadPermission(BloodPressureRecord::class)
+        HealthPermission.getReadPermission(BloodPressureRecord::class),
+        // 2026-09-20: состав тела (умные весы) и глюкоза (глюкометр/CGM). Тоже через safeRead.
+        HealthPermission.getReadPermission(BodyFatRecord::class),
+        HealthPermission.getReadPermission(BloodGlucoseRecord::class)
     )
 
     private fun client(): HealthConnectClient? = try {
@@ -238,6 +243,26 @@ class HealthConnectVialPlugin : Plugin() {
                     ?.let { out.put("weight", it.weight.inKilograms) }
                 safeRead(c, BloodPressureRecord::class, now.minus(Duration.ofDays(1)), now).maxByOrNull { it.time }
                     ?.let { out.put("bpSys", it.systolic.inMillimetersOfMercury); out.put("bpDia", it.diastolic.inMillimetersOfMercury) }
+
+                // ── Процент жира: последний за 30 дней (весы — не ежедневная история). ──
+                safeRead(c, BodyFatRecord::class, now.minus(Duration.ofDays(30)), now).maxByOrNull { it.time }
+                    ?.let { val v = it.percentage.value; if (v in 3.0..70.0) out.put("bodyFat", Math.round(v * 10.0) / 10.0) }
+
+                // ── Глюкоза: последний замер за 7 дней (ммоль/л). В отличие от Apple, Health Connect
+                // хранит ОТНОШЕНИЕ К ЕДЕ — передаём его: натощак читается иначе, чем после еды. ──
+                safeRead(c, BloodGlucoseRecord::class, from7, now).maxByOrNull { it.time }?.let {
+                    val v = it.level.inMillimolesPerLiter
+                    if (v in 2.0..30.0) {
+                        out.put("glucose", Math.round(v * 10.0) / 10.0)
+                        val meal = when (it.relationToMeal) {
+                            BloodGlucoseRecord.RELATION_TO_MEAL_FASTING -> "fasting"
+                            BloodGlucoseRecord.RELATION_TO_MEAL_BEFORE_MEAL -> "before_meal"
+                            BloodGlucoseRecord.RELATION_TO_MEAL_AFTER_MEAL -> "after_meal"
+                            else -> ""
+                        }
+                        if (meal.isNotEmpty()) out.put("glucoseMeal", meal)
+                    }
+                }
 
                 call.resolve(out)
             } catch (e: Exception) {

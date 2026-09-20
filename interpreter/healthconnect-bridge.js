@@ -3,7 +3,9 @@
    app/plugins/health-connect). На вебе и на iOS window.Capacitor.Plugins.HealthConnectVial
    отсутствует → все функции no-op (на iOS работает Apple-мост healthkit-bridge.js).
    Зеркало healthkit-bridge.js: плагин сам нормализует метрики в нативе и отдаёт
-   {hrv, rhr, vo2, spo2, sleepHours, deepMin, steps, workouts, respRate, weight, bpSys, bpDia} — мост только раскладывает их по полям. */
+   {hrv, rhr, vo2, spo2, sleepHours, deepMin, steps, workouts, respRate, weight, bpSys, bpDia,
+   bodyFat, glucose, glucoseMeal} — мост только раскладывает их по полям. `glucoseMeal` (натощак /
+   до / после еды) есть ТОЛЬКО здесь: Health Connect хранит отношение к еде, Apple — нет. */
 (function () {
   function hc() {
     return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.HealthConnectVial) || null;
@@ -35,7 +37,8 @@
     if (Object.keys(extra).length && typeof window.applyExtracted === 'function') {
       window.applyExtracted(extra, 'healthconnect');
     }
-    // Полный приём (тренировки, шаги, дыхание, давление, вес) — общая раскладка из Apple-моста.
+    // Полный приём (тренировки, шаги, дыхание, давление, вес, % жира, глюкоза) — общая раскладка
+    // из Apple-моста.
     if (typeof window._vialHealthExtras === 'function') window._vialHealthExtras(data, 'healthconnect');
     if (typeof window.updateImportSummary === 'function') window.updateImportSummary();
     return Object.keys(data).length > 0;

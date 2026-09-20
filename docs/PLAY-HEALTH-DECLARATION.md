@@ -1,7 +1,10 @@
 # Декларация «Приложения для здоровья» (Google Play) — тексты
 
-**Дата:** 2026-09-04. Приложение: VIA-L (`com.viael.vial`).
-Семь разрешений Health Connect, объявленных в `app/plugins/health-connect/android/src/main/AndroidManifest.xml`.
+**Дата:** 2026-09-04, дополнено 2026-09-20. Приложение: VIA-L (`com.viael.vial`).
+**Тринадцать** разрешений Health Connect, объявленных в
+`app/plugins/health-connect/android/src/main/AndroidManifest.xml`: семь исходных (ниже),
+четыре из «полного приёма» 2026-09-18 и два из 2026-09-20. Тексты для формы — все в этом файле;
+манифест и этот список должны совпадать, иначе консоль вернёт «Требуются действия».
 
 > Линия ответов: только ЧТЕНИЕ; данные показываются пользователю и используются для
 > текстового разбора; ничего не продаётся и не используется для рекламы; хранение
@@ -53,4 +56,36 @@ VO2 max is shown on the daily screen and used as context when the app suggests h
 ### Шаги — `READ_STEPS`
 ```
 Daily step count is shown on the daily screen and used to relate movement to sleep and energy in the explanation, and to suggest small, testable changes to the user's routine. Read-only.
+```
+
+### Тренировки — `READ_EXERCISE` (добавлено 2026-09-18)
+```
+Exercise sessions from the past week (day, type, duration) are shown on the daily screen and used so the explanation can account for yesterday's training when describing today's recovery, instead of asking the user to type their workouts in by hand. Read-only.
+```
+
+### Частота дыхания — `READ_RESPIRATORY_RATE` (добавлено 2026-09-18)
+```
+Respiratory rate measured during sleep is shown on the daily screen as additional context for sleep quality. It is presented descriptively, never as a diagnosis. Read-only.
+```
+
+### Вес — `READ_WEIGHT` (добавлено 2026-09-18)
+```
+Body weight is used to fill in the user's own profile field, which the app otherwise asks them to type, and which feeds general wellness context. The user can edit or clear it at any time. Read-only.
+```
+
+### Давление — `READ_BLOOD_PRESSURE` (добавлено 2026-09-18)
+```
+Blood pressure readings from the past day pre-fill the app's own blood-pressure fields, so the user does not retype what their cuff already recorded. Values are shown back to the user with a plain-language description and an explicit note that this is not a diagnosis. Read-only.
+```
+
+## Состав тела и обмен (добавлено 2026-09-20)
+
+### Процент жира — `READ_BODY_FAT`
+```
+Body fat percentage recorded by the user's own smart scale is shown on the daily screen and used to describe the direction of change over weeks, alongside weight. The app states that consumer bio-impedance scales are approximate and never presents the value as a norm or a diagnosis. Read-only.
+```
+
+### Глюкоза крови — `READ_BLOOD_GLUCOSE`
+```
+The user's most recent blood glucose reading from their own meter or CGM is shown on the daily screen as context for the nutrition part of the explanation. The reading's relation to meals, when recorded, is shown with it. The app never diagnoses, never uses the words diabetes or prediabetes, and suggests discussing persistent readings with a qualified professional. Read-only.
 ```

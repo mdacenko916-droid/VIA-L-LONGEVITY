@@ -15,10 +15,11 @@
   // темп. запястья только Series 8+/Ultra). Авторизацию опц. типов изолируем: если на них падает,
   // повторяем только по базовым, чтобы один неизвестный тип не сломал весь доступ к Health.
   var CORE_TYPES = ['heartRate','restingHeartRate','heartRateVariability','stepCount','sleepAnalysis','vo2Max','oxygenSaturation'];
-  // Полный приём (2026-09-18): тренировки, дыхание, вес, давление. Имена — ключи РАЗРЕШЕНИЙ плагина:
+  // Полный приём (2026-09-18, дополнен 2026-09-20 составом тела и глюкозой): тренировки, дыхание,
+  // вес, давление, процент жира, глюкоза. Имена — ключи РАЗРЕШЕНИЙ плагина:
   // тренировки разрешаются ключом 'activity' (он же сон), а читаются как 'workoutType'.
   // iOS сам покажет окно только по новым типам — тем, кто уже подключился, повторять ничего не надо.
-  var EXTRA_TYPES = ['activity','respiratoryRate','weight','bloodPressureSystolic','bloodPressureDiastolic'];
+  var EXTRA_TYPES = ['activity','respiratoryRate','weight','bloodPressureSystolic','bloodPressureDiastolic','bodyFat','bloodGlucose'];
   var OPT_TYPES  = ['appleSleepingWristTemperature'];
   var READ_TYPES = CORE_TYPES.concat(EXTRA_TYPES, OPT_TYPES);
 
@@ -113,7 +114,8 @@
     return ex;
   };
 
-  // Кладёт «полный приём» в ИП (общее для обоих мостов): тренировки, шаги, дыхание → importedData;
+  // Кладёт «полный приём» в ИП (общее для обоих мостов): тренировки, шаги, дыхание, процент жира,
+  // глюкоза → importedData;
   // давление — в поля давления, только если человек их ещё не заполнил; вес — в профиль, если
   // замер свежий (весы пишут в Health) и отличается от записанного. 2026-09-18
   window._vialHealthExtras = function(data, source){
@@ -121,6 +123,13 @@
     var extra = {};
     if(data.workouts){ var ws = window._vialWorkoutSummary(data.workouts); Object.keys(ws).forEach(function(k){ extra[k] = ws[k]; }); }
     if(data.steps > 0) extra.steps = Math.round(data.steps);
+    if(data.bodyFat >= 3 && data.bodyFat <= 70) extra.bodyFat = data.bodyFat;
+    if(data.glucose >= 2 && data.glucose <= 30){
+      extra.glucose = data.glucose;
+      // Отношение к еде отдаёт только Health Connect (Android). В Apple Health оно лежит в
+      // метаданных сэмпла, которых плагин не отдаёт → на iOS остаётся пустым, и разбор хеджирует.
+      if(data.glucoseMeal) extra.glucoseMeal = String(data.glucoseMeal);
+    }
     if(data.respRate >= 6 && data.respRate <= 40){
       extra.respRate = Math.round(data.respRate * 10) / 10;
       var rr = document.getElementById('resp_rate'); if(rr) rr.value = Math.round(data.respRate);
@@ -225,6 +234,16 @@
     var wt = await lastSample('weight', 7); if(wt && wt.value != null) out.weight = Number(wt.value);
     var bs = await lastSample('bloodPressureSystolic', 1), bd = await lastSample('bloodPressureDiastolic', 1);
     if(bs && bd && bs.value != null && bd.value != null){ out.bpSys = Number(bs.value); out.bpDia = Number(bd.value); }
+    // ── Состав тела и глюкоза (2026-09-20) ──
+    // Процент жира — последний замер за 30 дней: его пишут умные весы, а на них встают не каждый
+    // день. Apple отдаёт долей 0–1 (HKUnit.percent), как и SpO₂ → переводим в проценты.
+    var bf = await lastSample('bodyFat', 30);
+    if(bf && bf.value != null){ var fv = Number(bf.value); if(fv > 0 && fv <= 1) fv *= 100; if(fv >= 3 && fv <= 70) out.bodyFat = Math.round(fv * 10) / 10; }
+    // Глюкоза — последний замер за 7 дней (глюкометр/CGM пишут в Health). Плагин отдаёт ммоль/л.
+    // В поле «Глюкоза натощак» это НЕ кладём: замер из Health натощак не обязан быть, а на нём
+    // висят сверки и расчёт HOMA-IR. Идёт отдельным приборным показателем со своей оговоркой.
+    var gl = await lastSample('bloodGlucose', 7);
+    if(gl && gl.value != null){ var gv = Number(gl.value); if(gv >= 2 && gv <= 30) out.glucose = Math.round(gv * 10) / 10; }
     return out;
   };
 
