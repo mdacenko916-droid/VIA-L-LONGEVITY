@@ -112,7 +112,8 @@ self.addEventListener('push', e => {
     const ikBody = (IK_TXT[lg] || IK_TXT.en).replace('{t}', String(h).padStart(2, '0') + ':00');
     // Утро и приём в один час — два пуша подряд; общий тег сворачивает их в ОДНО уведомление.
     await self.registration.showNotification(isMorning ? t.t : 'VIA·L', {
-      body: isIntake ? ikBody : t.b,
+      // Утро и приём в один час — один пуш на оба: раньше текст утреннего терялся. 2026-09-20
+      body: isIntake ? (ntHour === h ? (t.b + ' · ' + ikBody) : ikBody) : t.b,
       icon: './pwa/icon-192.png',
       badge: './pwa/icon-192.png',
       // Утро — один тег на всё: вчерашнее не копится. Приём — тег на час: иначе напоминание 13:00

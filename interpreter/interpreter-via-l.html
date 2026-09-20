@@ -5689,7 +5689,7 @@ function renderCard(){
   _bkInner += '<div style="font-size:var(--fs-cap);color:var(--t3);margin-top:8px;text-align:center;">'
     +'<a href="../legal-app/privacy.html" target="_blank" rel="noopener" style="color:var(--t3);">'+L({ru:'Как мы обращаемся с данными',uk:'Як ми поводимося з даними',en:'How we handle your data',es:'Cómo tratamos sus datos',de:'Wie wir mit Ihren Daten umgehen',pt:'Como tratamos seus dados',fr:'Comment nous traitons vos données',pl:'Jak postępujemy z danymi',it:'Come trattiamo i tuoi dati',he:'איך אנחנו מטפלים בנתונים',ja:'データの取り扱いについて',ko:'데이터 처리 방식'})+'</a></div>';
   // Утреннее напоминание — только в приложении (на вебе локальных уведомлений нет).
-  var _secIntake='';   // «Мои приёмы» — внутри «Добавок и препаратов» (_secSup), отдельной вкладки нет
+  var _secIntake='';   // «Мои приёмы» — внутри «Добавок и препаратов» (_secSup), отдельного блока нет
   var _secNotify='';
   if(typeof notifyAvailable==='function' && notifyAvailable()){
     var _nt=_ntGet(), _ntOn=!!_nt.on, _ntTm=_nt.time||'08:00';
@@ -11794,15 +11794,7 @@ async function _ntArm(){
     if(!st.on){ if(typeof notifyCancel==='function') await notifyCancel(); return; }
     var hm=String(st.time||'08:00').split(':');
     var t=_ntText();
-    // Приём в ту же минуту, что и утреннее, — одно уведомление, а не два подряд: «…· ваш список на 08:00».
-    // Само напоминание о приёме на это время IK_CFG.arm не ставит (2026-09-18).
-    try{
-      var _hhmm=String(st.time||'08:00');
-      if(typeof _ikSchedule==='function' && _ikSchedule().some(function(x){ return x.t===_hhmm; })){
-        var _ik=L({ru:'ваш список на {t}',uk:'ваш список на {t}',en:'your {t} list',es:'tu lista de las {t}',de:'deine Liste für {t}',pt:'a sua lista das {t}',fr:'votre liste de {t}',pl:'twoja lista na {t}',it:'la tua lista delle {t}',he:'הרשימה שלכם ל־{t}',ja:'{t} のリスト',ko:'{t} 목록'}).replace('{t}',_hhmm);
-        t={title:t.title, body:String(t.body||'').replace(/\s+$/,'')+' · '+_ik};
-      }
-    }catch(e){}
+    // Приписки «· ваш список на 08:00» больше нет: приём приходит своим уведомлением (2026-09-20).
     await notifySchedule(parseInt(hm[0],10)||8, parseInt(hm[1],10)||0, t.title, t.body);
   }catch(e){}
 }
@@ -12549,8 +12541,8 @@ window.IK_CFG={prefix:'vialp',
   canRemind:function(){ return typeof notifyAvailable==='function' && notifyAvailable(); },
   ask:function(){ return (typeof notifyAsk==='function') ? notifyAsk() : Promise.resolve(false); },
   arm:function(list){
-    // Совпало с утренним напоминанием — отдельное не ставим: его текст дописывает _ntArm.
-    try{ var st=_ntGet(); if(st.on) list=(list||[]).filter(function(x){ return x.t!==String(st.time||'08:00'); }); }catch(e){}
+    // Раньше приём, совпавший с утренним, не ставился вовсе (текст дописывался к утреннему), и человек
+    // читал это как «напоминания о приёме не было». Теперь ставим отдельно: два уведомления. 2026-09-20
     if(typeof notifyIntake==='function') notifyIntake(list);
     try{ if(typeof _ntArm==='function') _ntArm(); }catch(e){}   // текст утреннего мог измениться
   }};
