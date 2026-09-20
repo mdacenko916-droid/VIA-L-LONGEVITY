@@ -54,7 +54,7 @@
       ru: 'На чём основано', uk: 'На чому ґрунтується', en: 'What this is based on',
       es: 'En qué se basa', de: 'Worauf das beruht', pt: 'Em que se baseia',
       fr: 'Sur quoi cela repose', pl: 'Na czym to się opiera', it: 'Su cosa si basa',
-      he: 'על מה זה מבוסס', ja: '根拠について', ko: '근거',
+      he: 'על מה זה מבוסס', ja: 'この分析の根拠', ko: '이 분석의 근거',
     });
     return '<div class="ai-themes-box vial-ev" data-day="' + esc(d) + '">'
          + '<button type="button" class="ai-more-all" onclick="_evidenceOpen(this)">'
@@ -102,15 +102,15 @@
         ru: 'Разбор собран по темам вашей картины дня. За ними стоят опубликованные работы — вот они:',
         uk: 'Розбір зібрано за темами вашої картини дня. За ними стоять опубліковані роботи — ось вони:',
         en: 'The analysis was built from the themes of your day. These are the published studies behind them:',
-        es: 'El análisis se construyó con los temas de tu día. Estos son los estudios publicados detrás:',
+        es: 'El análisis se construyó con los temas de tu día. Estos son los estudios publicados que hay detrás:',
         de: 'Die Analyse folgt den Themen deines Tages. Dahinter stehen diese veröffentlichten Arbeiten:',
         pt: 'A análise foi construída a partir dos temas do seu dia. Estes são os estudos publicados por trás:',
         fr: 'L’analyse suit les thèmes de votre journée. Voici les travaux publiés qui les sous-tendent :',
         pl: 'Analiza powstała z tematów Twojego dnia. Oto opublikowane prace, które za nimi stoją:',
         it: 'L’analisi nasce dai temi della tua giornata. Ecco gli studi pubblicati alla base:',
-        he: 'הניתוח נבנה מהנושאים של היום שלך. אלה המחקרים שפורסמו מאחוריהם:',
+        he: 'הניתוח נבנה מהנושאים של היום שלכם. אלה המחקרים שפורסמו מאחוריהם:',
         ja: 'この分析はあなたの一日のテーマから組み立てられています。その根拠となる公表研究です：',
-        ko: '이 분석은 당신의 하루 주제에서 만들어졌습니다. 그 근거가 된 공개 연구입니다:',
+        ko: '이 분석은 오늘 하루의 주제에서 만들어졌습니다. 그 근거가 된 공개 연구입니다:',
       });
       var foot = tr({
         ru: 'Работы общие, не про вас лично: они объясняют, почему приложение вообще смотрит на эти показатели. Это не диагноз и не назначение.',
@@ -123,8 +123,8 @@
         pl: 'Prace są ogólne, nie o Tobie: wyjaśniają, dlaczego aplikacja w ogóle patrzy na te sygnały. To nie diagnoza ani zalecenie.',
         it: 'Sono studi generali, non su di te: spiegano perché l’app guarda questi segnali. Non è una diagnosi né una prescrizione.',
         he: 'המחקרים כלליים, לא עליכם אישית: הם מסבירים מדוע האפליקציה בכלל מסתכלת על המדדים האלה. זו אינה אבחנה ואינה מרשם.',
-        ja: 'これらは一般的な研究で、あなた個人についてではありません。アプリがこれらの指標を見る理由を示すものです。診断でも処方でもありません。',
-        ko: '이 연구들은 일반적인 것으로 당신 개인에 대한 것이 아닙니다. 앱이 왜 이 지표를 보는지 설명합니다. 진단이나 처방이 아닙니다.',
+        ja: 'これらは一般的な研究であり、特定の個人について述べたものではありません。アプリがこれらの指標を見る理由を示すものです。診断でも処方でもありません。',
+        ko: '이 연구들은 일반적인 것이며 특정 개인에 대한 것이 아닙니다. 앱이 왜 이 지표를 보는지 설명합니다. 진단이나 처방이 아닙니다.',
       });
       // Сила доказательств. ФИКСИРОВАННАЯ строка, а не инструкция модели: оговорки в промпте
       // исполняются через раз (см. docs/PROMPT-RULES-AUDIT.md), а эту забыть нельзя. 2026-09-20
@@ -159,9 +159,9 @@
         html += '<ol class="vial-ev-list vial-ev-rest" hidden>' + list.slice(SHOW).map(row).join('') + '</ol>'
              + '<button type="button" class="vial-ev-all" onclick="_evidenceAll(this)">'
              + esc(tr({
-                 ru: 'Показать все', uk: 'Показати всі', en: 'Show all', es: 'Ver todas',
-                 de: 'Alle anzeigen', pt: 'Ver todas', fr: 'Tout afficher', pl: 'Pokaż wszystkie',
-                 it: 'Mostra tutte', he: 'להצגת הכול', ja: 'すべて表示', ko: '전체 보기',
+                 ru: 'Показать все', uk: 'Показати всі', en: 'Show all', es: 'Ver todos',
+                 de: 'Alle anzeigen', pt: 'Ver todos', fr: 'Tout afficher', pl: 'Pokaż wszystkie',
+                 it: 'Mostra tutti', he: 'להצגת הכול', ja: 'すべて表示', ko: '전체 보기',
                })) + ' (' + list.length + ')</button>';
       }
       html += '<div class="vial-ev-note vial-ev-foot">' + esc(weak) + '</div>'
