@@ -4667,11 +4667,23 @@ async function whoopRefresh(env, rec){
 // helper для Whoop/Polar/Withings/Oura: сортирует записи по дате (dateFn), берёт valFn ПОСЛЕДНЕЙ записи с
 // непустым значением — то есть по каждому полю ищет свой самый свежий валидный день (фолбэк, если у поля
 // пропуск именно за вчера).
-function _latestByDate(records, dateFn, valFn) {
+function _latestByDate(records, dateFn, valFn, sink) {
   const arr = (records || []).map(r => { const d = dateFn(r); const tm = d ? new Date(d).getTime() : NaN; const v = valFn(r); return { t: isFinite(tm) ? tm : 0, v }; }).filter(x => x.v != null);
   if (!arr.length) return null;
   arr.sort((a, b) => a.t - b.t);
-  return arr[arr.length - 1].v;
+  const top = arr[arr.length - 1];
+  // ЗА КАКОЕ ЧИСЛО пришло значение. Раньше это знал только Fitbit, остальные вендоры отдавали
+  // цифры без даты — и разбор читал замер трёхдневной давности как «прошлую ночь» (живой случай
+  // 2026-09-20: проданный Fitbit, данные за 15 сентября). sink — локальный массив вызывающего
+  // хендлера, НЕ глобальный: в одном изоляте Cloudflare одновременно живут чужие запросы.
+  if (sink && top.t > 0) sink.push(new Date(top.t).toISOString().slice(0, 10));
+  return top.v;
+}
+
+// Самая свежая из собранных дат → 'YYYY-MM-DD' (или null). Её отдаём клиенту как `day`.
+function _maxDay(sink) {
+  const a = (sink || []).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
+  return a.length ? a[a.length - 1] : null;
 }
 
 // Аудит 15.07 (владелец: «сколько там ещё такого хлама»): физиологические границы были заданы РАЗНОБОЙ —
@@ -4720,6 +4732,7 @@ function _sanitizeEx(ex) {
 }
 
 async function handleWhoopMetrics(request, env, corsHeaders){
+  const _pd = [];   // даты выбранных записей → `day` в ответе (см. _latestByDate)
   const url = new URL(request.url);
   const sid = url.searchParams.get('sid');
   if (!sid) return jsonResponse({ ok:false, error:'sid_required' }, corsHeaders, 400);
@@ -4744,21 +4757,21 @@ async function handleWhoopMetrics(request, env, corsHeaders){
   const rRecs = (rcv && rcv.records) || [];
   if (rRecs.length) {
     let v;
-    v = _latestByDate(rRecs, x => x.created_at, x => hrvMs(x.score && x.score.hrv_rmssd_milli)); if (v!=null) ex.hrv = Math.round(v);
-    v = _latestByDate(rRecs, x => x.created_at, x => { const n = Number(x.score && x.score.resting_heart_rate); return isFinite(n)&&n>0 ? n : null; }); if (v!=null) ex.rhr = Math.round(v);
-    v = _latestByDate(rRecs, x => x.created_at, x => { const n = Number(x.score && x.score.spo2_percentage); return isFinite(n)&&n>0 ? n : null; }); if (v!=null) ex.spo2 = +v.toFixed(1);
-    v = _latestByDate(rRecs, x => x.created_at, x => { const n = Number(x.score && x.score.recovery_score); return isFinite(n)&&n>=0 ? n : null; }); if (v!=null) ex.energy = Math.min(10, Math.max(1, Math.round(v/10)));
+    v = _latestByDate(rRecs, x => x.created_at, x => hrvMs(x.score && x.score.hrv_rmssd_milli), _pd); if (v!=null) ex.hrv = Math.round(v);
+    v = _latestByDate(rRecs, x => x.created_at, x => { const n = Number(x.score && x.score.resting_heart_rate); return isFinite(n)&&n>0 ? n : null; }, _pd); if (v!=null) ex.rhr = Math.round(v);
+    v = _latestByDate(rRecs, x => x.created_at, x => { const n = Number(x.score && x.score.spo2_percentage); return isFinite(n)&&n>0 ? n : null; }, _pd); if (v!=null) ex.spo2 = +v.toFixed(1);
+    v = _latestByDate(rRecs, x => x.created_at, x => { const n = Number(x.score && x.score.recovery_score); return isFinite(n)&&n>=0 ? n : null; }, _pd); if (v!=null) ex.energy = Math.min(10, Math.max(1, Math.round(v/10)));
   }
   const slp = await get(`/v2/activity/sleep?start=${encodeURIComponent(startISO)}&end=${encodeURIComponent(endISO)}&limit=25`);
   const sRecs = (slp && slp.records) || [];
   if (sRecs.length) {
     const ss = x => (x.score && x.score.stage_summary) || {};
-    const asleep = _latestByDate(sRecs, x => x.start, x => { const s = ss(x); const tot = Number(s.total_slow_wave_sleep_time_milli||0) + Number(s.total_light_sleep_time_milli||0) + Number(s.total_rem_sleep_time_milli||0); return tot > 0 ? tot : null; });
+    const asleep = _latestByDate(sRecs, x => x.start, x => { const s = ss(x); const tot = Number(s.total_slow_wave_sleep_time_milli||0) + Number(s.total_light_sleep_time_milli||0) + Number(s.total_rem_sleep_time_milli||0); return tot > 0 ? tot : null; }, _pd);
     if (asleep!=null) ex.sleepHours = +(asleep/3600000).toFixed(2);
-    const deep = _latestByDate(sRecs, x => x.start, x => { const d = Number(ss(x).total_slow_wave_sleep_time_milli); return isFinite(d)&&d>0 ? d : null; });
+    const deep = _latestByDate(sRecs, x => x.start, x => { const d = Number(ss(x).total_slow_wave_sleep_time_milli); return isFinite(d)&&d>0 ? d : null; }, _pd);
     if (deep!=null) ex.deepMin = Math.round(deep/60000);
   }
-  return jsonResponse({ ok:true, ex: _sanitizeEx(ex) }, corsHeaders);
+  return jsonResponse({ ok:true, ex: _sanitizeEx(ex), day: _maxDay(_pd) }, corsHeaders);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -4826,6 +4839,7 @@ async function handlePolarCallback(request, env, corsHeaders) {
 
 // GET /polar/metrics?sid=… → 7-day-averaged ex {hrv,rhr,sleepHours,deepMin,energy}
 async function handlePolarMetrics(request, env, corsHeaders) {
+  const _pd = [];   // даты выбранных записей → `day` в ответе (см. _latestByDate)
   const url = new URL(request.url);
   const sid = url.searchParams.get('sid');
   if (!sid) return jsonResponse({ ok:false, error:'sid_required' }, corsHeaders, 400);
@@ -4850,9 +4864,9 @@ async function handlePolarMetrics(request, env, corsHeaders) {
   const nr = await get(`/users/${userId}/nightly-recharge?from=${from}&to=${to}`);
   const nrList = Array.isArray(nr) ? nr : (nr && nr.recharges ? nr.recharges : []);
   if (nrList.length) {
-    const v = _latestByDate(nrList, x => x.date, x => { const n = Number(x.sdnn_avg || x.hrv_avg || 0); return isFinite(n) && n > 0 ? n : null; });
+    const v = _latestByDate(nrList, x => x.date, x => { const n = Number(x.sdnn_avg || x.hrv_avg || 0); return isFinite(n) && n > 0 ? n : null; }, _pd);
     if (v!=null) ex.hrv = Math.round(v);
-    const st = _latestByDate(nrList, x => x.date, x => { const n = Number(x.nightly_recharge_status); return isFinite(n) && n > 0 ? n : null; });
+    const st = _latestByDate(nrList, x => x.date, x => { const n = Number(x.nightly_recharge_status); return isFinite(n) && n > 0 ? n : null; }, _pd);
     if (st!=null) ex.energy = Math.min(10, Math.max(1, Math.round(st / 3 * 10)));
   }
 
@@ -4863,9 +4877,9 @@ async function handlePolarMetrics(request, env, corsHeaders) {
     // Сумма фаз ПЕРВЫМ приоритетом, готовое поле — только фолбэк. Урок Fitbit 2026-08-06: там
     // готовое «время сна» включало бодрствование и расходилось с приложением трекера на час.
     // Устройства Polar для проверки нет, поэтому берём заведомо безопасный порядок.
-    const tot = _latestByDate(slpList, x => x.date, x => { const st = Number(x.light_sleep||0) + Number(x.deep_sleep||0) + Number(x.rem_sleep||0); const t = st > 0 ? st : Number(x.total_sleep_time || 0); return isFinite(t) && t > 0 ? t : null; });
+    const tot = _latestByDate(slpList, x => x.date, x => { const st = Number(x.light_sleep||0) + Number(x.deep_sleep||0) + Number(x.rem_sleep||0); const t = st > 0 ? st : Number(x.total_sleep_time || 0); return isFinite(t) && t > 0 ? t : null; }, _pd);
     if (tot!=null) ex.sleepHours = +(tot / 3600).toFixed(2);
-    const dp = _latestByDate(slpList, x => x.date, x => { const n = Number(x.deep_sleep); return isFinite(n) && n > 0 ? n : null; });
+    const dp = _latestByDate(slpList, x => x.date, x => { const n = Number(x.deep_sleep); return isFinite(n) && n > 0 ? n : null; }, _pd);
     if (dp!=null) ex.deepMin = Math.round(dp / 60);
   }
 
@@ -4880,7 +4894,7 @@ async function handlePolarMetrics(request, env, corsHeaders) {
     }).filter(Boolean), ex);
   }
 
-  return jsonResponse({ ok:true, ex: _sanitizeEx(ex) }, corsHeaders);
+  return jsonResponse({ ok:true, ex: _sanitizeEx(ex), day: _maxDay(_pd) }, corsHeaders);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -4961,6 +4975,7 @@ async function withingsRefresh(env, rec) {
 
 // GET /withings/metrics?sid=… → 7-day-averaged ex {hrv,rhr,sleepHours,deepMin,spo2}
 async function handleWithingsMetrics(request, env, corsHeaders) {
+  const _pd = [];   // даты выбранных записей → `day` в ответе (см. _latestByDate)
   const url = new URL(request.url);
   const sid = url.searchParams.get('sid');
   if (!sid) return jsonResponse({ ok:false, error:'sid_required' }, corsHeaders, 400);
@@ -4988,10 +5003,10 @@ async function handleWithingsMetrics(request, env, corsHeaders) {
   const slpList = (slp && slp.series) || [];
   if (slpList.length) {
     const dget = (x, k) => { const n = Number((x.data||{})[k]); return isFinite(n) && n > 0 ? n : null; };
-    const v = _latestByDate(slpList, x => x.date, x => dget(x, 'sdnn_1')); if (v!=null) ex.hrv = Math.round(v);
-    const r = _latestByDate(slpList, x => x.date, x => dget(x, 'hr_min')); if (r!=null) ex.rhr = Math.round(r);
-    const t = _latestByDate(slpList, x => x.date, x => dget(x, 'total_sleep_time')); if (t!=null) ex.sleepHours = +(t/3600).toFixed(2);
-    const dp = _latestByDate(slpList, x => x.date, x => dget(x, 'deep_sleep_duration')); if (dp!=null) ex.deepMin = Math.round(dp/60);
+    const v = _latestByDate(slpList, x => x.date, x => dget(x, 'sdnn_1'), _pd); if (v!=null) ex.hrv = Math.round(v);
+    const r = _latestByDate(slpList, x => x.date, x => dget(x, 'hr_min'), _pd); if (r!=null) ex.rhr = Math.round(r);
+    const t = _latestByDate(slpList, x => x.date, x => dget(x, 'total_sleep_time'), _pd); if (t!=null) ex.sleepHours = +(t/3600).toFixed(2);
+    const dp = _latestByDate(slpList, x => x.date, x => dget(x, 'deep_sleep_duration'), _pd); if (dp!=null) ex.deepMin = Math.round(dp/60);
   }
 
   // SpO2 (meastype 54) — берём ПОСЛЕДНЮЮ группу замеров по дате, усредняя только замеры ВНУТРИ неё
@@ -5019,7 +5034,7 @@ async function handleWithingsMetrics(request, env, corsHeaders) {
     }), ex);
   }
 
-  return jsonResponse({ ok:true, ex: _sanitizeEx(ex) }, corsHeaders);
+  return jsonResponse({ ok:true, ex: _sanitizeEx(ex), day: _maxDay(_pd) }, corsHeaders);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -5097,6 +5112,7 @@ async function ouraRefresh(env, rec){
 // GET /oura/metrics?sid=… → 7-дневное ex {hrv,rhr,sleepHours,deepMin,spo2,energy} + тренировки.
 // HRV у Oura = average_hrv (ms, ночной RMSSD) — это и есть «настоящая» цифра кольца.
 async function handleOuraMetrics(request, env, corsHeaders){
+  const _pd = [];   // даты выбранных записей → `day` в ответе (см. _latestByDate)
   const url = new URL(request.url);
   const sid = url.searchParams.get('sid');
   if (!sid) return jsonResponse({ ok:false, error:'sid_required' }, corsHeaders, 400);
@@ -5122,22 +5138,22 @@ async function handleOuraMetrics(request, env, corsHeaders){
   const useSleep = night.length ? night : sleep;
   if (useSleep.length) {
     let v;
-    v = _latestByDate(useSleep, s => s.day || s.bedtime_end, s => { const n = Number(s.average_hrv); return isFinite(n)&&n>0 ? n : null; });        if (v!=null) ex.hrv = Math.round(v);
-    v = _latestByDate(useSleep, s => s.day || s.bedtime_end, s => { const n = Number(s.lowest_heart_rate); return isFinite(n)&&n>0 ? n : null; });  if (v!=null) ex.rhr = Math.round(v);
-    v = _latestByDate(useSleep, s => s.day || s.bedtime_end, s => { const n = Number(s.total_sleep_duration); return isFinite(n)&&n>0 ? n : null; }); if (v!=null) ex.sleepHours = +(v/3600).toFixed(2);
-    v = _latestByDate(useSleep, s => s.day || s.bedtime_end, s => { const n = Number(s.deep_sleep_duration); return isFinite(n)&&n>0 ? n : null; });  if (v!=null) ex.deepMin = Math.round(v/60);
+    v = _latestByDate(useSleep, s => s.day || s.bedtime_end, s => { const n = Number(s.average_hrv); return isFinite(n)&&n>0 ? n : null; }, _pd);        if (v!=null) ex.hrv = Math.round(v);
+    v = _latestByDate(useSleep, s => s.day || s.bedtime_end, s => { const n = Number(s.lowest_heart_rate); return isFinite(n)&&n>0 ? n : null; }, _pd);  if (v!=null) ex.rhr = Math.round(v);
+    v = _latestByDate(useSleep, s => s.day || s.bedtime_end, s => { const n = Number(s.total_sleep_duration); return isFinite(n)&&n>0 ? n : null; }, _pd); if (v!=null) ex.sleepHours = +(v/3600).toFixed(2);
+    v = _latestByDate(useSleep, s => s.day || s.bedtime_end, s => { const n = Number(s.deep_sleep_duration); return isFinite(n)&&n>0 ? n : null; }, _pd);  if (v!=null) ex.deepMin = Math.round(v/60);
   }
   // Readiness → readiness (score 0–100) + tempDev (ночное отклонение температуры) — за ПОСЛЕДНИЙ день (x.day).
   // Совпадает с импортом Oura-файла (parseOuraJSON): готовность отдаём как есть, энергию НЕ подменяем.
   const rdy = await get('/v2/usercollection/daily_readiness') || [];
   if (rdy.length) {
     let v;
-    v = _latestByDate(rdy, x => x.day, x => { const n = Number(x && x.score); return isFinite(n)&&n>0 ? n : null; });           if (v!=null) ex.readiness = Math.round(v);
-    v = _latestByDate(rdy, x => x.day, x => { const n = Number(x && x.temperature_deviation); return isFinite(n) ? n : null; }); if (v!=null) ex.tempDev = +v.toFixed(2);   // 2 знака — мелкие отклонения (0.02) не теряем
+    v = _latestByDate(rdy, x => x.day, x => { const n = Number(x && x.score); return isFinite(n)&&n>0 ? n : null; }, _pd);           if (v!=null) ex.readiness = Math.round(v);
+    v = _latestByDate(rdy, x => x.day, x => { const n = Number(x && x.temperature_deviation); return isFinite(n) ? n : null; }, _pd); if (v!=null) ex.tempDev = +v.toFixed(2);   // 2 знака — мелкие отклонения (0.02) не теряем
   }
   // SpO2 → spo2_percentage.average — за ПОСЛЕДНИЙ день (x.day)
   const spo2 = await get('/v2/usercollection/daily_spo2') || [];
-  if (spo2.length) { const v = _latestByDate(spo2, x => x.day, x => { const n = Number(x && x.spo2_percentage && x.spo2_percentage.average); return isFinite(n)&&n>0 ? n : null; }); if (v!=null) ex.spo2 = +v.toFixed(1); }
+  if (spo2.length) { const v = _latestByDate(spo2, x => x.day, x => { const n = Number(x && x.spo2_percentage && x.spo2_percentage.average); return isFinite(n)&&n>0 ? n : null; }, _pd); if (v!=null) ex.spo2 = +v.toFixed(1); }
   // Workout → сводка нагрузки за неделю (для модуля ДВИЖЕНИЕ + HRV-направленной нагрузки).
   // ⚠️ Oura пишет в эту коллекцию НЕ только тренировки: она сама детектит активность и заводит
   // запись на каждую прогулку и бытовое движение (source='autodetected'). Считать длину массива
@@ -5186,7 +5202,7 @@ async function handleOuraMetrics(request, env, corsHeaders){
     if (last.day)       ex.trainDay = String(last.day);
     if (last.activity)  ex.trainActivity = String(last.activity);
   }
-  return jsonResponse({ ok:true, ex: _sanitizeEx(ex) }, corsHeaders);
+  return jsonResponse({ ok:true, ex: _sanitizeEx(ex), day: _maxDay(_pd) }, corsHeaders);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -5266,6 +5282,7 @@ async function ultrahumanRefresh(env, rec){
 // GET /ultrahuman/metrics?sid=… → ex {hrv,rhr,sleepHours,deepMin,tempDev,readiness,spo2,vo2}, каждое поле —
 // за самый свежий день, где оно есть (как у Oura), а не среднее за неделю.
 async function handleUltrahumanMetrics(request, env, corsHeaders){
+  const _pd = [];   // даты выбранных записей → `day` в ответе (см. _latestByDate)
   const url = new URL(request.url);
   const sid = url.searchParams.get('sid');
   if (!sid) return jsonResponse({ ok:false, error:'sid_required' }, corsHeaders, 400);
@@ -5300,7 +5317,7 @@ async function handleUltrahumanMetrics(request, env, corsHeaders){
 
   const num = (v) => { const n = Number(v); return (v != null && v !== '' && isFinite(n)) ? n : null; };
   const pos = (v) => { const n = num(v); return (n != null && n > 0) ? n : null; };
-  const pick = (fn) => _latestByDate(rows, r => r.day, r => { try { return fn(r.t); } catch(e){ return null; } });
+  const pick = (fn) => _latestByDate(rows, r => r.day, r => { try { return fn(r.t); } catch(e){ return null; } }, _pd);
   const sl = (t) => t.Sleep || t.sleep || {};
   const qm = (t, k) => ((sl(t).quick_metrics || []).find(q => q && q.type === k) || {}).value;
   const stage = (t, k) => ((sl(t).sleep_stages || []).find(q => q && q.type === k) || {}).stage_time;
@@ -5315,7 +5332,7 @@ async function handleUltrahumanMetrics(request, env, corsHeaders){
   v = pick(t => pos(t.vo2_max && t.vo2_max.value));                                          if (v!=null) ex.vo2 = Math.round(v);
   v = pick(t => pos(sl(t).spo2 && sl(t).spo2.value));
   if (v!=null) ex.spo2 = +v.toFixed(1);
-  return jsonResponse({ ok:true, ex: _sanitizeEx(ex) }, corsHeaders);
+  return jsonResponse({ ok:true, ex: _sanitizeEx(ex), day: _maxDay(_pd) }, corsHeaders);
 }
 
 // POST /tg-test  → отправляет нутрициологу контрольное сообщение.
@@ -8093,6 +8110,17 @@ function buildUserMessage(data, lang, tier) {
                     : ' — заметное отклонение: мягко назови в паттерн-рамке и добавь «если так держится несколько дней — спокойно обсудить со специалистом»')) : '')
         ].filter(Boolean);
         var tail = '';
+        // ДАННЫЕ ПРИБОРА МОГУТ БЫТЬ НЕ ЗА ПРОШЛУЮ НОЧЬ (2026-09-20). Кольцо пролежало на зарядке,
+        // телефон уехал без хозяина, трекер продан — вендор всё равно отдаёт последний день, какой
+        // у него есть. В интерфейсе дата видна («данные за 15 сентября»), а в разбор не уходила
+        // вовсе, и модель писала «сегодня ваша ВСР ниже обычного» про день, которого не было.
+        var _lag = Number(d.lag) || 0;
+        if (_lag > 0 && d.day)
+          tail += '⚠️ ВНИМАНИЕ, ДАТА ПРИБОРНЫХ ДАННЫХ: показатели выше сняты ' + d.day
+               + ', это на ' + _lag + ' дн. раньше вчерашнего дня. НЕ называй их сегодняшними или «этой ночью» — '
+               + 'говори прямо, за какое число замер («по данным за ' + d.day + '»). Сравнение с личной нормой '
+               + 'по ним делать можно, но вывод о СЕГОДНЯШНЕМ состоянии на них не строй; если за свежие дни данных '
+               + 'нет, скажи об этом спокойно, одной фразой, и опирайся на то, что человек отметил сам.\n';
         // Состав тела и глюкоза приходят из Apple Health (умные весы, глюкометр/CGM) — 2026-09-20.
         // Обе цифры требуют оговорки, поэтому идут отдельной строкой, а не в общий перечень:
         // процент жира с бытовых весов (биоимпеданс) гуляет от воды и времени суток, а замер
