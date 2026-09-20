@@ -126,18 +126,54 @@
         ja: 'これらは一般的な研究で、あなた個人についてではありません。アプリがこれらの指標を見る理由を示すものです。診断でも処方でもありません。',
         ko: '이 연구들은 일반적인 것으로 당신 개인에 대한 것이 아닙니다. 앱이 왜 이 지표를 보는지 설명합니다. 진단이나 처방이 아닙니다.',
       });
-      var html = '<div class="vial-ev-note">' + esc(head) + '</div><ol class="vial-ev-list">';
-      list.forEach(function (doi) {
+      // Сила доказательств. ФИКСИРОВАННАЯ строка, а не инструкция модели: оговорки в промпте
+      // исполняются через раз (см. docs/PROMPT-RULES-AUDIT.md), а эту забыть нельзя. 2026-09-20
+      var weak = tr({
+        ru: 'Доказательная сила у этих работ разная: где-то крупные обзоры и мета-анализы, где-то отдельные небольшие исследования. То, что советует разбор, — безопасный шаг по самопомощи, а не лечение, и подходит не в каждой ситуации.',
+        uk: 'Доказова сила цих робіт різна: десь великі огляди та мета-аналізи, десь окремі невеликі дослідження. Те, що радить розбір, — безпечний крок самодопомоги, а не лікування, і підходить не в кожній ситуації.',
+        en: 'The strength of this evidence varies: some are large reviews and meta-analyses, some are small single studies. What the analysis suggests is a low-risk self-care step, not treatment, and it may not fit every situation.',
+        es: 'La solidez de esta evidencia varía: hay grandes revisiones y metaanálisis, y también estudios pequeños aislados. Lo que sugiere el análisis es un paso de autocuidado de bajo riesgo, no un tratamiento, y puede no encajar en toda situación.',
+        de: 'Die Aussagekraft dieser Arbeiten ist unterschiedlich: teils große Übersichten und Meta-Analysen, teils einzelne kleine Studien. Was die Auswertung vorschlägt, ist ein risikoarmer Selbsthilfe-Schritt, keine Behandlung — und passt nicht in jede Situation.',
+        pt: 'A força desta evidência varia: há grandes revisões e meta-análises e também estudos pequenos isolados. O que a análise sugere é um passo de autocuidado de baixo risco, não um tratamento, e pode não servir para toda situação.',
+        fr: 'La solidité de ces travaux varie : grandes revues et méta-analyses d’un côté, petites études isolées de l’autre. Ce que propose l’analyse est une mesure d’auto-soin à faible risque, pas un traitement, et elle ne convient pas à toutes les situations.',
+        pl: 'Siła tych dowodów bywa różna: od dużych przeglądów i metaanaliz po pojedyncze małe badania. To, co podpowiada analiza, jest bezpiecznym krokiem samopomocy, a nie leczeniem, i nie pasuje do każdej sytuacji.',
+        it: 'La forza di questi lavori varia: da grandi revisioni e meta-analisi a singoli piccoli studi. Ciò che l’analisi suggerisce è un passo di auto-cura a basso rischio, non una cura, e può non adattarsi a ogni situazione.',
+        he: 'עוצמת הראיות משתנה: יש סקירות גדולות ומטא-אנליזות ויש מחקרים קטנים בודדים. מה שהניתוח מציע הוא צעד עזרה-עצמית בסיכון נמוך, לא טיפול, והוא לא מתאים לכל מצב.',
+        ja: '根拠の強さはさまざまです。大規模なレビューやメタアナリシスもあれば、小規模な単一研究もあります。分析が提案するのは低リスクのセルフケアであり、治療ではありません。すべての状況に当てはまるとは限りません。',
+        ko: '근거의 강도는 제각각입니다. 대규모 리뷰와 메타분석도 있고 소규모 단일 연구도 있습니다. 분석이 제안하는 것은 위험이 낮은 자기관리이지 치료가 아니며, 모든 상황에 맞지는 않습니다.',
+      });
+      // Список подрезан: 150 ссылок подряд не читает никто, а выглядит это не солиднее, а неряшливее.
+      // Показываем свежие, остальное — по кнопке. Ничего не прячем: счётчик честно говорит сколько.
+      var SHOW = 12;
+      function row(doi) {
         var s = reg.sources[doi];
-        html += '<li><span class="vial-ev-t">' + esc(s.t) + '</span>'
+        return '<li><span class="vial-ev-t">' + esc(s.t) + '</span>'
              + (s.j ? '<span class="vial-ev-j"> — ' + esc(s.j) + (s.y ? ', ' + esc(s.y) : '') + '</span>'
                     : (s.y ? '<span class="vial-ev-j"> — ' + esc(s.y) + '</span>' : ''))
              + ' <a class="vial-ev-doi" href="https://doi.org/' + encodeURIComponent(doi)
              + '" target="_blank" rel="noopener">doi</a></li>';
-      });
-      html += '</ol><div class="vial-ev-note vial-ev-foot">' + esc(foot) + '</div>';
+      }
+      var html = '<div class="vial-ev-note">' + esc(head) + '</div>'
+               + '<ol class="vial-ev-list">' + list.slice(0, SHOW).map(row).join('') + '</ol>';
+      if (list.length > SHOW) {
+        html += '<ol class="vial-ev-list vial-ev-rest" hidden>' + list.slice(SHOW).map(row).join('') + '</ol>'
+             + '<button type="button" class="vial-ev-all" onclick="_evidenceAll(this)">'
+             + esc(tr({
+                 ru: 'Показать все', uk: 'Показати всі', en: 'Show all', es: 'Ver todas',
+                 de: 'Alle anzeigen', pt: 'Ver todas', fr: 'Tout afficher', pl: 'Pokaż wszystkie',
+                 it: 'Mostra tutte', he: 'להצגת הכול', ja: 'すべて表示', ko: '전체 보기',
+               })) + ' (' + list.length + ')</button>';
+      }
+      html += '<div class="vial-ev-note vial-ev-foot">' + esc(weak) + '</div>'
+            + '<div class="vial-ev-note">' + esc(foot) + '</div>';
       body.innerHTML = html;
     });
+  };
+
+  window._evidenceAll = function (btn) {
+    var rest = btn.parentNode.querySelector('.vial-ev-rest');
+    if (rest) { rest.hidden = false; rest.start = 13; }
+    btn.remove();
   };
 
   // Стили — в палитре приложения, без своих цветов (см. память про единый дизайн).
@@ -148,6 +184,7 @@
     + '.vial-ev-j{color:var(--t3,rgba(245,243,239,.5));font-style:italic;}'
     + '.vial-ev-doi{color:var(--gold-lt,#EEC77A);text-decoration:none;border-bottom:1px solid rgba(226,185,90,.4);}'
     + '.vial-ev-note{font-size:13px;line-height:1.5;color:var(--t3,rgba(245,243,239,.5));margin:0 0 12px;}'
-    + '.vial-ev-foot{margin:12px 0 0;}';
+    + '.vial-ev-foot{margin:12px 0 0;}'
+    + '.vial-ev-all{margin:2px 0 0;background:none;border:1px solid rgba(226,185,90,.4);border-radius:10px;color:var(--gold-lt,#EEC77A);font:inherit;font-size:13px;padding:8px 13px;cursor:pointer;}';
   document.head.appendChild(st);
 })();
