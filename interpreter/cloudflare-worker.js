@@ -1561,7 +1561,7 @@ export default {
           // не разобрался JSON памятки.
           await env.ANALYSIS_CACHE.put(jkey, JSON.stringify(ok
             ? (isPlan ? { job, status: 'done', plan: out.plan, ts: Date.now() }
-                      : { job, status: 'done', analysis: out.analysis, ts: Date.now() })
+                      : { job, status: 'done', analysis: out.analysis, kb: out.kb || [], ts: Date.now() })
             : { job, status: 'failed', ts: Date.now(),
                 err: (out && out.error) || 'no_output', raw: String((out && out.raw) || '').slice(0, 300) }),
             { expirationTtl: 72 * 3600 });
@@ -3219,10 +3219,14 @@ async function _analyzeCore(body, env, ctx) {
     // С языком: в кэше за день лежит ОДИН разбор, и без пометки языка украинский проход забирал
     // утренний русский текст (живой случай 2026-09-12). Формат новый, старые записи читаются как есть.
     ctx.waitUntil(env.ANALYSIS_CACHE.put('an:' + String(cid).slice(0, 64) + ':' + String(day).slice(0, 10),
-      JSON.stringify({ lang: lang || '', text }), { expirationTtl: 72 * 3600 }).catch(() => {}));
+      JSON.stringify({ lang: lang || '', text, kb: _kbIds }), { expirationTtl: 72 * 3600 }).catch(() => {}));
   }
 
-  return { analysis: text };
+  // Коды паттернов базы знаний, которые реально участвовали в ЭТОМ разборе. Нужны приложению
+  // для блока «На чём основано»: по ним оно показывает список научных работ из реестра
+  // (interpreter/evidence-registry.json, собран tools/build-evidence-registry.py). Привязать
+  // источник к отдельной ФРАЗЕ нельзя — текст пишет модель; честная единица — паттерн. 2026-09-20
+  return { analysis: text, kb: _kbIds };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -3271,21 +3275,21 @@ async function handleAnalysisCache(request, env, corsHeaders) {
     let m = null; try { m = JSON.parse(await env.ANALYSIS_CACHE.get(key) || 'null'); } catch (_) {}
     const mine = m && m.job === job;
     const ready = mine && m.status === 'done' && (wantPlan ? m.plan : m.analysis);
-    const res = ready ? (wantPlan ? { ok: true, plan: m.plan } : { ok: true, analysis: m.analysis })
+    const res = ready ? (wantPlan ? { ok: true, plan: m.plan } : { ok: true, analysis: m.analysis, kb: m.kb || [] })
               : (mine && m.status === 'failed') ? { ok: false, failed: true }
               : { ok: false, pending: true };
     return new Response(JSON.stringify(res), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
   const raw = await env.ANALYSIS_CACHE.get('an:' + cid + ':' + day);
   // Новый формат — {lang,text}; старый (до 2026-09-12) — просто текст, у него языка нет.
-  let text = '', cLang = '';
+  let text = '', cLang = '', kb = [];
   if (raw) {
-    if (raw.charAt(0) === '{') { try { const o = JSON.parse(raw); text = o.text || ''; cLang = o.lang || ''; } catch (_) { text = raw; } }
+    if (raw.charAt(0) === '{') { try { const o = JSON.parse(raw); text = o.text || ''; cLang = o.lang || ''; kb = o.kb || []; } catch (_) { text = raw; } }
     else text = raw;
   }
   const want = (u.searchParams.get('lang') || '').slice(0, 5);
   if (text && want && cLang && cLang !== want) text = '';   // чужой язык не отдаём: пусть лучше посчитает заново
-  return new Response(JSON.stringify(text ? { ok: true, analysis: text } : { ok: false }), {
+  return new Response(JSON.stringify(text ? { ok: true, analysis: text, kb } : { ok: false }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 }

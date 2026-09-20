@@ -6256,7 +6256,10 @@ function renderCard(){
   if(_aid.length){
     var _hInner=_aid.slice(0,31).map(function(e){
       var dt=e.day; try{dt=new Date(e.day).toLocaleDateString(_loc[lang]||'en-GB',{day:'numeric',month:'short',year:'numeric'});}catch(x){}
+      // Источники в истории — за ТОТ день, а не за сегодня (evidence.js читает _kbRenderDay).
+      window._kbRenderDay=e.day;
       var body=(typeof _renderAnalysis==='function')?_renderAnalysis(e.analysis||''):(typeof _aiMd==='function'?_aiMd(e.analysis||''):_esc(e.analysis||''));
+      window._kbRenderDay='';
       return '<details class="vc-day"><summary style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid rgba(226,185,90,.1);font-size:var(--fs-body);color:var(--t1);"><span style="color:var(--gold-lt);">›</span>'+_esc(dt)+'</summary><div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.55;padding:8px 0 12px;">'+body+'</div></details>';
     }).join('');
     _secHist=_vcSec('history',L({ru:'История разборов',uk:'Історія розборів',en:'Analysis history',es:'Historial de análisis',de:'Analyse-Verlauf',pt:'Histórico de análises',fr:'Historique des analyses',pl:'Historia analiz',it:'Cronologia analisi',he:'היסטוריית ניתוחים',ja:'分析履歴',ko:'분석 기록'}),_hInner,false,true);
@@ -9923,6 +9926,7 @@ function _renderDayFromSnap(snap, todayFlag){
           _aiAwaitJob(_day,_pj.job,_pj.ts).then(function(o){
             if(o&&o.analysis){
               try{ if(typeof _aiDailySaveDay==='function')_aiDailySaveDay(_day,o.analysis); }catch(e){}
+              try{ if(typeof _kbRemember==='function') _kbRemember(_day,o.kb||[]); }catch(e){}
               _r.innerHTML=(typeof _renderAnalysis==='function')?_renderAnalysis(o.analysis):_esc(o.analysis);
               if(_disc)_disc.style.display='block';
             } else { _showMissing(''); }
@@ -11712,6 +11716,9 @@ async function fetchAIAnalysis(data, lang, src) {
     if (json.analysis) {
       window._anLang = lang;   // язык показанного разбора: смена языка на ТОТ ЖЕ больше не платит
       try{if(typeof _aiDailySave==='function')_aiDailySave(json.analysis);}catch(e){}
+      // Паттерны, на которых собран разбор → блок «На чём основано» (evidence.js, 2026-09-20).
+      // Запоминаем ДО рендера: _renderAnalysis читает их из того же хранилища.
+      try{ if(typeof _kbRemember==='function') _kbRemember(_day, json.kb||[]); }catch(e){}
       try{ if(typeof bumpExpertUsedLocal==='function') bumpExpertUsedLocal(); }catch(e){}   // день доступа израсходован (зеркало воркера)
       // Структурный рендер (порт VIO): превью-карточки [[S]] + раскрытие [[D]]; без маркеров — фолбэк в плоский markdown
       result.innerHTML = (typeof _renderAnalysis==='function')?_renderAnalysis(json.analysis):_aiMd(json.analysis);
@@ -12433,6 +12440,9 @@ function _renderAnalysis(raw){
     var _moreAll=L({ru:'Подробнее о разборе',uk:'Докладніше про розбір',en:'More on the analysis',es:'Más sobre el análisis',de:'Mehr zur Analyse',pt:'Mais sobre a análise',fr:'Plus sur l’analyse',pl:'Więcej o analizie',it:'Altro sull’analisi',he:'עוד על הניתוח',ja:'分析の詳細',ko:'분석 자세히'});
     html+='<div class="ai-themes-box"><button type="button" class="ai-more-all" onclick="this.parentNode.classList.toggle(\'open\')">'+_esc(_moreAll)+' <i class="ph ph-caret-down" aria-hidden="true"></i></button><div class="ai-themes"><div class="ai-themes-in">'+_collapsed+'<div class="ai-coll-all-wrap"><button type="button" class="ai-coll-all" onclick="_collapseThemes(this,event)">'+_esc(_collLbl())+' <i class="ph ph-caret-up" aria-hidden="true"></i></button></div></div></div></div>';
   }
+  // «На чём основано» — работы за паттернами, которые участвовали именно в этом разборе
+  // (evidence.js, 2026-09-20). Пусто, если кодов за день нет: старый разбор или старая сборка.
+  try{ if(typeof _evidenceHtml==='function') html+=_evidenceHtml(); }catch(e){}
   return html;
 }
 function _aiDailyGet(){ try{return JSON.parse(localStorage.getItem('viae_ai_daily')||'[]')||[];}catch(e){return [];} }
@@ -12463,7 +12473,9 @@ async function _aiFromServer(day){
     var cid=_cid(); if(!cid) return '';
     var r=await fetch(AI_WORKER+'/analysis-cache?cid='+encodeURIComponent(cid)+'&day='+encodeURIComponent(day)+'&lang='+encodeURIComponent(lang||''));   // язык обязателен: иначе вернётся вчерашний/другой язык
     var j=await r.json();
-    if(j&&j.ok&&j.analysis){ try{ if(typeof _aiDailySaveDay==='function')_aiDailySaveDay(day,j.analysis); }catch(e){} return j.analysis; }
+    if(j&&j.ok&&j.analysis){ try{ if(typeof _aiDailySaveDay==='function')_aiDailySaveDay(day,j.analysis); }catch(e){}
+      try{ if(typeof _kbRemember==='function') _kbRemember(day,j.kb||[]); }catch(e){}   // «На чём основано» (2026-09-20)
+      return j.analysis; }
   }catch(e){}
   return '';
 }
@@ -12491,7 +12503,7 @@ function _aiAwaitJob(day, job, ts){
       try{
         var r=await fetch(AI_WORKER+'/analysis-cache?cid='+encodeURIComponent(cid)+'&day='+encodeURIComponent(day)+'&job='+encodeURIComponent(job));
         var j=await r.json();
-        if(j&&j.ok&&j.analysis){ res={analysis:j.analysis}; break; }
+        if(j&&j.ok&&j.analysis){ res={analysis:j.analysis, kb:j.kb||[]}; break; }   // kb → «На чём основано» (2026-09-20)
         if(j&&j.failed){ res={error:'ai_unavailable'}; break; }
       }catch(e){}
     }
@@ -12897,6 +12909,7 @@ document.addEventListener('visibilitychange',function(){
 <!-- IAP-мост (Apple подписка €15/мес, RevenueCat). Активен только внутри приложения; на вебе no-op. app/README.md -->
 <script src="iap-bridge.js"></script>
 <script src="intake.js"></script>
+<script src="evidence.js"></script><!-- «На чём основано» — список работ под разбором (2026-09-20) -->
 <script>
 /* «Мои приёмы» (intake.js, 2026-09-18). EXPERT — PWA: будить себя сама не умеет, поэтому расписание
    уходит на сервер (/push/intake), а будит ежечасный cron пустым пушем. Названий сервер не получает —
