@@ -11391,8 +11391,16 @@ function applyXiaomiManual(){
   setStatus('xiaomi-manual-status','success',_impDeviceApplied('Xiaomi'));
   updateImportSummary();
 }
-function applyManual(){const fields={hrv:'m-hrv',rhr:'m-rhr',sleepHours:'m-sleep',deepMin:'m-deep',tempDev:'m-temp',vo2:'m-vo2'};let n=0;Object.keys(fields).forEach(k=>{const v=parseFloat(document.getElementById(fields[k])?.value);if(!isNaN(v)){importedData[k]=v;n++;}});importedData.source='apple-manual';if(n>0){setStatus('manual-status','success',_impAppliedN(n));updateImportSummary();}else setStatus('manual-status','error',_impErrOneMetric());}
-function applyManualFull(){const fields={hrv:'mm-hrv',rhr:'mm-rhr',sleepHours:'mm-sleep',deepMin:'mm-deep',tempDev:'mm-temp',energy:'mm-energy'};let n=0;Object.keys(fields).forEach(k=>{const v=parseFloat(document.getElementById(fields[k])?.value);if(!isNaN(v)){importedData[k]=v;n++;}});importedData.source='manual';if(n>0){setStatus('manual-full-status','success',_impAppliedN(n));updateImportSummary();}else setStatus('manual-full-status','error',_impErrOneMetric());}
+function applyManual(){
+  // Ручной ввод отменяет штамп даты прибора: цифры человек вписал СЕЙЧАС, и предупреждение
+  // «данные за 15 сентября» к ним больше не относится (иначе разбор получит ложную тревогу).
+  try{ localStorage.removeItem('viae_imported_day'); }catch(e){}
+const fields={hrv:'m-hrv',rhr:'m-rhr',sleepHours:'m-sleep',deepMin:'m-deep',tempDev:'m-temp',vo2:'m-vo2'};let n=0;Object.keys(fields).forEach(k=>{const v=parseFloat(document.getElementById(fields[k])?.value);if(!isNaN(v)){importedData[k]=v;n++;}});importedData.source='apple-manual';if(n>0){setStatus('manual-status','success',_impAppliedN(n));updateImportSummary();}else setStatus('manual-status','error',_impErrOneMetric());}
+function applyManualFull(){
+  // Ручной ввод отменяет штамп даты прибора: цифры человек вписал СЕЙЧАС, и предупреждение
+  // «данные за 15 сентября» к ним больше не относится (иначе разбор получит ложную тревогу).
+  try{ localStorage.removeItem('viae_imported_day'); }catch(e){}
+const fields={hrv:'mm-hrv',rhr:'mm-rhr',sleepHours:'mm-sleep',deepMin:'mm-deep',tempDev:'mm-temp',energy:'mm-energy'};let n=0;Object.keys(fields).forEach(k=>{const v=parseFloat(document.getElementById(fields[k])?.value);if(!isNaN(v)){importedData[k]=v;n++;}});importedData.source='manual';if(n>0){setStatus('manual-full-status','success',_impAppliedN(n));updateImportSummary();}else setStatus('manual-full-status','error',_impErrOneMetric());}
 
 function parseWithingsCSV(text,filename){
   const out={};
