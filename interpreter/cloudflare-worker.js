@@ -6900,6 +6900,10 @@ const DISH_CATALOG = {
     bf_vegan_chia_berries:['чиа-пудинг на растительном молоке+черника+миндальные лепестки (веган)', ['gf','lowfod','soft','veg']],
     bf_ovo_eggs_potato: ['яичница+отварной картофель+шпинат, без молочного', ['gf','lowfod','soft','veg','egg']],
     bf_sardines_toast:  ['сардины с костями+безглютеновый тост+зелень+лимон', ['gf', 'lowfod', 'fish']],
+    // Пятая партия 2026-09-22 (docs/DISH-CATALOG-SPEC.md §7) — low-FODMAP поверх растительного питания.
+    bf_vegan_buckwheat_seeds:['гречневая каша на растительном молоке+черника+тыквенные семечки (веган)', ['gf','lowfod','soft','veg']],
+    bf_vegan_rice_peanut_banana:['рисовая каша на растительном молоке+арахисовая паста+банан (веган)', ['gf','lowfod','soft','veg']],
+    bf_lacto_cheese_gf_toast:['мягкий белый сыр на безглютеновом тосте+огурец+зелень (лакто-вег)', ['gf','lowfod','soft','veg','dairy']],
   },
   ln: {
     ln_salmon_quinoa:   ['лосось гриль+овощной микс (цукини, баклажан, помидоры)+киноа', ['gf', 'lowfod', 'fish']],
@@ -6918,6 +6922,10 @@ const DISH_CATALOG = {
     ln_lacto_salad_feta:['овощной салат по-гречески с фетой+киноа (лакто-вег)', ['gf','veg','dairy']],
     ln_ovo_egg_rice_bowl:['рис+варёные яйца+шпинат, без молочного (ово-вег)', ['gf','lowfod','soft','veg','egg']],
     ln_sardine_potato:  ['сардины+молодой картофель+листовая зелень (кальций из еды)', ['gf', 'lowfod', 'soft', 'fish']],
+    ln_vegan_tempeh_quinoa_veg:['темпе гриль+цукини и морковь+киноа (веган)', ['gf','lowfod','veg']],
+    ln_lacto_feta_rice_zucchini:['печёные цукини и морковь с фетой+белый рис (лакто-вег)', ['gf','lowfod','soft','veg','dairy']],
+    ln_ovo_omelet_potato_spinach:['омлет+отварной картофель+шпинат, без молочного (ово-вег)', ['gf','lowfod','soft','veg','egg']],
+    ln_lowfod_beef_potato:['постная говядина+отварной картофель+морковь', ['gf','lowfod','soft','meat']],
   },
   dn: {
     dn_baked_fish:      ['запечённая форель+тушёная капуста+молотый лён', ['gf', 'fish']],
@@ -6935,6 +6943,10 @@ const DISH_CATALOG = {
     dn_lacto_cheese_veg:['запечённые овощи+мягкий белый сыр+киноа (лакто-вег)', ['gf','soft','veg','dairy']],
     dn_ovo_frittata_veg:['фриттата с кабачком и зеленью, без сыра и молока (ово-вег)', ['gf','lowfod','soft','veg','egg']],
     dn_omelet_zucchini: ['омлет+тушёный кабачок+зелень', ['gf', 'lowfod', 'soft', 'veg', 'egg']],
+    dn_vegan_tofu_greenbeans_potato:['тофу+стручковая фасоль на пару+отварной картофель (веган)', ['gf','lowfod','soft','veg']],
+    dn_vegan_quinoa_zucchini_seeds:['киноа+запечённые цукини и морковь+тыквенные семечки (веган)', ['gf','lowfod','soft','veg']],
+    dn_lacto_cheese_rice_carrot:['мягкий белый сыр+морковь и стручковая фасоль на пару+белый рис (лакто-вег)', ['gf','lowfod','soft','veg','dairy']],
+    dn_lowfod_chicken_rice_beans:['куриная грудка+стручковая фасоль+белый рис', ['gf','lowfod','soft','meat']],
   },
   sn: {
     sn_nuts_fruit:      ['горсть орехов+яблоко/груша', ['gf', 'veg']],
@@ -6943,6 +6955,9 @@ const DISH_CATALOG = {
     sn_eggs_cucumber:   ['2 варёных яйца+огурец+зелень', ['gf', 'lowfod', 'soft', 'veg', 'egg']],
     sn_ricecake_cheese: ['рисовые хлебцы+ломтики твёрдого сыра', ['gf', 'lowfod', 'soft', 'veg', 'dairy']],
     sn_kiwi_walnuts:    ['киви+грецкие орехи', ['gf', 'lowfod', 'soft', 'veg']],
+    sn_ricecake_peanut_strawberry:['рисовые хлебцы+арахисовая паста+клубника', ['gf','lowfod','soft','veg']],
+    sn_cheese_grapes:   ['ломтики твёрдого сыра+виноград', ['gf','lowfod','soft','veg','dairy']],
+    sn_pumpkinseeds_orange:['тыквенные семечки+дольки апельсина', ['gf','lowfod','veg']],
   },
 };
 
