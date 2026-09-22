@@ -501,15 +501,16 @@ function logRiskProbe(env, ctx, endpoint, tier, lang, note) {
 }
 
 // Дешёвый разовый вызов Haiku (self-check / смягчение). maxTokens мал для check, большой для rewrite.
-async function callClaudeSimple(prompt, env, maxTokens, ctx, endpoint, note) {
+async function callClaudeSimple(prompt, env, maxTokens, ctx, endpoint, note, model) {
+  const _m = model || 'claude-haiku-4-5-20251001';
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-api-key': env.CLAUDE_API_KEY, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: maxTokens, temperature: 0.2, messages: [{ role: 'user', content: prompt }] }),
+      body: JSON.stringify({ model: _m, max_tokens: maxTokens, temperature: 0.2, messages: [{ role: 'user', content: prompt }] }),
     });
     const j = await r.json();
-    logUsage(env, ctx, endpoint || 'simple', 'claude-haiku-4-5-20251001', '', '', j, note);
+    logUsage(env, ctx, endpoint || 'simple', _m, '', '', j, note);
     return j.content?.[0]?.text || '';
   } catch (e) { return ''; }
 }
@@ -7020,8 +7021,18 @@ async function dishNames(env, ctx, lang) {
   const langName = CAB_LANG_NAMES[L] || 'английском';
   const prompt = 'Переведи названия блюд на ' + langName + ' языке. Это короткие составы блюд для меню.\n' +
     'Правила: строго построчно, тот же порядок, формат «ключ = перевод»; ключ (латиница до знака =) НЕ переводить и НЕ менять; ' +
-    'сохраняй знаки «+» и «/», числа и пометки в скобках; никаких пояснений и заголовков, только строки.\n\n' + src.join('\n');
-  const raw = await callClaudeSimple(prompt, env, 3000, ctx, 'dish-l10n', L);
+    'сохраняй знаки «+» и «/» и числа; никаких пояснений и заголовков, только строки.\n' +
+    // Живой прогон 2026-09-22: у украинского 14 названий из 64 остались наполовину русскими
+    // («вареная куриная грудка», «картофель», «творог»), а «яєчня» вышла как «яйниця».
+    // Эти названия человек видит в меню КАЖДЫЙ день, поэтому требуем полный перевод явно.
+    'ВАЖНО: ни одного слова исходного языка в переводе остаться не должно — переводи КАЖДОЕ слово, ' +
+    'включая названия продуктов и способ приготовления (варёный, гриль, запечённый). ' +
+    'Пиши так, как это блюдо называют носители языка в обычной жизни, без калек и выдуманных слов.\n' +
+    'Служебные пометки в скобках — «(веган)», «(вег)», «(лакто-вег)», «(ово-вег)» и пояснения вроде ' +
+    '«(железо и витамин C в одном приёме)» — НЕ переводи и вообще не переноси: они внутренние, клиенту не показываются.\n\n' + src.join('\n');
+  // Тяжёлые для маленькой модели языки — на Sonnet: перевод разовый, живёт год, а читают его каждый день.
+  const _dnModel = ['uk', 'he', 'ar', 'ja', 'ko'].includes(L) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001';
+  const raw = await callClaudeSimple(prompt, env, 3000, ctx, 'dish-l10n', L, _dnModel);
   const map = {};
   String(raw || '').split('\n').forEach(line => {
     const m = line.match(/^\s*([a-z][a-z0-9_]*)\s*=\s*(.+?)\s*$/i);
@@ -7097,6 +7108,12 @@ function _dpEngineOn(env, body) {
 }
 // Пробнику — 2 варианта вместо 5 (решение владельца 2026-09-22): меню видно, но подписка
 // даёт полное. БЖУ пробнику прячет клиент по метке [dish:] — это правка новой сборки.
+// Название блюда для клиента: каталог держит служебные пометки в скобках — «(веган)», «(вег)»,
+// «(лакто-вег)», «(ово-вег)», «(кальций из еды)», «(железо и витамин C в одном приёме)». Они писались
+// ДЛЯ МОДЕЛИ, и модель их в меню не переносила. Движок отдаёт название как есть, поэтому снимаем здесь.
+function _dishLabel(name) {
+  return String(name || '').replace(/\s*\([^)]*\)\s*$/, '').trim();
+}
 function buildDayPlanEngine(data, lang, names, opts) {
   const o = opts || {};
   const n = o.trial ? 2 : 5;
@@ -7108,7 +7125,7 @@ function buildDayPlanEngine(data, lang, names, opts) {
       if (!s || s.variants !== true) return s;
       const allowed = allowedDishes(data, _DP_ENGINE_MEAL[sect], names);
       const picked = _dpPick(allowed, n, _dpSeed(seedBase + '|' + sect));
-      return { title: s.title, variants: true, items: picked.map(([k, v]) => v[0] + ' [dish:' + k + ']') };
+      return { title: s.title, variants: true, items: picked.map(([k, v]) => _dishLabel(v[0]) + ' [dish:' + k + ']') };
     });
   });
   return plan;

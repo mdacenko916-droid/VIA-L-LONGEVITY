@@ -8,7 +8,7 @@
 let _L_LANG = 'en';
 const L = o => (o && typeof o === 'object') ? (o[_L_LANG] || o.en || o.ru || '') : o;
 
-function _actFactor(data){ var f=data.act_freq; return f==='high'?1.6 : f==='mod'?1.5 : f==='low'?1.3 : 1.2; }
+function _actFactor(data){ var f=data.act_freq; return f==='high'?1.6 : (f==='moderate'||f==='mod')?1.5 : f==='low'?1.3 : 1.2; }   /* 'mod' — опечатка: анкета сохраняет 'moderate' (value у радиокнопки af3), и у человека с тренировками 3–4 раза в неделю коэффициент падал до 1.2, а белок на приём выходил 28 г вместо 35. Старое 'mod' оставлено на случай сохранённых профилей. Поймано 2026-09-22 на движке памятки. */
 
 var _BP_CS='background:linear-gradient(150deg,#1b1712,#13100b);border:1px solid rgba(226,185,90,.28);border-radius:16px;padding:15px 16px;margin-bottom:12px;';
 // ═══ ПАМЯТКА ДНЯ — 6 глав → BottomSheet (детерминированно, из велнес-базы; RU-пилот, i18n позже) ═══
