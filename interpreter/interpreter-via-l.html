@@ -11367,7 +11367,11 @@ function _bpChapters(){
     _anWait=!!window._anLoading || !!(_pj && _pj.day===_dayKey() && Date.now()-_pj.ts < 10*60*1000); }
   // «Приём сегодня» — первой после разбора: это действия с конкретным временем (intake.js, 2026-09-18).
   try{ var _ikc=(typeof _ikChapter==='function')?_ikChapter():null; if(_ikc) chs.unshift(_ikc); }catch(e){}
-  if(_an || _anWait) chs.unshift({id:'analysis', icon:'<i class="ph ph-brain" style="color:var(--gold-lt);"></i>', pr:'🧠',
+  // Готовый разбор в памятке — ДУБЛЬ карточки разбора, которая на том же экране стоит выше
+  // (владелец, скрины 2026-09-22). Глава нужна ровно для одного: пока разбор считается в фоне,
+  // человек открывает памятку раньше и должен видеть здесь, что он в пути. Готов — карточка
+  // выше и есть разбор, глава уходит. (Возвращали её 2026-09-12 именно ради «Готовится…».)
+  if(_anWait && !_an) chs.unshift({id:'analysis', icon:'<i class="ph ph-brain" style="color:var(--gold-lt);"></i>', pr:'🧠',
     title:L({ru:'Разбор дня',uk:'Розбір дня',en:'Today’s analysis',es:'Análisis del día',de:'Analyse des Tages',pt:'Análise do dia',fr:'Analyse du jour',pl:'Analiza dnia',it:'Analisi del giorno',he:'ניתוח היום',ja:'今日の分析',ko:'오늘의 분석'}),
     teaser: _an
       ? L({ru:'Что происходит именно сегодня',uk:'Що відбувається саме сьогодні',en:'What is going on today',es:'Qué pasa hoy',de:'Was heute los ist',pt:'O que acontece hoje',fr:'Ce qui se passe aujourd’hui',pl:'Co dzieje się dzisiaj',it:'Cosa succede oggi',he:'מה קורה היום',ja:'今日の状態',ko:'오늘의 상태'})
