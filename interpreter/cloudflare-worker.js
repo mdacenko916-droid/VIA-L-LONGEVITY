@@ -3457,8 +3457,13 @@ async function _dailyLimitHit(env, kind, body) {
 
 async function handleDayPlan(request, env, corsHeaders, ctx) {
   const body = await request.json();
-  const _hit = await _dailyLimitHit(env, 'dayplan', body);
-  if (_hit) return jsonResponse(_hit, corsHeaders);
+  // Дневной лимит стоит на ПЛАТНОМ вызове. Движок памятки ничего не стоит, поэтому при нём
+  // лимит не нужен: иначе обкатка упирается в «одна памятка в сутки», а человек не может
+  // пересобрать меню после правки профиля. 2026-09-22.
+  if (!_dpEngineOn(env, body)) {
+    const _hit = await _dailyLimitHit(env, 'dayplan', body);
+    if (_hit) return jsonResponse(_hit, corsHeaders);
+  }
   // Фоновый режим (приложение шлёт bg:true с 2026-09-12). Памятка генерится до ~90 с, а Cloudflare
   // обрывает работу через 30 с после ухода клиента: свёрнутое приложение теряло её, и клиент просил
   // заново — 4 платных вызова подряд (живой случай 2026-09-11 23:17). Теперь через очередь, как разбор.
