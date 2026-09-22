@@ -1,4 +1,5 @@
 // VIA-L · Claude AI Proxy Worker v2.0
+import { bpChapterData } from './dayplan-base.js';   // базовые главы «Памятки дня» на 12 языках (генерируются из клиента: tools/build-dayplan-base.js)
 // Prompt caching + Knowledge Base (clinical patterns: P-F1–21, P-M1–11)
 // Secret: CLAUDE_API_KEY = sk-ant-api03-...
 
@@ -3484,6 +3485,21 @@ async function handleDayPlan(request, env, corsHeaders, ctx) {
 // Ядро памятки — общее для запроса и для очереди. Возвращает {plan} или {error}.
 async function _dayPlanCore(body, env, ctx) {
   const { data, lang, tier, src } = body || {};
+  // Движок вместо модели (флаг DAYPLAN_ENGINE). Ни одного платного вызова: названия блюд
+  // берутся из KV-словаря, тексты глав — из базовой памятки клиента на её языке.
+  if (_dpEngineOn(env, body)) {
+    try {
+      const _names = await dishNames(env, ctx, lang);
+      const _plan = buildDayPlanEngine(data || {}, lang, _names, { trial: !!body.trial, cid: body.cid, day: body.day });
+      if (_plan && Array.isArray(_plan.morning) && _plan.morning.length) {
+        logRiskProbe(env, ctx, 'dayplan-engine', tier, lang, 'src:' + String(src || 'pass').slice(0, 16));
+        return { plan: _plan };
+      }
+      console.error('day-plan engine: пустой план, уходим на модель');   // не оставляем человека без памятки
+    } catch (e) {
+      console.error('day-plan engine failed', e && e.message);           // любая ошибка движка → прежний путь
+    }
+  }
   const _src = 'src:' + String(src || 'pass').slice(0, 16);   // кто позвал памятку — см. /analyze
   const genLang = _genLang(lang);   // uk считаем по-русски и переводим (см. _GEN_VIA_RU)
   const langMap = {
@@ -7030,6 +7046,67 @@ function allowedDishes(data, meal, names) {
   if (!list.length) list = all;
   // подменяем русское название переводом, если он есть: одна точка на весь каталог
   return names ? list.map(([k, v]) => [k, [names[k] || v[0], v[1]]]) : list;
+}
+
+// ─────────────────────────────────────────────────────────────
+// ДВИЖОК «ПАМЯТКИ ДНЯ» БЕЗ ИИ — docs/DAY-PLAN-DETERMINISTIC-PLAN.md
+// Памятка = половина стоимости прохода, при том что её содержание и так выбирает код
+// (слои питания, фильтр каталога, рамка движения, литраж, белок на приём). Модель была
+// слоем формулировок — а формулировки уже написаны и уже на 12 языках: это базовая
+// памятка клиента (_bpChapterData), которую человек видит, пока ИИ считает.
+//
+// Поэтому движок = базовые главы + меню, собранное из фото-каталога тем же отбором
+// (allowedDishes), что уходит модели. Контракт /day-plan НЕ меняется: тот же JSON,
+// те же метки [dish:KEY] — значит правка доезжает и до замороженных сборок в сторах.
+// Разделы activity/water/sleep НЕ отдаём вовсе: клиент нарисует свои, и это ровно те же
+// тексты — меньше данных по сети и ни одной второй копии.
+// ─────────────────────────────────────────────────────────────
+const _DP_ENGINE_MEAL = { morning: 'bf', lunch: 'ln', evening: 'dn' };
+
+// Сид ротации: в пределах дня одинаковый (перерисовка не тасует меню), назавтра другой.
+function _dpSeed(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+// Детерминированный выбор n элементов: прокручиваем список от сида, без повторов.
+function _dpPick(list, n, seed) {
+  const arr = list.slice(), out = [];
+  let s = seed || 1;
+  while (arr.length && out.length < n) {
+    s = (Math.imul(s, 1103515245) + 12345) >>> 0;
+    out.push(arr.splice(s % arr.length, 1)[0]);
+  }
+  return out;
+}
+// Включён ли движок: 'on' — всем, 'cid:a,b' — только этим cid (обкатка), иначе ИИ как раньше.
+function _dpEngineOn(env, body) {
+  const v = String((env && env.DAYPLAN_ENGINE) || '').trim();
+  if (!v || v === 'off') return false;
+  if (v === 'on') return true;
+  if (v.startsWith('cid:')) {
+    const cid = String((body && body.cid) || '');
+    return !!cid && v.slice(4).split(',').map(x => x.trim()).filter(Boolean).some(x => cid.endsWith(x));
+  }
+  return false;
+}
+// Пробнику — 2 варианта вместо 5 (решение владельца 2026-09-22): меню видно, но подписка
+// даёт полное. БЖУ пробнику прячет клиент по метке [dish:] — это правка новой сборки.
+function buildDayPlanEngine(data, lang, names, opts) {
+  const o = opts || {};
+  const n = o.trial ? 2 : 5;
+  const seedBase = String(o.cid || '') + '|' + String(o.day || '');
+  const plan = {};
+  ['morning', 'lunch', 'evening'].forEach(sect => {
+    const secs = bpChapterData(sect, data, lang) || [];
+    plan[sect] = secs.map(s => {
+      if (!s || s.variants !== true) return s;
+      const allowed = allowedDishes(data, _DP_ENGINE_MEAL[sect], names);
+      const picked = _dpPick(allowed, n, _dpSeed(seedBase + '|' + sect));
+      return { title: s.title, variants: true, items: picked.map(([k, v]) => v[0] + ' [dish:' + k + ']') };
+    });
+  });
+  return plan;
 }
 
 function enforceDishCatalog(plan, data, names) {
