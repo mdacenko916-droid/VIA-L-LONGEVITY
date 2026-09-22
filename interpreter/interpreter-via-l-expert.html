@@ -5663,6 +5663,19 @@ async function _bkKey(pass,salt){ var base=await crypto.subtle.importKey('raw',n
 // всё пространство vialp_* (дневник, профиль, анализы, импорт с трекера, разборы, память ИИ,
 // эксперимент, токены источников). Язык интерфейса — не данные о здоровье, его оставляем.
 // Два подтверждения: действие необратимо, а резервная копия — единственный путь назад.
+function vlCopyCid(){
+  try{
+    var v=_cid(), el=document.getElementById('vlCidLine');
+    var done=function(){
+      if(!el) return;
+      var prev=el.innerHTML;
+      el.innerHTML=_esc(L({ru:'ID скопирован',uk:'ID скопійовано',en:'ID copied',es:'ID copiado',de:'ID kopiert',pt:'ID copiado',fr:'ID copié',pl:'ID skopiowane',it:'ID copiato',he:'המזהה הועתק',ja:'IDをコピーしました',ko:'ID가 복사되었습니다'}));
+      setTimeout(function(){ try{ el.innerHTML=prev; }catch(e){} },1500);
+    };
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(v).then(done,function(){});
+    else { var t=document.createElement('textarea'); t.value=v; document.body.appendChild(t); t.select(); try{document.execCommand('copy');done();}catch(e){} document.body.removeChild(t); }
+  }catch(e){}
+}
 async function vlEraseHealth(){
   if(!confirm(L({ru:'Удалить все ваши данные о здоровье с этого устройства? Действие необратимо.',uk:'Видалити всі ваші дані про здоров’я з цього пристрою? Дію не можна скасувати.',en:'Delete all your health data from this device? This cannot be undone.',es:'¿Eliminar todos sus datos de salud de este dispositivo? Es irreversible.',de:'Alle Ihre Gesundheitsdaten von diesem Gerät löschen? Nicht umkehrbar.',pt:'Excluir todos os seus dados de saúde deste dispositivo? A ação é irreversível.',fr:'Supprimer toutes vos données de santé de cet appareil ? Action irréversible.',pl:'Usunąć wszystkie dane o zdrowiu z tego urządzenia? Nie można tego cofnąć.',it:'Eliminare tutti i tuoi dati sulla salute da questo dispositivo? Azione irreversibile.',he:'למחוק את כל נתוני הבריאות שלכם מהמכשיר? לא ניתן לבטל.',ja:'この端末からすべての健康データを削除しますか？取り消せません。',ko:'이 기기에서 모든 건강 데이터를 삭제할까요? 되돌릴 수 없습니다.'}))) return;
   if(!confirm(L({ru:'Точно удалить? Если копия не сохранена, восстановить будет нечем.',uk:'Точно видалити? Якщо копію не збережено, відновити не буде з чого.',en:'Delete for sure? Without a saved backup there is nothing to restore from.',es:'¿Seguro? Sin una copia guardada no habrá nada que restaurar.',de:'Wirklich löschen? Ohne gespeicherte Sicherung gibt es nichts wiederherzustellen.',pt:'Excluir mesmo? Sem uma cópia salva não haverá o que restaurar.',fr:'Confirmer la suppression ? Sans sauvegarde, rien ne pourra être restauré.',pl:'Na pewno usunąć? Bez zapisanej kopii nie będzie z czego przywracać.',it:'Eliminare davvero? Senza un backup salvato non ci sarà nulla da ripristinare.',he:'למחוק בוודאות? ללא גיבוי שמור לא יהיה ממה לשחזר.',ja:'本当に削除しますか？バックアップがない場合、復元できません。',ko:'정말 삭제할까요? 저장된 백업이 없으면 복원할 수 없습니다.'}))) return;
@@ -6289,6 +6302,12 @@ function renderCard(){
     +'<button onclick="vlEraseHealth()" style="'+_rmBtn+'">🗑 '+L({ru:'Удалить мои данные о здоровье',uk:'Видалити мої дані про здоров’я',en:'Delete my health data',es:'Eliminar mis datos de salud',de:'Meine Gesundheitsdaten löschen',pt:'Excluir meus dados de saúde',fr:'Supprimer mes données de santé',pl:'Usuń moje dane o zdrowiu',it:'Elimina i miei dati sulla salute',he:'מחיקת נתוני הבריאות שלי',ja:'健康データを削除',ko:'내 건강 데이터 삭제'})+'</button>';
   _bkInner += '<div style="font-size:var(--fs-cap);color:var(--t3);margin-top:8px;text-align:center;">'
     +'<a href="../legal/privacy.html" target="_blank" rel="noopener" style="color:var(--t3);">'+L({ru:'Как мы обращаемся с данными',uk:'Як ми поводимося з даними',en:'How we handle your data',es:'Cómo tratamos sus datos',de:'Wie wir mit Ihren Daten umgehen',pt:'Como tratamos seus dados',fr:'Comment nous traitons vos données',pl:'Jak postępujemy z danymi',it:'Come trattiamo i tuoi dati',he:'איך אנחנו מטפלים בנתונים',ja:'データの取り扱いについて',ko:'데이터 처리 방식'})+'</a></div>';
+  // ID устройства — нужен поддержке, чтобы найти именно это устройство (в логах и метках дня
+  // нет ни имени, ни кода, только он). Нажатие копирует. Добавлено 2026-09-22 по просьбе владельца:
+  // иначе идентификатор с iPhone-PWA не достать — консоли там нет, а хранилище своё, не Safari.
+  _bkInner += '<div id="vlCidLine" onclick="vlCopyCid()" style="font-size:var(--fs-cap);color:var(--t3);margin-top:10px;text-align:center;cursor:pointer;">'
+    +_esc(L({ru:'ID устройства',uk:'ID пристрою',en:'Device ID',es:'ID del dispositivo',de:'Geräte-ID',pt:'ID do dispositivo',fr:'ID de l’appareil',pl:'ID urządzenia',it:'ID dispositivo',he:'מזהה מכשיר',ja:'デバイスID',ko:'기기 ID'}))
+    +' · <span style="color:var(--gold-lt);font-family:var(--font-ui);">'+_esc(_cid())+'</span></div>';
   _secBackup=_vcSec('backup',L({ru:'Резервная копия и удаление данных',uk:'Резервна копія та видалення даних',en:'Backup and data deletion',es:'Copia de seguridad',de:'Sicherung',pt:'Backup',fr:'Sauvegarde',pl:'Kopia zapasowa',it:'Backup',he:'גיבוי',ja:'バックアップ',ko:'백업'}),_bkInner,false,true);
 
   // ── Правовая информация / дисклеймер (App Store) ──
