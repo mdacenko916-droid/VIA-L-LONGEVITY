@@ -125,7 +125,7 @@ self.addEventListener('push', e => {
       tag: (isIntake ? ('vial-intake-' + h) : 'vial-morning') + '-' + new Date().toDateString(),
       renotify: false,
       // Приём — открыть сразу «Добавки и препараты» (что принимать), утро — просто приложение.
-      data: { url: './' + EXPERT + (isIntake ? '?tab=intake' : ''), intake: isIntake }
+      data: { url: './' + EXPERT + (isIntake ? '?tab=intake' : ''), intake: isIntake, h: h }   // h — час приёма: страница откроет ИМЕННО его, названий в пуше нет
     });
   })());
 });
@@ -139,10 +139,11 @@ self.addEventListener('notificationclick', e => {
     // Отметка «открыть приёмы» в Cache: спящая в фоне страница iOS может не получить postMessage, а
     // стартовый экран «Сегодня» — перерисоваться поверх ?tab=intake. Страница сама проверяет отметку
     // при запуске и при возврате из фона (_ikCheckOpen). 2026-09-19
-    if (intake) { try { const c = await caches.open(CACHE); await c.put('vial-open-intake', new Response(String(Date.now()))); } catch (_) {} }
+    const ih = (e.notification.data && e.notification.data.h);
+    if (intake) { try { const c = await caches.open(CACHE); await c.put('vial-open-intake', new Response(String(Date.now()) + ':' + (ih == null ? '' : ih))); } catch (_) {} }
     for (const w of wins) {
       if (w.url.indexOf(EXPERT) >= 0 || w.url.indexOf(BASE) >= 0) {
-        if (intake) w.postMessage({ action: 'openIntake' });   // открытое окно не перезагружаем — просим показать вкладку
+        if (intake) w.postMessage({ action: 'openIntake', h: ih });   // открытое окно не перезагружаем — просим показать вкладку и нужный приём
         return w.focus();
       }
     }

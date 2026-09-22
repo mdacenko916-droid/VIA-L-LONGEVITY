@@ -51,6 +51,8 @@
     add: { ru: '+ Добавить', uk: '+ Додати', en: '+ Add', es: '+ Añadir', de: '+ Hinzufügen', pt: '+ Adicionar', fr: '+ Ajouter', pl: '+ Dodaj', it: '+ Aggiungi', he: '+ הוספה', ja: '+ 追加', ko: '+ 추가' },
     master: { ru: 'Напоминания о приёме', uk: 'Нагадування про прийом', en: 'Intake reminders', es: 'Recordatorios de toma', de: 'Einnahme-Erinnerungen', pt: 'Lembretes de toma', fr: 'Rappels de prise', pl: 'Przypomnienia o przyjmowaniu', it: 'Promemoria di assunzione', he: 'תזכורות נטילה', ja: '服用の通知', ko: '복용 알림' },
     lock: { ru: 'На заблокированном экране — только время, без названий.', uk: 'На заблокованому екрані — лише час, без назв.', en: 'The lock screen shows only the time, never the names.', es: 'En la pantalla bloqueada solo se ve la hora, sin nombres.', de: 'Auf dem Sperrbildschirm steht nur die Uhrzeit, keine Namen.', pt: 'No ecrã bloqueado aparece só a hora, sem nomes.', fr: 'L’écran verrouillé n’affiche que l’heure, jamais les noms.', pl: 'Na ekranie blokady tylko godzina, bez nazw.', it: 'Sulla schermata di blocco solo l’ora, senza nomi.', he: 'במסך הנעול מוצגת רק השעה, בלי שמות.', ja: 'ロック画面には時刻だけを表示し、名前は出しません。', ko: '잠금 화면에는 이름 없이 시간만 표시됩니다.' },
+    at_title: { ru: 'Приём в {t}', uk: 'Прийом о {t}', en: 'Your {t} intake', es: 'Tu toma de las {t}', de: 'Einnahme um {t}', pt: 'A sua toma das {t}', fr: 'Votre prise de {t}', pl: 'Przyjęcie o {t}', it: 'Assunzione delle {t}', he: 'הנטילה ב־{t}', ja: '{t} の服用', ko: '{t} 복용' },
+    all_list: { ru: 'Весь список приёмов', uk: 'Весь список прийомів', en: 'See the whole schedule', es: 'Ver todas las tomas', de: 'Ganzen Plan ansehen', pt: 'Ver todas as tomas', fr: 'Voir toutes les prises', pl: 'Cała lista przyjmowania', it: 'Vedi tutte le assunzioni', he: 'כל לוח הנטילה', ja: '服用スケジュール全体', ko: '전체 복용 일정' },
     chapter: { ru: 'Приём сегодня', uk: 'Прийом сьогодні', en: 'Today’s intake', es: 'Tomas de hoy', de: 'Heutige Einnahme', pt: 'Tomas de hoje', fr: 'Prises du jour', pl: 'Dzisiejsze przyjmowanie', it: 'Assunzioni di oggi', he: 'נטילה היום', ja: '今日の服用', ko: '오늘의 복용' },
     teaser: { ru: 'Что и когда принять', uk: 'Що і коли прийняти', en: 'What to take and when', es: 'Qué tomar y cuándo', de: 'Was wann einnehmen', pt: 'O que tomar e quando', fr: 'Quoi prendre et quand', pl: 'Co i kiedy przyjąć', it: 'Cosa prendere e quando', he: 'מה ליטול ומתי', ja: '何をいつ飲むか', ko: '무엇을 언제 복용할지' },
     edit: { ru: 'Изменить время и сроки — «Мой профиль» → «Мои приёмы».', uk: 'Змінити час і терміни — «Мій профіль» → «Мої прийоми».', en: 'Change times and dates in My profile → My intake schedule.', es: 'Cambia horas y fechas en Mi perfil → Mis tomas.', de: 'Uhrzeiten und Daten änderst du unter Mein Profil → Meine Einnahmen.', pt: 'Altere horários e datas em Meu perfil → Minhas tomas.', fr: 'Modifiez heures et dates dans Mon profil → Mes prises.', pl: 'Godziny i daty zmienisz w Mój profil → Moje przyjmowanie.', it: 'Cambia orari e date in Il mio profilo → Le mie assunzioni.', he: 'שינוי שעות ותאריכים — «הפרופיל שלי» ← «לוח הנטילה שלי».', ja: '時刻や期間は「マイプロフィール」→「服用スケジュール」で変更できます。', ko: '시간과 기간은 «내 프로필» → «내 복용 일정»에서 바꿀 수 있습니다.' },
@@ -313,8 +315,14 @@
     if (!_ikActiveOn().length) return null;
     return { id: 'intake', icon: '<i class="ph ph-pill" style="color:var(--gold-lt);"></i>', pr: '💊', title: T('chapter'), teaser: T('teaser') };
   };
-  window._ikOpen = function () {
-    var list = _ikActiveOn(), h = '';
+  // atTime ('HH:MM') — открыть ОДИН приём, о котором только что напомнили (клик по уведомлению).
+  // Без аргумента — весь список, как раньше (глава памятки, кнопка в профиле).
+  window._ikOpen = function (atTime) {
+    var all = _ikActiveOn();
+    var at = (typeof atTime === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(atTime)) ? atTime : '';
+    var list = at ? all.filter(function (x) { return x.time === at; }) : all;
+    if (at && !list.length) { at = ''; list = all; }   // приём убрали, а уведомление ещё висело
+    var h = '';
     list.forEach(function (it) {
       h += '<div style="display:flex;gap:14px;padding:11px 0;border-bottom:1px solid var(--b1);">'
         + '<div style="font-family:var(--font-ui);font-weight:600;color:var(--gold-lt);min-width:52px;">' + _esc(it.time || '') + '</div>'
@@ -326,8 +334,17 @@
         + '</div></div>';
     });
     if (!h) h = '<div style="color:var(--t3);">' + _esc(T('empty')) + '</div>';
+    // Из одного приёма — ход ко всему списку: человек мог открыть уведомление, чтобы свериться со всем днём.
+    if (at && all.length > list.length) h += '<div onclick="_ikOpen()" style="margin-top:12px;font-size:var(--fs-cap);color:var(--gold-lt);cursor:pointer;">' + _esc(T('all_list')) + ' \u203a</div>';
     h += '<div style="font-size:var(--fs-cap);color:var(--t3);margin-top:12px;">' + _esc(T('edit')) + '</div>';
-    if (typeof openSheet === 'function') openSheet('<i class="ph ph-pill" style="color:var(--gold-lt);"></i>', T('chapter'), h);
+    if (typeof openSheet === 'function') openSheet('<i class="ph ph-pill" style="color:var(--gold-lt);"></i>',
+      at ? T('at_title').replace('{t}', at) : T('chapter'), h);
+  };
+  // Пуш EXPERT знает только ЧАС (в нём нет названий — см. sw-expert.js). Находим приёмы этого часа.
+  window._ikOpenHour = function (hour) {
+    var hh = String(parseInt(hour, 10)).padStart(2, '0');
+    var it = _ikActiveOn().filter(function (x) { return String(x.time || '').slice(0, 2) === hh; })[0];
+    window._ikOpen(it ? it.time : undefined);
   };
 
   // ── один раз спросить про напоминания (после прохода, когда список уже есть) ──

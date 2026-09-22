@@ -12991,7 +12991,9 @@ function _ikOpenTab(){
   }catch(e){}
 }
 // Приложение уже было открыто — SW не перезагружает страницу, а присылает сообщение.
-try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener('message',function(e){ if(e.data&&e.data.action==='openIntake') _ikOpenTab(); }); }catch(e){}
+try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener('message',function(e){ if(e.data&&e.data.action==='openIntake'){ _ikOpenTab(); _ikShowHour(e.data.h); } }); }catch(e){}
+// Пуш несёт ЧАС приёма (названий в нём нет) — открываем карточку именно этого приёма поверх вкладки.
+function _ikShowHour(h){ try{ if(h==null||h==='') return; if(typeof _ikOpenHour==='function') setTimeout(function(){ _ikOpenHour(h); },600); }catch(e){} }
 // Надёжный путь (2026-09-19, живой iPhone: клик по пушу открыл «Сегодня»): SW по клику кладёт в Cache
 // отметку vial-open-intake. Проверяем её при запуске (после стартового экрана) и при возврате из фона;
 // свежая (<3 мин) — открываем вкладку и стираем отметку, чтобы не срабатывало повторно.
@@ -12999,9 +13001,9 @@ function _ikCheckOpen(){
   try{
     if(!window.caches) return;
     caches.match('vial-open-intake').then(function(r){ return r?r.text():''; }).then(function(t){
-      var ts=parseInt(t,10); if(!ts) return;
+      var pr=String(t||'').split(':'), ts=parseInt(pr[0],10), hh=pr.length>1?pr[1]:''; if(!ts) return;
       caches.keys().then(function(ks){ ks.forEach(function(k){ caches.open(k).then(function(c){ c.delete('vial-open-intake'); }); }); });
-      if(Date.now()-ts<3*60*1000) _ikOpenTab();
+      if(Date.now()-ts<3*60*1000){ _ikOpenTab(); _ikShowHour(hh); }
     }).catch(function(){});
   }catch(e){}
 }
