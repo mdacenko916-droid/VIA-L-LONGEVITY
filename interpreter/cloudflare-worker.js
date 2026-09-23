@@ -9893,7 +9893,11 @@ const CABINET_LIST_COLS = `code,name,email,tg,phone,lang,product,program,tier,du
   json_array_length(data,'$.breakdowns')     AS bd_n,
   json_extract(data,'$.biometrics[#-1].hrv') AS last_hrv,
   json_extract(data,'$.sharing')             AS sharing,
-  json_extract(data,'$.consent.ref_code')    AS consent_ref`;
+  json_extract(data,'$.consent.ref_code')    AS consent_ref,
+  -- Канал клиента (2026-09-23, docs/APP-SPECIALIST-LINK-PLAN.md §4.1): выдан ли ему доступ
+  -- VIA-L EXPERT из кабинета. Клиент «из приложения» его не имеет — специалист должен видеть
+  -- разницу, потому что клинический разбор такому клиенту на экран не показывается.
+  json_extract(data,'$.expert_grant.code')   AS grant_code`;
 
 // D1-строка лёгкого запроса → объект для списка/календаря (без полного досье).
 function cabinetRowToLight(r){
@@ -9911,6 +9915,7 @@ function cabinetRowToLight(r){
     breakdowns: bdN > 0 ? new Array(bdN) : [],             // бейджу нужна только длина
     sharing: r.sharing === 1 || r.sharing === true,
     consent: r.consent_ref ? { ref_code: r.consent_ref } : undefined,
+    expert_grant: r.grant_code ? { code: r.grant_code } : undefined,   // канал: доступ EXPERT выдан
     _light: true,                                          // полное досье ещё не загружено
   };
 }

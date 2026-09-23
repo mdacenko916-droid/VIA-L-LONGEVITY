@@ -920,6 +920,22 @@ const STATUS_LABEL = {active:'Активен',new:'Новый',pause:'Пауза
 function statusLabel(st){ const v=t('st_'+st); return v==='st_'+st ? (st||'') : v; }
 // Индикатор «кормит ли пациент кабинет» (канал 1, §10): есть ИП-разборы/биометрия → зелёный;
 // привязан, но данных ещё нет → серый «ждёт»; обычный платный клиент основателя → ничего.
+// Канал клиента (docs/APP-SPECIALIST-LINK-PLAN.md §4.1). «Из приложения» — подключился по коду
+// специалиста и работает в VIA-L; «Доступ EXPERT» — доступ выдан из кабинета или куплен. Разница
+// не косметическая: у клиента из приложения на экране НЕТ клинического слоя (App Store 1.4.1),
+// и специалист должен это знать, прежде чем писать «как договаривались, смотрите разбор».
+function chanOf(c){
+  if(c.expert_grant && c.expert_grant.code) return 'expert';
+  if(String(c.tier||'').toUpperCase().indexOf('EXPERT') >= 0) return 'expert';
+  if(c.consent && c.consent.ref_code) return 'app';
+  return '';
+}
+function chanBadge(c){
+  const k = chanOf(c);
+  if(k === 'app')    return ` <span class="badge badge-pause" title="${t('chan_app_hint')}">${t('chan_app')}</span>`;
+  if(k === 'expert') return ` <span class="badge badge-new">${t('chan_expert')}</span>`;
+  return '';
+}
 function dataBadge(c){
   const hasData   = (Array.isArray(c.breakdowns)&&c.breakdowns.length) || (Array.isArray(c.biometrics)&&c.biometrics.length);
   const connected = c.sharing===true || (c.consent && c.consent.ref_code);
@@ -974,6 +990,9 @@ const T = {
   sc_bio:{ru:"О себе (коротко)",uk:"Про себе (коротко)",en:"About you (short)",es:"Sobre ti (breve)",de:"Über Sie (kurz)",pt:"Sobre você (breve)",fr:"À propos de vous (bref)",pl:"O sobie (krótko)",it:"Su di te (breve)",he:"עליך (בקצרה)",ja:"自己紹介（簡潔に）",ko:"소개(간단히)"},
   sc_err_cal:{ru:"Укажите ссылку на знакомство, чтобы показываться в витрине.",uk:"Вкажіть посилання на знайомство, щоб показуватися у вітрині.",en:"Add an intro-call link to appear in the showcase.",es:"Añade un enlace de presentación para aparecer en el escaparate.",de:"Fügen Sie einen Kennenlern-Link hinzu, um im Schaufenster zu erscheinen.",pt:"Adicione um link de apresentação para aparecer na vitrine.",fr:"Ajoutez un lien de rencontre pour apparaître dans la vitrine.",pl:"Dodaj link na poznanie się, aby pojawić się w witrynie.",it:"Aggiungi un link conoscitivo per apparire nella vetrina.",he:"הוסף קישור להיכרות כדי להופיע בחלון הראווה.",ja:"掲載に表示するには顔合わせリンクを追加してください。",ko:"프로필에 표시하려면 소개 통화 링크를 추가하세요."},
   sc_err_save:{ru:"Не удалось сохранить. Попробуйте ещё раз.",uk:"Не вдалося зберегти. Спробуйте ще раз.",en:"Couldn't save. Please try again.",es:"No se pudo guardar. Inténtalo de nuevo.",de:"Speichern fehlgeschlagen. Bitte erneut versuchen.",pt:"Não foi possível salvar. Tente novamente.",fr:"Échec de l'enregistrement. Veuillez réessayer.",pl:"Nie udało się zapisać. Spróbuj ponownie.",it:"Salvataggio non riuscito. Riprova.",he:"השמירה נכשלה. נסה שוב.",ja:"保存できませんでした。もう一度お試しください。",ko:"저장하지 못했습니다. 다시 시도하세요."},
+  chan_app:{ru:"Из приложения",uk:"З застосунку",en:"From the app",es:"Desde la app",de:"Aus der App",pt:"Da aplicação",fr:"Depuis l’app",pl:"Z aplikacji",it:"Dall’app",he:"מהאפליקציה",ja:"アプリから",ko:"앱에서"},
+  chan_expert:{ru:"Доступ EXPERT",uk:"Доступ EXPERT",en:"EXPERT access",es:"Acceso EXPERT",de:"EXPERT-Zugang",pt:"Acesso EXPERT",fr:"Accès EXPERT",pl:"Dostęp EXPERT",it:"Accesso EXPERT",he:"גישת EXPERT",ja:"EXPERTアクセス",ko:"EXPERT 접근"},
+  chan_app_hint:{ru:"Клиент работает в приложении: клинический разбор ему на экран не выводится. Дозы, анализы и интерпретацию давайте в переписке или в протоколе.",uk:"Клієнт працює в застосунку: клінічний розбір йому на екран не виводиться. Дози, аналізи та інтерпретацію давайте в переписці або в протоколі.",en:"This client works in the app, where the clinical layer is not shown. Give dosages, lab interpretation and conclusions in the chat or in the protocol.",es:"Este cliente usa la app, donde no se muestra la capa clínica. Da las dosis, la interpretación de análisis y las conclusiones en el chat o en el protocolo.",de:"Dieser Klient nutzt die App, in der die klinische Ebene nicht angezeigt wird. Dosierungen, Laborbefunde und Schlüsse gib im Chat oder im Protokoll.",pt:"Este cliente usa a aplicação, onde a camada clínica não é mostrada. Dê doses, interpretação de análises e conclusões no chat ou no protocolo.",fr:"Ce client utilise l’app, où la couche clinique n’est pas affichée. Donnez les dosages, l’interprétation des analyses et les conclusions dans la messagerie ou le protocole.",pl:"Ten klient korzysta z aplikacji, w której warstwa kliniczna nie jest pokazywana. Dawki, interpretację badań i wnioski przekazuj w czacie lub w protokole.",it:"Questo cliente usa l’app, dove il livello clinico non viene mostrato. Dai dosaggi, interpretazione degli esami e conclusioni in chat o nel protocollo.",he:"הלקוח עובד באפליקציה, שבה השכבה הקלינית אינה מוצגת. מסרו מינונים, פירוש בדיקות ומסקנות בצ׳אט או בפרוטוקול.",ja:"このクライアントはアプリを使っており、臨床レイヤーは表示されません。用量・検査の解釈・所見はチャットまたはプロトコルで伝えてください。",ko:"이 고객은 앱을 사용하며 임상 레이어는 표시되지 않습니다. 용량, 검사 해석, 결론은 채팅이나 프로토콜로 전달하세요."},
   pro_active:{ru:"Данные ✓",uk:"Дані ✓",en:"Data ✓",es:"Datos ✓",de:"Daten ✓",pt:"Dados ✓",fr:"Données ✓",pl:"Dane ✓",it:"Dati ✓",he:"נתונים ✓",ja:"データ ✓",ko:"데이터 ✓"},
   pro_waiting:{ru:"Ждёт данных",uk:"Очікує даних",en:"No data yet",es:"Sin datos aún",de:"Noch keine Daten",pt:"Sem dados ainda",fr:"Pas encore de données",pl:"Brak danych",it:"Nessun dato ancora",he:"אין נתונים עדיין",ja:"データ待ち",ko:"데이터 대기 중"},
   ml_title:{ru:"Моя ссылка для приглашения",uk:"Моє посилання для запрошення",en:"My invitation link",es:"Mi enlace de invitación",de:"Mein Einladungslink",pt:"Meu link de convite",fr:"Mon lien d'invitation",pl:"Mój link zaproszenia",it:"Il mio link d'invito",he:"קישור ההזמנה שלי",ja:"招待リンク",ko:"초대 링크"},
@@ -1720,7 +1739,7 @@ function renderClientList(filter='', statusFilter='', sortBy='updated'){
     const specName = (myRole==='owner' && c.specialist_id) ? (specNameById(c.specialist_id)||'') : '';
     const meta = [c.program||c.phase_label||'', c.age?(c.age+' л.'):'', specName].filter(Boolean).join(' · ');
     html += `<div class="client-item${selectedId===c.id?' active':''}" onclick="selectClient('${c.id}')">
-      <div class="client-name">${esc(c.name)} ${badge}${dataBadge(c)}</div>
+      <div class="client-name">${esc(c.name)} ${badge}${dataBadge(c)}${chanBadge(c)}</div>
       <div class="client-meta">${esc(meta)}${c.start_date?' · с '+c.start_date:''}</div>
     </div>`;
   }
@@ -2319,8 +2338,9 @@ function renderClientDetail(){
   document.getElementById('clientHeaderEl').innerHTML=`
     <div class="client-header-top">
       <div style="flex:1;">
-        <div class="client-header-name">${esc(c.name)} ${stBadge}${dataBadge(c)}</div>
+        <div class="client-header-name">${esc(c.name)} ${stBadge}${dataBadge(c)}${chanBadge(c)}</div>
         <div class="client-header-meta">${esc(metaParts.join(' · '))}</div>
+        ${chanOf(c)==='app'?`<div style="font-size:var(--fs-cap);color:#8a6d1f;background:#fdf6e3;border:1px solid #f0e3bb;border-radius:8px;padding:7px 9px;margin:6px 0;line-height:1.5;">${t('chan_app_hint')}</div>`:''}
         ${c.start_date?`<div style="font-size:var(--fs-cap);color:#888;margin-top:2px;">${t('ov_start')}: ${c.start_date}${c.duration_weeks?' · '+c.duration_weeks+' '+t('u_wk'):''} · ${c.format||'zoom'}</div>`:''}
       </div>
       <div>
