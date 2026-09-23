@@ -3913,10 +3913,11 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
     pt: 'Portuguese', fr: 'French', pl: 'Polish', it: 'Italian', he: 'Hebrew', ja: 'Japanese',
     ko: 'Korean' }[lang] || 'English';
   const weeklySystem =
-    'OUTPUT LANGUAGE: ' + outLang + '. Write the ENTIRE review in ' + outLang + ', even though these ' +
-    'instructions and the data below are in English.\n' +
+    'OUTPUT LANGUAGE: ' + outLang + '. Write the ENTIRE review in ' + outLang + ' — the heading too, with no ' +
+    'English words (HRV aside) — even though these instructions and the data below are in English.\n' +
     // Даты модель не видит и выдумывала месяц («Ваш novembre в цифрах» в сентябре, 2026-09-23).
-    'NEVER name a calendar month, date or season — say "this week" / "this month" instead.\n\n' +
+    'This is a ' + perAdj.toUpperCase() + ' review: call the period "' + perThis + '" (in ' + outLang + '), never the other period. ' +
+    'NEVER name a calendar month, date or season.\n\n' +
     'You are a longevity & clinical-nutrition EDUCATOR writing a SHORT ' + perAdj + ' review of a ' +
     "client's wearable / wellbeing dynamics. This is educational reflection, NOT medical advice, " +
     'diagnosis, or treatment.\n' +
