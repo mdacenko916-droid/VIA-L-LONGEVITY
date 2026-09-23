@@ -2733,7 +2733,12 @@ function _wrongLang(text, lang) {
   if (!text) return false;
   if (_CYR_OK.includes(lang)) {                              // цель — русский или украинский
     const d = _cyrDialect(text);
-    return !!d && d !== lang;                                // написано на «соседнем» языке
+    if (d) return d !== lang;                                // написано на «соседнем» языке
+    // Кириллицы нет вовсе — текст целиком латиницей. Раньше это проходило как «свой язык»:
+    // недельный разбор с lang=ru пришёл тестировщице на английском (2026-09-23).
+    const cyr = (String(text).match(/[а-яёА-ЯЁіїєґІЇЄҐ]/g) || []).length;
+    const lat = (String(text).match(/[a-zA-Z]/g) || []).length;
+    return lat >= 200 && cyr / (cyr + lat) < 0.25;
   }
   return _cyrShare(text) >= 0.25;                            // цель латиницей/иероглифами, а текст кириллицей
 }
@@ -3902,7 +3907,14 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
   const perThis = isMonth ? 'this month' : 'this week';
   const perNext = isMonth ? 'coming month' : 'coming week';
 
+  // Язык — ПЕРВОЙ строкой и по-английски: промпт и данные английские, и Haiku шёл за ними,
+  // не замечая «на: русском» в середине (2026-09-23, lang=ru → английский разбор).
+  const outLang = { ru: 'Russian', uk: 'Ukrainian', en: 'English', es: 'Spanish', de: 'German',
+    pt: 'Portuguese', fr: 'French', pl: 'Polish', it: 'Italian', he: 'Hebrew', ja: 'Japanese',
+    ko: 'Korean' }[lang] || 'English';
   const weeklySystem =
+    'OUTPUT LANGUAGE: ' + outLang + '. Write the ENTIRE review in ' + outLang + ', even though these ' +
+    'instructions and the data below are in English.\n\n' +
     'You are a longevity & clinical-nutrition EDUCATOR writing a SHORT ' + perAdj + ' review of a ' +
     "client's wearable / wellbeing dynamics. This is educational reflection, NOT medical advice, " +
     'diagnosis, or treatment.\n' +
@@ -4006,7 +4018,24 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
   // разбор шёл мимо неё, и владелец поймал живьём: интерфейс на английском, а карточка
   // недельного обзора с русским заголовком «Еженедельный обзор: Ваш старт…» (2026-09-10).
   // Структурных маркеров [[S]]/[[D]] здесь нет, поэтому structured=false.
-  text = await _enforceLang(text, lang, env, ctx, false);
+  // Служебную строку [[EXP]] в переводчик не отдаём — он может перевести ключи JSON и сломать
+  // петлю эксперимента. Переводим тело, а в хвосте — только поле what.
+  {
+    const _em = text.match(/\n*\[\[EXP\]\]\s*(\{[\s\S]*?\})\s*$/);
+    const _body = _em ? text.slice(0, _em.index) : text;
+    const _fixed = await _enforceLang(_body, lang, env, ctx, false);
+    let _tail = _em ? '\n[[EXP]]' + _em[1] : '';
+    if (_em && _fixed !== _body) {
+      try {
+        const e = JSON.parse(_em[1]);
+        if (e && e.what) {
+          const w = await translateReply(env, String(e.what), lang, 300).catch(() => '');
+          if (w) { e.what = w.trim(); _tail = '\n[[EXP]]' + JSON.stringify(e); }
+        }
+      } catch (_) {}
+    }
+    text = _fixed + _tail;
+  }
 
   // Проба правил недельного разбора: женские темы мужчине — самая заметная фальшь, и правило
   // про это живёт только в промпте (docs/PROMPT-RULES-AUDIT.md, строка 5). Ничего не меняем,
