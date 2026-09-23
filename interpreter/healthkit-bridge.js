@@ -264,6 +264,14 @@
     }
     window._vialHealthExtras(data, 'apple');
     if(typeof window.updateImportSummary === 'function') window.updateImportSummary();
-    return Object.keys(data).length > 0;
+    // ⚠️ Успехом считаем ТОЛЬКО показатели панели. Раньше здесь стояло Object.keys(data).length > 0,
+    // и если Health отдал один вес или глюкозу (а сон, ВСР и пульс покоя не отдал), человек видел
+    // бодрое «поправьте вручную» над панелью из восьми прочерков и никакого объяснения.
+    // Живой случай 2026-09-23 на iPhone владельца. Что пришло — кладём в _hkLastGot: клиент
+    // допишет это в подсказку, чтобы было видно, дело в разрешениях или в самих данных.
+    var PANEL = ['hrv','rhr','sleep','deep','spo2','tempDev','vo2'];
+    var OTHER = ['steps','weight','bpSys','bodyFat','glucose','respRate','workouts'];
+    window._hkLastGot = OTHER.filter(function(k){ return data[k] != null; });
+    return PANEL.some(function(k){ return data[k] != null; });
   };
 })();

@@ -41,7 +41,12 @@
     // из Apple-моста.
     if (typeof window._vialHealthExtras === 'function') window._vialHealthExtras(data, 'healthconnect');
     if (typeof window.updateImportSummary === 'function') window.updateImportSummary();
-    return Object.keys(data).length > 0;
+    // Успех — только показатели панели (как в Apple-мосте, 2026-09-23): один вес или шаги
+    // не повод показывать «всё получилось» над панелью из прочерков.
+    var PANEL = ['hrv','rhr','sleepHours','deepMin','spo2','tempDev','vo2'];
+    var OTHER = ['steps','weight','bpSys','bodyFat','glucose','respRate','workouts'];
+    window._hkLastGot = OTHER.filter(function (k) { return data[k] != null; });
+    return PANEL.some(function (k) { return data[k] != null; });
   };
 
   // Запрос разрешений отдельно от кнопки — нужен экрану выбора источника, который сам ведёт
