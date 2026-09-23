@@ -3914,7 +3914,9 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
     ko: 'Korean' }[lang] || 'English';
   const weeklySystem =
     'OUTPUT LANGUAGE: ' + outLang + '. Write the ENTIRE review in ' + outLang + ', even though these ' +
-    'instructions and the data below are in English.\n\n' +
+    'instructions and the data below are in English.\n' +
+    // Даты модель не видит и выдумывала месяц («Ваш novembre в цифрах» в сентябре, 2026-09-23).
+    'NEVER name a calendar month, date or season — say "this week" / "this month" instead.\n\n' +
     'You are a longevity & clinical-nutrition EDUCATOR writing a SHORT ' + perAdj + ' review of a ' +
     "client's wearable / wellbeing dynamics. This is educational reflection, NOT medical advice, " +
     'diagnosis, or treatment.\n' +
@@ -3970,7 +3972,7 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
       '════════════════════════════════════════\n' +
       'После текста разбора, с новой строки, выведи РОВНО одну строку в формате:\n' +
       '[[EXP]]{"what":"...","metrics":["...","..."]}\n' +
-      '• what — тот самый ОДИН эксперимент из пункта 4, коротко (до 90 знаков), на языке ответа, ' +
+      '• what — тот самый ОДИН эксперимент из пункта 4, коротко (до 90 знаков), на языке ответа (' + outLang + '), ' +
       'как действие человека («убрать кофе после 14:00»), без объяснений и без обещаний результата.\n' +
       '• metrics — 1–3 ключа из списка, по которым через неделю будет видно изменение: ' +
       'sleepHours, deepMin, rhr, hrv, spo2, energy, stress, hf (частота приливов). ' +
@@ -3995,7 +3997,7 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
     },
     body: JSON.stringify({
       model: ['he', 'ar', 'ja', 'ko', 'uk'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
-      max_tokens: 900,
+      max_tokens: 1400,   // 900 обрезал корейский на полуслове, без [[EXP]] (2026-09-23)
       system: weeklySystem,
       messages: [{ role: 'user', content: _condGateBlock(_wCtx) + buildDietBlock(_wCtx) + buildExerciseBlock(_wCtx)
         + buildWeeklyUserMessage(summary, daily, lang, period, exp) }],
@@ -4025,10 +4027,14 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
     const _body = _em ? text.slice(0, _em.index) : text;
     const _fixed = await _enforceLang(_body, lang, env, ctx, false);
     let _tail = _em ? '\n[[EXP]]' + _em[1] : '';
-    if (_em && _fixed !== _body) {
+    // what короткий — _wrongLang его не видит (<200 букв). Проверяем по письменности: тело было
+    // английским, а what пришёл по-русски (lang=en, 2026-09-23) — правило в промпте русское.
+    const _script = { ru: /[а-яё]/i, uk: /[а-яёіїєґ]/i, he: /[֐-׿]/, ja: /[぀-ヿ一-鿿]/, ko: /[가-힯]/ }[lang];
+    const _whatWrong = w => _script ? !_script.test(w) : /[а-яёА-ЯЁ֐-׿぀-ヿ一-鿿가-힯]/.test(w);
+    if (_em) {
       try {
         const e = JSON.parse(_em[1]);
-        if (e && e.what) {
+        if (e && e.what && (_fixed !== _body || _whatWrong(String(e.what)))) {
           const w = await translateReply(env, String(e.what), lang, 300).catch(() => '');
           if (w) { e.what = w.trim(); _tail = '\n[[EXP]]' + JSON.stringify(e); }
         }
