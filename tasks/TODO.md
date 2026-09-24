@@ -37,10 +37,11 @@
       legacyCompatible) €199,99 / $199,99 — ACTIVE, описание en/ru/uk/es. Остальные страны — пропорционально.
       ⚠️ Старый API inappproducts Google закрыл («migrate to the new publishing API»); создание — PATCH
       `onetimeproducts/{id}` (строчными), чтение и активация — `oneTimeProducts/...` (с заглавными).
-- [ ] **RevenueCat (руками, ключа нет):** товары iOS `via_l_pro_yearly`, `via_l_lifetime`; Android
-      `via_l_pro_monthly:yearly`, `via_l_lifetime` → entitlement `via_l_pro`; в Offering `default` пакеты Annual и
-      Lifetime. ⚠️ **Monthly оставить ПЕРВЫМ в списке пакетов**, пока в сторах версии 1.0.6 / v12: они берут
-      `availablePackages[0]` и иначе покажут годовую цену под подписью «VIA-L Monthly … / мес».
+- [x] ✅ **RevenueCat — сделано владельцем 2026-09-24, проверено публичным ключом** (тем же запросом, что SDK):
+      `default` на iOS — `$rc_monthly`→`via_l_pro_monthly`, `$rc_lifetime`→`via_l_lifetime`,
+      `$rc_annual`→`via_l_pro_yearly`; на Android — те же пакеты, годовой = `via_l_pro_monthly` план `yearly`.
+      Monthly первым на обеих платформах — старые сборки не перепутают цену. Привязку к entitlement `via_l_pro`
+      публичный ключ не показывает — проверится первой sandbox-покупкой года / «навсегда».
 - [ ] **Проверить после сборки:** экран показывает три тарифа с ценами стора; покупка «навсегда» снимает
       пейволл так же, как подписка.
 
