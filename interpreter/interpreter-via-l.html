@@ -11102,6 +11102,20 @@ function _specChapter(){
     title:L({ru:'Специалист ответил',uk:'Фахівець відповів',en:'Your guide replied',es:'Tu guía respondió',de:'Dein Begleiter hat geantwortet',pt:'O seu guia respondeu',fr:'Votre guide a répondu',pl:'Przewodnik odpowiedział',it:'La tua guida ha risposto',he:'המלווה שלכם השיב',ja:'ガイドから返信',ko:'가이드가 답장했어요'}),
     teaser:L({ru:'Открыть переписку',uk:'Відкрити переписку',en:'Open the conversation',es:'Abrir la conversación',de:'Gespräch öffnen',pt:'Abrir a conversa',fr:'Ouvrir la conversation',pl:'Otwórz rozmowę',it:'Apri la conversazione',he:'לפתוח את השיחה',ja:'メッセージを開く',ko:'대화 열기'}) };
 }
+// Протокол специалиста из кабинета → «Мои приёмы» с пометкой «от специалиста».
+// Тот же маршрут и то же слияние, что в EXPERT (интейк общий, intake.js). Без связки
+// и без сети остаётся то, что сохранено с прошлого раза. 2026-09-24.
+function _specProtocol(){
+  try{
+    var l=JSON.parse(localStorage.getItem('vial_spec_link')||'null');
+    if(!l||!l.code||l.sharing===false) return;
+    fetch(AI_WORKER+'/expert/intake?code='+encodeURIComponent(l.code))
+      .then(function(r){ return r.json(); })
+      .then(function(j){ if(j&&j.ok&&Array.isArray(j.items)&&typeof _ikMergeSpec==='function'){ _ikMergeSpec(j.items); if(typeof _ikArm==='function')_ikArm(); } })
+      .catch(function(){});
+  }catch(e){}
+}
+try{ setTimeout(_specProtocol, 2500); }catch(e){}
 function _specShare(){
   try{
     var l = JSON.parse(localStorage.getItem('vial_spec_link') || 'null');
