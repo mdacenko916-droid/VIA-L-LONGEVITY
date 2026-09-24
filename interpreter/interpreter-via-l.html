@@ -11402,7 +11402,7 @@ async function fetchAIAnalysis(data, lang, src) {
     const res = await fetch(AI_WORKER, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(Object.assign({ data, lang, tier: 'pro', structured: true, cid: _cid(), day: _day, src: src||'pass', bg: true, trial: _isTrial(), upgrade: (src==='upgrade') }, _specShare())),   // trial → короткий разбор (воркер, _TRIAL_FMT); upgrade → пересчёт после покупки   // cid+day — чтобы разбор можно было забрать с сервера, если ответ не доедет
+      body: JSON.stringify(Object.assign({ data, lang, tier: 'pro', structured: true, cid: _cid(), dev: (typeof vialDev==='function'?vialDev():''), day: _day, src: src||'pass', bg: true, trial: _isTrial(), upgrade: (src==='upgrade') }, _specShare())),   // trial → короткий разбор (воркер, _TRIAL_FMT); upgrade → пересчёт после покупки   // cid+day — чтобы разбор можно было забрать с сервера, если ответ не доедет
     });
     let json = await res.json();
     // Фоновый разбор (2026-09-11): сервер сразу отвечает номером задания и считает в очереди, а мы ждём
@@ -12051,7 +12051,7 @@ async function fetchDayPlan(data){
       if(_j0&&_j0.plan&&_j0.plan.morning){ var cp0=_cleanPlan(_j0.plan); _dpSave(cp0,_lg,sig); window._bpAI=cp0; renderDayBlueprint(data); }
       return;
     }
-    var res=await fetch(AI_WORKER+'/day-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:data,lang:_lg,tier:'pro',src:((typeof _rerendering!=='undefined'&&_rerendering)?'lang':'pass'),cid:_cid(),day:_day,bg:true,upgrade:_up})});
+    var res=await fetch(AI_WORKER+'/day-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:data,lang:_lg,tier:'pro',src:((typeof _rerendering!=='undefined'&&_rerendering)?'lang':'pass'),cid:_cid(),dev:(typeof vialDev==='function'?vialDev():''),day:_day,bg:true,upgrade:_up})});
     var json=await res.json();
     // Фоновая памятка (2026-09-12): сервер сразу отвечает номером задания и считает в очереди.
     // Свёрнутое приложение больше не обрывает её, и повторных платных вызовов нет.
@@ -12744,6 +12744,7 @@ document.addEventListener('visibilitychange',function(){
 <script src="healthconnect-bridge.js"></script>
 <!-- IAP-мост (подписка, RevenueCat: App Store + Google Play). Цена приходит из стора, в текст не зашита. Активен только внутри приложения; на вебе no-op. app/README.md -->
 <script src="iap-bridge.js"></script>
+<script src="device-id.js"></script>
 <script src="notify-bridge.js"></script>
 <script src="intake.js"></script>
 <script src="evidence.js"></script><!-- «На чём основано» — список работ под разбором (2026-09-20) -->
