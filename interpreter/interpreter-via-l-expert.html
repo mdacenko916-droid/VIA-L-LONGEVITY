@@ -12249,6 +12249,9 @@ function renderDayBlueprint(data){
       +'<div style="color:var(--gold-lt);font-size:20px;opacity:.6;flex-shrink:0;">›</div></div>';
   }).join('');
   box.innerHTML=head+rows;   // кнопка «Скачать памятку дня» убрана (см. выше)
+  // ⚠️ 2026-09-24: ожидание разбора СНЯТО (как в VIA-L) — памятку собирает движок за доли секунды,
+  // общий кэш промпта ему не нужен, а ожидание держало тарелки на «готовится» по несколько минут.
+  // Ниже — прежнее обоснование, актуальное только если движок выключат (DAYPLAN_ENGINE=off):
   // Памятку НЕ запрашиваем, пока идёт разбор: оба вызова уходят в одну и ту же модель с одной
   // и той же шапкой промпта, и параллельно они оба ПИШУТ её в кэш вместо того, чтобы второй
   // прочитал (живой проход 2026-08-29: cw=21204, cr=0 в обеих строках ai_usage — разница
@@ -12259,7 +12262,7 @@ function renderDayBlueprint(data){
   // Памятка сегодня уже не сложилась (сервер не собрал JSON даже с повтором) — не заказываем её
   // при каждой перерисовке: так набегали платные вызовы. Сбрасывается на следующий день.
   var _dpFail=false; try{ _dpFail=localStorage.getItem('viae_dp_fail')===_dayKey(); }catch(e){}
-  if(!window._bpAI && !window._bpAILoading && !window._anLoading && !window._bpNoFetch && !_dpFail && typeof fetchDayPlan==='function') fetchDayPlan(data);
+  if(!window._bpAI && !window._bpAILoading && !window._bpNoFetch && !_dpFail && typeof fetchDayPlan==='function') fetchDayPlan(data);
 }
 function _cleanPlan(p){
   // сетка безопасности: убрать редкие проскоки исследовательской лексики из ИИ-JSON.
@@ -12355,7 +12358,7 @@ function openBpChapter(id){
   if(!meta)return;
   // Главы с едой без персонального плана — это запасное меню: общие блюда без фото и БЖУ.
   // Пока план в пути, честнее сказать, что меню готовится (перенос из VIA-L, 2026-09-12).
-  if(!window._bpAI && (window._bpAILoading || window._anLoading) && ['morning','lunch','evening'].indexOf(id)>=0){
+  if(!window._bpAI && window._bpAILoading && ['morning','lunch','evening'].indexOf(id)>=0){
     openSheet(meta.icon, meta.title,
       '<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.7;padding:6px 0;">'+_esc(L({ru:'Персональное меню готовится — появится здесь через минуту-две. Приложение можно свернуть.',uk:'Персональне меню готується — з’явиться тут за хвилину-дві. Застосунок можна згорнути.',en:'Your personal menu is being prepared — it will appear here in a minute or two. You can leave the app.',es:'Tu menú personal se está preparando: aparecerá aquí en un minuto o dos. Puedes salir de la app.',de:'Dein persönliches Menü wird erstellt — es erscheint hier in ein bis zwei Minuten. Du kannst die App verlassen.',pt:'O seu menu pessoal está a ser preparado — aparecerá aqui dentro de um ou dois minutos. Pode sair da app.',fr:'Votre menu personnel est en préparation — il apparaîtra ici dans une à deux minutes. Vous pouvez quitter l’application.',pl:'Twoje osobiste menu jest przygotowywane — pojawi się tutaj za minutę lub dwie. Możesz wyjść z aplikacji.',it:'Il tuo menu personale è in preparazione — apparirà qui tra un minuto o due. Puoi uscire dall’app.',he:'התפריט האישי שלכם בהכנה — הוא יופיע כאן בעוד דקה-שתיים. אפשר לצאת מהאפליקציה.',ja:'あなた専用のメニューを準備中です。1〜2分でここに表示されます。アプリを閉じても大丈夫です。',ko:'개인 맞춤 메뉴를 준비하고 있어요. 1~2분 후 여기에 표시됩니다. 앱을 나가도 괜찮습니다.'}))+'</div>'+_bpDisc());
     return;
