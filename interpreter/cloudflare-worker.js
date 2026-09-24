@@ -3504,6 +3504,7 @@ async function _dayPlanCore(body, env, ctx) {
       const _names = await dishNames(env, ctx, lang);
       const _plan = buildDayPlanEngine(data || {}, lang, _names, { trial: !!body.trial, cid: body.cid, day: body.day });
       if (_plan && Array.isArray(_plan.morning) && _plan.morning.length) {
+        _plan.engine = 1;   // метка для клиента: памятку собрал движок, писать «персонализировано ИИ» нельзя
         logRiskProbe(env, ctx, 'dayplan-engine', tier, lang, 'src:' + String(src || 'pass').slice(0, 16));
         return { plan: _plan };
       }
