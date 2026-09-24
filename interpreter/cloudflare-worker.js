@@ -1462,6 +1462,7 @@ export default {
       // См. docs/PLATFORM-MODEL.md §3 (публичные ручки, без cabinet-auth).
       if (path === '/specialist/connect')  return handleSpecialistConnect(request, env, corsHeaders);
       if (path === '/specialist/unlink')   return handleSpecialistUnlink(request, env, corsHeaders);
+      if (path === '/specialist/sharing')  return handleSpecialistSharing(request, env, corsHeaders);   // клиент включает/выключает передачу данных специалисту
 
       // Воронка витрина → EXPERT PWA: специалист выдаёт клиенту СРОЧНЫЙ код доступа к
       // VIA-L EXPERT (отдельный от ref_code/кода карточки), сам управляет сроком/отзывом.
@@ -10740,7 +10741,30 @@ async function handleSpecialistConnect(request, env, corsHeaders){
       { expirationTtl: 200*24*60*60 });
   }
 
-  return jsonResponse({ ok:true, code, specialist_name: sp.name || '' }, corsHeaders);
+  return jsonResponse({ ok:true, code, specialist_id: sp.id, specialist_name: sp.name || '' }, corsHeaders);
+}
+
+// POST /specialist/sharing {code, on} — клиент включает/выключает передачу данных дня
+// специалисту, НЕ разрывая связь (для разрыва есть /specialist/unlink).
+// Зачем отдельно: человек может захотеть паузу («не показывай эту неделю»), и терять при этом
+// привязку, переписку и историю неправильно. Ингест уже умеет гаситься по data.sharing===false.
+// Прав не спрашиваем: код карточки знает только сам клиент — та же логика, что у unlink.
+async function handleSpecialistSharing(request, env, corsHeaders){
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  let b = {};
+  try { b = await request.json(); } catch(_){}
+  const code = String(b.code || '').trim().toUpperCase();
+  const on = b.on === true || b.on === 'true';
+  if(!code) return jsonResponse({ok:false,error:'no_code'}, corsHeaders, 400);
+  const row = await env.DB.prepare('SELECT data FROM clients WHERE upper(code)=?').bind(code).first();
+  if(!row) return jsonResponse({ok:false,error:'not_found'}, corsHeaders, 404);
+  let data = {};
+  try { data = JSON.parse(row.data || '{}'); } catch(_){}
+  data.sharing = on;
+  if(!on && data.consent) data.consent.paused_at = new Date().toISOString();
+  await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE upper(code)=?')
+    .bind(JSON.stringify(data), Date.now(), code).run();
+  return jsonResponse({ok:true, sharing:on}, corsHeaders);
 }
 
 async function handleSpecialistUnlink(request, env, corsHeaders){
