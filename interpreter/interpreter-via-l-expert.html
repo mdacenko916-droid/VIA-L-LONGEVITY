@@ -137,6 +137,10 @@ i.bottom-nav-icon{width:auto;height:auto;font-size:24px;line-height:1;color:var(
 #circModal .cm-sheet{position:fixed;left:0;right:0;bottom:0;width:100%;max-height:85vh;overflow-y:auto;background:linear-gradient(160deg,#2a323f,#181e28);border-top:1px solid rgba(226,185,90,.3);border-radius:24px 24px 0 0;padding:0 20px calc(28px + env(safe-area-inset-bottom));box-shadow:0 -10px 44px rgba(0,0,0,.55);transform:translateY(100%);transition:transform .34s cubic-bezier(.32,.72,0,1);}
 #circModal.open .cm-sheet{transform:translateY(0);}
 #circModal .cm-sheet{scrollbar-width:none;}
+/* Шторка главы памятки не должна ездить вбок: длинное неразрывное название блюда («грудка+гречка+свёкла»)
+   раздвигало её по ширине, и вся страница «плавала» (живой iPhone, сборка 205, 2026-09-25). Причину
+   чинит воркер (_dishLabel), здесь — страховка на любое будущее длинное слово. */
+#circModal .cm-sheet{overflow-x:hidden;overflow-wrap:anywhere;word-break:break-word;overscroll-behavior:contain;touch-action:pan-y;}
 #circModal .cm-sheet::-webkit-scrollbar{display:none;width:0;}
 #circModal .cm-handle{width:44px;height:4px;background:#3a4453;border-radius:99px;margin:12px auto 10px;}
 #circModal .cm-head{display:flex;align-items:center;gap:10px;}
