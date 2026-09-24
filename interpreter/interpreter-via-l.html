@@ -12011,7 +12011,7 @@ function _bpRenderSecs(secs){
       var opts=s.items.map(function(x,i){
         var dp=_dishOf(x);
         var photo=dp.key?'<img src="food/'+dp.key+'.webp" alt="" loading="lazy" onerror="this.remove()" style="width:74px;height:74px;flex-shrink:0;border-radius:12px;object-fit:contain;">':'';
-        var body='<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.5;">'+W(dp.text)+(dp.key?_dishMacros(_DISH[dp.key]):'')+'</div>';
+        var body='<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.5;">'+W(dp.text)+((dp.key&&!(typeof _isTrial==='function'&&_isTrial()))?_dishMacros(_DISH[dp.key]):'')+'</div>';
         return '<div style="display:flex;gap:11px;align-items:flex-start;background:rgba(226,185,90,.06);border:1px solid rgba(226,185,90,.15);border-radius:11px;padding:10px 12px;margin:6px 0;"><div style="font-size:var(--fs-cap);font-weight:700;color:var(--gold-lt);flex-shrink:0;min-width:16px;line-height:1.5;">'+(i+1)+'</div>'+photo+body+'</div>';
       }).join('');
       return head+note+opts;
@@ -12034,7 +12034,7 @@ function renderDayBlueprint(data){
   // тарелка+принцип из ленты результата убраны (владелец 2026-07-13) — живут в модале «Сегодня» и печати
   // Пробный режим: памятка базовая и такой останется — честно говорим это здесь, чтобы человек
   // не ждал ИИ-версию (надпись «готовится» в пробнике обещала бы то, чего не будет). 2026-09-17.
-  if(typeof _isTrial==='function' && _isTrial()) head+='<div style="'+_BP_CS+'font-size:var(--fs-cap);color:var(--gold-lt);">✦ '+_esc(L({ru:'Пробная памятка: расчёты по вашим данным и общее меню. Персональное меню с фото — при подписке.',uk:'Пробна пам’ятка: розрахунки за вашими даними та загальне меню. Персональне меню з фото — за підпискою.',en:'Trial day plan: calculations from your data and a general menu. The personal menu with photos comes with the subscription.',es:'Plan de prueba: cálculos con tus datos y un menú general. El menú personal con fotos viene con la suscripción.',de:'Test-Tagesplan: Berechnungen aus deinen Daten und ein allgemeines Menü. Das persönliche Menü mit Fotos gehört zum Abo.',pt:'Plano de teste: cálculos dos seus dados e um menu geral. O menu pessoal com fotos vem com a subscrição.',fr:'Plan d’essai : calculs d’après vos données et un menu général. Le menu personnel avec photos est inclus dans l’abonnement.',pl:'Próbny plan dnia: obliczenia z Twoich danych i ogólne menu. Osobiste menu ze zdjęciami jest w subskrypcji.',it:'Piano di prova: calcoli dai tuoi dati e un menù generale. Il menù personale con foto è nell’abbonamento.',he:'תוכנית ניסיון: חישובים מהנתונים שלכם ותפריט כללי. התפריט האישי עם תמונות כלול במנוי.',ja:'お試し版の一日プランです：あなたのデータに基づく計算と一般的なメニュー。写真つきの個別メニューはサブスクリプションに含まれます。',ko:'체험용 하루 플랜입니다: 입력한 데이터 기반 계산과 일반 메뉴. 사진이 있는 개인 맞춤 메뉴는 구독에 포함됩니다.'}))+'</div>';
+  if(typeof _isTrial==='function' && _isTrial()) head+='<div style="'+_BP_CS+'font-size:var(--fs-cap);color:var(--gold-lt);">✦ '+_esc(L({ru:'Пробная памятка: по два блюда на приём. Полное меню и расчёт белков, жиров и углеводов — при подписке.',uk:'Пробна пам’ятка: по дві страви на прийом. Повне меню та розрахунок білків, жирів і вуглеводів — за підпискою.',en:'Trial day plan: two dishes per meal. The full menu and the protein, fat and carb breakdown come with the subscription.',es:'Plan de prueba: dos platos por comida. El menú completo y el cálculo de proteínas, grasas y carbohidratos vienen con la suscripción.',de:'Test-Tagesplan: zwei Gerichte pro Mahlzeit. Das volle Menü und die Aufteilung in Eiweiß, Fett und Kohlenhydrate gehören zum Abo.',pt:'Plano de teste: dois pratos por refeição. O menu completo e o cálculo de proteínas, gorduras e hidratos vêm com a subscrição.',fr:'Plan d’essai : deux plats par repas. Le menu complet et le détail protéines, lipides et glucides sont inclus dans l’abonnement.',pl:'Próbny plan dnia: dwa dania na posiłek. Pełne menu i wyliczenie białka, tłuszczów i węglowodanów są w subskrypcji.',it:'Piano di prova: due piatti per pasto. Il menù completo e il calcolo di proteine, grassi e carboidrati sono nell’abbonamento.',he:'תוכנית ניסיון: שתי מנות לכל ארוחה. התפריט המלא וחישוב החלבון, השומן והפחמימות כלולים במנוי.',ja:'お試し版：1食につき2品。全メニューとたんぱく質・脂質・炭水化物の内訳はサブスクリプションで利用できます。',ko:'체험용: 끼니마다 두 가지 메뉴. 전체 메뉴와 단백질·지방·탄수화물 계산은 구독에 포함됩니다.'}))+'</div>';
   var rows=_bpChapters().map(function(r){
     return '<div onclick="openBpChapter(\''+r.id+'\')" style="display:flex;align-items:center;gap:13px;padding:14px;margin-bottom:8px;background:linear-gradient(150deg,#1b1712,#13100b);border:1px solid rgba(226,185,90,.22);border-radius:14px;cursor:pointer;">'
       +'<div style="font-size:22px;width:30px;text-align:center;flex-shrink:0;">'+r.icon+'</div>'
@@ -12042,6 +12042,9 @@ function renderDayBlueprint(data){
       +'<div style="color:var(--gold-lt);font-size:20px;opacity:.6;flex-shrink:0;">›</div></div>';
   }).join('');
   box.innerHTML=head+rows;   // кнопка «Скачать памятку дня» убрана (см. выше)
+  // ⚠️ 2026-09-24: ожидание разбора СНЯТО — памятку собирает движок за доли секунды, общий кэш
+  // промпта ему не нужен, а ожидание держало тарелки на экране «готовится» по несколько минут.
+  // Ниже — прежнее обоснование, актуальное только если движок выключат (DAYPLAN_ENGINE=off):
   // Памятку НЕ запрашиваем, пока идёт разбор: оба вызова уходят в одну и ту же модель с одной
   // и той же шапкой промпта, и параллельно они оба ПИШУТ её в кэш вместо того, чтобы второй
   // прочитал (живой проход 2026-08-29: cw=21204, cr=0 в обеих строках ai_usage — разница
@@ -12052,7 +12055,7 @@ function renderDayBlueprint(data){
   // Памятка сегодня уже не сложилась (сервер не смог собрать JSON даже с повтором) — не заказываем
   // её при каждой перерисовке: раньше так набегали платные вызовы. Сбрасывается на следующий день.
   var _dpFail=false; try{ _dpFail=localStorage.getItem('vialp_dp_fail')===_dayKey(); }catch(e){}
-  if(!window._bpAI && !window._bpAILoading && !window._anLoading && !window._bpNoFetch && !_dpFail && typeof fetchDayPlan==='function') fetchDayPlan(data);
+  if(!window._bpAI && !window._bpAILoading && !window._bpNoFetch && !_dpFail && typeof fetchDayPlan==='function') fetchDayPlan(data);
 }
 function _cleanPlan(p){
   // сетка безопасности: убрать редкие проскоки исследовательской лексики из ИИ-JSON.
@@ -12189,7 +12192,10 @@ async function fetchDayPlan(data){
   // Пробный режим: памятка дня остаётся БАЗОВОЙ (расчёты по данным + общее меню), ИИ-план не
   // заказываем. Он дороже разбора ($0.058 против $0.073 полного и ~$0.03 пробного) и как раз
   // и есть то, за что человек платит. 2026-09-17.
-  if(typeof _isTrial==='function' && _isTrial()){ window._bpAILoading=false; return; }
+  // Пробник (решение владельца 2026-09-22): меню из каталога, но 2 варианта на приём вместо 5 и без
+  // БЖУ. Режет сервер (trial в теле запроса), БЖУ прячет отрисовка ниже. Раньше пробнику памятку
+  // не заказывали вовсе — ИИ-план стоил денег; движок бесплатен, и базовое меню без фото больше
+  // не нужно показывать никому. 2026-09-24.
   window._bpAILoading=true;
   var _lg=(typeof lang!=='undefined'&&lang)||(typeof localStorage!=='undefined'&&localStorage.getItem('vial_lang'))||'en';
   var sig=(typeof _sigOf==='function')?_sigOf(data):'';
@@ -12207,7 +12213,7 @@ async function fetchDayPlan(data){
       if(_j0&&_j0.plan&&_j0.plan.morning){ var cp0=_cleanPlan(_j0.plan); _dpSave(cp0,_lg,sig); window._bpAI=cp0; renderDayBlueprint(data); }
       return;
     }
-    var res=await fetch(AI_WORKER+'/day-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:data,lang:_lg,tier:'pro',src:((typeof _rerendering!=='undefined'&&_rerendering)?'lang':'pass'),cid:_cid(),dev:(typeof vialDev==='function'?vialDev():''),day:_day,bg:true,upgrade:_up})});
+    var res=await fetch(AI_WORKER+'/day-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({trial:(typeof _isTrial==='function'&&_isTrial()),data:data,lang:_lg,tier:'pro',src:((typeof _rerendering!=='undefined'&&_rerendering)?'lang':'pass'),cid:_cid(),dev:(typeof vialDev==='function'?vialDev():''),day:_day,bg:true,upgrade:_up})});
     var json=await res.json();
     // Фоновая памятка (2026-09-12): сервер сразу отвечает номером задания и считает в очереди.
     // Свёрнутое приложение больше не обрывает её, и повторных платных вызовов нет.
@@ -12268,7 +12274,7 @@ function openBpChapter(id){
   // Главы с едой без персонального плана — это запасное меню: общие блюда без фото и БЖУ. Пока план
   // в пути (разбор ещё идёт или памятка считается), честнее сказать, что меню готовится: владелец
   // принял запасной список за «модель выдумывает блюда» (2026-09-11).
-  if(!window._bpAI && (window._bpAILoading || window._anLoading) && ['morning','lunch','evening'].indexOf(id)>=0){
+  if(!window._bpAI && window._bpAILoading && ['morning','lunch','evening'].indexOf(id)>=0){
     openSheet(meta.icon, meta.title,
       '<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.7;padding:6px 0;">'+_esc(L({ru:'Персональное меню готовится — появится здесь через минуту-две. Приложение можно свернуть.',uk:'Персональне меню готується — з’явиться тут за хвилину-дві. Застосунок можна згорнути.',en:'Your personal menu is being prepared — it will appear here in a minute or two. You can leave the app.',es:'Tu menú personal se está preparando: aparecerá aquí en un minuto o dos. Puedes salir de la app.',de:'Dein persönliches Menü wird erstellt — es erscheint hier in ein bis zwei Minuten. Du kannst die App verlassen.',pt:'O seu menu pessoal está a ser preparado — aparecerá aqui dentro de um ou dois minutos. Pode sair da app.',fr:'Votre menu personnel est en préparation — il apparaîtra ici dans une à deux minutes. Vous pouvez quitter l’application.',pl:'Twoje osobiste menu jest przygotowywane — pojawi się tutaj za minutę lub dwie. Możesz wyjść z aplikacji.',it:'Il tuo menu personale è in preparazione — apparirà qui tra un minuto o due. Puoi uscire dall’app.',he:'התפריט האישי שלכם בהכנה — הוא יופיע כאן בעוד דקה-שתיים. אפשר לצאת מהאפליקציה.',ja:'あなた専用のメニューを準備中です。1〜2分でここに表示されます。アプリを閉じても大丈夫です。',ko:'개인 맞춤 메뉴를 준비하고 있어요. 1~2분 후 여기에 표시됩니다. 앱을 나가도 괜찮습니다.'}))+'</div>'+_bpDisc());
     return;
