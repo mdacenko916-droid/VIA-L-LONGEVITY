@@ -925,6 +925,8 @@ input.oura-input::-webkit-slider-thumb{
   cursor:pointer;
 }
 
+/* Карточка предложения под пробным разбором: в печати — только короткая строка, без кнопок (2026-09-24) */
+@media print{ .trial-offer{display:none!important;} .trial-offer-short{display:block!important;} }
 /* CHIPS */
 .chips{display:flex;flex-wrap:wrap;gap:7px;}
 .chip input{display:none;}
@@ -9444,6 +9446,61 @@ function _trialNote(){
   return '<div onclick="_iapOpenFromProfile()" style="margin-top:14px;padding:11px 13px;border-radius:12px;border:1px solid rgba(226,185,90,.45);background:rgba(226,185,90,.10);font-size:var(--fs-cap);color:var(--gold-lt);line-height:1.5;cursor:pointer;">✦ '+_esc(txt)
     +'<div style="margin-top:7px;font-weight:600;">'+_esc(cta)+'</div></div>';
 }
+// Карточка предложения под ПЕРВЫМ пробным разбором (решение владельца 2026-09-24).
+// Раньше цену человек видел только на 4-й день, после трёх проходов в разные дни, — до этого
+// почти никто не доживал и ни разу не узнавал, что есть полная версия. Теперь в первый пробный
+// день под разбором — что даёт подписка и пример недельного разбора; во 2-й и 3-й — прежняя
+// короткая строка (_trialNote), чтобы не давить. «Позже» прячет карточку до завтра.
+// Кнопка ведёт на существующий экран подписки: цену, срок и условия Apple требует показывать
+// там, и они там есть — здесь их не дублируем.
+// Пункты — только то, что пробнику НЕ доступно: полный разбор, памятка с меню и фото
+// (пробник памятку у ИИ не заказывает), недельный и месячный разбор (нужна история дольше 3 дней).
+// Напоминания о приёме сюда не входят — они работают и в пробнике.
+function _trialOfferHidden(){ try{ return localStorage.getItem('vialp_offer_hide')===_dayKey(); }catch(e){ return false; } }
+function _trialOfferLater(el){
+  try{ localStorage.setItem('vialp_offer_hide',_dayKey()); }catch(e){}
+  var box=el&&el.closest?el.closest('.trial-offer-wrap'):null; if(!box) return;
+  var big=box.querySelector('.trial-offer'), small=box.querySelector('.trial-offer-short');
+  if(big) big.style.display='none'; if(small) small.style.display='block';
+}
+function _trialOffer(){
+  if(!_isTrial()) return '';
+  var used=(_trialGet().days||[]).length;
+  if(used>1 || _trialOfferHidden()) return _trialNote();
+  var T=function(o){ return _esc(L(o)); };
+  var title=T({ru:'Это пробный разбор — короткий.',uk:'Це пробний розбір — короткий.',en:'This is a trial overview — the short version.',es:'Este es un resumen de prueba, la versión corta.',de:'Das ist eine Test-Auswertung — die Kurzfassung.',pt:'Esta é uma análise de teste — a versão curta.',fr:'Ceci est un bilan d’essai — la version courte.',pl:'To przegląd próbny — wersja krótka.',it:'Questa è un’analisi di prova — la versione breve.',he:'זהו ניתוח ניסיון — הגרסה המקוצרת.',ja:'これはお試し版の分析（短縮版）です。',ko:'체험용 요약입니다 — 짧은 버전이에요.'});
+  var lead=T({ru:'С подпиской:',uk:'З підпискою:',en:'With a subscription:',es:'Con la suscripción:',de:'Mit dem Abo:',pt:'Com a subscrição:',fr:'Avec l’abonnement :',pl:'Z subskrypcją:',it:'Con l’abbonamento:',he:'עם מנוי:',ja:'サブスクリプションなら：',ko:'구독하면:'});
+  var b=[
+    T({ru:'полный разбор каждого дня, а не выжимка',uk:'повний розбір кожного дня, а не вижимка',en:'a full overview of every day, not a summary',es:'un resumen completo de cada día, no una síntesis',de:'eine vollständige Auswertung jedes Tages statt einer Kurzfassung',pt:'uma análise completa de cada dia, não um resumo',fr:'un bilan complet de chaque journée, pas un résumé',pl:'pełny przegląd każdego dnia, a nie skrót',it:'un’analisi completa di ogni giornata, non un riassunto',he:'ניתוח מלא של כל יום, לא תקציר',ja:'要約ではなく、毎日の詳しい分析',ko:'요약이 아닌 매일의 전체 분석'}),
+    T({ru:'памятка дня с меню и фото блюд под ваши данные',uk:'пам’ятка дня з меню та фото страв під ваші дані',en:'a day plan with a menu and dish photos tailored to your data',es:'un plan del día con menú y fotos de platos según tus datos',de:'ein Tagesplan mit Menü und Gerichtfotos passend zu deinen Daten',pt:'um plano do dia com menu e fotos de pratos conforme seus dados',fr:'un plan du jour avec menu et photos de plats adaptés à vos données',pl:'plan dnia z menu i zdjęciami dań dopasowanymi do Twoich danych',it:'un piano del giorno con menù e foto dei piatti in base ai tuoi dati',he:'תוכנית יום עם תפריט ותמונות מנות לפי הנתונים שלכם',ja:'あなたのデータに合わせたメニューと料理写真つきの一日プラン',ko:'내 데이터에 맞춘 메뉴와 음식 사진이 있는 하루 플랜'}),
+    T({ru:'недельный и месячный разбор: что изменилось и что попробовать дальше',uk:'тижневий і місячний розбір: що змінилося і що спробувати далі',en:'weekly and monthly reviews: what changed and what to try next',es:'resúmenes semanales y mensuales: qué cambió y qué probar después',de:'Wochen- und Monatsrückblicke: was sich verändert hat und was du als Nächstes ausprobierst',pt:'análises semanais e mensais: o que mudou e o que experimentar a seguir',fr:'bilans hebdomadaires et mensuels : ce qui a changé et quoi essayer ensuite',pl:'przeglądy tygodniowe i miesięczne: co się zmieniło i co wypróbować dalej',it:'analisi settimanali e mensili: cosa è cambiato e cosa provare dopo',he:'סיכומים שבועיים וחודשיים: מה השתנה ומה לנסות הלאה',ja:'週間・月間レビュー：何が変わったか、次に何を試すか',ko:'주간·월간 리뷰: 무엇이 바뀌었고 다음엔 무엇을 해볼지'})
+  ];
+  var sum=T({ru:'Как выглядит недельный разбор',uk:'Як виглядає тижневий розбір',en:'What a weekly review looks like',es:'Cómo es un resumen semanal',de:'So sieht ein Wochenrückblick aus',pt:'Como é uma análise semanal',fr:'À quoi ressemble un bilan hebdomadaire',pl:'Jak wygląda przegląd tygodniowy',it:'Com’è un’analisi settimanale',he:'איך נראה סיכום שבועי',ja:'週間レビューの例',ko:'주간 리뷰 예시'});
+  var ex=T({ru:'Пример. Ваш разбор соберётся из ваших данных через 7 дней.',uk:'Приклад. Ваш розбір збереться з ваших даних через 7 днів.',en:'Example. Yours will be built from your own data after 7 days.',es:'Ejemplo. El tuyo se hará con tus propios datos a los 7 días.',de:'Beispiel. Deiner entsteht nach 7 Tagen aus deinen eigenen Daten.',pt:'Exemplo. O seu será feito com os seus dados após 7 dias.',fr:'Exemple. Le vôtre sera établi d’après vos propres données au bout de 7 jours.',pl:'Przykład. Twój powstanie z Twoich danych po 7 dniach.',it:'Esempio. Il tuo sarà costruito sui tuoi dati dopo 7 giorni.',he:'דוגמה. הסיכום שלכם ייבנה מהנתונים שלכם אחרי 7 ימים.',ja:'例です。あなたのレビューは7日後にあなた自身のデータから作成されます。',ko:'예시입니다. 내 리뷰는 7일 뒤 내 데이터로 만들어져요.'});
+  var s=[
+    T({ru:'Сон в будни стал ровнее: засыпание сдвинулось на 25 минут раньше, ночные пробуждения — с трёх до одного-двух.',uk:'Сон у будні став рівнішим: засинання зсунулося на 25 хвилин раніше, нічні пробудження — з трьох до одного-двох.',en:'Weekday sleep got steadier: falling asleep moved 25 minutes earlier, and night awakenings dropped from three to one or two.',es:'El sueño entre semana se volvió más estable: te dormiste 25 minutos antes y los despertares nocturnos bajaron de tres a uno o dos.',de:'Der Schlaf unter der Woche wurde gleichmäßiger: das Einschlafen rückte 25 Minuten nach vorn, nächtliches Aufwachen ging von drei- auf ein- bis zweimal zurück.',pt:'O sono nos dias úteis ficou mais estável: adormecer passou a ser 25 minutos mais cedo e os despertares noturnos caíram de três para um ou dois.',fr:'Le sommeil en semaine est devenu plus régulier : endormissement 25 minutes plus tôt, réveils nocturnes passés de trois à un ou deux.',pl:'Sen w dni robocze stał się równiejszy: zasypianie przesunęło się o 25 minut wcześniej, a nocne pobudki spadły z trzech do jednej–dwóch.',it:'Il sonno nei giorni feriali è diventato più regolare: l’addormentamento si è spostato di 25 minuti prima e i risvegli notturni sono scesi da tre a uno o due.',he:'השינה בימי חול נעשתה יציבה יותר: ההירדמות הוקדמה ב-25 דקות, וההתעוררויות בלילה ירדו משלוש לאחת-שתיים.',ja:'平日の睡眠が安定しました。寝つく時刻が25分早まり、夜中に目覚める回数は3回から1〜2回に減りました。',ko:'평일 수면이 더 안정됐어요. 잠드는 시간이 25분 앞당겨졌고, 밤중에 깨는 횟수는 세 번에서 한두 번으로 줄었어요.'}),
+    T({ru:'В дни, когда экран гас позже 23:00, утренний пульс был выше на 4–6 ударов — связь повторилась четыре раза из пяти.',uk:'У дні, коли екран гаснув пізніше 23:00, ранковий пульс був вищим на 4–6 ударів — зв’язок повторився чотири рази з п’яти.',en:'On days the screen went off after 11 pm, your morning heart rate was 4–6 beats higher — this link showed up four times out of five.',es:'Los días en que la pantalla se apagó después de las 23:00, tu pulso matutino fue 4–6 latidos más alto; la relación se repitió cuatro de cinco veces.',de:'An Tagen, an denen der Bildschirm nach 23 Uhr ausging, lag dein Morgenpuls 4–6 Schläge höher — der Zusammenhang zeigte sich vier von fünf Malen.',pt:'Nos dias em que a tela se apagou depois das 23h, seu pulso matinal ficou 4–6 batimentos mais alto — a ligação se repetiu quatro em cinco vezes.',fr:'Les jours où l’écran s’éteignait après 23 h, votre pouls du matin était plus élevé de 4 à 6 battements — ce lien s’est répété quatre fois sur cinq.',pl:'W dni, gdy ekran gasł po 23:00, poranne tętno było wyższe o 4–6 uderzeń — ten związek powtórzył się cztery razy na pięć.',it:'Nei giorni in cui lo schermo si spegneva dopo le 23, il battito del mattino era più alto di 4–6 battiti: il legame si è ripetuto quattro volte su cinque.',he:'בימים שבהם המסך כבה אחרי 23:00, הדופק בבוקר היה גבוה ב-4–6 פעימות — הקשר חזר ארבע פעמים מתוך חמש.',ja:'画面を消したのが23時より遅かった日は、朝の脈拍が4〜6拍高く、この関係は5回中4回見られました。',ko:'화면을 밤 11시 이후에 끈 날에는 아침 맥박이 4~6회 더 높았고, 이 연관성은 다섯 번 중 네 번 나타났어요.'}),
+    T({ru:'Эксперимент на следующую неделю: убрать экран за час до сна в будни и посмотреть на утренний пульс и энергию днём.',uk:'Експеримент на наступний тиждень: прибрати екран за годину до сну в будні й подивитися на ранковий пульс та енергію вдень.',en:'Experiment for next week: no screens for an hour before bed on weekdays, then watch your morning heart rate and daytime energy.',es:'Experimento para la próxima semana: sin pantallas una hora antes de dormir entre semana, y observa el pulso matutino y la energía durante el día.',de:'Experiment für nächste Woche: unter der Woche eine Stunde vor dem Schlafen kein Bildschirm — dann Morgenpuls und Energie am Tag beobachten.',pt:'Experimento para a próxima semana: sem telas uma hora antes de dormir nos dias úteis e observe o pulso matinal e a energia durante o dia.',fr:'Expérience pour la semaine prochaine : pas d’écran une heure avant le coucher en semaine, puis observer le pouls du matin et l’énergie dans la journée.',pl:'Eksperyment na przyszły tydzień: bez ekranu godzinę przed snem w dni robocze, potem obserwuj poranne tętno i energię w ciągu dnia.',it:'Esperimento per la prossima settimana: niente schermi un’ora prima di dormire nei giorni feriali, poi osserva il battito del mattino e l’energia durante il giorno.',he:'ניסוי לשבוע הבא: בלי מסכים שעה לפני השינה בימי חול, ואז לשים לב לדופק בבוקר ולאנרגיה במהלך היום.',ja:'来週の実験：平日は寝る1時間前から画面を見ないようにして、朝の脈拍と日中のエネルギーを観察しましょう。',ko:'다음 주 실험: 평일에는 잠들기 한 시간 전부터 화면을 끄고, 아침 맥박과 낮 동안의 에너지를 살펴보세요.'})
+  ];
+  var btn=T({ru:'Посмотреть тариф',uk:'Переглянути тариф',en:'See the plan',es:'Ver el plan',de:'Tarif ansehen',pt:'Ver o plano',fr:'Voir l’offre',pl:'Zobacz plan',it:'Vedi il piano',he:'לצפייה בתוכנית',ja:'プランを見る',ko:'요금제 보기'});
+  var later=T({ru:'Позже',uk:'Пізніше',en:'Later',es:'Más tarde',de:'Später',pt:'Mais tarde',fr:'Plus tard',pl:'Później',it:'Più tardi',he:'אחר כך',ja:'あとで',ko:'나중에'});
+  var gold='rgba(226,185,90,';
+  return '<div class="trial-offer-wrap">'
+    +'<div class="trial-offer" style="margin-top:16px;padding:16px 16px 14px;border-radius:14px;border:1px solid '+gold+'.55);background:'+gold+'.10);color:var(--t1);line-height:1.5;">'
+    +'<div style="font-weight:600;color:var(--gold-lt);margin-bottom:8px;">✦ '+title+'</div>'
+    +'<div style="font-size:var(--fs-cap);color:var(--t2);margin-bottom:4px;">'+lead+'</div>'
+    +'<ul style="margin:0 0 12px;padding-left:18px;font-size:var(--fs-cap);">'+b.map(function(x){return '<li style="margin:3px 0;">'+x+'</li>';}).join('')+'</ul>'
+    +'<details style="margin:0 0 14px;font-size:var(--fs-cap);"><summary style="cursor:pointer;color:var(--gold-lt);">'+sum+'</summary>'
+    +'<div style="margin-top:8px;padding:10px 12px;border-left:2px solid '+gold+'.5);color:var(--t2);">'
+    +'<div style="font-style:italic;margin-bottom:6px;">'+ex+'</div>'
+    +s.map(function(x){return '<p style="margin:0 0 6px;">'+x+'</p>';}).join('')+'</div></details>'
+    +'<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">'
+    +'<button type="button" class="btn btn-primary" onclick="_iapOpenFromProfile()">'+btn+'</button>'
+    +'<button type="button" onclick="_trialOfferLater(this)" style="background:none;border:none;color:var(--t3);font-size:var(--fs-cap);cursor:pointer;padding:8px 4px;">'+later+'</button>'
+    +'</div></div>'
+    +'<div class="trial-offer-short" style="display:none;">'+_trialNote()+'</div>'
+    +'</div>';
+}
 // ── Рендер ВСЕГО дашборда из снимка дня (без живых полей и без нового запроса к ИИ) ──
 function _renderDayFromSnap(snap, todayFlag){
   if(!snap||!snap.data) return false;
@@ -12228,7 +12285,7 @@ function _splitActions(det){
 function _renderAnalysis(raw){
   // Пробный разбор помечаем в САМОМ рендере: так пометка появляется везде, где показывается текст
   // (карточка разбора, лента дня, глава «Разбор дня», печать) — без правки каждого места. 2026-09-17.
-  if(typeof _isTrial==='function' && _isTrial()) return _renderAnalysisInner(raw)+_trialNote();
+  if(typeof _isTrial==='function' && _isTrial()) return _renderAnalysisInner(raw)+_trialOffer();   // 1-й пробный день — карточка предложения, дальше короткая строка
   return _renderAnalysisInner(raw);
 }
 function _renderAnalysisInner(raw){
