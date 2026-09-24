@@ -3471,6 +3471,21 @@ async function handleDayPlan(request, env, corsHeaders, ctx) {
     const _hit = await _dailyLimitHit(env, 'dayplan', body);
     if (_hit) return jsonResponse(_hit, corsHeaders);
   }
+  // Движок собирает памятку мгновенно — очередь ему только вредит: доставка задания занимает
+  // ~45–60 с, и если приложение за это время свернули, а вернулись позже 10 минут, окно
+  // ожидания на телефоне закрывалось и человек видел базовую памятку вместо меню из каталога
+  // (живой случай владельца 2026-09-24: план собран в 15:55, до телефона не доехал).
+  // Поэтому при движке отвечаем СРАЗУ, даже если клиент просил bg: все сборки понимают ответ
+  // {plan} напрямую — номер задания им нужен, только когда плана в ответе нет.
+  if (_dpEngineOn(env, body)) {
+    const _eo = await _dayPlanCore(body, env, ctx);
+    if (_eo && _eo.plan && body && body.cid && body.day && env.ANALYSIS_CACHE && ctx) {
+      ctx.waitUntil(env.ANALYSIS_CACHE.put(_dpJobKey(body.cid, body.day),
+        JSON.stringify({ job: 'sync', status: 'done', plan: _eo.plan, ts: Date.now() }), { expirationTtl: 72 * 3600 }).catch(() => {}));
+    }
+    if (_eo && _eo.plan) return jsonResponse(_eo, corsHeaders);
+    // движок не справился (_dayPlanCore сам откатился бы на модель) — дальше обычный путь с очередью
+  }
   // Фоновый режим (приложение шлёт bg:true с 2026-09-12). Памятка генерится до ~90 с, а Cloudflare
   // обрывает работу через 30 с после ухода клиента: свёрнутое приложение теряло её, и клиент просил
   // заново — 4 платных вызова подряд (живой случай 2026-09-11 23:17). Теперь через очередь, как разбор.
