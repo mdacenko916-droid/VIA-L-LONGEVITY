@@ -11066,6 +11066,42 @@ const AI_WORKER = 'https://interpreter.viaelcom.workers.dev';
 // обмене код НЕ уходит вовсе, и разбор остаётся только на устройстве.
 // Выключатель живёт на экране «Мой наставник»; сервер тоже гасит приём по data.sharing.
 // docs/APP-SPECIALIST-LINK-PLAN.md §3.2. 2026-09-24.
+// Ответ специалиста человек не увидит, если не зайдёт во вкладку «Мой наставник» — а без повода
+// туда не заходят. Считаем непрочитанные ответы и показываем их главой в «Памятке дня», рядом
+// с «Приёмом сегодня». Своего пуша у приложения нет (APNs не поднимали).
+// Счётчик «сколько ответов человек уже видел» пишет страница переписки (vial_spec_seen).
+// docs/APP-SPECIALIST-LINK-PLAN.md §3.5. 2026-09-24.
+function _specUnread(){
+  try{
+    var l=JSON.parse(localStorage.getItem('vial_spec_link')||'null'); if(!l||!l.code) return 0;
+    var out=parseInt(localStorage.getItem('vial_spec_out'),10)||0;
+    var seen=parseInt(localStorage.getItem('vial_spec_seen'),10)||0;
+    return Math.max(0, out-seen);
+  }catch(e){ return 0; }
+}
+async function _specPoll(){
+  var l=null; try{ l=JSON.parse(localStorage.getItem('vial_spec_link')||'null'); }catch(e){}
+  if(!l||!l.code) return;
+  try{
+    var r=await fetch(AI_WORKER+'/expert/thread?code='+encodeURIComponent(l.code)+'&lang='+encodeURIComponent(lang));
+    var d=await r.json();
+    if(d&&d.ok&&Array.isArray(d.messages)){
+      var n=d.messages.filter(function(m){return m.dir==='out';}).length;
+      localStorage.setItem('vial_spec_out', String(n));
+      if(typeof renderDayBlueprint==='function' && window._bpData) renderDayBlueprint(window._bpData);
+    }
+  }catch(e){}
+}
+try{
+  setTimeout(_specPoll, 1500);
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') _specPoll(); });
+}catch(e){}
+function _specChapter(){
+  if(!_specUnread()) return null;
+  return { id:'spec', icon:'<i class="ph ph-chat-circle-dots" style="color:var(--gold-lt);"></i>', pr:'💬',
+    title:L({ru:'Специалист ответил',uk:'Фахівець відповів',en:'Your guide replied',es:'Tu guía respondió',de:'Dein Begleiter hat geantwortet',pt:'O seu guia respondeu',fr:'Votre guide a répondu',pl:'Przewodnik odpowiedział',it:'La tua guida ha risposto',he:'המלווה שלכם השיב',ja:'ガイドから返信',ko:'가이드가 답장했어요'}),
+    teaser:L({ru:'Открыть переписку',uk:'Відкрити переписку',en:'Open the conversation',es:'Abrir la conversación',de:'Gespräch öffnen',pt:'Abrir a conversa',fr:'Ouvrir la conversation',pl:'Otwórz rozmowę',it:'Apri la conversazione',he:'לפתוח את השיחה',ja:'メッセージを開く',ko:'대화 열기'}) };
+}
 function _specShare(){
   try{
     var l = JSON.parse(localStorage.getItem('vial_spec_link') || 'null');
@@ -11473,6 +11509,7 @@ function _bpChapters(){
     _anWait=!!window._anLoading || !!(_pj && _pj.day===_dayKey() && Date.now()-_pj.ts < 10*60*1000); }
   // «Приём сегодня» — первой после разбора: это действия с конкретным временем (intake.js, 2026-09-18).
   try{ var _ikc=(typeof _ikChapter==='function')?_ikChapter():null; if(_ikc) chs.unshift(_ikc); }catch(e){}
+  try{ var _spc=(typeof _specChapter==='function')?_specChapter():null; if(_spc) chs.unshift(_spc); }catch(e){}   // ответ специалиста — выше приёма
   // Готовый разбор в памятке — ДУБЛЬ карточки разбора, которая на том же экране стоит выше
   // (владелец, скрины 2026-09-22). Глава нужна ровно для одного: пока разбор считается в фоне,
   // человек открывает памятку раньше и должен видеть здесь, что он в пути. Готов — карточка
@@ -12040,6 +12077,7 @@ function _bpDisc(){
 }
 function openBpChapter(id){
   if(id==='intake'){ if(typeof _ikOpen==='function')_ikOpen(); return; }
+  if(id==='spec'){ location.href='./my-specialist.html?chat=1'; return; }   // переписка живёт на странице наставника
   if(id==='analysis'){   // полный текст сегодняшнего ИИ-разбора (кэш дня), не secs-структура
     try{
       var _ae=_aiDayEntry(_dayKey());

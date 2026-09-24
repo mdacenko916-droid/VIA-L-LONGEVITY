@@ -932,7 +932,11 @@ setLang((function(){try{var p=new URLSearchParams(location.search).get('lang');i
 // уже подключён?
 (function(){
   let link=null;try{link=JSON.parse(localStorage.getItem(LINK_KEY)||'null');}catch(e){}
-  if(link&&link.code) showDone(link,false);
+  if(link&&link.code){
+    showDone(link,false);
+    // Пришли из «Памятки дня» по главе «Специалист ответил» — открываем сразу переписку.
+    try{ if(new URLSearchParams(location.search).get('chat')==='1') openChat(); }catch(e){}
+  }
 })();
 loadShowcase();   // витрина наставников
 </script>
