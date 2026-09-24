@@ -114,6 +114,24 @@ i.bottom-nav-icon{width:auto;height:auto;font-size:24px;line-height:1;color:var(
 .chips.hf-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
 .chips.hf-grid .chip{margin:0;min-width:0;}
 .chips.hf-grid .chip label{min-height:50px;display:flex;align-items:center;justify-content:center;gap:5px;border-radius:12px;font-size:var(--fs-body);font-weight:500;width:100%;box-sizing:border-box;line-height:1.2;text-align:center;overflow-wrap:break-word;hyphens:auto;}
+/* Узкие экраны: длинное одиночное слово («НОРМАЛЬНЫЙ», «РАЗДРАЖИТЕЛЬНОСТЬ») вылезало за рамку
+   кнопки на Huawei. Две причины: общий отступ .chip label (16px слева и справа) не перебивался
+   мобильной правкой из-за приоритета селекторов, а `overflow-wrap:break-word` НЕ уменьшает
+   минимальную ширину flex-элемента — старый движок Android оставлял слово целым и выпускал
+   за границу. Лечение: отступы уже + `anywhere` (влияет на минимальную ширину) + запасной
+   `word-break` для старых движков. 2026-09-24. */
+@media (max-width:430px){
+  .chips.cog-grid .chip label,
+  .chips.sup-grid .chip label,
+  .chips.sym-grid .chip label,
+  .chips.yn-grid .chip label,
+  .chips.stress-grid .chip label,
+  .chips.hf-grid .chip label{
+    padding-left:9px;padding-right:9px;min-width:0;
+    overflow-wrap:anywhere;word-break:break-word;
+    -webkit-hyphens:auto;hyphens:auto;
+  }
+}
 #circModal{position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);display:none;opacity:0;transition:opacity .25s ease;}
 #circModal.open{opacity:1;}
 #circModal .cm-sheet{position:fixed;left:0;right:0;bottom:0;width:100%;max-height:85vh;overflow-y:auto;background:linear-gradient(160deg,#2a323f,#181e28);border-top:1px solid rgba(226,185,90,.3);border-radius:24px 24px 0 0;padding:0 20px calc(28px + env(safe-area-inset-bottom));box-shadow:0 -10px 44px rgba(0,0,0,.55);transform:translateY(100%);transition:transform .34s cubic-bezier(.32,.72,0,1);}
@@ -7473,6 +7491,24 @@ function _pmIdle(){
   _pmDialSet(_PM_SEC, _pmUnitSec(), 1);
   _pmActions(_pmStartBtn(_pmStartLbl()));
 }
+/* Звук таймера пульса (просьба владельца 2026-09-24): под щелчки считать удары легче, чем
+   глядя на цифру. Тон синтезируем через Web Audio — никаких файлов в бандле. Контекст создаём
+   в _pmStart, то есть по касанию кнопки: без жеста пользователя iOS и Android звук глушат.
+   Тихо и коротко — это метроном, а не сигнализация. */
+var _pmAC=null;
+function _pmBeep(hz,ms,vol){
+  try{
+    if(!_pmAC){ var AC=window.AudioContext||window.webkitAudioContext; if(!AC)return; _pmAC=new AC(); }
+    if(_pmAC.state==='suspended'){ try{_pmAC.resume();}catch(e){} }
+    var t=_pmAC.currentTime, o=_pmAC.createOscillator(), g=_pmAC.createGain();
+    o.type='sine'; o.frequency.value=hz;
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.linearRampToValueAtTime(vol,t+0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+ms/1000);
+    o.connect(g); g.connect(_pmAC.destination);
+    o.start(t); o.stop(t+ms/1000+0.03);
+  }catch(e){}
+}
 function _pmStart(){
   _pmStop(); _pmBusy=true;
   _pmTitle(t('pm_title'));   // сбрасываем заголовок после результата/ошибки
@@ -7482,16 +7518,19 @@ function _pmCountdown(n){
   if(n<=0){ _pmTimer(_PM_SEC); return; }
   _pmDialSet(n,'',1);
   _pmActions(_pmCap(L({ru:'Приготовьтесь…',uk:'Приготуйтеся…',en:'Get ready…',es:'Prepárate…',de:'Bereit machen…',pt:'Prepare-se…',fr:'Préparez-vous…',pl:'Przygotuj się…',it:'Preparati…',he:'התכוננו…',ja:'準備してください…',ko:'준비하세요…'})));
+  _pmBeep(620,70,.05);                    // отсчёт перед стартом — глуше и тише тиков
   _pmT=setTimeout(function(){_pmCountdown(n-1);},1000);
 }
 function _pmTimer(sec){
   var left=sec, unit=_pmUnitSec();
   _pmDialSet(left,unit,1);
   _pmActions(_pmCap(L({ru:'Считайте удары',uk:'Рахуйте удари',en:'Count the beats',es:'Cuenta los latidos',de:'Zähle die Schläge',pt:'Conte as batidas',fr:'Comptez les battements',pl:'Licz uderzenia',it:'Conta i battiti',he:'ספרו את הפעימות',ja:'拍動を数えてください',ko:'박동을 세세요'})));
+  _pmBeep(880,60,.07);                     // «пошёл» — первый тик громче остальных
   _pmT=setInterval(function(){
     left--;
     _pmDialSet(Math.max(left,0), unit, Math.max(left,0)/sec);   // штрихи гаснут к нулю
-    if(left>0)return;
+    if(left>0){ _pmBeep(880,30,.05); return; }                  // метроном: щелчок в секунду
+    _pmBeep(988,90,.08); setTimeout(function(){_pmBeep(1319,160,.08);},110);   // финал: две ноты вверх
     _pmStop(); _pmAsk();
   },1000);
 }

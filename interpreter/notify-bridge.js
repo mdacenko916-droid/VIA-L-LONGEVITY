@@ -49,10 +49,12 @@
           title: String(title || '').slice(0, 60),
           body: String(body || '').slice(0, 140),
           schedule: { on: { hour: Number(hh), minute: Number(mm) }, allowWhileIdle: true },
-          // ⚠️ БЕЗ этого поля iOS показывает уведомление МОЛЧА (Android звучит и так).
-          // Файла с таким именем в бандле нет намеренно: плагин в этом случае берёт
-          // системный звук по умолчанию — свой звук нам не нужен. 2026-09-22.
-          sound: 'default.wav',
+          // ⚠️ iOS: звук бывает ТОЛЬКО от файла в бандле. Строчки «возьми системный» у плагина
+          // нет: без поля sound — тишина, с именем несуществующего файла — тоже тишина
+          // (так и вышло 22.09 с 'default.wav'). Файл лежит в app/ios/App/App/vialchime.wav
+          // и подключён к цели App в Xcode — если его выкинуть, звук снова пропадёт.
+          // Android звучит сам: там звук берётся из канала уведомлений, файл ему не нужен.
+          sound: 'vialchime.wav',
           extra: { tab: 'today', plan: 'morning' },
         }],
       });
@@ -85,7 +87,7 @@
             body: String(it.body || '').slice(0, 140),
             schedule: it.at ? { at: new Date(it.at), allowWhileIdle: true }
                             : { on: { hour: Number(it.hh), minute: Number(it.mm) }, allowWhileIdle: true },
-            sound: 'default.wav',                     // см. про звук выше
+            sound: 'vialchime.wav',                   // см. про звук выше
             // Время приёма — чтобы клик открыл ИМЕННО его, а не весь список. Названий здесь нет
             // и не будет: extra не видно на экране, но и хранить их незачем — время однозначно.
             extra: { kind: 'intake', t: String(it.t || '') },
