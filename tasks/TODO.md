@@ -27,10 +27,15 @@
       годовую `via_l_pro_yearly` €99,99 (уровень в группе выше месячной); разовую покупку типа
       Non-Consumable `via_l_lifetime` €199,99. Локализации, скриншот для ревью; новые товары подать
       вместе с версией 1.0.7 (раздел «Покупки в приложении и подписки» на странице версии).
-- [ ] **Google Play:** в подписке `via_l_pro_monthly` цена €14,99, добавить базовый план «год» €99,99;
-      разовый товар `via_l_lifetime` €199,99.
-- [ ] **RevenueCat:** оба новых товара (iOS и Android) → entitlement `via_l_pro`; в Offering `default`
-      пакеты Monthly / Annual / Lifetime. Без этого приложение их не увидит.
+- [x] ✅ **Google Play — сделано 2026-09-24 через API** (сервисный аккаунт): `via_l_pro_monthly:monthly`
+      €14,99 / $14,99 (было €29,99 / $34,99), новый базовый план `via_l_pro_monthly:yearly` €99,99 / $99,99
+      — ACTIVE; разовый товар `via_l_lifetime` (новый API oneTimeProducts, вариант покупки `lifetime`,
+      legacyCompatible) €199,99 / $199,99 — ACTIVE, описание en/ru/uk/es. Остальные страны — пропорционально.
+      ⚠️ Старый API inappproducts Google закрыл («migrate to the new publishing API»); создание — PATCH
+      `onetimeproducts/{id}` (строчными), чтение и активация — `oneTimeProducts/...` (с заглавными).
+- [ ] **RevenueCat:** новые товары → entitlement `via_l_pro`; в Offering `default` пакеты Monthly / Annual /
+      Lifetime. Android-идентификаторы: `via_l_pro_monthly:yearly` и `via_l_lifetime`; iOS — после заведения в ASC.
+      Без этого приложение их не увидит. Ключа API RevenueCat на машине нет — только руками.
 - [ ] **Проверить после сборки:** экран показывает три тарифа с ценами стора; покупка «навсегда» снимает
       пейволл так же, как подписка.
 
