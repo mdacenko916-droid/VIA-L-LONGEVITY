@@ -2018,6 +2018,13 @@ body.consent-open #tb-brand,body.iap-open #tb-brand{display:none;}
 /* IAP-пейволл — та же механика показа/позиционирования, что consent-gate */
 #iap-gate{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(8,11,16,.5);backdrop-filter:blur(22px) saturate(1.1);-webkit-backdrop-filter:blur(22px) saturate(1.1);padding:calc(84px + env(safe-area-inset-top,0px)) 24px calc(24px + env(safe-area-inset-bottom,0px));box-sizing:border-box;}
 #iap-gate.show{display:flex;}
+/* Варианты тарифа на экране подписки (месяц / год / навсегда, 2026-09-24). Свой класс: у dm-opt в
+   этой странице стилей нет. Палитра — как у выбранных кнопок анкеты (.chip input:checked + label). */
+.iap-plan{cursor:pointer;margin-bottom:8px;padding:12px 14px;border-radius:14px;border:1px solid rgba(226,185,90,.35);background:linear-gradient(180deg,rgba(18,23,32,.72) 0%,rgba(6,9,14,.9) 100%);transition:border-color .2s,box-shadow .2s;}
+.iap-plan .iap-plan-title{font-weight:600;color:var(--t1);font-size:var(--fs-body);}
+.iap-plan .iap-plan-line{font-size:var(--fs-cap);color:var(--t2);margin-top:3px;}
+.iap-plan.sel{border-color:rgba(226,185,90,.85);background:linear-gradient(180deg,rgba(226,185,90,.22) 0%,rgba(196,150,60,.12) 100%);box-shadow:0 0 18px var(--gold-glow);}
+.iap-plan.sel .iap-plan-title{color:var(--gold-lt);}
 body.iap-open #topbar{z-index:10000;}
 body.iap-open #topbar *{pointer-events:none;}
 /* ⚠️ Раньше здесь стояло `#langDropdown *{pointer-events:auto}` — «включить клики всему
@@ -3946,8 +3953,10 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
       <div class="dm-block">
         <p id="iap-desc" data-t="iap_desc">Полный доступ к персональному анализу образа жизни. Оплата через {store}. Отменить можно в любой момент в настройках подписок {store}.</p>
       </div>
-      <button id="iap-btn" class="dm-opt sel" style="width:100%;text-align:center;padding:16px;cursor:pointer;" onclick="_iapBuy()">
-        <div class="dm-opt-title" id="iap-btn-label" data-t="iap_subscribe">Оформить подписку</div>
+      <!-- Варианты тарифа (месяц / год / навсегда) — рисует _iapPlansFill; пока в сторе один продукт, скрыт -->
+      <div id="iap-plans" style="display:none;margin-bottom:10px;"></div>
+      <button id="iap-btn" class="btn btn-primary" style="width:100%;text-align:center;padding:16px;cursor:pointer;" onclick="_iapBuy()">
+        <div id="iap-btn-label" data-t="iap_subscribe">Оформить подписку</div>
       </button>
       <div id="iap-price" style="display:none;text-align:center;margin-top:10px;font-size:var(--fs-cap);color:var(--t2);letter-spacing:.3px;"></div>
       <button type="button" id="iap-restore-btn" onclick="_iapRestoreClick()" style="width:100%;margin-top:10px;background:none;border:none;color:var(--t2);font-size:var(--fs-cap);text-decoration:underline;cursor:pointer;padding:6px;" data-t="iap_restore">Восстановить покупки</button>
@@ -8601,11 +8610,87 @@ function _iapI18n(){
   });
   _iapPriceFill();
 }
+/* Три тарифа на одном экране (решение владельца 2026-09-24): €14,99 в месяц · €99,99 в год ·
+   €199,99 навсегда. Цены НЕ зашиты — только priceString/price из стора, как и раньше (App Store
+   3.1.2: у каждого варианта видны название, срок и цена). Рисуем то, что реально пришло из
+   Offering: пока год и «навсегда» не заведены в сторе и RevenueCat, пакет один — и экран ведёт
+   себя по-старому (строка цены под кнопкой). Год выбран по умолчанию. */
+function _iapKind(pkg){
+  var ty=String((pkg&&pkg.packageType)||'').toUpperCase(), id=String((pkg&&pkg.identifier)||'').toLowerCase();
+  if(ty==='ANNUAL'||id.indexOf('annual')>=0) return 'year';
+  if(ty==='LIFETIME'||id.indexOf('lifetime')>=0) return 'life';
+  if(ty==='MONTHLY'||id.indexOf('monthly')>=0) return 'month';
+  return 'other';
+}
+function _iapMoney(v,cur){
+  try{ return new Intl.NumberFormat((typeof lang!=='undefined'&&lang)||undefined,{style:'currency',currency:cur}).format(v); }
+  catch(e){ return (Math.round(v*100)/100)+' '+(cur||''); }
+}
+function _iapPlanTitle(k){
+  if(k==='year') return L({ru:'Год',uk:'Рік',en:'Yearly',es:'Anual',de:'Jährlich',pt:'Anual',fr:'Annuel',pl:'Rocznie',it:'Annuale',he:'שנתי',ja:'年額',ko:'연간'});
+  if(k==='life') return L({ru:'Навсегда',uk:'Назавжди',en:'Lifetime',es:'De por vida',de:'Lebenslang',pt:'Vitalício',fr:'À vie',pl:'Dożywotnio',it:'A vita',he:'לכל החיים',ja:'買い切り',ko:'평생 이용'});
+  return L({ru:'Месяц',uk:'Місяць',en:'Monthly',es:'Mensual',de:'Monatlich',pt:'Mensal',fr:'Mensuel',pl:'Miesięcznie',it:'Mensile',he:'חודשי',ja:'月額',ko:'월간'});
+}
+function _iapPlanLine(pkg,k,monthPrice){
+  var pr=pkg.product||{}, ps=pr.priceString||'';
+  if(k==='month') return ps+' / '+t('iap_per_month');
+  if(k==='year'){
+    var per=L({ru:'год',uk:'рік',en:'year',es:'año',de:'Jahr',pt:'ano',fr:'an',pl:'rok',it:'anno',he:'שנה',ja:'年',ko:'년'});
+    var line=ps+' / '+per;
+    if(pr.price&&pr.currencyCode){
+      var x=_iapMoney(pr.price/12,pr.currencyCode);
+      line+=' · '+L({ru:'≈ {x} в месяц',uk:'≈ {x} на місяць',en:'≈ {x} a month',es:'≈ {x} al mes',de:'≈ {x} im Monat',pt:'≈ {x} por mês',fr:'≈ {x} par mois',pl:'≈ {x} miesięcznie',it:'≈ {x} al mese',he:'≈ {x} לחודש',ja:'月あたり約{x}',ko:'월 약 {x}'}).replace('{x}',x);
+    }
+    return line;
+  }
+  if(k==='life') return ps+' · '+L({ru:'разовая оплата, без продления',uk:'разова оплата, без продовження',en:'one-time payment, no renewal',es:'pago único, sin renovación',de:'Einmalzahlung, keine Verlängerung',pt:'pagamento único, sem renovação',fr:'paiement unique, sans renouvellement',pl:'jednorazowa płatność, bez odnawiania',it:'pagamento unico, senza rinnovo',he:'תשלום חד-פעמי, ללא חידוש',ja:'一回払い・自動更新なし',ko:'한 번 결제, 자동 갱신 없음'});
+  return ps;
+}
+function _iapPlansFill(pkgs){
+  var box=document.getElementById('iap-plans'); if(!box) return;
+  var order={year:0,month:1,life:2,other:3};
+  pkgs=pkgs.slice().sort(function(a,b){ return order[_iapKind(a)]-order[_iapKind(b)]; });
+  window._iapPkgs=pkgs;
+  var mp=null; pkgs.forEach(function(p){ if(_iapKind(p)==='month'&&p.product) mp=p.product.price; });
+  var sel=0; pkgs.forEach(function(p,i){ if(_iapKind(p)==='year') sel=i; });
+  window._iapSelIdx=sel;
+  box.innerHTML=pkgs.map(function(p,i){
+    var k=_iapKind(p), badge='';
+    if(k==='year'&&mp&&p.product&&p.product.price){
+      var save=Math.round((1-p.product.price/(12*mp))*100);
+      if(save>=5) badge='<span style="float:inline-end;font-size:var(--fs-cap);color:var(--gold-lt);font-weight:600;">'
+        +_esc(L({ru:'выгоднее на {n}%',uk:'вигідніше на {n}%',en:'save {n}%',es:'ahorra un {n}%',de:'{n}% sparen',pt:'poupe {n}%',fr:'économisez {n} %',pl:'oszczędzasz {n}%',it:'risparmi il {n}%',he:'חיסכון של {n}%',ja:'{n}%お得',ko:'{n}% 절약'}).replace('{n}',save))+'</span>';
+    }
+    return '<div class="iap-plan'+(i===sel?' sel':'')+'" data-i="'+i+'" onclick="_iapPick('+i+')">'
+      +'<div class="iap-plan-title">'+badge+_esc(_iapPlanTitle(k))+'</div>'
+      +'<div class="iap-plan-line">'+_esc(_iapPlanLine(p,k,mp))+'</div></div>';
+  }).join('');
+  box.style.display='block';
+  _iapPick(sel);
+}
+function _iapPick(i){
+  window._iapSelIdx=i;
+  var box=document.getElementById('iap-plans');
+  if(box) Array.prototype.forEach.call(box.querySelectorAll('.iap-plan'),function(el){ el.classList.toggle('sel',Number(el.getAttribute('data-i'))===i); });
+  var p=(window._iapPkgs||[])[i], lab=document.getElementById('iap-btn-label');
+  if(p&&lab) lab.textContent=L({ru:'Продолжить',uk:'Продовжити',en:'Continue',es:'Continuar',de:'Weiter',pt:'Continuar',fr:'Continuer',pl:'Dalej',it:'Continua',he:'המשך',ja:'続ける',ko:'계속'})+' — '+((p.product&&p.product.priceString)||'');
+}
 function _iapPriceFill(){
   var box=document.getElementById('iap-price'),lab=document.getElementById('iap-btn-label');
   if(!box||!window.iapGetPackage)return;
   var btn=document.getElementById('iap-btn'), err=document.getElementById('iap-error');
+  // Несколько тарифов в Offering → экран выбора (месяц / год / навсегда). Один — прежний путь ниже.
+  if(window.iapGetPackages){
+    window.iapGetPackages().then(function(list){
+      list=(list||[]).filter(function(p){ return p&&p.product&&p.product.priceString; });
+      if(list.length<2) return;
+      if(btn)btn.disabled=false; if(err)err.style.display='none';
+      box.style.display='none';
+      _iapPlansFill(list);
+    }).catch(function(){});
+  }
   window.iapGetPackage().then(function(pkg){
+    if(window._iapPkgs&&window._iapPkgs.length>1) return;   // уже нарисован выбор тарифа
     var ps=pkg&&pkg.product&&pkg.product.priceString;
     if(!ps){
       // Стор не отдал продукт (не заведён в Offering или висит в Missing Metadata). Раньше в
@@ -8682,7 +8767,7 @@ async function _iapBuy(){
   if(!btn||btn.disabled)return;
   btn.disabled=true;if(err)err.style.display='none';
   try{
-    var pkg=await window.iapGetPackage();
+    var pkg=(window._iapPkgs&&window._iapPkgs.length>1)?window._iapPkgs[window._iapSelIdx||0]:await window.iapGetPackage();   // выбранный тариф
     if(!pkg){ if(err)err.style.display='block'; btn.disabled=false; return; }
     var res=await window.iapPurchase(pkg);
     if(res&&res.ok){

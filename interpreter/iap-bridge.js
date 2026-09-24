@@ -78,6 +78,19 @@
     } catch(e){ console.warn('[iap] getOfferings failed', e); return null; }
   };
 
+  // ВСЕ варианты из текущего Offering: месяц, год, навсегда (линейка 2026-09-24: €14,99 / €99,99 /
+  // €199,99). Порядок и подписи решает экран; здесь — только то, что реально заведено в сторе и
+  // RevenueCat. Пока год и «навсегда» не заведены, вернётся один месячный — экран это переживёт.
+  window.iapGetPackages = async function(){
+    var p = rc(); if(!p) return [];
+    var ok = await ensureConfigured(); if(!ok) return [];
+    try {
+      var offerings = await p.getOfferings();
+      var cur = offerings && offerings.current;
+      return (cur && cur.availablePackages) || [];
+    } catch(e){ console.warn('[iap] getOfferings failed', e); return []; }
+  };
+
   // Покупка. Возвращает {ok:true} при успехе (в т.ч. если пользователь уже был подписан),
   // {ok:false, cancelled:true} при отмене пользователем, {ok:false, error} при сбое.
   window.iapPurchase = async function(pkg){
