@@ -385,6 +385,34 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 @media (max-width:599px){
   :root{ --fs-cap:14px; --fs-body:17px; --fs-title:20px; --fs-hero:26px; }
 }
+/* ══ Телефонный режим кабинета (2026-09-25, docs/CABINET-PUSH-MOBILE-PLAN.md) ══
+   Было: список клиентов — выезжающая шторка, шапка из десятка кнопок в несколько рядов, вкладки
+   карточки переносились, переписка — окошко в 50% экрана. Стало: список ⇄ карточка во весь экран
+   (body.ph-detail), шапка — одна строка с прокруткой вбок, вкладки — лента, «Переписка» первой,
+   переписка растягивается на всю высоту, поле ввода внизу (body.ph-chat). */
+.ph-back{display:none;}
+@media(max-width:768px){
+  #app.visible{height:100dvh;}
+  .topbar{padding:0 8px;gap:8px;}
+  .topbar-logo{display:none;}
+  .topbar-actions{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;max-width:100%;}
+  .topbar-actions::-webkit-scrollbar{display:none;}
+  .topbtn{flex:0 0 auto;white-space:nowrap;}
+  #mobileMenuBtn{display:none !important;}
+  .sidebar{position:static !important;transform:none !important;width:100% !important;flex:1 1 auto;border-right:none;}
+  .content{display:none;}
+  body.ph-detail .sidebar{display:none;}
+  body.ph-detail .content{display:flex;}
+  .ph-back{display:block;width:100%;text-align:left;padding:10px 14px;border:none;border-bottom:1px solid #e0e0e0;background:#fafafa;font-size:var(--fs-body);font-weight:600;cursor:pointer;color:#1a1a1a;}
+  .client-header{padding:10px 14px !important;}
+  .tabs{flex-wrap:nowrap;padding:0 4px !important;}
+  .tab{flex:0 0 auto;white-space:nowrap;}
+  .tabs .tab:last-child{order:-1;}   /* «Переписка» первой — только визуально, порядок в DOM не трогаем */
+  .tab-content{padding:12px !important;}
+  body.ph-chat #tabContent{display:flex;flex-direction:column;overflow:hidden;}
+  body.ph-chat #chatThreadBox{height:auto !important;flex:1 1 auto;min-height:120px;}
+}
+.tab.has-unread::after{content:' ●';color:#c0392b;}
 </style>
 </head>
 <body>
@@ -483,6 +511,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 
       <!-- Client Detail -->
       <div id="clientDetail" style="display:none;flex:1;display:none;flex-direction:column;overflow:hidden;">
+        <button type="button" class="ph-back" onclick="phBack()" id="phBackBtn">← Клиенты</button>
         <div class="client-header" id="clientHeaderEl"></div>
         <div class="tabs" id="tabsEl">
           <div class="tab active" onclick="switchTab('overview')" data-i18n="tab_overview">Обзор</div>
@@ -2330,6 +2359,25 @@ async function selectClient(id){
   if(selectedId!==id) return;                  // успели переключиться на другого — не рисуем
   renderClientDetail();
   if(window.innerWidth<768) document.getElementById('sidebar').classList.remove('open');
+  if(_isPhone()){
+    document.body.classList.add('ph-detail');
+    const b=document.getElementById('phBackBtn'); if(b) b.textContent='← '+t('mobile_clients').replace(/^☰\s*/,'');
+    if(c && c.unread>0) switchTab('messages');
+  }
+  _msgTabDot();
+}
+function _isPhone(){ return window.matchMedia('(max-width:768px)').matches; }
+// Телефон: из карточки назад к списку.
+function phBack(){
+  stopChatPoll();
+  document.body.classList.remove('ph-detail','ph-chat');
+  selectedId=null; refreshList();
+}
+// Красная точка на вкладке «Переписка», если у открытого клиента есть непрочитанные.
+function _msgTabDot(){
+  const tabs=document.querySelectorAll('#tabsEl .tab'); const mt=tabs[tabs.length-1]; if(!mt) return;
+  const c=clients.find(x=>x.id===selectedId);
+  mt.classList.toggle('has-unread', !!(c && c.unread>0 && currentTab!=='messages'));
 }
 // Список грузит только шапку (без тяжёлого data); полное досье карточки тянем по требованию.
 async function hydrateClient(id){
@@ -2399,6 +2447,8 @@ function switchTab(tab){
   renderTabContent();
   if(tab==='messages') startChatPoll(); else stopChatPoll();   // живое подтягивание входящих только на вкладке чата
   if(tab==='messages') markRead(clients.find(x=>x.id===selectedId));   // открыл переписку — непрочитанные 0
+  document.body.classList.toggle('ph-chat', tab==='messages');
+  _msgTabDot();
 }
 
 function renderTabContent(){
@@ -3592,6 +3642,7 @@ async function pollUnread(){
     const sel = clients.find(x=>x.id===selectedId);
     if(sel && sel.unread>0 && currentTab==='messages' && document.visibilityState==='visible') markRead(sel);
     else if(changed) refreshList();
+    if(changed) _msgTabDot();
   }catch(_){}
 }
 function markRead(c){
