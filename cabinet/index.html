@@ -413,6 +413,29 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
   body.ph-chat #chatThreadBox{height:auto !important;flex:1 1 auto;min-height:120px;}
 }
 .tab.has-unread::after{content:' ●';color:#c0392b;}
+/* Переписка на телефоне — как в Telegram (владелец, живой iPhone 2026-09-25): шапка карточки и
+   вкладки съедали больше половины экрана, на ленту оставалась полоска. В режиме body.ph-chat прячем
+   шапку кабинета, карточку и вкладки; сверху тонкая строка «← имя 🌐 ✨ ⓘ», лента на весь экран,
+   снизу поле ввода — широкое, растёт с текстом, отправка круглой кнопкой. #app по высоте — видимая
+   часть экрана (visualViewport), поэтому с клавиатурой поле стоит над ней. */
+.ph-chat-head{display:none;}
+@media(max-width:768px){
+  body.ph-chat .topbar,body.ph-chat #phBackBtn,body.ph-chat .client-header,body.ph-chat .tabs,
+  body.ph-chat .cab-msg-head,body.ph-chat .cab-ai{display:none !important;}
+  body.ph-chat.ph-ai .cab-ai{display:block !important;order:3;max-height:45vh;overflow-y:auto;margin:0 !important;padding:8px;border-top:1px solid #ddd;}
+  body.ph-chat .ph-chat-head{display:flex;align-items:center;gap:4px;flex:0 0 auto;padding:calc(6px + env(safe-area-inset-top,0px)) 6px 6px;border-bottom:1px solid #ddd;background:#fafafa;}
+  .ph-chat-head button{flex:0 0 auto;min-width:40px;height:40px;border:none;background:none;font-size:20px;cursor:pointer;color:#1a1a1a;}
+  .ph-chat-name{flex:1;min-width:0;font-weight:700;font-size:var(--fs-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  body.ph-chat .tab-content{padding:0 !important;}
+  body.ph-chat #msgTrans{flex:0 0 auto;max-height:30vh;overflow-y:auto;margin:0 !important;}
+  body.ph-chat #chatThreadBox{border:none !important;padding:10px !important;background:#efefef !important;}
+  body.ph-chat .cab-compose{flex:0 0 auto;margin:0 !important;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));gap:4px !important;border-top:1px solid #ddd;background:#fff;order:4;}
+  body.ph-chat .cab-compose label,body.ph-chat #cabMicBtn{width:40px !important;height:44px !important;border:none !important;background:none !important;font-size:22px !important;}
+  body.ph-chat #chatCompose{min-height:44px;max-height:40vh;resize:none !important;font-size:17px !important;border-radius:20px !important;padding:10px 14px !important;}
+  body.ph-chat .cab-send{flex:0 0 44px;width:44px;height:44px;padding:0 !important;border-radius:50% !important;font-size:0 !important;}
+  body.ph-chat .cab-send::after{content:'➤';font-size:20px;}
+  body.ph-chat #chatComposeStatus{flex:0 0 auto;margin:0 8px 2px !important;order:5;}
+}
 </style>
 </head>
 <body>
@@ -2367,10 +2390,23 @@ async function selectClient(id){
   _msgTabDot();
 }
 function _isPhone(){ return window.matchMedia('(max-width:768px)').matches; }
+// Поле ввода растёт с текстом до 40% экрана, потом прокручивается само.
+function _cabGrow(ta){ if(!ta) return; ta.style.height='auto'; ta.style.height=Math.min(ta.scrollHeight, Math.round(window.innerHeight*0.4))+'px'; }
+// Телефон, переписка: высота кабинета = видимая часть экрана (без клавиатуры). В PWA на iPhone экран под
+// клавиатуру не сжимается — сжимается только visualViewport, по нему и подгоняем; лента — вниз.
+function _phFit(){
+  const app=document.getElementById('app'); if(!app) return;
+  if(!(_isPhone() && document.body.classList.contains('ph-chat'))){ app.style.height=''; return; }
+  const vv=window.visualViewport;
+  app.style.height=(vv?vv.height:window.innerHeight)+'px';
+  if(vv && vv.offsetTop) window.scrollTo(0,0);
+  const box=document.getElementById('chatThreadBox'); if(box) box.scrollTop=box.scrollHeight;
+}
+if(window.visualViewport){ visualViewport.addEventListener('resize',_phFit); visualViewport.addEventListener('scroll',_phFit); }
 // Телефон: из карточки назад к списку.
 function phBack(){
   stopChatPoll();
-  document.body.classList.remove('ph-detail','ph-chat');
+  document.body.classList.remove('ph-detail','ph-chat','ph-ai'); _phFit();
   selectedId=null; refreshList();
 }
 // Красная точка на вкладке «Переписка», если у открытого клиента есть непрочитанные.
@@ -2448,6 +2484,8 @@ function switchTab(tab){
   if(tab==='messages') startChatPoll(); else stopChatPoll();   // живое подтягивание входящих только на вкладке чата
   if(tab==='messages') markRead(clients.find(x=>x.id===selectedId));   // открыл переписку — непрочитанные 0
   document.body.classList.toggle('ph-chat', tab==='messages');
+  if(tab!=='messages') document.body.classList.remove('ph-ai');
+  setTimeout(_phFit,0);
   _msgTabDot();
 }
 
@@ -2536,7 +2574,14 @@ function renderMessages(c){
   const bubbles = chatBubblesHtml(msgs);
 
   return `
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+    <div class="ph-chat-head">
+      <button type="button" onclick="phBack()" aria-label="Back">←</button>
+      <div class="ph-chat-name">${esc(c.name||'')}</div>
+      <button type="button" onclick="translateIncoming()" title="${t('msg_translate_in')}">🌐</button>
+      <button type="button" onclick="document.body.classList.toggle('ph-ai')" title="${t('msg_tools')}">✨</button>
+      <button type="button" onclick="switchTab('overview')" title="${t('tab_overview')}">ⓘ</button>
+    </div>
+    <div class="cab-msg-head" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
       <div class="section-title" style="margin:0;">${t('tab_messages')}</div>
       <button class="topbtn" onclick="translateIncoming()" style="font-size:var(--fs-cap);">${t('msg_translate_in')}</button>
     </div>
@@ -2548,18 +2593,19 @@ function renderMessages(c){
     </div>
 
     <!-- Поле ввода СНИЗУ -->
-    <div style="display:flex;gap:8px;margin-top:10px;align-items:flex-end;">
+    <div class="cab-compose" style="display:flex;gap:8px;margin-top:10px;align-items:flex-end;">
       <label title="Фото" style="flex:0 0 auto;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid #ccc;background:#fff;cursor:pointer;font-size:var(--fs-title);">📷<input type="file" accept="image/*" onchange="cabPickPhoto(this)" style="display:none;"></label>
       <button type="button" onclick="cabToggleVoice(this)" id="cabMicBtn" title="Голос" style="flex:0 0 auto;width:40px;height:40px;border:1px solid #ccc;background:#fff;cursor:pointer;font-size:var(--fs-title);">🎤</button>
       <textarea id="chatCompose" rows="2" maxlength="4000" placeholder="${t('msg_compose_ph')}"
         style="flex:1;border:1px solid #ccc;padding:9px 12px;font-size:var(--fs-body);font-family:inherit;resize:vertical;"
-        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatFromCompose();}"></textarea>
-      <button type="button" onclick="sendChatFromCompose()" style="background:#2e7d32;color:#fff;border:none;padding:10px 20px;cursor:pointer;font-size:var(--fs-body);white-space:nowrap;">${t('msg_send_chat')}</button>
+        oninput="_cabGrow(this)"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!_isPhone()){event.preventDefault();sendChatFromCompose();}"></textarea>
+      <button type="button" class="cab-send" onclick="sendChatFromCompose()" style="background:#2e7d32;color:#fff;border:none;padding:10px 20px;cursor:pointer;font-size:var(--fs-body);white-space:nowrap;">${t('msg_send_chat')}</button>
     </div>
     <div id="chatComposeStatus" style="font-size:var(--fs-cap);color:#888;margin-top:4px;margin-bottom:16px;"></div>
 
     <!-- ИИ-черновик и Telegram — в раскрывашке -->
-    <details style="margin-bottom:16px;">
+    <details class="cab-ai" style="margin-bottom:16px;">
       <summary style="cursor:pointer;font-size:var(--fs-cap);font-weight:600;color:#666;text-transform:uppercase;">${t('msg_tools')}</summary>
       <div style="border:1px solid #ddd;padding:16px;margin-top:10px;">
         <div style="font-size:var(--fs-cap);font-weight:600;color:#666;margin-bottom:10px;text-transform:uppercase;">${t('msg_ai_title')}</div>
