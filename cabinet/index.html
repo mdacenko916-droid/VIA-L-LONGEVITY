@@ -367,6 +367,9 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 .badge{display:inline-block;padding:1px 7px;font-size:var(--fs-cap);font-weight:700;border:1px solid transparent;vertical-align:middle;}
 .badge-active{background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7;}
 .badge-new{background:#e3f2fd;color:#1565c0;border-color:#90caf9;}
+/* Непрочитанные сообщения клиента (2026-09-25, docs/CABINET-PUSH-MOBILE-PLAN.md) */
+.unread-pill{display:inline-block;background:#c0392b;color:#fff;border-radius:10px;padding:0 7px;font-size:var(--fs-cap);font-weight:700;margin-left:2px;vertical-align:middle;}
+#unreadTotal{cursor:pointer;color:#c0392b;font-weight:700;margin-left:8px;white-space:nowrap;}
 .badge-pause{background:#fff3e0;color:#e65100;border-color:#ffcc80;}
 .badge-done{background:#f5f5f5;color:#757575;border-color:#e0e0e0;}
 /* Вкладки: горизонтальный скролл на мобайле */
@@ -413,6 +416,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
       <button class="topbtn" id="viewBillingBtn" onclick="switchView('billing')" style="display:none;" data-i18n="nav_billing">€ Бухгалтерия</button>
       <button class="topbtn" id="viewMyBillBtn" onclick="switchView('mybill')" style="display:none;" data-i18n="nav_mybill">€ Мои расчёты</button>
       <button class="topbtn" id="myPassBtn" onclick="changeMyPassword()" style="display:none;" data-i18n="mp_btn">Сменить пароль</button>
+      <button class="topbtn" id="pushBtn" onclick="togglePush()">🔔 Уведомления</button>
       <button class="topbtn" id="myLinkBtn" onclick="openMyLink()" data-i18n="nav_mylink">🔗 Моя ссылка</button>
       <button class="topbtn" id="showcaseBtn" onclick="openShowcase()" data-i18n="nav_showcase">🪟 Моя витрина</button>
       <button class="topbtn primary" onclick="openAddClient()" data-i18n="btn_new_client">+ Новый клиент</button>
@@ -959,6 +963,14 @@ const STATUS_BADGE  = {active:'active',new:'new',pause:'pause',done:'done'};
 // Словарь по ключам (key-major), 12 языков. t() берёт uiLang, фолбэк на ru.
 // Статичные элементы помечены data-i18n / data-i18n-ph / data-i18n-title.
 const T = {
+  unread_total:{ru:"новых: {n}",uk:"нових: {n}",en:"new: {n}",es:"nuevos: {n}",de:"neu: {n}",pt:"novas: {n}",fr:"nouveaux : {n}",pl:"nowych: {n}",it:"nuovi: {n}",he:"חדשות: {n}",ja:"新着: {n}",ko:"새 메시지: {n}"},
+  push_btn:{ru:"🔔 Уведомления",uk:"🔔 Сповіщення",en:"🔔 Notifications",es:"🔔 Notificaciones",de:"🔔 Benachrichtigungen",pt:"🔔 Notificações",fr:"🔔 Notifications",pl:"🔔 Powiadomienia",it:"🔔 Notifiche",he:"🔔 התראות",ja:"🔔 通知",ko:"🔔 알림"},
+  push_btn_on:{ru:"🔔 Уведомления вкл.",uk:"🔔 Сповіщення увімк.",en:"🔔 Notifications on",es:"🔔 Notificaciones activadas",de:"🔔 Benachrichtigungen an",pt:"🔔 Notificações ativas",fr:"🔔 Notifications activées",pl:"🔔 Powiadomienia wł.",it:"🔔 Notifiche attive",he:"🔔 התראות פעילות",ja:"🔔 通知オン",ko:"🔔 알림 켜짐"},
+  push_on:{ru:"Готово: о новых сообщениях клиентов придёт уведомление.",uk:"Готово: про нові повідомлення клієнтів надійде сповіщення.",en:"Done: you'll get a notification when a client writes.",es:"Listo: recibirás una notificación cuando un cliente escriba.",de:"Fertig: Du wirst benachrichtigt, wenn ein Klient schreibt.",pt:"Pronto: você será notificado quando um cliente escrever.",fr:"C’est fait : vous serez averti quand un client écrit.",pl:"Gotowe: dostaniesz powiadomienie, gdy klient napisze.",it:"Fatto: riceverai una notifica quando un cliente scrive.",he:"בוצע: תקבלו התראה כשלקוח כותב.",ja:"完了：クライアントからメッセージが届くと通知されます。",ko:"완료: 고객이 메시지를 보내면 알림을 받습니다."},
+  push_off_q:{ru:"Выключить уведомления на этом устройстве?",uk:"Вимкнути сповіщення на цьому пристрої?",en:"Turn off notifications on this device?",es:"¿Desactivar las notificaciones en este dispositivo?",de:"Benachrichtigungen auf diesem Gerät ausschalten?",pt:"Desativar as notificações neste dispositivo?",fr:"Désactiver les notifications sur cet appareil ?",pl:"Wyłączyć powiadomienia na tym urządzeniu?",it:"Disattivare le notifiche su questo dispositivo?",he:"לכבות התראות במכשיר הזה?",ja:"この端末の通知をオフにしますか？",ko:"이 기기에서 알림을 끌까요?"},
+  push_denied:{ru:"Уведомления запрещены в настройках браузера или телефона — разрешите их для кабинета и нажмите ещё раз.",uk:"Сповіщення заборонені в налаштуваннях браузера чи телефона — дозвольте їх для кабінету й натисніть ще раз.",en:"Notifications are blocked in your browser or phone settings — allow them for the cabinet and tap again.",es:"Las notificaciones están bloqueadas en los ajustes del navegador o del teléfono: permítelas para el gabinete y vuelve a tocar.",de:"Benachrichtigungen sind in Browser- oder Telefoneinstellungen blockiert — erlaube sie für den Arbeitsbereich und tippe erneut.",pt:"As notificações estão bloqueadas nas definições do navegador ou do telefone — permita-as para o gabinete e toque novamente.",fr:"Les notifications sont bloquées dans les réglages du navigateur ou du téléphone — autorisez-les pour l’espace et touchez à nouveau.",pl:"Powiadomienia są zablokowane w ustawieniach przeglądarki lub telefonu — zezwól na nie i dotknij ponownie.",it:"Le notifiche sono bloccate nelle impostazioni del browser o del telefono: consentile e tocca di nuovo.",he:"ההתראות חסומות בהגדרות הדפדפן או הטלפון — אפשרו אותן ולחצו שוב.",ja:"ブラウザまたは電話の設定で通知がブロックされています。許可してからもう一度タップしてください。",ko:"브라우저 또는 휴대폰 설정에서 알림이 차단되어 있습니다. 허용한 뒤 다시 눌러 주세요."},
+  push_ios:{ru:"На iPhone уведомления приходят, только если кабинет добавлен на экран «Домой»: в Safari «Поделиться» → «На экран Домой», затем откройте кабинет оттуда и нажмите «Уведомления».",uk:"На iPhone сповіщення надходять, лише якщо кабінет додано на екран «Додому»: у Safari «Поділитися» → «На екран Додому», потім відкрийте кабінет звідти й натисніть «Сповіщення».",en:"On iPhone, notifications work only when the cabinet is added to the Home Screen: in Safari tap Share → Add to Home Screen, open the cabinet from there and tap Notifications.",es:"En iPhone, las notificaciones solo funcionan si el gabinete está en la pantalla de inicio: en Safari, Compartir → Añadir a pantalla de inicio; ábrelo desde ahí y toca Notificaciones.",de:"Auf dem iPhone kommen Benachrichtigungen nur, wenn der Arbeitsbereich auf dem Home-Bildschirm ist: in Safari Teilen → Zum Home-Bildschirm, dann von dort öffnen und Benachrichtigungen tippen.",pt:"No iPhone, as notificações só funcionam com o gabinete no ecrã principal: no Safari, Partilhar → Adicionar ao ecrã principal; abra-o daí e toque em Notificações.",fr:"Sur iPhone, les notifications ne fonctionnent que si l’espace est sur l’écran d’accueil : dans Safari, Partager → Sur l’écran d’accueil, ouvrez-le depuis là et touchez Notifications.",pl:"Na iPhonie powiadomienia działają tylko, gdy gabinet jest na ekranie początkowym: w Safari Udostępnij → Do ekranu początkowego, otwórz stamtąd i dotknij Powiadomienia.",it:"Su iPhone le notifiche funzionano solo se lo spazio è nella schermata Home: in Safari Condividi → Aggiungi alla schermata Home, aprilo da lì e tocca Notifiche.",he:"באייפון ההתראות עובדות רק אם המרחב נוסף למסך הבית: ב-Safari שיתוף → הוספה למסך הבית, פתחו משם ולחצו על התראות.",ja:"iPhoneでは、キャビネットをホーム画面に追加した場合のみ通知が届きます。Safariで「共有」→「ホーム画面に追加」、そこから開いて「通知」をタップしてください。",ko:"iPhone에서는 캐비닛을 홈 화면에 추가한 경우에만 알림이 옵니다. Safari에서 공유 → 홈 화면에 추가 후 거기서 열어 알림을 누르세요."},
+  push_unsupported:{ru:"Этот браузер не поддерживает уведомления.",uk:"Цей браузер не підтримує сповіщення.",en:"This browser doesn't support notifications.",es:"Este navegador no admite notificaciones.",de:"Dieser Browser unterstützt keine Benachrichtigungen.",pt:"Este navegador não suporta notificações.",fr:"Ce navigateur ne prend pas en charge les notifications.",pl:"Ta przeglądarka nie obsługuje powiadomień.",it:"Questo browser non supporta le notifiche.",he:"הדפדפן הזה לא תומך בהתראות.",ja:"このブラウザは通知に対応していません。",ko:"이 브라우저는 알림을 지원하지 않습니다."},
   gate_title:{ru:"Кабинет специалиста",uk:"Кабінет спеціаліста",en:"Specialist cabinet",es:"Gabinete del especialista",de:"Arbeitsbereich des Spezialisten",pt:"Gabinete do especialista",fr:"Espace du spécialiste",pl:"Gabinet specjalisty",it:"Studio dello specialista",he:"חדר העבודה של המומחה",ja:"専門家キャビネット",ko:"전문가 캐비닛"},
   gate_sub:{ru:"Логин специалиста и пароль. Владельцу — логин оставить пустым, ввести пароль администратора.",uk:"Логін спеціаліста та пароль. Власнику — залиште логін порожнім, введіть пароль адміністратора.",en:"Specialist login and password. Owner — leave the login empty and enter the admin password.",es:"Usuario y contraseña del especialista. Propietario — deje el usuario vacío e introduzca la contraseña de administrador.",de:"Login und Passwort des Spezialisten. Inhaber — Login leer lassen und Admin-Passwort eingeben.",pt:"Login e senha do especialista. Proprietário — deixe o login vazio e digite a senha de administrador.",fr:"Identifiant et mot de passe du spécialiste. Propriétaire — laissez l'identifiant vide et saisissez le mot de passe administrateur.",pl:"Login i hasło specjalisty. Właściciel — zostaw login pusty i wpisz hasło administratora.",it:"Login e password dello specialista. Proprietario — lascia vuoto il login e inserisci la password amministratore.",he:"שם משתמש וסיסמה של המומחה. בעלים — השאירו את שם המשתמש ריק והזינו את סיסמת המנהל.",ja:"専門家のログインとパスワード。オーナーはログインを空欄にし、管理者パスワードを入力してください。",ko:"전문가 로그인과 비밀번호. 소유자는 로그인을 비워 두고 관리자 비밀번호를 입력하세요."},
   gate_login_ph:{ru:"логин специалиста (пусто — владелец)",uk:"логін спеціаліста (порожньо — власник)",en:"specialist login (empty = owner)",es:"usuario del especialista (vacío = propietario)",de:"Spezialisten-Login (leer = Inhaber)",pt:"login do especialista (vazio = proprietário)",fr:"identifiant du spécialiste (vide = propriétaire)",pl:"login specjalisty (puste = właściciel)",it:"login dello specialista (vuoto = proprietario)",he:"שם משתמש של המומחה (ריק = בעלים)",ja:"専門家のログイン（空欄＝オーナー）",ko:"전문가 로그인 (비움 = 소유자)"},
@@ -1553,6 +1565,11 @@ async function enterApp(){
   ensureSpecialists();   // подпись «чей клиент» + фильтр по специалисту (владельцу)
   // show mobile menu btn on small screens
   if(window.innerWidth<768) document.getElementById('mobileMenuBtn').style.display='';
+  // Непрочитанные и пуш (2026-09-25): опрос раз в минуту, кнопка уведомлений, открытие из пуша.
+  _pushBtnState();
+  if(!window._unreadTimer) window._unreadTimer = setInterval(pollUnread, 60000);
+  if(_pushOn() && 'serviceWorker' in navigator && 'PushManager' in window && (!pwaIsIOS() || pwaStandalone())) _pushRegister().catch(()=>{});
+  _openFromPush(new URLSearchParams(location.search).get('open'));
 }
 function lockApp(){
   sessionStorage.removeItem(TOKEN_KEY);
@@ -1695,6 +1712,7 @@ function renderClientList(filter='', statusFilter='', sortBy='updated'){
   const q = filter.toLowerCase();
   const specFilter = document.getElementById('specFilter')?.value || '';
   let filtered = clients.filter(c=>{
+    if(window._onlyUnread && !(c.unread>0)) return false;
     if(statusFilter && (c.status||'active') !== statusFilter) return false;
     if(specFilter && String(c.specialist_id||'') !== specFilter) return false;
     if(!q) return true;
@@ -1719,6 +1737,7 @@ function renderClientList(filter='', statusFilter='', sortBy='updated'){
   filtered = filtered.slice().sort(cmp);
 
   if(countEl) countEl.textContent = t('list_total') + ' ' + filtered.length + (q||statusFilter ? ' '+t('list_filtered') : '');
+  _unreadHeader(countEl);
 
   if(!filtered.length){
     list.innerHTML=`<div class="empty-list">${t('list_empty')}<br>${t('list_empty_hint')}</div>`;
@@ -1740,7 +1759,7 @@ function renderClientList(filter='', statusFilter='', sortBy='updated'){
     const specName = (myRole==='owner' && c.specialist_id) ? (specNameById(c.specialist_id)||'') : '';
     const meta = [c.program||c.phase_label||'', c.age?(c.age+' л.'):'', specName].filter(Boolean).join(' · ');
     html += `<div class="client-item${selectedId===c.id?' active':''}" onclick="selectClient('${c.id}')">
-      <div class="client-name">${esc(c.name)} ${badge}${dataBadge(c)}${chanBadge(c)}</div>
+      <div class="client-name">${esc(c.name)} ${c.unread>0?`<span class="unread-pill">💬 ${c.unread}</span> `:''}${badge}${dataBadge(c)}${chanBadge(c)}</div>
       <div class="client-meta">${esc(meta)}${c.start_date?' · с '+c.start_date:''}</div>
     </div>`;
   }
@@ -2379,6 +2398,7 @@ function switchTab(tab){
   });
   renderTabContent();
   if(tab==='messages') startChatPoll(); else stopChatPoll();   // живое подтягивание входящих только на вкладке чата
+  if(tab==='messages') markRead(clients.find(x=>x.id===selectedId));   // открыл переписку — непрочитанные 0
 }
 
 function renderTabContent(){
@@ -3550,6 +3570,81 @@ function generatePDF(id){
 
 // ── UTILS ─────────────────────────────────────────────────
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// ── Непрочитанные сообщения клиентов и пуш специалисту (2026-09-25, docs/CABINET-PUSH-MOBILE-PLAN.md) ──
+const _BASE_TITLE = document.title;
+const CAB_VAPID = 'BFiZop7dAz1pRWZIelHGWM1Ypqri-EDP6x-GufGMzo8A9xumzHkX2HKGZ_A4Qd7VtTMOqB30Ni1MXxO5BVDmQCU';   // тот же ключ, что у EXPERT
+function _unreadHeader(countEl){
+  const tot = (clients||[]).reduce((a,c)=>a+(c.unread>0?c.unread:0),0);
+  document.title = (tot ? '('+tot+') ' : '') + _BASE_TITLE;
+  if(countEl && tot) countEl.insertAdjacentHTML('beforeend',
+    ` <span id="unreadTotal" onclick="toggleUnreadOnly()" title="">💬 ${t('unread_total').replace('{n}',tot)}${window._onlyUnread?' ✕':''}</span>`);
+  if(!tot && window._onlyUnread){ window._onlyUnread=false; }
+}
+function toggleUnreadOnly(){ window._onlyUnread=!window._onlyUnread; listPage=1; refreshList(); }
+// Опрос раз в минуту: лёгкий список, берём только unread — полные досье не трогаем.
+async function pollUnread(){
+  if(!getToken()) return;
+  try{
+    const j = await api('/cabinet/clients'); if(!j || !j.ok) return;
+    const map = {}; (j.clients||[]).forEach(x=>{ map[x.code]=x; });
+    let changed=false;
+    clients.forEach(c=>{ const x=map[c.code]; if(x && (x.unread||0)!==(c.unread||0)){ c.unread=x.unread||0; if(x.updated_at) c.updated_at=x.updated_at; changed=true; } });
+    const sel = clients.find(x=>x.id===selectedId);
+    if(sel && sel.unread>0 && currentTab==='messages' && document.visibilityState==='visible') markRead(sel);
+    else if(changed) refreshList();
+  }catch(_){}
+}
+function markRead(c){
+  if(!c || !(c.unread>0)) return;
+  c.unread=0; refreshList();
+  api('/cabinet/chat-read', { code:c.code }).catch(()=>{});
+}
+// Нажали на пуш: кабинет открывается сразу в переписке с этим клиентом.
+async function _openFromPush(code){
+  if(!code) return;
+  const c = clients.find(x=>x.code===code || x.id===code); if(!c) return;
+  await selectClient(c.id);
+  switchTab('messages');
+  try{ if(location.search.indexOf('open=')>=0) history.replaceState(null,'',location.pathname); }catch(_){}
+}
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.addEventListener('message', e=>{ const d=e.data||{}; if(d.type==='vial-open') _openFromPush(d.code); });
+}
+function _cabB64(s){
+  const pad='='.repeat((4-s.length%4)%4), b=atob((s+pad).replace(/-/g,'+').replace(/_/g,'/'));
+  const out=new Uint8Array(b.length); for(let i=0;i<b.length;i++) out[i]=b.charCodeAt(i); return out;
+}
+function _pushOn(){ try{ return localStorage.getItem('vial_cab_push')==='1'; }catch(_){ return false; } }
+function _pushBtnState(){ const b=document.getElementById('pushBtn'); if(b) b.textContent = t(_pushOn()?'push_btn_on':'push_btn'); }
+// Подписка + секрет для SW. Вызывается по кнопке и молча при каждом входе, если уведомления включены:
+// peek обновляется, а SW не остаётся без него, если браузер почистил кэш.
+async function _pushRegister(){
+  const reg = await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if(!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:_cabB64(CAB_VAPID) });
+  const j = await api('/cabinet/push-subscribe', { endpoint:sub.endpoint, lang:uiLang });
+  if(!j || !j.ok || !j.peek) throw new Error('subscribe_failed');
+  const w = reg.active || navigator.serviceWorker.controller;
+  if(w) w.postMessage({ type:'vial-push', peek:j.peek, api:API, lang:uiLang });
+  try{ localStorage.setItem('vial_cab_push','1'); }catch(_){}
+  _pushBtnState();
+}
+async function togglePush(){
+  const ios = pwaIsIOS();
+  if(ios && !pwaStandalone()){ alert(t('push_ios')); return; }
+  if(!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)){ alert(t('push_unsupported')); return; }
+  if(_pushOn()){
+    if(!confirm(t('push_off_q'))) return;
+    try{ const reg=await navigator.serviceWorker.ready; const sub=await reg.pushManager.getSubscription();
+      if(sub){ api('/cabinet/push-unsubscribe',{endpoint:sub.endpoint}).catch(()=>{}); await sub.unsubscribe(); } }catch(_){}
+    try{ localStorage.removeItem('vial_cab_push'); }catch(_){}
+    _pushBtnState(); return;
+  }
+  const perm = await Notification.requestPermission();
+  if(perm!=='granted'){ alert(t('push_denied')); return; }
+  try{ await _pushRegister(); alert(t('push_on')); }catch(_){ alert(t('push_unsupported')); }
+}
+
 function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); }
 
 // ── PWA INSTALL — кнопка установки (Android/десктоп) / подсказка (iOS) ──
