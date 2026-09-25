@@ -130,6 +130,19 @@ html[data-lang="he"]{direction:rtl}
 .chatrec{display:none;align-items:center;gap:8px;font-size:var(--fs-cap);color:#c0392b;margin:0 0 8px 6px}
 .chatrec .dot{width:9px;height:9px;border-radius:50%;background:#c0392b;animation:recpulse 1s infinite}
 @keyframes recpulse{50%{opacity:.25}}
+/* Переписка на весь экран, как в мессенджере (просьба владельца 2026-09-25): раньше она жила внутри
+   прокручиваемой страницы — заголовок уезжал, лента крутилась отдельно (прокрутка в прокрутке), поле ввода
+   пряталось. Теперь #chatView закреплён между верхом экрана и нижним меню (или клавиатурой — _chatFit),
+   лента растягивается и крутится одна, поле ввода всегда видно. */
+body.chat-open{overflow:hidden}
+#chatView.fixed{position:fixed;left:0;right:0;top:0;bottom:0;z-index:150;display:flex;flex-direction:column;
+  background:var(--bg,#efe7d6);padding:calc(8px + env(safe-area-inset-top,0px)) 12px 8px;max-width:480px;margin:0 auto;box-sizing:border-box}
+#chatView.fixed .catback{flex:0 0 auto;margin:0 0 6px}
+#chatView.fixed .card{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;margin:0;padding:12px 12px 10px}
+#chatView.fixed .card .eyebrow,#chatView.fixed #chatTitle{display:none}
+#chatView.fixed #chatWho{flex:0 0 auto;margin:0 0 8px;font-weight:600;color:var(--t1)}
+#chatView.fixed .chatlog{flex:1 1 auto;min-height:0;max-height:none;margin:0 0 10px;overscroll-behavior:contain}
+#chatView.fixed .chatbar,#chatView.fixed .chatrec,#chatView.fixed .formerr{flex:0 0 auto}
 .msg img{display:block;max-width:220px;width:100%;border-radius:10px;margin-top:2px}
 .msg audio{display:block;width:230px;max-width:100%;margin-top:2px}
 .chatrow textarea{flex:1;min-height:44px;max-height:120px;resize:vertical;border:1px solid var(--b1);border-radius:12px;padding:11px 12px;font-family:inherit;font-size:var(--fs-body);background:#fff;color:var(--t1)}
@@ -633,7 +646,7 @@ async function _loadThread(){
   }catch(e){}
 }
 
-function _chatOpen(){ const v=document.getElementById('chatView'); return !!v && v.style.display==='block'; }
+function _chatOpen(){ const v=document.getElementById('chatView'); return !!v && v.style.display!=='none' && v.classList.contains('fixed'); }
 
 function _renderChat(){
   const box=document.getElementById('chatLog'); if(!box) return;
@@ -645,20 +658,40 @@ function _renderChat(){
       const who = m.dir==='out' ? (link.name||tr('spec_prefix')) : tr('chat_you');
       // Фото — картинкой, голосовое — плеером (раньше были значки-ссылки, открывавшие файл в браузере).
       const media = m.url ? (m.type==='image'
-          ? '<a href="'+esc(m.url)+'" target="_blank" rel="noopener"><img src="'+esc(m.url)+'" alt="" loading="lazy"></a>'
+          ? '<a href="'+esc(m.url)+'" target="_blank" rel="noopener"><img src="'+esc(m.url)+'" alt="" onload="_chatStick()"></a>'
           : '<audio controls preload="metadata" src="'+esc(m.url)+'"></audio>') : '';
       const body = (m.text ? esc(m.text) : '') + media;
       return '<div class="msg '+(m.dir==='out'?'out':'in')+'"><span class="who">'+esc(who)+' · '+esc(m.date||'')+'</span>'+body+'</div>';
     }).join('');
   }
-  box.scrollTop=box.scrollHeight;
+  _chatStick();
   _seenSet(_outCount(_chatMsgs));   // открыл переписку — ответы прочитаны
   _renderBadge();
 }
 
+// Лента внизу — если человек не отмотал её вверх читать старое.
+let _chatAtEnd=true;
+function _chatStick(){ const b=document.getElementById('chatLog'); if(b&&_chatAtEnd) b.scrollTop=b.scrollHeight; }
+// Низ окна переписки: над нижним меню, а при открытой клавиатуре — прямо над ней. В WebView приложения
+// экран под клавиатуру не сжимается, сжимается только visualViewport — по нему и считаем.
+function _chatFit(){
+  const v=document.getElementById('chatView'); if(!v||!v.classList.contains('fixed')) return;
+  const nav=document.getElementById('bottombar')||document.querySelector('.bottom-nav');
+  const navh=nav?nav.offsetHeight:0, vv=window.visualViewport;
+  const kb=vv?Math.max(0,window.innerHeight-vv.height-vv.offsetTop):0;
+  v.style.bottom=(kb>80?kb:navh)+'px';
+  v.style.top=(vv?vv.offsetTop:0)+'px';
+  _chatStick();
+}
+if(window.visualViewport){ visualViewport.addEventListener('resize',_chatFit); visualViewport.addEventListener('scroll',_chatFit); }
+window.addEventListener('resize',_chatFit);
 function openChat(){
   document.getElementById('done').style.display='none';
-  document.getElementById('chatView').style.display='block';
+  const cv=document.getElementById('chatView'); cv.style.display='flex'; cv.classList.add('fixed');
+  document.body.classList.add('chat-open');
+  const lg=document.getElementById('chatLog');
+  if(lg&&!lg._scrollHook){ lg._scrollHook=1; lg.addEventListener('scroll',function(){ _chatAtEnd=(lg.scrollHeight-lg.scrollTop-lg.clientHeight)<40; }); }
+  _chatAtEnd=true; setTimeout(_chatFit,0);
   const link=window._link||{};
   const who=document.getElementById('chatWho'); if(who) who.textContent=link.name||'';
   const bk=document.getElementById('chatBackBtn'); if(bk) bk.textContent=tr('back');
@@ -670,7 +703,9 @@ function openChat(){
 
 function closeChat(){
   if(_chatTimer){ clearInterval(_chatTimer); _chatTimer=null; }
-  document.getElementById('chatView').style.display='none';
+  const cv=document.getElementById('chatView'); cv.style.display='none'; cv.classList.remove('fixed');
+  cv.style.top=''; cv.style.bottom='';
+  document.body.classList.remove('chat-open');
   document.getElementById('done').style.display='block';
   _renderBadge();
 }
