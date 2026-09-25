@@ -7515,7 +7515,7 @@ function _pmBeep(hz,ms,vol){
     if(!_pmAC){ var AC=window.AudioContext||window.webkitAudioContext; if(!AC)return; _pmAC=new AC(); }
     if(_pmAC.state==='suspended'){ try{_pmAC.resume();}catch(e){} }
     var t=_pmAC.currentTime, o=_pmAC.createOscillator(), g=_pmAC.createGain();
-    o.type='triangle'; o.frequency.value=hz;   // треугольник плотнее синуса: при той же громкости слышен лучше
+    o.type='square'; o.frequency.value=hz;   // прямоугольная волна: при том же пике громче треугольной (~+5 дБ) — для слуха 40+ (2026-09-25)
     g.gain.setValueAtTime(0.0001,t);
     g.gain.linearRampToValueAtTime(vol,t+0.006);
     g.gain.exponentialRampToValueAtTime(0.0001,t+ms/1000);
@@ -7541,19 +7541,19 @@ function _pmCountdown(n){
   if(n<=0){ _pmTimer(_PM_SEC); return; }
   _pmDialSet(n,'',1);
   _pmActions(_pmCap(L({ru:'Приготовьтесь…',uk:'Приготуйтеся…',en:'Get ready…',es:'Prepárate…',de:'Bereit machen…',pt:'Prepare-se…',fr:'Préparez-vous…',pl:'Przygotuj się…',it:'Preparati…',he:'התכוננו…',ja:'準備してください…',ko:'준비하세요…'})));
-  _pmBeep(660,90,.32); _pmFlash(false);   // отсчёт перед стартом — ниже и тише тиков (громкость ×3 — 2026-09-25)
+  _pmBeep(660,90,.5); _pmFlash(false);   // отсчёт перед стартом — ниже и тише тиков (громкость ×3 — 2026-09-25)
   _pmT=setTimeout(function(){_pmCountdown(n-1);},1000);
 }
 function _pmTimer(sec){
   var left=sec, unit=_pmUnitSec();
   _pmDialSet(left,unit,1);
   _pmActions(_pmCap(L({ru:'Считайте удары',uk:'Рахуйте удари',en:'Count the beats',es:'Cuenta los latidos',de:'Zähle die Schläge',pt:'Conte as batidas',fr:'Comptez les battements',pl:'Licz uderzenia',it:'Conta i battiti',he:'ספרו את הפעימות',ja:'拍動を数えてください',ko:'박동을 세세요'})));
-  _pmBeep(1000,100,.6); _pmFlash(true);     // «пошёл» — первый тик громче остальных
+  _pmBeep(1000,100,.85); _pmFlash(true);     // «пошёл» — первый тик громче остальных
   _pmT=setInterval(function(){
     left--;
     _pmDialSet(Math.max(left,0), unit, Math.max(left,0)/sec);   // штрихи гаснут к нулю
-    if(left>0){ _pmBeep(1000,60,.45); _pmFlash(false); return; }   // метроном: щелчок и вспышка в секунду; 1000 Гц — возрастная тугоухость бьёт по высоким
-    _pmBeep(988,130,.6); setTimeout(function(){_pmBeep(1319,240,.6);},140); _pmFlash(true); setTimeout(function(){_pmAudioSession('auto');},700);   // финал: две ноты вверх
+    if(left>0){ _pmBeep(1000,60,.7); _pmFlash(false); return; }   // метроном: щелчок и вспышка в секунду; 1000 Гц — возрастная тугоухость бьёт по высоким
+    _pmBeep(988,130,.85); setTimeout(function(){_pmBeep(1319,240,.85);},140); _pmFlash(true); setTimeout(function(){_pmAudioSession('auto');},700);   // финал: две ноты вверх
     _pmStop(); _pmAsk();
   },1000);
 }
