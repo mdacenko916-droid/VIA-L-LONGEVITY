@@ -6066,8 +6066,14 @@ async function sendEmail(env, to, subject, bodyHtml) {
           + `</div>`,
       }),
     });
+    // Отказ Brevo раньше проглатывался: письмо с кодом доступа или анкетой не уходило, и об этом
+    // не знал никто — а отказ по ключу/IP в журнал транзакций Brevo даже не попадает (2026-09-25).
+    if (!res.ok) {
+      let t = ''; try { t = (await res.clone().text()).slice(0, 300); } catch (_) {}
+      console.error('brevo: отправка отклонена', res.status, t, '→', String(to).replace(/^(.).*@/, '$1***@'));
+    }
     return res;
-  } catch (_) { return { ok: false }; }
+  } catch (e) { console.error('brevo: сеть', e && e.message); return { ok: false }; }
 }
 
 async function tgAnswerCallback(env, callbackQueryId, text, showAlert = false) {
