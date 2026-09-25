@@ -1404,6 +1404,7 @@ export default {
       // Чат клиент↔нутрициолог: чтение треда — GET (?code=). Ответ спеца переводится на язык клиента.
       if (path === '/expert/thread')     return handleExpertThread(request, env, corsHeaders, ctx);
       if (path === '/expert/intake')     return handleExpertIntake(request, env, corsHeaders);   // протокол специалиста → «Мои приёмы»
+      if (path === '/cabinet/push-peek') return handleCabinetPushPeek(request, env, corsHeaders);   // GET для SW кабинета: кто написал (2026-09-25)
       return new Response('Not found', { status: 404 });
     }
 
@@ -1453,6 +1454,9 @@ export default {
       if (path === '/cabinet/delete')      return handleCabinetDelete(request, env, corsHeaders);
       if (path === '/cabinet/ai-draft')    return handleCabinetAiDraft(request, env, corsHeaders);
       if (path === '/cabinet/tg-send')     return handleCabinetTgSend(request, env, corsHeaders);
+      if (path === '/cabinet/chat-read')   return handleCabinetChatRead(request, env, corsHeaders);        // непрочитанные → 0
+      if (path === '/cabinet/push-subscribe')   return handleCabinetPushSubscribe(request, env, corsHeaders);
+      if (path === '/cabinet/push-unsubscribe') return handleCabinetPushUnsubscribe(request, env, corsHeaders);
       if (path === '/cabinet/chat-send')   return handleCabinetChatSend(request, env, corsHeaders, ctx);   // ответ спеца в чат клиента (app)
       if (path === '/cabinet/translate')   return handleCabinetTranslate(request, env, corsHeaders);
       if (path === '/cabinet/leads')       return handleCabinetLeads(request, env, corsHeaders);
@@ -4229,7 +4233,7 @@ async function handleExpertMessage(request, env, corsHeaders, ctx){
   const murl  = String(body.url || '').slice(0, 500);
   if(!code || (!text && !(mtype && murl))) return jsonResponse({ ok:false, error:'missing_fields' }, corsHeaders, 400);
   if(!env.DB) return jsonResponse({ ok:false, error:'d1_missing' }, corsHeaders, 500);
-  const row = await env.DB.prepare('SELECT data FROM clients WHERE code=?').bind(code).first();
+  const row = await env.DB.prepare('SELECT data, specialist_id FROM clients WHERE code=?').bind(code).first();
   if(!row) return jsonResponse({ ok:false, error:'not_found' }, corsHeaders, 404);   // карточка есть только у оплаченного VIA-L EXPERT
   let d = {}; try{ d = JSON.parse(row.data || '{}'); }catch(_){}
   if(!Array.isArray(d.messages)) d.messages = [];
@@ -4237,14 +4241,18 @@ async function handleExpertMessage(request, env, corsHeaders, ctx){
   if(mtype && murl){ inMsg.type = mtype; inMsg.url = murl; }
   d.messages.push(inMsg);
   if(d.messages.length > 300) d.messages = d.messages.slice(-300);
-  await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?')
+  // unread +1 — счётчик «💬 N» в кабинете; обнуляется, когда специалист открыл переписку (/cabinet/chat-read).
+  await env.DB.prepare('UPDATE clients SET data=?, updated_at=?, unread=COALESCE(unread,0)+1 WHERE code=?')
     .bind(JSON.stringify(d), Date.now(), code).run();
+  // Пуш специалисту в кабинет (2026-09-25): у клиентов приложения нет Telegram-топика, и до этого
+  // специалист о сообщении не узнавал вовсе. Пуш без тела — надпись SW берёт в /cabinet/push-peek.
+  if(ctx && row.specialist_id) ctx.waitUntil(_specPush(env, row.specialist_id));
   // Пинг нутрициологу в его топик (он остаётся в Telegram как оператор) — если топик известен.
   if(ctx && env.EXPERT_DRAFTS){
     ctx.waitUntil((async()=>{
       try{
         const topicId = await env.EXPERT_DRAFTS.get('code_topic:'+code);
-        if(topicId) await careSend(env, env.NUTRITIONIST_GROUP_ID, '💬 Новое сообщение от клиента в приложении:\n' + text, { message_thread_id: Number(topicId) });
+        if(topicId) await careSend(env, env.NUTRITIONIST_GROUP_ID, '💬 Новое сообщение от клиента в приложении:\n' + (text || (mtype==='image' ? '📷 фото' : '🎤 голосовое')), { message_thread_id: Number(topicId) });
       }catch(_){}
     })());
   }
@@ -9913,7 +9921,7 @@ async function handleCabinetShowcaseSave(request, env, corsHeaders){
 // Лёгкий список: колонки-шапка + только нужные списку/календарю куски data через
 // json_extract (НЕ тянем тяжёлые anketa/messages/protocol). Чинит лимит ответа D1.
 const CABINET_LIST_COLS = `code,name,email,tg,phone,lang,product,program,tier,duration_weeks,price,format,
-  start_date,end_date,status,gender,age,phase,specialist_id,created_at,updated_at,
+  start_date,end_date,status,gender,age,phase,specialist_id,created_at,updated_at,unread,
   json_extract(data,'$.phase_label')         AS phase_label,
   json_extract(data,'$.schedule')            AS j_schedule,
   json_array_length(data,'$.biometrics')     AS bio_n,
@@ -9932,7 +9940,7 @@ function cabinetRowToLight(r){
   try { schedule = r.j_schedule ? JSON.parse(r.j_schedule) : []; } catch(_){}
   const bioN = r.bio_n || 0, bdN = r.bd_n || 0;
   return {
-    id: r.code, code:r.code, name:r.name, email:r.email, tg:r.tg, phone:r.phone, lang:r.lang,
+    id: r.code, code:r.code, name:r.name, email:r.email, tg:r.tg, phone:r.phone, lang:r.lang, unread: r.unread||0,
     product:r.product, program:r.program, tier:r.tier, duration_weeks:r.duration_weeks,
     price:r.price, format:r.format, start_date:r.start_date, end_date:r.end_date,
     status:r.status, gender:r.gender, age:r.age, phase:r.phase, phase_label:r.phase_label||'',
@@ -10170,6 +10178,66 @@ async function handleCabinetAiDraft(request, env, corsHeaders){
 // (VIA-L EXPERT app), а не только в Telegram. Пишет {dir:'out',source:'cabinet'} в data.messages
 // (оригинал на языке спеца — /expert/thread переведёт клиенту на чтение). Опц. зеркало в TG-топик.
 // См. tasks/TODO.md «Свой чат — ответ специалиста из кабинета», [[project_own_chat_reply_gap]].
+// ── Пуш специалисту о новом сообщении клиента (2026-09-25, docs/CABINET-PUSH-MOBILE-PLAN.md) ──
+// Подписки — D1 spec_push. Пуш без тела (как у EXPERT): на серверах Apple/Google ни слова о клиенте.
+async function _specPush(env, specId){
+  if(!env.DB || !env.VAPID_JWK) return;
+  let rows=[]; try{ rows=(await env.DB.prepare('SELECT endpoint, fails FROM spec_push WHERE spec_id=? LIMIT 20').bind(specId).all()).results||[]; }catch(_){ return; }
+  for(const r of rows){
+    const res = await _pushOne(env, r.endpoint);
+    try{
+      if(res==='gone') await env.DB.prepare('DELETE FROM spec_push WHERE endpoint=?').bind(r.endpoint).run();
+      else if(res==='ok'){ if(r.fails) await env.DB.prepare('UPDATE spec_push SET fails=0 WHERE endpoint=?').bind(r.endpoint).run(); }
+      else { const f=(r.fails||0)+1; if(f>=5) await env.DB.prepare('DELETE FROM spec_push WHERE endpoint=?').bind(r.endpoint).run();
+             else await env.DB.prepare('UPDATE spec_push SET fails=? WHERE endpoint=?').bind(f, r.endpoint).run(); }
+    }catch(_){}
+  }
+}
+// POST /cabinet/push-subscribe {endpoint, lang} → {ok, peek}. peek — секрет подписки для push-peek.
+async function handleCabinetPushSubscribe(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  let b={}; try{ b=await request.json(); }catch(_){}
+  const endpoint=String(b.endpoint||'').slice(0,1000);
+  if(!/^https:\/\//.test(endpoint)) return jsonResponse({ok:false,error:'bad_endpoint'}, corsHeaders, 400);
+  const peek=_b64u(crypto.getRandomValues(new Uint8Array(24)));
+  await env.DB.prepare('INSERT OR REPLACE INTO spec_push (endpoint, spec_id, peek, lang, created, fails) VALUES (?,?,?,?,?,0)')
+    .bind(endpoint, sess.id, peek, String(b.lang||'').slice(0,5), Date.now()).run();
+  return jsonResponse({ok:true, peek, vapid: env.VAPID_PUBLIC||''}, corsHeaders);
+}
+async function handleCabinetPushUnsubscribe(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  let b={}; try{ b=await request.json(); }catch(_){}
+  try{ await env.DB.prepare('DELETE FROM spec_push WHERE endpoint=? AND spec_id=?').bind(String(b.endpoint||''), sess.id).run(); }catch(_){}
+  return jsonResponse({ok:true}, corsHeaders);
+}
+// GET /cabinet/push-peek?t=<peek> — для service worker: кто написал последним и что прислал.
+// Только имя клиента, его код (чтобы открыть переписку) и вид сообщения — без данных о здоровье.
+async function handleCabinetPushPeek(request, env, corsHeaders){
+  const t=String(new URL(request.url).searchParams.get('t')||'');
+  if(!t || !env.DB) return jsonResponse({ok:false}, corsHeaders, 400);
+  const sub = await env.DB.prepare('SELECT spec_id, lang FROM spec_push WHERE peek=?').bind(t).first();
+  if(!sub) return jsonResponse({ok:false,error:'gone'}, corsHeaders, 404);
+  const last = await env.DB.prepare(
+    "SELECT code, name, json_extract(data,'$.messages[#-1].type') AS mtype FROM clients WHERE specialist_id=? AND COALESCE(unread,0)>0 ORDER BY updated_at DESC LIMIT 1"
+  ).bind(sub.spec_id).first();
+  const tot = await env.DB.prepare('SELECT COALESCE(SUM(unread),0) n FROM clients WHERE specialist_id=?').bind(sub.spec_id).first();
+  if(!last) return jsonResponse({ok:true, total:0, lang:sub.lang||''}, corsHeaders);
+  return jsonResponse({ok:true, total:(tot&&tot.n)||0, code:last.code, name:last.name||'', kind:last.mtype||'text', lang:sub.lang||''}, corsHeaders);
+}
+// POST /cabinet/chat-read {code} — специалист открыл переписку: непрочитанные обнуляются.
+async function handleCabinetChatRead(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  let b={}; try{ b=await request.json(); }catch(_){}
+  const code=String(b.code||'').trim();
+  if(!code) return jsonResponse({ok:false,error:'no_code'}, corsHeaders, 400);
+  if(!await cabinetOwns(env, sess, code)) return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
+  await env.DB.prepare('UPDATE clients SET unread=0 WHERE code=?').bind(code).run();
+  return jsonResponse({ok:true}, corsHeaders);
+}
+
 async function handleCabinetChatSend(request, env, corsHeaders, ctx){
   const sess = await cabinetSession(request, env);
   if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
