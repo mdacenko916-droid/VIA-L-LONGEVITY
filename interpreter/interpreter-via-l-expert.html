@@ -7522,19 +7522,19 @@ function _pmCountdown(n){
   if(n<=0){ _pmTimer(_PM_SEC); return; }
   _pmDialSet(n,'',1);
   _pmActions(_pmCap(L({ru:'Приготовьтесь…',uk:'Приготуйтеся…',en:'Get ready…',es:'Prepárate…',de:'Bereit machen…',pt:'Prepare-se…',fr:'Préparez-vous…',pl:'Przygotuj się…',it:'Preparati…',he:'התכוננו…',ja:'準備してください…',ko:'준비하세요…'})));
-  _pmBeep(620,70,.05);                    // отсчёт перед стартом — глуше и тише тиков
+  _pmBeep(620,70,.10);                    // отсчёт перед стартом — глуше и тише тиков
   _pmT=setTimeout(function(){_pmCountdown(n-1);},1000);
 }
 function _pmTimer(sec){
   var left=sec, unit=_pmUnitSec();
   _pmDialSet(left,unit,1);
   _pmActions(_pmCap(L({ru:'Считайте удары',uk:'Рахуйте удари',en:'Count the beats',es:'Cuenta los latidos',de:'Zähle die Schläge',pt:'Conte as batidas',fr:'Comptez les battements',pl:'Licz uderzenia',it:'Conta i battiti',he:'ספרו את הפעימות',ja:'拍動を数えてください',ko:'박동을 세세요'})));
-  _pmBeep(880,60,.07);                     // «пошёл» — первый тик громче остальных
+  _pmBeep(880,60,.14);                     // «пошёл» — первый тик громче остальных
   _pmT=setInterval(function(){
     left--;
     _pmDialSet(Math.max(left,0), unit, Math.max(left,0)/sec);   // штрихи гаснут к нулю
-    if(left>0){ _pmBeep(880,30,.05); return; }                  // метроном: щелчок в секунду
-    _pmBeep(988,90,.08); setTimeout(function(){_pmBeep(1319,160,.08);},110);   // финал: две ноты вверх
+    if(left>0){ _pmBeep(880,40,.11); return; }                  // метроном: щелчок в секунду (громкость ×2 по просьбе владельца 2026-09-25)
+    _pmBeep(988,90,.16); setTimeout(function(){_pmBeep(1319,160,.16);},110);   // финал: две ноты вверх
     _pmStop(); _pmAsk();
   },1000);
 }
