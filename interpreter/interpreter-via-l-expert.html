@@ -1642,6 +1642,16 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;}
 .pm-dial-c{position:relative;text-align:center;line-height:1;z-index:1;}
 .pm-dial-num{font-family:'Playfair Display',serif;font-size:50px;font-weight:500;color:var(--gold-lt);line-height:1;}
 .pm-dial-u{font-size:var(--fs-cap);letter-spacing:1px;color:var(--gold);margin-top:3px;}
+/* Световая пульсация круга таймера пульса (просьба владельца 2026-09-25): после 40 слух садится, щелчок
+   могут не услышать — секунда видна глазом. Вспышка — свечение вокруг круга и лёгкий толчок цифры;
+   на старте и финише — сильнее. Вибрацию нарочно не делаем: пальцы на пульсе, дрожь мешает считать. */
+.pm-dialwrap::after{content:'';position:absolute;inset:-4px;border-radius:50%;pointer-events:none;opacity:0;}
+.pm-dialwrap.pm-flash::after{animation:pmflash .45s ease-out;}
+.pm-dialwrap.pm-flash-strong::after{animation:pmflash2 .9s ease-out;}
+.pm-dialwrap.pm-flash .pm-dial-c,.pm-dialwrap.pm-flash-strong .pm-dial-c{animation:pmpop .32s ease-out;}
+@keyframes pmflash{0%{opacity:1;box-shadow:0 0 0 0 rgba(226,185,90,.65),0 0 30px 8px rgba(226,185,90,.55);}100%{opacity:0;box-shadow:0 0 0 16px rgba(226,185,90,0),0 0 30px 8px rgba(226,185,90,0);}}
+@keyframes pmflash2{0%{opacity:1;box-shadow:0 0 0 0 rgba(226,185,90,.9),0 0 50px 16px rgba(226,185,90,.8);}100%{opacity:0;box-shadow:0 0 0 30px rgba(226,185,90,0),0 0 50px 16px rgba(226,185,90,0);}}
+@keyframes pmpop{0%{transform:scale(1.14);}100%{transform:scale(1);}}
 /* Нижняя область: кнопка старта / подпись отсчёта / ввод ударов.
    Кнопки — штатные .btn.btn-primary (единый размер со всем приложением);
    ниже только гасим .btn{flex:1}, чтобы они вели себя предсказуемо в разных контейнерах. */
@@ -7505,7 +7515,7 @@ function _pmBeep(hz,ms,vol){
     if(!_pmAC){ var AC=window.AudioContext||window.webkitAudioContext; if(!AC)return; _pmAC=new AC(); }
     if(_pmAC.state==='suspended'){ try{_pmAC.resume();}catch(e){} }
     var t=_pmAC.currentTime, o=_pmAC.createOscillator(), g=_pmAC.createGain();
-    o.type='sine'; o.frequency.value=hz;
+    o.type='triangle'; o.frequency.value=hz;   // треугольник плотнее синуса: при той же громкости слышен лучше
     g.gain.setValueAtTime(0.0001,t);
     g.gain.linearRampToValueAtTime(vol,t+0.006);
     g.gain.exponentialRampToValueAtTime(0.0001,t+ms/1000);
@@ -7513,8 +7523,17 @@ function _pmBeep(hz,ms,vol){
     o.start(t); o.stop(t+ms/1000+0.03);
   }catch(e){}
 }
+// Режим воспроизведения на время замера: иначе iOS считает щелчки звуком интерфейса — их глушит
+// беззвучный режим, а кнопки громкости регулируют звонок, а не их. navigator.audioSession — новые iOS;
+// на старых его нет, и всё остаётся как было. На время замера музыка встаёт на паузу — это 15 секунд.
+function _pmAudioSession(t){ try{ if(navigator.audioSession) navigator.audioSession.type=t; }catch(e){} }
+function _pmFlash(strong){
+  var w=document.getElementById('pmDial'); if(!w) return;
+  w.classList.remove('pm-flash','pm-flash-strong'); void w.offsetWidth;   // перезапуск анимации
+  w.classList.add(strong?'pm-flash-strong':'pm-flash');
+}
 function _pmStart(){
-  _pmStop(); _pmBusy=true;
+  _pmStop(); _pmBusy=true; _pmAudioSession('playback');
   _pmTitle(t('pm_title'));   // сбрасываем заголовок после результата/ошибки
   _pmCountdown(3);
 }
@@ -7522,19 +7541,19 @@ function _pmCountdown(n){
   if(n<=0){ _pmTimer(_PM_SEC); return; }
   _pmDialSet(n,'',1);
   _pmActions(_pmCap(L({ru:'Приготовьтесь…',uk:'Приготуйтеся…',en:'Get ready…',es:'Prepárate…',de:'Bereit machen…',pt:'Prepare-se…',fr:'Préparez-vous…',pl:'Przygotuj się…',it:'Preparati…',he:'התכוננו…',ja:'準備してください…',ko:'준비하세요…'})));
-  _pmBeep(620,70,.10);                    // отсчёт перед стартом — глуше и тише тиков
+  _pmBeep(660,90,.32); _pmFlash(false);   // отсчёт перед стартом — ниже и тише тиков (громкость ×3 — 2026-09-25)
   _pmT=setTimeout(function(){_pmCountdown(n-1);},1000);
 }
 function _pmTimer(sec){
   var left=sec, unit=_pmUnitSec();
   _pmDialSet(left,unit,1);
   _pmActions(_pmCap(L({ru:'Считайте удары',uk:'Рахуйте удари',en:'Count the beats',es:'Cuenta los latidos',de:'Zähle die Schläge',pt:'Conte as batidas',fr:'Comptez les battements',pl:'Licz uderzenia',it:'Conta i battiti',he:'ספרו את הפעימות',ja:'拍動を数えてください',ko:'박동을 세세요'})));
-  _pmBeep(880,60,.14);                     // «пошёл» — первый тик громче остальных
+  _pmBeep(1000,100,.6); _pmFlash(true);     // «пошёл» — первый тик громче остальных
   _pmT=setInterval(function(){
     left--;
     _pmDialSet(Math.max(left,0), unit, Math.max(left,0)/sec);   // штрихи гаснут к нулю
-    if(left>0){ _pmBeep(880,40,.11); return; }                  // метроном: щелчок в секунду (громкость ×2 по просьбе владельца 2026-09-25)
-    _pmBeep(988,90,.16); setTimeout(function(){_pmBeep(1319,160,.16);},110);   // финал: две ноты вверх
+    if(left>0){ _pmBeep(1000,60,.45); _pmFlash(false); return; }   // метроном: щелчок и вспышка в секунду; 1000 Гц — возрастная тугоухость бьёт по высоким
+    _pmBeep(988,130,.6); setTimeout(function(){_pmBeep(1319,240,.6);},140); _pmFlash(true); setTimeout(function(){_pmAudioSession('auto');},700);   // финал: две ноты вверх
     _pmStop(); _pmAsk();
   },1000);
 }
