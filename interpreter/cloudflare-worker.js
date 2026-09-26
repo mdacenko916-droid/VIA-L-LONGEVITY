@@ -4151,7 +4151,7 @@ async function handleChatUpload(request, env, corsHeaders){
   if(buf.byteLength > 12*1024*1024) return jsonResponse({ok:false,error:'too_large'}, corsHeaders, 413);
   const ext = ct.includes('png')?'png':ct.includes('webp')?'webp':ct.includes('gif')?'gif'
             : (ct.includes('mp4')||ct.includes('m4a'))?'m4a':(ct.includes('mpeg')||ct.includes('mp3'))?'mp3'
-            : (ct.includes('ogg'))?'ogg':(ct.includes('webm'))?'webm':(kind==='audio'?'webm':'jpg');
+            : (ct.includes('ogg'))?'ogg':(ct.includes('webm'))?'webm':(ct.includes('wav'))?'wav':(kind==='audio'?'webm':'jpg');
   const key = 'chat/'+row.code+'/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;
   await env.ASSETS.put(key, buf, { httpMetadata:{ contentType: ct } });
   return jsonResponse({ ok:true, url: CHAT_PUBLIC_BASE + '/' + key, type: kind }, corsHeaders);

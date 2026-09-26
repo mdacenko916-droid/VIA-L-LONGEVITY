@@ -785,16 +785,56 @@ function _recShow(on){
     if(sec>=120 && _rec && _rec.state==='recording') _rec.stop(); };   // потолок 2 минуты
   draw(); _recTick=setInterval(draw,500);
 }
+// Запись в WAV через Web Audio (16 кГц, моно, 16 бит) — для устройств, которые не умеют писать audio/mp4
+// (Android). Их webm/opus iPhone в браузере не проигрывает: живой случай 2026-09-26 — голосовое клиента с
+// Android у специалиста на iPhone крутило значок загрузки вечно. WAV проигрывают все. ~1,9 МБ в минуту.
+function _wavRecorder(stream){
+  const AC=window.AudioContext||window.webkitAudioContext; const ctx=new AC();
+  const src=ctx.createMediaStreamSource(stream), proc=ctx.createScriptProcessor(4096,1,1), chunks=[];
+  proc.onaudioprocess=function(e){ chunks.push(new Float32Array(e.inputBuffer.getChannelData(0))); };
+  src.connect(proc); proc.connect(ctx.destination);
+  return { stop:function(){ try{ proc.disconnect(); src.disconnect(); }catch(_){} const r=ctx.sampleRate; try{ ctx.close(); }catch(_){} return _encodeWav(chunks, r, 16000); } };
+}
+function _encodeWav(chunks, inRate, outRate){
+  let len=0; chunks.forEach(function(c){ len+=c.length; });
+  const all=new Float32Array(len); let o=0; chunks.forEach(function(c){ all.set(c,o); o+=c.length; });
+  const ratio=inRate/outRate, n=Math.floor(len/ratio), buf=new ArrayBuffer(44+n*2), v=new DataView(buf);
+  const w=function(p,s){ for(let i=0;i<s.length;i++) v.setUint8(p+i,s.charCodeAt(i)); };
+  w(0,'RIFF'); v.setUint32(4,36+n*2,true); w(8,'WAVE'); w(12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true);
+  v.setUint16(22,1,true); v.setUint32(24,outRate,true); v.setUint32(28,outRate*2,true); v.setUint16(32,2,true);
+  v.setUint16(34,16,true); w(36,'data'); v.setUint32(40,n*2,true);
+  for(let i=0;i<n;i++){   // понижение частоты усреднением — без хрипа от простого прореживания
+    const a=Math.floor(i*ratio), b=Math.min(len,Math.floor((i+1)*ratio)); let s=0;
+    for(let j=a;j<b;j++) s+=all[j]; s=Math.max(-1,Math.min(1,s/((b-a)||1)));
+    v.setInt16(44+i*2, s<0?s*0x8000:s*0x7FFF, true);
+  }
+  return new Blob([buf],{type:'audio/wav'});
+}
+function _canRecMp4(){ try{ return !!(window.MediaRecorder&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported('audio/mp4')); }catch(_){ return false; } }
 async function toggleVoice(){
   if(_rec && _rec.state==='recording'){ _rec.stop(); return; }
   const err=document.getElementById('chaterr'); err.classList.remove('show');
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!(window.MediaRecorder||window.AudioContext||window.webkitAudioContext)){
     err.textContent=tr('chat_mic_denied'); err.classList.add('show'); return;
   }
   let stream=null;
   try{ stream=await navigator.mediaDevices.getUserMedia({audio:true}); }
   catch(e){ err.textContent=tr('chat_mic_denied'); err.classList.add('show'); return; }
-  // iPhone пишет AAC (audio/mp4), Android — webm; сервер понимает оба.
+  // Android (нет записи в audio/mp4) — WAV: его webm iPhone не проигрывает. Объект с тем же state/stop,
+  // что у MediaRecorder, чтобы остальная логика (кнопка, таймер, потолок 2 минуты) не менялась.
+  if(!_canRecMp4()){
+    const wr=_wavRecorder(stream);
+    _rec={ state:'recording', stop:function(){
+      if(this.state!=='recording') return; this.state='inactive';
+      const blob=wr.stop(), long=Date.now()-_recT0;
+      try{ stream.getTracks().forEach(t=>t.stop()); }catch(_){}
+      _rec=null; _recShow(false); _chatSync();
+      if(long<700||blob.size<3000) return;
+      _uploadSend(blob,'audio');
+    } };
+    _recT0=Date.now(); _recShow(true); _chatSync(); return;
+  }
+  // iPhone пишет AAC (audio/mp4) — компактно и проигрывается везде.
   const pick=['audio/mp4','audio/webm;codecs=opus','audio/webm'].find(t=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t))||'';
   _recChunks=[]; _rec = pick ? new MediaRecorder(stream,{mimeType:pick}) : new MediaRecorder(stream);
   _rec.ondataavailable=e=>{ if(e.data&&e.data.size) _recChunks.push(e.data); };
