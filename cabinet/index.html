@@ -413,6 +413,19 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
   body.ph-chat #chatThreadBox{height:auto !important;flex:1 1 auto;min-height:120px;}
 }
 .tab.has-unread::after{content:' ●';color:#c0392b;}
+/* Читалка разбора (2026-09-26): на телефоне весь экран, на компьютере — окно по центру. */
+#bdReader{display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.35);}
+#bdReader.open{display:flex;justify-content:center;align-items:stretch;}
+#bdReader .bdr-head{position:sticky;top:0;display:flex;align-items:center;gap:6px;padding:calc(6px + env(safe-area-inset-top,0px)) 8px 6px;background:#fafafa;border-bottom:1px solid #ddd;}
+#bdReader .bdr-head button{min-width:44px;height:44px;border:none;background:none;font-size:22px;cursor:pointer;color:#1a1a1a;}
+#bdReader .bdr-title{flex:1;min-width:0;font-weight:700;font-size:var(--fs-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#bdReader .bdr-body{padding:14px 18px calc(24px + env(safe-area-inset-bottom,0px));font-size:17px;line-height:1.6;color:#1a1a1a;overflow-wrap:anywhere;}
+#bdReader > *{background:#fff;}
+#bdReader.open::before{content:'';}
+#bdReader{overflow:hidden;}
+#bdReader.open{flex-direction:column;align-items:center;}
+#bdReader .bdr-head,#bdReader .bdr-body{width:100%;max-width:760px;box-sizing:border-box;}
+#bdReader .bdr-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 /* Переписка на телефоне — как в Telegram (владелец, живой iPhone 2026-09-25): шапка карточки и
    вкладки съедали больше половины экрана, на ленту оставалась полоска. В режиме body.ph-chat прячем
    шапку кабинета, карточку и вкладки; сверху тонкая строка «← имя 🌐 ✨ ⓘ», лента на весь экран,
@@ -2872,11 +2885,11 @@ function renderBreakdowns(c){
     </tr>`;
     const m = b.metrics||{};
     const mLine = [m.hrv?'HRV '+m.hrv:'', m.rhr?t('bio_rhr')+' '+m.rhr:'', m.energy?t('bd_energy')+' '+m.energy:'', m.device?'· '+m.device:''].filter(Boolean).join(' · ');
+    // Разбор — в читалке на весь экран (владелец 2026-09-26): внутри строки таблицы текст переносился
+    // по ширине таблицы, а не экрана, и на телефоне уезжал вбок, да ещё сырым — с ** и [[D]].
     const textRow = (isIp && b.text) ? `<tr><td colspan="6" style="padding:0 12px 12px;border-bottom:1px solid var(--b1);">
-      <details>
-        <summary style="cursor:pointer;font-size:var(--fs-cap);color:#1565c0;">${t('bd_show')}${mLine?' · '+esc(mLine):''}</summary>
-        <div style="white-space:pre-wrap;font-size:var(--fs-cap);line-height:1.6;background:#f8f8f8;border:1px solid #ddd;padding:10px 12px;margin-top:6px;">${esc(b.text)}</div>
-      </details></td></tr>` : '';
+      <button type="button" onclick="openBdReader(${i})" style="background:none;border:none;padding:4px 0;cursor:pointer;font-size:var(--fs-cap);color:#1565c0;text-align:left;font-family:inherit;">📄 ${t('bd_show')}${mLine?' · '+esc(mLine):''}</button>
+      </td></tr>` : '';
     return main + textRow;
   }).join('');
   return `
@@ -2888,6 +2901,30 @@ function renderBreakdowns(c){
     </table>
     <button class="add-row-btn" onclick="addBdRow()">${t('bd_add')}</button>`;
 }
+// ── Читалка разбора: одним блоком на весь экран ──
+// Текст разбора приходит в разметке модели: **жирный**, «• пункты», «□ дело», служебные [[D]]/[[S]].
+function _bdFormat(text){
+  const lines = esc(String(text||'')).replace(/\[\[[A-Z]{1,3}\]\]/g,'').split(/\n/);
+  return lines.map(l=>{
+    const tr = l.trim();
+    if(!tr) return '<div style="height:10px;"></div>';
+    let h = tr.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/^□\s*/,'☐ ').replace(/^[-*]\s+/,'• ');
+    const head = /^<b>[^<]+<\/b>:?$/.test(h);                         // строка целиком жирная — подзаголовок
+    return '<div style="'+(head?'margin:14px 0 4px;font-size:1.05em;':'margin:0 0 4px;')+(/^(•|☐)/.test(h)?'padding-left:1.1em;text-indent:-1.1em;':'')+'">'+h+'</div>';
+  }).join('');
+}
+function openBdReader(i){
+  const c=clients.find(x=>x.id===selectedId); if(!c||!c.breakdowns||!c.breakdowns[i]) return;
+  const b=c.breakdowns[i];
+  let r=document.getElementById('bdReader');
+  if(!r){ r=document.createElement('div'); r.id='bdReader'; document.body.appendChild(r); }
+  r.innerHTML = `<div class="bdr-head"><button type="button" onclick="closeBdReader()" aria-label="Close">←</button>
+      <div class="bdr-title">${esc(c.name||'')} · ${esc(b.date||'')}</div></div>
+    <div class="bdr-body">${_bdFormat(b.text)}</div>`;
+  r.classList.add('open'); document.body.style.overflow='hidden';
+}
+function closeBdReader(){ const r=document.getElementById('bdReader'); if(r) r.classList.remove('open'); document.body.style.overflow=''; }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeBdReader(); });
 function updateBd(i,field,val){ const c=clients.find(x=>x.id===selectedId); if(!c)return; if(!c.breakdowns)c.breakdowns=[]; c.breakdowns[i][field]=val; saveData(); }
 function deleteBd(i){ const c=clients.find(x=>x.id===selectedId); if(!c)return; c.breakdowns.splice(i,1); saveData(); renderTabContent(); }
 function addBdRow(){ const c=clients.find(x=>x.id===selectedId); if(!c)return; if(!c.breakdowns)c.breakdowns=[]; c.breakdowns.push({date:new Date().toISOString().slice(0,10),type:'ai',status:'draft',notes:''}); saveData(); renderTabContent(); }
