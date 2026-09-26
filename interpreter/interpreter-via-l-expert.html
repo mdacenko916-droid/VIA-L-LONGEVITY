@@ -4242,10 +4242,47 @@ async function _chatUploadSend(file, kind){
 }
 function chatPickPhoto(inp){ const f=inp.files&&inp.files[0]; inp.value=''; if(f) _chatUploadSend(f,'image'); }
 let _mediaRec=null,_mediaChunks=[];
+// Запись в WAV через Web Audio (16 кГц, моно, 16 бит) — для устройств, которые не умеют писать audio/mp4
+// (Android). Их webm/opus iPhone в браузере не проигрывает: живой случай 2026-09-26 — голосовое клиента с
+// Android у специалиста на iPhone крутило значок загрузки вечно. WAV проигрывают все. ~1,9 МБ в минуту.
+function _wavRecorder(stream){
+  const AC=window.AudioContext||window.webkitAudioContext; const ctx=new AC();
+  const src=ctx.createMediaStreamSource(stream), proc=ctx.createScriptProcessor(4096,1,1), chunks=[];
+  proc.onaudioprocess=function(e){ chunks.push(new Float32Array(e.inputBuffer.getChannelData(0))); };
+  src.connect(proc); proc.connect(ctx.destination);
+  return { stop:function(){ try{ proc.disconnect(); src.disconnect(); }catch(_){} const r=ctx.sampleRate; try{ ctx.close(); }catch(_){} return _encodeWav(chunks, r, 16000); } };
+}
+function _encodeWav(chunks, inRate, outRate){
+  let len=0; chunks.forEach(function(c){ len+=c.length; });
+  const all=new Float32Array(len); let o=0; chunks.forEach(function(c){ all.set(c,o); o+=c.length; });
+  const ratio=inRate/outRate, n=Math.floor(len/ratio), buf=new ArrayBuffer(44+n*2), v=new DataView(buf);
+  const w=function(p,s){ for(let i=0;i<s.length;i++) v.setUint8(p+i,s.charCodeAt(i)); };
+  w(0,'RIFF'); v.setUint32(4,36+n*2,true); w(8,'WAVE'); w(12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true);
+  v.setUint16(22,1,true); v.setUint32(24,outRate,true); v.setUint32(28,outRate*2,true); v.setUint16(32,2,true);
+  v.setUint16(34,16,true); w(36,'data'); v.setUint32(40,n*2,true);
+  for(let i=0;i<n;i++){   // понижение частоты усреднением — без хрипа от простого прореживания
+    const a=Math.floor(i*ratio), b=Math.min(len,Math.floor((i+1)*ratio)); let s=0;
+    for(let j=a;j<b;j++) s+=all[j]; s=Math.max(-1,Math.min(1,s/((b-a)||1)));
+    v.setInt16(44+i*2, s<0?s*0x8000:s*0x7FFF, true);
+  }
+  return new Blob([buf],{type:'audio/wav'});
+}
+function _canRecMp4(){ try{ return !!(window.MediaRecorder&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported('audio/mp4')); }catch(_){ return false; } }
 async function chatToggleVoice(btn){
   if(_mediaRec && _mediaRec.state==='recording'){ _mediaRec.stop(); return; }
   try{
     const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    // Android/Chrome пишет webm — у специалиста на iPhone он не играет (2026-09-26). Там — WAV.
+    if(!_canRecMp4()){
+      const wr=_wavRecorder(stream);
+      _mediaRec={ state:'recording', stop:function(){
+        if(this.state!=='recording') return; this.state='inactive';
+        const blob=wr.stop(); try{ stream.getTracks().forEach(function(t){t.stop();}); }catch(_){}
+        btn.style.background='#fff'; btn.style.color='#8a6a1c'; btn.textContent='🎤'; _mediaRec=null;
+        if(blob.size>3000) _chatUploadSend(blob,'audio');
+      } };
+      btn.style.background='#c0392b'; btn.style.color='#fff'; btn.textContent='⏹'; return;
+    }
     _mediaChunks=[]; _mediaRec=new MediaRecorder(stream);
     _mediaRec.ondataavailable=function(e){ if(e.data&&e.data.size)_mediaChunks.push(e.data); };
     _mediaRec.onstop=function(){ const blob=new Blob(_mediaChunks,{type:(_mediaRec&&_mediaRec.mimeType)||'audio/webm'}); try{stream.getTracks().forEach(function(t){t.stop();});}catch(_){} btn.style.background='#fff'; btn.style.color='#8a6a1c'; btn.textContent='🎤'; if(blob.size) _chatUploadSend(blob,'audio'); };
