@@ -9960,7 +9960,8 @@ function cabinetRowToLight(r){
 function cabinetRowToClient(r){
   let data = {};
   try { data = JSON.parse(r.data || '{}'); } catch(_){}
-  return {
+  return { unread: r.unread||0,   // непрочитанные: без них кабинет не слал chat-read при открытии переписки (2026-09-26)
+
     ...data,
     // code — сквозной первичный ключ (спека §2). Фронт идентифицирует карточку по id;
     // у клиентов из воронки (deliverAnketa*) id нет — подставляем code, иначе карточка не откроется.

@@ -2458,7 +2458,9 @@ async function hydrateClient(id){
     const j = await api('/cabinet/client', { code: c.code });
     if(j && j.ok && j.client){
       const idx = clients.findIndex(x=>x.id===id);
-      if(idx>=0){ j.client.id = id; j.client._light = false; clients[idx] = j.client; }
+      if(idx>=0){ j.client.id = id; j.client._light = false;
+        if(j.client.unread==null) j.client.unread = clients[idx].unread||0;   // счётчик не терять при догрузке
+        clients[idx] = j.client; }
     }
   }catch(_){}
 }
@@ -2517,7 +2519,7 @@ function switchTab(tab){
   });
   renderTabContent();
   if(tab==='messages') startChatPoll(); else stopChatPoll();   // живое подтягивание входящих только на вкладке чата
-  if(tab==='messages') markRead(clients.find(x=>x.id===selectedId));   // открыл переписку — непрочитанные 0
+  if(tab==='messages') markRead(clients.find(x=>x.id===selectedId), true);   // открыл переписку — непрочитанные 0
   document.body.classList.toggle('ph-chat', tab==='messages');
   if(tab!=='messages') document.body.classList.remove('ph-ai');
   setTimeout(_phFit,0);
@@ -3750,10 +3752,14 @@ async function pollUnread(){
     if(changed) _msgTabDot();
   }catch(_){}
 }
-function markRead(c){
-  if(!c || !(c.unread>0)) return;
-  c.unread=0; refreshList();
-  api('/cabinet/chat-read', { code:c.code }).catch(()=>{});
+// force — открыли вкладку «Переписка»: сообщаем серверу «прочитано» всегда, не доверяя локальному счётчику
+// (2026-09-26: полная карточка приходила без unread, и сервер так и не узнавал, что сообщения прочитаны).
+function markRead(c, force){
+  if(!c) return;
+  const had = c.unread>0;
+  if(!had && !force) return;
+  c.unread=0; if(had) refreshList();
+  api('/cabinet/chat-read', { code:c.code||c.id }).catch(()=>{});
 }
 // Нажали на пуш: кабинет открывается сразу в переписке с этим клиентом.
 async function _openFromPush(code){
