@@ -594,6 +594,9 @@ function showDone(link,fresh){
   else{cb.style.display='none';ch.style.display='none';}
   window._link=link;window._fresh=fresh;
   refreshDone();
+  // Подключён к наставнику — просим разрешение на пуши «наставник ответил» (свежее подключение) или тихо обновляем токен.
+  if(window.vialPushRegister) window.vialPushRegister(!!fresh);
+  if(location.hash==='#chat') setTimeout(openChat,0);   // открыли из пуша — сразу переписка
 }
 
 function refreshDone(){
@@ -698,6 +701,7 @@ function _chatFit(){
 if(window.visualViewport){ visualViewport.addEventListener('resize',_chatFit); visualViewport.addEventListener('scroll',_chatFit); }
 window.addEventListener('resize',_chatFit);
 function openChat(){
+  if(window.vialPushRegister) window.vialPushRegister(true);   // открыл переписку — самое понятное место спросить про пуши
   document.getElementById('done').style.display='none';
   const cv=document.getElementById('chatView'); cv.style.display='flex'; cv.classList.add('fixed');
   document.body.classList.add('chat-open');
@@ -1162,5 +1166,6 @@ loadShowcase();   // витрина наставников
 <!-- Бар отрисован после основного скрипта: setLang() отработал до его появления в DOM,
      и подписи оставались английскими. Переприменяем перевод к уже готовой разметке (2026-08-25). -->
 <script>document.querySelectorAll('#bottombar [data-t]').forEach(function(el){var k=el.getAttribute('data-t');if(T[lang]&&T[lang][k]!==undefined)el.textContent=T[lang][k];});</script>
+<script src="push-bridge.js"></script>
 </body>
 </html>

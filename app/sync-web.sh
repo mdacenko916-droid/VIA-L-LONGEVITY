@@ -32,6 +32,7 @@ cp "$IP/healthconnect-bridge.js"  "$WWW/"
 cp "$IP/iap-bridge.js"            "$WWW/"
 cp "$IP/device-id.js"            "$WWW/"   # постоянный номер устройства: пробные дни и лимит (2026-09-24)
 cp "$IP/notify-bridge.js"         "$WWW/"
+cp "$IP/push-bridge.js"           "$WWW/"   # пуши «наставник ответил» (2026-09-27)
 cp "$IP/intake.js"                "$WWW/"   # «Мои приёмы» — общий модуль VIA-L и EXPERT (2026-09-18)
 cp "$IP/evidence.js"              "$WWW/"   # «На чём основано» — список работ под разбором (2026-09-20)
 cp "$IP/evidence-registry.json"   "$WWW/"   # реестр источников (tools/build-evidence-registry.py)

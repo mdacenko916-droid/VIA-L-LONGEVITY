@@ -1454,6 +1454,7 @@ export default {
       if (path === '/cabinet/delete')      return handleCabinetDelete(request, env, corsHeaders);
       if (path === '/cabinet/ai-draft')    return handleCabinetAiDraft(request, env, corsHeaders);
       if (path === '/cabinet/tg-send')     return handleCabinetTgSend(request, env, corsHeaders);
+      if (path === '/push/app-register')  return handleAppPushRegister(request, env, corsHeaders);        // токен пуша приложения
       if (path === '/cabinet/chat-read')   return handleCabinetChatRead(request, env, corsHeaders);        // непрочитанные → 0
       if (path === '/cabinet/push-subscribe')   return handleCabinetPushSubscribe(request, env, corsHeaders);
       if (path === '/cabinet/push-unsubscribe') return handleCabinetPushUnsubscribe(request, env, corsHeaders);
@@ -10239,6 +10240,71 @@ async function handleCabinetChatRead(request, env, corsHeaders){
   return jsonResponse({ok:true}, corsHeaders);
 }
 
+// ── Пуш клиенту в приложение VIA-L об ответе специалиста (2026-09-27, CABINET-PUSH-MOBILE-PLAN.md §3) ──
+// iOS — APNs напрямую (HTTP/2 из Workers проверен живой пробой: BadDeviceToken на выдуманный токен).
+// Секреты: APNS_KEY (.p8), APNS_KEY_ID, APNS_TEAM_ID. Токены — D1 app_push. Android (FCM) — следующим шагом.
+// Текст на заблокированном экране нейтральный: ни слова о здоровье, только «наставник ответил».
+const _APP_PUSH_TXT = {
+  ru:'Ваш наставник ответил', uk:'Ваш наставник відповів', en:'Your guide replied', es:'Tu guía te ha respondido',
+  de:'Dein Begleiter hat geantwortet', pt:'O seu guia respondeu', fr:'Votre guide vous a répondu',
+  pl:'Twój przewodnik odpowiedział', it:'La tua guida ha risposto', he:'המלווה שלך השיב/ה',
+  ja:'担当ガイドから返信がありました', ko:'가이드가 답장했습니다',
+};
+let _apnsJwtCache = { t:'', exp:0 };
+async function _apnsJwt(env){
+  if (_apnsJwtCache.t && Date.now() < _apnsJwtCache.exp) return _apnsJwtCache.t;   // Apple просит не чаще раза в 20 мин
+  const pem = String(env.APNS_KEY||'').replace(/-----[^-]+-----/g,'').replace(/\s+/g,'');
+  const der = Uint8Array.from(atob(pem), c=>c.charCodeAt(0));
+  const key = await crypto.subtle.importKey('pkcs8', der, { name:'ECDSA', namedCurve:'P-256' }, false, ['sign']);
+  const h = _b64u(new TextEncoder().encode(JSON.stringify({ alg:'ES256', kid:env.APNS_KEY_ID })));
+  const b = _b64u(new TextEncoder().encode(JSON.stringify({ iss:env.APNS_TEAM_ID, iat:Math.floor(Date.now()/1000) })));
+  const sig = await crypto.subtle.sign({ name:'ECDSA', hash:'SHA-256' }, key, new TextEncoder().encode(h+'.'+b));
+  _apnsJwtCache = { t: h+'.'+b+'.'+_b64u(sig), exp: Date.now() + 40*60*1000 };
+  return _apnsJwtCache.t;
+}
+async function _apnsSend(env, token, sandbox, lang){
+  const host = sandbox ? 'api.sandbox.push.apple.com' : 'api.push.apple.com';
+  const body = { aps:{ alert:{ title:'VIA·L', body:_APP_PUSH_TXT[lang]||_APP_PUSH_TXT.en }, sound:'vialchime.wav' }, open:'chat' };
+  try{
+    const r = await fetch('https://'+host+'/3/device/'+token, { method:'POST', headers:{
+      authorization:'bearer '+await _apnsJwt(env), 'apns-topic':'com.viael.vial', 'apns-push-type':'alert',
+      'apns-priority':'10', 'content-type':'application/json' }, body: JSON.stringify(body) });
+    if (r.ok) return 'ok';
+    let reason=''; try{ reason=(await r.json()).reason||''; }catch(_){}
+    return (r.status===410 || reason==='Unregistered') ? 'gone' : (reason==='BadDeviceToken' ? 'bad' : 'fail');
+  }catch(_){ return 'fail'; }
+}
+async function _appPush(env, code){
+  if (!env.DB || !env.APNS_KEY) return;
+  let rows=[]; try{ rows=(await env.DB.prepare('SELECT token, platform, env, lang, fails FROM app_push WHERE code=? LIMIT 10').bind(code).all()).results||[]; }catch(_){ return; }
+  for (const r of rows){
+    if (r.platform !== 'ios') continue;   // Android — после подключения FCM
+    let res = await _apnsSend(env, r.token, r.env==='sandbox', r.lang);
+    // Сборка прямо из Xcode даёт токен песочницы: боевой сервер ответит BadDeviceToken — пробуем песочницу и запоминаем.
+    if (res==='bad' && r.env!=='sandbox'){ res = await _apnsSend(env, r.token, true, r.lang);
+      if (res==='ok') try{ await env.DB.prepare("UPDATE app_push SET env='sandbox' WHERE token=?").bind(r.token).run(); }catch(_){} }
+    try{
+      if (res==='gone' || res==='bad') await env.DB.prepare('DELETE FROM app_push WHERE token=?').bind(r.token).run();
+      else if (res==='fail'){ const f=(r.fails||0)+1; if(f>=5) await env.DB.prepare('DELETE FROM app_push WHERE token=?').bind(r.token).run();
+        else await env.DB.prepare('UPDATE app_push SET fails=? WHERE token=?').bind(f, r.token).run(); }
+      else if (r.fails) await env.DB.prepare('UPDATE app_push SET fails=0 WHERE token=?').bind(r.token).run();
+    }catch(_){}
+  }
+}
+// POST /push/app-register {code, token, platform, lang} — приложение после подключения к наставнику.
+// Доступ по коду карточки, как у переписки: без существующей карточки токен не принимаем.
+async function handleAppPushRegister(request, env, corsHeaders){
+  let b={}; try{ b=await request.json(); }catch(_){}
+  const code=String(b.code||'').trim().toUpperCase(), token=String(b.token||'').trim();
+  const platform = b.platform==='android' ? 'android' : 'ios';
+  if(!code || !/^[A-Za-z0-9:_\-]{20,300}$/.test(token)) return jsonResponse({ok:false,error:'bad_input'}, corsHeaders, 400);
+  const row = await env.DB.prepare('SELECT code FROM clients WHERE upper(code)=?').bind(code).first();
+  if(!row) return jsonResponse({ok:false,error:'not_found'}, corsHeaders, 404);
+  await env.DB.prepare('INSERT OR REPLACE INTO app_push (token, code, platform, env, lang, created, fails) VALUES (?,?,?,?,?,?,0)')
+    .bind(token, row.code, platform, b.sandbox?'sandbox':'production', String(b.lang||'').slice(0,5), Date.now()).run();
+  return jsonResponse({ok:true}, corsHeaders);
+}
+
 async function handleCabinetChatSend(request, env, corsHeaders, ctx){
   const sess = await cabinetSession(request, env);
   if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
@@ -10260,6 +10326,7 @@ async function handleCabinetChatSend(request, env, corsHeaders, ctx){
   d.messages.push(outMsg);
   if(d.messages.length>300) d.messages=d.messages.slice(-300);
   await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?').bind(JSON.stringify(d), Date.now(), code).run();
+  if(ctx) ctx.waitUntil(_appPush(env, code));   // пуш клиенту в приложение: «Ваш наставник ответил» (2026-09-27)
   // Опц. зеркало в Telegram-топик (специалист-оператор в TG видит continuity) — не блокируем ответ.
   if(ctx && env.CLIENT_BOT_TOKEN && env.NUTRITIONIST_GROUP_ID && env.EXPERT_DRAFTS){
     ctx.waitUntil((async()=>{
