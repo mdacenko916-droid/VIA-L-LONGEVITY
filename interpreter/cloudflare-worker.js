@@ -10274,14 +10274,49 @@ async function _apnsSend(env, token, sandbox, lang){
     return (r.status===410 || reason==='Unregistered') ? 'gone' : (reason==='BadDeviceToken' ? 'bad' : 'fail');
   }catch(_){ return 'fail'; }
 }
+// Android: Firebase Cloud Messaging v1. FCM_SA — JSON сервисного аккаунта Firebase (проект via-l-health-71bdc),
+// из него подписываем JWT (RS256) и меняем на OAuth-токен на ~50 мин.
+let _fcmTokCache = { t:null, exp:0 };
+async function _fcmAuth(env){
+  if (_fcmTokCache.t && Date.now() < _fcmTokCache.exp) return _fcmTokCache.t;
+  const sa = JSON.parse(env.FCM_SA);
+  const pem = String(sa.private_key||'').replace(/-----[^-]+-----/g,'').replace(/\s+/g,'');
+  const der = Uint8Array.from(atob(pem), c=>c.charCodeAt(0));
+  const key = await crypto.subtle.importKey('pkcs8', der, { name:'RSASSA-PKCS1-v1_5', hash:'SHA-256' }, false, ['sign']);
+  const now = Math.floor(Date.now()/1000);
+  const h = _b64u(new TextEncoder().encode(JSON.stringify({ alg:'RS256', typ:'JWT' })));
+  const b = _b64u(new TextEncoder().encode(JSON.stringify({ iss:sa.client_email, scope:'https://www.googleapis.com/auth/firebase.messaging',
+    aud:'https://oauth2.googleapis.com/token', iat:now, exp:now+3600 })));
+  const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(h+'.'+b));
+  const r = await fetch('https://oauth2.googleapis.com/token', { method:'POST', headers:{ 'content-type':'application/x-www-form-urlencoded' },
+    body:'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion='+h+'.'+b+'.'+_b64u(sig) });
+  const j = await r.json();
+  if (!j.access_token) throw new Error('fcm auth');
+  _fcmTokCache = { t:j.access_token, exp:Date.now() + 50*60*1000, p:sa.project_id };
+  return j.access_token;
+}
+async function _fcmSend(env, token, lang){
+  try{
+    const auth = await _fcmAuth(env);
+    const r = await fetch('https://fcm.googleapis.com/v1/projects/'+_fcmTokCache.p+'/messages:send', { method:'POST',
+      headers:{ authorization:'Bearer '+auth, 'content-type':'application/json' },
+      body: JSON.stringify({ message:{ token, notification:{ title:'VIA·L', body:_APP_PUSH_TXT[lang]||_APP_PUSH_TXT.en },
+        data:{ open:'chat' }, android:{ priority:'HIGH', notification:{ sound:'default' } } } }) });
+    if (r.ok) return 'ok';
+    let st=''; try{ st=((await r.json()).error||{}).status||''; }catch(_){}
+    return (r.status===404 || st==='NOT_FOUND' || st==='UNREGISTERED') ? 'gone' : (st==='INVALID_ARGUMENT' ? 'bad' : 'fail');
+  }catch(_){ return 'fail'; }
+}
 async function _appPush(env, code){
-  if (!env.DB || !env.APNS_KEY) return;
+  if (!env.DB) return;
   let rows=[]; try{ rows=(await env.DB.prepare('SELECT token, platform, env, lang, fails FROM app_push WHERE code=? LIMIT 10').bind(code).all()).results||[]; }catch(_){ return; }
   for (const r of rows){
-    if (r.platform !== 'ios') continue;   // Android — после подключения FCM
-    let res = await _apnsSend(env, r.token, r.env==='sandbox', r.lang);
+    let res;
+    if (r.platform === 'android'){ if (!env.FCM_SA) continue; res = await _fcmSend(env, r.token, r.lang); }
+    else if (r.platform === 'ios'){ if (!env.APNS_KEY) continue; res = await _apnsSend(env, r.token, r.env==='sandbox', r.lang); }
+    else continue;
     // Сборка прямо из Xcode даёт токен песочницы: боевой сервер ответит BadDeviceToken — пробуем песочницу и запоминаем.
-    if (res==='bad' && r.env!=='sandbox'){ res = await _apnsSend(env, r.token, true, r.lang);
+    if (r.platform==='ios' && res==='bad' && r.env!=='sandbox'){ res = await _apnsSend(env, r.token, true, r.lang);
       if (res==='ok') try{ await env.DB.prepare("UPDATE app_push SET env='sandbox' WHERE token=?").bind(r.token).run(); }catch(_){} }
     try{
       if (res==='gone' || res==='bad') await env.DB.prepare('DELETE FROM app_push WHERE token=?').bind(r.token).run();

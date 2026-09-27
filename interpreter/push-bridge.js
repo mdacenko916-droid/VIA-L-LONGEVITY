@@ -3,8 +3,8 @@
    Телефон регистрируется, когда клиент подключён к наставнику (vial_spec_link.code): токен уходит на сервер
    (/push/app-register), и ответ специалиста из кабинета приходит пушем. Нажатие открывает переписку.
    Разрешение спрашиваем не на старте, а когда человек подключился к наставнику или открыл переписку —
-   тогда просьба понятна. Android — после подключения Firebase (google-services.json): без него вызов
-   register() роняет приложение, поэтому на Android пока выходим сразу. */
+   тогда просьба понятна. iOS — APNs, Android — Firebase (google-services.json в сборке с v17;
+   без него register() роняет приложение). */
 (function () {
   var WORKER = 'https://interpreter.viaelcom.workers.dev';
   function pn() { return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications) || null; }
@@ -28,7 +28,7 @@
   }
   // ask=true — можно показать системный запрос разрешения. ask=false — только тихо обновить токен.
   window.vialPushRegister = async function (ask) {
-    var p = pn(); if (!p || plat() !== 'ios') return false;
+    var p = pn(); if (!p || (plat() !== 'ios' && plat() !== 'android')) return false;
     var l = link(); if (!l || !l.code) return false;
     listen(p);
     try {
@@ -42,5 +42,5 @@
       return true;
     } catch (e) { return false; }
   };
-  try { if (pn() && plat() === 'ios') { listen(pn()); window.vialPushRegister(false); } } catch (e) {}
+  try { if (pn() && (plat() === 'ios' || plat() === 'android')) { listen(pn()); window.vialPushRegister(false); } } catch (e) {}
 })();
