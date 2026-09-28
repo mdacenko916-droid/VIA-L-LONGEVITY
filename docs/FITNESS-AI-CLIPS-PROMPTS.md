@@ -142,3 +142,47 @@ bouncing or half-repetitions`.
 5. Ведущая похожа на себя из других клипов.
 
 Брак не переделываем текстом до бесконечности — проще перегенерировать 2–3 раза с тем же заданием.
+
+---
+
+## 5. Пары кадров «верх → низ» (приём 2026-09-28)
+
+Проба показала: **амплитуду задаёт картинка, а не текст.** Veo сам делает присед на четверть, сколько
+его ни проси. Лечится режимом Flow «начальный и конечный кадр»: даём две картинки, генератор рисует
+движение между ними. Так же решается и стык — если конец совпадает со стартом.
+
+**Как работать:**
+1. В ChatGPT делаем две картинки: **верхняя точка** (исходное положение) и **нижняя точка** (конец движения).
+   К обеим прикладываем эталон Евы (`скрин/1/2.PNG`) или Адама (`скрин/1/Адам.PNG`).
+2. В Flow: начальный кадр — верхняя точка, конечный — она же; нижняя точка идёт серединой движения.
+   Если режим принимает только начало и конец, ставим верх → низ и добавляем в текст:
+   `She returns to the starting standing position at the end of the clip.`
+3. Текст движения — короткий: `She lowers down and stands back up twice, slowly and evenly. The camera does not move.`
+
+**Общий хвост для КАДРА (не для видео):**
+> Same woman, same clothes, same room as in the reference image. Standing on the teal mat. Camera at waist
+> height, whole body including feet fully visible. Photorealistic, no text, no logos, 16:9.
+
+### Пары для упражнений с амплитудой
+
+| Упражнение | Верхняя точка | Нижняя точка |
+|---|---|---|
+| Присед к стулу | `Side view, standing in front of the wooden chair, the chair directly behind her, arms reaching forward` | `Side view, in the bottom of a squat, seat lightly touching the chair seat, knees bent about ninety degrees, back straight, arms forward` |
+| Гоблет-присед ✅ | `Side view, standing, holding one dumbbell with both hands in front of her, elbows down` | `Side view, in the bottom of a squat, knees bent about ninety degrees, seat at knee level, back straight, dumbbell still in both hands` |
+| Румынская тяга | `Side view, standing tall, holding a dumbbell in each hand in front of her legs` | `Side view, bent forward at the hips with a flat back, knees slightly bent, dumbbells hanging at mid-shin level` |
+| Наклон без веса | `Side view, standing tall, hands resting on the front of her legs` | `Side view, bent forward at the hips with a flat back, hands sliding down to knee level` |
+| Выпад назад | `Side view, standing tall, hands on her waist` | `Side view, in a backward lunge: right foot stepped back on the toes, both knees bent about ninety degrees, torso upright` |
+| Подъём на носки | `Side view, standing tall next to the chair, one hand resting on the chair back` | `Side view, risen high on the balls of both feet, heels lifted off the floor, one hand on the chair back` |
+| Ягодичный мост | `Side view, lying on her back on the mat, knees bent, feet flat, arms alongside her body` | `Side view, hips lifted so that knees, hips and shoulders form one straight line` |
+| «Мёртвый жук» | `Side view, lying on her back, both arms pointing straight up, knees bent above the hips` | `Side view, lying on her back, right arm lowered behind her head and left leg extended straight just above the floor, lower back flat on the mat` |
+| «Птица-собака» | `Side view, on all fours, hands under shoulders, knees under hips, flat back` | `Side view, on all fours with the right arm extended forward and the left leg extended straight back, both level with the flat back` |
+| Отжимания от стены | `Side view, standing an arm's length from the wall, both palms on the wall at shoulder height, body in one straight line` | `Side view, elbows bent, body leaning close to the wall, still in one straight line from head to heels` |
+| Отжимания с колен | `Side view, in a kneeling push-up start: hands under shoulders, knees on the mat, body in one line from head to knees` | `Side view, lowered so that the chest is just above the mat, elbows bent close to the body, body still in one line` |
+| Тяга в наклоне | `Side view, bent forward at the hips with a flat back, dumbbells hanging down at arm's length` | `Side view, same bent-forward position, both dumbbells pulled up to waist level, elbows close to the body` |
+| Жим над головой сидя | `Side view, sitting upright on the chair, a dumbbell in each hand at shoulder height, elbows down` | `Side view, sitting upright on the chair, both dumbbells pressed straight overhead, arms extended` |
+
+### Одиночные кадры (движение без амплитуды)
+
+Планка · «прогулка фермера» · мини-прыжки · стойка на одной ноге · шаг на месте — хватает одного кадра
+из папки ведущего и короткого текста движения из §4: удержание, ходьба или мелкие повторы генератор
+делает без подсказок об амплитуде.
