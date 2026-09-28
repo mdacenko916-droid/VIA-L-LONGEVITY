@@ -48,6 +48,7 @@ Kling отложен: приседание вышло неглубоким с л
 | `05_лёжа_на_спине.png` | ягодичный мост, «мёртвый жук», касание пятками пола |
 | `06_на_четвереньках.png` | «птица-собака», «кошка-корова», «медведь», планка, отжимания с колен |
 | `07_сидя_на_стуле.png` | жим над головой сидя, подъём со стула, растяжка сидя |
+| `08_сбоку_стул_вплотную.png` | **присед к стулу** — стул стоит вплотную за спиной, двигать нечего |
 
 ## 3. Как собирается задание
 
@@ -64,10 +65,22 @@ Kling отложен: приседание вышло неглубоким с л
 Число повторов задавайте словами: `exactly two slow repetitions at an even tempo, without any extra
 bouncing or half-repetitions`.
 
+## 3a. Проба удалась — 2026-09-28 (Ева, присед к стулу)
+
+`скрин/Eva тренер видео/Woman_performing_bodyweight_squat_...mp4` — **эталон**. Стул неподвижен и не
+раздваивается, камера стоит, стопы в кадре, техника чистая: таз назад, колени по линии носков, спина ровная.
+Стык проверен кодом: последний кадр отличается от первого на 2,5 из 255 → **клип зацикливается без шва**.
+
+Отсюда правило: **длинные ролики не генерируем**. Генерируем 5 секунд с одним-двумя повторами, нужное
+число повторов делает проигрыватель зацикливанием. Это дешевле по кредитам и надёжнее по технике.
+
 ## 4. Задания по упражнениям (приоритет A)
 
-**Присед к стулу** · кадр 02
-> The woman performs one slow bodyweight squat: hips move back as if sitting down, knees stay in line with her toes, back straight, arms reach forward for balance. She lightly touches the chair seat with her hips, then stands back up.
+Ева и Адам выполняют одни и те же движения — меняется только приложенный кадр (папка Евы или Адама)
+и местоимение в тексте (`the woman` / `the man`).
+
+**Присед к стулу** · кадр 08 (стул вплотную за спиной)
+> The woman performs exactly two slow squats at an even tempo, without any extra bouncing or half-repetitions: hips move back as if sitting down, knees stay in line with her toes, back straight, arms reach forward for balance. She lightly touches the chair seat with her hips, then stands back up.
 
 **Гоблет-присед** · кадр 04
 > Holding one dumbbell with both hands close to her chest, the woman performs one slow squat: hips back, knees in line with toes, chest upright, then she stands back up.
