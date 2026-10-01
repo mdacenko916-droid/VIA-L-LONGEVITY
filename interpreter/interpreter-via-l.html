@@ -9470,29 +9470,101 @@ function renderDayIndex(score, type, data){
 // Регулярный ритм без гормональной контрацепции/МГТ и без продвинутых этапов (мено/пост):
 // при пери-VMS, нерегулярном и ановуляторном цикле бифазного паттерна часто нет вовсе.
 // determinePhase() у регулярного цикла = 'peri' (дефолт), поэтому 'peri' пропускаем.
+// ── ТЕМПЕРАТУРНАЯ ПРОВЕРКА ЦИКЛА (2026-10-01) ────────────────────────────────
+// Календарь («длина − 14») угадывает вторую половину цикла примерно в одном цикле из пяти и не видит
+// цикл без подъёма температуры вовсе. Кривая ночной температуры (vialp_temp_series) это видит.
+// «Низкий уровень» — медиана ночей 3–10-го дня цикла; подъём — три ночи подряд не ниже +0,2 °C к нему.
+// ⚠️ Это наблюдение о температуре, НЕ вывод об овуляции: клиенту никогда не «овуляция была / не была»,
+// не день овуляции и не «фертильное окно» (территория медизделий; docs/CYCLE-PHASE-WEARABLES-EVIDENCE.md).
+function _cycDiff(a,b){ return Math.round((new Date(a)-new Date(b))/86400000); }
+function _cycMedian(a){ var s=a.slice().sort(function(x,y){ return x-y; }), m=s.length>>1; return s.length?(s.length%2?s[m]:(s[m-1]+s[m])/2):null; }
+// Оценка одного цикла: nights — ряд [{d,v}], start — первый день, lastDay — сколько дней цикла смотреть.
+function _cycTempEval(nights,start,lastDay,len){
+  var by=[]; (nights||[]).forEach(function(n){ var c=_cycDiff(n.d,start)+1, v=Number(n.v); if(c>=1 && c<=lastDay && isFinite(v)) by.push({c:c,v:v}); });
+  by.sort(function(a,b){ return a.c-b.c; });
+  var base=by.filter(function(x){ return x.c>=3 && x.c<=10; }).map(function(x){ return x.v; });
+  if(base.length<4) return {state:'few',n:by.length};               // не из чего взять «низкий уровень»
+  var low=_cycMedian(base), thr=low+0.2;
+  var late=by.filter(function(x){ return x.c>=9 && x.v<=low+1; });  // скачок больше 1 °C — болезнь или сбой датчика, не фаза
+  var rise=0;
+  for(var k=0;k+2<late.length;k++){
+    if(late[k].v>=thr && late[k+1].v>=thr && late[k+2].v>=thr && (late[k+2].c-late[k].c)<=3){ rise=late[k].c; break; }
+  }
+  var span=lastDay-8, cover=span>0 && late.length>=Math.max(3,Math.ceil(span*0.7));
+  if(rise){
+    // Температура вернулась вниз — новый цикл уже идёт, а отметки о нём нет; подъём дольше 18 дней —
+    // тоже не наша история. В обоих случаях молчим и оставляем календарь.
+    if(_cycMedian(late.slice(-3).map(function(x){ return x.v; }))<low+0.1) return {state:'ended',n:by.length};
+    if(lastDay-rise>18) return {state:'long',n:by.length};
+    return {state:'rise',rise_day:rise,n:by.length,cover:cover};
+  }
+  var due=Math.max((len||28)-14,10)+7;                              // к этому дню подъём уже был бы виден (ошибка календаря ±3–4 дня + три ночи)
+  if(lastDay<due) return {state:'early',n:by.length,cover:cover};
+  return (cover && late.length>=8) ? {state:'none',n:by.length,cover:true} : {state:'few',n:by.length};
+}
+// Состояние сегодняшнего дня: {state:'early'|'rise'|'none'|'few', day, rise_day?, prev_none?} или null,
+// когда сказать нечего (нет ряда, нет даты начала, отметка устарела).
+function _cycTempState(){
+  try{
+    var S=JSON.parse(localStorage.getItem('vialp_temp_series')||'null'); if(!S || !Array.isArray(S.nights) || !S.nights.length) return null;
+    var today=_dayKey(), starts=_cycStarts().filter(function(d){ return d<=today; });
+    if(!starts.length){ var lp=_cycProfile().lastperiod; if(lp && lp<=today) starts=[lp]; }
+    if(!starts.length) return null;
+    var start=starts[starts.length-1], day=_cycDiff(today,start)+1;
+    var len=parseInt((document.getElementById('prof-cyclelen')||{}).value)||parseInt(_cycProfile().cyclelen)||28;
+    if(day<1 || day>Math.max(len,28)+10) return null;                // начало нового цикла не отмечено — где мы в цикле, неизвестно
+    var r=_cycTempEval(S.nights,start,day,len);
+    if(r.state==='ended' || r.state==='long') return null;
+    r.day=day;
+    if(r.state==='none' && starts.length>=2){                        // прошлый цикл тоже без подъёма?
+      var ps=starts[starts.length-2], pl=_cycDiff(start,ps);
+      if(pl>=20 && pl<=60 && _cycTempEval(S.nights,ps,pl,pl).state==='none') r.prev_none=true;
+    }
+    return r;
+  }catch(e){ return null; }
+}
+// Общие условия, при которых о цикле вообще можно говорить: женщина, не мено/пост, без гормональной
+// контрацепции/МГТ (med4 гасит естественный паттерн).
+function _phaseGate(data){
+  if(!data || data.gender!=='female') return false;
+  if(['meno','post','andro','pre_andro'].indexOf(data.phase)>=0) return false;
+  var meds=Array.isArray(data.meds)?data.meds:(data.meds?[data.meds]:[]);
+  return meds.indexOf('cycle_factor')<0;
+}
 function _phaseTrusted(data){
   try{
-    if(!data || data.gender!=='female') return null;
+    if(!_phaseGate(data)) return null;
+    // Температура главнее календаря: подъём виден — вторая половина цикла подтверждена прибором
+    // (и при нерегулярном ритме тоже); подъёма нет, а срок прошёл — фазу не применяем вовсе.
+    var ct=data.cycle_temp;
+    if(ct && ct.state==='rise') return 'luteal';
+    if(ct && ct.state==='none') return null;
     var ph=data.cycle_phase; if(!ph) return null;                   // нет фазы (в т.ч. cycle_status='absent')
     if(data.cycle_status!=='regular') return null;                  // только регулярный ритм (21–35 дн) → овуляторный цикл
-    if(['meno','post','andro','pre_andro'].indexOf(data.phase)>=0) return null;
-    var meds=Array.isArray(data.meds)?data.meds:(data.meds?[data.meds]:[]);
-    if(meds.indexOf('cycle_factor')>=0) return null;                // med4 = гормональная контрацепция/МГТ → естественного паттерна нет
+    if(ph==='luteal' && ct && ct.state==='early' && ct.cover) return null;   // календарь уже «вторая половина», а прибор подъёма ещё не видит
     return ph;
   }catch(e){ return null; }
 }
+var _CYC_TEMP_T={
+  rise:{ru:'С {d}-го дня цикла ночная температура держится выше, чем в первой половине. Такой подъём обычно бывает после овуляции — похоже, началась вторая половина цикла. Сон чуть легче, энергия и ВСР чуть ниже обычного — в эти дни у многих обычное дело.',uk:'З {d}-го дня циклу нічна температура тримається вище, ніж у першій половині. Такий підйом зазвичай буває після овуляції — схоже, почалася друга половина циклу. Сон трохи легший, енергія та ВСР трохи нижчі за звичні — цими днями у багатьох звична річ.',en:'Since day {d} of your cycle, your night temperature has stayed higher than in the first half. A rise like this usually follows ovulation — it looks like the second half of your cycle has begun. Lighter sleep, and energy and HRV a bit below your usual, are common these days.',es:'Desde el día {d} del ciclo, tu temperatura nocturna se mantiene más alta que en la primera mitad. Una subida así suele aparecer después de la ovulación; parece que ha empezado la segunda mitad del ciclo. Un sueño más ligero y la energía y la VFC algo por debajo de lo habitual son comunes estos días.',de:'Seit Tag {d} deines Zyklus liegt deine Nachttemperatur höher als in der ersten Hälfte. Ein solcher Anstieg folgt meist auf den Eisprung — offenbar hat die zweite Zyklushälfte begonnen. Leichterer Schlaf sowie Energie und HRV etwas unter dem Üblichen sind in diesen Tagen normal.',pt:'Desde o dia {d} do ciclo, sua temperatura noturna está mais alta do que na primeira metade. Uma subida assim costuma vir depois da ovulação — parece que a segunda metade do ciclo começou. Sono mais leve e energia e VFC um pouco abaixo do habitual são comuns nestes dias.',fr:'Depuis le jour {d} du cycle, votre température nocturne reste plus élevée que pendant la première moitié. Une telle hausse suit généralement l’ovulation — la seconde moitié du cycle semble avoir commencé. Un sommeil plus léger, une énergie et une VFC un peu sous votre habitude sont fréquents ces jours-ci.',pl:'Od {d}. dnia cyklu nocna temperatura utrzymuje się wyżej niż w pierwszej połowie. Taki wzrost zwykle pojawia się po owulacji — wygląda na to, że zaczęła się druga połowa cyklu. Lżejszy sen oraz energia i HRV nieco poniżej normy są w te dni częste.',it:'Dal giorno {d} del ciclo la temperatura notturna resta più alta rispetto alla prima metà. Un rialzo così di solito segue l’ovulazione — sembra iniziata la seconda metà del ciclo. Sonno più leggero, energia e HRV un po’ sotto il solito sono comuni in questi giorni.',he:'מיום {d} של המחזור טמפרטורת הלילה שלך נשארת גבוהה יותר מאשר במחצית הראשונה. עלייה כזו מופיעה בדרך כלל אחרי ביוץ — נראה שהתחילה המחצית השנייה של המחזור. שינה קלה יותר, אנרגיה ו-HRV מעט מתחת לרגיל שכיחים בימים אלה.',ja:'周期{d}日目から、夜間の体温が前半より高い状態が続いています。こうした上昇は通常、排卵の後に見られます — 周期の後半に入ったようです。眠りが浅め、エネルギーやHRVがいつもより少し低めなのは、この時期によくあることです。',ko:'주기 {d}일째부터 야간 체온이 전반부보다 높게 유지되고 있습니다. 이런 상승은 보통 배란 후에 나타납니다 — 주기 후반부가 시작된 것으로 보입니다. 수면이 조금 얕아지고 에너지와 HRV가 평소보다 약간 낮은 것은 이 시기에 흔한 일입니다.'},
+  none:{ru:'В этом цикле подъёма ночной температуры не видно. Так бывает в циклах без овуляции — в перименопаузе это частое явление — и при пропусках в измерениях. Поэтому сегодня опираемся на вашу личную норму, а не на фазу цикла.',uk:'У цьому циклі підйому нічної температури не видно. Так буває в циклах без овуляції — у перименопаузі це часте явище — і при пропусках у вимірюваннях. Тому сьогодні спираємося на вашу особисту норму, а не на фазу циклу.',en:'No rise in night temperature is visible in this cycle. This happens in cycles without ovulation — common in perimenopause — and when some nights are missing. So today we go by your personal baseline rather than the cycle phase.',es:'En este ciclo no se ve una subida de la temperatura nocturna. Ocurre en ciclos sin ovulación —algo frecuente en la perimenopausia— y cuando faltan mediciones. Por eso hoy nos guiamos por tu norma personal y no por la fase del ciclo.',de:'In diesem Zyklus ist kein Anstieg der Nachttemperatur zu sehen. Das kommt in Zyklen ohne Eisprung vor — in der Perimenopause häufig — und bei Lücken in den Messungen. Deshalb orientieren wir uns heute an deinem persönlichen Normalwert, nicht an der Zyklusphase.',pt:'Neste ciclo não se vê uma subida da temperatura noturna. Isso acontece em ciclos sem ovulação — algo frequente na perimenopausa — e quando faltam medições. Por isso hoje nos guiamos pela sua norma pessoal, e não pela fase do ciclo.',fr:'Aucune hausse de la température nocturne n’est visible dans ce cycle. Cela arrive dans les cycles sans ovulation — fréquents en périménopause — et lorsque des mesures manquent. Aujourd’hui, nous nous appuyons donc sur votre norme personnelle plutôt que sur la phase du cycle.',pl:'W tym cyklu nie widać wzrostu nocnej temperatury. Tak bywa w cyklach bez owulacji — w perimenopauzie to częste — oraz przy brakach w pomiarach. Dlatego dziś opieramy się na Twojej osobistej normie, a nie na fazie cyklu.',it:'In questo ciclo non si vede un rialzo della temperatura notturna. Succede nei cicli senza ovulazione — frequenti in perimenopausa — e quando mancano delle misurazioni. Per questo oggi ci basiamo sulla tua norma personale e non sulla fase del ciclo.',he:'במחזור הזה לא נראית עלייה בטמפרטורת הלילה. כך קורה במחזורים ללא ביוץ — תופעה שכיחה בפרימנופאוזה — וגם כשחסרות מדידות. לכן היום אנחנו נשענים על הנורמה האישית שלך ולא על שלב המחזור.',ja:'今回の周期では、夜間体温の上昇が見られません。排卵のない周期ではこうなることがあり — 更年期移行期にはよくあることです — 測定の抜けがある場合にも起こります。そのため今日は、周期のフェーズではなく、あなた自身の基準をもとに見ていきます。',ko:'이번 주기에서는 야간 체온 상승이 보이지 않습니다. 배란이 없는 주기에서 이런 일이 생기며 — 폐경 이행기에는 흔합니다 — 측정이 빠진 날이 있을 때도 그렇습니다. 그래서 오늘은 주기 단계가 아니라 개인 기준을 바탕으로 봅니다.'},
+  none2:{ru:' Так уже второй цикл подряд — если хотите разобраться, это стоит обсудить с врачом.',uk:' Так уже другий цикл поспіль — якщо хочете розібратися, це варто обговорити з лікарем.',en:' This is the second cycle in a row — if you’d like to look into it, it’s worth discussing with a doctor.',es:' Ya es el segundo ciclo seguido; si quieres aclararlo, vale la pena comentarlo con tu médico.',de:' Das ist bereits der zweite Zyklus in Folge — wenn du dem nachgehen möchtest, lohnt sich ein Gespräch mit einer Ärztin oder einem Arzt.',pt:' Já é o segundo ciclo seguido — se quiser entender melhor, vale conversar com um médico.',fr:' C’est le deuxième cycle de suite — si vous souhaitez y voir plus clair, cela vaut la peine d’en parler à un médecin.',pl:' To już drugi cykl z rzędu — jeśli chcesz to wyjaśnić, warto omówić to z lekarzem.',it:' È già il secondo ciclo di seguito — se vuoi capirne di più, vale la pena parlarne con un medico.',he:' זה כבר המחזור השני ברצף — אם תרצי לברר, כדאי לשוחח על כך עם רופא/ה.',ja:' これで2周期続けてです — 気になる場合は、医師に相談してみる価値があります。',ko:' 벌써 두 주기 연속입니다 — 자세히 알고 싶다면 의사와 상의해 볼 만합니다.'}
+};
 function _renderPhaseNote(data){
   var box=document.getElementById('rd-phasenote'); if(!box) return;
   box.style.display='none';
   try{
-    var ph=_phaseTrusted(data); if(!ph) return;
+    var ct=data.cycle_temp, m=null;
+    if(ct && ct.state==='none' && _phaseGate(data)) m={ic:'🌡️',t:L(_CYC_TEMP_T.none)+(ct.prev_none?L(_CYC_TEMP_T.none2):'')};
+    var ph=m?null:_phaseTrusted(data); if(!m && !ph) return;
+    if(ph==='luteal' && ct && ct.state==='rise') m={ic:'🌗',t:L(_CYC_TEMP_T.rise).replace('{d}',ct.rise_day)};   // вторая половина — по прибору, а не по календарю
     var T={
       menstrual:{ic:'🌙',t:L({ru:'Начало цикла. В эти дни телу нужнее покой и восстановление — бережный ритм и еда с железом сейчас в самый раз.',uk:'Початок циклу. Цими днями тілу потрібніші спокій і відновлення — дбайливий ритм і їжа із залізом зараз саме те.',en:'Early in your cycle. These days your body leans on rest and recovery — a gentle pace and iron-rich food fit well now.',es:'Inicio del ciclo. Estos días tu cuerpo necesita descanso y recuperación: un ritmo suave y comida rica en hierro van bien.',de:'Zyklusbeginn. In diesen Tagen braucht dein Körper Ruhe und Erholung — ein sanftes Tempo und eisenreiche Kost passen jetzt gut.',pt:'Início do ciclo. Nestes dias seu corpo precisa de descanso e recuperação — um ritmo suave e comida rica em ferro caem bem.',fr:'Début de cycle. Ces jours-ci votre corps a besoin de repos et de récupération — un rythme doux et des aliments riches en fer conviennent.',pl:'Początek cyklu. W te dni ciało potrzebuje odpoczynku i regeneracji — łagodne tempo i jedzenie bogate w żelazo są teraz na miejscu.',it:'Inizio del ciclo. In questi giorni il corpo ha bisogno di riposo e recupero — un ritmo dolce e cibo ricco di ferro vanno bene.',he:'תחילת המחזור. בימים אלה הגוף זקוק למנוחה והתאוששות — קצב עדין ומזון עשיר בברזל מתאימים עכשיו.',ja:'周期の始まりです。この時期は休息と回復が大切 — ゆるやかなペースと鉄分の多い食事が今は合います。',ko:'주기 초반입니다. 이 시기엔 휴식과 회복이 필요해요 — 부드러운 리듬과 철분이 풍부한 음식이 잘 맞습니다.'})},
       follicular:{ic:'🌱',t:L({ru:'Первая половина цикла — у многих сейчас больше энергии и сил. Удобное окно для активности и силовой.',uk:'Перша половина циклу — у багатьох зараз більше енергії та сил. Зручне вікно для активності й силового.',en:'First half of your cycle — many feel more energy now. A good window for activity and strength work.',es:'Primera mitad del ciclo: muchas sienten más energía ahora. Buena ventana para actividad y fuerza.',de:'Erste Zyklushälfte — viele haben jetzt mehr Energie. Ein gutes Fenster für Aktivität und Krafttraining.',pt:'Primeira metade do ciclo — muitas sentem mais energia agora. Boa janela para atividade e força.',fr:'Première moitié du cycle — beaucoup ont plus d’énergie. Une bonne fenêtre pour l’activité et le renforcement.',pl:'Pierwsza połowa cyklu — wiele osób ma teraz więcej energii. Dobre okno na aktywność i trening siłowy.',it:'Prima metà del ciclo — molte hanno più energia ora. Una buona finestra per attività e forza.',he:'המחצית הראשונה של המחזור — רבות חשות יותר אנרגיה עכשיו. חלון טוב לפעילות ולחיזוק.',ja:'周期の前半 — 多くの人がエネルギーを感じます。運動や筋トレに向く時期です。',ko:'주기 전반부 — 이 시기엔 에너지가 더 느껴지는 분이 많아요. 활동과 근력 운동에 좋은 시기입니다.'})},
       ovulation:{ic:'✨',t:L({ru:'Середина цикла — у многих пик энергии и настроения. Поддержите гидратацию и белок.',uk:'Середина циклу — у багатьох пік енергії та настрою. Підтримайте гідратацію та білок.',en:'Mid-cycle — many feel a peak in energy and mood. Support hydration and protein.',es:'Mitad del ciclo: muchas sienten un pico de energía y ánimo. Cuida la hidratación y la proteína.',de:'Zyklusmitte — viele erleben ein Hoch bei Energie und Stimmung. Achte auf Flüssigkeit und Eiweiß.',pt:'Meio do ciclo — muitas sentem pico de energia e humor. Mantenha hidratação e proteína.',fr:'Milieu de cycle — beaucoup ressentent un pic d’énergie et d’humeur. Pensez à l’hydratation et aux protéines.',pl:'Środek cyklu — wiele osób czuje szczyt energii i nastroju. Zadbaj o nawodnienie i białko.',it:'Metà ciclo — molte sentono un picco di energia e umore. Cura idratazione e proteine.',he:'אמצע המחזור — רבות חשות שיא של אנרגיה ומצב רוח. שמרו על שתייה וחלבון.',ja:'周期の中頃 — エネルギーと気分がピークの人が多い時期。水分とタンパク質を意識して。',ko:'주기 중반 — 에너지와 기분이 정점인 분이 많아요. 수분과 단백질을 챙기세요.'})},
       luteal:{ic:'🌗',t:L({ru:'Вы во второй половине цикла. Небольшие сдвиги — сон чуть легче, энергия и ВСР чуть ниже обычного — в эти дни у многих обычное дело, не повод для тревоги. Помогают магний, сложные углеводы вечером и ровный сон.',uk:'Ви в другій половині циклу. Невеликі зсуви — сон трохи легший, енергія та ВСР трохи нижчі за звичні — цими днями у багатьох звична річ, не привід для тривоги. Допомагають магній, складні вуглеводи ввечері та рівний сон.',en:'You’re in the second half of your cycle. Small shifts — lighter sleep, energy and HRV a bit below your usual — are common these days and not a cause for worry. Magnesium, evening complex carbs and steady sleep help.',es:'Estás en la segunda mitad del ciclo. Pequeños cambios —sueño más ligero, energía y VFC algo por debajo de lo habitual— son comunes estos días y no motivo de preocupación. Ayudan el magnesio, los carbohidratos complejos por la noche y un sueño estable.',de:'Du bist in der zweiten Zyklushälfte. Kleine Verschiebungen — leichterer Schlaf, Energie und HRV etwas unter dem Üblichen — sind in diesen Tagen normal und kein Grund zur Sorge. Magnesium, komplexe Kohlenhydrate am Abend und ruhiger Schlaf helfen.',pt:'Você está na segunda metade do ciclo. Pequenas mudanças — sono mais leve, energia e VFC um pouco abaixo do habitual — são comuns nestes dias e não motivo de preocupação. Ajudam magnésio, carboidratos complexos à noite e sono estável.',fr:'Vous êtes dans la seconde moitié du cycle. De petits changements — sommeil plus léger, énergie et VFC un peu sous votre habitude — sont fréquents ces jours-ci et sans raison de s’inquiéter. Le magnésium, les glucides complexes le soir et un sommeil régulier aident.',pl:'Jesteś w drugiej połowie cyklu. Drobne zmiany — lżejszy sen, energia i HRV nieco poniżej normy — są w te dni częste i nie są powodem do niepokoju. Pomagają magnez, złożone węglowodany wieczorem i równy sen.',it:'Sei nella seconda metà del ciclo. Piccoli cambiamenti — sonno più leggero, energia e HRV un po’ sotto il solito — sono comuni in questi giorni e non un motivo di preoccupazione. Aiutano magnesio, carboidrati complessi la sera e un sonno regolare.',he:'את במחצית השנייה של המחזור. שינויים קטנים — שינה קלה יותר, אנרגיה ו-HRV מעט מתחת לרגיל — שכיחים בימים אלה ואינם סיבה לדאגה. מגנזיום, פחמימות מורכבות בערב ושינה יציבה מסייעים.',ja:'周期の後半です。眠りが浅め、エネルギーやHRVがいつもより少し低め — こうした小さな変化はこの時期によくあることで、心配は要りません。マグネシウム、夜の複合炭水化物、規則的な睡眠が助けになります。',ko:'주기 후반부입니다. 수면이 조금 얕아지고 에너지와 HRV가 평소보다 약간 낮아지는 작은 변화는 이 시기에 흔하며 걱정할 일이 아닙니다. 마그네슘, 저녁의 복합 탄수화물, 규칙적인 수면이 도움이 됩니다.'})}
     };
-    var m=T[ph]; if(!m) return;
+    if(!m) m=T[ph]; if(!m) return;
     box.innerHTML='<span class="rd-phasenote-ic">'+m.ic+'</span><span>'+m.t+'</span>';
     box.style.display='flex';
   }catch(e){}
@@ -10256,6 +10328,7 @@ function _showResultsInner(){
     last_period:(function(){var ci=cycleInfo();if(ci)return ci.daysSince>365?'year':ci.daysSince>90?'months':'recent';var ph=getRadio('phase');return ph==='post'?'year':ph==='meno'?'months':'recent';})(),
     cycle_day:(getRadio('cycle_status')==='absent'?null:(cycleInfo()||{}).day||null),
     cycle_phase:(getRadio('cycle_status')==='absent'?null:(cycleInfo()||{}).phase||null),
+    cycle_temp:((getRadio('cycle_status')==='absent'||getRadio('gender')==='male')?null:_cycTempState()),   // что видно по кривой ночной температуры (подъём есть / нет / рано / мало ночей)
     pms:(function(){var s=getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9','pmss6']).filter(function(v){return v!=='none_pms';});return s.length>=5?'severe':s.length>=3?'moderate':s.length>=1?'mild':'none';})(),
     pms_symptoms:getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9','pmss6']),
     vitality:getRadio('vitality'),
