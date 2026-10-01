@@ -11610,7 +11610,32 @@ function _humanCtaHtml(){
        + '<div style="font-size:var(--fs-cap);color:var(--t2);margin-top:3px;">'+(T2[lang]||T2.en)+' →</div></div>';
 }
 function _humanCtaGo(){ try{ location.href='./my-specialist.html'; }catch(e){} }
+// ── «Также вы отметили…» под разбором ─────────────────────────────────────────
+// Фиксированная строка от приложения, а не просьба к модели: живой прогон 2026-10-01 показал, что
+// правило «назови остальные жалобы и отошли к памятке» модель держит наполовину — часть пунктов
+// называет, часть нет, к памятке не отсылает. Здесь человек каждый день видит одно и то же: всё,
+// что он отметил сверх двух главных, услышано, и шаги по этому лежат в главе памятки (нажатие
+// открывает её). В пробные дни не показываем: там видна одна карточка, обещать остальные нечестно.
+var _ALSO_T={ru:'Также вы отметили: {l}. Шаги по ним — в памятке дня, раздел «Что беспокоит».',uk:'Також ви позначили: {l}. Кроки щодо них — у памʼятці дня, розділ «Що турбує».',en:'You also marked: {l}. Steps for these are in your day plan, under “What bothers you”.',es:'También marcaste: {l}. Los pasos para ello están en tu plan del día, en «Qué te preocupa».',de:'Außerdem hast du markiert: {l}. Schritte dazu findest du im Tagesplan unter „Was dich belastet“.',pt:'Você também marcou: {l}. Os passos para isso estão no plano do dia, em «O que incomoda».',fr:'Vous avez aussi coché : {l}. Les étapes correspondantes sont dans le plan du jour, rubrique « Ce qui vous gêne ».',pl:'Zaznaczono też: {l}. Kroki w tych sprawach są w planie dnia, w części „Co Ci dokucza”.',it:'Hai segnato anche: {l}. I passi per questi punti sono nel piano del giorno, alla voce «Cosa ti dà fastidio».',he:'סימנתם גם: {l}. הצעדים לגביהם נמצאים בתוכנית היום, בפרק ״מה מטריד״.',ja:'ほかに選択された項目：{l}。それぞれの対処は、今日のプランの「気になること」にあります。',ko:'함께 선택하신 항목: {l}. 이에 대한 단계는 오늘의 계획의 ‘불편한 점’에 있습니다.'};
+function _alsoNoteHtml(){
+  try{
+    if(typeof _isTrial==='function' && _isTrial()) return '';
+    var c=_cmpGet(), ok=_cmpList();
+    var a=(c&&Array.isArray(c.also)?c.also:[]).filter(function(k){ return ok.indexOf(k)>=0 && (c.items||[]).indexOf(k)<0; });
+    if(!a.length) return '';
+    return '<div id="alsoNote" onclick="openBpChapter(\'cmp\')" style="margin-top:14px;padding:12px 14px;border:1px solid rgba(226,185,90,.28);border-radius:14px;background:rgba(226,185,90,.06);cursor:pointer;font-size:var(--fs-body);color:var(--t2);line-height:1.55;">'
+      + _esc(L(_ALSO_T).replace('{l}', a.map(_cmpLbl).join(' · '))) + ' <span style="color:var(--gold-lt);">›</span></div>';
+  }catch(e){ return ''; }
+}
+function _renderAlsoNote(){
+  var host=document.getElementById('aiDisc'); if(!host) return;
+  var old=document.getElementById('alsoNote'); if(old) old.remove();
+  var html=_alsoNoteHtml(); if(!html) return;
+  var d=document.createElement('div'); d.innerHTML=html;
+  host.parentNode.insertBefore(d.firstChild, host);   // над оговоркой «Создано ИИ», сразу под текстом разбора
+}
 function _renderHumanCta(){
+  try{ _renderAlsoNote(); }catch(e){}   // зовётся из всех мест, где разбор появляется на экране
   var host=document.getElementById('aiDisc'); if(!host) return;
   var old=document.getElementById('humanCta'); if(old) old.remove();
   var html=_humanCtaHtml(); if(!html) return;
