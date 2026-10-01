@@ -124,6 +124,17 @@ def upload_bundle(tok, eid, path):
         sys.exit("Загрузка .aab не удалась (%s): %s" % (e.code, e.read().decode()[:500]))
 
 
+def release_body(vc, fraction):
+    """Релиз целиком или поэтапно: --fraction 0.2 = 20% пользователей (status inProgress)."""
+    rel = {"name": "%s (1.0)" % vc, "versionCodes": [str(vc)], "status": "completed"}
+    if fraction:
+        if not 0 < fraction < 1:
+            sys.exit("--fraction должен быть между 0 и 1, например 0.2")
+        rel["status"] = "inProgress"
+        rel["userFraction"] = fraction
+    return rel
+
+
 def cmd_upload(args):
     """Загрузить .aab и сразу выложить его в трек (один edit — одна операция)."""
     tok = token()
@@ -134,13 +145,14 @@ def cmd_upload(args):
         tracks = [t["track"] for t in call(tok, "%s/edits/%s/tracks" % (API, eid)).get("tracks", [])]
         if args.track not in tracks:
             sys.exit("Трека «%s» нет. Есть: %s" % (args.track, " | ".join(tracks)))
-        print("Файл:  %s (%.1f МБ)\nТрек:  %s" % (args.aab, os.path.getsize(args.aab) / 1048576.0, args.track))
+        print("Файл:  %s (%.1f МБ)\nТрек:  %s\nДоля:  %s" % (args.aab, os.path.getsize(args.aab) / 1048576.0, args.track,
+              "%d%%" % round(args.fraction * 100) if args.fraction else "100%"))
         if not args.yes:
             print("\nЧерновой прогон. Ничего не загружено. Добавьте --yes.")
             return
         vc = upload_bundle(tok, eid, args.aab)
         print("Загружено, versionCode:", vc)
-        rel = {"name": "%s (1.0)" % vc, "versionCodes": [str(vc)], "status": "completed"}
+        rel = release_body(vc, args.fraction)
         if notes:
             rel["releaseNotes"] = notes
         call(tok, "%s/edits/%s/tracks/%s" % (API, eid, urllib.parse.quote(args.track)), "PUT",
@@ -160,7 +172,7 @@ def cmd_release(args):
         tracks = [t["track"] for t in call(tok, "%s/edits/%s/tracks" % (API, eid)).get("tracks", [])]
         if args.track not in tracks:
             sys.exit("Трека «%s» нет. Есть: %s" % (args.track, " | ".join(tracks)))
-        rel = {"name": "%s (1.0)" % args.version, "versionCodes": [str(args.version)], "status": "completed"}
+        rel = release_body(args.version, args.fraction)
         if notes:
             rel["releaseNotes"] = notes
         print("Трек:   %s\nСборка: %s\nЯзыки примечаний: %s"
@@ -291,11 +303,13 @@ def main():
     r.add_argument("--track", required=True, help='имя трека, например "1.0 (1) — закрытый тест"')
     r.add_argument("--version", required=True, type=int, help="versionCode сборки, например 4")
     r.add_argument("--notes", help="JSON с примечаниями (по умолчанию app/store/android/release-notes.json)")
+    r.add_argument("--fraction", type=float, help="поэтапно: доля пользователей, например 0.2")
     r.add_argument("--yes", action="store_true", help="действительно опубликовать")
     u = sub.add_parser("upload", help="загрузить .aab и выложить его в трек")
     u.add_argument("--aab", required=True, help="путь к .aab, например app/store/android/updates/vial-release-v5.aab")
     u.add_argument("--track", required=True, help='имя трека, например "1.0 (1) — закрытый тест"')
     u.add_argument("--notes", help="JSON с примечаниями (по умолчанию app/store/android/release-notes.json)")
+    u.add_argument("--fraction", type=float, help="поэтапно: доля пользователей, например 0.2")
     u.add_argument("--yes", action="store_true", help="действительно загрузить и выложить")
     pr = sub.add_parser("prices", help="выровнять цены подписки по всем странам")
     pr.add_argument("--product", default="via_l_pro_monthly")
