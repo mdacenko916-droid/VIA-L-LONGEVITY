@@ -5213,7 +5213,7 @@ async function handleOuraMetrics(request, env, corsHeaders){
   const h = { 'Authorization': 'Bearer ' + rec.access_token };
   const end   = new Date().toISOString().slice(0,10);
   const start = new Date(Date.now() - 7 * 86400000).toISOString().slice(0,10);
-  const get = async (path) => { try { const r = await fetch(`${OURA_API}${path}?start_date=${start}&end_date=${end}`, { headers:h }); if (!r.ok) return null; const j = await r.json(); return (j && j.data) || []; } catch(e){ return null; } };
+  const get = async (path, from) => { try { const r = await fetch(`${OURA_API}${path}?start_date=${from || start}&end_date=${end}`, { headers:h }); if (!r.ok) return null; const j = await r.json(); return (j && j.data) || []; } catch(e){ return null; } };
 
   const ex = {};
   // Sleep → hrv (average_hrv), rhr (lowest_heart_rate), sleepHours, deepMin — за ПОСЛЕДНЮЮ ночь (s.day), не среднее за 7д.
@@ -5229,11 +5229,26 @@ async function handleOuraMetrics(request, env, corsHeaders){
   }
   // Readiness → readiness (score 0–100) + tempDev (ночное отклонение температуры) — за ПОСЛЕДНИЙ день (x.day).
   // Совпадает с импортом Oura-файла (parseOuraJSON): готовность отдаём как есть, энергию НЕ подменяем.
-  const rdy = await get('/v2/usercollection/daily_readiness') || [];
+  // РЯД НОЧЕЙ ЗА 45 ДНЕЙ (2026-10-01) — для температурной проверки цикла. Одна последняя ночь не
+  // отвечает на вопрос «был ли подъём во второй половине цикла»: нужна кривая за весь цикл, причём
+  // без дыр в дни, когда человек не открывал приложение. Поэтому готовность тянем за 45 дней тем же
+  // запросом (последний день для readiness/tempDev выбирается как раньше), а ряд отдаём рядом с ex.
+  const rdy = await get('/v2/usercollection/daily_readiness', new Date(Date.now() - 45 * 86400000).toISOString().slice(0,10)) || [];
+  const tempSeries = [];
   if (rdy.length) {
     let v;
-    v = _latestByDate(rdy, x => x.day, x => { const n = Number(x && x.score); return isFinite(n)&&n>0 ? n : null; }, _pd);           if (v!=null) ex.readiness = Math.round(v);
-    v = _latestByDate(rdy, x => x.day, x => { const n = Number(x && x.temperature_deviation); return isFinite(n) ? n : null; }, _pd); if (v!=null) ex.tempDev = +v.toFixed(2);   // 2 знака — мелкие отклонения (0.02) не теряем
+    // «Последний день» ищем только в прежнем 7-дневном окне: иначе запись месячной давности
+    // выдала бы себя за свежую готовность/температуру, когда кольцо давно не носили.
+    const rdy7 = rdy.filter(x => x && String(x.day || '') >= start);
+    v = _latestByDate(rdy7, x => x.day, x => { const n = Number(x && x.score); return isFinite(n)&&n>0 ? n : null; }, _pd);           if (v!=null) ex.readiness = Math.round(v);
+    v = _latestByDate(rdy7, x => x.day, x => { const n = Number(x && x.temperature_deviation); return isFinite(n) ? n : null; }, _pd); if (v!=null) ex.tempDev = +v.toFixed(2);   // 2 знака — мелкие отклонения (0.02) не теряем
+    const _tb = _EX_BOUNDS.tempDev;
+    rdy.forEach(x => {
+      const d = String(x && x.day || '').slice(0,10);
+      const n = (x && x.temperature_deviation != null) ? Number(x.temperature_deviation) : NaN;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(d) && isFinite(n) && n >= _tb[0] && n <= _tb[1]) tempSeries.push({ d, v: +n.toFixed(2) });
+    });
+    tempSeries.sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
   }
   // SpO2 → spo2_percentage.average — за ПОСЛЕДНИЙ день (x.day)
   const spo2 = await get('/v2/usercollection/daily_spo2') || [];
@@ -5286,7 +5301,9 @@ async function handleOuraMetrics(request, env, corsHeaders){
     if (last.day)       ex.trainDay = String(last.day);
     if (last.activity)  ex.trainActivity = String(last.activity);
   }
-  return jsonResponse({ ok:true, ex: _sanitizeEx(ex), day: _maxDay(_pd) }, corsHeaders);
+  const _out = { ok:true, ex: _sanitizeEx(ex), day: _maxDay(_pd) };
+  if (tempSeries.length) _out.temp_series = tempSeries;   // [{d:'YYYY-MM-DD', v:°C от базовой}] — старые сборки поле не читают
+  return jsonResponse(_out, corsHeaders);
 }
 
 // ─────────────────────────────────────────────────────────────

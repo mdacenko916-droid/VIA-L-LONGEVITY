@@ -7322,6 +7322,7 @@ function saveProfile(){
       updated:_dayKey()
     };
     localStorage.setItem('vialp_profile',JSON.stringify(prof));
+    try{ _cycLogStart(prof.lastperiod, (P.lastperiod && prof.lastperiod && prof.lastperiod<P.lastperiod) ? P.lastperiod : ''); }catch(e){}   // журнал начал циклов; дату сдвинули назад — это правка, прежнюю убираем
     try{ if(typeof _ikSync==='function'){ _ikSync(prof); _ikArm(); } }catch(e){}   // «Мои приёмы» следуют за галочками
   }catch(e){}
 }
@@ -7839,8 +7840,26 @@ var _CYC_T = {
 function _cycProfile(){ try{ return JSON.parse(localStorage.getItem('vialp_profile')||'{}')||{}; }catch(e){ return {}; } }
 // Пишем в профиль ТОЛЬКО дату, напрямую: saveProfile не умеет очищать поле (пустой DOM сохраняет
 // прежнее значение), а «Отменить» должно вернуть и пустоту, если даты раньше не было.
+// ЖУРНАЛ НАЧАЛ ЦИКЛОВ (2026-10-01). В профиле лежит одна дата, и каждая новая отметка затирает
+// прежнюю — а температурной проверке цикла нужны настоящие границы циклов (сравнить вторую
+// половину с первой, увидеть цикл без подъёма). Храним до 12 последних начал. Дата ближе 15 дней
+// к уже записанной — это правка той же отметки, а не новый цикл (короче 20 дней мы не принимаем).
+function _cycStarts(){ try{ var a=JSON.parse(localStorage.getItem('vialp_cycle_starts')||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+function _cycLogStart(v,drop){
+  try{
+    var a=_cycStarts().filter(function(d){ return d!==drop; });
+    if(/^\d{4}-\d{2}-\d{2}$/.test(v||'') && v<=_dayKey(new Date(Date.now()+86400000))){
+      a=a.filter(function(d){ return Math.abs((new Date(v)-new Date(d))/86400000)>=15; });
+      a.push(v);
+    }
+    a.sort(); localStorage.setItem('vialp_cycle_starts', JSON.stringify(a.slice(-12)));
+  }catch(e){}
+}
 function _cycSetLast(v){
-  var P=_cycProfile(); if(v) P.lastperiod=v; else delete P.lastperiod;
+  var P=_cycProfile(), old=P.lastperiod||''; if(v) P.lastperiod=v; else delete P.lastperiod;
+  var undo=!!old && (!v || v<old);                     // «Отменить» или сдвиг назад — прежняя отметка была ошибкой
+  if(!undo) _cycLogStart(old);                         // прежнее начало — тоже в журнал (дата введена до его появления)
+  _cycLogStart(v, undo?old:'');
   try{ localStorage.setItem('vialp_profile', JSON.stringify(P)); }catch(e){}
   var inp=document.getElementById('prof-lastperiod'); if(inp) inp.value=v||'';
   if(typeof renderCycleDay==='function'){ try{ renderCycleDay(); }catch(e){} }
@@ -10883,6 +10902,22 @@ function parseCSV(text,source){
 // за 15-е). Дату показываем человеку И отправляем в разбор, иначе модель читает старый замер
 // как прошлую ночь. Раньше её сохранял только путь Fitbit — теперь все вендоры.
 function _saveImportedDay(j){ try{ if(j&&j.day) localStorage.setItem('viae_imported_day', String(j.day).slice(0,10)); }catch(e){} }
+// ── РЯД НОЧНОЙ ТЕМПЕРАТУРЫ (2026-10-01) ───────────────────────────────────────
+// Для температурной проверки цикла нужна кривая за весь цикл, а vialp_daily хранит температуру
+// только за дни прохода. Прибор отдаёт ряд за 45 ночей при каждой синхронизации — складываем его
+// по датам (до 90 ночей). kind: 'dev' — отклонение от базовой (Oura), 'abs' — абсолютные °C
+// (Apple Health). Ряды разных приборов не смешиваем: сменился источник — начинаем заново.
+function _tempSeriesSave(src,kind,rows){
+  try{
+    if(!Array.isArray(rows)||!rows.length) return;
+    var cur={}; try{ cur=JSON.parse(localStorage.getItem('vialp_temp_series')||'{}')||{}; }catch(e){}
+    var map={};
+    if(cur.src===src && cur.kind===kind && Array.isArray(cur.nights)) cur.nights.forEach(function(n){ if(n&&n.d) map[n.d]=n.v; });
+    rows.forEach(function(n){ var v=Number(n&&n.v); if(n && /^\d{4}-\d{2}-\d{2}$/.test(n.d) && isFinite(v)) map[n.d]=v; });
+    var nights=Object.keys(map).sort().slice(-90).map(function(d){ return {d:d,v:map[d]}; });
+    localStorage.setItem('vialp_temp_series', JSON.stringify({src:src,kind:kind,nights:nights,ts:Date.now()}));
+  }catch(e){}
+}
 function _importedDayGet(){ try{ var d=localStorage.getItem('viae_imported_day')||''; return /^\d{4}-\d{2}-\d{2}$/.test(d)?d:''; }catch(e){ return ''; } }
 // На сколько дней данные старше вчерашнего (0 — свежие: вчера или сегодня).
 function _importedDayLag(){
@@ -11424,6 +11459,7 @@ async function fetchOuraLive(sid){
   try{
     const r=await fetch(AI_WORKER+'/oura/metrics?sid='+encodeURIComponent(sid));
     const j=await r.json();
+    if(j.ok&&j.temp_series) _tempSeriesSave('oura','dev',j.temp_series);   // ряд ночей — для температурной проверки цикла
     if(j.ok&&j.ex&&Object.keys(j.ex).length){
       _saveImportedDay(j);
       applyExtracted(j.ex,'oura');

@@ -198,9 +198,22 @@
     // 14 дней). Если тип не поддержан плагином/часами — тихо пропускаем (out.tempDev остаётся пустым).
     try {
       var pw = hk();
-      var wt = await pw.queryHKitSampleType({ sampleName: 'appleSleepingWristTemperature', startDate: daysAgoISO(14), endDate: nowISO(), limit: 0 });
-      var wrows = (wt && wt.resultData) || [];
-      var wvals = wrows.map(function(s){ return Number(s.value); }).filter(function(n){ return isFinite(n) && n > 20 && n < 45; });
+      // Ряд ночей за 45 дней (2026-10-01) — для температурной проверки цикла: одной последней ночи
+      // мало, нужна кривая за весь цикл без дыр в дни, когда приложение не открывали. Базовая линия
+      // для tempDev считается ПО-ПРЕЖНЕМУ по последним 14 дням — окно запроса шире, расчёт тот же.
+      var wall = await pw.queryHKitSampleType({ sampleName: 'appleSleepingWristTemperature', startDate: daysAgoISO(45), endDate: nowISO(), limit: 0 });
+      var wok = ((wall && wall.resultData) || []).filter(function(s){ var n = Number(s && s.value); return isFinite(n) && n > 20 && n < 45; });
+      // Абсолютные °C по ночам; ключ — локальная дата окончания сна (как `day` у колец). В `out` ряд
+      // НЕ кладём: `out` уходит дальше в поля и доп. показатели, а ряд живёт только в хранилище.
+      if(wok.length && typeof window._tempSeriesSave === 'function'){
+        window._tempSeriesSave('apple', 'abs', wok.map(function(s){
+          var e = new Date(s.endDate || s.startDate);
+          return { d: e.getFullYear() + '-' + String(e.getMonth() + 1).padStart(2, '0') + '-' + String(e.getDate()).padStart(2, '0'), v: Math.round(Number(s.value) * 100) / 100 };
+        }));
+      }
+      var wcut = Date.now() - 14 * 86400000;
+      var wrows = wok.filter(function(s){ return new Date(s.endDate || s.startDate).getTime() >= wcut; });
+      var wvals = wrows.map(function(s){ return Number(s.value); });
       if(wvals.length >= 3){
         var base = wvals.reduce(function(a,b){ return a + b; }, 0) / wvals.length;
         wrows.sort(function(a,b){ return new Date(b.endDate || b.startDate) - new Date(a.endDate || a.startDate); });
