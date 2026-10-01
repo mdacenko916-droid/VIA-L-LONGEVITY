@@ -3302,9 +3302,21 @@ async function handleTranslateAnalysis(request, env, corsHeaders, ctx) {
   // Раньше ru/uk как ЦЕЛЬ отвергались («база знаний и так русская»). Но украинцу это закрывало
   // единственную дверь: русский текст ему переводить было нечем (жалоба тестировщика 2026-09-10).
   // Теперь принимаем — а лишнюю работу отсекает вызывающая сторона, сверяя язык до запроса.
+  // Текст уже на языке цели — переводить нечего. Сборки до 1.0.9 слали сюда свежий недельный/месячный
+  // разбор «перевести» на его же язык: Haiku на это иногда отвечал отказом («текст уже на русском,
+  // переводить нечего»), приложение сохраняло отказ ВМЕСТО разбора, а при смене языка ещё и
+  // переводило его (живой случай 2026-10-01, месячный разбор владельца). Русский/украинский
+  // ловим по буквам-маркерам до вызова модели.
+  if ((lang === 'ru' || lang === 'uk') && _cyrDialect(text) === lang) return jsonResponse({ error: 'same language' }, corsHeaders, 409);
   try {
     let out = await translateReply(env, text, lang, 8000);
     if (!out || out === text) return jsonResponse({ error: 'translate failed' }, corsHeaders, 502);
+    // Перевод не бывает в разы короче оригинала; короткий ответ — это отказ или комментарий модели.
+    // Иероглифические языки компактнее, им порог ниже.
+    if (text.length > 400 && out.length < text.length * (lang === 'ja' || lang === 'ko' ? 0.15 : 0.4)) {
+      console.error('translate-analysis: suspiciously short output', lang, text.length, out.length);
+      return jsonResponse({ error: 'translate failed' }, corsHeaders, 502);
+    }
     try { out = _structRepair(out); } catch (e) { /* ремонт не должен ронять ответ */ }
     logRiskProbe(env, ctx, 'analysis-translate', '', lang, 'len:' + text.length);
     return jsonResponse({ analysis: out }, corsHeaders);

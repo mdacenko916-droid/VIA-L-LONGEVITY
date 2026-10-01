@@ -5950,7 +5950,7 @@ async function genMonthlyReport(){
     if(!json.report) throw new Error('no report');
     localStorage.setItem('vialp_monthly_text',json.report);
     localStorage.setItem('vialp_monthly_last',String(Date.now()));
-    localStorage.setItem('vialp_monthly_lang',lang);
+    localStorage.setItem('vialp_monthly_lang',lang+'@'+_TR_ENGINE_V);   // тем же видом, что сверяет _reportEnsureLang
     localStorage.setItem('vialp_monthly_date',_dayKey());
     renderMonthlyReportUI();
     if(typeof genAiMemory==='function')genAiMemory(summary,daily);   // AI-память обновляется на месячном каденсе
@@ -6832,6 +6832,17 @@ async function _reportEnsureLang(kind){
   var txt='',saved='';
   try{ txt=localStorage.getItem(K.txt)||''; saved=localStorage.getItem(K.lng)||''; }catch(e){}
   if(!txt) return;
+  // До 2026-10-01 свежий разбор помечался голым 'ru', а сверка ждала 'ru@2' — и только что полученный
+  // текст уходил «переводиться» на свой же язык. Переводчик иногда отвечал отказом, отказ сохранялся
+  // вместо разбора. Голая пометка своего языка — это свежий разбор, он в порядке.
+  if(saved===lang){ try{ localStorage.setItem(K.lng,lang+'@'+_TR_ENGINE_V); }catch(e){} return; }
+  // Уже пострадавший разбор: «перевод» в несколько строк — это отказ переводчика, оригинал затёрт.
+  // Снимаем его вместе с таймером, чтобы человек мог получить разбор заново, а не ждать срока.
+  if(saved && saved.indexOf('@')>0 && txt.length<((lang==='ja'||lang==='ko')?300:700)){
+    try{ ['text','last','date','lang'].forEach(function(x){ localStorage.removeItem('vialp_'+kind+'_'+x); }); }catch(e){}
+    if(typeof window[K.render]==='function') window[K.render]();
+    return;
+  }
   // Пометки языка нет (текст сохранён до этой правки) — смотрим на сам текст.
   // Свежая пометка — всё в порядке. Пометки нет (текст сохранён до этой правки) — смотрим на сам
   // текст: для латиничных языков хватает доли кириллицы, а русский с украинским различаем по
@@ -6844,7 +6855,7 @@ async function _reportEnsureLang(kind){
     var r=await fetch(AI_WORKER+'/translate-analysis',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({text:txt,lang:lang})});
     var j=await r.json();
-    if(j&&j.analysis){
+    if(j&&j.analysis&&j.analysis.length>=txt.length*((lang==='ja'||lang==='ko')?0.15:0.4)){   // короткий «перевод» — отказ модели, оригинал не затираем
       try{ localStorage.setItem(K.txt,j.analysis); localStorage.setItem(K.lng,lang+'@'+_TR_ENGINE_V); }catch(e){}
       if(typeof window[K.render]==='function') window[K.render]();
     }
@@ -6901,7 +6912,7 @@ async function genWeeklyReport(){
     localStorage.setItem('vialp_weekly_text',json.report);
     localStorage.setItem('vialp_weekly_last',String(Date.now()));
     localStorage.setItem('vialp_weekly_date',_dayKey());
-    localStorage.setItem('vialp_weekly_lang',lang);   // язык, на котором разбор пришёл
+    localStorage.setItem('vialp_weekly_lang',lang+'@'+_TR_ENGINE_V);   // язык, на котором разбор пришёл — тем же видом, что сверяет _reportEnsureLang
     renderWeeklyReportUI();
     try{ if(typeof renderExperimentUI==='function') renderExperimentUI(_dayKey()); }catch(x){}   // новый эксперимент виден сразу
     // Память обновляем на НЕДЕЛЬНОМ каденсе, а не только на месячном: цепочка «что закрепилось →
