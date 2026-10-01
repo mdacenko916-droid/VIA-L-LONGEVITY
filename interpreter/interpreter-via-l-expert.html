@@ -12964,7 +12964,11 @@ document.addEventListener('visibilitychange',function(){
   function lng(){ var l; try{ l=localStorage.getItem('vial_lang'); }catch(e){} return I18N[l]?l:'en'; }
   function tr(){ return I18N[lng()]; }
   // Привязан ли пациент к специалисту (см. my-specialist.html) → human-led режим советника.
-  function specLink(){ try{ return JSON.parse(localStorage.getItem('viae_spec_link')||'null'); }catch(e){ return null; } }
+  // В EXPERT клиента ВСЕГДА ведёт специалист (вход по его коду; воркер по tier и так отвечает только
+  // переадресацией). Раньше здесь читался ключ viae_spec_link, который никто не пишет, — и советник
+  // здоровался «спросите про ваши показатели — помогу разобраться», а на вопрос отвечал отказом.
+  // Теперь приветствие всегда «вас ведёт ваш специалист»; имя берём из связки, если она есть. 2026-10-01.
+  function specLink(){ try{ var l=JSON.parse(localStorage.getItem('vial_spec_link')||'null'); return (l&&l.code)?l:{}; }catch(e){ return {}; } }
   // Имя клиента из профиля (первое слово) — чтобы приветствие обращалось лично.
   function clientName(){ try{ var g=(typeof secGet==='function')?secGet('viae_profile'):localStorage.getItem('viae_profile'); var P=JSON.parse(g||'{}')||{}; return (P.name||'').trim().split(/\s+/)[0]||''; }catch(e){ return ''; } }
   function greetFor(t){ var s=specLink(); var base = s ? (t.greetLed||t.greet).split('{nm}').join(s.name?(' '+s.name):'') : t.greet;

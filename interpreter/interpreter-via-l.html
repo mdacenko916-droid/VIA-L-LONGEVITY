@@ -12944,7 +12944,9 @@ document.addEventListener('visibilitychange',function(){
   // ⚠️ Ключ — vial_spec_link (его пишет my-specialist.html), а НЕ vialp_…: массовое переименование ключей
   // 2026-07-14 («разделение localStorage тарифов») задело и эту строку, и два с половиной месяца советник
   // у подключённых к наставнику клиентов работал как у всех — сам отвечал по здоровью. Починено 2026-10-01.
-  function specLink(){ try{ var l=JSON.parse(localStorage.getItem('vial_spec_link')||'null'); return (l&&l.code)?l:null; }catch(e){ return null; } }
+  // Обмен данными выключен (sharing===false) → специалист проходы не видит, отправлять к нему с вопросом
+  // по показателям некуда: советник остаётся обычным и отвечает сам (решение владельца 2026-10-01).
+  function specLink(){ try{ var l=JSON.parse(localStorage.getItem('vial_spec_link')||'null'); return (l&&l.code&&l.sharing!==false)?l:null; }catch(e){ return null; } }
   // Имя клиента из профиля (первое слово) — чтобы приветствие обращалось лично.
   function clientName(){ try{ var g=(typeof secGet==='function')?secGet('vialp_profile'):localStorage.getItem('vialp_profile'); var P=JSON.parse(g||'{}')||{}; return (P.name||'').trim().split(/\s+/)[0]||''; }catch(e){ return ''; } }
   function greetFor(t){ var s=specLink(); var base = s ? (t.greetLed||t.greet).split('{nm}').join(s.name?(' '+s.name):'') : t.greet;
