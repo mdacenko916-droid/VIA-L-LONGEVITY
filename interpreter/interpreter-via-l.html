@@ -11821,6 +11821,7 @@ function _bpChapters(){
   if(!_an){ var _pj=null; try{ _pj=JSON.parse(localStorage.getItem('vialp_an_job')||'null'); }catch(e){}
     _anWait=!!window._anLoading || !!(_pj && _pj.day===_dayKey() && Date.now()-_pj.ts < 10*60*1000); }
   // «Приём сегодня» — первой после разбора: это действия с конкретным временем (intake.js, 2026-09-18).
+  var _cmc=(typeof _cmpChapter==='function')?_cmpChapter():null; if(_cmc) chs.unshift(_cmc);   // «что беспокоит» — над «Утром»
   try{ var _ikc=(typeof _ikChapter==='function')?_ikChapter():null; if(_ikc) chs.unshift(_ikc); }catch(e){}
   try{ var _spc=(typeof _specChapter==='function')?_specChapter():null; if(_spc) chs.unshift(_spc); }catch(e){}   // ответ специалиста — выше приёма
   // Готовый разбор в памятке — ДУБЛЬ карточки разбора, которая на том же экране стоит выше
@@ -12122,7 +12123,6 @@ function openDayPlanPanel(){
   var tt=document.getElementById('dayplanTitle'); if(tt) tt.textContent='🧭 '+L({ru:'Памятка дня',uk:'Памʼятка дня',en:'Day plan',es:'Plan del día',de:'Tagesplan',pt:'Plano do dia',fr:'Plan du jour',pl:'Plan dnia',it:'Piano del giorno',he:'תוכנית היום',ja:'今日のプラン',ko:'오늘의 플랜'});
   var body=_platePhiloHTML(false);
   if(d||window._bpAI){
-    body+=_cmpTableHTML(d);
     body+=_bpChapters().map(function(r){
       return '<div onclick="openBpChapter(\''+r.id+'\')" style="display:flex;align-items:center;gap:12px;padding:13px;margin-bottom:8px;background:linear-gradient(150deg,#1b1712,#13100b);border:1px solid rgba(226,185,90,.2);border-radius:13px;cursor:pointer;">'
         +'<div style="font-size:20px;width:28px;text-align:center;flex-shrink:0;">'+r.icon+'</div>'
@@ -12163,19 +12163,26 @@ function _bpRenderSecs(secs){
     return head + s.items.map(function(x){return '<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.65;padding:6px 0 6px 20px;position:relative;"><span style="position:absolute;left:0;color:var(--gold-lt);top:6px;">☐</span>'+W(_dishOf(x).text)+'</div>';}).join('');   // ☐ вместо «–» — RC2: план действий, не статья
   }).join('');
 }
-// Таблица «что беспокоит → что сделать» (complaint-table.js): строки — жалобы из «С чем вы пришли».
-// Текст фиксированный, без доз; ИИ его не пишет. Пробник видит одну строку, подписчик — все.
-// Кнопка «Обсудить со специалистом» — только тем, кто подключён к наставнику (vial_spec_link).
-function _cmpTableHTML(data){
+// «Что беспокоит → что с этим делать» (complaint-table.js): свёрнутая глава памятки, внутри — карточки
+// по жалобам из «С чем вы пришли». Текст фиксированный, без доз; ИИ его не пишет. Пробник видит одну
+// карточку, подписчик — все. Кнопка «Обсудить со специалистом» — только подключённым к наставнику.
+function _cmpOpts(data){
+  var c=_cmpGet(), items=(c&&Array.isArray(c.items))?c.items:[];
+  var male=(data.gender==='male'), ct=data.cycle_temp, note='';
+  if(!male && ct && ct.state==='none' && _phaseGate(data)) note=L(_CYC_TEMP_T.none)+(ct.prev_none?L(_CYC_TEMP_T.none2):'');
+  var titles={}; Object.keys(CMP_ITEMS).forEach(function(k){ titles[k]=CMP_ITEMS[k].t; });
+  var spec=false; try{ var l=JSON.parse(localStorage.getItem('vial_spec_link')||'null'); spec=!!(l&&l.code); }catch(e){}
+  return {items:items, male:male, trial:(typeof _isTrial==='function'&&_isTrial()), spec:spec, lang:lang, titles:titles, cycleNote:note};
+}
+function _cmpChapter(){
   try{
-    if(typeof window.vialCmpTable!=='function' || !data) return '';
-    var c=_cmpGet(), items=(c&&Array.isArray(c.items))?c.items:[];
-    var male=(data.gender==='male'), ct=data.cycle_temp, note='';
-    if(!male && ct && ct.state==='none' && _phaseGate(data)) note=L(_CYC_TEMP_T.none)+(ct.prev_none?L(_CYC_TEMP_T.none2):'');
-    var titles={}; Object.keys(CMP_ITEMS).forEach(function(k){ titles[k]=CMP_ITEMS[k].t; });
-    var spec=false; try{ var l=JSON.parse(localStorage.getItem('vial_spec_link')||'null'); spec=!!(l&&l.code); }catch(e){}
-    return window.vialCmpTable({items:items, male:male, trial:(typeof _isTrial==='function'&&_isTrial()), spec:spec, lang:lang, titles:titles, cycleNote:note});
-  }catch(e){ return ''; }
+    if(typeof window.vialCmpRows!=='function' || !window._bpData) return null;
+    var o=_cmpOpts(window._bpData), p=window.vialCmpRows(o);
+    if(!p.rows.length) return null;
+    return { id:'cmp', icon:'<i class="ph ph-list-checks" style="color:var(--gold-lt);"></i>', pr:'📝',
+      title:window.vialCmpTitle(lang),
+      teaser:p.rows.map(function(r){ return L(o.titles[r.key]||{})||r.key; }).join(' · ') };
+  }catch(e){ return null; }
 }
 function renderDayBlueprint(data){
   var box=document.getElementById('dayBlueprint'); if(!box)return;
@@ -12199,7 +12206,7 @@ function renderDayBlueprint(data){
       +'<div style="flex:1;min-width:0;"><div style="font-family:var(--font-ui);font-size:var(--fs-body);font-weight:600;color:var(--t1);letter-spacing:.03em;text-transform:uppercase;">'+r.title+'</div><div style="font-size:var(--fs-cap);color:var(--t3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+r.teaser+'</div></div>'
       +'<div style="color:var(--gold-lt);font-size:20px;opacity:.6;flex-shrink:0;">›</div></div>';
   }).join('');
-  box.innerHTML=head+_cmpTableHTML(data)+rows;   // кнопка «Скачать памятку дня» убрана (см. выше)
+  box.innerHTML=head+rows;   // кнопка «Скачать памятку дня» убрана (см. выше)
   // ⚠️ 2026-09-24: ожидание разбора СНЯТО — памятку собирает движок за доли секунды, общий кэш
   // промпта ему не нужен, а ожидание держало тарелки на экране «готовится» по несколько минут.
   // Ниже — прежнее обоснование, актуальное только если движок выключат (DAYPLAN_ENGINE=off):
@@ -12412,6 +12419,7 @@ function _bpDisc(){
 function openBpChapter(id){
   if(id==='intake'){ if(typeof _ikOpen==='function')_ikOpen(); return; }
   if(id==='spec'){ location.href='./my-specialist.html?chat=1'; return; }   // переписка живёт на странице наставника
+  if(id==='cmp'){ try{ var _co=_cmpChapter(); if(_co) openSheet(_co.icon, _co.title, window.vialCmpTable(_cmpOpts(window._bpData||{}))); }catch(e){} return; }
   if(id==='analysis'){   // полный текст сегодняшнего ИИ-разбора (кэш дня), не secs-структура
     try{
       var _ae=_aiDayEntry(_dayKey());
