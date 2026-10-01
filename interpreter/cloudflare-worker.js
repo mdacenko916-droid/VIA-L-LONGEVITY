@@ -5944,6 +5944,33 @@ async function handleTgMessage(msg, env, corsHeaders) {
   return jsonResponse({ ok: true, saved: true }, corsHeaders);
 }
 
+// Русские слова, оставшиеся в украинском переводе. Украинский разбор считается по-русски и переводится
+// (_GEN_VIA_RU), и переводчик изредка оставляет слово как было: живой случай 2026-10-01 — разбор начался
+// с «Мері, здравствуйте!». Список — только слова, которых в украинском НЕТ, поэтому замена безопасна.
+// Границы слова — своим классом: `\b` кириллицу не видит.
+const _UK_RUSSISMS = [
+  ['здравствуйте', 'вітаю'], ['здравствуй', 'вітаю'], ['доброе утро', 'доброго ранку'], ['добрый день', 'добрий день'],
+  ['добрый вечер', 'добрий вечір'], ['спасибо', 'дякую'], ['пожалуйста', 'будь ласка'], ['сегодня', 'сьогодні'],
+  ['сейчас', 'зараз'], ['хорошо', 'добре'], ['если', 'якщо'], ['очень', 'дуже'], ['также', 'також'],
+  ['тоже', 'теж'], ['только', 'лише'], ['конечно', 'звичайно'],
+];
+function _ukPolish(text, env) {
+  let out = String(text || ''), hit = [];
+  const L = "А-Яа-яЁёІіЇїЄєҐґ'ʼ’";
+  for (const [ru, uk] of _UK_RUSSISMS) {
+    const re = new RegExp('(^|[^' + L + '])(' + ru + ')(?=$|[^' + L + '])', 'gi');
+    out = out.replace(re, (m, pre, w) => {
+      hit.push(ru);
+      return pre + (w.charAt(0) !== w.charAt(0).toLowerCase() ? uk.charAt(0).toUpperCase() + uk.slice(1) : uk);
+    });
+  }
+  // Слова с буквами ы/э/ъ/ё — тоже русские, но чем их заменить, кодом не решить: только считаем,
+  // чтобы видеть, как часто это случается, прежде чем строить второй проход перевода.
+  const rest = (out.match(/[А-Яа-яЁёІіЇїЄєҐґ]*[ыэъёЫЭЪЁ][А-Яа-яЁёІіЇїЄєҐґ]*/g) || []).slice(0, 5);
+  if (hit.length || rest.length) logRiskProbe(env, null, 'uk-russism', '', 'uk', 'fixed:' + hit.join(',') + ' left:' + rest.join(','));
+  return out;
+}
+
 // Перевод ответа нутрициолога (ru) на язык клиента через Claude API.
 // Сохраняем структуру (абзацы, списки, переносы) и медицинскую точность.
 // maxTokens: у ответа нутрициолога хватало 2000, но этим же движком чиним ЯЗЫК дневного
@@ -6006,7 +6033,8 @@ async function translateReply(env, text, targetLang, maxTokens) {
   // «разбор на Haiku + перевод» приходилось оценивать по токенам вручную (2026-09-17). Теперь
   // маршрут виден в учёте как 'translate' — по нему и решаем, уводить ли дорогие языки с Sonnet.
   logUsage(env, null, 'translate', 'claude-haiku-4-5-20251001', '', targetLang, result, 'chars:' + text.length);
-  return (result.content?.[0]?.text || '').trim() || text;
+  const _tr = (result.content?.[0]?.text || '').trim() || text;
+  return targetLang === 'uk' ? _ukPolish(_tr, env) : _tr;
 }
 
 // Telegram API helpers.
