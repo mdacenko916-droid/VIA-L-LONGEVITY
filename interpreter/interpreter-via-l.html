@@ -6359,7 +6359,7 @@ function _cmpList(){
 function _cmpI18n(k){
   var M={
     ask:{ru:'С чем вы пришли?',uk:'З чим ви прийшли?',en:'What brought you here?',es:'¿Qué te trae aquí?',de:'Was führt dich her?',pt:'O que trouxe você aqui?',fr:'Qu’est-ce qui vous amène ?',pl:'Z czym przychodzisz?',it:'Cosa ti porta qui?',he:'עם מה הגעתם?',ja:'何が気になって来ましたか？',ko:'무엇 때문에 오셨나요?'},
-    askSub:{ru:'Отметьте одно-два главных — с этого начнётся ваш разбор. Можно дописать своими словами.',uk:'Позначте одне-два головних — з цього почнеться ваш розбір. Можна дописати своїми словами.',en:'Pick one or two main ones — your analysis will start there. You can add your own words.',es:'Elige una o dos principales: por ahí empezará tu análisis. Puedes añadir tus palabras.',de:'Wähle ein bis zwei Hauptpunkte — damit beginnt deine Auswertung. Eigene Worte kannst du ergänzen.',pt:'Escolha um ou dois principais — sua análise começará por aí. Pode escrever com suas palavras.',fr:'Choisissez un ou deux points principaux — votre analyse commencera par là. Vous pouvez préciser.',pl:'Wybierz jedną–dwie główne — od tego zacznie się analiza. Możesz dopisać własnymi słowami.',it:'Scegli uno o due punti principali — la tua analisi partirà da lì. Puoi aggiungere con parole tue.',he:'בחרו אחד או שניים עיקריים — מכאן יתחיל הניתוח. אפשר להוסיף במילים שלכם.',ja:'主なものを1〜2つ選んでください。分析はそこから始まります。自由記述も可能です。',ko:'주된 것 1~2개를 선택하세요. 분석이 여기서 시작됩니다. 직접 쓸 수도 있습니다.'},
+    askSub:{ru:'Отметьте всё, что беспокоит. Первые два — главные (★): с них начнётся разбор. По остальным в памятке будут карточки. Можно дописать своими словами.',uk:'Позначте все, що турбує. Перші два — головні (★): з них почнеться розбір. Для решти в памʼятці будуть картки. Можна дописати своїми словами.',en:'Mark everything that bothers you. The first two are the main ones (★): your analysis starts there. The rest get cards in your day plan. You can add your own words.',es:'Marca todo lo que te preocupa. Los dos primeros son los principales (★): por ahí empezará tu análisis. Los demás tendrán tarjetas en tu plan del día. Puedes añadir tus palabras.',de:'Markiere alles, was dich belastet. Die ersten zwei sind die Hauptpunkte (★): damit beginnt deine Auswertung. Für die übrigen gibt es Karten im Tagesplan. Eigene Worte kannst du ergänzen.',pt:'Marque tudo o que incomoda. Os dois primeiros são os principais (★): sua análise começará por eles. Os demais terão cartões no plano do dia. Pode escrever com suas palavras.',fr:'Cochez tout ce qui vous gêne. Les deux premiers sont les principaux (★) : votre analyse commencera par là. Les autres auront des fiches dans le plan du jour. Vous pouvez préciser.',pl:'Zaznacz wszystko, co Ci dokucza. Pierwsze dwie to główne (★): od nich zacznie się analiza. Pozostałe dostaną karty w planie dnia. Możesz dopisać własnymi słowami.',it:'Segna tutto ciò che ti dà fastidio. I primi due sono i principali (★): la tua analisi partirà da lì. Gli altri avranno delle schede nel piano del giorno. Puoi aggiungere con parole tue.',he:'סמנו את כל מה שמטריד. שני הראשונים הם העיקריים (★): מהם יתחיל הניתוח. לשאר יהיו כרטיסים בתוכנית היום. אפשר להוסיף במילים שלכם.',ja:'気になることをすべて選んでください。最初の2つが主なもの（★）で、分析はそこから始まります。それ以外は今日のプランにカードが表示されます。自由記述も可能です。',ko:'불편한 것을 모두 선택하세요. 처음 두 개가 주된 것(★)이며 분석이 여기서 시작됩니다. 나머지는 오늘의 계획에 카드로 표시됩니다. 직접 쓸 수도 있습니다.'},
     ph:{ru:'Своими словами: что беспокоит больше всего…',uk:'Своїми словами: що турбує найбільше…',en:'In your own words: what bothers you most…',es:'Con tus palabras: qué te molesta más…',de:'In deinen Worten: was stört am meisten…',pt:'Com suas palavras: o que mais incomoda…',fr:'Avec vos mots : ce qui vous gêne le plus…',pl:'Własnymi słowami: co przeszkadza najbardziej…',it:'Con parole tue: cosa ti disturba di più…',he:'במילים שלכם: מה הכי מפריע…',ja:'ご自身の言葉で：いちばん気になることを…',ko:'본인의 말로: 가장 불편한 점을…'},
     save:{ru:'Сохранить',uk:'Зберегти',en:'Save',es:'Guardar',de:'Speichern',pt:'Salvar',fr:'Enregistrer',pl:'Zapisz',it:'Salva',he:'שמירה',ja:'保存',ko:'저장'},
     with:{ru:'Вы пришли с этим',uk:'Ви прийшли з цим',en:'What brought you here',es:'Con esto viniste',de:'Damit bist du gekommen',pt:'Foi com isso que veio',fr:'Ce qui vous a amené',pl:'Z tym przyszedłeś',it:'Con questo sei arrivato',he:'עם זה הגעתם',ja:'あなたが来た理由',ko:'오신 이유'},
@@ -6385,16 +6385,25 @@ function _cmpToggle(k,el){
   // затирал первый выбор (выбиралось всегда одно). Текст забираем из поля — перерисовка его теряет.
   var c=window._cmpDraft||_cmpGet()||{items:[],text:'',since:''};
   var ta=document.getElementById('cmpText'); if(ta) c=Object.assign({},c,{text:ta.value});
-  var a=Array.isArray(c.items)?c.items.slice():[];
-  var i=a.indexOf(k);
-  if(i>=0)a.splice(i,1); else if(a.length<2)a.push(k);   // не больше двух: жалоба должна быть главной, а не списком
-  window._cmpDraft=Object.assign({},c,{items:a});
+  // ГЛАВНЫХ по-прежнему не больше двух (items): на них держатся разбор, дневная и недельная оценка,
+  // эксперимент. Но отметить можно всё, что беспокоит: остальное уходит в also — по нему в памятке
+  // появляются карточки «что делать», а разбор называет его одной фразой (2026-10-01: у женщины в
+  // переходе жалоб обычно больше двух, и дописанное словами в карточки не попадало).
+  var a=Array.isArray(c.items)?c.items.slice():[], o=Array.isArray(c.also)?c.also.slice():[];
+  var i=a.indexOf(k), j=o.indexOf(k);
+  if(i>=0){ a.splice(i,1); if(o.length) a.push(o.shift()); }   // сняли главную → её место занимает первая из остальных
+  else if(j>=0) o.splice(j,1);
+  else if(a.length<2) a.push(k);
+  else o.push(k);
+  window._cmpDraft=Object.assign({},c,{items:a,also:o});
   renderComplaint();
 }
 function _cmpSubmit(){
   var d=window._cmpDraft||{items:[],text:''};
   var t=document.getElementById('cmpText');
-  var c={ items:(d.items||[]).slice(0,2), text:(t?t.value:'').trim().slice(0,300), since:_dayKey() };
+  var _main=(d.items||[]).slice(0,2);
+  var c={ items:_main, also:(d.also||[]).filter(function(k){ return CMP_ITEMS[k] && _main.indexOf(k)<0; }).slice(0,9),
+          text:(t?t.value:'').trim().slice(0,600), since:_dayKey() };
   if(!c.items.length && !c.text) return;   // пустое не сохраняем
   _cmpSave(c); _cmpEditing=false; window._cmpDraft=null; renderComplaint();
   // Блок «С чем вы пришли» отвечают кнопкой «Сохранить» — событий input/change она не шлёт,
@@ -6457,12 +6466,13 @@ function renderComplaint(){
   var c=_cmpGet();
   var CH='padding:9px 12px;border-radius:11px;font-size:var(--fs-cap);font-family:inherit;cursor:pointer;border:1px solid rgba(226,185,90,.32);background:rgba(226,185,90,.06);color:var(--t1);';
   var CH_ON='padding:9px 12px;border-radius:11px;font-size:var(--fs-cap);font-family:inherit;cursor:pointer;border:1px solid var(--gold);background:rgba(226,185,90,.2);color:#fff;font-weight:600;';
+  var CH_ALSO='padding:9px 12px;border-radius:11px;font-size:var(--fs-cap);font-family:inherit;cursor:pointer;border:1px solid var(--gold);background:rgba(226,185,90,.1);color:var(--t1);';
   var _ttl=document.getElementById('cmpSetupTitle'); if(_ttl)_ttl.textContent=_cmpI18n('ask');   // заголовок карточки — на текущем языке
   if(!c || _cmpEditing){
     var d=window._cmpDraft||{items:[],text:(c&&c.text)||''};
     var chips=_cmpList().map(function(k){
-      var on=(d.items||[]).indexOf(k)>=0;
-      return '<button type="button" onclick="_cmpToggle(\''+k+'\',this)" style="'+(on?CH_ON:CH)+'">'+_cmpLbl(k)+'</button>';
+      var on=(d.items||[]).indexOf(k)>=0, al=(d.also||[]).indexOf(k)>=0;   // ★ — главная; отмеченная без звезды — «также беспокоит»
+      return '<button type="button" onclick="_cmpToggle(\''+k+'\',this)" style="'+(on?CH_ON:(al?CH_ALSO:CH))+'">'+(on?'★ ':'')+_cmpLbl(k)+'</button>';
     }).join('');
     var _tgt=setup||box;
     if(setup && box) box.innerHTML='';   // жалоба ещё не задана → в дневном блоке показывать нечего
@@ -6470,7 +6480,7 @@ function renderComplaint(){
     box.innerHTML=(setup?'':'<label>'+_cmpI18n('ask')+'</label>')
       +'<div class="q-prompt">'+_cmpI18n('askSub')+'</div>'
       +'<div style="display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 10px;">'+chips+'</div>'
-      +'<textarea id="cmpText" rows="2" maxlength="300" placeholder="'+_cmpI18n('ph')+'" style="width:100%;background:rgba(226,185,90,.06);border:1px solid rgba(226,185,90,.3);border-radius:10px;color:var(--t1);padding:10px 12px;font-family:inherit;font-size:var(--fs-body);box-sizing:border-box;resize:vertical;">'+((d.text||'').replace(/</g,'&lt;'))+'</textarea>'
+      +'<textarea id="cmpText" rows="2" maxlength="600" placeholder="'+_cmpI18n('ph')+'" style="width:100%;background:rgba(226,185,90,.06);border:1px solid rgba(226,185,90,.3);border-radius:10px;color:var(--t1);padding:10px 12px;font-family:inherit;font-size:var(--fs-body);box-sizing:border-box;resize:vertical;">'+((d.text||'').replace(/</g,'&lt;'))+'</textarea>'
       +'<button type="button" onclick="_cmpSubmit()" style="margin-top:8px;background:var(--gold);color:#10141C;border:none;border-radius:10px;padding:9px 16px;font-size:var(--fs-body);font-weight:600;cursor:pointer;font-family:inherit;">'+_cmpI18n('save')+'</button>';
     return;
   }
@@ -6479,8 +6489,10 @@ function renderComplaint(){
   if(setup) setup.innerHTML='';
   if(!box) return;
   var names=(c.items||[]).map(_cmpLbl).join(' · ');
+  var _also=(Array.isArray(c.also)?c.also:[]).map(_cmpLbl).join(' · ');   // «также беспокоит» — приглушённо, после главных
   var head='<label>'+_cmpI18n('with')+'</label>'
     +'<div style="font-size:var(--fs-body);color:#fff;line-height:1.6;margin:2px 0 4px;">'+(names||'')+(c.text?((names?' — ':'')+String(c.text).replace(/</g,'&lt;')):'')+'</div>'
+    +(_also?'<div style="font-size:var(--fs-cap);color:var(--t3);line-height:1.5;margin:0 0 4px;">+ '+_also+'</div>':'')
     +'<div style="font-size:var(--fs-cap);color:var(--t3);margin-bottom:8px;">'+_cmpI18n('since')+' '+(c.since||'')
     +' · <a href="#" onclick="_cmpEdit();return false;" style="color:var(--gold-lt);">'+_cmpI18n('edit')+'</a></div>';
   // Быстрая жалоба (сон, энергия, приливы, туман, настроение, боли) меняется в масштабе суток —
@@ -12168,6 +12180,7 @@ function _bpRenderSecs(secs){
 // карточку, подписчик — все. Кнопка «Обсудить со специалистом» — только подключённым к наставнику.
 function _cmpOpts(data){
   var c=_cmpGet(), items=(c&&Array.isArray(c.items))?c.items:[];
+  if(c&&Array.isArray(c.also)) items=items.concat(c.also);   // карточки — и по главным, и по «также беспокоит»
   var male=(data.gender==='male'), ct=data.cycle_temp, note='';
   if(!male && ct && ct.state==='none' && _phaseGate(data)) note=L(_CYC_TEMP_T.none)+(ct.prev_none?L(_CYC_TEMP_T.none2):'');
   var titles={}; Object.keys(CMP_ITEMS).forEach(function(k){ titles[k]=CMP_ITEMS[k].t; });
