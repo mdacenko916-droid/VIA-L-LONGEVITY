@@ -12111,6 +12111,7 @@ function openDayPlanPanel(){
   var tt=document.getElementById('dayplanTitle'); if(tt) tt.textContent='🧭 '+L({ru:'Памятка дня',uk:'Памʼятка дня',en:'Day plan',es:'Plan del día',de:'Tagesplan',pt:'Plano do dia',fr:'Plan du jour',pl:'Plan dnia',it:'Piano del giorno',he:'תוכנית היום',ja:'今日のプラン',ko:'오늘의 플랜'});
   var body=_platePhiloHTML(false);
   if(d||window._bpAI){
+    body+=_cmpTableHTML(d);
     body+=_bpChapters().map(function(r){
       return '<div onclick="openBpChapter(\''+r.id+'\')" style="display:flex;align-items:center;gap:12px;padding:13px;margin-bottom:8px;background:linear-gradient(150deg,#1b1712,#13100b);border:1px solid rgba(226,185,90,.2);border-radius:13px;cursor:pointer;">'
         +'<div style="font-size:20px;width:28px;text-align:center;flex-shrink:0;">'+r.icon+'</div>'
@@ -12151,6 +12152,20 @@ function _bpRenderSecs(secs){
     return head + s.items.map(function(x){return '<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.65;padding:6px 0 6px 20px;position:relative;"><span style="position:absolute;left:0;color:var(--gold-lt);top:6px;">☐</span>'+W(_dishOf(x).text)+'</div>';}).join('');   // ☐ вместо «–» — RC2: план действий, не статья
   }).join('');
 }
+// Таблица «что беспокоит → что сделать» (complaint-table.js): строки — жалобы из «С чем вы пришли».
+// Текст фиксированный, без доз; ИИ его не пишет. Пробник видит одну строку, подписчик — все.
+// Кнопка «Обсудить со специалистом» — только тем, кто подключён к наставнику (vial_spec_link).
+function _cmpTableHTML(data){
+  try{
+    if(typeof window.vialCmpTable!=='function' || !data) return '';
+    var c=_cmpGet(), items=(c&&Array.isArray(c.items))?c.items:[];
+    var male=(data.gender==='male'), ct=data.cycle_temp, note='';
+    if(!male && ct && ct.state==='none' && _phaseGate(data)) note=L(_CYC_TEMP_T.none)+(ct.prev_none?L(_CYC_TEMP_T.none2):'');
+    var titles={}; Object.keys(CMP_ITEMS).forEach(function(k){ titles[k]=CMP_ITEMS[k].t; });
+    var spec=false; try{ var l=JSON.parse(localStorage.getItem('vial_spec_link')||'null'); spec=!!(l&&l.code); }catch(e){}
+    return window.vialCmpTable({items:items, male:male, trial:(typeof _isTrial==='function'&&_isTrial()), spec:spec, lang:lang, titles:titles, cycleNote:note});
+  }catch(e){ return ''; }
+}
 function renderDayBlueprint(data){
   var box=document.getElementById('dayBlueprint'); if(!box)return;
   window._bpData=data;
@@ -12173,7 +12188,7 @@ function renderDayBlueprint(data){
       +'<div style="flex:1;min-width:0;"><div style="font-family:var(--font-ui);font-size:var(--fs-body);font-weight:600;color:var(--t1);letter-spacing:.03em;text-transform:uppercase;">'+r.title+'</div><div style="font-size:var(--fs-cap);color:var(--t3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+r.teaser+'</div></div>'
       +'<div style="color:var(--gold-lt);font-size:20px;opacity:.6;flex-shrink:0;">›</div></div>';
   }).join('');
-  box.innerHTML=head+rows;   // кнопка «Скачать памятку дня» убрана (см. выше)
+  box.innerHTML=head+_cmpTableHTML(data)+rows;   // кнопка «Скачать памятку дня» убрана (см. выше)
   // ⚠️ 2026-09-24: ожидание разбора СНЯТО — памятку собирает движок за доли секунды, общий кэш
   // промпта ему не нужен, а ожидание держало тарелки на экране «готовится» по несколько минут.
   // Ниже — прежнее обоснование, актуальное только если движок выключат (DAYPLAN_ENGINE=off):
@@ -13042,6 +13057,7 @@ document.addEventListener('visibilitychange',function(){
 <script src="notify-bridge.js"></script>
 <script src="push-bridge.js"></script>
 <script src="intake.js"></script>
+<script src="complaint-table.js"></script><!-- таблица «что беспокоит → что сделать» в памятке дня (2026-10-01) -->
 <script src="evidence.js"></script><!-- «На чём основано» — список работ под разбором (2026-09-20) -->
 <script>
 /* «Мои приёмы» (intake.js, 2026-09-18). VIA-L ставит напоминания ЛОКАЛЬНЫМИ уведомлениями
