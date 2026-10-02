@@ -1016,6 +1016,28 @@ function chanBadge(c){
   if(k === 'expert') return ` <span class="badge badge-new">${t('chan_expert')}</span>`;
   return '';
 }
+// Разовый разбор (docs/SPECIALIST-REVIEW-PLAN.md): клиент приложения купил письменный разбор.
+// Пометка в списке — пока разбор не выдан; в карточке — срок ответа и кнопка «Разбор выдан».
+function reviewBadge(c){
+  const st = c.review && c.review.status;
+  return (st === 'open' || st === 'overdue') ? ` <span class="badge badge-new">${t('rev_badge')}</span>` : '';
+}
+function reviewNote(c){
+  const r = c.review; if(!r) return '';
+  const pending = r.status !== 'answered';                 // open | overdue — разбор ещё не выдан
+  // Срок ответа — 48 часов с покупки, поэтому показываем его со временем, в часовом поясе специалиста.
+  const due = (()=>{ const d=new Date(r.due_at); return isNaN(d) ? (r.due_at||'') : d.toLocaleString([], {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); })();
+  const late = pending && (r.extended || r.status === 'overdue' || Date.parse(r.due_at) < Date.now());
+  const key = r.status === 'overdue' ? 'rev_overdue' : !pending ? 'rev_answered' : r.extended ? 'rev_ext' : 'rev_open';
+  const txt = t(key).replace('{d}', esc(pending ? due : (r.answered_at||''))).replace('{c}', esc(r.closes_at||''));
+  return `<div style="font-size:var(--fs-cap);color:${late?'#b71c1c':'#1565c0'};background:${late?'#ffebee':'#e3f2fd'};border:1px solid ${late?'#ef9a9a':'#90caf9'};border-radius:8px;padding:7px 9px;margin:6px 0;line-height:1.5;">${txt}${r.sandbox?' ('+t('rev_test')+')':''}${pending?` <button class="topbtn primary" style="margin-left:8px;" onclick="reviewDone('${c.id}')">${t('rev_done_btn')}</button>`:''}</div>`;
+}
+async function reviewDone(id){
+  const c=clients.find(x=>x.id===id); if(!c)return;
+  const j=await api('/cabinet/review-done',{code:c.code||c.id});
+  if(j&&j.ok&&j.review){ c.review=j.review; renderClientDetail(); refreshList(); }
+  else alert(t('err_prefix')+((j&&j.error)||t('err_unknown')));
+}
 function dataBadge(c){
   const hasData   = (Array.isArray(c.breakdowns)&&c.breakdowns.length) || (Array.isArray(c.biometrics)&&c.biometrics.length);
   const connected = c.sharing===true || (c.consent && c.consent.ref_code);
@@ -1081,6 +1103,13 @@ const T = {
   sc_err_save:{ru:"Не удалось сохранить. Попробуйте ещё раз.",uk:"Не вдалося зберегти. Спробуйте ще раз.",en:"Couldn't save. Please try again.",es:"No se pudo guardar. Inténtalo de nuevo.",de:"Speichern fehlgeschlagen. Bitte erneut versuchen.",pt:"Não foi possível salvar. Tente novamente.",fr:"Échec de l'enregistrement. Veuillez réessayer.",pl:"Nie udało się zapisać. Spróbuj ponownie.",it:"Salvataggio non riuscito. Riprova.",he:"השמירה נכשלה. נסה שוב.",ja:"保存できませんでした。もう一度お試しください。",ko:"저장하지 못했습니다. 다시 시도하세요."},
   chan_app:{ru:"Из приложения",uk:"З застосунку",en:"From the app",es:"Desde la app",de:"Aus der App",pt:"Da aplicação",fr:"Depuis l’app",pl:"Z aplikacji",it:"Dall’app",he:"מהאפליקציה",ja:"アプリから",ko:"앱에서"},
   chan_expert:{ru:"Доступ EXPERT",uk:"Доступ EXPERT",en:"EXPERT access",es:"Acceso EXPERT",de:"EXPERT-Zugang",pt:"Acesso EXPERT",fr:"Accès EXPERT",pl:"Dostęp EXPERT",it:"Accesso EXPERT",he:"גישת EXPERT",ja:"EXPERTアクセス",ko:"EXPERT 접근"},
+  rev_badge:{ru:"Разовый разбор",uk:"Разовий розбір",en:"One-off review",es:"Revisión única",de:"Einmalige Auswertung",pt:"Análise avulsa",fr:"Analyse ponctuelle",pl:"Jednorazowa analiza",it:"Analisi singola",he:"סקירה חד-פעמית",ja:"単発レビュー",ko:"1회 리뷰"},
+  rev_open:{ru:"Оплачен разовый разбор. Ответить до {d}.",uk:"Оплачено разовий розбір. Відповісти до {d}.",en:"A one-off review has been paid. Reply by {d}.",es:"Se ha pagado una revisión única. Responder antes del {d}.",de:"Eine einmalige Auswertung wurde bezahlt. Antwort bis {d}.",pt:"Foi paga uma análise avulsa. Responder até {d}.",fr:"Une analyse ponctuelle a été payée. Répondre avant le {d}.",pl:"Opłacono jednorazową analizę. Odpowiedz do {d}.",it:"È stata pagata un'analisi singola. Rispondere entro il {d}.",he:"שולמה סקירה חד-פעמית. יש להשיב עד {d}.",ja:"単発レビューの支払いが完了しました。{d}までに回答してください。",ko:"1회 리뷰가 결제되었습니다. {d}까지 답변해 주세요."},
+  rev_ext:{ru:"Разовый разбор: первый срок пропущен, он продлён на 48 часов — ответить до {d}. Если ответа не будет, клиент вернёт деньги через магазин приложений.",uk:"Разовий розбір: перший термін пропущено, його продовжено на 48 годин — відповісти до {d}. Якщо відповіді не буде, клієнт поверне гроші через магазин застосунків.",en:"One-off review: the first deadline was missed and extended by 48 hours — reply by {d}. Without a reply, the client will get a refund through the app store.",es:"Revisión única: se pasó el primer plazo y se amplió 48 horas — responder antes del {d}. Sin respuesta, el cliente recuperará el dinero a través de la tienda de aplicaciones.",de:"Einmalige Auswertung: Die erste Frist wurde versäumt und um 48 Stunden verlängert — Antwort bis {d}. Ohne Antwort erhält der Klient sein Geld über den App-Store zurück.",pt:"Análise avulsa: o primeiro prazo foi perdido e prorrogado por 48 horas — responder até {d}. Sem resposta, o cliente será reembolsado pela loja de aplicativos.",fr:"Analyse ponctuelle : le premier délai est dépassé et prolongé de 48 heures — répondre avant le {d}. Sans réponse, le client sera remboursé via la boutique d'applications.",pl:"Jednorazowa analiza: pierwszy termin minął i został przedłużony o 48 godzin — odpowiedz do {d}. Bez odpowiedzi klient odzyska pieniądze przez sklep z aplikacjami.",it:"Analisi singola: la prima scadenza è passata ed è stata prorogata di 48 ore — rispondere entro il {d}. Senza risposta, il cliente sarà rimborsato tramite lo store.",he:"סקירה חד-פעמית: המועד הראשון חלף והוארך ב-48 שעות — יש להשיב עד {d}. ללא תשובה, הלקוח יקבל החזר דרך חנות האפליקציות.",ja:"単発レビュー：最初の期限を過ぎたため48時間延長されました。{d}までに回答してください。回答がない場合、クライアントはアプリストア経由で返金を受けます。",ko:"1회 리뷰: 첫 기한이 지나 48시간 연장되었습니다. {d}까지 답변해 주세요. 답변이 없으면 고객은 앱 스토어를 통해 환불받습니다."},
+  rev_overdue:{ru:"Разовый разбор: срок ответа истёк. Клиент вправе вернуть деньги через магазин приложений.",uk:"Разовий розбір: термін відповіді минув. Клієнт має право повернути гроші через магазин застосунків.",en:"One-off review: the reply deadline has passed. The client may get a refund through the app store.",es:"Revisión única: el plazo de respuesta ha vencido. El cliente puede recuperar el dinero a través de la tienda de aplicaciones.",de:"Einmalige Auswertung: Die Antwortfrist ist abgelaufen. Der Klient kann sein Geld über den App-Store zurückerhalten.",pt:"Análise avulsa: o prazo de resposta expirou. O cliente pode ser reembolsado pela loja de aplicativos.",fr:"Analyse ponctuelle : le délai de réponse est dépassé. Le client peut être remboursé via la boutique d'applications.",pl:"Jednorazowa analiza: termin odpowiedzi minął. Klient może odzyskać pieniądze przez sklep z aplikacjami.",it:"Analisi singola: il termine di risposta è scaduto. Il cliente può essere rimborsato tramite lo store.",he:"סקירה חד-פעמית: מועד התשובה חלף. הלקוח רשאי לקבל החזר דרך חנות האפליקציות.",ja:"単発レビュー：回答期限を過ぎました。クライアントはアプリストア経由で返金を受けられます。",ko:"1회 리뷰: 답변 기한이 지났습니다. 고객은 앱 스토어를 통해 환불받을 수 있습니다."},
+  rev_answered:{ru:"Разовый разбор выдан {d}. Уточняющие вопросы клиента — до {c}.",uk:"Разовий розбір видано {d}. Уточнювальні запитання клієнта — до {c}.",en:"One-off review delivered on {d}. Follow-up questions until {c}.",es:"Revisión única entregada el {d}. Preguntas de seguimiento hasta el {c}.",de:"Einmalige Auswertung am {d} übergeben. Rückfragen bis {c}.",pt:"Análise avulsa entregue em {d}. Perguntas de seguimento até {c}.",fr:"Analyse ponctuelle remise le {d}. Questions complémentaires jusqu'au {c}.",pl:"Jednorazową analizę przekazano {d}. Pytania uzupełniające do {c}.",it:"Analisi singola consegnata il {d}. Domande di approfondimento fino al {c}.",he:"הסקירה החד-פעמית נמסרה ב-{d}. שאלות הבהרה עד {c}.",ja:"単発レビューは{d}に提出済みです。追加質問は{c}まで。",ko:"1회 리뷰를 {d}에 전달했습니다. 추가 질문은 {c}까지."},
+  rev_done_btn:{ru:"Разбор выдан",uk:"Розбір видано",en:"Review delivered",es:"Revisión entregada",de:"Auswertung übergeben",pt:"Análise entregue",fr:"Analyse remise",pl:"Analiza przekazana",it:"Analisi consegnata",he:"הסקירה נמסרה",ja:"レビュー提出済み",ko:"리뷰 전달 완료"},
+  rev_test:{ru:"тестовая покупка",uk:"тестова покупка",en:"test purchase",es:"compra de prueba",de:"Testkauf",pt:"compra de teste",fr:"achat test",pl:"zakup testowy",it:"acquisto di prova",he:"רכישת בדיקה",ja:"テスト購入",ko:"테스트 구매"},
   chan_app_hint:{ru:"Клиент работает в приложении: клинический разбор ему на экран не выводится. Дозы, анализы и интерпретацию давайте в переписке или в протоколе.",uk:"Клієнт працює в застосунку: клінічний розбір йому на екран не виводиться. Дози, аналізи та інтерпретацію давайте в переписці або в протоколі.",en:"This client works in the app, where the clinical layer is not shown. Give dosages, lab interpretation and conclusions in the chat or in the protocol.",es:"Este cliente usa la app, donde no se muestra la capa clínica. Da las dosis, la interpretación de análisis y las conclusiones en el chat o en el protocolo.",de:"Dieser Klient nutzt die App, in der die klinische Ebene nicht angezeigt wird. Dosierungen, Laborbefunde und Schlüsse gib im Chat oder im Protokoll.",pt:"Este cliente usa a aplicação, onde a camada clínica não é mostrada. Dê doses, interpretação de análises e conclusões no chat ou no protocolo.",fr:"Ce client utilise l’app, où la couche clinique n’est pas affichée. Donnez les dosages, l’interprétation des analyses et les conclusions dans la messagerie ou le protocole.",pl:"Ten klient korzysta z aplikacji, w której warstwa kliniczna nie jest pokazywana. Dawki, interpretację badań i wnioski przekazuj w czacie lub w protokole.",it:"Questo cliente usa l’app, dove il livello clinico non viene mostrato. Dai dosaggi, interpretazione degli esami e conclusioni in chat o nel protocollo.",he:"הלקוח עובד באפליקציה, שבה השכבה הקלינית אינה מוצגת. מסרו מינונים, פירוש בדיקות ומסקנות בצ׳אט או בפרוטוקול.",ja:"このクライアントはアプリを使っており、臨床レイヤーは表示されません。用量・検査の解釈・所見はチャットまたはプロトコルで伝えてください。",ko:"이 고객은 앱을 사용하며 임상 레이어는 표시되지 않습니다. 용량, 검사 해석, 결론은 채팅이나 프로토콜로 전달하세요."},
   pro_active:{ru:"Данные ✓",uk:"Дані ✓",en:"Data ✓",es:"Datos ✓",de:"Daten ✓",pt:"Dados ✓",fr:"Données ✓",pl:"Dane ✓",it:"Dati ✓",he:"נתונים ✓",ja:"データ ✓",ko:"데이터 ✓"},
   pro_waiting:{ru:"Ждёт данных",uk:"Очікує даних",en:"No data yet",es:"Sin datos aún",de:"Noch keine Daten",pt:"Sem dados ainda",fr:"Pas encore de données",pl:"Brak danych",it:"Nessun dato ancora",he:"אין נתונים עדיין",ja:"データ待ち",ko:"데이터 대기 중"},
@@ -1846,7 +1875,7 @@ function renderClientList(filter='', statusFilter='', sortBy='updated'){
     const specName = (myRole==='owner' && c.specialist_id) ? (specNameById(c.specialist_id)||'') : '';
     const meta = [c.program||c.phase_label||'', c.age?(c.age+' л.'):'', specName].filter(Boolean).join(' · ');
     html += `<div class="client-item${selectedId===c.id?' active':''}" onclick="selectClient('${c.id}')">
-      <div class="client-name">${esc(c.name)} ${c.unread>0?`<span class="unread-pill">💬 ${c.unread}</span> `:''}${badge}${dataBadge(c)}${chanBadge(c)}</div>
+      <div class="client-name">${esc(c.name)} ${c.unread>0?`<span class="unread-pill">💬 ${c.unread}</span> `:''}${badge}${dataBadge(c)}${chanBadge(c)}${reviewBadge(c)}</div>
       <div class="client-meta">${esc(meta)}${c.start_date?' · с '+c.start_date:''}</div>
     </div>`;
   }
@@ -2479,9 +2508,10 @@ function renderClientDetail(){
   document.getElementById('clientHeaderEl').innerHTML=`
     <div class="client-header-top">
       <div style="flex:1;">
-        <div class="client-header-name">${esc(c.name)} ${stBadge}${dataBadge(c)}${chanBadge(c)}</div>
+        <div class="client-header-name">${esc(c.name)} ${stBadge}${dataBadge(c)}${chanBadge(c)}${reviewBadge(c)}</div>
         <div class="client-header-meta">${esc(metaParts.join(' · '))}</div>
         ${chanOf(c)==='app'?`<div style="font-size:var(--fs-cap);color:#8a6d1f;background:#fdf6e3;border:1px solid #f0e3bb;border-radius:8px;padding:7px 9px;margin:6px 0;line-height:1.5;">${t('chan_app_hint')}</div>`:''}
+        ${reviewNote(c)}
         ${c.start_date?`<div style="font-size:var(--fs-cap);color:#888;margin-top:2px;">${t('ov_start')}: ${c.start_date}${c.duration_weeks?' · '+c.duration_weeks+' '+t('u_wk'):''} · ${c.format||'zoom'}</div>`:''}
       </div>
       <div>

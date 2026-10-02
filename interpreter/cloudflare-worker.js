@@ -1472,6 +1472,9 @@ export default {
       if (path === '/specialist/connect')  return handleSpecialistConnect(request, env, corsHeaders);
       if (path === '/specialist/unlink')   return handleSpecialistUnlink(request, env, corsHeaders);
       if (path === '/specialist/sharing')  return handleSpecialistSharing(request, env, corsHeaders);   // клиент включает/выключает передачу данных специалисту
+      // Разовый разбор со специалистом (docs/SPECIALIST-REVIEW-PLAN.md): чек из приложения → заказ + связка с дежурным.
+      if (path === '/review/claim')        return handleReviewClaim(request, env, corsHeaders, ctx);
+      if (path === '/cabinet/review-done') return handleCabinetReviewDone(request, env, corsHeaders);
 
       // Воронка витрина → EXPERT PWA: специалист выдаёт клиенту СРОЧНЫЙ код доступа к
       // VIA-L EXPERT (отдельный от ref_code/кода карточки), сам управляет сроком/отзывом.
@@ -1534,6 +1537,7 @@ export default {
     const _h = new Date().getUTCHours();
     ctx.waitUntil(runPushReminders(env));          // ежечасно: разбудить тех, у кого local-час настал
     ctx.waitUntil(runPushIntake(env));             // ежечасно: напоминания о приёме добавок/препаратов (EXPERT)
+    ctx.waitUntil(runReviewSweep(env));            // ежечасно: разовые разборы — продление срока на 48 ч и просрочка
     if (_h === 9) {
       ctx.waitUntil(runDailyReminders(env));
       ctx.waitUntil(expireSpecialistAccess(env));   // Шаг 4: закрыть доступ при истёкшей абонплате
@@ -10182,7 +10186,9 @@ const CABINET_LIST_COLS = `code,name,email,tg,phone,lang,product,program,tier,du
   -- Канал клиента (2026-09-23, docs/APP-SPECIALIST-LINK-PLAN.md §4.1): выдан ли ему доступ
   -- VIA-L EXPERT из кабинета. Клиент «из приложения» его не имеет — специалист должен видеть
   -- разницу, потому что клинический разбор такому клиенту на экран не показывается.
-  json_extract(data,'$.expert_grant.code')   AS grant_code`;
+  json_extract(data,'$.expert_grant.code')   AS grant_code,
+  -- Разовый разбор (docs/SPECIALIST-REVIEW-PLAN.md): пометка в списке, чтобы оплаченный заказ не утонул.
+  json_extract(data,'$.review')              AS j_review`;
 
 // D1-строка лёгкого запроса → объект для списка/календаря (без полного досье).
 function cabinetRowToLight(r){
@@ -10201,6 +10207,7 @@ function cabinetRowToLight(r){
     sharing: r.sharing === 1 || r.sharing === true,
     consent: r.consent_ref ? { ref_code: r.consent_ref } : undefined,
     expert_grant: r.grant_code ? { code: r.grant_code } : undefined,   // канал: доступ EXPERT выдан
+    review: (()=>{ try{ return r.j_review ? JSON.parse(r.j_review) : undefined; }catch(_){ return undefined; } })(),   // разовый разбор: статус и срок
     _light: true,                                          // полное досье ещё не загружено
   };
 }
@@ -10288,10 +10295,13 @@ async function handleCabinetSave(request, env, corsHeaders){
   if(Array.isArray(c.notes)    && c.notes.length    > 300) c.notes    = c.notes.slice(-300);
 
   // Владелец правит любого; специалист — только своего. Решаем специалиста для записи.
-  const existing = await env.DB.prepare('SELECT specialist_id FROM clients WHERE code=?').bind(code).first();
+  const existing = await env.DB.prepare("SELECT specialist_id, json_extract(data,'$.review') AS j_review FROM clients WHERE code=?").bind(code).first();
   if(sess.role !== 'owner' && existing && existing.specialist_id != null && existing.specialist_id !== sess.id){
     return jsonResponse({ ok:false, error:'forbidden' }, corsHeaders, 403);
   }
+  // Разовый разбор ведёт сервер (/review/claim, /cabinet/review-done). Кабинет сохраняет досье
+  // целиком, и вкладка, открытая до покупки, стёрла бы пометку об оплаченном разборе.
+  if(existing && existing.j_review){ try{ c.review = JSON.parse(existing.j_review); }catch(_){} }
   const specId = sess.role === 'owner'
     ? (c.specialist_id != null ? c.specialist_id : (existing ? existing.specialist_id : 1))
     : sess.id;                                          // специалист всегда сохраняет на себя
@@ -10470,6 +10480,14 @@ async function handleCabinetPushPeek(request, env, corsHeaders){
   if(!t || !env.DB) return jsonResponse({ok:false}, corsHeaders, 400);
   const sub = await env.DB.prepare('SELECT spec_id, lang FROM spec_push WHERE peek=?').bind(t).first();
   if(!sub) return jsonResponse({ok:false,error:'gone'}, corsHeaders, 404);
+  // Пуш о разовом разборе (оплачен · срок продлён · срок истёк): сообщения от клиента при этом может
+  // и не быть, и без этой ветки специалист увидел бы «Клиент написал вам». Метка живёт 3 минуты.
+  try{
+    const rv = await env.DB.prepare(
+      'SELECT o.card_code, o.push_kind, c.name FROM review_orders o JOIN clients c ON c.code=o.card_code WHERE o.specialist_id=? AND o.push_at > ? ORDER BY o.push_at DESC LIMIT 1'
+    ).bind(sub.spec_id, Date.now() - 180000).first();
+    if(rv) return jsonResponse({ok:true, total:1, code:rv.card_code, name:rv.name||'', kind:rv.push_kind||'review', lang:sub.lang||''}, corsHeaders);
+  }catch(_){}
   const last = await env.DB.prepare(
     "SELECT code, name, json_extract(data,'$.messages[#-1].type') AS mtype FROM clients WHERE specialist_id=? AND COALESCE(unread,0)>0 ORDER BY updated_at DESC LIMIT 1"
   ).bind(sub.spec_id).first();
@@ -11233,6 +11251,198 @@ async function handleSpecialistUnlink(request, env, corsHeaders){
     .bind(JSON.stringify(data), Date.now(), code).run();
 
   return jsonResponse({ ok:true }, corsHeaders);
+}
+
+// ─────────────────────────────────────────────────────────────
+// РАЗОВЫЙ РАЗБОР СО СПЕЦИАЛИСТОМ (2026-10-02, docs/SPECIALIST-REVIEW-PLAN.md).
+// Клиент приложения без своего специалиста покупает письменный разбор разовой встроенной
+// покупкой. Встроенной — потому что разбор письменный и остаётся в приложении: исключение сторов
+// для услуг «человек человеку» (Apple 3.1.3(d), Google 1:1) написано про ЖИВЫЕ встречи.
+//
+// Покупку проверяем на сервере. Подписку воркер на слово верит приложению — там худшее, что
+// случится, это лишний разбор ИИ. Здесь на кону время живого человека, поэтому чек сверяется
+// с RevenueCat, а номер транзакции гасится в `review_orders` (UNIQUE): один чек — один разбор.
+//
+// Дальше всё едет по готовой связке: карточка в кабинете, ингест разборов по коду, переписка
+// с вложениями, протокол в «Мои приёмы». Этот код только заводит заказ и подключает к дежурному.
+// ─────────────────────────────────────────────────────────────
+const REVIEW_PRODUCT_ID  = 'via_l_specialist_review';   // разовая покупка в App Store / Google Play / RevenueCat
+const REVIEW_ANSWER_HOURS = 48;   // срок ответа специалиста — 48 часов с покупки (решение владельца 2026-10-02)
+const REVIEW_CHAT_DAYS   = 7;     // сколько дней ПОСЛЕ ВЫДАЧИ разбора клиент задаёт уточняющие вопросы
+// Публичные SDK-ключи RevenueCat — те же, что зашиты в iap-bridge.js. Если чтение покупок по ним
+// окажется урезанным, завести секрет: `wrangler secret put RC_SECRET_KEY` (он в приоритете).
+const _RC_PUBLIC = { ios: 'appl_otTgmSBqRgDJFfLFrcIaldOYqGd', android: 'goog_BHsIdgHZJEhYqOpcDbQoVQFbFPC' };
+
+// Разовые покупки этого товара у покупателя. null = RevenueCat не ответил (не путать с «покупок нет»).
+async function _reviewPurchases(env, rcUser, platform){
+  const key = env.RC_SECRET_KEY || _RC_PUBLIC[platform];
+  if(!key) return null;
+  try{
+    const r = await fetch('https://api.revenuecat.com/v1/subscribers/' + encodeURIComponent(rcUser), {
+      headers: { Authorization: 'Bearer ' + key, 'X-Platform': platform, 'Content-Type': 'application/json' },
+    });
+    if(!r.ok) return null;
+    const j = await r.json();
+    const list = j && j.subscriber && j.subscriber.non_subscriptions && j.subscriber.non_subscriptions[REVIEW_PRODUCT_ID];
+    return Array.isArray(list) ? list.filter(x => x && x.id) : [];
+  }catch(_){ return null; }
+}
+function _isoPlusDays(ms, days){ return new Date(ms + days*86400000).toISOString().slice(0,10); }
+
+// POST /review/claim {rc_user, platform, email, name, lang, consent}
+//   → {ok, code, specialist_id, specialist_name, due_at, closes_at, repeat?}
+// Приложение зовёт сразу после покупки и повторяет при следующем запуске, если ответа не было
+// (покупка прошла, сеть оборвалась). Повтор безопасен: учтённый чек возвращает тот же заказ.
+async function handleReviewClaim(request, env, corsHeaders, ctx){
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  let b = {}; try{ b = await request.json(); }catch(_){}
+  const rcUser   = String(b.rc_user || '').trim().slice(0, 200);
+  const platform = b.platform === 'android' ? 'android' : (b.platform === 'ios' ? 'ios' : '');
+  const email    = String(b.email || '').trim().slice(0, 200);
+  const name     = String(b.name || '').trim().slice(0, 120);
+  const lang     = String(b.lang || '').trim().slice(0, 5);
+  const consent  = b.consent === true || b.consent === 'true';
+  if(!rcUser || !platform) return jsonResponse({ok:false,error:'missing_fields'},   corsHeaders, 400);
+  if(!email)               return jsonResponse({ok:false,error:'no_email'},         corsHeaders, 400);
+  if(!consent)             return jsonResponse({ok:false,error:'consent_required'}, corsHeaders, 400);
+
+  const purchases = await _reviewPurchases(env, rcUser, platform);
+  if(purchases === null)  return jsonResponse({ok:false,error:'rc_unavailable'}, corsHeaders, 502);
+  if(!purchases.length)   return jsonResponse({ok:false,error:'no_purchase'},    corsHeaders, 402);
+
+  // Какие чеки уже учтены. Берём самый ранний неучтённый.
+  let used = new Set();
+  try{
+    const { results } = await env.DB.prepare(
+      'SELECT tx_id FROM review_orders WHERE tx_id IN (' + purchases.map(()=>'?').join(',') + ')'
+    ).bind(...purchases.map(p => String(p.id))).all();
+    used = new Set((results || []).map(r => r.tx_id));
+  }catch(_){}
+  const fresh = purchases.filter(p => !used.has(String(p.id)))
+    .sort((a,c) => String(a.purchase_date||'').localeCompare(String(c.purchase_date||'')))[0];
+
+  if(!fresh){
+    // Все чеки учтены — это повтор запроса. Отдаём последний заказ этого покупателя.
+    const last = await env.DB.prepare(
+      'SELECT o.card_code, o.specialist_id, o.due_at, o.closes_at, s.name AS sname FROM review_orders o LEFT JOIN specialists s ON s.id=o.specialist_id WHERE o.rc_user=? ORDER BY o.id DESC LIMIT 1'
+    ).bind(rcUser).first();
+    if(!last) return jsonResponse({ok:false,error:'no_purchase'}, corsHeaders, 402);
+    return jsonResponse({ ok:true, repeat:true, code:last.card_code, specialist_id:last.specialist_id,
+      specialist_name:last.sname || '', due_at:last.due_at, closes_at:last.closes_at }, corsHeaders);
+  }
+
+  // Дежурный специалист. Пока он один; код задаётся переменной, чтобы сменить без правки кода.
+  const dutyRef = String(env.REVIEW_SPEC_REF || 'FOUNDER').toUpperCase();
+  const sp = await env.DB.prepare(
+    "SELECT id,name,lang FROM specialists WHERE upper(ref_code)=? AND status='active'"
+  ).bind(dutyRef).first();
+  if(!sp) return jsonResponse({ok:false,error:'specialist_not_found'}, corsHeaders, 503);
+
+  // Карточка по email — как в /specialist/connect. Чужого клиента не забираем: если человек уже
+  // ведётся у другого специалиста, чек остаётся неучтённым (его можно предъявить после отвязки).
+  let existing = null;
+  try{ existing = await env.DB.prepare('SELECT code,data,specialist_id FROM clients WHERE lower(email)=lower(?) LIMIT 1').bind(email).first(); }catch(_){}
+  if(existing && existing.specialist_id && existing.specialist_id !== sp.id)
+    return jsonResponse({ok:false,error:'has_specialist'}, corsHeaders, 409);
+
+  const now = Date.now();
+  const code = existing ? existing.code : genPatientCode();
+  // Срок ответа — с точностью до минуты (48 часов — это не «послезавтра»); окно вопросов — датой.
+  const dueAt = new Date(now + REVIEW_ANSWER_HOURS*3600000).toISOString();
+  const closesAt = '';   // окно вопросов открывается при выдаче разбора (/cabinet/review-done)
+  const sandbox = fresh.is_sandbox ? 1 : 0;
+
+  // Сначала гасим чек: UNIQUE(tx_id) не даст двум одновременным запросам завести два заказа.
+  try{
+    await env.DB.prepare(
+      'INSERT INTO review_orders (tx_id,rc_user,store,sandbox,card_code,specialist_id,status,created_at,due_at,closes_at,push_at,push_kind) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
+    ).bind(String(fresh.id), rcUser, String(fresh.store || platform), sandbox, code, sp.id, 'open', now, dueAt, closesAt, now, 'review').run();
+  }catch(e){
+    return jsonResponse({ok:false,error:'claim_conflict'}, corsHeaders, 409);
+  }
+
+  let data = {}; try{ data = JSON.parse(existing?.data || '{}'); }catch(_){}
+  data.consent = { at: new Date(now).toISOString(), ref_code: dutyRef, specialist_id: sp.id, via: 'review' };
+  data.sharing = true;
+  data.review  = { status:'open', paid_at: new Date(now).toISOString().slice(0,10), due_at: dueAt, closes_at: closesAt, sandbox };
+
+  await env.DB.prepare(`
+    INSERT INTO clients (code,name,email,lang,product,status,specialist_id,data,created_at,updated_at)
+    VALUES (?,?,?,?,'interpreter','new',?,?,?,?)
+    ON CONFLICT(code) DO UPDATE SET
+      name=CASE WHEN excluded.name!='' THEN excluded.name ELSE name END,
+      email=excluded.email, specialist_id=excluded.specialist_id,
+      data=excluded.data, updated_at=excluded.updated_at
+  `).bind(code, name, email, lang || sp.lang || '', sp.id, JSON.stringify(data), now, now).run();
+
+  if(env.EXPERT_DRAFTS){
+    await env.EXPERT_DRAFTS.put('code_owner:'+code,
+      JSON.stringify({ email, name, lang: lang || sp.lang || '' }),
+      { expirationTtl: 200*24*60*60 });
+  }
+
+  // Специалисту — пуш в кабинет. Telegram не используем (решение владельца 2026-10-02). Пуш без тела;
+  // надпись «оплачен разбор» service worker берёт в /cabinet/push-peek по метке push_at/push_kind заказа.
+  if(ctx) ctx.waitUntil(_specPush(env, sp.id).catch(()=>{}));
+
+  return jsonResponse({ ok:true, code, specialist_id: sp.id, specialist_name: sp.name || '',
+    due_at: dueAt, closes_at: closesAt }, corsHeaders);
+}
+
+// Ежечасно (cron): просроченные разборы. Правило владельца 2026-10-02: не ответили за 48 часов —
+// срок один раз продлевается ещё на 48; не ответили и после — заказ «просрочен», клиент возвращает
+// деньги по правилам стора. Сами вернуть деньги мы можем не везде (Apple возврат оформляет только
+// по заявке покупателя), поэтому сервер лишь фиксирует состояние и будит специалиста пушем.
+async function runReviewSweep(env){
+  if(!env.DB) return;
+  let rows = [];
+  try{
+    rows = (await env.DB.prepare(
+      "SELECT id, card_code, specialist_id, due_at, extended FROM review_orders WHERE status='open' AND due_at < ? LIMIT 50"
+    ).bind(new Date().toISOString()).all()).results || [];
+  }catch(_){ return; }   // таблицы ещё нет — миграция не применена
+  const now = Date.now();
+  for(const o of rows){
+    try{
+      const overdue = !!o.extended;
+      const newDue  = overdue ? o.due_at : new Date(Date.parse(o.due_at) + REVIEW_ANSWER_HOURS*3600000).toISOString();
+      await env.DB.prepare('UPDATE review_orders SET status=?, extended=1, due_at=?, push_at=?, push_kind=? WHERE id=?')
+        .bind(overdue ? 'overdue' : 'open', newDue, now, overdue ? 'review_overdue' : 'review_late', o.id).run();
+      const row = await env.DB.prepare('SELECT data FROM clients WHERE code=?').bind(o.card_code).first();
+      if(row){
+        let d = {}; try{ d = JSON.parse(row.data || '{}'); }catch(_){}
+        if(d.review && d.review.status === 'open'){
+          d.review.extended = 1; d.review.due_at = newDue;
+          if(overdue) d.review.status = 'overdue';
+          await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?').bind(JSON.stringify(d), now, o.card_code).run();
+        }
+      }
+      if(o.specialist_id) await _specPush(env, o.specialist_id);
+    }catch(_){}
+  }
+}
+
+// POST /cabinet/review-done {code} — специалист отмечает, что разбор выдан. Отмечает сам, кнопкой:
+// первое сообщение в переписке часто уточняющий вопрос, а не разбор, и считать его ответом нельзя.
+async function handleCabinetReviewDone(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  let b = {}; try{ b = await request.json(); }catch(_){}
+  const code = String(b.code || '').trim();
+  if(!code) return jsonResponse({ok:false,error:'no_code'}, corsHeaders, 400);
+  if(!await cabinetOwns(env, sess, code)) return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
+  const row = await env.DB.prepare('SELECT data FROM clients WHERE code=?').bind(code).first();
+  if(!row) return jsonResponse({ok:false,error:'not_found'}, corsHeaders, 404);
+  let d = {}; try{ d = JSON.parse(row.data || '{}'); }catch(_){}
+  if(!d.review) return jsonResponse({ok:false,error:'no_review'}, corsHeaders, 404);
+  const now = Date.now();
+  d.review.status = 'answered';
+  d.review.answered_at = new Date(now).toISOString().slice(0,10);
+  d.review.closes_at = _isoPlusDays(now, REVIEW_CHAT_DAYS);   // 7 дней на уточняющие вопросы — от выдачи
+  await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?').bind(JSON.stringify(d), now, code).run();
+  await env.DB.prepare("UPDATE review_orders SET status='answered', answered_at=?, closes_at=? WHERE card_code=? AND status IN ('open','overdue')").bind(now, d.review.closes_at, code).run();
+  return jsonResponse({ ok:true, review: d.review }, corsHeaders);
 }
 
 // ─────────────────────────────────────────────────────────────
