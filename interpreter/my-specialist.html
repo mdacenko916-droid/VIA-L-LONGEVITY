@@ -98,6 +98,14 @@ input.in.err{border-color:var(--alert)}
 .btn.ghost{background:none;border:1px solid var(--b1);color:var(--t2);margin-top:12px}
 .formerr{display:none;font-size:var(--fs-cap);color:var(--alert);text-align:center;margin-top:14px}
 .formerr.show{display:block}
+/* Разовый разбор со специалистом (docs/SPECIALIST-REVIEW-PLAN.md) */
+.rvh{font-size:var(--fs-cap);letter-spacing:1.5px;text-transform:uppercase;color:var(--gold-txt);font-weight:600;margin:14px 0 6px;text-align:start}
+/* отступ и выравнивание — логические: в иврите маркеры справа */
+.rvl{margin:0 0 4px;padding-inline-start:20px;text-align:start;font-size:var(--fs-body);color:var(--t2);line-height:1.55}
+.rvl li{margin-bottom:6px}
+#reviewView .card .fld:first-of-type{margin-top:16px}
+.rvstate{display:none;margin-top:14px;padding:11px 14px;border-radius:12px;background:var(--surface-2);border:1px solid var(--b1);font-size:var(--fs-body);color:var(--t1);line-height:1.5;text-align:start}
+.rvstate.late{border-color:var(--alert)}
 /* success / connected */
 #done{display:none;text-align:center}
 .tick{width:58px;height:58px;border-radius:50%;background:var(--ok-dim);border:1px solid rgba(78,204,163,.35);
@@ -243,6 +251,14 @@ body.chat-open{overflow:hidden}
       <button type="button" class="btn" id="connectBtn" onclick="connect()" data-t="connect">Connect</button>
       <div class="formerr" id="formerr"></div>
 
+      <!-- Разовый разбор со специалистом (docs/SPECIALIST-REVIEW-PLAN.md). Виден только в приложении,
+           когда стор отдал товар; цена — из стора, в тексте её нет. -->
+      <div class="speccard" id="rvTeaser" style="display:none;margin-top:14px;text-align:start;">
+        <div style="font-weight:600;color:var(--t1);margin-bottom:4px;" data-t="rv_t"></div>
+        <div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.5;margin-bottom:12px;" data-t="rv_s"></div>
+        <button type="button" class="btn" onclick="openReview()"><span data-t="rv_more"></span> · <span id="rvTeaserPrice"></span></button>
+      </div>
+
       <!-- Нет кода → витрина наставников (public=1) + запись на 15-мин знакомство -->
       <div id="noCode" style="display:none;margin-top:10px;border-top:1px solid var(--b1);padding-top:12px;">
         <p class="intro" data-t="nocode_q" style="margin-bottom:10px;text-align:center;">Нет кода наставника?</p>
@@ -259,6 +275,10 @@ body.chat-open{overflow:hidden}
       <p class="intro" id="doneDesc" style="margin-bottom:0"></p>
       <div class="codebox" id="doneCode" style="display:none"></div>
       <p class="codehint" id="codeHint" style="display:none" data-t="code_hint">Save this code — it's the number of your connection to your guide.</p>
+      <!-- Разовый разбор: срок ответа, продление, просрочка с путём возврата. Приходит с перепиской. -->
+      <div class="rvstate" id="rvState"><span id="rvStateText"></span>
+        <button type="button" class="btn ghost" id="rvRefundBtn" onclick="refundReview()" style="display:none;margin-top:10px;" data-t="rv_refund_btn"></button>
+      </div>
       <!-- Обмен данными включается той же галочкой согласия при подключении, а здесь им можно
            управлять дальше: пауза не должна стоить человеку связи и переписки. 2026-09-24. -->
       <label style="display:flex;align-items:flex-start;gap:10px;margin-top:20px;text-align:left;cursor:pointer;">
@@ -308,6 +328,36 @@ body.chat-open{overflow:hidden}
     </div>
   </div>
 
+  <!-- ── РАЗБОР СО СПЕЦИАЛИСТОМ: что входит + покупка (docs/SPECIALIST-REVIEW-PLAN.md §1.1) ── -->
+  <div id="reviewView" style="display:none;">
+    <button type="button" class="catback" onclick="closeReview()" id="rvBackBtn">← Назад</button>
+    <div class="card">
+      <div class="eyebrow">VIA·L</div>
+      <h1 data-t="rv_t"></h1>
+      <p class="intro" data-t="rv_s"></p>
+      <div class="rvh" data-t="rv_get_h"></div>
+      <ul class="rvl"><li data-t="rv_get1"></li><li data-t="rv_get2"></li><li data-t="rv_get3"></li><li data-t="rv_get4"></li></ul>
+      <div class="rvh" data-t="rv_how_h"></div>
+      <ol class="rvl"><li data-t="rv_how1"></li><li data-t="rv_how2"></li><li data-t="rv_how3"></li></ol>
+      <div class="rvh" data-t="rv_imp_h"></div>
+      <ul class="rvl"><li data-t="rv_imp1"></li><li data-t="rv_imp2"></li><li data-t="rv_imp3"></li></ul>
+      <label class="fld">
+        <span class="lbl" data-t="email_label">Your email</span>
+        <input class="in" id="rvEmail" type="email" autocomplete="email" placeholder="you@email.com">
+      </label>
+      <label class="fld">
+        <span class="lbl"><span data-t="name_label">Your name</span> <span class="opt" data-t="name_opt">(optional)</span></span>
+        <input class="in" id="rvName" autocomplete="name" maxlength="80">
+      </label>
+      <label class="consent">
+        <input type="checkbox" id="rvConsent" aria-label="Consent">
+        <span data-t="rv_consent"></span>
+      </label>
+      <button type="button" class="btn" id="rvPayBtn" onclick="buyReview()"></button>
+      <div class="formerr" id="rvErr"></div>
+    </div>
+  </div>
+
   <!-- ── КАТАЛОГ «Специалисты VIA·L» (фильтры направление+язык) ── -->
   <div id="catalogView" style="display:none;">
     <button type="button" class="catback" onclick="closeCatalog()" id="catBackBtn">← Назад</button>
@@ -346,6 +396,8 @@ body.chat-open{overflow:hidden}
   </div>
 </div>
 
+<!-- Мост покупок: разовый «Разбор со специалистом». На вебе все функции no-op — блок разбора не появится. -->
+<script src="iap-bridge.js"></script>
 <script>
 const WORKER='https://interpreter.viaelcom.workers.dev';
 const LINK_KEY='vial_spec_link';   // {code, name}
@@ -477,6 +529,26 @@ function _isWebSite(){
   Object.keys(B).forEach(l=>{ if(T[l]) Object.assign(T[l], B[l]); });
 })();
 
+// Разовый разбор со специалистом — тексты экрана покупки и состояния заказа (русский — канон,
+// вычитан специалистом 2026-10-02; docs/SPECIALIST-REVIEW-PLAN.md §1.1). Отдельным блоком, как выше.
+(function(){
+  const R={
+    ru:{"rv_t":"Разбор со специалистом","rv_s":"Специалист изучит ваши данные и письменно ответит, что делать именно вам.","rv_more":"Подробнее","rv_get_h":"Что вы получите","rv_get1":"Письменный разбор вашей ситуации: что, судя по вашим данным и жалобам, происходит и с чего начать.","rv_get2":"Личный план: питание, режим, добавки — с дозировками и временем приёма. План появится в «Моих приёмах».","rv_get3":"Какие анализы стоит сдать и на что в них смотреть. Если анализы уже есть — пришлите фото, специалист их учтёт.","rv_get4":"7 дней на уточняющие вопросы после разбора.","rv_how_h":"Как это проходит","rv_how1":"После оплаты специалист видит ваши показатели, жалобы и разборы из приложения.","rv_how2":"Вы можете написать, что беспокоит больше всего, и приложить анализы.","rv_how3":"В течение 48 часов вы получите разбор в переписке.","rv_imp_h":"Важно","rv_imp1":"Общение только письменное, в приложении. Звонков нет.","rv_imp2":"Специалист — не врач: он не ставит диагнозы и не назначает лекарства. При тревожных признаках он скажет, к какому врачу обратиться.","rv_imp3":"Если ответа не будет в срок, вы сможете вернуть деньги через магазин приложений.","rv_consent":"Я согласен(на), что специалист VIA·L увидит мои показатели, жалобы, разборы из приложения и нашу переписку — чтобы подготовить разбор (GDPR).","rv_pay":"Оплатить · {price}","rv_busy":"Оформляем…","rv_retry":"Повторить","rv_err_pay":"Покупка не прошла. Деньги не списаны.","rv_err_claim":"Оплата прошла, но оформить разбор пока не удалось. Нажмите «Повторить» — платить второй раз не нужно.","rv_err_taken":"Эта почта уже подключена к другому специалисту. Укажите другую и нажмите «Повторить» — платить второй раз не нужно.","rv_paid_t":"Разбор оплачен","rv_paid_d":"Напишите специалисту, что беспокоит больше всего, и приложите анализы, если они есть.","rv_st_open":"Специалист ответит до {d}.","rv_st_ext":"Специалист не успел ответить в срок — приносим извинения. Новый срок: до {d}.","rv_st_over":"Специалист не ответил в срок. Приносим извинения.","rv_refund_ios":"Вернуть оплату можно через Apple.","rv_refund_and":"Напишите на support@via-l.com — мы вернём оплату.","rv_refund_btn":"Вернуть оплату","rv_st_done":"Разбор выдан. Уточняющие вопросы — до {c}."},
+    uk:{"rv_t":"Розбір зі спеціалістом","rv_s":"Спеціаліст вивчить ваші дані та письмово відповість, що робити саме вам.","rv_more":"Докладніше","rv_get_h":"Що ви отримаєте","rv_get1":"Письмовий розбір вашої ситуації: що, судячи з ваших даних і скарг, відбувається і з чого почати.","rv_get2":"Особистий план: харчування, режим, добавки — з дозуваннями та часом прийому. План з’явиться в «Моїх прийомах».","rv_get3":"Які аналізи варто здати і на що в них дивитися. Якщо аналізи вже є — надішліть фото, спеціаліст їх урахує.","rv_get4":"7 днів на уточнювальні запитання після розбору.","rv_how_h":"Як це відбувається","rv_how1":"Після оплати спеціаліст бачить ваші показники, скарги та розбори із застосунку.","rv_how2":"Ви можете написати, що турбує найбільше, і додати аналізи.","rv_how3":"Протягом 48 годин ви отримаєте розбір у переписці.","rv_imp_h":"Важливо","rv_imp1":"Спілкування лише письмове, у застосунку. Дзвінків немає.","rv_imp2":"Спеціаліст — не лікар: він не ставить діагнози і не призначає ліки. За тривожних ознак він скаже, до якого лікаря звернутися.","rv_imp3":"Якщо відповіді не буде вчасно, ви зможете повернути гроші через магазин застосунків.","rv_consent":"Я погоджуюся, що спеціаліст VIA·L побачить мої показники, скарги, розбори із застосунку та нашу переписку — щоб підготувати розбір (GDPR).","rv_pay":"Оплатити · {price}","rv_busy":"Оформлюємо…","rv_retry":"Повторити","rv_err_pay":"Покупка не відбулася. Гроші не списано.","rv_err_claim":"Оплата пройшла, але оформити розбір поки не вдалося. Натисніть «Повторити» — платити вдруге не потрібно.","rv_err_taken":"Цю пошту вже підключено до іншого спеціаліста. Вкажіть іншу й натисніть «Повторити» — платити вдруге не потрібно.","rv_paid_t":"Розбір оплачено","rv_paid_d":"Напишіть спеціалісту, що турбує найбільше, і додайте аналізи, якщо вони є.","rv_st_open":"Спеціаліст відповість до {d}.","rv_st_ext":"Спеціаліст не встиг відповісти вчасно — перепрошуємо. Новий термін: до {d}.","rv_st_over":"Спеціаліст не відповів у строк. Перепрошуємо.","rv_refund_ios":"Повернути оплату можна через Apple.","rv_refund_and":"Напишіть на support@via-l.com — ми повернемо оплату.","rv_refund_btn":"Повернути оплату","rv_st_done":"Розбір видано. Уточнювальні запитання — до {c}."},
+    en:{"rv_t":"Specialist review","rv_s":"A specialist will study your data and tell you in writing what to do in your case.","rv_more":"Learn more","rv_get_h":"What you get","rv_get1":"A written review of your situation: what your data and complaints suggest is going on, and where to start.","rv_get2":"A personal plan: nutrition, routine, supplements — with dosages and timing. The plan appears in “My intake schedule”.","rv_get3":"Which lab tests are worth doing and what to look at. If you already have results, send a photo and the specialist will take them into account.","rv_get4":"7 days for follow-up questions after the review.","rv_how_h":"How it works","rv_how1":"After payment the specialist sees your metrics, complaints and summaries from the app.","rv_how2":"You can write what bothers you most and attach your lab results.","rv_how3":"Within 48 hours you receive the review in the chat.","rv_imp_h":"Good to know","rv_imp1":"Communication is written only, inside the app. There are no calls.","rv_imp2":"The specialist is not a doctor: they do not diagnose or prescribe medication. If something looks worrying, they will tell you which doctor to see.","rv_imp3":"If there is no reply in time, you can get a refund through the app store.","rv_consent":"I agree that a VIA·L specialist will see my metrics, complaints, app summaries and our chat in order to prepare the review (GDPR).","rv_pay":"Pay · {price}","rv_busy":"Processing…","rv_retry":"Try again","rv_err_pay":"The purchase did not go through. You were not charged.","rv_err_claim":"The payment went through, but the review could not be set up yet. Tap “Try again” — you will not be charged twice.","rv_err_taken":"This email is already connected to another specialist. Enter a different one and tap “Try again” — you will not be charged twice.","rv_paid_t":"Review paid","rv_paid_d":"Write to the specialist what bothers you most and attach your lab results if you have them.","rv_st_open":"The specialist will reply by {d}.","rv_st_ext":"The specialist did not manage to reply in time — we apologise. New deadline: {d}.","rv_st_over":"The specialist did not reply in time. We apologise.","rv_refund_ios":"You can get a refund through Apple.","rv_refund_and":"Write to support@via-l.com and we will refund your payment.","rv_refund_btn":"Get a refund","rv_st_done":"Review delivered. Follow-up questions until {c}."},
+    es:{"rv_t":"Revisión con especialista","rv_s":"Un especialista estudiará tus datos y te dirá por escrito qué hacer en tu caso.","rv_more":"Más información","rv_get_h":"Qué recibes","rv_get1":"Una revisión escrita de tu situación: qué indican tus datos y molestias, y por dónde empezar.","rv_get2":"Un plan personal: alimentación, rutina, suplementos — con dosis y horarios. El plan aparecerá en «Mis tomas».","rv_get3":"Qué análisis conviene hacer y en qué fijarse. Si ya tienes análisis, envía una foto y el especialista los tendrá en cuenta.","rv_get4":"7 días para preguntas de seguimiento después de la revisión.","rv_how_h":"Cómo funciona","rv_how1":"Tras el pago, el especialista ve tus métricas, molestias y resúmenes de la app.","rv_how2":"Puedes escribir qué te preocupa más y adjuntar tus análisis.","rv_how3":"En un plazo de 48 horas recibirás la revisión en el chat.","rv_imp_h":"Importante","rv_imp1":"La comunicación es solo por escrito, dentro de la app. No hay llamadas.","rv_imp2":"El especialista no es médico: no diagnostica ni receta medicamentos. Ante señales de alarma te dirá a qué médico acudir.","rv_imp3":"Si no hay respuesta a tiempo, podrás recuperar tu dinero a través de la tienda de aplicaciones.","rv_consent":"Acepto que un especialista de VIA·L vea mis métricas, molestias, resúmenes de la app y nuestro chat para preparar la revisión (RGPD).","rv_pay":"Pagar · {price}","rv_busy":"Procesando…","rv_retry":"Reintentar","rv_err_pay":"La compra no se completó. No se te ha cobrado.","rv_err_claim":"El pago se realizó, pero aún no se pudo tramitar la revisión. Pulsa «Reintentar» — no se te cobrará dos veces.","rv_err_taken":"Este correo ya está conectado con otro especialista. Indica otro y pulsa «Reintentar» — no se te cobrará dos veces.","rv_paid_t":"Revisión pagada","rv_paid_d":"Escribe al especialista qué te preocupa más y adjunta tus análisis si los tienes.","rv_st_open":"El especialista responderá antes del {d}.","rv_st_ext":"El especialista no llegó a responder a tiempo — te pedimos disculpas. Nuevo plazo: {d}.","rv_st_over":"El especialista no respondió a tiempo. Te pedimos disculpas.","rv_refund_ios":"Puedes recuperar el pago a través de Apple.","rv_refund_and":"Escribe a support@via-l.com y te devolveremos el pago.","rv_refund_btn":"Recuperar el pago","rv_st_done":"Revisión entregada. Preguntas de seguimiento hasta el {c}."},
+    de:{"rv_t":"Auswertung vom Spezialisten","rv_s":"Ein Spezialist sieht sich Ihre Daten an und antwortet schriftlich, was Sie konkret tun können.","rv_more":"Mehr erfahren","rv_get_h":"Was Sie erhalten","rv_get1":"Eine schriftliche Auswertung Ihrer Situation: was Ihre Daten und Beschwerden nahelegen und womit Sie beginnen.","rv_get2":"Ein persönlicher Plan: Ernährung, Tagesablauf, Nahrungsergänzung — mit Dosierung und Einnahmezeit. Der Plan erscheint in «Meine Einnahmen».","rv_get3":"Welche Laborwerte sinnvoll sind und worauf zu achten ist. Wenn Sie schon Ergebnisse haben, schicken Sie ein Foto — der Spezialist berücksichtigt sie.","rv_get4":"7 Tage für Rückfragen nach der Auswertung.","rv_how_h":"So läuft es ab","rv_how1":"Nach der Zahlung sieht der Spezialist Ihre Werte, Beschwerden und Auswertungen aus der App.","rv_how2":"Sie können schreiben, was Sie am meisten belastet, und Laborwerte anhängen.","rv_how3":"Innerhalb von 48 Stunden erhalten Sie die Auswertung im Chat.","rv_imp_h":"Wichtig","rv_imp1":"Die Kommunikation erfolgt nur schriftlich, in der App. Es gibt keine Anrufe.","rv_imp2":"Der Spezialist ist kein Arzt: Er stellt keine Diagnosen und verschreibt keine Medikamente. Bei Warnzeichen sagt er Ihnen, an welchen Arzt Sie sich wenden sollten.","rv_imp3":"Kommt keine Antwort innerhalb der Frist, können Sie Ihr Geld über den App-Store zurückerhalten.","rv_consent":"Ich bin einverstanden, dass ein VIA·L-Spezialist meine Werte, Beschwerden, App-Auswertungen und unseren Chat sieht, um die Auswertung zu erstellen (DSGVO).","rv_pay":"Bezahlen · {price}","rv_busy":"Wird verarbeitet…","rv_retry":"Erneut versuchen","rv_err_pay":"Der Kauf wurde nicht abgeschlossen. Es wurde nichts abgebucht.","rv_err_claim":"Die Zahlung ist erfolgt, aber die Auswertung konnte noch nicht eingerichtet werden. Tippen Sie auf «Erneut versuchen» — Sie zahlen nicht doppelt.","rv_err_taken":"Diese E-Mail ist bereits mit einem anderen Spezialisten verbunden. Geben Sie eine andere an und tippen Sie auf «Erneut versuchen» — Sie zahlen nicht doppelt.","rv_paid_t":"Auswertung bezahlt","rv_paid_d":"Schreiben Sie dem Spezialisten, was Sie am meisten belastet, und hängen Sie Laborwerte an, falls vorhanden.","rv_st_open":"Der Spezialist antwortet bis {d}.","rv_st_ext":"Der Spezialist hat es nicht rechtzeitig geschafft — wir bitten um Entschuldigung. Neue Frist: {d}.","rv_st_over":"Der Spezialist hat nicht fristgerecht geantwortet. Wir bitten um Entschuldigung.","rv_refund_ios":"Sie können die Zahlung über Apple zurückerhalten.","rv_refund_and":"Schreiben Sie an support@via-l.com — wir erstatten die Zahlung.","rv_refund_btn":"Zahlung zurückerhalten","rv_st_done":"Auswertung übergeben. Rückfragen bis {c}."},
+    pt:{"rv_t":"Análise com especialista","rv_s":"Um especialista vai estudar seus dados e responder por escrito o que fazer no seu caso.","rv_more":"Saiba mais","rv_get_h":"O que você recebe","rv_get1":"Uma análise escrita da sua situação: o que seus dados e queixas indicam e por onde começar.","rv_get2":"Um plano pessoal: alimentação, rotina, suplementos — com doses e horários. O plano aparece em «Minhas tomas».","rv_get3":"Quais exames vale a pena fazer e o que observar neles. Se já tiver exames, envie uma foto e o especialista vai considerá-los.","rv_get4":"7 dias para perguntas de seguimento após a análise.","rv_how_h":"Como funciona","rv_how1":"Após o pagamento, o especialista vê seus indicadores, queixas e resumos do aplicativo.","rv_how2":"Você pode escrever o que mais incomoda e anexar exames.","rv_how3":"Em até 48 horas você recebe a análise no chat.","rv_imp_h":"Importante","rv_imp1":"A comunicação é apenas por escrito, dentro do aplicativo. Não há chamadas.","rv_imp2":"O especialista não é médico: não faz diagnósticos nem prescreve medicamentos. Diante de sinais de alerta, ele dirá qual médico procurar.","rv_imp3":"Se não houver resposta no prazo, você poderá ser reembolsado pela loja de aplicativos.","rv_consent":"Concordo que um especialista VIA·L veja meus indicadores, queixas, resumos do aplicativo e nosso chat para preparar a análise (RGPD).","rv_pay":"Pagar · {price}","rv_busy":"Processando…","rv_retry":"Tentar de novo","rv_err_pay":"A compra não foi concluída. Nada foi cobrado.","rv_err_claim":"O pagamento foi feito, mas ainda não foi possível registrar a análise. Toque em «Tentar de novo» — você não será cobrado duas vezes.","rv_err_taken":"Este e-mail já está conectado a outro especialista. Informe outro e toque em «Tentar de novo» — você não será cobrado duas vezes.","rv_paid_t":"Análise paga","rv_paid_d":"Escreva ao especialista o que mais incomoda e anexe seus exames, se tiver.","rv_st_open":"O especialista responderá até {d}.","rv_st_ext":"O especialista não conseguiu responder a tempo — pedimos desculpas. Novo prazo: {d}.","rv_st_over":"O especialista não respondeu no prazo. Pedimos desculpas.","rv_refund_ios":"Você pode pedir o reembolso pela Apple.","rv_refund_and":"Escreva para support@via-l.com e devolveremos o pagamento.","rv_refund_btn":"Pedir reembolso","rv_st_done":"Análise entregue. Perguntas de seguimento até {c}."},
+    fr:{"rv_t":"Analyse par un spécialiste","rv_s":"Un spécialiste étudie vos données et vous répond par écrit quoi faire dans votre cas.","rv_more":"En savoir plus","rv_get_h":"Ce que vous recevez","rv_get1":"Une analyse écrite de votre situation : ce que vos données et vos plaintes indiquent, et par où commencer.","rv_get2":"Un plan personnel : alimentation, rythme, compléments — avec dosages et horaires. Le plan apparaît dans « Mes prises ».","rv_get3":"Quelles analyses faire et quoi y regarder. Si vous avez déjà des résultats, envoyez une photo : le spécialiste en tiendra compte.","rv_get4":"7 jours pour poser des questions complémentaires après l’analyse.","rv_how_h":"Comment ça se passe","rv_how1":"Après le paiement, le spécialiste voit vos indicateurs, vos plaintes et vos synthèses de l’application.","rv_how2":"Vous pouvez écrire ce qui vous gêne le plus et joindre vos analyses.","rv_how3":"Sous 48 heures, vous recevez l’analyse dans la messagerie.","rv_imp_h":"Important","rv_imp1":"Les échanges se font uniquement par écrit, dans l’application. Il n’y a pas d’appels.","rv_imp2":"Le spécialiste n’est pas médecin : il ne pose pas de diagnostic et ne prescrit pas de médicaments. En cas de signes inquiétants, il vous dira quel médecin consulter.","rv_imp3":"Sans réponse dans le délai, vous pourrez être remboursé via la boutique d’applications.","rv_consent":"J’accepte qu’un spécialiste VIA·L voie mes indicateurs, mes plaintes, mes synthèses de l’application et nos échanges pour préparer l’analyse (RGPD).","rv_pay":"Payer · {price}","rv_busy":"Traitement…","rv_retry":"Réessayer","rv_err_pay":"L’achat n’a pas abouti. Vous n’avez pas été débité.","rv_err_claim":"Le paiement est passé, mais l’analyse n’a pas encore pu être enregistrée. Touchez « Réessayer » — vous ne paierez pas deux fois.","rv_err_taken":"Cet e-mail est déjà relié à un autre spécialiste. Indiquez-en un autre et touchez « Réessayer » — vous ne paierez pas deux fois.","rv_paid_t":"Analyse payée","rv_paid_d":"Écrivez au spécialiste ce qui vous gêne le plus et joignez vos analyses si vous en avez.","rv_st_open":"Le spécialiste répondra avant le {d}.","rv_st_ext":"Le spécialiste n’a pas pu répondre à temps — toutes nos excuses. Nouveau délai : {d}.","rv_st_over":"Le spécialiste n’a pas répondu dans le délai. Toutes nos excuses.","rv_refund_ios":"Vous pouvez être remboursé via Apple.","rv_refund_and":"Écrivez à support@via-l.com et nous vous rembourserons.","rv_refund_btn":"Être remboursé","rv_st_done":"Analyse remise. Questions complémentaires jusqu’au {c}."},
+    pl:{"rv_t":"Analiza ze specjalistą","rv_s":"Specjalista przeanalizuje Twoje dane i odpowie pisemnie, co robić w Twoim przypadku.","rv_more":"Dowiedz się więcej","rv_get_h":"Co otrzymasz","rv_get1":"Pisemną analizę Twojej sytuacji: co wynika z Twoich danych i dolegliwości i od czego zacząć.","rv_get2":"Osobisty plan: odżywianie, rytm dnia, suplementy — z dawkami i porami przyjmowania. Plan pojawi się w sekcji „Moje przyjmowanie”.","rv_get3":"Jakie badania warto zrobić i na co w nich patrzeć. Jeśli masz już wyniki — wyślij zdjęcie, specjalista je uwzględni.","rv_get4":"7 dni na pytania uzupełniające po analizie.","rv_how_h":"Jak to przebiega","rv_how1":"Po opłaceniu specjalista widzi Twoje wskaźniki, dolegliwości i podsumowania z aplikacji.","rv_how2":"Możesz napisać, co niepokoi Cię najbardziej, i dołączyć wyniki badań.","rv_how3":"W ciągu 48 godzin otrzymasz analizę w wiadomościach.","rv_imp_h":"Ważne","rv_imp1":"Kontakt wyłącznie pisemny, w aplikacji. Nie ma rozmów telefonicznych.","rv_imp2":"Specjalista nie jest lekarzem: nie stawia diagnoz i nie przepisuje leków. Przy niepokojących objawach powie, do jakiego lekarza się zgłosić.","rv_imp3":"Jeśli odpowiedź nie przyjdzie w terminie, możesz odzyskać pieniądze przez sklep z aplikacjami.","rv_consent":"Zgadzam się, aby specjalista VIA·L zobaczył moje wskaźniki, dolegliwości, podsumowania z aplikacji i naszą korespondencję w celu przygotowania analizy (RODO).","rv_pay":"Zapłać · {price}","rv_busy":"Przetwarzanie…","rv_retry":"Spróbuj ponownie","rv_err_pay":"Zakup nie doszedł do skutku. Nie pobrano opłaty.","rv_err_claim":"Płatność przeszła, ale analizy nie udało się jeszcze zarejestrować. Dotknij „Spróbuj ponownie” — nie zapłacisz drugi raz.","rv_err_taken":"Ten e-mail jest już połączony z innym specjalistą. Podaj inny i dotknij „Spróbuj ponownie” — nie zapłacisz drugi raz.","rv_paid_t":"Analiza opłacona","rv_paid_d":"Napisz specjaliście, co niepokoi Cię najbardziej, i dołącz wyniki badań, jeśli je masz.","rv_st_open":"Specjalista odpowie do {d}.","rv_st_ext":"Specjalista nie zdążył odpowiedzieć w terminie — przepraszamy. Nowy termin: {d}.","rv_st_over":"Specjalista nie odpowiedział w terminie. Przepraszamy.","rv_refund_ios":"Zwrot możesz uzyskać przez Apple.","rv_refund_and":"Napisz na support@via-l.com — zwrócimy płatność.","rv_refund_btn":"Odzyskaj płatność","rv_st_done":"Analiza przekazana. Pytania uzupełniające do {c}."},
+    it:{"rv_t":"Analisi con lo specialista","rv_s":"Uno specialista studierà i tuoi dati e ti risponderà per iscritto cosa fare nel tuo caso.","rv_more":"Scopri di più","rv_get_h":"Cosa ricevi","rv_get1":"Un’analisi scritta della tua situazione: cosa indicano i tuoi dati e i tuoi disturbi e da dove iniziare.","rv_get2":"Un piano personale: alimentazione, ritmi, integratori — con dosaggi e orari. Il piano compare in «Le mie assunzioni».","rv_get3":"Quali esami conviene fare e cosa guardare. Se hai già degli esami, invia una foto: lo specialista ne terrà conto.","rv_get4":"7 giorni per domande di approfondimento dopo l’analisi.","rv_how_h":"Come funziona","rv_how1":"Dopo il pagamento lo specialista vede i tuoi indicatori, i disturbi e i riepiloghi dell’app.","rv_how2":"Puoi scrivere cosa ti preoccupa di più e allegare gli esami.","rv_how3":"Entro 48 ore ricevi l’analisi nella chat.","rv_imp_h":"Importante","rv_imp1":"La comunicazione è solo scritta, nell’app. Non ci sono chiamate.","rv_imp2":"Lo specialista non è un medico: non fa diagnosi e non prescrive farmaci. In presenza di segnali d’allarme ti dirà a quale medico rivolgerti.","rv_imp3":"Se la risposta non arriva nei tempi, potrai essere rimborsato tramite lo store.","rv_consent":"Acconsento che uno specialista VIA·L veda i miei indicatori, i disturbi, i riepiloghi dell’app e la nostra chat per preparare l’analisi (GDPR).","rv_pay":"Paga · {price}","rv_busy":"Elaborazione…","rv_retry":"Riprova","rv_err_pay":"L’acquisto non è andato a buon fine. Non ti è stato addebitato nulla.","rv_err_claim":"Il pagamento è riuscito, ma non è stato ancora possibile registrare l’analisi. Tocca «Riprova» — non pagherai due volte.","rv_err_taken":"Questa e-mail è già collegata a un altro specialista. Indicane un’altra e tocca «Riprova» — non pagherai due volte.","rv_paid_t":"Analisi pagata","rv_paid_d":"Scrivi allo specialista cosa ti preoccupa di più e allega gli esami, se li hai.","rv_st_open":"Lo specialista risponderà entro il {d}.","rv_st_ext":"Lo specialista non è riuscito a rispondere in tempo — ci scusiamo. Nuova scadenza: {d}.","rv_st_over":"Lo specialista non ha risposto nei tempi. Ci scusiamo.","rv_refund_ios":"Puoi ottenere il rimborso tramite Apple.","rv_refund_and":"Scrivi a support@via-l.com e ti rimborseremo.","rv_refund_btn":"Ottieni il rimborso","rv_st_done":"Analisi consegnata. Domande di approfondimento fino al {c}."},
+    he:{"rv_t":"סקירה עם מומחה","rv_s":"מומחה יעיין בנתונים שלך ויענה בכתב מה כדאי לעשות במקרה שלך.","rv_more":"פרטים נוספים","rv_get_h":"מה מקבלים","rv_get1":"סקירה כתובה של המצב שלך: מה עולה מהנתונים ומהתלונות שלך, ומאיפה להתחיל.","rv_get2":"תוכנית אישית: תזונה, שגרה, תוספים — עם מינונים ושעות נטילה. התוכנית תופיע ב״לוח הנטילה שלי״.","rv_get3":"אילו בדיקות כדאי לעשות ועל מה להסתכל בהן. אם כבר יש בדיקות — שלחו תמונה, והמומחה יתחשב בהן.","rv_get4":"7 ימים לשאלות הבהרה אחרי הסקירה.","rv_how_h":"איך זה עובד","rv_how1":"אחרי התשלום המומחה רואה את המדדים, התלונות והסיכומים שלך מהאפליקציה.","rv_how2":"אפשר לכתוב מה הכי מטריד ולצרף בדיקות.","rv_how3":"תוך 48 שעות תתקבל הסקירה בהתכתבות.","rv_imp_h":"חשוב לדעת","rv_imp1":"התקשורת בכתב בלבד, בתוך האפליקציה. אין שיחות.","rv_imp2":"המומחה אינו רופא: הוא אינו מאבחן ואינו רושם תרופות. אם יש סימנים מדאיגים, הוא יאמר לאיזה רופא לפנות.","rv_imp3":"אם לא תתקבל תשובה בזמן, אפשר יהיה לקבל החזר דרך חנות האפליקציות.","rv_consent":"אני מסכים/ה שמומחה VIA·L יראה את המדדים, התלונות, הסיכומים מהאפליקציה וההתכתבות שלנו כדי להכין את הסקירה (GDPR).","rv_pay":"לתשלום · {price}","rv_busy":"מעבדים…","rv_retry":"לנסות שוב","rv_err_pay":"הרכישה לא הושלמה. לא בוצע חיוב.","rv_err_claim":"התשלום עבר, אך עדיין לא הצלחנו לרשום את הסקירה. לחצו על ״לנסות שוב״ — לא תחויבו פעמיים.","rv_err_taken":"האימייל הזה כבר מחובר למומחה אחר. הזינו אימייל אחר ולחצו על ״לנסות שוב״ — לא תחויבו פעמיים.","rv_paid_t":"הסקירה שולמה","rv_paid_d":"כתבו למומחה מה הכי מטריד וצרפו בדיקות, אם יש.","rv_st_open":"המומחה ישיב עד {d}.","rv_st_ext":"המומחה לא הספיק להשיב בזמן — אנו מתנצלים. מועד חדש: {d}.","rv_st_over":"המומחה לא השיב בזמן. אנו מתנצלים.","rv_refund_ios":"אפשר לקבל החזר דרך Apple.","rv_refund_and":"כתבו ל-support@via-l.com ונחזיר את התשלום.","rv_refund_btn":"לקבל החזר","rv_st_done":"הסקירה נמסרה. שאלות הבהרה עד {c}."},
+    ja:{"rv_t":"専門家によるレビュー","rv_s":"専門家があなたのデータを確認し、あなたの場合に何をすればよいかを文章でお答えします。","rv_more":"詳しく見る","rv_get_h":"受け取れるもの","rv_get1":"あなたの状況についての書面レビュー：データと不調から何が読み取れるか、何から始めるか。","rv_get2":"個別プラン：食事、生活リズム、サプリメント — 用量と摂取時間つき。プランは「服用スケジュール」に表示されます。","rv_get3":"受けたほうがよい検査と、その見方。すでに検査結果があれば写真を送ってください。専門家が考慮します。","rv_get4":"レビュー後7日間、追加の質問ができます。","rv_how_h":"進め方","rv_how1":"お支払い後、専門家がアプリ内のあなたの指標・不調・サマリーを確認します。","rv_how2":"一番気になることを書き、検査結果を添付できます。","rv_how3":"48時間以内にチャットでレビューが届きます。","rv_imp_h":"大切なこと","rv_imp1":"やり取りはアプリ内の文章のみです。通話はありません。","rv_imp2":"専門家は医師ではありません。診断や薬の処方は行いません。気になる兆候があれば、どの医師に相談すべきかをお伝えします。","rv_imp3":"期限内に回答がない場合、アプリストア経由で返金を受けられます。","rv_consent":"レビュー作成のため、VIA·Lの専門家が私の指標・不調・アプリのサマリー・チャット内容を見ることに同意します（GDPR）。","rv_pay":"支払う · {price}","rv_busy":"処理中…","rv_retry":"もう一度試す","rv_err_pay":"購入は完了しませんでした。請求は発生していません。","rv_err_claim":"お支払いは完了しましたが、レビューの登録がまだできていません。「もう一度試す」を押してください。二重に請求されることはありません。","rv_err_taken":"このメールアドレスは別の専門家にすでに接続されています。別のアドレスを入力して「もう一度試す」を押してください。二重に請求されることはありません。","rv_paid_t":"レビューのお支払い完了","rv_paid_d":"一番気になることを専門家に書き、検査結果があれば添付してください。","rv_st_open":"専門家は{d}までに回答します。","rv_st_ext":"専門家が期限内に回答できませんでした。申し訳ありません。新しい期限：{d}。","rv_st_over":"専門家は期限内に回答しませんでした。申し訳ありません。","rv_refund_ios":"Apple経由で返金を受けられます。","rv_refund_and":"support@via-l.com までご連絡ください。返金いたします。","rv_refund_btn":"返金を受ける","rv_st_done":"レビューを提出しました。追加の質問は{c}まで。"},
+    ko:{"rv_t":"전문가 리뷰","rv_s":"전문가가 데이터를 살펴보고 회원님의 경우 무엇을 하면 좋을지 글로 답해 드립니다.","rv_more":"자세히 보기","rv_get_h":"받게 되는 것","rv_get1":"상황에 대한 서면 리뷰: 데이터와 불편 증상이 무엇을 말해 주는지, 무엇부터 시작할지.","rv_get2":"개인 플랜: 식사, 생활 리듬, 보충제 — 용량과 복용 시간 포함. 플랜은 ‘내 복용 일정’에 표시됩니다.","rv_get3":"어떤 검사를 받으면 좋은지, 무엇을 봐야 하는지. 이미 검사 결과가 있다면 사진을 보내 주세요. 전문가가 반영합니다.","rv_get4":"리뷰 후 7일 동안 추가 질문을 할 수 있습니다.","rv_how_h":"진행 방식","rv_how1":"결제 후 전문가가 앱의 지표, 불편 증상, 요약을 확인합니다.","rv_how2":"가장 신경 쓰이는 점을 적고 검사 결과를 첨부할 수 있습니다.","rv_how3":"48시간 이내에 채팅으로 리뷰를 받습니다.","rv_imp_h":"알아 두세요","rv_imp1":"소통은 앱 안에서 글로만 이루어집니다. 통화는 없습니다.","rv_imp2":"전문가는 의사가 아닙니다. 진단하거나 약을 처방하지 않습니다. 우려되는 징후가 있으면 어떤 의사를 찾아가야 하는지 알려 드립니다.","rv_imp3":"기한 내 답변이 없으면 앱 스토어를 통해 환불받을 수 있습니다.","rv_consent":"리뷰 준비를 위해 VIA·L 전문가가 내 지표, 불편 증상, 앱 요약, 채팅 내용을 보는 것에 동의합니다(GDPR).","rv_pay":"결제 · {price}","rv_busy":"처리 중…","rv_retry":"다시 시도","rv_err_pay":"구매가 완료되지 않았습니다. 요금이 청구되지 않았습니다.","rv_err_claim":"결제는 완료되었지만 리뷰를 아직 등록하지 못했습니다. ‘다시 시도’를 눌러 주세요. 두 번 청구되지 않습니다.","rv_err_taken":"이 이메일은 이미 다른 전문가와 연결되어 있습니다. 다른 이메일을 입력하고 ‘다시 시도’를 눌러 주세요. 두 번 청구되지 않습니다.","rv_paid_t":"리뷰 결제 완료","rv_paid_d":"가장 신경 쓰이는 점을 전문가에게 적고, 검사 결과가 있으면 첨부해 주세요.","rv_st_open":"전문가가 {d}까지 답변합니다.","rv_st_ext":"전문가가 기한 내에 답변하지 못했습니다. 죄송합니다. 새 기한: {d}.","rv_st_over":"전문가가 기한 내에 답변하지 않았습니다. 죄송합니다.","rv_refund_ios":"Apple을 통해 환불받을 수 있습니다.","rv_refund_and":"support@via-l.com 으로 연락해 주시면 환불해 드립니다.","rv_refund_btn":"환불받기","rv_st_done":"리뷰가 전달되었습니다. 추가 질문은 {c}까지."}
+  };
+  Object.keys(R).forEach(l=>{ if(T[l]) Object.assign(T[l], R[l]); });
+})();
+
 let lang='en';
 let specName='';   // подтверждённое имя специалиста по коду (для consent + успеха)
 
@@ -499,6 +571,7 @@ function setLang(l){
   // описание специалиста переводит сервер — под новый язык нужен новый запрос (при первом вызове списка ещё нет)
   if(_was!==l && typeof _showcaseList!=='undefined' && _showcaseList) loadShowcase();
   renderConsent();
+  if(typeof _rvTexts==='function') _rvTexts();   // цена и кнопка разбора — подстановка, не data-t
   // если экран «подключено» уже виден — обновим тексты с подстановкой имени
   if(document.getElementById('done').style.display==='block') refreshDone();
 }
@@ -588,7 +661,7 @@ function showDone(link,fresh){
   document.getElementById('form').style.display='none';
   const done=document.getElementById('done');done.style.display='block';
   // свежее подключение показывает код доступа; повторный визит — только статус
-  const showCode=fresh&&link.code;
+  const showCode=fresh&&link.code&&!link.review;   // после покупки разбора код не нужен: вводить его некуда, связка уже есть
   const cb=document.getElementById('doneCode'),ch=document.getElementById('codeHint');
   if(showCode){cb.textContent=link.code;cb.style.display='block';ch.style.display='block';}
   else{cb.style.display='none';ch.style.display='none';}
@@ -601,10 +674,13 @@ function showDone(link,fresh){
 
 function refreshDone(){
   const link=window._link||{};const nm=link.name||tr('spec_prefix');
-  document.getElementById('doneTitle').textContent= window._fresh ? tr('ok_title') : tr('linked_to').replace('{name}',link.name||'');
-  document.getElementById('doneDesc').textContent= window._fresh
+  // После покупки разбора — свои слова: «свяжется по email» здесь неправда, ответ придёт в переписку.
+  const _rv = window._fresh && link.review;
+  document.getElementById('doneTitle').textContent= _rv ? tr('rv_paid_t') : window._fresh ? tr('ok_title') : tr('linked_to').replace('{name}',link.name||'');
+  document.getElementById('doneDesc').textContent= _rv ? tr('rv_paid_d') : window._fresh
     ? tr('ok_desc').replace('{name}',link.name||'')
     : '';
+  _rvState();
   document.getElementById('unlinkBtn').textContent=tr('unlink');
   const sb=document.getElementById('shareBox');
   if(sb) sb.checked = link.sharing !== false;   // подключились с согласием → обмен включён
@@ -657,7 +733,7 @@ async function _loadThread(){
   try{
     const r=await fetch(WORKER+'/expert/thread?code='+encodeURIComponent(link.code)+'&lang='+encodeURIComponent(lang));
     const d=await r.json();
-    if(d&&d.ok&&Array.isArray(d.messages)){ _chatMsgs=d.messages; _renderBadge(); if(_chatOpen()) _renderChat(); }
+    if(d&&d.ok&&Array.isArray(d.messages)){ _chatMsgs=d.messages; window._review=d.review||null; _rvState(); _renderBadge(); if(_chatOpen()) _renderChat(); }
   }catch(e){}
 }
 
@@ -1131,6 +1207,132 @@ function submitQuiz(){
 function _hideMatchNote(){ const n=document.getElementById('catMatchNote'); if(n)n.style.display='none'; }
 function _catLangChanged(){ _hideMatchNote(); renderCatalog(); }
 
+// ── РАЗОВЫЙ РАЗБОР СО СПЕЦИАЛИСТОМ (docs/SPECIALIST-REVIEW-PLAN.md) ─────────────────────────
+// Письменный разбор разовой встроенной покупкой. Порядок: почта и согласие ДО оплаты → покупка в
+// сторе → сервер сверяет чек (/review/claim) и подключает к дежурному специалисту → дальше обычная
+// связка (LINK_KEY): переписка, данные дня, «Мои приёмы». Между оплатой и ответом сервера может
+// оборваться сеть, поэтому оплаченная заявка лежит в REVIEW_PENDING и доводится при следующем
+// открытии — платить второй раз человек не должен ни при каком сбое.
+const REVIEW_PENDING='vial_review_pending';   // {rc_user, platform, email, name, ts}
+let _rvProduct=null, _rvBusy=false;
+function _rvPending(){
+  try{
+    const p=JSON.parse(localStorage.getItem(REVIEW_PENDING)||'null');
+    if(p && Date.now()-(p.ts||0) > 30*86400000){ localStorage.removeItem(REVIEW_PENDING); return null; }   // месяц не оформилась — отпускаем экран
+    return p;
+  }catch(e){ return null; }
+}
+function _rvLinked(){ try{ const l=JSON.parse(localStorage.getItem(LINK_KEY)||'null'); return !!(l&&l.code); }catch(e){ return false; } }
+function _rvErr(msg){ const el=document.getElementById('rvErr'); if(!el) return; el.textContent=msg||''; el.classList.toggle('show',!!msg); }
+function _rvTexts(){
+  const price=(_rvProduct&&_rvProduct.priceString)||'';
+  const tp=document.getElementById('rvTeaserPrice'); if(tp) tp.textContent=price;
+  const b=document.getElementById('rvPayBtn');
+  if(b) b.textContent = _rvBusy ? tr('rv_busy') : _rvPending() ? tr('rv_retry') : tr('rv_pay').replace('{price}',price);
+  const bk=document.getElementById('rvBackBtn'); if(bk) bk.textContent=tr('back');
+}
+function _rvDate(iso){
+  const d=new Date(iso); if(isNaN(d)) return iso||'';
+  const o = String(iso).length>10 ? {day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'} : {day:'numeric',month:'long'};
+  try{ return d.toLocaleString(lang,o); }catch(e){ return d.toLocaleString([],o); }
+}
+// Состояние заказа на экране «подключено»: срок → продление → просрочка с возвратом → выдан.
+function _rvState(){
+  const box=document.getElementById('rvState'); if(!box) return;
+  const r=window._review;
+  if(!r){ box.style.display='none'; return; }
+  const over = r.status==='overdue', done = r.status==='answered';
+  const ios = (window.iapPlatform&&iapPlatform())==='ios';
+  let txt = done ? (r.closes_at ? tr('rv_st_done').replace('{c}',_rvDate(r.closes_at)) : '')
+          : over ? tr('rv_st_over')+' '+tr(ios?'rv_refund_ios':'rv_refund_and')
+          : tr(r.extended?'rv_st_ext':'rv_st_open').replace('{d}',_rvDate(r.due_at));
+  document.getElementById('rvStateText').textContent=txt;
+  document.getElementById('rvRefundBtn').style.display = (over&&ios) ? 'block' : 'none';
+  box.classList.toggle('late', over || (!done && !!r.extended));
+  box.style.display = txt ? 'block' : 'none';
+}
+async function refundReview(){
+  const ok = window.iapRefundReview ? await iapRefundReview() : false;
+  if(!ok){ try{ window.open('https://reportaproblem.apple.com','_blank'); }catch(e){} }
+}
+function openReview(){
+  const card=document.querySelector('.card'); if(card)card.style.display='none';
+  document.getElementById('reviewView').style.display='block';
+  // что человек уже ввёл в форме кода — не заставляем набирать второй раз
+  const e=document.getElementById('rvEmail'), n=document.getElementById('rvName'), p=_rvPending();
+  if(!e.value) e.value=(p&&p.email)||document.getElementById('email').value.trim();
+  if(!n.value) n.value=(p&&p.name)||document.getElementById('name').value.trim();
+  if(p) document.getElementById('rvConsent').checked=true;   // согласие уже давалось перед оплатой
+  _rvErr(''); _rvTexts();
+  try{ window.scrollTo(0,0); }catch(x){}
+}
+function closeReview(){
+  document.getElementById('reviewView').style.display='none';
+  const card=document.querySelector('.card'); if(card)card.style.display='';
+}
+async function buyReview(){
+  if(_rvBusy) return;
+  const email=document.getElementById('rvEmail').value.trim();
+  const name=document.getElementById('rvName').value.trim();
+  document.getElementById('rvEmail').classList.remove('err'); _rvErr('');
+  if(!validEmail(email)){ _rvErr(tr('err_email')); document.getElementById('rvEmail').classList.add('err'); return; }
+  if(!document.getElementById('rvConsent').checked){ _rvErr(tr('err_consent')); return; }
+  const btn=document.getElementById('rvPayBtn');
+  _rvBusy=true; btn.disabled=true; _rvTexts();
+  try{
+    let p=_rvPending();
+    if(!p){
+      // Оплата. Заявку сохраняем сразу после успешной покупки и ДО запроса к серверу.
+      const res=await iapBuyReview(_rvProduct);
+      if(!res||!res.ok){ if(!(res&&res.cancelled)) _rvErr(tr('rv_err_pay')); return; }
+      p={ rc_user:res.rcUser||'', platform:iapPlatform(), email, name, ts:Date.now() };
+    } else { p.email=email; p.name=name; }   // повтор: почту можно было исправить
+    if(!p.rc_user) p.rc_user=await iapAppUserId();
+    try{ localStorage.setItem(REVIEW_PENDING,JSON.stringify(p)); }catch(e){}
+    await _rvClaim(p);
+  } finally { _rvBusy=false; btn.disabled=false; _rvTexts(); }
+}
+// Предъявить оплаченную покупку серверу. true — разбор оформлен и связка сохранена.
+async function _rvClaim(p, again){
+  let d=null, st=0;
+  try{
+    const r=await fetch(WORKER+'/review/claim',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({rc_user:p.rc_user,platform:p.platform,email:p.email,name:p.name,lang:lang,consent:true})});
+    st=r.status; d=await r.json();
+  }catch(e){}
+  if(d&&d.ok&&d.code){
+    try{ localStorage.removeItem(REVIEW_PENDING); }catch(e){}
+    const link={code:d.code,name:d.specialist_name||'',spec_id:d.specialist_id||null,sharing:true,review:true};
+    try{ localStorage.setItem(LINK_KEY,JSON.stringify(link)); }catch(e){}
+    window._review={status:'open',due_at:d.due_at||'',extended:0,closes_at:d.closes_at||''};
+    document.getElementById('reviewView').style.display='none';
+    const card=document.querySelector('.card'); if(card)card.style.display='';
+    showDone(link,true);
+    try{ window.scrollTo(0,0); }catch(x){}
+    return true;
+  }
+  // Заявку НЕ снимаем ни при какой ошибке: она появляется только после успешной покупки, и даже ответ
+  // «покупки нет» (402) может быть задержкой между стором и RevenueCat — снять заявку значило бы
+  // оставить человека без разбора за его же деньги. Сразу после оплаты один раз переспрашиваем.
+  if(st===402 && !again && Date.now()-(p.ts||0) < 120000){ await new Promise(r=>setTimeout(r,4000)); return _rvClaim(p,true); }
+  _rvErr(tr(d&&d.error==='has_specialist' ? 'rv_err_taken' : 'rv_err_claim'));
+  return false;
+}
+// Показать блок разбора: только в приложении, без связки, вне США (см. _isUS — та же причина, что
+// у платного ведения), и только если стор отдал товар. Оплаченная, но не оформленная заявка
+// доводится сразу — экран открывается сам с кнопкой «Повторить».
+async function initReview(){
+  if(_rvLinked() || !window.iapAvailable || !iapAvailable() || _isUS()) return;
+  const p=_rvPending();
+  _rvProduct=await iapReviewProduct();
+  if(!_rvProduct && !p) return;
+  if(_rvLinked()) return;                       // подключились, пока ждали стор
+  document.getElementById('rvTeaser').style.display='block';
+  _rvTexts();
+  if(p){ openReview(); _rvBusy=true; document.getElementById('rvPayBtn').disabled=true; _rvTexts();
+         try{ await _rvClaim(p); } finally { _rvBusy=false; document.getElementById('rvPayBtn').disabled=false; _rvTexts(); } }
+}
+
 // ── init ──
 codeEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('email').focus();}});
 setLang((function(){try{var p=new URLSearchParams(location.search).get('lang');if(p)return p;return localStorage.getItem('vial_lang')||'en';}catch(e){return 'en';}})());
@@ -1144,6 +1346,7 @@ setLang((function(){try{var p=new URLSearchParams(location.search).get('lang');i
   }
 })();
 loadShowcase();   // витрина наставников
+initReview();     // разовый разбор со специалистом (только в приложении)
 </script>
 
 <!-- Вкладки приложения. «Мой наставник» — активная; остальные ведут в приложение с ?tab=… -->

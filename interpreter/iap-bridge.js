@@ -118,4 +118,48 @@
       return active;
     } catch(e){ console.warn('[iap] restorePurchases failed', e); return false; }
   };
+
+  /* ── Разовая покупка «Разбор со специалистом» (docs/SPECIALIST-REVIEW-PLAN.md, 2026-10-02) ──
+     Расходуемый товар: одна покупка — один письменный разбор. К entitlement не привязан и в Offering
+     не лежит, поэтому берём его из стора напрямую по идентификатору. Покупку засчитывает СЕРВЕР
+     (/review/claim сверяет чек с RevenueCat по идентификатору покупателя) — здесь только касса. */
+  var REVIEW_PRODUCT_ID = 'via_l_specialist_review';
+  window.iapPlatform = function(){
+    try { return (window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform()) || ''; } catch(e){ return ''; }
+  };
+  // Товар из стора (цена — product.priceString) или null: нет приложения, товар не заведён, нет сети.
+  window.iapReviewProduct = async function(){
+    var p = rc(); if(!p) return null;
+    var ok = await ensureConfigured(); if(!ok) return null;
+    try {
+      var r = await p.getProducts({ productIdentifiers: [REVIEW_PRODUCT_ID], type: 'NON_SUBSCRIPTION' });
+      return (r && r.products && r.products[0]) || null;
+    } catch(e){ console.warn('[iap] getProducts failed', e); return null; }
+  };
+  // Идентификатор покупателя в RevenueCat — по нему сервер находит чек.
+  window.iapAppUserId = async function(){
+    var p = rc(); if(!p) return '';
+    var ok = await ensureConfigured(); if(!ok) return '';
+    try { var r = await p.getAppUserID(); return (r && r.appUserID) || ''; } catch(e){ return ''; }
+  };
+  // Покупка разбора. {ok:true, rcUser} · {ok:false, cancelled:true} · {ok:false, error}.
+  window.iapBuyReview = async function(product){
+    var p = rc(); if(!p || !product) return { ok:false };
+    try {
+      await p.purchaseStoreProduct({ product: product });
+      return { ok:true, rcUser: await window.iapAppUserId() };
+    } catch(e){
+      var cancelled = !!(e && (e.userCancelled || (e.message||'').toLowerCase().indexOf('cancel')>=0));
+      return { ok:false, cancelled: cancelled, error: e };
+    }
+  };
+  // Возврат за разбор: на iPhone — системное окно возврата Apple (iOS 15+). false = окна нет, показать запасной путь.
+  window.iapRefundReview = async function(){
+    var p = rc(); if(!p || window.iapPlatform() !== 'ios') return false;
+    try {
+      var prod = await window.iapReviewProduct(); if(!prod) return false;
+      await p.beginRefundRequestForProduct({ storeProduct: prod });
+      return true;
+    } catch(e){ console.warn('[iap] refund request failed', e); return false; }
+  };
 })();

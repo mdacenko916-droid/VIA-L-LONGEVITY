@@ -4407,7 +4407,11 @@ async function handleExpertThread(request, env, corsHeaders, ctx){
     const save = env.DB.prepare('UPDATE clients SET data=? WHERE code=?').bind(JSON.stringify(d), code).run();
     if(ctx) ctx.waitUntil(save.catch(()=>{})); else await save.catch(()=>{});
   }
-  return jsonResponse({ ok:true, messages: out }, corsHeaders);
+  // Разовый разбор (docs/SPECIALIST-REVIEW-PLAN.md): клиенту нужно видеть срок ответа, продление и
+  // просрочку. Отдаём вместе с перепиской — приложение и так зовёт её при каждом открытии.
+  const rv = d.review ? { status: d.review.status || 'open', due_at: d.review.due_at || '', extended: d.review.extended ? 1 : 0,
+                          closes_at: d.review.closes_at || '', answered_at: d.review.answered_at || '' } : undefined;
+  return jsonResponse({ ok:true, messages: out, review: rv }, corsHeaders);
 }
 
 async function handleExpertMessage(request, env, corsHeaders, ctx){
