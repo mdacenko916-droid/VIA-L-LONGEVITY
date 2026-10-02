@@ -4409,8 +4409,9 @@ async function handleExpertThread(request, env, corsHeaders, ctx){
   }
   // Разовый разбор (docs/SPECIALIST-REVIEW-PLAN.md): клиенту нужно видеть срок ответа, продление и
   // просрочку. Отдаём вместе с перепиской — приложение и так зовёт её при каждом открытии.
-  const rv = d.review ? { status: d.review.status || 'open', due_at: d.review.due_at || '', extended: d.review.extended ? 1 : 0,
-                          closes_at: d.review.closes_at || '', answered_at: d.review.answered_at || '' } : undefined;
+  const rv = (d.review && (d.review.status !== 'closed' || _reviewClosed(d)))
+    ? { status: d.review.status || 'open', due_at: d.review.due_at || '', extended: d.review.extended ? 1 : 0,
+        closes_at: d.review.closes_at || '', answered_at: d.review.answered_at || '' } : undefined;
   return jsonResponse({ ok:true, messages: out, review: rv }, corsHeaders);
 }
 
@@ -4425,6 +4426,7 @@ async function handleExpertMessage(request, env, corsHeaders, ctx){
   const row = await env.DB.prepare('SELECT data, specialist_id FROM clients WHERE code=?').bind(code).first();
   if(!row) return jsonResponse({ ok:false, error:'not_found' }, corsHeaders, 404);   // карточка есть только у оплаченного VIA-L EXPERT
   let d = {}; try{ d = JSON.parse(row.data || '{}'); }catch(_){}
+  if(_reviewClosed(d)) return jsonResponse({ ok:false, error:'review_closed' }, corsHeaders, 403);   // окно вопросов разового разбора истекло
   if(!Array.isArray(d.messages)) d.messages = [];
   const inMsg = { dir:'in', date: new Date().toISOString().slice(0,10), text, source:'app' };
   if(mtype && murl){ inMsg.type = mtype; inMsg.url = murl; }
@@ -10634,6 +10636,7 @@ async function handleCabinetChatSend(request, env, corsHeaders, ctx){
   if(mtype && murl){ outMsg.type = mtype; outMsg.url = murl; }
   d.messages.push(outMsg);
   if(d.messages.length>300) d.messages=d.messages.slice(-300);
+  if(d.review && d.review.unanswered) delete d.review.unanswered;   // на вопрос последнего дня ответили — метку снимаем
   await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?').bind(JSON.stringify(d), Date.now(), code).run();
   if(ctx) ctx.waitUntil(_appPush(env, code));   // пуш клиенту в приложение: «Ваш наставник ответил» (2026-09-27)
   // Опц. зеркало в Telegram-топик (специалист-оператор в TG видит continuity) — не блокируем ответ.
@@ -11231,6 +11234,7 @@ async function handleSpecialistSharing(request, env, corsHeaders){
   if(!row) return jsonResponse({ok:false,error:'not_found'}, corsHeaders, 404);
   let data = {};
   try { data = JSON.parse(row.data || '{}'); } catch(_){}
+  if(on && _reviewClosed(data)) return jsonResponse({ok:false,error:'review_closed'}, corsHeaders, 403);   // разбор закрыт — данные специалисту больше не идут
   data.sharing = on;
   if(!on && data.consent) data.consent.paused_at = new Date().toISOString();
   await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE upper(code)=?')
@@ -11427,7 +11431,47 @@ async function runReviewSweep(env){
       if(o.specialist_id) await _specPush(env, o.specialist_id);
     }catch(_){}
   }
+  await _reviewCloseExpired(env, now);
 }
+
+// Окно уточняющих вопросов — 7 дней от выдачи разбора (решение владельца 2026-10-02). День closes_at
+// входит в окно целиком; на следующий день заказ закрывается: клиент больше не пишет, данные дня
+// специалисту не уходят, переписка и протокол остаются. Вопрос, заданный в последний день, должен
+// быть отвечен — поэтому специалист отвечать может и после закрытия, а если последнее слово осталось
+// за клиентом, карточка помечается и специалисту уходит пуш.
+async function _reviewCloseExpired(env, now){
+  let rows = [];
+  try{
+    rows = (await env.DB.prepare(
+      "SELECT id, card_code, specialist_id FROM review_orders WHERE status='answered' AND closes_at != '' AND closes_at < ? LIMIT 50"
+    ).bind(new Date(now).toISOString().slice(0,10)).all()).results || [];
+  }catch(_){ return; }
+  for(const o of rows){
+    try{
+      const row = await env.DB.prepare('SELECT data FROM clients WHERE code=?').bind(o.card_code).first();
+      let unanswered = false;
+      if(row){
+        let d = {}; try{ d = JSON.parse(row.data || '{}'); }catch(_){}
+        // Закрываем только связку, созданную покупкой разбора: если человек за это время подключился
+        // к специалисту по коду (ведение), его переписку и обмен данными не трогаем.
+        if(d.review && d.review.status === 'answered' && d.consent && d.consent.via === 'review'){
+          const msgs = Array.isArray(d.messages) ? d.messages : [];
+          unanswered = !!(msgs.length && msgs[msgs.length-1].dir !== 'out');
+          d.review.status = 'closed';
+          d.review.closed_at = new Date(now).toISOString().slice(0,10);
+          if(unanswered) d.review.unanswered = 1;
+          d.sharing = false;
+          await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?').bind(JSON.stringify(d), now, o.card_code).run();
+        }
+      }
+      await env.DB.prepare('UPDATE review_orders SET status=?, push_at=?, push_kind=? WHERE id=?')
+        .bind('closed', unanswered ? now : null, unanswered ? 'review_unanswered' : null, o.id).run();
+      if(unanswered && o.specialist_id) await _specPush(env, o.specialist_id);
+    }catch(_){}
+  }
+}
+// Связка закрыта вместе с разовым разбором (а не обычное ведение по коду специалиста).
+function _reviewClosed(d){ return !!(d && d.review && d.review.status === 'closed' && d.consent && d.consent.via === 'review'); }
 
 // POST /cabinet/review-done {code} — специалист отмечает, что разбор выдан. Отмечает сам, кнопкой:
 // первое сообщение в переписке часто уточняющий вопрос, а не разбор, и считать его ответом нельзя.

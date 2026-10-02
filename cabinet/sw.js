@@ -57,20 +57,20 @@ const _PT = {
   ja:{t:'新しいメッセージ',m:'新しいメッセージ',p:'写真',v:'音声メッセージ',g:'クライアントからメッセージ',more:'他{n}件'},
   ko:{t:'새 메시지',m:'새 메시지',p:'사진',v:'음성 메시지',g:'고객이 메시지를 보냈습니다',more:'외 {n}건'},
 };
-// Разовый разбор (docs/SPECIALIST-REVIEW-PLAN.md): оплачен · срок продлён на 48 ч · срок истёк.
+// Разовый разбор (docs/SPECIALIST-REVIEW-PLAN.md): оплачен · срок продлён на 48 ч · срок истёк · вопрос последнего дня без ответа.
 const _RT = {
-  ru:{t:'Разовый разбор',n:'оплачен, ответить в течение 48 часов',l:'срок продлён на 48 часов',o:'срок ответа истёк'},
-  uk:{t:'Разовий розбір',n:'оплачено, відповісти протягом 48 годин',l:'термін продовжено на 48 годин',o:'термін відповіді минув'},
-  en:{t:'One-off review',n:'paid, reply within 48 hours',l:'deadline extended by 48 hours',o:'reply deadline has passed'},
-  es:{t:'Revisión única',n:'pagada, responder en 48 horas',l:'plazo ampliado 48 horas',o:'el plazo de respuesta ha vencido'},
-  de:{t:'Einmalige Auswertung',n:'bezahlt, Antwort innerhalb von 48 Stunden',l:'Frist um 48 Stunden verlängert',o:'Antwortfrist abgelaufen'},
-  pt:{t:'Análise avulsa',n:'paga, responder em 48 horas',l:'prazo prorrogado por 48 horas',o:'o prazo de resposta expirou'},
-  fr:{t:'Analyse ponctuelle',n:'payée, répondre sous 48 heures',l:'délai prolongé de 48 heures',o:'délai de réponse dépassé'},
-  pl:{t:'Jednorazowa analiza',n:'opłacona, odpowiedz w ciągu 48 godzin',l:'termin przedłużony o 48 godzin',o:'termin odpowiedzi minął'},
-  it:{t:'Analisi singola',n:'pagata, rispondere entro 48 ore',l:'scadenza prorogata di 48 ore',o:'termine di risposta scaduto'},
-  he:{t:'סקירה חד-פעמית',n:'שולמה, יש להשיב תוך 48 שעות',l:'המועד הוארך ב-48 שעות',o:'מועד התשובה חלף'},
-  ja:{t:'単発レビュー',n:'支払い済み、48時間以内に回答',l:'期限を48時間延長',o:'回答期限を過ぎました'},
-  ko:{t:'1회 리뷰',n:'결제 완료, 48시간 내 답변',l:'기한 48시간 연장',o:'답변 기한이 지났습니다'},
+  ru:{t:'Разовый разбор',n:'оплачен, ответить в течение 48 часов',l:'срок продлён на 48 часов',o:'срок ответа истёк',u:'вопрос клиента остался без ответа'},
+  uk:{t:'Разовий розбір',n:'оплачено, відповісти протягом 48 годин',l:'термін продовжено на 48 годин',o:'термін відповіді минув',u:'запитання клієнта лишилося без відповіді'},
+  en:{t:'One-off review',n:'paid, reply within 48 hours',l:'deadline extended by 48 hours',o:'reply deadline has passed',u:"the client's question is unanswered"},
+  es:{t:'Revisión única',n:'pagada, responder en 48 horas',l:'plazo ampliado 48 horas',o:'el plazo de respuesta ha vencido',u:'la pregunta del cliente quedó sin respuesta'},
+  de:{t:'Einmalige Auswertung',n:'bezahlt, Antwort innerhalb von 48 Stunden',l:'Frist um 48 Stunden verlängert',o:'Antwortfrist abgelaufen',u:'Frage des Klienten unbeantwortet'},
+  pt:{t:'Análise avulsa',n:'paga, responder em 48 horas',l:'prazo prorrogado por 48 horas',o:'o prazo de resposta expirou',u:'a pergunta do cliente ficou sem resposta'},
+  fr:{t:'Analyse ponctuelle',n:'payée, répondre sous 48 heures',l:'délai prolongé de 48 heures',o:'délai de réponse dépassé',u:'la question du client est restée sans réponse'},
+  pl:{t:'Jednorazowa analiza',n:'opłacona, odpowiedz w ciągu 48 godzin',l:'termin przedłużony o 48 godzin',o:'termin odpowiedzi minął',u:'pytanie klienta bez odpowiedzi'},
+  it:{t:'Analisi singola',n:'pagata, rispondere entro 48 ore',l:'scadenza prorogata di 48 ore',o:'termine di risposta scaduto',u:'la domanda del cliente è senza risposta'},
+  he:{t:'סקירה חד-פעמית',n:'שולמה, יש להשיב תוך 48 שעות',l:'המועד הוארך ב-48 שעות',o:'מועד התשובה חלף',u:'שאלת הלקוח נותרה ללא מענה'},
+  ja:{t:'単発レビュー',n:'支払い済み、48時間以内に回答',l:'期限を48時間延長',o:'回答期限を過ぎました',u:'クライアントの質問が未回答です'},
+  ko:{t:'1회 리뷰',n:'결제 완료, 48시간 내 답변',l:'기한 48시간 연장',o:'답변 기한이 지났습니다',u:'고객 질문에 답변하지 않았습니다'},
 };
 self.addEventListener('push', e => {
   e.waitUntil((async () => {
@@ -81,7 +81,7 @@ self.addEventListener('push', e => {
       try {
         const j = await (await fetch(m.api + '/cabinet/push-peek?t=' + encodeURIComponent(m.peek))).json();
         const R = _RT[(m && m.lang) || 'ru'] || _RT.ru;
-        const rk = j && j.ok && j.code && { review: R.n, review_late: R.l, review_overdue: R.o }[j.kind];
+        const rk = j && j.ok && j.code && { review: R.n, review_late: R.l, review_overdue: R.o, review_unanswered: R.u }[j.kind];
         if (rk) {
           code = j.code; title = R.t; body = (j.name || '') + ' — ' + rk;
         } else if (j && j.ok && j.code) {

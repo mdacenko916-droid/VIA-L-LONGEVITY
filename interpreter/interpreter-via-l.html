@@ -6801,7 +6801,7 @@ function _focusState(){
   var scores=_cmpScores(), latest=scores[0]||null;
   var todayBy=(latest&&latest.day===_dayKey())?_cmpEntryBy(latest):null;
   var rowsFor=function(cur,prev){ return keys.map(function(k){ return { key:k, title:_cmpLbl(k), val:(cur&&cur[k]!=null)?cur[k]:null, prev:(prev&&prev[k]!=null)?prev[k]:null }; }); };
-  var spec=false; try{ var l=JSON.parse(localStorage.getItem('vial_spec_link')||'null'); spec=!!(l&&l.code); }catch(x){}
+  var spec=false; try{ var l=JSON.parse(localStorage.getItem('vial_spec_link')||'null'); spec=!!(l&&l.code&&!l.closed); }catch(x){}
   var st={ lang:lang, cards:true, spec:spec, rv:(typeof _reviewOn==='function'&&_reviewOn()), okLabel:(typeof _expUI==='function'?_expUI().ok:'OK') };   // rv — можно предложить разовый разбор
   var _txt=function(t){ return '<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.65;white-space:pre-wrap;">'+_aiMd(t)+'</div>'; };
   // Итог месяца: кнопка, когда пришёл срок и набралось записей; текст — в день получения. Рядом — жалобы
@@ -11628,6 +11628,9 @@ async function _specPoll(){
     if(d&&d.ok&&Array.isArray(d.messages)){
       var n=d.messages.filter(function(m){return m.dir==='out';}).length;
       localStorage.setItem('vial_spec_out', String(n));
+      // Разовый разбор закрыт (окно вопросов истекло): связка остаётся ради переписки и протокола, но
+      // обмен данными выключен и человек снова «без специалиста» (docs/SPECIALIST-REVIEW-PLAN.md).
+      if(d.review && d.review.status==='closed' && !l.closed){ l.closed=true; l.sharing=false; localStorage.setItem('vial_spec_link', JSON.stringify(l)); }
       if(typeof renderDayBlueprint==='function' && window._bpData) renderDayBlueprint(window._bpData);
     }
   }catch(e){}
@@ -11648,7 +11651,7 @@ function _specChapter(){
 function _specProtocol(){
   try{
     var l=JSON.parse(localStorage.getItem('vial_spec_link')||'null');
-    if(!l||!l.code||l.sharing===false) return;
+    if(!l||!l.code||(l.sharing===false&&!l.closed)) return;   // после закрытого разбора протокол всё ещё может обновиться
     fetch(AI_WORKER+'/expert/intake?code='+encodeURIComponent(l.code))
       .then(function(r){ return r.json(); })
       .then(function(j){ if(j&&j.ok&&Array.isArray(j.items)&&typeof _ikMergeSpec==='function'){ _ikMergeSpec(j.items); if(typeof _ikArm==='function')_ikArm(); } })
@@ -11847,7 +11850,7 @@ function _humanCtaDays(){
 function _reviewOn(){
   try{
     if(localStorage.getItem('vial_review_on')!=='1') return false;
-    var l=JSON.parse(localStorage.getItem('vial_spec_link')||'null'); return !(l&&l.code);
+    var l=JSON.parse(localStorage.getItem('vial_spec_link')||'null'); return !(l&&l.code&&!l.closed);   // закрытый разбор — связки уже нет
   }catch(e){ return false; }
 }
 // США: платную работу специалиста не предлагаем — то же правило и та же проверка, что в my-specialist.html (_isUS).
@@ -12483,7 +12486,7 @@ function _cmpOpts(data){
   var male=(data.gender==='male'), ct=data.cycle_temp, note='';
   if(!male && ct && ct.state==='none' && _phaseGate(data)) note=L(_CYC_TEMP_T.none)+(ct.prev_none?L(_CYC_TEMP_T.none2):'');
   var titles={}; Object.keys(CMP_ITEMS).forEach(function(k){ titles[k]=CMP_ITEMS[k].t; });
-  var spec=false; try{ var l=JSON.parse(localStorage.getItem('vial_spec_link')||'null'); spec=!!(l&&l.code); }catch(e){}
+  var spec=false; try{ var l=JSON.parse(localStorage.getItem('vial_spec_link')||'null'); spec=!!(l&&l.code&&!l.closed); }catch(e){}
   return {items:items, male:male, trial:(typeof _isTrial==='function'&&_isTrial()), spec:spec, lang:lang, titles:titles, cycleNote:note};
 }
 function _cmpChapter(){

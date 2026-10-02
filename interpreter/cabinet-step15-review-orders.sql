@@ -25,14 +25,14 @@ CREATE TABLE IF NOT EXISTS review_orders (
   sandbox       INTEGER DEFAULT 0,      -- 1 = тестовая покупка (TestFlight, ревью стора) — в деньги не считать
   card_code     TEXT NOT NULL,          -- карточка клиента в кабинете
   specialist_id INTEGER,                -- кому ушёл разбор
-  status        TEXT DEFAULT 'open',    -- open | answered | overdue (не ответили и после продления)
+  status        TEXT DEFAULT 'open',    -- open | answered | overdue (не ответили и после продления) | closed (окно вопросов истекло)
   created_at    INTEGER,                -- когда покупка предъявлена
   due_at        TEXT,                   -- ISO-время, срок ответа (48 часов с покупки)
   closes_at     TEXT,                   -- YYYY-MM-DD, до какого дня клиент задаёт уточняющие вопросы (7 дней от выдачи)
   answered_at   INTEGER,
   extended      INTEGER DEFAULT 0,      -- 1 = срок уже продлевался на 48 часов (продление одно)
   push_at       INTEGER,                -- когда специалисту ушёл последний пуш по заказу
-  push_kind     TEXT                    -- review | review_late | review_overdue — что написать в уведомлении
+  push_kind     TEXT                    -- review | review_late | review_overdue | review_unanswered — что написать в уведомлении
 );
 CREATE INDEX IF NOT EXISTS idx_review_card ON review_orders(card_code);
 CREATE INDEX IF NOT EXISTS idx_review_user ON review_orders(rc_user);
