@@ -6,6 +6,9 @@
 Повторный запуск безопасен — если товар уже есть, скрипт останавливается.
 Цены на уже созданном товаре:  python3 app/scripts/asc_create_review_iap.py price
 (база €50 Германия + своя цена для США $54,99 — решение владельца 2026-10-02; авто-пересчёт давал $45).
+Скриншот для ревью:  python3 app/scripts/asc_create_review_iap.py shot
+(экран «Что входит» с кнопкой оплаты, app/store/images/iap-review/specialist-review-en.png; без него товар
+остаётся в состоянии MISSING_METADATA и StoreKit не отдаёт его даже в TestFlight).
 """
 import importlib.util, os
 _p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "asc_api.py")
@@ -54,10 +57,27 @@ def set_prices(iid):
             for k, pt in plan]})
     print("Цены: Германия (база) €%s · США $%s" % (plan[0][1]["attributes"]["customerPrice"], plan[1][1]["attributes"]["customerPrice"]))
 
-def price_only():
+def _find():
     found = [i for i in asc.all_pages("/v1/apps/%s/inAppPurchasesV2?limit=50" % APP) if i["attributes"]["productId"] == PID]
     if not found: raise SystemExit("Товар %s не найден." % PID)
-    set_prices(found[0]["id"])
+    return found[0]["id"]
+
+def shot():
+    iid = _find()
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "store", "images", "iap-review", "specialist-review-en.png")
+    data = open(path, "rb").read()
+    try:
+        old = (asc.req("/v2/inAppPurchases/%s/appStoreReviewScreenshot" % iid).get("data") or {}).get("id")
+    except RuntimeError:
+        old = None
+    if old:
+        asc.req("/v1/inAppPurchaseAppStoreReviewScreenshots/%s" % old, "DELETE"); print("Старый скриншот удалён")
+    sid = asc.upload_shot("inAppPurchaseAppStoreReviewScreenshots", "inAppPurchaseV2", "inAppPurchases", iid, data, "specialist-review-en.png")
+    print("Скриншот загружен:", sid, "(%d КБ)" % (len(data) // 1024))
+    print("Состояние товара:", asc.req("/v2/inAppPurchases/%s" % iid)["data"]["attributes"]["state"])
+
+def price_only():
+    set_prices(_find())
 
 def main():
     for k, (n, d) in L.items():
@@ -89,4 +109,4 @@ def main():
 
 if __name__ == "__main__":
     import sys
-    price_only() if sys.argv[1:] == ["price"] else main()
+    {"price": price_only, "shot": shot}.get((sys.argv[1:] or [""])[0], main)()
