@@ -4179,7 +4179,9 @@ const _GLAB={
   vo2:{ru:'Аэробная форма',uk:'Аеробна форма',en:'Aerobic fitness',es:'Forma aeróbica',de:'Aerobe Fitness',pt:'Forma aeróbica',fr:'Forme aérobie',pl:'Forma aerobowa',it:'Forma aerobica',he:'כושר אירובי',ja:'有酸素フィットネス',ko:'유산소 능력'},
   readiness:{ru:'Готовность',uk:'Готовність',en:'Readiness',es:'Preparación',de:'Bereitschaft',pt:'Prontidão',fr:'Disponibilité',pl:'Gotowość',it:'Prontezza',he:'מוכנות',ja:'準備度',ko:'준비도'},
   energy:{ru:'Энергия',uk:'Енергія',en:'Energy',es:'Energía',de:'Energie',pt:'Energia',fr:'Énergie',pl:'Energia',it:'Energia',he:'אנרגיה',ja:'エネルギー',ko:'에너지'},
-  bp_sys:{ru:'Верхнее давление',uk:'Верхній тиск',en:'Systolic BP',es:'Presión sistólica',de:'Oberer Blutdruck',pt:'Pressão sistólica',fr:'Tension systolique',pl:'Ciśnienie górne',it:'Pressione sistolica',he:'לחץ סיסטולי',ja:'収縮期血圧',ko:'수축기 혈압'}
+  bp_sys:{ru:'Верхнее давление',uk:'Верхній тиск',en:'Systolic BP',es:'Presión sistólica',de:'Oberer Blutdruck',pt:'Pressão sistólica',fr:'Tension systolique',pl:'Ciśnienie górne',it:'Pressione sistolica',he:'לחץ סיסטולי',ja:'収縮期血圧',ko:'수축기 혈압'},
+  bodyFat:{ru:'Процент жира',uk:'Відсоток жиру',en:'Body fat',es:'Grasa corporal',de:'Körperfett',pt:'Gordura corporal',fr:'Masse grasse',pl:'Tkanka tłuszczowa',it:'Massa grassa',he:'אחוז שומן',ja:'体脂肪率',ko:'체지방률'},
+  glucose:{ru:'Глюкоза',uk:'Глюкоза',en:'Glucose',es:'Glucosa',de:'Glukose',pt:'Glicose',fr:'Glycémie',pl:'Glukoza',it:'Glicemia',he:'גלוקוז',ja:'血糖',ko:'혈당'}
 };
 Object.keys(_GLAB).forEach(function(k){Object.keys(_GLAB[k]).forEach(function(l){if(!T[l])T[l]={};T[l]['glab_'+k]=_GLAB[k][l];});});
 // Карточка «Ручной ввод» + статус загрузки трекера (видимые): 12 языков
@@ -7580,7 +7582,7 @@ function renderCycleDay(){
     +'<span style="font-size:var(--fs-body);color:#F9A8D4;">· '+ph+'</span>';
 }
 // Источник данных «как есть» в человекочитаемое имя.
-const _SRC_NAMES={fitbit:'Fitbit',oura:'Oura',samsung:'Samsung Health',whoop:'WHOOP',xiaomi:'Xiaomi',garmin:'Garmin',polar:'Polar',withings:'Withings',apple:'Apple Health','apple-manual':'Apple Health'};
+const _SRC_NAMES={fitbit:'Fitbit',oura:'Oura',samsung:'Samsung Health',whoop:'WHOOP',xiaomi:'Xiaomi',garmin:'Garmin',polar:'Polar',withings:'Withings',apple:'Apple Health','apple-manual':'Apple Health',healthconnect:'Health Connect'};
 function srcName(s){return _SRC_NAMES[s]||(s?s.charAt(0).toUpperCase()+s.slice(1):'');}
 function _autoSource(){var d=(typeof importedData!=='undefined')?importedData:null;return (d&&d.source&&d.source!=='manual'&&d.source!=='apple-manual')?d.source:null;}
 // Баннер «✓ из <гаджет>» на приборных шагах (HRV/температура/сон/пульс): метрика подтянута,
@@ -7640,6 +7642,28 @@ function renderGadgetPanel(){
       +'<div class="gp-num'+(got?'':' miss')+'">'+v+(got&&m.u?'<span class="gp-u"> '+m.u+'</span>':'')+'</div>'
       +'</div>';
   }).join('');
+  // Процент жира и глюкоза из Apple Health / Health Connect. Читаем их с 2026-09-20, но значения
+  // уходили только в разбор, на экране их не было (отказ Google Play 2026-10-02: разрешение без
+  // видимой функции). Плитки стоят ВСЕГДА при источнике Health, и без значения тоже: иначе человек
+  // без весов и глюкометра не узнает, что приложение это читает. Только чтение — вручную не вводятся
+  // (замер глюкометра — не поле «Глюкоза натощак» из анализов, там сверки и HOMA-IR).
+  var _nat=(typeof window.healthConnectPresent==='function'&&window.healthConnectPresent())?'Health Connect':((typeof window.healthkitAvailable==='function'&&window.healthkitAvailable())?'Apple Health':'');
+  if((_nat&&_srcNow==='apple')||D.bodyFat!=null||D.glucose!=null){
+    var _meal={
+      fasting:{ru:'натощак',uk:'натще',en:'fasting',es:'en ayunas',de:'nüchtern',pt:'em jejum',fr:'à jeun',pl:'na czczo',it:'a digiuno',he:'בצום',ja:'空腹時',ko:'공복'},
+      before_meal:{ru:'до еды',uk:'до їжі',en:'before a meal',es:'antes de comer',de:'vor dem Essen',pt:'antes da refeição',fr:'avant le repas',pl:'przed posiłkiem',it:'prima del pasto',he:'לפני ארוחה',ja:'食前',ko:'식전'},
+      after_meal:{ru:'после еды',uk:'після їжі',en:'after a meal',es:'después de comer',de:'nach dem Essen',pt:'após a refeição',fr:'après le repas',pl:'po posiłku',it:'dopo il pasto',he:'אחרי ארוחה',ja:'食後',ko:'식후'}
+    }[D.glucoseMeal];
+    var _xu={bodyFat:'%',glucose:L({ru:'ммоль/л',uk:'ммоль/л',en:'mmol/L'})};
+    box.innerHTML+=['bodyFat','glucose'].map(function(k){
+      var got=D[k]!=null&&!isNaN(D[k]), nm=(_GLAB[k]&&(_GLAB[k][lang]||_GLAB[k].en))||k;
+      var sub=(_nat||src||'Health')+((k==='glucose'&&got&&_meal)?' · '+L(_meal):'');
+      return '<div class="gp-tile'+(got?' got':'')+'" style="cursor:default;" title="'+nm+'">'
+        +'<div class="gp-txt"><div class="gp-name">'+nm+'</div><div class="gp-abbr">'+sub+'</div></div>'
+        +'<div class="gp-num">'+(got?(+D[k]).toFixed(1)+'<span class="gp-u"> '+_xu[k]+'</span>':'—')+'</div>'
+        +'</div>';
+    }).join('');
+  }
   wrap.classList.toggle('answered', _gotAny);   // показатели есть → блок «готов», как отвеченный шаг
   wrap.style.display='block';
 }
