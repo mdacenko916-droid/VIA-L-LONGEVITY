@@ -3862,6 +3862,11 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
       </div>
     </div>
 
+    <!-- ── ФОКУС НЕДЕЛИ (2026-10-02): бирюзовый блок между разбором дня и памяткой. Один организм — одна
+         рекомендация на неделю: фокус выбирает код по карте рычагов (levers.js), здесь же отметка дня,
+         а через 7 дней — итог недели по состоянию и жалобам. Рисует renderFocusUI. ── -->
+    <div class="rd-card" id="rd-focus" style="display:none;border-color:rgba(90,196,178,.45);"></div>
+
     <!-- ── РЯД 3: Памятка дня — ОДИН блок: тарелка + баланс слева, Принцип VIA·L справа, графы ниже ── -->
     <div class="rd-card rd-dayplan">
       <div class="rd-dayplan-top">
@@ -6406,6 +6411,7 @@ function _cmpSubmit(){
           text:(t?t.value:'').trim().slice(0,600), since:_dayKey() };
   if(!c.items.length && !c.text) return;   // пустое не сохраняем
   _cmpSave(c); _cmpEditing=false; window._cmpDraft=null; renderComplaint();
+  try{ renderFocusUI(window.__rdDay||_dayKey()); }catch(_e){}
   // Блок «С чем вы пришли» отвечают кнопкой «Сохранить» — событий input/change она не шлёт,
   // поэтому гейт и авто-переход зовём отсюда сами. 2026-08-25.
   try{ if(typeof _refreshGate==='function') _refreshGate(); }catch(e){}
@@ -6507,15 +6513,23 @@ function renderComplaint(){
   // Раз в неделю — цифра 0–10 по самой жалобе. Прошлая оценка показывается рядом: человек видит не
   // абстрактный индекс, а движение по тому, с чем пришёл.
   var wk='';
-  if(_cmpWeeklyDue()){
-    var sc=_cmpScores(), prev=sc[0];
-    var btns=''; for(var n=0;n<=10;n++) btns+='<button type="button" onclick="_cmpScore('+n+')" style="'+CH+'padding:7px 0;min-width:30px;text-align:center;">'+n+'</button>';
+  // Оценка 0–10 по КАЖДОЙ отмеченной жалобе (2026-10-02): одна цифра на всё не показывала, что именно
+  // сдвинулось, а итог недели и решение по фокусу считаются от каждой жалобы отдельно. Ряды остаются на
+  // экране и после ответа в тот же день — видно, что выбрано, и можно дописать заметку.
+  var _scAll=_cmpScores(), _scToday=(_scAll[0]&&_scAll[0].day===_dayKey())?_scAll[0]:null;
+  if(_cmpWeeklyDue() || _scToday){
+    var sc=_scAll, prevE=_scToday?sc[1]:sc[0], prevBy=_cmpEntryBy(prevE), curBy=_cmpEntryBy(_scToday);
+    var rowsH=_cmpKeysAll().map(function(k){
+      var btns=''; for(var n=0;n<=10;n++) btns+='<button type="button" onclick="_cmpScoreBy(\''+k+'\','+n+')" style="'+((curBy[k]===n)?CH_ON:CH)+'padding:7px 0;min-width:30px;text-align:center;">'+n+'</button>';
+      return '<div style="margin-top:10px;"><div style="font-size:var(--fs-body);color:#fff;font-weight:600;">'+_cmpLbl(k)
+        +((prevBy[k]!=null)?(' <span style="font-weight:400;font-size:var(--fs-cap);color:var(--t3);">· '+_cmpI18n('prev')+' '+prevBy[k]+'/10</span>'):'')+'</div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;">'+btns+'</div></div>';
+    }).join('');
     wk='<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(226,185,90,.18);">'
       +'<div class="q-prompt">'+_cmpI18n('week')+'</div>'
-      +(prev?('<div style="font-size:var(--fs-cap);color:var(--t3);margin-top:2px;">'+_cmpI18n('prev')+' '+prev.val+'/10 · '+prev.day+'</div>'):'')
-      +'<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;">'+btns+'</div>'
+      +rowsH
       +'<div class="q-prompt" style="margin-top:12px;">'+_cmpI18n('wkNote')+'</div>'
-      +'<textarea id="cmpWkNote" rows="2" maxlength="300" oninput="_cmpNote(this.value)" placeholder="'+_cmpI18n('wkNotePh')+'" style="margin-top:6px;width:100%;background:rgba(226,185,90,.06);border:1px solid rgba(226,185,90,.3);border-radius:10px;color:var(--t1);padding:10px 12px;font-family:inherit;font-size:var(--fs-body);box-sizing:border-box;resize:vertical;">'+(((sc[0]&&sc[0].day===_dayKey()&&sc[0].note)||'').replace(/</g,'&lt;'))+'</textarea>'
+      +'<textarea id="cmpWkNote" rows="2" maxlength="300" oninput="_cmpNote(this.value)" placeholder="'+_cmpI18n('wkNotePh')+'" style="margin-top:6px;width:100%;background:rgba(226,185,90,.06);border:1px solid rgba(226,185,90,.3);border-radius:10px;color:var(--t1);padding:10px 12px;font-family:inherit;font-size:var(--fs-body);box-sizing:border-box;resize:vertical;">'+(((_scToday&&_scToday.note)||'').replace(/</g,'&lt;'))+'</textarea>'
       +'<div style="font-size:var(--fs-cap);color:var(--t3);margin-top:6px;">'+_cmpI18n('scaleHint')+'</div></div>';
   }
   box.innerHTML=head+daily+wk;
@@ -6551,10 +6565,12 @@ function _weeklyDaily(win){
       var sc=[]; try{ sc=JSON.parse(localStorage.getItem('vialp_cmp_scores')||'[]')||[]; }catch(e){}
       var d={better:0,same:0,worse:0};
       wk.forEach(function(r){ if(r.cmp_delta && d[r.cmp_delta]!=null) d[r.cmp_delta]++; });
-      return { items:c.items||[], text:c.text||'', since:c.since||'',
+      return { items:c.items||[], also:(Array.isArray(c.also)?c.also:[]), by:_cmpEntryBy(sc[0]), byPrev:_cmpEntryBy(sc[1]),
+               text:c.text||'', since:c.since||'',
                score:sc[0]?sc[0].val:null, scorePrev:sc[1]?sc[1].val:null, note:(sc[0]&&sc[0].note)||'',
                scoreDay:sc[0]?sc[0].day:'', deltas:d };
     })(),
+    focus:(typeof _focusPayload==='function'?_focusPayload():null),   // фокус недели и решение кода — ИИ их объясняет, а не выдумывает свои
     profile:{ phase:P.phase||null,
               pms:(P.pms_symptoms||[]).filter(function(s){return s&&s!=='none_pms';}),
               diet:(P.diet_restrict||[]), eating:P.eating_pattern||null }
@@ -6641,6 +6657,8 @@ function _expCapture(text){
   var clean=raw.replace(/\n*\[\[EXP\]\][\s\S]*$/,'').trim();
   var m=raw.match(/\[\[EXP\]\]\s*(\{[\s\S]*?\})/);
   if(!m) return clean;
+  // Жалобы отмечены → недельный фокус выбирает код по карте рычагов (levers.js), а не ИИ: хвост режем и всё.
+  try{ if(window.vialLevers && typeof _cmpKeysAll==='function' && _cmpKeysAll().length) return clean; }catch(_e){}
   var o=null; try{ o=JSON.parse(m[1]); }catch(e){}
   if(!o||!o.what) return clean;
   var keys=(Array.isArray(o.metrics)?o.metrics:[]).filter(function(k){return _EXP_KEYS.indexOf(k)>=0;}).slice(0,3);
@@ -6671,11 +6689,12 @@ function _expMeasure(e){
   });
   return out;
 }
-function _expArchive(e){
+function _expArchive(e,outcome){
   try{
     var res=_expMeasure(e); if(!res) return;
     var log=[]; try{log=JSON.parse(localStorage.getItem('vialp_exp_log')||'[]')||[];}catch(x){}
-    log.unshift({ what:e.what, startDay:e.startDay, days:res.days, rows:res.rows, ts:Date.now() });
+    log.unshift({ what:e.what, startDay:e.startDay, days:res.days, rows:res.rows, ts:Date.now(),
+                  lever:e.lever||null, outcome:outcome||null, kept:res.kept });   // рычаг и исход — чтобы не предлагать пройденное заново
     while(log.length>12)log.pop();
     localStorage.setItem('vialp_exp_log',JSON.stringify(log));
   }catch(e2){}
@@ -6702,11 +6721,159 @@ function _expDismiss(){
   _expSet(null);
   try{ renderExperimentUI(window.__rdDay||_dayKey()); }catch(x){}
 }
+// ══ ФОКУС НЕДЕЛИ (2026-10-02) ═══════════════════════════════════════════════════════════════
+// Один организм — одна рекомендация на неделю (решение владельца и Марины). Фокус — это тот же
+// «эксперимент» (vialp_experiment: отметка дня, база, «до → после»), только выбирает его КОД по карте
+// рычагов (levers.js), а не ИИ: рычаг, который закрывает больше всего отмеченных жалоб и ещё не
+// пробовался. Через 7 дней код же решает: закрепить / остаться / следующий / к специалисту — по
+// оценкам жалоб 0–10 и числу дней с отметкой. ИИ в недельном разборе это решение только объясняет.
+function _cmpKeysAll(){
+  var c=_cmpGet(); if(!c) return [];
+  var ok=_cmpList();
+  return (c.items||[]).concat(Array.isArray(c.also)?c.also:[]).filter(function(k,i,a){ return ok.indexOf(k)>=0 && a.indexOf(k)===i; });
+}
+// Оценки записи по жалобам. Старые записи хранили одну цифру на всё — относим её к главным жалобам.
+function _cmpEntryBy(e){
+  if(!e) return {};
+  if(e.by && typeof e.by==='object') return e.by;
+  var o={}, c=_cmpGet()||{};
+  if(e.val!=null) (c.items||[]).forEach(function(k){ o[k]=e.val; });
+  return o;
+}
+function _cmpByFull(by){ var k=_cmpKeysAll(); return k.length>0 && k.every(function(x){ return by && by[x]!=null; }); }
+// Оценка 0–10 по ОДНОЙ жалобе. Запись дня одна, оценки копятся в by; когда оценены все — неделя закрыта.
+function _cmpScoreBy(k,v){
+  try{
+    var arr=_cmpScores(), e=(arr[0]&&arr[0].day===_dayKey())?arr.shift():{ day:_dayKey(), note:'' };
+    e.by=(e.by&&typeof e.by==='object')?e.by:{}; e.by[k]=+v; e.ts=Date.now();
+    var c=_cmpGet()||{}, mv=(c.items||[]).map(function(x){ return e.by[x]; }).filter(function(x){ return x!=null; });
+    e.val=mv.length?Math.round(mv.reduce(function(a,b){ return a+b; },0)/mv.length):+v;   // одна цифра для траектории — среднее по главным
+    var t=document.getElementById('cmpWkNote'); if(t) e.note=t.value.trim().slice(0,300);
+    arr.unshift(e); while(arr.length>60) arr.pop();
+    localStorage.setItem('vialp_cmp_scores',JSON.stringify(arr));
+    if(_cmpByFull(e.by)) localStorage.setItem('vialp_cmp_last',String(Date.now()));
+  }catch(_e){}
+  try{ renderComplaint(); }catch(_e){}
+  try{ renderFocusUI(window.__rdDay||_dayKey()); }catch(_e){}
+}
+function _focusHold(keys){   // «дальше специалист»: держим 28 дней или пока набор жалоб не сменится
+  try{ var h=JSON.parse(localStorage.getItem('vialp_focus_hold')||'null');
+       if(h && h.sig===keys.slice().sort().join(',') && (Date.now()-h.ts)<28*86400000) return h; }catch(e){}
+  return null;
+}
+function _focusTried(){      // рычаги, которые уже прошли (со времени последней передачи специалисту)
+  var cut=0; try{ var h=JSON.parse(localStorage.getItem('vialp_focus_hold')||'null'); if(h&&h.ts) cut=h.ts; }catch(e){}
+  var log=[]; try{ log=JSON.parse(localStorage.getItem('vialp_exp_log')||'[]')||[]; }catch(e){}
+  return log.filter(function(x){ return x && x.lever && x.ts>cut && ['next','done','up'].indexOf(x.outcome)>=0; }).map(function(x){ return x.lever; });
+}
+function _focusOpts(){
+  var c=_cmpGet()||{}, keys=_cmpKeysAll();
+  var main=(c.items||[]).filter(function(k){ return keys.indexOf(k)>=0; });
+  var sh=null; try{ sh=_expAvg(_expRows(Date.now()-7*86400000,Date.now()),'sleepHours'); }catch(e){}
+  return { main:main, also:keys.filter(function(k){ return main.indexOf(k)<0; }), state:{ sleepHours:sh } };
+}
+function _focusStart(lever,by,week){
+  var now=Date.now(), base=_expRows(now-_EXP_WIN*86400000,now), b={}, keys=window.vialLevers.metrics(lever);
+  keys.forEach(function(k){ var v=_expAvg(base,k); if(v!=null) b[k]=v; });
+  _expSet({ what:(window.vialLevers.text(lever,lang)||{}).title||lever, lever:lever, metrics:keys, week:week||1,
+            startTs:now, startDay:_dayKey(), baseline:b, baseDays:base.length, base_by:by||{} });
+}
+// Состояние блока: что показывать сейчас. Считает страница, рисует levers.js (vialFocusHTML).
+function _focusState(){
+  if(!window.vialLevers || typeof window.vialFocusHTML!=='function') return null;
+  var keys=_cmpKeysAll(); if(!keys.length) return null;
+  var e=_expGet(); if(e && !e.lever) return null;      // ещё идёт прежний эксперимент от ИИ — у него своя карточка ниже
+  var opts=_focusOpts(), V=window.vialLevers, DAY=86400000;
+  if(!V.pick(opts) && !e) return null;                 // общих рычагов под эти жалобы нет (либидо, цикл) — остаются карточки
+  var scores=_cmpScores(), latest=scores[0]||null;
+  var todayBy=(latest&&latest.day===_dayKey())?_cmpEntryBy(latest):null;
+  var rowsFor=function(cur,prev){ return keys.map(function(k){ return { key:k, title:_cmpLbl(k), val:(cur&&cur[k]!=null)?cur[k]:null, prev:(prev&&prev[k]!=null)?prev[k]:null }; }); };
+  var spec=false; try{ var l=JSON.parse(localStorage.getItem('vial_spec_link')||'null'); spec=!!(l&&l.code); }catch(x){}
+  var st={ lang:lang, cards:true, spec:spec, okLabel:(typeof _expUI==='function'?_expUI().ok:'OK') };
+  if(!e){
+    if(_focusHold(keys)){ st.mode='up'; return st; }
+    var fresh=latest && _cmpByFull(_cmpEntryBy(latest)) && (Date.now()-(latest.ts||0))<3*DAY;
+    if(!fresh){ st.mode='base'; st.scoreRows=rowsFor(todayBy,null); return st; }
+    var lv=V.pick(Object.assign({},opts,{tried:_focusTried()}));
+    if(!lv){ st.mode='up'; return st; }
+    _focusStart(lv,_cmpEntryBy(latest),1); e=_expGet();
+  }
+  var r=_expMeasure(e); if(!r) return null;
+  st.lever=e.lever;
+  if(!r.ready){
+    st.mode='run'; st.day=Math.min(r.days+1,_EXP_WIN); st.today=_expDoneToday();
+    st.covers=V.cover(e.lever).filter(function(k){ return keys.indexOf(k)>=0; }).map(_cmpLbl);
+    var daily=[]; try{ daily=JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[]; }catch(x){}
+    st.marks=[]; for(var i=0;i<_EXP_WIN;i++){ var dk=_dayKey(new Date(e.startTs+i*DAY)); var rec=daily.filter(function(x){ return x.day===dk; })[0]; st.marks.push((rec&&rec.exp_done)||''); }
+    return st;
+  }
+  // Неделя прошла: нужна свежая оценка жалоб (не раньше шестого дня фокуса).
+  var nowE=null; for(var j=0;j<scores.length;j++){ if((scores[j].ts||0)>=e.startTs+6*DAY && _cmpByFull(_cmpEntryBy(scores[j]))){ nowE=scores[j]; break; } }
+  if(!nowE){ st.mode='score'; st.scoreRows=rowsFor(todayBy,e.base_by||null); return st; }
+  var nowBy=_cmpEntryBy(nowE), tried=_focusTried().concat([e.lever]);
+  var dec=V.decide({ prev:e.base_by||{}, now:nowBy, main:opts.main, done:r.kept, left:V.left(Object.assign({},opts,{tried:tried})) });
+  if(dec==='start') dec='stay';                        // сравнить было не с чем — остаёмся и теперь уже с базой
+  var next=e.lever;
+  if(dec==='keep' && (e.week||1)>=2){ var nx=V.pick(Object.assign({},opts,{tried:tried})); if(nx){ dec='done'; next=nx; } }   // две недели легче — шаг закрепился
+  else if(dec==='next'){ next=V.pick(Object.assign({},opts,{tried:tried})); if(!next) dec='up'; }
+  st.mode='result'; st.decision=dec; st.nextLever=(dec==='up')?null:next; st.kept=r.kept; st.asked=_EXP_WIN; st._nowBy=nowBy;
+  st.stateRows=r.rows.map(function(x){ return { name:_expName(x.k), val:_expVal(x.k,x.before)+' → '+_expVal(x.k,x.after) }; });
+  st.cmpRows=keys.map(function(k){ return { title:_cmpLbl(k), prev:(e.base_by&&e.base_by[k]!=null)?e.base_by[k]:null, now:(nowBy[k]!=null)?nowBy[k]:null }; });
+  var wt='', wd=''; try{ wt=localStorage.getItem('vialp_weekly_text')||''; wd=localStorage.getItem('vialp_weekly_date')||''; }catch(x){}
+  var can=false; try{ var g=_wrGate(), w=weeklyTrend(); can=!!(g.canGen && w && _histDays(w.wk)>=_WR_MIN_DAYS); }catch(x){}
+  st.review={ canGen:can, html:(wt && wd===_dayKey())?('<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.65;white-space:pre-wrap;">'+_aiMd(wt)+'</div>'):'' };
+  return st;
+}
+function renderFocusUI(activeKey){
+  var box=document.getElementById('rd-focus'); if(!box) return;
+  var st=null; try{ st=(activeKey && activeKey!==_dayKey())?null:_focusState(); }catch(e){ st=null; }
+  var html=st?window.vialFocusHTML(st):'';
+  if(!html){ box.style.display='none'; box.innerHTML=''; return; }
+  box.innerHTML=html; box.style.display='block';
+}
+// «Продолжить» в итоге недели: применяет решение кода и заводит фокус следующей недели.
+function _focusGo(){
+  var st=_focusState(); if(!st || st.mode!=='result') return;
+  var e=_expGet(); if(!e) return;
+  try{ localStorage.setItem('vialp_focus_last',JSON.stringify({ lever:e.lever, decision:st.decision, kept:st.kept, asked:st.asked,
+        prev:e.base_by||{}, now:st._nowBy||{}, next:st.nextLever||null, ts:Date.now() })); }catch(x){}
+  _expArchive(e,st.decision); _expSet(null);
+  if(st.decision==='up'){
+    try{ localStorage.setItem('vialp_focus_hold',JSON.stringify({ ts:Date.now(), sig:_cmpKeysAll().slice().sort().join(',') })); }catch(x){}
+  } else {
+    var same=(st.decision==='keep'||st.decision==='stay');
+    _focusStart(same?e.lever:st.nextLever, st._nowBy||{}, st.decision==='keep'?((e.week||1)+1):(same?(e.week||1):1));
+  }
+  try{ renderExperimentUI(window.__rdDay||_dayKey()); }catch(x){}
+}
+async function _focusReview(){
+  var b=document.getElementById('focusReviewBtn'); if(b){ b.disabled=true; b.textContent=_wrUI().load; }
+  try{ await genWeeklyReport(); }catch(e){}
+  try{ renderFocusUI(window.__rdDay||_dayKey()); }catch(e){}
+}
+// Фокус для разборов (дневного и недельного): что идёт сейчас и чем закончилась прошлая неделя.
+// Названия — по-русски: это внутренний язык промпта воркера, клиенту их покажет сам блок на его языке.
+function _focusPayload(){
+  try{
+    if(!window.vialLevers) return null;
+    var V=window.vialLevers, e=_expGet(), last=null;
+    try{ last=JSON.parse(localStorage.getItem('vialp_focus_last')||'null'); }catch(x){}
+    var o=null;
+    if(e && e.lever){ var r=_expMeasure(e), t=V.text(e.lever,'ru');
+      o={ title:t.title, steps:t.steps, day:Math.min((r?r.days:0)+1,_EXP_WIN), kept:r?r.kept:0, week:e.week||1 }; }
+    if(last && last.lever && (Date.now()-last.ts)<8*86400000){
+      var lt=V.text(last.lever,'ru'), nt=last.next?V.text(last.next,'ru'):null;
+      o=o||{}; o.last={ title:lt?lt.title:'', decision:last.decision, kept:last.kept, asked:last.asked, prev:last.prev||{}, now:last.now||{}, next:nt?nt.title:null };
+    }
+    return o;
+  }catch(e){ return null; }
+}
 // Карточка на экране дня. Пока идёт — одна строка (не занимает экран), через 7 дней — итог.
 function renderExperimentUI(activeKey){
+  try{ renderFocusUI(activeKey); }catch(_f){}   // блок «Фокус недели» живёт выше, но обновляется теми же событиями
   var box=document.getElementById('rd-exp'); if(!box) return;
   var e=_expGet();
-  if(!e||(activeKey&&activeKey!==_dayKey())){ box.style.display='none'; box.innerHTML=''; return; }
+  if(!e||e.lever||(activeKey&&activeKey!==_dayKey())){ box.style.display='none'; box.innerHTML=''; return; }   // e.lever — это фокус, у него свой блок
   var r=_expMeasure(e); if(!r){ box.style.display='none'; return; }
   var ui=_expUI();
   var html='<div class="rd-card-t" style="margin:0 0 2px;">✦ '+_esc(ui.title)+'</div>';
@@ -6909,7 +7076,9 @@ async function genWeeklyReport(){
   const summary={ n:w.wk.length, metrics:w.metrics.map(m=>({ key:m.k, avg:+m.a.toFixed(m.dec),
     prev:m.p!=null?+m.p.toFixed(m.dec):null, delta:m.delta!=null?+m.delta.toFixed(m.dec):null })) };
   const daily=(typeof _weeklyDaily==='function')?_weeklyDaily():null;  // дневные агрегаты + контекст профиля
-  const code=(window.sessionStorage&&sessionStorage.getItem('vialp_code'))||'';
+  // Код карточки: у клиента приложения, подключённого к наставнику, его даёт связка (_specShare) — раньше
+  // недельный разбор такого клиента в кабинет не уходил вовсе, специалист видел только дневные.
+  const code=(window.sessionStorage&&sessionStorage.getItem('vialp_code'))||(function(){ try{ return (typeof _specShare==='function'&&_specShare().code)||''; }catch(e){ return ''; } })();
   // Итог прошлого эксперимента уходит в разбор: новый разбор начинается не с нуля, а с того,
   // что человек уже делал, и что при этом сделали его собственные цифры.
   const exp=(typeof _expMeasure==='function')?_expMeasure():null;
@@ -10313,6 +10482,7 @@ function _showResultsInner(){
     bp_high:getRadio('bp_high'), bp_family:getRadio('bp_family'), bp_want:getRadio('bp_want'),
     allergy:(typeof getRadio==='function'&&getRadio('allergy_has')==='yes'&&document.getElementById('allergy')?document.getElementById('allergy').value:'').trim(),
     complaint:(typeof _cmpGet==='function'?_cmpGet():null),
+    focus:(typeof _focusPayload==='function'?_focusPayload():null),   // фокус недели — чтобы разбор дня не советовал другое
     osa_hint:_osaHintDue(),      // скрин дыхания во сне — раз в 14 дней
     labs_hint:_labHintDue(),   // блок «что обычно смотрят» — не чаще раза в 7 дней (иначе он повторялся бы в КАЖДОМ дневном разборе)
     complaint_delta:window._cmpDeltaToday||'',
@@ -11858,7 +12028,6 @@ function _bpChapters(){
   if(!_an){ var _pj=null; try{ _pj=JSON.parse(localStorage.getItem('vialp_an_job')||'null'); }catch(e){}
     _anWait=!!window._anLoading || !!(_pj && _pj.day===_dayKey() && Date.now()-_pj.ts < 10*60*1000); }
   // «Приём сегодня» — первой после разбора: это действия с конкретным временем (intake.js, 2026-09-18).
-  var _cmc=(typeof _cmpChapter==='function')?_cmpChapter():null; if(_cmc) chs.unshift(_cmc);   // «что беспокоит» — над «Утром»
   try{ var _ikc=(typeof _ikChapter==='function')?_ikChapter():null; if(_ikc) chs.unshift(_ikc); }catch(e){}
   try{ var _spc=(typeof _specChapter==='function')?_specChapter():null; if(_spc) chs.unshift(_spc); }catch(e){}   // ответ специалиста — выше приёма
   // Готовый разбор в памятке — ДУБЛЬ карточки разбора, которая на том же экране стоит выше
@@ -13120,6 +13289,7 @@ document.addEventListener('visibilitychange',function(){
 <script src="notify-bridge.js"></script>
 <script src="push-bridge.js"></script>
 <script src="intake.js"></script>
+<script src="levers.js"></script><!-- карта рычагов и блок «Фокус недели» (2026-10-02) -->
 <script src="complaint-table.js"></script><!-- таблица «что беспокоит → что сделать» в памятке дня (2026-10-01) -->
 <script src="evidence.js"></script><!-- «На чём основано» — список работ под разбором (2026-09-20) -->
 <script>

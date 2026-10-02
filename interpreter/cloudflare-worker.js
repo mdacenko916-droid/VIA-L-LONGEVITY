@@ -2226,6 +2226,47 @@ const _STRUCTURED_EXPERT_ADD =
 // стресс, добавки…») — это разрешение, а не требование. Здесь требование, вживлённое В ОПИСАНИЕ
 // СТРУКТУРЫ: приписка в хвост длинного промпта не исполняется (проверено на строке «На чём это основано»).
 // Доз тут нет намеренно — они уходят от специалиста (протокол в кабинете), авто-текст их не даёт.
+// ФОКУС НЕДЕЛИ В КОРМЕ (2026-10-02). Один организм — одна рекомендация на неделю: фокус выбирает КОД
+// приложения по карте рычагов (interpreter/levers.js), он же через 7 дней решает — закрепить, остаться,
+// взять следующий рычаг или передать специалисту. Модель это решение НЕ принимает и не оспаривает: её
+// дело — объяснить его связной картиной по цифрам человека. Иначе у клиента два источника «что делать
+// на неделе», и они расходятся (так было с экспериментом, который придумывал ИИ без памяти о прошлых).
+const _FOCUS_DECISION = {
+  keep: 'стало легче — фокус закрепляется ещё на неделю',
+  done: 'стало легче, шаг закрепился — добавляется следующий',
+  stay: 'шаг выполнялся меньше пяти дней из семи — фокус остаётся ещё на неделю',
+  next: 'шаг выполнялся, но оценки жалоб не сдвинулись — берётся следующий рычаг',
+  up:   'жалоба усилилась или рычаги пройдены — дальше это стоит обсудить со специалистом или врачом',
+};
+function _focusText(f, weekly) {
+  if (!f || typeof f !== 'object') return '';
+  const clip = (x, n) => String(x == null ? '' : x).replace(/\s+/g, ' ').trim().slice(0, n);
+  const num = (x) => { const n = parseInt(x, 10); return isFinite(n) && n >= 0 && n <= 31 ? n : null; };
+  let out = '';
+  const L = (f.last && typeof f.last === 'object') ? f.last : null;
+  if (weekly && L && _FOCUS_DECISION[L.decision]) {
+    const k = num(L.kept), a = num(L.asked);
+    out += '\n\nИТОГ ФОКУСА ПРОШЕДШЕЙ НЕДЕЛИ (решение принято КОДОМ приложения — не меняй и не оспаривай его):'
+        +  '\nФокус: «' + clip(L.title, 120) + '».'
+        +  (k != null ? ' Выполнялся ' + k + ' дн. из ' + (a || 7) + '.' : '')
+        +  '\nРешение: ' + _FOCUS_DECISION[L.decision] + '.'
+        +  (L.next && L.decision !== 'up' ? ' Фокус следующей недели: «' + clip(L.next, 120) + '».' : '');
+  }
+  if (f.title) {
+    const steps = (Array.isArray(f.steps) ? f.steps : []).slice(0, 3).map(x => clip(x, 160)).filter(Boolean).join(' ');
+    const d = num(f.day);
+    out += '\n\nФОКУС НЕДЕЛИ (выбран приложением по карте рычагов' + (d ? ', идёт день ' + d + ' из 7' : '') + '): «'
+        +  clip(f.title, 120) + '»' + (steps ? ' — ' + steps : '') + '.';
+  }
+  if (!out) return '';
+  return out + (weekly
+    ? '\nТВОЯ ЗАДАЧА ПО ФОКУСУ: объяснить решение одной связной картиной — как фокус, оценки жалоб и цифры прибора '
+      + 'связаны у ЭТОГО человека. НЕ предлагай другой эксперимент или свой фокус недели и НЕ спорь с решением: '
+      + 'следующий шаг уже выбран, назови его его же словами.'
+    : '\nВ рекомендациях дня НЕ противоречь фокусу и НЕ предлагай другой «эксперимент недели»; если сегодняшние '
+      + 'цифры с ним связаны — скажи об этом одной фразой.');
+}
+
 // ДЕНЬ И ФАЗА ЦИКЛА В КОРМЕ — с поправкой на кривую ночной температуры (2026-10-01).
 // Календарная фаза («длина − 14») точна примерно в одном цикле из пяти и не видит цикл без подъёма
 // температуры. Клиент присылает cycle_temp {state, rise_day, prev_none} — что видно по ряду ночей прибора
@@ -3928,6 +3969,16 @@ function buildWeeklyUserMessage(summary, daily, lang, period, exp) {
       let c = '\n\nЖАЛОБА, С КОТОРОЙ КЛИЕНТ ПРИШЁЛ' + (cmp.since ? ' (с ' + cmp.since + ')' : '') + ': '
             + (cmp.items || []).map(k => LB[k] || k).join('; ')
             + (cmp.text ? ' — своими словами: «' + String(cmp.text).slice(0,300) + '»' : '') + '.';
+      // Оценки 0–10 по КАЖДОЙ жалобе (2026-10-02): одна цифра на всё не показывала, что именно сдвинулось.
+      const _by = (cmp.by && typeof cmp.by === 'object') ? cmp.by : null, _bp = (cmp.byPrev && typeof cmp.byPrev === 'object') ? cmp.byPrev : {};
+      const _sc = (x) => { const n = Number(x); return isFinite(n) && n >= 0 && n <= 10 ? n : null; };
+      if (_by) {
+        const rows = Object.keys(LB).filter(k => _sc(_by[k]) != null)
+          .map(k => LB[k] + ': ' + (_sc(_bp[k]) != null ? _sc(_bp[k]) + ' → ' : '') + _sc(_by[k]));
+        if (rows.length) c += '\nОценки по каждой жалобе (0 — не беспокоит, 10 — сильно; меньше — лучше; «было → стало»): ' + rows.join('; ') + '.';
+      }
+      const _also = (Array.isArray(cmp.also) ? cmp.also : []).map(k => LB[k]).filter(Boolean).slice(0, 9);
+      if (_also.length) c += '\nТакже беспокоит (отмечено, но не главное): ' + _also.join('; ') + '.';
       const d = cmp.deltas || {};
       if ((d.better || d.same || d.worse))
         c += '\nЕго отметки по дням: лучше — ' + (d.better||0) + ', так же — ' + (d.same||0) + ', хуже — ' + (d.worse||0) + '.';
@@ -3941,9 +3992,12 @@ function buildWeeklyUserMessage(summary, daily, lang, period, exp) {
            + 'что мешало, что заметил. Если сказанное расходится с цифрами — назови оба и не отбрасывай его версию.';
       c += '\nОТКРОЙ РАЗБОР ИМЕННО ЭТИМ: что стало с тем, с чем человек пришёл — его словами и его же числами '
          + '(не пересчитывай их). Стало легче — скажи, ЧТО ИМЕННО этому предшествовало в его данных, и закрепи. '
-         + 'Не сдвинулось — так и скажи, без вины, и поменяй рычаг. Одной оценки мало для вывода о тренде — скажи это прямо.';
+         + 'Не сдвинулось — так и скажи, без вины, и поменяй рычаг. Одной оценки мало для вывода о тренде — скажи это прямо.'
+         + '\nЧеловек — ОДИН ОРГАНИЗМ: не разбирай жалобы по отдельности списком. Свяжи их между собой и с цифрами '
+         + 'состояния (сон, пульс покоя, ВСР, давление) в одну картину — что тянет что.';
       out += c;
     }
+    out += _focusText(daily.focus, true);   // фокус недели и решение кода — модель их объясняет
 
     const p = daily.profile || {};
     const ctx = [];
@@ -3996,6 +4050,9 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
   };
   const langName = langMap[lang] || 'English';
   const isMonth = period === 'month';
+  // Фокус недели выбран кодом приложения (levers.js) → модель свой «эксперимент» не предлагает и хвост
+  // [[EXP]] не пишет. Старые сборки фокуса не шлют — у них всё как раньше.
+  const _hasFocus = !!(daily && daily.focus && typeof daily.focus === 'object' && (daily.focus.title || daily.focus.last));
   // Велнес-рамка App Store (VIA-L) запрещает обещать результат и срок. VIA-L EXPERT живёт вне
   // App Store (PWA, доступ по коду, разбор видит специалист) — там эксперимент можно ставить
   // как проверяемую гипотезу: ожидаемое направление + горизонт. Без этого «верификации» нет:
@@ -4022,7 +4079,10 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
     'WRITE: 4–6 warm, supportive sentences. Care is the core value — encourage, never pressure or scare.\n' +
     'COVER, based ONLY on the numbers given (never invent metrics or values):\n' +
     '1) what improved ' + perThis + ', 2) what worsened or needs attention, 3) the single most likely ' +
-    'behavioural driver, 4) ONE small, doable focus for the ' + perNext + ' (an "experiment", not a list).\n' +
+    'behavioural driver, ' + (_hasFocus
+      ? '4) the focus for the ' + perNext + ' is ALREADY CHOSEN by the app (see the "ФОКУС НЕДЕЛИ" / "ИТОГ ФОКУСА" block in the data): ' +
+        'explain in one or two sentences why it fits THIS person. Do NOT invent another experiment or focus.\n'
+      : '4) ONE small, doable focus for the ' + perNext + ' (an "experiment", not a list).\n') +
     // Гипотеза с горизонтом — только вне велнес-рамки: иначе это обещание результата и срока.
     (_wellnessW ? '' :
       'STATE THE EXPERIMENT AS A TESTABLE HYPOTHESIS, not as a fact: name which 1–2 of THEIR OWN metrics you ' +
@@ -4065,7 +4125,7 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
     // Клиент вырезает эту строку из текста, запоминает эксперимент и через 7 дней сам считает
     // «до → после» по собственным дневным записям. Без неё петля не замыкается: приложение не знает,
     // ЧТО именно было предложено и КАКИЕ метрики за этим смотреть.
-    (isMonth ? '' :
+    ((isMonth || _hasFocus) ? '' :
       '\n\n════════════════════════════════════════\n' +
       'ПОСЛЕДНЯЯ СТРОКА ОТВЕТА — ТЕХНИЧЕСКАЯ (обязательно)\n' +
       '════════════════════════════════════════\n' +
@@ -8319,6 +8379,8 @@ function buildUserMessage(data, lang, tier) {
         // отдельной темой нельзя: разбор расползётся и главное утонет. Правило — в описании структуры (п. 2).
         const also = (Array.isArray(c.also) ? c.also : []).map(k => LB[k]).filter(Boolean).slice(0, 9);
         if (also.length) out += 'ТАКЖЕ БЕСПОКОИТ (отмечено клиентом, но НЕ главное): ' + also.join('; ') + '.\n';
+        const _ft = _focusText(data.focus, false);   // фокус недели — чтобы разбор дня не советовал другое
+        if (_ft) out += _ft.replace(/^\n+/, '') + '\n';
         const D = { better: 'сегодня ЛУЧШЕ, чем вчера', same: 'сегодня ТАК ЖЕ, как вчера', worse: 'сегодня ХУЖЕ, чем вчера' };
         if (D[data.complaint_delta]) out += 'Его собственная оценка динамики по жалобе: ' + D[data.complaint_delta] + '.\n';
         return out;
