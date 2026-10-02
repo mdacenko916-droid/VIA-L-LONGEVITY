@@ -6802,7 +6802,7 @@ function _focusState(){
   var todayBy=(latest&&latest.day===_dayKey())?_cmpEntryBy(latest):null;
   var rowsFor=function(cur,prev){ return keys.map(function(k){ return { key:k, title:_cmpLbl(k), val:(cur&&cur[k]!=null)?cur[k]:null, prev:(prev&&prev[k]!=null)?prev[k]:null }; }); };
   var spec=false; try{ var l=JSON.parse(localStorage.getItem('vial_spec_link')||'null'); spec=!!(l&&l.code); }catch(x){}
-  var st={ lang:lang, cards:true, spec:spec, okLabel:(typeof _expUI==='function'?_expUI().ok:'OK') };
+  var st={ lang:lang, cards:true, spec:spec, rv:(typeof _reviewOn==='function'&&_reviewOn()), okLabel:(typeof _expUI==='function'?_expUI().ok:'OK') };   // rv — можно предложить разовый разбор
   var _txt=function(t){ return '<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.65;white-space:pre-wrap;">'+_aiMd(t)+'</div>'; };
   // Итог месяца: кнопка, когда пришёл срок и набралось записей; текст — в день получения. Рядом — жалобы
   // «первая оценка за 30 дней → последняя»: медленные (вес, либидо, мышцы, цикл) честно видны только так.
@@ -11656,6 +11656,16 @@ function _specProtocol(){
   }catch(e){}
 }
 try{ setTimeout(_specProtocol, 2500); }catch(e){}
+// Сигналы блока «На что обратить внимание» — специалисту в карточку (только при включённом обмене).
+// Считаются в приложении (docR), в текст разбора не попадают — без этого специалист их не видел.
+function _specDocr(){
+  try{
+    if(!_specShare().code) return {};
+    var r=(typeof _lastResult!=='undefined'&&_lastResult&&_lastResult.docR)||[];
+    r=r.filter(function(x){ return typeof x==='string'&&x; }).slice(0,10);
+    return r.length ? { docr:r } : {};
+  }catch(e){ return {}; }
+}
 function _specShare(){
   try{
     var l = JSON.parse(localStorage.getItem('vial_spec_link') || 'null');
@@ -11832,7 +11842,42 @@ try{ ouraSyncLang(); }catch(e){}
 function _humanCtaDays(){
   try{ var a=JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[]; return a.length; }catch(e){ return 0; }
 }
+// Разовый разбор со специалистом (docs/SPECIALIST-REVIEW-PLAN.md). Доступен ли он этому человеку:
+// флаг ставит фоновая проверка при запуске (стор отдал товар, не США, приложение), связки нет.
+function _reviewOn(){
+  try{
+    if(localStorage.getItem('vial_review_on')!=='1') return false;
+    var l=JSON.parse(localStorage.getItem('vial_spec_link')||'null'); return !(l&&l.code);
+  }catch(e){ return false; }
+}
+// США: платную работу специалиста не предлагаем — то же правило и та же проверка, что в my-specialist.html (_isUS).
+function _reviewUS(){
+  try{ return /^(America\/(New_York|Chicago|Denver|Phoenix|Los_Angeles|Anchorage|Detroit|Indiana|Kentucky|Boise|Juneau|Menominee|Metlakatla|Nome|Sitka|Yakutat|North_Dakota)|Pacific\/Honolulu)/.test(Intl.DateTimeFormat().resolvedOptions().timeZone||''); }catch(e){ return false; }
+}
+window.addEventListener('load', function(){
+  (async function(){
+    var on=false;
+    try{ if(window.iapAvailable && iapAvailable() && !_reviewUS() && window.iapReviewProduct) on=!!(await iapReviewProduct()); }catch(e){}
+    try{ localStorage.setItem('vial_review_on', on?'1':'0'); }catch(e){}
+  })();
+});
+function _reviewGo(){ try{ location.href='./my-specialist.html?review=1'; }catch(e){} }
+// Поводы предложить разбор под дневным результатом: сегодня сработал блок «На что обратить
+// внимание» или у человека внесены анализы. В сам блок предупреждения кнопку НЕ ставим — правило
+// ниже: вывод, похожий на медицинский, не должен заканчиваться продажей услуги.
+function _reviewReason(){
+  try{ var da=document.getElementById('doctorAlert'); if(da&&da.classList.contains('visible')) return true; }catch(e){}
+  try{ var a=(typeof _labsGet==='function')?_labsGet():{}; for(var k in a){ if(a[k]&&a[k].v) return true; } }catch(e){}
+  return false;
+}
 function _humanCtaHtml(){
+  if(_reviewOn() && _reviewReason()){
+    var R1={ru:'Хотите разобрать это со специалистом?',uk:'Хочете розібрати це зі спеціалістом?',en:'Want to go through this with a specialist?',es:'¿Quiere revisarlo con un especialista?',de:'Möchten Sie das mit einem Spezialisten durchgehen?',pt:'Quer analisar isso com um especialista?',fr:'Envie d’en parler avec un spécialiste ?',pl:'Chcesz omówić to ze specjalistą?',it:'Vuole esaminarlo con uno specialista?',he:'רוצים לעבור על זה עם מומחה?',ja:'専門家と一緒に確認しませんか？',ko:'전문가와 함께 살펴보시겠어요?'};
+    var R2={ru:'Письменный разбор ваших данных и личный план',uk:'Письмовий розбір ваших даних і особистий план',en:'A written review of your data and a personal plan',es:'Una revisión escrita de sus datos y un plan personal',de:'Schriftliche Auswertung Ihrer Daten und ein persönlicher Plan',pt:'Uma análise escrita dos seus dados e um plano pessoal',fr:'Une analyse écrite de vos données et un plan personnel',pl:'Pisemna analiza Twoich danych i osobisty plan',it:'Un’analisi scritta dei suoi dati e un piano personale',he:'סקירה כתובה של הנתונים שלך ותוכנית אישית',ja:'データの書面レビューと個別プラン',ko:'데이터 서면 리뷰와 맞춤 플랜'};
+    return '<div id="humanCta" onclick="_reviewGo()" style="margin-top:14px;padding:12px 14px;border:1px solid rgba(226,185,90,.28);border-radius:14px;background:rgba(226,185,90,.06);cursor:pointer;">'
+         + '<div style="font-size:var(--fs-body);color:#fff;font-weight:500;">'+(R1[lang]||R1.en)+'</div>'
+         + '<div style="font-size:var(--fs-cap);color:var(--t2);margin-top:3px;">'+(R2[lang]||R2.en)+' →</div></div>';
+  }
   if(_humanCtaDays() < 14) return '';   // только когда набрана личная база: раньше обсуждать нечего
   var T1={ru:'Хотите разобрать это с человеком?',uk:'Хочете розібрати це з людиною?',en:'Want to go through this with a person?',es:'¿Quiere revisarlo con una persona?',de:'Möchten Sie das mit einem Menschen durchgehen?',pt:'Quer analisar isso com uma pessoa?',fr:'Envie d’en parler avec quelqu’un ?',pl:'Chcesz omówić to z człowiekiem?',it:'Vuoi rivederlo con una persona?',he:'רוצים לעבור על זה עם בן אדם?',ja:'これを人と一緒に見直しますか？',ko:'사람과 함께 살펴볼까요?'}, T2={ru:'15 минут, бесплатно — знакомство со специалистом',uk:'15 хвилин, безкоштовно — знайомство зі спеціалістом',en:'15 minutes, free — an introduction call with a specialist',es:'15 minutos, gratis — llamada de presentación con un especialista',de:'15 Minuten, kostenlos — Kennenlerngespräch mit einem Spezialisten',pt:'15 minutos, grátis — conversa inicial com um especialista',fr:'15 minutes, gratuit — premier échange avec un spécialiste',pl:'15 minut, bezpłatnie — rozmowa zapoznawcza ze specjalistą',it:'15 minuti, gratis — call conoscitiva con uno specialista',he:'15 דקות, בחינם — שיחת היכרות עם מומחה',ja:'15分・無料 — 専門家との初回面談',ko:'15분, 무료 — 전문가와의 소개 상담'};
   return '<div id="humanCta" onclick="_humanCtaGo()" style="margin-top:14px;padding:12px 14px;border:1px solid rgba(226,185,90,.28);border-radius:14px;background:rgba(226,185,90,.06);cursor:pointer;">'
@@ -11968,7 +12013,7 @@ async function fetchAIAnalysis(data, lang, src) {
     const res = await fetch(AI_WORKER, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(Object.assign({ data, lang, tier: 'pro', structured: true, cid: _cid(), dev: (typeof vialDev==='function'?vialDev():''), day: _day, src: src||'pass', bg: true, trial: _isTrial(), upgrade: (src==='upgrade') }, _specShare())),   // trial → короткий разбор (воркер, _TRIAL_FMT); upgrade → пересчёт после покупки   // cid+day — чтобы разбор можно было забрать с сервера, если ответ не доедет
+      body: JSON.stringify(Object.assign({ data, lang, tier: 'pro', structured: true, cid: _cid(), dev: (typeof vialDev==='function'?vialDev():''), day: _day, src: src||'pass', bg: true, trial: _isTrial(), upgrade: (src==='upgrade') }, _specShare(), _specDocr())),   // trial → короткий разбор (воркер, _TRIAL_FMT); upgrade → пересчёт после покупки   // cid+day — чтобы разбор можно было забрать с сервера, если ответ не доедет
     });
     let json = await res.json();
     // Фоновый разбор (2026-09-11): сервер сразу отвечает номером задания и считает в очереди, а мы ждём

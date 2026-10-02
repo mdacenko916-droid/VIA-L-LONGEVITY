@@ -3331,7 +3331,7 @@ async function _analyzeCore(body, env, ctx) {
   // UPDATE-only (карточка должна уже существовать = VIA-L EXPERT, созданная при оплате):
   // VIA-L/анонимные прогоны без карточки игнорируются. В фоне — не задерживает ответ клиенту.
   if (code && env.DB && text && ctx) {
-    ctx.waitUntil(cabinetIngestIpAnalysis(env, code, data, text, lang).catch(() => {}));
+    ctx.waitUntil(cabinetIngestIpAnalysis(env, code, data, text, lang, body && body.docr).catch(() => {}));
     ctx.waitUntil(_bumpGrantUsed(env, code).catch(() => {}));   // день доступа израсходован
   }
 
@@ -9623,7 +9623,7 @@ async function cabinetUpsertFromPayment(env, { code, name, email, lang, product,
 // (VIA-L/анонимные прогоны карточку не создают). Кладём: (1) недельный срез
 // биометрики чистым маппингом ИП→кабинет (дедуп — один срез в день); (2) лог
 // ИИ-разбора с полным текстом + ИП-метрики для контекста нутрициолога.
-async function cabinetIngestIpAnalysis(env, code, data, analysisText, lang){
+async function cabinetIngestIpAnalysis(env, code, data, analysisText, lang, docr){
   if(!env.DB || !code) return;
   data = data || {};
   code = String(code).toUpperCase();
@@ -9665,6 +9665,9 @@ async function cabinetIngestIpAnalysis(env, code, data, analysisText, lang){
   d.breakdowns.push({
     date: today, type:'ai', status:'received', source:'ip', lang: lang || '',
     text: String(analysisText).slice(0, 6000),
+    // Сигналы блока «На что обратить внимание», посчитанные в приложении (на языке клиента): в текст
+    // разбора они не входят, и без этого поля специалист их не видел. docs/SPECIALIST-REVIEW-PLAN.md.
+    triage: Array.isArray(docr) ? docr.filter(x => typeof x === 'string' && x).map(x => x.slice(0, 160)).slice(0, 10) : [],
     metrics: {
       hrv:data.hrv||'', rhr:data.rhr||'', sleep_qual:data.sleep_qual||'', energy:data.energy||'',
       anxiety:data.anxiety||'', temp:data.temp||'', weight:data.weight||'', device:data.device||'',

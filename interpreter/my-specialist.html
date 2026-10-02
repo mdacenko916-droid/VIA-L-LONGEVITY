@@ -1329,6 +1329,7 @@ async function initReview(){
   if(_rvLinked()) return;                       // подключились, пока ждали стор
   document.getElementById('rvTeaser').style.display='block';
   _rvTexts();
+  try{ if(!p && new URLSearchParams(location.search).get('review')==='1') openReview(); }catch(e){}   // пришли по кнопке с главного экрана
   if(p){ openReview(); _rvBusy=true; document.getElementById('rvPayBtn').disabled=true; _rvTexts();
          try{ await _rvClaim(p); } finally { _rvBusy=false; document.getElementById('rvPayBtn').disabled=false; _rvTexts(); } }
 }
