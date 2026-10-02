@@ -135,6 +135,16 @@ def release_body(vc, fraction):
     return rel
 
 
+# После отказа в проверке (2026-10-02, Health Connect) Play не принимает обычный commit:
+# «Changes cannot be sent for review automatically». С --hold изменения сохраняются, а на проверку
+# их отправляет человек: Play Console → «Обзор публикации» → «Отправить на проверку».
+HOLD_NOTE = "\nНа проверку НЕ отправлено: Play Console → «Обзор публикации» → «Отправить на проверку»."
+
+
+def commit_url(eid, args):
+    return "%s/edits/%s:commit%s" % (API, eid, "?changesNotSentForReview=true" if args.hold else "")
+
+
 def cmd_upload(args):
     """Загрузить .aab и сразу выложить его в трек (один edit — одна операция)."""
     tok = token()
@@ -157,8 +167,8 @@ def cmd_upload(args):
             rel["releaseNotes"] = notes
         call(tok, "%s/edits/%s/tracks/%s" % (API, eid, urllib.parse.quote(args.track)), "PUT",
              {"track": args.track, "releases": [rel]})
-        call(tok, "%s/edits/%s:commit" % (API, eid), "POST", {})
-        print("Выложено в трек «%s»." % args.track)
+        call(tok, commit_url(eid, args), "POST", {})
+        print("Выложено в трек «%s».%s" % (args.track, HOLD_NOTE if args.hold else ""))
     with_edit(tok, run)
 
 
@@ -182,8 +192,8 @@ def cmd_release(args):
             return
         call(tok, "%s/edits/%s/tracks/%s" % (API, eid, urllib.parse.quote(args.track)), "PUT",
              {"track": args.track, "releases": [rel]})
-        out = call(tok, "%s/edits/%s:commit" % (API, eid), "POST", {})
-        print("\nОпубликовано. edit id:", out.get("id", eid))
+        out = call(tok, commit_url(eid, args), "POST", {})
+        print("\nОпубликовано. edit id: %s%s" % (out.get("id", eid), HOLD_NOTE if args.hold else ""))
     with_edit(tok, run)
 
 
@@ -305,12 +315,14 @@ def main():
     r.add_argument("--notes", help="JSON с примечаниями (по умолчанию app/store/android/release-notes.json)")
     r.add_argument("--fraction", type=float, help="поэтапно: доля пользователей, например 0.2")
     r.add_argument("--yes", action="store_true", help="действительно опубликовать")
+    r.add_argument("--hold", action="store_true", help="не отправлять на проверку автоматически (после отказа Play)")
     u = sub.add_parser("upload", help="загрузить .aab и выложить его в трек")
     u.add_argument("--aab", required=True, help="путь к .aab, например app/store/android/updates/vial-release-v5.aab")
     u.add_argument("--track", required=True, help='имя трека, например "1.0 (1) — закрытый тест"')
     u.add_argument("--notes", help="JSON с примечаниями (по умолчанию app/store/android/release-notes.json)")
     u.add_argument("--fraction", type=float, help="поэтапно: доля пользователей, например 0.2")
     u.add_argument("--yes", action="store_true", help="действительно загрузить и выложить")
+    u.add_argument("--hold", action="store_true", help="не отправлять на проверку автоматически (после отказа Play)")
     pr = sub.add_parser("prices", help="выровнять цены подписки по всем странам")
     pr.add_argument("--product", default="via_l_pro_monthly")
     pr.add_argument("--base-plan", default="monthly")
