@@ -12161,10 +12161,10 @@ function openDayPlanPanel(){
   var body=_platePhiloHTML(false);
   if(d||window._bpAI){
     body+=_bpChapters().map(function(r){
-      return '<div onclick="openBpChapter(\''+r.id+'\')" style="display:flex;align-items:center;gap:12px;padding:13px;margin-bottom:8px;background:linear-gradient(150deg,#1b1712,#13100b);border:1px solid rgba(226,185,90,.2);border-radius:13px;cursor:pointer;">'
+      return '<div onclick="openBpChapter(\''+r.id+'\')" style="display:flex;align-items:center;gap:12px;padding:13px;margin-bottom:8px;background:linear-gradient(150deg,#1b1712,#13100b);border:1px solid '+(r.acc?'rgba('+r.acc+',.5)':'rgba(226,185,90,.2)')+';border-radius:13px;cursor:pointer;">'
         +'<div style="font-size:20px;width:28px;text-align:center;flex-shrink:0;">'+r.icon+'</div>'
-        +'<div style="flex:1;min-width:0;"><div style="font-family:var(--font-ui);font-size:var(--fs-body);font-weight:600;color:var(--t1);text-transform:uppercase;letter-spacing:.03em;">'+r.title+'</div><div style="font-size:var(--fs-cap);color:var(--t3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+r.teaser+'</div></div>'
-        +'<div style="color:var(--gold-lt);font-size:var(--fs-title);opacity:.6;flex-shrink:0;">›</div></div>';
+        +'<div style="flex:1;min-width:0;"><div style="font-family:var(--font-ui);font-size:var(--fs-body);font-weight:600;color:'+(r.acc?'rgb('+r.acc+')':'var(--t1)')+';text-transform:uppercase;letter-spacing:.03em;">'+r.title+'</div><div style="font-size:var(--fs-cap);color:var(--t3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+r.teaser+'</div></div>'
+        +'<div style="color:'+(r.acc?'rgb('+r.acc+')':'var(--gold-lt)')+';font-size:var(--fs-title);opacity:.6;flex-shrink:0;">›</div></div>';
     }).join('');
     // Кнопка «Скачать памятку дня» убрана: она не скачивала, а открывала окно на печать,
     // дублировала то, что и так на экране, и была однодневной. Экспорт наружу остаётся у разбора.
@@ -12217,7 +12217,8 @@ function _cmpChapter(){
     if(typeof window.vialCmpRows!=='function' || !window._bpData) return null;
     var o=_cmpOpts(window._bpData), p=window.vialCmpRows(o);
     if(!p.rows.length) return null;
-    return { id:'cmp', icon:'<i class="ph ph-list-checks" style="color:var(--gold-lt);"></i>', pr:'📝',
+    var _acc=window.vialCmpAcc||'90,196,178';   // бирюзовый акцент главы (как у «Добавок» в профиле)
+    return { id:'cmp', acc:_acc, icon:'<i class="ph ph-list-checks" style="color:rgb('+_acc+');"></i>', pr:'📝',
       title:window.vialCmpTitle(lang),
       teaser:p.rows.map(function(r){ return L(o.titles[r.key]||{})||r.key; }).join(' · ') };
   }catch(e){ return null; }
@@ -12239,10 +12240,10 @@ function renderDayBlueprint(data){
   // не ждал ИИ-версию (надпись «готовится» в пробнике обещала бы то, чего не будет). 2026-09-17.
   if(typeof _isTrial==='function' && _isTrial()) head+='<div style="'+_BP_CS+'font-size:var(--fs-cap);color:var(--gold-lt);">✦ '+_esc(L({ru:'Пробная памятка: по два блюда на приём. Полное меню и расчёт белков, жиров и углеводов — при подписке.',uk:'Пробна пам’ятка: по дві страви на прийом. Повне меню та розрахунок білків, жирів і вуглеводів — за підпискою.',en:'Trial day plan: two dishes per meal. The full menu and the protein, fat and carb breakdown come with the subscription.',es:'Plan de prueba: dos platos por comida. El menú completo y el cálculo de proteínas, grasas y carbohidratos vienen con la suscripción.',de:'Test-Tagesplan: zwei Gerichte pro Mahlzeit. Das volle Menü und die Aufteilung in Eiweiß, Fett und Kohlenhydrate gehören zum Abo.',pt:'Plano de teste: dois pratos por refeição. O menu completo e o cálculo de proteínas, gorduras e hidratos vêm com a subscrição.',fr:'Plan d’essai : deux plats par repas. Le menu complet et le détail protéines, lipides et glucides sont inclus dans l’abonnement.',pl:'Próbny plan dnia: dwa dania na posiłek. Pełne menu i wyliczenie białka, tłuszczów i węglowodanów są w subskrypcji.',it:'Piano di prova: due piatti per pasto. Il menù completo e il calcolo di proteine, grassi e carboidrati sono nell’abbonamento.',he:'תוכנית ניסיון: שתי מנות לכל ארוחה. התפריט המלא וחישוב החלבון, השומן והפחמימות כלולים במנוי.',ja:'お試し版：1食につき2品。全メニューとたんぱく質・脂質・炭水化物の内訳はサブスクリプションで利用できます。',ko:'체험용: 끼니마다 두 가지 메뉴. 전체 메뉴와 단백질·지방·탄수화물 계산은 구독에 포함됩니다.'}))+'</div>';
   var rows=_bpChapters().map(function(r){
-    return '<div onclick="openBpChapter(\''+r.id+'\')" style="display:flex;align-items:center;gap:13px;padding:14px;margin-bottom:8px;background:linear-gradient(150deg,#1b1712,#13100b);border:1px solid rgba(226,185,90,.22);border-radius:14px;cursor:pointer;">'
+    return '<div onclick="openBpChapter(\''+r.id+'\')" style="display:flex;align-items:center;gap:13px;padding:14px;margin-bottom:8px;background:linear-gradient(150deg,#1b1712,#13100b);border:1px solid '+(r.acc?'rgba('+r.acc+',.5)':'rgba(226,185,90,.22)')+';border-radius:14px;cursor:pointer;">'
       +'<div style="font-size:22px;width:30px;text-align:center;flex-shrink:0;">'+r.icon+'</div>'
-      +'<div style="flex:1;min-width:0;"><div style="font-family:var(--font-ui);font-size:var(--fs-body);font-weight:600;color:var(--t1);letter-spacing:.03em;text-transform:uppercase;">'+r.title+'</div><div style="font-size:var(--fs-cap);color:var(--t3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+r.teaser+'</div></div>'
-      +'<div style="color:var(--gold-lt);font-size:20px;opacity:.6;flex-shrink:0;">›</div></div>';
+      +'<div style="flex:1;min-width:0;"><div style="font-family:var(--font-ui);font-size:var(--fs-body);font-weight:600;color:'+(r.acc?'rgb('+r.acc+')':'var(--t1)')+';letter-spacing:.03em;text-transform:uppercase;">'+r.title+'</div><div style="font-size:var(--fs-cap);color:var(--t3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+r.teaser+'</div></div>'
+      +'<div style="color:'+(r.acc?'rgb('+r.acc+')':'var(--gold-lt)')+';font-size:20px;opacity:.6;flex-shrink:0;">›</div></div>';
   }).join('');
   box.innerHTML=head+rows;   // кнопка «Скачать памятку дня» убрана (см. выше)
   // ⚠️ 2026-09-24: ожидание разбора СНЯТО — памятку собирает движок за доли секунды, общий кэш

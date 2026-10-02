@@ -75,6 +75,9 @@
     }
   };
 
+  // Акцент главы — бирюзовый, тот же, что у раздела «Добавки» в карточке профиля (_CAT.supplement в
+  // interpreter-via-l.html). Просьба владельца 2026-10-02: глава должна отличаться от золотых глав памятки.
+  var ACC = '90,196,178';
   var ONLY_F = { hf:1, cycle:1 }, ONLY_M = { drive:1, muscle:1 };
   var ICON = { energy:'lightning', sleep:'moon', mood:'smiley', fog:'brain', weight:'scales', pain:'bone', libido:'heart', hf:'thermometer-hot', cycle:'drop', drive:'fire', muscle:'barbell' };
   function tx(o, lang){ return (o && (o[lang] || o.en || o.ru)) || ''; }
@@ -100,20 +103,21 @@
   }
   window.vialCmpRows = pickRows;
   window.vialCmpTitle = function(lang){ return tx(UI.title, lang || 'en'); };
+  window.vialCmpAcc = ACC;
 
   // Пункты блока. Маркер и текст — два элемента в ряд (flex), а не отступ слева: так список сам
   // переворачивается в иврите и не зависит от свойств, которых нет в старом WebView.
   function bullets(list, color){
     return (list || []).map(function(s){
       return '<div style="display:flex;gap:8px;align-items:flex-start;font-size:var(--fs-body);color:' + color + ';line-height:1.5;padding:3px 0;">'
-        + '<span style="color:var(--gold-lt);flex-shrink:0;">•</span><span style="min-width:0;">' + esc(s) + '</span></div>';
+        + '<span style="color:rgb(' + ACC + ');flex-shrink:0;">•</span><span style="min-width:0;">' + esc(s) + '</span></div>';
     }).join('');
   }
   function block(icon, label, body, accent){
     return '<div style="border-radius:12px;padding:11px 12px;margin-top:10px;'
-      + (accent ? 'background:rgba(226,185,90,.07);border:1px solid rgba(226,185,90,.22);' : 'background:var(--surface);border:1px solid var(--b1);') + '">'
-      + '<div style="display:flex;align-items:center;gap:7px;margin-bottom:4px;font-family:var(--font-ui);font-size:var(--fs-cap);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:' + (accent ? 'var(--gold-lt)' : 'var(--t3)') + ';">'
-      + '<i class="ph ph-' + icon + '" style="font-size:16px;color:var(--gold-lt);"></i><span>' + esc(label) + '</span></div>'
+      + (accent ? 'background:rgba(' + ACC + ',.09);border:1px solid rgba(' + ACC + ',.32);' : 'background:var(--surface);border:1px solid var(--b1);') + '">'
+      + '<div style="display:flex;align-items:center;gap:7px;margin-bottom:4px;font-family:var(--font-ui);font-size:var(--fs-cap);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:' + (accent ? 'rgb(' + ACC + ')' : 'var(--t3)') + ';">'
+      + '<i class="ph ph-' + icon + '" style="font-size:16px;color:rgb(' + ACC + ');"></i><span>' + esc(label) + '</span></div>'
       + body + '</div>';
   }
 
@@ -127,14 +131,14 @@
       + '<div style="font-size:var(--fs-cap);color:var(--t3);line-height:1.45;margin:2px 0 12px;">' + esc(tx(UI.note, lang)) + '</div>';
     p.rows.forEach(function(r){
       var title = tx((opts.titles || {})[r.key], lang) || r.key, R = ROWS[r.row];
-      h += '<div style="background:linear-gradient(150deg,#1b1712,#13100b);border:1px solid rgba(226,185,90,.28);border-radius:16px;padding:14px;margin-bottom:12px;">'
+      h += '<div style="background:linear-gradient(150deg,#121a19,#0e1413);border:1px solid rgba(' + ACC + ',.38);border-radius:16px;padding:14px;margin-bottom:12px;">'
         + '<div style="display:flex;align-items:center;gap:11px;">'
-        +   '<div style="width:38px;height:38px;flex-shrink:0;border-radius:50%;border:1px solid var(--gold-dim);display:flex;align-items:center;justify-content:center;"><i class="ph ph-' + (ICON[r.key] || 'heartbeat') + '" style="font-size:20px;color:var(--gold-lt);"></i></div>'
+        +   '<div style="width:38px;height:38px;flex-shrink:0;border-radius:50%;background:rgba(' + ACC + ',.13);border:1px solid rgba(' + ACC + ',.45);display:flex;align-items:center;justify-content:center;"><i class="ph ph-' + (ICON[r.key] || 'heartbeat') + '" style="font-size:20px;color:rgb(' + ACC + ');"></i></div>'
         +   '<div style="font-family:var(--font-ui);font-size:var(--fs-title);font-weight:600;color:var(--t1);line-height:1.25;min-width:0;">' + esc(title) + '</div>'
         + '</div>'
         + block('lightbulb', tx(UI['do'], lang), bullets(tx(R.d, lang), 'var(--t2)'), true)
         + block('plus-circle', tx(UI.extra, lang), bullets(tx(R.n, lang), 'var(--t3)'), false)
-        + ((r.key === 'cycle' && opts.cycleNote) ? '<div style="display:flex;gap:8px;align-items:flex-start;font-size:var(--fs-cap);color:var(--t3);line-height:1.5;margin-top:10px;"><i class="ph ph-thermometer-simple" style="font-size:16px;color:var(--gold-lt);flex-shrink:0;margin-top:2px;"></i><span style="min-width:0;">' + esc(opts.cycleNote) + '</span></div>' : '')
+        + ((r.key === 'cycle' && opts.cycleNote) ? '<div style="display:flex;gap:8px;align-items:flex-start;font-size:var(--fs-cap);color:var(--t3);line-height:1.5;margin-top:10px;"><i class="ph ph-thermometer-simple" style="font-size:16px;color:rgb(' + ACC + ');flex-shrink:0;margin-top:2px;"></i><span style="min-width:0;">' + esc(opts.cycleNote) + '</span></div>' : '')
         + '</div>';
     });
     if (p.more) h += '<div onclick="if(typeof closeCircModal===\'function\')closeCircModal();if(typeof _iapOpenFromProfile===\'function\')_iapOpenFromProfile()" style="font-size:var(--fs-body);color:var(--gold-lt);cursor:pointer;padding:4px 2px 12px;">✦ ' + esc(tx(UI.more, lang)) + ' ›</div>';
