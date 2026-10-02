@@ -164,12 +164,12 @@
       var b = '';
       for (var n = 0; n <= 10; n++) {
         var on = (r.val === n);
-        b += '<button type="button" onclick="_cmpScoreBy(\'' + esc(r.key) + '\',' + n + ')" style="min-width:28px;padding:6px 0;border-radius:9px;font-size:var(--fs-cap);font-family:inherit;cursor:pointer;text-align:center;'
+        b += '<button type="button" onclick="_cmpScoreBy(\'' + esc(r.key) + '\',' + n + ')" style="flex:1 1 0;min-width:0;max-width:44px;padding:7px 0;border-radius:9px;font-size:var(--fs-cap);font-family:inherit;cursor:pointer;text-align:center;'
           + (on ? 'border:1px solid rgb(' + ACC + ');background:rgb(' + ACC + ');color:#0e1413;font-weight:700;' : 'border:1px solid rgba(' + ACC + ',.36);background:transparent;color:var(--t1);') + '">' + n + '</button>';
       }
       return '<div style="margin-top:10px;"><div style="font-size:var(--fs-body);color:var(--t1);font-weight:600;">' + esc(r.title)
         + (r.prev != null ? ' <span style="font-weight:400;font-size:var(--fs-cap);color:var(--t3);">· ' + esc(r.prev) + '/10</span>' : '') + '</div>'
-        + '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;">' + b + '</div></div>';
+        + '<div style="display:flex;gap:4px;margin-top:6px;">' + b + '</div></div>';
     }).join('');
   }
   // st: {lang, mode, lever, nextLever, day, covers:[названия], marks:[7 × 'yes'|'no'|''], today, scoreRows,
