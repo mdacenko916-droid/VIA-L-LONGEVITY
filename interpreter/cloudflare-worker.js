@@ -3975,7 +3975,10 @@ function buildWeeklyUserMessage(summary, daily, lang, period, exp) {
       if (_by) {
         const rows = Object.keys(LB).filter(k => _sc(_by[k]) != null)
           .map(k => LB[k] + ': ' + (_sc(_bp[k]) != null ? _sc(_bp[k]) + ' → ' : '') + _sc(_by[k]));
-        if (rows.length) c += '\nОценки по каждой жалобе (0 — не беспокоит, 10 — сильно; меньше — лучше; «было → стало»): ' + rows.join('; ') + '.';
+        // «энергия и силы: 6 → 5» модель прочла как «энергия поднялась с 6 до 5» (живой месячный 2026-10-02):
+        // это оценка БЕСПОКОЙСТВА, а не уровень функции, — говорим это в самой строке.
+        if (rows.length) c += '\nОценки БЕСПОКОЙСТВА по каждой жалобе (0 — не беспокоит, 10 — сильно; «было → стало»; число МЕНЬШЕ = беспокоит меньше = лучше. '
+          + 'Это НЕ уровень самой функции: «энергия и силы: 6 → 5» значит, что усталость беспокоит меньше, а не что энергии стало 5): ' + rows.join('; ') + '.';
       }
       const _also = (Array.isArray(cmp.also) ? cmp.also : []).map(k => LB[k]).filter(Boolean).slice(0, 9);
       if (_also.length) c += '\nТакже беспокоит (отмечено, но не главное): ' + _also.join('; ') + '.';
@@ -4096,6 +4099,9 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
     // Живые прогоны 2026-10-02: «трёхнедельный план», «приливы 3 дня вместо ежедневных» — сроков и сравнений в данных не было.
     'Never state a duration, a frequency or a comparison ("three-week plan", "instead of daily", "for the first time") ' +
     'that is not literally present in the data below. If the data has no earlier value, do not compare.\n' +
+    // Тот же прогон: «стабилизирует гормональный баланс», «стабильнее уровень сахара ночью» — обещание и механизм, которых мы не мерили.
+    'Never promise a mechanism or an outcome that was not measured: no "stabilises / supports hormonal balance", no claims about ' +
+    'blood sugar, hormones or metabolism unless such a value is in the data. Say what the person DID and what THEIR numbers did.\n' +
     (_hasCmp
       ? 'FIRST — what happened to what the person CAME WITH (the "ЖАЛОБА" block): name each complaint with their OWN 0–10 ' +
         'scores as "was → now" (lower is better; never recompute them) and use their own words about the week if given. ' +
