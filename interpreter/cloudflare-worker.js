@@ -11339,7 +11339,7 @@ async function handleReviewClaim(request, env, corsHeaders, ctx){
     ).bind(rcUser).first();
     if(!last) return jsonResponse({ok:false,error:'no_purchase'}, corsHeaders, 402);
     return jsonResponse({ ok:true, repeat:true, code:last.card_code, specialist_id:last.specialist_id,
-      specialist_name:last.sname || '', due_at:last.due_at, closes_at:last.closes_at }, corsHeaders);
+      specialist_name:'', due_at:last.due_at, closes_at:last.closes_at }, corsHeaders);
   }
 
   // Дежурный специалист. Пока он один; код задаётся переменной, чтобы сменить без правки кода.
@@ -11396,7 +11396,9 @@ async function handleReviewClaim(request, env, corsHeaders, ctx){
   // надпись «оплачен разбор» service worker берёт в /cabinet/push-peek по метке push_at/push_kind заказа.
   if(ctx) ctx.waitUntil(_specPush(env, sp.id).catch(()=>{}));
 
-  return jsonResponse({ ok:true, code, specialist_id: sp.id, specialist_name: sp.name || '',
+  // Имя специалиста клиенту разбора не отдаём (решение владельца 2026-10-02): он его не выбирал,
+  // в приложении собеседник называется «Специалист VIA·L».
+  return jsonResponse({ ok:true, code, specialist_id: sp.id, specialist_name: '',
     due_at: dueAt, closes_at: closesAt }, corsHeaders);
 }
 

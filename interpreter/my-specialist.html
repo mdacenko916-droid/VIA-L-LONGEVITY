@@ -565,6 +565,9 @@ function _isWebSite(){
     ko:{"rv_st_closed":"질문 기간이 종료되었습니다. 채팅은 저장되어 있어 다시 읽을 수 있습니다.","rv_again":"새 리뷰 · {price}","rv_chat_closed":"질문 기간이 종료되었습니다. 전문가가 마지막 질문에 아직 답변 중이라면 답변이 여기에 표시됩니다."}
   };
   Object.keys(C).forEach(l=>{ if(T[l]) Object.assign(T[l], C[l]); });
+  // Кто отвечает на разбор: без личного имени (решение владельца 2026-10-02) — клиент специалиста не выбирал.
+  const N={"ru":"Специалист VIA·L","uk":"Спеціаліст VIA·L","en":"VIA·L specialist","es":"Especialista de VIA·L","de":"VIA·L-Spezialist","pt":"Especialista VIA·L","fr":"Spécialiste VIA·L","pl":"Specjalista VIA·L","it":"Specialista VIA·L","he":"מומחה VIA·L","ja":"VIA·Lの専門家","ko":"VIA·L 전문가"};
+  Object.keys(N).forEach(l=>{ if(T[l]) T[l].rv_spec=N[l]; });
 })();
 
 let lang='en';
@@ -694,7 +697,7 @@ function refreshDone(){
   const link=window._link||{};const nm=link.name||tr('spec_prefix');
   // После покупки разбора — свои слова: «свяжется по email» здесь неправда, ответ придёт в переписку.
   const _rv = window._fresh && link.review;
-  document.getElementById('doneTitle').textContent= _rv ? tr('rv_paid_t') : window._fresh ? tr('ok_title') : tr('linked_to').replace('{name}',link.name||'');
+  document.getElementById('doneTitle').textContent= _rv ? tr('rv_paid_t') : link.review ? tr('rv_t') : window._fresh ? tr('ok_title') : tr('linked_to').replace('{name}',link.name||'');
   document.getElementById('doneDesc').textContent= _rv ? tr('rv_paid_d') : window._fresh
     ? tr('ok_desc').replace('{name}',link.name||'')
     : '';
@@ -764,7 +767,7 @@ function _renderChat(){
     box.innerHTML='<p class="intro" style="text-align:left;margin:0;">'+esc(tr('chat_empty'))+'</p>';
   } else {
     box.innerHTML=_chatMsgs.map(m=>{
-      const who = m.dir==='out' ? (link.name||tr('spec_prefix')) : tr('chat_you');
+      const who = m.dir==='out' ? (_specDisp(link)||tr('spec_prefix')) : tr('chat_you');
       // Фото — картинкой, голосовое — плеером (раньше были значки-ссылки, открывавшие файл в браузере).
       const media = m.url ? (m.type==='image'
           ? '<a href="'+esc(m.url)+'" target="_blank" rel="noopener"><img src="'+esc(m.url)+'" alt="" onload="_chatStick()"></a>'
@@ -807,7 +810,7 @@ function openChat(){
   if(lg&&!lg._scrollHook){ lg._scrollHook=1; lg.addEventListener('scroll',function(){ _chatAtEnd=(lg.scrollHeight-lg.scrollTop-lg.clientHeight)<40; }); }
   _chatAtEnd=true; setTimeout(_chatFit,0);
   const link=window._link||{};
-  const who=document.getElementById('chatWho'); if(who) who.textContent=link.name||'';
+  const who=document.getElementById('chatWho'); if(who) who.textContent=_specDisp(link);
   const bk=document.getElementById('chatBackBtn'); if(bk) bk.textContent=tr('back');
   _renderChat();
   _loadThread();
@@ -1247,6 +1250,9 @@ function _rvPending(){
 }
 // Связка есть и действует. Закрытая (окно вопросов разбора истекло) связкой для покупки не считается:
 // человек может купить следующий разбор.
+// Имя собеседника в переписке: у связки по коду — имя специалиста, которого человек выбрал сам;
+// у разового разбора — «Специалист VIA·L».
+function _specDisp(link){ link=link||{}; return link.review ? tr('rv_spec') : (link.name||''); }
 function _rvLinked(){ try{ const l=JSON.parse(localStorage.getItem(LINK_KEY)||'null'); return !!(l&&l.code&&!l.closed); }catch(e){ return false; } }
 // Сервер сообщил, что разбор закрыт → запоминаем в связке: обмен данными выключен, главный экран
 // перестаёт считать человека ведомым и снова может предложить разбор.
@@ -1345,7 +1351,7 @@ async function _rvClaim(p, again){
   }catch(e){}
   if(d&&d.ok&&d.code){
     try{ localStorage.removeItem(REVIEW_PENDING); }catch(e){}
-    const link={code:d.code,name:d.specialist_name||'',spec_id:d.specialist_id||null,sharing:true,review:true,email:p.email||''};
+    const link={code:d.code,name:'',spec_id:d.specialist_id||null,sharing:true,review:true,email:p.email||''};   // имя не храним: в разборе собеседник — «Специалист VIA·L»
     try{ localStorage.setItem(LINK_KEY,JSON.stringify(link)); }catch(e){}
     window._review={status:'open',due_at:d.due_at||'',extended:0,closes_at:d.closes_at||''};
     document.getElementById('reviewView').style.display='none';
