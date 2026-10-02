@@ -409,3 +409,21 @@ into the chat. The app never shows a dose — doses in the answers are for the i
    with food matter, how many weeks until an effect on muscle versus on cognition can be expected, and does the
    effect disappear after stopping?
 
+### N-13, follow-up (2026-10-02): the 2025 trial in peri/menopausal women
+
+Answers 1–5 state that no 2023–2026 RCT tested creatine for cognition in women aged 40–60. I recall one (from
+memory, unverified — hence the question): an 8-week RCT of creatine hydrochloride / creatine ethyl ester in
+perimenopausal and menopausal women, possibly named CONCRET-MENOPA (Ostojic group, 2025). Answers → `6.txt`, `7.txt`.
+
+6. Is there a randomized controlled trial published in 2024–2026 of creatine supplementation in perimenopausal
+   and menopausal women that measured cognition (reaction time, attention, memory), mood or menopausal symptoms,
+   and brain creatine by magnetic resonance spectroscopy — possibly using creatine hydrochloride or creatine ethyl
+   ester rather than monohydrate (for example the CONCRET-MENOPA trial by Korovljev, Ostojic and colleagues)? If it
+   exists, give the full citation with DOI, sample size per arm, doses, duration, primary and secondary outcomes
+   with effect sizes and p-values, funding and conflicts of interest, and an assessment of risk of bias. If no such
+   trial exists, say so explicitly.
+7. Search beyond creatine monohydrate: list every human trial from 2020–2026 of any creatine form (monohydrate,
+   hydrochloride, ethyl ester, guanidinoacetic acid plus creatine) in women aged 40–65 or in peri/postmenopausal
+   women that reported a cognitive, mood, sleep or brain-creatine outcome. For each: citation with DOI, n, dose,
+   duration, result, and whether the finding has been replicated.
+
