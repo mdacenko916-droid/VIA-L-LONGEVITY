@@ -4053,6 +4053,11 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
   // Фокус недели выбран кодом приложения (levers.js) → модель свой «эксперимент» не предлагает и хвост
   // [[EXP]] не пишет. Старые сборки фокуса не шлют — у них всё как раньше.
   const _hasFocus = !!(daily && daily.focus && typeof daily.focus === 'object' && (daily.focus.title || daily.focus.last));
+  // Жалобы — в ОПИСАНИЕ СТРУКТУРЫ, а не только в данные: живой прогон 2026-10-02 показал, что русская приписка
+  // «открой разбор жалобой» внутри английского блока данных не исполняется — разбор пересказал сон и пульс,
+  // а оценки жалоб и слова человека о неделе пропустил целиком.
+  const _hasCmp = !!(daily && daily.complaint && typeof daily.complaint === 'object'
+    && ((Array.isArray(daily.complaint.items) && daily.complaint.items.length) || daily.complaint.text));
   // Велнес-рамка App Store (VIA-L) запрещает обещать результат и срок. VIA-L EXPERT живёт вне
   // App Store (PWA, доступ по коду, разбор видит специалист) — там эксперимент можно ставить
   // как проверяемую гипотезу: ожидаемое направление + горизонт. Без этого «верификации» нет:
@@ -4076,8 +4081,14 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
     'You are a longevity & clinical-nutrition EDUCATOR writing a SHORT ' + perAdj + ' review of a ' +
     "client's wearable / wellbeing dynamics. This is educational reflection, NOT medical advice, " +
     'diagnosis, or treatment.\n' +
-    'WRITE: 4–6 warm, supportive sentences. Care is the core value — encourage, never pressure or scare.\n' +
+    'WRITE: ' + (_hasCmp ? '6–9' : '4–6') + ' warm, supportive sentences. Care is the core value — encourage, never pressure or scare.\n' +
     'COVER, based ONLY on the numbers given (never invent metrics or values):\n' +
+    (_hasCmp
+      ? 'FIRST — what happened to what the person CAME WITH (the "ЖАЛОБА" block): name each complaint with their OWN 0–10 ' +
+        'scores as "was → now" (lower is better; never recompute them) and use their own words about the week if given. ' +
+        'The person is ONE ORGANISM: do not list complaints one by one — connect them with each other and with the state ' +
+        'numbers (sleep, resting pulse, HRV, blood pressure) into a single picture of what pulls what. Then:\n'
+      : '') +
     '1) what improved ' + perThis + ', 2) what worsened or needs attention, 3) the single most likely ' +
     'behavioural driver, ' + (_hasFocus
       ? '4) the focus for the ' + perNext + ' is ALREADY CHOSEN by the app (see the "ФОКУС НЕДЕЛИ" / "ИТОГ ФОКУСА" block in the data): ' +
@@ -4091,13 +4102,20 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
       'we\'ll look at your numbers in 7 days"), never as a promise or a health outcome. If a plausible direction ' +
     'cannot be named from the data, say plainly that this one is exploratory and you are only watching.\n') +
     // Петля: разбор не начинается с нуля. Если прошлый эксперимент измерен — сначала закрыть его.
+    (_hasFocus
+      ? 'If a "PREVIOUS EXPERIMENT" block is given, it is the SAME focus as in the "ИТОГ ФОКУСА" block: close that loop in one ' +
+        'sentence using the given before → after values verbatim, and take the adherence line as the truth. What comes next is ' +
+        'ALREADY DECIDED by the app and written in that block — repeat that decision faithfully, INCLUDING when it says the same ' +
+        'focus continues for another week, and NEVER replace it with a suggestion of your own.\n'
+      : '') +
+    (_hasFocus ? '' :
     'If a "PREVIOUS EXPERIMENT" block is given, OPEN the review by closing that loop in one sentence: name what ' +
     'the person actually did and what their own numbers did (use the given before → after values verbatim, never ' +
     'recompute or invent them). Take the adherence line as the truth about whether it happened — never write that ' +
     'they did something the line says they did not, and never blame them for it. ' +
     'If it stuck and the numbers moved — say so and BUILD THE NEXT LINK on top of it; ' +
     'do NOT propose the same thing again. If the numbers did not move, say that plainly and without blame, and pick ' +
-    'a different lever. Describe the numbers as the person\'s own data, never as a health outcome or measurement of anything.\n' +
+    'a different lever. Describe the numbers as the person\'s own data, never as a health outcome or measurement of anything.\n') +
     'If a "Daily detail" block and/or "Client context" are provided, USE them — ' +
     'they reflect what the person actually logged each day (hot flashes, temperature, SpO₂, memory, ' +
     'brain fog, stress, alcohol) and their profile (cycle phase, comfort markers, diet); ground the review in them.\n' +
