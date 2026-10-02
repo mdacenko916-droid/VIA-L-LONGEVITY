@@ -223,7 +223,8 @@ body.chat-open{overflow:hidden}
   <div class="card">
     <!-- ── FORM ─────────────────────────────── -->
     <div id="form">
-      <div class="eyebrow">VIA·L</div>
+      <div class="eyebrow" onclick="_rvDiagTap()">VIA·L</div>
+      <div id="rvDiag" style="display:none;font-size:11px;color:var(--t3);text-align:center;word-break:break-word;margin-bottom:6px;"></div>
       <h1 data-t="title">My guide</h1>
       <p class="intro" data-t="intro">Enter your guide's code — they will see that you've connected and contact you by email about a consultation.</p>
 
@@ -1370,15 +1371,27 @@ async function _rvClaim(p, again){
 // Показать блок разбора: только в приложении, без связки, вне США (см. _isUS — та же причина, что
 // у платного ведения), и только если стор отдал товар. Оплаченная, но не оформленная заявка
 // доводится сразу — экран открывается сам с кнопкой «Повторить».
+// Диагностика «почему нет блока разбора» — пять касаний по надписи VIA·L над формой. С телефона иначе
+// не видно, что ответил стор: блок молча не рисуется и при старой сборке, и при пустом ответе StoreKit.
+let _rvTaps=0, _rvWhy='не запускалась';
+function _rvDiagTap(){
+  if(++_rvTaps < 5) return; _rvTaps=0;
+  const el=document.getElementById('rvDiag'); if(!el) return;
+  let plat=''; try{ plat=(window.iapPlatform&&iapPlatform())||''; }catch(e){}
+  el.textContent='review: '+_rvWhy+' · iap='+(!!(window.iapAvailable&&iapAvailable()))+' · '+plat+' · store: '+(window._iapReviewDiag||'—')+' · tz='+(function(){ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone; }catch(e){ return '?'; } })();
+  el.style.display='block';
+}
 let _rvInit=false;
 async function initReview(){
+  _rvWhy = _rvLinked() ? 'есть связка' : !(window.iapAvailable&&iapAvailable()) ? 'нет моста покупок' : _isUS() ? 'США' : 'запрос товара…';
   if(_rvInit || _rvLinked() || !window.iapAvailable || !iapAvailable() || _isUS()) return;
   _rvInit=true;
   try{
   const p=_rvPending();
   _rvProduct=await iapReviewProduct();
-  if(!_rvProduct && !p) return;
+  if(!_rvProduct && !p){ _rvWhy='стор не отдал товар'; return; }
   if(_rvLinked()) return;                       // подключились, пока ждали стор
+  _rvWhy='блок показан';
   document.getElementById('rvTeaser').style.display='block';
   _rvTexts(); _rvState();                       // после закрытого разбора — кнопка «Новый разбор» на экране связки
   try{ if(!p && new URLSearchParams(location.search).get('review')==='1') openReview(); }catch(e){}   // пришли по кнопке с главного экрана

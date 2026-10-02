@@ -133,8 +133,9 @@
     var ok = await ensureConfigured(); if(!ok) return null;
     try {
       var r = await p.getProducts({ productIdentifiers: [REVIEW_PRODUCT_ID], type: 'NON_SUBSCRIPTION' });
+      window._iapReviewDiag = 'products=' + ((r && r.products && r.products.length) || 0);
       return (r && r.products && r.products[0]) || null;
-    } catch(e){ console.warn('[iap] getProducts failed', e); return null; }
+    } catch(e){ window._iapReviewDiag = 'error: ' + ((e && (e.message || e.code)) || e); console.warn('[iap] getProducts failed', e); return null; }
   };
   // Идентификатор покупателя в RevenueCat — по нему сервер находит чек.
   window.iapAppUserId = async function(){
