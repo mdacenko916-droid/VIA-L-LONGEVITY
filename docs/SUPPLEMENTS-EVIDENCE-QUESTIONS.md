@@ -374,3 +374,38 @@ product: how often, when, with what, for how long. Please answer with that const
 >
 > If the honest answer for most items is "no evidence", say so plainly rather than constructing a
 > rationale.
+
+---
+
+## N-13 — Creatine: update after new studies (2026-10-02)
+
+**Why:** Marina flagged that newer studies on creatine are out and our wording is behind. Where creatine is
+named today: the complaint cards (`interpreter/complaint-table.js` — "Brain fog" for both sexes, "Strength and
+muscle" for men) and `KB_SUPPLEMENTS` → "КРЕАТИН ВНЕ СПОРТА" plus P-F5 in the worker. Current wording: works
+only together with strength training; for memory and attention "a small signal, clearer with age, no guaranteed
+effect"; healthy kidneys only. Answers go to `interpreter/Infa Cloude/E/S. Креатин/` (1.txt … 5.txt) or straight
+into the chat. The app never shows a dose — doses in the answers are for the internal KB only.
+
+1. In perimenopausal and postmenopausal women (roughly 40–60 years), what do randomized controlled trials and
+   meta-analyses published in 2023–2026 show about creatine supplementation and cognitive outcomes (memory,
+   attention, reaction time, self-reported brain fog) and mood? Give effect sizes, the form used (monohydrate vs
+   hydrochloride), dose, duration, sample size and risk of bias for each trial, and state whether the benefit
+   appeared without resistance training.
+2. In healthy middle-aged adults of both sexes (40–65 years), what is the current evidence (2023–2026 RCTs,
+   meta-analyses, umbrella reviews) that creatine improves cognition, mental fatigue, sleep or daytime energy —
+   in particular under sleep restriction or high stress? Which subgroups benefit most (older adults, women,
+   vegetarians or people with low dietary creatine)? What effect size is realistic, and how consistent are the
+   findings across trials?
+3. For women aged 40–65 in the menopause transition: creatine WITH versus WITHOUT resistance training — effects
+   on lean mass, strength, physical function, bone density, and body weight or water retention. What do the
+   newest trials and meta-analyses conclude, and is there any measurable benefit of creatine alone, without
+   training?
+4. Safety of long-term creatine monohydrate use in adults aged 40–65: kidney function (true GFR versus the rise
+   in serum creatinine), blood pressure, use in people with type 2 diabetes or controlled hypertension,
+   interactions with common medicines (metformin, ACE inhibitors or ARBs, NSAIDs, diuretics), menopausal hormone
+   therapy, gastrointestinal tolerance and weight gain. Who should not take it or should ask a doctor first? Are
+   there any new safety signals from 2023–2026?
+5. Practical use of creatine for a non-athlete aged 40–65: is a loading phase needed, does timing or taking it
+   with food matter, how many weeks until an effect on muscle versus on cognition can be expected, and does the
+   effect disappear after stopping?
+
