@@ -138,6 +138,8 @@
     next:{ru:'Дальше',uk:'Далі',en:'Next',es:'Lo siguiente',de:'Als Nächstes',pt:'A seguir',fr:'Ensuite',pl:'Dalej',it:'Poi',he:'הלאה',ja:'次へ',ko:'다음'},
     go:{ru:'Продолжить',uk:'Продовжити',en:'Continue',es:'Continuar',de:'Weiter',pt:'Continuar',fr:'Continuer',pl:'Kontynuuj',it:'Continua',he:'להמשיך',ja:'続ける',ko:'계속하기'},
     ask:{ru:'Обсудить со специалистом',uk:'Обговорити з фахівцем',en:'Discuss with your specialist',es:'Hablarlo con tu especialista',de:'Mit deiner Fachperson besprechen',pt:'Conversar com seu especialista',fr:'En parler à votre spécialiste',pl:'Omów ze specjalistą',it:'Parlane con il tuo specialista',he:'לדבר עם איש המקצוע שלך',ja:'担当の専門家に相談する',ko:'담당 전문가와 상의하기'},
+    month:{ru:'Итог месяца от VIA-L',uk:'Підсумок місяця від VIA-L',en:'VIA-L review of the month',es:'Resumen del mes de VIA-L',de:'VIA-L-Auswertung des Monats',pt:'Resumo do mês do VIA-L',fr:'Bilan du mois par VIA-L',pl:'Podsumowanie miesiąca od VIA-L',it:'Bilancio del mese di VIA-L',he:'סיכום החודש של VIA-L',ja:'VIA-Lの今月のまとめ',ko:'VIA-L 월간 정리'},
+    monthRows:{ru:'За месяц',uk:'За місяць',en:'Over the month',es:'En el mes',de:'Im Monat',pt:'No mês',fr:'Sur le mois',pl:'W ciągu miesiąca',it:'Nel mese',he:'במהלך החודש',ja:'この1か月',ko:'한 달 동안'},
     review:{ru:'Разбор недели от VIA-L',uk:'Розбір тижня від VIA-L',en:'VIA-L review of the week',es:'Análisis de la semana de VIA-L',de:'VIA-L-Auswertung der Woche',pt:'Análise da semana do VIA-L',fr:'Analyse de la semaine par VIA-L',pl:'Analiza tygodnia od VIA-L',it:'Analisi della settimana di VIA-L',he:'סקירת השבוע של VIA-L',ja:'VIA-Lの今週のレビュー',ko:'VIA-L 주간 리뷰'}
   };
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
@@ -172,8 +174,26 @@
   }
   // st: {lang, mode, lever, nextLever, day, covers:[названия], marks:[7 × 'yes'|'no'|''], today, scoreRows,
   //      stateRows:[{name,val}], cmpRows:[{title,prev,now}], kept, asked, decision, spec, cards, review:{html,canGen}}
+  // Итог месяца — внизу блока в любом состоянии: кнопка, когда пришёл срок, и сам текст в день получения.
+  // rows — жалобы «первая оценка за месяц → последняя»: медленные (вес, либидо, мышцы, цикл) видны именно здесь.
+  function monthHTML(m, lang){
+    if (!m || (!m.canGen && !m.html)) return '';
+    var T = function(k){ return tx(UI[k], lang); };
+    var rows = (m.rows || []).map(function(r){
+      var tone = (r.prev != null && r.now != null) ? (r.now < r.prev ? 'dn' : r.now > r.prev ? 'up' : '') : '';
+      return pair(r.title, (r.prev != null ? r.prev + ' → ' : '') + (r.now != null ? r.now : '—'), tone);
+    }).join('');
+    return '<div style="border-top:1px solid rgba(' + ACC + ',.25);margin-top:14px;padding-top:12px;">'
+      + (m.html ? '<div style="' + CAP + 'color:var(--gold-lt);">' + esc(T('month')) + '</div>' + (rows ? box('res', T('monthRows'), rows) : '') + box('more', '', m.html)
+                : '<button type="button" id="focusMonthBtn" onclick="_focusMonth()" style="width:100%;padding:9px 10px;border-radius:10px;font-size:var(--fs-body);font-family:inherit;font-weight:600;cursor:pointer;background:transparent;color:var(--t1);border:1px solid rgba(226,185,90,.36);">' + esc(T('month')) + '</button>')
+      + '</div>';
+  }
   function focusHTML(st){
     st = st || {};
+    var h0 = focusMain(st);
+    return h0 ? h0 + monthHTML(st.month, st.lang || 'en') : '';
+  }
+  function focusMain(st){
     var lang = st.lang || 'en', T = function(k){ return tx(UI[k], lang); };
     var L = st.lever ? byKey(st.lever) : null;
     var head = function(title, sub){
@@ -231,8 +251,11 @@
         + (st.decision === 'up' ? '<div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">' + askBtn
             + '<button type="button" onclick="_focusGo()" style="padding:9px 10px;border-radius:10px;font-size:var(--fs-body);font-family:inherit;font-weight:600;cursor:pointer;background:transparent;color:var(--t1);border:1px solid rgba(' + ACC + ',.36);">' + esc(st.okLabel || 'OK') + '</button></div>' : '') + cardsLink;
     } else if (st.mode === 'up') {
+      // Фокуса нет, но разбор недели человеку по-прежнему положен: просить его больше негде.
+      var rv = (st.review && st.review.html) ? box('more', T('review'), st.review.html)
+             : (st.review && st.review.canGen) ? '<button type="button" id="focusReviewBtn" onclick="_focusReview()" style="width:100%;margin-top:10px;padding:9px 10px;border-radius:10px;font-size:var(--fs-body);font-family:inherit;font-weight:600;cursor:pointer;background:transparent;color:var(--t1);border:1px solid rgba(226,185,90,.36);">' + esc(T('review')) + '</button>' : '';
       h = head(T('title')) + box('res', '', '<div style="font-size:var(--fs-body);font-weight:600;color:var(--t1);line-height:1.45;">' + esc(T('v_up')) + '</div>')
-        + (askBtn ? '<div style="margin-top:10px;">' + askBtn + '</div>' : '') + cardsLink;
+        + rv + (askBtn ? '<div style="margin-top:10px;">' + askBtn + '</div>' : '') + cardsLink;
     } else return '';
     return h;
   }

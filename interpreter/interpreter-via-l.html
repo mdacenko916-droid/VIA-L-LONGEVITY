@@ -5932,6 +5932,8 @@ function renderMonthlyReportUI(){
   }
   if(g.canGen && have<_MR_MIN_DAYS){
     inner += '<div style="margin-top:'+(g.cached?'12px':'0')+';">'+_wrWaitNote(ui,_MR_MIN_DAYS,have)+'</div>';
+  } else if(g.canGen && _focusActive()){
+    inner += '<div style="margin-top:'+(g.cached?'12px':'0')+';font-size:var(--fs-cap);color:var(--t3);line-height:1.5;">'+_esc(L(_FOCUS_HINT))+'</div>';
   } else if(g.canGen){
     inner += '<button id="mrBtn" onclick="genMonthlyReport()" style="margin-top:'+(g.cached?'12px':'0')+';background:var(--gold);color:#10141C;border:none;border-radius:10px;padding:10px 16px;font-size:var(--fs-body);font-weight:600;cursor:pointer;">'+ui.get+'</button>';
   } else {
@@ -5946,7 +5948,7 @@ async function genMonthlyReport(){
   var btn=document.getElementById('mrBtn'); if(btn){ btn.disabled=true; btn.textContent=ui.load; }
   var summary={ n:w.wk.length, metrics:w.metrics.map(function(m){return { key:m.k, avg:+m.a.toFixed(m.dec), prev:m.p!=null?+m.p.toFixed(m.dec):null, delta:m.delta!=null?+m.delta.toFixed(m.dec):null };}) };
   var daily=(typeof _weeklyDaily==='function')?_weeklyDaily(30):null;
-  var code=(window.sessionStorage&&sessionStorage.getItem('vialp_code'))||'';
+  var code=(window.sessionStorage&&sessionStorage.getItem('vialp_code'))||(function(){ try{ return (typeof _specShare==='function'&&_specShare().code)||''; }catch(e){ return ''; } })();   // подключённый к наставнику клиент — итог месяца уходит в кабинет
   try{
     var res=await fetch('https://interpreter.viaelcom.workers.dev/weekly-report',{
       method:'POST',headers:{'Content-Type':'application/json'},
@@ -6565,12 +6567,21 @@ function _weeklyDaily(win){
       var sc=[]; try{ sc=JSON.parse(localStorage.getItem('vialp_cmp_scores')||'[]')||[]; }catch(e){}
       var d={better:0,same:0,worse:0};
       wk.forEach(function(r){ if(r.cmp_delta && d[r.cmp_delta]!=null) d[r.cmp_delta]++; });
-      return { items:c.items||[], also:(Array.isArray(c.also)?c.also:[]), by:_cmpEntryBy(sc[0]), byPrev:_cmpEntryBy(sc[1]),
+      // Месяц: «было» — самая ранняя оценка в окне, а не прошлая неделя: иначе траектории за месяц не видно.
+      var _inWin=sc.filter(function(x){ return x.ts && (now-x.ts)<(win+1)*DAY; });
+      var _prevE=(win>7 && _inWin.length>1)?_inWin[_inWin.length-1]:sc[1];
+      return { items:c.items||[], also:(Array.isArray(c.also)?c.also:[]), by:_cmpEntryBy(sc[0]), byPrev:_cmpEntryBy(_prevE),
                text:c.text||'', since:c.since||'',
                score:sc[0]?sc[0].val:null, scorePrev:sc[1]?sc[1].val:null, note:(sc[0]&&sc[0].note)||'',
                scoreDay:sc[0]?sc[0].day:'', deltas:d };
     })(),
     focus:(typeof _focusPayload==='function'?_focusPayload():null),   // фокус недели и решение кода — ИИ их объясняет, а не выдумывает свои
+    focusLog:(function(){   // что пробовали за окно и чем кончилось — для месячного итога
+      try{ if(!window.vialLevers) return [];
+        var lg=JSON.parse(localStorage.getItem('vialp_exp_log')||'[]')||[];
+        return lg.filter(function(x){ return x && x.lever && x.ts && (now-x.ts)<(win+1)*DAY; }).slice(0,6).reverse()
+                 .map(function(x){ var t=window.vialLevers.text(x.lever,'ru'); return { title:t?t.title:x.lever, outcome:x.outcome||'', kept:x.kept }; });
+      }catch(e){ return []; } })(),
     profile:{ phase:P.phase||null,
               pms:(P.pms_symptoms||[]).filter(function(s){return s&&s!=='none_pms';}),
               diet:(P.diet_restrict||[]), eating:P.eating_pattern||null }
@@ -6790,8 +6801,25 @@ function _focusState(){
   var rowsFor=function(cur,prev){ return keys.map(function(k){ return { key:k, title:_cmpLbl(k), val:(cur&&cur[k]!=null)?cur[k]:null, prev:(prev&&prev[k]!=null)?prev[k]:null }; }); };
   var spec=false; try{ var l=JSON.parse(localStorage.getItem('vial_spec_link')||'null'); spec=!!(l&&l.code); }catch(x){}
   var st={ lang:lang, cards:true, spec:spec, okLabel:(typeof _expUI==='function'?_expUI().ok:'OK') };
+  var _txt=function(t){ return '<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.65;white-space:pre-wrap;">'+_aiMd(t)+'</div>'; };
+  // Итог месяца: кнопка, когда пришёл срок и набралось записей; текст — в день получения. Рядом — жалобы
+  // «первая оценка за 30 дней → последняя»: медленные (вес, либидо, мышцы, цикл) честно видны только так.
+  try{
+    var mg=_mrGate(), mw=monthlyTrend(), mToday=(mg.cached && mg.cachedDate===_dayKey());
+    var mCan=!!(mg.canGen && mw && _histDays(mw.wk)>=_MR_MIN_DAYS);
+    if(mCan || mToday){
+      var inM=scores.filter(function(x){ return x.ts && (Date.now()-x.ts)<31*DAY; }), firstBy=_cmpEntryBy(inM[inM.length-1]), lastBy=_cmpEntryBy(inM[0]);
+      st.month={ canGen:mCan && !mToday, html:mToday?_txt(mg.cached):'',
+                 rows:(inM.length>1)?keys.filter(function(k){ return lastBy[k]!=null; }).map(function(k){ return { title:_cmpLbl(k), prev:(firstBy[k]!=null)?firstBy[k]:null, now:lastBy[k] }; }):[] };
+    }
+  }catch(x){}
+  var _review=function(){
+    var wt='', wd=''; try{ wt=localStorage.getItem('vialp_weekly_text')||''; wd=localStorage.getItem('vialp_weekly_date')||''; }catch(x){}
+    var can=false; try{ var g=_wrGate(), w=weeklyTrend(); can=!!(g.canGen && w && _histDays(w.wk)>=_WR_MIN_DAYS); }catch(x){}
+    return { canGen:can, html:(wt && wd===_dayKey())?_txt(wt):'' };
+  };
   if(!e){
-    if(_focusHold(keys)){ st.mode='up'; return st; }
+    if(_focusHold(keys)){ st.mode='up'; st.review=_review(); return st; }
     var fresh=latest && _cmpByFull(_cmpEntryBy(latest)) && (Date.now()-(latest.ts||0))<3*DAY;
     if(!fresh){ st.mode='base'; st.scoreRows=rowsFor(todayBy,null); return st; }
     var lv=V.pick(Object.assign({},opts,{tried:_focusTried()}));
@@ -6819,9 +6847,7 @@ function _focusState(){
   st.mode='result'; st.decision=dec; st.nextLever=(dec==='up')?null:next; st.kept=r.kept; st.asked=_EXP_WIN; st._nowBy=nowBy;
   st.stateRows=r.rows.map(function(x){ return { name:_expName(x.k), val:_expVal(x.k,x.before)+' → '+_expVal(x.k,x.after) }; });
   st.cmpRows=keys.map(function(k){ return { title:_cmpLbl(k), prev:(e.base_by&&e.base_by[k]!=null)?e.base_by[k]:null, now:(nowBy[k]!=null)?nowBy[k]:null }; });
-  var wt='', wd=''; try{ wt=localStorage.getItem('vialp_weekly_text')||''; wd=localStorage.getItem('vialp_weekly_date')||''; }catch(x){}
-  var can=false; try{ var g=_wrGate(), w=weeklyTrend(); can=!!(g.canGen && w && _histDays(w.wk)>=_WR_MIN_DAYS); }catch(x){}
-  st.review={ canGen:can, html:(wt && wd===_dayKey())?('<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.65;white-space:pre-wrap;">'+_aiMd(wt)+'</div>'):'' };
+  st.review=_review();
   return st;
 }
 function renderFocusUI(activeKey){
@@ -6846,6 +6872,14 @@ function _focusGo(){
   }
   try{ renderExperimentUI(window.__rdDay||_dayKey()); }catch(x){}
 }
+async function _focusMonth(){
+  var b=document.getElementById('focusMonthBtn'); if(b){ b.disabled=true; b.textContent=_wrUI().load; }
+  try{ await genMonthlyReport(); }catch(e){}
+  try{ renderFocusUI(window.__rdDay||_dayKey()); }catch(e){}
+}
+// Блок «Фокус недели» активен → недельный и месячный разбор запрашиваются в нём, а в профиле остаются для чтения.
+function _focusActive(){ try{ return !!_focusState(); }catch(e){ return false; } }
+var _FOCUS_HINT={ru:'Разбор запрашивается в блоке «Фокус недели» на экране «Сегодня».',uk:'Розбір запитується в блоці «Фокус тижня» на екрані «Сьогодні».',en:'The review is requested in the “Focus of the week” block on the Today screen.',es:'El análisis se pide en el bloque «Foco de la semana» de la pantalla Hoy.',de:'Die Auswertung wird im Block „Fokus der Woche“ auf dem Heute-Bildschirm angefordert.',pt:'A análise é pedida no bloco «Foco da semana» na tela Hoje.',fr:'L’analyse se demande dans le bloc « Focus de la semaine » de l’écran Aujourd’hui.',pl:'Analizę zamawia się w bloku „Fokus tygodnia” na ekranie Dziś.',it:'L’analisi si richiede nel blocco «Focus della settimana» nella schermata Oggi.',he:'את הסקירה מבקשים בבלוק ״המיקוד של השבוע״ במסך היום.',ja:'レビューは「今日」画面の「今週のフォーカス」ブロックから依頼します。',ko:'리뷰는 ‘오늘’ 화면의 ‘이번 주 포커스’ 블록에서 요청합니다.'};
 async function _focusReview(){
   var b=document.getElementById('focusReviewBtn'); if(b){ b.disabled=true; b.textContent=_wrUI().load; }
   try{ await genWeeklyReport(); }catch(e){}
@@ -7059,6 +7093,8 @@ function renderWeeklyReportUI(){
   }
   if(g.canGen && have<_WR_MIN_DAYS){
     inner += `<div style="margin-top:${g.cached?'12px':'0'};">`+_wrWaitNote(ui,_WR_MIN_DAYS,have)+`</div>`;
+  } else if(g.canGen && _focusActive()){
+    inner += `<div style="margin-top:${g.cached?'12px':'0'};font-size:var(--fs-cap);color:var(--t3);line-height:1.5;">${_esc(L(_FOCUS_HINT))}</div>`;
   } else if(g.canGen){
     inner += `<button id="wrBtn" onclick="genWeeklyReport()" style="margin-top:${g.cached?'12px':'0'};background:var(--gold);color:#10141C;border:none;border-radius:10px;padding:10px 16px;font-size:var(--fs-body);font-weight:600;cursor:pointer;">${ui.get}</button>`;
   } else {

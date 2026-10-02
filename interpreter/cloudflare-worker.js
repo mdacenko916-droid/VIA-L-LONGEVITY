@@ -3998,6 +3998,16 @@ function buildWeeklyUserMessage(summary, daily, lang, period, exp) {
       out += c;
     }
     out += _focusText(daily.focus, true);   // фокус недели и решение кода — модель их объясняет
+    // Месячный итог: что пробовали за месяц и чем кончилась каждая неделя (решения принимал код приложения).
+    if (isM && Array.isArray(daily.focusLog) && daily.focusLog.length) {
+      const rows = daily.focusLog.slice(0, 6).map(x => {
+        const t = String((x && x.title) || '').replace(/\s+/g, ' ').trim().slice(0, 120); if (!t) return '';
+        const k = parseInt(x.kept, 10);
+        return '«' + t + '»' + (isFinite(k) ? ' (выполнялся ' + k + ' дн. из 7)' : '') + (_FOCUS_DECISION[x.outcome] ? ' — ' + _FOCUS_DECISION[x.outcome] : '');
+      }).filter(Boolean);
+      if (rows.length) out += '\n\nЧТО ПРОБОВАЛИ ЗА МЕСЯЦ, по неделям (решения принимал код приложения, не оспаривай): ' + rows.join('; ')
+        + '. Скажи, что из этого закрепилось и что стоит за траекторией жалоб за месяц. Медленные жалобы (вес, либидо, мышцы, цикл) оценивай только по месяцу.';
+    }
 
     const p = daily.profile || {};
     const ctx = [];
@@ -4083,6 +4093,9 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
     'diagnosis, or treatment.\n' +
     'WRITE: ' + (_hasCmp ? '6–9' : '4–6') + ' warm, supportive sentences. Care is the core value — encourage, never pressure or scare.\n' +
     'COVER, based ONLY on the numbers given (never invent metrics or values):\n' +
+    // Живые прогоны 2026-10-02: «трёхнедельный план», «приливы 3 дня вместо ежедневных» — сроков и сравнений в данных не было.
+    'Never state a duration, a frequency or a comparison ("three-week plan", "instead of daily", "for the first time") ' +
+    'that is not literally present in the data below. If the data has no earlier value, do not compare.\n' +
     (_hasCmp
       ? 'FIRST — what happened to what the person CAME WITH (the "ЖАЛОБА" block): name each complaint with their OWN 0–10 ' +
         'scores as "was → now" (lower is better; never recompute them) and use their own words about the week if given. ' +
@@ -4247,7 +4260,7 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
         }
       }
     } catch (_) {}
-    ctx.waitUntil(cabinetIngestWeekly(env, code, clean + expLine, lang).catch(() => {}));
+    ctx.waitUntil(cabinetIngestWeekly(env, code, clean + expLine, lang, isMonth).catch(() => {}));
     ctx.waitUntil(_bumpGrantUsed(env, code).catch(() => {}));   // день доступа израсходован
   }
 
@@ -4259,7 +4272,7 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
 // Кладёт недельный разбор в карточку как breakdowns[type:'weekly']. Дедуп: если запись
 // weekly моложе 6 дней уже есть — заменяем её (защита от обхода клиентского гейта сбросом
 // localStorage), иначе добавляем. Только UPDATE существующей карточки (VIA-L EXPERT).
-async function cabinetIngestWeekly(env, code, text, lang) {
+async function cabinetIngestWeekly(env, code, text, lang, isMonth) {
   if (!env.DB || !code) return;
   code = String(code).toUpperCase();
   const row = await env.DB.prepare('SELECT data FROM clients WHERE code=?').bind(code).first();
@@ -4269,12 +4282,15 @@ async function cabinetIngestWeekly(env, code, text, lang) {
   if (d.sharing === false) return;
   if (!Array.isArray(d.breakdowns)) d.breakdowns = [];
   const today = new Date().toISOString().slice(0, 10);
+  // Месячный итог кладём тем же типом (в кабинете нет отдельного «monthly»), но с пометкой периода: без неё
+  // месячный затирал недельный, пришедший за последние шесть дней. Замена — только внутри своего периода.
+  const per = isMonth ? 'month' : 'week';
   const entry = {
-    date: today, type: 'weekly', status: 'received', source: 'ip', lang: lang || '',
+    date: today, type: 'weekly', period: per, status: 'received', source: 'ip', lang: lang || '',
     text: String(text).slice(0, 6000),
   };
-  const SIX_DAYS = 6 * 86400000;
-  const idx = d.breakdowns.findIndex(b => b.type === 'weekly' && b.date && (Date.now() - new Date(b.date).getTime()) < SIX_DAYS);
+  const WIN = (isMonth ? 25 : 6) * 86400000;
+  const idx = d.breakdowns.findIndex(b => b.type === 'weekly' && (b.period || 'week') === per && b.date && (Date.now() - new Date(b.date).getTime()) < WIN);
   if (idx >= 0) d.breakdowns[idx] = entry; else d.breakdowns.push(entry);
   if (d.breakdowns.length > 50) d.breakdowns = d.breakdowns.slice(-50);
   await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?')
