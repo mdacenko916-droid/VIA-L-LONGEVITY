@@ -9450,14 +9450,6 @@ async function deliverAnketa(env, body, answers, lang){
   // code_topic:<код> — единый «адрес» топика клиента: его пишет и сабмит анкеты, и /start
   // care-бота. Кто первый — создаёт, второй переиспользует → анкета и чат в ОДНОМ топике.
   const code = (typeof body.code==='string' && body.code.trim()) ? body.code.trim().toUpperCase() : '';
-  let topicId = body.topic ? String(body.topic).replace(/\D/g,'') : '';
-  if(topicId && !(await env.EXPERT_DRAFTS.get('care_client:'+topicId))) topicId = ''; // чужой/несуществующий
-  if(!topicId && code) topicId = (await env.EXPERT_DRAFTS.get('code_topic:'+code)) || '';
-  if(!topicId){
-    topicId = await careCreateTopic(env, ((name||'Клиент')+' · анкета · '+lang.toUpperCase()).slice(0,128));
-    if(topicId && code) await env.EXPERT_DRAFTS.put('code_topic:'+code, String(topicId));
-  }
-  const extra = topicId ? { message_thread_id: Number(topicId) } : {};
   const idline = `${name||'Клиент'}${email?' · '+email:''} · ${lang.toUpperCase()}`;
 
   // ── Сообщение 1: ИИ-сводка для нутрициолога (RU, перевод встроен) ──
@@ -9472,12 +9464,29 @@ async function deliverAnketa(env, body, answers, lang){
     let dData = {};
     try{ dData = JSON.parse(existing?.data||'{}'); }catch(_){}
     dData.anketa = { answers, submitted_at: new Date().toISOString(), lang, summary: summary||'' };
+    let saved = false;
     try{
       await env.DB.prepare(
         'INSERT INTO clients (code,name,email,lang,product,status,data,created_at,updated_at) VALUES (?,?,?,?,\'interpreter\',\'active\',?,?,?) ON CONFLICT(code) DO UPDATE SET name=CASE WHEN excluded.name!=\'\' THEN excluded.name ELSE name END, email=CASE WHEN excluded.email!=\'\' THEN excluded.email ELSE email END, lang=excluded.lang, data=excluded.data, updated_at=excluded.updated_at'
       ).bind(code, name||'', email||'', lang, JSON.stringify(dData), now, now).run();
+      saved = true;
     }catch(_){}
+    // 2026-10-03: ТГ-группы ведения нет — анкета с кодом живёт только в карточке кабинета
+    // (вкладка «Анкета»), в Telegram её содержимое не уходит. ТГ-путь ниже — легаси для анкет без кода.
+    if(saved){
+      if(email){ const m = ANKETA_MAIL[lang] || ANKETA_MAIL.en; await sendEmail(env, email, m.subj, m.body(name)); }
+      return;
+    }
   }
+
+  let topicId = body.topic ? String(body.topic).replace(/\D/g,'') : '';
+  if(topicId && !(await env.EXPERT_DRAFTS.get('care_client:'+topicId))) topicId = ''; // чужой/несуществующий
+  if(!topicId && code) topicId = (await env.EXPERT_DRAFTS.get('code_topic:'+code)) || '';
+  if(!topicId){
+    topicId = await careCreateTopic(env, ((name||'Клиент')+' · анкета · '+lang.toUpperCase()).slice(0,128));
+    if(topicId && code) await env.EXPERT_DRAFTS.put('code_topic:'+code, String(topicId));
+  }
+  const extra = topicId ? { message_thread_id: Number(topicId) } : {};
 
   if(summary){
     for(const chunk of anketaChunks([`🧬 СВОДКА ДЛЯ НУТРИЦИОЛОГА · ${idline}`, '', ...summary.split('\n')])){
