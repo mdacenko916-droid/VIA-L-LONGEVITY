@@ -773,7 +773,7 @@ function _renderChat(){
       const media = m.url ? (m.type==='image'
           ? '<a href="'+esc(m.url)+'" target="_blank" rel="noopener"><img src="'+esc(m.url)+'" alt="" onload="_chatStick()"></a>'
           : '<audio controls preload="metadata" src="'+esc(m.url)+'"></audio>') : '';
-      const body = (m.text ? esc(m.text) : '') + media;
+      const body = (m.text ? esc(m.text).replace(/https?:\/\/[^\s<]+[^\s<.,;:!?)»]/g, u=>'<a href="'+u+'" target="_blank" rel="noopener">'+u+'</a>') : '') + media;   // ссылки кликабельны (анкета от специалиста)
       return '<div class="msg '+(m.dir==='out'?'out':'in')+'"><span class="who">'+esc(who)+' · '+esc(m.date||'')+'</span>'+body+'</div>';
     }).join('');
   }

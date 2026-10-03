@@ -4211,7 +4211,7 @@ function renderExpertThread(msgs){
     const out = m.dir==='out';
     var body = (m.type==='image'&&m.url) ? '<img src="'+esc(m.url)+'" style="max-width:100%;border-radius:9px;display:block;margin:2px 0;" loading="lazy">'
              : (m.type==='audio'&&m.url) ? '<audio controls preload="none" src="'+esc(m.url)+'" style="width:230px;max-width:100%;"></audio>'
-             : esc(m.text).replace(/\n/g,'<br>');
+             : esc(m.text).replace(/https?:\/\/[^\s<]+[^\s<.,;:!?)»]/g, u=>'<a href="'+u+'" target="_blank" rel="noopener" style="color:#6e5310;text-decoration:underline;">'+u+'</a>').replace(/\n/g,'<br>');   // ссылки кликабельны (анкета от специалиста)
     return '<div style="align-self:'+(out?'flex-start':'flex-end')+';max-width:82%;padding:11px 14px;border-radius:14px;font-size:var(--fs-title);line-height:1.5;color:#1a1712;'
       + (out?'background:rgba(196,154,60,.20);border:1px solid rgba(196,154,60,.55);border-bottom-left-radius:4px;'
             :'background:#ffffff;border:1px solid rgba(0,0,0,.12);border-bottom-right-radius:4px;')+'">'

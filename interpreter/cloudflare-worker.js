@@ -1462,7 +1462,8 @@ export default {
       if (path === '/cabinet/chat-read')   return handleCabinetChatRead(request, env, corsHeaders);        // непрочитанные → 0
       if (path === '/cabinet/push-subscribe')   return handleCabinetPushSubscribe(request, env, corsHeaders);
       if (path === '/cabinet/push-unsubscribe') return handleCabinetPushUnsubscribe(request, env, corsHeaders);
-      if (path === '/cabinet/chat-send')   return handleCabinetChatSend(request, env, corsHeaders, ctx);   // ответ спеца в чат клиента (app)
+      if (path === '/cabinet/chat-send')   return handleCabinetChatSend(request, env, corsHeaders, ctx);
+      if (path === '/cabinet/anketa-mail') return handleCabinetAnketaMail(request, env, corsHeaders);   // анкета клиенту на почту (дубль ссылки из чата)   // ответ спеца в чат клиента (app)
       if (path === '/cabinet/translate')   return handleCabinetTranslate(request, env, corsHeaders);
       if (path === '/cabinet/leads')       return handleCabinetLeads(request, env, corsHeaders);
       if (path === '/cabinet/showcase-save') return handleCabinetShowcaseSave(request, env, corsHeaders);   // профиль витрины специалиста
@@ -10623,6 +10624,46 @@ async function handleAppPushRegister(request, env, corsHeaders){
   await env.DB.prepare('INSERT OR REPLACE INTO app_push (token, code, platform, env, lang, created, fails) VALUES (?,?,?,?,?,?,0)')
     .bind(token, row.code, platform, b.sandbox?'sandbox':'production', String(b.lang||'').slice(0,5), Date.now()).run();
   return jsonResponse({ok:true}, corsHeaders);
+}
+
+// POST /cabinet/anketa-mail {code} — письмо клиенту со ссылкой на анкету (book/anketa/?code=&lang=),
+// дубль сообщения в чате (кабинет, вкладка «Анкета», 2026-10-03). Почтовик у специалиста не открывается —
+// письмо уходит с сервера через Brevo. Заполненная анкета ляжет в карточку по коду (deliverAnketa).
+const ANKETA_INVITE_MAIL = {
+  ru:{s:'Анкета здоровья · VIA-L', t:'Чтобы разбор был максимально точным, заполните, пожалуйста, анкету здоровья (можно в несколько заходов):', b:'Открыть анкету →', c:'Или скопируйте ссылку:'},
+  uk:{s:'Анкета здоров’я · VIA-L', t:'Щоб розбір був максимально точним, заповніть, будь ласка, анкету здоров’я (можна в кілька заходів):', b:'Відкрити анкету →', c:'Або скопіюйте посилання:'},
+  en:{s:'Health questionnaire · VIA-L', t:'To make your review as precise as possible, please fill in the health questionnaire (you can do it in several sittings):', b:'Open the questionnaire →', c:'Or copy the link:'},
+  es:{s:'Cuestionario de salud · VIA-L', t:'Para que tu análisis sea lo más preciso posible, completa el cuestionario de salud (puedes hacerlo en varias veces):', b:'Abrir el cuestionario →', c:'O copia el enlace:'},
+  de:{s:'Gesundheitsfragebogen · VIA-L', t:'Damit Ihre Analyse möglichst genau wird, füllen Sie bitte den Gesundheitsfragebogen aus (gern in mehreren Schritten):', b:'Fragebogen öffnen →', c:'Oder kopieren Sie den Link:'},
+  pt:{s:'Questionário de saúde · VIA-L', t:'Para que sua análise seja a mais precisa possível, preencha o questionário de saúde (pode fazer em várias etapas):', b:'Abrir o questionário →', c:'Ou copie o link:'},
+  fr:{s:'Questionnaire de santé · VIA-L', t:'Pour que votre analyse soit la plus précise possible, remplissez le questionnaire de santé (vous pouvez le faire en plusieurs fois) :', b:'Ouvrir le questionnaire →', c:'Ou copiez le lien :'},
+  pl:{s:'Ankieta zdrowia · VIA-L', t:'Aby analiza była jak najdokładniejsza, wypełnij ankietę zdrowia (możesz w kilku podejściach):', b:'Otwórz ankietę →', c:'Lub skopiuj link:'},
+  it:{s:'Questionario sulla salute · VIA-L', t:'Per rendere la tua analisi il più precisa possibile, compila il questionario sulla salute (puoi farlo in più volte):', b:'Apri il questionario →', c:'Oppure copia il link:'},
+  he:{s:'שאלון בריאות · VIA-L', t:'כדי שהניתוח יהיה מדויק ככל האפשר, אנא מלא/י את שאלון הבריאות (אפשר בכמה פעמים):', b:'פתיחת השאלון ←', c:'או העתיקו את הקישור:'},
+  ja:{s:'健康問診票 · VIA-L', t:'分析をできるだけ正確にするため、健康問診票のご記入をお願いします（数回に分けてもOKです）：', b:'問診票を開く →', c:'またはリンクをコピーしてください：'},
+  ko:{s:'건강 설문지 · VIA-L', t:'분석을 최대한 정확하게 하기 위해 건강 설문지를 작성해 주세요(여러 번에 나눠 작성해도 됩니다):', b:'설문지 열기 →', c:'또는 링크를 복사하세요:'},
+};
+async function handleCabinetAnketaMail(request, env, corsHeaders){
+  const sess = await cabinetSession(request, env);
+  if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  let body={}; try{ body=await request.json(); }catch(_){}
+  const code = String(body.code||'').trim();
+  if(!code) return jsonResponse({ok:false,error:'no_code'}, corsHeaders, 400);
+  if(!await cabinetOwns(env, sess, code)) return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
+  const row = await env.DB.prepare('SELECT email,lang FROM clients WHERE code=?').bind(code).first();
+  if(!row) return jsonResponse({ok:false,error:'not_found'}, corsHeaders, 404);
+  const email = String(row.email||'').trim();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return jsonResponse({ok:false,error:'no_email'}, corsHeaders);
+  const lang = ANKETA_INVITE_MAIL[row.lang] ? row.lang : 'en';
+  const m = ANKETA_INVITE_MAIL[lang];
+  const link = 'https://via-l.com/book/anketa/?code=' + encodeURIComponent(code) + '&lang=' + lang;
+  const dir = lang==='he' ? ' dir="rtl"' : '';
+  const html = `<div${dir}><p>${m.t}</p>`
+    + `<p style="margin:24px 0"><a href="${link}" style="background:#6B4F2A;color:#fff;padding:14px 28px;border-radius:50px;text-decoration:none;font-family:sans-serif">${m.b}</a></p>`
+    + `<p style="color:#888;font-size:13px">${m.c} ${link}</p></div>`;
+  const r = await sendEmail(env, email, m.s, html);
+  return jsonResponse({ok: !!(r && r.ok !== false), email}, corsHeaders);
 }
 
 async function handleCabinetChatSend(request, env, corsHeaders, ctx){
