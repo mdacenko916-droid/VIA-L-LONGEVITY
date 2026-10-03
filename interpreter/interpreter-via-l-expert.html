@@ -2029,6 +2029,11 @@ body.iap-open #langDropdown,body.iap-open #langDropdown *{pointer-events:auto;}
 .ai-sec.open .ai-sec-more .ph{transform:rotate(180deg);}
 .ai-sec-coll{margin-top:16px;}
 /* «Подробнее о разборе» — темы свёрнуты под одной кнопкой (собранный вид как в макете) */
+/* «Слушать разбор» голосом телефона (tts-bridge.js, 2026-10-03) */
+.ai-tts-btn{margin-left:auto;display:inline-flex;align-items:center;gap:6px;flex-shrink:0;background:rgba(226,185,90,.10);border:1px solid rgba(226,185,90,.32);border-radius:999px;padding:5px 12px;color:var(--gold-lt);font-family:inherit;font-size:var(--fs-cap);font-weight:600;letter-spacing:.2px;text-transform:none;cursor:pointer;}
+.ai-tts-btn.on{background:rgba(226,185,90,.22);border-color:rgba(226,185,90,.6);}
+.ai-tts-btn i{font-size:16px;}
+.ai-tts-msg{display:none;font-size:var(--fs-cap);color:var(--t3);line-height:1.5;margin:-8px 0 12px;}
 .ai-more-all{display:inline-flex;align-items:center;gap:8px;margin-top:14px;background:rgba(226,185,90,.10);border:1px solid rgba(226,185,90,.32);border-radius:12px;padding:10px 16px;color:var(--gold-lt);font-size:var(--fs-body);font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:.2px;}
 .ai-more-all:hover{background:rgba(226,185,90,.16);}
 .ai-more-all .ph{font-size:14px;transition:transform .28s ease;}
@@ -3705,7 +3710,7 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
     <div class="rd-card rd-analysis" id="aiCard" style="display:none;">
       <div class="rd-analysis-fig" aria-hidden="true"></div>
       <div class="rd-analysis-body">
-        <div class="rd-card-t"><i class="ph ph-brain rd-ct-ic"></i> <span data-t="rd_analysis_title">Разбор дня от VIA‑L</span></div>
+        <div class="rd-card-t"><i class="ph ph-brain rd-ct-ic"></i> <span data-t="rd_analysis_title">Разбор дня от VIA‑L</span><button type="button" id="ai-tts" class="ai-tts-btn" onclick="vialTtsToggle()" style="display:none;"></button></div>
         <div id="aiLoading" style="display:flex;flex-direction:column;align-items:flex-start;gap:6px;font-size:var(--fs-body);">
           <!-- Точки вынесены ОТДЕЛЬНЫМ элементом, а не в строку перевода: движок i18n
                переписывает innerHTML у data-t, и любая разметка внутри него была бы стёрта. -->
@@ -5002,6 +5007,7 @@ function setLang(l){
   // lang на <html> нужен переносам: hyphens:auto без него применяет английские правила
   // к русскому/немецкому и рвёт слова не по слогам. 2026-09-06.
   try{ document.documentElement.lang = l; }catch(e){}
+  try{ if(window.vialTtsStop) vialTtsStop(); }catch(e){}   // озвучка на прежнем языке — гасим, подпись кнопки перерисуется
   try{ if(typeof _renderMaxBlocks==='function')_renderMaxBlocks(); }catch(e){}   // Zoom-блок виден только ru/uk; ошибка не должна ломать перевод
   document.getElementById('langLabel').textContent=LANG_FLAGS[l]||l.toUpperCase();
   document.querySelectorAll('.lang-option').forEach(o=>{
@@ -13087,6 +13093,7 @@ document.addEventListener('visibilitychange',function(){
 <!-- IAP-мост (Apple подписка €15/мес, RevenueCat). Активен только внутри приложения; на вебе no-op. app/README.md -->
 <script src="iap-bridge.js"></script>
 <script src="intake.js"></script>
+<script src="tts-bridge.js"></script><!-- «Слушать разбор» голосом телефона (2026-10-03) -->
 <script src="evidence.js"></script><!-- «На чём основано» — список работ под разбором (2026-09-20) -->
 <script>
 /* «Мои приёмы» (intake.js, 2026-09-18). EXPERT — PWA: будить себя сама не умеет, поэтому расписание
