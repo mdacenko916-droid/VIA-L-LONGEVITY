@@ -155,6 +155,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 .ch-line{display:flex;align-items:baseline;gap:10px;min-width:0;flex-wrap:wrap;}
 .ch-line .client-header-meta{margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 .ch-badges{display:none;}
+.ch-back,.ch-caret{display:none;}
 .ch-cmp{font-size:var(--fs-cap);color:#8a6a1c;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ch-ctl{display:flex;align-items:center;gap:8px;flex:0 0 auto;}
 .ch-more{position:relative;}
@@ -414,8 +415,22 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
   body.ph-detail .sidebar{display:none;}
   body.ph-detail .content{display:flex;}
   .ph-back{display:block;width:100%;text-align:left;padding:10px 14px;border:none;border-bottom:1px solid #e0e0e0;background:#fafafa;font-size:var(--fs-body);font-weight:600;cursor:pointer;color:#1a1a1a;}
-  .client-header{padding:10px 14px !important;}
+  .client-header{padding:6px 10px !important;}
   .ch-badges{display:inline;}
+  /* Телефон (2026-10-03): шапка свёрнута в одну строку «← имя ▾ [статус] [⋯]» + строка жалобы.
+     Бейджи и почта — по нажатию на имя (#clientHeaderEl.ch-open). Отдельная полоса «← Клиенты» не нужна. */
+  body.ph-detail #phBackBtn{display:none;}
+  .ch-back{display:block;flex:0 0 auto;border:none;background:none;font-size:22px;padding:0 6px 0 0;cursor:pointer;color:#1a1a1a;}
+  .client-header-top{gap:6px;}
+  .ch-line{flex-wrap:nowrap;align-items:center;}
+  .ch-line .client-header-name{font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;cursor:pointer;}
+  .ch-caret{display:inline;font-size:14px;color:#888;margin-left:4px;}
+  #clientHeaderEl:not(.ch-open) .ch-badges,#clientHeaderEl:not(.ch-open) .client-header-meta{display:none;}
+  #clientHeaderEl.ch-open .ch-line{flex-wrap:wrap;}
+  #clientHeaderEl.ch-open .client-header-name{white-space:normal;}
+  #clientHeaderEl.ch-open .ch-caret{transform:rotate(180deg);display:inline-block;}
+  .ch-ctl select{max-width:110px;}
+  .ch-cmp{margin-top:2px;}
   .tabs{flex-wrap:nowrap;padding:0 4px !important;}
   .tab{flex:0 0 auto;white-space:nowrap;}
   .tabs .tab:last-child{order:-1;}   /* «Переписка» первой — только визуально, порядок в DOM не трогаем */
@@ -2570,8 +2585,9 @@ function renderClientDetail(){
   const metaParts = [c.email, c.phone, c.program||phaseLabel(c.phase)||'', c.age?(c.age+' '+t('u_years')):'', c.price].filter(Boolean);
   document.getElementById('clientHeaderEl').innerHTML=`
     <div class="client-header-top">
+      <button type="button" class="ch-back" onclick="phBack()" aria-label="Back">←</button>
       <div class="ch-line" style="flex:1;">
-        <div class="client-header-name">${esc(c.name)}<span class="ch-badges">${dataBadge(c)}${chanBadge(c)}${reviewBadge(c)}</span></div>
+        <div class="client-header-name" onclick="if(_isPhone())document.getElementById('clientHeaderEl').classList.toggle('ch-open')">${esc(c.name)}<span class="ch-caret">▾</span><span class="ch-badges">${dataBadge(c)}${chanBadge(c)}${reviewBadge(c)}</span></div>
         <div class="client-header-meta">${esc(metaParts.join(' · '))}${c.start_date?` · ${t('ov_start')}: ${c.start_date}${c.duration_weeks?' · '+c.duration_weeks+' '+t('u_wk'):''} · ${esc(c.format||'zoom')}`:''}</div>
       </div>
       <div class="ch-ctl">
