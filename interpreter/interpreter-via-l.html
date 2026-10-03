@@ -6823,7 +6823,17 @@ function _focusStart(lever,by,week){
 function _focusState(){
   if(!window.vialLevers || typeof window.vialFocusHTML!=='function') return null;
   var keys=_cmpKeysAll(); if(!keys.length) return null;
-  var e=_expGet(); if(e && !e.lever) return null;      // ещё идёт прежний эксперимент от ИИ — у него своя карточка ниже
+  var e=_expGet();
+  // Ещё идёт прежний эксперимент от ИИ (заведён до «Фокуса недели»). Жалобы отмечены и общий рычаг есть → фокус его
+  // заменяет: эксперимент уходит в журнал с исходом 'replaced' (в «пройденные» рычаги не попадает), сегодняшняя
+  // отметка «делал» снимается, чтобы не стать первой точкой фокуса. Решение владельца 2026-10-03.
+  if(e && !e.lever){
+    if(!window.vialLevers.pick(_focusOpts())) return null;   // заменить нечем — эксперимент доживает в своей карточке
+    _expArchive(e,'replaced'); _expSet(null); e=null;
+    try{ var _d=JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[], _r=_d.filter(function(x){ return x.day===_dayKey(); })[0];
+         if(_r && _r.exp_done){ _r.exp_done=null; localStorage.setItem('vialp_daily',JSON.stringify(_d)); } }catch(x){}
+    try{ var _bx=document.getElementById('rd-exp'); if(_bx){ _bx.style.display='none'; _bx.innerHTML=''; } }catch(x){}
+  }
   var opts=_focusOpts(), V=window.vialLevers, DAY=86400000;
   if(!V.pick(opts) && !e) return null;                 // общих рычагов под эти жалобы нет (либидо, цикл) — остаются карточки
   var scores=_cmpScores(), latest=scores[0]||null;
