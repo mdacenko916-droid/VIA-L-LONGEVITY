@@ -142,15 +142,24 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 
 /* client header */
 .client-header{
-  padding:20px 24px 0;flex-shrink:0;border-bottom:1px solid var(--b1);
+  padding:12px 24px;flex-shrink:0;border-bottom:1px solid var(--b1);position:relative;z-index:5;
 }
-.client-header-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;}
+.client-header-top{display:flex;align-items:center;justify-content:space-between;gap:12px;}
 .client-header-name{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:var(--t1);}
 .client-header-meta{font-size:var(--fs-cap);color:var(--t3);margin-top:3px;}
 .client-header-score{text-align:right;}
 .score-big{font-family:'DM Mono',monospace;font-size:40px;font-weight:300;line-height:1;}
 .score-big-lbl{font-size:var(--fs-cap);letter-spacing:2px;text-transform:uppercase;color:var(--t3);}
-.header-actions{display:flex;gap:8px;margin-bottom:12px;}
+/* Шапка карточки — одна строка (2026-10-03): плашки ушли в «Обзор»/«Переписку», действия — в меню «⋯»,
+   бейджи на компьютере видны в списке слева, в шапке только на телефоне (там списка рядом нет). */
+.ch-line{display:flex;align-items:baseline;gap:10px;min-width:0;flex-wrap:wrap;}
+.ch-line .client-header-meta{margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.ch-badges{display:none;}
+.ch-ctl{display:flex;align-items:center;gap:8px;flex:0 0 auto;}
+.ch-more{position:relative;}
+.ch-menu{display:none;position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #9a9a9a;min-width:200px;padding:4px;z-index:50;}
+.ch-menu.open{display:flex;flex-direction:column;gap:4px;}
+.ch-menu .topbtn{width:100%;text-align:left;}
 
 /* tabs */
 .tabs{display:flex;gap:0;border-bottom:1px solid var(--b1);padding:0 24px;background:var(--dark2);}
@@ -405,6 +414,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
   body.ph-detail .content{display:flex;}
   .ph-back{display:block;width:100%;text-align:left;padding:10px 14px;border:none;border-bottom:1px solid #e0e0e0;background:#fafafa;font-size:var(--fs-body);font-weight:600;cursor:pointer;color:#1a1a1a;}
   .client-header{padding:10px 14px !important;}
+  .ch-badges{display:inline;}
   .tabs{flex-wrap:nowrap;padding:0 4px !important;}
   .tab{flex:0 0 auto;white-space:nowrap;}
   .tabs .tab:last-child{order:-1;}   /* «Переписка» первой — только визуально, порядок в DOM не трогаем */
@@ -454,6 +464,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
   body.ph-chat .cab-send{flex:0 0 44px;width:44px;height:44px;padding:0 !important;border-radius:50% !important;font-size:0 !important;}
   body.ph-chat .cab-send::after{content:'➤';font-size:20px;}
   body.ph-chat #chatComposeStatus{flex:0 0 auto;margin:0 8px 2px !important;order:5;}
+  body.ph-chat .cab-rev-line{flex:0 0 auto;order:3;margin:0 6px;}
 }
 </style>
 </head>
@@ -1282,6 +1293,7 @@ const T = {
   u_h:{ru:"ч",uk:"год",en:"h",es:"h",de:"Std",pt:"h",fr:"h",pl:"godz",it:"h",he:"שע'",ja:"時間",ko:"시간"},
   u_kg:{ru:"кг",uk:"кг",en:"kg",es:"kg",de:"kg",pt:"kg",fr:"kg",pl:"kg",it:"kg",he:"ק\"ג",ja:"kg",ko:"kg"},
   u_years:{ru:"л.",uk:"р.",en:"y.o.",es:"años",de:"J.",pt:"anos",fr:"ans",pl:"lat",it:"anni",he:"שנים",ja:"歳",ko:"세"},
+  hdr_more:{ru:"Действия",uk:"Дії",en:"Actions",es:"Acciones",de:"Aktionen",pt:"Ações",fr:"Actions",pl:"Działania",it:"Azioni",he:"פעולות",ja:"操作",ko:"작업"},
   hdr_edit:{ru:"✎ Редактировать",uk:"✎ Редагувати",en:"✎ Edit",es:"✎ Editar",de:"✎ Bearbeiten",pt:"✎ Editar",fr:"✎ Modifier",pl:"✎ Edytuj",it:"✎ Modifica",he:"✎ עריכה",ja:"✎ 編集",ko:"✎ 편집"},
   hdr_delete:{ru:"✕ Удалить",uk:"✕ Видалити",en:"✕ Delete",es:"✕ Eliminar",de:"✕ Löschen",pt:"✕ Excluir",fr:"✕ Supprimer",pl:"✕ Usuń",it:"✕ Elimina",he:"✕ מחיקה",ja:"✕ 削除",ko:"✕ 삭제"},
   ab_grace:{ru:"Оплата просрочена. К оплате {due}. Пока всё работает — после льготного периода выдача новых доступов будет закрыта.",uk:"Оплату прострочено. До сплати {due}. Поки все працює — після пільгового періоду видача нових доступів буде закрита.",en:"Payment is overdue. Due: {due}. Everything still works — after the grace period, granting new access will be closed.",es:"Pago vencido. A pagar: {due}. Todo sigue funcionando; tras el periodo de gracia no podrás otorgar nuevos accesos.",de:"Zahlung überfällig. Offen: {due}. Noch funktioniert alles — nach der Karenzzeit ist die Vergabe neuer Zugänge gesperrt.",pt:"Pagamento em atraso. A pagar: {due}. Tudo ainda funciona — após o período de carência, novos acessos serão bloqueados.",fr:"Paiement en retard. Dû : {due}. Tout fonctionne encore — après le délai de grâce, l’octroi de nouveaux accès sera bloqué.",pl:"Płatność zaległa. Do zapłaty: {due}. Na razie wszystko działa — po okresie karencji nadawanie nowych dostępów zostanie zablokowane.",it:"Pagamento scaduto. Da pagare: {due}. Tutto funziona ancora — dopo il periodo di tolleranza non potrai concedere nuovi accessi.",he:"התשלום באיחור. לתשלום: {due}. הכול עדיין פועל — לאחר תקופת החסד לא ניתן יהיה להעניק גישות חדשות.",ja:"支払いが遅延しています。未払い: {due}。今は通常どおり利用できますが、猶予期間の後は新規アクセスの付与ができなくなります。",ko:"결제가 연체되었습니다. 미납: {due}. 아직 모두 정상 작동하지만, 유예 기간 후에는 새 액세스 부여가 차단됩니다."},
@@ -2498,6 +2510,14 @@ async function hydrateClient(id){
   }catch(_){}
 }
 
+// Меню «⋯» в шапке карточки: открыть/закрыть; клик мимо — закрыть.
+function toggleHdrMenu(e){ e.stopPropagation(); const m=document.getElementById('hdrMenu'); if(m) m.classList.toggle('open'); }
+document.addEventListener('click', ()=>{ const m=document.getElementById('hdrMenu'); if(m) m.classList.remove('open'); });
+// Подсказка «клиент в приложении» — теперь наверху «Обзора», не в шапке.
+function chanHint(c){
+  return chanOf(c)==='app' ? `<div style="font-size:var(--fs-cap);color:#8a6d1f;background:#fdf6e3;border:1px solid #f0e3bb;border-radius:8px;padding:7px 9px;margin:0 0 10px;line-height:1.5;">${t('chan_app_hint')}</div>` : '';
+}
+
 function renderClientDetail(){
   const c = clients.find(x=>x.id===selectedId);
   if(!c){ document.getElementById('placeholder').style.display='flex'; document.getElementById('clientDetail').style.display='none'; return; }
@@ -2511,28 +2531,28 @@ function renderClientDetail(){
   const metaParts = [c.email, c.phone, c.program||phaseLabel(c.phase)||'', c.age?(c.age+' '+t('u_years')):'', c.price].filter(Boolean);
   document.getElementById('clientHeaderEl').innerHTML=`
     <div class="client-header-top">
-      <div style="flex:1;">
-        <div class="client-header-name">${esc(c.name)} ${stBadge}${dataBadge(c)}${chanBadge(c)}${reviewBadge(c)}</div>
-        <div class="client-header-meta">${esc(metaParts.join(' · '))}</div>
-        ${chanOf(c)==='app'?`<div style="font-size:var(--fs-cap);color:#8a6d1f;background:#fdf6e3;border:1px solid #f0e3bb;border-radius:8px;padding:7px 9px;margin:6px 0;line-height:1.5;">${t('chan_app_hint')}</div>`:''}
-        ${reviewNote(c)}
-        ${c.start_date?`<div style="font-size:var(--fs-cap);color:#888;margin-top:2px;">${t('ov_start')}: ${c.start_date}${c.duration_weeks?' · '+c.duration_weeks+' '+t('u_wk'):''} · ${c.format||'zoom'}</div>`:''}
+      <div class="ch-line" style="flex:1;">
+        <div class="client-header-name">${esc(c.name)}<span class="ch-badges">${dataBadge(c)}${chanBadge(c)}${reviewBadge(c)}</span></div>
+        <div class="client-header-meta">${esc(metaParts.join(' · '))}${c.start_date?` · ${t('ov_start')}: ${c.start_date}${c.duration_weeks?' · '+c.duration_weeks+' '+t('u_wk'):''} · ${esc(c.format||'zoom')}`:''}</div>
       </div>
-      <div>
+      <div class="ch-ctl">
         <select onchange="quickStatus('${c.id}',this.value)" style="border:1px solid #ccc;padding:4px 8px;font-size:var(--fs-cap);font-family:inherit;background:#fff;outline:none;cursor:pointer;">
           <option value="active" ${st==='active'?'selected':''}>${statusLabel('active')}</option>
           <option value="new" ${st==='new'?'selected':''}>${statusLabel('new')}</option>
           <option value="pause" ${st==='pause'?'selected':''}>${statusLabel('pause')}</option>
           <option value="done" ${st==='done'?'selected':''}>${statusLabel('done')}</option>
         </select>
+        <div class="ch-more">
+          <button class="topbtn" onclick="toggleHdrMenu(event)" title="${t('hdr_more')}" aria-label="${t('hdr_more')}" style="font-size:18px;line-height:1;padding:4px 12px;">⋯</button>
+          <div class="ch-menu" id="hdrMenu">
+            <button class="topbtn" onclick="openEditClient('${c.id}')">${t('hdr_edit')}</button>
+            <button class="topbtn" onclick="generatePDF('${c.id}')">↓ PDF</button>
+            ${myRole==='owner'?`<button class="topbtn" onclick="reassignClient('${c.id}')">${t('hdr_reassign')}</button>`:''}
+            <button class="topbtn" onclick="downloadAct('${c.id}')">${t('hdr_act')}</button>
+            <button class="topbtn" onclick="deleteClient('${c.id}')" style="color:var(--alert)">${t('hdr_delete')}</button>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="header-actions">
-      <button class="topbtn" onclick="openEditClient('${c.id}')">${t('hdr_edit')}</button>
-      <button class="topbtn primary" onclick="generatePDF('${c.id}')">↓ PDF</button>
-      ${myRole==='owner'?`<button class="topbtn" onclick="reassignClient('${c.id}')">${t('hdr_reassign')}</button>`:''}
-      <button class="topbtn" onclick="downloadAct('${c.id}')">${t('hdr_act')}</button>
-      <button class="topbtn" onclick="deleteClient('${c.id}')" style="color:var(--alert)">${t('hdr_delete')}</button>
     </div>`;
 
   // Tabs — вид под профиль (скрыть нутри-вкладки для не-нутрициологов) + подсветка активной
@@ -2663,6 +2683,7 @@ function renderMessages(c){
       ${bubbles}
     </div>
 
+    ${c.review?`<div class="cab-rev-line">${reviewNote(c)}</div>`:''}
     <!-- Поле ввода СНИЗУ -->
     <div class="cab-compose" style="display:flex;gap:8px;margin-top:10px;align-items:flex-end;">
       <label title="Фото" style="flex:0 0 auto;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid #ccc;background:#fff;cursor:pointer;font-size:var(--fs-title);">📷<input type="file" accept="image/*" onchange="cabPickPhoto(this)" style="display:none;"></label>
@@ -3204,7 +3225,7 @@ function renderOverview(c){
 
   const dynBlock = renderDynamics(c);
   if(c.code) setTimeout(loadClientPayments, 0);   // после вставки HTML в DOM
-  return cards + complaintBlock + dynBlock + profile + expertBlock + payBlock + nextBlock + bioBlock + ankBlock;
+  return chanHint(c) + reviewNote(c) + cards + complaintBlock + dynBlock + profile + expertBlock + payBlock + nextBlock + bioBlock + ankBlock;
 }
 
 // ── VIA-L EXPERT: выдача / продление / отзыв срочного кода доступа ──
