@@ -55,13 +55,189 @@
   function tx(o, lang){ return (o && (o[lang] || o.en || o.ru)) || ''; }
   function arr(a){ return Array.isArray(a) ? a.map(String) : []; }
 
+  // ── ПОДГОНКА ПОД ЧЕЛОВЕКА (решение владельца 2026-10-03) ──────────────────────────────────
+  // Жалобы решают, КАКИЕ рычаги вообще годятся; всё остальное, что о человеке известно, решает, какой из них
+  // ему подходит. c (собирает страница, _focusCtx): профиль (возраст, ИМТ, активность, белок), состояния и
+  // лекарства из карточки, временные ограничения, привычки за 7 дней из дневных проходов, сон/стресс/приливы,
+  // давление и анализы. Добавки на выбор не влияют: ни одна из списка не меняет, подходит ли шаг.
+  //   veto  — рычаг этому человеку не даём: противопоказан, или менять нечего (уже делает / привычки нет);
+  //   bonus — по данным рычаг ему особенно к месту (+1 за признак, не больше +2: жалобы остаются главными);
+  //   skip  — номера шагов, которые к нему не относятся (не пьёт — шаг про алкоголь не показываем);
+  //   notes — предостережения под шагами из-за лекарств и состояний (тексты NOTE, ×12).
+  // Пороги анализов — в канонических единицах «Анализов» (ммоль/л, %, мл/мин).
+  // Предостережения под шагами (fit → notes). Фиксированный текст: без доз, без запретов вместо врача.
+  var NOTE = {
+    gluc:{ru:'Вы принимаете препараты от диабета: при новой нагрузке сахар может снижаться сильнее обычного. Держите под рукой быстрый перекус, а при слабости или дрожи остановитесь.',
+      uk:'Ви приймаєте препарати від діабету: при новому навантаженні цукор може знижуватися сильніше, ніж зазвичай. Тримайте під рукою швидкий перекус, а при слабкості чи тремтінні зупиніться.',
+      en:'You take diabetes medication: with new activity your blood sugar can drop more than usual. Keep a quick snack at hand, and stop if you feel weak or shaky.',
+      es:'Tomas medicación para la diabetes: con una actividad nueva el azúcar puede bajar más de lo habitual. Ten a mano un tentempié rápido y para si notas debilidad o temblor.',
+      de:'Du nimmst Diabetes-Medikamente: Bei neuer Belastung kann der Zucker stärker sinken als sonst. Halte einen schnellen Snack bereit und hör auf, wenn du dich schwach oder zittrig fühlst.',
+      pt:'Você toma remédio para diabetes: com uma atividade nova o açúcar pode cair mais que o normal. Tenha um lanche rápido à mão e pare se sentir fraqueza ou tremor.',
+      fr:'Vous prenez un traitement du diabète : avec une activité nouvelle, la glycémie peut baisser plus que d’habitude. Gardez une collation rapide à portée de main et arrêtez-vous en cas de faiblesse ou de tremblements.',
+      pl:'Przyjmujesz leki na cukrzycę: przy nowym wysiłku cukier może spadać bardziej niż zwykle. Miej pod ręką szybką przekąskę, a przy osłabieniu lub drżeniu przerwij.',
+      it:'Prendi farmaci per il diabete: con un’attività nuova la glicemia può scendere più del solito. Tieni a portata di mano uno spuntino rapido e fermati se ti senti debole o tremante.',
+      he:'אתם נוטלים תרופות לסוכרת: במאמץ חדש הסוכר עלול לרדת יותר מהרגיל. שמרו בהישג יד חטיף מהיר, ועצרו אם מופיעים חולשה או רעד.',
+      ja:'糖尿病の薬を飲んでいる場合、新しい運動で血糖がいつもより下がることがあります。すぐ食べられる軽食を手元に置き、力が抜けたり震えたりしたら中止してください。',
+      ko:'당뇨약을 복용 중이라면 새로운 운동으로 혈당이 평소보다 더 떨어질 수 있습니다. 바로 먹을 간식을 곁에 두고, 힘이 빠지거나 떨리면 멈추세요.'},
+    blood:{ru:'Вы принимаете препарат, разжижающий кровь: нагрузку повышайте постепенно. После падения или сильного ушиба обратитесь к врачу.',
+      uk:'Ви приймаєте препарат, що розріджує кров: навантаження підвищуйте поступово. Після падіння чи сильного удару зверніться до лікаря.',
+      en:'You take a blood thinner: increase the load gradually. After a fall or a hard knock, see a doctor.',
+      es:'Tomas un anticoagulante: aumenta la carga poco a poco. Tras una caída o un golpe fuerte, consulta a un médico.',
+      de:'Du nimmst einen Blutverdünner: Steigere die Belastung allmählich. Nach einem Sturz oder starken Stoß zum Arzt.',
+      pt:'Você toma anticoagulante: aumente a carga aos poucos. Depois de uma queda ou pancada forte, procure um médico.',
+      fr:'Vous prenez un anticoagulant : augmentez la charge progressivement. Après une chute ou un choc violent, consultez un médecin.',
+      pl:'Przyjmujesz lek rozrzedzający krew: obciążenie zwiększaj stopniowo. Po upadku lub silnym uderzeniu zgłoś się do lekarza.',
+      it:'Prendi un anticoagulante: aumenta il carico gradualmente. Dopo una caduta o un colpo forte, rivolgiti a un medico.',
+      he:'אתם נוטלים תרופה לדילול הדם: העלו את העומס בהדרגה. אחרי נפילה או מכה חזקה פנו לרופא.',
+      ja:'血液をサラサラにする薬を飲んでいる場合、負荷は少しずつ上げてください。転倒や強い打撲のあとは医師に相談を。',
+      ko:'혈액 희석제를 복용 중이라면 부하를 천천히 늘리세요. 넘어지거나 세게 부딪힌 뒤에는 의사에게 진료를 받으세요.'},
+    bp:{ru:'При высоком давлении не задерживайте дыхание на усилии: выдыхайте, когда поднимаете вес. После упражнений на полу вставайте не резко.',
+      uk:'При високому тиску не затримуйте дихання на зусиллі: видихайте, коли піднімаєте вагу. Після вправ на підлозі вставайте не різко.',
+      en:'With high blood pressure, don’t hold your breath during effort: breathe out as you lift. Get up slowly after floor exercises.',
+      es:'Con la tensión alta, no aguantes la respiración en el esfuerzo: exhala al levantar el peso. Tras los ejercicios en el suelo, levántate despacio.',
+      de:'Bei hohem Blutdruck nicht die Luft anhalten: beim Heben ausatmen. Nach Übungen am Boden langsam aufstehen.',
+      pt:'Com pressão alta, não prenda a respiração no esforço: expire ao levantar o peso. Depois de exercícios no chão, levante-se devagar.',
+      fr:'En cas de tension élevée, ne bloquez pas la respiration pendant l’effort : expirez en soulevant. Après les exercices au sol, relevez-vous lentement.',
+      pl:'Przy wysokim ciśnieniu nie wstrzymuj oddechu przy wysiłku: wydychaj, gdy podnosisz ciężar. Po ćwiczeniach na podłodze wstawaj powoli.',
+      it:'Con la pressione alta non trattenere il respiro durante lo sforzo: espira mentre sollevi. Dopo gli esercizi a terra alzati lentamente.',
+      he:'בלחץ דם גבוה אל תעצרו את הנשימה במאמץ: נשפו בזמן ההרמה. אחרי תרגילים על הרצפה קומו לאט.',
+      ja:'血圧が高い場合、力を入れるときに息を止めず、持ち上げるときに息を吐きましょう。床での運動のあとはゆっくり立ち上がってください。',
+      ko:'혈압이 높다면 힘을 줄 때 숨을 참지 말고, 들어 올릴 때 숨을 내쉬세요. 바닥 운동 후에는 천천히 일어나세요.'},
+    osteo:{ru:'При остеопорозе избегайте резких скручиваний и наклонов вперёд с весом. Программу лучше согласовать с врачом или тренером.',
+      uk:'При остеопорозі уникайте різких скручувань і нахилів уперед із вагою. Програму краще погодити з лікарем або тренером.',
+      en:'With osteoporosis, avoid sharp twists and forward bends with weight. It’s best to agree the programme with your doctor or a trainer.',
+      es:'Con osteoporosis, evita giros bruscos e inclinaciones hacia delante con peso. Mejor acordar el plan con tu médico o un entrenador.',
+      de:'Bei Osteoporose ruckartige Drehungen und Vorbeugen mit Gewicht vermeiden. Das Programm am besten mit Arzt oder Trainer abstimmen.',
+      pt:'Com osteoporose, evite torções bruscas e inclinações para a frente com peso. O ideal é combinar o plano com o médico ou um treinador.',
+      fr:'En cas d’ostéoporose, évitez les torsions brusques et les flexions vers l’avant avec charge. Mieux vaut valider le programme avec votre médecin ou un coach.',
+      pl:'Przy osteoporozie unikaj gwałtownych skrętów i skłonów w przód z ciężarem. Plan najlepiej uzgodnić z lekarzem lub trenerem.',
+      it:'Con l’osteoporosi evita torsioni brusche e piegamenti in avanti con il peso. Meglio concordare il programma con il medico o un allenatore.',
+      he:'באוסטאופורוזיס הימנעו מפיתולים חדים ומכפיפות קדימה עם משקל. עדיף לתאם את התוכנית עם רופא או מאמן.',
+      ja:'骨粗しょう症がある場合、重りを持っての急なひねりや前かがみは避けてください。内容は医師やトレーナーと相談するのが安心です。',
+      ko:'골다공증이 있다면 무게를 든 채 급하게 비틀거나 앞으로 숙이는 동작은 피하세요. 프로그램은 의사나 트레이너와 상의하는 것이 좋습니다.'},
+    joint:{ru:'Если упражнение отдаётся болью в суставе или спине, замените его более лёгким или уменьшите вес.',
+      uk:'Якщо вправа віддає болем у суглобі чи спині, замініть її легшою або зменште вагу.',
+      en:'If an exercise causes pain in a joint or your back, swap it for an easier one or lower the weight.',
+      es:'Si un ejercicio te causa dolor en una articulación o en la espalda, cámbialo por otro más fácil o baja el peso.',
+      de:'Wenn eine Übung im Gelenk oder Rücken schmerzt, ersetze sie durch eine leichtere oder nimm weniger Gewicht.',
+      pt:'Se um exercício causar dor numa articulação ou nas costas, troque por um mais leve ou reduza o peso.',
+      fr:'Si un exercice provoque une douleur articulaire ou dorsale, remplacez-le par un plus facile ou allégez la charge.',
+      pl:'Jeśli ćwiczenie powoduje ból stawu lub pleców, zamień je na lżejsze albo zmniejsz ciężar.',
+      it:'Se un esercizio provoca dolore a un’articolazione o alla schiena, sostituiscilo con uno più facile o riduci il peso.',
+      he:'אם תרגיל גורם לכאב במפרק או בגב, החליפו אותו בקל יותר או הקטינו משקל.',
+      ja:'関節や腰に痛みが出る運動は、軽いものに替えるか重さを減らしてください。',
+      ko:'관절이나 허리에 통증이 생기는 운동은 더 쉬운 동작으로 바꾸거나 무게를 줄이세요.'},
+    warf:{ru:'Вы принимаете варфарин: количество зелёных овощей не меняйте резко — от этого зависит действие препарата. Перемены в питании обсудите с врачом.',
+      uk:'Ви приймаєте варфарин: кількість зелених овочів не змінюйте різко — від цього залежить дія препарату. Зміни в харчуванні обговоріть із лікарем.',
+      en:'You take warfarin: don’t change the amount of green vegetables suddenly — it affects how the medicine works. Discuss changes in your diet with your doctor.',
+      es:'Tomas warfarina: no cambies de golpe la cantidad de verduras verdes, porque influye en el efecto del medicamento. Comenta los cambios de dieta con tu médico.',
+      de:'Du nimmst Warfarin: Ändere die Menge an grünem Gemüse nicht abrupt — davon hängt die Wirkung des Medikaments ab. Ernährungsänderungen mit dem Arzt besprechen.',
+      pt:'Você toma varfarina: não mude de repente a quantidade de verduras verdes — isso afeta a ação do remédio. Converse com o médico sobre mudanças na alimentação.',
+      fr:'Vous prenez de la warfarine : ne changez pas brusquement la quantité de légumes verts, cela modifie l’effet du médicament. Parlez des changements d’alimentation à votre médecin.',
+      pl:'Przyjmujesz warfarynę: nie zmieniaj gwałtownie ilości zielonych warzyw — od tego zależy działanie leku. Zmiany w diecie omów z lekarzem.',
+      it:'Prendi warfarin: non cambiare di colpo la quantità di verdure verdi, perché incide sull’effetto del farmaco. Parla dei cambi di alimentazione con il medico.',
+      he:'אתם נוטלים וורפרין: אל תשנו בבת אחת את כמות הירקות הירוקים — זה משפיע על פעולת התרופה. שינויים בתזונה כדאי לתאם עם הרופא.',
+      ja:'ワルファリンを飲んでいる場合、緑の野菜の量を急に変えないでください。薬の効き方に影響します。食事の変更は医師と相談を。',
+      ko:'와파린을 복용 중이라면 녹색 채소의 양을 갑자기 바꾸지 마세요. 약의 효과에 영향을 줍니다. 식단 변화는 의사와 상의하세요.'},
+    asthma:{ru:'При астме дышите спокойно, без задержек и напряжения. Если начинается приступ, остановитесь и используйте ваши обычные средства.',
+      uk:'При астмі дихайте спокійно, без затримок і напруження. Якщо починається напад, зупиніться й скористайтеся вашими звичними засобами.',
+      en:'With asthma, breathe calmly, without holding or straining. If an attack starts, stop and use your usual medication.',
+      es:'Con asma, respira con calma, sin retener ni forzar. Si empieza una crisis, para y usa tu medicación habitual.',
+      de:'Bei Asthma ruhig atmen, ohne Anhalten und ohne Anstrengung. Beginnt ein Anfall, aufhören und die gewohnten Mittel nehmen.',
+      pt:'Com asma, respire com calma, sem prender nem forçar. Se começar uma crise, pare e use seus medicamentos habituais.',
+      fr:'En cas d’asthme, respirez calmement, sans retenir ni forcer. Si une crise commence, arrêtez-vous et utilisez votre traitement habituel.',
+      pl:'Przy astmie oddychaj spokojnie, bez wstrzymywania i napinania. Jeśli zaczyna się napad, przerwij i użyj swoich zwykłych leków.',
+      it:'Con l’asma respira con calma, senza trattenere né forzare. Se inizia una crisi, fermati e usa i tuoi farmaci abituali.',
+      he:'באסתמה נשמו ברוגע, בלי עצירות ובלי מאמץ. אם מתחיל התקף — עצרו והשתמשו בתרופות הרגילות שלכם.',
+      ja:'ぜんそくがある場合、息を止めたり力んだりせず、落ち着いて呼吸してください。発作が始まったら中止し、いつもの薬を使いましょう。',
+      ko:'천식이 있다면 숨을 참거나 무리하지 말고 편하게 호흡하세요. 발작이 시작되면 멈추고 평소 쓰는 약을 사용하세요.'},
+    night:{ru:'Ночью вставайте не резко: сначала посидите минуту на краю кровати. Свет в коридоре — приглушённый, но достаточный, чтобы не споткнуться.',
+      uk:'Уночі вставайте не різко: спершу посидьте хвилину на краю ліжка. Світло в коридорі — приглушене, але достатнє, щоб не спіткнутися.',
+      en:'At night, get up slowly: sit on the edge of the bed for a minute first. Keep the hallway light dim but bright enough not to trip.',
+      es:'Por la noche, levántate despacio: primero siéntate un minuto en el borde de la cama. Luz del pasillo tenue, pero suficiente para no tropezar.',
+      de:'Nachts langsam aufstehen: erst eine Minute auf der Bettkante sitzen. Licht im Flur gedämpft, aber hell genug, um nicht zu stolpern.',
+      pt:'À noite, levante-se devagar: primeiro sente-se um minuto na beira da cama. Luz do corredor fraca, mas suficiente para não tropeçar.',
+      fr:'La nuit, levez-vous lentement : asseyez-vous d’abord une minute au bord du lit. Lumière du couloir tamisée, mais suffisante pour ne pas trébucher.',
+      pl:'W nocy wstawaj powoli: najpierw posiedź minutę na brzegu łóżka. Światło w korytarzu przygaszone, ale wystarczające, żeby się nie potknąć.',
+      it:'Di notte alzati lentamente: prima siediti un minuto sul bordo del letto. Luce del corridoio soffusa ma sufficiente per non inciampare.',
+      he:'בלילה קומו לאט: קודם שבו דקה על קצה המיטה. אור במסדרון — עמום, אבל מספיק כדי לא למעוד.',
+      ja:'夜はゆっくり起き上がり、まずベッドの端に1分ほど座ってください。廊下の明かりは暗めに、でもつまずかない程度に。',
+      ko:'밤에는 천천히 일어나 먼저 침대 가장자리에 1분쯤 앉아 계세요. 복도 불은 어둡게, 하지만 걸려 넘어지지 않을 만큼은 켜 두세요.'}
+  };
+  function has(a, v){ return arr(a).indexOf(v) >= 0; }
+  function num(v){ var n = parseFloat(v); return isFinite(n) ? n : null; }
+  function fit(L, c){
+    var r = { veto: false, bonus: 0, skip: [], notes: [] };
+    if (!c) return r;
+    var cond = c.conditions, meds = c.cond_meds, h = c.habits || {}, lab = c.labs || {};
+    var logged = Number(h.days) || 0;                  // привычки судим только при 3+ днях записей
+    var temp = arr(c.cond_temp).filter(function(v){ return v !== 'none_temp'; }).length > 0;   // травма, после операции, острое, обострение
+    var age = num(c.age), bmi = num(c.bmi), sys = num(c.bpSys), dia = num(c.bpDia);
+    var metab = has(cond, 'prediabetes') || has(cond, 't2d') || has(cond, 'fatty_liver')
+             || (num(lab.glucose) >= 5.6) || (num(lab.hba1c) >= 5.7) || (num(lab.tg) >= 1.7);
+    var b = 0, add = function(ok){ if (ok) b++; };
+    switch (L.key) {
+      case 'evening':
+        if (logged >= 3) {
+          if (!h.alc && !h.cafLate && !h.lateMeal) r.veto = true;     // нечего менять
+          if (!h.cafLate) r.skip.push(0);
+          if (!h.alc) r.skip.push(1);
+          if (!h.lateMeal) r.skip.push(2);
+        }
+        add(h.alc >= 2); add(h.cafLate >= 2); add(h.lateMeal >= 2);
+        break;
+      case 'strength':
+        if (c.cond_limit === 'yes' || temp || has(cond, 'heart_failure') || has(cond, 'cvd_event')
+            || has(cond, 'onco_active') || has(cond, 'pregnancy') || (sys >= 160) || (dia >= 100)) r.veto = true;
+        if (h.strength >= 2) r.veto = true;              // уже делает две силовые в неделю
+        add(age >= 50); add(has(cond, 'osteoporosis')); add(bmi >= 27 || metab);
+        add(c.act_freq === 'none' || c.act_freq === 'low');
+        if (has(meds, 'glucose_meds')) r.notes.push('gluc');
+        if (has(meds, 'warfarin') || has(meds, 'doac')) r.notes.push('blood');
+        if (has(meds, 'bp_meds') || has(cond, 'hypertension')) r.notes.push('bp');
+        if (has(cond, 'osteoporosis')) r.notes.push('osteo');
+        if (has(cond, 'osteoarthritis') || has(cond, 'back') || has(cond, 'autoimmune_joint')) r.notes.push('joint');
+        break;
+      case 'protein':
+        if (has(cond, 'ckd') || (num(lab.egfr) != null && num(lab.egfr) < 60) || has(cond, 'ed_history')) r.veto = true;
+        if (c.protein === 'high') r.veto = true;          // белка и так много
+        add(c.protein === 'low' || c.protein === 'vegan'); add(age >= 60 || has(cond, 'osteoporosis')); add(h.strength >= 1);
+        break;
+      case 'walk':
+        if (temp) r.veto = true;
+        add(metab); add(bmi >= 27); add(logged >= 3 && h.sedentary * 2 >= logged);
+        if (has(meds, 'glucose_meds')) r.notes.push('gluc');
+        break;
+      case 'order':
+        if (has(cond, 'ed_history')) r.veto = true;      // правила про еду при РПП в анамнезе не даём
+        add(metab); add(bmi >= 27);
+        if (has(meds, 'warfarin')) r.notes.push('warf');
+        break;
+      case 'breath':
+        add((num(h.stress) >= 5) || c.chronic_stress === 'high' || c.chronic_stress === 'needs_recovery');
+        add(has(cond, 'hypertension') || (sys >= 135));
+        if (has(cond, 'asthma')) r.notes.push('asthma');
+        break;
+      case 'cool':
+        add(h.hf >= 3);
+        break;
+      case 'bed':
+        if (has(meds, 'bp_meds') || (age >= 70)) r.notes.push('night');
+        break;
+    }
+    r.bonus = Math.min(b, 2);
+    return r;
+  }
+
   // Сколько весит рычаг для этого человека: главная жалоба — 2, «также беспокоит» — 1.
   // Короткий сон по прибору (меньше 6,5 ч) добавляет балл рычагам сна: состояние тоже участвует в выборе.
+  // Дальше — подгонка fit: запрет обнуляет, признаки из данных добавляют (только если жалобы рычаг уже выбрали).
   function score(L, o){
     var main = arr(o.main), also = arr(o.also), s = 0;
     L.cover.forEach(function(c){ if (main.indexOf(c) >= 0) s += 2; else if (also.indexOf(c) >= 0) s += 1; });
     var sh = o.state && Number(o.state.sleepHours);
     if (s > 0 && isFinite(sh) && sh > 0 && sh < 6.5 && L.cover.indexOf('sleep') >= 0) s += 1;
+    if (s > 0 && o.ctx) { var f = fit(L, o.ctx); s = f.veto ? 0 : s + f.bonus; }
     return s;
   }
 
@@ -212,7 +388,12 @@
       h = head(T('title')) + '<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.5;margin-top:6px;">' + esc(T(st.mode === 'base' ? 'baseQ' : 'weekQ')) + '</div>'
         + scoreRows(st.scoreRows) + cardsLink;
     } else if (st.mode === 'run' && L) {
-      var steps = L.s.map(function(x){ return line(tx(x, lang)); }).join('');
+      // Шаги, которые к человеку не относятся, не показываем; под шагами — предостережения из fit (st.skip/st.notes).
+      var skip = (Array.isArray(st.skip) && st.skip.length < L.s.length) ? st.skip : [];   // все шаги лишние — показываем как есть
+      var steps = L.s.filter(function(x, i){ return skip.indexOf(i) < 0; }).map(function(x){ return line(tx(x, lang)); }).join('')
+        + (st.notes || []).filter(function(k){ return NOTE[k]; }).map(function(k){
+            return '<div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.5;margin-top:8px;padding-left:9px;border-left:2px solid rgba(226,185,90,.55);">' + esc(tx(NOTE[k], lang)) + '</div>';
+          }).join('');
       var tags = (st.covers && st.covers.length)
         ? '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;"><span style="font-size:var(--fs-cap);color:var(--t3);">' + esc(T('helps')) + '</span>'
           + st.covers.map(function(c){ return '<span style="font-size:var(--fs-cap);font-weight:600;color:rgb(' + ACC + ');border:1px solid rgba(' + ACC + ',.36);border-radius:999px;padding:2px 9px;">' + esc(c) + '</span>'; }).join('') + '</div>' : '';
@@ -271,6 +452,7 @@
     cover: function(k){ var L = byKey(k); return L ? L.cover.slice() : []; },
     metrics: function(k){ var L = byKey(k); return L ? L.metrics.slice() : []; },
     text: function(k, lang){ var L = byKey(k); return L ? { title: tx(L.t, lang), steps: L.s.map(function(x){ return tx(x, lang); }) } : null; },
+    fit: function(k, c){ var L = byKey(k); return L ? fit(L, c) : null; },
     pick: pick, left: left, decide: decide
   };
 })();

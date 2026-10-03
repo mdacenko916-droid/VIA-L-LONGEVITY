@@ -6789,7 +6789,29 @@ function _focusOpts(){
   var c=_cmpGet()||{}, keys=_cmpKeysAll();
   var main=(c.items||[]).filter(function(k){ return keys.indexOf(k)>=0; });
   var sh=null; try{ sh=_expAvg(_expRows(Date.now()-7*86400000,Date.now()),'sleepHours'); }catch(e){}
-  return { main:main, also:keys.filter(function(k){ return main.indexOf(k)<0; }), state:{ sleepHours:sh } };
+  return { main:main, also:keys.filter(function(k){ return main.indexOf(k)<0; }), state:{ sleepHours:sh }, ctx:_focusCtx() };
+}
+// Всё, что известно о человеке, для подгонки фокуса (levers.js → fit): карточка (возраст, ИМТ, активность, белок,
+// состояния, лекарства, временные ограничения), привычки и состояние за 7 дней из дневных проходов, давление, анализы.
+function _focusCtx(){
+  var P={}; try{ P=JSON.parse(localStorage.getItem('vialp_profile')||'{}')||{}; }catch(e){}
+  var w=parseFloat(P.weight), ht=parseFloat(P.height);
+  var rows=[]; try{ var since=Date.now()-7*86400000; rows=(JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[]).filter(function(r){ return r && (r.ts||0)>=since; }); }catch(e){}
+  var cnt=function(f){ return rows.filter(f).length; };
+  var avg=function(k){ var a=rows.map(function(r){ return Number(r[k]); }).filter(function(v){ return isFinite(v)&&v>0; }); return a.length?a.reduce(function(s,v){ return s+v; },0)/a.length:null; };
+  var bpN=rows.filter(function(r){ return r.bp_sys; }).length;
+  var labs={}; try{ var L=(typeof _labsGet==='function')?_labsGet():{}; ['glucose','hba1c','tg','egfr'].forEach(function(k){ if(L[k]&&L[k].v!=null) labs[k]=L[k].v; }); }catch(e){}
+  return {
+    age:P.age, bmi:(w>0&&ht>0)?w/Math.pow(ht/100,2):null, act_freq:P.act_freq||'', protein:P.protein_intake||'',
+    chronic_stress:P.chronic_stress||'', conditions:P.conditions||[], cond_meds:P.cond_meds||[], cond_temp:P.cond_temp||[], cond_limit:P.cond_limit||'',
+    habits:{ days:rows.length,
+      alc:cnt(function(r){ return r.alc==='yes'; }), cafLate:cnt(function(r){ return r.caffeine_late==='one'||r.caffeine_late==='many'; }),
+      lateMeal:cnt(function(r){ return r.last_meal==='late'||r.last_meal==='verylate'; }),
+      strength:cnt(function(r){ return r.move_today==='strength'; }),
+      sedentary:cnt(function(r){ return r.move_today==='sedentary'; }),
+      hf:cnt(function(r){ return r.hf_count && r.hf_count!=='none'; }), stress:avg('stress') },
+    bpSys:bpN>=2?avg('bp_sys'):null, bpDia:bpN>=2?avg('bp_dia'):null, labs:labs
+  };
 }
 function _focusStart(lever,by,week){
   var now=Date.now(), base=_expRows(now-_EXP_WIN*86400000,now), b={}, keys=window.vialLevers.metrics(lever);
@@ -6839,6 +6861,7 @@ function _focusState(){
   if(!r.ready){
     st.mode='run'; st.day=Math.min(r.days+1,_EXP_WIN); st.today=_expDoneToday();
     st.covers=V.cover(e.lever).filter(function(k){ return keys.indexOf(k)>=0; }).map(_cmpLbl);
+    var ft=V.fit?V.fit(e.lever,opts.ctx):null; if(ft){ st.skip=ft.skip; st.notes=ft.notes; }   // лишние шаги прячем, предостережения по лекарствам и состояниям
     var daily=[]; try{ daily=JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[]; }catch(x){}
     st.marks=[]; for(var i=0;i<_EXP_WIN;i++){ var dk=_dayKey(new Date(e.startTs+i*DAY)); var rec=daily.filter(function(x){ return x.day===dk; })[0]; st.marks.push((rec&&rec.exp_done)||''); }
     return st;
