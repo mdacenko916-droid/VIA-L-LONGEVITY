@@ -36,6 +36,7 @@ cp "$IP/push-bridge.js"           "$WWW/"   # пуши «наставник от
 cp "$IP/tts-bridge.js"            "$WWW/"   # «Слушать разбор» голосом телефона (2026-10-03)
 cp "$IP/intake.js"                "$WWW/"   # «Мои приёмы» — общий модуль VIA-L и EXPERT (2026-09-18)
 cp "$IP/levers.js"                "$WWW/"   # карта рычагов и блок «Фокус недели» (2026-10-02)
+cp "$IP/courses.js"               "$WWW/"   # проект «КУРСЫ»: карточка дня в «Фокусе недели» (2026-10-03)
 cp "$IP/complaint-table.js"       "$WWW/"   # таблица «что беспокоит → что сделать» в памятке дня (2026-10-01)
 cp "$IP/evidence.js"              "$WWW/"   # «На чём основано» — список работ под разбором (2026-09-20)
 cp "$IP/evidence-registry.json"   "$WWW/"   # реестр источников (tools/build-evidence-registry.py)

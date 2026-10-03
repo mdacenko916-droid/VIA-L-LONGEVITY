@@ -407,8 +407,12 @@
         return '<button type="button" onclick="_expMark(\'' + v + '\')" style="flex:1;padding:9px 10px;border-radius:10px;font-size:var(--fs-body);font-family:inherit;font-weight:600;cursor:pointer;'
           + (on ? 'background:rgb(' + ACC + ');color:#0e1413;border:1px solid rgb(' + ACC + ');' : 'background:transparent;color:var(--t1);border:1px solid rgba(' + ACC + ',.36);') + '">' + esc(label) + '</button>';
       };
+      // Карточка дня (проект «КУРСЫ», courses.js): новая каждый день недели, над шагами.
+      var dc = (window.vialCourses && window.vialCourses.card) ? window.vialCourses.card(L.key, st.day || 1, lang, skip) : null;
+      var dayCard = dc ? box('more', dc.title, '<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.55;">' + esc(dc.body) + '</div>') : '';
       h = head(T('title'), T('day').replace('{d}', st.day || 1))
         + '<div style="font-size:var(--fs-body);font-weight:600;color:var(--t1);line-height:1.35;margin-top:6px;">' + esc(tx(L.t, lang)) + '</div>'
+        + dayCard
         + box('do', T('what'), steps + tags + dots
             + '<div style="display:flex;gap:8px;margin-top:10px;">' + B('yes', T('did'), st.today === 'yes') + B('no', T('didnt'), st.today === 'no') + '</div>')
         + cardsLink;
