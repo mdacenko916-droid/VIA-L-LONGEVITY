@@ -9586,7 +9586,8 @@ function _labUnitMatch(raw, d){
     'пг/мл':'pg/mL','мг/л':'mg/L','мг/дл':'mg/dL','г/л':'g/L','г/дл':'g/dL','ед/л':'U/L','ме/л':'IU/L','ме/мл':'IU/mL',
     'мед/л':'mIU/L','мме/л':'mIU/L','мкме/мл':'µIU/mL','мкед/мл':'µIU/mL','мл/мин':'mL/min','мл/мин/1.73м2':'mL/min'};
   var n=function(x){ return String(x).toLowerCase().replace(/\s+/g,'').replace(/μ/g,'µ').replace(/^mc/,'µ').replace(/^u(?=[a-z])/,'µ'); };
-  var r=String(raw).trim(), lat=CY[n(r)]||r;
+  var r=String(raw).trim().replace(/\/\s*1[.,]73.*$/,''), lat=CY[n(r)]||r;   // «mL/min/1,73 m²» (СКФ) → mL/min
+  if(/^mu\/l$/i.test(String(lat).replace(/\s+/g,''))) lat='mIU/L';                      // «mU/L» (ТТГ) = mIU/L
   for(var i=0;i<d.u.length;i++){ if(n(d.u[i][0])===n(lat)) return d.u[i][0]; }
   return null;
 }
