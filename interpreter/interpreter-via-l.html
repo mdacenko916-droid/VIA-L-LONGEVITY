@@ -2380,7 +2380,7 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
     <!-- ✕ живёт ВНЕ панели (#panelClose): панель прокручивается и имеет transform, поэтому
          внутри неё кнопку нельзя ни зафиксировать, ни поставить на уровень переключателя языка. -->
     <div style="margin-bottom:8px;">
-      <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--t1);" data-t="card_title">Мой профиль</div>
+      <div id="cardTitle" style="font-family:'Playfair Display',serif;font-size:22px;color:var(--t1);" data-t="card_title">Мой профиль</div>
     </div>
     <div id="weeklyReport" style="margin-bottom:18px;"></div>
     <div id="monthlyReport" style="margin-bottom:18px;"></div>
@@ -4072,9 +4072,9 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
     <i class="ph ph-sun bottom-nav-icon" aria-hidden="true"></i>
     <span data-t="nav_today">Today</span>
   </button>
-  <button class="bottom-nav-item" id="nav-approach" onclick="openApproach()">
-    <i class="ph ph-stack bottom-nav-icon" aria-hidden="true"></i>
-    <span data-t="nav_approach">Our approach</span>
+  <button class="bottom-nav-item" id="nav-path" onclick="navTo('path')">
+    <i class="ph ph-chart-line-up bottom-nav-icon" aria-hidden="true"></i>
+    <span data-t="nav_path">My path</span>
   </button>
   <button class="bottom-nav-item" id="nav-guide" onclick="location.href='./my-specialist.html'">
     <i class="ph ph-signpost bottom-nav-icon" aria-hidden="true"></i>
@@ -4537,7 +4537,9 @@ const _STRK={
   cort_wind:{en:"⚡ Second wind in the evening",ru:"⚡ Второе дыхание вечером",uk:"⚡ Друге дихання ввечері",es:"⚡ Segundo aire por la noche",de:"⚡ Zweiter Wind am Abend",pt:"⚡ Segundo fôlego à noite",fr:"⚡ Second souffle le soir",pl:"⚡ Drugi oddech wieczorem",it:"⚡ Secondo respiro la sera",he:"⚡ אנרגיה שנייה בערב",ja:"⚡ 夜になると元気が戻る",ko:"⚡ 저녁에 다시 도는 기운"},
 };
 Object.keys(_STRK).forEach(function(k){Object.keys(_STRK[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_STRK[k][l];});});
-const _NAVC={nav_card:{en:"My Profile",ru:"Мой профиль",uk:"Мій профіль",es:"Mi perfil",de:"Mein Profil",pt:"Meu perfil",fr:"Mon profil",pl:"Mój profil",it:"Il mio profilo",he:"הפרופיל שלי",ja:"マイプロフィール",ko:"내 프로필"}};
+const _NAVC={nav_card:{en:"My Profile",ru:"Мой профиль",uk:"Мій профіль",es:"Mi perfil",de:"Mein Profil",pt:"Meu perfil",fr:"Mon profil",pl:"Mój profil",it:"Il mio profilo",he:"הפרופיל שלי",ja:"マイプロフィール",ko:"내 프로필"},
+  // «Мой путь» (2026-10-04): вкладка вместо «Наш подход» — то, к чему возвращаются: динамика, анализы, добавки, разборы
+  nav_path:{en:"My path",ru:"Мой путь",uk:"Мій шлях",es:"Mi camino",de:"Mein Weg",pt:"Meu caminho",fr:"Mon parcours",pl:"Moja droga",it:"Il mio percorso",he:"הדרך שלי",ja:"私の歩み",ko:"나의 여정"}};
 Object.keys(_NAVC).forEach(function(k){Object.keys(_NAVC[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_NAVC[k][l];});});
 const _HLPK={help_why:{en:"Why we assess this",ru:"Зачем мы это оцениваем?",uk:"Навіщо ми це оцінюємо?",es:"¿Por qué lo evaluamos?",de:"Warum wir das einschätzen",pt:"Por que avaliamos isso",fr:"Pourquoi nous évaluons cela",pl:"Dlaczego to oceniamy",it:"Perché lo valutiamo",he:"למה אנחנו מעריכים זאת",ja:"なぜ評価するのか",ko:"왜 평가하나요"},help_close:{en:"Got it",ru:"Понятно",uk:"Зрозуміло",es:"Entendido",de:"Verstanden",pt:"Entendi",fr:"Compris",pl:"Rozumiem",it:"Capito",he:"הבנתי",ja:"了解",ko:"확인"}};
 Object.keys(_HLPK).forEach(function(k){Object.keys(_HLPK[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_HLPK[k][l];});});
@@ -5001,9 +5003,11 @@ function navTo(tab){
   document.querySelectorAll('.bottom-nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+tab)?.classList.add('active');
   const cp=document.getElementById('cardPanel');
-  if(cp){cp.style.display=(tab==='card')?'block':'none';
-    document.body.classList.toggle('card-open', tab==='card');   // прячет футер главной: он просвечивал из-под панели карточки
-    if(tab==='card'){renderCard();const _m=document.querySelector('main');if(_m)_m.style.display='none';cp.scrollTop=0;}}   // навигацию НЕ прячем: «Мой профиль» — вкладка, а не модалка
+  var _isCp=(tab==='card'||tab==='path');
+  if(_isCp){ window._cardMode=tab; var _ct=document.getElementById('cardTitle'); if(_ct){ var _ck=(tab==='path')?'nav_path':'card_title'; _ct.setAttribute('data-t',_ck); _ct.textContent=t(_ck); } }
+  if(cp){cp.style.display=_isCp?'block':'none';
+    document.body.classList.toggle('card-open', _isCp);   // прячет футер главной: он просвечивал из-под панели карточки
+    if(_isCp){renderCard();const _m=document.querySelector('main');if(_m)_m.style.display='none';cp.scrollTop=0;}}   // навигацию НЕ прячем: «Мой профиль» — вкладка, а не модалка
   if(tab==='today'){
     // «Сегодня» = домашний дашборд дня. Прошёл сегодня → весь дашборд из снимка; не прошёл → на проход.
     if(typeof _passedToday==='function'&&_passedToday()&&typeof _showTodayDashboard==='function'&&_showTodayDashboard()){ /* полный дашборд дня показан */ }
@@ -5574,6 +5578,9 @@ function renderCard(){
     +'<div class="vp-txt"><b>'+_compTxt+'</b><span>'+_memberTxt+'</span></div></div>'
     +'</div>';
 
+  // «Мой путь» — та же панель без шапки профиля: только то, что показывает изменения
+  var _pathMode=(window._cardMode==='path');
+  if(_pathMode) html='<div class="vcard-wrap">';
   html+='<div class="vcard-grid">';
   // Секции собираются в переменные, затем выводятся в порядке логики/важности (см. join ниже)
   var _secAct='',_secNut='',_secSup='',_secBal='',_secRhythm='',_secStress='',_secLife='',_secGoal='',_secDyn='',_secHist='',_secBackup='',_secSource='',_secLegal='';
@@ -5885,8 +5892,14 @@ function renderCard(){
   // «Правовая информация» — всегда последняя.
   // Траектория по жалобе — первой: это ответ на «стало ли легче», ради которого человек и ведёт дневник.
   var _secCmp=(typeof _cmpTrajHTML==='function')?_cmpTrajHTML():'';
-  html+=[_secCmp,_secGoal,_secAct,_secNut,_secSup,_secHealth,_secStress,_secBal,_secRhythm,_secLife,   // «что я о себе указал»
-         _secDyn,_secVai,_secLabs,_secDaily,_secHist,_secSource,_secIntake,_secNotify,_secDisplay,_secSub,_secBackup,_secLegal].join('');     // «что показывает система / инструменты» + VAI-калькулятор
+  // «Наш подход» — бывшая вкладка навигации, читается один раз → секция профиля рядом с копией и правовым
+  var _apB=String(t('approach_body')||'').replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}).replace(/VIA[·\-]L/g,function(m){return '<span style="color:var(--gold-lt);font-weight:600;">'+m+'</span>';});
+  var _secApproach=_vcSec('<i class="ph ph-stack"></i>',t('nav_approach'),'<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.7;white-space:pre-line;">'+_apB+'</div>',false,true);
+  if(_pathMode)   // «Мой путь»: траектория, динамика, анализы, добавки и приёмы, дневник, история разборов
+    html+=[_secCmp,_secDyn,_secLabs,_secSup,_secDaily,_secHist].join('');
+  else            // «Мой профиль»: что я о себе указал + настройки и инструменты
+    html+=[_secGoal,_secAct,_secNut,_secHealth,_secStress,_secBal,_secRhythm,_secLife,
+           _secVai,_secSource,_secIntake,_secNotify,_secDisplay,_secSub,_secBackup,_secApproach,_secLegal].join('');
   html+='</div>'; // .vcard-grid
   html+='</div>'; // .vcard-wrap
 
@@ -5895,6 +5908,8 @@ function renderCard(){
   if(typeof renderWeeklyReportUI==='function')renderWeeklyReportUI();
   if(typeof renderMonthlyReportUI==='function')renderMonthlyReportUI();
   if(typeof renderAiMemoryUI==='function')renderAiMemoryUI();
+  // недельный/месячный итог и память — часть «Моего пути», в профиле их не показываем
+  ['weeklyReport','monthlyReport','aiMemoryBox'].forEach(function(id){ var e=document.getElementById(id); if(e) e.style.display=_pathMode?(id==='aiMemoryBox'?'flex':''):'none'; });
 }
 
 // ══ МЕСЯЧНЫЙ AI-РАЗБОР (порт VIO: то же окно weeklyTrend, 30 дней) ═══════════
@@ -13101,7 +13116,7 @@ function closeCircModal(){
     history.replaceState(null,'',location.origin+location.pathname);   // чистим адрес
     var go=function(){
       if(tab==='approach'){ if(typeof openApproach==='function') openApproach(); }
-      else if(tab==='card'||tab==='today'){ if(typeof navTo==='function') navTo(tab); }
+      else if(tab==='card'||tab==='today'||tab==='path'){ if(typeof navTo==='function') navTo(tab); }
       // Приход из уведомления: открыть «Памятку дня» сразу на утренней части.
       try{ if(_plan==='morning' && typeof openDayPlanPanel==='function') setTimeout(openDayPlanPanel,400); }catch(e){}
     };

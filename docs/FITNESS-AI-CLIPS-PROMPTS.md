@@ -121,8 +121,12 @@ bouncing or half-repetitions`.
 **Жим над головой сидя** · кадр 07
 > Sitting upright on the chair holding a dumbbell in each hand at shoulder height, the woman presses both dumbbells straight up overhead, then lowers them back to her shoulders.
 
-**«Прогулка фермера»** · кадр 04
-> Holding a dumbbell in each hand at her sides, shoulders down and back straight, the woman walks slowly and steadily across the room from left to right.
+**«Прогулка фермера» на месте** · кадр 04
+> Holding a heavy dumbbell in each hand at her sides, arms straight, shoulders down and back, chest up, the woman marches slowly in place on the mat, lifting each knee to hip height in turn. Her torso stays upright and does not lean to either side, the dumbbells do not swing.
+
+⚠️ 2026-10-04: ходьба через комнату у Veo не получается (кадр неподвижен, а ведущая уходит).
+Заменено на шаг на месте с гантелями: польза та же (хват, осанка, корпус держит вес), клип зацикливается.
+Названия в планах тренировок не меняем — упражнение то же.
 
 **Мини-прыжки на месте** · кадр 01
 > The woman performs small light jumps in place, landing softly on the balls of her feet with knees slightly bent, arms relaxed at her sides.
@@ -183,6 +187,19 @@ bouncing or half-repetitions`.
 
 ### Одиночные кадры (движение без амплитуды)
 
-Планка · «прогулка фермера» · мини-прыжки · стойка на одной ноге · шаг на месте — хватает одного кадра
+Планка · «прогулка фермера» на месте · мини-прыжки · стойка на одной ноге · шаг на месте — хватает одного кадра
 из папки ведущего и короткого текста движения из §4: удержание, ходьба или мелкие повторы генератор
 делает без подсказок об амплитуде.
+
+**Планка — фото, не видео (решение владельца 2026-10-04).** Упражнение статичное: два фото из ChatGPT
+сбоку, всё тело в кадре — планка на предплечьях и на прямых руках. Таймер, счёт и сигнал 3-2-1 рисует
+проигрыватель поверх фото (`FITNESS-APP-MODEL.md` §12.3), в картинку их не вшивать.
+Облегчённый вариант — планка на коленях, третье фото. Хвост кадра для лёжа на полу — без слова «Standing».
+
+| Фото | Текст для ChatGPT (+ эталон ведущей) |
+|---|---|
+| Планка на прямых руках | `Side view, a straight-arm plank on the teal mat: hands directly under the shoulders, arms straight, legs extended back, toes on the mat, body in one straight line from head to heels, hips level, neck neutral, gaze down at the mat.` |
+| Планка на коленях | `Side view, a kneeling forearm plank on the teal mat: forearms on the mat, elbows directly under the shoulders, knees on the mat, feet slightly raised, body in one straight line from head to knees, hips level, neck neutral, gaze down at the mat.` |
+
+Хвост: `Same woman, same clothes, same room as in the reference image. On the teal mat. Camera at waist
+height, whole body including head and feet fully visible. Photorealistic, no text, no logos, 16:9.`
