@@ -2382,10 +2382,11 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
     <div style="margin-bottom:8px;">
       <div id="cardTitle" style="font-family:'Playfair Display',serif;font-size:22px;color:var(--t1);" data-t="card_title">Мой профиль</div>
     </div>
-    <div id="weeklyReport" style="margin-bottom:18px;"></div>
+    <div id="cardBody"></div>
+    <!-- итоги и память — под графиком «Моего пути» (в профиле скрыты) -->
+    <div id="weeklyReport" style="margin:18px 0;"></div>
     <div id="monthlyReport" style="margin-bottom:18px;"></div>
     <div id="aiMemoryBox" style="margin-bottom:18px;display:flex;flex-direction:column;gap:10px;"></div>
-    <div id="cardBody"></div>
     <div id="historyList"></div>
   </div>
 </div>
@@ -5735,7 +5736,7 @@ function renderCard(){
   if(dynInner && !_trendsShown){ dynInner+='<div class="vc-empty" style="margin-top:8px;line-height:1.5;">'+L({ru:'Мини-графики (HRV, сон, энергия…) появятся после нескольких заходов — данные копятся.',uk:'Міні-графіки (HRV, сон, енергія…) зʼявляться після кількох заходів — дані накопичуються.',en:'Mini-charts (HRV, sleep, energy…) appear after a few check-ins — data is still accumulating.',es:'Los mini-gráficos (HRV, sueño, energía…) aparecen tras varios análisis — se están acumulando datos.',de:'Mini-Diagramme (HRV, Schlaf, Energie…) erscheinen nach einigen Check-ins — Daten sammeln sich noch.',pt:'Mini-gráficos (HRV, sono, energia…) aparecem após alguns registros — os dados estão se acumulando.',fr:'Les mini-graphiques (HRV, sommeil, énergie…) apparaissent après quelques bilans — les données sʼaccumulent.',pl:'Mini-wykresy (HRV, sen, energia…) pojawią się po kilku analizach — dane się gromadzą.',it:'I mini-grafici (HRV, sonno, energia…) compaiono dopo alcuni check-in — i dati si stanno accumulando.',he:'מיני-גרפים (HRV, שינה, אנרגיה…) יופיעו אחרי כמה בדיקות — הנתונים מצטברים.',ja:'ミニグラフ（HRV・睡眠・エネルギー…）は数回の記録後に表示されます——データを蓄積中です。',ko:'미니 차트(HRV, 수면, 에너지…)는 몇 번의 기록 후 표시됩니다 — 데이터가 쌓이는 중입니다.'})+'</div>'; }
   // Новичок (данных ещё нет): объясняем, что динамика набирается — а не «пусто/баг»
   if(!dynInner)dynInner='<div class="vc-empty" style="line-height:1.5;">'+L({ru:'Здесь появится ваша динамика — она набирается с каждым анализом. Загляните через пару заходов.',uk:'Тут зʼявиться ваша динаміка — вона накопичується з кожним аналізом. Завітайте за кілька заходів.',en:'Your dynamics will appear here — they build up with each check-in. Come back after a couple of check-ins.',es:'Aquí aparecerá tu evolución — se acumula con cada análisis. Vuelve tras un par de análisis.',de:'Hier erscheint deine Entwicklung — sie baut sich mit jedem Check-in auf. Schau nach ein paar Check-ins wieder vorbei.',pt:'Sua evolução aparecerá aqui — acumula-se a cada análise. Volte após alguns registros.',fr:'Votre évolution apparaîtra ici — elle se construit à chaque bilan. Revenez après quelques bilans.',pl:'Tu pojawi się Twoja dynamika — buduje się z każdą analizą. Wróć po kilku analizach.',it:'Qui apparirà la tua evoluzione — si accumula a ogni analisi. Torna dopo qualche check-in.',he:'כאן תופיע הדינמיקה שלך — היא נבנית עם כל בדיקה. חזרו אחרי כמה בדיקות.',ja:'ここに変化が表示されます——分析ごとに蓄積されます。数回後にまたご覧ください。',ko:'여기에 변화가 표시됩니다 — 분석할 때마다 쌓입니다. 몇 번 후에 다시 확인하세요.'})+'</div>';
-  _secDyn=_vcSec('dynamics',L({ru:'Динамика показателей',uk:'Динаміка показників',en:'Metric trends',es:'Tendencias de métricas',de:'Verlauf der Werte',pt:'Tendências das métricas',fr:'Tendances des mesures',pl:'Trendy wskaźników',it:'Andamento dei parametri',he:'מגמות המדדים',ja:'指標の推移',ko:'지표 추이'}),dynInner,false,true);
+  _secDyn=_vcSec('dynamics',L({ru:'Динамика показателей',uk:'Динаміка показників',en:'Metric trends',es:'Tendencias de métricas',de:'Verlauf der Werte',pt:'Tendências das métricas',fr:'Tendances des mesures',pl:'Trendy wskaźników',it:'Andamento dei parametri',he:'מגמות המדדים',ja:'指標の推移',ko:'지표 추이'}),dynInner,window._cardMode==='path',true);   // в «Моём пути» график открыт сразу
 
   // Секция «Памятка дня» убрана из профиля 2026-08-30 (владелец): тот же план открывается на «Сегодня».
 
@@ -5896,7 +5897,7 @@ function renderCard(){
   var _apB=String(t('approach_body')||'').replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}).replace(/VIA[·\-]L/g,function(m){return '<span style="color:var(--gold-lt);font-weight:600;">'+m+'</span>';});
   var _secApproach=_vcSec('<i class="ph ph-stack"></i>',t('nav_approach'),'<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.7;white-space:pre-line;">'+_apB+'</div>',false,true);
   if(_pathMode)   // «Мой путь»: траектория, динамика, анализы, добавки и приёмы, дневник, история разборов
-    html+=[_secCmp,_secDyn,_secLabs,_secSup,_secDaily,_secHist].join('');
+    html+=[_secDyn,_secCmp,_secLabs,_secSup,_secDaily,_secHist].join('');
   else            // «Мой профиль»: что я о себе указал + настройки и инструменты
     html+=[_secGoal,_secAct,_secNut,_secHealth,_secStress,_secBal,_secRhythm,_secLife,
            _secVai,_secSource,_secIntake,_secNotify,_secDisplay,_secSub,_secBackup,_secApproach,_secLegal].join('');
