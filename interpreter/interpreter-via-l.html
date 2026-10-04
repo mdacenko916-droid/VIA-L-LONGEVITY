@@ -9477,6 +9477,151 @@ function _labsPayload(){
   });
   return out;
 }
+// ══ РАСПОЗНАВАНИЕ АНАЛИЗОВ С ФОТО (порт из EXPERT 2026-10-04) ══════════════════════════════
+// В VIA-L: перед первым фото — согласие (фото уходит на сервер, не хранится), лимит в воркере 3/сутки на cid.
+// Ключевое правило: НИЧЕГО не сохраняем автоматически. Модель читает бланк, человек сверяет
+// и подтверждает — ошибка распознавания молчалива, а на этих числах строятся сверки.
+// Файл никуда не сохраняется: ужимаем в памяти, отправляем, забываем.
+function _labPhotoUI(){
+  return L({ru:{btn:'📷 Распознать с фото',load:'Читаю бланк…',err:'Не удалось прочитать. Попробуйте снимок ровнее и при хорошем свете.',none:'На снимке не нашлось знакомых показателей.',title:'Проверьте распознанное',sub:'Сверьте с бланком и исправьте, если нужно. Сохранится только то, что вы подтвердите.',save:'Подтвердить и сохранить',cancel:'Отмена',date:'Дата анализа'},
+            uk:{btn:'📷 Розпізнати з фото',load:'Читаю бланк…',err:'Не вдалося прочитати. Спробуйте рівніший знімок при доброму світлі.',none:'На знімку не знайшлося знайомих показників.',title:'Перевірте розпізнане',sub:'Звірте з бланком і виправте за потреби. Збережеться лише те, що ви підтвердите.',save:'Підтвердити та зберегти',cancel:'Скасувати',date:'Дата аналізу'},
+            en:{btn:'📷 Scan from photo',load:'Reading the report…',err:'Could not read it. Try a straighter shot in good light.',none:'No familiar markers found in the photo.',title:'Check what we read',sub:'Compare with your report and correct if needed. Only what you confirm will be saved.',save:'Confirm and save',cancel:'Cancel',date:'Test date'},
+            es:{btn:'📷 Escanear desde foto',load:'Leyendo el informe…',err:'No se pudo leer. Prueba con una foto más recta y buena luz.',none:'No se encontraron marcadores conocidos.',title:'Revisa lo detectado',sub:'Compara con tu informe y corrige si hace falta. Solo se guardará lo que confirmes.',save:'Confirmar y guardar',cancel:'Cancelar',date:'Fecha del análisis'},
+            de:{btn:'📷 Foto auslesen',load:'Befund wird gelesen…',err:'Konnte nicht gelesen werden. Bitte gerader und bei gutem Licht fotografieren.',none:'Keine bekannten Werte gefunden.',title:'Erkanntes prüfen',sub:'Mit dem Befund vergleichen und ggf. korrigieren. Gespeichert wird nur, was Sie bestätigen.',save:'Bestätigen und speichern',cancel:'Abbrechen',date:'Datum der Analyse'},
+            pt:{btn:'📷 Ler da foto',load:'Lendo o exame…',err:'Não foi possível ler. Tente uma foto mais reta e com boa luz.',none:'Nenhum marcador conhecido encontrado.',title:'Confira o que foi lido',sub:'Compare com o exame e corrija se preciso. Só será salvo o que você confirmar.',save:'Confirmar e salvar',cancel:'Cancelar',date:'Data do exame'},
+            fr:{btn:'📷 Lire depuis une photo',load:'Lecture du compte rendu…',err:'Lecture impossible. Essayez une photo plus droite et bien éclairée.',none:'Aucun marqueur connu trouvé.',title:'Vérifiez ce qui a été lu',sub:'Comparez avec votre compte rendu et corrigez si besoin. Seul ce que vous validez sera enregistré.',save:'Valider et enregistrer',cancel:'Annuler',date:"Date de l'analyse"},
+            pl:{btn:'📷 Odczytaj ze zdjęcia',load:'Czytam wynik…',err:'Nie udało się odczytać. Spróbuj prostszego zdjęcia przy dobrym świetle.',none:'Nie znaleziono znanych parametrów.',title:'Sprawdź odczytane',sub:'Porównaj z wynikiem i popraw w razie potrzeby. Zapisze się tylko to, co potwierdzisz.',save:'Potwierdź i zapisz',cancel:'Anuluj',date:'Data badania'},
+            it:{btn:'📷 Leggi dalla foto',load:'Sto leggendo il referto…',err:'Non è stato possibile leggere. Prova una foto più dritta e ben illuminata.',none:'Nessun marcatore noto trovato.',title:'Controlla ciò che è stato letto',sub:'Confronta con il referto e correggi se serve. Verrà salvato solo ciò che confermi.',save:'Conferma e salva',cancel:'Annulla',date:"Data dell'esame"},
+            he:{btn:'📷 סריקה מתמונה',load:'קורא את הבדיקה…',err:'לא הצלחנו לקרוא. נסו תמונה ישרה יותר ובאור טוב.',none:'לא נמצאו מדדים מוכרים בתמונה.',title:'בדקו את מה שזוהה',sub:'השוו לטופס ותקנו במידת הצורך. יישמר רק מה שתאשרו.',save:'אישור ושמירה',cancel:'ביטול',date:'תאריך הבדיקה'},
+            ja:{btn:'📷 写真から読み取る',load:'検査結果を読んでいます…',err:'読み取れませんでした。明るい場所で正面から撮影してください。',none:'既知の項目が見つかりませんでした。',title:'読み取り結果を確認',sub:'検査票と照らし合わせ、必要なら修正してください。確認したものだけが保存されます。',save:'確認して保存',cancel:'キャンセル',date:'検査日'},
+            ko:{btn:'📷 사진에서 인식',load:'검사지를 읽는 중…',err:'읽지 못했습니다. 밝은 곳에서 정면으로 다시 찍어 주세요.',none:'익숙한 항목을 찾지 못했습니다.',title:'인식 결과 확인',sub:'검사지와 대조하고 필요하면 수정하세요. 확인한 항목만 저장됩니다.',save:'확인하고 저장',cancel:'취소',date:'검사일'}});
+}
+// Ужимаем на устройстве: бланк с телефона — 3–6 МБ, для чтения цифр хватает длинной стороны ~1600 px.
+function _labPhotoShrink(file){
+  return new Promise(function(res,rej){
+    var fr=new FileReader();
+    fr.onload=function(){
+      var img=new Image();
+      img.onload=function(){
+        var M=1600, w=img.width, h=img.height, k=Math.min(1, M/Math.max(w,h));
+        var c=document.createElement('canvas'); c.width=Math.round(w*k); c.height=Math.round(h*k);
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        var d=c.toDataURL('image/jpeg',0.85);
+        res({ data:d.split(',')[1], mime:'image/jpeg' });
+      };
+      img.onerror=rej; img.src=fr.result;
+    };
+    fr.onerror=rej; fr.readAsDataURL(file);
+  });
+}
+async function labPhotoPick(file){
+  if(!file) return;
+  var ui=_labPhotoUI(), st=document.getElementById('labPhotoSt');
+  if(st){ st.textContent=ui.load; st.style.color='var(--t2)'; }
+  try{
+    var im=await _labPhotoShrink(file);
+    var r=await fetch('https://interpreter.viaelcom.workers.dev/labs/parse',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({image:im.data,mime:im.mime,tier:'pro',cid:(typeof _cid==='function'?_cid():'')})});
+    var j=await r.json();
+    if(j && j.error==='limit'){ if(st){ st.textContent=_labPhotoTx().limit; st.style.color='#E0576A'; } return; }
+    if(!j || !j.ok){ if(st){ st.textContent=ui.err; st.style.color='#E0576A'; } return; }
+    var keys=Object.keys(j.labs||{});
+    if(!keys.length){ if(st){ st.textContent=ui.none; st.style.color='#E0576A'; } return; }
+    if(st) st.textContent='';
+    _labPhotoConfirm(j.labs, j.date||'');
+  }catch(e){ if(st){ st.textContent=ui.err; st.style.color='#E0576A'; } }
+}
+// Экран подтверждения: значения в единицах бланка, всё правится до сохранения.
+function _labPhotoConfirm(labs, date){
+  var ui=_labPhotoUI();
+  var old=document.getElementById('labPhotoModal'); if(old) old.remove();
+  var rows=Object.keys(labs).map(function(k){
+    var d=_labDef(k); if(!d) return '';
+    // Бланк печатает единицу как есть («нг/мл»), а в выборе — латиница («ng/mL»). Без сопоставления
+    // подставлялась первая единица: витамин D в нг/мл молча записался бы как нмоль/л (в 2,5 раза меньше).
+    var u=_labUnitMatch(labs[k].u, d), uBad=!u; if(!u) u=d.c;
+    var uOpts=d.u.map(function(x){ return '<option value="'+x[0]+'"'+(x[0]===u?' selected':'')+'>'+x[0]+'</option>'; }).join('');
+    return '<div style="display:grid;grid-template-columns:1fr 84px 96px;gap:6px;align-items:center;margin-bottom:7px;">'
+      +'<div style="font-size:var(--fs-cap);color:var(--t2);">'+_esc(L(d.n))+'</div>'
+      +'<input id="lpv-'+k+'" value="'+labs[k].v+'" inputmode="decimal" style="background:rgba(255,255,255,.06);color:var(--t1);border:1px solid rgba(255,255,255,.12);border-radius:7px;font-size:var(--fs-body);padding:6px 8px;width:100%;box-sizing:border-box;">'
+      +'<select id="lpu-'+k+'" style="background:rgba(255,255,255,.06);color:var(--t2);border:1px solid '+(uBad?'#E0576A':'rgba(255,255,255,.12)')+';border-radius:7px;font-size:var(--fs-cap);padding:6px 4px;">'+uOpts+'</select>'
+      +'</div>';
+  }).join('');
+  var m=document.createElement('div'); m.id='labPhotoModal';
+  m.style.cssText='position:fixed;inset:0;z-index:900;background:rgba(8,10,16,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;';
+  m.innerHTML='<div style="width:100%;max-width:560px;max-height:88vh;overflow-y:auto;background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.28);border-radius:20px 20px 0 0;padding:18px 18px calc(22px + env(safe-area-inset-bottom));">'
+    +'<div style="font-family:Playfair Display,serif;font-size:var(--fs-title);color:#fff;margin-bottom:4px;">'+_esc(ui.title)+'</div>'
+    +'<div style="font-size:var(--fs-cap);color:var(--t3);line-height:1.5;margin-bottom:14px;">'+_esc(ui.sub)+'</div>'
+    +rows
+    +'<div style="display:flex;align-items:center;gap:8px;margin:10px 0 16px;">'
+      +'<span style="font-size:var(--fs-cap);color:var(--t3);">'+_esc(ui.date)+'</span>'
+      +'<input type="date" id="lpDate" value="'+(date||'')+'" style="background:transparent;color:var(--t2);border:1px solid rgba(255,255,255,.12);border-radius:7px;font-size:var(--fs-cap);padding:5px 8px;">'
+    +'</div>'
+    +'<button onclick="_labPhotoApply()" style="display:block;width:100%;padding:12px;border-radius:11px;border:none;background:var(--gold);color:#10141C;font-size:var(--fs-body);font-weight:600;cursor:pointer;font-family:inherit;">'+_esc(ui.save)+'</button>'
+    +'<button onclick="var e=document.getElementById(\'labPhotoModal\');if(e)e.remove();" style="display:block;width:100%;margin-top:8px;padding:10px;border-radius:11px;border:1px solid rgba(255,255,255,.14);background:transparent;color:var(--t2);font-size:var(--fs-body);cursor:pointer;font-family:inherit;">'+_esc(ui.cancel)+'</button>'
+    +'</div>';
+  document.body.appendChild(m);
+  window.__lpKeys=Object.keys(labs).filter(function(k){ return !!_labDef(k); });
+}
+// Сохраняем только подтверждённое и ЧЕРЕЗ _labSave — один путь проверки чисел и пересчёта единиц.
+function _labPhotoApply(){
+  var keys=window.__lpKeys||[], dEl=document.getElementById('lpDate'), date=dEl?dEl.value:'';
+  keys.forEach(function(k){
+    var vEl=document.getElementById('lpv-'+k), uEl=document.getElementById('lpu-'+k);
+    var v=vEl?vEl.value:'', u=uEl?uEl.value:'';
+    if(v==null||String(v).trim()==='') return;
+    var fi=document.getElementById('lab-'+k), fu=document.getElementById('labu-'+k), fd=document.getElementById('labd-'+k);
+    if(fi) fi.value=String(v).trim();
+    if(fu&&u) fu.value=u;
+    if(fd&&date) fd.value=date;
+    if(typeof _labSave==='function') _labSave(k);
+  });
+  var m=document.getElementById('labPhotoModal'); if(m) m.remove();
+}
+// Единица с бланка → вариант из выбора поля. Не узнали → null (поле подсветится, человек выберет сам).
+function _labUnitMatch(raw, d){
+  if(!raw) return d.c;
+  var CY={'нг/мл':'ng/mL','нмоль/л':'nmol/L','мкмоль/л':'µmol/L','ммоль/л':'mmol/L','пмоль/л':'pmol/L','мкг/л':'µg/L','мкг/дл':'µg/dL',
+    'пг/мл':'pg/mL','мг/л':'mg/L','мг/дл':'mg/dL','г/л':'g/L','г/дл':'g/dL','ед/л':'U/L','ме/л':'IU/L','ме/мл':'IU/mL',
+    'мед/л':'mIU/L','мме/л':'mIU/L','мкме/мл':'µIU/mL','мкед/мл':'µIU/mL','мл/мин':'mL/min','мл/мин/1.73м2':'mL/min'};
+  var n=function(x){ return String(x).toLowerCase().replace(/\s+/g,'').replace(/μ/g,'µ').replace(/^mc/,'µ').replace(/^u(?=[a-z])/,'µ'); };
+  var r=String(raw).trim(), lat=CY[n(r)]||r;
+  for(var i=0;i<d.u.length;i++){ if(n(d.u[i][0])===n(lat)) return d.u[i][0]; }
+  return null;
+}
+// Согласие и лимит — тексты только VIA-L (в EXPERT серверное хранение и так оговорено при входе).
+function _labPhotoTx(){
+  return L({ru:{t:'Перед распознаванием',b:'Фото бланка уйдёт на наш сервер и к ИИ-модели только для того, чтобы прочитать числа. Фото нигде не сохраняется. Значения вы проверите сами, и они останутся только на этом телефоне.',ok:'Понятно, выбрать фото',limit:'На сегодня распознавания закончились (3 в сутки). Попробуйте завтра или впишите значения вручную.'},
+    uk:{t:'Перед розпізнаванням',b:'Фото бланка піде на наш сервер і до ШІ-моделі лише для того, щоб прочитати числа. Фото ніде не зберігається. Значення ви перевірите самі, і вони залишаться лише на цьому телефоні.',ok:'Зрозуміло, вибрати фото',limit:'На сьогодні розпізнавання закінчилися (3 на добу). Спробуйте завтра або впишіть значення вручну.'},
+    en:{t:'Before we read it',b:'The photo of your report goes to our server and an AI model only to read the numbers. The photo is not stored anywhere. You check the values yourself, and they stay only on this phone.',ok:'Got it, choose a photo',limit:'You have used today’s scans (3 per day). Try again tomorrow or enter the values by hand.'},
+    es:{t:'Antes de leerlo',b:'La foto del informe va a nuestro servidor y a un modelo de IA solo para leer los números. La foto no se guarda en ningún sitio. Tú revisas los valores y se quedan solo en este teléfono.',ok:'Entendido, elegir foto',limit:'Ya usaste los escaneos de hoy (3 al día). Prueba mañana o escribe los valores a mano.'},
+    de:{t:'Bevor wir lesen',b:'Das Foto des Befunds geht nur zum Auslesen der Zahlen an unseren Server und ein KI-Modell. Das Foto wird nirgends gespeichert. Die Werte prüfen Sie selbst, und sie bleiben nur auf diesem Telefon.',ok:'Verstanden, Foto wählen',limit:'Die heutigen Scans sind aufgebraucht (3 pro Tag). Versuchen Sie es morgen oder tragen Sie die Werte von Hand ein.'},
+    pt:{t:'Antes de ler',b:'A foto do exame vai para o nosso servidor e para um modelo de IA só para ler os números. A foto não é guardada em lugar nenhum. Você confere os valores, e eles ficam só neste telefone.',ok:'Entendi, escolher foto',limit:'As leituras de hoje acabaram (3 por dia). Tente amanhã ou digite os valores à mão.'},
+    fr:{t:'Avant la lecture',b:'La photo du compte rendu est envoyée à notre serveur et à un modèle d’IA uniquement pour lire les chiffres. La photo n’est conservée nulle part. Vous vérifiez les valeurs, et elles restent uniquement sur ce téléphone.',ok:'Compris, choisir une photo',limit:'Les lectures du jour sont épuisées (3 par jour). Réessayez demain ou saisissez les valeurs à la main.'},
+    pl:{t:'Zanim odczytamy',b:'Zdjęcie wyniku trafia na nasz serwer i do modelu AI tylko po to, by odczytać liczby. Zdjęcie nie jest nigdzie zapisywane. Wartości sprawdzasz sam(a) i zostają tylko na tym telefonie.',ok:'Rozumiem, wybierz zdjęcie',limit:'Dzisiejsze odczyty się skończyły (3 dziennie). Spróbuj jutro albo wpisz wartości ręcznie.'},
+    it:{t:'Prima della lettura',b:'La foto del referto va al nostro server e a un modello di IA solo per leggere i numeri. La foto non viene salvata da nessuna parte. I valori li controlli tu e restano solo su questo telefono.',ok:'Ho capito, scegli foto',limit:'Le letture di oggi sono finite (3 al giorno). Riprova domani o inserisci i valori a mano.'},
+    he:{t:'לפני הקריאה',b:'תמונת הבדיקה נשלחת לשרת שלנו ולמודל בינה מלאכותית רק כדי לקרוא את המספרים. התמונה לא נשמרת בשום מקום. את הערכים בודקים בעצמכם, והם נשארים רק בטלפון הזה.',ok:'הבנתי, לבחור תמונה',limit:'הסריקות להיום נגמרו (3 ביום). נסו מחר או הזינו את הערכים ידנית.'},
+    ja:{t:'読み取りの前に',b:'検査票の写真は数値を読み取るためだけに当社サーバーとAIモデルへ送られます。写真はどこにも保存されません。数値はご自身で確認し、この端末にだけ残ります。',ok:'了解、写真を選ぶ',limit:'本日の読み取り回数を使い切りました（1日3回）。明日もう一度試すか、手入力してください。'},
+    ko:{t:'인식하기 전에',b:'검사지 사진은 숫자를 읽기 위해서만 저희 서버와 AI 모델로 전송됩니다. 사진은 어디에도 저장되지 않습니다. 수치는 직접 확인하며 이 휴대폰에만 남습니다.',ok:'알겠어요, 사진 선택',limit:'오늘 인식 횟수를 모두 사용했습니다(하루 3회). 내일 다시 시도하거나 직접 입력해 주세요.'}});
+}
+// Кнопка: согласие спрашиваем один раз, дальше сразу выбор фото (камера / галерея / скриншот).
+function _labPhotoStart(){
+  var ok=false; try{ ok=localStorage.getItem('vialp_labphoto_ok')==='1'; }catch(e){}
+  if(ok){ var f=document.getElementById('labPhotoFile'); if(f) f.click(); return; }
+  var tx=_labPhotoTx(), ui=_labPhotoUI();
+  var old=document.getElementById('labPhotoModal'); if(old) old.remove();
+  var m=document.createElement('div'); m.id='labPhotoModal';
+  m.style.cssText='position:fixed;inset:0;z-index:900;background:rgba(8,10,16,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;';
+  m.innerHTML='<div style="width:100%;max-width:560px;background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.28);border-radius:20px 20px 0 0;padding:18px 18px calc(22px + env(safe-area-inset-bottom));">'
+    +'<div style="font-family:Playfair Display,serif;font-size:var(--fs-title);color:#fff;margin-bottom:8px;">'+_esc(tx.t)+'</div>'
+    +'<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.6;margin-bottom:16px;">'+_esc(tx.b)+'</div>'
+    +'<button onclick="try{localStorage.setItem(\'vialp_labphoto_ok\',\'1\');}catch(e){}var e=document.getElementById(\'labPhotoModal\');if(e)e.remove();var f=document.getElementById(\'labPhotoFile\');if(f)f.click();" style="display:block;width:100%;padding:12px;border-radius:11px;border:none;background:var(--gold);color:#10141C;font-size:var(--fs-body);font-weight:600;cursor:pointer;font-family:inherit;">'+_esc(tx.ok)+'</button>'
+    +'<button onclick="var e=document.getElementById(\'labPhotoModal\');if(e)e.remove();" style="display:block;width:100%;margin-top:8px;padding:10px;border-radius:11px;border:1px solid rgba(255,255,255,.14);background:transparent;color:var(--t2);font-size:var(--fs-body);cursor:pointer;font-family:inherit;">'+_esc(ui.cancel)+'</button>'
+    +'</div>';
+  document.body.appendChild(m);
+}
+
 function _labsInner(){
   var all=_labsGet();
   var hint=L({ru:'Необязательно. Если анализы есть — разбор перестаёт гадать: включает нужные темы и не советует того, что вам уже не нужно.',uk:'Необовʼязково. Якщо аналізи є — розбір перестає гадати: вмикає потрібні теми й не радить того, що вам уже не потрібно.',en:'Optional. With lab values the overview stops guessing: it opens the relevant topics and stops suggesting what you no longer need.',es:'Opcional. Con analíticas el resumen deja de adivinar: abre los temas relevantes y deja de sugerir lo que ya no necesitas.',de:'Optional. Mit Laborwerten hört die Auswertung auf zu raten: Sie öffnet die passenden Themen und schlägt nicht mehr vor, was du nicht brauchst.',pt:'Opcional. Com exames a análise deixa de adivinhar: abre os temas relevantes e para de sugerir o que você já não precisa.',fr:'Facultatif. Avec des analyses, le bilan cesse de deviner : il ouvre les sujets pertinents et arrête de suggérer ce dont vous n’avez plus besoin.',pl:'Opcjonalnie. Z wynikami badań przegląd przestaje zgadywać: otwiera właściwe tematy i nie proponuje tego, czego już nie potrzebujesz.',it:'Facoltativo. Con le analisi il riepilogo smette di indovinare: apre i temi giusti e non suggerisce ciò che non ti serve più.',he:'לא חובה. עם בדיקות מעבדה הסקירה מפסיקה לנחש: היא פותחת את הנושאים הרלוונטיים ומפסיקה להציע את מה שכבר לא צריך.',ja:'任意です。検査値があると、まとめは推測をやめ、関係するテーマだけを開き、不要な提案をしなくなります。',ko:'선택 사항입니다. 검사 수치가 있으면 요약이 추측을 멈추고 관련 주제만 열며 필요 없는 제안을 하지 않습니다.'});
@@ -9487,6 +9632,13 @@ function _labsInner(){
   var h='<div style="font-size:var(--fs-cap);color:var(--t3);line-height:1.5;margin-bottom:8px;">'+_esc(hint)+'</div>'
         +'<div style="font-size:var(--fs-cap);color:var(--t3);line-height:1.5;margin-bottom:12px;opacity:.85;">⚕️ '+_esc(hint2)+'</div>';
   h+=_homaLine();
+  // Распознавание с фото — до полей: сначала быстрый путь. Без capture: человек выбирает камеру, галерею или скриншот.
+  h+='<div style="margin-bottom:12px;">'
+    +'<button type="button" onclick="_labPhotoStart()" style="display:inline-flex;align-items:center;gap:7px;background:rgba(226,185,90,.10);border:1px solid rgba(226,185,90,.32);border-radius:11px;padding:9px 14px;color:var(--gold-lt);font-size:var(--fs-body);font-weight:500;cursor:pointer;font-family:inherit;">'
+    +_esc(_labPhotoUI().btn)+'</button>'
+    +'<input type="file" id="labPhotoFile" accept="image/*" style="display:none" onchange="if(this.files&&this.files[0])labPhotoPick(this.files[0]);this.value=\'\';">'
+    +'<div id="labPhotoSt" style="font-size:var(--fs-cap);margin-top:6px;"></div>'
+    +'</div>';
   LAB_GROUPS.forEach(function(G){
   var _gd=LAB_DEFS.filter(function(x){return (x.g||'base')===G.g;});
   if(!_gd.length) return;

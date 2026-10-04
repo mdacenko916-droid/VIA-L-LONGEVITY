@@ -11915,6 +11915,17 @@ async function handleLabsParse(request, env, corsHeaders) {
   if (!data || data.length < 100) return jsonResponse({ ok:false, error:'no_image' }, corsHeaders, 400);
   if (data.length > 7000000) return jsonResponse({ ok:false, error:'too_large' }, corsHeaders, 413);
   if (!/^image\/(jpeg|png|webp)$/.test(mime)) return jsonResponse({ ok:false, error:'bad_type' }, corsHeaders, 415);
+  // VIA-L (tier 'pro', порт 2026-10-04): 3 распознавания в сутки на cid — вызов платный (Sonnet + картинка).
+  // EXPERT tier не шлёт — у него лимита нет, как и было.
+  const isVial = String(b.tier || '') === 'pro';
+  if (isVial) {
+    const cid = String(b.cid || '').slice(0, 64);
+    if (!cid || !env.ANALYSIS_CACHE) return jsonResponse({ ok:false, error:'no_cid' }, corsHeaders, 400);
+    const lkey = 'lpl:' + cid + ':' + new Date().toISOString().slice(0, 10);
+    const n = parseInt(await env.ANALYSIS_CACHE.get(lkey) || '0', 10) || 0;
+    if (n >= 3) return jsonResponse({ ok:false, error:'limit' }, corsHeaders, 200);
+    await env.ANALYSIS_CACHE.put(lkey, String(n + 1), { expirationTtl: 48 * 3600 });
+  }
 
   const prompt = 'На изображении — бланк лабораторных анализов. Извлеки ТОЛЬКО те показатели из списка ниже, '
     + 'которые реально видны, и верни СТРОГО JSON без пояснений и без markdown:\n'
@@ -11954,7 +11965,7 @@ async function handleLabsParse(request, env, corsHeaders) {
       }),
     });
     const j = await r.json();
-    logUsage(env, null, 'labs-parse', 'claude-sonnet-4-6', 'elite', '', j, 'photo');
+    logUsage(env, null, 'labs-parse', 'claude-sonnet-4-6', isVial ? 'pro' : 'elite', '', j, 'photo');
     const txt = j.content?.[0]?.text || '';
     const m = txt.match(/\{[\s\S]*\}/);
     if (!m) return jsonResponse({ ok:false, error:'unreadable' }, corsHeaders, 200);
