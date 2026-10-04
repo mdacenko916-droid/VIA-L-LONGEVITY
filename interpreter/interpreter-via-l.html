@@ -2384,8 +2384,8 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
     </div>
     <div id="cardBody"></div>
     <!-- итоги и память — под графиком «Моего пути» (в профиле скрыты) -->
-    <div id="weeklyReport" style="margin:18px 0;"></div>
-    <div id="monthlyReport" style="margin-bottom:18px;"></div>
+    <div id="weeklyReport"></div>
+    <div id="monthlyReport"></div>
     <div id="aiMemoryBox" style="margin-bottom:18px;display:flex;flex-direction:column;gap:10px;"></div>
     <div id="historyList"></div>
   </div>
@@ -5211,9 +5211,9 @@ function _med(vals){
   var m=Math.floor(v.length/2);
   return v.length%2?v[m]:(v[m-1]+v[m])/2;
 }
-function _cardTrends(){
+function _cardTrends(nDays){
   var arr=[]; try{arr=JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[];}catch(e){}
-  var recent=arr.slice(0,30).reverse(); // старые→новые, до 30 дней
+  var recent=arr.slice(0,nDays||30).reverse(); // старые→новые, до 30 дней (в «Моём пути» ещё и неделя — 7)
   var ser=function(k){return recent.map(function(r){return r[k];}).filter(function(x){return x!=null&&x!==''&&!isNaN(x);}).map(Number);};
   // PRO = гаджет-первичен: HRV/часы сна с прибора, энергия/пульс/тело как у VIO
   return { hrv:ser('hrv'), sleep:ser('sleepHours'), energy:ser('energy'), rhr:ser('rhr'), weight:ser('weight'), waist:ser('waist') };
@@ -5332,6 +5332,7 @@ function _vcCSS(){ if(document.getElementById('vcard-css'))return; var s=documen
   +".vd-cell{background:rgba(226,185,90,.06);border:1px solid rgba(226,185,90,.16);border-radius:12px;padding:10px 6px;text-align:center;}"
   +".vd-l{font-size:var(--fs-cap);color:var(--t3);}.vd-v{font-weight:700;font-size:var(--fs-hero);color:var(--t1);margin:2px 0;}.vd-d{font-size:var(--fs-cap);font-weight:600;}"
   +".vc-span{grid-column:auto;}"
+  +"#wrSlot,#mrSlot{display:contents;}#weeklyReport:empty,#monthlyReport:empty{display:none!important;}"   // «Мой путь»: нет итога — нет пустой щели в ленте
   +".vc-day>summary::-webkit-details-marker{display:none;}.vc-day>summary>span:first-child{transition:transform .2s;display:inline-block;}.vc-day[open]>summary>span:first-child{transform:rotate(90deg);}";
   (document.head||document.body).appendChild(s);
 }
@@ -5582,7 +5583,7 @@ function renderCard(){
   // «Мой путь» — та же панель без шапки профиля: только то, что показывает изменения
   var _pathMode=(window._cardMode==='path');
   if(_pathMode) html='<div class="vcard-wrap">';
-  html+='<div class="vcard-grid">';
+  html+='<div class="vcard-grid"'+(_pathMode?' style="grid-template-columns:1fr;"':'')+'>';   // «Мой путь» — лента в одну колонку
   // Секции собираются в переменные, затем выводятся в порядке логики/важности (см. join ниже)
   var _secAct='',_secNut='',_secSup='',_secBal='',_secRhythm='',_secStress='',_secLife='',_secGoal='',_secDyn='',_secHist='',_secBackup='',_secSource='',_secLegal='';
 
@@ -5705,9 +5706,10 @@ function renderCard(){
   // Плитки «Готовность 0–100» (Сегодня/Неделя/Месяц) удалены 2026-07-17 вместе с самим понятием.
   // Историю НЕ трогаем: score продолжает писаться в vialp_history. Ниже остаются честные мини-тренды
   // по каждой метрике отдельно («обычно ~X») — они и есть понятная клиенту динамика.
+  var _dynFor=function(nDays){   // «Мой путь»: та же динамика за неделю (7) и за месяц (30)
   var dynInner='';
   // мини-тренды HRV/сон/энергия/пульс/тело (личный ориентир «обычно»)
-  var _tr=_cardTrends();
+  var _tr=_cardTrends(nDays);
   var _trendsShown=(_tr.hrv.length>=2||_tr.sleep.length>=2||_tr.energy.length>=2||_tr.rhr.length>=2||_tr.weight.length>=2||_tr.waist.length>=2);
   if(_trendsShown){
     var _usu=function(v){return L({ru:'обычно ~'+v,uk:'зазвичай ~'+v,en:'usually ~'+v,es:'normalmente ~'+v,de:'meist ~'+v,pt:'normalmente ~'+v,fr:'habituellement ~'+v,pl:'zwykle ~'+v,it:'di solito ~'+v,he:'בדרך כלל ~'+v,ja:'通常 ~'+v,ko:'보통 ~'+v});};
@@ -5730,12 +5732,16 @@ function renderCard(){
     });
   }
   // Окно наблюдения — из удалённого Baseline: «обычно ~X» без срока непонятно, за что это «обычно».
-  if(_trendsShown && bl && bl.days) dynInner+='<div class="vc-empty" style="margin-top:8px;">'
+  if(_trendsShown && bl && bl.days && nDays>=30) dynInner+='<div class="vc-empty" style="margin-top:8px;">'
     +L({ru:'Ваш ориентир по '+bl.days+' дн.',uk:'Ваш орієнтир за '+bl.days+' дн.',en:'Your usual over '+bl.days+' days',es:'Tu referencia en '+bl.days+' días',de:'Dein Üblich über '+bl.days+' Tage',pt:'Sua referência em '+bl.days+' dias',fr:'Votre repère sur '+bl.days+' jours',pl:'Twój punkt odniesienia z '+bl.days+' dni',it:'Il tuo riferimento su '+bl.days+' giorni',he:'הרגיל שלך לאורך '+bl.days+' ימים',ja:bl.days+'日間のあなたの平常値',ko:bl.days+'일 기준 평소 값'})+'</div>';
   // Подсказка «идёт накопление»: готовность есть, но мини-графиков пока нет (мало точек)
   if(dynInner && !_trendsShown){ dynInner+='<div class="vc-empty" style="margin-top:8px;line-height:1.5;">'+L({ru:'Мини-графики (HRV, сон, энергия…) появятся после нескольких заходов — данные копятся.',uk:'Міні-графіки (HRV, сон, енергія…) зʼявляться після кількох заходів — дані накопичуються.',en:'Mini-charts (HRV, sleep, energy…) appear after a few check-ins — data is still accumulating.',es:'Los mini-gráficos (HRV, sueño, energía…) aparecen tras varios análisis — se están acumulando datos.',de:'Mini-Diagramme (HRV, Schlaf, Energie…) erscheinen nach einigen Check-ins — Daten sammeln sich noch.',pt:'Mini-gráficos (HRV, sono, energia…) aparecem após alguns registros — os dados estão se acumulando.',fr:'Les mini-graphiques (HRV, sommeil, énergie…) apparaissent après quelques bilans — les données sʼaccumulent.',pl:'Mini-wykresy (HRV, sen, energia…) pojawią się po kilku analizach — dane się gromadzą.',it:'I mini-grafici (HRV, sonno, energia…) compaiono dopo alcuni check-in — i dati si stanno accumulando.',he:'מיני-גרפים (HRV, שינה, אנרגיה…) יופיעו אחרי כמה בדיקות — הנתונים מצטברים.',ja:'ミニグラフ（HRV・睡眠・エネルギー…）は数回の記録後に表示されます——データを蓄積中です。',ko:'미니 차트(HRV, 수면, 에너지…)는 몇 번의 기록 후 표시됩니다 — 데이터가 쌓이는 중입니다.'})+'</div>'; }
   // Новичок (данных ещё нет): объясняем, что динамика набирается — а не «пусто/баг»
   if(!dynInner)dynInner='<div class="vc-empty" style="line-height:1.5;">'+L({ru:'Здесь появится ваша динамика — она набирается с каждым анализом. Загляните через пару заходов.',uk:'Тут зʼявиться ваша динаміка — вона накопичується з кожним аналізом. Завітайте за кілька заходів.',en:'Your dynamics will appear here — they build up with each check-in. Come back after a couple of check-ins.',es:'Aquí aparecerá tu evolución — se acumula con cada análisis. Vuelve tras un par de análisis.',de:'Hier erscheint deine Entwicklung — sie baut sich mit jedem Check-in auf. Schau nach ein paar Check-ins wieder vorbei.',pt:'Sua evolução aparecerá aqui — acumula-se a cada análise. Volte após alguns registros.',fr:'Votre évolution apparaîtra ici — elle se construit à chaque bilan. Revenez après quelques bilans.',pl:'Tu pojawi się Twoja dynamika — buduje się z każdą analizą. Wróć po kilku analizach.',it:'Qui apparirà la tua evoluzione — si accumula a ogni analisi. Torna dopo qualche check-in.',he:'כאן תופיע הדינמיקה שלך — היא נבנית עם כל בדיקה. חזרו אחרי כמה בדיקות.',ja:'ここに変化が表示されます——分析ごとに蓄積されます。数回後にまたご覧ください。',ko:'여기에 변화가 표시됩니다 — 분석할 때마다 쌓입니다. 몇 번 후에 다시 확인하세요.'})+'</div>';
+  return dynInner; };
+  var dynInner=_dynFor(30);
+  var _dynW=L({ru:'Динамика за неделю',uk:'Динаміка за тиждень',en:'This week’s trends',es:'Tendencias de la semana',de:'Verlauf der Woche',pt:'Tendências da semana',fr:'Tendances de la semaine',pl:'Trendy tygodnia',it:'Andamento della settimana',he:'מגמות השבוע',ja:'今週の推移',ko:'이번 주 추이'});
+  var _dynM=L({ru:'Динамика за месяц',uk:'Динаміка за місяць',en:'This month’s trends',es:'Tendencias del mes',de:'Verlauf des Monats',pt:'Tendências do mês',fr:'Tendances du mois',pl:'Trendy miesiąca',it:'Andamento del mese',he:'מגמות החודש',ja:'今月の推移',ko:'이번 달 추이'});
   _secDyn=_vcSec('dynamics',L({ru:'Динамика показателей',uk:'Динаміка показників',en:'Metric trends',es:'Tendencias de métricas',de:'Verlauf der Werte',pt:'Tendências das métricas',fr:'Tendances des mesures',pl:'Trendy wskaźników',it:'Andamento dei parametri',he:'מגמות המדדים',ja:'指標の推移',ko:'지표 추이'}),dynInner,window._cardMode==='path',true);   // в «Моём пути» график открыт сразу
 
   // Секция «Памятка дня» убрана из профиля 2026-08-30 (владелец): тот же план открывается на «Сегодня».
@@ -5896,16 +5902,21 @@ function renderCard(){
   // «Наш подход» — бывшая вкладка навигации, читается один раз → секция профиля рядом с копией и правовым
   var _apB=String(t('approach_body')||'').replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}).replace(/VIA[·\-]L/g,function(m){return '<span style="color:var(--gold-lt);font-weight:600;">'+m+'</span>';});
   var _secApproach=_vcSec('<i class="ph ph-stack"></i>',t('nav_approach'),'<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.7;white-space:pre-line;">'+_apB+'</div>',false,true);
-  if(_pathMode)   // «Мой путь»: траектория, динамика, анализы, добавки и приёмы, дневник, история разборов
-    html+=[_secDyn,_secCmp,_secLabs,_secSup,_secDaily,_secHist].join('');
+  if(_pathMode)   // «Мой путь»: недельный итог + динамика недели, месячный итог + динамика месяца (обе открыты), дальше остальное
+    html+=['<div id="wrSlot"></div>',_vcSec('dynamics',_dynW,_dynFor(7),true,true),
+           '<div id="mrSlot"></div>',_vcSec('dynamics',_dynM,_dynFor(30),true,true),
+           _secCmp,_secLabs,_secSup,_secDaily,_secHist].join('');
   else            // «Мой профиль»: что я о себе указал + настройки и инструменты
     html+=[_secGoal,_secAct,_secNut,_secHealth,_secStress,_secBal,_secRhythm,_secLife,
            _secVai,_secSource,_secIntake,_secNotify,_secDisplay,_secSub,_secBackup,_secApproach,_secLegal].join('');
   html+='</div>'; // .vcard-grid
   html+='</div>'; // .vcard-wrap
 
+  var hl=document.getElementById('historyList');
+  ['weeklyReport','monthlyReport'].forEach(function(id){ var e=document.getElementById(id); if(e&&hl&&box.contains(e)) hl.parentNode.insertBefore(e,hl); });
   box.innerHTML=html;
-  var hl=document.getElementById('historyList'); if(hl)hl.innerHTML='';
+  if(hl)hl.innerHTML='';
+  if(_pathMode){ [['wrSlot','weeklyReport'],['mrSlot','monthlyReport']].forEach(function(p){ var sl=document.getElementById(p[0]), e=document.getElementById(p[1]); if(sl&&e) sl.appendChild(e); }); }
   if(typeof renderWeeklyReportUI==='function')renderWeeklyReportUI();
   if(typeof renderMonthlyReportUI==='function')renderMonthlyReportUI();
   if(typeof renderAiMemoryUI==='function')renderAiMemoryUI();
