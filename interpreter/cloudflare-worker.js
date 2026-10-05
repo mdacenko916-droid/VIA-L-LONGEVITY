@@ -7102,6 +7102,7 @@ function _labRedFlags(data, asList) {
   const ins = n(labs.insulin), tsh = n(labs.tsh), prl = n(labs.prl), tst = n(labs.tst);
   const dheas = n(labs.dheas), hgb = n(labs.hgb), egfr = n(labs.egfr), alt = n(labs.alt);
   const ast = n(labs.ast), ca = n(labs.ca), crp = n(labs.crp), fer = n(labs.ferritin);
+  const tsat = n(labs.tsat);
 
   // Обмен
   if (glu != null && glu >= 13.9) flag('глюкоза натощак ' + glu + ' ммоль/л', true);
@@ -7127,6 +7128,9 @@ function _labRedFlags(data, asList) {
   if (ca != null && ca > 2.75) flag('кальций ' + ca + ' ммоль/л');
   if (crp != null && crp > 10) flag('CRP ' + crp + ' мг/л');
   if (fer != null && fer > 500) flag('ферритин ' + fer + ' нг/мл');
+  // Насыщение трансферрина >45% — общепринятый порог, после которого анализ пересдают натощак и показывают
+  // врачу (2026-10-04: на реальном бланке 65% со звёздочкой лаборатории — правила не было вовсе).
+  if (tsat != null && tsat > 45) flag('насыщение трансферрина ' + tsat + '% (анализ лучше пересдать натощак)');
 
   if (asList) return out;                       // для пробы правил: нужен список, а не текст
   if (!out.length) return '';
