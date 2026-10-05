@@ -9436,7 +9436,30 @@ var LAB_GROUPS=[
 ];
 var _LAB_KEY='vialp_labs';
 function _labsGet(){ try{ return JSON.parse(localStorage.getItem(_LAB_KEY)||'{}')||{}; }catch(e){ return {}; } }
-function _labsSet(o){ try{ localStorage.setItem(_LAB_KEY,JSON.stringify(o)); }catch(e){} }
+function _labsSet(o){ try{ localStorage.setItem(_LAB_KEY,JSON.stringify(o)); }catch(e){} _labsShareSoon(); }
+// Анализы → карточка специалиста (2026-10-05). Только при связке с включённой передачей (_specShare).
+// Шлём весь набор (сервер заменяет прошлый), с задержкой: подтверждение фото сохраняет по полю за раз.
+// Отпечаток последней отправки — чтобы при запуске не слать то же самое повторно.
+var _labsShareT=null;
+function _labsShareSoon(){ clearTimeout(_labsShareT); _labsShareT=setTimeout(_labsShareNow,1500); }
+function _labsShareNow(){
+  try{
+    var sh=(typeof _specShare==='function')?_specShare():{}; if(!sh.code) return;
+    var all=_labsGet(), items=[];
+    Object.keys(all).forEach(function(k){
+      var r=all[k], d=_labDef(k); if(!r||r.raw==null||r.raw===''||!d) return;
+      items.push({k:k, v:r.raw, u:r.u||d.c, n:L(d.n), d:r.d||''});
+    });
+    var fp=sh.code+'|'+JSON.stringify(items);
+    if(localStorage.getItem('vialp_labs_shared')===fp) return;
+    fetch('https://interpreter.viaelcom.workers.dev/specialist/labs',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({code:sh.code,items:items})})
+      .then(function(r){ return r.json(); })
+      .then(function(j){ if(j&&j.ok){ try{ localStorage.setItem('vialp_labs_shared',fp); }catch(e){} } })
+      .catch(function(){});
+  }catch(e){}
+}
+setTimeout(_labsShareNow,4000);   // запуск: связка могла появиться на экране «Мой наставник» (покупка разбора)
 function _labDef(k){ for(var i=0;i<LAB_DEFS.length;i++) if(LAB_DEFS[i].k===k) return LAB_DEFS[i]; return null; }
 // Значение в КАНОНИЧЕСКОЙ единице (то, в чём написаны пороги селектора воркера).
 function _labCanon(k,val,unit){

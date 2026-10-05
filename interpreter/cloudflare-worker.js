@@ -1472,7 +1472,8 @@ export default {
       // См. docs/PLATFORM-MODEL.md §3 (публичные ручки, без cabinet-auth).
       if (path === '/specialist/connect')  return handleSpecialistConnect(request, env, corsHeaders);
       if (path === '/specialist/unlink')   return handleSpecialistUnlink(request, env, corsHeaders);
-      if (path === '/specialist/sharing')  return handleSpecialistSharing(request, env, corsHeaders);   // клиент включает/выключает передачу данных специалисту
+      if (path === '/specialist/sharing')  return handleSpecialistSharing(request, env, corsHeaders);
+      if (path === '/specialist/labs')     return handleSpecialistLabs(request, env, corsHeaders);      // анализы из приложения → карточка (2026-10-05)   // клиент включает/выключает передачу данных специалисту
       // Разовый разбор со специалистом (docs/SPECIALIST-REVIEW-PLAN.md): чек из приложения → заказ + связка с дежурным.
       if (path === '/review/claim')        return handleReviewClaim(request, env, corsHeaders, ctx);
       if (path === '/cabinet/review-done') return handleCabinetReviewDone(request, env, corsHeaders);
@@ -10318,13 +10319,15 @@ async function handleCabinetSave(request, env, corsHeaders){
   if(Array.isArray(c.notes)    && c.notes.length    > 300) c.notes    = c.notes.slice(-300);
 
   // Владелец правит любого; специалист — только своего. Решаем специалиста для записи.
-  const existing = await env.DB.prepare("SELECT specialist_id, json_extract(data,'$.review') AS j_review FROM clients WHERE code=?").bind(code).first();
+  const existing = await env.DB.prepare("SELECT specialist_id, json_extract(data,'$.review') AS j_review, json_extract(data,'$.app_labs') AS j_labs FROM clients WHERE code=?").bind(code).first();
   if(sess.role !== 'owner' && existing && existing.specialist_id != null && existing.specialist_id !== sess.id){
     return jsonResponse({ ok:false, error:'forbidden' }, corsHeaders, 403);
   }
   // Разовый разбор ведёт сервер (/review/claim, /cabinet/review-done). Кабинет сохраняет досье
   // целиком, и вкладка, открытая до покупки, стёрла бы пометку об оплаченном разборе.
   if(existing && existing.j_review){ try{ c.review = JSON.parse(existing.j_review); }catch(_){} }
+  // Анализы из приложения пишет только приложение (/specialist/labs) — по той же причине берём их с сервера.
+  if(existing && existing.j_labs){ try{ c.app_labs = JSON.parse(existing.j_labs); }catch(_){} }
   const specId = sess.role === 'owner'
     ? (c.specialist_id != null ? c.specialist_id : (existing ? existing.specialist_id : 1))
     : sess.id;                                          // специалист всегда сохраняет на себя
@@ -11294,6 +11297,37 @@ async function handleSpecialistSharing(request, env, corsHeaders){
   await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE upper(code)=?')
     .bind(JSON.stringify(data), Date.now(), code).run();
   return jsonResponse({ok:true, sharing:on}, corsHeaders);
+}
+
+// Анализы из приложения → карточка специалиста (2026-10-05). Раньше в кабинет уходили только жалоба,
+// показатели и текст разбора: анализы, вписанные или распознанные с фото, специалист не видел вовсе
+// (живой случай владельца на «Разборе со специалистом»). Приложение шлёт ВЕСЬ набор после каждого
+// изменения, мы заменяем им прошлый — удалённое в приложении исчезает и в карточке.
+// Значение — как вписал клиент (с его единицей), название — на языке приложения клиента.
+async function handleSpecialistLabs(request, env, corsHeaders){
+  if(!env.DB) return jsonResponse({ok:false,error:'d1_missing'}, corsHeaders, 500);
+  let b = {};
+  try { b = await request.json(); } catch(_){}
+  const code = String(b.code || '').trim().toUpperCase();
+  if(!code) return jsonResponse({ok:false,error:'no_code'}, corsHeaders, 400);
+  const row = await env.DB.prepare('SELECT data FROM clients WHERE upper(code)=?').bind(code).first();
+  if(!row) return jsonResponse({ok:false,error:'not_found'}, corsHeaders, 404);
+  let data = {};
+  try { data = JSON.parse(row.data || '{}'); } catch(_){}
+  if(data.sharing === false) return jsonResponse({ok:false,error:'sharing_off'}, corsHeaders, 403);
+  const items = [];
+  (Array.isArray(b.items) ? b.items : []).slice(0, 80).forEach(x => {
+    if(!x || typeof x !== 'object') return;
+    const k = String(x.k || '').replace(/[^a-z0-9_]/gi, '').slice(0, 16);
+    const v = Number(String(x.v).replace(',', '.'));
+    if(!k || !isFinite(v)) return;
+    items.push({ k, v, u: String(x.u || '').slice(0, 16), n: String(x.n || k).slice(0, 60),
+                 d: /^\d{4}-\d{2}-\d{2}$/.test(String(x.d || '')) ? x.d : '' });
+  });
+  data.app_labs = { updated_at: new Date().toISOString(), items };
+  await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE upper(code)=?')
+    .bind(JSON.stringify(data), Date.now(), code).run();
+  return jsonResponse({ok:true, n:items.length}, corsHeaders);
 }
 
 async function handleSpecialistUnlink(request, env, corsHeaders){

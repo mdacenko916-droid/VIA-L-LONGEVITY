@@ -1575,6 +1575,8 @@ const T = {
   labs_title:{ru:"Лабораторные показатели",uk:"Лабораторні показники",en:"Lab values",es:"Valores de laboratorio",de:"Laborwerte",pt:"Valores laboratoriais",fr:"Valeurs de laboratoire",pl:"Wyniki laboratoryjne",it:"Valori di laboratorio",he:"ערכי מעבדה",ja:"検査値",ko:"검사 수치"},
   labs_date:{ru:"Дата анализов:",uk:"Дата аналізів:",en:"Test date:",es:"Fecha de análisis:",de:"Datum der Analysen:",pt:"Data dos exames:",fr:"Date des analyses :",pl:"Data badań:",it:"Data esami:",he:"תאריך הבדיקות:",ja:"検査日：",ko:"검사일:"},
   labs_norm:{ru:"Норма:",uk:"Норма:",en:"Range:",es:"Rango:",de:"Normbereich:",pt:"Intervalo:",fr:"Plage :",pl:"Norma:",it:"Intervallo:",he:"טווח:",ja:"基準値：",ko:"정상범위:"},
+  labs_app_title:{ru:"Из приложения клиента",uk:"З застосунку клієнта",en:"From the client’s app",es:"Desde la app del cliente",de:"Aus der App des Klienten",pt:"Do app do cliente",fr:"Depuis l’app du client",pl:"Z aplikacji klienta",it:"Dall’app del cliente",he:"מהאפליקציה של הלקוח",ja:"クライアントのアプリから",ko:"고객 앱에서"},
+  labs_app_note:{ru:"Вписаны клиентом или распознаны с фото бланка и подтверждены им. Значения и единицы — как в бланке. Обновлено:",uk:"Вписані клієнтом або розпізнані з фото бланка й підтверджені ним. Значення та одиниці — як у бланку. Оновлено:",en:"Entered by the client or read from a photo of the report and confirmed by them. Values and units as on the report. Updated:",es:"Introducidos por el cliente o leídos de una foto del informe y confirmados por él. Valores y unidades como en el informe. Actualizado:",de:"Vom Klienten eingetragen oder aus einem Foto des Befunds gelesen und von ihm bestätigt. Werte und Einheiten wie im Befund. Aktualisiert:",pt:"Inseridos pelo cliente ou lidos de uma foto do exame e confirmados por ele. Valores e unidades como no exame. Atualizado:",fr:"Saisis par le client ou lus sur une photo du compte rendu et validés par lui. Valeurs et unités comme sur le compte rendu. Mis à jour :",pl:"Wpisane przez klienta lub odczytane ze zdjęcia wyniku i przez niego potwierdzone. Wartości i jednostki jak na wyniku. Zaktualizowano:",it:"Inseriti dal cliente o letti da una foto del referto e confermati da lui. Valori e unità come nel referto. Aggiornato:",he:"הוזנו על ידי הלקוח או נקראו מתמונת הבדיקה ואושרו על ידו. ערכים ויחידות כמו בטופס. עודכן:",ja:"クライアントが入力、または検査票の写真から読み取り本人が確認した値です。数値と単位は検査票のとおり。更新：",ko:"고객이 입력했거나 검사지 사진에서 읽어 고객이 확인한 값입니다. 수치와 단위는 검사지 그대로. 업데이트:"},
   lab_low:{ru:"↓ Низко",uk:"↓ Низько",en:"↓ Low",es:"↓ Bajo",de:"↓ Niedrig",pt:"↓ Baixo",fr:"↓ Bas",pl:"↓ Niski",it:"↓ Basso",he:"↓ נמוך",ja:"↓ 低い",ko:"↓ 낮음"},
   lab_high:{ru:"↑ Выше нормы",uk:"↑ Вище норми",en:"↑ Above range",es:"↑ Por encima",de:"↑ Über Normbereich",pt:"↑ Acima",fr:"↑ Au-dessus",pl:"↑ Powyżej normy",it:"↑ Sopra la norma",he:"↑ מעל הטווח",ja:"↑ 基準値超",ko:"↑ 정상 초과"},
   lab_subopt:{ru:"⚠ Субоптимально",uk:"⚠ Субоптимально",en:"⚠ Suboptimal",es:"⚠ Subóptimo",de:"⚠ Suboptimal",pt:"⚠ Subótimo",fr:"⚠ Sous-optimal",pl:"⚠ Suboptymalnie",it:"⚠ Subottimale",he:"⚠ תת-אופטימלי",ja:"⚠ 準最適",ko:"⚠ 준최적"},
@@ -3587,7 +3589,21 @@ function renderLabs(c){
     <div style="font-size:var(--fs-cap);font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.08em;margin:20px 0 8px;">${labGroup(g)}</div>
     <div class="labs-grid">${LAB_FIELDS.filter(f=>f.g===g).map(f=>labCard(f,labs,c.marks)).join('')}</div>
   `).join('');
-  return `
+  // Анализы из приложения клиента (/specialist/labs) — только чтение, отдельно от полей специалиста:
+  // у приложения свой набор маркеров и единицы как в бланке, сводить их в сетку ниже — значит пересчитывать.
+  const al = c.app_labs && Array.isArray(c.app_labs.items) ? c.app_labs.items : [];
+  const appBlock = al.length ? `
+    <div class="section-title">${t('labs_app_title')}</div>
+    <div style="font-size:var(--fs-cap);color:var(--t3);margin:-4px 0 10px;line-height:1.5;">${t('labs_app_note')} ${esc(String(c.app_labs.updated_at||'').slice(0,10))}</div>
+    <div style="border:1px solid var(--b1);border-radius:10px;overflow:hidden;margin-bottom:22px;">
+      ${al.map((x,i)=>`<div style="display:flex;gap:10px;align-items:baseline;padding:8px 12px;${i?'border-top:1px solid var(--b1);':''}">
+        <span style="flex:1;min-width:0;">${esc(x.n)}</span>
+        <b style="white-space:nowrap;">${esc(String(x.v))}</b>
+        <span style="color:var(--t3);white-space:nowrap;min-width:52px;">${esc(x.u||'')}</span>
+        <span style="color:var(--t3);font-size:var(--fs-cap);white-space:nowrap;">${esc(x.d||'')}</span>
+      </div>`).join('')}
+    </div>` : '';
+  return appBlock + `
     <div class="section-title">${t('labs_title')}</div>
     <div class="lab-date-row">
       <label>${t('labs_date')}</label>
