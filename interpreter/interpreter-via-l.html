@@ -9642,7 +9642,6 @@ function _labSumTx(){
     ja:{t:'検査結果からわかること',src:'ご自身の検査票に印字された基準範囲との比較です。診断ではありません。1つの値だけでは多くはわかりません。',above:'検査票の範囲より高い',below:'検査票の範囲より低い',within:'範囲内',nor:'範囲なし（検査票になかった、または手入力）',allok:'範囲のある値はすべて範囲内です。まとめに反映されます。今のまま続けてください。',doc:'範囲外の値はかかりつけ医に見せましょう。検査票でも印がついている場合は特に。',next:'検査結果は、他のデータと合わせて次回のまとめに反映されます。',spec:'専門家が、検査結果を症状や機器のデータと合わせて確認し、再検査すべき項目をお伝えします。',specBtn:'専門家によるレビュー',ok:'わかりました',range:'検査票の範囲',blankBtn:'検査票を専門家に送る',blankNote:'アプリで扱わない項目（血球数、尿検査）も含め、専門家が検査票全体を確認できます。写真はやり取りの中に保存されます。',blankSent:'検査票を専門家とのやり取りに送りました',blankFail:'送信できませんでした。もう一度お試しください。'},
     ko:{t:'검사 결과에서 보이는 것',src:'본인 검사지에 인쇄된 참고 범위와 비교한 것입니다. 진단이 아닙니다. 값 하나만으로는 알 수 있는 것이 적습니다.',above:'검사지 범위보다 높음',below:'검사지 범위보다 낮음',within:'범위 안',nor:'범위 없음(검사지에 없었거나 직접 입력함)',allok:'범위가 있는 값은 모두 범위 안에 있습니다. 요약에 반영되니 지금처럼 계속하세요.',doc:'범위를 벗어난 값은 가정의에게 보여 주는 것이 좋습니다. 검사지에도 표시되어 있다면 더욱 그렇습니다.',next:'검사 결과는 다른 데이터와 함께 다음 요약에 반영됩니다.',spec:'전문가가 검사 결과를 증상과 기기 데이터와 함께 살펴보고 다시 받아야 할 검사를 알려 드립니다.',specBtn:'전문가 리뷰',ok:'알겠어요',range:'검사지 범위',blankBtn:'검사지를 전문가에게 보내기',blankNote:'앱에서 다루지 않는 항목(혈구 검사, 소변 검사)까지 포함해 전문가가 검사지 전체를 볼 수 있습니다. 사진은 대화에 보관됩니다.',blankSent:'검사지를 전문가와의 대화로 보냈습니다',blankFail:'보내지 못했습니다. 다시 시도해 주세요.'}});
 }
-var _LAB_US_TZ=/^(America\/(New_York|Chicago|Denver|Phoenix|Los_Angeles|Anchorage|Detroit|Indiana|Kentucky|Boise|Juneau|Menominee|Metlakatla|Nome|Sitka|Yakutat|North_Dakota)|Pacific\/Honolulu)/;   // как _isUS в my-specialist: разбор €50 в США не продаём
 // Вне диапазона из бланка → красная РАМКА (не заливка: это «покажите врачу», а не тревога).
 function _labOut(r){ if(!r||r.raw==null||r.raw==='') return false; var v=+r.raw; return (r.hi!=null&&v>r.hi)||(r.lo!=null&&v<r.lo); }
 function _labSummaryHTML(onlyKeys){
@@ -9664,9 +9663,10 @@ function _labSummaryHTML(onlyKeys){
   if(nor) h+='<div style="color:var(--t3);font-size:var(--fs-cap);margin-bottom:6px;">'+_esc(tx.nor)+': '+nor+'</div>';
   if(up.length||dn.length){
     h+='<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.55;margin:8px 0;">'+_esc(tx.doc)+' '+_esc(tx.next)+'</div>';
-    var us=false; try{ us=_LAB_US_TZ.test(Intl.DateTimeFormat().resolvedOptions().timeZone||''); }catch(e){}
-    if(!us) h+='<div style="font-size:var(--fs-cap);color:var(--t3);line-height:1.5;margin-top:10px;">'+_esc(tx.spec)+'</div>'
-      +'<button type="button" onclick="location.href=\'./my-specialist.html\'" style="margin-top:8px;background:rgba(226,185,90,.10);border:1px solid rgba(226,185,90,.32);border-radius:11px;padding:9px 14px;color:var(--gold-lt);font-size:var(--fs-body);cursor:pointer;font-family:inherit;">'+_esc(tx.specBtn)+' →</button>';
+    // Та же проверка, что у кнопки под разбором дня: товар загружен из магазина, не США, разбор ещё не куплен.
+    var canReview=false; try{ canReview=(typeof _reviewOn==='function') && _reviewOn(); }catch(e){}
+    if(canReview) h+='<div style="font-size:var(--fs-cap);color:var(--t3);line-height:1.5;margin-top:10px;">'+_esc(tx.spec)+'</div>'
+      +'<button type="button" onclick="_reviewGo()" style="margin-top:8px;background:rgba(226,185,90,.10);border:1px solid rgba(226,185,90,.32);border-radius:11px;padding:9px 14px;color:var(--gold-lt);font-size:var(--fs-body);cursor:pointer;font-family:inherit;">'+_esc(tx.specBtn)+' →</button>';
   } else {
     h+='<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.55;margin-top:6px;">'+_esc(tx.allok)+'</div>';
   }
