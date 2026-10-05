@@ -1,6 +1,6 @@
 # Кадр App Store 1290×2796: снимок экрана в золотой рамке, подпись — поверх размытой полосы самого снимка
 # (сверху или снизу — где на экране нет важного), бирюзой приложения (--ok #4ECCA3), Playfair Display.
-#   python3 compose-store-shot.py <снимок> "Строка 1\nСтрока 2" <out.png> top|bottom [высота_полосы]
+#   python3 compose-store-shot.py <снимок> "Строка 1\nСтрока 2" <out.png> top|bottom|status [высота_полосы]   (status — туман на месте строки с часами)
 # Шрифт: SHOT_FONT=/путь/PlayfairDisplay[wght].ttf (github.com/google/fonts, ofl/playfairdisplay).
 # Apple рамки и подписи на скриншотах не запрещает; нельзя только показывать то, чего в приложении нет.
 import sys, os
@@ -27,24 +27,32 @@ def compose(src, caption, out, where='top', band=None, patch=None):
     im = Image.open(src).convert('RGB')
     if patch:                              # закрасить «◂ Chrome» в строке состояния цветом фона рядом
         x0, y0, x1, y1 = patch; ImageDraw.Draw(im).rectangle(tuple(patch), fill=im.getpixel((x1 + 30, (y0 + y1) // 2)))
+    fade = 110
+    if where == 'status':                  # 2026-10-05, владелец: туман с подписью закрывает часы и батарею,
+        SB = 140                           # экран не перекрываем лишним. Строку состояния (140 px снимка iPhone)
+        content = im.crop((0, SB, im.width, im.height))   # срезаем, на её место — размытая верхушка экрана,
+        new = Image.new('RGB', im.size)                    # содержимое сдвигается вверх и остаётся целиком
+        new.paste(content.crop((0, 0, im.width, SB)).filter(ImageFilter.GaussianBlur(20)), (0, 0))
+        new.paste(content, (0, SB)); im = new; where = 'top'; fade = 70; status_sb = SB
+    else: status_sb = 0
     sw = W - 2 * M; sh = round(im.height * sw / im.width); top = (H - sh) // 2
     im = im.resize((sw, sh), Image.LANCZOS)
     lines = caption.split('\n'); f = font(88)
     d0 = ImageDraw.Draw(im)
     while max(d0.textlength(l, font=f) for l in lines) > sw - 150: f = font(f.size - 4)
     lh = round(f.size * 1.22); th = lh * len(lines)
-    bh = band or (th + 250)
+    bh = band or ((round(status_sb * sw / 1179) + th + 150) if status_sb else (th + 250))
     y0 = 0 if where == 'top' else sh - bh
     # размытая полоса + затемнение, к внутреннему краю сходит на нет
     blur = im.filter(ImageFilter.GaussianBlur(34))
     dark = Image.blend(blur, Image.new('RGB', im.size, BG), 0.62)
-    mask = Image.new('L', (sw, sh), 0); md = ImageDraw.Draw(mask); fade = 110
+    mask = Image.new('L', (sw, sh), 0); md = ImageDraw.Draw(mask)
     for i in range(bh):
         a = 255 if i < bh - fade else round(255 * (bh - i) / fade)
         y = y0 + i if where == 'top' else sh - 1 - i
         md.line((0, y, sw, y), fill=a)
     im = Image.composite(dark, im, mask); d = ImageDraw.Draw(im)
-    ty = (y0 + (bh - fade - th) // 2 + 20) if where == 'top' else (sh - (bh - fade) + (bh - fade - th) // 2 - 10)
+    ty = ((round(status_sb * sw / 1179) + 80) // 2 + 34) if status_sb else (y0 + (bh - fade - th) // 2 + 20) if where == 'top' else (sh - (bh - fade) + (bh - fade - th) // 2 - 10)
     for l in lines:
         w = d.textlength(l, font=f)
         d.text(((sw - w) / 2 + 2, ty + 3), l, font=f, fill=(0, 0, 0))          # лёгкая тень для читаемости
