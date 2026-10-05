@@ -9448,7 +9448,9 @@ function _labsShareNow(){
     var all=_labsGet(), items=[];
     Object.keys(all).forEach(function(k){
       var r=all[k], d=_labDef(k); if(!r||r.raw==null||r.raw===''||!d) return;
-      items.push({k:k, v:r.raw, u:r.u||d.c, n:L(d.n), d:r.d||''});
+      var it={k:k, v:r.raw, u:r.u||d.c, n:L(d.n), d:r.d||''};
+      if(r.lo!=null) it.lo=r.lo; if(r.hi!=null) it.hi=r.hi;
+      items.push(it);
     });
     var fp=sh.code+'|'+JSON.stringify(items);
     if(localStorage.getItem('vialp_labs_shared')===fp) return;
@@ -9479,7 +9481,9 @@ function _labSave(k){
   var unit=ui?ui.value:_labDef(k).c;
   var canon=_labCanon(k,raw,unit);
   if(canon==null){ _labHint(k,'bad'); return; }
+  var _prev=all[k]||{};
   all[k]={v:canon,u:unit,raw:parseFloat(String(raw).replace(',','.')),d:(di&&di.value)||''};
+  if(_prev.u===unit){ if(_prev.lo!=null) all[k].lo=_prev.lo; if(_prev.hi!=null) all[k].hi=_prev.hi; }   // диапазон бланка живёт, пока единица та же
   _labsSet(all); _labHint(k,'ok');
 }
 function _labHint(k,state){
@@ -9569,6 +9573,13 @@ function _labPhotoConfirm(labs, date){
       +'<div style="font-size:var(--fs-cap);color:var(--t2);">'+_esc(L(d.n))+'</div>'
       +'<input id="lpv-'+k+'" value="'+labs[k].v+'" inputmode="decimal" style="background:rgba(255,255,255,.06);color:var(--t1);border:1px solid rgba(255,255,255,.12);border-radius:7px;font-size:var(--fs-body);padding:6px 8px;width:100%;box-sizing:border-box;">'
       +'<select id="lpu-'+k+'" style="background:rgba(255,255,255,.06);color:var(--t2);border:1px solid '+(uBad?'#E0576A':'rgba(255,255,255,.12)')+';border-radius:7px;font-size:var(--fs-cap);padding:6px 4px;">'+uOpts+'</select>'
+      // Диапазон, напечатанный в бланке (2026-10-05): с ним сравнивает сводка. Пусто = в бланке не было.
+      +'<div style="grid-column:1/-1;display:flex;align-items:center;gap:6px;margin:-2px 0 4px;font-size:var(--fs-cap);color:var(--t3);">'
+        +'<span>'+_esc(_labSumTx().range)+'</span>'
+        +'<input id="lplo-'+k+'" value="'+(labs[k].lo!=null?labs[k].lo:'')+'" inputmode="decimal" placeholder="—" style="width:64px;background:transparent;color:var(--t2);border:1px solid rgba(255,255,255,.12);border-radius:6px;font-size:var(--fs-cap);padding:3px 6px;">'
+        +'<span>–</span>'
+        +'<input id="lphi-'+k+'" value="'+(labs[k].hi!=null?labs[k].hi:'')+'" inputmode="decimal" placeholder="—" style="width:64px;background:transparent;color:var(--t2);border:1px solid rgba(255,255,255,.12);border-radius:6px;font-size:var(--fs-cap);padding:3px 6px;">'
+      +'</div>'
       +'</div>';
   }).join('');
   var m=document.createElement('div'); m.id='labPhotoModal';
@@ -9599,8 +9610,76 @@ function _labPhotoApply(){
     if(fu&&u) fu.value=u;
     if(fd&&date) fd.value=date;
     if(typeof _labSave==='function') _labSave(k);
+    // диапазон из бланка — к сохранённому значению (единица та же, что у значения)
+    var all=_labsGet(); if(all[k]){
+      var num=function(id){ var e=document.getElementById(id); if(!e) return null; var x=parseFloat(String(e.value).replace(',','.')); return isFinite(x)?x:null; };
+      var lo=num('lplo-'+k), hi=num('lphi-'+k);
+      if(lo!=null) all[k].lo=lo; else delete all[k].lo;
+      if(hi!=null) all[k].hi=hi; else delete all[k].hi;
+      _labsSet(all);
+    }
   });
   var m=document.getElementById('labPhotoModal'); if(m) m.remove();
+  _labSummaryShow(keys);   // человек сразу видит, что получилось, а не ждёт завтрашнего разбора
+  try{ if(typeof renderCard==='function' && document.getElementById('cardPanel') && document.getElementById('cardPanel').style.display==='block') renderCard(); }catch(e){}
+}
+// ══ СВОДКА «ЧТО ВИДНО В АНАЛИЗАХ» (2026-10-05) ════════════════════════════════════════════
+// Граница (docs/LABS-LEGAL-BOUNDARY.md): сравниваем значение ТОЛЬКО с диапазоном из бланка человека,
+// который он сам подтвердил, — это «сравнение с пределами, заданными пользователем» (MDCG 2019-11),
+// а не наша интерпретация. Своей таблицы норм не подставляем, болезней не называем, рисков не считаем.
+function _labSumTx(){
+  return L({ru:{t:'Что видно в ваших анализах',src:'Сравнение с диапазоном, напечатанным в вашем бланке. Это не диагноз: одно значение само по себе мало что говорит.',above:'Выше диапазона бланка',below:'Ниже диапазона бланка',within:'В пределах диапазона',nor:'Без диапазона (его не было в бланке или значение вписано вручную)',allok:'Все значения с диапазоном — в его пределах. Разбор учтёт их, продолжайте как есть.',doc:'Значения вне диапазона стоит показать семейному врачу, особенно если они отмечены и в самом бланке.',next:'Анализы войдут в следующий разбор: он учтёт их вместе с вашими данными.',spec:'Специалист посмотрит анализы вместе с вашими жалобами и данными прибора и подскажет, что досдать.',specBtn:'Разбор со специалистом',ok:'Понятно',range:'диапазон бланка'},
+    uk:{t:'Що видно у ваших аналізах',src:'Порівняння з діапазоном, надрукованим у вашому бланку. Це не діагноз: одне значення саме по собі мало що каже.',above:'Вище діапазону бланка',below:'Нижче діапазону бланка',within:'У межах діапазону',nor:'Без діапазону (його не було в бланку або значення вписане вручну)',allok:'Усі значення з діапазоном — у його межах. Розбір урахує їх, продовжуйте як є.',doc:'Значення поза діапазоном варто показати сімейному лікарю, особливо якщо їх позначено і в самому бланку.',next:'Аналізи увійдуть у наступний розбір: він урахує їх разом із вашими даними.',spec:'Спеціаліст подивиться аналізи разом із вашими скаргами й даними приладу та підкаже, що доздати.',specBtn:'Розбір зі спеціалістом',ok:'Зрозуміло',range:'діапазон бланка'},
+    en:{t:'What your lab results show',src:'Compared with the range printed on your own report. This is not a diagnosis: a single value says little on its own.',above:'Above the report’s range',below:'Below the report’s range',within:'Within the range',nor:'No range (it wasn’t on the report, or the value was typed in)',allok:'Every value that has a range is within it. Your overview will take them into account — carry on as you are.',doc:'Values outside the range are worth showing to your family doctor, especially if the report flags them too.',next:'Your results will be included in your next overview, together with your other data.',spec:'A specialist can look at your results together with your complaints and device data and suggest what to retest.',specBtn:'Specialist review',ok:'Got it',range:'report range'},
+    es:{t:'Qué muestran tus análisis',src:'Comparado con el rango impreso en tu propio informe. No es un diagnóstico: un solo valor dice poco por sí mismo.',above:'Por encima del rango del informe',below:'Por debajo del rango del informe',within:'Dentro del rango',nor:'Sin rango (no estaba en el informe o el valor se escribió a mano)',allok:'Todos los valores con rango están dentro de él. El resumen los tendrá en cuenta: sigue como hasta ahora.',doc:'Conviene enseñar los valores fuera de rango a tu médico de familia, sobre todo si el informe también los marca.',next:'Tus análisis entrarán en el próximo resumen, junto con tus demás datos.',spec:'Un especialista puede revisar tus análisis junto con tus molestias y los datos del dispositivo y decirte qué repetir.',specBtn:'Revisión con especialista',ok:'Entendido',range:'rango del informe'},
+    de:{t:'Was Ihre Laborwerte zeigen',src:'Verglichen mit dem Bereich, der auf Ihrem eigenen Befund steht. Das ist keine Diagnose: Ein einzelner Wert sagt für sich wenig.',above:'Über dem Bereich des Befunds',below:'Unter dem Bereich des Befunds',within:'Im Bereich',nor:'Ohne Bereich (stand nicht im Befund oder Wert wurde eingetippt)',allok:'Alle Werte mit Bereich liegen darin. Die Auswertung berücksichtigt sie — machen Sie weiter wie bisher.',doc:'Werte außerhalb des Bereichs sollten Sie Ihrer Hausärztin oder Ihrem Hausarzt zeigen, besonders wenn auch der Befund sie markiert.',next:'Ihre Werte fließen in die nächste Auswertung ein, zusammen mit Ihren übrigen Daten.',spec:'Eine Fachperson kann Ihre Werte zusammen mit Beschwerden und Gerätedaten ansehen und sagen, was nachzutesten ist.',specBtn:'Auswertung mit Fachperson',ok:'Verstanden',range:'Bereich im Befund'},
+    pt:{t:'O que seus exames mostram',src:'Comparado com o intervalo impresso no seu próprio exame. Não é um diagnóstico: um único valor diz pouco por si só.',above:'Acima do intervalo do exame',below:'Abaixo do intervalo do exame',within:'Dentro do intervalo',nor:'Sem intervalo (não estava no exame ou o valor foi digitado)',allok:'Todos os valores com intervalo estão dentro dele. A análise vai considerá-los — continue como está.',doc:'Vale mostrar os valores fora do intervalo ao seu médico de família, principalmente se o próprio exame os marcar.',next:'Seus exames entrarão na próxima análise, junto com seus outros dados.',spec:'Um especialista pode ver seus exames junto com suas queixas e os dados do dispositivo e dizer o que repetir.',specBtn:'Análise com especialista',ok:'Entendi',range:'intervalo do exame'},
+    fr:{t:'Ce que montrent vos analyses',src:'Comparé à l’intervalle imprimé sur votre propre compte rendu. Ce n’est pas un diagnostic : une seule valeur dit peu à elle seule.',above:'Au-dessus de l’intervalle du compte rendu',below:'En dessous de l’intervalle du compte rendu',within:'Dans l’intervalle',nor:'Sans intervalle (absent du compte rendu ou valeur saisie à la main)',allok:'Toutes les valeurs ayant un intervalle y sont comprises. Le bilan en tiendra compte : continuez ainsi.',doc:'Les valeurs hors intervalle méritent d’être montrées à votre médecin traitant, surtout si le compte rendu les signale aussi.',next:'Vos analyses seront prises en compte dans le prochain bilan, avec vos autres données.',spec:'Un spécialiste peut examiner vos analyses avec vos plaintes et les données de l’appareil et dire quoi refaire.',specBtn:'Bilan avec un spécialiste',ok:'Compris',range:'intervalle du compte rendu'},
+    pl:{t:'Co pokazują Twoje badania',src:'W porównaniu z zakresem wydrukowanym na Twoim wyniku. To nie diagnoza: pojedyncza wartość sama w sobie mówi niewiele.',above:'Powyżej zakresu z wyniku',below:'Poniżej zakresu z wyniku',within:'W zakresie',nor:'Bez zakresu (nie było go na wyniku albo wartość wpisano ręcznie)',allok:'Wszystkie wartości z zakresem mieszczą się w nim. Analiza je uwzględni — działaj jak dotąd.',doc:'Wartości poza zakresem warto pokazać lekarzowi rodzinnemu, zwłaszcza jeśli wynik też je oznacza.',next:'Badania wejdą do następnej analizy razem z Twoimi pozostałymi danymi.',spec:'Specjalista obejrzy badania razem z Twoimi dolegliwościami i danymi urządzenia i podpowie, co powtórzyć.',specBtn:'Analiza ze specjalistą',ok:'Rozumiem',range:'zakres z wyniku'},
+    it:{t:'Cosa mostrano le tue analisi',src:'Confronto con l’intervallo stampato sul tuo referto. Non è una diagnosi: un singolo valore dice poco da solo.',above:'Sopra l’intervallo del referto',below:'Sotto l’intervallo del referto',within:'Nell’intervallo',nor:'Senza intervallo (non c’era nel referto o il valore è stato inserito a mano)',allok:'Tutti i valori con un intervallo vi rientrano. Il riepilogo ne terrà conto: continua così.',doc:'I valori fuori intervallo vanno mostrati al medico di famiglia, soprattutto se anche il referto li segnala.',next:'Le tue analisi entreranno nel prossimo riepilogo, insieme agli altri dati.',spec:'Uno specialista può esaminare le analisi insieme ai tuoi disturbi e ai dati del dispositivo e dirti cosa ripetere.',specBtn:'Riepilogo con specialista',ok:'Ho capito',range:'intervallo del referto'},
+    he:{t:'מה רואים בבדיקות שלכם',src:'השוואה לטווח המודפס בטופס שלכם. זו לא אבחנה: ערך בודד אומר מעט בפני עצמו.',above:'מעל הטווח שבטופס',below:'מתחת לטווח שבטופס',within:'בתוך הטווח',nor:'ללא טווח (לא הופיע בטופס או שהערך הוזן ידנית)',allok:'כל הערכים שיש להם טווח נמצאים בתוכו. הסקירה תתחשב בהם — המשיכו כרגיל.',doc:'כדאי להראות ערכים מחוץ לטווח לרופא המשפחה, במיוחד אם גם הטופס מסמן אותם.',next:'הבדיקות ייכנסו לסקירה הבאה, יחד עם שאר הנתונים שלכם.',spec:'מומחה יכול לעבור על הבדיקות יחד עם התלונות ונתוני המכשיר ולומר מה כדאי לבדוק שוב.',specBtn:'סקירה עם מומחה',ok:'הבנתי',range:'הטווח בטופס'},
+    ja:{t:'検査結果からわかること',src:'ご自身の検査票に印字された基準範囲との比較です。診断ではありません。1つの値だけでは多くはわかりません。',above:'検査票の範囲より高い',below:'検査票の範囲より低い',within:'範囲内',nor:'範囲なし（検査票になかった、または手入力）',allok:'範囲のある値はすべて範囲内です。まとめに反映されます。今のまま続けてください。',doc:'範囲外の値はかかりつけ医に見せましょう。検査票でも印がついている場合は特に。',next:'検査結果は、他のデータと合わせて次回のまとめに反映されます。',spec:'専門家が、検査結果を症状や機器のデータと合わせて確認し、再検査すべき項目をお伝えします。',specBtn:'専門家によるレビュー',ok:'わかりました',range:'検査票の範囲'},
+    ko:{t:'검사 결과에서 보이는 것',src:'본인 검사지에 인쇄된 참고 범위와 비교한 것입니다. 진단이 아닙니다. 값 하나만으로는 알 수 있는 것이 적습니다.',above:'검사지 범위보다 높음',below:'검사지 범위보다 낮음',within:'범위 안',nor:'범위 없음(검사지에 없었거나 직접 입력함)',allok:'범위가 있는 값은 모두 범위 안에 있습니다. 요약에 반영되니 지금처럼 계속하세요.',doc:'범위를 벗어난 값은 가정의에게 보여 주는 것이 좋습니다. 검사지에도 표시되어 있다면 더욱 그렇습니다.',next:'검사 결과는 다른 데이터와 함께 다음 요약에 반영됩니다.',spec:'전문가가 검사 결과를 증상과 기기 데이터와 함께 살펴보고 다시 받아야 할 검사를 알려 드립니다.',specBtn:'전문가 리뷰',ok:'알겠어요',range:'검사지 범위'}});
+}
+var _LAB_US_TZ=/^(America\/(New_York|Chicago|Denver|Phoenix|Los_Angeles|Anchorage|Detroit|Indiana|Kentucky|Boise|Juneau|Menominee|Metlakatla|Nome|Sitka|Yakutat|North_Dakota)|Pacific\/Honolulu)/;   // как _isUS в my-specialist: разбор €50 в США не продаём
+function _labSummaryHTML(onlyKeys){
+  var tx=_labSumTx(), all=_labsGet(), up=[], dn=[], inn=0, nor=0;
+  Object.keys(all).forEach(function(k){
+    if(onlyKeys && onlyKeys.indexOf(k)<0) return;
+    var r=all[k], d=_labDef(k); if(!r||r.raw==null||r.raw===''||!d) return;
+    var v=+r.raw, lo=r.lo, hi=r.hi, line=_esc(L(d.n))+' <b>'+_esc(String(r.raw))+'</b> '+_esc(r.u||'')
+      +' <span style="color:var(--t3);">('+(lo!=null?_esc(String(lo)):'')+'–'+(hi!=null?_esc(String(hi)):'')+')</span>';
+    if(lo==null&&hi==null){ nor++; return; }
+    if(hi!=null&&v>hi) up.push(line); else if(lo!=null&&v<lo) dn.push(line); else inn++;
+  });
+  if(!up.length&&!dn.length&&!inn) return '';
+  var li=function(arr){ return '<ul style="margin:4px 0 10px;padding-left:18px;line-height:1.6;">'+arr.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>'; };
+  var h='<div style="font-size:var(--fs-cap);color:var(--t3);line-height:1.5;margin-bottom:10px;">'+_esc(tx.src)+'</div>';
+  if(up.length) h+='<div style="color:#E9B872;font-weight:600;">↑ '+_esc(tx.above)+'</div>'+li(up);
+  if(dn.length) h+='<div style="color:#E9B872;font-weight:600;">↓ '+_esc(tx.below)+'</div>'+li(dn);
+  if(inn) h+='<div style="color:#4ECCA3;margin-bottom:6px;">✓ '+_esc(tx.within)+': '+inn+'</div>';
+  if(nor) h+='<div style="color:var(--t3);font-size:var(--fs-cap);margin-bottom:6px;">'+_esc(tx.nor)+': '+nor+'</div>';
+  if(up.length||dn.length){
+    h+='<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.55;margin:8px 0;">'+_esc(tx.doc)+' '+_esc(tx.next)+'</div>';
+    var us=false; try{ us=_LAB_US_TZ.test(Intl.DateTimeFormat().resolvedOptions().timeZone||''); }catch(e){}
+    if(!us) h+='<div style="font-size:var(--fs-cap);color:var(--t3);line-height:1.5;margin-top:10px;">'+_esc(tx.spec)+'</div>'
+      +'<button type="button" onclick="location.href=\'./my-specialist.html\'" style="margin-top:8px;background:rgba(226,185,90,.10);border:1px solid rgba(226,185,90,.32);border-radius:11px;padding:9px 14px;color:var(--gold-lt);font-size:var(--fs-body);cursor:pointer;font-family:inherit;">'+_esc(tx.specBtn)+' →</button>';
+  } else {
+    h+='<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.55;margin-top:6px;">'+_esc(tx.allok)+'</div>';
+  }
+  return h;
+}
+function _labSummaryShow(keys){
+  var body=_labSummaryHTML(keys); if(!body) return;
+  var tx=_labSumTx();
+  var m=document.createElement('div'); m.id='labSumModal';
+  m.style.cssText='position:fixed;inset:0;z-index:900;background:rgba(8,10,16,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;';
+  m.innerHTML='<div style="width:100%;max-width:560px;max-height:88vh;overflow-y:auto;background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.28);border-radius:20px 20px 0 0;padding:18px 18px calc(22px + env(safe-area-inset-bottom));font-size:var(--fs-body);color:var(--t1);">'
+    +'<div style="font-family:Playfair Display,serif;font-size:var(--fs-title);color:#fff;margin-bottom:8px;">'+_esc(tx.t)+'</div>'
+    +body
+    +'<button onclick="var e=document.getElementById(\'labSumModal\');if(e)e.remove();" style="display:block;width:100%;margin-top:16px;padding:12px;border-radius:11px;border:none;background:var(--gold);color:#10141C;font-size:var(--fs-body);font-weight:600;cursor:pointer;font-family:inherit;">'+_esc(tx.ok)+'</button>'
+    +'</div>';
+  document.body.appendChild(m);
 }
 // Единица с бланка → вариант из выбора поля. Не узнали → null (поле подсветится, человек выберет сам).
 function _labUnitMatch(raw, d){
@@ -9663,6 +9742,9 @@ function _labsInner(){
     +'<input type="file" id="labPhotoFile" accept="image/*" style="display:none" onchange="if(this.files&&this.files[0])labPhotoPick(this.files[0]);this.value=\'\';">'
     +'<div id="labPhotoSt" style="font-size:var(--fs-cap);margin-top:6px;"></div>'
     +'</div>';
+  var _sum=_labSummaryHTML();
+  if(_sum) h+='<div style="border:1px solid rgba(226,185,90,.22);border-radius:14px;padding:12px 14px;margin-bottom:14px;font-size:var(--fs-body);color:var(--t1);">'
+    +'<div style="font-family:Playfair Display,serif;font-size:var(--fs-title);margin-bottom:6px;">'+_esc(_labSumTx().t)+'</div>'+_sum+'</div>';
   LAB_GROUPS.forEach(function(G){
   var _gd=LAB_DEFS.filter(function(x){return (x.g||'base')===G.g;});
   if(!_gd.length) return;

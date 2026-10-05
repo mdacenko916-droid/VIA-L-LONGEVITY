@@ -11321,8 +11321,12 @@ async function handleSpecialistLabs(request, env, corsHeaders){
     const k = String(x.k || '').replace(/[^a-z0-9_]/gi, '').slice(0, 16);
     const v = Number(String(x.v).replace(',', '.'));
     if(!k || !isFinite(v)) return;
-    items.push({ k, v, u: String(x.u || '').slice(0, 16), n: String(x.n || k).slice(0, 60),
-                 d: /^\d{4}-\d{2}-\d{2}$/.test(String(x.d || '')) ? x.d : '' });
+    const it = { k, v, u: String(x.u || '').slice(0, 16), n: String(x.n || k).slice(0, 60),
+                 d: /^\d{4}-\d{2}-\d{2}$/.test(String(x.d || '')) ? x.d : '' };
+    const lo = Number(x.lo), hi = Number(x.hi);   // диапазон из бланка клиента, если был
+    if (x.lo != null && x.lo !== '' && isFinite(lo)) it.lo = lo;
+    if (x.hi != null && x.hi !== '' && isFinite(hi)) it.hi = hi;
+    items.push(it);
   });
   data.app_labs = { updated_at: new Date().toISOString(), items };
   await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE upper(code)=?')
@@ -11967,7 +11971,7 @@ async function handleLabsParse(request, env, corsHeaders) {
 
   const prompt = 'На изображении — бланк лабораторных анализов. Извлеки ТОЛЬКО те показатели из списка ниже, '
     + 'которые реально видны, и верни СТРОГО JSON без пояснений и без markdown:\n'
-    + '{"labs":{"<ключ>":{"v":<число>,"u":"<единица как в бланке>"},...},"date":"YYYY-MM-DD"}\n\n'
+    + '{"labs":{"<ключ>":{"v":<число>,"u":"<единица как в бланке>","lo":<нижняя граница или null>,"hi":<верхняя граница или null>},...},"date":"YYYY-MM-DD"}\n\n'
     + 'Допустимые ключи и КАНОНИЧЕСКИЕ единицы: ' + LAB_PARSE_KEYS + '\n\n'
     + 'СООТВЕТСТВИЕ РУССКИХ/УКРАИНСКИХ НАЗВАНИЙ (частая путаница — сверяйся с этим списком):\n'
     + 'ЛПНП / ЛПНЩ / LDL → ldl; ЛПВП / ЛПВЩ / HDL → hdl; холестерин общий → chol; триглицериды → tg; '
@@ -11986,7 +11990,10 @@ async function handleLabsParse(request, env, corsHeaders) {
     + '(3) чего нет на изображении — не выдумывай и не добавляй ключ; '
     + '(4) date — дата взятия материала, если видна; иначе не указывай поле; '
     + '(5) никаких комментариев, оценок, «нормы» и диагнозов — только числа; '
-    + '(6) если изображение нечитаемо — верни {"labs":{}}.';
+    + '(6) если изображение нечитаемо — верни {"labs":{}}; '
+    + '(7) lo/hi — референсный диапазон, НАПЕЧАТАННЫЙ в бланке в той же строке («75 - 100» → 75 и 100; «< 200» или '
+    + '«Valor deseable <200» → lo null, hi 200; «> 40» → lo 40, hi null), в тех же единицах, что значение; '
+    + 'диапазона нет в строке — оба null, НЕ подставляй «известную норму» от себя.';
 
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -12017,7 +12024,10 @@ async function handleLabsParse(request, env, corsHeaders) {
       if (!allow.has(k)) return;
       const v = Number(String((parsed.labs[k] || {}).v).replace(',', '.'));
       if (!isFinite(v)) return;
+      const _rb = x => { if (x == null || x === '') return null; const n = Number(String(x).replace(',', '.')); return isFinite(n) ? n : null; };
+      const lo = _rb((parsed.labs[k] || {}).lo), hi = _rb((parsed.labs[k] || {}).hi);
       out[k] = { v, u: String((parsed.labs[k] || {}).u || '').slice(0, 12) };
+      if (lo != null || hi != null) { if (lo != null) out[k].lo = lo; if (hi != null) out[k].hi = hi; }   // диапазон из бланка (2026-10-05)
     });
     const date = /^\d{4}-\d{2}-\d{2}$/.test(String(parsed.date || '')) ? parsed.date : '';
     return jsonResponse({ ok:true, labs: out, date }, corsHeaders);
