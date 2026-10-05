@@ -59,7 +59,7 @@ def compose(src, caption, out, where='top', band=None, patch=None):
         y = y0 + i if where == 'top' else sh - 1 - i
         md.line((0, y, sw, y), fill=a)
     im = Image.composite(dark, im, mask); d = ImageDraw.Draw(im)
-    ty = ((round(status_sb * sw / 1179) + 80) // 2 + 34) if status_sb else (y0 + (bh - fade - th) // 2 + 20) if where == 'top' else (sh - (bh - fade) + (bh - fade - th) // 2 - 10)
+    ty = ((round(status_sb * sw / 1179) + 80) // 2 + 34) if status_sb else (y0 + (bh - fade - th) // 2 + 20) if where == 'top' else (sh - th - 80)
     for l in lines:
         w = d.textlength(l, font=f)
         d.text(((sw - w) / 2 + 2, ty + 3), l, font=f, fill=(0, 0, 0))          # лёгкая тень для читаемости
