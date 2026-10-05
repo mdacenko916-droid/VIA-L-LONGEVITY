@@ -1,6 +1,7 @@
 # Кадр App Store 1290×2796: снимок экрана в золотой рамке, подпись — поверх размытой полосы самого снимка
 # (сверху или снизу — где на экране нет важного), бирюзой приложения (--ok #4ECCA3), Playfair Display.
-#   python3 compose-store-shot.py <снимок> "Строка 1\nСтрока 2" <out.png> top|bottom|status [высота_полосы]   (status — туман на месте строки с часами)
+#   python3 compose-store-shot.py <снимок> "Строка 1\nСтрока 2" <out.png> top|bottom|status|status-bottom [высота_полосы]
+#   status — туман с подписью на месте строки с часами; status-bottom — часы срезаны, туман снизу (где свободнее)
 # Шрифт: SHOT_FONT=/путь/PlayfairDisplay[wght].ttf (github.com/google/fonts, ofl/playfairdisplay).
 # Apple рамки и подписи на скриншотах не запрещает; нельзя только показывать то, чего в приложении нет.
 import sys, os
@@ -34,6 +35,12 @@ def compose(src, caption, out, where='top', band=None, patch=None):
         new = Image.new('RGB', im.size)                    # содержимое сдвигается вверх и остаётся целиком
         new.paste(content.crop((0, 0, im.width, SB)).filter(ImageFilter.GaussianBlur(20)), (0, 0))
         new.paste(content, (0, SB)); im = new; where = 'top'; fade = 70; status_sb = SB
+    elif where == 'status-bottom':         # то же, но туман с подписью снизу — когда свободнее низ экрана:
+        SB = 140                           # строку состояния срезаем, экран поднимается к верху рамки,
+        content = im.crop((0, SB, im.width, im.height))   # освободившийся низ уходит под туман
+        new = Image.new('RGB', im.size); new.paste(content, (0, 0))
+        new.paste(content.crop((0, content.height - SB, im.width, content.height)), (0, content.height))
+        im = new; where = 'bottom'; status_sb = 0
     else: status_sb = 0
     sw = W - 2 * M; sh = round(im.height * sw / im.width); top = (H - sh) // 2
     im = im.resize((sw, sh), Image.LANCZOS)
