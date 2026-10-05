@@ -6069,7 +6069,69 @@ function _researchConsent(){ try{ return localStorage.getItem('vialp_research_co
 // Слой синхронизации — ОТКЛЮЧЁН. Пуш возможен только при явном согласии пользователя (opt-in).
 // Сервер-эндпоинт добавляется на этапе 3: анонимно, health-данные отдельно от аккаунта,
 // с удалением по запросу (GDPR/законы штатов). Сейчас — инертный шов, чтобы включить без переделки.
-function _syncPushDaily(rec){
+// ══ ПРЕДЛОЖЕНИЕ «ПОМОЧЬ УЛУЧШИТЬ» ПРИ ЗАПУСКЕ (2026-10-05, решение владельца) ══════════════
+// Раньше переключатель жил только в «Профиль → Правовая информация → страница согласия» — его не находили.
+// Теперь один раз при запуске: окно с двумя РАВНЫМИ кнопками (без подталкивания), по умолчанию выключено,
+// «Подробнее» ведёт на полную страницу согласия. Ответ запоминается; дальше — только в профиле.
+function _rcAskTx(){
+  return L({ru:{t:'Помочь улучшить VIA·L',b:'Можно делиться обезличенными цифрами дня — без имени, почты и ваших слов. По ним мы проверяем, какие шаги «Фокуса недели» реально помогают людям с похожими жалобами, и делаем советы точнее. Приложение работает одинаково с переключателем и без, выключить можно в любой момент в «Мой профиль».',on:'Включить',no:'Не сейчас',more:'Подробнее: что передаётся'},
+    uk:{t:'Допомогти покращити VIA·L',b:'Можна ділитися знеособленими цифрами дня — без імені, пошти та ваших слів. За ними ми перевіряємо, які кроки «Фокусу тижня» справді допомагають людям зі схожими скаргами, і робимо поради точнішими. Застосунок працює однаково з перемикачем і без, вимкнути можна будь-коли в «Мій профіль».',on:'Увімкнути',no:'Не зараз',more:'Детальніше: що передається'},
+    en:{t:'Help improve VIA·L',b:'You can share the anonymous numbers of your day — no name, no email, none of your own words. They let us check which Focus of the week steps really help people with similar complaints, and make the advice more accurate. The app works the same either way, and you can switch it off any time in My Profile.',on:'Turn on',no:'Not now',more:'More: what is sent'},
+    es:{t:'Ayudar a mejorar VIA·L',b:'Puedes compartir las cifras anónimas de tu día: sin nombre, sin correo y sin tus palabras. Con ellas comprobamos qué pasos del Foco de la semana ayudan de verdad a personas con molestias parecidas y afinamos los consejos. La app funciona igual en ambos casos y puedes desactivarlo cuando quieras en Mi perfil.',on:'Activar',no:'Ahora no',more:'Más: qué se envía'},
+    de:{t:'VIA·L verbessern helfen',b:'Sie können die anonymen Zahlen Ihres Tages teilen — ohne Namen, E-Mail und eigene Worte. Damit prüfen wir, welche Schritte im Fokus der Woche Menschen mit ähnlichen Beschwerden wirklich helfen, und machen die Hinweise genauer. Die App funktioniert in beiden Fällen gleich; abschalten können Sie es jederzeit unter Mein Profil.',on:'Einschalten',no:'Nicht jetzt',more:'Mehr: was gesendet wird'},
+    pt:{t:'Ajudar a melhorar o VIA·L',b:'Você pode compartilhar os números anônimos do seu dia — sem nome, sem e-mail e sem suas palavras. Com eles verificamos quais passos do Foco da semana realmente ajudam pessoas com queixas parecidas e deixamos as dicas mais precisas. O app funciona igual nos dois casos, e você pode desligar quando quiser em Meu perfil.',on:'Ativar',no:'Agora não',more:'Mais: o que é enviado'},
+    fr:{t:'Aider à améliorer VIA·L',b:'Vous pouvez partager les chiffres anonymes de votre journée — sans nom, sans e-mail et sans vos propres mots. Ils nous permettent de vérifier quelles étapes du Focus de la semaine aident vraiment les personnes ayant des plaintes proches, et d’affiner les conseils. L’app fonctionne de la même façon dans les deux cas ; vous pouvez désactiver à tout moment dans Mon profil.',on:'Activer',no:'Pas maintenant',more:'En savoir plus : ce qui est envoyé'},
+    pl:{t:'Pomóż ulepszyć VIA·L',b:'Możesz udostępniać anonimowe liczby ze swojego dnia — bez imienia, e-maila i Twoich słów. Dzięki nim sprawdzamy, które kroki Fokusu tygodnia naprawdę pomagają osobom z podobnymi dolegliwościami, i uściślamy rady. Aplikacja działa tak samo w obu przypadkach, a wyłączyć można w każdej chwili w Mój profil.',on:'Włącz',no:'Nie teraz',more:'Więcej: co jest wysyłane'},
+    it:{t:'Aiuta a migliorare VIA·L',b:'Puoi condividere i numeri anonimi della tua giornata — senza nome, email né parole tue. Ci servono per verificare quali passi del Focus della settimana aiutano davvero chi ha disturbi simili e per rendere i consigli più precisi. L’app funziona allo stesso modo in entrambi i casi e puoi disattivare quando vuoi in Il mio profilo.',on:'Attiva',no:'Non ora',more:'Altro: cosa viene inviato'},
+    he:{t:'לעזור לשפר את VIA·L',b:'אפשר לשתף את המספרים האנונימיים של היום שלכם — בלי שם, בלי אימייל ובלי המילים שלכם. בעזרתם אנחנו בודקים אילו צעדים של המיקוד של השבוע באמת עוזרים לאנשים עם תלונות דומות, ומדייקים את ההמלצות. האפליקציה עובדת אותו דבר בשני המקרים, ואפשר לכבות בכל רגע בפרופיל שלי.',on:'להפעיל',no:'לא עכשיו',more:'עוד: מה נשלח'},
+    ja:{t:'VIA·Lの改善に協力する',b:'名前・メール・ご自身の言葉を含まない、その日の匿名の数値を共有できます。これにより「今週のフォーカス」のどのステップが似た悩みを持つ人に本当に役立つかを確かめ、アドバイスをより正確にします。どちらを選んでもアプリは同じように使え、「マイプロフィール」からいつでもオフにできます。',on:'オンにする',no:'今はしない',more:'詳しく：送信される内容'},
+    ko:{t:'VIA·L 개선에 참여하기',b:'이름, 이메일, 직접 쓴 말 없이 하루의 익명 수치를 공유할 수 있습니다. 이를 통해 「이번 주 포커스」의 어떤 단계가 비슷한 불편을 가진 분들께 실제로 도움이 되는지 확인하고 조언을 더 정확하게 만듭니다. 어느 쪽을 선택해도 앱은 똑같이 작동하며, 내 프로필에서 언제든 끌 수 있습니다.',on:'켜기',no:'나중에',more:'자세히: 전송되는 내용'}});
+}
+function _rcAskMaybe(){
+  try{
+    if(localStorage.getItem('vialp_rc_asked')) return;
+    if(localStorage.getItem('vialp_research_consent')==='1'){ localStorage.setItem('vialp_rc_asked','on'); return; }
+    var g=document.getElementById('gate'); if(g && g.style.display!=='none' && g.offsetParent!==null){ setTimeout(_rcAskMaybe,5000); return; }   // ещё на входе по коду
+    if(document.getElementById('labPhotoModal')||document.getElementById('labSumModal')||document.getElementById('rcAskModal')){ setTimeout(_rcAskMaybe,5000); return; }
+  }catch(e){ return; }
+  var tx=_rcAskTx();
+  var btn='flex:1;padding:12px;border-radius:11px;border:1px solid rgba(226,185,90,.45);background:rgba(226,185,90,.10);color:var(--gold-lt);font-size:var(--fs-body);font-weight:600;cursor:pointer;font-family:inherit;';
+  var m=document.createElement('div'); m.id='rcAskModal';
+  m.style.cssText='position:fixed;inset:0;z-index:950;background:rgba(8,10,16,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;';
+  m.innerHTML='<div style="width:100%;max-width:560px;background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.28);border-radius:20px 20px 0 0;padding:18px 18px calc(22px + env(safe-area-inset-bottom));">'
+    +'<div style="font-family:Playfair Display,serif;font-size:var(--fs-title);color:#fff;margin-bottom:8px;">'+_esc(tx.t)+'</div>'
+    +'<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.6;margin-bottom:12px;">'+_esc(tx.b)+'</div>'
+    +'<a href="./research-consent.html" onclick="try{localStorage.setItem(\'vialp_rc_asked\',\'more\');}catch(e){}" style="display:inline-block;font-size:var(--fs-cap);color:var(--gold-lt);margin-bottom:16px;">'+_esc(tx.more)+' →</a>'
+    +'<div style="display:flex;gap:10px;">'
+      +'<button type="button" onclick="_rcAskAnswer(false)" style="'+btn+'">'+_esc(tx.no)+'</button>'
+      +'<button type="button" onclick="_rcAskAnswer(true)" style="'+btn+'">'+_esc(tx.on)+'</button>'
+    +'</div></div>';
+  document.body.appendChild(m);
+}
+function _rcAskAnswer(on){
+  try{ localStorage.setItem('vialp_research_consent', on?'1':'0'); localStorage.setItem('vialp_rc_asked', on?'on':'no'); }catch(e){}
+  var m=document.getElementById('rcAskModal'); if(m) m.remove();
+  try{ if(on && typeof renderCard==='function' && document.body.classList.contains('card-open')) renderCard(); }catch(e){}
+}
+setTimeout(_rcAskMaybe,3000);
+// «Фокус недели» и грубый профиль для сводок метода (2026-10-05). Только ключи из закрытых списков —
+// сервер всё равно проверит каждое поле (RESEARCH_ENUMS). Возраст — пятилетками, текста жалобы нет.
+function _researchExtra(rec){
+  var x={};
+  try{
+    var P=JSON.parse(localStorage.getItem('vialp_profile')||'{}')||{};
+    if(P.gender==='male'||P.gender==='female') x.sex=P.gender;
+    var a=parseInt(P.age,10); if(a>=18&&a<=99) x.age5=Math.floor(a/5)*5;
+    if(P.gender==='male') x.phase='male'; else if(P.phase) x.phase=String(P.phase);
+    var c=P.complaint&&Array.isArray(P.complaint.items)?P.complaint.items.slice(0,2).map(String).sort():[];
+    if(c.length) x.cmp=c.join('+');
+    var e=(typeof _expGet==='function')?_expGet():null;
+    if(e&&e.lever&&(!e.startDay||!rec.day||rec.day>=e.startDay)) x.lever=e.lever;
+    if(rec.exp_done==='yes'||rec.exp_done==='no') x.exp_done=rec.exp_done;
+  }catch(e2){}
+  return x;
+}
+function _syncPushDaily(rec, more){
   // Исследовательский синк (opt-in). Уходит ТОЛЬКО при явном согласии — переключатель и полный
   // текст живут на research-consent.html, ключ тот же (vialp_research_consent, по умолчанию OFF).
   // Что именно принимается — решает whitelist на сервере (handleResearchDay): свободные тексты
@@ -6078,7 +6140,7 @@ function _syncPushDaily(rec){
     if(!_researchConsent()) return;
     var pid=_vialpPid(); if(!pid||!rec||!rec.day) return;
     fetch(AI_WORKER+'/research/day',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({pid:pid,lang:lang,rec:rec})}).catch(function(){});   // тихо: сбой синка не должен мешать проходу
+      body:JSON.stringify({pid:pid,lang:lang,rec:Object.assign({},rec,_researchExtra(rec),more||{})})}).catch(function(){});   // тихо: сбой синка не должен мешать проходу
   }catch(e){}
 }
 function _saveDaily(){
@@ -6661,6 +6723,7 @@ function _expMark(v){
     if(!r) return;                                   // прохода за сегодня ещё нет — отмечать не к чему
     r.exp_done=(r.exp_done===v)?null:v;              // повторный тап по тому же — снять отметку
     localStorage.setItem('vialp_daily',JSON.stringify(arr));
+    _syncPushDaily(r);                               // отметку ставят позже прохода — день уходит заново (только при согласии)
   }catch(e){}
   try{ renderExperimentUI(window.__rdDay||_dayKey()); }catch(e){}
 }
@@ -6743,6 +6806,8 @@ function _expArchive(e,outcome){
                   lever:e.lever||null, outcome:outcome||null, kept:res.kept });   // рычаг и исход — чтобы не предлагать пройденное заново
     while(log.length>12)log.pop();
     localStorage.setItem('vialp_exp_log',JSON.stringify(log));
+    if(outcome){ try{ var _d=JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[], _t=_d.filter(function(x){return x.day===_dayKey();})[0];
+      if(_t) _syncPushDaily(_t,{lever:e.lever||undefined, exp_outcome:String(outcome)}); }catch(x2){} }   // исход — для сводок метода
   }catch(e2){}
 }
 function _expUI(){

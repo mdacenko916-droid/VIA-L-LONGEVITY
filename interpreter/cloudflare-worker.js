@@ -2506,7 +2506,18 @@ const RESEARCH_FIELDS = [
   'hrv','rhr','sleepHours','deepMin','spo2','tempDev','vo2','readiness',
   'energy','sleep_qual','hf_count','hf_intensity','memory','fog','stress','alc',
   'cmp_delta','last_meal','caffeine_late','bp_sys','bp_dia','weight','waist',
+  // «Фокус недели» и грубый профиль (2026-10-05): без них видно, что стало легче, но не видно,
+  // от какого шага и у кого. Только значения из закрытых списков — проверка в RESEARCH_ENUMS.
+  'lever','exp_done','exp_outcome','cmp','sex','age5','phase',
 ];
+const RESEARCH_ENUMS = {
+  lever: /^[a-z_]{2,20}$/,                 // ключ рычага из levers.js
+  exp_done: /^(yes|no)$/,
+  exp_outcome: /^[a-z_]{2,12}$/,           // next / done / up / replaced …
+  cmp: /^[a-z_]{2,24}(\+[a-z_]{2,24})?$/, // ключи жалобы (не слова человека), не больше двух
+  sex: /^(male|female)$/,
+  phase: /^[a-z_]{2,16}$/,
+};
 // Метрики, приходящие ИЗ трекера (в отличие от самооценок, которые вводит сам человек).
 // Разделение нужно из-за условий вендоров — см. WEARABLE_RESEARCH_BLOCK ниже.
 const RESEARCH_DEVICE_FIELDS = new Set(['hrv','rhr','sleepHours','deepMin','spo2','tempDev','vo2','readiness']);
@@ -2614,12 +2625,22 @@ async function buildResearchStats(env, period) {
         const all = pre + '*';
         const lang = String(row.lang || '?').slice(0, 5);
         for (const k of RESEARCH_FIELDS) {
+          if (k === 'age5') continue;                             // возраст — разрез, а не метрика
           const v = d[k];
           if (typeof v !== 'number' || !isFinite(v)) continue;   // категории вида 'high' в сводку не идут
           push(src, lang, k, v);
           push(all, lang, k, v);
           push(src, '*', k, v);
           push(all, '*', k, v);
+          // Метод (2026-10-05): что происходит с метриками в дни рычага — по фазе, отдельно дни,
+          // когда шаг реально сделан, и «жалоба × рычаг» для изменения жалобы. src = разрез, lang = фаза.
+          if (d.lever) {
+            const ph = String(d.phase || '?');
+            push(pre + 'lever:' + d.lever, ph, k, v);
+            push(pre + 'lever:' + d.lever, '*', k, v);
+            if (d.exp_done === 'yes') push(pre + 'leverdone:' + d.lever, '*', k, v);
+            if (k === 'cmp_delta' && d.cmp) push(pre + 'cmp:' + d.cmp + '|lever:' + d.lever, '*', k, v);
+          }
         }
       }
       if (rows.length < 1000) break;
@@ -2657,6 +2678,8 @@ function _researchPick(rec, src) {
     if (dropDevice && RESEARCH_DEVICE_FIELDS.has(k)) continue;   // самооценки остаются: это наши данные, не вендорские
     const v = rec[k];
     if (v == null || v === '') continue;
+    if (k === 'age5') { if (typeof v === 'number' && v >= 18 && v <= 99 && v % 5 === 0) out[k] = v; continue; }
+    if (RESEARCH_ENUMS[k]) { if (typeof v === 'string' && RESEARCH_ENUMS[k].test(v)) out[k] = v; continue; }
     if (typeof v === 'number') { if (isFinite(v)) out[k] = v; continue; }
     if (typeof v === 'string' && v.length <= 32) out[k] = v;   // категории вида 'high'/'mild' — длинных строк тут не бывает
   }
