@@ -14,6 +14,10 @@
       (их показывает приложение: разбор знает, какие паттерны сработали → показывает их работы).
   docs/EVIDENCE-REGISTRY.md          — человеческая сводка: метод, цифры, пробелы.
 
+Ручные привязки: tools/evidence-links.json — работа, уже лежащая в выгрузках, привязывается
+к паттерну, под который её выгрузка не собиралась. DOI, которого нет в выгрузках, — ошибка сборки
+(принцип «ничего не придумываем» сохраняется).
+
 Запуск: python3 tools/build-evidence-registry.py
 Пересобирать после пополнения выгрузок.
 """
@@ -23,6 +27,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DUMPS = os.path.join(REPO, 'interpreter', 'Infa Cloude')
 OUT_JSON = os.path.join(REPO, 'interpreter', 'evidence-registry.json')
 OUT_MD = os.path.join(REPO, 'docs', 'EVIDENCE-REGISTRY.md')
+LINKS = os.path.join(REPO, 'tools', 'evidence-links.json')
 
 # Строка библиографии OpenEvidence:
 #   «12. Заголовок. Авторы. Журнал. 2020;142(25):e506-e532. doi:10.1161/CIR.0000000000000912.»
@@ -103,8 +108,27 @@ def collect():
     return sources, by_topic, files, lines
 
 
+def apply_links(sources, by_topic):
+    """Подмешать ручные привязки. Чужой DOI (не из выгрузок) — стоп, а не тихий пропуск."""
+    if not os.path.exists(LINKS):
+        return 0
+    links = json.load(open(LINKS, encoding='utf-8'))['links']
+    bad = [(p, l['doi']) for p, ls in links.items() for l in ls if l['doi'] not in sources]
+    if bad:
+        raise SystemExit('evidence-links.json: DOI нет в выгрузках: %s' % bad)
+    added = 0
+    for p, ls in links.items():
+        for l in ls:
+            if l['doi'] not in by_topic[p]:
+                by_topic[p].add(l['doi'])
+                sources[l['doi']]['topics'].add(p)
+                added += 1
+    return added
+
+
 def main():
     sources, by_topic, files, lines = collect()
+    linked = apply_links(sources, by_topic)
     pat_key = lambda k: (k[2], int(k[3:]))
     patterns = sorted([k for k in by_topic if re.match(r'^P-[FM]\d+$', k)], key=pat_key)
 
@@ -137,6 +161,7 @@ def main():
     md.append(f'- Строк библиографии с DOI: **{lines}**')
     md.append(f'- **Уникальных работ: {total}**')
     md.append(f'- Из них привязано к клиническим паттернам (P-F*/P-M*): **{len(used)}**')
+    md.append(f'- Из них привязано вручную (`tools/evidence-links.json`): **{linked}**')
     md.append(f'- Паттернов с источниками: **{len(patterns)}**\n')
     md.append('## По паттернам (это видит клиент)\n')
     for p in patterns:
