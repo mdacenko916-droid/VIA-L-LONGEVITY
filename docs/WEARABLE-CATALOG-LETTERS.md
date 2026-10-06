@@ -239,8 +239,7 @@ VIA-L — wellness-инструмент, не медицинское издел�
 ## 3. Ultrahuman — ответ Церингу (поддержка, 2026-10-06): имя и контакты
 
 Церинг (support@ultrahuman.com) готов передать запрос команде партнёров (PowerPlugs / список партнёров),
-просит полное имя и телефон. Отвечать в тот же тред. Телефон вписать владельцу; точное англ. название
-академии Peri — сверить.
+просит полное имя и телефон. Отвечать в тот же тред. Телефон вписать владельцу. Регалии Марины — с сайта (index.html, блок сертификатов): Perry Academy, IUND.
 
 **EN**
 
@@ -250,7 +249,9 @@ Thank you so much for your kind and thoughtful reply — it means a lot to us.
 
 Here are our details for the partner team:
 
-Maryna Datsenko — Founder of VIA-L, member of the Peri Academy
+Maryna Datsenko — Founder of VIA-L. Certified Perimenopause Specialist (Perry Academy Perimenopause
+Certificate®), active member of Perry Academy, listed in the international Perry Certified Directory;
+Nutritionist, International University of Nutrition and Dietetics (IUND).
 Ihor Datsenko — Co-founder, partnerships and integrations
 
 Company: VIA-L
@@ -276,7 +277,9 @@ VIA-L
 
 Наши данные для команды партнёров:
 
-Maryna Datsenko — основатель VIA-L, член академии Peri
+Maryna Datsenko — основатель VIA-L. Сертифицированный специалист по перименопаузе (Perry Academy
+Perimenopause Certificate®), действующий член Perry Academy, включена в международный каталог Perry
+Certified Directory; нутрициолог, Международный университет нутрициологии и диетологии (IUND).
 Ihor Datsenko — сооснователь, партнёрства и интеграции
 
 Компания: VIA-L
