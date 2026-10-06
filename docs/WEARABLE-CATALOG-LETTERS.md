@@ -13,23 +13,27 @@ Women's Health: Natural Cycles, Clue — цикл и фертильность), 
 
 ---
 
-## 1. Oura — через официальную форму для партнёров
+## 1. Oura — ответом Хелдеру в тикет #7815321 (с просьбой передать команде каталога)
 
-Куда: https://organizations.ouraring.com/contact?topic=PartnersAndResellers (тема «Partners and Resellers»;
-так указано на странице organizations.ouraring.com/solutions/partners-resellers — e-mail там НЕ дан).
-⚠️ Адрес `partnerships@ouraring.com` попал сюда из поиска и НЕ подтверждён — не использовать.
-Почему не старые треды: тред Becky (#6994484) утерян; Finn (#7815466) — бот, ящик не читают; Хелдер
-(#7815321) — поддержка, не партнёры. В форме: организация VIA-L, e-mail `integration@via-l.com`, тип —
-Product Integration Partner, текст письма ниже (если поле короткое — сокращённый вариант в конце раздела).
-Если 2 недели тишина — продублировать в тикет #7815321 с просьбой переслать в партнёрский отдел.
+Почему сюда (проверено 2026-10-06): публичного входа для приложений в каталог интеграций у Oura нет.
+• organizations.ouraring.com/contact и ouraring.com/partnerships (редирект туда же) — продажи колец
+  организациям и реселлерам, письмо уйдёт к продавцам.
+• partnersupport@ouraring.com — поддержка корпоративных клиентов (опт, работодатели, клиники), тоже не то.
+• partnerships@ouraring.com — выдал поиск, на сайтах Oura НЕ найден, не использовать.
+• Becky (Oura Partners, июнь, #6994484): «новых партнёров не берём, свяжемся сами»; тред утерян.
+• Finn (#7815466) — бот, ящик не читают.
+Остаётся тикет Хелдера #7815321 — живые люди, которые одобряли наш API-доступ: ответить в него.
 
-Тема: VIA-L — Product Integration Partner request: Oura Integrations directory (Women's Health)
+Тема: Re: [7815321] VIA-L — request to forward to the team behind the Oura Integrations directory
+
 
 **EN**
 
-Hello Oura Partnerships team,
+Hi Helder,
 
-I am writing about a Product Integration partnership, with a request that matters a great deal to us.
+Thank you again for approving VIA-L in August. I am writing with a request that matters a great deal to
+us, and I would be very grateful if you could forward this message to the team that manages the
+Integrations directory in the Oura app.
 
 We are a family from Ukraine. The war made us refugees, and we lost everything we had: our home, our
 work, our former life. Starting from zero, we built VIA-L — a new product for people 40+ going through
@@ -37,8 +41,8 @@ one of the hardest transitions in life: perimenopause, menopause and andropause.
 this period feel unwell and get little support. Sleep, energy, mood and weight change, and nobody
 connects the dots.
 
-Our Oura integration is already live: your support team approved VIA-L for production access to the Oura
-API on 26 August (ticket #7815321) and lifted the 10-user limit. The app is on the App Store in 12
+Our Oura integration is already live: on 26 August you approved VIA-L for production access to the Oura
+API and lifted the 10-user limit. The app is on the App Store in 12
 languages, with Android in final testing.
 
 What VIA-L does with an Oura ring:
@@ -75,9 +79,10 @@ integration@via-l.com · https://via-l.com
 
 **RU (перевод для владельца)**
 
-Здравствуйте, команда партнёрств Oura!
+Здравствуйте, Хелдер!
 
-Пишу по поводу партнёрства в интеграции продукта — с просьбой, которая для нас очень важна.
+Ещё раз спасибо, что в августе одобрили VIA-L. Пишу с просьбой, которая для нас очень важна, и буду очень
+благодарен, если вы перешлёте это письмо команде, которая ведёт каталог интеграций в приложении Oura.
 
 Мы — семья из Украины. Война сделала нас беженцами, и мы потеряли всё, что у нас было: дом, работу,
 прежнюю жизнь. Начав с нуля, мы создали VIA-L — новый продукт для людей 40+, которые проходят один из
@@ -85,8 +90,8 @@ integration@via-l.com · https://via-l.com
 плохо себя чувствуют и почти не получают поддержки. Меняются сон, энергия, настроение и вес — и никто
 не связывает это воедино.
 
-Наша интеграция с Oura уже работает: 26 августа ваша служба поддержки одобрила VIA-L для полноценного
-доступа к Oura API (тикет #7815321) и сняла ограничение в 10 пользователей. Приложение в App Store на
+Наша интеграция с Oura уже работает: 26 августа вы одобрили VIA-L для полноценного доступа к Oura API и
+сняли ограничение в 10 пользователей. Приложение в App Store на
 12 языках, Android — на финальном тестировании.
 
 Что VIA-L делает с кольцом Oura:
@@ -122,27 +127,6 @@ VIA-L — wellness-инструмент, не медицинское издел�
 Спасибо за ваше время,
 команда VIA-L
 
-### Oura — короткий вариант для формы (~1000 знаков)
-
-**EN**
-
-We are a family from Ukraine. The war made us refugees and we lost our home, our work and our former life. Starting from zero, we built VIA-L, an app for people 40+ in perimenopause, menopause and andropause.
-
-VIA-L already uses the Oura API in production (approved 26 August 2026, ticket #7815321). It reads sleep, HRV, resting heart rate and temperature against the user's own baseline and cycle phase, combines them with symptoms, lab results, food and supplements, and turns this into a daily plan, a weekly review and one focus for the week. A specialist review is available in the app. Evidence base: 970 studies. Wellness, not diagnosis; Oura data is never used to train AI.
-
-Your Women's Health partners cover cycle and fertility. VIA-L covers what comes after, and men in andropause too. Live on the App Store in 12 languages.
-
-We are self-funded, and a place in the Oura Integrations directory would mean a great deal to us. How can VIA-L be considered? Happy to send screenshots or a test account.
-
-**RU (перевод)**
-
-Мы — семья из Украины. Война сделала нас беженцами, мы потеряли дом, работу и прежнюю жизнь. Начав с нуля, мы создали VIA-L — приложение для людей 40+ в перименопаузе, менопаузе и андропаузе.
-
-VIA-L уже работает с Oura API в продакшене (одобрено 26 августа 2026, тикет #7815321). Сон, ВСР, пульс в покое и температура читаются относительно личной базы и фазы цикла, соединяются с симптомами, анализами, питанием и добавками и превращаются в план на день, разбор недели и один фокус на неделю. В приложении есть разбор от специалиста. База — 970 исследований. Wellness, не диагноз; данные Oura никогда не используются для обучения ИИ.
-
-Ваши партнёры в «Женском здоровье» — про цикл и фертильность. VIA-L — про то, что идёт после, и про мужчин в андропаузе. В App Store на 12 языках.
-
-Мы развиваемся на собственные средства, и место в каталоге интеграций Oura очень много для нас значит. Как VIA-L может попасть на рассмотрение? Пришлём скриншоты или тестовый доступ.
 
 ---
 
