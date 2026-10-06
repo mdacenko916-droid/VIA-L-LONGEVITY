@@ -34,6 +34,11 @@ MENO = '(menopaus*[tiab] OR perimenopaus*[tiab] OR postmenopaus*[tiab] OR "midli
 MID_MEN = ('(("middle-aged men"[tiab] OR "older men"[tiab] OR "aging men"[tiab] OR men[ti] '
            'OR testosterone[tiab] OR hypogonad*[tiab]) NOT (polycystic[tiab] OR PCOS[tiab]))')
 
+# Мужские паттерны (с 2026-10-06): тема — в ЗАГОЛОВКЕ, возраст 45+ по MeSH, без исследований только на женщинах,
+# без СПКЯ/беременности. Смешанные выборки допустимы — сердце/кишечник/мозг у мужчин изучают в общих когортах.
+MALE_CTX = ('(("Middle Aged"[mh] OR "Aged"[mh]) NOT ("Female"[mh] NOT "Male"[mh]) '
+            'NOT (polycystic[tiab] OR PCOS[tiab] OR pregnan*[tiab]))')
+
 QUERIES = {
     'P-F1': f'(estrogen*[tiab] OR oestrogen*[tiab] OR "vasomotor symptoms"[tiab] OR "hot flashes"[tiab] '
             f'OR "hot flushes"[tiab] OR "menopausal hormone therapy"[tiab]) AND {MENO}',
@@ -80,17 +85,23 @@ QUERIES = {
              'OR perimenopaus*[tiab] OR "hormonal contracepti*"[tiab])))',
     'P-M1': '(testosterone[tiab] OR hypogonadism[tiab] OR andropause[tiab] OR "late-onset hypogonadism"[tiab]) '
             'AND (men[tiab] OR male[tiab])',
-    'P-M2': f'(cortisol[tiab] OR "HPA axis"[tiab] OR "hypothalamic-pituitary-adrenal"[tiab] '
-            f'OR "chronic stress"[tiab] OR burnout[tiab]) AND {MID_MEN}',
-    'P-M3': f'("insulin resistance"[tiab] OR "metabolic syndrome"[tiab] OR prediabet*[tiab] '
-            f'OR "visceral fat"[tiab]) AND {MID_MEN}',
-    'P-M4': f'(inflammat*[tiab] OR "C-reactive protein"[tiab] OR inflammaging[tiab]) AND {MID_MEN}',
-    'P-M5': f'(hypothyroid*[tiab] OR "thyroid function"[tiab] OR Hashimoto*[tiab]) AND {MID_MEN}',
-    'P-M6': f'(microbiome[tiab] OR microbiota[tiab] OR probiotic*[tiab]) AND {MID_MEN}',
-    'P-M7': f'(cardiovascular[tiab] OR hypertension[tiab] OR dyslipid*[tiab] OR atherosclero*[tiab]) AND {MID_MEN}',
-    'P-M8': f'(cognit*[tiab] OR "brain fog"[tiab] OR memory[tiab] OR dementia[tiab]) AND {MID_MEN}',
-    'P-M9': '("obstructive sleep apnea"[tiab] OR "sleep apnoea"[tiab] OR "sleep deprivation"[tiab] '
-            'OR insomnia[tiab]) AND (testosterone[tiab] OR androgen*[tiab] OR hypogonad*[tiab])',
+    'P-M2': f'(cortisol[ti] OR "chronic stress"[ti] OR "psychological stress"[ti] OR burnout[ti] '
+            f'OR "stress management"[ti] OR "HPA axis"[ti]) AND {MALE_CTX}',
+    'P-M3': f'("metabolic syndrome"[ti] OR "insulin resistance"[ti] OR prediabet*[ti] OR "visceral fat"[ti] '
+            f'OR "visceral adipos*"[ti] OR "waist circumference"[ti]) AND (men[tiab] OR male[tiab]) AND {MALE_CTX}',
+    'P-M4': f'(inflammat*[ti] OR "C-reactive protein"[ti] OR inflammaging[ti] OR "anti-inflammatory diet"[ti]) '
+            f'AND (men[tiab] OR male[tiab]) AND {MALE_CTX}',
+    'P-M5': f'(hypothyroid*[ti] OR "thyroid function"[ti] OR "subclinical hypothyroidism"[ti] OR levothyroxine[ti]) '
+            f'AND {MALE_CTX}',
+    'P-M6': f'(microbiome[ti] OR microbiota[ti] OR probiotic*[ti] OR "dietary fiber"[ti] OR "fermented food*"[ti]) '
+            f'AND {MALE_CTX}',
+    'P-M7': f'(cardiovascular[ti] OR hypertension[ti] OR "blood pressure"[ti] OR atherosclero*[ti] OR LDL[ti]) '
+            f'AND (men[tiab] OR male[tiab]) AND (prevention[tiab] OR lifestyle[tiab] OR diet[tiab] OR exercise[tiab]) '
+            f'AND {MALE_CTX}',
+    'P-M8': f'(cognit*[ti] OR memory[ti] OR dementia[ti] OR "brain health"[ti]) AND (prevention[tiab] '
+            f'OR lifestyle[tiab] OR exercise[tiab] OR diet[tiab] OR hearing[tiab]) AND {MALE_CTX}',
+    'P-M9': '("obstructive sleep apnea"[ti] OR "sleep apnoea"[ti] OR "sleep deprivation"[ti] OR insomnia[ti]) '
+            'AND (testosterone[tiab] OR androgen*[tiab] OR hypogonad*[tiab] OR erectile[tiab] OR men[ti])',
     'P-M10': '("benign prostatic hyperplasia"[tiab] OR "lower urinary tract symptoms"[tiab] '
              'OR "prostate enlargement"[tiab])',
     'P-M11': '("erectile dysfunction"[tiab]) AND (cardiovascular[tiab] OR endothelial[tiab] OR coronary[tiab])',
