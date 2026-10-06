@@ -239,7 +239,8 @@ VIA-L — wellness-инструмент, не медицинское издел�
 ## 3. Ultrahuman — ответ Церингу (поддержка, 2026-10-06): имя и контакты
 
 Церинг (support@ultrahuman.com) готов передать запрос команде партнёров (PowerPlugs / список партнёров),
-просит полное имя и телефон. Отвечать в тот же тред. Телефон вписать владельцу.
+просит полное имя и телефон. Отвечать в тот же тред. Телефон вписать владельцу; точное англ. название
+академии Peri — сверить.
 
 **EN**
 
@@ -247,9 +248,11 @@ Hi Tsering,
 
 Thank you so much for your kind and thoughtful reply — it means a lot to us.
 
-Here are my details for the partner team:
+Here are our details for the partner team:
 
-Full name: Ihor Datsenko
+Maryna Datsenko — Founder of VIA-L, member of the Peri Academy
+Ihor Datsenko — Co-founder, partnerships and integrations
+
 Company: VIA-L
 Email: integration@via-l.com
 Phone: +__ ___ ___ ___
@@ -262,7 +265,7 @@ whenever the partner team is.
 Thank you again for forwarding our request.
 
 Warm regards,
-Ihor Datsenko
+Maryna Datsenko and Ihor Datsenko
 VIA-L
 
 **RU (перевод)**
@@ -271,9 +274,11 @@ VIA-L
 
 Большое спасибо за ваш тёплый и внимательный ответ — это много для нас значит.
 
-Мои данные для команды партнёров:
+Наши данные для команды партнёров:
 
-Полное имя: Ihor Datsenko
+Maryna Datsenko — основатель VIA-L, член академии Peri
+Ihor Datsenko — сооснователь, партнёрства и интеграции
+
 Компания: VIA-L
 Почта: integration@via-l.com
 Телефон: +__ ___ ___ ___
@@ -286,5 +291,5 @@ VIA-L
 Ещё раз спасибо, что передаёте наш запрос.
 
 С теплом,
-Ihor Datsenko
+Maryna Datsenko и Ihor Datsenko
 VIA-L
