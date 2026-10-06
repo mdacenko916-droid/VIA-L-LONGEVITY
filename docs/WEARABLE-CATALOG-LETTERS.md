@@ -13,16 +13,20 @@ Women's Health: Natural Cycles, Clue — цикл и фертильность), 
 
 ---
 
-## 1. Oura — ответом в тред Becky (Oura Partners, тикет #6994484)
+## 1. Oura — НОВЫМ письмом на `partnerships@ouraring.com`
 
-Тема: Re: VIA-L — a request to join the Oura Integrations directory (Women's Health)
+Треда с Becky (#6994484) у владельца больше нет; тред Finn (#7815466) — бот, ящик не читают; тикет
+Хелдера (#7815321) — поддержка, не партнёры. Адрес партнёров — с organizations.ouraring.com/solutions/partners-resellers,
+тип партнёрства «Product Integration Partners». Если 2 недели тишина — продублировать в тикет #7815321
+с просьбой переслать в партнёрский отдел.
+
+Тема: VIA-L — Product Integration Partner request: Oura Integrations directory (Women's Health)
 
 **EN**
 
-Hi Becky,
+Hello Oura Partnerships team,
 
-We spoke in June, and I would like to come back to you with where we are now, and with a request that
-matters a great deal to us.
+I am writing about a Product Integration partnership, with a request that matters a great deal to us.
 
 We are a family from Ukraine. The war made us refugees, and we lost everything we had: our home, our
 work, our former life. Starting from zero, we built VIA-L — a new product for people 40+ going through
@@ -30,9 +34,9 @@ one of the hardest transitions in life: perimenopause, menopause and andropause.
 this period feel unwell and get little support. Sleep, energy, mood and weight change, and nobody
 connects the dots.
 
-Since our last conversation, VIA-L has gone live. Your developer team approved us for production access
-to the Oura API in August (ticket #7815321), and the app is now on the App Store in 12 languages, with
-Android in final testing.
+Our Oura integration is already live: your support team approved VIA-L for production access to the Oura
+API on 26 August (ticket #7815321) and lifted the 10-user limit. The app is on the App Store in 12
+languages, with Android in final testing.
 
 What VIA-L does with an Oura ring:
 • Reads sleep, HRV, resting heart rate, temperature and activity against the person's own baseline,
@@ -68,10 +72,9 @@ integration@via-l.com · https://via-l.com
 
 **RU (перевод для владельца)**
 
-Здравствуйте, Becky!
+Здравствуйте, команда партнёрств Oura!
 
-Мы общались в июне, и я хочу рассказать, где мы сейчас, и обратиться с просьбой, которая для нас очень
-важна.
+Пишу по поводу партнёрства в интеграции продукта — с просьбой, которая для нас очень важна.
 
 Мы — семья из Украины. Война сделала нас беженцами, и мы потеряли всё, что у нас было: дом, работу,
 прежнюю жизнь. Начав с нуля, мы создали VIA-L — новый продукт для людей 40+, которые проходят один из
@@ -79,9 +82,9 @@ integration@via-l.com · https://via-l.com
 плохо себя чувствуют и почти не получают поддержки. Меняются сон, энергия, настроение и вес — и никто
 не связывает это воедино.
 
-С нашего прошлого разговора VIA-L запустился. В августе ваша команда разработчиков одобрила нам
-полноценный доступ к Oura API (тикет #7815321), приложение уже в App Store на 12 языках, Android — на
-финальном тестировании.
+Наша интеграция с Oura уже работает: 26 августа ваша служба поддержки одобрила VIA-L для полноценного
+доступа к Oura API (тикет #7815321) и сняла ограничение в 10 пользователей. Приложение в App Store на
+12 языках, Android — на финальном тестировании.
 
 Что VIA-L делает с кольцом Oura:
 • Читает сон, ВСР, пульс в покое, температуру и активность относительно личной базы человека, а не общих
