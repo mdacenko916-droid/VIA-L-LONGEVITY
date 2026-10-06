@@ -233,3 +233,58 @@ VIA-L — wellness-инструмент, не медицинское издел�
 
 Спасибо за ваше время,
 команда VIA-L
+
+---
+
+## 3. Ultrahuman — ответ Церингу (поддержка, 2026-10-06): имя и контакты
+
+Церинг (support@ultrahuman.com) готов передать запрос команде партнёров (PowerPlugs / список партнёров),
+просит полное имя и телефон. Отвечать в тот же тред. Телефон вписать владельцу.
+
+**EN**
+
+Hi Tsering,
+
+Thank you so much for your kind and thoughtful reply — it means a lot to us.
+
+Here are my details for the partner team:
+
+Full name: Ihor Datsenko
+Company: VIA-L
+Email: integration@via-l.com
+Phone: +__ ___ ___ ___
+Location: Valencia, Spain
+
+Our team works in Ukrainian and Russian, so email is the most convenient way to reach us; for a call we
+will gladly join with an interpreter. We are ready to send screenshots, a test account or a short demo
+whenever the partner team is.
+
+Thank you again for forwarding our request.
+
+Warm regards,
+Ihor Datsenko
+VIA-L
+
+**RU (перевод)**
+
+Здравствуйте, Церинг!
+
+Большое спасибо за ваш тёплый и внимательный ответ — это много для нас значит.
+
+Мои данные для команды партнёров:
+
+Полное имя: Ihor Datsenko
+Компания: VIA-L
+Почта: integration@via-l.com
+Телефон: +__ ___ ___ ___
+Город: Валенсия, Испания
+
+Наша команда работает на украинском и русском, поэтому удобнее всего связаться с нами по почте; на
+созвон мы с радостью подключимся с переводчиком. Готовы прислать скриншоты, тестовый доступ или короткое
+демо, как только команда партнёров будет готова.
+
+Ещё раз спасибо, что передаёте наш запрос.
+
+С теплом,
+Ihor Datsenko
+VIA-L
