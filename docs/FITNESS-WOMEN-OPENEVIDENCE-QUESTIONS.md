@@ -9,6 +9,10 @@
 > **Порядок:** сначала А и Е (без них нельзя запускать: нагрузка и безопасность), потом Г, Б, В, Д, Ж.
 > Каждый вопрос просит числа и уровень доказательности — без них ответ не превращается в правило.
 
+> **2026-10-06: часть вопросов закрыта прямым поиском PubMed** (`FIZ/pubmed/`, синтез —
+> `FITNESS-WOMEN-EVIDENCE.md` §3.2). **Задавать в первую очередь только эти:** 3, 5, 6, 7, 15, 17, 24, 25
+> (+ по желанию 31, 32). Остальные — если Марина хочет второе мнение.
+
 Общая приписка, которая уже вшита в каждый вопрос: *women aged 40–65 in perimenopause or postmenopause;
 give numbers (frequency, sets, reps, %1RM or RPE, duration, thresholds), state the level of evidence
 (meta-analysis / RCT / cohort / expert consensus), and note contraindications.*
