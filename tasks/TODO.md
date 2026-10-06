@@ -37,8 +37,8 @@
 ## 📨 VIA-L в каталог партнёров Oura и Ultrahuman (2026-10-06)
 
 - [ ] **Отправить два письма** с `integration@via-l.com` ответом в старые треды — тексты EN+RU в
-      `docs/WEARABLE-CATALOG-LETTERS.md`. Oura → новым письмом на `partnerships@ouraring.com` (Product Integration Partners;
-      тред Becky утерян), раздел Integrations → Women's Health; тишина 2 недели — продублировать в тикет #7815321. Ultrahuman → Vighnesh (`partners@ultrahuman.com`), PowerPlugs / список партнёров;
+      `docs/WEARABLE-CATALOG-LETTERS.md`. Oura → через форму organizations.ouraring.com/contact?topic=PartnersAndResellers
+      (e-mail на их странице не дан; тред Becky утерян), раздел Integrations → Women's Health; тишина 2 недели — продублировать в тикет #7815321. Ultrahuman → Vighnesh (`partners@ultrahuman.com`), PowerPlugs / список партнёров;
       там же спасибо Manasa и Sandeep (заодно закрывает хвост «ответить Sandeep с результатом»).
       Скидку/рефералку не просить — отдельная закрытая тема.
 
