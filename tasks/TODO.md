@@ -38,8 +38,8 @@
 
 - [ ] **Отправить два письма** с `integration@via-l.com` ответом в старые треды — тексты EN+RU в
       `docs/WEARABLE-CATALOG-LETTERS.md`. Oura → ответом Хелдеру в тикет #7815321 с просьбой переслать команде каталога
-      Integrations (публичного входа нет: формы organizations.* и partnersupport@ — продажи/корпоративные; тред Becky утерян). Ultrahuman → Vighnesh (`partners@ultrahuman.com`), PowerPlugs / список партнёров;
-      там же спасибо Manasa и Sandeep (заодно закрывает хвост «ответить Sandeep с результатом»).
+      Integrations (публичного входа нет: формы organizations.* и partnersupport@ — продажи/корпоративные; тред Becky утерян). Ultrahuman → новым письмом на `support@ultrahuman.com` для Manasa и Sandeep (помогали с
+      интеграцией в сентябре) с просьбой переслать команде PowerPlugs; Vighnesh не упоминать.
       Скидку/рефералку не просить — отдельная закрытая тема.
       📨 2026-10-06 Oura — ОТПРАВЛЕНО, автоответ: новый запрос **#8192567** (ответ обещан за 12 ч). ⏳ Ultrahuman — не отправлено.
 

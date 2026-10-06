@@ -130,16 +130,22 @@ VIA-L — wellness-инструмент, не медицинское издел�
 
 ---
 
-## 2. Ultrahuman — ответом в тред Vighnesh (Partnerships, `partners@ultrahuman.com`)
+## 2. Ultrahuman — новым письмом на `support@ultrahuman.com`, для Manasa и Sandeep
 
-Тема: Re: VIA-L — our Ultrahuman integration is live; a request about PowerPlugs
+Почему сюда: с интеграцией помогали они — Manasa 12.09 починила 403, Sandeep 17.09 прислал образец данных
+(тред `support@ultrahuman.com`). Сентябрьская переписка у владельца не находится, поэтому пишем новым письмом
+на тот же адрес. Vighnesh (июнь, `partners@`) не упоминаем — по ощущению владельца это продажи, не ответит.
+
+Тема: VIA-L — Ultrahuman integration is live, thank you; request to forward to the PowerPlugs team
 
 **EN**
 
-Hi Vighnesh,
+Hi Manasa, hi Sandeep,
 
-Thank you for your warm reply in June. I would like to share where we are now, and ask about something
-that matters a great deal to us.
+In September you helped us finish our Ultrahuman integration: Manasa fixed our API access, and Sandeep
+sent the sample data that let us verify every metric. Thank you both. I am writing with an update and a
+request that matters a great deal to us, and I would be very grateful if you could forward this message
+to the team responsible for PowerPlugs and partner integrations.
 
 We are a family from Ukraine. The war made us refugees, and we lost everything we had: our home, our
 work, our former life. Starting from zero, we built VIA-L — a new product for people 40+ going through
@@ -147,10 +153,8 @@ one of the hardest transitions in life: perimenopause, menopause and andropause.
 this period feel unwell and get little support. Sleep, energy, mood and weight change, and nobody
 connects the dots.
 
-Our Ultrahuman integration is now live. Your support team helped us get there — many thanks to Manasa
-for fixing our API access and to Sandeep for the sample data that let us verify every metric. Users can
-connect their Ring AIR directly in VIA-L, which is on the App Store in 12 languages, with Android in final
-testing.
+Our Ultrahuman integration is now live: users connect their Ring AIR directly in VIA-L, which is on the
+App Store in 12 languages, with Android in final testing.
 
 What VIA-L does with an Ultrahuman ring:
 • Reads sleep, HRV, resting heart rate, skin temperature and recovery against the person's own baseline,
@@ -184,10 +188,12 @@ integration@via-l.com · https://via-l.com
 
 **RU (перевод для владельца)**
 
-Здравствуйте, Vighnesh!
+Здравствуйте, Manasa и Sandeep!
 
-Спасибо за ваш тёплый ответ в июне. Хочу рассказать, где мы сейчас, и спросить о том, что для нас очень
-важно.
+В сентябре вы помогли нам довести интеграцию с Ultrahuman: Manasa починила доступ к API, а Sandeep
+прислал образец данных, по которому мы сверили каждую метрику. Спасибо вам обоим. Пишу с новостью и
+просьбой, которая для нас очень важна, и буду очень благодарен, если вы перешлёте это письмо команде,
+которая отвечает за PowerPlugs и партнёрские интеграции.
 
 Мы — семья из Украины. Война сделала нас беженцами, и мы потеряли всё, что у нас было: дом, работу,
 прежнюю жизнь. Начав с нуля, мы создали VIA-L — новый продукт для людей 40+, которые проходят один из
@@ -195,10 +201,8 @@ integration@via-l.com · https://via-l.com
 плохо себя чувствуют и почти не получают поддержки. Меняются сон, энергия, настроение и вес — и никто
 не связывает это воедино.
 
-Наша интеграция с Ultrahuman заработала. Нам помогла ваша поддержка — большое спасибо Manasa, которая
-починила доступ к API, и Sandeep за образец данных, по которому мы сверили каждую метрику. Пользователи
-подключают Ring AIR прямо в VIA-L — приложение в App Store на 12 языках, Android на финальном
-тестировании.
+Наша интеграция с Ultrahuman заработала: пользователи подключают Ring AIR прямо в VIA-L — приложение в
+App Store на 12 языках, Android на финальном тестировании.
 
 Что VIA-L делает с кольцом Ultrahuman:
 • Читает сон, ВСР, пульс в покое, температуру кожи и восстановление относительно личной базы человека,
