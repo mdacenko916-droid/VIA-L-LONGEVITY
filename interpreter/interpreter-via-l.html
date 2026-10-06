@@ -1619,6 +1619,11 @@ input[type="date"]{color-scheme:dark;-webkit-appearance:none;appearance:none;}  
 input[type="date"]::-webkit-date-and-time-value{text-align:center;margin:0;}
 input[type="date"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.85;}
 input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;}
+/* Дата цифрами (2026-10-06): iOS/Android рисуют поле даты на языке ТЕЛЕФОНА («27 мая 2026 г.» при PT в приложении).
+   Своё значение прячем, сверху — «27.05.2026» (скрипт _dateNum в конце страницы); выбор даты остаётся системным. */
+.dn-wrap{position:relative;display:block;min-width:0;}
+.dn-wrap>input[type="date"]{color:transparent !important;-webkit-text-fill-color:transparent;}
+.dn-txt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;color:var(--t2);font-variant-numeric:tabular-nums;}
 .manual-input::placeholder{color:rgba(255,255,255,.34);font-size:var(--fs-body);}   /* плейсхолдер приглушён — не путать со значением */
 /* ── VAI-калькулятор (Мой профиль) ── */
 .vai-calc{display:flex;flex-direction:column;gap:6px;}
@@ -13871,5 +13876,30 @@ function appleHKImport(btn){
   var show=function(){ try{ document.body.classList.add('booted'); }catch(e){} };
   if(document.readyState!=='loading') setTimeout(show,240); else document.addEventListener('DOMContentLoaded',function(){ setTimeout(show,240); });
   setTimeout(show,1500);
+})();
+</script>
+<script>
+/* Дата цифрами во всех полях даты (анализы, фото анализов, цикл, «Мои приёмы»): ДД.ММ.ГГГГ на любом языке. */
+(function(){
+  function fmt(v){ var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(v||''); return m ? m[3]+'.'+m[2]+'.'+m[1] : ''; }
+  function wrap(el){
+    if(el._dn) return; el._dn=true;
+    var c0=getComputedStyle(el), col=c0.color, fs=c0.fontSize, ff=c0.fontFamily;   // до обёртки: потом цвет станет прозрачным
+    var w=document.createElement('span'); w.className='dn-wrap';
+    var cs=el.style; ['flex','maxWidth','minWidth','width','margin'].forEach(function(k){ if(cs[k]){ w.style[k]=cs[k]; } });
+    if(cs.width) el.style.width='100%'; if(cs.maxWidth) el.style.maxWidth='100%'; if(cs.flex) el.style.flex='';
+    el.style.width=el.style.width||'100%'; el.style.boxSizing='border-box';
+    el.parentNode.insertBefore(w, el); w.appendChild(el);
+    var t=document.createElement('span'); t.className='dn-txt';
+    t.style.fontSize=fs; t.style.fontFamily=ff; t.style.color=col;
+    w.appendChild(t); el._dnTxt=t; sync(el);
+  }
+  function sync(el){ if(el._dnTxt){ var f=fmt(el.value); if(el._dnTxt.textContent!==f) el._dnTxt.textContent=f; } }
+  function scan(){ var a=document.querySelectorAll('input[type="date"]'); for(var i=0;i<a.length;i++){ wrap(a[i]); sync(a[i]); } }
+  document.addEventListener('input', function(e){ if(e.target && e.target.type==='date') sync(e.target); }, true);
+  document.addEventListener('change', function(e){ if(e.target && e.target.type==='date') sync(e.target); }, true);
+  try{ new MutationObserver(function(){ scan(); }).observe(document.documentElement,{childList:true,subtree:true}); }catch(e){}
+  setInterval(scan, 1000);   // значение, выставленное кодом (el.value=…), событий не шлёт
+  if(document.readyState!=='loading') scan(); else document.addEventListener('DOMContentLoaded', scan);
 })();
 </script>
