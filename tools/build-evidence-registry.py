@@ -10,13 +10,18 @@
 клиенту: за каждой строкой стоит настоящая публикация с DOI.
 
 Что на выходе:
-  interpreter/evidence-registry.json — машинный реестр ТОЛЬКО по паттернам P-F*/P-M*
-      (их показывает приложение: разбор знает, какие паттерны сработали → показывает их работы).
+  interpreter/evidence-registry.json — машинный реестр по паттернам P-F*/P-M* (byPattern: их показывает
+      разбор) и по модулям (byModule, с 2026-10-06: «Движение» — move-f из FIZ/, move-m из К-M/).
+      Все работы обоих разделов — в sources (полный список на странице «Научная база»).
   docs/EVIDENCE-REGISTRY.md          — человеческая сводка: метод, цифры, пробелы.
 
 Ручные привязки: tools/evidence-links.json — работа, уже лежащая в выгрузках, привязывается
 к паттерну, под который её выгрузка не собиралась. DOI, которого нет в выгрузках, — ошибка сборки
 (принцип «ничего не придумываем» сохраняется).
+
+PubMed (с 2026-10-06): папки `<тема>/pubmed/PM-*.txt` — записи прямого поиска PubMed
+(«PMID … | журнал год | тип» → заголовок → «doi:…»). Каждый PMID сверен по заголовку при выгрузке;
+скрипт берёт только записи с DOI. Принцип тот же: строка физически лежит в файле, ничего не сочинено.
 
 Запуск: python3 tools/build-evidence-registry.py
 Пересобирать после пополнения выгрузок.
@@ -35,6 +40,9 @@ DOI = re.compile(r'doi:\s*(10\.\d{4,9}/[^\s,;]+?)\.?\s*$', re.I)
 YEAR_SEG = re.compile(r'^\(?((?:19|20)\d{2})\b')
 YEAR_ANY = re.compile(r'\b((?:19|20)\d{2})\b')
 NUM_PREFIX = re.compile(r'^\d{1,3}\.\s*')
+# Модули приложения, не привязанные к клиническим паттернам: папка выгрузок → id модуля в реестре.
+MODULES = {'FIZ': 'move-f', 'К-M': 'move-m'}
+PM_HEAD = re.compile(r'^PMID (\d+) \| (.*?) ((?:19|20)\d{2})\b')
 
 
 def topic_of(rel_path):
@@ -84,6 +92,9 @@ def collect():
             full = os.path.join(dirpath, fn)
             rel = os.path.relpath(full, DUMPS)
             topic = topic_of(rel)
+            if os.path.basename(dirpath) == 'pubmed':   # свой формат: заголовок на строке ПЕРЕД doi
+                lines += _collect_pubmed(full, topic, sources, by_topic)
+                continue
             for line in open(full, encoding='utf-8', errors='replace'):
                 line = line.strip()
                 if 'doi:' not in line.lower():
@@ -106,6 +117,23 @@ def collect():
                 rec['topics'].add(topic)
                 by_topic[topic].add(doi)
     return sources, by_topic, files, lines
+
+
+def _collect_pubmed(path, topic, sources, by_topic):
+    """PM-*.txt: «PMID n | журнал год | типы» / заголовок / «doi:…» / аннотация. Только записи с DOI."""
+    n = 0
+    rows = open(path, encoding='utf-8', errors='replace').read().split('\n')
+    for i, row in enumerate(rows):
+        m = PM_HEAD.match(row)
+        if not m or i + 2 >= len(rows) or not rows[i + 2].startswith('doi:10.'):
+            continue
+        doi = rows[i + 2][4:].strip().rstrip('.').lower()
+        rec = sources.setdefault(doi, {'doi': doi, 'title': rows[i + 1].strip().rstrip('.'),
+                                       'journal': m.group(2).strip(), 'year': m.group(3), 'topics': set()})
+        rec['topics'].add(topic)
+        by_topic[topic].add(doi)
+        n += 1
+    return n
 
 
 def apply_links(sources, by_topic):
@@ -132,20 +160,26 @@ def main():
     pat_key = lambda k: (k[2], int(k[3:]))
     patterns = sorted([k for k in by_topic if re.match(r'^P-[FM]\d+$', k)], key=pat_key)
 
-    # ── Машинный реестр: только паттерны (их показывает приложение) ──
-    used = sorted({d for p in patterns for d in by_topic[p]})
+    # ── Машинный реестр: паттерны (их показывает разбор) + модули («Движение») ──
+    modules = {}
+    for folder, mid in MODULES.items():
+        if by_topic.get(folder):
+            modules[mid] = sorted(by_topic[folder])
+    used_pat = sorted({d for p in patterns for d in by_topic[p]})
+    used = sorted(set(used_pat) | {d for v in modules.values() for d in v})
     registry = {
         'generated': datetime.date.today().isoformat(),
         'note': 'Собрано tools/build-evidence-registry.py из выгрузок OpenEvidence. Руками не править.',
         'sources': {d: {'t': sources[d]['title'], 'j': sources[d]['journal'],
                         'y': sources[d]['year']} for d in used},
         'byPattern': {p: sorted(by_topic[p]) for p in patterns},
+        'byModule': modules,
     }
     with open(OUT_JSON, 'w', encoding='utf-8') as f:
         json.dump(registry, f, ensure_ascii=False, separators=(',', ':'))
 
     # ── Человеческая сводка ──
-    themes = sorted([k for k in by_topic if k not in patterns], key=lambda k: -len(by_topic[k]))
+    themes = sorted([k for k in by_topic if k not in patterns and k not in MODULES], key=lambda k: -len(by_topic[k]))
     total = len(sources)
     md = []
     md.append('# Реестр источников VIA-L\n')
@@ -160,7 +194,11 @@ def main():
     md.append(f'- Файлов выгрузок прочитано: **{files}**')
     md.append(f'- Строк библиографии с DOI: **{lines}**')
     md.append(f'- **Уникальных работ: {total}**')
-    md.append(f'- Из них привязано к клиническим паттернам (P-F*/P-M*): **{len(used)}**')
+    md.append(f'- **В приложении (паттерны + модули): {len(used)}**')
+    md.append(f'- Из них привязано к клиническим паттернам (P-F*/P-M*): **{len(used_pat)}**')
+    for mid, ds in modules.items():
+        md.append(f'- Модуль `{mid}` («Движение»): **{len(ds)}**, из них новых к паттернам: '
+                  f'**{len(set(ds) - set(used_pat))}**')
     md.append(f'- Из них привязано вручную (`tools/evidence-links.json`): **{linked}**')
     md.append(f'- Паттернов с источниками: **{len(patterns)}**\n')
     md.append('## По паттернам (это видит клиент)\n')
