@@ -354,13 +354,12 @@ VIA-L уже работает с Oura API в продакшене (одобре�
 Director, Partnerships & Enterprise International Growth — новый директор будет под ней. Контакт 3-го уровня:
 без Premium — только запрос в контакты с запиской (≤300 знаков), полное сообщение — после принятия.
 
-**Записка к запросу (288 знаков)**
+**Записка к запросу (≤200 знаков — лимит у владельца 200)**
 
-Hi Jacqui, we are a Ukrainian family who rebuilt from zero after the war. Our app VIA-L already runs on the Oura API and helps women and men through perimenopause, menopause and andropause in 12 languages across Europe. I would love to share how it could fit Oura's international growth.
+Hi Jacqui! Ukrainian family, rebuilt from zero after the war. Our app VIA-L runs on the Oura API and supports perimenopause and andropause in 12 languages. Could it fit Oura’s growth in Europe?
 
-RU: Здравствуйте, Джеки! Мы — украинская семья, которая после войны начала всё с нуля. Наше приложение VIA-L
-уже работает на Oura API и помогает женщинам и мужчинам в перименопаузе, менопаузе и андропаузе — на 12
-языках по всей Европе. Хотел бы рассказать, как оно может вписаться в международный рост Oura.
+RU: Здравствуйте, Джеки! Украинская семья, начали с нуля после войны. Наше приложение VIA-L работает на
+Oura API и поддерживает в перименопаузе и андропаузе на 12 языках. Может, оно впишется в рост Oura в Европе?
 
 **Сообщение после принятия запроса**
 
