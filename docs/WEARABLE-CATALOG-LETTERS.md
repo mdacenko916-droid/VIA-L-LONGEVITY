@@ -296,3 +296,28 @@ Ihor Datsenko — сооснователь, партнёрства и интег
 С теплом,
 Maryna Datsenko и Ihor Datsenko
 VIA-L
+
+---
+
+## 4. Oura — после отказа Amanda (#8192567, 2026-10-07): куда стучаться на самом деле
+
+Отказ пришёл из поддержки, обслуживающей очередь партнёров (подпись «Oura Partners | Customer Support») —
+тот же ответ, что Becky в июне. Решения принимают не там.
+
+**Каталог Integrations → Women's Health сейчас (8):** Alloy Health (телемедицина менопаузы), Clue, Mira,
+Natural Cycles, Oova, Peanut, Stardust, Twentyeight Health. Источник: support.ouraring.com/hc/en-us/articles/10705471244947.
+
+**Сеть Menopause Impact Scale (2026-09-02):** своя шкала Oura (22 симптома, 7 доменов, 2 900 участников
+валидации, + данные кольца) и 10 партнёров: Alloy Health, Gennev, Wisp, Pomelo, Oova, Mira, Hertility,
+Xella, Maven, Tia — почти все клиническая помощь/телемедицина/ЗГТ, в основном США. Сеть названа
+«расширяющейся», процедуры вступления не опубликовано. Источник: ouraring.com/blog/menopause-impact-scale-partner-network/.
+Наше отличие: wellness-самопомощь без диагноза, Европа, 12 языков, нутрициолог, мужчины (андропауза).
+Риск: могут счесть «не клиникой» — подавать как дополнение к клиническим партнёрам, не замену.
+
+**Кто решает:** анонс подписан Dorothy Kilroy, Chief Commercial Officer. В 2026 Oura нанимала:
+Director of Partnerships & Enterprise International Growth (Лондон, авг. 2026 — Европа, наш профиль),
+Senior Director, Healthcare Partnerships (США, сент. 2026), Director, Hardware Partnerships (США).
+Кто занял — открытые источники не показывают → искать в LinkedIn.
+
+**План:** короткое сообщение в LinkedIn (≈600 знаков) человеку на лондонской позиции по партнёрствам;
+не найдётся — Dorothy Kilroy. Поддержку (Amanda/Becky) больше не дёргать.
