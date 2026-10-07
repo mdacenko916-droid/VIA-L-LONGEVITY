@@ -3491,12 +3491,14 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
         <label><span id="bp-lbl">Артериальное давление</span> <span id="bp-opt" style="font-weight:400;color:var(--t3);font-size:var(--fs-cap);">(по желанию)</span></label>
         <div class="q-prompt" id="bp-q">Если измеряли давление тонометром в покое — впишите.</div>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-          <input class="manual-input" id="bp-sys" type="number" inputmode="numeric" min="70" max="260" placeholder="120" style="max-width:100px;text-align:center;">
+          <input class="manual-input" id="bp-sys" type="number" inputmode="numeric" min="70" max="260" placeholder="120" oninput="_bpSymRender()" style="max-width:100px;text-align:center;">
           <span style="font-size:20px;color:var(--t2);">/</span>
-          <input class="manual-input" id="bp-dia" type="number" inputmode="numeric" min="40" max="160" placeholder="80" style="max-width:100px;text-align:center;">
+          <input class="manual-input" id="bp-dia" type="number" inputmode="numeric" min="40" max="160" placeholder="80" oninput="_bpSymRender()" style="max-width:100px;text-align:center;">
           <span id="bp-unit" style="font-size:var(--fs-body);color:var(--t3);">мм рт.ст.</span>
         </div>
         <div id="bp-hint" style="font-size:var(--fs-cap);color:var(--t3);line-height:1.45;margin-top:8px;">Сидя, спина опёрта, ноги на полу, после 5 минут покоя — среднее из 2 замеров.</div>
+        <!-- Самочувствие при давлении выше СВОЕЙ нормы (2026-10-07, FITNESS-SELECTION-RULES §10): показывается только тогда. -->
+        <div id="bp-sym" style="display:none;margin-top:12px;"></div>
       </div>
       <div class="btn-row">
         <button class="btn btn-back" onclick="goTo(4)">←</button>
@@ -4910,13 +4912,73 @@ function setLang(l){
    которых нет и в английском. */
 function t(k){return T[lang][k]||(T.en&&T.en[k])||T.ru[k]||k;}
 // Подписи блока «Давление» — через L() (applyLang не фолбэчит на ru), значения inputs не трогаем.
+// ══ ДАВЛЕНИЕ: ЛИЧНАЯ НОРМА И САМОЧУВСТВИЕ (решение Марины 2026-10-07) ══════════════════════
+// Ориентир — обычное давление ЭТОГО человека, а не общие цифры: при обычном 90/60 уже 140/90 — очень высоко.
+// Норма — медиана прошлых замеров (без сегодняшнего), нужно ≥5. Флаг: severe ≥180/110; rel — выше нормы на
+// 20+ верхнее или 10+ нижнее; abs — нормы ещё нет и ≥160/100. При флаге спрашиваем самочувствие — в разбор.
+function _bpNorm(){
+  try{
+    var arr=JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[], k=_dayKey();
+    var r=arr.filter(function(x){ return x&&x.day!==k&&x.bp_sys&&x.bp_dia; }).slice(0,30);
+    if(r.length<5) return null;
+    var med=function(a){ a=a.slice().sort(function(x,y){return x-y;}); var m=Math.floor(a.length/2); return a.length%2?a[m]:(a[m-1]+a[m])/2; };
+    return { sys:med(r.map(function(x){return +x.bp_sys;})), dia:med(r.map(function(x){return +x.bp_dia;})), n:r.length };
+  }catch(e){ return null; }
+}
+function _bpFlag(){
+  var se=document.getElementById('bp-sys'), de=document.getElementById('bp-dia');
+  var s=se?parseInt(se.value):NaN, d=de?parseInt(de.value):NaN;
+  if(!(s>=70&&s<=260&&d>=40&&d<=160)) return '';
+  if(s>=180||d>=110) return 'severe';
+  var n=_bpNorm();
+  if(n) return (s>=n.sys+20||d>=n.dia+10)?'rel':'';
+  return (s>=160||d>=100)?'abs':'';
+}
+var _BP_SYM_KEYS=['headache','dizzy','nausea','chest','breath','vision','palp','none'];
+function _bpSymTx(){
+  return L({ru:{q:'Давление сегодня выше вашего обычного. Как вы себя чувствуете?',headache:'Головная боль',dizzy:'Головокружение',nausea:'Тошнота',chest:'Боль или давление в груди',breath:'Одышка',vision:'«Мушки», хуже видно',palp:'Сильное сердцебиение',none:'Чувствую себя как обычно'},
+    uk:{q:'Тиск сьогодні вищий за ваш звичайний. Як ви почуваєтеся?',headache:'Головний біль',dizzy:'Запаморочення',nausea:'Нудота',chest:'Біль або тиск у грудях',breath:'Задишка',vision:'«Мушки», гірше видно',palp:'Сильне серцебиття',none:'Почуваюся як зазвичай'},
+    en:{q:'Your blood pressure is higher than your usual today. How do you feel?',headache:'Headache',dizzy:'Dizziness',nausea:'Nausea',chest:'Chest pain or pressure',breath:'Shortness of breath',vision:'Spots, blurred vision',palp:'Strong heartbeat',none:'I feel as usual'},
+    es:{q:'Hoy tu presión está más alta de lo habitual para ti. ¿Cómo te sientes?',headache:'Dolor de cabeza',dizzy:'Mareo',nausea:'Náuseas',chest:'Dolor o presión en el pecho',breath:'Falta de aire',vision:'Manchas, visión borrosa',palp:'Palpitaciones fuertes',none:'Me siento como siempre'},
+    de:{q:'Ihr Blutdruck ist heute höher als üblich für Sie. Wie fühlen Sie sich?',headache:'Kopfschmerzen',dizzy:'Schwindel',nausea:'Übelkeit',chest:'Schmerz oder Druck in der Brust',breath:'Atemnot',vision:'Flimmern, verschwommenes Sehen',palp:'Starkes Herzklopfen',none:'Ich fühle mich wie immer'},
+    pt:{q:'Sua pressão está mais alta que o seu habitual hoje. Como você se sente?',headache:'Dor de cabeça',dizzy:'Tontura',nausea:'Náusea',chest:'Dor ou pressão no peito',breath:'Falta de ar',vision:'Pontos, visão turva',palp:'Palpitações fortes',none:'Estou como sempre'},
+    fr:{q:'Votre tension est plus haute que d’habitude aujourd’hui. Comment vous sentez-vous ?',headache:'Mal de tête',dizzy:'Vertiges',nausea:'Nausée',chest:'Douleur ou pression dans la poitrine',breath:'Essoufflement',vision:'Points lumineux, vision floue',palp:'Fortes palpitations',none:'Je me sens comme d’habitude'},
+    pl:{q:'Ciśnienie jest dziś wyższe niż Twoje zwykłe. Jak się czujesz?',headache:'Ból głowy',dizzy:'Zawroty głowy',nausea:'Nudności',chest:'Ból lub ucisk w klatce',breath:'Duszność',vision:'Mroczki, gorzej widzę',palp:'Silne kołatanie serca',none:'Czuję się jak zwykle'},
+    it:{q:'Oggi la pressione è più alta del tuo solito. Come ti senti?',headache:'Mal di testa',dizzy:'Capogiri',nausea:'Nausea',chest:'Dolore o peso al petto',breath:'Fiato corto',vision:'Puntini, vista offuscata',palp:'Batticuore forte',none:'Mi sento come al solito'},
+    he:{q:'לחץ הדם היום גבוה מהרגיל שלכם. איך אתם מרגישים?',headache:'כאב ראש',dizzy:'סחרחורת',nausea:'בחילה',chest:'כאב או לחץ בחזה',breath:'קוצר נשימה',vision:'נקודות, ראייה מטושטשת',palp:'דופק חזק',none:'מרגיש/ה כרגיל'},
+    ja:{q:'今日の血圧はいつもより高めです。体調はいかがですか？',headache:'頭痛',dizzy:'めまい',nausea:'吐き気',chest:'胸の痛み・圧迫感',breath:'息切れ',vision:'目がちらつく・見えにくい',palp:'強い動悸',none:'いつも通り'},
+    ko:{q:'오늘 혈압이 평소보다 높습니다. 몸 상태는 어떠세요?',headache:'두통',dizzy:'어지럼증',nausea:'메스꺼움',chest:'가슴 통증·압박감',breath:'숨참',vision:'눈앞이 번쩍임·흐리게 보임',palp:'심한 두근거림',none:'평소와 같아요'}});
+}
+function _bpSymRender(){
+  var box=document.getElementById('bp-sym'); if(!box) return;
+  var fl=_bpFlag();
+  if(!fl){ box.style.display='none'; box.innerHTML=''; window.__bpSym=[]; return; }
+  if(box.getAttribute('data-on')==='1' && box.innerHTML){ box.style.display='block'; return; }   // уже показано — отметки не сбрасываем
+  var tx=_bpSymTx(), sel=window.__bpSym||[];
+  box.innerHTML='<div class="q-prompt" style="color:var(--t1);margin-bottom:8px;">'+_esc(tx.q)+'</div><div class="chips">'
+    +_BP_SYM_KEYS.map(function(k){ return '<div class="chip"><input type="checkbox" id="bps-'+k+'" value="'+k+'"'+(sel.indexOf(k)>=0?' checked':'')+' onchange="_bpSymPick(this)"><label for="bps-'+k+'">'+_esc(tx[k])+'</label></div>'; }).join('')
+    +'</div>';
+  box.setAttribute('data-on','1'); box.style.display='block';
+}
+// «Как обычно» снимает остальные отметки и наоборот.
+function _bpSymPick(el){
+  if(el.checked){
+    if(el.value==='none') _BP_SYM_KEYS.forEach(function(k){ if(k!=='none'){ var c=document.getElementById('bps-'+k); if(c) c.checked=false; } });
+    else { var n=document.getElementById('bps-none'); if(n) n.checked=false; }
+  }
+  window.__bpSym=_BP_SYM_KEYS.filter(function(k){ var c=document.getElementById('bps-'+k); return c&&c.checked; });
+}
+function _bpSymGet(){ return _bpFlag() ? (window.__bpSym||[]) : []; }
+
 function _bpI18n(){
   var s=function(id,txt){var e=document.getElementById(id);if(e)e.textContent=txt;};
   s('bp-lbl',L({ru:'Артериальное давление',uk:'Артеріальний тиск',en:'Blood pressure',es:'Presión arterial',de:'Blutdruck',pt:'Pressão arterial',fr:'Tension artérielle',pl:'Ciśnienie krwi',it:'Pressione arteriosa',he:'לחץ דם',ja:'血圧',ko:'혈압'}));
   s('bp-opt',L({ru:'(по желанию)',uk:'(за бажанням)',en:'(optional)',es:'(opcional)',de:'(optional)',pt:'(opcional)',fr:'(facultatif)',pl:'(opcjonalnie)',it:'(facoltativo)',he:'(רשות)',ja:'（任意）',ko:'(선택)'}));
   s('bp-q',L({ru:'Если измеряли давление тонометром в покое — впишите.',uk:'Якщо вимірювали тиск тонометром у спокої — впишіть.',en:'If you measured your blood pressure at rest with a cuff, enter it.',es:'Si mediste tu presión en reposo con un tensiómetro, introdúcela.',de:'Wenn du deinen Blutdruck in Ruhe mit einem Messgerät gemessen hast, trage ihn ein.',pt:'Se mediu a pressão em repouso com um aparelho, informe.',fr:'Si vous avez mesuré votre tension au repos avec un tensiomètre, indiquez-la.',pl:'Jeśli zmierzyłaś ciśnienie ciśnieniomierzem w spoczynku — wpisz.',it:'Se hai misurato la pressione a riposo con un misuratore, inseriscila.',he:'אם מדדת לחץ דם במנוחה עם מד לחץ — הזן.',ja:'安静時に血圧計で測った場合は入力してください。',ko:'안정 시 혈압계로 측정했다면 입력하세요.'}));
   s('bp-hint',L({ru:'Сидя, спина опёрта, ноги на полу, после 5 минут покоя — среднее из 2 замеров.',uk:'Сидячи, спина оперта, ноги на підлозі, після 5 хвилин спокою — середнє з 2 замірів.',en:'Seated, back supported, feet on the floor, after 5 min of rest — average of 2 readings.',es:'Sentada, con la espalda apoyada, pies en el suelo, tras 5 min de reposo — promedio de 2 lecturas.',de:'Sitzend, Rücken gestützt, Füße am Boden, nach 5 Min Ruhe — Mittel aus 2 Messungen.',pt:'Sentada, costas apoiadas, pés no chão, após 5 min de repouso — média de 2 medições.',fr:'Assise, dos soutenu, pieds au sol, après 5 min de repos — moyenne de 2 mesures.',pl:'Siedząc, plecy podparte, stopy na podłodze, po 5 min odpoczynku — średnia z 2 pomiarów.',it:'Seduta, schiena appoggiata, piedi a terra, dopo 5 min di riposo — media di 2 misurazioni.',he:'בישיבה, גב נשען, רגליים על הרצפה, אחרי 5 דק׳ מנוחה — ממוצע של 2 מדידות.',ja:'座って背もたれに寄り、足を床につけ、5分安静後 — 2回の平均。',ko:'앉아서 등을 기대고 발을 바닥에 두고 5분 안정 후 — 2회 측정 평균.'}));
+  try{ var _bs=document.getElementById('bp-sym'); if(_bs&&_bs.getAttribute('data-on')==='1'){ _bs.setAttribute('data-on','0'); _bs.innerHTML=''; _bpSymRender(); } }catch(e){}
   s('bp-unit',L({ru:'мм рт.ст.',uk:'мм рт.ст.',en:'mmHg',es:'mmHg',de:'mmHg',pt:'mmHg',fr:'mmHg',pl:'mmHg',it:'mmHg',he:'ממ״כ',ja:'mmHg',ko:'mmHg'}));
+  try{ _bpSymRender(); }catch(e){}   // значения могли подставиться из прошлого прохода без ввода
 }
 
 // ══ GENDER TOGGLE ════════════════════════════════════════
@@ -10927,6 +10989,7 @@ function _showResultsInner(){
     // Артериальное давление (домашний ручной ввод, по желанию) — разбирает воркер по блоку «ДАВЛЕНИЕ»
     bp_sys:(function(){var e=document.getElementById('bp-sys');var v=e?parseInt(e.value):NaN;return (v>=70&&v<=260)?v:null;})(),
     bp_dia:(function(){var e=document.getElementById('bp-dia');var v=e?parseInt(e.value):NaN;return (v>=40&&v<=160)?v:null;})(),
+    bp_flag:_bpFlag()||null, bp_sym:_bpSymGet(), bp_norm:(function(){ var n=_bpNorm(); return n?{sys:n.sys,dia:n.dia}:null; })(),   // давление относительно СВОЕЙ нормы (2026-10-07)
     device:(typeof importedData!=='undefined'&&importedData)?{vo2:importedData.vo2,spo2:importedData.spo2,readiness:importedData.readiness,sleepHours:importedData.sleepHours,deepMin:importedData.deepMin,tempDev:importedData.tempDev,steps:importedData.steps,respRate:importedData.respRate,bodyFat:importedData.bodyFat,glucose:importedData.glucose,glucoseMeal:importedData.glucoseMeal,day:(typeof _importedDayGet==='function'?_importedDayGet():''),lag:(typeof _importedDayLag==='function'?_importedDayLag():0)}:null,
     // hotflash/hotfreq убраны 2026-07-16 (аудит метрики→воркер): воркер их НЕ читал ни разу — приливы
     // доходят до ИИ через hf_count/hf_intensity ниже. Данные не терялись, поля были мёртвым грузом.
