@@ -321,3 +321,29 @@ Senior Director, Healthcare Partnerships (США, сент. 2026), Director, Har
 
 **План:** короткое сообщение в LinkedIn (≈600 знаков) человеку на лондонской позиции по партнёрствам;
 не найдётся — Dorothy Kilroy. Поддержку (Amanda/Becky) больше не дёргать.
+
+### 4a. Форма Oura «Partners & Resellers» — текст для поля сообщения (≈1000 знаков)
+
+Куда: https://organizations.ouraring.com/contact?topic=PartnersAndResellers. На странице partners-resellers
+форма общая для реселлеров и «Product Integration Partners» и уходит в коммерческий отдел, не в поддержку
+(Amanda/Becky). В начале сообщения прямо указать: Product Integration Partner.
+
+**EN**
+
+Product Integration Partner — Menopause Impact Scale network.
+
+We are a Ukrainian family who lost everything to the war and built VIA-L from zero: a wellness app for perimenopause, menopause and andropause, live on the App Store in 12 languages. Founder Maryna Datsenko is a Certified Perimenopause Specialist (Perry Academy) and nutritionist.
+
+VIA-L already uses the Oura API in production (approved Aug 2026). It reads sleep, HRV, resting heart rate and temperature against the user's baseline and cycle phase, adds symptoms, labs, food and supplements, and gives a daily plan, a weekly review and one weekly focus, with a nutrition specialist review in-app. Evidence base: 970 studies.
+
+Your MIS partners are mostly US clinical care. VIA-L would add the self-care and nutrition side, for Europe, in 12 languages, and for men too. We would love to explore joining the network or the Women's Health directory.
+
+**RU (перевод)**
+
+Партнёр по интеграции продукта — сеть Menopause Impact Scale.
+
+Мы — украинская семья, которая потеряла всё из-за войны и создала VIA-L с нуля: wellness-приложение для перименопаузы, менопаузы и андропаузы, в App Store на 12 языках. Основатель Марина Даценко — сертифицированный специалист по перименопаузе (Perry Academy) и нутрициолог.
+
+VIA-L уже работает с Oura API в продакшене (одобрено в августе 2026). Сон, ВСР, пульс в покое и температура читаются относительно личной базы и фазы цикла, к ним добавляются симптомы, анализы, питание и добавки, а на выходе — план на день, разбор недели и один фокус на неделю, плюс разбор специалиста по питанию в приложении. База — 970 исследований.
+
+Ваши партнёры по MIS — в основном клиническая помощь в США. VIA-L добавил бы сторону самопомощи и питания — для Европы, на 12 языках и для мужчин тоже. Будем рады обсудить вступление в сеть или каталог «Женское здоровье».
