@@ -347,3 +347,42 @@ Your MIS partners are mostly US clinical care. VIA-L would add the self-care and
 VIA-L уже работает с Oura API в продакшене (одобрено в августе 2026). Сон, ВСР, пульс в покое и температура читаются относительно личной базы и фазы цикла, к ним добавляются симптомы, анализы, питание и добавки, а на выходе — план на день, разбор недели и один фокус на неделю, плюс разбор специалиста по питанию в приложении. База — 970 исследований.
 
 Ваши партнёры по MIS — в основном клиническая помощь в США. VIA-L добавил бы сторону самопомощи и питания — для Европы, на 12 языках и для мужчин тоже. Будем рады обсудить вступление в сеть или каталог «Женское здоровье».
+
+### 4b. LinkedIn — Jacqui Owens, Director, International Growth @ ŌURA (Лондон)
+
+Нашёл владелец 2026-10-07. Отвечает за международный рост Oura (UK, Европа, Ближний Восток, APAC) и нанимает
+Director, Partnerships & Enterprise International Growth — новый директор будет под ней. Контакт 3-го уровня:
+без Premium — только запрос в контакты с запиской (≤300 знаков), полное сообщение — после принятия.
+
+**Записка к запросу (288 знаков)**
+
+Hi Jacqui, we are a Ukrainian family who rebuilt from zero after the war. Our app VIA-L already runs on the Oura API and helps women and men through perimenopause, menopause and andropause in 12 languages across Europe. I would love to share how it could fit Oura's international growth.
+
+RU: Здравствуйте, Джеки! Мы — украинская семья, которая после войны начала всё с нуля. Наше приложение VIA-L
+уже работает на Oura API и помогает женщинам и мужчинам в перименопаузе, менопаузе и андропаузе — на 12
+языках по всей Европе. Хотел бы рассказать, как оно может вписаться в международный рост Oura.
+
+**Сообщение после принятия запроса**
+
+Thank you for connecting, Jacqui.
+
+VIA-L was founded by Maryna Datsenko, a Certified Perimenopause Specialist (Perry Academy) and nutritionist. We built it after the war took our home and work, and today it is live on the App Store in 12 languages, with Android in final testing.
+
+It already uses the Oura API in production (approved in August). VIA-L reads sleep, HRV, resting heart rate and temperature against the user's own baseline and cycle phase, combines them with symptoms, lab results, food and supplements, and turns this into a daily plan, a weekly review and one clear focus for the week. Users can also get a written review from a nutrition specialist in the app. The evidence base behind it covers 970 studies.
+
+I noticed Oura's Menopause Impact Scale partner network is mostly US clinical care. VIA-L could add the self-care and nutrition side for Europe, in 12 languages, and for men in andropause too. It would also give Oura members in this age group a reason to keep wearing the ring.
+
+Our attempts through the support team have not reached the right people. Would you be open to a short conversation, or could you point me to the right person for international partnerships? We are self-funded, so this would mean a great deal to us.
+
+Ihor Datsenko, co-founder, VIA-L · integration@via-l.com
+
+RU: Спасибо, что приняли запрос, Джеки. VIA-L основала Марина Даценко — сертифицированный специалист по
+перименопаузе (Perry Academy) и нутрициолог. Мы создали его после того, как война отняла у нас дом и работу;
+сейчас оно в App Store на 12 языках, Android на финальном тестировании. Уже работает с Oura API в продакшене
+(одобрено в августе): данные кольца читаются относительно личной базы и фазы цикла, соединяются с
+симптомами, анализами, питанием и добавками и превращаются в план на день, разбор недели и один фокус на
+неделю; в приложении есть разбор специалиста по питанию; база — 970 исследований. Сеть партнёров Oura по
+шкале менопаузы — в основном клиническая помощь в США; VIA-L добавил бы самопомощь и питание для Европы, на
+12 языках и для мужчин. И дал бы пользователям Oura этого возраста причину носить кольцо. Через поддержку мы
+не дошли до нужных людей. Готовы ли вы к короткому разговору или подскажете, к кому обратиться по
+международным партнёрствам? Мы развиваемся на свои средства, и это много для нас значит.
