@@ -529,6 +529,11 @@ html[data-current-lang="en"] #heroBtnSlots, html[data-current-lang="es"] #heroBt
 
 ### Журнал выполненного (что уже в проде + `main`)
 
+- **2026-10-08** — **Обзор Science 2026 (Gravelsins…Galea, doi 10.1126/science.aeg5004) → реестр + воркер.**
+  Обзор и 22 работы из его списка литературы найдены в PubMed по выходным данным (ecitmatch), 4 нерелевантные
+  отброшены; записи — `interpreter/Infa Cloude/P-F/pubmed/P-F{1,9,10,12,13,15,17}-science-aeg5004.txt`. Реестр:
+  паттерны 1177 → **1193**. Воркер: ранняя менопауза (`bone_risk: early_menopause`) включает и P-F13 (сердце),
+  в промпт — отдельной строкой «окно профилактики», не только «риск по костям». Выводы — `docs/PATTERN-ESTROGEN-EVIDENCE.md`.
 - **2026-10-08** — **VIA-L: системное окно «Оцените приложение».** `interpreter/review-bridge.js`, плагин
   `@capacitor-community/in-app-review` 6.0.0 (iOS SKStoreReviewController, Android Play In-App Review; на вебе
   ничего). Просим, когда в истории ≥3 разных дней с разбором, не в пробные дни, не чаще раза в 120 дней и не
