@@ -9225,7 +9225,7 @@ function _iapShow(){
   document.body.classList.add('iap-open');
   try{ _iapI18n(); }catch(e){}
   // Человек пришёл сюда после трёх бесплатных дней — говорим это прямо, иначе экран выглядит как
-  // просьба заплатить ни за что. Бесплатного периода у подписки НЕТ: три дня уже были (2026-09-17).
+  // просьба заплатить ни за что. Бесплатного периода у подписки НЕТ: пробные дни (_TRIAL_DAYS) уже были (2026-09-17).
   try{
     var n=document.getElementById('iap-trial-note');
     var used=(_trialGet().days||[]).length, spent=(used>=_TRIAL_DAYS && !_subActive());
@@ -10370,11 +10370,12 @@ function _daySnapGet(){ try{return JSON.parse(localStorage.getItem('vialp_days')
 function _daySnapSave(score,type,data,doc,docr){ try{var arr=_daySnapGet(),day=_dayKey();arr=arr.filter(function(e){return e.day!==day;});arr.unshift({day:day,score:score,type:type,data:data,doc:!!doc,docr:(docr||[]).filter(function(r){return typeof r==='string';}),ts:Date.now()});while(arr.length>400)arr.pop();localStorage.setItem('vialp_days',JSON.stringify(arr));}catch(e){} }
 function _passedToday(){ try{ return localStorage.getItem('vialp_lastpass')===_dayKey(); }catch(e){ return false; } }
 // ══ ПРОБНЫЙ РЕЖИМ (решение владельца 2026-09-17) ═══════════════════════════════
-// Бесплатный пробник — 3 дня прохода. Разбор в нём КОРОТКИЙ (воркер получает trial:true, ~$0.03
+// Бесплатный пробник — 7 дней прохода (было 3; 2026-10-09: итог «Фокуса недели» и первый недельный
+// разбор приходят на 5–7-й день — пробник должен до них дожить). Разбор в нём КОРОТКИЙ (воркер получает trial:true, ~$0.03
 // вместо $0.13), памятка дня — БАЗОВАЯ, без ИИ. Иначе 10 000 пробников = $1300 незаработанных денег.
 // Считаем уникальные дни с проходом, а не запуски. Переустановка пробник обнуляет — это дыра
 // на $0.09, закроется вместе с постоянным номером подписки (см. tasks/TODO.md).
-var _TRIAL_DAYS=3;
+var _TRIAL_DAYS=7;
 function _trialGet(){ try{ var t=JSON.parse(localStorage.getItem('vialp_trial')||'null'); return (t&&Array.isArray(t.days))?t:{days:[]}; }catch(e){ return {days:[]}; } }
 function _trialMark(){ try{ var t=_trialGet(), d=_dayKey(); if(t.days.indexOf(d)<0){ t.days.push(d); localStorage.setItem('vialp_trial',JSON.stringify(t)); } }catch(e){} }
 function _subActive(){ try{ return localStorage.getItem('vialp_entitlement')==='1'; }catch(e){ return false; } }

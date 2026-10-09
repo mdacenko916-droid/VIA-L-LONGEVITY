@@ -529,6 +529,7 @@ html[data-current-lang="en"] #heroBtnSlots, html[data-current-lang="es"] #heroBt
 
 ### Журнал выполненного (что уже в проде + `main`)
 
+- **2026-10-09** — **Пробник VIA-L 3 → 7 дней.** Польза (итог «Фокуса недели», недельный разбор) приходит на 5–7-й день — пробник до неё доживает. `_TRIAL_DAYS=7` в `interpreter-via-l.html`, `_trialGuard` в воркере `>= 7`, окно отзыва (`review-bridge.js`) — после 7-го дня. Тексты сторов — с версией 1.0.11.
 - **2026-10-09** — **Анкета: «менопауза после операции» + «тяжёлый ПМС в прошлом».** Оба вопроса — в блоке
   «менструаций нет» (`#cyc-absent-block`) VIA-L и EXPERT, ключи `meno_surg_q`/`pms_past_q` ×12, поля профиля
   `meno_surgical`/`pms_past`; в данные разбора уходят только при `cycle_status=absent`. Воркер: `meno_surgical=yes`

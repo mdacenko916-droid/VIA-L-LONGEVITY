@@ -2395,7 +2395,7 @@ function _structuredFmtExpert() {
   ) + _STRUCTURED_EXPERT_ADD;
 }
 
-// ПРОБНЫЙ РАЗБОР (решение владельца 2026-09-17). Бесплатный пробник — 3 дня, и платить за него
+// ПРОБНЫЙ РАЗБОР (решение владельца 2026-09-17). Бесплатный пробник — 7 дней (было 3, 2026-10-09), и платить за него
 // полным разбором нельзя: 10 000 пробников по $0.13 = $1300. Здесь короткий ответ (~1000 токенов
 // вместо 6000) и 2 темы базы вместо 4: замер полного разбора Haiku $0.077 → пробный ≈$0.03.
 // Структурных маркеров [[S]]/[[D]] НЕТ — приложение отрисует плоским markdown.
@@ -3057,7 +3057,7 @@ async function _trialGuard(request, env, body, ctx) {
     let led = null;
     try { led = JSON.parse(await env.ANALYSIS_CACHE.get('tr:' + key) || 'null'); } catch (_) {}
     const days = (led && Array.isArray(led.days)) ? led.days : [];
-    if (days.length >= 3 && days.indexOf(day) < 0) return { error: 'trial_over' };
+    if (days.length >= 7 && days.indexOf(day) < 0) return { error: 'trial_over' };   // = _TRIAL_DAYS приложения
 
     // 2. потолок на адрес
     const ip = request.headers.get('CF-Connecting-IP') || 'unknown';

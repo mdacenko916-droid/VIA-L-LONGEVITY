@@ -10,7 +10,7 @@
    «попросили» ≠ «показали»; своё ограничение нужно, чтобы не дёргать систему на каждом разборе.
    Окно — через 6 с после появления разбора и только если экран на виду: не перебиваем чтение. */
 (function () {
-  var KEY = 'vialp_review_asks', MIN_DAYS = 3, GAP = 120 * 86400000, MAX_ASKS = 3, DELAY = 6000;
+  var KEY = 'vialp_review_asks', MIN_DAYS = 7, GAP = 120 * 86400000, MAX_ASKS = 3, DELAY = 6000;
   var timer = null;
 
   function plug() {
