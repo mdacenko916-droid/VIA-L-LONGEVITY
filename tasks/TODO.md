@@ -57,7 +57,9 @@
 
 ## 📋 Лицензия MRS + AMS (ZEG Berlin) — для клиник и кабинета (2026-10-09)
 
-- [ ] **Марина отправляет заявку** через Rating Scale Request Form на zeg-berlin.com/solutions/ (Digital health
+- 📨 2026-10-09 ОТПРАВЛЕНЫ обе заявки (MRS и AMS отдельно, форма — одна шкала на заявку), подтверждения от
+      info@zeg-berlin.de получены. ⏳ Ждём условия и цену. В ответе ZEG указать единый верный адрес (в заявках разнобой).
+- [x] Заявка через Rating Scale Request Form на zeg-berlin.com/solutions/ (Digital health
       product + For patients, MRS и AMS, Electronic, No funding; текст описания — в чате 2026-10-09). Спрашиваем цену,
       условия для стартапа и переводы ru/uk (официальных нет). До письменной лицензии — НИЧЕГО в коде.
       Детали лицензий — `docs/INDEX-SCORING-SOURCES.md` §1.1.
