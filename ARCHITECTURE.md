@@ -529,6 +529,11 @@ html[data-current-lang="en"] #heroBtnSlots, html[data-current-lang="es"] #heroBt
 
 ### Журнал выполненного (что уже в проде + `main`)
 
+- **2026-10-09** — **Анкета: «менопауза после операции» + «тяжёлый ПМС в прошлом».** Оба вопроса — в блоке
+  «менструаций нет» (`#cyc-absent-block`) VIA-L и EXPERT, ключи `meno_surg_q`/`pms_past_q` ×12, поля профиля
+  `meno_surgical`/`pms_past`; в данные разбора уходят только при `cycle_status=absent`. Воркер: `meno_surgical=yes`
+  включает P-F13, оба ответа — отдельными строками в `buildUserMessage`. Основание — обзор Science 2026 (aeg5004).
+  На телефонах — со сборкой (`app/sync-web.sh`).
 - **2026-10-08** — **Обзор Science 2026 (Gravelsins…Galea, doi 10.1126/science.aeg5004) → реестр + воркер.**
   Обзор и 22 работы из его списка литературы найдены в PubMed по выходным данным (ecitmatch), 4 нерелевантные
   отброшены; записи — `interpreter/Infa Cloude/P-F/pubmed/P-F{1,9,10,12,13,15,17}-science-aeg5004.txt`. Реестр:

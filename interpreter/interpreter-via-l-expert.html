@@ -2849,6 +2849,18 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
             <div class="chip"><input type="radio" name="early_meno" id="em1" value="yes"><label for="em1" data-t="alg_yes">⚠️ Есть</label></div>
             <div class="chip"><input type="radio" name="early_meno" id="em2" value="no"><label for="em2" data-t="alg_no">🟢 Нет</label></div>
           </div>
+          <!-- Из обзора Science 2026 (aeg5004): хирургическая менопауза резче и с бо́льшим риском; тяжёлый ПМС
+               в прошлом предсказывает тяжесть перехода. Блок ПМС при absent скрыт — поэтому спрашиваем здесь. -->
+          <label data-t="meno_surg_q" style="margin-top:14px;">Менопауза наступила после операции (удаление яичников или матки)?</label>
+          <div class="chips cog-grid">
+            <div class="chip"><input type="radio" name="meno_surgical" id="msg1" value="yes"><label for="msg1" data-t="yes">Да</label></div>
+            <div class="chip"><input type="radio" name="meno_surgical" id="msg2" value="no"><label for="msg2" data-t="no">Нет</label></div>
+          </div>
+          <label data-t="pms_past_q" style="margin-top:14px;">Когда был цикл, ПМС был тяжёлым?</label>
+          <div class="chips cog-grid">
+            <div class="chip"><input type="radio" name="pms_past" id="pmp1" value="yes"><label for="pmp1" data-t="yes">Да</label></div>
+            <div class="chip"><input type="radio" name="pms_past" id="pmp2" value="no"><label for="pmp2" data-t="no">Нет</label></div>
+          </div>
         </div>
         <div class="input-group" id="cyc-pms-block">
           <label data-t="pms_q">Самочувствие перед менструацией (ПМС)</label>
@@ -4498,6 +4510,8 @@ const _CYCK={
   heavy_yes:{en:"Yes, heavy",ru:"Да, обильные",uk:"Так, рясні",es:"Sí, abundante",de:"Ja, stark",pt:"Sim, abundante",fr:"Oui, abondantes",pl:"Tak, obfite",it:"Sì, abbondanti",he:"כן, כבד",ja:"はい、多い",ko:"네, 많음"},
   heavy_no:{en:"Usual",ru:"Обычные",uk:"Звичайні",es:"Normal",de:"Normal",pt:"Normal",fr:"Normales",pl:"Zwykłe",it:"Normali",he:"רגיל",ja:"普通",ko:"보통"},
   early_meno_q:{en:"Early menopause (before 45)",ru:"Ранняя менопауза (до 45 лет)",uk:"Рання менопауза (до 45 років)?",es:"¿Menopausia temprana (antes de 45)?",de:"Frühe Menopause (vor 45)?",pt:"Menopausa precoce (antes dos 45)?",fr:"Ménopause précoce (avant 45 ans) ?",pl:"Wczesna menopauza (przed 45)?",it:"Menopausa precoce (prima dei 45)?",he:"גיל מעבר מוקדם (לפני 45)?",ja:"早期閉経（45歳より前）？",ko:"조기 폐경 (45세 이전)?"},
+  meno_surg_q:{en:"Did menopause follow surgery (ovaries or uterus removed)?",ru:"Менопауза наступила после операции (удаление яичников или матки)?",uk:"Менопауза настала після операції (видалення яєчників або матки)?",es:"¿La menopausia llegó tras una cirugía (extirpación de ovarios o útero)?",de:"Begann die Menopause nach einer Operation (Entfernung der Eierstöcke oder der Gebärmutter)?",pt:"A menopausa surgiu após uma cirurgia (remoção dos ovários ou do útero)?",fr:"La ménopause est-elle survenue après une opération (ablation des ovaires ou de l’utérus) ?",pl:"Czy menopauza nastąpiła po operacji (usunięcie jajników lub macicy)?",it:"La menopausa è arrivata dopo un intervento (rimozione delle ovaie o dell’utero)?",he:"האם גיל המעבר הגיע אחרי ניתוח (הסרת שחלות או רחם)?",ja:"閉経は手術（卵巣または子宮の摘出）の後でしたか？",ko:"폐경이 수술(난소 또는 자궁 절제) 후에 왔나요?"},
+  pms_past_q:{en:"When you still had a cycle, was PMS severe?",ru:"Когда был цикл, ПМС был тяжёлым?",uk:"Коли був цикл, ПМС був важким?",es:"Cuando tenías ciclo, ¿el síndrome premenstrual era intenso?",de:"Als Sie noch einen Zyklus hatten – war PMS stark ausgeprägt?",pt:"Quando ainda tinha ciclo, a TPM era intensa?",fr:"Quand vous aviez encore un cycle, le SPM était-il sévère ?",pl:"Gdy miała Pani jeszcze cykl, czy PMS był silny?",it:"Quando avevi ancora il ciclo, la sindrome premestruale era intensa?",he:"כשעוד היה לך מחזור, האם התסמונת הקדם־וסתית הייתה קשה?",ja:"まだ月経があった頃、PMSは重かったですか？",ko:"생리가 있던 시절, 월경전증후군(PMS)이 심했나요?"},
   s11_q1:{en:"How does your cycle feel right now?",ru:"Как сейчас ощущается ваш цикл?"},
   s11_q4:{en:"How would you rate your energy and drive over the past months?",ru:"Как вы оцениваете свою энергию и драйв в последние месяцы?"},
   s11_q5:{en:"How are your mood and motivation today?",ru:"Как сегодня ваше настроение и мотивация?"},
@@ -7808,6 +7822,8 @@ function saveProfile(){
       lastperiod:gv('prof-lastperiod')||P.lastperiod||'',
       cyclelen:gv('prof-cyclelen')||P.cyclelen||'',
       early_meno:getRadio('early_meno')||P.early_meno||'',
+      meno_surgical:getRadio('meno_surgical')||P.meno_surgical||'',
+      pms_past:getRadio('pms_past')||P.pms_past||'',
       gsm:keepArr(gc(['gsm1','gsm2','gsm3','gsm4','gsm5','gsm6','gsm7']),P.gsm),
       bone:keepArr(gc(['bone1','bone2','bone3','bone5']),P.bone),
       breast:keepArr(gc(['breast1','breast2','breast3','breast4']),P.breast),
@@ -8045,7 +8061,7 @@ function loadProfile(){
     set('prof-lastperiod',p.lastperiod);set('prof-cyclelen',p.cyclelen);
     if(p.gender){const g=document.querySelector('input[name=gender][value="'+p.gender+'"]');if(g&&!g.checked){g.checked=true;g.dispatchEvent(new Event('change'));}}
     if(p.phase){const ph=document.querySelector('input[name=phase][value="'+p.phase+'"]');if(ph)ph.checked=true;}
-    ['cycle_status','heavy_period','early_meno','vitality'].forEach(n=>{const v=p[n];if(v){const el=document.querySelector('input[name='+n+'][value="'+v+'"]');if(el)el.checked=true;}});
+    ['cycle_status','heavy_period','early_meno','meno_surgical','pms_past','vitality'].forEach(n=>{const v=p[n];if(v){const el=document.querySelector('input[name='+n+'][value="'+v+'"]');if(el)el.checked=true;}});
     if(typeof _cycleChange==='function')_cycleChange();
     if(typeof _wlExpChange==='function')_wlExpChange();   // восстановили «опыт снижения веса» → вернуть видимость «каким способом»
     const sH=(accId,map)=>{const acc=document.getElementById(accId);if(acc&&map&&typeof map==='object')acc.querySelectorAll('input[type=checkbox]').forEach(c=>{if(map[c.value]==='yes')c.checked=true;});};
@@ -10631,6 +10647,8 @@ function _showResultsInner(){
     gsm:getChecked(['gsm1','gsm2','gsm3','gsm4','gsm5','gsm6','gsm7']),
     horm_female:(typeof _hormMap==='function'?_hormMap('horm-acc'):{}),
     horm_male:(typeof _hormMap==='function'?_hormMap('horm-male-acc'):{}),
+    meno_surgical:(getRadio('cycle_status')==='absent'?(getRadio('meno_surgical')||''):''),
+    pms_past:(getRadio('cycle_status')==='absent'?(getRadio('pms_past')||''):''),
     bone_risk:(function(){var b=getChecked(['bone2','bone3','bone5']).filter(function(v){return v!=='none_bone';});if(getRadio('early_meno')==='yes')b.push('early_menopause');return b;})(),
     breast:getChecked(['breast1','breast3','breast4']),
   };

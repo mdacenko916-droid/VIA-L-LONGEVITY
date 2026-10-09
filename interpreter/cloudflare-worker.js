@@ -6623,7 +6623,7 @@ function selectKBPatterns(data) {
     // P-F13 сердечно-сосудистый
     // Ранняя менопауза (<45) — женский усилитель сердечно-сосудистого риска, не только костного
     // (Muka JAMA Cardiol 2016; обзор Science 2026 aeg5004). Раньше вела только в P-F12.
-    add('P-F13', has(sym,'palpitations','pulse_awareness') || has(bone,'early_menopause')
+    add('P-F13', has(sym,'palpitations','pulse_awareness') || has(bone,'early_menopause') || data.meno_surgical === 'yes'
       || num(labs.ldl) > 3.4 || num(labs.apob) > 1.0 || num(labs.tg) > 1.7);
     // P-F14 кожа/коллаген (NEW)
     add('P-F14', has(horm,'dry_skin','hair_loss')
@@ -8574,6 +8574,8 @@ function buildUserMessage(data, lang, tier) {
         ? 'Цикл · статус: ' + (data.cycle_status || '—') + (data.heavy_period ? ' | обильные менструации: ' + (data.heavy_period === 'yes' ? 'да' : 'нет') : '') + ' | давность последней менструации: ' + (data.last_period || '—') + (data.cycle_len ? ' | длина цикла: ' + data.cycle_len + ' дн' : '') + _cyclePhaseLine(data) + '\n'
           + 'ПМС · тяжесть: ' + _V(data.pms) + ' | симптомы: ' + _J(data.pms_symptoms) + '\n'
           + ((Array.isArray(data.bone_risk) && data.bone_risk.indexOf('early_menopause') >= 0) ? 'Ранняя менопауза (до 45 лет): да — это фактор не только для костей, но и для сердца/сосудов и долгосрочного здоровья мозга; подавать как окно профилактики, без запугивания\n' : '')
+          + (data.meno_surgical === 'yes' ? 'Менопауза после операции (удаление яичников/матки): да — переход был резким, симптомы обычно сильнее, риск для сердца/сосудов и костей выше, чем при естественной; не сравнивать с «обычной» постменопаузой, подавать как окно профилактики, без запугивания\n' : '')
+          + (data.pms_past === 'yes' ? 'Тяжёлый ПМС в прошлом: да — признак высокой чувствительности к гормональным колебаниям; объясняет более тяжёлый переход (приливы, настроение), это не «слабость»\n' : '')
           + ((data.hf_count && data.hf_count !== 'none') ? 'Приливы/жар: частота ' + _V(data.hf_count) + (data.hf_intensity ? ' | интенсивность ' + _V(data.hf_intensity) : '') + ' — вазомоторный признак перехода; учитывай как часть общей гормональной картины (влияет на сон/ночную температуру/пробуждения).\n' : '')
           + ((Array.isArray(data.gsm) && data.gsm.filter(function(x){return x && x.indexOf('none')<0;}).length) ? 'Тазовое дно / интимный комфорт: ' + _J(data.gsm) + ' — тоже часть перименопаузальной картины (мочеполовой синдром); поддержка мягко и без диагноза.\n' : '')
         // male_mood/horm_intensity шлют VIA-L EXPERT (у них есть инпуты) — для VIA-L их нет,
