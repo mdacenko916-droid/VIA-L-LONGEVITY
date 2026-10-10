@@ -1,6 +1,6 @@
 import json, os
 HERE=os.path.dirname(os.path.abspath(__file__)); os.chdir(HERE)
-for f in ['tr_uk_en','tr_es_de','tr_pt_fr','tr_pl_it','tr_he_ja_ko','tr_extra','tr_ui','tr_v2','tr_how','how_ru','how_uk_en','how_es_de','how_pt_fr','how_pl_it','how_he','how_ja_ko']: exec(open(f+'.py').read())
+for f in ['tr_uk_en','tr_es_de','tr_pt_fr','tr_pl_it','tr_he_ja_ko','tr_extra','tr_ui','tr_v2','tr_how','how_ru','how_uk_en','how_es_de','how_pt_fr','how_pl_it','how_he','how_ja_ko','clip_map']: exec(open(f+'.py').read())
 ru=json.load(open('names.json')); W=json.load(open('workouts_ru.json'))
 N={'ru':ru,'uk':uk,'en':en,'es':es,'de':de,'pt':pt,'fr':fr,'pl':pl,'it':it,'he':he,'ja':ja,'ko':ko}
 base=len(ru)
@@ -48,7 +48,7 @@ HW={'ru':HU}
 assert json.load(open('how_unique.json'))==HU, 'how_ru.py изменился — пересоберите how_unique.json и переводы'
 for l,arr in (('uk',HUK),('en',HEN),('es',HES),('de',HDE),('pt',HPT),('fr',HFR),('pl',HPL),('it',HIT),('he',HHE),('ja',HJA),('ko',HKO)):
     assert len(arr)==len(HU),l; HW[l]=arr
-HX=[[HU.index(_res(i,0)) if _res(i,0) else -1, HU.index(_res(i,1)) if _res(i,1) else -1, C.get(i,'')] for i in range(len(N['ru']))]
+HX=[[HU.index(_res(i,0)) if _res(i,0) else -1, HU.index(_res(i,1)) if _res(i,1) else -1, C.get(i,''), CLIP.get(i,'')] for i in range(len(N['ru']))]   # 4-й — номер ролика каталога (этап 3: GIF Евы)
 TK={'Сила: ноги и ягодицы':'legs','Сила: спина, плечи, руки':'upper','Сила: грудь, спина, плечи':'upperM','Сила: всё тело':'full','Корпус и тазовое дно':'core','Корпус, спина и тазовое дно':'coreM','Баланс и ловкость':'bal','Мобильность суставов':'mob','HIIT':'hiit','Кардио: база':'cb','Кардио: короткие интервалы':'cs','Кардио: интервалы':'ci','Пилатес':'pil','Тело-разум: мягкая йога и тайцзи':'mind'}
 CAT={'legs':'legs','upper':'upper','upperM':'upper','full':'full','core':'core','coreM':'core','bal':'bal','mob':'mob','hiit':'hiit','cb':'cardio','cs':'cardio','ci':'cardio','pil':'pil','mind':'mind'}
 LK={'старт':'start','регулярный':'reg','тренированный':'tr','все уровни':'all','все, первые ~6 недель':'all6'}
