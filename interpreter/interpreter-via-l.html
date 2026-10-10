@@ -2267,6 +2267,24 @@ body.view-result #tb-brand{display:none;}
 body.view-result #langDropdown{display:none;}
 /* Язык — только «Профиль › Настройки» (план структуры §3a, 2026-10-10): на вкладках-панелях кнопку не показываем. */
 body.card-open #langDropdown{display:none;}
+/* «Сегодня» по шагам приёма (этап 4, docs/APP-STRUCTURE-PLAN.md §4/4a): 4 карточки-шага, открыта одна. */
+.rd-part{font-size:var(--fs-cap);letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700;margin:18px 4px 8px;}
+.rd-step{margin-bottom:10px;}
+.rd-step-h{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;font:inherit;color:var(--t1);background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.20);border-radius:20px;padding:14px 16px;}
+.rd-step-n{width:28px;height:28px;border-radius:50%;border:1px solid rgba(226,185,90,.6);color:var(--gold-lt);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rd-step-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+.rd-step-t{font-family:'Playfair Display',serif;font-size:var(--fs-title);}
+.rd-step-s{font-size:var(--fs-cap);color:var(--t2);line-height:1.4;}
+.rd-step-ch{color:var(--gold-lt);font-size:22px;transition:transform .2s;}
+.rd-step.open .rd-step-ch{transform:rotate(90deg);}
+.rd-step.open .rd-step-s{display:none;}
+.rd-step-b{display:none;padding-top:10px;}
+.rd-step.open .rd-step-b{display:block;}
+#rdB1{background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.20);border-radius:20px;padding:14px 16px;color:var(--t1);line-height:1.6;}
+#rdWhy .ai-themes-box:not(.vial-ev) .ai-more-all{display:none;}
+#rdWhy .ai-themes-box:not(.vial-ev){display:block;}
+#rdWhy .rd-why-h{font-size:var(--fs-cap);letter-spacing:.08em;text-transform:uppercase;color:var(--gold);font-weight:700;margin:14px 4px 8px;}
+#stepResult .rd-sources{display:none;}
 .vc-link{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;font:inherit;color:inherit;background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.20);border-radius:18px;padding:14px 16px;margin-bottom:12px;}
 .vc-link .vc-txt{flex:1;display:flex;flex-direction:column;gap:3px;}
 .vc-chev{color:var(--gold-lt);font-size:22px;}
@@ -4096,6 +4114,39 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
 <!-- Нижняя строка — общий файл bottom-nav.js (одна на все страницы VIA-L, этап 0 плана структуры). -->
 <script src="bottom-nav.js"></script>
 <script>vialBottomNav.mount({ lang:(function(){ try{ return localStorage.getItem('vial_lang')||'en'; }catch(e){ return 'en'; } })() });</script>
+<script>
+// «Сегодня» по шагам приёма (этап 4, 2026-10-10, docs/APP-STRUCTURE-PLAN.md §4/4a). Разметку блоков не
+// трогаем: один раз при загрузке оборачиваем их в 4 шага и переносим узлы целиком (id и обработчики
+// остаются). Разбор ИИ по-прежнему пишут в #aiResult шесть мест кода — раскладку по шагам делает одна
+// функция _rdLayout после каждой записи: вывод («Где вы сейчас» + «Общая картина») остаётся в шаге 3,
+// темы («Почему именно так») и «На чём основано» уезжают в шаг 4.
+(function(){
+  var rd=document.querySelector('#stepResult > .rd'); if(!rd) return;
+  var $=function(id){ return document.getElementById(id); };
+  var mk=function(n,key,ru){
+    var s=document.createElement('section'); s.className='rd-step'+(n===4?' open':''); s.id='rdStep'+n;
+    s.innerHTML='<button type="button" class="rd-step-h" onclick="_rdStep('+n+')"><span class="rd-step-n">'+n+'</span>'
+      +'<span class="rd-step-tx"><span class="rd-step-t" data-t="'+key+'">'+ru+'</span><span class="rd-step-s" id="rdS'+n+'"></span></span>'
+      +'<span class="rd-step-ch">›</span></button><div class="rd-step-b" id="rdSB'+n+'"></div>';
+    return s;
+  };
+  var part=function(key,ru){ var d=document.createElement('div'); d.className='rd-part'; d.setAttribute('data-t',key); d.textContent=ru; return d; };
+  var s1=mk(1,'rd_s1','С чем вы пришли'), s2=mk(2,'rd_s2','Что показали цифры'), s3=mk(3,'rd_s3','На что это похоже'), s4=mk(4,'rd_s4','Шаг недели и памятка');
+  var b1=document.createElement('div'); b1.id='rdB1'; s1.querySelector('.rd-step-b').appendChild(b1);
+  var put=function(sec,el){ if(el) sec.querySelector('.rd-step-b').appendChild(el); };
+  // Ссылки — ДО переноса: «Стоит понаблюдать» лежит внутри карточки индекса, и после её переноса в ещё
+  // не вставленный шаг getElementById его уже не находит.
+  var E={ph:$('rd-phasenote'),row:rd.querySelector('.rd-row-2'),ai:$('aiCard'),da:$('doctorAlert'),fo:$('rd-focus'),dp:rd.querySelector('.rd-dayplan'),ex:$('rd-exp')};
+  put(s2,E.ph); put(s2,E.row);
+  put(s3,E.ai); put(s3,E.da);
+  put(s4,E.fo); put(s4,E.dp); put(s4,E.ex);
+  var why=document.createElement('div'); why.id='rdWhy'; put(s4,why);
+  var anchor=$('rd-week');
+  var seq=[part('rd_part_now','Как вы сегодня'),s1,s2,s3,part('rd_part_do','Что делать'),s4];
+  var ref=anchor?anchor.nextSibling:rd.firstChild;
+  seq.forEach(function(el){ rd.insertBefore(el,ref); });
+})();
+</script>
 
 </div><!-- /app -->
 
@@ -4566,6 +4617,13 @@ const _NAVC={nav_card:{en:"My Profile",ru:"Мой профиль",uk:"Мій п�
   prog_archive:{ru:"Архив дней",uk:"Архів днів",en:"Day archive",es:"Archivo de días",de:"Tagesarchiv",pt:"Arquivo de dias",fr:"Archives des jours",pl:"Archiwum dni",it:"Archivio dei giorni",he:"ארכיון ימים",ja:"日々の記録",ko:"일별 기록"},
   seg_week:{ru:"Неделя",uk:"Тиждень",en:"Week",es:"Semana",de:"Woche",pt:"Semana",fr:"Semaine",pl:"Tydzień",it:"Settimana",he:"שבוע",ja:"週",ko:"주"},
   seg_month:{ru:"Месяц",uk:"Місяць",en:"Month",es:"Mes",de:"Monat",pt:"Mês",fr:"Mois",pl:"Miesiąc",it:"Mese",he:"חודש",ja:"月",ko:"월"},
+  rd_part_now:{ru:"Как вы сегодня",uk:"Як ви сьогодні",en:"How you are today",es:"Cómo estás hoy",de:"Wie es dir heute geht",pt:"Como você está hoje",fr:"Comment vous allez aujourd’hui",pl:"Jak się dziś masz",it:"Come stai oggi",he:"המצב שלך היום",ja:"今日のあなた",ko:"오늘의 상태"},
+  rd_part_do:{ru:"Что делать",uk:"Що робити",en:"What to do",es:"Qué hacer",de:"Was zu tun ist",pt:"O que fazer",fr:"Que faire",pl:"Co robić",it:"Cosa fare",he:"מה לעשות",ja:"やること",ko:"할 일"},
+  rd_s1:{ru:"С чем вы пришли",uk:"З чим ви прийшли",en:"What brought you here",es:"Lo que te trajo aquí",de:"Womit du gekommen bist",pt:"O que trouxe você aqui",fr:"Ce qui vous amène",pl:"Z czym przychodzisz",it:"Il motivo per cui sei qui",he:"עם מה הגעת",ja:"気になっていること",ko:"찾아온 이유"},
+  rd_s2:{ru:"Что показали цифры",uk:"Що показали цифри",en:"What the numbers show",es:"Qué muestran los datos",de:"Was die Zahlen zeigen",pt:"O que os números mostram",fr:"Ce que montrent les chiffres",pl:"Co pokazują liczby",it:"Cosa mostrano i numeri",he:"מה המספרים מראים",ja:"数値が示すこと",ko:"숫자가 보여주는 것"},
+  rd_s3:{ru:"На что это похоже",uk:"На що це схоже",en:"What this looks like",es:"A qué se parece",de:"Wonach es aussieht",pt:"Com o que isso se parece",fr:"À quoi cela ressemble",pl:"Na co to wygląda",it:"A cosa somiglia",he:"למה זה דומה",ja:"どういう状態か",ko:"어떤 모습인지"},
+  rd_s4:{ru:"Шаг недели и памятка",uk:"Крок тижня і пам’ятка",en:"This week’s step and day plan",es:"Paso de la semana y plan del día",de:"Schritt der Woche und Tagesplan",pt:"Passo da semana e plano do dia",fr:"Étape de la semaine et plan du jour",pl:"Krok tygodnia i plan dnia",it:"Passo della settimana e piano del giorno",he:"הצעד של השבוע ותוכנית היום",ja:"今週のステップと今日のプラン",ko:"이번 주 단계와 오늘의 계획"},
+  rd_why_h:{ru:"Почему именно так",uk:"Чому саме так",en:"Why this approach",es:"Por qué así",de:"Warum gerade so",pt:"Por que assim",fr:"Pourquoi ainsi",pl:"Dlaczego właśnie tak",it:"Perché proprio così",he:"למה דווקא כך",ja:"なぜこうするのか",ko:"왜 이렇게 하는지"},
   dp_why_cal:{ru:"Почему мы не просим считать калории?",uk:"Чому ми не просимо рахувати калорії?",en:"Why we don’t ask you to count calories",es:"Por qué no pedimos contar calorías",de:"Warum wir kein Kalorienzählen verlangen",pt:"Por que não pedimos para contar calorias",fr:"Pourquoi nous ne demandons pas de compter les calories",pl:"Dlaczego nie prosimy o liczenie kalorii",it:"Perché non chiediamo di contare le calorie",he:"למה אנחנו לא מבקשים לספור קלוריות",ja:"なぜカロリー計算を求めないのか",ko:"왜 칼로리 계산을 요구하지 않나요"}};
 Object.keys(_NAVC).forEach(function(k){Object.keys(_NAVC[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_NAVC[k][l];});});
 const _HLPK={help_why:{en:"Why we assess this",ru:"Зачем мы это оцениваем?",uk:"Навіщо ми це оцінюємо?",es:"¿Por qué lo evaluamos?",de:"Warum wir das einschätzen",pt:"Por que avaliamos isso",fr:"Pourquoi nous évaluons cela",pl:"Dlaczego to oceniamy",it:"Perché lo valutiamo",he:"למה אנחנו מעריכים זאת",ja:"なぜ評価するのか",ko:"왜 평가하나요"},help_close:{en:"Got it",ru:"Понятно",uk:"Зрозуміло",es:"Entendido",de:"Verstanden",pt:"Entendi",fr:"Compris",pl:"Rozumiem",it:"Capito",he:"הבנתי",ja:"了解",ko:"확인"}};
@@ -5036,6 +5094,64 @@ document.querySelectorAll('input[name=gender]').forEach(el=>{
     setTimeout(function(){ if(document.body.classList.contains('flow-mode')&&!document.getElementById('morning-gate')&&typeof showAll==='function'){ var _sa=document.getElementById('scroll-area'); var _y=_sa?_sa.scrollTop:0; showAll(); if(_sa)_sa.scrollTop=_y; else window.scrollTo(0,_y); } },0);
   });
 });
+
+// ══ «СЕГОДНЯ» ПО ШАГАМ: аккордеон, раскладка разбора, строки-сути (этап 4, 2026-10-10) ══
+window._rdOpen=4;
+function _rdStep(n){ window._rdOpen=(window._rdOpen===n)?0:n;
+  for(var i=1;i<=4;i++){ var s=document.getElementById('rdStep'+i); if(s) s.classList.toggle('open',window._rdOpen===i); }
+  try{ var o=document.getElementById('rdStep'+n); if(o&&window._rdOpen===n) o.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){} }
+function _rdSetTxt(id,v){ var e=document.getElementById(id); if(e && e.textContent!==v) e.textContent=v; }
+var _rdBusy=false;
+function _rdLayout(){
+  if(_rdBusy) return; _rdBusy=true;
+  try{
+    var r=document.getElementById('aiResult'), why=document.getElementById('rdWhy');
+    if(r && why){
+      var box=r.querySelector('.ai-themes-box:not(.vial-ev)'), ev=r.querySelector('.vial-ev');
+      // Свежая запись в #aiResult стирает метку .rd-laid → темы прошлого дня/версии из шага 4 убираем,
+      // даже если в новом тексте тем нет (старый неструктурный разбор, ошибка, «ищем разбор…»).
+      var fresh=!r.querySelector('.rd-laid');
+      if(fresh) why.innerHTML='';
+      if(box){
+        var rest=box.querySelector('.ai-intro'); var head=r.querySelector('.ai-intro-head');
+        if(rest){ if(head&&head.nextSibling) r.insertBefore(rest,head.nextSibling); else r.appendChild(rest); }
+        var h=document.createElement('div'); h.className='rd-why-h'; h.textContent=t('rd_why_h'); why.appendChild(h);
+        box.classList.add('open'); why.appendChild(box);
+      }
+      if(ev) why.appendChild(ev);
+      if(fresh){ var mk=document.createElement('i'); mk.className='rd-laid'; mk.style.display='none'; r.appendChild(mk); }
+    }
+    // строки-сути свёрнутых шагов
+    var c=(typeof _cmpGet==='function')?_cmpGet():null, day=window.__rdDay||_dayKey(), dl='';
+    try{ var rec=(JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[]).filter(function(x){return x&&x.day===day;})[0]; dl=(rec&&rec.cmp_delta)||(day===_dayKey()?window._cmpDeltaToday:'')||''; }catch(e){}
+    var names=c?(c.items||[]).map(_cmpLbl).join(', '):'';
+    var dlT=dl?(L(_PB_T.today)+': '+String(_cmpI18n(dl)).toLowerCase()):'';
+    _rdSetTxt('rdS1',[names,dlT].filter(Boolean).join(' · '));
+    var b1=document.getElementById('rdB1');
+    if(b1){ var h1=c?('<div style="font-size:var(--fs-body);">'+_esc(names)+(c.text?' — '+_esc(c.text):'')+'</div>'
+        +(dlT?'<div style="font-size:var(--fs-cap);color:var(--t2);margin-top:4px;">'+_esc(dlT)+'</div>':'')
+        +'<a href="#" onclick="navTo(\'card\');_cardOpen(\'data\');return false;" style="display:inline-block;margin-top:8px;font-size:var(--fs-cap);color:var(--gold-lt);">'+_esc(_cmpI18n('edit'))+' ›</a>'):'';
+      if(b1.getAttribute('data-h')!==h1){ b1.innerHTML=h1; b1.setAttribute('data-h',h1); } }
+    var n=document.getElementById('rd-index-num'), st=document.getElementById('rd-index-status');
+    _rdSetTxt('rdS2',(n&&n.textContent&&n.textContent!=='—')?(n.textContent+'/100'+(st&&st.textContent?' · '+st.textContent:'')):'');
+    // Суть шага 3 — первая фраза вывода («Где вы сейчас»), а не приветствие из первой строки разбора.
+    var it='', ir=r?r.querySelector('.ai-intro:not(.ai-intro-head)'):null;
+    if(ir){ var cl=ir.cloneNode(true); cl.querySelectorAll('.ai-subh').forEach(function(x){ x.remove(); }); it=(cl.textContent||'').trim(); }
+    if(!it){ var ih=r?r.querySelector('.ai-intro-head'):null; it=ih?ih.textContent.trim():''; }
+    if(!it){ var ld=document.getElementById('aiLoading'); if(ld&&ld.style.display!=='none') it=(ld.textContent||'').trim().split('\n')[0]; }
+    var m=it.match(/^[\s\S]{20,180}?[.!?…。](\s|$)/); _rdSetTxt('rdS3',m?m[0].trim():it.slice(0,140));
+    var e=(typeof _expGet==='function')?_expGet():null, lv=(e&&e.lever&&window.vialLevers&&vialLevers.text)?vialLevers.text(e.lever,lang):null;
+    _rdSetTxt('rdS4',(lv&&lv.title)?lv.title:t('dayplan_title'));
+  }catch(err){}
+  _rdBusy=false;
+}
+(function(){
+  var rd=document.querySelector('#stepResult > .rd'); if(!rd||!window.MutationObserver) return;
+  var tmr=null;
+  new MutationObserver(function(){ if(_rdBusy) return; clearTimeout(tmr); tmr=setTimeout(_rdLayout,40); })
+    .observe(rd,{childList:true,subtree:true,characterData:true});
+  setTimeout(_rdLayout,0);
+})();
 
 // ══ BOTTOM NAV ════════════════════════════════════════════
 // Поверхности ленты-анкеты, которые живут ВНЕ <main> и не исчезают сами при переходе на
