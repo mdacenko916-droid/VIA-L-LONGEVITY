@@ -5593,6 +5593,40 @@ function _chgHTML(){
   return '<div class="vcard-sec vc-span" style="border-color:rgba(90,196,178,.45);padding:12px 16px;"><div class="vc-subh" style="margin-top:0;">'+_esc(L({ru:'Меняется со временем',uk:'Змінюється з часом',en:'Changes over time',es:'Cambia con el tiempo',de:'Ändert sich mit der Zeit',pt:'Muda com o tempo',fr:'Évolue avec le temps',pl:'Zmienia się z czasem',it:'Cambia nel tempo',he:'משתנה עם הזמן',ja:'時間とともに変わるもの',ko:'시간에 따라 바뀌는 것'}))+'</div>'
     +'<div style="font-size:var(--fs-cap);color:var(--t3);line-height:1.5;margin-bottom:6px;">'+_esc(L({ru:'По этим данным подбираются рекомендации. Раз в неделю приложение спросит само.',uk:'За цими даними добираються рекомендації. Раз на тиждень застосунок спитає сам.',en:'Your recommendations are based on these. Once a week the app will ask you itself.',es:'Las recomendaciones se basan en estos datos. Una vez por semana la app te preguntará.',de:'Danach richten sich die Empfehlungen. Einmal pro Woche fragt die App selbst nach.',pt:'As recomendações se baseiam nesses dados. Uma vez por semana o app vai perguntar.',fr:'Les recommandations s’appuient sur ces données. Une fois par semaine, l’app vous le demandera.',pl:'Na ich podstawie dobierane są zalecenia. Raz w tygodniu aplikacja sama zapyta.',it:'Le raccomandazioni si basano su questi dati. Una volta alla settimana l’app te lo chiederà.',he:'ההמלצות מבוססות על הנתונים האלה. פעם בשבוע האפליקציה תשאל בעצמה.',ja:'おすすめはこのデータをもとに選ばれます。週に1回アプリから確認します。',ko:'추천은 이 데이터를 바탕으로 합니다. 일주일에 한 번 앱이 직접 물어봐요.'}))+'</div>'+h+'</div>';
 }
+// «Мой месячный прогресс › Что пробовали» (этап 3, 2026-10-10): шаги «Фокуса недели» по порядку и чем каждый
+// кончился. Журнал (vialp_exp_log, _expArchive) раньше видел только ИИ месячного разбора, человек — нет.
+var _TRIED_T={
+  title:{ru:'Что пробовали',uk:'Що пробували',en:'What you’ve tried',es:'Lo que has probado',de:'Was du ausprobiert hast',pt:'O que você já experimentou',fr:'Ce que vous avez essayé',pl:'Co już próbowaliśmy',it:'Cosa hai provato',he:'מה ניסית',ja:'試したこと',ko:'시도해 본 것'},
+  keep:{ru:'стало легче → закрепили',uk:'стало легше → закріпили',en:'it helped → kept it',es:'ayudó → lo mantenemos',de:'hat geholfen → beibehalten',pt:'ajudou → mantivemos',fr:'ça a aidé → on le garde',pl:'pomogło → zostaje',it:'ha aiutato → lo teniamo',he:'עזר → נשאר',ja:'楽になった → 続ける',ko:'도움이 됨 → 유지'},
+  next:{ru:'не сдвинулось → следующий шаг',uk:'не зрушило → наступний крок',en:'no change → next step',es:'sin cambios → siguiente paso',de:'keine Veränderung → nächster Schritt',pt:'sem mudança → próximo passo',fr:'pas de changement → étape suivante',pl:'bez zmian → kolejny krok',it:'nessun cambiamento → passo successivo',he:'ללא שינוי → הצעד הבא',ja:'変化なし → 次のステップ',ko:'변화 없음 → 다음 단계'},
+  stay:{ru:'ещё неделя, чтобы проверить',uk:'ще тиждень, щоб перевірити',en:'one more week to check',es:'una semana más para comprobar',de:'noch eine Woche zum Prüfen',pt:'mais uma semana para conferir',fr:'encore une semaine pour vérifier',pl:'jeszcze tydzień na sprawdzenie',it:'ancora una settimana per verificare',he:'עוד שבוע כדי לבדוק',ja:'確認のためもう1週間',ko:'확인을 위해 한 주 더'},
+  up:{ru:'подключаем специалиста',uk:'залучаємо фахівця',en:'bringing in a specialist',es:'pasamos a un especialista',de:'eine Fachperson hinzuziehen',pt:'chamamos um especialista',fr:'on fait appel à un spécialiste',pl:'włączamy specjalistę',it:'coinvolgiamo uno specialista',he:'מערבים מומחה',ja:'専門家に相談',ko:'전문가와 연결'},
+  done:{ru:'завершён',uk:'завершено',en:'completed',es:'completado',de:'abgeschlossen',pt:'concluído',fr:'terminé',pl:'zakończony',it:'completato',he:'הושלם',ja:'完了',ko:'완료'},
+  run:{ru:'идёт · день {d} из 7',uk:'триває · день {d} із 7',en:'in progress · day {d} of 7',es:'en curso · día {d} de 7',de:'läuft · Tag {d} von 7',pt:'em andamento · dia {d} de 7',fr:'en cours · jour {d} sur 7',pl:'trwa · dzień {d} z 7',it:'in corso · giorno {d} di 7',he:'בתהליך · יום {d} מתוך 7',ja:'実施中 · 7日中{d}日目',ko:'진행 중 · 7일 중 {d}일째'},
+  kept:{ru:'получилось {n} из 7 дней',uk:'вдалося {n} із 7 днів',en:'done {n} of 7 days',es:'hecho {n} de 7 días',de:'{n} von 7 Tagen geschafft',pt:'feito em {n} de 7 dias',fr:'fait {n} jours sur 7',pl:'udało się {n} z 7 dni',it:'fatto {n} giorni su 7',he:'בוצע {n} מתוך 7 ימים',ja:'7日中{n}日できた',ko:'7일 중 {n}일 실천'}
+};
+function _triedHTML(){
+  var log=[]; try{ log=JSON.parse(localStorage.getItem('vialp_exp_log')||'[]')||[]; }catch(e){}
+  var V=window.vialLevers, ttl=function(x){ var tx=(V&&x.lever&&V.text)?V.text(x.lever,lang):null; return (tx&&tx.title)||x.what||''; };
+  var _loc={ru:'ru-RU',uk:'uk-UA',en:'en-GB',es:'es-ES',de:'de-DE',pt:'pt-BR',fr:'fr-FR',pl:'pl-PL',it:'it-IT',he:'he-IL',ja:'ja-JP',ko:'ko-KR'};
+  var fd=function(d){ try{ return new Date(d).toLocaleDateString(_loc[lang]||'en-GB',{day:'numeric',month:'short'}); }catch(e){ return d||''; } };
+  var COL={keep:'var(--ok)',next:'#E2B95A',stay:'#5AC4B2',up:'var(--gold-lt)',done:'var(--t2)'};
+  var items=log.filter(function(x){ return x && x.lever && x.outcome!=='replaced' && ttl(x); }).slice().reverse();
+  var rows=items.map(function(x){
+    var oc=_TRIED_T[x.outcome]?('<span style="color:'+(COL[x.outcome]||'var(--t2)')+';">'+_esc(L(_TRIED_T[x.outcome]))+'</span>'):'';
+    var kp=(x.kept!=null)?_esc(L(_TRIED_T.kept).replace('{n}',x.kept)):'';
+    return '<div class="vc-row" style="display:block;"><div style="font-size:var(--fs-cap);color:var(--t3);">'+_esc(fd(x.startDay))+(kp?' · '+kp:'')+'</div>'
+      +'<div style="color:var(--t1);margin-top:2px;">'+_esc(ttl(x))+'</div>'+(oc?'<div style="font-size:var(--fs-cap);margin-top:2px;">'+oc+'</div>':'')+'</div>';
+  });
+  var e=(typeof _expGet==='function')?_expGet():null;
+  if(e && e.lever && e.startTs){
+    var d=Math.min(7,Math.floor((Date.now()-e.startTs)/86400000)+1);
+    rows.push('<div class="vc-row" style="display:block;"><div style="font-size:var(--fs-cap);color:var(--t3);">'+_esc(fd(e.startDay))+'</div>'
+      +'<div style="color:var(--t1);margin-top:2px;">'+_esc(ttl(e))+'</div><div style="font-size:var(--fs-cap);color:#5AC4B2;margin-top:2px;">'+_esc(L(_TRIED_T.run).replace('{d}',d))+'</div></div>');
+  }
+  if(!rows.length) return '';
+  return '<div class="vc-subh">'+_esc(L(_TRIED_T.title))+'</div>'+rows.join('');
+}
 function renderCard(){
   try{ if(typeof _aiEnsureToday==='function') _aiEnsureToday(); }catch(e){}   // разбор мог остаться на сервере — подтянем
 
@@ -6011,7 +6045,7 @@ function renderCard(){
     var _arch=(_dInner?'<div class="vc-subh">'+_esc(t('daily_title'))+'</div>'+_dInner:'')
       +((typeof _hInner!=='undefined'&&_hInner)?'<div class="vc-subh">'+L({ru:'Разборы по дням',uk:'Розбори по днях',en:'Daily overviews',es:'Análisis por días',de:'Auswertungen nach Tagen',pt:'Análises por dia',fr:'Bilans par jour',pl:'Analizy dzienne',it:'Analisi per giorno',he:'ניתוחים לפי ימים',ja:'日ごとの分析',ko:'일별 분석'})+'</div>'+_hInner:'');
     html+=[_vcSec('<i class="ph ph-trend-up"></i>',_esc(t('prog_week')),'<div id="wrSlot"></div>'+_secCmp,true,true),
-           _vcSec('<i class="ph ph-calendar-check"></i>',_esc(t('prog_month')),'<div id="mrSlot"></div>',false,true),
+           _vcSec('<i class="ph ph-calendar-check"></i>',_esc(t('prog_month')),'<div id="mrSlot"></div>'+_triedHTML(),false,true),
            _vcSec('dynamics',L({ru:'Динамика показателей',uk:'Динаміка показників',en:'Metric trends',es:'Tendencias de métricas',de:'Verlauf der Werte',pt:'Tendências das métricas',fr:'Tendances des mesures',pl:'Trendy wskaźników',it:'Andamento dei parametri',he:'מגמות המדדים',ja:'指標の推移',ko:'지표 추이'}),
              _seg+'<div class="vc-dyn" data-r="7">'+_dynFor(7)+'</div><div class="vc-dyn" data-r="30" style="display:none;">'+_dynFor(30)+'</div>',false,true),
            _arch?_vcSec('<i class="ph ph-calendar-blank"></i>',_esc(t('prog_archive')),_arch,false,true):''].join('');
