@@ -7489,20 +7489,42 @@ function _dishLabel(name) {
   const s = String(name || '').replace(/\s*\([^)]*\)\s*$/, '').replace(/\s*\+\s*/g, ', ').trim();
   return s.charAt(0).toLocaleUpperCase() + s.slice(1);
 }
+// «Разбор → тарелка» (2026-10-10, первая версия): меню подбиралось только под профиль и не замечало сегодняшнее
+// состояние. Опора в нашей базе есть для одного сигнала — плохая ночь: тяжёлый и поздний ужин мешает сну
+// (docs/NUTRITION-MAPPING-SPEC.md, DM-REFLUX/DM-LATE: меньше объём и жирность, 2–3 ч до сна). Тогда в «Ужине»
+// первыми идут щадящие блюда (метка soft) и сверху строка «Сегодня — для сна». Приливы НЕ трогаем: по спеку
+// «обещаний не даём» (соя и лён эффекта не показали). Новые сигналы — только с опорой в базе.
+const _DP_SLEEP_T = {
+  t: { ru: 'Сегодня — для сна', uk: 'Сьогодні — для сну', en: 'Today — for your sleep', es: 'Hoy — para tu sueño', de: 'Heute — für deinen Schlaf', pt: 'Hoje — para o seu sono', fr: 'Aujourd’hui — pour votre sommeil', pl: 'Dziś — dla snu', it: 'Oggi — per il sonno', he: 'היום — בשביל השינה', ja: '今日は睡眠のために', ko: '오늘은 수면을 위해' },
+  i: { ru: 'Ночь была неглубокой — ужин полегче и за 2–3 часа до сна: щадящие блюда стоят первыми.', uk: 'Ніч була неглибокою — вечеря легша і за 2–3 години до сну: щадні страви стоять першими.', en: 'Last night’s sleep was light — a lighter dinner 2–3 hours before bed: gentle dishes come first.', es: 'Dormiste poco profundo: cena más ligera y 2–3 horas antes de dormir; los platos suaves van primero.', de: 'Die Nacht war unruhig — ein leichteres Abendessen 2–3 Stunden vor dem Schlafen: schonende Gerichte stehen oben.', pt: 'A noite foi leve — jantar mais leve e 2–3 horas antes de dormir: os pratos suaves vêm primeiro.', fr: 'Nuit peu réparatrice — un dîner plus léger, 2–3 h avant le coucher : les plats doux sont en tête.', pl: 'Noc była płytka — lżejsza kolacja 2–3 godziny przed snem: łagodne dania są na górze.', it: 'La notte è stata leggera: cena più leggera e 2–3 ore prima di dormire, i piatti delicati sono in cima.', he: 'השינה הייתה שטחית — ארוחת ערב קלה יותר, 2–3 שעות לפני השינה: המנות העדינות ראשונות.', ja: '眠りが浅かったので、夕食は軽めに就寝2〜3時間前までに。やさしい料理を上に並べました。', ko: '잠이 얕았어요 — 저녁은 가볍게, 잠들기 2~3시간 전에: 순한 메뉴를 위에 두었어요.' }
+};
+function _dpPoorSleep(data) {
+  const q = Number(data.sleep_qual), h = Number(data.sleep_hours || (data.device && data.device.sleepHours)) || 0;
+  return (q > 0 && q <= 4) || (h > 0 && h < 6) || data.wake === 'multiple' || data.deep === 'none';
+}
 function buildDayPlanEngine(data, lang, names, opts) {
   const o = opts || {};
   const n = o.trial ? 2 : 5;
   const seedBase = String(o.cid || '') + '|' + String(o.day || '');
   const plan = {};
+  const sleepBad = _dpPoorSleep(data || {});
   ['morning', 'lunch', 'evening'].forEach(sect => {
     const secs = bpChapterData(sect, data, lang) || [];
     plan[sect] = secs.map(s => {
       if (!s || s.variants !== true) return s;
-      const allowed = allowedDishes(data, _DP_ENGINE_MEAL[sect], names);
+      let allowed = allowedDishes(data, _DP_ENGINE_MEAL[sect], names);
+      if (sect === 'evening' && sleepBad) {   // щадящие — первыми; добираем остальными, если их мало
+        const soft = allowed.filter(([, v]) => v[1].includes('soft')), rest = allowed.filter(([, v]) => !v[1].includes('soft'));
+        const pk = _dpPick(soft, n, _dpSeed(seedBase + '|' + sect));
+        const more = pk.length < n ? _dpPick(rest, n - pk.length, _dpSeed(seedBase + '|' + sect + '|r')) : [];
+        return { title: s.title, variants: true, items: pk.concat(more).map(([k, v]) => _dishLabel(v[0]) + ' [dish:' + k + ']') };
+      }
       const picked = _dpPick(allowed, n, _dpSeed(seedBase + '|' + sect));
       return { title: s.title, variants: true, items: picked.map(([k, v]) => _dishLabel(v[0]) + ' [dish:' + k + ']') };
     });
   });
+  if (sleepBad && Array.isArray(plan.evening))
+    plan.evening.unshift({ title: _DP_SLEEP_T.t[lang] || _DP_SLEEP_T.t.en, items: [_DP_SLEEP_T.i[lang] || _DP_SLEEP_T.i.en], today: 'sleep' });
   return plan;
 }
 

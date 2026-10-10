@@ -2337,6 +2337,10 @@ body.card-open #langDropdown{display:none;}
 .rd-meal i{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--gold-lt);background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.35);}
 .rd-meal.now i{background:var(--gold);color:#10141C;border-color:var(--gold);box-shadow:0 0 0 4px rgba(198,140,52,.22);}
 .rd-meal.now{color:#1A1A2E;}
+/* меню этого приёма сегодня подстроено под состояние (разбор → тарелка) — бирюзовая точка */
+.rd-meal{position:relative;}
+.rd-meal.adj i::after{content:'';position:absolute;top:2px;right:2px;width:12px;height:12px;border-radius:50%;background:#5AC4B2;border:2px solid #10131A;}
+.rd-meal i{position:relative;}
 #rdPlan{background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.20);border-radius:20px;padding:6px 16px 10px;margin-bottom:10px;}
 .rd-plan-it{padding:11px 0;border-top:1px solid rgba(255,255,255,.07);}
 .rd-plan-it:first-child{border-top:0;}
@@ -5269,7 +5273,8 @@ function _rdMeals(){
   var box=document.getElementById('rdMeals'); if(!box) return;
   var hr=new Date().getHours(), now=hr<11?'morning':(hr<16?'lunch':'evening');
   var M=[['morning','ph-coffee',_RD_T.bf],['lunch','ph-bowl-food',_RD_T.ln],['evening','ph-moon-stars',_RD_T.dn]];
-  var h=M.map(function(m){ return '<button type="button" class="rd-meal'+(m[0]===now?' now':'')+'" onclick="openBpChapter(\''+m[0]+'\')"><i class="ph '+m[1]+'" aria-hidden="true"></i>'+_esc(L(m[2]))+'</button>'; }).join('')
+  var adj={}; try{ ['morning','lunch','evening'].forEach(function(k){ var a=window._bpAI&&window._bpAI[k]; if(Array.isArray(a)&&a.some(function(s){ return s&&s.today; })) adj[k]=1; }); }catch(e){}
+  var h=M.map(function(m){ return '<button type="button" class="rd-meal'+(m[0]===now?' now':'')+(adj[m[0]]?' adj':'')+'" onclick="openBpChapter(\''+m[0]+'\')"><i class="ph '+m[1]+'" aria-hidden="true"></i>'+_esc(L(m[2]))+'</button>'; }).join('')
     +'<button type="button" class="rd-meal rd-meal-plate" onclick="_rdPlate()"><i class="ph ph-chart-pie-slice" aria-hidden="true"></i>'+_esc(L(_RD_T.plate))+'</button>';
   _rdSetHtml(box,h);
 }
