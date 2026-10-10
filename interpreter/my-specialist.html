@@ -581,6 +581,7 @@ function setLang(l){
   var _was=lang;
   lang=l;
   try{localStorage.setItem('vial_lang',l);}catch(e){}
+  try{ if(window.vialBottomNav) vialBottomNav.setLang(l); }catch(e){}   // нижняя строка — bottom-nav.js
   document.documentElement.setAttribute('data-lang',l);
   document.documentElement.lang=l;
   var _ll=document.getElementById('langLabel');if(_ll)_ll.textContent=(LANG_FLAGS[l]?LANG_FLAGS[l]+' ':'')+l.toUpperCase();   /* флаг + код, как в приложении */
@@ -1418,24 +1419,12 @@ initReview();     // разовый разбор со специалистом (
 
 <!-- Вкладки приложения. «Мой наставник» — активная; остальные ведут в приложение с ?tab=… -->
 <div id="bottombar">
-<nav class="bottom-nav">
-  <a class="bottom-nav-item" href="./interpreter-via-l.html?tab=today">
-    <i class="ph ph-sun" aria-hidden="true"></i><span data-t="nav_today">Today</span>
-  </a>
-  <a class="bottom-nav-item" href="./interpreter-via-l.html?tab=path">
-    <i class="ph ph-chart-line-up" aria-hidden="true"></i><span data-t="nav_path">My path</span>
-  </a>
-  <span class="bottom-nav-item active">
-    <i class="ph ph-signpost" aria-hidden="true"></i><span data-t="nav_guide">My guide</span>
-  </span>
-  <a class="bottom-nav-item" href="./interpreter-via-l.html?tab=card">
-    <i class="ph ph-user" aria-hidden="true"></i><span data-t="nav_card">My profile</span>
-  </a>
-</nav>
+<nav class="bottom-nav" id="vialNav"></nav>
 </div>
+<script src="bottom-nav.js"></script>
+<script>vialBottomNav.mount({ active:'guide', home:'./interpreter-via-l.html', lang:lang });</script>
 <!-- Бар отрисован после основного скрипта: setLang() отработал до его появления в DOM,
      и подписи оставались английскими. Переприменяем перевод к уже готовой разметке (2026-08-25). -->
-<script>document.querySelectorAll('#bottombar [data-t]').forEach(function(el){var k=el.getAttribute('data-t');if(T[lang]&&T[lang][k]!==undefined)el.textContent=T[lang][k];});</script>
 <script src="push-bridge.js"></script>
 </body>
 </html>

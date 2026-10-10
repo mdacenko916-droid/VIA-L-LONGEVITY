@@ -125,13 +125,9 @@ h1{font-family:'Playfair Display',serif;font-size:var(--fs-hero);font-weight:500
 </div>
 
 <div id="bottombar">
-<nav class="bottom-nav">
-  <a class="bottom-nav-item" href="./interpreter-via-l.html?tab=today"><i class="ph ph-sun"></i><span data-t="nav_today">Today</span></a>
-  <a class="bottom-nav-item" href="./interpreter-via-l.html?tab=approach"><i class="ph ph-stack"></i><span data-t="nav_approach">Our approach</span></a>
-  <a class="bottom-nav-item" href="./my-specialist.html"><i class="ph ph-signpost"></i><span data-t="nav_guide">My guide</span></a>
-  <a class="bottom-nav-item active" href="./interpreter-via-l.html?tab=card"><i class="ph ph-user"></i><span data-t="nav_card">My profile</span></a>
-</nav>
+<nav class="bottom-nav" id="vialNav"></nav>
 </div>
+<script src="bottom-nav.js"></script>
 
 <script>
 // Закрытие страницы. Сначала обычный history.back(); в webview Capacitor он иногда молча не
@@ -208,6 +204,7 @@ function applyLang(l){
   });
   document.getElementById('langBtn').textContent = lang.toUpperCase();
   rcRender();
+  try{ if(window.vialBottomNav) vialBottomNav.setLang(lang); }catch(e){}
   try{ localStorage.setItem('selectedLang', lang); }catch(e){}
 }
 function toggleLang(){ document.getElementById('langMenu').classList.toggle('open'); }
@@ -237,13 +234,8 @@ async function rcForget(){
     msg.textContent = (j&&j.ok) ? tr('del_ok') : tr('del_err');
   }catch(e){ msg.textContent = tr('del_err'); }
 }
-if(RC_APP==='expert'){
-  document.querySelectorAll('.bottom-nav-item').forEach(function(a){
-    var h=a.getAttribute('href')||'';
-    if(h.indexOf('my-specialist.html')>=0){ a.setAttribute('href', RC_HOME+'?tab=chat'); var i=a.querySelector('i'); if(i) i.className='ph ph-chat-circle-dots'; }
-    else a.setAttribute('href', h.replace('./interpreter-via-l.html', RC_HOME));
-  });
-}
+// Нижняя строка — bottom-nav.js: VIA-L — общий набор, EXPERT — свой (Наш подход, переписка).
+vialBottomNav.mount({ set:RC_APP, active:'card', home:RC_HOME, lang:lang });
 (function(){
   const m = document.getElementById('langMenu');
   LANG_ORDER.filter(function(l){ return T[l]; }).forEach(function(l){

@@ -112,15 +112,12 @@ h1{font-family:'Playfair Display',serif;font-size:var(--fs-hero);font-weight:500
   <p class="disc" data-t="disc"></p>
 </div>
 
-<!-- Вкладки приложения: страница открывается из «Нашего подхода», поэтому активна именно она. -->
+<!-- Нижняя строка — bottom-nav.js. Страница открывается из профиля («Наш подход» → «Научная база»). -->
 <div id="bottombar">
-<nav class="bottom-nav">
-  <a class="bottom-nav-item" href="./interpreter-via-l.html?tab=today"><i class="ph ph-sun"></i><span data-t="nav_today">Today</span></a>
-  <a class="bottom-nav-item active" href="./interpreter-via-l.html?tab=approach"><i class="ph ph-stack"></i><span data-t="nav_approach">Our approach</span></a>
-  <a class="bottom-nav-item" href="./my-specialist.html"><i class="ph ph-signpost"></i><span data-t="nav_guide">My guide</span></a>
-  <a class="bottom-nav-item" href="./interpreter-via-l.html?tab=card"><i class="ph ph-user"></i><span data-t="nav_card">My profile</span></a>
-</nav>
+<nav class="bottom-nav" id="vialNav"></nav>
 </div>
+<script src="bottom-nav.js"></script>
+<script>vialBottomNav.mount({ active:'card', home:'./interpreter-via-l.html', lang:(function(){ try{ return localStorage.getItem('vial_lang')||'en'; }catch(e){ return 'en'; } })() });</script>
 
 <script>
 // Закрытие: history.back(), а если через 250 мс страница не сменилась (в webview Capacitor back
@@ -176,6 +173,7 @@ function applyLang(l){
     if (v !== undefined) el.textContent = v;
   });
   document.getElementById('langBtn').textContent = lang.toUpperCase();
+  try{ if(window.vialBottomNav) vialBottomNav.setLang(lang); }catch(e){}
   try{ localStorage.setItem('selectedLang', lang); localStorage.setItem('vial_lang', lang); }catch(e){}   // общий ключ с приложением: выбор здесь не должен расходиться с ним
 }
 function toggleLang(){ document.getElementById('langMenu').classList.toggle('open'); }
