@@ -2265,6 +2265,15 @@ body.view-result #tb-brand{display:none;}
    списывало день доступа. Язык остаётся доступен на всех остальных экранах: утренняя карточка,
    выбор источника, опросник, профиль — то есть ДО прохода, когда выбор и имеет смысл. */
 body.view-result #langDropdown{display:none;}
+/* Язык — только «Профиль › Настройки» (план структуры §3a, 2026-10-10): на вкладках-панелях кнопку не показываем. */
+body.card-open #langDropdown{display:none;}
+.vc-link{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;font:inherit;color:inherit;background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.20);border-radius:18px;padding:14px 16px;margin-bottom:12px;}
+.vc-link .vc-txt{flex:1;display:flex;flex-direction:column;gap:3px;}
+.vc-chev{color:var(--gold-lt);font-size:22px;}
+.vc-back{display:inline-flex;align-items:center;min-height:44px;margin:0 0 6px;padding:0 4px;background:none;border:0;color:var(--gold);font:600 var(--fs-body) var(--font-ui);cursor:pointer;}
+.vc-langs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.vc-lang{min-height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:var(--t1);font:400 var(--fs-body) var(--font-ui);text-align:left;padding:0 12px;cursor:pointer;}
+.vc-lang.on{border-color:rgba(226,185,90,.7);background:rgba(226,185,90,.14);}
 /* ...но НЕ когда поверх результата стоит пейволл: там переключатель — единственный способ
    сменить язык, а правило выше его прятало (живой iPhone 2026-09-09: «языки исчезли»).
    Правило про pointer-events для iap-open стоит ВЫШЕ и display:none не перебивало. */
@@ -4541,6 +4550,11 @@ const _NAVC={nav_card:{en:"My Profile",ru:"Мой профиль",uk:"Мій п�
   card_title:{en:"Profile",ru:"Профиль",uk:"Профіль",es:"Perfil",de:"Profil",pt:"Perfil",fr:"Profil",pl:"Profil",it:"Profilo",he:"פרופיל",ja:"プロフィール",ko:"프로필"},
   card_sub_path:{en:"What has changed since you started",ru:"Что изменилось с тех пор, как вы начали",uk:"Що змінилося відтоді, як ви почали",es:"Qué ha cambiado desde que empezaste",de:"Was sich seit deinem Start verändert hat",pt:"O que mudou desde que você começou",fr:"Ce qui a changé depuis vos débuts",pl:"Co się zmieniło od początku",it:"Cosa è cambiato da quando hai iniziato",he:"מה השתנה מאז שהתחלת",ja:"始めてから何が変わったか",ko:"시작한 이후 무엇이 달라졌는지"},
   card_sub_card:{en:"Your data and settings",ru:"Ваши данные и настройки",uk:"Ваші дані та налаштування",es:"Tus datos y ajustes",de:"Deine Daten und Einstellungen",pt:"Seus dados e configurações",fr:"Vos données et réglages",pl:"Twoje dane i ustawienia",it:"I tuoi dati e le impostazioni",he:"הנתונים וההגדרות שלך",ja:"あなたのデータと設定",ko:"내 데이터와 설정"},
+  card_data:{ru:"Мои данные",uk:"Мої дані",en:"My data",es:"Mis datos",de:"Meine Daten",pt:"Meus dados",fr:"Mes données",pl:"Moje dane",it:"I miei dati",he:"הנתונים שלי",ja:"マイデータ",ko:"내 데이터"},
+  card_data_sub:{ru:"Анкета, приёмы, анализы",uk:"Анкета, прийоми, аналізи",en:"Questionnaire, intake schedule, lab tests",es:"Cuestionario, tomas, analíticas",de:"Fragebogen, Einnahmen, Laborwerte",pt:"Questionário, tomas, exames",fr:"Questionnaire, prises, analyses",pl:"Ankieta, przyjmowanie, badania",it:"Questionario, assunzioni, analisi",he:"שאלון, נטילות, בדיקות",ja:"質問票・服用・血液検査",ko:"설문 · 복용 · 검사"},
+  card_settings:{ru:"Настройки",uk:"Налаштування",en:"Settings",es:"Ajustes",de:"Einstellungen",pt:"Configurações",fr:"Réglages",pl:"Ustawienia",it:"Impostazioni",he:"הגדרות",ja:"設定",ko:"설정"},
+  card_settings_sub:{ru:"Язык · источник данных · напоминания · размер текста",uk:"Мова · джерело даних · нагадування · розмір тексту",en:"Language · data source · reminders · text size",es:"Idioma · fuente de datos · recordatorios · tamaño del texto",de:"Sprache · Datenquelle · Erinnerungen · Textgröße",pt:"Idioma · fonte de dados · lembretes · tamanho do texto",fr:"Langue · source des données · rappels · taille du texte",pl:"Język · źródło danych · przypomnienia · rozmiar tekstu",it:"Lingua · fonte dati · promemoria · dimensione del testo",he:"שפה · מקור נתונים · תזכורות · גודל טקסט",ja:"言語・データソース・リマインダー・文字サイズ",ko:"언어 · 데이터 출처 · 알림 · 글자 크기"},
+  card_lang:{ru:"Язык",uk:"Мова",en:"Language",es:"Idioma",de:"Sprache",pt:"Idioma",fr:"Langue",pl:"Język",it:"Lingua",he:"שפה",ja:"言語",ko:"언어"},
   dp_why_cal:{ru:"Почему мы не просим считать калории?",uk:"Чому ми не просимо рахувати калорії?",en:"Why we don’t ask you to count calories",es:"Por qué no pedimos contar calorías",de:"Warum wir kein Kalorienzählen verlangen",pt:"Por que não pedimos para contar calorias",fr:"Pourquoi nous ne demandons pas de compter les calories",pl:"Dlaczego nie prosimy o liczenie kalorii",it:"Perché non chiediamo di contare le calorie",he:"למה אנחנו לא מבקשים לספור קלוריות",ja:"なぜカロリー計算を求めないのか",ko:"왜 칼로리 계산을 요구하지 않나요"}};
 Object.keys(_NAVC).forEach(function(k){Object.keys(_NAVC[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_NAVC[k][l];});});
 const _HLPK={help_why:{en:"Why we assess this",ru:"Зачем мы это оцениваем?",uk:"Навіщо ми це оцінюємо?",es:"¿Por qué lo evaluamos?",de:"Warum wir das einschätzen",pt:"Por que avaliamos isso",fr:"Pourquoi nous évaluons cela",pl:"Dlaczego to oceniamy",it:"Perché lo valutiamo",he:"למה אנחנו מעריכים זאת",ja:"なぜ評価するのか",ko:"왜 평가하나요"},help_close:{en:"Got it",ru:"Понятно",uk:"Зрозуміло",es:"Entendido",de:"Verstanden",pt:"Entendi",fr:"Compris",pl:"Rozumiem",it:"Capito",he:"הבנתי",ja:"了解",ko:"확인"}};
@@ -5045,7 +5059,7 @@ function navTo(tab){
   document.getElementById('nav-'+tab)?.classList.add('active');
   const cp=document.getElementById('cardPanel');
   var _isCp=(tab==='card'||tab==='path');
-  if(_isCp){ window._cardMode=tab; var _ct=document.getElementById('cardTitle'); if(_ct){ var _ck=(tab==='path')?'nav_path':'card_title'; _ct.setAttribute('data-t',_ck); _ct.textContent=t(_ck); }
+  if(_isCp){ window._cardMode=tab; window._cardSub=''; var _ct=document.getElementById('cardTitle'); if(_ct){ var _ck=(tab==='path')?'nav_path':'card_title'; _ct.setAttribute('data-t',_ck); _ct.textContent=t(_ck); }
     var _cs=document.getElementById('cardSub'); if(_cs){ var _sk=(tab==='path')?'card_sub_path':'card_sub_card'; _cs.setAttribute('data-t',_sk); _cs.textContent=t(_sk); } }
   if(cp){cp.style.display=_isCp?'block':'none';
     document.body.classList.toggle('card-open', _isCp);   // прячет футер главной: он просвечивал из-под панели карточки
@@ -5545,12 +5559,17 @@ function _cmpTrajHTML(){
     +'</div>';
 }
 
+// Вложенные страницы «Профиля» (2026-10-10): '' — сам профиль, 'data' — «Мои данные», 'settings' — «Настройки».
+function _cardOpen(k){ window._cardSub=k||''; renderCard(); var cp=document.getElementById('cardPanel'); if(cp) cp.scrollTop=0; }
 function renderCard(){
   try{ if(typeof _aiEnsureToday==='function') _aiEnsureToday(); }catch(e){}   // разбор мог остаться на сервере — подтянем
 
   if(typeof saveProfile==='function'){try{saveProfile();}catch(e){}}  // синхрон: карточка = что сейчас в профиле
   var box=document.getElementById('cardBody'); if(!box)return;
   _vcCSS();
+  try{ if(window._cardMode!=='path'){ var _cTt=document.getElementById('cardTitle'), _cSb=document.getElementById('cardSub'), _cK=window._cardSub?('card_'+window._cardSub):'card_title';
+    if(_cTt){ _cTt.setAttribute('data-t',_cK); _cTt.textContent=t(_cK); }
+    if(_cSb){ _cSb.style.display=window._cardSub?'none':''; } } }catch(e){}
   var P={}; try{P=JSON.parse(localStorage.getItem('vialp_profile')||'{}')||{};}catch(e){}
   var isMale=P.gender==='male';
   var _row=function(l,v){return '<div class="vc-row"><span class="vc-l">'+l+'</span><span class="vc-v">'+((v==null||v===''||v==='—')?'—':v)+'</span></div>';};
@@ -5623,7 +5642,17 @@ function renderCard(){
 
   // «Мой путь» — та же панель без шапки профиля: только то, что показывает изменения
   var _pathMode=(window._cardMode==='path');
+  var _cardSubPg=_pathMode?'':(window._cardSub||'');   // '' | 'data' | 'settings' — вложенные страницы «Профиля»
   if(_pathMode) html='<div class="vcard-wrap">';
+  if(_cardSubPg) html='<div class="vcard-wrap"><button type="button" class="vc-back" onclick="_cardOpen(\'\')">‹ '+_esc(t('card_title'))+'</button>';
+  var _cardLink=function(k){
+    var ic=(k==='data')?'clipboard-text':'gear-six';
+    return '<button type="button" class="vc-link vc-span" onclick="_cardOpen(\''+k+'\')"><span class="vc-ic"><i class="ph ph-'+ic+'"></i></span>'
+      +'<span class="vc-txt"><span class="vc-tt">'+_esc(t('card_'+k))+'</span><span class="vc-sub2">'+_esc(t('card_'+k+'_sub'))+'</span></span><span class="vc-chev">›</span></button>';
+  };
+  var _LANGS=[['en','🇬🇧','English'],['es','🇪🇸','Español'],['uk','🇺🇦','Українська'],['ru','🇷🇺','Русский'],['de','🇩🇪','Deutsch'],['pt','🇧🇷','Português'],['fr','🇫🇷','Français'],['pl','🇵🇱','Polski'],['it','🇮🇹','Italiano'],['he','🇮🇱','עברית'],['ja','🇯🇵','日本語'],['ko','🇰🇷','한국어']];
+  var _secLang=_vcSec('<i class="ph ph-translate"></i>',_esc(t('card_lang')),'<div class="vc-langs">'+_LANGS.map(function(x){
+      return '<button type="button" class="vc-lang'+(x[0]===lang?' on':'')+'" onclick="pickLang(\''+x[0]+'\')">'+x[1]+' '+x[2]+'</button>'; }).join('')+'</div>',true,true);
   html+='<div class="vcard-grid"'+(_pathMode?' style="grid-template-columns:1fr;"':'')+'>';   // «Мой путь» — лента в одну колонку
   // Секции собираются в переменные, затем выводятся в порядке логики/важности (см. join ниже)
   var _secAct='',_secNut='',_secSup='',_secBal='',_secRhythm='',_secStress='',_secLife='',_secGoal='',_secDyn='',_secHist='',_secBackup='',_secSource='',_secLegal='';
@@ -5946,10 +5975,13 @@ function renderCard(){
   if(_pathMode)   // «Мой путь»: недельный итог + динамика недели, месячный итог + динамика месяца (обе открыты), дальше остальное
     html+=['<div id="wrSlot"></div>',_vcSec('dynamics',_dynW,_dynFor(7),true,true),
            '<div id="mrSlot"></div>',_vcSec('dynamics',_dynM,_dynFor(30),true,true),
-           _secCmp,_secLabs,_secSup,_secDaily,_secHist].join('');
-  else            // «Мой профиль»: что я о себе указал + настройки и инструменты
-    html+=[_secGoal,_secAct,_secNut,_secHealth,_secStress,_secBal,_secRhythm,_secLife,
-           _secSource,_secIntake,_secNotify,_secDisplay,_secSub,_secBackup,_secLegal].join('');   // VAI и «Наш подход» убраны 2026-10-10 (план структуры §6)
+           _secCmp,_secDaily,_secHist].join('');   // анализы и добавки переехали в «Профиль › Мои данные» (2026-10-10)
+  else if(_cardSubPg==='data')       // «Профиль › Мои данные»: анкета + приёмы + анализы (план структуры §6)
+    html+=[_secGoal,_secAct,_secNut,_secHealth,_secStress,_secBal,_secRhythm,_secLife,_secSup,_secLabs].join('');
+  else if(_cardSubPg==='settings')   // «Профиль › Настройки»: язык живёт только здесь
+    html+=[_secLang,_secSource,_secNotify,_secDisplay].join('');
+  else                               // «Профиль»: две строки-входа + подписка, копия, правовое (VAI и «Наш подход» убраны 2026-10-10)
+    html+=[_cardLink('data'),_cardLink('settings'),_secSub,_secBackup,_secLegal].join('');
   html+='</div>'; // .vcard-grid
   html+='</div>'; // .vcard-wrap
 
