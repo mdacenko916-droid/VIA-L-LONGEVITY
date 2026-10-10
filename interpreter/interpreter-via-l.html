@@ -2283,6 +2283,11 @@ body.card-open #langDropdown{display:none;}
 #rdB1{background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.20);border-radius:20px;padding:14px 16px;color:var(--t1);line-height:1.6;}
 #rdWhy .ai-themes-box:not(.vial-ev) .ai-more-all{display:none;}
 #rdWhy .ai-themes-box:not(.vial-ev){display:block;}
+/* темы в шаге 4 всегда раскрыты: «Свернуть» внизу закрывал весь блок, а кнопки открыть обратно здесь нет */
+#rdWhy .ai-themes-box:not(.vial-ev) .ai-themes{grid-template-rows:1fr!important;}
+#rdWhy .ai-coll-all-wrap{display:none;}
+#rdWhy:not(:empty){background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.20);border-radius:20px;padding:6px 14px 14px;margin:10px 0;}
+#rdWhy .rd-why-h{color:var(--gold-lt);}
 #rdWhy .rd-why-h{font-size:var(--fs-cap);letter-spacing:.08em;text-transform:uppercase;color:var(--gold);font-weight:700;margin:14px 4px 8px;}
 #stepResult .rd-sources{display:none;}
 .vc-link{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;font:inherit;color:inherit;background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.20);border-radius:18px;padding:14px 16px;margin-bottom:12px;}
@@ -4130,8 +4135,7 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
       +'<span class="rd-step-ch">›</span></button><div class="rd-step-b" id="rdSB'+n+'"></div>';
     return s;
   };
-  var part=function(key,ru){ var d=document.createElement('div'); d.className='rd-part'; d.setAttribute('data-t',key); d.textContent=ru; return d; };
-  var s1=mk(1,'rd_s1','С чем вы пришли'), s2=mk(2,'rd_s2','Что показали цифры'), s3=mk(3,'rd_s3','На что это похоже'), s4=mk(4,'rd_s4','Шаг недели и памятка');
+  var s1=mk(1,'rd_s1','С чем вы пришли'), s2=mk(2,'rd_s2','Что показали цифры'), s3=mk(3,'rd_s3','На что это похоже'), s4=mk(4,'rd_s4','Что делать сегодня');
   var b1=document.createElement('div'); b1.id='rdB1'; s1.querySelector('.rd-step-b').appendChild(b1);
   var put=function(sec,el){ if(el) sec.querySelector('.rd-step-b').appendChild(el); };
   // Ссылки — ДО переноса: «Стоит понаблюдать» лежит внутри карточки индекса, и после её переноса в ещё
@@ -4139,10 +4143,14 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
   var E={ph:$('rd-phasenote'),row:rd.querySelector('.rd-row-2'),ai:$('aiCard'),da:$('doctorAlert'),fo:$('rd-focus'),dp:rd.querySelector('.rd-dayplan'),ex:$('rd-exp')};
   put(s2,E.ph); put(s2,E.row);
   put(s3,E.ai); put(s3,E.da);
-  put(s4,E.fo); put(s4,E.dp); put(s4,E.ex);
-  var why=document.createElement('div'); why.id='rdWhy'; put(s4,why);
+  // Шаг 4 (правка владельца 2026-10-10 по живому экрану): тарелка-памятка и темы разбора читались хуже
+  // всего — в конец; темы — на тёмной подложке (их карточки рассчитаны на тёмный фон).
+  var why=document.createElement('div'); why.id='rdWhy';
+  put(s4,E.fo); put(s4,E.ex); put(s4,why); put(s4,E.dp);
   var anchor=$('rd-week');
-  var seq=[part('rd_part_now','Как вы сегодня'),s1,s2,s3,part('rd_part_do','Что делать'),s4];
+  // Заголовки частей «Как вы сегодня / Что делать» сняты (владелец 2026-10-10): золото на светлом не
+  // читается, а порядок и так понятен по номерам 1–4.
+  var seq=[s1,s2,s3,s4];
   var ref=anchor?anchor.nextSibling:rd.firstChild;
   seq.forEach(function(el){ rd.insertBefore(el,ref); });
 })();
@@ -4622,7 +4630,7 @@ const _NAVC={nav_card:{en:"My Profile",ru:"Мой профиль",uk:"Мій п�
   rd_s1:{ru:"С чем вы пришли",uk:"З чим ви прийшли",en:"What brought you here",es:"Lo que te trajo aquí",de:"Womit du gekommen bist",pt:"O que trouxe você aqui",fr:"Ce qui vous amène",pl:"Z czym przychodzisz",it:"Il motivo per cui sei qui",he:"עם מה הגעת",ja:"気になっていること",ko:"찾아온 이유"},
   rd_s2:{ru:"Что показали цифры",uk:"Що показали цифри",en:"What the numbers show",es:"Qué muestran los datos",de:"Was die Zahlen zeigen",pt:"O que os números mostram",fr:"Ce que montrent les chiffres",pl:"Co pokazują liczby",it:"Cosa mostrano i numeri",he:"מה המספרים מראים",ja:"数値が示すこと",ko:"숫자가 보여주는 것"},
   rd_s3:{ru:"На что это похоже",uk:"На що це схоже",en:"What this looks like",es:"A qué se parece",de:"Wonach es aussieht",pt:"Com o que isso se parece",fr:"À quoi cela ressemble",pl:"Na co to wygląda",it:"A cosa somiglia",he:"למה זה דומה",ja:"どういう状態か",ko:"어떤 모습인지"},
-  rd_s4:{ru:"Шаг недели и памятка",uk:"Крок тижня і пам’ятка",en:"This week’s step and day plan",es:"Paso de la semana y plan del día",de:"Schritt der Woche und Tagesplan",pt:"Passo da semana e plano do dia",fr:"Étape de la semaine et plan du jour",pl:"Krok tygodnia i plan dnia",it:"Passo della settimana e piano del giorno",he:"הצעד של השבוע ותוכנית היום",ja:"今週のステップと今日のプラン",ko:"이번 주 단계와 오늘의 계획"},
+  rd_s4:{ru:"Что делать сегодня",uk:"Що робити сьогодні",en:"What to do today",es:"Qué hacer hoy",de:"Was heute zu tun ist",pt:"O que fazer hoje",fr:"Que faire aujourd’hui",pl:"Co zrobić dziś",it:"Cosa fare oggi",he:"מה לעשות היום",ja:"今日やること",ko:"오늘 할 일"},
   rd_why_h:{ru:"Почему именно так",uk:"Чому саме так",en:"Why this approach",es:"Por qué así",de:"Warum gerade so",pt:"Por que assim",fr:"Pourquoi ainsi",pl:"Dlaczego właśnie tak",it:"Perché proprio così",he:"למה דווקא כך",ja:"なぜこうするのか",ko:"왜 이렇게 하는지"},
   dp_why_cal:{ru:"Почему мы не просим считать калории?",uk:"Чому ми не просимо рахувати калорії?",en:"Why we don’t ask you to count calories",es:"Por qué no pedimos contar calorías",de:"Warum wir kein Kalorienzählen verlangen",pt:"Por que não pedimos para contar calorias",fr:"Pourquoi nous ne demandons pas de compter les calories",pl:"Dlaczego nie prosimy o liczenie kalorii",it:"Perché non chiediamo di contare le calorie",he:"למה אנחנו לא מבקשים לספור קלוריות",ja:"なぜカロリー計算を求めないのか",ko:"왜 칼로리 계산을 요구하지 않나요"}};
 Object.keys(_NAVC).forEach(function(k){Object.keys(_NAVC[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_NAVC[k][l];});});
