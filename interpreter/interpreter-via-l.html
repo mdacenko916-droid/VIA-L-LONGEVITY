@@ -2385,7 +2385,8 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
     <!-- ✕ живёт ВНЕ панели (#panelClose): панель прокручивается и имеет transform, поэтому
          внутри неё кнопку нельзя ни зафиксировать, ни поставить на уровень переключателя языка. -->
     <div style="margin-bottom:8px;">
-      <div id="cardTitle" style="font-family:'Playfair Display',serif;font-size:22px;color:var(--t1);" data-t="card_title">Мой профиль</div>
+      <div id="cardTitle" style="font-family:'Playfair Display',serif;font-size:22px;color:var(--t1);" data-t="card_title">Профиль</div>
+      <div id="cardSub" style="font-size:var(--fs-body);color:var(--t2);margin-top:4px;" data-t="card_sub_card"></div>
     </div>
     <div id="cardBody"></div>
     <!-- итоги и память — под графиком «Моего пути» (в профиле скрыты) -->
@@ -3908,13 +3909,10 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
                 <li><span class="rd-dot" style="background:#8b7bf0;"></span><b>¼</b><span data-t="plate_carb">медленные углеводы</span></li>
               </ul>
               <div class="rd-plate-note" data-t="plate_note">+ вода в течение дня · полезные жиры</div>
+              <!-- «Принцип VIA-L» (ежедневно один и тот же текст) убран 2026-10-10 — осталась одна ссылка. -->
+              <button type="button" class="rd-why" onclick="openWhyCalories()"><span data-t="dp_why_cal">Почему мы не просим считать калории?</span> →</button>
             </div>
           </div>
-        </div>
-        <div class="rd-dayplan-principle">
-          <div class="rd-card-t"><i class="ph ph-sparkle rd-ct-ic"></i> <span data-t="rd_principle_title">Принцип VIA‑L</span></div>
-          <div class="rd-principle-body" data-t="rd_principle_body">Мы не учим считать калории. Мы учим собирать правильную тарелку. Когда это станет привычкой — здоровое питание перестанет требовать подсчётов.</div>
-          <button type="button" class="rd-why" onclick="openWhyCalories()"><span data-t="rd_why">Почему?</span> →</button>
         </div>
       </div>
       <!-- полный план дня (главы Утро/День/Вода/Активность/Вечер/Сон) — как в «Сегодня»; внутри блока «Памятка дня», под тарелкой и принципом (2026-07-19) -->
@@ -3941,15 +3939,6 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
     <!-- LAB TESTS CARD -->
 
 
-    <!-- MAX EXCLUSIVE: Expert-розбір -->
-    <div id="maxBlock" style="display:none;" class="max-card">
-      <div class="max-badge">★ <span data-t="max_plan">VIA-L EXPERT</span></div>
-      <div class="max-title" data-t="max_title">Ваш Expert-разбор</div>
-      <div class="max-desc" data-t="max_desc">Отправьте запрос — нутрициолог подготовит персональный письменный разбор вашего профиля в течение 48 часов.</div>
-      <textarea id="maxQuestion" class="max-textarea" rows="3" data-t-placeholder="max_placeholder" placeholder="Ваше запитання або що хочете уточнити..."></textarea>
-      <button type="button" class="max-btn" id="maxSendBtn" onclick="sendMaxRequest()" data-t="max_btn">Отправить запрос нутрициологу →</button>
-      <div class="max-sent" id="maxSent" data-t="max_sent">✓ Запрос отправлен! Ответ в течение 48 часов.</div>
-    </div>
 
     <!-- Финал разбора («Ваш анализ завершён» + «Скачать PDF-отчёт») УБРАН 2026-08-04 по вопросу
          владельца «кому это нужно?». Разбор и так заканчивается дисклеймером и предложением
@@ -4547,7 +4536,12 @@ const _STRK={
 Object.keys(_STRK).forEach(function(k){Object.keys(_STRK[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_STRK[k][l];});});
 const _NAVC={nav_card:{en:"My Profile",ru:"Мой профиль",uk:"Мій профіль",es:"Mi perfil",de:"Mein Profil",pt:"Meu perfil",fr:"Mon profil",pl:"Mój profil",it:"Il mio profilo",he:"הפרופיל שלי",ja:"マイプロフィール",ko:"내 프로필"},
   // «Мой путь» (2026-10-04): вкладка вместо «Наш подход» — то, к чему возвращаются: динамика, анализы, добавки, разборы
-  nav_path:{en:"My path",ru:"Мой путь",uk:"Мій шлях",es:"Mi camino",de:"Mein Weg",pt:"Meu caminho",fr:"Mon parcours",pl:"Moja droga",it:"Il mio percorso",he:"הדרך שלי",ja:"私の歩み",ko:"나의 여정"}};
+  nav_path:{en:"My progress",ru:"Мой прогресс",uk:"Мій прогрес",es:"Mi progreso",de:"Fortschritt",pt:"Meu progresso",fr:"Mes progrès",pl:"Moje postępy",it:"Progressi",he:"ההתקדמות שלי",ja:"マイ進捗",ko:"나의 발전"},
+  // Структура 2026-10-10 (docs/APP-STRUCTURE-PLAN.md §3): заголовки экранов = имена вкладок + строка «что здесь»
+  card_title:{en:"Profile",ru:"Профиль",uk:"Профіль",es:"Perfil",de:"Profil",pt:"Perfil",fr:"Profil",pl:"Profil",it:"Profilo",he:"פרופיל",ja:"プロフィール",ko:"프로필"},
+  card_sub_path:{en:"What has changed since you started",ru:"Что изменилось с тех пор, как вы начали",uk:"Що змінилося відтоді, як ви почали",es:"Qué ha cambiado desde que empezaste",de:"Was sich seit deinem Start verändert hat",pt:"O que mudou desde que você começou",fr:"Ce qui a changé depuis vos débuts",pl:"Co się zmieniło od początku",it:"Cosa è cambiato da quando hai iniziato",he:"מה השתנה מאז שהתחלת",ja:"始めてから何が変わったか",ko:"시작한 이후 무엇이 달라졌는지"},
+  card_sub_card:{en:"Your data and settings",ru:"Ваши данные и настройки",uk:"Ваші дані та налаштування",es:"Tus datos y ajustes",de:"Deine Daten und Einstellungen",pt:"Seus dados e configurações",fr:"Vos données et réglages",pl:"Twoje dane i ustawienia",it:"I tuoi dati e le impostazioni",he:"הנתונים וההגדרות שלך",ja:"あなたのデータと設定",ko:"내 데이터와 설정"},
+  dp_why_cal:{ru:"Почему мы не просим считать калории?",uk:"Чому ми не просимо рахувати калорії?",en:"Why we don’t ask you to count calories",es:"Por qué no pedimos contar calorías",de:"Warum wir kein Kalorienzählen verlangen",pt:"Por que não pedimos para contar calorias",fr:"Pourquoi nous ne demandons pas de compter les calories",pl:"Dlaczego nie prosimy o liczenie kalorii",it:"Perché non chiediamo di contare le calorie",he:"למה אנחנו לא מבקשים לספור קלוריות",ja:"なぜカロリー計算を求めないのか",ko:"왜 칼로리 계산을 요구하지 않나요"}};
 Object.keys(_NAVC).forEach(function(k){Object.keys(_NAVC[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_NAVC[k][l];});});
 const _HLPK={help_why:{en:"Why we assess this",ru:"Зачем мы это оцениваем?",uk:"Навіщо ми це оцінюємо?",es:"¿Por qué lo evaluamos?",de:"Warum wir das einschätzen",pt:"Por que avaliamos isso",fr:"Pourquoi nous évaluons cela",pl:"Dlaczego to oceniamy",it:"Perché lo valutiamo",he:"למה אנחנו מעריכים זאת",ja:"なぜ評価するのか",ko:"왜 평가하나요"},help_close:{en:"Got it",ru:"Понятно",uk:"Зрозуміло",es:"Entendido",de:"Verstanden",pt:"Entendi",fr:"Compris",pl:"Rozumiem",it:"Capito",he:"הבנתי",ja:"了解",ko:"확인"}};
 Object.keys(_HLPK).forEach(function(k){Object.keys(_HLPK[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_HLPK[k][l];});});
@@ -5018,28 +5012,6 @@ document.querySelectorAll('input[name=gender]').forEach(el=>{
   });
 });
 
-// ══ MAX BLOCK ═════════════════════════════════════════════
-(function(){
-  if(sessionStorage.getItem('vialp_access')==='MAX'){
-    const b=document.getElementById('maxBlock');
-    if(b)b.style.display='block';
-  }
-})();
-
-function sendMaxRequest(){
-  const q=(document.getElementById('maxQuestion').value||'').trim();
-  const email='viaelcom@gmail.com';
-  const subject=encodeURIComponent('Expert-розбір VIA-L MAX');
-  const body=encodeURIComponent(
-    'Запит на Expert-розбір від клієнта тарифу Максимум.\n\n'+
-    (q?'Запитання / уточнення:\n'+q+'\n\n':'')+
-    'Дата: '+new Date().toLocaleString()
-  );
-  document.getElementById('maxSendBtn').style.display='none';
-  document.getElementById('maxSent').style.display='block';
-  setTimeout(()=>{ window.location.href='mailto:'+email+'?subject='+subject+'&body='+body; },300);
-}
-
 // ══ BOTTOM NAV ════════════════════════════════════════════
 // Поверхности ленты-анкеты, которые живут ВНЕ <main> и не исчезают сами при переходе на
 // другой экран: панель «Данные с трекера», живые гейты, активные шаги. Их гасил только
@@ -5073,7 +5045,8 @@ function navTo(tab){
   document.getElementById('nav-'+tab)?.classList.add('active');
   const cp=document.getElementById('cardPanel');
   var _isCp=(tab==='card'||tab==='path');
-  if(_isCp){ window._cardMode=tab; var _ct=document.getElementById('cardTitle'); if(_ct){ var _ck=(tab==='path')?'nav_path':'card_title'; _ct.setAttribute('data-t',_ck); _ct.textContent=t(_ck); } }
+  if(_isCp){ window._cardMode=tab; var _ct=document.getElementById('cardTitle'); if(_ct){ var _ck=(tab==='path')?'nav_path':'card_title'; _ct.setAttribute('data-t',_ck); _ct.textContent=t(_ck); }
+    var _cs=document.getElementById('cardSub'); if(_cs){ var _sk=(tab==='path')?'card_sub_path':'card_sub_card'; _cs.setAttribute('data-t',_sk); _cs.textContent=t(_sk); } }
   if(cp){cp.style.display=_isCp?'block':'none';
     document.body.classList.toggle('card-open', _isCp);   // прячет футер главной: он просвечивал из-под панели карточки
     if(_isCp){renderCard();const _m=document.querySelector('main');if(_m)_m.style.display='none';cp.scrollTop=0;}}   // навигацию НЕ прячем: «Мой профиль» — вкладка, а не модалка
@@ -5976,7 +5949,7 @@ function renderCard(){
            _secCmp,_secLabs,_secSup,_secDaily,_secHist].join('');
   else            // «Мой профиль»: что я о себе указал + настройки и инструменты
     html+=[_secGoal,_secAct,_secNut,_secHealth,_secStress,_secBal,_secRhythm,_secLife,
-           _secVai,_secSource,_secIntake,_secNotify,_secDisplay,_secSub,_secBackup,_secApproach,_secLegal].join('');
+           _secSource,_secIntake,_secNotify,_secDisplay,_secSub,_secBackup,_secLegal].join('');   // VAI и «Наш подход» убраны 2026-10-10 (план структуры §6)
   html+='</div>'; // .vcard-grid
   html+='</div>'; // .vcard-wrap
 
@@ -5989,7 +5962,9 @@ function renderCard(){
   if(typeof renderMonthlyReportUI==='function')renderMonthlyReportUI();
   if(typeof renderAiMemoryUI==='function')renderAiMemoryUI();
   // недельный/месячный итог и память — часть «Моего пути», в профиле их не показываем
-  ['weeklyReport','monthlyReport','aiMemoryBox'].forEach(function(id){ var e=document.getElementById(id); if(e) e.style.display=_pathMode?(id==='aiMemoryBox'?'flex':''):'none'; });
+  // «Что VIA-L запомнил» не показываем (2026-10-10: список «что у вас плохо» вгоняет в печаль) — память
+  // по-прежнему уходит в каждый разбор (ai_memory в payload).
+  ['weeklyReport','monthlyReport','aiMemoryBox'].forEach(function(id){ var e=document.getElementById(id); if(e) e.style.display=(_pathMode&&id!=='aiMemoryBox')?'':'none'; });
 }
 
 // ══ МЕСЯЧНЫЙ AI-РАЗБОР (порт VIO: то же окно weeklyTrend, 30 дней) ═══════════
@@ -10558,7 +10533,7 @@ function _renderWeekStrip(activeKey){
   window.__rdDay=activeKey;   // текущий день — его читает свайп
   // Тренды живут рядом и на том же дне — вешаем сюда: через эту точку проходит
   // и живой проход, и открытие дня из истории, и перерисовка при смене языка.
-  try{ if(typeof renderTrends==='function') renderTrends(activeKey); }catch(e){}
+  // «Тренды за 30 дней» с «Сегодня» убраны 2026-10-10: месяц — во вкладке «Мой прогресс» («Динамика»).
   // Петля эксперимента живёт на том же дне и той же точке входа (живой проход, история, смена языка).
   try{ if(typeof renderExperimentUI==='function') renderExperimentUI(activeKey); }catch(e){}
 }

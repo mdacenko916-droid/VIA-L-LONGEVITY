@@ -17,9 +17,9 @@
 (function () {
   var L = {
     today:    {en:'Today',ru:'Сегодня',uk:'Сьогодні',es:'Hoy',de:'Heute',pt:'Hoje',fr:'Aujourd’hui',pl:'Dziś',it:'Oggi',he:'היום',ja:'今日',ko:'오늘'},
-    path:     {en:'My path',ru:'Мой путь',uk:'Мій шлях',es:'Mi camino',de:'Mein Weg',pt:'Meu caminho',fr:'Mon parcours',pl:'Moja droga',it:'Il mio percorso',he:'הדרך שלי',ja:'私の歩み',ko:'나의 여정'},
-    guide:    {en:'My guide',ru:'Мой наставник',uk:'Мій наставник',es:'Mi guía',de:'Mein Begleiter',pt:'Meu guia',fr:'Mon guide',pl:'Mój przewodnik',it:'La mia guida',he:'המלווה שלי',ja:'マイガイド',ko:'나의 가이드'},
-    card:     {en:'My Profile',ru:'Мой профиль',uk:'Мій профіль',es:'Mi perfil',de:'Mein Profil',pt:'Meu perfil',fr:'Mon profil',pl:'Mój profil',it:'Il mio profilo',he:'הפרופיל שלי',ja:'マイプロフィール',ko:'내 프로필'},
+    path:     {en:'My progress',ru:'Мой прогресс',uk:'Мій прогрес',es:'Mi progreso',de:'Fortschritt',pt:'Meu progresso',fr:'Mes progrès',pl:'Moje postępy',it:'Progressi',he:'ההתקדמות שלי',ja:'マイ進捗',ko:'나의 발전'},
+    guide:    {en:'Specialist',ru:'Специалист',uk:'Спеціаліст',es:'Especialista',de:'Spezialist',pt:'Especialista',fr:'Spécialiste',pl:'Specjalista',it:'Specialista',he:'מומחה',ja:'専門家',ko:'전문가'},
+    card:     {en:'Profile',ru:'Профиль',uk:'Профіль',es:'Perfil',de:'Profil',pt:'Perfil',fr:'Profil',pl:'Profil',it:'Profilo',he:'פרופיל',ja:'プロフィール',ko:'프로필'},
     approach: {en:'Our approach',ru:'Наш подход',uk:'Наш підхід',es:'Enfoque',de:'Ansatz',pt:'Abordagem',fr:'Approche',pl:'Podejście',it:'Approccio',he:'הגישה שלנו',ja:'アプローチ',ko:'접근 방식'},
     chat:     {en:'Specialist',ru:'Специалист',uk:'Спеціаліст',es:'Especialista',de:'Spezialist',pt:'Especialista',fr:'Spécialiste',pl:'Specjalista',it:'Specialista',he:'מומחה',ja:'専門家',ko:'전문가'}
   };
