@@ -2290,7 +2290,24 @@ body.card-open #langDropdown{display:none;}
 #rdWhy .rd-why-h{color:var(--gold-lt);}
 #rdWhy .rd-why-h{font-size:var(--fs-cap);letter-spacing:.08em;text-transform:uppercase;color:var(--gold);font-weight:700;margin:14px 4px 8px;}
 #stepResult .rd-sources{display:none;}
-#rdPlan:empty,#rdFocusLine:empty,#rdMeals:empty{display:none;}
+#rdPlan:empty,#rdFocusLine:empty,#rdMeals:empty,#rdIntake:empty,#rdSelf:empty,#rdRitual:empty,#rdEv:empty{display:none;}
+/* подсветка следующего шага — 3 мягких золотых пульса */
+@keyframes rdPulse{0%,100%{box-shadow:0 0 0 0 rgba(226,185,90,0);border-color:rgba(226,185,90,.20);}50%{box-shadow:0 0 0 6px rgba(226,185,90,.28);border-color:rgba(226,185,90,.9);}}
+.rd-step-h.rd-next{animation:rdPulse 1.1s ease-in-out 3;}
+@media (prefers-reduced-motion:reduce){.rd-step-h.rd-next{animation:none;border-color:rgba(226,185,90,.9);}}
+.rd-end{display:block;height:1px;}
+#rdSelf{background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.20);border-radius:20px;padding:12px 16px;margin:10px 0;}
+.rd-self-h,.rd-ik-h{font-size:var(--fs-cap);letter-spacing:.08em;text-transform:uppercase;color:var(--gold-lt);font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.rd-self-l{display:flex;flex-wrap:wrap;gap:7px;}
+.rd-self-l span{font-size:var(--fs-cap);color:var(--t1);background:rgba(255,107,138,.12);border:1px solid rgba(255,107,138,.35);border-radius:999px;padding:4px 10px;}
+#rdIntake{background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.20);border-radius:20px;padding:12px 16px;margin-bottom:10px;}
+.rd-ik-r{display:flex;gap:12px;padding:8px 0;border-top:1px solid rgba(255,255,255,.07);cursor:pointer;color:var(--t1);font-size:var(--fs-body);}
+.rd-ik-r b{color:var(--gold-lt);font-weight:600;min-width:52px;}
+#rdRitual{background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.20);border-radius:20px;padding:6px 16px 14px;color:var(--t1);}
+#rdEv{margin-top:10px;}
+.rd-plate-sheet{display:block!important;}
+.rd-plate-sheet .rd-plate-img{width:100%;max-width:360px;display:block;margin:0 auto 12px;border-radius:16px;}
+.rd-plate-sheet .rd-why{display:none;}
 /* Кружки еды в шаге 4 (владелец 2026-10-10): прилипают сверху при прокрутке, ближайшая еда подсвечена. */
 /* top отрицательный: у #scroll-area сверху padding 72px под шапку «Анализ VIA-L», и прилипание считается от
    него — кружки висели на треть экрана ниже. Шапка при прокрутке уезжает, поэтому поднимаем на её высоту
@@ -4144,42 +4161,41 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
 <script src="bottom-nav.js"></script>
 <script>vialBottomNav.mount({ lang:(function(){ try{ return localStorage.getItem('vial_lang')||'en'; }catch(e){ return 'en'; } })() });</script>
 <script>
-// «Сегодня» по шагам приёма (этап 4, 2026-10-10, docs/APP-STRUCTURE-PLAN.md §4/4a). Разметку блоков не
-// трогаем: один раз при загрузке оборачиваем их в 4 шага и переносим узлы целиком (id и обработчики
-// остаются). Разбор ИИ по-прежнему пишут в #aiResult шесть мест кода — раскладку по шагам делает одна
-// функция _rdLayout после каждой записи: вывод («Где вы сейчас» + «Общая картина») остаётся в шаге 3,
-// темы («Почему именно так») и «На чём основано» уезжают в шаг 4.
+// «Сегодня» по шагам (этап 4, 2026-10-10, docs/APP-STRUCTURE-PLAN.md §4). Разметку блоков не трогаем:
+// один раз при загрузке оборачиваем их в 5 шагов и переносим узлы целиком (id и обработчики остаются).
+// Разбор ИИ по-прежнему пишут в #aiResult шесть мест кода — раскладку делает одна функция _rdLayout.
+//   1 Мой день — с чем пришли + что отметили сами + индекс и показатели прибора («анамнез на сегодня»)
+//   2 На что это похоже — вывод разбора, «Стоит понаблюдать», «На чём основано»
+//   3 Что делать сегодня — кружки еды и тарелки, план из разбора, приёмы сегодня, шаг недели
+//   4 Почему у меня так — темы разбора
+//   5 Мой вечерний ритуал — вечер (без меню ужина) и сон из памятки
+// Блок «Памятка дня» больше не показывается: его главы разошлись по шагам (решение владельца 2026-10-10).
 (function(){
   var rd=document.querySelector('#stepResult > .rd'); if(!rd) return;
   var $=function(id){ return document.getElementById(id); };
   var mk=function(n,key,ru){
-    var s=document.createElement('section'); s.className='rd-step'+(n===4?' open':''); s.id='rdStep'+n;
+    var s=document.createElement('section'); s.className='rd-step'+(n===1?' open':''); s.id='rdStep'+n;
     s.innerHTML='<button type="button" class="rd-step-h" onclick="_rdStep('+n+')"><span class="rd-step-n">'+n+'</span>'
       +'<span class="rd-step-tx"><span class="rd-step-t" data-t="'+key+'">'+ru+'</span><span class="rd-step-s" id="rdS'+n+'"></span></span>'
       +'<span class="rd-step-ch">›</span></button><div class="rd-step-b" id="rdSB'+n+'"></div>';
     return s;
   };
-  var s1=mk(1,'rd_s1','С чем вы пришли'), s2=mk(2,'rd_s2','Что показали цифры'), s3=mk(3,'rd_s3','На что это похоже'), s4=mk(4,'rd_s4','Что делать сегодня');
-  var b1=document.createElement('div'); b1.id='rdB1'; s1.querySelector('.rd-step-b').appendChild(b1);
-  var put=function(sec,el){ if(el) sec.querySelector('.rd-step-b').appendChild(el); };
+  var div=function(id){ var d=document.createElement('div'); d.id=id; return d; };
   // Ссылки — ДО переноса: «Стоит понаблюдать» лежит внутри карточки индекса, и после её переноса в ещё
   // не вставленный шаг getElementById его уже не находит.
   var E={ph:$('rd-phasenote'),row:rd.querySelector('.rd-row-2'),ai:$('aiCard'),da:$('doctorAlert'),fo:$('rd-focus'),dp:rd.querySelector('.rd-dayplan'),ex:$('rd-exp')};
-  put(s2,E.ph); put(s2,E.row);
-  put(s3,E.ai); put(s3,E.da);
-  // Шаг 4 (правка владельца 2026-10-10 по живому экрану): тарелка-памятка и темы разбора читались хуже
-  // всего — в конец; темы — на тёмной подложке (их карточки рассчитаны на тёмный фон).
-  var why=document.createElement('div'); why.id='rdWhy';
-  var meals=document.createElement('div'); meals.id='rdMeals'; put(s4,meals);
-  var plan=document.createElement('div'); plan.id='rdPlan';
-  var fl=document.createElement('div'); fl.id='rdFocusLine';
-  put(s4,plan); put(s4,fl); put(s4,E.fo); put(s4,E.ex); put(s4,why); put(s4,E.dp);
-  var anchor=$('rd-week');
-  // Заголовки частей «Как вы сегодня / Что делать» сняты (владелец 2026-10-10): золото на светлом не
-  // читается, а порядок и так понятен по номерам 1–4.
-  var seq=[s1,s2,s3,s4];
-  var ref=anchor?anchor.nextSibling:rd.firstChild;
-  seq.forEach(function(el){ rd.insertBefore(el,ref); });
+  var S=[mk(1,'rd_s1','Мой день'),mk(2,'rd_s2','На что это похоже'),mk(3,'rd_s3','Что делать сегодня'),mk(4,'rd_s4','Почему у меня так'),mk(5,'rd_s5','Мой вечерний ритуал')];
+  var put=function(n,el){ if(el) S[n-1].querySelector('.rd-step-b').appendChild(el); };
+  put(1,div('rdB1')); put(1,div('rdSelf')); put(1,E.ph); put(1,E.row);
+  put(2,E.ai); put(2,E.da); put(2,div('rdEv'));
+  put(3,div('rdMeals')); put(3,div('rdPlan')); put(3,div('rdIntake')); put(3,div('rdFocusLine')); put(3,E.fo); put(3,E.ex);
+  put(4,div('rdWhy'));
+  put(5,div('rdRitual'));
+  // метка конца шага: дочитал до неё — подсвечиваем следующий шаг
+  S.forEach(function(s,i){ if(i<S.length-1){ var e=document.createElement('i'); e.className='rd-end'; e.setAttribute('data-n',i+1); s.querySelector('.rd-step-b').appendChild(e); } });
+  if(E.dp) E.dp.style.display='none';   // памятка живёт дальше (её данные и главы нужны кружкам и ритуалу), но не показывается
+  var anchor=$('rd-week'), ref=anchor?anchor.nextSibling:rd.firstChild;
+  S.forEach(function(el){ rd.insertBefore(el,ref); });
 })();
 </script>
 
@@ -4654,11 +4670,12 @@ const _NAVC={nav_card:{en:"My Profile",ru:"Мой профиль",uk:"Мій п�
   seg_month:{ru:"Месяц",uk:"Місяць",en:"Month",es:"Mes",de:"Monat",pt:"Mês",fr:"Mois",pl:"Miesiąc",it:"Mese",he:"חודש",ja:"月",ko:"월"},
   rd_part_now:{ru:"Как вы сегодня",uk:"Як ви сьогодні",en:"How you are today",es:"Cómo estás hoy",de:"Wie es dir heute geht",pt:"Como você está hoje",fr:"Comment vous allez aujourd’hui",pl:"Jak się dziś masz",it:"Come stai oggi",he:"המצב שלך היום",ja:"今日のあなた",ko:"오늘의 상태"},
   rd_part_do:{ru:"Что делать",uk:"Що робити",en:"What to do",es:"Qué hacer",de:"Was zu tun ist",pt:"O que fazer",fr:"Que faire",pl:"Co robić",it:"Cosa fare",he:"מה לעשות",ja:"やること",ko:"할 일"},
-  rd_s1:{ru:"С чем вы пришли",uk:"З чим ви прийшли",en:"What brought you here",es:"Lo que te trajo aquí",de:"Womit du gekommen bist",pt:"O que trouxe você aqui",fr:"Ce qui vous amène",pl:"Z czym przychodzisz",it:"Il motivo per cui sei qui",he:"עם מה הגעת",ja:"気になっていること",ko:"찾아온 이유"},
-  rd_s2:{ru:"Что показали цифры",uk:"Що показали цифри",en:"What the numbers show",es:"Qué muestran los datos",de:"Was die Zahlen zeigen",pt:"O que os números mostram",fr:"Ce que montrent les chiffres",pl:"Co pokazują liczby",it:"Cosa mostrano i numeri",he:"מה המספרים מראים",ja:"数値が示すこと",ko:"숫자가 보여주는 것"},
-  rd_s3:{ru:"На что это похоже",uk:"На що це схоже",en:"What this looks like",es:"A qué se parece",de:"Wonach es aussieht",pt:"Com o que isso se parece",fr:"À quoi cela ressemble",pl:"Na co to wygląda",it:"A cosa somiglia",he:"למה זה דומה",ja:"どういう状態か",ko:"어떤 모습인지"},
-  rd_s4:{ru:"Что делать сегодня",uk:"Що робити сьогодні",en:"What to do today",es:"Qué hacer hoy",de:"Was heute zu tun ist",pt:"O que fazer hoje",fr:"Que faire aujourd’hui",pl:"Co zrobić dziś",it:"Cosa fare oggi",he:"מה לעשות היום",ja:"今日やること",ko:"오늘 할 일"},
+  rd_s1:{ru:"Мой день",uk:"Мій день",en:"My day",es:"Mi día",de:"Mein Tag",pt:"Meu dia",fr:"Ma journée",pl:"Mój dzień",it:"La mia giornata",he:"היום שלי",ja:"私の今日",ko:"나의 하루"},
+  rd_s2:{ru:"На что это похоже",uk:"На що це схоже",en:"What this looks like",es:"A qué se parece",de:"Wonach es aussieht",pt:"Com o que isso se parece",fr:"À quoi cela ressemble",pl:"Na co to wygląda",it:"A cosa somiglia",he:"למה זה דומה",ja:"どういう状態か",ko:"어떤 모습인지"},
+  rd_s3:{ru:"Что делать сегодня",uk:"Що робити сьогодні",en:"What to do today",es:"Qué hacer hoy",de:"Was heute zu tun ist",pt:"O que fazer hoje",fr:"Que faire aujourd’hui",pl:"Co zrobić dziś",it:"Cosa fare oggi",he:"מה לעשות היום",ja:"今日やること",ko:"오늘 할 일"},
+  rd_s4:{ru:"Почему у меня так",uk:"Чому в мене так",en:"Why it’s like this for me",es:"Por qué me pasa esto",de:"Warum es bei mir so ist",pt:"Por que comigo é assim",fr:"Pourquoi c’est ainsi chez moi",pl:"Dlaczego u mnie tak jest",it:"Perché per me è così",he:"למה זה כך אצלי",ja:"なぜ私はこうなのか",ko:"왜 나는 이런지"},
   rd_why_h:{ru:"Почему именно так",uk:"Чому саме так",en:"Why this approach",es:"Por qué así",de:"Warum gerade so",pt:"Por que assim",fr:"Pourquoi ainsi",pl:"Dlaczego właśnie tak",it:"Perché proprio così",he:"למה דווקא כך",ja:"なぜこうするのか",ko:"왜 이렇게 하는지"},
+  rd_s5:{ru:"Мой вечерний ритуал",uk:"Мій вечірній ритуал",en:"My evening ritual",es:"Mi ritual de la noche",de:"Mein Abendritual",pt:"Meu ritual da noite",fr:"Mon rituel du soir",pl:"Mój wieczorny rytuał",it:"Il mio rituale serale",he:"הטקס הערבי שלי",ja:"私の夜の習慣",ko:"나의 저녁 의식"},
   dp_why_cal:{ru:"Почему мы не просим считать калории?",uk:"Чому ми не просимо рахувати калорії?",en:"Why we don’t ask you to count calories",es:"Por qué no pedimos contar calorías",de:"Warum wir kein Kalorienzählen verlangen",pt:"Por que não pedimos para contar calorias",fr:"Pourquoi nous ne demandons pas de compter les calories",pl:"Dlaczego nie prosimy o liczenie kalorii",it:"Perché non chiediamo di contare le calorie",he:"למה אנחנו לא מבקשים לספור קלוריות",ja:"なぜカロリー計算を求めないのか",ko:"왜 칼로리 계산을 요구하지 않나요"}};
 Object.keys(_NAVC).forEach(function(k){Object.keys(_NAVC[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_NAVC[k][l];});});
 const _HLPK={help_why:{en:"Why we assess this",ru:"Зачем мы это оцениваем?",uk:"Навіщо ми це оцінюємо?",es:"¿Por qué lo evaluamos?",de:"Warum wir das einschätzen",pt:"Por que avaliamos isso",fr:"Pourquoi nous évaluons cela",pl:"Dlaczego to oceniamy",it:"Perché lo valutiamo",he:"למה אנחנו מעריכים זאת",ja:"なぜ評価するのか",ko:"왜 평가하나요"},help_close:{en:"Got it",ru:"Понятно",uk:"Зрозуміло",es:"Entendido",de:"Verstanden",pt:"Entendi",fr:"Compris",pl:"Rozumiem",it:"Capito",he:"הבנתי",ja:"了解",ko:"확인"}};
@@ -5130,31 +5147,43 @@ document.querySelectorAll('input[name=gender]').forEach(el=>{
   });
 });
 
-// ══ «СЕГОДНЯ» ПО ШАГАМ: аккордеон, раскладка разбора, строки-сути (этап 4, 2026-10-10) ══
-window._rdOpen=4;
-function _rdStep(n){ window._rdOpen=(window._rdOpen===n)?0:n;
-  for(var i=1;i<=4;i++){ var s=document.getElementById('rdStep'+i); if(s) s.classList.toggle('open',window._rdOpen===i); }
-  try{ var o=document.getElementById('rdStep'+n); if(o&&window._rdOpen===n) o.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){} }
-function _rdSetTxt(id,v){ var e=document.getElementById(id); if(e && e.textContent!==v) e.textContent=v; }
+// ══ «СЕГОДНЯ» ПО ШАГАМ: аккордеон, раскладка разбора, строки-сути, подсветка следующего шага (2026-10-10) ══
+window._rdOpen=1;
+var _RD_N=5;
+function _rdApply(){ for(var i=1;i<=_RD_N;i++){ var s=document.getElementById('rdStep'+i); if(s) s.classList.toggle('open',window._rdOpen===i); } }
+function _rdStep(n){
+  var was=window._rdOpen; window._rdOpen=(was===n)?0:n; _rdApply();
+  if(was===n && n<_RD_N) _rdPulse(n+1);   // свернул шаг — подсказываем следующий
+  try{ var o=document.getElementById('rdStep'+n); if(o&&window._rdOpen===n) o.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
+}
+// Мягкая подсветка следующего шага: 2–3 золотых пульса и тишина. Открыть можно любой шаг в любой момент.
+function _rdPulse(n){ var h=document.querySelector('#rdStep'+n+' .rd-step-h'); if(!h||window._rdOpen===n) return;
+  h.classList.remove('rd-next'); void h.offsetWidth; h.classList.add('rd-next'); }
 var _RD_T={
   bf:{ru:'Завтрак',uk:'Сніданок',en:'Breakfast',es:'Desayuno',de:'Frühstück',pt:'Café da manhã',fr:'Petit-déjeuner',pl:'Śniadanie',it:'Colazione',he:'ארוחת בוקר',ja:'朝食',ko:'아침'},
   ln:{ru:'Обед',uk:'Обід',en:'Lunch',es:'Comida',de:'Mittagessen',pt:'Almoço',fr:'Déjeuner',pl:'Obiad',it:'Pranzo',he:'ארוחת צהריים',ja:'昼食',ko:'점심'},
   dn:{ru:'Ужин',uk:'Вечеря',en:'Dinner',es:'Cena',de:'Abendessen',pt:'Jantar',fr:'Dîner',pl:'Kolacja',it:'Cena',he:'ארוחת ערב',ja:'夕食',ko:'저녁'},
+  plate:{ru:'Тарелка',uk:'Тарілка',en:'Plate',es:'Plato',de:'Teller',pt:'Prato',fr:'Assiette',pl:'Talerz',it:'Piatto',he:'צלחת',ja:'お皿',ko:'접시'},
   step:{ru:'Шаг недели',uk:'Крок тижня',en:'Step of the week',es:'Paso de la semana',de:'Schritt der Woche',pt:'Passo da semana',fr:'Étape de la semaine',pl:'Krok tygodnia',it:'Passo della settimana',he:'הצעד של השבוע',ja:'今週のステップ',ko:'이번 주 단계'},
   more:{ru:'Подробнее о шаге',uk:'Докладніше про крок',en:'More about this step',es:'Más sobre este paso',de:'Mehr zu diesem Schritt',pt:'Mais sobre este passo',fr:'En savoir plus sur cette étape',pl:'Więcej o tym kroku',it:'Di più su questo passo',he:'עוד על הצעד',ja:'このステップについて',ko:'이 단계 자세히'},
   yes:{ru:'Сегодня получилось',uk:'Сьогодні вдалося',en:'Done today',es:'Hoy lo logré',de:'Heute geschafft',pt:'Hoje consegui',fr:'Fait aujourd’hui',pl:'Dziś się udało',it:'Fatto oggi',he:'בוצע היום',ja:'今日できた',ko:'오늘 해냈어요'},
-  no:{ru:'Не вышло',uk:'Не вийшло',en:'Didn’t work out',es:'No salió',de:'Hat nicht geklappt',pt:'Não deu',fr:'Pas réussi',pl:'Nie wyszło',it:'Non è andata',he:'לא הסתדר',ja:'できなかった',ko:'못 했어요'}
+  no:{ru:'Не вышло',uk:'Не вийшло',en:'Didn’t work out',es:'No salió',de:'Hat nicht geklappt',pt:'Não deu',fr:'Pas réussi',pl:'Nie wyszło',it:'Non è andata',he:'לא הסתדר',ja:'できなかった',ko:'못 했어요'},
+  self:{ru:'Что вы отметили сами',uk:'Що ви позначили самі',en:'What you noted yourself',es:'Lo que anotaste tú',de:'Was du selbst notiert hast',pt:'O que você mesmo anotou',fr:'Ce que vous avez noté',pl:'Co zaznaczasz sam(a)',it:'Cosa hai annotato tu',he:'מה סימנת בעצמך',ja:'自分で記録したこと',ko:'직접 기록한 것'},
+  slp:{ru:'Сон по ощущениям',uk:'Сон за відчуттями',en:'Sleep, as it felt',es:'Sueño percibido',de:'Schlaf, gefühlt',pt:'Sono percebido',fr:'Sommeil ressenti',pl:'Sen w odczuciu',it:'Sonno percepito',he:'שינה בתחושה',ja:'睡眠の実感',ko:'체감 수면'},
+  en:{ru:'Энергия',uk:'Енергія',en:'Energy',es:'Energía',de:'Energie',pt:'Energia',fr:'Énergie',pl:'Energia',it:'Energia',he:'אנרגיה',ja:'エネルギー',ko:'에너지'},
+  st:{ru:'Стресс высокий',uk:'Стрес високий',en:'High stress',es:'Estrés alto',de:'Hoher Stress',pt:'Estresse alto',fr:'Stress élevé',pl:'Wysoki stres',it:'Stress alto',he:'לחץ גבוה',ja:'ストレス高め',ko:'스트레스 높음'},
+  hf:{ru:'Приливы',uk:'Припливи',en:'Hot flashes',es:'Sofocos',de:'Hitzewallungen',pt:'Ondas de calor',fr:'Bouffées de chaleur',pl:'Uderzenia gorąca',it:'Vampate',he:'גלי חום',ja:'ほてり',ko:'열감'},
+  fog:{ru:'Туман в голове',uk:'Туман у голові',en:'Brain fog',es:'Niebla mental',de:'Gedankennebel',pt:'Névoa mental',fr:'Brouillard mental',pl:'Mgła mózgowa',it:'Nebbia mentale',he:'ערפל מחשבתי',ja:'頭のもや',ko:'머릿속 안개'}
 };
-// План дня (шаг 4): действия «Что сделать» (строки ☐) из тем разбора ИИ — одним списком сверху, а рядом
-// кнопки глав памятки по смыслу действия: питание → Завтрак/Обед/Ужин (тарелки и меню), движение →
-// «Активность», сон → «Вечер»/«Сон». В самих темах остаётся только «почему» — без двойных советов.
+function _rdSetTxt(id,v){ var e=document.getElementById(id); if(e && e.textContent!==v) e.textContent=v; }
+function _rdSetHtml(el,h){ if(el && el.getAttribute('data-h')!==h){ el.innerHTML=h; el.setAttribute('data-h',h); } }
+// План дня: действия «Что сделать» (строки ☐) из тем разбора — одним списком в шаге 3; в темах остаётся «почему».
 function _rdPlanBuild(box){
   var plan=document.getElementById('rdPlan'); if(!plan) return;
   var items=[];
   box.querySelectorAll('.ai-sec').forEach(function(sec){
     var act=sec.querySelector('.ai-sec-act'); if(!act) return;
-    var th=((sec.className.match(/ai-th-([a-z]+)/)||[])[1])||'';
-    String(act.textContent||'').split('☐').map(function(x){ return x.replace(/\s+/g,' ').trim(); }).filter(Boolean).forEach(function(tx,ix){
+    String(act.textContent||'').split('☐').map(function(x){ return x.replace(/\s+/g,' ').trim(); }).filter(Boolean).forEach(function(tx){
       items.push('<div class="rd-plan-it"><div class="rd-plan-tx"><span>'+_esc(tx)+'</span></div></div>');
     });
     act.remove();
@@ -5163,79 +5192,115 @@ function _rdPlanBuild(box){
   });
   plan.innerHTML=items.slice(0,8).join('');
 }
-// Кружки еды над шагом 4: завтрак · обед · ужин → те же главы памятки (утро / день / вечер), что и в
-// «Памятке дня». Не зависят от текста разбора: кнопки под действиями появлялись, только если ИИ назвал
-// тему «питанием», и у владельца не появились вовсе (тема «Вес и живот»). Ближайшая еда — по часам.
+// Кружки шага 3: завтрак · обед · ужин → главы памятки (меню), тарелка → «Сбалансируйте тарелку» блоком.
+// Ближайшая по часам еда подсвечена. Не зависят от текста разбора.
 function _rdMeals(){
   var box=document.getElementById('rdMeals'); if(!box) return;
   var hr=new Date().getHours(), now=hr<11?'morning':(hr<16?'lunch':'evening');
   var M=[['morning','ph-coffee',_RD_T.bf],['lunch','ph-bowl-food',_RD_T.ln],['evening','ph-moon-stars',_RD_T.dn]];
-  var h=M.map(function(m){ return '<button type="button" class="rd-meal'+(m[0]===now?' now':'')+'" onclick="openBpChapter(\''+m[0]+'\')"><i class="ph '+m[1]+'" aria-hidden="true"></i>'+_esc(L(m[2]))+'</button>'; }).join('');
-  if(box.getAttribute('data-h')!==h){ box.innerHTML=h; box.setAttribute('data-h',h); }
+  var h=M.map(function(m){ return '<button type="button" class="rd-meal'+(m[0]===now?' now':'')+'" onclick="openBpChapter(\''+m[0]+'\')"><i class="ph '+m[1]+'" aria-hidden="true"></i>'+_esc(L(m[2]))+'</button>'; }).join('')
+    +'<button type="button" class="rd-meal rd-meal-plate" onclick="_rdPlate()"><i class="ph ph-chart-pie-slice" aria-hidden="true"></i>'+_esc(L(_RD_T.plate))+'</button>';
+  _rdSetHtml(box,h);
 }
-// Шаг недели в шаге 4 — одна строка с отметкой дня; весь блок фокуса — по «Подробнее о шаге».
-// Сжимаем только в режиме «идёт неделя» (в блоке есть отметка дня): оценки, итог и «к специалисту»
-// требуют действия человека и остаются раскрытыми.
+function _rdPlate(){
+  var src=document.querySelector('#stepResult .rd-plate'); if(!src||typeof openSheet!=='function') return;
+  var c=src.cloneNode(true); c.classList.add('rd-plate-sheet');
+  openSheet('<i class="ph ph-chart-pie-slice" style="color:var(--gold-lt);"></i>', c.querySelector('.rd-plate-h')?c.querySelector('.rd-plate-h').textContent:'', c.outerHTML);
+}
+// «Приёмы сегодня» — что и когда принять; нажатие открывает «Мои приёмы».
+function _rdIntake(){
+  var box=document.getElementById('rdIntake'); if(!box) return;
+  var its=[]; try{ its=(typeof _ikActiveOn==='function')?_ikActiveOn():[]; }catch(e){}
+  if(!its.length){ _rdSetHtml(box,''); return; }
+  var ttl=(typeof _ikTitle==='function')?_ikTitle():'';
+  _rdSetHtml(box,'<div class="rd-ik-h"><i class="ph ph-pill" aria-hidden="true"></i>'+_esc(ttl)+'</div>'
+    +its.slice(0,8).map(function(it){ return '<div class="rd-ik-r" onclick="_ikOpen()"><b>'+_esc(it.time||'')+'</b><span>'+_esc(it.name||'')+'</span></div>'; }).join(''));
+}
+// Шаг недели в шаге 3 — одна строка с отметкой дня; весь блок фокуса — по «Подробнее о шаге».
 function _rdFocusLine(){
   var fo=document.getElementById('rd-focus'), fl=document.getElementById('rdFocusLine'); if(!fo||!fl) return;
   var run=!!fo.querySelector('[onclick*="_expMark"]') && fo.style.display!=='none';
   var e=(typeof _expGet==='function')?_expGet():null, lv=(run&&e&&e.lever&&window.vialLevers&&vialLevers.text)?vialLevers.text(e.lever,lang):null;
-  if(!run||!lv){ if(fl.innerHTML) fl.innerHTML=''; fo.classList.remove('rd-fold'); return; }
+  if(!run||!lv){ _rdSetHtml(fl,''); fo.classList.remove('rd-fold'); return; }
   var d=Math.min(7,Math.floor((Date.now()-(e.startTs||Date.now()))/86400000)+1), dn='';
   try{ var rec=(JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[]).filter(function(x){return x&&x.day===_dayKey();})[0]; dn=(rec&&rec.exp_done)||''; }catch(x){}
   var open=!!window._rdFocusOpen;
-  var h='<div class="rd-fl-t">'+_esc(L(_RD_T.step))+'</div><div class="rd-fl-n">'+_esc(lv.title||'')+'</div>'
+  _rdSetHtml(fl,'<div class="rd-fl-t">'+_esc(L(_RD_T.step))+'</div><div class="rd-fl-n">'+_esc(lv.title||'')+'</div>'
     +'<div class="rd-fl-d">'+_esc(L(_TRIED_T.run).replace('{d}',d))+'</div>'
     +'<div class="rd-fl-b"><button type="button" class="'+(dn==='yes'?'on':'')+'" onclick="_expMark(\'yes\')">'+_esc(L(_RD_T.yes))+'</button>'
     +'<button type="button" class="'+(dn==='no'?'on':'')+'" onclick="_expMark(\'no\')">'+_esc(L(_RD_T.no))+'</button></div>'
-    +'<button type="button" class="rd-fl-more" onclick="window._rdFocusOpen=!window._rdFocusOpen;_rdLayout();">'+_esc(L(_RD_T.more))+(open?' ⌃':' ›')+'</button>';
-  if(fl.getAttribute('data-h')!==h){ fl.innerHTML=h; fl.setAttribute('data-h',h); }
+    +'<button type="button" class="rd-fl-more" onclick="window._rdFocusOpen=!window._rdFocusOpen;_rdLayout();">'+_esc(L(_RD_T.more))+(open?' ⌃':' ›')+'</button>');
   fo.classList.toggle('rd-fold',!open);
+}
+// «Что вы отметили сами» в шаге 1 — только отклонения дня, коротко (полные ответы — в «Архиве дней»).
+function _rdSelf(day){
+  var box=document.getElementById('rdSelf'); if(!box) return;
+  var r=null; try{ r=(JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[]).filter(function(x){return x&&x.day===day;})[0]; }catch(e){}
+  var out=[]; if(r){
+    if(r.sleep_qual!=null && +r.sleep_qual<=4) out.push(L(_RD_T.slp)+' '+r.sleep_qual+'/10');
+    if(r.energy!=null && +r.energy<=4) out.push(L(_RD_T.en)+' '+r.energy+'/10');
+    if(r.stress!=null && +r.stress>=9) out.push(L(_RD_T.st));
+    var HF={low:'1–2',mid:'3–5',high:'6–10',veryhigh:'10+'}; if(r.hf_count && HF[r.hf_count]) out.push(L(_RD_T.hf)+' '+HF[r.hf_count]);
+  }
+  _rdSetHtml(box,out.length?('<div class="rd-self-h">'+_esc(L(_RD_T.self))+'</div><div class="rd-self-l">'+out.map(function(x){ return '<span>'+_esc(x)+'</span>'; }).join('')+'</div>'):'');
+}
+// «Мой вечерний ритуал»: глава «Вечер» без меню ужина (меню — в кружке «Ужин») + глава «Сон».
+var _rdRitualKey='';
+function _rdRitual(){
+  var box=document.getElementById('rdRitual'); if(!box||typeof _bpChapterData!=='function') return;
+  var data=window._bpData||{}, ai=window._bpAI||null, key=String(!!ai)+'|'+(data.day||'')+'|'+lang;
+  if(key===_rdRitualKey && box.innerHTML) return; _rdRitualKey=key;
+  var get=function(id){ return (ai&&Array.isArray(ai[id]))?ai[id]:_bpChapterData(id,data)||[]; };
+  var secs=get('evening').filter(function(s){ return !(s&&s.variants); }).concat(get('sleep'));
+  box.innerHTML=secs.length?('<div class="rd-ritual">'+_bpRenderSecs(secs)+'</div>'):'';
 }
 var _rdBusy=false;
 function _rdLayout(){
   if(_rdBusy) return; _rdBusy=true;
   try{
-    var r=document.getElementById('aiResult'), why=document.getElementById('rdWhy');
+    var r=document.getElementById('aiResult'), why=document.getElementById('rdWhy'), evb=document.getElementById('rdEv');
     if(r && why){
       var box=r.querySelector('.ai-themes-box:not(.vial-ev)'), ev=r.querySelector('.vial-ev');
-      // Свежая запись в #aiResult стирает метку .rd-laid → темы прошлого дня/версии из шага 4 убираем,
-      // даже если в новом тексте тем нет (старый неструктурный разбор, ошибка, «ищем разбор…»).
+      // Свежая запись в #aiResult стирает метку .rd-laid → прошлые темы, план и источники убираем,
+      // даже если в новом тексте их нет (старый разбор, ошибка, «ищем разбор…»).
       var fresh=!r.querySelector('.rd-laid');
-      if(fresh){ why.innerHTML=''; var _pl=document.getElementById('rdPlan'); if(_pl) _pl.innerHTML=''; }
+      if(fresh){ why.innerHTML=''; if(evb) evb.innerHTML=''; var _pl=document.getElementById('rdPlan'); if(_pl) _pl.innerHTML=''; }
       if(box){
         var rest=box.querySelector('.ai-intro'); var head=r.querySelector('.ai-intro-head');
         if(rest){ if(head&&head.nextSibling) r.insertBefore(rest,head.nextSibling); else r.appendChild(rest); }
-        var h=document.createElement('div'); h.className='rd-why-h'; h.textContent=t('rd_why_h'); why.appendChild(h);
         box.classList.add('open'); why.appendChild(box);
         try{ _rdPlanBuild(box); }catch(e){}
       }
-      if(ev) why.appendChild(ev);
+      if(ev && evb) evb.appendChild(ev);
       if(fresh){ var mk=document.createElement('i'); mk.className='rd-laid'; mk.style.display='none'; r.appendChild(mk); }
     }
+    var day=window.__rdDay||_dayKey();
     try{ _rdFocusLine(); }catch(e){}
     try{ _rdMeals(); }catch(e){}
-    // строки-сути свёрнутых шагов
-    var c=(typeof _cmpGet==='function')?_cmpGet():null, day=window.__rdDay||_dayKey(), dl='';
+    try{ _rdIntake(); }catch(e){}
+    try{ _rdSelf(day); }catch(e){}
+    try{ _rdRitual(); }catch(e){}
+    // строка жалобы в шаге 1 (правится только жалоба: показатели дня меняются следующим проходом)
+    var c=(typeof _cmpGet==='function')?_cmpGet():null, dl='';
     try{ var rec=(JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[]).filter(function(x){return x&&x.day===day;})[0]; dl=(rec&&rec.cmp_delta)||(day===_dayKey()?window._cmpDeltaToday:'')||''; }catch(e){}
     var names=c?(c.items||[]).map(_cmpLbl).join(', '):'';
     var dlT=dl?(L(_PB_T.today)+': '+String(_cmpI18n(dl)).toLowerCase()):'';
-    _rdSetTxt('rdS1',[names,dlT].filter(Boolean).join(' · '));
-    var b1=document.getElementById('rdB1');
-    if(b1){ var h1=c?('<div style="font-size:var(--fs-body);">'+_esc(names)+(c.text?' — '+_esc(c.text):'')+'</div>'
+    _rdSetHtml(document.getElementById('rdB1'), c?('<div style="font-size:var(--fs-body);">'+_esc(names)+(c.text?' — '+_esc(c.text):'')+'</div>'
         +(dlT?'<div style="font-size:var(--fs-cap);color:var(--t2);margin-top:4px;">'+_esc(dlT)+'</div>':'')
-        +'<a href="#" onclick="navTo(\'card\');_cardOpen(\'data\');return false;" style="display:inline-block;margin-top:8px;font-size:var(--fs-cap);color:var(--gold-lt);">'+_esc(_cmpI18n('edit'))+' ›</a>'):'';
-      if(b1.getAttribute('data-h')!==h1){ b1.innerHTML=h1; b1.setAttribute('data-h',h1); } }
+        +'<a href="#" onclick="navTo(\'card\');_cardOpen(\'data\');return false;" style="display:inline-block;margin-top:8px;font-size:var(--fs-cap);color:var(--gold-lt);">'+_esc(_cmpI18n('edit'))+' ›</a>'):'');
+    // строки-сути свёрнутых шагов
     var n=document.getElementById('rd-index-num'), st=document.getElementById('rd-index-status');
-    _rdSetTxt('rdS2',(n&&n.textContent&&n.textContent!=='—')?(n.textContent+'/100'+(st&&st.textContent?' · '+st.textContent:'')):'');
-    // Суть шага 3 — первая фраза вывода («Где вы сейчас»), а не приветствие из первой строки разбора.
+    var idx=(n&&n.textContent&&n.textContent!=='—')?(n.textContent+'/100'+(st&&st.textContent?' · '+st.textContent:'')):'';
+    _rdSetTxt('rdS1',[names,dlT,idx].filter(Boolean).join(' · '));
     var it='', ir=r?r.querySelector('.ai-intro:not(.ai-intro-head)'):null;
     if(ir){ var cl=ir.cloneNode(true); cl.querySelectorAll('.ai-subh').forEach(function(x){ x.remove(); }); it=(cl.textContent||'').trim(); }
     if(!it){ var ih=r?r.querySelector('.ai-intro-head'):null; it=ih?ih.textContent.trim():''; }
     if(!it){ var ld=document.getElementById('aiLoading'); if(ld&&ld.style.display!=='none') it=(ld.textContent||'').trim().split('\n')[0]; }
-    var m=it.match(/^[\s\S]{20,180}?[.!?…。](\s|$)/); _rdSetTxt('rdS3',m?m[0].trim():it.slice(0,140));
-    var e=(typeof _expGet==='function')?_expGet():null, lv=(e&&e.lever&&window.vialLevers&&vialLevers.text)?vialLevers.text(e.lever,lang):null;
-    _rdSetTxt('rdS4',(lv&&lv.title)?lv.title:t('dayplan_title'));
+    var m=it.match(/^[\s\S]{20,180}?[.!?…。](\s|$)/); _rdSetTxt('rdS2',m?m[0].trim():it.slice(0,140));
+    var p1=document.querySelector('#rdPlan .rd-plan-tx span'); _rdSetTxt('rdS3',p1?p1.textContent:'');
+    var r1=document.querySelector('#rdRitual li, #rdRitual .bp-item, #rdRitual div'); var r1t=r1?String(r1.textContent||'').replace(/[☐•]/g,'').replace(/\s+/g,' ').trim():'';
+    _rdSetTxt('rdS5',r1t.slice(0,90));
+    _rdSetTxt('rdS4',[].map.call(document.querySelectorAll('#rdWhy .ai-sec-h > span:not(.ai-sec-ic)'),function(x){ return x.textContent.trim(); }).filter(Boolean).slice(0,3).join(' · '));
   }catch(err){}
   _rdBusy=false;
 }
@@ -5244,9 +5309,14 @@ function _rdLayout(){
   var tmr=null;
   new MutationObserver(function(){ if(_rdBusy) return; clearTimeout(tmr); tmr=setTimeout(_rdLayout,40); })
     .observe(rd,{childList:true,subtree:true,characterData:true});
+  // дочитал шаг до конца — подсвечиваем следующий
+  if(window.IntersectionObserver){
+    var io=new IntersectionObserver(function(es){ es.forEach(function(en){ if(!en.isIntersecting) return;
+      var k=+en.target.getAttribute('data-n'); if(window._rdOpen===k) _rdPulse(k+1); }); },{threshold:1});
+    rd.querySelectorAll('.rd-end').forEach(function(e){ io.observe(e); });
+  }
   setTimeout(_rdLayout,0);
 })();
-
 // ══ BOTTOM NAV ════════════════════════════════════════════
 // Поверхности ленты-анкеты, которые живут ВНЕ <main> и не исчезают сами при переходе на
 // другой экран: панель «Данные с трекера», живые гейты, активные шаги. Их гасил только
