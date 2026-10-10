@@ -160,6 +160,7 @@
     if (!r || !r.id) return h + '<div class="wo-why">' + esc(whyTxt(r, l)) + '</div>';
     h += '<div class="wo-n">' + esc(title(r.id, l)) + '</div><div class="wo-d">' + esc(meta(r.id, l)) + '</div>';
     var wt = whyTxt(r, l); if (wt) h += '<div class="wo-why">' + esc(wt) + '</div>';
+    if (window.vialPlayer) h += '<button type="button" class="wo-go" onclick="vialWorkouts.play(\'' + r.id + '\')">▶ ' + esc(window.vialPlayer.label()) + '</button>';
     h += '<div class="wo-b"><button type="button" class="wo-open" onclick="vialWorkouts.open(\'' + r.id + '\')">' + esc(tx(UI.open, l)) + ' ›</button>'
       + '<button type="button" class="wo-done' + (done ? ' on' : '') + '" onclick="vialWorkouts.toggle(\'' + r.id + '\')">' + (done ? '✓ ' + esc(tx(UI.doneOn, l)) : esc(tx(UI.done, l))) + '</button></div>';
     return h;
@@ -187,12 +188,48 @@
     return h;
   }
 
+  // ── шаги для проигрывателя (move-player.js): каждое упражнение каждого круга — отдельный шаг ──
+  // sec — время работы; reps — повторы (если у ролика размечены повторы, счёт идёт по ролику Евы).
+  function doseSec(ru) {
+    var s = String(ru || ''), t = 0, m;
+    if ((m = s.match(/(\d+)\s*мин/))) t += 60 * +m[1];
+    if ((m = s.match(/(\d+)\s*с(?=$|[\s,])/))) t += +m[1];
+    if (t && /^по /.test(s) && /на (каждую )?(ногу|руку|сторону)/.test(s)) t *= 2;
+    return t;
+  }
+  function doseReps(ru) {
+    var s = String(ru || '');
+    if (doseSec(s)) return 0;
+    var nums = (s.match(/\d+/g) || []).map(Number); if (!nums.length) return 0;
+    var n = /\+/.test(s) ? nums.reduce(function (a, b) { return a + b; }, 0) : nums[0];
+    if (/на (каждую )?(ногу|руку|сторону)/.test(s)) n *= 2;
+    return n;
+  }
+  function steps(id, l, hyp) {
+    var w = W[id]; if (!w) return [];
+    var out = [];
+    w.p.forEach(function (p) {
+      var rounds = p[2] || 1;
+      for (var r = 1; r <= rounds; r++) {
+        p[3].forEach(function (it, i) {
+          var k = hyp && it[2] != null ? it[2] : it[0], x = HX[k] || [], arr = HW[l] || HW.en;
+          var sec = doseSec(it[1]), reps = doseReps(it[1]);
+          out.push({ part: tx(PART[p[0]], l), k: p[0], round: r, rounds: rounds, first: i === 0, last: i === p[3].length - 1,
+            name: nm(k, l), dose: it[1] ? dose(it[1], l) : '', how: x[0] >= 0 ? arr[x[0]] : '',
+            clip: String(x[3] || '').split(' ')[0], sec: sec || (reps ? Math.max(20, Math.round(reps * 3.5)) : 45), reps: reps });
+        });
+      }
+    });
+    return out;
+  }
+
   var cfg = { lang: function () { return (typeof window.lang === 'string' && window.lang) || 'en'; }, day: function () { return new Date().toISOString().slice(0, 10); }, rerender: null };
   function L_() { try { return cfg.lang(); } catch (e) { return 'en'; } }
   function open(id) {
     if (typeof window.openSheet !== 'function' || !W[id]) return;
     window.openSheet('<i class="ph ph-barbell" style="color:var(--gold-lt);"></i>', title(id, L_()), plan(id, L_(), !!cfg.hyp));
   }
+  function play(id) { if (window.vialPlayer && W[id]) window.vialPlayer.start(id, { hyp: !!cfg.hyp }); }
   function toggle(id) {
     var day = cfg.day(), on = doneOn(day) !== id;
     mark(id, day, on);
@@ -206,6 +243,7 @@
     + '.wo-why{font-size:var(--fs-cap,13px);color:var(--t1,#fff);line-height:1.5;margin-top:8px;}'
     + '.wo-b{display:flex;gap:8px;margin-top:12px;}'
     + '.wo-b button{flex:1;min-height:44px;border-radius:12px;font:600 var(--fs-body,15px) var(--font-ui,inherit);cursor:pointer;background:transparent;color:var(--t1,#fff);border:1px solid rgba(226,185,90,.45);}'
+    + '.wo-go{display:block;width:100%;min-height:50px;margin-top:12px;border-radius:14px;border:0;background:var(--gold,#C68C34);color:#10131A;font:600 var(--fs-body,16px) var(--font-ui,inherit);cursor:pointer;}'
     + '.wo-b .wo-open{background:rgba(226,185,90,.16);}'
     + '.wo-b .wo-done.on{background:#5AC4B2;color:#0e1413;border-color:#5AC4B2;}'
     + '.wo-sh .wo-inv{font-size:var(--fs-cap,13px);color:var(--t2,rgba(255,255,255,.75));line-height:1.5;margin:8px 0 4px;}'
@@ -225,7 +263,7 @@
   try { var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st); } catch (e) {}
 
   window.vialWorkouts = {
-    pick: pick, card: card, plan: plan, open: open, toggle: toggle, title: title, meta: meta, why: whyTxt, dose: dose,
+    pick: pick, card: card, plan: plan, steps: steps, play: play, partName: function (k, l) { return tx(PART[k], l); }, open: open, toggle: toggle, title: title, meta: meta, why: whyTxt, dose: dose,
     cat: function (id) { return W[id] ? W[id].c : ''; }, ids: function () { return Object.keys(W); },
     log: log, doneOn: doneOn, mark: mark,
     setup: function (o) { Object.keys(o || {}).forEach(function (k) { cfg[k] = o[k]; }); }
