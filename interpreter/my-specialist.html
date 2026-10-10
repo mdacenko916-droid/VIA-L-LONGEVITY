@@ -65,6 +65,18 @@ body::before{
   background:linear-gradient(160deg,#ffffff 0%,#fdfbf6 60%,#faf6ec 100%);border:1px solid rgba(160,120,32,.28);border-radius:20px;
   padding:20px 20px;box-shadow:0 8px 30px rgba(120,90,30,.10);
 }
+.card,.speccard{background:linear-gradient(160deg,#222a37,#161c26)!important;border:1px solid rgba(226,185,90,.22)!important;box-shadow:0 8px 26px rgba(20,16,8,.18)!important;
+  --t1:#fff;--t2:rgba(255,255,255,.86);--t3:rgba(255,255,255,.62);--surface-2:rgba(255,255,255,.06);--b1:rgba(255,255,255,.14);--b2:rgba(226,185,90,.55);--gold-txt:#EEAF54;--ok:#4ECCA3;color:var(--t1);}
+.card .msg.in,.card .chatbar,.card .photomenu,.card .chatrow textarea,.card .codebox,.speccard .sc-photo-ph,#quizPrompt{background:rgba(255,255,255,.07)!important;color:var(--t1);}
+.card .chatbar textarea{color:var(--t1);}
+.codewrap{margin-top:16px;border:1px solid var(--b1);border-radius:16px;padding:0 14px;}
+.codewrap>summary{list-style:none;display:flex;align-items:center;gap:10px;cursor:pointer;padding:13px 0;}
+.codewrap>summary::-webkit-details-marker{display:none}
+.codewrap>summary>span:first-child{flex:1;display:flex;flex-direction:column;gap:2px;font-size:var(--fs-body);color:var(--t1);}
+.codewrap>summary small{font-size:var(--fs-cap);color:var(--t3);}
+.codewrap .cw-ch{color:var(--gold-lt);font-size:22px;transition:transform .2s;}
+.codewrap[open] .cw-ch{transform:rotate(90deg);}
+.codewrap[open]{padding-bottom:14px;}
 .eyebrow{font-size:var(--fs-cap);letter-spacing:4px;text-transform:uppercase;color:var(--gold-txt);margin-bottom:5px;text-align:center}
 h1{font-family:'Playfair Display',serif;font-weight:400;font-size:23px;text-align:center;margin-bottom:6px}
 .intro{font-size:var(--fs-body);color:var(--t2);line-height:1.5;text-align:center;margin-bottom:12px}
@@ -226,32 +238,7 @@ body.chat-open{overflow:hidden}
       <div class="eyebrow" onclick="_rvDiagTap()">VIA·L</div>
       <div id="rvDiag" style="display:none;font-size:11px;color:var(--t3);text-align:center;word-break:break-word;margin-bottom:6px;"></div>
       <h1 data-t="title">My guide</h1>
-      <p class="intro" data-t="intro">Enter your guide's code — they will see that you've connected and contact you by email about a consultation.</p>
-
-      <label class="fld">
-        <span class="lbl" data-t="code_label">Guide code</span>
-        <input class="in" id="code" autocomplete="off" maxlength="20" placeholder="AB12CD">
-      </label>
-      <div class="specfound" id="specfound"></div>
-
-      <label class="fld">
-        <span class="lbl" data-t="email_label">Your email</span>
-        <input class="in" id="email" type="email" autocomplete="email" placeholder="you@email.com">
-      </label>
-
-      <label class="fld">
-        <span class="lbl"><span data-t="name_label">Your name</span> <span class="opt" data-t="name_opt">(optional)</span></span>
-        <input class="in" id="name" autocomplete="name" maxlength="80">
-      </label>
-
-      <label class="consent">
-        <input type="checkbox" id="consent" aria-label="Consent">
-        <span id="consentText"></span>
-      </label>
-
-      <button type="button" class="btn" id="connectBtn" onclick="connect()" data-t="connect">Connect</button>
-      <div class="formerr" id="formerr"></div>
-
+      <p class="intro" data-t="sub_spec"></p>
       <!-- Разовый разбор со специалистом (docs/SPECIALIST-REVIEW-PLAN.md). Виден только в приложении,
            когда стор отдал товар; цена — из стора, в тексте её нет. -->
       <div class="speccard" id="rvTeaser" style="display:none;margin-top:14px;text-align:start;">
@@ -262,11 +249,42 @@ body.chat-open{overflow:hidden}
 
       <!-- Нет кода → витрина наставников (public=1) + запись на 15-мин знакомство -->
       <div id="noCode" style="display:none;margin-top:10px;border-top:1px solid var(--b1);padding-top:12px;">
-        <p class="intro" data-t="nocode_q" style="margin-bottom:10px;text-align:center;">Нет кода наставника?</p>
+        
         <div id="showcase"></div>
         <!-- Фолбэк (пустая витрина): знакомство с основателем, uk/ru -->
         <a class="btn" id="bookIntro" href="https://cal.com/marynaviael/%D0%B1%D0%B5%D1%81%D0%BF%D0%BB%D0%B0%D1%82%D0%BD%D0%B0%D1%8F-%D0%BA%D0%BE%D0%BD%D1%81%D1%83%D0%BB%D1%8C%D1%82%D0%B0%D1%86%D0%B8%D1%8F" target="_blank" rel="noopener" style="display:none;align-items:center;justify-content:center;gap:8px;text-decoration:none;text-align:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg><span data-t="nocode_book">Записаться на знакомство (15 мин) →</span></a>
       </div>
+      <!-- Подключение по коду — строкой внизу (план структуры §9, 2026-10-10): у покупателя из стора кода нет,
+           и поле ввода первым экраном читалось как «не для меня». Раскрывается по нажатию. -->
+      <details class="codewrap" id="codeWrap">
+        <summary><span><span data-t="code_q">Уже ведётесь у специалиста?</span><small data-t="code_q_s">Подключитесь по его коду</small></span><span class="cw-ch">›</span></summary>
+        <p class="intro" data-t="intro">Enter your guide's code — they will see that you've connected and contact you by email about a consultation.</p>
+
+        <label class="fld">
+          <span class="lbl" data-t="code_label">Guide code</span>
+          <input class="in" id="code" autocomplete="off" maxlength="20" placeholder="AB12CD">
+        </label>
+        <div class="specfound" id="specfound"></div>
+
+        <label class="fld">
+          <span class="lbl" data-t="email_label">Your email</span>
+          <input class="in" id="email" type="email" autocomplete="email" placeholder="you@email.com">
+        </label>
+
+        <label class="fld">
+          <span class="lbl"><span data-t="name_label">Your name</span> <span class="opt" data-t="name_opt">(optional)</span></span>
+          <input class="in" id="name" autocomplete="name" maxlength="80">
+        </label>
+
+        <label class="consent">
+          <input type="checkbox" id="consent" aria-label="Consent">
+          <span id="consentText"></span>
+        </label>
+
+        <button type="button" class="btn" id="connectBtn" onclick="connect()" data-t="connect">Connect</button>
+        <div class="formerr" id="formerr"></div>
+
+      </details>
     </div>
 
     <!-- ── DONE / CONNECTED ─────────────────── -->
@@ -464,8 +482,8 @@ function _toggleSpecMore(id){
 // платформа денег не держит и вернуть не может.
 (function(){
   const D={
-    ru:{who:'Ведение оказывает {name} — он несёт ответственность за консультации. VIA-L предоставляет программу и стороной договора не является.',pay:'Оплата идёт напрямую специалисту: платформа деньги не принимает, не хранит и не возвращает.'},
-    uk:{who:'Ведення надає {name} — він несе відповідальність за консультації. VIA-L надає програму і стороною договору не є.',pay:'Оплата йде напряму спеціалісту: платформа гроші не приймає, не зберігає й не повертає.'},
+    ru:{who:'Ведение оказывает {name}; ответственность за консультации несёт специалист. VIA-L предоставляет программу и стороной договора не является.',pay:'Оплата идёт напрямую специалисту: платформа деньги не принимает, не хранит и не возвращает.'},
+    uk:{who:'Ведення надає {name}; відповідальність за консультації несе фахівець. VIA-L надає програму і стороною договору не є.',pay:'Оплата йде напряму спеціалісту: платформа гроші не приймає, не зберігає й не повертає.'},
     en:{who:'Guidance is provided by {name}, who is responsible for the consultations. VIA-L provides the software and is not a party to your agreement.',pay:'Payment goes directly to the specialist: the platform does not receive, hold or refund it.'},
     es:{who:'El acompañamiento lo presta {name}, responsable de las consultas. VIA-L proporciona el software y no es parte del contrato.',pay:'El pago va directamente al especialista: la plataforma no lo recibe, ni lo retiene, ni lo reembolsa.'},
     de:{who:'Die Begleitung erbringt {name} und verantwortet die Beratungen. VIA-L stellt die Software bereit und ist nicht Vertragspartei.',pay:'Die Zahlung geht direkt an den Spezialisten: Die Plattform nimmt sie nicht entgegen, verwahrt sie nicht und erstattet sie nicht.'},
@@ -473,9 +491,9 @@ function _toggleSpecMore(id){
     fr:{who:'Le suivi est assuré par {name}, responsable des consultations. VIA-L fournit le logiciel et n’est pas partie au contrat.',pay:'Le paiement va directement au spécialiste : la plateforme ne le reçoit pas, ne le conserve pas et ne le rembourse pas.'},
     pl:{who:'Prowadzenie zapewnia {name} i odpowiada za konsultacje. VIA-L dostarcza oprogramowanie i nie jest stroną umowy.',pay:'Płatność trafia bezpośrednio do specjalisty: platforma jej nie przyjmuje, nie przechowuje i nie zwraca.'},
     it:{who:'Il percorso è erogato da {name}, responsabile delle consulenze. VIA-L fornisce il software e non è parte del contratto.',pay:'Il pagamento va direttamente allo specialista: la piattaforma non lo riceve, non lo trattiene e non lo rimborsa.'},
-    he:{who:'הליווי ניתן על ידי {name}, האחראי על הייעוץ. VIA-L מספקת את התוכנה ואינה צד להסכם.',pay:'התשלום עובר ישירות למומחה: הפלטפורמה אינה מקבלת, מחזיקה או מחזירה אותו.'},
+    he:{who:'הליווי ניתן על ידי {name}; האחריות על הייעוץ היא של המומחה. VIA-L מספקת את התוכנה ואינה צד להסכם.',pay:'התשלום עובר ישירות למומחה: הפלטפורמה אינה מקבלת, מחזיקה או מחזירה אותו.'},
     ja:{who:'サポートは{name}が提供し、相談内容の責任も同氏が負います。VIA-Lはソフトウェアを提供するのみで、契約の当事者ではありません。',pay:'お支払いは専門家へ直接行われます。プラットフォームは受領・保管・返金を行いません。'},
-    ko:{who:'관리는 {name}이(가) 제공하며 상담에 대한 책임도 그에게 있습니다. VIA-L은 소프트웨어를 제공할 뿐 계약 당사자가 아닙니다.',pay:'결제는 전문가에게 직접 전달됩니다. 플랫폼은 이를 수령·보관·환불하지 않습니다.'}
+    ko:{who:'관리는 {name}이(가) 제공하며 상담에 대한 책임은 전문가에게 있습니다. VIA-L은 소프트웨어를 제공할 뿐 계약 당사자가 아닙니다.',pay:'결제는 전문가에게 직접 전달됩니다. 플랫폼은 이를 수령·보관·환불하지 않습니다.'}
   };
   Object.keys(D).forEach(l=>{ if(T[l]){ T[l].resp_who=D[l].who; T[l].resp_pay=D[l].pay; } });
 })();
@@ -576,6 +594,7 @@ let specName='';   // подтверждённое имя специалиста
 
 function tr(k){return (T[lang]&&T[lang][k]!==undefined)?T[lang][k]:(T.en[k]!==undefined?T.en[k]:k);}
 
+(function(){var X={"sub_spec": {"ru": "Когда нужен человек, а не только приложение", "uk": "Коли потрібна людина, а не лише застосунок", "en": "When you need a person, not just an app", "es": "Cuando necesitas a una persona, no solo una app", "de": "Wenn du einen Menschen brauchst, nicht nur eine App", "pt": "Quando você precisa de uma pessoa, não só de um app", "fr": "Quand il vous faut une personne, pas seulement une app", "pl": "Gdy potrzebny jest człowiek, a nie tylko aplikacja", "it": "Quando serve una persona, non solo un’app", "he": "כשצריך אדם, לא רק אפליקציה", "ja": "アプリだけでなく、人の助けが必要なときに", "ko": "앱만이 아니라 사람이 필요할 때"}, "code_q": {"ru": "Уже ведётесь у специалиста?", "uk": "Вже ведетеся у фахівця?", "en": "Already working with a specialist?", "es": "¿Ya trabajas con un especialista?", "de": "Schon bei einer Fachperson in Begleitung?", "pt": "Já acompanha com um especialista?", "fr": "Déjà suivi(e) par un spécialiste ?", "pl": "Już współpracujesz ze specjalistą?", "it": "Sei già seguito da uno specialista?", "he": "כבר מלווים אצל מומחה?", "ja": "すでに専門家の指導を受けていますか？", "ko": "이미 전문가와 함께하고 있나요?"}, "code_q_s": {"ru": "Подключитесь по его коду", "uk": "Підключіться за його кодом", "en": "Connect with their code", "es": "Conéctate con su código", "de": "Mit ihrem Code verbinden", "pt": "Conecte-se com o código", "fr": "Connectez-vous avec son code", "pl": "Połącz się jego kodem", "it": "Collegati con il suo codice", "he": "התחברו עם הקוד", "ja": "コードで接続", "ko": "코드로 연결하기"}, "pick_spec": {"ru": "Выберите специалиста", "uk": "Оберіть фахівця", "en": "Choose a specialist", "es": "Elige un especialista", "de": "Wähle eine Fachperson", "pt": "Escolha um especialista", "fr": "Choisissez un spécialiste", "pl": "Wybierz specjalistę", "it": "Scegli uno specialista", "he": "בחרו מומחה", "ja": "専門家を選ぶ", "ko": "전문가 선택"}};Object.keys(X).forEach(function(k){Object.keys(X[k]).forEach(function(l){ if(T[l]) T[l][k]=X[k][l]; });});})();
 function setLang(l){
   if(!T[l]) l='en';
   var _was=lang;
@@ -1079,7 +1098,7 @@ function specCard(s, idx, inCatalog){
   // Галочка акцепта — НАД кнопкой оплаты: условия принимаются до платежа, а не после.
   // A4: бейдж проверки — рядом с именем, чтобы читался сразу, а не после прокрутки.
   const badge = s.verified_at
-    ? `<div style="display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-cap);color:#4ECCA3;border:1px solid rgba(78,204,163,.35);border-radius:999px;padding:2px 8px;margin-top:4px;">✓ ${esc(tr('ver_badge'))} · ${esc(s.verified_at)}</div>`
+    ? `<div style="display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-cap);color:#4ECCA3;border:1px solid rgba(78,204,163,.35);border-radius:999px;padding:2px 8px;margin-top:4px;">✓ ${esc(tr('ver_badge'))} · ${esc((function(d){ try{ var x=new Date(d); if(isNaN(x)) return d; return x.toLocaleDateString({ru:'ru-RU',uk:'uk-UA',en:'en-GB',es:'es-ES',de:'de-DE',pt:'pt-BR',fr:'fr-FR',pl:'pl-PL',it:'it-IT',he:'he-IL',ja:'ja-JP',ko:'ko-KR'}[lang]||'en-GB',{month:'long',year:'numeric'}); }catch(e){ return d; } })(s.verified_at))}</div>`
     : '';
   // E1: страна специалиста определяет применимое право в его договоре с клиентом,
   // поэтому она стоит в карточке рядом с проверкой, а не прячется в тексте оферты.
