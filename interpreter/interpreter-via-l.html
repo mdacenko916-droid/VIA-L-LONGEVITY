@@ -2290,7 +2290,7 @@ body.card-open #langDropdown{display:none;}
 #rdWhy .rd-why-h{color:var(--gold-lt);}
 #rdWhy .rd-why-h{font-size:var(--fs-cap);letter-spacing:.08em;text-transform:uppercase;color:var(--gold);font-weight:700;margin:14px 4px 8px;}
 #stepResult .rd-sources{display:none;}
-#rdPlan:empty,#rdFocusLine:empty,#rdMeals:empty,#rdIntake:empty,#rdSelf:empty,#rdRitual:empty,#rdEv:empty{display:none;}
+#rdPlan:empty,#rdWorkout:empty,#rdFocusLine:empty,#rdMeals:empty,#rdIntake:empty,#rdSelf:empty,#rdRitual:empty,#rdEv:empty{display:none;}
 /* подсветка следующего шага — 3 мягких золотых пульса */
 @keyframes rdPulse{0%,100%{box-shadow:0 0 0 0 rgba(226,185,90,0);border-color:rgba(226,185,90,.20);}50%{box-shadow:0 0 0 6px rgba(226,185,90,.28);border-color:rgba(226,185,90,.9);}}
 .rd-step-h.rd-next{border-color:rgba(226,185,90,.95)!important;box-shadow:0 0 0 3px rgba(226,185,90,.22);animation:rdPulse 1.1s ease-in-out 3;}
@@ -4247,7 +4247,7 @@ body::before{background-color:#10131A!important;}
   put(1,div('rdB1')); put(1,div('rdSelf')); put(1,E.ph); put(1,E.row);
   put(2,E.ai); put(2,E.da); put(2,div('rdEv'));
   var tts=function(src){ var d=document.createElement('div'); d.className='rd-tts-row'; d.innerHTML='<button type="button" class="ai-tts-btn tts-btn" data-src="'+src+'" onclick="vialTtsToggle(\''+src+'\')" style="display:none;"></button>'; return d; };
-  put(3,div('rdMeals')); put(3,tts('rdPlan')); put(3,div('rdPlan')); put(3,div('rdIntake')); put(3,div('rdFocusLine')); put(3,E.fo); put(3,E.ex);
+  put(3,div('rdMeals')); put(3,tts('rdPlan')); put(3,div('rdPlan')); var wo=div('rdWorkout'); wo.className='wo-card'; put(3,wo); put(3,div('rdIntake')); put(3,div('rdFocusLine')); put(3,E.fo); put(3,E.ex);
   put(4,tts('rdWhy')); put(4,div('rdWhy'));
   put(5,div('rdRitual'));
   // метка конца шага: дочитал до неё — подсвечиваем следующий шаг
@@ -5292,6 +5292,49 @@ function _rdIntake(){
   _rdSetHtml(box,'<div class="rd-ik-h"><i class="ph ph-pill" aria-hidden="true"></i>'+_esc(ttl)+'</div>'
     +its.slice(0,8).map(function(it){ return '<div class="rd-ik-r" onclick="_ikOpen()"><b>'+_esc(it.time||'')+'</b><span>'+_esc(it.name||'')+'</span></div>'; }).join(''));
 }
+// ══ «ТРЕНИРОВКА ДНЯ» (этап 1 — текстом; workouts.js) ══════════════════════════════════════════
+// Выбирает КОД по docs/FITNESS-SELECTION-RULES.md; здесь только собираем вход из того, что уже есть:
+// пол, частота занятий → уровень, состояния и ограничения, давление, сигналы хуже нормы и мышцы (_moveCtx),
+// что было вчера и за неделю (ответ «Движение вчера» + своя отметка «Сделано»). Выбор дня запоминаем
+// (vialp_wo_pick), чтобы разбор ИИ и карточка говорили об одной тренировке.
+function _woCat(m,z){
+  if(m==='strength'){ z=z||[]; if(z.indexOf('full')>=0||z.length>1) return 'full'; return z[0]||'str'; }
+  return m==='cardio'?'cardio':m==='hiit'?'hiit':'other';
+}
+function _woCtx(){
+  var P=_condProf(), c=P.conditions||[], has=function(){ for(var i=0;i<arguments.length;i++) if(c.indexOf(arguments[i])>=0) return true; return false; };
+  var g=getRadio('gender')||P.gender, af=getRadio('act_freq')||P.act_freq||'';
+  var mc={}; try{ mc=_moveCtx()||{}; }catch(e){}
+  var today=_dayKey(), t0=Date.parse(today), byD={};
+  (mc.hist||[]).forEach(function(h){ byD[h.d]={d:h.d,c:_woCat(h.m,h.z)}; });
+  var mt=getRadio('move_today'); if(mt) byD[1]={d:1,c:_woCat(mt,_trainZones())};
+  try{ vialWorkouts.log().forEach(function(r){ var d=Math.round((t0-Date.parse(r.day))/86400000); if(d>=1&&d<=7) byD[d]={d:d,c:r.c}; }); }catch(e){}
+  var temp=(P.cond_temp||[]).filter(function(x){ return x&&x!=='none_temp'; });
+  var sym=(_bpSymGet()||[]).filter(function(x){ return x!=='none'; });
+  var g7=document.getElementById('gsm7'), cmp=(typeof _cmpGet==='function'&&_cmpGet())||{};
+  return { male:g==='male', level:af==='high'?'tr':(af==='low'||af==='moderate')?'reg':'start',
+    bp:!!_bpFlag()||sym.length>0, ill:temp.length>0, limit:P.cond_limit==='yes'||has('pregnancy','onco_active'),
+    heartRisk:has('hypertension','arrhythmia','cvd_event','heart_failure'), pelvic:!!(g7&&g7.checked),
+    older:(parseInt(P.age)||0)>=60||has('osteoporosis'), cmp:(cmp.items||[]),
+    bad:(mc.low||[]).length+(mc.sore==='strong'?1:0), soreMild:mc.sore==='mild',
+    hist:Object.keys(byD).map(function(k){ return byD[k]; }) };
+}
+// fresh — пересчитать (проход); иначе взять выбор этого дня, если он уже есть.
+function _woPick(fresh){
+  if(!window.vialWorkouts) return null;
+  var day=_dayKey(), s=null;
+  try{ s=JSON.parse(localStorage.getItem('vialp_wo_pick')||'null'); }catch(e){}
+  if(!fresh && s && s.day===day && s.r) return s.r;
+  var r=null; try{ r=vialWorkouts.pick(_woCtx()); }catch(e){ return null; }
+  try{ localStorage.setItem('vialp_wo_pick',JSON.stringify({day:day,r:r})); }catch(e){}
+  return r;
+}
+function _rdWorkout(){
+  var box=document.getElementById('rdWorkout'); if(!box||!window.vialWorkouts) return;
+  vialWorkouts.setup({ day:_dayKey, lang:function(){ return lang; }, rerender:_rdWorkout });
+  var r=_woPick(false); if(!r){ _rdSetHtml(box,''); return; }
+  _rdSetHtml(box, vialWorkouts.card(r, lang, !!r.id && vialWorkouts.doneOn(_dayKey())===r.id));
+}
 // Шаг недели в шаге 3 — одна строка с отметкой дня; весь блок фокуса — по «Подробнее о шаге».
 function _rdFocusLine(){
   var fo=document.getElementById('rd-focus'), fl=document.getElementById('rdFocusLine'); if(!fo||!fl) return;
@@ -5379,6 +5422,7 @@ function _rdLayout(){
     try{ _rdFocusLine(); }catch(e){}
     try{ _rdMeals(); }catch(e){}
     try{ _rdIntake(); }catch(e){}
+    try{ _rdWorkout(); }catch(e){}
     try{ _rdSelf(day); }catch(e){}
     try{ _rdRitual(); }catch(e){}
     // строка жалобы в шаге 1 (правится только жалоба: показатели дня меняются следующим проходом)
@@ -5572,7 +5616,7 @@ function _cardSaveNum(field,val){var P={};try{P=JSON.parse(localStorage.getItem(
 // Данные НЕ уходят на сервер: пользователь сам сохраняет файл и импортирует на новом устройстве.
 // Пароль знает только он: PBKDF2→AES-GCM. Единый модуль с VIO (источник по _SEC; в PRO — localStorage).
 var _BK_KEYS = (typeof _SEC!=='undefined' && _SEC.keys) ? _SEC.keys.slice()
-  : ['vialp_profile','vialp_history','vialp_daily','vialp_weekly_text','vialp_monthly_text','vialp_ai_memory','vialp_ai_daily','vialp_day_plan','vialp_lastanswers','vialp_imported','vialp_days','vialp_pid','vialp_research_consent','vialp_experiment','vialp_exp_log','vialp_labs','vialp_bigtext'];   // активный эксперимент и журнал закрытых — иначе на новом устройстве петля обрывается; pid+согласие в копию: перенос на новое устройство не создаёт «нового участника» (P2/P6)
+  : ['vialp_profile','vialp_history','vialp_daily','vialp_weekly_text','vialp_monthly_text','vialp_ai_memory','vialp_ai_daily','vialp_day_plan','vialp_lastanswers','vialp_imported','vialp_days','vialp_pid','vialp_research_consent','vialp_experiment','vialp_exp_log','vialp_labs','vialp_bigtext','vialp_workouts'];   // активный эксперимент и журнал закрытых — иначе на новом устройстве петля обрывается; pid+согласие в копию: перенос на новое устройство не создаёт «нового участника» (P2/P6)
 function _bkGet(k){ return (typeof secGet==='function')?secGet(k):localStorage.getItem(k); }
 function _bkSet(k,v){ if(typeof secSet==='function'){ secSet(k,v); } else { localStorage.setItem(k,v); } }
 function _bkB64(u8){ var s=''; for(var i=0;i<u8.length;i++)s+=String.fromCharCode(u8[i]); return btoa(s); }
@@ -8707,6 +8751,13 @@ function _trainZones(){ var o=[]; ['tz_legs','tz_upper','tz_core','tz_full'].for
 // человек подтверждает или меняет. Только пока вопрос пустой: ответ человека трекер не перетирает.
 function _movePrefill(){
   try{
+    // Вчера отметили «Сделано» у «Тренировки дня» → это и есть ответ (тренировка известна точно, вместе с зоной).
+    var _wy=window.vialWorkouts?vialWorkouts.doneOn(_dayKey(new Date(Date.now()-86400000))):'';
+    if(_wy && !getRadio('move_today')){
+      var _wc=vialWorkouts.cat(_wy), _wv={legs:1,upper:1,full:1,core:1}[_wc]?'strength':(_wc==='hiit'||_wc==='cardio')?_wc:'yoga';
+      var _we=document.querySelector('input[name="move_today"][value="'+_wv+'"]');
+      if(_we){ _we.checked=true; _moveTodayChange(); var _tz=document.getElementById('tz_'+_wc); if(_wv==='strength'&&_tz) _tz.checked=true; return; }
+    }
     var d=(typeof importedData!=='undefined'&&importedData)?importedData:null;
     if(!d||!d.trainDay||getRadio('move_today'))return;
     if(String(d.trainDay).slice(0,10)!==_dayKey(new Date(Date.now()-86400000)))return;
@@ -11557,7 +11608,8 @@ function _showResultsInner(){
     source:(typeof importedData!=='undefined'&&importedData&&importedData.source)?importedData.source:null,   // откуда данные: oura/fitbit/…/apple-manual/manual — чтобы ИИ различал измерено vs со слов
     source_changed:(function(){try{return localStorage.getItem('vialp_source_changed')==='1';}catch(e){return false;}})(),   // сменил источник относительно прошлого прохода
     alc:getRadio('alc'),stress:getRadio('stress'),move_today:getRadio('move_today'),
-    move_ctx:(function(){try{return _moveCtx();}catch(e){return null;}})(),   // вчера/неделя/мышцы/сигналы хуже нормы → «что делать сегодня» (воркер)
+    move_ctx:(function(){try{return _moveCtx();}catch(e){return null;}})(),
+    workout_today:(function(){ try{ var r=_woPick(true); return r?{id:r.id||null,why:r.why||'',title:r.id?vialWorkouts.title(r.id,'ru'):'',meta:r.id?vialWorkouts.meta(r.id,'ru'):''}:null; }catch(e){ return null; } })(),   // «Тренировка дня» — выбрал код; ИИ только объясняет   // вчера/неделя/мышцы/сигналы хуже нормы → «что делать сегодня» (воркер)
     // Еда вчера вечером (суточное): время последнего приёма, характер ужина, поздний кофеин —
     // вход для связи «поздний/тяжёлый ужин и кофеин → фрагментация сна, утренние HRV/пульс».
     last_meal:getRadio('last_meal'), caffeine_late:getRadio('caffeine_late'),
@@ -14443,7 +14495,8 @@ document.addEventListener('visibilitychange',function(){
 <script src="tts-bridge.js"></script><!-- «Слушать разбор» голосом телефона (2026-10-03) -->
 <script src="review-bridge.js"></script><!-- окно «Оцените приложение» после 3 дней с разбором (2026-10-08) -->
 <script src="intake.js"></script>
-<script src="levers.js"></script><!-- карта рычагов и блок «Фокус недели» (2026-10-02) -->
+<script src="levers.js"></script>
+<script src="workouts.js"></script><!-- «Тренировка дня» текстом: 30 тренировок ×12 и выбор кодом (2026-10-10) --><!-- карта рычагов и блок «Фокус недели» (2026-10-02) -->
 <script src="courses.js"></script><!-- проект «КУРСЫ»: карточка дня в «Фокусе недели» (2026-10-03) -->
 <script src="complaint-table.js"></script><!-- таблица «что беспокоит → что сделать» в памятке дня (2026-10-01) -->
 <script src="evidence.js"></script><!-- «На чём основано» — список работ под разбором (2026-09-20) -->
