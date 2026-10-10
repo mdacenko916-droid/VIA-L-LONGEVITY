@@ -40,8 +40,11 @@
   };
 
   // ── текст разбора из карточки ──
-  function speechText() {
-    var r = document.getElementById('aiResult');
+  // src — id блока, который читаем (2026-10-10: в VIA-L разбор разложен по шагам «Сегодня» — вывод в #aiResult,
+  // план дня в #rdPlan, темы в #rdWhy; у каждого шага своя кнопка). По умолчанию — #aiResult, как раньше (EXPERT).
+  var curSrc = 'aiResult';
+  function speechText(src) {
+    var r = document.getElementById(src || 'aiResult');
     if (!r || r.style.display === 'none') return '';
     var c = r.cloneNode(true);
     c.querySelectorAll('button,.vial-ev,.trial-offer-wrap,.ai-sec-pill-row,img,script,style,[aria-hidden="true"],[onclick^="_iapOpen"]')
@@ -110,8 +113,9 @@
     try { var p = plug(); if (p) p.stop(); else if (web()) web().cancel(); } catch (e) {}
     paint();
   }
-  async function start() {
-    var text = speechText(); if (!text) return;
+  async function start(src) {
+    curSrc = src || 'aiResult';
+    var text = speechText(curSrc); if (!text) return;
     note('');
     var my = ++runId; playing = true; paint();
     var parts = chunks(text);
@@ -127,15 +131,23 @@
     if (!n) { n = document.createElement('div'); n.id = 'ai-tts-msg'; n.className = 'ai-tts-msg'; var h = b.closest('.rd-card-t'); if (h && h.parentNode) h.parentNode.insertBefore(n, h.nextSibling); }
     n.textContent = msg || ''; n.style.display = msg ? 'block' : 'none';
   }
-  function paint() {
-    var b = btn(); if (!b) return;
-    var ok = available() && !!speechText();
+  function paintOne(b, src) {
+    var ok = available() && !!speechText(src), on = playing && curSrc === src;
     b.style.display = ok ? '' : 'none';
-    b.classList.toggle('on', playing);
-    b.setAttribute('aria-pressed', playing ? 'true' : 'false');
-    b.innerHTML = '<i class="ph ' + (playing ? 'ph-stop-circle' : 'ph-speaker-high') + '" aria-hidden="true"></i><span>' + tr(playing ? LBL_STOP : LBL_PLAY) + '</span>';
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    b.innerHTML = '<i class="ph ' + (on ? 'ph-stop-circle' : 'ph-speaker-high') + '" aria-hidden="true"></i><span>' + tr(on ? LBL_STOP : LBL_PLAY) + '</span>';
   }
-  window.vialTtsToggle = function () { if (playing) stop(); else start(); };
+  function paint() {
+    var b = btn(); if (b) paintOne(b, 'aiResult');
+    document.querySelectorAll('.tts-btn[data-src]').forEach(function (x) { paintOne(x, x.getAttribute('data-src')); });
+  }
+  window.vialTtsToggle = function (src) {
+    src = src || 'aiResult';
+    if (playing) { var same = curSrc === src; stop(); if (same) return; }
+    start(src);
+  };
+  window.vialTtsPaint = paint;
   window.vialTtsStop = stop;
   window.vialTtsText = speechText;   // отладка: что именно пойдёт в озвучку
 

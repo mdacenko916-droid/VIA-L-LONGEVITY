@@ -2301,7 +2301,7 @@ body.card-open #langDropdown{display:none;}
 .rd-step.open>.rd-step-h{background:none;border-color:transparent;}
 .rd-step.open>.rd-step-b{padding:0 16px 16px;}
 .rd-step.open .rd-step-b .rd-card,.rd-step.open #rdB1,.rd-step.open #rdSelf,.rd-step.open #rdPlan,.rd-step.open #rdIntake,.rd-step.open #rdRitual,.rd-step.open #rdWhy{background:none!important;border:none!important;box-shadow:none!important;border-radius:0!important;padding-left:0!important;padding-right:0!important;margin:0!important;}
-.rd-step.open .rd-step-b>*+*:not(.rd-end):not(#rdMeals){border-top:1px solid rgba(255,255,255,.08)!important;padding-top:12px!important;margin-top:12px!important;}
+.rd-step.open .rd-step-b>*+*:not(.rd-end):not(#rdMeals):not(.rd-nextbtn){border-top:1px solid rgba(255,255,255,.08)!important;padding-top:12px!important;margin-top:12px!important;}
 .rd-step.open .rd-row-2{gap:12px;}
 .rd-step.open .rd-meal{color:var(--t2);}
 .rd-step.open .rd-meal.now{color:var(--gold-lt);}
@@ -2312,6 +2312,9 @@ body.card-open #langDropdown{display:none;}
 .rd-end{display:block;height:1px;}
 .rd-tag{display:inline-block;margin-top:6px;font-size:12px;color:#5AC4B2;border:1px solid rgba(90,196,178,.5);border-radius:10px;padding:1px 8px;}
 .rd-sci{display:inline-block;margin-top:12px;font-size:var(--fs-body);font-weight:600;color:var(--gold-lt);text-decoration:none;}
+.rd-nextbtn{display:block;width:100%;margin-top:14px;min-height:46px;border-radius:14px;border:1px solid rgba(226,185,90,.45);background:rgba(226,185,90,.10);color:var(--gold-lt);font:600 var(--fs-body) var(--font-ui);cursor:pointer;text-align:center;}
+.rd-tts-row{display:flex;justify-content:flex-end;margin-bottom:4px;}
+#stepResult .rd-step.open .rd-step-b>.rd-tts-row,#stepResult .rd-step.open .rd-step-b>.rd-tts-row+*{border-top:none!important;margin-top:0!important;padding-top:0!important;}
 .rd-help-row{display:flex;justify-content:flex-end;margin:4px 2px 8px;}
 #rdSelf{background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.20);border-radius:20px;padding:12px 16px;margin:10px 0;}
 .rd-self-h,.rd-ik-h{font-size:var(--fs-cap);letter-spacing:.08em;text-transform:uppercase;color:var(--gold-lt);font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
@@ -4207,11 +4210,16 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
   var put=function(n,el){ if(el) S[n-1].querySelector('.rd-step-b').appendChild(el); };
   put(1,div('rdB1')); put(1,div('rdSelf')); put(1,E.ph); put(1,E.row);
   put(2,E.ai); put(2,E.da); put(2,div('rdEv'));
-  put(3,div('rdMeals')); put(3,div('rdPlan')); put(3,div('rdIntake')); put(3,div('rdFocusLine')); put(3,E.fo); put(3,E.ex);
-  put(4,div('rdWhy'));
+  var tts=function(src){ var d=document.createElement('div'); d.className='rd-tts-row'; d.innerHTML='<button type="button" class="ai-tts-btn tts-btn" data-src="'+src+'" onclick="vialTtsToggle(\''+src+'\')" style="display:none;"></button>'; return d; };
+  put(3,div('rdMeals')); put(3,tts('rdPlan')); put(3,div('rdPlan')); put(3,div('rdIntake')); put(3,div('rdFocusLine')); put(3,E.fo); put(3,E.ex);
+  put(4,tts('rdWhy')); put(4,div('rdWhy'));
   put(5,div('rdRitual'));
   // метка конца шага: дочитал до неё — подсвечиваем следующий шаг
-  S.forEach(function(s,i){ if(i<S.length-1){ var e=document.createElement('i'); e.className='rd-end'; e.setAttribute('data-n',i+1); s.querySelector('.rd-step-b').appendChild(e); } });
+  S.forEach(function(s,i){ if(i<S.length-1){
+    // «Дальше: N. Название ›» — сворачивает этот шаг и открывает следующий (после длинного шага не искать заголовок)
+    var nx=document.createElement('button'); nx.type='button'; nx.className='rd-nextbtn'; nx.setAttribute('data-next',i+2);
+    nx.onclick=function(){ _rdStep(i+2); }; s.querySelector('.rd-step-b').appendChild(nx);
+    var e=document.createElement('i'); e.className='rd-end'; e.setAttribute('data-n',i+1); s.querySelector('.rd-step-b').appendChild(e); } });
   if(E.dp) E.dp.style.display='none';   // памятка живёт дальше (её данные и главы нужны кружкам и ритуалу), но не показывается
   var anchor=$('rd-week'), ref=anchor?anchor.nextSibling:rd.firstChild;
   var hr=document.createElement('div'); hr.className='rd-help-row';
@@ -5187,6 +5195,7 @@ var _RD_T={
   ln:{ru:'Обед',uk:'Обід',en:'Lunch',es:'Comida',de:'Mittagessen',pt:'Almoço',fr:'Déjeuner',pl:'Obiad',it:'Pranzo',he:'ארוחת צהריים',ja:'昼食',ko:'점심'},
   dn:{ru:'Ужин',uk:'Вечеря',en:'Dinner',es:'Cena',de:'Abendessen',pt:'Jantar',fr:'Dîner',pl:'Kolacja',it:'Cena',he:'ארוחת ערב',ja:'夕食',ko:'저녁'},
   plate:{ru:'Тарелка',uk:'Тарілка',en:'Plate',es:'Plato',de:'Teller',pt:'Prato',fr:'Assiette',pl:'Talerz',it:'Piatto',he:'צלחת',ja:'お皿',ko:'접시'},
+  next:{ru:'Дальше',uk:'Далі',en:'Next',es:'Siguiente',de:'Weiter',pt:'Próximo',fr:'Suite',pl:'Dalej',it:'Avanti',he:'הבא',ja:'次へ',ko:'다음'},
   step:{ru:'Шаг недели',uk:'Крок тижня',en:'Step of the week',es:'Paso de la semana',de:'Schritt der Woche',pt:'Passo da semana',fr:'Étape de la semaine',pl:'Krok tygodnia',it:'Passo della settimana',he:'הצעד של השבוע',ja:'今週のステップ',ko:'이번 주 단계'},
   more:{ru:'Подробнее о шаге',uk:'Докладніше про крок',en:'More about this step',es:'Más sobre este paso',de:'Mehr zu diesem Schritt',pt:'Mais sobre este passo',fr:'En savoir plus sur cette étape',pl:'Więcej o tym kroku',it:'Di più su questo passo',he:'עוד על הצעד',ja:'このステップについて',ko:'이 단계 자세히'},
   yes:{ru:'Сегодня получилось',uk:'Сьогодні вдалося',en:'Done today',es:'Hoy lo logré',de:'Heute geschafft',pt:'Hoje consegui',fr:'Fait aujourd’hui',pl:'Dziś się udało',it:'Fatto oggi',he:'בוצע היום',ja:'今日できた',ko:'오늘 해냈어요'},
@@ -5320,6 +5329,9 @@ function _rdLayout(){
     var day=window.__rdDay||_dayKey();
     try{ if(document.body.classList.contains('view-result') && window.vialHelp) vialHelp.once('today'); }catch(e){}
     try{ _rdTiles(); }catch(e){}
+    try{ document.querySelectorAll('.rd-nextbtn').forEach(function(b){ var k=+b.getAttribute('data-next'), tt=document.querySelector('#rdStep'+k+' .rd-step-t');
+      var v=L(_RD_T.next)+': '+k+'. '+(tt?tt.textContent:'')+' ›'; if(b.textContent!==v) b.textContent=v; }); }catch(e){}
+    try{ if(window.vialTtsPaint) vialTtsPaint(); }catch(e){}
     try{ _rdFocusLine(); }catch(e){}
     try{ _rdMeals(); }catch(e){}
     try{ _rdIntake(); }catch(e){}
