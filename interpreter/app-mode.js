@@ -132,7 +132,7 @@
         // на две высоты чёлки (скрин владельца: белая полоса до половины первой карточки).
         // В приложении фейд = только растушёвка, статус-бар закрашивает сам сдвиг #app.
         // 2026-09-01. В EXPERT-PWA (#app в нуле) правило не действует — там фейд прежний.
-        'html.app-mode #topbar::before{height:14px !important;background:linear-gradient(to bottom,#EAE1C9 0%,rgba(234,225,201,0) 100%) !important;}';
+        'html.app-mode #topbar::before{height:14px !important;background:linear-gradient(to bottom,#242c39 0%,rgba(36,44,57,0) 100%) !important;}';   // графит, не беж (2026-10-10: светлая полоса под статус-баром)
       (document.head || html).appendChild(css);
     }
     // Платёж внутри приложения НЕ ведём на Hotmart (PRO-покупка появится через IAP магазина).

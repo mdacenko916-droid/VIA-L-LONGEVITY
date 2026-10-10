@@ -2403,8 +2403,15 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
 /* ══ ТЁМНЫЙ ФОН ВЕЗДЕ (решение владельца 2026-10-10, сборка 276) ══
    Беж (блок «СВЕТЛЫЙ ФОН ПОД САЙТ» выше) снят для всего приложения: «Сегодня», экраны до прохода и проход —
    на графите, как «Мой прогресс» и «Профиль». Блок выше оставлен, но его цвета текста на беже перекрыты здесь. */
-body::before{background-color:#10131A!important;}
-#topbar::before{background:linear-gradient(to bottom,#10131A 0%,#10131A calc(env(safe-area-inset-top,0px) - 2px),rgba(16,19,26,0) 100%)!important;}
+/* ЕДИНЫЙ ФОН (владелец 2026-10-10, сборка 277): один графит на всех вкладках — тот же градиент, что у «Профиля» и
+   «Моего прогресса»; блоки (#222a37→#161c26) чуть темнее фона. До этого «Сегодня» было почти чёрным #10131A. */
+body{background-color:#181e28!important;}   /* только body: он уходит на холст, и градиент body::before виден поверх; фон у html перекрыл бы градиент */
+body::before{background:linear-gradient(180deg,#242c39 0%,#1b2029 60%,#181e28 100%) !important;}
+#topbar::before{background:linear-gradient(to bottom,#242c39 0%,#242c39 calc(env(safe-area-inset-top,0px) - 2px),rgba(36,44,57,0) 100%)!important;}
+/* «Профиль» и «Мой прогресс»: текст при прокрутке уходил под часы и логотип — верх панели растворяем */
+body.card-open #cardPanel, body.approach-open #approachPanel{
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,transparent calc(env(safe-area-inset-top,0px) + 6px),#000 calc(env(safe-area-inset-top,0px) + 58px));
+  mask-image:linear-gradient(to bottom,transparent 0,transparent calc(env(safe-area-inset-top,0px) + 6px),#000 calc(env(safe-area-inset-top,0px) + 58px));}
 .hero-title{color:#fff!important;}
 .hero-title em{color:var(--gold-lt)!important;}
 .hero-desc{color:var(--t2)!important;}
