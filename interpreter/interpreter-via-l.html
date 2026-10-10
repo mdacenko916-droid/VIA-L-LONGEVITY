@@ -2290,6 +2290,23 @@ body.card-open #langDropdown{display:none;}
 #rdWhy .rd-why-h{color:var(--gold-lt);}
 #rdWhy .rd-why-h{font-size:var(--fs-cap);letter-spacing:.08em;text-transform:uppercase;color:var(--gold);font-weight:700;margin:14px 4px 8px;}
 #stepResult .rd-sources{display:none;}
+#rdPlan:empty,#rdFocusLine:empty{display:none;}
+#rdPlan{background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.20);border-radius:20px;padding:6px 16px 10px;margin-bottom:10px;}
+.rd-plan-it{padding:11px 0;border-top:1px solid rgba(255,255,255,.07);}
+.rd-plan-it:first-child{border-top:0;}
+.rd-plan-tx{display:flex;gap:10px;color:var(--t1);font-size:var(--fs-body);line-height:1.5;}
+.rd-plan-tx:before{content:'';flex:0 0 7px;height:7px;margin-top:9px;border-radius:50%;background:var(--gold-lt);}
+.rd-plan-ch{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 0 17px;}
+.rd-plan-ch button{min-height:36px;padding:0 13px;border-radius:18px;border:1px solid rgba(226,185,90,.4);background:rgba(226,185,90,.10);color:var(--t1);font:400 var(--fs-cap) var(--font-ui);cursor:pointer;}
+#rdFocusLine{background:linear-gradient(160deg,#1f2a2a,#151d1d);border:1px solid rgba(90,196,178,.45);border-radius:20px;padding:13px 16px;margin-bottom:10px;color:var(--t1);}
+.rd-fl-t{font-size:var(--fs-cap);color:#5AC4B2;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
+.rd-fl-n{font-size:var(--fs-body);font-weight:600;margin-top:3px;}
+.rd-fl-d{font-size:var(--fs-cap);color:var(--t2);margin-top:2px;}
+.rd-fl-b{display:flex;gap:8px;margin-top:10px;}
+.rd-fl-b button{flex:1;min-height:42px;border-radius:12px;font:600 var(--fs-body) var(--font-ui);cursor:pointer;background:transparent;color:var(--t1);border:1px solid rgba(90,196,178,.4);}
+.rd-fl-b button.on{background:#5AC4B2;color:#0e1413;border-color:#5AC4B2;}
+.rd-fl-more{display:inline-block;margin-top:10px;font-size:var(--fs-cap);color:#5AC4B2;cursor:pointer;background:none;border:0;padding:0;font-family:inherit;}
+#rd-focus.rd-fold{display:none!important;}
 .vc-link{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;font:inherit;color:inherit;background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.20);border-radius:18px;padding:14px 16px;margin-bottom:12px;}
 .vc-link .vc-txt{flex:1;display:flex;flex-direction:column;gap:3px;}
 .vc-chev{color:var(--gold-lt);font-size:22px;}
@@ -4146,7 +4163,9 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
   // Шаг 4 (правка владельца 2026-10-10 по живому экрану): тарелка-памятка и темы разбора читались хуже
   // всего — в конец; темы — на тёмной подложке (их карточки рассчитаны на тёмный фон).
   var why=document.createElement('div'); why.id='rdWhy';
-  put(s4,E.fo); put(s4,E.ex); put(s4,why); put(s4,E.dp);
+  var plan=document.createElement('div'); plan.id='rdPlan';
+  var fl=document.createElement('div'); fl.id='rdFocusLine';
+  put(s4,plan); put(s4,fl); put(s4,E.fo); put(s4,E.ex); put(s4,why); put(s4,E.dp);
   var anchor=$('rd-week');
   // Заголовки частей «Как вы сегодня / Что делать» сняты (владелец 2026-10-10): золото на светлом не
   // читается, а порядок и так понятен по номерам 1–4.
@@ -5109,6 +5128,59 @@ function _rdStep(n){ window._rdOpen=(window._rdOpen===n)?0:n;
   for(var i=1;i<=4;i++){ var s=document.getElementById('rdStep'+i); if(s) s.classList.toggle('open',window._rdOpen===i); }
   try{ var o=document.getElementById('rdStep'+n); if(o&&window._rdOpen===n) o.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){} }
 function _rdSetTxt(id,v){ var e=document.getElementById(id); if(e && e.textContent!==v) e.textContent=v; }
+var _RD_T={
+  bf:{ru:'Завтрак',uk:'Сніданок',en:'Breakfast',es:'Desayuno',de:'Frühstück',pt:'Café da manhã',fr:'Petit-déjeuner',pl:'Śniadanie',it:'Colazione',he:'ארוחת בוקר',ja:'朝食',ko:'아침'},
+  ln:{ru:'Обед',uk:'Обід',en:'Lunch',es:'Comida',de:'Mittagessen',pt:'Almoço',fr:'Déjeuner',pl:'Obiad',it:'Pranzo',he:'ארוחת צהריים',ja:'昼食',ko:'점심'},
+  dn:{ru:'Ужин',uk:'Вечеря',en:'Dinner',es:'Cena',de:'Abendessen',pt:'Jantar',fr:'Dîner',pl:'Kolacja',it:'Cena',he:'ארוחת ערב',ja:'夕食',ko:'저녁'},
+  step:{ru:'Шаг недели',uk:'Крок тижня',en:'Step of the week',es:'Paso de la semana',de:'Schritt der Woche',pt:'Passo da semana',fr:'Étape de la semaine',pl:'Krok tygodnia',it:'Passo della settimana',he:'הצעד של השבוע',ja:'今週のステップ',ko:'이번 주 단계'},
+  more:{ru:'Подробнее о шаге',uk:'Докладніше про крок',en:'More about this step',es:'Más sobre este paso',de:'Mehr zu diesem Schritt',pt:'Mais sobre este passo',fr:'En savoir plus sur cette étape',pl:'Więcej o tym kroku',it:'Di più su questo passo',he:'עוד על הצעד',ja:'このステップについて',ko:'이 단계 자세히'},
+  yes:{ru:'Сегодня получилось',uk:'Сьогодні вдалося',en:'Done today',es:'Hoy lo logré',de:'Heute geschafft',pt:'Hoje consegui',fr:'Fait aujourd’hui',pl:'Dziś się udało',it:'Fatto oggi',he:'בוצע היום',ja:'今日できた',ko:'오늘 해냈어요'},
+  no:{ru:'Не вышло',uk:'Не вийшло',en:'Didn’t work out',es:'No salió',de:'Hat nicht geklappt',pt:'Não deu',fr:'Pas réussi',pl:'Nie wyszło',it:'Non è andata',he:'לא הסתדר',ja:'できなかった',ko:'못 했어요'}
+};
+// План дня (шаг 4): действия «Что сделать» (строки ☐) из тем разбора ИИ — одним списком сверху, а рядом
+// кнопки глав памятки по смыслу действия: питание → Завтрак/Обед/Ужин (тарелки и меню), движение →
+// «Активность», сон → «Вечер»/«Сон». В самих темах остаётся только «почему» — без двойных советов.
+function _rdPlanBuild(box){
+  var plan=document.getElementById('rdPlan'); if(!plan) return;
+  var ch={}; try{ (_bpChapters()||[]).forEach(function(c){ ch[c.id]=c.title; }); }catch(e){}
+  var btn=function(id,lbl){ return '<button type="button" onclick="openBpChapter(\''+id+'\')">'+_esc(lbl)+'</button>'; };
+  var items=[], meals=false;
+  box.querySelectorAll('.ai-sec').forEach(function(sec){
+    var act=sec.querySelector('.ai-sec-act'); if(!act) return;
+    var th=((sec.className.match(/ai-th-([a-z]+)/)||[])[1])||'';
+    String(act.textContent||'').split('☐').map(function(x){ return x.replace(/\s+/g,' ').trim(); }).filter(Boolean).forEach(function(tx,ix){
+      var c='';
+      if(ix>0) th='';   // кнопки глав — только у первого действия темы, без повторов
+      if(th==='nutrition' && !meals){ c=btn('morning',L(_RD_T.bf))+btn('lunch',L(_RD_T.ln))+btn('evening',L(_RD_T.dn)); meals=true; }
+      else if(th==='movement' && ch.activity) c=btn('activity',ch.activity);
+      else if(th==='sleep'){ c=(ch.evening?btn('evening',ch.evening):'')+(ch.sleep?btn('sleep',ch.sleep):''); }
+      items.push('<div class="rd-plan-it"><div class="rd-plan-tx"><span>'+_esc(tx)+'</span></div>'+(c?'<div class="rd-plan-ch">'+c+'</div>':'')+'</div>');
+    });
+    act.remove();
+    var more=sec.querySelector('.ai-sec-more');
+    if(more){ if(sec.querySelector('.ai-sec-why-h')){ var tn=more.firstChild; if(tn&&tn.nodeType===3) tn.nodeValue=_moreLblTxt()+' '; } else more.style.display='none'; }
+  });
+  plan.innerHTML=items.slice(0,8).join('');
+}
+// Шаг недели в шаге 4 — одна строка с отметкой дня; весь блок фокуса — по «Подробнее о шаге».
+// Сжимаем только в режиме «идёт неделя» (в блоке есть отметка дня): оценки, итог и «к специалисту»
+// требуют действия человека и остаются раскрытыми.
+function _rdFocusLine(){
+  var fo=document.getElementById('rd-focus'), fl=document.getElementById('rdFocusLine'); if(!fo||!fl) return;
+  var run=!!fo.querySelector('[onclick*="_expMark"]') && fo.style.display!=='none';
+  var e=(typeof _expGet==='function')?_expGet():null, lv=(run&&e&&e.lever&&window.vialLevers&&vialLevers.text)?vialLevers.text(e.lever,lang):null;
+  if(!run||!lv){ if(fl.innerHTML) fl.innerHTML=''; fo.classList.remove('rd-fold'); return; }
+  var d=Math.min(7,Math.floor((Date.now()-(e.startTs||Date.now()))/86400000)+1), dn='';
+  try{ var rec=(JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[]).filter(function(x){return x&&x.day===_dayKey();})[0]; dn=(rec&&rec.exp_done)||''; }catch(x){}
+  var open=!!window._rdFocusOpen;
+  var h='<div class="rd-fl-t">'+_esc(L(_RD_T.step))+'</div><div class="rd-fl-n">'+_esc(lv.title||'')+'</div>'
+    +'<div class="rd-fl-d">'+_esc(L(_TRIED_T.run).replace('{d}',d))+'</div>'
+    +'<div class="rd-fl-b"><button type="button" class="'+(dn==='yes'?'on':'')+'" onclick="_expMark(\'yes\')">'+_esc(L(_RD_T.yes))+'</button>'
+    +'<button type="button" class="'+(dn==='no'?'on':'')+'" onclick="_expMark(\'no\')">'+_esc(L(_RD_T.no))+'</button></div>'
+    +'<button type="button" class="rd-fl-more" onclick="window._rdFocusOpen=!window._rdFocusOpen;_rdLayout();">'+_esc(L(_RD_T.more))+(open?' ⌃':' ›')+'</button>';
+  if(fl.getAttribute('data-h')!==h){ fl.innerHTML=h; fl.setAttribute('data-h',h); }
+  fo.classList.toggle('rd-fold',!open);
+}
 var _rdBusy=false;
 function _rdLayout(){
   if(_rdBusy) return; _rdBusy=true;
@@ -5119,16 +5191,18 @@ function _rdLayout(){
       // Свежая запись в #aiResult стирает метку .rd-laid → темы прошлого дня/версии из шага 4 убираем,
       // даже если в новом тексте тем нет (старый неструктурный разбор, ошибка, «ищем разбор…»).
       var fresh=!r.querySelector('.rd-laid');
-      if(fresh) why.innerHTML='';
+      if(fresh){ why.innerHTML=''; var _pl=document.getElementById('rdPlan'); if(_pl) _pl.innerHTML=''; }
       if(box){
         var rest=box.querySelector('.ai-intro'); var head=r.querySelector('.ai-intro-head');
         if(rest){ if(head&&head.nextSibling) r.insertBefore(rest,head.nextSibling); else r.appendChild(rest); }
         var h=document.createElement('div'); h.className='rd-why-h'; h.textContent=t('rd_why_h'); why.appendChild(h);
         box.classList.add('open'); why.appendChild(box);
+        try{ _rdPlanBuild(box); }catch(e){}
       }
       if(ev) why.appendChild(ev);
       if(fresh){ var mk=document.createElement('i'); mk.className='rd-laid'; mk.style.display='none'; r.appendChild(mk); }
     }
+    try{ _rdFocusLine(); }catch(e){}
     // строки-сути свёрнутых шагов
     var c=(typeof _cmpGet==='function')?_cmpGet():null, day=window.__rdDay||_dayKey(), dl='';
     try{ var rec=(JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[]).filter(function(x){return x&&x.day===day;})[0]; dl=(rec&&rec.cmp_delta)||(day===_dayKey()?window._cmpDeltaToday:'')||''; }catch(e){}
