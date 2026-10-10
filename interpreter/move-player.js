@@ -36,10 +36,11 @@
     doneH:  {ru:'Готово!',uk:'Готово!',en:'Done!',es:'¡Hecho!',de:'Geschafft!',pt:'Feito!',fr:'Terminé !',pl:'Gotowe!',it:'Fatto!',he:'סיימתם!',ja:'完了！',ko:'완료!'},
     doneT:  {ru:'Тренировка отмечена «Сделано». Завтра утром она сама попадёт в «Движение вчера».',uk:'Тренування позначено «Зроблено». Завтра вранці воно саме потрапить у «Рух учора».',en:'The workout is marked done. Tomorrow morning it will fill in “Movement yesterday” by itself.',es:'El entrenamiento está marcado como hecho. Mañana se añadirá solo a «Movimiento de ayer».',de:'Das Training ist als erledigt markiert. Morgen früh steht es automatisch unter „Bewegung gestern“.',pt:'O treino foi marcado como feito. Amanhã de manhã ele entra sozinho em «Movimento de ontem».',fr:'La séance est marquée comme faite. Demain matin, elle s’ajoutera seule à « Mouvement d’hier ».',pl:'Trening oznaczony jako zrobiony. Jutro rano sam trafi do „Ruch wczoraj”.',it:'L’allenamento è segnato come fatto. Domattina comparirà da solo in «Movimento di ieri».',he:'האימון סומן כבוצע. מחר בבוקר הוא יופיע לבד ב«תנועה אתמול».',ja:'トレーニングを「完了」にしました。明日の朝「昨日の運動」に自動で入ります。',ko:'운동이 완료로 표시됐어요. 내일 아침 ‘어제의 움직임’에 자동으로 들어가요.'},
     close:  {ru:'Закрыть',uk:'Закрити',en:'Close',es:'Cerrar',de:'Schließen',pt:'Fechar',fr:'Fermer',pl:'Zamknij',it:'Chiudi',he:'סגירה',ja:'閉じる',ko:'닫기'},
-    sayStart:{ru:'Начинаем.',uk:'Починаємо.',en:'Let’s begin.',es:'Empezamos.',de:'Los geht’s.',pt:'Vamos começar.',fr:'On commence.',pl:'Zaczynamy.',it:'Iniziamo.',he:'מתחילים.',ja:'始めましょう。',ko:'시작합니다.'},
-    sayRest:{ru:'Отдых. Подышите спокойно.',uk:'Відпочинок. Подихайте спокійно.',en:'Rest. Breathe easy.',es:'Descanso. Respira tranquilo.',de:'Pause. Ruhig atmen.',pt:'Descanso. Respire com calma.',fr:'Repos. Respirez calmement.',pl:'Odpoczynek. Oddychaj spokojnie.',it:'Riposo. Respira con calma.',he:'מנוחה. נשמו ברוגע.',ja:'休憩です。ゆっくり呼吸しましょう。',ko:'휴식. 편하게 숨 쉬세요.'},
-    sayHalf:{ru:'Половина.',uk:'Половина.',en:'Halfway.',es:'La mitad.',de:'Halbzeit.',pt:'Metade.',fr:'À mi-chemin.',pl:'Połowa.',it:'A metà.',he:'חצי.',ja:'半分です。',ko:'절반입니다.'},
-    sayDone:{ru:'Готово. Отличная работа.',uk:'Готово. Чудова робота.',en:'Done. Great work.',es:'Hecho. Buen trabajo.',de:'Geschafft. Starke Leistung.',pt:'Pronto. Ótimo trabalho.',fr:'Terminé. Beau travail.',pl:'Gotowe. Świetna robota.',it:'Fatto. Ottimo lavoro.',he:'סיימתם. עבודה מצוינת.',ja:'お疲れさまでした。よくできました。',ko:'끝났어요. 정말 잘했어요.'}
+    sayStart:{ru:'Начинаем. Сначала — лёгкая разминка.',uk:'Починаємо. Спочатку — легка розминка.',en:'Let’s begin. First, an easy warm-up.',es:'Empezamos. Primero, un calentamiento suave.',de:'Los geht’s. Zuerst ein leichtes Aufwärmen.',pt:'Vamos começar. Primeiro, um aquecimento leve.',fr:'On commence. D’abord, un échauffement léger.',pl:'Zaczynamy. Najpierw lekka rozgrzewka.',it:'Iniziamo. Prima un riscaldamento leggero.',he:'מתחילים. קודם — חימום קל.',ja:'始めましょう。まずは軽いウォームアップから。',ko:'시작합니다. 먼저 가벼운 준비 운동부터.'},
+    sayRest:{ru:'Отдых. Походите, подышите спокойно.',uk:'Відпочинок. Походіть, подихайте спокійно.',en:'Rest. Walk around and breathe easy.',es:'Descanso. Camina un poco y respira tranquilo.',de:'Pause. Ein paar Schritte gehen, ruhig atmen.',pt:'Descanso. Ande um pouco e respire com calma.',fr:'Repos. Marchez un peu, respirez calmement.',pl:'Odpoczynek. Pochodź, oddychaj spokojnie.',it:'Riposo. Cammina un po’ e respira con calma.',he:'מנוחה. הסתובבו קצת ונשמו ברוגע.',ja:'休憩です。少し歩いて、ゆっくり呼吸しましょう。',ko:'휴식. 조금 걸으며 편하게 숨 쉬세요.'},
+    sayHalf:{ru:'Половина. Так держать.',uk:'Половина. Так тримати.',en:'Halfway. Keep it up.',es:'La mitad. Sigue así.',de:'Halbzeit. Weiter so.',pt:'Metade. Continue assim.',fr:'À mi-chemin. Continuez comme ça.',pl:'Połowa. Tak trzymaj.',it:'A metà. Continua così.',he:'חצי. ממשיכים ככה.',ja:'半分です。その調子。',ko:'절반입니다. 그대로 계속하세요.'},
+    sayDone:{ru:'Готово. Отличная работа — вы молодец.',uk:'Готово. Чудова робота — ви молодець.',en:'Done. Great work — well done you.',es:'Hecho. Muy buen trabajo, enhorabuena.',de:'Geschafft. Starke Leistung — gut gemacht.',pt:'Pronto. Ótimo trabalho — parabéns.',fr:'Terminé. Beau travail, bravo.',pl:'Gotowe. Świetna robota — brawo.',it:'Fatto. Ottimo lavoro, brava.',he:'סיימתם. עבודה מצוינת — כל הכבוד.',ja:'お疲れさまでした。よく頑張りました。',ko:'끝났어요. 정말 잘했어요.'},
+    restNext:{ru:'Отдохните и приготовьтесь',uk:'Відпочиньте й приготуйтеся',en:'Rest and get ready',es:'Descansa y prepárate',de:'Ausruhen und bereit machen',pt:'Descanse e prepare-se',fr:'Reposez-vous et préparez-vous',pl:'Odpocznij i przygotuj się',it:'Riposa e preparati',he:'נוחו והתכוננו',ja:'休んで準備しましょう',ko:'쉬면서 준비하세요'}
   };
   function L() { return (typeof lang !== 'undefined' && lang) ? lang : 'en'; }   // `let lang` главной не лежит в window
   function t(k) { var o = T[k] || {}; return o[L()] || o.en || ''; }
@@ -48,35 +49,80 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
   // ── голос телефона ──
-  var voiceOn = true, speaking = false, sayId = 0;
-  function plug() { return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.TextToSpeech) || null; }
+  var voiceOn = true, speaking = false, sayId = 0, vEnd = 0;
+  // iPhone: голос страницы (speechSynthesis, как в пробе) — у плагина шкала скорости без «чуть медленнее»
+  // и голос по умолчанию бывает мужским. Android WebView speechSynthesis не имеет — там плагин.
+  function isIOS() { try { return window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'ios'; } catch (e) { return false; } }
+  function plug() { if (window.speechSynthesis && (isIOS() || !window.Capacitor)) return null; return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.TextToSpeech) || null; }
+  // Женские голоса по языкам (iOS/macOS/Android-имена). «Улучшенный»/«премиум», если скачан, — первым.
+  var FEMALE = /milena|katya|lesya|samantha|karen|moira|serena|martha|tessa|fiona|victoria|allison|ava|susan|zoe|m[oó]nica|paulina|marisol|anna|petra|helena|luciana|joana|catarina|fernanda|am[eé]lie|audrey|marie|aur[eé]lie|zosia|ewa|alice|federica|carmit|kyoko|o-ren|yuna|sora|female/i;
+  var MALE = /yuri|maxim|daniel|alex|fred|thomas|jorge|diego|markus|yannick|luca|felipe|otoya|hattori|male/i;
+  var webVoice = null, plugVoice = -1;
+  function pickVoices() {
+    var lc = loc(), pre = lc.slice(0, 2);
+    var ss = window.speechSynthesis;
+    if (ss) {
+      var v = (ss.getVoices() || []).filter(function (x) { return (x.lang || '').replace('_', '-').slice(0, 2) === pre; });
+      var score = function (x) { var n = x.name + ' ' + (x.voiceURI || ''); return (FEMALE.test(n) ? 4 : 0) - (MALE.test(n) ? 4 : 0) + (/enhanced|premium|улучш|neural/i.test(n) ? 2 : 0) + ((x.lang || '').replace('_', '-') === lc ? 1 : 0); };
+      webVoice = v.sort(function (a, b) { return score(b) - score(a); })[0] || null;
+    }
+    var p = plug();
+    if (p && p.getSupportedVoices) p.getSupportedVoices().then(function (r) {
+      var vs = (r && r.voices) || [], best = -1, bs = -99;
+      vs.forEach(function (x, i) { if (String(x.lang || '').replace('_', '-').slice(0, 2) !== pre) return;
+        var n = (x.name || '') + ' ' + (x.voiceURI || ''); var sc = (FEMALE.test(n) ? 4 : 0) - (MALE.test(n) ? 4 : 0) + (/enhanced|premium|neural/i.test(n) ? 2 : 0);
+        if (sc > bs) { bs = sc; best = i; } });
+      plugVoice = best;
+    }).catch(function () {});
+  }
+  if (window.speechSynthesis) { try { window.speechSynthesis.onvoiceschanged = pickVoices; } catch (e) {} }
+  function vLen(text) { return String(text || '').length / 13; }   // ≈13 знаков в секунду — для расчёта, когда начать подсказку
   function say(text, force) {
     if (!voiceOn || !text) return;
     if (speaking && !force) return;
     var my = ++sayId, p = plug(), lc = loc();
-    speaking = true;
+    speaking = true; vEnd = Date.now() + vLen(text) * 1000 + 400;
     var done = function () { if (my === sayId) speaking = false; };
     if (p) {
+      var o = { text: text, lang: lc, rate: 0.9, category: 'playback' }; if (plugVoice >= 0) o.voice = plugVoice;
       Promise.resolve(force ? p.stop().catch(function () {}) : null)
-        .then(function () { return p.speak({ text: text, lang: lc, rate: 1.0, category: 'playback' }); })
+        .then(function () { return p.speak(o); })
         .then(done, done);
       return;
     }
     var ss = window.speechSynthesis; if (!ss) { speaking = false; return; }
     if (force) ss.cancel();
-    var u = new SpeechSynthesisUtterance(text); u.lang = lc;
-    var pre = lc.slice(0, 2), v = (ss.getVoices() || []).filter(function (x) { return (x.lang || '').slice(0, 2) === pre; });
-    if (v.length) u.voice = v.filter(function (x) { return /enhanced|premium/i.test(x.name); })[0] || v[0];
+    if (!webVoice) pickVoices();
+    var u = new SpeechSynthesisUtterance(text); u.lang = lc; u.rate = 0.92;
+    if (webVoice) u.voice = webVoice;
     u.onend = done; u.onerror = done; ss.speak(u);
   }
   function hush() { sayId++; speaking = false; var p = plug(); if (p) p.stop().catch(function () {}); else if (window.speechSynthesis) window.speechSynthesis.cancel(); }
 
   // ── звук: писки и музыка (WebAudio, без файлов) ──
-  var AC = null, mGain = null, mNext = 0, mStep = 0, mTimer = null, musicOn = true;
+  var AC = null, mGain = null, mNext = 0, mStep = 0, mTimer = null, musicOn = true, keepAlive = null;
+  // iPhone с выключенным звонком глушит WebAudio (музыка, писки), а голос идёт — поэтому «голос есть, музыки нет».
+  // Просим у WebKit режим воспроизведения и держим тихий <audio> — он переводит звук страницы в «медиа».
+  function unmuteIOS() {
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+    try {
+      if (!keepAlive) {
+        var sr = 8000, n = sr / 2, b = new ArrayBuffer(44 + n * 2), d = new DataView(b), w = function (o, s) { for (var i = 0; i < s.length; i++) d.setUint8(o + i, s.charCodeAt(i)); };
+        w(0, 'RIFF'); d.setUint32(4, 36 + n * 2, true); w(8, 'WAVEfmt '); d.setUint32(16, 16, true); d.setUint16(20, 1, true); d.setUint16(22, 1, true);
+        d.setUint32(24, sr, true); d.setUint32(28, sr * 2, true); d.setUint16(32, 2, true); d.setUint16(34, 16, true); w(36, 'data'); d.setUint32(40, n * 2, true);
+        keepAlive = new Audio(URL.createObjectURL(new Blob([b], { type: 'audio/wav' })));
+        keepAlive.loop = true; keepAlive.setAttribute('playsinline', ''); keepAlive.volume = 0.01;
+      }
+      var pr = keepAlive.play(); if (pr && pr.catch) pr.catch(function () {});
+    } catch (e) {}
+  }
   function tone(f, d, v) { if (!AC) return; var o = AC.createOscillator(), g = AC.createGain(), x = AC.currentTime;
     o.frequency.value = f; g.gain.setValueAtTime(v || .25, x); g.gain.exponentialRampToValueAtTime(.0001, x + d); o.connect(g); g.connect(AC.destination); o.start(x); o.stop(x + d); }
   function beep() { tone(880, .15, .25); }
   function endBeep() { tone(880, .7, .3); }
+  function tock() { if (!AC) return; var o = AC.createOscillator(), g = AC.createGain(), x = AC.currentTime;
+    o.type = 'triangle'; o.frequency.setValueAtTime(520, x); o.frequency.exponentialRampToValueAtTime(320, x + .09);
+    g.gain.setValueAtTime(.35, x); g.gain.exponentialRampToValueAtTime(.0001, x + .12); o.connect(g); g.connect(AC.destination); o.start(x); o.stop(x + .13); }
   function chime() { if (!AC) return; [[660, 0], [990, .16]].forEach(function (n) { var o = AC.createOscillator(), g = AC.createGain(), x = AC.currentTime + n[1];
     o.frequency.value = n[0]; g.gain.setValueAtTime(.0001, x); g.gain.exponentialRampToValueAtTime(.28, x + .02); g.gain.exponentialRampToValueAtTime(.0001, x + .45);
     o.connect(g); g.connect(AC.destination); o.start(x); o.stop(x + .5); }); }
@@ -103,7 +149,7 @@
       if (pos === 3 || pos === 7) note(hz(c[(mStep >> 3) % 3] + 12), mNext, beat * 1.5, 'sine', .035);
       mNext += beat; mStep++;
     }
-    mGain.gain.setTargetAtTime(!musicOn ? .0001 : (speaking ? .12 : .4), AC.currentTime, .15);
+    mGain.gain.setTargetAtTime(!musicOn ? .0001 : ((speaking || Date.now() < vEnd) ? .12 : .45), AC.currentTime, .15);
   }
   function startMusic() { if (!AC || mGain) return; mGain = AC.createGain(); mGain.gain.value = .0001; mGain.connect(AC.destination);
     mNext = AC.currentTime + .1; mTimer = setInterval(musicTick, 100); }
@@ -111,7 +157,9 @@
 
   // ── состояние ──
   var S = [], idx = 0, phase = 'work', left = 0, total = 0, paused = false, last = 0, raf = 0, wid = '', lastWhole = -1, saidHalf = false;
-  var repMode = false, repsLeft = 0, repsN = 0, repEnds = [], repLastT = 0, wake = null;
+  var repMode = false, repsLeft = 0, repsN = 0, repEnds = [], repLastT = 0, repSaid = false, wake = null, introDone = -1;
+  function intro(s) { return s.name + '. ' + (s.round === 1 ? (s.how || '') : ''); }   // техника — в первом круге
+  function busy() { return speaking || Date.now() < vEnd; }
   var ARC = 263.9;
   function restAfter(i) {
     var s = S[i]; if (!s || i >= S.length - 1) return 0;
@@ -209,7 +257,7 @@
     $('mvp-tag').textContent = rest ? t('rest') + ' · ' + t('next') : (CLIPS[s.clip] && CLIPS[s.clip].photo ? t('hold') : t('follow'));
     $('mvp-name').textContent = s.name;
     $('mvp-dose').textContent = s.dose;
-    $('mvp-hint').textContent = rest ? '' : (CLIPS[s.clip] ? s.how : '');
+    $('mvp-hint').textContent = rest ? t('restNext') : (CLIPS[s.clip] ? s.how : '');
     $('mvp-unit').textContent = rest ? t('rest').toLowerCase() : t('sec');
     $('mvp-arc').style.stroke = rest ? '#5AC4B2' : '#C68C34';
     var h = ''; for (var i = 0; i < S.length; i++) h += '<i class="' + (i < idx ? 'd' : i === idx ? 'c' : '') + '"></i>';
@@ -228,10 +276,13 @@
         repMode = true; repsN = repsLeft = s.reps; repEnds = c.rep; repLastT = 0;
         $('mvp-unit').textContent = t('reps'); $('mvp-sec').textContent = repsLeft;
       }
-      // техника — только в первом круге; дальше название и доза
-      say((idx === 0 ? t('sayStart') + ' ' : '') + s.name + '. ' + (s.dose ? s.dose + '. ' : '') + (s.round === 1 ? (s.how || '') : ''), true);
+      if (introDone !== idx) { introDone = idx; say((idx === 0 ? t('sayStart') + ' ' : '') + intro(s), true); }
+      repSaid = false;
     } else {
-      var n = S[idx + 1]; say(t('sayRest') + ' ' + t('next') + ': ' + n.name + '.', true);
+      // «Отдых», а подсказку следующего — так, чтобы закончилась к старту (как в пробе)
+      var nx = intro(S[idx + 1]);
+      if (total < vLen(t('sayRest')) + vLen(nx) + 1.5) { introDone = idx + 1; say(nx, true); }
+      else say(t('sayRest'), true);
     }
   }
   function finishPhase() {
@@ -251,7 +302,8 @@
       if (tt < repLastT - .5) { repEnds.forEach(function (b) { if (b > repLastT) crossed++; }); repEnds.forEach(function (b) { if (b <= tt) crossed++; }); }
       else repEnds.forEach(function (b) { if (b > repLastT && b <= tt) crossed++; });
       repLastT = tt;
-      for (var c = 0; c < crossed && repsLeft > 0; c++) { repsLeft--; if (repsLeft > 0 && repsLeft <= 3) beep(); }
+      if (!repSaid && !busy()) { repSaid = true; say(String(repsLeft)); }   // «десять» — как только освободился голос
+      for (var c = 0; c < crossed && repsLeft > 0; c++) { repsLeft--; if (repsLeft > 0) { say(String(repsLeft), true); repSaid = true; if (repsLeft <= 3) beep(); } }
       if (repsLeft <= 0) { finishPhase(); return; }
       var prev = 0, nxt = repEnds[0]; for (var q = 0; q < repEnds.length; q++) { if (repEnds[q] <= tt) prev = repEnds[q]; else { nxt = repEnds[q]; break; } }
       var fr = Math.min(1, Math.max(0, (tt - prev) / Math.max(.1, nxt - prev)));
@@ -264,11 +316,13 @@
     var whole = Math.ceil(left);
     $('mvp-sec').textContent = whole;
     $('mvp-arc').style.strokeDashoffset = ARC * (1 - left / total);
-    if (phase === 'work' && total >= 40 && !saidHalf && left <= total / 2) { saidHalf = true; say(t('sayHalf')); }
+    if (phase === 'rest' && introDone !== idx + 1 && left <= vLen(intro(S[idx + 1])) + .6 && !busy()) { introDone = idx + 1; say(intro(S[idx + 1])); }
+    if (phase === 'work' && total >= 30 && !saidHalf && left <= total / 2) { saidHalf = true; say(t('sayHalf')); }
     if (whole !== lastWhole) {
       lastWhole = whole;
       var b = $('mvp-321');
-      if (whole <= 3) { beep(); b.textContent = whole; b.classList.remove('hid'); } else b.classList.add('hid');
+      if (phase === 'work' && voiceOn && total >= 15 && whole <= 10) say(String(whole), true);   // голосом 10…1
+      if (whole <= 3) { phase === 'work' ? beep() : tock(); b.textContent = whole; b.classList.remove('hid'); } else b.classList.add('hid');
     }
   }
 
@@ -276,6 +330,7 @@
     paused = p; el().classList.toggle('pz', p);
     var q = $('mvp-quit'); q.removeAttribute('data-sure'); q.textContent = '✕ ' + t('quit');
     if (AC) { p ? AC.suspend() : AC.resume(); }
+    if (!p) unmuteIOS();
     last = 0;
     if (p) hush();
     vids().forEach(function (v) { if (v.classList.contains('hid')) return; p ? v.pause() : playV(v); });
@@ -302,6 +357,7 @@
     clearInterval(raf); hush();
     if (mTimer) { clearInterval(mTimer); mTimer = null; mGain = null; }
     if (AC) { try { AC.close(); } catch (e) {} AC = null; }
+    if (keepAlive) { try { keepAlive.pause(); } catch (e) {} }
     var d = el(); if (d) { vids().forEach(function (v) { v.pause(); v.removeAttribute('src'); }); d.remove(); }
     try { if (typeof window._rdWorkout === 'function') window._rdWorkout(); } catch (e) {}
   }
@@ -312,7 +368,10 @@
     wid = id; S = vialWorkouts.steps(id, L(), !!opts.hyp);
     if (!S.length) return;
     // AudioContext и первое видео — прямо из нажатия «Начать» (иначе iPhone не даст звук и видео)
+    unmuteIOS();
     try { AC = new (window.AudioContext || window.webkitAudioContext)(); tone(1, .01, .0001); } catch (e) { AC = null; }
+    pickVoices(); introDone = -1;
+    if (window.speechSynthesis && !plug()) { try { var u0 = new SpeechSynthesisUtterance(' '); u0.volume = 0; window.speechSynthesis.speak(u0); } catch (e) {} }
     build(); paintToggles();
     if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (w) { wake = w; }).catch(function () {});
     vids().forEach(function (v) { v.muted = true; v.playsInline = true; });
