@@ -11286,7 +11286,9 @@ function determinePhase(){
   var ci=(typeof cycleInfo==='function')?cycleInfo():null;
   var lp=ci?(ci.daysSince>365?'year':ci.daysSince>90?'months':'recent'):null;
   var hf=getRadio('hf_count')&&getRadio('hf_count')!=='none';
-  if(lp==='year'||cs==='absent')return 'post';
+  // «Менструаций больше нет», но по дате последних месячных не прошло и года — это ещё переход, а не
+  // постменопауза (противоречивые ответы, живой проход 2026-10-10). Даты нет — верим ответу.
+  if(lp==='year'||(cs==='absent'&&lp!=='recent'&&lp!=='months'))return 'post';
   if(cs==='irregular'||lp==='months'||(hf&&age>=48))return 'meno';
   return 'peri';
 }
