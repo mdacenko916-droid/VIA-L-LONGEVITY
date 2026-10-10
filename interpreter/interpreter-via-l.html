@@ -2310,6 +2310,8 @@ body.card-open #langDropdown{display:none;}
 #rdSB2 .rd-analysis .rd-card-t .rd-ct-ic,#rdSB2 .rd-analysis .rd-card-t>span[data-t="rd_analysis_title"]{display:none;}
 #rdSB2 .rd-analysis .rd-card-t{display:flex;justify-content:flex-end;margin-bottom:4px;min-height:0;}
 .rd-end{display:block;height:1px;}
+.rd-tag{display:inline-block;margin-top:6px;font-size:12px;color:#5AC4B2;border:1px solid rgba(90,196,178,.5);border-radius:10px;padding:1px 8px;}
+.rd-sci{display:inline-block;margin-top:12px;font-size:var(--fs-body);font-weight:600;color:var(--gold-lt);text-decoration:none;}
 .rd-help-row{display:flex;justify-content:flex-end;margin:4px 2px 8px;}
 #rdSelf{background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.20);border-radius:20px;padding:12px 16px;margin:10px 0;}
 .rd-self-h,.rd-ik-h{font-size:var(--fs-cap);letter-spacing:.08em;text-transform:uppercase;color:var(--gold-lt);font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
@@ -5278,6 +5280,20 @@ function _rdRitual(){
   var f=''; secs.some(function(s){ var it=(s&&Array.isArray(s.items))?s.items.filter(Boolean)[0]:null; if(it){ f=String(it); return true; } return false; });
   window._rdRitualFirst=f.replace(/\[[a-z]+:[^\]]*\]/g,'').replace(/[☐•*]/g,'').replace(/\s+/g,' ').trim();
 }
+// Плитки «Ваши показатели сегодня», связанные с жалобой, — первыми и с пометкой (этап 4c). Плитки по порядку
+// renderBioLoad: 0 восстановление (ВСР), 1 качество сна, 2 стресс, 3 ночная температура, 4 пульс покоя, 5 давление.
+var _RD_TILE={sleep:[1,0],hf:[3,1],energy:[0,4],mood:[2],fog:[1,2],drive:[0,1],muscle:[0],weight:[4],pain:[2]};
+function _rdTiles(){
+  var bb=document.getElementById('bioBars'); if(!bb) return;
+  var c=(typeof _cmpGet==='function')?_cmpGet():null, ks=(c&&c.items)||[]; if(!ks.length) return;
+  var tiles=[].slice.call(bb.children); if(!tiles.length||tiles[0].getAttribute('data-rdt')) return;   // уже разложено (до новой отрисовки)
+  var hit={}; ks.forEach(function(k){ (_RD_TILE[k]||[]).forEach(function(i){ if(tiles[i] && !hit[i]) hit[i]=k; }); });
+  var front=[];
+  Object.keys(hit).map(Number).sort(function(a,b){ return a-b; }).forEach(function(i){
+    var tg=document.createElement('span'); tg.className='rd-tag'; tg.textContent=_cmpLbl(hit[i]); tiles[i].appendChild(tg); front.push(tiles[i]); });
+  for(var j=front.length-1;j>=0;j--) bb.insertBefore(front[j],bb.firstChild);
+  tiles.forEach(function(t){ t.setAttribute('data-rdt','1'); });
+}
 var _rdBusy=false;
 function _rdLayout(){
   if(_rdBusy) return; _rdBusy=true;
@@ -5296,10 +5312,14 @@ function _rdLayout(){
         try{ _rdPlanBuild(box); }catch(e){}
       }
       if(ev && evb) evb.appendChild(ev);
+      // «На чём основано» → полная «Научная база» (science.html — своя страница VIA-L, не сайт; раньше вход был
+      // только из «Нашего подхода», который убран). Ссылка — всегда последней в блоке.
+      if(evb && !evb.querySelector('.rd-sci')){ var sci=document.createElement('a'); sci.className='rd-sci'; sci.href='./science.html'; sci.textContent=t('approach_science_link'); evb.appendChild(sci); }
       if(fresh){ var mk=document.createElement('i'); mk.className='rd-laid'; mk.style.display='none'; r.appendChild(mk); }
     }
     var day=window.__rdDay||_dayKey();
     try{ if(document.body.classList.contains('view-result') && window.vialHelp) vialHelp.once('today'); }catch(e){}
+    try{ _rdTiles(); }catch(e){}
     try{ _rdFocusLine(); }catch(e){}
     try{ _rdMeals(); }catch(e){}
     try{ _rdIntake(); }catch(e){}
@@ -9057,7 +9077,7 @@ function _flowHead(cad){
     base:{ t:{ru:'Настройте профиль',uk:'Налаштуйте профіль',en:'Set up your profile',es:'Configura tu perfil',de:'Richte dein Profil ein',pt:'Configure seu perfil',fr:'Configurez votre profil',pl:'Skonfiguruj profil',it:'Configura il tuo profilo',he:'הגדירו את הפרופיל',ja:'プロフィールを設定',ko:'프로필을 설정하세요'},
            s:{ru:'Заполняется один раз',uk:'Заповнюється один раз',en:'One-time setup',es:'Se completa una vez',de:'Nur einmal auszufüllen',pt:'Preenchido uma vez',fr:'À remplir une fois',pl:'Wypełniane raz',it:'Da compilare una volta',he:'ממולא פעם אחת',ja:'初回のみ入力',ko:'한 번만 입력합니다'} },
     daily:{ t:{ru:'Утренняя отметка',uk:'Ранкова відмітка',en:'Morning check-in',es:'Registro matinal',de:'Morgen-Check-in',pt:'Registro matinal',fr:'Point du matin',pl:'Poranny zapis',it:'Check-in mattutino',he:'צ׳ק-אין בוקר',ja:'朝のチェックイン',ko:'아침 체크인'},
-            s:{ru:'Как прошла ночь и как вы сейчас',uk:'Як минула ніч і як ви зараз',en:'How your night went and how you feel now',es:'Cómo fue tu noche y cómo te sientes ahora',de:'Wie war deine Nacht und wie fühlst du dich jetzt',pt:'Como foi sua noite e como você se sente agora',fr:'Comment s’est passée votre nuit et comment vous sentez-vous maintenant',pl:'Jak minęła noc i jak się teraz czujesz',it:'Com’è andata la notte e come ti senti ora',he:'איך עבר הלילה ואיך אתם מרגישים עכשיו',ja:'夜はどうだったか、今の調子はどうか',ko:'밤은 어땠고 지금 상태는 어떤지'} },
+            s:{ru:'Около 3 минут: сначала — как сегодня то, с чем вы пришли; данные прибора подтянутся сами',uk:'Близько 3 хвилин: спершу — як сьогодні те, з чим ви прийшли; дані приладу підтягнуться самі',en:'About 3 minutes: first, how today is going with what brought you here; device data comes in by itself',es:'Unos 3 minutos: primero, cómo va hoy lo que te trajo aquí; los datos del dispositivo llegan solos',de:'Etwa 3 Minuten: zuerst, wie es heute mit deinem Anliegen geht; Gerätedaten kommen von selbst',pt:'Cerca de 3 minutos: primeiro, como está hoje o que trouxe você aqui; os dados do aparelho chegam sozinhos',fr:'Environ 3 minutes : d’abord, comment va aujourd’hui ce qui vous amène ; les données de l’appareil arrivent seules',pl:'Około 3 minut: najpierw — jak dziś z tym, z czym przychodzisz; dane z urządzenia wczytają się same',it:'Circa 3 minuti: prima, come va oggi ciò per cui sei qui; i dati del dispositivo arrivano da soli',he:'כ־3 דקות: קודם — איך היום מה שבגללו הגעת; נתוני המכשיר יגיעו לבד',ja:'約3分：まず、気になっていることが今日どうか。デバイスのデータは自動で入ります',ko:'약 3분: 먼저 찾아온 이유가 오늘 어떤지; 기기 데이터는 자동으로 들어와요'} },
     now:{ t:{ru:'Живой замер сейчас',uk:'Живий замір зараз',en:'A live reading, now',es:'Una medición en vivo, ahora',de:'Eine Live-Messung, jetzt',pt:'Uma medição ao vivo, agora',fr:'Une mesure en direct, maintenant',pl:'Pomiar na żywo, teraz',it:'Una misurazione dal vivo, ora',he:'מדידה חיה, עכשיו',ja:'今このときの実測',ko:'지금 실시간 측정'},
           s:{ru:'Измерьте пульс в покое прямо сейчас',uk:'Виміряйте пульс у спокої просто зараз',en:'Measure your resting pulse right now',es:'Mide tu pulso en reposo ahora mismo',de:'Miss jetzt deinen Ruhepuls',pt:'Meça sua pulsação em repouso agora',fr:'Mesurez votre pouls au repos maintenant',pl:'Zmierz tętno spoczynkowe teraz',it:'Misura il polso a riposo adesso',he:'מדדו את הדופק במנוחה עכשיו',ja:'今、安静時の脈拍を測りましょう',ko:'지금 안정 시 맥박을 재보세요'} },
     weekly:{ t:{ru:'Подведите итоги недели',uk:'Підбийте підсумки тижня',en:'Sum up your week',es:'Resume tu semana',de:'Fasse deine Woche zusammen',pt:'Resuma sua semana',fr:'Faites le bilan de la semaine',pl:'Podsumuj tydzień',it:'Fai il punto della settimana',he:'סכמו את השבוע',ja:'1週間を振り返る',ko:'한 주를 정리하세요'},
@@ -9144,7 +9164,7 @@ function _showFlow(list){
 // Единая лента (строение VIO). Порядок = важность: base (профиль 0 → питание 7 → добавки 9),
 // сутки за вчера (приливы 2 → энергия/образ жизни 5 → когниция 6), «Прямо сейчас» (сигналы тела 4 —
 // пульс + самочувствие в моменте), weekly (активность 8 → новые симптомы 14), biweekly (стресс 10).
-const FLOW_ALL=[0,11,17,12,7,9,2,4,16,5,6,15,8,14,10];   // 11 «Женский организм» — свой шаг с 2026-09-09 (был внутри step0), стоит сразу после профиля, чтобы порядок на экране не изменился   // 17 «С чем вы пришли» — разовая установка сразу после профиля (динамика по ней живёт в дневном 14)   // daily-зона: приливы2·сигналы тела4·сон16·энергия5·ясность6; «Прямо сейчас»: пульс15. 15(пульс) — приборный (авто-скрытие всего шага при синке, см. _AUTO_STEP_METRIC). 16(сон) остаётся всегда: несёт субъективные ощущение сна/пробуждения; при синке прячется только под-группа «часы» (_toggleSleepHours). HRV/темп/VO2/SpO2/дыхание НЕ в ленте: функция гаджета, значения из панели трекера, поля живут в DOM (step1/step3)
+const FLOW_ALL=[0,11,17,12,7,9,14,2,4,16,5,6,15,8,10];   // 14 «С чем вы пришли — как сегодня» — первым в ежедневной части (2026-10-10: жалоба — основа приёма)   // 11 «Женский организм» — свой шаг с 2026-09-09 (был внутри step0), стоит сразу после профиля, чтобы порядок на экране не изменился   // 17 «С чем вы пришли» — разовая установка сразу после профиля (динамика по ней живёт в дневном 14)   // daily-зона: приливы2·сигналы тела4·сон16·энергия5·ясность6; «Прямо сейчас»: пульс15. 15(пульс) — приборный (авто-скрытие всего шага при синке, см. _AUTO_STEP_METRIC). 16(сон) остаётся всегда: несёт субъективные ощущение сна/пробуждения; при синке прячется только под-группа «часы» (_toggleSleepHours). HRV/темп/VO2/SpO2/дыхание НЕ в ленте: функция гаджета, значения из панели трекера, поля живут в DOM (step1/step3)
 // Профиль (возраст/рост/вес) — разовый онбординг: заполнен → убираем из стопки навсегда,
 // данные живут в «Мой профиль», правка оттуда (кнопка «Изменить» → _fixMetric(0)).
 function _profileDone(){ try{var p=JSON.parse(localStorage.getItem('vialp_profile')||'{}')||{}; return !!(p.age&&p.height&&p.weight);}catch(e){return false;} }
