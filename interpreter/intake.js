@@ -38,6 +38,17 @@
   var MED_IDS = ['med2', 'med3', 'med4'];
 
   var TX = {
+    when: { ru: 'Когда', uk: 'Коли', en: 'When', es: 'Cuándo', de: 'Wann', pt: 'Quando', fr: 'Quand', pl: 'Kiedy', it: 'Quando', he: 'מתי', ja: 'タイミング', ko: '언제' },
+    w_clock: { ru: 'По часам', uk: 'За годинником', en: 'By the clock', es: 'A una hora fija', de: 'Nach Uhrzeit', pt: 'Em horário fixo', fr: 'À heure fixe', pl: 'O stałej godzinie', it: 'A orario fisso', he: 'לפי שעה', ja: '時刻で', ko: '시간 지정' },
+    bf_before: { ru: 'До завтрака', uk: 'До сніданку', en: 'Before breakfast', es: 'Antes del desayuno', de: 'Vor dem Frühstück', pt: 'Antes do café da manhã', fr: 'Avant le petit-déjeuner', pl: 'Przed śniadaniem', it: 'Prima di colazione', he: 'לפני ארוחת הבוקר', ja: '朝食前', ko: '아침 식사 전' },
+    bf_with: { ru: 'Во время завтрака', uk: 'Під час сніданку', en: 'With breakfast', es: 'Con el desayuno', de: 'Zum Frühstück', pt: 'Com o café da manhã', fr: 'Pendant le petit-déjeuner', pl: 'Do śniadania', it: 'A colazione', he: 'עם ארוחת הבוקר', ja: '朝食と一緒に', ko: '아침 식사와 함께' },
+    bf_after: { ru: 'После завтрака', uk: 'Після сніданку', en: 'After breakfast', es: 'Después del desayuno', de: 'Nach dem Frühstück', pt: 'Depois do café da manhã', fr: 'Après le petit-déjeuner', pl: 'Po śniadaniu', it: 'Dopo colazione', he: 'אחרי ארוחת הבוקר', ja: '朝食後', ko: '아침 식사 후' },
+    ln_before: { ru: 'До обеда', uk: 'До обіду', en: 'Before lunch', es: 'Antes de la comida', de: 'Vor dem Mittagessen', pt: 'Antes do almoço', fr: 'Avant le déjeuner', pl: 'Przed obiadem', it: 'Prima di pranzo', he: 'לפני ארוחת הצהריים', ja: '昼食前', ko: '점심 식사 전' },
+    ln_with: { ru: 'Во время обеда', uk: 'Під час обіду', en: 'With lunch', es: 'Con la comida', de: 'Zum Mittagessen', pt: 'Com o almoço', fr: 'Pendant le déjeuner', pl: 'Do obiadu', it: 'A pranzo', he: 'עם ארוחת הצהריים', ja: '昼食と一緒に', ko: '점심 식사와 함께' },
+    ln_after: { ru: 'После обеда', uk: 'Після обіду', en: 'After lunch', es: 'Después de la comida', de: 'Nach dem Mittagessen', pt: 'Depois do almoço', fr: 'Après le déjeuner', pl: 'Po obiedzie', it: 'Dopo pranzo', he: 'אחרי ארוחת הצהריים', ja: '昼食後', ko: '점심 식사 후' },
+    dn_before: { ru: 'До ужина', uk: 'До вечері', en: 'Before dinner', es: 'Antes de la cena', de: 'Vor dem Abendessen', pt: 'Antes do jantar', fr: 'Avant le dîner', pl: 'Przed kolacją', it: 'Prima di cena', he: 'לפני ארוחת הערב', ja: '夕食前', ko: '저녁 식사 전' },
+    dn_with: { ru: 'Во время ужина', uk: 'Під час вечері', en: 'With dinner', es: 'Con la cena', de: 'Zum Abendessen', pt: 'Com o jantar', fr: 'Pendant le dîner', pl: 'Do kolacji', it: 'A cena', he: 'עם ארוחת הערב', ja: '夕食と一緒に', ko: '저녁 식사와 함께' },
+    dn_after: { ru: 'После ужина', uk: 'Після вечері', en: 'After dinner', es: 'Después de la cena', de: 'Nach dem Abendessen', pt: 'Depois do jantar', fr: 'Après le dîner', pl: 'Po kolacji', it: 'Dopo cena', he: 'אחרי ארוחת הערב', ja: '夕食後', ko: '저녁 식사 후' },
     title: { ru: 'Мои приёмы', uk: 'Мої прийоми', en: 'My intake schedule', es: 'Mis tomas', de: 'Meine Einnahmen', pt: 'Minhas tomas', fr: 'Mes prises', pl: 'Moje przyjmowanie', it: 'Le mie assunzioni', he: 'לוח הנטילה שלי', ja: '服用スケジュール', ko: '내 복용 일정' },
     intro: { ru: 'Добавки и препараты, которые вы отметили или вписали. Время подобрано по правилам приёма — поменяйте, если врач или специалист назначил иначе. Даты нужны, если это курс или назначение.', uk: 'Добавки й препарати, які ви позначили або вписали. Час підібрано за правилами прийому — змініть, якщо лікар чи спеціаліст призначив інакше. Дати потрібні, якщо це курс або призначення.', en: 'Supplements and medications you ticked or added. Times follow common intake rules — change them if your doctor or specialist said otherwise. Add dates if it is a course or a prescription.', es: 'Suplementos y medicamentos que marcaste o añadiste. La hora sigue las reglas habituales de toma — cámbiala si tu médico o especialista indicó otra. Añade fechas si es un tratamiento o una pauta.', de: 'Präparate, die du angekreuzt oder eingetragen hast. Die Uhrzeit folgt üblichen Einnahmeregeln — ändere sie, wenn Ärztin, Arzt oder Fachperson es anders verordnet haben. Daten eintragen, wenn es eine Kur oder Verordnung ist.', pt: 'Suplementos e medicamentos que marcou ou adicionou. O horário segue as regras habituais de toma — altere se o médico ou especialista indicou outro. Datas, se for um tratamento ou prescrição.', fr: 'Compléments et médicaments cochés ou ajoutés. L’heure suit les règles de prise habituelles — modifiez-la si votre médecin ou spécialiste a prescrit autrement. Ajoutez des dates s’il s’agit d’une cure ou d’une prescription.', pl: 'Suplementy i leki, które zaznaczono lub wpisano. Godzina według typowych zasad przyjmowania — zmień, jeśli lekarz lub specjalista zalecił inaczej. Daty, jeśli to kuracja lub zalecenie.', it: 'Integratori e farmaci che hai selezionato o aggiunto. L’orario segue le regole di assunzione abituali — cambialo se medico o specialista hanno indicato altro. Aggiungi le date se è un ciclo o una prescrizione.', he: 'תוספים ותרופות שסימנתם או הוספתם. השעה נקבעה לפי כללי נטילה מקובלים — שנו אותה אם הרופא או המומחה הורו אחרת. הוסיפו תאריכים אם מדובר בקורס או במרשם.', ja: 'チェックまたは入力したサプリと薬です。時刻は一般的な服用ルールに沿っています。医師や専門家の指示が違う場合は変更してください。期間のある服用や処方なら日付を入れてください。', ko: '선택하거나 입력한 보충제와 약입니다. 시간은 일반적인 복용 원칙에 따라 정했습니다. 의사나 전문가의 지시가 다르면 바꿔 주세요. 기간이 있는 복용이나 처방이라면 날짜를 넣어 주세요.' },
     empty: { ru: 'Пока пусто. Отметьте добавки или препараты в разделе «Добавки и препараты» — или добавьте своё ниже.', uk: 'Поки порожньо. Позначте добавки чи препарати в розділі «Добавки й препарати» — або додайте своє нижче.', en: 'Nothing here yet. Tick supplements or medications in “Supplements and medications” — or add your own below.', es: 'Aún está vacío. Marca suplementos o medicamentos en «Suplementos y medicamentos» o añade los tuyos abajo.', de: 'Noch leer. Kreuze Präparate unter „Nahrungsergänzung und Präparate“ an — oder trage unten eigene ein.', pt: 'Ainda vazio. Marque suplementos ou medicamentos em «Suplementos e medicamentos» — ou adicione abaixo.', fr: 'Rien pour l’instant. Cochez des compléments ou médicaments dans « Compléments et médicaments » — ou ajoutez les vôtres ci-dessous.', pl: 'Na razie pusto. Zaznacz suplementy lub leki w sekcji „Suplementy i leki” — albo dodaj własne poniżej.', it: 'Ancora vuoto. Seleziona integratori o farmaci in «Integratori e farmaci» — oppure aggiungi i tuoi qui sotto.', he: 'עדיין ריק. סמנו תוספים או תרופות בחלק «תוספים ותרופות» — או הוסיפו משלכם למטה.', ja: 'まだ何もありません。「サプリと薬」でチェックするか、下から追加してください。', ko: '아직 비어 있습니다. «보충제와 약»에서 선택하거나 아래에서 직접 추가하세요.' },
@@ -237,8 +248,13 @@
         + (it.note ? '<div style="font-size:var(--fs-cap);color:var(--t2);margin-top:3px;">' + _esc(it.note) + '</div>' : '')
         // Сетка 2×2: время | напоминать, с | по. Узкий экран не вылезает за карточку (min-width:0).
         + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;margin-top:10px;align-items:end;">'
+        + (MEALS_ON() ? '<div style="min-width:0;grid-column:1 / -1;"><div style="font-size:var(--fs-cap);color:var(--t3);margin-bottom:4px;">' + _esc(T('when')) + '</div>'
+            + '<select class="manual-input" onchange="_ikUpd(\'' + id + '\',\'when\',this.value)" style="width:100%;">'
+            + ['', 'bf_before', 'bf_with', 'bf_after', 'ln_before', 'ln_with', 'ln_after', 'dn_before', 'dn_with', 'dn_after'].map(function (w) {
+                return '<option value="' + w + '"' + ((it.when || '') === w ? ' selected' : '') + '>' + _esc(T(w || 'w_clock')) + '</option>'; }).join('')
+            + '</select></div>' : '')
         + '<div style="min-width:0;"><div style="font-size:var(--fs-cap);color:var(--t3);margin-bottom:4px;">' + _esc(T('time')) + '</div>'
-        + '<input type="time" class="manual-input" value="' + _esc(it.time || '08:00') + '" onchange="_ikUpd(\'' + id + '\',\'time\',this.value)"></div>'
+        + '<input type="time" class="manual-input" value="' + _esc(it.time || '08:00') + '"' + (it.when ? ' disabled' : '') + ' onchange="_ikUpd(\'' + id + '\',\'time\',this.value)"></div>'
         + '<label style="display:flex;align-items:center;gap:8px;min-height:44px;font-size:var(--fs-body);color:var(--t1);cursor:pointer;"><input type="checkbox" ' + (it.remind ? 'checked' : '') + ' onchange="_ikUpd(\'' + id + '\',\'remind\',this.checked)"> ' + _esc(T('remind')) + '</label>'
         + '<div style="min-width:0;"><div style="font-size:var(--fs-cap);color:var(--t3);margin-bottom:4px;">' + _esc(T('from')) + '</div>'
         + '<input type="date" class="manual-input" value="' + _esc(it.start || '') + '" onchange="_ikUpd(\'' + id + '\',\'start\',this.value)"></div>'
@@ -262,8 +278,29 @@
   };
   window._ikTitle = function () { return T('title'); };
 
+  // ── Привязка к еде (VIA-L, 2026-10-10): большинство средств пьют до / во время / после еды, а не «в 08:00».
+  // Человек один раз задаёт своё время завтрака, обеда и ужина (IK_CFG.meals → «Настройки»), приём
+  // «до» ставится за 30 минут, «во время» — ровно, «после» — через 30. Время приёма хранится уже
+  // посчитанным (it.time) — поэтому расписание, напоминания и разбор работают как раньше; при смене
+  // времени еды все привязанные приёмы пересчитываются и напоминания переставляются.
+  var MEAL_DEF = { bf: '08:00', ln: '13:00', dn: '19:00' }, MEAL_OFF = { before: -30, with: 0, after: 30 };
+  var MEALS_ON = function () { return !!(window.IK_CFG && window.IK_CFG.meals); };
+  window._ikMealsGet = function () { var m = {}; try { m = JSON.parse(localStorage.getItem(CFG().prefix + '_meals') || '{}') || {}; } catch (e) {}
+    return { bf: m.bf || MEAL_DEF.bf, ln: m.ln || MEAL_DEF.ln, dn: m.dn || MEAL_DEF.dn }; };
+  function whenTime(w) {
+    var m = /^(bf|ln|dn)_(before|with|after)$/.exec(w || ''); if (!m) return '';
+    var base = _ikMealsGet()[m[1]], t = parseInt(base.slice(0, 2), 10) * 60 + parseInt(base.slice(3, 5), 10) + MEAL_OFF[m[2]];
+    t = (t + 1440) % 1440; return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
+  }
+  window._ikMealsSet = function (k, v) {
+    if (!/^(bf|ln|dn)$/.test(k) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(v || '')) return;
+    var m = _ikMealsGet(); m[k] = v; try { localStorage.setItem(CFG().prefix + '_meals', JSON.stringify(m)); } catch (e) {}
+    var o = _ikGet(); o.items.forEach(function (it) { if (it.when) it.time = whenTime(it.when) || it.time; });
+    _ikSave(o); _ikArm();
+  };
   window._ikUpd = function (id, f, v) {
     var o = _ikGet(), it = o.items.filter(function (x) { return x.id === id; })[0]; if (!it) return;
+    if (f === 'when') { it.when = /^(bf|ln|dn)_(before|with|after)$/.test(v) ? v : ''; if (it.when) it.time = whenTime(it.when); _ikSave(o); _ikArm(); if (typeof renderCard === 'function') renderCard(); return; }
     if (f === 'time') it.time = /^([01]\d|2[0-3]):[0-5]\d$/.test(v) ? v : it.time;
     else if (f === 'start' || f === 'end') it[f] = /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : '';
     else if (f === 'remind') it.remind = !!v;
@@ -391,7 +428,7 @@
         out.push({ id: 2000 + i * 14 + k, at: d.getTime(), t: t, day: ds, end: end, title: 'VIA·L', body: body });
       }
     });
-    return out.slice(0, 56);
+    return out.slice(0, 48);   // iOS держит 64 отложенных: 48 приём + утреннее + до 12 о воде
   };
   window._ikArm = function () {
     try { var cfg = window.IK_CFG; if (cfg && cfg.arm) cfg.arm(_ikSchedule()); } catch (e) {}

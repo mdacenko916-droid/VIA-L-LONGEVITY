@@ -5907,6 +5907,17 @@ function _triedHTML(){
   if(!rows.length) return '';
   return '<div class="vc-subh">'+_esc(L(_TRIED_T.title))+'</div>'+rows.join('');
 }
+// Напоминания о воде (2026-10-10): включатель, интервал 1,5 / 2 / 3 ч, окно «с … до». Ежедневные, уведомление —
+// только значок 💧 (notifyWater). Хранится в vialp_water; переставляем при каждом изменении и при открытии.
+function _waterGet(){ var w={}; try{ w=JSON.parse(localStorage.getItem('vialp_water')||'{}')||{}; }catch(e){}
+  return { on:!!w.on, int:+w.int||2, from:w.from||'09:00', to:w.to||'20:00' }; }
+function _waterTimes(w){ if(!w.on) return []; var a=parseInt(w.from.slice(0,2),10)*60+parseInt(w.from.slice(3,5),10), b=parseInt(w.to.slice(0,2),10)*60+parseInt(w.to.slice(3,5),10), st=Math.round(w.int*60), out=[];
+  for(var t=a;t<=b&&out.length<12;t+=st) out.push(String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0')); return out; }
+function _waterArm(){ try{ if(typeof notifyWater==='function') notifyWater(_waterTimes(_waterGet())); }catch(e){} }
+function _waterSet(k,v){ var w=_waterGet(); if(k==='on') w.on=!!v; else if(k==='int') w.int=+v||2; else if(/^([01]\d|2[0-3]):[0-5]\d$/.test(v||'')) w[k]=v;
+  try{ localStorage.setItem('vialp_water',JSON.stringify(w)); }catch(e){}
+  if(k==='on' && v && typeof notifyAsk==='function'){ notifyAsk().then(function(ok){ if(!ok){ w.on=false; try{ localStorage.setItem('vialp_water',JSON.stringify(w)); }catch(e){} renderCard(); } _waterArm(); }); }
+  else _waterArm(); }
 function renderCard(){
   try{ if(typeof _aiEnsureToday==='function') _aiEnsureToday(); }catch(e){}   // разбор мог остаться на сервере — подтянем
 
@@ -6332,8 +6343,27 @@ function renderCard(){
   }
   else if(_cardSubPg==='data')       // «Профиль › Мои данные»: анкета + приёмы + анализы (план структуры §6)
     html+=[_chgHTML(),_secGoal,_secAct,_secNut,_secHealth,_secStress,_secBal,_secRhythm,_secLife,_secSup,_secLabs].join('');
-  else if(_cardSubPg==='settings')   // «Профиль › Настройки»: язык живёт только здесь
-    html+=[_secLang,_secSource,_secNotify,_secDisplay].join('');
+  else if(_cardSubPg==='settings'){  // «Профиль › Настройки»: язык живёт только здесь
+    // Время еды (привязка приёмов «до / во время / после еды») и напоминания о воде — 2026-10-10.
+    var _mt=(typeof _ikMealsGet==='function')?_ikMealsGet():{bf:'08:00',ln:'13:00',dn:'19:00'};
+    var _tm=function(k,lbl){ return '<label style="flex:1;display:block;font-size:var(--fs-cap);color:var(--t3);">'+_esc(lbl)
+      +'<input type="time" class="manual-input" value="'+_mt[k]+'" onchange="_ikMealsSet(\''+k+'\',this.value)" style="margin-top:4px;width:100%;"></label>'; };
+    var _secMeals=_vcSec('<i class="ph ph-fork-knife"></i>',_esc(L({ru:'Время еды',uk:'Час їжі',en:'Meal times',es:'Horario de comidas',de:'Essenszeiten',pt:'Horário das refeições',fr:'Heures des repas',pl:'Pory posiłków',it:'Orari dei pasti',he:'זמני ארוחות',ja:'食事の時間',ko:'식사 시간'})),
+      '<div style="font-size:var(--fs-cap);color:var(--t3);line-height:1.5;margin-bottom:8px;">'+_esc(L({ru:'К нему привязываются приёмы «до / во время / после еды» и их напоминания.',uk:'До нього прив’язуються прийоми «до / під час / після їжі» та їхні нагадування.',en:'Intakes set “before / with / after a meal” and their reminders follow these times.',es:'Las tomas «antes / con / después de comer» y sus recordatorios siguen este horario.',de:'Einnahmen „vor / zum / nach dem Essen“ und ihre Erinnerungen richten sich danach.',pt:'As tomas “antes / com / depois da refeição” e seus lembretes seguem estes horários.',fr:'Les prises « avant / pendant / après le repas » et leurs rappels suivent ces heures.',pl:'Do nich dopasowują się przyjęcia „przed / do / po posiłku” i ich przypomnienia.',it:'Le assunzioni «prima / durante / dopo i pasti» e i promemoria seguono questi orari.',he:'נטילות „לפני / עם / אחרי האוכל” והתזכורות שלהן מותאמות לשעות האלה.',ja:'「食前・食事中・食後」の服用とリマインダーはこの時間に合わせます。',ko:'“식전 / 식사 중 / 식후” 복용과 알림이 이 시간에 맞춰집니다.'}))+'</div>'
+      +'<div style="display:flex;gap:10px;">'+_tm('bf',L(_RD_T.bf))+_tm('ln',L(_RD_T.ln))+_tm('dn',L(_RD_T.dn))+'</div>',false,true);
+    var _w=_waterGet(), _hr=L({ru:'ч',uk:'год',en:'h',es:'h',de:'Std.',pt:'h',fr:'h',pl:'godz.',it:'h',he:'ש׳',ja:'時間',ko:'시간'});
+    var _secWater=_vcSec('<i class="ph ph-drop"></i>',_esc(L({ru:'Вода',uk:'Вода',en:'Water',es:'Agua',de:'Wasser',pt:'Água',fr:'Eau',pl:'Woda',it:'Acqua',he:'מים',ja:'水分',ko:'물'})),
+      '<label style="display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:var(--fs-body);color:var(--t1);cursor:pointer;"><span>'+_esc(L({ru:'Напоминать пить воду',uk:'Нагадувати пити воду',en:'Remind me to drink water',es:'Recordarme beber agua',de:'Ans Trinken erinnern',pt:'Lembrar de beber água',fr:'Me rappeler de boire',pl:'Przypominaj o piciu wody',it:'Ricordami di bere',he:'להזכיר לשתות מים',ja:'水分補給を知らせる',ko:'물 마시기 알림'}))+'</span>'
+      +'<input type="checkbox"'+(_w.on?' checked':'')+' onchange="_waterSet(\'on\',this.checked)"></label>'
+      +'<div style="display:flex;gap:10px;margin-top:10px;">'
+      +'<label style="flex:1;display:block;font-size:var(--fs-cap);color:var(--t3);">'+_esc(L({ru:'Каждые',uk:'Кожні',en:'Every',es:'Cada',de:'Alle',pt:'A cada',fr:'Toutes les',pl:'Co',it:'Ogni',he:'כל',ja:'間隔',ko:'간격'}))
+      +'<select class="manual-input" onchange="_waterSet(\'int\',this.value)" style="margin-top:4px;width:100%;">'
+      +[1.5,2,3].map(function(v){ return '<option value="'+v+'"'+(+_w.int===v?' selected':'')+'>'+String(v).replace('.',',')+' '+_esc(_hr)+'</option>'; }).join('')+'</select></label>'
+      +'<label style="flex:1;display:block;font-size:var(--fs-cap);color:var(--t3);">'+_esc(L({ru:'С',uk:'З',en:'From',es:'Desde',de:'Von',pt:'Das',fr:'De',pl:'Od',it:'Dalle',he:'מ־',ja:'開始',ko:'시작'}))+'<input type="time" class="manual-input" value="'+_w.from+'" onchange="_waterSet(\'from\',this.value)" style="margin-top:4px;width:100%;"></label>'
+      +'<label style="flex:1;display:block;font-size:var(--fs-cap);color:var(--t3);">'+_esc(L({ru:'До',uk:'До',en:'Until',es:'Hasta',de:'Bis',pt:'Até',fr:'À',pl:'Do',it:'Alle',he:'עד',ja:'終了',ko:'종료'}))+'<input type="time" class="manual-input" value="'+_w.to+'" onchange="_waterSet(\'to\',this.value)" style="margin-top:4px;width:100%;"></label>'
+      +'</div>',false,true);
+    html+=[_secLang,_secSource,_secNotify,_secMeals,_secWater,_secDisplay].join('');
+  }
   else                               // «Профиль»: две строки-входа + подписка, копия, правовое (VAI и «Наш подход» убраны 2026-10-10)
     html+=[_cardLink('data'),_cardLink('settings'),_secSub,_secBackup,_secLegal].join('');
   html+='</div>'; // .vcard-grid
@@ -14326,7 +14356,7 @@ document.addEventListener('visibilitychange',function(){
 <script>
 /* «Мои приёмы» (intake.js, 2026-09-18). VIA-L ставит напоминания ЛОКАЛЬНЫМИ уведомлениями
    (notify-bridge.js) — на вебе их нет, и переключатель напоминаний там не показывается. */
-window.IK_CFG={prefix:'vialp',
+window.IK_CFG={prefix:'vialp', meals:true,   // привязка приёма к еде (до / во время / после) — время еды в «Настройках»
   canRemind:function(){ return typeof notifyAvailable==='function' && notifyAvailable(); },
   ask:function(){ return (typeof notifyAsk==='function') ? notifyAsk() : Promise.resolve(false); },
   arm:function(list){
@@ -14338,6 +14368,7 @@ window.IK_CFG={prefix:'vialp',
 (function(){
   try{ var so=document.getElementById('supp_other'); if(so) so.placeholder=L({ru:'Другие добавки — впишите через запятую',uk:'Інші добавки — впишіть через кому',en:'Other supplements — separate with commas',es:'Otros suplementos — sepáralos con comas',de:'Weitere Präparate — mit Komma trennen',pt:'Outros suplementos — separe com vírgulas',fr:'Autres compléments — séparés par des virgules',pl:'Inne suplementy — oddziel przecinkami',it:'Altri integratori — separati da virgole',he:'תוספים אחרים — הפרידו בפסיקים',ja:'その他のサプリ（カンマ区切り）',ko:'기타 보충제 — 쉼표로 구분'}); }catch(e){}
   try{ _ikSync(); _ikArm(); _ikStepRender(); }catch(e){}   // при каждом открытии: курс мог закончиться, разовые напоминания — переставить
+  try{ _waterArm(); }catch(e){}   // вода — тоже переставляем при открытии
 })();
 </script>
 <script>

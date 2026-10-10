@@ -98,6 +98,26 @@
     } catch (e) { console.warn('[notify] intake schedule failed', e); return false; }
   };
 
+  /* Напоминания о воде (VIA-L, 2026-10-10). Свои id 500–599: notifyIntake снимает только ≥1000, утреннее — id 1.
+     times — ['09:00','11:00',…]; пустой список — выключено. Текст — только значок 💧: переводы не нужны,
+     смысл понятен на любом языке (решение владельца). */
+  window.notifyWater = async function (times) {
+    var p = ln(); if (!p) return false;
+    try {
+      var pend = await p.getPending();
+      var old = ((pend && pend.notifications) || []).filter(function (n) { var i = Number(n.id); return i >= 500 && i < 600; })
+        .map(function (n) { return { id: Number(n.id) }; });
+      if (old.length) await p.cancel({ notifications: old });
+      if (!times || !times.length) return true;
+      await p.schedule({ notifications: times.slice(0, 12).map(function (t, i) {
+        return { id: 500 + i, title: 'VIA·L', body: '💧',
+          schedule: { on: { hour: parseInt(t.slice(0, 2), 10), minute: parseInt(t.slice(3, 5), 10) }, allowWhileIdle: true },
+          sound: 'vialchime.wav', extra: { kind: 'water' } };
+      }) });
+      return true;
+    } catch (e) { console.warn('[notify] water schedule failed', e); return false; }
+  };
+
   // Нажатие по уведомлению → утреннее открывает «Сегодня» с памяткой, напоминание о приёме — список приёма.
   try {
     var p0 = ln();
