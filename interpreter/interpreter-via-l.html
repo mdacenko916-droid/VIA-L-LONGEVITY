@@ -2396,6 +2396,38 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
 #rd-week .rd-wd:not(.empty):hover{background:rgba(139,111,71,.08);}
 /* VIA-L золотом в заголовке «Анализ VIA-L» (по умолчанию — на тёмной карточке ярче) */
 .hl-vial{color:var(--gold-lt);font-weight:600;}
+/* ══ ТЁМНЫЙ ФОН ВЕЗДЕ (решение владельца 2026-10-10, сборка 276) ══
+   Беж (блок «СВЕТЛЫЙ ФОН ПОД САЙТ» выше) снят для всего приложения: «Сегодня», экраны до прохода и проход —
+   на графите, как «Мой прогресс» и «Профиль». Блок выше оставлен, но его цвета текста на беже перекрыты здесь. */
+body::before{background-color:#10131A!important;}
+#topbar::before{background:linear-gradient(to bottom,#10131A 0%,#10131A calc(env(safe-area-inset-top,0px) - 2px),rgba(16,19,26,0) 100%)!important;}
+.hero-title{color:#fff!important;}
+.hero-title em{color:var(--gold-lt)!important;}
+.hero-desc{color:var(--t2)!important;}
+.fgh-t{color:var(--gold-lt)!important;}
+.fgh-s{color:var(--t3)!important;}
+.flow-intro{color:var(--t2)!important;}
+.footer-logo{color:var(--gold-lt)!important;}
+.footer-tagline{color:var(--t3)!important;}
+.footer-line{background:rgba(255,255,255,.15)!important;}
+.legal-links a,.legal-links span{color:var(--t3)!important;border-bottom-color:rgba(255,255,255,.2)!important;}
+#tb-brand{color:var(--gold-lt)!important;}
+#tb-analysis .rd-head-t{color:#fff!important;}
+#tb-analysis .rd-head-date{color:var(--t3)!important;}
+#tb-analysis .hl-vial{color:var(--gold-lt)!important;}
+.rd-dn-arw{color:var(--gold-lt)!important;border-color:rgba(226,185,90,.35)!important;}
+.rd-dn-lbl{color:#fff!important;}
+.rd-dn-sub{color:var(--t3)!important;}
+#rd-week .rd-wd-wd{color:var(--t3)!important;}
+#rd-week .rd-wd-n{color:#fff!important;}
+#rd-week .rd-wd.active .rd-wd-wd{color:var(--gold-lt)!important;}
+#rd-week .rd-wd.active .rd-wd-n{color:#fff!important;}
+#rd-week .rd-wd.active{background:rgba(226,185,90,.14)!important;border-color:rgba(226,185,90,.45)!important;}
+.rd-meal{color:var(--t2)!important;}
+.rd-meal.now{color:var(--gold-lt)!important;}
+.rd-help-row .vh-i,#cardHelp{border-color:rgba(226,185,90,.6)!important;color:var(--gold-lt)!important;}
+/* на графите открытый шаг выделяется рамкой посветлее, свёрнутые — как обычно */
+.rd-step.open{border-color:rgba(226,185,90,.40)!important;}
 </style>
 </head>
 <body class="booting">
@@ -5179,11 +5211,18 @@ document.querySelectorAll('input[name=gender]').forEach(el=>{
 // ══ «СЕГОДНЯ» ПО ШАГАМ: аккордеон, раскладка разбора, строки-сути, подсветка следующего шага (2026-10-10) ══
 window._rdOpen=1;
 var _RD_N=5;
-function _rdApply(){ for(var i=1;i<=_RD_N;i++){ var s=document.getElementById('rdStep'+i); if(s) s.classList.toggle('open',window._rdOpen===i); } }
+// Подсветка следующего шага — без прокрутки и наблюдателей (на iPhone «дочитал до конца» не срабатывало, сборка 276):
+// пока открыт шаг N, шаг N+1 в золотой рамке; всё свёрнуто — подсвечен шаг после последнего открытого.
+window._rdLast=0;
+function _rdApply(){
+  for(var i=1;i<=_RD_N;i++){ var s=document.getElementById('rdStep'+i); if(s) s.classList.toggle('open',window._rdOpen===i); }
+  if(window._rdOpen) window._rdLast=window._rdOpen;
+  var nx=(window._rdLast||0)+1; if(nx>_RD_N) nx=0;
+  for(var j=1;j<=_RD_N;j++){ var h=document.querySelector('#rdStep'+j+' .rd-step-h'); if(!h) continue;
+    var want=(j===nx && window._rdOpen!==j); if(want && !h.classList.contains('rd-next')){ h.classList.add('rd-next'); } else if(!want) h.classList.remove('rd-next'); }
+}
 function _rdStep(n){
   var was=window._rdOpen; window._rdOpen=(was===n)?0:n; _rdApply();
-  if(window._rdOpen===n){ var hh=document.querySelector('#rdStep'+n+' .rd-step-h'); if(hh) hh.classList.remove('rd-next'); }
-  if(was===n && n<_RD_N) _rdPulse(n+1);   // свернул шаг — подсказываем следующий
   try{ var o=document.getElementById('rdStep'+n); if(o&&window._rdOpen===n) o.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
 }
 // Мягкая подсветка следующего шага: 2–3 золотых пульса и тишина. Открыть можно любой шаг в любой момент.
@@ -5365,13 +5404,7 @@ function _rdLayout(){
   var tmr=null;
   new MutationObserver(function(){ if(_rdBusy) return; clearTimeout(tmr); tmr=setTimeout(_rdLayout,40); })
     .observe(rd,{childList:true,subtree:true,characterData:true});
-  // дочитал шаг до конца — подсвечиваем следующий
-  if(window.IntersectionObserver){
-    var io=new IntersectionObserver(function(es){ es.forEach(function(en){ if(!en.isIntersecting) return;
-      var k=+en.target.getAttribute('data-n'); if(window._rdOpen===k) _rdPulse(k+1); }); },{threshold:1});
-    rd.querySelectorAll('.rd-end').forEach(function(e){ io.observe(e); });
-  }
-  setTimeout(_rdLayout,0);
+  setTimeout(function(){ _rdLayout(); _rdApply(); },0);
 })();
 // ══ BOTTOM NAV ════════════════════════════════════════════
 // Поверхности ленты-анкеты, которые живут ВНЕ <main> и не исчезают сами при переходе на
@@ -6403,7 +6436,7 @@ function renderCard(){
     // Время еды (привязка приёмов «до / во время / после еды») и напоминания о воде — 2026-10-10.
     var _mt=(typeof _ikMealsGet==='function')?_ikMealsGet():{bf:'08:00',ln:'13:00',dn:'19:00'};
     var _tm=function(k,lbl){ return '<label style="flex:1;display:block;font-size:var(--fs-cap);color:var(--t3);">'+_esc(lbl)
-      +'<input type="time" class="manual-input" value="'+_mt[k]+'" onchange="_ikMealsSet(\''+k+'\',this.value)" style="margin-top:4px;width:100%;"></label>'; };
+      +'<input type="time" class="manual-input" value="'+_mt[k]+'" onchange="_ikMealsSet(\''+k+'\',this.value)" style="margin-top:4px;width:100%;min-width:0;box-sizing:border-box;"></label>'; };
     var _secMeals=_vcSec('<i class="ph ph-fork-knife"></i>',_esc(L({ru:'Время еды',uk:'Час їжі',en:'Meal times',es:'Horario de comidas',de:'Essenszeiten',pt:'Horário das refeições',fr:'Heures des repas',pl:'Pory posiłków',it:'Orari dei pasti',he:'זמני ארוחות',ja:'食事の時間',ko:'식사 시간'})),
       '<div style="font-size:var(--fs-cap);color:var(--t3);line-height:1.5;margin-bottom:8px;">'+_esc(L({ru:'К нему привязываются приёмы «до / во время / после еды» и их напоминания.',uk:'До нього прив’язуються прийоми «до / під час / після їжі» та їхні нагадування.',en:'Intakes set “before / with / after a meal” and their reminders follow these times.',es:'Las tomas «antes / con / después de comer» y sus recordatorios siguen este horario.',de:'Einnahmen „vor / zum / nach dem Essen“ und ihre Erinnerungen richten sich danach.',pt:'As tomas “antes / com / depois da refeição” e seus lembretes seguem estes horários.',fr:'Les prises « avant / pendant / après le repas » et leurs rappels suivent ces heures.',pl:'Do nich dopasowują się przyjęcia „przed / do / po posiłku” i ich przypomnienia.',it:'Le assunzioni «prima / durante / dopo i pasti» e i promemoria seguono questi orari.',he:'נטילות „לפני / עם / אחרי האוכל” והתזכורות שלהן מותאמות לשעות האלה.',ja:'「食前・食事中・食後」の服用とリマインダーはこの時間に合わせます。',ko:'“식전 / 식사 중 / 식후” 복용과 알림이 이 시간에 맞춰집니다.'}))+'</div>'
       +'<div style="display:flex;gap:10px;">'+_tm('bf',L(_RD_T.bf))+_tm('ln',L(_RD_T.ln))+_tm('dn',L(_RD_T.dn))+'</div>',false,true);
@@ -6411,12 +6444,12 @@ function renderCard(){
     var _secWater=_vcSec('<i class="ph ph-drop"></i>',_esc(L({ru:'Вода',uk:'Вода',en:'Water',es:'Agua',de:'Wasser',pt:'Água',fr:'Eau',pl:'Woda',it:'Acqua',he:'מים',ja:'水分',ko:'물'})),
       '<label style="display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:var(--fs-body);color:var(--t1);cursor:pointer;"><span>'+_esc(L({ru:'Напоминать пить воду',uk:'Нагадувати пити воду',en:'Remind me to drink water',es:'Recordarme beber agua',de:'Ans Trinken erinnern',pt:'Lembrar de beber água',fr:'Me rappeler de boire',pl:'Przypominaj o piciu wody',it:'Ricordami di bere',he:'להזכיר לשתות מים',ja:'水分補給を知らせる',ko:'물 마시기 알림'}))+'</span>'
       +'<input type="checkbox"'+(_w.on?' checked':'')+' onchange="_waterSet(\'on\',this.checked)"></label>'
-      +'<div style="display:flex;gap:10px;margin-top:10px;">'
-      +'<label style="flex:1;display:block;font-size:var(--fs-cap);color:var(--t3);">'+_esc(L({ru:'Каждые',uk:'Кожні',en:'Every',es:'Cada',de:'Alle',pt:'A cada',fr:'Toutes les',pl:'Co',it:'Ogni',he:'כל',ja:'間隔',ko:'간격'}))
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">'
+      +'<label style="grid-column:1 / -1;display:block;font-size:var(--fs-cap);color:var(--t3);">'+_esc(L({ru:'Каждые',uk:'Кожні',en:'Every',es:'Cada',de:'Alle',pt:'A cada',fr:'Toutes les',pl:'Co',it:'Ogni',he:'כל',ja:'間隔',ko:'간격'}))
       +'<select class="manual-input" onchange="_waterSet(\'int\',this.value)" style="margin-top:4px;width:100%;">'
       +[1.5,2,3].map(function(v){ return '<option value="'+v+'"'+(+_w.int===v?' selected':'')+'>'+String(v).replace('.',',')+' '+_esc(_hr)+'</option>'; }).join('')+'</select></label>'
-      +'<label style="flex:1;display:block;font-size:var(--fs-cap);color:var(--t3);">'+_esc(L({ru:'С',uk:'З',en:'From',es:'Desde',de:'Von',pt:'Das',fr:'De',pl:'Od',it:'Dalle',he:'מ־',ja:'開始',ko:'시작'}))+'<input type="time" class="manual-input" value="'+_w.from+'" onchange="_waterSet(\'from\',this.value)" style="margin-top:4px;width:100%;"></label>'
-      +'<label style="flex:1;display:block;font-size:var(--fs-cap);color:var(--t3);">'+_esc(L({ru:'До',uk:'До',en:'Until',es:'Hasta',de:'Bis',pt:'Até',fr:'À',pl:'Do',it:'Alle',he:'עד',ja:'終了',ko:'종료'}))+'<input type="time" class="manual-input" value="'+_w.to+'" onchange="_waterSet(\'to\',this.value)" style="margin-top:4px;width:100%;"></label>'
+      +'<label style="min-width:0;display:block;font-size:var(--fs-cap);color:var(--t3);">'+_esc(L({ru:'С',uk:'З',en:'From',es:'Desde',de:'Von',pt:'Das',fr:'De',pl:'Od',it:'Dalle',he:'מ־',ja:'開始',ko:'시작'}))+'<input type="time" class="manual-input" value="'+_w.from+'" onchange="_waterSet(\'from\',this.value)" style="margin-top:4px;width:100%;min-width:0;box-sizing:border-box;"></label>'
+      +'<label style="min-width:0;display:block;font-size:var(--fs-cap);color:var(--t3);">'+_esc(L({ru:'До',uk:'До',en:'Until',es:'Hasta',de:'Bis',pt:'Até',fr:'À',pl:'Do',it:'Alle',he:'עד',ja:'終了',ko:'종료'}))+'<input type="time" class="manual-input" value="'+_w.to+'" onchange="_waterSet(\'to\',this.value)" style="margin-top:4px;width:100%;min-width:0;box-sizing:border-box;"></label>'
       +'</div>',false,true);
     html+=[_secLang,_secSource,_secNotify,_secMeals,_secWater,_secDisplay].join('');
   }

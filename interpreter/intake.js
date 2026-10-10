@@ -38,6 +38,13 @@
   var MED_IDS = ['med2', 'med3', 'med4'];
 
   var TX = {
+    m_bf: { ru: 'Завтрак', uk: 'Сніданок', en: 'Breakfast', es: 'Desayuno', de: 'Frühstück', pt: 'Café da manhã', fr: 'Petit-déj.', pl: 'Śniadanie', it: 'Colazione', he: 'בוקר', ja: '朝食', ko: '아침' },
+    m_ln: { ru: 'Обед', uk: 'Обід', en: 'Lunch', es: 'Comida', de: 'Mittagessen', pt: 'Almoço', fr: 'Déjeuner', pl: 'Obiad', it: 'Pranzo', he: 'צהריים', ja: '昼食', ko: '점심' },
+    m_dn: { ru: 'Ужин', uk: 'Вечеря', en: 'Dinner', es: 'Cena', de: 'Abendessen', pt: 'Jantar', fr: 'Dîner', pl: 'Kolacja', it: 'Cena', he: 'ערב', ja: '夕食', ko: '저녁' },
+    r_before: { ru: 'До', uk: 'До', en: 'Before', es: 'Antes', de: 'Vorher', pt: 'Antes', fr: 'Avant', pl: 'Przed', it: 'Prima', he: 'לפני', ja: '食前', ko: '전' },
+    r_with: { ru: 'Во время', uk: 'Під час', en: 'With', es: 'Durante', de: 'Dabei', pt: 'Durante', fr: 'Pendant', pl: 'W trakcie', it: 'Durante', he: 'במהלך', ja: '食事中', ko: '식사 중' },
+    r_after: { ru: 'После', uk: 'Після', en: 'After', es: 'Después', de: 'Danach', pt: 'Depois', fr: 'Après', pl: 'Po', it: 'Dopo', he: 'אחרי', ja: '食後', ko: '후' },
+    when_hint: { ru: 'Привяжите к еде — напоминание сдвинется вместе с вашим временем еды (Профиль › Настройки).', uk: 'Прив’яжіть до їжі — нагадування зсунеться разом із вашим часом їжі (Профіль › Налаштування).', en: 'Link it to a meal — the reminder moves with your meal time (Profile › Settings).', es: 'Vincúlalo a una comida: el recordatorio se mueve con tu horario (Perfil › Ajustes).', de: 'An eine Mahlzeit koppeln — die Erinnerung wandert mit deiner Essenszeit (Profil › Einstellungen).', pt: 'Vincule a uma refeição — o lembrete acompanha seu horário (Perfil › Configurações).', fr: 'Liez-le à un repas — le rappel suit votre heure de repas (Profil › Réglages).', pl: 'Powiąż z posiłkiem — przypomnienie przesunie się z porą posiłku (Profil › Ustawienia).', it: 'Collegalo a un pasto: il promemoria segue l’orario dei pasti (Profilo › Impostazioni).', he: 'קשרו לארוחה — התזכורת תזוז יחד עם שעת הארוחה (פרופיל › הגדרות).', ja: '食事に合わせると、食事時間に合わせて通知も動きます（プロフィール › 設定）。', ko: '식사에 연결하면 식사 시간에 맞춰 알림이 움직여요 (프로필 › 설정).' },
     when: { ru: 'Когда', uk: 'Коли', en: 'When', es: 'Cuándo', de: 'Wann', pt: 'Quando', fr: 'Quand', pl: 'Kiedy', it: 'Quando', he: 'מתי', ja: 'タイミング', ko: '언제' },
     w_clock: { ru: 'По часам', uk: 'За годинником', en: 'By the clock', es: 'A una hora fija', de: 'Nach Uhrzeit', pt: 'Em horário fixo', fr: 'À heure fixe', pl: 'O stałej godzinie', it: 'A orario fisso', he: 'לפי שעה', ja: '時刻で', ko: '시간 지정' },
     bf_before: { ru: 'До завтрака', uk: 'До сніданку', en: 'Before breakfast', es: 'Antes del desayuno', de: 'Vor dem Frühstück', pt: 'Antes do café da manhã', fr: 'Avant le petit-déjeuner', pl: 'Przed śniadaniem', it: 'Prima di colazione', he: 'לפני ארוחת הבוקר', ja: '朝食前', ko: '아침 식사 전' },
@@ -235,6 +242,20 @@
   // ── профиль: раздел «Мои приёмы» ──
   // Поля — общим классом приложения .manual-input (как дата цикла и анализов), не своим стилем.
   // _ikInner — только содержимое раздела: EXPERT вкладывает его внутрь «Добавок и препаратов» (одна вкладка).
+  // «Когда» кнопками (2026-10-10, сборка 276: список «По часам / До завтрака…» был непонятен): сначала еда или
+  // «по часам», затем «до / во время / после». Выбор еды без отношения ставит «во время».
+  function whenChips(it, id) {
+    var m = /^(bf|ln|dn)_(before|with|after)$/.exec(it.when || ''), meal = m ? m[1] : '', rel = m ? m[2] : 'with';
+    var CH = 'min-height:36px;padding:0 12px;border-radius:18px;font-family:inherit;font-size:var(--fs-cap);cursor:pointer;';
+    var b = function (on, label, val) { return '<button type="button" onclick="_ikUpd(\'' + id + '\',\'when\',\'' + val + '\')" style="' + CH
+      + (on ? 'border:1px solid var(--gold);background:rgba(226,185,90,.22);color:var(--t1);font-weight:600;' : 'border:1px solid rgba(226,185,90,.32);background:rgba(226,185,90,.06);color:var(--t2);') + '">' + _esc(label) + '</button>'; };
+    var row1 = [['bf', 'm_bf'], ['ln', 'm_ln'], ['dn', 'm_dn']].map(function (x) { return b(meal === x[0], T(x[1]), x[0] + '_' + rel); }).join('') + b(!meal, T('w_clock'), '');
+    var row2 = meal ? [['before', 'r_before'], ['with', 'r_with'], ['after', 'r_after']].map(function (x) { return b(rel === x[0], T(x[1]), meal + '_' + x[0]); }).join('') : '';
+    return '<div style="min-width:0;grid-column:1 / -1;"><div style="font-size:var(--fs-cap);color:var(--t3);margin-bottom:6px;">' + _esc(T('when')) + '</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:6px;">' + row1 + '</div>'
+      + (row2 ? '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">' + row2 + '</div>' : '<div style="font-size:var(--fs-cap);color:var(--t3);line-height:1.45;margin-top:6px;">' + _esc(T('when_hint')) + '</div>')
+      + '</div>';
+  }
   window._ikInner = function () {
     var o = _ikGet(), rows = '';
     o.items.forEach(function (it) {
@@ -248,18 +269,14 @@
         + (it.note ? '<div style="font-size:var(--fs-cap);color:var(--t2);margin-top:3px;">' + _esc(it.note) + '</div>' : '')
         // Сетка 2×2: время | напоминать, с | по. Узкий экран не вылезает за карточку (min-width:0).
         + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;margin-top:10px;align-items:end;">'
-        + (MEALS_ON() ? '<div style="min-width:0;grid-column:1 / -1;"><div style="font-size:var(--fs-cap);color:var(--t3);margin-bottom:4px;">' + _esc(T('when')) + '</div>'
-            + '<select class="manual-input" onchange="_ikUpd(\'' + id + '\',\'when\',this.value)" style="width:100%;">'
-            + ['', 'bf_before', 'bf_with', 'bf_after', 'ln_before', 'ln_with', 'ln_after', 'dn_before', 'dn_with', 'dn_after'].map(function (w) {
-                return '<option value="' + w + '"' + ((it.when || '') === w ? ' selected' : '') + '>' + _esc(T(w || 'w_clock')) + '</option>'; }).join('')
-            + '</select></div>' : '')
+        + (MEALS_ON() ? whenChips(it, id) : '')
         + '<div style="min-width:0;"><div style="font-size:var(--fs-cap);color:var(--t3);margin-bottom:4px;">' + _esc(T('time')) + '</div>'
-        + '<input type="time" class="manual-input" value="' + _esc(it.time || '08:00') + '"' + (it.when ? ' disabled' : '') + ' onchange="_ikUpd(\'' + id + '\',\'time\',this.value)"></div>'
+        + '<input type="time" class="manual-input" style="width:100%;min-width:0;box-sizing:border-box;" value="' + _esc(it.time || '08:00') + '"' + (it.when ? ' disabled' : '') + ' onchange="_ikUpd(\'' + id + '\',\'time\',this.value)"></div>'
         + '<label style="display:flex;align-items:center;gap:8px;min-height:44px;font-size:var(--fs-body);color:var(--t1);cursor:pointer;"><input type="checkbox" ' + (it.remind ? 'checked' : '') + ' onchange="_ikUpd(\'' + id + '\',\'remind\',this.checked)"> ' + _esc(T('remind')) + '</label>'
         + '<div style="min-width:0;"><div style="font-size:var(--fs-cap);color:var(--t3);margin-bottom:4px;">' + _esc(T('from')) + '</div>'
-        + '<input type="date" class="manual-input" value="' + _esc(it.start || '') + '" onchange="_ikUpd(\'' + id + '\',\'start\',this.value)"></div>'
+        + '<input type="date" class="manual-input" style="width:100%;min-width:0;box-sizing:border-box;" value="' + _esc(it.start || '') + '" onchange="_ikUpd(\'' + id + '\',\'start\',this.value)"></div>'
         + '<div style="min-width:0;"><div style="font-size:var(--fs-cap);color:var(--t3);margin-bottom:4px;">' + _esc(T('to')) + '</div>'
-        + '<input type="date" class="manual-input" value="' + _esc(it.end || '') + '" onchange="_ikUpd(\'' + id + '\',\'end\',this.value)" title="' + _esc(T('open_end')) + '"></div>'
+        + '<input type="date" class="manual-input" style="width:100%;min-width:0;box-sizing:border-box;" value="' + _esc(it.end || '') + '" onchange="_ikUpd(\'' + id + '\',\'end\',this.value)" title="' + _esc(T('open_end')) + '"></div>'
         + '</div></div>';
     });
     var inner = '<div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;">' + _esc(T('intro')) + '</div>'
