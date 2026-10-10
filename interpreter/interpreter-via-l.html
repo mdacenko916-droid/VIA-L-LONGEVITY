@@ -5575,6 +5575,24 @@ function _cardOpen(k){ window._cardSub=k||''; renderCard(); var cp=document.getE
 // «Мой прогресс › Динамика»: переключатель неделя / месяц без перерисовки карточки.
 function _dynSeg(btn,r){ var box=btn.closest('details')||document; box.querySelectorAll('.vc-seg button').forEach(function(b){ b.classList.toggle('on',b===btn); });
   box.querySelectorAll('.vc-dyn').forEach(function(d){ d.style.display=(+d.getAttribute('data-r')===r)?'':'none'; }); }
+// «Профиль › Мои данные» сверху: что меняется со временем и влияет на рекомендации — с датой изменения
+// (vialp_changed: saveProfile, проверка недели, «Мои приёмы»). Нажатие ведёт к нужному разделу ниже.
+function _chgHTML(){
+  var P={}, C={}; try{ P=JSON.parse(localStorage.getItem('vialp_profile')||'{}')||{}; C=JSON.parse(localStorage.getItem('vialp_changed')||'{}')||{}; }catch(e){}
+  var _loc={ru:'ru-RU',uk:'uk-UA',en:'en-GB',es:'es-ES',de:'de-DE',pt:'pt-BR',fr:'fr-FR',pl:'pl-PL',it:'it-IT',he:'he-IL',ja:'ja-JP',ko:'ko-KR'};
+  var dt=function(d){ if(!d) return ''; try{ return L({ru:'обновлено',uk:'оновлено',en:'updated',es:'actualizado',de:'aktualisiert',pt:'atualizado',fr:'mis à jour',pl:'zaktualizowano',it:'aggiornato',he:'עודכן',ja:'更新',ko:'업데이트'})+' '+new Date(d).toLocaleDateString(_loc[lang]||'en-GB',{day:'numeric',month:'short'}); }catch(e){ return d; } };
+  var row=function(title,val,d,go){ return '<div class="vc-row" style="cursor:pointer;" onclick="'+go+'"><span class="vc-l">'+title+'<span style="display:block;font-size:var(--fs-cap);color:var(--t3);">'+(d||'')+'</span></span><span class="vc-v">'+(val||'—')+'</span></div>'; };
+  var wv=[P.weight?P.weight+' kg':'',P.waist?P.waist+' cm':''].filter(Boolean).join(' · ');
+  var wd=[C.weight,C.waist].filter(Boolean).sort().pop()||'';
+  var ikN=0; try{ ikN=(typeof _ikActiveOn==='function')?_ikActiveOn().length:0; }catch(e){}
+  var ikTitle=(typeof _ikTitle==='function')?_ikTitle():'';
+  var h=row(_esc(L({ru:'Вес и талия',uk:'Вага й талія',en:'Weight and waist',es:'Peso y cintura',de:'Gewicht und Taille',pt:'Peso e cintura',fr:'Poids et tour de taille',pl:'Waga i talia',it:'Peso e girovita',he:'משקל ומותניים',ja:'体重とウエスト',ko:'체중과 허리둘레'})),_esc(wv),dt(wd),"_editProfile()")
+    +row(_esc(ikTitle),ikN?String(ikN):'',dt(C.intake),"var d=document.getElementById('vc-intake');if(d){d.open=true;d.scrollIntoView({block:'start'});}");
+  if(P.gender!=='male'){ var cs=document.querySelector('input[name=cycle_status]:checked'); var csl=cs?((document.querySelector('label[for=\"'+cs.id+'\"]')||{}).textContent||''):'';
+    h+=row(_esc(L({ru:'Состояние цикла',uk:'Стан циклу',en:'Cycle status',es:'Estado del ciclo',de:'Zyklusstatus',pt:'Situação do ciclo',fr:'État du cycle',pl:'Stan cyklu',it:'Stato del ciclo',he:'מצב המחזור',ja:'周期の状態',ko:'주기 상태'})),_esc(csl.trim()),dt(C.cycle_status),"_editProfile()"); }
+  return '<div class="vcard-sec vc-span" style="border-color:rgba(90,196,178,.45);padding:12px 16px;"><div class="vc-subh" style="margin-top:0;">'+_esc(L({ru:'Меняется со временем',uk:'Змінюється з часом',en:'Changes over time',es:'Cambia con el tiempo',de:'Ändert sich mit der Zeit',pt:'Muda com o tempo',fr:'Évolue avec le temps',pl:'Zmienia się z czasem',it:'Cambia nel tempo',he:'משתנה עם הזמן',ja:'時間とともに変わるもの',ko:'시간에 따라 바뀌는 것'}))+'</div>'
+    +'<div style="font-size:var(--fs-cap);color:var(--t3);line-height:1.5;margin-bottom:6px;">'+_esc(L({ru:'По этим данным подбираются рекомендации. Раз в неделю приложение спросит само.',uk:'За цими даними добираються рекомендації. Раз на тиждень застосунок спитає сам.',en:'Your recommendations are based on these. Once a week the app will ask you itself.',es:'Las recomendaciones se basan en estos datos. Una vez por semana la app te preguntará.',de:'Danach richten sich die Empfehlungen. Einmal pro Woche fragt die App selbst nach.',pt:'As recomendações se baseiam nesses dados. Uma vez por semana o app vai perguntar.',fr:'Les recommandations s’appuient sur ces données. Une fois par semaine, l’app vous le demandera.',pl:'Na ich podstawie dobierane są zalecenia. Raz w tygodniu aplikacja sama zapyta.',it:'Le raccomandazioni si basano su questi dati. Una volta alla settimana l’app te lo chiederà.',he:'ההמלצות מבוססות על הנתונים האלה. פעם בשבוע האפליקציה תשאל בעצמה.',ja:'おすすめはこのデータをもとに選ばれます。週に1回アプリから確認します。',ko:'추천은 이 데이터를 바탕으로 합니다. 일주일에 한 번 앱이 직접 물어봐요.'}))+'</div>'+h+'</div>';
+}
 function renderCard(){
   try{ if(typeof _aiEnsureToday==='function') _aiEnsureToday(); }catch(e){}   // разбор мог остаться на сервере — подтянем
 
@@ -5999,7 +6017,7 @@ function renderCard(){
            _arch?_vcSec('<i class="ph ph-calendar-blank"></i>',_esc(t('prog_archive')),_arch,false,true):''].join('');
   }
   else if(_cardSubPg==='data')       // «Профиль › Мои данные»: анкета + приёмы + анализы (план структуры §6)
-    html+=[_secGoal,_secAct,_secNut,_secHealth,_secStress,_secBal,_secRhythm,_secLife,_secSup,_secLabs].join('');
+    html+=[_chgHTML(),_secGoal,_secAct,_secNut,_secHealth,_secStress,_secBal,_secRhythm,_secLife,_secSup,_secLabs].join('');
   else if(_cardSubPg==='settings')   // «Профиль › Настройки»: язык живёт только здесь
     html+=[_secLang,_secSource,_secNotify,_secDisplay].join('');
   else                               // «Профиль»: две строки-входа + подписка, копия, правовое (VAI и «Наш подход» убраны 2026-10-10)
@@ -6652,6 +6670,61 @@ function _cmpScore(v){
   try{ localStorage.setItem('vialp_cmp_scores',JSON.stringify(arr)); localStorage.setItem('vialp_cmp_last',String(Date.now())); }catch(e){}
   renderComplaint();
 }
+// ── Проверка недели, часть 2 (2026-10-10, docs/APP-STRUCTURE-PLAN.md §7): вес и талия + приёмы ──
+// Вес и талию раньше спрашивали один раз в анкете: в запись дня копировался профиль, и у ручного ввода
+// график был ровной линией. Теперь раз в неделю — рядом с оценками жалоб, с прошлыми значениями и кнопкой
+// «Без изменений». Пишем прямо в поля профиля (prof-weight/prof-waist) — дальше всё как было: saveProfile,
+// запись дня, личная база. Дата изменения — в vialp_changed (для «Меняется со временем» в «Мои данные»).
+var _WK_T={
+  body:{ru:'Вес и талия — как сейчас?',uk:'Вага й талія — як зараз?',en:'Weight and waist — where are they now?',es:'Peso y cintura: ¿cómo están ahora?',de:'Gewicht und Taille – wie ist es jetzt?',pt:'Peso e cintura — como estão agora?',fr:'Poids et tour de taille — où en êtes-vous ?',pl:'Waga i talia — jak teraz?',it:'Peso e girovita: come sono ora?',he:'משקל והיקף מותניים — מה המצב עכשיו?',ja:'体重とウエスト — 今は？',ko:'체중과 허리둘레 — 지금은?'},
+  kg:{ru:'Вес, кг',uk:'Вага, кг',en:'Weight, kg',es:'Peso, kg',de:'Gewicht, kg',pt:'Peso, kg',fr:'Poids, kg',pl:'Waga, kg',it:'Peso, kg',he:'משקל, ק״ג',ja:'体重 kg',ko:'체중, kg'},
+  cm:{ru:'Талия, см',uk:'Талія, см',en:'Waist, cm',es:'Cintura, cm',de:'Taille, cm',pt:'Cintura, cm',fr:'Tour de taille, cm',pl:'Talia, cm',it:'Girovita, cm',he:'מותניים, ס״מ',ja:'ウエスト cm',ko:'허리둘레, cm'},
+  same:{ru:'Без изменений',uk:'Без змін',en:'No change',es:'Sin cambios',de:'Unverändert',pt:'Sem mudanças',fr:'Pas de changement',pl:'Bez zmian',it:'Nessun cambiamento',he:'ללא שינוי',ja:'変わりなし',ko:'변화 없음'},
+  ok:{ru:'Отмечено',uk:'Відзначено',en:'Noted',es:'Anotado',de:'Notiert',pt:'Anotado',fr:'Noté',pl:'Zapisane',it:'Annotato',he:'נרשם',ja:'記録しました',ko:'기록됨'},
+  ik:{ru:'Что-то изменилось в добавках или лекарствах?',uk:'Щось змінилося в добавках чи ліках?',en:'Anything changed in your supplements or medicines?',es:'¿Algo cambió en tus suplementos o medicamentos?',de:'Hat sich bei Nahrungsergänzung oder Medikamenten etwas geändert?',pt:'Algo mudou nos seus suplementos ou remédios?',fr:'Quelque chose a changé dans vos compléments ou médicaments ?',pl:'Czy coś się zmieniło w suplementach lub lekach?',it:'È cambiato qualcosa negli integratori o nei farmaci?',he:'השתנה משהו בתוספים או בתרופות?',ja:'サプリや薬に変化はありましたか？',ko:'영양제나 약에 변화가 있었나요?'},
+  no:{ru:'Нет',uk:'Ні',en:'No',es:'No',de:'Nein',pt:'Não',fr:'Non',pl:'Nie',it:'No',he:'לא',ja:'いいえ',ko:'아니요'},
+  yes:{ru:'Да',uk:'Так',en:'Yes',es:'Sí',de:'Ja',pt:'Sim',fr:'Oui',pl:'Tak',it:'Sì',he:'כן',ja:'はい',ko:'네'},
+  yesHint:{ru:'Отметьте изменения в «Профиль › Мои данные › Мои приёмы» — разбор их учтёт.',uk:'Позначте зміни в «Профіль › Мої дані › Мої прийоми» — розбір їх врахує.',en:'Update them in Profile › My data › My intake schedule — the overview will take them into account.',es:'Actualízalos en Perfil › Mis datos › Mis tomas: el análisis los tendrá en cuenta.',de:'Trag die Änderungen unter Profil › Meine Daten › Meine Einnahmen ein – die Auswertung berücksichtigt sie.',pt:'Atualize em Perfil › Meus dados › Minhas tomas — a análise vai considerar.',fr:'Mettez-les à jour dans Profil › Mes données › Mes prises — le bilan en tiendra compte.',pl:'Zaznacz zmiany w Profil › Moje dane › Moje przyjmowanie — analiza je uwzględni.',it:'Aggiornali in Profilo › I miei dati › Le mie assunzioni: l’analisi ne terrà conto.',he:'עדכנו בפרופיל › הנתונים שלי › לוח הנטילה שלי — הניתוח ייקח זאת בחשבון.',ja:'プロフィール › マイデータ › 服用スケジュールで更新してください。分析に反映されます。',ko:'프로필 › 내 데이터 › 내 복용 일정에서 수정하세요. 분석에 반영됩니다.'},
+  open:{ru:'Открыть сейчас',uk:'Відкрити зараз',en:'Open now',es:'Abrir ahora',de:'Jetzt öffnen',pt:'Abrir agora',fr:'Ouvrir maintenant',pl:'Otwórz teraz',it:'Apri ora',he:'לפתוח עכשיו',ja:'今すぐ開く',ko:'지금 열기'}
+};
+function _wkGet(){ try{ return JSON.parse(localStorage.getItem('vialp_wk_check')||'{}')||{}; }catch(e){ return {}; } }
+function _wkSet(k,v){ var o=_wkGet(); if(o.day!==_dayKey()) o={day:_dayKey()}; o[k]=v; try{ localStorage.setItem('vialp_wk_check',JSON.stringify(o)); }catch(e){} }
+function _profChanged(k){ try{ var o=JSON.parse(localStorage.getItem('vialp_changed')||'{}')||{}; o[k]=_dayKey(); localStorage.setItem('vialp_changed',JSON.stringify(o)); }catch(e){} }
+function _wkBody(k,v){
+  var el=document.getElementById(k==='weight'?'prof-weight':'prof-waist'); if(!el) return;
+  if(String(el.value)===String(v)) return;
+  el.value=v;
+  try{ if(typeof calcProfMetrics==='function') calcProfMetrics(); if(typeof saveProfile==='function') saveProfile(); }catch(e){}
+  _profChanged(k); _wkSet('body','set');
+}
+function _wkBodySame(){ _wkSet('body','same'); renderComplaint(); }
+function _wkIk(v){ _wkSet('ik',v); if(v==='yes') _profChanged('intake_asked'); renderComplaint(); }
+function _wkOpenIntake(){
+  try{ navTo('card'); _cardOpen('data'); setTimeout(function(){ var d=document.getElementById('vc-intake'); if(d){ d.open=true; d.scrollIntoView({block:'start'}); } },120); }catch(e){}
+}
+function _wkCheckHTML(){
+  var P={}; try{ P=JSON.parse(localStorage.getItem('vialp_profile')||'{}')||{}; }catch(e){}
+  var o=_wkGet(), today=(o.day===_dayKey());
+  var CH='padding:9px 14px;border-radius:11px;font-size:var(--fs-cap);font-family:inherit;cursor:pointer;border:1px solid rgba(226,185,90,.32);background:rgba(226,185,90,.06);color:var(--t1);';
+  var CH_ON='padding:9px 14px;border-radius:11px;font-size:var(--fs-cap);font-family:inherit;cursor:pointer;border:1px solid var(--gold);background:rgba(226,185,90,.2);color:#fff;font-weight:600;';
+  var inp=function(k,val,lbl){ return '<label style="flex:1;display:block;font-size:var(--fs-cap);color:var(--t3);">'+_esc(L(lbl))
+    +'<input type="number" inputmode="decimal" class="manual-input" value="'+(val==null?'':_esc(val))+'" placeholder="—" onchange="_wkBody(\''+k+'\',this.value)" style="margin-top:4px;width:100%;"></label>'; };
+  var bodyDone=today&&o.body;
+  var h='<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(226,185,90,.18);">'
+    +'<div class="q-prompt">'+_esc(L(_WK_T.body))+'</div>'
+    +'<div style="display:flex;gap:10px;margin-top:8px;">'+inp('weight',P.weight,_WK_T.kg)+inp('waist',P.waist,_WK_T.cm)+'</div>'
+    +'<button type="button" onclick="_wkBodySame()" style="margin-top:8px;'+(bodyDone?CH_ON:CH)+'">'+_esc(L(bodyDone?_WK_T.ok:_WK_T.same))+'</button>'
+    +'</div>';
+  var ik=today?o.ik:'';
+  h+='<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(226,185,90,.18);">'
+    +'<div class="q-prompt">'+_esc(L(_WK_T.ik))+'</div>'
+    +'<div style="display:flex;gap:7px;margin-top:8px;"><button type="button" onclick="_wkIk(\'no\')" style="'+(ik==='no'?CH_ON:CH)+'">'+_esc(L(_WK_T.no))+'</button>'
+    +'<button type="button" onclick="_wkIk(\'yes\')" style="'+(ik==='yes'?CH_ON:CH)+'">'+_esc(L(_WK_T.yes))+'</button></div>'
+    +(ik==='yes'?'<div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.5;margin-top:8px;">'+_esc(L(_WK_T.yesHint))
+      +' <a href="#" onclick="_wkOpenIntake();return false;" style="color:var(--gold-lt);">'+_esc(L(_WK_T.open))+' ›</a></div>':'')
+    +'</div>';
+  return h;
+}
 // Два места, два горизонта: ФОРМА жалобы («с чем вы пришли») живёт в разовом блоке step17
 // рядом с профилем, а СВОДКА с динамикой — в дневном «Что нового за сутки» (#cmpBlock).
 // Раньше и то и другое рисовалось в дневном блоке: первый проход спрашивал про хроническую
@@ -6726,7 +6799,8 @@ function renderComplaint(){
       +rowsH
       +'<div class="q-prompt" style="margin-top:12px;">'+_cmpI18n('wkNote')+'</div>'
       +'<textarea id="cmpWkNote" rows="2" maxlength="300" oninput="_cmpNote(this.value)" placeholder="'+_cmpI18n('wkNotePh')+'" style="margin-top:6px;width:100%;background:rgba(226,185,90,.06);border:1px solid rgba(226,185,90,.3);border-radius:10px;color:var(--t1);padding:10px 12px;font-family:inherit;font-size:var(--fs-body);box-sizing:border-box;resize:vertical;">'+(((_scToday&&_scToday.note)||'').replace(/</g,'&lt;'))+'</textarea>'
-      +'<div style="font-size:var(--fs-cap);color:var(--t3);margin-top:6px;">'+_cmpI18n('scaleHint')+'</div></div>';
+      +'<div style="font-size:var(--fs-cap);color:var(--t3);margin-top:6px;">'+_cmpI18n('scaleHint')+'</div>'
+      +_wkCheckHTML()+'</div>';
   }
   box.innerHTML=head+daily+wk;
 }
@@ -7782,6 +7856,8 @@ function saveProfile(){
       updated:_dayKey()
     };
     localStorage.setItem('vialp_profile',JSON.stringify(prof));
+    // Даты изменений того, что влияет на рекомендации (блок «Меняется со временем» в «Мои данные»).
+    try{ ['weight','waist','cycle_status'].forEach(function(k){ if(P[k]!==undefined && String(P[k]||'')!==String(prof[k]||'')) _profChanged(k); }); }catch(e){}
     try{ _cycLogStart(prof.lastperiod, (P.lastperiod && prof.lastperiod && prof.lastperiod<P.lastperiod) ? P.lastperiod : ''); }catch(e){}   // журнал начал циклов; дату сдвинули назад — это правка, прежнюю убираем
     try{ if(typeof _ikSync==='function'){ _ikSync(prof); _ikArm(); } }catch(e){}   // «Мои приёмы» следуют за галочками
   }catch(e){}

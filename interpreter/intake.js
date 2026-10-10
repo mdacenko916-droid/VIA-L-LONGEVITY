@@ -270,6 +270,7 @@
     _ikSave(o); _ikArm();
   };
   window._ikDel = function (id) {
+    try { if (typeof window._profChanged === 'function') window._profChanged('intake'); } catch (e) {}   // VIA-L: «Меняется со временем»
     var o = _ikGet(), it = o.items.filter(function (x) { return x.id === id; })[0];
     if (!it || it.src === 'spec') return;   // назначенное специалистом клиент не удаляет — только выключает напоминание
     // Строку «по галочке» удаляем вместе с галочкой в профиле, иначе синхронизация вернула бы её.
@@ -295,6 +296,7 @@
     _ikSave(o); _ikArm(); if (typeof renderCard === 'function') renderCard();
   };
   window._ikAdd = function () {
+    try { if (typeof window._profChanged === 'function') window._profChanged('intake'); } catch (e) {}   // VIA-L: «Меняется со временем»
     var inp = document.getElementById('ik-new'), n = inp ? String(inp.value || '').trim().slice(0, 60) : '';
     if (!n) return;
     var o = _ikGet();
