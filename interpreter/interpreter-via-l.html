@@ -2408,6 +2408,30 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
 body{background-color:#181e28!important;}   /* только body: он уходит на холст, и градиент body::before виден поверх; фон у html перекрыл бы градиент */
 body::before{background:linear-gradient(180deg,#242c39 0%,#1b2029 60%,#181e28 100%) !important;}
 #topbar::before{background:linear-gradient(to bottom,#242c39 0%,#242c39 calc(env(safe-area-inset-top,0px) - 2px),rgba(36,44,57,0) 100%)!important;}
+/* ══ ЕДИНЫЙ СТИЛЬ БЛОКОВ (владелец 2026-10-10): эталон — карточки «Моего прогресса» (details.vcard-sec).
+   Карточка: темнее фона rgba(6,9,18,.42), тонкая золотая рамка .22, скругление 16; иконка/номер — в золотом кружке.
+   Внутренний блок: еле заметная подложка + рамка .14. Кнопки: главная — сплошное золото, остальные — золотая обводка. */
+:root{--blk-bg:rgba(6,9,18,.42);--blk-bd:rgba(226,185,90,.22);--blk-bd-on:rgba(226,185,90,.42);--in-bg:rgba(255,255,255,.03);--in-bd:rgba(226,185,90,.14);}
+/* «Сегодня»: шаги */
+.rd-step-h{background:var(--blk-bg)!important;border:1px solid var(--blk-bd)!important;border-radius:16px!important;}
+.rd-step.open{background:var(--blk-bg)!important;border:1px solid var(--blk-bd-on)!important;border-radius:16px!important;}
+.rd-step.open>.rd-step-h{background:none!important;border-color:transparent!important;}
+.rd-step-n{width:36px!important;height:36px!important;border:none!important;background:rgba(226,185,90,.13)!important;color:var(--gold-lt)!important;}
+.rd-step-h.rd-next{border-color:rgba(226,185,90,.95)!important;}
+/* блоки внутри шагов — одна внутренняя подложка вместо пяти разных градиентов */
+.rd-step .card,.rd-step .ai-sec,.rd-step .rd-tile,.rd-step .wo-card,.rd-step #rdFocusLine,.rd-step #rd-focus,.rd-step #rd-exp>div,.rd-step .rd-plate{
+  background:var(--in-bg)!important;border:1px solid var(--in-bd)!important;box-shadow:none!important;border-radius:14px!important;}
+.rd-step .card::before,.rd-step .card-accent{display:none!important;}
+.rd-step #doctorAlert,.rd-step #doctorAlert *{border-radius:14px;}
+#rdFocusLine{border-color:rgba(90,196,178,.35)!important;}
+/* кнопки: второстепенные — золотая обводка, как «Скачать разбор» */
+.rd-nextbtn,.wo-b button,.rd-fl-b button:not(.on),.rd-help-row .vh-i{background:transparent!important;border:1px solid var(--gold-dim)!important;color:var(--gold-lt)!important;}
+.wo-b .wo-done.on{background:#5AC4B2!important;border-color:#5AC4B2!important;color:#0e1413!important;}
+.wo-go{background:var(--gold)!important;color:#10141C!important;}
+/* «Профиль»: пункты-кнопки и шапка — как карточки «Моего прогресса» */
+.vc-link,.vcard-hero{background:var(--blk-bg)!important;border:1px solid var(--blk-bd)!important;border-radius:16px!important;box-shadow:none!important;}
+.vcard-hero .vcard-sec,.vcard-hero>div[style*="background"]{background:var(--in-bg)!important;}
+.vh-edit-btn{background:transparent!important;border:1px solid var(--gold-dim)!important;color:var(--gold-lt)!important;}
 /* «Профиль» и «Мой прогресс»: текст при прокрутке уходил под часы и логотип — верх панели растворяем */
 body.card-open #cardPanel, body.approach-open #approachPanel{
   -webkit-mask-image:linear-gradient(to bottom,transparent 0,transparent calc(env(safe-area-inset-top,0px) + 6px),#000 calc(env(safe-area-inset-top,0px) + 58px));
