@@ -35,11 +35,12 @@
 
   // ── выбор тренировки дня — docs/FITNESS-SELECTION-RULES.md §4–7 ─────────────
   // ctx: {male, level:'start'|'reg'|'tr', bp, ill, limit, heartRisk, pelvic, older, bad, soreMild,
-  //       hist:[{d:1..7, c:'legs'|'upper'|'full'|'str'|'core'|'bal'|'mob'|'hiit'|'cardio'|'other'}]}
+  //       sleep, back, calm (жалоба: сон · спина/суставы · приливы/настроение/туман),
+//       hist:[{d:1..7, c:'legs'|'upper'|'full'|'str'|'core'|'bal'|'mob'|'pil'|'mind'|'hiit'|'cardio'|'other'}]}
   // Ответ: {id|null, why, wp} — id тренировки, ключ строки «почему» и её параметры.
   var STR = { legs: 1, upper: 1, full: 1, str: 1 };
   var IDS = {
-    w: { legs: ['w1', 'w2', 'w3'], upper: ['w4', 'w5', 'w6'], full: ['w7', 'w8', 'w9'], core: ['w10', 'w11', 'w12'], bal: ['w13', 'w13', 'w13'], mob: ['w14', 'w14', 'w14'], hiit: ['w15', 'w15', 'w15'] },
+    w: { legs: ['w1', 'w2', 'w3'], upper: ['w4', 'w5', 'w6'], full: ['w7', 'w8', 'w9'], core: ['w10', 'w11', 'w12'], bal: ['w13', 'w13', 'w13'], mob: ['w14', 'w14', 'w14'], hiit: ['w15', 'w15', 'w15'], pil: ['w16', 'w16', 'w16'], mind: ['w17', 'w17', 'w17'] },
     m: { legs: ['m1', 'm2', 'm3'], upper: ['m4', 'm5', 'm6'], full: ['m7', 'm8', 'm9'], core: ['m10', 'm11', 'm11'], cardio: ['m12', 'm13', 'm14'], mob: ['m15', 'm15', 'm15'] }
   };
   var LV = ['start', 'reg', 'tr'];
@@ -58,7 +59,7 @@
     if (streak >= 3) return { id: mob, why: 'rest', wp: { n: streak } };
     var cnt = function (f) { return hist.filter(function (h) { return f(h.c); }).length; };
     var done = { s: cnt(function (c) { return STR[c]; }), core: cnt(function (c) { return c === 'core'; }), bal: cnt(function (c) { return c === 'bal'; }),
-                 hiit: cnt(function (c) { return c === 'hiit'; }), cardio: cnt(function (c) { return c === 'cardio' || c === 'hiit'; }) };
+                 hiit: cnt(function (c) { return c === 'hiit'; }), pil: cnt(function (c) { return c === 'pil'; }), mind: cnt(function (c) { return c === 'mind'; }), cardio: cnt(function (c) { return c === 'cardio' || c === 'hiit'; }) };
     // Ограничение нагрузки врачом / беременность / онкология сейчас — только щадящие.
     if (ctx.limit) {
       if (!done.core) return { id: id('core', 0), why: 'limit' };
@@ -69,6 +70,7 @@
       if (lv === 0) {   // жёлтый день у новичка → корпус / баланс / мобильность (Марина, §8.4)
         if (!done.core) return { id: id('core', 0), why: 'yellow' };
         if (tr === 'w' && !done.bal) return { id: 'w13', why: 'yellow' };
+        if (tr === 'w' && !done.mind) return { id: 'w17', why: 'yellow' };
         return { id: mob, why: 'yellow' };
       }
       lv--;
@@ -90,11 +92,15 @@
     var tC = ctx.pelvic ? 3 : 1;
     if (done.core < tC && yc !== 'core') need.push({ c: 'core', def: tC - done.core });
     if (tr === 'w' && done.bal < 1 && yc !== 'bal') need.push({ c: 'bal', def: 1 });
+    // Пилатес и тело-разум — по разу в неделю (FITNESS-TRAINING-TYPES.md §3, 2026-10-08)
+    if (tr === 'w' && done.pil < 1 && yc !== 'pil') need.push({ c: 'pil', def: 1 });
+    if (tr === 'w' && done.mind < 1 && yc !== 'mind') need.push({ c: 'mind', def: 1 });
     var green = !yellow;
     if (tr === 'w' && LV[lv] === 'tr' && green && !ctx.heartRisk && !ban.hiit && done.hiit < 1) need.push({ c: 'hiit', def: 1 });
     if (tr === 'm' && done.cardio < 1 && yc !== 'cardio' && yc !== 'hiit') need.push({ c: 'cardio', def: 1 });
-    // Предпочтения при равном недоборе: тазовое дно → корпус; 60+ / остеопороз → баланс; иначе сила.
-    var pref = function (n) { return n.c === 'core' && ctx.pelvic ? 3 : n.c === 'bal' && ctx.older ? 2 : n.s ? 1 : 0; };
+    // Предпочтения при равном недоборе: тазовое дно → корпус; сон / спина → пилатес; приливы, настроение,
+    // туман → тело-разум; 60+ / остеопороз → баланс; иначе сила.
+    var pref = function (n) { return n.c === 'core' && ctx.pelvic ? 4 : n.c === 'pil' && (ctx.sleep || ctx.back) ? 3 : n.c === 'mind' && ctx.calm ? 3 : n.c === 'bal' && ctx.older ? 2 : n.s ? 1 : 0; };
     need.sort(function (a, b) { return (b.def - a.def) || (pref(b) - pref(a)); });
     var n = need[0];
     var yWhy = yc === 'legs' ? 'yLegs' : yc === 'upper' ? 'yUp' : yc === 'full' ? 'yFull' : '';
@@ -108,6 +114,7 @@
     var res = { id: id(n.c, l2) };
     if (yellow) res.why = 'yellow';
     else if (n.c === 'core' && ctx.pelvic) res.why = 'pelvic';
+    else if (n.c === 'pil' || n.c === 'mind') res.why = n.c;
     else if (n.s && yWhy) res.why = yWhy;
     else if (n.s) { res.why = 'wk'; res.wp = { s: done.s, t: tS }; }
     else if (yWhy) res.why = yWhy;
@@ -136,14 +143,14 @@
       + '<button type="button" class="wo-done' + (done ? ' on' : '') + '" onclick="vialWorkouts.toggle(\'' + r.id + '\')">' + (done ? '✓ ' + esc(tx(UI.doneOn, l)) : esc(tx(UI.done, l))) + '</button></div>';
     return h;
   }
-  function plan(id, l) {
+  function plan(id, l, hyp) {
     var w = W[id]; if (!w) return '';
     var h = '<div class="wo-sh"><div class="wo-d">' + esc(meta(id, l)) + '</div>'
       + '<div class="wo-inv"><b>' + esc(tx(UI.inv, l)) + ':</b> ' + esc(invTxt(id, l)) + '</div>';
     w.p.forEach(function (p) {
       var hd = tx(PART[p[0]], l) + (p[2] ? ' · ' + tx(UI.rounds, l).replace('{n}', p[2]) : '') + ' · ' + p[1] + ' ' + tx(UI.min, l);
       h += '<div class="wo-pt"><div class="wo-pth">' + esc(hd) + '</div><ol>'
-        + p[3].map(function (it) { return '<li><span>' + esc(nm(it[0], l)) + '</span>' + (it[1] ? '<em>' + esc(dose(it[1], l)) + '</em>' : '') + '</li>'; }).join('')
+        + p[3].map(function (it) { return '<li><span>' + esc(nm(hyp && it[2] != null ? it[2] : it[0], l)) + '</span>' + (it[1] ? '<em>' + esc(dose(it[1], l)) + '</em>' : '') + '</li>'; }).join('')
         + '</ol></div>';
     });
     h += '<div class="wo-note">' + esc(tx(UI.tempo, l)) + '</div><div class="wo-note wo-stop">' + esc(tx(UI.stop, l)) + '</div></div>';
@@ -154,7 +161,7 @@
   function L_() { try { return cfg.lang(); } catch (e) { return 'en'; } }
   function open(id) {
     if (typeof window.openSheet !== 'function' || !W[id]) return;
-    window.openSheet('<i class="ph ph-barbell" style="color:var(--gold-lt);"></i>', title(id, L_()), plan(id, L_()));
+    window.openSheet('<i class="ph ph-barbell" style="color:var(--gold-lt);"></i>', title(id, L_()), plan(id, L_(), !!cfg.hyp));
   }
   function toggle(id) {
     var day = cfg.day(), on = doneOn(day) !== id;

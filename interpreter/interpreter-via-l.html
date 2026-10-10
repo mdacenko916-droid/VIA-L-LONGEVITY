@@ -5299,7 +5299,7 @@ function _rdIntake(){
 // (vialp_wo_pick), чтобы разбор ИИ и карточка говорили об одной тренировке.
 function _woCat(m,z){
   if(m==='strength'){ z=z||[]; if(z.indexOf('full')>=0||z.length>1) return 'full'; return z[0]||'str'; }
-  return m==='cardio'?'cardio':m==='hiit'?'hiit':'other';
+  return m==='cardio'?'cardio':m==='hiit'?'hiit':m==='pilates'?'pil':m==='yoga'?'mind':'other';
 }
 function _woCtx(){
   var P=_condProf(), c=P.conditions||[], has=function(){ for(var i=0;i<arguments.length;i++) if(c.indexOf(arguments[i])>=0) return true; return false; };
@@ -5311,11 +5311,12 @@ function _woCtx(){
   try{ vialWorkouts.log().forEach(function(r){ var d=Math.round((t0-Date.parse(r.day))/86400000); if(d>=1&&d<=7) byD[d]={d:d,c:r.c}; }); }catch(e){}
   var temp=(P.cond_temp||[]).filter(function(x){ return x&&x!=='none_temp'; });
   var sym=(_bpSymGet()||[]).filter(function(x){ return x!=='none'; });
-  var g7=document.getElementById('gsm7'), cmp=(typeof _cmpGet==='function'&&_cmpGet())||{};
+  var g7=document.getElementById('gsm7'), cmp=(typeof _cmpGet==='function'&&_cmpGet())||{}, ci=function(k){ return (cmp.items||[]).indexOf(k)>=0; };
   return { male:g==='male', level:af==='high'?'tr':(af==='low'||af==='moderate')?'reg':'start',
     bp:!!_bpFlag()||sym.length>0, ill:temp.length>0, limit:P.cond_limit==='yes'||has('pregnancy','onco_active'),
     heartRisk:has('hypertension','arrhythmia','cvd_event','heart_failure'), pelvic:!!(g7&&g7.checked),
-    older:(parseInt(P.age)||0)>=60||has('osteoporosis'), cmp:(cmp.items||[]),
+    older:(parseInt(P.age)||0)>=60||has('osteoporosis'),
+    sleep:ci('sleep'), back:ci('pain')||has('back'), calm:ci('hf')||ci('mood')||ci('fog'), hyp:has('hypertension')||!!_bpFlag(),
     bad:(mc.low||[]).length+(mc.sore==='strong'?1:0), soreMild:mc.sore==='mild',
     hist:Object.keys(byD).map(function(k){ return byD[k]; }) };
 }
@@ -5331,7 +5332,8 @@ function _woPick(fresh){
 }
 function _rdWorkout(){
   var box=document.getElementById('rdWorkout'); if(!box||!window.vialWorkouts) return;
-  vialWorkouts.setup({ day:_dayKey, lang:function(){ return lang; }, rerender:_rdWorkout });
+  var hyp=false; try{ hyp=!!_woCtx().hyp; }catch(e){}
+  vialWorkouts.setup({ day:_dayKey, lang:function(){ return lang; }, rerender:_rdWorkout, hyp:hyp });
   var r=_woPick(false); if(!r){ _rdSetHtml(box,''); return; }
   _rdSetHtml(box, vialWorkouts.card(r, lang, !!r.id && vialWorkouts.doneOn(_dayKey())===r.id));
 }
@@ -8754,7 +8756,7 @@ function _movePrefill(){
     // Вчера отметили «Сделано» у «Тренировки дня» → это и есть ответ (тренировка известна точно, вместе с зоной).
     var _wy=window.vialWorkouts?vialWorkouts.doneOn(_dayKey(new Date(Date.now()-86400000))):'';
     if(_wy && !getRadio('move_today')){
-      var _wc=vialWorkouts.cat(_wy), _wv={legs:1,upper:1,full:1,core:1}[_wc]?'strength':(_wc==='hiit'||_wc==='cardio')?_wc:'yoga';
+      var _wc=vialWorkouts.cat(_wy), _wv={legs:1,upper:1,full:1,core:1}[_wc]?'strength':(_wc==='hiit'||_wc==='cardio')?_wc:_wc==='pil'?'pilates':'yoga';
       var _we=document.querySelector('input[name="move_today"][value="'+_wv+'"]');
       if(_we){ _we.checked=true; _moveTodayChange(); var _tz=document.getElementById('tz_'+_wc); if(_wv==='strength'&&_tz) _tz.checked=true; return; }
     }
