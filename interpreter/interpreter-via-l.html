@@ -2290,14 +2290,18 @@ body.card-open #langDropdown{display:none;}
 #rdWhy .rd-why-h{color:var(--gold-lt);}
 #rdWhy .rd-why-h{font-size:var(--fs-cap);letter-spacing:.08em;text-transform:uppercase;color:var(--gold);font-weight:700;margin:14px 4px 8px;}
 #stepResult .rd-sources{display:none;}
-#rdPlan:empty,#rdFocusLine:empty{display:none;}
+#rdPlan:empty,#rdFocusLine:empty,#rdMeals:empty{display:none;}
+/* Кружки еды в шаге 4 (владелец 2026-10-10): прилипают сверху при прокрутке, ближайшая еда подсвечена. */
+#rdMeals{position:sticky;top:6px;z-index:5;display:flex;justify-content:center;gap:22px;padding:8px 0 10px;margin-bottom:6px;background:linear-gradient(180deg,rgba(234,225,201,.96),rgba(234,225,201,.86));border-radius:18px;}
+.rd-meal{display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:0;padding:0;cursor:pointer;font:600 var(--fs-cap) var(--font-ui);color:#5b5345;}
+.rd-meal i{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--gold-lt);background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.35);}
+.rd-meal.now i{background:var(--gold);color:#10141C;border-color:var(--gold);box-shadow:0 0 0 4px rgba(198,140,52,.22);}
+.rd-meal.now{color:#1A1A2E;}
 #rdPlan{background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.20);border-radius:20px;padding:6px 16px 10px;margin-bottom:10px;}
 .rd-plan-it{padding:11px 0;border-top:1px solid rgba(255,255,255,.07);}
 .rd-plan-it:first-child{border-top:0;}
 .rd-plan-tx{display:flex;gap:10px;color:var(--t1);font-size:var(--fs-body);line-height:1.5;}
 .rd-plan-tx:before{content:'';flex:0 0 7px;height:7px;margin-top:9px;border-radius:50%;background:var(--gold-lt);}
-.rd-plan-ch{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 0 17px;}
-.rd-plan-ch button{min-height:36px;padding:0 13px;border-radius:18px;border:1px solid rgba(226,185,90,.4);background:rgba(226,185,90,.10);color:var(--t1);font:400 var(--fs-cap) var(--font-ui);cursor:pointer;}
 #rdFocusLine{background:linear-gradient(160deg,#1f2a2a,#151d1d);border:1px solid rgba(90,196,178,.45);border-radius:20px;padding:13px 16px;margin-bottom:10px;color:var(--t1);}
 .rd-fl-t{font-size:var(--fs-cap);color:#5AC4B2;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
 .rd-fl-n{font-size:var(--fs-body);font-weight:600;margin-top:3px;}
@@ -4163,6 +4167,7 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
   // Шаг 4 (правка владельца 2026-10-10 по живому экрану): тарелка-памятка и темы разбора читались хуже
   // всего — в конец; темы — на тёмной подложке (их карточки рассчитаны на тёмный фон).
   var why=document.createElement('div'); why.id='rdWhy';
+  var meals=document.createElement('div'); meals.id='rdMeals'; put(s4,meals);
   var plan=document.createElement('div'); plan.id='rdPlan';
   var fl=document.createElement('div'); fl.id='rdFocusLine';
   put(s4,plan); put(s4,fl); put(s4,E.fo); put(s4,E.ex); put(s4,why); put(s4,E.dp);
@@ -5142,25 +5147,28 @@ var _RD_T={
 // «Активность», сон → «Вечер»/«Сон». В самих темах остаётся только «почему» — без двойных советов.
 function _rdPlanBuild(box){
   var plan=document.getElementById('rdPlan'); if(!plan) return;
-  var ch={}; try{ (_bpChapters()||[]).forEach(function(c){ ch[c.id]=c.title; }); }catch(e){}
-  var btn=function(id,lbl){ return '<button type="button" onclick="openBpChapter(\''+id+'\')">'+_esc(lbl)+'</button>'; };
-  var items=[], meals=false;
+  var items=[];
   box.querySelectorAll('.ai-sec').forEach(function(sec){
     var act=sec.querySelector('.ai-sec-act'); if(!act) return;
     var th=((sec.className.match(/ai-th-([a-z]+)/)||[])[1])||'';
     String(act.textContent||'').split('☐').map(function(x){ return x.replace(/\s+/g,' ').trim(); }).filter(Boolean).forEach(function(tx,ix){
-      var c='';
-      if(ix>0) th='';   // кнопки глав — только у первого действия темы, без повторов
-      if(th==='nutrition' && !meals){ c=btn('morning',L(_RD_T.bf))+btn('lunch',L(_RD_T.ln))+btn('evening',L(_RD_T.dn)); meals=true; }
-      else if(th==='movement' && ch.activity) c=btn('activity',ch.activity);
-      else if(th==='sleep'){ c=(ch.evening?btn('evening',ch.evening):'')+(ch.sleep?btn('sleep',ch.sleep):''); }
-      items.push('<div class="rd-plan-it"><div class="rd-plan-tx"><span>'+_esc(tx)+'</span></div>'+(c?'<div class="rd-plan-ch">'+c+'</div>':'')+'</div>');
+      items.push('<div class="rd-plan-it"><div class="rd-plan-tx"><span>'+_esc(tx)+'</span></div></div>');
     });
     act.remove();
     var more=sec.querySelector('.ai-sec-more');
     if(more){ if(sec.querySelector('.ai-sec-why-h')){ var tn=more.firstChild; if(tn&&tn.nodeType===3) tn.nodeValue=_moreLblTxt()+' '; } else more.style.display='none'; }
   });
   plan.innerHTML=items.slice(0,8).join('');
+}
+// Кружки еды над шагом 4: завтрак · обед · ужин → те же главы памятки (утро / день / вечер), что и в
+// «Памятке дня». Не зависят от текста разбора: кнопки под действиями появлялись, только если ИИ назвал
+// тему «питанием», и у владельца не появились вовсе (тема «Вес и живот»). Ближайшая еда — по часам.
+function _rdMeals(){
+  var box=document.getElementById('rdMeals'); if(!box) return;
+  var hr=new Date().getHours(), now=hr<11?'morning':(hr<16?'lunch':'evening');
+  var M=[['morning','ph-coffee',_RD_T.bf],['lunch','ph-bowl-food',_RD_T.ln],['evening','ph-moon-stars',_RD_T.dn]];
+  var h=M.map(function(m){ return '<button type="button" class="rd-meal'+(m[0]===now?' now':'')+'" onclick="openBpChapter(\''+m[0]+'\')"><i class="ph '+m[1]+'" aria-hidden="true"></i>'+_esc(L(m[2]))+'</button>'; }).join('');
+  if(box.getAttribute('data-h')!==h){ box.innerHTML=h; box.setAttribute('data-h',h); }
 }
 // Шаг недели в шаге 4 — одна строка с отметкой дня; весь блок фокуса — по «Подробнее о шаге».
 // Сжимаем только в режиме «идёт неделя» (в блоке есть отметка дня): оценки, итог и «к специалисту»
@@ -5203,6 +5211,7 @@ function _rdLayout(){
       if(fresh){ var mk=document.createElement('i'); mk.className='rd-laid'; mk.style.display='none'; r.appendChild(mk); }
     }
     try{ _rdFocusLine(); }catch(e){}
+    try{ _rdMeals(); }catch(e){}
     // строки-сути свёрнутых шагов
     var c=(typeof _cmpGet==='function')?_cmpGet():null, day=window.__rdDay||_dayKey(), dl='';
     try{ var rec=(JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[]).filter(function(x){return x&&x.day===day;})[0]; dl=(rec&&rec.cmp_delta)||(day===_dayKey()?window._cmpDeltaToday:'')||''; }catch(e){}
