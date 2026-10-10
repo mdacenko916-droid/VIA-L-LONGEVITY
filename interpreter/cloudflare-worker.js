@@ -4133,6 +4133,23 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
     "client's wearable / wellbeing dynamics. This is educational reflection, NOT medical advice, " +
     'diagnosis, or treatment.\n' +
     'WRITE: ' + (_hasCmp ? '6–9' : '4–6') + ' warm, supportive sentences. Care is the core value — encourage, never pressure or scare.\n' +
+    // Тёплый разбор — поддержка и честная надежда (2026-10-10, docs/WEEKLY-REVIEW-SAMPLES.md, docs/APP-STRUCTURE-PLAN.md §5a).
+    // Только VIA-L (велнес-рамка); EXPERT — отдельным решением.
+    (_wellnessW ?
+      'TONE — SUPPORT AND HONEST HOPE (motivational interviewing; habit building in small steps; self-compassion). ' +
+      'The person should finish reading wanting to continue. Order: (1) name what they came with, in their own words; ' +
+      '(2) notice their EFFORT concretely from the adherence data ("kept the step 6 days out of 7") — effort is in their ' +
+      'control, the body is not, so praise effort, not results; (3) show THEIR shift using their own 0–10 scores; ' +
+      '(4) if it got worse — normalise it: in this life stage changes come in waves, one hard week does not undo the work; ' +
+      'no blame, no "why didn\'t you"; (5) HONEST hope about the process, never about an outcome: "first shifts often show ' +
+      'after a few weeks of steady practice" is fine; "hot flashes will go away / weight will drop / everything will normalise" ' +
+      'is forbidden; no numbers or timeframes that are not in the data; (6) end with the next step in one sentence and why it ' +
+      'fits them. Autonomy language ("you can", "many people find", "if it feels right"), never "must / have to / urgently". ' +
+      'When the decision is "specialist", present the person as support, not as alarm. Tone reference (Russian, do NOT copy ' +
+      'the wording and do NOT switch the output language): «Неделя выдалась тяжёлой: приливы беспокоили сильнее, и до шага ' +
+      'руки доходили всего два дня. Так бывает — в этом периоде самочувствие идёт волнами, и одна трудная неделя не отменяет ' +
+      'того, что вы уже начали. Не нужно наверстывать: достаточно вернуться к одному простому действию сегодня вечером.»\n'
+      : '') +
     'COVER, based ONLY on the numbers given (never invent metrics or values):\n' +
     // Живые прогоны 2026-10-02: «трёхнедельный план», «приливы 3 дня вместо ежедневных» — сроков и сравнений в данных не было.
     'Never state a duration, a frequency or a comparison ("three-week plan", "instead of daily", "for the first time") ' +
