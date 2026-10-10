@@ -1,6 +1,6 @@
 import json, os
-H=os.path.dirname(os.path.abspath(__file__)); os.chdir(H)
-for f in ['tr_uk_en','tr_es_de','tr_pt_fr','tr_pl_it','tr_he_ja_ko','tr_extra','tr_ui','tr_v2']: exec(open(f+'.py').read())
+HERE=os.path.dirname(os.path.abspath(__file__)); os.chdir(HERE)
+for f in ['tr_uk_en','tr_es_de','tr_pt_fr','tr_pl_it','tr_he_ja_ko','tr_extra','tr_ui','tr_v2','tr_how','how_ru','how_uk_en','how_es_de','how_pt_fr','how_pl_it','how_he','how_ja_ko']: exec(open(f+'.py').read())
 ru=json.load(open('names.json')); W=json.load(open('workouts_ru.json'))
 N={'ru':ru,'uk':uk,'en':en,'es':es,'de':de,'pt':pt,'fr':fr,'pl':pl,'it':it,'he':he,'ja':ja,'ko':ko}
 base=len(ru)
@@ -33,6 +33,22 @@ W.append(dict(id='№17',track='w',title='Тело-разум: мягкая йо
   dict(k='main',m=17,r=None,items=[[NR[10],'2 мин'],[NR[11],'3 мин'],[NR[12],'3 мин'],[NR[13],'по 30 с на каждую ногу'],[NR[14],'по 30 с на каждую сторону'],[NR[15],'45 с'],[NR[16],'60 с'],['«Кошка-корова» на четвереньках с дыханием','60 с']]),
   dict(k='cool',m=4,r=None,items=[['Лёжа, ноги на стуле, спокойное дыхание','2 мин'],[NR[17],'2 мин']])]))
 INV_OF['№16']=['mat','pillow']; INV_OF['№17']=['mat','chair','wall']
+# Этап 2: как делать — уникальные строки ×12 + на каждое название [техника, легче, коды «осторожно»]
+def _res(i,k):
+    v=H[i][k]; j=i
+    while H[j][0].startswith('@') and (k==0 or not v):
+        j=int(H[j][0][1:]); v=H[j][k]
+    return v
+HU=[]
+for i in range(len(N['ru'])):
+    for k in (0,1):
+        t=_res(i,k)
+        if t and t not in HU: HU.append(t)
+HW={'ru':HU}
+assert json.load(open('how_unique.json'))==HU, 'how_ru.py изменился — пересоберите how_unique.json и переводы'
+for l,arr in (('uk',HUK),('en',HEN),('es',HES),('de',HDE),('pt',HPT),('fr',HFR),('pl',HPL),('it',HIT),('he',HHE),('ja',HJA),('ko',HKO)):
+    assert len(arr)==len(HU),l; HW[l]=arr
+HX=[[HU.index(_res(i,0)) if _res(i,0) else -1, HU.index(_res(i,1)) if _res(i,1) else -1, C.get(i,'')] for i in range(len(N['ru']))]
 TK={'Сила: ноги и ягодицы':'legs','Сила: спина, плечи, руки':'upper','Сила: грудь, спина, плечи':'upperM','Сила: всё тело':'full','Корпус и тазовое дно':'core','Корпус, спина и тазовое дно':'coreM','Баланс и ловкость':'bal','Мобильность суставов':'mob','HIIT':'hiit','Кардио: база':'cb','Кардио: короткие интервалы':'cs','Кардио: интервалы':'ci','Пилатес':'pil','Тело-разум: мягкая йога и тайцзи':'mind'}
 CAT={'legs':'legs','upper':'upper','upperM':'upper','full':'full','core':'core','coreM':'core','bal':'bal','mob':'mob','hiit':'hiit','cb':'cardio','cs':'cardio','ci':'cardio','pil':'pil','mind':'mind'}
 LK={'старт':'start','регулярный':'reg','тренированный':'tr','все уровни':'all','все, первые ~6 недель':'all6'}
@@ -60,5 +76,5 @@ head='''/* VIA·L — «Тренировка дня» (этап 1: тексто�
    Этап 2 — описание выполнения, этап 3 — кнопка видео: добавлять полем к упражнению, структуру не менять. */
 (function () {
 '''
-body=('  var N = '+J(N)+';\n  var W = '+J(OUT)+';\n  var TI = '+J(TITLE)+';\n  var LVL = '+J(LEVEL)+';\n  var INV = '+J(INV)+';\n  var PART = '+J(PART)+';\n  var U = '+J(UNIT)+';\n  var UI = '+J(UI)+';\n  var WHY = '+J(WHY)+';\n')
-open(os.path.join(H,'../../interpreter/workouts.js'),'w').write(head+body+open('wo_logic.js').read())
+body=('  var N = '+J(N)+';\n  var W = '+J(OUT)+';\n  var TI = '+J(TITLE)+';\n  var LVL = '+J(LEVEL)+';\n  var INV = '+J(INV)+';\n  var PART = '+J(PART)+';\n  var U = '+J(UNIT)+';\n  var UI = '+J(UI)+';\n  var WHY = '+J(WHY)+';\n  var HW = '+J(HW)+';\n  var HX = '+J(HX)+';\n  var EASY = '+J(EASY)+';\n  var CAUT = '+J(CAUT)+';\n')
+open(os.path.join(HERE,'../../interpreter/workouts.js'),'w').write(head+body+open('wo_logic.js').read())

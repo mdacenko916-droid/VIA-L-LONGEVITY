@@ -143,6 +143,15 @@
       + '<button type="button" class="wo-done' + (done ? ' on' : '') + '" onclick="vialWorkouts.toggle(\'' + r.id + '\')">' + (done ? '✓ ' + esc(tx(UI.doneOn, l)) : esc(tx(UI.done, l))) + '</button></div>';
     return h;
   }
+  // Этап 2: как делать · легче · осторожно (коды каталога v2) — под названием упражнения.
+  function howHtml(k, l) {
+    var x = HX[k]; if (!x) return '';
+    var arr = HW[l] || HW.en, h = '';
+    if (x[0] >= 0) h += '<div class="wo-how">' + esc(arr[x[0]]) + '</div>';
+    if (x[1] >= 0) h += '<div class="wo-easy"><b>' + esc(tx(EASY, l)) + ':</b> ' + esc(arr[x[1]]) + '</div>';
+    if (x[2]) h += '<div class="wo-caut">⚠ ' + x[2].split(' ').map(function (c) { return esc(tx(CAUT[c], l)); }).join('; ') + '</div>';
+    return h;
+  }
   function plan(id, l, hyp) {
     var w = W[id]; if (!w) return '';
     var h = '<div class="wo-sh"><div class="wo-d">' + esc(meta(id, l)) + '</div>'
@@ -150,7 +159,7 @@
     w.p.forEach(function (p) {
       var hd = tx(PART[p[0]], l) + (p[2] ? ' · ' + tx(UI.rounds, l).replace('{n}', p[2]) : '') + ' · ' + p[1] + ' ' + tx(UI.min, l);
       h += '<div class="wo-pt"><div class="wo-pth">' + esc(hd) + '</div><ol>'
-        + p[3].map(function (it) { return '<li><span>' + esc(nm(hyp && it[2] != null ? it[2] : it[0], l)) + '</span>' + (it[1] ? '<em>' + esc(dose(it[1], l)) + '</em>' : '') + '</li>'; }).join('')
+        + p[3].map(function (it) { var k = hyp && it[2] != null ? it[2] : it[0]; return '<li><span>' + esc(nm(k, l)) + '</span>' + (it[1] ? '<em>' + esc(dose(it[1], l)) + '</em>' : '') + howHtml(k, l) + '</li>'; }).join('')
         + '</ol></div>';
     });
     h += '<div class="wo-note">' + esc(tx(UI.tempo, l)) + '</div><div class="wo-note wo-stop">' + esc(tx(UI.stop, l)) + '</div></div>';
@@ -186,6 +195,10 @@
     + '.wo-pt li{padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);line-height:1.45;color:var(--t1,#fff);font-size:var(--fs-body,15px);}'
     + '.wo-pt li span{display:block;}'
     + '.wo-pt li em{display:block;font-style:normal;font-size:var(--fs-cap,13px);color:var(--gold-lt,#EEAF54);margin-top:2px;}'
+    + '.wo-how{font-size:var(--fs-cap,13px);color:var(--t2,rgba(255,255,255,.75));line-height:1.5;margin-top:4px;}'
+    + '.wo-easy{font-size:var(--fs-cap,13px);color:var(--t2,rgba(255,255,255,.75));line-height:1.5;margin-top:3px;}'
+    + '.wo-easy b{color:#5AC4B2;font-weight:600;}'
+    + '.wo-caut{font-size:var(--fs-cap,13px);color:#F0A07A;line-height:1.5;margin-top:3px;}'
     + '.wo-note{font-size:var(--fs-cap,13px);color:var(--t2,rgba(255,255,255,.75));line-height:1.5;margin-top:14px;}'
     + '.wo-stop{color:var(--t1,#fff);}';
   try { var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st); } catch (e) {}
