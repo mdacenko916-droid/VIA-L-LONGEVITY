@@ -187,6 +187,7 @@
     var h = '<div class="wo-h"><i class="ph ph-barbell" aria-hidden="true"></i>' + esc(tx(UI.title, l)) + '</div>';
     if (!r || !r.id) return h + '<div class="wo-why">' + esc(whyTxt(r, l)) + '</div>';
     h += '<div class="wo-n">' + esc(title(r.id, l)) + '</div><div class="wo-d">' + esc(meta(r.id, l)) + '</div>';
+    h += '<div class="wo-d">' + esc(tx(UI.inv, l)) + ': ' + esc(invTxt(r.id, l)) + '</div>';
     var wt = whyTxt(r, l); if (wt) h += '<div class="wo-why">' + esc(wt) + '</div>';
     if (upOffer()) h += '<div class="wo-up"><span>' + esc(tx(FEEL.up, l)) + '</span><div class="wo-b"><button type="button" onclick="vialWorkouts.acceptUp(true)">' + esc(tx(FEEL.yes, l)) + '</button><button type="button" onclick="vialWorkouts.acceptUp(false)">' + esc(tx(FEEL.no, l)) + '</button></div></div>';
     if (window.vialPlayer) h += '<button type="button" class="wo-go" onclick="vialWorkouts.play(\'' + r.id + '\')">▶ ' + esc(window.vialPlayer.label()) + '</button>';
@@ -319,7 +320,7 @@
   try { var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st); } catch (e) {}
 
   window.vialWorkouts = {
-    pick: pick, card: card, plan: plan, steps: steps, play: play, askFeel: askFeel, _pickFeel: _pickFeel, _saveFeel: _saveFeel, acceptUp: acceptUp, saveFeel: saveFeel, partName: function (k, l) { return tx(PART[k], l); }, open: open, toggle: toggle, title: title, meta: meta, why: whyTxt, dose: dose,
+    pick: pick, card: card, plan: plan, steps: steps, play: play, askFeel: askFeel, _pickFeel: _pickFeel, _saveFeel: _saveFeel, acceptUp: acceptUp, saveFeel: saveFeel, partName: function (k, l) { return tx(PART[k], l); }, open: open, toggle: toggle, title: title, meta: meta, inv: invTxt, hasDb: function (id) { return !!W[id] && W[id].inv.some(function (k) { return /^db/.test(k); }); }, why: whyTxt, dose: dose,
     cat: function (id) { return W[id] ? W[id].c : ''; }, ids: function () { return Object.keys(W); },
     log: log, doneOn: doneOn, mark: mark,
     setup: function (o) { Object.keys(o || {}).forEach(function (k) { cfg[k] = o[k]; }); }

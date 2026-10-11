@@ -60,6 +60,9 @@
     sayStart:{ru:'Начинаем. Сначала — лёгкая разминка.',uk:'Починаємо. Спочатку — легка розминка.',en:'Let’s begin. First, an easy warm-up.',es:'Empezamos. Primero, un calentamiento suave.',de:'Los geht’s. Zuerst ein leichtes Aufwärmen.',pt:'Vamos começar. Primeiro, um aquecimento leve.',fr:'On commence. D’abord, un échauffement léger.',pl:'Zaczynamy. Najpierw lekka rozgrzewka.',it:'Iniziamo. Prima un riscaldamento leggero.',he:'מתחילים. קודם — חימום קל.',ja:'始めましょう。まずは軽いウォームアップから。',ko:'시작합니다. 먼저 가벼운 준비 운동부터.'},
     sayRest:{ru:'Отдых. Походите, подышите спокойно.',uk:'Відпочинок. Походіть, подихайте спокійно.',en:'Rest. Walk around and breathe easy.',es:'Descanso. Camina un poco y respira tranquilo.',de:'Pause. Ein paar Schritte gehen, ruhig atmen.',pt:'Descanso. Ande um pouco e respire com calma.',fr:'Repos. Marchez un peu, respirez calmement.',pl:'Odpoczynek. Pochodź, oddychaj spokojnie.',it:'Riposo. Cammina un po’ e respira con calma.',he:'מנוחה. הסתובבו קצת ונשמו ברוגע.',ja:'休憩です。少し歩いて、ゆっくり呼吸しましょう。',ko:'휴식. 조금 걸으며 편하게 숨 쉬세요.'},
     sayHalf:{ru:'Половина. Так держать.',uk:'Половина. Так тримати.',en:'Halfway. Keep it up.',es:'La mitad. Sigue así.',de:'Halbzeit. Weiter so.',pt:'Metade. Continue assim.',fr:'À mi-chemin. Continuez comme ça.',pl:'Połowa. Tak trzymaj.',it:'A metà. Continua così.',he:'חצי. ממשיכים ככה.',ja:'半分です。その調子。',ko:'절반입니다. 그대로 계속하세요.'},
+    sayToday:{ru:'Сегодня',uk:'Сьогодні',en:'Today',es:'Hoy',de:'Heute',pt:'Hoje',fr:'Aujourd’hui',pl:'Dziś',it:'Oggi',he:'היום',ja:'今日は',ko:'오늘은'},
+    sayNeed:{ru:'Понадобится',uk:'Знадобиться',en:'You’ll need',es:'Necesitarás',de:'Du brauchst',pt:'Você vai precisar de',fr:'Il vous faut',pl:'Przyda się',it:'Ti servirà',he:'תצטרכו',ja:'用意するもの',ko:'준비물'},
+    sayWt:{ru:'Вес гантелей выбирайте так, чтобы последние два-три повтора давались с трудом, но техника не ломалась. Если легко — в следующий раз возьмите тяжелее.',uk:'Вагу гантелей обирайте так, щоб останні два-три повторення давалися важко, але техніка не ламалася. Якщо легко — наступного разу візьміть важчі.',en:'Pick dumbbells heavy enough that the last two or three reps feel hard, but your form stays clean. If it’s easy, go heavier next time.',es:'Elige un peso con el que las dos o tres últimas repeticiones cuesten, pero sin perder la técnica. Si resulta fácil, la próxima vez coge más peso.',de:'Wähle die Hanteln so, dass die letzten zwei, drei Wiederholungen schwerfallen, die Technik aber sauber bleibt. Ist es leicht, nimm beim nächsten Mal mehr.',pt:'Escolha um peso em que as duas ou três últimas repetições custem, sem perder a técnica. Se ficar fácil, da próxima vez pegue mais peso.',fr:'Choisissez des haltères assez lourds pour que les deux ou trois dernières répétitions soient difficiles, sans perdre la technique. Si c’est facile, prenez plus lourd la prochaine fois.',pl:'Dobierz ciężar tak, by ostatnie dwa–trzy powtórzenia były trudne, ale technika się nie psuła. Jeśli łatwo — następnym razem weź cięższe.',it:'Scegli un peso con cui le ultime due o tre ripetizioni siano faticose, ma la tecnica resti pulita. Se è facile, la prossima volta prendi di più.',he:'בחרו משקולות כך ששתיים־שלוש החזרות האחרונות יהיו קשות, אבל הטכניקה תישמר. אם קל — בפעם הבאה קחו כבד יותר.',ja:'最後の2〜3回がきついけれど、フォームが崩れない重さのダンベルを選びましょう。楽なら次回は重くしましょう。',ko:'마지막 두세 번이 힘들지만 자세가 무너지지 않는 무게를 고르세요. 쉬우면 다음엔 더 무겁게 하세요.'},
     sayGo:  {ru:'Начали!',uk:'Почали!',en:'Go!',es:'¡Vamos!',de:'Los!',pt:'Vamos!',fr:'C’est parti !',pl:'Zaczynamy!',it:'Via!',he:'מתחילים!',ja:'スタート！',ko:'시작!'},
     sayDone:{ru:'Готово. Отличная работа — вы молодец.',uk:'Готово. Чудова робота — ви молодець.',en:'Done. Great work — well done you.',es:'Hecho. Muy buen trabajo, enhorabuena.',de:'Geschafft. Starke Leistung — gut gemacht.',pt:'Pronto. Ótimo trabalho — parabéns.',fr:'Terminé. Beau travail, bravo.',pl:'Gotowe. Świetna robota — brawo.',it:'Fatto. Ottimo lavoro, brava.',he:'סיימתם. עבודה מצוינת — כל הכבוד.',ja:'お疲れさまでした。よく頑張りました。',ko:'끝났어요. 정말 잘했어요.'},
     restNext:{ru:'Отдохните и приготовьтесь',uk:'Відпочиньте й приготуйтеся',en:'Rest and get ready',es:'Descansa y prepárate',de:'Ausruhen und bereit machen',pt:'Descanse e prepare-se',fr:'Reposez-vous et préparez-vous',pl:'Odpocznij i przygotuj się',it:'Riposa e preparati',he:'נוחו והתכוננו',ja:'休んで準備しましょう',ko:'쉬면서 준비하세요'}
@@ -207,6 +210,13 @@
   // ── состояние ──
   var S = [], idx = 0, phase = 'work', left = 0, total = 0, paused = false, last = 0, raf = 0, wid = '', lastWhole = -1, saidHalf = false;
   var fromRest = false, repMode = false, repsLeft = 0, repsN = 0, repEnds = [], repLastT = 0, repSaid = false, wake = null, introDone = -1;
+  // вступление: какая тренировка, что приготовить, как выбрать вес (владелец 2026-10-11)
+  function opening() {
+    var W = window.vialWorkouts, l = L(), o = t('sayToday') + ': ' + W.title(wid, l) + '. ';
+    var inv = W.inv ? W.inv(wid, l) : ''; if (inv) o += t('sayNeed') + ': ' + inv + '. ';
+    if (W.hasDb && W.hasDb(wid)) o += t('sayWt');
+    return o.trim();
+  }
   function intro(s) { return s.name + '. ' + (s.round === 1 ? (s.how || '') : ''); }   // техника — в первом круге
   function busy() { return speaking || Date.now() < vEnd; }
   var ARC = 263.9;
@@ -375,7 +385,7 @@
         repMode = true; repsN = repsLeft = s.reps; repEnds = c.rep; repLastT = 0;
         $('mvp-unit').textContent = t('reps'); $('mvp-sec').textContent = repsLeft;
       }
-      if (introDone !== idx) { introDone = idx; say((idx === 0 ? t('sayStart') + ' ' : (fromRest ? t('sayGo') + ' ' : '')) + intro(s), true); }
+      if (introDone !== idx) { introDone = idx; say((idx === 0 ? opening() + ' ' + t('sayStart') + ' ' : (fromRest ? t('sayGo') + ' ' : '')) + intro(s), true); }
       repSaid = false; fromRest = false;
     } else {
       // отдых: что будет дальше — сразу и коротко; в конце — голосом 3-2-1 с писком, на старте «Начали!» (владелец 2026-10-11)
