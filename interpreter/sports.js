@@ -266,7 +266,18 @@
   }
   function _skip() { try { localStorage.setItem(SKIP, dayKey()); } catch (e) {} rerender(); }
 
+  // Для ИИ-разбора (воркер, _todayMovePlanBase): названия по-русски — промпт внутренний.
+  function ctxForAI() {
+    var wd = 'пн,вт,ср,чт,пт,сб,вс'.split(','), n = nowGet(), st = today(), mv = '';
+    try { mv = (document.querySelector('input[name="move_today"]:checked') || {}).value || ''; } catch (e) {}
+    var y = mv === 'sport' ? yesterday() : null, it = function (id, full) { return { n: name(id, 'ru'), c: cat(id, full) }; };
+    var list = get().map(function (x) { return name(x.id, 'ru') + ((x.days || []).length ? ' (' + x.days.map(function (d) { return wd[d - 1]; }).join(', ') + ')' : '') + (x.full === false ? ', спокойно' : ''); });
+    if (!list.length && !y && !(n && n.sid)) return null;
+    return { list: list, today: st ? it(st.id, st.full !== false) : null, yday: y ? { n: name(y.id, 'ru'), c: y.c } : null,
+      done: n && n.did === 'sport' && n.sid ? it(n.sid, (find(n.sid) || {}).full !== false) : null };
+  }
   window.vialSports = {
+    ctxForAI: ctxForAI,
     get: get, name: name, cat: cat, catOf: catOf, today: today, yesterday: yesterday, now: nowGet, gap: gap, gapTxt: gapTxt,
     profileHtml: profileHtml, picker: picker, checkHtml: checkHtml, dayCard: dayCard, t: t,
     _find: _find, _tg: _tg, _rm: _rm, _day: _day, _full: _full, _now: _now, _skip: _skip

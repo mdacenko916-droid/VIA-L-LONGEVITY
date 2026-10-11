@@ -7885,13 +7885,29 @@ function _todayMovePlanBase(data, holdLoad, lowRecovery) {
   const arr = v => Array.isArray(v) ? v.map(String) : [];
   const low = arr(mc.low), sore = String(mc.sore || '');
   const days = [];   // d = сколько дней назад была нагрузка; ответ сегодняшнего прохода = вчера (d=1)
-  if (data.move_today) days.push({ d: 1, m: String(data.move_today), z: arr(mc.zone) });
+  // «Мой спорт» (sports.js, 2026-10-11): вчерашний спорт → по его нагрузке; рывковый = как HIIT, ровный = кардио,
+  // силовой — как силовая на всё тело (FITNESS-SELECTION-RULES §15).
+  const sc = (data.sport_ctx && typeof data.sport_ctx === 'object') ? data.sport_ctx : {};
+  const spM = c => c === 'hiit' ? 'hiit' : c === 'cardio' ? 'cardio' : (c === 'full' || c === 'legs' || c === 'upper') ? 'strength' : 'light';
+  const spZ = c => c === 'full' ? ['full'] : c === 'legs' ? ['legs'] : c === 'upper' ? ['upper'] : [];
+  const spN = v => String((v && v.n) || '').replace(/[\r\n«»]+/g, ' ').slice(0, 40);
+  if (data.move_today === 'sport' && sc.yday) days.push({ d: 1, m: spM(String(sc.yday.c)), z: spZ(String(sc.yday.c)), sp: spN(sc.yday) });
+  else if (data.move_today) days.push({ d: 1, m: String(data.move_today), z: arr(mc.zone) });
   (Array.isArray(mc.hist) ? mc.hist : []).forEach(h => {
     const d = parseInt(h && h.d);
     if (d > 1 && d <= 7 && !days.some(x => x.d === d)) days.push({ d, m: String(h.m || ''), z: arr(h.z) });
   });
-  if (!days.length && !low.length && !sore) return null;
+  if (!days.length && !low.length && !sore && !sc.today) return null;
   if (holdLoad) return 'сегодня: только спокойное движение в уже разрешённых рамках, без наращивания.';
+  // День своего спорта по расписанию клиента — он и есть нагрузка дня (приложение показывает ту же карточку).
+  if (sc.today && spN(sc.today)) {
+    const sn = spN(sc.today), dev = low.includes('hrv') || low.includes('rhr'), feel = low.includes('sleep') || low.includes('energy');
+    const base = 'сегодня по расписанию клиента: ' + sn + ' — это и есть нагрузка дня; силовую и интервалы не предлагать; к игре — разминка 8–10 минут до и растяжка после.';
+    if (dev && feel) return base + ' Но и прибор, и самочувствие ниже обычного: мягко предложить перенести ' + sn + ' или сыграть спокойно и коротко; лёгкая растяжка — полноценный план.' + ' Клиенту одной фразой объяснить «почему сегодня так», вывод не менять.';
+    if (dev) return base + ' Прибор показывает восстановление ниже нормы, а самочувствие хорошее — не спорить, кто прав: играть можно спокойнее, без рывков на пределе; если в первые 10–15 минут тяжело дышать или пульс выше привычного — закончить раньше.' + ' Клиенту одной фразой объяснить «почему сегодня так», вывод не менять.';
+    if (feel) return base + ' Прибор в норме, но самочувствие хуже обычного — ориентир на самочувствие: играть спокойнее и короче, это тоже нагрузка дня.' + ' Клиенту одной фразой объяснить «почему сегодня так», вывод не менять.';
+    return base + ' Клиенту одной фразой объяснить «почему сегодня так», вывод не менять.';
+  }
 
   const LBL = { hrv: 'HRV ниже личной нормы', rhr: 'пульс покоя выше личной нормы', sleep: 'сон хуже обычного', energy: 'энергии меньше обычного' };
   const bad = low.filter(k => LBL[k]).map(k => LBL[k]);
@@ -7933,7 +7949,7 @@ function _todayMovePlanBase(data, holdLoad, lowRecovery) {
   }
   if (weekDone)
     return 'сегодня: силовых на неделе уже ' + strength7 + ' — план выполнен; кардио в разговорном темпе, ходьба или отдых — по желанию.' + REST + WHY;
-  return 'сегодня: хороший день для силовой' + (y && y.m === 'cardio' ? ' (вчера было кардио)' : y && y.m === 'hiit' ? ' (вчера был HIIT — без интервалов сегодня)' : '')
+  return 'сегодня: хороший день для силовой' + (y && y.sp ? ' (вчера был ' + y.sp + (y.m === 'hiit' ? ' — сегодня без интервалов и без силовой на ноги' : '') + ')' : y && y.m === 'cardio' ? ' (вчера было кардио)' : y && y.m === 'hiit' ? ' (вчера был HIIT — без интервалов сегодня)' : '')
     + ' — на этой неделе силовых ' + strength7 + ' из ' + target + '.' + WHY;
 }
 
@@ -8531,7 +8547,8 @@ function buildUserMessage(data, lang, tier) {
     + (data.new_symptoms ? 'Что нового за сутки (со слов клиента — ОБЯЗАТЕЛЬНО учти при интерпретации: может объяснять «отклонения» в биометрии, напр. простуда → низкий SpO₂; не тревожь, если сигнал объясняется этим): ' + data.new_symptoms + '\n' : '')
     // «Движение вчера» и «Мышцы сегодня» словами — чтобы ИИ (и будущий тренер) видел полную картину
     // состояния перед нагрузкой, а не только вывод _todayMovePlan. Где и как болит — со слов клиента. 2026-09-19
-    + (data.move_today ? 'Движение вчера (со слов клиента): ' + ({sedentary:'сидячий день',light:'немного двигался',walk:'много ходил',cardio:'кардио / бег',strength:'силовая',yoga:'йога / растяжка',pilates:'пилатес',hiit:'HIIT (интервальная высокой интенсивности)'}[String(data.move_today)] || String(data.move_today).slice(0, 30)) + '\n' : '')
+    + (data.move_today ? 'Движение вчера (со слов клиента): ' + ({sedentary:'сидячий день',light:'немного двигался',walk:'много ходил',cardio:'кардио / бег',strength:'силовая',yoga:'йога / растяжка',pilates:'пилатес',hiit:'HIIT (интервальная высокой интенсивности)',sport:'спорт / игра' + (data.sport_ctx && data.sport_ctx.yday && data.sport_ctx.yday.n ? ' (' + String(data.sport_ctx.yday.n).slice(0, 40) + ')' : '')}[String(data.move_today)] || String(data.move_today).slice(0, 30)) + '\n' : '')
+    + (data.sport_ctx && Array.isArray(data.sport_ctx.list) && data.sport_ctx.list.length ? 'Свой спорт клиента (дни): ' + data.sport_ctx.list.slice(0, 6).map(v => String(v).replace(/[\r\n]+/g, ' ').slice(0, 60)).join('; ') + '\n' : '')
     + (_soreText(data) ? 'Мышцы/суставы сегодня — где и как болит (со слов клиента, ОБЯЗАТЕЛЬНО учти в плане движения): «' + _soreText(data) + '». Эту зону сегодня не нагружать, упражнения подобрать в обход неё; если похоже на травму (растяжение, резкая боль, отёк, боль в суставе) — никакой нагрузки на эту зону и мягко предложить показаться врачу, если за несколько дней не проходит. Диагноз не ставить.\n' : '')
     + (data.lifestyle_notes ? 'События/контекст недели (со слов клиента — учитывай как бытовое объяснение сдвигов метрик, не как ухудшение): ' + data.lifestyle_notes + '\n' : '')
     // Виды/частота/восстановление уходили СЫРЫМИ токенами анкеты (strength, moderate, tired…):
