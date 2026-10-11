@@ -3656,6 +3656,7 @@ body.card-open #cardPanel, body.approach-open #approachPanel{
           <div class="chip"><input type="radio" name="move_today" id="mv6" value="yoga" onchange="_moveTodayChange()"><label for="mv6" data-t="move_yoga">🧘 Йога / растяжка</label></div>
           <div class="chip"><input type="radio" name="move_today" id="mv7" value="pilates" onchange="_moveTodayChange()"><label for="mv7" data-t="move_pilates">🤸 Пилатес</label></div>
           <div class="chip"><input type="radio" name="move_today" id="mv8" value="hiit" onchange="_moveTodayChange()"><label for="mv8" data-t="move_hiit">🔥 HIIT</label></div>
+          <div class="chip"><input type="radio" name="move_today" id="mv9" value="sport" onchange="_moveTodayChange()"><label for="mv9" data-t="move_sport">⚽ Спорт / игра</label></div>
         </div>
         <div id="move-trk-note" style="display:none;font-size:var(--fs-cap);color:var(--t3);line-height:1.45;margin-top:8px;"></div>
       </div>
@@ -4697,6 +4698,7 @@ const _ENK={
   move_cardio:{en:"🏃 Cardio / run",ru:"🏃 Кардио / бег",uk:"🏃 Кардіо / біг",es:"🏃 Cardio / correr",de:"🏃 Cardio / Laufen",pt:"🏃 Cardio / corrida",fr:"🏃 Cardio / course",pl:"🏃 Cardio / bieg",it:"🏃 Cardio / corsa",he:"🏃 קרדיו / ריצה",ja:"🏃 有酸素 / ランニング",ko:"🏃 유산소 / 달리기"},
   move_yoga:{en:"🧘 Yoga / stretching",ru:"🧘 Йога / растяжка",uk:"🧘 Йога / розтяжка",es:"🧘 Yoga / estiramientos",de:"🧘 Yoga / Dehnen",pt:"🧘 Yoga / alongamento",fr:"🧘 Yoga / étirements",pl:"🧘 Joga / rozciąganie",it:"🧘 Yoga / stretching",he:"🧘 יוגה / מתיחות",ja:"🧘 ヨガ / ストレッチ",ko:"🧘 요가 / 스트레칭"},
   move_pilates:{en:"🤸 Pilates",ru:"🤸 Пилатес",uk:"🤸 Пілатес",es:"🤸 Pilates",de:"🤸 Pilates",pt:"🤸 Pilates",fr:"🤸 Pilates",pl:"🤸 Pilates",it:"🤸 Pilates",he:"🤸 פילאטיס",ja:"🤸 ピラティス",ko:"🤸 필라테스"},
+  move_sport:{en:"⚽ Sport / game",ru:"⚽ Спорт / игра",uk:"⚽ Спорт / гра",es:"⚽ Deporte / partido",de:"⚽ Sport / Spiel",pt:"⚽ Esporte / jogo",fr:"⚽ Sport / match",pl:"⚽ Sport / gra",it:"⚽ Sport / partita",he:"⚽ ספורט / משחק",ja:"⚽ スポーツ・試合",ko:"⚽ 스포츠 / 경기"},
   move_hiit:{en:"🔥 HIIT",ru:"🔥 HIIT",uk:"🔥 HIIT",es:"🔥 HIIT",de:"🔥 HIIT",pt:"🔥 HIIT",fr:"🔥 HIIT",pl:"🔥 HIIT",it:"🔥 HIIT",he:"🔥 HIIT",ja:"🔥 HIIT",ko:"🔥 HIIT"},
   move_strength:{en:"🏋 Strength",ru:"🏋 Силовая",uk:"🏋 Силове",es:"🏋 Fuerza",de:"🏋 Kraft",pt:"🏋 Força",fr:"🏋 Renforcement",pl:"🏋 Siłowy",it:"🏋 Forza",he:"🏋 כוח",ja:"🏋 筋トレ",ko:"🏋 근력 운동"},
 };
@@ -5350,6 +5352,7 @@ function _rdIntake(){
 // (vialp_wo_pick), чтобы разбор ИИ и карточка говорили об одной тренировке.
 function _woCat(m,z){
   if(m==='strength'){ z=z||[]; if(z.indexOf('full')>=0||z.length>1) return 'full'; return z[0]||'str'; }
+  if(m==='sport'){ var y=window.vialSports&&vialSports.yesterday(); return y?y.c:'cardio'; }
   return m==='cardio'?'cardio':m==='hiit'?'hiit':m==='pilates'?'pil':m==='yoga'?'mind':'other';
 }
 function _woCtx(){
@@ -5363,12 +5366,19 @@ function _woCtx(){
   var temp=(P.cond_temp||[]).filter(function(x){ return x&&x!=='none_temp'; });
   var sym=(_bpSymGet()||[]).filter(function(x){ return x!=='none'; });
   var g7=document.getElementById('gsm7'), cmp=(typeof _cmpGet==='function'&&_cmpGet())||{}, ci=function(k){ return (cmp.items||[]).indexOf(k)>=0; };
+  // «Мой спорт» и проверка перед стартом (sports.js, 2026-10-11)
+  var sp=window.vialSports, now=sp?sp.now():null, st=sp?sp.today():null;
+  // прибор ниже нормы: ВСР / пульс покоя по личной базе; без них — readiness прибора < 70 (Oura: «обратить внимание»)
+  var low=mc.low||[], ix=(typeof importedData!=='undefined'&&importedData)||{};
+  var dev=low.indexOf('hrv')>=0||low.indexOf('rhr')>=0, rdy=!dev&&ix.readiness!=null&&+ix.readiness>0&&+ix.readiness<70;
   return { male:g==='male', level:af==='high'?'tr':(af==='low'||af==='moderate')?'reg':'start',
+    sportToday:st?{id:st.id,full:st.full!==false}:null, now0:(now&&now.did==='sport'&&now.sid&&sp)?sp.catOf(now.sid):'',
+    dev:dev||rdy, feel:low.indexOf('sleep')>=0||low.indexOf('energy')>=0,
     bp:!!_bpFlag()||sym.length>0, ill:temp.length>0, limit:P.cond_limit==='yes'||has('pregnancy','onco_active'),
     heartRisk:has('hypertension','arrhythmia','cvd_event','heart_failure'), pelvic:!!(g7&&g7.checked),
     older:(parseInt(P.age)||0)>=60||has('osteoporosis'),
     sleep:ci('sleep'), back:ci('pain')||has('back'), calm:ci('hf')||ci('mood')||ci('fog'), hyp:has('hypertension')||!!_bpFlag(),
-    bad:(mc.low||[]).length+(mc.sore==='strong'?1:0), soreMild:mc.sore==='mild',
+    bad:(mc.low||[]).length+(rdy?1:0)+(mc.sore==='strong'?1:0), soreMild:mc.sore==='mild',
     hist:Object.keys(byD).map(function(k){ return byD[k]; }) };
 }
 // fresh — пересчитать (проход); иначе взять выбор этого дня, если он уже есть.
@@ -5669,7 +5679,7 @@ function _cardSaveNum(field,val){var P={};try{P=JSON.parse(localStorage.getItem(
 // Данные НЕ уходят на сервер: пользователь сам сохраняет файл и импортирует на новом устройстве.
 // Пароль знает только он: PBKDF2→AES-GCM. Единый модуль с VIO (источник по _SEC; в PRO — localStorage).
 var _BK_KEYS = (typeof _SEC!=='undefined' && _SEC.keys) ? _SEC.keys.slice()
-  : ['vialp_profile','vialp_history','vialp_daily','vialp_weekly_text','vialp_monthly_text','vialp_ai_memory','vialp_ai_daily','vialp_day_plan','vialp_lastanswers','vialp_imported','vialp_days','vialp_pid','vialp_research_consent','vialp_experiment','vialp_exp_log','vialp_labs','vialp_bigtext','vialp_workouts','vialp_wo_lv'];   // активный эксперимент и журнал закрытых — иначе на новом устройстве петля обрывается; pid+согласие в копию: перенос на новое устройство не создаёт «нового участника» (P2/P6)
+  : ['vialp_profile','vialp_history','vialp_daily','vialp_weekly_text','vialp_monthly_text','vialp_ai_memory','vialp_ai_daily','vialp_day_plan','vialp_lastanswers','vialp_imported','vialp_days','vialp_pid','vialp_research_consent','vialp_experiment','vialp_exp_log','vialp_labs','vialp_bigtext','vialp_workouts','vialp_wo_lv','vialp_sports'];   // активный эксперимент и журнал закрытых — иначе на новом устройстве петля обрывается; pid+согласие в копию: перенос на новое устройство не создаёт «нового участника» (P2/P6)
 function _bkGet(k){ return (typeof secGet==='function')?secGet(k):localStorage.getItem(k); }
 function _bkSet(k,v){ if(typeof secSet==='function'){ secSet(k,v); } else { localStorage.setItem(k,v); } }
 function _bkB64(u8){ var s=''; for(var i=0;i<u8.length;i++)s+=String.fromCharCode(u8[i]); return btoa(s); }
@@ -6533,7 +6543,8 @@ function renderCard(){
            _arch?_vcSec('<i class="ph ph-calendar-blank"></i>',_esc(t('prog_archive')),_arch,false,true):''].join('');
   }
   else if(_cardSubPg==='data')       // «Профиль › Мои данные»: анкета + приёмы + анализы (план структуры §6)
-    html+=[_chgHTML(),_secGoal,_secAct,_secNut,_secHealth,_secStress,_secBal,_secRhythm,_secLife,_secSup,_secLabs].join('');
+    var _secSport=window.vialSports?_vcSec('<i class="ph ph-tennis-ball"></i>',_esc(vialSports.t('title',lang)),vialSports.profileHtml(lang),false,true):'';
+    html+=[_chgHTML(),_secGoal,_secAct,_secSport,_secNut,_secHealth,_secStress,_secBal,_secRhythm,_secLife,_secSup,_secLabs].join('');
   else if(_cardSubPg==='settings'){  // «Профиль › Настройки»: язык живёт только здесь
     // Время еды (привязка приёмов «до / во время / после еды») и напоминания о воде — 2026-10-10.
     var _mt=(typeof _ikMealsGet==='function')?_ikMealsGet():{bf:'08:00',ln:'13:00',dn:'19:00'};
@@ -14568,6 +14579,7 @@ document.addEventListener('visibilitychange',function(){
 <script src="review-bridge.js"></script><!-- окно «Оцените приложение» после 3 дней с разбором (2026-10-08) -->
 <script src="intake.js"></script>
 <script src="levers.js"></script>
+<script src="sports.js"></script><!-- «Мой спорт», проверка перед тренировкой, сверка прибора и самочувствия (2026-10-11) -->
 <script src="workouts.js"></script>
 <script src="move-player.js"></script><!-- проигрыватель «Тренировки дня»: ролики Евы из clips/, голос телефона, музыка (2026-10-10) --><!-- «Тренировка дня» текстом: 30 тренировок ×12 и выбор кодом (2026-10-10) --><!-- карта рычагов и блок «Фокус недели» (2026-10-02) -->
 <script src="courses.js"></script><!-- проект «КУРСЫ»: карточка дня в «Фокусе недели» (2026-10-03) -->

@@ -86,8 +86,23 @@
     if (lg.some(function (r) { var a = ago(r); return r.pain >= 6 && a >= 0 && a <= 2; })) return { id: mob, why: 'pain' };
     if (lg.some(function (r) { return r.pain >= 4 && r.pain <= 5 && ago(r) === 1; })) ctx.soreMild = true;
     lv = Math.max(0, Math.min(2, lv + lvDelta()));
-    if ((ctx.bad || 0) >= 2) return { id: mob, why: 'red' };
+    // Расхождение прибора и самочувствия (FITNESS-SELECTION-RULES §15): не спорим, кто прав, — называем оба.
+    var gap = window.vialSports ? vialSports.gap(ctx) : '';
+    // День своего спорта по расписанию («Мой спорт»): он и есть нагрузка дня, к нему — разминка и растяжка.
+    if (ctx.sportToday && !ctx.limit && !ctx.now0) return { id: null, sport: ctx.sportToday.id, mob: mob, why: 'sport', gap: gap };
+    // Сегодня уже был спорт (проверка перед стартом): что было бы без него — r.orig, для «всё равно как в плане».
+    if (ctx.now0) {
+      var c0 = {}; Object.keys(ctx).forEach(function (k) { if (k !== 'now0') c0[k] = ctx[k]; });
+      var o = pick(c0), r0 = pick2(ctx, lv, mob, id, tr, T, gap);
+      r0.orig = o && o.id; if (r0.id !== r0.orig) r0.why = ''; return r0;
+    }
+    return pick2(ctx, lv, mob, id, tr, T, gap);
+  }
+  function pick2(ctx, lv, mob, id, tr, T, gap) {
+    var tday = cfg.day();
+    if ((ctx.bad || 0) >= 2) return { id: mob, why: 'red', gap: gap };
     var hist = (ctx.hist || []).filter(function (h) { return h && h.d >= 1 && h.d <= 7; });
+    if (ctx.now0) hist.push({ d: 0, c: ctx.now0 });   // сегодняшний спорт — в недельный счёт
     var on = function (d) { return hist.filter(function (h) { return h.d === d; })[0]; };
     var loaded = function (h) { return h && (STR[h.c] || h.c === 'hiit' || h.c === 'cardio'); };
     var streak = 0; while (streak < 7 && loaded(on(streak + 1))) streak++;
@@ -103,10 +118,10 @@
     var yellow = (ctx.bad || 0) === 1 || !!ctx.soreMild;
     if (yellow) {
       if (lv === 0) {   // жёлтый день у новичка → корпус / баланс / мобильность (Марина, §8.4)
-        if (!done.core) return { id: id('core', 0), why: 'yellow' };
-        if (tr === 'w' && !done.bal) return { id: 'w13', why: 'yellow' };
-        if (tr === 'w' && !done.mind) return { id: 'w17', why: 'yellow' };
-        return { id: mob, why: 'yellow' };
+        if (!done.core) return { id: id('core', 0), why: 'yellow', gap: gap };
+        if (tr === 'w' && !done.bal) return { id: 'w13', why: 'yellow', gap: gap };
+        if (tr === 'w' && !done.mind) return { id: 'w17', why: 'yellow', gap: gap };
+        return { id: mob, why: 'yellow', gap: gap };
       }
       lv--;
     }
@@ -117,6 +132,13 @@
     if (yc === 'full') { ban.legs = ban.upper = ban.full = 1; }
     if (yc === 'str') { ban.full = 1; }
     if (yc === 'hiit') { ban.hiit = ban.legs = 1; }
+    // Сегодня уже был спорт: что он нагрузил — сегодня не трогаем (рывковый — ноги и сердце, ровный — ноги).
+    var c0 = ctx.now0 || '';
+    if (c0 === 'hiit') { ban.hiit = ban.legs = ban.full = 1; }
+    if (c0 === 'cardio') { ban.hiit = ban.legs = 1; }
+    if (c0 === 'legs') { ban.legs = ban.full = ban.hiit = 1; }
+    if (c0 === 'upper') { ban.upper = ban.full = 1; }
+    if (c0 === 'full') { ban.legs = ban.upper = ban.full = ban.hiit = 1; }
     if (STR[yc] && LV[lv] === 'start') { ban.legs = ban.upper = ban.full = 1; }   // у «старта» не две силовые подряд
     var tS = LV[Math.max(0, LV.indexOf(ctx.level || 'start'))] === 'start' ? 2 : 3;
     var need = [];
@@ -132,7 +154,7 @@
     if (tr === 'w' && done.mind < 1 && yc !== 'mind') need.push({ c: 'mind', def: 1 });
     var green = !yellow;
     if (tr === 'w' && LV[lv] === 'tr' && green && !ctx.heartRisk && !ban.hiit && done.hiit < 1) need.push({ c: 'hiit', def: 1 });
-    if (tr === 'm' && done.cardio < 1 && yc !== 'cardio' && yc !== 'hiit') need.push({ c: 'cardio', def: 1 });
+    if (tr === 'm' && done.cardio < 1 && yc !== 'cardio' && yc !== 'hiit' && !ban.hiit) need.push({ c: 'cardio', def: 1 });
     // Предпочтения при равном недоборе: тазовое дно → корпус; сон / спина → пилатес; приливы, настроение,
     // туман → тело-разум; 60+ / остеопороз → баланс; иначе сила.
     var pref = function (n) { return n.c === 'core' && ctx.pelvic ? 4 : n.c === 'pil' && (ctx.sleep || ctx.back) ? 3 : n.c === 'mind' && ctx.calm ? 3 : n.c === 'bal' && ctx.older ? 2 : n.s ? 1 : 0; };
@@ -146,7 +168,7 @@
     }
     var l2 = lv;
     if (n.c === 'cardio' && (ctx.heartRisk || yellow)) l2 = 0;   // интервалы при сердечном риске — нет
-    var res = { id: id(n.c, l2) };
+    var res = { id: id(n.c, l2), gap: gap };
     if (yellow) res.why = 'yellow';
     else if (n.c === 'core' && ctx.pelvic) res.why = 'pelvic';
     else if (n.c === 'pil' || n.c === 'mind') res.why = n.c;
@@ -171,11 +193,16 @@
   // Карточка в шаге «Что делать сегодня». done — тренировку уже отметили сегодня.
   function card(r, l, done) {
     var h = '<div class="wo-h"><i class="ph ph-barbell" aria-hidden="true"></i>' + esc(tx(UI.title, l)) + '</div>';
+    if (r && r.sport && window.vialSports) return vialSports.dayCard(r, l);
     if (!r || !r.id) return h + '<div class="wo-why">' + esc(whyTxt(r, l)) + '</div>';
     h += '<div class="wo-n">' + esc(title(r.id, l)) + '</div><div class="wo-d">' + esc(meta(r.id, l)) + '</div>';
     h += '<div class="wo-d">' + esc(tx(UI.inv, l)) + ': ' + esc(invTxt(r.id, l)) + '</div>';
-    var wt = whyTxt(r, l); if (wt) h += '<div class="wo-why">' + esc(wt) + '</div>';
+    // при расхождении прибора и самочувствия — объяснение обоих вместо короткого «сигнал ниже обычного»
+    var wt = (r.gap && window.vialSports && (r.why === 'yellow' || r.why === 'red')) ? vialSports.gapTxt(r.gap, '', l) : whyTxt(r, l);
+    if (wt) h += '<div class="wo-why">' + esc(wt) + '</div>';
+    var chk = window.vialSports ? vialSports.checkHtml(r, l) : '';
     if (upOffer()) h += '<div class="wo-up"><span>' + esc(tx(FEEL.up, l)) + '</span><div class="wo-b"><button type="button" onclick="vialWorkouts.acceptUp(true)">' + esc(tx(FEEL.yes, l)) + '</button><button type="button" onclick="vialWorkouts.acceptUp(false)">' + esc(tx(FEEL.no, l)) + '</button></div></div>';
+    h += chk;
     if (window.vialPlayer) h += '<button type="button" class="wo-go" onclick="vialWorkouts.play(\'' + r.id + '\')">▶ ' + esc(window.vialPlayer.label()) + '</button>';
     h += '<div class="wo-b"><button type="button" class="wo-open" onclick="vialWorkouts.open(\'' + r.id + '\')">' + esc(tx(UI.open, l)) + ' ›</button>'
       + '<button type="button" class="wo-done' + (done ? ' on' : '') + '" onclick="vialWorkouts.toggle(\'' + r.id + '\')">' + (done ? '✓ ' + esc(tx(UI.doneOn, l)) : esc(tx(UI.done, l))) + '</button></div>';
@@ -307,7 +334,7 @@
   try { var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st); } catch (e) {}
 
   window.vialWorkouts = {
-    pick: pick, card: card, plan: plan, steps: steps, play: play, askFeel: askFeel, _pickFeel: _pickFeel, _saveFeel: _saveFeel, acceptUp: acceptUp, saveFeel: saveFeel, partName: function (k, l) { return tx(PART[k], l); }, open: open, toggle: toggle, title: title, meta: meta, inv: invTxt, hasDb: hasDb, lastKg: lastKg, why: whyTxt, dose: dose,
+    pick: pick, card: card, plan: plan, steps: steps, play: play, askFeel: askFeel, _pickFeel: _pickFeel, _saveFeel: _saveFeel, acceptUp: acceptUp, saveFeel: saveFeel, partName: function (k, l) { return tx(PART[k], l); }, open: open, toggle: toggle, title: title, uiTitle: function (l) { return tx(UI.title, l); }, meta: meta, inv: invTxt, hasDb: hasDb, lastKg: lastKg, why: whyTxt, dose: dose,
     cat: function (id) { return W[id] ? W[id].c : ''; }, ids: function () { return Object.keys(W); },
     log: log, doneOn: doneOn, mark: mark,
     setup: function (o) { Object.keys(o || {}).forEach(function (k) { cfg[k] = o[k]; }); }
