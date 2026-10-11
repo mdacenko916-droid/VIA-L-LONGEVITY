@@ -300,6 +300,30 @@ class HealthConnectVialPlugin : Plugin() {
         ExerciseSessionRecord.EXERCISE_TYPE_ELLIPTICAL -> "elliptical"
         ExerciseSessionRecord.EXERCISE_TYPE_ROWING,
         ExerciseSessionRecord.EXERCISE_TYPE_ROWING_MACHINE -> "rowing"
+        // Виды спорта для «Моего спорта» (sports.js, 2026-10-11) — те же слова, что даёт Apple Health в snake_case
+        ExerciseSessionRecord.EXERCISE_TYPE_TENNIS -> "tennis"
+        ExerciseSessionRecord.EXERCISE_TYPE_SOCCER -> "soccer"
+        ExerciseSessionRecord.EXERCISE_TYPE_BASKETBALL -> "basketball"
+        ExerciseSessionRecord.EXERCISE_TYPE_VOLLEYBALL -> "volleyball"
+        ExerciseSessionRecord.EXERCISE_TYPE_BADMINTON -> "badminton"
+        ExerciseSessionRecord.EXERCISE_TYPE_TABLE_TENNIS -> "table_tennis"
+        ExerciseSessionRecord.EXERCISE_TYPE_SQUASH,
+        ExerciseSessionRecord.EXERCISE_TYPE_RACQUETBALL -> "squash"
+        ExerciseSessionRecord.EXERCISE_TYPE_HANDBALL -> "handball"
+        ExerciseSessionRecord.EXERCISE_TYPE_ICE_HOCKEY,
+        ExerciseSessionRecord.EXERCISE_TYPE_ROLLER_HOCKEY -> "hockey"
+        ExerciseSessionRecord.EXERCISE_TYPE_GOLF -> "golf"
+        ExerciseSessionRecord.EXERCISE_TYPE_DANCING -> "dance"
+        ExerciseSessionRecord.EXERCISE_TYPE_MARTIAL_ARTS -> "martial_arts"
+        ExerciseSessionRecord.EXERCISE_TYPE_BOXING -> "boxing"
+        ExerciseSessionRecord.EXERCISE_TYPE_FENCING -> "fencing"
+        ExerciseSessionRecord.EXERCISE_TYPE_SKIING -> "skiing"
+        ExerciseSessionRecord.EXERCISE_TYPE_SNOWBOARDING -> "snowboarding"
+        ExerciseSessionRecord.EXERCISE_TYPE_SURFING -> "surfing"
+        ExerciseSessionRecord.EXERCISE_TYPE_PADDLING -> "paddle_sports"
+        ExerciseSessionRecord.EXERCISE_TYPE_ROCK_CLIMBING -> "climbing"
+        ExerciseSessionRecord.EXERCISE_TYPE_STAIR_CLIMBING,
+        ExerciseSessionRecord.EXERCISE_TYPE_STAIR_CLIMBING_MACHINE -> "stair_climbing"
         else -> "sport"
     }
 

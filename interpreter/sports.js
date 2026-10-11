@@ -101,6 +101,9 @@
     p_all: row('мышцы|м’язи|muscles|los músculos|die Muskeln|os músculos|les muscles|mięśnie|i muscoli|השרירים|筋肉|근육'),
     keep: row('Всё равно сделать как в плане|Все одно зробити як у плані|Do the original plan anyway|Hacer igualmente lo planeado|Trotzdem wie geplant|Fazer como planejado mesmo assim|Faire quand même le plan prévu|Mimo to zrób plan|Fare comunque il piano|לעשות בכל זאת לפי התוכנית|予定どおり行う|그래도 계획대로 하기'),
     ok: row('Сегодня уже: {s}. Эта тренировка подходит — нагружает другое.|Сьогодні вже: {s}. Це тренування підходить — навантажує інше.|Already today: {s}. This workout still fits — it works different muscles.|Hoy ya: {s}. Este entrenamiento encaja: trabaja otra zona.|Heute schon: {s}. Dieses Training passt — es belastet anderes.|Hoje já: {s}. Este treino ainda serve — trabalha outra parte.|Déjà aujourd’hui : {s}. Cette séance convient — elle sollicite autre chose.|Dziś już: {s}. Ten trening pasuje — obciąża co innego.|Oggi già: {s}. Questo allenamento va bene: lavora altro.|היום כבר: {s}. האימון הזה מתאים — הוא עובד על משהו אחר.|今日はすでに{s}。このトレーニングは大丈夫、使う部位が違います。|오늘 이미 {s}. 이 운동은 괜찮아요. 다른 부위를 써요.'),
+    w_btn: row('Подтянуть с часов|Підтягнути з годинника|Get from my watch|Traer del reloj|Von der Uhr holen|Puxar do relógio|Récupérer depuis la montre|Pobierz z zegarka|Prendi dall’orologio|למשוך מהשעון|ウォッチから取得|워치에서 가져오기'),
+    w_none: row('Сегодня тренировок с часов нет.|Сьогодні тренувань з годинника немає.|No workouts from your watch today.|Hoy no hay entrenamientos del reloj.|Heute keine Trainings von der Uhr.|Nenhum treino do relógio hoje.|Aucune séance de la montre aujourd’hui.|Dziś brak treningów z zegarka.|Nessun allenamento dall’orologio oggi.|אין היום אימונים מהשעון.|今日はウォッチの記録がありません。|오늘 워치 운동 기록이 없어요.'),
+    w_got: row('С часов: {a}, {m} мин|З годинника: {a}, {m} хв|From your watch: {a}, {m} min|Del reloj: {a}, {m} min|Von der Uhr: {a}, {m} Min.|Do relógio: {a}, {m} min|Depuis la montre : {a}, {m} min|Z zegarka: {a}, {m} min|Dall’orologio: {a}, {m} min|מהשעון: {a}, {m} דק׳|ウォッチより：{a}、{m}分|워치: {a}, {m}분'),
     // день спорта по расписанию
     dayT: row('Сегодня по плану: {s}|Сьогодні за планом: {s}|Today’s plan: {s}|Hoy toca: {s}|Heute geplant: {s}|Hoje no plano: {s}|Au programme aujourd’hui : {s}|Dziś w planie: {s}|Oggi in programma: {s}|היום בתוכנית: {s}|今日の予定：{s}|오늘의 계획: {s}'),
     daySub: row('по вашему расписанию|за вашим розкладом|on your schedule|según tu calendario|nach deinem Plan|conforme sua rotina|selon votre planning|według twojego planu|secondo il tuo programma|לפי הלוח שלכם|いつもの予定どおり|평소 일정대로'),
@@ -134,7 +137,7 @@
   // Вчерашний спорт — для чипа «Спорт» в «Движении вчера»: по расписанию вчера, иначе первый в списке.
   function yesterday() { var d = new Date(Date.parse(dayKey()) - 86400000).toISOString().slice(0, 10), s = scheduled(d) || get()[0]; return s ? { id: s.id, c: cat(s.id, s.full !== false) } : null; }
   function nowGet() { try { var o = JSON.parse(localStorage.getItem(NOW) || 'null'); return o && o.day === dayKey() ? o : null; } catch (e) { return null; } }
-  function nowSet(k, v) { var o = nowGet() || { day: dayKey() }; o[k] = v; if (k === 'did' && v !== 'sport') delete o.sid; try { localStorage.setItem(NOW, JSON.stringify(o)); } catch (e) {} rerender(); }
+  function nowSet(k, v) { var o = nowGet() || { day: dayKey() }; o[k] = v; if (k === 'did' && v !== 'sport') { delete o.sid; delete o.watch; } try { localStorage.setItem(NOW, JSON.stringify(o)); } catch (e) {} rerender(); }
   function rerender() { try { localStorage.removeItem('vialp_wo_pick'); } catch (e) {} try { if (typeof window._rdWorkout === 'function') window._rdWorkout(); } catch (e) {} }
 
   // ── «Мой спорт» в Профиле ───────────────────────────────────────────────────
@@ -219,9 +222,11 @@
     var b = function (k, v, lbl) { return '<button type="button" class="' + (n[k] === v ? 'on' : '') + '" onclick="vialSports._now(\'' + k + '\',\'' + v + '\')">' + esc(lbl) + '</button>'; };
     var h = '<div class="sp-chk"><div class="sp-q" style="margin-top:0;">' + esc(t('q1', l)) + '</div><div class="sp-o">'
       + b('did', 'none', t('d_none', l)) + b('did', 'walk', t('d_walk', l)) + b('did', 'sport', t('d_sport', l)) + '</div>';
+    if (n.watch) h += '<div id="spWatch" style="font-size:13px;color:var(--ok,#4ECCA3);margin-top:7px;">' + esc(t('w_got', l).replace('{a}', n.sid ? name(n.sid, l) : n.watch.a).replace('{m}', n.watch.m)) + '</div>';
+    else if (canWatch()) h += '<button type="button" onclick="vialSports._pull()" style="margin-top:8px;background:none;border:0;padding:0;color:var(--ok,#4ECCA3);font:500 13px var(--font-ui,inherit);cursor:pointer;"><i class="ph ph-heartbeat"></i> <span id="spWatch">' + esc(t('w_btn', l)) + '</span></button>';
     if (n.did === 'sport') {
       // свой спорт — первым; остальное — из полного каталога через поиск в «Моём спорте»
-      var opts = mine.map(function (x) { return x.id; }); POP.forEach(function (id) { if (opts.indexOf(id) < 0) opts.push(id); });
+      var opts = mine.map(function (x) { return x.id; }); if (n.sid && opts.indexOf(n.sid) < 0) opts.unshift(n.sid); POP.forEach(function (id) { if (opts.indexOf(id) < 0) opts.push(id); });
       ['gym', 'yoga', 'pilates'].forEach(function (id) { if (opts.indexOf(id) < 0) opts.push(id); });
       h += '<div class="sp-q">' + esc(t('which', l)) + '</div><div class="sp-o">' + opts.map(function (id) { return b('sid', id, name(id, l)); }).join('') + '</div>';
     }
@@ -266,6 +271,37 @@
   }
   function _skip() { try { localStorage.setItem(SKIP, dayKey()); } catch (e) {} rerender(); }
 
+  // ── «Подтянуть с часов»: сегодняшние тренировки из Apple Health / Health Connect ──────────────
+  // Вид — snake_case: Apple — workoutActivityName («Traditional Strength Training» → traditional_strength_training),
+  // Android — слово из HealthConnectVialPlugin.exerciseName. Неизвестное → спрашиваем, что это было.
+  var ACT = { tennis: 'tennis', soccer: 'football', basketball: 'basketball', volleyball: 'volleyball', badminton: 'badminton', table_tennis: 'tabletennis',
+    squash: 'squash', racquetball: 'squash', pickleball: 'pickleball', handball: 'handball', hockey: 'hockey', ice_hockey: 'hockey', golf: 'golf',
+    dance: 'dance', dancing: 'dance', cardio_dance: 'dance', social_dance: 'dance', martial_arts: 'martial', boxing: 'boxing', kickboxing: 'kickboxing',
+    fencing: 'fencing', skiing: 'skiing', downhill_skiing: 'skiing', cross_country_skiing: 'xcski', snowboarding: 'snowboard', surfing: 'surfing',
+    surfing_sports: 'surfing', paddle_sports: 'kayak', climbing: 'climbing', stair_climbing: 'stairs', stairs: 'stairs', running: 'running', cycling: 'cycling',
+    swimming: 'swimming', rowing: 'rowing', hiking: 'hiking', elliptical: 'elliptical', yoga: 'yoga', pilates: 'pilates', tai_chi: 'taichi', barre: 'barre',
+    strength_training: 'gym', traditional_strength_training: 'gym', functional_strength_training: 'gym', cross_training: 'crossfit',
+    equestrian_sports: 'horse', bowling: 'bowling' };
+  function canWatch() { try { return !!((window.healthkitAvailable && healthkitAvailable()) || (window.healthConnectPresent && healthConnectPresent())); } catch (e) { return false; } }
+  var pulling = false;
+  async function pull() {
+    if (pulling) return; pulling = true; var msg = document.getElementById('spWatch'), l = L_();
+    if (msg) msg.textContent = '…';
+    var data = null;
+    try {
+      if (window.healthkitAvailable && healthkitAvailable() && window.healthkitRead) data = await healthkitRead();
+      else if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.HealthConnectVial) data = await Capacitor.Plugins.HealthConnectVial.readMetrics();
+    } catch (e) { data = null; }
+    pulling = false;
+    var day = dayKey(), list = ((data && data.workouts) || []).filter(function (w) { return w && w.day === day && w.minutes >= 10 && !/^walking$/.test(w.activity || ''); });
+    if (!list.length) { if (msg) msg.textContent = t('w_none', l); return; }
+    list.sort(function (a, b) { return b.minutes - a.minutes; });
+    var w = list[0], sid = ACT[String(w.activity || '').toLowerCase()] || '';
+    var o = nowGet() || { day: day }; o.did = 'sport'; o.watch = { a: String(w.activity || '').replace(/_/g, ' ').slice(0, 40), m: Math.round(w.minutes) };
+    if (sid) o.sid = sid; else delete o.sid;
+    try { localStorage.setItem(NOW, JSON.stringify(o)); } catch (e) {}
+    rerender();
+  }
   // Для ИИ-разбора (воркер, _todayMovePlanBase): названия по-русски — промпт внутренний.
   function ctxForAI() {
     var wd = 'пн,вт,ср,чт,пт,сб,вс'.split(','), n = nowGet(), st = today(), mv = '';
@@ -277,7 +313,7 @@
       done: n && n.did === 'sport' && n.sid ? it(n.sid, (find(n.sid) || {}).full !== false) : null };
   }
   window.vialSports = {
-    ctxForAI: ctxForAI,
+    ctxForAI: ctxForAI, _pull: pull,
     get: get, name: name, cat: cat, catOf: catOf, today: today, yesterday: yesterday, now: nowGet, gap: gap, gapTxt: gapTxt,
     profileHtml: profileHtml, picker: picker, checkHtml: checkHtml, dayCard: dayCard, t: t,
     _find: _find, _tg: _tg, _rm: _rm, _day: _day, _full: _full, _now: _now, _skip: _skip
