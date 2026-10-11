@@ -15,7 +15,7 @@
      _bootRoute решит, какой экран показать, — на холодном запуске успевали «проскочить» один-два
      блока, и только потом появлялась утренняя карточка. Прячем эти две поверхности до маршрутизации;
      класс снимается в _start (и по страховочному таймеру, если скрипт упал — иначе экран пустой). -->
-<style>body.booting main,body.booting .hero{visibility:hidden !important;}</style>
+<style>body.booting main,body.booting .hero,body.booting #topbar .lang-dropdown{visibility:hidden !important;}</style>
 <!-- PWA (устанавливаемость на телефон до нативной сборки; service worker ОБЩИЙ с EXPERT —
      scope /interpreter/ один на двоих, второй воркер вытеснил бы первый) -->
 <link rel="manifest" href="via-l.webmanifest">
@@ -1043,12 +1043,12 @@ input.oura-input::-webkit-slider-thumb{
   background:rgba(255,107,107,.08);
   border:1px solid rgba(255,107,107,.2);border-left:2px solid var(--alert);
   border-radius:16px;padding:16px 18px;
-  font-size:var(--fs-cap);color:rgba(255,150,150,.9);line-height:1.65;
+  font-size:var(--fs-cap);color:var(--t2);line-height:1.65;
   margin-bottom:12px;display:none;
   
 }
 .doctor-alert.visible{display:block;}
-.doctor-alert strong{display:block;margin-bottom:5px;font-size:var(--fs-cap);letter-spacing:.5px;}
+.doctor-alert strong{display:block;margin-bottom:5px;color:var(--alert);font-size:var(--fs-cap);letter-spacing:.5px;}
 /* Раскрывашка триажа: только измерения клиента вне ориентира (safe-режим) */
 #docDetails{margin-top:10px;}
 .doc-more{display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:rgba(255,170,170,.95);font-size:var(--fs-cap);font-weight:600;cursor:pointer;padding:2px 0;font-family:inherit;letter-spacing:.2px;}
@@ -1075,9 +1075,9 @@ input.oura-input::-webkit-slider-thumb{
 .rd-daybanner b{color:var(--gold-lt);font-weight:600;}
 .rd-daybanner-past{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);}
 /* Фазовый контекст дня — мягкая карточка (розовый акцент цикла, как в блоке цикла) */
-.rd-phasenote{display:flex;gap:10px;align-items:flex-start;font-size:var(--fs-cap);color:#5C3247;line-height:1.5;background:linear-gradient(180deg,rgba(244,114,182,.09),rgba(244,114,182,.03));border:1px solid rgba(244,114,182,.22);border-radius:14px;padding:11px 14px;}
+.rd-phasenote{display:flex;gap:10px;align-items:flex-start;font-size:var(--fs-cap);color:var(--t2);line-height:1.5;background:linear-gradient(180deg,rgba(244,114,182,.09),rgba(244,114,182,.03));border:1px solid rgba(244,114,182,.22);border-radius:14px;padding:11px 14px;}
 .rd-phasenote .rd-phasenote-ic{font-size:16px;line-height:1.3;flex:0 0 auto;}
-.rd-phasenote b{color:#9D2E63;font-weight:600;}
+.rd-phasenote b{color:var(--t1);font-weight:600;}
 /* лента недели (Oura) */
 .rd-week{display:flex;gap:5px;justify-content:space-between;overflow:hidden;padding:2px 0;margin-top:14px;}   /* воздух под шапкой: строка дня начиналась вплотную к «Анализ VIA-L + дата» и слипалась с ней (2026-08-25) */
 /* Лента дней — компактная строка (как навигатор дат у Oura): день+число+точка в ряд, а не колонкой */
@@ -9253,8 +9253,8 @@ function _showFlow(list){
       : L({ru:'Расскажите немного о себе — это нужно один раз, чтобы разбор был персональным.',uk:'Розкажіть трохи про себе — це потрібно один раз, щоб розбір був персональним.',en:'Tell us a little about yourself — just once, so your overview is truly personal.',es:'Cuéntanos un poco sobre ti — solo una vez, para que tu resumen sea personal.',de:'Erzähl uns etwas über dich — nur einmal, damit deine Übersicht persönlich ist.',pt:'Conte-nos um pouco sobre você — apenas uma vez, para que seu resumo seja pessoal.',fr:'Parlez-nous un peu de vous — une seule fois, pour un bilan vraiment personnel.',pl:'Opowiedz nam trochę o sobie — tylko raz, aby przegląd był osobisty.',it:'Raccontaci un po’ di te — una sola volta, per un riepilogo davvero personale.',he:'ספרו לנו קצת על עצמכם — פעם אחת, כדי שהסקירה תהיה אישית.',ja:'あなたについて少し教えてください（初回のみ）。まとめがあなた仕様になります。',ko:'자신에 대해 조금 알려주세요 — 처음 한 번만, 요약이 맞춤형이 됩니다.'});
     var d=document.createElement('div'); d.className='flow-intro';
     d.style.cssText='max-width:600px;margin:6px auto 2px;padding:0 26px;text-align:center;';
-    d.innerHTML='<div style="font-family:\'Playfair Display\',serif;font-size:27px;font-weight:600;letter-spacing:.3px;color:#8B6030;margin-bottom:9px;">'+ttl+'</div>'
-      +'<div style="font-size:var(--fs-title);color:#3A2C1A;line-height:1.65;font-weight:500;">'+sub+'</div>';
+    d.innerHTML='<div style="font-family:\'Playfair Display\',serif;font-size:27px;font-weight:600;letter-spacing:.3px;color:var(--gold-lt);margin-bottom:9px;">'+ttl+'</div>'
+      +'<div style="font-size:var(--fs-title);color:var(--t2);line-height:1.65;font-weight:500;">'+sub+'</div>';
     main.appendChild(d);
   })();
   // Дневную группу делим на две зоны: «За прошедшие сутки» (ретроспектива) и «Прямо сейчас»
@@ -9930,13 +9930,13 @@ async function _iapRestoreClick(){
   else { if(document.readyState!=='loading')_gateNext(); else document.addEventListener('DOMContentLoaded',_gateNext); }
 })();
 (function(){
-  function _unboot(){ try{ document.body.classList.remove('booting'); }catch(e){} }
+  function _unboot(){ if(window._tabPending) return; try{ document.body.classList.remove('booting'); }catch(e){} }   // ?tab: снимет сам обработчик вкладки
   function _start(){
     try{_bootRoute();}catch(e){ try{startFunnel();}catch(_){} }
     // Снимаем ПОСЛЕ кадра, в котором маршрут уже применён, — иначе видна та же перерисовка.
     try{ requestAnimationFrame(_unboot); }catch(e){ _unboot(); }
   }
-  setTimeout(_unboot, 3000);   // страховка: что бы ни случилось, экран не остаётся невидимым
+  setTimeout(function(){ window._tabPending=false; _unboot(); }, 3000);   // страховка: что бы ни случилось, экран не остаётся невидимым
   if(document.readyState!=='loading')_start(); else document.addEventListener('DOMContentLoaded',_start);
 })();   // пароль убран; маршрут запуска: сегодня уже пройдено→«Сегодня», иначе утренняя карточка / hero+анкета
 function goTo(n){
@@ -9979,7 +9979,7 @@ function goTo(n){
       var y=sa.scrollTop;
       if(document.body.classList.contains('view-result')){
         if(y>lastY+4 && y>70) tb.classList.add('tb-hidden');        // вниз → прячем
-        else if(y<lastY-4 || y<=8) tb.classList.remove('tb-hidden'); // вверх / у верха → показываем
+        else if(y<=70) tb.classList.remove('tb-hidden');   // только у верха: посреди ленты прозрачная шапка ложилась на текст карточек
       } else if(tb.classList.contains('tb-hidden')) tb.classList.remove('tb-hidden');
       lastY=y; ticking=false;
     });
@@ -14187,8 +14187,14 @@ function closeCircModal(){
     var _q=new URLSearchParams(location.search);
     var tab=_q.get('tab'), _plan=_q.get('plan');   // plan читаем ДО очистки адреса
     if(!tab) return;
+    window._tabPending=true;   // без этого сначала мелькал «Сегодня», и лишь потом открывалась вкладка
     history.replaceState(null,'',location.origin+location.pathname);   // чистим адрес
     var go=function(){
+      try{ _goTab(); }catch(e){}
+      window._tabPending=false;
+      requestAnimationFrame(function(){ document.body.classList.remove('booting'); });
+    };
+    var _goTab=function(){
       if(tab==='approach'){ if(typeof openApproach==='function') openApproach(); }
       else if(tab==='card'||tab==='today'||tab==='path'){ if(typeof navTo==='function') navTo(tab); }
       // Приход из уведомления: открыть «Памятку дня» сразу на утренней части.
