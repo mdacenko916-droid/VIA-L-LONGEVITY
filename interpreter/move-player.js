@@ -15,6 +15,18 @@
     '3.2': { rep: [2.9, 5.87] }, '3.4': { rep: [2.67, 5.29] },
     '3.6': { photo: 1 }, '3.7': { photo: 1 }, '3.8': { photo: 1 }, '6.3': { photo: 1 }
   };
+  // Рамка движения в клипе (доли кадра x0,y0,x1,y1) — для «Крупного плана»: стоя Ева во весь рост, лёжа — коврик
+  // от края до края. Перенесено из пробы владельца (player.html, BOX), ключи — номера каталога.
+  var BOX = { '8.1': [.38, 0, .60, .95], '5.2': [.40, .02, .60, .95], '1.9': [.36, 0, .64, .97], '1.17': [.38, .02, .71, .92],
+    '1.1': [.30, 0, .68, .92], '1.4': [.38, 0, .60, .95], '1.10': [.35, .02, .60, .95], '2.1': [.32, .05, .76, .90], '2.3': [.12, .25, .89, .84],
+    '2.7': [.33, .10, .67, .92], '1.13': [.22, .08, .58, .92], '2.9': [.34, .15, .66, .92], '2.20': [.30, .03, .54, .95],
+    '3.6': [.17, .35, .84, .80], '3.7': [.19, .40, .81, .84], '3.8': [.19, .30, .81, .84], '1.20': [.20, .45, .85, .88],
+    '3.2': [.18, .28, .84, .88], '3.4': [.14, .28, .90, .88], '6.3': [.32, .07, .66, .92] };
+  // Настройки (под «⋯», как в системном плеере iPhone) — запоминаются
+  var PREF_K = 'vialp_mvp_prefs';
+  function prefs() { var d = { tempo: 1, zoom: false, music: true, voice: true }; try { var o = JSON.parse(localStorage.getItem(PREF_K) || '{}'); for (var k in o) d[k] = o[k]; } catch (e) {} return d; }
+  function savePrefs(p) { try { localStorage.setItem(PREF_K, JSON.stringify(p)); } catch (e) {} }
+  var P = prefs();
   var BASE = 'clips/';
   function clipSrc(id) { var c = CLIPS[id]; return c ? BASE + id.replace('.', '-') + (c.photo ? '.jpg' : '.mp4') : ''; }
 
@@ -35,6 +47,15 @@
     music:  {ru:'Музыка',uk:'Музика',en:'Music',es:'Música',de:'Musik',pt:'Música',fr:'Musique',pl:'Muzyka',it:'Musica',he:'מוזיקה',ja:'音楽',ko:'음악'},
     doneH:  {ru:'Готово!',uk:'Готово!',en:'Done!',es:'¡Hecho!',de:'Geschafft!',pt:'Feito!',fr:'Terminé !',pl:'Gotowe!',it:'Fatto!',he:'סיימתם!',ja:'完了！',ko:'완료!'},
     doneT:  {ru:'Тренировка отмечена «Сделано». Завтра утром она сама попадёт в «Движение вчера».',uk:'Тренування позначено «Зроблено». Завтра вранці воно саме потрапить у «Рух учора».',en:'The workout is marked done. Tomorrow morning it will fill in “Movement yesterday” by itself.',es:'El entrenamiento está marcado como hecho. Mañana se añadirá solo a «Movimiento de ayer».',de:'Das Training ist als erledigt markiert. Morgen früh steht es automatisch unter „Bewegung gestern“.',pt:'O treino foi marcado como feito. Amanhã de manhã ele entra sozinho em «Movimento de ontem».',fr:'La séance est marquée comme faite. Demain matin, elle s’ajoutera seule à « Mouvement d’hier ».',pl:'Trening oznaczony jako zrobiony. Jutro rano sam trafi do „Ruch wczoraj”.',it:'L’allenamento è segnato come fatto. Domattina comparirà da solo in «Movimento di ieri».',he:'האימון סומן כבוצע. מחר בבוקר הוא יופיע לבד ב«תנועה אתמול».',ja:'トレーニングを「完了」にしました。明日の朝「昨日の運動」に自動で入ります。',ko:'운동이 완료로 표시됐어요. 내일 아침 ‘어제의 움직임’에 자동으로 들어가요.'},
+    more:   {ru:'Настройки',uk:'Налаштування',en:'Settings',es:'Ajustes',de:'Einstellungen',pt:'Ajustes',fr:'Réglages',pl:'Ustawienia',it:'Impostazioni',he:'הגדרות',ja:'設定',ko:'설정'},
+    tempo:  {ru:'Темп Евы',uk:'Темп Єви',en:'Eva’s pace',es:'Ritmo de Eva',de:'Evas Tempo',pt:'Ritmo da Eva',fr:'Rythme d’Eva',pl:'Tempo Ewy',it:'Ritmo di Eva',he:'הקצב של אווה',ja:'エヴァのペース',ko:'에바의 속도'},
+    tSlow:  {ru:'Медленнее',uk:'Повільніше',en:'Slower',es:'Más lento',de:'Langsamer',pt:'Mais devagar',fr:'Plus lent',pl:'Wolniej',it:'Più lento',he:'לאט יותר',ja:'ゆっくり',ko:'느리게'},
+    tNorm:  {ru:'Обычный',uk:'Звичайний',en:'Normal',es:'Normal',de:'Normal',pt:'Normal',fr:'Normal',pl:'Normalne',it:'Normale',he:'רגיל',ja:'ふつう',ko:'보통'},
+    tFast:  {ru:'Быстрее',uk:'Швидше',en:'Faster',es:'Más rápido',de:'Schneller',pt:'Mais rápido',fr:'Plus rapide',pl:'Szybciej',it:'Più veloce',he:'מהר יותר',ja:'速く',ko:'빠르게'},
+    tFast2: {ru:'Ещё быстрее',uk:'Ще швидше',en:'Even faster',es:'Aún más rápido',de:'Noch schneller',pt:'Ainda mais rápido',fr:'Encore plus rapide',pl:'Jeszcze szybciej',it:'Ancora più veloce',he:'עוד יותר מהר',ja:'さらに速く',ko:'더 빠르게'},
+    zoom:   {ru:'Крупный план',uk:'Великий план',en:'Close-up',es:'Primer plano',de:'Nahaufnahme',pt:'Close-up',fr:'Gros plan',pl:'Zbliżenie',it:'Primo piano',he:'תקריב',ja:'クローズアップ',ko:'클로즈업'},
+    on:     {ru:'Вкл.',uk:'Увімк.',en:'On',es:'Sí',de:'An',pt:'Lig.',fr:'Oui',pl:'Wł.',it:'On',he:'פועל',ja:'オン',ko:'켜기'},
+    off:    {ru:'Выкл.',uk:'Вимк.',en:'Off',es:'No',de:'Aus',pt:'Desl.',fr:'Non',pl:'Wył.',it:'Off',he:'כבוי',ja:'オフ',ko:'끄기'},
     close:  {ru:'Закрыть',uk:'Закрити',en:'Close',es:'Cerrar',de:'Schließen',pt:'Fechar',fr:'Fermer',pl:'Zamknij',it:'Chiudi',he:'סגירה',ja:'閉じる',ko:'닫기'},
     sayStart:{ru:'Начинаем. Сначала — лёгкая разминка.',uk:'Починаємо. Спочатку — легка розминка.',en:'Let’s begin. First, an easy warm-up.',es:'Empezamos. Primero, un calentamiento suave.',de:'Los geht’s. Zuerst ein leichtes Aufwärmen.',pt:'Vamos começar. Primeiro, um aquecimento leve.',fr:'On commence. D’abord, un échauffement léger.',pl:'Zaczynamy. Najpierw lekka rozgrzewka.',it:'Iniziamo. Prima un riscaldamento leggero.',he:'מתחילים. קודם — חימום קל.',ja:'始めましょう。まずは軽いウォームアップから。',ko:'시작합니다. 먼저 가벼운 준비 운동부터.'},
     sayRest:{ru:'Отдых. Походите, подышите спокойно.',uk:'Відпочинок. Походіть, подихайте спокійно.',en:'Rest. Walk around and breathe easy.',es:'Descanso. Camina un poco y respira tranquilo.',de:'Pause. Ein paar Schritte gehen, ruhig atmen.',pt:'Descanso. Ande um pouco e respire com calma.',fr:'Repos. Marchez un peu, respirez calmement.',pl:'Odpoczynek. Pochodź, oddychaj spokojnie.',it:'Riposo. Cammina un po’ e respira con calma.',he:'מנוחה. הסתובבו קצת ונשמו ברוגע.',ja:'休憩です。少し歩いて、ゆっくり呼吸しましょう。',ko:'휴식. 조금 걸으며 편하게 숨 쉬세요.'},
@@ -201,13 +222,21 @@
     + '#mvp .end{position:absolute;inset:0;z-index:4;background:#10131A;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center}'
     + '#mvp .end h2{font-family:"Playfair Display",serif;color:#EEAF54;font-size:32px;margin:0}#mvp .end p{max-width:440px;color:rgba(255,255,255,.8);line-height:1.5;margin:0}'
     + '#mvp .end button{background:#C68C34;border-color:#C68C34;color:#10131A;font-weight:600;min-width:200px}'
+    + '#mvp .info{padding-right:76px}'
+    + '#mvp .more{position:absolute;right:16px;bottom:calc(22px + env(safe-area-inset-bottom));z-index:4;width:48px;height:48px;border-radius:50%;padding:0;font-size:22px;line-height:1;background:rgba(30,34,44,.7);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}'
+    + '#mvp .mnu{position:absolute;right:16px;bottom:calc(80px + env(safe-area-inset-bottom));z-index:5;min-width:250px;max-width:calc(100% - 32px);border-radius:18px;background:rgba(36,40,50,.94);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.12);padding:6px 0;box-shadow:0 12px 40px rgba(0,0,0,.5)}'
+    + '#mvp .mnu button{display:flex;align-items:center;gap:12px;width:100%;border:0;border-radius:0;background:none;padding:13px 18px;font-size:16px;text-align:left;color:#fff}'
+    + '#mvp .mnu button+button{border-top:1px solid rgba(255,255,255,.08)}'
+    + '#mvp .mnu .mi{width:22px;text-align:center;opacity:.9}#mvp .mnu .mv{margin-left:auto;color:rgba(255,255,255,.55);font-size:14px}#mvp .mnu .mc{margin-left:auto;color:rgba(255,255,255,.4)}'
+    + '#mvp .mnu .mh{font-weight:600}#mvp .mnu .ck{width:22px;color:#EEAF54}'
+    + '#mvp.fill .fg{object-fit:fill}'
     + '#mvp .hid{display:none!important}';
 
   function build() {
     if (!$('mvp-css')) { var st = document.createElement('style'); st.id = 'mvp-css'; st.textContent = CSS; document.head.appendChild(st); }
     var d = document.createElement('div'); d.id = 'mvp';
-    d.innerHTML = '<video class="bg" muted playsinline loop></video><video class="fg" muted playsinline loop></video>'
-      + '<img class="bg hid" alt=""><img class="fg hid" alt=""><div class="nc hid"><div><i></i><span></span></div></div>'
+    d.innerHTML = '<video class="bg" muted playsinline loop></video><video class="fg" muted playsinline loop onloadedmetadata="window.vialPlayer&&vialPlayer._fit()"></video>'
+      + '<img class="bg hid" alt=""><img class="fg hid" alt="" onload="window.vialPlayer&&vialPlayer._fit()"><div class="nc hid"><div><i></i><span></span></div></div>'
       + '<div class="bar" id="mvp-bar"></div><div class="blk" id="mvp-blk"></div>'
       + '<div class="ring"><svg width="96" height="96" viewBox="0 0 96 96"><circle cx="48" cy="48" r="42" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="6"/>'
       + '<circle id="mvp-arc" cx="48" cy="48" r="42" fill="none" stroke="#C68C34" stroke-width="6" stroke-linecap="round" stroke-dasharray="263.9" stroke-dashoffset="0"/></svg>'
@@ -216,31 +245,72 @@
       + '<div class="b321 hid" id="mvp-321"></div>'
       + '<div class="ctl"><button class="x" id="mvp-quit"></button><div class="row"><button class="cb" id="mvp-prev" aria-label="prev">⏮</button>'
       + '<button class="cb big" id="mvp-play" aria-label="play">▶</button><button class="cb" id="mvp-next" aria-label="next">⏭</button></div>'
-      + '<div class="row"><button class="tg" id="mvp-voice"></button><button class="tg" id="mvp-music"></button></div></div>'
+      + '</div><button class="more" id="mvp-more" aria-label="settings">⋯</button><div class="mnu hid" id="mvp-mnu"></div>'
       + '<div class="end hid"><h2></h2><p></p><button id="mvp-close"></button></div>';
     document.body.appendChild(d);
-    d.addEventListener('pointerup', function (e) { if (e.target.closest('button') || !d.querySelector('.end').classList.contains('hid')) return; if (!paused) setPaused(true); });
+    d.addEventListener('pointerup', function (e) { if (e.target.closest('button') || !d.querySelector('.end').classList.contains('hid')) return;
+      var m = $('mvp-mnu'); if (m && !m.classList.contains('hid')) { m.classList.add('hid'); return; }   // нажатие мимо меню — только закрыть его
+      if (!paused) setPaused(true); });
     $('mvp-play').onclick = function () { setPaused(false); };
     $('mvp-next').onclick = function () { setPaused(false); goNext(); };
     $('mvp-prev').onclick = function () { setPaused(false); goPrev(); };
     $('mvp-quit').onclick = function () { var b = $('mvp-quit'); if (b.getAttribute('data-sure')) { finish(false); return; } b.setAttribute('data-sure', '1'); b.textContent = '✕ ' + t('sure'); };
-    $('mvp-voice').onclick = function () { voiceOn = !voiceOn; if (!voiceOn) hush(); paintToggles(); };
-    $('mvp-music').onclick = function () { musicOn = !musicOn; paintToggles(); };
+    $('mvp-more').onclick = function (e) { e.stopPropagation(); var m = $('mvp-mnu'); if (m.classList.contains('hid')) menu(''); else m.classList.add('hid'); };
     $('mvp-close').onclick = close;
     return d;
   }
-  function paintToggles() {
-    $('mvp-voice').textContent = (voiceOn ? '🔊 ' : '🔇 ') + t('voice'); $('mvp-voice').classList.toggle('off', !voiceOn);
-    $('mvp-music').textContent = '🎵 ' + t('music'); $('mvp-music').classList.toggle('off', !musicOn);
+  // Меню «⋯»: строки с текущим значением → подменю с галочкой (как в системном плеере iPhone)
+  var TEMPOS = [[0.8, 'tSlow'], [1, 'tNorm'], [1.25, 'tFast'], [1.5, 'tFast2']];
+  function menu(sub) {
+    var m = $('mvp-mnu'), h = '', onoff = function (v) { return t(v ? 'on' : 'off'); };
+    var tl = (TEMPOS.filter(function (x) { return x[0] === P.tempo; })[0] || TEMPOS[1])[1];
+    if (!sub) {
+      h = row('tempo', '🏃', t('tempo'), t(tl)) + row('zoom', '⤢', t('zoom'), onoff(P.zoom)) + row('music', '🎵', t('music'), onoff(P.music)) + row('voice', '🔊', t('voice'), onoff(P.voice));
+    } else {
+      h = '<button type="button" data-k="" class="mh"><span class="mi">‹</span>' + esc(t(sub)) + '</button>';
+      var opts = sub === 'tempo' ? TEMPOS.map(function (x) { return [x[0], t(x[1])]; }) : [[true, t('on')], [false, t('off')]];
+      opts.forEach(function (o) { h += '<button type="button" data-set="' + sub + '" data-v="' + o[0] + '"><span class="ck">' + (P[sub] === o[0] ? '✓' : '') + '</span>' + esc(o[1]) + '</button>'; });
+    }
+    m.innerHTML = h; m.classList.remove('hid');
+    m.querySelectorAll('button').forEach(function (b) {
+      b.onclick = function (e) {
+        e.stopPropagation();
+        if (b.hasAttribute('data-k')) { menu(b.getAttribute('data-k')); return; }
+        var k = b.getAttribute('data-set'), v = b.getAttribute('data-v');
+        P[k] = k === 'tempo' ? +v : v === 'true'; savePrefs(P); applyPrefs(); menu('');
+      };
+    });
+    function row(k, ic, lb, val) { return '<button type="button" data-k="' + k + '"><span class="mi">' + ic + '</span>' + esc(lb) + '<span class="mv">' + esc(val) + '</span><span class="mc">›</span></button>'; }
   }
+  function applyPrefs() {
+    voiceOn = P.voice; if (!voiceOn) hush();
+    musicOn = P.music;
+    el().classList.toggle('fill', !!P.zoom); fitBox();
+    vids().forEach(function (v) { v.playbackRate = P.tempo; });
+  }
+  // «Крупный план»: вписать рамку движения в свободную часть экрана (между верхней полосой и подписью)
+  function fitBox() {
+    var d = el(); if (!d) return;
+    var shown = d.getAttribute('data-clip') || '';
+    [].slice.call(d.querySelectorAll('.fg')).forEach(function (fg) {
+      if (!P.zoom || fg.classList.contains('hid') || !BOX[shown]) { fg.style.left = fg.style.top = fg.style.width = fg.style.height = ''; return; }
+      var W = d.clientWidth, H = d.clientHeight, nw = fg.videoWidth || fg.naturalWidth || 16, nh = fg.videoHeight || fg.naturalHeight || 9, b = BOX[shown];
+      var land = W > H, top = land ? 0 : 76, bot = land ? 0 : 170, side = land ? 0 : 8, aw = W - 2 * side, ah = H - top - bot;
+      var sc = Math.min(aw / ((b[2] - b[0]) * nw), ah / ((b[3] - b[1]) * nh)); sc = Math.max(sc, Math.min(W / nw, H / nh));
+      var vw = nw * sc, vh = nh * sc, cx = (b[0] + b[2]) / 2 * vw, cy = (b[1] + b[3]) / 2 * vh;
+      fg.style.width = vw + 'px'; fg.style.height = vh + 'px'; fg.style.left = (side + aw / 2 - cx) + 'px'; fg.style.top = (top + ah / 2 - cy) + 'px';
+    });
+  }
+  window.addEventListener('resize', function () { setTimeout(fitBox, 60); });
   function el() { return $('mvp'); }
   function vids() { return [].slice.call(el().querySelectorAll('video')); }
-  function playV(v) { if (paused) return; var p = v.play(); if (p && p.catch) p.catch(function () {}); }
+  function playV(v) { v.playbackRate = P.tempo || 1; if (paused) return; var p = v.play(); if (p && p.catch) p.catch(function () {}); }
 
   // показать ролик / фото / экран без ролика
   function showMedia(s) {
     var d = el(), src = s ? clipSrc(s.clip) : '', c = s && CLIPS[s.clip];
     var imgs = [].slice.call(d.querySelectorAll('img')), nc = d.querySelector('.nc');
+    d.setAttribute('data-clip', src ? s.clip : '');
     vids().forEach(function (v) {
       var on = !!(src && !c.photo);
       v.classList.toggle('hid', !on);
@@ -252,6 +322,7 @@
     imgs.forEach(function (i) { var on = !!(src && c.photo); i.classList.toggle('hid', !on); if (on && i.getAttribute('src') !== src) i.src = src; });
     nc.classList.toggle('hid', !!src);
     if (!src && s) { nc.querySelector('i').textContent = t('noclip'); nc.querySelector('span').textContent = s.how || ''; }
+    fitBox();
   }
 
   function render() {
@@ -379,14 +450,14 @@
     try { AC = new (window.AudioContext || window.webkitAudioContext)(); tone(1, .01, .0001); } catch (e) { AC = null; }
     pickVoices(); introDone = -1;
     if (window.speechSynthesis && !plug()) { try { var u0 = new SpeechSynthesisUtterance(' '); u0.volume = 0; window.speechSynthesis.speak(u0); } catch (e) {} }
-    build(); paintToggles();
+    build();
     if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (w) { wake = w; }).catch(function () {});
     vids().forEach(function (v) { v.muted = true; v.playsInline = true; });
-    musicOn = opts.music !== false; startMusic();
+    P = prefs(); startMusic(); applyPrefs();
     idx = 0; paused = false; last = 0;
     startPhase('work');
     raf = setInterval(tick, 100);
   }
 
-  window.vialPlayer = { start: start, close: close, hasClip: function (id) { return !!CLIPS[id]; }, label: function () { return t('start'); } };
+  window.vialPlayer = { _fit: function () { fitBox(); }, start: start, close: close, hasClip: function (id) { return !!CLIPS[id]; }, label: function () { return t('start'); } };
 })();
