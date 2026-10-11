@@ -27,6 +27,26 @@
   var LOG = 'vialp_workouts';
   function log() { try { var a = JSON.parse(localStorage.getItem(LOG) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
   function doneOn(day) { var r = log().filter(function (x) { return x && x.day === day; })[0]; return r ? r.id : ''; }
+  // поправка уровня по «Как прошло»: -1 после двух «тяжело», +1 когда человек согласился на «выше»
+  var LVK = 'vialp_wo_lv';
+  function lvDelta() { try { return +(JSON.parse(localStorage.getItem(LVK) || '{}').d) || 0; } catch (e) { return 0; } }
+  function setLv(d) { try { localStorage.setItem(LVK, JSON.stringify({ d: Math.max(-2, Math.min(2, d)), ts: Date.now() })); } catch (e) {} }
+  function upOffer() { try { return localStorage.getItem('vialp_wo_up') === '1'; } catch (e) { return false; } }
+  function setUp(on) { try { on ? localStorage.setItem('vialp_wo_up', '1') : localStorage.removeItem('vialp_wo_up'); } catch (e) {} }
+  // ответ «Как прошло» → в запись дня; два одинаковых ответа подряд меняют уровень (вниз — сразу, вверх — с согласия)
+  function saveFeel(id, feel, pain) {
+    var day = cfg.day(), a = log(), r = a.filter(function (x) { return x && x.day === day; })[0];
+    if (!r) { mark(id, day, true); a = log(); r = a[0]; }
+    r.feel = feel; r.pain = +pain || 0;
+    var rated = a.filter(function (x) { return x && x.feel && !x.used; }).slice(0, 2), msg = 'r_ok';
+    if (rated.length === 2 && rated[0].feel === rated[1].feel && rated[0].feel !== 'ok') {
+      if (rated[0].feel === 'hard') { setLv(lvDelta() - 1); msg = 'r_down'; } else setUp(true);
+      rated.forEach(function (x) { x.used = 1; });
+    }
+    if (r.pain >= 6) msg = 'r_stop'; else if (r.pain >= 4) msg = 'r_mid';
+    try { localStorage.setItem(LOG, JSON.stringify(a.slice(0, 120))); } catch (e) {}
+    return msg;
+  }
   function mark(id, day, on) {
     var a = log().filter(function (x) { return x && x.day !== day; });
     if (on && W[id]) a.unshift({ day: day, id: id, c: W[id].c });
@@ -51,6 +71,13 @@
     var id = function (c, l) { return (T[c] || T.mob)[l == null ? lv : l]; };
     if (ctx.bp) return { id: null, why: 'bp' };
     if (ctx.ill) return { id: mob, why: 'ill' };
+    // «Как прошло» (§3, §11): боль ≥6 за последние 2 дня → только мобильность; 4–5 вчера → день полегче;
+    // уровень — с поправкой после «тяжело ×2» / принятого «выше».
+    var tday = cfg.day(), lg = log();
+    var ago = function (r) { return Math.round((Date.parse(tday) - Date.parse(r.day)) / 86400000); };
+    if (lg.some(function (r) { var a = ago(r); return r.pain >= 6 && a >= 0 && a <= 2; })) return { id: mob, why: 'pain' };
+    if (lg.some(function (r) { return r.pain >= 4 && r.pain <= 5 && ago(r) === 1; })) ctx.soreMild = true;
+    lv = Math.max(0, Math.min(2, lv + lvDelta()));
     if ((ctx.bad || 0) >= 2) return { id: mob, why: 'red' };
     var hist = (ctx.hist || []).filter(function (h) { return h && h.d >= 1 && h.d <= 7; });
     var on = function (d) { return hist.filter(function (h) { return h.d === d; })[0]; };
@@ -139,6 +166,7 @@
     if (!r || !r.id) return h + '<div class="wo-why">' + esc(whyTxt(r, l)) + '</div>';
     h += '<div class="wo-n">' + esc(title(r.id, l)) + '</div><div class="wo-d">' + esc(meta(r.id, l)) + '</div>';
     var wt = whyTxt(r, l); if (wt) h += '<div class="wo-why">' + esc(wt) + '</div>';
+    if (upOffer()) h += '<div class="wo-up"><span>' + esc(tx(FEEL.up, l)) + '</span><div class="wo-b"><button type="button" onclick="vialWorkouts.acceptUp(true)">' + esc(tx(FEEL.yes, l)) + '</button><button type="button" onclick="vialWorkouts.acceptUp(false)">' + esc(tx(FEEL.no, l)) + '</button></div></div>';
     if (window.vialPlayer) h += '<button type="button" class="wo-go" onclick="vialWorkouts.play(\'' + r.id + '\')">▶ ' + esc(window.vialPlayer.label()) + '</button>';
     h += '<div class="wo-b"><button type="button" class="wo-open" onclick="vialWorkouts.open(\'' + r.id + '\')">' + esc(tx(UI.open, l)) + ' ›</button>'
       + '<button type="button" class="wo-done' + (done ? ' on' : '') + '" onclick="vialWorkouts.toggle(\'' + r.id + '\')">' + (done ? '✓ ' + esc(tx(UI.doneOn, l)) : esc(tx(UI.done, l))) + '</button></div>';
@@ -208,11 +236,34 @@
     if (typeof window.openSheet !== 'function' || !W[id]) return;
     window.openSheet('<i class="ph ph-barbell" style="color:var(--gold-lt);"></i>', title(id, L_()), plan(id, L_(), !!cfg.hyp));
   }
+  function askFeel(id) {
+    if (typeof window.openSheet !== 'function' || !W[id]) return;
+    var l = L_(), f = function (k) { return esc(tx(FEEL[k], l)); };
+    var h = '<div class="wo-feel" data-id="' + id + '"><div class="wo-fq">' + f('q') + '</div><div class="wo-fb">'
+      + ['easy', 'ok', 'hard'].map(function (k) { return '<button type="button" data-f="' + k + '" onclick="vialWorkouts._pickFeel(this)">' + f(k) + '</button>'; }).join('')
+      + '</div><div class="wo-fq2">' + f('pain') + '</div><div class="wo-fr"><input type="range" min="0" max="10" step="1" value="0" oninput="this.nextElementSibling.textContent=this.value"><b>0</b></div>'
+      + '<button type="button" class="wo-go wo-fs" disabled onclick="vialWorkouts._saveFeel(this)">' + f('save') + '</button>'
+      + '<div class="wo-note wo-stop">' + f('urgent') + '</div></div>';
+    window.openSheet('<i class="ph ph-barbell" style="color:var(--gold-lt);"></i>', title(id, l), h);
+  }
+  function _pickFeel(b) {
+    var w = b.closest('.wo-feel'); w.querySelectorAll('.wo-fb button').forEach(function (x) { x.classList.toggle('on', x === b); });
+    w.setAttribute('data-f', b.getAttribute('data-f')); w.querySelector('.wo-fs').disabled = false;
+  }
+  function _saveFeel(b) {
+    var w = b.closest('.wo-feel'), id = w.getAttribute('data-id'), pain = +w.querySelector('input[type=range]').value;
+    var msg = saveFeel(id, w.getAttribute('data-f'), pain);
+    w.innerHTML = '<div class="wo-fq">' + esc(tx(FEEL[msg], L_())) + '</div>' + (pain >= 4 ? '<div class="wo-note wo-stop">' + esc(tx(FEEL.urgent, L_())) + '</div>' : '');
+    try { localStorage.removeItem('vialp_wo_pick'); } catch (e) {}
+    if (typeof cfg.rerender === 'function') try { cfg.rerender(); } catch (e) {}
+  }
+  function acceptUp(yes) { if (yes) setLv(lvDelta() + 1); setUp(false); try { localStorage.removeItem('vialp_wo_pick'); } catch (e) {} if (typeof cfg.rerender === 'function') try { cfg.rerender(); } catch (e) {} }
   function play(id) { if (window.vialPlayer && W[id]) window.vialPlayer.start(id, { hyp: !!cfg.hyp }); }
   function toggle(id) {
     var day = cfg.day(), on = doneOn(day) !== id;
     mark(id, day, on);
     if (typeof cfg.rerender === 'function') try { cfg.rerender(); } catch (e) {}
+    if (on) askFeel(id);
   }
 
   var CSS = '.wo-card{background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.28);border-radius:20px;padding:13px 16px;margin-bottom:10px;color:var(--t1,#fff);}'
@@ -237,12 +288,16 @@
     + '.wo-easy{font-size:var(--fs-cap,13px);color:var(--t2,rgba(255,255,255,.75));line-height:1.5;margin-top:3px;}'
     + '.wo-easy b{color:#5AC4B2;font-weight:600;}'
     + '.wo-caut{font-size:var(--fs-cap,13px);color:#F0A07A;line-height:1.5;margin-top:3px;}'
+    + '.wo-feel{display:flex;flex-direction:column;gap:12px;}.wo-fq{font-size:var(--fs-body,16px);font-weight:600;color:var(--t1,#fff);}.wo-fq2{font-size:var(--fs-cap,13px);color:var(--t2,rgba(255,255,255,.8));line-height:1.45;}'
+    + '.wo-fb{display:flex;gap:8px;}.wo-fb button{flex:1;min-height:46px;border-radius:12px;border:1px solid rgba(226,185,90,.45);background:transparent;color:var(--t1,#fff);font:600 var(--fs-body,15px) var(--font-ui,inherit);cursor:pointer;}.wo-fb button.on{background:var(--gold,#C68C34);border-color:var(--gold,#C68C34);color:#10131A;}'
+    + '.wo-fr{display:flex;align-items:center;gap:12px;}.wo-fr input{flex:1;accent-color:#EEAF54;}.wo-fr b{min-width:22px;text-align:center;color:var(--gold-lt,#EEAF54);font-size:18px;}.wo-fs:disabled{opacity:.4;}'
+    + '.wo-up{margin-top:10px;padding:10px 12px;border-radius:12px;border:1px solid rgba(90,196,178,.4);font-size:var(--fs-cap,13px);color:var(--t1,#fff);}'
     + '.wo-note{font-size:var(--fs-cap,13px);color:var(--t2,rgba(255,255,255,.75));line-height:1.5;margin-top:14px;}'
     + '.wo-stop{color:var(--t1,#fff);}';
   try { var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st); } catch (e) {}
 
   window.vialWorkouts = {
-    pick: pick, card: card, plan: plan, steps: steps, play: play, partName: function (k, l) { return tx(PART[k], l); }, open: open, toggle: toggle, title: title, meta: meta, why: whyTxt, dose: dose,
+    pick: pick, card: card, plan: plan, steps: steps, play: play, askFeel: askFeel, _pickFeel: _pickFeel, _saveFeel: _saveFeel, acceptUp: acceptUp, saveFeel: saveFeel, partName: function (k, l) { return tx(PART[k], l); }, open: open, toggle: toggle, title: title, meta: meta, why: whyTxt, dose: dose,
     cat: function (id) { return W[id] ? W[id].c : ''; }, ids: function () { return Object.keys(W); },
     log: log, doneOn: doneOn, mark: mark,
     setup: function (o) { Object.keys(o || {}).forEach(function (k) { cfg[k] = o[k]; }); }

@@ -76,5 +76,5 @@ head='''/* VIA·L — «Тренировка дня» (этап 1: тексто�
    Этап 2 — описание выполнения, этап 3 — кнопка видео: добавлять полем к упражнению, структуру не менять. */
 (function () {
 '''
-body=('  var N = '+J(N)+';\n  var W = '+J(OUT)+';\n  var TI = '+J(TITLE)+';\n  var LVL = '+J(LEVEL)+';\n  var INV = '+J(INV)+';\n  var PART = '+J(PART)+';\n  var U = '+J(UNIT)+';\n  var UI = '+J(UI)+';\n  var WHY = '+J(WHY)+';\n  var HW = '+J(HW)+';\n  var HX = '+J(HX)+';\n  var EASY = '+J(EASY)+';\n  var CAUT = '+J(CAUT)+';\n')
+body=('  var N = '+J(N)+';\n  var W = '+J(OUT)+';\n  var TI = '+J(TITLE)+';\n  var LVL = '+J(LEVEL)+';\n  var INV = '+J(INV)+';\n  var PART = '+J(PART)+';\n  var U = '+J(UNIT)+';\n  var UI = '+J(UI)+';\n  var WHY = '+J(WHY)+';\n  var HW = '+J(HW)+';\n  var HX = '+J(HX)+';\n  var EASY = '+J(EASY)+';\n  var CAUT = '+J(CAUT)+';\n  var FEEL = '+J(FEEL)+';\n')
 open(os.path.join(HERE,'../../interpreter/workouts.js'),'w').write(head+body+open('wo_logic.js').read())

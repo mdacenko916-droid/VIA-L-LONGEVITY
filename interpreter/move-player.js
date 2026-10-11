@@ -352,6 +352,8 @@
     say(t('sayDone'), true);
     var e = el().querySelector('.end'); e.classList.remove('hid');
     e.querySelector('h2').textContent = t('doneH'); e.querySelector('p').textContent = t('doneT'); $('mvp-close').textContent = t('close');
+    // дальше — «Как прошло?» (легко/нормально/тяжело + боль 0–10): по ответам меняется уровень (этап 2б)
+    $('mvp-close').onclick = function () { close(); try { if (window.vialWorkouts && vialWorkouts.askFeel) vialWorkouts.askFeel(wid); } catch (er) {} };
   }
   function close() {
     clearInterval(raf); hush();
