@@ -333,6 +333,39 @@ def cmd_screens(args):
     with_edit(tok, run)
 
 
+LISTING_LANGS = {"EN": "en-US", "UK": "uk", "RU": "ru-RU", "ES": "es-US"}
+
+
+def parse_listing(path):
+    """Тексты из app/store/android/PLAY-ВСТАВИТЬ.txt: блоки «XX — КРАТКОЕ/ПОЛНОЕ ОПИСАНИЕ», текст между линиями ----."""
+    import re
+    out = {}
+    pat = r"^(EN|UK|RU|ES)\b[^\n]*?(КРАТКОЕ|ПОЛНОЕ) ОПИСАНИЕ[^\n]*\n----\n(.*?)\n----"
+    for lang, kind, body in re.findall(pat, open(path).read(), re.S | re.M):
+        key = "shortDescription" if kind == "КРАТКОЕ" else "fullDescription"
+        out.setdefault(LISTING_LANGS[lang], {})[key] = body.strip()
+    return out
+
+
+def cmd_listing(args):
+    """Обновить краткое и полное описание страницы Play на всех языках из файла (название не трогаем)."""
+    texts = parse_listing(args.file)
+    for lang, t in sorted(texts.items()):
+        print("%-6s краткое %3d / 80   полное %4d / 4000" % (lang, len(t.get("shortDescription", "")), len(t.get("fullDescription", ""))))
+        if len(t.get("shortDescription", "")) > 80 or len(t.get("fullDescription", "")) > 4000 or len(t) != 2:
+            sys.exit("Текст %s не помещается в лимит Play или неполон" % lang)
+    if not args.yes:
+        print("\nЧерновой прогон. Ничего не отправлено. Добавьте --yes.")
+        return
+    tok = token()
+    def run(eid):
+        for lang, t in texts.items():
+            call(tok, "%s/edits/%s/listings/%s" % (API, eid, lang), "PATCH", t)
+        call(tok, commit_url(eid, args), "POST", {})
+        print("Описание обновлено: %s" % ", ".join(sorted(texts)))
+    with_edit(tok, run)
+
+
 def main():
     ap = argparse.ArgumentParser(description="Треки Google Play и выкладка сборки в трек")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -366,8 +399,12 @@ def main():
     sc.add_argument("--skip", action="append", help="имя кадра, который не ставить в Play (например 01.png)")
     sc.add_argument("--yes", action="store_true", help="действительно заменить")
     sc.set_defaults(hold=False)
+    li = sub.add_parser("listing", help="обновить описание страницы Play (4 языка) из PLAY-ВСТАВИТЬ.txt")
+    li.add_argument("--file", default="app/store/android/PLAY-ВСТАВИТЬ.txt")
+    li.add_argument("--yes", action="store_true", help="действительно отправить")
+    li.set_defaults(hold=False)
     a = ap.parse_args()
-    {"status": cmd_status, "release": cmd_release, "upload": cmd_upload, "prices": cmd_prices, "screens": cmd_screens}[a.cmd](a)
+    {"status": cmd_status, "release": cmd_release, "upload": cmd_upload, "prices": cmd_prices, "screens": cmd_screens, "listing": cmd_listing}[a.cmd](a)
 
 
 if __name__ == "__main__":
