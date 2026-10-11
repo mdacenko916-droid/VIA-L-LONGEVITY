@@ -305,6 +305,34 @@ def cmd_prices(args):
     print("\nЦены обновлены." if "_err" not in out else out)
 
 
+def cmd_screens(args):
+    """Заменить скриншоты телефона одного языка страницы Play кадрами из папки (01.png, 02.png… по порядку)."""
+    files = sorted(glob.glob(os.path.join(args.dir, "*.png")))
+    if args.skip:
+        files = [f for f in files if os.path.basename(f) not in args.skip]
+    if not 2 <= len(files) <= 8:   # предел Play для телефона — от 2 до 8 кадров
+        sys.exit("Play принимает 2–8 кадров, выбрано %d (лишние убрать через --skip)" % len(files))
+    print("Язык: %s\nКадры: %s" % (args.lang, " ".join(os.path.basename(f) for f in files)))
+    if not args.yes:
+        print("\nЧерновой прогон. Ничего не загружено. Добавьте --yes.")
+        return
+    tok = token()
+    def run(eid):
+        base = "%s/edits/%s/listings/%s/phoneScreenshots" % (API, eid, args.lang)
+        call(tok, base, "DELETE")
+        up = base.replace("/androidpublisher/v3/", "/upload/androidpublisher/v3/") + "?uploadType=media"
+        for f in files:
+            req = urllib.request.Request(up, method="POST", data=open(f, "rb").read(),
+                                         headers={"Authorization": "Bearer " + tok, "Content-Type": "image/png"})
+            try:
+                urllib.request.urlopen(req, timeout=120).read()
+            except urllib.error.HTTPError as e:
+                sys.exit("Кадр %s не загружен (%s): %s" % (f, e.code, e.read().decode()[:300]))
+        call(tok, commit_url(eid, args), "POST", {})
+        print("Скриншоты %s заменены: %d шт." % (args.lang, len(files)))
+    with_edit(tok, run)
+
+
 def main():
     ap = argparse.ArgumentParser(description="Треки Google Play и выкладка сборки в трек")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -332,8 +360,14 @@ def main():
                     help="цена для отдельной страны в её валюте, например CA=34.99 (можно несколько)")
     pr.add_argument("--regions-version", help="версия справочника регионов Play, например 2025/03")
     pr.add_argument("--yes", action="store_true", help="действительно применить")
+    sc = sub.add_parser("screens", help="заменить скриншоты телефона одного языка страницы Play")
+    sc.add_argument("--lang", required=True, help="код языка Play: en-US, es-US, ru-RU, uk")
+    sc.add_argument("--dir", required=True, help="папка с кадрами 1080×2160, например app/store/images/screenshots-play/en")
+    sc.add_argument("--skip", action="append", help="имя кадра, который не ставить в Play (например 01.png)")
+    sc.add_argument("--yes", action="store_true", help="действительно заменить")
+    sc.set_defaults(hold=False)
     a = ap.parse_args()
-    {"status": cmd_status, "release": cmd_release, "upload": cmd_upload, "prices": cmd_prices}[a.cmd](a)
+    {"status": cmd_status, "release": cmd_release, "upload": cmd_upload, "prices": cmd_prices, "screens": cmd_screens}[a.cmd](a)
 
 
 if __name__ == "__main__":
