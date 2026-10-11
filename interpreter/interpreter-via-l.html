@@ -1940,6 +1940,9 @@ body.flow-mode .step.flow-show.answered .step-badge::after{content:' ✓';font-w
 /* Подсветка пропущенного блока при попытке уйти на результат раньше времени */
 @keyframes gate-pulse{0%,100%{box-shadow:0 0 0 1px rgba(226,185,90,.18),0 8px 48px rgba(196,150,60,.16);}50%{box-shadow:0 0 0 2px rgba(245,166,35,.9),0 0 26px rgba(245,166,35,.5);}}
 body.flow-mode .step.gate-pulse > .card{animation:gate-pulse 1.4s ease;opacity:1;}
+#flow-progress.gate-left{color:var(--gold-lt);font-weight:600;}
+@keyframes gateBtn{0%,100%{box-shadow:0 0 0 0 rgba(226,185,90,0);}50%{box-shadow:0 0 0 6px rgba(226,185,90,.45);}}
+.as-usual.gate-pulse-btn{animation:gateBtn .85s ease-in-out 3;border-color:var(--gold-lt)!important;color:var(--gold-lt)!important;}
 body.flow-mode #scroll-area{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));}   /* небольшой клиренс + safe-area (нижняя навигация — отдельный сиблинг, контент под неё не заходит) */
 /* Завершение этапа «Ваш профиль»: зелёная галочка + золотое свечение заголовка (Вариант 1) */
 .prof-check{display:none;}   /* ЕДИНЫЙ СТАНДАРТ «готово»: сигнал несёт сам заголовок (зелёный + ✓), как в блоке «Данные с трекера»; отдельный зелёный кружок убран */
@@ -9055,6 +9058,7 @@ function _refreshGate(){
   // Счётчик виден ВСЕГДА, в том числе когда всё отвечено: раньше при complete он очищался, и
   // владелец видел просто пропавшую строку — непонятно, гейт досчитал или сломался. 2026-08-25.
   if(p) p.classList.toggle('gate-done', complete);
+  if(p && complete) p.classList.remove('gate-left');
   if(p) p.textContent = complete ? L({ru:'Все блоки отвечены · '+total+' из '+total,uk:'Усі блоки відповідені · '+total+' з '+total,en:'All blocks answered · '+total+' of '+total,es:'Todos los bloques respondidos · '+total+' de '+total,de:'Alle Blöcke beantwortet · '+total+' von '+total,pt:'Todos os blocos respondidos · '+total+' de '+total,fr:'Tous les blocs répondus · '+total+' sur '+total,pl:'Wszystkie bloki wypełnione · '+total+' z '+total,it:'Tutti i blocchi completati · '+total+' di '+total,he:'כל הבלוקים נענו · '+total+' מתוך '+total,ja:'全ブロック回答済み · '+total+'問中'+total+'問',ko:'모든 블록 응답 완료 · '+total+'개 중 '+total+'개'}) : L({ru:'Отвечено '+done+' из '+total,uk:'Відповіли '+done+' з '+total,en:done+' of '+total+' answered',es:done+' de '+total+' respondidas',de:done+' von '+total+' beantwortet',pt:done+' de '+total+' respondidas',fr:done+' sur '+total+' répondues',pl:'Odpowiedziano '+done+' z '+total,it:done+' di '+total+' risposte',he:done+' מתוך '+total+' נענו',ja:total+'問中'+done+'問',ko:total+'개 중 '+done+'개 응답'});
   return {done:done,total:total,first:firstUn,complete:complete};
 }
@@ -9207,9 +9211,20 @@ function _gateGuardOrRun(run){
   var g=_refreshGate();
   if(g.complete){ run(); return; }
   var el=g.first; if(el){
-    try{ el.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
+    // 2026-10-11: раньше кнопка молча уводила наверх — владелец не понял, что произошло. Теперь: подпись над кнопкой
+    // «Осталось ответить: <блок>», прокрутка к самому блоку (по центру), а если ответ перенесён с прошлого раза —
+    // подсветка кнопки «Всё так же».
+    var bd=el.querySelector('.step-badge'), nm=bd?String(bd.textContent||'').replace(/^[\d\s\/·]+/,'').trim():'';
+    var carry=el.querySelector('.as-usual[onclick*="_carryConfirm"]:not(.picked)');
+    var p=document.getElementById('flow-progress');
+    if(p){ p.classList.add('gate-left');
+      p.textContent=L({ru:'Осталось ответить',uk:'Залишилося відповісти',en:'Still to answer',es:'Falta responder',de:'Noch zu beantworten',pt:'Falta responder',fr:'Reste à répondre',pl:'Zostało do odpowiedzi',it:'Manca da rispondere',he:'נותר לענות',ja:'未回答',ko:'남은 질문'})+(nm?': '+nm:'')
+        +(carry?' — '+L({ru:'нажмите «'+_carryBtnLbl()+'» или измените ответ',uk:'натисніть «'+_carryBtnLbl()+'» або змініть відповідь',en:'tap “'+_carryBtnLbl()+'” or change the answer',es:'toca «'+_carryBtnLbl()+'» o cambia la respuesta',de:'tippe auf „'+_carryBtnLbl()+'“ oder ändere die Antwort',pt:'toque em «'+_carryBtnLbl()+'» ou mude a resposta',fr:'touchez « '+_carryBtnLbl()+' » ou changez la réponse',pl:'naciśnij „'+_carryBtnLbl()+'” lub zmień odpowiedź',it:'tocca «'+_carryBtnLbl()+'» o cambia la risposta',he:'הקישו «'+_carryBtnLbl()+'» או שנו את התשובה',ja:'「'+_carryBtnLbl()+'」を押すか回答を変えてください',ko:'‘'+_carryBtnLbl()+'’을 누르거나 답을 바꾸세요'}):''); }
+    var tgt=carry||el;
+    try{ tgt.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){}
     el.classList.remove('gate-pulse'); void el.offsetWidth; el.classList.add('gate-pulse');
-    setTimeout(function(){ el.classList.remove('gate-pulse'); }, 1400);
+    if(carry){ carry.classList.remove('gate-pulse-btn'); void carry.offsetWidth; carry.classList.add('gate-pulse-btn'); }
+    setTimeout(function(){ el.classList.remove('gate-pulse'); if(carry) carry.classList.remove('gate-pulse-btn'); }, 2600);
   }
 }
 // Каденс-заголовок (формат VIO): верхняя строка — ЭТАП (что это), нижняя — периодичность (когда/как часто).
