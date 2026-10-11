@@ -49,8 +49,7 @@ Android-сборка возьмёт **всё, что лежит в `main` на �
       которых не видно на экране.
 - [ ] **Разовый разбор со специалистом в Google Play** (взят 10-11). Приложение и воркер уже общие с iOS (`iap-bridge.js`,
       `/review/claim` сверяет `non_subscriptions` в RevenueCat по `X-Platform: android`, возврат на Android — через support@).
-      Осталось: (1) владелец: `python3 app/scripts/play-release.py review-product --yes` — товар €50 / $54,99, 174 страны
-      (создание платного товара среда мне не даёт); (2) владелец: RevenueCat → Products → New → Google Play →
+      ✅ 10-11 товар создан и ACTIVE (`review-product --yes`, запускал владелец; 174 страны, €50 / $54,99 / £50,99). Осталось: (2) владелец: RevenueCat → Products → New → Google Play →
       `via_l_specialist_review`, без entitlement и вне Offering (как iOS); (3) тест-покупка тестировщиком лицензий на v19.
 - [ ] **Баг Android:** у отказавшего от новых типов Health Connect окно разрешений всплывает при каждом нажатии «Health Connect».
 - [ ] **Скриншоты Play** — из того же набора, что App Store (раздел «📸 Скриншоты сторов»), кадр 1080×2160 (`play-from-appstore.py`).
