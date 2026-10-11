@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="color-scheme" content="dark">
+<style>html{background:#181e28}</style><!-- без белой вспышки при открытии/переходе (2026-10-11) -->
 <!-- maximum-scale/user-scalable: iOS иначе зумит всю страницу при фокусе в поле <16px и не возвращает масштаб обратно -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <!-- Силуэт разбора: фон CSS начинает грузиться только когда карточка разбора становится видимой,
@@ -2405,7 +2407,7 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
    на графите, как «Мой прогресс» и «Профиль». Блок выше оставлен, но его цвета текста на беже перекрыты здесь. */
 /* ЕДИНЫЙ ФОН (владелец 2026-10-10, сборка 277): один графит на всех вкладках — тот же градиент, что у «Профиля» и
    «Моего прогресса»; блоки (#222a37→#161c26) чуть темнее фона. До этого «Сегодня» было почти чёрным #10131A. */
-body{background-color:#181e28!important;}   /* только body: он уходит на холст, и градиент body::before виден поверх; фон у html перекрыл бы градиент */
+body{background-color:transparent!important;}   /* фон холста — html #181e28 (ставится первым в <head>, без белой вспышки); body прозрачный, поверх — градиент body::before */
 body::before{background:linear-gradient(180deg,#242c39 0%,#1b2029 60%,#181e28 100%) !important;}
 #topbar::before{background:linear-gradient(to bottom,#242c39 0%,#242c39 calc(env(safe-area-inset-top,0px) - 2px),rgba(36,44,57,0) 100%)!important;}
 /* ══ ЕДИНЫЙ СТИЛЬ БЛОКОВ (владелец 2026-10-10): эталон — карточки «Моего прогресса» (details.vcard-sec).
@@ -2432,6 +2434,11 @@ body::before{background:linear-gradient(180deg,#242c39 0%,#1b2029 60%,#181e28 10
 .vc-link,.vcard-hero{background:var(--blk-bg)!important;border:1px solid var(--blk-bd)!important;border-radius:16px!important;box-shadow:none!important;}
 .vcard-hero .vcard-sec,.vcard-hero>div[style*="background"]{background:var(--in-bg)!important;}
 .vh-edit-btn{background:transparent!important;border:1px solid var(--gold-dim)!important;color:var(--gold-lt)!important;}
+/* кнопки выбора источника данных — как карточки «Моего прогресса» */
+.imp-btn{background:var(--blk-bg)!important;border:1px solid var(--blk-bd)!important;box-shadow:none!important;}
+#morning-gate{background:transparent!important;border:none!important;}
+/* язык в приложении меняется только в «Профиль → Настройки» (этап 1); в шапке переключатель мелькал при переходах */
+html.app-mode #topbar .lang-dropdown{display:none!important;}
 /* «Профиль» и «Мой прогресс»: текст при прокрутке уходил под часы и логотип — верх панели растворяем */
 body.card-open #cardPanel, body.approach-open #approachPanel{
   -webkit-mask-image:linear-gradient(to bottom,transparent 0,transparent calc(env(safe-area-inset-top,0px) + 6px),#000 calc(env(safe-area-inset-top,0px) + 58px));
@@ -3054,7 +3061,7 @@ body.card-open #cardPanel, body.approach-open #approachPanel{
          См. interpreter/wearables/oura.md, docs/HEALTH-DATA-SOURCING-PLAN.md -->
     <button id="dev-vendors-btn" onclick="_chooseSource('device')" class="imp-btn">
       <span class="imp-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8M20 12a8 8 0 0 1-13.7 5.6L4 16"/><path d="M20 4v4h-4M4 20v-4h4"/></svg></span>
-      <span class="imp-txt"><b data-t="imp_device_t">Синхронизация устройства</b><small data-t="imp_device_s">Oura · Fitbit · Polar · Withings · Ultrahuman</small></span>
+      <span class="imp-txt"><b data-t="imp_device_t">Синхронизация устройства</b><small data-t="imp_device_s">Oura · Ultrahuman · Fitbit · Polar · Withings</small></span>
       <span class="imp-go">→</span>
     </button>
   </div>
@@ -4378,7 +4385,7 @@ const LANG_FLAGS={'uk':'🇺🇦 UK','ru':'🇷🇺 RU','en':'🇬🇧 EN','es':
 // Кнопка «Синхронизация устройства» (вендор-OAuth Oura/Polar/Withings) — 12 языков
 ;(function(){var c={
   imp_device_t:{ru:'Синхронизация устройства',uk:'Синхронізація пристрою',en:'Sync your device',es:'Sincronizar dispositivo',de:'Gerät synchronisieren',pt:'Sincronizar dispositivo',fr:"Synchroniser l'appareil",pl:'Synchronizuj urządzenie',it:'Sincronizza dispositivo',he:'סנכרון המכשיר',ja:'デバイスを同期',ko:'기기 동기화'},
-  imp_device_s:{ru:'Oura · Fitbit · Polar · Withings · Ultrahuman',uk:'Oura · Fitbit · Polar · Withings · Ultrahuman',en:'Oura · Fitbit · Polar · Withings · Ultrahuman',es:'Oura · Fitbit · Polar · Withings · Ultrahuman',de:'Oura · Fitbit · Polar · Withings · Ultrahuman',pt:'Oura · Fitbit · Polar · Withings · Ultrahuman',fr:'Oura · Fitbit · Polar · Withings · Ultrahuman',pl:'Oura · Fitbit · Polar · Withings · Ultrahuman',it:'Oura · Fitbit · Polar · Withings · Ultrahuman',he:'Oura · Fitbit · Polar · Withings · Ultrahuman',ja:'Oura · Fitbit · Polar · Withings · Ultrahuman',ko:'Oura · Fitbit · Polar · Withings · Ultrahuman'}
+  imp_device_s:{ru:'Oura · Ultrahuman · Fitbit · Polar · Withings',uk:'Oura · Ultrahuman · Fitbit · Polar · Withings',en:'Oura · Ultrahuman · Fitbit · Polar · Withings',es:'Oura · Ultrahuman · Fitbit · Polar · Withings',de:'Oura · Ultrahuman · Fitbit · Polar · Withings',pt:'Oura · Ultrahuman · Fitbit · Polar · Withings',fr:'Oura · Ultrahuman · Fitbit · Polar · Withings',pl:'Oura · Ultrahuman · Fitbit · Polar · Withings',it:'Oura · Ultrahuman · Fitbit · Polar · Withings',he:'Oura · Ultrahuman · Fitbit · Polar · Withings',ja:'Oura · Ultrahuman · Fitbit · Polar · Withings',ko:'Oura · Ultrahuman · Fitbit · Polar · Withings'}
 };Object.keys(c).forEach(function(k){Object.keys(c[k]).forEach(function(l){if(T[l])T[l][k]=c[k][l];});});})();
 ;(function(){var c={ allergy_ph:{ru:'На что? (орехи, лактоза, глютен…)',uk:'На що? (горіхи, лактоза, глютен…)',en:'To what? (nuts, lactose, gluten…)',es:'¿A qué? (frutos secos, lactosa, gluten…)',de:'Worauf? (Nüsse, Laktose, Gluten…)',pt:'A quê? (nozes, lactose, glúten…)',fr:'À quoi ? (noix, lactose, gluten…)',pl:'Na co? (orzechy, laktoza, gluten…)',it:'A cosa? (noci, lattosio, glutine…)',he:'למה? (אגוזים, לקטוז, גלוטן…)',ja:'何に？（ナッツ、乳糖、グルテン…）',ko:'무엇에? (견과류, 유당, 글루텐…)'} };Object.keys(c).forEach(function(k){Object.keys(c[k]).forEach(function(l){if(T[l])T[l][k]=c[k][l];});});})();
 // Подписи 9 показателей трекера в карточке — человеческим языком, на 12 языках
@@ -9478,7 +9485,7 @@ function _showMorningCard(src){
   if(_pn) greet+=', '+(typeof _esc==='function'?_esc(_pn):_pn);   // имя уходит в innerHTML — экранируем
   var ready=L({ru:'Анализ прошедших суток и состояния сейчас',uk:'Аналіз минулої доби та стану зараз',en:'A review of the past 24 hours and how you are now',es:'Análisis de las últimas 24 horas y de cómo está ahora',de:'Auswertung der letzten 24 Stunden und Ihres Zustands jetzt',pt:'Análise das últimas 24 horas e de como você está agora',fr:'Bilan des dernières 24 heures et de votre état actuel',pl:'Analiza ostatniej doby i stanu teraz',it:'Analisi delle ultime 24 ore e di come stai ora',he:'ניתוח היממה האחרונה ומצבך עכשיו',ja:'過去24時間と現在の状態の分析',ko:'지난 24시간과 현재 상태 분석'});
   var syncLine='';
-  if(src!=='manual'){ var f=_syncStampFmt(); if(f) syncLine='<div style="font-size:var(--fs-cap);color:#5A4A35;margin:5px 0 1px;">'+L({ru:'Последняя синхронизация',uk:'Остання синхронізація',en:'Last sync',es:'Última sincronización',de:'Letzte Synchronisation',pt:'Última sincronização',fr:'Dernière synchronisation',pl:'Ostatnia synchronizacja',it:'Ultima sincronizzazione',he:'סנכרון אחרון',ja:'最終同期',ko:'마지막 동기화'})+': '+f+'</div>'; }
+  if(src!=='manual'){ var f=_syncStampFmt(); if(f) syncLine='<div style="font-size:var(--fs-cap);color:var(--t3);margin:5px 0 1px;">'+L({ru:'Последняя синхронизация',uk:'Остання синхронізація',en:'Last sync',es:'Última sincronización',de:'Letzte Synchronisation',pt:'Última sincronização',fr:'Dernière synchronisation',pl:'Ostatnia synchronizacja',it:'Ultima sincronizzazione',he:'סנכרון אחרון',ja:'最終同期',ko:'마지막 동기화'})+': '+f+'</div>'; }
   var btnCss='display:block;width:100%;box-sizing:border-box;margin-top:16px;padding:14px;border-radius:12px;border:1px solid rgba(226,185,90,.5);background:rgba(226,185,90,.12);color:#fff;font-size:var(--fs-title);font-weight:600;cursor:pointer;font-family:inherit;';
   document.body.classList.add('morning-mode');
   var _fhm=document.getElementById('funnelHome'); if(_fhm)_fhm.style.display='none';   // утренний экран и есть «дом» — крестику тут закрывать нечего   // держит раскладку экрана; снимается везде, где гейт удаляется
@@ -9486,10 +9493,10 @@ function _showMorningCard(src){
   d.style.cssText='max-width:560px;margin:8px auto;padding:14px 14px;text-align:center;background:linear-gradient(160deg,#222a37,#161c26);border:1px solid rgba(226,185,90,.28);border-radius:18px;';
   // Выбор источника КАЖДЫЙ день — человек волен взять данные откуда удобно.
   var _pick=L({ru:'Откуда взять данные сегодня?',uk:'Звідки взяти дані сьогодні?',en:'Where should today’s data come from?',es:'¿De dónde tomar los datos de hoy?',de:'Woher sollen die heutigen Daten kommen?',pt:'De onde vêm os dados de hoje?',fr:'D’où proviennent les données du jour ?',pl:'Skąd wziąć dzisiejsze dane?',it:'Da dove prendere i dati di oggi?',he:'מהיכן לקחת את נתוני היום?',ja:'今日のデータはどこから取得しますか？',ko:'오늘 데이터는 어디에서 가져올까요?'});
-  d.innerHTML='<div style="font-family:\'Playfair Display\',serif;font-size:clamp(19px,4.8vw,26px);color:#241A10;line-height:1.12;margin-bottom:2px;">'+greet+'</div>'
-    +'<div style="font-family:\'Playfair Display\',serif;font-style:italic;font-size:clamp(14px,3.4vw,18px);color:#A67A24;line-height:1.2;margin-bottom:6px;">'+ready+'</div>'
+  d.innerHTML='<div style="font-family:\'Playfair Display\',serif;font-size:clamp(19px,4.8vw,26px);color:#fff;line-height:1.12;margin-bottom:2px;">'+greet+'</div>'
+    +'<div style="font-family:\'Playfair Display\',serif;font-style:italic;font-size:clamp(14px,3.4vw,18px);color:var(--gold-lt);line-height:1.2;margin-bottom:6px;">'+ready+'</div>'
     +syncLine
-    +'<div style="font-size:var(--fs-body);color:#4A3A28;margin:10px 0 6px;">'+_pick+'</div>'
+    +'<div style="font-size:var(--fs-body);color:var(--t2);margin:10px 0 6px;">'+_pick+'</div>'
     +'<div id="morning-src" style="text-align:left;"></div>';
   main.appendChild(d);
   // Полноценные карточки источника (те же, что в hero) — клонируем в блок; оригиналы прячет morning-mode.
