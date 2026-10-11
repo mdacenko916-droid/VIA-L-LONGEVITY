@@ -334,14 +334,15 @@ def cmd_screens(args):
     with_edit(tok, run)
 
 
-LISTING_LANGS = {"EN": "en-US", "UK": "uk", "RU": "ru-RU", "ES": "es-US"}
+LISTING_LANGS = {"EN": "en-US", "UK": "uk", "RU": "ru-RU", "ES": "es-US", "DE": "de-DE", "FR": "fr-FR", "PT": "pt-BR",
+                 "IT": "it-IT", "PL": "pl-PL", "HE": "iw-IL", "JA": "ja-JP", "KO": "ko-KR"}   # иврит в Play — iw-IL
 
 
 def parse_listing(path):
     """Тексты из app/store/android/PLAY-ВСТАВИТЬ.txt: блоки «XX — КРАТКОЕ/ПОЛНОЕ ОПИСАНИЕ», текст между линиями ----."""
     import re
     out = {}
-    pat = r"^(EN|UK|RU|ES)\b[^\n]*?(КРАТКОЕ|ПОЛНОЕ) ОПИСАНИЕ[^\n]*\n----\n(.*?)\n----"
+    pat = r"^(EN|UK|RU|ES|DE|FR|PT|IT|PL|HE|JA|KO)\b[^\n]*?(КРАТКОЕ|ПОЛНОЕ) ОПИСАНИЕ[^\n]*\n----\n(.*?)\n----"
     for lang, kind, body in re.findall(pat, open(path).read(), re.S | re.M):
         key = "shortDescription" if kind == "КРАТКОЕ" else "fullDescription"
         out.setdefault(LISTING_LANGS[lang], {})[key] = body.strip()
@@ -360,8 +361,10 @@ def cmd_listing(args):
         return
     tok = token()
     def run(eid):
+        have = {x["language"] for x in call(tok, "%s/edits/%s/listings" % (API, eid)).get("listings", [])}
         for lang, t in texts.items():
-            call(tok, "%s/edits/%s/listings/%s" % (API, eid, lang), "PATCH", t)
+            if lang not in have: t = dict(t, title="VIA-L")   # новый язык страницы — без названия Play не примет
+            call(tok, "%s/edits/%s/listings/%s" % (API, eid, lang), "PATCH" if lang in have else "PUT", t)
         call(tok, commit_url(eid, args), "POST", {})
         print("Описание обновлено: %s" % ", ".join(sorted(texts)))
     with_edit(tok, run)
