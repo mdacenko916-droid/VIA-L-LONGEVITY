@@ -18,6 +18,7 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function nm(i, l) { var a = N[l] || N.en; return a[i] || N.ru[i] || ''; }
   function title(id, l) { var w = W[id]; return w ? tx(TI[w.ti], l) : ''; }
+  function hasDb(id) { return !!W[id] && W[id].inv.some(function (k) { return /^db/.test(k); }); }
   function invTxt(id, l) {
     var w = W[id]; if (!w) return '';
     return w.inv.map(function (k) { var p = k.split(':'); return tx(INV[p[0]], l).replace('{d}', p[1] || ''); }).join(', ');
@@ -34,10 +35,11 @@
   function upOffer() { try { return localStorage.getItem('vialp_wo_up') === '1'; } catch (e) { return false; } }
   function setUp(on) { try { on ? localStorage.setItem('vialp_wo_up', '1') : localStorage.removeItem('vialp_wo_up'); } catch (e) {} }
   // ответ «Как прошло» → в запись дня; два одинаковых ответа подряд меняют уровень (вниз — сразу, вверх — с согласия)
-  function saveFeel(id, feel, pain) {
+  function saveFeel(id, feel, pain, kg) {
     var day = cfg.day(), a = log(), r = a.filter(function (x) { return x && x.day === day; })[0];
     if (!r) { mark(id, day, true); a = log(); r = a[0]; }
     r.feel = feel; r.pain = +pain || 0;
+    kg = parseFloat(String(kg || '').replace(',', '.')); if (kg > 0 && kg <= 60) r.kg = kg; else delete r.kg;
     var rated = a.filter(function (x) { return x && x.feel && !x.used; }).slice(0, 2), msg = 'r_ok';
     if (rated.length === 2 && rated[0].feel === rated[1].feel && rated[0].feel !== 'ok') {
       if (rated[0].feel === 'hard') { setLv(lvDelta() - 1); msg = 'r_down'; } else setUp(true);
@@ -46,6 +48,12 @@
     if (r.pain >= 6) msg = 'r_stop'; else if (r.pain >= 4) msg = 'r_mid';
     try { localStorage.setItem(LOG, JSON.stringify(a.slice(0, 120))); } catch (e) {}
     return msg;
+  }
+  // вес гантелей в прошлый раз на тренировке того же типа (то же название) — для подсказки в начале
+  function lastKg(id) {
+    var w = W[id]; if (!w) return null;
+    var r = log().filter(function (x) { return x && x.kg && W[x.id] && W[x.id].ti === w.ti; })[0];
+    return r ? { kg: r.kg, feel: r.feel || 'ok' } : null;
   }
   function mark(id, day, on) {
     var a = log().filter(function (x) { return x && x.day !== day; });
@@ -243,6 +251,7 @@
     var h = '<div class="wo-feel" data-id="' + id + '"><div class="wo-fq">' + f('q') + '</div><div class="wo-fb">'
       + ['easy', 'ok', 'hard'].map(function (k) { return '<button type="button" data-f="' + k + '" onclick="vialWorkouts._pickFeel(this)">' + f(k) + '</button>'; }).join('')
       + '</div><div class="wo-fq2">' + f('pain') + '</div><div class="wo-fr"><input type="range" min="0" max="10" step="1" value="0" oninput="this.nextElementSibling.textContent=this.value"><b>0</b></div>'
+      + (hasDb(id) ? '<div class="wo-fq2">' + f('kg') + '</div><input class="wo-kg" type="number" inputmode="decimal" min="0.5" max="60" step="0.5" placeholder="' + (lastKg(id) ? lastKg(id).kg : '4') + '">' : '')
       + '<button type="button" class="wo-go wo-fs" disabled onclick="vialWorkouts._saveFeel(this)">' + f('save') + '</button>'
       + '<div class="wo-note wo-stop">' + f('urgent') + '</div></div>';
     window.openSheet('<i class="ph ph-barbell" style="color:var(--gold-lt);"></i>', title(id, l), h);
@@ -253,7 +262,7 @@
   }
   function _saveFeel(b) {
     var w = b.closest('.wo-feel'), id = w.getAttribute('data-id'), pain = +w.querySelector('input[type=range]').value;
-    var msg = saveFeel(id, w.getAttribute('data-f'), pain);
+    var kgEl = w.querySelector('.wo-kg'), msg = saveFeel(id, w.getAttribute('data-f'), pain, kgEl ? kgEl.value : '');
     w.innerHTML = '<div class="wo-fq">' + esc(tx(FEEL[msg], L_())) + '</div>' + (pain >= 4 ? '<div class="wo-note wo-stop">' + esc(tx(FEEL.urgent, L_())) + '</div>' : '');
     try { localStorage.removeItem('vialp_wo_pick'); } catch (e) {}
     if (typeof cfg.rerender === 'function') try { cfg.rerender(); } catch (e) {}
@@ -291,14 +300,14 @@
     + '.wo-caut{font-size:var(--fs-cap,13px);color:#F0A07A;line-height:1.5;margin-top:3px;}'
     + '.wo-feel{display:flex;flex-direction:column;gap:12px;}.wo-fq{font-size:var(--fs-body,16px);font-weight:600;color:var(--t1,#fff);}.wo-fq2{font-size:var(--fs-cap,13px);color:var(--t2,rgba(255,255,255,.8));line-height:1.45;}'
     + '.wo-fb{display:flex;gap:8px;}.wo-fb button{flex:1;min-height:46px;border-radius:12px;border:1px solid rgba(226,185,90,.45);background:transparent;color:var(--t1,#fff);font:600 var(--fs-body,15px) var(--font-ui,inherit);cursor:pointer;}.wo-fb button.on{background:var(--gold,#C68C34);border-color:var(--gold,#C68C34);color:#10131A;}'
-    + '.wo-fr{display:flex;align-items:center;gap:12px;}.wo-fr input{flex:1;accent-color:#EEAF54;}.wo-fr b{min-width:22px;text-align:center;color:var(--gold-lt,#EEAF54);font-size:18px;}.wo-fs:disabled{opacity:.4;}'
+    + '.wo-fr{display:flex;align-items:center;gap:12px;}.wo-fr input{flex:1;accent-color:#EEAF54;}.wo-fr b{min-width:22px;text-align:center;color:var(--gold-lt,#EEAF54);font-size:18px;}.wo-fs:disabled{opacity:.4;}.wo-kg{width:110px;min-height:44px;border-radius:12px;border:1px solid rgba(226,185,90,.45);background:rgba(255,255,255,.06);color:var(--t1,#fff);font:600 18px var(--font-ui,inherit);text-align:center;}'
     + '.wo-up{margin-top:10px;padding:10px 12px;border-radius:12px;border:1px solid rgba(90,196,178,.4);font-size:var(--fs-cap,13px);color:var(--t1,#fff);}'
     + '.wo-note{font-size:var(--fs-cap,13px);color:var(--t2,rgba(255,255,255,.75));line-height:1.5;margin-top:14px;}'
     + '.wo-stop{color:var(--t1,#fff);}';
   try { var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st); } catch (e) {}
 
   window.vialWorkouts = {
-    pick: pick, card: card, plan: plan, steps: steps, play: play, askFeel: askFeel, _pickFeel: _pickFeel, _saveFeel: _saveFeel, acceptUp: acceptUp, saveFeel: saveFeel, partName: function (k, l) { return tx(PART[k], l); }, open: open, toggle: toggle, title: title, meta: meta, inv: invTxt, hasDb: function (id) { return !!W[id] && W[id].inv.some(function (k) { return /^db/.test(k); }); }, why: whyTxt, dose: dose,
+    pick: pick, card: card, plan: plan, steps: steps, play: play, askFeel: askFeel, _pickFeel: _pickFeel, _saveFeel: _saveFeel, acceptUp: acceptUp, saveFeel: saveFeel, partName: function (k, l) { return tx(PART[k], l); }, open: open, toggle: toggle, title: title, meta: meta, inv: invTxt, hasDb: hasDb, lastKg: lastKg, why: whyTxt, dose: dose,
     cat: function (id) { return W[id] ? W[id].c : ''; }, ids: function () { return Object.keys(W); },
     log: log, doneOn: doneOn, mark: mark,
     setup: function (o) { Object.keys(o || {}).forEach(function (k) { cfg[k] = o[k]; }); }
