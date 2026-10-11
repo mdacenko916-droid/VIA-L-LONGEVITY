@@ -1430,9 +1430,10 @@ export default {
       if (path === '/cal-webhook')      return handleCalWebhook(request, env, corsHeaders);
 
       // Клиентский бот заботы (@viael_care_bot) → переписка клиент↔нутрициолог через Topics
-      if (path === '/care-webhook')     return handleCareWebhook(request, env, corsHeaders);
 
       // Цифровая анкета здоровья (book/anketa) → структурированная карточка в топик клиента
+      // старый вебхук клиентского ТГ-бота (удалён 2026-10-11): отвечаем 200, чтобы Telegram не слал повторы
+      if (path === '/care-webhook')     return new Response('ok');
       if (path === '/anketa-submit')    return handleAnketaSubmit(request, env, corsHeaders, ctx);
       if (path === '/advisor-chat')     return handleAdvisorChat(request, env, corsHeaders, ctx);
       if (path === '/weekly-report')    return handleWeeklyReport(request, env, corsHeaders, ctx);
@@ -1457,7 +1458,6 @@ export default {
       if (path === '/cabinet/save')        return handleCabinetSave(request, env, corsHeaders);
       if (path === '/cabinet/delete')      return handleCabinetDelete(request, env, corsHeaders);
       if (path === '/cabinet/ai-draft')    return handleCabinetAiDraft(request, env, corsHeaders);
-      if (path === '/cabinet/tg-send')     return handleCabinetTgSend(request, env, corsHeaders);
       if (path === '/push/app-register')  return handleAppPushRegister(request, env, corsHeaders);        // токен пуша приложения
       if (path === '/cabinet/chat-read')   return handleCabinetChatRead(request, env, corsHeaders);        // непрочитанные → 0
       if (path === '/cabinet/push-subscribe')   return handleCabinetPushSubscribe(request, env, corsHeaders);
@@ -1541,7 +1541,6 @@ export default {
     ctx.waitUntil(runPushIntake(env));             // ежечасно: напоминания о приёме добавок/препаратов (EXPERT)
     ctx.waitUntil(runReviewSweep(env));            // ежечасно: разовые разборы — продление срока на 48 ч и просрочка
     if (_h === 9) {
-      ctx.waitUntil(runDailyReminders(env));
       ctx.waitUntil(expireSpecialistAccess(env));   // Шаг 4: закрыть доступ при истёкшей абонплате
       ctx.waitUntil(eraseExpiredHealthData(env));    // E3 §5: данные о здоровье — 90 дней после ведения
       ctx.waitUntil(purgeExpiredResearch(env));      // исследовательский синк: скользящее окно 730 дней
@@ -4485,15 +4484,6 @@ async function handleExpertMessage(request, env, corsHeaders, ctx){
   // Пуш специалисту в кабинет (2026-09-25): у клиентов приложения нет Telegram-топика, и до этого
   // специалист о сообщении не узнавал вовсе. Пуш без тела — надпись SW берёт в /cabinet/push-peek.
   if(ctx && row.specialist_id) ctx.waitUntil(_specPush(env, row.specialist_id));
-  // Пинг нутрициологу в его топик (он остаётся в Telegram как оператор) — если топик известен.
-  if(ctx && env.EXPERT_DRAFTS){
-    ctx.waitUntil((async()=>{
-      try{
-        const topicId = await env.EXPERT_DRAFTS.get('code_topic:'+code);
-        if(topicId) await careSend(env, env.NUTRITIONIST_GROUP_ID, '💬 Новое сообщение от клиента в приложении:\n' + (text || (mtype==='image' ? '📷 фото' : '🎤 голосовое')), { message_thread_id: Number(topicId) });
-      }catch(_){}
-    })());
-  }
   return jsonResponse({ ok:true }, corsHeaders);
 }
 
@@ -8847,118 +8837,16 @@ function buildUserMessage(data, lang, tier) {
 }
 
 // ════════════════════════════════════════════════════════════════════════
-// КЛИЕНТСКИЙ БОТ ЗАБОТЫ (@viael_care_bot) — переписка клиент ↔ нутрициолог
-// через Topics-супергруппу. Секреты: CLIENT_BOT_TOKEN, NUTRITIONIST_GROUP_ID.
-// KV (EXPERT_DRAFTS): care_topic:<clientId>→topicId, care_client:<topicId>→{clientId,lang,name}
-// Статический словарь фраз = 0 вызовов API. Подробности — ARCHITECTURE §16.
+// Языки, перевод и FAQ-память. Клиентский бот заботы (@viael_care_bot, Telegram-топики) удалён 2026-10-11:
+// группы ведения не было, канал связи — свой чат в приложении (/cabinet/chat-send). Остались общие помощники:
+// careLang (язык клиента), careTranslate (переводы чата и кабинета), faqLoad/faqMatch (память ответов советника).
 // ════════════════════════════════════════════════════════════════════════
 
 const CARE_SUPPORTED = ['uk','ru','en','es','de','pt','fr','pl','it','he','ja','ko'];
 
-const CARE_PHRASES = {
-  hello_welcome: {
-    ru:'Здравствуйте! Я бот заботы VIA-L 🌿 Напишите мне в любой момент — передам ваш вопрос нутрициологу и вернусь с ответом на вашем языке. Вы не останетесь один на один.',
-    uk:'Вітаю! Я бот турботи VIA-L 🌿 Пишіть мені будь-коли — передам ваше запитання нутриціологу й повернуся з відповіддю вашою мовою. Ви не залишитеся наодинці.',
-    en:"Hello! I'm the VIA-L care assistant 🌿 Write to me anytime — I'll pass your question to your nutritionist and come back with an answer in your language. You won't be left alone.",
-    es:'¡Hola! Soy el asistente de cuidado de VIA-L 🌿 Escríbeme cuando quieras — le paso tu pregunta a tu nutricionista y vuelvo con una respuesta en tu idioma. No te quedarás solo/a.',
-    de:'Hallo! Ich bin der VIA-L Care-Assistent 🌿 Schreib mir jederzeit — ich leite deine Frage an deine Ernährungsberaterin weiter und komme mit einer Antwort in deiner Sprache zurück. Du bleibst nicht allein.',
-    pt:'Olá! Sou o assistente de cuidado da VIA-L 🌿 Escreva-me a qualquer momento — passo a sua pergunta à nutricionista e volto com uma resposta no seu idioma. Você não ficará sozinho(a).',
-    fr:"Bonjour ! Je suis l'assistant de soin VIA-L 🌿 Écrivez-moi à tout moment — je transmets votre question à votre nutritionniste et je reviens avec une réponse dans votre langue. Vous ne resterez pas seul(e).",
-    pl:'Cześć! Jestem asystentem troski VIA-L 🌿 Napisz do mnie w każdej chwili — przekażę Twoje pytanie dietetykowi i wrócę z odpowiedzią w Twoim języku. Nie zostaniesz sam(a).',
-    it:'Ciao! Sono l’assistente di cura VIA-L 🌿 Scrivimi in qualsiasi momento — passo la tua domanda alla nutrizionista e torno con una risposta nella tua lingua. Non resterai solo/a.',
-    he:'שלום! אני עוזר הטיפול של VIA-L 🌿 כתבו לי בכל עת — אעביר את שאלתכם לתזונאית ואחזור עם תשובה בשפה שלכם. לא תישארו לבד.',
-    ja:'こんにちは！VIA-Lのケアアシスタントです 🌿 いつでもメッセージをどうぞ — ご質問を栄養士にお伝えし、あなたの言語でお返事します。おひとりにはしません。',
-    ko:'안녕하세요! VIA-L 케어 어시스턴트입니다 🌿 언제든지 메시지를 보내주세요 — 질문을 영양사에게 전달하고 당신의 언어로 답변을 드립니다. 혼자 두지 않겠습니다.',
-  },
-  passed_to_specialist: {
-    ru:'Спасибо 🌿 Передал ваш вопрос нутрициологу. Ответим в рабочее время, обычно в течение 48 часов — вы точно не потеряетесь.',
-    uk:'Дякую 🌿 Передав ваше запитання нутриціологу. Відповімо в робочий час, зазвичай протягом 48 годин — ви точно не загубитеся.',
-    en:"Thank you 🌿 I've passed your question to your nutritionist. We'll reply during working hours, usually within 48 hours — you won't be forgotten.",
-    es:'Gracias 🌿 Le he pasado tu pregunta a tu nutricionista. Responderemos en horario laboral, normalmente en 48 horas — no te olvidaremos.',
-    de:'Danke 🌿 Ich habe deine Frage an deine Ernährungsberaterin weitergeleitet. Wir antworten zu den Geschäftszeiten, meist innerhalb von 48 Stunden — du wirst nicht vergessen.',
-    pt:'Obrigado 🌿 Passei a sua pergunta à nutricionista. Responderemos em horário comercial, normalmente em 48 horas — você não será esquecido(a).',
-    fr:"Merci 🌿 J'ai transmis votre question à votre nutritionniste. Nous répondrons aux heures ouvrables, généralement sous 48 heures — vous ne serez pas oublié(e).",
-    pl:'Dziękuję 🌿 Przekazałem Twoje pytanie dietetykowi. Odpowiemy w godzinach pracy, zwykle w ciągu 48 godzin — nie zapomnimy o Tobie.',
-    it:'Grazie 🌿 Ho passato la tua domanda alla nutrizionista. Risponderemo negli orari lavorativi, di solito entro 48 ore — non ti dimenticheremo.',
-    he:'תודה 🌿 העברתי את שאלתכם לתזונאית. נשיב בשעות העבודה, בדרך כלל תוך 48 שעות — לא נשכח אתכם.',
-    ja:'ありがとうございます 🌿 ご質問を栄養士にお伝えしました。営業時間内、通常48時間以内にお返事します — あなたを忘れません。',
-    ko:'감사합니다 🌿 질문을 영양사에게 전달했습니다. 영업 시간 내, 보통 48시간 이내에 답변드립니다 — 잊지 않겠습니다.',
-  },
-  anketa_invite: {
-    ru:'Чтобы вести вас точно, нутрициологу нужна полная картина 🌿 Заполните, пожалуйста, анкету здоровья — спокойно, можно в несколько заходов: {link}\n\nЕсть свежие анализы — впишите значения или приложите фото/PDF. Нет под рукой — не переживайте, подскажем, что сдать. Лучше заполнить за 2–3 дня до встречи.',
-    uk:'Щоб вести вас точно, нутриціологу потрібна повна картина 🌿 Заповніть, будь ласка, анкету здоров’я — спокійно, можна в кілька заходів: {link}\n\nЄ свіжі аналізи — впишіть значення або додайте фото/PDF. Немає під рукою — не хвилюйтеся, підкажемо, що здати. Краще заповнити за 2–3 дні до зустрічі.',
-    en:'To guide you precisely, your nutritionist needs the full picture 🌿 Please fill in the health questionnaire — take your time, in several sittings if needed: {link}\n\nIf you have recent lab results, enter the values or attach a photo/PDF. Don’t have them yet — no worries, we’ll tell you what to take. Best to complete it 2–3 days before your session.',
-    es:'Para guiarte con precisión, tu nutricionista necesita el panorama completo 🌿 Completa el cuestionario de salud — con calma, en varias veces si hace falta: {link}\n\nSi tienes análisis recientes, escribe los valores o adjunta una foto/PDF. ¿No los tienes aún? Tranquilo/a, te diremos qué hacer. Mejor completarlo 2–3 días antes de la sesión.',
-    de:'Damit dich deine Ernährungsberaterin genau begleiten kann, braucht sie das Gesamtbild 🌿 Bitte fülle den Gesundheitsfragebogen aus — in Ruhe, gern in mehreren Schritten: {link}\n\nWenn du aktuelle Laborwerte hast, trage sie ein oder hänge ein Foto/PDF an. Noch keine? Kein Problem, wir sagen dir, was zu tun ist. Am besten 2–3 Tage vor dem Termin.',
-    pt:'Para guiar você com precisão, sua nutricionista precisa do quadro completo 🌿 Preencha o questionário de saúde — com calma, em várias etapas se precisar: {link}\n\nSe tiver exames recentes, insira os valores ou anexe foto/PDF. Ainda não tem? Sem preocupação, diremos o que fazer. Melhor concluir 2–3 dias antes da sessão.',
-    fr:'Pour vous accompagner avec précision, votre nutritionniste a besoin du tableau complet 🌿 Remplissez le questionnaire de santé — tranquillement, en plusieurs fois si besoin : {link}\n\nSi vous avez des analyses récentes, saisissez les valeurs ou joignez une photo/PDF. Pas encore ? Pas d’inquiétude, on vous dira quoi faire. Idéalement 2–3 jours avant la séance.',
-    pl:'Aby prowadzić Cię precyzyjnie, dietetyk potrzebuje pełnego obrazu 🌿 Wypełnij ankietę zdrowia — spokojnie, w kilku podejściach: {link}\n\nMasz świeże wyniki badań — wpisz wartości lub dołącz zdjęcie/PDF. Jeszcze nie masz? Spokojnie, podpowiemy, co zrobić. Najlepiej wypełnić 2–3 dni przed sesją.',
-    it:'Per seguirti con precisione, la tua nutrizionista ha bisogno del quadro completo 🌿 Compila il questionario sulla salute — con calma, anche in più volte: {link}\n\nSe hai esami recenti, inserisci i valori o allega foto/PDF. Non li hai ancora? Tranquillo/a, ti diremo cosa fare. Meglio completarlo 2–3 giorni prima della sessione.',
-    he:'כדי שהתזונאית תלווה אותך במדויק, היא צריכה תמונה מלאה 🌿 אנא מלא/י את שאלון הבריאות — בנחת, אפשר בכמה פעמים: {link}\n\nאם יש בדיקות עדכניות, הזן/י ערכים או צרף/י תמונה/PDF. אין עדיין? אל דאגה, נכוון אותך. עדיף להשלים 2–3 ימים לפני הפגישה.',
-    ja:'栄養士が的確にサポートできるよう、全体像が必要です 🌿 健康問診票のご記入をお願いします — ゆっくり、何回かに分けてもOK：{link}\n\n最近の検査結果があれば数値を入力するか写真/PDFを添付してください。まだない場合もご安心を、何を受ければよいかお伝えします。セッションの2〜3日前までにご記入いただけると助かります。',
-    ko:'영양사가 정확히 도와드리도록 전체 그림이 필요합니다 🌿 건강 설문지를 작성해 주세요 — 천천히, 여러 번 나눠 해도 좋습니다: {link}\n\n최근 검사 결과가 있으면 수치를 입력하거나 사진/PDF를 첨부해 주세요. 아직 없으셔도 괜찮습니다, 무엇을 받으면 되는지 알려드리겠습니다. 세션 2~3일 전까지 작성해 주시면 좋습니다.',
-  },
-  got_attachment: {
-    ru:'Спасибо 🌿 Получили ваше вложение и передали нутрициологу. Вернёмся с ответом на вашем языке.',
-    uk:'Дякуємо 🌿 Отримали ваше вкладення й передали нутриціологу. Повернемося з відповіддю вашою мовою.',
-    en:'Thank you 🌿 We’ve received your attachment and passed it to your nutritionist. We’ll come back with an answer in your language.',
-    es:'Gracias 🌿 Hemos recibido tu archivo y se lo hemos pasado a tu nutricionista. Volveremos con una respuesta en tu idioma.',
-    de:'Danke 🌿 Wir haben deinen Anhang erhalten und an deine Ernährungsberaterin weitergeleitet. Wir melden uns mit einer Antwort in deiner Sprache.',
-    pt:'Obrigado 🌿 Recebemos o seu anexo e o encaminhamos à nutricionista. Voltaremos com uma resposta no seu idioma.',
-    fr:'Merci 🌿 Nous avons bien reçu votre pièce jointe et l’avons transmise à votre nutritionniste. Nous reviendrons avec une réponse dans votre langue.',
-    pl:'Dziękujemy 🌿 Otrzymaliśmy Twój załącznik i przekazaliśmy go dietetykowi. Wrócimy z odpowiedzią w Twoim języku.',
-    it:'Grazie 🌿 Abbiamo ricevuto il tuo allegato e l’abbiamo passato alla nutrizionista. Torneremo con una risposta nella tua lingua.',
-    he:'תודה 🌿 קיבלנו את הקובץ שצירפת והעברנו אותו לתזונאית. נחזור עם תשובה בשפה שלך.',
-    ja:'ありがとうございます 🌿 添付ファイルを受け取り、栄養士にお渡ししました。あなたの言語でお返事します。',
-    ko:'감사합니다 🌿 첨부파일을 받아 영양사에게 전달했습니다. 당신의 언어로 답변드리겠습니다.',
-  },
-  zoom_invite: {
-    ru:'Ваша онлайн-консультация 🌿 Ссылка для подключения:\n{link}\n\nПодключитесь, пожалуйста, за пару минут до начала. До встречи!',
-    uk:'Ваша онлайн-консультація 🌿 Посилання для підключення:\n{link}\n\nПідключіться, будь ласка, за кілька хвилин до початку. До зустрічі!',
-    en:'Your online consultation 🌿 Link to join:\n{link}\n\nPlease join a couple of minutes before the start. See you!',
-    es:'Tu consulta online 🌿 Enlace para conectarte:\n{link}\n\nConéctate un par de minutos antes de empezar. ¡Nos vemos!',
-    de:'Deine Online-Beratung 🌿 Link zum Beitreten:\n{link}\n\nBitte tritt ein paar Minuten vor Beginn bei. Bis bald!',
-    pt:'A sua consulta online 🌿 Link para entrar:\n{link}\n\nEntre alguns minutos antes do início. Até já!',
-    fr:'Votre consultation en ligne 🌿 Lien pour rejoindre :\n{link}\n\nConnectez-vous quelques minutes avant le début. À bientôt !',
-    pl:'Twoja konsultacja online 🌿 Link do dołączenia:\n{link}\n\nDołącz kilka minut przed rozpoczęciem. Do zobaczenia!',
-    it:'La tua consulenza online 🌿 Link per partecipare:\n{link}\n\nCollegati un paio di minuti prima dell’inizio. A presto!',
-    he:'הייעוץ המקוון שלך 🌿 קישור להצטרפות:\n{link}\n\nאנא הצטרף/י כמה דקות לפני תחילת המפגש. נתראה!',
-    ja:'オンライン相談のご案内 🌿 参加リンク:\n{link}\n\n開始の数分前にご参加ください。お会いできるのを楽しみにしています！',
-    ko:'온라인 상담 안내 🌿 참여 링크:\n{link}\n\n시작 몇 분 전에 입장해 주세요. 곧 뵙겠습니다!',
-  },
-  error_unsupported: {
-    ru:'Пока я понимаю текст, фото и файлы. Напишите, пожалуйста, словами — и я всё передам нутрициологу 🌿',
-    uk:'Поки що я розумію текст, фото та файли. Напишіть, будь ласка, словами — і я все передам нутриціологу 🌿',
-    en:'For now I understand text, photos and files. Please write it in words — and I’ll pass everything to your nutritionist 🌿',
-    es:'Por ahora entiendo texto, fotos y archivos. Escríbelo con palabras, por favor — y se lo paso todo a tu nutricionista 🌿',
-    de:'Im Moment verstehe ich Text, Fotos und Dateien. Bitte schreib es in Worten — und ich leite alles an deine Ernährungsberaterin weiter 🌿',
-    pt:'Por enquanto entendo texto, fotos e ficheiros. Escreva em palavras, por favor — e passo tudo à nutricionista 🌿',
-    fr:'Pour l’instant je comprends le texte, les photos et les fichiers. Écrivez-le en mots, s’il vous plaît — et je transmets tout à votre nutritionniste 🌿',
-    pl:'Na razie rozumiem tekst, zdjęcia i pliki. Napisz proszę słowami — a wszystko przekażę dietetykowi 🌿',
-    it:'Per ora capisco testo, foto e file. Scrivilo a parole, per favore — e passo tutto alla nutrizionista 🌿',
-    he:'בינתיים אני מבין טקסט, תמונות וקבצים. כתבו במילים, בבקשה — ואעביר הכול לתזונאית 🌿',
-    ja:'今はテキスト・写真・ファイルに対応しています。お手数ですが文章でお書きください — すべて栄養士にお伝えします 🌿',
-    ko:'지금은 텍스트·사진·파일을 이해합니다. 번거로우시겠지만 글로 적어 주세요 — 모두 영양사에게 전달하겠습니다 🌿',
-  },
-  error_generic: {
-    ru:'Кажется, что-то подвисло на моей стороне 🙈 Повторите, пожалуйста, через минуту — я никуда не денусь.',
-    uk:'Здається, щось підвисло на моєму боці 🙈 Повторіть, будь ласка, за хвилину — я нікуди не дінуся.',
-    en:'Something seems to have hiccuped on my side 🙈 Please try again in a minute — I’m not going anywhere.',
-    es:'Parece que algo se atascó de mi lado 🙈 Inténtalo de nuevo en un minuto — no me voy a ningún lado.',
-    de:'Auf meiner Seite hat etwas gehakt 🙈 Bitte versuch es in einer Minute noch einmal — ich bin gleich wieder da.',
-    pt:'Parece que algo travou do meu lado 🙈 Tente novamente daqui a um minuto — não vou a lado nenhum.',
-    fr:'On dirait que quelque chose a coincé de mon côté 🙈 Réessayez dans une minute — je ne bouge pas.',
-    pl:'Wygląda, że coś się zacięło po mojej stronie 🙈 Spróbuj ponownie za minutę — nigdzie się nie wybieram.',
-    it:'Sembra che qualcosa si sia inceppato dalla mia parte 🙈 Riprova tra un minuto — non vado da nessuna parte.',
-    he:'נראה שמשהו נתקע אצלי 🙈 נסו שוב בעוד דקה — אני לא הולך לשום מקום.',
-    ja:'こちら側で少し不具合が出たようです 🙈 1分ほどしてからもう一度お試しください — ずっとここにいます。',
-    ko:'제 쪽에서 잠시 문제가 생긴 것 같아요 🙈 1분 뒤에 다시 보내 주세요 — 어디 가지 않아요.',
-  },
-};
 
 // Веб-форма полной анкеты здоровья (110 Q × 12 яз, GitHub Pages via-l.com).
 // Заполненная анкета возвращается POST-ом на /anketa-submit (см. handleAnketaSubmit).
-const CARE_ANKETA_FORM = 'https://via-l.com/book/anketa/';
 
 function careLang(code){
   if(!code) return 'en';
@@ -8966,57 +8854,9 @@ function careLang(code){
   if(c==='iw') c='he';
   return CARE_SUPPORTED.includes(c) ? c : 'en';
 }
-function carePhrase(key, lang){
-  const m = CARE_PHRASES[key] || {};
-  return m[lang] || m.en || '';
-}
 
-async function careSend(env, chatId, text, extra = {}){
-  const url = `https://api.telegram.org/bot${env.CLIENT_BOT_TOKEN}/sendMessage`;
-  const body = JSON.stringify({ chat_id: chatId, text, disable_web_page_preview: true, ...extra });
-  for(let attempt=0; attempt<3; attempt++){
-    const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body });
-    if(res.ok) return res.json();
-    if((res.status===429||res.status>=500)&&attempt<2){
-      let waitMs=1200;
-      try{ const j=await res.clone().json(); if(j?.parameters?.retry_after) waitMs=j.parameters.retry_after*1000+250; }catch(_){}
-      await new Promise(r=>setTimeout(r, Math.min(waitMs,6000)));
-      continue;
-    }
-    return res.json().catch(()=>({ok:false}));
-  }
-}
 
-async function careCreateTopic(env, name){
-  const url = `https://api.telegram.org/bot${env.CLIENT_BOT_TOKEN}/createForumTopic`;
-  const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ chat_id: env.NUTRITIONIST_GROUP_ID, name: String(name).slice(0,128) }) });
-  const j = await res.json().catch(()=>({}));
-  return j?.result?.message_thread_id || null;
-}
 
-// Отправка в топик клиента с авто-пересозданием. Если нутрициолог удалил топик,
-// Telegram отвечает «message thread not found» → создаём новый, обновляем KV
-// (care_topic/care_client), чистим висячую обратную привязку и шлём заново. Закрывает
-// баг «клиент пропал после удаления его топика».
-async function careRelayToTopic(env, clientId, lang, cname, text){
-  const send = tid => careSend(env, env.NUTRITIONIST_GROUP_ID, text,
-    tid ? { message_thread_id: Number(tid) } : {});
-  let topicId = await env.EXPERT_DRAFTS.get('care_topic:'+clientId);
-  let res = topicId ? await send(topicId) : null;
-  const threadGone = res && res.ok===false && /thread not found/i.test(res.description||'');
-  if(!topicId || threadGone){
-    const fresh = await careCreateTopic(env, cname+' · '+lang.toUpperCase());
-    if(fresh){
-      if(threadGone && topicId) await env.EXPERT_DRAFTS.delete('care_client:'+topicId);
-      await env.EXPERT_DRAFTS.put('care_topic:'+clientId, String(fresh));
-      await env.EXPERT_DRAFTS.put('care_client:'+fresh, JSON.stringify({clientId, lang, name:cname}));
-      topicId = fresh;
-      await send(topicId);
-    }
-  }
-  return topicId;
-}
 
 // Перевод с авто-роутингом модели: he/ja/ko → Sonnet 4.6 (Haiku галлюцинирует),
 // остальные → Haiku (дёшево). ru/uk не переводим — это решает вызывающий код.
@@ -9054,14 +8894,6 @@ async function careTranslate(env, text, fromLang, toLang){
 // нутрициологу в топик (клиенту авто не шлём — выдачу тоже решает человек).
 async function faqLoad(env){
   try{ return JSON.parse(await env.EXPERT_DRAFTS.get('faq:db')) || []; }catch(_){ return []; }
-}
-async function faqAdd(env, q, a){
-  if(!q || !a) return false;
-  const db = await faqLoad(env);
-  db.push({ q:String(q).slice(0,500), a:String(a).slice(0,1500), ts:Date.now() });
-  while(db.length>500) db.shift();   // держим базу компактной (последние 500 пар)
-  await env.EXPERT_DRAFTS.put('faq:db', JSON.stringify(db));
-  return true;
 }
 // Семантический поиск: даём Haiku новый вопрос + нумерованный список эталонных вопросов,
 // модель возвращает индекс совпадающего ПО СМЫСЛУ (или -1). Ловит синонимы/перефраз.
@@ -9246,201 +9078,7 @@ async function handleAdvisorChat(request, env, corsHeaders, ctx){
   }catch(_){ return jsonResponse({ok:false,error:'ai_error'}, corsHeaders, 502); }
 }
 
-async function careAnswerCallback(env, id, text){
-  try{ await fetch(`https://api.telegram.org/bot${env.CLIENT_BOT_TOKEN}/answerCallbackQuery`,
-    { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ callback_query_id:id, text:text||'' }) }); }catch(_){}
-}
-// Копия медиа-сообщения клиента (фото анализов, голосовое, документ) в его топик —
-// чтобы нутрициолог видел оригинал вложения, а не терял его. copyMessage сохраняет
-// подпись/файл без пометки «переслано».
-async function careCopyMessage(env, fromChatId, messageId, topicId){
-  try{ await fetch(`https://api.telegram.org/bot${env.CLIENT_BOT_TOKEN}/copyMessage`,
-    { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ chat_id: env.NUTRITIONIST_GROUP_ID, from_chat_id: fromChatId,
-        message_id: messageId, message_thread_id: Number(topicId) }) }); }catch(_){}
-}
 
-async function handleCareWebhook(request, env, corsHeaders){
-  if(request.method!=='POST') return jsonResponse({ok:true}, corsHeaders);
-  if(!env.CLIENT_BOT_TOKEN || !env.NUTRITIONIST_GROUP_ID || !env.EXPERT_DRAFTS){
-    return jsonResponse({ok:false, error:'care bot not configured'}, corsHeaders);
-  }
-  let update;
-  try{ update = await request.json(); }catch(_){ return jsonResponse({ok:true}, corsHeaders); }
-
-  // ── Кнопка «⭐ В эталон» в топике нутрициолога → сохранить пару в FAQ-память ──
-  if(update.callback_query){
-    const cq = update.callback_query;
-    if(String(cq.message?.chat?.id) === String(env.NUTRITIONIST_GROUP_ID) && (cq.data||'').startsWith('faqsave:')){
-      const threadId = (cq.data.split(':')[1]||'').replace(/\D/g,'');
-      let saved=false;
-      const rawP = threadId ? await env.EXPERT_DRAFTS.get('care_lastpair:'+threadId) : null;
-      if(rawP){ try{ const p=JSON.parse(rawP); saved=await faqAdd(env, p.q, p.a); }catch(_){} }
-      await careAnswerCallback(env, cq.id, saved ? '⭐ Сохранено в эталон' : 'Нет свежей пары вопрос/ответ');
-    }else{
-      await careAnswerCallback(env, cq.id, '');
-    }
-    return jsonResponse({ok:true}, corsHeaders);
-  }
-
-  const msg = update.message || update.edited_message;
-  if(!msg) return jsonResponse({ok:true}, corsHeaders);
-  const groupId = String(env.NUTRITIONIST_GROUP_ID);
-
-  // ── ВЕТКА 1: нутрициолог пишет в топик группы → доставить клиенту ──
-  if(String(msg.chat?.id) === groupId){
-    const text = msg.text;
-    const threadId = msg.message_thread_id;
-    if(!text || !threadId) return jsonResponse({ok:true}, corsHeaders);            // сервисные / General
-    if(msg.from?.username === 'viael_care_bot') return jsonResponse({ok:true}, corsHeaders);
-    if(text.startsWith('/')){
-      // Команды нутрициолога в топике клиента (язык клиента берём текущий — care_lang):
-      //   /anketa            → выдать клиенту веб-анкету (ссылка вернётся в этот топик).
-      //   /zoom <ссылка>     → выдать клиенту приглашение на онлайн-консультацию.
-      const cmd = text.trim().split(/\s+/)[0].toLowerCase();
-      const rawA = await env.EXPERT_DRAFTS.get('care_client:'+threadId);
-      let rA=null; if(rawA){ try{ rA = JSON.parse(rawA); }catch(_){ rA=null; } }
-      if(rA){
-        const cl = (await env.EXPERT_DRAFTS.get('care_lang:'+rA.clientId)) || rA.lang || 'en';
-        if(cmd==='/anketa'){
-          const anketaLink = CARE_ANKETA_FORM + '?lang=' + cl + '&topic=' + threadId;
-          await careSend(env, rA.clientId, carePhrase('anketa_invite', cl).replace('{link}', anketaLink));
-          await careSend(env, env.NUTRITIONIST_GROUP_ID, '✅ Анкета отправлена клиенту', { message_thread_id: threadId });
-        }else if(cmd==='/zoom'){
-          const link = text.trim().split(/\s+/).slice(1).join(' ').trim();
-          if(/^https?:\/\//i.test(link)){
-            await careSend(env, rA.clientId, carePhrase('zoom_invite', cl).replace('{link}', link));
-            await careSend(env, env.NUTRITIONIST_GROUP_ID, '✅ Ссылка на Zoom отправлена клиенту', { message_thread_id: threadId });
-          }else{
-            await careSend(env, env.NUTRITIONIST_GROUP_ID, 'Использование: /zoom <ссылка на встречу>', { message_thread_id: threadId });
-          }
-        }
-      }
-      return jsonResponse({ok:true}, corsHeaders);                                 // прочие команды/служебное
-    }
-    const raw = await env.EXPERT_DRAFTS.get('care_client:'+threadId);
-    if(!raw) return jsonResponse({ok:true}, corsHeaders);                          // топик не наш
-    let rec; try{ rec = JSON.parse(raw); }catch(_){ return jsonResponse({ok:true}, corsHeaders); }
-    // Язык берём ТЕКУЩИЙ (care_lang), а не замороженный в топике: клиент мог
-    // сменить язык (/start en) уже после создания топика.
-    const clang = (await env.EXPERT_DRAFTS.get('care_lang:'+rec.clientId)) || rec.lang || 'en';
-    let out = text;
-    if(clang!=='ru' && clang!=='uk') out = await careTranslate(env, text, 'ru', clang);
-    await careSend(env, rec.clientId, out);
-    // FAQ-память: если есть свежий вопрос клиента — предложить сохранить пару в эталон.
-    // text здесь = ответ нутрициолога на ru (до перевода) → база остаётся русскоязычной.
-    const lastq = await env.EXPERT_DRAFTS.get('care_lastq:'+rec.clientId);
-    if(lastq){
-      await env.EXPERT_DRAFTS.put('care_lastpair:'+threadId, JSON.stringify({q:lastq, a:text}), {expirationTtl: 7*24*60*60});
-      await careSend(env, env.NUTRITIONIST_GROUP_ID, '✅ Ответ доставлен клиенту.\nСохранить этот ответ как эталонный для похожих вопросов?', {
-        message_thread_id: threadId,
-        reply_markup: { inline_keyboard: [[{ text:'⭐ Сохранить в эталон', callback_data:'faqsave:'+threadId }]] },
-      });
-    }
-    return jsonResponse({ok:true}, corsHeaders);
-  }
-
-  // ── ВЕТКА 2: клиент пишет боту в личку ──
-  if(msg.chat?.type === 'private'){
-    const clientId = msg.chat.id;
-    const text = (msg.text||'').trim();
-    // Язык: сначала ранее выбранный (deep-link из ИП / персональный), иначе язык
-    // интерфейса Telegram. Не перезаписываем на каждом сообщении — выбор «прилипает».
-    let lang = await env.EXPERT_DRAFTS.get('care_lang:'+clientId) || careLang(msg.from?.language_code);
-
-    if(text==='/start' || text.startsWith('/start ')){
-      // deep-link приходит как «/start <payload>». payload = ЛИБО язык (старое поведение),
-      // ЛИБО КОД доступа (новое): код связывает анкету и переписку в ОДИН топик через
-      // code_topic:<код>. Язык/имя клиента берём из code_owner (записан при покупке).
-      const payload = text.split(/\s+/)[1];
-      let startCode = '';
-      if(payload){
-        if(CARE_SUPPORTED.includes(payload.toLowerCase())) lang = payload.toLowerCase();
-        else startCode = payload.toUpperCase();
-      }
-      let owner = null;
-      if(startCode){
-        const rawO = await env.EXPERT_DRAFTS.get('code_owner:'+startCode);
-        if(rawO){ try{ owner = JSON.parse(rawO); }catch(_){ } }
-        if(owner && owner.lang) lang = owner.lang;
-      }
-      await env.EXPERT_DRAFTS.put('care_lang:'+clientId, lang);
-      await careSend(env, clientId, carePhrase('hello_welcome', lang));
-      // Первое подключение: привязываем топик. Если сабмит анкеты уже создал топик под
-      // этим кодом (code_topic) — ПЕРЕИСПОЛЬЗУЕМ его (анкета + чат в одном топике!), иначе
-      // создаём новый и записываем code_topic. Повторный /start топик уже видит — не дублируем.
-      if(!(await env.EXPERT_DRAFTS.get('care_topic:'+clientId))){
-        const cname = (owner && owner.name) || [msg.from?.first_name, msg.from?.last_name].filter(Boolean).join(' ') || ('client '+clientId);
-        const announce = '🆕 Клиент подключился к ведению:\n👤 '+cname+' ('+lang.toUpperCase()+')';
-        let topicId = startCode ? await env.EXPERT_DRAFTS.get('code_topic:'+startCode) : '';
-        if(topicId){
-          await env.EXPERT_DRAFTS.put('care_topic:'+clientId, String(topicId));
-          await env.EXPERT_DRAFTS.put('care_client:'+topicId, JSON.stringify({clientId, lang, name:cname}));
-          await careSend(env, env.NUTRITIONIST_GROUP_ID, announce, { message_thread_id: Number(topicId) });
-        } else {
-          topicId = await careRelayToTopic(env, clientId, lang, cname, announce);
-          if(topicId && startCode) await env.EXPERT_DRAFTS.put('code_topic:'+startCode, String(topicId));
-        }
-        if(topicId){
-          const anketaLink = CARE_ANKETA_FORM + '?lang=' + lang + (startCode ? '&code='+encodeURIComponent(startCode) : '&topic='+topicId);
-          await careSend(env, clientId, carePhrase('anketa_invite', lang).replace('{link}', anketaLink));
-        }
-      }
-      return jsonResponse({ok:true}, corsHeaders);
-    }
-
-    // фиксируем текущий язык клиента, чтобы ответная ветка нутрициолога знала, на
-    // какой язык переводить (read-first выше сохраняет «прилипчивость» выбора).
-    await env.EXPERT_DRAFTS.put('care_lang:'+clientId, lang);
-
-    const cname = [msg.from?.first_name, msg.from?.last_name].filter(Boolean).join(' ') || ('client '+clientId);
-
-    // Вложение без текста (фото анализов, голосовое, документ, видео) — копируем оригинал
-    // в топик клиента, чтобы нутрициолог его видел. Раньше такое сообщение (text==='')
-    // ошибочно попадало в ветку /start и терялось.
-    const hasMedia = !!(msg.photo||msg.document||msg.voice||msg.audio||msg.video||msg.video_note||msg.animation);
-    if(!text && hasMedia){
-      const header = '👤 '+cname+(lang!=='ru'&&lang!=='uk' ? ' ('+lang.toUpperCase()+')' : '')+' прислал(а) вложение:';
-      const topicId = await careRelayToTopic(env, clientId, lang, cname, header);
-      if(topicId) await careCopyMessage(env, clientId, msg.message_id, topicId);
-      await careSend(env, clientId, carePhrase('got_attachment', lang));
-      return jsonResponse({ok:true}, corsHeaders);
-    }
-    if(!text){   // прочее без текста (стикер/локация/контакт) — мягко просим словами
-      await careSend(env, clientId, carePhrase('error_unsupported', lang));
-      return jsonResponse({ok:true}, corsHeaders);
-    }
-
-    // реле: оригинал + (если не ru/uk) перевод на ru для нутрициолога
-    let qForFaq = text;   // ru-вариант вопроса для FAQ-памяти (база русскоязычная)
-    let relay = '👤 '+cname+(lang!=='ru'&&lang!=='uk' ? ' ('+lang.toUpperCase()+')' : '')+':\n'+text;
-    if(lang!=='ru' && lang!=='uk'){
-      const ru = await careTranslate(env, text, lang, 'ru');
-      qForFaq = ru;
-      relay += '\n\n🔁 RU: '+ru;
-    }
-    // в топик клиента с авто-пересозданием, если нутрициолог удалил топик
-    const topicId = await careRelayToTopic(env, clientId, lang, cname, relay);
-    if(!topicId){   // релей не прошёл (не создался топик) — честно говорим клиенту
-      await careSend(env, clientId, carePhrase('error_generic', lang));
-      return jsonResponse({ok:true}, corsHeaders);
-    }
-    await careSend(env, clientId, carePhrase('passed_to_specialist', lang));
-    // FAQ-память: запоминаем вопрос (для кнопки «⭐ В эталон» к будущему ответу) и
-    // подсказываем нутрициологу похожий подтверждённый ответ (клиенту авто НЕ шлём).
-    await env.EXPERT_DRAFTS.put('care_lastq:'+clientId, qForFaq, {expirationTtl: 30*24*60*60});
-    const hit = await faqMatch(env, qForFaq);
-    if(hit && topicId){
-      await careSend(env, env.NUTRITIONIST_GROUP_ID,
-        '💡 Похожий эталонный ответ (FAQ-память):\n'+hit.a+'\n\n— на вопрос: '+hit.q,
-        { message_thread_id: Number(topicId) });
-    }
-    return jsonResponse({ok:true}, corsHeaders);
-  }
-
-  return jsonResponse({ok:true}, corsHeaders);
-}
 
 // ════════════════════════════════════════════════════════════════════════
 // ЦИФРОВАЯ АНКЕТА ЗДОРОВЬЯ (book/anketa, 110 Q × 12 яз) → /anketa-submit
@@ -9526,9 +9164,6 @@ async function anketaSummary(env, answers, lang){
 }
 
 async function handleAnketaSubmit(request, env, corsHeaders, ctx){
-  if(!env.CLIENT_BOT_TOKEN || !env.NUTRITIONIST_GROUP_ID || !env.EXPERT_DRAFTS){
-    return jsonResponse({ok:false, error:'care bot not configured'}, corsHeaders, 503);
-  }
   let body;
   try{ body = await request.json(); }catch(_){ return jsonResponse({ok:false, error:'bad json'}, corsHeaders, 400); }
   const answers = body.answers;
@@ -9575,9 +9210,7 @@ async function deliverAnketa(env, body, answers, lang){
     }
   }
 
-  // ── Куда нутрициологу: топик из /anketa, либо по КОДУ (связка с перепиской), либо новый ──
-  // code_topic:<код> — единый «адрес» топика клиента: его пишет и сабмит анкеты, и /start
-  // care-бота. Кто первый — создаёт, второй переиспользует → анкета и чат в ОДНОМ топике.
+  // ── Анкета по коду доступа → карточка кабинета (D1); без кода — письмом на support@ (ниже) ──
   const code = (typeof body.code==='string' && body.code.trim()) ? body.code.trim().toUpperCase() : '';
   const idline = `${name||'Клиент'}${email?' · '+email:''} · ${lang.toUpperCase()}`;
 
@@ -9608,31 +9241,15 @@ async function deliverAnketa(env, body, answers, lang){
     }
   }
 
-  let topicId = body.topic ? String(body.topic).replace(/\D/g,'') : '';
-  if(topicId && !(await env.EXPERT_DRAFTS.get('care_client:'+topicId))) topicId = ''; // чужой/несуществующий
-  if(!topicId && code) topicId = (await env.EXPERT_DRAFTS.get('code_topic:'+code)) || '';
-  if(!topicId){
-    topicId = await careCreateTopic(env, ((name||'Клиент')+' · анкета · '+lang.toUpperCase()).slice(0,128));
-    if(topicId && code) await env.EXPERT_DRAFTS.put('code_topic:'+code, String(topicId));
-  }
-  const extra = topicId ? { message_thread_id: Number(topicId) } : {};
-
-  if(summary){
-    for(const chunk of anketaChunks([`🧬 СВОДКА ДЛЯ НУТРИЦИОЛОГА · ${idline}`, '', ...summary.split('\n')])){
-      await careSend(env, env.NUTRITIONIST_GROUP_ID, chunk, extra);
-    }
-  }
-
-  // ── Сообщение 2: полные ответы как есть (язык клиента) — первоисточник ──
-  const lines = [`📋 ПОЛНЫЕ ОТВЕТЫ · ${idline}`, ''];
+  // 2026-10-11: ТГ-группы ведения нет — анкета без кода (или не записавшаяся в D1) уходит письмом на support@
+  // (→ ящик владельца): ИИ-сводка + полные ответы. Раньше шла в Telegram-топик care-группы.
+  const lines = [`СВОДКА ДЛЯ НУТРИЦИОЛОГА · ${idline}`, '', summary || '(сводка не получилась)', '', `ПОЛНЫЕ ОТВЕТЫ · ${idline}`, ''];
   for(const item of Object.values(answers)){
     if(!item || item.v==null || item.v==='') continue;
     const val = anketaVal(item.v), q = item.q || '';
     lines.push(val.includes('\n') ? `• ${q}:\n${val}` : `• ${q}: ${val}`);
   }
-  for(const chunk of anketaChunks(lines)){
-    await careSend(env, env.NUTRITIONIST_GROUP_ID, chunk, extra);
-  }
+  try{ await sendEmail(env, 'support@via-l.com', `Анкета · ${name||'Клиент'}${code?' · '+code:''}`, lines.join('\n')); }catch(_){}
 
   // ── Подтверждение клиенту на email (гарантированный канал) ──
   if(email){
@@ -9907,30 +9524,7 @@ function daysBetweenISO(a, b){
   return Math.round((db - da) / 86400000);
 }
 
-// code → topicId (code_topic) → clientId+lang (care_client / care_lang). null если чата нет.
-async function resolveClientChat(env, code){
-  if(!env.EXPERT_DRAFTS || !code) return null;
-  const topicId = await env.EXPERT_DRAFTS.get('code_topic:' + String(code).toUpperCase());
-  if(!topicId) return null;
-  const raw = await env.EXPERT_DRAFTS.get('care_client:' + topicId);
-  if(!raw) return null;
-  let r = null; try{ r = JSON.parse(raw); }catch(_){ return null; }
-  if(!r.clientId) return null;
-  const lang = (await env.EXPERT_DRAFTS.get('care_lang:' + r.clientId)) || r.lang || 'en';
-  return { clientId: r.clientId, lang, topicId };
-}
 
-// Шлёт клиенту (с переводом на его язык) + кладёт копию в топик нутрициолога для прозрачности.
-async function sendClientReminder(env, ctx, ruText){
-  let out = ruText;
-  if(ctx.lang !== 'ru' && ctx.lang !== 'uk'){
-    try{ out = await careTranslate(env, ruText, 'ru', ctx.lang); }catch(_){}
-  }
-  await careSend(env, ctx.clientId, out);
-  if(ctx.topicId){
-    await careSend(env, env.NUTRITIONIST_GROUP_ID, '🔔 Бот напомнил клиенту: ' + ruText, { message_thread_id: Number(ctx.topicId) });
-  }
-}
 
 // ══════════════════════════════════════════════════════════════════════
 // WEB PUSH — утреннее напоминание для VIA-L EXPERT (PWA, вне магазинов).
@@ -10113,72 +9707,6 @@ async function runPushReminders(env) {
   }
 }
 
-async function runDailyReminders(env){
-  if(!env.DB) return;
-  const todayStr    = new Date().toISOString().slice(0,10);
-  const tomorrow    = new Date(); tomorrow.setUTCDate(tomorrow.getUTCDate()+1);
-  const tomorrowStr = tomorrow.toISOString().slice(0,10);
-
-  let results = [];
-  try{
-    const q = await env.DB.prepare("SELECT code,data,product,tier FROM clients WHERE status IN ('active','new')").all();
-    results = q.results || [];
-  }catch(_){ return; }
-
-  for(const row of results){
-    let d = {}; try{ d = JSON.parse(row.data || '{}'); }catch(_){ continue; }
-    const cc = await resolveClientChat(env, row.code);
-    if(!cc) continue;                                   // нет care-чата — написать нельзя
-    let changed = false;
-
-    // ИП-клиент проходит шаги в интерпретаторе (импорт с устройства + анализ) —
-    // данные сами улетают в кабинет. Он НИЧЕГО не присылает и не знает про PDF
-    // (PDF готовит нутрициолог). Поэтому для ИП зовём пройти ИП со ссылкой;
-    // site-программы интерпретатор не проходят → нейтрально про самочувствие.
-    const isIp   = row.product === 'interpreter';
-    const ipLink = ipLinkFor(row.product, row.tier);
-    const ipCall = ipLink ? ` Пройдите, пожалуйста, шаги в интерпретаторе (импорт данных с устройства + анализ) — это пара минут, а данные сами придут ко мне: ${ipLink}` : '';
-
-    // 1+2+4 — точки расписания (Zoom/PDF) за 24 ч и в день встречи.
-    // Тон — ЗАБОТА (ключевая ценность VIA-L): тепло, поддержка, без давления.
-    for(const s of (d.schedule || [])){
-      if(!s.date || s.done) continue;
-      const isZoom = s.type === 'zoom' || s.type === 'once';
-      if(s.date === tomorrowStr && !s.reminded_24h){
-        await sendClientReminder(env, cc, isZoom
-          ? `Здравствуйте! 🌿 С заботой напоминаю: завтра у нас с вами онлайн-встреча, я очень жду нашего разговора.${s.link ? ' Ссылка для подключения: ' + s.link : ''} Берегите себя.`
-          : (isIp
-              ? `Здравствуйте! 🌿 Завтра я подготовлю для вас персональный разбор.${ipCall} Спасибо вам, берегите себя!`
-              : `Здравствуйте! 🌿 Завтра я подготовлю для вас персональный разбор. Поделитесь, пожалуйста, парой слов о самочувствии — так я смогу позаботиться о вас точнее. Спасибо вам.`));
-        s.reminded_24h = true; changed = true;
-      }
-      if(s.date === todayStr && !s.reminded_day){
-        await sendClientReminder(env, cc, isZoom
-          ? `Доброе утро! 🌿 Сегодня у нас онлайн-встреча — я уже готовлюсь к нашему разговору.${s.link ? ' Ссылка: ' + s.link : ''} До скорой встречи, берегите себя!`
-          : (isIp
-              ? `Доброе утро! 🌿 Сегодня готовлю ваш разбор. Если ещё не успели — пройдите шаги в интерпретаторе, чтобы я учёл свежие данные:${ipLink ? ' ' + ipLink : ''} Спасибо, что заботитесь о себе!`
-              : `Доброе утро! 🌿 Сегодня готовлю ваш разбор. Спасибо, что вы со мной — поделитесь, как ваше самочувствие.`));
-        s.reminded_day = true; changed = true;
-      }
-    }
-
-    // 3 — «нет данных N дней»: мягкая забота, без упрёка. Для ИП — зовём пройти ИП.
-    const lastBio = (d.biometrics || []).slice(-1)[0];
-    const sinceData  = lastBio?.date ? daysBetweenISO(lastBio.date, todayStr) : 999;
-    const sinceNudge = d.last_data_nudge ? daysBetweenISO(d.last_data_nudge, todayStr) : 999;
-    if(sinceData >= REMIND_NO_DATA_DAYS && sinceNudge >= REMIND_NO_DATA_DAYS){
-      await sendClientReminder(env, cc, isIp
-        ? `Здравствуйте! 🌿 Давно не было ваших данных — как самочувствие? Когда будет удобно, пройдите шаги в интерпретаторе, чтобы я продолжил вести вас точно:${ipLink ? ' ' + ipLink : ''} Я рядом и забочусь о вашем результате.`
-        : `Здравствуйте! 🌿 Давно не было от вас вестей — как ваше самочувствие? Поделитесь, пожалуйста, когда будет удобно. Я рядом и забочусь о вашем результате.`);
-      d.last_data_nudge = todayStr; changed = true;
-    }
-
-    if(changed){
-      try{ await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?')
-        .bind(JSON.stringify(d), Date.now(), row.code).run(); }catch(_){}
-    }
-  }
-}
 
 // ─────────────────────────────────────────────────────────────
 // КАБИНЕТ НУТРИЦИОЛОГА — лёгкий CRM на D1. См. docs/CABINET-MODEL.md.
@@ -10582,11 +10110,9 @@ async function handleCabinetAiDraft(request, env, corsHeaders){
   }
 }
 
-// Этап 4: отправка сообщения в ТГ-топик клиента (care-группа, через CLIENT_BOT_TOKEN).
-// Ищет topicId по code_topic:<code> в EXPERT_DRAFTS.
 // POST /cabinet/chat-send {code, text} — ответ специалиста ИЗ КАБИНЕТА прямо в чат клиента
 // (VIA-L EXPERT app), а не только в Telegram. Пишет {dir:'out',source:'cabinet'} в data.messages
-// (оригинал на языке спеца — /expert/thread переведёт клиенту на чтение). Опц. зеркало в TG-топик.
+// (оригинал на языке спеца — /expert/thread переведёт клиенту на чтение)..
 // См. tasks/TODO.md «Свой чат — ответ специалиста из кабинета», [[project_own_chat_reply_gap]].
 // ── Пуш специалисту о новом сообщении клиента (2026-09-25, docs/CABINET-PUSH-MOBILE-PLAN.md) ──
 // Подписки — D1 spec_push. Пуш без тела (как у EXPERT): на серверах Apple/Google ни слова о клиенте.
@@ -10819,46 +10345,9 @@ async function handleCabinetChatSend(request, env, corsHeaders, ctx){
   if(d.review && d.review.unanswered) delete d.review.unanswered;   // на вопрос последнего дня ответили — метку снимаем
   await env.DB.prepare('UPDATE clients SET data=?, updated_at=? WHERE code=?').bind(JSON.stringify(d), Date.now(), code).run();
   if(ctx) ctx.waitUntil(_appPush(env, code));   // пуш клиенту в приложение: «Ваш наставник ответил» (2026-09-27)
-  // Опц. зеркало в Telegram-топик (специалист-оператор в TG видит continuity) — не блокируем ответ.
-  if(ctx && env.CLIENT_BOT_TOKEN && env.NUTRITIONIST_GROUP_ID && env.EXPERT_DRAFTS){
-    ctx.waitUntil((async()=>{
-      try{ const topicId = await env.EXPERT_DRAFTS.get('code_topic:'+code); const tgText = text || (mtype==='image'?'📷 '+murl:mtype==='audio'?'🎤 '+murl:''); if(topicId && tgText) await careSend(env, env.NUTRITIONIST_GROUP_ID, tgText, {message_thread_id:Number(topicId)}); }catch(_){}
-    })());
-  }
   return jsonResponse({ ok:true, date }, corsHeaders);
 }
 
-async function handleCabinetTgSend(request, env, corsHeaders){
-  const sess = await cabinetSession(request, env);
-  if(!sess) return jsonResponse({ok:false,error:'unauthorized'}, corsHeaders, 401);
-  if(!env.CLIENT_BOT_TOKEN || !env.NUTRITIONIST_GROUP_ID) return jsonResponse({ok:false,error:'tg_not_configured'}, corsHeaders, 500);
-  let body={};
-  try{ body=await request.json(); }catch(_){}
-  const code = String(body.code||'').trim();
-  const text = String(body.text||'').trim();
-  if(!code || !text) return jsonResponse({ok:false,error:'missing_fields'}, corsHeaders, 400);
-  if(!await cabinetOwns(env, sess, code)) return jsonResponse({ok:false,error:'forbidden'}, corsHeaders, 403);
-
-  // Шаг 5: авто-перевод на язык пациента, если он отличается от языка специалиста.
-  let outText = text, translated = false;
-  if(env.DB){
-    const spLang = await cabSpecialistLang(env, sess);
-    let clientLang = '';
-    try{ const cl = await env.DB.prepare('SELECT lang FROM clients WHERE code=?').bind(code).first(); clientLang = (cl && cl.lang) || ''; }catch(_){}
-    if(clientLang && spLang && clientLang !== spLang){
-      const t = await careTranslate(env, text, spLang, clientLang);
-      if(t && t !== text){ outText = t; translated = true; }
-    }
-  }
-
-  let topicId = '';
-  if(env.EXPERT_DRAFTS) topicId = (await env.EXPERT_DRAFTS.get('code_topic:'+code)) || '';
-
-  const extra = topicId ? {message_thread_id: Number(topicId)} : {};
-  const res = await careSend(env, env.NUTRITIONIST_GROUP_ID, outText, extra);
-  const ok = !!(res && (res.ok || res.result));
-  return jsonResponse({ok, topicId: topicId||null, translated}, corsHeaders);
-}
 
 // Лиды-знакомства (Cal.com-брони без оплаченной карточки) для секции «Знакомства»
 // в календаре кабинета. Возвращаем только будущие, отсортированные по дате.
