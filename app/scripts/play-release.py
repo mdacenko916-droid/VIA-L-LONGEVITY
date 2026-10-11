@@ -399,7 +399,8 @@ def cmd_review_product(args):
             "listings": [{"languageCode": l, "title": t, "description": d} for l, t, d in REVIEW_TEXT],
             "purchaseOptions": [{"purchaseOptionId": "review", "buyOption": {"legacyCompatible": True},
                                  "regionalPricingAndAvailabilityConfigs": regs}]}
-    o = call(tok, "%s/oneTimeProducts/%s?allowMissing=true&regionsVersion.version=%s&updateMask=listings,purchaseOptions"
+    # patch у Google — единственный путь с маленькими буквами (discovery v3), остальные — oneTimeProducts
+    o = call(tok, "%s/onetimeproducts/%s?allowMissing=true&regionsVersion.version=%s&updateMask=listings,purchaseOptions"
              % (API, REVIEW_ID, urllib.parse.quote(rv)), "PATCH", body)
     st = {x["purchaseOptionId"]: x.get("state") for x in o.get("purchaseOptions", [])}
     if st.get("review") != "ACTIVE":
