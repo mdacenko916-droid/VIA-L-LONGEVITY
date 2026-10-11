@@ -60,9 +60,31 @@
     sayStart:{ru:'Начинаем. Сначала — лёгкая разминка.',uk:'Починаємо. Спочатку — легка розминка.',en:'Let’s begin. First, an easy warm-up.',es:'Empezamos. Primero, un calentamiento suave.',de:'Los geht’s. Zuerst ein leichtes Aufwärmen.',pt:'Vamos começar. Primeiro, um aquecimento leve.',fr:'On commence. D’abord, un échauffement léger.',pl:'Zaczynamy. Najpierw lekka rozgrzewka.',it:'Iniziamo. Prima un riscaldamento leggero.',he:'מתחילים. קודם — חימום קל.',ja:'始めましょう。まずは軽いウォームアップから。',ko:'시작합니다. 먼저 가벼운 준비 운동부터.'},
     sayRest:{ru:'Отдых. Походите, подышите спокойно.',uk:'Відпочинок. Походіть, подихайте спокійно.',en:'Rest. Walk around and breathe easy.',es:'Descanso. Camina un poco y respira tranquilo.',de:'Pause. Ein paar Schritte gehen, ruhig atmen.',pt:'Descanso. Ande um pouco e respire com calma.',fr:'Repos. Marchez un peu, respirez calmement.',pl:'Odpoczynek. Pochodź, oddychaj spokojnie.',it:'Riposo. Cammina un po’ e respira con calma.',he:'מנוחה. הסתובבו קצת ונשמו ברוגע.',ja:'休憩です。少し歩いて、ゆっくり呼吸しましょう。',ko:'휴식. 조금 걸으며 편하게 숨 쉬세요.'},
     sayHalf:{ru:'Половина. Так держать.',uk:'Половина. Так тримати.',en:'Halfway. Keep it up.',es:'La mitad. Sigue así.',de:'Halbzeit. Weiter so.',pt:'Metade. Continue assim.',fr:'À mi-chemin. Continuez comme ça.',pl:'Połowa. Tak trzymaj.',it:'A metà. Continua così.',he:'חצי. ממשיכים ככה.',ja:'半分です。その調子。',ko:'절반입니다. 그대로 계속하세요.'},
+    sayGo:  {ru:'Начали!',uk:'Почали!',en:'Go!',es:'¡Vamos!',de:'Los!',pt:'Vamos!',fr:'C’est parti !',pl:'Zaczynamy!',it:'Via!',he:'מתחילים!',ja:'スタート！',ko:'시작!'},
     sayDone:{ru:'Готово. Отличная работа — вы молодец.',uk:'Готово. Чудова робота — ви молодець.',en:'Done. Great work — well done you.',es:'Hecho. Muy buen trabajo, enhorabuena.',de:'Geschafft. Starke Leistung — gut gemacht.',pt:'Pronto. Ótimo trabalho — parabéns.',fr:'Terminé. Beau travail, bravo.',pl:'Gotowe. Świetna robota — brawo.',it:'Fatto. Ottimo lavoro, brava.',he:'סיימתם. עבודה מצוינת — כל הכבוד.',ja:'お疲れさまでした。よく頑張りました。',ko:'끝났어요. 정말 잘했어요.'},
     restNext:{ru:'Отдохните и приготовьтесь',uk:'Відпочиньте й приготуйтеся',en:'Rest and get ready',es:'Descansa y prepárate',de:'Ausruhen und bereit machen',pt:'Descanse e prepare-se',fr:'Reposez-vous et préparez-vous',pl:'Odpocznij i przygotuj się',it:'Riposa e preparati',he:'נוחו והתכוננו',ja:'休んで準備しましょう',ko:'쉬면서 준비하세요'}
   };
+  // Слова поддержки в паузах (тон разборов: поддержка без давления — docs/WEEKLY-REVIEW-SAMPLES.md)
+  var CHEER = {
+    ru:['У вас отлично получается.','Дышите ровно, не задерживайте дыхание.','Двигайтесь в своём темпе.','Каждое повторение — вклад в вашу силу.','Если тяжело — можно медленнее, это тоже работа.','Ещё немного — вы справляетесь.','Плечи вниз, шея свободна.','Хорошо держите технику.','Это время — для вас.'],
+    uk:['У вас чудово виходить.','Дихайте рівно, не затримуйте дихання.','Рухайтеся у своєму темпі.','Кожне повторення — внесок у вашу силу.','Якщо важко — можна повільніше, це теж робота.','Ще трохи — ви справляєтеся.','Плечі вниз, шия вільна.','Добре тримаєте техніку.','Цей час — для вас.'],
+    en:['You’re doing great.','Breathe steadily — don’t hold your breath.','Move at your own pace.','Every rep adds to your strength.','If it feels hard, go slower — that still counts.','Just a little more — you’ve got this.','Shoulders down, neck relaxed.','Nice form — keep it up.','This time is for you.'],
+    es:['Lo estás haciendo genial.','Respira con calma, no contengas el aire.','Muévete a tu ritmo.','Cada repetición suma a tu fuerza.','Si cuesta, ve más despacio: también cuenta.','Un poco más, lo estás logrando.','Hombros abajo, cuello suelto.','Buena técnica, sigue así.','Este tiempo es para ti.'],
+    de:['Das machst du großartig.','Atme ruhig weiter, nicht die Luft anhalten.','Beweg dich in deinem Tempo.','Jede Wiederholung stärkt dich.','Wenn es schwer ist, mach langsamer — das zählt auch.','Nur noch ein bisschen — du schaffst das.','Schultern runter, Nacken locker.','Gute Technik, weiter so.','Diese Zeit gehört dir.'],
+    pt:['Você está indo muito bem.','Respire com calma, não prenda o ar.','Mova-se no seu ritmo.','Cada repetição soma à sua força.','Se estiver difícil, vá mais devagar — também conta.','Só mais um pouco, você consegue.','Ombros para baixo, pescoço solto.','Boa técnica, continue assim.','Este tempo é para você.'],
+    fr:['Vous vous en sortez très bien.','Respirez calmement, ne bloquez pas votre souffle.','Bougez à votre rythme.','Chaque répétition renforce votre force.','Si c’est dur, ralentissez — ça compte aussi.','Encore un peu, vous y êtes.','Épaules basses, nuque détendue.','Belle technique, continuez.','Ce moment est pour vous.'],
+    pl:['Świetnie ci idzie.','Oddychaj spokojnie, nie wstrzymuj oddechu.','Ruszaj się we własnym tempie.','Każde powtórzenie dodaje ci siły.','Jeśli ciężko — zwolnij, to też się liczy.','Jeszcze trochę — dasz radę.','Barki w dół, szyja luźna.','Dobra technika, tak trzymaj.','Ten czas jest dla ciebie.'],
+    it:['Stai andando benissimo.','Respira con calma, non trattenere il fiato.','Muoviti al tuo ritmo.','Ogni ripetizione aggiunge forza.','Se è dura, rallenta: conta lo stesso.','Ancora un po’, ce la fai.','Spalle giù, collo rilassato.','Buona tecnica, continua così.','Questo tempo è per te.'],
+    he:['אתם עושים את זה מצוין.','נשמו בקצב רגוע, בלי לעצור את הנשימה.','זוזו בקצב שלכם.','כל חזרה מוסיפה כוח.','אם קשה — אפשר לאט יותר, גם זה נחשב.','עוד קצת — אתם מצליחים.','כתפיים למטה, צוואר רפוי.','טכניקה טובה, ממשיכים.','הזמן הזה הוא בשבילכם.'],
+    ja:['とても上手です。','息を止めず、落ち着いて呼吸しましょう。','自分のペースで動きましょう。','一回一回が力になります。','きつければゆっくりでも大丈夫。それも立派な運動です。','あと少し、できていますよ。','肩を下げて、首はリラックス。','いいフォームです、その調子。','この時間はあなたのためのものです。'],
+    ko:['정말 잘하고 있어요.','숨을 참지 말고 편하게 쉬세요.','자기 속도대로 움직이세요.','한 번 한 번이 힘이 됩니다.','힘들면 천천히 해도 괜찮아요. 그것도 운동이에요.','조금만 더, 잘하고 있어요.','어깨는 내리고 목은 편하게.','자세 좋아요, 계속하세요.','이 시간은 당신을 위한 시간이에요.']
+  };
+  var lastSpoke = 0, lastCheer = -1;
+  function cheer() {
+    var a = CHEER[L()] || CHEER.en, i = Math.floor(Math.random() * a.length);
+    if (i === lastCheer) i = (i + 1) % a.length;
+    lastCheer = i; say(a[i]);
+  }
   function L() { return (typeof lang !== 'undefined' && lang) ? lang : 'en'; }   // `let lang` главной не лежит в window
   function t(k) { var o = T[k] || {}; return o[L()] || o.en || ''; }
   function loc() { try { return (typeof window._locale === 'function') ? window._locale() : 'en-GB'; } catch (e) { return 'en-GB'; } }
@@ -102,6 +124,7 @@
     if (!voiceOn || !text) return;
     if (speaking && !force) return;
     var my = ++sayId, p = plug(), lc = loc();
+    lastSpoke = Date.now();
     speaking = true; vEnd = Date.now() + vLen(text) * 1000 + 400;
     var done = function () { if (my === sayId) speaking = false; };
     if (p) {
@@ -183,7 +206,7 @@
 
   // ── состояние ──
   var S = [], idx = 0, phase = 'work', left = 0, total = 0, paused = false, last = 0, raf = 0, wid = '', lastWhole = -1, saidHalf = false;
-  var repMode = false, repsLeft = 0, repsN = 0, repEnds = [], repLastT = 0, repSaid = false, wake = null, introDone = -1;
+  var fromRest = false, repMode = false, repsLeft = 0, repsN = 0, repEnds = [], repLastT = 0, repSaid = false, wake = null, introDone = -1;
   function intro(s) { return s.name + '. ' + (s.round === 1 ? (s.how || '') : ''); }   // техника — в первом круге
   function busy() { return speaking || Date.now() < vEnd; }
   var ARC = 263.9;
@@ -352,13 +375,12 @@
         repMode = true; repsN = repsLeft = s.reps; repEnds = c.rep; repLastT = 0;
         $('mvp-unit').textContent = t('reps'); $('mvp-sec').textContent = repsLeft;
       }
-      if (introDone !== idx) { introDone = idx; say((idx === 0 ? t('sayStart') + ' ' : '') + intro(s), true); }
-      repSaid = false;
+      if (introDone !== idx) { introDone = idx; say((idx === 0 ? t('sayStart') + ' ' : (fromRest ? t('sayGo') + ' ' : '')) + intro(s), true); }
+      repSaid = false; fromRest = false;
     } else {
-      // «Отдых», а подсказку следующего — так, чтобы закончилась к старту (как в пробе)
-      var nx = intro(S[idx + 1]);
-      if (total < vLen(t('sayRest')) + vLen(nx) + 1.5) { introDone = idx + 1; say(nx, true); }
-      else say(t('sayRest'), true);
+      // отдых: что будет дальше — сразу и коротко; в конце — голосом 3-2-1 с писком, на старте «Начали!» (владелец 2026-10-11)
+      fromRest = true;
+      say(t('sayRest') + ' ' + t('next') + ': ' + S[idx + 1].name + '.', true);
     }
   }
   function finishPhase() {
@@ -381,6 +403,7 @@
       if (!repSaid && !busy()) { repSaid = true; say(String(repsLeft)); }   // «десять» — как только освободился голос
       for (var c = 0; c < crossed && repsLeft > 0; c++) { repsLeft--; if (repsLeft > 0) { say(String(repsLeft), true); repSaid = true; if (repsLeft <= 3) beep(); } }
       if (repsLeft <= 0) { finishPhase(); return; }
+      if (voiceOn && repsLeft > 3 && Date.now() - lastSpoke > 15000 && !busy()) cheer();   // медленные повторы — тоже не молчим
       var prev = 0, nxt = repEnds[0]; for (var q = 0; q < repEnds.length; q++) { if (repEnds[q] <= tt) prev = repEnds[q]; else { nxt = repEnds[q]; break; } }
       var fr = Math.min(1, Math.max(0, (tt - prev) / Math.max(.1, nxt - prev)));
       $('mvp-sec').textContent = repsLeft;
@@ -389,16 +412,17 @@
     }
     left -= dt;
     if (left <= 0) { finishPhase(); return; }
+    if (phase === 'work' && voiceOn && left > 12 && Date.now() - lastSpoke > 15000 && !busy()) cheer();
     var whole = Math.ceil(left);
     $('mvp-sec').textContent = whole;
     $('mvp-arc').style.strokeDashoffset = ARC * (1 - left / total);
-    if (phase === 'rest' && introDone !== idx + 1 && left <= vLen(intro(S[idx + 1])) + .6 && !busy()) { introDone = idx + 1; say(intro(S[idx + 1])); }
     if (phase === 'work' && total >= 30 && !saidHalf && left <= total / 2) { saidHalf = true; say(t('sayHalf')); }
     if (whole !== lastWhole) {
       lastWhole = whole;
       var b = $('mvp-321');
       if (phase === 'work' && voiceOn && total >= 15 && whole <= 10) say(String(whole), true);   // голосом 10…1
-      if (whole <= 3) { phase === 'work' ? beep() : tock(); b.textContent = whole; b.classList.remove('hid'); } else b.classList.add('hid');
+      if (phase === 'rest' && voiceOn && whole <= 3) say(String(whole), true);   // конец отдыха — тоже вслух
+      if (whole <= 3) { beep(); b.textContent = whole; b.classList.remove('hid'); } else b.classList.add('hid');
     }
   }
 
