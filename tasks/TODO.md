@@ -47,8 +47,11 @@ Android-сборка возьмёт **всё, что лежит в `main` на �
       напрямую Oura · Ultrahuman · Polar · Withings, через Health Connect — Samsung, Garmin, Pixel (проверить на живом
       телефоне, кто реально пишет в Health Connect); Apple не упоминать; подписка «через Google Play»; не обещать показатели,
       которых не видно на экране.
-- [ ] **Разовый разбор со специалистом в Google Play** — товар `via_l_specialist_review` (€50, разовый) завести в Play Console
-      и RevenueCat; в примечаниях для проверки — кто специалист, что получает покупатель, почему встроенная покупка.
+- [ ] **Разовый разбор со специалистом в Google Play** (взят 10-11). Приложение и воркер уже общие с iOS (`iap-bridge.js`,
+      `/review/claim` сверяет `non_subscriptions` в RevenueCat по `X-Platform: android`, возврат на Android — через support@).
+      Осталось: (1) владелец: `python3 app/scripts/play-release.py review-product --yes` — товар €50 / $54,99, 174 страны
+      (создание платного товара среда мне не даёт); (2) владелец: RevenueCat → Products → New → Google Play →
+      `via_l_specialist_review`, без entitlement и вне Offering (как iOS); (3) тест-покупка тестировщиком лицензий на v19.
 - [ ] **Баг Android:** у отказавшего от новых типов Health Connect окно разрешений всплывает при каждом нажатии «Health Connect».
 - [ ] **Скриншоты Play** — из того же набора, что App Store (раздел «📸 Скриншоты сторов»), кадр 1080×2160 (`play-from-appstore.py`).
 - [ ] **Проверить на живом Android** (эмулятор — тупик): голос по-русски/украински и экран установки голоса, если его нет;

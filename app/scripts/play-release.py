@@ -9,6 +9,7 @@
     python3 app/scripts/play-release.py status
     python3 app/scripts/play-release.py release --track "1.0 (1) — закрытый тест" --version 4
     python3 app/scripts/play-release.py release --track "..." --version 4 --yes    # с публикацией
+    python3 app/scripts/play-release.py review-product --yes                        # товар «Разбор» €50
 
 Без --yes ничего не публикуется: скрипт только печатает, что сделал бы (черновой прогон).
 
@@ -366,6 +367,47 @@ def cmd_listing(args):
     with_edit(tok, run)
 
 
+REVIEW_ID = "via_l_specialist_review"     # тот же id, что в App Store и в iap-bridge.js / воркере (REVIEW_PRODUCT_ID)
+REVIEW_TEXT = [   # Play: название ≤55, описание ≤200; языки — как у страницы Play
+    ("en-US", "Specialist review", "A specialist studies your data and replies in writing within 48 hours: what is going on, a personal plan and which lab tests to take. 7 days for follow-up questions."),
+    ("ru-RU", "Разбор со специалистом", "Специалист изучит ваши данные и письменно ответит в течение 48 часов: что происходит, личный план и какие анализы сдать. 7 дней на уточняющие вопросы."),
+    ("uk", "Розбір зі спеціалістом", "Спеціаліст вивчить ваші дані й письмово відповість протягом 48 годин: що відбувається, особистий план і які аналізи здати. 7 днів на уточнювальні запитання."),
+    ("es-ES", "Revisión con especialista", "Un especialista estudia tus datos y responde por escrito en 48 horas: qué está pasando, un plan personal y qué análisis hacer. 7 días para preguntas de seguimiento."),
+]
+
+
+def cmd_review_product(args):
+    """Разовый товар «Разбор со специалистом» (docs/SPECIALIST-REVIEW-PLAN.md): €50 в зоне евро, $54,99 в США
+    (как в App Store), остальные страны — пересчёт Google от €50. Создаёт или обновляет товар и включает покупку."""
+    tok = token()
+    conv = call(tok, API + "/pricing:convertRegionPrices", "POST", {"price": {"currencyCode": "EUR", "units": "50"}})
+    regs = []
+    for rc, v in sorted(conv["convertedRegionPrices"].items()):
+        pr = v["price"]
+        if pr["currencyCode"] == "EUR": pr = {"currencyCode": "EUR", "units": "50"}
+        if rc == "US": pr = {"currencyCode": "USD", "units": "54", "nanos": 990000000}
+        regs.append({"regionCode": rc, "price": pr, "availability": "AVAILABLE"})
+    def show(rc):
+        p = next((r["price"] for r in regs if r["regionCode"] == rc), None)
+        return "%s %s %s.%02d" % (rc, p["currencyCode"], p["units"], p.get("nanos", 0) // 10000000) if p else rc + " —"
+    print("Товар %s: %d стран; %s" % (REVIEW_ID, len(regs), " · ".join(show(c) for c in ("DE", "ES", "US", "GB", "UA", "PL"))))
+    if not args.yes:
+        print("\nЧерновой прогон. Ничего не создано. Добавьте --yes.")
+        return
+    rv = "2026/01"   # справочник регионов, как у via_l_lifetime
+    body = {"packageName": PKG, "productId": REVIEW_ID, "regionsVersion": {"version": rv},
+            "listings": [{"languageCode": l, "title": t, "description": d} for l, t, d in REVIEW_TEXT],
+            "purchaseOptions": [{"purchaseOptionId": "review", "buyOption": {"legacyCompatible": True},
+                                 "regionalPricingAndAvailabilityConfigs": regs}]}
+    o = call(tok, "%s/oneTimeProducts/%s?allowMissing=true&regionsVersion.version=%s&updateMask=listings,purchaseOptions"
+             % (API, REVIEW_ID, urllib.parse.quote(rv)), "PATCH", body)
+    st = {x["purchaseOptionId"]: x.get("state") for x in o.get("purchaseOptions", [])}
+    if st.get("review") != "ACTIVE":
+        call(tok, "%s/oneTimeProducts/%s/purchaseOptions:batchUpdateStates" % (API, REVIEW_ID), "POST",
+             {"requests": [{"activatePurchaseOptionRequest": {"packageName": PKG, "productId": REVIEW_ID, "purchaseOptionId": "review"}}]})
+    print("Готово: %s создан, покупка включена. Дальше — RevenueCat (см. docs/SPECIALIST-REVIEW-PLAN.md)." % REVIEW_ID)
+
+
 def main():
     ap = argparse.ArgumentParser(description="Треки Google Play и выкладка сборки в трек")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -399,12 +441,15 @@ def main():
     sc.add_argument("--skip", action="append", help="имя кадра, который не ставить в Play (например 01.png)")
     sc.add_argument("--yes", action="store_true", help="действительно заменить")
     sc.set_defaults(hold=False)
+    rp = sub.add_parser("review-product", help="разовый товар «Разбор со специалистом» (€50) — создать/обновить и включить")
+    rp.add_argument("--yes", action="store_true", help="действительно создать")
+    rp.set_defaults(hold=False)
     li = sub.add_parser("listing", help="обновить описание страницы Play (4 языка) из PLAY-ВСТАВИТЬ.txt")
     li.add_argument("--file", default="app/store/android/PLAY-ВСТАВИТЬ.txt")
     li.add_argument("--yes", action="store_true", help="действительно отправить")
     li.set_defaults(hold=False)
     a = ap.parse_args()
-    {"status": cmd_status, "release": cmd_release, "upload": cmd_upload, "prices": cmd_prices, "screens": cmd_screens, "listing": cmd_listing}[a.cmd](a)
+    {"status": cmd_status, "release": cmd_release, "upload": cmd_upload, "prices": cmd_prices, "screens": cmd_screens, "listing": cmd_listing, "review-product": cmd_review_product}[a.cmd](a)
 
 
 if __name__ == "__main__":
