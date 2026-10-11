@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="color-scheme" content="dark">
 <style>html{background:#181e28}</style><!-- без белой вспышки при переходе с вкладки на вкладку (2026-10-11) -->
+<style>
+/* «Скачет картинка» (запись владельца 2026-10-11 23:27): сначала рисовалась запись на знакомство, потом витрина и разбор
+   перестраивали экран. Карточка проявляется, когда готовы витрина и разбор (не дольше 0,9 с); переход между страницами
+   приложения — плавным растворением (cross-document view transition; где не поддерживается — как раньше). */
+@view-transition{navigation:auto;}
+.wrap>.card{opacity:0;transition:opacity .22s ease;animation:spShowSafe 0s 1.5s forwards;}   /* страховка: что бы ни упало — через 1,5 с видно */
+@keyframes spShowSafe{to{opacity:1;}}
+.wrap>.card.ready{opacity:1;}
+</style>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>VIA‑L · My specialist</title>
 <meta name="robots" content="noindex,nofollow">
@@ -1081,7 +1090,8 @@ async function loadShowcase(){
     const r = await fetch(WORKER+'/specialists/public?lang='+encodeURIComponent(lang));   // bio переводит сервер под этот язык
     const d = await r.json();
     _showcaseList = (d && d.ok && Array.isArray(d.specialists)) ? d.specialists : [];
-  }catch(e){ _showcaseList = []; }
+    try{ localStorage.setItem('vial_showcase_cache', JSON.stringify({lang:lang, list:_showcaseList})); }catch(e){}
+  }catch(e){ if(!_showcaseList) _showcaseList = []; }
   renderShowcase();
 }
 // Общая карточка специалиста (teaser + каталог). В каталоге карточка кликабельна → выбор в нижний блок.
@@ -1439,8 +1449,16 @@ setLang((function(){try{var p=new URLSearchParams(location.search).get('lang');i
     try{ if(new URLSearchParams(location.search).get('chat')==='1') openChat(); }catch(e){}
   }
 })();
-loadShowcase();   // витрина наставников
-initReview();     // разовый разбор со специалистом (только в приложении)
+// Витрина из прошлого раза — сразу, без перестройки экрана; свежий список подменит её тем же видом.
+try{ const c=JSON.parse(localStorage.getItem('vial_showcase_cache')||'null'); if(c && c.lang===lang && Array.isArray(c.list)){ _showcaseList=c.list; renderShowcase(); } }catch(e){}
+(function(){
+  const card=document.querySelector('.wrap>.card'), show=function(){ if(card) card.classList.add('ready'); };
+  Promise.race([
+    Promise.allSettled([_showcaseList ? Promise.resolve() : loadShowcase(), initReview()]),   // витрина наставников + разовый разбор
+    new Promise(function(r){ setTimeout(r, 900); })
+  ]).then(show, show);
+  if(_showcaseList) loadShowcase();   // обновить кэш в фоне
+})();
 </script>
 
 <!-- Вкладки приложения. «Мой наставник» — активная; остальные ведут в приложение с ?tab=… -->
