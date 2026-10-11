@@ -55,8 +55,8 @@
   function isIOS() { try { return window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'ios'; } catch (e) { return false; } }
   function plug() { if (window.speechSynthesis && (isIOS() || !window.Capacitor)) return null; return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.TextToSpeech) || null; }
   // Женские голоса по языкам (iOS/macOS/Android-имена). «Улучшенный»/«премиум», если скачан, — первым.
-  var FEMALE = /milena|katya|lesya|samantha|karen|moira|serena|martha|tessa|fiona|victoria|allison|ava|susan|zoe|m[oó]nica|paulina|marisol|anna|petra|helena|luciana|joana|catarina|fernanda|am[eé]lie|audrey|marie|aur[eé]lie|zosia|ewa|alice|federica|carmit|kyoko|o-ren|yuna|sora|female/i;
-  var MALE = /yuri|maxim|daniel|alex|fred|thomas|jorge|diego|markus|yannick|luca|felipe|otoya|hattori|male/i;
+  var FEMALE = /milena|katya|lesya|samantha|karen|moira|serena|martha|kate|stephanie|tessa|fiona|victoria|allison|ava|susan|zoe|m[oó]nica|paulina|marisol|anna|petra|helena|luciana|joana|catarina|fernanda|am[eé]lie|audrey|marie|aur[eé]lie|zosia|ewa|alice|federica|carmit|kyoko|o-ren|yuna|sora|female/i;
+  var MALE = /yuri|maxim|daniel|arthur|oliver|aaron|gordon|rishi|alex|fred|thomas|jorge|diego|markus|yannick|luca|felipe|otoya|hattori|male/i;
   var webVoice = null, plugVoice = -1;
   function pickVoices() {
     var lc = loc(), pre = lc.slice(0, 2);
@@ -75,7 +75,7 @@
       plugVoice = best;
     }).catch(function () {});
   }
-  if (window.speechSynthesis) { try { window.speechSynthesis.onvoiceschanged = pickVoices; } catch (e) {} }
+  if (window.speechSynthesis) { try { window.speechSynthesis.onvoiceschanged = pickVoices; window.speechSynthesis.getVoices(); } catch (e) {} }
   function vLen(text) { return String(text || '').length / 13; }   // ≈13 знаков в секунду — для расчёта, когда начать подсказку
   function say(text, force) {
     if (!voiceOn || !text) return;
@@ -91,8 +91,13 @@
       return;
     }
     var ss = window.speechSynthesis; if (!ss) { speaking = false; return; }
-    if (force) ss.cancel();
     if (!webVoice) pickVoices();
+    if (!webVoice && (ss.getVoices() || []).length === 0 && !(say._w > 8)) {   // голоса ещё не загрузились — ждём до ~2,5 с
+      say._w = (say._w || 0) + 1; speaking = false;
+      setTimeout(function () { if (my === sayId) say(text, force); }, 300); return;
+    }
+    say._w = 0;
+    if (force) ss.cancel();
     var u = new SpeechSynthesisUtterance(text); u.lang = lc; u.rate = 0.92;
     if (webVoice) u.voice = webVoice;
     u.onend = done; u.onerror = done; ss.speak(u);
