@@ -2007,6 +2007,11 @@ body:not(.flow-mode) .flow-intro{display:none;}
 .imp-btn .imp-txt b{font-size:var(--fs-body);font-weight:600;letter-spacing:0;text-transform:none;color:var(--t1);line-height:1.25;}   /* Капс с разрядкой занимал по три строки на «Импорт через Apple Health / Health Connect» и хуже читается для 40+ */
 .imp-btn .imp-txt small{font-size:var(--fs-cap);color:var(--t2);font-weight:400;text-transform:none;letter-spacing:0;}
 .imp-badge{position:absolute;top:-8px;right:14px;font-size:var(--fs-cap);font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#160f02;background:linear-gradient(135deg,#e2b96a,#c4963c);padding:3px 9px;border-radius:50px;box-shadow:0 2px 8px rgba(196,150,60,.4);}
+/* «Рекомендуем» словом наезжал на длинные названия (uk/es, скрины 2026-10-11) → золотой кружок с короной (владелец 2026-10-12);
+   слово остаётся для экранного диктора (imp-badge-t спрятан визуально) */
+.imp-badge{width:26px;height:26px;padding:0!important;border-radius:50%;display:flex;align-items:center;justify-content:center;letter-spacing:0;font-size:15px;top:-11px!important;right:12px!important;box-shadow:0 2px 6px rgba(0,0,0,.35);}
+.imp-badge i{color:#160f02;}
+.imp-badge-t{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
 .imp-go{flex-shrink:0;color:var(--gold-lt);font-size:var(--fs-title);line-height:1;opacity:.75;}
 .imp-cnt{flex-shrink:0;font-family:'Oswald',sans-serif;font-size:var(--fs-body);letter-spacing:1px;color:var(--gold-lt);white-space:nowrap;}
 .imp-cnt:empty{display:none;}
@@ -3058,7 +3063,7 @@ body.card-open #cardPanel, body.approach-open #approachPanel{
     <button onclick="_chooseSource('apple')" class="imp-btn">
       <span class="imp-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.5-7-9.4A3.85 3.85 0 0 1 12 7a3.85 3.85 0 0 1 7 3.6C19 15.5 12 20 12 20Z"/><path d="M8.5 12.4h2l1-2 1.6 3.6 1-1.6h1.4"/></svg></span>
       <span class="imp-txt"><b data-t="imp_health_t">Ввод данных с трекера</b><small data-t="imp_health_s">Apple Health / Health Connect</small></span>
-      <span class="imp-badge" data-t="imp_recommended">Рекомендуем</span>
+      <span class="imp-badge"><i class="ph ph-crown-simple" aria-hidden="true"></i><span class="imp-badge-t" data-t="imp_recommended">Рекомендуем</span></span>
       <span class="imp-cnt" id="imp-cnt-all"></span>
       <span class="imp-go">→</span>
     </button>
@@ -11758,6 +11763,7 @@ function _showResultsInner(){
     last_period:(function(){var ci=cycleInfo();if(ci)return ci.daysSince>365?'year':ci.daysSince>90?'months':'recent';var ph=getRadio('phase');return ph==='post'?'year':ph==='meno'?'months':'recent';})(),
     cycle_day:(getRadio('cycle_status')==='absent'?null:(cycleInfo()||{}).day||null),
     cycle_phase:(getRadio('cycle_status')==='absent'?null:(cycleInfo()||{}).phase||null),
+    wearable_tags:_wearTagsFresh(),   // свои метки из Oura за 3 дня (симптомы, события) — воркер даёт их отдельной строкой
     cycle_temp:((getRadio('cycle_status')==='absent'||getRadio('gender')==='male')?null:_cycTempState()),   // что видно по кривой ночной температуры (подъём есть / нет / рано / мало ночей)
     pms:(function(){var s=getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9','pmss6']).filter(function(v){return v!=='none_pms';});return s.length>=5?'severe':s.length>=3?'moderate':s.length>=1?'mild':'none';})(),
     pms_symptoms:getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9','pmss6']),
@@ -12412,6 +12418,19 @@ function _saveImportedDay(j){ try{ if(j&&j.day) localStorage.setItem('viae_impor
 // только за дни прохода. Прибор отдаёт ряд за 45 ночей при каждой синхронизации — складываем его
 // по датам (до 90 ночей). kind: 'dev' — отклонение от базовой (Oura), 'abs' — абсолютные °C
 // (Apple Health). Ряды разных приборов не смешиваем: сменился источник — начинаем заново.
+// Метки Oura (2026-10-12): что человек сам отметил в приложении кольца. Храним последний ответ,
+// в разбор отдаём только метки за 3 последних дня и только если синхронизация была не старше 3 дней.
+function _wearTagsSave(tags){
+  try{ localStorage.setItem('vialp_wear_tags', JSON.stringify({ts:Date.now(), tags:tags.slice(0,20)})); }catch(e){}
+}
+function _wearTagsFresh(){
+  try{
+    var o=JSON.parse(localStorage.getItem('vialp_wear_tags')||'null'); if(!o||!Array.isArray(o.tags)) return [];
+    if(Date.now()-(o.ts||0) > 3*86400000) return [];
+    var from=new Date(Date.now()-3*86400000).toISOString().slice(0,10);
+    return o.tags.filter(function(x){ return x && String(x.d||'') >= from; }).slice(0,10);
+  }catch(e){ return []; }
+}
 function _tempSeriesSave(src,kind,rows){
   try{
     if(!Array.isArray(rows)||!rows.length) return;
@@ -12977,7 +12996,8 @@ async function fetchOuraLive(sid){
   try{
     const r=await fetch(AI_WORKER+'/oura/metrics?sid='+encodeURIComponent(sid));
     const j=await r.json();
-    if(j.ok&&j.temp_series) _tempSeriesSave('oura','dev',j.temp_series);   // ряд ночей — для температурной проверки цикла
+    if(j.ok&&j.temp_series) _tempSeriesSave('oura','dev',j.temp_series);
+    if(j.ok&&Array.isArray(j.tags)) _wearTagsSave(j.tags);   // метки, которые человек сам ставит в Oura (2026-10-12)   // ряд ночей — для температурной проверки цикла
     if(j.ok&&j.ex&&Object.keys(j.ex).length){
       _saveImportedDay(j);
       applyExtracted(j.ex,'oura');

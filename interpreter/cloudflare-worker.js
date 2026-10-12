@@ -5360,7 +5360,7 @@ async function handleWithingsMetrics(request, env, corsHeaders) {
 const OURA_AUTH_URL  = 'https://cloud.ouraring.com/oauth/authorize';
 const OURA_TOKEN_URL = 'https://api.ouraring.com/oauth/token';
 const OURA_API       = 'https://api.ouraring.com';
-const OURA_SCOPES    = 'personal daily heartrate workout spo2';
+const OURA_SCOPES    = 'personal daily heartrate workout spo2 tag';   // tag — метки, которые человек ставит сам (симптомы и т.п.), 2026-10-12
 
 async function handleOuraStart(request, env, corsHeaders){
   if (!_sec(env.OURA_CLIENT_ID) || !_sec(env.OURA_CLIENT_SECRET)) return jsonResponse({ ok:false, error:'oura_secrets_missing' }, corsHeaders, 500);
@@ -5369,13 +5369,16 @@ async function handleOuraStart(request, env, corsHeaders){
   let ret = url.searchParams.get('ret') || FITBIT_DEFAULT_RET;
   if (!sid) return jsonResponse({ ok:false, error:'sid_required' }, corsHeaders, 400);
   if (!FITBIT_RETURN_ALLOW.some(p => ret.startsWith(p))) ret = FITBIT_DEFAULT_RET;
-  const payload = b64urlEncode(JSON.stringify({ sid, ret }));
+  // notag=1 — повтор без scope `tag` (страховка 2026-10-12: если Oura не разрешит метки нашему
+  // приложению, подключение не должно ломаться — callback перезапускает вход без них).
+  const noTag = url.searchParams.get('notag') === '1';
+  const payload = b64urlEncode(JSON.stringify(noTag ? { sid, ret, nt:1 } : { sid, ret }));
   const state = payload + '.' + await hmacHex(_sec(env.OURA_CLIENT_SECRET), payload);
   const auth = new URL(OURA_AUTH_URL);
   auth.searchParams.set('response_type', 'code');
   auth.searchParams.set('client_id', _sec(env.OURA_CLIENT_ID));
   auth.searchParams.set('redirect_uri', url.origin + '/oura/callback');
-  auth.searchParams.set('scope', OURA_SCOPES);
+  auth.searchParams.set('scope', noTag ? OURA_SCOPES.replace(/\s*\btag\b/, '') : OURA_SCOPES);
   auth.searchParams.set('state', state);
   return Response.redirect(auth.toString(), 302);
 }
@@ -5386,12 +5389,16 @@ async function handleOuraCallback(request, env, corsHeaders){
   const state = url.searchParams.get('state') || '';
   const errParam = url.searchParams.get('error');
   const dot = state.lastIndexOf('.');
-  let sid = '', ret = FITBIT_DEFAULT_RET;
+  let sid = '', ret = FITBIT_DEFAULT_RET, nt = false;
   if (dot > 0) {
     const payload = state.slice(0, dot), sig = state.slice(dot + 1);
-    if (sig === await hmacHex(_sec(env.OURA_CLIENT_SECRET) || '', payload)) { try { const o = JSON.parse(b64urlDecode(payload)); sid = o.sid || ''; if (o.ret) ret = o.ret; } catch(e){} }
+    if (sig === await hmacHex(_sec(env.OURA_CLIENT_SECRET) || '', payload)) { try { const o = JSON.parse(b64urlDecode(payload)); sid = o.sid || ''; if (o.ret) ret = o.ret; nt = !!o.nt; } catch(e){} }
   }
   const back = (status) => _oauthBack(request, ret, 'oura', status, sid);
+  // Oura отказала по разрешениям (не сам человек нажал «отказать») — один повтор без `tag`.
+  if (errParam && errParam !== 'access_denied' && sid && !nt) {
+    return Response.redirect(url.origin + '/oura/start?sid=' + encodeURIComponent(sid) + '&ret=' + encodeURIComponent(ret) + '&notag=1', 302);
+  }
   if (errParam || !code || !sid) return back('error');
   const r = await fetch(OURA_TOKEN_URL, {
     method: 'POST',
@@ -5418,6 +5425,22 @@ async function ouraRefresh(env, rec){
   const tok = await r.json();
   if (!tok.access_token) return null;
   return { access_token: tok.access_token, refresh_token: tok.refresh_token || rec.refresh_token, expires_at: Date.now() + (tok.expires_in || 86400) * 1000 };
+}
+
+// Строка разбора из меток Oura (2026-10-12). Код вида tag_generic_hot_flashes → «hot flashes»;
+// своё название и комментарий — как написал человек. Только последние 3 дня, не больше 10 меток.
+function _wearTagsLine(data){
+  const arr = Array.isArray(data && data.wearable_tags) ? data.wearable_tags : [];
+  const items = arr.slice(0, 10).map(x => {
+    const code = String(x && x.c || '').replace(/^tag_(generic|sleep|activity|nutrition|ailment|lifestyle)_/i, '').replace(/^custom$/i, '').replace(/_/g, ' ').trim();
+    const name = String(x && x.n || '').trim(), note = String(x && x.t || '').trim();
+    const what = [name || code, note].filter(Boolean).join(' — ').slice(0, 140);
+    const d = String(x && x.d || '').slice(5, 10);
+    return what ? (d ? d + ': ' : '') + what : '';
+  }).filter(Boolean);
+  if (!items.length) return '';
+  return 'Метки, которые человек САМ поставил в приложении Oura за последние дни (его собственные отметки, НЕ измерения кольца; названия могут быть по-английски — переведи по смыслу на язык ответа): ' + items.join('; ')
+    + '. Учитывай как отметки самочувствия и событий (симптом, болезнь, алкоголь, поздний ужин и т.п.) рядом с цифрами — например, отмеченная простуда объясняет подъём температуры; диагноз не ставь.\n';
 }
 
 // GET /oura/metrics?sid=… → 7-дневное ex {hrv,rhr,sleepHours,deepMin,spo2,energy} + тренировки.
@@ -5530,6 +5553,20 @@ async function handleOuraMetrics(request, env, corsHeaders){
   }
   const _out = { ok:true, ex: _sanitizeEx(ex), day: _maxDay(_pd) };
   if (tempSeries.length) _out.temp_series = tempSeries;   // [{d:'YYYY-MM-DD', v:°C от базовой}] — старые сборки поле не читают
+  // МЕТКИ (Enhanced Tags, 2026-10-12): то, что человек сам отметил в приложении Oura — симптомы,
+  // приём чего-то, события. Это ЕГО отметки, не измерение кольца. Нужен scope `tag`: у подключений,
+  // сделанных до 2026-10-12, его нет → Oura отвечает ошибкой, get() даёт null, меток просто нет.
+  // Полного открытого списка кодов у Oura нет (формат tag_generic_<имя>/tag_sleep_<имя>, custom),
+  // поэтому отдаём код и своё название как есть — разбор читает их как слова человека.
+  const tg = await get('/v2/usercollection/enhanced_tag') || [];
+  const tags = tg.map(x => ({
+    d: String(x && x.start_day || '').slice(0, 10),
+    c: String(x && x.tag_type_code || '').slice(0, 60),
+    n: String(x && x.custom_name || '').slice(0, 60),
+    t: String(x && x.comment || '').slice(0, 120),
+  })).filter(x => /^\d{4}-\d{2}-\d{2}$/.test(x.d) && (x.c || x.n || x.t))
+    .sort((a, b) => a.d < b.d ? 1 : a.d > b.d ? -1 : 0).slice(0, 20);
+  if (tags.length) _out.tags = tags;   // [{d, c:код, n:своё название, t:комментарий}] — старые сборки поле не читают
   return jsonResponse(_out, corsHeaders);
 }
 
@@ -6125,6 +6162,7 @@ const _UK_RUSSISMS = [
   ['сейчас', 'зараз'], ['хорошо', 'добре'], ['если', 'якщо'], ['очень', 'дуже'], ['также', 'також'],
   ['тоже', 'теж'], ['только', 'лише'], ['конечно', 'звичайно'],
   ['ко', 'до'],   // «Підготуйтеся ко сну» — заголовок карточки в разборе 2026-10-02
+  ['рычагов', 'важелів'], ['рычаги', 'важелі'], ['рычаг', 'важіль'],   // «рычаги, які працюють» — недельный разбор uk 2026-10-12
 ];
 function _ukPolish(text, env) {
   let out = String(text || ''), hit = [];
@@ -8557,6 +8595,7 @@ function buildUserMessage(data, lang, tier) {
     // в слово из опросника. 2026-08-31, поймано на TestFlight-сборке.
     + 'Физическая активность · виды: ' + _J((data.act_types || []).map(v => ({strength:'силовые (strength training)',cardio:'кардио (cardio)',yoga:'йога (yoga)',pilates:'пилатес (pilates)',walking:'ходьба (walking)',hiit:'HIIT',none_act:'не тренируется (no training)'})[v] || v)) + ' | частота: ' + _V({none:'не тренируется',low:'редко',moderate:'умеренно',high:'часто'}[data.act_freq] || data.act_freq) + ' | восстановление после нагрузки: ' + _V({great:'прилив сил',ok:'нормально',tired:'устаю',spent:'сильно устаю'}[data.act_recovery] || data.act_recovery) + (data.move_today ? ' | движение за прошедшие сутки: ' + ({sedentary:'сидячий день',light:'немного двигался',walk:'много ходил',cardio:'кардио/бег',strength:'силовая тренировка',active:'активный день'}[data.move_today] || data.move_today) : '')
     + ((data.device && Number(data.device.steps) > 0) ? ' | шаги за прошедшие сутки (с телефона/часов): ' + Math.round(Number(data.device.steps)) : '') + '\n'
+    + _wearTagsLine(data)
     + 'Добавки (принимает): ' + _J(data.supplements) + '\n'
     + _suppCrossChecks(data)
     + _labRedFlags(data)
