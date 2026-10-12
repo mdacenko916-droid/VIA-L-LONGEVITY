@@ -1397,6 +1397,7 @@ export default {
       if (path === '/oura/start')        return handleOuraStart(request, env, corsHeaders);
       if (path === '/oura/callback')     return handleOuraCallback(request, env, corsHeaders);
       if (path === '/oura/metrics')      return handleOuraMetrics(request, env, corsHeaders);
+      if (path === '/oura/disconnect')   return handleOuraDisconnect(request, env, corsHeaders);
       // Ultrahuman Partner API (OAuth2, self-serve кабинет vision.ultrahuman.com/developer)
       if (path === '/ultrahuman/start')    return handleUltrahumanStart(request, env, corsHeaders);
       if (path === '/ultrahuman/callback') return handleUltrahumanCallback(request, env, corsHeaders);
@@ -5412,6 +5413,15 @@ async function handleOuraCallback(request, env, corsHeaders){
     access_token: tok.access_token, refresh_token: tok.refresh_token || '', expires_at: Date.now() + (tok.expires_in || 86400) * 1000,
   }), { expirationTtl: 30 * 24 * 3600 });
   return back('connected');
+}
+
+// GET/POST /oura/disconnect?sid=… → забываем токен (2026-10-12, кнопка «Отключить Oura»). Отзыва токена
+// у Oura в открытом API нет; без токена в KV читать данные кольца мы больше не можем, срок токена и так ≤30 дней.
+async function handleOuraDisconnect(request, env, corsHeaders){
+  const sid = new URL(request.url).searchParams.get('sid');
+  if (!sid) return jsonResponse({ ok:false, error:'sid_required' }, corsHeaders, 400);
+  if (env.WEARABLE_TOKENS) { try { await env.WEARABLE_TOKENS.delete('oura:' + sid); } catch (e) {} }
+  return jsonResponse({ ok:true }, corsHeaders);
 }
 
 async function ouraRefresh(env, rec){
