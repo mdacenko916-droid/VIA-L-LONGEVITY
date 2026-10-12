@@ -537,6 +537,10 @@ html[data-current-lang="en"] #heroBtnSlots, html[data-current-lang="es"] #heroBt
   не измерения кольца». Подключения до 2026-10-12 меток не дают, пока человек не переподключит Oura. MIS (шкала
   менопаузы Oura) в открытом API v1.41 нет — только по партнёрству. Политика (`legal-app/privacy.html`) ×12:
   фраза о метках. Воркер выложен; веб — пушем; в приложениях — со сборкой.
+  Дополнение того же дня: кнопка «Отключить Oura» (`/oura/disconnect`), строка «Ваши метки из Oura» в карточке, и
+  `_ouraTagsToPass` — метки вчерашнего дня отмечают ПУСТЫЕ ответы прохода (alcohol → `alc`, late coffee →
+  `caffeine_late`, latemeal → `last_meal`), серия меток period → `prof-lastperiod`, только если новый цикл (≥15 дней).
+  Живые коды владельца: period, alcohol, caffeine, latemeal, late coffee.
 - **2026-10-11** — **Воркер: удалена старая Telegram-модель ведения** (−513 строк): клиентский бот заботы (`/care-webhook` → теперь
   тихий 200), `/cabinet/tg-send`, зеркала сообщений в топик, ежедневные напоминания через бота (`runDailyReminders`), словарь
   `CARE_PHRASES`. Анкета по коду больше не требует настроек Telegram; анкета без кода — письмом на support@ (ИИ-сводка + ответы).

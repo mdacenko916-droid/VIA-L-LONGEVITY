@@ -8254,6 +8254,7 @@ let _lastResult=null;
 setLang(_initLang());   // язык устройства при первом входе; ручной выбор (pickLang) имеет приоритет
 loadProfile();
 try{_restoreAnswers();}catch(e){}
+try{_ouraTagsToPass();}catch(e){}   // метки Oura → ответы прохода, которых человек ещё не дал (2026-10-12)
 try{ if(typeof _ntArm==='function')_ntArm(); }catch(e){}          // утреннее напоминание: текст мог устареть — переставить
 try{ if(typeof _ntOffer==='function')setTimeout(_ntOffer,1500); }catch(e){}   // предложить включить, если памятка уже была  // «как вчера»: подтянуть ответы прошлой сессии
 
@@ -13008,6 +13009,42 @@ function _ouraTagsShow(tags){
   el.textContent=L({ru:'Ваши метки из Oura (учтём в разборе): ',uk:'Ваші мітки з Oura (врахуємо в розборі): ',en:'Your Oura tags (included in your read): ',es:'Tus etiquetas de Oura (se tienen en cuenta en el análisis): ',de:'Deine Oura-Tags (fließen in die Auswertung ein): ',pt:'Suas etiquetas da Oura (entram na análise): ',fr:'Vos étiquettes Oura (prises en compte dans l’analyse) : ',pl:'Twoje znaczniki z Oura (uwzględnimy w analizie): ',it:'I tuoi tag Oura (inclusi nell’analisi): ',he:'התגיות שלך מ-Oura (ייכללו בניתוח): ',ja:'Ouraのタグ（分析に反映）：',ko:'Oura 태그(분석에 반영): '})+names.join(', ');
   el.style.display='block';
 }
+// Метки Oura → проход (2026-10-12, решение владельца). Отмечаем ТОЛЬКО пустые ответы — ответ человека
+// важнее метки. Вечерние вопросы — по меткам ВЧЕРАШНЕГО дня (утренний проход спрашивает про вчерашний вечер):
+// alcohol → «Алкоголь: да», late coffee → «Поздний кофеин: одна чашка», latemeal → «Последний приём пищи
+// 20–22». Метку «caffeine» без «late» не переводим: вопрос именно про кофе после обеда.
+// period → «Первый день текущего цикла» = начало последней серии дней с меткой period, только если это
+// НОВЫЙ цикл (≥15 дней после записанной даты или даты нет): одна случайная метка фазу не собьёт.
+function _ouraTagsToPass(){
+  var o=null; try{ o=JSON.parse(localStorage.getItem('vialp_wear_tags')||'null'); }catch(e){}
+  if(!o||!Array.isArray(o.tags)||!o.tags.length) return;
+  if(Date.now()-(o.ts||0) > 3*86400000) return;
+  var norm=function(x){ return (String(x&&x.c||'').replace(/^tag_(generic|sleep|activity|nutrition|ailment|lifestyle)_/i,'')+' '+String(x&&x.n||'')).toLowerCase().replace(/[^a-z\u0400-\u04ff ]+/g,' ').replace(/\s+/g,' ').trim(); };
+  var yday=_dayKey(new Date(Date.now()-86400000));
+  var has=function(day,re){ return o.tags.some(function(x){ return x && x.d===day && re.test(norm(x)); }); };
+  var setIfEmpty=function(name,val){
+    if(getRadio(name)) return;
+    var el=document.querySelector('input[name="'+name+'"][value="'+val+'"]'); if(!el) return;
+    el.checked=true; try{ el.dispatchEvent(new Event('change',{bubbles:true})); }catch(e){}
+  };
+  if(has(yday,/\balcohol\b|\bwine\b|\bbeer\b/)) setIfEmpty('alc','yes');
+  if(has(yday,/late ?coffee|late ?caffeine/)) setIfEmpty('caffeine_late','one');
+  if(has(yday,/late ?meal|late ?dinner|late ?eating/)) setIfEmpty('last_meal','late');
+  // цикл
+  if(getRadio('gender')==='male'||getRadio('cycle_status')==='absent') return;
+  var days={}; o.tags.forEach(function(x){ if(x && /^\d{4}-\d{2}-\d{2}$/.test(x.d) && /\bperiod\b|menstruat/.test(norm(x))) days[x.d]=1; });
+  var list=Object.keys(days).sort(); if(!list.length) return;
+  var start=list[list.length-1], ms=function(d){ return new Date(d+'T00:00:00').getTime(); };
+  for(var i=list.length-2;i>=0;i--){ if(ms(start)-ms(list[i]) <= 2*86400000) start=list[i]; else break; }   // серия подряд (пропуск ≤1 день)
+  var el=document.getElementById('prof-lastperiod'); if(!el) return;
+  var cur=el.value;
+  if(start>_dayKey()) return;
+  if(!cur || (ms(start)-ms(cur)) >= 15*86400000){
+    el.value=start;
+    try{ if(typeof renderCycleDay==='function') renderCycleDay(); }catch(e){}
+    try{ if(typeof saveProfile==='function') saveProfile(); }catch(e){}
+  }
+}
 function _ouraDiscPaint(){
   var b=document.getElementById('oura-disc-btn'); if(!b) return;
   var on=false; try{ on=!!(localStorage.getItem('vialp_oura_on') && localStorage.getItem('vialp_oura_sid')); }catch(e){}
@@ -13054,6 +13091,7 @@ async function fetchOuraLive(sid){
       applyImportedToSliders();
       renderPreview('oura-connect-grid',j.ex);
       _ouraTagsShow(j.tags);
+      try{ _ouraTagsToPass(); }catch(e){}
       document.getElementById('oura-connect-preview').classList.add('show');
       setStatus('oura-connect-status','success',ui.ok);
       if(typeof updateImportSummary==='function') updateImportSummary();
