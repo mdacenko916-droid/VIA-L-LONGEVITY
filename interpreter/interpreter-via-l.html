@@ -2628,6 +2628,7 @@ body.card-open #cardPanel, body.approach-open #approachPanel{
       <div class="imported-preview" id="oura-connect-preview">
         <div style="font-size:var(--fs-cap);color:var(--ok);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">✓ Oura</div>
         <div class="preview-grid" id="oura-connect-grid"></div>
+        <div id="oura-tags-line" style="display:none;margin-top:10px;font-size:var(--fs-cap);color:var(--t2);line-height:1.5;"></div>
       </div>
     </div>
   </div>
@@ -12994,6 +12995,19 @@ function _ouraDiscUI(){
     ja:{b:'Ouraの接続を解除',q:'Ouraリングの接続を解除しますか？VIA-Lはデータを受け取らなくなります。読み込み済みの日は残ります。',ok:'Ouraの接続を解除しました'},
     ko:{b:'Oura 연결 해제',q:'Oura 링 연결을 해제할까요? VIA-L은 더 이상 데이터를 받지 않습니다. 이미 불러온 날은 유지됩니다.',ok:'Oura 연결이 해제되었습니다'}});
 }
+// Метки из Oura — видны сразу после синхронизации (2026-10-12): человек видит, что они дошли и
+// пойдут в разбор (в разбор — только за 3 дня). Код tag_generic_caffeine → «caffeine»; своё название — как есть.
+function _ouraTagsShow(tags){
+  var el=document.getElementById('oura-tags-line'); if(!el) return;
+  var from=new Date(Date.now()-3*86400000).toISOString().slice(0,10);
+  var seen={}, names=(Array.isArray(tags)?tags:[]).filter(function(x){ return x && String(x.d||'')>=from; }).map(function(x){
+    var c=String(x.c||'').replace(/^tag_(generic|sleep|activity|nutrition|ailment|lifestyle)_/i,'').replace(/^custom$/i,'').replace(/_/g,' ').trim();
+    return String(x.n||'').trim()||c;
+  }).filter(function(n){ if(!n||seen[n]) return false; seen[n]=1; return true; }).slice(0,10);
+  if(!names.length){ el.style.display='none'; return; }
+  el.textContent=L({ru:'Ваши метки из Oura (учтём в разборе): ',uk:'Ваші мітки з Oura (врахуємо в розборі): ',en:'Your Oura tags (included in your read): ',es:'Tus etiquetas de Oura (se tienen en cuenta en el análisis): ',de:'Deine Oura-Tags (fließen in die Auswertung ein): ',pt:'Suas etiquetas da Oura (entram na análise): ',fr:'Vos étiquettes Oura (prises en compte dans l’analyse) : ',pl:'Twoje znaczniki z Oura (uwzględnimy w analizie): ',it:'I tuoi tag Oura (inclusi nell’analisi): ',he:'התגיות שלך מ-Oura (ייכללו בניתוח): ',ja:'Ouraのタグ（分析に反映）：',ko:'Oura 태그(분석에 반영): '})+names.join(', ');
+  el.style.display='block';
+}
 function _ouraDiscPaint(){
   var b=document.getElementById('oura-disc-btn'); if(!b) return;
   var on=false; try{ on=!!(localStorage.getItem('vialp_oura_on') && localStorage.getItem('vialp_oura_sid')); }catch(e){}
@@ -13039,6 +13053,7 @@ async function fetchOuraLive(sid){
       // панель показывала 61 с Oura, а в разбор уходило прежнее значение (живой iPhone 2026-09-13).
       applyImportedToSliders();
       renderPreview('oura-connect-grid',j.ex);
+      _ouraTagsShow(j.tags);
       document.getElementById('oura-connect-preview').classList.add('show');
       setStatus('oura-connect-status','success',ui.ok);
       if(typeof updateImportSummary==='function') updateImportSummary();
