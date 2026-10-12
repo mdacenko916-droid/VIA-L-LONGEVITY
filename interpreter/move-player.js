@@ -126,9 +126,45 @@
     }).catch(function () {});
   }
   if (window.speechSynthesis) { try { window.speechSynthesis.onvoiceschanged = pickVoices; window.speechSynthesis.getVoices(); } catch (e) {} }
+  // Сокращения единиц → слова (2026-10-12): голос читал «5 с» как «пять эс». Число + единица перед
+  // пробелом/знаком/концом строки. Для ru/uk/pl — склонение по числу (держать 1 секунду / 3 секунды / 5 секунд).
+  function plural3(n, a, b, c) { n = Math.abs(n) % 100; var d = n % 10; if (n > 10 && n < 20) return c; if (d === 1) return a; if (d >= 2 && d <= 4) return b; return c; }
+  var UNITS = {
+    ru: { s: ['секунду','секунды','секунд'], min: ['минуту','минуты','минут'], kg: ['килограмм','килограмма','килограммов'], km: ['километр','километра','километров'] },
+    uk: { s: ['секунду','секунди','секунд'], min: ['хвилину','хвилини','хвилин'], kg: ['кілограм','кілограми','кілограмів'], km: ['кілометр','кілометри','кілометрів'] },
+    pl: { s: ['sekundę','sekundy','sekund'], min: ['minutę','minuty','minut'], kg: ['kilogram','kilogramy','kilogramów'], km: ['kilometr','kilometry','kilometrów'] },
+    en: { s: ['second','seconds'], min: ['minute','minutes'], kg: ['kilogram','kilograms'], km: ['kilometre','kilometres'] },
+    es: { s: ['segundo','segundos'], min: ['minuto','minutos'], kg: ['kilo','kilos'], km: ['kilómetro','kilómetros'] },
+    pt: { s: ['segundo','segundos'], min: ['minuto','minutos'], kg: ['quilo','quilos'], km: ['quilômetro','quilômetros'] },
+    de: { s: ['Sekunde','Sekunden'], min: ['Minute','Minuten'], kg: ['Kilogramm','Kilogramm'], km: ['Kilometer','Kilometer'] },
+    fr: { s: ['seconde','secondes'], min: ['minute','minutes'], kg: ['kilo','kilos'], km: ['kilomètre','kilomètres'] },
+    it: { s: ['secondo','secondi'], min: ['minuto','minuti'], kg: ['chilo','chili'], km: ['chilometro','chilometri'] }
+  };
+  // Как пишется единица в текстах на каждом языке (без точки — точку съедает граница).
+  var UNIT_RE = {
+    s:   { ru: 'с|сек', uk: 'с|сек', pl: 's|sek', en: 's|sec|secs', es: 's|seg', pt: 's|seg', de: 's|Sek', fr: 's|sec', it: 's|sec' },
+    min: { ru: 'мин', uk: 'хв', pl: 'min', en: 'min|mins', es: 'min', pt: 'min', de: 'Min', fr: 'min', it: 'min' },
+    kg:  { ru: 'кг', uk: 'кг', pl: 'kg', en: 'kg', es: 'kg', pt: 'kg', de: 'kg', fr: 'kg', it: 'kg' },
+    km:  { ru: 'км', uk: 'км', pl: 'km', en: 'km', es: 'km', pt: 'km', de: 'km', fr: 'km', it: 'km' }
+  };
+  function spoken(text) {
+    var l = (typeof lang !== 'undefined' && lang) || 'en', U = UNITS[l]; if (!U) return String(text || '');
+    var out = String(text || '');
+    Object.keys(UNIT_RE).forEach(function (k) {
+      var alt = UNIT_RE[k][l]; if (!alt || !U[k]) return;
+      var re = new RegExp('(\\d+(?:[.,]\\d+)?)\\s?(?:' + alt + ')(?=[\\s.,;:!?)\\u2014\\u2013]|$)', 'g');
+      out = out.replace(re, function (m, num) {
+        var n = parseFloat(String(num).replace(',', '.')), f = U[k];
+        var w = f.length === 3 ? (n % 1 ? f[1] : plural3(n, f[0], f[1], f[2])) : (n === 1 ? f[0] : f[1]);
+        return num + ' ' + w;
+      });
+    });
+    return out;
+  }
   function vLen(text) { return String(text || '').length / 13; }   // ≈13 знаков в секунду — для расчёта, когда начать подсказку
   function say(text, force) {
     if (!voiceOn || !text) return;
+    text = spoken(text);
     if (speaking && !force) return;
     var my = ++sayId, p = plug(), lc = loc();
     lastSpoke = Date.now();
@@ -148,10 +184,13 @@
       setTimeout(function () { if (my === sayId) say(text, force); }, 300); return;
     }
     say._w = 0;
-    if (force) ss.cancel();
     var u = new SpeechSynthesisUtterance(text); u.lang = lc; u.rate = 0.92;
     if (webVoice) u.voice = webVoice;
-    u.onend = done; u.onerror = done; ss.speak(u);
+    u.onend = done; u.onerror = done;
+    // Повторы (2026-10-12): в WebKit speak() сразу после cancel() иногда заново проигрывает оборванную
+    // фразу. Если что-то звучит или в очереди — гасим и говорим через 80 мс; если тишина — сразу.
+    if (force && (ss.speaking || ss.pending)) { ss.cancel(); setTimeout(function () { if (my === sayId) ss.speak(u); }, 80); }
+    else ss.speak(u);
   }
   function hush() { sayId++; speaking = false; var p = plug(); if (p) p.stop().catch(function () {}); else if (window.speechSynthesis) window.speechSynthesis.cancel(); }
 
