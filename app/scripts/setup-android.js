@@ -294,6 +294,19 @@ const SIGNING_BLOCK = `
     }
 `;
 
+// Правила R8 для VIA-L (2026-10-15). Мост JS↔нативный код вызывается по именам — их нельзя переименовывать.
+const R8_RULES = `
+# ── VIA-L R8 ──
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod,SourceFile,LineNumberTable
+-keepclassmembers class * { @android.webkit.JavascriptInterface <methods>; }
+-keep class com.getcapacitor.** { *; }
+-keep class com.viael.** { *; }
+-keep class com.getcapacitor.community.** { *; }
+-keep class com.capacitorjs.plugins.** { *; }
+-keep class com.revenuecat.purchases.capacitor.** { *; }
+-dontwarn com.getcapacitor.**
+`;
+
 function patchSigning() {
   if (!fs.existsSync(APP_GRADLE)) {
     console.warn('⚠️  app/build.gradle не найден. Сначала выполни `npx cap add android`.');
@@ -319,6 +332,19 @@ function patchSigning() {
     g = g.replace(/versionCode 1\b/,
       "versionCode Integer.parseInt(System.getenv('VIAL_VERSION_CODE') ?: '1')");
     touched++;
+  }
+
+  // R8 (2026-10-15): Google Play с февраля 2027 требует оптимизацию DEX ≥ 25 % (у нас было 5 % — сжатие выключено).
+  // Плагины Capacitor держит его собственный consumer-файл; мост WebView и свой плагин — правила ниже (R8_RULES).
+  if (g.includes('minifyEnabled false') && g.includes('signingConfig signingConfigs.release')) {
+    g = g.replace(/minifyEnabled false\n(\s*)proguardFiles getDefaultProguardFile\('proguard-android\.txt'\)/,
+      "minifyEnabled true\n$1shrinkResources true\n$1proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')");
+    touched++;
+  }
+  const rules = path.join(path.dirname(APP_GRADLE), 'proguard-rules.pro');
+  if (fs.existsSync(rules) && !fs.readFileSync(rules, 'utf8').includes('VIA-L R8')) {
+    fs.appendFileSync(rules, R8_RULES);
+    console.log('✚ proguard-rules.pro: правила VIA-L для R8.');
   }
 
   if (!touched) { console.log('✓ app/build.gradle: подпись и versionCode уже настроены.'); return; }
