@@ -1471,6 +1471,7 @@ export default {
 
       // Платформа, Шаг 2: пациент подключается к специалисту по его коду + согласие.
       // См. docs/PLATFORM-MODEL.md §3 (публичные ручки, без cabinet-auth).
+      if (path.startsWith('/duo/'))        return handleDuo(path, request, env, corsHeaders);   // «Вдвоём» (2026-10-15)
       if (path === '/specialist/connect')  return handleSpecialistConnect(request, env, corsHeaders);
       if (path === '/specialist/unlink')   return handleSpecialistUnlink(request, env, corsHeaders);
       if (path === '/specialist/sharing')  return handleSpecialistSharing(request, env, corsHeaders);
@@ -10461,6 +10462,76 @@ async function handleCabinetLeads(request, env, corsHeaders){
 // переписывают из письма. Ровно 32 символа, а 256 кратно 32 → `byte % 32` даёт
 // равномерное распределение без смещения, отбраковка байтов не нужна.
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+// ── «Вдвоём» (2026-10-15, docs/НОВЫЕ-ИДЕИ.md §1) ─────────────────────────────────────────────
+// Двое (муж/жена, подруга, мама, дочь) связываются кодом и видят друг у друга ТОЛЬКО: имя, которое человек
+// сам себе дал, ключ шага недели (рычаг), день недели фокуса и 7 отметок «получилось/нет». Никаких данных
+// о здоровье. id — случайный секрет устройства (клиент создаёт сам); партнёр чужой id не узнаёт никогда:
+// воркер находит пару по своей записи. Подписка у каждого своя (решение владельца) — здесь её не трогаем.
+// Хранение — D1 (duo_m, duo_inv; interpreter/duo-schema.sql). НЕ KV: KV кэширует чтение до 60 с, и только что
+// созданная пара на устаревшей записи выглядела «распавшейся» (проверка 2026-10-15).
+function _duoId(x){ x = String(x || ''); return /^[A-Za-z0-9_-]{16,64}$/.test(x) ? x : ''; }
+function _duoName(x){ return String(x || '').replace(/[<>]/g, '').trim().slice(0, 30); }
+async function _duoGet(env, id){ return await env.DB.prepare('SELECT id,name,peer,lever,day,marks,upd FROM duo_m WHERE id=?').bind(id).first(); }
+async function _duoEnsure(env, id, name){
+  await env.DB.prepare("INSERT INTO duo_m (id,name,upd) VALUES (?,?,?) ON CONFLICT(id) DO UPDATE SET name=CASE WHEN excluded.name<>'' THEN excluded.name ELSE duo_m.name END, upd=excluded.upd")
+    .bind(id, name || '', Date.now()).run();
+  return await _duoGet(env, id);
+}
+async function handleDuo(path, request, env, corsHeaders){
+  if (!env.DB) return jsonResponse({ ok:false, error:'db_missing' }, corsHeaders, 500);
+  let b = {}; try { b = await request.json(); } catch (e) {}
+  const id = _duoId(b.id);
+  if (!id) return jsonResponse({ ok:false, error:'bad_id' }, corsHeaders, 400);
+  const me = await _duoEnsure(env, id, _duoName(b.name));
+  const op = path.slice(5), now = Date.now();
+  if (op === 'invite') {
+    if (me.peer) return jsonResponse({ ok:false, error:'already_paired' }, corsHeaders, 409);
+    const code = _randCode(6);
+    await env.DB.prepare('DELETE FROM duo_inv WHERE ts<?').bind(now - 7 * 86400000).run();   // старые приглашения
+    await env.DB.prepare('INSERT INTO duo_inv (code,a,ts) VALUES (?,?,?)').bind(code, id, now).run();
+    return jsonResponse({ ok:true, code }, corsHeaders);
+  }
+  if (op === 'join') {
+    const code = String(b.code || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+    if (me.peer) return jsonResponse({ ok:false, error:'already_paired' }, corsHeaders, 409);
+    const inv = await env.DB.prepare('SELECT a,ts FROM duo_inv WHERE code=?').bind(code).first();
+    if (!inv || inv.a === id || now - inv.ts > 7 * 86400000) return jsonResponse({ ok:false, error:'bad_code' }, corsHeaders, 404);
+    const other = await _duoGet(env, inv.a);
+    if (!other || other.peer) return jsonResponse({ ok:false, error:'bad_code' }, corsHeaders, 404);
+    await env.DB.batch([
+      env.DB.prepare('UPDATE duo_m SET peer=?, upd=? WHERE id=? AND peer IS NULL').bind(id, now, inv.a),
+      env.DB.prepare('UPDATE duo_m SET peer=?, upd=? WHERE id=?').bind(inv.a, now, id),
+      env.DB.prepare('DELETE FROM duo_inv WHERE code=?').bind(code),
+    ]);
+    return jsonResponse({ ok:true, peerName: other.name || '' }, corsHeaders);
+  }
+  if (op === 'push') {
+    const lever = String(b.lever || '').slice(0, 30) || null;
+    const day = Math.max(0, Math.min(7, parseInt(b.day, 10) || 0));
+    const marks = (Array.isArray(b.marks) ? b.marks : []).slice(0, 7).map(v => (v === 'yes' || v === 'no') ? v : '');
+    await env.DB.prepare('UPDATE duo_m SET lever=?, day=?, marks=?, upd=? WHERE id=?').bind(lever, day, JSON.stringify(marks), now, id).run();
+    return jsonResponse({ ok:true }, corsHeaders);
+  }
+  if (op === 'peer') {
+    if (!me.peer) return jsonResponse({ ok:true, peer:null }, corsHeaders);
+    const p = await _duoGet(env, me.peer);
+    if (!p || p.peer !== id) {   // партнёр вышел из пары (D1 читает свежее — это не кэш)
+      await env.DB.prepare('UPDATE duo_m SET peer=NULL, upd=? WHERE id=?').bind(now, id).run();
+      return jsonResponse({ ok:true, peer:null }, corsHeaders);
+    }
+    let marks = []; try { marks = JSON.parse(p.marks || '[]'); } catch (e) {}
+    return jsonResponse({ ok:true, peer:{ name:p.name || '', lever:p.lever || null, day:p.day || 0, marks, upd:p.upd || 0 } }, corsHeaders);
+  }
+  if (op === 'leave') {
+    await env.DB.batch([
+      env.DB.prepare('UPDATE duo_m SET peer=NULL, upd=? WHERE id=(SELECT peer FROM duo_m WHERE id=?) AND peer=?').bind(now, id, id),
+      env.DB.prepare('UPDATE duo_m SET peer=NULL, upd=? WHERE id=?').bind(now, id),
+    ]);
+    return jsonResponse({ ok:true }, corsHeaders);
+  }
+  return jsonResponse({ ok:false, error:'unknown_op' }, corsHeaders, 404);
+}
 
 // Случайная часть кода — из crypto.getRandomValues, НЕ из Math.random: код доступа
 // открывает личный дневник клиента и его карточку, а Math.random не криптостойкий

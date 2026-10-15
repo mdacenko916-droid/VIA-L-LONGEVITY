@@ -4092,6 +4092,8 @@ body.card-open #cardPanel, body.approach-open #approachPanel{
          рекомендация на неделю: фокус выбирает код по карте рычагов (levers.js), здесь же отметка дня,
          а через 7 дней — итог недели по состоянию и жалобам. Рисует renderFocusUI. ── -->
     <div class="rd-card" id="rd-focus" style="display:none;border-color:rgba(90,196,178,.45);"></div>
+    <!-- «Вдвоём» (duo.js, 2026-10-15): шаг недели вместе с близким человеком — видны только шаг и отметки -->
+    <div class="rd-card" id="rd-duo" style="display:none;"></div>
 
     <!-- ── РЯД 3: Памятка дня — ОДИН блок: тарелка + баланс слева, Принцип VIA·L справа, графы ниже ── -->
     <div class="rd-card rd-dayplan">
@@ -7454,6 +7456,7 @@ function _expMark(v){
     r.exp_done=(r.exp_done===v)?null:v;              // повторный тап по тому же — снять отметку
     localStorage.setItem('vialp_daily',JSON.stringify(arr));
     _syncPushDaily(r);                               // отметку ставят позже прохода — день уходит заново (только при согласии)
+    try{ if(window.vialDuo) vialDuo.push(); }catch(e){}   // «Вдвоём»: партнёр видит отметку
   }catch(e){}
   try{ renderExperimentUI(window.__rdDay||_dayKey()); }catch(e){}
 }
@@ -7717,8 +7720,9 @@ function renderFocusUI(activeKey){
   var box=document.getElementById('rd-focus'); if(!box) return;
   var st=null; try{ st=(activeKey && activeKey!==_dayKey())?null:_focusState(); }catch(e){ st=null; }
   var html=st?window.vialFocusHTML(st):'';
-  if(!html){ box.style.display='none'; box.innerHTML=''; return; }
+  if(!html){ box.style.display='none'; box.innerHTML=''; try{ if(window.vialDuo) vialDuo.render(); }catch(e){} return; }
   box.innerHTML=html; box.style.display='block';
+  try{ if(window.vialDuo) vialDuo.render(); }catch(e){}   // «Вдвоём» — под фокусом
 }
 // «Продолжить» в итоге недели: применяет решение кода и заводит фокус следующей недели.
 function _focusGo(){
@@ -14693,6 +14697,7 @@ document.addEventListener('visibilitychange',function(){
 <script src="review-bridge.js"></script><!-- окно «Оцените приложение» после 3 дней с разбором (2026-10-08) -->
 <script src="intake.js"></script>
 <script src="levers.js"></script>
+<script src="duo.js"></script><!-- «Вдвоём» (2026-10-15) -->
 <script src="sports.js"></script><!-- «Мой спорт», проверка перед тренировкой, сверка прибора и самочувствия (2026-10-11) -->
 <script src="workouts.js"></script>
 <script src="move-player.js"></script><!-- проигрыватель «Тренировки дня»: ролики Евы из clips/, голос телефона, музыка (2026-10-10) --><!-- «Тренировка дня» текстом: 30 тренировок ×12 и выбор кодом (2026-10-10) --><!-- карта рычагов и блок «Фокус недели» (2026-10-02) -->
