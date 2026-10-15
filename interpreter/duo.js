@@ -76,10 +76,49 @@
     return peerCache;
   }
 
+  // (i) «Как это работает» + строка «Вы» (2026-10-15, владелец: блок теряется, нужно описание).
+  var I = {
+    ru:{me:'Вы',info:['Каждый идёт своим шагом из «Фокуса недели» и сам отмечает дни: «Сегодня получилось» или «Не вышло».','Вы видите имя близкого человека, его шаг, день недели и 7 кружков. Он видит то же у вас.','Золотой кружок — получилось, серый — не вышло, пустой — отметки нет.','Разборы, показатели прибора, жалобы и анкета друг другу не видны. Переписки внутри пары нет.','Подписка у каждого своя. Выйти из пары можно в любой момент — связь пропадёт у обоих.','Зачем: шаг легче удержать вдвоём. Видно, что близкий человек тоже старается, — и есть повод поддержать.']},
+    uk:{me:'Ви',info:['Кожен іде своїм кроком із «Фокусу тижня» і сам позначає дні: «Сьогодні вдалося» або «Не вийшло».','Ви бачите імʼя близької людини, її крок, день тижня і 7 кружечків. Вона бачить те саме у вас.','Золотий кружечок — вдалося, сірий — не вийшло, порожній — позначки немає.','Розбори, показники приладу, скарги й анкета одне одному не видні. Листування всередині пари немає.','Підписка в кожного своя. Вийти з пари можна будь-коли — звʼязок зникне в обох.','Навіщо: крок легше втримати вдвох. Видно, що близька людина теж старається, — і є привід підтримати.']},
+    en:{me:'You',info:['Each of you follows your own step from “Focus of the week” and marks each day: “Done today” or “Didn’t work out”.','You see the other person’s name, their step, the day of the week and 7 dots. They see the same for you.','Gold dot — done, grey — didn’t work out, empty — no mark yet.','Analyses, device data, complaints and questionnaire answers stay private. There is no messaging inside the pair.','Each of you keeps your own subscription. You can leave the pair at any time — the link disappears for both.','Why: a step is easier to keep up together. You see the other person is trying too — and have a reason to cheer them on.']},
+    es:{me:'Tú',info:['Cada una sigue su propio paso del «Foco de la semana» y marca cada día: «Hoy lo logré» o «No salió».','Ves el nombre de la otra persona, su paso, el día de la semana y 7 puntos. Ella ve lo mismo de ti.','Punto dorado: lo logró; gris: no salió; vacío: aún sin marca.','Los análisis, los datos del dispositivo, las molestias y el cuestionario no se comparten. No hay mensajes dentro de la pareja.','Cada una tiene su propia suscripción. Puedes salir de la pareja cuando quieras: el vínculo desaparece para las dos.','Para qué: un paso se mantiene mejor en compañía. Ves que la otra persona también lo intenta, y tienes un motivo para animarla.']},
+    de:{me:'Du',info:['Jede Person geht ihren eigenen Schritt aus „Fokus der Woche“ und markiert jeden Tag: „Heute geschafft“ oder „Hat nicht geklappt“.','Du siehst den Namen der anderen Person, ihren Schritt, den Wochentag und 7 Punkte. Sie sieht dasselbe von dir.','Goldener Punkt – geschafft, grau – nicht geklappt, leer – noch keine Markierung.','Auswertungen, Gerätedaten, Beschwerden und Fragebogen bleiben privat. Nachrichten innerhalb des Paares gibt es nicht.','Jede Person hat ihr eigenes Abo. Du kannst das Paar jederzeit verlassen – die Verbindung verschwindet für beide.','Wozu: Zu zweit hält man einen Schritt leichter durch. Du siehst, dass sich die andere Person auch bemüht – und hast einen Grund, sie zu ermutigen.']},
+    pt:{me:'Você',info:['Cada pessoa segue o próprio passo do «Foco da semana» e marca cada dia: «Hoje consegui» ou «Não deu».','Você vê o nome da outra pessoa, o passo dela, o dia da semana e 7 bolinhas. Ela vê o mesmo de você.','Bolinha dourada — conseguiu, cinza — não deu, vazia — ainda sem marcação.','Análises, dados do aparelho, queixas e questionário não são compartilhados. Não há mensagens dentro da dupla.','Cada pessoa tem a própria assinatura. Dá para sair da dupla a qualquer momento — a ligação some para as duas.','Para quê: a dois é mais fácil manter o passo. Você vê que a outra pessoa também está tentando — e tem um motivo para apoiá-la.']},
+    fr:{me:'Vous',info:['Chacun suit sa propre étape du « Focus de la semaine » et coche chaque jour : « Fait aujourd’hui » ou « Pas réussi ».','Vous voyez le prénom de l’autre personne, son étape, le jour de la semaine et 7 points. Elle voit la même chose pour vous.','Point doré — réussi, gris — pas réussi, vide — pas encore coché.','Analyses, données de l’appareil, symptômes et questionnaire restent privés. Il n’y a pas de messagerie dans le duo.','Chacun garde son propre abonnement. Vous pouvez quitter le duo à tout moment — le lien disparaît pour les deux.','Pourquoi : une étape tient mieux à deux. Vous voyez que l’autre fait aussi des efforts — et vous avez une raison de l’encourager.']},
+    pl:{me:'Ty',info:['Każda osoba idzie własnym krokiem z „Fokusu tygodnia” i zaznacza każdy dzień: „Dziś się udało” albo „Nie wyszło”.','Widzisz imię drugiej osoby, jej krok, dzień tygodnia i 7 kropek. Ona widzi to samo u ciebie.','Złota kropka — udało się, szara — nie wyszło, pusta — brak zaznaczenia.','Analizy, dane z urządzenia, dolegliwości i ankieta pozostają prywatne. W parze nie ma wiadomości.','Każda osoba ma własną subskrypcję. Parę można opuścić w każdej chwili — połączenie zniknie u obu.','Po co: we dwoje łatwiej utrzymać krok. Widzisz, że druga osoba też się stara — i masz powód, by ją wesprzeć.']},
+    it:{me:'Tu',info:['Ognuno segue il proprio passo dal «Focus della settimana» e segna ogni giorno: «Fatto oggi» o «Non è andata».','Vedi il nome dell’altra persona, il suo passo, il giorno della settimana e 7 pallini. Lei vede lo stesso di te.','Pallino dorato — fatto, grigio — non è andata, vuoto — ancora nessun segno.','Analisi, dati del dispositivo, disturbi e questionario restano privati. Nella coppia non ci sono messaggi.','Ognuno ha il proprio abbonamento. Puoi lasciare la coppia in qualsiasi momento — il collegamento sparisce per entrambi.','Perché: in due è più facile mantenere un passo. Vedi che anche l’altra persona ci prova — e hai un motivo per incoraggiarla.']},
+    he:{me:'את/ה',info:['כל אחד הולך בצעד שלו מ„מיקוד השבוע” ומסמן כל יום: „בוצע היום” או „לא הסתדר”.','אתם רואים את השם של האדם הקרוב, את הצעד שלו, את היום בשבוע ו־7 נקודות. הוא רואה אותו דבר אצלכם.','נקודה זהובה — בוצע, אפורה — לא הסתדר, ריקה — עוד אין סימון.','ניתוחים, נתוני המכשיר, תלונות והשאלון נשארים פרטיים. אין התכתבות בתוך הזוג.','לכל אחד מנוי משלו. אפשר לצאת מהזוג בכל רגע — הקשר נעלם אצל שניכם.','למה: ביחד קל יותר להחזיק בצעד. רואים שגם האדם הקרוב משתדל — ויש סיבה לעודד.']},
+    ja:{me:'あなた',info:['それぞれが「今週のフォーカス」から自分の一歩を選び、毎日「今日できた」か「できなかった」を記録します。','相手の名前、一歩、今週の何日目か、7つの丸が見えます。相手にもあなたの同じ情報が見えます。','金の丸はできた、灰色はできなかった、空の丸はまだ記録なし。','分析、デバイスのデータ、不調、質問票は共有されません。ペア内のメッセージ機能はありません。','サブスクリプションはそれぞれ別です。いつでもペアを解除でき、つながりは両方から消えます。','なぜ：ふたりなら一歩を続けやすい。相手もがんばっているのが見え、応援するきっかけになります。']},
+    ko:{me:'나',info:['각자 "이번 주 포커스"에서 자신의 한 걸음을 정하고 매일 "오늘 해냈어요" 또는 "못 했어요"를 표시합니다.','상대의 이름, 한 걸음, 이번 주 며칠째인지, 7개의 점이 보입니다. 상대도 나의 같은 정보를 봅니다.','금색 점은 해냄, 회색은 못 함, 빈 점은 아직 표시 없음.','분석, 기기 데이터, 불편 증상, 설문은 공유되지 않습니다. 짝 사이에 메시지 기능은 없습니다.','구독은 각자 따로입니다. 언제든 짝에서 나갈 수 있고, 연결은 둘 다에게서 사라집니다.','왜: 함께하면 한 걸음을 이어 가기 쉬워요. 상대도 노력하는 게 보이고, 응원할 이유가 생깁니다.']}
+  };
+  function LI() { var l = (typeof lang !== 'undefined' && lang) || 'en'; return I[l] || I.en; }
+  try {
+    var css = document.createElement('style');
+    css.textContent = '.rd-step.open .rd-step-b #rd-duo.rd-card,#rd-duo.rd-card{background:linear-gradient(160deg,rgba(226,185,90,.13),rgba(226,185,90,.04))!important;border:1px solid rgba(226,185,90,.55)!important;border-radius:14px!important;padding:13px 16px!important;margin:10px 0!important;}'
+      + '#rd-duo .duo-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}#rd-duo .duo-h .rd-card-t{margin:0;}'
+      + '#rd-duo .duo-i{width:28px;height:28px;flex:0 0 28px;border-radius:50%;border:1px solid var(--gold);background:transparent;color:var(--gold-lt);font:italic 600 15px Georgia,serif;cursor:pointer;padding:0;}'
+      + '#rd-duo .duo-r{margin-top:10px;}#rd-duo .duo-r+.duo-r{padding-top:10px;border-top:1px solid rgba(226,185,90,.18);}'
+      + '#rd-duo .duo-n{font-size:var(--fs-cap);color:var(--gold-lt);font-weight:700;letter-spacing:.04em;}'
+      + '#rd-duo .duo-s{font-size:var(--fs-body);color:var(--t1);line-height:1.45;margin-top:2px;}';
+    document.head.appendChild(css);
+  } catch (e) {}
+  function info() {
+    var T = L(), x = LI();
+    var body = x.info.map(function (t, i) { return '<p style="margin:' + (i ? '10px' : '0') + ' 0 0;line-height:1.55;color:' + (i === x.info.length - 1 ? 'var(--gold-lt)' : 'var(--t1)') + ';">' + esc(t) + '</p>'; }).join('');
+    if (typeof window.openSheet === 'function') window.openSheet('👥', T.t, body);
+    else alert(x.info.join('\n\n'));
+  }
+  function row(who, lever, day, marks) {
+    var tt = (lever && window.vialLevers) ? window.vialLevers.text(lever, (typeof lang !== 'undefined' && lang) || 'en') : null;
+    if (!tt) return '';
+    return '<div class="duo-r"><div class="duo-n">' + esc(who) + (day ? ' · <span style="color:var(--t3);font-weight:400;">' + esc(L().day.replace('{d}', day)) + '</span>' : '') + '</div>'
+      + '<div class="duo-s">' + esc(tt.title) + '</div>' + dots(marks) + '</div>';
+  }
+
   var BTN = 'padding:8px 14px;border-radius:10px;font-size:var(--fs-cap);font-family:inherit;cursor:pointer;border:1px solid rgba(226,185,90,.32);background:rgba(226,185,90,.08);color:var(--t1);';
   var BTN_ON = 'padding:8px 14px;border-radius:10px;font-size:var(--fs-cap);font-family:inherit;cursor:pointer;border:1px solid var(--gold);background:rgba(226,185,90,.2);color:#fff;font-weight:600;';
   var INP = 'width:100%;box-sizing:border-box;margin-top:6px;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;font:inherit;font-size:var(--fs-body);';
-  function head() { return '<div class="rd-card-t" style="margin:0 0 6px;">👥 ' + esc(L().t) + '</div>'; }
+  function head() { return '<div class="duo-h"><div class="rd-card-t">👥 ' + esc(L().t) + '</div><button type="button" class="duo-i" onclick="vialDuo.info()" aria-label="i">i</button></div>'; }
   function dots(m) {
     return '<div style="display:flex;gap:6px;margin-top:8px;">' + (m || []).slice(0, 7).map(function (v) {
       var c = v === 'yes' ? 'var(--gold)' : v === 'no' ? 'rgba(255,255,255,.25)' : 'transparent';
@@ -99,13 +138,10 @@
       if (s.paired) {
         var nm = (p && p.name) || s.peerName || T.partner;
         h += '<div style="font-size:var(--fs-body);color:var(--t1);font-weight:600;">' + esc(T['with'].replace('{n}', nm)) + '</div>';
-        var tt = (p && p.lever && window.vialLevers) ? window.vialLevers.text(p.lever, (typeof lang !== 'undefined' && lang) || 'en') : null;
-        if (tt) {
-          h += '<div style="font-size:var(--fs-body);color:var(--t2);margin-top:4px;line-height:1.5;">' + esc(nm) + ': ' + esc(tt.title)
-            + (p.day ? ' · <span style="color:var(--t3);">' + esc(T.day.replace('{d}', p.day)) + '</span>' : '') + '</div>' + dots(p.marks);
-        } else {
-          h += '<div style="font-size:var(--fs-cap);color:var(--t3);margin-top:4px;">' + esc(T.choosing.replace('{n}', nm)) + '</div>';
-        }
+        var mf = myFocus();
+        h += row(LI().me, mf.lever, mf.day, mf.marks);
+        if (p && p.lever && window.vialLevers) h += row(nm, p.lever, p.day, p.marks);
+        else h += '<div class="duo-r"><div class="duo-n">' + esc(nm) + '</div><div style="font-size:var(--fs-cap);color:var(--t3);margin-top:2px;">' + esc(T.choosing.replace('{n}', nm)) + '</div></div>';
         if (specCode()) {
           var on = !!s.specShare, both = on && !!s.linked;
           h += '<label style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;cursor:pointer;"><input type="checkbox" ' + (on ? 'checked ' : '') + 'onchange="vialDuo.spec(this.checked)" style="margin-top:3px;">'
@@ -113,8 +149,7 @@
             + '<div style="font-size:var(--fs-cap);color:var(--t3);margin-top:4px;line-height:1.5;">' + esc(T.spHint) + '</div>'
             + (on ? '<div style="font-size:var(--fs-cap);color:' + (both ? 'var(--ok)' : 'var(--t3)') + ';margin-top:4px;">' + esc(both ? T.spBoth : T.spWait.replace('{n}', nm)) + '</div>' : '');
         }
-        h += '<div style="font-size:var(--fs-cap);color:var(--t3);margin-top:10px;">' + esc(T.note) + '</div>'
-          + '<button type="button" onclick="vialDuo.leave()" style="margin-top:6px;background:none;border:none;color:var(--t3);font:inherit;font-size:var(--fs-cap);text-decoration:underline;cursor:pointer;padding:0;">' + esc(T.leave) + '</button>';
+        h += '<button type="button" onclick="vialDuo.leave()" style="margin-top:6px;background:none;border:none;color:var(--t3);font:inherit;font-size:var(--fs-cap);text-decoration:underline;cursor:pointer;padding:0;margin-top:12px;">' + esc(T.leave) + '</button>';
         box.innerHTML = h; box.style.display = 'block'; return;
       }
     }
@@ -141,6 +176,7 @@
 
   window.vialDuo = {
     render: render,
+    info: info,
     push: function () { push(true); },
     spec: async function (on) { var s = st(); s.specShare = !!on; stSet(s); await push(true); peerCache = null; render(); },
     mode: function (m) { uiMode = m; render(); },
