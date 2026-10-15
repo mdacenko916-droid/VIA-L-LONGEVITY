@@ -1092,6 +1092,10 @@ const STATUS_BADGE  = {active:'active',new:'new',pause:'pause',done:'done'};
 // Словарь по ключам (key-major), 12 языков. t() берёт uiLang, фолбэк на ru.
 // Статичные элементы помечены data-i18n / data-i18n-ph / data-i18n-title.
 const T = {
+  duo_with:{ru:"Пара: {n}",uk:"Пара: {n}",en:"Together with {n}",es:"En compañía de {n}",de:"Zu zweit mit {n}",pt:"A dois com {n}",fr:"À deux avec {n}",pl:"Para: {n}",it:"In due con {n}",he:"ביחד עם {n}",ja:"{n}さんとふたりで",ko:"{n} 님과 함께"},
+  duo_card:{ru:"Карточка",uk:"Картка",en:"Card",es:"Ficha",de:"Karte",pt:"Ficha",fr:"Fiche",pl:"Karta",it:"Scheda",he:"כרטיס",ja:"カード",ko:"카드"},
+  duo_together:{ru:"Открыть вместе",uk:"Відкрити разом",en:"Open together",es:"Abrir juntas",de:"Zusammen öffnen",pt:"Abrir juntos",fr:"Ouvrir ensemble",pl:"Otwórz razem",it:"Apri insieme",he:"לפתוח יחד",ja:"並べて開く",ko:"함께 열기"},
+  duo_hint:{ru:"Только просмотр. Оба дали согласие показать вам, что они пара; друг другу их данные не видны.",uk:"Лише перегляд. Обоє погодилися показати вам, що вони пара; одне одному їхні дані не видно.",en:"View only. Both agreed to show you they are a pair; they cannot see each other’s data.",es:"Solo lectura. Ambas aceptaron mostrarte que son pareja; entre ellas no ven sus datos.",de:"Nur Ansicht. Beide haben zugestimmt, dir zu zeigen, dass sie ein Paar sind; gegenseitig sehen sie ihre Daten nicht.",pt:"Somente leitura. Ambos aceitaram mostrar que são uma dupla; um não vê os dados do outro.",fr:"Lecture seule. Les deux ont accepté de vous montrer qu’ils forment un duo ; ils ne voient pas les données l’un de l’autre.",pl:"Tylko podgląd. Oboje zgodzili się pokazać, że są parą; nawzajem nie widzą swoich danych.",it:"Sola lettura. Entrambi hanno accettato di mostrarti che sono una coppia; tra loro non vedono i dati.",he:"צפייה בלבד. שניהם הסכימו להראות לך שהם זוג; זה לא רואה את הנתונים של זה.",ja:"閲覧のみ。おふたりはペアであることを示すことに同意しています。お互いのデータは見えません。",ko:"보기 전용. 두 분 모두 짝임을 보여 주는 데 동의했으며, 서로의 데이터는 보이지 않습니다."},
   photo_open:{ru:"Открыть оригинал",uk:"Відкрити оригінал",en:"Open original",es:"Abrir original",de:"Original öffnen",pt:"Abrir original",fr:"Ouvrir l’original",pl:"Otwórz oryginał",it:"Apri originale",he:"פתיחת המקור",ja:"元の画像を開く",ko:"원본 열기"},
   unread_total:{ru:"новых: {n}",uk:"нових: {n}",en:"new: {n}",es:"nuevos: {n}",de:"neu: {n}",pt:"novas: {n}",fr:"nouveaux : {n}",pl:"nowych: {n}",it:"nuovi: {n}",he:"חדשות: {n}",ja:"新着: {n}",ko:"새 메시지: {n}"},
   push_btn:{ru:"🔔 Уведомления",uk:"🔔 Сповіщення",en:"🔔 Notifications",es:"🔔 Notificaciones",de:"🔔 Benachrichtigungen",pt:"🔔 Notificações",fr:"🔔 Notifications",pl:"🔔 Powiadomienia",it:"🔔 Notifiche",he:"🔔 התראות",ja:"🔔 通知",ko:"🔔 알림"},
@@ -1919,7 +1923,7 @@ function renderClientList(filter='', statusFilter='', sortBy='updated'){
     const specName = (myRole==='owner' && c.specialist_id) ? (specNameById(c.specialist_id)||'') : '';
     const meta = [c.program||c.phase_label||'', c.age?(c.age+' л.'):'', specName].filter(Boolean).join(' · ');
     html += `<div class="client-item${selectedId===c.id?' active':''}" onclick="selectClient('${c.id}')">
-      <div class="client-name">${esc(c.name)} ${c.unread>0?`<span class="unread-pill">💬 ${c.unread}</span> `:''}${badge}${dataBadge(c)}${chanBadge(c)}${reviewBadge(c)}</div>
+      <div class="client-name">${esc(c.name)} ${c.duo_code?'<span title="'+esc(t('duo_with').replace('{n}',''))+'">👥</span> ':''}${c.unread>0?`<span class="unread-pill">💬 ${c.unread}</span> `:''}${badge}${dataBadge(c)}${chanBadge(c)}${reviewBadge(c)}</div>
       <div class="client-meta">${esc(meta)}${c.start_date?' · с '+c.start_date:''}</div>
     </div>`;
   }
@@ -2613,7 +2617,7 @@ function renderClientDetail(){
         </div>
       </div>
     </div>
-    ${complaintLine(c)}`;
+    ${complaintLine(c)}${duoLine(c)}`;
 
   // Tabs — вид под профиль (скрыть нутри-вкладки для не-нутрициологов) + подсветка активной
   applyTabProfile();
@@ -2654,6 +2658,39 @@ function renderTabContent(){
   else if(currentTab==='breakdowns') el.innerHTML = renderBreakdowns(c);
   else if(currentTab==='messages') el.innerHTML = renderMessages(c);
   if(currentTab==='messages'){ requestAnimationFrame(()=>{ const b=document.getElementById('chatThreadBox'); if(b) b.scrollTop=b.scrollHeight; }); }
+}
+
+// ── «Вдвоём» (2026-10-15): пара видна, только если оба клиента дали согласие и оба у этого специалиста ──
+function _duoPeer(c){ return (c && c.duo_code) ? clients.find(x=>x.code===c.duo_code) : null; }
+function duoLine(c){
+  const p=_duoPeer(c); if(!p) return '';
+  const A='style="color:var(--gold-dk,#9a7a2e);cursor:pointer;text-decoration:underline;"';
+  return `<div style="margin-top:6px;font-size:var(--fs-cap);">👥 ${esc(t('duo_with').replace('{n}',p.name||''))} · <a ${A} onclick="selectClient('${p.id}')">${t('duo_card')}</a> · <a ${A} onclick="openDuoTogether('${c.id}','${p.id}')">${t('duo_together')}</a></div>`;
+}
+let _duoTab='anketa';
+async function openDuoTogether(aId,bId){
+  for(const id of [aId,bId]){ const x=clients.find(y=>y.id===id); if(x && x._light) await hydrateClient(id); }
+  const a=clients.find(x=>x.id===aId), b=clients.find(x=>x.id===bId); if(!a||!b) return;
+  let m=document.getElementById('duoModal');
+  if(!m){ m=document.createElement('div'); m.id='duoModal'; document.body.appendChild(m); }
+  const render=()=>{
+    const R={anketa:renderAnketa, overview:renderOverview, biometrics:renderBiometrics}[_duoTab]||renderAnketa;
+    const tabs=['anketa','overview','biometrics'].map(k=>`<button type="button" class="tab${_duoTab===k?' active':''}" onclick="_duoTab='${k}';openDuoTogether('${aId}','${bId}')">${t('tab_'+k)}</button>`).join('');
+    const col=(x)=>`<div class="duo-col" style="flex:1 1 420px;min-width:0;background:#fff;border:1px solid #e5e0d4;border-radius:12px;padding:14px;overflow:auto;"><div style="font-weight:600;margin-bottom:8px;">${esc(x.name||'')}</div>${R(x)}</div>`;
+    m.innerHTML=`<style>#duoModal .duo-col button,#duoModal .duo-col input,#duoModal .duo-col select,#duoModal .duo-col textarea,#duoModal .duo-col a{pointer-events:none;}</style>
+      <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:stretch;justify-content:center;padding:16px;box-sizing:border-box;" onclick="if(event.target===this)this.parentNode.remove()">
+        <div style="background:#f7f4ec;border-radius:14px;width:100%;max-width:1200px;display:flex;flex-direction:column;overflow:hidden;">
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #e5e0d4;flex-wrap:wrap;">
+            <div style="font-weight:600;flex:1;">👥 ${esc(a.name||'')} · ${esc(b.name||'')}</div>
+            <div class="tabs" style="display:flex;gap:4px;">${tabs}</div>
+            <button type="button" class="topbtn" onclick="document.getElementById('duoModal').remove()">✕</button>
+          </div>
+          <div style="font-size:var(--fs-cap);color:#888;padding:6px 14px;">${esc(t('duo_hint'))}</div>
+          <div style="display:flex;gap:12px;padding:0 14px 14px;overflow:auto;flex:1;flex-wrap:wrap;">${col(a)}${col(b)}</div>
+        </div>
+      </div>`;
+  };
+  render();
 }
 
 // ── ANKETA TAB ──────────────────────────────────────────

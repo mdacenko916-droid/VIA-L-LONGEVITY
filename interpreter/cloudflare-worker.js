@@ -9922,7 +9922,7 @@ async function handleCabinetShowcaseSave(request, env, corsHeaders){
 // Лёгкий список: колонки-шапка + только нужные списку/календарю куски data через
 // json_extract (НЕ тянем тяжёлые anketa/messages/protocol). Чинит лимит ответа D1.
 const CABINET_LIST_COLS = `code,name,email,tg,phone,lang,product,program,tier,duration_weeks,price,format,
-  start_date,end_date,status,gender,age,phase,specialist_id,created_at,updated_at,unread,
+  start_date,end_date,status,gender,age,phase,specialist_id,created_at,updated_at,unread,duo_code,
   json_extract(data,'$.phase_label')         AS phase_label,
   json_extract(data,'$.schedule')            AS j_schedule,
   json_array_length(data,'$.biometrics')     AS bio_n,
@@ -9948,6 +9948,7 @@ function cabinetRowToLight(r){
     price:r.price, format:r.format, start_date:r.start_date, end_date:r.end_date,
     status:r.status, gender:r.gender, age:r.age, phase:r.phase, phase_label:r.phase_label||'',
     specialist_id:r.specialist_id, created_at:r.created_at, updated_at:r.updated_at,
+    duo_code: r.duo_code || null,                          // «Вдвоём»: код карточки партнёра (оба согласились)
     schedule,                                              // календарю нужны все будущие точки
     biometrics: bioN > 0 ? [{ hrv: r.last_hrv }] : [],     // календарю нужен только последний hrv
     breakdowns: bdN > 0 ? new Array(bdN) : [],             // бейджу нужна только длина
@@ -9970,7 +9971,7 @@ function cabinetRowToClient(r){
     // code — сквозной первичный ключ (спека §2). Фронт идентифицирует карточку по id;
     // у клиентов из воронки (deliverAnketa*) id нет — подставляем code, иначе карточка не откроется.
     id: data.id || r.code,
-    code:r.code, name:r.name, email:r.email, tg:r.tg, phone:r.phone, lang:r.lang,
+    code:r.code, name:r.name, email:r.email, tg:r.tg, phone:r.phone, lang:r.lang, duo_code:r.duo_code||null,
     product:r.product, program:r.program, tier:r.tier, duration_weeks:r.duration_weeks,
     price:r.price, format:r.format, start_date:r.start_date, end_date:r.end_date,
     status:r.status, gender:r.gender, age:r.age, phase:r.phase,
@@ -10472,11 +10473,31 @@ const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 // созданная пара на устаревшей записи выглядела «распавшейся» (проверка 2026-10-15).
 function _duoId(x){ x = String(x || ''); return /^[A-Za-z0-9_-]{16,64}$/.test(x) ? x : ''; }
 function _duoName(x){ return String(x || '').replace(/[<>]/g, '').trim().slice(0, 30); }
-async function _duoGet(env, id){ return await env.DB.prepare('SELECT id,name,peer,lever,day,marks,upd FROM duo_m WHERE id=?').bind(id).first(); }
+async function _duoGet(env, id){ return await env.DB.prepare('SELECT id,name,peer,lever,day,marks,upd,spec_code,spec_share FROM duo_m WHERE id=?').bind(id).first(); }
 async function _duoEnsure(env, id, name){
   await env.DB.prepare("INSERT INTO duo_m (id,name,upd) VALUES (?,?,?) ON CONFLICT(id) DO UPDATE SET name=CASE WHEN excluded.name<>'' THEN excluded.name ELSE duo_m.name END, upd=excluded.upd")
     .bind(id, name || '', Date.now()).run();
   return await _duoGet(env, id);
+}
+// Связь пары в кабинете (2026-10-15): clients.duo_code ставим ОБОИМ, только если оба включили «Показать
+// специалисту» (spec_share), оба в паре друг с другом и обе карточки у ОДНОГО специалиста. Иначе — снимаем.
+async function _duoSyncSpec(env, id){
+  const me = await _duoGet(env, id); if (!me) return;
+  const p = me.peer ? await _duoGet(env, me.peer) : null;
+  const clear = async (code) => { if (code) await env.DB.prepare('UPDATE clients SET duo_code=NULL WHERE code=? AND duo_code IS NOT NULL').bind(code).run(); };
+  const ok = p && p.peer === id && me.spec_share && p.spec_share && me.spec_code && p.spec_code && me.spec_code !== p.spec_code;
+  if (ok) {
+    const a = await env.DB.prepare('SELECT specialist_id FROM clients WHERE code=?').bind(me.spec_code).first();
+    const b = await env.DB.prepare('SELECT specialist_id FROM clients WHERE code=?').bind(p.spec_code).first();
+    if (a && b && a.specialist_id && a.specialist_id === b.specialist_id) {
+      await env.DB.batch([
+        env.DB.prepare('UPDATE clients SET duo_code=? WHERE code=?').bind(p.spec_code, me.spec_code),
+        env.DB.prepare('UPDATE clients SET duo_code=? WHERE code=?').bind(me.spec_code, p.spec_code),
+      ]);
+      return;
+    }
+  }
+  await clear(me.spec_code); if (p) await clear(p.spec_code);
 }
 async function handleDuo(path, request, env, corsHeaders){
   if (!env.DB) return jsonResponse({ ok:false, error:'db_missing' }, corsHeaders, 500);
@@ -10510,20 +10531,30 @@ async function handleDuo(path, request, env, corsHeaders){
     const lever = String(b.lever || '').slice(0, 30) || null;
     const day = Math.max(0, Math.min(7, parseInt(b.day, 10) || 0));
     const marks = (Array.isArray(b.marks) ? b.marks : []).slice(0, 7).map(v => (v === 'yes' || v === 'no') ? v : '');
-    await env.DB.prepare('UPDATE duo_m SET lever=?, day=?, marks=?, upd=? WHERE id=?').bind(lever, day, JSON.stringify(marks), now, id).run();
-    return jsonResponse({ ok:true }, corsHeaders);
+    const specCode = String(b.spec_code || '').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 40) || null;
+    const specShare = (b.spec_share === true && specCode) ? 1 : 0;
+    await env.DB.prepare('UPDATE duo_m SET lever=?, day=?, marks=?, spec_code=?, spec_share=?, upd=? WHERE id=?')
+      .bind(lever, day, JSON.stringify(marks), specCode, specShare, now, id).run();
+    await _duoSyncSpec(env, id);
+    let peerShares = false;
+    if (me.peer) { const p = await _duoGet(env, me.peer); peerShares = !!(p && p.peer === id && p.spec_share); }
+    let linked = false;
+    if (specShare && specCode) { const r = await env.DB.prepare('SELECT duo_code FROM clients WHERE code=?').bind(specCode).first(); linked = !!(r && r.duo_code); }
+    return jsonResponse({ ok:true, peer_shares: peerShares, linked }, corsHeaders);
   }
   if (op === 'peer') {
     if (!me.peer) return jsonResponse({ ok:true, peer:null }, corsHeaders);
     const p = await _duoGet(env, me.peer);
     if (!p || p.peer !== id) {   // партнёр вышел из пары (D1 читает свежее — это не кэш)
       await env.DB.prepare('UPDATE duo_m SET peer=NULL, upd=? WHERE id=?').bind(now, id).run();
+      if (me.spec_code) await env.DB.prepare('UPDATE clients SET duo_code=NULL WHERE code=?').bind(me.spec_code).run();
       return jsonResponse({ ok:true, peer:null }, corsHeaders);
     }
     let marks = []; try { marks = JSON.parse(p.marks || '[]'); } catch (e) {}
-    return jsonResponse({ ok:true, peer:{ name:p.name || '', lever:p.lever || null, day:p.day || 0, marks, upd:p.upd || 0 } }, corsHeaders);
+    return jsonResponse({ ok:true, peer:{ name:p.name || '', lever:p.lever || null, day:p.day || 0, marks, upd:p.upd || 0, spec_share: !!p.spec_share } }, corsHeaders);
   }
   if (op === 'leave') {
+    if (me.spec_code) await env.DB.prepare('UPDATE clients SET duo_code=NULL WHERE code=? OR duo_code=?').bind(me.spec_code, me.spec_code).run();
     await env.DB.batch([
       env.DB.prepare('UPDATE duo_m SET peer=NULL, upd=? WHERE id=(SELECT peer FROM duo_m WHERE id=?) AND peer=?').bind(now, id, id),
       env.DB.prepare('UPDATE duo_m SET peer=NULL, upd=? WHERE id=?').bind(now, id),
