@@ -3831,7 +3831,12 @@ async function deleteClient(id){
   const c=clients.find(x=>x.id===id);
   try{ await api('/cabinet/delete',{ code:(c&&c.code)||id }); }catch(_){}
   clients=clients.filter(x=>x.id!==id);
-  if(selectedId===id){ selectedId=null; document.getElementById('placeholder').style.display='flex'; document.getElementById('clientDetail').style.display='none'; }
+  if(selectedId===id){
+    selectedId=null; document.getElementById('placeholder').style.display='flex'; document.getElementById('clientDetail').style.display='none';
+    // Телефон: карточка была открыта во весь экран (ph-detail), а «←» жил в её шапке — после удаления оставалось
+    // пустое поле без выхода (живой случай владельца 2026-10-15). Возвращаемся к списку, как по стрелке.
+    if(_isPhone()){ phBack(); return; }
+  }
   refreshList();
 }
 
