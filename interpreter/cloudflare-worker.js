@@ -3274,7 +3274,9 @@ async function _analyzeCore(body, env, ctx) {
   };
   const result = await _claudeStream(_reqBody, env,
     (st) => logRiskProbe(env, ctx, 'api-retry', tier, lang, 'analyze: status ' + st));
-  logUsage(env, ctx, 'analyze', ['he', 'ar', 'ja', 'ko'].includes(genLang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001', tier, lang, result, _src + (genLang !== lang ? ' gen:' + genLang : '') + (trial ? ' trial' : ''));
+  // all: — все темы, сработавшие по правилам (по приоритету; первые 4 вошли), kb: — что ушло в промпт (с темами жалобы).
+  const _kbS = a => (Array.isArray(a) ? a : []).map(x => String(x).replace(/^P-/, '')).join(',') || '-';
+  logUsage(env, ctx, 'analyze', ['he', 'ar', 'ja', 'ko'].includes(genLang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001', tier, lang, result, _src + (genLang !== lang ? ' gen:' + genLang : '') + (trial ? ' trial' : '') + ' all:' + _kbS(data && data._kbAll) + ' kb:' + _kbS(_kbIds));
   // Сбой API (кончился баланс ключа, rate limit, 5xx) — НЕ выдаём клиенту как разбор. Раньше сюда
   // подставлялось result.error.message, и человек читал в карточке «Разбор дня от VIA·L» английский
   // текст биллинга Anthropic; тот же текст уходил в кэш дня и в карточку кабинета специалисту.
@@ -6770,6 +6772,9 @@ function selectKBPatterns(data) {
     : ['P-M1','P-M2','P-M3','P-M5','P-M9','P-M8','P-M7','P-M11','P-M4','P-M6','P-M10'];
   const uniq = [...new Set(selected)];
   uniq.sort((a, b) => priority.indexOf(a) - priority.indexOf(b));
+  // Замер «сколько тем срабатывает и какие отсекает предел 4» (2026-10-15) → в ai_usage.note разбора.
+  // Нужен до решения о вторичной теме дня: из чего её брать и хватит ли тем на ротацию.
+  try { data._kbAll = uniq.slice(); } catch (e) {}
   const base = uniq.slice(0, 4);
   // Жалоба и «что нового» (см. _attachComplaintPatterns): до двух тем СВЕРХ четырёх по правилам.
   // Сверху, а не вместо: новый симптом не должен вытеснять то, что правила нашли по данным.
