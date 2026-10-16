@@ -49,6 +49,7 @@ cp "$IP/complaint-table.js"       "$WWW/"   # таблица «что беспо
 cp "$IP/evidence.js"              "$WWW/"   # «На чём основано» — список работ под разбором (2026-09-20)
 cp "$IP/evidence-registry.json"   "$WWW/"   # реестр источников (tools/build-evidence-registry.py)
 cp "$IP/my-specialist.html"       "$WWW/"
+cp "$IP/specialist.js"           "$WWW/"   # вкладка «Специалист»: панель в приложении + оболочка my-specialist.html (2026-10-16)
 cp "$IP/research-consent.html"    "$WWW/"
 # «Научная база» — собственная страница базового тарифа (НЕ клиническая methodology.html,
 # см. комментарий в её шапке). Без неё ссылка из «Наш подход» открывала пустоту:

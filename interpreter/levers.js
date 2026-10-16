@@ -381,10 +381,10 @@
         + (sub ? '<div style="font-size:var(--fs-cap);color:var(--t3);white-space:nowrap;">' + esc(sub) + '</div>' : '') + '</div>';
     };
     var cardsLink = st.cards ? '<div onclick="openBpChapter(\'cmp\')" style="margin-top:10px;font-size:var(--fs-body);color:rgb(' + ACC + ');cursor:pointer;">' + esc(T('cards')) + ' ›</div>' : '';
-    var askBtn = st.spec ? '<button type="button" class="as-usual" style="display:flex;width:100%;justify-content:center;" onclick="location.href=\'./my-specialist.html?chat=1\'">' + esc(T('ask')) + '</button>'
+    var askBtn = st.spec ? '<button type="button" class="as-usual" style="display:flex;width:100%;justify-content:center;" onclick="if(window.vialGoSpec)vialGoSpec({chat:1});else location.href=\'./my-specialist.html?chat=1\'">' + esc(T('ask')) + '</button>'
                // Своего специалиста нет, а блок сам говорит «дальше — со специалистом»: предлагаем разовый разбор
                // (docs/SPECIALIST-REVIEW-PLAN.md). Кнопка рисуется только в состоянии «к специалисту» — askBtn там и стоит.
-               : st.rv ? '<button type="button" class="as-usual" style="display:flex;width:100%;justify-content:center;" onclick="location.href=\'./my-specialist.html?review=1\'">' + esc(T('rv')) + '</button>' : '';
+               : st.rv ? '<button type="button" class="as-usual" style="display:flex;width:100%;justify-content:center;" onclick="if(window.vialGoSpec)vialGoSpec({review:1});else location.href=\'./my-specialist.html?review=1\'">' + esc(T('rv')) + '</button>' : '';
     var h = '';
     if (st.mode === 'base' || st.mode === 'score') {
       h = head(T('title')) + '<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.5;margin-top:6px;">' + esc(T(st.mode === 'base' ? 'baseQ' : 'weekQ')) + '</div>'

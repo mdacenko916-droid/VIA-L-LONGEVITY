@@ -22,8 +22,19 @@
       } catch (e) {}
     });
     // Нажали на пуш — сразу в переписку с наставником.
+    // В приложении переписка — вкладка-панель (vialGoSpec, 2026-10-16); ждём конца загрузки, иначе стартовый
+    // маршрут «Сегодня» закроет её. На отдельной странице — открываем переписку на месте (смена #chat не перезагружает).
     p.addListener('pushNotificationActionPerformed', function () {
-      try { if (location.pathname.indexOf('my-specialist') < 0 || location.hash !== '#chat') location.href = 'my-specialist.html#chat'; } catch (e) {}
+      try {
+        if (window.vialGoSpec) {
+          var t0 = Date.now();
+          (function go() {
+            if (document.body && document.body.classList.contains('booting') && Date.now() - t0 < 8000) { setTimeout(go, 150); return; }
+            window.vialGoSpec({ chat: 1 });
+          })();
+        } else if (window.vialSp && location.pathname.indexOf('my-specialist') >= 0) window.vialSp.open({ chat: 1 });
+        else if (location.pathname.indexOf('my-specialist') < 0 || location.hash !== '#chat') location.href = 'my-specialist.html#chat';
+      } catch (e) {}
     });
   }
   // ask=true — можно показать системный запрос разрешения. ask=false — только тихо обновить токен.

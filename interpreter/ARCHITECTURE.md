@@ -26,7 +26,7 @@
 > файлов `interpreter-vio.html`, `interpreter-pro-expert.html`, `interpreter-elite.html` больше нет.
 > Фактически в `interpreter/`: `interpreter-via-l.html` (VIA-L, App Store / Google Play, данные на устройстве,
 > RevenueCat), `interpreter-via-l-expert.html` (VIA-L EXPERT, PWA, вход по коду, синк `/expert/state`),
-> `index.html` (лендинг ведения EXPERT, не витрина устройств), `my-specialist.html` (витрина наставников),
+> `index.html` (лендинг ведения EXPERT, не витрина устройств), `specialist.js` (вкладка «Специалист»: панель `#specPanel` в приложении, теневой DOM, ×12; с 2026-10-16) + `my-specialist.html` (её оболочка для веба),
 > `science.html` (научная база VIA-L), `methodology.html` (EXPERT), `research-consent.html`,
 > `code-generator.html`, мосты `app-mode.js`/`healthkit-bridge.js`/`healthconnect-bridge.js`/`iap-bridge.js`/
 > `notify-bridge.js`, `sw-expert.js`, SQL-миграции D1 (`cabinet-*.sql`, `ai-usage-`, `research-`, `complaints-`,

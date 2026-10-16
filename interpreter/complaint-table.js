@@ -167,7 +167,7 @@
         + '</div>';
     });
     if (p.more) h += '<div onclick="if(typeof closeCircModal===\'function\')closeCircModal();if(typeof _iapOpenFromProfile===\'function\')_iapOpenFromProfile()" style="font-size:var(--fs-body);color:var(--gold-lt);cursor:pointer;padding:4px 2px 12px;">✦ ' + esc(tx(UI.more, lang)) + ' ›</div>';
-    if (opts.spec) h += '<button type="button" class="as-usual" style="display:flex;width:100%;justify-content:center;margin-top:2px;" onclick="location.href=\'./my-specialist.html?chat=1\'"><i class="ph ph-user" style="color:var(--gold-lt);"></i>' + esc(tx(UI.ask, lang)) + '</button>';
+    if (opts.spec) h += '<button type="button" class="as-usual" style="display:flex;width:100%;justify-content:center;margin-top:2px;" onclick="if(window.vialGoSpec)vialGoSpec({chat:1});else location.href=\'./my-specialist.html?chat=1\'"><i class="ph ph-user" style="color:var(--gold-lt);"></i>' + esc(tx(UI.ask, lang)) + '</button>';
     return h + '</div>';
   };
 })();

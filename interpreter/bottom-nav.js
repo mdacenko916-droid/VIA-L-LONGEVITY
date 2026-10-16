@@ -9,7 +9,7 @@
      <script src="bottom-nav.js"></script>
      <script>vialBottomNav.mount({ active:'guide', home:'./interpreter-via-l.html', lang:lang });</script>
    home не задан → это сама главная: пункты — кнопки navTo() с id nav-<вкладка> (на них ссылается код
-   главной). home задан → ссылки home?tab=<вкладка>; главная открывает вкладку по ?tab (её обработчик
+   главной; «Специалист» с 2026-10-16 тоже панель главной, specialist.js). home задан → ссылки home?tab=<вкладка>; главная открывает вкладку по ?tab (её обработчик
    «Возврат со страницы…»). Строку home пишем в самом html — app/sync-web.sh заменяет в нём
    interpreter-via-l.html → index.html. Язык сменился → страница зовёт vialBottomNav.setLang(l).
    set:'expert' — набор EXPERT (Наш подход, переписка) для research-consent.html?app=expert;
@@ -46,8 +46,8 @@
         el.type = 'button';
         el.id = 'nav-' + k;
         el.addEventListener('click', function () {
-          if (k === 'guide') location.href = './my-specialist.html';
-          else if (typeof window.navTo === 'function') window.navTo(k);
+          if (typeof window.navTo === 'function') window.navTo(k);   // «Специалист» — тоже вкладка-панель (2026-10-16)
+          else if (k === 'guide') location.href = './my-specialist.html';
         });
       } else {                               // другая страница: ссылки на главную
         el = document.createElement('a');

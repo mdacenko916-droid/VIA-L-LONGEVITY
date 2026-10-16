@@ -4277,6 +4277,20 @@ body.card-open #cardPanel, body.approach-open #approachPanel{
   </div>
 </div>
 
+<!-- «СПЕЦИАЛИСТ» — вкладка-панель (2026-10-16). Содержимое рисует specialist.js в теневом DOM #specHost.
+     Раньше вкладка была отдельной страницей my-specialist.html: каждый переход туда/обратно заново грузил
+     приложение, и экран мигал. Панель — поверх ленты и шапки, под нижней строкой (та поднимается над ней). -->
+<style>
+#specPanel{display:none;position:fixed;inset:0;z-index:650;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;scrollbar-width:none;background:linear-gradient(180deg,#242c39 0%,#1b2029 60%,#181e28 100%);}
+#specPanel::-webkit-scrollbar{display:none;}
+body.spec-open #specPanel{display:block;}
+body.spec-open #bottombar{position:relative;z-index:700;}
+body.spec-open #vlAdvBtn,body.spec-open #vlAdvPanel{display:none!important;}   /* на отдельной странице советника не было */
+body.chat-open #specPanel{overflow:hidden;}   /* переписка на весь экран — прокручивается только лента */
+</style>
+<div id="specPanel"><div id="specHost"></div></div>
+
 <!-- BOTTOMBAR -->
 <div id="flow-footer"><div id="flow-progress" aria-live="polite"></div><button class="btn btn-primary" id="flow-btn" type="button"></button></div>
 <div id="bottombar">
@@ -5078,6 +5092,7 @@ function setLang(l){
   lang=l;
   localStorage.setItem('vial_lang', l);
   try{ if(window.vialBottomNav) vialBottomNav.setLang(l); }catch(e){}   // нижняя строка — bottom-nav.js
+  try{ if(window.vialSp) vialSp.setLang(l); }catch(e){}   // вкладка «Специалист» (specialist.js)
   // lang на <html> нужен переносам: hyphens:auto без него применяет английские правила
   // к русскому/немецкому и рвёт слова не по слогам. 2026-09-06.
   try{ document.documentElement.lang = l; }catch(e){}
@@ -5549,7 +5564,10 @@ function _hideFlowSurfaces(){
     if(typeof _hideFlowFooter==='function')_hideFlowFooter();
   }catch(e){}
 }
-function navTo(tab){
+function navTo(tab, want){
+  // «Специалист» — панель #specPanel (specialist.js, 2026-10-16). Не загрузился файл — по-старому, отдельной страницей.
+  if(tab==='guide' && !(window._specShow && window.vialSp)){ location.href='./my-specialist.html'+(want&&want.chat?'?chat=1':want&&want.review?'?review=1':''); return; }
+  if(tab!=='guide' && window._specHide) window._specHide();
   window.__editMode=false;   // любой переход по нижней навигации выходит из режима правки профиля (как VIO)
   _hideFlowSurfaces();       // уходим с ленты начисто — ниже нужный экран построится с нуля
   var __sa=document.getElementById('scroll-area'); if(__sa)__sa.scrollTop=0;   // новый экран открывается сверху
@@ -5585,6 +5603,7 @@ function navTo(tab){
     }
   }
   if(tab==='home'){ if(typeof startFunnel==='function')startFunnel(); else goTo(0); }   // «домой» = вся стопка (лого топбара)
+  if(tab==='guide') window._specShow(want);
 }
 // ── Мой профиль: личный экран клиента (профиль + данные трекера + прошлые разборы), всё из localStorage ──
 
@@ -11554,7 +11573,7 @@ function _renderDoctorAlert(data, docFlag, reasons){
       var _hasSpec=false; try{ var _sl=JSON.parse(localStorage.getItem('vial_spec_link')||'null'); _hasSpec=!!(_sl&&_sl.code&&!_sl.closed); }catch(e){}
       if(_hasSpec){
         var _wr=L({ru:'Написать специалисту',uk:'Написати спеціалісту',en:'Message your specialist',es:'Escribir al especialista',de:'Dem Spezialisten schreiben',pt:'Escrever ao especialista',fr:'Écrire au spécialiste',pl:'Napisz do specjalisty',it:'Scrivi allo specialista',he:'לכתוב למומחה',ja:'専門家に書く',ko:'전문가에게 쓰기'});
-        _advBtn+=' <button type="button" onclick="location.href=\'./my-specialist.html?chat=1\'" style="margin-top:10px;padding:8px 14px;border-radius:11px;cursor:pointer;font-family:inherit;font-size:var(--fs-cap);font-weight:600;color:var(--gold-lt);background:rgba(226,185,90,.12);border:1px solid rgba(226,185,90,.4);">✉️ '+_esc(_wr)+'</button>';
+        _advBtn+=' <button type="button" onclick="vialGoSpec({chat:1})" style="margin-top:10px;padding:8px 14px;border-radius:11px;cursor:pointer;font-family:inherit;font-size:var(--fs-cap);font-weight:600;color:var(--gold-lt);background:rgba(226,185,90,.12);border:1px solid rgba(226,185,90,.4);">✉️ '+_esc(_wr)+'</button>';
       }
       // Единственная нейтральная оговорка — внизу и мелким, а не заголовком блока: не пугает, но честна.
       var _foot=L({ru:'VIA·L помогает наблюдать за самочувствием и не заменяет врача. Если что-то беспокоит — обратитесь к врачу.',uk:'VIA·L допомагає спостерігати за самопочуттям і не замінює лікаря. Якщо щось турбує — зверніться до лікаря.',en:'VIA·L helps you observe how you feel and does not replace a doctor. If something worries you, see a doctor.',es:'VIA·L te ayuda a observar cómo te sientes y no sustituye al médico. Si algo te preocupa, acude a un médico.',de:'VIA·L hilft Ihnen, Ihr Befinden zu beobachten, und ersetzt keinen Arzt. Wenn Sie etwas beunruhigt, wenden Sie sich an einen Arzt.',pt:'O VIA·L ajuda a observar como você se sente e não substitui um médico. Se algo preocupar, procure um médico.',fr:'VIA·L vous aide à observer votre ressenti et ne remplace pas un médecin. Si quelque chose vous inquiète, consultez un médecin.',pl:'VIA·L pomaga obserwować samopoczucie i nie zastępuje lekarza. Jeśli coś Cię niepokoi — zgłoś się do lekarza.',it:'VIA·L ti aiuta a osservare come stai e non sostituisce il medico. Se qualcosa ti preoccupa, rivolgiti a un medico.',he:'VIA·L עוזרת לעקוב אחרי איך אתם מרגישים ואינה מחליפה רופא. אם משהו מדאיג — פנו לרופא.',ja:'VIA·L は体調を観察する助けであり、医師の代わりではありません。気になることがあれば医師にご相談ください。',ko:'VIA·L은 컨디션을 관찰하도록 돕는 도구이며 의사를 대신하지 않습니다. 걱정되는 점이 있으면 의사를 만나세요.'});
@@ -12812,7 +12831,7 @@ function applyUltrahumanManual(){
 
 // ══ AI ANALYSIS ═══════════════════════════════════════════
 const AI_WORKER = 'https://interpreter.viaelcom.workers.dev';
-// Связка со специалистом («Мой наставник» → my-specialist.html пишет vial_spec_link).
+// Связка со специалистом (вкладка «Специалист» → specialist.js пишет vial_spec_link).
 // Если человек подключён и обмен включён — передаём код карточки: воркер по нему кладёт
 // проход в карточку кабинета (cabinetIngestIpAnalysis). Без связки и при выключенном
 // обмене код НЕ уходит вовсе, и разбор остаётся только на устройстве.
@@ -13160,7 +13179,7 @@ window.addEventListener('load', function(){
     try{ localStorage.setItem('vial_review_on', on?'1':'0'); }catch(e){}
   })();
 });
-function _reviewGo(){ try{ location.href='./my-specialist.html?review=1'; }catch(e){} }
+function _reviewGo(){ vialGoSpec({review:1}); }
 // Поводы предложить разбор под дневным результатом: сегодня сработал блок «На что обратить
 // внимание» или у человека внесены анализы. В сам блок предупреждения кнопку НЕ ставим — правило
 // ниже: вывод, похожий на медицинский, не должен заканчиваться продажей услуги.
@@ -13183,7 +13202,7 @@ function _humanCtaHtml(){
        + '<div style="font-size:var(--fs-body);color:#fff;font-weight:500;">'+(T1[lang]||T1.en)+'</div>'
        + '<div style="font-size:var(--fs-cap);color:var(--t2);margin-top:3px;">'+(T2[lang]||T2.en)+' →</div></div>';
 }
-function _humanCtaGo(){ try{ location.href='./my-specialist.html'; }catch(e){} }
+function _humanCtaGo(){ vialGoSpec(); }
 // ── «Также вы отметили…» под разбором ─────────────────────────────────────────
 // Фиксированная строка от приложения, а не просьба к модели: живой прогон 2026-10-01 показал, что
 // правило «назови остальные жалобы и отошли к памятке» модель держит наполовину — часть пунктов
@@ -14030,7 +14049,7 @@ function _bpDisc(){
 }
 function openBpChapter(id){
   if(id==='intake'){ if(typeof _ikOpen==='function')_ikOpen(); return; }
-  if(id==='spec'){ location.href='./my-specialist.html?chat=1'; return; }   // переписка живёт на странице наставника
+  if(id==='spec'){ vialGoSpec({chat:1}); return; }   // переписка — во вкладке «Специалист»
   if(id==='cmp'){ try{ var _co=_cmpChapter(); if(_co) openSheet(_co.icon, _co.title, window.vialCmpTable(_cmpOpts(window._bpData||{}))); }catch(e){} return; }
   if(id==='analysis'){   // полный текст сегодняшнего ИИ-разбора (кэш дня), не secs-структура
     try{
@@ -14347,6 +14366,7 @@ function closeCircModal(){
   try{
     var _q=new URLSearchParams(location.search);
     var tab=_q.get('tab'), _plan=_q.get('plan');   // plan читаем ДО очистки адреса
+    var _want={chat:_q.get('chat')==='1', review:_q.get('review')==='1'};   // для tab=guide
     if(!tab) return;
     window._tabPending=true;   // без этого сначала мелькал «Сегодня», и лишь потом открывалась вкладка
     history.replaceState(null,'',location.origin+location.pathname);   // чистим адрес
@@ -14358,6 +14378,7 @@ function closeCircModal(){
     var _goTab=function(){
       if(tab==='approach'){ if(typeof openApproach==='function') openApproach(); }
       else if(tab==='card'||tab==='today'||tab==='path'){ if(typeof navTo==='function') navTo(tab); }
+      else if(tab==='guide'){ if(typeof navTo==='function') navTo('guide', _want); }
       // Приход из уведомления: открыть «Памятку дня» сразу на утренней части.
       try{ if(_plan==='morning' && typeof openDayPlanPanel==='function') setTimeout(openDayPlanPanel,400); }catch(e){}
     };
@@ -14568,7 +14589,7 @@ document.addEventListener('visibilitychange',function(){
   function lng(){ var l; try{ l=localStorage.getItem('vial_lang'); }catch(e){} return I18N[l]?l:'en'; }
   function tr(){ return I18N[lng()]; }
   // Привязан ли пациент к специалисту (см. my-specialist.html) → human-led режим советника.
-  // ⚠️ Ключ — vial_spec_link (его пишет my-specialist.html), а НЕ vialp_…: массовое переименование ключей
+  // ⚠️ Ключ — vial_spec_link (его пишет specialist.js), а НЕ vialp_…: массовое переименование ключей
   // 2026-07-14 («разделение localStorage тарифов») задело и эту строку, и два с половиной месяца советник
   // у подключённых к наставнику клиентов работал как у всех — сам отвечал по здоровью. Починено 2026-10-01.
   // Обмен данными выключен (sharing===false) → специалист проходы не видит, отправлять к нему с вопросом
@@ -14696,6 +14717,40 @@ document.addEventListener('visibilitychange',function(){
 <script src="healthconnect-bridge.js"></script>
 <!-- IAP-мост (подписка, RevenueCat: App Store + Google Play). Цена приходит из стора, в текст не зашита. Активен только внутри приложения; на вебе no-op. app/README.md -->
 <script src="iap-bridge.js"></script>
+<script src="specialist.js"></script><!-- вкладка «Специалист» (2026-10-16) — после iap-bridge: разбор со специалистом -->
+<script>
+// Вкладка «Специалист» панелью (#specPanel): navTo('guide', want) → _specShow, уход на другую вкладку → _specHide.
+(function(){
+  var panel=document.getElementById('specPanel'), host=document.getElementById('specHost'), mounted=false;
+  if(!window.vialSp||!panel||!host) return;   // нет specialist.js — navTo уведёт на отдельную страницу, как раньше
+  function lang(){ try{ return localStorage.getItem('vial_lang')||'en'; }catch(e){ return 'en'; } }
+  function ensure(want){
+    if(!mounted) mounted=vialSp.mount(host,{ scroller:panel, lang:lang(), want:want||{}, onHome:function(){ navTo('today'); } });
+    return mounted;
+  }
+  window._specShow=function(want){
+    var first=!mounted;
+    if(!ensure(want)){ location.href='./my-specialist.html'; return; }
+    var cm=document.getElementById('circModal');   // «Спросить специалиста» из листа (таблица жалоб, главы памятки) — лист закрываем
+    if(cm && cm.classList.contains('open') && typeof closeCircModal==='function') closeCircModal();
+    document.body.classList.add('spec-open');
+    if(first) panel.scrollTop=0; else vialSp.open(want||{});   // первый показ: want уже учёл mount()
+  };
+  window._specHide=function(){
+    if(!document.body.classList.contains('spec-open')) return;
+    document.body.classList.remove('spec-open');
+    vialSp.hide();
+  };
+  // Заранее, пока человек на «Сегодня»: первый заход на вкладку — сразу с витриной, без проявления.
+  function pre(){ setTimeout(function(){ try{ ensure(); }catch(e){} }, 2500); }
+  if(document.readyState==='complete') pre(); else window.addEventListener('load', pre);
+})();
+// Все кнопки «Написать специалисту», «Разбор со специалистом», глава «Специалист ответил», пуш.
+window.vialGoSpec=function(want){
+  if(typeof navTo==='function') navTo('guide', want||{});
+  else location.href='./my-specialist.html'+(want&&want.chat?'?chat=1':want&&want.review?'?review=1':'');
+};
+</script>
 <script src="device-id.js"></script>
 <script src="notify-bridge.js"></script>
 <script src="push-bridge.js"></script>
