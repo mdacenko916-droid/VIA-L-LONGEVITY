@@ -2896,9 +2896,54 @@ function _wrongLang(text, lang) {
 const _GEN_VIA_RU = ['uk'];
 function _genLang(lang) { return _GEN_VIA_RU.includes(String(lang || '')) ? 'ru' : lang; }
 
+// ВКРАПЛЕНИЯ ЧУЖОГО ЯЗЫКА. _wrongLang ловит только текст, целиком ушедший в другой язык (≥25%).
+// Отдельные слова проходили мимо — живой польский проход 2026-10-16: «perimenopauzы» (русская ы
+// внутри польского слова), «resting heart rate», чешское «směrem k 55–56 uderz./min.».
+// Признаки детерминированные: слово, где смешаны латиница и кириллица; чешские буквы ě ř ů ť ď ň
+// (их нет ни в одном из 12 языков приложения); английские служебные слова в неанглийском тексте.
+const _MIX_WORD = /[a-zA-ZÀ-ſ][Ѐ-ӿ]|[Ѐ-ӿ][a-zA-ZÀ-ſ]/;
+const _CZ_ONLY = /[ěřůťďňĚŘŮŤĎŇ]/;
+const _EN_LEAK = /\b(the|your|which|resting heart rate|heart rate)\b/i;
+function _langMix(text, lang) {
+  const t = String(text || '');
+  if (_MIX_WORD.test(t)) return 'mixed-script word';
+  if (_CZ_ONLY.test(t)) return 'czech letters';
+  if (lang !== 'en' && !_CYR_OK.includes(lang) && _EN_LEAK.test(t)) return 'english words';
+  return '';
+}
+// Запасной ремонт без ИИ: в смешанном слове буквы чужой письменности → двойники нужной
+// (perimenopauzы → perimenopauzy). Только внутри смешанных слов, остальной текст не трогаем.
+const _CYR2LAT = { 'а':'a','е':'e','о':'o','р':'p','с':'c','х':'x','у':'y','ы':'y','і':'i','к':'k','м':'m','т':'t','н':'n','в':'w','и':'i','А':'A','Е':'E','О':'O','Р':'P','С':'C','Х':'X','К':'K','М':'M','Т':'T','Н':'H','В':'B' };
+const _LAT2CYR = { 'a':'а','e':'е','o':'о','p':'р','c':'с','x':'х','y':'у','i':'і','k':'к','m':'м','t':'т','A':'А','E':'Е','O':'О','P':'Р','C':'С','X':'Х','K':'К','M':'М','T':'Т','H':'Н','B':'В' };
+function _fixMixedWords(text, lang) {
+  const toCyr = _CYR_OK.includes(lang);
+  return String(text).replace(/[A-Za-zÀ-ſЀ-ӿ]+/g, w => {
+    if (!_MIX_WORD.test(w)) return w;
+    return w.replace(toCyr ? /[A-Za-z]/g : /[Ѐ-ӿ]/g, ch => (toCyr ? _LAT2CYR : _CYR2LAT)[ch] || ch);
+  });
+}
+// Разметка, которую экран не рисует: линия «---» и длинный *курсив* (недельный разбор красит курсивом
+// только фразы до 60 знаков — оговорка «*Wszystko, co tu czytasz…*» шла со звёздочками, 2026-10-16).
+function _mdTidy(text) {
+  return String(text)
+    .replace(/^[ \t]*([-*_])(?:[ \t]*\1){2,}[ \t]*$/gm, '')          // ---, ***, ___ отдельной строкой
+    .replace(/(^|[^*])\*(?![\s*])([^*\n]{61,}?)\*(?!\*)/g, '$1$2')     // длинный *курсив* → обычный текст
+    .replace(/\n{3,}/g, '\n\n');
+}
+
 async function _enforceLang(text, lang, env, ctx, structured) {
+  try { text = _mdTidy(text); } catch (e) { /* чистка разметки не должна ронять ответ */ }
   try {
-    if (!_wrongLang(text, lang)) return text;                // язык в порядке — ничего не делаем
+    if (!_wrongLang(text, lang)) {
+      const _mix = _langMix(text, lang);
+      if (!_mix) return text;                                // язык в порядке — ничего не делаем
+      // Вкрапления правим тем же переводчиком «в свой же язык»: чужие слова он переводит, своё не трогает.
+      logRiskProbe(env, ctx, 'lang-mix', '', lang, _mix);
+      let out = await translateReply(env, text, lang, 8000).catch(() => '');
+      if (out && structured) { try { out = _structRepair(out); } catch (e) {} }
+      if (out && !_wrongLang(out, lang) && !_MIX_WORD.test(out) && out.length > text.length * 0.6) return out;
+      return _fixMixedWords(text, lang);                     // переводчик не помог — хотя бы смешанные слова
+    }
     logRiskProbe(env, ctx, 'lang-mismatch', '', lang, 'analyze: cyrillic in ' + lang);
     // Чиним переводом, а не перегенерацией: тот же движок, что переводит ответы специалиста,
     // дешевле полного прохода и сохраняет разметку [[S]]/[[D]].
