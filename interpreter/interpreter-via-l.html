@@ -9179,6 +9179,10 @@ function _blockComplete(step){
     if(ig.id==='cmpBlock' && ig.querySelector('#cmpDelta') && !window._cmpDeltaToday) return false;
     // «События недели» намеренно НЕ требуем: заметка о контексте опциональна.
   }
+  // Приливы (step2) живут в #hf-section ВНЕ .input-group — цикл выше их не видел, блок считался
+  // отвеченным, и авто-переход после «Ничего нового» перепрыгивал его сразу на «Сигналы тела» (2026-10-16).
+  var _hf=step.querySelector('#hf-section');
+  if(_hf && _hf.offsetParent!==null && !_hf.querySelector('input[name="hf_intensity"]:checked')) return false;
   return true;
 }
 // ── Перенесённые ответы: видимая пометка + подтверждение одним касанием ────────────────
