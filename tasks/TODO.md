@@ -80,7 +80,10 @@
 > приложения; примечания ×6 вкл. fr/pl) выложена в «v4» → проверка Google. Скрины Play fr-FR/pl-PL — по 8 новых.
 > ✅ **2026-10-16 19:20 Google одобрил v24** (отправка 44). **v25** (`main` на `b63f97d`: «Специалист» — вкладка-панель
 > без перезагрузки и мерцания, `specialist.js`) выложена в «v4» → проверка Google. Подпись и разрешения = v24,
-> versionCode 25, mapping — `app/store/android/mapping/mapping-v25.txt`. production — 18.
+> versionCode 25, mapping — `app/store/android/mapping/mapping-v25.txt`.
+> ✅ **2026-10-16 v25 → production** (владелец сам, клиентов на Android ещё нет — только тестировщики) → проверка
+> Google. Примечания — `app/store/android/release-notes-production.json` (всё новое с v19); ушли со старыми
+> названиями («Движение», «My sport», «Juntos»), файл исправлен — правильные уйдут со следующим выпуском.
 
 **Главное правило:** экраны и логика у iOS и Android **общие** — `interpreter/` → `app/sync-web.sh` → `app/www`.
 Android-сборка возьмёт **всё, что лежит в `main` на момент сборки** (перестройка «Сегодня», тренировки, проигрыватель,
