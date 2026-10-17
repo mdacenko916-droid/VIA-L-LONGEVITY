@@ -74,7 +74,8 @@
     css(); refresh();
   }
 
-  // Круг с книгой и разрыв линии. Линия рисуется ::before с вырезом посередине (средняя из пяти кнопок
+  // Круг с книгой и разрыв линии. Линия рисуется ::before с вырезом посередине (средняя из пяти кнопок; вырез уже круга —
+  // линия доходит до самого круга и прячется под ним, владелец 2026-10-17
   // стоит ровно по центру), а не кольцом вокруг круга: кольцо цвета строки давало ореол на фоне страницы.
   function css() {
     if (document.getElementById('bnLibCss')) return;
@@ -82,8 +83,8 @@
     st.textContent = ''
       + '.bottom-nav.has-lib{border-top-color:transparent!important;}'
       + '.bottom-nav.has-lib::before{content:"";position:absolute;left:0;right:0;top:-1.5px;height:1.5px;background:rgba(238,199,122,.62);pointer-events:none;'
-      +   '-webkit-mask-image:linear-gradient(to right,#000 calc(50% - 35px),transparent calc(50% - 35px),transparent calc(50% + 35px),#000 calc(50% + 35px));'
-      +   'mask-image:linear-gradient(to right,#000 calc(50% - 35px),transparent calc(50% - 35px),transparent calc(50% + 35px),#000 calc(50% + 35px));}'
+      +   '-webkit-mask-image:linear-gradient(to right,#000 calc(50% - 20px),transparent calc(50% - 20px),transparent calc(50% + 20px),#000 calc(50% + 20px));'
+      +   'mask-image:linear-gradient(to right,#000 calc(50% - 20px),transparent calc(50% - 20px),transparent calc(50% + 20px),#000 calc(50% + 20px));}'
       + '.bn-lib{position:relative;}'
       + '.bn-lib-c{width:54px;height:54px;border-radius:50%;margin:-33px auto 0;display:flex;align-items:center;justify-content:center;'
       +   'background:linear-gradient(160deg,#F0CF86,#C9973F);border:1.5px solid rgba(238,199,122,.9);box-shadow:0 5px 16px rgba(0,0,0,.5);}'
