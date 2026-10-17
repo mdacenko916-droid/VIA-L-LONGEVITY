@@ -60,9 +60,9 @@
       + (a.min ? '<span class="vc-sub2">' + esc(a.min) + '</span>' : '') + '</span><span class="vc-chev">›</span></button>';
   }
 
-  // Группа в Telegram — ссылка на язык (ru и uk — отдельные группы, docs/ARTICLE-LIBRARY-PLAN.md). Пусто = группы
+  // Группа в Telegram — ссылка на язык: четыре группы ru, uk, en, es (владелец 2026-10-17, docs/ARTICLE-LIBRARY-PLAN.md). Пусто = группы
   // ещё нет: книга внизу открывает статьи сразу, без выбора. Ссылку вписывает владелец, когда группа откроется.
-  var TG = { ru: '', uk: '' };
+  var TG = { ru: '', uk: '', en: '', es: '' };
 
   function sheetClose() { var o = document.getElementById('vialLibSheet'); if (o) o.remove(); document.body.classList.remove('lib-sheet'); }
   function shRow(tag, attrs, ic, t, sub) {
