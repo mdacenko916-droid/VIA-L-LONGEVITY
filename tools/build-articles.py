@@ -29,6 +29,18 @@ SECTIONS = [
 ]
 ALL_KEYS = [k for _, ks in SECTIONS for k in ks]
 
+# Языки, которые уходят в приложение: только вычитанные специалистом. Переведено, но не вычитано — лежит в
+# docs/articles/<язык>/ и в сборку не идёт. Проверить невычитанный язык локально: ARTICLES_LANGS=ru,uk python3 …
+PUBLISH = {'ru'}   # ru — вычитано 2026-10-17; uk — переведено 2026-10-17, ждёт вычитки
+if os.environ.get('ARTICLES_LANGS'):
+    PUBLISH = set(os.environ['ARTICLES_LANGS'].split(','))
+
+# Строка-метка «На чём основано» в тексте статьи — на языке статьи (заменяется блоком работ реестра).
+# Коды тем берутся из служебного комментария; в переводах комментарий оставляем русским (он внутренний).
+EV_MARKS = ('**На чём основано**', '**На чому ґрунтується**', '**What this is based on**', '**En qué se basa**',
+            '**Worauf das beruht**', '**Em que se baseia**', '**Sur quoi cela repose**', '**Na czym to się opiera**',
+            '**Su cosa si basa**', '**על מה זה מבוסס**', '**この記事の根拠**', '**이 글의 근거**')
+
 
 def inline(s):
     s = html.escape(s, quote=False)
@@ -64,7 +76,7 @@ def convert(path):
             minutes = t.strip().strip('*'); continue
         if t.strip() == '---':
             close_ul(); continue
-        if t.startswith('**На чём основано**'):
+        if t.startswith(EV_MARKS):
             close_ul(); out.append('<!--EV-->'); continue
         if t.startswith('## '):
             close_ul(); out.append('<h3 class="art-h">' + inline(t[3:].strip()) + '</h3>'); continue
@@ -87,6 +99,8 @@ def main():
         d = os.path.join(SRC, lang)
         if not os.path.isdir(d):
             continue
+        if lang not in PUBLISH:
+            skipped[lang] = 'не вычитано'; continue
         have = {f[:-3] for f in os.listdir(d) if f.endswith('.md')}
         missing = [k for k in ALL_KEYS if k not in have]
         if missing:
