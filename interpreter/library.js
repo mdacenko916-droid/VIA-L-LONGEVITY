@@ -12,6 +12,7 @@
     start: {ru:'С чего начать',uk:'З чого почати',en:'Where to start',es:'Por dónde empezar',de:'Der Einstieg',pt:'Por onde começar',fr:'Pour commencer',pl:'Od czego zacząć',it:'Da dove iniziare',he:'מאיפה מתחילים',ja:'はじめに',ko:'시작하기'},
     cmp:   {ru:'Что беспокоит',uk:'Що турбує',en:'What bothers you',es:'Qué te preocupa',de:'Was dich belastet',pt:'O que te incomoda',fr:'Ce qui vous gêne',pl:'Co Ci dokucza',it:'Cosa ti disturba',he:'מה מטריד',ja:'気になること',ko:'신경 쓰이는 것'},
     step:  {ru:'Что делать',uk:'Що робити',en:'What to do',es:'Qué hacer',de:'Was tun',pt:'O que fazer',fr:'Que faire',pl:'Co robić',it:'Cosa fare',he:'מה עושים',ja:'できること',ko:'할 수 있는 것'},
+    more:{ru:'Подробнее в статье',uk:'Докладніше в статті',en:'Read the article',es:'Leer el artículo',de:'Zum Artikel',pt:'Ler o artigo',fr:'Lire l’article',pl:'Przeczytaj artykuł',it:'Leggi l’articolo',he:'לקריאת המאמר',ja:'記事を読む',ko:'글 읽기'},
     sheetArt:{ru:'Статьи',uk:'Статті',en:'Articles',es:'Artículos',de:'Artikel',pt:'Artigos',fr:'Articles',pl:'Artykuły',it:'Articoli',he:'מאמרים',ja:'記事',ko:'아티클'},
     sheetArtSub:{ru:'Перименопауза, менопауза и что делать',uk:'Перименопауза, менопауза і що робити',en:'Perimenopause, menopause and what to do',es:'Perimenopausia, menopausia y qué hacer',de:'Perimenopause, Menopause und was hilft',pt:'Perimenopausa, menopausa e o que fazer',fr:'Périménopause, ménopause et que faire',pl:'Perimenopauza, menopauza i co robić',it:'Perimenopausa, menopausa e cosa fare',he:'פרימנופאוזה, מנופאוזה ומה עושים',ja:'更年期の前後とできること',ko:'폐경 전후와 할 수 있는 것'},
     sheetTg:{ru:'Сообщество в Telegram',uk:'Спільнота в Telegram',en:'Telegram community',es:'Comunidad en Telegram',de:'Community auf Telegram',pt:'Comunidade no Telegram',fr:'Communauté sur Telegram',pl:'Społeczność na Telegramie',it:'Community su Telegram',he:'הקהילה בטלגרם',ja:'Telegramコミュニティ',ko:'텔레그램 커뮤니티'},
@@ -83,7 +84,23 @@
     o.querySelector('a').addEventListener('click', function () { setTimeout(sheetClose, 300); });
   }
 
+  // Статьи пока из женского раздела (андропауза — позже, docs/ARTICLE-LIBRARY-PLAN.md): мужчине ссылку не даём.
+  function isMale() { try { return (JSON.parse(localStorage.getItem('vialp_profile') || '{}') || {}).gender === 'male'; } catch (e) { return false; } }
+  // Открыть статью из карточки «Что беспокоит» / «Фокуса недели»: закрыть главу памятки, вкладка «Библиотека», статья.
+  function go(k) {
+    try { if (typeof window.closeCircModal === 'function') window.closeCircModal(); } catch (e) {}
+    if (typeof window.navTo === 'function') window.navTo('lib', { direct: 1 });
+    if (typeof window._cardOpen === 'function') window._cardOpen('art:' + k);
+  }
+
   window.vialLibrary = {
+    go: go,
+    // Кнопка «Подробнее в статье» под карточкой (ключ жалобы или шага = ключ статьи). Нет статьи на языке — пусто.
+    moreBtn: function (k, lang) {
+      var d = data(lang); if (!d || !d[k] || isMale()) return '';
+      return '<button type="button" class="as-usual" style="display:flex;width:100%;justify-content:center;align-items:center;gap:7px;margin-top:10px;" onclick="vialLibrary.go(\'' + k + '\')">'
+        + '<i class="ph ph-book-open-text" aria-hidden="true"></i>' + esc(tx(UI.more, lang)) + '</button>';
+    },
     has: function (lang) { return !!data(lang); },
     hasTab: function (lang) { return !!data(lang) || !!TG[lang]; },   // книга в нижней строке
     tg: function (lang) { return TG[lang] || ''; },

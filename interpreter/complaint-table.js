@@ -165,6 +165,7 @@
         + (R.w ? block('info', tx(UI.why, lang), '<div style="font-size:var(--fs-body);color:var(--t2);line-height:1.5;">' + esc(tx((opts.male && R.wm) ? R.wm : R.w, lang)) + '</div>', false) : '')   // wm — мужской вариант (2026-10-16)
         + block('lightbulb', tx(UI['do'], lang), bullets(tx(R.d, lang), 'var(--t2)'), true)
         + block('plus-circle', tx(UI.extra, lang), bullets(extraList(R, lang, !!opts.male), 'var(--t3)'), false)
+        + ((!opts.male && window.vialLibrary && vialLibrary.moreBtn) ? vialLibrary.moreBtn(r.row, lang) : '')   // статья библиотеки по этой жалобе (2026-10-17)
         + ((r.key === 'cycle' && opts.cycleNote) ? '<div style="display:flex;gap:8px;align-items:flex-start;font-size:var(--fs-cap);color:var(--t3);line-height:1.5;margin-top:10px;"><i class="ph ph-thermometer-simple" style="font-size:16px;color:rgb(' + ACC + ');flex-shrink:0;margin-top:2px;"></i><span style="min-width:0;">' + esc(opts.cycleNote) + '</span></div>' : '')
         + '</div>';
     });

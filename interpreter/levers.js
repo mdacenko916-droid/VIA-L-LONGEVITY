@@ -417,6 +417,7 @@
         + dayCard
         + box('do', T('what'), steps + tags + dots
             + '<div style="display:flex;gap:8px;margin-top:10px;">' + B('yes', T('did'), st.today === 'yes') + B('no', T('didnt'), st.today === 'no') + '</div>')
+        + ((window.vialLibrary && vialLibrary.moreBtn) ? vialLibrary.moreBtn(L.key, lang) : '')   // статья библиотеки по этому шагу (2026-10-17)
         + cardsLink;
     } else if (st.mode === 'result') {
       var verdict = T('v_' + (st.decision || 'stay')) || T('v_stay');
