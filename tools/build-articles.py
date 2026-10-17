@@ -31,7 +31,7 @@ ALL_KEYS = [k for _, ks in SECTIONS for k in ks]
 
 # Языки, которые уходят в приложение: только вычитанные специалистом. Переведено, но не вычитано — лежит в
 # docs/articles/<язык>/ и в сборку не идёт. Проверить невычитанный язык локально: ARTICLES_LANGS=ru,uk python3 …
-PUBLISH = {'ru', 'en', 'es'}   # ru — вычитано 2026-10-17; en, es — вычитать некому, решение владельца 2026-10-17: проверены сверкой с ru; uk — ждёт вычитки
+PUBLISH = {'ru', 'en', 'es', 'fr', 'de'}   # ru — вычитано 2026-10-17; en, es, fr, de — вычитать некому, решение владельца 2026-10-17: проверены сверкой с ru; uk — ждёт вычитки
 if os.environ.get('ARTICLES_LANGS'):
     PUBLISH = set(os.environ['ARTICLES_LANGS'].split(','))
 
