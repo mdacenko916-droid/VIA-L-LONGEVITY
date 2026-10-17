@@ -31,7 +31,7 @@ ALL_KEYS = [k for _, ks in SECTIONS for k in ks]
 
 # Языки, которые уходят в приложение: только вычитанные специалистом. Переведено, но не вычитано — лежит в
 # docs/articles/<язык>/ и в сборку не идёт. Проверить невычитанный язык локально: ARTICLES_LANGS=ru,uk python3 …
-PUBLISH = {'ru', 'uk', 'en', 'es', 'fr', 'de', 'pl', 'it'}   # ru, uk — вычитаны специалистом 2026-10-17; en, es, fr, de, pl, it — вычитать некому, решение владельца 2026-10-17: проверены сверкой с ru
+PUBLISH = {'ru', 'uk', 'en', 'es', 'fr', 'de', 'pl', 'it', 'pt', 'he', 'ja', 'ko'}   # ru, uk — вычитаны специалистом 2026-10-17; en, es, fr, de, pl, it, pt, he, ja, ko — вычитать некому, решение владельца 2026-10-17: проверены сверкой с ru
 # Подпись «Проверено специалистом VIA-L» — только у языков, которые вычитал специалист. Остальные опубликованы по
 # решению владельца после сверки с ru: подписи у них нет (иначе это неправда — 2026-10-17).
 REVIEWED = {'ru', 'uk'}
@@ -74,7 +74,7 @@ def convert(path):
             close_ul(); continue
         if t.startswith('# '):
             title = t[2:].strip(); continue
-        mm = re.match(r'^\*(\d+)\s+([^*]+)\*$', t.strip())
+        mm = re.match(r'^\*(\d+)\s*([^*]+)\*$', t.strip())   # \s* — в ja/ko нет пробела («4分», «4분»)
         if mm and not minutes:
             minutes = t.strip().strip('*'); continue
         if t.strip() == '---':
