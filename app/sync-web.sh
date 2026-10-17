@@ -46,6 +46,8 @@ cp "$IP/move-player.js"           "$WWW/"   # проигрыватель «Тр�
 rm -rf "$WWW/clips" && cp -R "$IP/clips" "$WWW/clips"   # ролики и фото Евы для проигрывателя, ≈4 МБ (2026-10-10)
 cp "$IP/courses.js"               "$WWW/"   # проект «КУРСЫ»: карточка дня в «Фокусе недели» (2026-10-03)
 cp "$IP/complaint-table.js"       "$WWW/"   # таблица «что беспокоит → что сделать» в памятке дня (2026-10-01)
+cp "$IP/articles.js"              "$WWW/"   # библиотека статей: данные (СОБРАНО tools/build-articles.py, 2026-10-17)
+cp "$IP/library.js"               "$WWW/"   # библиотека статей: экран в «Профиле»
 cp "$IP/evidence.js"              "$WWW/"   # «На чём основано» — список работ под разбором (2026-09-20)
 cp "$IP/evidence-registry.json"   "$WWW/"   # реестр источников (tools/build-evidence-registry.py)
 cp "$IP/my-specialist.html"       "$WWW/"

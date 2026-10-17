@@ -62,6 +62,21 @@
          + '<div class="ai-themes"><div class="ai-themes-in vial-ev-body"></div></div></div>';
   };
 
+  // ── Кнопка под статьёй библиотеки (library.js, 2026-10-17): темы — коды статьи, а не дня разбора ──
+  window._evidenceArticleHtml = function (codes) {
+    if (!codes || !codes.length) return '';
+    var lbl = tr({
+      ru: 'На чём основано', uk: 'На чому ґрунтується', en: 'What this is based on',
+      es: 'En qué se basa', de: 'Worauf das beruht', pt: 'Em que se baseia',
+      fr: 'Sur quoi cela repose', pl: 'Na czym to się opiera', it: 'Su cosa si basa',
+      he: 'על מה זה מבוסס', ja: 'この記事の根拠', ko: '이 글의 근거',
+    });
+    return '<div class="ai-themes-box vial-ev" data-ctx="art" data-codes="' + esc(codes.join(',')) + '">'
+         + '<button type="button" class="ai-more-all" onclick="_evidenceOpen(this)">'
+         + esc(lbl) + ' <i class="ph ph-caret-down" aria-hidden="true"></i></button>'
+         + '<div class="ai-themes"><div class="ai-themes-in vial-ev-body"></div></div></div>';
+  };
+
   function loadRegistry() {
     if (REG) return Promise.resolve(REG);
     if (REG_LOADING) return REG_LOADING;
@@ -90,7 +105,8 @@
         })) + '</div>';
         return;
       }
-      var ids = idsFor(box.getAttribute('data-day')), seen = {}, list = [];
+      var art = box.getAttribute('data-ctx') === 'art', codes = box.getAttribute('data-codes');
+      var ids = codes ? codes.split(',') : idsFor(box.getAttribute('data-day')), seen = {}, list = [];
       ids.forEach(function (p) {
         (reg.byPattern[p] || []).forEach(function (doi) {
           if (seen[doi] || !reg.sources[doi]) return;
@@ -142,6 +158,50 @@
         ja: '根拠の強さはさまざまです。大規模なレビューやメタアナリシスもあれば、小規模な単一研究もあります。分析が提案するのは低リスクのセルフケアであり、治療ではありません。すべての状況に当てはまるとは限りません。',
         ko: '근거의 강도는 제각각입니다. 대규모 리뷰와 메타분석도 있고 소규모 단일 연구도 있습니다. 분석이 제안하는 것은 위험이 낮은 자기관리이지 치료가 아니며, 모든 상황에 맞지는 않습니다.',
       });
+      if (art) {   // статья библиотеки: те же оговорки, но про статью, а не про разбор дня
+        head = tr({
+          ru: 'Статья написана по темам базы знаний VIA-L. За ними стоят опубликованные работы — вот они:',
+          uk: 'Статтю написано за темами бази знань VIA-L. За ними стоять опубліковані роботи — ось вони:',
+          en: 'This article is based on topics from the VIA-L knowledge base. These are the published studies behind them:',
+          es: 'Este artículo se basa en temas de la base de conocimiento de VIA-L. Estos son los estudios publicados que hay detrás:',
+          de: 'Dieser Artikel stützt sich auf Themen der VIA-L-Wissensbasis. Dahinter stehen diese veröffentlichten Arbeiten:',
+          pt: 'Este artigo se baseia em temas da base de conhecimento da VIA-L. Estes são os estudos publicados por trás:',
+          fr: 'Cet article s’appuie sur des thèmes de la base de connaissances VIA-L. Voici les travaux publiés qui les sous-tendent :',
+          pl: 'Ten artykuł opiera się na tematach z bazy wiedzy VIA-L. Oto opublikowane prace, które za nimi stoją:',
+          it: 'Questo articolo si basa sui temi della base di conoscenza VIA-L. Ecco gli studi pubblicati alla base:',
+          he: 'המאמר מבוסס על נושאים ממאגר הידע של VIA-L. אלה המחקרים שפורסמו מאחוריהם:',
+          ja: 'この記事はVIA-Lの知識ベースのテーマに基づいています。その根拠となる公表研究です：',
+          ko: '이 글은 VIA-L 지식 기반의 주제를 바탕으로 합니다. 그 근거가 된 공개 연구입니다:',
+        });
+        weak = tr({
+          ru: 'Доказательная сила у этих работ разная: где-то крупные обзоры и мета-анализы, где-то отдельные небольшие исследования. Шаги в статье — простые меры заботы о себе с низким риском, а не лечение, и подходят не всем.',
+          uk: 'Доказова сила цих робіт різна: десь великі огляди та мета-аналізи, десь окремі невеликі дослідження. Кроки в статті — прості заходи турботи про себе з низьким ризиком, а не лікування, і підходять не всім.',
+          en: 'The strength of this evidence varies: some are large reviews and meta-analyses, some are small single studies. The steps in the article are simple, low-risk self-care measures, not treatment, and they may not suit everyone.',
+          es: 'La solidez de esta evidencia varía: hay grandes revisiones y metaanálisis, y también estudios pequeños aislados. Los pasos del artículo son medidas sencillas de autocuidado de bajo riesgo, no un tratamiento, y pueden no servir para todos.',
+          de: 'Die Aussagekraft dieser Arbeiten ist unterschiedlich: teils große Übersichten und Meta-Analysen, teils einzelne kleine Studien. Die Schritte im Artikel sind einfache, risikoarme Selbsthilfe-Maßnahmen, keine Behandlung, und passen nicht für alle.',
+          pt: 'A força desta evidência varia: há grandes revisões e meta-análises e também estudos pequenos isolados. Os passos do artigo são medidas simples de autocuidado de baixo risco, não um tratamento, e podem não servir para todos.',
+          fr: 'La solidité de ces travaux varie : grandes revues et méta-analyses d’un côté, petites études isolées de l’autre. Les étapes de l’article sont des mesures simples d’auto-soin à faible risque, pas un traitement, et ne conviennent pas à tout le monde.',
+          pl: 'Siła tych dowodów bywa różna: od dużych przeglądów i metaanaliz po pojedyncze małe badania. Kroki w artykule to proste, bezpieczne sposoby dbania o siebie, a nie leczenie, i nie każdemu będą pasować.',
+          it: 'La forza di questi lavori varia: da grandi revisioni e meta-analisi a singoli piccoli studi. I passi dell’articolo sono semplici misure di auto-cura a basso rischio, non una cura, e possono non andare bene per tutti.',
+          he: 'עוצמת הראיות משתנה: יש סקירות גדולות ומטא-אנליזות ויש מחקרים קטנים בודדים. הצעדים במאמר הם צעדי עזרה-עצמית פשוטים בסיכון נמוך, לא טיפול, והם לא מתאימים לכולם.',
+          ja: '根拠の強さはさまざまです。大規模なレビューやメタアナリシスもあれば、小規模な単一研究もあります。記事のステップは低リスクで簡単なセルフケアであり、治療ではなく、すべての人に合うとは限りません。',
+          ko: '근거의 강도는 제각각입니다. 대규모 리뷰와 메타분석도 있고 소규모 단일 연구도 있습니다. 글에 나온 단계는 위험이 낮은 간단한 자기관리이지 치료가 아니며, 모든 사람에게 맞지는 않을 수 있습니다.',
+        });
+        foot = tr({
+          ru: 'Работы общие, не про вас лично: они объясняют, почему в статье эти советы. Это не диагноз и не назначение.',
+          uk: 'Роботи загальні, не про вас особисто: вони пояснюють, чому в статті саме ці поради. Це не діагноз і не призначення.',
+          en: 'These studies are general, not about you personally: they explain why the article gives this advice. This is not a diagnosis or a prescription.',
+          es: 'Son estudios generales, no sobre ti: explican por qué el artículo da estos consejos. No es un diagnóstico ni una prescripción.',
+          de: 'Die Arbeiten sind allgemein, nicht über dich persönlich: Sie erklären, warum der Artikel diese Ratschläge gibt. Keine Diagnose, keine Verordnung.',
+          pt: 'Os estudos são gerais, não sobre você: explicam por que o artigo dá estes conselhos. Não é diagnóstico nem prescrição.',
+          fr: 'Ces travaux sont généraux, pas sur vous : ils expliquent pourquoi l’article donne ces conseils. Ni diagnostic ni prescription.',
+          pl: 'Prace są ogólne, nie o Tobie: wyjaśniają, skąd w artykule te wskazówki. To nie diagnoza ani zalecenie.',
+          it: 'Sono studi generali, non su di te: spiegano perché l’articolo dà questi consigli. Non è una diagnosi né una prescrizione.',
+          he: 'המחקרים כלליים, לא עליכם אישית: הם מסבירים מדוע המאמר נותן את העצות האלה. זו אינה אבחנה ואינה מרשם.',
+          ja: 'これらは一般的な研究であり、特定の個人について述べたものではありません。記事がこの助言をする理由を示すものです。診断でも処方でもありません。',
+          ko: '이 연구들은 일반적인 것이며 특정 개인에 대한 것이 아닙니다. 글이 왜 이런 조언을 하는지 설명합니다. 진단이나 처방이 아닙니다.',
+        });
+      }
       // Список подрезан: 150 ссылок подряд не читает никто, а выглядит это не солиднее, а неряшливее.
       // Показываем свежие, остальное — по кнопке. Ничего не прячем: счётчик честно говорит сколько.
       var SHOW = 12;
