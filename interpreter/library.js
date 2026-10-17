@@ -20,11 +20,19 @@
     sheetSite:{ru:'Библиотека VIA-L',uk:'Бібліотека VIA-L',en:'VIA-L Library',es:'Biblioteca VIA-L',de:'VIA-L-Bibliothek',pt:'Biblioteca VIA-L',fr:'Bibliothèque VIA-L',pl:'Biblioteka VIA-L',it:'Biblioteca VIA-L',he:'הספרייה של VIA-L',ja:'VIA-Lライブラリー',ko:'VIA-L 라이브러리'},
     sheetSiteSub:{ru:'Все статьи и поиск — откроется в браузере',uk:'Усі статті й пошук — відкриється в браузері',en:'All articles with search — opens in your browser',es:'Todos los artículos y búsqueda — se abre en el navegador'},
     sheetSiteSubEn:{de:'Auf Englisch — der Browser kann die Seite übersetzen',pt:'Em inglês — o navegador pode traduzir a página',fr:'En anglais — le navigateur peut traduire la page',pl:'Po angielsku — przeglądarka może przetłumaczyć stronę',it:'In inglese — il browser può tradurre la pagina',he:'באנגלית — הדפדפן יכול לתרגם את הדף',ja:'英語のページです。ブラウザで翻訳できます',ko:'영어 페이지예요. 브라우저에서 번역할 수 있어요'},
+    men:  {ru:'Мужское',uk:'Чоловіче',en:'For men',es:'Para hombres',de:'Für Männer',pt:'Para homens',fr:'Pour les hommes',pl:'Dla mężczyzn',it:'Per uomini',he:'לגברים',ja:'男性のために',ko:'남성을 위해'},
+    rowSubM:{ru:'Андропауза, сон, сердце и что делать',uk:'Андропауза, сон, серце і що робити',en:'Andropause, sleep, heart and what to do',es:'Andropausia, sueño, corazón y qué hacer',de:'Andropause, Schlaf, Herz und was hilft',pt:'Andropausa, sono, coração e o que fazer',fr:'Andropause, sommeil, cœur et que faire',pl:'Andropauza, sen, serce i co robić',it:'Andropausa, sonno, cuore e cosa fare',he:'אנדרופאוזה, שינה, לב ומה עושים',ja:'男性更年期、睡眠、心臓とできること',ko:'남성 갱년기, 수면, 심장과 할 수 있는 것'},
     check: {ru:'Проверено специалистом VIA-L',uk:'Перевірено спеціалістом VIA-L',en:'Reviewed by a VIA-L specialist',es:'Revisado por un especialista de VIA-L',de:'Geprüft von einer VIA-L-Fachperson',pt:'Revisado por um especialista VIA-L',fr:'Relu par un spécialiste VIA-L',pl:'Sprawdzone przez specjalistę VIA-L',it:'Rivisto da uno specialista VIA-L',he:'נבדק על ידי מומחה VIA-L',ja:'VIA-Lの専門家が確認済み',ko:'VIA-L 전문가 검토 완료'}
   };
   function tx(o, lang) { return (o && (o[lang] || o.en || o.ru)) || ''; }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function data(lang) { var A = window.VIAL_ART; return (A && A.langs && A.langs[lang]) || null; }
+  // Мужской раздел (2026-10-17): мужчине — свои статьи; язык без мужского набора мужчине «Основы» не показывает.
+  function hasMen(lang) { var A = window.VIAL_ART; return !!(A && A.men && A.men.indexOf(lang) > -1 && data(lang)); }
+  function secs(lang) { var A = window.VIAL_ART; return isMale() ? (A.sectionsM || []) : A.sections; }
+  // Карточка жалобы мужчины → его статья (ключ жалобы из complaint-table.js; libido уже приходит как libido_m).
+  var MK = { sleep: 'sleep_m', energy: 'energy_m', mood: 'mood_m', fog: 'fog_m', weight: 'weight_m', pain: 'pain_m',
+             muscle: 'muscle_m', drive: 'drive', libido_m: 'libido_m' };
 
   // Стили статьи — из токенов приложения (Playfair для заголовка, графит + золото, как блоки «Профиля»).
   var CSS_ID = 'vialArtCss';
@@ -83,7 +91,7 @@
     sheetClose(); css();
     var o = document.createElement('div'); o.id = 'vialLibSheet'; o.className = 'art-sheet-bg';
     o.onclick = function (e) { if (e.target === o) sheetClose(); };
-    var art = data(lang) ? shRow('button', 'type="button" id="artSheetArt"', 'ph-book-open-text', tx(UI.sheetArt, lang), tx(UI.sheetArtSub, lang)) : '';
+    var art = has(lang) ? shRow('button', 'type="button" id="artSheetArt"', 'ph-book-open-text', tx(UI.sheetArt, lang), tx(UI.sheetArtSub, lang)) : '';
     var site = shRow('a', 'href="' + esc(siteUrl(lang)) + '" target="_blank" rel="noopener"', 'ph-globe-simple', tx(UI.sheetSite, lang),
       SITE_LANGS.indexOf(lang) > -1 ? tx(UI.sheetSiteSub, lang) : (UI.sheetSiteSubEn[lang] || ''));
     var tg = TG[lang] ? shRow('a', 'href="' + esc(TG[lang]) + '" target="_blank" rel="noopener"', 'ph-telegram-logo', tx(UI.sheetTg, lang), tx(UI.sheetTgSub, lang)) : '';
@@ -94,7 +102,7 @@
     [].forEach.call(o.querySelectorAll('a'), function (a) { a.addEventListener('click', function () { setTimeout(sheetClose, 300); }); });
   }
 
-  // Статьи пока из женского раздела (андропауза — позже, docs/ARTICLE-LIBRARY-PLAN.md): мужчине ссылку не даём.
+  function has(lang) { return isMale() ? hasMen(lang) : !!data(lang); }
   function isMale() { try { return (JSON.parse(localStorage.getItem('vialp_profile') || '{}') || {}).gender === 'male'; } catch (e) { return false; } }
   // Открыть статью из карточки «Что беспокоит» / «Фокуса недели»: закрыть главу памятки, вкладка «Библиотека», статья.
   function go(k) {
@@ -107,11 +115,13 @@
     go: go,
     // Кнопка «Подробнее в статье» под карточкой (ключ жалобы или шага = ключ статьи). Нет статьи на языке — пусто.
     moreBtn: function (k, lang) {
-      var d = data(lang); if (!d || !d[k] || isMale()) return '';
+      if (isMale()) k = hasMen(lang) ? MK[k] : '';   // шаги «Что делать» пока женские — мужчине без ссылки
+      var d = data(lang); if (!k || !d || !d[k]) return '';
       return '<button type="button" class="as-usual" style="display:flex;width:100%;justify-content:center;align-items:center;gap:7px;margin-top:10px;" onclick="vialLibrary.go(\'' + k + '\')">'
         + '<i class="ph ph-book-open-text" aria-hidden="true"></i>' + esc(tx(UI.more, lang)) + '</button>';
     },
-    has: function (lang) { return !!data(lang); },
+    has: has,
+    isMale: isMale,
     hasTab: function () { return true; },   // книга в нижней строке: сайт-библиотека есть у всех языков
     tg: function (lang) { return TG[lang] || ''; },
     // Нажатие на книгу: всегда выбор (статьи / сайт / группа).
@@ -120,9 +130,9 @@
     label: function (k, lang) { return tx(UI[k], lang); },
     // «Профиль › Статьи»: три раздела, внутри — строки-входы теми же классами, что «Мои данные» / «Настройки».
     listHtml: function (lang) {
-      var d = data(lang), A = window.VIAL_ART; if (!d) return '';
+      var d = data(lang); if (!has(lang)) return '';
       css();
-      return A.sections.map(function (sec) {
+      return secs(lang).map(function (sec) {
         return '<div class="vc-subh vc-span" style="grid-column:1/-1;">' + esc(tx(UI[sec[0]], lang)) + '</div>'
           + sec[1].filter(function (k) { return d[k]; }).map(function (k) { return rowHtml(k, d[k]); }).join('');
       }).join('');
@@ -135,7 +145,7 @@
       var body = a.h.replace('<!--EV-->', ev ? '<div class="art-ev">' + ev + '</div>' : '');
       return '<div class="art-card"><h2 class="art-title">' + esc(a.t) + '</h2>'
         + (a.min ? '<div class="art-min">' + esc(a.min) + '</div>' : '') + body
-        + (((window.VIAL_ART.reviewed || []).indexOf(lang) > -1)   // подпись — только у вычитанных специалистом языков
+        + (((window.VIAL_ART.reviewed || []).indexOf(lang) > -1) && !a.nr   // подпись — только вычитанное специалистом
             ? '<div class="art-check"><i class="ph ph-seal-check" aria-hidden="true"></i>' + esc(tx(UI.check, lang)) + '</div>' : '')
         + '</div>';
     },

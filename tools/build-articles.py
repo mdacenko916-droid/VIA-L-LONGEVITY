@@ -28,6 +28,14 @@ SECTIONS = [
     ('step',  ['evening', 'wake', 'strength', 'protein', 'cool', 'walk', 'breath', 'bed', 'order']),
 ]
 ALL_KEYS = [k for _, ks in SECTIONS for k in ks]
+# Мужской раздел (2026-10-17, P-M1…P-M11): мужчине приложение показывает его вместо женского. Язык получает мужской раздел,
+# только когда в нём есть все мужские статьи; без них язык остаётся с женским разделом (мужчине «Основы» не показываются).
+SECTIONS_M = [
+    ('start', ['start-andro', 'start-tests_m']),
+    ('cmp',   ['sleep_m', 'energy_m', 'mood_m', 'fog_m', 'drive', 'weight_m', 'pain_m', 'muscle_m', 'libido_m']),
+    ('men',   ['prostate', 'heart_m']),
+]
+ALL_KEYS_M = [k for _, ks in SECTIONS_M for k in ks]
 
 # Языки, которые уходят в приложение: только вычитанные специалистом. Переведено, но не вычитано — лежит в
 # docs/articles/<язык>/ и в сборку не идёт. Проверить невычитанный язык локально: ARTICLES_LANGS=ru,uk python3 …
@@ -93,11 +101,14 @@ def convert(path):
     close_ul()
     if not title:
         raise SystemExit('нет заголовка: ' + path)
-    return {'t': title, 'min': minutes, 'h': ''.join(out), 'codes': codes}
+    a = {'t': title, 'min': minutes, 'h': ''.join(out), 'codes': codes}
+    if 'Вычитано специалистом' not in meta:
+        a['nr'] = 1   # не вычитано специалистом: подписи «Проверено специалистом» у этой статьи нет, даже в ru/uk
+    return a
 
 
 def main():
-    data, skipped = {}, {}
+    data, skipped, men = {}, {}, []
     for lang in sorted(os.listdir(SRC)):
         d = os.path.join(SRC, lang)
         if not os.path.isdir(d):
@@ -109,12 +120,15 @@ def main():
         if missing:
             skipped[lang] = missing; continue
         data[lang] = {k: convert(os.path.join(d, k + '.md')) for k in ALL_KEYS}
+        if all(k in have for k in ALL_KEYS_M):
+            data[lang].update({k: convert(os.path.join(d, k + '.md')) for k in ALL_KEYS_M})
+            men.append(lang)
     js = ('/* VIA·L — библиотека статей. СОБРАНО tools/build-articles.py из docs/articles/<язык>/*.md — руками не править.\n'
           '   Данные: ART[язык][ключ] = {t: заголовок, min: время чтения, h: HTML тела, codes: темы базы для «На чём основано»}. */\n'
-          'window.VIAL_ART = ' + json.dumps({'sections': SECTIONS, 'reviewed': sorted(REVIEWED & set(data)), 'langs': data}, ensure_ascii=False, separators=(',', ':')) + ';\n')
+          'window.VIAL_ART = ' + json.dumps({'sections': SECTIONS, 'sectionsM': SECTIONS_M, 'men': sorted(men), 'reviewed': sorted(REVIEWED & set(data)), 'langs': data}, ensure_ascii=False, separators=(',', ':')) + ';\n')
     open(OUT, 'w', encoding='utf-8').write(js)
     print('→', os.path.relpath(OUT, REPO), '| языки:', ', '.join(sorted(data)) or '—',
-          '| пропущены (не все статьи):', skipped or '—')
+          '| мужской раздел:', ', '.join(sorted(men)) or '—', '| пропущены (не все статьи):', skipped or '—')
 
 
 if __name__ == '__main__':

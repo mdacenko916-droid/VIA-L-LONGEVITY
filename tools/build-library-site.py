@@ -45,6 +45,7 @@ UI = {
     'start':   {'uk': 'З чого почати', 'ru': 'С чего начать', 'en': 'Where to start', 'es': 'Por dónde empezar'},
     'cmp':     {'uk': 'Що турбує', 'ru': 'Что беспокоит', 'en': 'What bothers you', 'es': 'Qué te preocupa'},
     'step':    {'uk': 'Що робити', 'ru': 'Что делать', 'en': 'What to do', 'es': 'Qué hacer'},
+    'men':     {'uk': 'Чоловікам', 'ru': 'Мужчинам', 'en': 'For men', 'es': 'Para hombres'},
     'check':   {'uk': 'Перевірено спеціалістом VIA-L', 'ru': 'Проверено специалистом VIA-L', 'en': 'Reviewed by a VIA-L specialist', 'es': 'Revisado por un especialista de VIA-L'},
     'ev':      {'uk': 'На чому ґрунтується', 'ru': 'На чём основано', 'en': 'What this is based on', 'es': 'En qué se basa'},
     'evHead':  {'uk': 'Статтю написано за темами бази знань VIA-L. За ними стоять опубліковані роботи — ось вони:',
@@ -206,6 +207,9 @@ def main():
     langs = [L for L in SITE_LANGS if L in BA.PUBLISH and all(
         os.path.exists(os.path.join(BA.SRC, L, k + '.md')) for k in BA.ALL_KEYS)]
     data = {L: {k: BA.convert(os.path.join(BA.SRC, L, k + '.md')) for k in BA.ALL_KEYS} for L in langs}
+    for L in langs:   # мужской раздел — только язык, где есть все мужские статьи
+        if all(os.path.exists(os.path.join(BA.SRC, L, k + '.md')) for k in BA.ALL_KEYS_M):
+            data[L].update({k: BA.convert(os.path.join(BA.SRC, L, k + '.md')) for k in BA.ALL_KEYS_M})
     urls = []
     for L in langs:
         os.makedirs(os.path.join(OUT, L), exist_ok=True)
@@ -215,6 +219,13 @@ def main():
         for sec, keys in BA.SECTIONS:
             secs += '<h2 class="sec">%s</h2><div class="cards">' % tx(sec, L)
             for k in keys:
+                secs += '<a class="card" href="%s.html" data-s="%s"><span class="t">%s</span><span class="m">%s</span></a>' % (
+                    k, esc((d[k]['t'] + ' ' + plain(d[k]['h'].split('<!--EV-->')[0])).lower()), esc(d[k]['t']), esc(d[k]['min']))
+            secs += '</div>'
+        men = all(k in d for k in BA.ALL_KEYS_M)
+        if men:   # мужской раздел — одним блоком «Мужчинам» (2026-10-17)
+            secs += '<h2 class="sec">%s</h2><div class="cards">' % tx('men', L)
+            for k in BA.ALL_KEYS_M:
                 secs += '<a class="card" href="%s.html" data-s="%s"><span class="t">%s</span><span class="m">%s</span></a>' % (
                     k, esc((d[k]['t'] + ' ' + plain(d[k]['h'].split('<!--EV-->')[0])).lower()), esc(d[k]['t']), esc(d[k]['min']))
             secs += '</div>'
@@ -230,7 +241,8 @@ def main():
             page(L, tx('title', L), lead, L + '/', body, alt))
         urls.append(L + '/')
         # ── статьи ──
-        for sec, keys in BA.SECTIONS:
+        groups = list(BA.SECTIONS) + ([('men', BA.ALL_KEYS_M)] if men else [])
+        for sec, keys in groups:
             for i, k in enumerate(keys):
                 a = d[k]
                 art = a['h'].replace('<!--EV-->', ev_block(L, a['codes'], reg))
@@ -238,12 +250,12 @@ def main():
                 more = '<section class="more"><h2>%s</h2><div class="cards">%s</div></section>' % (tx('more', L), ''.join(
                     '<a class="card" href="%s.html"><span class="t">%s</span><span class="m">%s</span></a>' % (n, esc(d[n]['t']), esc(d[n]['min'])) for n in nxt))
                 chk = ('<span class="ok">%s · %s</span>' % (tx('check', L), REVIEWED[8:] + '.' + REVIEWED[5:7] + '.' + REVIEWED[:4])
-                       if L in BA.REVIEWED else '')   # подпись — только у вычитанных специалистом языков
+                       if L in BA.REVIEWED and not a.get('nr') else '')   # подпись — только у вычитанных специалистом языков
                 body = ('<article><a class="backl" href="./">‹ %s</a><h1>%s</h1><div class="meta"><span>%s</span>%s</div>%s</article>%s%s'
                         ) % (tx('back', L), esc(a['t']), esc(a['min']), chk, art, dl_block(L, sub[L]), more)
                 desc = plain(a['h'].split('<!--EV-->')[0])
                 desc = desc[:157].rsplit(' ', 1)[0] + '…' if len(desc) > 160 else desc
-                alt = {X: '%s/%s.html' % (X, k) for X in langs}
+                alt = {X: '%s/%s.html' % (X, k) for X in langs if k in data[X]}
                 open(os.path.join(OUT, L, k + '.html'), 'w', encoding='utf-8').write(
                     page(L, a['t'] + ' · VIA-L', desc, '%s/%s.html' % (L, k), body, alt))
                 urls.append('%s/%s.html' % (L, k))
