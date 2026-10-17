@@ -32,6 +32,9 @@ ALL_KEYS = [k for _, ks in SECTIONS for k in ks]
 # Языки, которые уходят в приложение: только вычитанные специалистом. Переведено, но не вычитано — лежит в
 # docs/articles/<язык>/ и в сборку не идёт. Проверить невычитанный язык локально: ARTICLES_LANGS=ru,uk python3 …
 PUBLISH = {'ru', 'uk', 'en', 'es', 'fr', 'de'}   # ru, uk — вычитаны специалистом 2026-10-17; en, es, fr, de — вычитать некому, решение владельца 2026-10-17: проверены сверкой с ru
+# Подпись «Проверено специалистом VIA-L» — только у языков, которые вычитал специалист. Остальные опубликованы по
+# решению владельца после сверки с ru: подписи у них нет (иначе это неправда — 2026-10-17).
+REVIEWED = {'ru', 'uk'}
 if os.environ.get('ARTICLES_LANGS'):
     PUBLISH = set(os.environ['ARTICLES_LANGS'].split(','))
 
@@ -108,7 +111,7 @@ def main():
         data[lang] = {k: convert(os.path.join(d, k + '.md')) for k in ALL_KEYS}
     js = ('/* VIA·L — библиотека статей. СОБРАНО tools/build-articles.py из docs/articles/<язык>/*.md — руками не править.\n'
           '   Данные: ART[язык][ключ] = {t: заголовок, min: время чтения, h: HTML тела, codes: темы базы для «На чём основано»}. */\n'
-          'window.VIAL_ART = ' + json.dumps({'sections': SECTIONS, 'langs': data}, ensure_ascii=False, separators=(',', ':')) + ';\n')
+          'window.VIAL_ART = ' + json.dumps({'sections': SECTIONS, 'reviewed': sorted(REVIEWED & set(data)), 'langs': data}, ensure_ascii=False, separators=(',', ':')) + ';\n')
     open(OUT, 'w', encoding='utf-8').write(js)
     print('→', os.path.relpath(OUT, REPO), '| языки:', ', '.join(sorted(data)) or '—',
           '| пропущены (не все статьи):', skipped or '—')

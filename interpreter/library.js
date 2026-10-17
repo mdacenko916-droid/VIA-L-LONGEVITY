@@ -125,7 +125,9 @@
       var body = a.h.replace('<!--EV-->', ev ? '<div class="art-ev">' + ev + '</div>' : '');
       return '<div class="art-card"><h2 class="art-title">' + esc(a.t) + '</h2>'
         + (a.min ? '<div class="art-min">' + esc(a.min) + '</div>' : '') + body
-        + '<div class="art-check"><i class="ph ph-seal-check" aria-hidden="true"></i>' + esc(tx(UI.check, lang)) + '</div></div>';
+        + (((window.VIAL_ART.reviewed || []).indexOf(lang) > -1)   // подпись — только у вычитанных специалистом языков
+            ? '<div class="art-check"><i class="ph ph-seal-check" aria-hidden="true"></i>' + esc(tx(UI.check, lang)) + '</div>' : '')
+        + '</div>';
     },
     title: function (k, lang) { var d = data(lang); return (d && d[k] && d[k].t) || ''; }
   };
