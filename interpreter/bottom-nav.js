@@ -17,7 +17,9 @@
 (function () {
   var L = {
     today:    {en:'Today',ru:'Сегодня',uk:'Сьогодні',es:'Hoy',de:'Heute',pt:'Hoje',fr:'Aujourd’hui',pl:'Dziś',it:'Oggi',he:'היום',ja:'今日',ko:'오늘'},
-    path:     {en:'My progress',ru:'Мой прогресс',uk:'Мій прогрес',es:'Mi progreso',de:'Fortschritt',pt:'Meu progresso',fr:'Mes progrès',pl:'Moje postępy',it:'Progressi',he:'ההתקדמות שלי',ja:'マイ進捗',ko:'나의 발전'},
+    // короткие подписи (2026-10-17): с пятой кнопкой «Мой прогресс» не влезал в свою пятую часть строки
+    path:     {en:'Progress',ru:'Прогресс',uk:'Прогрес',es:'Progreso',de:'Fortschritt',pt:'Progresso',fr:'Progrès',pl:'Postępy',it:'Progressi',he:'התקדמות',ja:'進捗',ko:'진행'},
+    lib:      {en:'Library',ru:'Библиотека',uk:'Бібліотека',es:'Biblioteca',de:'Bibliothek',pt:'Biblioteca',fr:'Bibliothèque',pl:'Biblioteka',it:'Biblioteca',he:'ספרייה',ja:'ライブラリ',ko:'라이브러리'},
     guide:    {en:'Specialist',ru:'Специалист',uk:'Спеціаліст',es:'Especialista',de:'Spezialist',pt:'Especialista',fr:'Spécialiste',pl:'Specjalista',it:'Specialista',he:'מומחה',ja:'専門家',ko:'전문가'},
     card:     {en:'Profile',ru:'Профиль',uk:'Профіль',es:'Perfil',de:'Profil',pt:'Perfil',fr:'Profil',pl:'Profil',it:'Profilo',he:'פרופיל',ja:'プロフィール',ko:'프로필'},
     approach: {en:'Our approach',ru:'Наш подход',uk:'Наш підхід',es:'Enfoque',de:'Ansatz',pt:'Abordagem',fr:'Approche',pl:'Podejście',it:'Approccio',he:'הגישה שלנו',ja:'アプローチ',ko:'접근 방식'},
@@ -25,7 +27,9 @@
   };
   // [вкладка, иконка Phosphor]
   var SETS = {
-    vial:   [['today','ph-sun'], ['path','ph-chart-line-up'], ['guide','ph-signpost'], ['card','ph-user']],
+    // lib — книга посередине, в разрыве линии над строкой (2026-10-17). Видна, только если языку есть что
+    // показать: статьи (library.js) или ссылка на группу; иначе строка остаётся из четырёх кнопок.
+    vial:   [['today','ph-sun'], ['path','ph-chart-line-up'], ['lib','ph-book-open-text'], ['guide','ph-signpost'], ['card','ph-user']],
     expert: [['today','ph-sun'], ['approach','ph-stack'], ['chat','ph-chat-circle-dots'], ['card','ph-user']]
   };
   var cfg = null;
@@ -56,13 +60,48 @@
       el.className = 'bottom-nav-item' + (cfg.active === k ? ' active' : '');
       el.setAttribute('data-nav', k);
       var i = document.createElement('i');
-      i.className = 'ph ' + it[1] + ' bottom-nav-icon';
+      i.className = 'ph ' + it[1] + (k === 'lib' ? '' : ' bottom-nav-icon');
       i.setAttribute('aria-hidden', 'true');
+      if (k === 'lib') {                     // золотой круг над строкой
+        el.className += ' bn-lib';
+        var c = document.createElement('span'); c.className = 'bn-lib-c'; c.appendChild(i); i = c;
+      }
       var s = document.createElement('span');
       s.textContent = label(k, lang);
       el.appendChild(i); el.appendChild(s);
       nav.appendChild(el);
     });
+    css(); refresh();
+  }
+
+  // Круг с книгой и разрыв линии. Линия рисуется ::before с вырезом посередине (средняя из пяти кнопок
+  // стоит ровно по центру), а не кольцом вокруг круга: кольцо цвета строки давало ореол на фоне страницы.
+  function css() {
+    if (document.getElementById('bnLibCss')) return;
+    var st = document.createElement('style'); st.id = 'bnLibCss';
+    st.textContent = ''
+      + '.bottom-nav.has-lib{border-top-color:transparent!important;}'
+      + '.bottom-nav.has-lib::before{content:"";position:absolute;left:0;right:0;top:-1.5px;height:1.5px;background:rgba(238,199,122,.62);pointer-events:none;'
+      +   '-webkit-mask-image:linear-gradient(to right,#000 calc(50% - 35px),transparent calc(50% - 35px),transparent calc(50% + 35px),#000 calc(50% + 35px));'
+      +   'mask-image:linear-gradient(to right,#000 calc(50% - 35px),transparent calc(50% - 35px),transparent calc(50% + 35px),#000 calc(50% + 35px));}'
+      + '.bn-lib{position:relative;}'
+      + '.bn-lib-c{width:54px;height:54px;border-radius:50%;margin:-33px auto 0;display:flex;align-items:center;justify-content:center;'
+      +   'background:linear-gradient(160deg,#F0CF86,#C9973F);border:1.5px solid rgba(238,199,122,.9);box-shadow:0 5px 16px rgba(0,0,0,.5);}'
+      + '.bn-lib-c i{font-size:28px;line-height:1;color:#10141C;}'
+      + '.bn-lib:active .bn-lib-c{transform:scale(.92);}'
+      + '.bn-lib.active .bn-lib-c{box-shadow:0 0 14px rgba(226,185,90,.75),0 5px 16px rgba(0,0,0,.5);}';
+    document.head.appendChild(st);
+  }
+
+  // Книга видна только языку, которому есть что показать (vialLibrary.hasTab). library.js грузится позже
+  // строки — он сам зовёт refresh(); на других страницах (нет library.js) книги нет.
+  function refresh() {
+    var nav = cfg && (cfg.el || document.getElementById('vialNav'));
+    if (!nav) return;
+    var b = nav.querySelector('[data-nav="lib"]'); if (!b) return;
+    var on = !!(window.vialLibrary && vialLibrary.hasTab && vialLibrary.hasTab(cfg.lang || 'en'));
+    b.style.display = on ? '' : 'none';
+    nav.classList.toggle('has-lib', on);
   }
 
   // Только подписи: перерисовка целиком сбросила бы .active, который главная ставит в navTo().
@@ -72,10 +111,11 @@
     var nav = cfg.el || document.getElementById('vialNav');
     if (!nav) return;
     nav.querySelectorAll('[data-nav]').forEach(function (el) {
-      var s = el.querySelector('span');
+      var s = el.lastChild;   // подпись — последний элемент (у книги первым идёт круг-span)
       if (s) s.textContent = label(el.getAttribute('data-nav'), l);
     });
+    refresh();
   }
 
-  window.vialBottomNav = { mount: mount, setLang: setLang };
+  window.vialBottomNav = { mount: mount, setLang: setLang, refresh: refresh };
 })();

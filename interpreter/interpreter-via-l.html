@@ -507,7 +507,7 @@ body.imp-open #topbar::before{display:none;}
 }
 .bottom-nav-item{
   display:flex;flex-direction:column;align-items:center;gap:4px;
-  font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
+  font-size:9px;letter-spacing:1.5px;text-transform:none;   /* 2026-10-17: обычные буквы — заглавными пять подписей не влезали */
   color:var(--gold-lt);cursor:pointer;transition:color .2s;
   background:none;border:none;font-family:var(--font-ui);
   padding:4px 12px;border-radius:12px;
@@ -2253,7 +2253,7 @@ body.card-open #cardPanel, body.approach-open #approachPanel{
   transform:none!important; width:100%!important; max-width:none!important;
   max-height:none!important; border-radius:0!important; border:none!important; box-shadow:none!important;
   background:linear-gradient(180deg,#242c39 0%,#1b2029 60%,#181e28 100%)!important;
-  padding:calc(env(safe-area-inset-top,0px) + 64px) 16px 24px!important;
+  padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 24px!important;   /* 64→12 (2026-10-17): надписи VIA·L в шапке больше нет — заголовок встаёт сразу под статус-бар */
 }
 /* Бежевый фейд под статус-баром на графитовом экране был бы чужой полосой. */
 body.card-open #topbar::before, body.approach-open #topbar::before{display:none!important;}
@@ -2465,9 +2465,10 @@ body::before{background:linear-gradient(180deg,#242c39 0%,#1b2029 60%,#181e28 10
 /* «Профиль» и «Мой прогресс»: текст при прокрутке уходил под часы и логотип — верх панели растворяем.
    2026-10-15: зона = вся шапка с логотипом (до 64px под safe-area, где начинается контент панели). Было
    «safe-area + 6px»: на iPhone вырез ~60px закрывал логотип сам, а на Android safe-area = 0 — текст ехал по лого. */
+/* 2026-10-17: логотипа в шапке нет → растворяем только статус-бар + 12px (до начала заголовка панели). */
 body.card-open #cardPanel, body.approach-open #approachPanel{
-  -webkit-mask-image:linear-gradient(to bottom,transparent 0,transparent calc(env(safe-area-inset-top,0px) + 44px),#000 calc(env(safe-area-inset-top,0px) + 64px));
-  mask-image:linear-gradient(to bottom,transparent 0,transparent calc(env(safe-area-inset-top,0px) + 44px),#000 calc(env(safe-area-inset-top,0px) + 64px));}
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,transparent env(safe-area-inset-top,0px),#000 calc(env(safe-area-inset-top,0px) + 12px));
+  mask-image:linear-gradient(to bottom,transparent 0,transparent env(safe-area-inset-top,0px),#000 calc(env(safe-area-inset-top,0px) + 12px));}
 .hero-title{color:#fff!important;}
 .hero-title em{color:var(--gold-lt)!important;}
 .hero-desc{color:var(--t2)!important;}
@@ -2478,7 +2479,7 @@ body.card-open #cardPanel, body.approach-open #approachPanel{
 .footer-tagline{color:var(--t3)!important;}
 .footer-line{background:rgba(255,255,255,.15)!important;}
 .legal-links a,.legal-links span{color:var(--t3)!important;border-bottom-color:rgba(255,255,255,.2)!important;}
-#tb-brand{color:var(--gold-lt)!important;}
+#tb-brand{display:none!important;}   /* 2026-10-17, владелец: подпись VIA·L в шапке была для EXPERT; в VIA-L не нужна (логотип есть на «Сегодня»), а полоса под ней съедала верх экрана */
 #tb-analysis .rd-head-t{color:#fff!important;}
 #tb-analysis .rd-head-date{color:var(--t3)!important;}
 #tb-analysis .hl-vial{color:var(--gold-lt)!important;}
@@ -4286,10 +4287,16 @@ body.card-open #cardPanel, body.approach-open #approachPanel{
 #specPanel::-webkit-scrollbar{display:none;}
 body.spec-open #specPanel{display:block;}
 body.spec-open #bottombar{position:relative;z-index:700;}
+body.card-open #bottombar{position:relative;z-index:450;}   /* круг «Библиотеки» выступает над строкой — иначе его верх накрывала панель «Профиля»/«Прогресса» (z 400), 2026-10-17 */
 body.spec-open #vlAdvBtn,body.spec-open #vlAdvPanel{display:none!important;}   /* на отдельной странице советника не было */
 body.chat-open #specPanel{overflow:hidden;}   /* переписка на весь экран — прокручивается только лента */
+/* Полоса под часами (2026-10-17, скрин владельца): панель лежит на весь экран, и при прокрутке текст шёл прямо
+   под часы и батарею. Та же растушёвка, что у других вкладок: плотный графит на высоту статус-бара + 10px. */
+#specTop{display:none;position:fixed;left:0;right:0;top:0;height:calc(env(safe-area-inset-top,0px) + 10px);z-index:660;pointer-events:none;
+  background:linear-gradient(to bottom,#242c39 0,#242c39 env(safe-area-inset-top,0px),rgba(36,44,57,0) 100%);}
+body.spec-open #specTop{display:block;}
 </style>
-<div id="specPanel"><div id="specHost"></div></div>
+<div id="specPanel"><div id="specHost"></div></div><div id="specTop"></div>
 
 <!-- BOTTOMBAR -->
 <div id="flow-footer"><div id="flow-progress" aria-live="polite"></div><button class="btn btn-primary" id="flow-btn" type="button"></button></div>
@@ -5569,6 +5576,10 @@ function _hideFlowSurfaces(){
 function navTo(tab, want){
   // «Специалист» — панель #specPanel (specialist.js, 2026-10-16). Не загрузился файл — по-старому, отдельной страницей.
   if(tab==='guide' && !(window._specShow && window.vialSp)){ location.href='./my-specialist.html'+(want&&want.chat?'?chat=1':want&&want.review?'?review=1':''); return; }
+  // «Библиотека» — книга посередине нижней строки (2026-10-17): есть группа в Telegram → сначала выбор
+  // «Статьи / группа» (library.js); статьи — та же панель «Профиля» на странице «Статьи», без кнопки «назад».
+  if(tab==='lib' && !(want&&want.direct) && window.vialLibrary && !vialLibrary.tap(lang)) return;
+  window._libTab=(tab==='lib');
   if(tab!=='guide' && window._specHide) window._specHide();
   window.__editMode=false;   // любой переход по нижней навигации выходит из режима правки профиля (как VIO)
   _hideFlowSurfaces();       // уходим с ленты начисто — ниже нужный экран построится с нуля
@@ -5586,8 +5597,8 @@ function navTo(tab, want){
   document.querySelectorAll('.bottom-nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+tab)?.classList.add('active');
   const cp=document.getElementById('cardPanel');
-  var _isCp=(tab==='card'||tab==='path');
-  if(_isCp){ window._cardMode=tab; window._cardSub=''; var _ct=document.getElementById('cardTitle'); if(_ct){ var _ck=(tab==='path')?'nav_path':'card_title'; _ct.setAttribute('data-t',_ck); _ct.textContent=t(_ck); }
+  var _isCp=(tab==='card'||tab==='path'||tab==='lib');
+  if(_isCp){ window._cardMode=(tab==='lib')?'card':tab; window._cardSub=(tab==='lib')?'articles':''; var _ct=document.getElementById('cardTitle'); if(_ct){ var _ck=(tab==='path')?'nav_path':(tab==='lib')?'card_articles':'card_title'; _ct.setAttribute('data-t',_ck); _ct.textContent=t(_ck); }
     var _cs=document.getElementById('cardSub'); if(_cs){ var _sk=(tab==='path')?'card_sub_path':'card_sub_card'; _cs.setAttribute('data-t',_sk); _cs.textContent=t(_sk); } }
   if(cp){cp.style.display=_isCp?'block':'none';
     document.body.classList.toggle('card-open', _isCp);   // прячет футер главной: он просвечивал из-под панели карточки
@@ -6240,7 +6251,8 @@ function renderCard(){
   var _cardSubPg=_pathMode?'':(window._cardSub||'');   // '' | 'data' | 'settings' — вложенные страницы «Профиля»
   if(_pathMode) html='<div class="vcard-wrap">';
   var _artKey=(_cardSubPg.indexOf('art:')===0)?_cardSubPg.slice(4):'';   // «Профиль › Статьи › статья» — назад к списку
-  if(_cardSubPg) html='<div class="vcard-wrap"><button type="button" class="vc-back" onclick="_cardOpen(\''+(_artKey?'articles':'')+'\')">‹ '+_esc(t(_artKey?'card_articles':'card_title'))+'</button>';
+  if(_cardSubPg==='articles' && window._libTab) html='<div class="vcard-wrap">';   // вкладка «Библиотека»: список — корень, назад некуда
+  else if(_cardSubPg) html='<div class="vcard-wrap"><button type="button" class="vc-back" onclick="_cardOpen(\''+(_artKey?'articles':'')+'\')">‹ '+_esc(t(_artKey?'card_articles':'card_title'))+'</button>';
   var _cardLink=function(k){
     var ic=(k==='data')?'clipboard-text':(k==='articles')?'book-open-text':'gear-six';
     return '<button type="button" class="vc-link vc-span" onclick="_cardOpen(\''+k+'\')"><span class="vc-ic"><i class="ph ph-'+ic+'"></i></span>'
@@ -14384,7 +14396,7 @@ function closeCircModal(){
     };
     var _goTab=function(){
       if(tab==='approach'){ if(typeof openApproach==='function') openApproach(); }
-      else if(tab==='card'||tab==='today'||tab==='path'){ if(typeof navTo==='function') navTo(tab); }
+      else if(tab==='card'||tab==='today'||tab==='path'||tab==='lib'){ if(typeof navTo==='function') navTo(tab, tab==='lib'?{direct:1}:undefined); }
       else if(tab==='guide'){ if(typeof navTo==='function') navTo('guide', _want); }
       // Приход из уведомления: открыть «Памятку дня» сразу на утренней части.
       try{ if(_plan==='morning' && typeof openDayPlanPanel==='function') setTimeout(openDayPlanPanel,400); }catch(e){}
