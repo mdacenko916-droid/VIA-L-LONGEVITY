@@ -40,6 +40,9 @@ UI = {
     'leadNr':  {'uk': '', 'ru': '',
                 'en': 'Plain, honest articles about what happens to the body in the transition years, and what really helps. Every article is based on published research.',
                 'es': 'Artículos sencillos y honestos sobre lo que le pasa al cuerpo en los años de transición y lo que de verdad ayuda. Cada artículo se basa en estudios publicados.'},
+    'leadM':   {'uk': 'Прості й чесні статті про те, що відбувається з тілом після 40, і що справді допомагає. Кожна стаття ґрунтується на опублікованих дослідженнях; статті для жінок перевірені спеціалістом.',
+                'ru': 'Простые и честные статьи о том, что происходит с телом после 40, и что действительно помогает. Каждая статья основана на опубликованных исследованиях; статьи для женщин проверены специалистом.',
+                'en': '', 'es': ''},
     'search':  {'uk': 'Пошук статті', 'ru': 'Поиск статьи', 'en': 'Search articles', 'es': 'Buscar un artículo'},
     'none':    {'uk': 'Нічого не знайшлося.', 'ru': 'Ничего не нашлось.', 'en': 'Nothing found.', 'es': 'No se ha encontrado nada.'},
     'start':   {'uk': 'З чого почати', 'ru': 'С чего начать', 'en': 'Where to start', 'es': 'Por dónde empezar'},
@@ -234,7 +237,8 @@ def main():
                   'document.querySelectorAll(\'h2.sec\').forEach(function(h){var any=[].some.call(h.nextElementSibling.children,function(c){return c.style.display!==\'none\';});h.style.display=any?\'\':\'none\';});'
                   'document.querySelector(\'.none\').style.display=n?\'none\':\'block\';">'
                   '<p class="none">%s</p>') % (tx('search', L), tx('search', L), tx('none', L))
-        lead = tx('lead', L) if L in BA.REVIEWED else tx('leadNr', L)
+        nr = any(d[k].get('nr') for k in d)   # есть невычитанные статьи (мужские переводы) — не обещаем «каждая проверена»
+        lead = (tx('leadM', L) if nr else tx('lead', L)) if L in BA.REVIEWED else tx('leadNr', L)
         body = '<h1>%s</h1><p class="lead">%s</p>%s%s%s' % (tx('title', L), lead, search, secs, dl_block(L, sub[L]))
         alt = {X: X + '/' for X in langs}
         open(os.path.join(OUT, L, 'index.html'), 'w', encoding='utf-8').write(
