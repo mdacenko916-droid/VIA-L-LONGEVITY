@@ -17,6 +17,9 @@
     sheetArtSub:{ru:'Перименопауза, менопауза и что делать',uk:'Перименопауза, менопауза і що робити',en:'Perimenopause, menopause and what to do',es:'Perimenopausia, menopausia y qué hacer',de:'Perimenopause, Menopause und was hilft',pt:'Perimenopausa, menopausa e o que fazer',fr:'Périménopause, ménopause et que faire',pl:'Perimenopauza, menopauza i co robić',it:'Perimenopausa, menopausa e cosa fare',he:'פרימנופאוזה, מנופאוזה ומה עושים',ja:'更年期の前後とできること',ko:'폐경 전후와 할 수 있는 것'},
     sheetTg:{ru:'Сообщество в Telegram',uk:'Спільнота в Telegram',en:'Telegram community',es:'Comunidad en Telegram',de:'Community auf Telegram',pt:'Comunidade no Telegram',fr:'Communauté sur Telegram',pl:'Społeczność na Telegramie',it:'Community su Telegram',he:'הקהילה בטלגרם',ja:'Telegramコミュニティ',ko:'텔레그램 커뮤니티'},
     sheetTgSub:{ru:'Общение с женщинами, которые проходят то же',uk:'Спілкування з жінками, які проходять те саме',en:'Talk with women going through the same',es:'Habla con mujeres que viven lo mismo',de:'Austausch mit Frauen, die dasselbe erleben',pt:'Converse com mulheres que vivem o mesmo',fr:'Échangez avec des femmes qui vivent la même chose',pl:'Rozmowy z kobietami, które przechodzą to samo',it:'Parla con donne che vivono lo stesso',he:'שיחה עם נשים שעוברות את אותו הדבר',ja:'同じ経験をしている女性たちと話せます',ko:'같은 시기를 지나는 여성들과 이야기해요'},
+    sheetSite:{ru:'Вся библиотека на сайте',uk:'Уся бібліотека на сайті',en:'Full library on the website',es:'Toda la biblioteca en la web',de:'Die ganze Bibliothek auf der Website',pt:'A biblioteca completa no site',fr:'Toute la bibliothèque sur le site',pl:'Cała biblioteka na stronie',it:'Tutta la biblioteca sul sito',he:'כל הספרייה באתר',ja:'すべての記事はウェブサイトで',ko:'전체 라이브러리는 웹사이트에서'},
+    sheetSiteSub:{ru:'Все статьи и поиск — откроется в браузере',uk:'Усі статті й пошук — відкриється в браузері',en:'All articles with search — opens in your browser',es:'Todos los artículos y búsqueda — se abre en el navegador'},
+    sheetSiteSubEn:{de:'Auf Englisch — der Browser kann die Seite übersetzen',pt:'Em inglês — o navegador pode traduzir a página',fr:'En anglais — le navigateur peut traduire la page',pl:'Po angielsku — przeglądarka może przetłumaczyć stronę',it:'In inglese — il browser può tradurre la pagina',he:'באנגלית — הדפדפן יכול לתרגם את הדף',ja:'英語のページです。ブラウザで翻訳できます',ko:'영어 페이지예요. 브라우저에서 번역할 수 있어요'},
     check: {ru:'Проверено специалистом VIA-L',uk:'Перевірено спеціалістом VIA-L',en:'Reviewed by a VIA-L specialist',es:'Revisado por un especialista de VIA-L',de:'Geprüft von einer VIA-L-Fachperson',pt:'Revisado por um especialista VIA-L',fr:'Relu par un spécialiste VIA-L',pl:'Sprawdzone przez specjalistę VIA-L',it:'Rivisto da uno specialista VIA-L',he:'נבדק על ידי מומחה VIA-L',ja:'VIA-Lの専門家が確認済み',ko:'VIA-L 전문가 검토 완료'}
   };
   function tx(o, lang) { return (o && (o[lang] || o.en || o.ru)) || ''; }
@@ -64,24 +67,31 @@
   // ещё нет: книга внизу открывает статьи сразу, без выбора. Ссылку вписывает владелец, когда группа откроется.
   var TG = { ru: '', uk: '', en: '', es: '' };
 
+  // Вся библиотека — на сайте (владелец 2026-10-17: основная, пополняется). Сайт на uk/ru/en/es, остальные языки → английская
+  // версия (браузер переведёт). ?app=1 — страница без перехода на главную via-l.com и без цен (library/, build-library-site.py).
+  var SITE = 'https://via-l.com/library/', SITE_LANGS = ['uk', 'ru', 'en', 'es'];
+  function siteUrl(lang) { return SITE + (SITE_LANGS.indexOf(lang) > -1 ? lang : 'en') + '/?app=1'; }
+
   function sheetClose() { var o = document.getElementById('vialLibSheet'); if (o) o.remove(); document.body.classList.remove('lib-sheet'); }
   function shRow(tag, attrs, ic, t, sub) {
     return '<' + tag + ' class="art-sh" ' + attrs + '><span class="art-sh-ic"><i class="ph ' + ic + '"></i></span>'
       + '<span class="art-sh-tx"><span class="art-sh-t">' + esc(t) + '</span><span class="art-sh-s">' + esc(sub) + '</span></span>'
       + '<span class="art-sh-chev">›</span></' + tag + '>';
   }
-  // Выбор по нажатию на книгу: «Статьи» или группа. Только если у языка есть и то и другое.
+  // Выбор по нажатию на книгу: «Статьи», «Вся библиотека на сайте» и группа (если у языка она есть).
   function sheet(lang) {
     sheetClose(); css();
     var o = document.createElement('div'); o.id = 'vialLibSheet'; o.className = 'art-sheet-bg';
     o.onclick = function (e) { if (e.target === o) sheetClose(); };
     var art = data(lang) ? shRow('button', 'type="button" id="artSheetArt"', 'ph-book-open-text', tx(UI.sheetArt, lang), tx(UI.sheetArtSub, lang)) : '';
-    var tg = shRow('a', 'href="' + esc(TG[lang]) + '" target="_blank" rel="noopener"', 'ph-telegram-logo', tx(UI.sheetTg, lang), tx(UI.sheetTgSub, lang));
-    o.innerHTML = '<div class="art-sheet">' + art + tg + '</div>';
+    var site = shRow('a', 'href="' + esc(siteUrl(lang)) + '" target="_blank" rel="noopener"', 'ph-globe-simple', tx(UI.sheetSite, lang),
+      SITE_LANGS.indexOf(lang) > -1 ? tx(UI.sheetSiteSub, lang) : (UI.sheetSiteSubEn[lang] || ''));
+    var tg = TG[lang] ? shRow('a', 'href="' + esc(TG[lang]) + '" target="_blank" rel="noopener"', 'ph-telegram-logo', tx(UI.sheetTg, lang), tx(UI.sheetTgSub, lang)) : '';
+    o.innerHTML = '<div class="art-sheet">' + art + site + tg + '</div>';
     document.body.appendChild(o); document.body.classList.add('lib-sheet');
     var b = document.getElementById('artSheetArt');
     if (b) b.onclick = function () { sheetClose(); if (typeof window.navTo === 'function') window.navTo('lib', { direct: 1 }); };
-    o.querySelector('a').addEventListener('click', function () { setTimeout(sheetClose, 300); });
+    [].forEach.call(o.querySelectorAll('a'), function (a) { a.addEventListener('click', function () { setTimeout(sheetClose, 300); }); });
   }
 
   // Статьи пока из женского раздела (андропауза — позже, docs/ARTICLE-LIBRARY-PLAN.md): мужчине ссылку не даём.
@@ -102,10 +112,10 @@
         + '<i class="ph ph-book-open-text" aria-hidden="true"></i>' + esc(tx(UI.more, lang)) + '</button>';
     },
     has: function (lang) { return !!data(lang); },
-    hasTab: function (lang) { return !!data(lang) || !!TG[lang]; },   // книга в нижней строке
+    hasTab: function () { return true; },   // книга в нижней строке: сайт-библиотека есть у всех языков
     tg: function (lang) { return TG[lang] || ''; },
-    // Нажатие на книгу: есть группа → выбор из двух; нет → true (открыть статьи сразу).
-    tap: function (lang) { if (TG[lang]) { sheet(lang); return false; } return true; },
+    // Нажатие на книгу: всегда выбор (статьи / сайт / группа).
+    tap: function (lang) { sheet(lang); return false; },
     sheetClose: sheetClose,
     label: function (k, lang) { return tx(UI[k], lang); },
     // «Профиль › Статьи»: три раздела, внутри — строки-входы теми же классами, что «Мои данные» / «Настройки».

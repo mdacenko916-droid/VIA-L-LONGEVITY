@@ -134,6 +134,7 @@ article h1{margin-top:28px;}
 .stores a{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;background:#F4EDE3;color:var(--gold);text-decoration:none;font-weight:500;font-size:15px;}
 .more h2{font-family:'Playfair Display',serif;font-weight:400;font-size:24px;margin:30px 0 12px;color:var(--gold);}
 .backl{display:inline-block;margin:22px 0 0;text-decoration:none;font-size:15px;}
+html.in-app .dl,html.in-app .to-app,html.in-app .to-site{display:none!important;}
 footer{margin:46px 0 0;padding:22px 0 40px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);}
 """
 
@@ -142,6 +143,13 @@ FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="
 
 APPLE = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2.5 2-3.6 2.1-3.7-1.2-1.7-3-1.9-3.6-2-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.9-1.7 0-3.3 1-4.1 2.5-1.8 3.1-.5 7.6 1.3 10.1.8 1.2 1.8 2.6 3.1 2.5 1.3-.1 1.7-.8 3.2-.8s1.9.8 3.2.8c1.4 0 2.2-1.2 3-2.4 1-1.4 1.4-2.7 1.4-2.8-.1 0-2.5-1-2.5-4.2zM14 5.1c.7-.8 1.1-1.9 1-3.1-1 .1-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.9-1.4z"/></svg>'
 GPLAY = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M4 2.6c-.3.3-.4.7-.4 1.2v16.4c0 .5.1.9.4 1.2l9.2-9.4L4 2.6zm10.4 8.2 2.6-2.6L6.2 2.1c-.3-.2-.7-.2-1 0l9.2 8.7zm0 2.4-9.2 8.7c.3.2.7.2 1 0l10.8-6.1-2.6-2.6zm5.9-2.8-2.5-1.4-2.8 2.8 2.8 2.8 2.5-1.4c.7-.4.7-1.4 0-1.8z"/></svg>'
+
+
+# Режим «из приложения» (владелец 2026-10-17): книга в VIA-L ведёт сюда с ?app=1. Прячем всё, что уводит на главную via-l.com
+# (там цены и гайды Hotmart — правило App Store 3.1.1 / Play Billing) и блок «скачать приложение»: остаются статьи, поиск, языки.
+# Метка держится на вкладке браузера (sessionStorage), чтобы переходы по статьям её не теряли.
+APP_MODE = ('<script>try{if(/[?&]app=1/.test(location.search))sessionStorage.setItem("vialApp","1");'
+            'if(sessionStorage.getItem("vialApp"))document.documentElement.classList.add("in-app");}catch(e){}</script>')
 
 
 def page(lang, title, desc, path, body, alt_paths):
@@ -153,11 +161,11 @@ def page(lang, title, desc, path, body, alt_paths):
     return ('<!doctype html><html lang="%s"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
             '<title>%s</title><meta name="description" content="%s"><link rel="canonical" href="%s/%s">%s'
             '<meta property="og:type" content="article"><meta property="og:title" content="%s"><meta property="og:description" content="%s">'
-            '<meta property="og:url" content="%s/%s"><meta name="robots" content="index, follow">%s<style>%s</style></head><body>'
+            '<meta property="og:url" content="%s/%s"><meta name="robots" content="index, follow">%s<style>%s</style>' + APP_MODE + '</head><body>'
             '<header class="top"><div class="wrap"><a class="brand" href="../%s/">VIA·L</a>'
-            '<nav class="menu"><a class="on" href="../%s/">%s</a><a href="#app">%s</a><a href="https://via-l.com/">%s</a></nav>'
+            '<nav class="menu"><a class="on" href="../%s/">%s</a><a class="to-app" href="#app">%s</a><a class="to-site" href="https://via-l.com/">%s</a></nav>'
             '<div class="langs">%s</div></div></header><main class="wrap">%s</main>'
-            '<footer class="wrap">© VIA-L · <a href="https://via-l.com/">via-l.com</a></footer></body></html>'
+            '<footer class="wrap">© VIA-L<span class="to-site"> · <a href="https://via-l.com/">via-l.com</a></span></footer></body></html>'
             ) % (lang, esc(title), esc(desc), BASE, path, alts, esc(title), esc(desc), BASE, path, FONTS, CSS,
                  lang, lang, tx('lib', lang), tx('appNav', lang), tx('specNav', lang), langs, body)
 
@@ -244,7 +252,7 @@ def main():
                 '<title>VIA-L · %s</title><link rel="canonical" href="%s/%s/">%s'
                 '<script>(function(){var L=%s,s="";try{s=localStorage.getItem("selectedLang")||"";}catch(e){}'
                 'if(s==="ua")s="uk";if(L.indexOf(s)<0){var n=(navigator.language||"").slice(0,2).toLowerCase();s=L.indexOf(n)>-1?n:"%s";}'
-                'location.replace(s+"/");})();</script></head><body>%s</body></html>'
+                'location.replace(s+"/"+location.search);})();</script></head><body>%s</body></html>'
                 ) % (tx('lib', DEFAULT), BASE, DEFAULT,
                      ''.join('<link rel="alternate" hreflang="%s" href="%s/%s/">' % (X, BASE, X) for X in langs),
                      json.dumps(langs), DEFAULT, ' · '.join('<a href="%s/">%s</a>' % (X, tx('lib', X)) for X in langs))
