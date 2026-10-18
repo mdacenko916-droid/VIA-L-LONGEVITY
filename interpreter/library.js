@@ -17,7 +17,7 @@
     sheetArtSub:{ru:'Коротко о главном: что происходит и что делать',uk:'Коротко про головне: що відбувається і що робити',en:'The key facts: what’s happening and what to do',es:'Lo importante: qué está pasando y qué hacer',de:'Das Wichtigste: was passiert und was hilft',pt:'O principal: o que está acontecendo e o que fazer',fr:'L’essentiel : ce qui se passe et que faire',pl:'Najważniejsze: co się dzieje i co robić',it:'L’essenziale: cosa succede e cosa fare',he:'בקצרה: מה קורה ומה עושים',ja:'何が起きていて、何ができるかを手短に',ko:'무슨 일이 일어나고 무엇을 할 수 있는지 간단히'},
     sheetTg:{ru:'Сообщество в Telegram',uk:'Спільнота в Telegram',en:'Telegram community',es:'Comunidad en Telegram',de:'Community auf Telegram',pt:'Comunidade no Telegram',fr:'Communauté sur Telegram',pl:'Społeczność na Telegramie',it:'Community su Telegram',he:'הקהילה בטלגרם',ja:'Telegramコミュニティ',ko:'텔레그램 커뮤니티'},
     sheetTgSub:{ru:'Общение с женщинами, которые проходят то же',uk:'Спілкування з жінками, які проходять те саме',en:'Talk with women going through the same',es:'Habla con mujeres que viven lo mismo',de:'Austausch mit Frauen, die dasselbe erleben',pt:'Converse com mulheres que vivem o mesmo',fr:'Échangez avec des femmes qui vivent la même chose',pl:'Rozmowy z kobietami, które przechodzą to samo',it:'Parla con donne che vivono lo stesso',he:'שיחה עם נשים שעוברות את אותו הדבר',ja:'同じ経験をしている女性たちと話せます',ko:'같은 시기를 지나는 여성들과 이야기해요'},
-    sheetSite:{ru:'Библиотека VIA-L',uk:'Бібліотека VIA-L',en:'VIA-L Library',es:'Biblioteca VIA-L',de:'VIA-L-Bibliothek',pt:'Biblioteca VIA-L',fr:'Bibliothèque VIA-L',pl:'Biblioteka VIA-L',it:'Biblioteca VIA-L',he:'הספרייה של VIA-L',ja:'VIA-Lライブラリー',ko:'VIA-L 라이브러리'},
+    sheetSite:{ru:'Основы на сайте',uk:'Основи на сайті',en:'Essentials on the website',es:'Lo esencial en la web',de:'Grundlagen auf der Website',pt:'O essencial no site',fr:'L’essentiel sur le site',pl:'Podstawy na stronie',it:'Le basi sul sito',he:'היסודות באתר',ja:'サイトで「基本」を読む',ko:'웹사이트의 기초'},
     sheetSiteSub:{ru:'Все статьи и поиск — откроется в браузере',uk:'Усі статті й пошук — відкриється в браузері',en:'All articles with search — opens in your browser',es:'Todos los artículos y búsqueda — se abre en el navegador'},
     sheetSiteSubEn:{de:'Auf Englisch — der Browser kann die Seite übersetzen',pt:'Em inglês — o navegador pode traduzir a página',fr:'En anglais — le navigateur peut traduire la page',pl:'Po angielsku — przeglądarka może przetłumaczyć stronę',it:'In inglese — il browser può tradurre la pagina',he:'באנגלית — הדפדפן יכול לתרגם את הדף',ja:'英語のページです。ブラウザで翻訳できます',ko:'영어 페이지예요. 브라우저에서 번역할 수 있어요'},
     men:  {ru:'Мужское',uk:'Чоловіче',en:'For men',es:'Para hombres',de:'Für Männer',pt:'Para homens',fr:'Pour les hommes',pl:'Dla mężczyzn',it:'Per uomini',he:'לגברים',ja:'男性のために',ko:'남성을 위해'},
@@ -102,19 +102,23 @@
       + '<span class="art-sh-tx"><span class="art-sh-t">' + esc(t) + '</span><span class="art-sh-s">' + esc(sub) + '</span></span>'
       + '<span class="art-sh-chev">›</span></' + tag + '>';
   }
-  // Выбор по нажатию на книгу: «Статьи», «Вся библиотека на сайте» и группа (если у языка она есть).
+  // Выбор по нажатию на книгу: «Библиотека VIA-L» (платная, в приложении), «Основы», «Основы на сайте» и группа (если есть).
+  // Платная полка — строкой здесь, а не внутри «Основ», и не на сайте: подписку видит только приложение (владелец 2026-10-18).
   function sheet(lang) {
     sheetClose(); css();
     var o = document.createElement('div'); o.id = 'vialLibSheet'; o.className = 'art-sheet-bg';
     o.onclick = function (e) { if (e.target === o) sheetClose(); };
+    var res = resHas(lang) ? shRow('button', 'type="button" id="artSheetRes"', 'ph-flask', tx(UI.res, lang), tx(UI.resSub, lang)) : '';
     var art = has(lang) ? shRow('button', 'type="button" id="artSheetArt"', 'ph-book-open-text', tx(UI.sheetArt, lang), tx(UI.sheetArtSub, lang)) : '';
     var site = shRow('a', 'href="' + esc(siteUrl(lang)) + '" target="_blank" rel="noopener"', 'ph-globe-simple', tx(UI.sheetSite, lang),
       SITE_LANGS.indexOf(lang) > -1 ? tx(UI.sheetSiteSub, lang) : (UI.sheetSiteSubEn[lang] || ''));
     var tg = TG[lang] ? shRow('a', 'href="' + esc(TG[lang]) + '" target="_blank" rel="noopener"', 'ph-telegram-logo', tx(UI.sheetTg, lang), tx(UI.sheetTgSub, lang)) : '';
-    o.innerHTML = '<div class="art-sheet">' + art + site + tg + '</div>';
+    o.innerHTML = '<div class="art-sheet">' + res + art + site + tg + '</div>';
     document.body.appendChild(o); document.body.classList.add('lib-sheet');
     var b = document.getElementById('artSheetArt');
     if (b) b.onclick = function () { sheetClose(); if (typeof window.navTo === 'function') window.navTo('lib', { direct: 1 }); };
+    var rb = document.getElementById('artSheetRes');
+    if (rb) rb.onclick = function () { sheetClose(); if (typeof window.navTo === 'function') window.navTo('lib', { direct: 1 }); if (typeof window._cardOpen === 'function') window._cardOpen('research'); };
     [].forEach.call(o.querySelectorAll('a'), function (a) { a.addEventListener('click', function () { setTimeout(sheetClose, 300); }); });
   }
 
@@ -216,9 +220,7 @@
     listHtml: function (lang) {
       var d = data(lang); if (!has(lang)) return '';
       css();
-      var res = resHas(lang) ? '<button type="button" class="vc-link vc-span" onclick="_cardOpen(\'research\')"><span class="vc-ic"><i class="ph ph-flask"></i></span>'
-        + '<span class="vc-txt"><span class="vc-tt">' + esc(tx(UI.res, lang)) + '</span><span class="vc-sub2">' + esc(tx(UI.resSub, lang)) + '</span></span><span class="vc-chev">›</span></button>' : '';
-      return res + secs(lang).map(function (sec) {
+      return secs(lang).map(function (sec) {
         if (!sec[1].some(function (k) { return d[k]; })) return '';   // группа ещё не переведена на язык — без заголовка
         return '<div class="vc-subh vc-span" style="grid-column:1/-1;">' + esc(tx(UI[sec[0]], lang)) + '</div>'
           + sec[1].filter(function (k) { return d[k]; }).map(function (k) { return rowHtml(k, d[k]); }).join('');
