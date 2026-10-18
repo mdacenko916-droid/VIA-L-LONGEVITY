@@ -17,9 +17,6 @@
     sheetArtSub:{ru:'Коротко о главном: что происходит и что делать',uk:'Коротко про головне: що відбувається і що робити',en:'The key facts: what’s happening and what to do',es:'Lo importante: qué está pasando y qué hacer',de:'Das Wichtigste: was passiert und was hilft',pt:'O principal: o que está acontecendo e o que fazer',fr:'L’essentiel : ce qui se passe et que faire',pl:'Najważniejsze: co się dzieje i co robić',it:'L’essenziale: cosa succede e cosa fare',he:'בקצרה: מה קורה ומה עושים',ja:'何が起きていて、何ができるかを手短に',ko:'무슨 일이 일어나고 무엇을 할 수 있는지 간단히'},
     sheetTg:{ru:'Сообщество в Telegram',uk:'Спільнота в Telegram',en:'Telegram community',es:'Comunidad en Telegram',de:'Community auf Telegram',pt:'Comunidade no Telegram',fr:'Communauté sur Telegram',pl:'Społeczność na Telegramie',it:'Community su Telegram',he:'הקהילה בטלגרם',ja:'Telegramコミュニティ',ko:'텔레그램 커뮤니티'},
     sheetTgSub:{ru:'Общение с женщинами, которые проходят то же',uk:'Спілкування з жінками, які проходять те саме',en:'Talk with women going through the same',es:'Habla con mujeres que viven lo mismo',de:'Austausch mit Frauen, die dasselbe erleben',pt:'Converse com mulheres que vivem o mesmo',fr:'Échangez avec des femmes qui vivent la même chose',pl:'Rozmowy z kobietami, które przechodzą to samo',it:'Parla con donne che vivono lo stesso',he:'שיחה עם נשים שעוברות את אותו הדבר',ja:'同じ経験をしている女性たちと話せます',ko:'같은 시기를 지나는 여성들과 이야기해요'},
-    sheetSite:{ru:'Основы на сайте',uk:'Основи на сайті',en:'Essentials on the website',es:'Lo esencial en la web',de:'Grundlagen auf der Website',pt:'O essencial no site',fr:'L’essentiel sur le site',pl:'Podstawy na stronie',it:'Le basi sul sito',he:'היסודות באתר',ja:'サイトで「基本」を読む',ko:'웹사이트의 기초'},
-    sheetSiteSub:{ru:'Все статьи и поиск — откроется в браузере',uk:'Усі статті й пошук — відкриється в браузері',en:'All articles with search — opens in your browser',es:'Todos los artículos y búsqueda — se abre en el navegador'},
-    sheetSiteSubEn:{de:'Auf Englisch — der Browser kann die Seite übersetzen',pt:'Em inglês — o navegador pode traduzir a página',fr:'En anglais — le navigateur peut traduire la page',pl:'Po angielsku — przeglądarka może przetłumaczyć stronę',it:'In inglese — il browser può tradurre la pagina',he:'באנגלית — הדפדפן יכול לתרגם את הדף',ja:'英語のページです。ブラウザで翻訳できます',ko:'영어 페이지예요. 브라우저에서 번역할 수 있어요'},
     men:  {ru:'Мужское',uk:'Чоловіче',en:'For men',es:'Para hombres',de:'Für Männer',pt:'Para homens',fr:'Pour les hommes',pl:'Dla mężczyzn',it:'Per uomini',he:'לגברים',ja:'男性のために',ko:'남성을 위해'},
     rowSubM:{ru:'Андропауза, сон, сердце и что делать',uk:'Андропауза, сон, серце і що робити',en:'Andropause, sleep, heart and what to do',es:'Andropausia, sueño, corazón y qué hacer',de:'Andropause, Schlaf, Herz und was hilft',pt:'Andropausa, sono, coração e o que fazer',fr:'Andropause, sommeil, cœur et que faire',pl:'Andropauza, sen, serce i co robić',it:'Andropausa, sonno, cuore e cosa fare',he:'אנדרופאוזה, שינה, לב ומה עושים',ja:'男性更年期、睡眠、心臓とできること',ko:'남성 갱년기, 수면, 심장과 할 수 있는 것'},
     // Библиотека VIA-L — платная часть (, 2026-10-18, docs/LIBRARY-FULL-MODEL.md): анонсы всем, текст — по подписке.
@@ -29,7 +26,9 @@
     resStudy:{ru:'Разбор исследования',uk:'Розбір дослідження',en:'Study explained',es:'Estudio explicado',de:'Studie erklärt',pt:'Estudo explicado',fr:'Étude expliquée',pl:'Badanie w skrócie',it:'Studio spiegato',he:'מחקר בהסבר',ja:'研究の解説',ko:'연구 해설'},
     resLock:{ru:'Полный разбор доступен по подписке VIA-L.',uk:'Повний розбір доступний за підпискою VIA-L.',en:'The full summary is part of the VIA-L subscription.',es:'El resumen completo está incluido en la suscripción VIA-L.',de:'Die vollständige Zusammenfassung ist im VIA-L-Abo enthalten.',pt:'O resumo completo faz parte da assinatura VIA-L.',fr:'Le résumé complet est inclus dans l’abonnement VIA-L.',pl:'Pełne omówienie jest dostępne w subskrypcji VIA-L.',it:'Il riassunto completo è incluso nell’abbonamento VIA-L.',he:'הסיכום המלא כלול במנוי VIA-L.',ja:'全文はVIA-Lのサブスクリプションでお読みいただけます。',ko:'전체 해설은 VIA-L 구독에 포함되어 있어요.'},
     resLockWeb:{ru:'Полный разбор доступен в приложении VIA-L по подписке.',uk:'Повний розбір доступний у застосунку VIA-L за підпискою.',en:'The full summary is available in the VIA-L app with a subscription.',es:'El resumen completo está disponible en la app VIA-L con suscripción.',de:'Die vollständige Zusammenfassung gibt es in der VIA-L-App mit Abo.',pt:'O resumo completo está disponível no app VIA-L com assinatura.',fr:'Le résumé complet est disponible dans l’app VIA-L avec abonnement.',pl:'Pełne omówienie jest dostępne w aplikacji VIA-L w subskrypcji.',it:'Il riassunto completo è disponibile nell’app VIA-L con abbonamento.',he:'הסיכום המלא זמין באפליקציית VIA-L במנוי.',ja:'全文はVIA-Lアプリのサブスクリプションでお読みいただけます。',ko:'전체 해설은 VIA-L 앱 구독으로 볼 수 있어요.'},
-    resSubBtn:{ru:'Подписка VIA-L',uk:'Підписка VIA-L',en:'VIA-L subscription',es:'Suscripción VIA-L',de:'VIA-L-Abo',pt:'Assinatura VIA-L',fr:'Abonnement VIA-L',pl:'Subskrypcja VIA-L',it:'Abbonamento VIA-L',he:'מנוי VIA-L',ja:'VIA-Lのサブスクリプション',ko:'VIA-L 구독'},
+resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: сон, припливи, кава…',en:'Search: sleep, hot flashes, coffee…',es:'Buscar: sueño, sofocos, café…',de:'Suche: Schlaf, Hitzewallungen, Kaffee…',pt:'Buscar: sono, ondas de calor, café…',fr:'Rechercher : sommeil, bouffées de chaleur, café…',pl:'Szukaj: sen, uderzenia gorąca, kawa…',it:'Cerca: sonno, vampate, caffè…',he:'חיפוש: שינה, גלי חום, קפה…',ja:'検索：睡眠、ほてり、コーヒー…',ko:'검색: 수면, 안면홍조, 커피…'},
+    resNone:{ru:'Ничего не нашлось. Попробуйте другое слово.',uk:'Нічого не знайшлося. Спробуйте інше слово.',en:'Nothing found. Try another word.',es:'No hay resultados. Prueba otra palabra.',de:'Nichts gefunden. Versuche ein anderes Wort.',pt:'Nada encontrado. Tente outra palavra.',fr:'Aucun résultat. Essayez un autre mot.',pl:'Nic nie znaleziono. Spróbuj innego słowa.',it:'Nessun risultato. Prova un’altra parola.',he:'לא נמצא דבר. נסו מילה אחרת.',ja:'見つかりませんでした。別の言葉で試してください。',ko:'찾지 못했어요. 다른 단어로 찾아보세요.'},
+        resSubBtn:{ru:'Подписка VIA-L',uk:'Підписка VIA-L',en:'VIA-L subscription',es:'Suscripción VIA-L',de:'VIA-L-Abo',pt:'Assinatura VIA-L',fr:'Abonnement VIA-L',pl:'Subskrypcja VIA-L',it:'Abbonamento VIA-L',he:'מנוי VIA-L',ja:'VIA-Lのサブスクリプション',ko:'VIA-L 구독'},
     resLoad:{ru:'Загружаем…',uk:'Завантажуємо…',en:'Loading…',es:'Cargando…',de:'Wird geladen…',pt:'Carregando…',fr:'Chargement…',pl:'Ładowanie…',it:'Caricamento…',he:'טוען…',ja:'読み込み中…',ko:'불러오는 중…'},
     resErr:{ru:'Не получилось загрузить. Проверьте интернет и откройте ещё раз.',uk:'Не вдалося завантажити. Перевірте інтернет і відкрийте ще раз.',en:'Couldn’t load. Check your connection and try again.',es:'No se pudo cargar. Revisa tu conexión e inténtalo de nuevo.',de:'Laden fehlgeschlagen. Prüfe die Verbindung und versuche es erneut.',pt:'Não foi possível carregar. Verifique a conexão e tente de novo.',fr:'Chargement impossible. Vérifiez votre connexion et réessayez.',pl:'Nie udało się wczytać. Sprawdź internet i spróbuj ponownie.',it:'Impossibile caricare. Controlla la connessione e riprova.',he:'הטעינה נכשלה. בדקו את החיבור ונסו שוב.',ja:'読み込めませんでした。接続を確認してもう一度お試しください。',ko:'불러오지 못했어요. 인터넷을 확인하고 다시 시도해 주세요.'},
     resNew:{ru:'Новые материалы выходят каждую неделю.',uk:'Нові матеріали виходять щотижня.',en:'New pieces come out every week.',es:'Cada semana hay contenido nuevo.',de:'Jede Woche erscheinen neue Beiträge.',pt:'Novos conteúdos saem toda semana.',fr:'De nouveaux contenus chaque semaine.',pl:'Nowe materiały co tydzień.',it:'Nuovi contenuti ogni settimana.',he:'תכנים חדשים יוצאים כל שבוע.',ja:'毎週新しい記事が追加されます。',ko:'매주 새 글이 올라와요.'},
@@ -91,10 +90,6 @@
   // ещё нет: книга внизу открывает статьи сразу, без выбора. Ссылку вписывает владелец, когда группа откроется.
   var TG = { ru: '', uk: '', en: '', es: '' };
 
-  // Вся библиотека — на сайте (владелец 2026-10-17: основная, пополняется). Сайт на uk/ru/en/es, остальные языки → английская
-  // версия (браузер переведёт). ?app=1 — страница без перехода на главную via-l.com и без цен (library/, build-library-site.py).
-  var SITE = 'https://via-l.com/library/', SITE_LANGS = ['uk', 'ru', 'en', 'es'];
-  function siteUrl(lang) { return SITE + (SITE_LANGS.indexOf(lang) > -1 ? lang : 'en') + '/?app=1'; }
 
   function sheetClose() { var o = document.getElementById('vialLibSheet'); if (o) o.remove(); document.body.classList.remove('lib-sheet'); }
   function shRow(tag, attrs, ic, t, sub) {
@@ -102,7 +97,8 @@
       + '<span class="art-sh-tx"><span class="art-sh-t">' + esc(t) + '</span><span class="art-sh-s">' + esc(sub) + '</span></span>'
       + '<span class="art-sh-chev">›</span></' + tag + '>';
   }
-  // Выбор по нажатию на книгу: «Библиотека VIA-L» (платная, в приложении), «Основы», «Основы на сайте» и группа (если есть).
+  // Выбор по нажатию на книгу: «Библиотека VIA-L» (платная, в приложении), «Основы» и группа (если есть).
+  // Строки «на сайте» нет (владелец 2026-10-18): «Основы» есть в приложении на всех 12 языках.
   // Платная полка — строкой здесь, а не внутри «Основ», и не на сайте: подписку видит только приложение (владелец 2026-10-18).
   function sheet(lang) {
     sheetClose(); css();
@@ -110,10 +106,8 @@
     o.onclick = function (e) { if (e.target === o) sheetClose(); };
     var res = resHas(lang) ? shRow('button', 'type="button" id="artSheetRes"', 'ph-flask', tx(UI.res, lang), tx(UI.resSub, lang)) : '';
     var art = has(lang) ? shRow('button', 'type="button" id="artSheetArt"', 'ph-book-open-text', tx(UI.sheetArt, lang), tx(UI.sheetArtSub, lang)) : '';
-    var site = shRow('a', 'href="' + esc(siteUrl(lang)) + '" target="_blank" rel="noopener"', 'ph-globe-simple', tx(UI.sheetSite, lang),
-      SITE_LANGS.indexOf(lang) > -1 ? tx(UI.sheetSiteSub, lang) : (UI.sheetSiteSubEn[lang] || ''));
     var tg = TG[lang] ? shRow('a', 'href="' + esc(TG[lang]) + '" target="_blank" rel="noopener"', 'ph-telegram-logo', tx(UI.sheetTg, lang), tx(UI.sheetTgSub, lang)) : '';
-    o.innerHTML = '<div class="art-sheet">' + res + art + site + tg + '</div>';
+    o.innerHTML = '<div class="art-sheet">' + res + art + tg + '</div>';
     document.body.appendChild(o); document.body.classList.add('lib-sheet');
     var b = document.getElementById('artSheetArt');
     if (b) b.onclick = function () { sheetClose(); if (typeof window.navTo === 'function') window.navTo('lib', { direct: 1 }); };
@@ -150,10 +144,17 @@
       + '<span class="vc-sub2">' + esc(tx(x.type === 'myth' ? UI.resMyth : UI.resStudy, lang)) + ' · ' + esc(x.year || '') + '</span></span>'
       + '<span class="vc-chev">' + (subOn() ? '›' : '<i class="ph ph-lock-simple"></i>') + '</span></button>';
   }
+  var resQ = '';   // строка поиска по полке: заголовок, анонс, тема (полный текст закрыт — ищем по анонсам)
+  function resMatch(x, lang) {
+    if (!resQ) return true;
+    var hay = (x.title + ' ' + (x.teaser || '') + ' ' + (tx(TOPIC[x.topic], lang) || '')).toLowerCase();
+    return resQ.split(/\s+/).every(function (w) { return hay.indexOf(w) > -1; });
+  }
   function resListRender(lang) {
     if (!resCat) return;
-    var order = [], by = {};
-    resCat.forEach(function (x) { if (!by[x.topic]) { by[x.topic] = []; order.push(x.topic); } by[x.topic].push(x); });
+    var order = [], by = {}, hit = resCat.filter(function (x) { return resMatch(x, lang); });
+    if (!hit.length) return resFill('vialResList', '<p class="art-p art-note" style="grid-column:1/-1;">' + esc(tx(UI.resNone, lang)) + '</p>');
+    hit.forEach(function (x) { if (!by[x.topic]) { by[x.topic] = []; order.push(x.topic); } by[x.topic].push(x); });
     resFill('vialResList', order.reverse().map(function (k) {   // свежая тема — сверху
       return '<div class="vc-subh vc-span" style="grid-column:1/-1;">' + esc(tx(TOPIC[k], lang) || k) + '</div>'
         + by[k].map(function (x) { return resRow(x, lang); }).join('');
@@ -210,7 +211,7 @@
     },
     has: has,
     isMale: isMale,
-    hasTab: function () { return true; },   // книга в нижней строке: сайт-библиотека есть у всех языков
+    hasTab: function () { return true; },   // книга в нижней строке: «Основы» есть у всех 12 языков
     tg: function (lang) { return TG[lang] || ''; },
     // Нажатие на книгу: всегда выбор (статьи / сайт / группа).
     tap: function (lang) { sheet(lang); return false; },
@@ -242,10 +243,14 @@
     resHas: resHas,
     // «Библиотека › Разборы исследований»: список по темам (подгружается), замок — без подписки.
     researchHtml: function (lang) {
-      css(); var box = '<div id="vialResList" class="vc-span" style="grid-column:1/-1;display:contents;"><p class="art-p art-note">' + esc(tx(UI.resLoad, lang)) + '</p></div>';
+      css(); resQ = '';
+      var find = '<input type="search" id="vialResFind" class="manual-input vc-span" style="grid-column:1/-1;width:100%;box-sizing:border-box;margin-bottom:6px;"'
+        + ' placeholder="' + esc(tx(UI.resFind, lang)) + '" oninput="vialLibrary.resFind(this.value,\'' + esc(lang) + '\')">';
+      var box = find + '<div id="vialResList" class="vc-span" style="grid-column:1/-1;display:contents;"><p class="art-p art-note">' + esc(tx(UI.resLoad, lang)) + '</p></div>';
       setTimeout(function () { resCatalog(lang, function (err) { if (err) resFill('vialResList', '<p class="art-p">' + esc(tx(UI.resErr, lang)) + '</p>'); else resListRender(lang); }); }, 0);
       return box;
     },
+    resFind: function (q, lang) { resQ = String(q || '').trim().toLowerCase(); resListRender(lang); },
     researchItemHtml: function (id, lang) {
       css(); setTimeout(function () { resCatalog(lang, function (err) { if (err) resFill('vialResItem', '<p class="art-p">' + esc(tx(UI.resErr, lang)) + '</p>'); else resLoadItem(id, lang); }); }, 0);
       return '<div id="vialResItem" style="grid-column:1/-1;"><p class="art-p art-note">' + esc(tx(UI.resLoad, lang)) + '</p></div>';
