@@ -27,6 +27,12 @@
     resLock:{ru:'Полный разбор доступен по подписке VIA-L.',uk:'Повний розбір доступний за підпискою VIA-L.',en:'The full summary is part of the VIA-L subscription.',es:'El resumen completo está incluido en la suscripción VIA-L.',de:'Die vollständige Zusammenfassung ist im VIA-L-Abo enthalten.',pt:'O resumo completo faz parte da assinatura VIA-L.',fr:'Le résumé complet est inclus dans l’abonnement VIA-L.',pl:'Pełne omówienie jest dostępne w subskrypcji VIA-L.',it:'Il riassunto completo è incluso nell’abbonamento VIA-L.',he:'הסיכום המלא כלול במנוי VIA-L.',ja:'全文はVIA-Lのサブスクリプションでお読みいただけます。',ko:'전체 해설은 VIA-L 구독에 포함되어 있어요.'},
     resLockWeb:{ru:'Полный разбор доступен в приложении VIA-L по подписке.',uk:'Повний розбір доступний у застосунку VIA-L за підпискою.',en:'The full summary is available in the VIA-L app with a subscription.',es:'El resumen completo está disponible en la app VIA-L con suscripción.',de:'Die vollständige Zusammenfassung gibt es in der VIA-L-App mit Abo.',pt:'O resumo completo está disponível no app VIA-L com assinatura.',fr:'Le résumé complet est disponible dans l’app VIA-L avec abonnement.',pl:'Pełne omówienie jest dostępne w aplikacji VIA-L w subskrypcji.',it:'Il riassunto completo è disponibile nell’app VIA-L con abbonamento.',he:'הסיכום המלא זמין באפליקציית VIA-L במנוי.',ja:'全文はVIA-Lアプリのサブスクリプションでお読みいただけます。',ko:'전체 해설은 VIA-L 앱 구독으로 볼 수 있어요.'},
 resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: сон, припливи, кава…',en:'Search: sleep, hot flashes, coffee…',es:'Buscar: sueño, sofocos, café…',de:'Suche: Schlaf, Hitzewallungen, Kaffee…',pt:'Buscar: sono, ondas de calor, café…',fr:'Rechercher : sommeil, bouffées de chaleur, café…',pl:'Szukaj: sen, uderzenia gorąca, kawa…',it:'Cerca: sonno, vampate, caffè…',he:'חיפוש: שינה, גלי חום, קפה…',ja:'検索：睡眠、ほてり、コーヒー…',ko:'검색: 수면, 안면홍조, 커피…'},
+    back:{en:'Library',ru:'Библиотека',uk:'Бібліотека',es:'Biblioteca',de:'Bibliothek',pt:'Biblioteca',fr:'Bibliothèque',pl:'Biblioteka',it:'Biblioteca',he:'ספרייה',ja:'ライブラリ',ko:'라이브러리'},
+    resTopics:{ru:'Темы',uk:'Теми',en:'Topics',es:'Temas',de:'Themen',pt:'Temas',fr:'Thèmes',pl:'Tematy',it:'Temi',he:'נושאים',ja:'テーマ',ko:'주제'},
+    resAll:{ru:'Все темы',uk:'Усі теми',en:'All topics',es:'Todos los temas',de:'Alle Themen',pt:'Todos os temas',fr:'Tous les thèmes',pl:'Wszystkie tematy',it:'Tutti i temi',he:'כל הנושאים',ja:'すべてのテーマ',ko:'모든 주제'},
+    resAsk:{ru:'Попросить добавить эту тему',uk:'Попросити додати цю тему',en:'Ask us to add this topic',es:'Pedir que añadamos este tema',de:'Dieses Thema vorschlagen',pt:'Pedir para adicionar este tema',fr:'Demander d’ajouter ce thème',pl:'Poproś o dodanie tego tematu',it:'Chiedi di aggiungere questo tema',he:'לבקש להוסיף את הנושא',ja:'このテーマの追加をリクエスト',ko:'이 주제 추가 요청하기'},
+    resAsked:{ru:'Спасибо! Запрос у нас. Если найдём хорошее исследование, добавим материал в ближайшее время.',uk:'Дякуємо! Запит у нас. Якщо знайдемо гарне дослідження, додамо матеріал найближчим часом.',en:'Thank you! We’ve got your request. If we find a good study, we’ll add it soon.',es:'¡Gracias! Hemos recibido tu petición. Si encontramos un buen estudio, lo añadiremos pronto.',de:'Danke! Deine Anfrage ist bei uns. Wenn wir eine gute Studie finden, ergänzen wir sie bald.',pt:'Obrigado! Recebemos seu pedido. Se encontrarmos um bom estudo, vamos adicioná-lo em breve.',fr:'Merci ! Votre demande est bien reçue. Si nous trouvons une bonne étude, nous l’ajouterons bientôt.',pl:'Dziękujemy! Mamy Twoją prośbę. Jeśli znajdziemy dobre badanie, wkrótce je dodamy.',it:'Grazie! Abbiamo ricevuto la richiesta. Se troviamo un buono studio, lo aggiungeremo presto.',he:'תודה! הבקשה התקבלה. אם נמצא מחקר טוב, נוסיף אותו בקרוב.',ja:'ありがとうございます。リクエストを受け取りました。良い研究が見つかれば、近いうちに追加します。',ko:'감사해요! 요청을 받았어요. 좋은 연구를 찾으면 곧 추가할게요.'},
+    resAskErr:{ru:'Не получилось отправить. Попробуйте позже.',uk:'Не вдалося надіслати. Спробуйте пізніше.',en:'Couldn’t send. Please try later.',es:'No se pudo enviar. Inténtalo más tarde.',de:'Senden fehlgeschlagen. Bitte später erneut versuchen.',pt:'Não foi possível enviar. Tente mais tarde.',fr:'Envoi impossible. Réessayez plus tard.',pl:'Nie udało się wysłać. Spróbuj później.',it:'Invio non riuscito. Riprova più tardi.',he:'השליחה נכשלה. נסו שוב מאוחר יותר.',ja:'送信できませんでした。後でもう一度お試しください。',ko:'보내지 못했어요. 나중에 다시 시도해 주세요.'},
     resNone:{ru:'Ничего не нашлось. Попробуйте другое слово.',uk:'Нічого не знайшлося. Спробуйте інше слово.',en:'Nothing found. Try another word.',es:'No hay resultados. Prueba otra palabra.',de:'Nichts gefunden. Versuche ein anderes Wort.',pt:'Nada encontrado. Tente outra palavra.',fr:'Aucun résultat. Essayez un autre mot.',pl:'Nic nie znaleziono. Spróbuj innego słowa.',it:'Nessun risultato. Prova un’altra parola.',he:'לא נמצא דבר. נסו מילה אחרת.',ja:'見つかりませんでした。別の言葉で試してください。',ko:'찾지 못했어요. 다른 단어로 찾아보세요.'},
         resSubBtn:{ru:'Подписка VIA-L',uk:'Підписка VIA-L',en:'VIA-L subscription',es:'Suscripción VIA-L',de:'VIA-L-Abo',pt:'Assinatura VIA-L',fr:'Abonnement VIA-L',pl:'Subskrypcja VIA-L',it:'Abbonamento VIA-L',he:'מנוי VIA-L',ja:'VIA-Lのサブスクリプション',ko:'VIA-L 구독'},
     resLoad:{ru:'Загружаем…',uk:'Завантажуємо…',en:'Loading…',es:'Cargando…',de:'Wird geladen…',pt:'Carregando…',fr:'Chargement…',pl:'Ładowanie…',it:'Caricamento…',he:'טוען…',ja:'読み込み中…',ko:'불러오는 중…'},
@@ -112,7 +118,7 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
     var b = document.getElementById('artSheetArt');
     if (b) b.onclick = function () { sheetClose(); if (typeof window.navTo === 'function') window.navTo('lib', { direct: 1 }); };
     var rb = document.getElementById('artSheetRes');
-    if (rb) rb.onclick = function () { sheetClose(); if (typeof window.navTo === 'function') window.navTo('lib', { direct: 1 }); if (typeof window._cardOpen === 'function') window._cardOpen('research'); };
+    if (rb) rb.onclick = function () { sheetClose(); if (typeof window.navTo === 'function') window.navTo('lib', { direct: 1 }); if (typeof window._cardOpen === 'function') { resQ = ''; resTopic = ''; resMenu = false; window._cardOpen('research'); } };
     [].forEach.call(o.querySelectorAll('a'), function (a) { a.addEventListener('click', function () { setTimeout(sheetClose, 300); }); });
   }
 
@@ -145,15 +151,43 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
       + '<span class="vc-chev">' + (subOn() ? '›' : '<i class="ph ph-lock-simple"></i>') + '</span></button>';
   }
   var resQ = '';   // строка поиска по полке: заголовок, анонс, тема (полный текст закрыт — ищем по анонсам)
+  var resTopic = '', resMenu = false, resAsked = {};   // ☰ «Темы»: выбранная тема ('' — все), открыт ли список тем; уже отправленные запросы
   function resMatch(x, lang) {
+    if (resTopic && x.topic !== resTopic) return false;
     if (!resQ) return true;
     var hay = (x.title + ' ' + (x.teaser || '') + ' ' + (tx(TOPIC[x.topic], lang) || '')).toLowerCase();
     return resQ.split(/\s+/).every(function (w) { return hay.indexOf(w) > -1; });
   }
+  function resTopicBtn(lang) {
+    var b = document.getElementById('vialResTopicsT'); if (b) b.textContent = resTopic ? (tx(TOPIC[resTopic], lang) || resTopic) : tx(UI.resTopics, lang);
+  }
+  // Список тем вместо материалов: «Все темы» + 11 тем с числом материалов; нажатие — тема и её материалы.
+  function resMenuRender(lang) {
+    var order = [], cnt = {};
+    resCat.forEach(function (x) { if (!cnt[x.topic]) { cnt[x.topic] = 0; order.push(x.topic); } cnt[x.topic]++; });
+    var row = function (k, t, n) {
+      return '<button type="button" class="vc-link vc-span" onclick="vialLibrary.resPick(\'' + esc(k) + '\',\'' + esc(lang) + '\')">'
+        + '<span class="vc-txt"><span class="vc-tt">' + esc(t) + '</span></span><span class="vc-sub2">' + n + '</span>'
+        + '<span class="vc-chev">' + (k === resTopic ? '<i class="ph ph-check"></i>' : '›') + '</span></button>';
+    };
+    resFill('vialResList', row('', tx(UI.resAll, lang), resCat.length)
+      + order.reverse().map(function (k) { return row(k, tx(TOPIC[k], lang) || k, cnt[k]); }).join(''));
+  }
+  // Поиск ничего не нашёл → запрос уходит нам на почту (POST /library/ask), тему добавим, если актуальна (владелец 2026-10-18).
+  function resNoneHtml(lang) {
+    var q = resQ;
+    if (!q || q.length < 2) return '<p class="art-p art-note" style="grid-column:1/-1;">' + esc(tx(UI.resNone, lang)) + '</p>';
+    if (resAsked[q]) return '<p class="art-p art-note" style="grid-column:1/-1;">' + esc(tx(resAsked[q] === 'err' ? UI.resAskErr : UI.resAsked, lang)) + '</p>';
+    return '<div style="grid-column:1/-1;"><p class="art-p art-note">' + esc(tx(UI.resNone, lang)) + '</p>'
+      + '<button type="button" class="as-usual" id="vialResAsk" onclick="vialLibrary.resAsk(\'' + esc(lang) + '\')">'
+      + '<i class="ph ph-paper-plane-tilt" aria-hidden="true"></i>' + esc(tx(UI.resAsk, lang)) + '</button></div>';
+  }
   function resListRender(lang) {
     if (!resCat) return;
+    resTopicBtn(lang);
+    if (resMenu) return resMenuRender(lang);
     var order = [], by = {}, hit = resCat.filter(function (x) { return resMatch(x, lang); });
-    if (!hit.length) return resFill('vialResList', '<p class="art-p art-note" style="grid-column:1/-1;">' + esc(tx(UI.resNone, lang)) + '</p>');
+    if (!hit.length) return resFill('vialResList', resNoneHtml(lang));
     hit.forEach(function (x) { if (!by[x.topic]) { by[x.topic] = []; order.push(x.topic); } by[x.topic].push(x); });
     resFill('vialResList', order.reverse().map(function (k) {   // свежая тема — сверху
       return '<div class="vc-subh vc-span" style="grid-column:1/-1;">' + esc(tx(TOPIC[k], lang) || k) + '</div>'
@@ -243,14 +277,29 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
     resHas: resHas,
     // «Библиотека › Разборы исследований»: список по темам (подгружается), замок — без подписки.
     researchHtml: function (lang) {
-      css(); resQ = '';
-      var find = '<input type="search" id="vialResFind" class="manual-input vc-span" style="grid-column:1/-1;width:100%;box-sizing:border-box;margin-bottom:6px;"'
-        + ' placeholder="' + esc(tx(UI.resFind, lang)) + '" oninput="vialLibrary.resFind(this.value,\'' + esc(lang) + '\')">';
+      css(); resMenu = false;   // тема и строка поиска сохраняются, пока человек ходит «в материал и назад»
+      var find = '<div class="vc-span" style="grid-column:1/-1;display:flex;gap:8px;align-items:center;margin-bottom:6px;">'
+        + '<button type="button" class="as-usual" style="margin-top:0;flex:0 0 auto;max-width:45%;" onclick="vialLibrary.resMenu(\'' + esc(lang) + '\')">'
+        + '<i class="ph ph-list" aria-hidden="true"></i><span id="vialResTopicsT" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(resTopic ? (tx(TOPIC[resTopic], lang) || resTopic) : tx(UI.resTopics, lang)) + '</span></button>'
+        + '<input type="search" id="vialResFind" class="manual-input" style="flex:1 1 auto;min-width:0;box-sizing:border-box;" value="' + esc(resQ) + '"'
+        + ' placeholder="' + esc(tx(UI.resFind, lang)) + '" oninput="vialLibrary.resFind(this.value,\'' + esc(lang) + '\')"></div>';
       var box = find + '<div id="vialResList" class="vc-span" style="grid-column:1/-1;display:contents;"><p class="art-p art-note">' + esc(tx(UI.resLoad, lang)) + '</p></div>';
       setTimeout(function () { resCatalog(lang, function (err) { if (err) resFill('vialResList', '<p class="art-p">' + esc(tx(UI.resErr, lang)) + '</p>'); else resListRender(lang); }); }, 0);
       return box;
     },
-    resFind: function (q, lang) { resQ = String(q || '').trim().toLowerCase(); resListRender(lang); },
+    resFind: function (q, lang) { resQ = String(q || '').trim().toLowerCase(); resMenu = false; resListRender(lang); },
+    resMenu: function (lang) { resMenu = !resMenu; resListRender(lang); },
+    resPick: function (k, lang) { resTopic = k || ''; resMenu = false; resQ = ''; var f = document.getElementById('vialResFind'); if (f) f.value = ''; resListRender(lang); },   // тема — с чистым поиском
+    resReset: function () { resQ = ''; resTopic = ''; resMenu = false; },
+    resAsk: function (lang) {
+      var q = resQ; if (!q || resAsked[q]) return;
+      var b = document.getElementById('vialResAsk'); if (b) b.disabled = true;
+      fetch(API + '/library/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ q: q, lang: lang, platform: (typeof window.iapPlatform === 'function') ? window.iapPlatform() : '' }) })
+        .then(function (r) { resAsked[q] = r.ok ? 'ok' : 'err'; })
+        .catch(function () { resAsked[q] = 'err'; })
+        .then(function () { if (resQ === q) resListRender(lang); });
+    },
     researchItemHtml: function (id, lang) {
       css(); setTimeout(function () { resCatalog(lang, function (err) { if (err) resFill('vialResItem', '<p class="art-p">' + esc(tx(UI.resErr, lang)) + '</p>'); else resLoadItem(id, lang); }); }, 0);
       return '<div id="vialResItem" style="grid-column:1/-1;"><p class="art-p art-note">' + esc(tx(UI.resLoad, lang)) + '</p></div>';

@@ -1488,6 +1488,7 @@ export default {
       // Разовый разбор со специалистом (docs/SPECIALIST-REVIEW-PLAN.md): чек из приложения → заказ + связка с дежурным.
       if (path === '/review/claim')        return handleReviewClaim(request, env, corsHeaders, ctx);
       if (path === '/library/item')        return handleLibraryItem(request, env, corsHeaders);   // полный текст — подписка VIA-L или код EXPERT
+      if (path === '/library/ask')         return handleLibraryAsk(request, env, corsHeaders);    // поиск не нашёл → запрос темы на support@ (2026-10-18)
       if (path === '/cabinet/review-done') return handleCabinetReviewDone(request, env, corsHeaders);
 
       // Воронка витрина → EXPERT PWA: специалист выдаёт клиенту СРОЧНЫЙ код доступа к
@@ -11327,6 +11328,30 @@ async function handleLibraryItem(request, env, corsHeaders){
   try{ item = JSON.parse(await env.LIBRARY.get('lib:item:'+c.lang+':'+id) || 'null'); }catch(_){}
   if(!item) return jsonResponse({ok:false,error:'not_found'}, corsHeaders, 404);
   return jsonResponse({ok:true, lang:c.lang, item}, corsHeaders);
+}
+
+// POST /library/ask {q, lang, platform} → {ok} — поиск по Библиотеке VIA-L ничего не нашёл: запрос уходит письмом
+// на support@via-l.com, тему добавляем, если актуальна (владелец 2026-10-18). Без данных клиента — только текст запроса.
+// Лимит: 5 запросов в сутки с одного адреса (KV LIBRARY, ключ живёт сутки).
+async function handleLibraryAsk(request, env, corsHeaders){
+  if(!env.LIBRARY) return jsonResponse({ok:false,error:'library_missing'}, corsHeaders, 500);
+  let b = {}; try{ b = await request.json(); }catch(_){}
+  const q = String(b.q||'').replace(/\s+/g,' ').trim().slice(0,200);
+  if(q.length < 2) return jsonResponse({ok:false,error:'empty'}, corsHeaders, 400);
+  const lang = _libLang(b.lang);
+  const platform = b.platform === 'android' ? 'Android' : (b.platform === 'ios' ? 'iOS' : 'веб');
+  const ip = request.headers.get('CF-Connecting-IP') || 'na';
+  const rk = 'lib:ask:' + _libToday() + ':' + ip;
+  const n = parseInt(await env.LIBRARY.get(rk) || '0', 10) || 0;
+  if(n >= 5) return jsonResponse({ok:false,error:'limit'}, corsHeaders, 429);
+  await env.LIBRARY.put(rk, String(n+1), { expirationTtl: 86400 });
+  const e = v => String(v).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const r = await sendEmail(env, 'support@via-l.com', 'Библиотека VIA-L · запрос темы: ' + q.slice(0,60),
+    '<p><b>В Библиотеке VIA-L искали и не нашли:</b></p><p style="font-size:18px">«' + e(q) + '»</p>'
+    + '<p style="color:#888">Язык: ' + e(lang) + ' · ' + platform + ' · ' + _libToday() + '</p>'
+    + '<p style="color:#888">Если тема актуальна — подобрать исследование и добавить материал (~/Developer/Библиотека-VIA-L, README «Как добавить материал»).</p>');
+  if(!r || !r.ok) return jsonResponse({ok:false,error:'mail_failed'}, corsHeaders, 502);
+  return jsonResponse({ok:true}, corsHeaders);
 }
 
 // Разовые покупки этого товара у покупателя. null = RevenueCat не ответил (не путать с «покупок нет»).
