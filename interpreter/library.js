@@ -134,13 +134,24 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
   // ── Полная библиотека: разборы исследований (2026-10-18) ──
   // Анонсы — GET /library/catalog (открыто), текст — POST /library/item: воркер сверяет подписку с RevenueCat
   // по идентификатору покупателя. Без подписки — анонс + кнопка экрана подписки стора (цен и сайта здесь нет).
-  // Тексты пока только на русском (канон); другим языкам раздел не показываем, пока нет перевода.
-  var API = 'https://interpreter.viaelcom.workers.dev', RES_LANGS = ['ru'];
-  var TOPIC = { sleep:{ru:'Сон'}, myths:{ru:'Мифы о перименопаузе'}, food:{ru:'Питание'}, exercise:{ru:'Физические упражнения'},
-    mental:{ru:'Психическое здоровье'}, sex:{ru:'Сексуальное здоровье'}, hormones:{ru:'Гормональное здоровье'}, heart:{ru:'Сердце и сосуды'},
-    pelvic:{ru:'Тазовое дно'}, osnovy:{ru:'Основы перименопаузы и менопаузы'}, treatment:{ru:'Варианты лечения'} };
-  var resCat = null, resItems = {};
-  function resHas(lang) { return RES_LANGS.indexOf(lang) > -1 && !isMale(); }   // мужские темы — позже (LIBRARY-FULL-MODEL §1)
+  // Тексты: канон ru + наш перевод uk/en/es; остальные 8 языков приложения читают английский (владелец 2026-10-18).
+  // Названия тем — на языке приложения (12), сами материалы — на языке текста (resLang).
+  var API = 'https://interpreter.viaelcom.workers.dev', RES_LANGS = ['ru', 'uk', 'en', 'es'];
+  function resLang(lang) { return RES_LANGS.indexOf(lang) > -1 ? lang : 'en'; }
+  var TOPIC = {
+    sleep:{ru:'Сон',uk:'Сон',en:'Sleep',es:'Sueño',de:'Schlaf',pt:'Sono',fr:'Sommeil',pl:'Sen',it:'Sonno',he:'שינה',ja:'睡眠',ko:'수면'},
+    myths:{ru:'Мифы о перименопаузе',uk:'Міфи про перименопаузу',en:'Perimenopause myths',es:'Mitos sobre la perimenopausia',de:'Mythen über die Perimenopause',pt:'Mitos sobre a perimenopausa',fr:'Idées reçues sur la périménopause',pl:'Mity o perimenopauzie',it:'Miti sulla perimenopausa',he:'מיתוסים על פרימנופאוזה',ja:'更年期前後の俗説',ko:'폐경 이행기에 대한 속설'},
+    food:{ru:'Питание',uk:'Харчування',en:'Nutrition',es:'Alimentación',de:'Ernährung',pt:'Alimentação',fr:'Alimentation',pl:'Odżywianie',it:'Alimentazione',he:'תזונה',ja:'食事',ko:'식사'},
+    exercise:{ru:'Физические упражнения',uk:'Фізичні вправи',en:'Exercise',es:'Ejercicio',de:'Bewegung',pt:'Exercício',fr:'Activité physique',pl:'Aktywność fizyczna',it:'Esercizio fisico',he:'פעילות גופנית',ja:'運動',ko:'운동'},
+    mental:{ru:'Психическое здоровье',uk:'Психічне здоров’я',en:'Mental health',es:'Salud mental',de:'Psychische Gesundheit',pt:'Saúde mental',fr:'Santé mentale',pl:'Zdrowie psychiczne',it:'Salute mentale',he:'בריאות נפשית',ja:'心の健康',ko:'마음 건강'},
+    sex:{ru:'Сексуальное здоровье',uk:'Сексуальне здоров’я',en:'Sexual health',es:'Salud sexual',de:'Sexuelle Gesundheit',pt:'Saúde sexual',fr:'Santé sexuelle',pl:'Zdrowie seksualne',it:'Salute sessuale',he:'בריאות מינית',ja:'性の健康',ko:'성 건강'},
+    hormones:{ru:'Гормональное здоровье',uk:'Гормональне здоров’я',en:'Hormonal health',es:'Salud hormonal',de:'Hormonelle Gesundheit',pt:'Saúde hormonal',fr:'Santé hormonale',pl:'Zdrowie hormonalne',it:'Salute ormonale',he:'בריאות הורמונלית',ja:'ホルモンの健康',ko:'호르몬 건강'},
+    heart:{ru:'Сердце и сосуды',uk:'Серце і судини',en:'Heart and blood vessels',es:'Corazón y vasos sanguíneos',de:'Herz und Gefäße',pt:'Coração e vasos',fr:'Cœur et vaisseaux',pl:'Serce i naczynia',it:'Cuore e vasi sanguigni',he:'לב וכלי דם',ja:'心臓と血管',ko:'심장과 혈관'},
+    pelvic:{ru:'Тазовое дно',uk:'Тазове дно',en:'Pelvic floor',es:'Suelo pélvico',de:'Beckenboden',pt:'Assoalho pélvico',fr:'Plancher pelvien',pl:'Dno miednicy',it:'Pavimento pelvico',he:'רצפת האגן',ja:'骨盤底',ko:'골반저'},
+    osnovy:{ru:'Основы перименопаузы и менопаузы',uk:'Основи перименопаузи й менопаузи',en:'Perimenopause and menopause basics',es:'Lo básico de la perimenopausia y la menopausia',de:'Grundlagen zu Perimenopause und Menopause',pt:'O básico sobre perimenopausa e menopausa',fr:'Bases de la périménopause et de la ménopause',pl:'Podstawy perimenopauzy i menopauzy',it:'Le basi di perimenopausa e menopausa',he:'יסודות הפרימנופאוזה והמנופאוזה',ja:'更年期の基本',ko:'폐경 이행기와 폐경의 기초'},
+    treatment:{ru:'Варианты лечения',uk:'Варіанти лікування',en:'Treatment options',es:'Opciones de tratamiento',de:'Behandlungsmöglichkeiten',pt:'Opções de tratamento',fr:'Options de traitement',pl:'Możliwości leczenia',it:'Opzioni di trattamento',he:'אפשרויות טיפול',ja:'治療の選択肢',ko:'치료 선택지'} };
+  var resCat = null, resCatLang = '', resItems = {};
+  function resHas(lang) { return !isMale(); }   // все 12 языков (resLang); мужские темы — позже (LIBRARY-FULL-MODEL §1)
   function subOn() { try { return localStorage.getItem('vialp_entitlement') === '1'; } catch (e) { return false; } }
   function inApp() { return !!(window.Capacitor && typeof window.iapAvailable === 'function' && window.iapAvailable()); }
   function resFill(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html; }
@@ -195,9 +206,10 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
     }).join('') + '<div class="art-note vc-span" style="grid-column:1/-1;margin-top:6px;">' + esc(tx(UI.resNew, lang)) + '</div>');
   }
   function resCatalog(lang, cb) {
-    if (resCat) return cb();
-    fetch(API + '/library/catalog?lang=' + encodeURIComponent(lang)).then(function (r) { return r.json(); })
-      .then(function (j) { if (!j || !j.ok) throw 0; resCat = j.items || []; cb(); })
+    if (resCat && resCatLang === resLang(lang)) return cb();   // сменили язык — каталог заново
+    var L = resLang(lang);
+    fetch(API + '/library/catalog?lang=' + encodeURIComponent(L)).then(function (r) { return r.json(); })
+      .then(function (j) { if (!j || !j.ok) throw 0; resCat = j.items || []; resCatLang = L; cb(); })
       .catch(function () { cb(true); });
   }
   function resLocked(x, lang) {
@@ -216,21 +228,22 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
       + (it.related ? '<p class="art-p art-note">' + esc(tx(UI.resRel, lang)) + ': ' + esc(String(it.related).replace(/^статья\s*/i, '')) + '</p>' : '')
       + '<p class="art-p art-note"><b>' + esc(tx(UI.resSrc, lang)) + ':</b> ' + esc(s.authors || '') + '. ' + esc(s.title || '') + ' ' + esc(s.journal || '') + ', ' + esc(s.year || '')
       + (s.url ? '. <a href="' + esc(s.url) + '" target="_blank" rel="noopener" style="color:var(--gold-lt);">' + esc(String(s.url).replace('https://', '')) + '</a>' : '') + '</p>'
-      + '<div class="art-check"><i class="ph ' + (/специалист/.test(it.signature || '') ? 'ph-seal-check' : 'ph-robot') + '" aria-hidden="true"></i>' + esc(it.signature || '') + '</div></div>';
+      + '<div class="art-check"><i class="ph ' + ((it.reviewed || /специалист/.test(it.signature || '')) ? 'ph-seal-check' : 'ph-robot') + '" aria-hidden="true"></i>' + esc(it.signature || '') + '</div></div>';
   }
   async function resLoadItem(id, lang) {
     var x = (resCat || []).filter(function (y) { return y.id === id; })[0];
     if (!x) return resFill('vialResItem', '<p class="art-p">' + esc(tx(UI.resErr, lang)) + '</p>');
-    if (resItems[id]) return resFill('vialResItem', resFull(resItems[id], lang));
+    var ik = resLang(lang) + ':' + id;
+    if (resItems[ik]) return resFill('vialResItem', resFull(resItems[ik], lang));
     if (!subOn() || !inApp()) return resFill('vialResItem', resLocked(x, lang));
     try {
       var rc = (typeof window.iapAppUserId === 'function') ? await window.iapAppUserId() : '';
       var r = await fetch(API + '/library/item', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: id, lang: lang, rc_user: rc, platform: (typeof window.iapPlatform === 'function') ? window.iapPlatform() : '' }) });
+        body: JSON.stringify({ id: id, lang: resLang(lang), rc_user: rc, platform: (typeof window.iapPlatform === 'function') ? window.iapPlatform() : '' }) });
       var j = await r.json();
       if (r.status === 402) return resFill('vialResItem', resLocked(x, lang));
       if (!j || !j.ok) throw 0;
-      resItems[id] = j.item; resFill('vialResItem', resFull(j.item, lang));
+      resItems[ik] = j.item; resFill('vialResItem', resFull(j.item, lang));
     } catch (e) { resFill('vialResItem', '<p class="art-p">' + esc(tx(UI.resErr, lang)) + '</p>'); }
   }
 
