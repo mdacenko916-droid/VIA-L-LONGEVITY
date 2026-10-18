@@ -11241,7 +11241,7 @@ const _RC_PUBLIC = { ios: 'appl_otTgmSBqRgDJFfLFrcIaldOYqGd', android: 'goog_BHs
 // ─────────────────────────────────────────────────────────────
 // ПОЛНАЯ БИБЛИОТЕКА (платная, docs/LIBRARY-FULL-MODEL.md §4–5, 2026-10-18)
 // Репозиторий публичный, поэтому тексты не в git и не в R2 (у vial-assets публичный адрес),
-// а в отдельном KV `LIBRARY`. Заливает их ~/Developer/VIA-L-LIBRARY-PAID/tools/publish.py.
+// а в отдельном KV `LIBRARY`. Заливает их ~/Developer/Библиотека-VIA-L/tools/publish.py.
 //   lib:catalog:<lang>   — [{id,topic,type,title,teaser,year,journal,week}] — анонсы, открыты всем
 //   lib:item:<lang>:<id> — {id,title,fields:[[имя,текст]],source:{…},signature}
 // Выдаём только то, чья дата открытия (`week`) наступила. С 2026-10-18 publish.py ставит дату выкладки — открыто всё сразу.

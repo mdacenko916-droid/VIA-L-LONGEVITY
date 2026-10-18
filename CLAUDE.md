@@ -14,7 +14,7 @@ This repo holds **two products**, each with its own ARCHITECTURE.md (NOT auto-lo
 - **Marketing site** (repo root: `index.html`, `*-program.html`, `book/`, booking) — European market, **4 languages** (uk/ru/en/es). Top-level map of the whole repo: [`ARCHITECTURE.md`](ARCHITECTURE.md) (site + ИП + backend + integrations; §0 «два продукта»).
 - **Interpreter / ИП** (`interpreter/`) — global wearable-biomarker interpreter + nutritionist funnel, **12 languages**, primary EN. Deep-dive: [`interpreter/ARCHITECTURE.md`](interpreter/ARCHITECTURE.md) (file map §2, tariffs §3, deploy §12, wearable integrations §15–16). Do **not** conflate ИП's 12-lang/global model with the site's 4-lang one.
 
-**Две библиотеки — не путать (владелец 2026-10-18):** «Библиотека CLAUDE» = то, чем пользуется ИИ (база знаний воркера, реестр источников, `interpreter/Infa Cloude/`); «Библиотека VIA-L» = то, что читает клиент (полки «Основы» и платная «Наука простым языком», `docs/LIBRARY-FULL-MODEL.md`).
+**Две библиотеки — не путать (владелец 2026-10-18):** «Библиотека CLAUDE» = то, чем пользуется ИИ (база знаний воркера, реестр источников, `interpreter/Infa Cloude/`); «Библиотека VIA-L» = ПЛАТНАЯ библиотека для клиентов (разборы исследований и мифы; «Основы» — отдельные бесплатные статьи, это не Библиотека VIA-L). Других названий нет. Всё по Библиотеке VIA-L (тексты, инструменты, Telegram, Instagram, посты) — в папке `~/Developer/Библиотека-VIA-L/` (вне git: репозиторий публичный), вход — её `README.md`.
 
 ### Hosting & deploy (no build system)
 - `via-l.com` = **GitHub Pages from this repo**. All HTML (site **and** interpreter) deploys automatically on `git push origin main` (~1–2 min). There is **no separate "upload to site" step** — the push *is* the deploy.
