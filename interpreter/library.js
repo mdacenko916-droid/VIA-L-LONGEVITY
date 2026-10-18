@@ -22,6 +22,19 @@
     sheetSiteSubEn:{de:'Auf Englisch — der Browser kann die Seite übersetzen',pt:'Em inglês — o navegador pode traduzir a página',fr:'En anglais — le navigateur peut traduire la page',pl:'Po angielsku — przeglądarka może przetłumaczyć stronę',it:'In inglese — il browser può tradurre la pagina',he:'באנגלית — הדפדפן יכול לתרגם את הדף',ja:'英語のページです。ブラウザで翻訳できます',ko:'영어 페이지예요. 브라우저에서 번역할 수 있어요'},
     men:  {ru:'Мужское',uk:'Чоловіче',en:'For men',es:'Para hombres',de:'Für Männer',pt:'Para homens',fr:'Pour les hommes',pl:'Dla mężczyzn',it:'Per uomini',he:'לגברים',ja:'男性のために',ko:'남성을 위해'},
     rowSubM:{ru:'Андропауза, сон, сердце и что делать',uk:'Андропауза, сон, серце і що робити',en:'Andropause, sleep, heart and what to do',es:'Andropausia, sueño, corazón y qué hacer',de:'Andropause, Schlaf, Herz und was hilft',pt:'Andropausa, sono, coração e o que fazer',fr:'Andropause, sommeil, cœur et que faire',pl:'Andropauza, sen, serce i co robić',it:'Andropausa, sonno, cuore e cosa fare',he:'אנדרופאוזה, שינה, לב ומה עושים',ja:'男性更年期、睡眠、心臓とできること',ko:'남성 갱년기, 수면, 심장과 할 수 있는 것'},
+    // Полная библиотека — разборы исследований (2026-10-18, docs/LIBRARY-FULL-MODEL.md): анонсы всем, текст — по подписке.
+    res:   {ru:'Разборы исследований',uk:'Розбори досліджень',en:'Research explained',es:'Estudios explicados',de:'Studien erklärt',pt:'Estudos explicados',fr:'Études expliquées',pl:'Badania w skrócie',it:'Studi spiegati',he:'מחקרים בהסבר פשוט',ja:'研究をわかりやすく',ko:'쉽게 읽는 연구'},
+    resSub:{ru:'Научные работы простым языком: кто, что, как и что это значит для вас',uk:'Наукові роботи простою мовою: хто, що, як і що це означає для вас',en:'Studies in plain language: who, what, how and what it means for you',es:'Estudios en lenguaje sencillo: quién, qué, cómo y qué significa para ti',de:'Studien in einfacher Sprache: wer, was, wie und was es für dich bedeutet',pt:'Estudos em linguagem simples: quem, o quê, como e o que significa para você',fr:'Des études en langage clair : qui, quoi, comment et ce que cela signifie pour vous',pl:'Badania prostym językiem: kto, co, jak i co to dla Ciebie znaczy',it:'Studi in parole semplici: chi, cosa, come e cosa significa per te',he:'מחקרים בשפה פשוטה: מי, מה, איך ומה זה אומר עבורך',ja:'研究をやさしい言葉で：誰が、何を、どう調べ、あなたにとって何を意味するか',ko:'쉬운 말로 읽는 연구: 누가, 무엇을, 어떻게, 그리고 나에게 어떤 의미인지'},
+    resMyth:{ru:'Миф и факты',uk:'Міф і факти',en:'Myth vs facts',es:'Mito y hechos',de:'Mythos und Fakten',pt:'Mito e fatos',fr:'Mythe et faits',pl:'Mit i fakty',it:'Mito e fatti',he:'מיתוס ועובדות',ja:'俗説と事実',ko:'속설과 사실'},
+    resStudy:{ru:'Разбор исследования',uk:'Розбір дослідження',en:'Study explained',es:'Estudio explicado',de:'Studie erklärt',pt:'Estudo explicado',fr:'Étude expliquée',pl:'Badanie w skrócie',it:'Studio spiegato',he:'מחקר בהסבר',ja:'研究の解説',ko:'연구 해설'},
+    resLock:{ru:'Полный разбор доступен по подписке VIA-L.',uk:'Повний розбір доступний за підпискою VIA-L.',en:'The full summary is part of the VIA-L subscription.',es:'El resumen completo está incluido en la suscripción VIA-L.',de:'Die vollständige Zusammenfassung ist im VIA-L-Abo enthalten.',pt:'O resumo completo faz parte da assinatura VIA-L.',fr:'Le résumé complet est inclus dans l’abonnement VIA-L.',pl:'Pełne omówienie jest dostępne w subskrypcji VIA-L.',it:'Il riassunto completo è incluso nell’abbonamento VIA-L.',he:'הסיכום המלא כלול במנוי VIA-L.',ja:'全文はVIA-Lのサブスクリプションでお読みいただけます。',ko:'전체 해설은 VIA-L 구독에 포함되어 있어요.'},
+    resLockWeb:{ru:'Полный разбор доступен в приложении VIA-L по подписке.',uk:'Повний розбір доступний у застосунку VIA-L за підпискою.',en:'The full summary is available in the VIA-L app with a subscription.',es:'El resumen completo está disponible en la app VIA-L con suscripción.',de:'Die vollständige Zusammenfassung gibt es in der VIA-L-App mit Abo.',pt:'O resumo completo está disponível no app VIA-L com assinatura.',fr:'Le résumé complet est disponible dans l’app VIA-L avec abonnement.',pl:'Pełne omówienie jest dostępne w aplikacji VIA-L w subskrypcji.',it:'Il riassunto completo è disponibile nell’app VIA-L con abbonamento.',he:'הסיכום המלא זמין באפליקציית VIA-L במנוי.',ja:'全文はVIA-Lアプリのサブスクリプションでお読みいただけます。',ko:'전체 해설은 VIA-L 앱 구독으로 볼 수 있어요.'},
+    resSubBtn:{ru:'Подписка VIA-L',uk:'Підписка VIA-L',en:'VIA-L subscription',es:'Suscripción VIA-L',de:'VIA-L-Abo',pt:'Assinatura VIA-L',fr:'Abonnement VIA-L',pl:'Subskrypcja VIA-L',it:'Abbonamento VIA-L',he:'מנוי VIA-L',ja:'VIA-Lのサブスクリプション',ko:'VIA-L 구독'},
+    resLoad:{ru:'Загружаем…',uk:'Завантажуємо…',en:'Loading…',es:'Cargando…',de:'Wird geladen…',pt:'Carregando…',fr:'Chargement…',pl:'Ładowanie…',it:'Caricamento…',he:'טוען…',ja:'読み込み中…',ko:'불러오는 중…'},
+    resErr:{ru:'Не получилось загрузить. Проверьте интернет и откройте ещё раз.',uk:'Не вдалося завантажити. Перевірте інтернет і відкрийте ще раз.',en:'Couldn’t load. Check your connection and try again.',es:'No se pudo cargar. Revisa tu conexión e inténtalo de nuevo.',de:'Laden fehlgeschlagen. Prüfe die Verbindung und versuche es erneut.',pt:'Não foi possível carregar. Verifique a conexão e tente de novo.',fr:'Chargement impossible. Vérifiez votre connexion et réessayez.',pl:'Nie udało się wczytać. Sprawdź internet i spróbuj ponownie.',it:'Impossibile caricare. Controlla la connessione e riprova.',he:'הטעינה נכשלה. בדקו את החיבור ונסו שוב.',ja:'読み込めませんでした。接続を確認してもう一度お試しください。',ko:'불러오지 못했어요. 인터넷을 확인하고 다시 시도해 주세요.'},
+    resNew:{ru:'Новые материалы выходят каждую неделю.',uk:'Нові матеріали виходять щотижня.',en:'New pieces come out every week.',es:'Cada semana hay contenido nuevo.',de:'Jede Woche erscheinen neue Beiträge.',pt:'Novos conteúdos saem toda semana.',fr:'De nouveaux contenus chaque semaine.',pl:'Nowe materiały co tydzień.',it:'Nuovi contenuti ogni settimana.',he:'תכנים חדשים יוצאים כל שבוע.',ja:'毎週新しい記事が追加されます。',ko:'매주 새 글이 올라와요.'},
+    resSrc:{ru:'Источник',uk:'Джерело',en:'Source',es:'Fuente',de:'Quelle',pt:'Fonte',fr:'Source',pl:'Źródło',it:'Fonte',he:'מקור',ja:'出典',ko:'출처'},
+    resRel:{ru:'Связанная статья',uk:'Пов’язана стаття',en:'Related article',es:'Artículo relacionado',de:'Passender Artikel',pt:'Artigo relacionado',fr:'Article associé',pl:'Powiązany artykuł',it:'Articolo correlato',he:'מאמר קשור',ja:'関連記事',ko:'관련 글'},
     check: {ru:'Проверено специалистом VIA-L',uk:'Перевірено спеціалістом VIA-L',en:'Reviewed by a VIA-L specialist',es:'Revisado por un especialista de VIA-L',de:'Geprüft von einer VIA-L-Fachperson',pt:'Revisado por um especialista VIA-L',fr:'Relu par un spécialiste VIA-L',pl:'Sprawdzone przez specjalistę VIA-L',it:'Rivisto da uno specialista VIA-L',he:'נבדק על ידי מומחה VIA-L',ja:'VIA-Lの専門家が確認済み',ko:'VIA-L 전문가 검토 완료'}
   };
   function tx(o, lang) { return (o && (o[lang] || o.en || o.ru)) || ''; }
@@ -114,6 +127,74 @@
     if (typeof window._cardOpen === 'function') window._cardOpen('art:' + k);
   }
 
+  // ── Полная библиотека: разборы исследований (2026-10-18) ──
+  // Анонсы — GET /library/catalog (открыто), текст — POST /library/item: воркер сверяет подписку с RevenueCat
+  // по идентификатору покупателя. Без подписки — анонс + кнопка экрана подписки стора (цен и сайта здесь нет).
+  // Тексты пока только на русском (канон); другим языкам раздел не показываем, пока нет перевода.
+  var API = 'https://interpreter.viaelcom.workers.dev', RES_LANGS = ['ru'];
+  var TOPIC = { sleep:{ru:'Сон'}, myths:{ru:'Мифы о перименопаузе'}, food:{ru:'Питание'}, exercise:{ru:'Физические упражнения'},
+    mental:{ru:'Психическое здоровье'}, sex:{ru:'Сексуальное здоровье'}, hormones:{ru:'Гормональное здоровье'}, heart:{ru:'Сердце и сосуды'},
+    pelvic:{ru:'Тазовое дно'}, osnovy:{ru:'Основы перименопаузы и менопаузы'}, treatment:{ru:'Варианты лечения'} };
+  var resCat = null, resItems = {};
+  function resHas(lang) { return RES_LANGS.indexOf(lang) > -1 && !isMale(); }   // мужские темы — позже (LIBRARY-FULL-MODEL §1)
+  function subOn() { try { return localStorage.getItem('vialp_entitlement') === '1'; } catch (e) { return false; } }
+  function inApp() { return !!(window.Capacitor && typeof window.iapAvailable === 'function' && window.iapAvailable()); }
+  function resFill(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html; }
+  function resRow(x, lang) {
+    return '<button type="button" class="vc-link vc-span art-row" onclick="_cardOpen(\'res:' + esc(x.id) + '\')">'
+      + '<span class="vc-txt"><span class="vc-tt">' + esc(x.title) + '</span>'
+      + '<span class="vc-sub2">' + esc(tx(x.type === 'myth' ? UI.resMyth : UI.resStudy, lang)) + ' · ' + esc(x.year || '') + '</span></span>'
+      + '<span class="vc-chev">' + (subOn() ? '›' : '<i class="ph ph-lock-simple"></i>') + '</span></button>';
+  }
+  function resListRender(lang) {
+    if (!resCat) return;
+    var order = [], by = {};
+    resCat.forEach(function (x) { if (!by[x.topic]) { by[x.topic] = []; order.push(x.topic); } by[x.topic].push(x); });
+    resFill('vialResList', order.reverse().map(function (k) {   // свежая тема — сверху
+      return '<div class="vc-subh vc-span" style="grid-column:1/-1;">' + esc(tx(TOPIC[k], lang) || k) + '</div>'
+        + by[k].map(function (x) { return resRow(x, lang); }).join('');
+    }).join('') + '<div class="art-note vc-span" style="grid-column:1/-1;margin-top:6px;">' + esc(tx(UI.resNew, lang)) + '</div>');
+  }
+  function resCatalog(lang, cb) {
+    if (resCat) return cb();
+    fetch(API + '/library/catalog?lang=' + encodeURIComponent(lang)).then(function (r) { return r.json(); })
+      .then(function (j) { if (!j || !j.ok) throw 0; resCat = j.items || []; cb(); })
+      .catch(function () { cb(true); });
+  }
+  function resLocked(x, lang) {
+    var btn = inApp() ? '<button type="button" class="as-usual" style="display:flex;width:100%;justify-content:center;align-items:center;gap:7px;margin-top:12px;" onclick="_iapOpenFromProfile()">'
+      + '<i class="ph ph-lock-simple-open" aria-hidden="true"></i>' + esc(tx(UI.resSubBtn, lang)) + '</button>' : '';
+    return '<div class="art-card"><div class="art-min">' + esc(tx(x.type === 'myth' ? UI.resMyth : UI.resStudy, lang)) + '</div>'
+      + '<h2 class="art-title">' + esc(x.title) + '</h2>'
+      + (x.teaser ? '<p class="art-p">' + esc(x.teaser) + '</p>' : '')
+      + '<p class="art-p art-note"><i class="ph ph-lock-simple"></i> ' + esc(tx(inApp() ? UI.resLock : UI.resLockWeb, lang)) + '</p>' + btn + '</div>';
+  }
+  function resFull(it, lang) {
+    var s = it.source || {};
+    return '<div class="art-card"><div class="art-min">' + esc(tx(it.type === 'myth' ? UI.resMyth : UI.resStudy, lang)) + '</div>'
+      + '<h2 class="art-title">' + esc(it.title) + '</h2>'
+      + (it.fields || []).map(function (f) { return '<p class="art-p"><b>' + esc(f[0]) + ':</b> ' + esc(f[1]) + '</p>'; }).join('')
+      + (it.related ? '<p class="art-p art-note">' + esc(tx(UI.resRel, lang)) + ': ' + esc(String(it.related).replace(/^статья\s*/i, '')) + '</p>' : '')
+      + '<p class="art-p art-note"><b>' + esc(tx(UI.resSrc, lang)) + ':</b> ' + esc(s.authors || '') + '. ' + esc(s.title || '') + ' ' + esc(s.journal || '') + ', ' + esc(s.year || '')
+      + (s.url ? '. <a href="' + esc(s.url) + '" target="_blank" rel="noopener" style="color:var(--gold-lt);">' + esc(String(s.url).replace('https://', '')) + '</a>' : '') + '</p>'
+      + '<div class="art-check"><i class="ph ' + (/специалист/.test(it.signature || '') ? 'ph-seal-check' : 'ph-robot') + '" aria-hidden="true"></i>' + esc(it.signature || '') + '</div></div>';
+  }
+  async function resLoadItem(id, lang) {
+    var x = (resCat || []).filter(function (y) { return y.id === id; })[0];
+    if (!x) return resFill('vialResItem', '<p class="art-p">' + esc(tx(UI.resErr, lang)) + '</p>');
+    if (resItems[id]) return resFill('vialResItem', resFull(resItems[id], lang));
+    if (!subOn() || !inApp()) return resFill('vialResItem', resLocked(x, lang));
+    try {
+      var rc = (typeof window.iapAppUserId === 'function') ? await window.iapAppUserId() : '';
+      var r = await fetch(API + '/library/item', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id, lang: lang, rc_user: rc, platform: (typeof window.iapPlatform === 'function') ? window.iapPlatform() : '' }) });
+      var j = await r.json();
+      if (r.status === 402) return resFill('vialResItem', resLocked(x, lang));
+      if (!j || !j.ok) throw 0;
+      resItems[id] = j.item; resFill('vialResItem', resFull(j.item, lang));
+    } catch (e) { resFill('vialResItem', '<p class="art-p">' + esc(tx(UI.resErr, lang)) + '</p>'); }
+  }
+
   window.vialLibrary = {
     go: go,
     // Кнопка «Подробнее в статье» под карточкой (ключ жалобы или шага = ключ статьи). Нет статьи на языке — пусто.
@@ -135,7 +216,9 @@
     listHtml: function (lang) {
       var d = data(lang); if (!has(lang)) return '';
       css();
-      return secs(lang).map(function (sec) {
+      var res = resHas(lang) ? '<button type="button" class="vc-link vc-span" onclick="_cardOpen(\'research\')"><span class="vc-ic"><i class="ph ph-flask"></i></span>'
+        + '<span class="vc-txt"><span class="vc-tt">' + esc(tx(UI.res, lang)) + '</span><span class="vc-sub2">' + esc(tx(UI.resSub, lang)) + '</span></span><span class="vc-chev">›</span></button>' : '';
+      return res + secs(lang).map(function (sec) {
         if (!sec[1].some(function (k) { return d[k]; })) return '';   // группа ещё не переведена на язык — без заголовка
         return '<div class="vc-subh vc-span" style="grid-column:1/-1;">' + esc(tx(UI[sec[0]], lang)) + '</div>'
           + sec[1].filter(function (k) { return d[k]; }).map(function (k) { return rowHtml(k, d[k]); }).join('');
@@ -153,7 +236,18 @@
             ? '<div class="art-check"><i class="ph ph-seal-check" aria-hidden="true"></i>' + esc(tx(UI.check, lang)) + '</div>' : '')
         + '</div>';
     },
-    title: function (k, lang) { var d = data(lang); return (d && d[k] && d[k].t) || ''; }
+    title: function (k, lang) { var d = data(lang); return (d && d[k] && d[k].t) || ''; },
+    resHas: resHas,
+    // «Библиотека › Разборы исследований»: список по темам (подгружается), замок — без подписки.
+    researchHtml: function (lang) {
+      css(); var box = '<div id="vialResList" class="vc-span" style="grid-column:1/-1;display:contents;"><p class="art-p art-note">' + esc(tx(UI.resLoad, lang)) + '</p></div>';
+      setTimeout(function () { resCatalog(lang, function (err) { if (err) resFill('vialResList', '<p class="art-p">' + esc(tx(UI.resErr, lang)) + '</p>'); else resListRender(lang); }); }, 0);
+      return box;
+    },
+    researchItemHtml: function (id, lang) {
+      css(); setTimeout(function () { resCatalog(lang, function (err) { if (err) resFill('vialResItem', '<p class="art-p">' + esc(tx(UI.resErr, lang)) + '</p>'); else resLoadItem(id, lang); }); }, 0);
+      return '<div id="vialResItem" style="grid-column:1/-1;"><p class="art-p art-note">' + esc(tx(UI.resLoad, lang)) + '</p></div>';
+    }
   };
   try { if (window.vialBottomNav && vialBottomNav.refresh) vialBottomNav.refresh(); } catch (e) {}   // строка смонтирована раньше — показать книгу
 })();

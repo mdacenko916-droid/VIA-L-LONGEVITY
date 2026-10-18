@@ -1377,6 +1377,8 @@ export default {
       if (path === '/specialist-by-ref') return handleSpecialistByRef(request, env, corsHeaders);
       // Витрина «Мой наставник»: публичный список наставников (public=1) для выбора + записи на зум.
       if (path === '/specialists/public') return handleSpecialistsPublic(request, env, corsHeaders);
+      // Полная библиотека: анонсы вышедших материалов — открыто всем (LIBRARY-FULL-MODEL §4).
+      if (path === '/library/catalog') return handleLibraryCatalog(request, env, corsHeaders);
       // Fitbit OAuth2 (self-serve) — connect ring/device, pull 7-day metrics
       if (path === '/fitbit/start')    return handleFitbitStart(request, env, corsHeaders);
       if (path === '/fitbit/callback') return handleFitbitCallback(request, env, corsHeaders);
@@ -1478,6 +1480,7 @@ export default {
       if (path === '/specialist/labs')     return handleSpecialistLabs(request, env, corsHeaders);      // анализы из приложения → карточка (2026-10-05)   // клиент включает/выключает передачу данных специалисту
       // Разовый разбор со специалистом (docs/SPECIALIST-REVIEW-PLAN.md): чек из приложения → заказ + связка с дежурным.
       if (path === '/review/claim')        return handleReviewClaim(request, env, corsHeaders, ctx);
+      if (path === '/library/item')        return handleLibraryItem(request, env, corsHeaders);   // полный текст — подписка VIA-L или код EXPERT
       if (path === '/cabinet/review-done') return handleCabinetReviewDone(request, env, corsHeaders);
 
       // Воронка витрина → EXPERT PWA: специалист выдаёт клиенту СРОЧНЫЙ код доступа к
@@ -11205,6 +11208,89 @@ const REVIEW_CHAT_DAYS   = 7;     // сколько дней ПОСЛЕ ВЫДА
 // Публичные SDK-ключи RevenueCat — те же, что зашиты в iap-bridge.js. Если чтение покупок по ним
 // окажется урезанным, завести секрет: `wrangler secret put RC_SECRET_KEY` (он в приоритете).
 const _RC_PUBLIC = { ios: 'appl_otTgmSBqRgDJFfLFrcIaldOYqGd', android: 'goog_BHsIdgHZJEhYqOpcDbQoVQFbFPC' };
+
+// ─────────────────────────────────────────────────────────────
+// ПОЛНАЯ БИБЛИОТЕКА (платная, docs/LIBRARY-FULL-MODEL.md §4–5, 2026-10-18)
+// Репозиторий публичный, поэтому тексты не в git и не в R2 (у vial-assets публичный адрес),
+// а в отдельном KV `LIBRARY`. Заливает их ~/Developer/VIA-L-LIBRARY-PAID/tools/publish.py.
+//   lib:catalog:<lang>   — [{id,topic,type,title,teaser,year,journal,week}] — анонсы, открыты всем
+//   lib:item:<lang>:<id> — {id,title,fields:[[имя,текст]],source:{…},signature}
+// Выдаём только то, чья неделя (`week`, понедельник) уже наступила: библиотека растёт по графику §7а.
+// Доступ: подписка VIA-L (entitlement via_l_pro в RevenueCat) или действующий код VIA-L EXPERT.
+// ─────────────────────────────────────────────────────────────
+const LIB_ENTITLEMENT = 'via_l_pro';
+const LIB_ENT_TTL = 3600;   // кэш «подписка есть/нет» на час: не дёргать RevenueCat на каждую статью
+
+function _libToday(){ return new Date().toISOString().slice(0,10); }
+function _libLang(v){ const l = String(v||'').trim().slice(0,5); return /^[a-z]{2}$/.test(l) ? l : 'ru'; }
+async function _libCatalog(env, lang){
+  let L = null;
+  try{ L = JSON.parse(await env.LIBRARY.get('lib:catalog:'+lang) || 'null'); }catch(_){}
+  if(!Array.isArray(L) && lang !== 'ru') return _libCatalog(env, 'ru');   // язык без перевода — русский канон
+  const today = _libToday();
+  return { lang: Array.isArray(L) ? lang : 'ru', items: (L||[]).filter(x => x && x.week && x.week <= today) };
+}
+
+// true / false / null (RevenueCat не ответил)
+async function _libEntitled(env, rcUser, platform){
+  const ck = 'lib:ent:' + platform + ':' + rcUser;
+  const cached = await env.LIBRARY.get(ck);
+  if(cached === '1') return true;
+  if(cached === '0') return false;
+  const key = env.RC_SECRET_KEY || _RC_PUBLIC[platform];
+  if(!key) return null;
+  try{
+    const r = await fetch('https://api.revenuecat.com/v1/subscribers/' + encodeURIComponent(rcUser), {
+      headers: { Authorization: 'Bearer ' + key, 'X-Platform': platform, 'Content-Type': 'application/json' },
+    });
+    if(!r.ok) return null;
+    const j = await r.json();
+    const e = j && j.subscriber && j.subscriber.entitlements && j.subscriber.entitlements[LIB_ENTITLEMENT];
+    const ok = !!e && (!e.expires_date || Date.parse(e.expires_date) > Date.now());
+    await env.LIBRARY.put(ck, ok ? '1' : '0', { expirationTtl: LIB_ENT_TTL });
+    return ok;
+  }catch(_){ return null; }
+}
+async function _libExpertOk(env, code){
+  if(!code || !env.EXPERT_DRAFTS) return false;
+  let rec = null;
+  try{ rec = JSON.parse(await env.EXPERT_DRAFTS.get('expert_access:'+code) || 'null'); }catch(_){}
+  return !!rec && !rec.revoked && !(rec.expiry && _libToday() > rec.expiry);
+}
+
+// GET /library/catalog?lang=ru → {ok, lang, items} — анонсы вышедших материалов, без полного текста.
+async function handleLibraryCatalog(request, env, corsHeaders){
+  if(!env.LIBRARY) return jsonResponse({ok:false,error:'library_missing'}, corsHeaders, 500);
+  const c = await _libCatalog(env, _libLang(new URL(request.url).searchParams.get('lang')));
+  return jsonResponse({ok:true, lang:c.lang, items:c.items}, corsHeaders);
+}
+
+// POST /library/item {id, lang, rc_user, platform} | {id, lang, code} → {ok, item} | 402 no_access
+async function handleLibraryItem(request, env, corsHeaders){
+  if(!env.LIBRARY) return jsonResponse({ok:false,error:'library_missing'}, corsHeaders, 500);
+  let b = {}; try{ b = await request.json(); }catch(_){}
+  const id = String(b.id||'').trim().slice(0,120);
+  if(!/^[a-z0-9-]+$/.test(id)) return jsonResponse({ok:false,error:'bad_id'}, corsHeaders, 400);
+  const c = await _libCatalog(env, _libLang(b.lang));
+  if(!c.items.some(x => x.id === id)) return jsonResponse({ok:false,error:'not_found'}, corsHeaders, 404);   // нет или ещё не вышел
+
+  const code = String(b.code||'').trim().toUpperCase().slice(0,40);
+  const rcUser = String(b.rc_user||'').trim().slice(0,200);
+  const platform = b.platform === 'android' ? 'android' : (b.platform === 'ios' ? 'ios' : '');
+  let ok = false;
+  if(code) ok = await _libExpertOk(env, code);
+  if(!ok && rcUser && platform){
+    const e = await _libEntitled(env, rcUser, platform);
+    if(e === null) return jsonResponse({ok:false,error:'rc_unavailable'}, corsHeaders, 502);
+    ok = e;
+  }
+  if(!ok) return jsonResponse({ok:false,error:'no_access'}, corsHeaders, 402);
+
+  let item = null;
+  try{ item = JSON.parse(await env.LIBRARY.get('lib:item:'+c.lang+':'+id) || 'null'); }catch(_){}
+  if(!item) return jsonResponse({ok:false,error:'not_found'}, corsHeaders, 404);
+  return jsonResponse({ok:true, lang:c.lang, item}, corsHeaders);
+}
 
 // Разовые покупки этого товара у покупателя. null = RevenueCat не ответил (не путать с «покупок нет»).
 async function _reviewPurchases(env, rcUser, platform){

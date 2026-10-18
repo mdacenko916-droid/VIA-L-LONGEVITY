@@ -4851,6 +4851,7 @@ const _NAVC={nav_card:{en:"My Profile",ru:"Мой профиль",uk:"Мій п�
   card_data:{ru:"Мои данные",uk:"Мої дані",en:"My data",es:"Mis datos",de:"Meine Daten",pt:"Meus dados",fr:"Mes données",pl:"Moje dane",it:"I miei dati",he:"הנתונים שלי",ja:"マイデータ",ko:"내 데이터"},
   card_data_sub:{ru:"Анкета, приёмы, анализы",uk:"Анкета, прийоми, аналізи",en:"Questionnaire, intake schedule, lab tests",es:"Cuestionario, tomas, analíticas",de:"Fragebogen, Einnahmen, Laborwerte",pt:"Questionário, tomas, exames",fr:"Questionnaire, prises, analyses",pl:"Ankieta, przyjmowanie, badania",it:"Questionario, assunzioni, analisi",he:"שאלון, נטילות, בדיקות",ja:"質問票・服用・血液検査",ko:"설문 · 복용 · 검사"},
   card_articles:{ru:"Основы",uk:"Основи",en:"Essentials",es:"Lo esencial",de:"Grundlagen",pt:"O essencial",fr:"L’essentiel",pl:"Podstawy",it:"Le basi",he:"היסודות",ja:"基本",ko:"기초"},
+  card_research:{ru:"Разборы исследований",uk:"Розбори досліджень",en:"Research explained",es:"Estudios explicados",de:"Studien erklärt",pt:"Estudos explicados",fr:"Études expliquées",pl:"Badania w skrócie",it:"Studi spiegati",he:"מחקרים בהסבר פשוט",ja:"研究をわかりやすく",ko:"쉽게 읽는 연구"},
   card_articles_sub:{ru:"Перименопауза, менопауза и что делать",uk:"Перименопауза, менопауза і що робити",en:"Perimenopause, menopause and what to do",es:"Perimenopausia, menopausia y qué hacer",de:"Perimenopause, Menopause und was hilft",pt:"Perimenopausa, menopausa e o que fazer",fr:"Périménopause, ménopause et que faire",pl:"Perimenopauza, menopauza i co robić",it:"Perimenopausa, menopausa e cosa fare",he:"פרימנופאוזה, מנופאוזה ומה עושים",ja:"更年期の前後とできること",ko:"폐경 전후와 할 수 있는 것"},
   card_settings:{ru:"Настройки",uk:"Налаштування",en:"Settings",es:"Ajustes",de:"Einstellungen",pt:"Configurações",fr:"Réglages",pl:"Ustawienia",it:"Impostazioni",he:"הגדרות",ja:"設定",ko:"설정"},
   card_settings_sub:{ru:"Язык · источник данных · напоминания · размер текста",uk:"Мова · джерело даних · нагадування · розмір тексту",en:"Language · data source · reminders · text size",es:"Idioma · fuente de datos · recordatorios · tamaño del texto",de:"Sprache · Datenquelle · Erinnerungen · Textgröße",pt:"Idioma · fonte de dados · lembretes · tamanho do texto",fr:"Langue · source des données · rappels · taille du texte",pl:"Język · źródło danych · przypomnienia · rozmiar tekstu",it:"Lingua · fonte dati · promemoria · dimensione del testo",he:"שפה · מקור נתונים · תזכורות · גודל טקסט",ja:"言語・データソース・リマインダー・文字サイズ",ko:"언어 · 데이터 출처 · 알림 · 글자 크기"},
@@ -6208,7 +6209,7 @@ function renderCard(){
   if(typeof saveProfile==='function'){try{saveProfile();}catch(e){}}  // синхрон: карточка = что сейчас в профиле
   var box=document.getElementById('cardBody'); if(!box)return;
   _vcCSS();
-  try{ if(window._cardMode!=='path'){ var _cTt=document.getElementById('cardTitle'), _cSb=document.getElementById('cardSub'), _cK=window._cardSub?('card_'+(String(window._cardSub).indexOf('art:')===0?'articles':window._cardSub)):'card_title';
+  try{ if(window._cardMode!=='path'){ var _cTt=document.getElementById('cardTitle'), _cSb=document.getElementById('cardSub'), _cK=window._cardSub?('card_'+(String(window._cardSub).indexOf('art:')===0?'articles':String(window._cardSub).indexOf('res:')===0?'research':window._cardSub)):'card_title';
     if(_cTt){ _cTt.setAttribute('data-t',_cK); _cTt.textContent=t(_cK); }
     if(_cSb){ _cSb.style.display=window._cardSub?'none':''; } } }catch(e){}
   var P={}; try{P=JSON.parse(localStorage.getItem('vialp_profile')||'{}')||{};}catch(e){}
@@ -6286,8 +6287,9 @@ function renderCard(){
   var _cardSubPg=_pathMode?'':(window._cardSub||'');   // '' | 'data' | 'settings' — вложенные страницы «Профиля»
   if(_pathMode) html='<div class="vcard-wrap">';
   var _artKey=(_cardSubPg.indexOf('art:')===0)?_cardSubPg.slice(4):'';   // «Профиль › Статьи › статья» — назад к списку
+  var _resId=(_cardSubPg.indexOf('res:')===0)?_cardSubPg.slice(4):'';    // «Библиотека › Разборы › разбор» (2026-10-18)
   if(_cardSubPg==='articles' && window._libTab) html='<div class="vcard-wrap">';   // вкладка «Библиотека»: список — корень, назад некуда
-  else if(_cardSubPg) html='<div class="vcard-wrap"><button type="button" class="vc-back" onclick="_cardOpen(\''+(_artKey?'articles':'')+'\')">‹ '+_esc(t(_artKey?'card_articles':'card_title'))+'</button>';
+  else if(_cardSubPg) html='<div class="vcard-wrap"><button type="button" class="vc-back" onclick="_cardOpen(\''+(_artKey||_cardSubPg==='research'?'articles':_resId?'research':'')+'\')">‹ '+_esc(t(_artKey||_cardSubPg==='research'?'card_articles':_resId?'card_research':'card_title'))+'</button>';
   var _cardLink=function(k){
     var ic=(k==='data')?'clipboard-text':(k==='articles')?'book-open-text':'gear-six';
     return '<button type="button" class="vc-link vc-span" onclick="_cardOpen(\''+k+'\')"><span class="vc-ic"><i class="ph ph-'+ic+'"></i></span>'
@@ -6635,6 +6637,10 @@ function renderCard(){
     html+=vialLibrary.listHtml(lang);
   else if(_artKey && window.vialLibrary)
     html+=vialLibrary.articleHtml(_artKey,lang);
+  else if(_cardSubPg==='research' && window.vialLibrary && vialLibrary.researchHtml)   // разборы исследований (library.js, 2026-10-18)
+    html+=vialLibrary.researchHtml(lang);
+  else if(_resId && window.vialLibrary && vialLibrary.researchItemHtml)
+    html+=vialLibrary.researchItemHtml(_resId,lang);
   else if(_cardSubPg==='settings'){  // «Профиль › Настройки»: язык живёт только здесь
     // Время еды (привязка приёмов «до / во время / после еды») и напоминания о воде — 2026-10-10.
     var _mt=(typeof _ikMealsGet==='function')?_ikMealsGet():{bf:'08:00',ln:'13:00',dn:'19:00'};
