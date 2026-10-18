@@ -211,8 +211,8 @@ def main():
         os.path.exists(os.path.join(BA.SRC, L, k + '.md')) for k in BA.ALL_KEYS)]
     data = {L: {k: BA.convert(os.path.join(BA.SRC, L, k + '.md')) for k in BA.ALL_KEYS} for L in langs}
     for L in langs:   # мужской раздел — только язык, где есть все мужские статьи
-        if all(os.path.exists(os.path.join(BA.SRC, L, k + '.md')) for k in BA.ALL_KEYS_M):
-            data[L].update({k: BA.convert(os.path.join(BA.SRC, L, k + '.md')) for k in BA.ALL_KEYS_M})
+        mk = BA.men_keys({f[:-3] for f in os.listdir(os.path.join(BA.SRC, L)) if f.endswith('.md')})
+        data[L].update({k: BA.convert(os.path.join(BA.SRC, L, k + '.md')) for k in mk})
     urls = []
     for L in langs:
         os.makedirs(os.path.join(OUT, L), exist_ok=True)
@@ -225,10 +225,10 @@ def main():
                 secs += '<a class="card" href="%s.html" data-s="%s"><span class="t">%s</span><span class="m">%s</span></a>' % (
                     k, esc((d[k]['t'] + ' ' + plain(d[k]['h'].split('<!--EV-->')[0])).lower()), esc(d[k]['t']), esc(d[k]['min']))
             secs += '</div>'
-        men = all(k in d for k in BA.ALL_KEYS_M)
+        men = BA.men_keys(d)
         if men:   # мужской раздел — одним блоком «Мужчинам» (2026-10-17)
             secs += '<h2 class="sec">%s</h2><div class="cards">' % tx('men', L)
-            for k in BA.ALL_KEYS_M:
+            for k in men:
                 secs += '<a class="card" href="%s.html" data-s="%s"><span class="t">%s</span><span class="m">%s</span></a>' % (
                     k, esc((d[k]['t'] + ' ' + plain(d[k]['h'].split('<!--EV-->')[0])).lower()), esc(d[k]['t']), esc(d[k]['min']))
             secs += '</div>'
@@ -245,7 +245,7 @@ def main():
             page(L, tx('title', L), lead, L + '/', body, alt))
         urls.append(L + '/')
         # ── статьи ──
-        groups = list(BA.SECTIONS) + ([('men', BA.ALL_KEYS_M)] if men else [])
+        groups = list(BA.SECTIONS) + ([('men', men)] if men else [])
         for sec, keys in groups:
             for i, k in enumerate(keys):
                 a = d[k]

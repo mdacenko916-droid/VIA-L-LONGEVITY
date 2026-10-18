@@ -36,6 +36,16 @@ SECTIONS_M = [
     ('men',   ['prostate', 'heart_m']),
 ]
 ALL_KEYS_M = [k for _, ks in SECTIONS_M for k in ks]
+# Мужские «Что делать» (2026-10-18, вычитаны специалистом): отдельная группа — язык получает её, когда есть все 8 статей,
+# и не теряет мужской раздел, пока они не переведены. «Прохладной спальни» (cool) для мужчин нет: в базе P-M нет опоры.
+STEP_M = ['evening_m', 'wake_m', 'strength_m', 'protein_m', 'walk_m', 'breath_m', 'bed_m', 'order_m']
+
+
+def men_keys(have):
+    """Мужские ключи языка: основной набор + «Что делать», если переведены все шаги; [] — мужского раздела нет."""
+    if not all(k in have for k in ALL_KEYS_M):
+        return []
+    return ALL_KEYS_M + (STEP_M if all(k in have for k in STEP_M) else [])
 
 # Языки, которые уходят в приложение: только вычитанные специалистом. Переведено, но не вычитано — лежит в
 # docs/articles/<язык>/ и в сборку не идёт. Проверить невычитанный язык локально: ARTICLES_LANGS=ru,uk python3 …
@@ -120,12 +130,13 @@ def main():
         if missing:
             skipped[lang] = missing; continue
         data[lang] = {k: convert(os.path.join(d, k + '.md')) for k in ALL_KEYS}
-        if all(k in have for k in ALL_KEYS_M):
-            data[lang].update({k: convert(os.path.join(d, k + '.md')) for k in ALL_KEYS_M})
+        mk = men_keys(have)
+        if mk:
+            data[lang].update({k: convert(os.path.join(d, k + '.md')) for k in mk})
             men.append(lang)
     js = ('/* VIA·L — библиотека статей. СОБРАНО tools/build-articles.py из docs/articles/<язык>/*.md — руками не править.\n'
           '   Данные: ART[язык][ключ] = {t: заголовок, min: время чтения, h: HTML тела, codes: темы базы для «На чём основано»}. */\n'
-          'window.VIAL_ART = ' + json.dumps({'sections': SECTIONS, 'sectionsM': SECTIONS_M, 'men': sorted(men), 'reviewed': sorted(REVIEWED & set(data)), 'langs': data}, ensure_ascii=False, separators=(',', ':')) + ';\n')
+          'window.VIAL_ART = ' + json.dumps({'sections': SECTIONS, 'sectionsM': SECTIONS_M + [('step', STEP_M)], 'men': sorted(men), 'reviewed': sorted(REVIEWED & set(data)), 'langs': data}, ensure_ascii=False, separators=(',', ':')) + ';\n')
     open(OUT, 'w', encoding='utf-8').write(js)
     print('→', os.path.relpath(OUT, REPO), '| языки:', ', '.join(sorted(data)) or '—',
           '| мужской раздел:', ', '.join(sorted(men)) or '—', '| пропущены (не все статьи):', skipped or '—')

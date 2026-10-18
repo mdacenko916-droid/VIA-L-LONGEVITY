@@ -32,7 +32,10 @@
   function secs(lang) { var A = window.VIAL_ART; return isMale() ? (A.sectionsM || []) : A.sections; }
   // Карточка жалобы мужчины → его статья (ключ жалобы из complaint-table.js; libido уже приходит как libido_m).
   var MK = { sleep: 'sleep_m', energy: 'energy_m', mood: 'mood_m', fog: 'fog_m', weight: 'weight_m', pain: 'pain_m',
-             muscle: 'muscle_m', drive: 'drive', libido_m: 'libido_m' };
+             muscle: 'muscle_m', drive: 'drive', libido_m: 'libido_m',
+             // шаги «Фокуса недели» (2026-10-18); cool — без статьи: в мужской базе нет опоры
+             evening: 'evening_m', wake: 'wake_m', strength: 'strength_m', protein: 'protein_m', walk: 'walk_m',
+             breath: 'breath_m', bed: 'bed_m', order: 'order_m' };
 
   // Стили статьи — из токенов приложения (Playfair для заголовка, графит + золото, как блоки «Профиля»).
   var CSS_ID = 'vialArtCss';
@@ -115,7 +118,7 @@
     go: go,
     // Кнопка «Подробнее в статье» под карточкой (ключ жалобы или шага = ключ статьи). Нет статьи на языке — пусто.
     moreBtn: function (k, lang) {
-      if (isMale()) k = hasMen(lang) ? MK[k] : '';   // шаги «Что делать» пока женские — мужчине без ссылки
+      if (isMale()) k = hasMen(lang) ? (MK[k] || '') : '';   // нет мужской статьи (cool, непереведённый шаг) — без ссылки
       var d = data(lang); if (!k || !d || !d[k]) return '';
       return '<button type="button" class="as-usual" style="display:flex;width:100%;justify-content:center;align-items:center;gap:7px;margin-top:10px;" onclick="vialLibrary.go(\'' + k + '\')">'
         + '<i class="ph ph-book-open-text" aria-hidden="true"></i>' + esc(tx(UI.more, lang)) + '</button>';
@@ -133,6 +136,7 @@
       var d = data(lang); if (!has(lang)) return '';
       css();
       return secs(lang).map(function (sec) {
+        if (!sec[1].some(function (k) { return d[k]; })) return '';   // группа ещё не переведена на язык — без заголовка
         return '<div class="vc-subh vc-span" style="grid-column:1/-1;">' + esc(tx(UI[sec[0]], lang)) + '</div>'
           + sec[1].filter(function (k) { return d[k]; }).map(function (k) { return rowHtml(k, d[k]); }).join('');
       }).join('');
