@@ -113,6 +113,7 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
     var res = resHas(lang) ? shRow('button', 'type="button" id="artSheetRes"', 'ph-flask', tx(UI.res, lang), tx(UI.resSub, lang)) : '';
     var art = has(lang) ? shRow('button', 'type="button" id="artSheetArt"', 'ph-book-open-text', tx(UI.sheetArt, lang), tx(UI.sheetArtSub, lang)) : '';
     var tg = TG[lang] ? shRow('a', 'href="' + esc(TG[lang]) + '" target="_blank" rel="noopener"', 'ph-telegram-logo', tx(UI.sheetTg, lang), tx(UI.sheetTgSub, lang)) : '';
+    if (!(res || art || tg)) return;   // нечего показать — без пустой полосы и спрятанного советника
     o.innerHTML = '<div class="art-sheet">' + res + art + tg + '</div>';
     document.body.appendChild(o); document.body.classList.add('lib-sheet');
     var b = document.getElementById('artSheetArt');
