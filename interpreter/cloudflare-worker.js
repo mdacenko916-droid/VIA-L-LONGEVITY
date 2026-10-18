@@ -11280,6 +11280,14 @@ async function _libEntitled(env, rcUser, platform){
     return ok;
   }catch(_){ return null; }
 }
+// Код доступа к Библиотеке VIA-L (владелец 2026-10-18): lib:code:<код> = {label, expiry?} в KV LIBRARY.
+// Вводится на сайте (via-l.com/library/), не в приложении: App Store запрещает открывать платное в обход оплаты.
+async function _libCodeOk(env, code){
+  if(!code) return false;
+  let rec = null;
+  try{ rec = JSON.parse(await env.LIBRARY.get('lib:code:'+code) || 'null'); }catch(_){}
+  return !!rec && !rec.revoked && !(rec.expiry && _libToday() > rec.expiry);
+}
 async function _libExpertOk(env, code){
   if(!code || !env.EXPERT_DRAFTS) return false;
   let rec = null;
@@ -11307,7 +11315,7 @@ async function handleLibraryItem(request, env, corsHeaders){
   const rcUser = String(b.rc_user||'').trim().slice(0,200);
   const platform = b.platform === 'android' ? 'android' : (b.platform === 'ios' ? 'ios' : '');
   let ok = false;
-  if(code) ok = await _libExpertOk(env, code);
+  if(code) ok = (await _libCodeOk(env, code)) || (await _libExpertOk(env, code));
   if(!ok && rcUser && platform){
     const e = await _libEntitled(env, rcUser, platform);
     if(e === null) return jsonResponse({ok:false,error:'rc_unavailable'}, corsHeaders, 502);
