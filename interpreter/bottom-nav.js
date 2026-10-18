@@ -27,11 +27,12 @@
   };
   // [вкладка, иконка Phosphor]
   var SETS = {
-    // lib — книга посередине, в разрыве линии над строкой (2026-10-17). Видна, только если языку есть что
-    // показать: статьи (library.js) или ссылка на группу; иначе строка остаётся из четырёх кнопок.
-    vial:   [['today','ph-sun'], ['path','ph-chart-line-up'], ['lib','ph-book-open-text'], ['guide','ph-signpost'], ['card','ph-user']],
+    // В центре — «Специалист» в золотом круге: в центре у человека должен быть человек (владелец 2026-10-18).
+    // Книга «Библиотека» — 4-я; видна, только если языку есть что показать (library.js), иначе кнопок четыре.
+    vial:   [['today','ph-sun'], ['path','ph-chart-line-up'], ['guide','ph-chat-circle-text'], ['lib','ph-book-open-text'], ['card','ph-user']],
     expert: [['today','ph-sun'], ['approach','ph-stack'], ['chat','ph-chat-circle-dots'], ['card','ph-user']]
   };
+  var CENTER = { vial: 'guide' };   // вкладка в золотом круге над строкой
   var cfg = null;
 
   function label(k, lang) { var o = L[k] || {}; return o[lang] || o.en || k; }
@@ -41,7 +42,7 @@
     var nav = cfg.el || document.getElementById('vialNav');
     if (!nav) return;
     var lang = cfg.lang || 'en';
-    var set = SETS[cfg.set] || SETS.vial;
+    var set = SETS[cfg.set] || SETS.vial, center = CENTER[cfg.set || 'vial'] || '';
     nav.innerHTML = '';
     set.forEach(function (it) {
       var k = it[0], el;
@@ -60,9 +61,9 @@
       el.className = 'bottom-nav-item' + (cfg.active === k ? ' active' : '');
       el.setAttribute('data-nav', k);
       var i = document.createElement('i');
-      i.className = 'ph ' + it[1] + (k === 'lib' ? '' : ' bottom-nav-icon');
+      i.className = 'ph ' + it[1] + (k === center ? '' : ' bottom-nav-icon');
       i.setAttribute('aria-hidden', 'true');
-      if (k === 'lib') {                     // золотой круг над строкой
+      if (k === center) {                    // золотой круг над строкой
         el.className += ' bn-lib';
         var c = document.createElement('span'); c.className = 'bn-lib-c'; c.appendChild(i); i = c;
       }
@@ -74,7 +75,7 @@
     css(); refresh();
   }
 
-  // Круг с книгой и разрыв линии. Линия рисуется ::before с вырезом посередине (средняя из пяти кнопок; вырез уже круга —
+  // Золотой круг (центральная вкладка) и разрыв линии. Линия рисуется ::before с вырезом посередине (средняя из пяти кнопок; вырез уже круга —
   // линия доходит до самого круга и прячется под ним, владелец 2026-10-17
   // стоит ровно по центру), а не кольцом вокруг круга: кольцо цвета строки давало ореол на фоне страницы.
   function css() {
@@ -95,12 +96,13 @@
   }
 
   // Книга видна только языку, которому есть что показать (vialLibrary.hasTab). library.js грузится позже
-  // строки — он сам зовёт refresh(); на других страницах (нет library.js) книги нет.
+  // строки — он сам зовёт refresh(). На других страницах (нет library.js) книга — ссылка на главную ?tab=lib:
+  // без неё кнопок четыре, и круг «Специалиста» съехал бы с центра (2026-10-18).
   function refresh() {
     var nav = cfg && (cfg.el || document.getElementById('vialNav'));
     if (!nav) return;
     var b = nav.querySelector('[data-nav="lib"]'); if (!b) return;
-    var on = !!(window.vialLibrary && vialLibrary.hasTab && vialLibrary.hasTab(cfg.lang || 'en'));
+    var on = (cfg.home && !window.vialLibrary) ? true : !!(window.vialLibrary && vialLibrary.hasTab && vialLibrary.hasTab(cfg.lang || 'en'));
     b.style.display = on ? '' : 'none';
     nav.classList.toggle('has-lib', on);
   }
