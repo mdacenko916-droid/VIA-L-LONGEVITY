@@ -11215,7 +11215,7 @@ const _RC_PUBLIC = { ios: 'appl_otTgmSBqRgDJFfLFrcIaldOYqGd', android: 'goog_BHs
 // а в отдельном KV `LIBRARY`. Заливает их ~/Developer/VIA-L-LIBRARY-PAID/tools/publish.py.
 //   lib:catalog:<lang>   — [{id,topic,type,title,teaser,year,journal,week}] — анонсы, открыты всем
 //   lib:item:<lang>:<id> — {id,title,fields:[[имя,текст]],source:{…},signature}
-// Выдаём только то, чья неделя (`week`, понедельник) уже наступила: библиотека растёт по графику §7а.
+// Выдаём только то, чья дата открытия (`week`) наступила. С 2026-10-18 publish.py ставит дату выкладки — открыто всё сразу.
 // Доступ: подписка VIA-L (entitlement via_l_pro в RevenueCat) или действующий код VIA-L EXPERT.
 // ─────────────────────────────────────────────────────────────
 const LIB_ENTITLEMENT = 'via_l_pro';
