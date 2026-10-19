@@ -9080,14 +9080,15 @@ async function advisorLibPick(env, ctx, q, lang, tier, male){
   if(!env.LIBRARY || !env.CLAUDE_API_KEY || !q) return null;
   const L = ['ru','uk','en','es'].includes(lang) ? lang : 'en';
   let canon, own;
-  try{ [canon, own] = await Promise.all([_libCatalog(env,'ru'), _libCatalog(env,L)]); }catch(_){ return null; }
+  const g = male ? 'm' : '';   // мужчине — мужская полка
+  try{ [canon, own] = await Promise.all([_libCatalog(env,'ru',g), _libCatalog(env,L,g)]); }catch(_){ return null; }
   if(!canon.items.length) return null;
   const list = canon.items.map((x,i)=>`${i}: ${x.title}`).join('\n');
   const system =
     'Ты подбираешь к вопросу клиента материал из Библиотеки VIA-L (вопрос может быть на любом языке).'+
     ' Верни номер материала, который ПРЯМО про тему вопроса. Если такого нет (приветствие, вопрос о'+
     ' приложении или тарифе, тема не совпадает) — верни -1. Сомневаешься — -1.'+
-    (male ? ' Клиент — мужчина: материалы про менопаузу и женское здоровье ему не подходят, только общие (кофе, железо, магний, омега-3 и т.п.).' : '')+
+
     ' Ответ — ТОЛЬКО одно целое число.';
   try{
     const model = 'claude-haiku-4-5-20251001';
@@ -11296,10 +11297,12 @@ const LIB_ENT_TTL = 3600;   // кэш «подписка есть/нет» на 
 
 function _libToday(){ return new Date().toISOString().slice(0,10); }
 function _libLang(v){ const l = String(v||'').trim().slice(0,5); return /^[a-z]{2}$/.test(l) ? l : 'ru'; }
-async function _libCatalog(env, lang){
+// g='m' — мужская полка (lib:catalog:m:<lang>, материалы m-*), 2026-10-19; '' — женская.
+async function _libCatalog(env, lang, g){
+  const gp = g === 'm' ? 'm:' : '';
   let L = null;
-  try{ L = JSON.parse(await env.LIBRARY.get('lib:catalog:'+lang) || 'null'); }catch(_){}
-  if(!Array.isArray(L) && lang !== 'ru') return _libCatalog(env, 'ru');   // язык без перевода — русский канон
+  try{ L = JSON.parse(await env.LIBRARY.get('lib:catalog:'+gp+lang) || 'null'); }catch(_){}
+  if(!Array.isArray(L) && lang !== 'ru') return _libCatalog(env, 'ru', g);   // язык без перевода — русский канон
   const today = _libToday();
   return { lang: Array.isArray(L) ? lang : 'ru', items: (L||[]).filter(x => x && x.week && x.week <= today) };
 }
@@ -11342,7 +11345,8 @@ async function _libExpertOk(env, code){
 // GET /library/catalog?lang=ru → {ok, lang, items} — анонсы вышедших материалов, без полного текста.
 async function handleLibraryCatalog(request, env, corsHeaders){
   if(!env.LIBRARY) return jsonResponse({ok:false,error:'library_missing'}, corsHeaders, 500);
-  const c = await _libCatalog(env, _libLang(new URL(request.url).searchParams.get('lang')));
+  const q = new URL(request.url).searchParams;
+  const c = await _libCatalog(env, _libLang(q.get('lang')), q.get('g') === 'm' ? 'm' : '');
   return jsonResponse({ok:true, lang:c.lang, items:c.items}, corsHeaders);
 }
 
@@ -11352,7 +11356,7 @@ async function handleLibraryItem(request, env, corsHeaders){
   let b = {}; try{ b = await request.json(); }catch(_){}
   const id = String(b.id||'').trim().slice(0,120);
   if(!/^[a-z0-9-]+$/.test(id)) return jsonResponse({ok:false,error:'bad_id'}, corsHeaders, 400);
-  const c = await _libCatalog(env, _libLang(b.lang));
+  const c = await _libCatalog(env, _libLang(b.lang), id.startsWith('m-') ? 'm' : '');   // мужские материалы — m-*
   if(!c.items.some(x => x.id === id)) return jsonResponse({ok:false,error:'not_found'}, corsHeaders, 404);   // нет или ещё не вышел
 
   const code = String(b.code||'').trim().toUpperCase().slice(0,40);

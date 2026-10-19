@@ -26,6 +26,7 @@
     resStudy:{ru:'Разбор исследования',uk:'Розбір дослідження',en:'Study explained',es:'Estudio explicado',de:'Studie erklärt',pt:'Estudo explicado',fr:'Étude expliquée',pl:'Badanie w skrócie',it:'Studio spiegato',he:'מחקר בהסבר',ja:'研究の解説',ko:'연구 해설'},
     resLock:{ru:'Полный разбор доступен по подписке VIA-L.',uk:'Повний розбір доступний за підпискою VIA-L.',en:'The full summary is part of the VIA-L subscription.',es:'El resumen completo está incluido en la suscripción VIA-L.',de:'Die vollständige Zusammenfassung ist im VIA-L-Abo enthalten.',pt:'O resumo completo faz parte da assinatura VIA-L.',fr:'Le résumé complet est inclus dans l’abonnement VIA-L.',pl:'Pełne omówienie jest dostępne w subskrypcji VIA-L.',it:'Il riassunto completo è incluso nell’abbonamento VIA-L.',he:'הסיכום המלא כלול במנוי VIA-L.',ja:'全文はVIA-Lのサブスクリプションでお読みいただけます。',ko:'전체 해설은 VIA-L 구독에 포함되어 있어요.'},
     resLockWeb:{ru:'Полный разбор доступен в приложении VIA-L по подписке.',uk:'Повний розбір доступний у застосунку VIA-L за підпискою.',en:'The full summary is available in the VIA-L app with a subscription.',es:'El resumen completo está disponible en la app VIA-L con suscripción.',de:'Die vollständige Zusammenfassung gibt es in der VIA-L-App mit Abo.',pt:'O resumo completo está disponível no app VIA-L com assinatura.',fr:'Le résumé complet est disponible dans l’app VIA-L avec abonnement.',pl:'Pełne omówienie jest dostępne w aplikacji VIA-L w subskrypcji.',it:'Il riassunto completo è disponibile nell’app VIA-L con abbonamento.',he:'הסיכום המלא זמין באפליקציית VIA-L במנוי.',ja:'全文はVIA-Lアプリのサブスクリプションでお読みいただけます。',ko:'전체 해설은 VIA-L 앱 구독으로 볼 수 있어요.'},
+resFindM:{ru:'Поиск: сон, тестостерон, кофе…',uk:'Пошук: сон, тестостерон, кава…',en:'Search: sleep, testosterone, coffee…',es:'Buscar: sueño, testosterona, café…',de:'Suche: Schlaf, Testosteron, Kaffee…',pt:'Buscar: sono, testosterona, café…',fr:'Rechercher : sommeil, testostérone, café…',pl:'Szukaj: sen, testosteron, kawa…',it:'Cerca: sonno, testosterone, caffè…',he:'חיפוש: שינה, טסטוסטרון, קפה…',ja:'検索：睡眠、テストステロン、コーヒー…',ko:'검색: 수면, 테스토스테론, 커피…'},
 resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: сон, припливи, кава…',en:'Search: sleep, hot flashes, coffee…',es:'Buscar: sueño, sofocos, café…',de:'Suche: Schlaf, Hitzewallungen, Kaffee…',pt:'Buscar: sono, ondas de calor, café…',fr:'Rechercher : sommeil, bouffées de chaleur, café…',pl:'Szukaj: sen, uderzenia gorąca, kawa…',it:'Cerca: sonno, vampate, caffè…',he:'חיפוש: שינה, גלי חום, קפה…',ja:'検索：睡眠、ほてり、コーヒー…',ko:'검색: 수면, 안면홍조, 커피…'},
     back:{en:'Library',ru:'Библиотека',uk:'Бібліотека',es:'Biblioteca',de:'Bibliothek',pt:'Biblioteca',fr:'Bibliothèque',pl:'Biblioteka',it:'Biblioteca',he:'ספרייה',ja:'ライブラリ',ko:'라이브러리'},
     resTopics:{ru:'Темы',uk:'Теми',en:'Topics',es:'Temas',de:'Themen',pt:'Temas',fr:'Thèmes',pl:'Tematy',it:'Temi',he:'נושאים',ja:'テーマ',ko:'주제'},
@@ -150,9 +151,16 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
     heart:{ru:'Сердце и сосуды',uk:'Серце і судини',en:'Heart and blood vessels',es:'Corazón y vasos sanguíneos',de:'Herz und Gefäße',pt:'Coração e vasos',fr:'Cœur et vaisseaux',pl:'Serce i naczynia',it:'Cuore e vasi sanguigni',he:'לב וכלי דם',ja:'心臓と血管',ko:'심장과 혈관'},
     pelvic:{ru:'Тазовое дно',uk:'Тазове дно',en:'Pelvic floor',es:'Suelo pélvico',de:'Beckenboden',pt:'Assoalho pélvico',fr:'Plancher pelvien',pl:'Dno miednicy',it:'Pavimento pelvico',he:'רצפת האגן',ja:'骨盤底',ko:'골반저'},
     osnovy:{ru:'Основы перименопаузы и менопаузы',uk:'Основи перименопаузи й менопаузи',en:'Perimenopause and menopause basics',es:'Lo básico de la perimenopausia y la menopausia',de:'Grundlagen zu Perimenopause und Menopause',pt:'O básico sobre perimenopausa e menopausa',fr:'Bases de la périménopause et de la ménopause',pl:'Podstawy perimenopauzy i menopauzy',it:'Le basi di perimenopausa e menopausa',he:'יסודות הפרימנופאוזה והמנופאוזה',ja:'更年期の基本',ko:'폐경 이행기와 폐경의 기초'},
+    m_testo:{ru:'Тестостерон и андропауза',uk:'Тестостерон і андропауза',en:'Testosterone and andropause',es:'Testosterona y andropausia',de:'Testosteron und Andropause',pt:'Testosterona e andropausa',fr:'Testostérone et andropause',pl:'Testosteron i andropauza',it:'Testosterone e andropausa',he:'טסטוסטרון ואנדרופאוזה',ja:'テストステロンと男性更年期',ko:'테스토스테론과 남성 갱년기'},
+    m_stress:{ru:'Стресс и восстановление',uk:'Стрес і відновлення',en:'Stress and recovery',es:'Estrés y recuperación',de:'Stress und Erholung',pt:'Estresse e recuperação',fr:'Stress et récupération',pl:'Stres i regeneracja',it:'Stress e recupero',he:'לחץ והתאוששות',ja:'ストレスと回復',ko:'스트레스와 회복'},
+    m_metab:{ru:'Обмен веществ и вес',uk:'Обмін речовин і вага',en:'Metabolism and weight',es:'Metabolismo y peso',de:'Stoffwechsel und Gewicht',pt:'Metabolismo e peso',fr:'Métabolisme et poids',pl:'Metabolizm i waga',it:'Metabolismo e peso',he:'חילוף חומרים ומשקל',ja:'代謝と体重',ko:'대사와 체중'},
+    m_gut:{ru:'Кишечник',uk:'Кишечник',en:'Gut health',es:'Salud intestinal',de:'Darmgesundheit',pt:'Saúde intestinal',fr:'Santé intestinale',pl:'Zdrowie jelit',it:'Salute intestinale',he:'בריאות המעי',ja:'腸の健康',ko:'장 건강'},
+    m_brain:{ru:'Память и ясность ума',uk:'Пам’ять і ясність розуму',en:'Memory and clear thinking',es:'Memoria y mente clara',de:'Gedächtnis und klarer Kopf',pt:'Memória e clareza mental',fr:'Mémoire et clarté d’esprit',pl:'Pamięć i jasność umysłu',it:'Memoria e lucidità',he:'זיכרון וצלילות',ja:'記憶と頭の冴え',ko:'기억력과 맑은 정신'},
     treatment:{ru:'Варианты лечения',uk:'Варіанти лікування',en:'Treatment options',es:'Opciones de tratamiento',de:'Behandlungsmöglichkeiten',pt:'Opções de tratamento',fr:'Options de traitement',pl:'Możliwości leczenia',it:'Opzioni di trattamento',he:'אפשרויות טיפול',ja:'治療の選択肢',ko:'치료 선택지'} };
+  // Мужчинам — своя полка (m_*; темы сна, сердца, секса и движения называются как у женской). 2026-10-19.
+  ['sleep', 'heart', 'sex', 'exercise'].forEach(function (k) { TOPIC['m_' + k] = TOPIC[k]; });
   var resCat = null, resCatLang = '', resItems = {};
-  function resHas(lang) { return !isMale(); }   // все 12 языков (resLang); мужские темы — позже (LIBRARY-FULL-MODEL §1)
+  function resHas(lang) { return true; }   // все 12 языков (resLang); у мужчины — мужская полка (?g=m)
   function subOn() { try { return localStorage.getItem('vialp_entitlement') === '1'; } catch (e) { return false; } }
   function inApp() { return !!(window.Capacitor && typeof window.iapAvailable === 'function' && window.iapAvailable()); }
   function resFill(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html; }
@@ -207,10 +215,10 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
     }).join('') + '<div class="art-note vc-span" style="grid-column:1/-1;margin-top:6px;">' + esc(tx(UI.resNew, lang)) + '</div>');
   }
   function resCatalog(lang, cb) {
-    if (resCat && resCatLang === resLang(lang)) return cb();   // сменили язык — каталог заново
-    var L = resLang(lang);
-    fetch(API + '/library/catalog?lang=' + encodeURIComponent(L)).then(function (r) { return r.json(); })
-      .then(function (j) { if (!j || !j.ok) throw 0; resCat = j.items || []; resCatLang = L; cb(); })
+    var L = resLang(lang), K = L + (isMale() ? ':m' : '');
+    if (resCat && resCatLang === K) return cb();   // сменили язык или пол в профиле — каталог заново
+    fetch(API + '/library/catalog?lang=' + encodeURIComponent(L) + (isMale() ? '&g=m' : '')).then(function (r) { return r.json(); })
+      .then(function (j) { if (!j || !j.ok) throw 0; resCat = j.items || []; resCatLang = K; cb(); })
       .catch(function () { cb(true); });
   }
   function resLocked(x, lang) {
@@ -296,7 +304,7 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
         + '<button type="button" class="as-usual" style="margin-top:0;flex:0 0 auto;max-width:45%;" onclick="vialLibrary.resMenu(\'' + esc(lang) + '\')">'
         + '<i class="ph ph-list" aria-hidden="true"></i><span id="vialResTopicsT" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(resTopic ? (tx(TOPIC[resTopic], lang) || resTopic) : tx(UI.resTopics, lang)) + '</span></button>'
         + '<input type="search" id="vialResFind" class="manual-input" style="flex:1 1 auto;min-width:0;box-sizing:border-box;" value="' + esc(resQ) + '"'
-        + ' placeholder="' + esc(tx(UI.resFind, lang)) + '" oninput="vialLibrary.resFind(this.value,\'' + esc(lang) + '\')"></div>';
+        + ' placeholder="' + esc(tx(isMale() ? UI.resFindM : UI.resFind, lang)) + '" oninput="vialLibrary.resFind(this.value,\'' + esc(lang) + '\')"></div>';
       var box = find + '<div id="vialResList" class="vc-span" style="grid-column:1/-1;display:contents;"><p class="art-p art-note">' + esc(tx(UI.resLoad, lang)) + '</p></div>';
       setTimeout(function () { resCatalog(lang, function (err) { if (err) resFill('vialResList', '<p class="art-p">' + esc(tx(UI.resErr, lang)) + '</p>'); else resListRender(lang); }); }, 0);
       return box;
