@@ -12,7 +12,7 @@
          на развороте одна нога шагает дважды — владелец заметил 2026-10-09).
 Исходники не трогает, пишет H.264 в <папка>/pingpong/.
 
-  python3 tools/fitness_boomerang.py "скрин/Eva тренер видео"
+  python3 tools/fitness_boomerang.py "~/Developer/VIA-L-фитнес-медиа/Eva тренер видео"
 """
 import json, os, subprocess, sys
 import numpy as np

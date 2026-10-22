@@ -11,7 +11,7 @@
   4. сохраняет в H.264 (HEVC не везде играет) в подпапку loop/ под тем же именем.
 Исходники не трогает. Печатает разницу стыка по телу до и после (меньше — лучше).
 
-  python3 tools/fitness_loop.py "скрин/Eva тренер видео"
+  python3 tools/fitness_loop.py "~/Developer/VIA-L-фитнес-медиа/Eva тренер видео"
 """
 import glob, json, os, subprocess, sys
 import numpy as np
