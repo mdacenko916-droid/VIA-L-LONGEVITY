@@ -138,7 +138,7 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
   // по идентификатору покупателя. Без подписки — анонс + кнопка экрана подписки стора (цен и сайта здесь нет).
   // Тексты: канон ru + наш перевод uk/en/es; остальные 8 языков приложения читают английский (владелец 2026-10-18).
   // Названия тем — на языке приложения (12), сами материалы — на языке текста (resLang).
-  var API = 'https://interpreter.viaelcom.workers.dev', RES_LANGS = ['ru', 'uk', 'en', 'es'];
+  var API = 'https://interpreter.viaelcom.workers.dev', RES_LANGS = ['ru', 'uk', 'en', 'es', 'de'];
   function resLang(lang) { return RES_LANGS.indexOf(lang) > -1 ? lang : 'en'; }
   var TOPIC = {
     sleep:{ru:'Сон',uk:'Сон',en:'Sleep',es:'Sueño',de:'Schlaf',pt:'Sono',fr:'Sommeil',pl:'Sen',it:'Sonno',he:'שינה',ja:'睡眠',ko:'수면'},
