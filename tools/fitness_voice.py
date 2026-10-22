@@ -4,8 +4,8 @@
 Ключ не хранится в git и не передаётся в чат: положите его в файл ~/.cartesia/key
 (или в переменную окружения CARTESIA_API_KEY).
 
-  python3 tools/fitness_voice.py "~/Developer/VIA-L-фитнес-медиа/Eva тренер видео"          # озвучить недостающие
-  python3 tools/fitness_voice.py "~/Developer/VIA-L-фитнес-медиа/Eva тренер видео" --force  # переозвучить всё
+  python3 tools/fitness_voice.py "скрин/Eva тренер видео"          # озвучить недостающие
+  python3 tools/fitness_voice.py "скрин/Eva тренер видео" --force  # переозвучить всё
 
 Файлы ложатся в <папка>/voice/<имя>.mp3; проигрыватель берёт их по тем же именам (VOICE в player.html).
 """

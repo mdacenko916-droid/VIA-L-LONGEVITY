@@ -4,7 +4,7 @@
 не было чёрных краёв, и клип режется на кадре, где поза совпадает с первой (для упражнений в две стороны).
 
 Нужен OpenCV:  python3 -m venv venv && venv/bin/pip install opencv-python-headless numpy
-  venv/bin/python tools/fitness_stabilize.py "~/Developer/VIA-L-фитнес-медиа/Eva тренер видео/09_птица-собака.mp4"
+  venv/bin/python tools/fitness_stabilize.py "скрин/Eva тренер видео/09_птица-собака.mp4"
   --top вторым аргументом — обрезка снизу, а не по центру (голова у верхнего края кадра).
 Результат — <папка>/stab/<имя>.mp4 (H.264). Исходник не трогает.
 """
