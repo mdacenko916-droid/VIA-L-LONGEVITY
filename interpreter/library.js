@@ -39,6 +39,9 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
     resLoad:{ru:'Загружаем…',uk:'Завантажуємо…',en:'Loading…',es:'Cargando…',de:'Wird geladen…',pt:'Carregando…',fr:'Chargement…',pl:'Ładowanie…',it:'Caricamento…',he:'טוען…',ja:'読み込み中…',ko:'불러오는 중…'},
     resErr:{ru:'Не получилось загрузить. Проверьте интернет и откройте ещё раз.',uk:'Не вдалося завантажити. Перевірте інтернет і відкрийте ще раз.',en:'Couldn’t load. Check your connection and try again.',es:'No se pudo cargar. Revisa tu conexión e inténtalo de nuevo.',de:'Laden fehlgeschlagen. Prüfe die Verbindung und versuche es erneut.',pt:'Não foi possível carregar. Verifique a conexão e tente de novo.',fr:'Chargement impossible. Vérifiez votre connexion et réessayez.',pl:'Nie udało się wczytać. Sprawdź internet i spróbuj ponownie.',it:'Impossibile caricare. Controlla la connessione e riprova.',he:'הטעינה נכשלה. בדקו את החיבור ונסו שוב.',ja:'読み込めませんでした。接続を確認してもう一度お試しください。',ko:'불러오지 못했어요. 인터넷을 확인하고 다시 시도해 주세요.'},
     resNew:{ru:'Новые материалы выходят каждую неделю.',uk:'Нові матеріали виходять щотижня.',en:'New pieces come out every week.',es:'Cada semana hay contenido nuevo.',de:'Jede Woche erscheinen neue Beiträge.',pt:'Novos conteúdos saem toda semana.',fr:'De nouveaux contenus chaque semaine.',pl:'Nowe materiały co tydzień.',it:'Nuovi contenuti ogni settimana.',he:'תכנים חדשים יוצאים כל שבוע.',ja:'毎週新しい記事が追加されます。',ko:'매주 새 글이 올라와요.'},
+    // Словарь терминов (2026-10-22): тема 'glossary', тип 'term' — карточка термина с несколькими источниками.
+    resTerm:{ru:'Термин',uk:'Термін',en:'Term explained',es:'Término explicado',de:'Begriff erklärt',pt:'Termo explicado',fr:'Terme expliqué',pl:'Pojęcie',it:'Termine spiegato',he:'מונח בהסבר',ja:'用語の解説',ko:'용어 해설'},
+    resSrcs:{ru:'Источники',uk:'Джерела',en:'Sources',es:'Fuentes',de:'Quellen',pt:'Fontes',fr:'Sources',pl:'Źródła',it:'Fonti',he:'מקורות',ja:'出典',ko:'출처'},
     resSrc:{ru:'Источник',uk:'Джерело',en:'Source',es:'Fuente',de:'Quelle',pt:'Fonte',fr:'Source',pl:'Źródło',it:'Fonte',he:'מקור',ja:'出典',ko:'출처'},
     resRel:{ru:'Связанная статья',uk:'Пов’язана стаття',en:'Related article',es:'Artículo relacionado',de:'Passender Artikel',pt:'Artigo relacionado',fr:'Article associé',pl:'Powiązany artykuł',it:'Articolo correlato',he:'מאמר קשור',ja:'関連記事',ko:'관련 글'},
     check: {ru:'Проверено специалистом VIA-L',uk:'Перевірено спеціалістом VIA-L',en:'Reviewed by a VIA-L specialist',es:'Revisado por un especialista de VIA-L',de:'Geprüft von einer VIA-L-Fachperson',pt:'Revisado por um especialista VIA-L',fr:'Relu par un spécialiste VIA-L',pl:'Sprawdzone przez specjalistę VIA-L',it:'Rivisto da uno specialista VIA-L',he:'נבדק על ידי מומחה VIA-L',ja:'VIA-Lの専門家が確認済み',ko:'VIA-L 전문가 검토 완료'}
@@ -158,6 +161,7 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
     m_gut:{ru:'Кишечник',uk:'Кишечник',en:'Gut health',es:'Salud intestinal',de:'Darmgesundheit',pt:'Saúde intestinal',fr:'Santé intestinale',pl:'Zdrowie jelit',it:'Salute intestinale',he:'בריאות המעי',ja:'腸の健康',ko:'장 건강'},
     m_myths:{ru:'Мифы о мужском здоровье',uk:'Міфи про чоловіче здоров’я',en:'Men\'s health myths',es:'Mitos sobre la salud masculina',de:'Mythen zur Männergesundheit',pt:'Mitos sobre a saúde masculina',fr:'Idées reçues sur la santé masculine',pl:'Mity o zdrowiu mężczyzn',it:'Miti sulla salute maschile',he:'מיתוסים על בריאות הגבר',ja:'男性の健康にまつわる誤解',ko:'남성 건강에 관한 오해'},
     m_brain:{ru:'Память и ясность ума',uk:'Пам’ять і ясність розуму',en:'Memory and clear thinking',es:'Memoria y mente clara',de:'Gedächtnis und klarer Kopf',pt:'Memória e clareza mental',fr:'Mémoire et clarté d’esprit',pl:'Pamięć i jasność umysłu',it:'Memoria e lucidità',he:'זיכרון וצלילות',ja:'記憶と頭の冴え',ko:'기억력과 맑은 정신'},
+    glossary:{ru:'Словарь терминов',uk:'Словник термінів',en:'Glossary of terms',es:'Glosario de términos',de:'Begriffe erklärt',pt:'Glossário de termos',fr:'Lexique des termes',pl:'Słownik pojęć',it:'Glossario dei termini',he:'מילון מונחים',ja:'用語集',ko:'용어 사전'},
     treatment:{ru:'Варианты лечения',uk:'Варіанти лікування',en:'Treatment options',es:'Opciones de tratamiento',de:'Behandlungsmöglichkeiten',pt:'Opções de tratamento',fr:'Options de traitement',pl:'Możliwości leczenia',it:'Opzioni di trattamento',he:'אפשרויות טיפול',ja:'治療の選択肢',ko:'치료 선택지'} };
   // Мужчинам — своя полка (m_*; темы сна, сердца, секса и движения называются как у женской). 2026-10-19.
   ['sleep', 'heart', 'sex', 'exercise', 'checks'].forEach(function (k) { TOPIC['m_' + k] = TOPIC[k]; });
@@ -166,10 +170,11 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
   function subOn() { try { return localStorage.getItem('vialp_entitlement') === '1'; } catch (e) { return false; } }
   function inApp() { return !!(window.Capacitor && typeof window.iapAvailable === 'function' && window.iapAvailable()); }
   function resFill(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html; }
+  function resKind(x, lang) { return tx(x.type === 'myth' ? UI.resMyth : (x.type === 'term' ? UI.resTerm : UI.resStudy), lang); }
   function resRow(x, lang) {
     return '<button type="button" class="vc-link vc-span art-row" onclick="_cardOpen(\'res:' + esc(x.id) + '\')">'
       + '<span class="vc-txt"><span class="vc-tt">' + esc(x.title) + '</span>'
-      + '<span class="vc-sub2">' + esc(tx(x.type === 'myth' ? UI.resMyth : UI.resStudy, lang)) + ' · ' + esc(x.year || '') + '</span></span>'
+      + '<span class="vc-sub2">' + esc(resKind(x, lang)) + (x.year ? ' · ' + esc(x.year) : '') + '</span></span>'
       + '<span class="vc-chev">' + (subOn() ? '›' : '<i class="ph ph-lock-simple"></i>') + '</span></button>';
   }
   var resQ = '';   // строка поиска по полке: заголовок, анонс, тема (полный текст закрыт — ищем по анонсам)
@@ -226,19 +231,23 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
   function resLocked(x, lang) {
     var btn = inApp() ? '<button type="button" class="as-usual" style="display:flex;width:100%;justify-content:center;align-items:center;gap:7px;margin-top:12px;" onclick="_iapOpenFromProfile()">'
       + '<i class="ph ph-lock-simple-open" aria-hidden="true"></i>' + esc(tx(UI.resSubBtn, lang)) + '</button>' : '';
-    return '<div class="art-card"><div class="art-min">' + esc(tx(x.type === 'myth' ? UI.resMyth : UI.resStudy, lang)) + '</div>'
+    return '<div class="art-card"><div class="art-min">' + esc(resKind(x, lang)) + '</div>'
       + '<h2 class="art-title">' + esc(x.title) + '</h2>'
       + (x.teaser ? '<p class="art-p">' + esc(x.teaser) + '</p>' : '')
       + '<p class="art-p art-note"><i class="ph ph-lock-simple"></i> ' + esc(tx(inApp() ? UI.resLock : UI.resLockWeb, lang)) + '</p>' + btn + '</div>';
   }
+  function resSrcLine(s) {   // авторы без конечной точки: «и др.» + «. » давало двойную
+    return esc(String(s.authors || '').replace(/\.$/, '')) + '. ' + esc(s.title || '') + ' ' + esc(s.journal || '') + ', ' + esc(s.year || '')
+      + (s.url ? '. <a href="' + esc(s.url) + '" target="_blank" rel="noopener" style="color:var(--gold-lt);">' + esc(String(s.url).replace('https://', '')) + '</a>' : '');
+  }
   function resFull(it, lang) {
-    var s = it.source || {};
-    return '<div class="art-card"><div class="art-min">' + esc(tx(it.type === 'myth' ? UI.resMyth : UI.resStudy, lang)) + '</div>'
+    var s = it.source || {}, many = (it.sources || []).length > 1;
+    return '<div class="art-card"><div class="art-min">' + esc(resKind(it, lang)) + '</div>'
       + '<h2 class="art-title">' + esc(it.title) + '</h2>'
       + (it.fields || []).map(function (f) { return '<p class="art-p"><b>' + esc(f[0]) + ':</b> ' + esc(f[1]) + '</p>'; }).join('')
       + (it.related ? '<p class="art-p art-note">' + esc(tx(UI.resRel, lang)) + ': ' + esc(String(it.related).replace(/^статья\s*/i, '')) + '</p>' : '')
-      + '<p class="art-p art-note"><b>' + esc(tx(UI.resSrc, lang)) + ':</b> ' + esc(s.authors || '') + '. ' + esc(s.title || '') + ' ' + esc(s.journal || '') + ', ' + esc(s.year || '')
-      + (s.url ? '. <a href="' + esc(s.url) + '" target="_blank" rel="noopener" style="color:var(--gold-lt);">' + esc(String(s.url).replace('https://', '')) + '</a>' : '') + '</p>'
+      + (many ? '<p class="art-p art-note"><b>' + esc(tx(UI.resSrcs, lang)) + ':</b></p><ul class="art-ul art-note">' + it.sources.map(function (x) { return '<li>' + resSrcLine(x) + '</li>'; }).join('') + '</ul>'
+              : '<p class="art-p art-note"><b>' + esc(tx(UI.resSrc, lang)) + ':</b> ' + resSrcLine(s) + '</p>')
       + '<div class="art-check"><i class="ph ' + ((it.reviewed || /специалист/.test(it.signature || '')) ? 'ph-seal-check' : 'ph-robot') + '" aria-hidden="true"></i>' + esc(it.signature || '') + '</div></div>';
   }
   async function resLoadItem(id, lang) {
