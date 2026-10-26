@@ -11892,6 +11892,14 @@ function _showResultsInner(){
     cycle_phase:(getRadio('cycle_status')==='absent'?null:(cycleInfo()||{}).phase||null),
     wearable_tags:_wearTagsFresh(),   // свои метки из Oura за 3 дня (симптомы, события) — воркер даёт их отдельной строкой
     cycle_temp:((getRadio('cycle_status')==='absent'||getRadio('gender')==='male')?null:_cycTempState()),   // что видно по кривой ночной температуры (подъём есть / нет / рано / мало ночей)
+    // Журнал начал циклов → длины циклов и сколько дней прошло с последнего начала (2026-10-26): по ним
+    // воркер видит признаки STRAW+10 — соседние циклы стойко различаются на ≥7 дн, пауза ≥60 дн.
+    cycle_log:(function(){ if(getRadio('cycle_status')==='absent'||getRadio('gender')==='male') return null;
+      var today=_dayKey(), s=_cycStarts().filter(function(d){ return d<=today; }), lens=[];
+      for(var i=1;i<s.length;i++) lens.push(_cycDiff(s[i],s[i-1]));
+      var last=s.length?s[s.length-1]:(_cycProfile().lastperiod||'');
+      var since=(last && last<=today)?_cycDiff(today,last):null;
+      return (lens.length||since!=null)?{lens:lens.slice(-6),since:since}:null; })(),
     pms:(function(){var s=getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9','pmss6']).filter(function(v){return v!=='none_pms';});return s.length>=5?'severe':s.length>=3?'moderate':s.length>=1?'mild':'none';})(),
     pms_symptoms:getChecked(['pmss1','pmss2','pmss3','pmss4','pmss5','pmss9','pmss6']),
     vitality:getRadio('vitality'),
