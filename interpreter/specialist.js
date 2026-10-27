@@ -183,6 +183,7 @@ input.in.err{border-color:var(--alert)}
 .car-slide .speccard{margin-bottom:0;}
 .car-slide:only-child{flex-basis:100%;}   /* один специалист — карточка на всю ширину, без пустоты справа */
 .seeall{white-space:nowrap;}
+.seeall-btn{display:flex;justify-content:center;width:100%;box-sizing:border-box;margin-top:12px;padding:13px 14px;border:1px solid rgba(226,185,90,.55);border-radius:14px;background:rgba(226,185,90,.07);}
 .car-arrow{position:absolute;top:42px;width:30px;height:30px;border-radius:50%;border:1px solid var(--b1);background:rgba(255,255,255,.92);color:var(--gold-txt);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(120,90,30,.15);z-index:2;}
 .car-prev{left:-6px;} .car-next{right:-6px;}
 @media (max-width:599px){
@@ -1129,12 +1130,14 @@ function renderShowcase(){
   if(_showcaseEmpty){ box.innerHTML=''; updateShowcaseFallback(); return; }
   const header = `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px;">
       <div style="font-weight:600;color:var(--t1);">${esc(catL('title'))}</div>
-      ${list.length>1?`<button type="button" class="seeall" onclick="vialSp.openCatalog()">${esc(catL('seeall'))} (${list.length}) →</button>`:''}
     </div>`;
   const slides = list.map(s=>`<div class="car-slide">${specCard(s)}</div>`).join('');
   const arrows = list.length>1
     ? `<button type="button" class="car-arrow car-prev" onclick="vialSp._carScroll(-1)" aria-label="prev">‹</button><button type="button" class="car-arrow car-next" onclick="vialSp._carScroll(1)" aria-label="next">›</button>` : '';
-  box.innerHTML = header + `<div class="car-wrap"><div class="car-track" id="carTrack">${slides}</div>${arrows}</div>`;
+  // Вход в витрину (каталог с подбором) — отдельной кнопкой под карточкой: в строке заголовка не помещался и рвал его на две строки,
+  // а без него терялось, куда нажимать (владелец 2026-10-28).
+  const seeAll = `<button type="button" class="seeall seeall-btn" onclick="vialSp.openCatalog()">${esc(catL('seeall'))} (${list.length}) →</button>`;
+  box.innerHTML = header + `<div class="car-wrap"><div class="car-track" id="carTrack">${slides}</div>${arrows}</div>` + seeAll;
   updateShowcaseFallback();
   // подскролл к выбранному из каталога
   if(_chosenIdx!=null){ const tr=$id('carTrack'); const sl=tr&&tr.children[_chosenIdx]; if(sl){ try{ sl.scrollIntoView({inline:'center',block:'nearest'}); }catch(e){} } }
