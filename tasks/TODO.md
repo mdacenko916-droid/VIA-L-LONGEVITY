@@ -141,8 +141,8 @@ ADAM-L перекрашивает и переименовывает их выв�
 - [ ] 5. Женские ветки JS (цикл, приливы, ПМС) — мёртвый код, вычистить по частям с прогоном.
 - [ ] 6. Нативная обёртка. ✅ 10-27 `app-adam/` (см. `app-adam/README.md`): bundle `com.viael.adaml`, iOS-проект для
       Xcode Cloud, `sync-web.sh`, иконка/заставка, setup-скрипты; локально `npm ci` + `cap sync ios` проходят.
-      ⏳ Кабинеты (руками владельца, кроме отмеченного): (а) App ID `com.viael.adaml` с HealthKit + Push — могу через
-      ASC API по команде; (б) карточка приложения «ADAM-L» в App Store Connect (API её не создаёт); (в) workflow Xcode
+      ⏳ Кабинеты (руками владельца, кроме отмеченного): (а) ✅ 10-28 App ID `com.viael.adaml` (ASC id 8QV8F7VS3D)
+      зарегистрирован через API: IAP + Push + HealthKit, как у VIA-L; (б) карточка приложения «ADAM-L» в App Store Connect (API её не создаёт); (в) workflow Xcode
       Cloud на `app-adam/ios/App`; (г) RevenueCat: приложения ADAM-L iOS/Android, товары, entitlement, offering →
       ключи в `app-adam/iap-keys.json`; (д) Google Play: новое приложение `com.viael.adaml`, свой ключ подписи.
       ⏳ Моё: `legal-adam/` ×12 (сейчас в бандле юр-страницы VIA-L), тексты и скриншоты сторов ×12, Android
