@@ -172,8 +172,8 @@ input.in.err{border-color:var(--alert)}
 .cchip.active{background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#1a1408;border-color:transparent;font-weight:500;}
 .catlang{appearance:none;-webkit-appearance:none;border:1px solid var(--b1);background-color:#fff;color:var(--t1);border-radius:10px;padding:9px 38px 9px 14px;font-family:inherit;font-size:var(--fs-body);min-width:180px;max-width:100%;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%238a6a1c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px;}
 .speccard{background:#fff;border:1px solid rgba(160,120,32,.22);border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 4px 16px rgba(120,90,30,.07);}
-.speccard .sc-photo{width:52px;height:52px;border-radius:50%;object-fit:cover;flex:none;}
-.speccard .sc-photo-ph{width:52px;height:52px;border-radius:50%;flex:none;background:#f2ead9;display:flex;align-items:center;justify-content:center;color:var(--gold-txt);font-size:20px;font-weight:600;}
+.speccard .sc-photo{width:40%;max-width:170px;aspect-ratio:3/4;height:auto;border-radius:14px;object-fit:cover;object-position:center 15%;flex:none;background:#2A2D33;cursor:zoom-in;}   /* 2026-10-27: крупное фото на графите, по нажатию — целиком (концепт владельца) */
+.speccard .sc-photo-ph{width:40%;max-width:170px;aspect-ratio:3/4;height:auto;border-radius:14px;flex:none;background:#f2ead9;display:flex;align-items:center;justify-content:center;color:var(--gold-txt);font-size:20px;font-weight:600;}
 .seeall{display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--gold-txt);font-family:inherit;font-size:var(--fs-body);font-weight:600;cursor:pointer;padding:4px 0;}
 /* Карусель специалистов на экране входа */
 .car-wrap{position:relative;}
@@ -181,6 +181,8 @@ input.in.err{border-color:var(--alert)}
 .car-track::-webkit-scrollbar{display:none;}
 .car-slide{flex:0 0 88%;scroll-snap-align:center;}
 .car-slide .speccard{margin-bottom:0;}
+.car-slide:only-child{flex-basis:100%;}   /* один специалист — карточка на всю ширину, без пустоты справа */
+.seeall{white-space:nowrap;}
 .car-arrow{position:absolute;top:42px;width:30px;height:30px;border-radius:50%;border:1px solid var(--b1);background:rgba(255,255,255,.92);color:var(--gold-txt);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(120,90,30,.15);z-index:2;}
 .car-prev{left:-6px;} .car-next{right:-6px;}
 @media (max-width:599px){
@@ -1046,7 +1048,7 @@ async function loadShowcase(){
 // Общая карточка специалиста (teaser + каталог). В каталоге карточка кликабельна → выбор в нижний блок.
 function specCard(s, idx, inCatalog){
   const langs=(s.langs||'').split(',').map(x=>x.trim().toUpperCase()).filter(Boolean).join(' · ');
-  const photo = s.photo ? `<img class="sc-photo" src="${esc(s.photo)}" alt="" loading="lazy">`
+  const photo = s.photo ? `<img class="sc-photo" src="${esc(s.photo)}" alt="" loading="lazy" onclick="event.stopPropagation();vialSp._photoZoom(this.src)">`
     : `<div class="sc-photo-ph">${esc((s.name||'?').trim().charAt(0).toUpperCase())}</div>`;
   const cal = s.cal_url?esc(s.cal_url):'';
   const _bs='display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-top:12px;font-size:var(--fs-body);padding:10px 12px;';
@@ -1088,20 +1090,31 @@ function specCard(s, idx, inCatalog){
     + esc(tr('resp_who').replace('{name}', s.name||'')) + ' ' + esc(tr('resp_pay')) + '</div>';
   const clickAttr = inCatalog ? ` onclick="vialSp._pickSpecialist(${idx})" style="cursor:pointer;"` : '';
   return `<div class="speccard"${clickAttr}>
-    <div style="display:flex;gap:12px;align-items:center;">
+    <div style="display:flex;gap:14px;align-items:flex-start;">
       ${photo}
-      <div style="flex:1;min-width:0;">
-        <div style="font-weight:600;color:var(--t1);font-size:var(--fs-title);">${esc(s.name||'')}</div>
-        ${s.specialty?`<div style="font-size:var(--fs-body);color:var(--gold-txt);">${esc(specLabel(s.specialty))}</div>`:''}
-        ${langs?`<div style="font-size:var(--fs-cap);color:var(--t3);margin-top:2px;">${langs}</div>`:''}
-        ${badge}
+      <div style="flex:1;min-width:0;padding-top:4px;">
+        <div style="font-weight:600;color:var(--t1);font-size:var(--fs-title);line-height:1.25;">${esc(s.name||'')}</div>
+        ${s.specialty?`<div style="font-size:var(--fs-body);color:var(--gold-txt);margin-top:4px;">${esc(specLabel(s.specialty))}</div>`:''}
+        ${langs?`<div style="font-size:var(--fs-cap);color:var(--t3);margin-top:6px;">${langs}</div>`:''}
       </div>
     </div>
+    ${badge}
     ${s.bio?`<div style="font-size:var(--fs-body);color:var(--t2);margin-top:8px;line-height:1.5;">${esc(s.bio)}</div>`:''}
     ${more}
     ${btn}
     ${resp}
   </div>`;
+}
+// Фото специалиста целиком — поверх страницы (вне shadow DOM), закрытие по нажатию в любом месте.
+function _photoZoom(src){
+  if(!src) return;
+  const o=document.createElement('div');
+  o.setAttribute('style','position:fixed;inset:0;z-index:2147483000;background:rgba(8,10,14,.94);display:flex;align-items:center;justify-content:center;padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(20px + env(safe-area-inset-bottom,0px));box-sizing:border-box;cursor:zoom-out;');
+  o.innerHTML='<img alt="" style="max-width:100%;max-height:100%;border-radius:16px;object-fit:contain;box-shadow:0 10px 40px rgba(0,0,0,.6);">'
+    +'<button type="button" aria-label="close" style="position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:14px;width:40px;height:40px;border-radius:50%;border:1px solid rgba(226,185,90,.5);background:rgba(20,24,32,.8);color:#E2B95A;font-size:22px;line-height:1;cursor:pointer;">×</button>';
+  o.querySelector('img').src=src;
+  o.onclick=function(){ o.remove(); };
+  document.body.appendChild(o);
 }
 function _pickSpecialist(i){
   _chosenIdx=i; closeCatalog(); renderShowcase();
@@ -1116,7 +1129,7 @@ function renderShowcase(){
   if(_showcaseEmpty){ box.innerHTML=''; updateShowcaseFallback(); return; }
   const header = `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px;">
       <div style="font-weight:600;color:var(--t1);">${esc(catL('title'))}</div>
-      <button type="button" class="seeall" onclick="vialSp.openCatalog()">${esc(catL('seeall'))} (${list.length}) →</button>
+      ${list.length>1?`<button type="button" class="seeall" onclick="vialSp.openCatalog()">${esc(catL('seeall'))} (${list.length}) →</button>`:''}
     </div>`;
   const slides = list.map(s=>`<div class="car-slide">${specCard(s)}</div>`).join('');
   const arrows = list.length>1
@@ -1463,7 +1476,7 @@ window.vialSp = {
   _photoTap: _photoTap, _chatSync: _chatSync, toggleVoice: toggleVoice, sendMsg: sendMsg,
   closeReview: closeReview, buyReview: buyReview, closeCatalog: closeCatalog, _catLangChanged: _catLangChanged,
   openQuiz: openQuiz, closeQuiz: closeQuiz, submitQuiz: submitQuiz, _rvDiagTap: _rvDiagTap,
-  _chatStick: _chatStick, _toggleSpecMore: _toggleSpecMore, _pickSpecialist: _pickSpecialist,
+  _chatStick: _chatStick, _toggleSpecMore: _toggleSpecMore, _pickSpecialist: _pickSpecialist, _photoZoom: _photoZoom,
   openCatalog: openCatalog, _carScroll: _carScroll, setCatFilter: setCatFilter, _setQuizNeed: _setQuizNeed
 };
 })();
