@@ -91,7 +91,9 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
       + '.art-sheet-bg{background:linear-gradient(180deg,#1e2530,#141922);align-items:stretch;}'
       + '.art-sheet{height:100%;overflow-y:auto;align-content:start;border:none;border-radius:0;background:none;padding:calc(22px + env(safe-area-inset-top,0px)) 16px calc(120px + env(safe-area-inset-bottom,0px));}'
       + '.art-pg-t{font-family:\'Playfair Display\',serif;font-size:calc(var(--fs-title) + 8px);color:var(--t1);margin:0 2px 4px;}'
-      + 'body.lib-sheet #bottombar{position:relative;z-index:900;}'
+      // html-префикс: правило страницы body.card-open #bottombar{z-index:450} стоит ниже по документу и перебивало —
+      // с «Прогресса»/«Профиля» строка уходила под экран Библиотеки (Android 2026-10-28)
+      + 'html body.lib-sheet #bottombar{position:relative;z-index:900;}'
       // Блок «к фокусу недели» (2026-10-27, концепт владельца): большая карточка с картинкой темы + три строки.
       + '.art-hcap{font-size:var(--fs-cap);letter-spacing:1.5px;text-transform:uppercase;color:var(--gold-lt);margin:0 2px -2px;}'
       + '.art-hero{position:relative;display:flex;flex-direction:column;justify-content:flex-end;gap:6px;min-height:150px;width:100%;box-sizing:border-box;padding:16px 46px 14px 16px;border-radius:18px;border:1px solid rgba(226,185,90,.35);background-color:#161c26;background-size:cover;background-position:center;color:var(--t1);text-align:start;font:inherit;cursor:pointer;overflow:hidden;}'
@@ -136,6 +138,7 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
     if (!(res || art || tg)) return;   // нечего показать — без пустой полосы и спрятанного советника
     o.innerHTML = '<div class="art-sheet"><h1 class="art-pg-t">' + esc(tx(UI.back, lang)) + '</h1>' + (res ? '<div id="artSheetPick" style="display:contents;"></div>' : '') + res + art + tg + '</div>';
     (document.getElementById('app') || document.body).appendChild(o); document.body.classList.add('lib-sheet');   // внутри #app — как #specPanel, иначе нижняя строка оказывалась под экраном
+    var nv = document.querySelector('.bottom-nav'); if (nv) nv.classList.remove('nav-hidden');   // строка могла уехать при прокрутке прошлого экрана
     [].forEach.call(document.querySelectorAll('.bottom-nav-item'), function (b) { b.classList.toggle('active', b.getAttribute('data-nav') === 'lib'); });
     if (res) resCatalog(lang, function (err) { if (!err) pickFill(lang); });   // нет сети — шторка как была, без пустого места
     var b = document.getElementById('artSheetArt');

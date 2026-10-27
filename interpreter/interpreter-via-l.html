@@ -2508,7 +2508,7 @@ body::before{background:linear-gradient(180deg,#242c39 0%,#1b2029 60%,#181e28 10
 .imp-start:active{transform:scale(.98);}
 /* Ничего не выбрано (первый запуск): кнопка приглушена и просит выбрать — начать, не выбрав, нельзя (владелец 2026-10-27). */
 .imp-start .is-hint{display:none;}
-:not([data-pick])>.imp-start{background:transparent;color:var(--t3);border:1px dashed var(--gold-dim);box-shadow:none;font-weight:500;font-size:var(--fs-body);}
+:not([data-pick])>.imp-start{background:rgba(226,185,90,.07);color:var(--gold-lt);border:1px solid rgba(226,185,90,.55);box-shadow:none;font-weight:600;font-size:var(--fs-body);}   /* золотом: серый пунктир на Android не замечали (2026-10-28) */
 :not([data-pick])>.imp-start .is-go{display:none;}
 :not([data-pick])>.imp-start .is-hint{display:inline;}
 .imp-btn.imp-nudge{border-color:var(--gold)!important;}
@@ -2516,6 +2516,12 @@ body::before{background:linear-gradient(180deg,#242c39 0%,#1b2029 60%,#181e28 10
    Снимаем повторы: абзац «Трекер не обязателен…» теперь говорят сами карточки, подпись бренда внизу дублирует шапку. */
 body.src-choice .hero-desc[data-t="hero_sub"],
 body.src-choice .footer-logo,body.src-choice .footer-line,body.src-choice .footer-tagline{display:none!important;}
+/* Свободная высота (короткий Android) — поровну над шапкой и над ссылками: «Конфиденциальность · Условия» у нижней строки,
+   логотип с силуэтами опускается. На iPhone свободного места почти нет — там ничего не сдвигается (2026-10-28). */
+body.src-choice #scroll-area{display:flex;flex-direction:column;}
+body.src-choice .hero{margin-top:auto;flex:0 0 auto;}
+body.src-choice footer{margin-top:auto;}
+body.src-choice #scroll-area .legal-links{padding-bottom:calc(36px + env(safe-area-inset-bottom,0px))!important;}   /* над золотым кругом «Специалиста», он выступает над строкой */
 /* Золотые силуэты за логотипом — только первый и ежедневный экран (концепт владельца 2026-10-27). Низ растворяем маской,
    чтобы ленты не спорили с текстом и карточками. */
 body.src-choice .hero::before,body.morning-mode .hero::before{content:'';position:absolute;z-index:-1;pointer-events:none;top:-34px;left:50%;transform:translateX(-50%);width:min(108vw,600px);aspect-ratio:1000/853;background:url(art/silhouettes.webp) center top/100% auto no-repeat;opacity:.62;-webkit-mask-image:linear-gradient(#000 38%,transparent 78%);mask-image:linear-gradient(#000 38%,transparent 78%);}
