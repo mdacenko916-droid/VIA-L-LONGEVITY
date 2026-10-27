@@ -139,9 +139,15 @@ ADAM-L перекрашивает и переименовывает их выв�
       специалист — Марина, как в VIA-L (каталог с сервера без изменений).
 - [ ] 4. Цена в пейволле/подписке: брать из стора своего приложения (свои товары ADAM-L в ASC/RevenueCat/Play).
 - [ ] 5. Женские ветки JS (цикл, приливы, ПМС) — мёртвый код, вычистить по частям с прогоном.
-- [ ] 6. Нативная обёртка по образцу `app/`: свой bundle id, `sync-web.sh` копирует `adam-l.html`, ASC, RevenueCat, Play,
-      `legal-app` ×12, манифест PWA, тексты и скриншоты сторов ×12.
-- [ ] 7. ПОСЛЕДНИМ — воркер: ADAM-L ходит как VIA-L (tier `pro`, велнес-режим уже App Store-безопасный); решить, нужен ли
+- [ ] 6. Нативная обёртка. ✅ 10-27 `app-adam/` (см. `app-adam/README.md`): bundle `com.viael.adaml`, iOS-проект для
+      Xcode Cloud, `sync-web.sh`, иконка/заставка, setup-скрипты; локально `npm ci` + `cap sync ios` проходят.
+      ⏳ Кабинеты (руками владельца, кроме отмеченного): (а) App ID `com.viael.adaml` с HealthKit + Push — могу через
+      ASC API по команде; (б) карточка приложения «ADAM-L» в App Store Connect (API её не создаёт); (в) workflow Xcode
+      Cloud на `app-adam/ios/App`; (г) RevenueCat: приложения ADAM-L iOS/Android, товары, entitlement, offering →
+      ключи в `app-adam/iap-keys.json`; (д) Google Play: новое приложение `com.viael.adaml`, свой ключ подписи.
+      ⏳ Моё: `legal-adam/` ×12 (сейчас в бандле юр-страницы VIA-L), тексты и скриншоты сторов ×12, Android
+      (`npm run add:android` локально).
+- [ ] 7. ПОСЛЕДНИМ — воркер: возврат после OAuth трекеров в схему `com.viael.adaml://` (сейчас только VIA-L); ADAM-L ходит как VIA-L (tier `pro`, велнес-режим уже App Store-безопасный); решить, нужен ли
       свой tier (раздельные сводки «Помочь улучшить», лимиты, бренд в тексте разбора/памятки — воркер пишет «VIA-L»).
 - [ ] 8. Хвосты удаления EXPERT (10-27): воркер `cloudflare-worker.js:9770/10967` и кабинет `cabinet/index.html:3266` ещё дают
       ссылку на удалённый `interpreter-via-l-expert.html`; `research-consent.html` ветка `expert`. `sw-expert.js` и
