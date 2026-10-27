@@ -2499,6 +2499,17 @@ body::before{background:linear-gradient(180deg,#242c39 0%,#1b2029 60%,#181e28 10
 /* кнопки выбора источника данных — как карточки «Моего прогресса» */
 .imp-btn{background:var(--blk-bg)!important;border:1px solid var(--blk-bd)!important;box-shadow:none!important;}
 #morning-gate{background:transparent!important;border:none!important;}
+/* 2026-10-27: выбор источника = отметка в кружке справа, запуск = одна золотая кнопка под карточками */
+.imp-btn .imp-go{width:22px;height:22px;border-radius:50%;box-sizing:border-box;border:1.5px solid var(--gold-dim);opacity:1;display:flex;align-items:center;justify-content:center;}
+.imp-btn.picked{border-color:var(--gold)!important;box-shadow:0 0 0 1px var(--gold),0 6px 22px rgba(196,150,60,.18)!important;}
+.imp-btn.picked .imp-go{background:var(--gold);border-color:var(--gold);}
+.imp-btn.picked .imp-go::after{content:'';width:6px;height:11px;border:solid #10141C;border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg);}
+.imp-start{display:block;width:100%;max-width:460px;box-sizing:border-box;margin:14px auto 0;padding:14px;border:none;border-radius:14px;cursor:pointer;font-family:var(--font-ui);font-size:var(--fs-title);font-weight:600;color:#10141C;background:linear-gradient(135deg,#e2b96a,#c4963c);box-shadow:0 6px 20px rgba(196,150,60,.28);}
+.imp-start:active{transform:scale(.98);}
+/* Первый запуск (body.src-choice): кнопка «Начать сейчас» заняла ~60px, а экран входа должен помещаться без прокрутки.
+   Снимаем повторы: абзац «Трекер не обязателен…» теперь говорят сами карточки, подпись бренда внизу дублирует шапку. */
+body.src-choice .hero-desc[data-t="hero_sub"],
+body.src-choice .footer-logo,body.src-choice .footer-line,body.src-choice .footer-tagline{display:none!important;}
 /* язык в приложении меняется только в «Профиль → Настройки» (этап 1); в шапке переключатель мелькал при переходах */
 #topbar .lang-dropdown{display:none!important;}   /* 2026-10-11: убран везде — VIA-L продаётся только в сторах; язык = язык телефона, смена — «Профиль → Настройки» */
 /* «Профиль» и «Мой прогресс»: текст при прокрутке уходил под часы и логотип — верх панели растворяем.
@@ -3104,33 +3115,36 @@ body.card-open #cardPanel, body.approach-open #approachPanel{
   <p class="hero-desc" data-t="hero_desc">Перименопауза и андропауза: сон, энергия и настроение начинают вести себя иначе. VIA-L объясняет, что происходит, и предлагает одно небольшое действие на сегодня.</p>
   <p class="hero-desc" style="font-size:.92em;margin-top:5px;color:#2E2010;" data-t="hero_sub">Трекер не обязателен: всё можно вводить вручную. Если он есть — подключите, и часть полей заполнится сама.</p>
   <div class="hero-imports" style="margin-top:10px;">
-    <button onclick="_chooseSource('apple')" class="imp-btn">
+    <button onclick="_pickSource(this,'apple')" class="imp-btn" data-src="apple" aria-pressed="false">
       <span class="imp-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.5-7-9.4A3.85 3.85 0 0 1 12 7a3.85 3.85 0 0 1 7 3.6C19 15.5 12 20 12 20Z"/><path d="M8.5 12.4h2l1-2 1.6 3.6 1-1.6h1.4"/></svg></span>
       <span class="imp-txt"><b data-t="imp_health_t">Ввод данных с трекера</b><small data-t="imp_health_s">Apple Health / Health Connect</small></span>
       <span class="imp-badge"><i class="ph ph-crown-simple" aria-hidden="true"></i><span class="imp-badge-t" data-t="imp_recommended">Рекомендуем</span></span>
       <span class="imp-cnt" id="imp-cnt-all"></span>
-      <span class="imp-go">→</span>
+      <span class="imp-go" aria-hidden="true"></span>
     </button>
     <!-- Вендор-OAuth ЖИВОЙ и публичный. Запись 2026-07-21 «убран из публичного выбора, стена
          масштаба у каждого вендора» УСТАРЕЛА и снята 2026-09-01: 2026-08-26 Oura одобрила наше
          приложение и сняла лимит 10 пользователей (тикет #7815321) — потолка у прямой интеграции
          больше нет. Apple Health / Health Connect остаётся широким каналом-приёмником, прямой
          Oura нужен ради RMSSD и фирменных скоров (см. interpreter/wearables/oura.md). -->
-    <button onclick="_chooseSource('manual')" class="imp-btn">
+    <button onclick="_pickSource(this,'manual')" class="imp-btn" data-src="manual" aria-pressed="false">
       <span class="imp-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 6.5 17.5 10.5M4 20l1-4L15.5 5.5a1.8 1.8 0 0 1 2.5 0l.5.5a1.8 1.8 0 0 1 0 2.5L8 19l-4 1Z"/></svg></span>
       <span class="imp-txt"><b data-t="imp_manual_t">Ручной ввод</b><small data-t="imp_manual_s">Ввод показателей самостоятельно</small></span>
-      <span class="imp-go">→</span>
+      <span class="imp-go" aria-hidden="true"></span>
     </button>
     <!-- Прямая синхронизация облака вендора (веб-OAuth). Oura — ПРИОРИТЕТНЫЙ канал: одобрена
          2026-08-26, лимит пользователей снят, работает и в браузере, и в нативном app. Polar и
          Withings — свои OAuth, без Google/CASA. ⚠️ Fitbit: legacy Web API депрекейтится 09.2026
          (миграция в Google Health API = CASA) — проверить и снять из подписи, когда отвалится.
          См. interpreter/wearables/oura.md, docs/HEALTH-DATA-SOURCING-PLAN.md -->
-    <button id="dev-vendors-btn" onclick="_chooseSource('device')" class="imp-btn">
+    <button id="dev-vendors-btn" onclick="_pickSource(this,'device')" class="imp-btn" data-src="device" aria-pressed="false">
       <span class="imp-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8M20 12a8 8 0 0 1-13.7 5.6L4 16"/><path d="M20 4v4h-4M4 20v-4h4"/></svg></span>
       <span class="imp-txt"><b data-t="imp_device_t">Синхронизация устройства</b><small data-t="imp_device_s">Oura · Ultrahuman · Fitbit · Polar · Withings</small></span>
-      <span class="imp-go">→</span>
+      <span class="imp-go" aria-hidden="true"></span>
     </button>
+    <!-- 2026-10-27, владелец: карточки выше только ВЫБИРАЮТ источник, запускает одна кнопка — раньше каждая
+         карточка сама открывала проход/импорт, и было непонятно, куда нажимать дальше. -->
+    <button type="button" class="imp-start" onclick="_startPicked(this)"><span data-t="imp_start">Начать сейчас</span></button>
   </div>
 </div>
 
@@ -4952,7 +4966,8 @@ const _NAV={
   fh_today:{ru:'Сегодня',uk:'Сьогодні',en:'Today',es:'Hoy',de:'Heute',pt:'Hoje',fr:'Aujourd’hui',pl:'Dziś',it:'Oggi',he:'היום',ja:'今日',ko:'오늘'},
   fh_weekly:{ru:'Раз в неделю',uk:'Раз на тиждень',en:'Weekly',es:'Una vez por semana',de:'Wöchentlich',pt:'Semanalmente',fr:'Une fois par semaine',pl:'Raz w tygodniu',it:'Settimanale',he:'פעם בשבוע',ja:'週1回',ko:'주 1회'},
   fh_biweekly:{ru:'Раз в 2 недели',uk:'Раз на 2 тижні',en:'Every 2 weeks',es:'Cada 2 semanas',de:'Alle 2 Wochen',pt:'A cada 2 semanas',fr:'Toutes les 2 semaines',pl:'Co 2 tygodnie',it:'Ogni 2 settimane',he:'אחת לשבועיים',ja:'2週間に1回',ko:'2주에 1회'},
-  imp_recommended:{ru:'Рекомендуем',uk:'Рекомендуємо',en:'Recommended',es:'Recomendado',de:'Empfohlen',pt:'Recomendado',fr:'Recommandé',pl:'Polecane',it:'Consigliato',he:'מומלץ',ja:'おすすめ',ko:'추천'}
+  imp_recommended:{ru:'Рекомендуем',uk:'Рекомендуємо',en:'Recommended',es:'Recomendado',de:'Empfohlen',pt:'Recomendado',fr:'Recommandé',pl:'Polecane',it:'Consigliato',he:'מומלץ',ja:'おすすめ',ko:'추천'},
+  imp_start:{ru:'Начать сейчас',uk:'Почати зараз',en:'Start now',es:'Empezar ahora',de:'Jetzt starten',pt:'Começar agora',fr:'Commencer',pl:'Zacznij teraz',it:'Inizia ora',he:'להתחיל עכשיו',ja:'今すぐ始める',ko:'지금 시작하기'}
 };
 Object.keys(_NAV).forEach(function(k){Object.keys(_NAV[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_NAV[k][l];});});
 // Диапазоны для ручного ввода показателей в карточке (clamp + единица + формат)
@@ -9643,7 +9658,7 @@ function _showMorningCard(src){
   document.body.classList.add('flow-mode'); if(typeof _hideFlowFooter==='function')_hideFlowFooter();
   document.querySelectorAll('.step').forEach(function(s){s.classList.remove('flow-show','active');});
   document.querySelectorAll('.flow-group-head,.flow-intro').forEach(function(h){h.remove();});
-  var old=document.getElementById('morning-gate'); if(old)old.remove(); document.body.classList.remove('morning-mode');
+  var old=document.getElementById('morning-gate'); if(old)old.remove(); document.body.classList.remove('morning-mode','src-choice');
   var c=_srcMorningCopy(src);
   // Приветствие по ЛОКАЛЬНОМУ времени: проход можно открыть и в обед, и вечером — «Доброе утро» в 15:00
   // читается как поломка. Границы: 5–11 утро, 12–17 день, 18–4 вечер («доброй ночи» — это прощание, не берём).
@@ -9675,11 +9690,13 @@ function _showMorningCard(src){
   // Полноценные карточки источника (те же, что в hero) — клонируем в блок; оригиналы прячет morning-mode.
   try{
     var _box=d.querySelector('#morning-src');
-    document.querySelectorAll('.hero .imp-btn').forEach(function(btn){
+    document.querySelectorAll('.hero .imp-btn, .hero .imp-start').forEach(function(btn){
       var cl=btn.cloneNode(true);
+      cl.removeAttribute('id');   // dev-vendors-btn
       cl.querySelectorAll('[id]').forEach(function(e){e.removeAttribute('id');});   // не плодим дубли id (imp-cnt-*)
       _box.appendChild(cl);
     });
+    _pickDefault(_box);
     var _hero=document.querySelector('.hero'); if(_hero)_hero.style.display='';   // шапка (лого + VIA—L) остаётся: правило morning-mode прячет только длинный текст и кнопки-оригиналы
   }catch(e){}
   var sa=document.getElementById('scroll-area'); if(sa)sa.scrollTop=0; else window.scrollTo(0,0);
@@ -9689,6 +9706,8 @@ function _showSourceChoice(){
   document.body.classList.remove('flow-mode');   // экран выбора — не лента, лишний нижний отступ ленты не нужен
   if(typeof _hideFlowSurfaces==='function')_hideFlowSurfaces();   // панель гаджета/гейты не должны висеть над экраном выбора
   var h=document.querySelector('.hero'); if(h)h.style.display='';
+  _pickDefault(document.querySelector('.hero .hero-imports'));
+  document.body.classList.add('src-choice');
   var m=document.querySelector('main'); if(m)m.style.display='none';
   var g=document.getElementById('morning-gate'); if(g)g.remove(); document.body.classList.remove('morning-mode');
   var _fh=document.getElementById('funnelHome'); if(_fh)_fh.style.display='none';
@@ -9708,6 +9727,7 @@ function _funnelHome(){
 // Открыть анкету. После выбора источника hero больше не нужен — прячем его (нет скролла
 // вверх к карточкам выбора), страница открывается на тексте «Добро пожаловать».
 function _openFunnel(){
+  document.body.classList.remove('src-choice');
   var m=document.querySelector('main'); if(m)m.style.display='';
   var h=document.querySelector('.hero'); if(h)h.style.display='none';
   var _op=document.getElementById('importPanel'), _pl=_op&&_op.classList.contains('open');
@@ -9723,6 +9743,25 @@ function _chooseSource(src){
   if(src==='apple'){ try{ _heroHealthStart(); }catch(e){} }
   else if(src==='device'){ openImport('full'); }   // вендор-панель: Oura · Polar · Withings
   _openFunnel();
+}
+// Карточка источника только отмечает выбор; запуск — кнопкой «Начать сейчас» (_startPicked).
+// Выбор живёт в data-pick своего блока: на первом экране это .hero-imports, на ежедневном — #morning-src.
+function _pickSource(btn,src){
+  var box=btn&&btn.parentNode; if(!box) return;
+  box.setAttribute('data-pick',src);
+  box.querySelectorAll('.imp-btn').forEach(function(b){ var on=b.getAttribute('data-src')===src; b.classList.toggle('picked',on); b.setAttribute('aria-pressed',on?'true':'false'); });
+}
+// Отметка по умолчанию: вчерашний источник у постоянного, рекомендуемый трекер у новичка — кнопка работает с первого нажатия.
+function _pickDefault(box){
+  if(!box) return;
+  var src=(typeof _srcGet==='function'&&_srcGet())||'apple';
+  var b=box.querySelector('.imp-btn[data-src="'+src+'"]')||box.querySelector('.imp-btn[data-src="apple"]');
+  if(b) _pickSource(b,b.getAttribute('data-src'));
+}
+function _startPicked(btn){
+  var box=btn&&btn.parentNode; if(!box) return;
+  var src=box.getAttribute('data-pick'); if(!src){ _pickDefault(box); src=box.getAttribute('data-pick'); }
+  if(src) _chooseSource(src);
 }
 // Единый сценарий утренней карточки (2-й+ день): (синхронизация, если нужна) → анкета.
 function _startDailyRun(src){
