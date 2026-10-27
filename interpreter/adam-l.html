@@ -2803,6 +2803,19 @@ body.flow-mode:not(.morning-mode) #tb-brand{display:none;}
       </div>
       <div id="prof-err" style="font-size:var(--fs-cap);color:var(--alert);margin-top:8px;display:none;" data-t="prof_err">Укажите возраст, вес и рост</div>
       </div><!-- /карточка «Ваш профиль» -->
+      <!-- ADAM-L: «Кости и осанка» — раньше жил внутри женской карточки, мужчины его не видели. Риск по костям
+           у мужчин 50+ реален; ответы уходят в разбор как bone_risk (воркер читает без привязки к полу). 2026-10-27. -->
+      <div class="card" id="bone-card">
+        <div class="card-accent"></div>
+        <div class="step-badge" data-t="bone_l">Кости и осанка</div>
+        <div class="input-group">
+          <div class="chips sup-grid" id="bone-list">
+            <div class="chip"><input type="checkbox" id="bone2" value="posture_shift" onchange="_giNone(this,'bone-list')"><label for="bone2" data-t="bone_height">Изменение осанки</label></div>
+            <div class="chip"><input type="checkbox" id="bone3" value="balance_trait" onchange="_giNone(this,'bone-list')"><label for="bone3" data-t="bone_family">Хрупкость костей у близких родственников</label></div>
+            <div class="chip sup-full"><input type="checkbox" id="bone5" value="none_bone" onchange="_giNone(this,'bone-list')"><label for="bone5" data-t="bone_none">✨ Ничего из перечисленного</label></div>
+          </div>
+        </div>
+      </div>
       <!-- ADAM-L: женская карточка «Женский организм» (цикл, ПМС, грудь, гормональные сигналы) удалена. Блок «Риск по костям» был внутри неё — вернуть мужчинам отдельно. -->
   </div>
   <!-- С ЧЕМ ВЫ ПРИШЛИ — разовая установка (base): жалоба задаётся один раз, дальше в шаге
@@ -10498,7 +10511,7 @@ function _showResultsInner(){
     horm_male:(typeof _hormMap==='function'?_hormMap('horm-male-acc'):{}),
     meno_surgical:(getRadio('cycle_status')==='absent'?(getRadio('meno_surgical')||''):''),
     pms_past:(getRadio('cycle_status')==='absent'?(getRadio('pms_past')||''):''),
-    bone_risk:(function(){var b=getChecked(['bone2','bone3','bone5']).filter(function(v){return v!=='none_bone';});if(getRadio('early_meno')==='yes')b.push('early_menopause');return b;})(),
+    bone_risk:(function(){var b=getChecked(['bone2','bone3','bone5']);if(!b.length){try{b=(_condProf().bone||[]).slice();}catch(e){}}b=b.filter(function(v){return v!=='none_bone';});if(getRadio('early_meno')==='yes')b.push('early_menopause');return b;})(),
     breast:getChecked(['breast1','breast3','breast4']),
   };
   const ins=[],recs={};
