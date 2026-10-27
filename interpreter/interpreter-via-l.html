@@ -2506,6 +2506,12 @@ body::before{background:linear-gradient(180deg,#242c39 0%,#1b2029 60%,#181e28 10
 .imp-btn.picked .imp-go::after{content:'';width:6px;height:11px;border:solid #10141C;border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg);}
 .imp-start{display:block;width:100%;max-width:460px;box-sizing:border-box;margin:14px auto 0;padding:14px;border:none;border-radius:14px;cursor:pointer;font-family:var(--font-ui);font-size:var(--fs-title);font-weight:600;color:#10141C;background:linear-gradient(135deg,#e2b96a,#c4963c);box-shadow:0 6px 20px rgba(196,150,60,.28);}
 .imp-start:active{transform:scale(.98);}
+/* Ничего не выбрано (первый запуск): кнопка приглушена и просит выбрать — начать, не выбрав, нельзя (владелец 2026-10-27). */
+.imp-start .is-hint{display:none;}
+:not([data-pick])>.imp-start{background:transparent;color:var(--t3);border:1px dashed var(--gold-dim);box-shadow:none;font-weight:500;font-size:var(--fs-body);}
+:not([data-pick])>.imp-start .is-go{display:none;}
+:not([data-pick])>.imp-start .is-hint{display:inline;}
+.imp-btn.imp-nudge{border-color:var(--gold)!important;}
 /* Первый запуск (body.src-choice): кнопка «Начать сейчас» заняла ~60px, а экран входа должен помещаться без прокрутки.
    Снимаем повторы: абзац «Трекер не обязателен…» теперь говорят сами карточки, подпись бренда внизу дублирует шапку. */
 body.src-choice .hero-desc[data-t="hero_sub"],
@@ -3147,7 +3153,7 @@ body.card-open #cardPanel, body.approach-open #approachPanel{
     </button>
     <!-- 2026-10-27, владелец: карточки выше только ВЫБИРАЮТ источник, запускает одна кнопка — раньше каждая
          карточка сама открывала проход/импорт, и было непонятно, куда нажимать дальше. -->
-    <button type="button" class="imp-start" onclick="_startPicked(this)"><span data-t="imp_start">Начать сейчас</span></button>
+    <button type="button" class="imp-start" onclick="_startPicked(this)"><span class="is-go" data-t="imp_start">Начать сейчас</span><span class="is-hint" data-t="imp_pick_first">Выберите, откуда взять данные</span></button>
   </div>
 </div>
 
@@ -4970,6 +4976,7 @@ const _NAV={
   fh_weekly:{ru:'Раз в неделю',uk:'Раз на тиждень',en:'Weekly',es:'Una vez por semana',de:'Wöchentlich',pt:'Semanalmente',fr:'Une fois par semaine',pl:'Raz w tygodniu',it:'Settimanale',he:'פעם בשבוע',ja:'週1回',ko:'주 1회'},
   fh_biweekly:{ru:'Раз в 2 недели',uk:'Раз на 2 тижні',en:'Every 2 weeks',es:'Cada 2 semanas',de:'Alle 2 Wochen',pt:'A cada 2 semanas',fr:'Toutes les 2 semaines',pl:'Co 2 tygodnie',it:'Ogni 2 settimane',he:'אחת לשבועיים',ja:'2週間に1回',ko:'2주에 1회'},
   imp_recommended:{ru:'Рекомендуем',uk:'Рекомендуємо',en:'Recommended',es:'Recomendado',de:'Empfohlen',pt:'Recomendado',fr:'Recommandé',pl:'Polecane',it:'Consigliato',he:'מומלץ',ja:'おすすめ',ko:'추천'},
+  imp_pick_first:{ru:'Выберите, откуда взять данные',uk:'Оберіть, звідки взяти дані',en:'Choose where your data comes from',es:'Elige de dónde tomar los datos',de:'Wähle, woher die Daten kommen',pt:'Escolha de onde vêm os dados',fr:'Choisissez la source des données',pl:'Wybierz, skąd wziąć dane',it:'Scegli da dove prendere i dati',he:'בחרו מהיכן לקחת את הנתונים',ja:'データの取得元を選んでください',ko:'데이터를 가져올 곳을 선택하세요'},
   imp_start:{ru:'Начать сейчас',uk:'Почати зараз',en:'Start now',es:'Empezar ahora',de:'Jetzt starten',pt:'Começar agora',fr:'Commencer',pl:'Zacznij teraz',it:'Inizia ora',he:'להתחיל עכשיו',ja:'今すぐ始める',ko:'지금 시작하기'}
 };
 Object.keys(_NAV).forEach(function(k){Object.keys(_NAV[k]).forEach(function(l){if(!T[l])T[l]={};T[l][k]=_NAV[k][l];});});
@@ -9754,17 +9761,25 @@ function _pickSource(btn,src){
   box.setAttribute('data-pick',src);
   box.querySelectorAll('.imp-btn').forEach(function(b){ var on=b.getAttribute('data-src')===src; b.classList.toggle('picked',on); b.setAttribute('aria-pressed',on?'true':'false'); });
 }
-// Отметка по умолчанию: вчерашний источник у постоянного, рекомендуемый трекер у новичка — кнопка работает с первого нажатия.
+// Отметка по умолчанию — только вчерашний источник (постоянный клиент выбирал его сам). У новичка не отмечено
+// ничего: кнопка приглушена, пока человек не выберет — иначе «Начать» уводило в трекер, не глядя (владелец 2026-10-27).
 function _pickDefault(box){
   if(!box) return;
-  var src=(typeof _srcGet==='function'&&_srcGet())||'apple';
-  var b=box.querySelector('.imp-btn[data-src="'+src+'"]')||box.querySelector('.imp-btn[data-src="apple"]');
-  if(b) _pickSource(b,b.getAttribute('data-src'));
+  box.removeAttribute('data-pick');
+  box.querySelectorAll('.imp-btn').forEach(function(b){ b.classList.remove('picked'); b.setAttribute('aria-pressed','false'); });
+  var src=(typeof _srcGet==='function'&&_srcGet())||'';
+  var b=src&&box.querySelector('.imp-btn[data-src="'+src+'"]');
+  if(b) _pickSource(b,src);
 }
 function _startPicked(btn){
   var box=btn&&btn.parentNode; if(!box) return;
-  var src=box.getAttribute('data-pick'); if(!src){ _pickDefault(box); src=box.getAttribute('data-pick'); }
-  if(src) _chooseSource(src);
+  var src=box.getAttribute('data-pick');
+  if(!src){   // не выбрано — коротко подсветить карточки, куда нажимать
+    var cs=box.querySelectorAll('.imp-btn'); cs.forEach(function(b){ b.classList.add('imp-nudge'); });
+    setTimeout(function(){ cs.forEach(function(b){ b.classList.remove('imp-nudge'); }); },600);
+    return;
+  }
+  _chooseSource(src);
 }
 // Единый сценарий утренней карточки (2-й+ день): (синхронизация, если нужна) → анкета.
 function _startDailyRun(src){
