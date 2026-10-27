@@ -75,6 +75,7 @@ cp -R "$IP/images-in"  "$WWW/images-in"
 cp -R "$IP/phosphor"   "$WWW/phosphor"
 cp -R "$IP/icons"      "$WWW/icons"
 cp -R "$IP/food"       "$WWW/food"
+cp -R "$IP/art"        "$WWW/art"    # силуэты главной + картинки тем Библиотеки, art/lib/<тема>.jpg ≈1,7 МБ (2026-10-27)
 
 # Юр-страницы приложения: чистый app-only комплект legal-app/ (Privacy+Terms, 12 языков,
 # без мед-бизнеса/медсайта/«Interpreter») → в бандл как www/legal. Старые legal/ — для сайта.
