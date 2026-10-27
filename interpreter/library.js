@@ -29,6 +29,8 @@
 resFindM:{ru:'Поиск: сон, тестостерон, кофе…',uk:'Пошук: сон, тестостерон, кава…',en:'Search: sleep, testosterone, coffee…',es:'Buscar: sueño, testosterona, café…',de:'Suche: Schlaf, Testosteron, Kaffee…',pt:'Buscar: sono, testosterona, café…',fr:'Rechercher : sommeil, testostérone, café…',pl:'Szukaj: sen, testosteron, kawa…',it:'Cerca: sonno, testosterone, caffè…',he:'חיפוש: שינה, טסטוסטרון, קפה…',ja:'検索：睡眠、テストステロン、コーヒー…',ko:'검색: 수면, 테스토스테론, 커피…'},
 resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: сон, припливи, кава…',en:'Search: sleep, hot flashes, coffee…',es:'Buscar: sueño, sofocos, café…',de:'Suche: Schlaf, Hitzewallungen, Kaffee…',pt:'Buscar: sono, ondas de calor, café…',fr:'Rechercher : sommeil, bouffées de chaleur, café…',pl:'Szukaj: sen, uderzenia gorąca, kawa…',it:'Cerca: sonno, vampate, caffè…',he:'חיפוש: שינה, גלי חום, קפה…',ja:'検索：睡眠、ほてり、コーヒー…',ko:'검색: 수면, 안면홍조, 커피…'},
     back:{en:'Library',ru:'Библиотека',uk:'Бібліотека',es:'Biblioteca',de:'Bibliothek',pt:'Biblioteca',fr:'Bibliothèque',pl:'Biblioteka',it:'Biblioteca',he:'ספרייה',ja:'ライブラリ',ko:'라이브러리'},
+    heroFor:{ru:'К вашему фокусу недели',uk:'До вашого фокусу тижня',en:'For your focus this week',es:'Para tu foco de la semana',de:'Passend zu deinem Wochenfokus',pt:'Para o seu foco da semana',fr:'Pour votre objectif de la semaine',pl:'Do Twojego celu tygodnia',it:'Per il tuo obiettivo della settimana',he:'למיקוד השבועי שלך',ja:'今週のフォーカスに',ko:'이번 주 포커스에 맞춰'},
+    heroNew:{ru:'Новое в Библиотеке VIA-L',uk:'Нове в Бібліотеці VIA-L',en:'New in the VIA-L Library',es:'Novedades en la Biblioteca VIA-L',de:'Neu in der VIA-L-Bibliothek',pt:'Novidades na Biblioteca VIA-L',fr:'Nouveau dans la Bibliothèque VIA-L',pl:'Nowości w Bibliotece VIA-L',it:'Novità nella Biblioteca VIA-L',he:'חדש בספריית VIA-L',ja:'VIA-Lライブラリーの新着',ko:'VIA-L 라이브러리 새 글'},
     resTopics:{ru:'Темы',uk:'Теми',en:'Topics',es:'Temas',de:'Themen',pt:'Temas',fr:'Thèmes',pl:'Tematy',it:'Temi',he:'נושאים',ja:'テーマ',ko:'주제'},
     resAll:{ru:'Все темы',uk:'Усі теми',en:'All topics',es:'Todos los temas',de:'Alle Themen',pt:'Todos os temas',fr:'Tous les thèmes',pl:'Wszystkie tematy',it:'Tutti i temi',he:'כל הנושאים',ja:'すべてのテーマ',ko:'모든 주제'},
     resAsk:{ru:'Попросить добавить эту тему',uk:'Попросити додати цю тему',en:'Ask us to add this topic',es:'Pedir que añadamos este tema',de:'Dieses Thema vorschlagen',pt:'Pedir para adicionar este tema',fr:'Demander d’ajouter ce thème',pl:'Poproś o dodanie tego tematu',it:'Chiedi di aggiungere questo tema',he:'לבקש להוסיף את הנושא',ja:'このテーマの追加をリクエスト',ko:'이 주제 추가 요청하기'},
@@ -85,6 +87,16 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
       + '.art-sh-t{display:block;font-size:var(--fs-body);font-weight:600;color:var(--t1);}'
       + '.art-sh-s{display:block;margin-top:3px;font-size:var(--fs-cap);color:var(--t3);line-height:1.4;}'
       + '.art-sh-chev{flex:0 0 auto;color:var(--gold-lt);font-size:22px;}'
+      + '.art-sheet{max-height:88vh;overflow-y:auto;}'
+      // Блок «к фокусу недели» (2026-10-27, концепт владельца): большая карточка с картинкой темы + три строки.
+      + '.art-hcap{font-size:var(--fs-cap);letter-spacing:1.5px;text-transform:uppercase;color:var(--gold-lt);margin:0 2px -2px;}'
+      + '.art-hero{position:relative;display:flex;flex-direction:column;justify-content:flex-end;gap:6px;min-height:150px;width:100%;box-sizing:border-box;padding:16px 46px 14px 16px;border-radius:18px;border:1px solid rgba(226,185,90,.35);background-color:#161c26;background-size:cover;background-position:center;color:var(--t1);text-align:start;font:inherit;cursor:pointer;overflow:hidden;}'
+      + '.art-hero-k{font-size:var(--fs-cap);color:var(--gold-lt);}'
+      + '.art-hero-t{font-family:\'Playfair Display\',serif;font-size:calc(var(--fs-title) + 2px);line-height:1.25;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.7);}'
+      + '.art-hero-go{position:absolute;right:14px;bottom:14px;width:30px;height:30px;border-radius:50%;border:1px solid rgba(226,185,90,.6);display:flex;align-items:center;justify-content:center;color:var(--gold-lt);font-size:16px;background:rgba(10,13,20,.45);}'
+      + '.art-sh.art-pk{padding:9px 12px;gap:12px;}'
+      + '.art-pk-im{flex:0 0 auto;width:48px;height:48px;border-radius:12px;background-size:cover;background-position:center;border:1px solid rgba(226,185,90,.25);}'
+      + '.art-pk .art-sh-t{font-weight:500;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}'
       + 'body.lib-sheet #vlAdvBtn{display:none!important;}'
       + '.art-row .vc-tt{font-size:var(--fs-body);text-transform:none;letter-spacing:normal;line-height:1.35;}';
     document.head.appendChild(st);
@@ -118,13 +130,59 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
     var art = has(lang) ? shRow('button', 'type="button" id="artSheetArt"', 'ph-book-open-text', tx(UI.sheetArt, lang), tx(UI.sheetArtSub, lang)) : '';
     var tg = TG[lang] ? shRow('a', 'href="' + esc(TG[lang]) + '" target="_blank" rel="noopener"', 'ph-telegram-logo', tx(UI.sheetTg, lang), tx(UI.sheetTgSub, lang)) : '';
     if (!(res || art || tg)) return;   // нечего показать — без пустой полосы и спрятанного советника
-    o.innerHTML = '<div class="art-sheet">' + res + art + tg + '</div>';
+    o.innerHTML = '<div class="art-sheet">' + (res ? '<div id="artSheetPick" style="display:contents;"></div>' : '') + res + art + tg + '</div>';
     document.body.appendChild(o); document.body.classList.add('lib-sheet');
+    if (res) resCatalog(lang, function (err) { if (!err) pickFill(lang); });   // нет сети — шторка как была, без пустого места
     var b = document.getElementById('artSheetArt');
     if (b) b.onclick = function () { sheetClose(); if (typeof window.navTo === 'function') window.navTo('lib', { direct: 1 }); };
     var rb = document.getElementById('artSheetRes');
     if (rb) rb.onclick = function () { sheetClose(); if (typeof window.navTo === 'function') window.navTo('lib', { direct: 1 }); if (typeof window._cardOpen === 'function') { resQ = ''; resTopic = ''; resMenu = false; window._cardOpen('research'); } };
     [].forEach.call(o.querySelectorAll('a'), function (a) { a.addEventListener('click', function () { setTimeout(sheetClose, 300); }); });
+  }
+
+  // Подборка в шторке: тема — по шагу «Фокуса недели», внутри темы и среди свежих — смена по дням.
+  // Картинка — art/lib/<тема>.jpg (мужские темы m_* берут картинку без префикса, см. art/README.md).
+  var FOCUS_TOPIC = { evening: 'sleep', bed: 'sleep', wake: 'sleep', cool: 'hormones', strength: 'exercise', walk: 'exercise',
+                      protein: 'food', order: 'food', breath: 'mental' };
+  var FOCUS_TOPIC_M = { sleep: 'm_sleep', exercise: 'm_exercise', food: 'm_metab', mental: 'm_stress', hormones: 'm_testo' };
+  function artImg(t) { return 'art/lib/' + String(t || '').replace(/^m_/, '') + '.jpg'; }
+  function focusTopic() {
+    var e = null; try { e = JSON.parse(localStorage.getItem('vialp_experiment') || 'null'); } catch (x) {}
+    var t = e && FOCUS_TOPIC[e.lever]; if (!t) return '';
+    return isMale() ? (FOCUS_TOPIC_M[t] || '') : t;
+  }
+  function pickFill(lang) {
+    var box = document.getElementById('artSheetPick'); if (!box || !resCat) return;
+    var day = Math.floor(Date.now() / 864e5);
+    var all = resCat.map(function (x, i) { return { x: x, i: i }; }).filter(function (o) { return o.x.type !== 'term' && TOPIC[o.x.topic]; })
+      .sort(function (a, b) { return String(b.x.week || '').localeCompare(String(a.x.week || '')) || b.i - a.i; }).map(function (o) { return o.x; });
+    if (!all.length) return;
+    var ft = focusTopic(), pool = ft ? all.filter(function (x) { return x.topic === ft; }).slice(0, 8) : [];
+    var forFocus = pool.length > 0; if (!forFocus) pool = all.slice(0, 12);
+    var hero = pool[day % pool.length], used = {}, rows = [];
+    used[hero.topic] = 1;
+    for (var k = 0, n = all.length, m = Math.min(n, 30); k < n && rows.length < 3; k++) {   // три свежих из других тем: среди 30 свежих сдвиг по дням, дальше — по порядку
+      var x = all[k < m ? (k + day) % m : k]; if (!x || used[x.topic] || x === hero) continue;
+      used[x.topic] = 1; rows.push(x);
+    }
+    var lock = subOn() ? '›' : '<i class="ph ph-lock-simple"></i>';
+    var sub = function (x) { return esc(tx(TOPIC[x.topic], lang)) + ' · ' + esc(resKind(x, lang)); };
+    box.innerHTML = '<div class="art-hcap">' + esc(tx(forFocus ? UI.heroFor : UI.heroNew, lang)) + '</div>'
+      + '<button type="button" class="art-hero" data-res="' + esc(hero.id) + '" style="background-image:linear-gradient(90deg,rgba(12,15,22,.9) 0%,rgba(12,15,22,.6) 55%,rgba(12,15,22,.15) 100%),url(' + artImg(hero.topic) + ')">'
+      + '<span class="art-hero-k">' + sub(hero) + '</span><span class="art-hero-t">' + esc(hero.title) + '</span><span class="art-hero-go">' + lock + '</span></button>'
+      + rows.map(function (x) {
+          return '<button type="button" class="art-sh art-pk" data-res="' + esc(x.id) + '"><span class="art-pk-im" style="background-image:url(' + artImg(x.topic) + ')"></span>'
+            + '<span class="art-sh-tx"><span class="art-sh-t">' + esc(x.title) + '</span><span class="art-sh-s">' + esc(tx(TOPIC[x.topic], lang)) + '</span></span>'
+            + '<span class="art-sh-chev">' + lock + '</span></button>';
+        }).join('');
+    [].forEach.call(box.querySelectorAll('[data-res]'), function (b) {
+      b.onclick = function () {
+        var id = b.getAttribute('data-res'); sheetClose();
+        if (typeof window.navTo === 'function') window.navTo('lib', { direct: 1 });
+        resQ = ''; resTopic = ''; resMenu = false;
+        if (typeof window._cardOpen === 'function') window._cardOpen('res:' + id);
+      };
+    });
   }
 
   function has(lang) { return isMale() ? hasMen(lang) : !!data(lang); }
