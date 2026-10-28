@@ -5445,6 +5445,9 @@ async function handleWithingsMetrics(request, env, corsHeaders) {
 const OURA_AUTH_URL  = 'https://cloud.ouraring.com/oauth/authorize';
 const OURA_TOKEN_URL = 'https://api.ouraring.com/oauth/token';
 const OURA_API       = 'https://api.ouraring.com';
+// 2026-10-28: фильтр перед api.ouraring.com отвечает HTML «403 Forbidden» на любой запрос без User-Agent, а fetch
+// воркера его не ставит — подключение проходило, но все данные приходили пустыми (кольцо Марины). Ставим везде.
+const OURA_UA        = 'VIA-L/1.0 (+https://via-l.com)';
 const OURA_SCOPES    = 'personal daily heartrate workout spo2 tag';   // tag — метки, которые человек ставит сам (симптомы и т.п.), 2026-10-12
 
 async function handleOuraStart(request, env, corsHeaders){
@@ -5487,7 +5490,7 @@ async function handleOuraCallback(request, env, corsHeaders){
   if (errParam || !code || !sid) return back('error');
   const r = await fetch(OURA_TOKEN_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': OURA_UA },
     body: new URLSearchParams({ grant_type:'authorization_code', code, redirect_uri: url.origin + '/oura/callback', client_id: _sec(env.OURA_CLIENT_ID), client_secret: _sec(env.OURA_CLIENT_SECRET) }).toString(),
   });
   if (!r.ok) return back('error');
@@ -5512,7 +5515,7 @@ async function ouraRefresh(env, rec){
   if (!rec.refresh_token) return null;
   const r = await fetch(OURA_TOKEN_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': OURA_UA },
     body: new URLSearchParams({ grant_type:'refresh_token', refresh_token: rec.refresh_token, client_id: _sec(env.OURA_CLIENT_ID), client_secret: _sec(env.OURA_CLIENT_SECRET) }).toString(),
   });
   if (!r.ok) return null;
@@ -5554,10 +5557,13 @@ async function handleOuraMetrics(request, env, corsHeaders){
     rec = refreshed;
     await env.WEARABLE_TOKENS.put('oura:' + sid, JSON.stringify(rec), { expirationTtl: 30 * 24 * 3600 });
   }
-  const h = { 'Authorization': 'Bearer ' + rec.access_token };
+  const h = { 'Authorization': 'Bearer ' + rec.access_token, 'User-Agent': OURA_UA };
   const end   = new Date().toISOString().slice(0,10);
   const start = new Date(Date.now() - 7 * 86400000).toISOString().slice(0,10);
-  const get = async (path, from) => { try { const r = await fetch(`${OURA_API}${path}?start_date=${from || start}&end_date=${end}`, { headers:h }); if (!r.ok) return null; const j = await r.json(); return (j && j.data) || []; } catch(e){ return null; } };
+  // ?diag=1 (2026-10-28): коды ответа Oura и число записей по каждому запросу — без самих данных. Раньше ошибка Oura
+  // молча превращалась в «нет данных», и «подключилось, но поля пустые» нельзя было отличить от пустого аккаунта.
+  const _diag = url.searchParams.get('diag') === '1' ? {} : null;
+  const get = async (path, from) => { const k = path.split('/').pop(); try { const r = await fetch(`${OURA_API}${path}?start_date=${from || start}&end_date=${end}`, { headers:h }); if (!r.ok) { if (_diag) { let m = ''; try { m = (await r.text()).slice(0, 160); } catch(_){} _diag[k] = r.status + (m ? ' ' + m : ''); } return null; } const j = await r.json(); const d = (j && j.data) || []; if (_diag) _diag[k] = '200:' + (Array.isArray(d) ? d.length : '?'); return d; } catch(e){ if (_diag) _diag[k] = 'exc'; return null; } };
 
   const ex = {};
   // Sleep → hrv (average_hrv), rhr (lowest_heart_rate), sleepHours, deepMin — за ПОСЛЕДНЮЮ ночь (s.day), не среднее за 7д.
@@ -5661,6 +5667,7 @@ async function handleOuraMetrics(request, env, corsHeaders){
   })).filter(x => /^\d{4}-\d{2}-\d{2}$/.test(x.d) && (x.c || x.n || x.t))
     .sort((a, b) => a.d < b.d ? 1 : a.d > b.d ? -1 : 0).slice(0, 20);
   if (tags.length) _out.tags = tags;   // [{d, c:код, n:своё название, t:комментарий}] — старые сборки поле не читают
+  if (_diag) { _diag.range = start + '..' + end; _out.diag = _diag; }
   return jsonResponse(_out, corsHeaders);
 }
 
