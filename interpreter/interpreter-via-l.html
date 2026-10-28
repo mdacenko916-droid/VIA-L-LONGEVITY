@@ -2515,13 +2515,16 @@ body::before{background:linear-gradient(180deg,#242c39 0%,#1b2029 60%,#181e28 10
 /* Первый запуск (body.src-choice): кнопка «Начать сейчас» заняла ~60px, а экран входа должен помещаться без прокрутки.
    Снимаем повторы: абзац «Трекер не обязателен…» теперь говорят сами карточки, подпись бренда внизу дублирует шапку. */
 body.src-choice .hero-desc[data-t="hero_sub"],
-body.src-choice .footer-logo,body.src-choice .footer-line,body.src-choice .footer-tagline{display:none!important;}
+body.src-choice .footer-logo,body.src-choice .footer-line,body.src-choice .footer-tagline,
+body.morning-mode .footer-logo,body.morning-mode .footer-line,body.morning-mode .footer-tagline{display:none!important;}   /* ежедневный — так же (2026-10-28): иначе на коротком Android ссылки уходили под круг «Специалиста» */
 /* Свободная высота (короткий Android) — поровну над шапкой и над ссылками: «Конфиденциальность · Условия» у нижней строки,
    логотип с силуэтами опускается. На iPhone свободного места почти нет — там ничего не сдвигается (2026-10-28). */
 body.src-choice #scroll-area{display:flex;flex-direction:column;}
 body.src-choice .hero{margin-top:auto;flex:0 0 auto;}
 body.src-choice footer{margin-top:auto;}
-body.src-choice #scroll-area .legal-links{padding-bottom:calc(36px + env(safe-area-inset-bottom,0px))!important;}   /* над золотым кругом «Специалиста», он выступает над строкой */
+body.src-choice #scroll-area .legal-links,body.morning-mode #scroll-area .legal-links{padding-bottom:calc(36px + env(safe-area-inset-bottom,0px))!important;}
+/* Android WebView по умолчанию заливает нажатый элемент синим (iOS — нет): у нас отклик — своя золотая отметка и сжатие кнопки (2026-10-28). */
+html{-webkit-tap-highlight-color:transparent;}   /* над золотым кругом «Специалиста», он выступает над строкой */
 /* Золотые силуэты за логотипом — только первый и ежедневный экран (концепт владельца 2026-10-27). Низ растворяем маской,
    чтобы ленты не спорили с текстом и карточками. */
 body.src-choice .hero::before,body.morning-mode .hero::before{content:'';position:absolute;z-index:-1;pointer-events:none;top:-34px;left:50%;transform:translateX(-50%);width:min(108vw,600px);aspect-ratio:1000/853;background:url(art/silhouettes.webp) center top/100% auto no-repeat;opacity:.62;-webkit-mask-image:linear-gradient(#000 38%,transparent 78%);mask-image:linear-gradient(#000 38%,transparent 78%);}
