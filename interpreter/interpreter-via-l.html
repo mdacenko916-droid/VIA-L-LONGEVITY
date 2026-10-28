@@ -2519,10 +2519,18 @@ body.src-choice .footer-logo,body.src-choice .footer-line,body.src-choice .foote
 body.morning-mode .footer-logo,body.morning-mode .footer-line,body.morning-mode .footer-tagline{display:none!important;}   /* ежедневный — так же (2026-10-28): иначе на коротком Android ссылки уходили под круг «Специалиста» */
 /* Свободная высота (короткий Android) — поровну над шапкой и над ссылками: «Конфиденциальность · Условия» у нижней строки,
    логотип с силуэтами опускается. На iPhone свободного места почти нет — там ничего не сдвигается (2026-10-28). */
+/* 2026-10-28, владелец: экран не прокручивается, ссылки — посередине между кнопкой и нижней строкой. Свободная высота
+   делится на три равные части: над шапкой, над ссылками, под ссылками. Нижний отступ — только под выступ круга
+   «Специалиста» (без него ссылки уходили под круг, с прежними 36px экран становился выше окна и прокручивался). */
 body.src-choice #scroll-area{display:flex;flex-direction:column;}
-body.src-choice .hero{margin-top:auto;flex:0 0 auto;}
-body.src-choice footer{margin-top:auto;}
-body.src-choice #scroll-area .legal-links,body.morning-mode #scroll-area .legal-links{padding-bottom:calc(36px + env(safe-area-inset-bottom,0px))!important;}
+body.src-choice .hero,body.morning-mode .hero{margin-top:auto!important;flex:0 0 auto;}
+body.morning-mode #scroll-area main{flex:0 0 auto!important;}
+body.src-choice #scroll-area footer,body.morning-mode #scroll-area footer{padding:0!important;margin:0!important;}
+body.src-choice #scroll-area .legal-links,body.morning-mode #scroll-area .legal-links{margin-top:auto!important;margin-bottom:auto!important;padding-top:12px!important;padding-bottom:calc(26px + env(safe-area-inset-bottom,0px))!important;}
+@media (max-height:720px){   /* самый короткий Android: ежедневный экран был выше окна на ~15px */
+  body.morning-mode #scroll-area .imp-btn{margin-top:5px!important;}
+  body.src-choice #scroll-area .legal-links,body.morning-mode #scroll-area .legal-links{padding-top:4px!important;}
+}
 /* Android WebView по умолчанию заливает нажатый элемент синим (iOS — нет): у нас отклик — своя золотая отметка и сжатие кнопки (2026-10-28). */
 html{-webkit-tap-highlight-color:transparent;}   /* над золотым кругом «Специалиста», он выступает над строкой */
 /* Золотые силуэты за логотипом — только первый и ежедневный экран (концепт владельца 2026-10-27). Низ растворяем маской,
