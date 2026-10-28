@@ -146,7 +146,8 @@ ADAM-L перекрашивает и переименовывает их выв�
       SKU ADAML-IOS-001) — владелец; ✅ товары через API (`app-adam/scripts/asc_create_products.py`): группа «ADAM-L
       Subscriptions», adam_l_yearly €99,99/$99,99 (ур.1), adam_l_monthly €14,99/$14,99 (ур.2), adam_l_lifetime
       €199,99/$199,99, adam_l_specialist_review €50/$54,99 ×12 — 175 стран; MISSING_METADATA = нужен скрин пейволла; (в) workflow Xcode
-      Cloud на `app-adam/ios/App`; (г) RevenueCat: ADAM-L iOS/Android — В ТОТ ЖЕ проект, что VIA-L (воркер
+      Cloud на `app-adam/ios/App`; (г) ✅ 10-28 RevenueCat iOS: ADAM-L в проекте VIA-L, ключ `appl_VySq…` в
+      `app-adam/iap-keys.json` (Android — после Google Play). Было: В ТОТ ЖЕ проект, что VIA-L (воркер
       сверяет покупки по нему); товары adam_l_* на тот же entitlement `via_l_pro`; offering ADAM-L → ключи в
       `app-adam/iap-keys.json`; воркер: принять `adam_l_specialist_review` в /review/claim и ключи ADAM-L (п.7); (д) Google Play: новое приложение `com.viael.adaml`, свой ключ подписи.
       ⏳ Моё: `legal-adam/` ×12 (сейчас в бандле юр-страницы VIA-L), тексты и скриншоты сторов ×12, Android
