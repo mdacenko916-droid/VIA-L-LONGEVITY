@@ -67,6 +67,11 @@ else
 fi
 sed -i '' -E "s/android: *'goog_[A-Za-z0-9]+'/android: '$ANDK'/; s/ios: *'appl_[A-Za-z0-9]+'/ios:     '$IOSK'/" "$WWW/iap-bridge.js"
 if grep -q -E "goog_BHsIdg|appl_otTgm" "$WWW/iap-bridge.js"; then echo "✗ В бандле остались ключи VIA-L"; exit 1; fi
+# Разовый разбор со специалистом у ADAM-L — свой товар в сторе (adam_l_specialist_review). Право доступа
+# подписки — общее с VIA-L (via_l_pro): ADAM-L заведён приложениями в ТОМ ЖЕ проекте RevenueCat, иначе
+# воркер не увидит покупки (библиотека, /review/claim). Воркер должен принимать оба id разбора — TODO.
+sed -i '' "s/var REVIEW_PRODUCT_ID = 'via_l_specialist_review'/var REVIEW_PRODUCT_ID = 'adam_l_specialist_review'/" "$WWW/iap-bridge.js"
+grep -q "REVIEW_PRODUCT_ID = 'adam_l_specialist_review'" "$WWW/iap-bridge.js" || { echo "✗ Не подменился id разбора"; exit 1; }
 
 echo "✓ Готово. Размер www: $(du -sh "$WWW" | cut -f1)"
 echo "  Дальше: cd app-adam && npx cap sync && открыть в Xcode / Android Studio."

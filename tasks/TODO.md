@@ -142,9 +142,13 @@ ADAM-L перекрашивает и переименовывает их выв�
 - [ ] 6. Нативная обёртка. ✅ 10-27 `app-adam/` (см. `app-adam/README.md`): bundle `com.viael.adaml`, iOS-проект для
       Xcode Cloud, `sync-web.sh`, иконка/заставка, setup-скрипты; локально `npm ci` + `cap sync ios` проходят.
       ⏳ Кабинеты (руками владельца, кроме отмеченного): (а) ✅ 10-28 App ID `com.viael.adaml` (ASC id 8QV8F7VS3D)
-      зарегистрирован через API: IAP + Push + HealthKit, как у VIA-L; (б) карточка приложения «ADAM-L» в App Store Connect (API её не создаёт); (в) workflow Xcode
-      Cloud на `app-adam/ios/App`; (г) RevenueCat: приложения ADAM-L iOS/Android, товары, entitlement, offering →
-      ключи в `app-adam/iap-keys.json`; (д) Google Play: новое приложение `com.viael.adaml`, свой ключ подписи.
+      зарегистрирован через API: IAP + Push + HealthKit, как у VIA-L; (б) ✅ 10-28 карточка «ADAM-L» в ASC (Apple ID 6828101783,
+      SKU ADAML-IOS-001) — владелец; ✅ товары через API (`app-adam/scripts/asc_create_products.py`): группа «ADAM-L
+      Subscriptions», adam_l_yearly €99,99/$99,99 (ур.1), adam_l_monthly €14,99/$14,99 (ур.2), adam_l_lifetime
+      €199,99/$199,99, adam_l_specialist_review €50/$54,99 ×12 — 175 стран; MISSING_METADATA = нужен скрин пейволла; (в) workflow Xcode
+      Cloud на `app-adam/ios/App`; (г) RevenueCat: ADAM-L iOS/Android — В ТОТ ЖЕ проект, что VIA-L (воркер
+      сверяет покупки по нему); товары adam_l_* на тот же entitlement `via_l_pro`; offering ADAM-L → ключи в
+      `app-adam/iap-keys.json`; воркер: принять `adam_l_specialist_review` в /review/claim и ключи ADAM-L (п.7); (д) Google Play: новое приложение `com.viael.adaml`, свой ключ подписи.
       ⏳ Моё: `legal-adam/` ×12 (сейчас в бандле юр-страницы VIA-L), тексты и скриншоты сторов ×12, Android
       (`npm run add:android` локально).
 - [ ] 7. ПОСЛЕДНИМ — воркер: возврат после OAuth трекеров в схему `com.viael.adaml://` (сейчас только VIA-L); ADAM-L ходит как VIA-L (tier `pro`, велнес-режим уже App Store-безопасный); решить, нужен ли

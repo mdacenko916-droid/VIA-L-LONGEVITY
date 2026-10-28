@@ -10,6 +10,8 @@
 | схема возврата после OAuth трекера | `com.viael.vial://` | `com.viael.adaml://` (воркер пока знает только VIA-L — TODO) |
 | точка входа бандла | `interpreter-via-l.html` | `interpreter/adam-l.html` |
 | ключи RevenueCat | в `interpreter/iap-bridge.js` | `app-adam/iap-keys.json` → подставляются в копию при сборке |
+| товары App Store | via_l_pro_monthly/yearly, via_l_lifetime, via_l_specialist_review | adam_l_monthly/yearly/lifetime/specialist_review (`scripts/asc_create_products.py`) |
+| entitlement RevenueCat | `via_l_pro` | тот же `via_l_pro`: ADAM-L — приложения в том же проекте RevenueCat |
 
 - `plugins/` и `patches/` — ссылки на `../app/` (плагин Health Connect и патч HealthKit общие).
 - `ios/` в git: его собирает Xcode Cloud. `ci_scripts` ставят зависимости в `app-adam/`, запускают `sync-web.sh`
