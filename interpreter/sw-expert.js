@@ -4,9 +4,10 @@
 // уже установленный EXPERT. Имя файла не меняем по той же причине (сохранённые PWA его помнят).
 // БЕЗОПАСНО для остальных соседей в /interpreter/: перехватываем навигацию ТОЛЬКО на эти две
 // страницы (index.html, methodology.html и пр. — мимо). POST/cross-origin не трогаем.
-const CACHE = 'vial-expert-v6';   // bump при смене иконок/оболочки → сбрасывает старый кэш
+const CACHE = 'vial-expert-v7';   // bump при смене иконок/оболочки → сбрасывает старый кэш
 const EXPERT = 'interpreter-via-l-expert.html';
 const BASE = 'interpreter-via-l.html';   // базовый тариф VIA-L — своя иконка/манифест, тот же механизм
+const ADAM = 'adam-l.html';              // ADAM-L (мужское, 2026-10-28) — тот же scope, поэтому тот же воркер
 // HTML НЕ предкэшируем: iOS-PWA любит отдавать закэшированную страницу при запуске
 // и не обновляться. Кэшируем только статику (иконки/манифест); HTML — всегда network-first.
 const SHELL = [
@@ -17,7 +18,11 @@ const SHELL = [
   './via-l.webmanifest',
   './pwa/vial-icon-192.png',
   './pwa/vial-icon-512.png',
-  './pwa/vial-apple-touch-icon.png'
+  './pwa/vial-apple-touch-icon.png',
+  './adam-l.webmanifest',
+  './pwa/adam-l-icon-192.png',
+  './pwa/adam-l-icon-512.png',
+  './pwa/adam-l-apple-touch-icon.png'
 ];
 
 self.addEventListener('install', e => {
@@ -38,15 +43,16 @@ self.addEventListener('fetch', e => {
   if (url.origin !== location.origin) return;       // воркер-API/шрифты/картинки CDN — мимо
   const isExpert = url.pathname.endsWith(EXPERT);
   const isBase = url.pathname.endsWith(BASE);        // endsWith(BASE) не ловит EXPERT: имена не суффиксы друг друга
+  const isAdam = url.pathname.endsWith('/' + ADAM);
 
   if (req.mode === 'navigate') {
-    if (!isExpert && !isBase) return;                // чужие страницы — не перехватываем
+    if (!isExpert && !isBase && !isAdam) return;     // чужие страницы — не перехватываем
     e.respondWith(                                   // наша страница: свежая из сети, офлайн → кеш
       // cache:'no-cache' — в обход HTTP-кэша (GitHub Pages: max-age=600 → перезапуск в
       // течение 10 мин отдавал старьё, «правки не доезжают»). При неизменном файле это 304.
       fetch(req, { cache: 'no-cache' })
         .then(r => { const cc = r.clone(); caches.open(CACHE).then(c => c.put(req, cc)); return r; })
-        .catch(() => caches.match('./' + (isExpert ? EXPERT : BASE)))
+        .catch(() => caches.match('./' + (isExpert ? EXPERT : isAdam ? ADAM : BASE)))
     );
     return;
   }

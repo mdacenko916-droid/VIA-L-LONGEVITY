@@ -75,9 +75,9 @@
 <style>body.booting main,body.booting .hero{visibility:hidden !important;}</style>
 <!-- PWA (устанавливаемость на телефон до нативной сборки; service worker ОБЩИЙ с EXPERT —
      scope /interpreter/ один на двоих, второй воркер вытеснил бы первый) -->
-<link rel="manifest" href="via-l.webmanifest">
-<meta name="theme-color" content="#1C1130">
-<link rel="apple-touch-icon" href="Logo/adam-l-icon-180.png">
+<link rel="manifest" href="adam-l.webmanifest">
+<meta name="theme-color" content="#211434">
+<link rel="apple-touch-icon" href="pwa/adam-l-apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2576,6 +2576,62 @@ body.src-choice .footer-logo,body.src-choice .footer-line,body.src-choice .foote
 /* Золотые силуэты за логотипом — только первый и ежедневный экран (концепт владельца 2026-10-27). Низ растворяем маской,
    чтобы ленты не спорили с текстом и карточками. */
 body.src-choice .hero::before,body.morning-mode .hero::before{display:none;content:none;position:absolute;z-index:-1;pointer-events:none;top:-34px;left:50%;transform:translateX(-50%);width:min(108vw,600px);aspect-ratio:1000/853;background:url(art/silhouettes.webp) center top/100% auto no-repeat;opacity:.62;-webkit-mask-image:linear-gradient(#000 38%,transparent 78%);mask-image:linear-gradient(#000 38%,transparent 78%);}
+/* ══ ADAM-L: первый и ежедневный экран «как в примере» (владелец 2026-10-28, скрин/1/3/ADAM-L/выбери).
+   Что делает экран премиальным: фото мужчины справа, растворённое в фоне; знак + имя в одну строку
+   слева; крупное приветствие с засечками; стеклянные карточки с тонкой тёплой кромкой; ОДНА янтарная
+   кнопка. Фото — Logo/adam-l-hero.jpg (пока вырезка из концепта; своё фото владельца — заменить файл).
+   Префикс html:root:root поднимает вес над старыми правилами раскладки (до (0,4,2) с !important). */
+html:root:root :is(body.src-choice,body.morning-mode) .hero{display:grid!important;grid-template-columns:auto 1fr;column-gap:12px;align-items:center;justify-items:start;text-align:left;max-width:560px;margin:0 auto;padding:4px 18px 0!important;isolation:isolate;}
+html:root:root :is(body.src-choice,body.morning-mode) .hero>*{grid-column:1/-1;}
+html:root:root :is(body.src-choice,body.morning-mode) .hero::before{content:''!important;display:block!important;position:absolute;z-index:-1;pointer-events:none;top:calc(-18px - env(safe-area-inset-top,0px));right:0;left:auto;transform:none;width:min(62%,340px);height:calc(400px + env(safe-area-inset-top,0px));aspect-ratio:auto;opacity:1;background:url(Logo/adam-l-hero.jpg) 0 top/cover no-repeat;
+  -webkit-mask-image:linear-gradient(to right,transparent 0,rgba(0,0,0,.55) 22%,#000 48%),linear-gradient(to bottom,#000 55%,transparent 100%);-webkit-mask-composite:source-in;
+  mask-image:linear-gradient(to right,transparent 0,rgba(0,0,0,.55) 22%,#000 48%),linear-gradient(to bottom,#000 55%,transparent 100%);mask-composite:intersect;}
+html:root:root body.src-choice #scroll-area{padding-top:calc(18px + env(safe-area-inset-top,0px))!important;}
+html:root:root :is(body.src-choice,body.morning-mode) .hero-block-header{grid-column:1;grid-row:1/3;margin:0!important;}
+html:root:root :is(body.src-choice,body.morning-mode) .hero-monogram{width:64px!important;height:64px!important;margin:0!important;}
+html:root:root :is(body.src-choice,body.morning-mode) .hero-block-name{grid-column:2;grid-row:1;align-self:end;font-size:clamp(24px,6.6vw,30px)!important;letter-spacing:7px!important;padding-left:0!important;margin:0!important;}
+html:root:root :is(body.src-choice,body.morning-mode) .hero-block-tier{grid-column:2;grid-row:2;align-self:start;font-family:var(--font-ui)!important;font-size:11px!important;letter-spacing:3.2px!important;color:#C8CAD8!important;margin:3px 0 0!important;padding:0!important;}
+html:root:root body.src-choice .hero-title{max-width:66%;margin:26px 0 8px!important;font-size:clamp(27px,7.4vw,36px)!important;line-height:1.1!important;text-align:left;text-shadow:0 2px 18px rgba(20,10,40,.7);}
+html:root:root body.src-choice .hero-title em{color:#fff!important;}
+html:root:root body.src-choice .hero-desc[data-t="hero_desc"]{max-width:62%;margin:0 0 4px!important;font-size:14px!important;line-height:1.42!important;color:#C9B8F0!important;font-weight:400;text-align:left;text-shadow:0 1px 10px rgba(20,10,40,.8);}
+html:root:root body.src-choice .hero-imports{width:100%;margin-top:14px!important;}
+html:root:root body.morning-mode #scroll-area main{justify-content:flex-start!important;}
+html:root:root body.morning-mode #morning-gate{max-width:560px;text-align:left!important;padding:0 18px!important;margin:22px auto 0!important;}
+html:root:root body.morning-mode #morning-gate>div:nth-child(1){font-size:clamp(28px,7.8vw,38px)!important;line-height:1.12!important;max-width:68%;margin-bottom:10px!important;text-shadow:0 2px 18px rgba(20,10,40,.7);}
+html:root:root body.morning-mode #morning-gate>div:nth-child(2){font-family:var(--font-ui)!important;font-style:normal!important;font-size:15px!important;line-height:1.42!important;color:#C9B8F0!important;max-width:62%;}
+html:root:root body.morning-mode #morning-gate>div:nth-child(3){margin-top:12px!important;}
+html:root:root body.morning-mode #morning-src{margin-top:16px;}
+html:root:root body.morning-mode .footer-logo,html:root:root body.morning-mode .footer-line{display:none!important;}   /* имя уже в шапке; остаются слоган и ссылки */
+html:root:root body.morning-mode #morning-gate>div:nth-last-child(2){display:none;}   /* «Откуда взять данные сегодня?» — карточки говорят сами */
+/* карточки: стекло + тонкая тёплая кромка, значок в плитке, отметка — янтарный кружок */
+html:root:root :is(body.src-choice,body.morning-mode) .imp-btn{max-width:none;margin:10px 0 0!important;padding:12px 14px!important;gap:13px;border-radius:18px!important;
+  background:linear-gradient(160deg,rgba(72,46,131,.42),rgba(33,20,52,.62))!important;border:1px solid rgba(240,200,90,.34)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 10px 28px rgba(8,4,20,.45)!important;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);}
+html:root:root :is(body.src-choice,body.morning-mode) .imp-btn .imp-ic{width:50px;height:50px;border-radius:14px;background:rgba(20,12,36,.6);border:1px solid rgba(240,200,90,.38);color:#F0C85A;}
+html:root:root :is(body.src-choice,body.morning-mode) .imp-btn .imp-ic svg{width:26px;height:26px;}
+html:root:root :is(body.src-choice,body.morning-mode) .imp-btn .imp-txt b{font-size:17px;color:#F7F5FB;}
+html:root:root :is(body.src-choice,body.morning-mode) .imp-btn .imp-txt small{font-size:14px;line-height:1.3;color:#C9B8F0;}
+html:root:root :is(body.src-choice,body.morning-mode) .imp-btn .imp-go{width:26px;height:26px;border-color:rgba(240,200,90,.55);}
+html:root:root :is(body.src-choice,body.morning-mode) .imp-btn.picked{border-color:#F0C85A!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 0 1px rgba(240,200,90,.55),0 10px 30px rgba(240,200,90,.16)!important;}
+html:root:root :is(body.src-choice,body.morning-mode) .imp-btn.picked .imp-go{background:#F0C85A;border-color:#F0C85A;}
+html:root:root :is(body.src-choice,body.morning-mode) .imp-btn.picked .imp-go::after{border-color:#1A102D;}
+/* одна янтарная кнопка; пока источник не выбран — та же форма, приглушённая */
+html:root:root :is(body.src-choice,body.morning-mode) .imp-start{max-width:none;margin-top:16px;padding:15px;border-radius:18px;font-size:18px;font-weight:600;letter-spacing:.2px;color:#1A102D;background:linear-gradient(180deg,#F7DB86 0%,#F0C85A 45%,#D9A441 100%);border:1px solid rgba(255,236,180,.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 10px 28px rgba(240,200,90,.28);}
+html:root:root :is(body.src-choice,body.morning-mode) :not([data-pick])>.imp-start{background:rgba(240,200,90,.07);color:rgba(247,245,251,.7);border:1px solid rgba(240,200,90,.35);box-shadow:none;font-size:16px;font-weight:500;}
+/* центр нижней строки — «Специалист» в янтарном круге, как в примере (модуль рисует золото, перекрасчик делал серебро) */
+.bn-lib-c{background:linear-gradient(160deg,#F7DB86,#D9A441)!important;border-color:rgba(255,226,150,.9)!important;box-shadow:0 0 18px rgba(240,200,90,.35),0 5px 16px rgba(0,0,0,.5)!important;}
+.bn-lib-c i{color:#1A102D!important;}
+.bottom-nav.has-lib::before{background:rgba(240,200,90,.4)!important;}
+/* низкий экран (SE, старые Android): без прокрутки помещаемся за счёт абзаца под заголовком — заголовок говорит то же */
+@media (max-height:740px){
+  html:root:root body.src-choice .hero-desc[data-t="hero_desc"]{display:none!important;}
+  html:root:root body.src-choice .hero-title{margin:16px 0 0!important;}
+  html:root:root :is(body.src-choice,body.morning-mode) .imp-btn{padding:9px 12px!important;margin-top:8px!important;}
+  html:root:root :is(body.src-choice,body.morning-mode) .imp-btn .imp-ic{width:44px;height:44px;}
+  html:root:root :is(body.src-choice,body.morning-mode) .imp-start{margin-top:12px;padding:13px;}
+  html:root:root body.morning-mode #morning-gate{margin-top:12px!important;}
+  html:root:root body.morning-mode #morning-gate>div:nth-child(1){font-size:28px!important;}
+}
 /* язык в приложении меняется только в «Профиль → Настройки» (этап 1); в шапке переключатель мелькал при переходах */
 #topbar .lang-dropdown{display:none!important;}   /* 2026-10-11: убран везде — VIA-L продаётся только в сторах; язык = язык телефона, смена — «Профиль → Настройки» */
 /* «Профиль» и «Мой прогресс»: текст при прокрутке уходил под часы и логотип — верх панели растворяем.
@@ -9606,7 +9662,7 @@ function _showMorningCard(src){
     : L({ru:'Добрый вечер',uk:'Доброго вечора',en:'Good evening',es:'Buenas noches',de:'Guten Abend',pt:'Boa noite',fr:'Bonsoir',pl:'Dobry wieczór',it:'Buonasera',he:'ערב טוב',ja:'こんばんは',ko:'안녕하세요'});
   // Имя из карточки клиента: карточка уже заполнена — обращаться безлично незачем. Если имени нет — просто приветствие.
   var _pn=''; try{ var _PG=JSON.parse(localStorage.getItem('vialp_profile')||'{}')||{}; _pn=String(_PG.name||'').trim().slice(0,40); }catch(e){}
-  if(_pn) greet+=', '+(typeof _esc==='function'?_esc(_pn):_pn);   // имя уходит в innerHTML — экранируем
+  if(_pn) greet+=',<br>'+(typeof _esc==='function'?_esc(_pn):_pn);   // ADAM-L: имя второй строкой, как в примере   // имя уходит в innerHTML — экранируем
   var ready=L({ru:'Анализ прошедших суток и состояния сейчас',uk:'Аналіз минулої доби та стану зараз',en:'A review of the past 24 hours and how you are now',es:'Análisis de las últimas 24 horas y de cómo está ahora',de:'Auswertung der letzten 24 Stunden und Ihres Zustands jetzt',pt:'Análise das últimas 24 horas e de como você está agora',fr:'Bilan des dernières 24 heures et de votre état actuel',pl:'Analiza ostatniej doby i stanu teraz',it:'Analisi delle ultime 24 ore e di come stai ora',he:'ניתוח היממה האחרונה ומצבך עכשיו',ja:'過去24時間と現在の状態の分析',ko:'지난 24시간과 현재 상태 분석'});
   var syncLine='';
   if(src!=='manual'){ var f=_syncStampFmt(); if(f) syncLine='<div style="font-size:var(--fs-cap);color:var(--t3);margin:5px 0 1px;">'+L({ru:'Последняя синхронизация',uk:'Остання синхронізація',en:'Last sync',es:'Última sincronización',de:'Letzte Synchronisation',pt:'Última sincronização',fr:'Dernière synchronisation',pl:'Ostatnia synchronizacja',it:'Ultima sincronizzazione',he:'סנכרון אחרון',ja:'最終同期',ko:'마지막 동기화'})+': '+f+'</div>'; }
