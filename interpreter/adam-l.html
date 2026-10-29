@@ -2632,6 +2632,25 @@ html:root:root :is(body.src-choice,body.morning-mode) :not([data-pick])>.imp-sta
   html:root:root body.morning-mode #morning-gate{margin-top:12px!important;}
   html:root:root body.morning-mode #morning-gate>div:nth-child(1){font-size:28px!important;}
 }
+/* 2026-10-29, скрин владельца (iPhone, скрин/1/2): первый экран прокручивался на ~60px — кнопка уходила под нижнюю строку;
+   подпись «МУЖСКАЯ АНДРОПАУЗА» заходила на лоб на фото. Шрифты не уменьшаем: плотнее разрядка подписи, абзац шире
+   (6 строк → 4), меньше воздуха сверху; ссылки — посередине между кнопкой и нижней строкой. */
+html:root:root :is(body.src-choice,body.morning-mode) .hero-block-tier{letter-spacing:1.3px!important;}
+html:root:root body.src-choice #scroll-area{display:flex;flex-direction:column;padding-top:calc(8px + env(safe-area-inset-top,0px))!important;padding-bottom:0!important;}
+html:root:root body.src-choice .hero-title{margin-top:18px!important;}
+html:root:root body.src-choice .hero-desc[data-t="hero_desc"]{max-width:92%;}
+html:root:root body.src-choice .hero-imports{margin-top:10px!important;}
+html:root:root body.src-choice #scroll-area footer{padding:0!important;margin:0!important;}
+html:root:root body.src-choice #scroll-area .legal-links{margin-top:auto!important;margin-bottom:auto!important;padding:10px 16px 12px!important;}
+@media (min-height:741px) and (max-height:820px){   /* iPhone mini/X/11 Pro (812): ru/uk ещё на ~30px выше окна — поджимаем только воздух */
+  html:root:root body.src-choice .hero-title{margin-top:12px!important;}
+  html:root:root body.src-choice .imp-btn{padding-top:10px!important;padding-bottom:10px!important;margin-top:8px!important;}
+  html:root:root body.src-choice .imp-start{margin-top:12px;}
+  html:root:root body.src-choice #scroll-area .legal-links{padding:6px 16px 8px!important;}
+}
+@media (max-width:370px) and (max-height:820px){   /* узкий Android 360×780: абзац в 5 строк не влезал — как на низких экранах, говорит заголовок */
+  html:root:root body.src-choice .hero-desc[data-t="hero_desc"]{display:none!important;}
+}
 /* язык в приложении меняется только в «Профиль → Настройки» (этап 1); в шапке переключатель мелькал при переходах */
 #topbar .lang-dropdown{display:none!important;}   /* 2026-10-11: убран везде — VIA-L продаётся только в сторах; язык = язык телефона, смена — «Профиль → Настройки» */
 /* «Профиль» и «Мой прогресс»: текст при прокрутке уходил под часы и логотип — верх панели растворяем.
@@ -2641,6 +2660,11 @@ html:root:root :is(body.src-choice,body.morning-mode) :not([data-pick])>.imp-sta
 body.card-open #cardPanel, body.approach-open #approachPanel{
   -webkit-mask-image:linear-gradient(to bottom,transparent 0,transparent env(safe-area-inset-top,0px),#000 calc(env(safe-area-inset-top,0px) + 12px));
   mask-image:linear-gradient(to bottom,transparent 0,transparent env(safe-area-inset-top,0px),#000 calc(env(safe-area-inset-top,0px) + 12px));}
+/* 2026-10-29, скрин владельца (iPhone, скрин/1/2/3–4): в прозрачном верху панели просвечивало фото главного экрана,
+   а заголовок стоял у самой кромки растворения. Пока панель открыта, фото прячем — сверху ровный фон экрана;
+   заголовок опускаем на 16px. */
+html:root:root :is(body.card-open,body.approach-open) .hero{visibility:hidden!important;}
+html:root:root body.card-open #cardPanel,html:root:root body.approach-open #approachPanel{padding-top:calc(env(safe-area-inset-top,0px) + 28px)!important;}
 .hero-title{color:#fff!important;}
 .hero-title em{color:var(--gold-lt)!important;}
 .hero-desc{color:var(--t2)!important;}
