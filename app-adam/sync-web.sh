@@ -43,10 +43,9 @@ done
 # Ассеты
 for d in Logo images-in phosphor icons food art; do cp -R "$IP/$d" "$WWW/$d"; done
 
-# Юр-страницы. ⚠️ Пока это комплект VIA-L (legal-app/) — у ADAM-L свои документы ×12 ещё не написаны
-# (TODO «👨 ADAM-L»). До выпуска в стор заменить на legal-adam/.
-cp -R "$ROOT/legal-app" "$WWW/legal"
-sed -i '' -e 's#\.\./legal/#legal/#g' -e 's#\.\./legal-app/#legal/#g' "$WWW/index.html"
+# Юр-страницы ADAM-L (legal-adam/ ×12, 2026-10-30: копия legal-app с именем ADAM-L и пакетом com.viael.adaml).
+cp -R "$ROOT/legal-adam" "$WWW/legal"
+sed -i '' -e 's#\.\./legal/#legal/#g' -e 's#\.\./legal-app/#legal/#g' -e 's#\.\./legal-adam/#legal/#g' "$WWW/index.html"
 sed -i '' -e 's#href="\.\./index\.html"#href="../index.html?tab=card" onclick="if(history.length>1){history.back();return false;}"#g' "$WWW"/legal/*.html
 sed -i '' -e 's#interpreter-via-l\.html#index.html#g' "$WWW/my-specialist.html" "$WWW/research-consent.html"
 

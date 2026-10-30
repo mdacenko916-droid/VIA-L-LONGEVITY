@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>ADAM-L AI assistant — Privacy Policy</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cream: #F5F3EF; --cream-dk: #EDE9E2;
+      --gold: #6B4F2A; --gold-lt: #8B6030; --gold-pale: #A07840;
+      --text: #0D0A05; --text-mid: #1A1008; --text-lt: #2E2010;
+      --line: rgba(139,111,71,.15);
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--cream); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 17px; line-height: 1.75; font-weight: 400; -webkit-font-smoothing: antialiased; }
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 200; display: flex; align-items: center; justify-content: space-between; padding: 14px 40px; background: rgba(245,243,239,0.92); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); flex-wrap: wrap; gap: 10px; }
+    .nav-logo { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; letter-spacing: 8px; color: var(--text); text-decoration: none; }
+    .nav-back { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); text-decoration: none; transition: opacity .2s; cursor: pointer; }
+    .nav-back:hover { opacity: .7; }
+    /* Переключатель языка — как в приложении: пилюля «флаг + код + галочка» и выпадающий список.
+       Лента из 12 чипов на телефоне занимала две строки и читалась как отдельный интерфейс. */
+    .lang-wrap { position: relative; }
+    .lang-btn { display: flex; align-items: center; gap: 7px; background: none; border: 1px solid var(--line); border-radius: 50px; padding: 5px 12px; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-lt); cursor: pointer; font-family: inherit; transition: border-color .2s, color .2s; }
+    .lang-btn:hover { border-color: var(--gold-pale); color: var(--gold); }
+    .lang-btn .caret { width: 9px; height: 6px; flex-shrink: 0; opacity: .6; }
+    .lang-menu { display: none; position: absolute; right: 0; top: calc(100% + 8px); min-width: 190px; max-height: 60vh; overflow-y: auto; background: var(--cream); border: 1px solid var(--line); border-radius: 14px; padding: 6px; box-shadow: 0 14px 40px rgba(60,44,20,.16); z-index: 240; }
+    .lang-menu.open { display: block; }
+    .lang-opt { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; font-size: 15px; color: var(--text-mid); cursor: pointer; white-space: nowrap; }
+    .lang-opt:hover { background: var(--cream-dk); }
+    .lang-opt.active { color: var(--gold); }
+    .lang-flag { font-size: 17px; line-height: 1; }
+    .page-wrap { max-width: 820px; margin: 0 auto; padding: 140px 40px 80px; }
+    .page-eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .page-eyebrow::before { content: ''; display: block; width: 22px; height: 1px; background: var(--gold-pale); flex-shrink: 0; }
+    .page-eyebrow span { font-size: 13px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); font-weight: 500; }
+    h1 { font-family: 'Playfair Display', serif; font-size: clamp(32px, 6vw, 48px); font-weight: 500; letter-spacing: .03em; color: var(--text); margin-bottom: 8px; line-height: 1.15; }
+    .page-date { font-size: 13px; color: var(--gold-pale); letter-spacing: 1px; margin-bottom: 28px; }
+    .intro { font-size: 15px; color: var(--text-lt); background: rgba(160,120,64,.06); border-left: 2px solid var(--gold-pale); padding: 12px 18px; margin-bottom: 36px; }
+    h2 { font-family: 'DM Sans', sans-serif; font-size: 13px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); font-weight: 500; margin: 30px 0 14px; }
+    p { color: var(--text-mid); margin-bottom: 14px; }
+    ul { color: var(--text-mid); margin-bottom: 14px; padding-left: 20px; }
+    li { margin-bottom: 6px; }
+    a { color: var(--gold); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    strong { color: var(--text); font-weight: 500; }
+    footer { background: var(--cream-dk); border-top: 1px solid var(--line); padding: 28px 40px; margin-top: 40px; }
+    .footer-inner { max-width: 820px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .footer-copy { font-size: 13px; color: var(--text-lt); opacity: .7; }
+    .footer-links a { font-size: 13px; color: var(--text-lt); opacity: .7; text-decoration: none; }
+    .footer-links a:hover { opacity: 1; color: var(--gold); }
+    [data-lang] { display: none; }
+    [data-lang].active { display: block; }
+    html[lang="he"] [data-lang="he"] { direction: rtl; text-align: right; }
+    html[lang="he"] [data-lang="he"] ul { padding-right: 20px; padding-left: 0; }
+    @media (max-width: 600px) {
+      nav { padding: 12px 16px; }
+      .page-wrap { padding: 130px 22px 60px; }
+      .lang-btn { padding: 4px 10px; font-size: 12px; }
+      footer { padding: 24px 20px; }
+      .footer-inner { flex-direction: column; text-align: center; }
+    }
+  
+    /* iOS-приложение: страница открывается во весь экран, и фиксированная шапка
+       уезжала ПОД часы и индикаторы — логотип «ADAM-L» налезал на время (живой iPhone,
+       2026-09-09). env(safe-area-inset-top) работает только вместе с viewport-fit=cover
+       в мета-теге выше. Правило идёт последним, чтобы перекрыть мобильную медиа-вставку. */
+    nav { padding-top: calc(14px + env(safe-area-inset-top)); }
+    .page-wrap { padding-top: calc(140px + env(safe-area-inset-top)); }
+    @media (max-width: 600px) {
+      nav { padding-top: calc(12px + env(safe-area-inset-top)); }
+      .page-wrap { padding-top: calc(130px + env(safe-area-inset-top)); }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-logo">ADAM-L</span>
+  <div class="lang-wrap">
+    <button class="lang-btn" id="langBtn" type="button" onclick="toggleLangMenu(event)" aria-haspopup="true">
+      <span class="lang-flag" id="langFlag">🇬🇧</span><span id="langLabel">EN</span>
+      <svg class="caret" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1 1l4 4 4-4"/></svg>
+    </button>
+    <div class="lang-menu" id="langMenu"></div>
+  </div>
+  <a href="../index.html" class="nav-back" id="back-link">← Back to app</a>
+</nav>
+
+<main class="page-wrap">
+
+  <!-- ============ EN ============ -->
+  <div data-lang="en" class="active">
+    <div class="page-eyebrow"><span>Privacy Policy</span></div>
+    <h1>Privacy Policy</h1>
+    <p class="page-date">ADAM-L AI assistant · Last updated: 2 October 2026</p>
+    <p class="intro">This policy explains how the <strong>ADAM-L AI assistant</strong> app handles your information. The app is a general <strong>wellness and educational tool</strong>. It is <strong>not a medical device</strong>, does not provide medical advice, diagnosis or treatment, and is not a substitute for a qualified professional.</p>
+    <h2>1. Who we are</h2>
+    <p>The controller of your data is <strong>Kyrylo Selivanov</strong>, a private individual residing in Ukraine ("we", "us"). We have not appointed a Data Protection Officer; all privacy requests are handled directly by the controller.</p>
+    <p>Privacy contact: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · General support: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. Scope</h2>
+    <p>This policy applies only to the <strong>ADAM-L AI assistant</strong> mobile application and its subscription. It does not cover any separate website or service.</p>
+    <h2>3. What the app is</h2>
+    <p>The app lets you record self-reported wellness markers (such as sleep quality, energy, activity, nutrition habits and personal goals) and, optionally read wellness metrics from Apple Health or Health Connect with your permission. It uses an artificial-intelligence model to return <strong>general, non-medical nutrition and lifestyle suggestions</strong> for education and self-care.</p>
+    <h2>4. Information we process</h2>
+    <ul>
+      <li><strong>Wellness inputs you enter</strong> — subjective self-ratings and lifestyle markers you choose to provide.</li>
+      <li><strong>Wearable metrics (optional)</strong> — data you explicitly authorise the app to read from Apple Health / Health Connect on your device. Specifically, and only the types you allow: sleep, steps, workouts (exercise sessions), heart rate, resting heart rate, heart rate variability (HRV), respiratory rate, blood oxygen saturation, VO₂ max, weight, blood pressure, body fat percentage, night wrist temperature and blood glucose. They are used only to build your daily wellness overview and suggestions (for example, recovery compared with your own usual level, or adjusting today's activity after yesterday's workout). This data is never used for advertising and is never sold.</li>
+      <li><strong>Your goals and focus areas</strong> — to personalise the suggestions.</li>
+      <li><strong>Minimal technical data</strong> — app version and the network request needed to generate an AI response.</li>
+      <li><strong>Photos of lab reports (optional)</strong> — only if you tap «Scan from photo». The photo is sent over an encrypted connection to our processing service and the AI model solely to read the numbers, is not stored, and is discarded once the response is returned. The values are saved only on your device, and only after you check and confirm them.</li>
+    </ul>
+    <p>The app has <strong>no account and no login</strong>. You do not need to give your name or email to use it. The only exception is the optional <strong>My guide</strong> connection described in section 6: if you choose to connect to a specialist, you provide your email and, if you wish, your name.</p>
+    <p>Because these inputs can relate to your physical wellbeing, we treat them as a special category of personal data and process them only with your <strong>explicit consent</strong> (GDPR Article 6(1)(a) and Article 9(2)(a)). You can withdraw consent at any time by deleting your data in the app or uninstalling it.</p>
+    <h2>5. Where your data is stored</h2>
+    <p>Your wellness inputs and history are stored <strong>locally on your device</strong>, in encrypted form, and are <strong>not kept permanently on our servers</strong> (see the temporary safeguard below). To generate an AI suggestion, the relevant inputs for that request are sent over an encrypted connection to our processing service and to the AI provider, used only to produce your response, and are <strong>not retained</strong> beyond the short technical lifetime of the request.</p>
+    <p>A generated overview is additionally kept on our processing service for <strong>no longer than 72 hours</strong> and is then deleted automatically. This is a safeguard for the case where the response never reached your device (the connection dropped, the app was closed): you can retrieve your own overview without requesting a new one. The record is pseudonymous — it is tied to a random device identifier, with no name, email or access code.</p>
+    <p><strong>Optional: helping to improve the app.</strong> Separately from the above, you can turn on «Help improve ADAM-L» — it is <strong>off unless you switch it on</strong>. While it is on, the numbers of each finished day (tracker metrics, your ratings, home blood-pressure readings, weight and waist, the schema and weight versions) are sent to our processing service and stored there under the same random device identifier, so the app can be calibrated on real data. Anything written in your own words is refused by the server and never leaves the device. Turning the switch off stops it immediately; «Delete my contribution» erases everything already sent from this installation. Legal basis: your explicit consent — GDPR Article 6(1)(a) with Article 9(2)(a). The full text is on the «Help improve ADAM-L» page in the app. If a Focus of the week is running, we also send which step it is, whether you marked it as done that day and how the experiment ended; the categories of your main complaint chosen from the list (never your own words); and your sex, age in five-year bands and the life stage you chose in the questionnaire.</p>
+    <p><strong>Optional: sharing with your specialist.</strong> If you connect to a specialist on the My guide screen and leave sharing on, your daily check-ins, the text of your analyses and your messages are stored in that specialist’s client record on our service (Cloudflare) — this is how the specialist can see them. Nothing is shared unless you connect and consent; the details and how to stop are in section 6.</p>
+    <p><strong>Optional: Together.</strong> If you pair with someone you choose (a partner, friend or family member) using a code, that person sees only the name you enter for them, your current weekly step, the day of the week and your daily “done / not done” marks. No health data, analyses or entries are shared. We store these few fields on our server only while you are paired; you can leave the pair at any time.</p>
+    <h2>6. Service providers</h2>
+    <ul>
+      <li><strong>Anthropic PBC (USA)</strong> — provides the AI model (Claude) that generates suggestions from the inputs sent for a request.</li>
+      <li><strong>Cloudflare, Inc. (USA)</strong> — hosts the request-relay service; any temporary technical storage uses automatic expiry.</li>
+      <li><strong>Apple / Google</strong> — distribute the app and provide the on-device health-data permission (Apple Health / Health Connect). They receive only what their platforms require for app distribution.</li>
+      <li><strong>RevenueCat, Inc. (USA)</strong> — checks the status of the subscription you buy through Apple or Google. It receives purchase details and a random app user identifier — no name, email or health data.</li>
+      <li><strong>Oura, Google (Fitbit), Polar, Withings — optional</strong> — only if you connect a device account directly. You sign in on the vendor's own page; our relay uses the access you grant to bring your metrics into the app and does not store the metrics. The access credentials expire automatically (within 30 days at most). If you connect Oura, this also includes the tags you add yourself in the Oura app (for example, symptoms).</li>
+      <li><strong>Cal.com, Inc. (USA) — optional</strong> — booking of an introductory call on the My guide screen. What you enter on the booking page is handled under Cal.com's own privacy policy.</li>
+    </ul>
+    <h3>Optional: My guide (independent specialists)</h3>
+    <p>The <strong>My guide</strong> screen lists independent specialists who use the ADAM-L platform. Each specialist provides their own services and is responsible for them; ADAM-L provides the software.</p>
+    <p><strong>If you connect to a specialist</strong> with their code, you give your email, optionally your name, and your explicit consent. We store these, together with the date of consent and the specialist you chose, in our database (Cloudflare).</p>
+    <p><strong>What the specialist sees.</strong> While the “My guide sees my daily data” switch is on, each daily check-in you complete is also sent to the specialist you connected to: your answers about how you feel, the reason you came, device readings — including the data you allowed the app to read from Apple Health or Health Connect — and the text of your analysis. You can turn the switch off at any time on the My guide screen: the connection and your messages stay, and nothing new is sent. Health data is shared only with the specialist you chose yourself; we never use it for advertising and never sell it.</p>
+    <p><strong>Lab values.</strong> While the switch is on, the lab values you enter or confirm from a photo of your report (value, unit and test date) are also sent to that specialist. Each time you change them, the set in the client record is replaced with your current one.</p>
+     <p><strong>Messages.</strong> Messages, photos and voice messages you send to the specialist on the My guide screen are stored in our database and file storage (Cloudflare) and are visible to that specialist. The specialist’s replies may be machine-translated into your language. Photos and voice messages are kept for up to 365 days; the microphone is used only while you record a voice message.</p>
+    <p><strong>One-off specialist review.</strong> When you buy a review, you give your email, optionally your name, and your explicit consent. We store these together with the date of consent and the purchase details (the purchaser identifier and transaction number from RevenueCat) to make sure the purchase was paid and is counted once. You are connected to a ADAM-L specialist who prepares the review. From then on, everything described above for My guide applies: what the specialist sees, how messages are stored and how to withdraw consent. When the question window closes, no new data is shared with the specialist.</p>
+    <p><strong>If you book an introductory call</strong>, Cal.com passes the booking to us (name, email, time), and we forward it to the specialist, including as a notification message (Telegram).</p>
+    <p>You can withdraw consent at any time with “Withdraw consent and disconnect” on the same screen — the connection ends immediately and nothing more is sent. To have the connection record, the data and the messages already shared deleted completely, write to <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> from the email you used; we delete them within 30 days. Legal basis: your explicit consent — GDPR Article 6(1)(a) and, for health data, Article 9(2)(a).</p>
+    <p>We do <strong>not sell</strong> your personal information and do not use it for advertising.</p>
+    <h2>7. International transfers</h2>
+    <p>The providers above may process request data in the United States. Such transfers rely on the European Commission's <strong>Standard Contractual Clauses</strong> and each provider's supplementary safeguards.</p>
+    <h2>8. Retention</h2>
+    <p>On-device data remains until you delete it in the app or uninstall the app — you are in control. Data sent for an AI request is not stored; a generated overview is kept for no longer than 72 hours (section 5). Data shared to help improve the app is kept until you delete your contribution. A My guide connection record (section 6) is kept until you ask us to delete it. We keep no other wellness history on our servers. If you share with a specialist, the check-ins, analyses and messages already shared are kept until you ask us to delete them.</p>
+    <h2>9. Your rights</h2>
+    <p>Depending on where you live, you may have the right to access, correct, delete, restrict or object to processing, to data portability, and to withdraw consent. Because your data lives on your device, you can exercise most of these directly in the app at any time.</p>
+    <p><strong>EU/UK (GDPR):</strong> you also have the right to lodge a complaint with your local supervisory authority. <strong>California (CCPA/CPRA):</strong> you have the right to know, delete and opt out of "sale"/"sharing" — we do neither.</p>
+    <p><strong>Washington State (My Health My Data Act):</strong> you have the right to delete your consumer health data — not merely your account. The app does this directly: <strong>“Delete my health data”</strong> in the “Backup and data deletion” section erases everything from this device immediately. <strong>“Save backup”</strong> next to it exports an encrypted copy first. We do not sell or share health data and do not use it to train models.</p>
+    <p>To make a request, contact <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. We respond within 30 days (15 days for California requests).</p>
+    <h2>10. Children</h2>
+    <p>The app is intended for adults <strong>aged 18 and over</strong>. We do not knowingly collect data from minors. If you believe a minor has used the app, contact <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> and we will assist.</p>
+    <h2>11. Security</h2>
+    <p>Wellness data is encrypted at rest on your device and sent over encrypted (TLS) connections. No method of storage or transmission is completely secure, but we apply measures appropriate to the sensitivity of the data.</p>
+    <h2>12. Changes</h2>
+    <p>We may update this policy. Material changes will be reflected by the "Last updated" date above and, where appropriate, highlighted in the app.</p>
+    <h2>13. Contact</h2>
+    <p>Privacy enquiries: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · General support: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
+
+  <!-- ============ ES ============ -->
+  <div data-lang="es">
+    <div class="page-eyebrow"><span>Política de Privacidad</span></div>
+    <h1>Política de Privacidad</h1>
+    <p class="page-date">ADAM-L AI assistant · Última actualización: 2 de octubre de 2026</p>
+    <p class="intro">Esta política explica cómo la app <strong>ADAM-L AI assistant</strong> trata tu información. La app es una <strong>herramienta general de bienestar y educación</strong>. <strong>No es un producto sanitario</strong>, no ofrece asesoramiento médico, diagnóstico ni tratamiento, y no sustituye a un profesional cualificado.</p>
+    <h2>1. Quiénes somos</h2>
+    <p>El responsable de tus datos es <strong>Kyrylo Selivanov</strong>, particular residente en Ucrania ("nosotros"). No hemos designado un Delegado de Protección de Datos; el responsable gestiona directamente todas las solicitudes de privacidad.</p>
+    <p>Contacto de privacidad: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Soporte general: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. Alcance</h2>
+    <p>Esta política se aplica únicamente a la aplicación móvil <strong>ADAM-L AI assistant</strong> y su suscripción. No cubre ningún sitio web ni servicio independiente.</p>
+    <h2>3. Qué es la app</h2>
+    <p>La app te permite registrar marcadores de bienestar autodeclarados (como calidad del sueño, energía, actividad, hábitos de nutrición y objetivos personales) y, leer opcionalmente métricas de bienestar de Apple Health o Health Connect con tu permiso. Utiliza un modelo de inteligencia artificial para ofrecer <strong>sugerencias generales y no médicas de nutrición y estilo de vida</strong> con fines educativos y de autocuidado.</p>
+    <h2>4. Información que tratamos</h2>
+    <ul>
+      <li><strong>Datos de bienestar que introduces</strong> — autoevaluaciones subjetivas y marcadores de estilo de vida que decides facilitar.</li>
+      <li><strong>Métricas de wearables (opcional)</strong> — datos que autorizas expresamente a leer desde Apple Health / Health Connect en tu dispositivo. En concreto, y solo los tipos que permitas: sueño, pasos, entrenamientos (sesiones de ejercicio), frecuencia cardíaca, frecuencia cardíaca en reposo, variabilidad de la frecuencia cardíaca (VFC), frecuencia respiratoria, saturación de oxígeno en sangre, VO₂ máx, peso, presión arterial, porcentaje de grasa corporal, temperatura nocturna de la muñeca y glucosa en sangre. Se usan solo para elaborar tu resumen diario de bienestar y tus sugerencias (por ejemplo, la recuperación comparada con tu nivel habitual o ajustar la actividad de hoy tras el entrenamiento de ayer). Estos datos nunca se usan para publicidad ni se venden.</li>
+      <li><strong>Tus objetivos y áreas de enfoque</strong> — para personalizar las sugerencias.</li>
+      <li><strong>Datos técnicos mínimos</strong> — versión de la app y la solicitud de red necesaria para generar una respuesta de IA.</li>
+      <li><strong>Fotos de informes de análisis (opcional)</strong> — solo si pulsas «Escanear desde foto». La foto se envía por una conexión cifrada a nuestro servicio de procesamiento y al modelo de IA únicamente para leer los números, no se guarda y se descarta al devolver la respuesta. Los valores se guardan solo en tu dispositivo y solo después de que los revises y confirmes.</li>
+    </ul>
+    <p>La app <strong>no tiene cuenta ni inicio de sesión</strong>. No necesitas dar tu nombre ni tu correo para usarla. La única excepción es la conexión opcional <strong>My guide</strong> descrita en la sección 6: si decides conectarte con un especialista, facilitas tu correo y, si quieres, tu nombre.</p>
+    <p>Dado que estos datos pueden referirse a tu bienestar físico, los tratamos como categoría especial de datos personales y solo con tu <strong>consentimiento explícito</strong> (RGPD Artículo 6(1)(a) y Artículo 9(2)(a)). Puedes retirar el consentimiento en cualquier momento borrando tus datos en la app o desinstalándola.</p>
+    <h2>5. Dónde se almacenan tus datos</h2>
+    <p>Tus datos de bienestar e historial se almacenan <strong>localmente en tu dispositivo</strong>, cifrados, y <strong>no se conservan de forma permanente en nuestros servidores</strong> (véase la salvaguarda temporal más abajo). Para generar una sugerencia de IA, los datos necesarios para esa solicitud se envían por conexión cifrada a nuestro servicio de procesamiento y al proveedor de IA, se usan solo para producir tu respuesta y <strong>no se conservan</strong> más allá de la breve vida técnica de la solicitud.</p>
+    <p>El resumen generado se conserva además en nuestro servicio de procesamiento <strong>no más de 72 horas</strong> y después se elimina automáticamente. Es una salvaguarda para el caso en que la respuesta no llegue a tu dispositivo (se cortó la conexión, se cerró la aplicación): podrás recuperar tu resumen sin volver a solicitarlo. El registro es seudonimizado: está ligado a un identificador aleatorio del dispositivo, sin nombre, correo ni código de acceso.</p>
+    <p><strong>Opcional: ayudar a mejorar la aplicación.</strong> Aparte de lo anterior, puedes activar «Ayudar a mejorar ADAM-L»: está <strong>desactivado salvo que tú lo actives</strong>. Mientras esté activo, las cifras de cada día completado (métricas del dispositivo, tus valoraciones, mediciones caseras de presión, peso y cintura, versiones de esquema y pesos) se envían a nuestro servicio de procesamiento y se guardan allí bajo el mismo identificador aleatorio del dispositivo, para calibrar la aplicación con datos reales. Todo lo escrito con tus palabras es rechazado por el servidor y nunca sale del dispositivo. Desactivarlo lo detiene de inmediato; «Eliminar mi aportación» borra todo lo ya enviado desde esta instalación. Base jurídica: tu consentimiento explícito — RGPD Artículo 6(1)(a) con Artículo 9(2)(a). El texto completo está en la página «Ayudar a mejorar ADAM-L». Si tienes un «Foco de la semana» en curso, también se envía qué paso es, si lo marcaste como hecho ese día y cómo terminó el experimento; las categorías de tu molestia principal elegidas de la lista (nunca tus palabras); y tu sexo, tu edad en tramos de cinco años y la etapa que indicaste en el cuestionario.</p>
+    <p><strong>Opcional: compartir con tu especialista.</strong> Si te conectas con un especialista en la pantalla My guide y dejas activado el intercambio, tus registros diarios, el texto de tus análisis y tus mensajes se guardan en la ficha de cliente de ese especialista en nuestro servicio (Cloudflare): así es como el especialista puede verlos. No se comparte nada si no te conectas y das tu consentimiento; los detalles y cómo detenerlo están en la sección 6.</p>
+    <p><strong>Opcional: En compañía.</strong> Si te emparejas con una persona que eliges (pareja, amiga o familiar) mediante un código, esa persona solo ve el nombre que escribes para ella, tu paso de la semana, el día de la semana y tus marcas diarias «hecho / no hecho». No se comparten datos de salud, análisis ni registros. Guardamos estos pocos campos en nuestro servidor solo mientras estéis emparejadas; puedes salir en cualquier momento.</p>
+    <h2>6. Proveedores de servicios</h2>
+    <ul>
+      <li><strong>Anthropic PBC (EE. UU.)</strong> — proporciona el modelo de IA (Claude) que genera las sugerencias a partir de los datos enviados en una solicitud.</li>
+      <li><strong>Cloudflare, Inc. (EE. UU.)</strong> — aloja el servicio de retransmisión de solicitudes; cualquier almacenamiento técnico temporal usa expiración automática.</li>
+      <li><strong>Apple / Google</strong> — distribuyen la app y ofrecen el permiso de datos de salud en el dispositivo (Apple Health / Health Connect). Solo reciben lo que sus plataformas requieren para la distribución.</li>
+      <li><strong>RevenueCat, Inc. (EE. UU.)</strong> — comprueba el estado de la suscripción que compras a través de Apple o Google. Recibe los datos de la compra y un identificador aleatorio de usuario de la app, sin nombre, correo ni datos de salud.</li>
+      <li><strong>Oura, Google (Fitbit), Polar, Withings — opcional</strong> — solo si conectas directamente la cuenta de un dispositivo. Inicias sesión en la página del propio fabricante; nuestro servicio de retransmisión usa el acceso que concedes para traer tus métricas a la app y no las almacena. Las credenciales de acceso caducan automáticamente (en 30 días como máximo). Si conectas Oura, esto incluye también las etiquetas que añades tú misma en la app de Oura (por ejemplo, síntomas).</li>
+      <li><strong>Cal.com, Inc. (EE. UU.) — opcional</strong> — reserva de una llamada de presentación en la pantalla My guide. Lo que introduces en la página de reserva se trata según la política de privacidad de Cal.com.</li>
+    </ul>
+    <h3>Opcional: My guide (especialistas independientes)</h3>
+    <p>La pantalla <strong>My guide</strong> muestra especialistas independientes que usan la plataforma ADAM-L. Cada especialista presta sus propios servicios y responde de ellos; ADAM-L proporciona el software.</p>
+    <p><strong>Si te conectas con un especialista</strong> mediante su código, indicas tu correo, opcionalmente tu nombre, y das tu consentimiento explícito. Lo guardamos, junto con la fecha del consentimiento y el especialista elegido, en nuestra base de datos (Cloudflare).</p>
+    <p><strong>Qué ve el especialista.</strong> Mientras el interruptor «Mi guía ve mis datos del día» esté activado, cada registro diario que completes se envía también al especialista con el que te conectaste: tus respuestas sobre cómo te sientes, el motivo por el que viniste, las lecturas de dispositivos —incluidos los datos que permitiste leer de Apple Health o Health Connect— y el texto de tu análisis. Puedes desactivar el interruptor en cualquier momento en la pantalla My guide: la conexión y tus mensajes se mantienen y no se envía nada nuevo. Los datos de salud se comparten solo con el especialista que tú elegiste; nunca los usamos para publicidad ni los vendemos.</p>
+    <p><strong>Valores de análisis.</strong> Mientras el interruptor esté activado, los valores de análisis que introduces o confirmas desde una foto del informe (valor, unidad y fecha) también se envían a ese especialista. Cada vez que los cambias, el conjunto de la ficha se sustituye por el actual.</p>
+     <p><strong>Mensajes.</strong> Los mensajes y fotos que envías al especialista en la pantalla My guide se guardan en nuestra base de datos y almacenamiento de archivos (Cloudflare) y los ve ese especialista. Las respuestas del especialista pueden traducirse automáticamente a tu idioma. Las fotos y los mensajes de voz se conservan hasta 365 días; el micrófono solo se usa mientras grabas un mensaje de voz.</p>
+    <p><strong>Revisión única con especialista.</strong> Al comprar una revisión indicas tu correo, opcionalmente tu nombre, y das tu consentimiento explícito. Los guardamos junto con la fecha del consentimiento y los datos de la compra (el identificador de comprador y el número de transacción de RevenueCat) para comprobar que la compra se pagó y se contabiliza una sola vez. Te conectas con un especialista de ADAM-L que prepara la revisión. A partir de ahí se aplica todo lo descrito arriba para My guide: qué ve el especialista, cómo se guardan los mensajes y cómo retirar el consentimiento. Cuando se cierra el plazo de preguntas, dejan de compartirse datos nuevos con el especialista.</p>
+    <p><strong>Si reservas una llamada de presentación</strong>, Cal.com nos transmite la reserva (nombre, correo, hora) y la reenviamos al especialista, también como mensaje de notificación (Telegram).</p>
+    <p>Puedes retirar tu consentimiento en cualquier momento con «Retirar consentimiento y desconectar» en la misma pantalla: la conexión termina de inmediato y no se envía nada más. Para eliminar por completo el registro de conexión, los datos y los mensajes ya compartidos, escribe a <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> desde el correo que usaste; los eliminamos en un plazo de 30 días. Base jurídica: tu consentimiento explícito — artículo 6(1)(a) del RGPD y, para los datos de salud, artículo 9(2)(a).</p>
+    <p><strong>No vendemos</strong> tu información personal ni la usamos para publicidad.</p>
+    <h2>7. Transferencias internacionales</h2>
+    <p>Los proveedores anteriores pueden procesar datos de la solicitud en Estados Unidos. Dichas transferencias se basan en las <strong>Cláusulas Contractuales Tipo</strong> de la Comisión Europea y en las garantías adicionales de cada proveedor.</p>
+    <h2>8. Conservación</h2>
+    <p>Los datos del dispositivo permanecen hasta que los borres en la app o la desinstales: tú tienes el control. Los datos enviados para una solicitud de IA no se almacenan; un resumen generado se guarda como máximo 72 horas (sección 5). Los datos compartidos para ayudar a mejorar la app se guardan hasta que elimines tu contribución. El registro de una conexión My guide (sección 6) se guarda hasta que nos pidas eliminarlo. No guardamos ningún otro historial de bienestar en nuestros servidores. Si compartes con un especialista, los registros, análisis y mensajes ya compartidos se conservan hasta que nos pidas eliminarlos.</p>
+    <h2>9. Tus derechos</h2>
+    <p>Según dónde vivas, puedes tener derecho a acceder, corregir, borrar, limitar u oponerte al tratamiento, a la portabilidad y a retirar el consentimiento. Como tus datos están en tu dispositivo, puedes ejercer la mayoría directamente en la app en cualquier momento.</p>
+    <p><strong>UE/RU (RGPD):</strong> también tienes derecho a reclamar ante tu autoridad de control local. <strong>California (CCPA/CPRA):</strong> tienes derecho a saber, borrar y excluirte de la "venta"/"compartición" — no hacemos ninguna.</p>
+    <p><strong>Estado de Washington (My Health My Data Act):</strong> tiene derecho a eliminar sus datos de salud, no solo la cuenta. La app lo hace directamente: <strong>«Eliminar mis datos de salud»</strong> en la sección «Copia de seguridad y eliminación de datos» borra todo de este dispositivo al instante. Al lado, <strong>«Guardar copia»</strong> exporta un archivo cifrado.</p>
+    <p>Para una solicitud, escribe a <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. Respondemos en 30 días (15 para solicitudes de California).</p>
+    <h2>10. Menores</h2>
+    <p>La app está destinada a adultos <strong>mayores de 18 años</strong>. No recopilamos datos de menores a sabiendas. Si crees que un menor ha usado la app, escribe a <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> y te ayudaremos.</p>
+    <h2>11. Seguridad</h2>
+    <p>Los datos de bienestar se cifran en reposo en tu dispositivo y se envían por conexiones cifradas (TLS). Ningún método de almacenamiento o transmisión es totalmente seguro, pero aplicamos medidas acordes a la sensibilidad de los datos.</p>
+    <h2>12. Cambios</h2>
+    <p>Podemos actualizar esta política. Los cambios sustanciales se reflejarán en la fecha de "Última actualización" y, cuando proceda, se destacarán en la app.</p>
+    <h2>13. Contacto</h2>
+    <p>Consultas de privacidad: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Soporte general: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
+
+  <!-- ============ UK ============ -->
+  <div data-lang="uk">
+    <div class="page-eyebrow"><span>Політика конфіденційності</span></div>
+    <h1>Політика конфіденційності</h1>
+    <p class="page-date">ADAM-L AI assistant · Останнє оновлення: 2 жовтня 2026</p>
+    <p class="intro">Ця політика пояснює, як застосунок <strong>ADAM-L AI assistant</strong> обробляє вашу інформацію. Застосунок — це загальний <strong>велнес- та освітній інструмент</strong>. Він <strong>не є медичним виробом</strong>, не надає медичних порад, діагностики чи лікування та не замінює кваліфікованого фахівця.</p>
+    <h2>1. Хто ми</h2>
+    <p>Контролером ваших даних є <strong>Кирило Селіванов</strong>, фізична особа, яка проживає в Україні («ми»). Ми не призначали Уповноваженого із захисту даних; усі запити щодо конфіденційності обробляє безпосередньо контролер.</p>
+    <p>Контакт з питань конфіденційності: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Загальна підтримка: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. Сфера дії</h2>
+    <p>Ця політика стосується лише мобільного застосунку <strong>ADAM-L AI assistant</strong> та його рівнів за підпискою. Вона не поширюється на будь-який окремий вебсайт чи сервіс.</p>
+    <h2>3. Що таке застосунок</h2>
+    <p>Застосунок дозволяє записувати самозвітні велнес-показники (як-от якість сну, енергію, активність, звички харчування та особисті цілі) і, за бажанням, зчитувати велнес-метрики з Apple Health або Health Connect з вашого дозволу. Він використовує модель штучного інтелекту, щоб надавати <strong>загальні, немедичні поради щодо харчування та способу життя</strong> для освіти й самодогляду.</p>
+    <h2>4. Яку інформацію ми обробляємо</h2>
+    <ul>
+      <li><strong>Велнес-дані, які ви вводите</strong> — суб'єктивні самооцінки та показники способу життя, які ви вирішуєте надати.</li>
+      <li><strong>Метрики носимих пристроїв </strong> — дані, які ви прямо дозволяєте зчитувати з Apple Health / Health Connect на вашому пристрої. Конкретно й лише ті типи, які ви дозволите: сон, кроки, тренування, пульс, пульс спокою, варіабельність серцевого ритму (HRV), частота дихання, насичення крові киснем, VO₂ max, вага, артеріальний тиск, відсоток жиру в тілі, нічна температура зап’ястя та глюкоза крові. Вони використовуються лише для щоденного велнес-огляду й порад (наприклад, відновлення порівняно з вашою звичною нормою або підлаштування навантаження сьогодні після вчорашнього тренування). Ці дані ніколи не використовуються для реклами й ніколи не продаються.</li>
+      <li><strong>Ваші цілі та фокус</strong> — для персоналізації порад.</li>
+      <li><strong>Мінімальні технічні дані</strong> — версія застосунку та мережевий запит, потрібний для генерації відповіді ШІ.</li>
+      <li><strong>Фото бланків аналізів (необовʼязково)</strong> — лише якщо ви натиснете «Розпізнати з фото». Фото надсилається зашифрованим зʼєднанням на наш сервіс обробки та до моделі ШІ виключно для того, щоб прочитати числа, не зберігається і видаляється після відповіді. Значення зберігаються лише на вашому пристрої і лише після того, як ви їх перевірите й підтвердите.</li>
+    </ul>
+    <p>У застосунку <strong>немає акаунта та входу</strong>. Щоб ним користуватися, не потрібно вказувати ім’я чи email. Єдиний виняток — необов’язкове підключення <strong>My guide</strong>, описане в розділі 6: якщо ви вирішите підключитися до спеціаліста, ви вказуєте свій email і, за бажанням, ім’я.</p>
+    <p>Оскільки ці дані можуть стосуватися вашого фізичного самопочуття, ми вважаємо їх особливою категорією персональних даних і обробляємо лише за вашою <strong>явною згодою</strong> (GDPR Стаття 6(1)(a) та Стаття 9(2)(a)). Ви можете відкликати згоду будь-коли, видаливши свої дані в застосунку або видаливши застосунок.</p>
+    <h2>5. Де зберігаються ваші дані</h2>
+    <p>Ваші велнес-дані та історія зберігаються <strong>локально на вашому пристрої</strong> у зашифрованому вигляді й <strong>не зберігаються постійно на наших серверах</strong> (див. тимчасову страховку нижче). Щоб згенерувати пораду ШІ, потрібні для запиту дані передаються шифрованим з'єднанням до нашого сервісу обробки та до постачальника ШІ, використовуються лише для формування відповіді й <strong>не зберігаються</strong> понад короткий технічний час запиту.</p>
+    <p>Готовий текст розбору додатково зберігається на нашому сервісі обробки <strong>не довше ніж 72 години</strong> і потім видаляється автоматично. Це страховка на випадок, якщо відповідь не дійшла до пристрою (зв’язок обірвався, застосунок згорнули): ви зможете отримати свій розбір, не запитуючи його заново. Запис знеособлений — він прив’язаний до випадкового ідентифікатора пристрою, без імені, пошти та коду доступу.</p>
+    <p><strong>Необов’язково: допомогти покращити застосунок.</strong> Окремо від наведеного вище ви можете увімкнути «Допомогти покращити ADAM-L» — за замовчуванням <strong>вимкнено</strong>. Поки увімкнено, числа кожного завершеного дня (показники трекера, ваші оцінки, домашні заміри тиску, вага й талія, версії схеми та ваг) надсилаються до нашого сервісу обробки й зберігаються там під тим самим випадковим ідентифікатором пристрою, щоб застосунок можна було відкалібрувати на реальних даних. Усе, написане вашими словами, сервер не приймає — воно не залишає пристрій. Вимкнення зупиняє передавання одразу; «Видалити мій внесок» стирає все вже надіслане з цього встановлення. Правова підстава: ваша явна згода — GDPR Стаття 6(1)(a) зі Статтею 9(2)(a). Повний текст — на сторінці «Допомогти покращити ADAM-L». Якщо триває «Фокус тижня», також передаються: який це крок, чи позначили ви його виконаним цього дня і чим закінчився експеримент; категорії вашої головної скарги, обрані зі списку (не ваші слова); стать, вік п’ятирічками та етап, який ви вказали в анкеті.</p>
+    <p><strong>За бажанням: обмін даними зі спеціалістом.</strong> Якщо ви підключаєтеся до спеціаліста на екрані My guide і залишаєте обмін увімкненим, ваші щоденні проходи, текст розборів і повідомлення зберігаються в картці клієнта цього спеціаліста на нашому сервісі (Cloudflare) — саме так спеціаліст їх бачить. Нічого не передається, якщо ви не підключилися й не дали згоду; подробиці та як це зупинити — у розділі 6.</p>
+    <p><strong>За бажанням: Удвох.</strong> Якщо ви за кодом обʼєднуєтеся в пару з людиною, яку обрали самі (партнер, подруга, родичка), вона бачить лише імʼя, яке ви для неї вказали, ваш поточний крок тижня, день тижня та щоденні позначки «вийшло / не вийшло». Дані про здоровʼя, розбори та записи не передаються. Ці кілька полів зберігаються на нашому сервері лише поки ви в парі; вийти з пари можна будь-коли.</p>
+    <h2>6. Постачальники послуг</h2>
+    <ul>
+      <li><strong>Anthropic PBC (США)</strong> — надає модель ШІ (Claude), що формує поради з надісланих у запиті даних.</li>
+      <li><strong>Cloudflare, Inc. (США)</strong> — хостить сервіс ретрансляції запитів; будь-яке тимчасове технічне зберігання має автоматичне завершення терміну.</li>
+      <li><strong>Apple / Google</strong> — розповсюджують застосунок і надають дозвіл на дані здоров'я на пристрої (Apple Health / Health Connect). Вони отримують лише те, що потрібно їхнім платформам для розповсюдження.</li>
+      <li><strong>RevenueCat, Inc. (США)</strong> — перевіряє статус підписки, яку ви купуєте через Apple або Google. Отримує дані покупки та випадковий ідентифікатор користувача застосунку — без імені, email чи даних про здоров’я.</li>
+      <li><strong>Oura, Google (Fitbit), Polar, Withings — за бажанням</strong> — лише якщо ви підключаєте акаунт пристрою напряму. Ви входите на сторінці самого виробника; наш сервіс ретрансляції використовує наданий вами доступ, щоб передати ваші показники в застосунок, і не зберігає їх. Облікові дані доступу спливають автоматично (щонайбільше за 30 днів). Якщо ви підключаєте Oura, це також мітки, які ви самі ставите в застосунку Oura (наприклад, симптоми).</li>
+      <li><strong>Cal.com, Inc. (США) — за бажанням</strong> — запис на знайомчий дзвінок на екрані My guide. Те, що ви вводите на сторінці запису, обробляється за політикою конфіденційності Cal.com.</li>
+    </ul>
+    <h3>За бажанням: My guide (незалежні спеціалісти)</h3>
+    <p>Екран <strong>My guide</strong> показує незалежних спеціалістів, які користуються платформою ADAM-L. Кожен спеціаліст надає власні послуги й відповідає за них; ADAM-L надає програмне забезпечення.</p>
+    <p><strong>Якщо ви підключаєтеся до спеціаліста</strong> за його кодом, ви вказуєте email, за бажанням ім’я, і даєте явну згоду. Ми зберігаємо це разом із датою згоди та обраним спеціалістом у нашій базі даних (Cloudflare).</p>
+    <p><strong>Що бачить спеціаліст.</strong> Поки ввімкнено перемикач «Фахівець бачить мої дані дня», кожен щоденний прохід, який ви завершуєте, також надсилається спеціалістові, до якого ви підключилися: ваші відповіді про самопочуття, причина, з якою ви прийшли, показники пристроїв — зокрема дані, які ви дозволили застосунку читати з Apple Health або Health Connect, — і текст вашого розбору. Вимкнути перемикач можна будь-коли на екрані My guide: зв’язок і ваші повідомлення залишаються, нове більше не надсилається. Дані про здоров’я передаються лише спеціалістові, якого ви обрали самі; ми ніколи не використовуємо їх для реклами й не продаємо.</p>
+    <p><strong>Показники аналізів.</strong> Поки перемикач увімкнено, показники аналізів, які ви вписуєте або підтверджуєте з фото бланка (значення, одиниця й дата), також надсилаються цьому спеціалістові. Щоразу, коли ви їх змінюєте, набір у картці замінюється поточним.</p>
+     <p><strong>Повідомлення.</strong> Повідомлення, фото й голосові повідомлення, які ви надсилаєте спеціалістові на екрані My guide, зберігаються в нашій базі даних і файловому сховищі (Cloudflare) та доступні цьому спеціалістові. Відповіді спеціаліста можуть автоматично перекладатися вашою мовою. Фото й голосові повідомлення зберігаються до 365 днів; мікрофон використовується лише під час запису голосового повідомлення.</p>
+    <p><strong>Разовий розбір зі спеціалістом.</strong> Купуючи розбір, ви вказуєте email, за бажанням ім’я, і даєте явну згоду. Ми зберігаємо їх разом із датою згоди та даними про покупку (ідентифікатор покупця і номер транзакції від RevenueCat), щоб переконатися, що покупку оплачено і зараховано один раз. Ви підключаєтеся до спеціаліста ADAM-L, який готує розбір. Далі діє все, що описано вище для My guide: що бачить спеціаліст, як зберігається переписка і як відкликати згоду. Коли вікно запитань закривається, нові дані спеціалісту більше не передаються.</p>
+    <p><strong>Якщо ви записуєтеся на знайомчий дзвінок</strong>, Cal.com передає нам запис (ім’я, email, час), і ми пересилаємо його спеціалістові, зокрема повідомленням-сповіщенням (Telegram).</p>
+    <p>Відкликати згоду можна будь-коли кнопкою «Відкликати згоду та відключитися» на тому самому екрані — зв’язок припиняється одразу, і нічого більше не надсилається. Щоб повністю видалити запис про підключення, дані та вже передані повідомлення, напишіть на <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> з email, який ви вказували; ми видалимо їх протягом 30 днів. Правова підстава: ваша явна згода — стаття 6(1)(a) GDPR, а для даних про здоров’я — стаття 9(2)(a).</p>
+    <p>Ми <strong>не продаємо</strong> вашу персональну інформацію та не використовуємо її для реклами.</p>
+    <h2>7. Міжнародні передачі</h2>
+    <p>Наведені постачальники можуть обробляти дані запиту у США. Такі передачі ґрунтуються на <strong>Стандартних договірних положеннях</strong> Європейської Комісії та додаткових гарантіях кожного постачальника.</p>
+    <h2>8. Зберігання</h2>
+    <p>Дані на пристрої зберігаються, доки ви не видалите їх у застосунку або не видалите застосунок, — усе під вашим контролем. Дані, надіслані для запиту до ШІ, не зберігаються; сформований огляд зберігається не довше 72 годин (розділ 5). Дані, якими ви поділилися, щоб допомогти покращити застосунок, зберігаються, доки ви не видалите свій внесок. Запис про підключення My guide (розділ 6) зберігається, доки ви не попросите нас його видалити. Іншої історії самопочуття на наших серверах ми не зберігаємо. Якщо ви ділитеся даними зі спеціалістом, уже передані проходи, розбори й повідомлення зберігаються, доки ви не попросите їх видалити.</p>
+    <h2>9. Ваші права</h2>
+    <p>Залежно від місця проживання, ви можете мати право на доступ, виправлення, видалення, обмеження чи заперечення обробки, на перенесення даних і на відкликання згоди. Оскільки ваші дані на вашому пристрої, більшість із цього ви можете зробити прямо в застосунку будь-коли.</p>
+    <p><strong>ЄС/Велика Британія (GDPR):</strong> ви також маєте право подати скаргу до місцевого наглядового органу. <strong>Каліфорнія (CCPA/CPRA):</strong> ви маєте право знати, видаляти та відмовитися від «продажу»/«поширення» — ми не робимо ні того, ні іншого.</p>
+    <p><strong>Штат Вашингтон (My Health My Data Act):</strong> ви маєте право видалити саме дані про здоров’я, а не лише акаунт. Застосунок робить це напряму: <strong>«Видалити мої дані про здоров’я»</strong> в розділі «Резервна копія та видалення даних» стирає все з цього пристрою одразу. Поруч <strong>«Зберегти копію»</strong> — вивантаження зашифрованого файлу.</p>
+    <p>Щоб надіслати запит, пишіть на <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. Ми відповідаємо протягом 30 днів (15 для запитів із Каліфорнії).</p>
+    <h2>10. Діти</h2>
+    <p>Застосунок призначений для дорослих <strong>18 років і старше</strong>. Ми свідомо не збираємо дані неповнолітніх. Якщо ви вважаєте, що застосунком скористалася неповнолітня особа, напишіть на <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>, і ми допоможемо.</p>
+    <h2>11. Безпека</h2>
+    <p>Велнес-дані шифруються на вашому пристрої та передаються шифрованими (TLS) з'єднаннями. Жоден метод зберігання чи передачі не є цілком безпечним, але ми застосовуємо заходи, відповідні чутливості даних.</p>
+    <h2>12. Зміни</h2>
+    <p>Ми можемо оновлювати цю політику. Суттєві зміни відображатимуться у даті «Останнє оновлення» та, за потреби, виділятимуться в застосунку.</p>
+    <h2>13. Контакт</h2>
+    <p>Запити щодо конфіденційності: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Загальна підтримка: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
+
+  <!-- ============ RU ============ -->
+  <div data-lang="ru">
+    <div class="page-eyebrow"><span>Политика конфиденциальности</span></div>
+    <h1>Политика конфиденциальности</h1>
+    <p class="page-date">ADAM-L AI assistant · Последнее обновление: 2 октября 2026</p>
+    <p class="intro">Эта политика объясняет, как приложение <strong>ADAM-L AI assistant</strong> обращается с вашей информацией. Приложение — это общий <strong>велнес- и образовательный инструмент</strong>. Оно <strong>не является медицинским изделием</strong>, не даёт медицинских советов, диагностики или лечения и не заменяет квалифицированного специалиста.</p>
+    <h2>1. Кто мы</h2>
+    <p>Контролёр ваших данных — <strong>Кирилл Селиванов</strong>, физическое лицо, проживающее в Украине («мы»). Мы не назначали Уполномоченного по защите данных; все запросы по конфиденциальности обрабатывает непосредственно контролёр.</p>
+    <p>Контакт по конфиденциальности: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Общая поддержка: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. Область применения</h2>
+    <p>Эта политика распространяется только на мобильное приложение <strong>ADAM-L AI assistant</strong> и его уровни по подписке. Она не охватывает какой-либо отдельный сайт или сервис.</p>
+    <h2>3. Что такое приложение</h2>
+    <p>Приложение позволяет записывать самостоятельно вводимые велнес-показатели (например, качество сна, энергию, активность, привычки питания и личные цели) и, по желанию, считывать велнес-метрики из Apple Health или Health Connect с вашего разрешения. Оно использует модель искусственного интеллекта, чтобы давать <strong>общие, немедицинские рекомендации по питанию и образу жизни</strong> в образовательных целях и для самопомощи.</p>
+    <h2>4. Какую информацию мы обрабатываем</h2>
+    <ul>
+      <li><strong>Велнес-данные, которые вы вводите</strong> — субъективные самооценки и показатели образа жизни, которые вы решаете предоставить.</li>
+      <li><strong>Метрики носимых устройств </strong> — данные, которые вы прямо разрешаете считывать из Apple Health / Health Connect на вашем устройстве. Конкретно и только те типы, которые вы разрешите: сон, шаги, тренировки, пульс, пульс покоя, вариабельность сердечного ритма (HRV), частота дыхания, насыщение крови кислородом, VO₂ max, вес, артериальное давление, процент жира в теле, ночная температура запястья и глюкоза крови. Они используются только для ежедневного велнес-обзора и советов (например, восстановление в сравнении с вашей обычной нормой или подстройка нагрузки сегодня после вчерашней тренировки). Эти данные никогда не используются для рекламы и никогда не продаются.</li>
+      <li><strong>Ваши цели и фокус</strong> — для персонализации рекомендаций.</li>
+      <li><strong>Минимальные технические данные</strong> — версия приложения и сетевой запрос, необходимый для генерации ответа ИИ.</li>
+      <li><strong>Фото бланков анализов (необязательно)</strong> — только если вы нажмёте «Распознать с фото». Фото отправляется по зашифрованному соединению на наш сервис обработки и к модели ИИ исключительно для того, чтобы прочитать числа, не сохраняется и удаляется после ответа. Значения сохраняются только на вашем устройстве и только после того, как вы их проверите и подтвердите.</li>
+    </ul>
+    <p>В приложении <strong>нет аккаунта и входа</strong>. Чтобы им пользоваться, не нужно указывать имя или email. Единственное исключение — необязательное подключение <strong>My guide</strong>, описанное в разделе 6: если вы решите подключиться к специалисту, вы указываете свой email и, по желанию, имя.</p>
+    <p>Поскольку эти данные могут относиться к вашему физическому самочувствию, мы считаем их особой категорией персональных данных и обрабатываем только с вашего <strong>явного согласия</strong> (GDPR Статья 6(1)(a) и Статья 9(2)(a)). Вы можете отозвать согласие в любой момент, удалив свои данные в приложении или удалив приложение.</p>
+    <h2>5. Где хранятся ваши данные</h2>
+    <p>Ваши велнес-данные и история хранятся <strong>локально на вашем устройстве</strong> в зашифрованном виде и <strong>не хранятся постоянно на наших серверах</strong> (см. временную страховку ниже). Чтобы сгенерировать рекомендацию ИИ, нужные для запроса данные передаются по шифрованному соединению нашему сервису обработки и провайдеру ИИ, используются только для формирования вашего ответа и <strong>не сохраняются</strong> сверх короткого технического времени запроса.</p>
+    <p>Готовый текст разбора дополнительно сохраняется на нашем сервисе обработки <strong>не дольше 72 часов</strong> и затем удаляется автоматически. Это страховка на случай, если ответ не дошёл до устройства (связь прервалась, приложение свернули): вы сможете получить свой разбор, не запрашивая его заново. Запись обезличена — она привязана к случайному идентификатору устройства, без имени, почты и кода доступа.</p>
+    <p><strong>Необязательно: помочь улучшить приложение.</strong> Отдельно от сказанного выше вы можете включить «Помочь улучшить ADAM-L» — по умолчанию <strong>выключено</strong>. Пока включено, числа каждого завершённого дня (показатели трекера, ваши оценки, домашние замеры давления, вес и талия, версии схемы и весов) отправляются в наш сервис обработки и хранятся там под тем же случайным идентификатором устройства, чтобы приложение можно было откалибровать на реальных данных. Всё, написанное вашими словами, сервер не принимает — оно не покидает устройство. Выключение останавливает передачу сразу; «Удалить мой вклад» стирает всё уже отправленное с этой установки. Правовое основание: ваше явное согласие — GDPR Статья 6(1)(a) со Статьёй 9(2)(a). Полный текст — на странице «Помочь улучшить ADAM-L» в приложении. Если идёт «Фокус недели», также передаются: какой это шаг, отметили ли вы его выполненным в этот день и чем закончился эксперимент; категории вашей главной жалобы, выбранные из списка (не ваши слова); пол, возраст пятилетками и этап, который вы указали в анкете.</p>
+    <p><strong>По желанию: обмен данными со специалистом.</strong> Если вы подключаетесь к специалисту на экране My guide и оставляете обмен включённым, ваши ежедневные проходы, текст разборов и сообщения хранятся в карточке клиента этого специалиста на нашем сервисе (Cloudflare) — именно так специалист их видит. Ничего не передаётся, если вы не подключились и не дали согласие; подробности и как это остановить — в разделе 6.</p>
+    <p><strong>По желанию: Вдвоём.</strong> Если вы по коду объединяетесь в пару с человеком, которого выбрали сами (партнёр, подруга, родственница), он видит только имя, которое вы для него указали, ваш текущий шаг недели, день недели и ежедневные отметки «получилось / не получилось». Данные о здоровье, разборы и записи не передаются. Эти несколько полей хранятся на нашем сервере только пока вы в паре; выйти из пары можно в любой момент.</p>
+    <h2>6. Поставщики услуг</h2>
+    <ul>
+      <li><strong>Anthropic PBC (США)</strong> — предоставляет модель ИИ (Claude), формирующую рекомендации из отправленных в запросе данных.</li>
+      <li><strong>Cloudflare, Inc. (США)</strong> — хостит сервис ретрансляции запросов; любое временное техническое хранение имеет автоматическое истечение срока.</li>
+      <li><strong>Apple / Google</strong> — распространяют приложение и предоставляют разрешение на данные здоровья на устройстве (Apple Health / Health Connect). Они получают лишь то, что нужно их платформам для распространения.</li>
+      <li><strong>RevenueCat, Inc. (США)</strong> — проверяет статус подписки, которую вы покупаете через Apple или Google. Получает данные покупки и случайный идентификатор пользователя приложения — без имени, email и данных о здоровье.</li>
+      <li><strong>Oura, Google (Fitbit), Polar, Withings — по желанию</strong> — только если вы подключаете аккаунт устройства напрямую. Вы входите на странице самого производителя; наш сервис ретрансляции использует выданный вами доступ, чтобы передать ваши показатели в приложение, и не хранит их. Учётные данные доступа истекают автоматически (не позднее чем через 30 дней). Если вы подключаете Oura, это также метки, которые вы сами ставите в приложении Oura (например, симптомы).</li>
+      <li><strong>Cal.com, Inc. (США) — по желанию</strong> — запись на ознакомительный звонок на экране My guide. То, что вы вводите на странице записи, обрабатывается по политике конфиденциальности Cal.com.</li>
+    </ul>
+    <h3>По желанию: My guide (независимые специалисты)</h3>
+    <p>Экран <strong>My guide</strong> показывает независимых специалистов, которые пользуются платформой ADAM-L. Каждый специалист оказывает собственные услуги и отвечает за них; ADAM-L предоставляет программное обеспечение.</p>
+    <p><strong>Если вы подключаетесь к специалисту</strong> по его коду, вы указываете email, по желанию имя, и даёте явное согласие. Мы храним это вместе с датой согласия и выбранным специалистом в нашей базе данных (Cloudflare).</p>
+    <p><strong>Что видит специалист.</strong> Пока включён переключатель «Специалист видит мои данные дня», каждый завершённый вами ежедневный проход также отправляется специалисту, к которому вы подключились: ваши ответы о самочувствии, причина, с которой вы пришли, показатели устройств — в том числе данные, которые вы разрешили приложению читать из Apple Health или Health Connect, — и текст вашего разбора. Выключить переключатель можно в любой момент на экране My guide: связь и ваши сообщения остаются, новое больше не отправляется. Данные о здоровье передаются только специалисту, которого вы выбрали сами; мы никогда не используем их для рекламы и не продаём.</p>
+    <p><strong>Показатели анализов.</strong> Пока переключатель включён, показатели анализов, которые вы вписываете или подтверждаете с фото бланка (значение, единица и дата), тоже отправляются этому специалисту. Каждый раз, когда вы их меняете, набор в карточке заменяется текущим.</p>
+     <p><strong>Сообщения.</strong> Сообщения, фото и голосовые сообщения, которые вы отправляете специалисту на экране My guide, хранятся в нашей базе данных и файловом хранилище (Cloudflare) и видны этому специалисту. Ответы специалиста могут автоматически переводиться на ваш язык. Фото и голосовые сообщения хранятся до 365 дней; микрофон используется только во время записи голосового сообщения.</p>
+    <p><strong>Разовый разбор со специалистом.</strong> Покупая разбор, вы указываете email, по желанию имя, и даёте явное согласие. Мы сохраняем их вместе с датой согласия и данными о покупке (идентификатор покупателя и номер транзакции от RevenueCat), чтобы убедиться, что покупка оплачена и засчитана один раз. Вы подключаетесь к специалисту ADAM-L, который готовит разбор. Дальше действует всё, что описано выше для My guide: что видит специалист, как хранится переписка и как отозвать согласие. Когда окно вопросов закрывается, новые данные специалисту больше не передаются.</p>
+    <p><strong>Если вы записываетесь на ознакомительный звонок</strong>, Cal.com передаёт нам запись (имя, email, время), и мы пересылаем её специалисту, в том числе сообщением-уведомлением (Telegram).</p>
+    <p>Отозвать согласие можно в любой момент кнопкой «Отозвать согласие и отключиться» на том же экране — связь прекращается сразу, и больше ничего не отправляется. Чтобы полностью удалить запись о подключении, данные и уже переданные сообщения, напишите на <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> с email, который вы указывали; мы удалим их в течение 30 дней. Правовое основание: ваше явное согласие — статья 6(1)(a) GDPR, а для данных о здоровье — статья 9(2)(a).</p>
+    <p>Мы <strong>не продаём</strong> вашу персональную информацию и не используем её для рекламы.</p>
+    <h2>7. Международные передачи</h2>
+    <p>Указанные поставщики могут обрабатывать данные запроса в США. Такие передачи основаны на <strong>Стандартных договорных положениях</strong> Европейской комиссии и дополнительных гарантиях каждого поставщика.</p>
+    <h2>8. Хранение</h2>
+    <p>Данные на устройстве хранятся, пока вы не удалите их в приложении или не удалите приложение, — всё под вашим контролем. Данные, отправленные для запроса к ИИ, не хранятся; сформированный обзор хранится не дольше 72 часов (раздел 5). Данные, которыми вы поделились, чтобы помочь улучшить приложение, хранятся, пока вы не удалите свой вклад. Запись о подключении My guide (раздел 6) хранится, пока вы не попросите нас её удалить. Другой истории самочувствия на наших серверах мы не храним. Если вы делитесь данными со специалистом, уже переданные проходы, разборы и сообщения хранятся, пока вы не попросите их удалить.</p>
+    <h2>9. Ваши права</h2>
+    <p>В зависимости от места проживания у вас может быть право на доступ, исправление, удаление, ограничение или возражение против обработки, на переносимость данных и на отзыв согласия. Поскольку ваши данные на вашем устройстве, большинство из этого вы можете сделать прямо в приложении в любое время.</p>
+    <p><strong>ЕС/Великобритания (GDPR):</strong> у вас также есть право подать жалобу в местный надзорный орган. <strong>Калифорния (CCPA/CPRA):</strong> у вас есть право знать, удалять и отказаться от «продажи»/«передачи» — мы не делаем ни того, ни другого.</p>
+    <p><strong>Штат Вашингтон (My Health My Data Act):</strong> у вас есть право удалить именно данные о здоровье, а не только аккаунт. Приложение делает это напрямую: <strong>«Удалить мои данные о здоровье»</strong> в разделе «Резервная копия и удаление данных» стирает всё с этого устройства сразу. Рядом <strong>«Сохранить копию»</strong> — выгрузка зашифрованного файла перед удалением. Мы не продаём и не передаём данные о здоровье и не обучаем на них модели.</p>
+    <p>Чтобы отправить запрос, пишите на <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. Мы отвечаем в течение 30 дней (15 для запросов из Калифорнии).</p>
+    <h2>10. Дети</h2>
+    <p>Приложение предназначено для взрослых <strong>18 лет и старше</strong>. Мы сознательно не собираем данные несовершеннолетних. Если вы считаете, что приложением воспользовался несовершеннолетний, напишите на <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>, и мы поможем.</p>
+    <h2>11. Безопасность</h2>
+    <p>Велнес-данные шифруются на вашем устройстве и передаются по шифрованным (TLS) соединениям. Ни один метод хранения или передачи не является полностью безопасным, но мы применяем меры, соответствующие чувствительности данных.</p>
+    <h2>12. Изменения</h2>
+    <p>Мы можем обновлять эту политику. Существенные изменения отразятся в дате «Последнее обновление» и, при необходимости, будут выделены в приложении.</p>
+    <h2>13. Контакт</h2>
+    <p>Запросы по конфиденциальности: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Общая поддержка: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
+
+  <!-- ============ DE ============ -->
+  <div data-lang="de">
+    <div class="page-eyebrow"><span>Datenschutzerklärung</span></div>
+    <h1>Datenschutzerklärung</h1>
+    <p class="page-date">ADAM-L AI assistant · Zuletzt aktualisiert: 2. Oktober 2026</p>
+    <p class="intro">Diese Erklärung beschreibt, wie die App <strong>ADAM-L AI assistant</strong> mit deinen Daten umgeht. Die App ist ein allgemeines <strong>Wellness- und Bildungstool</strong>. Sie ist <strong>kein Medizinprodukt</strong>, bietet keine medizinische Beratung, Diagnose oder Behandlung und ersetzt keine qualifizierte Fachkraft.</p>
+    <h2>1. Wer wir sind</h2>
+    <p>Verantwortlicher für deine Daten ist <strong>Kyrylo Selivanov</strong>, eine Privatperson mit Wohnsitz in der Ukraine („wir"). Wir haben keinen Datenschutzbeauftragten bestellt; alle Datenschutzanfragen bearbeitet der Verantwortliche direkt.</p>
+    <p>Datenschutz-Kontakt: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Allgemeiner Support: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. Geltungsbereich</h2>
+    <p>Diese Erklärung gilt nur für die mobile App <strong>ADAM-L AI assistant</strong> und ihre Abonnement-Stufen. Sie umfasst keine separate Website oder Dienstleistung.</p>
+    <h2>3. Was die App ist</h2>
+    <p>Mit der App kannst du selbst angegebene Wellness-Marker erfassen (z. B. Schlafqualität, Energie, Aktivität, Ernährungsgewohnheiten und persönliche Ziele) und optional mit deiner Erlaubnis Wellness-Werte aus Apple Health oder Health Connect lesen. Sie nutzt ein KI-Modell, um <strong>allgemeine, nicht-medizinische Ernährungs- und Lebensstil-Empfehlungen</strong> zur Bildung und Selbstfürsorge zu geben.</p>
+    <h2>4. Welche Daten wir verarbeiten</h2>
+    <ul>
+      <li><strong>Von dir eingegebene Wellness-Daten</strong> — subjektive Selbsteinschätzungen und Lebensstil-Marker, die du bereitstellst.</li>
+      <li><strong>Wearable-Werte (optional)</strong> — Daten, die du der App ausdrücklich zum Lesen aus Apple Health / Health Connect auf deinem Gerät erlaubst. Konkret und nur die Typen, die du erlaubst: Schlaf, Schritte, Trainings (Workouts), Herzfrequenz, Ruheherzfrequenz, Herzfrequenzvariabilität (HRV), Atemfrequenz, Sauerstoffsättigung des Blutes, VO₂max, Gewicht, Blutdruck, Körperfettanteil, nächtliche Handgelenktemperatur und Blutzucker. Sie werden nur für deine tägliche Wellness-Übersicht und Empfehlungen genutzt (z. B. Erholung im Vergleich zu deinem üblichen Niveau oder die heutige Aktivität nach dem gestrigen Training anpassen). Diese Daten werden nie für Werbung verwendet und nie verkauft.</li>
+      <li><strong>Deine Ziele und Fokusbereiche</strong> — zur Personalisierung der Empfehlungen.</li>
+      <li><strong>Minimale technische Daten</strong> — App-Version und die für eine KI-Antwort nötige Netzwerkanfrage.</li>
+      <li><strong>Fotos von Laborbefunden (optional)</strong> — nur wenn Sie auf «Foto auslesen» tippen. Das Foto wird über eine verschlüsselte Verbindung an unseren Verarbeitungsdienst und das KI-Modell gesendet, ausschließlich um die Zahlen zu lesen, nicht gespeichert und nach der Antwort verworfen. Die Werte werden nur auf Ihrem Gerät gespeichert und erst, nachdem Sie sie geprüft und bestätigt haben.</li>
+    </ul>
+    <p>Die App hat <strong>kein Konto und keine Anmeldung</strong>. Um sie zu nutzen, musst du weder deinen Namen noch deine E-Mail-Adresse angeben. Die einzige Ausnahme ist die optionale Verbindung <strong>My guide</strong> (Abschnitt 6): Wenn du dich mit einer Fachperson verbindest, gibst du deine E-Mail-Adresse und, wenn du möchtest, deinen Namen an.</p>
+    <p>Da diese Daten dein körperliches Wohlbefinden betreffen können, behandeln wir sie als besondere Kategorie personenbezogener Daten und verarbeiten sie nur mit deiner <strong>ausdrücklichen Einwilligung</strong> (DSGVO Art. 6 Abs. 1 lit. a und Art. 9 Abs. 2 lit. a). Du kannst die Einwilligung jederzeit widerrufen, indem du deine Daten in der App löschst oder die App deinstallierst.</p>
+    <h2>5. Wo deine Daten gespeichert werden</h2>
+    <p>Deine Wellness-Daten und dein Verlauf werden <strong>lokal auf deinem Gerät</strong> verschlüsselt gespeichert und <strong>nicht dauerhaft auf unseren Servern</strong> aufbewahrt (siehe die zeitlich begrenzte Absicherung unten). Zur Erstellung einer KI-Empfehlung werden die für die Anfrage nötigen Daten verschlüsselt an unseren Verarbeitungsdienst und den KI-Anbieter gesendet, nur zur Erzeugung deiner Antwort genutzt und <strong>nicht</strong> über die kurze technische Lebensdauer der Anfrage hinaus aufbewahrt.</p>
+    <p>Die erstellte Auswertung wird zusätzlich <strong>höchstens 72 Stunden</strong> in unserem Verarbeitungsdienst aufbewahrt und danach automatisch gelöscht. Das ist eine Absicherung für den Fall, dass die Antwort dein Gerät nie erreicht hat (Verbindung abgebrochen, App geschlossen): Du kannst deine Auswertung abrufen, ohne sie neu anzufordern. Der Eintrag ist pseudonym — er hängt an einer zufälligen Gerätekennung, ohne Name, E-Mail oder Zugangscode.</p>
+    <p><strong>Optional: die App verbessern helfen.</strong> Unabhängig vom Obigen kannst du «Die App verbessern helfen» einschalten — standardmäßig ist es <strong>aus</strong>. Solange es an ist, werden die Zahlen jedes abgeschlossenen Tages (Tracker-Werte, deine Bewertungen, häusliche Blutdruckmessungen, Gewicht und Taille, Schema- und Gewichtsversionen) an unseren Verarbeitungsdienst gesendet und dort unter derselben zufälligen Gerätekennung gespeichert, damit die App an echten Daten kalibriert werden kann. Alles, was du in eigenen Worten geschrieben hast, weist der Server ab und verlässt das Gerät nie. Ausschalten stoppt sofort; «Meinen Beitrag löschen» entfernt alles bereits Gesendete dieser Installation. Rechtsgrundlage: deine ausdrückliche Einwilligung — DSGVO Art. 6(1)(a) mit Art. 9(2)(a). Der vollständige Text steht auf der Seite «Die App verbessern helfen». Läuft ein „Fokus der Woche“, senden wir außerdem, welcher Schritt es ist, ob Sie ihn an dem Tag als erledigt markiert haben und wie das Experiment endete; die Kategorien Ihrer Hauptbeschwerde aus der Liste (nie Ihre eigenen Worte); sowie Geschlecht, Alter in Fünfjahresstufen und die Lebensphase aus dem Fragebogen.</p>
+    <p><strong>Optional: Teilen mit deiner Fachperson.</strong> Wenn du dich auf dem Bildschirm My guide mit einer Fachperson verbindest und das Teilen eingeschaltet lässt, werden deine täglichen Check-ins, der Text deiner Auswertungen und deine Nachrichten in der Klientenakte dieser Fachperson auf unserem Dienst (Cloudflare) gespeichert — so kann die Fachperson sie sehen. Ohne Verbindung und Einwilligung wird nichts geteilt; Einzelheiten und wie du es beendest, stehen in Abschnitt 6.</p>
+    <p><strong>Optional: Zu zweit.</strong> Wenn du dich per Code mit einer selbst gewählten Person (Partner, Freundin, Familienmitglied) verbindest, sieht diese nur den Namen, den du für sie eingibst, deinen aktuellen Wochenschritt, den Wochentag und deine täglichen Häkchen „geschafft / nicht geschafft“. Gesundheitsdaten, Auswertungen und Einträge werden nicht geteilt. Diese wenigen Felder speichern wir nur, solange ihr verbunden seid; du kannst die Verbindung jederzeit beenden.</p>
+    <h2>6. Dienstleister</h2>
+    <ul>
+      <li><strong>Anthropic PBC (USA)</strong> — stellt das KI-Modell (Claude) bereit, das Empfehlungen aus den für eine Anfrage gesendeten Daten erzeugt.</li>
+      <li><strong>Cloudflare, Inc. (USA)</strong> — hostet den Anfrage-Relay-Dienst; jegliche vorübergehende technische Speicherung nutzt automatischen Ablauf.</li>
+      <li><strong>Apple / Google</strong> — vertreiben die App und stellen die Gesundheitsdaten-Berechtigung auf dem Gerät (Apple Health / Health Connect) bereit. Sie erhalten nur das, was ihre Plattformen für den Vertrieb benötigen.</li>
+      <li><strong>RevenueCat, Inc. (USA)</strong> — prüft den Status des Abos, das du über Apple oder Google abschließt. Erhält Kaufdaten und eine zufällige App-Nutzerkennung — ohne Namen, E-Mail-Adresse oder Gesundheitsdaten.</li>
+      <li><strong>Oura, Google (Fitbit), Polar, Withings — optional</strong> — nur wenn du ein Gerätekonto direkt verbindest. Du meldest dich auf der Seite des Herstellers an; unser Relay-Dienst nutzt den gewährten Zugriff, um deine Messwerte in die App zu holen, und speichert sie nicht. Die Zugangsdaten laufen automatisch ab (spätestens nach 30 Tagen). Wenn du Oura verbindest, gehören dazu auch die Tags, die du selbst in der Oura-App setzt (zum Beispiel Symptome).</li>
+      <li><strong>Cal.com, Inc. (USA) — optional</strong> — Buchung eines Kennenlerngesprächs auf dem Bildschirm My guide. Was du auf der Buchungsseite eingibst, unterliegt der Datenschutzerklärung von Cal.com.</li>
+    </ul>
+    <h3>Optional: My guide (unabhängige Fachpersonen)</h3>
+    <p>Der Bildschirm <strong>My guide</strong> zeigt unabhängige Fachpersonen, die die ADAM-L-Plattform nutzen. Jede Fachperson erbringt ihre eigenen Leistungen und ist dafür verantwortlich; ADAM-L stellt die Software bereit.</p>
+    <p><strong>Wenn du dich mit einer Fachperson verbindest</strong>, gibst du über ihren Code deine E-Mail-Adresse, optional deinen Namen und deine ausdrückliche Einwilligung an. Wir speichern dies zusammen mit dem Datum der Einwilligung und der gewählten Fachperson in unserer Datenbank (Cloudflare).</p>
+    <p><strong>Was die Fachperson sieht.</strong> Solange der Schalter „Mein Begleiter sieht meine Tagesdaten“ eingeschaltet ist, wird jeder abgeschlossene tägliche Check-in auch an die Fachperson gesendet, mit der du verbunden bist: deine Antworten zum Befinden, der Grund, mit dem du gekommen bist, Gerätewerte — einschließlich der Daten, die die App aus Apple Health oder Health Connect lesen darf — und der Text deiner Auswertung. Du kannst den Schalter jederzeit auf dem Bildschirm My guide ausschalten: Verbindung und Nachrichten bleiben, Neues wird nicht mehr gesendet. Gesundheitsdaten werden nur mit der Fachperson geteilt, die du selbst gewählt hast; wir nutzen sie nie für Werbung und verkaufen sie nicht.</p>
+    <p><strong>Laborwerte.</strong> Solange der Schalter an ist, werden die Laborwerte, die Sie eintragen oder aus einem Foto des Befunds bestätigen (Wert, Einheit und Datum), ebenfalls an diese Fachperson gesendet. Bei jeder Änderung wird der Satz in der Klientenakte durch den aktuellen ersetzt.</p>
+     <p><strong>Nachrichten.</strong> Nachrichten und Fotos, die du der Fachperson auf dem Bildschirm My guide sendest, werden in unserer Datenbank und unserem Dateispeicher (Cloudflare) gespeichert und sind für diese Fachperson sichtbar. Antworten der Fachperson können maschinell in deine Sprache übersetzt werden. Fotos und Sprachnachrichten werden bis zu 365 Tage aufbewahrt; das Mikrofon wird nur während der Aufnahme einer Sprachnachricht genutzt.</p>
+    <p><strong>Einmalige Auswertung durch einen Spezialisten.</strong> Beim Kauf einer Auswertung geben Sie Ihre E-Mail-Adresse, optional Ihren Namen, und Ihre ausdrückliche Einwilligung an. Wir speichern diese zusammen mit dem Datum der Einwilligung und den Kaufdaten (Käuferkennung und Transaktionsnummer von RevenueCat), um sicherzustellen, dass der Kauf bezahlt wurde und nur einmal angerechnet wird. Sie werden mit einem ADAM-L-Spezialisten verbunden, der die Auswertung erstellt. Danach gilt alles, was oben für My guide beschrieben ist: was der Spezialist sieht, wie Nachrichten gespeichert werden und wie Sie die Einwilligung widerrufen. Wenn das Fragefenster schließt, werden keine neuen Daten mehr an den Spezialisten übermittelt.</p>
+    <p><strong>Wenn du ein Kennenlerngespräch buchst</strong>, übermittelt Cal.com uns die Buchung (Name, E-Mail-Adresse, Uhrzeit), und wir leiten sie an die Fachperson weiter, auch als Benachrichtigung (Telegram).</p>
+    <p>Du kannst deine Einwilligung jederzeit mit „Einwilligung widerrufen und trennen“ auf demselben Bildschirm widerrufen — die Verbindung endet sofort, und es wird nichts mehr gesendet. Um den Verbindungseintrag, die Daten und die bereits geteilten Nachrichten vollständig löschen zu lassen, schreibe an <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> von der verwendeten E-Mail-Adresse; wir löschen sie innerhalb von 30 Tagen. Rechtsgrundlage: deine ausdrückliche Einwilligung — Art. 6 Abs. 1 lit. a DSGVO und für Gesundheitsdaten Art. 9 Abs. 2 lit. a.</p>
+    <p>Wir <strong>verkaufen</strong> deine personenbezogenen Daten nicht und nutzen sie nicht für Werbung.</p>
+    <h2>7. Internationale Übermittlungen</h2>
+    <p>Die genannten Anbieter können Anfragedaten in den USA verarbeiten. Solche Übermittlungen beruhen auf den <strong>Standardvertragsklauseln</strong> der Europäischen Kommission und den ergänzenden Garantien jedes Anbieters.</p>
+    <h2>8. Speicherdauer</h2>
+    <p>Daten auf dem Gerät bleiben, bis du sie in der App löschst oder die App deinstallierst — du hast die Kontrolle. Für eine KI-Anfrage gesendete Daten werden nicht gespeichert; eine erstellte Übersicht wird höchstens 72 Stunden aufbewahrt (Abschnitt 5). Daten, die du zur Verbesserung der App teilst, bleiben gespeichert, bis du deinen Beitrag löschst. Ein My-guide-Verbindungseintrag (Abschnitt 6) bleibt gespeichert, bis du uns um Löschung bittest. Einen anderen Wellness-Verlauf speichern wir nicht auf unseren Servern. Wenn du mit einer Fachperson teilst, werden bereits geteilte Check-ins, Auswertungen und Nachrichten aufbewahrt, bis du uns um Löschung bittest.</p>
+    <h2>9. Deine Rechte</h2>
+    <p>Je nach Wohnort hast du möglicherweise das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung oder Widerspruch, auf Datenübertragbarkeit und auf Widerruf der Einwilligung. Da deine Daten auf deinem Gerät liegen, kannst du das meiste jederzeit direkt in der App tun.</p>
+    <p><strong>EU/UK (DSGVO):</strong> du hast zudem das Recht, dich bei deiner lokalen Aufsichtsbehörde zu beschweren. <strong>Kalifornien (CCPA/CPRA):</strong> du hast das Recht auf Auskunft, Löschung und Widerspruch gegen „Verkauf"/„Weitergabe" — wir tun beides nicht.</p>
+    <p><strong>Bundesstaat Washington (My Health My Data Act):</strong> Sie haben das Recht, Ihre Gesundheitsdaten zu löschen, nicht nur das Konto. Die App tut das direkt: <strong>„Meine Gesundheitsdaten löschen“</strong> im Abschnitt „Sicherung und Datenlöschung“ entfernt alles sofort vom Gerät. Daneben exportiert <strong>„Backup speichern“</strong> eine verschlüsselte Kopie.</p>
+    <p>Für eine Anfrage schreibe an <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. Wir antworten innerhalb von 30 Tagen (15 Tage bei Anfragen aus Kalifornien).</p>
+    <h2>10. Kinder</h2>
+    <p>Die App richtet sich an Erwachsene <strong>ab 18 Jahren</strong>. Wir erheben wissentlich keine Daten von Minderjährigen. Wenn du glaubst, dass ein Minderjähriger die App genutzt hat, schreibe an <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> und wir helfen.</p>
+    <h2>11. Sicherheit</h2>
+    <p>Wellness-Daten werden auf deinem Gerät verschlüsselt gespeichert und über verschlüsselte (TLS) Verbindungen gesendet. Keine Speicher- oder Übertragungsmethode ist völlig sicher, aber wir treffen der Sensibilität der Daten angemessene Maßnahmen.</p>
+    <h2>12. Änderungen</h2>
+    <p>Wir können diese Erklärung aktualisieren. Wesentliche Änderungen spiegeln sich im Datum „Zuletzt aktualisiert" wider und werden ggf. in der App hervorgehoben.</p>
+    <h2>13. Kontakt</h2>
+    <p>Datenschutzanfragen: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Allgemeiner Support: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
+
+  <!-- ============ PT ============ -->
+  <div data-lang="pt">
+    <div class="page-eyebrow"><span>Política de Privacidade</span></div>
+    <h1>Política de Privacidade</h1>
+    <p class="page-date">ADAM-L AI assistant · Última atualização: 2 de outubro de 2026</p>
+    <p class="intro">Esta política explica como a app <strong>ADAM-L AI assistant</strong> trata as suas informações. A app é uma <strong>ferramenta geral de bem-estar e educação</strong>. <strong>Não é um dispositivo médico</strong>, não fornece aconselhamento médico, diagnóstico ou tratamento e não substitui um profissional qualificado.</p>
+    <h2>1. Quem somos</h2>
+    <p>O responsável pelos seus dados é <strong>Kyrylo Selivanov</strong>, particular residente na Ucrânia ("nós"). Não nomeámos um Encarregado de Proteção de Dados; o responsável trata diretamente de todos os pedidos de privacidade.</p>
+    <p>Contacto de privacidade: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Suporte geral: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. Âmbito</h2>
+    <p>Esta política aplica-se apenas à aplicação móvel <strong>ADAM-L AI assistant</strong> e aos seus níveis de subscrição. Não abrange qualquer site ou serviço separado.</p>
+    <h2>3. O que é a app</h2>
+    <p>A app permite registar marcadores de bem-estar autodeclarados (como qualidade do sono, energia, atividade, hábitos alimentares e objetivos pessoais) e, ler opcionalmente métricas de bem-estar do Apple Health ou Health Connect com a sua permissão. Utiliza um modelo de inteligência artificial para dar <strong>sugestões gerais e não médicas de nutrição e estilo de vida</strong> para educação e autocuidado.</p>
+    <h2>4. Informação que tratamos</h2>
+    <ul>
+      <li><strong>Dados de bem-estar que introduz</strong> — autoavaliações subjetivas e marcadores de estilo de vida que decide fornecer.</li>
+      <li><strong>Métricas de wearables (opcional)</strong> — dados que autoriza expressamente a ler do Apple Health / Health Connect no seu dispositivo. Concretamente, e apenas os tipos que autorizar: sono, passos, treinos (sessões de exercício), frequência cardíaca, frequência cardíaca em repouso, variabilidade da frequência cardíaca (VFC), frequência respiratória, saturação de oxigénio no sangue, VO₂ máx, peso, pressão arterial, percentagem de gordura corporal, temperatura noturna do pulso e glicemia. São usados apenas para criar o seu resumo diário de bem-estar e sugestões (por exemplo, a recuperação face ao seu nível habitual ou ajustar a atividade de hoje após o treino de ontem). Estes dados nunca são usados para publicidade e nunca são vendidos.</li>
+      <li><strong>Os seus objetivos e áreas de foco</strong> — para personalizar as sugestões.</li>
+      <li><strong>Dados técnicos mínimos</strong> — versão da app e o pedido de rede necessário para gerar uma resposta de IA.</li>
+      <li><strong>Fotos de exames laboratoriais (opcional)</strong> — apenas se tocar em «Ler da foto». A foto é enviada por uma ligação encriptada ao nosso serviço de processamento e ao modelo de IA unicamente para ler os números, não é guardada e é descartada após a resposta. Os valores são guardados apenas no seu dispositivo e só depois de os verificar e confirmar.</li>
+    </ul>
+    <p>A app <strong>não tem conta nem início de sessão</strong>. Não precisa de indicar o seu nome ou email para a utilizar. A única exceção é a ligação opcional <strong>My guide</strong> descrita na secção 6: se decidir ligar-se a um especialista, indica o seu email e, se quiser, o seu nome.</p>
+    <p>Como estes dados podem referir-se ao seu bem-estar físico, tratamo-los como categoria especial de dados pessoais e apenas com o seu <strong>consentimento explícito</strong> (RGPD Artigo 6.º(1)(a) e Artigo 9.º(2)(a)). Pode retirar o consentimento a qualquer momento apagando os seus dados na app ou desinstalando-a.</p>
+    <h2>5. Onde os seus dados são guardados</h2>
+    <p>Os seus dados de bem-estar e histórico são guardados <strong>localmente no seu dispositivo</strong>, cifrados, e <strong>não são mantidos permanentemente nos nossos servidores</strong> (ver a salvaguarda temporária abaixo). Para gerar uma sugestão de IA, os dados necessários para o pedido são enviados por ligação cifrada ao nosso serviço de processamento e ao fornecedor de IA, usados apenas para produzir a sua resposta e <strong>não retidos</strong> além da curta vida técnica do pedido.</p>
+    <p>A análise gerada é adicionalmente mantida no nosso serviço de processamento por <strong>no máximo 72 horas</strong> e depois é apagada automaticamente. É uma salvaguarda para o caso de a resposta não chegar ao seu dispositivo (a ligação caiu, a aplicação foi fechada): pode recuperar a sua análise sem a pedir de novo. O registo é pseudonimizado — está ligado a um identificador aleatório do dispositivo, sem nome, e-mail ou código de acesso.</p>
+    <p><strong>Opcional: ajudar a melhorar o aplicativo.</strong> À parte do acima, você pode ativar «Ajudar a melhorar o ADAM-L» — por padrão está <strong>desativado</strong>. Enquanto estiver ativo, os números de cada dia concluído (métricas do monitor, suas avaliações, medições caseiras de pressão, peso e cintura, versões de esquema e pesos) são enviados ao nosso serviço de processamento e guardados lá sob o mesmo identificador aleatório do dispositivo, para calibrar o aplicativo com dados reais. Tudo o que você escreveu com suas palavras é recusado pelo servidor e nunca sai do dispositivo. Desativar interrompe de imediato; «Excluir minha contribuição» apaga tudo o que já foi enviado desta instalação. Base legal: seu consentimento explícito — RGPD Artigo 6(1)(a) com Artigo 9(2)(a). O texto completo está na página «Ajudar a melhorar o ADAM-L». Se houver um «Foco da semana» em curso, enviamos também qual é o passo, se você o marcou como feito naquele dia e como o experimento terminou; as categorias da sua queixa principal escolhidas na lista (nunca suas palavras); e sexo, idade em faixas de cinco anos e a fase indicada no questionário.</p>
+    <p><strong>Opcional: partilha com o seu especialista.</strong> Se se ligar a um especialista no ecrã My guide e deixar a partilha ligada, os seus registos diários, o texto das suas análises e as suas mensagens são guardados na ficha de cliente desse especialista no nosso serviço (Cloudflare) — é assim que o especialista os vê. Nada é partilhado sem que se ligue e dê consentimento; os detalhes e como parar estão na secção 6.</p>
+    <p><strong>Opcional: A dois.</strong> Se formar um par por código com uma pessoa que escolheu (parceiro, amiga, familiar), essa pessoa vê apenas o nome que indicar para ela, o seu passo da semana, o dia da semana e as marcações diárias «feito / não feito». Dados de saúde, análises e registos não são partilhados. Guardamos estes poucos campos no nosso servidor apenas enquanto estiverem em par; pode sair a qualquer momento.</p>
+    <h2>6. Prestadores de serviços</h2>
+    <ul>
+      <li><strong>Anthropic PBC (EUA)</strong> — fornece o modelo de IA (Claude) que gera sugestões a partir dos dados enviados num pedido.</li>
+      <li><strong>Cloudflare, Inc. (EUA)</strong> — aloja o serviço de retransmissão de pedidos; qualquer armazenamento técnico temporário usa expiração automática.</li>
+      <li><strong>Apple / Google</strong> — distribuem a app e fornecem a permissão de dados de saúde no dispositivo (Apple Health / Health Connect). Recebem apenas o que as suas plataformas exigem para a distribuição.</li>
+      <li><strong>RevenueCat, Inc. (EUA)</strong> — verifica o estado da subscrição que compra através da Apple ou da Google. Recebe os dados da compra e um identificador aleatório de utilizador da app — sem nome, email ou dados de saúde.</li>
+      <li><strong>Oura, Google (Fitbit), Polar, Withings — opcional</strong> — apenas se ligar diretamente a conta de um dispositivo. Inicia sessão na página do próprio fabricante; o nosso serviço de retransmissão usa o acesso concedido para trazer as suas métricas para a app e não as armazena. As credenciais de acesso expiram automaticamente (no máximo em 30 dias). Se ligar a Oura, isto inclui também as etiquetas que adiciona na app Oura (por exemplo, sintomas).</li>
+      <li><strong>Cal.com, Inc. (EUA) — opcional</strong> — marcação de uma chamada de apresentação no ecrã My guide. O que introduz na página de marcação é tratado segundo a política de privacidade da Cal.com.</li>
+    </ul>
+    <h3>Opcional: My guide (especialistas independentes)</h3>
+    <p>O ecrã <strong>My guide</strong> mostra especialistas independentes que utilizam a plataforma ADAM-L. Cada especialista presta os seus próprios serviços e é responsável por eles; a ADAM-L fornece o software.</p>
+    <p><strong>Se se ligar a um especialista</strong> através do código dele, indica o seu email, opcionalmente o seu nome, e dá o seu consentimento explícito. Guardamos isto, juntamente com a data do consentimento e o especialista escolhido, na nossa base de dados (Cloudflare).</p>
+    <p><strong>O que o especialista vê.</strong> Enquanto o interruptor «O meu guia vê os meus dados do dia» estiver ligado, cada registo diário que concluir é também enviado ao especialista a que se ligou: as suas respostas sobre como se sente, o motivo por que veio, as leituras dos dispositivos — incluindo os dados que permitiu à app ler do Apple Health ou do Health Connect — e o texto da sua análise. Pode desligar o interruptor a qualquer momento no ecrã My guide: a ligação e as suas mensagens mantêm-se e nada de novo é enviado. Os dados de saúde são partilhados apenas com o especialista que escolheu; nunca os usamos para publicidade nem os vendemos.</p>
+    <p><strong>Valores de exames.</strong> Enquanto o interruptor estiver ligado, os valores de exames que você insere ou confirma a partir de uma foto do exame (valor, unidade e data) também são enviados a esse especialista. Sempre que você os altera, o conjunto na ficha é substituído pelo atual.</p>
+     <p><strong>Mensagens.</strong> As mensagens e fotos que envia ao especialista no ecrã My guide são guardadas na nossa base de dados e armazenamento de ficheiros (Cloudflare) e ficam visíveis para esse especialista. As respostas do especialista podem ser traduzidas automaticamente para o seu idioma. As fotos e as mensagens de voz são guardadas até 365 dias; o microfone só é usado enquanto grava uma mensagem de voz.</p>
+    <p><strong>Análise avulsa com especialista.</strong> Ao comprar uma análise, indica o seu email, opcionalmente o seu nome, e dá o seu consentimento explícito. Guardamos estes dados juntamente com a data do consentimento e os dados da compra (o identificador do comprador e o número da transação da RevenueCat) para confirmar que a compra foi paga e é contabilizada uma única vez. Fica ligado a um especialista ADAM-L que prepara a análise. A partir daí aplica-se tudo o que foi descrito acima para My guide: o que o especialista vê, como as mensagens são guardadas e como retirar o consentimento. Quando o prazo de perguntas termina, deixam de ser partilhados novos dados com o especialista.</p>
+    <p><strong>Se marcar uma chamada de apresentação</strong>, a Cal.com transmite-nos a marcação (nome, email, hora) e reencaminhamo-la ao especialista, incluindo como mensagem de notificação (Telegram).</p>
+    <p>Pode retirar o consentimento a qualquer momento com «Retirar consentimento e desligar» no mesmo ecrã — a ligação termina de imediato e nada mais é enviado. Para eliminar por completo o registo de ligação, os dados e as mensagens já partilhados, escreva para <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> a partir do email que usou; eliminamo-los no prazo de 30 dias. Base jurídica: o seu consentimento explícito — artigo 6.º, n.º 1, alínea a) do RGPD e, para dados de saúde, artigo 9.º, n.º 2, alínea a).</p>
+    <p><strong>Não vendemos</strong> as suas informações pessoais nem as usamos para publicidade.</p>
+    <h2>7. Transferências internacionais</h2>
+    <p>Os fornecedores acima podem processar dados do pedido nos Estados Unidos. Tais transferências baseiam-se nas <strong>Cláusulas Contratuais-Tipo</strong> da Comissão Europeia e nas garantias suplementares de cada fornecedor.</p>
+    <h2>8. Conservação</h2>
+    <p>Os dados no dispositivo permanecem até os apagar na app ou desinstalar a app — o controlo é seu. Os dados enviados para um pedido de IA não são guardados; um resumo gerado é guardado no máximo 72 horas (secção 5). Os dados partilhados para ajudar a melhorar a app são guardados até eliminar a sua contribuição. O registo de uma ligação My guide (secção 6) é guardado até nos pedir para o eliminar. Não guardamos qualquer outro histórico de bem-estar nos nossos servidores. Se partilhar com um especialista, os registos, análises e mensagens já partilhados são guardados até nos pedir para os eliminar.</p>
+    <h2>9. Os seus direitos</h2>
+    <p>Consoante o local onde vive, pode ter direito de acesso, retificação, apagamento, limitação ou oposição ao tratamento, portabilidade e retirada do consentimento. Como os seus dados estão no seu dispositivo, pode exercer a maioria diretamente na app a qualquer momento.</p>
+    <p><strong>UE/RU (RGPD):</strong> tem ainda o direito de apresentar reclamação à sua autoridade de controlo local. <strong>Califórnia (CCPA/CPRA):</strong> tem o direito de saber, apagar e recusar a "venda"/"partilha" — não fazemos nenhuma.</p>
+    <p><strong>Estado de Washington (My Health My Data Act):</strong> você tem o direito de excluir seus dados de saúde, não apenas a conta. O app faz isso direto: <strong>«Excluir meus dados de saúde»</strong> na seção «Backup e exclusão de dados» apaga tudo deste dispositivo na hora. Ao lado, <strong>«Salvar backup»</strong> exporta um arquivo criptografado.</p>
+    <p>Para um pedido, escreva para <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. Respondemos em 30 dias (15 para pedidos da Califórnia).</p>
+    <h2>10. Crianças</h2>
+    <p>A app destina-se a adultos com <strong>18 anos ou mais</strong>. Não recolhemos conscientemente dados de menores. Se acredita que um menor usou a app, escreva para <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> e ajudaremos.</p>
+    <h2>11. Segurança</h2>
+    <p>Os dados de bem-estar são cifrados em repouso no seu dispositivo e enviados por ligações cifradas (TLS). Nenhum método de armazenamento ou transmissão é totalmente seguro, mas aplicamos medidas adequadas à sensibilidade dos dados.</p>
+    <h2>12. Alterações</h2>
+    <p>Podemos atualizar esta política. Alterações materiais serão refletidas na data de "Última atualização" e, quando adequado, destacadas na app.</p>
+    <h2>13. Contacto</h2>
+    <p>Questões de privacidade: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Suporte geral: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
+
+  <!-- ============ FR ============ -->
+  <div data-lang="fr">
+    <div class="page-eyebrow"><span>Politique de confidentialité</span></div>
+    <h1>Politique de confidentialité</h1>
+    <p class="page-date">ADAM-L AI assistant · Dernière mise à jour : 2 octobre 2026</p>
+    <p class="intro">Cette politique explique comment l'application <strong>ADAM-L AI assistant</strong> traite vos informations. L'application est un <strong>outil général de bien-être et d'éducation</strong>. Ce <strong>n'est pas un dispositif médical</strong>, elle ne fournit pas de conseil médical, de diagnostic ni de traitement et ne remplace pas un professionnel qualifié.</p>
+    <h2>1. Qui nous sommes</h2>
+    <p>Le responsable de vos données est <strong>Kyrylo Selivanov</strong>, un particulier résidant en Ukraine (« nous »). Nous n'avons pas désigné de délégué à la protection des données ; toutes les demandes relatives à la vie privée sont traitées directement par le responsable.</p>
+    <p>Contact confidentialité : <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Support général : <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. Champ d'application</h2>
+    <p>Cette politique s'applique uniquement à l'application mobile <strong>ADAM-L AI assistant</strong> et à ses niveaux par abonnement. Elle ne couvre aucun site web ni service distinct.</p>
+    <h2>3. Ce qu'est l'application</h2>
+    <p>L'application vous permet d'enregistrer des marqueurs de bien-être auto-déclarés (comme la qualité du sommeil, l'énergie, l'activité, les habitudes alimentaires et vos objectifs personnels) et, de lire en option des mesures de bien-être depuis Apple Health ou Health Connect avec votre autorisation. Elle utilise un modèle d'intelligence artificielle pour fournir des <strong>suggestions générales et non médicales de nutrition et de mode de vie</strong>, à des fins d'éducation et d'auto-soin.</p>
+    <h2>4. Informations que nous traitons</h2>
+    <ul>
+      <li><strong>Données de bien-être que vous saisissez</strong> — auto-évaluations subjectives et marqueurs de mode de vie que vous choisissez de fournir.</li>
+      <li><strong>Mesures d'objets connectés </strong> — données que vous autorisez expressément l'application à lire depuis Apple Health / Health Connect sur votre appareil. Concrètement, et uniquement les types que vous autorisez : sommeil, pas, entraînements (séances d'exercice), fréquence cardiaque, fréquence cardiaque au repos, variabilité de la fréquence cardiaque (VFC), fréquence respiratoire, saturation en oxygène du sang, VO₂ max, poids, tension artérielle, pourcentage de masse grasse, température nocturne du poignet et glycémie. Elles servent uniquement à votre aperçu bien-être quotidien et à vos suggestions (par exemple la récupération par rapport à votre niveau habituel, ou l'ajustement de l'activité du jour après l'entraînement de la veille). Ces données ne sont jamais utilisées à des fins publicitaires ni vendues.</li>
+      <li><strong>Vos objectifs et axes de focus</strong> — pour personnaliser les suggestions.</li>
+      <li><strong>Données techniques minimales</strong> — version de l'application et requête réseau nécessaire pour générer une réponse d'IA.</li>
+      <li><strong>Photos de comptes rendus d'analyses (facultatif)</strong> — uniquement si vous appuyez sur « Lire depuis une photo ». La photo est envoyée via une connexion chiffrée à notre service de traitement et au modèle d'IA dans le seul but de lire les chiffres, n'est pas conservée et est supprimée une fois la réponse renvoyée. Les valeurs sont enregistrées uniquement sur votre appareil, et seulement après que vous les avez vérifiées et validées.</li>
+    </ul>
+    <p>L’application <strong>n’a ni compte ni connexion</strong>. Vous n’avez pas besoin de fournir votre nom ou votre e-mail pour l’utiliser. La seule exception est la connexion facultative <strong>My guide</strong> décrite à la section 6 : si vous choisissez de vous connecter à un spécialiste, vous indiquez votre e-mail et, si vous le souhaitez, votre nom.</p>
+    <p>Comme ces données peuvent concerner votre bien-être physique, nous les traitons comme une catégorie particulière de données personnelles et uniquement avec votre <strong>consentement explicite</strong> (RGPD article 6(1)(a) et article 9(2)(a)). Vous pouvez retirer votre consentement à tout moment en supprimant vos données dans l'application ou en la désinstallant.</p>
+    <h2>5. Où vos données sont stockées</h2>
+    <p>Vos données de bien-être et votre historique sont stockés <strong>localement sur votre appareil</strong>, sous forme chiffrée, et <strong>ne sont pas conservés durablement sur nos serveurs</strong> (voir la sécurité temporaire ci-dessous). Pour générer une suggestion d'IA, les données nécessaires à la requête sont envoyées par connexion chiffrée à notre service de traitement et au fournisseur d'IA, utilisées uniquement pour produire votre réponse et <strong>non conservées</strong> au-delà de la brève durée technique de la requête.</p>
+    <p>Le bilan généré est en outre conservé sur notre service de traitement <strong>pendant 72 heures au maximum</strong>, puis supprimé automatiquement. C’est une sécurité si la réponse n’a pas atteint votre appareil (connexion coupée, application fermée) : vous pourrez récupérer votre bilan sans en demander un nouveau. L’enregistrement est pseudonymisé — il est lié à un identifiant d’appareil aléatoire, sans nom, e-mail ni code d’accès.</p>
+    <p><strong>Facultatif : aider à améliorer l’application.</strong> Indépendamment de ce qui précède, vous pouvez activer « Aider à améliorer ADAM-L » — c’est <strong>désactivé</strong> par défaut. Tant que c’est actif, les chiffres de chaque journée terminée (mesures de la montre, vos évaluations, tensions mesurées à domicile, poids et tour de taille, versions du schéma et des pondérations) sont envoyés à notre service de traitement et y sont conservés sous le même identifiant d’appareil aléatoire, afin de calibrer l’application sur des données réelles. Tout ce que vous avez écrit avec vos mots est refusé par le serveur et ne quitte jamais l’appareil. Désactiver arrête immédiatement ; « Supprimer ma contribution » efface tout ce qui a déjà été envoyé depuis cette installation. Base légale : votre consentement explicite — RGPD Article 6(1)(a) avec Article 9(2)(a). Le texte complet figure sur la page « Aider à améliorer ADAM-L ». Si un « Focus de la semaine » est en cours, nous envoyons aussi de quelle étape il s’agit, si vous l’avez marquée comme faite ce jour-là et comment l’expérience s’est terminée ; les catégories de votre plainte principale choisies dans la liste (jamais vos propres mots) ; ainsi que votre sexe, votre âge par tranches de cinq ans et l’étape de vie indiquée dans le questionnaire.</p>
+    <p><strong>Facultatif : partage avec votre spécialiste.</strong> Si vous vous connectez à un spécialiste sur l’écran My guide et laissez le partage activé, vos bilans quotidiens, le texte de vos analyses et vos messages sont conservés dans la fiche client de ce spécialiste sur notre service (Cloudflare) — c’est ainsi qu’il peut les voir. Rien n’est partagé sans connexion ni consentement ; les détails et la façon d’arrêter figurent à la section 6.</p>
+    <p><strong>Facultatif : À deux.</strong> Si vous formez une paire par code avec une personne de votre choix (partenaire, amie, proche), elle ne voit que le nom que vous indiquez pour elle, votre étape de la semaine, le jour de la semaine et vos coches quotidiennes « fait / pas fait ». Aucune donnée de santé, analyse ou saisie n’est partagée. Nous conservons ces quelques champs sur notre serveur uniquement pendant que vous êtes en paire ; vous pouvez la quitter à tout moment.</p>
+    <h2>6. Prestataires</h2>
+    <ul>
+      <li><strong>Anthropic PBC (États-Unis)</strong> — fournit le modèle d'IA (Claude) qui génère les suggestions à partir des données envoyées pour une requête.</li>
+      <li><strong>Cloudflare, Inc. (États-Unis)</strong> — héberge le service de relais des requêtes ; tout stockage technique temporaire utilise une expiration automatique.</li>
+      <li><strong>Apple / Google</strong> — distribuent l'application et fournissent l'autorisation d'accès aux données de santé sur l'appareil (Apple Health / Health Connect). Ils ne reçoivent que ce que leurs plateformes exigent pour la distribution.</li>
+      <li><strong>RevenueCat, Inc. (États-Unis)</strong> — vérifie le statut de l’abonnement que vous achetez via Apple ou Google. Reçoit les données d’achat et un identifiant aléatoire d’utilisateur de l’application — sans nom, e-mail ni données de santé.</li>
+      <li><strong>Oura, Google (Fitbit), Polar, Withings — facultatif</strong> — uniquement si vous connectez directement le compte d’un appareil. Vous vous identifiez sur la page du fabricant ; notre service relais utilise l’accès accordé pour importer vos mesures dans l’application et ne les conserve pas. Les identifiants d’accès expirent automatiquement (au plus tard après 30 jours). Si vous connectez Oura, cela comprend aussi les étiquettes que vous ajoutez vous-même dans l’app Oura (par exemple, des symptômes).</li>
+      <li><strong>Cal.com, Inc. (États-Unis) — facultatif</strong> — réservation d’un appel de présentation sur l’écran My guide. Ce que vous saisissez sur la page de réservation est traité selon la politique de confidentialité de Cal.com.</li>
+    </ul>
+    <h3>Facultatif : My guide (spécialistes indépendants)</h3>
+    <p>L’écran <strong>My guide</strong> présente des spécialistes indépendants qui utilisent la plateforme ADAM-L. Chaque spécialiste fournit ses propres services et en est responsable ; ADAM-L fournit le logiciel.</p>
+    <p><strong>Si vous vous connectez à un spécialiste</strong> avec son code, vous indiquez votre e-mail, éventuellement votre nom, et donnez votre consentement explicite. Nous les conservons, avec la date du consentement et le spécialiste choisi, dans notre base de données (Cloudflare).</p>
+    <p><strong>Ce que voit le spécialiste.</strong> Tant que l’interrupteur « Mon guide voit mes données du jour » est activé, chaque bilan quotidien que vous terminez est aussi envoyé au spécialiste auquel vous êtes connecté : vos réponses sur votre ressenti, le motif pour lequel vous êtes venu, les relevés des appareils — y compris les données que vous avez autorisé l’app à lire dans Apple Health ou Health Connect — et le texte de votre analyse. Vous pouvez désactiver l’interrupteur à tout moment sur l’écran My guide : le lien et vos messages restent, et rien de nouveau n’est envoyé. Les données de santé ne sont partagées qu’avec le spécialiste que vous avez choisi ; nous ne les utilisons jamais à des fins publicitaires et ne les vendons pas.</p>
+    <p><strong>Valeurs d'analyses.</strong> Tant que l'interrupteur est activé, les valeurs d'analyses que vous saisissez ou validez depuis une photo du compte rendu (valeur, unité et date) sont aussi envoyées à ce spécialiste. À chaque modification, l'ensemble de la fiche est remplacé par l'ensemble actuel.</p>
+     <p><strong>Messages.</strong> Les messages et photos que vous envoyez au spécialiste sur l’écran My guide sont conservés dans notre base de données et notre stockage de fichiers (Cloudflare) et sont visibles par ce spécialiste. Ses réponses peuvent être traduites automatiquement dans votre langue. Les photos et les messages vocaux sont conservés jusqu’à 365 jours ; le micro n’est utilisé que pendant l’enregistrement d’un message vocal.</p>
+    <p><strong>Analyse ponctuelle par un spécialiste.</strong> Lorsque vous achetez une analyse, vous indiquez votre e-mail, éventuellement votre nom, et donnez votre consentement explicite. Nous les conservons avec la date du consentement et les données d’achat (l’identifiant d’acheteur et le numéro de transaction fournis par RevenueCat) afin de vérifier que l’achat a été payé et n’est compté qu’une fois. Vous êtes mis en relation avec un spécialiste ADAM-L qui prépare l’analyse. Ensuite s’applique tout ce qui est décrit ci-dessus pour My guide : ce que voit le spécialiste, comment les messages sont conservés et comment retirer votre consentement. Lorsque la période de questions se termine, aucune nouvelle donnée n’est transmise au spécialiste.</p>
+    <p><strong>Si vous réservez un appel de présentation</strong>, Cal.com nous transmet la réservation (nom, e-mail, heure) et nous la transférons au spécialiste, y compris sous forme de notification (Telegram).</p>
+    <p>Vous pouvez retirer votre consentement à tout moment avec « Retirer le consentement et se déconnecter » sur le même écran — le lien prend fin immédiatement et plus rien n’est envoyé. Pour faire supprimer entièrement l’enregistrement de connexion, les données et les messages déjà partagés, écrivez à <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> depuis l’e-mail utilisé ; nous les supprimons sous 30 jours. Base juridique : votre consentement explicite — article 6(1)(a) du RGPD et, pour les données de santé, article 9(2)(a).</p>
+    <p>Nous <strong>ne vendons pas</strong> vos informations personnelles et ne les utilisons pas à des fins publicitaires.</p>
+    <h2>7. Transferts internationaux</h2>
+    <p>Les prestataires ci-dessus peuvent traiter les données de requête aux États-Unis. Ces transferts reposent sur les <strong>clauses contractuelles types</strong> de la Commission européenne et les garanties supplémentaires de chaque prestataire.</p>
+    <h2>8. Conservation</h2>
+    <p>Les données sur l’appareil y restent jusqu’à ce que vous les supprimiez dans l’application ou désinstalliez celle-ci — vous gardez le contrôle. Les données envoyées pour une requête d’IA ne sont pas conservées ; un aperçu généré est conservé au maximum 72 heures (section 5). Les données partagées pour aider à améliorer l’application sont conservées jusqu’à ce que vous supprimiez votre contribution. L’enregistrement d’une connexion My guide (section 6) est conservé jusqu’à ce que vous nous demandiez de le supprimer. Nous ne conservons aucun autre historique de bien-être sur nos serveurs. Si vous partagez avec un spécialiste, les bilans, analyses et messages déjà partagés sont conservés jusqu’à ce que vous nous demandiez de les supprimer.</p>
+    <h2>9. Vos droits</h2>
+    <p>Selon votre lieu de résidence, vous pouvez avoir le droit d'accès, de rectification, d'effacement, de limitation ou d'opposition au traitement, à la portabilité et au retrait du consentement. Comme vos données se trouvent sur votre appareil, vous pouvez exercer l'essentiel directement dans l'application à tout moment.</p>
+    <p><strong>UE/RU (RGPD) :</strong> vous avez aussi le droit d'introduire une réclamation auprès de votre autorité de contrôle locale. <strong>Californie (CCPA/CPRA) :</strong> vous avez le droit de savoir, de supprimer et de refuser la « vente »/« partage » — nous ne faisons ni l'un ni l'autre.</p>
+    <p><strong>État de Washington (My Health My Data Act) :</strong> vous avez le droit de supprimer vos données de santé, et pas seulement votre compte. L’application le fait directement : <strong>« Supprimer mes données de santé »</strong> dans la section « Sauvegarde et suppression des données » efface tout de cet appareil immédiatement. À côté, <strong>« Enregistrer la sauvegarde »</strong> exporte un fichier chiffré.</p>
+    <p>Pour une demande, écrivez à <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. Nous répondons sous 30 jours (15 jours pour les demandes de Californie).</p>
+    <h2>10. Enfants</h2>
+    <p>L'application est destinée aux adultes de <strong>18 ans et plus</strong>. Nous ne collectons pas sciemment de données de mineurs. Si vous pensez qu'un mineur a utilisé l'application, écrivez à <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> et nous vous aiderons.</p>
+    <h2>11. Sécurité</h2>
+    <p>Les données de bien-être sont chiffrées au repos sur votre appareil et envoyées via des connexions chiffrées (TLS). Aucune méthode de stockage ou de transmission n'est totalement sûre, mais nous appliquons des mesures adaptées à la sensibilité des données.</p>
+    <h2>12. Modifications</h2>
+    <p>Nous pouvons mettre à jour cette politique. Les changements importants seront reflétés dans la date de « Dernière mise à jour » et, le cas échéant, signalés dans l'application.</p>
+    <h2>13. Contact</h2>
+    <p>Questions de confidentialité : <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Support général : <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
+
+  <!-- ============ PL ============ -->
+  <div data-lang="pl">
+    <div class="page-eyebrow"><span>Polityka prywatności</span></div>
+    <h1>Polityka prywatności</h1>
+    <p class="page-date">ADAM-L AI assistant · Ostatnia aktualizacja: 2 października 2026</p>
+    <p class="intro">Niniejsza polityka wyjaśnia, jak aplikacja <strong>ADAM-L AI assistant</strong> postępuje z Twoimi informacjami. Aplikacja to ogólne <strong>narzędzie wellness i edukacyjne</strong>. <strong>Nie jest wyrobem medycznym</strong>, nie udziela porad medycznych, diagnozy ani leczenia i nie zastępuje wykwalifikowanego specjalisty.</p>
+    <h2>1. Kim jesteśmy</h2>
+    <p>Administratorem Twoich danych jest <strong>Kyrylo Selivanov</strong>, osoba fizyczna zamieszkała na Ukrainie („my"). Nie wyznaczyliśmy Inspektora Ochrony Danych; wszystkie zapytania dotyczące prywatności obsługuje bezpośrednio administrator.</p>
+    <p>Kontakt ws. prywatności: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Wsparcie ogólne: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. Zakres</h2>
+    <p>Niniejsza polityka dotyczy wyłącznie aplikacji mobilnej <strong>ADAM-L AI assistant</strong> i jej subskrypcji. Nie obejmuje żadnej odrębnej strony ani usługi.</p>
+    <h2>3. Czym jest aplikacja</h2>
+    <p>Aplikacja pozwala rejestrować samodzielnie podawane wskaźniki wellness (np. jakość snu, energię, aktywność, nawyki żywieniowe i cele osobiste) oraz — opcjonalnie odczytywać wskaźniki wellness z Apple Health lub Health Connect za Twoją zgodą. Wykorzystuje model sztucznej inteligencji, aby udzielać <strong>ogólnych, niemedycznych sugestii dotyczących odżywiania i stylu życia</strong> w celach edukacyjnych i samopomocy.</p>
+    <h2>4. Jakie dane przetwarzamy</h2>
+    <ul>
+      <li><strong>Dane wellness, które wprowadzasz</strong> — subiektywne samooceny i wskaźniki stylu życia, które zdecydujesz się podać.</li>
+      <li><strong>Wskaźniki z urządzeń noszonych </strong> — dane, na których odczyt z Apple Health / Health Connect na Twoim urządzeniu wyraźnie zezwalasz. Konkretnie i tylko te typy, na które pozwolisz: sen, kroki, treningi, tętno, tętno spoczynkowe, zmienność rytmu serca (HRV), częstość oddechów, saturacja krwi tlenem, VO₂ max, waga, ciśnienie krwi, zawartość tkanki tłuszczowej, nocna temperatura nadgarstka i poziom glukozy we krwi. Służą wyłącznie do codziennego podsumowania wellness i wskazówek (np. regeneracja w porównaniu z Twoim zwykłym poziomem albo dopasowanie dzisiejszej aktywności po wczorajszym treningu). Te dane nigdy nie są wykorzystywane do reklam i nigdy nie są sprzedawane.</li>
+      <li><strong>Twoje cele i obszary skupienia</strong> — do personalizacji sugestii.</li>
+      <li><strong>Minimalne dane techniczne</strong> — wersja aplikacji i zapytanie sieciowe potrzebne do wygenerowania odpowiedzi AI.</li>
+      <li><strong>Zdjęcia wyników badań (opcjonalnie)</strong> — tylko jeśli dotkniesz «Odczytaj ze zdjęcia». Zdjęcie jest wysyłane szyfrowanym połączeniem do naszej usługi przetwarzania i modelu AI wyłącznie w celu odczytania liczb, nie jest przechowywane i jest usuwane po udzieleniu odpowiedzi. Wartości są zapisywane tylko na Twoim urządzeniu i dopiero po ich sprawdzeniu i potwierdzeniu.</li>
+    </ul>
+    <p>Aplikacja <strong>nie ma konta ani logowania</strong>. Aby z niej korzystać, nie musisz podawać imienia ani adresu e-mail. Jedynym wyjątkiem jest opcjonalne połączenie <strong>My guide</strong> opisane w sekcji 6: jeśli zdecydujesz się połączyć ze specjalistą, podajesz swój e-mail i, jeśli chcesz, imię.</p>
+    <p>Ponieważ dane te mogą dotyczyć Twojego samopoczucia fizycznego, traktujemy je jako szczególną kategorię danych osobowych i przetwarzamy wyłącznie za Twoją <strong>wyraźną zgodą</strong> (RODO art. 6 ust. 1 lit. a i art. 9 ust. 2 lit. a). Zgodę możesz wycofać w każdej chwili, usuwając dane w aplikacji lub odinstalowując ją.</p>
+    <h2>5. Gdzie przechowywane są Twoje dane</h2>
+    <p>Twoje dane wellness i historia są przechowywane <strong>lokalnie na Twoim urządzeniu</strong> w formie zaszyfrowanej i <strong>nie są przechowywane trwale na naszych serwerach</strong> (zob. tymczasowe zabezpieczenie poniżej). Aby wygenerować sugestię AI, dane potrzebne do danego zapytania są wysyłane szyfrowanym połączeniem do naszej usługi przetwarzania i do dostawcy AI, używane wyłącznie do wytworzenia odpowiedzi i <strong>nie są przechowywane</strong> poza krótkim czasem technicznym zapytania.</p>
+    <p>Wygenerowana analiza jest dodatkowo przechowywana w naszej usłudze przetwarzania <strong>nie dłużej niż 72 godziny</strong>, a następnie usuwana automatycznie. To zabezpieczenie na wypadek, gdyby odpowiedź nie dotarła do urządzenia (zerwane połączenie, zamknięta aplikacja): możesz odebrać swoją analizę bez zamawiania nowej. Wpis jest spseudonimizowany — powiązany z losowym identyfikatorem urządzenia, bez imienia, e-maila i kodu dostępu.</p>
+    <p><strong>Opcjonalnie: pomoc w ulepszaniu aplikacji.</strong> Niezależnie od powyższego możesz włączyć „Pomóż ulepszyć ADAM-L” — domyślnie jest <strong>wyłączone</strong>. Gdy jest włączone, liczby każdego ukończonego dnia (dane trackera, twoje oceny, domowe pomiary ciśnienia, waga i talia, wersje schematu i wag) trafiają do naszej usługi przetwarzania i są tam przechowywane pod tym samym losowym identyfikatorem urządzenia, aby aplikację można było kalibrować na prawdziwych danych. Wszystko, co napisałeś własnymi słowami, serwer odrzuca — nie opuszcza urządzenia. Wyłączenie zatrzymuje przesyłanie natychmiast; „Usuń mój wkład” kasuje wszystko już wysłane z tej instalacji. Podstawa prawna: twoja wyraźna zgoda — RODO art. 6 ust. 1 lit. a) w zw. z art. 9 ust. 2 lit. a). Pełny tekst jest na stronie „Pomóż ulepszyć ADAM-L”. Jeśli trwa „Fokus tygodnia”, wysyłamy też, jaki to krok, czy oznaczono go tego dnia jako wykonany i jak zakończył się eksperyment; kategorie głównej dolegliwości wybrane z listy (nigdy Twoje słowa); a także płeć, wiek w przedziałach pięcioletnich i etap życia wskazany w ankiecie.</p>
+    <p><strong>Opcjonalnie: udostępnianie specjaliście.</strong> Jeśli połączysz się ze specjalistą na ekranie My guide i zostawisz udostępnianie włączone, twoje codzienne wpisy, tekst analiz i wiadomości są przechowywane w karcie klienta tego specjalisty w naszej usłudze (Cloudflare) — w ten sposób specjalista je widzi. Bez połączenia i zgody nic nie jest udostępniane; szczegóły i sposób zatrzymania opisuje sekcja 6.</p>
+    <p><strong>Opcjonalnie: We dwoje.</strong> Jeśli połączysz się kodem w parę z wybraną osobą (partner, przyjaciółka, ktoś z rodziny), widzi ona tylko imię, które dla niej wpiszesz, twój bieżący krok tygodnia, dzień tygodnia i codzienne odhaczenia „udało się / nie udało”. Dane o zdrowiu, analizy i wpisy nie są udostępniane. Te kilka pól przechowujemy na naszym serwerze tylko, dopóki jesteście w parze; możesz z niej wyjść w każdej chwili.</p>
+    <h2>6. Dostawcy usług</h2>
+    <ul>
+      <li><strong>Anthropic PBC (USA)</strong> — dostarcza model AI (Claude), który generuje sugestie z danych wysłanych w zapytaniu.</li>
+      <li><strong>Cloudflare, Inc. (USA)</strong> — hostuje usługę przekazywania zapytań; wszelkie tymczasowe przechowywanie techniczne wygasa automatycznie.</li>
+      <li><strong>Apple / Google</strong> — dystrybuują aplikację i zapewniają uprawnienie do danych zdrowotnych na urządzeniu (Apple Health / Health Connect). Otrzymują tylko to, czego ich platformy wymagają do dystrybucji.</li>
+      <li><strong>RevenueCat, Inc. (USA)</strong> — sprawdza status subskrypcji kupionej przez Apple lub Google. Otrzymuje dane zakupu i losowy identyfikator użytkownika aplikacji — bez imienia, e-maila ani danych o zdrowiu.</li>
+      <li><strong>Oura, Google (Fitbit), Polar, Withings — opcjonalnie</strong> — tylko jeśli bezpośrednio połączysz konto urządzenia. Logujesz się na stronie producenta; nasza usługa pośrednicząca używa udzielonego dostępu, aby przesłać Twoje pomiary do aplikacji, i ich nie przechowuje. Dane dostępowe wygasają automatycznie (najpóźniej po 30 dniach). Jeśli połączysz Oura, obejmuje to także znaczniki, które sam dodajesz w aplikacji Oura (na przykład objawy).</li>
+      <li><strong>Cal.com, Inc. (USA) — opcjonalnie</strong> — rezerwacja rozmowy zapoznawczej na ekranie My guide. To, co wpisujesz na stronie rezerwacji, jest przetwarzane zgodnie z polityką prywatności Cal.com.</li>
+    </ul>
+    <h3>Opcjonalnie: My guide (niezależni specjaliści)</h3>
+    <p>Ekran <strong>My guide</strong> pokazuje niezależnych specjalistów korzystających z platformy ADAM-L. Każdy specjalista świadczy własne usługi i za nie odpowiada; ADAM-L dostarcza oprogramowanie.</p>
+    <p><strong>Jeśli łączysz się ze specjalistą</strong> za pomocą jego kodu, podajesz e-mail, opcjonalnie imię, i wyrażasz wyraźną zgodę. Przechowujemy to wraz z datą zgody i wybranym specjalistą w naszej bazie danych (Cloudflare).</p>
+    <p><strong>Co widzi specjalista.</strong> Dopóki przełącznik „Mój przewodnik widzi moje dane dnia” jest włączony, każdy ukończony codzienny wpis jest także wysyłany specjaliście, z którym się połączyłeś: odpowiedzi o samopoczuciu, powód, z którym przyszedłeś, odczyty urządzeń — w tym dane, które pozwoliłeś aplikacji odczytywać z Apple Health lub Health Connect — oraz tekst twojej analizy. Przełącznik możesz wyłączyć w każdej chwili na ekranie My guide: połączenie i wiadomości zostają, a nic nowego nie jest wysyłane. Dane o zdrowiu udostępniamy wyłącznie specjaliście, którego sam wybrałeś; nigdy nie używamy ich do reklam i ich nie sprzedajemy.</p>
+    <p><strong>Wyniki badań.</strong> Gdy przełącznik jest włączony, wyniki badań, które wpisujesz lub potwierdzasz ze zdjęcia (wartość, jednostka i data), są również wysyłane do tego specjalisty. Przy każdej zmianie zestaw w karcie klienta jest zastępowany bieżącym.</p>
+     <p><strong>Wiadomości.</strong> Wiadomości i zdjęcia wysyłane specjaliście na ekranie My guide są przechowywane w naszej bazie danych i magazynie plików (Cloudflare) i są widoczne dla tego specjalisty. Odpowiedzi specjalisty mogą być automatycznie tłumaczone na twój język. Zdjęcia i wiadomości głosowe przechowujemy do 365 dni; mikrofon jest używany tylko podczas nagrywania wiadomości głosowej.</p>
+    <p><strong>Jednorazowa analiza ze specjalistą.</strong> Kupując analizę, podajesz e-mail, opcjonalnie imię, i wyrażasz wyraźną zgodę. Przechowujemy je wraz z datą zgody i danymi zakupu (identyfikator kupującego i numer transakcji z RevenueCat), aby upewnić się, że zakup został opłacony i jest liczony tylko raz. Łączysz się ze specjalistą ADAM-L, który przygotowuje analizę. Dalej obowiązuje wszystko, co opisano powyżej dla My guide: co widzi specjalista, jak przechowywane są wiadomości i jak wycofać zgodę. Gdy okno pytań się zamyka, nowe dane nie są już przekazywane specjaliście.</p>
+    <p><strong>Jeśli rezerwujesz rozmowę zapoznawczą</strong>, Cal.com przekazuje nam rezerwację (imię, e-mail, godzinę), a my przesyłamy ją specjaliście, również jako powiadomienie (Telegram).</p>
+    <p>Zgodę możesz wycofać w każdej chwili przyciskiem „Cofnij zgodę i rozłącz” na tym samym ekranie — połączenie kończy się natychmiast i nic więcej nie jest wysyłane. Aby całkowicie usunąć zapis połączenia, dane i już udostępnione wiadomości, napisz na <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> z adresu e-mail, którego użyłeś; usuniemy je w ciągu 30 dni. Podstawa prawna: twoja wyraźna zgoda — art. 6 ust. 1 lit. a RODO, a w przypadku danych o zdrowiu art. 9 ust. 2 lit. a.</p>
+    <p><strong>Nie sprzedajemy</strong> Twoich danych osobowych i nie używamy ich do reklam.</p>
+    <h2>7. Przekazywanie międzynarodowe</h2>
+    <p>Powyżsi dostawcy mogą przetwarzać dane zapytania w USA. Takie przekazania opierają się na <strong>Standardowych klauzulach umownych</strong> Komisji Europejskiej oraz dodatkowych zabezpieczeniach każdego dostawcy.</p>
+    <h2>8. Przechowywanie</h2>
+    <p>Dane na urządzeniu pozostają, dopóki nie usuniesz ich w aplikacji lub nie odinstalujesz aplikacji — masz nad nimi kontrolę. Dane wysłane w zapytaniu do AI nie są przechowywane; wygenerowane podsumowanie jest przechowywane nie dłużej niż 72 godziny (sekcja 5). Dane udostępnione, by pomóc ulepszyć aplikację, są przechowywane, dopóki nie usuniesz swojego wkładu. Zapis połączenia My guide (sekcja 6) jest przechowywany, dopóki nie poprosisz nas o jego usunięcie. Nie przechowujemy na naszych serwerach żadnej innej historii samopoczucia. Jeśli udostępniasz dane specjaliście, już udostępnione wpisy, analizy i wiadomości są przechowywane, dopóki nie poprosisz o ich usunięcie.</p>
+    <h2>9. Twoje prawa</h2>
+    <p>W zależności od miejsca zamieszkania możesz mieć prawo dostępu, sprostowania, usunięcia, ograniczenia lub sprzeciwu wobec przetwarzania, prawo do przenoszenia danych oraz do wycofania zgody. Ponieważ Twoje dane są na Twoim urządzeniu, większość z nich możesz zrealizować bezpośrednio w aplikacji w dowolnym momencie.</p>
+    <p><strong>UE/UK (RODO):</strong> masz też prawo wnieść skargę do lokalnego organu nadzorczego. <strong>Kalifornia (CCPA/CPRA):</strong> masz prawo wiedzieć, usuwać i sprzeciwić się „sprzedaży"/„udostępnianiu" — nie robimy żadnego.</p>
+    <p><strong>Stan Waszyngton (My Health My Data Act):</strong> masz prawo usunąć dane o zdrowiu, a nie tylko konto. Aplikacja robi to wprost: <strong>„Usuń moje dane o zdrowiu”</strong> w sekcji „Kopia zapasowa i usuwanie danych” kasuje wszystko z urządzenia natychmiast. Obok <strong>„Zapisz kopię”</strong> eksportuje zaszyfrowany plik.</p>
+    <p>Aby złożyć wniosek, napisz na <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. Odpowiadamy w ciągu 30 dni (15 dla wniosków z Kalifornii).</p>
+    <h2>10. Dzieci</h2>
+    <p>Aplikacja jest przeznaczona dla osób dorosłych <strong>w wieku 18 lat i starszych</strong>. Świadomie nie zbieramy danych osób niepełnoletnich. Jeśli sądzisz, że aplikacji użyła osoba niepełnoletnia, napisz na <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>, a pomożemy.</p>
+    <h2>11. Bezpieczeństwo</h2>
+    <p>Dane wellness są szyfrowane w spoczynku na Twoim urządzeniu i wysyłane przez szyfrowane (TLS) połączenia. Żadna metoda przechowywania ani przesyłania nie jest w pełni bezpieczna, ale stosujemy środki odpowiednie do wrażliwości danych.</p>
+    <h2>12. Zmiany</h2>
+    <p>Możemy aktualizować tę politykę. Istotne zmiany będą odzwierciedlone w dacie „Ostatnia aktualizacja" i w stosownych przypadkach wyróżnione w aplikacji.</p>
+    <h2>13. Kontakt</h2>
+    <p>Zapytania dotyczące prywatności: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Wsparcie ogólne: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
+
+  <!-- ============ IT ============ -->
+  <div data-lang="it">
+    <div class="page-eyebrow"><span>Informativa sulla privacy</span></div>
+    <h1>Informativa sulla privacy</h1>
+    <p class="page-date">ADAM-L AI assistant · Ultimo aggiornamento: 2 ottobre 2026</p>
+    <p class="intro">Questa informativa spiega come l'app <strong>ADAM-L AI assistant</strong> tratta le tue informazioni. L'app è uno <strong>strumento generale di benessere ed educazione</strong>. <strong>Non è un dispositivo medico</strong>, non fornisce consulenza medica, diagnosi o trattamento e non sostituisce un professionista qualificato.</p>
+    <h2>1. Chi siamo</h2>
+    <p>Il titolare dei tuoi dati è <strong>Kyrylo Selivanov</strong>, una persona fisica residente in Ucraina ("noi"). Non abbiamo nominato un Responsabile della protezione dei dati; tutte le richieste sulla privacy sono gestite direttamente dal titolare.</p>
+    <p>Contatto privacy: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Supporto generale: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. Ambito</h2>
+    <p>Questa informativa si applica solo all'applicazione mobile <strong>ADAM-L AI assistant</strong> e ai suoi livelli in abbonamento. Non copre alcun sito web o servizio separato.</p>
+    <h2>3. Cos'è l'app</h2>
+    <p>L'app ti consente di registrare indicatori di benessere autodichiarati (come qualità del sonno, energia, attività, abitudini alimentari e obiettivi personali) e, di leggere facoltativamente metriche di benessere da Apple Health o Health Connect con il tuo permesso. Utilizza un modello di intelligenza artificiale per fornire <strong>suggerimenti generali e non medici su nutrizione e stile di vita</strong>, a scopo educativo e di autocura.</p>
+    <h2>4. Informazioni che trattiamo</h2>
+    <ul>
+      <li><strong>Dati di benessere che inserisci</strong> — autovalutazioni soggettive e indicatori di stile di vita che scegli di fornire.</li>
+      <li><strong>Metriche da dispositivi indossabili </strong> — dati che autorizzi espressamente l'app a leggere da Apple Health / Health Connect sul tuo dispositivo. Nello specifico, e solo i tipi che consenti: sonno, passi, allenamenti (sessioni di esercizio), frequenza cardiaca, frequenza cardiaca a riposo, variabilità della frequenza cardiaca (HRV), frequenza respiratoria, saturazione di ossigeno nel sangue, VO₂ max, peso, pressione arteriosa, percentuale di massa grassa, temperatura notturna del polso e glicemia. Sono usati solo per il tuo riepilogo giornaliero di benessere e i suggerimenti (ad esempio il recupero rispetto al tuo livello abituale o adattare l'attività di oggi dopo l'allenamento di ieri). Questi dati non vengono mai usati per pubblicità né venduti.</li>
+      <li><strong>I tuoi obiettivi e aree di focus</strong> — per personalizzare i suggerimenti.</li>
+      <li><strong>Dati tecnici minimi</strong> — versione dell'app e la richiesta di rete necessaria a generare una risposta dell'IA.</li>
+      <li><strong>Foto di referti di laboratorio (facoltativo)</strong> — solo se tocchi «Leggi dalla foto». La foto viene inviata tramite una connessione cifrata al nostro servizio di elaborazione e al modello di IA al solo scopo di leggere i numeri, non viene conservata ed è eliminata dopo la risposta. I valori vengono salvati solo sul tuo dispositivo e solo dopo che li hai controllati e confermati.</li>
+    </ul>
+    <p>L’app <strong>non ha account né accesso</strong>. Per usarla non devi fornire il tuo nome o la tua email. L’unica eccezione è il collegamento facoltativo <strong>My guide</strong> descritto nella sezione 6: se scegli di collegarti a uno specialista, fornisci la tua email e, se vuoi, il tuo nome.</p>
+    <p>Poiché questi dati possono riguardare il tuo benessere fisico, li trattiamo come categoria particolare di dati personali e solo con il tuo <strong>consenso esplicito</strong> (GDPR art. 6(1)(a) e art. 9(2)(a)). Puoi revocare il consenso in qualsiasi momento eliminando i tuoi dati nell'app o disinstallandola.</p>
+    <h2>5. Dove sono conservati i tuoi dati</h2>
+    <p>I tuoi dati di benessere e la cronologia sono conservati <strong>localmente sul tuo dispositivo</strong>, in forma cifrata, e <strong>non sono conservati in modo permanente sui nostri server</strong> (vedi la tutela temporanea qui sotto). Per generare un suggerimento dell'IA, i dati necessari alla richiesta sono inviati tramite connessione cifrata al nostro servizio di elaborazione e al fornitore di IA, usati solo per produrre la tua risposta e <strong>non conservati</strong> oltre la breve vita tecnica della richiesta.</p>
+    <p>L’analisi generata viene inoltre conservata sul nostro servizio di elaborazione <strong>per non più di 72 ore</strong> e poi eliminata automaticamente. È una tutela nel caso in cui la risposta non sia arrivata al dispositivo (connessione caduta, app chiusa): potrai recuperare la tua analisi senza richiederne una nuova. Il record è pseudonimo — è legato a un identificatore casuale del dispositivo, senza nome, e-mail o codice di accesso.</p>
+    <p><strong>Facoltativo: aiutare a migliorare l’app.</strong> Indipendentemente da quanto sopra, puoi attivare «Aiuta a migliorare ADAM-L»: è <strong>disattivo</strong> se non lo attivi tu. Mentre è attivo, i numeri di ogni giornata completata (metriche del dispositivo, le tue valutazioni, misurazioni della pressione a casa, peso e girovita, versioni di schema e pesi) vengono inviati al nostro servizio di elaborazione e lì conservati sotto lo stesso identificatore casuale del dispositivo, per calibrare l’app su dati reali. Tutto ciò che hai scritto con parole tue viene rifiutato dal server e non lascia mai il dispositivo. Disattivarlo ferma subito l’invio; «Elimina il mio contributo» cancella tutto ciò che è già stato inviato da questa installazione. Base giuridica: il tuo consenso esplicito — GDPR Articolo 6(1)(a) con Articolo 9(2)(a). Il testo completo è nella pagina «Aiuta a migliorare ADAM-L». Se è in corso un «Focus della settimana», inviamo anche di quale passo si tratta, se lo hai segnato come fatto quel giorno e come si è concluso l’esperimento; le categorie del tuo disturbo principale scelte dall’elenco (mai le tue parole); e sesso, età in fasce di cinque anni e la fase indicata nel questionario.</p>
+    <p><strong>Facoltativo: condivisione con il tuo specialista.</strong> Se ti colleghi a uno specialista nella schermata My guide e lasci attiva la condivisione, i tuoi check-in giornalieri, il testo delle tue analisi e i tuoi messaggi sono conservati nella scheda cliente di quello specialista sul nostro servizio (Cloudflare): è così che lo specialista li vede. Senza collegamento e consenso non viene condiviso nulla; dettagli e come interrompere sono nella sezione 6.</p>
+    <p><strong>Facoltativo: In due.</strong> Se ti abbini tramite codice a una persona che scegli (partner, amica, familiare), questa vede solo il nome che indichi per lei, il tuo passo della settimana, il giorno della settimana e le spunte quotidiane «fatto / non fatto». Dati di salute, analisi e registrazioni non vengono condivisi. Conserviamo questi pochi campi sul nostro server solo finché siete in coppia; puoi uscire in qualsiasi momento.</p>
+    <h2>6. Fornitori di servizi</h2>
+    <ul>
+      <li><strong>Anthropic PBC (USA)</strong> — fornisce il modello di IA (Claude) che genera i suggerimenti dai dati inviati per una richiesta.</li>
+      <li><strong>Cloudflare, Inc. (USA)</strong> — ospita il servizio di inoltro delle richieste; ogni archiviazione tecnica temporanea usa scadenza automatica.</li>
+      <li><strong>Apple / Google</strong> — distribuiscono l'app e forniscono l'autorizzazione ai dati sanitari sul dispositivo (Apple Health / Health Connect). Ricevono solo ciò che le loro piattaforme richiedono per la distribuzione.</li>
+      <li><strong>RevenueCat, Inc. (USA)</strong> — verifica lo stato dell’abbonamento acquistato tramite Apple o Google. Riceve i dati dell’acquisto e un identificativo casuale dell’utente dell’app — senza nome, email o dati sanitari.</li>
+      <li><strong>Oura, Google (Fitbit), Polar, Withings — facoltativo</strong> — solo se colleghi direttamente l’account di un dispositivo. Accedi sulla pagina del produttore; il nostro servizio di inoltro usa l’accesso concesso per portare i tuoi valori nell’app e non li conserva. Le credenziali di accesso scadono automaticamente (al massimo entro 30 giorni). Se colleghi Oura, sono inclusi anche i tag che aggiungi tu nell’app Oura (ad esempio, i sintomi).</li>
+      <li><strong>Cal.com, Inc. (USA) — facoltativo</strong> — prenotazione di una chiamata conoscitiva nella schermata My guide. Ciò che inserisci nella pagina di prenotazione è trattato secondo l’informativa privacy di Cal.com.</li>
+    </ul>
+    <h3>Facoltativo: My guide (specialisti indipendenti)</h3>
+    <p>La schermata <strong>My guide</strong> mostra specialisti indipendenti che usano la piattaforma ADAM-L. Ogni specialista fornisce i propri servizi e ne è responsabile; ADAM-L fornisce il software.</p>
+    <p><strong>Se ti colleghi a uno specialista</strong> con il suo codice, indichi la tua email, facoltativamente il tuo nome, e dai il tuo consenso esplicito. Li conserviamo, insieme alla data del consenso e allo specialista scelto, nel nostro database (Cloudflare).</p>
+    <p><strong>Cosa vede lo specialista.</strong> Finché l’interruttore «La mia guida vede i miei dati del giorno» è attivo, ogni check-in giornaliero che completi viene inviato anche allo specialista a cui ti sei collegato: le tue risposte su come ti senti, il motivo per cui sei arrivato, le letture dei dispositivi — compresi i dati che hai permesso all’app di leggere da Apple Health o Health Connect — e il testo della tua analisi. Puoi disattivare l’interruttore in qualsiasi momento nella schermata My guide: il collegamento e i tuoi messaggi restano e non viene inviato nulla di nuovo. I dati sanitari vengono condivisi solo con lo specialista che hai scelto tu; non li usiamo mai per pubblicità e non li vendiamo.</p>
+    <p><strong>Valori delle analisi.</strong> Finché l'interruttore è attivo, i valori delle analisi che inserisci o confermi da una foto del referto (valore, unità e data) vengono inviati anche a quello specialista. A ogni modifica, l'insieme nella scheda viene sostituito con quello attuale.</p>
+     <p><strong>Messaggi.</strong> I messaggi e le foto che invii allo specialista nella schermata My guide sono conservati nel nostro database e archivio file (Cloudflare) e sono visibili a quello specialista. Le sue risposte possono essere tradotte automaticamente nella tua lingua. Le foto e i messaggi vocali sono conservati fino a 365 giorni; il microfono viene usato solo mentre registri un messaggio vocale.</p>
+    <p><strong>Analisi singola con lo specialista.</strong> Quando acquisti un’analisi indichi la tua e-mail, facoltativamente il tuo nome, e dai il tuo consenso esplicito. Li conserviamo insieme alla data del consenso e ai dati dell’acquisto (l’identificativo dell’acquirente e il numero di transazione di RevenueCat) per verificare che l’acquisto sia stato pagato e venga conteggiato una sola volta. Vieni collegato a uno specialista ADAM-L che prepara l’analisi. Da quel momento vale tutto quanto descritto sopra per My guide: cosa vede lo specialista, come vengono conservati i messaggi e come revocare il consenso. Quando il periodo per le domande si chiude, allo specialista non vengono più condivisi nuovi dati.</p>
+    <p><strong>Se prenoti una chiamata conoscitiva</strong>, Cal.com ci trasmette la prenotazione (nome, email, orario) e la inoltriamo allo specialista, anche come messaggio di notifica (Telegram).</p>
+    <p>Puoi revocare il consenso in qualsiasi momento con «Revoca il consenso e disconnetti» nella stessa schermata: il collegamento termina subito e non viene inviato altro. Per far eliminare completamente il record di collegamento, i dati e i messaggi già condivisi, scrivi a <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> dall’email che hai usato; li eliminiamo entro 30 giorni. Base giuridica: il tuo consenso esplicito — articolo 6(1)(a) del GDPR e, per i dati sanitari, articolo 9(2)(a).</p>
+    <p><strong>Non vendiamo</strong> le tue informazioni personali e non le usiamo per pubblicità.</p>
+    <h2>7. Trasferimenti internazionali</h2>
+    <p>I fornitori sopra indicati possono trattare i dati della richiesta negli Stati Uniti. Tali trasferimenti si basano sulle <strong>Clausole contrattuali tipo</strong> della Commissione europea e sulle garanzie supplementari di ciascun fornitore.</p>
+    <h2>8. Conservazione</h2>
+    <p>I dati sul dispositivo restano finché non li elimini nell’app o disinstalli l’app — il controllo è tuo. I dati inviati per una richiesta all’IA non vengono conservati; una panoramica generata è conservata per non più di 72 ore (sezione 5). I dati condivisi per aiutare a migliorare l’app sono conservati finché non elimini il tuo contributo. La registrazione di un collegamento My guide (sezione 6) è conservata finché non ci chiedi di eliminarla. Non conserviamo nessun altro storico di benessere sui nostri server. Se condividi con uno specialista, i check-in, le analisi e i messaggi già condivisi sono conservati finché non ci chiedi di eliminarli.</p>
+    <h2>9. I tuoi diritti</h2>
+    <p>A seconda di dove vivi, puoi avere diritto di accesso, rettifica, cancellazione, limitazione od opposizione al trattamento, alla portabilità e alla revoca del consenso. Poiché i tuoi dati sono sul tuo dispositivo, puoi esercitare la maggior parte direttamente nell'app in qualsiasi momento.</p>
+    <p><strong>UE/UK (GDPR):</strong> hai anche il diritto di presentare reclamo alla tua autorità di controllo locale. <strong>California (CCPA/CPRA):</strong> hai il diritto di sapere, cancellare e rifiutare la "vendita"/"condivisione" — non facciamo né l'una né l'altra.</p>
+    <p><strong>Stato di Washington (My Health My Data Act):</strong> hai diritto a eliminare i dati sulla salute, non solo l’account. L’app lo fa direttamente: <strong>«Elimina i miei dati sulla salute»</strong> nella sezione «Backup ed eliminazione dei dati» cancella tutto dal dispositivo subito. Accanto, <strong>«Salva backup»</strong> esporta un file cifrato.</p>
+    <p>Per una richiesta scrivi a <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. Rispondiamo entro 30 giorni (15 per le richieste della California).</p>
+    <h2>10. Minori</h2>
+    <p>L'app è destinata agli adulti di <strong>18 anni e oltre</strong>. Non raccogliamo consapevolmente dati di minori. Se ritieni che un minore abbia usato l'app, scrivi a <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> e ti aiuteremo.</p>
+    <h2>11. Sicurezza</h2>
+    <p>I dati di benessere sono cifrati a riposo sul tuo dispositivo e inviati tramite connessioni cifrate (TLS). Nessun metodo di archiviazione o trasmissione è del tutto sicuro, ma applichiamo misure adeguate alla sensibilità dei dati.</p>
+    <h2>12. Modifiche</h2>
+    <p>Possiamo aggiornare questa informativa. Le modifiche sostanziali saranno riflesse nella data di "Ultimo aggiornamento" e, ove opportuno, evidenziate nell'app.</p>
+    <h2>13. Contatto</h2>
+    <p>Richieste sulla privacy: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · Supporto generale: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
+
+  <!-- ============ HE ============ -->
+  <div data-lang="he">
+    <div class="page-eyebrow"><span>מדיניות פרטיות</span></div>
+    <h1>מדיניות פרטיות</h1>
+    <p class="page-date">ADAM-L AI assistant · עודכן לאחרונה: 2 באוקטובר 2026</p>
+    <p class="intro">מדיניות זו מסבירה כיצד אפליקציית <strong>ADAM-L AI assistant</strong> מטפלת במידע שלך. האפליקציה היא <strong>כלי כללי לרווחה וחינוך</strong>. היא <strong>אינה מכשיר רפואי</strong>, אינה מספקת ייעוץ רפואי, אבחון או טיפול, ואינה תחליף לאיש מקצוע מוסמך.</p>
+    <h2>1. מי אנחנו</h2>
+    <p>בעל השליטה בנתונים שלך הוא <strong>קירילו סליבנוב</strong>, אדם פרטי המתגורר באוקראינה («אנחנו»). לא מינינו ממונה על הגנת מידע; כל הפניות בנושא פרטיות מטופלות ישירות על ידי בעל השליטה.</p>
+    <p>יצירת קשר לפרטיות: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · תמיכה כללית: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. תחולה</h2>
+    <p>מדיניות זו חלה רק על אפליקציית המובייל <strong>ADAM-L AI assistant</strong>. היא אינה מכסה אתר או שירות נפרד כלשהו.</p>
+    <h2>3. מה האפליקציה</h2>
+    <p>האפליקציה מאפשרת לרשום סמני רווחה שדיווחת בעצמך (כמו איכות שינה, אנרגיה, פעילות, הרגלי תזונה ומטרות אישיות), ולקרוא באופן אופציונלי נתוני רווחה מ-Apple Health או Health Connect באישורך. היא משתמשת במודל בינה מלאכותית כדי לספק <strong>הצעות כלליות ולא-רפואיות בתזונה ואורח חיים</strong> לחינוך וטיפול עצמי.</p>
+    <h2>4. מידע שאנו מעבדים</h2>
+    <ul>
+      <li><strong>נתוני רווחה שאתה מזין</strong> — הערכות עצמיות סובייקטיביות וסמני אורח חיים שאתה בוחר לספק.</li>
+      <li><strong>מדדים מהתקנים לבישים </strong> — נתונים שאתה מאשר במפורש לאפליקציה לקרוא מ-Apple Health / Health Connect במכשירך. באופן ספציפי, ורק הסוגים שתאשר: שינה, צעדים, אימונים, דופק, דופק במנוחה, שונות קצב הלב (HRV), קצב נשימה, רוויית חמצן בדם, VO₂ max, משקל, לחץ דם, אחוז שומן בגוף, טמפרטורת פרק כף היד בלילה וגלוקוז בדם. הם משמשים רק לסיכום הרווחה היומי ולהמלצות (למשל התאוששות בהשוואה לרמה הרגילה שלך, או התאמת הפעילות היום אחרי האימון של אתמול). נתונים אלה לעולם אינם משמשים לפרסום ולעולם אינם נמכרים.</li>
+      <li><strong>המטרות ותחומי המיקוד שלך</strong> — להתאמה אישית של ההצעות.</li>
+      <li><strong>נתונים טכניים מינימליים</strong> — גרסת האפליקציה והבקשה הרשתית הדרושה ליצירת תשובת AI.</li>
+      <li><strong>תמונות של טופסי בדיקות מעבדה (אופציונלי)</strong> — רק אם תקישו על «סריקה מתמונה». התמונה נשלחת בחיבור מוצפן לשירות העיבוד שלנו ולמודל ה-AI אך ורק כדי לקרוא את המספרים, אינה נשמרת ונמחקת לאחר מתן התשובה. הערכים נשמרים רק במכשיר שלכם, ורק לאחר שבדקתם ואישרתם אותם.</li>
+    </ul>
+    <p>באפליקציה <strong>אין חשבון ואין התחברות</strong>. אין צורך למסור שם או כתובת דוא"ל כדי להשתמש בה. החריג היחיד הוא החיבור האופציונלי <strong>My guide</strong> המתואר בסעיף 6: אם תבחר להתחבר למומחה, תמסור את כתובת הדוא"ל שלך, ואם תרצה — גם את שמך.</p>
+    <p>מכיוון שנתונים אלו עשויים לגעת ברווחתך הגופנית, אנו מתייחסים אליהם כאל קטגוריה מיוחדת של נתונים אישיים ומעבדים אותם רק ב<strong>הסכמתך המפורשת</strong> (GDPR סעיף 6(1)(a) וסעיף 9(2)(a)). ניתן לחזור מההסכמה בכל עת על ידי מחיקת הנתונים באפליקציה או הסרתה.</p>
+    <h2>5. היכן מאוחסנים הנתונים שלך</h2>
+    <p>נתוני הרווחה וההיסטוריה שלך מאוחסנים <strong>מקומית במכשירך</strong> בצורה מוצפנת, ו<strong>אינם נשמרים באופן קבוע בשרתינו</strong> (ראו את הגיבוי הזמני להלן). כדי ליצור הצעת AI, הנתונים הדרושים לאותה בקשה נשלחים בחיבור מוצפן לשירות העיבוד שלנו ולספק ה-AI, משמשים רק להפקת תשובתך, ו<strong>אינם נשמרים</strong> מעבר לחיי הבקשה הטכניים הקצרים.</p>
+    <p>‏הסקירה שנוצרה נשמרת בנוסף בשירות העיבוד שלנו <strong>לא יותר מ-72 שעות</strong> ואז נמחקת אוטומטית. זהו אמצעי גיבוי למקרה שהתשובה לא הגיעה למכשיר (החיבור נותק, האפליקציה נסגרה): תוכלו לקבל את הסקירה שלכם בלי לבקש אותה מחדש. הרישום מזוהה בדוי — הוא מקושר למזהה מכשיר אקראי, ללא שם, דוא״ל או קוד גישה.</p>
+    <p><strong>‏אופציונלי: לעזור לשפר את האפליקציה.</strong> ‏בנפרד מהאמור למעלה, אפשר להפעיל «לעזור לשפר את ADAM-L» — כברירת מחדל זה <strong>כבוי</strong>. כל עוד זה פעיל, המספרים של כל יום שהושלם (נתוני המכשיר, הדירוגים שלכם, מדידות לחץ דם ביתיות, משקל והיקף מותניים, גרסאות הסכימה והמשקלים) נשלחים לשירות העיבוד שלנו ונשמרים שם תחת אותו מזהה מכשיר אקראי, כדי לכייל את האפליקציה על נתונים אמיתיים. כל מה שנכתב במילים שלכם נדחה בשרת ואינו עוזב את המכשיר. כיבוי עוצר מיד; «מחיקת התרומה שלי» מוחקת את כל מה שכבר נשלח מהתקנה זו. בסיס משפטי: הסכמה מפורשת שלכם — GDPR סעיף 6(1)(a) יחד עם סעיף 9(2)(a). הטקסט המלא נמצא בעמוד «לעזור לשפר את ADAM-L». אם מתנהל «המיקוד של השבוע», נשלח גם איזה צעד זה, האם סימנתם אותו כבוצע באותו יום ואיך הסתיים הניסוי; קטגוריות התלונה העיקרית שנבחרו מהרשימה (לעולם לא המילים שלכם); וכן מין, גיל בקבוצות של חמש שנים והשלב שציינתם בשאלון.</p>
+    <p><strong>אופציונלי: שיתוף עם המומחה שלכם.</strong> אם אתם מתחברים למומחה במסך My guide ומשאירים את השיתוף מופעל, הצ׳ק-אינים היומיים, טקסט הניתוחים וההודעות שלכם נשמרים בכרטיס הלקוח של אותו מומחה בשירות שלנו (Cloudflare) — כך המומחה רואה אותם. דבר אינו משותף בלי חיבור והסכמה; הפרטים והדרך להפסיק — בסעיף 6.</p>
+    <p><strong>אופציונלי: ביחד.</strong> אם תתחברו בקוד לזוג עם אדם שבחרתם (בן/בת זוג, חברה, בן משפחה), הוא יראה רק את השם שהזנתם עבורו, את צעד השבוע הנוכחי שלכם, את היום בשבוע ואת הסימונים היומיים „הצליח / לא הצליח”. נתוני בריאות, ניתוחים ורישומים אינם משותפים. אנו שומרים את השדות המעטים האלה בשרת רק כל עוד אתם בזוג; אפשר לצאת בכל עת.</p>
+    <h2>6. ספקי שירות</h2>
+    <ul>
+      <li><strong>Anthropic PBC (ארה"ב)</strong> — מספקת את מודל ה-AI (Claude) שמפיק הצעות מהנתונים שנשלחו בבקשה.</li>
+      <li><strong>Cloudflare, Inc. (ארה"ב)</strong> — מארחת את שירות העברת הבקשות; כל אחסון טכני זמני פג באופן אוטומטי.</li>
+      <li><strong>Apple / Google</strong> — מפיצות את האפליקציה ומספקות את הרשאת נתוני הבריאות במכשיר (Apple Health / Health Connect). הן מקבלות רק את הנדרש לפלטפורמות שלהן להפצה.</li>
+      <li><strong>RevenueCat, Inc. (ארה"ב)</strong> — בודקת את מצב המנוי שנרכש דרך Apple או Google. מקבלת את פרטי הרכישה ומזהה משתמש אקראי של האפליקציה — ללא שם, דוא"ל או נתוני בריאות.</li>
+      <li><strong>Oura, Google (Fitbit), Polar, Withings — אופציונלי</strong> — רק אם תחבר ישירות חשבון של מכשיר. ההתחברות מתבצעת בדף של היצרן עצמו; שירות הממסר שלנו משתמש בגישה שנתת כדי להעביר את המדדים שלך לאפליקציה ואינו שומר אותם. פרטי הגישה פגים אוטומטית (לכל היותר תוך 30 יום). אם תחברו את Oura, הדבר כולל גם את התגיות שאתם מוסיפים בעצמכם באפליקציית Oura (למשל, תסמינים).</li>
+      <li><strong>Cal.com, Inc. (ארה"ב) — אופציונלי</strong> — קביעת שיחת היכרות במסך My guide. מה שתזין בדף קביעת הפגישה מטופל לפי מדיניות הפרטיות של Cal.com.</li>
+    </ul>
+    <h3>אופציונלי: My guide (מומחים עצמאיים)</h3>
+    <p>המסך <strong>My guide</strong> מציג מומחים עצמאיים המשתמשים בפלטפורמת ADAM-L. כל מומחה מספק את שירותיו שלו ואחראי להם; ADAM-L מספקת את התוכנה.</p>
+    <p><strong>אם אתם מתחברים למומחה</strong> באמצעות הקוד שלו, אתם מוסרים דוא״ל, ולפי רצונכם גם שם, ונותנים הסכמה מפורשת. אנו שומרים זאת, יחד עם תאריך ההסכמה והמומחה שבחרתם, במסד הנתונים שלנו (Cloudflare).</p>
+    <p><strong>מה המומחה רואה.</strong> כל עוד המתג «המלווה שלי רואה את נתוני היום שלי» מופעל, כל צ׳ק-אין יומי שאתם משלימים נשלח גם למומחה שאליו התחברתם: התשובות שלכם לגבי ההרגשה, הסיבה שבגללה הגעתם, נתוני מכשירים — כולל נתונים שהרשיתם לאפליקציה לקרוא מ-Apple Health או מ-Health Connect — וטקסט הניתוח שלכם. אפשר לכבות את המתג בכל רגע במסך My guide: החיבור וההודעות נשארים, ושום דבר חדש אינו נשלח. נתוני בריאות משותפים רק עם המומחה שבחרתם בעצמכם; לעולם איננו משתמשים בהם לפרסום ואיננו מוכרים אותם.</p>
+    <p><strong>ערכי בדיקות מעבדה.</strong> כל עוד המתג פעיל, ערכי הבדיקות שאתם מזינים או מאשרים מתמונת הטופס (ערך, יחידה ותאריך) נשלחים גם לאותו מומחה. בכל שינוי, הסט בכרטיס הלקוח מוחלף בסט הנוכחי.</p>
+     <p><strong>הודעות.</strong> הודעות ותמונות שאתם שולחים למומחה במסך My guide נשמרות במסד הנתונים ובאחסון הקבצים שלנו (Cloudflare) וגלויות לאותו מומחה. תשובות המומחה עשויות להיות מתורגמות אוטומטית לשפה שלכם. תמונות והודעות קוליות נשמרות עד 365 יום; המיקרופון משמש רק בזמן הקלטת הודעה קולית.</p>
+    <p><strong>סקירה חד-פעמית עם מומחה.</strong> בעת רכישת סקירה אתם מוסרים אימייל, ואם תרצו גם שם, ונותנים הסכמה מפורשת. אנו שומרים אותם יחד עם תאריך ההסכמה ופרטי הרכישה (מזהה הרוכש ומספר העסקה מ-RevenueCat) כדי לוודא שהרכישה שולמה ונספרת פעם אחת. אתם מחוברים למומחה ADAM-L שמכין את הסקירה. מכאן חל כל מה שתואר לעיל לגבי My guide: מה המומחה רואה, כיצד ההודעות נשמרות וכיצד לבטל את ההסכמה. כאשר חלון השאלות נסגר, נתונים חדשים אינם מועברים עוד למומחה.</p>
+    <p><strong>אם תקבע שיחת היכרות</strong>, Cal.com מעבירה אלינו את פרטי הפגישה (שם, דוא"ל, שעה), ואנו מעבירים אותם למומחה, גם כהודעת התראה (Telegram).</p>
+    <p>אפשר לבטל את ההסכמה בכל רגע בכפתור «לבטל הסכמה ולהתנתק» באותו מסך — החיבור מסתיים מיד ושום דבר נוסף אינו נשלח. כדי למחוק לגמרי את רשומת החיבור, את הנתונים ואת ההודעות שכבר שותפו, כתבו אל <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> מכתובת הדוא״ל שבה השתמשתם; נמחק אותם תוך 30 יום. הבסיס המשפטי: הסכמתכם המפורשת — סעיף 6(1)(a) של GDPR, ולגבי נתוני בריאות — סעיף 9(2)(a).</p>
+    <p>אנו <strong>לא מוכרים</strong> את המידע האישי שלך ולא משתמשים בו לפרסום.</p>
+    <h2>7. העברות בין-לאומיות</h2>
+    <p>הספקים לעיל עשויים לעבד את נתוני הבקשה בארצות הברית. העברות אלו נסמכות על <strong>סעיפי החוזה הסטנדרטיים</strong> של הנציבות האירופית ועל אמצעי ההגנה המשלימים של כל ספק.</p>
+    <h2>8. שמירה</h2>
+    <p>הנתונים במכשיר נשמרים עד שתמחק אותם באפליקציה או תסיר את האפליקציה — השליטה בידיך. נתונים שנשלחים לבקשת AI אינם נשמרים; סקירה שנוצרה נשמרת לכל היותר 72 שעות (סעיף 5). נתונים ששיתפת כדי לעזור לשפר את האפליקציה נשמרים עד שתמחק את התרומה שלך. רישום של חיבור My guide (סעיף 6) נשמר עד שתבקש מאיתנו למחוק אותו. איננו שומרים בשרתים שלנו שום היסטוריית רווחה אחרת. אם אתם משתפים עם מומחה, הצ׳ק-אינים, הניתוחים וההודעות ששותפו כבר נשמרים עד שתבקשו מאיתנו למחוק אותם.</p>
+    <h2>9. הזכויות שלך</h2>
+    <p>בהתאם למקום מגוריך, ייתכן שתהיה לך זכות לגישה, תיקון, מחיקה, הגבלה או התנגדות לעיבוד, לניוד נתונים ולחזרה מהסכמה. מכיוון שהנתונים שלך במכשירך, את רובם תוכל לממש ישירות באפליקציה בכל עת.</p>
+    <p><strong>האיחוד האירופי/בריטניה (GDPR):</strong> יש לך גם זכות להגיש תלונה לרשות הפיקוח המקומית. <strong>קליפורניה (CCPA/CPRA):</strong> יש לך זכות לדעת, למחוק ולסרב ל«מכירה»/«שיתוף» — איננו עושים אף אחת מהן.</p>
+    <p><strong>מדינת וושינגטון (My Health My Data Act):</strong> יש לכם זכות למחוק את נתוני הבריאות עצמם, לא רק את החשבון. האפליקציה עושה זאת ישירות: <strong>«מחיקת נתוני הבריאות שלי»</strong> בקטע «גיבוי ומחיקת נתונים» מוחקת הכול מהמכשיר מיד. לצידה <strong>«שמור גיבוי»</strong> מייצאת קובץ מוצפן.</p>
+    <p>להגשת בקשה, כתוב אל <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>. אנו משיבים תוך 30 יום (15 יום לבקשות מקליפורניה).</p>
+    <h2>10. קטינים</h2>
+    <p>האפליקציה מיועדת למבוגרים <strong>בני 18 ומעלה</strong>. איננו אוספים ביודעין נתונים מקטינים. אם לדעתך קטין השתמש באפליקציה, כתוב אל <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> ונסייע.</p>
+    <h2>11. אבטחה</h2>
+    <p>נתוני רווחה מוצפנים במנוחה במכשירך ונשלחים בחיבורים מוצפנים (TLS). אף שיטת אחסון או שידור אינה בטוחה לחלוטין, אך אנו מיישמים אמצעים ההולמים את רגישות הנתונים.</p>
+    <h2>12. שינויים</h2>
+    <p>אנו עשויים לעדכן מדיניות זו. שינויים מהותיים ישתקפו בתאריך «עודכן לאחרונה» ובמקרים המתאימים יודגשו באפליקציה.</p>
+    <h2>13. יצירת קשר</h2>
+    <p>פניות בנושא פרטיות: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · תמיכה כללית: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
+
+  <!-- ============ JA ============ -->
+  <div data-lang="ja">
+    <div class="page-eyebrow"><span>プライバシーポリシー</span></div>
+    <h1>プライバシーポリシー</h1>
+    <p class="page-date">ADAM-L AI assistant · 最終更新: 2026年10月2日</p>
+    <p class="intro">本ポリシーは、アプリ <strong>ADAM-L AI assistant</strong> がお客様の情報をどのように取り扱うかを説明します。本アプリは一般的な<strong>ウェルネスおよび教育のためのツール</strong>です。<strong>医療機器ではなく</strong>、医療上の助言・診断・治療を提供せず、有資格の専門家に代わるものではありません。</p>
+    <h2>1. 事業者情報</h2>
+    <p>データ管理者は、ウクライナに居住する個人である <strong>Kyrylo Selivanov</strong>（「当社」）です。データ保護責任者は選任していません。プライバシーに関するお問い合わせはすべて管理者が直接対応します。</p>
+    <p>プライバシー窓口: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · 一般サポート: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. 適用範囲</h2>
+    <p>本ポリシーはモバイルアプリ <strong>ADAM-L AI assistant</strong> とそのサブスクリプションにのみ適用されます。独立したウェブサイトやサービスは対象外です。</p>
+    <h2>3. アプリの概要</h2>
+    <p>本アプリでは、自己申告のウェルネス指標（睡眠の質、エネルギー、活動、食習慣、個人の目標など）を記録でき、お客様の許可のもと Apple Health または Health Connect からウェルネス数値を任意で読み取れます。AI モデルを用いて、教育とセルフケアのための<strong>一般的かつ非医療的な栄養・ライフスタイルの提案</strong>を返します。</p>
+    <h2>4. 取り扱う情報</h2>
+    <ul>
+      <li><strong>お客様が入力するウェルネス情報</strong> — 提供を選択した主観的な自己評価やライフスタイル指標。</li>
+      <li><strong>ウェアラブル数値</strong> — 端末上の Apple Health / Health Connect から読み取ることを明示的に許可したデータ。 具体的には、許可した種類のみ：睡眠、歩数、ワークアウト（運動セッション）、心拍数、安静時心拍数、心拍変動（HRV）、呼吸数、血中酸素飽和度、VO₂max、体重、血圧、体脂肪率、睡眠中の手首皮膚温、血糖値。これらは毎日のウェルネス概要と提案（例：普段の自分の水準と比べた回復、昨日のワークアウトを踏まえた今日の活動量の調整）の作成にのみ使用されます。これらのデータが広告に使用されたり販売されたりすることは一切ありません。</li>
+      <li><strong>お客様の目標・重点領域</strong> — 提案のパーソナライズのため。</li>
+      <li><strong>最小限の技術データ</strong> — アプリのバージョンおよび AI 応答生成に必要なネットワークリクエスト。</li>
+      <li><strong>検査票の写真（任意）</strong> — 「写真から読み取る」をタップした場合のみ。写真は数値を読み取る目的に限り、暗号化された接続で当社の処理サービスと AI モデルに送信され、保存されず、応答後に破棄されます。数値はご自身で確認・承認した後にのみ、お使いの端末にだけ保存されます。</li>
+    </ul>
+    <p>本アプリには<strong>アカウントもログインもありません</strong>。利用にあたって氏名やメールアドレスを入力する必要はありません。唯一の例外は、セクション6で説明する任意の<strong>My guide</strong>接続です。専門家との接続を選んだ場合に限り、メールアドレスと、希望すれば氏名を入力します。</p>
+    <p>これらの情報は身体的な健やかさに関わり得るため、特別な種類の個人データとして扱い、<strong>明示的な同意</strong>（GDPR 第6条(1)(a)および第9条(2)(a)）に基づいてのみ処理します。同意はアプリ内でデータを削除するか、アプリをアンインストールすることでいつでも撤回できます。</p>
+    <h2>5. データの保存場所</h2>
+    <p>お客様のウェルネス情報と履歴は<strong>端末内にローカルで暗号化して保存</strong>され、<strong>当社サーバーに恒久的に保持されることはありません</strong>（下記の一時的な保険をご覧ください）。AI 提案の生成にあたり、その要求に必要なデータのみを暗号化通信で当社の処理サービスおよび AI プロバイダーに送信し、応答の生成のみに使用し、要求の短い技術的存続期間を超えて<strong>保持しません</strong>。</p>
+    <p>生成されたまとめは、当社の処理サービスに<strong>最長72時間</strong>保持され、その後自動的に削除されます。これは、回答が端末に届かなかった場合（通信が切れた、アプリを閉じたなど）の保険です。新たに生成し直すことなく、ご自身のまとめを受け取れます。この記録は仮名化されており、ランダムな端末識別子に紐づくのみで、氏名・メール・アクセスコードは含みません。</p>
+    <p><strong>任意：アプリの改善に協力する。</strong> 上記とは別に、「アプリの改善に協力する」をオンにできます（既定では<strong>オフ</strong>）。オンの間は、完了した各日の数値（トラッカーの指標、あなたの評価、家庭で測った血圧、体重と腹囲、スキーマと重みのバージョン）が当社の処理サービスに送信され、同じランダムな端末識別子のもとで保存されます。実データでアプリを較正するためです。ご自身の言葉で書いた内容はサーバーが受け付けず、端末から出ることはありません。オフにすれば送信は直ちに止まり、「協力データを削除」でこの端末から送信済みのものをすべて消去できます。法的根拠：明示的な同意（GDPR 第6条1項(a)および第9条2項(a)）。全文は「アプリの改善に協力する」ページにあります。 「今週のフォーカス」を実施中の場合は、どのステップか、その日に「できた」と記録したか、実験がどう終わったかも送信します。また、リストから選んだ主な悩みのカテゴリー（ご自身の言葉は含みません）、性別、5歳刻みの年齢、アンケートで選んだライフステージも送信します。</p>
+    <p><strong>任意：専門家との共有。</strong>My guide 画面で専門家に接続し、共有をオンにしたままにすると、毎日のチェックイン、分析の本文、メッセージが当社サービス（Cloudflare）上のその専門家のクライアント記録に保存されます。専門家はこれによって内容を確認できます。接続と同意がなければ何も共有されません。詳細と停止方法は第6節をご覧ください。</p>
+    <p><strong>任意：ふたりで。</strong>コードでご自身が選んだ人（パートナー、友人、家族）とペアになると、その人に見えるのは、あなたが相手向けに入力した名前、今週の一歩、週の何日目か、毎日の「できた／できなかった」のチェックだけです。健康データ、分析、記録は共有されません。これらの少数の項目は、ペアの間だけ当社サーバーに保存されます。ペアはいつでも解除できます。</p>
+    <h2>6. サービス提供者</h2>
+    <ul>
+      <li><strong>Anthropic PBC（米国）</strong> — 送信されたデータから提案を生成する AI モデル（Claude）を提供。</li>
+      <li><strong>Cloudflare, Inc.（米国）</strong> — 要求中継サービスをホスト。一時的な技術保存には自動失効を使用。</li>
+      <li><strong>Apple / Google</strong> — アプリを配信し、端末上の健康データ権限（Apple Health / Health Connect）を提供。配信に必要な範囲のみを受領します。</li>
+      <li><strong>RevenueCat, Inc.（米国）</strong> — AppleまたはGoogleで購入したサブスクリプションの状態を確認します。購入情報とランダムなアプリ利用者IDを受け取りますが、氏名・メールアドレス・健康データは含まれません。</li>
+      <li><strong>Oura、Google（Fitbit）、Polar、Withings（任意）</strong> — デバイスのアカウントを直接接続した場合のみ。ログインはメーカー自身のページで行います。当社の中継サービスは許可されたアクセスを使って指標をアプリに取り込みますが、指標は保存しません。アクセス認証情報は自動的に失効します（最長30日）。Oura を接続した場合は、Oura アプリでご自身が付けたタグ（症状など）も含まれます。</li>
+      <li><strong>Cal.com, Inc.（米国）（任意）</strong> — My guide画面での紹介通話の予約。予約ページで入力した内容は、Cal.comのプライバシーポリシーに従って取り扱われます。</li>
+    </ul>
+    <h3>任意：My guide（独立した専門家）</h3>
+    <p><strong>My guide</strong>画面には、ADAM-Lのプラットフォームを利用する独立した専門家が表示されます。各専門家は自らサービスを提供し、その責任を負います。ADAM-Lはソフトウェアを提供します。</p>
+    <p><strong>専門家のコードで接続する場合</strong>、メールアドレス、任意でお名前を入力し、明示的な同意をいただきます。これらは同意日と選んだ専門家とともに当社のデータベース（Cloudflare）に保存されます。</p>
+    <p><strong>専門家が見るもの。</strong>「担当ガイドが私の日々のデータを見る」スイッチがオンの間、あなたが完了した毎日のチェックインは、接続した専門家にも送信されます。内容は、体調についての回答、来られた理由、デバイスの数値（Apple Health または Health Connect からの読み取りを許可したデータを含む）、分析の本文です。スイッチは My guide 画面でいつでもオフにでき、接続とメッセージはそのまま残り、新しいデータは送られません。健康データはあなた自身が選んだ専門家とだけ共有され、広告に使うことも販売することもありません。</p>
+    <p><strong>検査値。</strong>スイッチがオンの間、入力した、または検査票の写真から確認した検査値（数値・単位・検査日）も、その専門家に送信されます。変更するたびに、カルテ内のデータは最新のものに置き換えられます。</p>
+     <p><strong>メッセージ。</strong>My guide 画面で専門家に送ったメッセージと写真は、当社のデータベースとファイルストレージ（Cloudflare）に保存され、その専門家が閲覧できます。専門家の返信はあなたの言語に自動翻訳される場合があります。写真とボイスメッセージは最長365日間保存されます。マイクはボイスメッセージを録音している間だけ使用します。</p>
+    <p><strong>専門家による単発レビュー。</strong> レビューを購入する際、メールアドレス、任意でお名前を入力し、明示的な同意をいただきます。これらは、同意の日付および購入情報（RevenueCatの購入者識別子と取引番号）とともに保存され、購入が支払われ、1回だけ計上されることを確認するために使用されます。あなたはレビューを作成するADAM-Lの専門家に接続されます。以降は、上記のMy guideについての説明がすべて適用されます（専門家が見る内容、メッセージの保存方法、同意の撤回方法）。質問期間が終了すると、新しいデータは専門家に共有されなくなります。</p>
+    <p><strong>紹介通話を予約した場合</strong>、Cal.comから予約情報（氏名、メールアドレス、日時）が当社に届き、当社はそれを専門家に転送します（通知メッセージ（Telegram）を含む）。</p>
+    <p>同じ画面の「同意を撤回して切断」でいつでも同意を撤回できます。接続はすぐに終了し、以後は何も送信されません。接続記録、すでに共有したデータとメッセージを完全に削除したい場合は、登録したメールアドレスから <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> にご連絡ください。30日以内に削除します。法的根拠：あなたの明示的な同意（GDPR第6条1項(a)、健康データについては第9条2項(a)）。</p>
+    <p>当社はお客様の個人情報を<strong>販売せず</strong>、広告にも使用しません。</p>
+    <h2>7. 国際移転</h2>
+    <p>上記の提供者は要求データを米国で処理する場合があります。かかる移転は欧州委員会の<strong>標準契約条項</strong>および各提供者の補完的保護措置に基づきます。</p>
+    <h2>8. 保存期間</h2>
+    <p>端末上のデータは、アプリ内で削除するかアプリをアンインストールするまで保持され、管理はあなたにあります。AIリクエストのために送信されたデータは保存されません。生成された概要は最長72時間保持されます（セクション5）。アプリ改善のために共有したデータは、あなたが提供データを削除するまで保持されます。My guide接続の記録（セクション6）は、削除をご依頼いただくまで保持されます。それ以外のウェルネス履歴を当社のサーバーに保存することはありません。 専門家と共有している場合、すでに共有したチェックイン、分析、メッセージは、削除をご依頼いただくまで保存されます。</p>
+    <h2>9. お客様の権利</h2>
+    <p>お住まいの地域により、アクセス・訂正・削除・制限・異議、データポータビリティ、同意撤回の権利がある場合があります。データは端末内にあるため、その多くをいつでもアプリ内で直接行えます。</p>
+    <p><strong>EU/英国（GDPR）:</strong> 現地の監督機関に苦情を申し立てる権利もあります。<strong>カリフォルニア（CCPA/CPRA）:</strong> 知る・削除する・「販売」/「共有」をオプトアウトする権利があります — 当社はいずれも行いません。</p>
+    <p><strong>ワシントン州（My Health My Data Act）：</strong>アカウントだけでなく健康データそのものを削除する権利があります。アプリでは「バックアップとデータ削除」内の<strong>「健康データを削除」</strong>で、この端末から即時に消去できます。隣の<strong>「バックアップを保存」</strong>で暗号化ファイルを書き出せます。</p>
+    <p>ご請求は <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> までご連絡ください。30日以内（カリフォルニアの請求は15日以内）に回答します。</p>
+    <h2>10. 未成年者</h2>
+    <p>本アプリは<strong>18歳以上</strong>の成人向けです。未成年者のデータを故意に収集しません。未成年者が利用したと思われる場合は <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> までご連絡ください。対応します。</p>
+    <h2>11. セキュリティ</h2>
+    <p>ウェルネスデータは端末内で保存時に暗号化され、暗号化（TLS）接続で送信されます。完全に安全な保存・送信方法は存在しませんが、データの機微性に見合った対策を講じます。</p>
+    <h2>12. 変更</h2>
+    <p>本ポリシーは更新することがあります。重要な変更は上記「最終更新」日に反映し、必要に応じてアプリ内で強調表示します。</p>
+    <h2>13. お問い合わせ</h2>
+    <p>プライバシーに関するお問い合わせ: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · 一般サポート: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
+
+  <!-- ============ KO ============ -->
+  <div data-lang="ko">
+    <div class="page-eyebrow"><span>개인정보처리방침</span></div>
+    <h1>개인정보처리방침</h1>
+    <p class="page-date">ADAM-L AI assistant · 최종 업데이트: 2026년 10월 2일</p>
+    <p class="intro">본 방침은 <strong>ADAM-L AI assistant</strong> 앱이 귀하의 정보를 어떻게 처리하는지 설명합니다. 이 앱은 일반적인 <strong>웰니스 및 교육 도구</strong>입니다. <strong>의료기기가 아니며</strong> 의학적 조언·진단·치료를 제공하지 않고 자격을 갖춘 전문가를 대체하지 않습니다.</p>
+    <h2>1. 우리는 누구인가</h2>
+    <p>데이터 관리자는 우크라이나에 거주하는 개인 <strong>Kyrylo Selivanov</strong>("당사")입니다. 데이터 보호 책임자는 지정하지 않았으며, 모든 개인정보 관련 요청은 관리자가 직접 처리합니다.</p>
+    <p>개인정보 문의: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · 일반 지원: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+    <h2>2. 적용 범위</h2>
+    <p>본 방침은 모바일 앱 <strong>ADAM-L AI assistant</strong> 및 그 구독 등급에만 적용됩니다. 별도의 웹사이트나 서비스는 포함하지 않습니다.</p>
+    <h2>3. 앱 소개</h2>
+    <p>이 앱을 통해 자가 보고 웰니스 지표(수면의 질, 에너지, 활동, 식습관, 개인 목표 등)를 기록할 수 있으며, 귀하의 허가하에 Apple Health 또는 Health Connect의 웰니스 수치를 선택적으로 읽을 수 있습니다. AI 모델을 사용하여 교육 및 자가 관리를 위한 <strong>일반적·비의료적 영양 및 생활습관 제안</strong>을 제공합니다.</p>
+    <h2>4. 처리하는 정보</h2>
+    <ul>
+      <li><strong>귀하가 입력하는 웰니스 데이터</strong> — 제공하기로 선택한 주관적 자가 평가 및 생활습관 지표.</li>
+      <li><strong>웨어러블 수치</strong> — 기기의 Apple Health / Health Connect에서 읽도록 명시적으로 허가한 데이터. 구체적으로, 허용한 유형만: 수면, 걸음 수, 운동(운동 세션), 심박수, 안정 시 심박수, 심박 변이도(HRV), 호흡수, 혈중 산소포화도, VO₂ max, 체중, 혈압, 체지방률, 수면 중 손목 온도, 혈당. 이 데이터는 매일의 웰니스 요약과 제안(예: 평소 나의 수준과 비교한 회복, 어제 운동 후 오늘 활동량 조정)을 만드는 데에만 사용됩니다. 이 데이터는 광고에 사용되지 않으며 절대 판매되지 않습니다.</li>
+      <li><strong>귀하의 목표 및 집중 영역</strong> — 제안 개인화를 위해.</li>
+      <li><strong>최소한의 기술 데이터</strong> — 앱 버전 및 AI 응답 생성을 위해 필요한 네트워크 요청.</li>
+      <li><strong>검사지 사진(선택)</strong> — 「사진에서 인식」을 누른 경우에만. 사진은 숫자를 읽는 목적으로만 암호화된 연결을 통해 당사 처리 서비스와 AI 모델로 전송되며, 저장되지 않고 응답 후 폐기됩니다. 수치는 직접 확인하고 승인한 뒤에만 사용자의 기기에만 저장됩니다.</li>
+    </ul>
+    <p>이 앱에는 <strong>계정도 로그인도 없습니다</strong>. 앱을 사용하기 위해 이름이나 이메일을 입력할 필요가 없습니다. 유일한 예외는 섹션 6에 설명된 선택 사항인 <strong>My guide</strong> 연결입니다. 전문가와 연결하기로 선택한 경우에만 이메일과, 원하시면 이름을 입력합니다.</p>
+    <p>이러한 데이터는 귀하의 신체적 웰빙과 관련될 수 있으므로 특별한 범주의 개인정보로 취급하며, 귀하의 <strong>명시적 동의</strong>(GDPR 제6조(1)(a) 및 제9조(2)(a))에 근거해서만 처리합니다. 동의는 앱에서 데이터를 삭제하거나 앱을 제거하여 언제든지 철회할 수 있습니다.</p>
+    <h2>5. 데이터 저장 위치</h2>
+    <p>귀하의 웰니스 데이터와 기록은 <strong>기기 내에 로컬로 암호화되어 저장</strong>되며 <strong>당사 서버에 영구적으로 보관되지 않습니다</strong>(아래의 임시 안전장치 참조). AI 제안을 생성하기 위해 해당 요청에 필요한 데이터만 암호화 연결을 통해 당사 처리 서비스와 AI 제공업체로 전송되어 응답 생성에만 사용되며, 요청의 짧은 기술적 수명을 넘어 <strong>보관되지 않습니다</strong>.</p>
+    <p>생성된 요약은 당사 처리 서비스에 <strong>최대 72시간</strong> 보관된 뒤 자동으로 삭제됩니다. 이는 응답이 기기에 도달하지 못한 경우(연결 끊김, 앱 종료 등)를 위한 안전장치로, 새로 요청하지 않고도 자신의 요약을 받을 수 있습니다. 이 기록은 가명 처리되어 임의의 기기 식별자에만 연결되며 이름, 이메일, 접근 코드는 포함하지 않습니다.</p>
+    <p><strong>선택 사항: 앱 개선에 도움 주기.</strong> 위 내용과 별개로 ‘앱 개선에 도움 주기’를 켤 수 있으며, 기본값은 <strong>꺼짐</strong>입니다. 켜져 있는 동안에는 완료된 각 날짜의 수치(트래커 지표, 사용자의 평가, 가정에서 잰 혈압, 체중과 허리둘레, 스키마·가중치 버전)가 당사 처리 서비스로 전송되어 동일한 임의의 기기 식별자 아래 저장됩니다. 실제 데이터로 앱을 보정하기 위해서입니다. 본인의 말로 작성한 내용은 서버가 받지 않으며 기기를 벗어나지 않습니다. 끄면 전송이 즉시 중단되고, ‘내 기여 삭제’로 이 기기에서 이미 보낸 내용을 모두 지울 수 있습니다. 법적 근거: 명시적 동의 — GDPR 제6조 제1항 (a) 및 제9조 제2항 (a). 전체 내용은 ‘앱 개선에 도움 주기’ 페이지에 있습니다. 「이번 주 포커스」가 진행 중이면 어떤 단계인지, 그날 완료로 표시했는지, 실험이 어떻게 끝났는지도 전송합니다. 또한 목록에서 고른 주요 불편의 범주(본인이 쓴 말은 제외), 성별, 5세 단위 연령, 설문에서 선택한 생애 단계도 전송합니다.</p>
+    <p><strong>선택 사항: 전문가와의 공유.</strong> My guide 화면에서 전문가와 연결하고 공유를 켜 두면, 매일의 체크인, 분석 본문, 메시지가 당사 서비스(Cloudflare)의 해당 전문가 고객 기록에 저장됩니다. 전문가는 이를 통해 내용을 확인합니다. 연결하고 동의하지 않으면 아무것도 공유되지 않으며, 자세한 내용과 중지 방법은 6항에 있습니다.</p>
+    <p><strong>선택 사항: 함께.</strong> 직접 고른 사람(배우자, 친구, 가족)과 코드로 짝을 맺으면, 그 사람에게는 내가 입력한 이름, 이번 주 한 걸음, 요일, 매일의 ‘했음 / 못 했음’ 체크만 보입니다. 건강 데이터, 분석, 기록은 공유되지 않습니다. 이 몇 가지 항목은 짝으로 연결된 동안에만 서버에 저장되며, 언제든 짝을 해제할 수 있습니다.</p>
+    <h2>6. 서비스 제공업체</h2>
+    <ul>
+      <li><strong>Anthropic PBC(미국)</strong> — 요청 시 전송된 데이터로 제안을 생성하는 AI 모델(Claude)을 제공.</li>
+      <li><strong>Cloudflare, Inc.(미국)</strong> — 요청 중계 서비스를 호스팅하며, 임시 기술 저장은 자동 만료를 사용.</li>
+      <li><strong>Apple / Google</strong> — 앱을 배포하고 기기 내 건강 데이터 권한(Apple Health / Health Connect)을 제공. 배포에 필요한 범위만 수령합니다.</li>
+      <li><strong>RevenueCat, Inc.(미국)</strong> — Apple 또는 Google을 통해 구매한 구독의 상태를 확인합니다. 구매 정보와 무작위 앱 사용자 식별자를 받으며, 이름·이메일·건강 데이터는 받지 않습니다.</li>
+      <li><strong>Oura, Google(Fitbit), Polar, Withings — 선택 사항</strong> — 기기 계정을 직접 연결한 경우에만 해당합니다. 로그인은 제조사 자체 페이지에서 이루어지며, 당사 중계 서비스는 허용된 접근 권한으로 지표를 앱에 가져올 뿐 저장하지 않습니다. 접근 자격 증명은 자동으로 만료됩니다(최대 30일). Oura를 연결하면 Oura 앱에서 직접 추가한 태그(예: 증상)도 포함됩니다.</li>
+      <li><strong>Cal.com, Inc.(미국) — 선택 사항</strong> — My guide 화면에서 소개 통화 예약. 예약 페이지에 입력한 내용은 Cal.com의 개인정보 처리방침에 따라 처리됩니다.</li>
+    </ul>
+    <h3>선택 사항: My guide(독립 전문가)</h3>
+    <p><strong>My guide</strong> 화면에는 ADAM-L 플랫폼을 사용하는 독립 전문가가 표시됩니다. 각 전문가는 자신의 서비스를 직접 제공하고 그에 대한 책임을 지며, ADAM-L은 소프트웨어를 제공합니다.</p>
+    <p><strong>전문가 코드로 연결하는 경우</strong> 이메일, 원하시면 이름을 입력하고 명시적으로 동의하게 됩니다. 이 정보는 동의 날짜 및 선택한 전문가와 함께 당사 데이터베이스(Cloudflare)에 저장됩니다.</p>
+    <p><strong>전문가가 보는 정보.</strong> «가이드가 내 하루 데이터를 봅니다» 스위치가 켜져 있는 동안, 완료한 매일의 체크인은 연결된 전문가에게도 전송됩니다. 여기에는 몸 상태에 대한 답변, 찾아온 이유, 기기 측정값(Apple Health 또는 Health Connect에서 읽도록 허용한 데이터 포함), 분석 본문이 포함됩니다. 스위치는 My guide 화면에서 언제든 끌 수 있으며, 연결과 메시지는 유지되고 새로운 데이터는 전송되지 않습니다. 건강 데이터는 직접 선택한 전문가와만 공유되며, 광고에 사용하거나 판매하지 않습니다.</p>
+    <p><strong>검사 수치.</strong> 스위치가 켜져 있는 동안 직접 입력하거나 검사지 사진에서 확인한 검사 수치(값, 단위, 검사일)도 해당 전문가에게 전송됩니다. 변경할 때마다 고객 카드의 데이터는 현재 데이터로 교체됩니다.</p>
+     <p><strong>메시지.</strong> My guide 화면에서 전문가에게 보낸 메시지와 사진은 당사 데이터베이스와 파일 저장소(Cloudflare)에 저장되며 해당 전문가가 볼 수 있습니다. 전문가의 답장은 사용자의 언어로 자동 번역될 수 있습니다. 사진과 음성 메시지는 최대 365일간 보관되며, 마이크는 음성 메시지를 녹음하는 동안에만 사용됩니다.</p>
+    <p><strong>전문가 1회 리뷰.</strong> 리뷰를 구매할 때 이메일과 선택적으로 이름을 입력하고 명시적으로 동의합니다. 당사는 이를 동의 날짜 및 구매 정보(RevenueCat의 구매자 식별자와 거래 번호)와 함께 저장하여 구매가 결제되었고 한 번만 계산되는지 확인합니다. 회원님은 리뷰를 준비하는 ADAM-L 전문가와 연결됩니다. 이후에는 위에서 My guide에 대해 설명한 내용이 모두 적용됩니다: 전문가가 보는 내용, 메시지 저장 방식, 동의 철회 방법. 질문 기간이 종료되면 새로운 데이터는 더 이상 전문가에게 공유되지 않습니다.</p>
+    <p><strong>소개 통화를 예약하는 경우</strong> Cal.com이 예약 정보(이름, 이메일, 시간)를 당사에 전달하고, 당사는 이를 알림 메시지(Telegram)를 포함해 전문가에게 전달합니다.</p>
+    <p>같은 화면의 «동의 철회 및 연결 해제»로 언제든 동의를 철회할 수 있습니다. 연결은 즉시 종료되고 더 이상 아무것도 전송되지 않습니다. 연결 기록과 이미 공유된 데이터 및 메시지를 완전히 삭제하려면 사용한 이메일로 <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> 에 연락해 주세요. 30일 이내에 삭제합니다. 법적 근거: 사용자의 명시적 동의 — GDPR 제6조 1항 (a), 건강 데이터의 경우 제9조 2항 (a).</p>
+    <p>당사는 귀하의 개인정보를 <strong>판매하지 않으며</strong> 광고에 사용하지 않습니다.</p>
+    <h2>7. 국제 이전</h2>
+    <p>위 제공업체는 요청 데이터를 미국에서 처리할 수 있습니다. 이러한 이전은 유럽위원회의 <strong>표준계약조항</strong> 및 각 제공업체의 보완적 보호조치에 근거합니다.</p>
+    <h2>8. 보관</h2>
+    <p>기기에 있는 데이터는 앱에서 삭제하거나 앱을 제거할 때까지 유지되며, 관리 권한은 귀하에게 있습니다. AI 요청을 위해 전송된 데이터는 저장되지 않으며, 생성된 요약은 최대 72시간 보관됩니다(섹션 5). 앱 개선을 돕기 위해 공유한 데이터는 귀하가 기여 데이터를 삭제할 때까지 보관됩니다. My guide 연결 기록(섹션 6)은 삭제를 요청하실 때까지 보관됩니다. 그 밖의 웰니스 기록은 당사 서버에 저장하지 않습니다. 전문가와 공유하는 경우, 이미 공유된 체크인, 분석, 메시지는 삭제를 요청하실 때까지 보관됩니다.</p>
+    <h2>9. 귀하의 권리</h2>
+    <p>거주 지역에 따라 열람·정정·삭제·처리 제한 또는 반대, 데이터 이동, 동의 철회의 권리가 있을 수 있습니다. 데이터가 기기 내에 있으므로 대부분은 언제든지 앱에서 직접 행사할 수 있습니다.</p>
+    <p><strong>EU/영국(GDPR):</strong> 현지 감독기관에 민원을 제기할 권리도 있습니다. <strong>캘리포니아(CCPA/CPRA):</strong> 알 권리, 삭제, "판매"/"공유" 거부 권리가 있으며 — 당사는 어느 것도 하지 않습니다.</p>
+    <p><strong>워싱턴주(My Health My Data Act):</strong> 계정뿐 아니라 건강 데이터 자체를 삭제할 권리가 있습니다. 앱에서 ‘백업 및 데이터 삭제’ 섹션의 <strong>‘내 건강 데이터 삭제’</strong>로 이 기기에서 즉시 지울 수 있습니다. 옆의 <strong>‘백업 저장’</strong>으로 암호화 파일을 내보낼 수 있습니다.</p>
+    <p>요청은 <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>으로 문의하세요. 30일 이내(캘리포니아 요청은 15일 이내)에 답변합니다.</p>
+    <h2>10. 아동</h2>
+    <p>이 앱은 <strong>만 18세 이상</strong> 성인을 위한 것입니다. 미성년자의 데이터를 고의로 수집하지 않습니다. 미성년자가 앱을 사용했다고 생각되면 <a href="mailto:privacy@via-l.com">privacy@via-l.com</a>으로 문의해 주세요. 도와드리겠습니다.</p>
+    <h2>11. 보안</h2>
+    <p>웰니스 데이터는 기기 내에서 저장 시 암호화되고 암호화(TLS) 연결로 전송됩니다. 완전히 안전한 저장·전송 방법은 없지만, 데이터 민감도에 적절한 조치를 적용합니다.</p>
+    <h2>12. 변경</h2>
+    <p>본 방침은 업데이트될 수 있습니다. 중요한 변경은 위 "최종 업데이트" 날짜에 반영되며 필요 시 앱 내에서 강조됩니다.</p>
+    <h2>13. 문의</h2>
+    <p>개인정보 문의: <a href="mailto:privacy@via-l.com">privacy@via-l.com</a> · 일반 지원: <a href="mailto:support@via-l.com">support@via-l.com</a></p>
+  </div>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span class="footer-copy">© 2026 ADAM-L</span>
+    <span class="footer-links"><a href="./terms.html">Terms of Service</a></span>
+  </div>
+</footer>
+
+<script>
+  var LANG_FLAGS = { en:'🇬🇧', es:'🇪🇸', uk:'🇺🇦', ru:'🇷🇺', de:'🇩🇪', pt:'🇧🇷', fr:'🇫🇷', pl:'🇵🇱', it:'🇮🇹', he:'🇮🇱', ja:'🇯🇵', ko:'🇰🇷' };
+  var LANG_NAMES = { en:'English', es:'Español', uk:'Українська', ru:'Русский', de:'Deutsch', pt:'Português', fr:'Français', pl:'Polski', it:'Italiano', he:'עברית', ja:'日本語', ko:'한국어' };
+  var LANG_ORDER = ['en','es','uk','ru','de','pt','fr','pl','it','he','ja','ko'];
+  function toggleLangMenu(e) { if (e) e.stopPropagation(); document.getElementById('langMenu').classList.toggle('open'); }
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.lang-wrap')) { var m = document.getElementById('langMenu'); if (m) m.classList.remove('open'); }
+  });
+  (function buildLangMenu(){
+    var m = document.getElementById('langMenu');
+    LANG_ORDER.forEach(function(l) {
+      var d = document.createElement('div');
+      d.className = 'lang-opt'; d.setAttribute('data-l', l);
+      d.innerHTML = '<span class="lang-flag">' + LANG_FLAGS[l] + '</span>' + LANG_NAMES[l];
+      d.onclick = function(){ setLang(l); };
+      m.appendChild(d);
+    });
+  })();
+  var backLabels = {
+    en:'← Back to app', es:'← Volver a la app', uk:'← Назад до застосунку', ru:'← Назад в приложение',
+    de:'← Zurück zur App', pt:'← Voltar à app', fr:'← Retour à l\'app', pl:'← Powrót do aplikacji',
+    it:'← Torna all\'app', he:'→ חזרה לאפליקציה', ja:'← アプリに戻る', ko:'← 앱으로 돌아가기'
+  };
+  function setLang(l) {
+    document.querySelectorAll('[data-lang]').forEach(function(el) {
+      el.classList.toggle('active', el.getAttribute('data-lang') === l);
+    });
+    var lf = document.getElementById('langFlag'); if (lf) lf.textContent = LANG_FLAGS[l] || '🌐';
+    var ll = document.getElementById('langLabel'); if (ll) ll.textContent = l.toUpperCase();
+    document.querySelectorAll('.lang-opt').forEach(function(o) {
+      o.classList.toggle('active', o.getAttribute('data-l') === l);
+    });
+    var lm = document.getElementById('langMenu'); if (lm) lm.classList.remove('open');
+    var bl = document.getElementById('back-link'); if (bl) bl.textContent = backLabels[l] || '← Back to app';
+    document.documentElement.lang = l;
+    try { localStorage.setItem('selectedLang', l); } catch(e){}
+  }
+  (function(){
+    var saved = null;
+    // Тот же ключ, что у приложения и остальных юр-страниц; `vial_legal_lang` — запасной,
+    // для тех, кто раньше выбирал язык только на странице поддержки.
+    try { saved = localStorage.getItem('vial_lang')||localStorage.getItem('selectedLang')||localStorage.getItem('vial_legal_lang'); } catch(e){}
+    if (saved === 'ua') saved = 'uk';
+    if (saved && backLabels[saved]) { setLang(saved); return; }
+    var hl = (navigator.language || '').toLowerCase().slice(0,2);
+    if (hl === 'ua') hl = 'uk';
+    if (backLabels[hl]) setLang(hl); else setLang('en');
+  })();
+</script>
+
+</body>
+</html>
