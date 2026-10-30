@@ -157,8 +157,14 @@ ADAM-L перекрашивает и переименовывает их выв�
       `app-adam/iap-keys.json` (Android — после Google Play). Было: В ТОТ ЖЕ проект, что VIA-L (воркер
       сверяет покупки по нему); товары adam_l_* на тот же entitlement `via_l_pro`; offering ADAM-L → ключи в
       `app-adam/iap-keys.json`; воркер: принять `adam_l_specialist_review` в /review/claim и ключи ADAM-L (п.7); (д) Google Play: новое приложение `com.viael.adaml`, свой ключ подписи.
-      ⏳ Моё: `legal-adam/` ×12 (сейчас в бандле юр-страницы VIA-L), тексты и скриншоты сторов ×12, Android
-      (`npm run add:android` локально).
+      ✅ 10-30 `legal-adam/` ×12 (копия legal-app: имя ADAM-L, пакет com.viael.adaml) — в бандле и на странице.
+      ✅ 10-30 тексты/анкеты: `app-adam/store/ADAM-L-СТОРЫ-ВСТАВИТЬ.txt` (описание EN/UK/RU/ES, Безопасность данных,
+      декларация Health Connect без цикла и без «Медицины», IARC, App Privacy). ⏳ ещё 8 языков описания, скриншоты.
+      ✅ 10-30 Android: `app-adam/android` (cap add + setup), ключ загрузки `app-adam/adaml-release.jks` (alias adaml,
+      пароль в `app-adam/keystore.properties`; копия + AAB v1 в `/Users/foxmaster/Developer/ADAM-L-release/`, вне git),
+      сборка: JAVA_HOME=jbr-17 (`~/Library/Java/JavaVirtualMachines/jbr-17.0.14`, JBR Android Studio 25 не годится),
+      `VIAL_VERSION_CODE=N ./gradlew bundleRelease`. Play-аккаунт личный ВЛАДЕЛЬЦА → первую загрузку руками в консоли
+      (закрытый тест), play-release.py VIA-L к нему не подключён; потом 12 тестировщиков × 14 дней.
 - [ ] 7. ПОСЛЕДНИМ — воркер: возврат после OAuth трекеров в схему `com.viael.adaml://` (сейчас только VIA-L); ADAM-L ходит как VIA-L (tier `pro`, велнес-режим уже App Store-безопасный); решить, нужен ли
       свой tier (раздельные сводки «Помочь улучшить», лимиты, бренд в тексте разбора/памятки — воркер пишет «VIA-L»).
 - [ ] 8. Хвосты удаления EXPERT (10-27): воркер `cloudflare-worker.js:9770/10967` и кабинет `cabinet/index.html:3266` ещё дают
