@@ -53,6 +53,32 @@
     catch(e){ console.warn('[iap] configure failed', e); return false; }
   }
 
+  // Флаги подписки для синхронного UI: vialp_entitlement — доступ есть; vialp_ent_trial — это бесплатный
+  // пробный период МАГАЗИНА (periodType TRIAL, 2026-10-31): карта привязана, разбор в эти дни остаётся коротким.
+  function saveEnt(ci) {
+    var e = ci && ci.entitlements && ci.entitlements.active && ci.entitlements.active[ENTITLEMENT_ID];
+    try { localStorage.setItem('vialp_entitlement', e ? '1' : '0'); localStorage.setItem('vialp_ent_trial', e && String(e.periodType || '').toUpperCase() === 'TRIAL' ? '1' : '0'); } catch(x){}
+    return !!e;
+  }
+
+  // Каким тарифам магазин сейчас даст бесплатную неделю (2026-10-31). iOS — спрашиваем право на вводное
+  // предложение (одно на Apple ID в группе); Android — Play отдаёт бесплатную фазу только тем, кому она положена.
+  // Возвращает {productId:true}; флаг vialp_st_offer = «пробник магазина существует» — по нему приложение
+  // даёт без карты 1 день вместо 7 (пока в сторе предложения нет — всё по-старому).
+  window.iapTrialEligible = async function(pkgs){
+    var p = rc(), out = {}; if(!p || !pkgs || !pkgs.length) return out;
+    var free = pkgs.filter(function(k){ var ip = k && k.product && k.product.introPrice; return ip && Number(ip.price) === 0; });
+    try { localStorage.setItem('vialp_st_offer', free.length ? '1' : '0'); } catch(e){}
+    if(!free.length) return out;
+    if(window.iapPlatform() === 'ios' && p.checkTrialOrIntroductoryPriceEligibility){
+      try {
+        var r = await p.checkTrialOrIntroductoryPriceEligibility({ productIdentifiers: free.map(function(k){ return k.product.identifier; }) });
+        free.forEach(function(k){ var x = r && r[k.product.identifier]; if(x && Number(x.status) === 2) out[k.product.identifier] = true; });   // 2 = ELIGIBLE
+      } catch(e){ console.warn('[iap] eligibility failed', e); }
+    } else free.forEach(function(k){ out[k.product.identifier] = true; });
+    return out;
+  };
+
   // Проверка активной подписки. Возвращает true/false, кэширует флаг в localStorage
   // (vialp_entitlement) — читается синхронно другими частями UI без повторного await.
   window.iapCheckEntitlement = async function(){
@@ -60,10 +86,7 @@
     var ok = await ensureConfigured(); if(!ok) return false;
     try {
       var r = await p.getCustomerInfo();
-      var active = !!(r && r.customerInfo && r.customerInfo.entitlements &&
-                       r.customerInfo.entitlements.active && r.customerInfo.entitlements.active[ENTITLEMENT_ID]);
-      try { localStorage.setItem('vialp_entitlement', active ? '1' : '0'); } catch(e){}
-      return active;
+      return saveEnt(r && r.customerInfo);
     } catch(e){ console.warn('[iap] getCustomerInfo failed', e); return false; }
   };
 
@@ -97,10 +120,7 @@
     var p = rc(); if(!p || !pkg) return { ok:false };
     try {
       var res = await p.purchasePackage({ aPackage: pkg });
-      var active = !!(res && res.customerInfo && res.customerInfo.entitlements &&
-                       res.customerInfo.entitlements.active && res.customerInfo.entitlements.active[ENTITLEMENT_ID]);
-      try { localStorage.setItem('vialp_entitlement', active ? '1' : '0'); } catch(e){}
-      return { ok: active };
+      return { ok: saveEnt(res && res.customerInfo) };
     } catch(e){
       var cancelled = !!(e && (e.userCancelled || (e.message||'').toLowerCase().indexOf('cancel')>=0));
       return { ok:false, cancelled: cancelled, error: e };
@@ -112,10 +132,7 @@
     var ok = await ensureConfigured(); if(!ok) return false;
     try {
       var r = await p.restorePurchases();
-      var active = !!(r && r.customerInfo && r.customerInfo.entitlements &&
-                       r.customerInfo.entitlements.active && r.customerInfo.entitlements.active[ENTITLEMENT_ID]);
-      try { localStorage.setItem('vialp_entitlement', active ? '1' : '0'); } catch(e){}
-      return active;
+      return saveEnt(r && r.customerInfo);
     } catch(e){ console.warn('[iap] restorePurchases failed', e); return false; }
   };
 

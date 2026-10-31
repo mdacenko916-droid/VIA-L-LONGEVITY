@@ -3147,7 +3147,9 @@ async function _trialGuard(request, env, body, ctx) {
     // 7 КАЛЕНДАРНЫХ дней от первого пробного дня (2026-10-31; было — 7 дней с проходом). = _TRIAL_DAYS приложения.
     // Старые приложения считают дни с проходом у себя, но разбор после 7-го календарного дня им откажет сервер.
     const start = (led && led.start) || days.slice().sort()[0] || '';
-    if (start && /^\d{4}-\d{2}-\d{2}$/.test(day) && (Date.parse(day) - Date.parse(start)) / 86400000 >= 7) return { error: 'trial_over' };
+    // strial — идёт бесплатная неделя МАГАЗИНА (карта привязана, 2026-10-31): разбор короткий, но счёт дней не закрывает.
+    // Флаг ставит клиент; подделка даёт лишь короткий разбор, потолки адреса и суток ниже действуют и на него.
+    if (!body.strial && start && /^\d{4}-\d{2}-\d{2}$/.test(day) && (Date.parse(day) - Date.parse(start)) / 86400000 >= 7) return { error: 'trial_over' };
 
     // 2. потолок на адрес
     const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
