@@ -9547,6 +9547,9 @@ function _stepDue(n){
   // «С чем вы пришли» — тоже разовый блок, но его «сделано» определяет не профиль, а сама
   // сохранённая жалоба: клиент мог заполнить профиль раньше, чем появился этот шаг. 2026-08-25.
   if(n===17) return !(typeof _cmpGet==='function' && _cmpGet());
+  // «Что нового за сутки» в САМЫЙ ПЕРВЫЙ проход не спрашиваем (владелец 2026-10-31): жалоба, вес и талия только что
+  // введены в профиле — «лучше/хуже, чем вчера», недельная оценка и вес за 25 секунд не изменятся. Со второго дня — как было.
+  if(n===14){ var _lp=null; try{ _lp=localStorage.getItem('vialp_lastpass'); }catch(e){} if(!_lp) return false; }
   if(c==='base')return !_profileDone();
   if(c==='weekly'||c==='biweekly'){
     var last=_stepLastMap()[n]; if(!last)return true;
@@ -9992,6 +9995,7 @@ var _IAP_FREE7={ru:'7 дней бесплатно, затем',uk:'7 днів б
 // кнопка «Начать 7 дней бесплатно» и условия над тарифами (Apple 3.1.2: до подтверждения видно, когда и сколько спишут).
 function _iapTrialMark(pkgs){
   if(!window.iapTrialEligible) return;
+  if(_subActive()&&!_storeTrial()) return;   // подписка уже есть (в т.ч. тестовая TestFlight) — «7 дней бесплатно» не предлагаем
   window.iapTrialEligible(pkgs).then(function(ok){
     window._iapTrialOK=ok||{}; var any=Object.keys(window._iapTrialOK).length>0;
     var n=document.getElementById('iap-trial-note');
@@ -10139,7 +10143,7 @@ function _iapShow(){
         ja:'無料でお使いいただける日数が終わりました。詳しい分析と個別の一日プランはサブスクリプションに含まれます（いつでも解約できます）。',
         ko:'무료 이용 기간이 끝났습니다. 전체 분석과 개인 맞춤 하루 플랜은 구독에 포함되며 언제든 해지할 수 있습니다.'});
       // бесплатная неделя магазина положена — вместо «дни закончились» условия пробного периода
-      if(window._iapTrialOK&&Object.keys(window._iapTrialOK).length){ n.textContent=L(_IAP_NOTE7).replace(/\{store\}/g,_iapStoreName()); n.style.display='block'; }
+      if(window._iapTrialOK&&Object.keys(window._iapTrialOK).length&&!(_subActive()&&!_storeTrial())){ n.textContent=L(_IAP_NOTE7).replace(/\{store\}/g,_iapStoreName()); n.style.display='block'; }
     }
   }catch(e){}
 }
