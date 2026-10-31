@@ -30,7 +30,7 @@ for f in app-mode.js healthkit-bridge.js healthconnect-bridge.js iap-bridge.js d
          evidence-registry.json my-specialist.html specialist.js research-consent.html science.html; do
   cp "$IP/$f" "$WWW/"
 done
-cp -R "$IP/clips" "$WWW/clips"
+# clips/ — ролики Евы убраны 2026-10-31 (проигрыватель без видео, move-player.js)
 
 # Перенаправители: подстраницы ссылаются на веб-имена инструмента
 for name in interpreter-via-l.html adam-l.html; do

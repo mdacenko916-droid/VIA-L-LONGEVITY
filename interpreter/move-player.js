@@ -1,4 +1,7 @@
-/* VIA·L — проигрыватель «Тренировки дня» (2026-10-10). Механика взята из пробы владельца
+/* VIA·L — проигрыватель «Тренировки дня» (2026-10-10).
+   2026-10-31, владелец: видео убрано — съёмка роликов не окупала труд. Режим «Тренировка с голосом»: на экране название,
+   «как делать», кольцо-таймер; голос телефона ведёт; повторы — по времени (≈3,5 с на повтор). Механика роликов
+   ниже оставлена (CLIPS/BOX пусты): ролик вернётся — вписать номер в CLIPS, файл в clips/ и строку в app/sync-web.sh. Механика взята из пробы владельца
    (скрин/Eva тренер видео/player.html, FITNESS-APP-MODEL.md §12.3): ролик Евы на весь экран, кольцо-таймер,
    счёт повторов по самому ролику, писки 3-2-1, музыка (WebAudio, своя), голос — ГОЛОС ТЕЛЕФОНА
    (плагин TextToSpeech в приложении, speechSynthesis в браузере; решение 2026-10-10, Cartesia не нужна).
@@ -7,21 +10,10 @@
    Новый ролик: положить clips/<номер>.mp4 (720p, без звука), вписать номер в CLIPS (и повторы в rep, если бумеранг). */
 (function () {
   // Ролики и фото Евы. rep — моменты (с) конца повтора в петле ролика (размечено в пробе 2026-10-06).
-  var CLIPS = {
-    '8.1': {}, '5.2': {}, '2.20': {},
-    '1.1': { rep: [4.75] }, '1.4': { rep: [3.92] }, '1.9': { rep: [4.08] }, '1.10': { rep: [5.08] },
-    '1.13': { rep: [2.79, 4.67] }, '1.17': { rep: [2.92] }, '1.20': { rep: [3.33] },
-    '2.1': { rep: [3.42] }, '2.3': { rep: [4.33] }, '2.7': { rep: [1.58] }, '2.9': { rep: [3.08] },
-    '3.2': { rep: [2.9, 5.87] }, '3.4': { rep: [2.67, 5.29] },
-    '3.6': { photo: 1 }, '3.7': { photo: 1 }, '3.8': { photo: 1 }, '6.3': { photo: 1 }
-  };
+  var CLIPS = {};   // 2026-10-31: ролики Евы убраны (см. шапку)
   // Рамка движения в клипе (доли кадра x0,y0,x1,y1) — для «Крупного плана»: стоя Ева во весь рост, лёжа — коврик
   // от края до края. Перенесено из пробы владельца (player.html, BOX), ключи — номера каталога.
-  var BOX = { '8.1': [.38, 0, .60, .95], '5.2': [.40, .02, .60, .95], '1.9': [.36, 0, .64, .97], '1.17': [.38, .02, .71, .92],
-    '1.1': [.30, 0, .68, .92], '1.4': [.38, 0, .60, .95], '1.10': [.35, .02, .60, .95], '2.1': [.32, .05, .76, .90], '2.3': [.12, .25, .89, .84],
-    '2.7': [.33, .10, .67, .92], '1.13': [.22, .08, .58, .92], '2.9': [.34, .15, .66, .92], '2.20': [.30, .03, .54, .95],
-    '3.6': [.17, .35, .84, .80], '3.7': [.19, .40, .81, .84], '3.8': [.19, .30, .81, .84], '1.20': [.20, .45, .85, .88],
-    '3.2': [.18, .28, .84, .88], '3.4': [.14, .28, .90, .88], '6.3': [.32, .07, .66, .92] };
+  var BOX = {};
   // Настройки (под «⋯», как в системном плеере iPhone) — запоминаются
   var PREF_K = 'vialp_mvp_prefs';
   function prefs() { var d = { tempo: 1, zoom: false, music: true, voice: true }; try { var o = JSON.parse(localStorage.getItem(PREF_K) || '{}'); for (var k in o) d[k] = o[k]; } catch (e) {} return d; }
@@ -31,15 +23,15 @@
   function clipSrc(id) { var c = CLIPS[id]; return c ? BASE + id.replace('.', '-') + (c.photo ? '.jpg' : '.mp4') : ''; }
 
   var T = {
-    start:  {ru:'Начать тренировку',uk:'Почати тренування',en:'Start workout',es:'Empezar entrenamiento',de:'Training starten',pt:'Começar treino',fr:'Commencer la séance',pl:'Zacznij trening',it:'Inizia allenamento',he:'להתחיל אימון',ja:'トレーニングを始める',ko:'운동 시작'},
+    start: {ru:'Тренировка с голосом',uk:'Тренування з голосом',en:'Workout with voice guide',es:'Entrenamiento con voz',de:'Training mit Sprachführung',pt:'Treino com voz',fr:'Séance guidée à la voix',pl:'Trening z głosem',it:'Allenamento con guida vocale',he:'אימון עם הדרכה קולית',ja:'音声ガイド付きトレーニング',ko:'음성 안내 운동'},
     resume: {ru:'Продолжить',uk:'Продовжити',en:'Resume',es:'Continuar',de:'Weiter',pt:'Continuar',fr:'Reprendre',pl:'Wznów',it:'Riprendi',he:'להמשיך',ja:'再開',ko:'계속'},
     quit:   {ru:'Выйти',uk:'Вийти',en:'Exit',es:'Salir',de:'Beenden',pt:'Sair',fr:'Quitter',pl:'Wyjdź',it:'Esci',he:'יציאה',ja:'終了',ko:'나가기'},
     sure:   {ru:'Точно выйти?',uk:'Точно вийти?',en:'Exit for sure?',es:'¿Salir de verdad?',de:'Wirklich beenden?',pt:'Sair mesmo?',fr:'Vraiment quitter ?',pl:'Na pewno wyjść?',it:'Uscire davvero?',he:'בטוח לצאת?',ja:'本当に終了しますか？',ko:'정말 나갈까요?'},
     rest:   {ru:'Отдых',uk:'Відпочинок',en:'Rest',es:'Descanso',de:'Pause',pt:'Descanso',fr:'Repos',pl:'Odpoczynek',it:'Riposo',he:'מנוחה',ja:'休憩',ko:'휴식'},
     next:   {ru:'Дальше',uk:'Далі',en:'Next',es:'Siguiente',de:'Als Nächstes',pt:'A seguir',fr:'Ensuite',pl:'Dalej',it:'Prossimo',he:'הבא',ja:'次は',ko:'다음'},
-    follow: {ru:'Повторяйте',uk:'Повторюйте',en:'Follow along',es:'Repite',de:'Mitmachen',pt:'Repita',fr:'Suivez',pl:'Powtarzaj',it:'Ripeti',he:'חזרו אחריה',ja:'一緒に',ko:'따라 하세요'},
+    follow: {ru:'Выполняем',uk:'Виконуємо',en:'Your turn',es:'Tu turno',de:'Jetzt du',pt:'Sua vez',fr:'À vous',pl:'Twoja kolej',it:'Tocca a te',he:'תורכם',ja:'あなたの番',ko:'지금 하세요'},
     hold:   {ru:'Удержание',uk:'Утримання',en:'Hold',es:'Mantén',de:'Halten',pt:'Segure',fr:'Tenez',pl:'Utrzymaj',it:'Mantieni',he:'החזקה',ja:'キープ',ko:'유지'},
-    noclip: {ru:'Ролика пока нет — делайте по описанию',uk:'Ролика поки немає — робіть за описом',en:'No video yet — follow the description',es:'Aún no hay vídeo: sigue la descripción',de:'Noch kein Video — nach Beschreibung ausführen',pt:'Ainda sem vídeo — siga a descrição',fr:'Pas encore de vidéo — suivez la description',pl:'Filmu jeszcze nie ma — ćwicz według opisu',it:'Video non ancora disponibile: segui la descrizione',he:'עדיין אין סרטון — בצעו לפי התיאור',ja:'動画はまだありません。説明に沿って行ってください',ko:'아직 영상이 없어요 — 설명대로 하세요'},
+    noclip: {ru:'Как делать',uk:'Як робити',en:'How to do it',es:'Cómo hacerlo',de:'So geht’s',pt:'Como fazer',fr:'Comment faire',pl:'Jak wykonać',it:'Come si fa',he:'איך מבצעים',ja:'やり方',ko:'하는 방법'},
     round:  {ru:'Круг {r} из {n}',uk:'Коло {r} з {n}',en:'Round {r} of {n}',es:'Vuelta {r} de {n}',de:'Runde {r} von {n}',pt:'Volta {r} de {n}',fr:'Tour {r} sur {n}',pl:'Runda {r} z {n}',it:'Giro {r} di {n}',he:'סבב {r} מתוך {n}',ja:'{n}周中{r}周目',ko:'{n}라운드 중 {r}'},
     reps:   {ru:'раз',uk:'разів',en:'reps',es:'rep.',de:'Wdh.',pt:'rep.',fr:'rép.',pl:'powt.',it:'rip.',he:'חזרות',ja:'回',ko:'회'},
     sec:    {ru:'сек',uk:'сек',en:'sec',es:'s',de:'Sek.',pt:'s',fr:'s',pl:'s',it:'s',he:'שנ׳',ja:'秒',ko:'초'},
@@ -138,14 +130,16 @@
     pt: { s: ['segundo','segundos'], min: ['minuto','minutos'], kg: ['quilo','quilos'], km: ['quilômetro','quilômetros'] },
     de: { s: ['Sekunde','Sekunden'], min: ['Minute','Minuten'], kg: ['Kilogramm','Kilogramm'], km: ['Kilometer','Kilometer'] },
     fr: { s: ['seconde','secondes'], min: ['minute','minutes'], kg: ['kilo','kilos'], km: ['kilomètre','kilomètres'] },
-    it: { s: ['secondo','secondi'], min: ['minuto','minuti'], kg: ['chilo','chili'], km: ['chilometro','chilometri'] }
+    it: { s: ['secondo','secondi'], min: ['minuto','minuti'], kg: ['chilo','chili'], km: ['chilometro','chilometri'] },
+    he: { s: ['שנייה','שניות'], min: ['דקה','דקות'], kg: ['קילו','קילו'], km: ['קילומטר','קילומטרים'] }   // 2026-10-31: «שנ׳» читалось буквами
+    // ja/ko: единица и так целое слово (秒/分/回, 초/분/회) — голос читает верно, правило не нужно
   };
   // Как пишется единица в текстах на каждом языке (без точки — точку съедает граница).
   var UNIT_RE = {
-    s:   { ru: 'с|сек', uk: 'с|сек', pl: 's|sek', en: 's|sec|secs', es: 's|seg', pt: 's|seg', de: 's|Sek', fr: 's|sec', it: 's|sec' },
-    min: { ru: 'мин', uk: 'хв', pl: 'min', en: 'min|mins', es: 'min', pt: 'min', de: 'Min', fr: 'min', it: 'min' },
-    kg:  { ru: 'кг', uk: 'кг', pl: 'kg', en: 'kg', es: 'kg', pt: 'kg', de: 'kg', fr: 'kg', it: 'kg' },
-    km:  { ru: 'км', uk: 'км', pl: 'km', en: 'km', es: 'km', pt: 'km', de: 'km', fr: 'km', it: 'km' }
+    s:   { ru: 'с|сек', uk: 'с|сек', pl: 's|sek', en: 's|sec|secs', es: 's|seg', pt: 's|seg', de: 's|Sek', fr: 's|sec', it: 's|sec', he: 'שנ׳|שנ\'' },
+    min: { ru: 'мин', uk: 'хв', pl: 'min', en: 'min|mins', es: 'min', pt: 'min', de: 'Min', fr: 'min', it: 'min', he: 'דק׳|דק\'' },
+    kg:  { ru: 'кг', uk: 'кг', pl: 'kg', en: 'kg', es: 'kg', pt: 'kg', de: 'kg', fr: 'kg', it: 'kg', he: 'ק"ג|קג' },
+    km:  { ru: 'км', uk: 'км', pl: 'km', en: 'km', es: 'km', pt: 'km', de: 'km', fr: 'km', it: 'km', he: 'ק"מ|קמ' }
   };
   function spoken(text) {
     var l = (typeof lang !== 'undefined' && lang) || 'en', U = UNITS[l]; if (!U) return String(text || '');
@@ -349,7 +343,7 @@
     var m = $('mvp-mnu'), h = '', onoff = function (v) { return t(v ? 'on' : 'off'); };
     var tl = (TEMPOS.filter(function (x) { return x[0] === P.tempo; })[0] || TEMPOS[1])[1];
     if (!sub) {
-      h = row('tempo', '🏃', t('tempo'), t(tl)) + row('zoom', '⤢', t('zoom'), onoff(P.zoom)) + row('music', '🎵', t('music'), onoff(P.music)) + row('voice', '🔊', t('voice'), onoff(P.voice));
+      h = (Object.keys(CLIPS).length ? row('tempo', '🏃', t('tempo'), t(tl)) + row('zoom', '⤢', t('zoom'), onoff(P.zoom)) : '') + row('music', '🎵', t('music'), onoff(P.music)) + row('voice', '🔊', t('voice'), onoff(P.voice));
     } else {
       h = '<button type="button" data-k="" class="mh"><span class="mi">‹</span>' + esc(t(sub)) + '</button>';
       var opts = sub === 'tempo' ? TEMPOS.map(function (x) { return [x[0], t(x[1])]; }) : [[true, t('on')], [false, t('off')]];
