@@ -80,6 +80,7 @@ UNIT = {
 UI = {
 'title':  row('Нагрузка на сегодня','Навантаження на сьогодні','Today’s activity','Actividad de hoy','Bewegung für heute','Atividade de hoje','Activité du jour','Aktywność na dziś','Attività di oggi','הפעילות להיום','今日の運動','오늘의 활동'),   # 2026-10-31: было «Тренировка дня»
 'open':   row('Открыть план','Відкрити план','Open the plan','Abrir el plan','Plan öffnen','Abrir o plano','Ouvrir le plan','Otwórz plan','Apri il piano','לפתוח את התוכנית','プランを開く','계획 열기'),
+'back':   row('Назад','Назад','Back','Atrás','Zurück','Voltar','Retour','Wstecz','Indietro','חזרה','戻る','뒤로'),   # 2026-10-31: тренировка на весь экран
 'done':   row('Сделано','Зроблено','Done','Hecho','Erledigt','Feito','Fait','Zrobione','Fatto','בוצע','完了','완료'),
 'doneOn': row('Сделано сегодня','Зроблено сьогодні','Done today','Hecho hoy','Heute erledigt','Feito hoje','Fait aujourd’hui','Zrobione dziś','Fatto oggi','בוצע היום','今日は完了','오늘 완료'),
 'inv':    row('Понадобится','Знадобиться','You’ll need','Necesitarás','Sie brauchen','Você vai precisar','Il vous faut','Będzie potrzebne','Ti servirà','יש להכין','用意するもの','준비물'),

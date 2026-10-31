@@ -6,3 +6,6 @@
   `library.js` (TOPIC) без префикса `m_`: мужские общие темы (m_sleep, m_heart, m_sex, m_exercise,
   m_checks) берут те же картинки; `myths.jpg` — и для `myths`, и для `m_myths`; `stress.jpg` — для `m_stress`.
 - Исходники PNG лежат у владельца в `скрин/1/3/`. Новую картинку класть с тем же именем — код не меняется.
+- `move/<состояние>.jpg` — фото карточки «Нагрузка на сегодня» (2026-10-31), 1200×600: green (хороший день), yellow,
+  red, rest, pain, ill, bp, limit, sport — по причине выбора тренировки (`PH` в `tools/workouts/wo_logic.js`).
+  Женская серия (VIA-L); ADAM-L ставит `window.VIAL_MOVE_ART=''` — шапка без фото до своей мужской серии.

@@ -190,15 +190,28 @@
     var w = W[id]; if (!w) return '';
     return tx(LVL[w.lv], l) + ' · ' + w.m + ' ' + tx(UI.min, l);
   }
+  // Фото состояния дня (2026-10-31, владелец): art/move/<состояние>.jpg, 1200×600. Одно на состояние, не на тренировку:
+  // давление, недомогание, боль, восстановление ниже нормы, отдых после 3 дней, ограничение, день полегче, свой спорт;
+  // остальное (хороший день и его причины) — green. Новый снимок — тем же именем, код не меняется.
+  var PH = { bp: 'bp', ill: 'ill', pain: 'pain', red: 'red', rest: 'rest', limit: 'limit', yellow: 'yellow' };
+  // Папку задаёт страница: window.VIAL_MOVE_ART (ADAM-L — '' до своих мужских снимков: шапка без фото).
+  function photo(r) { var a = window.VIAL_MOVE_ART != null ? window.VIAL_MOVE_ART : 'art/move/'; return a ? a + (r && r.sport ? 'sport' : (r && PH[r.why]) || 'green') + '.jpg' : ''; }
+  function bg(r) { var u = photo(r); return u ? ' style="background-image:url(' + u + ')"' : ''; }
+  // Шапка-фото: подпись «Нагрузка на сегодня», название, уровень и время; нажатие — тренировка на весь экран.
+  function hero(r, l, t, m) {
+    var tag = r && r.id ? 'button type="button" onclick="vialWorkouts.open(\'' + r.id + '\')"' : 'div';
+    return '<' + tag + ' class="wo-hero' + (photo(r) ? '' : ' wo-np') + '"' + bg(r) + '><span class="wo-hk">' + esc(tx(UI.title, l)) + '</span>'
+      + (t ? '<span class="wo-ht">' + esc(t) + '</span>' : '') + (m ? '<span class="wo-hm">' + esc(m) + '</span>' : '')
+      + (r && r.id ? '<span class="wo-hgo">›</span>' : '') + '</' + tag.split(' ')[0] + '>';
+  }
+  // при расхождении прибора и самочувствия — объяснение обоих вместо короткого «сигнал ниже обычного»
+  function whyFull(r, l) { return (r.gap && window.vialSports && (r.why === 'yellow' || r.why === 'red')) ? vialSports.gapTxt(r.gap, '', l) : whyTxt(r, l); }
   // Карточка в шаге «Что делать сегодня». done — тренировку уже отметили сегодня.
   function card(r, l, done) {
-    var h = '<div class="wo-h"><i class="ph ph-barbell" aria-hidden="true"></i>' + esc(tx(UI.title, l)) + '</div>';
-    if (r && r.sport && window.vialSports) return vialSports.dayCard(r, l);
-    if (!r || !r.id) return h + '<div class="wo-why">' + esc(whyTxt(r, l)) + '</div>';
-    h += '<div class="wo-n">' + esc(title(r.id, l)) + '</div><div class="wo-d">' + esc(meta(r.id, l)) + '</div>';
-    h += '<div class="wo-d">' + esc(tx(UI.inv, l)) + ': ' + esc(invTxt(r.id, l)) + '</div>';
-    // при расхождении прибора и самочувствия — объяснение обоих вместо короткого «сигнал ниже обычного»
-    var wt = (r.gap && window.vialSports && (r.why === 'yellow' || r.why === 'red')) ? vialSports.gapTxt(r.gap, '', l) : whyTxt(r, l);
+    if (r && r.sport && window.vialSports) return (photo(r) ? '<div class="wo-hero wo-hero-s"' + bg(r) + '></div>' : '') + vialSports.dayCard(r, l);
+    if (!r || !r.id) return hero(r, l, '', '') + '<div class="wo-why">' + esc(whyTxt(r, l)) + '</div>';
+    var h = hero(r, l, title(r.id, l), meta(r.id, l));
+    var wt = whyFull(r, l);
     if (wt) h += '<div class="wo-why">' + esc(wt) + '</div>';
     var chk = window.vialSports ? vialSports.checkHtml(r, l) : '';
     if (upOffer()) h += '<div class="wo-up"><span>' + esc(tx(FEEL.up, l)) + '</span><div class="wo-b"><button type="button" onclick="vialWorkouts.acceptUp(true)">' + esc(tx(FEEL.yes, l)) + '</button><button type="button" onclick="vialWorkouts.acceptUp(false)">' + esc(tx(FEEL.no, l)) + '</button></div></div>';
@@ -217,10 +230,10 @@
     if (x[2]) h += '<div class="wo-caut">⚠ ' + x[2].split(' ').map(function (c) { return esc(tx(CAUT[c], l)); }).join('; ') + '</div>';
     return h;
   }
-  function plan(id, l, hyp) {
+  function plan(id, l, hyp, bare) {
     var w = W[id]; if (!w) return '';
-    var h = '<div class="wo-sh"><div class="wo-d">' + esc(meta(id, l)) + '</div>'
-      + '<div class="wo-inv"><b>' + esc(tx(UI.inv, l)) + ':</b> ' + esc(invTxt(id, l)) + '</div>';
+    var h = '<div class="wo-sh">' + (bare ? '' : '<div class="wo-d">' + esc(meta(id, l)) + '</div>'
+      + '<div class="wo-inv"><b>' + esc(tx(UI.inv, l)) + ':</b> ' + esc(invTxt(id, l)) + '</div>');
     w.p.forEach(function (p) {
       var hd = tx(PART[p[0]], l) + (p[2] ? ' · ' + tx(UI.rounds, l).replace('{n}', p[2]) : '') + ' · ' + p[1] + ' ' + tx(UI.min, l);
       h += '<div class="wo-pt"><div class="wo-pth">' + esc(hd) + '</div><ol>'
@@ -268,9 +281,26 @@
 
   var cfg = { lang: function () { return (typeof window.lang === 'string' && window.lang) || 'en'; }, day: function () { return new Date().toISOString().slice(0, 10); }, rerender: null };
   function L_() { try { return cfg.lang(); } catch (e) { return 'en'; } }
+  // Тренировка на весь экран (2026-10-31, как статья Библиотеки): фото, «почему так», что понадобится, голос, план, «Сделано».
+  // Назад — кнопкой «‹» или свайпом от левого края.
+  function close() { var o = document.getElementById('woFull'); if (o) o.remove(); document.body.classList.remove('wo-full-open'); }
   function open(id) {
-    if (typeof window.openSheet !== 'function' || !W[id]) return;
-    window.openSheet('<i class="ph ph-barbell" style="color:var(--gold-lt);"></i>', title(id, L_()), plan(id, L_(), !!cfg.hyp));
+    if (!W[id]) return;
+    close();
+    var l = L_(), r = null; try { r = JSON.parse(localStorage.getItem('vialp_wo_pick') || 'null'); r = r && r.r && r.r.id === id ? r.r : null; } catch (e) {}
+    var wt = r ? whyFull(r, l) : '', done = doneOn(cfg.day()) === id;
+    var o = document.createElement('div'); o.id = 'woFull';
+    o.innerHTML = '<div class="wo-fp' + (photo(r) ? '' : ' wo-np') + '"' + bg(r || { why: '' }) + '><button type="button" class="wo-back" onclick="vialWorkouts.close()">‹ ' + esc(tx(UI.back, l)) + '</button></div>'
+      + '<div class="wo-fc"><div class="wo-hk">' + esc(tx(UI.title, l)) + '</div><h1 class="wo-fh">' + esc(title(id, l)) + '</h1><div class="wo-d">' + esc(meta(id, l)) + '</div>'
+      + (wt ? '<div class="wo-fwhy">' + esc(wt) + '</div>' : '')
+      + '<div class="wo-inv"><b>' + esc(tx(UI.inv, l)) + ':</b> ' + esc(invTxt(id, l)) + '</div>'
+      + (window.vialPlayer ? '<button type="button" class="wo-go" onclick="vialWorkouts.play(\'' + id + '\')">▶ ' + esc(window.vialPlayer.label()) + '</button>' : '')
+      + plan(id, l, !!cfg.hyp, true)
+      + '<div class="wo-b"><button type="button" class="wo-done' + (done ? ' on' : '') + '" onclick="vialWorkouts.close();vialWorkouts.toggle(\'' + id + '\')">' + (done ? '✓ ' + esc(tx(UI.doneOn, l)) : esc(tx(UI.done, l))) + '</button></div></div>';
+    var x0 = -1, y0 = 0;
+    o.addEventListener('touchstart', function (e) { var t = e.touches[0]; x0 = t.clientX < 30 ? t.clientX : -1; y0 = t.clientY; }, { passive: true });
+    o.addEventListener('touchend', function (e) { var t = e.changedTouches[0]; if (x0 >= 0 && t.clientX - x0 > 70 && Math.abs(t.clientY - y0) < 60) close(); x0 = -1; }, { passive: true });
+    document.body.appendChild(o); document.body.classList.add('wo-full-open');
   }
   function askFeel(id) {
     if (typeof window.openSheet !== 'function' || !W[id]) return;
@@ -330,11 +360,31 @@
     + '.wo-fr{display:flex;align-items:center;gap:12px;}.wo-fr input{flex:1;accent-color:#EEAF54;}.wo-fr b{min-width:22px;text-align:center;color:var(--gold-lt,#EEAF54);font-size:18px;}.wo-fs:disabled{opacity:.4;}.wo-kg{width:110px;min-height:44px;border-radius:12px;border:1px solid rgba(226,185,90,.45);background:rgba(255,255,255,.06);color:var(--t1,#fff);font:600 18px var(--font-ui,inherit);text-align:center;}'
     + '.wo-up{margin-top:10px;padding:10px 12px;border-radius:12px;border:1px solid rgba(90,196,178,.4);font-size:var(--fs-cap,13px);color:var(--t1,#fff);}'
     + '.wo-note{font-size:var(--fs-cap,13px);color:var(--t2,rgba(255,255,255,.75));line-height:1.5;margin-top:14px;}'
-    + '.wo-stop{color:var(--t1,#fff);}';
+    + '.wo-stop{color:var(--t1,#fff);}'
+    // 2026-10-31: шапка-фото карточки и тренировка на весь экран
+    + '.wo-hero{position:relative;display:flex;flex-direction:column;justify-content:flex-end;width:100%;min-height:170px;box-sizing:border-box;margin:0;padding:14px 52px 13px 14px;border-radius:16px;border:1px solid rgba(226,185,90,.35);background-color:#161c26;background-size:cover;background-position:62% center;color:#fff;text-align:start;font:inherit;cursor:pointer;overflow:hidden;}'
+    + '.wo-hero.wo-np{min-height:0;padding-top:12px;}.wo-fp.wo-np{height:calc(110px + env(safe-area-inset-top,0px));}'
+    + 'div.wo-hero{cursor:default;}.wo-hero-s{min-height:140px;margin-bottom:10px;}'
+    + '.wo-hero::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(10,12,18,.72) 0%,rgba(10,12,18,.25) 55%,rgba(10,12,18,0) 78%),linear-gradient(0deg,rgba(10,12,18,.6),rgba(10,12,18,0) 62%);}'
+    + '.wo-hero>span{position:relative;}'
+    + '.wo-hk{font-size:var(--fs-cap,12px);letter-spacing:.08em;text-transform:uppercase;color:var(--gold-lt,#EEAF54);}'
+    + '.wo-ht{font-family:"Playfair Display",serif;font-size:calc(var(--fs-title,18px) + 3px);line-height:1.2;margin-top:4px;text-shadow:0 1px 8px rgba(0,0,0,.7);}'
+    + '.wo-hm{font-size:var(--fs-cap,13px);color:rgba(255,255,255,.82);margin-top:3px;}'
+    + '.wo-hgo{position:absolute!important;right:13px;bottom:13px;width:30px;height:30px;border-radius:50%;border:1px solid rgba(226,185,90,.6);display:flex;align-items:center;justify-content:center;color:var(--gold-lt,#EEAF54);background:rgba(10,13,20,.45);font-size:18px;}'
+    + '#woFull{position:fixed;inset:0;z-index:9990;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:linear-gradient(180deg,#1e2530,#141922);color:var(--t1,#fff);}'
+    + 'body.wo-full-open{overflow:hidden;}'
+    + '.wo-fp{position:relative;height:calc(260px + env(safe-area-inset-top,0px));background-size:cover;background-position:64% center;}'
+    + '.wo-fp::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,25,34,.55) 0%,rgba(20,25,34,0) 30%,rgba(20,25,34,0) 55%,#1c2330 100%);}'
+    + '.wo-back{position:absolute;z-index:1;left:14px;top:calc(12px + env(safe-area-inset-top,0px));padding:8px 14px 8px 11px;border-radius:20px;border:1px solid rgba(226,185,90,.5);background:rgba(10,13,20,.55);color:var(--gold-lt,#EEAF54);font:600 var(--fs-body,15px) var(--font-ui,inherit);cursor:pointer;}'
+    + '.wo-fc{position:relative;margin-top:-48px;padding:0 18px calc(40px + env(safe-area-inset-bottom,0px));}'
+    + '.wo-fh{font-family:"Playfair Display",serif;font-weight:400;font-size:calc(var(--fs-title,18px) + 8px);line-height:1.2;margin:6px 0 3px;color:#fff;}'
+    + '.wo-fwhy{margin:14px 0 4px;padding:12px 14px;border-radius:14px;background:rgba(226,185,90,.07);border:1px solid rgba(226,185,90,.3);font-size:var(--fs-body,15px);line-height:1.5;}'
+    + '#woFull .wo-inv{font-size:var(--fs-cap,13px);color:var(--t2,rgba(255,255,255,.75));line-height:1.5;margin:10px 0 0;}#woFull .wo-inv b{color:var(--t1,#fff);font-weight:600;}'
+    + '#woFull .wo-go{margin-top:14px;}';
   try { var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st); } catch (e) {}
 
   window.vialWorkouts = {
-    pick: pick, card: card, plan: plan, steps: steps, play: play, askFeel: askFeel, _pickFeel: _pickFeel, _saveFeel: _saveFeel, acceptUp: acceptUp, saveFeel: saveFeel, partName: function (k, l) { return tx(PART[k], l); }, open: open, toggle: toggle, title: title, uiTitle: function (l) { return tx(UI.title, l); }, meta: meta, inv: invTxt, hasDb: hasDb, lastKg: lastKg, why: whyTxt, dose: dose,
+    pick: pick, card: card, plan: plan, steps: steps, play: play, askFeel: askFeel, _pickFeel: _pickFeel, _saveFeel: _saveFeel, acceptUp: acceptUp, saveFeel: saveFeel, partName: function (k, l) { return tx(PART[k], l); }, open: open, close: close, toggle: toggle, title: title, uiTitle: function (l) { return tx(UI.title, l); }, meta: meta, inv: invTxt, hasDb: hasDb, lastKg: lastKg, why: whyTxt, dose: dose,
     cat: function (id) { return W[id] ? W[id].c : ''; }, ids: function () { return Object.keys(W); },
     log: log, doneOn: doneOn, mark: mark,
     setup: function (o) { Object.keys(o || {}).forEach(function (k) { cfg[k] = o[k]; }); }
