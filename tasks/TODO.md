@@ -192,8 +192,7 @@ ADAM-L перекрашивает и переименовывает их выв�
 Код готов (`iap-bridge.js` saveEnt/iapTrialEligible, `_trialDays/_storeTrial` в interpreter-via-l.html, `strial` в воркере):
 пока в сторе нет бесплатной недели — всё по-старому (7 дней без карты); появится — 1 день без карты → экран
 «Начать 7 дней бесплатно» → в пробный период магазина разбор короткий → после оплаты полный.
-- [ ] **App Store:** вводное предложение FREE_TRIAL ONE_WEEK у `via_l_pro_monthly` и `via_l_pro_yearly`, все страны
-      (ASC → подписка → Subscription Prices → «+» Introductory Offer, или API — нужно разрешение владельца).
+- ✅ 10-31 **App Store:** вводное предложение FREE_TRIAL ONE_WEEK у `via_l_pro_monthly` и `via_l_pro_yearly` — все 175 стран (API).
 - [ ] **Google Play:** предложение «free-week» (P1W бесплатно, новые клиенты) на планах monthly и yearly, активировать.
 - [ ] **Воркер:** `wrangler deploy` (исключение `strial` в `_trialGuard`) — ДО выхода версии приложения с этим кодом.
 - [ ] Notes для ревью следующей версии: доступ = 1 день бесплатно, затем пробный период магазина 7 дней (короткий разбор), затем подписка.
