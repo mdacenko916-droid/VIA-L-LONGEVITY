@@ -10103,7 +10103,7 @@ function _iapShow(){
   // просьба заплатить ни за что. Бесплатного периода у подписки НЕТ: пробные дни (_TRIAL_DAYS) уже были (2026-09-17).
   try{
     var n=document.getElementById('iap-trial-note');
-    var used=(_trialGet().days||[]).length, spent=(used>=_TRIAL_DAYS && !_subActive());
+    var used=(_trialGet().days||[]).length, spent=(_trialSpent() && !_subActive());
     if(n){
       n.style.display=spent?'block':'none';
       if(spent) n.textContent=L({ru:'Пробные дни закончились. Полный разбор и персональная памятка дня — по подписке, отмена в любой момент.',
@@ -11245,14 +11245,25 @@ function _daySnapGet(){ try{return JSON.parse(localStorage.getItem('vialp_days')
 function _daySnapSave(score,type,data,doc,docr){ try{var arr=_daySnapGet(),day=_dayKey();arr=arr.filter(function(e){return e.day!==day;});arr.unshift({day:day,score:score,type:type,data:data,doc:!!doc,docr:(docr||[]).filter(function(r){return typeof r==='string';}),ts:Date.now()});while(arr.length>400)arr.pop();localStorage.setItem('vialp_days',JSON.stringify(arr));}catch(e){} }
 function _passedToday(){ try{ return localStorage.getItem('vialp_lastpass')===_dayKey(); }catch(e){ return false; } }
 // ══ ПРОБНЫЙ РЕЖИМ (решение владельца 2026-09-17) ═══════════════════════════════
-// Бесплатный пробник — 7 дней прохода (было 3; 2026-10-09: итог «Фокуса недели» и первый недельный
-// разбор приходят на 5–7-й день — пробник должен до них дожить). Разбор в нём КОРОТКИЙ (воркер получает trial:true, ~$0.03
+// Бесплатный пробник — 7 КАЛЕНДАРНЫХ дней от первого прохода (было 3; 2026-10-09: итог «Фокуса недели» и первый недельный
+// разбор приходят на 5–7-й день — пробник должен до них дожить; 2026-10-31: календарные дни вместо дней с проходом,
+// решение владельца — пропущенные дни пробник не продлевают). Разбор в нём КОРОТКИЙ (воркер получает trial:true, ~$0.03
 // вместо $0.13), памятка дня — БАЗОВАЯ, без ИИ. Иначе 10 000 пробников = $1300 незаработанных денег.
 // Считаем уникальные дни с проходом, а не запуски. Переустановка пробник обнуляет — это дыра
 // на $0.09, закроется вместе с постоянным номером подписки (см. tasks/TODO.md).
 var _TRIAL_DAYS=7;
 function _trialGet(){ try{ var t=JSON.parse(localStorage.getItem('vialp_trial')||'null'); return (t&&Array.isArray(t.days))?t:{days:[]}; }catch(e){ return {days:[]}; } }
 function _trialMark(){ try{ var t=_trialGet(), d=_dayKey(); if(t.days.indexOf(d)<0){ t.days.push(d); localStorage.setItem('vialp_trial',JSON.stringify(t)); } }catch(e){} }
+// Первый день пробника — самая ранняя настоящая дата в days. over=1 ставит ответ сервера 'trial_over'.
+// Старые телефоны после 'trial_over' хранили days=['x','y','z'] без дат — это тоже «пробник кончился».
+function _trialStart(t){ var v=(t.days||[]).filter(function(d){return /^\d{4}-\d{2}-\d{2}$/.test(d);}).sort(); return v[0]||''; }
+function _trialSpent(){
+  var t=_trialGet(); if(t.over) return true;
+  if(!t.days.length) return false;
+  var s=_trialStart(t); if(!s) return true;
+  var a=s.split('-'), b=_dayKey().split('-');
+  return (Date.UTC(+b[0],b[1]-1,+b[2])-Date.UTC(+a[0],a[1]-1,+a[2]))/86400000 >= _TRIAL_DAYS;
+}
 function _subActive(){ try{ return localStorage.getItem('vialp_entitlement')==='1'; }catch(e){ return false; } }
 // Пробный режим есть только ВНУТРИ приложения: на вебе подписки нет вообще, там всё как было.
 // Сегодняшний день, уже засчитанный в пробник, остаётся пробным — иначе перерисовка экрана
@@ -11263,8 +11274,7 @@ function _isTrial(){
   // превращалась бы в новый бесплатный пробник). Флаг ставится, пока подписка активна.
   if(_trialGet().sub) return false;
   if(!(typeof window.iapAvailable==='function'&&window.iapAvailable())) return false;
-  var t=_trialGet();
-  return t.days.indexOf(_dayKey())>=0 || t.days.length < _TRIAL_DAYS;
+  return !_trialSpent();
 }
 // Пометка «это пробный разбор» — одна на все экраны (карточка разбора, ленты, печать).
 function _trialNote(){
@@ -13544,7 +13554,7 @@ async function fetchAIAnalysis(data, lang, src) {
       // потолок дня, честно просим зайти позже. 2026-09-17.
       loading.style.display = 'none';
       if (json.error === 'trial_over') {
-        try{ var _t=_trialGet(); _t.days=['x','y','z']; localStorage.setItem('vialp_trial',JSON.stringify(_t)); }catch(e){}   // сервер главнее телефона
+        try{ var _t=_trialGet(); _t.over=1; localStorage.setItem('vialp_trial',JSON.stringify(_t)); }catch(e){}   // сервер главнее телефона
         if (typeof _iapShow==='function') _iapShow();
       } else {
         err.textContent = L({ru:'Пробный разбор сегодня недоступен — попробуйте позже или оформите подписку.',

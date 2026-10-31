@@ -3144,7 +3144,10 @@ async function _trialGuard(request, env, body, ctx) {
     let led = null;
     try { led = JSON.parse(await env.ANALYSIS_CACHE.get('tr:' + key) || 'null'); } catch (_) {}
     const days = (led && Array.isArray(led.days)) ? led.days : [];
-    if (days.length >= 7 && days.indexOf(day) < 0) return { error: 'trial_over' };   // = _TRIAL_DAYS приложения
+    // 7 КАЛЕНДАРНЫХ дней от первого пробного дня (2026-10-31; было — 7 дней с проходом). = _TRIAL_DAYS приложения.
+    // Старые приложения считают дни с проходом у себя, но разбор после 7-го календарного дня им откажет сервер.
+    const start = (led && led.start) || days.slice().sort()[0] || '';
+    if (start && /^\d{4}-\d{2}-\d{2}$/.test(day) && (Date.parse(day) - Date.parse(start)) / 86400000 >= 7) return { error: 'trial_over' };
 
     // 2. потолок на адрес
     const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
@@ -3187,8 +3190,9 @@ async function _trialMarkDay(env, body) {
     try { led = JSON.parse(await env.ANALYSIS_CACHE.get('tr:' + key) || 'null'); } catch (_) {}
     const days = (led && Array.isArray(led.days)) ? led.days : [];
     if (days.indexOf(day) >= 0) return;
+    const start = (led && led.start) || days.slice().sort()[0] || day;   // первый день храним отдельно: days режется до 10
     days.push(day);
-    await env.ANALYSIS_CACHE.put('tr:' + key, JSON.stringify({ days: days.slice(-10) }), { expirationTtl: 400 * 24 * 3600 });
+    await env.ANALYSIS_CACHE.put('tr:' + key, JSON.stringify({ start: start, days: days.slice(-10) }), { expirationTtl: 400 * 24 * 3600 });
   } catch (e) { /* учёт пробника не имеет права ломать разбор */ }
 }
 
