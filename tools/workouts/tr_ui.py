@@ -78,7 +78,7 @@ UNIT = {
 }
 # rounds: «{n} круга»
 UI = {
-'title':  row('Тренировка дня','Тренування дня','Workout of the day','Entrenamiento del día','Training des Tages','Treino do dia','Séance du jour','Trening dnia','Allenamento del giorno','האימון של היום','今日のトレーニング','오늘의 운동'),
+'title':  row('Нагрузка на сегодня','Навантаження на сьогодні','Today’s activity','Actividad de hoy','Bewegung für heute','Atividade de hoje','Activité du jour','Aktywność na dziś','Attività di oggi','הפעילות להיום','今日の運動','오늘의 활동'),   # 2026-10-31: было «Тренировка дня»
 'open':   row('Открыть план','Відкрити план','Open the plan','Abrir el plan','Plan öffnen','Abrir o plano','Ouvrir le plan','Otwórz plan','Apri il piano','לפתוח את התוכנית','プランを開く','계획 열기'),
 'done':   row('Сделано','Зроблено','Done','Hecho','Erledigt','Feito','Fait','Zrobione','Fatto','בוצע','完了','완료'),
 'doneOn': row('Сделано сегодня','Зроблено сьогодні','Done today','Hecho hoy','Heute erledigt','Feito hoje','Fait aujourd’hui','Zrobione dziś','Fatto oggi','בוצע היום','今日は完了','오늘 완료'),
