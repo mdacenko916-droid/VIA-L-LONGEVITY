@@ -14,6 +14,7 @@ ren_old={json.load(open('names.json'))[i]:i for i in REN}   # старые ру�
 for l in LANGS:
     assert len(NEW[l])==18, l
     N[l]=N[l]+NEW[l]
+exec(open('warmup.py',encoding='utf-8').read()); _wu_base=_wu_apply(); _wu_workouts(_wu_base)   # общая разминка (2026-10-31)
 ru=N['ru']
 idx={n:i for i,n in enumerate(ru)}
 idx.update(ren_old)
@@ -45,6 +46,7 @@ for i in range(len(N['ru'])):
         t=_res(i,k)
         if t and t not in HU: HU.append(t)
 HW={'ru':HU}
+if os.environ.get('WU_REBUILD'): json.dump(HU,open('how_unique.json','w'),ensure_ascii=False,indent=0)   # однократно после правки how_ru/warmup.py
 assert json.load(open('how_unique.json'))==HU, 'how_ru.py изменился — пересоберите how_unique.json и переводы'
 for l,arr in (('uk',HUK),('en',HEN),('es',HES),('de',HDE),('pt',HPT),('fr',HFR),('pl',HPL),('it',HIT),('he',HHE),('ja',HJA),('ko',HKO)):
     assert len(arr)==len(HU),l; HW[l]=arr
