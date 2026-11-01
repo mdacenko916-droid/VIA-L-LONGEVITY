@@ -62,13 +62,6 @@ interpreter/
 │       ├── LAB MODULE 3.txt        # Метаболическая панель
 │       └── LAB MODULE 4.txt        # Щитовидная железа
 │
-├── images-bg/                  # Фоновые изображения (galaxy-тема, по тарифу)
-│   ├── galaxy-index.jpg / galaxy-mobile.jpg
-│   ├── galaxy-vio.jpg / galaxy-vio-mobile.jpg
-│   ├── galaxy-pro.jpg / galaxy-pro-mobile.jpg
-│   ├── galaxy-expert.jpg / galaxy-expert-mobile.jpg
-│   └── galaxy-elite.jpg / galaxy-elite-mobile.jpg
-│
 ├── images-in/                  # Фото устройств (PNG, золотая тема)
 │   ├── Oura Ring Gen 4 gold.PNG
 │   ├── Apple Watch Series 11 gold.PNG
@@ -646,7 +639,7 @@ Oura Ring, Apple Watch, Garmin Fenix 8, Samsung Galaxy Watch, Fitbit Charge 6, P
 
 ### Фоны
 
-Каждый тариф имеет собственную фоновую картинку (`images-bg/galaxy-*.jpg`) — тёмная космическая тема с золотыми оттенками. Реализовано через `body::before { background-image: ...; position: fixed; }` для работы на iOS.
+Фоновых картинок нет: папка `images-bg/` (galaxy-фоны старых тарифов) удалена 2026-11-01 — ни одна страница на неё не ссылалась.
 
 ---
 
