@@ -4023,6 +4023,11 @@ body.has-tts-fab #stepResult .rd-tts-row,body.has-tts-fab #stepResult #ai-tts{di
           <div class="chip"><input type="radio" name="act_recovery" id="ar4" value="spent"><label for="ar4" data-t="rec_exhausted">😮‍💨 Сильно устаю</label></div>
         </div>
       </div>
+      <!-- «Мой спорт» в проходе (sports.js fillPass): падел, футбол… — учитывается в «Тренировке дня». 2026-11-01 -->
+      <div class="input-group">
+        <label data-sp-t="title">Мой спорт</label>
+        <div data-sp-pass></div>
+      </div>
       <div class="btn-row">
         <button class="btn btn-back" onclick="goTo(7)">←</button>
         <button class="btn btn-primary" onclick="goTo(9)"><span class="btn-label" data-t="next">Далее →</span></button>
@@ -5246,6 +5251,7 @@ function setLang(l){
   localStorage.setItem('vial_lang', l);
   try{ if(window.vialBottomNav) vialBottomNav.setLang(l); }catch(e){}   // нижняя строка — bottom-nav.js
   try{ if(window.vialSp) vialSp.setLang(l); }catch(e){}   // вкладка «Специалист» (specialist.js)
+  try{ if(window.vialSports) vialSports.fillPass(); }catch(e){}   // «Мой спорт» в проходе (sports.js)
   // lang на <html> нужен переносам: hyphens:auto без него применяет английские правила
   // к русскому/немецкому и рвёт слова не по слогам. 2026-09-06.
   try{ document.documentElement.lang = l; }catch(e){}

@@ -3,7 +3,8 @@
    был футбол — перед стартом спрашиваем и меняем; кольцо говорит «отдых», а самочувствие хорошее — говорим
    про оба источника и даём вариант, а не спорим, кто прав. Правила — docs/FITNESS-SELECTION-RULES.md §15.
    Хранение (только на устройстве): vialp_sports [{id, days:[1..7], full}], vialp_wo_now {day, did, sid, ate},
-   vialp_sport_skip "день". Выбор тренировки — vialWorkouts.pick (ctx.sportToday / ctx.now0). */
+   vialp_sport_skip "день". 2026-11-01: ▶ без ответов сначала подсвечивает вопросы; «когда ели» → ateTs и время
+   «начинать с …»; «Мой спорт» и в проходе (fillPass). Выбор тренировки — vialWorkouts.pick (ctx.sportToday / ctx.now0). */
 (function () {
   'use strict';
   var LG = ['ru', 'uk', 'en', 'es', 'de', 'pt', 'fr', 'pl', 'it', 'he', 'ja', 'ko'];
@@ -89,9 +90,14 @@
     which: row('Что именно?|Що саме?|Which one?|¿Cuál?|Was genau?|Qual?|Lequel ?|Co dokładnie?|Quale?|מה בדיוק?|どれですか？|어떤 운동인가요?'),
     q2: row('Когда ели?|Коли їли?|When did you last eat?|¿Cuándo comiste?|Wann hast du gegessen?|Quando comeu?|Quand avez-vous mangé ?|Kiedy jadłaś/eś?|Quando hai mangiato?|מתי אכלתם?|最後に食べたのは？|마지막 식사는 언제였나요?'),
     a_lt1: row('Меньше часа|Менше години|Under an hour ago|Hace menos de una hora|Vor weniger als 1 Std.|Há menos de 1 hora|Il y a moins d’une heure|Mniej niż godzinę temu|Meno di un’ora fa|לפני פחות משעה|1時間以内|1시간 이내'),
+    a_now: row('Только что|Щойно|Just now|Ahora mismo|Gerade eben|Agora mesmo|À l’instant|Przed chwilą|Proprio ora|ממש עכשיו|たった今|방금'),
+    a_30: row('~30 минут назад|~30 хвилин тому|~30 min ago|Hace ~30 min|Vor ~30 Min.|Há ~30 min|Il y a ~30 min|~30 min temu|~30 min fa|לפני כ-30 דקות|30分ほど前|30분 전쯤'),
     a_12: row('1–2 часа|1–2 години|1–2 hours ago|Hace 1–2 horas|Vor 1–2 Std.|Há 1–2 horas|Il y a 1–2 h|1–2 godziny temu|1–2 ore fa|לפני 1–2 שעות|1〜2時間前|1–2시간 전'),
     a_long: row('Давно|Давно|A while ago|Hace rato|Länger her|Faz tempo|Il y a longtemps|Dawno|Da un po’|מזמן|しばらく前|꽤 됐어요'),
     m_lt1: row('После еды прошло меньше часа: разминка подольше, без прыжков и рывков. Тяжело в животе — отложите на час.|Після їжі минуло менше години: розминка довша, без стрибків і ривків. Важко в животі — відкладіть на годину.|Less than an hour since you ate: warm up longer and skip jumps and bursts. If your stomach feels heavy, wait an hour.|Ha pasado menos de una hora desde que comiste: calienta más y evita saltos y arranques. Si notas pesadez, espera una hora.|Weniger als eine Stunde nach dem Essen: länger aufwärmen, keine Sprünge und Sprints. Fühlt sich der Magen schwer an, eine Stunde warten.|Menos de uma hora depois de comer: aqueça mais e evite saltos e arrancadas. Se sentir peso no estômago, espere uma hora.|Moins d’une heure après le repas : échauffement plus long, sans sauts ni accélérations. Estomac lourd ? Attendez une heure.|Mniej niż godzinę po jedzeniu: dłuższa rozgrzewka, bez skoków i zrywów. Ciężko w żołądku — odłóż o godzinę.|Meno di un’ora dopo il pasto: riscaldamento più lungo, niente salti e scatti. Se senti pesantezza, aspetta un’ora.|עברה פחות משעה מהאוכל: חימום ארוך יותר, בלי קפיצות ופריצות. כבד בבטן — דחו בשעה.|食後1時間以内です。ウォームアップを長めにし、ジャンプやダッシュは控えましょう。お腹が重ければ1時間あけて。|식사 후 1시간이 안 됐어요. 준비 운동을 길게, 점프와 전력 질주는 빼세요. 속이 더부룩하면 1시간 뒤에 하세요.'),
+    m_wait: row('Ели около {t}. Спокойно начинать — с {r}, через час после еды; после плотного обеда — с {r2}. Если раньше — разминка подольше, без прыжков и рывков.|Їли близько {t}. Спокійно починати — з {r}, через годину після їжі; після щільного обіду — з {r2}. Якщо раніше — розминка довша, без стрибків і ривків.|You ate around {t}. Start comfortably from {r}, an hour after eating; after a big meal, from {r2}. If earlier — a longer warm-up, no jumps or bursts.|Comiste hacia las {t}. Lo cómodo es empezar desde las {r}, una hora después de comer; tras una comida copiosa, desde las {r2}. Si antes, calentamiento más largo, sin saltos ni arranques.|Gegessen um etwa {t}. Bequem starten ab {r}, eine Stunde nach dem Essen; nach einer großen Mahlzeit ab {r2}. Früher? Dann länger aufwärmen, ohne Sprünge und schnelle Antritte.|Comeu por volta das {t}. Comece com conforto a partir das {r}, uma hora após comer; depois de uma refeição farta, a partir das {r2}. Se for antes, aquecimento mais longo, sem saltos nem arrancadas.|Repas vers {t}. Commencez tranquillement à partir de {r}, une heure après avoir mangé ; après un repas copieux, à partir de {r2}. Plus tôt ? Échauffement plus long, sans sauts ni accélérations.|Jedzenie około {t}. Spokojnie zacznij od {r}, godzinę po jedzeniu; po obfitym posiłku — od {r2}. Wcześniej? Dłuższa rozgrzewka, bez skoków i zrywów.|Hai mangiato verso le {t}. Inizia tranquillamente dalle {r}, un’ora dopo il pasto; dopo un pasto abbondante, dalle {r2}. Se prima, riscaldamento più lungo, senza salti né scatti.|אכלתם בסביבות {t}. נוח להתחיל מ-{r}, שעה אחרי האוכל; אחרי ארוחה כבדה — מ-{r2}. אם מוקדם יותר — חימום ארוך יותר, בלי קפיצות ופריצות.|食事は{t}ごろ。食後1時間の{r}から始めると楽です。しっかり食べた後は{r2}から。それより早いなら、ウォームアップを長めにし、ジャンプやダッシュは避けましょう。|{t}쯤 식사하셨어요. 식후 1시간인 {r}부터 시작하면 편해요. 든든히 먹었다면 {r2}부터. 더 일찍 한다면 준비운동을 길게, 점프와 순간 가속은 피하세요.'),
+    m_go: row('С еды прошёл час — можно начинать. После плотного обеда — лучше с {r2}.|Від їжі минула година — можна починати. Після щільного обіду — краще з {r2}.|It’s been an hour since you ate — you can start. After a big meal, better from {r2}.|Ya ha pasado una hora desde que comiste: puedes empezar. Tras una comida copiosa, mejor desde las {r2}.|Seit dem Essen ist eine Stunde vergangen — du kannst starten. Nach einer großen Mahlzeit besser ab {r2}.|Já passou uma hora desde que comeu — pode começar. Depois de uma refeição farta, melhor a partir das {r2}.|Une heure s’est écoulée depuis le repas — vous pouvez commencer. Après un repas copieux, plutôt à partir de {r2}.|Od jedzenia minęła godzina — możesz zaczynać. Po obfitym posiłku lepiej od {r2}.|È passata un’ora dal pasto: puoi iniziare. Dopo un pasto abbondante, meglio dalle {r2}.|עברה שעה מהאוכל — אפשר להתחיל. אחרי ארוחה כבדה — עדיף מ-{r2}.|食後1時間たちました。始めて大丈夫です。しっかり食べた後なら{r2}からがおすすめです。|식사 후 1시간이 지났어요. 시작해도 좋아요. 든든히 먹었다면 {r2}부터가 좋아요.'),
+    ask: row('Сначала два вопроса выше — по ответам подберём нагрузку и время. Или нажмите ещё раз, чтобы начать сразу.|Спершу два питання вище — за відповідями підберемо навантаження і час. Або натисніть ще раз, щоб почати одразу.|First, the two questions above — your answers set the load and timing. Or tap again to start right away.|Primero, las dos preguntas de arriba: con tus respuestas ajustamos la carga y el momento. O pulsa otra vez para empezar ya.|Zuerst die zwei Fragen oben — danach richten sich Belastung und Zeitpunkt. Oder tippe noch einmal, um gleich zu starten.|Primeiro, as duas perguntas acima — com as respostas ajustamos a carga e o horário. Ou toque de novo para começar já.|D’abord les deux questions ci-dessus — vos réponses règlent la charge et le moment. Ou touchez à nouveau pour commencer tout de suite.|Najpierw dwa pytania powyżej — na ich podstawie dobierzemy obciążenie i porę. Albo naciśnij jeszcze raz, by zacząć od razu.|Prima le due domande qui sopra: con le risposte regoliamo carico e momento. Oppure tocca di nuovo per iniziare subito.|קודם שתי השאלות למעלה — לפי התשובות נתאים עומס ותזמון. או הקישו שוב כדי להתחיל מיד.|まず上の2つの質問に答えてください。答えに合わせて負荷とタイミングを調整します。すぐ始めるなら、もう一度タップ。|먼저 위의 두 질문에 답해 주세요. 답에 맞춰 강도와 시간을 조정해요. 바로 시작하려면 한 번 더 누르세요.'),
     m_long: row('Давно не ели: за 30–60 минут перекусите — банан, йогурт или горсть орехов.|Давно не їли: за 30–60 хвилин перекусіть — банан, йогурт або жменя горіхів.|It’s been a while since you ate: have a small snack 30–60 minutes before — a banana, yogurt or a handful of nuts.|Hace rato que no comes: toma algo ligero 30–60 minutos antes — un plátano, yogur o un puñado de frutos secos.|Länger nichts gegessen: 30–60 Minuten vorher eine Kleinigkeit — Banane, Joghurt oder eine Handvoll Nüsse.|Faz tempo que não come: faça um lanche 30–60 minutos antes — banana, iogurte ou um punhado de castanhas.|Repas lointain : prenez une collation 30–60 minutes avant — banane, yaourt ou une poignée de noix.|Dawno nie jadłaś/eś: zjedz coś małego 30–60 minut wcześniej — banan, jogurt albo garść orzechów.|Hai mangiato tempo fa: fai uno spuntino 30–60 minuti prima — una banana, uno yogurt o una manciata di frutta secca.|עבר זמן מאז שאכלתם: נשנוש קטן 30–60 דקות לפני — בננה, יוגורט או חופן אגוזים.|しばらく食べていません。30〜60分前にバナナ、ヨーグルト、ナッツひとつかみなど軽く補給を。|식사한 지 꽤 됐어요. 30–60분 전에 바나나, 요거트, 견과류 한 줌 정도 가볍게 드세요.'),
     m_walk: row('Прогулка не мешает тренировке — разминку можно сделать короче.|Прогулянка не заважає тренуванню — розминку можна зробити коротшою.|A walk doesn’t get in the way — you can keep the warm-up shorter.|Un paseo no impide entrenar: puedes acortar el calentamiento.|Ein Spaziergang stört nicht — das Aufwärmen darf kürzer sein.|A caminhada não atrapalha — o aquecimento pode ser mais curto.|Une marche ne gêne pas — l’échauffement peut être plus court.|Spacer nie przeszkadza — rozgrzewka może być krótsza.|Una passeggiata non è un problema: il riscaldamento può essere più breve.|הליכה לא מפריעה — אפשר לקצר את החימום.|散歩は問題ありません。ウォームアップは短めでOKです。|산책은 괜찮아요. 준비 운동은 짧게 해도 돼요.'),
     swap: row('Сегодня уже: {s}. {P} поработали — сейчас лучше «{n}», а «{o}» в другой день.|Сьогодні вже: {s}. {P} попрацювали — зараз краще «{n}», а «{o}» іншого дня.|Already today: {s}. Your {p} have worked — “{n}” fits better now; keep “{o}” for another day.|Hoy ya: {s}. {P} ya han trabajado: ahora mejor «{n}», y «{o}» otro día.|Heute schon: {s}. {P} haben gearbeitet — jetzt passt „{n}“ besser, „{o}“ an einem anderen Tag.|Hoje já: {s}. {P} já trabalharam — agora é melhor «{n}», e «{o}» em outro dia.|Déjà aujourd’hui : {s}. {P} ont travaillé — mieux vaut « {n} » maintenant, et « {o} » un autre jour.|Dziś już: {s}. {P} popracowały — teraz lepiej „{n}”, a „{o}” innego dnia.|Oggi già: {s}. {P} hanno lavorato — ora meglio «{n}», e «{o}» un altro giorno.|היום כבר: {s}. {P} עבדו — עכשיו עדיף „{n}”, ו„{o}” ביום אחר.|今日はすでに{s}。{P}は使っています。今は「{n}」がおすすめ、「{o}」は別の日に。|오늘 이미 {s}. {P}은 충분히 썼어요. 지금은 「{n}」이 좋고 「{o}」은 다른 날에.'),
@@ -137,7 +143,10 @@
   // Вчерашний спорт — для чипа «Спорт» в «Движении вчера»: по расписанию вчера, иначе первый в списке.
   function yesterday() { var d = new Date(Date.parse(dayKey()) - 86400000).toISOString().slice(0, 10), s = scheduled(d) || get()[0]; return s ? { id: s.id, c: cat(s.id, s.full !== false) } : null; }
   function nowGet() { try { var o = JSON.parse(localStorage.getItem(NOW) || 'null'); return o && o.day === dayKey() ? o : null; } catch (e) { return null; } }
-  function nowSet(k, v) { var o = nowGet() || { day: dayKey() }; o[k] = v; if (k === 'did' && v !== 'sport') { delete o.sid; delete o.watch; } try { localStorage.setItem(NOW, JSON.stringify(o)); } catch (e) {} rerender(); }
+  function nowSet(k, v) { var o = nowGet() || { day: dayKey() }; o[k] = v; if (k === 'ate') { if (AGO[v] != null) o.ateTs = Date.now() - AGO[v] * 60000; else delete o.ateTs; } if (k === 'did' && v !== 'sport') { delete o.sid; delete o.watch; } try { localStorage.setItem(NOW, JSON.stringify(o)); } catch (e) {} rerender(); }
+  // «Когда ели» → момент еды (минут назад): из него — конкретное «начинать с …» (час после еды, после плотного — два).
+  var AGO = { now: 0, '30': 30 };
+  function hm(ts, l) { var d = new Date(Math.round(ts / 300000) * 300000); try { return d.toLocaleTimeString(l || L_(), { hour: '2-digit', minute: '2-digit' }); } catch (e) { return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); } }
   function rerender() { try { localStorage.removeItem('vialp_wo_pick'); } catch (e) {} try { if (typeof window._rdWorkout === 'function') window._rdWorkout(); } catch (e) {} }
 
   // ── «Мой спорт» в Профиле ───────────────────────────────────────────────────
@@ -159,6 +168,7 @@
     + '.sp-o button.on{background:var(--gold,#C68C34);border-color:var(--gold,#C68C34);color:#10131A;font-weight:600;}'
     + '.sp-adv{margin-top:12px;padding:12px;border-radius:14px;background:rgba(78,204,163,.10);border:1px solid rgba(78,204,163,.35);color:var(--t1,#fff);font-size:var(--fs-body,15px);line-height:1.5;}'
     + '.sp-row{display:flex;justify-content:space-between;align-items:center;width:100%;margin-top:8px;padding:12px 14px;border-radius:14px;border:1px solid rgba(226,185,90,.45);background:transparent;color:var(--t1,#fff);font:600 var(--fs-body,15px) var(--font-ui,inherit);cursor:pointer;text-align:left;}'
+    + '.sp-chk.sp-ask{padding:12px;border:1px solid var(--gold,#C68C34);border-radius:14px;}.sp-hint{color:var(--gold-lt,#EEAF54);font-size:14px;line-height:1.45;margin-bottom:6px;}'
     + '.sp-row span{color:var(--t3,rgba(255,255,255,.55));font-weight:400;}.sp-keep{display:block;width:100%;margin-top:8px;padding:8px;border:0;background:none;color:var(--t3,rgba(255,255,255,.55));font:500 14px var(--font-ui,inherit);cursor:pointer;}';
   try { var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st); } catch (e) {}
 
@@ -175,11 +185,14 @@
         + '<button type="button" class="' + (x.full !== false ? 'on' : '') + '" onclick="vialSports._full(\'' + x.id + '\',true)">' + esc(t('full', l)) + '</button></div></div>';
     }).join('');
   }
-  function profileHtml(l) {
-    return '<div id="spMine" style="margin-bottom:4px;"><div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.5;margin-bottom:10px;">' + esc(t('intro', l)) + '</div>'
-      + mineHtml(l) + '</div><button type="button" class="sp-add" onclick="vialSports.picker()">+ ' + esc(t('add', l)) + '</button>';
+  function mineIn(l) { return '<div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.5;margin-bottom:10px;">' + esc(t('intro', l)) + '</div>' + mineHtml(l); }
+  // pass — копия для анкеты прохода (шаг «Физическая активность»): без id, чтобы не спорить с Профилем
+  function profileHtml(l, pass) {
+    return '<div' + (pass ? '' : ' id="spMine"') + ' data-sp-mine style="margin-bottom:4px;">' + mineIn(l) + '</div><button type="button" class="sp-add" onclick="vialSports.picker()">+ ' + esc(t('add', l)) + '</button>';
   }
-  function refreshMine() { var b = document.getElementById('spMine'); if (b) b.outerHTML = profileHtml(L_()).replace(/<button type="button" class="sp-add"[\s\S]*$/, ''); }
+  function refreshMine() { var l = L_(); document.querySelectorAll('[data-sp-mine]').forEach(function (b) { b.innerHTML = mineIn(l); }); }
+  // «Мой спорт» в проходе: <label data-sp-t="title"> + <div data-sp-pass> (interpreter-via-l.html); при смене языка — снова
+  function fillPass() { var l = L_(); document.querySelectorAll('[data-sp-t]').forEach(function (e) { e.textContent = t(e.getAttribute('data-sp-t'), l); }); document.querySelectorAll('[data-sp-pass]').forEach(function (e) { e.innerHTML = profileHtml(l, true); }); }
   function chip(id, l) { var on = !!find(id); return '<button type="button" class="sp-chip' + (on ? ' on' : '') + '" data-sp="' + id + '" onclick="vialSports._tg(\'' + id + '\',this)"><i class="ph ph-' + BY[id][2] + '"></i>' + esc(name(id, l)) + '</button>'; }
   function picker() {
     if (typeof window.openSheet !== 'function') return;
@@ -230,7 +243,7 @@
       ['gym', 'yoga', 'pilates'].forEach(function (id) { if (opts.indexOf(id) < 0) opts.push(id); });
       h += '<div class="sp-q">' + esc(t('which', l)) + '</div><div class="sp-o">' + opts.map(function (id) { return b('sid', id, name(id, l)); }).join('') + '</div>';
     }
-    h += '<div class="sp-q">' + esc(t('q2', l)) + '</div><div class="sp-o">' + b('ate', 'lt1', t('a_lt1', l)) + b('ate', '12', t('a_12', l)) + b('ate', 'long', t('a_long', l)) + '</div>';
+    h += '<div class="sp-q">' + esc(t('q2', l)) + '</div><div class="sp-o">' + b('ate', 'now', t('a_now', l)) + b('ate', '30', t('a_30', l)) + b('ate', '12', t('a_12', l)) + b('ate', 'long', t('a_long', l)) + '</div>';
     var adv = [];
     if (n.did === 'walk') adv.push(t('m_walk', l));
     if (n.did === 'sport' && n.sid && window.vialWorkouts) {
@@ -238,12 +251,27 @@
       if (r.orig && r.orig !== r.id) adv.push(t('swap', l).replace('{s}', nm).replace('{P}', p.charAt(0).toUpperCase() + p.slice(1)).replace('{p}', p).replace('{n}', W.title(r.id, l)).replace('{o}', W.title(r.orig, l)));
       else adv.push(t('ok', l).replace('{s}', name(n.sid, l)));
     }
-    if (n.ate === 'lt1') adv.push(t('m_lt1', l)); else if (n.ate === 'long') adv.push(t('m_long', l));
+    if (n.ateTs && AGO[n.ate] != null) {
+      var r1 = n.ateTs + 3600000, r2 = n.ateTs + 7200000, nw = Date.now();
+      if (nw < r1) adv.push(t('m_wait', l).replace('{t}', hm(n.ateTs, l)).replace('{r}', hm(r1, l)).replace('{r2}', hm(r2, l)));
+      else if (nw < r2) adv.push(t('m_go', l).replace('{r2}', hm(r2, l)));
+    } else if (n.ate === 'lt1') adv.push(t('m_lt1', l));   // ответ старой версии (без времени)
+    else if (n.ate === 'long') adv.push(t('m_long', l));
     if (adv.length) h += '<div class="sp-adv">' + adv.map(esc).join('<br><br>') + '</div>';
     if (r.orig && r.orig !== r.id) h += '<button type="button" class="sp-keep" onclick="vialWorkouts.play(\'' + r.orig + '\')">' + esc(t('keep', l)) + '</button>';
     return h + '</div>';
   }
   function _now(k, v) { nowSet(k, v); }
+  // ▶ без ответов: первое нажатие подсвечивает вопросы, второе — запускает (не держим человека силой).
+  var asked = '';
+  document.addEventListener('click', function (e) {
+    var b = e.target && e.target.closest ? e.target.closest('.wo-go') : null; if (!b || !b.parentNode) return;
+    var c = b.parentNode.querySelector('.sp-chk'), n = nowGet() || {}; if (!c || (n.did && n.ate) || asked === dayKey()) return;
+    asked = dayKey(); e.preventDefault(); e.stopPropagation();
+    c.classList.add('sp-ask');
+    if (!c.querySelector('.sp-hint')) c.insertAdjacentHTML('afterbegin', '<div class="sp-hint">' + esc(t('ask', L_())) + '</div>');
+    try { c.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (x) {}
+  }, true);
 
   // ── сверка прибора и самочувствия ───────────────────────────────────────────
   // dev — прибор ниже личной нормы (ВСР/пульс покоя или readiness < 70); feel — сон/энергия на 2 балла хуже обычного.
@@ -315,7 +343,8 @@
   window.vialSports = {
     ctxForAI: ctxForAI, _pull: pull,
     get: get, name: name, cat: cat, catOf: catOf, today: today, yesterday: yesterday, now: nowGet, gap: gap, gapTxt: gapTxt,
-    profileHtml: profileHtml, picker: picker, checkHtml: checkHtml, dayCard: dayCard, t: t,
+    profileHtml: profileHtml, fillPass: fillPass, picker: picker, checkHtml: checkHtml, dayCard: dayCard, t: t,
     _find: _find, _tg: _tg, _rm: _rm, _day: _day, _full: _full, _now: _now, _skip: _skip
   };
+  try { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fillPass); else fillPass(); } catch (e) {}
 })();
