@@ -235,7 +235,9 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
   function resHas(lang) { return true; }   // все 12 языков (resLang); у мужчины — мужская полка (?g=m)
   function subOn() { try { return localStorage.getItem('vialp_entitlement') === '1'; } catch (e) { return false; } }
   function inApp() { return !!(window.Capacitor && typeof window.iapAvailable === 'function' && window.iapAvailable()); }
-  function resFill(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html; }
+  function resFill(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html;
+    if (id === 'vialResItem' && window.vialTtsFab) window.vialTtsFab(html.indexOf('art-check') > -1 ? 'vialResItem' : '');   // полный разбор — боковая «Слушать» (2026-11-01)
+  }
   function resKind(x, lang) { return tx(x.type === 'myth' ? UI.resMyth : (x.type === 'term' ? UI.resTerm : UI.resStudy), lang); }
   function resRow(x, lang) {
     return '<button type="button" class="vc-link vc-span art-row" onclick="_cardOpen(\'res:' + esc(x.id) + '\')">'

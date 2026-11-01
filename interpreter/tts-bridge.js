@@ -138,7 +138,39 @@
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
     b.innerHTML = '<i class="ph ' + (on ? 'ph-stop-circle' : 'ph-speaker-high') + '" aria-hidden="true"></i><span>' + tr(on ? LBL_STOP : LBL_PLAY) + '</span>';
   }
+  // ── боковая «Слушать» (2026-11-01, владелец): одна круглая кнопка у правого края, пока открыт текст —
+  // шаг 2/3/4 «Сегодня» или статья Библиотеки. Только вкл/выкл, без перемотки. Страница зовёт vialTtsFab(id блока) / vialTtsFab('').
+  var fabSrc = '';
+  function fab() {
+    var f = document.getElementById('ttsFab'); if (f) return f;
+    var st = document.createElement('style');
+    st.textContent = '.tts-fab{position:fixed;right:-10px;top:52%;z-index:460;width:56px;height:56px;border-radius:50%;border:0;padding:0 10px 0 0;display:none;align-items:center;justify-content:center;'
+      + 'background:linear-gradient(135deg,#e2b96a,#c4963c);color:#10141C;box-shadow:0 6px 18px rgba(0,0,0,.45);font-size:24px;cursor:pointer;-webkit-tap-highlight-color:transparent}'
+      + '.tts-fab.show{display:flex}.tts-fab.on{background:#1b212c;color:#EEAF54;border:2px solid #EEAF54}'
+      + 'html[dir=rtl] .tts-fab{right:auto;left:-10px;padding:0 0 0 10px}'
+      + 'body.iap-open .tts-fab,body.consent-open .tts-fab{display:none!important}';
+    document.head.appendChild(st);
+    f = document.createElement('button'); f.type = 'button'; f.id = 'ttsFab'; f.className = 'tts-fab';
+    f.onclick = function () { if (fabSrc) window.vialTtsToggle(fabSrc); };
+    document.body.appendChild(f); document.body.classList.add('has-tts-fab');
+    return f;
+  }
+  function paintFab() {
+    var f = document.getElementById('ttsFab'); if (!f) return;
+    var ok = !!(fabSrc && available() && speechText(fabSrc)), on = ok && playing && curSrc === fabSrc;
+    f.classList.toggle('show', ok); f.classList.toggle('on', on);
+    f.setAttribute('aria-label', tr(on ? LBL_STOP : LBL_PLAY)); f.setAttribute('aria-pressed', on ? 'true' : 'false');
+    f.innerHTML = '<i class="ph ' + (on ? 'ph-stop' : 'ph-speaker-high') + '" aria-hidden="true"></i>';
+  }
+  window.vialTtsFab = function (src) {
+    src = src || '';
+    if (playing && src !== curSrc) stop();   // закрыли текст / открыли другой — голос замолкает
+    fabSrc = src; if (available()) fab();
+    paintFab();
+  };
+
   function paint() {
+    paintFab();
     var b = btn(); if (b) paintOne(b, 'aiResult');
     document.querySelectorAll('.tts-btn[data-src]').forEach(function (x) { paintOne(x, x.getAttribute('data-src')); });
   }

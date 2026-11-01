@@ -2579,6 +2579,33 @@ body.card-open #cardPanel, body.approach-open #approachPanel{
 /* на графите открытый шаг выделяется рамкой посветлее, свёрнутые — как обычно */
 .rd-step.open{border-color:rgba(226,185,90,.40)!important;}
 </style>
+<style>/* 2026-11-01, владелец: у каждого шага «Сегодня» свой лёгкий оттенок (закрытый и открытый) и своя форма текста:
+   2 — письмо, 3 — список дел карточками, 4 — объяснение с линией слева. Цвета — из палитры (--warn, --ok, --alert, --gold-lt). */
+#stepResult .rd-step{--sc:238,175,84;}
+#stepResult #rdStep1{--sc:255,255,255;}#stepResult #rdStep2{--sc:245,166,35;}#stepResult #rdStep3{--sc:78,204,163;}#stepResult #rdStep4{--sc:255,107,138;}#stepResult #rdStep5{--sc:238,175,84;}
+#stepResult .rd-step>.rd-step-h{background:linear-gradient(160deg,rgba(var(--sc),.075),rgba(var(--sc),.02)),var(--blk-bg,rgba(6,9,18,.42))!important;border-color:rgba(var(--sc),.30)!important;}
+#stepResult #rdStep1>.rd-step-h,#stepResult #rdStep1.open{background:linear-gradient(160deg,rgba(255,255,255,.04),rgba(255,255,255,.01)),var(--blk-bg,rgba(6,9,18,.42))!important;}
+#stepResult .rd-step.open{background:linear-gradient(160deg,rgba(var(--sc),.075),rgba(var(--sc),.02)),var(--blk-bg,rgba(6,9,18,.42))!important;border-color:rgba(var(--sc),.45)!important;}
+#stepResult .rd-step.open>.rd-step-h{background:none!important;border-color:transparent!important;}
+#stepResult .rd-step .rd-step-n{background:rgba(var(--sc),.15)!important;color:rgb(var(--sc))!important;}
+#stepResult .rd-step .rd-step-ch{color:rgb(var(--sc));}
+/* 2 — письмо: первая фраза крупно курсивом, подзаголовки янтарные */
+#stepResult #rdStep2 .ai-intro-head{font-family:'Playfair Display',serif;font-style:italic;font-size:calc(var(--fs-body) + 4px);line-height:1.45;}
+#stepResult #rdStep2 .ai-subh{color:rgb(var(--sc))!important;}
+/* 3 — список дел: каждое дело карточкой с номером, начало совета жирным */
+#stepResult #rdPlan{counter-reset:rdp;}
+#stepResult #rdStep3 .rd-plan-it{counter-increment:rdp;border:1px solid rgba(var(--sc),.22)!important;background:rgba(var(--sc),.07);border-radius:14px;padding:12px!important;margin-top:9px;}
+#stepResult #rdStep3 .rd-plan-tx{gap:12px;}
+#stepResult #rdStep3 .rd-plan-tx:before{content:counter(rdp);flex:0 0 30px;height:30px;margin-top:0;border-radius:50%;background:rgba(var(--sc),.16);color:rgb(var(--sc));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;}
+#stepResult #rdStep3 .rd-plan-t{display:block;font-weight:600;margin-bottom:3px;color:var(--t1);}
+/* 4 — объяснение: линия слева, вставки «Что происходит / Что в данных» */
+#stepResult #rdStep4 .ai-sec{background:linear-gradient(160deg,rgba(var(--sc),.06),rgba(20,24,36,.30))!important;border-color:rgba(var(--sc),.24)!important;}
+#stepResult #rdStep4 .ai-sec-sum{border-left:2px solid rgb(var(--sc));padding-left:12px;}
+#stepResult #rdStep4 .ai-sec-det{border-left-color:rgba(var(--sc),.55)!important;}
+#stepResult #rdStep4 .ai-sec-why-h,#stepResult #rdStep4 .ai-subh{color:rgb(var(--sc))!important;}
+/* «Слушать» — одна боковая кнопка (tts-bridge.js); прежние кнопки в шагах прячем */
+body.has-tts-fab #stepResult .rd-tts-row,body.has-tts-fab #stepResult #ai-tts{display:none!important;}
+</style>
 </head>
 <body class="booting">
 <!-- Старый движок страницы (Chrome/WebView < 80, живой Huawei Y5 2019 на Android 9 с Chrome 79): он не понимает `?.`,
@@ -5431,6 +5458,7 @@ window._rdLast=0;
 function _rdApply(){
   for(var i=1;i<=_RD_N;i++){ var s=document.getElementById('rdStep'+i); if(s) s.classList.toggle('open',window._rdOpen===i); }
   if(window._rdOpen) window._rdLast=window._rdOpen;
+  try{ if(window.vialTtsFab) vialTtsFab(({2:'aiResult',3:'rdPlan',4:'rdWhy'})[window._rdOpen]||''); }catch(e){}
   var nx=(window._rdLast||0)+1; if(nx>_RD_N) nx=0;
   for(var j=1;j<=_RD_N;j++){ var h=document.querySelector('#rdStep'+j+' .rd-step-h'); if(!h) continue;
     var want=(j===nx && window._rdOpen!==j); if(want && !h.classList.contains('rd-next')){ h.classList.add('rd-next'); } else if(!want) h.classList.remove('rd-next'); }
@@ -5469,7 +5497,10 @@ function _rdPlanBuild(box){
   box.querySelectorAll('.ai-sec').forEach(function(sec){
     var act=sec.querySelector('.ai-sec-act'); if(!act) return;
     String(act.textContent||'').split('☐').map(function(x){ return x.replace(/\s+/g,' ').trim(); }).filter(Boolean).forEach(function(tx){
-      items.push('<div class="rd-plan-it"><div class="rd-plan-tx"><span>'+_esc(tx)+'</span></div></div>');
+      // начало совета до « — » (или первое предложение) — жирной строкой, остальное «зачем» (2026-11-01)
+      var _k=tx.indexOf(' — '); if(_k<8||_k>90){ _k=tx.search(/[.!?](\s|$)/); if(_k>=8&&_k<=90) _k++; else _k=-1; }
+      var _t=_k>0?tx.slice(0,_k).replace(/[.:]$/,''):'', _r=_k>0?tx.slice(_k).replace(/^\s*—\s*/,'').trim():tx;
+      items.push('<div class="rd-plan-it"><div class="rd-plan-tx"><span>'+(_t?'<b class="rd-plan-t">'+_esc(_t)+'</b> ':'')+_esc(_r)+'</span></div></div>');
     });
     act.remove();
     var more=sec.querySelector('.ai-sec-more');
@@ -5691,6 +5722,7 @@ function _hideFlowSurfaces(){
   }catch(e){}
 }
 function navTo(tab, want){
+  try{ if(window.vialTtsFab) vialTtsFab(tab==='today'?(({2:'aiResult',3:'rdPlan',4:'rdWhy'})[window._rdOpen]||''):''); }catch(e){}   // сменили вкладку — боковая «Слушать» гаснет
   // «Специалист» — панель #specPanel (specialist.js, 2026-10-16). Не загрузился файл — по-старому, отдельной страницей.
   if(tab==='guide' && !(window._specShow && window.vialSp)){ location.href='./my-specialist.html'+(want&&want.chat?'?chat=1':want&&want.review?'?review=1':''); return; }
   // «Библиотека» — книга в нижней строке (4-я; в центре с 2026-10-18 «Специалист»): есть группа в Telegram → сначала выбор
@@ -6218,7 +6250,8 @@ function _cmpTrajHTML(){
 }
 
 // Вложенные страницы «Профиля» (2026-10-10): '' — сам профиль, 'data' — «Мои данные», 'settings' — «Настройки».
-function _cardOpen(k){ window._cardSub=k||''; renderCard(); var cp=document.getElementById('cardPanel'); if(cp) cp.scrollTop=0; }
+function _cardOpen(k){ window._cardSub=k||''; renderCard();
+  try{ if(window.vialTtsFab) vialTtsFab(String(k||'').indexOf('art:')===0?'cardBody':''); }catch(e){} var cp=document.getElementById('cardPanel'); if(cp) cp.scrollTop=0; }   // статья «Основ» — читаем; разбор Библиотеки включает library.js
 // «Мой прогресс › Динамика»: переключатель неделя / месяц без перерисовки карточки.
 function _dynSeg(btn,r){ var box=btn.closest('details')||document; box.querySelectorAll('.vc-seg button').forEach(function(b){ b.classList.toggle('on',b===btn); });
   box.querySelectorAll('.vc-dyn').forEach(function(d){ d.style.display=(+d.getAttribute('data-r')===r)?'':'none'; }); }
