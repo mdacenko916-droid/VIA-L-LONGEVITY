@@ -2648,6 +2648,17 @@ html:root:root body.src-choice #scroll-area .legal-links{margin-top:auto!importa
   html:root:root body.src-choice .imp-start{margin-top:12px;}
   html:root:root body.src-choice #scroll-area .legal-links{padding:6px 16px 8px!important;}
 }
+/* 2026-11-01, Android 412×915: экран выше 820 — блок кончался на ~640 из 855, снизу пусто (в VIA-L заполнено).
+   Лишнюю высоту (до 140px) раздаём воздуху между блоками, ссылки — к низу, как в VIA-L. */
+@media (min-height:821px){
+  html:root:root body.src-choice{--adx:clamp(0px,calc(100vh - 820px),140px);}
+  html:root:root body.src-choice .hero-title{margin-top:calc(26px + var(--adx)*.15)!important;}
+  html:root:root body.src-choice .hero-imports{margin-top:calc(10px + var(--adx)*.12)!important;}
+  html:root:root body.src-choice .imp-btn{padding-top:calc(12px + var(--adx)*.06)!important;padding-bottom:calc(12px + var(--adx)*.06)!important;margin-top:calc(10px + var(--adx)*.05)!important;}
+  html:root:root:root body.src-choice #scroll-area .legal-links{margin-top:auto!important;margin-bottom:0!important;padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))!important;}
+}
+/* Android WebView заливает нажатый элемент синим (iOS — нет); в VIA-L убрано 2026-10-28, сюда не дошло — копия старше. */
+html{-webkit-tap-highlight-color:transparent;}
 /* 2026-10-30, TestFlight ADAM-L (скрин/1/2 IMG_6024–25): в приложении app-mode.js опускает #app ниже часов, а отступы выше
    прибавляют safe-area ещё раз — под часами глухая полоса ~70px, экран выше окна на ~40px, «Конфиденциальность» под
    кругом «Специалиста». На первом и ежедневном экране #app снова от самого верха: фото заходит под часы, сверху лишь
