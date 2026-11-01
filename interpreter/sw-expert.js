@@ -4,7 +4,7 @@
 // уже установленный EXPERT. Имя файла не меняем по той же причине (сохранённые PWA его помнят).
 // БЕЗОПАСНО для остальных соседей в /interpreter/: перехватываем навигацию ТОЛЬКО на эти две
 // страницы (index.html, methodology.html и пр. — мимо). POST/cross-origin не трогаем.
-const CACHE = 'vial-expert-v7';   // bump при смене иконок/оболочки → сбрасывает старый кэш
+const CACHE = 'vial-expert-v8';   // bump при смене иконок/оболочки → сбрасывает старый кэш
 const EXPERT = 'interpreter-via-l-expert.html';
 const BASE = 'interpreter-via-l.html';   // базовый тариф VIA-L — своя иконка/манифест, тот же механизм
 const ADAM = 'adam-l.html';              // ADAM-L (мужское, 2026-10-28) — тот же scope, поэтому тот же воркер
@@ -12,9 +12,6 @@ const ADAM = 'adam-l.html';              // ADAM-L (мужское, 2026-10-28) 
 // и не обновляться. Кэшируем только статику (иконки/манифест); HTML — всегда network-first.
 const SHELL = [
   './via-l-expert.webmanifest',
-  './pwa/icon-192.png',
-  './pwa/icon-512.png',
-  './pwa/apple-touch-icon.png',
   './via-l.webmanifest',
   './pwa/vial-icon-192.png',
   './pwa/vial-icon-512.png',
@@ -120,8 +117,8 @@ self.addEventListener('push', e => {
     await self.registration.showNotification(isMorning ? t.t : 'VIA·L', {
       // Утро и приём в один час — один пуш на оба: раньше текст утреннего терялся. 2026-09-20
       body: isIntake ? (ntHour === h ? (t.b + ' · ' + ikBody) : ikBody) : t.b,
-      icon: './pwa/icon-192.png',
-      badge: './pwa/icon-192.png',
+      icon: './pwa/vial-icon-192.png',   // иконки EXPERT (pwa/icon-*) удалены 2026-11-01
+      badge: './pwa/vial-icon-192.png',
       // Утро — один тег на всё: вчерашнее не копится. Приём — тег на час: иначе напоминание 13:00
       // тихо (renotify:false) заменило бы висящее утреннее, и человек бы его не заметил. Два пуша
       // одного часа (утро + приём) сворачиваются в одно под общим тегом этого часа.
