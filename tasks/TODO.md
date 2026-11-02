@@ -204,12 +204,9 @@ ADAM-L перекрашивает и переименовывает их выв�
 - [ ] 8. Хвосты удаления EXPERT (10-27): воркер `cloudflare-worker.js:9770/10967` и кабинет `cabinet/index.html:3266` ещё дают
       ссылку на удалённый `interpreter-via-l-expert.html`; `research-consent.html` ветка `expert`. `sw-expert.js` и
       `via-l-expert.webmanifest` НЕ удалять — их использует VIA-L на сайте.
-- [ ] **ADAM-L Android v3** (11-02: синяя подсветка нажатия убрана, первый экран >820 заполнен — только Android; в v2 этого не было,
-      AAB v2 собран ДО фикса) — `/Users/foxmaster/Developer/ADAM-L-release/ADAM-L-v3.aab`, **владелец загружает** в «Закрытое тестирование – Alpha».
-      11-02: ключ `revenuecat-play@via-l-health` видит ADAM-L (чтение ✅), загрузка → 403: нужны права выпуска в тестовые треки;
-      v2 в Play так и не загружена (в библиотеке только сборка 1) — v3 её заменяет.
-- [ ] **ADAM-L Android v2** (`884c4d63`: мужские фото «Нагрузка на сегодня», без видео, разминка, оттенки шагов, боковая «Слушать») — AAB собран
-      и подписан ключом ADAM-L: `/Users/foxmaster/Developer/ADAM-L-release/ADAM-L-v2.aab`; **владелец загружает в консоли** в «Закрытое тестирование – Alpha».
+- [ ] **ADAM-L Android v3** (11-02: синяя подсветка нажатия убрана, первый экран >820 — только Android; + всё из v2) —
+      ✅ 11-02 выложена в Alpha через API (`revenuecat-play@via-l-health`, права выпуска в тест выданы владельцем;
+      play-release.py с PLAY_PKG=com.viael.adaml). ⏳ проверить на Huawei после обновления из Play.
 
 ## 🔗 Вторичная тема дня — замер (старт 2026-10-15)
 
