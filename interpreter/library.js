@@ -228,9 +228,10 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
     m_myths:{ru:'Мифы о мужском здоровье',uk:'Міфи про чоловіче здоров’я',en:'Men\'s health myths',es:'Mitos sobre la salud masculina',de:'Mythen zur Männergesundheit',pt:'Mitos sobre a saúde masculina',fr:'Idées reçues sur la santé masculine',pl:'Mity o zdrowiu mężczyzn',it:'Miti sulla salute maschile',he:'מיתוסים על בריאות הגבר',ja:'男性の健康にまつわる誤解',ko:'남성 건강에 관한 오해'},
     m_brain:{ru:'Память и ясность ума',uk:'Пам’ять і ясність розуму',en:'Memory and clear thinking',es:'Memoria y mente clara',de:'Gedächtnis und klarer Kopf',pt:'Memória e clareza mental',fr:'Mémoire et clarté d’esprit',pl:'Pamięć i jasność umysłu',it:'Memoria e lucidità',he:'זיכרון וצלילות',ja:'記憶と頭の冴え',ko:'기억력과 맑은 정신'},
     glossary:{ru:'Словарь терминов',uk:'Словник термінів',en:'Glossary of terms',es:'Glosario de términos',de:'Begriffe erklärt',pt:'Glossário de termos',fr:'Lexique des termes',pl:'Słownik pojęć',it:'Glossario dei termini',he:'מילון מונחים',ja:'用語集',ko:'용어 사전'},
+    supps:{ru:'Добавки и витамины',uk:'Добавки й вітаміни',en:'Supplements and vitamins',es:'Suplementos y vitaminas',de:'Nahrungsergänzung und Vitamine',pt:'Suplementos e vitaminas',fr:'Compléments et vitamines',pl:'Suplementy i witaminy',it:'Integratori e vitamine',he:'תוספי תזונה וויטמינים',ja:'サプリメントとビタミン',ko:'보충제와 비타민'},   // полка-сборка 2026-11-02
     treatment:{ru:'Варианты лечения',uk:'Варіанти лікування',en:'Treatment options',es:'Opciones de tratamiento',de:'Behandlungsmöglichkeiten',pt:'Opções de tratamento',fr:'Options de traitement',pl:'Możliwości leczenia',it:'Opzioni di trattamento',he:'אפשרויות טיפול',ja:'治療の選択肢',ko:'치료 선택지'} };
   // Мужчинам — своя полка (m_*; темы сна, сердца, секса и движения называются как у женской). 2026-10-19.
-  ['sleep', 'heart', 'sex', 'exercise', 'checks'].forEach(function (k) { TOPIC['m_' + k] = TOPIC[k]; });
+  ['sleep', 'heart', 'sex', 'exercise', 'checks', 'supps'].forEach(function (k) { TOPIC['m_' + k] = TOPIC[k]; });
   var resCat = null, resCatLang = '', resItems = {};
   function resHas(lang) { return true; }   // все 12 языков (resLang); у мужчины — мужская полка (?g=m)
   function subOn() { try { return localStorage.getItem('vialp_entitlement') === '1'; } catch (e) { return false; } }
