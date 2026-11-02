@@ -42,16 +42,7 @@
 `app-adam/sync-web.sh`; товары: App Store VIA-L `via_l_specialist_plan` (6829735946) и ADAM-L `adam_l_specialist_plan`
 (6829736130) €150/$164,99, 175 стран, скрин ревью загружен; Google Play VIA-L — ACTIVE (`play-release.py plan-product`).
 ✅ 11-02 запушено, воркер выложен (35e4d92f).
-- [ ] **RevenueCat (руками владельца), пошагово:**
-      1. app.revenuecat.com → проект **VIA-L** → слева **Product catalog** → вкладка **Products**.
-      2. **+ New** (или **Import**, если стор подтянул товар сам) → приложение **VIA-L (App Store)** →
-         Identifier `via_l_specialist_plan` → тип **Consumable** → **Save**.
-      3. Снова **+ New** → приложение **VIA-L (Play Store)** → Identifier `via_l_specialist_plan` → **Consumable** → **Save**.
-      4. Снова **+ New** → приложение **ADAM-L (App Store)** → Identifier `adam_l_specialist_plan` → **Consumable** → **Save**.
-      5. Там же проверить, есть ли `adam_l_specialist_review` у ADAM-L (App Store); нет — добавить так же (Consumable).
-      6. ⚠️ **Не** привязывать к entitlement `via_l_pro` и **не** класть в Offering «default» (иначе товар попадёт
-         на экран подписки) — точно как `via_l_specialist_review`.
-      7. Написать Claude «готово» — проверю, что сервер видит товары.
+✅ 11-02 RevenueCat: товары добавлены владельцем; App Store — оба товара READY_TO_SUBMIT; воркер отвечает на kind=plan.
 - [ ] **ADAM-L Google Play:** товар `adam_l_specialist_plan` €150 в консоли руками (личный аккаунт, API нет) — вместе с
       `adam_l_specialist_review`.
 - [ ] **Сборки:** VIA-L iOS/Android и ADAM-L — товар подать на ревью Apple вместе со сборкой; тест-покупка в TestFlight.
