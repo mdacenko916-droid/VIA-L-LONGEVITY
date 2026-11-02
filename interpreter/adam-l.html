@@ -7,6 +7,8 @@
      вшиты в VIA-L с золотом и графитом. Править их нельзя — VIA-L должен остаться как есть. Поэтому здесь,
      и только здесь, всё, что модули дописывают на страницу (теги <style>, атрибуты style/fill/stroke),
      перекрашивается на лету в палитру ADAM-L: золото → серебро, графит → слива. Canvas не ловится. -->
+<script>/* 2026-11-02: метка Android для правил, которые iPhone трогать не должны */
+if(/Android/i.test(navigator.userAgent))document.documentElement.classList.add('is-android');</script>
 <script>
 (function(){
   var HX={c68c34:'c8cad8',c49a3c:'c8cad8',c4963c:'c8cad8',c9973f:'c8cad8',c9962f:'c8cad8',c0963c:'c8cad8',c0923a:'c8cad8',bf8f2c:'c8cad8',
@@ -2649,13 +2651,14 @@ html:root:root body.src-choice #scroll-area .legal-links{margin-top:auto!importa
   html:root:root body.src-choice #scroll-area .legal-links{padding:6px 16px 8px!important;}
 }
 /* 2026-11-01, Android 412×915: экран выше 820 — блок кончался на ~640 из 855, снизу пусто (в VIA-L заполнено).
-   Лишнюю высоту (до 140px) раздаём воздуху между блоками, ссылки — к низу, как в VIA-L. */
+   Лишнюю высоту (до 140px) раздаём воздуху между блоками, ссылки — к низу, как в VIA-L.
+   2026-11-02: только Android (html.is-android) — на iPhone 852+ правило дало скролл первого экрана. */
 @media (min-height:821px){
-  html:root:root body.src-choice{--adx:clamp(0px,calc(100vh - 820px),140px);}
-  html:root:root body.src-choice .hero-title{margin-top:calc(26px + var(--adx)*.15)!important;}
-  html:root:root body.src-choice .hero-imports{margin-top:calc(10px + var(--adx)*.12)!important;}
-  html:root:root body.src-choice .imp-btn{padding-top:calc(12px + var(--adx)*.06)!important;padding-bottom:calc(12px + var(--adx)*.06)!important;margin-top:calc(10px + var(--adx)*.05)!important;}
-  html:root:root:root body.src-choice #scroll-area .legal-links{margin-top:auto!important;margin-bottom:0!important;padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))!important;}
+  html.is-android:root:root body.src-choice{--adx:clamp(0px,calc(100vh - 820px),140px);}
+  html.is-android:root:root body.src-choice .hero-title{margin-top:calc(26px + var(--adx)*.15)!important;}
+  html.is-android:root:root body.src-choice .hero-imports{margin-top:calc(10px + var(--adx)*.12)!important;}
+  html.is-android:root:root body.src-choice .imp-btn{padding-top:calc(12px + var(--adx)*.06)!important;padding-bottom:calc(12px + var(--adx)*.06)!important;margin-top:calc(10px + var(--adx)*.05)!important;}
+  html.is-android:root:root:root body.src-choice #scroll-area .legal-links{margin-top:auto!important;margin-bottom:0!important;padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))!important;}
 }
 /* Android WebView заливает нажатый элемент синим (iOS — нет); в VIA-L убрано 2026-10-28, сюда не дошло — копия старше. */
 html{-webkit-tap-highlight-color:transparent;}
