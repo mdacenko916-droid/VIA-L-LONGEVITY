@@ -16,6 +16,8 @@ spec = importlib.util.spec_from_file_location("asc", _p); asc = importlib.util.m
 
 APP = "6807062006"
 PID = "via_l_specialist_review"
+NAME = "VIA-L Specialist Review"            # внутреннее имя товара в App Store Connect
+SHOT = "specialist-review-en.png"          # скриншот для ревью, app/store/images/iap-review/
 EUR = "50.0"
 USD = "54.99"   # США — вручную: авто-пересчёт Apple из €50 даёт $45 (без европейского НДС)
 # Название ≤ 30 знаков, описание ≤ 45 — предел App Store.
@@ -64,7 +66,7 @@ def _find():
 
 def shot():
     iid = _find()
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "store", "images", "iap-review", "specialist-review-en.png")
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "store", "images", "iap-review", SHOT)
     data = open(path, "rb").read()
     try:
         old = (asc.req("/v2/inAppPurchases/%s/appStoreReviewScreenshot" % iid).get("data") or {}).get("id")
@@ -72,7 +74,7 @@ def shot():
         old = None
     if old:
         asc.req("/v1/inAppPurchaseAppStoreReviewScreenshots/%s" % old, "DELETE"); print("Старый скриншот удалён")
-    sid = asc.upload_shot("inAppPurchaseAppStoreReviewScreenshots", "inAppPurchaseV2", "inAppPurchases", iid, data, "specialist-review-en.png")
+    sid = asc.upload_shot("inAppPurchaseAppStoreReviewScreenshots", "inAppPurchaseV2", "inAppPurchases", iid, data, SHOT)
     print("Скриншот загружен:", sid, "(%d КБ)" % (len(data) // 1024))
     print("Состояние товара:", asc.req("/v2/inAppPurchases/%s" % iid)["data"]["attributes"]["state"])
 
@@ -86,7 +88,7 @@ def main():
         raise SystemExit("Товар %s уже существует — ничего не делаю." % PID)
 
     r = asc.req("/v2/inAppPurchases", "POST", {"data": {"type": "inAppPurchases",
-        "attributes": {"name": "VIA-L Specialist Review", "productId": PID, "inAppPurchaseType": "CONSUMABLE",
+        "attributes": {"name": NAME, "productId": PID, "inAppPurchaseType": "CONSUMABLE",
                        "reviewNote": NOTE, "familySharable": False},
         "relationships": {"app": {"data": {"type": "apps", "id": APP}}}}})["data"]
     iid = r["id"]; print("Создан товар", iid, r["attributes"]["state"])

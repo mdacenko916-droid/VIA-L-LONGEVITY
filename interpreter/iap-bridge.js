@@ -141,15 +141,19 @@
      не лежит, поэтому берём его из стора напрямую по идентификатору. Покупку засчитывает СЕРВЕР
      (/review/claim сверяет чек с RevenueCat по идентификатору покупателя) — здесь только касса. */
   var REVIEW_PRODUCT_ID = 'via_l_specialist_review';
+  // «Рекомендации на 3 месяца» (2026-11-02) — второй разовый товар, порядок тот же. kind='plan' во всех функциях ниже.
+  var PLAN_PRODUCT_ID = 'via_l_specialist_plan';
+  function _pid(kind){ return kind === 'plan' ? PLAN_PRODUCT_ID : REVIEW_PRODUCT_ID; }
   window.iapPlatform = function(){
     try { return (window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform()) || ''; } catch(e){ return ''; }
   };
   // Товар из стора (цена — product.priceString) или null: нет приложения, товар не заведён, нет сети.
-  window.iapReviewProduct = async function(){
+  window.iapReviewProduct = async function(kind){
     var p = rc(); if(!p) return null;
     var ok = await ensureConfigured(); if(!ok) return null;
     try {
-      var r = await p.getProducts({ productIdentifiers: [REVIEW_PRODUCT_ID], type: 'NON_SUBSCRIPTION' });
+      var r = await p.getProducts({ productIdentifiers: [_pid(kind)], type: 'NON_SUBSCRIPTION' });
+      if(kind === 'plan') return (r && r.products && r.products[0]) || null;   // диагностика — по разбору
       window._iapReviewDiag = 'products=' + ((r && r.products && r.products.length) || 0);
       return (r && r.products && r.products[0]) || null;
     } catch(e){ window._iapReviewDiag = 'error: ' + ((e && (e.message || e.code)) || e); console.warn('[iap] getProducts failed', e); return null; }
@@ -172,10 +176,10 @@
     }
   };
   // Возврат за разбор: на iPhone — системное окно возврата Apple (iOS 15+). false = окна нет, показать запасной путь.
-  window.iapRefundReview = async function(){
+  window.iapRefundReview = async function(kind){
     var p = rc(); if(!p || window.iapPlatform() !== 'ios') return false;
     try {
-      var prod = await window.iapReviewProduct(); if(!prod) return false;
+      var prod = await window.iapReviewProduct(kind); if(!prod) return false;
       await p.beginRefundRequestForProduct({ storeProduct: prod });
       return true;
     } catch(e){ console.warn('[iap] refund request failed', e); return false; }

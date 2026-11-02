@@ -4548,7 +4548,8 @@ async function handleExpertThread(request, env, corsHeaders, ctx){
   // просрочку. Отдаём вместе с перепиской — приложение и так зовёт её при каждом открытии.
   const rv = (d.review && (d.review.status !== 'closed' || _reviewClosed(d)))
     ? { status: d.review.status || 'open', due_at: d.review.due_at || '', extended: d.review.extended ? 1 : 0,
-        closes_at: d.review.closes_at || '', answered_at: d.review.answered_at || '' } : undefined;
+        closes_at: d.review.closes_at || '', answered_at: d.review.answered_at || '',
+        kind: d.review.kind || 'review', format: d.review.format || '' } : undefined;
   return jsonResponse({ ok:true, messages: out, review: rv }, corsHeaders);
 }
 
@@ -11347,7 +11348,16 @@ async function handleSpecialistUnlink(request, env, corsHeaders){
 // Дальше всё едет по готовой связке: карточка в кабинете, ингест разборов по коду, переписка
 // с вложениями, протокол в «Мои приёмы». Этот код только заводит заказ и подключает к дежурному.
 // ─────────────────────────────────────────────────────────────
-const REVIEW_PRODUCT_ID  = 'via_l_specialist_review';   // разовая покупка в App Store / Google Play / RevenueCat
+// Разовые покупки в App Store / Google Play / RevenueCat. Вид заказа → товары обоих приложений (VIA-L и ADAM-L
+// заведены в одном проекте RevenueCat). review — разбор €50 (2026-10-02); plan — «Рекомендации на 3 месяца» €150
+// (решение владельца 2026-11-02): тот же порядок (48 часов на ответ, 7 дней вопросов после выдачи), но разбор
+// полный (анамнез, анализы, дневник питания) и план на 3 месяца; на uk/ru — одна онлайн-встреча, иначе письменно.
+// Старые сборки вид не присылают — для них это review.
+const REVIEW_PRODUCTS = {
+  review: ['via_l_specialist_review', 'adam_l_specialist_review'],
+  plan:   ['via_l_specialist_plan',   'adam_l_specialist_plan'],
+};
+function _reviewKind(v){ return v === 'plan' ? 'plan' : 'review'; }
 const REVIEW_ANSWER_HOURS = 48;   // срок ответа специалиста — 48 часов с покупки (решение владельца 2026-10-02)
 const REVIEW_CHAT_DAYS   = 7;     // сколько дней ПОСЛЕ ВЫДАЧИ разбора клиент задаёт уточняющие вопросы
 // Публичные SDK-ключи RevenueCat — те же, что зашиты в iap-bridge.js. Если чтение покупок по ним
@@ -11472,8 +11482,8 @@ async function handleLibraryAsk(request, env, corsHeaders){
   return jsonResponse({ok:true}, corsHeaders);
 }
 
-// Разовые покупки этого товара у покупателя. null = RevenueCat не ответил (не путать с «покупок нет»).
-async function _reviewPurchases(env, rcUser, platform){
+// Разовые покупки этого вида у покупателя. null = RevenueCat не ответил (не путать с «покупок нет»).
+async function _reviewPurchases(env, rcUser, platform, kind){
   const key = env.RC_SECRET_KEY || _RC_PUBLIC[platform];
   if(!key) return null;
   try{
@@ -11482,13 +11492,13 @@ async function _reviewPurchases(env, rcUser, platform){
     });
     if(!r.ok) return null;
     const j = await r.json();
-    const list = j && j.subscriber && j.subscriber.non_subscriptions && j.subscriber.non_subscriptions[REVIEW_PRODUCT_ID];
-    return Array.isArray(list) ? list.filter(x => x && x.id) : [];
+    const ns = (j && j.subscriber && j.subscriber.non_subscriptions) || {};
+    return REVIEW_PRODUCTS[kind].flatMap(id => Array.isArray(ns[id]) ? ns[id] : []).filter(x => x && x.id);
   }catch(_){ return null; }
 }
 function _isoPlusDays(ms, days){ return new Date(ms + days*86400000).toISOString().slice(0,10); }
 
-// POST /review/claim {rc_user, platform, email, name, lang, consent}
+// POST /review/claim {rc_user, platform, email, name, lang, consent, kind?}
 //   → {ok, code, specialist_id, specialist_name, due_at, closes_at, repeat?}
 // Приложение зовёт сразу после покупки и повторяет при следующем запуске, если ответа не было
 // (покупка прошла, сеть оборвалась). Повтор безопасен: учтённый чек возвращает тот же заказ.
@@ -11501,11 +11511,12 @@ async function handleReviewClaim(request, env, corsHeaders, ctx){
   const name     = String(b.name || '').trim().slice(0, 120);
   const lang     = String(b.lang || '').trim().slice(0, 5);
   const consent  = b.consent === true || b.consent === 'true';
+  const kind     = _reviewKind(b.kind);
   if(!rcUser || !platform) return jsonResponse({ok:false,error:'missing_fields'},   corsHeaders, 400);
   if(!email)               return jsonResponse({ok:false,error:'no_email'},         corsHeaders, 400);
   if(!consent)             return jsonResponse({ok:false,error:'consent_required'}, corsHeaders, 400);
 
-  const purchases = await _reviewPurchases(env, rcUser, platform);
+  const purchases = await _reviewPurchases(env, rcUser, platform, kind);
   if(purchases === null)  return jsonResponse({ok:false,error:'rc_unavailable'}, corsHeaders, 502);
   if(!purchases.length)   return jsonResponse({ok:false,error:'no_purchase'},    corsHeaders, 402);
 
@@ -11564,6 +11575,9 @@ async function handleReviewClaim(request, env, corsHeaders, ctx){
   data.consent = { at: new Date(now).toISOString(), ref_code: dutyRef, specialist_id: sp.id, via: 'review' };
   data.sharing = true;
   data.review  = { status:'open', paid_at: new Date(now).toISOString().slice(0,10), due_at: dueAt, closes_at: closesAt, sandbox };
+  // Рекомендации на 3 месяца: на украинском и русском — онлайн-встреча (ссылку на запись специалист даёт
+  // в переписке), на остальных языках — письменный ответ.
+  if(kind === 'plan'){ data.review.kind = 'plan'; data.review.format = /^(uk|ru)$/.test(lang) ? 'meeting' : 'written'; }
 
   await env.DB.prepare(`
     INSERT INTO clients (code,name,email,lang,product,status,specialist_id,data,created_at,updated_at)

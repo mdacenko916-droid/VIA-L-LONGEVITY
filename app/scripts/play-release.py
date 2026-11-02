@@ -379,16 +379,31 @@ REVIEW_TEXT = [   # Play: название ≤55, описание ≤200; яз�
 ]
 
 
-def cmd_review_product(args):
+PLAN_ID = "via_l_specialist_plan"         # «Рекомендации на 3 месяца» €150 (2026-11-02), id как в App Store / iap-bridge.js / воркере
+PLAN_TEXT = [
+    ("en-US", "3-month recommendations", "A specialist reviews your health history, lab results, lifestyle and food diary and gives you a 3-month plan to follow on your own. 7 days for follow-up questions."),
+    ("ru-RU", "Рекомендации на 3 месяца", "Специалист разберёт историю здоровья, анализы, образ жизни и дневник питания и даст план на 3 месяца, который вы выполняете сами. 7 дней на вопросы."),
+    ("uk", "Рекомендації на 3 місяці", "Спеціаліст розбере історію здоров’я, аналізи, спосіб життя та щоденник харчування і дасть план на 3 місяці, який ви виконуєте самі. 7 днів на запитання."),
+    ("es-ES", "Recomendaciones para 3 meses", "Un especialista analiza tu historial, analíticas, estilo de vida y diario de alimentación y te da un plan de 3 meses para seguir por tu cuenta. 7 días de preguntas."),
+]
+
+
+def cmd_plan_product(args):
+    """Разовый товар «Рекомендации на 3 месяца»: €150 / $164,99 — тот же путь, что у разбора."""
+    cmd_review_product(args, PLAN_ID, PLAN_TEXT, "150", ("164", 990000000))
+
+
+def cmd_review_product(args, pid=None, texts=None, eur="50", usd=("54", 990000000)):
     """Разовый товар «Разбор со специалистом» (docs/SPECIALIST-REVIEW-PLAN.md): €50 в зоне евро, $54,99 в США
     (как в App Store), остальные страны — пересчёт Google от €50. Создаёт или обновляет товар и включает покупку."""
+    REVIEW_ID, REVIEW_TEXT_ = pid or globals()["REVIEW_ID"], texts or REVIEW_TEXT
     tok = token()
-    conv = call(tok, API + "/pricing:convertRegionPrices", "POST", {"price": {"currencyCode": "EUR", "units": "50"}})
+    conv = call(tok, API + "/pricing:convertRegionPrices", "POST", {"price": {"currencyCode": "EUR", "units": eur}})
     regs = []
     for rc, v in sorted(conv["convertedRegionPrices"].items()):
         pr = v["price"]
-        if pr["currencyCode"] == "EUR": pr = {"currencyCode": "EUR", "units": "50"}
-        if rc == "US": pr = {"currencyCode": "USD", "units": "54", "nanos": 990000000}
+        if pr["currencyCode"] == "EUR": pr = {"currencyCode": "EUR", "units": eur}
+        if rc == "US": pr = {"currencyCode": "USD", "units": usd[0], "nanos": usd[1]}
         regs.append({"regionCode": rc, "price": pr, "availability": "AVAILABLE"})
     def show(rc):
         p = next((r["price"] for r in regs if r["regionCode"] == rc), None)
@@ -399,7 +414,7 @@ def cmd_review_product(args):
         return
     rv = "2026/01"   # справочник регионов, как у via_l_lifetime
     body = {"packageName": PKG, "productId": REVIEW_ID, "regionsVersion": {"version": rv},
-            "listings": [{"languageCode": l, "title": t, "description": d} for l, t, d in REVIEW_TEXT],
+            "listings": [{"languageCode": l, "title": t, "description": d} for l, t, d in REVIEW_TEXT_],
             "purchaseOptions": [{"purchaseOptionId": "review", "buyOption": {"legacyCompatible": True},
                                  "regionalPricingAndAvailabilityConfigs": regs}]}
     # patch у Google — единственный путь с маленькими буквами (discovery v3), остальные — oneTimeProducts
@@ -448,12 +463,15 @@ def main():
     rp = sub.add_parser("review-product", help="разовый товар «Разбор со специалистом» (€50) — создать/обновить и включить")
     rp.add_argument("--yes", action="store_true", help="действительно создать")
     rp.set_defaults(hold=False)
+    pp = sub.add_parser("plan-product", help="разовый товар «Рекомендации на 3 месяца» (€150) — создать/обновить и включить")
+    pp.add_argument("--yes", action="store_true", help="действительно создать")
+    pp.set_defaults(hold=False)
     li = sub.add_parser("listing", help="обновить описание страницы Play (4 языка) из PLAY-ВСТАВИТЬ.txt")
     li.add_argument("--file", default="app/store/android/PLAY-ВСТАВИТЬ.txt")
     li.add_argument("--yes", action="store_true", help="действительно отправить")
     li.set_defaults(hold=False)
     a = ap.parse_args()
-    {"status": cmd_status, "release": cmd_release, "upload": cmd_upload, "prices": cmd_prices, "screens": cmd_screens, "listing": cmd_listing, "review-product": cmd_review_product}[a.cmd](a)
+    {"status": cmd_status, "release": cmd_release, "upload": cmd_upload, "prices": cmd_prices, "screens": cmd_screens, "listing": cmd_listing, "review-product": cmd_review_product, "plan-product": cmd_plan_product}[a.cmd](a)
 
 
 if __name__ == "__main__":

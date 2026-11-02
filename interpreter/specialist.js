@@ -219,6 +219,12 @@ var MARKUP = `<div class="sp-page">
         <div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.5;margin-bottom:12px;" data-t="rv_s"></div>
         <button type="button" class="btn" onclick="vialSp.openReview()"><span data-t="rv_more"></span> · <span id="rvTeaserPrice"></span></button>
       </div>
+      <!-- Рекомендации на 3 месяца (2026-11-02): второй разовый товар, показывается по тем же правилам. -->
+      <div class="speccard" id="plTeaser" style="display:none;margin-top:10px;text-align:start;">
+        <div style="font-weight:600;color:var(--t1);margin-bottom:4px;" data-t="pl_t"></div>
+        <div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.5;margin-bottom:12px;" data-t="pl_s"></div>
+        <button type="button" class="btn" onclick="vialSp.openReview('plan')"><span data-t="rv_more"></span> · <span id="plTeaserPrice"></span></button>
+      </div>
 
       <!-- Нет кода → витрина наставников (public=1) + запись на 15-мин знакомство -->
       <div id="noCode" style="display:none;margin-top:10px;border-top:1px solid var(--b1);padding-top:12px;">
@@ -270,7 +276,7 @@ var MARKUP = `<div class="sp-page">
       <!-- Разовый разбор: срок ответа, продление, просрочка с путём возврата. Приходит с перепиской. -->
       <div class="rvstate" id="rvState"><span id="rvStateText"></span>
         <button type="button" class="btn ghost" id="rvRefundBtn" onclick="vialSp.refundReview()" style="display:none;margin-top:10px;" data-t="rv_refund_btn"></button>
-        <button type="button" class="btn" id="rvAgainBtn" onclick="vialSp.openReview()" style="display:none;margin-top:10px;"></button>
+        <button type="button" class="btn" id="rvAgainBtn" onclick="vialSp.openAgain()" style="display:none;margin-top:10px;"></button>
       </div>
       <!-- Обмен данными включается той же галочкой согласия при подключении, а здесь им можно
            управлять дальше: пауза не должна стоить человеку связи и переписки. 2026-09-24. -->
@@ -327,14 +333,15 @@ var MARKUP = `<div class="sp-page">
     <button type="button" class="catback" onclick="vialSp.closeReview()" id="rvBackBtn">← Назад</button>
     <div class="card">
       <div class="eyebrow">VIA·L</div>
-      <h1 data-t="rv_t"></h1>
-      <p class="intro" data-t="rv_s"></p>
+      <!-- Заголовок и списки — по виду покупки (разбор / рекомендации на 3 месяца), заполняет _rvTexts. -->
+      <h1 id="rvH"></h1>
+      <p class="intro" id="rvSub"></p>
       <div class="rvh" data-t="rv_get_h"></div>
-      <ul class="rvl"><li data-t="rv_get1"></li><li data-t="rv_get2"></li><li data-t="rv_get3"></li><li data-t="rv_get4"></li></ul>
+      <ul class="rvl" id="rvGet"></ul>
       <div class="rvh" data-t="rv_how_h"></div>
-      <ol class="rvl"><li data-t="rv_how1"></li><li data-t="rv_how2"></li><li data-t="rv_how3"></li></ol>
+      <ol class="rvl" id="rvHow"></ol>
       <div class="rvh" data-t="rv_imp_h"></div>
-      <ul class="rvl"><li data-t="rv_imp1"></li><li data-t="rv_imp2"></li><li data-t="rv_imp3"></li></ul>
+      <ul class="rvl" id="rvImp"></ul>
       <label class="fld">
         <span class="lbl" data-t="email_label">Your email</span>
         <input class="in" id="rvEmail" type="email" autocomplete="email" placeholder="you@email.com">
@@ -562,6 +569,10 @@ function _isWebSite(){
   // Кто отвечает на разбор: без личного имени (решение владельца 2026-10-02) — клиент специалиста не выбирал.
   const N={"ru":"Специалист VIA·L","uk":"Спеціаліст VIA·L","en":"VIA·L specialist","es":"Especialista de VIA·L","de":"VIA·L-Spezialist","pt":"Especialista VIA·L","fr":"Spécialiste VIA·L","pl":"Specjalista VIA·L","it":"Specialista VIA·L","he":"מומחה VIA·L","ja":"VIA·Lの専門家","ko":"VIA·L 전문가"};
   Object.keys(N).forEach(l=>{ if(T[l]) T[l].rv_spec=N[l]; });
+  // «Рекомендации на 3 месяца» (решение владельца 2026-11-02, русский — канон). Разовые: человек дальше
+  // действует сам, без сопровождения. uk/ru — одна онлайн-встреча (pl_how3m/pl_imp1m), остальные — письменно.
+  const P={"ru":{"pl_t":"Рекомендации на 3 месяца","pl_s":"Специалист полностью разберёт вашу ситуацию и составит план на три месяца, по которому вы будете действовать сами.","pl_get1":"Полный разбор: история здоровья, анализы, образ жизни, жалобы и показатели из приложения.","pl_get2":"Подробный разбор дневника питания: чего не хватает, что мешает, что поменять в первую очередь.","pl_get3":"Рекомендации на 3 месяца по питанию, тренировкам, сну и образу жизни — каждая опирается на научные исследования.","pl_get4":"Добавки — с дозировками и временем приёма. План появится в «Моих приёмах».","pl_get5":"Какие анализы сдать сейчас и когда пересдать, чтобы увидеть результат.","pl_how2":"Напишите в переписке о своём здоровье: что беспокоит, какие были болезни, какие лекарства и добавки принимаете. Приложите фото анализов и дневник питания за 3–7 дней.","pl_how3m":"В течение 48 часов специалист пришлёт в переписке ссылку для записи на онлайн-встречу. На встрече вы получите рекомендации.","pl_how3w":"В течение 48 часов вы получите рекомендации в переписке.","pl_imp1m":"Одна онлайн-встреча по видеосвязи. Уточняющие вопросы — письменно, в приложении.","pl_imp4":"Это разовые рекомендации: дальше вы действуете по плану сами, без сопровождения специалиста.","pl_paid_t":"Рекомендации оплачены","pl_paid_d":"Напишите специалисту о своём здоровье и приложите анализы и дневник питания за 3–7 дней.","pl_st_done":"Рекомендации выданы. Уточняющие вопросы — до {c}.","pl_again":"Новые рекомендации · {price}"},"uk":{"pl_t":"Рекомендації на 3 місяці","pl_s":"Спеціаліст повністю розбере вашу ситуацію і складе план на три місяці, за яким ви діятимете самостійно.","pl_get1":"Повний розбір: історія здоров’я, аналізи, спосіб життя, скарги та показники із застосунку.","pl_get2":"Детальний розбір щоденника харчування: чого бракує, що заважає, що змінити насамперед.","pl_get3":"Рекомендації на 3 місяці щодо харчування, тренувань, сну та способу життя — кожна спирається на наукові дослідження.","pl_get4":"Добавки — з дозуваннями та часом прийому. План з’явиться в «Моїх прийомах».","pl_get5":"Які аналізи здати зараз і коли перездати, щоб побачити результат.","pl_how2":"Напишіть у листуванні про своє здоров’я: що турбує, які були хвороби, які ліки та добавки приймаєте. Додайте фото аналізів і щоденник харчування за 3–7 днів.","pl_how3m":"Протягом 48 годин спеціаліст надішле в листуванні посилання для запису на онлайн-зустріч. На зустрічі ви отримаєте рекомендації.","pl_how3w":"Протягом 48 годин ви отримаєте рекомендації в листуванні.","pl_imp1m":"Одна онлайн-зустріч у відеозв’язку. Уточнювальні запитання — письмово, у застосунку.","pl_imp4":"Це разові рекомендації: далі ви дієте за планом самостійно, без супроводу спеціаліста.","pl_paid_t":"Рекомендації оплачено","pl_paid_d":"Напишіть спеціалісту про своє здоров’я і додайте аналізи та щоденник харчування за 3–7 днів.","pl_st_done":"Рекомендації видано. Уточнювальні запитання — до {c}.","pl_again":"Нові рекомендації · {price}"},"en":{"pl_t":"3-month recommendations","pl_s":"A specialist will review your whole situation and draw up a three-month plan for you to follow on your own.","pl_get1":"A full review: health history, lab results, lifestyle, complaints and metrics from the app.","pl_get2":"A detailed review of your food diary: what is missing, what gets in the way, what to change first.","pl_get3":"Recommendations for 3 months on nutrition, exercise, sleep and lifestyle — each one based on scientific research.","pl_get4":"Supplements — with dosages and timing. The plan appears in “My intake schedule”.","pl_get5":"Which lab tests to do now and when to repeat them to see the result.","pl_how2":"Write in the chat about your health: what bothers you, past illnesses, which medications and supplements you take. Attach photos of your lab results and a food diary for 3–7 days.","pl_how3m":"Within 48 hours the specialist will send you a link in the chat to book an online meeting. You will receive the recommendations at the meeting.","pl_how3w":"Within 48 hours you receive the recommendations in the chat.","pl_imp1m":"One online video meeting. Follow-up questions in writing, inside the app.","pl_imp4":"These are one-off recommendations: after that you follow the plan on your own, without ongoing support from the specialist.","pl_paid_t":"Recommendations paid","pl_paid_d":"Write to the specialist about your health and attach your lab results and a food diary for 3–7 days.","pl_st_done":"Recommendations delivered. Follow-up questions until {c}.","pl_again":"New recommendations · {price}"},"es":{"pl_t":"Recomendaciones para 3 meses","pl_s":"Un especialista analizará toda tu situación y preparará un plan de tres meses para que lo sigas por tu cuenta.","pl_get1":"Un análisis completo: historial de salud, analíticas, estilo de vida, molestias y datos de la app.","pl_get2":"Un análisis detallado de tu diario de alimentación: qué falta, qué estorba y qué cambiar primero.","pl_get3":"Recomendaciones para 3 meses sobre alimentación, ejercicio, sueño y estilo de vida, cada una basada en estudios científicos.","pl_get4":"Suplementos, con dosis y horarios. El plan aparecerá en «Mis tomas».","pl_get5":"Qué analíticas hacer ahora y cuándo repetirlas para ver el resultado.","pl_how2":"Escribe en el chat sobre tu salud: qué te molesta, enfermedades previas, qué medicamentos y suplementos tomas. Adjunta fotos de tus analíticas y un diario de alimentación de 3–7 días.","pl_how3m":"En 48 horas el especialista te enviará por el chat un enlace para reservar una reunión en línea. En la reunión recibirás las recomendaciones.","pl_how3w":"En 48 horas recibirás las recomendaciones en el chat.","pl_imp1m":"Una reunión en línea por videollamada. Las preguntas de seguimiento, por escrito en la app.","pl_imp4":"Son recomendaciones puntuales: después sigues el plan por tu cuenta, sin acompañamiento del especialista.","pl_paid_t":"Recomendaciones pagadas","pl_paid_d":"Escribe al especialista sobre tu salud y adjunta tus analíticas y un diario de alimentación de 3–7 días.","pl_st_done":"Recomendaciones entregadas. Preguntas de seguimiento hasta el {c}.","pl_again":"Nuevas recomendaciones · {price}"},"de":{"pl_t":"Empfehlungen für 3 Monate","pl_s":"Ein Spezialist wertet Ihre gesamte Situation aus und erstellt einen Dreimonatsplan, den Sie selbstständig umsetzen.","pl_get1":"Eine vollständige Auswertung: Gesundheitsgeschichte, Laborwerte, Lebensstil, Beschwerden und Werte aus der App.","pl_get2":"Eine ausführliche Auswertung Ihres Ernährungstagebuchs: was fehlt, was stört, was zuerst zu ändern ist.","pl_get3":"Empfehlungen für 3 Monate zu Ernährung, Training, Schlaf und Lebensstil — jede gestützt auf wissenschaftliche Studien.","pl_get4":"Nahrungsergänzung — mit Dosierung und Einnahmezeit. Der Plan erscheint in «Meine Einnahmen».","pl_get5":"Welche Laborwerte Sie jetzt bestimmen lassen und wann wiederholen sollten, um das Ergebnis zu sehen.","pl_how2":"Schreiben Sie im Chat über Ihre Gesundheit: was Sie belastet, frühere Erkrankungen, welche Medikamente und Nahrungsergänzungen Sie nehmen. Hängen Sie Fotos Ihrer Laborwerte und ein Ernährungstagebuch über 3–7 Tage an.","pl_how3m":"Innerhalb von 48 Stunden sendet Ihnen der Spezialist im Chat einen Link zur Buchung eines Online-Termins. Im Termin erhalten Sie die Empfehlungen.","pl_how3w":"Innerhalb von 48 Stunden erhalten Sie die Empfehlungen im Chat.","pl_imp1m":"Ein Online-Termin per Video. Rückfragen schriftlich, in der App.","pl_imp4":"Es sind einmalige Empfehlungen: Danach setzen Sie den Plan selbstständig um, ohne Begleitung durch den Spezialisten.","pl_paid_t":"Empfehlungen bezahlt","pl_paid_d":"Schreiben Sie dem Spezialisten über Ihre Gesundheit und hängen Sie Laborwerte und ein Ernährungstagebuch über 3–7 Tage an.","pl_st_done":"Empfehlungen übergeben. Rückfragen bis {c}.","pl_again":"Neue Empfehlungen · {price}"},"pt":{"pl_t":"Recomendações para 3 meses","pl_s":"Um especialista vai analisar toda a sua situação e preparar um plano de três meses para você seguir por conta própria.","pl_get1":"Uma análise completa: histórico de saúde, exames, estilo de vida, queixas e dados do app.","pl_get2":"Uma análise detalhada do seu diário alimentar: o que falta, o que atrapalha, o que mudar primeiro.","pl_get3":"Recomendações para 3 meses sobre alimentação, treino, sono e estilo de vida — cada uma baseada em estudos científicos.","pl_get4":"Suplementos — com doses e horários. O plano aparece em «Minhas tomas».","pl_get5":"Quais exames fazer agora e quando repetir para ver o resultado.","pl_how2":"Escreva no chat sobre a sua saúde: o que incomoda, doenças anteriores, quais medicamentos e suplementos toma. Anexe fotos dos exames e um diário alimentar de 3–7 dias.","pl_how3m":"Em até 48 horas o especialista enviará no chat um link para agendar um encontro online. No encontro você receberá as recomendações.","pl_how3w":"Em até 48 horas você recebe as recomendações no chat.","pl_imp1m":"Um encontro online por vídeo. Perguntas de seguimento por escrito, no app.","pl_imp4":"São recomendações avulsas: depois você segue o plano por conta própria, sem acompanhamento do especialista.","pl_paid_t":"Recomendações pagas","pl_paid_d":"Escreva ao especialista sobre a sua saúde e anexe os exames e um diário alimentar de 3–7 dias.","pl_st_done":"Recomendações entregues. Perguntas de seguimento até {c}.","pl_again":"Novas recomendações · {price}"},"fr":{"pl_t":"Recommandations pour 3 mois","pl_s":"Un spécialiste analyse l’ensemble de votre situation et établit un plan de trois mois que vous suivez par vous-même.","pl_get1":"Une analyse complète : antécédents de santé, bilans, mode de vie, plaintes et données de l’app.","pl_get2":"Une analyse détaillée de votre journal alimentaire : ce qui manque, ce qui gêne, ce qu’il faut changer en premier.","pl_get3":"Des recommandations pour 3 mois sur l’alimentation, l’entraînement, le sommeil et le mode de vie — chacune fondée sur des études scientifiques.","pl_get4":"Compléments — avec dosages et horaires. Le plan apparaît dans « Mes prises ».","pl_get5":"Quels bilans faire maintenant et quand les refaire pour voir le résultat.","pl_how2":"Écrivez dans la messagerie au sujet de votre santé : ce qui vous gêne, vos maladies passées, les médicaments et compléments que vous prenez. Joignez des photos de vos bilans et un journal alimentaire sur 3 à 7 jours.","pl_how3m":"Sous 48 heures, le spécialiste vous envoie dans la messagerie un lien pour réserver un rendez-vous en ligne. Vous recevrez les recommandations lors du rendez-vous.","pl_how3w":"Sous 48 heures, vous recevez les recommandations dans la messagerie.","pl_imp1m":"Un rendez-vous en ligne en visio. Questions complémentaires par écrit, dans l’app.","pl_imp4":"Ce sont des recommandations ponctuelles : ensuite, vous suivez le plan par vous-même, sans accompagnement du spécialiste.","pl_paid_t":"Recommandations payées","pl_paid_d":"Écrivez au spécialiste au sujet de votre santé et joignez vos bilans et un journal alimentaire sur 3 à 7 jours.","pl_st_done":"Recommandations remises. Questions complémentaires jusqu’au {c}.","pl_again":"Nouvelles recommandations · {price}"},"pl":{"pl_t":"Zalecenia na 3 miesiące","pl_s":"Specjalista przeanalizuje całą Twoją sytuację i przygotuje plan na trzy miesiące, który zrealizujesz samodzielnie.","pl_get1":"Pełna analiza: historia zdrowia, wyniki badań, styl życia, dolegliwości i dane z aplikacji.","pl_get2":"Szczegółowa analiza dzienniczka żywieniowego: czego brakuje, co przeszkadza, co zmienić w pierwszej kolejności.","pl_get3":"Zalecenia na 3 miesiące dotyczące żywienia, treningu, snu i stylu życia — każde oparte na badaniach naukowych.","pl_get4":"Suplementy — z dawkami i porami przyjmowania. Plan pojawi się w sekcji „Moje przyjmowanie”.","pl_get5":"Jakie badania zrobić teraz i kiedy je powtórzyć, aby zobaczyć efekt.","pl_how2":"Napisz w czacie o swoim zdrowiu: co Cię niepokoi, przebyte choroby, jakie leki i suplementy przyjmujesz. Dołącz zdjęcia wyników badań i dzienniczek żywieniowy z 3–7 dni.","pl_how3m":"W ciągu 48 godzin specjalista wyśle w czacie link do zapisu na spotkanie online. Zalecenia otrzymasz na spotkaniu.","pl_how3w":"W ciągu 48 godzin otrzymasz zalecenia w czacie.","pl_imp1m":"Jedno spotkanie online przez wideo. Pytania uzupełniające — pisemnie, w aplikacji.","pl_imp4":"To jednorazowe zalecenia: dalej realizujesz plan samodzielnie, bez prowadzenia przez specjalistę.","pl_paid_t":"Zalecenia opłacone","pl_paid_d":"Napisz specjaliście o swoim zdrowiu i dołącz wyniki badań oraz dzienniczek żywieniowy z 3–7 dni.","pl_st_done":"Zalecenia przekazane. Pytania uzupełniające do {c}.","pl_again":"Nowe zalecenia · {price}"},"it":{"pl_t":"Raccomandazioni per 3 mesi","pl_s":"Uno specialista analizzerà tutta la tua situazione e preparerà un piano di tre mesi da seguire in autonomia.","pl_get1":"Un’analisi completa: storia clinica, esami, stile di vita, disturbi e dati dell’app.","pl_get2":"Un’analisi dettagliata del tuo diario alimentare: cosa manca, cosa ostacola, cosa cambiare per primo.","pl_get3":"Raccomandazioni per 3 mesi su alimentazione, allenamento, sonno e stile di vita — ognuna basata su studi scientifici.","pl_get4":"Integratori — con dosaggi e orari. Il piano compare in «Le mie assunzioni».","pl_get5":"Quali esami fare ora e quando ripeterli per vedere il risultato.","pl_how2":"Scrivi in chat della tua salute: cosa ti disturba, malattie passate, quali farmaci e integratori prendi. Allega le foto degli esami e un diario alimentare di 3–7 giorni.","pl_how3m":"Entro 48 ore lo specialista ti invierà in chat un link per prenotare un incontro online. All’incontro riceverai le raccomandazioni.","pl_how3w":"Entro 48 ore ricevi le raccomandazioni in chat.","pl_imp1m":"Un incontro online in videochiamata. Domande di approfondimento per iscritto, nell’app.","pl_imp4":"Sono raccomandazioni una tantum: poi segui il piano in autonomia, senza l’accompagnamento dello specialista.","pl_paid_t":"Raccomandazioni pagate","pl_paid_d":"Scrivi allo specialista della tua salute e allega gli esami e un diario alimentare di 3–7 giorni.","pl_st_done":"Raccomandazioni consegnate. Domande di approfondimento fino al {c}.","pl_again":"Nuove raccomandazioni · {price}"},"he":{"pl_t":"המלצות ל-3 חודשים","pl_s":"מומחה יסקור את כל המצב שלך ויכין תוכנית לשלושה חודשים שתבצע/י בעצמך.","pl_get1":"סקירה מלאה: היסטוריה רפואית, בדיקות, אורח חיים, תלונות ונתונים מהאפליקציה.","pl_get2":"סקירה מפורטת של יומן התזונה: מה חסר, מה מפריע, מה לשנות קודם.","pl_get3":"המלצות ל-3 חודשים על תזונה, אימונים, שינה ואורח חיים — כל אחת מבוססת על מחקרים מדעיים.","pl_get4":"תוספים — עם מינונים ושעות נטילה. התוכנית תופיע ב״לוח הנטילה שלי״.","pl_get5":"אילו בדיקות לעשות עכשיו ומתי לחזור עליהן כדי לראות תוצאה.","pl_how2":"כתבו בצ׳אט על הבריאות שלכם: מה מטריד, מחלות בעבר, אילו תרופות ותוספים אתם נוטלים. צרפו צילומי בדיקות ויומן תזונה של 3–7 ימים.","pl_how3m":"תוך 48 שעות המומחה ישלח בצ׳אט קישור לקביעת פגישה מקוונת. את ההמלצות תקבלו בפגישה.","pl_how3w":"תוך 48 שעות תקבלו את ההמלצות בצ׳אט.","pl_imp1m":"פגישה מקוונת אחת בווידאו. שאלות הבהרה — בכתב, באפליקציה.","pl_imp4":"אלה המלצות חד-פעמיות: לאחר מכן אתם פועלים לפי התוכנית בעצמכם, ללא ליווי של המומחה.","pl_paid_t":"ההמלצות שולמו","pl_paid_d":"כתבו למומחה על הבריאות שלכם וצרפו בדיקות ויומן תזונה של 3–7 ימים.","pl_st_done":"ההמלצות נמסרו. שאלות הבהרה עד {c}.","pl_again":"המלצות חדשות · {price}"},"ja":{"pl_t":"3か月のレコメンデーション","pl_s":"専門家があなたの状況を総合的に分析し、ご自身で実践する3か月のプランを作成します。","pl_get1":"総合的な分析：健康歴、検査結果、生活習慣、気になる症状、アプリのデータ。","pl_get2":"食事日記の詳しい分析：足りないもの、妨げになっているもの、最初に変えること。","pl_get3":"食事、運動、睡眠、生活習慣についての3か月のレコメンデーション — すべて科学的研究に基づきます。","pl_get4":"サプリメント — 用量と摂取時間つき。プランは「服用スケジュール」に表示されます。","pl_get5":"今受けるべき検査と、結果を確かめるための再検査の時期。","pl_how2":"チャットで健康状態について書いてください：気になること、既往歴、服用中の薬やサプリメント。検査結果の写真と3〜7日分の食事日記を添付してください。","pl_how3m":"48時間以内に、専門家がチャットでオンライン面談の予約リンクを送ります。レコメンデーションは面談でお伝えします。","pl_how3w":"48時間以内にチャットでレコメンデーションを受け取れます。","pl_imp1m":"ビデオ通話によるオンライン面談1回。追加の質問はアプリ内で文章にて。","pl_imp4":"これは1回限りのレコメンデーションです。その後はご自身でプランを実践し、専門家による継続的なサポートはありません。","pl_paid_t":"レコメンデーションのお支払い完了","pl_paid_d":"健康状態について専門家に書き、検査結果と3〜7日分の食事日記を添付してください。","pl_st_done":"レコメンデーションをお渡ししました。追加の質問は{c}まで。","pl_again":"新しいレコメンデーション · {price}"},"ko":{"pl_t":"3개월 권장 플랜","pl_s":"전문가가 상황 전체를 분석하고 스스로 실천할 3개월 플랜을 만들어 드립니다.","pl_get1":"전체 분석: 건강 이력, 검사 결과, 생활 습관, 불편 증상, 앱 데이터.","pl_get2":"식사 일기 상세 분석: 무엇이 부족한지, 무엇이 방해되는지, 무엇부터 바꿀지.","pl_get3":"식사, 운동, 수면, 생활 습관에 대한 3개월 권장 사항 — 모두 과학 연구에 근거합니다.","pl_get4":"보충제 — 용량과 복용 시간 포함. 플랜은 ‘내 복용 일정’에 표시됩니다.","pl_get5":"지금 받아야 할 검사와 결과를 확인하기 위한 재검사 시기.","pl_how2":"채팅에 건강 상태를 적어 주세요: 불편한 점, 과거 질환, 복용 중인 약과 보충제. 검사 결과 사진과 3–7일 식사 일기를 첨부해 주세요.","pl_how3m":"48시간 이내에 전문가가 채팅으로 온라인 상담 예약 링크를 보내 드립니다. 권장 사항은 상담에서 받게 됩니다.","pl_how3w":"48시간 이내에 채팅으로 권장 사항을 받게 됩니다.","pl_imp1m":"영상 통화로 진행하는 온라인 상담 1회. 추가 질문은 앱에서 글로.","pl_imp4":"1회성 권장 사항입니다: 이후에는 전문가의 지속적인 관리 없이 스스로 플랜을 실천합니다.","pl_paid_t":"권장 플랜 결제 완료","pl_paid_d":"전문가에게 건강 상태를 적고 검사 결과와 3–7일 식사 일기를 첨부해 주세요.","pl_st_done":"권장 사항을 전달했습니다. 추가 질문은 {c}까지.","pl_again":"새 권장 플랜 · {price}"}};
+  Object.keys(P).forEach(l=>{ if(T[l]) Object.assign(T[l], P[l]); });
 })();
 
 let lang='en';
@@ -686,8 +697,9 @@ function refreshDone(){
   const link=window._link||{};const nm=link.name||tr('spec_prefix');
   // После покупки разбора — свои слова: «свяжется по email» здесь неправда, ответ придёт в переписку.
   const _rv = window._fresh && link.review;
-  $id('doneTitle').textContent= _rv ? tr('rv_paid_t') : link.review ? tr('rv_t') : window._fresh ? tr('ok_title') : tr('linked_to').replace('{name}',link.name||'');
-  $id('doneDesc').textContent= _rv ? tr('rv_paid_d') : window._fresh
+  const _pl=!!link.plan;
+  $id('doneTitle').textContent= _rv ? tr(_pl?'pl_paid_t':'rv_paid_t') : link.review ? tr(_pl?'pl_t':'rv_t') : window._fresh ? tr('ok_title') : tr('linked_to').replace('{name}',link.name||'');
+  $id('doneDesc').textContent= _rv ? tr(_pl?'pl_paid_d':'rv_paid_d') : window._fresh
     ? tr('ok_desc').replace('{name}',link.name||'')
     : '';
   _rvState();
@@ -1242,8 +1254,14 @@ function _catLangChanged(){ _hideMatchNote(); renderCatalog(); }
 // связка (LINK_KEY): переписка, данные дня, «Мои приёмы». Между оплатой и ответом сервера может
 // оборваться сеть, поэтому оплаченная заявка лежит в REVIEW_PENDING и доводится при следующем
 // открытии — платить второй раз человек не должен ни при каком сбое.
-const REVIEW_PENDING='vial_review_pending';   // {rc_user, platform, email, name, ts}
-let _rvProduct=null, _rvBusy=false;
+const REVIEW_PENDING='vial_review_pending';   // {rc_user, platform, email, name, ts, kind}
+// Вид покупки: 'review' — разбор €50; 'plan' — «Рекомендации на 3 месяца» €150 (2026-11-02). Порядок у обоих один.
+let _rvProduct=null, _plProduct=null, _rvKind='review', _rvBusy=false;
+function _rvProd(kind){ return kind==='plan' ? _plProduct : _rvProduct; }
+// uk/ru — рекомендации на онлайн-встрече, остальные языки — письменно (воркер решает так же, по языку покупки)
+function _plMeet(){ return lang==='uk'||lang==='ru'; }
+// Связка/заказ — рекомендации на 3 месяца (а не разбор)
+function _rvIsPlan(){ return !!((window._review&&window._review.kind==='plan') || (window._link&&window._link.plan)); }
 function _rvPending(){
   try{
     const p=JSON.parse(localStorage.getItem(REVIEW_PENDING)||'null');
@@ -1268,11 +1286,20 @@ function _rvMarkClosed(){
 }
 function _rvErr(msg){ const el=$id('rvErr'); if(!el) return; el.textContent=msg||''; el.classList.toggle('show',!!msg); }
 function _rvTexts(){
-  const price=(_rvProduct&&_rvProduct.priceString)||'';
-  const tp=$id('rvTeaserPrice'); if(tp) tp.textContent=price;
-  const ag=$id('rvAgainBtn'); if(ag) ag.textContent=tr('rv_again').replace('{price}',price);
+  const pp=k=>{ const x=_rvProd(k); return (x&&x.priceString)||''; };
+  const tp=$id('rvTeaserPrice'); if(tp) tp.textContent=pp('review');
+  const pt=$id('plTeaserPrice'); if(pt) pt.textContent=pp('plan');
+  const agk=_rvIsPlan()?'plan':'review';
+  const ag=$id('rvAgainBtn'); if(ag) ag.textContent=tr(agk==='plan'?'pl_again':'rv_again').replace('{price}',pp(agk));
+  // экран «что входит» — по виду покупки
+  const pl=_rvKind==='plan', li=keys=>keys.map(k=>'<li>'+esc(tr(k))+'</li>').join('');
+  const h=$id('rvH'); if(h) h.textContent=tr(pl?'pl_t':'rv_t');
+  const sb=$id('rvSub'); if(sb) sb.textContent=tr(pl?'pl_s':'rv_s');
+  const g=$id('rvGet'); if(g) g.innerHTML=li(pl?['pl_get1','pl_get2','pl_get3','pl_get4','pl_get5','rv_get4']:['rv_get1','rv_get2','rv_get3','rv_get4']);
+  const hw=$id('rvHow'); if(hw) hw.innerHTML=li(pl?['rv_how1','pl_how2',_plMeet()?'pl_how3m':'pl_how3w']:['rv_how1','rv_how2','rv_how3']);
+  const im=$id('rvImp'); if(im) im.innerHTML=li(pl?[_plMeet()?'pl_imp1m':'rv_imp1','pl_imp4','rv_imp2','rv_imp3']:['rv_imp1','rv_imp2','rv_imp3']);
   const b=$id('rvPayBtn');
-  if(b) b.textContent = _rvBusy ? tr('rv_busy') : _rvPending() ? tr('rv_retry') : tr('rv_pay').replace('{price}',price);
+  if(b) b.textContent = _rvBusy ? tr('rv_busy') : _rvPending() ? tr('rv_retry') : tr('rv_pay').replace('{price}',pp(_rvKind));
   const bk=$id('rvBackBtn'); if(bk) bk.textContent=tr('back');
 }
 function _rvDate(iso){
@@ -1289,12 +1316,13 @@ function _rvState(){
   const ios = (window.iapPlatform&&iapPlatform())==='ios';
   // закрыт: обмен данными выключен на сервере, переключатель больше ничего не делает — убираем его
   const sr=$id('shareRow'); if(sr) sr.style.display=closed?'none':'flex';
-  $id('rvAgainBtn').style.display=(closed&&_rvProduct)?'block':'none';
+  const _pl=_rvIsPlan();
+  $id('rvAgainBtn').style.display=(closed&&_rvProd(_pl?'plan':'review'))?'block':'none';
   // Закрыт — человек уже не «подключён»: заголовок и кнопка переписки называют вещи как есть.
-  if(closed) $id('doneTitle').textContent=tr('rv_t');
+  if(closed) $id('doneTitle').textContent=tr(_pl?'pl_t':'rv_t');
   const cbt=ROOT.querySelector('#chatBtn [data-t]'); if(cbt) cbt.textContent=tr(closed?'chat_title':'chat_open');
   let txt = closed ? tr('rv_st_closed')
-          : done ? (r.closes_at ? tr('rv_st_done').replace('{c}',_rvDate(r.closes_at)) : '')
+          : done ? (r.closes_at ? tr(_pl?'pl_st_done':'rv_st_done').replace('{c}',_rvDate(r.closes_at)) : '')
           : over ? tr('rv_st_over')+' '+tr(ios?'rv_refund_ios':'rv_refund_and')
           : tr(r.extended?'rv_st_ext':'rv_st_open').replace('{d}',_rvDate(r.due_at));
   $id('rvStateText').textContent=txt;
@@ -1303,10 +1331,12 @@ function _rvState(){
   box.style.display = txt ? 'block' : 'none';
 }
 async function refundReview(){
-  const ok = window.iapRefundReview ? await iapRefundReview() : false;
+  const ok = window.iapRefundReview ? await iapRefundReview(_rvIsPlan()?'plan':'review') : false;
   if(!ok){ try{ window.open('https://reportaproblem.apple.com','_blank'); }catch(e){} }
 }
-function openReview(){
+function openReview(kind){
+  const p0=_rvPending();
+  _rvKind = p0 ? (p0.kind==='plan'?'plan':'review') : (kind==='plan'?'plan':'review');   // оплаченная заявка — её вид
   const card=ROOT.querySelector('.card'); if(card)card.style.display='none';
   $id('reviewView').style.display='block';
   // что человек уже ввёл в форме кода — не заставляем набирать второй раз
@@ -1318,6 +1348,8 @@ function openReview(){
   _rvErr(''); _rvTexts();
   try{ _top(); }catch(x){}
 }
+// «Новый разбор» / «Новые рекомендации» после закрытого заказа — того же вида
+function openAgain(){ openReview(_rvIsPlan()?'plan':'review'); }
 function closeReview(){
   $id('reviewView').style.display='none';
   const card=ROOT.querySelector('.card'); if(card)card.style.display='';
@@ -1335,9 +1367,9 @@ async function buyReview(){
     let p=_rvPending();
     if(!p){
       // Оплата. Заявку сохраняем сразу после успешной покупки и ДО запроса к серверу.
-      const res=await iapBuyReview(_rvProduct);
+      const res=await iapBuyReview(_rvProd(_rvKind));
       if(!res||!res.ok){ if(!(res&&res.cancelled)) _rvErr(tr('rv_err_pay')); return; }
-      p={ rc_user:res.rcUser||'', platform:iapPlatform(), email, name, ts:Date.now() };
+      p={ rc_user:res.rcUser||'', platform:iapPlatform(), email, name, ts:Date.now(), kind:_rvKind };
     } else { p.email=email; p.name=name; }   // повтор: почту можно было исправить
     if(!p.rc_user) p.rc_user=await iapAppUserId();
     try{ localStorage.setItem(REVIEW_PENDING,JSON.stringify(p)); }catch(e){}
@@ -1349,14 +1381,16 @@ async function _rvClaim(p, again){
   let d=null, st=0;
   try{
     const r=await fetch(WORKER+'/review/claim',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({rc_user:p.rc_user,platform:p.platform,email:p.email,name:p.name,lang:lang,consent:true})});
+      body:JSON.stringify({rc_user:p.rc_user,platform:p.platform,email:p.email,name:p.name,lang:lang,consent:true,kind:p.kind==='plan'?'plan':'review'})});
     st=r.status; d=await r.json();
   }catch(e){}
   if(d&&d.ok&&d.code){
     try{ localStorage.removeItem(REVIEW_PENDING); }catch(e){}
     const link={code:d.code,name:'',spec_id:d.specialist_id||null,sharing:true,review:true,email:p.email||''};   // имя не храним: в разборе собеседник — «Специалист VIA·L»
+    if(p.kind==='plan') link.plan=true;
     try{ localStorage.setItem(LINK_KEY,JSON.stringify(link)); }catch(e){}
     window._review={status:'open',due_at:d.due_at||'',extended:0,closes_at:d.closes_at||''};
+    if(p.kind==='plan') window._review.kind='plan';
     $id('reviewView').style.display='none';
     const card=ROOT.querySelector('.card'); if(card)card.style.display='';
     showDone(link,true);
@@ -1390,13 +1424,15 @@ async function initReview(){
   _rvInit=true;
   try{
   const p=_rvPending();
-  _rvProduct=await iapReviewProduct();
-  if(!_rvProduct && !p){ _rvWhy='стор не отдал товар'; return; }
+  [_rvProduct,_plProduct]=await Promise.all([iapReviewProduct(), iapReviewProduct('plan').catch(()=>null)]);
+  if(!_rvProduct && !_plProduct && !p){ _rvWhy='стор не отдал товар'; return; }
   if(_rvLinked()) return;                       // подключились, пока ждали стор
   _rvWhy='блок показан';
-  $id('rvTeaser').style.display='block';
+  $id('rvTeaser').style.display=_rvProduct?'block':'none';
+  $id('plTeaser').style.display=_plProduct?'block':'none';
   _rvTexts(); _rvState();                       // после закрытого разбора — кнопка «Новый разбор» на экране связки
   if(!p && WANT.review){ WANT.review=false; openReview(); }   // пришли по кнопке с главного экрана
+  if(!p && WANT.plan){ WANT.plan=false; openReview('plan'); }
   if(p){ openReview(); _rvBusy=true; $id('rvPayBtn').disabled=true; _rvTexts();
          try{ await _rvClaim(p); } finally { _rvBusy=false; $id('rvPayBtn').disabled=false; _rvTexts(); } }
   } finally { _rvInit=false; }
@@ -1474,7 +1510,7 @@ window.vialSp = {
   setLang: function(l){ if(!ROOT){ lang = T[l] ? l : 'en'; return; } if(l !== lang) setLang(l); },
   lang: function(){ return lang; },
   // обработчики из разметки
-  openReview: openReview, connect: connect, refundReview: refundReview, toggleShare: toggleShare,
+  openReview: openReview, openAgain: openAgain, connect: connect, refundReview: refundReview, toggleShare: toggleShare,
   openChat: openChat, unlink: unlink, closeChat: closeChat, pickPhoto: pickPhoto, _photoPick: _photoPick,
   _photoTap: _photoTap, _chatSync: _chatSync, toggleVoice: toggleVoice, sendMsg: sendMsg,
   closeReview: closeReview, buyReview: buyReview, closeCatalog: closeCatalog, _catLangChanged: _catLangChanged,
