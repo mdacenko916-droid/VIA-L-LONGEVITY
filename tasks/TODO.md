@@ -43,8 +43,8 @@
 (6829736130) €150/$164,99, 175 стран, скрин ревью загружен; Google Play VIA-L — ACTIVE (`play-release.py plan-product`).
 ✅ 11-02 запушено, воркер выложен (35e4d92f).
 ✅ 11-02 RevenueCat: товары добавлены владельцем; App Store — оба товара READY_TO_SUBMIT; воркер отвечает на kind=plan.
-- [ ] **ADAM-L Google Play:** товар `adam_l_specialist_plan` €150 в консоли руками (личный аккаунт, API нет) — вместе с
-      `adam_l_specialist_review`.
+✅ 11-02 ADAM-L Google Play (владелец, в другом чате): подписка `adam_l_pro` (monthly, yearly, free-3d) и разовые
+товары включены; в RevenueCat импортированы, к `via_l_pro` привязаны все, кроме `specialist_*`; Android-ключ в `app-adam/iap-keys.json`.
 - [ ] **Сборки:** VIA-L iOS/Android и ADAM-L — товар подать на ревью Apple вместе со сборкой; тест-покупка в TestFlight.
 - [ ] **Сайт via-l.com (Hotmart — владелец вечером 11-02):** новый блок «Консультации» после «Программ»: две карточки
       €50 «Разбор со специалистом» (письменно) и €150 «Рекомендации на 3 месяца» (uk/ru — встреча, en/es — письменно),
