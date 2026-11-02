@@ -9596,6 +9596,9 @@ function _stepDue(n){
   // «С чем вы пришли» — тоже разовый блок, но его «сделано» определяет не профиль, а сама
   // сохранённая жалоба: клиент мог заполнить профиль раньше, чем появился этот шаг. 2026-08-25.
   if(n===17) return !(typeof _cmpGet==='function' && _cmpGet());
+  // «Что нового за сутки» в САМЫЙ ПЕРВЫЙ проход не спрашиваем (владелец 2026-10-31): жалоба, вес и талия только что
+  // введены в профиле — «лучше/хуже, чем вчера», недельная оценка и вес за 25 секунд не изменятся. Со второго дня — как было.
+  if(n===14){ var _lp=null; try{ _lp=localStorage.getItem('vialp_lastpass'); }catch(e){} if(!_lp) return false; }
   if(c==='base')return !_profileDone();
   if(c==='weekly'||c==='biweekly'){
     var last=_stepLastMap()[n]; if(!last)return true;
@@ -9908,7 +9911,9 @@ function _gateNext(){
     // Пробный режим: пейволл ждёт, пока не израсходованы 3 пробных дня (2026-09-17).
     window.iapCheckEntitlement().then(function(active){
       if(active){ try{ var t=_trialGet(); if(!t.sub){ t.sub=1; localStorage.setItem('vialp_trial',JSON.stringify(t)); } }catch(e){} return; }
-      if(!_isTrial())_iapShow();
+      // есть ли в сторе бесплатная неделя (флаг vialp_st_offer → сколько дней без карты); сеть упала — решаем по прошлому флагу
+      var go=function(){ if(!_isTrial())_iapShow(); };
+      (window.iapGetPackages?window.iapGetPackages().then(function(l){ return window.iapTrialEligible?window.iapTrialEligible(l||[]):null; }):Promise.resolve()).then(go,go);
     });
   }
 }
@@ -10034,6 +10039,25 @@ function _iapStoreName(){
   var pl='';try{pl=(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform())||'';}catch(e){}
   return pl==='android'?'Google Play':'Apple ID';
 }
+var _IAP_RENEW7={ru:'Оплата спишется с вашего аккаунта {store} по окончании 3 бесплатных дней, если не отменить подписку до их конца. Дальше подписка продлевается автоматически по указанной выше цене, если автопродление не отключить не позднее чем за 24 часа до конца текущего периода. Управлять подпиской и отменить её можно в настройках подписок {store}.',uk:'Оплата спишеться з вашого акаунта {store} після закінчення 3 безкоштовних днів, якщо не скасувати підписку до їх кінця. Далі підписка продовжується автоматично за вказаною вище ціною, якщо автопродовження не вимкнути щонайпізніше за 24 години до кінця поточного періоду. Керувати підпискою і скасувати її можна в налаштуваннях підписок {store}.',en:'Payment will be charged to your {store} account when the 3 free days end, unless you cancel before then. After that the subscription renews automatically at the price shown above unless auto-renew is turned off at least 24 hours before the end of the current period. Manage or cancel it in your {store} subscription settings.',es:'El pago se cargará en tu cuenta de {store} al terminar los 3 días gratis, salvo que canceles antes. Después, la suscripción se renueva automáticamente al precio indicado arriba, salvo que desactives la renovación al menos 24 horas antes del fin del periodo actual. Gestiona o cancela la suscripción en los ajustes de suscripciones de {store}.',de:'Die Zahlung wird deinem {store}-Konto am Ende der 3 Gratistage belastet, sofern du nicht vorher kündigst. Danach verlängert sich das Abo automatisch zum oben genannten Preis, sofern die automatische Verlängerung nicht spätestens 24 Stunden vor Ende des laufenden Zeitraums deaktiviert wird. Verwalten oder kündigen kannst du es in den Abo-Einstellungen von {store}.',pt:'O pagamento será cobrado na sua conta {store} no fim dos 3 dias grátis, a menos que cancele antes. Depois, a assinatura renova-se automaticamente pelo preço indicado acima, a menos que a renovação automática seja desativada pelo menos 24 horas antes do fim do período atual. Gerencie ou cancele nas definições de assinaturas da {store}.',fr:'Le paiement sera prélevé sur votre compte {store} à la fin des 3 jours gratuits, sauf résiliation avant. Ensuite, l’abonnement se renouvelle automatiquement au prix indiqué ci-dessus, sauf si le renouvellement automatique est désactivé au moins 24 heures avant la fin de la période en cours. Gérez ou résiliez-le dans les réglages d’abonnements {store}.',pl:'Płatność zostanie pobrana z Twojego konta {store} po zakończeniu 3 darmowych dni, jeśli nie anulujesz wcześniej. Potem subskrypcja odnawia się automatycznie po cenie podanej wyżej, jeśli automatyczne odnawianie nie zostanie wyłączone co najmniej 24 godziny przed końcem bieżącego okresu. Zarządzaj nią lub anuluj w ustawieniach subskrypcji {store}.',it:'Il pagamento verrà addebitato sul tuo account {store} al termine dei 3 giorni gratuiti, se non disdici prima. Poi l’abbonamento si rinnova automaticamente al prezzo indicato sopra, salvo disattivazione del rinnovo automatico almeno 24 ore prima della fine del periodo in corso. Gestiscilo o disdicilo nelle impostazioni degli abbonamenti di {store}.',he:'התשלום יחויב בחשבון {store} שלכם בסוף 3 ימי החינם, אלא אם תבטלו לפני כן. לאחר מכן המנוי מתחדש אוטומטית במחיר שמופיע למעלה, אלא אם החידוש האוטומטי יכובה לפחות 24 שעות לפני סוף התקופה הנוכחית. ניהול וביטול — בהגדרות המינויים של {store}.',ja:'3日間の無料期間が終わると、それまでに解約しない限り{store}アカウントに課金されます。その後は、現在の期間終了の24時間前までに自動更新をオフにしない限り、上記の価格で自動更新されます。管理・解約は{store}のサブスクリプション設定から行えます。',ko:'무료 3일이 끝나기 전에 해지하지 않으면 그때 {store} 계정으로 결제됩니다. 이후에는 현재 기간 종료 최소 24시간 전에 자동 갱신을 끄지 않는 한 위 가격으로 자동 갱신됩니다. 구독 관리와 해지는 {store} 구독 설정에서 할 수 있습니다.'};
+var _IAP_FREE7={ru:'3 дня бесплатно, затем',uk:'3 дні безкоштовно, потім',en:'3 days free, then',es:'3 días gratis, después',de:'3 Tage gratis, danach',pt:'3 dias grátis, depois',fr:'3 jours gratuits, puis',pl:'3 dni za darmo, potem',it:'3 giorni gratis, poi',he:'3 ימים בחינם, ואז',ja:'3日間無料、その後',ko:'3일 무료, 이후'}, _IAP_START7={ru:'Начать 3 дня бесплатно',uk:'Почати 3 дні безкоштовно',en:'Start 3 days free',es:'Empezar 3 días gratis',de:'3 Tage gratis starten',pt:'Começar 3 dias grátis',fr:'Commencer 3 jours gratuits',pl:'Zacznij 3 dni za darmo',it:'Inizia 3 giorni gratis',he:'להתחיל 3 ימים בחינם',ja:'3日間の無料体験を始める',ko:'3일 무료로 시작하기'}, _IAP_NOTE7={ru:'Первые 3 дня бесплатно — полный доступ: подробный разбор каждый день, памятка дня с меню и тренировка под ваше состояние. Оплата спишется через 3 дня, если не отменить подписку до конца пробного периода в настройках {store}.',uk:'Перші 3 дні безкоштовно — повний доступ: детальний розбір щодня, пам’ятка дня з меню й тренування під ваш стан. Оплата спишеться через 3 дні, якщо не скасувати підписку до кінця пробного періоду в налаштуваннях {store}.',en:'The first 3 days are free with full access: a detailed overview every day, a day plan with a menu and a workout matched to how you are. You will be charged after 3 days unless you cancel before the trial ends in your {store} settings.',es:'Los primeros 3 días son gratis con acceso completo: un resumen detallado cada día, el plan del día con menú y un entrenamiento según cómo estás. Se cobrará a los 3 días si no cancelas antes de que termine la prueba en los ajustes de {store}.',de:'Die ersten 3 Tage sind gratis mit vollem Zugang: jeden Tag eine ausführliche Auswertung, ein Tagesplan mit Menü und ein Training passend zu deinem Zustand. Die Zahlung erfolgt nach 3 Tagen, wenn du nicht vor Ende des Testzeitraums in den {store}-Einstellungen kündigst.',pt:'Os primeiros 3 dias são grátis com acesso completo: uma análise detalhada por dia, o plano do dia com menu e um treino de acordo com como você está. A cobrança é feita após 3 dias, a menos que cancele antes do fim do teste nas definições da {store}.',fr:'Les 3 premiers jours sont gratuits avec un accès complet : un bilan détaillé chaque jour, le plan du jour avec menu et une séance adaptée à votre état. Le paiement est prélevé après 3 jours, sauf résiliation avant la fin de l’essai dans les réglages {store}.',pl:'Pierwsze 3 dni za darmo z pełnym dostępem: codziennie szczegółowy przegląd, plan dnia z menu i trening dopasowany do Twojego stanu. Płatność zostanie pobrana po 3 dniach, jeśli nie anulujesz przed końcem okresu próbnego w ustawieniach {store}.',it:'I primi 3 giorni sono gratuiti con accesso completo: un’analisi dettagliata ogni giorno, il piano del giorno con menù e un allenamento in base a come stai. L’addebito avverrà dopo 3 giorni, se non disdici prima della fine della prova nelle impostazioni di {store}.',he:'3 הימים הראשונים בחינם עם גישה מלאה: ניתוח מפורט בכל יום, תוכנית יום עם תפריט ואימון שמותאם למצב שלכם. החיוב יתבצע אחרי 3 ימים, אלא אם תבטלו לפני סוף תקופת הניסיון בהגדרות {store}.',ja:'最初の3日間は無料で、すべての機能を使えます：毎日の詳しい分析、メニュー付きの一日プラン、コンディションに合わせたトレーニング。無料期間の終了前に{store}の設定で解約しない場合、3日後に課金されます。',ko:'처음 3일은 모든 기능을 무료로 이용할 수 있습니다: 매일의 자세한 분석, 메뉴가 있는 하루 플랜, 컨디션에 맞춘 운동. 체험 기간이 끝나기 전에 {store} 설정에서 해지하지 않으면 3일 후 결제됩니다.'};
+// Бесплатная неделя магазина (2026-10-31): у кого она положена — строка тарифа «7 дней бесплатно, затем …»,
+// кнопка «Начать 7 дней бесплатно» и условия над тарифами (Apple 3.1.2: до подтверждения видно, когда и сколько спишут).
+function _iapTrialMark(pkgs){
+  if(!window.iapTrialEligible) return;
+  if(_subActive()&&!_storeTrial()) return;   // подписка уже есть (в т.ч. тестовая TestFlight) — «7 дней бесплатно» не предлагаем
+  window.iapTrialEligible(pkgs).then(function(ok){
+    window._iapTrialOK=ok||{}; var any=Object.keys(window._iapTrialOK).length>0;
+    var n=document.getElementById('iap-trial-note');
+    if(n&&any){ n.textContent=L(_IAP_NOTE7).replace(/\{store\}/g,_iapStoreName()); n.style.display='block'; }
+    var rn=document.getElementById('iap-renew-note');   // «спишется при подтверждении» неверно при пробной неделе — списание в её конце
+    if(rn&&any) rn.textContent=L(_IAP_RENEW7).replace(/\{store\}/g,_iapStoreName());
+    if(window._iapPkgs&&window._iapPkgs.length>1){ _iapPlansFill(window._iapPkgs); return; }
+    var pkg=pkgs[0], lab=document.getElementById('iap-btn-label'), box=document.getElementById('iap-price');
+    if(pkg&&pkg.product&&window._iapTrialOK[pkg.product.identifier]){ if(lab)lab.textContent=L(_IAP_START7); if(box)box.textContent=L(_IAP_FREE7)+' '+box.textContent; }
+  }).catch(function(){});
+}
+function _iapHasTrial(p){ return !!(p&&p.product&&window._iapTrialOK&&window._iapTrialOK[p.product.identifier]); }
 function _iapI18n(){
   var nm=_iapStoreName();
   ['iap-desc','iap-renew-note'].forEach(function(id){
@@ -10095,7 +10119,7 @@ function _iapPlansFill(pkgs){
     }
     return '<div class="iap-plan'+(i===sel?' sel':'')+'" data-i="'+i+'" onclick="_iapPick('+i+')">'
       +'<div class="iap-plan-title">'+badge+_esc(_iapPlanTitle(k))+'</div>'
-      +'<div class="iap-plan-line">'+_esc(_iapPlanLine(p,k,mp))+'</div></div>';
+      +'<div class="iap-plan-line">'+_esc((_iapHasTrial(p)?L(_IAP_FREE7)+' ':'')+_iapPlanLine(p,k,mp))+'</div></div>';
   }).join('');
   box.style.display='block';
   _iapPick(sel);
@@ -10105,6 +10129,7 @@ function _iapPick(i){
   var box=document.getElementById('iap-plans');
   if(box) Array.prototype.forEach.call(box.querySelectorAll('.iap-plan'),function(el){ el.classList.toggle('sel',Number(el.getAttribute('data-i'))===i); });
   var p=(window._iapPkgs||[])[i], lab=document.getElementById('iap-btn-label');
+  if(p&&lab&&_iapHasTrial(p)){ lab.textContent=L(_IAP_START7); return; }
   if(p&&lab) lab.textContent=L({ru:'Продолжить',uk:'Продовжити',en:'Continue',es:'Continuar',de:'Weiter',pt:'Continuar',fr:'Continuer',pl:'Dalej',it:'Continua',he:'המשך',ja:'続ける',ko:'계속'})+' — '+((p.product&&p.product.priceString)||'');
 }
 function _iapPriceFill(){
@@ -10119,6 +10144,7 @@ function _iapPriceFill(){
       if(btn)btn.disabled=false; if(err)err.style.display='none';
       box.style.display='none';
       _iapPlansFill(list);
+      if(!window._iapTrialOK) _iapTrialMark(list);
     }).catch(function(){});
   }
   window.iapGetPackage().then(function(pkg){
@@ -10142,6 +10168,7 @@ function _iapPriceFill(){
     box.textContent='ADAM-L Monthly · '+ps+' / '+t('iap_per_month');
     box.style.display='block';
     if(lab)lab.textContent=t('iap_subscribe')+' — '+ps;
+    if(!(window._iapPkgs&&window._iapPkgs.length>1)) _iapTrialMark([pkg]);
   }).catch(function(){});
 }
 function _iapShow(){
@@ -10152,7 +10179,7 @@ function _iapShow(){
   // просьба заплатить ни за что. Бесплатного периода у подписки НЕТ: пробные дни (_TRIAL_DAYS) уже были (2026-09-17).
   try{
     var n=document.getElementById('iap-trial-note');
-    var used=(_trialGet().days||[]).length, spent=(used>=_TRIAL_DAYS && !_subActive());
+    var used=(_trialGet().days||[]).length, spent=(_trialSpent() && !_subActive() && used>0);   // «дни закончились» — только тем, у кого они были
     if(n){
       n.style.display=spent?'block':'none';
       if(spent) n.textContent=L({ru:'Пробные дни закончились. Полный разбор и персональная памятка дня — по подписке, отмена в любой момент.',
@@ -10167,6 +10194,8 @@ function _iapShow(){
         he:'ימי הניסיון הסתיימו. הניתוח המלא ותוכנית היום האישית כלולים במנוי — אפשר לבטל בכל עת.',
         ja:'無料でお使いいただける日数が終わりました。詳しい分析と個別の一日プランはサブスクリプションに含まれます（いつでも解約できます）。',
         ko:'무료 이용 기간이 끝났습니다. 전체 분석과 개인 맞춤 하루 플랜은 구독에 포함되며 언제든 해지할 수 있습니다.'});
+      // бесплатная неделя магазина положена — вместо «дни закончились» условия пробного периода
+      if(window._iapTrialOK&&Object.keys(window._iapTrialOK).length&&!(_subActive()&&!_storeTrial())){ n.textContent=L(_IAP_NOTE7).replace(/\{store\}/g,_iapStoreName()); n.style.display='block'; }
     }
   }catch(e){}
 }
@@ -11294,30 +11323,50 @@ function _daySnapGet(){ try{return JSON.parse(localStorage.getItem('vialp_days')
 function _daySnapSave(score,type,data,doc,docr){ try{var arr=_daySnapGet(),day=_dayKey();arr=arr.filter(function(e){return e.day!==day;});arr.unshift({day:day,score:score,type:type,data:data,doc:!!doc,docr:(docr||[]).filter(function(r){return typeof r==='string';}),ts:Date.now()});while(arr.length>400)arr.pop();localStorage.setItem('vialp_days',JSON.stringify(arr));}catch(e){} }
 function _passedToday(){ try{ return localStorage.getItem('vialp_lastpass')===_dayKey(); }catch(e){ return false; } }
 // ══ ПРОБНЫЙ РЕЖИМ (решение владельца 2026-09-17) ═══════════════════════════════
-// Бесплатный пробник — 7 дней прохода (было 3; 2026-10-09: итог «Фокуса недели» и первый недельный
-// разбор приходят на 5–7-й день — пробник должен до них дожить). Разбор в нём КОРОТКИЙ (воркер получает trial:true, ~$0.03
+// Бесплатный пробник — 7 КАЛЕНДАРНЫХ дней от первого прохода (было 3; 2026-10-09: итог «Фокуса недели» и первый недельный
+// разбор приходят на 5–7-й день — пробник должен до них дожить; 2026-10-31: календарные дни вместо дней с проходом,
+// решение владельца — пропущенные дни пробник не продлевают). Разбор в нём КОРОТКИЙ (воркер получает trial:true, ~$0.03
 // вместо $0.13), памятка дня — БАЗОВАЯ, без ИИ. Иначе 10 000 пробников = $1300 незаработанных денег.
 // Считаем уникальные дни с проходом, а не запуски. Переустановка пробник обнуляет — это дыра
 // на $0.09, закроется вместе с постоянным номером подписки (см. tasks/TODO.md).
 var _TRIAL_DAYS=7;
+// 2026-10-31, владелец: пробный период МАГАЗИНА — карта при старте, списание через 7 дней, если не отменить.
+// Пока он существует в сторе (vialp_st_offer ставит iapTrialEligible), без карты даём 1 день — увидеть первый
+// разбор; дальше экран подписки с «7 дней бесплатно». Нет предложения в сторе — прежние 7 дней без карты.
+// 2026-11-01, владелец: пробник магазина 3 дня с ПОЛНЫМ разбором, карта при первом входе — дней без карты 0.
+function _trialDays(){ try{ return localStorage.getItem('vialp_st_offer')==='1' ? 0 : _TRIAL_DAYS; }catch(e){ return _TRIAL_DAYS; } }
+// Идёт бесплатная неделя магазина: доступ есть, но разбор и памятка — короткие, как в пробнике (стоимость ИИ).
+function _storeTrial(){ try{ return localStorage.getItem('vialp_entitlement')==='1' && localStorage.getItem('vialp_ent_trial')==='1'; }catch(e){ return false; } }
 function _trialGet(){ try{ var t=JSON.parse(localStorage.getItem('vialp_trial')||'null'); return (t&&Array.isArray(t.days))?t:{days:[]}; }catch(e){ return {days:[]}; } }
 function _trialMark(){ try{ var t=_trialGet(), d=_dayKey(); if(t.days.indexOf(d)<0){ t.days.push(d); localStorage.setItem('vialp_trial',JSON.stringify(t)); } }catch(e){} }
+// Первый день пробника — самая ранняя настоящая дата в days. over=1 ставит ответ сервера 'trial_over'.
+// Старые телефоны после 'trial_over' хранили days=['x','y','z'] без дат — это тоже «пробник кончился».
+function _trialStart(t){ var v=(t.days||[]).filter(function(d){return /^\d{4}-\d{2}-\d{2}$/.test(d);}).sort(); return v[0]||''; }
+function _trialSpent(){
+  var t=_trialGet(); if(t.over) return true;
+  if(_trialDays()===0) return true;   // пробник магазина есть — без карты дней нет, сразу экран подписки
+  if(!t.days.length) return false;
+  var s=_trialStart(t); if(!s) return true;
+  var a=s.split('-'), b=_dayKey().split('-');
+  return (Date.UTC(+b[0],b[1]-1,+b[2])-Date.UTC(+a[0],a[1]-1,+a[2]))/86400000 >= _trialDays();
+}
 function _subActive(){ try{ return localStorage.getItem('vialp_entitlement')==='1'; }catch(e){ return false; } }
 // Пробный режим есть только ВНУТРИ приложения: на вебе подписки нет вообще, там всё как было.
 // Сегодняшний день, уже засчитанный в пробник, остаётся пробным — иначе перерисовка экрана
 // заказала бы полный платный разбор за тот же день.
 function _isTrial(){
+  // 2026-11-01: в 3 бесплатных днях магазина разбор ПОЛНЫЙ (короткий по цене почти не дешевле: $0,056 против $0,08)
   if(_subActive()) return false;
   // Подписка была и закончилась — пробные дни второй раз не выдаём (иначе отмена подписки
   // превращалась бы в новый бесплатный пробник). Флаг ставится, пока подписка активна.
   if(_trialGet().sub) return false;
   if(!(typeof window.iapAvailable==='function'&&window.iapAvailable())) return false;
-  var t=_trialGet();
-  return t.days.indexOf(_dayKey())>=0 || t.days.length < _TRIAL_DAYS;
+  return !_trialSpent();
 }
 // Пометка «это пробный разбор» — одна на все экраны (карточка разбора, ленты, печать).
 function _trialNote(){
   if(!_isTrial()) return '';
+  if(_storeTrial()) return '<div style="margin-top:14px;padding:11px 13px;border-radius:12px;border:1px solid rgba(226,185,90,.45);background:rgba(226,185,90,.10);font-size:var(--fs-cap);color:var(--gold-lt);line-height:1.5;">✦ '+_esc(L(_ST_NOTE))+'</div>';
   var txt=L({ru:'Пробный разбор — короткий. Полный разбор и персональная памятка дня — при подписке.',
              uk:'Пробний розбір — короткий. Повний розбір і персональна пам’ятка дня — за підпискою.',
              en:'Trial overview — short version. The full overview and a personal day plan come with the subscription.',
@@ -11353,8 +11402,21 @@ function _trialOfferLater(el){
   var big=box.querySelector('.trial-offer'), small=box.querySelector('.trial-offer-short');
   if(big) big.style.display='none'; if(small) small.style.display='block';
 }
+var _ST_NOTE={ru:'Пробный период: разбор короткий. Полный разбор, памятка дня с меню и недельные итоги начнутся после 7 бесплатных дней.',
+  uk:'Пробний період: розбір короткий. Повний розбір, пам’ятка дня з меню й тижневі підсумки почнуться після 7 безкоштовних днів.',
+  en:'Free trial: the overview is the short version. The full overview, the day plan with a menu and weekly reviews start after the 7 free days.',
+  es:'Periodo de prueba: el resumen es la versión corta. El resumen completo, el plan del día con menú y los resúmenes semanales empiezan tras los 7 días gratis.',
+  de:'Testzeitraum: die Auswertung ist die Kurzfassung. Vollständige Auswertung, Tagesplan mit Menü und Wochenrückblicke beginnen nach den 7 Gratistagen.',
+  pt:'Período de teste: a análise é a versão curta. A análise completa, o plano do dia com menu e as análises semanais começam após os 7 dias grátis.',
+  fr:'Période d’essai : le bilan est en version courte. Le bilan complet, le plan du jour avec menu et les bilans hebdomadaires commencent après les 7 jours gratuits.',
+  pl:'Okres próbny: przegląd w wersji krótkiej. Pełny przegląd, plan dnia z menu i podsumowania tygodnia zaczną się po 7 darmowych dniach.',
+  it:'Periodo di prova: l’analisi è in versione breve. L’analisi completa, il piano del giorno con menù e i riepiloghi settimanali iniziano dopo i 7 giorni gratuiti.',
+  he:'תקופת ניסיון: הניתוח בגרסה מקוצרת. הניתוח המלא, תוכנית היום עם תפריט והסיכומים השבועיים מתחילים אחרי 7 הימים החינמיים.',
+  ja:'無料トライアル中：分析は短縮版です。詳しい分析、メニュー付きの一日プラン、週間まとめは7日間の無料期間のあとに始まります。',
+  ko:'무료 체험 기간: 분석은 요약본입니다. 전체 분석, 메뉴가 있는 하루 플랜, 주간 리뷰는 7일 무료 기간 후 시작됩니다.'};
 function _trialOffer(){
   if(!_isTrial()) return '';
+  if(_storeTrial()) return _trialNote();
   var used=(_trialGet().days||[]).length;
   if(used>1 || _trialOfferHidden()) return _trialNote();
   var T=function(o){ return _esc(L(o)); };
@@ -13563,7 +13625,7 @@ async function fetchAIAnalysis(data, lang, src) {
     const res = await fetch(AI_WORKER, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(Object.assign({ data, lang, tier: 'pro', structured: true, cid: _cid(), dev: (typeof vialDev==='function'?vialDev():''), day: _day, src: src||'pass', bg: true, trial: _isTrial(), upgrade: (src==='upgrade') }, _specShare(), _specDocr())),   // trial → короткий разбор (воркер, _TRIAL_FMT); upgrade → пересчёт после покупки   // cid+day — чтобы разбор можно было забрать с сервера, если ответ не доедет
+      body: JSON.stringify(Object.assign({ data, lang, tier: 'pro', structured: true, cid: _cid(), dev: (typeof vialDev==='function'?vialDev():''), day: _day, src: src||'pass', bg: true, trial: _isTrial(), strial: _storeTrial(), upgrade: (src==='upgrade') }, _specShare(), _specDocr())),   // trial → короткий разбор (воркер, _TRIAL_FMT); upgrade → пересчёт после покупки   // cid+day — чтобы разбор можно было забрать с сервера, если ответ не доедет
     });
     let json = await res.json();
     // Фоновый разбор (2026-09-11): сервер сразу отвечает номером задания и считает в очереди, а мы ждём
@@ -13593,7 +13655,7 @@ async function fetchAIAnalysis(data, lang, src) {
       // потолок дня, честно просим зайти позже. 2026-09-17.
       loading.style.display = 'none';
       if (json.error === 'trial_over') {
-        try{ var _t=_trialGet(); _t.days=['x','y','z']; localStorage.setItem('vialp_trial',JSON.stringify(_t)); }catch(e){}   // сервер главнее телефона
+        try{ var _t=_trialGet(); _t.over=1; localStorage.setItem('vialp_trial',JSON.stringify(_t)); }catch(e){}   // сервер главнее телефона
         if (typeof _iapShow==='function') _iapShow();
       } else {
         err.textContent = L({ru:'Пробный разбор сегодня недоступен — попробуйте позже или оформите подписку.',
@@ -14241,7 +14303,7 @@ async function fetchDayPlan(data){
       if(_j0&&_j0.plan&&_j0.plan.morning){ var cp0=_cleanPlan(_j0.plan); _dpSave(cp0,_lg,sig); window._bpAI=cp0; renderDayBlueprint(data); }
       return;
     }
-    var res=await fetch(AI_WORKER+'/day-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({trial:(typeof _isTrial==='function'&&_isTrial()),data:data,lang:_lg,tier:'pro',src:((typeof _rerendering!=='undefined'&&_rerendering)?'lang':'pass'),cid:_cid(),dev:(typeof vialDev==='function'?vialDev():''),day:_day,bg:true,upgrade:_up})});
+    var res=await fetch(AI_WORKER+'/day-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({trial:(typeof _isTrial==='function'&&_isTrial()),strial:(typeof _storeTrial==='function'&&_storeTrial()),data:data,lang:_lg,tier:'pro',src:((typeof _rerendering!=='undefined'&&_rerendering)?'lang':'pass'),cid:_cid(),dev:(typeof vialDev==='function'?vialDev():''),day:_day,bg:true,upgrade:_up})});
     var json=await res.json();
     // Фоновая памятка (2026-09-12): сервер сразу отвечает номером задания и считает в очереди.
     // Свёрнутое приложение больше не обрывает её, и повторных платных вызовов нет.
