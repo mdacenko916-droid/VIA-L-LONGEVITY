@@ -1352,6 +1352,10 @@ const HOTMART_PRODUCTS = {
   // ДОЛЖЕН совпадать с колонкой B в базе кодов (Google Sheet) и с apps-script.
   8199953: { type: 'interpreter', tier: 'VIAL-EXPERT-8W',  price: '€390' },   // VIA-L EXPERT · 8W
   8200155: { type: 'interpreter', tier: 'VIAL-EXPERT-12W', price: '€590' },   // VIA-L EXPERT · 12W
+  // Разовые консультации с сайта (2026-11-03): одна ссылка на товар для всех 4 языков.
+  // Доставка вне Hotmart: письмо покупателю → он шлёт данные на support@ (CONSULT_EMAIL).
+  8878763: { type: 'consult', kind: 'review', price: '€50'  },   // Разбор со специалистом
+  8878897: { type: 'consult', kind: 'plan',   price: '€150' },   // Рекомендации на 3 месяца
 };
 
 const PROGRAM_NAMES = {
@@ -1690,6 +1694,9 @@ async function handleHotmartWebhook(request, env, corsHeaders) {
   if (product?.type === 'interpreter') {
     return handleInterpreterPurchase(product, buyerName, buyerEmail, lang, env, corsHeaders);
   }
+  if (product?.type === 'consult') {
+    return handleConsultPurchase(product, buyerName, buyerEmail, lang, amount, env, corsHeaders);
+  }
 
   if (!product) {
     await sendTelegram(env,
@@ -1758,6 +1765,73 @@ async function handleHotmartWebhook(request, env, corsHeaders) {
   );
 
   return jsonResponse({ ok: true, token, program: product.program, lang }, corsHeaders);
+}
+
+// ── Разовая консультация с сайта: карточка в кабинете + TG + письмо «что прислать» ──
+// Тексты = PDF-инструкция в Hotmart (uk/ru — одна онлайн-встреча у «плана», остальные письменно).
+const CONSULT_NAMES = { review: 'Разбор со специалистом', plan: 'Рекомендации на 3 месяца' };
+const CONSULT_EMAIL = {
+  uk: { review: 'Розбір зі спеціалістом', plan: 'Рекомендації на 3 місяці',
+    hi: (n) => `<p>Вітаємо, <b>${n}</b>!</p>`, paid: (t) => `<p>Оплату підтверджено: <b>${t}</b>.</p>`,
+    send: (t) => `<p>Напишіть на <a href="mailto:support@via-l.com">support@via-l.com</a>, у темі — «${t}». У листі: вік, зріст і вага; що турбує найбільше і як давно; які були хвороби, які ліки та добавки приймаєте. Додайте фото або PDF аналізів, якщо є, і щоденник харчування за 3–7 днів.</p>`,
+    w_review: '<p>Розбір прийде на вашу пошту протягом <b>48 годин</b> після того, як ми отримаємо ваш лист. Потім 7 днів — на уточнювальні запитання.</p>',
+    w_plan_m: '<p>Протягом <b>48 годин</b> після вашого листа спеціаліст надішле посилання для запису на онлайн-зустріч. На зустрічі ви отримаєте рекомендації; уточнювальні запитання — 7 днів, поштою. Це разові рекомендації: далі ви дієте за планом самостійно, без супроводу спеціаліста.</p>',
+    w_plan_w: '<p>Рекомендації прийдуть на вашу пошту протягом <b>48 годин</b> після вашого листа; уточнювальні запитання — 7 днів. Це разові рекомендації: далі ви дієте за планом самостійно, без супроводу спеціаліста.</p>',
+    note: '<p style="color:#888;font-size:13px">Спеціаліст — не лікар: не ставить діагнозів і не призначає ліків. За тривожних ознак підкаже, до якого лікаря звернутися.</p>' },
+  ru: { review: 'Разбор со специалистом', plan: 'Рекомендации на 3 месяца',
+    hi: (n) => `<p>Здравствуйте, <b>${n}</b>!</p>`, paid: (t) => `<p>Оплата подтверждена: <b>${t}</b>.</p>`,
+    send: (t) => `<p>Напишите на <a href="mailto:support@via-l.com">support@via-l.com</a>, в теме — «${t}». В письме: возраст, рост и вес; что беспокоит больше всего и как давно; какие были болезни, какие лекарства и добавки принимаете. Приложите фото или PDF анализов, если есть, и дневник питания за 3–7 дней.</p>`,
+    w_review: '<p>Разбор придёт на вашу почту в течение <b>48 часов</b> после того, как мы получим ваше письмо. Затем 7 дней — на уточняющие вопросы.</p>',
+    w_plan_m: '<p>В течение <b>48 часов</b> после вашего письма специалист пришлёт ссылку для записи на онлайн-встречу. На встрече вы получите рекомендации; уточняющие вопросы — 7 дней, по почте. Это разовые рекомендации: дальше вы действуете по плану сами, без сопровождения специалиста.</p>',
+    w_plan_w: '<p>Рекомендации придут на вашу почту в течение <b>48 часов</b> после вашего письма; уточняющие вопросы — 7 дней. Это разовые рекомендации: дальше вы действуете по плану сами, без сопровождения специалиста.</p>',
+    note: '<p style="color:#888;font-size:13px">Специалист — не врач: не ставит диагнозы и не назначает лекарства. При тревожных признаках подскажет, к какому врачу обратиться.</p>' },
+  en: { review: 'Specialist review', plan: '3-month recommendations',
+    hi: (n) => `<p>Hello, <b>${n}</b>!</p>`, paid: (t) => `<p>Your payment is confirmed: <b>${t}</b>.</p>`,
+    send: (t) => `<p>Please email <a href="mailto:support@via-l.com">support@via-l.com</a> with the subject “${t}”. In the email: age, height and weight; what bothers you most and for how long; past illnesses, which medicines and supplements you take. Attach photos or PDFs of your lab results, if you have them, and a food diary for 3–7 days.</p>`,
+    w_review: '<p>The review arrives by email within <b>48 hours</b> after we receive your message. After that you have 7 days for follow-up questions.</p>',
+    w_plan_m: '<p>The written recommendations arrive by email within <b>48 hours</b> after your message; follow-up questions for 7 days. These are one-off recommendations: after that you follow the plan on your own, without ongoing support from the specialist.</p>',
+    w_plan_w: '<p>The written recommendations arrive by email within <b>48 hours</b> after your message; follow-up questions for 7 days. These are one-off recommendations: after that you follow the plan on your own, without ongoing support from the specialist.</p>',
+    note: '<p style="color:#888;font-size:13px">The specialist is not a doctor: no diagnoses, no prescription medicines. If there are warning signs, you will be told which doctor to see.</p>' },
+  es: { review: 'Revisión con especialista', plan: 'Recomendaciones para 3 meses',
+    hi: (n) => `<p>Hola, <b>${n}</b>:</p>`, paid: (t) => `<p>Tu pago está confirmado: <b>${t}</b>.</p>`,
+    send: (t) => `<p>Escribe a <a href="mailto:support@via-l.com">support@via-l.com</a> con el asunto «${t}». En el correo: edad, altura y peso; qué te preocupa más y desde cuándo; enfermedades previas, qué medicamentos y suplementos tomas. Adjunta fotos o PDF de tus análisis, si los tienes, y un diario de alimentación de 3–7 días.</p>`,
+    w_review: '<p>La revisión llega a tu correo en un plazo de <b>48 horas</b> desde que recibimos tu mensaje. Después tienes 7 días para preguntas de seguimiento.</p>',
+    w_plan_m: '<p>Las recomendaciones por escrito llegan a tu correo en un plazo de <b>48 horas</b> desde tu mensaje; preguntas de seguimiento durante 7 días. Son recomendaciones puntuales: después sigues el plan por tu cuenta, sin acompañamiento del especialista.</p>',
+    w_plan_w: '<p>Las recomendaciones por escrito llegan a tu correo en un plazo de <b>48 horas</b> desde tu mensaje; preguntas de seguimiento durante 7 días. Son recomendaciones puntuales: después sigues el plan por tu cuenta, sin acompañamiento del especialista.</p>',
+    note: '<p style="color:#888;font-size:13px">El especialista no es médico: no diagnostica ni receta medicamentos. Ante señales de alarma, te dirá a qué médico acudir.</p>' },
+};
+
+async function handleConsultPurchase(product, buyerName, buyerEmail, lang, amount, env, corsHeaders) {
+  const token     = crypto.randomUUID();
+  const meet      = product.kind === 'plan' && (lang === 'uk' || lang === 'ru');
+  const name      = CONSULT_NAMES[product.kind] || product.kind;
+  const amountStr = amount ? `€${amount}` : product.price;
+  const langFlag  = { uk: '🇺🇦', ru: '🇷🇺', es: '🇪🇸', en: '🇬🇧' }[lang] || '🌐';
+
+  await cabinetUpsertFromPayment(env, {
+    code: token, name: buyerName, email: buyerEmail, lang,
+    product, program: name, tier: name, price: product.price, paidAmount: amountStr,
+  });
+
+  await sendTelegram(env,
+    `💳 <b>Новая оплата — ${name}</b>\n`
+    + `━━━━━━━━━━━━━━━━━━━━\n`
+    + `👤 ${esc(buyerName)}\n`
+    + `📧 <code>${esc(buyerEmail)}</code>\n`
+    + `💰 ${amountStr}\n`
+    + `${langFlag} Язык клиента: ${lang.toUpperCase()} · ${product.kind === 'plan' ? (meet ? 'онлайн-встреча' : 'письменно') : 'письменно'}\n`
+    + `━━━━━━━━━━━━━━━━━━━━\n`
+    + `Клиенту ушло письмо: прислать данные на support@. Ответ — 48 ч с его письма.`
+  );
+
+  const t = CONSULT_EMAIL[lang] || CONSULT_EMAIL.en;
+  const title = t[product.kind] || name;
+  await sendEmail(env, buyerEmail, `VIA-L · ${title}`,
+    t.hi(esc(buyerName)) + t.paid(title) + t.send(title)
+    + (product.kind === 'plan' ? (meet ? t.w_plan_m : t.w_plan_w) : t.w_review) + t.note,
+  );
+
+  return jsonResponse({ ok: true, token, consult: product.kind, lang }, corsHeaders);
 }
 
 // ── Interpreter purchase: assign code + email buyer ───────────
@@ -9600,6 +9674,7 @@ function cabinetTariffMeta(product, lang){
     if (product.tier === 'VIAL-EXPERT-12W') return { duration: 12, format: ukRu ? 'zoom' : 'pdf' };
     return { duration: null, format: 'pdf' };                                            // PRO в кабинет не пишем
   }
+  if (product.type === 'consult') return { duration: 1, format: (product.kind === 'plan' && ukRu) ? 'zoom' : 'pdf' };
   const plan = product.plan || '';
   if (plan.includes('Разов')) return { duration: 1,  format: 'once' };                   // разовая (только uk/ru)
   if (plan.includes('8'))     return { duration: 8,  format: ukRu ? 'zoom' : 'pdf' };
