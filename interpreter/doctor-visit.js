@@ -5,12 +5,14 @@
    отметок, её цифры за 4 недели, вопросы врачу, что взять с собой.
    Собирает КОД, без ИИ и без сети. Рамка: адресат + её данные + вопросы. Ни диагноза («у вас
    перименопауза»), ни назначения («вам нужна гормональная терапия»), ни препаратов.
-   «Уже была у врача» прячет карточку на 90 дней. Только женщины (ADAM-L — отдельный файл).
+   «Уже была у врача» прячет карточку на 90 дней. VIA-L — женщины 35+. ADAM-L (window.DV_SEX='male') — мужчины 40+:
+   жалобы андропаузы, уролог-андролог/семейный врач по стране, вопросы про тестостерон. В VIA-L мужчинам карточки нет.
    Рисует блок #rd-doctor перед шагом 1; зовётся из renderFocusUI (страница).
    Правишь русский — правь все 12 языков. В строках только типографские кавычки и апостроф ’. */
 (function () {
   var K_HIDE = 'vialp_dv_hide', HIDE_DAYS = 90, DAY = 86400000;
   var CMP_KEYS = ['hf', 'sleep', 'mood', 'cycle', 'libido', 'fog'];   // жалобы, с которыми идут к гинекологу в 35+
+  var CMP_KEYS_M = ['energy', 'sleep', 'mood', 'fog', 'libido', 'drive', 'muscle'];   // ADAM-L: андропауза 40+
 
   var S = {
     badge:{ru:'Пора к врачу',uk:'Час до лікаря',en:'Time to see a doctor',es:'Momento de ir al médico',de:'Zeit für einen Arztbesuch',pt:'Hora de ir ao médico',fr:'Le moment de consulter',pl:'Czas na wizytę u lekarza',it:'È il momento del medico',he:'הגיע הזמן לרופא',ja:'受診のタイミングです',ko:'진료받을 때예요'},
@@ -38,6 +40,17 @@
     q_ref:{ru:'Нужна ли мне консультация гинеколога?',uk:'Чи потрібна мені консультація гінеколога?',en:'Should I also see a gynecologist?',es:'¿Necesito que me vea ginecología?',de:'Sollte ich zusätzlich zur Frauenärztin gehen?',pt:'Preciso de uma consulta de ginecologia?',fr:'Dois-je aussi consulter un gynécologue ?',pl:'Czy potrzebuję konsultacji ginekologa?',it:'Ho bisogno di una visita ginecologica?',he:'האם כדאי שאפנה גם לרופא/ת נשים?',ja:'婦人科も受診したほうがよいですか？',ko:'산부인과 진료도 받아야 할까요?'},
     h_labs:{ru:'Мои анализы',uk:'Мої аналізи',en:'My lab results',es:'Mis análisis',de:'Meine Laborwerte',pt:'Meus exames',fr:'Mes analyses',pl:'Moje badania',it:'I miei esami',he:'הבדיקות שלי',ja:'私の検査結果',ko:'내 검사 결과'},
     h_labs_sub:{ru:'Как вписаны в приложение; дата — день сдачи.',uk:'Як вписані в застосунок; дата — день здачі.',en:'As entered in the app; the date is when the test was taken.',es:'Tal como se anotaron en la app; la fecha es la del análisis.',de:'Wie in der App eingetragen; das Datum ist der Tag der Blutabnahme.',pt:'Como registrados no app; a data é a do exame.',fr:'Tels que saisis dans l’app ; la date est celle du prélèvement.',pl:'Tak jak wpisane w aplikacji; data — dzień pobrania.',it:'Come inseriti nell’app; la data è quella del prelievo.',he:'כפי שהוזנו באפליקציה; התאריך — יום הבדיקה.',ja:'アプリに入力した値です。日付は検査日です。',ko:'앱에 입력한 값이며, 날짜는 검사한 날이에요.'},
+    // ── ADAM-L (мужчины 40+, 2026-11-06) ──
+    who_uro:{ru:'Уролог-андролог',uk:'Уролог-андролог',en:'Urologist (andrologist)',es:'Urología / andrología',de:'Urologe / Androloge',pt:'Urologista / andrologista',fr:'Urologue / andrologue',pl:'Urolog-androlog',it:'Urologo / andrologo',he:'אורולוג/אנדרולוג',ja:'泌尿器科（男性外来）',ko:'비뇨의학과'},
+    who_uro_sub:{ru:'или эндокринолог',uk:'або ендокринолог',en:'or an endocrinologist',es:'o endocrinología',de:'oder Endokrinologe',pt:'ou endocrinologista',fr:'ou un endocrinologue',pl:'lub endokrynolog',it:'o un endocrinologo',he:'או אנדוקרינולוג',ja:'または内分泌内科',ko:'또는 내분비내과'},
+    gp_men_sub:{ru:'с такими жалобами обычно начинают с него: он назначит анализы, в том числе тестостерон, и направит к урологу или эндокринологу, если нужно',uk:'з такими скаргами зазвичай починають із нього: він призначить аналізи, зокрема тестостерон, і направить до уролога чи ендокринолога, якщо потрібно',en:'this is the usual first stop: your family doctor can order tests, including testosterone, and refer you to a urologist or endocrinologist if needed',es:'con estas molestias se suele empezar por aquí: puede pedir análisis, incluida la testosterona, y derivarte a urología o endocrinología si hace falta',de:'bei solchen Beschwerden ist die Hausarztpraxis meist die erste Anlaufstelle: Sie veranlasst Laborwerte, auch Testosteron, und überweist bei Bedarf zur Urologie oder Endokrinologie',pt:'com estas queixas costuma-se começar por aqui: o médico de família pede exames, incluindo testosterona, e encaminha ao urologista ou endocrinologista, se for preciso',fr:'pour ces symptômes, on commence souvent par lui : il prescrit des analyses, dont la testostérone, et vous oriente vers un urologue ou un endocrinologue si besoin',pl:'z takimi dolegliwościami zwykle zaczyna się od niego: zleci badania, w tym testosteron, i skieruje do urologa lub endokrynologa, jeśli trzeba',it:'con questi disturbi di solito si parte da qui: il medico di famiglia prescrive gli esami, compreso il testosterone, e ti indirizza dall’urologo o dall’endocrinologo se serve',he:'עם תלונות כאלה בדרך כלל מתחילים כאן: רופא/ת המשפחה יפנה לבדיקות, כולל טסטוסטרון, ולאורולוג או לאנדוקרינולוג במידת הצורך',ja:'こうした症状はまずかかりつけ医からが一般的です。テストステロンを含む検査を出し、必要なら泌尿器科や内分泌内科を紹介してくれます',ko:'이런 증상은 보통 가정의학과에서 시작해요. 테스토스테론을 포함한 검사를 하고, 필요하면 비뇨의학과나 내분비내과로 의뢰해 줘요'},
+    lead_uro:{ru:'Это стоит обсудить с урологом-андрологом — мы собрали, что сказать на приёме и что спросить.',uk:'Це варто обговорити з урологом-андрологом — ми зібрали, що сказати на прийомі й що запитати.',en:'It’s worth discussing with a urologist — we’ve put together what to say and what to ask.',es:'Merece la pena hablarlo en urología: hemos preparado qué contar en la consulta y qué preguntar.',de:'Das sollten Sie mit einem Urologen besprechen — wir haben zusammengestellt, was Sie sagen und fragen können.',pt:'Vale a pena conversar com um urologista — reunimos o que dizer na consulta e o que perguntar.',fr:'Cela mérite d’en parler à un urologue — nous avons préparé quoi dire et quoi demander.',pl:'Warto omówić to z urologiem — zebraliśmy, co powiedzieć na wizycie i o co zapytać.',it:'Vale la pena parlarne con un urologo: abbiamo preparato cosa dire alla visita e cosa chiedere.',he:'כדאי לדבר על זה עם אורולוג — אספנו מה לומר בביקור ומה לשאול.',ja:'泌尿器科で相談する価値があります。受診時に伝えることと質問をまとめました。',ko:'비뇨의학과에서 상의해 볼 만해요. 진료 때 말할 내용과 물어볼 질문을 정리했어요.'},
+    note_direct_uro:{ru:'Обычно к урологу можно записаться без направления; начать можно и с семейного врача.',uk:'Зазвичай до уролога можна записатися без направлення; почати можна й із сімейного лікаря.',en:'You can usually book a urologist without a referral; your family doctor is also a fine place to start.',es:'Normalmente se puede pedir cita en urología sin derivación; también puedes empezar por tu médico de cabecera.',de:'Einen Termin beim Urologen bekommen Sie in der Regel ohne Überweisung; Sie können aber auch bei der Hausarztpraxis anfangen.',pt:'Normalmente pode marcar urologista sem encaminhamento; também pode começar pelo médico de família.',fr:'En général, on peut consulter un urologue sans orientation ; vous pouvez aussi commencer par votre médecin traitant.',pl:'Zwykle do urologa można zapisać się bez skierowania; można też zacząć od lekarza rodzinnego.',it:'Di solito si può prenotare dall’urologo senza impegnativa; puoi anche partire dal medico di famiglia.',he:'בדרך כלל אפשר לקבוע תור לאורולוג בלי הפניה; אפשר גם להתחיל אצל רופא/ת המשפחה.',ja:'泌尿器科は通常、紹介状なしで予約できます。かかりつけ医から始めてもかまいません。',ko:'보통 비뇨의학과는 의뢰서 없이 예약할 수 있어요. 가정의학과에서 시작해도 괜찮아요.'},
+    note_private_uro:{ru:'К частному урологу обычно можно записаться и без направления.',uk:'До приватного уролога зазвичай можна записатися й без направлення.',en:'A private urologist will usually see you without a referral.',es:'En la sanidad privada, a urología se suele poder ir sin derivación.',de:'Private Urologiepraxen nehmen meist auch ohne Überweisung Termine an.',pt:'No privado, normalmente pode marcar com um urologista sem encaminhamento.',fr:'Dans le privé, on peut en général consulter un urologue sans orientation.',pl:'Do prywatnego urologa zwykle można zapisać się bez skierowania.',it:'Privatamente, dall’urologo di solito si può andare senza impegnativa.',he:'לאורולוג פרטי אפשר בדרך כלל לקבוע תור גם בלי הפניה.',ja:'自費の泌尿器科なら、紹介状なしで受診できることが多いです。',ko:'개인 비뇨의학과는 보통 의뢰서 없이도 예약할 수 있어요.'},
+    note_route_uro:{ru:'Профильный специалист — уролог-андролог или эндокринолог; в некоторых странах к нему можно записаться напрямую.',uk:'Профільний фахівець — уролог-андролог або ендокринолог; у деяких країнах до нього можна записатися напряму.',en:'The relevant specialist is a urologist or endocrinologist; in some countries you can book one directly.',es:'El especialista es urología/andrología o endocrinología; en algunos países se puede pedir cita directamente.',de:'Zuständig sind Urologie/Andrologie oder Endokrinologie; in manchen Ländern bekommen Sie dort direkt einen Termin.',pt:'O especialista é o urologista/andrologista ou o endocrinologista; em alguns países pode marcar diretamente.',fr:'Le spécialiste est l’urologue/andrologue ou l’endocrinologue ; dans certains pays, on peut le consulter directement.',pl:'Właściwy specjalista to urolog-androlog lub endokrynolog; w niektórych krajach można zapisać się bezpośrednio.',it:'Lo specialista è l’urologo/andrologo o l’endocrinologo; in alcuni Paesi si può prenotare direttamente.',he:'המומחה הרלוונטי — אורולוג/אנדרולוג או אנדוקרינולוג; בחלק מהמדינות אפשר לקבוע אצלו תור ישירות.',ja:'専門は泌尿器科（男性外来）または内分泌内科です。国によっては直接予約できます。',ko:'관련 전문과는 비뇨의학과나 내분비내과예요. 나라에 따라 바로 예약할 수 있어요.'},
+    q_m2:{ru:'Стоит ли мне проверить тестостерон — и в какое время его сдавать?',uk:'Чи варто мені перевірити тестостерон — і в який час його здавати?',en:'Should I have my testosterone checked — and at what time of day?',es:'¿Debería medirme la testosterona? ¿A qué hora conviene hacerse el análisis?',de:'Sollte ich meinen Testosteronwert bestimmen lassen — und zu welcher Tageszeit?',pt:'Devo verificar a testosterona — e a que horas fazer o exame?',fr:'Dois-je faire doser ma testostérone — et à quelle heure ?',pl:'Czy powinienem sprawdzić testosteron — i o jakiej porze go badać?',it:'Dovrei controllare il testosterone? E a che ora fare il prelievo?',he:'האם כדאי לי לבדוק טסטוסטרון — ובאיזו שעה ביום?',ja:'テストステロンを測ったほうがよいですか？検査は何時ごろがよいですか？',ko:'테스토스테론을 검사해 봐야 할까요? 하루 중 언제 검사하면 좋을까요?'},
+    q_m4:{ru:'Если тестостерон окажется низким — какие есть варианты и их за и против в моём случае?',uk:'Якщо тестостерон виявиться низьким — які є варіанти та їхні за і проти в моєму випадку?',en:'If my testosterone turns out low, what are the options and their pros and cons in my case?',es:'Si la testosterona sale baja, ¿qué opciones hay y qué pros y contras tienen en mi caso?',de:'Falls der Testosteronwert niedrig ist: Welche Möglichkeiten gibt es, und was spricht in meinem Fall dafür und dagegen?',pt:'Se a testosterona estiver baixa, quais são as opções e os prós e contras no meu caso?',fr:'Si ma testostérone est basse, quelles sont les options et leurs pour et contre dans mon cas ?',pl:'Jeśli testosteron okaże się niski — jakie są możliwości i ich za i przeciw w moim przypadku?',it:'Se il testosterone risulta basso, quali opzioni ci sono e con quali pro e contro nel mio caso?',he:'אם הטסטוסטרון יתברר כנמוך — מה האפשרויות ומה היתרונות והחסרונות במקרה שלי?',ja:'テストステロンが低かった場合、どんな選択肢があり、私の場合の利点と欠点は？',ko:'테스토스테론이 낮게 나오면 어떤 방법이 있고, 제 경우 장단점은 무엇인가요?'},
+    q_ref_uro:{ru:'Нужна ли мне консультация уролога или эндокринолога?',uk:'Чи потрібна мені консультація уролога або ендокринолога?',en:'Should I also see a urologist or endocrinologist?',es:'¿Necesito que me vea urología o endocrinología?',de:'Sollte ich zusätzlich zur Urologie oder Endokrinologie gehen?',pt:'Preciso de uma consulta de urologia ou endocrinologia?',fr:'Dois-je aussi consulter un urologue ou un endocrinologue ?',pl:'Czy potrzebuję konsultacji urologa lub endokrynologa?',it:'Ho bisogno di una visita urologica o endocrinologica?',he:'האם כדאי שאפנה גם לאורולוג או לאנדוקרינולוג?',ja:'泌尿器科や内分泌内科も受診したほうがよいですか？',ko:'비뇨의학과나 내분비내과 진료도 받아야 할까요?'},
     h_ask:{ru:'Спросите врача',uk:'Запитайте лікаря',en:'Ask your doctor',es:'Pregunta en la consulta',de:'Fragen Sie nach',pt:'Pergunte ao médico',fr:'Demandez au médecin',pl:'Zapytaj lekarza',it:'Chiedi al medico',he:'שאלו את הרופא/ה',ja:'医師への質問',ko:'의사에게 물어보세요'},
     h_take:{ru:'Возьмите с собой',uk:'Візьміть із собою',en:'Bring with you',es:'Lleva contigo',de:'Nehmen Sie mit',pt:'Leve com você',fr:'À apporter',pl:'Zabierz ze sobą',it:'Porta con te',he:'קחו איתכם',ja:'持っていくもの',ko:'챙겨 갈 것'},
     say_age:{ru:'Мне {a}.',uk:'Мені {a}.',en:'I’m {a}.',es:'Tengo {a} años.',de:'Ich bin {a}.',pt:'Tenho {a} anos.',fr:'J’ai {a} ans.',pl:'Mam {a} lat.',it:'Ho {a} anni.',he:'אני בת {a}.',ja:'{a}歳です。',ko:'{a}세예요.'},
@@ -74,11 +87,21 @@
     copied:{ru:'Текст скопирован — вставьте его в сообщение или заметки.',uk:'Текст скопійовано — вставте його в повідомлення чи нотатки.',en:'Text copied — paste it into a message or your notes.',es:'Texto copiado: pégalo en un mensaje o en tus notas.',de:'Text kopiert — fügen Sie ihn in eine Nachricht oder Notiz ein.',pt:'Texto copiado — cole numa mensagem ou nas suas notas.',fr:'Texte copié — collez-le dans un message ou vos notes.',pl:'Tekst skopiowany — wklej go do wiadomości lub notatek.',it:'Testo copiato: incollalo in un messaggio o nelle note.',he:'הטקסט הועתק — הדביקו אותו בהודעה או בפתקים.',ja:'テキストをコピーしました。メッセージやメモに貼り付けてください。',ko:'텍스트를 복사했어요. 메시지나 메모에 붙여 넣으세요.'},
     note:{ru:'Это не диагноз — ваши данные и вопросы для разговора с врачом.',uk:'Це не діагноз — ваші дані й запитання для розмови з лікарем.',en:'This isn’t a diagnosis — it’s your data and questions for a conversation with your doctor.',es:'No es un diagnóstico: son tus datos y preguntas para hablar con tu médico.',de:'Das ist keine Diagnose — es sind Ihre Daten und Fragen für das Gespräch in der Praxis.',pt:'Isto não é um diagnóstico — são seus dados e perguntas para conversar com o médico.',fr:'Ce n’est pas un diagnostic : ce sont vos données et vos questions pour en parler avec votre médecin.',pl:'To nie diagnoza — to Twoje dane i pytania do rozmowy z lekarzem.',it:'Non è una diagnosi: sono i tuoi dati e le domande per parlarne con il medico.',he:'זו לא אבחנה — אלה הנתונים שלכם ושאלות לשיחה עם הרופא/ה.',ja:'これは診断ではありません。医師と話すためのあなたのデータと質問です。',ko:'진단이 아니에요. 의사와 이야기할 내 데이터와 질문이에요.'}
   };
+  // Мужские формы там, где фраза от первого лица зависит от рода (ru/uk/pl/it/he); остальное общее.
+  var MALE = {
+    dismiss:{ru:'Уже был у врача',uk:'Уже був у лікаря',pl:'Byłem już u lekarza',it:'Sono già stato dal medico'},
+    say_age:{he:'אני בן {a}.'},
+    say_since:{he:'אני שם לב לזה מאז {d}.'},
+    say_sleep:{he:'אני ישן בממוצע {h} — {m} דק׳ פחות מחודש קודם.'},
+    q3:{pl:'Jakie badania powinienem zrobić?'},
+    q_bp:{pl:'Co powinienem zrobić z ciśnieniem?'}
+  };
   var QUO = { ru:['«','»'], uk:['«','»'], es:['«','»'], fr:['« ',' »'], pt:['“','”'], it:['«','»'], pl:['„','”'], de:['„','“'], en:['“','”'], he:['״','״'], ja:['「','」'], ko:['“','”'] };
   var HF_F = { low:'1–2', mid:'3–5', high:'6–10', veryhigh:'10+' };
 
   function lg() { return (typeof lang !== 'undefined' && lang) || 'en'; }
-  function T(k) { var o = S[k]; return o ? (o[lg()] || o.en) : k; }
+  var _male = false;   // ставит collect(): ADAM-L → мужские формы
+  function T(k) { var m = _male && MALE[k] && MALE[k][lg()]; if (m) return m; var o = S[k]; return o ? (o[lg()] || o.en) : k; }
   function SP() { return lg() === 'ja' ? '' : ' '; }               // японский пишет фразы без пробелов
   function END() { return lg() === 'ja' ? '。' : '.'; }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]; }); }
@@ -94,9 +117,10 @@
   function collect() {
     var P = J('vialp_profile', {}) || {};
     var male = P.gender === 'male' || (typeof getRadio === 'function' && getRadio('gender') === 'male');
-    if (male) return null;
+    if (male && window.DV_SEX !== 'male') return null;   // VIA-L: мужчинам карточку не показываем (решение — только по ADAM-L)
+    _male = male;
     var age = parseInt(P.age) || 0;
-    if (age && age < 35) return null;
+    if (age && age < (male ? 40 : 35)) return null;
     var arr = J('vialp_daily', []) || [], now = Date.now();
     var cur = arr.filter(function (r) { return r && r.ts && now - r.ts < 28 * DAY; });
     var prev = arr.filter(function (r) { return r && r.ts && now - r.ts >= 28 * DAY && now - r.ts < 56 * DAY; });
@@ -111,14 +135,15 @@
     gaps = gaps.slice(-5);
     var cs = (typeof getRadio === 'function' && getRadio('cycle_status')) || P.cycle_status || '';
     var spread = gaps.length >= 3 ? Math.max.apply(null, gaps) - Math.min.apply(null, gaps) : 0;
-    var c = P.complaint || null, cItems = (c && Array.isArray(c.items)) ? c.items : [];
+    var c = P.complaint || null, cItems = (c && Array.isArray(c.items)) ? c.items : [], KEYS = male ? CMP_KEYS_M : CMP_KEYS;
     var cDays = (c && /^\d{4}-\d{2}-\d{2}$/.test(c.since || '')) ? Math.floor((now - new Date(c.since + 'T00:00:00')) / DAY) : 0;
     return {
       P:P, age:age, cc:country(), cs:cs, gaps:gaps, starts:st,
-      cItems:cItems, cSince:(c && c.since) || '', cRel:cItems.filter(function (k) { return CMP_KEYS.indexOf(k) >= 0; }),
-      long:cDays >= 42 && cItems.some(function (k) { return CMP_KEYS.indexOf(k) >= 0; }),
-      hfDays:hfDays, hfMode:hfMode,
-      irr:cs === 'irregular' || spread >= 7,
+      cItems:cItems, cSince:(c && c.since) || '', cRel:cItems.filter(function (k) { return KEYS.indexOf(k) >= 0; }),
+      long:cDays >= 42 && cItems.some(function (k) { return KEYS.indexOf(k) >= 0; }),
+      male:male,
+      hfDays:male ? 0 : hfDays, hfMode:hfMode,
+      irr:!male && (cs === 'irregular' || spread >= 7),
       bp:(bpS != null && bpD != null && (bpS >= 140 || bpD >= 90)) ? Math.round(bpS) + '/' + Math.round(bpD) : '',
       bpAvg:(bpS != null && bpD != null) ? Math.round(bpS) + '/' + Math.round(bpD) : '',
       sleep:[avg(cur, 'sleepHours'), avg(prev, 'sleepHours')],
@@ -134,7 +159,7 @@
     if (d.bp) r.push(T('why_bp').replace('{v}', d.bp));
     return r;
   }
-  function gynNeeded(d) { return d.long || d.hfDays >= 8 || (d.irr && d.cs !== 'absent'); }
+  function gynNeeded(d) { return d.long || d.hfDays >= 8 || (d.irr && d.cs !== 'absent'); }   // «есть повод к профильному» (у мужчин — к урологу)
   // ── куда идти — по стране, где она живёт (2026-11-06, слово владельца: «в Европе идут к семейному врачу») ──
   // Страна — по часовому поясу телефона, а не по языку: украинка в Валенсии пишет по-украински, а лечится в Испании.
   // 'gp' — с менопаузой начинают у семейного врача (он же назначает лечение и направляет);
@@ -143,7 +168,10 @@
   // NHSU (Украина: акушер-гинеколог без направления); Норвегия/Дания — GP-гейткипинг (BJGP Open 2024, Scand J Prim Health Care 2023).
   var ROUTE = { GB:'gp', IE:'gp', NL:'gp', DK:'gp', NO:'gp', PT:'gp', ES:'gp', IT:'gp', CA:'gp', AU:'gp', NZ:'gp',
                 DE:'gyn', AT:'gyn', FR:'gyn', UA:'gyn', RU:'gyn', PL:'gyn', IL:'gyn', US:'gyn', JP:'gyn', KR:'gyn' };
-  var PRIVATE_NOTE = { ES:1, IT:1, PT:1 };   // в госсистеме — через семейного, частно — напрямую
+  var PRIVATE_NOTE = { ES:1, IT:1, PT:1 };
+  // Мужчины: к урологу напрямую — DE/AT (свободный выбор врача), JP/KR (клиники без направления). В UA/PL/FR уролог —
+  // по направлению (UA: напрямую только гинеколог и ещё несколько; FR: parcours de soins), поэтому там — семейный врач.
+  var ROUTE_M = { DE:'uro', AT:'uro', JP:'uro', KR:'uro' };   // в госсистеме — через семейного, частно — напрямую
   var TZ = { 'Europe/Madrid':'ES','Atlantic/Canary':'ES','Africa/Ceuta':'ES','Europe/London':'GB','Europe/Dublin':'IE','Europe/Amsterdam':'NL',
     'Europe/Copenhagen':'DK','Europe/Oslo':'NO','Europe/Lisbon':'PT','Atlantic/Madeira':'PT','Atlantic/Azores':'PT','Europe/Rome':'IT',
     'Europe/Berlin':'DE','Europe/Vienna':'AT','Europe/Paris':'FR','Europe/Kyiv':'UA','Europe/Kiev':'UA','Europe/Uzhgorod':'UA','Europe/Zaporozhye':'UA',
@@ -156,7 +184,11 @@
     return '';   // по языку не гадаем: язык ≠ страна проживания
   }
   // 'gyn' | 'gp' | 'gyn?' (страна неизвестна — гинеколог + общая оговорка). Повод только давление → всегда семейный.
-  function route(d) { if (!gynNeeded(d)) return 'gp'; var r = ROUTE[d.cc]; return r === 'gp' ? 'gp' : r === 'gyn' ? 'gyn' : 'gyn?'; }
+  function route(d) {
+    if (!gynNeeded(d)) return 'gp';
+    if (d.male) return ROUTE_M[d.cc] ? 'uro' : (d.cc ? 'gp' : 'gp?');   // страна неизвестна → семейный + «профильный — уролог/эндокринолог»
+    var r = ROUTE[d.cc]; return r === 'gp' ? 'gp' : r === 'gyn' ? 'gyn' : 'gyn?';
+  }
   function hidden() { var t = +J(K_HIDE, 0) || 0; return t && Date.now() - t < HIDE_DAYS * DAY; }
 
   // ── «что сказать» от первого лица ──
@@ -168,7 +200,8 @@
       var x = lbl.join(', '); if (['ru','uk','en','es','pt','fr','it','pl'].indexOf(lg()) >= 0) x = x.toLowerCase();   // de — существительные с заглавной; he/ja/ko — регистра нет
       s.push(T('say_cmp').replace('{x}', x) + (d.cSince ? SP() + T('say_since').replace('{d}', fmtDate(d.cSince)) : ''));
     }
-    if (d.cs === 'absent') s.push(d.P.lastperiod ? T('say_nocyc_d').replace('{d}', fmtDate(d.P.lastperiod)) : T('say_nocyc'));
+    if (d.male) {}
+    else if (d.cs === 'absent') s.push(d.P.lastperiod ? T('say_nocyc_d').replace('{d}', fmtDate(d.P.lastperiod)) : T('say_nocyc'));
     else if (d.irr) s.push(d.gaps.length >= 3 ? T('say_cyc_rng').replace('{a}', Math.min.apply(null, d.gaps)).replace('{b}', Math.max.apply(null, d.gaps)) : T('say_cyc'));
     if (d.hfDays) s.push(T('say_hf').replace('{n}', d.hfDays) + (HF_F[d.hfMode] ? SP() + T('say_hf_f').replace('{f}', HF_F[d.hfMode]) : ''));
     if (d.sleep[0] && d.sleep[1] && d.sleep[1] - d.sleep[0] >= 1 / 3) s.push(T('say_sleep').replace('{h}', fmtH(d.sleep[0])).replace('{m}', Math.round((d.sleep[1] - d.sleep[0]) * 60)));
@@ -192,8 +225,10 @@
   }
   function questions(d) {
     var q = [];
-    if (gynNeeded(d)) q.push(T('q1'), T('q2'), T('q3'), T('q4')); else q.push(T('q3'));
-    if (route(d) === 'gp' && gynNeeded(d)) q.push(T('q_ref'));
+    var rt = route(d);
+    if (gynNeeded(d)) { if (d.male) q.push(T('q1'), T('q_m2'), T('q3'), T('q_m4')); else q.push(T('q1'), T('q2'), T('q3'), T('q4')); }
+    else q.push(T('q3'));
+    if ((rt === 'gp' || rt === 'gp?') && gynNeeded(d)) q.push(T(d.male ? 'q_ref_uro' : 'q_ref'));
     if (d.bp) q.push(T('q_bp'));
     return q;
   }
@@ -202,7 +237,7 @@
     try { if (typeof _ikActiveOn === 'function') meds = _ikActiveOn().map(function (it) { return String(it.name || '').trim(); }).filter(Boolean); } catch (e) {}
     meds = meds.filter(function (m, i) { return meds.indexOf(m) === i; }).slice(0, 15);
     t.push(meds.length ? T('take_meds') + ' ' + meds.join(lg() === 'ja' ? '、' : ', ') + END() : T('take_meds0'));
-    if (d.cs !== 'absent') t.push(d.starts.length ? T('take_cyc') + ' ' + d.starts.slice(-4).map(fmtDate).join(lg() === 'ja' ? '、' : '; ') + END() : T('take_cyc0'));
+    if (!d.male && d.cs !== 'absent') t.push(d.starts.length ? T('take_cyc') + ' ' + d.starts.slice(-4).map(fmtDate).join(lg() === 'ja' ? '、' : '; ') + END() : T('take_cyc0'));
     if (d.bp) t.push(T('take_bp'));
     return t;
   }
@@ -241,19 +276,29 @@
   }
 
   function cardHTML(d) {
-    var r = reasons(d), gyn = route(d) !== 'gp';
+    var r = reasons(d), rt = route(d), gyn = rt === 'gyn' || rt === 'gyn?';
     return '<div class="dv-badge">✦ ' + esc(T('badge')) + '</div>'
       + '<h2 class="dv-title">' + esc(T('title')) + '</h2>'
-      + '<p class="dv-lead">' + esc(r.join(SP()) + SP() + T(gyn ? 'lead_gyn' : 'lead_gp')) + '</p>'
+      + '<p class="dv-lead">' + esc(r.join(SP()) + SP() + T(rt === 'uro' ? 'lead_uro' : gyn ? 'lead_gyn' : 'lead_gp')) + '</p>'
       + '<button type="button" class="dv-solid" onclick="vialDoctor.open()">' + esc(T('open')) + '</button>'
       + '<button type="button" class="dv-ghost" onclick="vialDoctor.hide()">' + esc(T('dismiss')) + '</button>';
   }
+  // К кому идти: заголовок, подпись, значок — по маршруту и полу
+  function who(d) {
+    var rt = route(d), meno = gynNeeded(d);
+    if (rt === 'gyn' || rt === 'gyn?') return { t:T('who_gyn'), s:T('who_gyn_sub'), ico:'♀' };
+    if (rt === 'uro') return { t:T('who_uro'), s:T('who_uro_sub'), ico:'♂' };
+    return { t:T('who_gp'), s:T(meno ? (d.male ? 'gp_men_sub' : 'who_gp_meno_sub') : 'who_gp_sub'), ico:'♥' };
+  }
   function sheetHTML(d) {
-    var rt = route(d), gyn = rt !== 'gp', meno = gynNeeded(d), h = '<div id="dv-sheet">';
-    h += '<div class="dv-who"><div class="dv-ico">' + (gyn ? '♀' : '♥') + '</div><div><b>' + esc(T(gyn ? 'who_gyn' : 'who_gp')) + '</b>'
-      + '<div class="dv-small">' + esc(T(gyn ? 'who_gyn_sub' : (meno ? 'who_gp_meno_sub' : 'who_gp_sub'))) + '</div></div></div>';
-    var nt = rt === 'gyn?' ? T('note_route') : rt === 'gyn' ? T('note_direct') : (meno && PRIVATE_NOTE[d.cc] ? T('note_private') : '');
-    if (gyn && d.bp) nt += (nt ? SP() : '') + T('note_bp');
+    var rt = route(d), meno = gynNeeded(d), h = '<div id="dv-sheet">', w = who(d);
+    var spec = rt === 'gyn' || rt === 'gyn?' || rt === 'uro';
+    h += '<div class="dv-who"><div class="dv-ico">' + w.ico + '</div><div><b>' + esc(w.t) + '</b>'
+      + '<div class="dv-small">' + esc(w.s) + '</div></div></div>';
+    var nt = rt === 'gyn?' ? T('note_route') : rt === 'gyn' ? T('note_direct') : rt === 'uro' ? T('note_direct_uro')
+           : rt === 'gp?' ? T('note_route_uro')
+           : (meno && PRIVATE_NOTE[d.cc] ? T(d.male ? 'note_private_uro' : 'note_private') : '');
+    if (spec && d.bp) nt += (nt ? SP() : '') + T('note_bp');
     if (nt) h += '<div class="dv-small">' + esc(nt) + '</div>';
     var say = sayLines(d), q = QUO[lg()] || QUO.en;
     if (say.length) h += '<div class="dv-sec"><div class="dv-h">' + esc(T('h_say')) + '</div><div class="dv-quote">' + esc(q[0] + say.join(SP()) + q[1]) + '</div></div>';
@@ -275,7 +320,7 @@
     return h;
   }
   function plainText(d) {
-    var gyn = route(d) !== 'gp', out = [T('title'), '', T(gyn ? 'who_gyn' : 'who_gp') + ' — ' + T(gyn ? 'who_gyn_sub' : (gynNeeded(d) ? 'who_gp_meno_sub' : 'who_gp_sub'))];
+    var w = who(d), out = [T('title'), '', w.t + ' — ' + w.s];
     var say = sayLines(d); if (say.length) out.push('', T('h_say') + ':', say.join(SP()));
     var rows = dataRows(d); if (rows.length) { out.push('', T('h_data') + ':'); rows.forEach(function (x) { out.push('• ' + x[0] + ': ' + x[1] + (x[2] ? ' (' + x[2] + ')' : '')); }); }
     var labs = labRows(); if (labs.length) { out.push('', T('h_labs') + ':'); labs.forEach(function (x) { out.push('• ' + x[0] + ': ' + x[1] + (x[2] ? ' (' + x[2] + ')' : '')); }); }
