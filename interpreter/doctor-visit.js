@@ -32,6 +32,12 @@
     h_say:{ru:'Что сказать',uk:'Що сказати',en:'What to say',es:'Qué contar',de:'Was Sie sagen können',pt:'O que dizer',fr:'Quoi dire',pl:'Co powiedzieć',it:'Cosa dire',he:'מה לומר',ja:'伝えること',ko:'말할 내용'},
     h_data:{ru:'Мои данные · 4 недели',uk:'Мої дані · 4 тижні',en:'My data · 4 weeks',es:'Mis datos · 4 semanas',de:'Meine Daten · 4 Wochen',pt:'Meus dados · 4 semanas',fr:'Mes données · 4 semaines',pl:'Moje dane · 4 tygodnie',it:'I miei dati · 4 settimane',he:'הנתונים שלי · 4 שבועות',ja:'私のデータ・4週間',ko:'내 데이터 · 4주'},
     h_data_sub:{ru:'Среднее; рядом — изменение к 4 неделям до этого.',uk:'Середнє; поруч — зміна щодо 4 тижнів до цього.',en:'Averages; next to them, the change from the 4 weeks before.',es:'Medias; al lado, el cambio respecto a las 4 semanas anteriores.',de:'Durchschnitt; daneben die Veränderung zu den 4 Wochen davor.',pt:'Médias; ao lado, a mudança em relação às 4 semanas anteriores.',fr:'Moyennes ; à côté, l’écart avec les 4 semaines précédentes.',pl:'Średnie; obok — zmiana względem 4 wcześniejszych tygodni.',it:'Medie; accanto, la variazione rispetto alle 4 settimane prima.',he:'ממוצעים; לידם — השינוי לעומת 4 השבועות שלפני.',ja:'平均値。横はその前の4週間との差です。',ko:'평균값이며, 옆은 그 전 4주와 비교한 변화예요.'},
+    who_gp_meno_sub:{ru:'с менопаузой обычно начинают с него: он может сам подобрать лечение и направит к гинекологу, если нужно',uk:'з менопаузою зазвичай починають із нього: він може сам підібрати лікування й направить до гінеколога, якщо потрібно',en:'menopause care usually starts here: your family doctor can offer treatment and refer you to a gynecologist if needed',es:'con la menopausia se suele empezar por aquí: puede proponerte tratamiento y derivarte a ginecología si hace falta',de:'in den Wechseljahren ist die Hausarztpraxis oft die erste Anlaufstelle: Sie kann behandeln und bei Bedarf zur Frauenärztin überweisen',pt:'na menopausa costuma-se começar por aqui: o médico de família pode propor tratamento e encaminhar ao ginecologista, se for preciso',fr:'pour la ménopause, on commence souvent par lui : il peut proposer un traitement et vous orienter vers un gynécologue si besoin',pl:'z menopauzą zwykle zaczyna się od niego: może sam dobrać leczenie i skierować do ginekologa, jeśli trzeba',it:'per la menopausa di solito si parte da qui: il medico di famiglia può proporre una cura e indirizzarti dal ginecologo se serve',he:'בגיל המעבר בדרך כלל מתחילים כאן: רופא/ת המשפחה יכול/ה להציע טיפול ולהפנות לרופא/ת נשים במידת הצורך',ja:'更年期の相談は、まずかかりつけ医からが一般的です。治療を提案し、必要なら婦人科を紹介してくれます',ko:'갱년기 상담은 보통 여기서 시작해요. 가정의학과에서 치료를 권하고 필요하면 산부인과로 의뢰해 줘요'},
+    note_private:{ru:'К частному гинекологу обычно можно записаться и без направления.',uk:'До приватного гінеколога зазвичай можна записатися й без направлення.',en:'A private gynecologist will usually see you without a referral.',es:'En la sanidad privada, a ginecología se suele poder ir sin derivación.',de:'Private Frauenarztpraxen nehmen meist auch ohne Überweisung Termine an.',pt:'No privado, normalmente pode marcar com um ginecologista sem encaminhamento.',fr:'Dans le privé, on peut en général consulter un gynécologue sans orientation.',pl:'Do prywatnego ginekologa zwykle można zapisać się bez skierowania.',it:'Privatamente, dal ginecologo di solito si può andare senza impegnativa.',he:'לרופא/ת נשים פרטי/ת אפשר בדרך כלל לקבוע תור גם בלי הפניה.',ja:'自費の婦人科なら、紹介状なしで受診できることが多いです。',ko:'개인 산부인과는 보통 의뢰서 없이도 예약할 수 있어요.'},
+    note_direct:{ru:'Обычно к гинекологу можно записаться без направления.',uk:'Зазвичай до гінеколога можна записатися без направлення.',en:'You can usually book a gynecologist without a referral.',es:'Normalmente se puede pedir cita en ginecología sin derivación.',de:'Einen Termin in der Frauenarztpraxis bekommen Sie in der Regel ohne Überweisung.',pt:'Normalmente pode marcar ginecologista sem encaminhamento.',fr:'En général, on peut prendre rendez-vous chez un gynécologue sans orientation.',pl:'Zwykle do ginekologa można zapisać się bez skierowania.',it:'Di solito si può prenotare dal ginecologo senza impegnativa.',he:'בדרך כלל אפשר לקבוע תור לרופא/ת נשים בלי הפניה.',ja:'婦人科は通常、紹介状なしで予約できます。',ko:'보통 산부인과는 의뢰서 없이 예약할 수 있어요.'},
+    q_ref:{ru:'Нужна ли мне консультация гинеколога?',uk:'Чи потрібна мені консультація гінеколога?',en:'Should I also see a gynecologist?',es:'¿Necesito que me vea ginecología?',de:'Sollte ich zusätzlich zur Frauenärztin gehen?',pt:'Preciso de uma consulta de ginecologia?',fr:'Dois-je aussi consulter un gynécologue ?',pl:'Czy potrzebuję konsultacji ginekologa?',it:'Ho bisogno di una visita ginecologica?',he:'האם כדאי שאפנה גם לרופא/ת נשים?',ja:'婦人科も受診したほうがよいですか？',ko:'산부인과 진료도 받아야 할까요?'},
+    h_labs:{ru:'Мои анализы',uk:'Мої аналізи',en:'My lab results',es:'Mis análisis',de:'Meine Laborwerte',pt:'Meus exames',fr:'Mes analyses',pl:'Moje badania',it:'I miei esami',he:'הבדיקות שלי',ja:'私の検査結果',ko:'내 검사 결과'},
+    h_labs_sub:{ru:'Как вписаны в приложение; дата — день сдачи.',uk:'Як вписані в застосунок; дата — день здачі.',en:'As entered in the app; the date is when the test was taken.',es:'Tal como se anotaron en la app; la fecha es la del análisis.',de:'Wie in der App eingetragen; das Datum ist der Tag der Blutabnahme.',pt:'Como registrados no app; a data é a do exame.',fr:'Tels que saisis dans l’app ; la date est celle du prélèvement.',pl:'Tak jak wpisane w aplikacji; data — dzień pobrania.',it:'Come inseriti nell’app; la data è quella del prelievo.',he:'כפי שהוזנו באפליקציה; התאריך — יום הבדיקה.',ja:'アプリに入力した値です。日付は検査日です。',ko:'앱에 입력한 값이며, 날짜는 검사한 날이에요.'},
     h_ask:{ru:'Спросите врача',uk:'Запитайте лікаря',en:'Ask your doctor',es:'Pregunta en la consulta',de:'Fragen Sie nach',pt:'Pergunte ao médico',fr:'Demandez au médecin',pl:'Zapytaj lekarza',it:'Chiedi al medico',he:'שאלו את הרופא/ה',ja:'医師への質問',ko:'의사에게 물어보세요'},
     h_take:{ru:'Возьмите с собой',uk:'Візьміть із собою',en:'Bring with you',es:'Lleva contigo',de:'Nehmen Sie mit',pt:'Leve com você',fr:'À apporter',pl:'Zabierz ze sobą',it:'Porta con te',he:'קחו איתכם',ja:'持っていくもの',ko:'챙겨 갈 것'},
     say_age:{ru:'Мне {a}.',uk:'Мені {a}.',en:'I’m {a}.',es:'Tengo {a} años.',de:'Ich bin {a}.',pt:'Tenho {a} anos.',fr:'J’ai {a} ans.',pl:'Mam {a} lat.',it:'Ho {a} anni.',he:'אני בת {a}.',ja:'{a}歳です。',ko:'{a}세예요.'},
@@ -108,7 +114,7 @@
     var c = P.complaint || null, cItems = (c && Array.isArray(c.items)) ? c.items : [];
     var cDays = (c && /^\d{4}-\d{2}-\d{2}$/.test(c.since || '')) ? Math.floor((now - new Date(c.since + 'T00:00:00')) / DAY) : 0;
     return {
-      P:P, age:age, cs:cs, gaps:gaps, starts:st,
+      P:P, age:age, cc:country(), cs:cs, gaps:gaps, starts:st,
       cItems:cItems, cSince:(c && c.since) || '', cRel:cItems.filter(function (k) { return CMP_KEYS.indexOf(k) >= 0; }),
       long:cDays >= 42 && cItems.some(function (k) { return CMP_KEYS.indexOf(k) >= 0; }),
       hfDays:hfDays, hfMode:hfMode,
@@ -129,6 +135,28 @@
     return r;
   }
   function gynNeeded(d) { return d.long || d.hfDays >= 8 || (d.irr && d.cs !== 'absent'); }
+  // ── куда идти — по стране, где она живёт (2026-11-06, слово владельца: «в Европе идут к семейному врачу») ──
+  // Страна — по часовому поясу телефона, а не по языку: украинка в Валенсии пишет по-украински, а лечится в Испании.
+  // 'gp' — с менопаузой начинают у семейного врача (он же назначает лечение и направляет);
+  // 'gyn' — к гинекологу обычно напрямую. Нет в списке — общий текст «в некоторых странах…».
+  // Источники: Constantine 2016 (Post Reprod Health, doi:10.1177/2053369116632439: UK/IT/ES — GP-гейткипинг, FR/DE — прямой доступ);
+  // NHSU (Украина: акушер-гинеколог без направления); Норвегия/Дания — GP-гейткипинг (BJGP Open 2024, Scand J Prim Health Care 2023).
+  var ROUTE = { GB:'gp', IE:'gp', NL:'gp', DK:'gp', NO:'gp', PT:'gp', ES:'gp', IT:'gp', CA:'gp', AU:'gp', NZ:'gp',
+                DE:'gyn', AT:'gyn', FR:'gyn', UA:'gyn', RU:'gyn', PL:'gyn', IL:'gyn', US:'gyn', JP:'gyn', KR:'gyn' };
+  var PRIVATE_NOTE = { ES:1, IT:1, PT:1 };   // в госсистеме — через семейного, частно — напрямую
+  var TZ = { 'Europe/Madrid':'ES','Atlantic/Canary':'ES','Africa/Ceuta':'ES','Europe/London':'GB','Europe/Dublin':'IE','Europe/Amsterdam':'NL',
+    'Europe/Copenhagen':'DK','Europe/Oslo':'NO','Europe/Lisbon':'PT','Atlantic/Madeira':'PT','Atlantic/Azores':'PT','Europe/Rome':'IT',
+    'Europe/Berlin':'DE','Europe/Vienna':'AT','Europe/Paris':'FR','Europe/Kyiv':'UA','Europe/Kiev':'UA','Europe/Uzhgorod':'UA','Europe/Zaporozhye':'UA',
+    'Europe/Moscow':'RU','Europe/Samara':'RU','Asia/Yekaterinburg':'RU','Asia/Novosibirsk':'RU','Asia/Vladivostok':'RU','Europe/Warsaw':'PL',
+    'Asia/Jerusalem':'IL','Asia/Tel_Aviv':'IL','Asia/Tokyo':'JP','Asia/Seoul':'KR','Pacific/Auckland':'NZ',
+    'America/New_York':'US','America/Chicago':'US','America/Denver':'US','America/Los_Angeles':'US','America/Phoenix':'US','America/Anchorage':'US','Pacific/Honolulu':'US',
+    'America/Detroit':'US','America/Toronto':'CA','America/Vancouver':'CA','America/Edmonton':'CA','America/Winnipeg':'CA','America/Halifax':'CA','America/St_Johns':'CA' };
+  function country() {
+    try { var tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; if (TZ[tz]) return TZ[tz]; if (/^Australia\//.test(tz)) return 'AU'; } catch (e) {}
+    return '';   // по языку не гадаем: язык ≠ страна проживания
+  }
+  // 'gyn' | 'gp' | 'gyn?' (страна неизвестна — гинеколог + общая оговорка). Повод только давление → всегда семейный.
+  function route(d) { if (!gynNeeded(d)) return 'gp'; var r = ROUTE[d.cc]; return r === 'gp' ? 'gp' : r === 'gyn' ? 'gyn' : 'gyn?'; }
   function hidden() { var t = +J(K_HIDE, 0) || 0; return t && Date.now() - t < HIDE_DAYS * DAY; }
 
   // ── «что сказать» от первого лица ──
@@ -155,9 +183,17 @@
     if (d.bpAvg) rows.push([T('d_bp'), d.bpAvg, '']);
     return rows;
   }
+  // Анализы, вписанные в приложение (vialp_labs: {k:{v,u,raw,d}}) — как на бланке: число, единица, дата.
+  function labRows() {
+    var a = J('vialp_labs', {}) || {}, defs = (typeof LAB_DEFS !== 'undefined' && LAB_DEFS) || [], out = [];
+    defs.forEach(function (df) { var x = a[df.k]; if (!x || x.raw == null || isNaN(x.raw)) return;
+      out.push([ (df.n && (df.n[lg()] || df.n.en)) || df.k, String(x.raw).replace('.', (lg() === 'en' || lg() === 'ja' || lg() === 'ko' || lg() === 'he') ? '.' : ',') + ' ' + (x.u || df.c || ''), x.d ? fmtDate(x.d) : '' ]); });
+    return out.slice(0, 25);
+  }
   function questions(d) {
     var q = [];
     if (gynNeeded(d)) q.push(T('q1'), T('q2'), T('q3'), T('q4')); else q.push(T('q3'));
+    if (route(d) === 'gp' && gynNeeded(d)) q.push(T('q_ref'));
     if (d.bp) q.push(T('q_bp'));
     return q;
   }
@@ -205,7 +241,7 @@
   }
 
   function cardHTML(d) {
-    var r = reasons(d), gyn = gynNeeded(d);
+    var r = reasons(d), gyn = route(d) !== 'gp';
     return '<div class="dv-badge">✦ ' + esc(T('badge')) + '</div>'
       + '<h2 class="dv-title">' + esc(T('title')) + '</h2>'
       + '<p class="dv-lead">' + esc(r.join(SP()) + SP() + T(gyn ? 'lead_gyn' : 'lead_gp')) + '</p>'
@@ -213,16 +249,22 @@
       + '<button type="button" class="dv-ghost" onclick="vialDoctor.hide()">' + esc(T('dismiss')) + '</button>';
   }
   function sheetHTML(d) {
-    var gyn = gynNeeded(d), h = '<div id="dv-sheet">';
+    var rt = route(d), gyn = rt !== 'gp', meno = gynNeeded(d), h = '<div id="dv-sheet">';
     h += '<div class="dv-who"><div class="dv-ico">' + (gyn ? '♀' : '♥') + '</div><div><b>' + esc(T(gyn ? 'who_gyn' : 'who_gp')) + '</b>'
-      + '<div class="dv-small">' + esc(T(gyn ? 'who_gyn_sub' : 'who_gp_sub')) + '</div></div></div>';
-    if (gyn) h += '<div class="dv-small">' + esc(T('note_route') + (d.bp ? SP() + T('note_bp') : '')) + '</div>';
+      + '<div class="dv-small">' + esc(T(gyn ? 'who_gyn_sub' : (meno ? 'who_gp_meno_sub' : 'who_gp_sub'))) + '</div></div></div>';
+    var nt = rt === 'gyn?' ? T('note_route') : rt === 'gyn' ? T('note_direct') : (meno && PRIVATE_NOTE[d.cc] ? T('note_private') : '');
+    if (gyn && d.bp) nt += (nt ? SP() : '') + T('note_bp');
+    if (nt) h += '<div class="dv-small">' + esc(nt) + '</div>';
     var say = sayLines(d), q = QUO[lg()] || QUO.en;
     if (say.length) h += '<div class="dv-sec"><div class="dv-h">' + esc(T('h_say')) + '</div><div class="dv-quote">' + esc(q[0] + say.join(SP()) + q[1]) + '</div></div>';
     var rows = dataRows(d);
     if (rows.length) h += '<div class="dv-sec"><div class="dv-h">' + esc(T('h_data')) + '</div><table class="dv-tbl">'
       + rows.map(function (x) { return '<tr><td>' + esc(x[0]) + '</td><td>' + esc(x[1]) + '</td><td>' + esc(x[2]) + '</td></tr>'; }).join('')
       + '</table><div class="dv-small" style="margin-top:6px;">' + esc(T('h_data_sub')) + '</div></div>';
+    var labs = labRows();
+    if (labs.length) h += '<div class="dv-sec"><div class="dv-h">' + esc(T('h_labs')) + '</div><table class="dv-tbl">'
+      + labs.map(function (x) { return '<tr><td>' + esc(x[0]) + '</td><td>' + esc(x[1]) + '</td><td>' + esc(x[2]) + '</td></tr>'; }).join('')
+      + '</table><div class="dv-small" style="margin-top:6px;">' + esc(T('h_labs_sub')) + '</div></div>';
     h += '<div class="dv-sec"><div class="dv-h">' + esc(T('h_ask')) + '</div><ol class="dv-ol">'
       + questions(d).map(function (q) { return '<li>' + esc(q) + '</li>'; }).join('') + '</ol></div>';
     h += '<div class="dv-sec"><div class="dv-h">' + esc(T('h_take')) + '</div><ul class="dv-ol" style="list-style:disc;">'
@@ -233,9 +275,10 @@
     return h;
   }
   function plainText(d) {
-    var gyn = gynNeeded(d), out = [T('title'), '', T(gyn ? 'who_gyn' : 'who_gp') + ' — ' + T(gyn ? 'who_gyn_sub' : 'who_gp_sub')];
+    var gyn = route(d) !== 'gp', out = [T('title'), '', T(gyn ? 'who_gyn' : 'who_gp') + ' — ' + T(gyn ? 'who_gyn_sub' : (gynNeeded(d) ? 'who_gp_meno_sub' : 'who_gp_sub'))];
     var say = sayLines(d); if (say.length) out.push('', T('h_say') + ':', say.join(SP()));
     var rows = dataRows(d); if (rows.length) { out.push('', T('h_data') + ':'); rows.forEach(function (x) { out.push('• ' + x[0] + ': ' + x[1] + (x[2] ? ' (' + x[2] + ')' : '')); }); }
+    var labs = labRows(); if (labs.length) { out.push('', T('h_labs') + ':'); labs.forEach(function (x) { out.push('• ' + x[0] + ': ' + x[1] + (x[2] ? ' (' + x[2] + ')' : '')); }); }
     out.push('', T('h_ask') + ':'); questions(d).forEach(function (q, i) { out.push((i + 1) + '. ' + q); });
     out.push('', T('h_take') + ':'); takeLines(d).forEach(function (q) { out.push('• ' + q); });
     out.push('', T('note'));
