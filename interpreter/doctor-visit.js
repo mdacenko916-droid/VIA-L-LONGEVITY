@@ -60,6 +60,12 @@
     u_h:{ru:'ч',uk:'год',en:'h',es:'h',de:'Std',pt:'h',fr:'h',pl:'godz.',it:'h',he:'ש׳',ja:'時間',ko:'시간'},
     u_min:{ru:'мин',uk:'хв',en:'min',es:'min',de:'Min',pt:'min',fr:'min',pl:'min',it:'min',he:'דק׳',ja:'分',ko:'분'},
     u_ms:{ru:'мс',uk:'мс',en:'ms',es:'ms',de:'ms',pt:'ms',fr:'ms',pl:'ms',it:'ms',he:'מ״ש',ja:'ms',ko:'ms'},
+    sp_h:{ru:'Специалист VIA·L',uk:'Спеціаліст VIA·L',en:'VIA·L specialist',es:'Especialista de VIA·L',de:'VIA·L-Spezialist',pt:'Especialista VIA·L',fr:'Spécialiste VIA·L',pl:'Specjalista VIA·L',it:'Specialista VIA·L',he:'מומחה VIA·L',ja:'VIA·Lの専門家',ko:'VIA·L 전문가'},
+    sp_free:{ru:'С этим в приложении работают специалисты VIA·L: разберут ваши данные вместе с вами и помогут подготовиться к врачу. Знакомство бесплатное.',uk:'З цим у застосунку працюють спеціалісти VIA·L: розберуть ваші дані разом із вами й допоможуть підготуватися до лікаря. Знайомство безкоштовне.',en:'VIA·L specialists in the app work with exactly this: they’ll go through your data with you and help you prepare for the doctor. The intro call is free.',es:'En la app, los especialistas de VIA·L trabajan justo con esto: revisarán tus datos contigo y te ayudarán a preparar la visita al médico. La presentación es gratuita.',de:'Genau damit arbeiten die VIA·L-Spezialisten in der App: Sie gehen Ihre Daten mit Ihnen durch und helfen bei der Vorbereitung auf den Arzttermin. Das Kennenlernen ist kostenlos.',pt:'No app, os especialistas VIA·L trabalham exatamente com isso: vão analisar seus dados com você e ajudar a preparar a consulta. A conversa inicial é gratuita.',fr:'Dans l’app, les spécialistes VIA·L travaillent justement là-dessus : ils passent vos données en revue avec vous et vous aident à préparer la consultation. La première rencontre est gratuite.',pl:'W aplikacji właśnie tym zajmują się specjaliści VIA·L: przejrzą z Tobą Twoje dane i pomogą przygotować się do wizyty. Rozmowa zapoznawcza jest bezpłatna.',it:'Nell’app gli specialisti VIA·L si occupano proprio di questo: esaminano i tuoi dati insieme a te e ti aiutano a prepararti alla visita. Il primo incontro è gratuito.',he:'באפליקציה מומחי VIA·L עוסקים בדיוק בזה: יעברו איתכם על הנתונים ויעזרו להתכונן לרופא. שיחת ההיכרות בחינם.',ja:'アプリではVIA·Lの専門家がまさにこの相談に対応しています。一緒にデータを確認し、受診の準備を手伝います。初回の顔合わせは無料です。',ko:'앱에서는 VIA·L 전문가가 바로 이런 고민을 다뤄요. 함께 데이터를 살펴보고 진료 준비를 도와드려요. 첫 소개 상담은 무료예요.'},
+    sp_btn:{ru:'Выбрать специалиста',uk:'Обрати спеціаліста',en:'Choose a specialist',es:'Elegir especialista',de:'Spezialisten wählen',pt:'Escolher especialista',fr:'Choisir un spécialiste',pl:'Wybierz specjalistę',it:'Scegli uno specialista',he:'לבחור מומחה',ja:'専門家を選ぶ',ko:'전문가 선택하기'},
+    sp_linked:{ru:'Обсудите это и с вашим специалистом VIA·L.',uk:'Обговоріть це й зі своїм спеціалістом VIA·L.',en:'Talk this over with your VIA·L specialist too.',es:'Coméntalo también con tu especialista de VIA·L.',de:'Besprechen Sie das auch mit Ihrem VIA·L-Spezialisten.',pt:'Converse sobre isso também com seu especialista VIA·L.',fr:'Parlez-en aussi à votre spécialiste VIA·L.',pl:'Omów to też ze swoim specjalistą VIA·L.',it:'Parlane anche con il tuo specialista VIA·L.',he:'דברו על זה גם עם המומחה שלכם ב־VIA·L.',ja:'担当のVIA·Lの専門家にも相談してください。',ko:'담당 VIA·L 전문가와도 이야기해 보세요.'},
+    sp_write:{ru:'Написать специалисту',uk:'Написати спеціалісту',en:'Message your specialist',es:'Escribir a tu especialista',de:'Spezialisten anschreiben',pt:'Escrever ao especialista',fr:'Écrire à votre spécialiste',pl:'Napisz do specjalisty',it:'Scrivi allo specialista',he:'לכתוב למומחה',ja:'専門家にメッセージ',ko:'전문가에게 메시지'},
+    sp_card:{ru:'или разобрать со специалистом VIA·L →',uk:'або розібрати зі спеціалістом VIA·L →',en:'or go through it with a VIA·L specialist →',es:'o revisarlo con un especialista de VIA·L →',de:'oder mit einem VIA·L-Spezialisten durchgehen →',pt:'ou analisar com um especialista VIA·L →',fr:'ou en parler avec un spécialiste VIA·L →',pl:'albo omówić to ze specjalistą VIA·L →',it:'oppure esaminarlo con uno specialista VIA·L →',he:'או לעבור על זה עם מומחה VIA·L ←',ja:'またはVIA·Lの専門家と確認する →',ko:'또는 VIA·L 전문가와 살펴보기 →'},
     q1:{ru:'С чем могут быть связаны эти изменения?',uk:'З чим можуть бути пов’язані ці зміни?',en:'What could be behind these changes?',es:'¿Con qué pueden estar relacionados estos cambios?',de:'Womit können diese Veränderungen zusammenhängen?',pt:'Com o que essas mudanças podem estar relacionadas?',fr:'À quoi ces changements peuvent-ils être liés ?',pl:'Z czym mogą być związane te zmiany?',it:'A cosa possono essere legati questi cambiamenti?',he:'במה השינויים האלה יכולים להיות קשורים?',ja:'これらの変化は何と関係している可能性がありますか？',ko:'이런 변화는 무엇과 관련이 있을까요?'},
     q2:{ru:'Подходит ли мне гормональная терапия — какие за и против в моём случае?',uk:'Чи підходить мені гормональна терапія — які за і проти в моєму випадку?',en:'Is hormone therapy an option for me — what are the pros and cons in my case?',es:'¿La terapia hormonal es una opción para mí? ¿Qué pros y contras tiene en mi caso?',de:'Kommt eine Hormontherapie für mich infrage — was spricht in meinem Fall dafür und dagegen?',pt:'A terapia hormonal é uma opção para mim — quais os prós e contras no meu caso?',fr:'Le traitement hormonal est-il envisageable pour moi — quels sont les pour et les contre dans mon cas ?',pl:'Czy terapia hormonalna jest dla mnie — jakie są za i przeciw w moim przypadku?',it:'La terapia ormonale è un’opzione per me? Quali pro e contro nel mio caso?',he:'האם טיפול הורמונלי מתאים לי — מה היתרונות והחסרונות במקרה שלי?',ja:'ホルモン療法は私に合いますか？私の場合の利点と欠点は？',ko:'호르몬 치료가 저에게 맞을까요? 제 경우 장단점은 무엇인가요?'},
     q3:{ru:'Какие анализы мне стоит сдать?',uk:'Які аналізи мені варто здати?',en:'Which tests should I have?',es:'¿Qué análisis debería hacerme?',de:'Welche Untersuchungen sollte ich machen lassen?',pt:'Quais exames devo fazer?',fr:'Quels examens devrais-je faire ?',pl:'Jakie badania powinnam zrobić?',it:'Quali esami dovrei fare?',he:'אילו בדיקות כדאי לי לעשות?',ja:'どんな検査を受けるとよいですか？',ko:'어떤 검사를 받아야 할까요?'},
@@ -222,6 +228,7 @@
     + '.dv-who b{font-size:var(--fs-title);color:var(--t1);font-weight:500;display:block;}'
     + '.dv-ico{width:38px;height:38px;border-radius:50%;border:1px solid var(--gold-lt);display:flex;align-items:center;justify-content:center;color:var(--gold-lt);font-size:20px;flex:none;}'
     + '.dv-small{font-size:var(--fs-cap);color:var(--t3);line-height:1.45;}'
+    + '.dv-ghost.dv-spec{color:var(--gold-lt);text-decoration:none;font-size:var(--fs-body);margin-top:10px;}'
     + '.dv-sec{margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08);}'
     + '.dv-h{font-family:"Playfair Display",serif;font-size:var(--fs-title);color:var(--gold-lt);margin:0 0 8px;}'
     + '.dv-quote{border-left:2px solid var(--gold-lt);padding:2px 0 2px 12px;font-style:italic;font-size:var(--fs-body);line-height:1.6;color:var(--t1);}'
@@ -237,12 +244,23 @@
     document.head.appendChild(s);
   }
 
+  // ── специалист VIA·L (2026-11-07, слово владельца: «с менопаузой и андропаузой в первую очередь занимается специалист
+  // в приложении», дальше — гинеколог/эндокринолог из каталога). Знакомство бесплатное, расчёт — мимо приложения.
+  // Есть связка → «написать специалисту»; нет → каталог, нужные специальности первыми.
+  function specLinked() { try { var l = JSON.parse(localStorage.getItem('vial_spec_link') || 'null'); return !!(l && l.code && !l.closed); } catch (e) { return false; } }
+  function canSpec() { return typeof window.vialGoSpec === 'function'; }
+  function goSpec(male) {
+    try { if (typeof closeCircModal === 'function') closeCircModal(); } catch (e) {}
+    if (specLinked()) vialGoSpec({ chat: 1 });
+    else vialGoSpec({ catalog: 1, prefer: male ? ['nutritionist', 'endocrinologist', 'urologist', 'andrologist'] : ['nutritionist', 'gynecologist', 'endocrinologist'] });
+  }
   function cardHTML(d) {
     var r = reasons(d);
     return '<div class="dv-badge">✦ ' + esc(T('badge')) + '</div>'
       + '<h2 class="dv-title">' + esc(T('title')) + '</h2>'
       + '<p class="dv-lead">' + esc(r.join(SP()) + SP() + T('lead_gp')) + '</p>'
       + '<button type="button" class="dv-solid" onclick="vialDoctor.open()">' + esc(T('open')) + '</button>'
+      + (canSpec() ? '<button type="button" class="dv-ghost dv-spec" onclick="vialDoctor.spec()">' + esc(specLinked() ? T('sp_write') + (lg() === 'he' ? ' ←' : ' →') : T('sp_card')) + '</button>' : '')
       + '<button type="button" class="dv-ghost" onclick="vialDoctor.hide()">' + esc(T('dismiss')) + '</button>';
   }
   // К кому идти: заголовок, подпись, значок — по маршруту и полу
@@ -270,6 +288,9 @@
       + questions(d).map(function (q) { return '<li>' + esc(q) + '</li>'; }).join('') + '</ol></div>';
     h += '<div class="dv-sec"><div class="dv-h">' + esc(T('h_take')) + '</div><ul class="dv-ol" style="list-style:disc;">'
       + takeLines(d).map(function (q) { return '<li>' + esc(q) + '</li>'; }).join('') + '</ul></div>';
+    if (canSpec()) { var lk = specLinked();
+      h += '<div class="dv-sec dv-spbox"><div class="dv-h">' + esc(T('sp_h')) + '</div><div class="dv-small" style="font-size:var(--fs-body);color:var(--t2);">' + esc(T(lk ? 'sp_linked' : 'sp_free')) + '</div>'
+        + '<button type="button" class="dv-out" style="width:100%;margin-top:10px;" onclick="vialDoctor.spec()">' + esc(T(lk ? 'sp_write' : 'sp_btn')) + ' →</button></div>'; }
     h += '<div class="dv-row"><button type="button" class="dv-solid" id="dv-showbtn" onclick="vialDoctor.big()">' + esc(T('show')) + '</button>'
       + '<button type="button" class="dv-out" onclick="vialDoctor.share()">' + esc(T('share')) + '</button></div>';
     h += '<div class="dv-small" style="text-align:center;margin-top:12px;">' + esc(T('note')) + '</div></div>';
@@ -290,6 +311,7 @@
     // Есть ли сейчас повод к врачу (без учёта «Уже была у врача»): страница по нему включает предложение
     // разбора со специалистом ПОД разбором дня (_reviewReason). В саму карточку продажу не ставим —
     // медицинский вывод не должен заканчиваться покупкой (правило ревью, см. _reviewReason).
+    spec: function () { var d = collect(); goSpec(!!(d && d.male)); },
     active: function () { try { var d = collect(); return !!(d && reasons(d).length); } catch (e) { return false; } },
     // activeKey — день на экране: карточка только на сегодняшнем, не в истории
     render: function (activeKey) {

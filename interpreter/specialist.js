@@ -1044,7 +1044,7 @@ function catLabel(c){ const m=CAT_LBL[c]; return m?(m[lang]||m.en):(c||''); }
 
 let _showcaseEmpty = true;
 let _showcaseList = null;   // кэш списка → перерисовка при смене языка без повторного запроса
-let _catFilter='all', _catLang='all', _chosenIdx=null;   // выбранный из каталога → показ в нижнем блоке
+let _catFilter='all', _catLang='all', _chosenIdx=null, _catPrefer=null;   // _catPrefer — специальности первыми («Подготовка к визиту», 2026-11-07)   // выбранный из каталога → показ в нижнем блоке
 function updateShowcaseFallback(){
   const fb = $id('bookIntro');
   if(fb) fb.style.display = (_showcaseEmpty && (lang==='ru'||lang==='uk')) ? 'flex' : 'none';
@@ -1057,6 +1057,16 @@ async function loadShowcase(){
     try{ localStorage.setItem('vial_showcase_cache', JSON.stringify({lang:lang, list:_showcaseList})); }catch(e){}
   }catch(e){ if(!_showcaseList) _showcaseList = []; }
   renderShowcase();
+  if(_catalogOpen()) renderCatalog();   // каталог открыт — свежий список сразу в нём
+}
+// Пришли из «Подготовки к визиту» (doctor-visit.js): сразу каталог, нужные специальности первыми.
+// Пустая витрина — остаёмся на главном экране вкладки (там знакомство с основателем).
+function _applyWant(){
+  if(!WANT.catalog) return;
+  const go=()=>{ if(!WANT.catalog || !(_showcaseList&&_showcaseList.length)) return;
+    WANT.catalog=0; _catFilter='all'; _catLang='all'; openCatalog(); _catPrefer=WANT.prefer||null; renderCatalog();
+    const note=$id('catMatchNote'); if(note){ note.textContent=catL('matched'); note.style.display='block'; } };
+  if(_showcaseList && _showcaseList.length) go(); else loadShowcase().then(go, function(){});
 }
 // Общая карточка специалиста (teaser + каталог). В каталоге карточка кликабельна → выбор в нижний блок.
 function specCard(s, idx, inCatalog){
@@ -1178,6 +1188,11 @@ function renderCatalog(){
     if(_catLang!=='all'){ const ls=(s.langs||'').toLowerCase().split(',').map(x=>x.trim()); if(!ls.includes(_catLang)) return false; }
     return true;
   });
+  if(_catPrefer && _catPrefer.length){   // нужные специальности первыми, внутри — говорящие на языке клиента
+    const rk=s=>{ const sp=String(s.specialty||'').toLowerCase(); let i=_catPrefer.findIndex(p=>sp.indexOf(p)>=0); if(i<0)i=99;
+      const ls=(s.langs||'').toLowerCase().split(',').map(x=>x.trim()); return i*2+(ls.includes(lang)?0:1); };
+    items.sort((a,b)=>rk(a.s)-rk(b.s) || a.i-b.i);
+  }
   listEl.innerHTML = items.length ? items.map(({s,i})=>specCard(s,i,true)).join('') : `<div style="text-align:center;color:var(--t3);font-size:var(--fs-body);padding:20px 0;">${esc(catL('empty'))}</div>`;
 }
 function refreshCatalogTexts(){
@@ -1196,6 +1211,7 @@ function openCatalog(){
   try{ _top(); }catch(e){}
 }
 function closeCatalog(){
+  _catPrefer=null;
   $id('catalogView').style.display='none';
   const card=ROOT.querySelector('.card'); if(card)card.style.display='';
 }
@@ -1464,6 +1480,7 @@ try{ const c=JSON.parse(localStorage.getItem('vial_showcase_cache')||'null'); if
   ]).then(show, show);
   if(_showcaseList) loadShowcase();   // обновить кэш в фоне
 })();
+_applyWant();
 }
 
 // ── Подключение ──────────────────────────────────────────────────────────────
@@ -1497,6 +1514,7 @@ function open(want){
   loadShowcase();
   initReview();         // разбор: товар из стора, ?review=1 → сразу экран покупки
   if(WANT.chat && window._link && window._link.code) openChat();
+  _applyWant();
 }
 // Уход с вкладки. Раньше страница выгружалась целиком: переписка закрывалась, опрос и запись голоса умирали.
 function hide(){
