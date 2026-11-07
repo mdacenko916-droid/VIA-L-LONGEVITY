@@ -1924,11 +1924,11 @@ const _RESP_NOTE = {
   de:'Beratung und Begleitung erbringt dein Spezialist und verantwortet sie. VIA-L stellt die Software bereit und ist nicht Vertragspartei zwischen dir und dem Spezialisten. Die Zahlung geht direkt an den Spezialisten: Die Plattform nimmt sie nicht entgegen, verwahrt sie nicht und erstattet sie nicht.',
   pt:'As consultas e o acompanhamento são prestados pelo seu especialista, que é responsável por eles. A VIA-L fornece o software e não é parte do contrato entre você e o especialista. O pagamento vai diretamente ao especialista: a plataforma não o recebe, não o retém nem o reembolsa.',
   fr:'Les consultations et le suivi sont assurés par votre spécialiste, qui en est responsable. VIA-L fournit le logiciel et n’est pas partie au contrat entre vous et le spécialiste. Le paiement va directement au spécialiste : la plateforme ne le reçoit pas, ne le conserve pas et ne le rembourse pas.',
-  pl:'Konsultacje i prowadzenie zapewnia Twój specjalista i to on za nie odpowiada. VIA-L dostarcza oprogramowanie i nie jest stroną umowy między Tobą a specjalistą. Płatność trafia bezpośrednio do specjalisty: platforma jej nie przyjmuje, nie przechowuje i nie zwraca.',
+  pl:'Konsultacje i opiekę zapewnia Twój specjalista i to on za nie odpowiada. VIA-L dostarcza oprogramowanie i nie jest stroną umowy między Tobą a specjalistą. Płatność trafia bezpośrednio do specjalisty: platforma jej nie przyjmuje, nie przechowuje i nie zwraca.',
   it:'Le consulenze e il percorso sono erogati dal tuo specialista, che ne è responsabile. VIA-L fornisce il software e non è parte del contratto tra te e lo specialista. Il pagamento va direttamente allo specialista: la piattaforma non lo riceve, non lo trattiene e non lo rimborsa.',
   he:'הייעוץ והליווי ניתנים על ידי המומחה שלכם, והאחריות עליהם היא שלו. VIA-L מספקת את התוכנה ואינה צד להסכם ביניכם לבין המומחה. התשלום עובר ישירות למומחה: הפלטפורמה אינה מקבלת, מחזיקה או מחזירה אותו.',
   ja:'相談およびサポートは担当の専門家が提供し、その責任も同氏が負います。VIA-Lはソフトウェアを提供するのみで、あなたと専門家の契約の当事者ではありません。お支払いは専門家へ直接行われ、プラットフォームは受領・保管・返金を行いません。',
-  ko:'상담과 관리는 담당 전문가가 제공하며 그에 대한 책임도 전문가에게 있습니다. VIA-L은 소프트웨어를 제공할 뿐, 귀하와 전문가 간 계약의 당사자가 아닙니다. 결제는 전문가에게 직접 전달되며 플랫폼은 이를 수령·보관·환불하지 않습니다.',
+  ko:'상담과 케어는 담당 전문가가 제공하며 그에 대한 책임도 전문가에게 있습니다. VIA-L은 소프트웨어를 제공할 뿐, 귀하와 전문가 간 계약의 당사자가 아닙니다. 결제는 전문가에게 직접 전달되며 플랫폼은 이를 수령·보관·환불하지 않습니다.',
 };
 
 function buildInterpreterEmailBody(name, tier, code, lang) {
