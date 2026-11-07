@@ -79,6 +79,14 @@
         .map(function (n) { return { id: Number(n.id) }; });
       if (old.length) await p.cancel({ notifications: old });
       if (!items || !items.length) return true;
+      // Кнопка «✓ Принято» прямо в уведомлении (2026-11-08): приняв лекарство, человек отмечает это, а не
+      // смахивает напоминание. Подпись — на языке приложения на момент постановки (переставляется при каждом
+      // открытии). «Принято» на заблокированном экране ничего о здоровье не говорит. foreground — открыть
+      // приложение: так отметка надёжно доходит до страницы и человек видит её в списке.
+      try {
+        if (p.registerActionTypes) await p.registerActionTypes({ types: [{ id: 'VIAL_INTAKE', actions: [
+          { id: 'taken', title: (typeof _ikTakenLabel === 'function' ? _ikTakenLabel() : '✓'), foreground: true }] }] });
+      } catch (e) {}
       await p.schedule({
         notifications: items.slice(0, 56).map(function (it) {
           return {
@@ -91,6 +99,7 @@
             // Время приёма — чтобы клик открыл ИМЕННО его, а не весь список. Названий здесь нет
             // и не будет: extra не видно на экране, но и хранить их незачем — время однозначно.
             extra: { kind: 'intake', t: String(it.t || '') },
+            actionTypeId: 'VIAL_INTAKE',
           };
         }),
       });
@@ -122,13 +131,24 @@
   try {
     var p0 = ln();
     if (p0 && p0.addListener) {
-      p0.addListener('localNotificationActionPerformed', function (ev) {
+      var _onAct = function (ev) {
         try {
           var ex = ev && ev.notification && ev.notification.extra;
           if (typeof navTo === 'function') navTo('today');
-          if (ex && ex.kind === 'intake' && typeof _ikOpen === 'function') { var _t = ex.t; setTimeout(function () { _ikOpen(_t); }, 300); return; }
+          if (ex && ex.kind === 'intake' && typeof _ikOpen === 'function') {
+            var _t = ex.t;
+            // «✓ Принято» в уведомлении — отмечаем все приёмы этого времени, список открываем уже с галочками.
+            if (ev.actionId === 'taken' && typeof _ikMarkAt === 'function') { try { _ikMarkAt(_t); } catch (e) {} }
+            setTimeout(function () { try { if (typeof _rdIntake === 'function') _rdIntake(); } catch (e) {} _ikOpen(_t); }, 300); return;
+          }
           if (typeof openDayPlanPanel === 'function') setTimeout(openDayPlanPanel, 300);   // модал «Памятка дня»
         } catch (e) {}
+      };
+      p0.addListener('localNotificationActionPerformed', function (ev) {
+        // Холодный старт по уведомлению: событие приходит, пока остальные скрипты (intake.js) ещё грузятся —
+        // ждём загрузки страницы, иначе отметка «Принято» потерялась бы.
+        if (document.readyState !== 'complete') { window.addEventListener('load', function () { setTimeout(function () { _onAct(ev); }, 0); }, { once: true }); return; }
+        _onAct(ev);
       });
     }
   } catch (e) {}

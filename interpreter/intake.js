@@ -81,6 +81,10 @@
     push: { ru: 'Ваш приём в {t} — откройте VIA·L', uk: 'Ваш прийом о {t} — відкрийте VIA·L', en: 'Your {t} intake — open VIA·L', es: 'Tu toma de las {t} — abre VIA·L', de: 'Deine Einnahme um {t} — öffne VIA·L', pt: 'A sua toma das {t} — abra a VIA·L', fr: 'Votre prise de {t} — ouvrez VIA·L', pl: 'Twoje przyjęcie o {t} — otwórz VIA·L', it: 'La tua assunzione delle {t} — apri VIA·L', he: 'הנטילה שלכם ב־{t} — פתחו את VIA·L', ja: '{t} の服用 — VIA·L を開く', ko: '{t} 복용 — VIA·L 열기' },
     step_l: { ru: 'Когда вы их принимаете', uk: 'Коли ви їх приймаєте', en: 'When you take them', es: 'Cuándo los tomas', de: 'Wann du sie einnimmst', pt: 'Quando os toma', fr: 'Quand vous les prenez', pl: 'Kiedy je przyjmujesz', it: 'Quando li prendi', he: 'מתי אתם נוטלים אותם', ja: '服用のタイミング', ko: '언제 복용하나요' },
     step_q: { ru: 'Время подставлено по правилам приёма — поменяйте под себя. Напоминания, сроки курса и отключение — в «Мой профиль» → «Мои приёмы».', uk: 'Час підставлено за правилами прийому — змініть під себе. Нагадування, терміни курсу й вимкнення — у «Мій профіль» → «Мої прийоми».', en: 'Times follow common intake rules — adjust them to your routine. Reminders, course dates and switching off are in My profile → My intake schedule.', es: 'La hora sigue las reglas habituales — ajústala a tu rutina. Recordatorios, fechas y desactivar: Mi perfil → Mis tomas.', de: 'Die Uhrzeit folgt üblichen Regeln — pass sie an deinen Alltag an. Erinnerungen, Kurdauer und Abschalten: Mein Profil → Meine Einnahmen.', pt: 'O horário segue as regras habituais — ajuste à sua rotina. Lembretes, datas e desligar: Meu perfil → Minhas tomas.', fr: 'L’heure suit les règles habituelles — adaptez-la à votre rythme. Rappels, dates de cure et désactivation : Mon profil → Mes prises.', pl: 'Godzina według typowych zasad — dopasuj do swojego dnia. Przypomnienia, daty i wyłączanie: Mój profil → Moje przyjmowanie.', it: 'L’orario segue le regole abituali — adattalo alla tua giornata. Promemoria, date e disattivazione: Il mio profilo → Le mie assunzioni.', he: 'השעה נקבעה לפי כללי נטילה מקובלים — התאימו אותה לשגרה שלכם. תזכורות, תאריכי קורס וכיבוי — ב«הפרופיל שלי» ← «לוח הנטילה שלי».', ja: '時刻は一般的な服用ルールに沿っています。生活に合わせて変更してください。通知・期間・オフは「マイプロフィール」→「服用スケジュール」で。', ko: '시간은 일반적인 복용 원칙에 따랐습니다. 생활에 맞게 바꿔 주세요. 알림·기간·끄기는 «내 프로필» → «내 복용 일정»에서.' },
+    done_btn: { ru: 'Принято', uk: 'Прийнято', en: 'Taken', es: 'Tomado', de: 'Eingenommen', pt: 'Tomado', fr: 'Pris', pl: 'Przyjęte', it: 'Preso', he: 'נלקח', ja: '服用済み', ko: '복용함' },
+    mark_btn: { ru: 'Отметить', uk: 'Позначити', en: 'Mark', es: 'Marcar', de: 'Abhaken', pt: 'Marcar', fr: 'Cocher', pl: 'Odhacz', it: 'Segna', he: 'לסמן', ja: '記録する', ko: '체크' },
+    all_btn: { ru: 'Отметить всё как принятое', uk: 'Позначити все як прийняте', en: 'Mark all as taken', es: 'Marcar todo como tomado', de: 'Alles als eingenommen markieren', pt: 'Marcar tudo como tomado', fr: 'Tout marquer comme pris', pl: 'Oznacz wszystko jako przyjęte', it: 'Segna tutto come preso', he: 'לסמן הכול כנלקח', ja: 'すべて服用済みにする', ko: '모두 복용함으로 표시' },
+    count: { ru: 'Принято {n} из {m}', uk: 'Прийнято {n} з {m}', en: '{n} of {m} taken', es: '{n} de {m} tomados', de: '{n} von {m} eingenommen', pt: '{n} de {m} tomados', fr: '{n} sur {m} pris', pl: 'Przyjęte: {n} z {m}', it: '{n} su {m} presi', he: 'נלקחו {n} מתוך {m}', ja: '{m}件中{n}件服用済み', ko: '{m}개 중 {n}개 복용' },
     spec: { ru: 'от специалиста', uk: 'від спеціаліста', en: 'from your specialist', es: 'de tu especialista', de: 'von deiner Fachperson', pt: 'do seu especialista', fr: 'de votre spécialiste', pl: 'od specjalisty', it: 'dal tuo specialista', he: 'מהמומחה', ja: '専門家より', ko: '전문가 지정' },
   };
   var TIPS = {
@@ -108,6 +112,51 @@
     var d = day || ymd();
     return _ikGet().items.filter(function (it) { return activeOn(it, d); })
       .sort(function (a, b) { return String(a.time).localeCompare(String(b.time)); });
+  };
+
+  // ── «Принято» (2026-11-08, слово владельца): человек отмечает приём, а не просто смахивает напоминание, —
+  // днём можно свериться, что уже выпито. Хранится по календарному дню: {день: {id приёма: 'ЧЧ:ММ' отметки}},
+  // держим 14 дней. Только на устройстве, никуда не отправляется.
+  var DONE = function () { return CFG().prefix + '_intake_done'; };
+  function doneAll() { try { return JSON.parse(localStorage.getItem(DONE()) || '{}') || {}; } catch (e) { return {}; } }
+  function doneDay(day) { return doneAll()[day || ymd()] || {}; }
+  function hm(d) { return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+  function doneSet(ids, on) {
+    var all = doneAll(), day = ymd(), d = all[day] || {}, now = hm(new Date());
+    ids.forEach(function (id) { if (on) d[id] = d[id] || now; else delete d[id]; });
+    all[day] = d;
+    Object.keys(all).sort().slice(0, -14).forEach(function (k) { delete all[k]; });
+    try { localStorage.setItem(DONE(), JSON.stringify(all)); } catch (e) {}
+  }
+  window._ikDone = function (id) { return doneDay()[id] || ''; };
+  window._ikDoneCount = function () {
+    var its = _ikActiveOn(), d = doneDay();
+    return { n: its.filter(function (it) { return d[it.id]; }).length, m: its.length };
+  };
+  // Отметить все приёмы этого времени (кнопка «Принято» в уведомлении).
+  window._ikMarkAt = function (t) {
+    var ids = _ikActiveOn().filter(function (it) { return it.time === t; }).map(function (it) { return it.id; });
+    if (ids.length) doneSet(ids, true);
+    return ids.length;
+  };
+  function refresh() {
+    try { if (typeof _rdIntake === 'function') _rdIntake(); } catch (e) {}
+    try { var m = document.getElementById('circModal'); if (m && m.classList.contains('open') && document.getElementById('ik-sheet')) window._ikOpen(window.__ikAt); } catch (e) {}
+  }
+  window._ikToggleDone = function (id, ev) {
+    try { if (ev) ev.stopPropagation(); } catch (e) {}
+    doneSet([id], !window._ikDone(id)); refresh();
+  };
+  window._ikMarkList = function (ids) { doneSet(String(ids || '').split(',').filter(Boolean), true); refresh(); };
+  // Кружок-галочка: пустой — не принято; золотой с ✓ — принято (и во сколько отметили).
+  window._ikCheck = function (it, big) {
+    var at = window._ikDone(it.id), id = _esc(it.id);
+    var sz = big ? 30 : 26;
+    return '<button type="button" onclick="_ikToggleDone(\'' + id + '\',event)" aria-pressed="' + (at ? 'true' : 'false') + '" aria-label="' + _esc(T('done_btn')) + '"'
+      + ' style="flex:0 0 auto;margin-left:auto;display:flex;align-items:center;gap:6px;background:none;border:none;padding:4px 0 4px 8px;cursor:pointer;font-family:inherit;color:' + (at ? 'var(--gold-lt)' : 'var(--t3)') + ';font-size:var(--fs-cap);white-space:nowrap;">'
+      + (big ? '<span>' + (at ? _esc(at) : _esc(T('mark_btn'))) + '</span>' : (at ? '<span>' + _esc(at) + '</span>' : ''))
+      + '<span style="width:' + sz + 'px;height:' + sz + 'px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:' + (big ? 17 : 15) + 'px;line-height:1;'
+      + (at ? 'background:var(--gold-lt);color:#1a1712;border:1px solid var(--gold-lt);' : 'border:1.5px solid rgba(226,185,90,.55);color:transparent;') + '">✓</span></button>';
   };
 
   function chipName(id) {
@@ -378,21 +427,26 @@
     var at = (typeof atTime === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(atTime)) ? atTime : '';
     var list = at ? all.filter(function (x) { return x.time === at; }) : all;
     if (at && !list.length) { at = ''; list = all; }   // приём убрали, а уведомление ещё висело
-    var h = '';
+    window.__ikAt = at || undefined;
+    var h = '<div id="ik-sheet">', c0 = list.filter(function (it) { return window._ikDone(it.id); }).length;
+    if (list.length) h += '<div style="font-size:var(--fs-cap);color:' + (c0 === list.length ? 'var(--gold-lt)' : 'var(--t3)') + ';margin-bottom:4px;">' + _esc(T('count').replace('{n}', c0).replace('{m}', list.length)) + '</div>';
     list.forEach(function (it) {
-      h += '<div style="display:flex;gap:14px;padding:11px 0;border-bottom:1px solid var(--b1);">'
+      var dn = !!window._ikDone(it.id);
+      h += '<div style="display:flex;gap:14px;align-items:center;padding:11px 0;border-bottom:1px solid var(--b1);' + (dn ? 'opacity:.75;' : '') + '">'
         + '<div style="font-family:var(--font-ui);font-weight:600;color:var(--gold-lt);min-width:52px;">' + _esc(it.time || '') + '</div>'
-        + '<div><div style="color:var(--t1);font-weight:600;">' + _esc(it.name) + (it.src === 'spec' ? ' <span style="font-size:var(--fs-cap);color:var(--gold-lt);font-weight:400;">· ' + _esc(T('spec')) + '</span>' : '') + '</div>'
+        + '<div style="flex:1 1 auto;min-width:0;overflow-wrap:break-word;"><div style="color:var(--t1);font-weight:600;">' + _esc(it.name) + (it.src === 'spec' ? ' <span style="font-size:var(--fs-cap);color:var(--gold-lt);font-weight:400;">· ' + _esc(T('spec')) + '</span>' : '') + '</div>'
         + (it.dose ? '<div style="font-size:var(--fs-cap);color:var(--t2);">' + _esc(it.dose) + '</div>' : '')
         + (it.tip && TIPS[it.tip] ? '<div style="font-size:var(--fs-cap);color:var(--t3);">' + _esc(L(TIPS[it.tip])) + '</div>' : '')
         + (it.note ? '<div style="font-size:var(--fs-cap);color:var(--t2);">' + _esc(it.note) + '</div>' : '')
         + (it.end ? '<div style="font-size:var(--fs-cap);color:var(--t3);">' + _esc(T('to')) + ' ' + _esc(it.end) + '</div>' : '')
-        + '</div></div>';
+        + '</div>' + window._ikCheck(it, true) + '</div>';
     });
-    if (!h) h = '<div style="color:var(--t3);">' + _esc(T('empty')) + '</div>';
+    if (!list.length) h += '<div style="color:var(--t3);">' + _esc(T('empty')) + '</div>';
+    var left = list.filter(function (it) { return !window._ikDone(it.id); });
+    if (left.length > 1) h += '<button type="button" onclick="_ikMarkList(\'' + left.map(function (it) { return _esc(it.id); }).join(',') + '\')" style="display:block;width:100%;margin-top:14px;padding:12px;border-radius:12px;border:1px solid rgba(226,185,90,.45);background:rgba(226,185,90,.10);color:var(--gold-lt);font-family:inherit;font-size:var(--fs-body);cursor:pointer;">✓ ' + _esc(T('all_btn')) + '</button>';
     // Из одного приёма — ход ко всему списку: человек мог открыть уведомление, чтобы свериться со всем днём.
     if (at && all.length > list.length) h += '<div onclick="_ikOpen()" style="margin-top:12px;font-size:var(--fs-cap);color:var(--gold-lt);cursor:pointer;">' + _esc(T('all_list')) + ' \u203a</div>';
-    h += '<div style="font-size:var(--fs-cap);color:var(--t3);margin-top:12px;">' + _esc(T('edit')) + '</div>';
+    h += '<div style="font-size:var(--fs-cap);color:var(--t3);margin-top:12px;">' + _esc(T('edit')) + '</div></div>';
     if (typeof openSheet === 'function') openSheet('<i class="ph ph-pill" style="color:var(--gold-lt);"></i>',
       at ? T('at_title').replace('{t}', at) : T('chapter'), h);
   };
@@ -447,6 +501,8 @@
     });
     return out.slice(0, 48);   // iOS держит 64 отложенных: 48 приём + утреннее + до 12 о воде
   };
+  window._ikCountLbl = function (n, m) { return T('count').replace('{n}', n).replace('{m}', m); };
+  window._ikTakenLabel = function () { return '✓ ' + T('done_btn'); };
   window._ikArm = function () {
     try { var cfg = window.IK_CFG; if (cfg && cfg.arm) cfg.arm(_ikSchedule()); } catch (e) {}
   };
