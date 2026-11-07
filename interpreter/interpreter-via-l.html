@@ -13469,6 +13469,7 @@ function _reviewGo(){ vialGoSpec({review:1}); }
 // внимание» или у человека внесены анализы. В сам блок предупреждения кнопку НЕ ставим — правило
 // ниже: вывод, похожий на медицинский, не должен заканчиваться продажей услуги.
 function _reviewReason(){
+  try{ if(window.vialDoctor && vialDoctor.active()) return true; }catch(e){}   // повод из «Подготовки к визиту» (2026-11-07)
   try{ var da=document.getElementById('doctorAlert'); if(da&&da.classList.contains('visible')) return true; }catch(e){}
   try{ var a=(typeof _labsGet==='function')?_labsGet():{}; for(var k in a){ if(a[k]&&a[k].v) return true; } }catch(e){}
   return false;

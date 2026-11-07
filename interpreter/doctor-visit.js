@@ -287,6 +287,10 @@
   }
 
   window.vialDoctor = {
+    // Есть ли сейчас повод к врачу (без учёта «Уже была у врача»): страница по нему включает предложение
+    // разбора со специалистом ПОД разбором дня (_reviewReason). В саму карточку продажу не ставим —
+    // медицинский вывод не должен заканчиваться покупкой (правило ревью, см. _reviewReason).
+    active: function () { try { var d = collect(); return !!(d && reasons(d).length); } catch (e) { return false; } },
     // activeKey — день на экране: карточка только на сегодняшнем, не в истории
     render: function (activeKey) {
       var rd = document.querySelector('#stepResult > .rd'); if (!rd) return;
