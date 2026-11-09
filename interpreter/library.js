@@ -17,6 +17,16 @@
     sheetArtSub:{ru:'Коротко о главном: что происходит и что делать',uk:'Коротко про головне: що відбувається і що робити',en:'The key facts: what’s happening and what to do',es:'Lo importante: qué está pasando y qué hacer',de:'Das Wichtigste: was passiert und was hilft',pt:'O principal: o que está acontecendo e o que fazer',fr:'L’essentiel : ce qui se passe et que faire',pl:'Najważniejsze: co się dzieje i co robić',it:'L’essenziale: cosa succede e cosa fare',he:'בקצרה: מה קורה ומה עושים',ja:'何が起きていて、何ができるかを手短に',ko:'무슨 일이 일어나고 무엇을 할 수 있는지 간단히'},
     sheetTg:{ru:'Сообщество в Telegram',uk:'Спільнота в Telegram',en:'Telegram community',es:'Comunidad en Telegram',de:'Community auf Telegram',pt:'Comunidade no Telegram',fr:'Communauté sur Telegram',pl:'Społeczność na Telegramie',it:'Community su Telegram',he:'הקהילה בטלגרם',ja:'Telegramコミュニティ',ko:'텔레그램 커뮤니티'},
     sheetTgSub:{ru:'Общение с женщинами, которые проходят то же',uk:'Спілкування з жінками, які проходять те саме',en:'Talk with women going through the same',es:'Habla con mujeres que viven lo mismo',de:'Austausch mit Frauen, die dasselbe erleben',pt:'Converse com mulheres que vivem o mesmo',fr:'Échangez avec des femmes qui vivent la même chose',pl:'Rozmowy z kobietami, które przechodzą to samo',it:'Parla con donne che vivono lo stesso',he:'שיחה עם נשים שעוברות את אותו הדבר',ja:'同じ経験をしている女性たちと話せます',ko:'같은 시기를 지나는 여성들과 이야기해요'},
+    // VIA-L Club для подписчиков приложения (владелец 2026-11-09): клуб своего языка бесплатно на срок подписки.
+    // Только uk/ru/es (клубы есть только на них). Без цен и без Tribute (Apple 3.1.1).
+    club:{ru:'VIA-L Club в Telegram',uk:'VIA-L Club у Telegram',es:'VIA-L Club en Telegram',en:'VIA-L Club on Telegram'},
+    clubSub:{ru:'Женщины, которые проходят то же, — входит в вашу подписку',uk:'Жінки, які проходять те саме, — входить у вашу підписку',es:'Mujeres que viven lo mismo: incluido en tu suscripción',en:'Women going through the same — included in your subscription'},
+    clubWait:{ru:'Проверяем подписку…',uk:'Перевіряємо підписку…',es:'Comprobando la suscripción…',en:'Checking your subscription…'},
+    clubCode:{ru:'Ваш код входа',uk:'Ваш код входу',es:'Tu código de acceso',en:'Your access code'},
+    clubOpen:{ru:'Открыть в Telegram',uk:'Відкрити в Telegram',es:'Abrir en Telegram',en:'Open in Telegram'},
+    clubHint:{ru:'Код разовый и действует сутки. Если Telegram на другом устройстве — отправьте код боту @{bot}.',uk:'Код разовий і діє добу. Якщо Telegram на іншому пристрої — надішліть код боту @{bot}.',es:'El código es de un solo uso y vale un día. Si Telegram está en otro dispositivo, envía el código al bot @{bot}.',en:'The code is single-use and valid for one day. If Telegram is on another device, send the code to @{bot}.'},
+    clubNoSub:{ru:'Клуб входит в подписку VIA-L. Когда подписка активна, здесь появится код входа.',uk:'Клуб входить у підписку VIA-L. Коли підписка активна, тут з’явиться код входу.',es:'El club está incluido en la suscripción de VIA-L. Cuando esté activa, aquí aparecerá tu código.',en:'The club is included in the VIA-L subscription. When it is active, your code will appear here.'},
+    clubErr:{ru:'Не удалось получить код. Проверьте интернет и попробуйте ещё раз.',uk:'Не вдалося отримати код. Перевірте інтернет і спробуйте ще раз.',es:'No se pudo obtener el código. Comprueba la conexión e inténtalo de nuevo.',en:'Could not get the code. Check your connection and try again.'},
     men:  {ru:'Мужское',uk:'Чоловіче',en:'For men',es:'Para hombres',de:'Für Männer',pt:'Para homens',fr:'Pour les hommes',pl:'Dla mężczyzn',it:'Per uomini',he:'לגברים',ja:'男性のために',ko:'남성을 위해'},
     rowSubM:{ru:'Андропауза, сон, сердце и что делать',uk:'Андропауза, сон, серце і що робити',en:'Andropause, sleep, heart and what to do',es:'Andropausia, sueño, corazón y qué hacer',de:'Andropause, Schlaf, Herz und was hilft',pt:'Andropausa, sono, coração e o que fazer',fr:'Andropause, sommeil, cœur et que faire',pl:'Andropauza, sen, serce i co robić',it:'Andropausa, sonno, cuore e cosa fare',he:'אנדרופאוזה, שינה, לב ומה עושים',ja:'男性更年期、睡眠、心臓とできること',ko:'남성 갱년기, 수면, 심장과 할 수 있는 것'},
     // Библиотека VIA-L — платная часть (, 2026-10-18, docs/LIBRARY-FULL-MODEL.md): анонсы всем, текст — по подписке.
@@ -128,6 +138,36 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
   // Выбор по нажатию на книгу: «Библиотека VIA-L» (платная, в приложении), «Основы» и группа (если есть).
   // Строки «на сайте» нет (владелец 2026-10-18): «Основы» есть в приложении на всех 12 языках.
   // Платная полка — строкой здесь, а не внутри «Основ», и не на сайте: подписку видит только приложение (владелец 2026-10-18).
+  var CLUB_URL = 'https://vial-club-guard.viaelcom.workers.dev/app-code', CLUB_LANGS = { uk: 1, ru: 1, es: 1 };
+  // Кнопка клуба — только в приложении (есть RevenueCat), женский профиль, язык с клубом.
+  function clubOk(lang) {
+    return !!CLUB_LANGS[lang] && !isMale() && typeof window.iapAppUserId === 'function'
+      && typeof window.iapAvailable === 'function' && window.iapAvailable();
+  }
+  async function clubGet(lang) {
+    var box = document.querySelector('#vialLibSheet .art-sheet'); if (!box) return;
+    var head = '<h1 class="art-pg-t">' + esc(tx(UI.club, lang)) + '</h1>';
+    box.innerHTML = head + '<p class="art-sh-s">' + esc(tx(UI.clubWait, lang)) + '</p>';
+    var j = null, st = 0;
+    try {
+      var rc = await window.iapAppUserId();
+      var r = await fetch(CLUB_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rc: rc, lang: lang, platform: (typeof window.iapPlatform === 'function') ? window.iapPlatform() : '' }) });
+      st = r.status; j = await r.json();
+    } catch (e) { j = null; }
+    if (j && j.code) {
+      var bot = j.bot || 'vial_publisher_bot';
+      box.innerHTML = head
+        + '<p class="art-sh-s">' + esc(tx(UI.clubCode, lang)) + '</p>'
+        + '<div style="font-family:\'Playfair Display\',serif;font-size:28px;letter-spacing:2px;color:var(--gold-lt);text-align:center;padding:6px 0;user-select:all;-webkit-user-select:all;">' + esc(j.show || j.code) + '</div>'
+        + shRow('a', 'href="https://t.me/' + esc(bot) + '?start=' + esc(j.code) + '" target="_blank" rel="noopener"', 'ph-telegram-logo', tx(UI.clubOpen, lang), '')
+        + '<p class="art-sh-s">' + esc(tx(UI.clubHint, lang).replace('{bot}', bot)) + '</p>';
+      [].forEach.call(box.querySelectorAll('a'), function (a) { a.addEventListener('click', function () { setTimeout(sheetClose, 300); }); });
+      return;
+    }
+    box.innerHTML = head + '<p class="art-sh-s">' + esc(tx(st === 403 ? UI.clubNoSub : UI.clubErr, lang)) + '</p>';
+  }
+
   function sheet(lang) {
     sheetClose(); css();
     var o = document.createElement('div'); o.id = 'vialLibSheet'; o.className = 'art-sheet-bg';
@@ -135,6 +175,7 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
     var res = resHas(lang) ? shRow('button', 'type="button" id="artSheetRes"', 'ph-flask', tx(UI.res, lang), tx(UI.resSub, lang)) : '';
     var art = has(lang) ? shRow('button', 'type="button" id="artSheetArt"', 'ph-book-open-text', tx(UI.sheetArt, lang), tx(UI.sheetArtSub, lang)) : '';
     var tg = TG[lang] ? shRow('a', 'href="' + esc(TG[lang]) + '" target="_blank" rel="noopener"', 'ph-telegram-logo', tx(UI.sheetTg, lang), tx(UI.sheetTgSub, lang)) : '';
+    if (!tg && clubOk(lang)) tg = shRow('button', 'type="button" id="artSheetClub"', 'ph-telegram-logo', tx(UI.club, lang), tx(UI.clubSub, lang));
     if (!(res || art || tg)) return;   // нечего показать — без пустой полосы и спрятанного советника
     o.innerHTML = '<div class="art-sheet"><h1 class="art-pg-t">' + esc(tx(UI.back, lang)) + '</h1>' + (res ? '<div id="artSheetPick" style="display:contents;"></div>' : '') + res + art + tg + '</div>';
     (document.getElementById('app') || document.body).appendChild(o); document.body.classList.add('lib-sheet');   // внутри #app — как #specPanel, иначе нижняя строка оказывалась под экраном
@@ -143,6 +184,8 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
     if (res) resCatalog(lang, function (err) { if (!err) pickFill(lang); });   // нет сети — шторка как была, без пустого места
     var b = document.getElementById('artSheetArt');
     if (b) b.onclick = function () { sheetClose(); if (typeof window.navTo === 'function') window.navTo('lib', { direct: 1 }); };
+    var cb = document.getElementById('artSheetClub');
+    if (cb) cb.onclick = function () { clubGet(lang); };
     var rb = document.getElementById('artSheetRes');
     if (rb) rb.onclick = function () { sheetClose(); if (typeof window.navTo === 'function') window.navTo('lib', { direct: 1 }); if (typeof window._cardOpen === 'function') { resQ = ''; resTopic = ''; resMenu = false; window._cardOpen('research'); } };
     [].forEach.call(o.querySelectorAll('a'), function (a) { a.addEventListener('click', function () { setTimeout(sheetClose, 300); }); });

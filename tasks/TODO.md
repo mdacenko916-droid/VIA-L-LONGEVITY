@@ -42,13 +42,15 @@
       Tribute тех, кто вошёл по приглашению нашего бота. Без ответа не запускаем.
       2026-11-09: владелец задал вопрос в поддержку Tribute и вручную добавил в группу друга (не платил через Tribute) —
       проверить 11-10/11-11, на месте ли он. Вход — по разовому коду (deep link в бота, код можно ввести вручную).
-- [ ] **guard:** `POST /app-invite {rc, lang}` → проверка `via_l_pro` в RevenueCat (как `LIB_ENT` в cloudflare-worker.js) →
-      `createChatInviteLink` (creates_join_request, name `app:<хэш>`, срок 1 ч) → строка в D1. `chat_join_request` по такой ссылке →
-      повторная проверка → approve, связка tg_id ↔ rc. Крон раз в сутки: подписка кончилась → убрать из группы (ban+unban).
-      Вебхук: добавить `chat_join_request` в allowed_updates. Только участники «app:», людей Tribute не трогаем.
-- [ ] **Приложение:** в листе «Библиотека» строка Telegram уже заготовлена (`library.js`, `TG` пустой) → кнопка «VIA-L Club»
-      (только uk/ru/es и активная подписка): запрос к guard, открыть ссылку. Без цен и слова Tribute. Подписи uk/ru/es.
-      Веб — со сборкой (Xcode Cloud / Android).
+- [x] **Код написан 2026-11-09** (не задеплоен): guard `POST /app-code` → разовый код VL-XXXX-XXXX (сутки) → бот по `t.me/vial_publisher_bot?start=<код>`
+      или по коду, введённому руками, → личная ссылка с заявкой (`app:<tg id>`) → одобряет только её владельца; крон в 09:00 UTC —
+      подписка кончилась → исключить + сообщение в личку. Приложение: `library.js` — строка «VIA-L Club у Telegram» в листе Библиотеки
+      (только в приложении, uk/ru/es, женский профиль), код + «Відкрити в Telegram». На сайте кнопки нет (нет RevenueCat).
+- [ ] **Запуск — после теста Tribute** (порядок важен: сначала сервер, потом сборка):
+      1) `cd ~/Developer/Библиотека-VIA-L/guard && npx wrangler d1 execute vial-club-guard --remote --file schema-club.sql && npx wrangler deploy`;
+      2) setWebhook бота с `allowed_updates: ["message","edited_message","chat_join_request"]` (секрет — тот же HOOK_SECRET);
+      3) у бота в трёх группах права «приглашать» и «банить» — проверить getChatMember;
+      4) живой тест: код → бот → заявка → в клубе; 5) пуш `library.js` + сборка iOS/Android.
 - [ ] Закреп и правила клуба: строка «подписчики приложения — вход из приложения».
 
 ## 📈 «3 месяца с VIA-L: что изменилось» — квартальный разбор (решение владельца 2026-11-09)
