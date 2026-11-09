@@ -7033,6 +7033,9 @@ function _researchExtra(rec){
     var e=(typeof _expGet==='function')?_expGet():null;
     if(e&&e.lever&&(!e.startDay||!rec.day||rec.day>=e.startDay)) x.lever=e.lever;
     if(rec.exp_done==='yes'||rec.exp_done==='no') x.exp_done=rec.exp_done;
+    // Недельные оценки жалоб 0–10 этого дня (2026-11-09): только ключ жалобы и цифра, заметку своими словами не шлём.
+    var sc=JSON.parse(localStorage.getItem('vialp_cmp_scores')||'[]')||[], se=sc.filter(function(s){ return s&&s.day===rec.day&&s.by&&typeof s.by==='object'; })[0];
+    if(se){ var o={},n=0; Object.keys(se.by).forEach(function(k){ var v=se.by[k]; if(/^[a-z_]{2,24}$/.test(k)&&typeof v==='number'&&v>=0&&v<=10&&n<11){ o[k]=Math.round(v); n++; } }); if(n) x.cmp_scores=o; }
   }catch(e2){}
   return x;
 }
@@ -7824,7 +7827,12 @@ function _cmpScoreBy(k,v){
     var t=document.getElementById('cmpWkNote'); if(t) e.note=t.value.trim().slice(0,300);
     arr.unshift(e); while(arr.length>60) arr.pop();
     localStorage.setItem('vialp_cmp_scores',JSON.stringify(arr));
-    if(_cmpByFull(e.by)) localStorage.setItem('vialp_cmp_last',String(Date.now()));
+    if(_cmpByFull(e.by)){
+      localStorage.setItem('vialp_cmp_last',String(Date.now()));
+      // неделя оценена — день уходит в синк заново, уже с оценками (только при согласии, см. _syncPushDaily)
+      var _dl=JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[], _dr=_dl.filter(function(x){ return x&&x.day===_dayKey(); })[0];
+      if(_dr && typeof _syncPushDaily==='function') _syncPushDaily(_dr);
+    }
   }catch(_e){}
   try{ renderComplaint(); }catch(_e){}
   try{ renderFocusUI(window.__rdDay||_dayKey()); }catch(_e){}

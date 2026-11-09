@@ -2625,6 +2625,10 @@ const RESEARCH_FIELDS = [
   // «Фокус недели» и грубый профиль (2026-10-05): без них видно, что стало легче, но не видно,
   // от какого шага и у кого. Только значения из закрытых списков — проверка в RESEARCH_ENUMS.
   'lever','exp_done','exp_outcome','cmp','sex','age5','phase',
+  // Недельные оценки жалоб 0–10 (2026-11-09, владелец: своё доказательство «было → стало»). Объект
+  // {ключ жалобы: целое 0–10} в день, когда человек оценил неделю. Только ключи из CMP_ITEMS и цифры —
+  // заметка своими словами сюда не попадает. В сводки (buildResearchStats) не идёт: там только числа.
+  'cmp_scores',
 ];
 const RESEARCH_ENUMS = {
   lever: /^[a-z_]{2,20}$/,                 // ключ рычага из levers.js
@@ -2795,6 +2799,16 @@ function _researchPick(rec, src) {
     const v = rec[k];
     if (v == null || v === '') continue;
     if (k === 'age5') { if (typeof v === 'number' && v >= 18 && v <= 99 && v % 5 === 0) out[k] = v; continue; }
+    if (k === 'cmp_scores') {
+      if (typeof v !== 'object' || Array.isArray(v)) continue;
+      const o = {}; let n = 0;
+      for (const [ck, cv] of Object.entries(v)) {
+        if (n >= 11 || !/^[a-z_]{2,24}$/.test(ck) || !Number.isInteger(cv) || cv < 0 || cv > 10) continue;
+        o[ck] = cv; n++;
+      }
+      if (n) out[k] = o;
+      continue;
+    }
     if (RESEARCH_ENUMS[k]) { if (typeof v === 'string' && RESEARCH_ENUMS[k].test(v)) out[k] = v; continue; }
     if (typeof v === 'number') { if (isFinite(v)) out[k] = v; continue; }
     if (typeof v === 'string' && v.length <= 32) out[k] = v;   // категории вида 'high'/'mild' — длинных строк тут не бывает
