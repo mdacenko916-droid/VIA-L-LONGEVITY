@@ -51,6 +51,9 @@
 - [x] 2026-11-09: D1-таблицы, деплой guard, вебхук `@vial_club_guard_bot` с `chat_join_request` — сделано; `/app-code` отвечает (без подписки 403).
       ⚠️ Бот входа — **@vial_club_guard_bot** (не publisher). Ждём: владелец даёт ему в трёх группах права «Приглашать пользователей» и
       «Блокировать пользователей» (сейчас только «Удаление сообщений»). Потом CLUB_ON=true → пуш → живой тест в TestFlight (песочница RevenueCat).
+      ✅ 2026-11-09 права выданы в UA/RU/ES (проверено: бот создал и отозвал тестовые ссылки); CLUB_ON=true, пуш.
+- [ ] **Живой тест в TestFlight** (VIA-L, язык uk/ru/es, активная подписка-песочница): Библиотека → «VIA-L Club» → код → Telegram →
+      «Подать заявку» → в клубе. Только после этого сборку — на ревью. Закреп/правила клуба: строка «подписчики приложения — вход из приложения».
 - [ ] **Запуск — после теста Tribute** (порядок важен: сначала сервер, потом сборка):
       1) `cd ~/Developer/Библиотека-VIA-L/guard && npx wrangler d1 execute vial-club-guard --remote --file schema-club.sql && npx wrangler deploy`;
       2) setWebhook бота с `allowed_updates: ["message","edited_message","chat_join_request"]` (секрет — тот же HOOK_SECRET);
