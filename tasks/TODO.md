@@ -48,6 +48,9 @@
       или по коду, введённому руками, → личная ссылка с заявкой (`app:<tg id>`) → одобряет только её владельца; крон в 09:00 UTC —
       подписка кончилась → исключить + сообщение в личку. Приложение: `library.js` — строка «VIA-L Club у Telegram» в листе Библиотеки
       (только в приложении, uk/ru/es, женский профиль), код + «Відкрити в Telegram». На сайте кнопки нет (нет RevenueCat).
+- [x] 2026-11-09: D1-таблицы, деплой guard, вебхук `@vial_club_guard_bot` с `chat_join_request` — сделано; `/app-code` отвечает (без подписки 403).
+      ⚠️ Бот входа — **@vial_club_guard_bot** (не publisher). Ждём: владелец даёт ему в трёх группах права «Приглашать пользователей» и
+      «Блокировать пользователей» (сейчас только «Удаление сообщений»). Потом CLUB_ON=true → пуш → живой тест в TestFlight (песочница RevenueCat).
 - [ ] **Запуск — после теста Tribute** (порядок важен: сначала сервер, потом сборка):
       1) `cd ~/Developer/Библиотека-VIA-L/guard && npx wrangler d1 execute vial-club-guard --remote --file schema-club.sql && npx wrangler deploy`;
       2) setWebhook бота с `allowed_updates: ["message","edited_message","chat_join_request"]` (секрет — тот же HOOK_SECRET);

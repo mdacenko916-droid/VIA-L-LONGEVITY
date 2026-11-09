@@ -158,7 +158,7 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
       st = r.status; j = await r.json();
     } catch (e) { j = null; }
     if (j && j.code) {
-      var bot = j.bot || 'vial_publisher_bot';
+      var bot = j.bot || 'vial_club_guard_bot';
       box.innerHTML = head
         + '<p class="art-sh-s">' + esc(tx(UI.clubCode, lang)) + '</p>'
         + '<div style="font-family:\'Playfair Display\',serif;font-size:28px;letter-spacing:2px;color:var(--gold-lt);text-align:center;padding:6px 0;user-select:all;-webkit-user-select:all;">' + esc(j.show || j.code) + '</div>'
