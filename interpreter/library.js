@@ -138,10 +138,12 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
   // Выбор по нажатию на книгу: «Библиотека VIA-L» (платная, в приложении), «Основы» и группа (если есть).
   // Строки «на сайте» нет (владелец 2026-10-18): «Основы» есть в приложении на всех 12 языках.
   // Платная полка — строкой здесь, а не внутри «Основ», и не на сайте: подписку видит только приложение (владелец 2026-10-18).
+  // CLUB_ON — включить после теста Tribute и деплоя guard-бота (TODO «🔑 Клуб для подписчиков приложения»). До этого кнопки нет.
+  var CLUB_ON = false;
   var CLUB_URL = 'https://vial-club-guard.viaelcom.workers.dev/app-code', CLUB_LANGS = { uk: 1, ru: 1, es: 1 };
   // Кнопка клуба — только в приложении (есть RevenueCat), женский профиль, язык с клубом.
   function clubOk(lang) {
-    return !!CLUB_LANGS[lang] && !isMale() && typeof window.iapAppUserId === 'function'
+    return CLUB_ON && !!CLUB_LANGS[lang] && !isMale() && typeof window.iapAppUserId === 'function'
       && typeof window.iapAvailable === 'function' && window.iapAvailable();
   }
   async function clubGet(lang) {

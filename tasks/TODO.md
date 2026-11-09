@@ -50,7 +50,7 @@
       1) `cd ~/Developer/Библиотека-VIA-L/guard && npx wrangler d1 execute vial-club-guard --remote --file schema-club.sql && npx wrangler deploy`;
       2) setWebhook бота с `allowed_updates: ["message","edited_message","chat_join_request"]` (секрет — тот же HOOK_SECRET);
       3) у бота в трёх группах права «приглашать» и «банить» — проверить getChatMember;
-      4) живой тест: код → бот → заявка → в клубе; 5) пуш `library.js` + сборка iOS/Android.
+      4) живой тест: код → бот → заявка → в клубе; 5) `CLUB_ON = true` в `library.js` (сейчас false — код в main с 11-09, кнопка скрыта) → пуш + сборка iOS/Android.
 - [ ] Закреп и правила клуба: строка «подписчики приложения — вход из приложения».
 
 ## 📊 Своё доказательство «VIA-L помогает» — недельные оценки в обезличенную синхронизацию (2026-11-09)
