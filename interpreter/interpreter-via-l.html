@@ -2587,6 +2587,20 @@ html:root details.vcard-sec{background:rgba(6,5,4,.78)!important;-webkit-backdro
 html:root #vialLibSheet .art-sh{background:rgba(6,5,4,.78)!important;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}   /* владелец 11-10: на лентах кнопки светлели — темнее */
 #topbar::before{background:linear-gradient(to bottom,rgba(8,7,5,.85) 0%,rgba(8,7,5,.85) calc(env(safe-area-inset-top,0px) - 2px),rgba(8,7,5,0) 100%)!important;}
 #specTop{background:linear-gradient(to bottom,rgba(8,7,5,.85) 0,rgba(8,7,5,.85) env(safe-area-inset-top,0px),rgba(8,7,5,0) 100%)!important;}
+/* 2026-11-10, владелец (скрины для сторов): под часами была видна полоса — фон под статус-баром и ниже не сходился.
+   1) В приложении #app опущен под статус-бар (app-mode.js), под часами виден фон body::before; полоска
+      #topbar::before 14px (графит/тёмная) ложилась поверх лент шовом — убираем, ленты идут сплошь.
+   2) Открытые «Профиль»/«Мой прогресс»/«Наш подход»: верх панели прозрачный (маска выше) — сквозь него
+      просвечивало фото «Сегодня» под панелью. Прячем страницу под панелью — сверху виден тот же общий фон.
+   3) Панель подключения гаджета: вместо графита #10131A — общий фон с лентами (прозрачная панель на body::before),
+      карточки источников — общий фон блоков (--blk-bg), как в «Профиле». */
+html.app-mode #topbar::before{display:none!important;}
+body.card-open #scroll-area > :not(#cardPanel){visibility:hidden;}
+body.approach-open #scroll-area{visibility:hidden;}
+body.imp-open #scroll-area > :not(#importPanel){visibility:hidden;}
+html:root #importPanel{background:transparent!important;}
+html:root #importPanel .source-card:not(#card-manual){background:var(--blk-bg)!important;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+html:root #importPanel .import-hero{border-bottom-color:rgba(226,185,90,.18);}
 /* низкий экран (SE, старые Android): как в ADAM-L — без прокрутки помещаемся за счёт абзаца под заголовком, заголовок говорит то же */
 @media (max-height:740px),(max-width:370px) and (max-height:820px){   /* + узкий Android 360×780: абзац в 5 строк давал прокрутку на 13px */
   html:root:root body.src-choice .hero-desc[data-t="hero_desc"]{display:none!important;}
