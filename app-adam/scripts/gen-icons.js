@@ -14,7 +14,9 @@ const APP = path.resolve(__dirname, '..');
 const SRC = path.join(APP, 'assets', 'icon-source.png');
 const MARK = path.join(APP, 'assets', 'icon-mark-alpha.png');
 const IOS_ICON = path.join(APP, 'ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png');
-const BG = { r: 0x21, g: 0x14, b: 0x34 };   // индиго ADAM-L (#211434)
+// Фон заставки = фон приложения и подложка WebView (capacitor.config.json, html в adam-l.html). 2026-11-10: был слива #211434,
+// страница — #0A0527 → при запуске мелькала другая полоса. Цвета держать одинаковыми.
+const BG = { r: 0x0A, g: 0x05, b: 0x27 };   // индиго ADAM-L (#0A0527)
 
 async function main() {
   const buf = await sharp(SRC).resize(1024, 1024, { kernel: 'lanczos3' }).removeAlpha().png({ compressionLevel: 9 }).toBuffer();
@@ -30,6 +32,22 @@ async function main() {
     for (const f of ['splash-2732x2732.png', 'splash-2732x2732-1.png', 'splash-2732x2732-2.png'])
       fs.writeFileSync(path.join(SPLASH_DIR, f), splash);
     console.log('✓ iOS Splash');
+  }
+  // Android: drawable*/splash.png — Capacitor кладёт белую заглушку; пишем знак на фоне приложения (40% короткой стороны). 2026-11-10.
+  const RES = path.join(APP, 'android/app/src/main/res');
+  if (fs.existsSync(RES)) {
+    let n = 0;
+    for (const d of fs.readdirSync(RES).filter(d => d.startsWith('drawable'))) {
+      const f = path.join(RES, d, 'splash.png');
+      if (!fs.existsSync(f)) continue;
+      const m = await sharp(f).metadata();
+      const side = Math.round(Math.min(m.width, m.height) * 0.4);
+      const mark = await sharp(MARK).resize(side, side, { kernel: 'lanczos3' }).png().toBuffer();
+      fs.writeFileSync(f, await sharp({ create: { width: m.width, height: m.height, channels: 3, background: BG } })
+        .composite([{ input: mark, gravity: 'centre' }]).png().toBuffer());
+      n++;
+    }
+    console.log('✓ Android splash (' + n + ')');
   }
 
   const ANDROID_RES = path.join(APP, 'android/app/src/main/res');

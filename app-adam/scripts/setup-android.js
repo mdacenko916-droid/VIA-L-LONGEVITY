@@ -59,10 +59,14 @@ const NAV_BAR_COLOR = '#00000000';
 // заезжает — отступ сверху даёт тот же слушатель, что и снизу. Иначе логотип ADAM-L и кнопка
 // языка оказывались под часами и обрезались (скриншот Huawei, 2026-09-01), причём на любой
 // модели: Android WebView не отдаёт env(safe-area-inset-top), там всегда 0.
-const STATUS_BAR_COLOR = '#FFEAE1C9';
+// 2026-11-10 (как VIA-L): статус-бар — фон приложения #0A0527 со СВЕТЛЫМИ значками (был бежевый от светлой темы).
+const STATUS_BAR_COLOR = '#FF0A0527';
+const LIGHT_STATUS = 'false';
+// Фон заставки Android 12+ (Theme.SplashScreen): без него система берёт белый/серый по теме телефона.
+const SPLASH_BG = '#FF0A0527';
 const STATUS_ITEMS =
   `        <item name="android:statusBarColor">${STATUS_BAR_COLOR}</item>\n` +
-  `        <item name="android:windowLightStatusBar">true</item>\n`;
+  `        <item name="android:windowLightStatusBar">${LIGHT_STATUS}</item>\n`;
 const NAV_ITEMS =
   `        <item name="android:navigationBarColor">${NAV_BAR_COLOR}</item>\n` +
   `        <item name="android:windowLightNavigationBar">false</item>\n`;
@@ -194,16 +198,22 @@ function patchStyles() {
     return;
   }
   let xml = fs.readFileSync(STYLES, 'utf8');
-  // Значение могло остаться от прошлой версии скрипта (был непрозрачный цвет) — приводим к текущему.
+  // Значения могли остаться от прошлой версии скрипта — приводим к текущим (панель навигации, статус-бар, фон заставки).
   if (xml.includes('android:navigationBarColor')) {
-    const fixed = xml.replace(/(<item name="android:navigationBarColor">)[^<]*(<\/item>)/g, `$1${NAV_BAR_COLOR}$2`);
-    if (fixed === xml) { console.log('✓ styles.xml: панель навигации уже настроена.'); return; }
+    let fixed = xml
+      .replace(/(<item name="android:navigationBarColor">)[^<]*(<\/item>)/g, `$1${NAV_BAR_COLOR}$2`)
+      .replace(/(<item name="android:statusBarColor">)[^<]*(<\/item>)/g, `$1${STATUS_BAR_COLOR}$2`)
+      .replace(/(<item name="android:windowLightStatusBar">)[^<]*(<\/item>)/g, `$1${LIGHT_STATUS}$2`);
+    if (!fixed.includes('windowSplashScreenBackground'))
+      fixed = fixed.replace(/(<style name="AppTheme\.NoActionBarLaunch"[^>]*>\n)/, `$1        <item name="windowSplashScreenBackground">${SPLASH_BG}</item>\n`);
+    if (fixed === xml) { console.log('✓ styles.xml: системные панели и заставка уже настроены.'); return; }
     fs.writeFileSync(STYLES, fixed);
-    console.log(`✚ styles.xml: цвет панели навигации обновлён → ${NAV_BAR_COLOR} (прозрачная).`);
+    console.log(`✚ styles.xml: обновлено — навигация ${NAV_BAR_COLOR}, статус-бар ${STATUS_BAR_COLOR} (светлые значки), фон заставки ${SPLASH_BG}.`);
     return;
   }
   let touched = 0;
-  xml = xml.replace(/(<style name="AppTheme\.NoActionBar(?:Launch)?"[^>]*>\n)/g, (m) => { touched++; return m + NAV_ITEMS + STATUS_ITEMS; });
+  xml = xml.replace(/(<style name="AppTheme\.NoActionBar(?:Launch)?"[^>]*>\n)/g, (m) => { touched++; return m + NAV_ITEMS + STATUS_ITEMS
+    + (m.includes('Launch') ? `        <item name="windowSplashScreenBackground">${SPLASH_BG}</item>\n` : ''); });
   if (!touched) { console.warn('⚠️  styles.xml: не найдены темы AppTheme.NoActionBar* — формат изменился, проверь вручную.'); return; }
   fs.writeFileSync(STYLES, xml);
   console.log(`✚ styles.xml: цвет системной панели навигации задан в ${touched} теме(ах) — ${NAV_BAR_COLOR}.`);
@@ -214,7 +224,7 @@ function patchStyles() {
 // `cap add android` пишет пустой BridgeActivity, поэтому правку держим здесь.
 const MAIN_ACT_SRC = `package com.viael.adaml;
 
-import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -225,14 +235,17 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     // Цвет нижней панели приложения (низ градиента .bottom-nav). Под кнопками системы видно
     // именно фон окна, поэтому он должен совпадать — иначе снизу чужая полоса.
-    private static final int BAR_COLOR = 0xFF171D27;
+    // Фон окна виден под часами (Android 15+) и под кнопками системы: сверху фон приложения #0A0527,
+    // снизу — цвет нижней строки ADAM-L #110A2E. 2026-11-10 (было: графит VIA-L #171D27).
+    private static final int TOP_COLOR = 0xFF0A0527;
+    private static final int BAR_COLOR = 0xFF110A2E;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Окно рисует себя под системными панелями (как на iOS).
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-        getWindow().setBackgroundDrawable(new ColorDrawable(BAR_COLOR));
+        getWindow().setBackgroundDrawable(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{TOP_COLOR, BAR_COLOR}));
 
         // Системные панели не должны ложиться поверх интерфейса: снизу кнопки перекрывали
         // подписи навигации, сверху статус-бар срезал логотип и кнопку языка. Через CSS это не
@@ -263,7 +276,9 @@ function patchMainActivity() {
     return;
   }
   const cur = fs.existsSync(MAIN_ACT) ? fs.readFileSync(MAIN_ACT, 'utf8') : '';
-  if (cur.includes('setDecorFitsSystemWindows')) { console.log('✓ MainActivity.java: edge-to-edge уже включён.'); return; }
+  if (cur === MAIN_ACT_SRC) { console.log('✓ MainActivity.java: edge-to-edge уже включён, фон окна актуален.'); return; }
+  if (cur && !cur.includes('setDecorFitsSystemWindows') && !cur.includes('extends BridgeActivity {}') && cur.split('\n').length > 8)
+    console.warn('⚠️  MainActivity.java был изменён вручную — перезаписываю версией из setup-android.js.');
   fs.writeFileSync(MAIN_ACT, MAIN_ACT_SRC);
   console.log('✚ MainActivity.java: включён edge-to-edge (рисуем под системными панелями).');
 }
