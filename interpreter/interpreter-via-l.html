@@ -2601,6 +2601,15 @@ body.imp-open #scroll-area > :not(#importPanel){visibility:hidden;}
 html:root #importPanel{background:transparent!important;}
 html:root #importPanel .source-card:not(#card-manual){background:var(--blk-bg)!important;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
 html:root #importPanel .import-hero{border-bottom-color:rgba(226,185,90,.18);}
+/* 2026-11-10, владелец: верх у всех вкладок один — как «Профиль»/«Мой прогресс»: под часами общий фон с лентами,
+   текст при прокрутке растворяется у нижнего края статус-бара (маска). Было: «Специалист» — тёмная плашка под
+   часами с просвечивающим текстом; «Библиотека» — без ничего, заголовок наезжал на часы. Переписка (chat-open)
+   не трогается — у неё своя шапка под статус-баром. */
+body.spec-open:not(.chat-open) #specTop{display:none!important;}
+body.spec-open:not(.chat-open) #specPanel, html:root #vialLibSheet .art-sheet{
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,transparent env(safe-area-inset-top,0px),#000 calc(env(safe-area-inset-top,0px) + 12px));
+  mask-image:linear-gradient(to bottom,transparent 0,transparent env(safe-area-inset-top,0px),#000 calc(env(safe-area-inset-top,0px) + 12px));}
+body.spec-open:not(.chat-open) #scroll-area, body.spec-open:not(.chat-open) #topbar, body.spec-open:not(.chat-open) #approachPanel, body.spec-open:not(.chat-open) #dayplanPanel{visibility:hidden;}   /* под прозрачным верхом панели — только общий фон */
 /* низкий экран (SE, старые Android): как в ADAM-L — без прокрутки помещаемся за счёт абзаца под заголовком, заголовок говорит то же */
 @media (max-height:740px),(max-width:370px) and (max-height:820px){   /* + узкий Android 360×780: абзац в 5 строк давал прокрутку на 13px */
   html:root:root body.src-choice .hero-desc[data-t="hero_desc"]{display:none!important;}

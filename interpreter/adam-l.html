@@ -2733,6 +2733,15 @@ body.approach-open #scroll-area{visibility:hidden;}
 body.imp-open #scroll-area > :not(#importPanel){visibility:hidden;}
 html:root #importPanel{background:transparent!important;}
 html:root #importPanel .source-card:not(#card-manual){background:var(--blk-bg)!important;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+/* 2026-11-10, владелец: верх у всех вкладок один — как «Профиль»/«Мой прогресс»: под часами общий фон с лентами,
+   текст при прокрутке растворяется у нижнего края статус-бара (маска). Было: «Специалист» — тёмная плашка под
+   часами с просвечивающим текстом; «Библиотека» — без ничего, заголовок наезжал на часы. Переписка (chat-open)
+   не трогается — у неё своя шапка под статус-баром. */
+body.spec-open:not(.chat-open) #specTop{display:none!important;}
+body.spec-open:not(.chat-open) #specPanel, html:root #vialLibSheet .art-sheet{
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,transparent env(safe-area-inset-top,0px),#000 calc(env(safe-area-inset-top,0px) + 12px));
+  mask-image:linear-gradient(to bottom,transparent 0,transparent env(safe-area-inset-top,0px),#000 calc(env(safe-area-inset-top,0px) + 12px));}
+body.spec-open:not(.chat-open) #scroll-area, body.spec-open:not(.chat-open) #topbar, body.spec-open:not(.chat-open) #approachPanel, body.spec-open:not(.chat-open) #dayplanPanel{visibility:hidden;}   /* под прозрачным верхом панели — только общий фон */
 html:root details.vcard-sec{background:rgba(8,4,26,.78)!important;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
 html:root #vialLibSheet .art-sh{background:rgba(8,4,26,.78)!important;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
 html:root:root :is(body.src-choice,body.morning-mode) .hero::before{background:linear-gradient(to right,rgba(17,9,54,.85) 0%,rgba(17,9,54,.55) 38%,rgba(17,9,54,0) 66%),url(Logo/adam-l-hero.jpg) 80% 55%/cover no-repeat!important;}   /* 2026-11-10: фото владельца (скрин/м/Игорь ADAM-L.PNG) — лицо целиком на уровне заголовка, абзац по куртке */
