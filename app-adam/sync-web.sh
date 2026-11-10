@@ -25,7 +25,7 @@ cp "$IP/adam-l.html" "$WWW/index.html"
 
 # Скрипты и вспомогательные страницы — тот же набор, что у VIA-L (app/sync-web.sh)
 for f in app-mode.js healthkit-bridge.js healthconnect-bridge.js iap-bridge.js device-id.js notify-bridge.js \
-         push-bridge.js tts-bridge.js review-bridge.js intake.js help.js bottom-nav.js levers.js duo.js doctor-visit.js sports.js \
+         push-bridge.js tts-bridge.js review-bridge.js intake.js help.js bottom-nav.js levers.js day-tasks.js duo.js doctor-visit.js sports.js \
          workouts.js move-player.js courses.js complaint-table.js articles.js library.js evidence.js \
          evidence-registry.json my-specialist.html specialist.js research-consent.html science.html; do
   cp "$IP/$f" "$WWW/"

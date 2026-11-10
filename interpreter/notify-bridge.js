@@ -141,9 +141,7 @@
             if (ev.actionId === 'taken' && typeof _ikMarkAt === 'function') { try { _ikMarkAt(_t); } catch (e) {} }
             setTimeout(function () { try { if (typeof _rdIntake === 'function') _rdIntake(); } catch (e) {} _ikOpen(_t); }, 300); return;
           }
-          // 2026-11-10: утренний пуш зовёт сделать проход. Проход сегодня ещё не сделан — остаёмся на «Сегодня»
-          // (там ежедневный экран с проходом); сделан — открываем «Памятку дня», как раньше.
-          if (typeof _passedToday === 'function' && !_passedToday()) return;
+          // 2026-11-10: памятка = два напоминания и, пока проход не сделан, кнопка «Начать» — пуш ведёт в неё.
           if (typeof openDayPlanPanel === 'function') setTimeout(openDayPlanPanel, 300);   // модал «Памятка дня»
         } catch (e) {}
       };
