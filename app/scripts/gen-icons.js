@@ -18,7 +18,9 @@ const SRC_SVG = path.join(APP, 'assets', 'icon-source.svg');
 const SRC_PNG = path.join(APP, 'assets', 'icon-source.png');
 const PREVIEW = path.join(APP, 'assets', 'icon-1024.png');
 const IOS_ICON = path.join(APP, 'ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png');
-const BG = { r: 0, g: 0, b: 0 }; // чёрный — под космический фон Logo-IP (углы iOS скругляет сама)
+// Фон заставки = фон приложения и подложка WebView (capacitor.config.json backgroundColor, html в interpreter-via-l.html).
+// 2026-11-10: был чистый чёрный, а подложка графитовая — при запуске мелькала серая вспышка. Цвета держать одинаковыми.
+const BG = { r: 11, g: 10, b: 8 };   // #0B0A08
 
 async function main() {
   // SVG приоритетнее — вектор рисуется чётко в любом размере (без апскейл-мыла).
@@ -90,10 +92,9 @@ async function main() {
     console.warn('iOS не сгенерирован — нет ios/. Сначала `npm run add:ios`, потом `npm run icons`.');
   }
 
-  // ── Splash (заставка запуска): лого по центру на чёрном, 2732×2732 ──
-  const logoOnSplash = await sharp(SRC, isSvg ? { density: 512 } : undefined)
-    .resize(1100, 1100, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-    .png().toBuffer();
+  // ── Splash (заставка запуска): знак по центру на фоне приложения, 2732×2732 ──
+  // 2026-11-10: знак без плитки (markAlpha) — раньше на чёрном стоял графитовый квадрат иконки.
+  const logoOnSplash = await sharp(markAlpha).resize(1100, 1100, { kernel: 'lanczos3' }).png().toBuffer();
   const splash = await sharp({ create: { width: 2732, height: 2732, channels: 3, background: BG } })
     .composite([{ input: logoOnSplash, gravity: 'centre' }])
     .png({ compressionLevel: 9, effort: 10 }).toBuffer();
@@ -104,6 +105,23 @@ async function main() {
     for (const f of ['splash-2732x2732.png', 'splash-2732x2732-1.png', 'splash-2732x2732-2.png'])
       fs.writeFileSync(path.join(SPLASH_DIR, f), splash);
     console.log('✓ iOS Splash обновлён (3 файла)');
+  }
+  // Android: drawable*/splash.png — Capacitor кладёт белую заглушку; она видна при запуске (тема NoActionBarLaunch).
+  // Пишем тот же знак на фоне приложения в размер каждого файла; знак — 40% короткой стороны. 2026-11-10.
+  const RES = path.join(APP, 'android/app/src/main/res');
+  if (fs.existsSync(RES)) {
+    let n = 0;
+    for (const d of fs.readdirSync(RES).filter(d => d.startsWith('drawable'))) {
+      const f = path.join(RES, d, 'splash.png');
+      if (!fs.existsSync(f)) continue;
+      const m = await sharp(f).metadata();
+      const side = Math.round(Math.min(m.width, m.height) * 0.4);
+      const mark = await sharp(markAlpha).resize(side, side, { kernel: 'lanczos3' }).png().toBuffer();
+      fs.writeFileSync(f, await sharp({ create: { width: m.width, height: m.height, channels: 3, background: BG } })
+        .composite([{ input: mark, gravity: 'centre' }]).png().toBuffer());
+      n++;
+    }
+    console.log('✓ Android splash обновлён (' + n + ' файлов)');
   }
   // ── Android: mipmap + адаптивная иконка ──────────────────────────────────
   // Capacitor кладёт СВОИ дефолтные ic_launcher_*; без этого шага в APK уезжала
