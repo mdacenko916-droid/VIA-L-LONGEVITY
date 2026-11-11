@@ -127,6 +127,20 @@
     } catch (e) { console.warn('[notify] water schedule failed', e); return false; }
   };
 
+  /* Вечернее напоминание о ритуале перед сном (блок «Сон», sleep.js, 2026-11-11). Свой id 2: утреннее — 1,
+     вода 500–599, приёмы ≥1000. hhmm 'HH:MM' или null — выключить. Текст — только 🌙 (экран блокировки). */
+  window.notifySleep = async function (hhmm, title) {
+    var p = ln(); if (!p) return false;
+    try {
+      await p.cancel({ notifications: [{ id: 2 }] });
+      if (!hhmm) return true;
+      await p.schedule({ notifications: [{ id: 2, title: String(title || 'VIA·L'), body: '🌙',
+        schedule: { on: { hour: parseInt(hhmm.slice(0, 2), 10), minute: parseInt(hhmm.slice(3, 5), 10) }, allowWhileIdle: true },
+        sound: 'vialchime.wav', extra: { kind: 'sleep' } }] });
+      return true;
+    } catch (e) { console.warn('[notify] sleep schedule failed', e); return false; }
+  };
+
   // Нажатие по уведомлению → утреннее открывает «Сегодня» с памяткой, напоминание о приёме — список приёма.
   try {
     var p0 = ln();
@@ -141,6 +155,7 @@
             if (ev.actionId === 'taken' && typeof _ikMarkAt === 'function') { try { _ikMarkAt(_t); } catch (e) {} }
             setTimeout(function () { try { if (typeof _rdIntake === 'function') _rdIntake(); } catch (e) {} _ikOpen(_t); }, 300); return;
           }
+          if (ex && ex.kind === 'sleep') { setTimeout(function () { try { if (typeof _rdStep === 'function' && window._rdOpen !== 5) _rdStep(5); var el = document.getElementById('rdSleep'); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'start' }); } catch (e) {} }, 400); return; }   // ритуал перед сном — шаг 5 «Сегодня»
           // 2026-11-10: памятка = два напоминания и, пока проход не сделан, кнопка «Начать» — пуш ведёт в неё.
           if (typeof openDayPlanPanel === 'function') setTimeout(openDayPlanPanel, 300);   // модал «Памятка дня»
         } catch (e) {}

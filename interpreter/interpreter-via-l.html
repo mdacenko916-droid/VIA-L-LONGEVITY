@@ -4545,7 +4545,7 @@ body.spec-open #specTop{display:block;}
   var tts=function(src){ var d=document.createElement('div'); d.className='rd-tts-row'; d.innerHTML='<button type="button" class="ai-tts-btn tts-btn" data-src="'+src+'" onclick="vialTtsToggle(\''+src+'\')" style="display:none;"></button>'; return d; };
   put(3,div('rdMeals')); put(3,tts('rdPlan')); put(3,div('rdPlan')); var wo=div('rdWorkout'); wo.className='wo-card'; put(3,wo); put(3,div('rdIntake')); put(3,div('rdFocusLine')); put(3,E.fo); put(3,E.duo); put(3,E.ex);   // «Вдвоём» — под фокусом недели (2026-10-15)
   put(4,tts('rdWhy')); put(4,div('rdWhy'));
-  put(5,div('rdRitual'));
+  put(5,div('rdSleep')); put(5,div('rdRitual'));   // блок «Сон» (sleep.js, 2026-11-11) — над ритуалом
   // метка конца шага: дочитал до неё — подсвечиваем следующий шаг
   S.forEach(function(s,i){ if(i<S.length-1){
     // «Дальше: N. Название ›» — сворачивает этот шаг и открывает следующий (после длинного шага не искать заголовок)
@@ -5325,6 +5325,7 @@ function setLang(l){
   try{ if(window.vialBottomNav) vialBottomNav.setLang(l); }catch(e){}   // нижняя строка — bottom-nav.js
   try{ if(window.vialSp) vialSp.setLang(l); }catch(e){}   // вкладка «Специалист» (specialist.js)
   try{ if(window.vialSports) vialSports.fillPass(); }catch(e){}   // «Мой спорт» в проходе (sports.js)
+  try{ if(window.vialSleep) vialSleep.relang(); }catch(e){}   // блок «Сон» (sleep.js)
   // lang на <html> нужен переносам: hyphens:auto без него применяет английские правила
   // к русскому/немецкому и рвёт слова не по слогам. 2026-09-06.
   try{ document.documentElement.lang = l; }catch(e){}
@@ -7119,6 +7120,7 @@ function _saveDaily(){
       stress:(function(){var v=getRadio('stress');return v==='high'?9:v==='mild'?5:v==='no'?2:null;})(), alc:getRadio('alc'),
       cmp_delta:window._cmpDeltaToday||null,   // «лучше/так же/хуже» по жалобе — из этого недельный разбор считает траекторию
       move_today:getRadio('move_today'), train_zone:_trainZones(), sore:getRadio('sore'), sore_note:(typeof _soreNote==='function'?_soreNote():''),   // движение вчера — история для «что делать сегодня»
+      sl:(function(){ try{ return window.vialSleep?vialSleep.rec():null; }catch(e){ return null; } })(),   // дневник сна: легли/засыпание/встали/эффективность (sleep.js)
       last_meal:getRadio('last_meal'), caffeine_late:getRadio('caffeine_late'),   // еда вчера вечером — копим по дням для недельного разбора
       bp_sys:(function(){var e=document.getElementById('bp-sys');var v=e?parseInt(e.value):NaN;return (v>=70&&v<=260)?v:null;})(),   // давление (ручной ввод) — для тренда/плитки
       bp_dia:(function(){var e=document.getElementById('bp-dia');var v=e?parseInt(e.value):NaN;return (v>=40&&v<=160)?v:null;})(),
@@ -12094,6 +12096,7 @@ function _showResultsInner(){
     // Еда вчера вечером (суточное): время последнего приёма, характер ужина, поздний кофеин —
     // вход для связи «поздний/тяжёлый ужин и кофеин → фрагментация сна, утренние HRV/пульс».
     last_meal:getRadio('last_meal'), caffeine_late:getRadio('caffeine_late'),
+    sleep_diary:(function(){ try{ return window.vialSleep?vialSleep.payload():null; }catch(e){ return null; } })(),   // дневник сна КПТ-І — только при включённом блоке «Сон» (sleep.js)
     // Накопленная AI-память (что уже закрепилось + текущие зоны внимания) → разбор ведёт ЦЕПОЧКУ,
     // а не пишет каждый день с нуля. Тот же вход, что в EXPERT; рамка остаётся велнес-паттерновой.
     // Анализы (если введены): воркер уже читает data.labs в selectKBPatterns — включает нужные
@@ -15173,7 +15176,7 @@ window.vialGoSpec=function(want){
 <script src="review-bridge.js"></script><!-- окно «Оцените приложение» после 3 дней с разбором (2026-10-08) -->
 <script src="intake.js"></script>
 <script src="levers.js"></script>
-<script src="day-tasks.js"></script><!-- «Напоминания на сегодня»: пул и выбор двух на день (2026-11-10) -->
+<script src="day-tasks.js"></script><script src="sleep.js"></script><!-- блок «Сон»: дневник в шаге «Сон», ритуал перед сном (2026-11-11, docs/SLEEP-MODULE-MODEL.md) --><!-- «Напоминания на сегодня»: пул и выбор двух на день (2026-11-10) -->
 <script src="duo.js"></script><!-- «Вдвоём» (2026-10-15): включено владельцем 2026-10-15 вместе с парой у специалиста -->
 <script src="doctor-visit.js"></script><!-- «Подготовка к визиту»: карточка к врачу, акцент на «Сегодня» (2026-11-06) -->
 <script src="sports.js"></script><!-- «Мой спорт», проверка перед тренировкой, сверка прибора и самочувствия (2026-10-11) -->
