@@ -252,9 +252,12 @@
     var now = Date.now(), DAY = 86400000, a = get(KEY_LOG, []) || [], arr = [];
     try { arr = JSON.parse(localStorage.getItem('vialp_daily') || '[]') || []; } catch (e) {}
     var inW = function (ts, k) { return ts && now - ts >= (k - 1) * win * DAY && now - ts < k * win * DAY; };
+    // Квартал (90 дн.): записей дней хранится 90, «прошлого квартала» нет — эффективность сравниваем
+    // последний месяц против первого месяца окна (60–90 дн. назад).
+    var inE = win >= 90 ? function (ts, k) { return ts && (k === 1 ? now - ts < 30 * DAY : now - ts >= 60 * DAY && now - ts < 90 * DAY); } : inW;
     var days = function (k, full) { var o = {}; a.forEach(function (x) { if (x.k === k && inW(x.ts, 1) && (!full || x.full)) o[x.day] = 1; }); return Object.keys(o).length; };
     var cntK = function (k) { return a.filter(function (x) { return x.k === k && inW(x.ts, 1); }).length; };
-    var effOf = function (k) { var v = arr.filter(function (r) { return r && inW(r.ts, k) && r.sl && r.sl.eff != null; }).map(function (r) { return r.sl.eff; });
+    var effOf = function (k) { var v = arr.filter(function (r) { return r && inE(r.ts, k) && r.sl && r.sl.eff != null; }).map(function (r) { return r.sl.eff; });
       return v.length ? { avg: Math.round(v.reduce(function (x, y) { return x + y; }, 0) / v.length), n: v.length } : null; };
     var lc = {}, lb = '', ln = 0;
     arr.forEach(function (r) { var l = r && inW(r.ts, 1) && r.sl && r.sl.lat; if (l) { lc[l] = (lc[l] || 0) + 1; if (lc[l] > ln) { ln = lc[l]; lb = l; } } });

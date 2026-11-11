@@ -2774,6 +2774,7 @@ body.has-tts-fab #stepResult .rd-tts-row,body.has-tts-fab #stepResult #ai-tts{di
     <!-- итоги и память — под графиком «Моего пути» (в профиле скрыты) -->
     <div id="weeklyReport"></div>
     <div id="monthlyReport"></div>
+    <div id="quarterlyReport"></div>
     <div id="aiMemoryBox" style="margin-bottom:18px;display:flex;flex-direction:column;gap:10px;"></div>
     <div id="historyList"></div>
   </div>
@@ -5960,7 +5961,7 @@ function _cardSaveNum(field,val){var P={};try{P=JSON.parse(localStorage.getItem(
 // Данные НЕ уходят на сервер: пользователь сам сохраняет файл и импортирует на новом устройстве.
 // Пароль знает только он: PBKDF2→AES-GCM. Единый модуль с VIO (источник по _SEC; в PRO — localStorage).
 var _BK_KEYS = (typeof _SEC!=='undefined' && _SEC.keys) ? _SEC.keys.slice()
-  : ['vialp_profile','vialp_history','vialp_daily','vialp_weekly_text','vialp_monthly_text','vialp_ai_memory','vialp_ai_daily','vialp_day_plan','vialp_lastanswers','vialp_imported','vialp_days','vialp_pid','vialp_research_consent','vialp_experiment','vialp_exp_log','vialp_labs','vialp_bigtext','vialp_workouts','vialp_wo_lv','vialp_sports'];   // активный эксперимент и журнал закрытых — иначе на новом устройстве петля обрывается; pid+согласие в копию: перенос на новое устройство не создаёт «нового участника» (P2/P6)
+  : ['vialp_profile','vialp_history','vialp_daily','vialp_weekly_text','vialp_monthly_text','vialp_quarterly_text','vialp_ai_memory','vialp_ai_daily','vialp_day_plan','vialp_lastanswers','vialp_imported','vialp_days','vialp_pid','vialp_research_consent','vialp_experiment','vialp_exp_log','vialp_labs','vialp_bigtext','vialp_workouts','vialp_wo_lv','vialp_sports'];   // активный эксперимент и журнал закрытых — иначе на новом устройстве петля обрывается; pid+согласие в копию: перенос на новое устройство не создаёт «нового участника» (P2/P6)
 function _bkGet(k){ return (typeof secGet==='function')?secGet(k):localStorage.getItem(k); }
 function _bkSet(k,v){ if(typeof secSet==='function'){ secSet(k,v); } else { localStorage.setItem(k,v); } }
 function _bkB64(u8){ var s=''; for(var i=0;i<u8.length;i++)s+=String.fromCharCode(u8[i]); return btoa(s); }
@@ -6160,7 +6161,7 @@ function _vcCSS(){ if(document.getElementById('vcard-css'))return; var s=documen
   +".vd-cell{background:rgba(226,185,90,.06);border:1px solid rgba(226,185,90,.16);border-radius:12px;padding:10px 6px;text-align:center;}"
   +".vd-l{font-size:var(--fs-cap);color:var(--t3);}.vd-v{font-weight:700;font-size:var(--fs-hero);color:var(--t1);margin:2px 0;}.vd-d{font-size:var(--fs-cap);font-weight:600;}"
   +".vc-span{grid-column:auto;}"
-  +"#wrSlot,#mrSlot{display:contents;}#weeklyReport:empty,#monthlyReport:empty{display:none!important;}"   // «Мой путь»: нет итога — нет пустой щели в ленте
+  +"#wrSlot,#mrSlot,#qrSlot{display:contents;}#weeklyReport:empty,#monthlyReport:empty,#quarterlyReport:empty{display:none!important;}"   // «Мой путь»: нет итога — нет пустой щели в ленте
   +".vc-day>summary::-webkit-details-marker{display:none;}.vc-day>summary>span:first-child{transition:transform .2s;display:inline-block;}.vc-day[open]>summary>span:first-child{transform:rotate(90deg);}";
   (document.head||document.body).appendChild(s);
 }
@@ -6822,7 +6823,7 @@ function renderCard(){
     var _arch=(_dInner?'<div class="vc-subh">'+_esc(t('daily_title'))+'</div>'+_dInner:'')
       +((typeof _hInner!=='undefined'&&_hInner)?'<div class="vc-subh">'+L({ru:'Разборы по дням',uk:'Розбори по днях',en:'Daily overviews',es:'Análisis por días',de:'Auswertungen nach Tagen',pt:'Análises por dia',fr:'Bilans par jour',pl:'Analizy dzienne',it:'Analisi per giorno',he:'ניתוחים לפי ימים',ja:'日ごとの分析',ko:'일별 분석'})+'</div>'+_hInner:'');
     html+=[_vcSec('<i class="ph ph-trend-up"></i>',_esc(t('prog_week')),'<div id="wrSlot"></div>'+_secCmp,true,true),
-           _vcSec('<i class="ph ph-calendar-check"></i>',_esc(t('prog_month')),'<div id="mrSlot"></div>'+_triedHTML(),false,true),
+           _vcSec('<i class="ph ph-calendar-check"></i>',_esc(t('prog_month')),'<div id="mrSlot"></div><div id="qrSlot"></div>'+_triedHTML(),false,true),
            _vcSec('dynamics',L({ru:'Динамика показателей',uk:'Динаміка показників',en:'Metric trends',es:'Tendencias de métricas',de:'Verlauf der Werte',pt:'Tendências das métricas',fr:'Tendances des mesures',pl:'Trendy wskaźników',it:'Andamento dei parametri',he:'מגמות המדדים',ja:'指標の推移',ko:'지표 추이'}),
              _seg+'<div class="vc-dyn" data-r="7">'+_dynFor(7)+'</div><div class="vc-dyn" data-r="30" style="display:none;">'+_dynFor(30)+'</div>',false,true),
            _arch?_vcSec('<i class="ph ph-calendar-blank"></i>',_esc(t('prog_archive')),_arch,false,true):''].join('');
@@ -6866,17 +6867,18 @@ function renderCard(){
   html+='</div>'; // .vcard-wrap
 
   var hl=document.getElementById('historyList');
-  ['weeklyReport','monthlyReport'].forEach(function(id){ var e=document.getElementById(id); if(e&&hl&&box.contains(e)) hl.parentNode.insertBefore(e,hl); });
+  ['weeklyReport','monthlyReport','quarterlyReport'].forEach(function(id){ var e=document.getElementById(id); if(e&&hl&&box.contains(e)) hl.parentNode.insertBefore(e,hl); });
   box.innerHTML=html;
   if(hl)hl.innerHTML='';
-  if(_pathMode){ [['wrSlot','weeklyReport'],['mrSlot','monthlyReport']].forEach(function(p){ var sl=document.getElementById(p[0]), e=document.getElementById(p[1]); if(sl&&e) sl.appendChild(e); }); }
+  if(_pathMode){ [['wrSlot','weeklyReport'],['mrSlot','monthlyReport'],['qrSlot','quarterlyReport']].forEach(function(p){ var sl=document.getElementById(p[0]), e=document.getElementById(p[1]); if(sl&&e) sl.appendChild(e); }); }
   if(typeof renderWeeklyReportUI==='function')renderWeeklyReportUI();
   if(typeof renderMonthlyReportUI==='function')renderMonthlyReportUI();
+  if(typeof renderQuarterlyReportUI==='function')renderQuarterlyReportUI();
   if(typeof renderAiMemoryUI==='function')renderAiMemoryUI();
   // недельный/месячный итог и память — часть «Моего пути», в профиле их не показываем
   // «Что VIA-L запомнил» не показываем (2026-10-10: список «что у вас плохо» вгоняет в печаль) — память
   // по-прежнему уходит в каждый разбор (ai_memory в payload).
-  ['weeklyReport','monthlyReport','aiMemoryBox'].forEach(function(id){ var e=document.getElementById(id); if(e) e.style.display=(_pathMode&&id!=='aiMemoryBox')?'':'none'; });
+  ['weeklyReport','monthlyReport','quarterlyReport','aiMemoryBox'].forEach(function(id){ var e=document.getElementById(id); if(e) e.style.display=(_pathMode&&id!=='aiMemoryBox')?'':'none'; });
 }
 
 // ══ МЕСЯЧНЫЙ AI-РАЗБОР (порт VIO: то же окно weeklyTrend, 30 дней) ═══════════
@@ -6956,6 +6958,98 @@ async function genMonthlyReport(){
     var box=document.getElementById('monthlyReport');
     if(box&&box.firstElementChild){ var er=document.createElement('div'); er.style.cssText='margin-top:10px;font-size:var(--fs-cap);color:#FF6B8A;'; er.textContent='⚠ '+ui.err; box.firstElementChild.appendChild(er); }
   }
+}
+// ══ «3 МЕСЯЦА С VIA-L: ЧТО ИЗМЕНИЛОСЬ» — КВАРТАЛЬНЫЙ РАЗБОР (2026-11-11, решение владельца 2026-11-09) ══
+// Третий горизонт после недели и месяца. Окно 90 дней; сравнение — ПЕРВЫЙ месяц окна против ПОСЛЕДНЕГО
+// («было в начале → стало сейчас»), а не «прошлый квартал»: человеку важно, что сдвинулось за эти три месяца.
+// Гейт: прошло ≥84 дней с первой записи, в окне ≥45 дней записей, раз в 90 дней. Воркер: /weekly-report, period:'quarter'.
+var _QR_MIN_DAYS=45, _QR_SPAN=84;
+function quarterTrend(){
+  var h=[]; try{ h=JSON.parse(localStorage.getItem('vialp_history')||'[]')||[]; }catch(e){}
+  var now=Date.now(), DAY=86400000;
+  var wk=h.filter(function(s){ return s.ts&&now-s.ts<90*DAY; });
+  var late=h.filter(function(s){ return s.ts&&now-s.ts<30*DAY; });
+  var early=h.filter(function(s){ return s.ts&&now-s.ts>=60*DAY&&now-s.ts<90*DAY; });
+  if(wk.length<2) return null;
+  var avg=function(arr,k){ var v=arr.map(function(s){return s[k];}).filter(function(x){return x!=null&&!isNaN(x);}); return v.length?v.reduce(function(a,b){return a+(+b);},0)/v.length:null; };
+  var defs=[['hrv','hrv',0],['sleep','sleep',1],['rhr','rhr',0],['energy','energy',1],['qol','qol',0],['anx','anxiety',1],['score','score',0]];
+  var metrics=defs.map(function(d){ var a=avg(late,d[1]), p=avg(early,d[1]); if(a==null) return null;
+    return { key:d[0], avg:+a.toFixed(d[2]), prev:p!=null?+p.toFixed(d[2]):null, delta:p!=null?+(a-p).toFixed(d[2]):null }; }).filter(Boolean);
+  var first=h.reduce(function(m,s){ return (s.ts&&s.ts<m)?s.ts:m; }, now);
+  return { wk:wk, metrics:metrics, first:first };
+}
+function _qrLabels(){
+  var T={
+    ru:{title:'3 месяца с VIA-L: что изменилось',sub:'итог за три месяца · раз в 3 месяца',soon:'Итог трёх месяцев откроется через'},
+    uk:{title:'3 місяці з VIA-L: що змінилося',sub:'підсумок за три місяці · раз на 3 місяці',soon:'Підсумок трьох місяців відкриється через'},
+    en:{title:'3 months with VIA-L: what changed',sub:'three-month summary · once every 3 months',soon:'Your 3-month summary opens in'},
+    es:{title:'3 meses con VIA-L: qué ha cambiado',sub:'resumen de tres meses · cada 3 meses',soon:'Tu resumen de 3 meses se abre en'},
+    de:{title:'3 Monate mit VIA-L: was sich verändert hat',sub:'Drei-Monats-Bilanz · alle 3 Monate',soon:'Deine 3-Monats-Bilanz öffnet sich in'},
+    pt:{title:'3 meses com VIA-L: o que mudou',sub:'resumo de três meses · a cada 3 meses',soon:'Seu resumo de 3 meses abre em'},
+    fr:{title:'3 mois avec VIA-L : ce qui a changé',sub:'bilan sur trois mois · tous les 3 mois',soon:'Votre bilan de 3 mois s’ouvre dans'},
+    pl:{title:'3 miesiące z VIA-L: co się zmieniło',sub:'podsumowanie trzech miesięcy · co 3 miesiące',soon:'Podsumowanie 3 miesięcy otworzy się za'},
+    it:{title:'3 mesi con VIA-L: cosa è cambiato',sub:'bilancio di tre mesi · ogni 3 mesi',soon:'Il tuo bilancio di 3 mesi si apre tra'},
+    he:{title:'3 חודשים עם VIA-L: מה השתנה',sub:'סיכום שלושה חודשים · פעם ב-3 חודשים',soon:'הסיכום של 3 החודשים ייפתח בעוד'},
+    ja:{title:'VIA-Lとの3か月:何が変わったか',sub:'3か月のまとめ · 3か月に1回',soon:'3か月のまとめが開くまで'},
+    ko:{title:'VIA-L과 함께한 3개월: 무엇이 달라졌나',sub:'3개월 요약 · 3개월마다',soon:'3개월 요약이 열리기까지'}
+  };
+  return Object.assign({},_wrUI(),T[lang]||T.en);
+}
+function _qrGate(){
+  var DAY=86400000, now=Date.now(), q=quarterTrend();
+  var last=parseInt(localStorage.getItem('vialp_quarterly_last')||'0',10);
+  var sinceFirst=q?Math.floor((now-q.first)/DAY):0;
+  var leftSpan=Math.max(0,_QR_SPAN-sinceFirst), leftLast=last?Math.max(0,Math.ceil((90*DAY-(now-last))/DAY)):0;
+  return { q:q, canGen:!!q && leftSpan===0 && leftLast===0, daysLeft:Math.max(leftSpan,leftLast), have:q?_histDays(q.wk):0,
+           cached:localStorage.getItem('vialp_quarterly_text')||'', cachedDate:localStorage.getItem('vialp_quarterly_date')||'' };
+}
+function renderQuarterlyReportUI(){
+  setTimeout(function(){ try{ _reportEnsureLang('quarterly'); }catch(e){} },0);
+  var box=document.getElementById('quarterlyReport'); if(!box) return;
+  var g=_qrGate(); if(!g.q){ box.innerHTML=''; return; }
+  var ui=_qrLabels(), inner='';
+  if(g.cached){
+    inner += _wrCollapsible('qr',g.cached,ui,g.cachedDate);
+    inner += '<div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
+      + '<button id="qrToggle" onclick="toggleReportBody(\'qr\')" style="background:var(--gold);color:#10141C;border:none;border-radius:9px;padding:8px 14px;font-size:var(--fs-cap);font-weight:600;cursor:pointer;">▾ '+ui.open+'</button>'
+      + '<button onclick="dlQuarterlyReport()" style="background:transparent;color:var(--gold);border:1px solid var(--gold-dim);border-radius:9px;padding:7px 13px;font-size:var(--fs-cap);cursor:pointer;">⬇ '+ui.dl+'</button></div>';
+  }
+  if(g.daysLeft>0){
+    inner += '<div style="margin-top:'+(g.cached?'12px':'0')+';font-size:var(--fs-cap);color:var(--t3);">⏳ '+(g.cached?ui.lock:ui.soon)+' '+g.daysLeft+' '+ui.days+'</div>';
+  } else if(g.have<_QR_MIN_DAYS){
+    inner += '<div style="margin-top:'+(g.cached?'12px':'0')+';">'+_wrWaitNote(ui,_QR_MIN_DAYS,g.have)+'</div>';
+  } else {
+    inner += '<button id="qrBtn" onclick="genQuarterlyReport()" style="margin-top:'+(g.cached?'12px':'0')+';background:var(--gold);color:#10141C;border:none;border-radius:10px;padding:10px 16px;font-size:var(--fs-body);font-weight:600;cursor:pointer;">'+ui.get+'</button>';
+  }
+  box.innerHTML='<div style="background:linear-gradient(145deg,#161A22,#10141C);border:1px solid var(--gold-dim);border-radius:16px;padding:16px 18px;margin-top:12px;"><div style="font-family:\'Playfair Display\',serif;font-size:var(--fs-title);color:var(--t1);">✦ '+_esc(ui.title)+'</div><div style="font-size:var(--fs-cap);color:var(--t3);margin:2px 0 12px;">'+_esc(ui.sub)+'</div>'+inner+'</div>';
+}
+async function genQuarterlyReport(){
+  var g=_qrGate(); if(!g.canGen || g.have<_QR_MIN_DAYS) return;   // страховка гейта
+  var ui=_qrLabels();
+  var btn=document.getElementById('qrBtn'); if(btn){ btn.disabled=true; btn.textContent=ui.load; }
+  var summary={ n:g.q.wk.length, metrics:g.q.metrics };
+  var daily=(typeof _weeklyDaily==='function')?_weeklyDaily(90):null;
+  var code=(window.sessionStorage&&sessionStorage.getItem('vialp_code'))||(function(){ try{ return (typeof _specShare==='function'&&_specShare().code)||''; }catch(e){ return ''; } })();
+  try{
+    var res=await fetch('https://interpreter.viaelcom.workers.dev/weekly-report',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({summary:summary,daily:daily,lang:lang,code:code,period:'quarter',ctx:_condProf()})});
+    var json=await res.json();
+    if(!json.report) throw new Error('no report');
+    localStorage.setItem('vialp_quarterly_text',json.report);
+    localStorage.setItem('vialp_quarterly_last',String(Date.now()));
+    localStorage.setItem('vialp_quarterly_lang',lang+'@'+_TR_ENGINE_V);
+    localStorage.setItem('vialp_quarterly_date',_dayKey());
+    renderQuarterlyReportUI();
+    if(typeof genAiMemory==='function')genAiMemory(summary,daily);   // память — и на квартальном каденсе
+  }catch(e){
+    if(btn){ btn.disabled=false; btn.textContent=ui.get; }
+    var box=document.getElementById('quarterlyReport');
+    if(box&&box.firstElementChild){ var er=document.createElement('div'); er.style.cssText='margin-top:10px;font-size:var(--fs-cap);color:#FF6B8A;'; er.textContent='⚠ '+ui.err; box.firstElementChild.appendChild(er); }
+  }
+}
+function dlQuarterlyReport(){
+  _dlReport(localStorage.getItem('vialp_quarterly_text')||'',_qrLabels(),localStorage.getItem('vialp_quarterly_date')||_dayKey(),'quarterly');
 }
 function dlMonthlyReport(){
   _dlReport(localStorage.getItem('vialp_monthly_text')||'',_mrLabels(),localStorage.getItem('vialp_monthly_date')||_dayKey(),'monthly');
@@ -7692,7 +7786,7 @@ function _weeklyDaily(win){
     focusLog:(function(){   // что пробовали за окно и чем кончилось — для месячного итога
       try{ if(!window.vialLevers) return [];
         var lg=JSON.parse(localStorage.getItem('vialp_exp_log')||'[]')||[];
-        return lg.filter(function(x){ return x && x.lever && x.ts && (now-x.ts)<(win+1)*DAY; }).slice(0,6).reverse()
+        return lg.filter(function(x){ return x && x.lever && x.ts && (now-x.ts)<(win+1)*DAY; }).slice(0,win>30?14:6).reverse()
                  .map(function(x){ var t=window.vialLevers.text(x.lever,'ru'); return { title:t?t.title:x.lever, outcome:x.outcome||'', kept:x.kept }; });
       }catch(e){ return []; } })(),
     profile:{ phase:P.phase||null,
@@ -8162,7 +8256,7 @@ function _wrCollapsible(p,txt,ui,date){
 function toggleReportBody(p){
   var b=document.getElementById(p+'Body'), f=document.getElementById(p+'Fade'), t=document.getElementById(p+'Toggle');
   if(!b||!t) return;
-  var ui=(p==='mr'&&typeof _mrLabels==='function')?_mrLabels():_wrUI();
+  var ui=(p==='mr'&&typeof _mrLabels==='function')?_mrLabels():(p==='qr'&&typeof _qrLabels==='function')?_qrLabels():_wrUI();
   if(b.style.maxHeight==='none'){                       // свернуть
     b.style.maxHeight='88px'; if(f) f.style.display='';
     t.textContent='▾ '+ui.open;
@@ -8197,7 +8291,8 @@ var _TR_ENGINE_V='2';
 var _rpTrBusy={};
 async function _reportEnsureLang(kind){
   var K={weekly:{txt:'vialp_weekly_text',lng:'vialp_weekly_lang',render:'renderWeeklyReportUI'},
-         monthly:{txt:'vialp_monthly_text',lng:'vialp_monthly_lang',render:'renderMonthlyReportUI'}}[kind];
+         monthly:{txt:'vialp_monthly_text',lng:'vialp_monthly_lang',render:'renderMonthlyReportUI'},
+         quarterly:{txt:'vialp_quarterly_text',lng:'vialp_quarterly_lang',render:'renderQuarterlyReportUI'}}[kind];
   if(!K||_rpTrBusy[kind]) return;
 
   var txt='',saved='';

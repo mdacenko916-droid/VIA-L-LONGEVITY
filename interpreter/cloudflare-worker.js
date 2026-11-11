@@ -4125,11 +4125,12 @@ async function handleAiMemory(request, env, corsHeaders, ctx) {
 // ─────────────────────────────────────────────────────────────
 function buildWeeklyUserMessage(summary, daily, lang, period, exp) {
   summary = summary || {};
-  const isM = period === 'month';
-  const spanN = isM ? 30 : 7;
-  const thisP = isM ? 'this month' : 'this week';
-  const lastP = isM ? 'last month' : 'last week';
-  const adjP  = isM ? 'Monthly' : 'Weekly';
+  const isQ = period === 'quarter';   // «3 месяца с VIA-L» (2026-11-11): окно 90 дн., метрики — последний месяц против первого
+  const isM = period === 'month' || isQ;
+  const spanN = isQ ? 30 : (isM ? 30 : 7);
+  const thisP = isQ ? 'the last 30 days of these 3 months' : (isM ? 'this month' : 'this week');
+  const lastP = isQ ? 'the first month of these 3 months' : (isM ? 'last month' : 'last week');
+  const adjP  = isQ ? 'Three-month' : (isM ? 'Monthly' : 'Weekly');
   const labels = {
     hrv:'HRV', sleep:'Sleep quality', rhr:'Resting heart rate', energy:'Energy',
     qol:'Quality of life', anx:'Anxiety', score:'Readiness',
@@ -4220,12 +4221,12 @@ function buildWeeklyUserMessage(summary, daily, lang, period, exp) {
     out += _focusText(daily.focus, true);   // фокус недели и решение кода — модель их объясняет
     // Месячный итог: что пробовали за месяц и чем кончилась каждая неделя (решения принимал код приложения).
     if (isM && Array.isArray(daily.focusLog) && daily.focusLog.length) {
-      const rows = daily.focusLog.slice(0, 6).map(x => {
+      const rows = daily.focusLog.slice(0, isQ ? 14 : 6).map(x => {
         const t = String((x && x.title) || '').replace(/\s+/g, ' ').trim().slice(0, 120); if (!t) return '';
         const k = parseInt(x.kept, 10);
         return '«' + t + '»' + (isFinite(k) ? ' (выполнялся ' + k + ' дн. из 7)' : '') + (_FOCUS_DECISION[x.outcome] ? ' — ' + _FOCUS_DECISION[x.outcome] : '');
       }).filter(Boolean);
-      if (rows.length) out += '\n\nЧТО ПРОБОВАЛИ ЗА МЕСЯЦ, по неделям (решения принимал код приложения, не оспаривай): ' + rows.join('; ')
+      if (rows.length) out += '\n\nЧТО ПРОБОВАЛИ ЗА ' + (isQ ? '3 МЕСЯЦА' : 'МЕСЯЦ') + ', по неделям (решения принимал код приложения, не оспаривай): ' + rows.join('; ')
         + '. Скажи, что из этого закрепилось и что стоит за траекторией жалоб за месяц. Медленные жалобы (вес, либидо, мышцы, цикл) оценивай только по месяцу.';
     }
 
@@ -4240,7 +4241,7 @@ function buildWeeklyUserMessage(summary, daily, lang, period, exp) {
     if (p.eating)                ctx.push('eating pattern: ' + p.eating);
     if (p.goal) ctx.unshift('client goal: ' + String(p.goal).slice(0, 200) + ((p.priorities && p.priorities.length) ? ' (focus: ' + p.priorities.join(', ') + ')' : ''));
     if (ctx.length) out += '\n\nClient context: ' + ctx.join('; ') + '.';
-    if (p.goal) out += '\nFrame what improved and the next-' + (isM ? 'month' : 'week') + ' focus around this stated goal.';
+    if (p.goal) out += '\nFrame what improved and the next-' + (isQ ? '3-months' : (isM ? 'month' : 'week')) + ' focus around this stated goal.';
   }
 
   // ЗАМКНУТАЯ ПЕТЛЯ ЭКСПЕРИМЕНТА: прошлый разбор дал ОДИН эксперимент, клиент измерил его
@@ -4265,7 +4266,7 @@ function buildWeeklyUserMessage(summary, daily, lang, period, exp) {
     }
   }
 
-  return out + '\n\nWrite the short ' + (isM ? 'monthly' : 'weekly') + ' review now.';
+  return out + '\n\nWrite the ' + (isQ ? 'three-month' : (isM ? 'short monthly' : 'short weekly')) + ' review now.';
 }
 
 async function handleWeeklyReport(request, env, corsHeaders, ctx) {
@@ -4279,7 +4280,8 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
     it: 'italiano', he: 'עברית', ja: '日本語', ko: '한국어',
   };
   const langName = langMap[lang] || 'English';
-  const isMonth = period === 'month';
+  const isQuarter = period === 'quarter';   // «3 месяца с VIA-L» — тот же обработчик, третий горизонт (2026-11-11)
+  const isMonth = period === 'month' || isQuarter;
   // Фокус недели выбран кодом приложения (levers.js) → модель свой «эксперимент» не предлагает и хвост
   // [[EXP]] не пишет. Старые сборки фокуса не шлют — у них всё как раньше.
   const _hasFocus = !!(daily && daily.focus && typeof daily.focus === 'object' && (daily.focus.title || daily.focus.last));
@@ -4293,9 +4295,9 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
   // как проверяемую гипотезу: ожидаемое направление + горизонт. Без этого «верификации» нет:
   // нечего сверять через неделю, кроме «стало иначе».
   const _wellnessW = ['vio', 'pro'].includes(String(tier || '').toLowerCase());
-  const perAdj  = isMonth ? 'monthly' : 'weekly';   // 3-й уровень: месячный разбор — то же ядро, другое окно/каденс
-  const perThis = isMonth ? 'this month' : 'this week';
-  const perNext = isMonth ? 'coming month' : 'coming week';
+  const perAdj  = isQuarter ? 'three-month' : (isMonth ? 'monthly' : 'weekly');   // уровни: неделя → месяц → 3 месяца — то же ядро, другое окно
+  const perThis = isQuarter ? 'these 3 months' : (isMonth ? 'this month' : 'this week');
+  const perNext = isQuarter ? 'next 3 months' : (isMonth ? 'coming month' : 'coming week');
 
   // Язык — ПЕРВОЙ строкой и по-английски: промпт и данные английские, и Haiku шёл за ними,
   // не замечая «на: русском» в середине (2026-09-23, lang=ru → английский разбор).
@@ -4328,6 +4330,19 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
       'the wording and do NOT switch the output language): «Неделя выдалась тяжёлой: приливы беспокоили сильнее, и до шага ' +
       'руки доходили всего два дня. Так бывает — в этом периоде самочувствие идёт волнами, и одна трудная неделя не отменяет ' +
       'того, что вы уже начали. Не нужно наверстывать: достаточно вернуться к одному простому действию сегодня вечером.»\n'
+      : '') +
+    (isQuarter ?
+      'THIS IS THE "3 MONTHS WITH THE APP: WHAT CHANGED" SUMMARY. Write 8–12 sentences in this order: (1) what the person came ' +
+      'with, in their own words; (2) what they DID over these 3 months — the weekly steps from "ЧТО ПРОБОВАЛИ" with how many days ' +
+      'each was kept, the sleep block if present; (3) "was → now": their own 0–10 complaint scores from the first to the latest ' +
+      'rating, and the numbers of the first month vs the last 30 days, verbatim; (4) what STUCK and became a habit (a step kept ' +
+      '5+ days and decided "keep"), and what did not; (5) honest hope about the process (no promised outcome, no timeframe not in ' +
+      'the data); (6) ONE focus for the next 3 months, in one sentence, built on what stuck. Slow complaints (weight, libido, ' +
+      'muscle, cycle) are judged on this horizon. If the data are thin, say so plainly instead of drawing conclusions. ' +
+      'STRICT: name each step EXACTLY as written in the data (never paraphrase "кофе до 14:00" into another time); do NOT explain ' +
+      'physiological mechanisms (what a step "does" to the body); the ONLY duration you may mention is one literally present in the ' +
+      'data; stay within 12 sentences and UNDER 260 WORDS in total; no extra sections beyond the six above; do not add nutrition or ' +
+      'exercise advice beyond the single next-3-months focus; do not speculate about causes ("probably helped").\n'
       : '') +
     'COVER, based ONLY on the numbers given (never invent metrics or values):\n' +
     // Живые прогоны 2026-10-02: «трёхнедельный план», «приливы 3 дня вместо ежедневных» — сроков и сравнений в данных не было.
@@ -4418,6 +4433,8 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
       + 'и предложи не новый совет поверх старого, а либо продолжить тот же акцент дольше, либо сменить его. '
       + 'Не выдумывай, что человек делал: ты видишь только цифры и его отметки.')
 
+  // «3 месяца» — раз в 90 дней, итог важнее экономии: Sonnet на всех языках (Haiku путал шаги и придумывал сроки, прогон 2026-11-11).
+  const _wModel = (isQuarter || ['he', 'ar', 'ja', 'ko', 'uk'].includes(lang)) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001';
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -4426,8 +4443,8 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: ['he', 'ar', 'ja', 'ko', 'uk'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
-      max_tokens: 1400,   // 900 обрезал корейский на полуслове, без [[EXP]] (2026-09-23)
+      model: _wModel,
+      max_tokens: isQuarter ? 2000 : 1400,   // 900 обрезал корейский на полуслове, без [[EXP]] (2026-09-23); квартальный длиннее
       system: weeklySystem,
       messages: [{ role: 'user', content: _condGateBlock(_wCtx) + buildDietBlock(_wCtx) + buildExerciseBlock(_wCtx)
         + buildWeeklyUserMessage(summary, daily, lang, period, exp) }],
@@ -4435,7 +4452,7 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
   });
 
   const result = await response.json();
-  logUsage(env, ctx, isMonth ? 'monthly-report' : 'weekly-report', ['he', 'ar', 'ja', 'ko', 'uk'].includes(lang) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001', tier, lang, result);
+  logUsage(env, ctx, isQuarter ? 'quarterly-report' : (isMonth ? 'monthly-report' : 'weekly-report'), _wModel, tier, lang, result);
   // Недельный/месячный разбор — та же защита, что в /analyze: сбой API не превращается в текст
   // отчёта (иначе он осел бы и у клиента, и в карточке специалиста). 2026-08-25.
   if (!result.content?.[0]?.text) {
@@ -4478,7 +4495,7 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
   // только считаем промахи.
   try {
     const _pf = (daily && daily.profile) || {};
-    _ruleProbe(env, ctx, isMonth ? 'monthly' : 'weekly', text,
+    _ruleProbe(env, ctx, isQuarter ? 'quarterly' : (isMonth ? 'monthly' : 'weekly'), text,
                _analyzeExpects({ gender: _pf.sex, diet_type: _pf.diet_type, labs: {} }), tier, lang);
   } catch (e) {}
 
@@ -4500,7 +4517,7 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
         }
       }
     } catch (_) {}
-    ctx.waitUntil(cabinetIngestWeekly(env, code, clean + expLine, lang, isMonth).catch(() => {}));
+    ctx.waitUntil(cabinetIngestWeekly(env, code, clean + expLine, lang, isQuarter ? 'quarter' : isMonth).catch(() => {}));
     ctx.waitUntil(_bumpGrantUsed(env, code).catch(() => {}));   // день доступа израсходован
   }
 
@@ -4524,12 +4541,12 @@ async function cabinetIngestWeekly(env, code, text, lang, isMonth) {
   const today = new Date().toISOString().slice(0, 10);
   // Месячный итог кладём тем же типом (в кабинете нет отдельного «monthly»), но с пометкой периода: без неё
   // месячный затирал недельный, пришедший за последние шесть дней. Замена — только внутри своего периода.
-  const per = isMonth ? 'month' : 'week';
+  const per = isMonth === 'quarter' ? 'quarter' : (isMonth ? 'month' : 'week');   // 'quarter' — «3 месяца» (2026-11-11)
   const entry = {
     date: today, type: 'weekly', period: per, status: 'received', source: 'ip', lang: lang || '',
     text: String(text).slice(0, 6000),
   };
-  const WIN = (isMonth ? 25 : 6) * 86400000;
+  const WIN = (per === 'quarter' ? 80 : (isMonth ? 25 : 6)) * 86400000;
   const idx = d.breakdowns.findIndex(b => b.type === 'weekly' && (b.period || 'week') === per && b.date && (Date.now() - new Date(b.date).getTime()) < WIN);
   if (idx >= 0) d.breakdowns[idx] = entry; else d.breakdowns.push(entry);
   if (d.breakdowns.length > 50) d.breakdowns = d.breakdowns.slice(-50);
