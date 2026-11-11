@@ -439,6 +439,9 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
       var sl = SLEEP_KEYS.indexOf(k) > -1 && window.vialLibrary.sectionKeys('sleepcbt', lang).length
         ? '<button type="button" class="as-usual" style="display:flex;width:100%;justify-content:center;align-items:center;gap:7px;margin-top:8px;" onclick="vialLibrary.goSection(\'sleepcbt\')">'
           + '<i class="ph ph-moon-stars" aria-hidden="true"></i>' + esc(tx(UI.sleepcbt, lang)) + '</button>' : '';
+      if (SLEEP_KEYS.indexOf(k) > -1 && window.vialSleep && vialSleep.goCard)   // ритуал перед сном (sleep.js) — карточка в «Сегодня», шаг 5
+        sl += '<button type="button" class="as-usual" style="display:flex;width:100%;justify-content:center;align-items:center;gap:7px;margin-top:8px;" onclick="vialSleep.goCard()">'
+          + '<i class="ph ph-play-circle" aria-hidden="true"></i>' + esc(vialSleep.label('ritual')) + '</button>';
       if (isMale()) k = hasMen(lang) ? (MK[k] || '') : '';   // нет мужской статьи (cool, непереведённый шаг) — без ссылки
       var d = data(lang); if (!k || !d || !d[k]) return sl;
       return '<button type="button" class="as-usual" style="display:flex;width:100%;justify-content:center;align-items:center;gap:7px;margin-top:10px;" onclick="vialLibrary.go(\'' + k + '\')">'

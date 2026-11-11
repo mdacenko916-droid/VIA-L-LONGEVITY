@@ -45,6 +45,16 @@
     // «Читать о сне»: 5 статей «Основ» раздела «Сон: КПТ-И» (articles.js) + исследования о сне в Библиотеке VIA-L
     read: {ru:'Читать о сне',uk:'Читати про сон',en:'Read about sleep',es:'Leer sobre el sueño',de:'Über Schlaf lesen',pt:'Ler sobre o sono',fr:'Lire sur le sommeil',pl:'Czytaj o śnie',it:'Leggi sul sonno',he:'לקרוא על שינה',ja:'睡眠について読む',ko:'수면에 대해 읽기'},
     read_res: {ru:'Исследования о сне',uk:'Дослідження про сон',en:'Sleep research',es:'Estudios sobre el sueño',de:'Studien zum Schlaf',pt:'Estudos sobre o sono',fr:'Études sur le sommeil',pl:'Badania o śnie',it:'Studi sul sonno',he:'מחקרים על שינה',ja:'睡眠の研究',ko:'수면 연구'},
+    // Дневник отдельно от ритуала (2026-11-11, владелец): ритуал, «Не спится», мысли, чтение — всем сразу; дневник (3 вопроса утром)
+    // включается сам по сигналу (жалоба «Сон» / «Фокус недели» про сон / сон ≤4 в 3 из 7 дней), если человек сам его не выключал.
+    d_lbl: {ru:'Дневник сна по утрам',uk:'Щоденник сну щоранку',en:'Morning sleep diary',es:'Diario de sueño por la mañana',de:'Schlaftagebuch am Morgen',pt:'Diário do sono pela manhã',fr:'Agenda du sommeil le matin',pl:'Poranny dziennik snu',it:'Diario del sonno al mattino',he:'יומן שינה בבוקר',ja:'朝の睡眠日誌',ko:'아침 수면 일지'},
+    d_tx: {ru:'Три коротких вопроса в шаге «Сон» утром: когда легли, сколько засыпали, когда встали. Из них считается эффективность сна — главная цифра КПТ-И.',uk:'Три короткі запитання в кроці «Сон» зранку: коли лягли, скільки засинали, коли встали. З них рахується ефективність сну — головна цифра КПТ-І.',en:'Three short questions in the morning Sleep step: when you went to bed, how long it took to fall asleep, when you got up. They give your sleep efficiency — the key number in CBT-I.',es:'Tres preguntas cortas en el paso «Sueño» de la mañana: a qué hora te acostaste, cuánto tardaste en dormirte, a qué hora te levantaste. Con ellas se calcula la eficiencia del sueño, la cifra clave de la TCC-I.',de:'Drei kurze Fragen im Schritt „Schlaf“ am Morgen: wann du ins Bett gegangen bist, wie lange das Einschlafen gedauert hat, wann du aufgestanden bist. Daraus ergibt sich die Schlafeffizienz — die zentrale Zahl der KVT-I.',pt:'Três perguntas curtas na etapa «Sono» da manhã: quando se deitou, quanto demorou para dormir, quando se levantou. Delas sai a eficiência do sono — o número-chave da TCC-I.',fr:'Trois questions courtes à l’étape « Sommeil » du matin : l’heure du coucher, le temps d’endormissement, l’heure du lever. Elles donnent l’efficacité du sommeil — le chiffre clé de la TCC-I.',pl:'Trzy krótkie pytania w porannym kroku „Sen”: kiedy kładziesz się spać, ile trwa zasypianie, kiedy wstajesz. Z nich liczy się wydajność snu — kluczowa liczba CBT-I.',it:'Tre brevi domande nel passaggio «Sonno» del mattino: quando vai a letto, quanto ci metti ad addormentarti, quando ti alzi. Da qui si calcola l’efficienza del sonno, il numero chiave della CBT-I.',he:'שלוש שאלות קצרות בשלב ״שינה״ בבוקר: מתי נכנסתם למיטה, כמה זמן לקח להירדם, מתי קמתם. מהן מחושבת יעילות השינה — המספר המרכזי של CBT-I.',ja:'朝の「睡眠」ステップに短い質問が3つ:床に就いた時刻、寝つくまでの時間、起きた時刻。ここからCBT-Iの大事な数字、睡眠効率を計算します。',ko:'아침 \'수면\' 단계에 짧은 질문 3개: 잠자리에 든 시간, 잠들기까지 걸린 시간, 일어난 시간. 여기서 CBT-I의 핵심 숫자인 수면 효율을 계산해요.'},
+    d_on: {ru:'Включить дневник',uk:'Увімкнути щоденник',en:'Turn on the diary',es:'Activar el diario',de:'Tagebuch einschalten',pt:'Ativar o diário',fr:'Activer l’agenda',pl:'Włącz dziennik',it:'Attiva il diario',he:'הפעלת היומן',ja:'日誌をオンにする',ko:'일지 켜기'},
+    d_off: {ru:'Выключить дневник',uk:'Вимкнути щоденник',en:'Turn off the diary',es:'Desactivar el diario',de:'Tagebuch ausschalten',pt:'Desativar o diário',fr:'Désactiver l’agenda',pl:'Wyłącz dziennik',it:'Disattiva il diario',he:'כיבוי היומן',ja:'日誌をオフにする',ko:'일지 끄기'},
+    d_auto: {ru:'Дневник включился сам: {why}. Если не нужен — выключите.',uk:'Щоденник увімкнувся сам: {why}. Якщо не потрібен — вимкніть.',en:'The diary turned on by itself: {why}. If you don’t need it, turn it off.',es:'El diario se activó solo: {why}. Si no lo necesitas, desactívalo.',de:'Das Tagebuch hat sich selbst eingeschaltet: {why}. Wenn du es nicht brauchst, schalte es aus.',pt:'O diário foi ativado sozinho: {why}. Se não precisar, desative.',fr:'L’agenda s’est activé tout seul : {why}. S’il ne vous sert pas, désactivez-le.',pl:'Dziennik włączył się sam: {why}. Jeśli go nie potrzebujesz — wyłącz.',it:'Il diario si è attivato da solo: {why}. Se non ti serve, disattivalo.',he:'היומן הופעל מעצמו: {why}. אם אין בו צורך — כבו אותו.',ja:'日誌が自動でオンになりました:{why}。不要ならオフにしてください。',ko:'일지가 자동으로 켜졌어요: {why}. 필요 없으면 끄세요.'},
+    why_cmp: {ru:'вы отметили, что беспокоит сон',uk:'ви відзначили, що турбує сон',en:'you said sleep is bothering you',es:'indicaste que te preocupa el sueño',de:'du hast Schlaf als Beschwerde angegeben',pt:'você indicou que o sono incomoda',fr:'vous avez indiqué que le sommeil vous gêne',pl:'zaznaczono, że dokucza sen',it:'hai indicato che il sonno ti disturba',he:'סימנתם שהשינה מטרידה',ja:'睡眠が気になると選ばれたため',ko:'수면이 신경 쓰인다고 표시하셨어요'},
+    why_focus: {ru:'«Фокус недели» сейчас про сон',uk:'«Фокус тижня» зараз про сон',en:'this week’s focus is on sleep',es:'el foco de la semana es el sueño',de:'der Wochenfokus liegt auf dem Schlaf',pt:'o foco da semana é o sono',fr:'le focus de la semaine porte sur le sommeil',pl:'fokus tygodnia dotyczy snu',it:'il focus della settimana è il sonno',he:'מוקד השבוע הוא השינה',ja:'今週のフォーカスが睡眠のため',ko:'이번 주 포커스가 수면이에요'},
+    why_q: {ru:'сон был плохим 3 из последних 7 дней',uk:'сон був поганим 3 з останніх 7 днів',en:'sleep was poor on 3 of the last 7 days',es:'el sueño fue malo 3 de los últimos 7 días',de:'der Schlaf war an 3 der letzten 7 Tage schlecht',pt:'o sono foi ruim em 3 dos últimos 7 dias',fr:'le sommeil a été mauvais 3 des 7 derniers jours',pl:'sen był słaby 3 z ostatnich 7 dni',it:'il sonno è stato scarso 3 degli ultimi 7 giorni',he:'השינה הייתה גרועה 3 מתוך 7 הימים האחרונים',ja:'直近7日のうち3日、睡眠がよくなかったため',ko:'최근 7일 중 3일 수면이 좋지 않았어요'},
     ritual: {ru:'Ритуал перед сном',uk:'Ритуал перед сном',en:'Wind-down ritual',es:'Ritual antes de dormir',de:'Ritual vor dem Schlafen',pt:'Ritual antes de dormir',fr:'Rituel avant le coucher',pl:'Rytuał przed snem',it:'Rituale prima di dormire',he:'טקס לפני השינה',ja:'寝る前の習慣',ko:'잠들기 전 루틴'},
     awake: {ru:'Не спится',uk:'Не спиться',en:'Can’t sleep',es:'No puedo dormir',de:'Kann nicht schlafen',pt:'Não consigo dormir',fr:'Je n’arrive pas à dormir',pl:'Nie mogę zasnąć',it:'Non riesco a dormire',he:'לא נרדמים',ja:'眠れない',ko:'잠이 안 와요'},
     worry: {ru:'Выгрузить мысли',uk:'Вивантажити думки',en:'Offload my thoughts',es:'Vaciar la mente',de:'Gedanken abladen',pt:'Despejar os pensamentos',fr:'Déposer mes pensées',pl:'Wyrzuć myśli z głowy',it:'Scaricare i pensieri',he:'לפרוק מחשבות',ja:'考えを書き出す',ko:'생각 내려놓기'},
@@ -144,7 +154,26 @@
       + '<div class="sl-hint" id="sl_prev" data-sl="d_prev" style="display:none;">' + esc(t('d_prev')) + '</div>'
       + '</div>';
   }
+  // ── автовключение дневника (2026-11-11) ──
+  // Только если человек сам ни разу не включал/не выключал (KEY_ON ещё не записан): его «выключить» — навсегда.
+  var KEY_AUTO = 'vial_sleep_auto';
+  function sleepSignal() {
+    try { if (typeof _cmpKeysAll === 'function' && _cmpKeysAll().indexOf('sleep') > -1) return 'why_cmp'; } catch (e) {}
+    try { var ex = JSON.parse(localStorage.getItem('vialp_experiment') || 'null'); if (ex && ['evening', 'wake', 'bed', 'cool'].indexOf(ex.lever) > -1) return 'why_focus'; } catch (e) {}
+    try {
+      var arr = JSON.parse(localStorage.getItem('vialp_daily') || '[]') || [], cut = Date.now() - 7 * 86400000;
+      if (arr.filter(function (r) { return r && r.ts >= cut && r.sleep_qual != null && r.sleep_qual <= 4; }).length >= 3) return 'why_q';
+    } catch (e) {}
+    return '';
+  }
+  function autoCheck() {
+    if (get(KEY_ON, null) !== null) return;
+    var why = sleepSignal(); if (!why) return;
+    put(KEY_ON, true); put(KEY_AUTO, why);
+    var box = $('sl-diary'); if (box) box.style.display = '';   // включился из карточки — вопросы в шаге «Сон» сразу видны
+  }
   function mountDiary() {
+    autoCheck();
     var anchor = $('sq-wake'); if (!anchor) return;
     var box = $('sl-diary');
     if (!box) { box = document.createElement('div'); box.id = 'sl-diary'; box.innerHTML = diaryHtml(); anchor.parentNode.insertBefore(box, anchor.nextSibling); prefill(); }
@@ -215,11 +244,7 @@
   function setSet(k, v) { var s = settings(); s[k] = v; put(KEY_SET, s); }
   function card() {
     var box = $('rdSleep'); if (!box) return;
-    if (!on()) {
-      box.innerHTML = '<div class="sl-card"><div class="sl-h">🌙 ' + esc(t('card_t')) + '</div><div class="sl-tx">' + esc(t('off_tx')) + '</div>'
-        + '<button type="button" class="sl-btn sl-main" onclick="vialSleep.toggle(true)">' + esc(t('btn_on')) + '</button></div>';
-      return;
-    }
+    autoCheck();
     var s = settings(), e = eff7(), fl = (get(KEY_FLAGS, null) || {}), flags = (fl.ts && Date.now() - fl.ts < 14 * 86400000) ? (fl.f || []) : [];
     var durs = [5, 10, 15].map(function (d) { return '<button type="button" class="sl-pill' + (s.dur === d ? ' on' : '') + '" onclick="vialSleep.set(\'dur\',' + d + ')">' + d + ' ' + esc(t('min')) + '</button>'; }).join('');
     var nz = [['music', 'n_music'], ['none', 'n_none']].map(function (x) { return '<button type="button" class="sl-pill' + (s.noise === x[0] ? ' on' : '') + '" onclick="vialSleep.set(\'noise\',\'' + x[0] + '\')">' + esc(t(x[1])) + '</button>'; }).join('');
@@ -235,11 +260,16 @@
       + '<button type="button" class="sl-btn" onclick="vialSleep.worry()">' + esc(t('worry')) + '</button></div>'
       + wPrev
       + '<div class="sl-lbl">' + esc(t('remind')) + '</div>' + rm
-      + '<div class="sl-lbl">' + esc(t('eff7')) + '</div>'
-      + (e ? '<div class="sl-eff"><b>' + e.avg + '%</b> <span>' + esc(t('eff_hint')) + '</span></div>' : '<div class="sl-tx">' + esc(t('eff_none')) + '</div>')
-      + flags.filter(function (k) { return S['f_' + k]; }).map(function (k) { return '<div class="sl-flag">⚠️ ' + esc(t('f_' + k)) + '</div>'; }).join('')
       + readHtml()
-      + '<button type="button" class="sl-off" onclick="vialSleep.toggle(false)">' + esc(t('btn_off')) + '</button></div>';
+      + '<div class="sl-lbl">' + esc(t('d_lbl')) + '</div>'
+      + (on()
+        ? (get(KEY_AUTO, '') && S[get(KEY_AUTO, '')] ? '<div class="sl-note">' + esc(t('d_auto').replace('{why}', t(get(KEY_AUTO, '')))) + '</div>' : '')
+          + '<div class="sl-tx" style="margin-top:4px;">' + esc(t('eff7')) + '</div>'
+          + (e ? '<div class="sl-eff"><b>' + e.avg + '%</b> <span>' + esc(t('eff_hint')) + '</span></div>' : '<div class="sl-tx">' + esc(t('eff_none')) + '</div>')
+          + flags.filter(function (k) { return S['f_' + k]; }).map(function (k) { return '<div class="sl-flag">⚠️ ' + esc(t('f_' + k)) + '</div>'; }).join('')
+          + '<button type="button" class="sl-off" onclick="vialSleep.toggle(false)">' + esc(t('d_off')) + '</button>'
+        : '<div class="sl-tx">' + esc(t('d_tx')) + '</div><button type="button" class="sl-btn" onclick="vialSleep.toggle(true)">' + esc(t('d_on')) + '</button>')
+      + '</div>';
   }
   // ── (i) и «Читать о сне» (2026-11-11) ──
   // Статьи — раздел «Основ» «Всё о сне» (articles.js; лекция — только у женщины, 5 статей КПТ-И без рода); исследования — тема «Сон»
@@ -262,17 +292,26 @@
     if (k === '@res') { if (Lb.research) Lb.research('sleep'); return; }
     if (Lb.go) Lb.go(k);
   }
+  // Перейти к карточке «Работаю над сном» (вкладка «Сегодня», шаг 5) — из жалобы «Сон» и шагов сна «Фокуса недели»
+  function goCard() {
+    try { if (typeof window.closeCircModal === 'function') window.closeCircModal(); } catch (e) {}
+    try { if (window.vialLibrary && vialLibrary.sheetClose) vialLibrary.sheetClose(); } catch (e) {}
+    try { if (typeof window.navTo === 'function') window.navTo('today'); } catch (e) {}
+    setTimeout(function () {
+      try { if (typeof _rdStep === 'function' && window._rdOpen !== 5) _rdStep(5); } catch (e) {}
+      var el = $('rdSleep'); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    }, 120);
+  }
   function dayKey() { try { return (typeof _dayKey === 'function') ? _dayKey() : new Date().toISOString().slice(0, 10); } catch (e) { return ''; } }
   function toggle(v) {
-    put(KEY_ON, !!v);
-    if (!v) { setSet('remind', ''); schedule(); }
+    put(KEY_ON, !!v); put(KEY_AUTO, '');   // решение человека — автовключение больше не трогает
     mountDiary(); card();
   }
 
   // ── напоминание (локальное уведомление id 2; текст — только 🌙: ничего о здоровье на экране блокировки) ──
   function schedule() {
     var s = settings();
-    try { if (typeof window.notifySleep === 'function') window.notifySleep(on() && s.remind ? s.remind : null, brand()); } catch (e) {}
+    try { if (typeof window.notifySleep === 'function') window.notifySleep(s.remind ? s.remind : null, brand()); } catch (e) {}
   }
   function remind(v) {
     setSet('remind', v || '');
@@ -451,8 +490,14 @@
     });
     return at + sec;
   }
+  // Блокировка кнопкой / сворачивание во время ритуала (2026-11-11): iOS замораживает таймеры, и после разблокировки
+  // накопившиеся фразы прозвучали бы разом. Поэтому при скрытии страницы ритуал останавливается целиком: голос, мелодия,
+  // «не гасить экран». В беззвучном режиме звук идёт: сессия iOS «playback» (плагин голоса ставит её при запуске,
+  // плюс navigator.audioSession), на Android голос и мелодия — медиапоток, его режим «без звука» не глушит.
+  var active = false;
+  document.addEventListener('visibilitychange', function () { if (document.hidden && active) stop(); });
   function begin(title) {
-    stop(true); run++; cursor = {}; overlay(title); awakeOn(); pickVoice();
+    stop(true); run++; cursor = {}; overlay(title); awakeOn(); pickVoice(); active = true;
   }
   function ritual() {
     var s = settings(), plan = { 5: [120, 0, 180], 10: [120, 240, 240], 15: [180, 360, 360] }[s.dur] || [120, 240, 240];
@@ -474,9 +519,9 @@
     at = breathe(at, 150, true);
     later(function () { finish(); }, (at + 2) * 1000);
   }
-  function finish() { noiseStop(false); awakeOff(); var o = $('sl-ov'); if (o) o.style.display = 'none'; run++; }
+  function finish() { active = false; noiseStop(false); awakeOff(); var o = $('sl-ov'); if (o) o.style.display = 'none'; run++; }
   function stop(quiet) {
-    run++; timers.forEach(clearTimeout); timers = []; hush(); noiseStop(true); awakeOff();
+    active = false; run++; timers.forEach(clearTimeout); timers = []; hush(); noiseStop(true); awakeOff();
     var o = $('sl-ov'); if (o && !quiet) o.style.display = 'none';
   }
 
@@ -543,7 +588,7 @@
     on: on, toggle: toggle, card: card, rec: rec, payload: payload, relang: relang,
     set: function (k, v) { setSet(k, v); card(); },
     remind: remind, ritual: ritual, awake: awake, stop: function () { stop(false); },
-    worry: worry, worrySave: worrySave, mountDiary: mountDiary, info: info, read: read, open: open,
+    worry: worry, worrySave: worrySave, mountDiary: mountDiary, info: info, read: read, open: open, goCard: goCard, label: function (k) { return t(k); },
     _music: makeMusic   // отладка: собрать мелодию дня (вернёт blob-URL)
   };
   mountDiary(); card(); schedule();
