@@ -26,7 +26,7 @@
   // ── строки ×12 (русский — канон) ──
   var S = {
     card_t: {ru:'Работаю над сном',uk:'Працюю над сном',en:'Working on my sleep',es:'Trabajo mi sueño',de:'Ich arbeite an meinem Schlaf',pt:'Trabalhando o meu sono',fr:'Je travaille mon sommeil',pl:'Pracuję nad snem',it:'Lavoro sul mio sonno',he:'עובדים על השינה',ja:'睡眠に取り組む',ko:'수면 개선 중'},
-    off_tx: {ru:'Включите — и по утрам в шаге «Сон» появятся три коротких вопроса дневника сна, а здесь — ритуал перед сном. Подход построен на принципах КПТ-І — его рекомендуют первым, когда сон разладился.',
+    off_tx: {ru:'Включите — и по утрам в шаге «Сон» появятся три коротких вопроса дневника сна, а здесь — ритуал перед сном. Подход построен на принципах КПТ-И — его рекомендуют первым, когда сон разладился.',
              uk:'Увімкніть — і щоранку в кроці «Сон» з’являться три короткі запитання щоденника сну, а тут — ритуал перед сном. Підхід побудований на принципах КПТ-І — її рекомендують першою, коли сон розладнався.',
              en:'Turn it on and each morning the Sleep step will add three short sleep-diary questions, and here you’ll get a wind-down ritual. The approach follows the principles of CBT-I — the first thing recommended when sleep goes off track.',
              es:'Actívalo y cada mañana el paso «Sueño» añadirá tres preguntas breves del diario de sueño, y aquí tendrás un ritual para antes de dormir. El enfoque sigue los principios de la TCC-I, lo primero que se recomienda cuando el sueño se desajusta.',
@@ -40,6 +40,11 @@
              ko:'켜면 매일 아침 ‘수면’ 단계에 짧은 수면 일지 질문 3개가 추가되고, 여기에는 잠들기 전 루틴이 나타나요. CBT-I 원칙에 기반한 방법으로, 수면이 흐트러졌을 때 가장 먼저 권장되는 접근이에요.'},
     btn_on: {ru:'Включить',uk:'Увімкнути',en:'Turn on',es:'Activar',de:'Einschalten',pt:'Ativar',fr:'Activer',pl:'Włącz',it:'Attiva',he:'הפעלה',ja:'オンにする',ko:'켜기'},
     btn_off: {ru:'Выключить блок «Сон»',uk:'Вимкнути блок «Сон»',en:'Turn off the Sleep block',es:'Desactivar el bloque «Sueño»',de:'Block „Schlaf“ ausschalten',pt:'Desativar o bloco «Sono»',fr:'Désactiver le bloc « Sommeil »',pl:'Wyłącz blok „Sen”',it:'Disattiva il blocco «Sonno»',he:'כיבוי בלוק «שינה»',ja:'「睡眠」をオフにする',ko:'‘수면’ 끄기'},
+    // (i) в карточке — про голос и звук (2026-11-11, владелец: пути в настройках не называть — их меняют обновления)
+    info: {ru:'Голос ритуала — встроенный голос вашего телефона, он работает без интернета. Его можно сменить или скачать более естественный в настройках телефона. Фон — тихая мелодия 60 ударов в минуту, она гаснет после ритуала.',uk:'Голос ритуалу — вбудований голос вашого телефона, він працює без інтернету. Його можна змінити або завантажити природніший у налаштуваннях телефона. Фон — тиха мелодія 60 ударів на хвилину, вона згасає після ритуалу.',en:'The ritual voice is your phone’s built-in voice and works offline. You can change it or download a more natural one in your phone’s settings. The background is a quiet melody at 60 beats per minute that fades after the ritual.',es:'La voz del ritual es la voz integrada de tu teléfono y funciona sin internet. Puedes cambiarla o descargar una más natural en los ajustes del teléfono. El fondo es una melodía suave de 60 pulsaciones por minuto que se apaga al terminar el ritual.',de:'Die Stimme im Ritual ist die eingebaute Stimme deines Telefons und funktioniert ohne Internet. Du kannst sie in den Einstellungen des Telefons ändern oder eine natürlichere herunterladen. Im Hintergrund läuft eine leise Melodie mit 60 Schlägen pro Minute, die nach dem Ritual ausklingt.',pt:'A voz do ritual é a voz embutida do seu celular e funciona sem internet. Você pode trocá-la ou baixar uma mais natural nas configurações do celular. O fundo é uma melodia suave de 60 batidas por minuto que se apaga depois do ritual.',fr:'La voix du rituel est la voix intégrée de votre téléphone et fonctionne sans internet. Vous pouvez la changer ou en télécharger une plus naturelle dans les réglages du téléphone. En fond, une mélodie douce à 60 battements par minute, qui s’éteint après le rituel.',pl:'Głos rytuału to wbudowany głos Twojego telefonu i działa bez internetu. Możesz go zmienić albo pobrać bardziej naturalny w ustawieniach telefonu. W tle gra cicha melodia 60 uderzeń na minutę, która wygasa po rytuale.',it:'La voce del rituale è la voce integrata del tuo telefono e funziona senza internet. Puoi cambiarla o scaricarne una più naturale nelle impostazioni del telefono. Lo sfondo è una melodia leggera a 60 battiti al minuto che si spegne dopo il rituale.',he:'הקול בטקס הוא הקול המובנה של הטלפון, והוא עובד בלי אינטרנט. אפשר להחליף אותו או להוריד קול טבעי יותר בהגדרות הטלפון. ברקע מתנגנת מנגינה שקטה של 60 פעימות לדקה, שדועכת בסוף הטקס.',ja:'習慣の声はスマートフォンに内蔵された音声で、インターネットなしで使えます。スマートフォンの設定で変更したり、より自然な音声をダウンロードしたりできます。背景は1分間60拍の静かなメロディで、習慣が終わると消えていきます。',ko:'루틴의 목소리는 휴대폰에 내장된 음성이라 인터넷 없이도 작동해요. 휴대폰 설정에서 바꾸거나 더 자연스러운 음성을 내려받을 수 있어요. 배경은 분당 60박의 조용한 멜로디이고, 루틴이 끝나면 사라져요.'},
+    // «Читать о сне»: 5 статей «Основ» раздела «Сон: КПТ-И» (articles.js) + исследования о сне в Библиотеке VIA-L
+    read: {ru:'Читать о сне',uk:'Читати про сон',en:'Read about sleep',es:'Leer sobre el sueño',de:'Über Schlaf lesen',pt:'Ler sobre o sono',fr:'Lire sur le sommeil',pl:'Czytaj o śnie',it:'Leggi sul sonno',he:'לקרוא על שינה',ja:'睡眠について読む',ko:'수면에 대해 읽기'},
+    read_res: {ru:'Исследования о сне',uk:'Дослідження про сон',en:'Sleep research',es:'Estudios sobre el sueño',de:'Studien zum Schlaf',pt:'Estudos sobre o sono',fr:'Études sur le sommeil',pl:'Badania o śnie',it:'Studi sul sonno',he:'מחקרים על שינה',ja:'睡眠の研究',ko:'수면 연구'},
     ritual: {ru:'Ритуал перед сном',uk:'Ритуал перед сном',en:'Wind-down ritual',es:'Ritual antes de dormir',de:'Ritual vor dem Schlafen',pt:'Ritual antes de dormir',fr:'Rituel avant le coucher',pl:'Rytuał przed snem',it:'Rituale prima di dormire',he:'טקס לפני השינה',ja:'寝る前の習慣',ko:'잠들기 전 루틴'},
     awake: {ru:'Не спится',uk:'Не спиться',en:'Can’t sleep',es:'No puedo dormir',de:'Kann nicht schlafen',pt:'Não consigo dormir',fr:'Je n’arrive pas à dormir',pl:'Nie mogę zasnąć',it:'Non riesco a dormire',he:'לא נרדמים',ja:'眠れない',ko:'잠이 안 와요'},
     worry: {ru:'Выгрузить мысли',uk:'Вивантажити думки',en:'Offload my thoughts',es:'Vaciar la mente',de:'Gedanken abladen',pt:'Despejar os pensamentos',fr:'Déposer mes pensées',pl:'Wyrzuć myśli z głowy',it:'Scaricare i pensieri',he:'לפרוק מחשבות',ja:'考えを書き出す',ko:'생각 내려놓기'},
@@ -221,7 +226,8 @@
     var times = ['', '21:00', '21:30', '22:00', '22:30', '23:00', '23:30'];
     var rm = '<select class="sl-sel" onchange="vialSleep.remind(this.value)">' + times.map(function (x) { return '<option value="' + x + '"' + (s.remind === x ? ' selected' : '') + '>' + (x ? x : esc(t('remind_off'))) + '</option>'; }).join('') + '</select>';
     var w = get(KEY_WORRY, null), wPrev = (w && w.text && w.day && w.day !== dayKey()) ? '<div class="sl-note"><b>' + esc(t('w_prev')) + '</b> ' + esc(w.text.slice(0, 280)) + '</div>' : '';
-    box.innerHTML = '<div class="sl-card"><div class="sl-h">🌙 ' + esc(t('card_t')) + '</div>'
+    box.innerHTML = '<div class="sl-card"><div class="sl-h"><button type="button" class="help-btn-inline" aria-label="info" onclick="vialSleep.info()">ℹ</button>🌙 ' + esc(t('card_t')) + '</div>'
+      + '<div id="sl-info" class="sl-note"' + (infoOpen ? '' : ' hidden') + '>' + esc(t('info')) + '</div>'
       + '<button type="button" class="sl-btn sl-main" onclick="vialSleep.ritual()">▶ ' + esc(t('ritual')) + '</button>'
       + '<div class="sl-lbl">' + esc(t('dur')) + '</div><div class="sl-pills">' + durs + '</div>'
       + '<div class="sl-lbl">' + esc(t('noise')) + '</div><div class="sl-pills">' + nz + '</div>'
@@ -232,7 +238,29 @@
       + '<div class="sl-lbl">' + esc(t('eff7')) + '</div>'
       + (e ? '<div class="sl-eff"><b>' + e.avg + '%</b> <span>' + esc(t('eff_hint')) + '</span></div>' : '<div class="sl-tx">' + esc(t('eff_none')) + '</div>')
       + flags.filter(function (k) { return S['f_' + k]; }).map(function (k) { return '<div class="sl-flag">⚠️ ' + esc(t('f_' + k)) + '</div>'; }).join('')
+      + readHtml()
       + '<button type="button" class="sl-off" onclick="vialSleep.toggle(false)">' + esc(t('btn_off')) + '</button></div>';
+  }
+  // ── (i) и «Читать о сне» (2026-11-11) ──
+  // Статьи — раздел «Основ» «Сон: КПТ-И» (articles.js, общие для VIA-L и ADAM-L, без рода); исследования — тема «Сон»
+  // Библиотеки VIA-L (у мужчины — m_sleep; без подписки там анонс и замок, как везде).
+  var READ = ['cbti', 'cbti-diary', 'cbti-window', 'cbti-mind', 'cbti-relax'], infoOpen = false, readOpen = false;
+  function info() { infoOpen = !infoOpen; var el = $('sl-info'); if (el) el.hidden = !infoOpen; }
+  function readHtml() {
+    var Lb = window.vialLibrary, lang = L();
+    var arts = (Lb && Lb.title) ? READ.filter(function (k) { return Lb.title(k, lang); }) : [];
+    var res = !!(Lb && Lb.research);
+    if (!arts.length && !res) return '';
+    var rows = !readOpen ? '' : '<div class="sl-read">' + arts.map(function (k) {
+        return '<button type="button" class="sl-rd" onclick="vialSleep.open(\'' + k + '\')"><span>' + esc(Lb.title(k, lang)) + '</span><span class="sl-chev">›</span></button>';
+      }).join('') + (res ? '<button type="button" class="sl-rd" onclick="vialSleep.open(\'@res\')"><span>🔬 ' + esc(t('read_res')) + '</span><span class="sl-chev">›</span></button>' : '') + '</div>';
+    return '<button type="button" class="sl-btn" onclick="vialSleep.read()">📖 ' + esc(t('read')) + ' ' + (readOpen ? '▴' : '▾') + '</button>' + rows;
+  }
+  function read() { readOpen = !readOpen; card(); }
+  function open(k) {
+    var Lb = window.vialLibrary; if (!Lb) return;
+    if (k === '@res') { if (Lb.research) Lb.research('sleep'); return; }
+    if (Lb.go) Lb.go(k);
   }
   function dayKey() { try { return (typeof _dayKey === 'function') ? _dayKey() : new Date().toISOString().slice(0, 10); } catch (e) { return ''; } }
   function toggle(v) {
@@ -493,6 +521,10 @@
     + '.sl-eff{font-size:var(--fs-cap);color:var(--t2);line-height:1.4;}.sl-eff b{font-size:22px;color:var(--gold-lt);margin-right:6px;}'
     + '.sl-flag{font-size:var(--fs-cap);color:var(--t1);background:rgba(224,107,107,.10);border:1px solid rgba(224,107,107,.30);border-radius:12px;padding:8px 10px;margin-top:10px;line-height:1.4;}'
     + '.sl-note{font-size:var(--fs-cap);color:var(--t2);border-left:2px solid var(--gold-lt);padding:4px 10px;margin-top:10px;white-space:pre-wrap;}'
+    + '.sl-h .help-btn-inline{margin-top:-2px;}'
+    + '.sl-read{display:grid;gap:6px;margin-top:8px;}'
+    + '.sl-rd{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:44px;padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(6,9,18,.35);color:var(--t1);font-size:var(--fs-cap);font-family:inherit;text-align:start;line-height:1.35;}'
+    + '.sl-chev{color:var(--gold-lt);font-size:18px;flex:0 0 auto;}'
     + '.sl-off{display:block;margin:14px auto 0;background:none;border:none;color:var(--t3);font-size:var(--fs-cap);text-decoration:underline;font-family:inherit;}'
     + '.sl-d-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}.sl-d-row .q-prompt{margin:0;}'
     + '.sl-time{max-width:120px;text-align:center;font-size:18px;font-weight:700;}'
@@ -511,7 +543,7 @@
     on: on, toggle: toggle, card: card, rec: rec, payload: payload, relang: relang,
     set: function (k, v) { setSet(k, v); card(); },
     remind: remind, ritual: ritual, awake: awake, stop: function () { stop(false); },
-    worry: worry, worrySave: worrySave, mountDiary: mountDiary,
+    worry: worry, worrySave: worrySave, mountDiary: mountDiary, info: info, read: read, open: open,
     _music: makeMusic   // отладка: собрать мелодию дня (вернёт blob-URL)
   };
   mountDiary(); card(); schedule();

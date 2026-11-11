@@ -39,6 +39,9 @@ ALL_KEYS_M = [k for _, ks in SECTIONS_M for k in ks]
 # Мужские «Что делать» (2026-10-18, вычитаны специалистом): отдельная группа — язык получает её, когда есть все 8 статей,
 # и не теряет мужской раздел, пока они не переведены. «Прохладной спальни» (cool) для мужчин нет: в базе P-M нет опоры.
 STEP_M = ['evening_m', 'wake_m', 'strength_m', 'protein_m', 'walk_m', 'breath_m', 'bed_m', 'order_m']
+# «Сон: КПТ-І» (2026-11-11, блок «Сон», docs/SLEEP-MODULE-MODEL.md): 5 статей без рода — одни и те же у женщины и мужчины.
+# Только в приложении: сайт (build-library-site.py) берёт SECTIONS и этот раздел не видит. Язык получает раздел, когда есть все 5.
+SLEEP = ['cbti', 'cbti-diary', 'cbti-window', 'cbti-mind', 'cbti-relax']
 
 
 def men_keys(have):
@@ -130,13 +133,15 @@ def main():
         if missing:
             skipped[lang] = missing; continue
         data[lang] = {k: convert(os.path.join(d, k + '.md')) for k in ALL_KEYS}
+        if all(k in have for k in SLEEP):
+            data[lang].update({k: convert(os.path.join(d, k + '.md')) for k in SLEEP})
         mk = men_keys(have)
         if mk:
             data[lang].update({k: convert(os.path.join(d, k + '.md')) for k in mk})
             men.append(lang)
     js = ('/* VIA·L — библиотека статей. СОБРАНО tools/build-articles.py из docs/articles/<язык>/*.md — руками не править.\n'
           '   Данные: ART[язык][ключ] = {t: заголовок, min: время чтения, h: HTML тела, codes: темы базы для «На чём основано»}. */\n'
-          'window.VIAL_ART = ' + json.dumps({'sections': SECTIONS, 'sectionsM': SECTIONS_M + [('step', STEP_M)], 'men': sorted(men), 'reviewed': sorted(REVIEWED & set(data)), 'langs': data}, ensure_ascii=False, separators=(',', ':')) + ';\n')
+          'window.VIAL_ART = ' + json.dumps({'sections': SECTIONS[:2] + [('sleepcbt', SLEEP)] + SECTIONS[2:], 'sectionsM': SECTIONS_M[:2] + [('sleepcbt', SLEEP)] + SECTIONS_M[2:] + [('step', STEP_M)], 'men': sorted(men), 'reviewed': sorted(REVIEWED & set(data)), 'langs': data}, ensure_ascii=False, separators=(',', ':')) + ';\n')
     open(OUT, 'w', encoding='utf-8').write(js)
     print('→', os.path.relpath(OUT, REPO), '| языки:', ', '.join(sorted(data)) or '—',
           '| мужской раздел:', ', '.join(sorted(men)) or '—', '| пропущены (не все статьи):', skipped or '—')

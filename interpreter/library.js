@@ -11,6 +11,8 @@
     rowSub:{ru:'Перименопауза, менопауза и что делать',uk:'Перименопауза, менопауза і що робити',en:'Perimenopause, menopause and what to do',es:'Perimenopausia, menopausia y qué hacer',de:'Perimenopause, Menopause und was hilft',pt:'Perimenopausa, menopausa e o que fazer',fr:'Périménopause, ménopause et que faire',pl:'Perimenopauza, menopauza i co robić',it:'Perimenopausa, menopausa e cosa fare',he:'פרימנופאוזה, מנופאוזה ומה עושים',ja:'更年期の前後とできること',ko:'폐경 전후와 할 수 있는 것'},
     start: {ru:'С чего начать',uk:'З чого почати',en:'Where to start',es:'Por dónde empezar',de:'Der Einstieg',pt:'Por onde começar',fr:'Pour commencer',pl:'Od czego zacząć',it:'Da dove iniziare',he:'מאיפה מתחילים',ja:'はじめに',ko:'시작하기'},
     cmp:   {ru:'Что беспокоит',uk:'Що турбує',en:'What bothers you',es:'Qué te preocupa',de:'Was dich belastet',pt:'O que te incomoda',fr:'Ce qui vous gêne',pl:'Co Ci dokucza',it:'Cosa ti disturba',he:'מה מטריד',ja:'気になること',ko:'신경 쓰이는 것'},
+    // «Сон: КПТ-И» (2026-11-11): раздел «Основ» из 5 статей, вход и из карточки блока «Сон» (sleep.js)
+    sleepcbt:{ru:'Сон: техники КПТ-И',uk:'Сон: техніки КПТ-І',en:'Sleep: CBT-I techniques',es:'Sueño: técnicas de TCC-I',de:'Schlaf: Methoden der KVT-I',pt:'Sono: técnicas de TCC-I',fr:'Sommeil : techniques de TCC-I',pl:'Sen: techniki CBT-I',it:'Sonno: tecniche CBT-I',he:'שינה: טכניקות CBT-I',ja:'睡眠：CBT-Iの方法',ko:'수면: CBT-I 기법'},
     step:  {ru:'Что делать',uk:'Що робити',en:'What to do',es:'Qué hacer',de:'Was tun',pt:'O que fazer',fr:'Que faire',pl:'Co robić',it:'Cosa fare',he:'מה עושים',ja:'できること',ko:'할 수 있는 것'},
     more:{ru:'Подробнее в статье',uk:'Докладніше в статті',en:'Read the article',es:'Leer el artículo',de:'Zum Artikel',pt:'Ler o artigo',fr:'Lire l’article',pl:'Przeczytaj artykuł',it:'Leggi l’articolo',he:'לקריאת המאמר',ja:'記事を読む',ko:'글 읽기'},
     sheetArt:{ru:'Основы',uk:'Основи',en:'Essentials',es:'Lo esencial',de:'Grundlagen',pt:'O essencial',fr:'L’essentiel',pl:'Podstawy',it:'Le basi',he:'היסודות',ja:'基本',ko:'기초'},
@@ -438,6 +440,14 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
     resMenu: function (lang) { resMenu = !resMenu; resListRender(lang); },
     resPick: function (k, lang) { resTopic = k || ''; resMenu = false; resQ = ''; var f = document.getElementById('vialResFind'); if (f) f.value = ''; resListRender(lang); },   // тема — с чистым поиском
     resReset: function () { resQ = ''; resTopic = ''; resMenu = false; },
+    // Открыть разборы исследований на теме (из карточки блока «Сон»: 'sleep' → у мужчины m_sleep). 2026-11-11.
+    research: function (t) {
+      sheetClose();
+      try { if (typeof window.closeCircModal === 'function') window.closeCircModal(); } catch (e) {}
+      if (typeof window.navTo === 'function') window.navTo('lib', { direct: 1 });
+      resQ = ''; resMenu = false; resTopic = t ? (isMale() && TOPIC['m_' + t] ? 'm_' + t : t) : '';
+      if (typeof window._cardOpen === 'function') window._cardOpen('research');
+    },
     resAsk: function (lang) {
       var q = resQ; if (!q || resAsked[q]) return;
       var b = document.getElementById('vialResAsk'); if (b) b.disabled = true;
