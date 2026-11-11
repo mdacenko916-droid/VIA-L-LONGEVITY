@@ -223,10 +223,11 @@
     return f;
   }
   function payload() {
-    var r = rec(); if (!on()) return null;
-    var f = flagsNow(r);
+    var u = stats(7);
+    if (!on()) return used(u) ? { on: false, use: u } : null;   // дневник выключен, но ритуалом пользуется — ИИ должен это видеть
+    var r = rec(), f = flagsNow(r);
     try { put(KEY_FLAGS, { day: (typeof _dayKey === 'function' ? _dayKey() : ''), ts: Date.now(), f: f }); } catch (e) {}
-    return { on: true, bed: r && r.bed, rise: r && r.rise, lat: r && r.lat, tib: r && r.tib, eff: r && r.eff, flags: f };
+    return { on: true, bed: r && r.bed, rise: r && r.rise, lat: r && r.lat, tib: r && r.tib, eff: r && r.eff, flags: f, use: u };
   }
 
   // ── эффективность за 7 дней из vialp_daily (поле sl, пишет _saveDaily) ──
@@ -236,6 +237,32 @@
     if (!v.length) return null;
     return { n: v.length, avg: Math.round(v.reduce(function (a, b) { return a + b; }, 0) / v.length) };
   }
+
+  // ── журнал использования и сводка за окно (2026-11-11) — в дневной/недельный/месячный разбор ──
+  // Только факты «что делал»: дни ритуала (начат / дослушан), «Не спится», «Выгрузить мысли». Текст мыслей не уходит никуда.
+  var KEY_LOG = 'vial_sleep_log', curKind = '';
+  function logUse(k, full) {
+    var a = get(KEY_LOG, []) || [], d = dayKey();
+    if (full) { for (var i = 0; i < a.length; i++) if (a[i].k === k && a[i].day === d) { a[i].full = true; break; } }
+    else a.unshift({ day: d, k: k, ts: Date.now(), full: false });
+    put(KEY_LOG, a.slice(0, 200));
+  }
+  function stats(win) {
+    win = win || 7;
+    var now = Date.now(), DAY = 86400000, a = get(KEY_LOG, []) || [], arr = [];
+    try { arr = JSON.parse(localStorage.getItem('vialp_daily') || '[]') || []; } catch (e) {}
+    var inW = function (ts, k) { return ts && now - ts >= (k - 1) * win * DAY && now - ts < k * win * DAY; };
+    var days = function (k, full) { var o = {}; a.forEach(function (x) { if (x.k === k && inW(x.ts, 1) && (!full || x.full)) o[x.day] = 1; }); return Object.keys(o).length; };
+    var cntK = function (k) { return a.filter(function (x) { return x.k === k && inW(x.ts, 1); }).length; };
+    var effOf = function (k) { var v = arr.filter(function (r) { return r && inW(r.ts, k) && r.sl && r.sl.eff != null; }).map(function (r) { return r.sl.eff; });
+      return v.length ? { avg: Math.round(v.reduce(function (x, y) { return x + y; }, 0) / v.length), n: v.length } : null; };
+    var lc = {}, lb = '', ln = 0;
+    arr.forEach(function (r) { var l = r && inW(r.ts, 1) && r.sl && r.sl.lat; if (l) { lc[l] = (lc[l] || 0) + 1; if (lc[l] > ln) { ln = lc[l]; lb = l; } } });
+    var e1 = effOf(1), e0 = effOf(2);
+    return { win: win, diaryOn: on(), diaryDays: e1 ? e1.n : 0, eff: e1 ? e1.avg : null, effPrev: e0 ? e0.avg : null, lat: lb || null,
+             ritualDays: days('r'), ritualFull: days('r', true), awake: cntK('a'), worry: cntK('w') };
+  }
+  function used(st) { return !!(st && (st.diaryOn || st.ritualDays || st.awake || st.worry)); }
 
   // ── карточка в «Мой вечерний ритуал» ──
   // Фон: мелодия (по умолчанию) или тишина. Шум убран 2026-11-11: доказательства в его пользу слабые, розовый шум
@@ -501,7 +528,7 @@
   }
   function ritual() {
     var s = settings(), plan = { 5: [120, 0, 180], 10: [120, 240, 240], 15: [180, 360, 360] }[s.dur] || [120, 240, 240];
-    begin(t('ritual')); noiseStart(s.noise);
+    begin(t('ritual')); noiseStart(s.noise); curKind = 'r'; logUse('r');
     var at = 0;
     later(function () { show(tr(SAY.intro)); say(tr(SAY.intro)); }, 300); at = 8;
     later(function () { show(tr(SAY.breath)); say(tr(SAY.breath)); }, at * 1000); at += 9;
@@ -512,16 +539,16 @@
     later(function () { finish(); }, (at + 12) * 1000);
   }
   function awake() {
-    begin(t('awake')); noiseStart('none');
+    begin(t('awake')); noiseStart('none'); curKind = 'a'; logUse('a');
     var at = 0;
     AWAKE.forEach(function (p, i) { later(function () { show(tr(p)); say(tr(p)); }, (at + i * 11) * 1000 + 300); });
     at = AWAKE.length * 11;
     at = breathe(at, 150, true);
     later(function () { finish(); }, (at + 2) * 1000);
   }
-  function finish() { active = false; noiseStop(false); awakeOff(); var o = $('sl-ov'); if (o) o.style.display = 'none'; run++; }
+  function finish() { if (curKind) logUse(curKind, true); curKind = ''; active = false; noiseStop(false); awakeOff(); var o = $('sl-ov'); if (o) o.style.display = 'none'; run++; }
   function stop(quiet) {
-    active = false; run++; timers.forEach(clearTimeout); timers = []; hush(); noiseStop(true); awakeOff();
+    active = false; curKind = ""; run++; timers.forEach(clearTimeout); timers = []; hush(); noiseStop(true); awakeOff();
     var o = $('sl-ov'); if (o && !quiet) o.style.display = 'none';
   }
 
@@ -538,6 +565,7 @@
   function worrySave() {
     var v = (($('sl-w') || {}).value || '').trim();
     put(KEY_WORRY, v ? { day: dayKey(), text: v } : null);
+    if (v) logUse('w');
     var o = $('sl-ov'); if (o) o.querySelector('.sl-ov-in').innerHTML = '<div class="sl-ov-tx">' + esc(t('w_done')) + '</div><button type="button" class="sl-btn" onclick="vialSleep.stop()">' + esc(t('close')) + '</button>';
   }
 
@@ -588,7 +616,7 @@
     on: on, toggle: toggle, card: card, rec: rec, payload: payload, relang: relang,
     set: function (k, v) { setSet(k, v); card(); },
     remind: remind, ritual: ritual, awake: awake, stop: function () { stop(false); },
-    worry: worry, worrySave: worrySave, mountDiary: mountDiary, info: info, read: read, open: open, goCard: goCard, label: function (k) { return t(k); },
+    worry: worry, worrySave: worrySave, mountDiary: mountDiary, info: info, read: read, open: open, goCard: goCard, stats: stats, label: function (k) { return t(k); },
     _music: makeMusic   // отладка: собрать мелодию дня (вернёт blob-URL)
   };
   mountDiary(); card(); schedule();

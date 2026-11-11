@@ -7659,6 +7659,7 @@ function _weeklyDaily(win){
     tempDev:avg('tempDev'), spo2:avg('spo2'), stress:avg('stress'),
     memory:avg('memory'), fogDays:cnt('fog',function(x){return x!=null&&+x>0;}),
     alcDays:cnt('alc',function(x){return x!=null&&+x>0;}),
+    sleep:(function(){ try{ return window.vialSleep&&vialSleep.stats?vialSleep.stats(win):null; }catch(e){ return null; } })(),   // блок «Сон»: ритуал, дневник, эффективность против прошлого окна (2026-11-11)
     complaint:(function(){
       var c=P.complaint||null; if(!c) return null;
       var sc=[]; try{ sc=JSON.parse(localStorage.getItem('vialp_cmp_scores')||'[]')||[]; }catch(e){}
