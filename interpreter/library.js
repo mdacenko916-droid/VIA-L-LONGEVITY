@@ -11,8 +11,11 @@
     rowSub:{ru:'Перименопауза, менопауза и что делать',uk:'Перименопауза, менопауза і що робити',en:'Perimenopause, menopause and what to do',es:'Perimenopausia, menopausia y qué hacer',de:'Perimenopause, Menopause und was hilft',pt:'Perimenopausa, menopausa e o que fazer',fr:'Périménopause, ménopause et que faire',pl:'Perimenopauza, menopauza i co robić',it:'Perimenopausa, menopausa e cosa fare',he:'פרימנופאוזה, מנופאוזה ומה עושים',ja:'更年期の前後とできること',ko:'폐경 전후와 할 수 있는 것'},
     start: {ru:'С чего начать',uk:'З чого почати',en:'Where to start',es:'Por dónde empezar',de:'Der Einstieg',pt:'Por onde começar',fr:'Pour commencer',pl:'Od czego zacząć',it:'Da dove iniziare',he:'מאיפה מתחילים',ja:'はじめに',ko:'시작하기'},
     cmp:   {ru:'Что беспокоит',uk:'Що турбує',en:'What bothers you',es:'Qué te preocupa',de:'Was dich belastet',pt:'O que te incomoda',fr:'Ce qui vous gêne',pl:'Co Ci dokucza',it:'Cosa ti disturba',he:'מה מטריד',ja:'気になること',ko:'신경 쓰이는 것'},
-    // «Сон: КПТ-И» (2026-11-11): раздел «Основ» из 5 статей, вход и из карточки блока «Сон» (sleep.js)
-    sleepcbt:{ru:'Сон: техники КПТ-И',uk:'Сон: техніки КПТ-І',en:'Sleep: CBT-I techniques',es:'Sueño: técnicas de TCC-I',de:'Schlaf: Methoden der KVT-I',pt:'Sono: técnicas de TCC-I',fr:'Sommeil : techniques de TCC-I',pl:'Sen: techniki CBT-I',it:'Sonno: tecniche CBT-I',he:'שינה: טכניקות CBT-I',ja:'睡眠：CBT-Iの方法',ko:'수면: CBT-I 기법'},
+    // Раздел «Всё о сне» (2026-11-11): лекция «КПТ сну» целиком (жен.), 5 статей о КПТ-И, старые статьи о сне; вход и из карточки блока «Сон»
+    sleepcbt:{ru:'Всё о сне',uk:'Усе про сон',en:'All about sleep',es:'Todo sobre el sueño',de:'Alles über Schlaf',pt:'Tudo sobre o sono',fr:'Tout sur le sommeil',pl:'Wszystko o śnie',it:'Tutto sul sonno',he:'הכול על שינה',ja:'睡眠のすべて',ko:'수면의 모든 것'},
+    // Общий поиск на экране книги (2026-11-11): «Основы» — по всему тексту, Библиотека VIA-L — по заголовкам и анонсам
+    findArt:{ru:'Основы',uk:'Основи',en:'Essentials',es:'Lo esencial',de:'Grundlagen',pt:'O essencial',fr:'L’essentiel',pl:'Podstawy',it:'Le basi',he:'היסודות',ja:'基本',ko:'기초'},
+    findRes:{ru:'Библиотека VIA-L',uk:'Бібліотека VIA-L',en:'VIA-L Library',es:'Biblioteca VIA-L',de:'VIA-L-Bibliothek',pt:'Biblioteca VIA-L',fr:'Bibliothèque VIA-L',pl:'Biblioteka VIA-L',it:'Biblioteca VIA-L',he:'ספריית VIA-L',ja:'VIA-Lライブラリー',ko:'VIA-L 라이브러리'},
     step:  {ru:'Что делать',uk:'Що робити',en:'What to do',es:'Qué hacer',de:'Was tun',pt:'O que fazer',fr:'Que faire',pl:'Co robić',it:'Cosa fare',he:'מה עושים',ja:'できること',ko:'할 수 있는 것'},
     more:{ru:'Подробнее в статье',uk:'Докладніше в статті',en:'Read the article',es:'Leer el artículo',de:'Zum Artikel',pt:'Ler o artigo',fr:'Lire l’article',pl:'Przeczytaj artykuł',it:'Leggi l’articolo',he:'לקריאת המאמר',ja:'記事を読む',ko:'글 읽기'},
     sheetArt:{ru:'Основы',uk:'Основи',en:'Essentials',es:'Lo esencial',de:'Grundlagen',pt:'O essencial',fr:'L’essentiel',pl:'Podstawy',it:'Le basi',he:'היסודות',ja:'基本',ko:'기초'},
@@ -181,7 +184,9 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
     var tg = TG[lang] ? shRow('a', 'href="' + esc(TG[lang]) + '" target="_blank" rel="noopener"', 'ph-telegram-logo', tx(UI.sheetTg, lang), tx(UI.sheetTgSub, lang)) : '';
     if (!tg && clubOk(lang)) tg = shRow('button', 'type="button" id="artSheetClub"', 'ph-telegram-logo', tx(UI.club, lang), tx(UI.clubSub, lang));
     if (!(res || art || tg)) return;   // нечего показать — без пустой полосы и спрятанного советника
-    o.innerHTML = '<div class="art-sheet"><h1 class="art-pg-t">' + esc(tx(UI.back, lang)) + '</h1>' + (res ? '<div id="artSheetPick" style="display:contents;"></div>' : '') + res + art + tg + '</div>';
+    var find = '<input type="search" id="artSheetQ" class="manual-input" style="width:100%;box-sizing:border-box;" placeholder="' + esc(tx(isMale() ? UI.resFindM : UI.resFind, lang)) + '" oninput="vialLibrary.find(this.value,\'' + esc(lang) + '\')">'
+      + '<div id="artSheetHits" style="display:contents;"></div>';
+    o.innerHTML = '<div class="art-sheet"><h1 class="art-pg-t">' + esc(tx(UI.back, lang)) + '</h1>' + find + '<div id="artSheetMain" style="display:contents;">' + (res ? '<div id="artSheetPick" style="display:contents;"></div>' : '') + res + art + tg + '</div></div>';
     (document.getElementById('app') || document.body).appendChild(o); document.body.classList.add('lib-sheet');   // внутри #app — как #specPanel, иначе нижняя строка оказывалась под экраном
     var nv = document.querySelector('.bottom-nav'); if (nv) nv.classList.remove('nav-hidden');   // строка могла уехать при прокрутке прошлого экрана
     [].forEach.call(document.querySelectorAll('.bottom-nav-item'), function (b) { b.classList.toggle('active', b.getAttribute('data-nav') === 'lib'); });
@@ -240,6 +245,49 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
     });
   }
 
+  // ── Общий поиск (2026-11-11): одна строка над «Основами» и Библиотекой VIA-L ──
+  // «Основы» лежат в приложении — ищем по заголовку и всему тексту (работает без сети); Библиотека VIA-L — по каталогу
+  // (заголовок, анонс, тема; полный текст закрыт подпиской). Все слова запроса должны найтись. Мужчине — его разделы и полка.
+  var artText = {};
+  function artKeys(lang) {
+    var d = data(lang), seen = {}, out = []; if (!d || !has(lang)) return out;
+    secs(lang).forEach(function (sec) { sec[1].forEach(function (k) { if (d[k] && !seen[k]) { seen[k] = 1; out.push(k); } }); });
+    return out;
+  }
+  function artHay(k, lang) {
+    var ik = lang + ':' + k; if (artText[ik]) return artText[ik];
+    var a = data(lang)[k];
+    return (artText[ik] = (a.t + ' ' + a.h.replace(/<[^>]+>/g, ' ')).toLowerCase());
+  }
+  function findRender(q, lang) {
+    var main = document.getElementById('artSheetMain'), box = document.getElementById('artSheetHits'); if (!box) return;
+    var words = String(q || '').trim().toLowerCase().split(/\s+/).filter(Boolean);
+    if (!words.length || words.join('').length < 2) { box.innerHTML = ''; if (main) main.style.display = 'contents'; return; }
+    if (main) main.style.display = 'none';
+    var all = function (h) { return words.every(function (w) { return h.indexOf(w) > -1; }); };
+    var arts = artKeys(lang).filter(function (k) { return all(artHay(k, lang)); }).slice(0, 25);
+    var hits = (resCat || []).filter(function (x) { return all((x.title + ' ' + (x.teaser || '') + ' ' + (tx(TOPIC[x.topic], lang) || '')).toLowerCase()); }).slice(0, 40);
+    var d = data(lang), lock = subOn() ? '›' : '<i class="ph ph-lock-simple"></i>';
+    var row = function (attr, t, sub, chev) {
+      return '<button type="button" class="art-sh art-pk" ' + attr + '><span class="art-sh-tx"><span class="art-sh-t">' + esc(t) + '</span>'
+        + (sub ? '<span class="art-sh-s">' + esc(sub) + '</span>' : '') + '</span><span class="art-sh-chev">' + chev + '</span></button>';
+    };
+    var html = (arts.length ? '<div class="art-hcap">' + esc(tx(UI.findArt, lang)) + ' · ' + arts.length + '</div>'
+        + arts.map(function (k) { return row('data-art="' + esc(k) + '"', d[k].t, d[k].min, '›'); }).join('') : '')
+      + (hits.length ? '<div class="art-hcap">' + esc(tx(UI.findRes, lang)) + ' · ' + hits.length + '</div>'
+        + hits.map(function (x) { return row('data-res="' + esc(x.id) + '"', x.title, tx(TOPIC[x.topic], lang) + ' · ' + resKind(x, lang), lock); }).join('') : '');
+    box.innerHTML = html || '<p class="art-sh-s">' + esc(tx(UI.resNone, lang)) + '</p>';
+    [].forEach.call(box.querySelectorAll('[data-art],[data-res]'), function (b) {
+      b.onclick = function () {
+        var k = b.getAttribute('data-art'), id = b.getAttribute('data-res'); sheetClose();
+        if (typeof window.navTo === 'function') window.navTo('lib', { direct: 1 });
+        resQ = ''; resTopic = ''; resMenu = false;
+        if (typeof window._cardOpen === 'function') window._cardOpen(k ? 'art:' + k : 'res:' + id);
+      };
+    });
+  }
+
+  var SLEEP_KEYS = ['sleep', 'evening', 'wake', 'bed', 'cool'];   // ключи жалобы/шагов сна (до замены на мужские)
   function has(lang) { return isMale() ? hasMen(lang) : !!data(lang); }
   function isMale() { try { return (JSON.parse(localStorage.getItem('vialp_profile') || '{}') || {}).gender === 'male'; } catch (e) { return false; } }
   // Открыть статью из карточки «Что беспокоит» / «Фокуса недели»: закрыть главу памятки, вкладка «Библиотека», статья.
@@ -387,10 +435,21 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
     go: go,
     // Кнопка «Подробнее в статье» под карточкой (ключ жалобы или шага = ключ статьи). Нет статьи на языке — пусто.
     moreBtn: function (k, lang) {
+      // Жалоба «Сон» и шаги сна «Фокуса недели» — ещё кнопка в раздел «Всё о сне» (2026-11-11)
+      var sl = SLEEP_KEYS.indexOf(k) > -1 && window.vialLibrary.sectionKeys('sleepcbt', lang).length
+        ? '<button type="button" class="as-usual" style="display:flex;width:100%;justify-content:center;align-items:center;gap:7px;margin-top:8px;" onclick="vialLibrary.goSection(\'sleepcbt\')">'
+          + '<i class="ph ph-moon-stars" aria-hidden="true"></i>' + esc(tx(UI.sleepcbt, lang)) + '</button>' : '';
       if (isMale()) k = hasMen(lang) ? (MK[k] || '') : '';   // нет мужской статьи (cool, непереведённый шаг) — без ссылки
-      var d = data(lang); if (!k || !d || !d[k]) return '';
+      var d = data(lang); if (!k || !d || !d[k]) return sl;
       return '<button type="button" class="as-usual" style="display:flex;width:100%;justify-content:center;align-items:center;gap:7px;margin-top:10px;" onclick="vialLibrary.go(\'' + k + '\')">'
-        + '<i class="ph ph-book-open-text" aria-hidden="true"></i>' + esc(tx(UI.more, lang)) + '</button>';
+        + '<i class="ph ph-book-open-text" aria-hidden="true"></i>' + esc(tx(UI.more, lang)) + '</button>' + sl;
+    },
+    // Открыть «Основы» на разделе (список статей, прокрутка к заголовку раздела)
+    goSection: function (name) {
+      try { if (typeof window.closeCircModal === 'function') window.closeCircModal(); } catch (e) {}
+      if (typeof window.navTo === 'function') window.navTo('lib', { direct: 1 });
+      if (typeof window._cardOpen === 'function') window._cardOpen('articles');
+      setTimeout(function () { var h = document.getElementById('artSec-' + name); if (h && h.scrollIntoView) h.scrollIntoView({ block: 'start' }); }, 60);
     },
     has: has,
     isMale: isMale,
@@ -406,7 +465,7 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
       css();
       return secs(lang).map(function (sec) {
         if (!sec[1].some(function (k) { return d[k]; })) return '';   // группа ещё не переведена на язык — без заголовка
-        return '<div class="vc-subh vc-span" style="grid-column:1/-1;">' + esc(tx(UI[sec[0]], lang)) + '</div>'
+        return '<div class="vc-subh vc-span" id="artSec-' + esc(sec[0]) + '" style="grid-column:1/-1;scroll-margin-top:70px;">' + esc(tx(UI[sec[0]], lang)) + '</div>'
           + sec[1].filter(function (k) { return d[k]; }).map(function (k) { return rowHtml(k, d[k]); }).join('');
       }).join('');
     },
@@ -440,6 +499,16 @@ resFind:{ru:'Поиск: сон, приливы, кофе…',uk:'Пошук: с
     resMenu: function (lang) { resMenu = !resMenu; resListRender(lang); },
     resPick: function (k, lang) { resTopic = k || ''; resMenu = false; resQ = ''; var f = document.getElementById('vialResFind'); if (f) f.value = ''; resListRender(lang); },   // тема — с чистым поиском
     resReset: function () { resQ = ''; resTopic = ''; resMenu = false; },
+    find: function (q, lang) {
+      findRender(q, lang);
+      if (!resCat) resCatalog(lang, function () { var f = document.getElementById('artSheetQ'); if (f) findRender(f.value, lang); });   // каталог ещё не пришёл — дорисуем
+    },
+    // Ключи раздела «Основ» с учётом пола и языка (карточка блока «Сон» берёт отсюда список «Всё о сне»)
+    sectionKeys: function (name, lang) {
+      var d = data(lang); if (!d || !has(lang)) return [];
+      var sec = secs(lang).filter(function (x) { return x[0] === name; })[0];
+      return sec ? sec[1].filter(function (k) { return d[k]; }) : [];
+    },
     // Открыть разборы исследований на теме (из карточки блока «Сон»: 'sleep' → у мужчины m_sleep). 2026-11-11.
     research: function (t) {
       sheetClose();

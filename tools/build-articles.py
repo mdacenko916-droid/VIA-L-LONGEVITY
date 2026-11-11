@@ -42,6 +42,11 @@ STEP_M = ['evening_m', 'wake_m', 'strength_m', 'protein_m', 'walk_m', 'breath_m'
 # «Сон: КПТ-І» (2026-11-11, блок «Сон», docs/SLEEP-MODULE-MODEL.md): 5 статей без рода — одни и те же у женщины и мужчины.
 # Только в приложении: сайт (build-library-site.py) берёт SECTIONS и этот раздел не видит. Язык получает раздел, когда есть все 5.
 SLEEP = ['cbti', 'cbti-diary', 'cbti-window', 'cbti-mind', 'cbti-relax']
+# Лекция «КПТ сну» целиком (2026-11-11, владелец): про перименопаузу и в женском роде — только в женском разделе.
+SLEEP_F = ['cbti-lecture']
+# Раздел «Сон» собирает всё о сне в одно место: лекция + 5 статей + уже существующие статьи о сне (они остаются и в своих разделах).
+SLEEP_SEC = SLEEP_F + SLEEP + ['sleep', 'bed', 'evening', 'wake', 'cool']
+SLEEP_SEC_M = SLEEP + ['sleep_m', 'bed_m', 'evening_m', 'wake_m']
 
 
 def men_keys(have):
@@ -133,15 +138,15 @@ def main():
         if missing:
             skipped[lang] = missing; continue
         data[lang] = {k: convert(os.path.join(d, k + '.md')) for k in ALL_KEYS}
-        if all(k in have for k in SLEEP):
-            data[lang].update({k: convert(os.path.join(d, k + '.md')) for k in SLEEP})
+        if all(k in have for k in SLEEP + SLEEP_F):
+            data[lang].update({k: convert(os.path.join(d, k + '.md')) for k in SLEEP + SLEEP_F})
         mk = men_keys(have)
         if mk:
             data[lang].update({k: convert(os.path.join(d, k + '.md')) for k in mk})
             men.append(lang)
     js = ('/* VIA·L — библиотека статей. СОБРАНО tools/build-articles.py из docs/articles/<язык>/*.md — руками не править.\n'
           '   Данные: ART[язык][ключ] = {t: заголовок, min: время чтения, h: HTML тела, codes: темы базы для «На чём основано»}. */\n'
-          'window.VIAL_ART = ' + json.dumps({'sections': SECTIONS[:2] + [('sleepcbt', SLEEP)] + SECTIONS[2:], 'sectionsM': SECTIONS_M[:2] + [('sleepcbt', SLEEP)] + SECTIONS_M[2:] + [('step', STEP_M)], 'men': sorted(men), 'reviewed': sorted(REVIEWED & set(data)), 'langs': data}, ensure_ascii=False, separators=(',', ':')) + ';\n')
+          'window.VIAL_ART = ' + json.dumps({'sections': SECTIONS[:2] + [('sleepcbt', SLEEP_SEC)] + SECTIONS[2:], 'sectionsM': SECTIONS_M[:2] + [('sleepcbt', SLEEP_SEC_M)] + SECTIONS_M[2:] + [('step', STEP_M)], 'men': sorted(men), 'reviewed': sorted(REVIEWED & set(data)), 'langs': data}, ensure_ascii=False, separators=(',', ':')) + ';\n')
     open(OUT, 'w', encoding='utf-8').write(js)
     print('→', os.path.relpath(OUT, REPO), '| языки:', ', '.join(sorted(data)) or '—',
           '| мужской раздел:', ', '.join(sorted(men)) or '—', '| пропущены (не все статьи):', skipped or '—')

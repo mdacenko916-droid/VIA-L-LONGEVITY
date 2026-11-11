@@ -242,13 +242,13 @@
       + '<button type="button" class="sl-off" onclick="vialSleep.toggle(false)">' + esc(t('btn_off')) + '</button></div>';
   }
   // ── (i) и «Читать о сне» (2026-11-11) ──
-  // Статьи — раздел «Основ» «Сон: КПТ-И» (articles.js, общие для VIA-L и ADAM-L, без рода); исследования — тема «Сон»
+  // Статьи — раздел «Основ» «Всё о сне» (articles.js; лекция — только у женщины, 5 статей КПТ-И без рода); исследования — тема «Сон»
   // Библиотеки VIA-L (у мужчины — m_sleep; без подписки там анонс и замок, как везде).
-  var READ = ['cbti', 'cbti-diary', 'cbti-window', 'cbti-mind', 'cbti-relax'], infoOpen = false, readOpen = false;
+  var infoOpen = false, readOpen = false;
   function info() { infoOpen = !infoOpen; var el = $('sl-info'); if (el) el.hidden = !infoOpen; }
   function readHtml() {
     var Lb = window.vialLibrary, lang = L();
-    var arts = (Lb && Lb.title) ? READ.filter(function (k) { return Lb.title(k, lang); }) : [];
+    var arts = (Lb && Lb.sectionKeys) ? Lb.sectionKeys('sleepcbt', lang) : [];   // раздел «Всё о сне»: у женщины с лекцией, у мужчины — свои статьи
     var res = !!(Lb && Lb.research);
     if (!arts.length && !res) return '';
     var rows = !readOpen ? '' : '<div class="sl-read">' + arts.map(function (k) {
