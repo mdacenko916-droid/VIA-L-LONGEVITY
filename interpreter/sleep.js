@@ -47,8 +47,7 @@
     min: {ru:'мин',uk:'хв',en:'min',es:'min',de:'Min',pt:'min',fr:'min',pl:'min',it:'min',he:'דק׳',ja:'分',ko:'분'},
     noise: {ru:'Фон',uk:'Фон',en:'Background',es:'Fondo',de:'Hintergrund',pt:'Fundo',fr:'Fond sonore',pl:'Tło',it:'Sottofondo',he:'רקע',ja:'背景音',ko:'배경음'},
     n_none: {ru:'Тишина',uk:'Тиша',en:'Silence',es:'Silencio',de:'Stille',pt:'Silêncio',fr:'Silence',pl:'Cisza',it:'Silenzio',he:'שקט',ja:'無音',ko:'무음'},
-    n_soft: {ru:'Ровный шум',uk:'Рівний шум',en:'Soft noise',es:'Ruido suave',de:'Sanftes Rauschen',pt:'Ruído suave',fr:'Bruit doux',pl:'Łagodny szum',it:'Rumore morbido',he:'רעש רך',ja:'やわらかいノイズ',ko:'부드러운 소음'},
-    n_deep: {ru:'Глубокий шум',uk:'Глибокий шум',en:'Deep noise',es:'Ruido profundo',de:'Tiefes Rauschen',pt:'Ruído profundo',fr:'Bruit grave',pl:'Głęboki szum',it:'Rumore profondo',he:'רעש עמוק',ja:'低いノイズ',ko:'깊은 소음'},
+    n_music: {ru:'Мелодия для сна',uk:'Мелодія для сну',en:'Sleep melody',es:'Melodía para dormir',de:'Schlafmelodie',pt:'Melodia para dormir',fr:'Mélodie pour dormir',pl:'Melodia do snu',it:'Melodia per dormire',he:'מנגינה לשינה',ja:'眠りのメロディ',ko:'수면 멜로디'},
     remind: {ru:'Напомнить о ритуале',uk:'Нагадати про ритуал',en:'Remind me of the ritual',es:'Recordarme el ritual',de:'An das Ritual erinnern',pt:'Lembrar do ritual',fr:'Me rappeler le rituel',pl:'Przypomnij o rytuale',it:'Ricordami il rituale',he:'תזכורת לטקס',ja:'習慣のリマインダー',ko:'루틴 알림'},
     remind_off: {ru:'не напоминать',uk:'не нагадувати',en:'no reminder',es:'sin recordatorio',de:'keine Erinnerung',pt:'sem lembrete',fr:'pas de rappel',pl:'bez przypomnienia',it:'nessun promemoria',he:'ללא תזכורת',ja:'通知しない',ko:'알림 없음'},
     eff7: {ru:'Эффективность сна за 7 дней',uk:'Ефективність сну за 7 днів',en:'Sleep efficiency, last 7 days',es:'Eficiencia del sueño, 7 días',de:'Schlafeffizienz, 7 Tage',pt:'Eficiência do sono, 7 dias',fr:'Efficacité du sommeil, 7 jours',pl:'Efektywność snu, 7 dni',it:'Efficienza del sonno, 7 giorni',he:'יעילות שינה, 7 ימים',ja:'睡眠効率（7日間）',ko:'수면 효율 (7일)'},
@@ -205,7 +204,9 @@
   }
 
   // ── карточка в «Мой вечерний ритуал» ──
-  function settings() { var s = get(KEY_SET, {}) || {}; return { dur: s.dur || 10, noise: s.noise || 'soft', remind: s.remind || '' }; }
+  // Фон: мелодия (по умолчанию) или тишина. Шум убран 2026-11-11: доказательства в его пользу слабые, розовый шум
+  // в работах сокращал быстрый сон; медленная инструментальная музыка улучшает сон (Cochrane 2022, мета-анализы 50+).
+  function settings() { var s = get(KEY_SET, {}) || {}; return { dur: s.dur || 10, noise: s.noise === 'none' ? 'none' : 'music', remind: s.remind || '' }; }
   function setSet(k, v) { var s = settings(); s[k] = v; put(KEY_SET, s); }
   function card() {
     var box = $('rdSleep'); if (!box) return;
@@ -216,7 +217,7 @@
     }
     var s = settings(), e = eff7(), fl = (get(KEY_FLAGS, null) || {}), flags = (fl.ts && Date.now() - fl.ts < 14 * 86400000) ? (fl.f || []) : [];
     var durs = [5, 10, 15].map(function (d) { return '<button type="button" class="sl-pill' + (s.dur === d ? ' on' : '') + '" onclick="vialSleep.set(\'dur\',' + d + ')">' + d + ' ' + esc(t('min')) + '</button>'; }).join('');
-    var nz = [['none', 'n_none'], ['soft', 'n_soft'], ['deep', 'n_deep']].map(function (x) { return '<button type="button" class="sl-pill' + (s.noise === x[0] ? ' on' : '') + '" onclick="vialSleep.set(\'noise\',\'' + x[0] + '\')">' + esc(t(x[1])) + '</button>'; }).join('');
+    var nz = [['music', 'n_music'], ['none', 'n_none']].map(function (x) { return '<button type="button" class="sl-pill' + (s.noise === x[0] ? ' on' : '') + '" onclick="vialSleep.set(\'noise\',\'' + x[0] + '\')">' + esc(t(x[1])) + '</button>'; }).join('');
     var times = ['', '21:00', '21:30', '22:00', '22:30', '23:00', '23:30'];
     var rm = '<select class="sl-sel" onchange="vialSleep.remind(this.value)">' + times.map(function (x) { return '<option value="' + x + '"' + (s.remind === x ? ' selected' : '') + '>' + (x ? x : esc(t('remind_off'))) + '</option>'; }).join('') + '</select>';
     var w = get(KEY_WORRY, null), wPrev = (w && w.text && w.day && w.day !== dayKey()) ? '<div class="sl-note"><b>' + esc(t('w_prev')) + '</b> ' + esc(w.text.slice(0, 280)) + '</div>' : '';
@@ -275,39 +276,89 @@
   }
   function hush() { var p = plug(); if (p) p.stop().catch(function () {}); else if (window.speechSynthesis) window.speechSynthesis.cancel(); }
 
-  // ── фон: шум, собранный в WAV на лету (через <audio>, а не WebAudio: iPhone с выключенным звонком глушит WebAudio) ──
-  var audio = null, audioUrl = null;
-  function noiseWav(kind) {
-    var sr = 22050, sec = 16, fade = sr, n = sr * sec, tot = n + fade, x = new Float32Array(tot);
-    var last = 0, b0 = 0, b1 = 0, b2 = 0;
-    for (var i = 0; i < tot; i++) {
-      var w = Math.random() * 2 - 1;
-      if (kind === 'deep') { last = (last + 0.02 * w) / 1.02; x[i] = last * 3.2; }            // «коричневый» — глубже
-      else { b0 = 0.997 * b0 + w * 0.029591; b1 = 0.985 * b1 + w * 0.032534; b2 = 0.95 * b2 + w * 0.048056; x[i] = (b0 + b1 + b2 + w * 0.05) * 0.55; }  // «розовый» — ровнее
-    }
-    for (var j = 0; j < fade; j++) { var a = j / fade; x[j] = x[j] * a + x[n + j] * (1 - a); }  // склейка петли без щелчка
-    var b = new ArrayBuffer(44 + n * 2), d = new DataView(b), ws = function (o, s) { for (var k = 0; k < s.length; k++) d.setUint8(o + k, s.charCodeAt(k)); };
+  // ── фон: «мелодия для сна», собранная на лету (OfflineAudioContext → WAV → <audio>; файлов нет) ──
+  // Канон «седативной музыки» из исследований сна: медленно (60 ударов в минуту), без ударных и резких акцентов,
+  // мягкие тембры, плавная мелодия, тихо. Аккорды D–Bm–G–A по 16 с, редкие ноты пентатоники, мягкий бас,
+  // реверберация. Петля 64 с склеена без шва (хвост доливается в начало). Мелодия своя на каждый день (сид = день).
+  // <audio>, а не живой WebAudio: iPhone с выключенным звонком глушит WebAudio, а <audio> в режиме playback — нет.
+  var audio = null, audioUrl = null, musicCache = {};
+  function wavUrl(x, sr) {
+    var n = x.length, b = new ArrayBuffer(44 + n * 2), d = new DataView(b), ws = function (o, s) { for (var k = 0; k < s.length; k++) d.setUint8(o + k, s.charCodeAt(k)); };
     ws(0, 'RIFF'); d.setUint32(4, 36 + n * 2, true); ws(8, 'WAVEfmt '); d.setUint32(16, 16, true); d.setUint16(20, 1, true); d.setUint16(22, 1, true);
     d.setUint32(24, sr, true); d.setUint32(28, sr * 2, true); d.setUint16(32, 2, true); d.setUint16(34, 16, true); ws(36, 'data'); d.setUint32(40, n * 2, true);
-    for (var m = 0; m < n; m++) { var v = Math.max(-1, Math.min(1, x[m])); d.setInt16(44 + m * 2, v * 0x5fff, true); }
+    for (var m = 0; m < n; m++) { var v = Math.max(-1, Math.min(1, x[m])); d.setInt16(44 + m * 2, v * 0x7fff, true); }
     return URL.createObjectURL(new Blob([b], { type: 'audio/wav' }));
+  }
+  function rng(seed) { var a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; var t2 = Math.imul(a ^ (a >>> 15), 1 | a); t2 = (t2 + Math.imul(t2 ^ (t2 >>> 7), 61 | t2)) ^ t2; return ((t2 ^ (t2 >>> 14)) >>> 0) / 4294967296; }; }
+  function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+  function makeMusic(seed) {
+    var OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    if (!OAC) return Promise.resolve(null);
+    var sr = 22050, LOOP = 64, TAIL = 8, ctx = new OAC(1, sr * (LOOP + TAIL), sr), R = rng(seed);
+    var master = ctx.createGain(); master.gain.value = 0.9;
+    var lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1500; lp.Q.value = 0.3;
+    // реверберация: импульс из затухающего шума ~3,5 с
+    var ir = ctx.createBuffer(1, Math.floor(sr * 3.5), sr), irD = ir.getChannelData(0);
+    for (var i = 0; i < irD.length; i++) irD[i] = (R() * 2 - 1) * Math.pow(1 - i / irD.length, 2.6);
+    var rev = ctx.createConvolver(); rev.buffer = ir; var wet = ctx.createGain(); wet.gain.value = 0.32; var dry = ctx.createGain(); dry.gain.value = 0.75;
+    master.connect(lp); lp.connect(dry); lp.connect(rev); rev.connect(wet); dry.connect(ctx.destination); wet.connect(ctx.destination);
+    var CH = [[50, 57, 61, 64], [47, 54, 57, 61], [43, 50, 54, 59], [45, 52, 54, 59]];   // Dmaj9 · Bm9 · Gmaj7 · A6sus
+    var PENTA = [62, 64, 66, 69, 71, 74, 76, 78];                                    // ре-мажорная пентатоника
+    function tone(f, at, dur, vol, type, atk, rel) {
+      var o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(vol, at + atk);
+      g.gain.setValueAtTime(vol, Math.max(at + atk, at + dur - rel)); g.gain.linearRampToValueAtTime(0.0001, at + dur);
+      o.connect(g); g.connect(master); o.start(at); o.stop(at + dur + 0.05);
+    }
+    function bell(f, at, vol) {
+      var o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o2.type = 'sine';
+      o.frequency.value = f; o2.frequency.value = f * 2.001;
+      var g2 = ctx.createGain(); g2.gain.value = 0.18; o2.connect(g2); g2.connect(g); o.connect(g);
+      g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(vol, at + 0.06); g.gain.exponentialRampToValueAtTime(0.0001, at + 4.5);
+      g.connect(master); o.start(at); o2.start(at); o.stop(at + 4.6); o2.stop(at + 4.6);
+    }
+    CH.forEach(function (c, k) {
+      var t0 = k * 16;
+      c.forEach(function (m, j) { tone(hz(m), Math.max(0, t0 - 1.5), 19, j ? 0.045 : 0.06, j % 2 ? 'triangle' : 'sine', 3.5, 4.5); tone(hz(m) * 1.003, Math.max(0, t0 - 1.5), 19, 0.02, 'sine', 4, 5); });
+      tone(hz(c[0] - 12), Math.max(0, t0 - 1), 18, 0.07, 'sine', 3, 4);             // мягкий бас
+      for (var bar = 0; bar < 4; bar++) {                                           // 4 такта по 4 с
+        if (R() < 0.7) { var beat = Math.floor(R() * 4), note = PENTA[Math.floor(R() * PENTA.length)]; bell(hz(note), t0 + bar * 4 + beat + 0.5, 0.05 + R() * 0.03); }
+      }
+    });
+    if (ctx.length) tone(hz(50), LOOP - 1.5, TAIL + 1.5, 0.045, 'sine', 3.5, 4.5);  // начало первого аккорда для бесшовной склейки
+    return ctx.startRendering().then(function (buf) {
+      var d = buf.getChannelData(0), n = sr * LOOP, out = new Float32Array(n), peak = 0;
+      for (var a2 = 0; a2 < n; a2++) out[a2] = d[a2];
+      for (var t3 = n; t3 < d.length; t3++) out[t3 - n] += d[t3];                 // хвост — в начало петли
+      for (var p = 0; p < n; p++) peak = Math.max(peak, Math.abs(out[p]));
+      if (peak > 0) for (var q = 0; q < n; q++) out[q] = out[q] / peak * 0.8;
+      return wavUrl(out, sr);
+    }).catch(function () { return null; });
+  }
+  var SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=';
+  function playUrl(url, vol) {
+    try {
+      if (navigator.audioSession) navigator.audioSession.type = 'playback';
+      audio = new Audio(url || SILENT); audio.loop = true; audio.setAttribute('playsinline', '');
+      audio.volume = url ? 0 : 0.01;
+      var pr = audio.play(); if (pr && pr.catch) pr.catch(function () {});
+      if (url) { var a3 = audio, v = 0, st = setInterval(function () { if (audio !== a3) return clearInterval(st); v = Math.min(vol, v + vol / 10); a3.volume = v; if (v >= vol) clearInterval(st); }, 800); }   // мягкое начало ~8 с
+    } catch (e) {}
   }
   function noiseStart(kind) {
     noiseStop(true);
-    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
-    if (kind === 'none') kind = 'silent';
-    try {
-      audioUrl = kind === 'silent' ? null : noiseWav(kind);
-      audio = new Audio(audioUrl || 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=');
-      audio.loop = true; audio.setAttribute('playsinline', ''); audio.volume = kind === 'silent' ? 0.01 : 0.35;
-      var pr = audio.play(); if (pr && pr.catch) pr.catch(function () {});
-    } catch (e) {}
+    var my = run;
+    playUrl(null, 0);                                    // сразу тихий звук: держит режим воспроизведения, пока мелодия собирается
+    if (kind !== 'music') return;
+    var seed = parseInt(String(dayKey()).replace(/\D/g, ''), 10) || 1;
+    var p = musicCache[seed] ? Promise.resolve(musicCache[seed]) : makeMusic(seed).then(function (u) { if (u) musicCache[seed] = u; return u; });
+    p.then(function (u) { if (!u || my !== run) return; var old = audio; audio = null; try { if (old) old.pause(); } catch (e) {} playUrl(u, 0.3); });
   }
   function noiseStop(now) {
-    var a = audio, u = audioUrl; audio = null; audioUrl = null; if (!a) return;
-    var end = function () { try { a.pause(); } catch (e) {} if (u) try { URL.revokeObjectURL(u); } catch (e) {} };
+    var a = audio; audio = null; if (!a) return;
+    var end = function () { try { a.pause(); } catch (e) {} };   // URL мелодии не отзываем — кэш на вечер
     if (now) return end();
-    var v = a.volume, st = setInterval(function () { v -= 0.02; if (v <= 0.01) { clearInterval(st); end(); } else a.volume = v; }, 1000);   // мягко гаснет ~15–20 с
+    var v = a.volume, st = setInterval(function () { v -= 0.015; if (v <= 0.01) { clearInterval(st); end(); } else a.volume = v; }, 1000);   // гаснет ~20 с
   }
 
   // ── не дать экрану погаснуть: плагин KeepAwake (если стоит) → Wake Lock API → ничего (подсказка на экране) ──
@@ -337,23 +388,43 @@
     return o;
   }
   function show(text) { var e = $('sl-tx'); if (e) e.textContent = text; }
-  // Дыхание 4/6 на sec секунд; голосом подсказываем только первые три цикла.
-  function breathe(at, sec) {
+  // Пул фраз (sleep-phrases.js): каждый вечер — свой сдвиг по кругу, внутри ритуала фразы не повторяются.
+  var cursor = {};
+  function pool(cat) {
+    var P = window.VIAL_SLEEP_PHRASES, a = (P && P[cat] && (P[cat][L()] || P[cat].en)) || [];
+    if (!a.length) return '';
+    if (cursor[cat] == null) { var d = Math.floor(Date.now() / 86400000); cursor[cat] = (d * 17 + (cat.length * 7)) % a.length; }
+    var x = a[cursor[cat] % a.length]; cursor[cat]++; return x;
+  }
+  function line(text) { if (text) { show(text); say(text); } }
+  // Дыхание 4/6 на sec секунд. Первые три цикла — голосом «вдох/выдох»; дальше через цикл: фраза из пула
+  // (дыхание или мысли), между ними — снова тихие «вдох/выдох». Тишины длиннее одного цикла (10 с) нет.
+  function breathe(at, sec, mindToo) {
     var cyc = Math.floor(sec / 10);
     for (var i = 0; i < cyc; i++) (function (i) {
-      later(function () { var c = $('sl-circle'); if (c) { c.style.transition = 'transform 4s ease-in-out'; c.style.transform = 'scale(1.35)'; } show(t('b_in')); if (i < 3) say(t('b_in')); }, (at + i * 10) * 1000);
-      later(function () { var c = $('sl-circle'); if (c) { c.style.transition = 'transform 6s ease-in-out'; c.style.transform = 'scale(1)'; } show(t('b_out')); if (i < 3) say(t('b_out')); }, (at + i * 10 + 4) * 1000);
+      var talk = i >= 3 && i % 2 === 1;
+      later(function () { var c = $('sl-circle'); if (c) { c.style.transition = 'transform 4s ease-in-out'; c.style.transform = 'scale(1.35)'; }
+        if (talk) line(pool(mindToo && i % 4 === 3 ? 'mind' : 'breath')); else { show(t('b_in')); say(t('b_in')); } }, (at + i * 10) * 1000);
+      later(function () { var c = $('sl-circle'); if (c) { c.style.transition = 'transform 6s ease-in-out'; c.style.transform = 'scale(1)'; }
+        if (!talk) { show(t('b_out')); say(t('b_out')); } }, (at + i * 10 + 4) * 1000);
     })(i);
     return at + cyc * 10;
   }
+  // Блок практики: вступление, затем пункты списка; между ними — фразы из пула каждые ~11 с (тело и мысли по очереди).
   function phrases(at, sec, intro, list) {
-    later(function () { show(tr(intro)); say(tr(intro)); }, at * 1000);
-    var step = (sec - 8) / list.length;
-    list.forEach(function (p, i) { later(function () { show(tr(p)); say(tr(p)); }, (at + 8 + i * step) * 1000); });
+    later(function () { line(tr(intro)); }, at * 1000);
+    var slot = (sec - 10) / list.length;
+    list.forEach(function (p, i) {
+      var t0 = at + 10 + i * slot;
+      later(function () { line(tr(p)); }, t0 * 1000);
+      for (var k = 1, f = t0 + 12; f < t0 + slot - 4; k++, f += 11) (function (k, f) {
+        later(function () { line(pool(k % 2 ? 'body' : 'mind')); }, f * 1000);
+      })(k, f);
+    });
     return at + sec;
   }
   function begin(title) {
-    stop(true); run++; overlay(title); awakeOn(); pickVoice();
+    stop(true); run++; cursor = {}; overlay(title); awakeOn(); pickVoice();
   }
   function ritual() {
     var s = settings(), plan = { 5: [120, 0, 180], 10: [120, 240, 240], 15: [180, 360, 360] }[s.dur] || [120, 240, 240];
@@ -361,7 +432,7 @@
     var at = 0;
     later(function () { show(tr(SAY.intro)); say(tr(SAY.intro)); }, 300); at = 8;
     later(function () { show(tr(SAY.breath)); say(tr(SAY.breath)); }, at * 1000); at += 9;
-    at = breathe(at, plan[0]);
+    at = breathe(at, plan[0], true);
     if (plan[1]) at = phrases(at, plan[1], SAY.pmr_in, PMR);
     at = phrases(at, plan[2], SAY.scan_in, SCAN);
     later(function () { show(tr(SAY.outro)); say(tr(SAY.outro)); }, at * 1000);
@@ -372,7 +443,7 @@
     var at = 0;
     AWAKE.forEach(function (p, i) { later(function () { show(tr(p)); say(tr(p)); }, (at + i * 11) * 1000 + 300); });
     at = AWAKE.length * 11;
-    at = breathe(at, 120);
+    at = breathe(at, 150, true);
     later(function () { finish(); }, (at + 2) * 1000);
   }
   function finish() { noiseStop(false); awakeOff(); var o = $('sl-ov'); if (o) o.style.display = 'none'; run++; }
@@ -440,7 +511,8 @@
     on: on, toggle: toggle, card: card, rec: rec, payload: payload, relang: relang,
     set: function (k, v) { setSet(k, v); card(); },
     remind: remind, ritual: ritual, awake: awake, stop: function () { stop(false); },
-    worry: worry, worrySave: worrySave, mountDiary: mountDiary
+    worry: worry, worrySave: worrySave, mountDiary: mountDiary,
+    _music: makeMusic   // отладка: собрать мелодию дня (вернёт blob-URL)
   };
   mountDiary(); card(); schedule();
 })();
