@@ -13,7 +13,7 @@ Heat rises to your face and neck, you break into a sweat, then you may feel chil
 
 Each of us has a "thermal comfort zone" — a range in which the body does not try either to cool down or to warm up. When oestrogen falls during the transition, this zone narrows. Now even a very small rise in temperature is enough for the body to decide it must cool down urgently: blood vessels widen, the skin flushes, sweat appears.
 
-Hot flashes usually come together with night sweats, broken sleep, dryness, aching joints and "brain fog". This is one picture, not a set of separate problems. If you wear a ring or watch, you can often see sharp jumps in skin temperature at night together with awakenings.
+Hot flashes usually come together with night sweats, broken sleep, dryness, aching joints and "brain fog". This is one picture, not a set of separate problems. A ring or watch cannot recognise hot flashes: no such device has been validated for this. And some hot flashes pass unnoticed during sleep — by morning you don’t remember them. So log both hot flashes and night awakenings.
 
 ## Why nights are the worst
 

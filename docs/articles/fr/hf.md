@@ -13,7 +13,7 @@ La chaleur monte au visage et au cou, vous transpirez, puis vous pouvez avoir de
 
 Chacun de nous a une « zone de confort thermique » : une plage dans laquelle le corps ne cherche ni à se refroidir ni à se réchauffer. Quand l’œstrogène baisse pendant la transition, cette zone se rétrécit. Désormais, une toute petite hausse de température suffit pour que le corps décide qu’il doit se refroidir d’urgence : les vaisseaux se dilatent, la peau rougit, la sueur apparaît.
 
-Les bouffées de chaleur s’accompagnent généralement de sueurs nocturnes, d’un sommeil haché, de sécheresse, de douleurs articulaires et de « brouillard » dans la tête. C’est un seul tableau, pas une série de problèmes séparés. Si vous portez une bague ou une montre, on voit souvent la nuit des pics brusques de température cutanée en même temps que les réveils.
+Les bouffées de chaleur s’accompagnent généralement de sueurs nocturnes, d’un sommeil haché, de sécheresse, de douleurs articulaires et de « brouillard » dans la tête. C’est un seul tableau, pas une série de problèmes séparés. Une bague ou une montre ne reconnaissent pas les bouffées de chaleur : aucun appareil de ce type n’est validé pour cela. Et une partie des bouffées passe inaperçue pendant le sommeil — le matin, on ne s’en souvient pas. Notez donc à la fois les bouffées de chaleur et les réveils nocturnes.
 
 ## Pourquoi la nuit est le pire moment
 

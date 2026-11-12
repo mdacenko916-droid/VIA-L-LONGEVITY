@@ -13,7 +13,7 @@ Il calore sale al viso e al collo, sudi, poi magari senti freddo. Di notte la st
 
 Ognuno di noi ha una «zona di comfort termico»: un intervallo in cui il corpo non cerca né di raffreddarsi né di scaldarsi. Quando nella transizione l’estrogeno cala, questa zona si restringe. Ora basta un aumento minimo della temperatura perché il corpo decida di doversi raffreddare con urgenza: i vasi si dilatano, la pelle si arrossa, compare il sudore.
 
-Insieme alle vampate di solito arrivano sudorazioni notturne, sonno spezzato, secchezza, dolori articolari e «nebbia» in testa. È un unico quadro, non una serie di problemi separati. Se porti un anello o un orologio, di notte si vedono spesso picchi bruschi della temperatura della pelle insieme ai risvegli.
+Insieme alle vampate di solito arrivano sudorazioni notturne, sonno spezzato, secchezza, dolori articolari e «nebbia» in testa. È un unico quadro, non una serie di problemi separati. Un anello o un orologio non riconoscono le vampate: nessun dispositivo di questo tipo è stato validato per farlo. E una parte delle vampate passa inosservata durante il sonno — al mattino non le ricordi. Per questo annota sia le vampate sia i risvegli notturni.
 
 ## Perché di notte è peggio
 

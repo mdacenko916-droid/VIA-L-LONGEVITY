@@ -13,7 +13,7 @@ Gorąco uderza do twarzy i szyi, oblewa cię pot, potem może cię przejść dre
 
 Każdy z nas ma „strefę komfortu cieplnego” — zakres, w którym ciało nie próbuje ani się ochłodzić, ani ogrzać. Gdy w okresie przejściowym spada estrogen, ta strefa się zwęża. Teraz ciału wystarcza bardzo niewielki wzrost temperatury, by uznać, że trzeba pilnie się chłodzić: naczynia się rozszerzają, skóra czerwienieje, pojawia się pot.
 
-Uderzeniom gorąca zwykle towarzyszą nocne poty, przerywany sen, suchość, bolące stawy i „mgła” w głowie. To jeden obraz, a nie zestaw osobnych problemów. Jeśli nosisz pierścień albo zegarek, w nocy często widać na nim gwałtowne skoki temperatury skóry razem z wybudzeniami.
+Uderzeniom gorąca zwykle towarzyszą nocne poty, przerywany sen, suchość, bolące stawy i „mgła” w głowie. To jeden obraz, a nie zestaw osobnych problemów. Pierścień ani zegarek nie rozpoznają uderzeń gorąca: żadne takie urządzenie nie zostało do tego zweryfikowane. A część uderzeń gorąca mija we śnie niezauważona — rano ich nie pamiętasz. Dlatego zapisuj zarówno uderzenia gorąca, jak i nocne wybudzenia.
 
 ## Dlaczego w nocy jest najgorzej
 

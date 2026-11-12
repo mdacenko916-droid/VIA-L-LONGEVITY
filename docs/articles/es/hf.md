@@ -13,7 +13,7 @@ El calor te sube a la cara y al cuello, rompes a sudar y luego quizá tengas esc
 
 Todos tenemos una «zona de confort térmico»: un margen en el que el cuerpo no intenta ni enfriarse ni calentarse. Cuando en la transición baja el estrógeno, esa zona se estrecha. Ahora basta una subida de temperatura muy pequeña para que el cuerpo decida que tiene que enfriarse con urgencia: los vasos se dilatan, la piel se enrojece, aparece el sudor.
 
-Junto con los sofocos suelen venir los sudores nocturnos, el sueño entrecortado, la sequedad, el dolor de articulaciones y la «niebla mental». Es un solo cuadro, no un conjunto de problemas separados. Si llevas un anillo o un reloj, por la noche a menudo se ven saltos bruscos de la temperatura de la piel junto con los despertares.
+Junto con los sofocos suelen venir los sudores nocturnos, el sueño entrecortado, la sequedad, el dolor de articulaciones y la «niebla mental». Es un solo cuadro, no un conjunto de problemas separados. Un anillo o un reloj no reconocen los sofocos: ningún dispositivo de este tipo está validado para ello. Y parte de los sofocos pasan inadvertidos durante el sueño: por la mañana no los recuerdas. Por eso anota tanto los sofocos como los despertares nocturnos.
 
 ## Por qué la noche es lo peor
 

@@ -13,7 +13,7 @@ O calor sobe para o rosto e o pescoço, você começa a suar e depois pode senti
 
 Todos temos uma «zona de conforto térmico» — uma faixa em que o corpo não tenta nem esfriar nem se aquecer. Quando o estrogênio cai na transição, essa zona se estreita. Agora basta um aumento muito pequeno de temperatura para o corpo decidir que precisa se resfriar com urgência: os vasos se dilatam, a pele fica vermelha, aparece o suor.
 
-Junto com as ondas de calor costumam vir suores noturnos, sono picado, secura, dores nas articulações e «névoa» na cabeça. É um único quadro, e não um conjunto de problemas separados. Se você usa um anel ou um relógio, à noite muitas vezes aparecem picos bruscos da temperatura da pele junto com os despertares.
+Junto com as ondas de calor costumam vir suores noturnos, sono picado, secura, dores nas articulações e «névoa» na cabeça. É um único quadro, e não um conjunto de problemas separados. Um anel ou um relógio não reconhecem ondas de calor: nenhum aparelho desse tipo foi validado para isso. E parte das ondas de calor passa despercebida durante o sono — de manhã você não se lembra delas. Por isso, registre tanto as ondas de calor quanto os despertares noturnos.
 
 ## Por que a noite é a pior parte
 

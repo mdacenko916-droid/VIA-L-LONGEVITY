@@ -13,7 +13,7 @@ Hitze steigt in Gesicht und Hals, du gerätst ins Schwitzen, danach frierst du v
 
 Jeder Mensch hat eine „thermische Komfortzone“ — einen Bereich, in dem der Körper weder abkühlen noch sich aufwärmen will. Wenn im Übergang das Östrogen sinkt, wird diese Zone schmaler. Jetzt reicht schon ein winziger Temperaturanstieg, damit der Körper beschließt, sofort abkühlen zu müssen: Die Gefäße weiten sich, die Haut rötet sich, Schweiß bricht aus.
 
-Mit Hitzewallungen kommen meist Nachtschweiß, unterbrochener Schlaf, Trockenheit, schmerzende Gelenke und „Nebel im Kopf“. Das ist ein einziges Bild, keine Sammlung einzelner Probleme. Wenn du einen Ring oder eine Uhr trägst, sieht man nachts oft scharfe Sprünge der Hauttemperatur zusammen mit dem Aufwachen.
+Mit Hitzewallungen kommen meist Nachtschweiß, unterbrochener Schlaf, Trockenheit, schmerzende Gelenke und „Nebel im Kopf“. Das ist ein einziges Bild, keine Sammlung einzelner Probleme. Ein Ring oder eine Uhr erkennt Hitzewallungen nicht: Kein solches Gerät ist dafür validiert. Und ein Teil der Hitzewallungen verläuft im Schlaf unbemerkt — morgens erinnerst du dich nicht daran. Trage deshalb sowohl Hitzewallungen als auch nächtliches Aufwachen ein.
 
 ## Warum die Nacht am schlimmsten ist
 
