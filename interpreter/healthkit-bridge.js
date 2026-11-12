@@ -159,11 +159,12 @@
       var p = hk();
       var sl = await p.queryHKitSampleType({ sampleName: 'sleepAnalysis', startDate: daysAgoISO(1), endDate: nowISO(), limit: 0 });
       var rows = (sl && sl.resultData) || [];
-      var asleepMin = 0, deepMin = 0;
+      var asleepMin = 0, deepMin = 0, awake = [];
       rows.forEach(function(s){
         var mins = (new Date(s.endDate) - new Date(s.startDate)) / 60000;
         if(!(mins > 0)) return;
         var v = String(s.value != null ? s.value : (s.sleepState || '')).toLowerCase();
+        if(v.indexOf('awake') >= 0){ awake.push([new Date(s.startDate), new Date(s.endDate)]); return; }
         var asleep = false;
         if(v.indexOf('deep') >= 0){ deepMin += mins; asleepMin += mins; asleep = true; }
         else if(v.indexOf('asleep') >= 0 || v.indexOf('core') >= 0 || v.indexOf('rem') >= 0){ asleepMin += mins; asleep = true; }
@@ -175,6 +176,26 @@
       });
       if(asleepMin > 0) out.sleep = Math.round(asleepMin / 60 * 100) / 100; // часы, 2 знака (точность до минуты, дисплей Ч:ММ)
       if(deepMin > 0)   out.deep  = Math.round(deepMin);
+      // Ночные пробуждения (2026-11-12) → подсказка «был ли прилив?» в шаге «Приливы». Прибор прилив
+      // НЕ распознаёт — мы только спрашиваем (docs/WEARABLE-HOT-FLASH-DETECTION.md). Берём бодрствование
+      // ПОСРЕДИ сна (внутри окна сна), соседние отрезки с зазором < 3 мин склеиваем, от 5 мин, до 3 эпизодов.
+      if(nightStart && nightEnd && awake.length){
+        awake.sort(function(a, b){ return a[0] - b[0]; });
+        var runs = [];
+        awake.forEach(function(a){
+          var st = a[0] < nightStart ? nightStart : a[0], en = a[1] > nightEnd ? nightEnd : a[1];
+          if(!(en > st)) return;
+          var prev = runs[runs.length - 1];
+          if(prev && st - prev[1] < 3 * 60000){ if(en > prev[1]) prev[1] = en; } else runs.push([st, en]);
+        });
+        var w = runs.map(function(r){ return { s:r[0], t:('0' + r[0].getHours()).slice(-2) + ':' + ('0' + r[0].getMinutes()).slice(-2), m:Math.round((r[1] - r[0]) / 60000) }; })
+          .filter(function(x){ return x.m >= 5; });
+        w = w.sort(function(a, b){ return b.m - a.m; }).slice(0, 3).sort(function(a, b){ return a.s - b.s; });
+        if(w.length){
+          var d = nightEnd, dk = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+          out.nightWakes = { d:dk, w:w.map(function(x){ return { t:x.t, m:x.m }; }) };
+        }
+      }
     } catch(e){}
     // HRV (SDNN): среднее по сэмплам внутри окна сна, сопоставимо с ночной HRV кольца.
     // Фолбэк на последний сэмпл, если ночь не размечена (нет sleepAnalysis за сутки).
@@ -276,6 +297,7 @@
       window.applyExtracted(extra, 'apple');
     }
     window._vialHealthExtras(data, 'apple');
+    if(data.nightWakes && typeof window._nightWakesSave === 'function') window._nightWakesSave('apple', data.nightWakes);
     if(typeof window.updateImportSummary === 'function') window.updateImportSummary();
     // ⚠️ Успехом считаем ТОЛЬКО показатели панели. Раньше здесь стояло Object.keys(data).length > 0,
     // и если Health отдал один вес или глюкозу (а сон, ВСР и пульс покоя не отдал), человек видел

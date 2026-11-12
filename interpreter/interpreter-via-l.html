@@ -3579,6 +3579,8 @@ body.has-tts-fab #stepResult .rd-tts-row,body.has-tts-fab #stepResult #ai-tts{di
           <div class="chip"><input type="radio" name="temp" id="tp5" value="chaotic"><label for="tp5" data-t="temp_chaotic">Хаотично</label></div>
         </div>
       </div>
+      <!-- «Был ли прилив?» по ночному пробуждению с прибора (2026-11-12) — рисует _hfWakeRender(); прибор прилив не распознаёт, мы только спрашиваем -->
+      <div class="hf-block" id="hf-wake" style="display:none;"></div>
       <div id="hf-section">
         <!-- ИНТЕНСИВНОСТЬ (5 уровней) -->
         <div class="hf-block">
@@ -5952,6 +5954,7 @@ function _gRefresh(){
   try{ if(typeof _condRender==='function')_condRender(); }catch(e){}   // блок состояний — тексты 12 языков внутри, перерисовать вместе с языком
   try{ if(typeof _dietRender==='function')_dietRender(); }catch(e){}   // тип питания — там же   // блок жалобы в шаге «Что нового»
   try{ if(typeof _cycTodayRender==='function')_cycTodayRender(); }catch(e){}   // «Цикл сегодня» — тексты 12 языков в JS
+  try{ if(typeof _hfWakeRender==='function')_hfWakeRender(); }catch(e){}   // «Был ли прилив?» по ночному пробуждению — тексты 12 языков в JS
   if(typeof _reflowSteps==='function'){try{_reflowSteps();}catch(e){}}
 }
 // Инлайн-правка веса/талии прямо в карточке (меняются со временем) → vial_profile + синхрон с профилем.
@@ -7206,6 +7209,8 @@ function _saveDaily(){
       energy:(document.getElementById('energy')?+document.getElementById('energy').value:null),   // субъективная бодрость за вчера, не прибор
       sleep_qual:(function(){var e=document.getElementById('sleep_qual');var v=e?parseFloat(e.value):NaN;return isNaN(v)?null:v;})(),   // ощущение сна → для личной нормы «как обычно»
       hf_count:getRadio('hf_count'), hf_intensity:getRadio('hf_intensity'),
+      hf_wake:getRadio('hf_wake'),   // ответ «был ли прилив» на ночное пробуждение с прибора (yes/no/unk)
+      nw:(function(){ try{ var o=_nightWakesToday(); return o?o.w.map(function(x){return x.t;}):null; }catch(e){ return null; } })(),
       // ежедневные субъективные блоки — копим по дням для недельного разбора из карточки
       memory:getRadio('memory'), fog:getRadio('fog'),
       // Числового слайдера «стресс X/10» в UI нет — есть только категория (name="stress": no/mild/high).
@@ -8956,7 +8961,7 @@ function _completeness(){
 // именно в них). Молчаливый перенос вчерашнего состояния как сегодняшнего искажает и честность ответа
 // клиента, и вход в ИИ-разбор — та же логика, по которой день не должен получать усреднённые/чужие данные.
 // Переносим ТОЛЬКО базу; дневное состояние всегда начинается пустым — отвечать заново, без якоря на вчера.
-var _DAILY_RADIO=['temp','deep','wake','hf_count','hf_intensity','appetite','move_today','eating_pattern','protein_intake','memory','fog','alc','stress','chronic_stress','last_meal','caffeine_late','sore','phq_int','phq_down'];
+var _DAILY_RADIO=['temp','deep','wake','hf_count','hf_intensity','hf_wake','appetite','move_today','eating_pattern','protein_intake','memory','fog','alc','stress','chronic_stress','last_meal','caffeine_late','sore','phq_int','phq_down'];
 var _DAILY_VAL=['energy','stress','resp_rate','hrv','rhr','sleep_hours'];
 function _isDailyField(el){
   if(el.name&&_DAILY_RADIO.indexOf(el.name)>=0)return true;
@@ -9076,6 +9081,56 @@ function _hfChange(){
   var intn=getRadio('hf_intensity');
   if(intn&&intn!=='none'){ fb.style.display=''; }
   else{ fb.style.display='none'; var n=document.querySelector('input[name="hf_count"][value="none"]'); if(n)n.checked=true; }
+  try{ _hfWakeHint(); }catch(e){}
+}
+// НОЧНЫЕ ПРОБУЖДЕНИЯ С ПРИБОРА → «Был ли тогда прилив?» (2026-11-12, решение владельца).
+// Прибор прилив НЕ распознаёт (docs/WEARABLE-HOT-FLASH-DETECTION.md): мы только спрашиваем. Во время ночного
+// прилива женщина просыпается в 69–78% случаев, а утром помнит лишь часть приливов (Carpenter 2004) — вопрос
+// рядом с пробуждением повышает полноту отметок. Формулировка — вопрос, НЕ «прибор заметил прилив».
+// Источники: Oura (воркер, night_wakes из sleep_phase_5_min), Apple Health (healthkit-bridge.js, отрезки «awake»).
+// Хранение: vialp_night_wakes = {d:'YYYY-MM-DD' (утро), src, w:[{t:'03:10', m:15}]}. Только женщинам, только за сегодня.
+var _HFW_T={
+  q:{ru:'Прибор показал, что ночью вы просыпались около {t}. Был ли тогда прилив или ночная потливость?',uk:'Прилад показав, що вночі ви прокидалися близько {t}. Чи був тоді приплив або нічна пітливість?',en:'Your device shows you woke up around {t} last night. Was there a hot flash or night sweat then?',es:'Tu dispositivo muestra que anoche te despertaste hacia las {t}. ¿Tuviste entonces un sofoco o sudor nocturno?',de:'Dein Gerät zeigt, dass du nachts gegen {t} aufgewacht bist. Hattest du da eine Hitzewallung oder Nachtschweiß?',pt:'Seu dispositivo mostra que você acordou por volta das {t} à noite. Teve uma onda de calor ou suor noturno nessa hora?',fr:'Votre appareil indique que vous vous êtes réveillée vers {t} cette nuit. Était-ce une bouffée de chaleur ou des sueurs nocturnes ?',pl:'Urządzenie pokazuje, że w nocy obudziłaś się około {t}. Czy było wtedy uderzenie gorąca albo nocne poty?',it:'Il dispositivo mostra che stanotte ti sei svegliata verso le {t}. In quel momento c’è stata una vampata o sudorazione notturna?',he:'המכשיר מראה שהתעוררת בלילה בסביבות {t}. האם היה אז גל חום או הזעת לילה?',ja:'デバイスによると、昨夜{t}ごろに目が覚めていました。そのとき、ホットフラッシュや寝汗はありましたか？',ko:'기기에 따르면 어젯밤 {t}쯤 잠에서 깼어요. 그때 안면홍조나 식은땀이 있었나요?'},
+  and:{ru:' и ',uk:' і ',en:' and ',es:' y las ',de:' und ',pt:' e das ',fr:' et ',pl:' i ',it:' e le ',he:' ו־',ja:'、',ko:', '},
+  note:{ru:'Сам прибор приливы не распознаёт. Спрашиваем, потому что ночные приливы к утру часто забываются.',uk:'Сам прилад припливів не розпізнає. Питаємо, бо нічні припливи до ранку часто забуваються.',en:'The device itself can’t recognise hot flashes. We ask because night-time hot flashes are often forgotten by morning.',es:'El dispositivo no reconoce los sofocos por sí solo. Te lo preguntamos porque los sofocos nocturnos se suelen olvidar por la mañana.',de:'Das Gerät selbst erkennt Hitzewallungen nicht. Wir fragen, weil nächtliche Hitzewallungen morgens oft vergessen sind.',pt:'O próprio dispositivo não reconhece ondas de calor. Perguntamos porque as ondas de calor noturnas costumam ser esquecidas pela manhã.',fr:'L’appareil ne reconnaît pas lui-même les bouffées de chaleur. Nous demandons, car les bouffées nocturnes sont souvent oubliées le matin.',pl:'Samo urządzenie nie rozpoznaje uderzeń gorąca. Pytamy, bo nocne uderzenia gorąca rano często się zapomina.',it:'Il dispositivo da solo non riconosce le vampate. Lo chiediamo perché le vampate notturne al mattino spesso si dimenticano.',he:'המכשיר עצמו לא מזהה גלי חום. אנחנו שואלים כי גלי חום בלילה נשכחים לעיתים קרובות עד הבוקר.',ja:'デバイス自体はホットフラッシュを見分けられません。夜のホットフラッシュは朝には忘れがちなので、お聞きしています。',ko:'기기 자체는 안면홍조를 알아보지 못해요. 밤의 안면홍조는 아침이면 잊기 쉬워서 여쭤봐요.'},
+  yes:{ru:'Да',uk:'Так',en:'Yes',es:'Sí',de:'Ja',pt:'Sim',fr:'Oui',pl:'Tak',it:'Sì',he:'כן',ja:'はい',ko:'네'},
+  no:{ru:'Нет',uk:'Ні',en:'No',es:'No',de:'Nein',pt:'Não',fr:'Non',pl:'Nie',it:'No',he:'לא',ja:'いいえ',ko:'아니요'},
+  unk:{ru:'Не помню',uk:'Не пам’ятаю',en:'Don’t remember',es:'No lo recuerdo',de:'Weiß nicht mehr',pt:'Não lembro',fr:'Je ne sais plus',pl:'Nie pamiętam',it:'Non ricordo',he:'לא זוכרת',ja:'覚えていない',ko:'기억나지 않아요'},
+  hint:{ru:'Отметьте его ниже — насколько сильным он был.',uk:'Позначте його нижче — наскільки сильним він був.',en:'Mark it below — how strong it was.',es:'Márcalo abajo: cómo de fuerte fue.',de:'Trage sie unten ein – wie stark sie war.',pt:'Marque abaixo: qual foi a intensidade.',fr:'Notez-la ci-dessous : quelle était son intensité.',pl:'Zaznacz je poniżej — jak silne było.',it:'Segnala qui sotto quanto è stata forte.',he:'סמני אותו למטה — כמה חזק הוא היה.',ja:'下で、どのくらい強かったかを記録してください。',ko:'아래에 얼마나 강했는지 표시해 주세요.'}
+};
+window._nightWakesSave=function(src,nw){
+  try{
+    if(!nw||!nw.d||!Array.isArray(nw.w)) return;
+    var w=nw.w.filter(function(x){ return x&&/^\d{2}:\d{2}$/.test(x.t||'')&&x.m>=5; }).slice(0,3);
+    if(!w.length){ localStorage.removeItem('vialp_night_wakes'); }
+    else localStorage.setItem('vialp_night_wakes',JSON.stringify({d:String(nw.d).slice(0,10),src:src,w:w}));
+  }catch(e){}
+  try{ _hfWakeRender(); }catch(e){}
+};
+function _nightWakesToday(){
+  try{ var o=JSON.parse(localStorage.getItem('vialp_night_wakes')||'null'); return (o&&o.d===_dayKey()&&Array.isArray(o.w)&&o.w.length)?o:null; }catch(e){ return null; }
+}
+function _hfWakeRender(){
+  var box=document.getElementById('hf-wake'); if(!box) return;
+  var P={}; try{ P=JSON.parse(localStorage.getItem('vialp_profile')||'{}')||{}; }catch(e){}
+  var isM=(typeof getRadio==='function'&&getRadio('gender')==='male')||P.gender==='male';
+  var nw=isM?null:_nightWakesToday();
+  if(!nw){ box.style.display='none'; box.innerHTML=''; return; }
+  var cur=getRadio('hf_wake');
+  var times=nw.w.map(function(x){ return x.t.replace(/^0(\d)/,'$1'); }).join(L(_HFW_T.and));
+  var opt=function(v){ return '<label class="hf-opt"><input type="radio" name="hf_wake" value="'+v+'" onchange="_hfWakeHint()"'+(cur===v?' checked':'')+'><span class="hf-circle"></span><span class="hf-lbl2">'+L(_HFW_T[v==='unk'?'unk':v])+'</span></label>'; };
+  box.innerHTML='<div class="hf-head">🌙 <span>'+L(_HFW_T.q).replace('{t}',times)+'</span></div>'
+    +'<div class="hf-q">'+L(_HFW_T.note)+'</div>'
+    +'<div class="hf-opts">'+opt('yes')+opt('no')+opt('unk')+'</div>'
+    +'<div class="hf-q" id="hf-wake-hint" style="display:none;margin-top:8px;"></div>';
+  box.style.display='';
+  _hfWakeHint();
+}
+function _hfWakeHint(){
+  var h=document.getElementById('hf-wake-hint'); if(!h) return;
+  var intn=getRadio('hf_intensity');
+  if(getRadio('hf_wake')==='yes'&&(!intn||intn==='none')){ h.textContent=L(_HFW_T.hint); h.style.display=''; }
+  else h.style.display='none';
 }
 // Края шкалы «Ощущение сна» — по полу из анкеты. «Выспался/выспалась» в русском и украинском
 // имеет род, а аудитория в основном женская: мужская форма читалась бы мимо. Пол берём из профиля
@@ -9792,6 +9847,7 @@ function showAll(){
   if(!window.__editMode && typeof _passedToday==='function'&&_passedToday()){ _showDailyDoneGate(); return; }   // сегодня пройдено → гейт «возвращайтесь завтра»
   _showFlow(_allFlow()); if(typeof renderGadgetPanel==='function')renderGadgetPanel();
   try{ if(typeof _cycTodayRender==='function')_cycTodayRender(); }catch(e){}
+  try{ if(typeof _hfWakeRender==='function')_hfWakeRender(); }catch(e){}
   // Обычный проход: кнопка через строгий гейт — результат только когда все блоки отвечены.
   _flowFooter(t('show_result'), function(){ _gateGuardOrRun(function(){ if(typeof _saveDaily==='function')_saveDaily(); document.body.classList.remove('flow-mode'); _hideFlowFooter(); showResults(); }); });
   if(window.__editMode){ _flowFooter(L({ru:'Сохранить и вернуться',uk:'Зберегти й повернутися',en:'Save & return',es:'Guardar y volver',de:'Speichern & zurück',pt:'Salvar e voltar',fr:'Enregistrer et revenir',pl:'Zapisz i wróć',it:'Salva e torna',he:'שמור וחזור',ja:'保存して戻る',ko:'저장하고 돌아가기'}),_saveProfileDone); }   // режим «Изменить профиль»: футер = сохранить и вернуться (без гейта)
@@ -12246,6 +12302,8 @@ function _showResultsInner(){
     // 5-й уровень нормализуем к существующим кодам движка: veryhigh→high, severe→intense (логика оценки не меняется)
     hf_count:(function(v){return v==='veryhigh'?'high':v;})(getRadio('hf_count')),
     hf_intensity:(function(v){return v==='severe'?'intense':v;})(getRadio('hf_intensity')),
+    hf_wake:getRadio('hf_wake')||null,   // «был ли прилив» на ночное пробуждение с прибора (yes/no/unk) — воркер: строка рядом с приливами
+    night_wakes:(function(){ try{ var o=_nightWakesToday(); return o?o.w:null; }catch(e){ return null; } })(),
     resp_rate:+document.getElementById('resp_rate').value,
     // производные из чеклиста «Сигналы тела» (отдельных инпутов mood/anxiety в PRO нет)
     mood:(document.getElementById('sym4')&&document.getElementById('sym4').checked)?'swings':'stable',
@@ -13578,6 +13636,7 @@ async function fetchOuraLive(sid){
     const r=await fetch(AI_WORKER+'/oura/metrics?sid='+encodeURIComponent(sid));
     const j=await r.json();
     if(j.ok&&j.temp_series) _tempSeriesSave('oura','dev',j.temp_series);
+    if(j.ok&&j.night_wakes&&typeof window._nightWakesSave==='function') window._nightWakesSave('oura',j.night_wakes);   // ночные пробуждения → «был ли прилив?» (показ только за сегодня)
     if(j.ok&&Array.isArray(j.tags)) _wearTagsSave(j.tags);   // метки, которые человек сам ставит в Oura (2026-10-12)
     if(j.ok){ try{ localStorage.setItem('vialp_oura_on','1'); }catch(e){} _ouraDiscPaint(); }   // ряд ночей — для температурной проверки цикла
     if(j.ok&&j.ex&&Object.keys(j.ex).length){

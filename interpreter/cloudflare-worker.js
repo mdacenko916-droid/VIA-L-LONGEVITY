@@ -5176,6 +5176,36 @@ async function whoopRefresh(env, rec){
 // helper для Whoop/Polar/Withings/Oura: сортирует записи по дате (dateFn), берёт valFn ПОСЛЕДНЕЙ записи с
 // непустым значением — то есть по каждому полю ищет свой самый свежий валидный день (фолбэк, если у поля
 // пропуск именно за вчера).
+// НОЧНЫЕ ПРОБУЖДЕНИЯ (2026-11-12) → подсказка в шаге «Приливы»: «прибор показал, что вы просыпались около
+// 3:10 — был ли прилив?». Прибор прилив НЕ распознаёт (docs/WEARABLE-HOT-FLASH-DETECTION.md) — мы только
+// спрашиваем: пробуждение во время прилива бывает в 69–78% случаев, а утром женщина помнит лишь часть
+// приливов. Источник — sleep_phase_5_min последней основной ночи (1 глубокий, 2 лёгкий, 3 REM, 4 бодрствование),
+// шаг 5 мин от bedtime_start. Берём только бодрствование ПОСРЕДИ сна (не до засыпания и не после
+// последнего сна), от 5 мин; время — по местным часам ночи (смещение из bedtime_start), до 3 эпизодов.
+function _ouraNightWakes(sleeps) {
+  try {
+    const main = (sleeps || []).filter(s => s && s.type === 'long_sleep' && s.sleep_phase_5_min && s.bedtime_start);
+    if (!main.length) return null;
+    main.sort((a, b) => new Date(a.bedtime_end || a.bedtime_start) - new Date(b.bedtime_end || b.bedtime_start));
+    const s = main[main.length - 1];
+    const ph = String(s.sleep_phase_5_min), m = /T(\d{2}):(\d{2})/.exec(String(s.bedtime_start));
+    if (!m) return null;
+    const first = ph.search(/[123]/), last = Math.max(ph.lastIndexOf('1'), ph.lastIndexOf('2'), ph.lastIndexOf('3'));
+    if (first < 0 || last <= first) return null;
+    const base = (+m[1]) * 60 + (+m[2]), runs = [];
+    for (let i = first; i <= last; i++) {
+      if (ph[i] !== '4') continue;
+      let j = i; while (j + 1 <= last && ph[j + 1] === '4') j++;
+      const at = (base + i * 5) % 1440;
+      runs.push({ t: String(Math.floor(at / 60)).padStart(2, '0') + ':' + String(at % 60).padStart(2, '0'), m: (j - i + 1) * 5 });
+      i = j;
+    }
+    if (!runs.length) return null;
+    const w = runs.slice().sort((a, b) => b.m - a.m).slice(0, 3);   // самые длинные — по времени ночи
+    w.sort((a, b) => runs.indexOf(a) - runs.indexOf(b));
+    return { d: String(s.day || String(s.bedtime_end || '').slice(0, 10)), w };
+  } catch (e) { return null; }
+}
 function _latestByDate(records, dateFn, valFn, sink) {
   const arr = (records || []).map(r => { const d = dateFn(r); const tm = d ? new Date(d).getTime() : NaN; const v = valFn(r); return { t: isFinite(tm) ? tm : 0, v }; }).filter(x => x.v != null);
   if (!arr.length) return null;
@@ -5766,6 +5796,8 @@ async function handleOuraMetrics(request, env, corsHeaders){
   }
   const _out = { ok:true, ex: _sanitizeEx(ex), day: _maxDay(_pd) };
   if (tempSeries.length) _out.temp_series = tempSeries;   // [{d:'YYYY-MM-DD', v:°C от базовой}] — старые сборки поле не читают
+  const _nw = _ouraNightWakes(useSleep);
+  if (_nw) _out.night_wakes = _nw;   // {d, w:[{t:'03:10', m:15}]} — подсказка «был ли прилив?»; старые сборки поле не читают
   // МЕТКИ (Enhanced Tags, 2026-10-12): то, что человек сам отметил в приложении Oura — симптомы,
   // приём чего-то, события. Это ЕГО отметки, не измерение кольца. Нужен scope `tag`: у подключений,
   // сделанных до 2026-10-12, его нет → Oura отвечает ошибкой, get() даёт null, меток просто нет.
@@ -8996,6 +9028,15 @@ function buildUserMessage(data, lang, tier) {
           + (data.meno_surgical === 'yes' ? 'Менопауза после операции (удаление яичников/матки): да — переход был резким, симптомы обычно сильнее, риск для сердца/сосудов и костей выше, чем при естественной; не сравнивать с «обычной» постменопаузой, подавать как окно профилактики, без запугивания\n' : '')
           + (data.pms_past === 'yes' ? 'Тяжёлый ПМС в прошлом: да — признак высокой чувствительности к гормональным колебаниям; объясняет более тяжёлый переход (приливы, настроение), это не «слабость»\n' : '')
           + ((data.hf_count && data.hf_count !== 'none') ? 'Приливы/жар: частота ' + _V(data.hf_count) + (data.hf_intensity ? ' | интенсивность ' + _V(data.hf_intensity) : '') + ' — вазомоторный признак перехода; учитывай как часть общей гормональной картины (влияет на сон/ночную температуру/пробуждения).\n' : '')
+          // Ночные пробуждения с прибора + её ответ «был ли тогда прилив» (2026-11-12). Прибор прилив НЕ распознаёт —
+          // это пробуждение, а связь с приливом знает только она сама (docs/WEARABLE-HOT-FLASH-DETECTION.md).
+          + ((Array.isArray(data.night_wakes) && data.night_wakes.length)
+              ? 'Ночные пробуждения по прибору: ' + data.night_wakes.slice(0, 3).map(w => String(w && w.t || '').slice(0, 5) + (w && w.m ? ' (' + (parseInt(w.m, 10) || 0) + ' мин)' : '')).join(', ')
+                + (data.hf_wake === 'yes' ? ' | на вопрос «был ли тогда прилив или ночная потливость» ответила: ДА — свяжи пробуждения с приливами'
+                  : data.hf_wake === 'no' ? ' | на вопрос о приливе ответила: НЕТ — причину пробуждений ищи в другом (вечер, стресс, мочевой пузырь, шум), приливами НЕ объясняй'
+                  : ' | был ли тогда прилив — не помнит или не ответила')
+                + '. НЕ пиши, что прибор «заметил/зафиксировал/поймал» прилив: прибор видит только пробуждение.\n'
+              : '')
           + ((Array.isArray(data.gsm) && data.gsm.filter(function(x){return x && x.indexOf('none')<0;}).length) ? 'Тазовое дно / интимный комфорт: ' + _J(data.gsm) + ' — тоже часть перименопаузальной картины (мочеполовой синдром); поддержка мягко и без диагноза.\n' : '')
         // male_mood/horm_intensity шлют VIA-L EXPERT (у них есть инпуты) — для VIA-L их нет,
         // поэтому у него строка просто схлопывается в «—». Трогать нельзя: это не сироты.

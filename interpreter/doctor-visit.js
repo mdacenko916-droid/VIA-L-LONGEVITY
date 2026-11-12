@@ -113,7 +113,7 @@
     var prev = arr.filter(function (r) { return r && r.ts && now - r.ts >= 28 * DAY && now - r.ts < 56 * DAY; });
     var avg = function (list, k, min) { var v = list.map(function (r) { return r[k]; }).filter(function (x) { return x != null && x !== '' && !isNaN(x) && +x > 0; });
       return v.length >= (min || 5) ? v.reduce(function (a, b) { return a + (+b); }, 0) / v.length : null; };
-    var hfDays = cur.filter(function (r) { return r.hf_count && r.hf_count !== 'none'; }).length;
+    var hfDays = cur.filter(function (r) { return (r.hf_count && r.hf_count !== 'none') || r.hf_wake === 'yes'; }).length;   // «Да» на ночное пробуждение с прибора — тоже день с приливом (2026-11-12)
     var hfMode = (function () { var c = {}, best = null, n = 0; cur.forEach(function (r) { var x = r.hf_count; if (!x || x === 'none') return; c[x] = (c[x] || 0) + 1; if (c[x] > n) { n = c[x]; best = x; } }); return best; })();
     var bpS = avg(cur, 'bp_sys', 3), bpD = avg(cur, 'bp_dia', 3);
     // цикл: длины по журналу начал (последние 5 промежутков)
