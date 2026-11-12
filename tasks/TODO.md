@@ -36,7 +36,7 @@
 
 ## 🌡 «Был ли прилив?» по ночному пробуждению с прибора (решение владельца 2026-11-12)
 Разбор: `docs/WEARABLE-HOT-FLASH-DETECTION.md`. Прибор прилив НЕ распознаёт — только спрашиваем.
-- [ ] **Этап 1 — в `main` 5a40f152, не в проде:** `wrangler deploy` (воркер, `night_wakes` от Oura) + пуш (Apple Health, блок ×12). Проверить на живом iPhone: строка появляется утром после ночи с пробуждением; Oura и Apple Health.
+- [ ] **Этап 1 — запушено 2026-11-12 (d0d5c33b → Xcode Cloud VIA-L 356 / ADAM-L 42); воркер НЕ задеплоен:** нужен `wrangler deploy` (без него Oura не отдаёт `night_wakes`; Apple Health работает и так). Проверить на живом iPhone: строка появляется утром после ночи с пробуждением; Oura и Apple Health.
 - [ ] **Этап 2:** Android — Health Connect (стадии `SleepSessionRecord`, правка нативного плагина `app/plugins/health-connect`) — со следующей Android-сборкой; затем Fitbit, Polar, Withings, Ultrahuman (воркер).
 - [ ] После выхода в сторы — поправить «ЧТО-КАК-РЕЗУЛЬТАТ» §1.2 «Сон: пробуждения»: пробуждения теперь и с прибора (Oura, Apple Health).
 
