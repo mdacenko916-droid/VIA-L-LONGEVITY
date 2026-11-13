@@ -4637,7 +4637,7 @@ const LANG_FLAGS={'uk':'🇺🇦 UK','ru':'🇷🇺 RU','en':'🇬🇧 EN','es':
 ;(function(){var c={ allergy_ph:{ru:'На что? (орехи, лактоза, глютен…)',uk:'На що? (горіхи, лактоза, глютен…)',en:'To what? (nuts, lactose, gluten…)',es:'¿A qué? (frutos secos, lactosa, gluten…)',de:'Worauf? (Nüsse, Laktose, Gluten…)',pt:'A quê? (nozes, lactose, glúten…)',fr:'À quoi ? (noix, lactose, gluten…)',pl:'Na co? (orzechy, laktoza, gluten…)',it:'A cosa? (noci, lattosio, glutine…)',he:'למה? (אגוזים, לקטוז, גלוטן…)',ja:'何に？（ナッツ、乳糖、グルテン…）',ko:'무엇에? (견과류, 유당, 글루텐…)'} };Object.keys(c).forEach(function(k){Object.keys(c[k]).forEach(function(l){if(T[l])T[l][k]=c[k][l];});});})();
 // Подписи 9 показателей трекера в карточке — человеческим языком, на 12 языках
 const _GLAB={
-  hrv:{ru:'Частота сердца',uk:'Частота серця',en:'Heart rate',es:'Frecuencia cardíaca',de:'Herzfrequenz',pt:'Frequência cardíaca',fr:'Fréquence cardiaque',pl:'Tętno',it:'Frequenza cardiaca',he:'דופק',ja:'心拍数',ko:'심박수'},
+  hrv:{ru:'Вариабельность',uk:'Варіабельність',en:'HR variability',es:'Variabilidad',de:'Variabilität',pt:'Variabilidade',fr:'Variabilité',pl:'Zmienność rytmu',it:'Variabilità',he:'שונות הדופק',ja:'心拍変動',ko:'심박 변이도'},   // 2026-10-28: было «Частота сердца» — HRV это вариабельность ритма, не частота
   rhr:{ru:'Пульс покоя',uk:'Пульс спокою',en:'Resting pulse',es:'Pulso en reposo',de:'Ruhepuls',pt:'Pulso em repouso',fr:'Pouls au repos',pl:'Tętno spoczynkowe',it:'Polso a riposo',he:'דופק במנוחה',ja:'安静時心拍',ko:'안정시 맥박'},
   sleepHours:{ru:'Сон',uk:'Сон',en:'Sleep',es:'Sueño',de:'Schlaf',pt:'Sono',fr:'Sommeil',pl:'Sen',it:'Sonno',he:'שינה',ja:'睡眠',ko:'수면'},
   deepMin:{ru:'Глубокий сон',uk:'Глибокий сон',en:'Deep sleep',es:'Sueño profundo',de:'Tiefschlaf',pt:'Sono profundo',fr:'Sommeil profond',pl:'Sen głęboki',it:'Sonno profondo',he:'שינה עמוקה',ja:'深い睡眠',ko:'깊은 수면'},
@@ -6147,7 +6147,7 @@ function _vcCSS(){ if(document.getElementById('vcard-css'))return; var s=documen
   +".vc-goal{width:100%;background:rgba(200,202,216,.06);border:1px solid rgba(200,202,216,.3);border-radius:10px;color:var(--t1);padding:9px 11px;font-family:inherit;font-size:var(--fs-body);box-sizing:border-box;resize:vertical;}"
   +".vc-pri{background:rgba(200,202,216,.08);border:1px solid rgba(200,202,216,.25);color:var(--t2);border-radius:50px;padding:5px 12px;font-size:var(--fs-cap);cursor:pointer;font-family:inherit;transition:all .2s ease;}"
   +".vc-pri.on{background:rgba(200,202,216,.25);border-color:#DDE0EC;color:#fff;}"
-  +".vc-dyn{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:8px 0;}"
+  +".vc-dyn{display:block;padding:4px 0;}"   /* 2026-11-13: была сетка 3 колонки под плитки .vd-cell — строки трендов сжимались в 3 узкие колонки (живой экран) */
   +".vd-cell{background:rgba(200,202,216,.06);border:1px solid rgba(200,202,216,.16);border-radius:12px;padding:10px 6px;text-align:center;}"
   +".vd-l{font-size:var(--fs-cap);color:var(--t3);}.vd-v{font-weight:700;font-size:var(--fs-hero);color:var(--t1);margin:2px 0;}.vd-d{font-size:var(--fs-cap);font-weight:600;}"
   +".vc-span{grid-column:auto;}"
@@ -6615,6 +6615,8 @@ function renderCard(){
   // мини-тренды HRV/сон/энергия/пульс/тело (личный ориентир «обычно»)
   var _tr=_cardTrends(nDays);
   var _trendsShown=(_tr.hrv.length>=2||_tr.sleep.length>=2||_tr.energy.length>=2||_tr.rhr.length>=2||_tr.weight.length>=2||_tr.waist.length>=2);
+  if(_trendsShown){ var _nd=Math.max(_tr.hrv.length,_tr.sleep.length,_tr.energy.length,_tr.rhr.length,_tr.weight.length,_tr.waist.length);   // 2026-11-13: видно, за какой период и сколько дней — иначе «Неделя/Месяц» выглядят одинаково
+    dynInner+='<div class="vc-empty" style="padding:2px 0 6px;">'+L({ru:'За последние '+nDays+' дн. · дней с данными: '+_nd,uk:'За останні '+nDays+' дн. · днів із даними: '+_nd,en:'Last '+nDays+' days · days with data: '+_nd,es:'Últimos '+nDays+' días · días con datos: '+_nd,de:'Letzte '+nDays+' Tage · Tage mit Daten: '+_nd,pt:'Últimos '+nDays+' dias · dias com dados: '+_nd,fr:'Derniers '+nDays+' jours · jours avec données : '+_nd,pl:'Ostatnie '+nDays+' dni · dni z danymi: '+_nd,it:'Ultimi '+nDays+' giorni · giorni con dati: '+_nd,he:'ב־'+nDays+' הימים האחרונים · ימים עם נתונים: '+_nd,ja:'直近'+nDays+'日 · データのある日: '+_nd,ko:'최근 '+nDays+'일 · 데이터가 있는 날: '+_nd})+'</div>'; }
   if(_trendsShown){
     var _usu=function(v){return L({ru:'обычно ~'+v,uk:'зазвичай ~'+v,en:'usually ~'+v,es:'normalmente ~'+v,de:'meist ~'+v,pt:'normalmente ~'+v,fr:'habituellement ~'+v,pl:'zwykle ~'+v,it:'di solito ~'+v,he:'בדרך כלל ~'+v,ja:'通常 ~'+v,ko:'보통 ~'+v});};
     var _uh=L({ru:'ч',uk:'год',en:'h',es:'h',de:'Std',pt:'h',fr:'h',pl:'godz',it:'h',he:'ש',ja:'時間',ko:'시간'});
