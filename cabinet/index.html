@@ -788,7 +788,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
         <label data-i18n="sp_paid_until">Оплачено до (необяз.)</label>
         <input class="form-input" id="s-paid-until" type="date">
       </div>
-      <div class="form-row" style="margin:0">
+      <div class="form-row" style="margin:0" id="s-platform-row">
         <label data-i18n="sp_platform_since">На платформе с (абонплата)</label>
         <input class="form-input" id="s-platform-since" type="date">
         <div style="font-size:var(--fs-cap);color:#888;margin-top:4px;" data-i18n="sp_platform_since_hint">С этой даты начисляется €30/мес. Пусто — абонплату не начисляем (свой специалист).</div>
@@ -1009,6 +1009,9 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
 // Пароль больше НЕ в HTML — проверяется воркером (/cabinet-auth), данные клиентов
 // живут в D1, а не в localStorage. См. docs/CABINET-MODEL.md (Этап 1).
 const API       = 'https://interpreter.viaelcom.workers.dev';
+// Владелец 2026-11-18: деньги и EXPERT в кабинете пока скрыты (цены не решены, EXPERT удалён 10-27).
+// Код и данные на месте — вернуть: SHOW_MONEY = true.
+const SHOW_MONEY = false;
 const KEY       = 'vial_cabinet';        // legacy localStorage — только для разовой миграции
 const TOKEN_KEY = 'vial_cabinet_token';
 
@@ -1042,7 +1045,7 @@ function chanOf(c){
 function chanBadge(c){
   const k = chanOf(c);
   if(k === 'app')    return ` <span class="badge badge-pause" title="${t('chan_app_hint')}">${t('chan_app')}</span>`;
-  if(k === 'expert') return ` <span class="badge badge-new">${t('chan_expert')}</span>`;
+  if(k === 'expert' && SHOW_MONEY) return ` <span class="badge badge-new">${t('chan_expert')}</span>`;   // EXPERT удалён 10-27 — бейдж скрыт вместе с деньгами
   return '';
 }
 // Разовый разбор (docs/SPECIALIST-REVIEW-PLAN.md): клиент приложения купил письменный разбор.
@@ -1726,10 +1729,12 @@ async function enterApp(){
   // Панель «Специалисты» — только владельцу.
   const spBtn = document.getElementById('viewSpecialistsBtn');
   if(spBtn) spBtn.style.display = (myRole==='owner') ? '' : 'none';
+  const pfRow = document.getElementById('s-platform-row');
+  if(pfRow) pfRow.style.display = SHOW_MONEY ? '' : 'none';
   const blBtn = document.getElementById('viewBillingBtn');
-  if(blBtn) blBtn.style.display = (myRole==='owner') ? '' : 'none';
+  if(blBtn) blBtn.style.display = (SHOW_MONEY && myRole==='owner') ? '' : 'none';
   const mbBtn = document.getElementById('viewMyBillBtn');
-  if(mbBtn) mbBtn.style.display = (myRole==='owner') ? 'none' : '';
+  if(mbBtn) mbBtn.style.display = (!SHOW_MONEY || myRole==='owner') ? 'none' : '';
   const mpBtn = document.getElementById('myPassBtn');
   if(mpBtn) mpBtn.style.display = (myRole==='owner') ? 'none' : '';
   ensureSpecialists();   // подпись «чей клиент» + фильтр по специалисту (владельцу)
@@ -3317,8 +3322,8 @@ function renderOverview(c){
     <div id="cpBox" style="border:1px solid #ddd;padding:12px 16px;margin-bottom:20px;font-size:var(--fs-body);">…</div>` : '';
 
   const dynBlock = renderDynamics(c);
-  if(c.code) setTimeout(loadClientPayments, 0);   // после вставки HTML в DOM
-  return chanHint(c) + reviewNote(c) + cards + dynBlock + profile + expertBlock + payBlock + nextBlock + bioBlock + ankBlock;
+  if(c.code && SHOW_MONEY) setTimeout(loadClientPayments, 0);   // после вставки HTML в DOM
+  return chanHint(c) + reviewNote(c) + cards + dynBlock + profile + (SHOW_MONEY ? expertBlock + payBlock : '') + nextBlock + bioBlock + ankBlock;
 }
 
 // ── VIA-L EXPERT: выдача / продление / отзыв срочного кода доступа ──
