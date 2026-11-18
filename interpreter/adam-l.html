@@ -7083,7 +7083,7 @@ function saveSession(score,type,data){
   const history=JSON.parse(localStorage.getItem(key)||'[]');
   const D=(typeof importedData!=='undefined'&&importedData)?importedData:{};
   const session={
-    date:new Date().toLocaleDateString(lang==='en'?'en-GB':'ru-RU',{day:'numeric',month:'short',year:'numeric'}),
+    date:new Date().toLocaleDateString(_locale(),{day:'numeric',month:'short',year:'numeric'}),
     score,type,
     hrv:data.hrv,sleep:data.sleep_qual,rhr:data.rhr,energy:data.energy,
     deepMin:D.deepMin,spo2:D.spo2,tempDev:D.tempDev,vo2:D.vo2,readiness:D.readiness,sleepHours:D.sleepHours,
@@ -7190,7 +7190,7 @@ function _syncPushDaily(rec, more){
 function _saveDaily(){
   try{
     var rec={
-      date:new Date().toLocaleDateString(lang==='en'?'en-GB':'ru-RU',{day:'numeric',month:'short'}),
+      date:new Date().toLocaleDateString(_locale(),{day:'numeric',month:'short'}),
       day:_dayKey(), ts:Date.now(),
       hrv:importedData.hrv, rhr:importedData.rhr, sleepHours:importedData.sleepHours,
       deepMin:importedData.deepMin, spo2:importedData.spo2, tempDev:importedData.tempDev,
@@ -7269,7 +7269,9 @@ function _dailyInner(){
       // Приборные плитки отсюда убраны: динамику HRV/пульса/сна показывает карточка «Тренды за 30 дней»
       // на экране разбора — там видна форма кривой, а не 14 отдельных наборов чисел. Здесь остаётся
       // то, чего в трендах нет и нигде больше не видно: субъективные ответы дня.
-      return '<div class="daily-day-card"><div class="daily-day-date">'+r.date+'</div>'
+      // Дата карточки — из r.day на текущем языке: старые записи хранят r.date строкой по-русски («13 нояб.»). 2026-11-18.
+      var _dd=r.date; try{ if(r.day){ var _p=r.day.split('-'); _dd=new Date(+_p[0],+_p[1]-1,+_p[2]).toLocaleDateString(_locale(),{day:'numeric',month:'short'}); } }catch(e){}
+      return '<div class="daily-day-card"><div class="daily-day-date">'+_dd+'</div>'
         +'<div class="daily-subj">'+(p.length?p.join(' · '):'—')+'</div>'
         +'</div>';
     }).join('');
@@ -10504,7 +10506,7 @@ function downloadPDF(){
 function _downloadPDFInner(){
   if(!_lastResult)return;
   const{score,type,insights,recs,docR,data}=_lastResult;
-  const date=new Date().toLocaleDateString(lang==='en'?'en-GB':'ru-RU',{day:'numeric',month:'long',year:'numeric'});
+  const date=new Date().toLocaleDateString(_locale(),{day:'numeric',month:'long',year:'numeric'});
   const colors={ok:'#4ECCA3',warn:'#F5A623',alert:'#FF6B8A'};
   const clr=colors[type]||colors.ok;
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
