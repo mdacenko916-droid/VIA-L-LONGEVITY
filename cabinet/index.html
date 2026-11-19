@@ -1330,6 +1330,8 @@ const T = {
   bio_weight:{ru:"Вес",uk:"Вага",en:"Weight",es:"Peso",de:"Gewicht",pt:"Peso",fr:"Poids",pl:"Waga",it:"Peso",he:"משקל",ja:"体重",ko:"체중"},
   u_wk:{ru:"нед.",uk:"тиж.",en:"wk",es:"sem.",de:"Wo.",pt:"sem.",fr:"sem.",pl:"tyg.",it:"sett.",he:"שב'",ja:"週",ko:"주"},
   u_h:{ru:"ч",uk:"год",en:"h",es:"h",de:"Std",pt:"h",fr:"h",pl:"godz",it:"h",he:"שע'",ja:"時間",ko:"시간"},
+  u_bpm:{ru:"уд/мин",uk:"уд/хв",en:"bpm",es:"lpm",de:"S/min",pt:"bpm",fr:"bpm",pl:"ud./min",it:"bpm",he:"פעימות/דקה",ja:"拍/分",ko:"bpm"},
+  u_steps:{ru:"шагов",uk:"кроків",en:"steps",es:"pasos",de:"Schritte",pt:"passos",fr:"pas",pl:"kroków",it:"passi",he:"צעדים",ja:"歩",ko:"걸음"},
   u_kg:{ru:"кг",uk:"кг",en:"kg",es:"kg",de:"kg",pt:"kg",fr:"kg",pl:"kg",it:"kg",he:"ק\"ג",ja:"kg",ko:"kg"},
   u_years:{ru:"л.",uk:"р.",en:"y.o.",es:"años",de:"J.",pt:"anos",fr:"ans",pl:"lat",it:"anni",he:"שנים",ja:"歳",ko:"세"},
   hdr_more:{ru:"Действия",uk:"Дії",en:"Actions",es:"Acciones",de:"Aktionen",pt:"Ações",fr:"Actions",pl:"Działania",it:"Azioni",he:"פעולות",ja:"操作",ko:"작업"},
@@ -3027,12 +3029,12 @@ function renderBiometrics(c){
     return `<tr${cls}>
       <td><input class="proto-input" type="number" min="1" value="${esc(String(b.week||''))}" oninput="updateBio(${i},'week',this.value)" style="width:40px;"></td>
       <td><input class="proto-input" type="date" value="${esc(b.date||'')}" oninput="updateBio(${i},'date',this.value)"></td>
-      <td><input class="proto-input" type="number" step="0.1" min="0" value="${esc(String(b.sleep||''))}" oninput="updateBio(${i},'sleep',this.value)" placeholder="—"></td>
-      <td><input class="proto-input" type="number" min="0" max="100" value="${esc(String(b.sleep_q||''))}" oninput="updateBio(${i},'sleep_q',this.value)" placeholder="—"></td>
-      <td><input class="proto-input" type="number" min="0" value="${esc(String(b.rhr||''))}" oninput="updateBio(${i},'rhr',this.value)" placeholder="—"></td>
-      <td><input class="proto-input" type="number" min="0" value="${esc(String(b.hrv||''))}" oninput="updateBio(${i},'hrv',this.value)" placeholder="—"></td>
-      <td><input class="proto-input" type="number" min="0" value="${esc(String(b.steps||''))}" oninput="updateBio(${i},'steps',this.value)" placeholder="—"></td>
-      <td><input class="proto-input" type="number" step="0.1" min="0" value="${esc(String(b.weight||''))}" oninput="updateBio(${i},'weight',this.value)" placeholder="—"></td>
+      <td><input class="proto-input" type="number" step="0.1" min="0" value="${esc(String(b.sleep||''))}" oninput="updateBio(${i},'sleep',this.value)" placeholder="${t('u_h')}"></td>
+      <td><input class="proto-input" type="number" min="0" max="100" value="${esc(String(b.sleep_q||''))}" oninput="updateBio(${i},'sleep_q',this.value)" placeholder="%"></td>
+      <td><input class="proto-input" type="number" min="0" value="${esc(String(b.rhr||''))}" oninput="updateBio(${i},'rhr',this.value)" placeholder="${t('u_bpm')}"></td>
+      <td><input class="proto-input" type="number" min="0" value="${esc(String(b.hrv||''))}" oninput="updateBio(${i},'hrv',this.value)" placeholder="${t('u_ms')}"></td>
+      <td><input class="proto-input" type="number" min="0" value="${esc(String(b.steps||''))}" oninput="updateBio(${i},'steps',this.value)" placeholder="${t('u_steps')}"></td>
+      <td><input class="proto-input" type="number" step="0.1" min="0" value="${esc(String(b.weight||''))}" oninput="updateBio(${i},'weight',this.value)" placeholder="${t('u_kg')}"></td>
       <td><button class="proto-del" onclick="deleteBio(${i})">×</button></td>
     </tr>`;
   }).join('');
