@@ -527,7 +527,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
       <button class="topbtn" id="viewBillingBtn" onclick="switchView('billing')" style="display:none;" data-i18n="nav_billing">€ Бухгалтерия</button>
       <button class="topbtn" id="viewMyBillBtn" onclick="switchView('mybill')" style="display:none;" data-i18n="nav_mybill">€ Мои расчёты</button>
       <button class="topbtn" id="myPassBtn" onclick="changeMyPassword()" style="display:none;" data-i18n="mp_btn">Сменить пароль</button>
-      <button class="topbtn" id="pushBtn" onclick="togglePush()">🔔 Уведомления</button>
+      <button class="topbtn" id="pushBtn" onclick="togglePush()" data-i18n="push_btn">🔔 Уведомления</button>
       <button class="topbtn" id="myLinkBtn" onclick="openMyLink()" data-i18n="nav_mylink">🔗 Моя ссылка</button>
       <button class="topbtn" id="showcaseBtn" onclick="openShowcase()" data-i18n="nav_showcase">🪟 Моя витрина</button>
       <button class="topbtn primary" onclick="openAddClient()" data-i18n="btn_new_client">+ Новый клиент</button>
@@ -589,7 +589,7 @@ html,body{height:100%;background:var(--dark);color:var(--t1);font-family:'DM San
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
           <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
         </svg>
-        <p>Выберите клиента из списка или добавьте нового</p>
+        <p data-i18n="empty_pick_client">Выберите клиента из списка или добавьте нового</p>
       </div>
 
       <!-- Client Detail -->
@@ -1356,6 +1356,7 @@ const T = {
   rs_confirm:{ru:"Передать клиента специалисту {name}? Срок доступа сохранится.",uk:"Передати клієнта спеціалісту {name}? Строк доступу збережеться.",en:"Reassign the client to {name}? The access period is kept.",es:"¿Reasignar el cliente a {name}? Se mantiene el periodo de acceso.",de:"Klient an {name} übergeben? Die Zugangsdauer bleibt erhalten.",pt:"Transferir o cliente para {name}? O período de acesso é mantido.",fr:"Réattribuer le client à {name} ? La durée d’accès est conservée.",pl:"Przekazać klienta do {name}? Okres dostępu zostaje zachowany.",it:"Riassegnare il cliente a {name}? Il periodo di accesso resta invariato.",he:"להעביר את הלקוח אל {name}? תקופת הגישה נשמרת.",ja:"クライアントを{name}に引き継ぎますか？アクセス期間は維持されます。",ko:"클라이언트를 {name}에게 이관할까요? 이용 기간은 유지됩니다."},
   rs_done:{ru:"Клиент передан: {name}",uk:"Клієнта передано: {name}",en:"Client reassigned to {name}",es:"Cliente reasignado a {name}",de:"Klient übergeben an {name}",pt:"Cliente transferido para {name}",fr:"Client réattribué à {name}",pl:"Klient przekazany do {name}",it:"Cliente riassegnato a {name}",he:"הלקוח הועבר אל {name}",ja:"クライアントを{name}に引き継ぎました",ko:"클라이언트를 {name}에게 이관했습니다"},
   rs_none:{ru:"Нет других проверенных специалистов — передавать некому.",uk:"Немає інших перевірених спеціалістів — передавати нікому.",en:"No other verified specialists — nobody to reassign to.",es:"No hay otros especialistas verificados: no hay a quién reasignar.",de:"Keine weiteren geprüften Spezialisten — niemand zum Übergeben.",pt:"Não há outros especialistas verificados — ninguém para transferir.",fr:"Aucun autre spécialiste vérifié — personne à qui réattribuer.",pl:"Brak innych zweryfikowanych specjalistów — nie ma komu przekazać.",it:"Nessun altro specialista verificato — non c'è a chi riassegnare.",he:"אין מומחים מאומתים אחרים — אין למי להעביר.",ja:"確認済みの他の専門家がいないため引き継げません。",ko:"확인된 다른 전문가가 없어 이관할 수 없습니다."},
+  empty_pick_client:{ru:"Выберите клиента из списка или добавьте нового",uk:"Оберіть клієнта зі списку або додайте нового",en:"Select a client from the list or add a new one",es:"Elige un cliente de la lista o añade uno nuevo",de:"Wählen Sie einen Klienten aus der Liste oder fügen Sie einen neuen hinzu",pt:"Escolha um cliente da lista ou adicione um novo",fr:"Choisissez un client dans la liste ou ajoutez-en un nouveau",pl:"Wybierz klienta z listy lub dodaj nowego",it:"Scegli un cliente dall’elenco o aggiungine uno nuovo",he:"בחרו לקוח מהרשימה או הוסיפו חדש",ja:"リストからクライアントを選ぶか、新しく追加してください",ko:"목록에서 고객을 선택하거나 새 고객을 추가하세요"},
   filter_all_spec:{ru:"Все специалисты",uk:"Усі спеціалісти",en:"All specialists",es:"Todos los especialistas",de:"Alle Spezialisten",pt:"Todos os especialistas",fr:"Tous les spécialistes",pl:"Wszyscy specjaliści",it:"Tutti gli specialisti",he:"כל המומחים",ja:"すべての専門家",ko:"모든 전문가"},
   sp_public_h:{ru:"Публичный профиль (видит клиент)",uk:"Публічний профіль (бачить клієнт)",en:"Public profile (clients see this)",es:"Perfil público (lo ve el cliente)",de:"Öffentliches Profil (für Klienten sichtbar)",pt:"Perfil público (o cliente vê)",fr:"Profil public (visible par le client)",pl:"Profil publiczny (widzi klient)",it:"Profilo pubblico (visibile al cliente)",he:"פרופיל ציבורי (הלקוח רואה)",ja:"公開プロフィール（クライアントに表示）",ko:"공개 프로필 (고객에게 표시)"},
   sp_private_h:{ru:"Для платформы (клиент не видит)",uk:"Для платформи (клієнт не бачить)",en:"For the platform (not shown to clients)",es:"Para la plataforma (no lo ve el cliente)",de:"Für die Plattform (für Klienten unsichtbar)",pt:"Para a plataforma (o cliente não vê)",fr:"Pour la plateforme (invisible au client)",pl:"Dla platformy (klient nie widzi)",it:"Per la piattaforma (non visibile al cliente)",he:"לפלטפורמה (הלקוח לא רואה)",ja:"プラットフォーム用（クライアントには非表示）",ko:"플랫폼용 (고객에게 비공개)"},
@@ -1665,6 +1666,7 @@ function applyI18n(){
 function setUiLang(l){
   uiLang = l; localStorage.setItem('vial_cabinet_uilang', l);
   applyI18n();
+  if(typeof _pushBtnState==='function') _pushBtnState();   // «🔔 Уведомления» рисуется из JS — без этого оставалась на языке входа
   if(typeof refreshList==='function') refreshList();      // статусы/бейджи в списке
   if(selectedId) renderClientDetail();                    // активная карточка (вкладки)
   const cal=document.getElementById('calendarView'); if(cal && cal.style.display!=='none') renderCalendar();
@@ -1962,7 +1964,7 @@ async function ensureSpecialists(){
   const sel = document.getElementById('specFilter');
   if(sel && specialistsCache.length){
     sel.style.display = '';
-    sel.innerHTML = `<option value="">${t('filter_all_spec')}</option>` +
+    sel.innerHTML = `<option value="" data-i18n="filter_all_spec">${t('filter_all_spec')}</option>` +
       specialistsCache.map(x=>`<option value="${x.id}">${esc(x.name||('#'+x.id))}</option>`).join('');
   }
   refreshList();
