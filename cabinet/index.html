@@ -2523,7 +2523,7 @@ async function selectClient(id){
 }
 function _isPhone(){ return window.matchMedia('(max-width:768px)').matches; }
 // Поле ввода растёт с текстом до 40% экрана, потом прокручивается само.
-function _cabGrow(ta){ if(!ta) return; ta.style.height='auto'; ta.style.height=Math.min(ta.scrollHeight, Math.round(window.innerHeight*0.4))+'px'; }
+function _cabGrow(ta){ if(!ta) return; ta.style.height='auto'; ta.style.height=Math.min(ta.scrollHeight, Math.round(window.innerHeight*0.4))+'px'; if(typeof _fitChatCard==='function') _fitChatCard(); }   // поле растёт — лента уступает место, окно остаётся на экране
 // Телефон, переписка: высота кабинета = видимая часть экрана (без клавиатуры). В PWA на iPhone экран под
 // клавиатуру не сжимается — сжимается только visualViewport, по нему и подгоняем; лента — вниз.
 function _phFit(){
@@ -2677,8 +2677,21 @@ function renderTabContent(){
   else if(currentTab==='schedule') el.innerHTML = renderSchedule(c);
   else if(currentTab==='breakdowns') el.innerHTML = renderBreakdowns(c);
   else if(currentTab==='messages') el.innerHTML = renderMessages(c);
-  if(currentTab==='messages'){ requestAnimationFrame(()=>{ const b=document.getElementById('chatThreadBox'); if(b) b.scrollTop=b.scrollHeight; }); }
+  if(currentTab==='messages'){ requestAnimationFrame(()=>{ _fitChatCard(); const b=document.getElementById('chatThreadBox'); if(b) b.scrollTop=b.scrollHeight; }); }
 }
+// Окно переписки на компьютере — ровно по видимой высоте вкладки (владелец 2026-11-19): иначе вместе
+// с длинным тредом листалась вся страница и шапка с «Перевести» уезжала. Подгоняем высоту ленты так,
+// чтобы шапка, лента и поле ввода целиком стояли на экране; листается только лента внутри окна.
+function _fitChatCard(){
+  if(window.innerWidth<=768) return;   // телефон — своя раскладка (body.ph-chat)
+  const tc=document.getElementById('tabContent'), card=document.querySelector('.cab-chat-card'), th=document.getElementById('chatThreadBox');
+  if(!tc||!card||!th) return;
+  const cs=getComputedStyle(tc), pad=(parseFloat(cs.paddingTop)||0)+(parseFloat(cs.paddingBottom)||0);
+  const other=card.offsetHeight-th.offsetHeight;          // шапка + строка разбора + поле ввода
+  th.style.height=Math.max(220, tc.clientHeight-pad-other-4)+'px';
+  tc.scrollTop=0;
+}
+window.addEventListener('resize',()=>{ if(currentTab==='messages') _fitChatCard(); });
 
 // ── «Вдвоём» (2026-10-15): пара видна, только если оба клиента дали согласие и оба у этого специалиста ──
 function _duoPeer(c){ return (c && c.duo_code) ? clients.find(x=>x.code===c.duo_code) : null; }
