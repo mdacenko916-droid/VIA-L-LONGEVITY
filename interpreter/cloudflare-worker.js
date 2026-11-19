@@ -5231,7 +5231,7 @@ function _maxDay(sink) {
 // пойманный в Fitbit-логе 15.07) у остальных трекеров доходил бы прямо до ИИ-промпта. Единый санитайзер по
 // эталонным границам _GMETA (клиент, интерпретатор PRO) — вызывается в КОНЦЕ каждого из 5 хендлеров, поверх
 // их inline-проверок (defensive: не убирает частные фильтры, а гарантирует одинаковый финальный порог всем).
-const _EX_BOUNDS = { hrv:[10,200], rhr:[30,120], sleepHours:[0,14], deepMin:[0,240], tempDev:[-2,2], spo2:[80,100], vo2:[15,80], readiness:[0,100], energy:[1,10] };
+const _EX_BOUNDS = { hrv:[10,200], rhr:[30,120], sleepHours:[0,14], deepMin:[0,240], tempDev:[-2,2], spo2:[80,100], vo2:[15,80], readiness:[0,100], energy:[1,10], steps:[0,100000] };
 // Тренировки за 7 дней от любого вендора → те же поля, что у Oura (workouts7d / trainMin7d / trainDay /
 // trainActivity): клиент берёт их без правок (applyExtracted копирует всё), «Движение вчера»
 // подставляется с трекера (_movePrefill). Вход — уже нормализованные сессии {day:'YYYY-MM-DD',
@@ -5746,6 +5746,11 @@ async function handleOuraMetrics(request, env, corsHeaders){
   // SpO2 → spo2_percentage.average — за ПОСЛЕДНИЙ день (x.day)
   const spo2 = await get('/v2/usercollection/daily_spo2') || [];
   if (spo2.length) { const v = _latestByDate(spo2, x => x.day, x => { const n = Number(x && x.spo2_percentage && x.spo2_percentage.average); return isFinite(n)&&n>0 ? n : null; }, _pd); if (v!=null) ex.spo2 = +v.toFixed(1); }
+  // Шаги (2026-11-19, владелец: «в кабинет шаги от Oura не приходят»). daily_activity под scope `daily`, который
+  // уже выдан. Берём последний ПОЛНЫЙ день (раньше сегодняшнего): проход — «за вчера», а утренний счёт за сегодня
+  // почти нулевой. В _pd дату не кладём — `day` ответа остаётся датой ночи, как было.
+  const act = await get('/v2/usercollection/daily_activity') || [];
+  if (act.length) { const full = act.filter(x => x && String(x.day || '') < end); const v = _latestByDate(full, x => x.day, x => { const n = Number(x && x.steps); return isFinite(n)&&n>0 ? n : null; }, null); if (v!=null) ex.steps = Math.round(v); }
   // Workout → сводка нагрузки за неделю (для модуля ДВИЖЕНИЕ + HRV-направленной нагрузки).
   // ⚠️ Oura пишет в эту коллекцию НЕ только тренировки: она сама детектит активность и заводит
   // запись на каждую прогулку и бытовое движение (source='autodetected'). Считать длину массива
