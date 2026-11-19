@@ -9893,7 +9893,8 @@ async function cabinetIngestIpAnalysis(env, code, data, analysisText, lang, docr
     const prevWeek = d.biometrics.length ? (parseInt(d.biometrics[d.biometrics.length-1].week) || d.biometrics.length) : 0;
     d.biometrics.push(Object.assign({ week: prevWeek + 1, date: today }, bioRow));
   } else {
-    // повторный проход в тот же день — дописываем только пустые графы (ручные правки специалиста не трогаем)
+    // проход в приложении — один в день; строка за сегодня уже есть, только если специалист завёл её вручную
+    // или запрос пришёл повторно (сеть) — тогда дописываем лишь пустые графы, правки специалиста не трогаем
     Object.keys(bioRow).forEach(k => { if((_bToday[k] === '' || _bToday[k] == null) && bioRow[k] !== '') _bToday[k] = bioRow[k]; });
   }
 
