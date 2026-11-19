@@ -12647,7 +12647,9 @@ async function handleCabinetSpecialistSave(request, env, corsHeaders){
   // зарегистрированные предприниматели. Значит «Проверен» нельзя ставить, пока не заполнены графы,
   // из которых собираются реквизиты договора и подставляется применимое право. Проверка серверная:
   // галочка в интерфейсе — не доказательство, а страна и регистрация нужны в оферте буквально.
-  if(verified){
+  // Владелец 2026-11-19: своему специалисту (billing_exempt — основатель / собственная практика, Марина)
+  // реквизиты ФОП не нужны — договор с клиентом не от его имени. Для внешних правило прежнее.
+  if(verified && !billingExempt){
     const need = { legal_name:V('legal_name'), country:V('country'), legal_form:V('legal_form'),
                    reg_number:V('reg_number'), tax_id:V('tax_id'), address:V('address'), phone:V('phone') };
     const missing = Object.keys(need).filter(k => !need[k]);
