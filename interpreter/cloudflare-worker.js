@@ -9878,12 +9878,23 @@ async function cabinetIngestIpAnalysis(env, code, data, analysisText, lang, docr
 
   // (1) Недельный срез биометрики — только чистый маппинг (hrv/rhr/weight). Один срез в день.
   if(!Array.isArray(d.biometrics)) d.biometrics = [];
-  if(!d.biometrics.some(b => b.date === today)){
+  // 2026-11-19 (владелец: «пришли не все данные»): сон и шаги раньше писались пустыми, хотя приложение их шлёт —
+  // часы сна: ручной ввод sleep_hours или прибор device.sleepHours; шаги: device.steps.
+  const _dev = (data.device && typeof data.device === 'object') ? data.device : {};
+  const _sl = parseFloat(data.sleep_hours) || parseFloat(_dev.sleepHours) || 0;
+  const _st = parseInt(_dev.steps, 10) || 0;
+  const bioRow = {
+    sleep: _sl > 0 && _sl < 24 ? String(Math.round(_sl * 10) / 10) : '',
+    rhr: data.rhr || '', hrv: data.hrv || '',
+    steps: _st > 0 ? String(_st) : '', weight: data.weight || '',
+  };
+  const _bToday = d.biometrics.find(b => b.date === today);
+  if(!_bToday){
     const prevWeek = d.biometrics.length ? (parseInt(d.biometrics[d.biometrics.length-1].week) || d.biometrics.length) : 0;
-    d.biometrics.push({
-      week: prevWeek + 1, date: today,
-      sleep:'', rhr: data.rhr || '', hrv: data.hrv || '', steps:'', weight: data.weight || '',
-    });
+    d.biometrics.push(Object.assign({ week: prevWeek + 1, date: today }, bioRow));
+  } else {
+    // повторный проход в тот же день — дописываем только пустые графы (ручные правки специалиста не трогаем)
+    Object.keys(bioRow).forEach(k => { if((_bToday[k] === '' || _bToday[k] == null) && bioRow[k] !== '') _bToday[k] = bioRow[k]; });
   }
 
   // (2) Лог ИИ-разбора. Полный срез ИП — в metrics (контекст для нутрициолога).
