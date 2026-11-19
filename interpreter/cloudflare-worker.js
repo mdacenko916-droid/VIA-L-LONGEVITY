@@ -9883,8 +9883,10 @@ async function cabinetIngestIpAnalysis(env, code, data, analysisText, lang, docr
   const _dev = (data.device && typeof data.device === 'object') ? data.device : {};
   const _sl = parseFloat(data.sleep_hours) || parseFloat(_dev.sleepHours) || 0;
   const _st = parseInt(_dev.steps, 10) || 0;
+  const _sq = parseFloat(data.sleep_qual) || 0;   // качество сна: шкала 0–10 в приложении, там же показано в % (7 → 70 %)
   const bioRow = {
     sleep: _sl > 0 && _sl < 24 ? String(Math.round(_sl * 10) / 10) : '',
+    sleep_q: _sq > 0 && _sq <= 10 ? String(Math.round(_sq * 10)) : '',
     rhr: data.rhr || '', hrv: data.hrv || '',
     steps: _st > 0 ? String(_st) : '', weight: data.weight || '',
   };
