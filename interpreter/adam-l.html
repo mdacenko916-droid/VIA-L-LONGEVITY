@@ -6436,6 +6436,7 @@ function renderCard(){
         out+=cell('WHtR',r.toFixed(2),c2,cl2);}
       return out;})()
     +'</div>';
+  if((parseFloat(P.weight)>0||parseFloat(P.waist)>0)&&parseFloat(P.height)>0) html+=_calcSrcHtml(['bmi','whtr']);
   // ── Энергетический ориентир (канон VIO d224d32): калории живут ТОЛЬКО здесь — не на «Сегодня»,
   // не в меню, не в советах. BMR Mifflin-St Jeor × активность, диапазон ±5%; честный образовательный
   // ориентир с дисклеймером «считать ежедневно не нужно» (философия: тарелка вместо бухгалтерии).
@@ -6455,6 +6456,7 @@ function renderCard(){
     +'<div style="margin-top:9px;padding-top:8px;border-top:1px solid rgba(200,202,216,.14);display:flex;flex-direction:column;gap:5px;">'
     +'<span onclick="openWhyCalories()" style="font-size:var(--fs-cap);color:var(--gold-lt);cursor:pointer;">💡 '+L({ru:'Почему мы не просим считать калории?',uk:'Чому ми не просимо рахувати калорії?',en:'Why we don’t ask you to count calories',es:'Por qué no pedimos contar calorías',de:'Warum wir kein Kalorienzählen verlangen',pt:'Por que não pedimos para contar calorias',fr:'Pourquoi nous ne demandons pas de compter les calories',pl:'Dlaczego nie prosimy o liczenie kalorii',it:'Perché non chiediamo di contare le calorie',he:'למה אנחנו לא מבקשים לספור קלוריות',ja:'なぜカロリー計算を求めないのか',ko:'왜 칼로리 계산을 요구하지 않나요'})+'</span>'
     +'<span onclick="_plateSheet()" style="font-size:var(--fs-cap);color:var(--gold-lt);cursor:pointer;">🥗 '+L({ru:'Основа питания — Гарвардская тарелка',uk:'Основа харчування — Гарвардська тарілка',en:'Nutrition basis — the Harvard plate',es:'Base de la alimentación — el plato de Harvard',de:'Ernährungsbasis — der Harvard-Teller',pt:'Base da alimentação — o prato de Harvard',fr:'Base de l’alimentation — l’assiette de Harvard',pl:'Podstawa żywienia — talerz harwardzki',it:'Base dell’alimentazione — il piatto di Harvard',he:'בסיס התזונה — צלחת הרווארד',ja:'食事の基本 — ハーバード・プレート',ko:'식사의 기본 — 하버드 플레이트'})+' →</span>'
+    +_calcSrcHtml(['kcal'])
     +'</div>'+'</div>';
   else html+='<div style="margin-top:10px;padding:10px 13px;border:1px dashed rgba(200,202,216,.22);background:rgba(255,255,255,.03);border-radius:12px;">'
     +'<div style="font-size:var(--fs-cap);letter-spacing:.06em;text-transform:uppercase;color:var(--gold-lt);font-weight:700;opacity:.9;">⚡ '+L({ru:'Ваш энергетический ориентир',uk:'Ваш енергетичний орієнтир',en:'Your energy guideline',es:'Tu referencia energética',de:'Dein Energie-Richtwert',pt:'Sua referência energética',fr:'Votre repère énergétique',pl:'Twoje zapotrzebowanie energetyczne',it:'Il tuo riferimento energetico',he:'ההכוונה האנרגטית שלך',ja:'あなたのエネルギーの目安',ko:'나의 에너지 기준'})+'</div>'
@@ -6784,6 +6786,7 @@ function renderCard(){
     +'<button type="button" class="vai-btn" onclick="_vaiCalc()">'+L({ru:'Рассчитать',uk:'Розрахувати',en:'Calculate',es:'Calcular',de:'Berechnen',pt:'Calcular',fr:'Calculer',pl:'Oblicz',it:'Calcola',he:'חישוב',ja:'計算',ko:'계산'})+'</button>'
     +'<div id="vai-result"></div>'
     +'<div class="vai-disc">'+L({ru:'VAI — не диагноз, а расчётный косвенный показатель. Для оценки здоровья обратитесь к специалисту.',uk:'VAI — не діагноз, а розрахунковий непрямий показник. Для оцінки здоров’я зверніться до спеціаліста.',en:'VAI is not a diagnosis — it is a calculated indirect indicator. For a health assessment, consult a specialist.',es:'VAI no es un diagnóstico, es un indicador indirecto calculado. Para evaluar tu salud, consulta a un especialista.',de:'VAI ist keine Diagnose, sondern ein berechneter indirekter Indikator. Für eine Gesundheitsbewertung wende dich an eine Fachkraft.',pt:'VAI não é um diagnóstico — é um indicador indireto calculado. Para avaliar a saúde, consulte um especialista.',fr:'Le VAI n’est pas un diagnostic — c’est un indicateur indirect calculé. Pour évaluer votre santé, consultez un spécialiste.',pl:'VAI to nie diagnoza — to obliczany wskaźnik pośredni. W celu oceny zdrowia skonsultuj się ze specjalistą.',it:'Il VAI non è una diagnosi — è un indicatore indiretto calcolato. Per valutare la salute, consulta uno specialista.',he:'VAI אינו אבחון — זהו מדד עקיף מחושב. להערכת בריאות פנו למומחה.',ja:'VAIは診断ではなく、算出された間接指標です。健康評価は専門家にご相談ください。',ko:'VAI는 진단이 아니라 계산된 간접 지표입니다. 건강 평가는 전문가와 상담하세요.'})+'</div>'
+    +_calcSrcHtml(['vai'])
     +'</div>';
   var _secVai=_vcSec('vai',L({ru:'Индекс скрытого жира (VAI)',uk:'Індекс прихованого жиру (VAI)',en:'Hidden fat index (VAI)',es:'Índice de grasa oculta (VAI)',de:'Index für verborgenes Fett (VAI)',pt:'Índice de gordura oculta (VAI)',fr:'Indice de graisse cachée (VAI)',pl:'Wskaźnik ukrytego tłuszczu (VAI)',it:'Indice del grasso nascosto (VAI)',he:'מדד שומן נסתר (VAI)',ja:'隠れ脂肪指数 (VAI)',ko:'숨은 지방 지수 (VAI)'}),_vaiInner,false,true);
   // «По дням» — дневник самочувствия; такая же сворачиваемая секция, как остальные.
@@ -8676,8 +8679,21 @@ function calcProfMetrics(){
     else{cat=_bc.obese;col='var(--alert)';}
     parts.push(`<span style="font-size:var(--fs-cap);letter-spacing:1px;color:var(--t3);text-transform:uppercase;margin-left:4px;">WHtR</span><span style="font-size:20px;font-weight:300;color:${col};margin:0 5px;">${rv}</span><span style="font-size:var(--fs-cap);color:${col};">${cat}</span>`);
   }
-  if(parts.length){box.innerHTML=parts.join('<span style="width:1px;height:22px;background:var(--b1);margin:0 4px;align-self:center;"></span>');box.style.display='flex';}
+  if(parts.length){box.innerHTML=parts.join('<span style="width:1px;height:22px;background:var(--b1);margin:0 4px;align-self:center;"></span>');box.innerHTML+='<div style="flex-basis:100%;">'+_calcSrcHtml(['bmi','whtr']).replace('margin-top:8px','margin-top:2px')+'</div>';box.style.display='flex';}
   else{box.style.display='none';}
+}
+// Источники расчётов профиля (ИМТ, WHtR, VAI, ккал) — App Store 1.4.1 (2026-11-20): у каждого расчёта ссылка на первоисточник.
+var _CALC_SRC={
+  bmi:['BMI — WHO, Technical Report Series 894 (2000)','https://iris.who.int/handle/10665/42330'],
+  whtr:['WHtR — Ashwell M. et al., Obesity Reviews 2012','https://doi.org/10.1111/j.1467-789X.2011.00952.x'],
+  vai:['VAI — Amato M.C. et al., Diabetes Care 2010','https://doi.org/10.2337/dc09-1825'],
+  kcal:['Mifflin M.D. et al., Am J Clin Nutr 1990','https://doi.org/10.1093/ajcn/51.2.241']
+};
+function _calcSrcHtml(keys){
+  var lbl=L({ru:'Источники',uk:'Джерела',en:'Sources',es:'Fuentes',de:'Quellen',pt:'Fontes',fr:'Sources',pl:'Źródła',it:'Fonti',he:'מקורות',ja:'出典',ko:'출처'});
+  var links=keys.filter(function(k){return _CALC_SRC[k];}).map(function(k){
+    return '<a href="'+_CALC_SRC[k][1]+'" target="_blank" rel="noopener" style="color:var(--gold-lt);text-decoration:none;border-bottom:1px solid rgba(200,202,216,.35);">'+_CALC_SRC[k][0]+'</a>';});
+  return links.length?'<div class="calc-src" style="font-size:var(--fs-cap);color:var(--t3);line-height:1.6;margin-top:8px;">'+lbl+': '+links.join(' · ')+'</div>':'';
 }
 // Вариант 1: как только заполнены возраст+вес+рост — карточка «Ваш профиль» завершается
 // (зелёная ✓ + золотое свечение заголовка), затем мягкий авто-скролл к следующей карточке
