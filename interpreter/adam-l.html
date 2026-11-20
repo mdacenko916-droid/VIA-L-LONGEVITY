@@ -6260,8 +6260,8 @@ function _vaiLabs(){
 }
 function _vaiCalc(){
   var P={}; try{P=JSON.parse(localStorage.getItem('vialp_profile')||'{}')||{};}catch(e){}
-  var waist=parseFloat(P.waist), w=parseFloat(P.weight), h=parseFloat(P.height);
-  var bmi=(w&&h&&h>0)?(w/Math.pow(h/100,2)):null;
+  var waist=_okWst(P.waist)?parseFloat(P.waist):null, w=parseFloat(P.weight), h=parseFloat(P.height);
+  var bmi=(_okW(w)&&_okH(h))?(w/Math.pow(h/100,2)):null;
   var _lv=_vaiLabs(), tg, hdl;
   if(_lv){ tg=_lv.tg; hdl=_lv.hdl; }               // из «Анализов», уже в ммоль/л
   else{
@@ -6428,15 +6428,15 @@ function renderCard(){
       var w=parseFloat(P.weight),h=parseFloat(P.height),wst=parseFloat(P.waist),out='';
       var C={low:L({ru:'ниже нормы',uk:'нижче норми',en:'below range',es:'bajo',de:'unter Norm',pt:'abaixo',fr:'sous la norme',pl:'poniżej normy',it:'sotto norma',he:'מתחת לנורמה',ja:'基準未満',ko:'기준 미만'}),ok:L({ru:'норма',uk:'норма',en:'in range',es:'normal',de:'im Normbereich',pt:'normal',fr:'dans la norme',pl:'w normie',it:'nella norma',he:'בנורמה',ja:'基準内',ko:'정상'}),over:L({ru:'выше нормы',uk:'вище норми',en:'above range',es:'elevado',de:'über Norm',pt:'acima',fr:'au-dessus',pl:'powyżej normy',it:'sopra norma',he:'מעל הנורמה',ja:'基準超',ko:'기준 초과'}),obese:L({ru:'значительно выше нормы',uk:'значно вище норми',en:'well above range',es:'muy elevado',de:'deutlich über Norm',pt:'bem acima',fr:'bien au-dessus',pl:'znacznie powyżej',it:'molto sopra norma',he:'הרבה מעל הנורמה',ja:'大幅に基準超',ko:'기준 크게 초과'})};
       var cell=function(lbl,val,cat,col){return '<div class="vh-cell"><div class="vh-l">'+lbl+'</div><div class="vh-v" style="color:'+col+';">'+val+'</div><div style="font-size:var(--fs-cap);color:'+col+';margin-top:1px;">'+cat+'</div></div>';};
-      if(w>0&&h>0){var bmi=w/Math.pow(h/100,2),c,cl;
+      if(_okW(w)&&_okH(h)){var bmi=w/Math.pow(h/100,2),c,cl;
         if(bmi<18.5){c=C.low;cl='#60a5fa';}else if(bmi<25){c=C.ok;cl='var(--ok)';}else if(bmi<30){c=C.over;cl='#f59e0b';}else{c=C.obese;cl='var(--alert)';}
         out+=cell('BMI',bmi.toFixed(1),c,cl);}
-      if(wst>0&&h>0){var r=wst/h,thr=(P.gender==='male')?[0.43,0.53,0.63]:[0.42,0.49,0.58],c2,cl2;
+      if(_okWst(wst)&&_okH(h)){var r=wst/h,thr=(P.gender==='male')?[0.43,0.53,0.63]:[0.42,0.49,0.58],c2,cl2;
         if(r<thr[0]){c2=C.low;cl2='#60a5fa';}else if(r<thr[1]){c2=C.ok;cl2='var(--ok)';}else if(r<thr[2]){c2=C.over;cl2='#f59e0b';}else{c2=C.obese;cl2='var(--alert)';}
         out+=cell('WHtR',r.toFixed(2),c2,cl2);}
       return out;})()
     +'</div>';
-  if((parseFloat(P.weight)>0||parseFloat(P.waist)>0)&&parseFloat(P.height)>0) html+=_calcSrcHtml(['bmi','whtr']);
+  if((_okW(P.weight)||_okWst(P.waist))&&_okH(P.height)) html+=_calcSrcHtml(['bmi','whtr']);
   // ── Энергетический ориентир (канон VIO d224d32): калории живут ТОЛЬКО здесь — не на «Сегодня»,
   // не в меню, не в советах. BMR Mifflin-St Jeor × активность, диапазон ±5%; честный образовательный
   // ориентир с дисклеймером «считать ежедневно не нужно» (философия: тарелка вместо бухгалтерии).
@@ -6763,12 +6763,12 @@ function renderCard(){
   var _lglLinks=_lglRow('../legal-adam/privacy.html',t('priv_link'))+_lglRow('../legal-adam/terms.html',t('terms_link'));
   _secLegal=_vcSec('legal',t('card_legal'),'<div style="font-size:var(--fs-cap);color:var(--t2);line-height:1.6;">'+t('consent_body')+'</div>'+_rcHtml+_lglLinks,false,true);
   // ── VAI: калькулятор скрытого (висцерального) жира. Доп-инструмент, БЕЗ ИИ/сети. Велнес-рамка + дисклеймер. ──
-  var _vaiBMI=(P.weight&&P.height&&P.height>0)?(P.weight/Math.pow(P.height/100,2)):null;
+  var _vaiBMI=(_okW(P.weight)&&_okH(P.height))?(P.weight/Math.pow(P.height/100,2)):null;
   var _vaiLab=(typeof _vaiLabs==='function')?_vaiLabs():null;
   var _vaiInner='<div class="vai-calc">'
     +'<div class="vai-intro">'+L({ru:'Косвенная оценка скрытого (висцерального) жира по формуле VAI. Одинаковые вес и талия — не всегда одинаковый обмен веществ.',uk:'Непряма оцінка прихованого (вісцерального) жиру за формулою VAI. Однакові вага й талія — не завжди однаковий обмін речовин.',en:'An indirect estimate of hidden (visceral) fat via the VAI formula. Same weight and waist do not always mean the same metabolism.',es:'Una estimación indirecta de la grasa oculta (visceral) con la fórmula VAI. El mismo peso y cintura no siempre significan el mismo metabolismo.',de:'Eine indirekte Schätzung des verborgenen (viszeralen) Fetts über die VAI-Formel. Gleiches Gewicht und gleiche Taille bedeuten nicht immer denselben Stoffwechsel.',pt:'Uma estimativa indireta da gordura oculta (visceral) pela fórmula VAI. Mesmo peso e cintura nem sempre significam o mesmo metabolismo.',fr:'Une estimation indirecte de la graisse cachée (viscérale) via la formule VAI. Même poids et même tour de taille ne signifient pas toujours le même métabolisme.',pl:'Pośrednia ocena ukrytego (trzewnego) tłuszczu wzorem VAI. Ta sama waga i talia nie zawsze oznaczają ten sam metabolizm.',it:'Una stima indiretta del grasso nascosto (viscerale) con la formula VAI. Stesso peso e girovita non sempre significano lo stesso metabolismo.',he:'הערכה עקיפה של שומן נסתר (ויסצרלי) לפי נוסחת VAI. אותו משקל והיקף מותניים לא תמיד מעידים על אותו חילוף חומרים.',ja:'VAI式による隠れた（内臓）脂肪の間接的な推定。同じ体重・ウエストでも代謝が同じとは限りません。',ko:'VAI 공식을 통한 숨은(내장) 지방의 간접 추정. 같은 체중·허리둘레라도 대사가 같지는 않습니다.'})+'</div>'
     +'<div class="vai-from"><b>'+L({ru:'Из профиля',uk:'З профілю',en:'From your profile',es:'De tu perfil',de:'Aus deinem Profil',pt:'Do seu perfil',fr:'De votre profil',pl:'Z Twojego profilu',it:'Dal tuo profilo',he:'מהפרופיל שלך',ja:'プロフィールから',ko:'프로필에서'})+':</b> '+L({ru:'талия',uk:'талія',en:'waist',es:'cintura',de:'Taille',pt:'cintura',fr:'tour de taille',pl:'talia',it:'girovita',he:'מותניים',ja:'ウエスト',ko:'허리둘레'})+' '+(P.waist?(P.waist+' '+L({ru:'см',uk:'см',en:'cm',es:'cm',de:'cm',pt:'cm',fr:'cm',pl:'cm',it:'cm',he:'ס״מ',ja:'cm',ko:'cm'})):'—')+' · '+L({ru:'ИМТ',uk:'ІМТ',en:'BMI',es:'IMC',de:'BMI',pt:'IMC',fr:'IMC',pl:'BMI',it:'IMC',he:'BMI',ja:'BMI',ko:'BMI'})+' '+(_vaiBMI?_vaiBMI.toFixed(1):'—')+'</div>'
-    +((P.waist&&_vaiBMI)?'':'<div class="vai-warn">'+L({ru:'Сначала заполните талию, вес и рост в профиле выше.',uk:'Спершу заповніть талію, вагу й зріст у профілі вище.',en:'First fill in waist, weight and height in the profile above.',es:'Primero completa cintura, peso y altura en el perfil de arriba.',de:'Fülle zuerst Taille, Gewicht und Größe im Profil oben aus.',pt:'Primeiro preencha cintura, peso e altura no perfil acima.',fr:'Remplissez d’abord tour de taille, poids et taille dans le profil ci-dessus.',pl:'Najpierw uzupełnij talię, wagę i wzrost w profilu powyżej.',it:'Prima compila girovita, peso e altezza nel profilo qui sopra.',he:'תחילה מלאו מותניים, משקל וגובה בפרופיל למעלה.',ja:'まず上のプロフィールでウエスト・体重・身長を入力してください。',ko:'먼저 위 프로필에서 허리둘레·체중·키를 입력하세요.'})+'</div>')
+    +((_okWst(P.waist)&&_vaiBMI)?'':'<div class="vai-warn">'+L({ru:'Сначала заполните талию, вес и рост в профиле выше.',uk:'Спершу заповніть талію, вагу й зріст у профілі вище.',en:'First fill in waist, weight and height in the profile above.',es:'Primero completa cintura, peso y altura en el perfil de arriba.',de:'Fülle zuerst Taille, Gewicht und Größe im Profil oben aus.',pt:'Primeiro preencha cintura, peso e altura no perfil acima.',fr:'Remplissez d’abord tour de taille, poids et taille dans le profil ci-dessus.',pl:'Najpierw uzupełnij talię, wagę i wzrost w profilu powyżej.',it:'Prima compila girovita, peso e altezza nel profilo qui sopra.',he:'תחילה מלאו מותניים, משקל וגובה בפרופיל למעלה.',ja:'まず上のプロフィールでウエスト・体重・身長を入力してください。',ko:'먼저 위 프로필에서 허리둘레·체중·키를 입력하세요.'})+'</div>')
     // Если ТГ и ЛПВП уже есть в «Анализах» — показываем их, а не просим ввести заново.
     +(_vaiLab
       ? ('<div class="vai-from" style="margin-top:10px;"><b>'+L({ru:'Из анализов',uk:'З аналізів',en:'From your lab tests',es:'De tus analíticas',de:'Aus deinen Laborwerten',pt:'Dos seus exames',fr:'De vos analyses',pl:'Z Twoich badań',it:'Dalle tue analisi',he:'מבדיקות המעבדה שלך',ja:'血液検査から',ko:'혈액 검사에서'})+':</b> '
@@ -8660,7 +8660,7 @@ function calcProfMetrics(){
     over:L({ru:'выше нормы',uk:'вище норми',en:'above range',es:'elevado',de:'über Norm',pt:'acima',fr:'au-dessus',pl:'powyżej normy',it:'sopra norma',he:'מעל הנורמה',ja:'基準超',ko:'기준 초과'}),
     obese:L({ru:'значительно выше нормы',uk:'значно вище норми',en:'well above range',es:'muy elevado',de:'deutlich über Norm',pt:'bem acima',fr:'bien au-dessus',pl:'znacznie powyżej',it:'molto sopra norma',he:'הרבה מעל הנורמה',ja:'大幅に基準超',ko:'기준 크게 초과'})};
   let parts=[];
-  if(w>0&&h>0){
+  if(_okW(w)&&_okH(h)){
     const bmi=w/Math.pow(h/100,2),br=bmi.toFixed(1);
     let cat,col;
     if(bmi<18.5){cat=_bc.low;col='#60a5fa';}
@@ -8669,7 +8669,7 @@ function calcProfMetrics(){
     else{cat=_bc.obese;col='var(--alert)';}
     parts.push(`<span style="font-size:var(--fs-cap);letter-spacing:1px;color:var(--t3);text-transform:uppercase;">BMI</span><span style="font-size:20px;font-weight:300;color:${col};margin:0 5px;">${br}</span><span style="font-size:var(--fs-cap);color:${col};">${cat}</span>`);
   }
-  if(wst>0&&h>0){
+  if(_okWst(wst)&&_okH(h)){
     const r=wst/h,rv=r.toFixed(2);
     const thr=g==='male'?[0.43,0.53,0.63]:[0.42,0.49,0.58];
     let cat,col;
@@ -8683,6 +8683,9 @@ function calcProfMetrics(){
   else{box.style.display='none';}
 }
 // Источники расчётов профиля (ИМТ, WHtR, VAI, ккал) — App Store 1.4.1 (2026-11-20): у каждого расчёта ссылка на первоисточник.
+// Пределы те же, что min/max у полей профиля: вне них ИМТ/WHtR/VAI не считаем (талия 5 см давала WHtR 0.03 — ревью Apple 2026-11-20).
+function _inR(v,lo,hi){v=parseFloat(v);return v>=lo&&v<=hi;}
+function _okW(v){return _inR(v,30,250);} function _okH(v){return _inR(v,100,230);} function _okWst(v){return _inR(v,40,200);}
 var _CALC_SRC={
   bmi:['BMI — WHO, Technical Report Series 894 (2000)','https://iris.who.int/handle/10665/42330'],
   whtr:['WHtR — Ashwell M. et al., Obesity Reviews 2012','https://doi.org/10.1111/j.1467-789X.2011.00952.x'],
