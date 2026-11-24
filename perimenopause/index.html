@@ -40,6 +40,15 @@
   .bar-r{display:flex;align-items:center;gap:8px}
   .langs button{background:transparent;border:1px solid var(--line);color:var(--text-lt);border-radius:999px;padding:5px 11px;font:600 13px 'DM Sans',sans-serif;cursor:pointer}
   .langs button.on{background:var(--gold);color:var(--gold-xp);border-color:var(--gold)}
+  /* язык — кнопка с выпадающим списком, как на главной */
+  .lsw{position:relative}
+  .lbtn{display:flex;align-items:center;gap:6px;background:var(--gold-xp);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font:600 15px 'DM Sans',sans-serif;letter-spacing:1px;color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .lbtn .arr{font-size:8px;color:var(--text-lt);transition:transform .2s}
+  .lsw.open .arr{transform:rotate(180deg)}
+  .lsw .langs{display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--cream);border:1px solid var(--gold-pale);border-radius:12px;overflow:hidden;min-width:170px;box-shadow:0 8px 24px rgba(90,70,40,.18);z-index:50;flex-direction:column;gap:0}
+  .lsw.open .langs{display:flex}
+  .lsw .langs button{display:block;width:100%;text-align:left;border:none;border-radius:0;background:transparent;padding:12px 16px;font:500 16px 'DM Sans',sans-serif;color:var(--text-mid);cursor:pointer}
+  .lsw .langs button.on{background:var(--cream-dk);color:var(--gold);font-weight:600}
   .bar .btn{padding:9px 14px;font-size:14px;border-radius:10px}
   .tabs{display:flex;gap:4px;justify-content:space-between;overflow-x:auto;padding:0 12px 10px;max-width:1080px;margin:0 auto;scrollbar-width:none}
   .tabs::-webkit-scrollbar{display:none}
@@ -150,7 +159,7 @@
   <div class="bar">
     <a class="logo" href="/">VIA-L</a>
     <div class="bar-r">
-      <div class="langs"><button data-l="uk">УКР</button> <button data-l="ru">РУС</button> <button data-l="es">ES</button> <button data-l="en">EN</button></div>
+      <div class="lsw" id="lsw"><button class="lbtn" id="lbtn" type="button" aria-haspopup="true"><span id="lflag">🇺🇦</span><span id="lcode">UK</span><span class="arr">▼</span></button><div class="langs"><button data-l="uk">🇺🇦 Українська</button><button data-l="ru">🇷🇺 Русский</button><button data-l="es">🇪🇸 Español</button><button data-l="en">🇬🇧 English</button></div></div>
       <a class="btn go" href="/check/" data-i18n="nav_cta">Пройти розбір</a>
     </div>
   </div>
@@ -643,11 +652,16 @@ var lang=(function(){
   var n=(navigator.language||'').slice(0,2).toLowerCase();
   return T[n]?n:'en';
 })();
+// Кнопка языка: открыть/закрыть список, подпись = текущий язык.
+var LF={uk:['🇺🇦','UK'],ru:['🇷🇺','RU'],es:['🇪🇸','ES'],en:['🇬🇧','EN']};
+function lbtnSync(){ var f=LF[lang]||LF.uk; document.getElementById('lflag').textContent=f[0]; document.getElementById('lcode').textContent=f[1]; document.getElementById('lsw').classList.remove('open'); }
+document.getElementById('lbtn').onclick=function(e){ e.stopPropagation(); document.getElementById('lsw').classList.toggle('open'); };
+document.addEventListener('click',function(){ document.getElementById('lsw').classList.remove('open'); });
 function apply(){
   var d=T[lang];
   document.querySelectorAll('[data-i18n]').forEach(function(el){ var k=el.getAttribute('data-i18n'); if(d[k]!=null) el.innerHTML=d[k]; });
   document.title=d._title; document.documentElement.lang=lang;
-  document.querySelectorAll('.langs button').forEach(function(b){ b.classList.toggle('on',b.dataset.l===lang); });
+  document.querySelectorAll('.langs button').forEach(function(b){ b.classList.toggle('on',b.dataset.l===lang); }); lbtnSync();
   document.querySelectorAll('a.go').forEach(function(a){ a.href='/check/?src='+encodeURIComponent(SRC)+'&lang='+lang; });
   // uk/ru: знакомство + клуб; es/en: письменная консультация в приложении (решение владельца 2026-11-24).
   document.querySelectorAll('[data-only]').forEach(function(el){ el.hidden=el.getAttribute('data-only').split(' ').indexOf(lang)<0; });
