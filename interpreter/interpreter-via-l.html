@@ -4551,7 +4551,7 @@ body.spec-open #specTop{display:block;}
   put(1,div('rdB1')); put(1,div('rdSelf')); put(1,E.ph); put(1,E.row);
   put(2,E.ai); put(2,E.da); put(2,div('rdEv'));
   var tts=function(src){ var d=document.createElement('div'); d.className='rd-tts-row'; d.innerHTML='<button type="button" class="ai-tts-btn tts-btn" data-src="'+src+'" onclick="vialTtsToggle(\''+src+'\')" style="display:none;"></button>'; return d; };
-  put(3,div('rdMeals')); put(3,tts('rdPlan')); put(3,div('rdPlan')); var wo=div('rdWorkout'); wo.className='wo-card'; put(3,wo); put(3,div('rdIntake')); put(3,div('rdFocusLine')); put(3,E.fo); put(3,E.duo); put(3,E.ex);   // «Вдвоём» — под фокусом недели (2026-10-15)
+  put(3,div('rdMeals')); put(3,tts('rdPlan')); put(3,div('rdPlan')); var wo=div('rdWorkout'); wo.className='wo-card'; put(3,wo); put(3,div('rdPelvic')); put(3,div('rdIntake')); put(3,div('rdFocusLine')); put(3,E.fo); put(3,E.duo); put(3,E.ex);   // «Вдвоём» — под фокусом недели (2026-10-15)
   put(4,tts('rdWhy')); put(4,div('rdWhy'));
   put(5,div('rdSleep')); put(5,div('rdHypno')); put(5,div('rdRitual'));   // блок «Сон» (sleep.js, 2026-11-11) — над ритуалом; под ним «Прохлада» (hypnosis.js, 2026-11-24)
   // метка конца шага: дочитал до неё — подсвечиваем следующий шаг
@@ -5335,6 +5335,7 @@ function setLang(l){
   try{ if(window.vialSports) vialSports.fillPass(); }catch(e){}   // «Мой спорт» в проходе (sports.js)
   try{ if(window.vialSleep) vialSleep.relang(); }catch(e){}   // блок «Сон» (sleep.js)
   try{ if(window.vialHypno) vialHypno.card(); }catch(e){}   // «Прохлада» — гипнотическая релаксация (hypnosis.js)
+  try{ if(window.vialPelvic) vialPelvic.card(); }catch(e){}   // «Тазовое дно — 12 недель» (pelvic.js)
   // lang на <html> нужен переносам: hyphens:auto без него применяет английские правила
   // к русскому/немецкому и рвёт слова не по слогам. 2026-09-06.
   try{ document.documentElement.lang = l; }catch(e){}
@@ -8826,6 +8827,7 @@ function saveProfile(){
     try{ ['weight','waist','cycle_status'].forEach(function(k){ if(P[k]!==undefined && String(P[k]||'')!==String(prof[k]||'')) _profChanged(k); }); }catch(e){}
     try{ _cycLogStart(prof.lastperiod, (P.lastperiod && prof.lastperiod && prof.lastperiod<P.lastperiod) ? P.lastperiod : ''); }catch(e){}   // журнал начал циклов; дату сдвинули назад — это правка, прежнюю убираем
     try{ if(typeof _ikSync==='function'){ _ikSync(prof); _ikArm(); } }catch(e){}   // «Мои приёмы» следуют за галочками
+    try{ if(window.vialPelvic) vialPelvic.card(); }catch(e){}   // «Тазовое дно — 12 недель» следует за галочками подтекания (pelvic.js)
   }catch(e){}
 }
 // Трекер цикла: дату последней менструации + длину цикла спрашиваем один раз (помнятся),
@@ -15344,7 +15346,7 @@ window.vialGoSpec=function(want){
 <script src="review-bridge.js"></script><!-- окно «Оцените приложение» после 3 дней с разбором (2026-10-08) -->
 <script src="intake.js"></script>
 <script src="levers.js"></script>
-<script src="day-tasks.js"></script><script src="sleep-phrases.js"></script><script src="sleep.js"></script><script src="hypnosis.js"></script><!-- блок «Сон»: дневник в шаге «Сон», ритуал перед сном (2026-11-11, docs/SLEEP-MODULE-MODEL.md) --><!-- «Напоминания на сегодня»: пул и выбор двух на день (2026-11-10) -->
+<script src="day-tasks.js"></script><script src="sleep-phrases.js"></script><script src="sleep.js"></script><script src="hypnosis.js"></script><script src="pelvic.js"></script><!-- блок «Сон»: дневник в шаге «Сон», ритуал перед сном (2026-11-11, docs/SLEEP-MODULE-MODEL.md) --><!-- «Напоминания на сегодня»: пул и выбор двух на день (2026-11-10) -->
 <script src="duo.js"></script><!-- «Вдвоём» (2026-10-15): включено владельцем 2026-10-15 вместе с парой у специалиста -->
 <script src="doctor-visit.js"></script><!-- «Подготовка к визиту»: карточка к врачу, акцент на «Сегодня» (2026-11-06) -->
 <script src="sports.js"></script><!-- «Мой спорт», проверка перед тренировкой, сверка прибора и самочувствия (2026-10-11) -->
