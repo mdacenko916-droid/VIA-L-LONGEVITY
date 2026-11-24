@@ -1642,6 +1642,7 @@
       background: var(--cream);
       padding: 100px 36px 48px;
       display: flex; flex-direction: column;
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
       transform: translateX(-100%);
       transition: transform 0.38s cubic-bezier(0.4,0,0.2,1);
       box-shadow: 4px 0 40px rgba(44,36,23,0.12);
@@ -1669,6 +1670,9 @@
       transition: color 0.2s, padding-left 0.2s;
     }
     .drawer-nav a:hover { color: var(--gold); padding-left: 6px; }
+    .drawer-nav .nav-check a, .nav-menu-dropdown a.nav-check { color: var(--gold); font-weight: 600; }
+    /* опросник и лендинг пока только uk/ru */
+    html[lang="es"] .nav-check, html[lang="en"] .nav-check { display: none !important; }
     .drawer-lang { display: flex; flex-direction: column; gap: 4px; margin-bottom: 24px; }
     .drawer-lang-opt { font-size: 14px; color: var(--text-mid); padding: 10px 0; cursor: pointer; border-bottom: 0.5px solid var(--line); -webkit-tap-highlight-color: transparent; }
     .drawer-lang-opt.active { color: var(--gold); font-weight: 500; }
@@ -2516,6 +2520,7 @@
       <span class="menu-arrow">▼</span>
     </button>
     <div class="nav-menu-dropdown" id="navMenuDrop" role="menu">
+      <a href="perimenopause/?src=site" class="nav-check" data-i18n="nav_check">Безкоштовний розбір</a>
       <a href="#about" onclick="closeNavMenu()" data-i18n="nav_approach">Підхід</a>
       <a href="#programs" onclick="closeNavMenu()" data-i18n="nav_programs">Програми</a>
       <a href="#guides" onclick="closeNavMenu()" data-i18n="nav_guides">Гайди</a>
@@ -2560,6 +2565,7 @@
     <div class="drawer-sub">Longevity</div>
     <div class="drawer-line"></div>
     <ul class="drawer-nav">
+      <li class="nav-check"><a href="perimenopause/?src=site" data-i18n="nav_check">Безкоштовний розбір</a></li>
       <li><a href="#about" onclick="toggleDrawer()" data-i18n="nav_approach">Підхід</a></li>
       <li><a href="#programs" onclick="toggleDrawer()" data-i18n="nav_programs">Програми</a></li>
       <li><a href="#guides" onclick="toggleDrawer()" data-i18n="nav_guides">Гайди</a></li>
@@ -2569,12 +2575,6 @@
       <li><a href="#me" onclick="toggleDrawer()" data-i18n="nav_about">Про мене</a></li>
       <li><a href="#booking" onclick="toggleDrawer()" data-i18n="nav_book">Записатися</a></li>
     </ul>
-    <div class="drawer-lang">
-      <div onclick="switchLang('uk','🇺🇦','UK',this)" class="drawer-lang-opt active" data-lang="uk">🇺🇦 Українська</div>
-      <div onclick="switchLang('ru','🇷🇺','RU',this)" class="drawer-lang-opt" data-lang="ru">🇷🇺 Русский</div>
-      <div onclick="switchLang('es','🇪🇸','ES',this)" class="drawer-lang-opt" data-lang="es">🇪🇸 Español</div>
-      <div onclick="switchLang('en','🇬🇧','EN',this)" class="drawer-lang-opt" data-lang="en">🇬🇧 English</div>
-    </div>
     <div class="drawer-footer">VIA-L · Longevity</div>
   </div>
 </div>
@@ -3173,7 +3173,7 @@
 // ════ TRANSLATIONS ════
 var translations = {
 uk: {
-nav_menu: "Меню", nav_approach: "Підхід", nav_programs: "Програми", nav_guides: "Гайди", nav_library: "Бібліотека", nav_interp: "Супровід у застосунку", nav_cabinet: "Кабінет", nav_about: "Про мене", nav_book: "Контакт",
+nav_check: "Безкоштовний розбір", nav_menu: "Меню", nav_approach: "Підхід", nav_programs: "Програми", nav_guides: "Гайди", nav_library: "Бібліотека", nav_interp: "Супровід у застосунку", nav_cabinet: "Кабінет", nav_about: "Про мене", nav_book: "Контакт",
 bridge_label: "Перехід до стратегії",
 bridge_text: "Від того, що ви відчуваєте зараз, до того, що насправді запускає ці стани.",
 bridge_link: "Як ми працюємо",
@@ -3348,7 +3348,7 @@ b_interp_devices: "Тижнів супроводу", b_interp_params: "Днів 
 b_interp_btn: "Як це проходить", b_interp_plans: "Тарифи 8 і 12 тижнів",
 },
 ru: {
-nav_menu: "Меню", nav_approach: "Подход", nav_programs: "Программы", nav_guides: "Гайды", nav_library: "Библиотека", nav_interp: "Сопровождение в приложении", nav_cabinet: "Кабинет", nav_about: "Обо мне", nav_book: "Контакт",
+nav_check: "Бесплатный разбор", nav_menu: "Меню", nav_approach: "Подход", nav_programs: "Программы", nav_guides: "Гайды", nav_library: "Библиотека", nav_interp: "Сопровождение в приложении", nav_cabinet: "Кабинет", nav_about: "Обо мне", nav_book: "Контакт",
 bridge_label: "Переход к стратегии",
 bridge_text: "От того, что вы чувствуете сейчас, к тому, что действительно запускает эти состояния.",
 bridge_link: "Как мы работаем",
@@ -3523,7 +3523,7 @@ b_interp_devices: "Недель сопровождения", b_interp_params: "�
 b_interp_btn: "Как это проходит", b_interp_plans: "Тарифы 8 и 12 недель",
 },
 es: {
-nav_menu: "Menú", nav_approach: "Enfoque", nav_programs: "Programas", nav_guides: "Guías", nav_library: "Biblioteca", nav_interp: "Acompañamiento en la app", nav_cabinet: "Gabinete", nav_about: "Sobre mí", nav_book: "Contacto",
+nav_check: "Análisis gratuito", nav_menu: "Menú", nav_approach: "Enfoque", nav_programs: "Programas", nav_guides: "Guías", nav_library: "Biblioteca", nav_interp: "Acompañamiento en la app", nav_cabinet: "Gabinete", nav_about: "Sobre mí", nav_book: "Contacto",
 bridge_label: "Transición a la estrategia",
 bridge_text: "De lo que sientes hoy a lo que realmente activa estos estados.",
 bridge_link: "Cómo trabajamos",
@@ -3698,7 +3698,7 @@ b_interp_devices: "Semanas de acompañamiento", b_interp_params: "Días de apoyo
 b_interp_btn: "Cómo funciona", b_interp_plans: "Tarifas de 8 y 12 semanas",
 },
 en: {
-nav_menu: "Menu", nav_approach: "Approach", nav_programs: "Programmes", nav_guides: "Guides", nav_library: "Library", nav_interp: "Support in the app", nav_cabinet: "Cabinet", nav_about: "About", nav_book: "Contact",
+nav_check: "Free check", nav_menu: "Menu", nav_approach: "Approach", nav_programs: "Programmes", nav_guides: "Guides", nav_library: "Library", nav_interp: "Support in the app", nav_cabinet: "Cabinet", nav_about: "About", nav_book: "Contact",
 bridge_label: "From symptoms to strategy",
 bridge_text: "From how you feel right now to what is actually triggering these states.",
 bridge_link: "How we work",
