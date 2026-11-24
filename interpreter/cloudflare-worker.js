@@ -4206,7 +4206,7 @@ function buildWeeklyUserMessage(summary, daily, lang, period, exp) {
       const LB = { energy:'энергия и силы', sleep:'сон и пробуждения', mood:'настроение и тревожность',
                    fog:'туман в голове, память', weight:'вес и живот', libido:'либидо и близость',
                    pain:'боли и скованность', hf:'приливы и ночная потливость', cycle:'цикл и его изменения',
-                   drive:'мотивация и драйв', muscle:'сила и мышцы', crave:'тяга к сладкому, заедание стресса', heart:'давление, холестерин, сердце' };
+                   drive:'мотивация и драйв', muscle:'сила и мышцы', crave:'тяга к сладкому, заедание стресса', heart:'давление, холестерин, сердце', hair:'волосы, кожа, ногти' };
       let c = '\n\nЖАЛОБА, С КОТОРОЙ КЛИЕНТ ПРИШЁЛ' + (cmp.since ? ' (с ' + cmp.since + ')' : '') + ': '
             + (cmp.items || []).map(k => LB[k] || k).join('; ')
             + (cmp.text ? ' — своими словами: «' + String(cmp.text).slice(0,300) + '»' : '') + '.';
@@ -6791,6 +6791,7 @@ const _KB_BY_COMPLAINT = {
   muscle: { f: ['P-F12'], m: ['P-M1'] },
   crave:  { f: ['P-F7', 'P-F9'], m: ['P-M3'] },   // 2026-11-24: тяга к сладкому — обмен/вес + настроение и стресс
   heart:  { f: ['P-F13'], m: ['P-M7'] },            // 2026-11-24: давление, холестерин, сердце — сердечно-сосудистые картины
+  hair:   { f: ['P-F14'], m: [] },                    // 2026-11-24: волосы, кожа, ногти — картина «кожа и волосы»
 };
 // Заголовки тем для классификатора: номер + название до первого « — » (без инструкций внутри блока).
 // У части тем название — про механизм, а не про ощущение («B12 и фолат»), и модель по одному
@@ -7437,6 +7438,7 @@ const _LAB_BY_COMPLAINT = {
   muscle: ['tst', 'vitd', 'ca'],
   crave:  ['glucose', 'hba1c'],
   heart:  ['ldl', 'chol', 'hdl', 'tg', 'glucose'],
+  hair:   ['ferritin', 'tsh', 'vitd', 'zinc'],
 };
 const _LAB_NAME_RU = {
   ferritin: 'ферритин', crp: 'CRP', tsh: 'ТТГ', vitd: 'витамин D (25-OH)', b12: 'B12',
@@ -8046,7 +8048,7 @@ function selectDietPattern(data) {
     food: 'молочное или обогащённые альтернативы, сардины с костями, кунжут, зелень',
     limit: 'избыток натрия',
     ev: 'средняя', note: 'K2 без обещаний: маркеры двигает, плотность почти нет, переломы не доказаны' });
-  add('AC-PROTEIN', age >= 50 || cmp.includes('muscle') || data.phase === 'post' || data.phase === 'meno', {
+  add('AC-PROTEIN', age >= 50 || cmp.includes('muscle') || cmp.includes('hair') || data.phase === 'post' || data.phase === 'meno', {
     what: 'достаточно белка за день плюс силовая нагрузка',
     food: vegan ? 'бобовые, тофу и темпе, киноа, орехи — равномерно по приёмам'
                : (plant ? 'яйца, творог, бобовые, тофу — равномерно по приёмам' : 'рыба, птица, яйца, творог, бобовые — равномерно по приёмам'),
@@ -8107,7 +8109,7 @@ function selectDietPattern(data) {
   // из-за того, что рядом нашлись липиды. Если жалоба ни с чем не связана — обычный приоритет.
   const BY_COMPLAINT = { energy:['AC-IRON','AC-LOWGI'], sleep:['AC-EVENING'], mood:['AC-EVENING'],
     fog:['AC-IRON','AC-B12'], weight:['AC-LOWGI'], pain:['AC-OMEGA'], muscle:['AC-PROTEIN'],
-    drive:['AC-WEIGHT'], cycle:['AC-IRON'], crave:['AC-LOWGI'], heart:['AC-SODIUM','AC-FIBER'] };
+    drive:['AC-WEIGHT'], cycle:['AC-IRON'], crave:['AC-LOWGI'], heart:['AC-SODIUM','AC-FIBER'], hair:['AC-PROTEIN','AC-IRON'] };
   const wanted = [];
   cmp.forEach(k => (BY_COMPLAINT[k] || []).forEach(id => { if (wanted.indexOf(id) < 0) wanted.push(id); }));
   const out = [];
@@ -8955,7 +8957,7 @@ function buildUserMessage(data, lang, tier) {
         const LB = { energy:'энергия и силы', sleep:'сон и пробуждения', mood:'настроение и тревожность',
                      fog:'туман в голове, память', weight:'вес и живот', libido:'либидо и близость',
                      pain:'боли и скованность', hf:'приливы и ночная потливость', cycle:'цикл и его изменения',
-                     drive:'мотивация и драйв', muscle:'сила и мышцы', crave:'тяга к сладкому, заедание стресса', heart:'давление, холестерин, сердце' };
+                     drive:'мотивация и драйв', muscle:'сила и мышцы', crave:'тяга к сладкому, заедание стресса', heart:'давление, холестерин, сердце', hair:'волосы, кожа, ногти' };
         const items = (Array.isArray(c.items) ? c.items : []).map(k => LB[k] || k).filter(Boolean);
         if (!items.length && !c.text) return '';
         let out = 'ЖАЛОБА, С КОТОРОЙ КЛИЕНТ ПРИШЁЛ' + (c.since ? ' (отмечена ' + c.since + ')' : '') + ': '
