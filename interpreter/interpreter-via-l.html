@@ -4551,7 +4551,7 @@ body.spec-open #specTop{display:block;}
   put(1,div('rdB1')); put(1,div('rdSelf')); put(1,E.ph); put(1,E.row);
   put(2,E.ai); put(2,E.da); put(2,div('rdEv'));
   var tts=function(src){ var d=document.createElement('div'); d.className='rd-tts-row'; d.innerHTML='<button type="button" class="ai-tts-btn tts-btn" data-src="'+src+'" onclick="vialTtsToggle(\''+src+'\')" style="display:none;"></button>'; return d; };
-  put(3,div('rdMeals')); put(3,tts('rdPlan')); put(3,div('rdPlan')); var wo=div('rdWorkout'); wo.className='wo-card'; put(3,wo); put(3,div('rdPelvic')); put(3,div('rdWplan')); put(3,div('rdLabs')); put(3,div('rdIntake')); put(3,div('rdFocusLine')); put(3,E.fo); put(3,E.duo); put(3,E.ex);   // «Вдвоём» — под фокусом недели (2026-10-15)
+  put(3,div('rdMeals')); put(3,tts('rdPlan')); put(3,div('rdPlan')); var wo=div('rdWorkout'); wo.className='wo-card'; put(3,wo); put(3,div('rdPelvic')); put(3,div('rdWplan')); put(3,div('rdLabs')); put(3,div('rdGut')); put(3,div('rdIntake')); put(3,div('rdFocusLine')); put(3,E.fo); put(3,E.duo); put(3,E.ex);   // «Вдвоём» — под фокусом недели (2026-10-15)
   put(4,tts('rdWhy')); put(4,div('rdWhy'));
   put(5,div('rdSleep')); put(5,div('rdHypno')); put(5,div('rdRitual'));   // блок «Сон» (sleep.js, 2026-11-11) — над ритуалом; под ним «Прохлада» (hypnosis.js, 2026-11-24)
   // метка конца шага: дочитал до неё — подсвечиваем следующий шаг
@@ -5338,6 +5338,7 @@ function setLang(l){
   try{ if(window.vialPelvic) vialPelvic.card(); }catch(e){}   // «Тазовое дно — 12 недель» (pelvic.js)
   try{ if(window.vialWplan) vialWplan.card(); }catch(e){}   // «Талия и вес — 8 недель» (wplan.js)
   try{ if(window.vialLabFollow) vialLabFollow.card(); }catch(e){}   // «Мои анализы: что дальше» (labfollow.js)
+  try{ if(window.vialGut) vialGut.card(); }catch(e){}   // «Пищеварение: щадящие недели и возврат» (gut.js)
   // lang на <html> нужен переносам: hyphens:auto без него применяет английские правила
   // к русскому/немецкому и рвёт слова не по слогам. 2026-09-06.
   try{ document.documentElement.lang = l; }catch(e){}
@@ -5973,7 +5974,7 @@ function _cardSaveNum(field,val){var P={};try{P=JSON.parse(localStorage.getItem(
 // Данные НЕ уходят на сервер: пользователь сам сохраняет файл и импортирует на новом устройстве.
 // Пароль знает только он: PBKDF2→AES-GCM. Единый модуль с VIO (источник по _SEC; в PRO — localStorage).
 var _BK_KEYS = (typeof _SEC!=='undefined' && _SEC.keys) ? _SEC.keys.slice()
-  : ['vialp_profile','vialp_history','vialp_daily','vialp_weekly_text','vialp_monthly_text','vialp_quarterly_text','vialp_ai_memory','vialp_ai_daily','vialp_day_plan','vialp_lastanswers','vialp_imported','vialp_days','vialp_pid','vialp_research_consent','vialp_experiment','vialp_exp_log','vialp_labs','vialp_labs_hist','vial_pelvic','vial_wplan','vialp_bigtext','vialp_workouts','vialp_wo_lv','vialp_sports'];   // активный эксперимент и журнал закрытых — иначе на новом устройстве петля обрывается; pid+согласие в копию: перенос на новое устройство не создаёт «нового участника» (P2/P6)
+  : ['vialp_profile','vialp_history','vialp_daily','vialp_weekly_text','vialp_monthly_text','vialp_quarterly_text','vialp_ai_memory','vialp_ai_daily','vialp_day_plan','vialp_lastanswers','vialp_imported','vialp_days','vialp_pid','vialp_research_consent','vialp_experiment','vialp_exp_log','vialp_labs','vialp_labs_hist','vial_pelvic','vial_wplan','vial_gut','vialp_bigtext','vialp_workouts','vialp_wo_lv','vialp_sports'];   // активный эксперимент и журнал закрытых — иначе на новом устройстве петля обрывается; pid+согласие в копию: перенос на новое устройство не создаёт «нового участника» (P2/P6)
 function _bkGet(k){ return (typeof secGet==='function')?secGet(k):localStorage.getItem(k); }
 function _bkSet(k,v){ if(typeof secSet==='function'){ secSet(k,v); } else { localStorage.setItem(k,v); } }
 function _bkB64(u8){ var s=''; for(var i=0;i<u8.length;i++)s+=String.fromCharCode(u8[i]); return btoa(s); }
@@ -8833,6 +8834,7 @@ function saveProfile(){
     try{ if(typeof _ikSync==='function'){ _ikSync(prof); _ikArm(); } }catch(e){}   // «Мои приёмы» следуют за галочками
     try{ if(window.vialPelvic) vialPelvic.card(); }catch(e){}   // «Тазовое дно — 12 недель» следует за галочками подтекания (pelvic.js)
     try{ if(window.vialWplan) vialWplan.card(); }catch(e){}   // «Талия и вес — 8 недель»: новый вес/талия из проверки недели → журнал (wplan.js)
+    try{ if(window.vialGut) vialGut.card(); }catch(e){}   // «Пищеварение» следует за отметками ЖКТ в профиле (gut.js)
   }catch(e){}
 }
 // Трекер цикла: дату последней менструации + длину цикла спрашиваем один раз (помнятся),
@@ -15356,7 +15358,7 @@ window.vialGoSpec=function(want){
 <script src="review-bridge.js"></script><!-- окно «Оцените приложение» после 3 дней с разбором (2026-10-08) -->
 <script src="intake.js"></script>
 <script src="levers.js"></script>
-<script src="day-tasks.js"></script><script src="sleep-phrases.js"></script><script src="sleep.js"></script><script src="hypnosis.js"></script><script src="pelvic.js"></script><script src="wplan.js"></script><script src="labfollow.js"></script><!-- блок «Сон»: дневник в шаге «Сон», ритуал перед сном (2026-11-11, docs/SLEEP-MODULE-MODEL.md) --><!-- «Напоминания на сегодня»: пул и выбор двух на день (2026-11-10) -->
+<script src="day-tasks.js"></script><script src="sleep-phrases.js"></script><script src="sleep.js"></script><script src="hypnosis.js"></script><script src="pelvic.js"></script><script src="wplan.js"></script><script src="labfollow.js"></script><script src="gut.js"></script><!-- блок «Сон»: дневник в шаге «Сон», ритуал перед сном (2026-11-11, docs/SLEEP-MODULE-MODEL.md) --><!-- «Напоминания на сегодня»: пул и выбор двух на день (2026-11-10) -->
 <script src="duo.js"></script><!-- «Вдвоём» (2026-10-15): включено владельцем 2026-10-15 вместе с парой у специалиста -->
 <script src="doctor-visit.js"></script><!-- «Подготовка к визиту»: карточка к врачу, акцент на «Сегодня» (2026-11-06) -->
 <script src="sports.js"></script><!-- «Мой спорт», проверка перед тренировкой, сверка прибора и самочувствия (2026-10-11) -->
