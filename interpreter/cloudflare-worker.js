@@ -4681,6 +4681,9 @@ async function handleCheckReport(request, env, corsHeaders, ctx) {
     'ПРАВИЛА: никогда не говори «у вас перименопауза/болезнь X» — только «такая картина часто встречается при…» или «по ответам это может быть и не связано с переходом»; ' +
     'не выдумывай фактов, сроков и цифр, которых нет в данных; не обещай результат и сроки («пройдёт», «через 2 недели станет легче»); ' +
     'никаких доз, лекарств, гормональной терапии как совета, трав; анализы называть можно; без личных имён; тон спокойный, без запугивания, на «вы».\n' +
+    // Живой прогон 2026-11-24: «в 47» при ответе 45–49, «просыпается» в третьем лице, «указывать на гипотиреоз».
+    'Возраст — ТОЛЬКО диапазоном, как в данных («45–49»), никогда не называй точный возраст. Обращайся к ней на «вы» во ВСЕХ полях, включая told, — не в третьем лице. ' +
+    'Не называй болезни даже как возможность (гипотиреоз, анемия, депрессия, диабет и т. п.) — говори «проверить щитовидную железу (ТТГ)», «запасы железа (ферритин)».\n' +
     'Верни ТОЛЬКО JSON без пояснений и без ```:\n' +
     '{"title":"суть одной строкой, до 90 знаков, например «Ночные пробуждения в 46 — стресс, гормональный переход или и то и другое»",' +
     '"told":"2–3 предложения: что она рассказала, её же ответами",' +
@@ -4705,11 +4708,13 @@ async function handleCheckReport(request, env, corsHeaders, ctx) {
   let rep = null;
   try { const m = raw.match(/\{[\s\S]*\}/); rep = JSON.parse(m ? m[0] : raw); } catch (_) {}
   if (!rep || !rep.title) return jsonResponse({ error: 'ai_unavailable' }, corsHeaders, 502);
-  const clean = s => _stripTimeframePromises(String(s || '').slice(0, 1200)).trim();
+  // uk: модель пишет русское «апноэ» вместо «апное» (живой прогон 2026-11-24).
+  const _ukFix = s => lang === 'uk' ? s.replace(/апноэ/gi, 'апное') : s;
+  const clean = s => _ukFix(_stripTimeframePromises(String(s || '').slice(0, 1200))).trim();
   const out = {
-    title: String(rep.title).slice(0, 140), told: clean(rep.told), looks: clean(rep.looks), exclude: clean(rep.exclude),
+    title: _ukFix(String(rep.title).slice(0, 140)), told: clean(rep.told), looks: clean(rep.looks), exclude: clean(rep.exclude),
     now: (Array.isArray(rep.now) ? rep.now : []).slice(0, 2).map(clean).filter(Boolean),
-    ask: (Array.isArray(rep.ask) ? rep.ask : []).slice(0, 3).map(s => String(s || '').slice(0, 300).trim()).filter(Boolean),
+    ask: (Array.isArray(rep.ask) ? rep.ask : []).slice(0, 3).map(s => _ukFix(String(s || '').slice(0, 300)).trim()).filter(Boolean),
   };
 
   if (env.DB) {
