@@ -4294,7 +4294,10 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
   // App Store (PWA, доступ по коду, разбор видит специалист) — там эксперимент можно ставить
   // как проверяемую гипотезу: ожидаемое направление + горизонт. Без этого «верификации» нет:
   // нечего сверять через неделю, кроме «стало иначе».
-  const _wellnessW = ['vio', 'pro'].includes(String(tier || '').toLowerCase());
+  // Без tier — тоже велнес: приложения VIA-L/ADAM-L tier в /weekly-report не шлют (никогда не слали), и с 2026-08-30
+  // их разборы шли в режиме EXPERT — прогноз со сроком, без тёплого тона. EXPERT PWA удалён 2026-10-27 (2026-11-24).
+  const _tierW = String(tier || '').toLowerCase();
+  const _wellnessW = !_tierW || ['vio', 'pro'].includes(_tierW);
   const perAdj  = isQuarter ? 'three-month' : (isMonth ? 'monthly' : 'weekly');   // уровни: неделя → месяц → 3 месяца — то же ядро, другое окно
   const perThis = isQuarter ? 'these 3 months' : (isMonth ? 'this month' : 'this week');
   const perNext = isQuarter ? 'next 3 months' : (isMonth ? 'coming month' : 'coming week');
@@ -4370,8 +4373,8 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
       'starting with "— ". Each question is written in the first person, as the person would say it at an appointment, ' +
       'and is built from THEIR OWN data this week (a complaint score, a signal that persists or worsened, a step that did ' +
       'not help), e.g. the shape «My night awakenings stayed at 6–7/10 for the whole week — where would you start?». ' +
-      'Never name a disease, a diagnosis, a lab test or a hormone, never suggest a medication or a dose; no numbers that ' +
-      'are not in the data. These 2 questions do NOT count toward the sentence limit above.\n') +
+      'Never name a disease, a diagnosis, a lab test or a hormone, never suggest a medication or a dose; no numbers, ' +
+      'durations ("for a couple of weeks") or circumstances ("even when I go to bed earlier") that are not in the data. These 2 questions do NOT count toward the sentence limit above.\n') +
     // Гипотеза с горизонтом — только вне велнес-рамки: иначе это обещание результата и срока.
     (_wellnessW ? '' :
       'STATE THE EXPERIMENT AS A TESTABLE HYPOTHESIS, not as a fact: name which 1–2 of THEIR OWN metrics you ' +
