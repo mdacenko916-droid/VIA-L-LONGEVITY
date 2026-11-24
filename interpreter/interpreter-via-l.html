@@ -7230,6 +7230,7 @@ function _saveDaily(){
       // Раньше тут стоял getElementById('stress') на несуществующий id → всегда null, недельный/месячный
       // тренд стресса молча не считался. Мапим категорию на число (0–10), чтобы тренд снова работал.
       stress:(function(){var v=getRadio('stress');return v==='high'?9:v==='mild'?5:v==='no'?2:null;})(), alc:getRadio('alc'),
+      phq_int:getRadio('phq_int'), phq_down:getRadio('phq_down'),   // 2026-11-24: 2 вопроса PHQ (раз в 2 недели) — для заметки «к врачу» под шагами настроения
       cmp_delta:window._cmpDeltaToday||null,   // «лучше/так же/хуже» по жалобе — из этого недельный разбор считает траекторию
       move_today:getRadio('move_today'), train_zone:_trainZones(), sore:getRadio('sore'), sore_note:(typeof _soreNote==='function'?_soreNote():''),   // движение вчера — история для «что делать сегодня»
       sl:(function(){ try{ return window.vialSleep?vialSleep.rec():null; }catch(e){ return null; } })(),   // дневник сна: легли/засыпание/встали/эффективность (sleep.js)
@@ -8024,6 +8025,9 @@ function _focusOpts(){
 }
 // Всё, что известно о человеке, для подгонки фокуса (levers.js → fit): карточка (возраст, ИМТ, активность, белок,
 // состояния, лекарства, временные ограничения), привычки и состояние за 7 дней из дневных проходов, давление, анализы.
+// 2026-11-24: сумма 2 вопросов PHQ (0–6) из последнего ответа за 14 дней; ≥3 — заметка «к врачу» под шагами настроения
+function _phqLast(){ try{ var since=Date.now()-14*86400000, a=(JSON.parse(localStorage.getItem('vialp_daily')||'[]')||[]).filter(function(r){ return r&&(r.ts||0)>=since&&r.phq_int!=null&&r.phq_int!==''&&r.phq_down!=null&&r.phq_down!==''; });
+  if(!a.length) return null; a.sort(function(x,y){ return (y.ts||0)-(x.ts||0); }); var v=Number(a[0].phq_int)+Number(a[0].phq_down); return isFinite(v)?v:null; }catch(e){ return null; } }
 function _focusCtx(){
   var P={}; try{ P=JSON.parse(localStorage.getItem('vialp_profile')||'{}')||{}; }catch(e){}
   var w=parseFloat(P.weight), ht=parseFloat(P.height);
@@ -8041,7 +8045,7 @@ function _focusCtx(){
       strength:cnt(function(r){ return r.move_today==='strength'; }),
       sedentary:cnt(function(r){ return r.move_today==='sedentary'; }),
       hf:cnt(function(r){ return r.hf_count && r.hf_count!=='none'; }), stress:avg('stress') },
-    bpSys:bpN>=2?avg('bp_sys'):null, bpDia:bpN>=2?avg('bp_dia'):null, labs:labs
+    bpSys:bpN>=2?avg('bp_sys'):null, bpDia:bpN>=2?avg('bp_dia'):null, labs:labs, phq:_phqLast()
   };
 }
 function _focusStart(lever,by,week){
