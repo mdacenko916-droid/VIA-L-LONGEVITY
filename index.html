@@ -5371,45 +5371,5 @@ html[lang="en"] #b9CalCard,      html[lang="es"] #b9CalCard,
 html[lang="en"] #footerCalBtn,   html[lang="es"] #footerCalBtn,
 html[lang="en"] #gmodalCalBtn,   html[lang="es"] #gmodalCalBtn { display:none !important; }
 </style>
-<script>
-/* ════ МОБИЛЬНЫЙ МАСШТАБ ТЕКСТА (2026-11-24) ════
-   Владелец: на телефоне мелко даже после 15→17px (у DM Sans маленькие строчные). Размеры на странице
-   заданы в сотне мест, часть — !important, поэтому не правим каждое, а на ≤768px пропорционально
-   увеличиваем ВЕСЬ текст 11–20px в 1.18 раза; заголовки (>20px) и логотипные надписи (<11px) не трогаем.
-   Масштабируем только элементы со СВОИМ размером (отличным от родителя) — наследники растут вместе
-   с родителем, двойного увеличения нет. Смена языка перерисовывает текст — пересчёт после applyLang. */
-(function(){
-  var K=1.18, KU=1.06, MIN=11, MAX=20;   // KU — надписи ЗАГЛАВНЫМИ с разрядкой: при 1.18 расползались на 3 строки
-  function mobile(){ return window.matchMedia('(max-width: 768px)').matches; }
-  function run(){
-    if(!mobile()) return;
-    var els=document.body.getElementsByTagName('*'), todo=[], i, el, cs, fs, ps;
-    for(i=0;i<els.length;i++){
-      el=els[i];
-      if(el.hasAttribute('data-fs0')||/^(SCRIPT|STYLE|SVG|PATH|IMG|IFRAME|BR)$/i.test(el.tagName)) continue;
-      cs=getComputedStyle(el); fs=parseFloat(cs.fontSize);
-      ps=el.parentElement?parseFloat(getComputedStyle(el.parentElement).fontSize):0;
-      var pScaled=el.parentElement&&el.parentElement.hasAttribute('data-fs0');
-      // наследник масштабированного родителя с тем же размером — уже вырос вместе с ним
-      if(pScaled && Math.abs(fs-ps)<0.1) { el.setAttribute('data-fs0','inh'); continue; }
-      if(fs>=MIN && fs<=MAX && (Math.abs(fs-ps)>=0.1 || el.parentElement===document.body)) todo.push([el,fs,cs.textTransform==='uppercase'?KU:K]);
-    }
-    for(i=0;i<todo.length;i++){
-      todo[i][0].setAttribute('data-fs0',todo[i][1]);
-      todo[i][0].style.setProperty('font-size',(Math.round(todo[i][1]*todo[i][2]*10)/10)+'px','important');
-    }
-  }
-  // Второй проход догоняет элементы, чей СВОЙ размер совпадал с родительским до масштабирования родителя.
-  function go(){ run(); run(); }
-  var t=null;
-  function later(){ clearTimeout(t); t=setTimeout(go,60); }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
-  window.addEventListener('load',go);
-  // Пересчёт только после смены языка (applyLang перерисовывает текст). Наблюдатель за DOM не ставим:
-  // анимации страницы меняют DOM постоянно, и пересчёт крутился без остановки (тормозил загрузку).
-  var orig=window.applyLang;
-  if(typeof orig==='function') window.applyLang=function(l){ var r=orig.apply(this,arguments); later(); return r; };
-})();
-</script>
 </body>
 </html>
