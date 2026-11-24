@@ -4183,7 +4183,7 @@ function buildWeeklyUserMessage(summary, daily, lang, period, exp) {
       const LB = { energy:'энергия и силы', sleep:'сон и пробуждения', mood:'настроение и тревожность',
                    fog:'туман в голове, память', weight:'вес и живот', libido:'либидо и близость',
                    pain:'боли и скованность', hf:'приливы и ночная потливость', cycle:'цикл и его изменения',
-                   drive:'мотивация и драйв', muscle:'сила и мышцы' };
+                   drive:'мотивация и драйв', muscle:'сила и мышцы', crave:'тяга к сладкому, заедание стресса' };
       let c = '\n\nЖАЛОБА, С КОТОРОЙ КЛИЕНТ ПРИШЁЛ' + (cmp.since ? ' (с ' + cmp.since + ')' : '') + ': '
             + (cmp.items || []).map(k => LB[k] || k).join('; ')
             + (cmp.text ? ' — своими словами: «' + String(cmp.text).slice(0,300) + '»' : '') + '.';
@@ -6747,6 +6747,7 @@ const _KB_BY_COMPLAINT = {
   cycle:  { f: ['P-F3'],  m: [] },
   drive:  { f: ['P-F5'],  m: ['P-M1'] },
   muscle: { f: ['P-F12'], m: ['P-M1'] },
+  crave:  { f: ['P-F7', 'P-F9'], m: ['P-M3'] },   // 2026-11-24: тяга к сладкому — обмен/вес + настроение и стресс
 };
 // Заголовки тем для классификатора: номер + название до первого « — » (без инструкций внутри блока).
 // У части тем название — про механизм, а не про ощущение («B12 и фолат»), и модель по одному
@@ -7391,6 +7392,7 @@ const _LAB_BY_COMPLAINT = {
   cycle:  ['tsh', 'ferritin', 'prl'],
   drive:  ['tst', 'shbg', 'tsh', 'vitd'],
   muscle: ['tst', 'vitd', 'ca'],
+  crave:  ['glucose', 'hba1c'],
 };
 const _LAB_NAME_RU = {
   ferritin: 'ферритин', crp: 'CRP', tsh: 'ТТГ', vitd: 'витамин D (25-OH)', b12: 'B12',
@@ -8061,7 +8063,7 @@ function selectDietPattern(data) {
   // из-за того, что рядом нашлись липиды. Если жалоба ни с чем не связана — обычный приоритет.
   const BY_COMPLAINT = { energy:['AC-IRON','AC-LOWGI'], sleep:['AC-EVENING'], mood:['AC-EVENING'],
     fog:['AC-IRON','AC-B12'], weight:['AC-LOWGI'], pain:['AC-OMEGA'], muscle:['AC-PROTEIN'],
-    drive:['AC-WEIGHT'], cycle:['AC-IRON'] };
+    drive:['AC-WEIGHT'], cycle:['AC-IRON'], crave:['AC-LOWGI'] };
   const wanted = [];
   cmp.forEach(k => (BY_COMPLAINT[k] || []).forEach(id => { if (wanted.indexOf(id) < 0) wanted.push(id); }));
   const out = [];
@@ -8909,7 +8911,7 @@ function buildUserMessage(data, lang, tier) {
         const LB = { energy:'энергия и силы', sleep:'сон и пробуждения', mood:'настроение и тревожность',
                      fog:'туман в голове, память', weight:'вес и живот', libido:'либидо и близость',
                      pain:'боли и скованность', hf:'приливы и ночная потливость', cycle:'цикл и его изменения',
-                     drive:'мотивация и драйв', muscle:'сила и мышцы' };
+                     drive:'мотивация и драйв', muscle:'сила и мышцы', crave:'тяга к сладкому, заедание стресса' };
         const items = (Array.isArray(c.items) ? c.items : []).map(k => LB[k] || k).filter(Boolean);
         if (!items.length && !c.text) return '';
         let out = 'ЖАЛОБА, С КОТОРОЙ КЛИЕНТ ПРИШЁЛ' + (c.since ? ' (отмечена ' + c.since + ')' : '') + ': '
