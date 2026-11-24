@@ -25,7 +25,7 @@
   .bar{max-width:640px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
   .logo{font-family:'Playfair Display',serif;font-size:26px;font-weight:600;color:var(--gold);text-decoration:none;letter-spacing:.5px}
   .langs{display:flex;gap:6px}
-  .langs button{background:transparent;border:1px solid var(--line);color:var(--text-lt);border-radius:999px;padding:6px 14px;font:600 15px 'DM Sans',sans-serif;cursor:pointer}
+  .langs button{background:transparent;border:1px solid var(--line);color:var(--text-lt);border-radius:999px;padding:6px 11px;font:600 15px 'DM Sans',sans-serif;cursor:pointer}
   .langs button.on{background:var(--gold);color:var(--gold-xp);border-color:var(--gold)}
   .progress{height:3px;background:var(--cream-md)}
   .progress i{display:block;height:100%;width:0;background:var(--gold-pale);transition:width .35s}
@@ -74,7 +74,7 @@
 <header>
   <div class="bar">
     <a class="logo" href="/">VIA-L</a>
-    <div class="langs"><button data-l="uk">УКР</button><button data-l="ru">РУС</button></div>
+    <div class="langs"><button data-l="uk">УКР</button><button data-l="ru">РУС</button><button data-l="es">ES</button><button data-l="en">EN</button></div>
   </div>
   <div class="progress"><i id="prog"></i></div>
 </header>
@@ -90,7 +90,7 @@ var WORKER='https://interpreter.viaelcom.workers.dev/check-report';
 var CAL='https://cal.com/marynaviael/%D0%B1%D0%B5%D1%81%D0%BF%D0%BB%D0%B0%D1%82%D0%BD%D0%B0%D1%8F-%D0%BA%D0%BE%D0%BD%D1%81%D1%83%D0%BB%D1%8C%D1%82%D0%B0%D1%86%D0%B8%D1%8F';
 var SRC=(function(){ try{ return (new URLSearchParams(location.search).get('src')||'').replace(/[^a-z0-9_-]/gi,'').slice(0,20); }catch(e){ return ''; } })();
 
-// ── Тексты ×2 (uk, ru). Ключи вариантов = коды воркера (_CHK в cloudflare-worker.js).
+// ── Тексты ×4 (uk, ru, es, en; es — на «tú», как в приложении). es/en: вместо знакомства и клуба — письменная консультация в приложении (решение владельца 2026-11-24). Ключи вариантов = коды воркера (_CHK в cloudflare-worker.js).
 var T={
 uk:{
   title:'Вам за 35 — і з вами щось відбувається?',
@@ -179,15 +179,102 @@ ru:{
   errDay:'Сегодня разборов слишком много — попробуйте, пожалуйста, завтра.',
   errGen:'Не получилось подготовить разбор. Попробуйте ещё раз через минуту.', retry:'Попробовать ещё раз',
   file:'VIA-L-razbor'
+},
+es:{
+  title:'¿Tienes más de 35 y algo está cambiando en ti?',
+  lead:'El sueño, el ánimo, el ciclo y la energía cambian. Puede ser la perimenopausia — o puede ser otra cosa. Vamos a verlo.',
+  chips:['12 preguntas','≈ 4 minutos','gratis','sin email ni registro'],
+  start:'Empezar',
+  fine:'El análisis no es un diagnóstico ni sustituye la visita al médico. Las respuestas son anónimas.',
+  next:'Siguiente', write:'Escribir', skip:'Omitir', send:'Enviar',
+  hello:'¡Hola! Te haré 12 preguntas cortas. Puedes responder «no lo sé» — también es una respuesta.',
+  safetyQ:'Primero, una comprobación. Si ahora necesitas ayuda urgente, no puede esperar al resultado de este cuestionario. ¿Tienes ahora algo de esto?',
+  safety:{chest:'Dolor fuerte en el pecho',breath:'Falta de aire importante',faint:'Desmayo o sensación de estar a punto de desmayarte',bleed:'Sangrado abundante con debilidad o mareo',pmb:'Sangrado después de un año sin regla',belly:'Dolor fuerte y repentino en el abdomen o la pelvis',harm:'Temo hacerme daño',none:'Nada de esto'},
+  stopT:'Por favor, pide ayuda ahora',
+  stopP:'Lo que has marcado necesita atención médica sin esperar. Llama al 112 o acude al servicio de urgencias más cercano.',
+  stopHarm:'Si estás pensando en hacerte daño: en España, llama al 024 (gratis, 24 horas). No estás sola — pide ayuda ahora.',
+  q:{
+    age:['¿Cuántos años tienes?',{a35:'35–39',a40:'40–44',a45:'45–49',a50:'50–54',a55:'55+'}],
+    cycle:['¿Cómo está tu ciclo?',{regular:'Regular, como antes',irregular:'Se ha vuelto irregular (más corto o más largo)',heavy:'Reglas más abundantes o más largas',skips:'A veces falta la regla 2 meses o más',none12:'Sin regla desde hace más de un año',unknown:'No lo sé (anticonceptivos hormonales, DIU, cirugía)'}],
+    main:['¿Qué te preocupa más? Elige una opción.',{hf:'Sofocos y sudores nocturnos',sleep:'Sueño y despertares nocturnos',energy:'Falta de energía',mood:'Ánimo, ansiedad, irritabilidad',fog:'Niebla mental, memoria',weight:'Peso y abdomen',crave:'Antojos de dulce',libido:'Libido e intimidad',pain:'Articulaciones, rigidez',cycle:'Ciclo'}],
+    also:['¿Qué más te preocupa? Puedes elegir varias.',{hf:'Sofocos y sudores nocturnos',sleep:'Sueño y despertares nocturnos',energy:'Falta de energía',mood:'Ánimo, ansiedad, irritabilidad',fog:'Niebla mental, memoria',weight:'Peso y abdomen',crave:'Antojos de dulce',libido:'Libido e intimidad',pain:'Articulaciones, rigidez',cycle:'Ciclo',cold:'Frío, estreñimiento, piel seca',palp:'Palpitaciones, latidos irregulares',wtloss:'He adelgazado sin motivo',none:'Nada más'}],
+    since:['¿Cuándo notaste por primera vez lo principal?',{lt3:'Hace menos de 3 meses',m3_12:'Hace 3–12 meses',gt1y:'Hace más de un año',before_same:'Ya lo tenía antes, sigue igual',before_worse:'Ya lo tenía antes, pero ha empeorado claramente',dunno:'No lo recuerdo'}],
+    impact:['¿Cuánto afecta a tu vida diaria?',{barely:'Casi nada',cope:'Lo noto, pero me las arreglo',change:'Tengo que cambiar planes, trabajo o descanso',daily:'Me afecta mucho cada día'}],
+    sleep:['¿Cómo duermes? Puedes elegir varias.',{ok:'Duermo bien',onset:'Me cuesta dormirme',wake_back:'Me despierto por la noche y vuelvo a dormirme',early:'Me despierto a las 3–5 y no puedo volver a dormirme',sweat:'Me despierto por calor o sudor',snore:'Ronco o notan pausas en mi respiración',unrefreshed:'Duermo suficiente, pero me levanto agotada'}],
+    about:['¿Qué de esto te describe? Puedes elegir varias.',{hc:'Anticonceptivos hormonales o DIU hormonal',mht:'Tomo terapia hormonal para los síntomas de la menopausia',surgery:'Me han extirpado el útero o los ovarios',meds:'Tomo otros medicamentos de forma habitual',conditions:'Tengo enfermedades que controlo o trato',stress:'Ahora tengo mucho estrés o carga',none:'Nada de esto'}],
+    labs:['¿Te has hecho análisis en el último año? Puedes elegir varias.',{cbc:'Hemograma',ferritin:'Ferritina',tsh:'TSH (tiroides)',vitd:'Vitamina D',glucose:'Glucosa o hemoglobina glicada',none:'No me he hecho',dunno:'No lo recuerdo'}],
+    device:['¿Llevas un anillo o reloj que registra el sueño?',{oura:'Oura',apple:'Apple Watch',garmin:'Garmin',fitbit:'Fitbit / Google',other:'Otro',none:'No'}],
+    tried:['¿Lo has hablado con un especialista? ¿Has probado algo?',{no:'Todavía no lo he hablado ni probado',told_age:'Lo hablé y me dijeron «es la edad»',partly:'Probé algo, ayudó en parte',no_help:'Probé algo, no ayudó'}],
+    want:['¿Qué respuesta te sería más útil ahora?',{peri:'Si puede ser la perimenopausia',now:'Qué hacer ahora mismo',doctor:'Cómo empezar la conversación con el médico',food:'Cómo alimentarme en esta etapa'}]
+  },
+  noteQ:'Y por último: ¿qué más debería saber un especialista? Análisis, medicamentos, lo que te dijeron los médicos. Puedes omitirlo.',
+  notePh:'Escribe unas palabras…',
+  wait:'¡Gracias! Estoy preparando tu análisis — tardará hasta un minuto. No cierres la página.',
+  ready:'Listo. Aquí tienes tu análisis:',
+  hTold:'Lo que nos contaste', hLooks:'A qué se parece', hExcl:'Qué suele querer descartar un especialista', hNow:'Qué puedes hacer ya', hAsk:'Qué preguntar al especialista',
+  disc:'No es un diagnóstico ni sustituye la visita al médico.',
+  dl:'Descargar análisis', again:'Repetir',
+  nextH:'Y ahora',
+  appT:'App VIA-L', appP:'Seguirlo cada día: un análisis diario de tu estado y un foco por semana. 3 días gratis.',
+  appDev:'Tu anillo o reloj ya recoge datos — VIA-L te explica qué dicen sobre tu estado.',
+  wrT:'Consulta escrita con un especialista', wrP:'Dentro de la app VIA-L: cuentas tu caso y un especialista te responde por escrito en 48 horas; después tienes 7 días para hacer preguntas.',
+  errLimit:'Hoy ya has recibido 3 análisis desde este dispositivo. Inténtalo mañana.',
+  errDay:'Hoy hay demasiados análisis — inténtalo mañana, por favor.',
+  errGen:'No se pudo preparar el análisis. Inténtalo de nuevo en un minuto.', retry:'Reintentar',
+  file:'VIA-L-analisis'
+},
+en:{
+  title:'Over 35 — and something is changing?',
+  lead:'Sleep, mood, cycle and energy are shifting. It may be perimenopause — or it may be something else. Let’s sort it out.',
+  chips:['12 questions','≈ 4 minutes','free','no email, no sign-up'],
+  start:'Start',
+  fine:'This is not a diagnosis and does not replace a visit to a doctor. Answers are anonymous.',
+  next:'Next', write:'Write', skip:'Skip', send:'Send',
+  hello:'Hi! I’ll ask you 12 short questions. “I don’t know” is a fine answer too.',
+  safetyQ:'First, one check. If you need urgent help right now, it can’t wait for the result of a questionnaire. Do you have any of these right now?',
+  safety:{chest:'Severe chest pain',breath:'Marked shortness of breath',faint:'Fainting or feeling close to fainting',bleed:'Heavy bleeding with weakness or dizziness',pmb:'Bleeding after a year without periods',belly:'Sudden severe pain in the abdomen or pelvis',harm:'I’m afraid I might harm myself',none:'None of these'},
+  stopT:'Please get help now',
+  stopP:'What you’ve ticked needs medical help without waiting. Call 112 (EU) or go to the nearest emergency department.',
+  stopHarm:'If you are thinking about harming yourself: Spain — 024; UK and Ireland — Samaritans 116 123; Ukraine — 7333. You are not alone — reach out now.',
+  q:{
+    age:['How old are you?',{a35:'35–39',a40:'40–44',a45:'45–49',a50:'50–54',a55:'55+'}],
+    cycle:['What’s happening with your cycle?',{regular:'Regular, as before',irregular:'It has become irregular (shorter or longer)',heavy:'Periods are heavier or longer',skips:'Sometimes I skip 2 months or more',none12:'No periods for over a year',unknown:'Can’t tell (hormonal contraception, IUD, surgery)'}],
+    main:['What bothers you most? Choose one.',{hf:'Hot flushes and night sweats',sleep:'Sleep and night waking',energy:'No energy',mood:'Mood, anxiety, irritability',fog:'Brain fog, memory',weight:'Weight and belly',crave:'Sugar cravings',libido:'Libido and intimacy',pain:'Joints, stiffness',cycle:'Cycle'}],
+    also:['What else bothers you? Choose any.',{hf:'Hot flushes and night sweats',sleep:'Sleep and night waking',energy:'No energy',mood:'Mood, anxiety, irritability',fog:'Brain fog, memory',weight:'Weight and belly',crave:'Sugar cravings',libido:'Libido and intimacy',pain:'Joints, stiffness',cycle:'Cycle',cold:'Feeling cold, constipation, dry skin',palp:'Palpitations, skipped beats',wtloss:'Lost weight for no reason',none:'Nothing else'}],
+    since:['When did you first notice the main thing?',{lt3:'Less than 3 months ago',m3_12:'3–12 months ago',gt1y:'More than a year ago',before_same:'I had it before, it’s the same now',before_worse:'I had it before, but it’s clearly worse',dunno:'I don’t remember'}],
+    impact:['How much does it affect your everyday life?',{barely:'Hardly at all',cope:'I notice it, but I cope',change:'I have to change plans, work or rest',daily:'It affects me a lot every day'}],
+    sleep:['How do you sleep? Choose any.',{ok:'I sleep fine',onset:'Hard to fall asleep',wake_back:'I wake at night and fall asleep again',early:'I wake at 3–5 am and can’t get back to sleep',sweat:'I wake from heat or sweat',snore:'I snore, or others notice pauses in my breathing',unrefreshed:'I sleep enough but wake up exhausted'}],
+    about:['Which of these apply to you? Choose any.',{hc:'Hormonal contraception or hormonal IUD',mht:'I take hormone therapy for menopause symptoms',surgery:'My uterus or ovaries were removed',meds:'I take other medicines regularly',conditions:'I have conditions I monitor or treat',stress:'A lot of stress or load right now',none:'None of these'}],
+    labs:['Any blood tests in the past year? Choose any.',{cbc:'Full blood count',ferritin:'Ferritin',tsh:'TSH (thyroid)',vitd:'Vitamin D',glucose:'Glucose or HbA1c',none:'None',dunno:'I don’t remember'}],
+    device:['Do you wear a ring or watch that tracks sleep?',{oura:'Oura',apple:'Apple Watch',garmin:'Garmin',fitbit:'Fitbit / Google',other:'Other',none:'No'}],
+    tried:['Have you discussed this with a specialist? Tried anything?',{no:'Not discussed or tried yet',told_age:'Discussed it, was told “it’s your age”',partly:'Tried something, it helped partly',no_help:'Tried something, it didn’t help'}],
+    want:['What answer would help you most right now?',{peri:'Could this be perimenopause',now:'What to do right now',doctor:'How to start the conversation with a doctor',food:'How to eat in this stage'}]
+  },
+  noteQ:'And finally: what else should a specialist know? Tests, medicines, what doctors have said. You can skip this.',
+  notePh:'Write a few words…',
+  wait:'Thank you! Preparing your report — it takes up to a minute. Please keep this page open.',
+  ready:'Done. Here is your report:',
+  hTold:'What you told us', hLooks:'What this looks like', hExcl:'What a specialist usually wants to rule out', hNow:'What you can do now', hAsk:'What to ask a specialist',
+  disc:'This is not a diagnosis and does not replace a visit to a doctor.',
+  dl:'Download report', again:'Start again',
+  nextH:'What’s next',
+  appT:'VIA-L app', appP:'Track it every day: a daily read of how you are, and one focus per week. 3 days free.',
+  appDev:'Your ring or watch is already collecting data — VIA-L explains what it says about how you are.',
+  wrT:'Written consultation with a specialist', wrP:'Inside the VIA-L app: describe your situation and a specialist replies in writing within 48 hours; then you have 7 days for follow-up questions.',
+  errLimit:'You’ve already received 3 reports from this device today. Please try tomorrow.',
+  errDay:'Too many reports today — please try again tomorrow.',
+  errGen:'Couldn’t prepare the report. Please try again in a minute.', retry:'Try again',
+  file:'VIA-L-report'
 }};
 // Порядок шагов: [ключ, мульти?, эксклюзивный вариант]
 var STEPS=[['age',0],['cycle',0],['main',0],['also',1,'none'],['since',0],['impact',0],['sleep',1,'ok'],['about',1,'none'],['labs',1,'none'],['device',0],['tried',0],['want',0]];
 var TOTAL=STEPS.length+2; // + проверка безопасности + заметка
 
 var lang=(function(){
-  try{ var q=new URLSearchParams(location.search).get('lang'); if(q==='uk'||q==='ru') return q; }catch(e){}
-  try{ var s=localStorage.getItem('selectedLang'); if(s==='uk'||s==='ru') return s; }catch(e){}
-  return /^ru/i.test(navigator.language||'')?'ru':'uk';
+  try{ var q=new URLSearchParams(location.search).get('lang'); if(T[q]) return q; }catch(e){}
+  try{ var s=localStorage.getItem('selectedLang'); if(T[s]) return s; }catch(e){}
+  var n=(navigator.language||'').slice(0,2).toLowerCase();
+  return T[n]?n:(n==='ua'?'uk':'en');
 })();
 var A={}, step=-1, report=null;
 var $=function(id){return document.getElementById(id);};
@@ -309,8 +396,11 @@ function showReport(r){
     '<div class="row" style="justify-content:flex-start;margin-top:14px"><button class="btn ghost" id="dl">⬇ '+esc(t.dl)+'</button><button class="btn ghost" id="ag">'+esc(t.again)+'</button></div></div>'+
     '<div class="next"><h3 style="font-family:Playfair Display,serif;font-weight:500;font-size:22px;margin-top:8px">'+esc(t.nextH)+'</h3>'+
     '<div class="card"><b>'+esc(t.appT)+'</b><p>'+esc(dev?t.appDev+' ':'')+esc(t.appP)+'</p><div class="row"><a class="btn" href="'+s.ios+'" target="_blank" rel="noopener">App Store</a><a class="btn" href="'+s.android+'" target="_blank" rel="noopener">Google Play</a></div></div>'+
-    '<div class="card"><b>'+esc(t.calT)+'</b><p>'+esc(t.calP)+'</p><div class="row"><a class="btn" href="'+CAL+'" target="_blank" rel="noopener">'+esc(t.calB)+'</a></div></div>'+
-    '<div class="card"><b>'+esc(t.clubT)+'</b><p>'+esc(t.clubP)+'</p><div class="row"><a class="btn" href="https://t.me/vial_club_guard_bot?start='+(lang==='ru'?'RU':'UK')+'" target="_blank" rel="noopener">'+esc(t.clubB)+'</a></div></div></div>';
+    (t.calT
+      ? '<div class="card"><b>'+esc(t.calT)+'</b><p>'+esc(t.calP)+'</p><div class="row"><a class="btn" href="'+CAL+'" target="_blank" rel="noopener">'+esc(t.calB)+'</a></div></div>'+
+        '<div class="card"><b>'+esc(t.clubT)+'</b><p>'+esc(t.clubP)+'</p><div class="row"><a class="btn" href="https://t.me/vial_club_guard_bot?start='+(lang==='ru'?'RU':'UK')+'" target="_blank" rel="noopener">'+esc(t.clubB)+'</a></div></div>'
+      : '<div class="card"><b>'+esc(t.wrT)+'</b><p>'+esc(t.wrP)+'</p><div class="row"><a class="btn" href="'+s.ios+'" target="_blank" rel="noopener">App Store</a><a class="btn" href="'+s.android+'" target="_blank" rel="noopener">Google Play</a></div></div>')+
+    '</div>';
   $('dl').onclick=download; $('ag').onclick=restart;
   scrollEnd();
 }
