@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIA-L — Що з вами відбувається?</title>
+<meta name="description" content="12 питань, близько 4 хвилин, безкоштовно. Розбір ваших відповідей: на що це схоже, що варто виключити і що запитати у фахівця.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- Опросник «Что со мной происходит?» (2026-11-24). Текст и логика — docs/QUIZ-CHECK-PLAN.md.
+     Разбор пишет воркер /check-report; сюда уходят только коды вариантов. Проверка безопасности — здесь, до запроса. -->
+<style>
+  :root{
+    --cream:#EAE1C9; --cream-dk:#E3D9BF; --cream-md:#DCD1B2;
+    --gold:#6B4F2A; --gold-lt:#8B6030; --gold-pale:#A07840; --gold-xp:#F4EDE3;
+    --text:#0D0A05; --text-mid:#1A1008; --text-lt:#2E2010; --line:rgba(139,111,71,.18);
+    --bubble:#F7F1E4; --me:#6B4F2A; --alert:#8E2B1E;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--cream);color:var(--text);font-family:'DM Sans',sans-serif;font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+  a{color:var(--gold)}
+  header{position:sticky;top:0;z-index:5;background:var(--cream);border-bottom:1px solid var(--line)}
+  .bar{max-width:640px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .logo{font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:var(--gold);text-decoration:none;letter-spacing:.5px}
+  .langs{display:flex;gap:6px}
+  .langs button{background:transparent;border:1px solid var(--line);color:var(--text-lt);border-radius:999px;padding:4px 11px;font:500 13px 'DM Sans',sans-serif;cursor:pointer}
+  .langs button.on{background:var(--gold);color:var(--gold-xp);border-color:var(--gold)}
+  .progress{height:3px;background:var(--cream-md)}
+  .progress i{display:block;height:100%;width:0;background:var(--gold-pale);transition:width .35s}
+  main{max-width:640px;margin:0 auto;padding:20px 16px 120px}
+  .intro h1{font-family:'Playfair Display',serif;font-weight:500;font-size:clamp(28px,7vw,40px);line-height:1.2;margin:18px 0 12px}
+  .intro p{color:var(--text-lt);margin-bottom:10px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 24px}
+  .chips span{background:var(--gold-xp);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:14px;color:var(--text-lt)}
+  .btn{display:inline-block;background:var(--gold);color:var(--gold-xp);border:none;border-radius:14px;padding:14px 22px;font:600 16px 'DM Sans',sans-serif;cursor:pointer;text-decoration:none;text-align:center}
+  .btn.ghost{background:transparent;color:var(--gold);border:1px solid var(--gold-pale)}
+  .btn:disabled{opacity:.45;cursor:default}
+  .fine{font-size:13px;color:var(--text-lt);opacity:.85;margin-top:14px}
+  .chat{display:flex;flex-direction:column;gap:10px}
+  .msg{max-width:88%;padding:12px 16px;border-radius:16px;background:var(--bubble);border:1px solid var(--line);color:var(--text-mid);animation:in .25s ease}
+  .msg.me{align-self:flex-end;background:var(--me);color:var(--gold-xp);border-color:var(--me)}
+  @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .opts{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+  .opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--gold-xp);border:1px solid var(--line);border-radius:14px;padding:12px 16px;font:500 16px 'DM Sans',sans-serif;color:var(--text);cursor:pointer}
+  .opt .box{flex:0 0 20px;height:20px;border:1.5px solid var(--gold-pale);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--gold-xp)}
+  .opt.on{border-color:var(--gold)}
+  .opt.on .box{background:var(--gold);border-color:var(--gold)}
+  .row{display:flex;justify-content:flex-end;gap:8px;margin-top:6px;flex-wrap:wrap}
+  textarea{width:100%;min-height:110px;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font:16px 'DM Sans',sans-serif;background:var(--gold-xp);color:var(--text);resize:vertical}
+  .stop{background:#F6E3DC;border:1px solid #D9A99A;border-radius:16px;padding:18px;color:var(--alert)}
+  .stop h2{font-family:'Playfair Display',serif;font-weight:500;font-size:24px;margin-bottom:8px}
+  .stop p{margin-top:8px;color:var(--text-mid)}
+  .loading{display:flex;gap:6px;padding:14px 16px}
+  .loading i{width:8px;height:8px;border-radius:50%;background:var(--gold-pale);animation:b 1s infinite}
+  .loading i:nth-child(2){animation-delay:.15s}.loading i:nth-child(3){animation-delay:.3s}
+  @keyframes b{0%,100%{opacity:.25}50%{opacity:1}}
+  .report{background:var(--gold-xp);border:1px solid var(--line);border-radius:18px;padding:20px 18px;margin-top:10px}
+  .report h2{font-family:'Playfair Display',serif;font-weight:500;font-size:24px;line-height:1.3;margin-bottom:6px}
+  .report h3{font-family:'Playfair Display',serif;font-weight:500;font-size:18px;color:var(--gold);margin:18px 0 6px}
+  .report ul{padding-left:20px}
+  .report li{margin:4px 0}
+  .next{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+  .card{background:var(--bubble);border:1px solid var(--line);border-radius:16px;padding:16px}
+  .card b{display:block;font-family:'Playfair Display',serif;font-weight:500;font-size:18px;margin-bottom:4px}
+  .card p{font-size:15px;color:var(--text-lt);margin-bottom:10px}
+  .card .row{justify-content:flex-start}
+  .err{color:var(--alert);font-size:15px}
+  @media (max-width:380px){body{font-size:16px}.opt{font-size:15px;padding:11px 13px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <a class="logo" href="/">VIA-L</a>
+    <div class="langs"><button data-l="uk">УКР</button><button data-l="ru">РУС</button></div>
+  </div>
+  <div class="progress"><i id="prog"></i></div>
+</header>
+<main>
+  <section class="intro" id="intro"></section>
+  <div class="chat" id="chat" hidden></div>
+  <div id="ctl"></div>
+</main>
+<script>
+(function(){
+'use strict';
+var WORKER='https://interpreter.viaelcom.workers.dev/check-report';
+var CAL='https://cal.com/marynaviael/%D0%B1%D0%B5%D1%81%D0%BF%D0%BB%D0%B0%D1%82%D0%BD%D0%B0%D1%8F-%D0%BA%D0%BE%D0%BD%D1%81%D1%83%D0%BB%D1%8C%D1%82%D0%B0%D1%86%D0%B8%D1%8F';
+var SRC=(function(){ try{ return (new URLSearchParams(location.search).get('src')||'').replace(/[^a-z0-9_-]/gi,'').slice(0,20); }catch(e){ return ''; } })();
+
+// ── Тексты ×2 (uk, ru). Ключи вариантов = коды воркера (_CHK в cloudflare-worker.js).
+var T={
+uk:{
+  title:'Вам за 35 — і з вами щось відбувається?',
+  lead:'Сон, настрій, цикл, сили змінюються. Це може бути перименопауза — а може бути щось інше. Давайте розберемося.',
+  chips:['12 питань','≈ 4 хвилини','безкоштовно','без пошти та реєстрації'],
+  start:'Почати розбір',
+  fine:'Розбір не ставить діагноз і не замінює візит до лікаря. Відповіді анонімні.',
+  next:'Далі', write:'Написати', skip:'Пропустити', send:'Надіслати',
+  hello:'Вітаю! Я поставлю 12 коротких питань. Можна відповідати «не знаю» — це теж відповідь.',
+  safetyQ:'Спершу одна перевірка. Якщо зараз потрібна термінова допомога, з нею не можна чекати результату опитування. Чи є зараз щось із переліченого?',
+  safety:{chest:'Сильний біль у грудях',breath:'Виражена задишка',faint:'Непритомність або стан, близький до неї',bleed:'Сильна кровотеча зі слабкістю або запамороченням',pmb:'Кровотеча після року без місячних',belly:'Раптовий сильний біль у животі або тазі',harm:'Я боюся, що можу заподіяти собі шкоду',none:'Нічого з переліченого'},
+  stopT:'Будь ласка, зверніться по допомогу зараз',
+  stopP:'Те, що ви відзначили, потребує медичної допомоги без очікування. Телефонуйте 112 (ЄС, Україна) або зверніться до найближчого відділення невідкладної допомоги.',
+  stopHarm:'Якщо ви думаєте про те, щоб заподіяти собі шкоду: Україна — 7333 (Lifeline Ukraine), Іспанія — 024. Ви не одна — зверніться зараз.',
+  q:{
+    age:['Скільки вам років?',{a35:'35–39',a40:'40–44',a45:'45–49',a50:'50–54',a55:'55+'}],
+    cycle:['Що з циклом?',{regular:'Регулярний, як раніше',irregular:'Став нерегулярним (коротший або довший)',heavy:'Місячні стали рясніші або довші',skips:'Бувають пропуски 2 місяці й більше',none12:'Місячних немає понад рік',unknown:'Не можу сказати (гормональна контрацепція, спіраль, операція)'}],
+    main:['Що турбує найбільше? Оберіть одне.',{hf:'Припливи й нічна пітливість',sleep:'Сон і нічні пробудження',energy:'Немає сил',mood:'Настрій, тривожність, дратівливість',fog:'Туман у голові, пам’ять',weight:'Вага й живіт',crave:'Тяга до солодкого',libido:'Лібідо й близькість',pain:'Суглоби, скутість',cycle:'Цикл'}],
+    also:['Що ще турбує? Можна кілька.',{hf:'Припливи й нічна пітливість',sleep:'Сон і нічні пробудження',energy:'Немає сил',mood:'Настрій, тривожність, дратівливість',fog:'Туман у голові, пам’ять',weight:'Вага й живіт',crave:'Тяга до солодкого',libido:'Лібідо й близькість',pain:'Суглоби, скутість',cycle:'Цикл',cold:'Мерзлякуватість, закреп, суха шкіра',palp:'Серцебиття, перебої',wtloss:'Схудла без причини',none:'Більше нічого'}],
+    since:['Коли ви вперше помітили головне?',{lt3:'Менше 3 місяців тому',m3_12:'3–12 місяців тому',gt1y:'Понад рік тому',before_same:'Було й раніше, зараз так само',before_worse:'Було й раніше, але стало помітно сильніше',dunno:'Не пам’ятаю'}],
+    impact:['Наскільки це заважає звичайному життю?',{barely:'Майже не заважає',cope:'Помічаю, але даю раду',change:'Доводиться змінювати плани, роботу чи відпочинок',daily:'Сильно заважає щодня'}],
+    sleep:['Як ви спите? Можна кілька.',{ok:'Сплю нормально',onset:'Важко заснути',wake_back:'Прокидаюся вночі й засинаю знову',early:'Прокидаюся о 3–5 ранку й не можу заснути',sweat:'Прокидаюся від жару чи поту',snore:'Хроплю або близькі помічають паузи в диханні',unrefreshed:'Сплю достатньо, але зранку розбита'}],
+    about:['Що з цього про вас? Можна кілька.',{hc:'Гормональна контрацепція або спіраль із гормоном',mht:'Приймаю гормональну терапію від симптомів менопаузи',surgery:'Видаляли матку або яєчники',meds:'Постійно приймаю інші ліки',conditions:'Є захворювання, які спостерігаю або лікую',stress:'Зараз багато стресу чи навантаження',none:'Нічого з переліченого'}],
+    labs:['Чи здавали аналізи за останній рік? Можна кілька.',{cbc:'Загальний аналіз крові',ferritin:'Феритин',tsh:'ТТГ (щитоподібна залоза)',vitd:'Вітамін D',glucose:'Глюкоза або глікований гемоглобін',none:'Не здавала',dunno:'Не пам’ятаю'}],
+    device:['Чи носите кільце або годинник, що стежать за сном?',{oura:'Oura',apple:'Apple Watch',garmin:'Garmin',fitbit:'Fitbit / Google',other:'Інше',none:'Ні'}],
+    tried:['Чи обговорювали це з фахівцем? Чи пробували щось?',{no:'Ще не обговорювала й не пробувала',told_age:'Обговорювала, сказали «це вік»',partly:'Пробувала, допомогло частково',no_help:'Пробувала, не допомогло'}],
+    want:['Яка відповідь зараз була б для вас найкориснішою?',{peri:'Чи може це бути перименопауза',now:'Що робити просто зараз',doctor:'З чого почати розмову з лікарем',food:'Як харчуватися в цей період'}]
+  },
+  noteQ:'І останнє. Що ще важливо знати фахівцю? Аналізи, ліки, що казали лікарі. Можна пропустити.',
+  notePh:'Напишіть кілька слів…',
+  wait:'Дякую! Готую ваш розбір — це займе до хвилини. Не закривайте сторінку.',
+  ready:'Готово. Ось ваш розбір:',
+  hTold:'Що ви розповіли', hLooks:'На що це схоже', hExcl:'Що фахівець зазвичай хоче виключити', hNow:'Що можна зробити вже зараз', hAsk:'Що запитати у фахівця',
+  disc:'Це не діагноз і не заміна візиту до лікаря.',
+  dl:'Завантажити розбір', again:'Пройти ще раз',
+  nextH:'Що далі',
+  appT:'Застосунок VIA-L', appP:'Відстежувати це щодня: щоденний розбір вашого стану і один фокус на тиждень. 3 дні безкоштовно.',
+  appDev:'Ваше кільце чи годинник уже збирає дані — VIA-L пояснить, що вони кажуть про ваш стан.',
+  calT:'Знайомство з нутриціологинею Мариною', calP:'15 хвилин безкоштовно — обговорити ваш розбір і з чого почати.', calB:'Записатися',
+  clubT:'Клуб VIA-L у Telegram', clubP:'Безкоштовно: розбори досліджень про перименопаузу й менопаузу, питання фахівцям.', clubB:'Приєднатися',
+  errLimit:'Сьогодні з цього пристрою вже отримано 3 розбори. Спробуйте завтра.',
+  errDay:'Сьогодні розборів забагато — спробуйте, будь ласка, завтра.',
+  errGen:'Не вдалося підготувати розбір. Спробуйте ще раз за хвилину.', retry:'Спробувати ще раз',
+  file:'VIA-L-rozbir'
+},
+ru:{
+  title:'Вам за 35 — и с вами что-то происходит?',
+  lead:'Сон, настроение, цикл, силы меняются. Это может быть перименопауза — а может быть что-то ещё. Давайте разберёмся.',
+  chips:['12 вопросов','≈ 4 минуты','бесплатно','без почты и регистрации'],
+  start:'Начать разбор',
+  fine:'Разбор не ставит диагноз и не заменяет визит к врачу. Ответы анонимны.',
+  next:'Дальше', write:'Написать', skip:'Пропустить', send:'Отправить',
+  hello:'Здравствуйте! Я задам 12 коротких вопросов. Можно отвечать «не знаю» — это тоже ответ.',
+  safetyQ:'Сначала одна проверка. Если сейчас нужна срочная помощь, с ней нельзя ждать результата опроса. Есть ли сейчас что-то из перечисленного?',
+  safety:{chest:'Сильная боль в груди',breath:'Выраженная одышка',faint:'Обморок или состояние, близкое к нему',bleed:'Сильное кровотечение со слабостью или головокружением',pmb:'Кровотечение после года без месячных',belly:'Внезапная сильная боль в животе или тазу',harm:'Я опасаюсь, что могу причинить себе вред',none:'Ничего из перечисленного'},
+  stopT:'Пожалуйста, обратитесь за помощью сейчас',
+  stopP:'То, что вы отметили, требует медицинской помощи без ожидания. Звоните 112 (ЕС, Украина) или обратитесь в ближайшее отделение неотложной помощи.',
+  stopHarm:'Если вы думаете о том, чтобы причинить себе вред: Украина — 7333 (Lifeline Ukraine), Испания — 024. Вы не одна — обратитесь сейчас.',
+  q:{
+    age:['Сколько вам лет?',{a35:'35–39',a40:'40–44',a45:'45–49',a50:'50–54',a55:'55+'}],
+    cycle:['Что с циклом?',{regular:'Регулярный, как раньше',irregular:'Стал нерегулярным (короче или длиннее)',heavy:'Месячные стали обильнее или дольше',skips:'Бывают пропуски 2 месяца и больше',none12:'Месячных нет больше года',unknown:'Не могу сказать (гормональная контрацепция, спираль, операция)'}],
+    main:['Что беспокоит больше всего? Выберите одно.',{hf:'Приливы и ночная потливость',sleep:'Сон и ночные пробуждения',energy:'Нет сил',mood:'Настроение, тревожность, раздражительность',fog:'Туман в голове, память',weight:'Вес и живот',crave:'Тяга к сладкому',libido:'Либидо и близость',pain:'Суставы, скованность',cycle:'Цикл'}],
+    also:['Что ещё беспокоит? Можно несколько.',{hf:'Приливы и ночная потливость',sleep:'Сон и ночные пробуждения',energy:'Нет сил',mood:'Настроение, тревожность, раздражительность',fog:'Туман в голове, память',weight:'Вес и живот',crave:'Тяга к сладкому',libido:'Либидо и близость',pain:'Суставы, скованность',cycle:'Цикл',cold:'Зябкость, запор, сухая кожа',palp:'Сердцебиение, перебои',wtloss:'Похудела без причины',none:'Больше ничего'}],
+    since:['Когда вы впервые заметили главное?',{lt3:'Меньше 3 месяцев назад',m3_12:'3–12 месяцев назад',gt1y:'Больше года назад',before_same:'Было и раньше, сейчас так же',before_worse:'Было и раньше, но стало заметно сильнее',dunno:'Не помню'}],
+    impact:['Насколько это мешает обычной жизни?',{barely:'Почти не мешает',cope:'Замечаю, но справляюсь',change:'Приходится менять планы, работу или отдых',daily:'Сильно мешает каждый день'}],
+    sleep:['Как вы спите? Можно несколько.',{ok:'Сплю нормально',onset:'Трудно заснуть',wake_back:'Просыпаюсь ночью и засыпаю снова',early:'Просыпаюсь в 3–5 утра и не могу уснуть',sweat:'Просыпаюсь от жара или пота',snore:'Храплю или близкие замечают паузы в дыхании',unrefreshed:'Сплю достаточно, но утром разбитая'}],
+    about:['Что из этого про вас? Можно несколько.',{hc:'Гормональная контрацепция или спираль с гормоном',mht:'Принимаю гормональную терапию от симптомов менопаузы',surgery:'Удаляли матку или яичники',meds:'Постоянно принимаю другие лекарства',conditions:'Есть заболевания, которые наблюдаю или лечу',stress:'Сейчас много стресса или нагрузки',none:'Ничего из перечисленного'}],
+    labs:['Сдавали анализы за последний год? Можно несколько.',{cbc:'Общий анализ крови',ferritin:'Ферритин',tsh:'ТТГ (щитовидная железа)',vitd:'Витамин D',glucose:'Глюкоза или гликированный гемоглобин',none:'Не сдавала',dunno:'Не помню'}],
+    device:['Носите кольцо или часы, которые следят за сном?',{oura:'Oura',apple:'Apple Watch',garmin:'Garmin',fitbit:'Fitbit / Google',other:'Другое',none:'Нет'}],
+    tried:['Обсуждали это со специалистом? Пробовали что-то?',{no:'Ещё не обсуждала и не пробовала',told_age:'Обсуждала, сказали «это возраст»',partly:'Пробовала, помогло частично',no_help:'Пробовала, не помогло'}],
+    want:['Какой ответ сейчас был бы для вас самым полезным?',{peri:'Может ли это быть перименопауза',now:'Что делать прямо сейчас',doctor:'С чего начать разговор с врачом',food:'Как питаться в этот период'}]
+  },
+  noteQ:'И последнее. Что ещё важно знать специалисту? Анализы, лекарства, что говорили врачи. Можно пропустить.',
+  notePh:'Напишите несколько слов…',
+  wait:'Спасибо! Готовлю ваш разбор — это займёт до минуты. Не закрывайте страницу.',
+  ready:'Готово. Вот ваш разбор:',
+  hTold:'Что вы рассказали', hLooks:'На что это похоже', hExcl:'Что специалист обычно хочет исключить', hNow:'Что можно сделать уже сейчас', hAsk:'Что спросить у специалиста',
+  disc:'Это не диагноз и не замена визита к врачу.',
+  dl:'Скачать разбор', again:'Пройти ещё раз',
+  nextH:'Что дальше',
+  appT:'Приложение VIA-L', appP:'Отслеживать это каждый день: ежедневный разбор вашего состояния и один фокус на неделю. 3 дня бесплатно.',
+  appDev:'Ваше кольцо или часы уже собирают данные — VIA-L объяснит, что они говорят о вашем состоянии.',
+  calT:'Знакомство с нутрициологом Мариной', calP:'15 минут бесплатно — обсудить ваш разбор и с чего начать.', calB:'Записаться',
+  clubT:'Клуб VIA-L в Telegram', clubP:'Бесплатно: разборы исследований о перименопаузе и менопаузе, вопросы специалистам.', clubB:'Присоединиться',
+  errLimit:'Сегодня с этого устройства уже получено 3 разбора. Попробуйте завтра.',
+  errDay:'Сегодня разборов слишком много — попробуйте, пожалуйста, завтра.',
+  errGen:'Не получилось подготовить разбор. Попробуйте ещё раз через минуту.', retry:'Попробовать ещё раз',
+  file:'VIA-L-razbor'
+}};
+// Порядок шагов: [ключ, мульти?, эксклюзивный вариант]
+var STEPS=[['age',0],['cycle',0],['main',0],['also',1,'none'],['since',0],['impact',0],['sleep',1,'ok'],['about',1,'none'],['labs',1,'none'],['device',0],['tried',0],['want',0]];
+var TOTAL=STEPS.length+2; // + проверка безопасности + заметка
+
+var lang=(function(){
+  try{ var q=new URLSearchParams(location.search).get('lang'); if(q==='uk'||q==='ru') return q; }catch(e){}
+  try{ var s=localStorage.getItem('selectedLang'); if(s==='uk'||s==='ru') return s; }catch(e){}
+  return /^ru/i.test(navigator.language||'')?'ru':'uk';
+})();
+var A={}, step=-1, report=null;
+var $=function(id){return document.getElementById(id);};
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function L(){return T[lang];}
+function prog(n){ $('prog').style.width=Math.round(100*n/TOTAL)+'%'; }
+function say(text,me){ var d=document.createElement('div'); d.className='msg'+(me?' me':''); d.textContent=text; $('chat').appendChild(d); return d; }
+function scrollEnd(){ setTimeout(function(){ window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'}); },30); }
+
+function renderIntro(){
+  document.documentElement.lang=lang;
+  document.querySelectorAll('.langs button').forEach(function(b){ b.classList.toggle('on',b.dataset.l===lang); });
+  var t=L();
+  $('intro').innerHTML='<h1>'+esc(t.title)+'</h1><p>'+esc(t.lead)+'</p><div class="chips">'+t.chips.map(function(c){return '<span>'+esc(c)+'</span>';}).join('')+
+    '</div><button class="btn" id="go">'+esc(t.start)+'</button><p class="fine">'+esc(t.fine)+'</p>';
+  $('go').onclick=start;
+}
+document.querySelectorAll('.langs button').forEach(function(b){
+  b.onclick=function(){
+    if(lang===b.dataset.l) return;
+    lang=b.dataset.l; try{ localStorage.setItem('selectedLang',lang); }catch(e){}
+    if(step<0||report){ renderIntro(); if(report) showReport(report); return; }
+    restart();   // язык поменяли посреди опроса — начинаем заново на новом языке
+  };
+});
+
+function start(){
+  $('intro').hidden=true; $('chat').hidden=false; $('chat').innerHTML='';
+  A={}; step=0; report=null;
+  say(L().hello); askSafety();
+}
+function restart(){ step=-1; report=null; $('ctl').innerHTML=''; $('chat').innerHTML=''; $('chat').hidden=true; $('intro').hidden=false; prog(0); renderIntro(); }
+
+// Мульти/одиночный выбор. done(values[]) вызывается по «Далі» (мульти) или по клику (одиночный).
+function choose(opts,multi,excl,done){
+  var t=L(), sel=[], ctl=$('ctl');
+  ctl.innerHTML='<div class="opts">'+Object.keys(opts).map(function(k){
+    return '<button class="opt" data-k="'+k+'">'+(multi?'<span class="box"></span>':'')+'<span>'+esc(opts[k])+'</span></button>';
+  }).join('')+'</div>'+(multi?'<div class="row"><button class="btn" id="nx" disabled>'+esc(t.next)+'</button></div>':'');
+  ctl.querySelectorAll('.opt').forEach(function(b){
+    b.onclick=function(){
+      var k=b.dataset.k;
+      if(!multi){ ctl.innerHTML=''; say(opts[k],true); done([k]); return; }
+      var i=sel.indexOf(k);
+      if(i>=0) sel.splice(i,1); else { if(k===excl) sel=[]; else sel=sel.filter(function(x){return x!==excl;}); sel.push(k); }
+      ctl.querySelectorAll('.opt').forEach(function(o){ var on=sel.indexOf(o.dataset.k)>=0; o.classList.toggle('on',on); o.querySelector('.box').textContent=on?'✓':''; });
+      $('nx').disabled=!sel.length;
+    };
+  });
+  if(multi) $('nx').onclick=function(){ ctl.innerHTML=''; say(sel.map(function(k){return opts[k];}).join(', '),true); done(sel.slice()); };
+  scrollEnd();
+}
+
+function askSafety(){
+  prog(0); var t=L();
+  say(t.safetyQ);
+  choose(t.safety,true,'none',function(v){
+    if(v.length===1&&v[0]==='none'){ prog(1); ask(0); return; }
+    var harm=v.indexOf('harm')>=0;
+    $('ctl').innerHTML='<div class="stop"><h2>'+esc(t.stopT)+'</h2><p>'+esc(t.stopP)+'</p>'+(harm?'<p><b>'+esc(t.stopHarm)+'</b></p>':'')+'</div>';
+    scrollEnd();
+  });
+}
+function ask(i){
+  if(i>=STEPS.length){ askNote(); return; }
+  var s=STEPS[i], key=s[0], q=L().q[key], opts=q[1];
+  if(key==='also'){ opts={}; Object.keys(q[1]).forEach(function(k){ if(k!==A.main) opts[k]=q[1][k]; }); }  // главное не повторяем
+  say(q[0]);
+  choose(opts,!!s[1],s[2],function(v){ A[key]=s[1]?v:v[0]; prog(i+2); ask(i+1); });
+}
+function askNote(){
+  var t=L(); say(t.noteQ);
+  $('ctl').innerHTML='<div class="row"><button class="btn ghost" id="wr">'+esc(t.write)+'</button><button class="btn" id="sk">'+esc(t.skip)+'</button></div>';
+  $('sk').onclick=function(){ say(t.skip,true); submit(); };
+  $('wr').onclick=function(){
+    $('ctl').innerHTML='<textarea id="nt" maxlength="500" placeholder="'+esc(t.notePh)+'"></textarea><div class="row"><button class="btn" id="sd">'+esc(t.send)+'</button></div>';
+    $('nt').focus();
+    $('sd').onclick=function(){ var v=$('nt').value.trim(); if(v){ A.note=v; say(v,true); } else say(t.skip,true); submit(); };
+  };
+  scrollEnd();
+}
+
+function submit(){
+  var t=L(); prog(TOTAL);
+  say(t.wait);
+  $('ctl').innerHTML='<div class="loading"><i></i><i></i><i></i></div>'; scrollEnd();
+  var a={}; Object.keys(A).forEach(function(k){ a[k]=A[k]; });
+  if(Array.isArray(a.also)) a.also=a.also.filter(function(x){return x!=='none';});
+  if(Array.isArray(a.about)) a.about=a.about.filter(function(x){return x!=='none';});
+  fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lang:lang,src:SRC,a:a})})
+    .then(function(r){ return r.json().catch(function(){ return {error:'x'}; }); })
+    .then(function(j){
+      if(j&&j.report){ report=j.report; say(t.ready); showReport(report); return; }
+      var e=j&&j.error, msg=e==='limit_ip'?t.errLimit:(e==='limit_day'?t.errDay:t.errGen);
+      $('ctl').innerHTML='<p class="err">'+esc(msg)+'</p>'+(e==='limit_ip'||e==='limit_day'?'':'<div class="row"><button class="btn" id="rt">'+esc(t.retry)+'</button></div>');
+      if($('rt')) $('rt').onclick=submit;
+    })
+    .catch(function(){ $('ctl').innerHTML='<p class="err">'+esc(t.errGen)+'</p><div class="row"><button class="btn" id="rt">'+esc(t.retry)+'</button></div>'; $('rt').onclick=submit; });
+}
+
+function storeLinks(){
+  var ct='check'+(SRC?'_'+SRC:'');
+  return {
+    ios:'https://apps.apple.com/app/apple-store/id6807062006?pt=129383674&ct='+encodeURIComponent(ct)+'&mt=8',
+    android:'https://play.google.com/store/apps/details?id=com.viael.vial&referrer='+encodeURIComponent('utm_source=check&utm_medium='+(SRC||'site')+'&utm_campaign=quiz')
+  };
+}
+function showReport(r){
+  var t=L(), s=storeLinks(), dev=A.device&&A.device!=='none';
+  var li=function(arr){ return '<ul>'+(arr||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>'; };
+  $('ctl').innerHTML=
+    '<div class="report" id="rep"><h2>'+esc(r.title)+'</h2>'+
+    '<h3>'+esc(t.hTold)+'</h3><p>'+esc(r.told)+'</p>'+
+    '<h3>'+esc(t.hLooks)+'</h3><p>'+esc(r.looks)+'</p>'+
+    '<h3>'+esc(t.hExcl)+'</h3><p>'+esc(r.exclude)+'</p>'+
+    (r.now&&r.now.length?'<h3>'+esc(t.hNow)+'</h3>'+li(r.now):'')+
+    (r.ask&&r.ask.length?'<h3>'+esc(t.hAsk)+'</h3>'+li(r.ask):'')+
+    '<p class="fine">'+esc(t.disc)+'</p>'+
+    '<div class="row" style="justify-content:flex-start;margin-top:14px"><button class="btn ghost" id="dl">⬇ '+esc(t.dl)+'</button><button class="btn ghost" id="ag">'+esc(t.again)+'</button></div></div>'+
+    '<div class="next"><h3 style="font-family:Playfair Display,serif;font-weight:500;font-size:22px;margin-top:8px">'+esc(t.nextH)+'</h3>'+
+    '<div class="card"><b>'+esc(t.appT)+'</b><p>'+esc(dev?t.appDev+' ':'')+esc(t.appP)+'</p><div class="row"><a class="btn" href="'+s.ios+'" target="_blank" rel="noopener">App Store</a><a class="btn" href="'+s.android+'" target="_blank" rel="noopener">Google Play</a></div></div>'+
+    '<div class="card"><b>'+esc(t.calT)+'</b><p>'+esc(t.calP)+'</p><div class="row"><a class="btn" href="'+CAL+'" target="_blank" rel="noopener">'+esc(t.calB)+'</a></div></div>'+
+    '<div class="card"><b>'+esc(t.clubT)+'</b><p>'+esc(t.clubP)+'</p><div class="row"><a class="btn" href="https://t.me/vial_club_guard_bot?start='+(lang==='ru'?'RU':'UK')+'" target="_blank" rel="noopener">'+esc(t.clubB)+'</a></div></div></div>';
+  $('dl').onclick=download; $('ag').onclick=restart;
+  scrollEnd();
+}
+function download(){
+  if(!report) return; var t=L(), r=report, d=new Date().toISOString().slice(0,10);
+  var b=function(a){ return (a||[]).map(function(x){return '— '+x;}).join('\n'); };
+  var txt='VIA-L — '+r.title+'\n'+d+'\n\n'+t.hTold+'\n'+r.told+'\n\n'+t.hLooks+'\n'+r.looks+'\n\n'+t.hExcl+'\n'+r.exclude+'\n\n'+
+    (r.now&&r.now.length?t.hNow+'\n'+b(r.now)+'\n\n':'')+(r.ask&&r.ask.length?t.hAsk+'\n'+b(r.ask)+'\n\n':'')+t.disc+'\nvia-l.com\n';
+  var blob=new Blob([txt],{type:'text/plain;charset=utf-8'}), a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=t.file+'-'+d+'.txt'; document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },0);
+}
+renderIntro();
+})();
+</script>
+</body>
+</html>
