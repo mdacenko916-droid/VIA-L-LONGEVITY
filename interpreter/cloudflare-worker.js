@@ -4362,6 +4362,16 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
       ? '4) the focus for the ' + perNext + ' is ALREADY CHOSEN by the app (see the "ФОКУС НЕДЕЛИ" / "ИТОГ ФОКУСА" block in the data): ' +
         'explain in one or two sentences why it fits THIS person. Do NOT invent another experiment or focus.\n'
       : '4) ONE small, doable focus for the ' + perNext + ' (an "experiment", not a list).\n') +
+    // «Что спросить у специалиста» (2026-11-24, по мотивам лендинга Symptomato): человек приходит к врачу
+    // с вопросами из своих же данных, а не с пересказом. Только недельный: у месяца/квартала свой строгий порядок.
+    (isMonth ? '' :
+      '5) AFTER the review text and BEFORE the disclaimer line, a short block: a heading line starting with "### " that ' +
+      'means "What you could ask your specialist" (in ' + outLang + '), then EXACTLY 2 questions, each on its own line ' +
+      'starting with "— ". Each question is written in the first person, as the person would say it at an appointment, ' +
+      'and is built from THEIR OWN data this week (a complaint score, a signal that persists or worsened, a step that did ' +
+      'not help), e.g. the shape «My night awakenings stayed at 6–7/10 for the whole week — where would you start?». ' +
+      'Never name a disease, a diagnosis, a lab test or a hormone, never suggest a medication or a dose; no numbers that ' +
+      'are not in the data. These 2 questions do NOT count toward the sentence limit above.\n') +
     // Гипотеза с горизонтом — только вне велнес-рамки: иначе это обещание результата и срока.
     (_wellnessW ? '' :
       'STATE THE EXPERIMENT AS A TESTABLE HYPOTHESIS, not as a fact: name which 1–2 of THEIR OWN metrics you ' +
