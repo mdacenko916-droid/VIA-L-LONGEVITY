@@ -784,6 +784,29 @@ function _stripUrgencyVerdicts(text) {
     return out;
   }).filter(l => l !== '').join('\n');
 }
+// Обещание результата СО СРОКОМ («первые подвижки ровно через неделю», «within two weeks you'll notice») —
+// велнес-рамка App Store это запрещает, промпт говорит прямо, но Haiku протекает (живой недельный 2026-11-24).
+// Предложение убираем, только если в нём И срок, И результат: «через 7 дней посмотрим на цифры» — не обещание.
+// ⚠️ Без \b — кириллицу он не видит; границы через (?![\p{L}]).
+const _TF_RE = /(?:через|спустя|в\s+течение|протягом|після)\s+(?:\d+(?:\s*[–—-]\s*\d+)?|одну|одна|один|две|два|три|пару|несколько|кілька|декілька|тиждень|неделю|месяц|місяць)?\s*(?:дн|недел|тижн|тиждень|месяц|місяц)[\p{L}]*|(?:within|in|after)\s+(?:a|one|two|three|a\s+few|a\s+couple\s+of|several|\d+)\s+(?:days?|weeks?|months?)|(?:en|tras|después\s+de|dentro\s+de)\s+(?:una|un|dos|tres|unas|pocas|varias|\d+)\s+(?:días|semanas?|mes(?:es)?)|(?:in|nach|innerhalb)\s+(?:einer|zwei|drei|wenigen|\d+)\s+(?:Tagen|Wochen?|Monaten?)|(?:en|après|d'ici)\s+(?:une|deux|trois|quelques|\d+)\s+(?:jours|semaines?|mois)|(?:em|após|dentro\s+de)\s+(?:uma|duas|três|algumas|\d+)\s+(?:dias|semanas?|meses)|(?:in|dopo|tra|entro)\s+(?:una|due|tre|qualche|poche|\d+)\s+(?:giorni|settimane?|mesi)|(?:po|za|w\s+ciągu)\s+(?:tygodniu|kilku|dwóch|\d+)\s*(?:dni|tygodni|miesi)[\p{L}]*/iu;
+const _OUTCOME_RE = /(?:замет|почувств|стан(?:ет|ут|овит)|легче|улучш|подвижк|сдвиг|эффект|результат|уйд|пройд|снизит|уменьш|помітит|відчу|покращ|зрушен|notice|feel|improv|better|shift|result|effect|eas(?:e|ier)|go\s+away|notar|sentir|mejor|cambio|resultado|efecto|alivi|merk|spür|besser|verbesser|remarqu|ressent|mieux|amélior|perceb|sentir|melhor|notare|sentir|miglior|zauważ|poczuj|lepiej|popraw)/iu;
+function _stripTimeframePromises(text) {
+  if (!text || !_TF_RE.test(text)) return text;
+  return String(text).split('\n').map(line => {
+    if (!_TF_RE.test(line) || /^\s*#/.test(line)) return line;
+    const parts = line.split(/(?<=[.!?…])\s+/);
+    const keep = parts.filter(s => !(_TF_RE.test(s) && _OUTCOME_RE.test(s)));
+    if (keep.length === parts.length) return line;
+    return keep.length ? keep.join(' ') : null;   // строка целиком из обещаний — убрать строку
+  }).filter(l => l !== null).join('\n');
+}
+// Выдуманная давность в вопросах к специалисту («уже несколько недель» — в недельных данных её нет).
+// Режем только оборот, вопрос остаётся. Только строки-вопросы «— …».
+const _QDUR_RE = /,?\s*(?:уже\s+|вже\s+|already\s+|for\s+|desde\s+hace\s+|durante\s+)?(?:несколько|пару|много|кілька|декілька|багато|a\s+couple\s+of|several|a\s+few|many|unas|varias|un\s+par\s+de|muchas)\s+(?:недель|недели|тижнів|тижні|weeks|semanas)(?![\p{L}])/giu;
+function _stripQuestionDurations(text) {
+  if (!text) return text;
+  return String(text).split('\n').map(l => /^\s*[—–-]\s/.test(l) ? l.replace(_QDUR_RE, '').replace(/\s{2,}/g, ' ') : l).join('\n');
+}
 function _stripRiskClaims(text) {
   if (!text || !_RISK_RE.test(text)) return text;
   return text.split('\n').map(line => {
@@ -4485,7 +4508,13 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
   {
     const _em = text.match(/\n*\[\[EXP\]\]\s*(\{[\s\S]*?\})\s*$/);
     const _body = _em ? text.slice(0, _em.index) : text;
-    const _fixed = await _enforceLang(_body, lang, env, ctx, false);
+    const _langFixed = await _enforceLang(_body, lang, env, ctx, false);
+    let _fixed = _langFixed;
+    // Велнес (VIA-L/ADAM-L): гарант на выходе — обещания со сроком и выдуманная давность в вопросах (2026-11-24).
+    if (_wellnessW) {
+      _fixed = _stripTimeframePromises(_fixed);
+      if (!(daily && daily.complaint && daily.complaint.since)) _fixed = _stripQuestionDurations(_fixed);
+    }
     let _tail = _em ? '\n[[EXP]]' + _em[1] : '';
     // what короткий — _wrongLang его не видит (<200 букв). Проверяем по письменности: тело было
     // английским, а what пришёл по-русски (lang=en, 2026-09-23) — правило в промпте русское.
@@ -4494,7 +4523,7 @@ async function handleWeeklyReport(request, env, corsHeaders, ctx) {
     if (_em) {
       try {
         const e = JSON.parse(_em[1]);
-        if (e && e.what && (_fixed !== _body || _whatWrong(String(e.what)))) {
+        if (e && e.what && (_langFixed !== _body || _whatWrong(String(e.what)))) {
           const w = await translateReply(env, String(e.what), lang, 300).catch(() => '');
           if (w) { e.what = w.trim(); _tail = '\n[[EXP]]' + JSON.stringify(e); }
         }
