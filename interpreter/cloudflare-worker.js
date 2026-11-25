@@ -4680,10 +4680,12 @@ async function handleCheckReport(request, env, corsHeaders, ctx) {
     'Напиши короткий тёплый разбор её ответов. Это НЕ диагноз и НЕ назначение лечения.\n' +
     'ПРАВИЛА: никогда не говори «у вас перименопауза/болезнь X» — только «такая картина часто встречается при…» или «по ответам это может быть и не связано с переходом»; ' +
     'не выдумывай фактов, сроков и цифр, которых нет в данных; не обещай результат и сроки («пройдёт», «через 2 недели станет легче»); ' +
-    'никаких доз, лекарств, гормональной терапии как совета, трав; анализы называть можно; без личных имён; тон спокойный, без запугивания, на «вы».\n' +
+    'никаких доз, лекарств, гормональной терапии как совета, трав; анализы называть можно; без личных имён; тон спокойный, без запугивания.\n' +
+    // Прогон 2026-11-25 (Haiku): «давление держится стабильно?» без данных о давлении; ask — вопросы к ней, а не её вопросы специалисту.
+    'Не добавляй симптомов, анализов, давления, лекарств и обстоятельств, которых НЕТ в данных. ' +
     // Живой прогон 2026-11-24: «в 47» при ответе 45–49, «просыпается» в третьем лице, «указывать на гипотиреоз».
-    'Возраст — ТОЛЬКО диапазоном, как в данных («45–49»), никогда не называй точный возраст. Обращайся к ней на «вы» во ВСЕХ полях, включая told, — не в третьем лице. ' +
-    (lang === 'es' ? 'По-испански обращайся на «tú» (как в приложении VIA-L), не на «usted». ' : '') +
+    'Возраст — ТОЛЬКО диапазоном, как в данных («45–49»), никогда не называй точный возраст. Обращайся к ней напрямую во ВСЕХ полях, включая told, — не в третьем лице: ' +
+    ({ uk: 'на «ви». ', ru: 'на «вы». ', es: 'по-испански на «tú» (как в приложении VIA-L), не на «usted». ', en: 'на «you». ' }[lang]) +
     'Не называй болезни даже как возможность (гипотиреоз, анемия, депрессия, диабет и т. п.) — говори «проверить щитовидную железу (ТТГ)», «запасы железа (ферритин)».\n' +
     'Верни ТОЛЬКО JSON без пояснений и без ```:\n' +
     '{"title":"суть одной строкой, до 90 знаков, например «Ночные пробуждения в 45–49 — стресс, гормональный переход или и то и другое»",' +
@@ -4691,26 +4693,41 @@ async function handleCheckReport(request, env, corsHeaders, ctx) {
     '"looks":"2–3 предложения: на что это похоже — честно, без диагноза",' +
     '"exclude":"2–4 предложения: что специалист обычно хочет исключить — строго по блоку ЧТО ИСКЛЮЧИТЬ и ПОДСКАЗКАМ",' +
     '"now":["шаг 1 на сегодня-неделю, одно предложение","шаг 2"],' +
-    '"ask":["вопрос специалисту от первого лица из её ответов","вопрос 2","вопрос 3"]}';
+    '"ask":["вопрос, который ОНА задаст специалисту, от первого лица («Может ли мой…», «Стоит ли мне…»), из её ответов — НЕ вопрос к ней","вопрос 2","вопрос 3"]}\n\n' +
+    'REMINDER: write every JSON value in ' + outLang + ' only' + (lang === 'es' || lang === 'en' ? ' — no Russian or Ukrainian words.' : '.');
 
-  const model = lang === 'uk' ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001';   // uk — на Sonnet, как в ИП (project_ip_model_routing)
-  let result;
-  try {
+  // Все языки — Sonnet: прогон 2026-11-25 на Haiku дал es/en разборы по-русски (4 из 4), вопросы «к ней» вместо её
+  // вопросов специалисту и выдуманные данные. Потолок 300 разборов/сутки держит расход (~$0.02–0.03 за разбор).
+  const model = 'claude-sonnet-4-6';
+  const _call = async (messages) => {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': env.CLAUDE_API_KEY, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model, max_tokens: 1200, system, messages: [{ role: 'user', content: data }] }),
+      body: JSON.stringify({ model, max_tokens: 1400, system, messages }),
     });
-    result = await resp.json();
-  } catch (e) { return jsonResponse({ error: 'ai_unavailable' }, corsHeaders, 502); }
-  logUsage(env, ctx, 'check-report', model, 'site', lang, result, src || null);
-  const raw = result && result.content && result.content[0] && result.content[0].text;
+    const r = await resp.json();
+    logUsage(env, ctx, 'check-report', model, 'site', lang, r, src || null);
+    return r && r.content && r.content[0] && r.content[0].text;
+  };
+  const userMsg = data + '\n\nWrite every JSON value in ' + outLang + '.';
+  let raw;
+  try { raw = await _call([{ role: 'user', content: userMsg }]); } catch (e) { return jsonResponse({ error: 'ai_unavailable' }, corsHeaders, 502); }
   if (!raw) return jsonResponse({ error: 'ai_unavailable' }, corsHeaders, 502);
+  // es/en: кириллица в ответе = модель ушла в язык данных → один повтор с требованием переписать на нужном языке.
+  if ((lang === 'es' || lang === 'en') && /[А-Яа-яЁёІіЇїЄєҐґ]/.test(raw)) {
+    try {
+      const fixed = await _call([{ role: 'user', content: userMsg }, { role: 'assistant', content: raw },
+        { role: 'user', content: 'Rewrite this exact JSON with every value fully in ' + outLang + (lang === 'es' ? ' (address her as «tú»)' : '') + '. Same meaning, same keys. Output only the JSON.' }]);
+      if (fixed && !/[А-Яа-яЁёІіЇїЄєҐґ]/.test(fixed)) raw = fixed;
+    } catch (_) {}
+    // Разбор не на её языке хуже, чем «попробуйте ещё раз».
+    if (/[А-Яа-яЁёІіЇїЄєҐґ]/.test(raw)) return jsonResponse({ error: 'ai_unavailable' }, corsHeaders, 502);
+  }
   let rep = null;
   try { const m = raw.match(/\{[\s\S]*\}/); rep = JSON.parse(m ? m[0] : raw); } catch (_) {}
   if (!rep || !rep.title) return jsonResponse({ error: 'ai_unavailable' }, corsHeaders, 502);
   // uk: модель пишет русское «апноэ» вместо «апное» (живой прогон 2026-11-24).
-  const _ukFix = s => lang === 'uk' ? s.replace(/апноэ/gi, 'апное') : s;
+  const _ukFix = s => lang === 'uk' ? s.replace(/апноэ/gi, 'апное').replace(/ферритин/g, 'феритин').replace(/Ферритин/g, 'Феритин') : s;
   const clean = s => _ukFix(_stripTimeframePromises(String(s || '').slice(0, 1200))).trim();
   const out = {
     title: _ukFix(String(rep.title).slice(0, 140)), told: clean(rep.told), looks: clean(rep.looks), exclude: clean(rep.exclude),
