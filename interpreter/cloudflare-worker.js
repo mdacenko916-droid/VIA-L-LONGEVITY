@@ -4700,8 +4700,9 @@ async function handleCheckReport(request, env, corsHeaders, ctx) {
 
   // Все языки — Sonnet: прогон 2026-11-25 на Haiku дал es/en разборы по-русски (4 из 4), вопросы «к ней» вместо её
   // вопросов специалисту и выдуманные данные. Сравнение 2026-11-25 на 10 разборах: Sonnet 4.6 $0.015, Sonnet 5.5 $0.011
-  // (лучше и дешевле), Haiku 5.5 $0.0005 (половина uk-разбора по-русски, русизмы) → Sonnet 5.5. Потолок 300 разборов/сутки.
-  const model = 'claude-sonnet-5-5';
+  // (лучше и дешевле), Haiku 5.5 $0.0005 (половина uk-разбора по-русски, ломаная ru-грамматика; es/en — чисто).
+  // Решение владельца 2026-11-25: uk/ru → Sonnet 5.5, es/en → Haiku 5.5. Потолок 300 разборов/сутки.
+  const model = (lang === 'es' || lang === 'en') ? 'claude-haiku-5-5' : 'claude-sonnet-5-5';
   // Модели 5.5 думают по умолчанию — для короткого JSON выключаем (Haiku 5.5: disabled; Sonnet 5.5: between_tools).
   const _thinking = model === 'claude-haiku-5-5' ? { type: 'disabled' } : model === 'claude-sonnet-5-5' ? { type: 'between_tools' } : null;
   const _call = async (messages) => {
