@@ -466,6 +466,8 @@ const AI_RISK_RE = /(diagnos|\bdisease\b|\bdisorder\b|\bsyndrome\b|patholog|\btr
 const AI_PRICE = {   // $ за миллион токенов: вход / выход / запись в кэш / чтение из кэша
   'claude-haiku-4-5-20251001': { in: 1,  out: 5,  cw: 1.25, cr: 0.10 },
   'claude-sonnet-4-6':         { in: 3,  out: 15, cw: 3.75, cr: 0.30 },
+  'claude-sonnet-5-5':         { in: 2,  out: 10, cw: 2.50, cr: 0.10 },
+  'claude-haiku-5-5':          { in: 0.10, out: 0.50, cw: 0.125, cr: 0.01 },
 };
 function logUsage(env, ctx, endpoint, model, tier, lang, result, note) {
   try {
@@ -4697,17 +4699,20 @@ async function handleCheckReport(request, env, corsHeaders, ctx) {
     'REMINDER: write every JSON value in ' + outLang + ' only' + (lang === 'es' || lang === 'en' ? ' — no Russian or Ukrainian words.' : '.');
 
   // Все языки — Sonnet: прогон 2026-11-25 на Haiku дал es/en разборы по-русски (4 из 4), вопросы «к ней» вместо её
-  // вопросов специалисту и выдуманные данные. Потолок 300 разборов/сутки держит расход (~$0.02–0.03 за разбор).
-  const model = 'claude-sonnet-4-6';
+  // вопросов специалисту и выдуманные данные. Сравнение 2026-11-25 на 10 разборах: Sonnet 4.6 $0.015, Sonnet 5.5 $0.011
+  // (лучше и дешевле), Haiku 5.5 $0.0005 (половина uk-разбора по-русски, русизмы) → Sonnet 5.5. Потолок 300 разборов/сутки.
+  const model = 'claude-sonnet-5-5';
+  // Модели 5.5 думают по умолчанию — для короткого JSON выключаем (Haiku 5.5: disabled; Sonnet 5.5: between_tools).
+  const _thinking = model === 'claude-haiku-5-5' ? { type: 'disabled' } : model === 'claude-sonnet-5-5' ? { type: 'between_tools' } : null;
   const _call = async (messages) => {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': env.CLAUDE_API_KEY, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model, max_tokens: 1400, system, messages }),
+      body: JSON.stringify({ model, max_tokens: 1400, system, messages, ...(_thinking ? { thinking: _thinking } : {}) }),
     });
     const r = await resp.json();
     logUsage(env, ctx, 'check-report', model, 'site', lang, r, src || null);
-    return r && r.content && r.content[0] && r.content[0].text;
+    return r && Array.isArray(r.content) ? r.content.filter(b => b.type === 'text').map(b => b.text).join('') : null;
   };
   const userMsg = data + '\n\nWrite every JSON value in ' + outLang + '.';
   let raw;
