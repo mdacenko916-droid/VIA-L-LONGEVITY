@@ -514,6 +514,8 @@
     var x = a[cursor[cat] % a.length]; cursor[cat]++; return x;
   }
   function line(text) { if (text) { show(text); say(text); } }
+  // Фраза из пула — «заполнитель»: записанный голос не перебиваем (у Achernar паузы по смыслу: «Держите…»), просто пропускаем её.
+  function filler(text) { if (text && !(recOn() && rec && !rec.paused && !rec.ended)) { show(text); say(text); } }
   // Дыхание 4/6 на sec секунд. Первые три цикла — голосом «вдох/выдох»; дальше через цикл: фраза из пула
   // (дыхание или мысли), между ними — снова тихие «вдох/выдох». Тишины длиннее одного цикла (10 с) нет.
   function breathe(at, sec, mindToo) {
@@ -521,7 +523,7 @@
     for (var i = 0; i < cyc; i++) (function (i) {
       var talk = i >= 3 && i % 2 === 1;
       later(function () { var c = $('sl-circle'); if (c) { c.style.transition = 'transform 4s ease-in-out'; c.style.transform = 'scale(1.35)'; }
-        if (talk) line(pool(mindToo && i % 4 === 3 ? 'mind' : 'breath')); else { show(t('b_in')); say(t('b_in')); } }, (at + i * 10) * 1000);
+        if (talk) filler(pool(mindToo && i % 4 === 3 ? 'mind' : 'breath')); else { show(t('b_in')); say(t('b_in')); } }, (at + i * 10) * 1000);
       later(function () { var c = $('sl-circle'); if (c) { c.style.transition = 'transform 6s ease-in-out'; c.style.transform = 'scale(1)'; }
         if (!talk) { show(t('b_out')); say(t('b_out')); } }, (at + i * 10 + 4) * 1000);
     })(i);
@@ -532,10 +534,10 @@
     later(function () { line(tr(intro)); }, at * 1000);
     var slot = (sec - 10) / list.length;
     list.forEach(function (p, i) {
-      var t0 = at + 10 + i * slot;
+      var t0 = at + (recOn() ? 16 : 10) + i * slot;   // записанное вступление длиннее голоса телефона
       later(function () { line(tr(p)); }, t0 * 1000);
       for (var k = 1, f = t0 + 12; f < t0 + slot - 4; k++, f += 11) (function (k, f) {
-        later(function () { line(pool(k % 2 ? 'body' : 'mind')); }, f * 1000);
+        later(function () { filler(pool(k % 2 ? 'body' : 'mind')); }, f * 1000);
       })(k, f);
     });
     return at + sec;
@@ -555,7 +557,7 @@
     var at = 0;
     later(function () { show(tr(SAY.intro)); say(tr(SAY.intro)); }, 300); at = 8;
     later(function () { show(tr(SAY.breath)); say(tr(SAY.breath)); }, at * 1000); at += 9;
-    at = breathe(at, plan[0], true);
+    at = breathe(at + (recOn() ? 12 : 0), plan[0], true);   // записанная инструкция дыхания ≈ 15–19 с
     if (plan[1]) at = phrases(at, plan[1], SAY.pmr_in, PMR);
     at = phrases(at, plan[2], SAY.scan_in, SCAN);
     later(function () { show(tr(SAY.outro)); say(tr(SAY.outro)); }, at * 1000);
