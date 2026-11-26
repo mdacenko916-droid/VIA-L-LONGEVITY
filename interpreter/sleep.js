@@ -367,20 +367,25 @@
   // ── записанный голос (Gemini TTS Achernar, 2026-11-25): фразы в R2 sleep/Achernar/<язык>/<fnv>.m4a ──
   // Озвучка — ~/Developer/VIA-L-HYPNOSIS/scripts/sleep_voice.py (имя файла = fnv() текста, как здесь).
   // Язык в REC_LANGS — только когда залиты ВСЕ его фразы. Нет файла / нет сети → до конца ритуала голос телефона.
-  var REC_BASE = 'https://pub-2f2f1a44a98c46beabafa751ba849852.r2.dev/sleep/Achernar/', REC_LANGS = [];
-  var rec = null, recOff = false;
+  var REC_BASE = 'https://pub-2f2f1a44a98c46beabafa751ba849852.r2.dev/sleep/Achernar/', REC_LANGS = ['ru', 'uk'];
+  var rec = null, recOff = false, recQ = [];   // recQ — обязательные фразы, ждущие конца текущей записи
   function fnv(s) { var h = 0x811c9dc5; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return ('0000000' + h.toString(16)).slice(-8); }
   function recOn() { return !recOff && REC_LANGS.indexOf(L()) >= 0; }
+  function busy() { return !!(rec && !rec.paused && !rec.ended); }
   function recStop() { var a = rec; rec = null; if (a) { try { a.pause(); a.removeAttribute('src'); a.load(); } catch (e) {} } }
   function sayRec(text) {
     recStop(); var my = run, a = new Audio(REC_BASE + L() + '/' + fnv(text) + '.m4a'); a.setAttribute('playsinline', ''); rec = a;
     var fb = function () { if (rec !== a || my !== run) return; rec = null; recOff = true; sayTts(text); };
     a.addEventListener('error', fb);
+    a.addEventListener('ended', function () { if (rec === a && my === run && recQ.length) sayRec(recQ.shift()); });
     var pr = a.play(); if (pr && pr.catch) pr.catch(fb);
   }
   function say(text) {
     if (!text) return;
-    if (recOn()) return sayRec(text);
+    if (recOn()) {   // запись не обрываем: «вдох/выдох» во время фразы пропускаем, остальное ставим в очередь
+      if (busy()) { if (text !== t('b_in') && text !== t('b_out')) recQ.push(text); return; }
+      return sayRec(text);
+    }
     sayTts(text);
   }
   function sayTts(text) {
@@ -391,7 +396,7 @@
     var u = new SpeechSynthesisUtterance(text); u.lang = loc(); u.rate = 0.8; u.pitch = 0.95; u.volume = 0.9; if (voice) u.voice = voice;
     if (ss.speaking || ss.pending) { ss.cancel(); setTimeout(function () { ss.speak(u); }, 80); } else ss.speak(u);
   }
-  function hush() { recStop(); var p = plug(); if (p) p.stop().catch(function () {}); else if (window.speechSynthesis) window.speechSynthesis.cancel(); }
+  function hush() { recQ = []; recStop(); var p = plug(); if (p) p.stop().catch(function () {}); else if (window.speechSynthesis) window.speechSynthesis.cancel(); }
 
   // ── фон: «мелодия для сна», собранная на лету (OfflineAudioContext → WAV → <audio>; файлов нет) ──
   // Канон «седативной музыки» из исследований сна: медленно (60 ударов в минуту), без ударных и резких акцентов,
@@ -515,7 +520,7 @@
   }
   function line(text) { if (text) { show(text); say(text); } }
   // Фраза из пула — «заполнитель»: записанный голос не перебиваем (у Achernar паузы по смыслу: «Держите…»), просто пропускаем её.
-  function filler(text) { if (text && !(recOn() && rec && !rec.paused && !rec.ended)) { show(text); say(text); } }
+  function filler(text) { if (text && !(recOn() && busy())) { show(text); say(text); } }
   // Дыхание 4/6 на sec секунд. Первые три цикла — голосом «вдох/выдох»; дальше через цикл: фраза из пула
   // (дыхание или мысли), между ними — снова тихие «вдох/выдох». Тишины длиннее одного цикла (10 с) нет.
   function breathe(at, sec, mindToo) {
@@ -549,7 +554,7 @@
   var active = false;
   document.addEventListener('visibilitychange', function () { if (document.hidden && active) stop(); });
   function begin(title) {
-    stop(true); run++; cursor = {}; recOff = false; overlay(title); awakeOn(); pickVoice(); active = true;
+    stop(true); run++; cursor = {}; recOff = false; recQ = []; overlay(title); awakeOn(); pickVoice(); active = true;
   }
   function ritual() {
     var s = settings(), plan = { 5: [120, 0, 180], 10: [120, 240, 240], 15: [180, 360, 360] }[s.dur] || [120, 240, 240];
