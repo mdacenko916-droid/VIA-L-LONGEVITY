@@ -64,6 +64,13 @@
     noise: {ru:'Фон',uk:'Фон',en:'Background',es:'Fondo',de:'Hintergrund',pt:'Fundo',fr:'Fond sonore',pl:'Tło',it:'Sottofondo',he:'רקע',ja:'背景音',ko:'배경음'},
     n_none: {ru:'Без мелодии',uk:'Без мелодії',en:'No melody',es:'Sin melodía',de:'Ohne Melodie',pt:'Sem melodia',fr:'Sans mélodie',pl:'Bez melodii',it:'Senza melodia',he:'בלי מנגינה',ja:'メロディなし',ko:'멜로디 없음'},
     n_soft: {ru:'Тише',uk:'Тихіше',en:'Softer',es:'Más suave',de:'Leiser',pt:'Mais baixo',fr:'Plus doux',pl:'Ciszej',it:'Più piano',he:'שקט יותר',ja:'控えめ',ko:'더 작게'},
+    // 2026-11-26: своя музыка с телефона + нет голоса на Android
+    n_own: {ru:'Своя с телефона',uk:'Своя з телефона',en:'My own from phone',es:'La mía del teléfono',de:'Eigene vom Handy',pt:'Minha do celular',fr:'La mienne (téléphone)',pl:'Własna z telefonu',it:'La mia dal telefono',he:'שלי מהטלפון',ja:'スマホの曲',ko:'내 휴대폰 음악'},
+    own_now: {ru:'Ваша музыка:',uk:'Ваша музика:',en:'Your music:',es:'Tu música:',de:'Deine Musik:',pt:'Sua música:',fr:'Votre musique :',pl:'Twoja muzyka:',it:'La tua musica:',he:'המוזיקה שלכם:',ja:'あなたの曲：',ko:'내 음악:'},
+    own_change: {ru:'Выбрать другую',uk:'Обрати іншу',en:'Choose another',es:'Elegir otra',de:'Andere wählen',pt:'Escolher outra',fr:'En choisir une autre',pl:'Wybierz inną',it:'Scegline un’altra',he:'לבחור אחרת',ja:'別の曲を選ぶ',ko:'다른 곡 고르기'},
+    own_hint: {ru:'Выберите файл с музыкой на телефоне (mp3, m4a и т. п.). Музыка из Apple Music, Spotify и других сервисов защищена — её сюда добавить нельзя. Файл хранится только на телефоне.',uk:'Оберіть файл із музикою на телефоні (mp3, m4a тощо). Музика з Apple Music, Spotify та інших сервісів захищена — її сюди додати не можна. Файл зберігається лише на телефоні.',en:'Pick a music file on your phone (mp3, m4a, etc.). Music from Apple Music, Spotify and other services is protected and can’t be added here. The file stays on your phone only.',es:'Elige un archivo de música del teléfono (mp3, m4a, etc.). La música de Apple Music, Spotify y otros servicios está protegida y no se puede añadir aquí. El archivo se queda solo en tu teléfono.',de:'Wähle eine Musikdatei auf deinem Handy (mp3, m4a usw.). Musik aus Apple Music, Spotify und anderen Diensten ist geschützt und kann hier nicht hinzugefügt werden. Die Datei bleibt nur auf deinem Handy.',pt:'Escolha um arquivo de música no celular (mp3, m4a etc.). Músicas do Apple Music, Spotify e outros serviços são protegidas e não podem ser adicionadas aqui. O arquivo fica só no seu celular.',fr:'Choisissez un fichier musical sur votre téléphone (mp3, m4a, etc.). La musique d’Apple Music, Spotify et autres services est protégée et ne peut pas être ajoutée ici. Le fichier reste uniquement sur votre téléphone.',pl:'Wybierz plik z muzyką na telefonie (mp3, m4a itp.). Muzyka z Apple Music, Spotify i innych serwisów jest chroniona — nie da się jej tu dodać. Plik zostaje tylko na telefonie.',it:'Scegli un file musicale sul telefono (mp3, m4a ecc.). La musica di Apple Music, Spotify e altri servizi è protetta e non si può aggiungere qui. Il file resta solo sul telefono.',he:'בחרו קובץ מוזיקה בטלפון (mp3‏, m4a וכו׳). מוזיקה מ־Apple Music‏, Spotify ושירותים אחרים מוגנת ואי אפשר להוסיף אותה כאן. הקובץ נשמר רק בטלפון.',ja:'スマホ内の音楽ファイル（mp3、m4aなど）を選んでください。Apple MusicやSpotifyなどの曲は保護されているため追加できません。ファイルはスマホの中にだけ保存されます。',ko:'휴대폰에 있는 음악 파일(mp3, m4a 등)을 고르세요. Apple Music, Spotify 등 서비스의 음악은 보호되어 있어 여기에 추가할 수 없어요. 파일은 휴대폰에만 저장돼요.'},
+    own_big: {ru:'Файл слишком большой — выберите до 60 МБ.',uk:'Файл завеликий — оберіть до 60 МБ.',en:'The file is too large — choose one up to 60 MB.',es:'El archivo es demasiado grande: elige uno de hasta 60 MB.',de:'Die Datei ist zu groß — wähle eine bis 60 MB.',pt:'O arquivo é grande demais — escolha um de até 60 MB.',fr:'Fichier trop volumineux — choisissez-en un de 60 Mo maximum.',pl:'Plik jest za duży — wybierz do 60 MB.',it:'Il file è troppo grande: scegline uno fino a 60 MB.',he:'הקובץ גדול מדי — בחרו קובץ עד 60 MB.',ja:'ファイルが大きすぎます。60MB以下を選んでください。',ko:'파일이 너무 커요. 60MB 이하로 골라 주세요.'},
+    novoice: {ru:'На телефоне нет голоса для этого языка. Добавьте его в настройках телефона — раздел синтеза речи («Устный контент» на iPhone).',uk:'На телефоні немає голосу для цієї мови. Додайте його в налаштуваннях телефона — розділ синтезу мовлення («Усний контент» на iPhone).',en:'Your phone has no voice for this language. Add one in the phone settings — text-to-speech (Spoken Content on iPhone).',es:'Tu teléfono no tiene voz para este idioma. Añádela en los ajustes del teléfono: síntesis de voz (Contenido leído en iPhone).',de:'Dein Telefon hat keine Stimme für diese Sprache. Füge sie in den Telefoneinstellungen hinzu – Sprachausgabe (Gesprochene Inhalte am iPhone).',pt:'Seu telefone não tem voz para este idioma. Adicione nos ajustes do telefone: síntese de voz (Conteúdo Falado no iPhone).',fr:'Votre téléphone n’a pas de voix pour cette langue. Ajoutez-la dans les réglages : synthèse vocale (Contenu énoncé sur iPhone).',pl:'Telefon nie ma głosu dla tego języka. Dodaj go w ustawieniach telefonu — synteza mowy (Mówienie zawartości na iPhonie).',it:'Il telefono non ha una voce per questa lingua. Aggiungila nelle impostazioni: sintesi vocale (Contenuto letto su iPhone).',he:'אין בטלפון קול לשפה הזו. אפשר להוסיף אותו בהגדרות הטלפון — הקראת טקסט (תוכן מוקרא ב-iPhone).',ja:'このスマートフォンにはこの言語の音声がありません。設定の読み上げ(iPhoneでは「読み上げコンテンツ」)から追加してください。',ko:'휴대폰에 이 언어의 음성이 없습니다. 휴대폰 설정의 텍스트 음성 변환(iPhone은 ‘음성 콘텐츠’)에서 추가해 주세요.'},
     n_music: {ru:'Мелодия для сна',uk:'Мелодія для сну',en:'Sleep melody',es:'Melodía para dormir',de:'Schlafmelodie',pt:'Melodia para dormir',fr:'Mélodie pour dormir',pl:'Melodia do snu',it:'Melodia per dormire',he:'מנגינה לשינה',ja:'眠りのメロディ',ko:'수면 멜로디'},
     remind: {ru:'Напомнить о ритуале',uk:'Нагадати про ритуал',en:'Remind me of the ritual',es:'Recordarme el ritual',de:'An das Ritual erinnern',pt:'Lembrar do ritual',fr:'Me rappeler le rituel',pl:'Przypomnij o rytuale',it:'Ricordami il rituale',he:'תזכורת לטקס',ja:'習慣のリマインダー',ko:'루틴 알림'},
     remind_off: {ru:'не напоминать',uk:'не нагадувати',en:'no reminder',es:'sin recordatorio',de:'keine Erinnerung',pt:'sem lembrete',fr:'pas de rappel',pl:'bez przypomnienia',it:'nessun promemoria',he:'ללא תזכורת',ja:'通知しない',ko:'알림 없음'},
@@ -272,14 +279,16 @@
   // ── карточка в «Мой вечерний ритуал» ──
   // Фон: мелодия (по умолчанию) или тишина. Шум убран 2026-11-11: доказательства в его пользу слабые, розовый шум
   // в работах сокращал быстрый сон; медленная инструментальная музыка улучшает сон (Cochrane 2022, мета-анализы 50+).
-  function settings() { var s = get(KEY_SET, {}) || {}; return { dur: s.dur || 10, noise: s.noise === 'none' || s.noise === 'soft' ? s.noise : 'music', remind: s.remind || '' }; }
+  function settings() { var s = get(KEY_SET, {}) || {}; return { dur: s.dur || 10, noise: s.noise === 'none' || s.noise === 'soft' || s.noise === 'own' ? s.noise : 'music', remind: s.remind || '' }; }
   function setSet(k, v) { var s = settings(); s[k] = v; put(KEY_SET, s); }
   function card() {
     var box = $('rdSleep'); if (!box) return;
     autoCheck();
     var s = settings(), e = eff7(), fl = (get(KEY_FLAGS, null) || {}), flags = (fl.ts && Date.now() - fl.ts < 14 * 86400000) ? (fl.f || []) : [];
     var durs = [5, 10, 15].map(function (d) { return '<button type="button" class="sl-pill' + (s.dur === d ? ' on' : '') + '" onclick="vialSleep.set(\'dur\',' + d + ')">' + d + ' ' + esc(t('min')) + '</button>'; }).join('');
-    var nz = [['music', 'n_music'], ['soft', 'n_soft'], ['none', 'n_none']].map(function (x) { return '<button type="button" class="sl-pill' + (s.noise === x[0] ? ' on' : '') + '" onclick="vialSleep.set(\'noise\',\'' + x[0] + '\')">' + esc(t(x[1])) + '</button>'; }).join('');
+    var nz = [['music', 'n_music'], ['soft', 'n_soft'], ['own', 'n_own'], ['none', 'n_none']].map(function (x) { return '<button type="button" class="sl-pill' + (s.noise === x[0] ? ' on' : '') + '" onclick="' + (x[0] === 'own' ? 'vialSleep.own()' : 'vialSleep.set(\'noise\',\'' + x[0] + '\')') + '">' + esc(t(x[1])) + '</button>'; }).join('')
+      + (ownHint && !ownName ? '<div class="sl-note">' + esc(t('own_hint')) + '</div>' : '')
+      + (s.noise === 'own' && ownName ? '<div class="sl-note">' + esc(t('own_now')) + ' ' + esc(ownName) + ' · <a href="#" onclick="vialSleep.pick();return false;">' + esc(t('own_change')) + '</a></div>' : '');
     var times = ['', '21:00', '21:30', '22:00', '22:30', '23:00', '23:30'];
     var rm = '<select class="sl-sel" onchange="vialSleep.remind(this.value)">' + times.map(function (x) { return '<option value="' + x + '"' + (s.remind === x ? ' selected' : '') + '>' + (x ? x : esc(t('remind_off'))) + '</option>'; }).join('') + '</select>';
     var w = get(KEY_WORRY, null), wPrev = (w && w.text && w.day && w.day !== dayKey()) ? '<div class="sl-note"><b>' + esc(t('w_prev')) + '</b> ' + esc(w.text.slice(0, 280)) + '</div>' : '';
@@ -398,10 +407,46 @@
   }
   function hush() { recQ = []; recStop(); var p = plug(); if (p) p.stop().catch(function () {}); else if (window.speechSynthesis) window.speechSynthesis.cancel(); }
 
+  // ── своя музыка с телефона (2026-11-26, владелец): файл в IndexedDB, только на устройстве; в бэкап не входит ──
+  // Выбор через <input type=file>: iOS открывает «Файлы», Android — выбор файла. Защищённую музыку сервисов (Apple Music,
+  // Spotify) браузерный выбор не отдаёт — об этом подсказка. audio.volume на iPhone не работает: своя музыка — громкостью телефона.
+  var ownName = (get('vial_sleep_own_name', '') || ''), OWN_MAX = 60 * 1024 * 1024;
+  function idb(mode, fn) {
+    return new Promise(function (res) {
+      try { var rq = indexedDB.open('vial_sleep', 1);
+        rq.onupgradeneeded = function () { try { rq.result.createObjectStore('f'); } catch (e) {} };
+        rq.onsuccess = function () { try { var tx = rq.result.transaction('f', mode), st = tx.objectStore('f'), r = fn(st);
+          tx.oncomplete = function () { res(r && r.result !== undefined ? r.result : true); }; tx.onerror = function () { res(null); }; } catch (e) { res(null); } };
+        rq.onerror = function () { res(null); };
+      } catch (e) { res(null); }
+    });
+  }
+  function pick() {
+    var inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'audio/*'; inp.style.display = 'none';
+    inp.onchange = function () {
+      var f = inp.files && inp.files[0]; inp.remove(); if (!f) return;
+      if (f.size > OWN_MAX) { alert(t('own_big')); return; }
+      idb('readwrite', function (st) { return st.put(f, 'own'); }).then(function (ok) {
+        if (!ok) return;
+        if (ownUrl) { try { URL.revokeObjectURL(ownUrl); } catch (e) {} ownUrl = null; }
+        ownName = String(f.name || '').replace(/\.[a-z0-9]{2,4}$/i, '').slice(0, 60); put('vial_sleep_own_name', ownName);
+        setSet('noise', 'own'); card();
+      });
+    };
+    document.body.appendChild(inp); inp.click();
+  }
+  // Без alert перед выбором: на iPhone окно файлов открывается только прямо из нажатия — подсказка в карточке.
+  var ownHint = false;
+  function own() { if (ownName) { setSet('noise', 'own'); card(); return; } ownHint = true; pick(); card(); }
+  var ownUrl = null;
+  function ownLoad() {
+    if (ownUrl) return Promise.resolve(ownUrl);
+    return idb('readonly', function (st) { return st.get('own'); }).then(function (b) { if (b && b.size) { ownUrl = URL.createObjectURL(b); return ownUrl; } return null; });
+  }
+
   // ── фон: «мелодия для сна», собранная на лету (OfflineAudioContext → WAV → <audio>; файлов нет) ──
-  // Канон «седативной музыки» из исследований сна: медленно (60 ударов в минуту), без ударных и резких акцентов,
-  // мягкие тембры, плавная мелодия, тихо. Аккорды D–Bm–G–A по 16 с, редкие ноты пентатоники, мягкий бас,
-  // реверберация. Петля 64 с склеена без шва (хвост доливается в начало). Мелодия своя на каждый день (сид = день).
+  // Канон «седативной музыки» из исследований сна: медленно, без ударных и резких акцентов, мягкие тембры, тихо.
+  // С 2026-11-26 — тёплый низкий фон (см. makeMusic). Мелодия своя на каждый день (сид = день).
   // <audio>, а не живой WebAudio: iPhone с выключенным звонком глушит WebAudio, а <audio> в режиме playback — нет.
   var audio = null, audioUrl = null, musicCache = {};
   function wavUrl(x, sr) {
@@ -416,38 +461,41 @@
   function makeMusic(seed, gain) {
     var OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
     if (!OAC) return Promise.resolve(null);
-    var sr = 22050, LOOP = 64, TAIL = 8, ctx = new OAC(1, sr * (LOOP + TAIL), sr), R = rng(seed);
-    var master = ctx.createGain(); master.gain.value = 0.9;
-    var lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1500; lp.Q.value = 0.3;
-    // реверберация: импульс из затухающего шума ~3,5 с
-    var ir = ctx.createBuffer(1, Math.floor(sr * 3.5), sr), irD = ir.getChannelData(0);
-    for (var i = 0; i < irD.length; i++) irD[i] = (R() * 2 - 1) * Math.pow(1 - i / irD.length, 2.6);
-    var rev = ctx.createConvolver(); rev.buffer = ir; var wet = ctx.createGain(); wet.gain.value = 0.32; var dry = ctx.createGain(); dry.gain.value = 0.75;
+    // 2026-11-26 (владелец: прежняя мелодия «ужасная»): тёплый медленный фон без «звоночков». Аккорды по 25 с
+    // в низком регистре, мягкий фильтр, который медленно «дышит», громкость качается раз в 10 с — в такт дыханию 4/6.
+    // Петля 100 с (кратна 10 и 20 с); первый аккорд рисуется в хвосте и доливается в начало — склейка без шва.
+    var sr = 22050, LOOP = 100, TAIL = 28, ctx = new OAC(1, sr * (LOOP + TAIL), sr), R = rng(seed);
+    var master = ctx.createGain(); master.gain.value = 0.8;
+    var breath = ctx.createOscillator(), bDepth = ctx.createGain(); breath.frequency.value = 0.1; bDepth.gain.value = 0.12;
+    breath.connect(bDepth); bDepth.connect(master.gain); breath.start(0);
+    var lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 850; lp.Q.value = 0.4;
+    var fl = ctx.createOscillator(), fDepth = ctx.createGain(); fl.frequency.value = 0.05; fDepth.gain.value = 220;
+    fl.connect(fDepth); fDepth.connect(lp.frequency); fl.start(0);
+    var ir = ctx.createBuffer(1, Math.floor(sr * 4.5), sr), irD = ir.getChannelData(0);
+    for (var i = 0; i < irD.length; i++) irD[i] = (R() * 2 - 1) * Math.pow(1 - i / irD.length, 3);
+    var rev = ctx.createConvolver(); rev.buffer = ir; var wet = ctx.createGain(); wet.gain.value = 0.42; var dry = ctx.createGain(); dry.gain.value = 0.7;
     master.connect(lp); lp.connect(dry); lp.connect(rev); rev.connect(wet); dry.connect(ctx.destination); wet.connect(ctx.destination);
-    var CH = [[50, 57, 61, 64], [47, 54, 57, 61], [43, 50, 54, 59], [45, 52, 54, 59]];   // Dmaj9 · Bm9 · Gmaj7 · A6sus
-    var PENTA = [62, 64, 66, 69, 71, 74, 76, 78];                                    // ре-мажорная пентатоника
+    var CH = [[38, 50, 57, 62, 66], [35, 47, 54, 59, 62], [43, 50, 55, 59, 62], [45, 52, 57, 59, 64]];   // D · Bm · G · Asus2, низко
+    var MEL = [62, 64, 66, 69, 71];
     function tone(f, at, dur, vol, type, atk, rel) {
       var o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.value = f;
       g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(vol, at + atk);
       g.gain.setValueAtTime(vol, Math.max(at + atk, at + dur - rel)); g.gain.linearRampToValueAtTime(0.0001, at + dur);
       o.connect(g); g.connect(master); o.start(at); o.stop(at + dur + 0.05);
     }
-    function bell(f, at, vol) {
-      var o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o2.type = 'sine';
-      o.frequency.value = f; o2.frequency.value = f * 2.001;
-      var g2 = ctx.createGain(); g2.gain.value = 0.18; o2.connect(g2); g2.connect(g); o.connect(g);
-      g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(vol, at + 0.06); g.gain.exponentialRampToValueAtTime(0.0001, at + 4.5);
-      g.connect(master); o.start(at); o2.start(at); o.stop(at + 4.6); o2.stop(at + 4.6);
+    function chord(c, t0) {
+      var st = t0 - 4;
+      tone(hz(c[0]), st, 31, 0.07, 'sine', 6, 9);                                   // бас
+      c.slice(1).forEach(function (m) {
+        tone(hz(m), st, 31, 0.032, 'triangle', 7, 9);
+        tone(hz(m) * 1.0025, st, 31, 0.022, 'sine', 8, 9);                          // лёгкая расстройка — «тепло»
+      });
     }
     CH.forEach(function (c, k) {
-      var t0 = k * 16;
-      c.forEach(function (m, j) { tone(hz(m), Math.max(0, t0 - 1.5), 19, j ? 0.045 : 0.06, j % 2 ? 'triangle' : 'sine', 3.5, 4.5); tone(hz(m) * 1.003, Math.max(0, t0 - 1.5), 19, 0.02, 'sine', 4, 5); });
-      tone(hz(c[0] - 12), Math.max(0, t0 - 1), 18, 0.07, 'sine', 3, 4);             // мягкий бас
-      for (var bar = 0; bar < 4; bar++) {                                           // 4 такта по 4 с
-        if (R() < 0.7) { var beat = Math.floor(R() * 4), note = PENTA[Math.floor(R() * PENTA.length)]; bell(hz(note), t0 + bar * 4 + beat + 0.5, 0.05 + R() * 0.03); }
-      }
+      var t0 = k ? k * 25 : LOOP; chord(c, t0);                                     // первый аккорд — в хвост: склейка без шва
+      var n = 1 + (R() < 0.5 ? 1 : 0);
+      for (var j = 0; j < n; j++) tone(hz(MEL[Math.floor(R() * MEL.length)]), t0 + 5 + j * 10 + R() * 3, 9, 0.022, 'sine', 2.5, 5);   // тихая «напевка», без удара
     });
-    if (ctx.length) tone(hz(50), LOOP - 1.5, TAIL + 1.5, 0.045, 'sine', 3.5, 4.5);  // начало первого аккорда для бесшовной склейки
     return ctx.startRendering().then(function (buf) {
       var d = buf.getChannelData(0), n = sr * LOOP, out = new Float32Array(n), peak = 0;
       for (var a2 = 0; a2 < n; a2++) out[a2] = d[a2];
@@ -471,6 +519,7 @@
     noiseStop(true);
     var my = run;
     playUrl(null, 0);                                    // сразу тихий звук: держит режим воспроизведения, пока мелодия собирается
+    if (kind === 'own') { ownLoad().then(function (u) { if (my !== run) return; if (!u) return noiseStart('music'); var old = audio; audio = null; try { if (old) old.pause(); } catch (e) {} playUrl(u, 0.5); }); return; }
     if (kind !== 'music' && kind !== 'soft') return;
     var seed = parseInt(String(dayKey()).replace(/\D/g, ''), 10) || 1, gain = kind === 'soft' ? 0.35 : 1, ck = seed + ':' + gain;   // «Тише» ≈ −9 дБ под голосом
     var p = musicCache[ck] ? Promise.resolve(musicCache[ck]) : makeMusic(seed, gain).then(function (u) { if (u) musicCache[ck] = u; return u; });
@@ -555,6 +604,8 @@
   document.addEventListener('visibilitychange', function () { if (document.hidden && active) stop(); });
   function begin(title) {
     stop(true); run++; cursor = {}; recOff = false; recQ = []; overlay(title); awakeOn(); pickVoice(); active = true;
+    var p = plug(), my = run;   // Android: голоса для языка нет → говорим об этом и открываем установку голоса (иначе ритуал молчал)
+    if (p && p.isLanguageSupported && !recOn()) p.isLanguageSupported({ lang: loc() }).then(function (r) { if (my !== run || !r || r.supported !== false) return; var k = document.querySelector('#sl-ov .sl-ov-keep'); if (k) { k.textContent = t('novoice'); k.style.color = 'rgba(255,255,255,.75)'; } try { if (p.openInstall) p.openInstall(); } catch (e) {} }).catch(function () {});
   }
   function ritual() {
     var s = settings(), plan = { 5: [120, 0, 180], 10: [120, 240, 240], 15: [180, 360, 360] }[s.dur] || [120, 240, 240];
@@ -645,7 +696,7 @@
   window.vialSleep = {
     on: on, toggle: toggle, card: card, rec: rec, payload: payload, relang: relang,
     set: function (k, v) { setSet(k, v); card(); },
-    remind: remind, ritual: ritual, awake: awake, stop: function () { stop(false); },
+    own: own, pick: pick, remind: remind, ritual: ritual, awake: awake, stop: function () { stop(false); },
     worry: worry, worrySave: worrySave, mountDiary: mountDiary, info: info, read: read, open: open, goCard: goCard, stats: stats, label: function (k) { return t(k); },
     _music: makeMusic   // отладка: собрать мелодию дня (вернёт blob-URL)
   };
