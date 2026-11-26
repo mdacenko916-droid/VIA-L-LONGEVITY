@@ -4,7 +4,7 @@
    Записи — Gemini TTS (голос Sulafat), лежат в R2 `vial-assets/hypnosis/<язык>/<файл>.m4a` (моно AAC 64k),
    в бандл не входят: язык добавляется и текст правится без новой сборки (только залить файлы в R2).
    Курс виден только на языках из LANGS и не мужчинам. ИИ не нужен, на устройстве — только дата старта и журнал.
-   Плеер: экран #sl-ov и стили sl-* из sleep.js, фон — записанный трек Pixabay (HYP_MUS, docs/SLEEP-MUSIC-SOURCES.md; без сети — vialSleep._music), экран не гаснет.
+   Плеер: экран #sl-ov и стили sl-* из sleep.js, фон — записанные треки Pixabay по очереди (musicOn, docs/SLEEP-MUSIC-SOURCES.md; без сети — vialSleep._music), экран не гаснет.
    Рамка для сторов: «гипнотическая релаксация» / «аудиопрактика», без «лечения» и обещаний. */
 (function () {
   var BASE = 'https://pub-2f2f1a44a98c46beabafa751ba849852.r2.dev/hypnosis/';
@@ -107,13 +107,18 @@
     var pr = voice.play(); if (pr && pr.catch) pr.catch(function () { if (my === run) tx(t('err')); });
     musicOn(my);
   }
-  // Фон под голосом (2026-11-26, выбор владельца): записанный трек Pixabay 195425 (docs/SLEEP-MUSIC-SOURCES.md), громкость
-  // зашита в файл (−30 LUFS, «Тише» −36; голос −16). Нет сети / файла → мелодия, собранная на телефоне.
-  var HYP_MUS = 'https://pub-2f2f1a44a98c46beabafa751ba849852.r2.dev/hypnosis/music/195425';
-  function musicOn(my) {
+  // Фон под голосом (2026-11-26, выбор владельца): записанные треки Pixabay (docs/SLEEP-MUSIC-SOURCES.md) по очереди —
+  // свой 195425 и 12 треков ритуала сна, каждый вечер с другого. Громкость зашита в файл (голос −16 LUFS; 195425 −30/−36,
+  // треки сна −28/−35 — «Тише» почти одинаково). Нет сети / файла → мелодия, собранная на телефоне.
+  var R2 = 'https://pub-2f2f1a44a98c46beabafa751ba849852.r2.dev/';
+  function musList() { var t = (window.vialSleep && vialSleep._tracks) || []; return ['h'].concat(t); }
+  function musUrl(id, soft) { return id === 'h' ? R2 + 'hypnosis/music/195425' + (soft ? '-soft' : '') + '.m4a' : R2 + 'sleep/music/' + (soft ? 'soft/' : '') + id + '.m4a'; }
+  function musicOn(my, i) {
     var m = mel(); if (m === 'none') return;
+    var list = musList(); if (i == null) i = Math.floor(Date.now() / 86400000) % list.length;
     try {
-      var a = new Audio(HYP_MUS + (m === 'soft' ? '-soft' : '') + '.m4a'); a.loop = true; a.setAttribute('playsinline', ''); music = a;
+      var a = new Audio(musUrl(list[i % list.length], m === 'soft')); a.setAttribute('playsinline', ''); music = a;
+      a.addEventListener('ended', function () { if (music === a && my === run) musicOn(my, i + 1); });
       a.addEventListener('error', function () { if (music === a && my === run) { music = null; synthOn(my); } });
       var p = a.play(); if (p && p.catch) p.catch(function () {});
     } catch (e) { synthOn(my); }

@@ -717,7 +717,7 @@
     own: own, pick: pick, remind: remind, ritual: ritual, awake: awake, stop: function () { stop(false); },
     worry: worry, worrySave: worrySave, mountDiary: mountDiary, info: info, read: read, open: open, goCard: goCard, stats: stats, label: function (k) { return t(k); },
     _music: makeMusic,  // запасная мелодия (без сети) — её же берёт гипноз, если нет файла
-    _musBase: MUS_BASE
+    _musBase: MUS_BASE, _tracks: TRACKS
   };
   mountDiary(); card(); schedule();
 })();

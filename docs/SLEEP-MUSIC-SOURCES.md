@@ -25,7 +25,9 @@
 | 587578 | the_mountain | the_mountain-deep-sleep-deep-sleep-music-587578.mp3 | 2:15 |
 | 571041 | verclub_music | verclub_music-sleep-music-571041.mp3 | 8:52 |
 
-## Гипноз «Прохлада» (`hypnosis.js`, `HYP_MUS`) — R2 `vial-assets/hypnosis/music/195425.m4a` и `195425-soft.m4a`
+## Гипноз «Прохлада» (`hypnosis.js`, `musicOn`) — R2 `vial-assets/hypnosis/music/195425.m4a` и `195425-soft.m4a`
+
+Под голосом играют по очереди 13 треков: этот и все 12 треков ритуала сна (их же файлы `sleep/music/`), каждый вечер с другого (решение владельца 2026-11-26: «они все однотипные»).
 
 | ID | Автор на Pixabay | Файл-оригинал | Длина |
 |---|---|---|---|
