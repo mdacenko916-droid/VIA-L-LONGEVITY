@@ -519,8 +519,26 @@
     noiseStop(true);
     var my = run;
     playUrl(null, 0);                                    // сразу тихий звук: держит режим воспроизведения, пока мелодия собирается
-    if (kind === 'own') { ownLoad().then(function (u) { if (my !== run) return; if (!u) return noiseStart('music'); var old = audio; audio = null; try { if (old) old.pause(); } catch (e) {} playUrl(u, 0.5); }); return; }
+    if (kind === 'own') { ownLoad().then(function (u) { if (my !== run) return; if (!u) return noiseStart('music'); var old = audio; audio = null; try { if (old) old.pause(); } catch (e) {} playUrl(u, 1); }); return; }
     if (kind !== 'music' && kind !== 'soft') return;
+    trackPlay(kind, dayNum() % TRACKS.length, my, audio);
+  }
+  // Записанная музыка (2026-11-26, выбор владельца, Pixabay — docs/SLEEP-MUSIC-SOURCES.md): треки по очереди, каждый вечер
+  // с другого. Громкость зашита в файл (−28 LUFS, «Тише» −35; голос −16): на iPhone audio.volume не работает.
+  // Нет сети / файла → мелодия, собранная на телефоне (makeMusic).
+  var MUS_BASE = 'https://pub-2f2f1a44a98c46beabafa751ba849852.r2.dev/sleep/music/',
+      TRACKS = ['636504', '562633', '614717', '627002', '628075', '587330', '626784', '580201', '577897', '578609', '587578', '571041'];
+  function dayNum() { return Math.floor(Date.now() / 86400000); }
+  function trackPlay(kind, i, my, keep) {
+    if (my !== run) return;
+    playUrl(MUS_BASE + (kind === 'soft' ? 'soft/' : '') + TRACKS[i % TRACKS.length] + '.m4a', 1);
+    var a = audio; a.loop = false;
+    var drop = function () { if (keep && keep !== a) { try { keep.pause(); } catch (e) {} } keep = null; };
+    a.addEventListener('playing', drop);
+    a.addEventListener('ended', function () { if (audio === a && my === run) trackPlay(kind, i + 1, my, a); });
+    a.addEventListener('error', function () { if (audio !== a || my !== run) return; drop(); synth(kind, my); });
+  }
+  function synth(kind, my) {
     var seed = parseInt(String(dayKey()).replace(/\D/g, ''), 10) || 1, gain = kind === 'soft' ? 0.35 : 1, ck = seed + ':' + gain;   // «Тише» ≈ −9 дБ под голосом
     var p = musicCache[ck] ? Promise.resolve(musicCache[ck]) : makeMusic(seed, gain).then(function (u) { if (u) musicCache[ck] = u; return u; });
     p.then(function (u) { if (!u || my !== run) return; var old = audio; audio = null; try { if (old) old.pause(); } catch (e) {} playUrl(u, 0.3); });
@@ -698,7 +716,8 @@
     set: function (k, v) { setSet(k, v); card(); },
     own: own, pick: pick, remind: remind, ritual: ritual, awake: awake, stop: function () { stop(false); },
     worry: worry, worrySave: worrySave, mountDiary: mountDiary, info: info, read: read, open: open, goCard: goCard, stats: stats, label: function (k) { return t(k); },
-    _music: makeMusic   // отладка: собрать мелодию дня (вернёт blob-URL)
+    _music: makeMusic,  // запасная мелодия (без сети) — её же берёт гипноз, если нет файла
+    _musBase: MUS_BASE
   };
   mountDiary(); card(); schedule();
 })();

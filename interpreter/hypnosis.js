@@ -4,7 +4,7 @@
    Записи — Gemini TTS (голос Sulafat), лежат в R2 `vial-assets/hypnosis/<язык>/<файл>.m4a` (моно AAC 64k),
    в бандл не входят: язык добавляется и текст правится без новой сборки (только залить файлы в R2).
    Курс виден только на языках из LANGS и не мужчинам. ИИ не нужен, на устройстве — только дата старта и журнал.
-   Плеер: экран #sl-ov и стили sl-* из sleep.js, фон — «Мелодия для сна» (vialSleep._music), экран не гаснет.
+   Плеер: экран #sl-ov и стили sl-* из sleep.js, фон — записанный трек Pixabay (HYP_MUS, docs/SLEEP-MUSIC-SOURCES.md; без сети — vialSleep._music), экран не гаснет.
    Рамка для сторов: «гипнотическая релаксация» / «аудиопрактика», без «лечения» и обещаний. */
 (function () {
   var BASE = 'https://pub-2f2f1a44a98c46beabafa751ba849852.r2.dev/hypnosis/';
@@ -107,7 +107,18 @@
     var pr = voice.play(); if (pr && pr.catch) pr.catch(function () { if (my === run) tx(t('err')); });
     musicOn(my);
   }
+  // Фон под голосом (2026-11-26, выбор владельца): записанный трек Pixabay 195425 (docs/SLEEP-MUSIC-SOURCES.md), громкость
+  // зашита в файл (−30 LUFS, «Тише» −36; голос −16). Нет сети / файла → мелодия, собранная на телефоне.
+  var HYP_MUS = 'https://pub-2f2f1a44a98c46beabafa751ba849852.r2.dev/hypnosis/music/195425';
   function musicOn(my) {
+    var m = mel(); if (m === 'none') return;
+    try {
+      var a = new Audio(HYP_MUS + (m === 'soft' ? '-soft' : '') + '.m4a'); a.loop = true; a.setAttribute('playsinline', ''); music = a;
+      a.addEventListener('error', function () { if (music === a && my === run) { music = null; synthOn(my); } });
+      var p = a.play(); if (p && p.catch) p.catch(function () {});
+    } catch (e) { synthOn(my); }
+  }
+  function synthOn(my) {
     var m = mel(); if (m === 'none' || !window.vialSleep || !vialSleep._music) return;
     var seed = parseInt(String(dayKey()).replace(/\D/g, ''), 10) || 1;
     vialSleep._music(seed, m === 'soft' ? 0.25 : 0.5).then(function (u) {   // под голосом тише, чем в ритуале сна
