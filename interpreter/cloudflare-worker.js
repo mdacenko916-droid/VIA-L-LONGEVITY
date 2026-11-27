@@ -1478,6 +1478,7 @@ export default {
       if (path === '/advisor-chat')     return handleAdvisorChat(request, env, corsHeaders, ctx);
       if (path === '/weekly-report')    return handleWeeklyReport(request, env, corsHeaders, ctx);
       if (path === '/check-report')     return handleCheckReport(request, env, corsHeaders, ctx);   // опросник сайта via-l.com/check/
+      if (path === '/check-event')      return handleCheckEvent(request, env, corsHeaders);         // воронка: лендинг → опросник → начал
 
       // Утреннее напоминание EXPERT (PWA): подписка на Web Push. Тело пуша пустое — см. runPushReminders.
       if (path === '/push/subscribe')   return handlePushSubscribe(request, env, corsHeaders);
@@ -4617,6 +4618,31 @@ const _CHK_EXCLUDE = {
 };
 function _chkPick(map, v) { return Object.prototype.hasOwnProperty.call(map, v) ? map[v] : null; }
 function _chkList(map, arr) { return (Array.isArray(arr) ? arr : []).slice(0, 12).map(v => _chkPick(map, v)).filter(Boolean); }
+
+// POST /check-event — воронка «Безкоштовний розбір VIA-L»: land (открыл лендинг), open (открыл опросник), start (начал опрос).
+// Завершённые разборы считает /check-report (ai_usage + check_quiz). Личных данных нет: адрес — только суточный хеш
+// для уникальных посетителей; не больше 5 записей одного события с адреса в сутки (защита от накрутки).
+async function handleCheckEvent(request, env, corsHeaders) {
+  let body = {}; try { body = JSON.parse(await request.text()); } catch (_) {}
+  const ev = ['land', 'open', 'start'].includes(body.ev) ? body.ev : null;
+  if (!ev || !env.DB) return jsonResponse({ ok: false }, corsHeaders, 400);
+  const lang = ['uk', 'ru', 'en', 'es'].includes(body.lang) ? body.lang : '';
+  const src = String(body.src || '').replace(/[^a-z0-9_-]/gi, '').slice(0, 20);
+  const day = new Date().toISOString().slice(0, 10);
+  const ip = request.headers.get('CF-Connecting-IP') || 'x';
+  let ipHash = '';
+  try {
+    const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('chk:' + day + ':' + ip));
+    ipHash = Array.from(new Uint8Array(h)).slice(0, 12).map(b => b.toString(16).padStart(2, '0')).join('');
+  } catch (_) {}
+  try {
+    await env.DB.prepare('CREATE TABLE IF NOT EXISTS check_events (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER, day TEXT, ev TEXT, src TEXT, lang TEXT, ip TEXT)').run();
+    const r = await env.DB.prepare('SELECT COUNT(*) AS n FROM check_events WHERE day=? AND ip=? AND ev=?').bind(day, ipHash, ev).first();
+    if (r && (r.n || 0) >= 5) return jsonResponse({ ok: true }, corsHeaders);
+    await env.DB.prepare('INSERT INTO check_events (ts,day,ev,src,lang,ip) VALUES (?,?,?,?,?,?)').bind(Date.now(), day, ev, src, lang, ipHash).run();
+  } catch (e) { console.warn('check_events failed', e && e.message); }
+  return jsonResponse({ ok: true }, corsHeaders);
+}
 
 async function handleCheckReport(request, env, corsHeaders, ctx) {
   if (!env.CLAUDE_API_KEY) return jsonResponse({ error: 'ai_unavailable' }, corsHeaders, 503);

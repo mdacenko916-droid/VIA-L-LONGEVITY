@@ -652,6 +652,9 @@ var lang=(function(){
   var n=(navigator.language||'').slice(0,2).toLowerCase();
   return T[n]?n:'en';
 })();
+// Воронка «Безкоштовний розбір»: открыл лендинг (метка источника, без личных данных) — воркер /check-event.
+try{ var EVB=JSON.stringify({ev:'land',src:SRC,lang:lang}), EVU='https://interpreter.viaelcom.workers.dev/check-event';
+  if(navigator.sendBeacon) navigator.sendBeacon(EVU,new Blob([EVB],{type:'text/plain'})); else fetch(EVU,{method:'POST',body:EVB,keepalive:true}); }catch(e){}
 // Кнопка языка: открыть/закрыть список, подпись = текущий язык.
 var LF={uk:['🇺🇦','UK'],ru:['🇷🇺','RU'],es:['🇪🇸','ES'],en:['🇬🇧','EN']};
 function lbtnSync(){ var f=LF[lang]||LF.uk; document.getElementById('lflag').textContent=f[0]; document.getElementById('lcode').textContent=f[1]; document.getElementById('lsw').classList.remove('open'); }

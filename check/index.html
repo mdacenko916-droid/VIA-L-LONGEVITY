@@ -292,6 +292,12 @@ function L(){return T[lang];}
 function prog(n){ $('prog').style.width=Math.round(100*n/TOTAL)+'%'; }
 function say(text,me){ var d=document.createElement('div'); d.className='msg'+(me?' me':''); d.textContent=text; $('chat').appendChild(d); return d; }
 function scrollEnd(){ setTimeout(function(){ window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'}); },30); }
+// Воронка «Безкоштовний розбір»: open — открыл опросник, start — нажал «Почати» (метка источника, без личных данных).
+var EVSENT={};
+function ev(name){ if(EVSENT[name]) return; EVSENT[name]=1;
+  try{ var b=JSON.stringify({ev:name,src:SRC,lang:lang}), u='https://interpreter.viaelcom.workers.dev/check-event';
+    if(navigator.sendBeacon) navigator.sendBeacon(u,new Blob([b],{type:'text/plain'})); else fetch(u,{method:'POST',body:b,keepalive:true}); }catch(e){} }
+ev('open');
 
 // Кнопка языка: открыть/закрыть список, подпись = текущий язык.
 var LF={uk:['🇺🇦','UK'],ru:['🇷🇺','RU'],es:['🇪🇸','ES'],en:['🇬🇧','EN']};
@@ -304,7 +310,7 @@ function renderIntro(){
   var t=L();
   $('intro').innerHTML='<h1>'+esc(t.title)+'</h1><p>'+esc(t.lead)+'</p><div class="chips">'+t.chips.map(function(c){return '<span>'+esc(c)+'</span>';}).join('')+
     '</div><button class="btn" id="go">'+esc(t.start)+'</button><p class="fine">'+esc(t.fine)+'</p>';
-  $('go').onclick=start;
+  $('go').onclick=function(){ ev('start'); start(); };
 }
 document.querySelectorAll('.langs button').forEach(function(b){
   b.onclick=function(){
