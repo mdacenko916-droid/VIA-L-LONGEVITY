@@ -18,8 +18,8 @@ APP = "6807062006"
 PID = "via_l_specialist_review"
 NAME = "VIA-L Specialist Review"            # внутреннее имя товара в App Store Connect
 SHOT = "specialist-review-en.png"          # скриншот для ревью, app/store/images/iap-review/
-EUR = "50.0"
-USD = "54.99"   # США — вручную: авто-пересчёт Apple из €50 даёт $45 (без европейского НДС)
+EUR = "25.0"   # 2026-11-27 владелец: −50 % (было €50)
+USD = "27.49"   # было $54,99; США — вручную: авто-пересчёт Apple из €50 даёт $45 (без европейского НДС)
 # Название ≤ 30 знаков, описание ≤ 45 — предел App Store.
 L = {
     "en-US": ("Specialist Review", "Written review of your data, personal plan"),

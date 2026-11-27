@@ -39,5 +39,5 @@ if __name__ == "__main__":
     a = sys.argv[1:]
     if not a or a[0] not in APPS: raise SystemExit("Укажите приложение: vial или adam")
     rv.APP, rv.PID, rv.NAME, rv.SHOT = APPS[a[0]]
-    rv.EUR, rv.USD, rv.L, rv.NOTE = "150.0", "164.99", L, NOTE
+    rv.EUR, rv.USD, rv.L, rv.NOTE = "75.0", "82.99", L, NOTE   # 2026-11-27 −50 % (было €150 / $164,99)
     {"price": rv.price_only, "shot": rv.shot}.get((a[1:] or [""])[0], rv.main)()
