@@ -376,7 +376,7 @@
   // ── записанный голос (Gemini TTS Achernar, 2026-11-25): фразы в R2 sleep/Achernar/<язык>/<fnv>.m4a ──
   // Озвучка — ~/Developer/VIA-L-HYPNOSIS/scripts/sleep_voice.py (имя файла = fnv() текста, как здесь).
   // Язык в REC_LANGS — только когда залиты ВСЕ его фразы. Нет файла / нет сети → до конца ритуала голос телефона.
-  var REC_BASE = 'https://pub-2f2f1a44a98c46beabafa751ba849852.r2.dev/sleep/Achernar/', REC_LANGS = ['ru', 'uk'];
+  var REC_BASE = 'https://pub-2f2f1a44a98c46beabafa751ba849852.r2.dev/sleep/Achernar/', REC_LANGS = ['ru', 'uk', 'es', 'en'];
   var rec = null, recOff = false, recQ = [];   // recQ — обязательные фразы, ждущие конца текущей записи
   function fnv(s) { var h = 0x811c9dc5; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return ('0000000' + h.toString(16)).slice(-8); }
   function recOn() { return !recOff && REC_LANGS.indexOf(L()) >= 0; }
